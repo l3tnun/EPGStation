@@ -17,6 +17,7 @@ iOS, Android での操作感を重視しています。
 ## 動作環境
 
 * [Node.js](http://nodejs.org/) ^6.x.x || ~ 8
+* [Mirakurun](https://github.com/Chinachu/Mirakurun) ^2.5.7
 * Linux or macOS
 * MySQL or MariaDB (character-set-server = utf8)
 * FFmpeg
