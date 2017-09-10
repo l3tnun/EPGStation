@@ -1,0 +1,40 @@
+@import 'variables';
+
+.header-menu-button
+    border-radius: 50%;
+    font-size: 24px;
+    height: 32px;
+    margin-left: 0;
+    margin-right: 0;
+    min-width: 32px;
+    width: 32px;
+    padding: 0;
+    overflow: hidden;
+    color: inherit;
+    line-height: normal;
+    position: relative;
+    .material-icons
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-12px,-12px);
+        line-height: 24px;
+        width: 24px;
+
+.mdl-layout__header-row
+    .mdl-layout-title
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        line-height: 21px;
+        padding-top: 0px;
+        width: calc(100vw - 800px);
+        @-moz-document url-prefix()
+            /*firefox だけタイトルの上が見切れる*/
+            line-height: 26px;
+
+    @media screen and (max-width: $header-height)
+        .mdl-layout-title
+            width: calc(100vw - 150px);
+            padding-top: 3px;
+

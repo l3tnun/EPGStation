@@ -1,0 +1,28 @@
+.pagination
+    min-height: 48px;
+    background: white;
+    top: 14px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 32px;
+
+    // for chrome
+    @media all and (-webkit-min-device-pixel-ratio:0) and (min-resolution: .001dpcm)
+        margin-bottom: 16px;
+
+    .container
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        display: flex;
+
+        .button
+            font-size: 20px;
+            line-height: 20px;
+            text-decoration: none;
+            color: #616161 !important;
+
+        .text
+            padding: 1px 10px 0 10px;
+

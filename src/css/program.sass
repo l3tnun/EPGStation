@@ -1,0 +1,265 @@
+@import 'variables';
+
+$board-line: 2px solid #ccc;
+$window-width: 600px
+
+$chennel-height: 30px;
+$chennel-width: 140px;
+$chennel-mobile-height: 20px;
+$chennel-mobile-width: 100px;
+
+$timescale-height: 180px;
+$timescale-width: 30px;
+$timescale-mobile-height: 120px;
+$timescale-mobile-width: 20px;
+
+$board-fontsize: 10pt;
+$board-mobile-fontsize: 7.5pt;
+
+.ProgramTable
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    .channels
+        overflow: hidden;
+        height: auto;
+        z-index: 5;
+        display: flex;
+        .item
+            font-weight: bold;
+            color: #fff;
+            background: #999;
+            box-sizing: border-box;
+            border-right: $board-line;
+            overflow: hidden;
+            white-space: nowrap;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            vertical-align: middle;
+    .child
+        width: 100%;
+        position: absolute;
+        .board
+            z-index: 4;
+            height: 100%;
+            overflow: auto;
+            display: flex;
+            position: relative;
+            .left-station
+                .item
+                    border-left: $board-line;
+            .station
+                box-sizing: border-box;
+                border-top: $board-line;
+                .item
+                    overflow: hidden;
+                    box-sizing: border-box;
+                    border-bottom: $board-line;
+                    border-right: $board-line;
+                    margin: 0;
+                    padding: 0;
+                    line-height: 1.2em;
+                    color: black;
+                    .title
+                        font-weight: bold;
+                    > div
+                        pointer-events: none;
+                .reserve
+                    border: 4px solid red;
+                .hide
+                    background-color: #F8F8F8;
+                    color: #888;
+                .conflict
+                    background-color: #fffd6b;
+                    border: 4px solid red;
+                    border-style: dashed;
+                    color: black;
+                .skip
+                    background-color: #aaa;
+                .nodata
+                    text-indent: 100%;
+                    white-space: nowrap;
+                    overflow: hidden;
+
+            .boardbar
+                z-index: 5;
+                position: absolute;
+                background-color: red;
+                height: 2px;
+                overflow: hidden;
+                left: 0;
+
+        .timescale
+            float: left;
+            overflow: hidden;
+            height: 100%;
+            z-index: 4;
+            .item
+                box-sizing: border-box;
+                border-top: 2px solid #fff;
+                color: #fff;
+
+            .time-4
+                background: #98c32f;
+            .time-5
+                background: #b4c831;
+            .time-6
+                background: #d1cc34;
+            .time-7
+                background: #efcc35;
+            .time-8
+                background: #ffcd3e;
+            .time-9
+                background: #ffc636;
+            .time-10
+                background: #feaf33;
+            .time-11
+                background: #fe9c30;
+            .time-12
+                background: #fe882f;
+            .time-13
+                background: #fe7b2d;
+            .time-14
+                background: #fe712c;
+            .time-15
+                background: #fd692b;
+            .time-16
+                background: #fd5f25;
+            .time-17
+                background: #fd572b;
+            .time-18
+                background: #f44c3c;
+            .time-19
+                background: #e33f6e;
+            .time-20
+                background: #ce35a2;
+            .time-21
+                background: #b630d9;
+            .time-22
+                background: #9e2ffc;
+            .time-23
+                background: #852ffc;
+            .time-0
+                background: #652ffc;
+            .time-1
+                background: #3f2cf3;
+            .time-2
+                background: #2923d5;
+            .time-3
+                background: #2520c0;
+
+    .progress
+        position: fixed;
+        left: 0px;
+        top: 0px;
+        height: 100%;
+        width: 100%;
+        z-index: 20000;
+        background-color: rgba(0, 0, 0, 0.3);
+        .mdl-spinner
+            position: absolute;
+            top: 50%;
+            left: 50%;
+
+// android 用 scroll 修正
+.ProgramTable.fix-scroll
+    position: absolute;
+    overflow: auto;
+    top: 56px;
+    height: calc(100% - 56px);
+    .channels
+        position: fixed;
+        z-index: 3;
+    .child
+        width: auto;
+        height: auto;
+        .timescale
+            position: fixed;
+            z-index: 2;
+        .board
+            z-index: 1;
+
+/** tablet */
+@media screen and (min-width: $window-width)
+    .ProgramTable
+        --time-base-height: $timescale-height / 60;
+        --channel-width: $chennel-width;
+        .channels
+            padding-left: $timescale-width;
+            width: calc(100% - #{$timescale-width});
+            .item
+                max-width: $timescale-width;
+                min-width: $chennel-width;
+                max-height: $chennel-height;
+                min-height: $chennel-height;
+                line-height: $chennel-height;
+                font-size: 15px;
+        .child
+            height: calc(100% - 86px);
+            .board
+                .station
+                    max-width: $chennel-width;
+                    min-width: $chennel-width;
+                    .item
+                        font-size: $board-fontsize
+            .timescale
+                .item
+                    max-width: $timescale-width;
+                    min-width: $timescale-width;
+                    max-height: $timescale-height;
+                    min-height: $timescale-height;
+                    font-size: 17px;
+
+    // android 用 scroll 修正
+    .ProgramTable.fix-scroll
+        .child
+            .timescale
+            padding-top: $chennel-height;
+            .board
+                margin-left: $timescale-width;
+
+/* mobile*/
+@media screen and (max-width: $window-width)
+    .ProgramTable
+        --time-base-height: $timescale-mobile-height / 60;
+        --channel-width: $chennel-mobile-width;
+        .channels
+            padding-left: $timescale-mobile-width;
+            width: calc(100% - #{$timescale-mobile-width});
+            .item
+                max-width: $chennel-mobile-width;
+                min-width: $chennel-mobile-width;
+                max-height: $chennel-mobile-height;
+                min-height: $chennel-mobile-height;
+                line-height: $chennel-mobile-height;
+                font-size: 12px;
+        .child
+            height: calc(100% - 76px);
+            .board
+                .station
+                    max-width: $chennel-mobile-width;
+                    min-width: $chennel-mobile-width;
+                    .item
+                        font-size: $board-mobile-fontsize
+            .timescale
+                .item
+                    max-height: $timescale-mobile-height;
+                    min-height: $timescale-mobile-height;
+                    max-width: $timescale-mobile-width;
+                    min-width: $timescale-mobile-width;
+                    font-size: 12px;
+
+    // android 用 scroll 修正
+    .ProgramTable.fix-scroll
+        .child
+            .timescale
+            padding-top: $chennel-mobile-height;
+            .board
+                margin-left: $timescale-mobile-width;
+
+/* header が高くなる */
+@media screen and (min-width: $header-height + 1)
+    .ProgramTable
+        .child
+            height: calc(100% - 94px);

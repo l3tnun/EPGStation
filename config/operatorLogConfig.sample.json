@@ -1,0 +1,34 @@
+{
+    "appenders": {
+        "system": {
+            "type": "file",
+            "maxLogSize": 1048576,
+            "backups": 3,
+            "filename": "/hoge/EPGStation/logs/Operator/system.log",
+            "pattern": "-yyyy-MM-dd"
+        },
+        "access": {
+            "type": "file",
+            "maxLogSize": 1048576,
+            "backups": 3,
+            "filename": "/hoge/EPGStation/logs/Operator/access.log",
+            "pattern": "-yyyy-MM-dd"
+        },
+        "stream": {
+            "type": "file",
+            "maxLogSize": 1048576,
+            "backups": 3,
+            "filename": "/hoge/EPGStation/logs/Operator/stream.log",
+            "pattern": "-yyyy-MM-dd"
+        },
+        "console": { "type": "console" },
+        "stdout": { "type": "stdout" }
+    },
+    "categories": {
+        "default": { "appenders": [ "console", "stdout" ], "level": "info" },
+        "system": { "appenders": [ "system", "stdout" ], "level": "info" },
+        "access": { "appenders": [ "access", "stdout" ], "level": "info" },
+        "stream": { "appenders": [ "stream", "stdout" ], "level": "info" }
+    }
+}
+

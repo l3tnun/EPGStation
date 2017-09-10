@@ -1,0 +1,72 @@
+$switching-width: 870px;
+
+.rules-content
+    // car view
+    .mdl-card
+        max-width: $switching-width;
+        min-height: 50px;
+        margin-left : auto;
+        margin-right : auto;
+
+    .title
+        font-weight: bold;
+        padding-right: 6px;
+        line-height: 24px;
+        text-align: left;
+        margin-right: 40px;
+        pointer-events: none;
+
+    .mdl-switch
+        position: absolute;
+        top: calc(50% - 14px);
+        width: 24px;
+        right: 18px;
+
+    // table view
+    .mdl-data-table
+        max-width: 1600px;
+        width: calc(100% - 16px);
+        margin: 16px auto;
+
+        td, th
+            &:last-of-type
+                padding-right: 12px;
+            &:first-of-type
+                padding-left: 24px;
+            padding-top: 8px;
+            padding-right: 8px;
+            padding-bottom: 8px;
+            padding-left: 8px;
+
+        td
+            overflow: hidden;
+            vertical-align: middle;
+            white-space: normal;
+            color: rgba(0, 0, 0, 0.70);
+
+        .keyword, .ignore-keyword
+            max-width: 180px;
+
+        .toggle
+            width: 40px;
+            .toggle-container
+                width: 40px;
+                position: relative;
+
+        .dow
+            max-width: calc(6em + 20px);
+
+        .option
+            width: 96px;
+            .option-container
+                display: flex;
+
+@media screen and (max-width: $switching-width)
+    .rules-content
+        .mdl-data-table
+            display: none;
+
+@media screen and (min-width: $switching-width + 1)
+    .rules-content
+        .rule-card
+            display: none;

@@ -1,0 +1,966 @@
+swagger: "2.0"
+basePath: "/api"
+info:
+  version: "0.1.0"
+  title: "Test"
+consumes:
+  - application/json
+produces:
+  - application/json
+
+paths: {}
+
+parameters:
+  offset:
+    description: '取得の開始位置'
+    name: offset
+    in: query
+    type: integer
+    format: int32
+    minimum: 0
+    default: 0
+
+  limit:
+    description: '取得数の上限'
+    name: limit
+    in: query
+    type: integer
+    format: int32
+    minimum: 1
+    default: 24
+
+  scheduleType:
+    description: '番組表放送波'
+    name: type
+    in: query
+    required: true
+    type: string
+    enum:
+      - GR
+      - BS
+      - CS
+      - SKY
+
+  scheduleTime:
+    description: '番組表の時刻指定(YYMMDDHH)'
+    name: time
+    in: query
+    type: integer
+
+  scheduleLength:
+    description: '番組表の長さ指定'
+    name: length
+    in: query
+    type: integer
+    minimum: 1
+    default: 24
+
+  scheduleAddition:
+    description: '放映中の時刻加算(分)'
+    name: time
+    in: query
+    type: integer
+    minimum: 0
+    default: 0
+
+  rule:
+    description: 'rule id'
+    name: rule
+    in: query
+    type: integer
+
+  genre1:
+    description: 'genre1'
+    name: genre1
+    in: query
+    type: integer
+    minimum: 0
+
+  channel:
+    description: 'channel id'
+    name: channel
+    in: query
+    type: integer
+    minimum: 0
+
+  recordedKeyword:
+    description: 'recorded search keyword'
+    name: keyword
+    in: query
+    type: string
+
+definitions:
+  total:
+    description: '総数'
+    type: integer
+
+  EncodedId:
+    description: 'encoded id'
+    type: integer
+
+  RecordedId:
+    description: 'recorded id'
+    type: integer
+
+  RuleId:
+    description: 'rule id'
+    type: integer
+
+  ProgramId:
+    type: integer
+    maximum: 655356553565535
+
+  EventId:
+    type: integer
+    maximum: 65535
+
+  ServiceId:
+    type: integer
+    maximum: 65535
+
+  NetworkId:
+    type: integer
+    maximum: 65535
+
+  ServiceItemId:
+    type: integer
+    maximum: 6553565535
+
+  UnixtimeMS:
+    type: integer
+
+  ChannelType:
+    type: string
+    enum:
+      - GR
+      - BS
+      - CS
+      - SKY
+
+  remoteControlKeyId:
+    type: integer
+
+  ProgramGenreLv1:
+    type: integer
+
+  ProgramGenreLv2:
+    type: integer
+
+  ProgramVideoType:
+    type: string
+    enum:
+      - mpeg2
+      - h.264
+      - h.265
+
+  ProgramVideoResolution:
+    type: string
+    enum:
+      - 240p
+      - 480i
+      - 480p
+      - 720p
+      - 1080i
+      - 1080p
+      - 2160p
+      - 4320p
+
+  ProgramAudioSamplingRate:
+    type: integer
+    enum:
+      - 16000 # 001
+      - 22050 # 010
+      - 24000 # 011
+      - 32000 # 101
+      - 44100 # 110
+      - 48000 # 111
+
+  Config:
+    description: 'config'
+    type: object
+    required:
+      - enableEncode
+      - boradcast
+    properties:
+      enableEncode:
+        description: 'エンコードが有効か'
+        type: boolean
+      encodeOption:
+        type: array
+        items:
+          description: 'エンコードオプション名'
+          type: string
+      defaultEncode:
+        description: '手動予約時のエンコード設定番号'
+        type: number
+      delTs:
+        description: '手動予約時にデフォルトで ts を削除するか'
+        type: boolean
+      boradcast:
+        description: '有効になっている放送波'
+        type: object
+        required:
+          - GR
+          - BS
+          - CS
+          - SKY
+        properties:
+          GR:
+            type: boolean
+          BS:
+            type: boolean
+          CS:
+            type: boolean
+          SKY:
+            type: boolean
+      recordedViewer:
+        description: 'mobile 用録画ファイル視聴用設定'
+        type: object
+        properties:
+          ios:
+            type: string
+          android:
+            type: string
+      recordedDownloader:
+        description: 'mobile 用録画ファイルダウンロード用設定'
+        type: object
+        properties:
+          ios:
+            type: string
+          android:
+            type: string
+      mpegTsStreaming:
+        type: array
+        items:
+          description: 'mpeg ts streaming ライブ視聴の設定'
+          type: string
+      mpegTsViewer:
+        description: 'mpeg ts streaming の viewer の設定'
+        type: object
+        properties:
+          ios:
+            type: string
+          android:
+            type: string
+      recordedHLS:
+        type: array
+        items:
+          description: 'HLS での録画済みファイルの配信設定'
+          type: string
+
+  SchedulePrograms:
+    description: '番組データ'
+    type: array
+    items:
+      $ref: '#/definitions/ScheduleProgram'
+
+  ScheduleProgram:
+    type: object
+    required:
+      - channel
+      - programs
+    properties:
+      channel:
+        $ref: '#/definitions/ScheduleServiceItem'
+      programs:
+        type: array
+        items:
+            $ref: '#/definitions/ScheduleProgramItem'
+
+  ScheduleSearch:
+    description: '番組検索結果'
+    type: array
+    items:
+      $ref: '#/definitions/ScheduleProgramItem'
+
+  ScheduleProgramItem:
+    type: object
+    required:
+      - id
+      - channelId
+      - startAt
+      - endAt
+      - isFree
+      - name
+      - channelType
+    properties:
+      id:
+        $ref: '#/definitions/ProgramId'
+        description: 'program id'
+      channelId:
+        $ref: '#/definitions/ServiceItemId'
+      startAt:
+        $ref: '#/definitions/UnixtimeMS'
+      endAt:
+        $ref: '#/definitions/UnixtimeMS'
+      isFree:
+        type: boolean
+        description: '無料放送か'
+      name:
+        type: string
+        description: '番組タイトル'
+      description:
+        type: string
+        description: '番組詳細'
+      extended:
+        type: string
+        description: '番組拡張'
+      genre1:
+        $ref: '#/definitions/ProgramGenreLv1'
+      genre2:
+        $ref: '#/definitions/ProgramGenreLv2'
+      channelType:
+        $ref: '#/definitions/ChannelType'
+
+  ScheduleServiceItem:
+    type: object
+    required:
+      - id
+      - serviceId
+      - networkId
+      - name
+      - hasLogoData
+      - channelType
+    properties:
+      id:
+        $ref: '#/definitions/ServiceItemId'
+      serviceId:
+        $ref: '#/definitions/ServiceId'
+      networkId:
+        $ref: '#/definitions/NetworkId'
+      name:
+        type: string
+      remoteControlKeyId:
+        $ref: '#/definitions/remoteControlKeyId'
+      hasLogoData:
+        type: boolean
+      channelType:
+        $ref: '#/definitions/ChannelType'
+
+  ServiceItem:
+    type: object
+    required:
+      - id
+      - serviceId
+      - networkId
+      - name
+      - hasLogoData
+      - channelType
+      - channel
+    properties:
+      id:
+        $ref: '#/definitions/ServiceItemId'
+      serviceId:
+        $ref: '#/definitions/ServiceId'
+      networkId:
+        $ref: '#/definitions/NetworkId'
+      name:
+        type: string
+      remoteControlKeyId:
+        $ref: '#/definitions/remoteControlKeyId'
+      hasLogoData:
+        type: boolean
+      channelType:
+        $ref: '#/definitions/ChannelType'
+      channel:
+        type: string
+      type:
+        type: number
+
+  EncodedProgram:
+    type: object
+    required:
+      - encodedId
+      - name
+      - filename
+    properties:
+      encodedId:
+        $ref: '#/definitions/EncodedId'
+      name:
+        type: string
+      filename:
+        type: string
+        description: 'ファイル名'
+
+  EncodingInfo:
+    type: object
+    required:
+      - name
+      - isEncoding
+    properties:
+      name:
+        type: string
+        description: エンコードモード名
+      isEncoding:
+        type: boolean
+        description: エンコード中か
+
+  RecordedProgram:
+    type: object
+    required:
+      - id
+      - channelId
+      - channelType
+      - startAt
+      - endAt
+      - name
+      - hasThumbnail
+      - original
+      - recording
+    properties:
+      id:
+        $ref: '#/definitions/RecordedId'
+      channelId:
+        $ref: '#/definitions/ServiceItemId'
+      channelType:
+        $ref: '#/definitions/ChannelType'
+      startAt:
+        $ref: '#/definitions/UnixtimeMS'
+      endAt:
+        $ref: '#/definitions/UnixtimeMS'
+      name:
+        type: string
+        description: '番組タイトル'
+      description:
+        type: string
+        description: '番組詳細'
+      extended:
+        type: string
+        description: '番組拡張'
+      genre1:
+        $ref: '#/definitions/ProgramGenreLv1'
+      genre2:
+        $ref: '#/definitions/ProgramGenreLv2'
+      videoType:
+        $ref: '#/definitions/ProgramVideoType'
+      videoResolution:
+        $ref: '#/definitions/ProgramVideoResolution'
+      videoStreamContent:
+        type: integer
+      videoComponentType:
+        type: integer
+      audioSamplingRate:
+        $ref: '#/definitions/ProgramAudioSamplingRate'
+      audioComponentType:
+        type: integer
+      recording:
+        type: boolean
+        description: '録画中か'
+      hasThumbnail:
+        type: boolean
+        description: 'サムネイルが作成済みか'
+      original:
+        type: boolean
+        description: 'オリジナルの録画データが削除されていないか'
+      filename:
+        type: string
+        description: 'ファイル名'
+      encoded:
+        type: array
+        items:
+          $ref: '#/definitions/EncodedProgram'
+      encoding:
+        type: array
+        items:
+          $ref: '#/definitions/EncodingInfo'
+
+  RecordingProgram:
+    $ref: '#/definitions/ReserveProgram'
+
+  RecordedTags:
+    description: '録画タグ, ruleId, genre1 は null 値も入る'
+    type: object
+    required:
+      - rule
+      - channel
+      - genre
+    properties:
+      rule:
+        type: array
+        items:
+          $ref: '#/definitions/RecordedRuleTag'
+      channel:
+        type: array
+        items:
+          $ref: '#/definitions/RecordedChannelTag'
+      genre:
+        type: array
+        items:
+          $ref: '#/definitions/RecordedGenreTag'
+
+  RecordedRuleTag:
+    type: object
+    required:
+      - cnt
+      - ruleId
+      - name
+    properties:
+      cnt:
+        type: integer
+      ruleId:
+        $ref: '#/definitions/RuleId'
+      name:
+        type: string
+
+  RecordedChannelTag:
+    type: object
+    required:
+      - cnt
+      - channelId
+    properties:
+      cnt:
+        type: integer
+      channelId:
+        $ref: '#/definitions/ServiceId'
+      name:
+        type: string
+
+  RecordedGenreTag:
+    type: object
+    required:
+      - cnt
+      - genre1
+    properties:
+      cnt:
+        type: integer
+      genre1:
+        description: 'null 値も取る'
+        $ref: '#/definitions/ProgramGenreLv1'
+
+  AddReserve:
+    type: object
+    required:
+      - programId
+    properties:
+      programId:
+        $ref: '#/definitions/ProgramId'
+      encode:
+        $ref: '#/definitions/RuleEncode'
+
+  Reserve:
+    type: object
+    required:
+      - program
+      - isManual
+    description: 'program は必須項目'
+    properties:
+      program:
+        $ref: '#/definitions/ReserveProgram'
+      ruleId:
+        $ref: '#/definitions/RuleId'
+      isManual:
+        type: boolean
+        description: '手動予約か'
+
+  ReserveAllId:
+    type: object
+    description: '予約一覧の program id を抜き出したもの'
+    required:
+      - reserves
+      - conflicts
+      - skips
+    properties:
+      reserves:
+        type: array
+        items:
+          $ref: '#/definitions/ReserveAllItem'
+      conflicts:
+        type: array
+        items:
+          $ref: '#/definitions/ReserveAllItem'
+      skips:
+        type: array
+        items:
+          $ref: '#/definitions/ReserveAllItem'
+
+  ReserveAllItem:
+    type: object
+    required:
+      - programId
+    properties:
+      programId:
+        $ref: '#/definitions/ProgramId'
+      ruleId:
+        $ref: '#/definitions/RuleId'
+
+  ReserveProgram:
+    type: object
+    description: '予約番組情報'
+    required:
+      - id
+      - channelId
+      - eventId
+      - serviceId
+      - networkId
+      - startAt
+      - endAt
+      - isFree
+      - name
+      - channelType
+      - channel
+    properties:
+      id:
+        $ref: '#/definitions/ProgramId'
+        description: 'program id'
+      channelId:
+        $ref: '#/definitions/ServiceItemId'
+      eventId:
+        $ref: '#/definitions/EventId'
+      serviceId:
+        $ref: '#/definitions/ServiceId'
+      networkId:
+        $ref: '#/definitions/NetworkId'
+      startAt:
+        $ref: '#/definitions/UnixtimeMS'
+      endAt:
+        $ref: '#/definitions/UnixtimeMS'
+      isFree:
+        type: boolean
+        description: '無料放送か'
+      name:
+        type: string
+        description: '番組タイトル'
+      description:
+        type: string
+        description: '番組詳細'
+      extended:
+        type: string
+        description: '番組拡張'
+      genre1:
+        $ref: '#/definitions/ProgramGenreLv1'
+      genre2:
+        $ref: '#/definitions/ProgramGenreLv2'
+      channelType:
+        $ref: '#/definitions/ChannelType'
+      channel:
+        type: string
+      videoType:
+        $ref: '#/definitions/ProgramVideoType'
+      videoResolution:
+        $ref: '#/definitions/ProgramVideoResolution'
+      videoStreamContent:
+        type: integer
+      videoComponentType:
+        type: integer
+      audioSamplingRate:
+        $ref: '#/definitions/ProgramAudioSamplingRate'
+      audioComponentType:
+        type: integer
+
+  Rule:
+    type: object
+    required:
+      - id
+      - week
+      - enable
+    properties:
+      id:
+        $ref: '#/definitions/RuleId'
+        description: 'rule id'
+      keyword:
+        type: string
+        description: '検索文字列'
+      ignoreKeyword:
+        type: string
+        description: '検索除外文字列'
+      keyCS:
+        type: boolean
+        description: '大文字小文字を区別する'
+      keyRegExp:
+        type: boolean
+        description: '正規表現'
+      title:
+        type: boolean
+        description: 'タイトルを検索範囲に含む'
+      description:
+        type: boolean
+        description: '詳細を検索範囲に含む'
+      extended:
+        type: boolean
+        description: '拡張を検索範囲に含む'
+      GR:
+        type: boolean
+        description: '地上波'
+      BS:
+        type: boolean
+        description: 'BS'
+      CS:
+        type: boolean
+        description: 'CS'
+      SKY:
+        type: boolean
+        description: 'SKY'
+      station:
+        $ref: '#/definitions/ServiceItemId'
+        description: '放送局 id'
+      genrelv1:
+        $ref: '#/definitions/ProgramGenreLv1'
+        description: 'ジャンル'
+      genrelv2:
+        $ref: '#/definitions/ProgramGenreLv2'
+        description: 'サブジャンル'
+      startTime:
+        type: integer
+        minimum: 0
+        description: '開始時刻'
+      timeRange:
+        type: integer
+        minimum: 1
+        description: '時刻範囲'
+      week:
+        type: integer
+        description: '曜日 0x01, 0x02, 0x04, 0x08, 0x10, 0x20 ,0x40 が日〜土に対応するので and 演算で曜日を取り出せる'
+      isFree:
+        type: boolean
+        description: '無料放送だけか'
+      durationMin:
+        type: integer
+        description: '最小長'
+      durationMax:
+        type: integer
+        description: '最大長'
+      enable:
+        type: boolean
+        description: 'ルールが有効か'
+      directory:
+        type: string
+        description: '録画データの保存場所'
+      recordedFormat:
+        type: string
+        description: '録画ファイル名のフォーマット'
+      mode1:
+        type: integer
+        description: '録画モード 1'
+      directory1:
+        type: string
+        description: '録画モード 1 の保存場所'
+      mode2:
+        type: integer
+        description: '録画モード 2'
+      directory2:
+        type: string
+        description: '録画モード 2 の保存場所'
+      mode3:
+        type: integer
+        description: '録画モード 3'
+      directory3:
+        type: string
+        description: '録画モード 3 の保存場所'
+      delTs:
+        type: boolean
+        description: 'エンコード後にオリジナルファイルを削除するか'
+
+  AddRule:
+    type: object
+    required:
+      - search
+      - option
+    properties:
+      search:
+        $ref: '#/definitions/RuleSearch'
+      option:
+        $ref: '#/definitions/RuleOption'
+      encode:
+        $ref: '#/definitions/RuleEncode'
+
+  RuleSearch:
+    required:
+      - week
+    type: object
+    description: '検索オプション'
+    properties:
+      keyword:
+        type: string
+        description: '検索文字列 title, description, extended のいずれかを有効化すること'
+      ignoreKeyword:
+        type: string
+        description: '検索除外文字列 title, description, extended のいずれかを有効化すること'
+      keyCS:
+        type: boolean
+        description: '大文字小文字を区別する keyword or ignoreKeyword が空の場合は指定しない'
+      keyRegExp:
+        type: boolean
+        description: '正規表現 keyword or ignoreKeyword が空の場合は指定しない'
+      title:
+        type: boolean
+        description: 'タイトルを検索範囲に含む keyword or ignoreKeyword が空の場合は指定しない'
+      description:
+        type: boolean
+        description: '詳細を検索範囲に含む keyword or ignoreKeyword が空の場合は指定しない'
+      extended:
+        type: boolean
+        description: '拡張を検索範囲に含む keyword or ignoreKeyword が空の場合は指定しない'
+      GR:
+        type: boolean
+        description: '地上波 stations とは併用不可'
+      BS:
+        type: boolean
+        description: 'BS stations とは併用不可'
+      CS:
+        type: boolean
+        description: 'CS stations とは併用不可'
+      SKY:
+        type: boolean
+        description: 'SKY stations とは併用不可'
+      station:
+        $ref: '#/definitions/ServiceItemId'
+        description: '放送局 id 指定 GR, BS, CS, SKY とは併用不可 どちらかを必ず指定する'
+      genrelv1:
+        $ref: '#/definitions/ProgramGenreLv1'
+        description: 'ジャンル id 指定'
+      genrelv2:
+        $ref: '#/definitions/ProgramGenreLv2'
+        description: 'サブ id 指定 genrelv1 と同時に指定する'
+      startTime:
+        type: integer
+        minimum: 0
+        description: '開始時刻指定 timeRange と同時に指定する'
+      timeRange:
+        type: integer
+        minimum: 1
+        description: '時刻範囲指定 startTime と同時に指定する'
+      week:
+        type: integer
+        description: '必須項目 曜日指定 0x01, 0x02, 0x04, 0x08, 0x10, 0x20 ,0x40 が日〜土に対応するので and 演算で曜日を指定する'
+      isFree:
+        type: boolean
+        description: '無料放送だけか'
+      durationMin:
+        type: integer
+        description: '最小長'
+      durationMax:
+        type: integer
+        description: '最大長'
+
+  RuleOption:
+    type: object
+    required:
+      - enable
+    description: 'オプション'
+    properties:
+      enable:
+        type: boolean
+        description: '必須項目 ルールの有効化'
+      directory:
+        type: string
+        description: '録画データの保存場所'
+      recordedFormat:
+        type: string
+        description: '録画ファイル名フォーマット'
+
+  RuleEncode:
+    type: object
+    required:
+      - mode1
+      - delTs
+    description: 'mode1 と delTs は必須項目, エンコードを行わない場合はすべて必要ない'
+    properties:
+      mode1:
+        type: integer
+        description: '録画モード 1'
+      directory1:
+        type: string
+        description: '録画モード 1 の保存場所'
+      mode2:
+        type: integer
+        description: '録画モード 2'
+      directory2:
+        type: string
+        description: '録画モード 2 の保存場所'
+      mode3:
+        type: integer
+        description: '録画モード 3'
+      directory3:
+        type: string
+        description: '録画モード 3 の保存場所'
+      delTs:
+        type: boolean
+        description: 'エンコード後にオリジナルファイルを削除する'
+
+  StorageInfo:
+    type: object
+    required:
+      - free
+      - used
+      - total
+    properties:
+      free:
+        type: integer
+      used:
+        type: integer
+      total:
+        type: integer
+
+  StreamInfos:
+    type: array
+    items:
+      $ref: '#/definitions/StreamInfo'
+
+  HLSStream:
+    type: object
+    required:
+      - streamNumber
+    properties:
+      streamNumber:
+        type: integer
+
+  StreamInfo:
+    type: object
+    required:
+      - streamNumber
+      - isEnable
+      - viewCnt
+      - isNull
+    properties:
+      streamNumber:
+        type: integer
+      isEnable:
+        type: boolean
+      viewCnt:
+        type: integer
+      isNull:
+        type: boolean
+      type:
+        type: string
+        enum:
+          - MpegTsLive
+          - RecordedHLS
+      channelId:
+        $ref: '#/definitions/ServiceItemId'
+      recordedId:
+        $ref: '#/definitions/RecordedId'
+      mode:
+        type: integer
+      channelName:
+        type: string
+      title:
+        type: string
+      startAt:
+        $ref: '#/definitions/UnixtimeMS'
+      endAt:
+        $ref: '#/definitions/UnixtimeMS'
+      channelType:
+        $ref: '#/definitions/ChannelType'
+      description:
+        type: string
+      extended:
+        type: string
+
+  Error:
+    type: object
+    readOnly: true
+    required:
+      - code
+      - message
+    properties:
+      code:
+        description: 'HTTPステータスコード'
+        type: integer
+        format: int32
+      message:
+        description: 'エラーメッセージ'
+        type: string
+      errors:
+        description: 'Error'
+        type: string
+

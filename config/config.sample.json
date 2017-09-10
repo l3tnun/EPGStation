@@ -1,0 +1,64 @@
+{
+    "serverPort": "8888",
+    "mirakurunPath": "http+unix://%2Fvar%2Frun%2Fmirakurun.sock/",
+    "mysql": {
+        "host": "127.0.0.1",
+        "user": "epgstation",
+        "password": "epgstation",
+        "database": "epgstation",
+        "connectTimeout": 1000,
+        "connectionLimit": 10
+    },
+    "maxEncode": 2,
+    "encode": [
+        {
+            "name": "H264",
+            "cmd": "/bin/bash /hoge/EPGStation/config/enc.sh main",
+            "suffix": ".mp4",
+            "default": true
+        },
+        {
+            "name": "H264-sub",
+            "cmd": "/bin/bash /hoge/EPGStation/config/enc.sh sub",
+            "suffix": "-sub.mp4"
+        }
+    ],
+
+    "recordedViewer": {
+        "ios": "infuse://x-callback-url/play?url=http://ADDRESS",
+        "android": "intent://ADDRESS#Intent;package=com.mxtech.videoplayer.ad;type=video;scheme=http;end"
+    },
+    "recordedDownloader": {
+        "ios": "vlc-x-callback://x-callback-url/download?url=http://ADDRESS&filename=FILENAME",
+        "android": "intent://ADDRESS#Intent;package=com.dv.adm;type=video;scheme=http;end"
+    },
+
+    "maxStreaming": 2,
+    "mpegTsStreaming": [
+        {
+            "name": "1280x720(main)",
+            "cmd": "/usr/local/bin/ffmpeg -re -dual_mono_mode main -i pipe:0 -c:a aac -ar 48000 -ab 192k -ac 2 -c:v libx264 -s 1280x720 -filter:v yadif -aspect 16:9 -vb 3000k -f mpegts pipe:1"
+        },
+        {
+            "name": "720x480(main)",
+            "cmd": "/usr/local/bin/ffmpeg -re -dual_mono_mode main -i pipe:0 -c:a aac -ar 48000 -ab 128k -ac 2 -c:v libx264 -s 720x480 -filter:v yadif -aspect 16:9 -vb 1500k -f mpegts pipe:1"
+        },
+        {
+            "name": "無変換"
+        }
+    ],
+    "mpegTsViewer": {
+        "ios": "vlc-x-callback://x-callback-url/stream?url=http://ADDRESS",
+        "android": "intent://ADDRESS#Intent;package=org.videolan.vlc;type=video;scheme=http;end"
+    },
+    "recordedHLS": [
+        {
+            "name": "1280x720(main)",
+            "cmd": "/usr/local/bin/ffmpeg -dual_mono_mode main -i %INPUT% -f hls -hls_time 3 -hls_list_size 0 -hls_allow_cache 1 -hls_segment_filename %streamFileDir%/stream%streamNum%-%09d.ts -threads auto -c:a aac -ar 48000 -ab 192k -ac 2 -c:v libx264 -s 1280x720 -aspect 16:9 -vb 3000k -flags +loop-global_header %OUTPUT%"
+        },
+        {
+            "name": "720x480(main)",
+            "cmd": "/usr/local/bin/ffmpeg -dual_mono_mode main -i %INPUT% -f hls -hls_time 3 -hls_list_size 0 -hls_allow_cache 1 -hls_segment_filename %streamFileDir%/stream%streamNum%-%09d.ts -threads auto -c:a aac -ar 48000 -ab 128k -ac 2 -c:v libx264 -s 720x480 -aspect 16:9 -vb 1500k -flags +loop-global_header %OUTPUT%"
+        }
+}
+

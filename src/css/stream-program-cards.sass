@@ -1,0 +1,34 @@
+@import 'variables';
+
+.stream-programs-cards
+    height: calc(100% - #{ $header-max-height });
+    @media screen and (max-width: $header-height)
+        height: calc(100% - #{ $header-min-height });
+
+    #stream-programs-cards-content
+        overflow-y: auto;
+        height: calc(100% - #{ $tab-height });
+
+        .mdl-card
+            max-width: 840px;
+            min-height: 100px;
+            margin-left: auto;
+            margin-right: auto;
+            .mdl-card__supporting-text
+                text-decoration: none;
+                > div
+                    pointer-events: none;
+                .name
+                    font-weight: bold;
+                    font-size: 16px;
+                    margin-bottom: 4px;
+                .time
+                    font-size: 12px;
+                .title
+                    font-weight: bold;
+                    font-size: 13px;
+                    margin-top: 4px;
+                    margin-bottom: 4px;
+                .description
+                    font-size: 13px;
+
