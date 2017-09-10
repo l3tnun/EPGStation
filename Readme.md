@@ -18,7 +18,7 @@ iOS, Android での操作感を重視しています。
 
 * [Node.js](http://nodejs.org/) ^6.x.x || ~ 8
 * Linux or macOS
-* MySQL or MariaDB
+* MySQL or MariaDB (character-set-server = utf8)
 * FFmpeg
 
 ## インストール方法
