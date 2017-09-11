@@ -343,12 +343,14 @@ class Operator {
         setInterval(() => {
             // recrding のゴミを掃除
             this.recordingManager.cleanRecording();
-            // 1 時間以上経過したデータを削除
-            programsDB.deleteOldPrograms()
-            .catch((err) => {
-                this.log.system.error('old programs delete error');
-                this.log.system.error(err);
-            });
+            if(Util.isContinuousEPGUpdater()) {
+                // 1 時間以上経過したデータを削除
+                programsDB.deleteOldPrograms()
+                .catch((err) => {
+                    this.log.system.error('old programs delete error');
+                    this.log.system.error(err);
+                });
+            }
         }, 1000 * 60 * 60);
 
         //ストレージ空き容量チェック
