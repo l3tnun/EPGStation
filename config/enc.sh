@@ -13,8 +13,8 @@ function getHeight() {
 }
 
 if [ `getHeight` -gt 720 ]; then
-    /usr/local/bin/ffmpeg -dual_mono_mode $mode -i "$INPUT" -filter:v yadif -c:v libx264 -crf 23 -f mp4 -s 1280x720 -c:a aac -ar 48000 -ab 192k -ac 2 "$OUTPUT"
+    $ffmpeg_cmd -dual_mono_mode $mode -i "$INPUT" -filter:v yadif -c:v libx264 -crf 23 -f mp4 -s 1280x720 -c:a aac -ar 48000 -ab 192k -ac 2 "$OUTPUT"
 else
-    /usr/local/bin/ffmpeg -dual_mono_mode $mode -i "$INPUT" -filter:v yadif -c:v libx264 -crf 23 -f mp4 -s 720x480 -c:a aac -ar 48000 -ab 128k -ac 2 "$OUTPUT"
+    $ffmpeg_cmd -dual_mono_mode $mode -i "$INPUT" -filter:v yadif -c:v libx264 -crf 23 -f mp4 -s 720x480 -c:a aac -ar 48000 -ab 128k -ac 2 "$OUTPUT"
 fi
 
