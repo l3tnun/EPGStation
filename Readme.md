@@ -22,6 +22,8 @@ iOS, Android での操作感を重視しています。
 * MySQL or MariaDB (character-set-server = utf8)
 * FFmpeg
 
+[docker-mirakurun-epgstation](https://github.com/l3tnun/docker-mirakurun-epgstation) で動作を確認しています。
+
 ## インストール方法
 ````
 $ git clone https://github.com/l3tnun/EPGStation.git
