@@ -60,5 +60,6 @@
             "name": "720x480(main)",
             "cmd": "/usr/local/bin/ffmpeg -dual_mono_mode main -i %INPUT% -f hls -hls_time 3 -hls_list_size 0 -hls_allow_cache 1 -hls_segment_filename %streamFileDir%/stream%streamNum%-%09d.ts -threads auto -c:a aac -ar 48000 -ab 128k -ac 2 -c:v libx264 -s 720x480 -aspect 16:9 -vb 1500k -flags +loop-global_header %OUTPUT%"
         }
+    ]
 }
 
