@@ -5,9 +5,9 @@ EPGStation
 
 ## これはなに？
 
-[Mirakurun](https://github.com/Chinachu/Mirakurun) を使用した録画管理ソフトです。
+[Mirakurun](https://github.com/Chinachu/Mirakurun) を使用した録画管理ソフトです
 
-iOS, Android での操作感を重視しています。
+iOS, Android での操作感を重視しています
 
 ## スクリーンショット
 
@@ -18,11 +18,13 @@ iOS, Android での操作感を重視しています。
 
 * [Node.js](http://nodejs.org/) ^6.x.x || ~ 8
 * [Mirakurun](https://github.com/Chinachu/Mirakurun) ^2.5.7
-* Linux or macOS
+* Linux, macOS, Windows (実験的)
 * MySQL or MariaDB (character-set-server = utf8)
 * FFmpeg
 
-[docker-mirakurun-epgstation](https://github.com/l3tnun/docker-mirakurun-epgstation) で動作を確認しています。
+[docker-mirakurun-epgstation](https://github.com/l3tnun/docker-mirakurun-epgstation) で動作を確認しています
+
+Windows については [doc/windows.md](doc/windows.md) を参照してください
 
 ## インストール方法
 ````
@@ -50,11 +52,11 @@ $ cp config/config.sample.json config/config.json
 $ vim config/config.json
 ````
 
-mirakurunPath, mysql, encode の設定をすればとりあえず動きます。
+mirakurunPath, mysql, encode の設定をすればとりあえず動きます
 
-デフォルトでは ffmpeg のパスは ```/usr/local/bin/ffmpeg``` を想定しています。
+デフォルトでは ffmpeg のパスは ```/usr/local/bin/ffmpeg``` を想定しています
 
-詳細は [doc/config.md](doc/config.md) を参照してください。
+詳細は [doc/config.md](doc/config.md) を参照してください
 
 ### log の設定
 
@@ -78,13 +80,13 @@ or
 $ node dist/server/index.js
 ````
 
-デーモン化は [PM2](http://pm2.keymetrics.io/) で行うといいです。
+デーモン化は [PM2](http://pm2.keymetrics.io/) で行うといいです
 
-root で動かす必要はないです。お好きなユーザーで起動してください。
+root で動かす必要はないです。お好きなユーザーで起動してください
 
 ## スマートフォン側の設定
 
-config.json で設定したアプリをインストールしてください。
+config.json で設定したアプリをインストールしてください
 
 ## API の確認
 
@@ -92,13 +94,13 @@ config.json で設定したアプリをインストールしてください。
 http://host:prot/api/debug
 ````
 
-上記にアクセスすると Swagger UI で API の確認が可能です。
+上記にアクセスすると Swagger UI で API の確認が可能です
 
 ## Android 6.0 以上での注意
 
-Android の設定 -> ユーザー補助 にて "操作の監視" が必要なサービスを ON にしていると、番組表の動作が著しく重くなります。
+Android の設定 -> ユーザー補助 にて "操作の監視" が必要なサービスを ON にしていると、番組表の動作が著しく重くなります
 
-具体的なアプリは LMT Launcher や Pie Control などが挙げられます。
+具体的なアプリは LMT Launcher や Pie Control などが挙げられます
 
 回避方法は以下のいずれかを行えば ok です
 
@@ -106,9 +108,9 @@ Android の設定 -> ユーザー補助 にて "操作の監視" が必要なサ
 * EPGStation -> 設定 -> 番組表スクロール修正の有効化 -> 保存
 
 
-番組表スクロール修正の有効化で完全に回避することは現状不可能です。
+番組表スクロール修正の有効化で完全に回避することは現状不可能です
 
-そのため更に動作を軽くしたい場合は、番組表時間で表示時間を短くしてください。
+そのため更に動作を軽くしたい場合は、番組表時間で表示時間を短くしてください
 
 ## Licence
 

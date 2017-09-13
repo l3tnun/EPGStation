@@ -189,7 +189,7 @@ class EncodeManager extends Base implements EncodeManagerInterface {
             return;
         }
 
-        let dir = path.join(Util.getRecordedPath(), program.directory || '');
+        let dir = path.join(Util.getRecordedPath(), Util.replacePathName(program.directory || ''));
 
         // dir の存在確認
         try {

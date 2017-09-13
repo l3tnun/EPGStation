@@ -32,22 +32,24 @@ class CreateMirakurunClient extends Base {
         * Released under the MIT license
         * http://opensource.org/licenses/mit-license.php
         */
-        if (/(?:\/|\+)unix:/.test(mirakurunPath) === true) {
+        if(/\\\\.\\pipe/.test(mirakurunPath)) {
+            client.socketPath = mirakurunPath;
+        } else if(/(?:\/|\+)unix:/.test(mirakurunPath) === true) {
             const standardFormat = /^http\+unix:\/\/([^\/]+)(\/?.*)$/;
             const legacyFormat = /^http:\/\/unix:([^:]+):?(.*)$/;
 
             if (standardFormat.test(mirakurunPath) === true) {
                 client.socketPath = mirakurunPath.replace(standardFormat, '$1').replace(/%2F/g, '/');
-                client.basePath = path.join(mirakurunPath.replace(standardFormat, '$2'), client.basePath);
+                client.basePath = path.posix.join(mirakurunPath.replace(standardFormat, '$2'), client.basePath);
             } else {
                 client.socketPath = mirakurunPath.replace(legacyFormat, '$1');
-                client.basePath = path.join(mirakurunPath.replace(legacyFormat, '$2'), client.basePath);
+                client.basePath = path.posix.join(mirakurunPath.replace(legacyFormat, '$2'), client.basePath);
             }
         } else {
             const urlObject = url.parse(mirakurunPath);
             client.host = <string>(urlObject.hostname);
             client.port = Number(<string>(urlObject.port));
-            client.basePath = path.join(<string>(urlObject.pathname), <string>(client.basePath));
+            client.basePath = path.posix.join(<string>(urlObject.pathname), <string>(client.basePath));
         }
 
         client.userAgent = `${ pkg.name }/${ pkg.version }`;

@@ -525,14 +525,7 @@ class RecordingManager extends Base implements RecordingManagerInterface {
 
         // 使用禁止文字列
         fileName = fileName.replace(/\//g, '／');
-        fileName = fileName.replace(/\¥/g, '￥');
-        fileName = fileName.replace(/\:/g, '：');
-        fileName = fileName.replace(/\*/g, '＊');
-        fileName = fileName.replace(/\?/g, '？');
-        fileName = fileName.replace(/\"/g, '”');
-        fileName = fileName.replace(/\</g, '＜');
-        fileName = fileName.replace(/\>/g, '＞');
-        fileName = fileName.replace(/\|/g, '｜');
+        fileName = Util.replacePathName(fileName);
 
         if(conflict > 0) { fileName += `(${ conflict })`; }
 
@@ -542,7 +535,7 @@ class RecordingManager extends Base implements RecordingManagerInterface {
         // ディレクトリ
         let recDir = Util.getRecordedPath();
         if(typeof reserve.ruleOption !== 'undefined' && typeof reserve.ruleOption.directory !== 'undefined') {
-            recDir = path.join(recDir, reserve.ruleOption.directory);
+            recDir = path.join(recDir, Util.replacePathName(reserve.ruleOption.directory));
         }
 
         //ファイルパス

@@ -51,6 +51,24 @@ namespace Util {
             setTimeout(() => { resolve(); }, msec);
         });
     }
+
+    /**
+    * windows の禁止文字列を置換
+    * @param str: 文字列
+    * @return string
+    */
+    export const replacePathName = (str: string): string => {
+        return str
+            .replace(/\¥/g, '￥')
+            .replace(/\:/g, '：')
+            .replace(/\*/g, '＊')
+            .replace(/\?/g, '？')
+            .replace(/\"/g, '”')
+            .replace(/\</g, '＜')
+            .replace(/\>/g, '＞')
+            .replace(/\|/g, '｜')
+            .replace(/\./g, '．')
+    }
 }
 
 export default Util;

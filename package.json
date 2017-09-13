@@ -10,7 +10,9 @@
     "build": "gulp build --env production",
     "dev-build": "gulp build --env development",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "task": "gulp"
+    "task": "gulp",
+    "install-win-service": "winser -i -a",
+    "uninstall-win-service": "winser -r -x"
   },
   "repository": {
     "type": "git",
