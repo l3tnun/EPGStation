@@ -25,6 +25,7 @@ interface RecordedModelInterface extends ApiModel {
     deleteRecorded(recordedId: number): Promise<void>
     getGenreTags(): Promise<{}>;
     getM3u8(host: string, isSecure: boolean, recordedId: number, encodedId: number | undefined): Promise<PLayList>;
+    sendToKodi(host: string, isSecure: boolean, kodi: number, recordedId: number, encodedId: number | undefined): Promise<void>;
 }
 
 namespace RecordedModelInterface {
@@ -311,6 +312,33 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
             name: encodeURIComponent(fileName + '.m3u8'),
             playList: playList,
         };
+    }
+
+    /**
+    * kodi へ送信する
+    * @param host: host
+    * @param isSecure: boolean true: https, false: http
+    * @param kodi: kodi index number
+    * @param recordedId: recorded id
+    * @param encodedId: encoded id
+    * @return Promise<void>
+    */
+    public async sendToKodi(host: string, isSecure: boolean, kodi: number, recordedId: number, encodedId: number | undefined): Promise<void> {
+        const kodiConfig = this.config.getConfig().kodiHosts;
+        if(typeof kodiConfig === 'undefined' || typeof kodiConfig[kodi] === 'undefined') {
+            throw new Error('KodiConfigIsNotFound');
+        }
+
+        let recorded = await this.recordedDB.findId(recordedId);
+        let encoded = typeof encodedId !== 'undefined' ? await this.encodedDB.findId(encodedId) : null;
+        if(recorded.length === 0 || recorded[0].recPath === null && encoded === null || encoded !== null && encoded.length === 0) {
+            throw new Error(RecordedModelInterface.NotFoundRecordedFileError);
+        }
+
+        let source = `${ isSecure ? 'https' : 'http' }://${ host }/api/recorded/${ recordedId }/file`;
+        if(encoded !== null) { source += `?encodedId=${ encodedId }`; }
+
+        await ApiUtil.sendToKodi(source, kodiConfig[kodi].host, kodiConfig[kodi].user, kodiConfig[kodi].pass);
     }
 }
 

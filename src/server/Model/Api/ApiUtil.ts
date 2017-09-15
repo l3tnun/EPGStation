@@ -1,3 +1,5 @@
+import * as url from 'url';
+import * as request from 'request';
 import * as DBSchema from '../DB/DBSchema';
 
 namespace ApiUtil {
@@ -50,6 +52,49 @@ namespace ApiUtil {
         });
 
         return items as any;
+    }
+
+    /**
+    * kodi に指定した url を送信する
+    * @param source: source url
+    * @param host: kodi host url
+    * @param user?: user
+    * @param pass?: password
+    * @param Promise<void>
+    */
+    export const sendToKodi = (source: string, host: string, user?: string, pass?: string): Promise<void> => {
+        let option: request.OptionsWithUri = {
+            uri: url.resolve(host, '/jsonrpc'),
+            headers: {
+                name: 'Content-type',
+                value: 'application/json',
+            },
+            json: {
+                jsonrpc: "2.0",
+                method: "Player.Open",
+                params: {
+                    item: { file: source },
+                },
+                id: 1,
+            },
+        };
+
+        if(typeof user !== 'undefined' && typeof pass !== 'undefined') {
+            option.auth = {
+                user: user,
+                pass: pass,
+            };
+        }
+
+        return new Promise<void>((resolve: () => void, reject: (err: Error) => void) => {
+            request.post(option, (err, _response, body) => {
+                if(err !== null || typeof body === 'undefined') {
+                    reject(new Error(`ErrorSendToKodi ${ err }, ${ body }`));
+                } else {
+                    resolve();
+                }
+            });
+        });
     }
 }
 

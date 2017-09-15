@@ -66,6 +66,12 @@ interface ConfigInterface {
         name: string;
         cmd: string;
     }[];
+    kodiHosts: {
+        name: string;
+        host: string;
+        user?: string;
+        pass?: string;
+    }[];
 }
 
 export default ConfigInterface;

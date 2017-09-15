@@ -62,6 +62,12 @@ class ConfigModel extends ApiModel implements ConfigModelInterface {
             });
         }
 
+        if(typeof config.kodiHosts !== 'undefined') {
+            results['kodiHosts'] = config.kodiHosts.map((host) => {
+                return host.name;
+            });
+        }
+
         return results;
     }
 }

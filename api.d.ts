@@ -46,6 +46,7 @@ export interface Config {
         android: string;
     };
     recordedHLS?: string[];
+    kodiHosts?: string[];
 }
 
 export interface ScheduleProgram {

@@ -94,6 +94,10 @@ definitions:
     description: '総数'
     type: integer
 
+  KodiHostIndex:
+    description: 'kodi host index number'
+    type: integer
+
   EncodedId:
     description: 'encoded id'
     type: integer
@@ -246,6 +250,11 @@ definitions:
         type: array
         items:
           description: 'HLS での録画済みファイルの配信設定'
+          type: string
+      kodiHosts:
+        type: array
+        items:
+          description: 'kodi host 名の一覧'
           type: string
 
   SchedulePrograms:
@@ -526,6 +535,16 @@ definitions:
       genre1:
         description: 'null 値も取る'
         $ref: '#/definitions/ProgramGenreLv1'
+
+  RecordedSendToKodi:
+    type: object
+    required:
+      - kodi
+    properties:
+      kodi:
+        $ref: '#/definitions/KodiHostIndex'
+      encodeId:
+        $ref: '#/definitions/EncodedId'
 
   AddReserve:
     type: object
