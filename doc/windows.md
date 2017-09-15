@@ -61,7 +61,6 @@ mysql> quit
 
 ```
 npm install -g windows-build-tools
-
 ```
 C++ のコンパイラや Python 2.7 がインストールされます
 
@@ -107,7 +106,7 @@ enc.sh を起動するようになっていますが、 windows では動かな�
 例えば引数で渡したファイルをエンコードする ```C:\\hoge\\fuga.js``` を作成して
 
 ```
-"cmd": "node C:\\hoge\\fuga.js %INPUT% %OUTUPUT%"
+"cmd": "node C:\\hoge\\fuga.js %INPUT% %OUTPUT%"
 ```
 
 このように指定すれば正常に動作するはずです。
