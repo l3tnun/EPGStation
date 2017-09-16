@@ -543,7 +543,7 @@ definitions:
     properties:
       kodi:
         $ref: '#/definitions/KodiHostIndex'
-      encodeId:
+      encodedId:
         $ref: '#/definitions/EncodedId'
 
   AddReserve:
