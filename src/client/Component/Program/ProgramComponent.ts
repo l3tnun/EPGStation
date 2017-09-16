@@ -106,7 +106,6 @@ class ProgramComponent extends ParentComponent<void> {
                         const drawer = <HTMLElement>document.getElementsByClassName('mdl-layout__drawer')[0];
                         const obfuscator = <HTMLElement>document.getElementsByClassName('mdl-layout__obfuscator')[0];
                         naviButton.onclick = () => {
-                            console.log('click');
                             drawer.style.position = 'fixed';
                             obfuscator.style.position = 'fixed';
                         }
