@@ -65,6 +65,7 @@ class ProgramComponent extends ParentComponent<void> {
                         },
                     }, m("i", { class: "material-icons" }, "schedule")),
                 ],
+                headerStyle: this.viewModel.isFixScroll() ? 'position: fixed;' : '',
             },
             menuContent: [
                 { attrs: {
@@ -88,16 +89,31 @@ class ProgramComponent extends ParentComponent<void> {
             notMainContent: [
                 m('div', {
                     class: 'ProgramTable' + (this.viewModel.isFixScroll() ? ' fix-scroll' : ''),
-                    oncreate: (vnode: m.VnodeDOM<void, this>) => {
+                    oncreate: () => {
                         if(!this.viewModel.isFixScroll()) { return; }
 
-                        let element = <HTMLElement> vnode.dom;
-                        let channel = <HTMLElement> document.getElementsByClassName(ProgramViewModel.channlesName)[0];
-                        let time = <HTMLElement> document.getElementsByClassName(ProgramViewModel.timescaleName)[0];
-
+                        // scroll 設定
+                        const element = <HTMLElement>document.getElementsByClassName('mdl-layout')[0];
+                        const channel = <HTMLElement>document.getElementsByClassName(ProgramViewModel.channlesName)[0];
+                        const time = <HTMLElement>document.getElementsByClassName(ProgramViewModel.timescaleName)[0];
                         element.onscroll = () => {
                             channel.scrollLeft = element.scrollLeft;
                             time.scrollTop = element.scrollTop;
+                        }
+
+                        // navigation のズレを修正
+                        const naviButton = <HTMLElement>document.getElementsByClassName('mdl-layout__drawer-button')[0];
+                        const drawer = <HTMLElement>document.getElementsByClassName('mdl-layout__drawer')[0];
+                        const obfuscator = <HTMLElement>document.getElementsByClassName('mdl-layout__obfuscator')[0];
+                        naviButton.onclick = () => {
+                            drawer.style.position = 'fixed';
+                            obfuscator.style.position = 'fixed';
+                        }
+                        obfuscator.onclick = () => {
+                            setTimeout(() => {
+                                drawer.style.position = '';
+                                obfuscator.style.position = '';
+                            }, 200);
                         }
                     },
                 }, [

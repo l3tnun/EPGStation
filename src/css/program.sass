@@ -164,10 +164,6 @@ $board-mobile-fontsize: 7.5pt;
 
 // android 用 scroll 修正
 .ProgramTable.fix-scroll
-    position: absolute;
-    overflow: auto;
-    top: 56px;
-    height: calc(100% - 56px);
     .channels
         position: fixed;
         z-index: 3;
@@ -213,11 +209,15 @@ $board-mobile-fontsize: 7.5pt;
 
     // android 用 scroll 修正
     .ProgramTable.fix-scroll
+        .channels
+            top: $header-max-height;
         .child
             .timescale
+                top: calc(#{ $header-max-height } + #{ $chennel-height });
             padding-top: $chennel-height;
             .board
                 margin-left: $timescale-width;
+                top: $header-max-height;
 
 /* mobile*/
 @media screen and (max-width: $window-width)
@@ -252,11 +252,15 @@ $board-mobile-fontsize: 7.5pt;
 
     // android 用 scroll 修正
     .ProgramTable.fix-scroll
+        .channels
+            top: $header-min-height;
         .child
             .timescale
+                top: calc(#{ $header-min-height } + #{ $chennel-mobile-height });
             padding-top: $chennel-mobile-height;
             .board
                 margin-left: $timescale-mobile-width;
+                top: $header-min-height;
 
 /* header が高くなる */
 @media screen and (min-width: $header-height + 1)

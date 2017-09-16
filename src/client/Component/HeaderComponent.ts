@@ -8,6 +8,7 @@ interface HeaderArgs {
     title: string;
     button?: m.Children[];
     tab?: string[];
+    headerStyle?: string;
 }
 
 /**
@@ -74,6 +75,7 @@ class HeaderComponent extends Component<HeaderArgs> {
 
         return m('header', {
             class: 'mdl-layout__header',
+            style: typeof vnode.attrs.headerStyle === 'undefined' ? '' : vnode.attrs.headerStyle,
             oncreate: () => { document.title = vnode.attrs.title; },
             onupdate: () => { if(vnode.attrs.title !== document.title) { document.title = vnode.attrs.title; } },
         }, [
