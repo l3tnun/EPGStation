@@ -16,7 +16,6 @@ interface MainLayoutArgs {
     menuWidth?: number;
     menuContent?: { attrs: { [key: string]: any }, text: string }[];
     mainLayoutStyle?: string;
-    mainLayoutClass?: string;
 }
 
 /**
@@ -37,10 +36,6 @@ class MainLayoutComponent extends Component<MainLayoutArgs> {
         let attr: { [key: string]: any } = { class: 'mdl-layout mdl-js-layout mdl-layout--fixed-header' };
         if(typeof vnode.attrs.mainLayoutStyle !== 'undefined') {
             attr.style = vnode.attrs.mainLayoutStyle;
-        }
-
-        if(typeof vnode.attrs.mainLayoutClass !== 'undefined') {
-            attr.class += ' ' + vnode.attrs.mainLayoutClass;
         }
 
         return m('div', attr, [

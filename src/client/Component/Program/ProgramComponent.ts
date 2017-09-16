@@ -31,9 +31,6 @@ class ProgramComponent extends ParentComponent<void> {
     private timeBalloon: ProgramTimeBalloonViewModel;
     private balloon: BalloonViewModel;
 
-    private fixScrollListener = this.fixScroll.bind(this);
-    private scrollElements: { main: HTMLElement, channel: HTMLElement, time: HTMLElement } | null = null;
-
     constructor() {
         super();
         this.viewModel = <ProgramViewModel>(factory.get('ProgramViewModel'));
@@ -51,19 +48,6 @@ class ProgramComponent extends ParentComponent<void> {
     * page name
     */
     protected getComponentName(): string { return 'Program'; }
-
-    private fixScroll(): void {
-        if(this.scrollElements === null) {
-            this.scrollElements = {
-                main: <HTMLElement>document.getElementsByClassName('mdl-layout')[0],
-                channel: <HTMLElement>document.getElementsByClassName(ProgramViewModel.channlesName)[0],
-                time: <HTMLElement>document.getElementsByClassName(ProgramViewModel.timescaleName)[0],
-            }
-        }
-
-        this.scrollElements.channel.scrollLeft = this.scrollElements.main.scrollLeft;
-        this.scrollElements.time.scrollTop = this.scrollElements.main.scrollTop;
-    }
 
     /**
     * view
@@ -107,13 +91,31 @@ class ProgramComponent extends ParentComponent<void> {
                     class: 'ProgramTable' + (this.viewModel.isFixScroll() ? ' fix-scroll' : ''),
                     oncreate: () => {
                         if(!this.viewModel.isFixScroll()) { return; }
+
+                        // scroll 設定
                         const element = <HTMLElement>document.getElementsByClassName('mdl-layout')[0];
-                        element.addEventListener('scroll', this.fixScrollListener, false);
-                    },
-                    onremove: () => {
-                        if(!this.viewModel.isFixScroll()) { return; }
-                        const element = <HTMLElement>document.getElementsByClassName('mdl-layout')[0];
-                        element.removeEventListener('scroll', this.fixScrollListener, false);
+                        const channel = <HTMLElement>document.getElementsByClassName(ProgramViewModel.channlesName)[0];
+                        const time = <HTMLElement>document.getElementsByClassName(ProgramViewModel.timescaleName)[0];
+                        element.onscroll = () => {
+                            channel.scrollLeft = element.scrollLeft;
+                            time.scrollTop = element.scrollTop;
+                        }
+
+                        // navigation のズレを修正
+                        const naviButton = <HTMLElement>document.getElementsByClassName('mdl-layout__drawer-button')[0];
+                        const drawer = <HTMLElement>document.getElementsByClassName('mdl-layout__drawer')[0];
+                        const obfuscator = <HTMLElement>document.getElementsByClassName('mdl-layout__obfuscator')[0];
+                        naviButton.onclick = () => {
+                            console.log('click');
+                            drawer.style.position = 'fixed';
+                            obfuscator.style.position = 'fixed';
+                        }
+                        obfuscator.onclick = () => {
+                            setTimeout(() => {
+                                drawer.style.position = '';
+                                obfuscator.style.position = '';
+                            }, 200);
+                        }
                     },
                 }, [
                     m(ChannelComponent),
@@ -151,7 +153,6 @@ class ProgramComponent extends ParentComponent<void> {
                 }),
             ],
             mainLayoutStyle: this.viewModel.isFixScroll() ? 'overflow-x: auto;' : '',
-            mainLayoutClass: this.viewModel.isFixScroll() ? 'main-layout-fix-scroll' : '',
         });
     }
 
