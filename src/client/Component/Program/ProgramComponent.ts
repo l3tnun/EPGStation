@@ -31,6 +31,9 @@ class ProgramComponent extends ParentComponent<void> {
     private timeBalloon: ProgramTimeBalloonViewModel;
     private balloon: BalloonViewModel;
 
+    private fixScrollListener = this.fixScroll.bind(this);
+    private scrollElements: { main: HTMLElement, channel: HTMLElement, time: HTMLElement } | null = null;
+
     constructor() {
         super();
         this.viewModel = <ProgramViewModel>(factory.get('ProgramViewModel'));
@@ -49,6 +52,19 @@ class ProgramComponent extends ParentComponent<void> {
     */
     protected getComponentName(): string { return 'Program'; }
 
+    private fixScroll(): void {
+        if(this.scrollElements === null) {
+            this.scrollElements = {
+                main: <HTMLElement>document.getElementsByClassName('mdl-layout')[0],
+                channel: <HTMLElement>document.getElementsByClassName(ProgramViewModel.channlesName)[0],
+                time: <HTMLElement>document.getElementsByClassName(ProgramViewModel.timescaleName)[0],
+            }
+        }
+
+        this.scrollElements.channel.scrollLeft = this.scrollElements.main.scrollLeft;
+        this.scrollElements.time.scrollTop = this.scrollElements.main.scrollTop;
+    }
+
     /**
     * view
     */
@@ -65,6 +81,7 @@ class ProgramComponent extends ParentComponent<void> {
                         },
                     }, m("i", { class: "material-icons" }, "schedule")),
                 ],
+                headerStyle: this.viewModel.isFixScroll() ? 'position: fixed;' : '',
             },
             menuContent: [
                 { attrs: {
@@ -88,17 +105,15 @@ class ProgramComponent extends ParentComponent<void> {
             notMainContent: [
                 m('div', {
                     class: 'ProgramTable' + (this.viewModel.isFixScroll() ? ' fix-scroll' : ''),
-                    oncreate: (vnode: m.VnodeDOM<void, this>) => {
+                    oncreate: () => {
                         if(!this.viewModel.isFixScroll()) { return; }
-
-                        let element = <HTMLElement> vnode.dom;
-                        let channel = <HTMLElement> document.getElementsByClassName(ProgramViewModel.channlesName)[0];
-                        let time = <HTMLElement> document.getElementsByClassName(ProgramViewModel.timescaleName)[0];
-
-                        element.onscroll = () => {
-                            channel.scrollLeft = element.scrollLeft;
-                            time.scrollTop = element.scrollTop;
-                        }
+                        const element = <HTMLElement>document.getElementsByClassName('mdl-layout')[0];
+                        element.addEventListener('scroll', this.fixScrollListener, false);
+                    },
+                    onremove: () => {
+                        if(!this.viewModel.isFixScroll()) { return; }
+                        const element = <HTMLElement>document.getElementsByClassName('mdl-layout')[0];
+                        element.removeEventListener('scroll', this.fixScrollListener, false);
                     },
                 }, [
                     m(ChannelComponent),
@@ -136,6 +151,7 @@ class ProgramComponent extends ParentComponent<void> {
                 }),
             ],
             mainLayoutStyle: this.viewModel.isFixScroll() ? 'overflow-x: auto;' : '',
+            mainLayoutClass: this.viewModel.isFixScroll() ? 'main-layout-fix-scroll' : '',
         });
     }
 
