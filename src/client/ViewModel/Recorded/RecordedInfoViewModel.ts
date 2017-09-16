@@ -3,6 +3,7 @@ import ViewModel from '../ViewModel';
 import { BalloonModelInterface } from '../../Model/Balloon/BallonModel';
 import * as apid from '../../../../api';
 import { ChannelsApiModelInterface } from '../../Model/Api/ChannelsApiModel';
+import { RecordedApiModelInterface } from '../../Model/Api/RecordedApiModel';
 import Util from '../../Util/Util';
 import DateUtil from '../../Util/DateUtil';
 import { ConfigApiModelInterface } from '../../Model/Api/ConfigApiModel';
@@ -17,14 +18,17 @@ class RecordedInfoViewModel extends ViewModel {
     private balloon: BalloonModelInterface;
     private recorded: apid.RecordedProgram | null = null;
     private channels: ChannelsApiModelInterface;
+    private recordedApiModel: RecordedApiModelInterface;
     private streamApiModel: StreamsApiModelInterface;
     private tab: TabModelInterface;
 
     public hlsOptionValue: number = 0;
+    public kodiOptionValue: number = 0;
 
     constructor(
         config: ConfigApiModelInterface,
         channels: ChannelsApiModelInterface,
+        recordedApiModel: RecordedApiModelInterface,
         streamApiModel: StreamsApiModelInterface,
         balloon: BalloonModelInterface,
         tab: TabModelInterface,
@@ -32,6 +36,7 @@ class RecordedInfoViewModel extends ViewModel {
         super();
         this.config = config;
         this.channels = channels;
+        this.recordedApiModel = recordedApiModel;
         this.streamApiModel = streamApiModel;
         this.balloon = balloon;
         this.tab = tab;
@@ -217,7 +222,7 @@ class RecordedInfoViewModel extends ViewModel {
     }
 
     /**
-    * HLS 配信用の video 情報を返す
+    * 配信用の video 情報を返す
     * @return { name: string, encodedId?: number }[]
     */
     public getVideoInfo(): { name: string, encodedId?: number }[] {
@@ -257,6 +262,34 @@ class RecordedInfoViewModel extends ViewModel {
 
         //ページ移動
         setTimeout(() => { m.route.set('/stream/watch', { stream: streamNumber }); }, 200);
+    }
+
+    /**
+    * kodi 配信用の selector の設定を取得
+    * @return { value: number, name: string }[]
+    */
+    public getKodiOptions(): { value: number, name: string }[] {
+        let config = this.config.getConfig();
+        if(config === null || typeof config.kodiHosts === 'undefined') { return []; }
+
+        return config.kodiHosts.map((option, index) => {
+            return { value: index, name: option }
+        });
+    }
+
+    /**
+    * kodi への配信
+    * @param encodedId: encoded id
+    */
+    public async sendToKodi(encodedId: number | null = null): Promise<void> {
+        if(this.recorded === null) { return; }
+
+        // kodi 配信開始
+        await this.recordedApiModel.sendToKodi(
+            this.kodiOptionValue,
+            this.recorded.id,
+            encodedId,
+        );
     }
 
     /**

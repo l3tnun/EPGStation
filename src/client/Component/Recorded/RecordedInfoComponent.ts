@@ -136,7 +136,7 @@ class RecordedInfoComponent extends Component<void> {
                     onupdate: (vnode: m.VnodeDOM<void, this>) => {
                         this.selectOnUpdate(<HTMLInputElement>(vnode.dom), this.viewModel.hlsOptionValue);
                     },
-                }, this.createOptions()),
+                }, this.createHLSOptions()),
             ]),
 
             this.viewModel.getVideoInfo().map((video) => {
@@ -147,15 +147,46 @@ class RecordedInfoComponent extends Component<void> {
                     },
                 }, video.name);
             }),
+
+            // kodi 配信
+            m('div', { class: 'video-title' }, 'kodi 配信'),
+            m('div', { class: 'pulldown mdl-layout-spacer' }, [
+                m('select', {
+                    class: 'mdl-textfield__input program-dialog-label',
+                    onchange: m.withAttr('value', (value) => { this.viewModel.kodiOptionValue = Number(value); }),
+                    onupdate: (vnode: m.VnodeDOM<void, this>) => {
+                        this.selectOnUpdate(<HTMLInputElement>(vnode.dom), this.viewModel.kodiOptionValue);
+                    },
+                }, this.createKodiOptions()),
+            ]),
+
+            this.viewModel.getVideoInfo().map((video) => {
+                return m('a', {
+                    class: 'recorded-link mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect',
+                    onclick: () => {
+                        this.viewModel.sendToKodi(typeof video.encodedId === 'undefined' ? null : video.encodedId);
+                    },
+                }, video.name);
+            }),
         ];
     }
 
     /**
-    * selector の option を生成する
+    * HLS 配信の option を生成する
     * @return m.Child[]
     */
-    private createOptions(): m.Child[] {
+    private createHLSOptions(): m.Child[] {
         return this.viewModel.getHLSOptions().map((option) => {
+            return m('option', { value: option.value }, option.name);
+        });
+    }
+
+    /**
+    * kodi 配信の option を生成する
+    * @return m.Child[]
+    */
+    private createKodiOptions(): m.Child[] {
+        return this.viewModel.getKodiOptions().map((option) => {
             return m('option', { value: option.value }, option.name);
         });
     }

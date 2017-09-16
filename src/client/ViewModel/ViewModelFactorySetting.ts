@@ -99,6 +99,7 @@ namespace ViewModelFactorySetting {
         factory.reg('RecordedInfoViewModel', new RecordedInfoViewModel(
             configModel,
             channelsApiModel,
+            recordedApiModel,
             streamApiModel,
             balloonModel,
             tabModel,

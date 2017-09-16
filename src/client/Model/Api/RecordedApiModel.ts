@@ -15,6 +15,7 @@ interface RecordedApiModelInterface extends ApiModel {
     fetchRecorded(limit: number, offset: number, option: findQuery): Promise<void>;
     fetchTags(): Promise<void>;
     delete(recordedId: apid.RecordedId): Promise<void>;
+    sendToKodi(kodi: number, recordedId: number, encodedId: number | null): Promise<void>;
     getRecorded(): apid.RecordedPrograms;
     getTags(): apid.RecordedTags;
 }
@@ -119,6 +120,37 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
         });
     }
 
+    /**
+    * kodi へ配信
+    * /api/recorded/{id}/kodi
+    * @param kodi: kodi hosts index number
+    * @param recordedId: recordedId
+    * @param encodedId: encodedId
+    */
+    public async sendToKodi(kodi: number, recordedId: number, encodedId: number | null = null): Promise<void> {
+        let query: { [key: string ]: number } = {
+            kodi: kodi,
+            recordedId: recordedId,
+        };
+
+        if(encodedId !== null) {
+            query.encodedId = encodedId;
+        }
+
+        try {
+            await m.request({
+                method: 'POST',
+                url: `/api/recorded/${ recordedId }/kodi`,
+                data: query,
+            });
+
+            this.openSnackbar('kodi へ送信しました');
+        } catch(err) {
+            console.error(`/api/recorded/${ recordedId }/kodi POST`);
+            console.error(err);
+            this.openSnackbar('kodi への送信に失敗しました');
+        }
+    }
 
     /**
     * recorded の取得
