@@ -37,7 +37,8 @@ Config.json
 | mpegTsStreaming | {}[] | | no | ライブ視聴の設定 |
 | mpegTsViewer | {} | | no | ライブ視聴を ios, android で視聴するときのアプリ設定 |
 | streamFilePath | string | EPGStation/data/streamfiles | no | HLS 配信時に使用される一時領域 |
-| recordedHLS | {}[] | | no | 録画済みファイルを HLS 配信するときにしようするオプション |
+| recordedHLS | {}[] | | no | 録画済みファイルを HLS 配信時に使用するオプション |
+| kodiHosts | {}[] | | no | kodi 配信時に使用するオプション |
 
 ## プロパティ詳細解説
 
@@ -154,6 +155,14 @@ Config.json
 | %OUTPUT% | 出力ファイルパス |
 | %streamFileDir% | config. streamFilePath |
 | %streamNum% | ストリーム番号 |
+
+### kodiHosts
+| プロパティ | 種類 | 必須 | 説明 |
+| -------- | ---- | --- | --- |
+| name | string | yes | web で表示される名前 |
+| host | strgin | yes | kodi host url (例) http://192.168.0.2:8080 |
+| user | string | no | kodi user 名 |
+| pass | string | no | kodi パスワード |
 
 ----
 
