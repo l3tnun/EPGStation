@@ -1,0 +1,74 @@
+$switching-width: 800px;
+
+.top-page
+    .recorded, .reserves
+        min-height: 0px;
+        max-width: 600px;
+    .parent-title
+        padding: 16px;
+        font-size: 16px;
+    .recorded
+        margin-right: 4px;
+
+        .title, .channel, .time, .description
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 12px;
+
+        .title, .description
+            font-weight: bold;
+        .thumbnail-container, .text-container
+            pointer-events: none;
+
+        .recorded-card
+            min-height: 92px;
+            max-height: 92px;
+            max-width: 586px;
+            margin-left: auto;
+            margin-right: auto;
+
+            .mdl-button
+                position: absolute;
+                right: 0px;
+    
+        .thumbnail-container
+            height: 92px;
+            width: calc(28%);
+            text-align: left;
+            float: left;
+            clear: both;
+            overflow: hidden;
+            margin-right: 6px;
+    
+        .thumbnail
+            position: relative;
+            top: 50%;
+            left: 50%;
+            width: auto;
+            height: 100%;
+            -webkit-transform: translate(-50%,-50%);
+            -ms-transform: translate(-50%,-50%);
+            transform: translate(-50%,-50%);
+    
+        .text-container
+            padding: 6px;
+            height: 92px;
+
+            .title
+                padding-right: 18px;
+
+    .reserves
+        margin-left: 4px;
+
+@media screen and (max-width: $switching-width)
+    .top-page
+        .recorded, .reserves
+            margin-right: auto;
+            margin-left: auto;
+
+@media screen and (min-width: $switching-width)
+    .top-page
+        display: flex;
+        justify-content: center;
+
