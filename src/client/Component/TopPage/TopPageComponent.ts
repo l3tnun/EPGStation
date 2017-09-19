@@ -92,7 +92,6 @@ class TopPageComponent extends ParentComponent<void> {
                     maxWidth: 450,
                     maxHeight: 450,
                     dialogMaxWidth: 600,
-                    verticalOnly: true, //window.innerWidth <= ReservesComponent.switchingWidth,
                     forceDialog: window.innerHeight < 900 && window.innerWidth < 780,
                 }),
                 m(BalloonComponent, {
