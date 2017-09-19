@@ -13,6 +13,13 @@ import RecordedMenuViewModel from '../../ViewModel/Recorded/RecordedMenuViewMode
 import RecordedMenuComponent from '../Recorded/RecordedMenuComponent';
 import RecordedDeleteComponent from '../Recorded/RecordedDeleteComponent';
 import TabComponent from '../TabComponent';
+import ReservesViewModel from '../../ViewModel/Reserves/ReservesViewModel';
+import ProgramInfoViewModel from '../../ViewModel/Program/ProgramInfoViewModel';
+import ReservesMenuViewModel from '../../ViewModel/Reserves/ReservesMenuViewModel';
+import ProgramInfoComponent from '../Program/ProgramInfoComponent';
+import ReservesMenuComponent from '../Reserves/ReservesMenuComponent';
+import ReservesDeleteComponent from '../Reserves/ReservesDeleteComponent';
+import DateUtil from '../../Util/DateUtil';
 
 /**
 * TopPageComponent
@@ -21,6 +28,9 @@ class TopPageComponent extends ParentComponent<void> {
     private recordedViewModel: RecordedViewModel;
     private recordedMenuViewModel: RecordedMenuViewModel;
     private recordedInfoViewModel: RecordedInfoViewModel;
+    private reservesViewModel: ReservesViewModel;
+    private reservesMenuViewModel: ReservesMenuViewModel;
+    private programInfo: ProgramInfoViewModel;
     private balloon: BalloonViewModel;
 
     constructor() {
@@ -28,12 +38,16 @@ class TopPageComponent extends ParentComponent<void> {
         this.recordedViewModel = <RecordedViewModel>(factory.get('RecordedViewModel'));
         this.recordedMenuViewModel = <RecordedMenuViewModel>(factory.get('RecordedMenuViewModel'));
         this.recordedInfoViewModel = <RecordedInfoViewModel>(factory.get('RecordedInfoViewModel'));
+        this.reservesViewModel = <ReservesViewModel>(factory.get('ReservesViewModel'));
+        this.reservesMenuViewModel = <ReservesMenuViewModel>(factory.get('ReservesMenuViewModel'));
+        this.programInfo = <ProgramInfoViewModel>(factory.get('ProgramInfoViewModel'));
         this.balloon = <BalloonViewModel>(factory.get('BalloonViewModel'));
     }
 
     protected initViewModel(status: ViewModelStatus = 'init'): void {
         super.initViewModel(status);
         this.recordedViewModel.init(status);
+        this.reservesViewModel.init(status);
         this.recordedMenuViewModel = <RecordedMenuViewModel>(factory.get('RecordedMenuViewModel'));
     }
 
@@ -69,6 +83,27 @@ class TopPageComponent extends ParentComponent<void> {
                 m(BalloonComponent, {
                     id: RecordedMenuViewModel.deleteId,
                     content: m(RecordedDeleteComponent),
+                    maxWidth: 300,
+                    forceDialog: true,
+                }),
+                m(BalloonComponent, {
+                    id: ProgramInfoViewModel.id,
+                    content: m(ProgramInfoComponent),
+                    maxWidth: 450,
+                    maxHeight: 450,
+                    dialogMaxWidth: 600,
+                    verticalOnly: true, //window.innerWidth <= ReservesComponent.switchingWidth,
+                    forceDialog: window.innerHeight < 900 && window.innerWidth < 780,
+                }),
+                m(BalloonComponent, {
+                    id: ReservesMenuViewModel.id,
+                    content: m(ReservesMenuComponent),
+                    maxWidth: 106,
+                    horizontalOnly: true,
+                }),
+                m(BalloonComponent, {
+                    id: ReservesMenuViewModel.deleteId,
+                    content: m(ReservesDeleteComponent),
                     maxWidth: 300,
                     forceDialog: true,
                 }),
@@ -147,7 +182,66 @@ class TopPageComponent extends ParentComponent<void> {
     private createReserves(): m.Child {
         return m('div', { class: 'reserves mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col' }, [
             m('div', { class: 'parent-title' }, '予約'),
+
+            this.reservesViewModel.getReserves().reserves.map((reserve) => {
+                return this.createReserveCard(reserve);
+            }),
         ]);
+    }
+
+    /**
+    * reserve card
+    * @param reserve: apid.Reserve
+    * @return m.Child
+    */
+    private createReserveCard(reserve: apid.Reserve): m.Child {
+        return m('div', { class: 'reserves-card not-hide mdl-card mdl-cell mdl-cell--12-col' }, [
+            m('button', {
+                class: 'mdl-button mdl-js-button mdl-button--icon',
+                style: 'position: absolute; right: 0px;',
+                onclick: (e: Event) => {
+                    this.reservesMenuViewModel.set(reserve);
+                    this.balloon.open(ReservesMenuViewModel.id, e);
+                },
+            }, [
+                m('i', { class: 'material-icons' }, 'more_vert' ) //menu icon
+            ]),
+            //番組情報
+            m('div', {
+                class: 'mdl-card__supporting-text',
+                onclick: (event: Event) => { this.openProgramInfo(event, reserve); },
+            }, [
+                m('div', { class: 'title' }, reserve.program.name),
+                m('div', { class: 'time' }, this.getReservesCardTime(reserve.program)),
+                m('div', { class: 'channel' }, this.reservesViewModel.getChannelName(reserve.program.channelId)),
+                m('div', { class: 'description' }, reserve.program.description),
+            ])
+        ]);
+    }
+
+    /**
+    * click 時に programInfo を開く
+    * @param event: Event
+    * @param reserve: reserve
+    */
+    private openProgramInfo(event: Event, reserve: apid.Reserve): void {
+        let channel = this.reservesViewModel.getChannel(reserve.program.channelId);
+        if(channel === null) { return; }
+
+        this.programInfo.set(reserve.program, channel);
+        this.balloon.open(ProgramInfoViewModel.id, event);
+    }
+
+    /**
+    * getReservesCardTime
+    * @return string
+    */
+    private getReservesCardTime(program: apid.ReserveProgram): string {
+        let start = DateUtil.getJaDate(new Date(program.startAt));
+        let end = DateUtil.getJaDate(new Date(program.endAt));
+        let duration = Math.floor((program.endAt - program.startAt) / 1000 / 60);
+
+        return DateUtil.format(start, 'MM/dd(w) hh:mm:ss') + '~' + DateUtil.format(end, 'hh:mm:ss') + `(${ duration }分)`;
     }
 }
 
