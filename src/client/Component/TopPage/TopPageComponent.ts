@@ -128,7 +128,7 @@ class TopPageComponent extends ParentComponent<void> {
         return m('div', { class: 'recorded mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col' }, [
             m('div', { class: 'parent-title' }, '録画済み'),
 
-            m('div', { class: 'child' }, [
+            m('div', { class: 'child non-scroll' }, [
                 this.recordedViewModel.getRecorded().recorded.map((recorded) => {
                     return this.createRecordedCard(recorded);
                 }),
@@ -183,7 +183,7 @@ class TopPageComponent extends ParentComponent<void> {
         return m('div', { class: 'reserves mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col' }, [
             m('div', { class: 'parent-title' }, '予約'),
 
-            m('div', { class: 'child' }, [
+            m('div', { class: 'child non-scroll' }, [
                 this.reservesViewModel.getReserves().reserves.map((reserve) => {
                     return this.createReserveCard(reserve);
                 }),
