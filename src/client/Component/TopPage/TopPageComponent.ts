@@ -62,10 +62,8 @@ class TopPageComponent extends ParentComponent<void> {
     public view(): m.Children {
         return m(MainLayoutComponent, {
             header: { title: 'EPGStation' },
-            content: [
-                this.createContent(),
-            ],
             notMainContent: [
+                this.createContent(),
                 m(BalloonComponent, {
                     id: RecordedInfoViewModel.id,
                     head: m(TabComponent, { tabs: this.recordedInfoViewModel.getTabTitles(), contentId: 'recorded-info-content' }),
@@ -118,6 +116,7 @@ class TopPageComponent extends ParentComponent<void> {
         return m('div', { class: 'top-page' }, [
             this.createRecorded(),
             this.createReserves(),
+            m('div', { class: 'clear: both;' }),
         ]);
     }
 
@@ -129,9 +128,11 @@ class TopPageComponent extends ParentComponent<void> {
         return m('div', { class: 'recorded mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col' }, [
             m('div', { class: 'parent-title' }, '録画済み'),
 
-            this.recordedViewModel.getRecorded().recorded.map((recorded) => {
-                return this.createRecordedCard(recorded);
-            }),
+            m('div', { class: 'child' }, [
+                this.recordedViewModel.getRecorded().recorded.map((recorded) => {
+                    return this.createRecordedCard(recorded);
+                }),
+            ]),
         ]);
     }
 
@@ -182,9 +183,11 @@ class TopPageComponent extends ParentComponent<void> {
         return m('div', { class: 'reserves mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col' }, [
             m('div', { class: 'parent-title' }, '予約'),
 
-            this.reservesViewModel.getReserves().reserves.map((reserve) => {
-                return this.createReserveCard(reserve);
-            }),
+            m('div', { class: 'child' }, [
+                this.reservesViewModel.getReserves().reserves.map((reserve) => {
+                    return this.createReserveCard(reserve);
+                }),
+            ])
         ]);
     }
 
