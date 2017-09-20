@@ -125,13 +125,17 @@ class TopPageComponent extends ParentComponent<void> {
     * @return m.Child
     */
     private createRecorded(): m.Child {
+        const viewLength = this.recordedViewModel.getRecorded().recorded.length;
+        const total = this.recordedViewModel.getRecorded().total;
+
         return m('div', { class: 'recorded mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col' }, [
-            m('div', { class: 'parent-title' }, `録画済み ${ this.recordedViewModel.getRecorded().recorded.length }/${ this.recordedViewModel.getRecorded().total }`),
+            m('div', { class: 'parent-title' }, `録画済み ${ viewLength }/${ total }`),
 
             m('div', { class: 'child non-scroll' }, [
                 this.recordedViewModel.getRecorded().recorded.map((recorded) => {
                     return this.createRecordedCard(recorded);
                 }),
+                this.createMore(viewLength, total, '/recorded?page=2'),
             ]),
         ]);
     }
@@ -180,13 +184,17 @@ class TopPageComponent extends ParentComponent<void> {
     * @return m.Child
     */
     private createReserves(): m.Child {
+        const viewLength = this.reservesViewModel.getReserves().reserves.length;
+        const total = this.reservesViewModel.getReserves().total;
+
         return m('div', { class: 'reserves mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col' }, [
-            m('div', { class: 'parent-title' }, `予約 ${ this.reservesViewModel.getReserves().reserves.length }/${ this.reservesViewModel.getReserves().total }`),
+            m('div', { class: 'parent-title' }, `予約 ${ viewLength }/${ total }`),
 
             m('div', { class: 'child non-scroll' }, [
                 this.reservesViewModel.getReserves().reserves.map((reserve) => {
                     return this.createReserveCard(reserve);
                 }),
+                this.createMore(viewLength, total, '/reserves?page=2'),
             ])
         ]);
     }
@@ -244,6 +252,24 @@ class TopPageComponent extends ParentComponent<void> {
         let duration = Math.floor((program.endAt - program.startAt) / 1000 / 60);
 
         return DateUtil.format(start, 'MM/dd(w) hh:mm:ss') + '~' + DateUtil.format(end, 'hh:mm:ss') + `(${ duration }分)`;
+    }
+
+    /**
+    * more
+    * @param viewLength: 表示件数
+    * @param total: 総数
+    * @param href: url
+    */
+    private createMore(viewLength: number, total: number, href: string): m.Child | null {
+        if(!(total > viewLength)) { return null; }
+
+        return m('div', { class: 'more' } , [
+            m('a', {
+                class: 'mdl-button mdl-js-button mdl-js-ripple-effect',
+                href: href,
+                oncreate: m.route.link,
+            }, 'more'),
+        ]);
     }
 }
 
