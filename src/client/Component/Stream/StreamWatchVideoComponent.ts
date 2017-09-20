@@ -42,7 +42,9 @@ class StreamWatchVideoComponent extends Component<void> {
 
                     //error 処理追加
                     (<HTMLVideoElement>(vnode.dom)).addEventListener('error', () => {
-                        this.viewModel.openSnackbar('ビデオ再生に失敗しました');
+                        if(m.route.get().split('?')[0].indexOf('/stream') !== -1) {
+                            this.viewModel.openSnackbar('ビデオ再生に失敗しました');
+                        }
                     }, true);
 
                     //再生

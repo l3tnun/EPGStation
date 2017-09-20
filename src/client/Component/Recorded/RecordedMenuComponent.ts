@@ -18,7 +18,7 @@ class RecordedMenuComponent extends Component<void> {
     * view
     */
     public view(): m.Child {
-        let ruleId = this.viewModel.getRuleId();
+        const ruleId = this.viewModel.getRuleId();
 
         return m('div', { class: 'recorded-menu' }, [
             this.createItem({
@@ -26,7 +26,7 @@ class RecordedMenuComponent extends Component<void> {
                 onclick: () => {
                     this.viewModel.close();
                     if(Number(m.route.param('rule')) === ruleId) { return; };
-                    m.route.set(m.route.get().split('?')[0], { rule: ruleId });
+                    m.route.set('/recorded', { rule: ruleId });
                 },
             }, 'search', 'search'),
             this.createItem({
