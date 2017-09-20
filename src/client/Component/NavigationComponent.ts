@@ -45,7 +45,9 @@ class NavigationComponent extends Component<void> {
             oncreate: () => {
                 Util.upgradeMdl();
                 if(m.route.get() === '/') {
-                    setTimeout(() => { this.open(); }, 200);
+                    if(window.innerWidth <= 1024) {
+                        setTimeout(() => { this.open(); }, 200);
+                    }
                 }
             },
             onupdate: () => { Util.upgradeMdl(); },
