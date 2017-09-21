@@ -66,17 +66,38 @@ class MirakurunEPGUpdateManager extends Base implements MirakurunEPGUpdateManage
 
         const stream = await this.mirakurun.getEventsStream();
 
-        stream.on('data', (data) => {
+        let data: string = '';
+        stream.on('data', (chunk) => {
+            data += String(chunk);
+            if(data.indexOf('[\n') !== -1) {
+                data = '';
+                return;
+            } else if(data.slice(-1).indexOf('\n') === -1) {
+                return;
+            } else if(data.substr(data.length - 2).indexOf(',\n') !== -1) {
+                data = data.slice( 0, -2 );
+            }
+
+            if(!data) { return; }
+
+            let events: apid.Event[];
             try {
-                const event: apid.Event = <apid.Event> JSON.parse(String(data).slice( 0, -2 ));
+                events = <apid.Event[]> JSON.parse('[' + data + ']');
+                data = '';
+            } catch(err) {
+                this.log.system.debug(`event parse error`);
+                this.log.system.debug(data);
+                this.log.system.debug(err);
+                return;
+            }
+
+            for(let event of events) {
                 if(event.resource === 'service') {
                     if(typeof excludes[(<events.ServiceEvents>event).data.id] !== 'undefined') { return; }
                     this.serviceQueue.push(<events.ServiceEvents>event);
                 } else if(event.resource === 'program') {
                     this.programQueue.push(<events.ProgramBaseEvent>event);
                 }
-            } catch(err) {
-                return;
             }
         });
 
