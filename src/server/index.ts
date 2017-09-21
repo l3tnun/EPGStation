@@ -4,13 +4,20 @@ import Operator from './Operator/Operator';
 import factory from './Model/ModelFactory'
 import { IPCServerInterface } from './Model/IPC/IPCServer';
 
-new Operator().run()
-.then(() => {
-    let child = child_process.fork(path.join(__dirname, 'Service', 'ServiceExecutor.js'), [], { silent: true });
+const runService = () => {
+    const child = child_process.fork(path.join(__dirname, 'Service', 'ServiceExecutor.js'), [], { silent: true });
 
     // Operator と Service 間通信の設定
-    let ipc: IPCServerInterface = <IPCServerInterface>(factory.get('IPCServer'));
-    ipc.register(child);
+    (<IPCServerInterface>factory.get('IPCServer')).register(child);
+
+    // 終了したら再起動
+    child.once('exit', () => { runService(); });
+    child.once('error', () => { runService(); });
+}
+
+new Operator().run()
+.then(() => {
+    runService();
 })
 .catch((err) => {
     console.error(err);
