@@ -94,7 +94,7 @@ class Operator {
         MirakurunEPGUpdateManager.init(servicesDB, programsDB);
         this.mirakurunEPGUpdateManager = MirakurunEPGUpdateManager.getInstance();
         this.reservationManager = ReservationManager.getInstance();
-        RecordingManager.init(recordedDB, encodedDB, servicesDB, this.reservationManager);
+        RecordingManager.init(recordedDB, encodedDB, servicesDB, programsDB, this.reservationManager);
         this.recordingManager = RecordingManager.getInstance();
         this.thumbnailManager = ThumbnailManager.getInstance();
         StorageCheckManager.init(recordedDB, this.recordingManager, this.ipc);
