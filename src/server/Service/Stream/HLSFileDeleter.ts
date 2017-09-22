@@ -56,7 +56,7 @@ class HLSFileDeleter extends Base {
             if(fileNum === 0 && file.match('.m3u8') && file.match(`stream${ this.streamNumber }`)) {
                 tsFileList.push(file);
             }
-            if(file.match('.ts') && file.match(`stream${ this.streamNumber }`)) {
+            if(file.match(`stream${ this.streamNumber }`)) {
                 tsFileList.push(file);
             }
         });

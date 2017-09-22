@@ -227,8 +227,8 @@ class StreamManager extends Base implements StreamManagerInterface {
             let m3u8Flag = false;
             fileList.map((file: string) => {
                 if(file.match(`stream${streamNumber}`)) {
-                    if(file.match('.m3u8')) { m3u8Flag = true; }
-                    if(file.match('.ts')) { tsFileCount += 1; }
+                    if(file.match(/.m3u8/)) { m3u8Flag = true; }
+                    else { tsFileCount += 1; }
                 }
             });
 
