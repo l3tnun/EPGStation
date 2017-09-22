@@ -14,6 +14,7 @@ interface findQuery {
 interface RecordedDBInterface extends DBBase {
     create(): Promise<void>;
     insert(program: DBSchema.RecordedSchema): Promise<any>;
+    replace(program: DBSchema.RecordedSchema): Promise<any>;
     delete(id: number): Promise<void>;
     deleteRecPath(id: number): Promise<void>;
     deleteRuleId(ruleId: number): Promise<void>;
@@ -98,6 +99,68 @@ class RecordedDB extends DBBase implements RecordedDBInterface {
         let baseDir = Util.getRecordedPath();
 
         let value: any[] = [];
+        value.push(program.programId);
+        value.push(program.channelId);
+        value.push(program.channelType);
+        value.push(program.startAt);
+        value.push(program.endAt);
+        value.push(program.duration);
+        value.push(program.name);
+        value.push(program.description);
+        value.push(program.extended);
+        value.push(program.genre1);
+        value.push(program.genre2);
+        value.push(program.videoType);
+        value.push(program.videoResolution);
+        value.push(program.videoStreamContent);
+        value.push(program.videoComponentType);
+        value.push(program.audioSamplingRate);
+        value.push(program.audioComponentType);
+        value.push(program.recPath === null ? null : program.recPath.slice(baseDir.length + path.sep.length));
+        value.push(program.ruleId);
+        value.push(program.thumbnailPath);
+        value.push(program.recording);
+
+        return this.runQuery(query, value);
+    }
+
+    /**
+    * recorded 更新
+    * @param program: DBSchema.RecordedSchema
+    * @param Promise<any>
+    */
+    public replace(program: DBSchema.RecordedSchema): Promise<any> {
+        let query = `replace into ${ DBSchema.TableName.Recorded } (`
+            + 'id, '
+            + 'programId, '
+            + 'channelId, '
+            + 'channelType, '
+            + 'startAt, '
+            + 'endAt, '
+            + 'duration, '
+            + 'name, '
+            + 'description, '
+            + 'extended, '
+            + 'genre1, '
+            + 'genre2, '
+            + 'videoType, '
+            + 'videoResolution, '
+            + 'videoStreamContent, '
+            + 'videoComponentType, '
+            + 'audioSamplingRate, '
+            + 'audioComponentType, '
+            + 'recPath, '
+            + 'ruleId, '
+            + 'thumbnailPath, '
+            + 'recording '
+        + ') VALUES ('
+            + '?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?'
+        + ');'
+
+        let baseDir = Util.getRecordedPath();
+
+        let value: any[] = [];
+        value.push(program.id);
         value.push(program.programId);
         value.push(program.channelId);
         value.push(program.channelType);

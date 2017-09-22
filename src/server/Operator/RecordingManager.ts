@@ -9,6 +9,7 @@ import * as apid from '../../../node_modules/mirakurun/api';
 import { RecordedDBInterface } from '../Model/DB/RecordedDB';
 import { EncodedDBInterface } from '../Model/DB/EncodedDB';
 import { ServicesDBInterface } from '../Model/DB/ServicesDB';
+import { ProgramsDBInterface } from '../Model/DB/ProgramsDB';
 import * as DBSchema from '../Model/DB/DBSchema';
 import CreateMirakurunClient from '../Util/CreateMirakurunClient';
 import { ReserveProgram } from './ReserveProgramInterface';
@@ -47,6 +48,7 @@ class RecordingManager extends Base implements RecordingManagerInterface {
     private recordedDB: RecordedDBInterface;
     private encodedDB: EncodedDBInterface;
     private servicesDB: ServicesDBInterface;
+    private programsDB: ProgramsDBInterface;
     private reservationManager: ReservationManagerInterface;
 
     public static getInstance(): RecordingManager {
@@ -61,10 +63,11 @@ class RecordingManager extends Base implements RecordingManagerInterface {
         recordedDB: RecordedDBInterface,
         encodedDB: EncodedDBInterface,
         servicesDB: ServicesDBInterface,
-        reservationManager: ReservationManagerInterface
+        programsDB: ProgramsDBInterface,
+        reservationManager: ReservationManagerInterface,
     ): void {
         if(this.inited) { return; }
-        this.instance = new RecordingManager(recordedDB, encodedDB, servicesDB, reservationManager);
+        this.instance = new RecordingManager(recordedDB, encodedDB, servicesDB, programsDB, reservationManager);
         this.inited = true;
     }
 
@@ -72,6 +75,7 @@ class RecordingManager extends Base implements RecordingManagerInterface {
         recordedDB: RecordedDBInterface,
         encodedDB: EncodedDBInterface,
         servicesDB: ServicesDBInterface,
+        programsDB: ProgramsDBInterface,
         reservationManager: ReservationManagerInterface,
     ) {
         super();
@@ -79,6 +83,7 @@ class RecordingManager extends Base implements RecordingManagerInterface {
         this.recordedDB = recordedDB;
         this.encodedDB = encodedDB;
         this.servicesDB = servicesDB;
+        this.programsDB = programsDB;
         this.reservationManager = reservationManager;
         this.mirakurun = CreateMirakurunClient.get();
     }
@@ -452,6 +457,35 @@ class RecordingManager extends Base implements RecordingManagerInterface {
             if(results.length !== 0) {
                 // recording 状態を解除
                 await this.recordedDB.removeRecording(recorded.id)
+
+                // 番組情報を最新に更新する
+                const program = await this.programsDB.findId(recorded.programId);
+                if(program.length > 0) {
+                    await this.recordedDB.replace({
+                        id: recorded.id,
+                        programId: recorded.programId,
+                        channelId: program[0].channelId,
+                        channelType: program[0].channelType,
+                        startAt: program[0].startAt,
+                        endAt: program[0].endAt,
+                        duration: program[0].duration,
+                        name: program[0].name,
+                        description: program[0].description,
+                        extended: program[0].extended,
+                        genre1: program[0].genre1,
+                        genre2: program[0].genre2,
+                        videoType: program[0].videoType,
+                        videoResolution: program[0].videoResolution,
+                        videoStreamContent: program[0].videoStreamContent,
+                        videoComponentType: program[0].videoComponentType,
+                        audioSamplingRate: program[0].audioSamplingRate,
+                        audioComponentType: program[0].audioComponentType,
+                        recPath: recData.recPath!,
+                        ruleId: typeof recData.reserve.ruleId === 'undefined' ? null : recData.reserve.ruleId,
+                        thumbnailPath: null,
+                        recording: false,
+                    });
+                }
 
                 //録画完了を通知
                 let encodeOption = typeof recData.reserve.encodeOption === 'undefined' ? null : recData.reserve.encodeOption;
