@@ -62,6 +62,7 @@ class BoardComponent extends Component<void> {
             this.viewModel.getSchedule().map((schedule, i) => {
                 return m('div', {
                     class: 'station' + (i === 0 ? ' left-station' : ''),
+                    style: `left: calc(${ i } * var(--channel-width))`,
                     oncreate: (vnode: m.VnodeDOM<void, this>) => {
                         this.createStationChild(vnode.dom, schedule, i);
 
@@ -125,15 +126,15 @@ class BoardComponent extends Component<void> {
             let beforeEnd = i - 1 < 0 ? time.start : programs[i - 1].endAt;
             if(beforeEnd - start < 0) {
                 // 一つ前のプログラムと連続でないため間にダミーを追加
-                childs.push(this.createDummy(this.getHeight(beforeEnd, start)));
+                childs.push(this.createDummy(this.getHeight(beforeEnd, start), this.getPosition(time.start, beforeEnd)));
             }
 
             // 番組を追加
-            childs.push(this.createContent(this.getHeight(start, end), program, schedule.channel));
+            childs.push(this.createContent(this.getHeight(start, end), this.getPosition(time.start, start), program, schedule.channel));
 
             // 最後の番組と番組表の終了時刻に空きがあったら埋める
             if(programsLength - 1 === i && time.end > end) {
-                childs.push(this.createDummy(this.getHeight(end, time.end)));
+                childs.push(this.createDummy(this.getHeight(end, time.end), this.getPosition(time.start, end)));
             }
         });
 
@@ -159,16 +160,31 @@ class BoardComponent extends Component<void> {
     }
 
     /**
+    * 位置を計算
+    * @param startTime: number
+    * @param startProgram: number
+    * @return position
+    */
+    private getPosition(startTime: number, startProgram: number): number {
+        // 端数秒切り捨て
+        startTime = Math.floor(startTime / 10000);
+        startProgram = Math.floor(startProgram / 10000);
+
+        return Math.ceil((startProgram - startTime) / 6);
+    }
+
+    /**
     * dummy 要素を作成
     * @param heght: height
+    * @param position: position
     * @return Element
     */
-    private createDummy(height: number): Element {
+    private createDummy(height: number, position: number): Element {
         if(height == 0) { return document.createElement('div'); }
 
         return this.createTextElement('div', {
             class: 'item nodata',
-            style: `height: calc(${ height } * var(--time-base-height));`,
+            style: `height: calc(${ height } * var(--time-base-height)); top: calc(${ position } * var(--time-base-height));`,
         },
         'n');
     }
@@ -176,10 +192,11 @@ class BoardComponent extends Component<void> {
     /**
     * 通常の番組情報を作成
     * @param height: height
+    * @param position: position
     * @param program: program
     * @return Element
     */
-    private createContent(height: number, program: apid.ScheduleProgramItem, channel: apid.ScheduleServiceItem): Element {
+    private createContent(height: number, position: number, program: apid.ScheduleProgramItem, channel: apid.ScheduleServiceItem): Element {
         if(height === 0) { return document.createElement('div'); }
 
         let classStr = 'item';
@@ -213,7 +230,7 @@ class BoardComponent extends Component<void> {
 
         let element = this.createParentElement('div', {
             class: classStr,
-            style: `height: calc(${ height } * var(--time-base-height));`,
+            style: `height: calc(${ height } * var(--time-base-height)); top: calc(${ position } * var(--time-base-height));`,
             onclick: (event: Event) => {
                 this.infoViewModel.set(program, channel);
                 this.balloon.open(ProgramInfoViewModel.id, event);

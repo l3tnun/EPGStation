@@ -29,9 +29,10 @@ class ChannelComponent extends Component<void> {
         let childs: m.Children[] = [];
         if(typeof m.route.param('type') !== 'undefined') {
             //通常の番組表表示
-            childs = this.viewModel.getChannels().map((channel) => {
+            childs = this.viewModel.getChannels().map((channel, i) => {
                 return m('div', {
                     class: 'item',
+                    style: `left: calc(${ i } * var(--channel-width));`,
                     onclick: (e: Event) => {
                         if(this.streamSelector.getOptions().length > 0) {
                             this.streamSelector.set(channel, () => { this.jumpSingleStation(channel); });
@@ -47,11 +48,14 @@ class ChannelComponent extends Component<void> {
             let start = this.viewModel.getTimeParam().start;
             childs =  this.viewModel.getSchedule().map((_s, i) => {
                 let addTime = i * 24 * 60 * 60 * 1000;
-                return m('div', { class: 'item' }, DateUtil.format(DateUtil.getJaDate(new Date(start + addTime)), 'MM/dd(w)'));
+                return m('div', {
+                    class: 'item',
+                    style: `left: calc(${ i } * var(--channel-width));`,
+                }, DateUtil.format(DateUtil.getJaDate(new Date(start + addTime)), 'MM/dd(w)'));
             });
         }
         // 終端までスクロールした時にずれが発生するためダミー要素を追加する
-        childs.push(m('div', { class: 'item', style: 'visibility: hidden;' }));
+        childs.push(m('div', { class: 'item', style: `visibility: hidden; left: calc(${ this.viewModel.getSchedule().length } * var(--channel-width))` }));
 
         return m('div', { class: ProgramViewModel.channlesName }, childs);
     }

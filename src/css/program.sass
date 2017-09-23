@@ -21,11 +21,11 @@ $board-mobile-fontsize: 7.5pt;
     height: 100%;
     overflow: hidden;
     .channels
+        position: absolute;
         overflow: hidden;
-        height: auto;
         z-index: 5;
-        display: flex;
         .item
+            position: absolute;
             font-weight: bold;
             color: #fff;
             background: #999;
@@ -50,6 +50,7 @@ $board-mobile-fontsize: 7.5pt;
                 .item
                     border-left: $board-line;
             .station
+                position: absolute;
                 box-sizing: border-box;
                 border-top: $board-line;
                 .item
@@ -182,7 +183,8 @@ $board-mobile-fontsize: 7.5pt;
         --time-base-height: $timescale-height / 60;
         --channel-width: $chennel-width;
         .channels
-            padding-left: $timescale-width;
+            margin-left: $timescale-width;
+            height: $chennel-height;
             width: calc(100% - #{$timescale-width});
             .item
                 max-width: $timescale-width;
@@ -194,12 +196,14 @@ $board-mobile-fontsize: 7.5pt;
         .child
             height: calc(100% - 86px);
             .board
+                top: $chennel-height;
                 .station
                     max-width: $chennel-width;
                     min-width: $chennel-width;
                     .item
                         font-size: $board-fontsize
             .timescale
+                padding-top: $chennel-height;
                 .item
                     max-width: $timescale-width;
                     min-width: $timescale-width;
@@ -225,7 +229,8 @@ $board-mobile-fontsize: 7.5pt;
         --time-base-height: $timescale-mobile-height / 60;
         --channel-width: $chennel-mobile-width;
         .channels
-            padding-left: $timescale-mobile-width;
+            margin-left: $timescale-mobile-width;
+            height: $chennel-mobile-height;
             width: calc(100% - #{$timescale-mobile-width});
             .item
                 max-width: $chennel-mobile-width;
@@ -237,12 +242,14 @@ $board-mobile-fontsize: 7.5pt;
         .child
             height: calc(100% - 76px);
             .board
+                top: $chennel-mobile-height;
                 .station
                     max-width: $chennel-mobile-width;
                     min-width: $chennel-mobile-width;
                     .item
                         font-size: $board-mobile-fontsize
             .timescale
+                padding-top: $chennel-mobile-height;
                 .item
                     max-height: $timescale-mobile-height;
                     min-height: $timescale-mobile-height;
