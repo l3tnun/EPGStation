@@ -84,7 +84,6 @@ $board-mobile-fontsize: 7.5pt;
                     overflow: hidden;
 
             .boardbar
-                z-index: 5;
                 position: absolute;
                 background-color: red;
                 height: 2px;
@@ -169,12 +168,11 @@ $board-mobile-fontsize: 7.5pt;
         position: fixed;
         z-index: 3;
     .child
-        width: auto;
-        height: auto;
         .timescale
             position: fixed;
             z-index: 2;
         .board
+            position: static;
             z-index: 1;
 
 /** tablet */
@@ -213,15 +211,16 @@ $board-mobile-fontsize: 7.5pt;
 
     // android 用 scroll 修正
     .ProgramTable.fix-scroll
+        --time-width: $timescale-width;
         .channels
             top: $header-max-height;
         .child
             .timescale
-                top: calc(#{ $header-max-height } + #{ $chennel-height });
+                padding-top: $header-max-height;
             padding-top: $chennel-height;
             .board
                 margin-left: $timescale-width;
-                top: $header-max-height;
+                padding-top: $header-max-height;
 
 /* mobile*/
 @media screen and (max-width: $window-width)
@@ -259,15 +258,16 @@ $board-mobile-fontsize: 7.5pt;
 
     // android 用 scroll 修正
     .ProgramTable.fix-scroll
+        --time-width: $timescale-mobile-width;
         .channels
             top: $header-min-height;
         .child
             .timescale
-                top: calc(#{ $header-min-height } + #{ $chennel-mobile-height });
+                padding-top: $header-min-height;
             padding-top: $chennel-mobile-height;
             .board
                 margin-left: $timescale-mobile-width;
-                top: $header-min-height;
+                padding-top: $header-min-height;
 
 /* header が高くなる */
 @media screen and (min-width: $header-height + 1)

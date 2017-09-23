@@ -62,7 +62,7 @@ class BoardComponent extends Component<void> {
             this.viewModel.getSchedule().map((schedule, i) => {
                 return m('div', {
                     class: 'station' + (i === 0 ? ' left-station' : ''),
-                    style: `left: calc(${ i } * var(--channel-width))`,
+                    style: `left: calc(${ i } * var(--channel-width) + var(--time-width))`,
                     oncreate: (vnode: m.VnodeDOM<void, this>) => {
                         this.createStationChild(vnode.dom, schedule, i);
 
