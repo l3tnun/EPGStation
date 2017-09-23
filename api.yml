@@ -1,8 +1,5 @@
 swagger: "2.0"
 basePath: "/api"
-info:
-  version: "0.1.5"
-  title: "Test"
 consumes:
   - application/json
 produces:
