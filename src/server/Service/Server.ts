@@ -21,8 +21,15 @@ class Server extends Base {
         // log
         this.app.use(log4js.connectLogger(this.log.access, { level: log4js.levels.INFO }));
 
+        // read pkg
+        const pkg = require(path.join('..', '..', '..', 'package.json'));
+
         // read api.yml
-        const api = yaml.safeLoad(fs.readFileSync(path.join(__dirname, '..', '..', '..', 'api.yml'), 'utf-8'));
+        let api = yaml.safeLoad(fs.readFileSync(path.join(__dirname, '..', '..', '..', 'api.yml'), 'utf-8'));
+        api.info = {
+            version: pkg.version,
+            title: pkg.name,
+        }
 
         // swagger ui
         const swaggerUi = require('swagger-ui-express');
