@@ -43,6 +43,8 @@ class BoardComponent extends Component<void> {
         let genre = this.genreViewModel.get();
         this.storedGenre = genre === null ? {} : genre;
 
+        const schedules = this.viewModel.getSchedule();
+
         return m('div', {
             class: 'board non-scroll',
             oncreate:(vnode: m.VnodeDOM<void, this>) => {
@@ -59,9 +61,9 @@ class BoardComponent extends Component<void> {
                 }
             },
         }, [
-            this.viewModel.getSchedule().map((schedule, i) => {
+            schedules.map((schedule, i) => {
                 return m('div', {
-                    class: 'station' + (i === 0 ? ' left-station' : ''),
+                    class: 'station',
                     style: `left: calc(${ i } * var(--channel-width) + var(--time-width))`,
                     oncreate: (vnode: m.VnodeDOM<void, this>) => {
                         this.createStationChild(vnode.dom, schedule, i);
@@ -115,18 +117,14 @@ class BoardComponent extends Component<void> {
             // 時刻
             let start = program.startAt < time.start ? time.start : program.startAt;
             let end = program.endAt > time.end ? time.end : program.endAt;
-            if(programsLength !== i + 1 && programs[i + 1].startAt < end) {
-                // プログラムの終了時刻が次の開始時刻を超えていたら
-                end = programs[i + 1].startAt;
-            }
 
             // start と end が同じならスルー
             if(start === end) { return; }
 
-            let beforeEnd = i - 1 < 0 ? time.start : programs[i - 1].endAt;
-            if(beforeEnd - start < 0) {
+            let dummyEnd = i - 1 < 0 ? time.start : programs[i - 1].endAt;
+            if(dummyEnd - start < 0) {
                 // 一つ前のプログラムと連続でないため間にダミーを追加
-                childs.push(this.createDummy(this.getHeight(beforeEnd, start), this.getPosition(time.start, beforeEnd)));
+                childs.push(this.createDummy(this.getHeight(dummyEnd, start), this.getPosition(time.start, dummyEnd)));
             }
 
             // 番組を追加

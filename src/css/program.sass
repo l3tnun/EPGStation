@@ -1,6 +1,7 @@
 @import 'variables';
 
-$board-line: 2px solid #ccc;
+$board-line: 1px solid #ccc;
+$board-line-x2: 2px solid #ccc;
 $window-width: 600px
 
 $chennel-height: 30px;
@@ -31,6 +32,7 @@ $board-mobile-fontsize: 7.5pt;
             color: #fff;
             background: #999;
             box-sizing: border-box;
+            border-left: $board-line;
             border-right: $board-line;
             overflow: hidden;
             white-space: nowrap;
@@ -38,6 +40,10 @@ $board-mobile-fontsize: 7.5pt;
             justify-content: center;
             text-align: center;
             vertical-align: middle;
+            &:first-child
+                border-left: $board-line-x2;
+            &:nth-last-child(2)
+                border-right: $board-line-x2;
     .child
         width: 100%;
         position: absolute;
@@ -47,17 +53,17 @@ $board-mobile-fontsize: 7.5pt;
             overflow: auto;
             display: flex;
             position: relative;
-            .left-station
-                .item
-                    border-left: $board-line;
             .station
                 position: absolute;
                 box-sizing: border-box;
                 border-top: $board-line;
                 .item
+                    position: absolute;
                     overflow: hidden;
                     box-sizing: border-box;
+                    border-top: $board-line;
                     border-bottom: $board-line;
+                    border-left: $board-line;
                     border-right: $board-line;
                     margin: 0;
                     padding: 0;
@@ -83,6 +89,12 @@ $board-mobile-fontsize: 7.5pt;
                     text-indent: 100%;
                     white-space: nowrap;
                     overflow: hidden;
+                &:first-child
+                    .item
+                        border-left: $board-line-x2;
+                &:nth-last-child(2)
+                    .item
+                        border-right: $board-line-x2;
 
             .boardbar
                 position: absolute;
@@ -201,6 +213,8 @@ $board-mobile-fontsize: 7.5pt;
                     min-width: $chennel-width;
                     .item
                         font-size: $board-fontsize
+                        max-width: $chennel-width;
+                        min-width: $chennel-width;
             .timescale
                 padding-top: $chennel-height;
                 .item
@@ -248,6 +262,8 @@ $board-mobile-fontsize: 7.5pt;
                     min-width: $chennel-mobile-width;
                     .item
                         font-size: $board-mobile-fontsize
+                        max-width: $chennel-mobile-width;
+                        min-width: $chennel-mobile-width;
             .timescale
                 padding-top: $chennel-mobile-height;
                 .item
