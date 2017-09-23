@@ -26,13 +26,13 @@ class ChannelComponent extends Component<void> {
     * view
     */
     public view(): m.Children {
-        let childs: m.Children[] = [];
+        let childs: m.Children[] = [ m('div', { class: 'item' }, 'dummy') ];
         if(typeof m.route.param('type') !== 'undefined') {
             //通常の番組表表示
-            childs = this.viewModel.getChannels().map((channel, i) => {
+            Array.prototype.push.apply(childs, this.viewModel.getChannels().map((channel, i) => {
                 return m('div', {
                     class: 'item',
-                    style: `left: calc(${ i } * var(--channel-width));`,
+                    style: `left: calc(${ i } * var(--channel-width) + var(--timescale-width));`,
                     onclick: (e: Event) => {
                         if(this.streamSelector.getOptions().length > 0) {
                             this.streamSelector.set(channel, () => { this.jumpSingleStation(channel); });
@@ -42,17 +42,17 @@ class ChannelComponent extends Component<void> {
                         }
                     },
                 }, channel.name);
-            });
+            }));
         } else {
             //単局表示
             let start = this.viewModel.getTimeParam().start;
-            childs =  this.viewModel.getSchedule().map((_s, i) => {
+            Array.prototype.push.apply(childs, this.viewModel.getSchedule().map((_s, i) => {
                 let addTime = i * 24 * 60 * 60 * 1000;
                 return m('div', {
                     class: 'item',
-                    style: `left: calc(${ i } * var(--channel-width));`,
+                    style: `left: calc(${ i } * var(--channel-width) + var(--timescale-width));`,
                 }, DateUtil.format(DateUtil.getJaDate(new Date(start + addTime)), 'MM/dd(w)'));
-            });
+            }));
         }
         // 終端までスクロールした時にずれが発生するためダミー要素を追加する
         childs.push(m('div', { class: 'item', style: `visibility: hidden; left: calc(${ this.viewModel.getSchedule().length } * var(--channel-width))` }));

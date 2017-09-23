@@ -25,6 +25,7 @@ $board-mobile-fontsize: 7.5pt;
     .channels
         position: absolute;
         overflow: hidden;
+        width: 100%;
         z-index: 4;
         .item
             position: absolute;
@@ -41,7 +42,7 @@ $board-mobile-fontsize: 7.5pt;
             text-align: center;
             vertical-align: middle;
             &:first-child
-                border-left: $board-line-x2;
+                visibility: hidden;
             &:nth-last-child(2)
                 border-right: $board-line-x2;
     .child
@@ -195,11 +196,10 @@ $board-mobile-fontsize: 7.5pt;
 @media screen and (min-width: $window-width)
     .ProgramTable
         --time-base-height: $timescale-height / 60;
+        --timescale-width: $timescale-width;
         --channel-width: $chennel-width;
         .channels
-            margin-left: $timescale-width;
             height: $chennel-height;
-            width: calc(100% - #{$timescale-width});
             .item
                 max-width: $timescale-width;
                 min-width: $chennel-width;
@@ -207,6 +207,9 @@ $board-mobile-fontsize: 7.5pt;
                 min-height: $chennel-height;
                 line-height: $chennel-height;
                 font-size: 15px;
+                &:first-child
+                    max-width: $timescale-width;
+                    min-width: $timescale-width;
         .child
             height: calc(100% - 86px);
             .board
@@ -244,11 +247,10 @@ $board-mobile-fontsize: 7.5pt;
 @media screen and (max-width: $window-width)
     .ProgramTable
         --time-base-height: $timescale-mobile-height / 60;
+        --timescale-width: $timescale-mobile-width;
         --channel-width: $chennel-mobile-width;
         .channels
-            margin-left: $timescale-mobile-width;
             height: $chennel-mobile-height;
-            width: calc(100% - #{$timescale-mobile-width});
             .item
                 max-width: $chennel-mobile-width;
                 min-width: $chennel-mobile-width;
@@ -256,6 +258,9 @@ $board-mobile-fontsize: 7.5pt;
                 min-height: $chennel-mobile-height;
                 line-height: $chennel-mobile-height;
                 font-size: 12px;
+                &:first-child
+                    max-width: $timescale-mobile-width;
+                    min-width: $timescale-mobile-width;
         .child
             height: calc(100% - 76px);
             .board
