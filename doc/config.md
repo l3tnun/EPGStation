@@ -118,6 +118,7 @@ Config.json
 | -------- | ---- | --- |
 | ios | string | iOS での録画視聴アプリの設定 |
 | android | string | Android での録画視聴アプリの設定 |
+| mac | string | macOS での URL Scheme 設定 (Safari では動作しない) |
 
 ### recordedDownloader
 
@@ -125,6 +126,7 @@ Config.json
 | -------- | ---- | --- |
 | ios | string | iOS での録画ファイルのダウンロードアプリの設定 |
 | android | string | Android での録画ファイルのダウンロードアプリの設定 |
+| mac | string | macOS での URL Scheme 設定 (Safari では動作しない) |
 
 ### mpegTsViewer
 
@@ -132,6 +134,7 @@ Config.json
 | -------- | ---- | --- |
 | ios | string | iOS でのライブ視聴アプリの設定 |
 | android | string | Android でのライブ視聴アプリの設定 |
+| mac | string | macOS での URL Scheme 設定 (Safari では動作しない) |
 
 #### recordedViewer, recordedDownloader, mpegTsViewer で置換される文字列
 

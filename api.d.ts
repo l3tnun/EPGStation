@@ -35,15 +35,18 @@ export interface Config {
     recordedViewer?: {
         ios: string;
         android: string;
+        mac: string;
     };
     recordedDownloader?: {
         ios: string;
         android: string;
+        mac: string;
     };
     mpegTsStreaming?: string[];
     mpegTsViewer?: {
         ios: string;
         android: string;
+        mac: string;
     };
     recordedHLS?: string[];
     kodiHosts?: string[];

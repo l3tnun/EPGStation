@@ -73,14 +73,16 @@ class RecordedInfoViewModel extends ViewModel {
         let config = this.config.getConfig();
         if(this.recorded === null || config === null) { return []; }
 
-        // mobile 用のベースリンクを取得
-        let mobileBase: string | null = null;
-        let app: { ios: string, android: string } | undefined = download ? config.recordedDownloader : config.recordedViewer;
+        // url scheme 用のベースリンクを取得
+        let urlScheme: string | null = null;
+        let app: { ios: string, android: string, mac: string } | undefined = download ? config.recordedDownloader : config.recordedViewer;
         if(typeof app !== 'undefined') {
             if(Util.uaIsiOS() && typeof app.ios !== 'undefined') {
-                mobileBase = app.ios;
+                urlScheme = app.ios;
             } else if(Util.uaIsAndroid() && typeof app.android !== 'undefined') {
-                mobileBase = app.android;
+                urlScheme = app.android;
+            } else if(Util.uaIsMac() && !Util.uaIsSafari() && typeof app.mac !== 'undefined') {
+                urlScheme = app.mac;
             }
         }
 
@@ -88,10 +90,10 @@ class RecordedInfoViewModel extends ViewModel {
         // ts ファイル
         if(this.recorded.original) {
             let url = download ? `/api/recorded/${ this.recorded.id }/file?mode=download` : `/api/recorded/${ this.recorded.id }/file`;
-            if(mobileBase !== null) {
+            if(urlScheme !== null) {
                 let full = location.host + url;
-                if(mobileBase.match(/vlc-x-callback/)) { full = full.replace(/\&/g, '%26').replace(/\=/g, '%3D'); }
-                url = mobileBase.replace(/ADDRESS/g, full);
+                if(urlScheme.match(/vlc-x-callback/)) { full = encodeURIComponent(full) }
+                url = urlScheme.replace(/ADDRESS/g, full);
                 if(typeof this.recorded.filename !== 'undefined') {
                     url = url.replace(/FILENAME/g, this.recorded.filename);
                 }
@@ -104,10 +106,10 @@ class RecordedInfoViewModel extends ViewModel {
             for(let encoded of this.recorded.encoded) {
                 let url = download ? `/api/recorded/${ this.recorded.id }/file?encodedId=${ encoded.encodedId }&mode=download`
                         : `/api/recorded/${ this.recorded.id }/file?encodedId=${ encoded.encodedId }`;
-                if(mobileBase !== null) {
+                if(urlScheme !== null) {
                     let full = location.host + url;
-                    if(mobileBase.match(/vlc-x-callback/)) { full = full.replace(/\&/g, '%26').replace(/\=/g, '%3D'); }
-                    url = mobileBase.replace(/ADDRESS/g, full);
+                    if(urlScheme.match(/vlc-x-callback/)) { full = encodeURIComponent(full) }
+                    url = urlScheme.replace(/ADDRESS/g, full);
                     url = url.replace(/FILENAME/g, encoded.filename);
                 }
                 result.push({ name: encoded.name, path: url });

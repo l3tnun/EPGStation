@@ -58,6 +58,8 @@ mirakurunPath, mysql, encode の設定をすればとりあえず動きます
 
 詳細は [doc/config.md](doc/config.md) を参照してください
 
+mac での URL Scheme 設定については [doc/mac-url-scheme.md](doc/mac-url-scheme.md) を参照してください
+
 ### log の設定
 
 ````
