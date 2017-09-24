@@ -60,6 +60,8 @@ mirakurunPath, mysql, encode の設定をすればとりあえず動きます
 
 mac での URL Scheme 設定については [doc/mac-url-scheme.md](doc/mac-url-scheme.md) を参照してください
 
+windows での URL Protocol 設定については [doc/win-url-protocol.md](doc/win-url-protocol.md) を参照してください
+
 ### log の設定
 
 ````

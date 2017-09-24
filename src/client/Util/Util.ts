@@ -139,6 +139,14 @@ namespace Util {
     }
 
     /**
+    * UA が Windows か判定
+    * @return boolean
+    */
+    export const uaIsWindows = (): boolean => {
+        return /Windows|windows/.test(navigator.userAgent);
+    }
+
+    /**
     * close Navigation
     */
     export const closeNavigation = (): void => {
