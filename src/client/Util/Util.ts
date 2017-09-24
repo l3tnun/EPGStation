@@ -123,6 +123,14 @@ namespace Util {
     }
 
     /**
+    * UA が macOS か判定
+    * @return boolean
+    */
+    export const uaIsMac = (): boolean => {
+        return /Mac|mac/.test(navigator.userAgent);
+    }
+
+    /**
     * close Navigation
     */
     export const closeNavigation = (): void => {
