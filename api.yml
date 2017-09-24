@@ -222,6 +222,8 @@ definitions:
             type: string
           android:
             type: string
+          mac:
+            type: string
       recordedDownloader:
         description: 'mobile 用録画ファイルダウンロード用設定'
         type: object
@@ -229,6 +231,8 @@ definitions:
           ios:
             type: string
           android:
+            type: string
+          mac:
             type: string
       mpegTsStreaming:
         type: array
@@ -242,6 +246,8 @@ definitions:
           ios:
             type: string
           android:
+            type: string
+          mac:
             type: string
       recordedHLS:
         type: array

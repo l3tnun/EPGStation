@@ -45,10 +45,12 @@ interface ConfigInterface {
     recordedViewer: {
         ios: string;
         android: string;
+        mac: string;
     };
     recordedDownloader: {
         ios: string;
         android: string;
+        mac: string;
     };
 
     maxStreaming: number;
@@ -60,6 +62,7 @@ interface ConfigInterface {
     mpegTsViewer: {
         ios: string;
         android: string;
+        mac: string;
     };
     streamFilePath: string;
     recordedHLS: {
