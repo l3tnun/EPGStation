@@ -13,7 +13,7 @@ recordedViewer, recordedDownloader, mpegTsViewer に
 
 ## AppleScript でのカスタム URL Scheme アプリの作成
 
-[Quiita: AppleScriptでカスタムURLスキーム](AppleScriptでカスタムURLスキーム) を参考にしています。詳しい解説はそちらを見てください
+[Quiita: AppleScriptでカスタムURLスキーム](http://qiita.com/CorecaraBiz/items/9a1fc60aada31858d582) を参考にしています。詳しい解説はそちらを見てください
 
 ### 1. アプレットの作成
 
