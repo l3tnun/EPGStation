@@ -115,6 +115,14 @@ namespace Util {
     }
 
     /**
+    * UA が Safari か判定
+    * @return boolean
+    */
+    export const uaIsSafari = (): boolean => {
+        return /safari|Safari/.test(navigator.userAgent) && !Util.uaIsChrome();;
+    }
+
+    /**
     * UA が Mobile か判定
     * @return boolean
     */

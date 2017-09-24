@@ -9,7 +9,7 @@ namespace CreateStreamLink {
     ): string | null => {
         if(config === null) { return null; }
 
-        if(!(Util.uaIsiOS() || Util.uaIsAndroid() || (Util.uaIsMac() && typeof config.mpegTsViewer !== 'undefined' && typeof config.mpegTsViewer.mac !== 'undefined'))) {
+        if(!(Util.uaIsiOS() || Util.uaIsAndroid() || (Util.uaIsMac() && !Util.uaIsSafari() && typeof config.mpegTsViewer !== 'undefined' && typeof config.mpegTsViewer.mac !== 'undefined'))) {
             //プレイリストのリンクを返す
             return `/api/streams/live/${ channelId }/mpegts/playlist?mode=${ mode }`;
         }
@@ -18,7 +18,7 @@ namespace CreateStreamLink {
         if(typeof config.mpegTsViewer !== 'undefined') {
             if(Util.uaIsiOS() && typeof config.mpegTsViewer.ios !== 'undefined') { baseUrl = config.mpegTsViewer.ios; }
             if(Util.uaIsAndroid() && typeof config.mpegTsViewer.android !== 'undefined') { baseUrl = config.mpegTsViewer.android; }
-            if(Util.uaIsMac() && typeof config.mpegTsViewer.mac !== 'undefined') { baseUrl = config.mpegTsViewer.mac; }
+            if(Util.uaIsMac() && !Util.uaIsSafari() && typeof config.mpegTsViewer.mac !== 'undefined') { baseUrl = config.mpegTsViewer.mac; }
         }
 
         // viewer が config.json に記述されていなかった場合

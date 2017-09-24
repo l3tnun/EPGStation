@@ -81,7 +81,7 @@ class RecordedInfoViewModel extends ViewModel {
                 urlScheme = app.ios;
             } else if(Util.uaIsAndroid() && typeof app.android !== 'undefined') {
                 urlScheme = app.android;
-            } else if(Util.uaIsMac() && typeof app.mac !== 'undefined') {
+            } else if(Util.uaIsMac() && !Util.uaIsSafari() && typeof app.mac !== 'undefined') {
                 urlScheme = app.mac;
             }
         }
