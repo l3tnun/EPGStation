@@ -36,17 +36,20 @@ export interface Config {
         ios: string;
         android: string;
         mac: string;
+        win: string;
     };
     recordedDownloader?: {
         ios: string;
         android: string;
         mac: string;
+        win: string;
     };
     mpegTsStreaming?: string[];
     mpegTsViewer?: {
         ios: string;
         android: string;
         mac: string;
+        win: string;
     };
     recordedHLS?: string[];
     kodiHosts?: string[];

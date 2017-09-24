@@ -75,7 +75,7 @@ class RecordedInfoViewModel extends ViewModel {
 
         // url scheme 用のベースリンクを取得
         let urlScheme: string | null = null;
-        let app: { ios: string, android: string, mac: string } | undefined = download ? config.recordedDownloader : config.recordedViewer;
+        let app: { ios: string, android: string, mac: string, win: string } | undefined = download ? config.recordedDownloader : config.recordedViewer;
         if(typeof app !== 'undefined') {
             if(Util.uaIsiOS() && typeof app.ios !== 'undefined') {
                 urlScheme = app.ios;
@@ -83,6 +83,8 @@ class RecordedInfoViewModel extends ViewModel {
                 urlScheme = app.android;
             } else if(Util.uaIsMac() && !Util.uaIsSafari() && typeof app.mac !== 'undefined') {
                 urlScheme = app.mac;
+            } else if(Util.uaIsWindows() && typeof app.win !== 'undefined') {
+                urlScheme = app.win;
             }
         }
 
