@@ -25,7 +25,7 @@ recordedViewer, recordedDownloader, mpegTsViewer に
 
 ```
 set vlcdata=%1
-"C:\Program Files (x86)\VideoLAN\VLC\vlc.exe" "%vlcdata:~8%"
+start "" "C:\Program Files (x86)\VideoLAN\VLC\vlc.exe" "%vlcdata:~8%"
 ```
 
 ### 2. レジストリへの登録
