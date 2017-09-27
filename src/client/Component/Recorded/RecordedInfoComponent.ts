@@ -127,48 +127,59 @@ class RecordedInfoComponent extends Component<void> {
     * createStreaming tab
     */
     private createStreaming(): m.Child[] {
-        return <m.Child[]>[
-            m('div', { class: 'video-title' }, 'HLS 配信'),
-            m('div', { class: 'pulldown mdl-layout-spacer' }, [
-                m('select', {
-                    class: 'mdl-textfield__input program-dialog-label',
-                    onchange: m.withAttr('value', (value) => { this.viewModel.hlsOptionValue = Number(value); }),
-                    onupdate: (vnode: m.VnodeDOM<void, this>) => {
-                        this.selectOnUpdate(<HTMLInputElement>(vnode.dom), this.viewModel.hlsOptionValue);
-                    },
-                }, this.createHLSOptions()),
-            ]),
+        let child: m.Child[] = [];
 
-            this.viewModel.getVideoInfo().map((video) => {
-                return m('a', {
-                    class: 'recorded-link mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect',
-                    onclick: () => {
-                        this.viewModel.startHLSStreaming(typeof video.encodedId === 'undefined' ? null : video.encodedId);
-                    },
-                }, video.name);
-            }),
+        // HLS 配信
+        if(this.viewModel.isEnabledRecordedHLS()) {
+            Array.prototype.push.apply(child,[
+                m('div', { class: 'video-title' }, 'HLS 配信'),
+                m('div', { class: 'pulldown mdl-layout-spacer' }, [
+                    m('select', {
+                        class: 'mdl-textfield__input program-dialog-label',
+                        onchange: m.withAttr('value', (value) => { this.viewModel.hlsOptionValue = Number(value); }),
+                        onupdate: (vnode: m.VnodeDOM<void, this>) => {
+                            this.selectOnUpdate(<HTMLInputElement>(vnode.dom), this.viewModel.hlsOptionValue);
+                        },
+                    }, this.createHLSOptions()),
+                ]),
 
-            // kodi 配信
-            m('div', { class: 'video-title' }, 'kodi 配信'),
-            m('div', { class: 'pulldown mdl-layout-spacer' }, [
-                m('select', {
-                    class: 'mdl-textfield__input program-dialog-label',
-                    onchange: m.withAttr('value', (value) => { this.viewModel.kodiOptionValue = Number(value); }),
-                    onupdate: (vnode: m.VnodeDOM<void, this>) => {
-                        this.selectOnUpdate(<HTMLInputElement>(vnode.dom), this.viewModel.kodiOptionValue);
-                    },
-                }, this.createKodiOptions()),
-            ]),
+                this.viewModel.getVideoInfo().map((video) => {
+                    return m('a', {
+                        class: 'recorded-link mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect',
+                        onclick: () => {
+                            this.viewModel.startHLSStreaming(typeof video.encodedId === 'undefined' ? null : video.encodedId);
+                        },
+                    }, video.name);
+                }),
+            ]);
+        }
 
-            this.viewModel.getVideoInfo().map((video) => {
-                return m('a', {
-                    class: 'recorded-link mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect',
-                    onclick: () => {
-                        this.viewModel.sendToKodi(typeof video.encodedId === 'undefined' ? null : video.encodedId);
-                    },
-                }, video.name);
-            }),
-        ];
+        // kodi 配信
+        if(this.viewModel.isEnabledKodi()) {
+            Array.prototype.push.apply(child,[
+                m('div', { class: 'video-title' }, 'kodi 配信'),
+                m('div', { class: 'pulldown mdl-layout-spacer' }, [
+                    m('select', {
+                        class: 'mdl-textfield__input program-dialog-label',
+                        onchange: m.withAttr('value', (value) => { this.viewModel.kodiOptionValue = Number(value); }),
+                        onupdate: (vnode: m.VnodeDOM<void, this>) => {
+                            this.selectOnUpdate(<HTMLInputElement>(vnode.dom), this.viewModel.kodiOptionValue);
+                        },
+                    }, this.createKodiOptions()),
+                ]),
+
+                this.viewModel.getVideoInfo().map((video) => {
+                    return m('a', {
+                        class: 'recorded-link mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect',
+                        onclick: () => {
+                            this.viewModel.sendToKodi(typeof video.encodedId === 'undefined' ? null : video.encodedId);
+                        },
+                    }, video.name);
+                })
+            ]);
+        }
+
+        return child;
     }
 
     /**
