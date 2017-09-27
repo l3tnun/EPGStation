@@ -49,11 +49,29 @@ class RecordedInfoViewModel extends ViewModel {
     public getTabTitles(): string[] {
         let tabs = ['info', 'download' ];
         const config = this.config.getConfig();
-        if(config !== null && typeof config.recordedHLS !== 'undefined') {
+        if(config !== null && (typeof config.recordedHLS !== 'undefined' || typeof config.kodiHosts !== 'undefined')) {
             tabs.push('stream');
         }
 
         return tabs;
+    }
+
+    /**
+    * HLS 配信が有効か
+    * @return boolean true: 有効, false: 無効
+    */
+    public isEnabledRecordedHLS(): boolean {
+        const config = this.config.getConfig();
+        return config !== null && typeof config.recordedHLS !== 'undefined';
+    }
+
+    /**
+    * kodi 配信が有効か
+    * @return boolean true: 有効, false: 無効
+    */
+    public isEnabledKodi(): boolean {
+        const config = this.config.getConfig();
+        return config !== null && typeof config.kodiHosts !== 'undefined';
     }
 
     /**
