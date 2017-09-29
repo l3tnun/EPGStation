@@ -113,7 +113,7 @@ class TopPageComponent extends ParentComponent<void> {
     * @return m.Child
     */
     private createContent(): m.Child {
-        return m('div', { class: 'top-page' }, [
+        return m('div', { class: 'top-page' + (window.innerWidth < 800 ? ' non-scroll' : '') }, [
             this.createRecorded(),
             this.createReserves(),
             m('div', { class: 'clear: both;' }),
