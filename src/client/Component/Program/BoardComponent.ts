@@ -118,9 +118,6 @@ class BoardComponent extends Component<void> {
             let start = program.startAt < time.start ? time.start : program.startAt;
             let end = program.endAt > time.end ? time.end : program.endAt;
 
-            // start と end が同じならスルー
-            if(start === end) { return; }
-
             let dummyEnd = i - 1 < 0 ? time.start : programs[i - 1].endAt;
             if(dummyEnd - start < 0) {
                 // 一つ前のプログラムと連続でないため間にダミーを追加
@@ -128,13 +125,20 @@ class BoardComponent extends Component<void> {
             }
 
             // 番組を追加
-            childs.push(this.createContent(this.getHeight(start, end), this.getPosition(time.start, start), program, schedule.channel));
+            if(start !== end) {
+                childs.push(this.createContent(this.getHeight(start, end), this.getPosition(time.start, start), program, schedule.channel));
+            }
 
             // 最後の番組と番組表の終了時刻に空きがあったら埋める
             if(programsLength - 1 === i && time.end > end) {
                 childs.push(this.createDummy(this.getHeight(end, time.end), this.getPosition(time.start, end)));
             }
         });
+
+        // programs が空
+        if(childs.length === 0) {
+            childs.push(this.createDummy(this.getHeight(time.start, time.end), this.getPosition(time.start, time.start)));
+        }
 
         let fragment = document.createDocumentFragment();
         childs.map((child) => {
