@@ -106,7 +106,7 @@ class ProgramInfoViewModel extends ViewModel {
         let end = DateUtil.getJaDate(new Date(this.program.endAt));
         let duration = Math.floor((this.program.endAt - this.program.startAt) / 1000 / 60);
 
-        return DateUtil.format(start, 'hh:mm:ss') + ' ~ ' + DateUtil.format(end, 'hh:mm:ss') + ` (${ duration }分)`
+        return DateUtil.format(start, 'MM/dd(w) hh:mm:ss') + ' ~ ' + DateUtil.format(end, 'hh:mm:ss') + ` (${ duration }分)`
     }
 
     /**
