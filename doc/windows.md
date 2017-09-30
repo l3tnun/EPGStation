@@ -99,25 +99,30 @@ ffmpeg のパスを ```C:\\ffmpeg\\ffmpeg.exe``` のように指定してくだ�
 
 #### encode
 
-enc.sh を起動するようになっていますが、 windows では動かないので各自で適当に差し替えてください
-
-注意点は bat ファイル (cmd.exe) は SIGKILL を送っても死なない点です。エンコード中に録画を削除すると録画ファイルが消えません。そのため、SIGKILL を送ったら死ぬような方法を指定してください
-
-例えば引数で渡したファイルをエンコードする ```C:\\hoge\\fuga.js``` を作成して
+enc.sh を起動するようになっていますが、 windows では動かないので ```config/enc.js``` へ書き換えでください
 
 ```
-"cmd": "node C:\\hoge\\fuga.js %INPUT% %OUTPUT%"
+"cmd": "C:\\PROGRA~1\\nodejs\\node.exe C:\\hoge\\EPGStation\\config\\enc.js main"
 ```
 
-このように指定すれば正常に動作するはずです。
+この ```PROGRA~1``` は 8.3 形式の表記方法で、 Program Files を指しています。cmd.exe にて ```dir /x c:\``` と打ち込むと確認できます
 
-もしくは、以下のように直接 ffmpeg.exe を指定しても ok です
+enc.js の以下の部分を ffmpeg.exe のパスに書き換えることも忘れないでください
+
+```
+const ffmpeg = '/usr/local/bin/ffmpeg';
+```
+
+または、以下のように enc.js ではなく直接 ffmpeg.exe を指定しても ok です
 
 ```
 "cmd": "C:\\ffmpeg\\ffmpeg.exe -dual_mono_mode main -i %INPUT% -c:a aac -ar 48000 -ab 192k -ac 2 -c:v libx264 -s 1280x720 -filter:v yadif -aspect 16:9 -crf 23 -f mp4 %OUTPUT%"
 ```
 
+注意点としては bat ファイル (cmd.exe) は、 SIGKILL を送っても死なないため使用できないことです。エンコード中に録画を削除すると録画ファイルが消えません。そのため、SIGKILL を送ったら死ぬような方法を指定してください
+
 ## サービス化
+
 [winser](https://github.com/jfromaniello/winser) がインストールされいる環境であれば、以下のコマンドを管理者権限で実行するとサービス化できます
 
 ```
