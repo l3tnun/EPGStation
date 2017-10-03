@@ -72,7 +72,8 @@ Config.json
 | OUTPUT | string | 出力ファイルパス |
 | VIDEOTYPE | string \| null | "mpeg2" \| "h.264" \| "h.265" |
 | VIDEORESOLUTION | string \| null | "240p" \| "480i" \| "480p" \| "720p" \| "1080i" \| "2160p" \| "4320p" | null |
-| VIDEOSTREAMCONTENT | number \| null | video componentType |
+| VIDEOSTREAMCONTENT | number \| null | video streamType |
+| VIDEOCOMPONENTTYPE | number \| null | video componentType |
 | AUDIOSAMPLINGRATE | number \| null | 16000 \| 22050 \| 24000 \|  32000 \| 44100 \| 48000 |
 | AUDIOCOMPONENTTYPE | number \| null | audio componentType|
 

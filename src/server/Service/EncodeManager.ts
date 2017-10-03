@@ -211,6 +211,7 @@ class EncodeManager extends Base implements EncodeManagerInterface {
                 VIDEOTYPE: program.recordedProgram.videoType || '',
                 VIDEORESOLUTION: program.recordedProgram.videoResolution || '',
                 VIDEOSTREAMCONTENT: program.recordedProgram.videoStreamContent || '',
+                VIDEOCOMPONENTTYPE: program.recordedProgram.videoComponentType || '',
                 AUDIOSAMPLINGRATE: program.recordedProgram.audioSamplingRate || '',
                 AUDIOCOMPONENTTYPE: program.recordedProgram.audioComponentType || '',
             }
