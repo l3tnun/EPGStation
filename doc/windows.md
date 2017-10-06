@@ -83,6 +83,22 @@ git をインストール済みの方は git で、そうでない方は zip で
 
 unix 系では ```/``` を使用するため *.sample.json では ```/hoge/huga/piyo``` と書かれていますが、windows では ```\\hoge\\huga\\piyo``` このように書いてください
 
+### serviceLogConfig.json
+```categories``` の ```access``` の ```appenders``` に ```stdout``` を含まないでください
+
+WebUI が応答しなくなる不具合を確認しています
+
+serviceLogConfig の stdout の出力は子プロセスになっている関係で表示されないため、基本的には不要です
+
+```
+    "categories": {
+        "default": { "appenders": [ "console", "stdout" ], "level": "info" },
+        "system": { "appenders": [ "system", "stdout" ], "level": "info" },
+        "access": { "appenders": [ "access" ], "level": "info" },
+        "stream": { "appenders": [ "stream", "stdout" ], "level": "info" }
+    }
+```
+
 ### config.json
 
 #### mirakurunPath

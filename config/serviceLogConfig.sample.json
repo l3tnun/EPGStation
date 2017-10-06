@@ -27,7 +27,7 @@
     "categories": {
         "default": { "appenders": [ "console", "stdout" ], "level": "info" },
         "system": { "appenders": [ "system", "stdout" ], "level": "info" },
-        "access": { "appenders": [ "access", "stdout" ], "level": "info" },
+        "access": { "appenders": [ "access" ], "level": "info" },
         "stream": { "appenders": [ "stream", "stdout" ], "level": "info" }
     }
 }
