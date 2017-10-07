@@ -167,7 +167,7 @@ class Operator {
 
         // ルールが更新されたので予約を更新する
         try {
-            await this.reservationManager.updateRule(ruleId)
+            await this.reservationManager.updateAll();
         } catch(err) {
             this.log.system.error('ReservationManager update Error');
             this.log.system.error(err);

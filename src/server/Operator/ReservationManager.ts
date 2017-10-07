@@ -628,7 +628,7 @@ class ReservationManager extends Base {
                             //手動予約を優先する
                             //ルール同士のコンフリクト ruleId が若い方を優先する
                             //録画中(延長された)
-                            if(tunerThreads[matches[i].program.channelType] === k &&  check && (
+                            if(tunerMaxPosition[matches[i].program.channelType] === j && check && (
                                 (t.isManual && m.isManual && t.manualId! > m.manualId!)
                                 || (!t.isManual && m.isManual)
                                 || (!t.isManual && !m.isManual && t.ruleId! > m.ruleId!)
