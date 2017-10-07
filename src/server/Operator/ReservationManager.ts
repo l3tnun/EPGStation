@@ -591,6 +591,9 @@ class ReservationManager extends Base {
             this.tuners.forEach((tuner) => { tunerThreads.push({ types: tuner.types, programs: [] }); });
         }
 
+        // 同じ channelId で連続して tuner を使用するためにソートする
+        matches.sort((a, b) => { return b.program.channelId - a.program.channelId });
+
         // それぞれの放送波ごとのチューナーの最終位置を記録
         let tunerMaxPosition = { GR: 0, BS: 0, CS: 0, SKY: 0 };
         tunerThreads.forEach((threads, i) => {
@@ -625,7 +628,7 @@ class ReservationManager extends Base {
                             //手動予約を優先する
                             //ルール同士のコンフリクト ruleId が若い方を優先する
                             //録画中(延長された)
-                            if(tunerThreads[matches[i].program.channelType] === k &&  check && (
+                            if(tunerMaxPosition[matches[i].program.channelType] === j && check && (
                                 (t.isManual && m.isManual && t.manualId! > m.manualId!)
                                 || (!t.isManual && m.isManual)
                                 || (!t.isManual && !m.isManual && t.ruleId! > m.ruleId!)
