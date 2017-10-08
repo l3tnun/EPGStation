@@ -59,6 +59,7 @@ namespace Util {
     */
     export const replacePathName = (str: string): string => {
         return str
+            .replace(/\\/g, '￥')
             .replace(/\¥/g, '￥')
             .replace(/\:/g, '：')
             .replace(/\*/g, '＊')
