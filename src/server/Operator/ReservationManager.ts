@@ -5,6 +5,7 @@ import *  as apid from '../../../node_modules/mirakurun/api';
 import { SearchInterface, OptionInterface, EncodeInterface } from './RuleInterface';
 import { ProgramsDBInterface } from '../Model/DB/ProgramsDB';
 import { RulesDBInterface } from '../Model/DB/RulesDB';
+import { IPCServerInterface } from '../Model/IPC/IPCServer';
 import * as DBSchema from '../Model/DB/DBSchema';
 import { ReserveProgram } from './ReserveProgramInterface';
 import DateUtil from '../Util/DateUtil';
@@ -45,8 +46,8 @@ interface ReservationManagerInterface {
     getReserves(limit?: number, offset?: number): ReserveLimit;
     getConflicts(limit?: number, offset?: number): ReserveLimit;
     getSkips(limit?: number, offset?: number): ReserveLimit;
-    cancel(id: apid.ProgramId): Promise<void>;
-    removeSkip(id: apid.ProgramId): Promise<void>;
+    cancel(id: apid.ProgramId): void;
+    removeSkip(id: apid.ProgramId): void;
     addReserve(programId: apid.ProgramId, encode?: EncodeInterface): Promise<void>;
     updateAll(): Promise<void>;
     clean(): void;
@@ -63,14 +64,15 @@ class ReservationManager extends Base {
     private isRunning: boolean = false;
     private programDB: ProgramsDBInterface;
     private rulesDB: RulesDBInterface;
+    private ipc: IPCServerInterface;
     private reserves: ReserveProgram[] = []; //予約
     private tuners: apid.TunerDevice[] = [];
     private reservesPath: string;
 
-    public static init(programDB: ProgramsDBInterface, rulesDB: RulesDBInterface) {
+    public static init(programDB: ProgramsDBInterface, rulesDB: RulesDBInterface, ipc: IPCServerInterface) {
         if(ReservationManager.inited) { return; }
         ReservationManager.inited = true;
-        this.instance = new ReservationManager(programDB, rulesDB);
+        this.instance = new ReservationManager(programDB, rulesDB, ipc);
         ReservationManager.inited = true;
     }
 
@@ -82,10 +84,11 @@ class ReservationManager extends Base {
         return this.instance;
     }
 
-    private constructor(programDB: ProgramsDBInterface, rulesDB: RulesDBInterface) {
+    private constructor(programDB: ProgramsDBInterface, rulesDB: RulesDBInterface, ipc: IPCServerInterface) {
         super();
         this.programDB = programDB;
         this.rulesDB = rulesDB;
+        this.ipc = ipc;
         this.reservesPath = this.config.getConfig().reserves || path.join(__dirname, '..', '..', '..', 'data', 'reserves.json');
         this.readReservesFile();
     }
@@ -206,7 +209,7 @@ class ReservationManager extends Base {
     * 予約削除(手動予約) or 予約スキップ(ルール予約)
     * @param id: program id
     */
-    public async cancel(id: apid.ProgramId): Promise<void> {
+    public cancel(id: apid.ProgramId): void {
         for(let i = 0; i < this.reserves.length; i++) {
             if(this.reserves[i].program.id === id) {
                 if(this.reserves[i].isManual) {
@@ -226,14 +229,15 @@ class ReservationManager extends Base {
             }
         }
 
-        await this.updateAll();
+        this.updateAll()
+        .then(() => { this.ipc.notifIo(); });
     }
 
     /**
     * 予約対象から除外され状態を解除する
     * @param id: number program id
     */
-    public async removeSkip(id: apid.ProgramId): Promise<void> {
+    public removeSkip(id: apid.ProgramId): void {
         for(let i = 0; i < this.reserves.length; i++) {
             if(this.reserves[i].program.id === id) {
                 this.reserves[i].isSkip = false;
@@ -241,7 +245,8 @@ class ReservationManager extends Base {
             }
         }
 
-        await this.updateAll();
+        this.updateAll()
+        .then(() => { this.ipc.notifIo(); });
     }
 
     /**
