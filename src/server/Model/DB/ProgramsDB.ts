@@ -248,7 +248,7 @@ class ProgramsDB extends DBBase implements ProgramsDBInterface {
         let query = 'select id, channelId, startAt, endAt, isFree, name, description, extended, genre1, genre2, channelType '
             + `from ${ DBSchema.TableName.Programs } `
             + `where channelType = '${ type }' `
-            + `and endAt > ${ startAt } and ${ endAt } >= startAt `
+            + `and endAt >= ${ startAt } and ${ endAt } > startAt `
             + 'order by startAt';
 
         return this.runQuery(query);
@@ -265,7 +265,7 @@ class ProgramsDB extends DBBase implements ProgramsDBInterface {
         let query = 'select id, channelId, startAt, endAt, isFree, name, description, extended, genre1, genre2, channelType '
             + `from ${ DBSchema.TableName.Programs } `
             + `where channelId = ${ channelId } `
-            + `and endAt > ${ startAt } and ${ endAt } >= startAt `
+            + `and endAt >= ${ startAt } and ${ endAt } > startAt `
             + 'order by startAt';
 
         return this.runQuery(query);
@@ -282,7 +282,7 @@ class ProgramsDB extends DBBase implements ProgramsDBInterface {
 
         let query = 'select id, channelId, startAt, endAt, isFree, name, description, extended, genre1, genre2, channelType '
             + `from ${ DBSchema.TableName.Programs } `
-            + `where endAt > ${ now } and ${ now } >= startAt `
+            + `where endAt >= ${ now } and ${ now } > startAt `
             + 'order by startAt';
 
         return this.runQuery(query);
