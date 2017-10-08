@@ -87,7 +87,7 @@ class Operator {
             this.log.system.error(err);
         };
 
-        ReservationManager.init(programsDB, rulesDB, this.ipc);
+        ReservationManager.init(programsDB, rulesDB);
         RuleManager.init(rulesDB);
         this.ruleManager = RuleManager.getInstance();
         this.mirakurun = MirakurunManager.getInstance();

@@ -11,7 +11,7 @@ interface RulesDBInterface extends DBBase {
     findId(id: number): Promise<DBSchema.RulesSchema[]>;
     findAllId(): Promise<{ id: number }[]>;
     findAllIdAndKeyword(): Promise<{ id: number, keyword: string }[]>;
-    findAll(limit?: number, offset?: number): Promise<DBSchema.RulesSchema[]>;
+    findAll(limit: number | undefined, offset: number): Promise<DBSchema.RulesSchema[]>;
     getTotal(): Promise<number>;
 }
 

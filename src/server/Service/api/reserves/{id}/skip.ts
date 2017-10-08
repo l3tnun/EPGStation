@@ -9,6 +9,7 @@ export const del: Operation = async (req, res) => {
     try {
         await reserves.removeReserveSkip(req.params.id);
         api.responseJSON(res, 200, { code: 200 });
+        api.notifyClient();
     } catch(err) {
         api.responseServerError(res, err.message);
     }
