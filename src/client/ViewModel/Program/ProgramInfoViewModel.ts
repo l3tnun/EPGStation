@@ -240,6 +240,7 @@ class ProgramInfoViewModel extends ViewModel {
     */
     public async deleteReserve(): Promise<void> {
         if(this.program === null) { return; }
+        this.close();
 
         try {
             await this.reserves.deleteReserve(this.program.id);
@@ -256,6 +257,7 @@ class ProgramInfoViewModel extends ViewModel {
     */
     public async deleteSkip(): Promise<void> {
         if(this.program === null) { return; }
+        this.close();
 
         try {
             await this.reserves.deleteSkip(this.program.id);
