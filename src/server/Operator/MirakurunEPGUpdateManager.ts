@@ -65,33 +65,29 @@ class MirakurunEPGUpdateManager extends Base implements MirakurunEPGUpdateManage
         }
 
         const stream = await this.mirakurun.getEventsStream();
+        stream.setEncoding('utf-8');
 
         let data: string = '';
         stream.on('data', (chunk) => {
-            data += String(chunk);
-            if(data.indexOf('[\n') !== -1) {
-                data = '';
-                return;
-            } else if(data.slice(-1).indexOf('\n') === -1) {
-                return;
-            } else if(data.substr(data.length - 2).indexOf(',\n') !== -1) {
-                data = data.slice( 0, -2 );
-            }
+            data += chunk;
+            for(let i = 0; i < data.length; i++) {
+                if(data[i] !== '\n') { continue; }
 
-            if(!data) { return; }
+                const line = data.slice(0, i);
+                data = data.slice(i + 1);
+                i = 0;
+                if(line === ',' || line === '[') { continue; }
 
-            let events: apid.Event[];
-            try {
-                events = <apid.Event[]> JSON.parse('[' + data + ']');
-                data = '';
-            } catch(err) {
-                this.log.system.debug(`event parse error`);
-                this.log.system.debug(data);
-                this.log.system.debug(err);
-                return;
-            }
+                let event: apid.Event;
+                try {
+                    event = <apid.Event> JSON.parse(line);
+                } catch(err) {
+                    this.log.stream.debug(`event parse error`);
+                    this.log.stream.debug(line);
+                    this.log.stream.debug(err);
+                    return;
+                }
 
-            for(let event of events) {
                 if(event.resource === 'service') {
                     if(typeof excludes[(<events.ServiceEvents>event).data.id] !== 'undefined') { return; }
                     this.serviceQueue.push(<events.ServiceEvents>event);
@@ -103,12 +99,12 @@ class MirakurunEPGUpdateManager extends Base implements MirakurunEPGUpdateManage
 
         // エラー処理
         stream.once('error', () => {
-            this.log.system.fatal('MirakurunEPGUpdateManager stream error');
+            this.log.stream.fatal('MirakurunEPGUpdateManager stream error');
             process.exit(1);
         });
 
         stream.once('end', () => {
-            this.log.system.fatal('MirakurunEPGUpdateManager stream end');
+            this.log.stream.fatal('MirakurunEPGUpdateManager stream end');
             process.exit(1);
         });
     }
@@ -163,7 +159,7 @@ class MirakurunEPGUpdateManager extends Base implements MirakurunEPGUpdateManage
 
         let insertDatas: apid.Service[] = [];
         for(let key in serviceHash) {
-            this.log.system.debug(`replace service: ${ serviceHash[key].id }`)
+            this.log.stream.debug(`replace service: ${ serviceHash[key].id }`)
 
             const service = serviceHash[key];
             if(typeof service.channel === 'undefined') { return; }
@@ -179,8 +175,8 @@ class MirakurunEPGUpdateManager extends Base implements MirakurunEPGUpdateManage
             try {
                 await this.servicesDB.insert(insertDatas, false);
             } catch(err) {
-                this.log.system.error('update service error');
-                this.log.system.error(err);
+                this.log.stream.error('update service error');
+                this.log.stream.error(err);
             }
         }
     }
@@ -216,8 +212,8 @@ class MirakurunEPGUpdateManager extends Base implements MirakurunEPGUpdateManage
 
         let replaceData: apid.Program[] = [];
         for(let key in insertProgramsHash) {
-            this.log.system.debug(`replace program: ${ insertProgramsHash[key].id }`);
-            this.log.system.debug(`name: ${ insertProgramsHash[key].name }`);
+            this.log.stream.debug(`replace program: ${ insertProgramsHash[key].id }`);
+            this.log.stream.debug(`name: ${ insertProgramsHash[key].name }`);
             replaceData.push(insertProgramsHash[key]);
         }
 
@@ -226,19 +222,19 @@ class MirakurunEPGUpdateManager extends Base implements MirakurunEPGUpdateManage
             try {
                 await this.programsDB.insert(this.channelTypes, replaceData, false);
             } catch(err) {
-                this.log.system.error('update program error');
-                this.log.system.error(err);
+                this.log.stream.error('update program error');
+                this.log.stream.error(err);
             }
         }
 
         // delete program
         for(let key in deleteProgramsHash) {
-            this.log.system.debug(`delete program: ${ deleteProgramsHash[key] }`);
+            this.log.stream.debug(`delete program: ${ deleteProgramsHash[key] }`);
             try {
                 await this.programsDB.delete(deleteProgramsHash[key]);
             } catch(err) {
-                this.log.system.error('delete program error');
-                this.log.system.error(err);
+                this.log.stream.error('delete program error');
+                this.log.stream.error(err);
             }
         }
     }
