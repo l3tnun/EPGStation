@@ -45,7 +45,7 @@ interface ReservationManagerInterface {
     getReserves(limit?: number, offset?: number): ReserveLimit;
     getConflicts(limit?: number, offset?: number): ReserveLimit;
     getSkips(limit?: number, offset?: number): ReserveLimit;
-    cancel(id: apid.ProgramId): void;
+    cancel(id: apid.ProgramId): Promise<void>;
     removeSkip(id: apid.ProgramId): Promise<void>;
     addReserve(programId: apid.ProgramId, encode?: EncodeInterface): Promise<void>;
     updateAll(): Promise<void>;
@@ -206,7 +206,7 @@ class ReservationManager extends Base {
     * 予約削除(手動予約) or 予約スキップ(ルール予約)
     * @param id: program id
     */
-    public cancel(id: apid.ProgramId): void {
+    public async cancel(id: apid.ProgramId): Promise<void> {
         for(let i = 0; i < this.reserves.length; i++) {
             if(this.reserves[i].program.id === id) {
                 if(this.reserves[i].isManual) {
@@ -226,7 +226,7 @@ class ReservationManager extends Base {
             }
         }
 
-        this.updateAll();
+        await this.updateAll();
     }
 
     /**
