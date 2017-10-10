@@ -284,7 +284,7 @@ class ReservationManager extends Base {
         this.isManualRunning[manualId] = true;
         this.log.system.info(`UpdateManualId: ${ manualId }`);
 
-        let finalize = () => { this.isManualRunning[manualId] = false; }
+        let finalize = () => { this.updateAll(); this.isManualRunning[manualId] = false; }
 
         //番組情報を取得
         let programs: DBSchema.ProgramSchema[];
