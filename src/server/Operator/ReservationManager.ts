@@ -544,13 +544,8 @@ class ReservationManager extends Base {
         // rule ごとにまとめたものを channelId でソート後、matches へ戻す
         matches = [];
         for(let key of keys) {
-            if(key === 0) {
-                // 手動予約は manualId (予約順) でソートする
-                machesIndex[key].sort((a, b) => { return a.manualId! - b.manualId! });
-            } else {
-                // 同じ channelId で連続して tuner を使用するためにソートする
-                machesIndex[key].sort((a, b) => { return b.program.channelId - a.program.channelId });
-            }
+            // 同じ channelId で連続して tuner を使用するためにソートする
+            machesIndex[key].sort((a, b) => { return b.program.channelId - a.program.channelId });
             Array.prototype.push.apply(matches, machesIndex[key]);
         }
 
