@@ -284,7 +284,7 @@ class ReservationManager extends Base {
         this.isManualRunning[manualId] = true;
         this.log.system.info(`UpdateManualId: ${ manualId }`);
 
-        let finalize = () => { this.updateAll(); this.isManualRunning[manualId] = false; }
+        let finalize = () => { this.isManualRunning[manualId] = false; }
 
         //番組情報を取得
         let programs: DBSchema.ProgramSchema[];
@@ -598,8 +598,42 @@ class ReservationManager extends Base {
             this.tuners.forEach((tuner) => { tunerThreads.push({ types: tuner.types, programs: [] }); });
         }
 
-        // 同じ channelId で連続して tuner を使用するためにソートする
-        matches.sort((a, b) => { return b.program.channelId - a.program.channelId });
+        //rule ごとにソート
+        matches.sort((a, b) => {
+            if(a.isManual || b.isManual) { return 0; }
+            return a.ruleId! - b.ruleId!
+        });
+
+        // rule ごとにまとめる
+        let machesIndex: { [key: number]: ReserveProgram[] } = {};
+        let keys: number[] = [];
+        for(let matche of matches) {
+            const key = matche.isManual ? 0 : matche.ruleId!;
+
+            if(typeof machesIndex[key] === 'undefined') {
+                if(key === 0) {
+                    // 手動予約
+                    keys.unshift(key);
+                } else {
+                    keys.push(key);
+                }
+                machesIndex[key] = [];
+            }
+            machesIndex[key].push(matche);
+        }
+
+        // rule ごとにまとめたものを channelId でソート後、matches へ戻す
+        matches = [];
+        for(let key of keys) {
+            if(key === 0) {
+                // 手動予約は manualId (予約順) でソートする
+                machesIndex[key].sort((a, b) => { return a.manualId! - b.manualId! });
+            } else {
+                // 同じ channelId で連続して tuner を使用するためにソートする
+                machesIndex[key].sort((a, b) => { return b.program.channelId - a.program.channelId });
+            }
+            Array.prototype.push.apply(matches, machesIndex[key]);
+        }
 
         // それぞれの放送波ごとのチューナーの最終位置を記録
         let tunerMaxPosition = { GR: 0, BS: 0, CS: 0, SKY: 0 };

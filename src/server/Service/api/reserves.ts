@@ -53,6 +53,7 @@ export const post: Operation = async (req, res) => {
     try {
         await reserves.addReserve(req.body.programId, req.body.encode);
         api.responseJSON(res, 201, { code: 201 });
+        api.notifyClient();
     } catch(err) {
         api.responseServerError(res, err.message);
     }
