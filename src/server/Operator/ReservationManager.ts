@@ -4,6 +4,7 @@ import Base from '../Base';
 import *  as apid from '../../../node_modules/mirakurun/api';
 import { SearchInterface, OptionInterface, EncodeInterface } from './RuleInterface';
 import { ProgramsDBInterface } from '../Model/DB/ProgramsDB';
+import { IPCServerInterface } from '../Model/IPC/IPCServer';
 import { RulesDBInterface } from '../Model/DB/RulesDB';
 import * as DBSchema from '../Model/DB/DBSchema';
 import { ReserveProgram } from './ReserveProgramInterface';
@@ -67,14 +68,15 @@ class ReservationManager extends Base {
     private isUpdateAllRunning: boolean = false;
     private programDB: ProgramsDBInterface;
     private rulesDB: RulesDBInterface;
+    private ipc: IPCServerInterface;
     private reserves: ReserveProgram[] = []; //予約
     private tuners: apid.TunerDevice[] = [];
     private reservesPath: string;
 
-    public static init(programDB: ProgramsDBInterface, rulesDB: RulesDBInterface) {
+    public static init(programDB: ProgramsDBInterface, rulesDB: RulesDBInterface, ipc: IPCServerInterface) {
         if(ReservationManager.inited) { return; }
         ReservationManager.inited = true;
-        this.instance = new ReservationManager(programDB, rulesDB);
+        this.instance = new ReservationManager(programDB, rulesDB, ipc);
         ReservationManager.inited = true;
     }
 
@@ -86,10 +88,11 @@ class ReservationManager extends Base {
         return this.instance;
     }
 
-    private constructor(programDB: ProgramsDBInterface, rulesDB: RulesDBInterface) {
+    private constructor(programDB: ProgramsDBInterface, rulesDB: RulesDBInterface, ipc: IPCServerInterface) {
         super();
         this.programDB = programDB;
         this.rulesDB = rulesDB;
+        this.ipc = ipc;
         this.reservesPath = this.config.getConfig().reserves || path.join(__dirname, '..', '..', '..', 'data', 'reserves.json');
         this.readReservesFile();
     }
@@ -218,7 +221,7 @@ class ReservationManager extends Base {
                     this.reserves.splice(i, 1);
                     this.writeReservesFile();
                     this.log.system.info(`cancel reserve: ${ id }`);
-                    return;
+                    break;
                 } else {
                     //ルール予約ならスキップを有効化
                     this.reserves[i].isSkip = true;
@@ -226,10 +229,12 @@ class ReservationManager extends Base {
                     this.reserves[i].isConflict = false;
                     this.writeReservesFile();
                     this.log.system.info(`add skip: ${ id }`);
-                    return;
+                    break;
                 }
             }
         }
+
+        this.updateAll();
     }
 
     /**
@@ -247,6 +252,8 @@ class ReservationManager extends Base {
                 }
             }
         }
+
+        this.updateAll();
     }
 
     /**
@@ -724,6 +731,9 @@ class ReservationManager extends Base {
         for(let rule of rules) {
             await this.updateRule(rule.id);
         }
+
+        // 通知
+        this.ipc.notifIo();
 
         this.isUpdateAllRunning = false;
         this.log.system.info('updateAll done');
