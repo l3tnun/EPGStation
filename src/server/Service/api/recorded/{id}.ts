@@ -58,7 +58,11 @@ export const del: Operation = async (req, res) => {
         api.responseJSON(res, 200, { code: 200 });
         api.notifyClient();
     } catch(err) {
-        api.responseServerError(res, err.message);
+        if(err.message === RecordedModelInterface.RecordedIsStreamingNowError) {
+             api.responseError(res, { code: 409,  message: 'is streaming now' });
+        } else {
+            api.responseServerError(res, err.message);
+        }
     }
 };
 
@@ -79,8 +83,8 @@ del.apiDoc = {
         200: {
             description: '録画を削除しました',
         },
-        404: {
-            description: '指定された id の録画データがない',
+        409: {
+            description: '配信中',
         },
         default: {
             description: '予期しないエラー',

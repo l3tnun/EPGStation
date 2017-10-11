@@ -50,6 +50,7 @@ namespace ModelFactorySetting {
             new RulesDB(),
             new ServicesDB(),
             encodeManager,
+            StreamManager.getInstance(),
         ); });
         factory.reg('ChannelsModel', () => { return new ChannelsModel(new ServicesDB()); });
         factory.reg('ReservesModel', () => { return new ReservesModel(ipc); });

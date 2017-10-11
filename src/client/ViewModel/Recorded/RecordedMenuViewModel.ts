@@ -75,8 +75,12 @@ class RecordedMenuViewModel extends ViewModel {
             await this.recordedApiModel.delete(this.recorded.id);
             this.snackbar.open(`削除: ${ this.recorded.name }`);
         } catch(err) {
-            console.error(err);
-            this.snackbar.open(`削除失敗: ${ this.recorded.name }`);
+            if(err.message === RecordedApiModelInterface.isStreamingNowError) {
+                this.snackbar.open(`配信中のため削除失敗: ${ this.recorded.name }`);
+            } else {
+                console.error(err);
+                this.snackbar.open(`削除失敗: ${ this.recorded.name }`);
+            }
         }
 
         await this.recordedApiModel.update();

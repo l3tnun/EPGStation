@@ -20,6 +20,10 @@ interface RecordedApiModelInterface extends ApiModel {
     getTags(): apid.RecordedTags;
 }
 
+namespace RecordedApiModelInterface {
+    export const isStreamingNowError = 'isStreamingNow';
+}
+
 /**
 * RecordedApiModel
 * /api/recorded
@@ -112,11 +116,16 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
     * /api/recorded/{id} delete
     * @param recordedId: recorded id
     * @return Promise<void>
+    * @throws isStreamingNow: 配信中の場合発生
     */
     public async delete(recordedId: apid.RecordedId): Promise<void> {
         await m.request({
             method: 'DELETE',
             url: `/api/recorded/${ recordedId }`,
+            extract: (xhr) => {
+                if(xhr.status === 409) { throw new Error(RecordedApiModelInterface.isStreamingNowError); }
+                return xhr.responseText;
+            },
         });
     }
 
