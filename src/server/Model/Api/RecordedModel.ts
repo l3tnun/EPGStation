@@ -8,6 +8,7 @@ import { ServicesDBInterface } from '../DB/ServicesDB';
 import * as DBSchema from '../DB/DBSchema';
 import ApiUtil from './ApiUtil';
 import { EncodeManagerInterface } from '../../Service/EncodeManager';
+import { StreamManagerInterface } from '../../Service/Stream/StreamManager';
 import { PLayList } from './PlayListInterface';
 
 interface recordedFilePathInfo {
@@ -29,9 +30,10 @@ interface RecordedModelInterface extends ApiModel {
 }
 
 namespace RecordedModelInterface {
-    export const NotFoundRecordedIdError = 'NotFoundRecordedId'
-    export const NotFoundRecordedThumbnailError = 'NotFoundRecordedThumbnail'
-    export const NotFoundRecordedFileError = 'NotFoundRecordedFile'
+    export const NotFoundRecordedIdError = 'NotFoundRecordedId';
+    export const NotFoundRecordedThumbnailError = 'NotFoundRecordedThumbnail';
+    export const NotFoundRecordedFileError = 'NotFoundRecordedFile';
+    export const RecordedIsStreamingNowError = 'RecordedIsStreamingNow';
 }
 
 class RecordedModel extends ApiModel implements RecordedModelInterface {
@@ -41,6 +43,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
     private rulesDB: RulesDBInterface;
     private servicesDB: ServicesDBInterface;
     private encodeManager: EncodeManagerInterface;
+    private streamManager: StreamManagerInterface;
 
     constructor(
         ipc: IPCClientInterface,
@@ -49,6 +52,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
         rulesDB: RulesDBInterface,
         servicesDB: ServicesDBInterface,
         encodeManager: EncodeManagerInterface,
+        streamManager: StreamManagerInterface,
     ) {
         super();
         this.ipc = ipc;
@@ -57,6 +61,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
         this.rulesDB = rulesDB;
         this.servicesDB = servicesDB;
         this.encodeManager = encodeManager;
+        this.streamManager = streamManager;
     }
 
     /**
@@ -239,6 +244,12 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
     * @return Promise<void>
     */
     public async deleteRecorded(recordedId: number): Promise<void> {
+        this.streamManager.getStreamInfos().forEach((info) => {
+            // 配信中か？
+            if(typeof info.recordedId !== 'undefined' && info.recordedId === recordedId) {
+                throw new Error(RecordedModelInterface.RecordedIsStreamingNowError);
+            }
+        });
         this.encodeManager.cancel(recordedId);
         await this.ipc.recordedDelete(recordedId);
     }
