@@ -559,10 +559,20 @@ class ReservationManager extends Base {
         });
 
         let now = new Date().getTime();
+        //プログラムの重複をチェックするための index
+        let reservesIndex: { [key: number]: boolean } = {};
 
         //tunerThreads に matches の内容を格納する
         for(let i = 0; i < matches.length; i++) {
-            if (matches[i].isSkip) {
+            // programId で重複をチェック
+            if(typeof reservesIndex[matches[i].program.id] === 'undefined') {
+                reservesIndex[matches[i].program.id] = true;
+            } else {
+                continue;
+            }
+
+            // skip
+            if(matches[i].isSkip) {
                 matches[i].isConflict = false;
                 skips.push(matches[i]);
                 continue;
