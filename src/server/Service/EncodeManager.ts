@@ -46,7 +46,7 @@ class EncodeManager extends Base implements EncodeManagerInterface {
     private queue: EncodeProgram[] = [];
     private isRunning: boolean = false;
     //エンコード中のプロセスとプログラムを格納する
-    private encodingData: { child: ChildProcess, program: EncodeProgram, filePath: string } | null = null;
+    private encodingData: { child: ChildProcess, program: EncodeProgram, filePath: string, timerId: NodeJS.Timer } | null = null;
     private listener: events.EventEmitter = new events.EventEmitter();
 
     public static getInstance(): EncodeManager {
@@ -218,13 +218,15 @@ class EncodeManager extends Base implements EncodeManagerInterface {
         }
         this.encodeProcessManager.create(program.filePath, output, encodeConfig[program.mode].cmd, EncodeManager.priority, option)
         .then((child) => {
-            if(typeof program !== 'undefined') {
-                this.encodingData = {
-                    child: child,
-                    program: program,
-                    filePath: output,
-                };
-            }
+            if(typeof program === 'undefined') { return; }
+
+            const timeout = program.recordedProgram.duration * ( encodeConfig[program.mode].rate || 4 );
+            this.encodingData = {
+                child: child,
+                program: program,
+                filePath: output,
+                timerId: setTimeout(() => { child.kill('SIGKILL'); }, timeout),
+            };
 
             // debug 用
             child.stderr.on('data', (data) => { this.log.system.debug(String(data)); });
@@ -269,6 +271,10 @@ class EncodeManager extends Base implements EncodeManagerInterface {
     * 実行ロックを解除して encode を呼び出す
     */
     private finalize(): void {
+        // タイマー停止
+        if(this.encodingData !== null) {
+            clearTimeout(this.encodingData.timerId);
+        }
         this.isRunning = false;
         this.encodingData = null;
         setTimeout(() => { this.encode(); }, 0);

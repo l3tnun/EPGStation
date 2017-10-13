@@ -35,6 +35,7 @@ interface ConfigInterface {
         name: string,
         cmd: string,
         suffix: string,
+        rate?: number,
         default?: boolean,
     }[];
     delts: boolean;

@@ -57,12 +57,13 @@ Config.json
 
 ### encode
 
-| プロパティ | 種類 | 必須 | 説明 |
-| -------- | ---- | ---- |--- |
-| name | string | yse | web で表示される名前 |
-| cmd | string | yse | エンコードコマンド |
-| suffix | string | yse | ファイル名の後ろに付加される文字列 (拡張子) |
-| default | boolean | no | 手動予約時のデフォルトのモードにするか |
+| プロパティ | 種類 | 必須 | default| 説明 |
+| -------- | ---- | ---- | --- | --- |
+| name | string | yse | | web で表示される名前 |
+| cmd | string | yse | | エンコードコマンド |
+| suffix | string | yse | | ファイル名の後ろに付加される文字列 (拡張子) |
+| rate | number | no | 4.0 | タイムアウト率 録画時間 * rate だけ待つ  |
+| default | boolean | no | | 手動予約時のデフォルトのモードにするか |
 
 #### cmd 実行時に渡される環境変数
 
