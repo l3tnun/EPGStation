@@ -214,6 +214,7 @@ class EncodeManager extends Base implements EncodeManagerInterface {
                 VIDEOCOMPONENTTYPE: program.recordedProgram.videoComponentType || '',
                 AUDIOSAMPLINGRATE: program.recordedProgram.audioSamplingRate || '',
                 AUDIOCOMPONENTTYPE: program.recordedProgram.audioComponentType || '',
+                CHANNELID: program.recordedProgram.channelId,
             }
         }
         this.encodeProcessManager.create(program.filePath, output, encodeConfig[program.mode].cmd, EncodeManager.priority, option)
