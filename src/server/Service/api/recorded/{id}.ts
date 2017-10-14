@@ -54,7 +54,7 @@ export const del: Operation = async (req, res) => {
     let recordeds = <RecordedModelInterface>(factory.get('RecordedModel'));
 
     try {
-        await recordeds.deleteRecorded(req.params.id);
+        await recordeds.deleteAllRecorded(req.params.id);
         api.responseJSON(res, 200, { code: 200 });
         api.notifyClient();
     } catch(err) {

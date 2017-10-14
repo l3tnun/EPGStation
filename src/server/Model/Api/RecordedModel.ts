@@ -23,7 +23,7 @@ interface RecordedModelInterface extends ApiModel {
     getId(recordedId: number): Promise<{}>;
     getThumbnailPath(recordedId: number): Promise<string>;
     getFilePath(recordedId: number, encodedId: number | undefined): Promise<recordedFilePathInfo>;
-    deleteRecorded(recordedId: number): Promise<void>
+    deleteAllRecorded(recordedId: number): Promise<void>
     getGenreTags(): Promise<{}>;
     getM3u8(host: string, isSecure: boolean, recordedId: number, encodedId: number | undefined): Promise<PLayList>;
     sendToKodi(host: string, isSecure: boolean, kodi: number, recordedId: number, encodedId: number | undefined): Promise<void>;
@@ -243,7 +243,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
     * @param recordedId: recorded id
     * @return Promise<void>
     */
-    public async deleteRecorded(recordedId: number): Promise<void> {
+    public async deleteAllRecorded(recordedId: number): Promise<void> {
         this.streamManager.getStreamInfos().forEach((info) => {
             // 配信中か？
             if(typeof info.recordedId !== 'undefined' && info.recordedId === recordedId) {

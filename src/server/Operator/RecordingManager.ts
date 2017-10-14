@@ -25,7 +25,7 @@ interface recordingProgram {
 }
 
 interface RecordingManagerInterface {
-    delete(id: number): Promise<void>;
+    deleteAll(id: number): Promise<void>;
     deleteRule(id: number): Promise<void>;
     addThumbnail(id: number, thumbnailPath: string): Promise<void>;
     addEncodeFile(recordedId: number, name: string, filePath: string, delTs: boolean): Promise<number>;
@@ -114,7 +114,7 @@ class RecordingManager extends Base implements RecordingManagerInterface {
     * @throws RecordingManagerNotFoundRecordedProgram id で指定したプログラムが存在しない場合
     * @return Promise<void>
     */
-    public async delete(id: number): Promise<void> {
+    public async deleteAll(id: number): Promise<void> {
         this.log.system.info(`delete recorded file ${ id }`);
 
         // id で指定された recorded を取得
