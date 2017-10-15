@@ -33,7 +33,7 @@ interface EncodeManagerInterface {
     getEncodingId(): number | null;
     getEncodingInfo(): EncodingInfo;
     cancel(recordedId: number): void;
-    push(program: EncodeProgram): void;
+    push(program: EncodeProgram, isCopy?: boolean): void;
 }
 
 /**
@@ -154,9 +154,25 @@ class EncodeManager extends Base implements EncodeManagerInterface {
     /**
     * キューにプログラムを積む
     * @param program: EncodeProgram
+    * @param isCopy: true: delTs を受け継ぐ, false: 受け継がない
     */
-    public push(program: EncodeProgram): void {
+    public push(program: EncodeProgram, isCopy: boolean = false): void {
         this.log.system.info(`push encode: ${ program.filePath } ${ program.mode }`);
+
+        // ts 削除設定を同じ recordedId の program から受け継ぐ
+        if(isCopy) {
+            if(this.encodingData !== null && program.recordedId === this.encodingData.program.recordedId && this.encodingData.program.delTs) {
+                this.encodingData.program.delTs = false;
+                program.delTs = true;
+            }
+            for(let i = 0; i < this.queue.length; i++) {
+                if(program.recordedId === this.queue[i].recordedId && this.queue[i].delTs) {
+                    this.queue[i].delTs = false;
+                    program.delTs = true;
+                }
+            }
+        }
+
         this.queue.push(program);
         this.encode();
     }
@@ -251,7 +267,7 @@ class EncodeManager extends Base implements EncodeManagerInterface {
                         this.log.system.info(`fin encode: ${ program.filePath}`);
 
                         //通知
-                        this.eventsNotify(program.recordedId, name, output, program.delTs);
+                        this.eventsNotify(program.recordedId, name, output, this.encodingData!.program.delTs);
                     }
                 }
 

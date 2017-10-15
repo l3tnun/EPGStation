@@ -555,6 +555,17 @@ definitions:
       encodedId:
         $ref: '#/definitions/EncodedId'
 
+  RecordedAddEncode:
+    type: object
+    required:
+      - mode
+    properties:
+      mode:
+        description: 'エンコードモード'
+        type: integer
+      encodedId:
+        $ref: '#/definitions/EncodedId'
+
   AddReserve:
     type: object
     required:
