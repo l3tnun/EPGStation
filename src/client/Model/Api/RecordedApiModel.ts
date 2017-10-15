@@ -14,7 +14,8 @@ interface RecordedApiModelInterface extends ApiModel {
     update(): Promise<void>;
     fetchRecorded(limit: number, offset: number, option: findQuery): Promise<void>;
     fetchTags(): Promise<void>;
-    delete(recordedId: apid.RecordedId): Promise<void>;
+    deleteAll(recordedId: apid.RecordedId): Promise<void>;
+    delete(recordedId: apid.RecordedId, encodedId: apid.EncodedId | null): Promise<void>;
     sendToKodi(kodi: number, recordedId: number, encodedId: number | null): Promise<void>;
     getRecorded(): apid.RecordedPrograms;
     getTags(): apid.RecordedTags;
@@ -22,6 +23,7 @@ interface RecordedApiModelInterface extends ApiModel {
 
 namespace RecordedApiModelInterface {
     export const isStreamingNowError = 'isStreamingNow';
+    export const isLockedError = 'isLocked';
 }
 
 /**
@@ -118,12 +120,33 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
     * @return Promise<void>
     * @throws isStreamingNow: 配信中の場合発生
     */
-    public async delete(recordedId: apid.RecordedId): Promise<void> {
+    public async deleteAll(recordedId: apid.RecordedId): Promise<void> {
         await m.request({
             method: 'DELETE',
             url: `/api/recorded/${ recordedId }`,
             extract: (xhr) => {
                 if(xhr.status === 409) { throw new Error(RecordedApiModelInterface.isStreamingNowError); }
+                return xhr.responseText;
+            },
+        });
+    }
+
+    /**
+    * 録画の個別削除
+    * /api/recorded/{id}/file delete
+    * @param recordedId: recorded id
+    * @param encodedId: encoded id
+    * @return Promise<void>
+    * @throws isLocked: ファイルが使用されている
+    */
+    public async delete(recordedId: apid.RecordedId, encodedId: apid.EncodedId | null): Promise<void> {
+        const query = encodedId === null ? '' : `?encodedId=${ encodedId }`;
+
+        await m.request({
+            method: 'DELETE',
+            url: `/api/recorded/${ recordedId }/file${ query }`,
+            extract: (xhr) => {
+                if(xhr.status === 423) { throw new Error(RecordedApiModelInterface.isLockedError); }
                 return xhr.responseText;
             },
         });
