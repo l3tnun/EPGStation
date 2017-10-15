@@ -6,6 +6,7 @@ import Util from '../../Util/Util';
 interface EncodedDBInterface extends DBBase {
     create(): Promise<void>;
     insert(recordedId: number, name: string, path: string): Promise<any>;
+    delete(id: number): Promise<void>;
     deleteRecordedId(recordedId: number): Promise<void>;
     findId(id: number): Promise<DBSchema.EncodedSchema[]>;
     findRecordedId(recordedId: number): Promise<DBSchema.EncodedSchema[]>;

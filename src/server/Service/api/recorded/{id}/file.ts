@@ -66,3 +66,66 @@ get.apiDoc = {
     }
 };
 
+export const del: Operation = async (req, res) => {
+    let recordeds = <RecordedModelInterface>(factory.get('RecordedModel'));
+
+    try {
+        await recordeds.deleteTsRecorded(req.params.id, req.query.encodedId);
+        api.responseJSON(res, 200, { code: 200 });
+        api.notifyClient();
+    } catch(err) {
+        switch(err.message) {
+            case RecordedModelInterface.NotFoundRecordedIdError:
+                api.responseError(res, { code: 404,  message: 'id is not found' });
+                break;
+            case RecordedModelInterface.NotFoundRecordedFileError:
+                api.responseError(res, { code: 404,  message: 'file is not found' });
+                break;
+            case RecordedModelInterface.FileIsLockedError:
+                api.responseError(res, { code: 423,  message: 'file is locked' });
+                break;
+            default:
+                api.responseServerError(res, err.message);
+                break;
+        }
+    }
+};
+
+del.apiDoc = {
+    summary: '録画を個別削除',
+    tags: ['recorded'],
+    description: '録画を個別削除する',
+    parameters: [
+        {
+            name: 'id',
+            in: 'path',
+            description: 'recorded id',
+            required: true,
+            type: 'integer'
+        },
+        {
+            name: 'encodedId',
+            in: 'query',
+            description: 'encoded id',
+            type: 'integer',
+        },
+    ],
+    responses: {
+        200: {
+            description: '録画を個別削除しました',
+        },
+        404: {
+            description: 'Not found',
+        },
+        423: {
+            description: 'file is locked',
+        },
+        default: {
+            description: '予期しないエラー',
+            schema: {
+                $ref: '#/definitions/Error'
+            }
+        }
+    }
+}
+

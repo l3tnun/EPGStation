@@ -20,6 +20,7 @@ interface EncodeProgram {
 interface EncodingProgram {
     recordedId: number;
     mode: number;
+    filePath: string;
 }
 
 interface EncodingInfo {
@@ -92,6 +93,7 @@ class EncodeManager extends Base implements EncodeManagerInterface {
             result.encoding = {
                 recordedId: this.encodingData.program.recordedId,
                 mode: this.encodingData.program.mode,
+                filePath: this.encodingData.filePath,
             }
         }
 
@@ -99,6 +101,7 @@ class EncodeManager extends Base implements EncodeManagerInterface {
             result.queue.push({
                 recordedId: program.recordedId,
                 mode: program.mode,
+                filePath: program.filePath,
             });
         }
 
