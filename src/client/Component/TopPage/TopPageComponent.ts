@@ -12,6 +12,7 @@ import RecordedInfoViewModel from '../../ViewModel/Recorded/RecordedInfoViewMode
 import RecordedMenuViewModel from '../../ViewModel/Recorded/RecordedMenuViewModel';
 import RecordedMenuComponent from '../Recorded/RecordedMenuComponent';
 import RecordedDeleteComponent from '../Recorded/RecordedDeleteComponent';
+import RecordedEncodeComponent from '../Recorded/RecordedEncodeComponent';
 import TabComponent from '../TabComponent';
 import ReservesViewModel from '../../ViewModel/Reserves/ReservesViewModel';
 import ProgramInfoViewModel from '../../ViewModel/Program/ProgramInfoViewModel';
@@ -83,6 +84,11 @@ class TopPageComponent extends ParentComponent<void> {
                     content: m(RecordedDeleteComponent),
                     maxWidth: 300,
                     forceDialog: true,
+                }),
+                m(BalloonComponent, {
+                    id: RecordedMenuViewModel.encodeId,
+                    content: m(RecordedEncodeComponent),
+                    maxWidth: 350,
                 }),
                 m(BalloonComponent, {
                     id: ProgramInfoViewModel.id,

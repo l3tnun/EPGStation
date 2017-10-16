@@ -159,7 +159,7 @@ class IPCClient extends Model implements IPCClientInterface {
     * @return Promise<void>
     */
     public async recordedDelete(recordedId: number): Promise<void> {
-        let id = this.send(IPCMessageDefinition.recordedDelete, { recordedId: recordedId });
+        let id = this.send(IPCMessageDefinition.recordedDeleteAll, { recordedId: recordedId });
         await this.receive(id);
     }
 

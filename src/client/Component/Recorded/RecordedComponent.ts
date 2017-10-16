@@ -12,6 +12,7 @@ import RecordedInfoViewModel from '../../ViewModel/Recorded/RecordedInfoViewMode
 import RecordedMenuViewModel from '../../ViewModel/Recorded/RecordedMenuViewModel';
 import RecordedMenuComponent from './RecordedMenuComponent';
 import RecordedDeleteComponent from './RecordedDeleteComponent';
+import RecordedEncodeComponent from './RecordedEncodeComponent';
 import RecordedSearchViewModel from '../../ViewModel/Recorded/RecordedSearchViewModel';
 import RecordedSearchComponent from './RecordedSearchComponent';
 import RecordedSearchActionComponent from './RecordedSearchActionComponent';
@@ -89,6 +90,11 @@ class RecordedComponent extends ParentComponent<void> {
                     content: m(RecordedDeleteComponent),
                     maxWidth: 300,
                     forceDialog: true,
+                }),
+                m(BalloonComponent, {
+                    id: RecordedMenuViewModel.encodeId,
+                    content: m(RecordedEncodeComponent),
+                    maxWidth: 350,
                 }),
                 m(BalloonComponent, {
                     id: RecordedSearchViewModel.id,

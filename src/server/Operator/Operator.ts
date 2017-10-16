@@ -225,7 +225,7 @@ class Operator {
                 if(program.recPath === null) { continue; }
                 await this.ipc.setEncode({
                     recordedId: program.id,
-                    filePath: program.recPath,
+                    source: program.recPath,
                     mode: settings[i].mode,
                     directory: settings[i].directory,
                     delTs: i === encCnt - 1 ? encodeOption.delTs : false,

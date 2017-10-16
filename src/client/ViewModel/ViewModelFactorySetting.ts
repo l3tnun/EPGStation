@@ -108,6 +108,7 @@ namespace ViewModelFactorySetting {
             balloonModel,
             recordedApiModel,
             snackbarModel,
+            configModel,
         ));
         factory.reg('RecordedSearchViewModel', new RecordedSearchViewModel(
             balloonModel,

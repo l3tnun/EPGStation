@@ -66,3 +66,134 @@ get.apiDoc = {
     }
 };
 
+export const del: Operation = async (req, res) => {
+    let recordeds = <RecordedModelInterface>(factory.get('RecordedModel'));
+
+    try {
+        await recordeds.deleteRecorded(req.params.id, req.query.encodedId);
+        api.responseJSON(res, 200, { code: 200 });
+        api.notifyClient();
+    } catch(err) {
+        switch(err.message) {
+            case RecordedModelInterface.NotFoundRecordedIdError:
+                api.responseError(res, { code: 404,  message: 'id is not found' });
+                break;
+            case RecordedModelInterface.NotFoundRecordedFileError:
+                api.responseError(res, { code: 404,  message: 'file is not found' });
+                break;
+            case RecordedModelInterface.RecordedIsStreamingNowError:
+                api.responseError(res, { code: 423,  message: 'file is locked' });
+                break;
+            case RecordedModelInterface.FileIsLockedError:
+                api.responseError(res, { code: 423,  message: 'file is locked' });
+                break;
+            default:
+                api.responseServerError(res, err.message);
+                break;
+        }
+    }
+};
+
+del.apiDoc = {
+    summary: '録画を個別削除',
+    tags: ['recorded'],
+    description: '録画を個別削除する',
+    parameters: [
+        {
+            name: 'id',
+            in: 'path',
+            description: 'recorded id',
+            required: true,
+            type: 'integer'
+        },
+        {
+            name: 'encodedId',
+            in: 'query',
+            description: 'encoded id',
+            type: 'integer',
+        },
+    ],
+    responses: {
+        200: {
+            description: '録画を個別削除しました',
+        },
+        404: {
+            description: 'Not found',
+        },
+        423: {
+            description: 'file is locked',
+        },
+        default: {
+            description: '予期しないエラー',
+            schema: {
+                $ref: '#/definitions/Error'
+            }
+        }
+    }
+}
+
+export const post: Operation = async (req, res) => {
+    let recordeds = <RecordedModelInterface>(factory.get('RecordedModel'));
+
+    try {
+        await recordeds.addEncode(req.params.id, req.body.mode, req.body.encodedId);
+        api.responseJSON(res, 200, { code: 200, result: 'ok' });
+        api.notifyClient();
+    } catch(err) {
+        switch(err.message) {
+            case RecordedModelInterface.NotFoundRecordedIdError:
+                api.responseError(res, { code: 404,  message: 'id is not found' });
+                break;
+            case RecordedModelInterface.NotFoundRecordedFileError:
+                api.responseError(res, { code: 404,  message: 'file is not found' });
+                break;
+            case RecordedModelInterface.IsRecordingError:
+                api.responseError(res, { code: 409,  message: 'file is recording' });
+                break;
+            default:
+                api.responseServerError(res, err.message);
+                break;
+        }
+    }
+}
+
+post.apiDoc = {
+    summary: 'エンコード手動追加',
+    tags: ['recorded'],
+    description: 'ンコード手動追加する',
+    parameters: [
+        {
+            name: 'id',
+            in: 'path',
+            description: 'recorded id',
+            required: true,
+            type: 'integer'
+        },
+        {
+            name: 'body',
+            in: 'body',
+            required: true,
+            schema: {
+                $ref: '#/definitions/RecordedAddEncode'
+            }
+        },
+    ],
+    responses: {
+        200: {
+            description: 'ok'
+        },
+        404: {
+            description: 'Not found'
+        },
+        409: {
+            description: '録画中'
+        },
+        default: {
+            description: '予期しないエラー',
+            schema: {
+                $ref: '#/definitions/Error'
+            }
+        }
+    }
+}
+

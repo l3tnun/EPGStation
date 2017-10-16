@@ -93,7 +93,7 @@ class StorageCheckManager extends Base implements StorageCheckManagerInterface {
             // 削除
             let recorded = await this.recordedDB.findOld();
             if(recorded.length > 0) {
-                await this.recordingManager.delete(recorded[0].id);
+                await this.recordingManager.deleteAll(recorded[0].id);
                 this.ipc.notifIo();
                 intervalTime = 1000;
             }

@@ -1,4 +1,5 @@
 import * as path from 'path';
+import * as fs from 'fs';
 import ApiModel from './ApiModel';
 import { IPCClientInterface } from '../IPC/IPCClient';
 import { findQuery, RecordedDBInterface } from '../DB/RecordedDB';
@@ -23,10 +24,12 @@ interface RecordedModelInterface extends ApiModel {
     getId(recordedId: number): Promise<{}>;
     getThumbnailPath(recordedId: number): Promise<string>;
     getFilePath(recordedId: number, encodedId: number | undefined): Promise<recordedFilePathInfo>;
-    deleteRecorded(recordedId: number): Promise<void>
+    deleteAllRecorded(recordedId: number): Promise<void>
+    deleteRecorded(recordedId: number, encodedId: number | undefined): Promise<void>;
     getGenreTags(): Promise<{}>;
     getM3u8(host: string, isSecure: boolean, recordedId: number, encodedId: number | undefined): Promise<PLayList>;
     sendToKodi(host: string, isSecure: boolean, kodi: number, recordedId: number, encodedId: number | undefined): Promise<void>;
+    addEncode(recordedId: number, mode: number, encodedId: number | undefined): Promise<void>;
 }
 
 namespace RecordedModelInterface {
@@ -34,6 +37,10 @@ namespace RecordedModelInterface {
     export const NotFoundRecordedThumbnailError = 'NotFoundRecordedThumbnail';
     export const NotFoundRecordedFileError = 'NotFoundRecordedFile';
     export const RecordedIsStreamingNowError = 'RecordedIsStreamingNow';
+    export const DeleteFileError = 'DeleteFileError';
+    export const FileIsLockedError = 'FileIsLocked'
+    export const EncodeModeIsNotFoundError = 'EncodeModeIsNotFound';
+    export const IsRecordingError = 'IsRecording';
 }
 
 class RecordedModel extends ApiModel implements RecordedModelInterface {
@@ -241,9 +248,10 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
     /**
     * 録画を削除
     * @param recordedId: recorded id
+    * @throws RecordedIsStreamingNow 指定した recordedId の録画が配信中
     * @return Promise<void>
     */
-    public async deleteRecorded(recordedId: number): Promise<void> {
+    public async deleteAllRecorded(recordedId: number): Promise<void> {
         this.streamManager.getStreamInfos().forEach((info) => {
             // 配信中か？
             if(typeof info.recordedId !== 'undefined' && info.recordedId === recordedId) {
@@ -252,6 +260,63 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
         });
         this.encodeManager.cancel(recordedId);
         await this.ipc.recordedDelete(recordedId);
+    }
+
+    /**
+    * recorded のファイルを個別削除
+    * @param recordedId: recorded id
+    * @param encodedId: encoded id
+    * @throws RecordedIsStreamingNow 指定した recordedId の録画が配信中
+    * @throws NotFoundRecordedId 指定した recordedId の録画情報が無い
+    * @throws NotFoundRecordedFileError ts ファイルがすでに削除されている
+    * @throws DeleteFileError ファイル削除エラー
+    * @throws FileIsLockedError エンコードに使用されている
+    * @return Promise<void>
+    */
+    public async deleteRecorded(recordedId: number, encodedId: number | undefined): Promise<void> {
+        this.streamManager.getStreamInfos().forEach((info) => {
+            // 配信中か？
+            if(typeof info.recordedId !== 'undefined' && info.recordedId === recordedId) {
+                throw new Error(RecordedModelInterface.RecordedIsStreamingNowError);
+            }
+        });
+
+        //recorded 情報の確認
+        const recorded = await this.recordedDB.findId(recordedId);
+        // 録画情報が無い
+        if(recorded.length === 0) { throw new Error(RecordedModelInterface.NotFoundRecordedIdError); }
+
+        // ファイルパス取得
+        let filePath: string;
+        if(typeof encodedId === 'undefined') {
+            if(recorded[0].recPath === null) { throw new Error(RecordedModelInterface.NotFoundRecordedFileError); }
+            filePath = String(recorded[0].recPath);
+        } else {
+            const encoded = await this.encodedDB.findId(encodedId);
+            if(encoded.length === 0) { throw new Error(RecordedModelInterface.NotFoundRecordedFileError); }
+            filePath = String(encoded[0].path);
+        }
+
+        //エンコードのソースファイルか確認
+        const info = this.encodeManager.getEncodingInfo();
+        if(info.encoding !== null && info.encoding.source === filePath) {
+            throw new Error(RecordedModelInterface.FileIsLockedError);
+        }
+        for(let q of info.queue) {
+            if(q.source === filePath) { throw new Error(RecordedModelInterface.FileIsLockedError); }
+        }
+
+        // ファイル削除
+        fs.unlink(String(filePath), (err) => {
+            if(err) { throw new Error(RecordedModelInterface.DeleteFileError); }
+        });
+
+        // DB 上から削除
+        if(typeof encodedId === 'undefined') {
+            await this.recordedDB.deleteRecPath(recordedId);
+        } else {
+            await this.encodedDB.delete(encodedId);
+        }
     }
 
     /**
@@ -350,6 +415,53 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
         if(encoded !== null) { source += `?encodedId=${ encodedId }`; }
 
         await ApiUtil.sendToKodi(source, kodiConfig[kodi].host, kodiConfig[kodi].user, kodiConfig[kodi].pass);
+    }
+
+    /**
+    * encode 手動追加
+    * @param recordedId: recorded id
+    * @param mode: encode mode
+    * @param encodedId: encoded id
+    * @throws EncodeModeIsNotFound 指定したエンコード設定がない場合
+    * @throws NotFoundRecordedId 指定した recordedId の録画情報が無い
+    * @throws IsRecording 指定した recordedId の録画が録画中
+    * @throws NotFoundRecordedFileError ts ファイルがすでに削除されている
+    * @return Promise<void>
+    */
+    public async addEncode(recordedId: number, mode: number, encodedId: number | undefined): Promise<void> {
+        // エンコード設定が存在するか確認
+        const encodeConfig = this.config.getConfig().encode;
+        if(typeof encodeConfig === 'undefined' || typeof encodeConfig[mode] === 'undefined') {
+            throw new Error(RecordedModelInterface.EncodeModeIsNotFoundError);
+        }
+
+        //recorded 情報の確認
+        const recorded = await this.recordedDB.findId(recordedId);
+        // 録画情報が無い
+        if(recorded.length === 0) { throw new Error(RecordedModelInterface.NotFoundRecordedIdError); }
+
+        // 録画中か確認
+        if(recorded[0].recording) { throw new Error(RecordedModelInterface.IsRecordingError); }
+
+        // ファイルパス取得
+        let filePath: string;
+        if(typeof encodedId === 'undefined') {
+            if(recorded[0].recPath === null) { throw new Error(RecordedModelInterface.NotFoundRecordedFileError); }
+            filePath = String(recorded[0].recPath);
+        } else {
+            const encoded = await this.encodedDB.findId(encodedId);
+            if(encoded.length === 0) { throw new Error(RecordedModelInterface.NotFoundRecordedFileError); }
+            filePath = String(encoded[0].path);
+        }
+
+        //エンコードを追加
+        this.encodeManager.push({
+            recordedId: recorded[0].id,
+            source: filePath,
+            mode: mode,
+            delTs: false,
+            recordedProgram: recorded[0],
+        }, typeof encodedId === 'undefined');
     }
 }
 
