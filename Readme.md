@@ -21,8 +21,8 @@ iOS, Android での操作感を重視しています
 * Linux, macOS, Windows (実験的)
 * [MySQL](https://www.mysql.com/jp/) or [MariaDB](https://mariadb.org/) (character-set-server = utf8)
 * [FFmpeg](http://ffmpeg.org/)
-* [Python 2.7](https://www.python.org/) diskusage の node-gyp で必要
-* [GCC](https://gcc.gnu.org/) diskusage の node-gyp で必要
+* [Python 2.7](https://www.python.org/) diskusage で使用される node-gyp で必要
+* [GCC](https://gcc.gnu.org/) diskusage で使用される node-gyp で必要
 
 [docker-mirakurun-epgstation](https://github.com/l3tnun/docker-mirakurun-epgstation) で動作を確認しています
 
