@@ -183,7 +183,7 @@ class BalloonComponent extends Component<BalloonArgs> {
             document.body.classList.add('balloon');
             let elements = document.getElementsByClassName('non-scroll');
             for(let i = 0; i < elements.length; i++) {
-                (<HTMLElement>elements[i]).style.overflow = 'hidden'
+                (<HTMLElement>elements[i]).classList.add('non-scroll-enable');
             }
         }, 200);
     }
@@ -196,9 +196,9 @@ class BalloonComponent extends Component<BalloonArgs> {
 
         (<HTMLElement>document.body.parentNode!).classList.remove('balloon');
         document.body.classList.remove('balloon');
-        let elements = document.getElementsByClassName('non-scroll');
+        let elements = document.getElementsByClassName('non-scroll-enable');
         for(let i = 0; i < elements.length; i++) {
-            (<HTMLElement>elements[i]).style.overflow = ''
+            (<HTMLElement>elements[i]).classList.remove('non-scroll-enable');
         }
     }
 

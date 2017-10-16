@@ -1,3 +1,5 @@
+@import 'variables';
+
 body
     -webkit-text-size-adjust: 100%;
 
@@ -53,4 +55,11 @@ select
     left: 0px; top: 0px;
     background-color: black;
     opacity: 0.5; z-index: 100000;
+
+.non-scroll.non-scroll-enable
+    overflow: hidden !important;
+
+@media screen and (min-width: $top-page-switching-width)
+    .top-page.non-scroll-enable
+        overflow: visible !important;
 

@@ -1,7 +1,5 @@
 @import 'variables';
 
-$switching-width: 800px;
-
 .top-page
     width: 100vw;
     max-width: 1232px;
@@ -73,7 +71,7 @@ $switching-width: 800px;
       margin-top: 8px;
       margin-bottom: 8px;
 
-@media screen and (max-width: $switching-width - 1)
+@media screen and (max-width: $top-page-switching-width - 1)
     .top-page
         overflow-y: scroll;
         overflow-x: hidden;
@@ -81,7 +79,7 @@ $switching-width: 800px;
             margin-right: auto;
             margin-left: auto;
 
-@media screen and (min-width: $switching-width)
+@media screen and (min-width: $top-page-switching-width)
     .top-page
         height: calc(100% - #{$header-min-height} - 16px);
         .recorded, .reserves
