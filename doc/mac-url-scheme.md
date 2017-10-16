@@ -6,7 +6,7 @@ Mac でのカスタム URL Sceheme の設定
 recordedViewer, recordedDownloader, mpegTsViewer に
 
 ```
-"mac" : "SchemeSample://http://ADDRESS"
+"mac" : "cvlc://http://ADDRESS"
 ```
 
 のように設定してください
@@ -22,7 +22,15 @@ recordedViewer, recordedDownloader, mpegTsViewer に
 ```/Applications/VLC.app``` で渡された URL を開くようになっています
 
 ```
-on open location url_scheme		(*デリミタで文字列抽出*)	set AppleScript's text item delimiters to {"SchemeSample://"}	set txt_items to text items of url_scheme	set AppleScript's text item delimiters to {""}	set scheme_txt to txt_items as Unicode text		do shell script ({"/Applications/VLC.app/Contents/MacOS/VLC ", scheme_txt} as string)end open location
+on open location url_scheme
+	(*デリミタで文字列抽出*)
+	set AppleScript's text item delimiters to {"cvlc://"}
+	set txt_items to text items of url_scheme
+	set AppleScript's text item delimiters to {""}
+	set scheme_txt to txt_items as Unicode text
+
+	do shell script ({"/Applications/VLC.app/Contents/MacOS/VLC ", scheme_txt} as string)
+end open location
 ```
 
 ### 2. info.plist の編集
@@ -38,10 +46,10 @@ on open location url_scheme		(*デリミタで文字列抽出*)	set AppleScri
 <array>
     <dict>
         <key>CFBundleURLName</key>
-        <string>biz.corecara.SchemeSample</string>
+        <string>biz.corecara.cvlc</string>
         <key>CFBundleURLSchemes</key>
         <array>
-            <string>SchemeSample</string>
+            <string>cvlc</string>
         </array>
     </dict>
 </array>

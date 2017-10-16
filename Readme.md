@@ -16,11 +16,13 @@ iOS, Android での操作感を重視しています
 
 ## 動作環境
 
-* [Node.js](http://nodejs.org/) ^6.x.x || ~ 8
+* [Node.js](http://nodejs.org/) ^6.5.x || ~ 8
 * [Mirakurun](https://github.com/Chinachu/Mirakurun) ^2.5.7
 * Linux, macOS, Windows (実験的)
-* MySQL or MariaDB (character-set-server = utf8)
-* FFmpeg
+* [MySQL](https://www.mysql.com/jp/) or [MariaDB](https://mariadb.org/) (character-set-server = utf8)
+* [FFmpeg](http://ffmpeg.org/)
+* [Python 2.7](https://www.python.org/) diskusage の node-gyp で必要
+* [GCC](https://gcc.gnu.org/) diskusage の node-gyp で必要
 
 [docker-mirakurun-epgstation](https://github.com/l3tnun/docker-mirakurun-epgstation) で動作を確認しています
 
@@ -60,7 +62,7 @@ mirakurunPath, mysql, encode の設定をすればとりあえず動きます
 
 mac での URL Scheme 設定については [doc/mac-url-scheme.md](doc/mac-url-scheme.md) を参照してください
 
-windows での URL Protocol 設定については [doc/win-url-protocol.md](doc/win-url-protocol.md) を参照してください
+windows での URL Scheme 設定については [doc/win-url-scheme.md](doc/win-url-scheme.md) を参照してください
 
 ### log の設定
 
