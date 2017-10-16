@@ -25,7 +25,7 @@ interface RecordedModelInterface extends ApiModel {
     getThumbnailPath(recordedId: number): Promise<string>;
     getFilePath(recordedId: number, encodedId: number | undefined): Promise<recordedFilePathInfo>;
     deleteAllRecorded(recordedId: number): Promise<void>
-    deleteTsRecorded(recordedId: number, encodedId: number | undefined): Promise<void>;
+    deleteRecorded(recordedId: number, encodedId: number | undefined): Promise<void>;
     getGenreTags(): Promise<{}>;
     getM3u8(host: string, isSecure: boolean, recordedId: number, encodedId: number | undefined): Promise<PLayList>;
     sendToKodi(host: string, isSecure: boolean, kodi: number, recordedId: number, encodedId: number | undefined): Promise<void>;
@@ -271,7 +271,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
     * @throws FileIsLockedError エンコードに使用されている
     * @return Promise<void>
     */
-    public async deleteTsRecorded(recordedId: number, encodedId: number | undefined): Promise<void> {
+    public async deleteRecorded(recordedId: number, encodedId: number | undefined): Promise<void> {
         //recorded 情報の確認
         const recorded = await this.recordedDB.findId(recordedId);
         // 録画情報が無い

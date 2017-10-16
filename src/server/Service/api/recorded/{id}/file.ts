@@ -70,7 +70,7 @@ export const del: Operation = async (req, res) => {
     let recordeds = <RecordedModelInterface>(factory.get('RecordedModel'));
 
     try {
-        await recordeds.deleteTsRecorded(req.params.id, req.query.encodedId);
+        await recordeds.deleteRecorded(req.params.id, req.query.encodedId);
         api.responseJSON(res, 200, { code: 200 });
         api.notifyClient();
     } catch(err) {
