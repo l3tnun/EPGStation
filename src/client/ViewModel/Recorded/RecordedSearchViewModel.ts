@@ -56,6 +56,7 @@ class RecordedSearchViewModel extends ViewModel {
             delete query.rule;
             delete query.channel;
             delete query.genre1;
+            delete query.page;
 
             if(this.keyword.length > 0) { query.keyword = this.keyword; }
             if(this.rule !== -1) { query.rule = this.rule; }
