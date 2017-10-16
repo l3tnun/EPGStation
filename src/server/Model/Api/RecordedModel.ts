@@ -248,6 +248,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
     /**
     * 録画を削除
     * @param recordedId: recorded id
+    * @throws RecordedIsStreamingNow 指定した recordedId の録画が配信中
     * @return Promise<void>
     */
     public async deleteAllRecorded(recordedId: number): Promise<void> {
@@ -265,6 +266,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
     * recorded のファイルを個別削除
     * @param recordedId: recorded id
     * @param encodedId: encoded id
+    * @throws RecordedIsStreamingNow 指定した recordedId の録画が配信中
     * @throws NotFoundRecordedId 指定した recordedId の録画情報が無い
     * @throws NotFoundRecordedFileError ts ファイルがすでに削除されている
     * @throws DeleteFileError ファイル削除エラー
@@ -272,6 +274,13 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
     * @return Promise<void>
     */
     public async deleteRecorded(recordedId: number, encodedId: number | undefined): Promise<void> {
+        this.streamManager.getStreamInfos().forEach((info) => {
+            // 配信中か？
+            if(typeof info.recordedId !== 'undefined' && info.recordedId === recordedId) {
+                throw new Error(RecordedModelInterface.RecordedIsStreamingNowError);
+            }
+        });
+
         //recorded 情報の確認
         const recorded = await this.recordedDB.findId(recordedId);
         // 録画情報が無い

@@ -81,6 +81,9 @@ export const del: Operation = async (req, res) => {
             case RecordedModelInterface.NotFoundRecordedFileError:
                 api.responseError(res, { code: 404,  message: 'file is not found' });
                 break;
+            case RecordedModelInterface.RecordedIsStreamingNowError:
+                api.responseError(res, { code: 423,  message: 'file is locked' });
+                break;
             case RecordedModelInterface.FileIsLockedError:
                 api.responseError(res, { code: 423,  message: 'file is locked' });
                 break;
