@@ -3,6 +3,7 @@ import * as apid from '../../../../api';
 import { BalloonModelInterface } from '../../Model/Balloon/BallonModel';
 import { RecordedApiModelInterface } from '../../Model/Api/RecordedApiModel';
 import { SnackbarModelInterface } from '../../Model/Snackbar/SnackbarModel';
+import { ConfigApiModelInterface } from '../../Model/Api/ConfigApiModel';
 
 interface deleteFile {
     name: string;
@@ -17,19 +18,25 @@ class RecordedMenuViewModel extends ViewModel {
     private balloon: BalloonModelInterface;
     private recordedApiModel: RecordedApiModelInterface;
     private snackbar: SnackbarModelInterface;
+    private config: ConfigApiModelInterface;
     private recorded: apid.RecordedProgram | null = null;
+    private encodeStatus: boolean = false; // true: encode 有効
 
-    public deleteFiles: deleteFile[] = [];
+    public recordedFiles: deleteFile[] = [];
+    public encodeModeOptionValue: number = 0;
+    public encodeSourceOptionValue: number = 0;
 
     constructor(
         balloon: BalloonModelInterface,
         recordedApiModel: RecordedApiModelInterface,
         snackbar: SnackbarModelInterface,
+        config: ConfigApiModelInterface,
     ) {
         super();
         this.balloon = balloon;
         this.recordedApiModel = recordedApiModel;
         this.snackbar = snackbar;
+        this.config = config;
     }
 
     /**
@@ -39,15 +46,21 @@ class RecordedMenuViewModel extends ViewModel {
     public set(recorded: apid.RecordedProgram): void {
         this.recorded = recorded;
 
-        this.deleteFiles = [];
+        this.recordedFiles = [];
         if(this.recorded.original) {
-            this.deleteFiles.push({ name: 'TS', encodedId: null, checked: true });
+            this.recordedFiles.push({ name: 'TS', encodedId: null, checked: true });
         }
         if(typeof this.recorded.encoded !== 'undefined') {
             for(let encoded of this.recorded.encoded) {
-                this.deleteFiles.push({ name: encoded.name, encodedId: encoded.encodedId, checked: true });
+                this.recordedFiles.push({ name: encoded.name, encodedId: encoded.encodedId, checked: true });
             }
         }
+
+        const config = this.config.getConfig();
+        if(config === null) { return; }
+        this.encodeStatus = config.enableEncode;
+        this.encodeSourceOptionValue = 0;
+        this.encodeModeOptionValue = 0;
     }
 
     /**
@@ -90,11 +103,11 @@ class RecordedMenuViewModel extends ViewModel {
         if(this.recorded === null) { return; }
 
         let deleteCnt = 0;
-        this.deleteFiles.map((file) => {
+        this.recordedFiles.map((file) => {
             if(file.checked) { deleteCnt += 1; }
         });
 
-        if(deleteCnt === this.deleteFiles.length) {
+        if(deleteCnt === this.recordedFiles.length) {
             // delete all
             try {
                 await this.recordedApiModel.deleteAll(this.recorded.id);
@@ -110,7 +123,7 @@ class RecordedMenuViewModel extends ViewModel {
         } else {
             let deleteCnt = 0;
             //個別削除
-            for(let file of this.deleteFiles) {
+            for(let file of this.recordedFiles) {
                 if(!file.checked) { continue; }
 
                 try {
@@ -134,11 +147,64 @@ class RecordedMenuViewModel extends ViewModel {
         await this.recordedApiModel.update();
         await this.recordedApiModel.fetchTags();
     }
+
+    /**
+    * エンコードオプションが有効か
+    * @return true: 有効, false: 無効
+    */
+    public isEnableEncode(): boolean {
+        return this.encodeStatus && this.recorded !== null && !this.recorded.recording;
+    }
+
+    /**
+    * エンコードオプションを取得する
+    * @return encode option
+    */
+    public getEncodeOption(): { value: number, name: string }[] {
+        let config = this.config.getConfig();
+        if(!this.encodeStatus || config === null || typeof config.encodeOption === 'undefined') { return []; }
+
+        let result: { value: number, name: string }[] = [];
+        config.encodeOption.forEach((option, i) => {
+            result.push({ value: i, name: option });
+        });
+
+        return result;
+    }
+
+    /**
+    * open encode dialog
+    */
+    public openEncode(): void {
+        this.close();
+        setTimeout(() => {
+            this.balloon.open(RecordedMenuViewModel.encodeId);
+        }, 200);
+    }
+
+    /**
+    * encode 追加
+    */
+    public async addEncode(): Promise<void> {
+        if(this.recorded === null) { return; }
+
+        try {
+            await this.recordedApiModel.addEncode(
+                this.recorded.id,
+                this.encodeModeOptionValue,
+                this.recordedFiles[this.encodeSourceOptionValue].encodedId
+            );
+            this.snackbar.open(`エンコードキューに追加しました`);
+        } catch(err) {
+            this.snackbar.open(`エンコードキューに追加に失敗しました`);
+        }
+    }
 }
 
 namespace RecordedMenuViewModel {
     export const id = 'recorded-menu'
     export const deleteId = 'recorded-delete'
+    export const encodeId = 'recorded-encode'
 }
 
 export default RecordedMenuViewModel;

@@ -19,16 +19,16 @@ class RecordedDeleteComponent extends Component<void> {
     */
     public view(): m.Child {
         let files: m.Child[] = [];
-        for(let i = 0; i < this.viewModel.deleteFiles.length; i++) {
+        for(let i = 0; i < this.viewModel.recordedFiles.length; i++) {
             files.push(m('label', { class: 'mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect' }, [
                 m('input', {
                     type: 'checkbox',
                     class: 'mdl-checkbox__input',
-                    checked: this.viewModel.deleteFiles[i].checked,
-                    onclick: m.withAttr('checked', (value) => { this.viewModel.deleteFiles[i].checked = value; }),
+                    checked: this.viewModel.recordedFiles[i].checked,
+                    onclick: m.withAttr('checked', (value) => { this.viewModel.recordedFiles[i].checked = value; }),
                     onupdate: (vnode: m.VnodeDOM<void, this>) => { this.checkboxOnUpdate(<HTMLInputElement>(vnode.dom)); },
                 }),
-                m('span', { class: 'mdl-checkbox__label' }, this.viewModel.deleteFiles[i].name),
+                m('span', { class: 'mdl-checkbox__label' }, this.viewModel.recordedFiles[i].name),
             ]));
         }
 

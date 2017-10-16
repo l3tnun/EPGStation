@@ -19,6 +19,7 @@ interface RecordedApiModelInterface extends ApiModel {
     sendToKodi(kodi: number, recordedId: number, encodedId: number | null): Promise<void>;
     getRecorded(): apid.RecordedPrograms;
     getTags(): apid.RecordedTags;
+    addEncode(recordedId: apid.RecordedId, mode: number, encodedId: apid.EncodedId | null): Promise<void>;
 }
 
 namespace RecordedApiModelInterface {
@@ -199,6 +200,28 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
     public getTags(): apid.RecordedTags {
         return this.tags;
     }
+
+    /**
+    * エンコード追加
+    * /api/recorded/{id}/file post
+    * @param recordedId: recorded id
+    * @param mode: mode
+    * @param encodedId: encoded id
+    * @return Promise<void>
+    */
+    public async addEncode(recordedId: apid.RecordedId, mode: number, encodedId: apid.EncodedId | null): Promise<void> {
+        const query: { mode: number, encodedId?: number } = {
+            mode: mode,
+        };
+        if(encodedId !== null) { query.encodedId = encodedId; }
+
+        await m.request({
+            method: 'POST',
+            url: `/api/recorded/${ recordedId }/file`,
+            data: query,
+        });
+    }
+
 }
 
 export { findQuery, RecordedApiModelInterface, RecordedApiModel };

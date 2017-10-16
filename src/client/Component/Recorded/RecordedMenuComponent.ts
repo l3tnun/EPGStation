@@ -30,6 +30,12 @@ class RecordedMenuComponent extends Component<void> {
                 },
             }, 'search', 'search'),
             this.createItem({
+                style: this.viewModel.isEnableEncode() ? '' : 'display: none;',
+                onclick: () => {
+                    this.viewModel.openEncode();
+                },
+            }, 'add_circle_outline', 'encode'),
+            this.createItem({
                 onclick: () => {
                     this.viewModel.openDelete();
                 },
