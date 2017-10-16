@@ -290,11 +290,11 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
 
         //エンコードのソースファイルか確認
         const info = this.encodeManager.getEncodingInfo();
-        if(info.encoding !== null && info.encoding.filePath === filePath) {
+        if(info.encoding !== null && info.encoding.source === filePath) {
             throw new Error(RecordedModelInterface.FileIsLockedError);
         }
         for(let q of info.queue) {
-            if(q.filePath === filePath) { throw new Error(RecordedModelInterface.FileIsLockedError); }
+            if(q.source === filePath) { throw new Error(RecordedModelInterface.FileIsLockedError); }
         }
 
         // ファイル削除
@@ -448,7 +448,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
         //エンコードを追加
         this.encodeManager.push({
             recordedId: recorded[0].id,
-            filePath: filePath,
+            source: filePath,
             mode: mode,
             delTs: false,
             recordedProgram: recorded[0],

@@ -10,7 +10,7 @@ import Util from '../Util/Util';
 
 interface EncodeProgram {
     recordedId: number;
-    filePath: string;
+    source: string;
     mode: number;
     directory?: string;
     delTs: boolean;
@@ -20,7 +20,7 @@ interface EncodeProgram {
 interface EncodingProgram {
     recordedId: number;
     mode: number;
-    filePath: string;
+    source: string;
 }
 
 interface EncodingInfo {
@@ -29,7 +29,7 @@ interface EncodingInfo {
 }
 
 interface EncodeManagerInterface {
-    addListener(callback: (recordedId: number, name: string, filePath: string, delTs: boolean) => void): void;
+    addListener(callback: (recordedId: number, name: string, output: string, delTs: boolean) => void): void;
     getEncodingId(): number | null;
     getEncodingInfo(): EncodingInfo;
     cancel(recordedId: number): void;
@@ -47,7 +47,7 @@ class EncodeManager extends Base implements EncodeManagerInterface {
     private queue: EncodeProgram[] = [];
     private isRunning: boolean = false;
     //エンコード中のプロセスとプログラムを格納する
-    private encodingData: { child: ChildProcess, program: EncodeProgram, filePath: string, timerId: NodeJS.Timer } | null = null;
+    private encodingData: { child: ChildProcess, program: EncodeProgram, source: string, output: string, timerId: NodeJS.Timer } | null = null;
     private listener: events.EventEmitter = new events.EventEmitter();
 
     public static getInstance(): EncodeManager {
@@ -73,9 +73,9 @@ class EncodeManager extends Base implements EncodeManagerInterface {
     * エンコード完了時に実行されるイベントに追加
     @param callback ルール更新時に実行される
     */
-    public addListener(callback: (recordedId: number, name: string, filePath: string, delTs: boolean) => void): void {
-        this.listener.on(EncodeManager.ENCODE_FIN_EVENT, (recordedId: number, name: string, filePath: string, delTs: boolean) => {
-            callback(recordedId, name, filePath, delTs);
+    public addListener(callback: (recordedId: number, name: string, output: string, delTs: boolean) => void): void {
+        this.listener.on(EncodeManager.ENCODE_FIN_EVENT, (recordedId: number, name: string, output: string, delTs: boolean) => {
+            callback(recordedId, name, output, delTs);
         });
     }
 
@@ -93,7 +93,7 @@ class EncodeManager extends Base implements EncodeManagerInterface {
             result.encoding = {
                 recordedId: this.encodingData.program.recordedId,
                 mode: this.encodingData.program.mode,
-                filePath: this.encodingData.filePath,
+                source: this.encodingData.source,
             }
         }
 
@@ -101,7 +101,7 @@ class EncodeManager extends Base implements EncodeManagerInterface {
             result.queue.push({
                 recordedId: program.recordedId,
                 mode: program.mode,
-                filePath: program.filePath,
+                source: program.source,
             });
         }
 
@@ -131,7 +131,7 @@ class EncodeManager extends Base implements EncodeManagerInterface {
         // 現在エンコード中ならプロセスを kill
         if(this.encodingData !== null && this.encodingData.program.recordedId === recordedId) {
             // kill する前にファイルパスを記憶
-            let filePath = this.encodingData.filePath;
+            let output = this.encodingData.output;
 
             //kill
             this.encodingData. child.kill('SIGKILL');
@@ -139,10 +139,10 @@ class EncodeManager extends Base implements EncodeManagerInterface {
 
             // 少し待ってから削除
             setTimeout(() => {
-                fs.unlink(filePath, (err) => {
-                    this.log.system.info(`delete encode file: ${ filePath }`);
+                fs.unlink(output, (err) => {
+                    this.log.system.info(`delete encode file: ${ output }`);
                     if(err) {
-                        this.log.system.error(`delete encode file error: ${ filePath }`);
+                        this.log.system.error(`delete encode file error: ${ output }`);
                         this.log.system.error(String(err));
                     }
                     this.finalize();
@@ -157,7 +157,7 @@ class EncodeManager extends Base implements EncodeManagerInterface {
     * @param isCopy: true: delTs を受け継ぐ, false: 受け継がない
     */
     public push(program: EncodeProgram, isCopy: boolean = false): void {
-        this.log.system.info(`push encode: ${ program.filePath } ${ program.mode }`);
+        this.log.system.info(`push encode: ${ program.source } ${ program.mode }`);
 
         // ts 削除設定を同じ recordedId の program から受け継ぐ
         if(isCopy) {
@@ -200,10 +200,10 @@ class EncodeManager extends Base implements EncodeManagerInterface {
 
         // エンコードするファイルの存在確認
         try {
-            fs.statSync(program.filePath);
+            fs.statSync(program.source);
         } catch(e) {
             // ファイルが存在しない
-            this.log.system.error(`encode file is not found: ${ program.filePath }`);
+            this.log.system.error(`encode file is not found: ${ program.source }`);
             this.finalize();
             return;
         }
@@ -219,13 +219,13 @@ class EncodeManager extends Base implements EncodeManagerInterface {
             mkdirp.sync(dir);
         }
 
-        this.log.system.info(`encode start: ${ program.filePath}`);
-        let output = this.getFilePath(dir, program.filePath, encodeConfig[program.mode].suffix);
+        this.log.system.info(`encode start: ${ program.source }`);
+        let output = this.getFilePath(dir, program.source, encodeConfig[program.mode].suffix);
         let name = encodeConfig[program.mode].name;
 
         let option = {
             env: {
-                INPUT: program.filePath,
+                INPUT: program.source,
                 OUTPUT: output,
                 VIDEOTYPE: program.recordedProgram.videoType || '',
                 VIDEORESOLUTION: program.recordedProgram.videoResolution || '',
@@ -236,7 +236,7 @@ class EncodeManager extends Base implements EncodeManagerInterface {
                 CHANNELID: program.recordedProgram.channelId,
             }
         }
-        this.encodeProcessManager.create(program.filePath, output, encodeConfig[program.mode].cmd, EncodeManager.priority, option)
+        this.encodeProcessManager.create(program.source, output, encodeConfig[program.mode].cmd, EncodeManager.priority, option)
         .then((child) => {
             if(typeof program === 'undefined') { return; }
 
@@ -244,7 +244,8 @@ class EncodeManager extends Base implements EncodeManagerInterface {
             this.encodingData = {
                 child: child,
                 program: program,
-                filePath: output,
+                source: program.source,
+                output: output,
                 timerId: setTimeout(() => { child.kill('SIGKILL'); }, timeout),
             };
 
@@ -262,9 +263,9 @@ class EncodeManager extends Base implements EncodeManagerInterface {
                     });
                 } else {
                     if(code !== 0) {
-                        this.log.system.error(`encode failed: ${ program.filePath }`);
+                        this.log.system.error(`encode failed: ${ output }`);
                     } else {
-                        this.log.system.info(`fin encode: ${ program.filePath}`);
+                        this.log.system.info(`fin encode: ${ output }`);
 
                         //通知
                         this.eventsNotify(program.recordedId, name, output, this.encodingData!.program.delTs);
@@ -312,24 +313,24 @@ class EncodeManager extends Base implements EncodeManagerInterface {
         let fileName = path.basename(sourcePath);
         if(conflict > 0) { fileName += `(${ conflict })`; }
         fileName += suffix;
-        let filePath = path.join(dir, fileName);
+        let source = path.join(dir, fileName);
 
         //同名ファイルが存在するか確認
         try {
-            fs.statSync(filePath);
+            fs.statSync(source);
             return this.getFilePath(dir, sourcePath, suffix, conflict + 1);
         } catch(e) {
-            return filePath;
+            return source;
         }
     }
 
     /**
     * エンコード完了を通知
     * @param recordedId: recorded id
-    * @param filePath: filePath
+    * @param output: output
     */
-    private eventsNotify(recordedId: number, name: string, filePath: string, delTs: boolean): void {
-        this.listener.emit(EncodeManager.ENCODE_FIN_EVENT, recordedId, name, filePath, delTs);
+    private eventsNotify(recordedId: number, name: string, output: string, delTs: boolean): void {
+        this.listener.emit(EncodeManager.ENCODE_FIN_EVENT, recordedId, name, output, delTs);
     }
 }
 
