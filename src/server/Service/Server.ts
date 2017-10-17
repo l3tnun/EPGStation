@@ -19,7 +19,7 @@ class Server extends Base {
         super();
 
         // log
-        this.app.use(log4js.connectLogger(this.log.access, { level: log4js.levels.INFO }));
+        this.app.use(log4js.connectLogger(this.log.access, { level: 'info' }));
 
         // read pkg
         const pkg = require(path.join('..', '..', '..', 'package.json'));
