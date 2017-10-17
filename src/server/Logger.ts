@@ -19,7 +19,7 @@ namespace Logger {
     */
     export const initialize = (logPath?: string): void => {
         if(typeof logPath == 'undefined') {
-            log4js.configure(<any>{
+            log4js.configure({
                 appenders: {
                     system: { type: 'console' },
                     access: { type: 'console' },
