@@ -28,7 +28,7 @@ Config.json
 | delts | boolean | false | no | 手動予約時の ts 削除チェックボックスのデフォルト設定 |
 | storageLimitCheckIntervalTime | number | 60 | no | ストレージ空き容量をチェックする間隔 (秒) |
 | storageLimitThreshold | number | 0 | no | ストレージ空き容量限界閾値 (MB) |
-| storageLimitAction | "remove" | "none" | "none" | no | ストレージ空き容量が限界閾値を超えたときの動作 |
+| storageLimitAction | "remove" | "none" | no | ストレージ空き容量が限界閾値を超えたときの動作 remove で最も古い録画番組から削除される |
 | storageLimitCmd | string | | no | ストレージ空き容量が限界閾値を超えたときに実行するコマンド |
 | recordedViewer | {} | | no | 録画済み番組を ios, android で視聴するときのアプリ設定 |
 | recordedDownloader | {} | | no | 録画済み番組を ios, android でダウンロードするときのアプリ設定 |
