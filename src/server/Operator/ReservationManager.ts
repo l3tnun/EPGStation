@@ -1,7 +1,8 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import Base from '../Base';
-import *  as apid from '../../../node_modules/mirakurun/api';
+import * as apid from '../../../node_modules/mirakurun/api';
+import Tuner from './Tuner';
 import { SearchInterface, OptionInterface, EncodeInterface } from './RuleInterface';
 import { ProgramsDBInterface } from '../Model/DB/ProgramsDB';
 import { IPCServerInterface } from '../Model/IPC/IPCServer';
@@ -10,17 +11,6 @@ import * as DBSchema from '../Model/DB/DBSchema';
 import { ReserveProgram } from './ReserveProgramInterface';
 import DateUtil from '../Util/DateUtil';
 import CheckRule from '../Util/CheckRule';
-
-interface TunerThread {
-    types: string;
-    programs: ReserveProgram[]
-}
-
-interface TunerThreadsResult {
-    conflicts: ReserveProgram[];
-    skips: ReserveProgram[];
-    tunerThreads: TunerThread[];
-}
 
 interface ReserveAllId {
     reserves: ReserveAllItem[],
@@ -66,7 +56,7 @@ class ReservationManager extends Base {
     private rulesDB: RulesDBInterface;
     private ipc: IPCServerInterface;
     private reserves: ReserveProgram[] = []; //予約
-    private tuners: apid.TunerDevice[] = [];
+    private tuners: Tuner[] = [];
     private reservesPath: string;
 
     public static init(programDB: ProgramsDBInterface, rulesDB: RulesDBInterface, ipc: IPCServerInterface) {
@@ -98,7 +88,9 @@ class ReservationManager extends Base {
     * @param tuners: TunerDevice[]
     */
     public setTuners(tuners: apid.TunerDevice[]): void {
-        this.tuners = tuners;
+        this.tuners = tuners.map((tuner) => {
+            return new Tuner(tuner);
+        });
     }
 
     /**
@@ -255,35 +247,20 @@ class ReservationManager extends Base {
     * @throws ReservationManagerAddFailed 予約に失敗
     */
     public async addReserve(programId: apid.ProgramId, encode: EncodeInterface | null = null): Promise<void> {
-        //reserves をコピー & programId の予約がすでに存在しないかを確認
-        let tmpReserves: ReserveProgram[] = [];
-        for(let reserve of this.reserves) {
-            if(reserve.program.id == programId) {
-                this.log.system.error(`programId is reserves: ${ programId }`);
-                throw new Error('ReservationManagerAddFailed');
-            }
+        if(this.isRunning) { throw new Error('ReservationManagerUpdateManualIsRunning'); }
 
-            // reserve をコピー
-            let r: any = {};
-            Object.assign(r, reserve);
-            tmpReserves.push(r);
-        }
-
-        // encode option がただしいかチェック
+        // encode option が正しいかチェック
         if(encode != null && !(new CheckRule().checkEncodeOption(encode))) {
             this.log.system.error('addReserve Failed');
             this.log.system.error('ReservationManager is Running');
             throw new Error('ReservationManagerAddFailed');
         }
 
-        let manualId = new Date().getTime();
-        if(this.isRunning) { throw new Error('ReservationManagerUpdateManualIsRunning'); }
-
         // 更新ロック
         this.isRunning = true;
-        this.log.system.info(`UpdateManualId: ${ manualId }`);
+        this.log.system.info(`addReserve: ${ programId }`);
 
-        let finalize = () => { this.isRunning = false; }
+        const finalize = () => { this.isRunning = false; }
 
         //番組情報を取得
         let programs: DBSchema.ProgramSchema[];
@@ -301,39 +278,61 @@ class ReservationManager extends Base {
             throw new Error('ProgramIsNotFound');
         }
 
-        //番組情報を記録
-        let reserve: ReserveProgram = {
+        //追加する予約情報を生成
+        let addReserve: ReserveProgram = {
             program: programs[0],
             isSkip: false,
             isManual: true,
-            manualId: manualId,
+            manualId: new Date().getTime(),
             isConflict: false,
         };
         if(encode != null) {
-            reserve.encodeOption = encode;
+            addReserve.encodeOption = encode;
         }
-        let matches: ReserveProgram[] = [ reserve ];
 
-        // tmpReserves に matches の番組情報を追加する
-        let results = this.pushTunerThreads(tmpReserves);
-        results = this.pushTunerThreads(
-            matches,
-            false,
-            results.conflicts,
-            results.skips,
-            results.tunerThreads
-        );
+        //追加する予約情報と重複する時間帯の予約済み番組情報を conflict, skip は除外して取得
+        //すでに予約済みの場合はエラー
+        let reserves: ReserveProgram[] = [];
+        for(let reserve of this.reserves) {
+            if(reserve.program.id == programId) {
+                this.log.system.error(`program is reserves: ${ programId }`);
+                finalize();
+                throw new Error('ReservationManagerAddFailed');
+            }
 
-        results.conflicts.forEach((conflict) => {
-            if(conflict.program.id === programId) {
+            // 該当する予約情報をコピー
+            if(!reserve.isConflict
+                && !reserve.isSkip
+                && reserve.program.startAt <= addReserve.program.endAt
+                && reserve.program.endAt >= addReserve.program.startAt
+            ) {
+                let r: any = {};
+                Object.assign(r, reserve);
+                reserves.push(r);
+            }
+        }
+
+        // 予約情報を生成
+        reserves.push(addReserve);
+        const newReserves = this.createReserves(reserves);
+
+        // conflict したかチェック
+        for(let reserve of newReserves) {
+            if(reserve.isConflict) {
                 finalize();
                 this.log.system.error(`program id conflict: ${ programId }`);
                 throw new Error('ReservationManagerAddReserveConflict');
             }
-        });
+        }
 
-        this.saveReserves(results);
+        // 保存
+        this.reserves.push(addReserve);
+        this.reserves.sort((a, b) => { return a.program.startAt - b.program.startAt });
+        this.writeReservesFile();
+
         finalize();
+
+        this.log.system.info(`success addReserve: ${ programId }`);
     }
 
     /**
@@ -406,18 +405,18 @@ class ReservationManager extends Base {
             });
         }
 
-        // TunerThreadsResult を取得
-        let results = this.pushTunerThreads(matches);
+        // 予約情報を生成
+        const newReserves = this.createReserves(matches);
 
-        // log にコンフリクトを書き込む
-        results.conflicts.forEach((conflict) => {
-            if(typeof conflict.ruleId !== 'undefined') {
-                this.log.system.warn(`conflict: ${ conflict.program.id } ${ DateUtil.format(new Date(conflict.program.startAt), 'yyyy-MM-ddThh:mm:ss') } ${ conflict.program.name }`);
-            }
-        });
+        // conflict を表示
+        for(let reserve of newReserves) {
+            if(!reserve.isConflict) { continue; }
+            this.log.system.warn(`conflict: ${ reserve.program.id } ${ DateUtil.format(new Date(reserve.program.startAt), 'yyyy-MM-ddThh:mm:ss') } ${ reserve.program.name }`);
+        }
 
-        //保存
-        this.saveReserves(results);
+        // 保存
+        this.reserves = newReserves;
+        this.writeReservesFile();
 
         //通知
         this.ipc.notifIo();
@@ -498,155 +497,124 @@ class ReservationManager extends Base {
     }
 
     /**
-    * tunerThreads に matches を格納する
-    * @param matches: 格納するデータ
-    * @param check: 重複を詳しくチェック
-    * @param conflicts: conflicts
-    * @param skips スキップ
-    * @param tunerThreads: tunerThreads
-    * @return TunerThreadsResult
+    * 予約情報を生成する
+    * @param matches 予約したい番組情報
+    * @return ReserveProgram[] 予約情報
     */
-    private pushTunerThreads(
-        matches: ReserveProgram[],
-        check: boolean = true,
-        conflicts: ReserveProgram[] = [],
-        skips: ReserveProgram[] = [],
-        tunerThreads: TunerThread[] = []
-    ): TunerThreadsResult {
-        if(tunerThreads.length == 0) {
-            this.tuners.forEach((tuner) => { tunerThreads.push({ types: tuner.types, programs: [] }); });
-        }
+    private createReserves(matches: ReserveProgram[]): ReserveProgram[] {
+        //重複チェックのために programId でソート
+        matches.sort(this.sortReserveProgram);
 
-        //rule ごとにソート
-        matches.sort((a, b) => {
-            if(a.isManual || b.isManual) { return 0; }
-            return a.ruleId! - b.ruleId!
-        });
+        let list: {
+            time: apid.UnixtimeMS,
+            isStart: boolean,
+            idx: number, // matches index
+        }[] = [];
 
-        // rule ごとにまとめる
-        let machesIndex: { [key: number]: ReserveProgram[] } = {};
-        let keys: number[] = [];
-        for(let matche of matches) {
-            const key = matche.isManual ? 0 : matche.ruleId!;
+        // 重複チェック用 index
+        let programIndex: { [key: number]: boolean } = {};
 
-            if(typeof machesIndex[key] === 'undefined') {
-                if(key === 0) {
-                    // 手動予約
-                    keys.unshift(key);
-                } else {
-                    keys.push(key);
-                }
-                machesIndex[key] = [];
-            }
-            machesIndex[key].push(matche);
-        }
-
-        // rule ごとにまとめたものを channelId でソート後、matches へ戻す
-        matches = [];
-        for(let key of keys) {
-            // 同じ channelId で連続して tuner を使用するためにソートする
-            machesIndex[key].sort((a, b) => { return b.program.channelId - a.program.channelId });
-            Array.prototype.push.apply(matches, machesIndex[key]);
-        }
-
-        // それぞれの放送波ごとのチューナーの最終位置を記録
-        let tunerMaxPosition = { GR: 0, BS: 0, CS: 0, SKY: 0 };
-        tunerThreads.forEach((threads, i) => {
-            if(threads.types.indexOf('GR') !== -1) { tunerMaxPosition.GR = i; }
-            if(threads.types.indexOf('BS') !== -1) { tunerMaxPosition.BS = i; }
-            if(threads.types.indexOf('CS') !== -1) { tunerMaxPosition.CS = i; }
-            if(threads.types.indexOf('SKY') !== -1) { tunerMaxPosition.SKY = i; }
-        });
-
-        let now = new Date().getTime();
-        //プログラムの重複をチェックするための index
-        let reservesIndex: { [key: number]: boolean } = {};
-
-        //tunerThreads に matches の内容を格納する
+        // list を生成
         for(let i = 0; i < matches.length; i++) {
-            // programId で重複をチェック
-            if(typeof reservesIndex[matches[i].program.id] === 'undefined') {
-                reservesIndex[matches[i].program.id] = true;
+            // programId がすでに存在する場合は list に追加しない
+            if(typeof programIndex[matches[i].program.id] === 'undefined') {
+                programIndex[matches[i].program.id] = true;
             } else {
                 continue;
             }
 
-            // skip
-            if(matches[i].isSkip) {
-                matches[i].isConflict = false;
-                skips.push(matches[i]);
-                continue;
+            list.push({
+                time: matches[i].program.startAt,
+                isStart: true,
+                idx: i,
+            });
+            list.push({
+                time: matches[i].program.endAt,
+                isStart: false,
+                idx: i,
+            });
+        }
+
+        // list を time でソート
+        list.sort((a, b) => { return a.time - b.time });
+
+        // 予約情報が格納可能かチェックする
+        let reserves: { reserve: ReserveProgram, idx: number }[] = [];
+        for(let l of list) {
+            if(matches[l.idx].isSkip) { continue; }
+
+            if(l.isStart) {
+                // add
+                reserves.push({ reserve: matches[l.idx], idx: l.idx });
+            } else {
+                // remove
+                reserves = reserves.filter((r) => {
+                    return r.idx !== l.idx;
+                });
             }
 
-            matches[i].isConflict = true;
+            // sort reserves
+            reserves.sort((a, b) => {
+                return this.sortReserveProgram(a.reserve, b.reserve);
+            });
 
-            //コンフリクトチェック
-            for(let j = 0; j < tunerThreads.length; j++) {
-                if(tunerThreads[j].types.indexOf(matches[i].program.channelType) !== -1) {
-                    matches[i].isConflict = false;
-                    for(let k = 0; k < tunerThreads[j].programs.length; k++) {
-                        let t = tunerThreads[j].programs[k];
-                        let m = matches[i];
-                        if (!((t.program.endAt <= m.program.startAt) || (t.program.startAt >= m.program.endAt)) && !(t.program.channel == m.program.channel && t.program.serviceId != m.program.serviceId)) {
-                            //チューナーがこれ以上余りがない場合
-                            //手動予約同士のコンフリクト manualId の若い方を優先する
-                            //手動予約を優先する
-                            //ルール同士のコンフリクト ruleId が若い方を優先する
-                            //録画中(延長された)
-                            if(tunerMaxPosition[matches[i].program.channelType] === j && check && (
-                                (t.isManual && m.isManual && t.manualId! > m.manualId!)
-                                || (!t.isManual && m.isManual)
-                                || (!t.isManual && !m.isManual && t.ruleId! > m.ruleId!)
-                                || (m.program.startAt <= now && m.program.endAt <= now)
-                            )) {
-                                tunerThreads[j].programs[k].isConflict = true;
-                                conflicts.push(tunerThreads[j].programs[k]);
-                                tunerThreads[j].programs.splice(k, 1);
-                                break;
-                            } else {
-                                matches[i].isConflict = true;
-                                break;
-                            }
-                        }
-                    }
+            this.log.system.debug('--------------------');
+            for(let r of reserves) {
+                this.log.system.debug(<any>{
+                    name: r.reserve.program.name,
+                    ruleId: r.reserve.ruleId!,
+                });
+            }
 
-                    //コンフリクトしていなければ tunerThreads[j].programs へ追加
-                    if(!matches[i].isConflict) {
-                        tunerThreads[j].programs.push(matches[i]);
+            // tuner clear
+            for(let i = 0; i < this.tuners.length; i++) {
+                this.tuners[i].clear();
+            }
+
+            //重複の評価
+            for(let reserve of reserves) {
+                if(matches[reserve.idx].isSkip) { continue; }
+
+                let isConflict = true;
+                for(let i = 0; i < this.tuners.length; i++) {
+                    try {
+                        this.tuners[i].add(matches[reserve.idx].program);
+                        isConflict = false;
                         break;
+                    } catch(err) {
+                        // tuner に追加できなかった
                     }
                 }
-            }
 
-            if(matches[i].isConflict) {
-                conflicts.push(matches[i]);
+                if(isConflict) {
+                    matches[reserve.idx].isConflict = true;
+                }
             }
         }
 
-        return {
-            conflicts: conflicts,
-            skips: skips,
-            tunerThreads: tunerThreads
-        };
+        // list から重複を除外した予約情報を生成
+        let newReserves: ReserveProgram[] = [];
+        for(let l of list) {
+            if(l.isStart) { newReserves.push(matches[l.idx]); }
+        }
+
+        return newReserves.sort((a, b) => { return a.program.startAt - b.program.startAt });
     }
 
     /**
-    * TunerThreadsResult を reserves へ保存する
-    * @param results: TunerThreadsResult
+    * ReserveProgram のソート用関数
+    * manualId が小さい > manualId が大きい > ruleId が小さい > ruleId が大きい の順で判定する
+    * @param a: ReserveProgram
+    * @param b: ReserveProgram
+    * @return number
     */
-    private saveReserves(results: TunerThreadsResult): void {
-        let reserves: ReserveProgram[] = [];
-        results.tunerThreads.forEach((thread) => {
-            Array.prototype.push.apply(reserves, thread.programs);
-        });
-        Array.prototype.push.apply(reserves, results.skips);
-        Array.prototype.push.apply(reserves, results.conflicts);
+    private sortReserveProgram(a: ReserveProgram, b: ReserveProgram): number {
+        if(a.isManual && b.isManual) { return a.manualId! - b.manualId!; }
+        if(a.isManual && !b.isManual) { return -1; }
+        if(!a.isManual && b.isManual) { return 1; }
+        if(!a.isManual && !b.isManual) { return a.ruleId! - b.ruleId!; }
 
-        //startAt でソート
-        reserves.sort((a, b) => { return a.program.startAt - b.program.startAt });
-
-        this.reserves = reserves;
-        this.writeReservesFile();
+        return 0;
     }
 
     /**
