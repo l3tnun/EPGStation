@@ -56,7 +56,7 @@ $ vim config/config.json
 
 mirakurunPath, mysql, encode の設定をすればとりあえず動きます
 
-デフォルトでは ffmpeg のパスは ```/usr/local/bin/ffmpeg``` を想定しています
+ffmpeg のパスはデフォルトで ```/usr/local/bin/ffmpeg``` となっています
 
 詳細は [doc/config.md](doc/config.md) を参照してください
 
