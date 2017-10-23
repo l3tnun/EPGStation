@@ -89,12 +89,14 @@ class RulesViewModel extends ViewModel {
     * @param rule: Rule
     */
     public async enable(rule: apid.Rule): Promise<void> {
+        const keyword = typeof rule.keyword === 'undefined' ? '-' : rule.keyword;
+
         try {
             await this.rulesApiModel.enable(rule.id);
-            this.snackbar.open(`有効化: ${ rule.keyword }`);
+            this.snackbar.open(`有効化: ${ keyword }`);
         } catch(err) {
             console.error(err);
-            this.snackbar.open(`有効化失敗: ${ rule.keyword }`);
+            this.snackbar.open(`有効化失敗: ${ keyword }`);
         }
     }
 
@@ -103,12 +105,14 @@ class RulesViewModel extends ViewModel {
     * @param rule: Rule
     */
     public async disable(rule: apid.Rule): Promise<void> {
+        const keyword = typeof rule.keyword === 'undefined' ? '-' : rule.keyword;
+
         try {
             await this.rulesApiModel.disable(rule.id);
-            this.snackbar.open(`無効化: ${ rule.keyword }`);
+            this.snackbar.open(`無効化: ${ keyword }`);
         } catch(err) {
             console.error(err);
-            this.snackbar.open(`無効化失敗: ${ rule.keyword }`);
+            this.snackbar.open(`無効化失敗: ${ keyword }`);
         }
     }
 }
