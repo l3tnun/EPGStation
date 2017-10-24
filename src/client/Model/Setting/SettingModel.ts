@@ -1,5 +1,6 @@
 import Model from '../Model';
 import { StorageModelInterface } from '../Storage/StorageModel';
+import Util from '../../Util/Util';
 
 interface SettingValue {
     programFixScroll: boolean;
@@ -7,6 +8,12 @@ interface SettingValue {
     recordedLength: number;
     reservesLength: number;
     ruleLength: number;
+    isEnableMegTsStreamingURLScheme: boolean;
+    customMegTsStreamingURLScheme: string | null;
+    isEnableRecordedViewerURLScheme: boolean;
+    customRecordedViewerURLScheme: string | null;
+    isEnableEecordedDownloaderURLScheme: boolean;
+    customEecordedDownloaderURLScheme: string | null;
 }
 
 interface SettingModelInterface extends Model {
@@ -51,8 +58,21 @@ class SettingModel extends Model implements SettingModelInterface {
                 console.error(err);
             }
         } else {
+            //デフォルト値と比較して足りない項目があれば追加する
+            const defaultValue = this.getDefaultValue();
+            let needsUpdate = false;
+            for(let key in defaultValue) {
+                if(typeof stored[key] === 'undefined') {
+                    stored[key] = defaultValue[key];
+                    needsUpdate = true;
+                }
+            }
+
             this.value = stored;
             this.isEnable = true;
+
+            //追加された項目があったら更新する
+            if(needsUpdate) { this.update(); }
         }
     }
 
@@ -82,12 +102,20 @@ class SettingModel extends Model implements SettingModelInterface {
     * set default value
     */
     public getDefaultValue(): SettingValue {
+        const hasURLSchemeConfigUA = Util.uaIsiOS() || Util.uaIsAndroid() || Util.uaIsMac() || Util.uaIsWindows();
+
         return {
             programFixScroll: false,
             programLength: 24,
             recordedLength: 24,
             reservesLength: 24,
             ruleLength: 24,
+            isEnableMegTsStreamingURLScheme: hasURLSchemeConfigUA,
+            customMegTsStreamingURLScheme: null,
+            isEnableRecordedViewerURLScheme: hasURLSchemeConfigUA,
+            customRecordedViewerURLScheme: null,
+            isEnableEecordedDownloaderURLScheme: hasURLSchemeConfigUA,
+            customEecordedDownloaderURLScheme: null,
         };
     }
 }
