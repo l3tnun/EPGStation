@@ -241,7 +241,7 @@ class IPCServer extends Model implements IPCServerInterface {
         this.functions[IPCMessageDefinition.updateReserves] = async (id: number) => {
             try {
                 if(Util.isContinuousEPGUpdater()) {
-                    await this.managers.reservation.updateAll();
+                    this.managers.reservation.updateAll();
                 } else {
                     this.managers.mirakurun.update();
                 }

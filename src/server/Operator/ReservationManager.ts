@@ -200,8 +200,13 @@ class ReservationManager extends Base {
     /**
     * 予約削除(手動予約) or 予約スキップ(ルール予約)
     * @param id: program id
+    * @throws ReservationManagerIsRunning 他で予約情報更新中の場合
     */
     public cancel(id: apid.ProgramId): void {
+        if(this.isRunning) { throw new Error(ReservationManager.ReservationManagerIsRunningError); }
+        this.isRunning = true;
+
+        let needsUpdateAll = false;
         for(let i = 0; i < this.reserves.length; i++) {
             if(this.reserves[i].program.id === id) {
                 if(this.reserves[i].isManual) {
@@ -209,6 +214,7 @@ class ReservationManager extends Base {
                     this.reserves.splice(i, 1);
                     this.writeReservesFile();
                     this.log.system.info(`cancel reserve: ${ id }`);
+                    needsUpdateAll = true;
                     break;
                 } else {
                     //ルール予約ならスキップを有効化
@@ -217,27 +223,39 @@ class ReservationManager extends Base {
                     this.reserves[i].isConflict = false;
                     this.writeReservesFile();
                     this.log.system.info(`add skip: ${ id }`);
+                    needsUpdateAll = true;
                     break;
                 }
             }
         }
 
-        this.updateAll();
+        this.isRunning = false;
+        if(needsUpdateAll) { this.updateAll(); }
     }
 
     /**
     * 予約対象から除外され状態を解除する
     * @param id: number program id
+    * @throws ReservationManagerIsRunning 他で予約情報更新中の場合
     */
     public async removeSkip(id: apid.ProgramId): Promise<void> {
+        if(this.isRunning) { throw new Error(ReservationManager.ReservationManagerIsRunningError); }
+        this.isRunning = true;
+
+        let needsUpdateAll = false;
         for(let i = 0; i < this.reserves.length; i++) {
             if(this.reserves[i].program.id === id) {
                 this.reserves[i].isSkip = false;
                 this.log.system.info(`remove skip: ${ id }`);
+                needsUpdateAll = true;
             }
         }
 
-        this.updateAll();
+        this.isRunning = false;
+        if(needsUpdateAll) {
+            this.writeReservesFile();
+            this.updateAll();
+        }
     }
 
     /**
@@ -340,7 +358,7 @@ class ReservationManager extends Base {
     * @return Promise<void> すでに実行中なら ReservationManagerUpdateIsRunning が発行される
     */
     public async updateAll(): Promise<void> {
-        if(this.isRunning) { return; }
+        if(this.isRunning) { throw new Error(ReservationManager.ReservationManagerIsRunningError); }
         this.isRunning = true;
 
         this.log.system.info('updateAll start');
@@ -656,6 +674,10 @@ class ReservationManager extends Base {
             { encoding: 'utf-8' }
         );
     }
+}
+
+namespace ReservationManager {
+    export const ReservationManagerIsRunningError = 'ReservationManagerIsRunning';
 }
 
 export { ReserveAllId, ReserveLimit, ReservationManagerInterface, ReservationManager };

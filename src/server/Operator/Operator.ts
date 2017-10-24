@@ -149,15 +149,16 @@ class Operator {
     * RuleManager Update 終了の callback
     * @param ruleId: rule id
     * @param status: RuleEventStatus
+    * @param isRetry: true: retry, false: retry ではない
     */
-    private async ruleManagerUpdateCallback(ruleId: number, status: RuleEventStatus): Promise<void> {
+    private async ruleManagerUpdateCallback(ruleId: number, status: RuleEventStatus, isRetry: boolean = false): Promise<void> {
         // ルールが削除 or 無効化されたとき、そのルールの予約を停止する
-        if(status === 'delete' || status === 'disable') {
+        if(!isRetry && (status === 'delete' || status === 'disable')) {
             this.recordingManager.stopRuleId(ruleId);
         }
 
         // ルールが削除されたとき recorded の整合性をとる
-        if(status === 'delete') {
+        if(!isRetry && status === 'delete') {
             try {
                 await this.recordingManager.deleteRule(ruleId);
             } catch(err) {
@@ -171,11 +172,13 @@ class Operator {
         } catch(err) {
             this.log.system.error('ReservationManager update Error');
             this.log.system.error(err);
-            setTimeout(() => { this.ruleManagerUpdateCallback(ruleId, status) }, 1000);
+            setTimeout(() => { this.ruleManagerUpdateCallback(ruleId, status, true) }, 1000);
         }
 
-        // socket.io で通知
-        this.ipc.notifIo();
+        if(!isRetry) {
+            // socket.io で通知
+            this.ipc.notifIo();
+        }
     }
 
     /**
