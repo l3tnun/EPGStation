@@ -135,6 +135,56 @@ class SettingComponent extends ParentComponent<void> {
                     ])
                 ),
 
+                this.createListItem(
+                    'ライブ視聴のURL設定',
+                    this.createToggle(
+                        () => { return this.viewModel.tmpValue.isEnableMegTsStreamingURLScheme; },
+                        (value) => { this.viewModel.tmpValue.isEnableMegTsStreamingURLScheme = value; },
+                    )
+                ),
+                this.createTextBox(
+                    () => {
+                        const value = this.viewModel.tmpValue.customMegTsStreamingURLScheme;
+                        return value === null ? '' : value;
+                    },
+                    (value) => {
+                        this.viewModel.tmpValue.customMegTsStreamingURLScheme = value ? value : null;
+                    }
+                ),
+
+                this.createListItem(
+                    '録画視聴のURL設定',
+                    this.createToggle(
+                        () => { return this.viewModel.tmpValue.isEnableRecordedViewerURLScheme; },
+                        (value) => { this.viewModel.tmpValue.isEnableRecordedViewerURLScheme = value; },
+                    )
+                ),
+                this.createTextBox(
+                    () => {
+                        const value = this.viewModel.tmpValue.customRecordedViewerURLScheme;
+                        return value === null ? '' : value;
+                    },
+                    (value) => {
+                        this.viewModel.tmpValue.customRecordedViewerURLScheme = value ? value : null;
+                    }
+                ),
+
+                this.createListItem(
+                    '録画保存のURL設定',
+                    this.createToggle(
+                        () => { return this.viewModel.tmpValue.isEnableEecordedDownloaderURLScheme; },
+                        (value) => { this.viewModel.tmpValue.isEnableEecordedDownloaderURLScheme = value; },
+                    )
+                ),
+                this.createTextBox(
+                    () => {
+                        const value = this.viewModel.tmpValue.customEecordedDownloaderURLScheme;
+                        return value === null ? '' : value;
+                    },
+                    (value) => {
+                        this.viewModel.tmpValue.customEecordedDownloaderURLScheme = value ? value : null;
+                    }
+                ),
             ]),
 
             m('div', { class: 'mdl-dialog__actions' }, [
@@ -186,6 +236,50 @@ class SettingComponent extends ParentComponent<void> {
         }
 
         return results;
+    }
+
+    /**
+    * create Toggle
+    * @param getValue: () => boolean 入力値
+    * @param setValue: (value: boolean) => void toogle 変更時に実行される
+    * @return m.Child
+    */
+    private createToggle(getValue: () => boolean, setValue: (value: boolean) => void): m.Child {
+        return m('label', {
+            class: 'mdl-switch mdl-js-switch mdl-js-ripple-effect',
+            onupdate: (vnode: m.VnodeDOM<void, this>) => {
+                this.toggleLabelOnUpdate(<HTMLInputElement>vnode.dom, getValue());
+            },
+        }, [
+            m('input', {
+                type: 'checkbox',
+                class: 'mdl-switch__input',
+                checked: getValue(),
+                onclick: m.withAttr('checked', (value) => {
+                    setValue(value);
+                }),
+            }),
+            m('span', { class: 'mdl-switch__label' }),
+        ]);
+    }
+
+    /**
+    * create TextBox
+    * @param getValue: () => string
+    * @param setValue: (value: string) => void
+    * @return m.Child
+    */
+    private createTextBox(getValue: () => string, setValue: (value: string) => void): m.Child {
+        return m('li', { class: 'mdl-list__item' }, [
+            m('div', { class: 'mdl-cell--12-col mdl-textfield mdl-js-textfield' }, [
+                 m('input', {
+                    class: 'mdl-textfield__input',
+                    type: 'text',
+                    value: getValue(),
+                    onchange: m.withAttr('value', (value) => { setValue(value); }),
+                })
+            ]),
+        ]);
     }
 }
 

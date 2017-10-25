@@ -102,7 +102,7 @@ class SettingModel extends Model implements SettingModelInterface {
     * set default value
     */
     public getDefaultValue(): SettingValue {
-        const hasURLSchemeConfigUA = Util.uaIsiOS() || Util.uaIsAndroid() || Util.uaIsMac() || Util.uaIsWindows();
+        const hasURLSchemeConfigUA = Util.uaIsiOS() || Util.uaIsAndroid();
 
         return {
             programFixScroll: false,
