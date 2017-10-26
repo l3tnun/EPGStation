@@ -64,6 +64,10 @@ mac での URL Scheme 設定については [doc/mac-url-scheme.md](doc/mac-url-
 
 windows での URL Scheme 設定については [doc/win-url-scheme.md](doc/win-url-scheme.md) を参照してください
 
+その他の環境での URL Scheme の設定や個別に無効化したい場合については WebUI の設定で各ブラウザごとに設定してください
+
+記述方法は [doc/config.md](https://github.com/l3tnun/EPGStation/blob/master/doc/config.md#recordedviewer-recordeddownloader-mpegtsviewer-%E3%81%A7%E7%BD%AE%E6%8F%9B%E3%81%95%E3%82%8C%E3%82%8B%E6%96%87%E5%AD%97%E5%88%97) に準じます
+
 ### log の設定
 
 ````
