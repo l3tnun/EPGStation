@@ -5,6 +5,7 @@ import * as apid from '../../../../api';
 import { StreamsApiModelInterface } from '../../Model/Api/StreamsApiModel';
 import { ConfigApiModelInterface } from '../../Model/Api/ConfigApiModel';
 import { SnackbarModelInterface } from '../../Model/Snackbar/SnackbarModel';
+import { SettingModelInterface } from '../../Model/Setting/SettingModel';
 import CreateStreamLink from './CreateStreamLink';
 
 /**
@@ -13,6 +14,7 @@ import CreateStreamLink from './CreateStreamLink';
 class StreamInfoViewModel extends ViewModel {
     private streamsApiModel: StreamsApiModelInterface;
     private config: ConfigApiModelInterface;
+    private setting: SettingModelInterface;
     private snackbar: SnackbarModelInterface;
     private timer: NodeJS.Timer | null = null;
 
@@ -20,11 +22,13 @@ class StreamInfoViewModel extends ViewModel {
         streamsApiModel: StreamsApiModelInterface,
         config: ConfigApiModelInterface,
         snackbar: SnackbarModelInterface,
+        setting: SettingModelInterface,
     ) {
         super();
         this.streamsApiModel = streamsApiModel;
         this.config = config;
         this.snackbar = snackbar;
+        this.setting = setting;
     }
 
     /**
@@ -100,10 +104,15 @@ class StreamInfoViewModel extends ViewModel {
         if(typeof info === 'undefined') { return; }
 
         if(info.type === 'MpegTsLive') {
+            const setting = this.setting.get();
             let url: string | null = null;
             try {
                 url = CreateStreamLink.mpegTsStreamingLink(
                     this.config.getConfig(),
+                    setting === null ? null : {
+                        isEnableURLScheme: setting.isEnableMegTsStreamingURLScheme,
+                        customURLScheme: setting.customMegTsStreamingURLScheme,
+                    },
                     info.channelId!,
                     info.mode!,
                 );

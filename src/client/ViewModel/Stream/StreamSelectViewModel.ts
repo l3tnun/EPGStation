@@ -4,6 +4,7 @@ import * as apid from '../../../../api';
 import { ConfigApiModelInterface } from '../../Model/Api/ConfigApiModel';
 import { BalloonModelInterface } from '../../Model/Balloon/BallonModel';
 import { SnackbarModelInterface } from '../../Model/Snackbar/SnackbarModel';
+import { SettingModelInterface } from '../../Model/Setting/SettingModel';
 import CreateStreamLink from './CreateStreamLink';
 
 /**
@@ -11,6 +12,7 @@ import CreateStreamLink from './CreateStreamLink';
 */
 class StreamSelectViewModel extends ViewModel {
     private config: ConfigApiModelInterface;
+    private setting: SettingModelInterface;
     private balloon: BalloonModelInterface;
     private channel: apid.ScheduleServiceItem | null = null;
     private snackbar: SnackbarModelInterface;
@@ -25,11 +27,13 @@ class StreamSelectViewModel extends ViewModel {
         config: ConfigApiModelInterface,
         balloon: BalloonModelInterface,
         snackbar: SnackbarModelInterface,
+        setting: SettingModelInterface,
     ) {
         super();
         this.config = config;
         this.balloon = balloon;
         this.snackbar = snackbar;
+        this.setting = setting;
     }
 
     /**
@@ -67,10 +71,15 @@ class StreamSelectViewModel extends ViewModel {
     public view(): void {
         if(this.channel === null) { return; }
 
+        const setting = this.setting.get();
         let url: string | null = null;
         try {
             url = CreateStreamLink.mpegTsStreamingLink(
                 this.config.getConfig(),
+                setting === null ? null : {
+                    isEnableURLScheme: setting.isEnableMegTsStreamingURLScheme,
+                    customURLScheme: setting.customMegTsStreamingURLScheme,
+                },
                 this.channel.id,
                 this.streamOptionValue,
             );

@@ -103,6 +103,7 @@ namespace ViewModelFactorySetting {
             streamApiModel,
             balloonModel,
             tabModel,
+            settingModel,
         ));
         factory.reg('RecordedMenuViewModel', new RecordedMenuViewModel(
             balloonModel,
@@ -161,11 +162,13 @@ namespace ViewModelFactorySetting {
             configModel,
             balloonModel,
             snackbarModel,
+            settingModel,
         ));
         factory.reg('StreamInfoViewModel', new StreamInfoViewModel(
             streamApiModel,
             configModel,
             snackbarModel,
+            settingModel,
         ));
         factory.reg('StreamForcedStopViewModel', new StreamForcedStopViewModel(
             streamApiModel,

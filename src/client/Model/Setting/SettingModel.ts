@@ -7,6 +7,12 @@ interface SettingValue {
     recordedLength: number;
     reservesLength: number;
     ruleLength: number;
+    isEnableMegTsStreamingURLScheme: boolean;
+    customMegTsStreamingURLScheme: string | null;
+    isEnableRecordedViewerURLScheme: boolean;
+    customRecordedViewerURLScheme: string | null;
+    isEnableRecordedDownloaderURLScheme: boolean;
+    customRecordedDownloaderURLScheme: string | null;
 }
 
 interface SettingModelInterface extends Model {
@@ -51,8 +57,21 @@ class SettingModel extends Model implements SettingModelInterface {
                 console.error(err);
             }
         } else {
+            //デフォルト値と比較して足りない項目があれば追加する
+            const defaultValue = this.getDefaultValue();
+            let needsUpdate = false;
+            for(let key in defaultValue) {
+                if(typeof stored[key] === 'undefined') {
+                    stored[key] = defaultValue[key];
+                    needsUpdate = true;
+                }
+            }
+
             this.value = stored;
             this.isEnable = true;
+
+            //追加された項目があったら更新する
+            if(needsUpdate) { this.update(); }
         }
     }
 
@@ -88,6 +107,12 @@ class SettingModel extends Model implements SettingModelInterface {
             recordedLength: 24,
             reservesLength: 24,
             ruleLength: 24,
+            isEnableMegTsStreamingURLScheme: true,
+            customMegTsStreamingURLScheme: null,
+            isEnableRecordedViewerURLScheme: true,
+            customRecordedViewerURLScheme: null,
+            isEnableRecordedDownloaderURLScheme: true,
+            customRecordedDownloaderURLScheme: null,
         };
     }
 }
