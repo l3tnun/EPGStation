@@ -7,6 +7,7 @@ import { RecordedApiModelInterface } from '../../Model/Api/RecordedApiModel';
 import Util from '../../Util/Util';
 import DateUtil from '../../Util/DateUtil';
 import { ConfigApiModelInterface } from '../../Model/Api/ConfigApiModel';
+import { SettingModelInterface } from '../../Model/Setting/SettingModel';
 import { StreamsApiModelInterface } from '../../Model/Api/StreamsApiModel';
 import { TabModelInterface } from '../../Model/Tab/TabModel';
 
@@ -15,6 +16,7 @@ import { TabModelInterface } from '../../Model/Tab/TabModel';
 */
 class RecordedInfoViewModel extends ViewModel {
     private config: ConfigApiModelInterface;
+    private setting: SettingModelInterface;
     private balloon: BalloonModelInterface;
     private recorded: apid.RecordedProgram | null = null;
     private channels: ChannelsApiModelInterface;
@@ -32,6 +34,7 @@ class RecordedInfoViewModel extends ViewModel {
         streamApiModel: StreamsApiModelInterface,
         balloon: BalloonModelInterface,
         tab: TabModelInterface,
+        setting: SettingModelInterface,
     ) {
         super();
         this.config = config;
@@ -40,6 +43,7 @@ class RecordedInfoViewModel extends ViewModel {
         this.streamApiModel = streamApiModel;
         this.balloon = balloon;
         this.tab = tab;
+        this.setting = setting;
     }
 
     /**
@@ -88,21 +92,38 @@ class RecordedInfoViewModel extends ViewModel {
     * @return video source
     */
     public getVideoSrc(download: boolean = false): { name: string, path: string }[] {
-        let config = this.config.getConfig();
-        if(this.recorded === null || config === null) { return []; }
+        const config = this.config.getConfig();
+        const setting = this.setting.get();
+        if(this.recorded === null || config === null || setting === null) { return []; }
 
         // url scheme 用のベースリンクを取得
         let urlScheme: string | null = null;
-        let app: { ios: string, android: string, mac: string, win: string } | undefined = download ? config.recordedDownloader : config.recordedViewer;
-        if(typeof app !== 'undefined') {
-            if(Util.uaIsiOS() && typeof app.ios !== 'undefined') {
-                urlScheme = app.ios;
-            } else if(Util.uaIsAndroid() && typeof app.android !== 'undefined') {
-                urlScheme = app.android;
-            } else if(Util.uaIsMac() && !Util.uaIsSafari() && typeof app.mac !== 'undefined') {
-                urlScheme = app.mac;
-            } else if(Util.uaIsWindows() && typeof app.win !== 'undefined') {
-                urlScheme = app.win;
+
+        let isEnableUrlScheme = false;
+        if(download) {
+            if(setting.isEnableRecordedDownloaderURLScheme) {
+                urlScheme = setting.customRecordedDownloaderURLScheme;
+                isEnableUrlScheme = true;
+            }
+        } else {
+            if(setting.isEnableRecordedViewerURLScheme) {
+                urlScheme = setting.customRecordedViewerURLScheme;
+                isEnableUrlScheme = true;
+            }
+        }
+
+        if(urlScheme === null && isEnableUrlScheme) {
+            const app: { ios: string, android: string, mac: string, win: string } | undefined = download ? config.recordedDownloader : config.recordedViewer;
+            if(typeof app !== 'undefined') {
+                if(Util.uaIsiOS() && typeof app.ios !== 'undefined') {
+                    urlScheme = app.ios;
+                } else if(Util.uaIsAndroid() && typeof app.android !== 'undefined') {
+                    urlScheme = app.android;
+                } else if(Util.uaIsMac() && !Util.uaIsSafari() && typeof app.mac !== 'undefined') {
+                    urlScheme = app.mac;
+                } else if(Util.uaIsWindows() && typeof app.win !== 'undefined') {
+                    urlScheme = app.win;
+                }
             }
         }
 

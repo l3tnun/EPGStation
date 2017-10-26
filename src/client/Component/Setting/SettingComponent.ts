@@ -52,22 +52,10 @@ class SettingComponent extends ParentComponent<void> {
         if(Util.uaIsAndroid()) {
             fixScroll = this.createListItem(
                 '番組表スクロール修正',
-                m('label', {
-                    class: 'mdl-switch mdl-js-switch mdl-js-ripple-effect',
-                    onupdate: (vnode: m.VnodeDOM<void, this>) => {
-                        this.toggleLabelOnUpdate(<HTMLInputElement>vnode.dom, this.viewModel.tmpValue.programFixScroll);
-                    }
-                }, [
-                    m('input', {
-                        type: 'checkbox',
-                        class: 'mdl-switch__input',
-                        checked: this.viewModel.tmpValue.programFixScroll,
-                        onclick: m.withAttr('checked', (value) => {
-                            this.viewModel.tmpValue.programFixScroll = value;
-                        }),
-                    }),
-                ]),
-                { style: 'margin-right: 16px;' }
+                this.createToggle(
+                    () => { return this.viewModel.tmpValue.programFixScroll; },
+                    (value) => { this.viewModel.tmpValue.programFixScroll = value; },
+                )
             );
         }
 
@@ -172,17 +160,17 @@ class SettingComponent extends ParentComponent<void> {
                 this.createListItem(
                     '録画保存のURL設定',
                     this.createToggle(
-                        () => { return this.viewModel.tmpValue.isEnableEecordedDownloaderURLScheme; },
-                        (value) => { this.viewModel.tmpValue.isEnableEecordedDownloaderURLScheme = value; },
+                        () => { return this.viewModel.tmpValue.isEnableRecordedDownloaderURLScheme; },
+                        (value) => { this.viewModel.tmpValue.isEnableRecordedDownloaderURLScheme = value; },
                     )
                 ),
                 this.createTextBox(
                     () => {
-                        const value = this.viewModel.tmpValue.customEecordedDownloaderURLScheme;
+                        const value = this.viewModel.tmpValue.customRecordedDownloaderURLScheme;
                         return value === null ? '' : value;
                     },
                     (value) => {
-                        this.viewModel.tmpValue.customEecordedDownloaderURLScheme = value ? value : null;
+                        this.viewModel.tmpValue.customRecordedDownloaderURLScheme = value ? value : null;
                     }
                 ),
             ]),
@@ -207,19 +195,12 @@ class SettingComponent extends ParentComponent<void> {
     * create list item
     * @param name: name
     * @param child m.child
-    * @param child Attr: attr
     * @return m.Child
     */
-    private createListItem(name: string, child: m.Child, childAttr: { [key: string]: any } = {}): m.Child {
-        if(typeof childAttr.class === 'string') {
-            childAttr.class += ' mdl-list__item-secondary-action';
-        } else {
-            childAttr.class = 'mdl-list__item-secondary-action';
-        }
-
+    private createListItem(name: string, child: m.Child): m.Child {
         return m('li', { class: 'mdl-list__item' }, [
             m('span', { class: 'mdl-list__item-primary-content' }, name),
-            m('span', childAttr, child),
+            m('span', { class: 'mdl-list__item-secondary-action' }, child),
         ]);
     }
 

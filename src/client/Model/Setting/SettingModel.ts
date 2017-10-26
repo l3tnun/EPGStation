@@ -1,6 +1,5 @@
 import Model from '../Model';
 import { StorageModelInterface } from '../Storage/StorageModel';
-import Util from '../../Util/Util';
 
 interface SettingValue {
     programFixScroll: boolean;
@@ -12,8 +11,8 @@ interface SettingValue {
     customMegTsStreamingURLScheme: string | null;
     isEnableRecordedViewerURLScheme: boolean;
     customRecordedViewerURLScheme: string | null;
-    isEnableEecordedDownloaderURLScheme: boolean;
-    customEecordedDownloaderURLScheme: string | null;
+    isEnableRecordedDownloaderURLScheme: boolean;
+    customRecordedDownloaderURLScheme: string | null;
 }
 
 interface SettingModelInterface extends Model {
@@ -102,20 +101,18 @@ class SettingModel extends Model implements SettingModelInterface {
     * set default value
     */
     public getDefaultValue(): SettingValue {
-        const hasURLSchemeConfigUA = Util.uaIsiOS() || Util.uaIsAndroid();
-
         return {
             programFixScroll: false,
             programLength: 24,
             recordedLength: 24,
             reservesLength: 24,
             ruleLength: 24,
-            isEnableMegTsStreamingURLScheme: hasURLSchemeConfigUA,
+            isEnableMegTsStreamingURLScheme: true,
             customMegTsStreamingURLScheme: null,
-            isEnableRecordedViewerURLScheme: hasURLSchemeConfigUA,
+            isEnableRecordedViewerURLScheme: true,
             customRecordedViewerURLScheme: null,
-            isEnableEecordedDownloaderURLScheme: hasURLSchemeConfigUA,
-            customEecordedDownloaderURLScheme: null,
+            isEnableRecordedDownloaderURLScheme: true,
+            customRecordedDownloaderURLScheme: null,
         };
     }
 }

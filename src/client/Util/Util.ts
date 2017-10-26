@@ -135,7 +135,7 @@ namespace Util {
     * @return boolean
     */
     export const uaIsMac = (): boolean => {
-        return /Mac|mac/.test(navigator.userAgent);
+        return /Macintosh|macintosh/.test(navigator.userAgent);
     }
 
     /**
