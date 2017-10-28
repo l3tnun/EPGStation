@@ -6,7 +6,7 @@ export interface ReserveProgram {
     ruleId?: number;
     ruleOption?: OptionInterface;
     encodeOption?: EncodeInterface;
-    isSkip?: boolean;
+    isSkip: boolean;
     isManual: boolean;     //手動予約時にtrue
     manualId?: number;      //手動予約時に追加する
     isConflict: boolean;

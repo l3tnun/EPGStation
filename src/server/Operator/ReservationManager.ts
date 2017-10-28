@@ -207,31 +207,49 @@ class ReservationManager extends Base {
         if(this.isRunning) { throw new Error(ReservationManager.ReservationManagerIsRunningError); }
         this.isRunning = true;
 
-        let needsUpdateAll = false;
+        let needsUpdate = false;
         for(let i = 0; i < this.reserves.length; i++) {
             if(this.reserves[i].program.id === id) {
                 if(this.reserves[i].isManual) {
                     //手動予約なら削除
                     this.reserves.splice(i, 1);
-                    this.writeReservesFile();
                     this.log.system.info(`cancel reserve: ${ id }`);
-                    needsUpdateAll = true;
+                    needsUpdate = true;
                     break;
                 } else {
                     //ルール予約ならスキップを有効化
                     this.reserves[i].isSkip = true;
                     // skip すれば録画されないのでコンフリクトはしない
                     this.reserves[i].isConflict = false;
-                    this.writeReservesFile();
                     this.log.system.info(`add skip: ${ id }`);
-                    needsUpdateAll = true;
+                    needsUpdate = true;
                     break;
                 }
             }
         }
 
+        if(needsUpdate) {
+            this.log.system.info('start update');
+
+            // 予約情報をコピー
+            let matches: ReserveProgram[] = [];
+            for(let reserve of this.reserves) {
+                let r: any = {};
+                Object.assign(r, reserve);
+                r.isConflict = false;
+                matches.push(r);
+            }
+
+            //予約情報更新
+            this.reserves = this.createReserves(matches);
+            this.writeReservesFile();
+
+            //通知
+            this.ipc.notifIo();
+
+            this.log.system.info('update done');
+        }
         this.isRunning = false;
-        if(needsUpdateAll) { this.updateAll(); }
     }
 
     /**
@@ -524,7 +542,7 @@ class ReservationManager extends Base {
         //通知
         this.ipc.notifIo();
 
-        this.log.system.info(`done update rule: ${ ruleId }`);
+        this.log.system.info(`update rule: ${ ruleId } done`);
     }
 
     /**
