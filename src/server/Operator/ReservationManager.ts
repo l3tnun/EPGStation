@@ -40,6 +40,7 @@ interface ReservationManagerInterface {
     removeSkip(id: apid.ProgramId): Promise<void>;
     addReserve(programId: apid.ProgramId, encode?: EncodeInterface): Promise<void>;
     updateAll(): Promise<void>;
+    updateRule(ruleId: number): Promise<void>;
     clean(): void;
 }
 
@@ -242,19 +243,17 @@ class ReservationManager extends Base {
         if(this.isRunning) { throw new Error(ReservationManager.ReservationManagerIsRunningError); }
         this.isRunning = true;
 
-        let needsUpdateAll = false;
         for(let i = 0; i < this.reserves.length; i++) {
             if(this.reserves[i].program.id === id) {
                 this.reserves[i].isSkip = false;
                 this.log.system.info(`remove skip: ${ id }`);
-                needsUpdateAll = true;
-            }
-        }
 
-        this.isRunning = false;
-        if(needsUpdateAll) {
-            this.writeReservesFile();
-            this.updateAll();
+                this.isRunning = false;
+                if(typeof this.reserves[i].ruleId !== 'undefined') {
+                    this.updateRule(this.reserves[i].ruleId!);
+                }
+                break;
+            }
         }
     }
 
@@ -424,23 +423,104 @@ class ReservationManager extends Base {
         }
 
         // 予約情報を生成
-        const newReserves = this.createReserves(matches);
-
-        // conflict を表示
-        for(let reserve of newReserves) {
-            if(!reserve.isConflict) { continue; }
-            this.log.system.warn(`conflict: ${ reserve.program.id } ${ DateUtil.format(new Date(reserve.program.startAt), 'yyyy-MM-ddThh:mm:ss') } ${ reserve.program.name }`);
-        }
-
-        // 保存
-        this.reserves = newReserves;
+        this.reserves = this.createReserves(matches);
         this.writeReservesFile();
+
+        this.isRunning = false;
 
         //通知
         this.ipc.notifIo();
 
-        this.isRunning = false;
+        // conflict を表示
+        this.showConflict();
+
         this.log.system.info('updateAll done');
+    }
+
+    /**
+    * 指定した rule の予約を更新
+    */
+    public async updateRule(ruleId: number): Promise<void> {
+        if(this.isRunning) { throw new Error(ReservationManager.ReservationManagerIsRunningError); }
+        this.isRunning = true;
+
+        const finalize = () => { this.isRunning = false; }
+
+        this.log.system.info(`start update rule: ${ ruleId }`);
+
+        // rule を取得
+        let rule: DBSchema.RulesSchema | null = null;
+        try {
+            let result = await this.rulesDB.findId(ruleId);
+            if(result.length !== 0 && result[0].enable) {
+                rule = result[0];
+            }
+        } catch(err) {
+            finalize();
+            throw err;
+        }
+
+        // 番組情報を取得
+        let programs: DBSchema.ProgramSchema[] = []
+        if(rule !== null) {;
+            try {
+                programs = await this.programDB.findRule(this.createSearchOption(rule));
+            } catch(err) {
+                finalize();
+                throw err;
+            }
+        }
+
+        // スキップ情報
+        let skipIndex: { [key: number]: boolean } = {};
+        // ruleId を除外した予約情報を生成
+        let matches: ReserveProgram[] = [];
+        for(let reserve of this.reserves) {
+            //スキップ情報を記録
+            if(reserve.isSkip) { skipIndex[reserve.program.id] = reserve.isSkip; }
+
+            if(typeof reserve.ruleId === 'undefined' || reserve.ruleId !== ruleId) {
+                let r: any = {};
+                Object.assign(r, reserve);
+                r.isConflict = false;
+                matches.push(r);
+            }
+        }
+
+        if(rule !== null) {
+            // ruleId の番組情報を追加
+            const ruleOption = this.createOption(rule);
+            const encodeOption = this.createEncodeOption(rule);
+            for(let program of programs) {
+                let data: ReserveProgram = {
+                    program: program,
+                    ruleId: ruleId,
+                    ruleOption: ruleOption,
+                    isSkip: typeof skipIndex[program.id] === 'undefined' ? false : skipIndex[program.id],
+                    isManual: false,
+                    isConflict: false,
+                };
+                if(encodeOption !== null) {
+                    data.encodeOption = encodeOption;
+                }
+                matches.push(data);
+            }
+        }
+
+        // 予約情報を生成
+        this.reserves = this.createReserves(matches);
+
+        this.writeReservesFile();
+
+        finalize();
+
+        // conflict を表示
+        this.showConflict();
+
+        //通知
+        this.ipc.notifIo();
+
+        this.log.system.info(`done update rule: ${ ruleId }`);
     }
 
     /**
@@ -633,6 +713,16 @@ class ReservationManager extends Base {
         if(!a.isManual && !b.isManual) { return a.ruleId! - b.ruleId!; }
 
         return 0;
+    }
+
+    /**
+    * conflict を表示
+    */
+    private showConflict(): void {
+        for(let reserve of this.reserves) {
+            if(!reserve.isConflict) { continue; }
+            this.log.system.warn(`conflict: ${ reserve.program.id } ${ DateUtil.format(new Date(reserve.program.startAt), 'yyyy-MM-ddThh:mm:ss') } ${ reserve.program.name }`);
+        }
     }
 
     /**
