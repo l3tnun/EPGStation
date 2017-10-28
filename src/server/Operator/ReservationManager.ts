@@ -380,7 +380,11 @@ class ReservationManager extends Base {
                 let programs = await this.programDB.findId(reserve.program.id, true);
                 if(programs.length === 0) { continue; }
                 reserve.program = programs[0];
-                matches.push(reserve);
+
+                let r: any = {};
+                Object.assign(r, reserve);
+                r.isConflict = false;
+                matches.push(r);
             } catch(err) {
                 this.log.system.error('manual program search error');
                 this.log.system.error(err);
