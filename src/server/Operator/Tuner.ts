@@ -18,18 +18,18 @@ class Tuner extends Base {
 
     /**
     * 予約情報を追加
-    * @throws TunerIsNotEmpty 予約情報が追加できなかった場合
+    * @return boolean 予約情報が追加できなかった場合 false
     */
-    public add(program: DBSchema.ProgramSchema): void {
-        if(this.types.indexOf(program.channelType) === -1) {
-            throw new Error(Tuner.TunerIsNotEmptyError);
+    public add(program: DBSchema.ProgramSchema): boolean {
+        if(this.types.indexOf(program.channelType) === -1 && (
+            this.programs.length === 0
+            || this.programs[0].channel === program.channel
+        )) {
+            this.programs.push(program);
+            return true;
         }
 
-        if(this.programs.length === 0 || this.programs[0].channel === program.channel) {
-            this.programs.push(program);
-        } else {
-            throw new Error(Tuner.TunerIsNotEmptyError);
-        }
+        return false;
     }
 
     /**

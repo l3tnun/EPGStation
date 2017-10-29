@@ -229,27 +229,32 @@ class ReservationManager extends Base {
         }
 
         if(needsUpdate) {
-            this.log.system.info('start update');
+            setTimeout(() => {
+                this.log.system.info('start update');
 
-            // 予約情報をコピー
-            let matches: ReserveProgram[] = [];
-            for(let reserve of this.reserves) {
-                let r: any = {};
-                Object.assign(r, reserve);
-                r.isConflict = false;
-                matches.push(r);
-            }
+                // 予約情報をコピー
+                let matches: ReserveProgram[] = [];
+                for(let reserve of this.reserves) {
+                    let r: any = {};
+                    Object.assign(r, reserve);
+                    r.isConflict = false;
+                    matches.push(r);
+                }
 
-            //予約情報更新
-            this.reserves = this.createReserves(matches);
-            this.writeReservesFile();
+                //予約情報更新
+                this.reserves = this.createReserves(matches);
+                this.writeReservesFile();
 
-            //通知
-            this.ipc.notifIo();
+                this.isRunning = false;
 
-            this.log.system.info('update done');
+                //通知
+                this.ipc.notifIo();
+
+                this.log.system.info('update done');
+            }, 100);
+        } else {
+            this.isRunning = false;
         }
-        this.isRunning = false;
     }
 
     /**
@@ -668,9 +673,10 @@ class ReservationManager extends Base {
                 reserves.push({ reserve: matches[l.idx], idx: l.idx });
             } else {
                 // remove
-                reserves = reserves.filter((r) => {
-                    return r.idx !== l.idx;
+                const index = reserves.findIndex((r) => {
+                    return r.idx === l.idx;
                 });
+                reserves.splice(index, 1);
             }
 
             // sort reserves
@@ -697,12 +703,9 @@ class ReservationManager extends Base {
 
                 let isConflict = true;
                 for(let i = 0; i < this.tuners.length; i++) {
-                    try {
-                        this.tuners[i].add(matches[reserve.idx].program);
+                    if(this.tuners[i].add(matches[reserve.idx].program)) {
                         isConflict = false;
                         break;
-                    } catch(err) {
-                        // tuner に追加できなかった
                     }
                 }
 
