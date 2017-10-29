@@ -229,27 +229,32 @@ class ReservationManager extends Base {
         }
 
         if(needsUpdate) {
-            this.log.system.info('start update');
+            setTimeout(() => {
+                this.log.system.info('start update');
 
-            // 予約情報をコピー
-            let matches: ReserveProgram[] = [];
-            for(let reserve of this.reserves) {
-                let r: any = {};
-                Object.assign(r, reserve);
-                r.isConflict = false;
-                matches.push(r);
-            }
+                // 予約情報をコピー
+                let matches: ReserveProgram[] = [];
+                for(let reserve of this.reserves) {
+                    let r: any = {};
+                    Object.assign(r, reserve);
+                    r.isConflict = false;
+                    matches.push(r);
+                }
 
-            //予約情報更新
-            this.reserves = this.createReserves(matches);
-            this.writeReservesFile();
+                //予約情報更新
+                this.reserves = this.createReserves(matches);
+                this.writeReservesFile();
 
-            //通知
-            this.ipc.notifIo();
+                this.isRunning = false;
 
-            this.log.system.info('update done');
+                //通知
+                this.ipc.notifIo();
+
+                this.log.system.info('update done');
+            }, 100);
+        } else {
+            this.isRunning = false;
         }
-        this.isRunning = false;
     }
 
     /**
