@@ -668,9 +668,10 @@ class ReservationManager extends Base {
                 reserves.push({ reserve: matches[l.idx], idx: l.idx });
             } else {
                 // remove
-                reserves = reserves.filter((r) => {
-                    return r.idx !== l.idx;
+                const index = reserves.findIndex((r) => {
+                    return r.idx === l.idx;
                 });
+                reserves.splice(index, 1);
             }
 
             // sort reserves
