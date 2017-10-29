@@ -697,12 +697,9 @@ class ReservationManager extends Base {
 
                 let isConflict = true;
                 for(let i = 0; i < this.tuners.length; i++) {
-                    try {
-                        this.tuners[i].add(matches[reserve.idx].program);
+                    if(this.tuners[i].add(matches[reserve.idx].program)) {
                         isConflict = false;
                         break;
-                    } catch(err) {
-                        // tuner に追加できなかった
                     }
                 }
 
