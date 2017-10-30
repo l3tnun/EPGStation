@@ -136,9 +136,6 @@ class Operator {
             setTimeout(() => { this.mirakurunUpdateCallback(tuners) }, 1000);
         };
 
-        // socket.io で通知
-        this.ipc.notifIo();
-
         if(Util.isContinuousEPGUpdater()) {
             // EPG ストリーム更新開始
             await this.mirakurunEPGUpdateManager.start();
@@ -173,11 +170,6 @@ class Operator {
             this.log.system.error('ReservationManager update Error');
             this.log.system.error(err);
             setTimeout(() => { this.ruleManagerUpdateCallback(ruleId, status, true) }, 1000);
-        }
-
-        if(!isRetry) {
-            // socket.io で通知
-            this.ipc.notifIo();
         }
     }
 

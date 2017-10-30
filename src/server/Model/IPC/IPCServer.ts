@@ -75,6 +75,7 @@ class IPCServer extends Model implements IPCServerInterface {
     */
     public notifIo(): void {
         this.child.send({ msg: events.updateStatus });
+        this.log.access.debug('noifIo');
     }
 
     /**
