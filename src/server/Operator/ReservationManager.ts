@@ -875,7 +875,6 @@ class ReservationManager extends Base {
 }
 
 namespace ReservationManager {
-    export const ReservationManagerIsRunningError = 'ReservationManagerIsRunning';
     export const UNLOCK_EVENT = 'ExeUnlock';
 }
 
