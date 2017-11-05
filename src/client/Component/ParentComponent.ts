@@ -43,7 +43,7 @@ abstract class ParentComponent<T> extends Component<T> {
     /**
     * query を記憶
     */
-    public oninit(_vnode: m.Vnode<T, this>): any {
+    public oninit(_vnode: m.Vnode<T, any>): any {
         this.query = Util.getCopyQuery();
         this.queryChanged = false;
         this.initViewModel('init');
@@ -115,7 +115,7 @@ abstract class ParentComponent<T> extends Component<T> {
     * ViewModeel の init が必要であるかチェック
     * 必要であれば this.queryChanged = true;
     */
-    public onbeforeupdate(_vnode: m.VnodeDOM<T, this>, _old: m.VnodeDOM<T, this>): boolean | void {
+    public onbeforeupdate(_vnode: m.VnodeDOM<T, any>, _old: m.VnodeDOM<T, any>): boolean | void {
         this.newQuery = Util.getCopyQuery();
         if(m.buildQueryString(this.newQuery) == m.buildQueryString(this.query)) { return; }
         this.queryChanged = true;
@@ -125,7 +125,7 @@ abstract class ParentComponent<T> extends Component<T> {
     * update
     * this.queryChanged === true なら initViewModel
     */
-    public onupdate(_vnode: m.VnodeDOM<T, this>): void {
+    public onupdate(_vnode: m.VnodeDOM<T, any>): void {
         // query の変更で initViewModel する場合は state を適宜変更する
         if(this.queryChanged) {
             // close balloon
@@ -137,7 +137,7 @@ abstract class ParentComponent<T> extends Component<T> {
         this.queryChanged = false;
     }
 
-    public async onbeforeremove(vnode: m.VnodeDOM<T, this>): Promise<any>{
+    public async onbeforeremove(vnode: m.VnodeDOM<T, any>): Promise<any>{
         // close balloon
         // setTimeout で遅らせないと次のページで constructor が２度呼ばれてしまう
         await new Promise<void>((resolve: () => void) => {
@@ -150,14 +150,14 @@ abstract class ParentComponent<T> extends Component<T> {
         return super.onbeforeremove(vnode);
     }
 
-    public onremove(vnode: m.VnodeDOM<T, this>): any {
+    public onremove(vnode: m.VnodeDOM<T, any>): any {
         ParentComponent.ioStatus[this.getComponentName()].isActive = false;
         return super.onremove(vnode);
     }
 
     protected abstract getComponentName(): string;
 
-    public abstract view(vnode: m.Vnode<T, this>): m.Children | null | void;
+    public abstract view(vnode: m.Vnode<T, any>): m.Children | null | void;
 }
 
 export default ParentComponent;
