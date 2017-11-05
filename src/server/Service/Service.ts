@@ -8,7 +8,6 @@ import ModelFactorySetting from '../Model/ServiceModelFactorySetting';
 * Service
 */
 class Service {
-    private config: Configuration;
     private log: LoggerInterface;
 
     constructor() {
@@ -27,7 +26,6 @@ class Service {
         Logger.initialize(path.join(__dirname, '..', '..', '..', 'config', 'serviceLogConfig.json'));
         Configuration.getInstance().initialize(path.join(__dirname, '..', '..', '..', 'config', 'config.json'));
         this.log = Logger.getLogger();
-        this.config = Configuration.getInstance();
     }
 
     /**
