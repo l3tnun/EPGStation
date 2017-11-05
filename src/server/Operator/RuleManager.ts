@@ -99,9 +99,9 @@ class RuleManager extends Base implements RuleManagerInterface {
         this.isRunning = true;
 
         // rule が存在するか db 上から検索
-        let result: DBSchema.RulesSchema[];
         try {
-            result = await this.rulesDB.findId(ruleId);
+            const result = await this.rulesDB.findId(ruleId);
+            if(result.length === 0) { throw new Error('RuleIsNotFound'); }
         } catch(err) {
             this.isRunning = false;
             throw err;
