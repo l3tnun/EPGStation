@@ -12,6 +12,8 @@ interface ConfigInterface {
         connectTimeout: number,
         connectionLimit: number,
     };
+    gid: string | number;
+    uid: string | number;
     continuousEPGUpdater: boolean;
     programInsertMax: number;
     programInsertWait: number;
