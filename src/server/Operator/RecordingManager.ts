@@ -150,7 +150,7 @@ class RecordingManager extends Base implements RecordingManagerInterface {
 
         //エンコード実データを削除
         encoded.forEach((file) => {
-            fs.unlink(String(file.path), (err) => {
+            fs.unlink(file.path, (err) => {
                 if(err) {
                     this.log.system.error(`delete encode file error: ${ file.path }`);
                     this.log.system.error(String(err));

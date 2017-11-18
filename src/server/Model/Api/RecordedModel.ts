@@ -182,7 +182,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
                 return {
                     encodedId: file.id,
                     name: file.name,
-                    filename: encodeURIComponent(path.basename(String(file.path))),
+                    filename: encodeURIComponent(path.basename(file.path)),
                 }
             });
         }
@@ -294,7 +294,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
         } else {
             const encoded = await this.encodedDB.findId(encodedId);
             if(encoded.length === 0) { throw new Error(RecordedModelInterface.NotFoundRecordedFileError); }
-            filePath = String(encoded[0].path);
+            filePath = encoded[0].path;
         }
 
         //エンコードのソースファイルか確認
@@ -307,7 +307,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
         }
 
         // ファイル削除
-        fs.unlink(String(filePath), (err) => {
+        fs.unlink(filePath, (err) => {
             if(err) { throw new Error(RecordedModelInterface.DeleteFileError); }
         });
 
@@ -383,7 +383,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
         + `#EXTINF: ${ duration }, ${ name }\n`
         + url;
 
-        let fileName = encoded === null ? path.basename(String(recorded[0].recPath)) : path.basename(String(encoded[0].path));
+        let fileName = encoded === null ? path.basename(String(recorded[0].recPath)) : path.basename(encoded[0].path);
         return {
             name: encodeURIComponent(fileName + '.m3u8'),
             playList: playList,
@@ -451,7 +451,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
         } else {
             const encoded = await this.encodedDB.findId(encodedId);
             if(encoded.length === 0) { throw new Error(RecordedModelInterface.NotFoundRecordedFileError); }
-            filePath = String(encoded[0].path);
+            filePath = encoded[0].path;
         }
 
         //エンコードを追加

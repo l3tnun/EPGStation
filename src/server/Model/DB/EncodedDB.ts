@@ -83,13 +83,15 @@ class EncodedDB extends DBBase implements EncodedDBInterface {
     }
 
     /**
-    * path をフルパスへ書き換える
     * @param programs: DBSchema.RecordedSchema[]
     */
     private fixResult(programs: DBSchema.EncodedSchema[]): DBSchema.EncodedSchema[] {
         let baseDir = Util.getRecordedPath();
         return programs.map((program) => {
+            // path をフルパスへ書き換える
             program.path = path.join(baseDir, program.path);
+            // name を string へ
+            program.name = String(program.name);
             return program;
         });
     }
