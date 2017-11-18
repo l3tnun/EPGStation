@@ -214,14 +214,14 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
     public async getFilePath(recordedId: number, encodedId: number | undefined): Promise<recordedFilePathInfo> {
         let isEncoded: boolean = typeof encodedId !== 'undefined';
 
-        let result: DBSchema.RecordedSchema[] | DBSchema.EncodedSchema[];
+        let result: DBSchema.RecordedSchema[] | DBSchema.EncodedSchema | null;
         result = isEncoded ? await this.encodedDB.findId(encodedId!) : await this.recordedDB.findId(recordedId);
 
-        if(result.length === 0) {
+        if(result === null || (<DBSchema.RecordedSchema[]>result).length === 0) {
             throw new Error(RecordedModelInterface.NotFoundRecordedFileError);
         }
 
-        let filePath: string | null = isEncoded ? (<DBSchema.EncodedSchema[]>result)[0].path : (<DBSchema.RecordedSchema[]>result)[0].recPath;
+        let filePath: string | null = isEncoded ? (<DBSchema.EncodedSchema>result).path : (<DBSchema.RecordedSchema[]>result)[0].recPath;
         if(filePath === null) {
             throw new Error(RecordedModelInterface.NotFoundRecordedFileError);
         }
@@ -293,8 +293,8 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
             filePath = String(recorded[0].recPath);
         } else {
             const encoded = await this.encodedDB.findId(encodedId);
-            if(encoded.length === 0) { throw new Error(RecordedModelInterface.NotFoundRecordedFileError); }
-            filePath = encoded[0].path;
+            if(encoded === null) { throw new Error(RecordedModelInterface.NotFoundRecordedFileError); }
+            filePath = encoded.path;
         }
 
         //エンコードのソースファイルか確認
@@ -370,7 +370,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
     public async getM3u8(host: string, isSecure: boolean, recordedId: number, encodedId: number | undefined): Promise<PLayList> {
         let recorded = await this.recordedDB.findId(recordedId);
         let encoded = typeof encodedId !== 'undefined' ? await this.encodedDB.findId(encodedId) : null;
-        if(recorded.length === 0 || recorded[0].recPath === null && encoded === null || encoded !== null && encoded.length === 0) {
+        if(recorded.length === 0 || recorded[0].recPath === null && encoded === null) {
             throw new Error(RecordedModelInterface.NotFoundRecordedFileError);
         }
 
@@ -407,7 +407,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
 
         let recorded = await this.recordedDB.findId(recordedId);
         let encoded = typeof encodedId !== 'undefined' ? await this.encodedDB.findId(encodedId) : null;
-        if(recorded.length === 0 || recorded[0].recPath === null && encoded === null || encoded !== null && encoded.length === 0) {
+        if(recorded.length === 0 || recorded[0].recPath === null && encoded === null) {
             throw new Error(RecordedModelInterface.NotFoundRecordedFileError);
         }
 
@@ -450,8 +450,8 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
             filePath = String(recorded[0].recPath);
         } else {
             const encoded = await this.encodedDB.findId(encodedId);
-            if(encoded.length === 0) { throw new Error(RecordedModelInterface.NotFoundRecordedFileError); }
-            filePath = encoded[0].path;
+            if(encoded === null) { throw new Error(RecordedModelInterface.NotFoundRecordedFileError); }
+            filePath = encoded.path;
         }
 
         //エンコードを追加

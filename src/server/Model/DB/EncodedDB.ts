@@ -8,7 +8,7 @@ interface EncodedDBInterface extends DBBase {
     insert(recordedId: number, name: string, path: string): Promise<any>;
     delete(id: number): Promise<void>;
     deleteRecordedId(recordedId: number): Promise<void>;
-    findId(id: number): Promise<DBSchema.EncodedSchema[]>;
+    findId(id: number): Promise<DBSchema.EncodedSchema | null>;
     findRecordedId(recordedId: number): Promise<DBSchema.EncodedSchema[]>;
 }
 
@@ -75,11 +75,11 @@ class EncodedDB extends DBBase implements EncodedDBInterface {
     /**
     * id 検索
     * @param id: encoded id
-    * @return Promise<DBSchema.EncodedSchema[]>
+    * @return Promise<DBSchema.EncodedSchema | null>
     */
-    public async findId(id: number): Promise<DBSchema.EncodedSchema[]> {
+    public async findId(id: number): Promise<DBSchema.EncodedSchema | null> {
         let programs = await this.runQuery(`select * from ${ DBSchema.TableName.Encoded } where id = ${ id }`);
-        return this.fixResult(<DBSchema.EncodedSchema[]>programs);
+        return this.getFirst(this.fixResult(<DBSchema.EncodedSchema[]>programs));
     }
 
     /**

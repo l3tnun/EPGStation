@@ -168,6 +168,15 @@ abstract class DBBase extends Model {
 
         return result[0].total;
     }
+
+    /**
+    * 取得した結果の先頭だけ返す。結果が空なら null
+    * @param result<T[]>
+    * return T | null
+    */
+    protected getFirst<T>(result: T[]): T | null {
+        return result.length === 0 ? null : result[0];
+    }
 }
 
 export default DBBase;
