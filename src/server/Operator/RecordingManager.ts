@@ -413,7 +413,7 @@ class RecordingManager extends Base implements RecordingManagerInterface {
         };
 
         try {
-            recorded.id = <number>(( await this.recordedDB.insert(recorded) ).insertId);
+            recorded.id = await this.recordedDB.insert(recorded);
             //録画終了時処理
             stream.once('end', () => { this.recEnd(recData, recFile, recorded); });
 

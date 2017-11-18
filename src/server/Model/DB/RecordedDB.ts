@@ -13,8 +13,8 @@ interface findQuery {
 
 interface RecordedDBInterface extends DBBase {
     create(): Promise<void>;
-    insert(program: DBSchema.RecordedSchema): Promise<any>;
-    replace(program: DBSchema.RecordedSchema): Promise<any>;
+    insert(program: DBSchema.RecordedSchema): Promise<number>;
+    replace(program: DBSchema.RecordedSchema): Promise<void>;
     delete(id: number): Promise<void>;
     deleteRecPath(id: number): Promise<void>;
     deleteRuleId(ruleId: number): Promise<void>;
@@ -67,9 +67,9 @@ class RecordedDB extends DBBase implements RecordedDBInterface {
     /**
     * recorded 挿入
     * @param program: DBSchema.RecordedSchema
-    * @param Promise<any>
+    * @param Promise<number> insertId
     */
-    public insert(program: DBSchema.RecordedSchema): Promise<any> {
+    public async insert(program: DBSchema.RecordedSchema): Promise<number> {
         let query = `insert into ${ DBSchema.TableName.Recorded } (`
             + 'programId, '
             + 'channelId, '
@@ -121,15 +121,15 @@ class RecordedDB extends DBBase implements RecordedDBInterface {
         value.push(program.thumbnailPath);
         value.push(program.recording);
 
-        return this.runQuery(query, value);
+        return this.getInsertId(await this.runQuery(query, value));
     }
 
     /**
     * recorded 更新
     * @param program: DBSchema.RecordedSchema
-    * @param Promise<any>
+    * @param Promise<void>
     */
-    public replace(program: DBSchema.RecordedSchema): Promise<any> {
+    public async replace(program: DBSchema.RecordedSchema): Promise<void> {
         let query = `replace into ${ DBSchema.TableName.Recorded } (`
             + 'id, '
             + 'programId, '
@@ -183,7 +183,7 @@ class RecordedDB extends DBBase implements RecordedDBInterface {
         value.push(program.thumbnailPath);
         value.push(program.recording);
 
-        return this.runQuery(query, value);
+        await this.runQuery(query, value);
     }
 
     /**
