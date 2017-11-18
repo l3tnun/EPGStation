@@ -57,7 +57,7 @@ export interface RulesSchema {
     ignoreKeyword: string | null;
     keyCS: boolean | null;
     keyRegExp: boolean | null;
-    title:  boolean | null;
+    title: boolean | null;
     description: boolean | null;
     extended: boolean | null;
     GR: boolean | null;

@@ -246,8 +246,31 @@ class RulesDB extends DBBase implements RulesDBInterface {
     * @param id: rule id
     * @return Promise<DBSchema.RulesSchema[]>
     */
-    public findId(id: number): Promise<DBSchema.RulesSchema[]> {
-        return this.runQuery(`select * from ${ DBSchema.TableName.Rules } where id = ${ id }`);
+    public async findId(id: number): Promise<DBSchema.RulesSchema[]> {
+        return this.fixResult(<DBSchema.RulesSchema[]> await this.runQuery(`select * from ${ DBSchema.TableName.Rules } where id = ${ id }`));
+    }
+
+    /**
+    * @param DBSchema.RulesSchema[]
+    * @return DBSchema.RulesSchema[]
+    */
+    private fixResult(rules: DBSchema.RulesSchema[]): DBSchema.RulesSchema[] {
+        return rules.map((rule) => {
+            if(rule.keyCS != null) { rule.keyCS = Boolean(rule.keyCS); }
+            if(rule.keyRegExp != null) { rule.keyRegExp = Boolean(rule.keyRegExp); }
+            if(rule.title != null) { rule.title = Boolean(rule.title); }
+            if(rule.description != null) { rule.description = Boolean(rule.description); }
+            if(rule.extended != null) { rule.extended = Boolean(rule.extended); }
+            if(rule.GR != null) { rule.GR = Boolean(rule.GR); }
+            if(rule.BS != null) { rule.BS = Boolean(rule.BS); }
+            if(rule.CS != null) { rule.CS = Boolean(rule.CS); }
+            if(rule.SKY != null) { rule.SKY = Boolean(rule.SKY); }
+            if(rule.isFree != null) { rule.isFree = Boolean(rule.isFree); }
+            if(rule.enable != null) { rule.enable = Boolean(rule.enable); }
+            if(rule.delTs != null) { rule.delTs = Boolean(rule.delTs); }
+
+            return rule;
+        });
     }
 
     /**
@@ -272,11 +295,11 @@ class RulesDB extends DBBase implements RulesDBInterface {
     * @param offset: offset
     * @return Promise<DBSchema.RulesSchema[]>
     */
-    public findAll(limit?: number, offset: number = 0): Promise<DBSchema.RulesSchema[]> {
+    public async findAll(limit?: number, offset: number = 0): Promise<DBSchema.RulesSchema[]> {
         let query = `select * from ${ DBSchema.TableName.Rules }`;
         if(typeof limit !== 'undefined') { query += ` limit ${ offset }, ${ limit }` }
 
-        return this.runQuery(query);
+        return this.fixResult(<DBSchema.RulesSchema[]> await this.runQuery(query));
     }
 
     /**

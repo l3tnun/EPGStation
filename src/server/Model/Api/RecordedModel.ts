@@ -169,7 +169,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
         data['hasThumbnail'] = data['thumbnailPath'] !== null
         delete data['thumbnailPath'];
 
-        data['recording'] = Boolean(data['recording']);
+        data['recording'] = data['recording'];
 
         data['original'] = data['recPath'] !== null
 
