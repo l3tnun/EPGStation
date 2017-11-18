@@ -56,13 +56,13 @@ class RulesModel extends ApiModel implements RulesModelInterface {
     * @return Promise<{}>
     */
     public async getId(ruleId: number): Promise<{}> {
-        let result = await this.rulesDB.findId(ruleId);
+        let rule = await this.rulesDB.findId(ruleId);
 
-        if(result.length === 0) {
+        if(rule === null) {
             throw new Error(RulesModelInterface.NotFoundRuleIdError);
         }
 
-        return ApiUtil.deleteNullinHash(result[0]);
+        return ApiUtil.deleteNullinHash(rule);
     }
 
     /**

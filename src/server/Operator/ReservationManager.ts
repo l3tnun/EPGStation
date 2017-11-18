@@ -570,8 +570,8 @@ class ReservationManager extends Base {
         let rule: DBSchema.RulesSchema | null = null;
         try {
             let result = await this.rulesDB.findId(ruleId);
-            if(result.length !== 0 && result[0].enable) {
-                rule = result[0];
+            if(result !== null && result.enable) {
+                rule = result;
             }
         } catch(err) {
             finalize();

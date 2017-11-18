@@ -8,7 +8,7 @@ interface RulesDBInterface extends DBBase {
     delete(id: number): Promise<void>;
     enable(id: number): Promise<void>;
     disable(id: number): Promise<void>;
-    findId(id: number): Promise<DBSchema.RulesSchema[]>;
+    findId(id: number): Promise<DBSchema.RulesSchema | null>;
     findAllId(): Promise<{ id: number }[]>;
     findAllIdAndKeyword(): Promise<{ id: number, keyword: string }[]>;
     findAll(limit?: number, offset?: number): Promise<DBSchema.RulesSchema[]>;
@@ -244,10 +244,10 @@ class RulesDB extends DBBase implements RulesDBInterface {
     /**
     * id 検索
     * @param id: rule id
-    * @return Promise<DBSchema.RulesSchema[]>
+    * @return Promise<DBSchema.RulesSchema>
     */
-    public async findId(id: number): Promise<DBSchema.RulesSchema[]> {
-        return this.fixResult(<DBSchema.RulesSchema[]> await this.runQuery(`select * from ${ DBSchema.TableName.Rules } where id = ${ id }`));
+    public async findId(id: number): Promise<DBSchema.RulesSchema | null> {
+        return this.getFirst(this.fixResult(<DBSchema.RulesSchema[]> await this.runQuery(`select * from ${ DBSchema.TableName.Rules } where id = ${ id }`)));
     }
 
     /**
