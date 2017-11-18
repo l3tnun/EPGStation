@@ -3,7 +3,7 @@ import * as DBSchema from './DBSchema';
 
 interface RulesDBInterface extends DBBase {
     create(): Promise<void>;
-    insert(rule: DBSchema.RulesSchema): Promise<any>;
+    insert(rule: DBSchema.RulesSchema): Promise<number>;
     update(id: number, rule: DBSchema.RulesSchema): Promise<void>;
     delete(id: number): Promise<void>;
     enable(id: number): Promise<void>;
@@ -62,9 +62,9 @@ class RulesDB extends DBBase implements RulesDBInterface {
     /**
     * データ挿入
     * @param rule: DBSchema.RulesSchema
-    * @return Promise<void>
+    * @return Promise<number> insertId
     */
-    public insert(rule: DBSchema.RulesSchema): Promise<any> {
+    public async insert(rule: DBSchema.RulesSchema): Promise<number> {
         let query = `insert into ${ DBSchema.TableName.Rules } (`
             + 'keyword, '
             + 'ignoreKeyword, '
@@ -132,7 +132,7 @@ class RulesDB extends DBBase implements RulesDBInterface {
         value.push(rule.directory3);
         value.push(rule.delTs);
 
-        return this.runQuery(query, value);
+        return this.getInsertId(await this.runQuery(query, value));
     }
 
 
