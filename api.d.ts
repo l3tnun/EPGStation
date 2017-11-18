@@ -72,6 +72,12 @@ export interface ScheduleProgramItem {
     genre1?: ProgramGenreLv1;
     genre2?: ProgramGenreLv2;
     channelType: ChannelType;
+    videoType?: ProgramVideoType;
+    videoResolution?: ProgramVideoResolution;
+    videoStreamContent?: number;
+    videoComponentType?: number;
+    audioSamplingRate?: ProgramAudioSamplingRate;
+    audioComponentType?: number;
 }
 
 export interface ScheduleServiceItem {

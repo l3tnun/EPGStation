@@ -191,7 +191,7 @@ class ScheduleModel extends ApiModel implements ScheduleModelInterface {
         }
 
         let programs = await this.programDB.findRule(searchOption,
-            'id, channelId, startAt, endAt, isFree, name, description, extended, genre1, genre2, channelType',
+            ProgramsDBInterface.ScheduleProgramItemColumns,
         300);
 
         return programs.map((program) => {

@@ -245,7 +245,7 @@ class ProgramsDB extends DBBase implements ProgramsDBInterface {
     * @return Promise<DBSchema.ScheduleProgramItem[]>
     */
     public findSchedule(startAt: apid.UnixtimeMS, endAt: apid.UnixtimeMS, type: apid.ChannelType): Promise<DBSchema.ScheduleProgramItem[]> {
-        let query = 'select id, channelId, startAt, endAt, isFree, name, description, extended, genre1, genre2, channelType '
+        let query = `select ${ ProgramsDBInterface.ScheduleProgramItemColumns } `
             + `from ${ DBSchema.TableName.Programs } `
             + `where channelType = '${ type }' `
             + `and endAt >= ${ startAt } and ${ endAt } > startAt `
@@ -262,7 +262,7 @@ class ProgramsDB extends DBBase implements ProgramsDBInterface {
     * @return Promise<DBSchema.ScheduleProgramItem[]>
     */
     public findScheduleId(startAt: apid.UnixtimeMS, endAt: apid.UnixtimeMS, channelId: apid.ServiceItemId): Promise<DBSchema.ScheduleProgramItem[]> {
-        let query = 'select id, channelId, startAt, endAt, isFree, name, description, extended, genre1, genre2, channelType '
+        let query = `select ${ ProgramsDBInterface.ScheduleProgramItemColumns } `
             + `from ${ DBSchema.TableName.Programs } `
             + `where channelId = ${ channelId } `
             + `and endAt >= ${ startAt } and ${ endAt } > startAt `
@@ -280,7 +280,7 @@ class ProgramsDB extends DBBase implements ProgramsDBInterface {
         let now = new Date().getTime();
         now += addition;
 
-        let query = 'select id, channelId, startAt, endAt, isFree, name, description, extended, genre1, genre2, channelType '
+        let query = `select ${ ProgramsDBInterface.ScheduleProgramItemColumns } `
             + `from ${ DBSchema.TableName.Programs } `
             + `where endAt >= ${ now } and ${ now } > startAt `
             + 'order by startAt';
@@ -298,7 +298,7 @@ class ProgramsDB extends DBBase implements ProgramsDBInterface {
         let now = new Date().getTime();
         now += addition;
 
-        let query = 'select id, channelId, startAt, endAt, isFree, name, description, extended, genre1, genre2, channelType '
+        let query = `select ${ ProgramsDBInterface.ScheduleProgramItemColumns } `
             + `from ${ DBSchema.TableName.Programs } `
             + `where endAt > ${ now } and ${ now } >= startAt and channelId = ${ channelId } `
             + 'order by startAt';
@@ -540,6 +540,10 @@ class ProgramsDB extends DBBase implements ProgramsDBInterface {
 
         return queryStr;
     }
+}
+
+namespace ProgramsDBInterface {
+    export const ScheduleProgramItemColumns = 'id, channelId, startAt, endAt, isFree, name, description, extended, genre1, genre2, channelType, videoType, videoResolution, videoStreamContent, videoComponentType, audioSamplingRate, audioComponentType';
 }
 
 export { ChannelTypeHash, ProgramsDBInterface, ProgramsDB }
