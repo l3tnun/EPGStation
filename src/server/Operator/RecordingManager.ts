@@ -200,9 +200,7 @@ class RecordingManager extends Base implements RecordingManagerInterface {
         this.log.system.info(`add encode file: ${ recordedId }`);
 
         // DB にエンコードファイルを追加
-        let encoded = await this.encodedDB.insert(recordedId, name, filePath);
-        //encoded id
-        let encodedId = <number>(encoded.insertId);
+        const encodedId = await this.encodedDB.insert(recordedId, name, filePath);
 
         // ts 削除
         if(delTs) {
