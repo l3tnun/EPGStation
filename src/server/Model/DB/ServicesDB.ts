@@ -104,16 +104,27 @@ class ServicesDB extends DBBase implements ServicesDBInterface {
     * @param id: id
     * @return Promise<DBSchema.ServiceSchema>
     */
-    public findId(id: number): Promise<DBSchema.ServiceSchema[]> {
-        return this.runQuery(`select * from ${ DBSchema.TableName.Services } where id = ${ id }`);
+    public async findId(id: number): Promise<DBSchema.ServiceSchema[]> {
+        return this.fixResult(<DBSchema.ServiceSchema[]> await this.runQuery(`select * from ${ DBSchema.TableName.Services } where id = ${ id }`));
+    }
+
+    /**
+    * @param services: DBSchema.ServiceSchema[]
+    * @return DBSchema.ServiceSchema[]
+    */
+    private fixResult(services: DBSchema.ServiceSchema[]): DBSchema.ServiceSchema[] {
+        return services.map((service) => {
+            service.hasLogoData = Boolean(service.hasLogoData);
+            return service;
+        });
     }
 
     /**
     * 全件取得
     * @return Promise<DBSchema.ServiceSchema[]>
     */
-    public findAll(): Promise<DBSchema.ServiceSchema[]> {
-        return this.runQuery(`select * from ${ DBSchema.TableName.Services } order by channelTypeId, remoteControlKeyId, id`);
+    public async findAll(): Promise<DBSchema.ServiceSchema[]> {
+        return this.fixResult(<DBSchema.ServiceSchema[]> await this.runQuery(`select * from ${ DBSchema.TableName.Services } order by channelTypeId, remoteControlKeyId, id`));
     }
 
     /**
@@ -121,14 +132,14 @@ class ServicesDB extends DBBase implements ServicesDBInterface {
     * @param types GR | BS | CS | SKY
     * @return Promise<DBSchema.ServiceSchema[]>
     */
-    public findChannelType(types: (apid.ChannelType)[] ): Promise<DBSchema.ServiceSchema[]> {
+    public async findChannelType(types: (apid.ChannelType)[] ): Promise<DBSchema.ServiceSchema[]> {
         let str = '';
         types.forEach((type) => {
             str += `'${ type }',`
         });
         str = str.slice(0, -1);
 
-        return this.runQuery(`select * from ${ DBSchema.TableName.Services } where channelType in (${ str }) order by channelTypeId, remoteControlKeyId, id`);
+        return this.fixResult(<DBSchema.ServiceSchema[]> await this.runQuery(`select * from ${ DBSchema.TableName.Services } where channelType in (${ str }) order by channelTypeId, remoteControlKeyId, id`));
     }
 }
 

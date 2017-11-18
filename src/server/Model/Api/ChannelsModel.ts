@@ -32,7 +32,7 @@ class ChannelsModel extends ApiModel implements ChannelsModelInterface {
 
         let results: any[] = [];
         datas.forEach((result: DBSchema.ServiceSchema) => {
-            results.push(this.fixResult(result));
+            results.push(ApiUtil.deleteNullinHash(result));
         });
 
         return ApiUtil.sortItems(results, this.config.getConfig().serviceOrder || []);
@@ -50,23 +50,12 @@ class ChannelsModel extends ApiModel implements ChannelsModelInterface {
             throw new Error(ChannelsModelInterface.NotFoundChannelIdError);
         }
 
-        if(!Boolean(results[0].hasLogoData)) {
+        if(!results[0].hasLogoData) {
             throw new Error(ChannelsModelInterface.NotFoundLogoError);
         }
 
         let mirakurun = CreateMirakurunClient.get();
         return mirakurun.getLogoImage(channelId);
-    }
-
-    /**
-    * DBSchema.ServiceSchema の boolean 値を number から boolean へ正す
-    * @param data: DBSchema.ServiceSchema
-    * @return {};
-    */
-    private fixResult(data: DBSchema.ServiceSchema): {} {
-        if(data.hasLogoData != null) { data.hasLogoData = Boolean(data.hasLogoData); }
-
-        return ApiUtil.deleteNullinHash(data);
     }
 }
 

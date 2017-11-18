@@ -171,7 +171,7 @@ class ScheduleModel extends ApiModel implements ScheduleModelInterface {
             serviceId: channel.serviceId,
             networkId: channel.networkId,
             name: channel.name,
-            hasLogoData: Boolean(channel.hasLogoData),
+            hasLogoData: channel.hasLogoData,
             channelType: channel.channelType,
         }
         if(channel.remoteControlKeyId !== null) { c['remoteControlKeyId'] = channel.remoteControlKeyId; }
