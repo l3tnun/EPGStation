@@ -93,11 +93,11 @@ class ScheduleModel extends ApiModel implements ScheduleModelInterface {
 
         let channel = await this.serviceDB.findId(channelId);
 
-        if(channel.length === 0) { throw new Error(ScheduleModelInterface.channelIdIsNotFoundError); }
+        if(channel === null) { throw new Error(ScheduleModelInterface.channelIdIsNotFoundError); }
 
         return programs.map((program) => {
             return {
-                channel: this.createChannel(channel[0]),
+                channel: this.createChannel(channel!),
                 programs: program,
             }
         });

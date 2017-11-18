@@ -5,7 +5,7 @@ import * as DBSchema from './DBSchema';
 interface ServicesDBInterface extends DBBase {
     create(): Promise<void>;
     insert(services: apid.Service[], isDelete?: boolean): Promise<void>;
-    findId(id: number): Promise<DBSchema.ServiceSchema[]>;
+    findId(id: number): Promise<DBSchema.ServiceSchema | null>;
     findAll(): Promise<DBSchema.ServiceSchema[]>;
     findChannelType(types: (apid.ChannelType)[] ): Promise<DBSchema.ServiceSchema[]>;
 }
@@ -102,10 +102,10 @@ class ServicesDB extends DBBase implements ServicesDBInterface {
     /**
     * id 検索
     * @param id: id
-    * @return Promise<DBSchema.ServiceSchema>
+    * @return Promise<DBSchema.ServiceSchema | null>
     */
-    public async findId(id: number): Promise<DBSchema.ServiceSchema[]> {
-        return this.fixResult(<DBSchema.ServiceSchema[]> await this.runQuery(`select * from ${ DBSchema.TableName.Services } where id = ${ id }`));
+    public async findId(id: number): Promise<DBSchema.ServiceSchema | null> {
+        return this.getFirst(this.fixResult(<DBSchema.ServiceSchema[]> await this.runQuery(`select * from ${ DBSchema.TableName.Services } where id = ${ id }`)));
     }
 
     /**

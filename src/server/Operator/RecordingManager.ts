@@ -528,9 +528,9 @@ class RecordingManager extends Base implements RecordingManagerInterface {
         // get channel name
         let channelName = String(reserve.program.channelId);
         try {
-            let results = await this.servicesDB.findId(reserve.program.channelId)
-            if(results.length !== 0) {
-                channelName = results[0].name;
+            let channel = await this.servicesDB.findId(reserve.program.channelId)
+            if(channel !== null) {
+                channelName = channel.name;
             }
         } catch(err) {
             this.log.system.error(err);

@@ -126,8 +126,8 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
                 let channel = await this.servicesDB.findId(info.channelId);
                 let program = await this.programDB.findBroadcastingChanel(info.channelId);
 
-                if(channel.length > 0) {
-                    info.channelName = channel[0].name;
+                if(channel !== null) {
+                    info.channelName = channel.name;
                 }
 
                 if(program.length > 0) {
@@ -145,7 +145,7 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
 
                 if(recorded !== null) {
                     let channel = await this.servicesDB.findId(recorded[0].channelId);
-                    info.channelName = channel.length > 0 ? channel[0].name : String(recorded.channelId);
+                    info.channelName = channel !== null ? channel.name : String(recorded.channelId);
 
                     info.title = recorded.name;
                     info.startAt = recorded.startAt;
@@ -169,9 +169,9 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
     */
     public async getLiveM3u8(host: string, isSecure: boolean, channelId: apid.ServiceItemId, mode: number): Promise<PLayList> {
         let channel = await this.servicesDB.findId(channelId);
-        if(channel.length === 0) { throw new Error(StreamsModelInterface.channleIsNotFoundError); }
+        if(channel === null) { throw new Error(StreamsModelInterface.channleIsNotFoundError); }
 
-        const name = channel[0].name;
+        const name = channel.name;
         const playList = '#EXTM3U\n'
         + `#EXTINF: ${ 0 }, ${ name }\n`
         + `${ isSecure ? 'https' : 'http' }://${ host }/api/streams/live/${ channelId }/mpegts?mode=${ mode }`

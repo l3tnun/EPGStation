@@ -46,11 +46,11 @@ class ChannelsModel extends ApiModel implements ChannelsModelInterface {
     public async getLogo(channelId: apid.ServiceItemId): Promise<Buffer> {
         let results = await this.servicesDB.findId(channelId);
 
-        if(results.length == 0) {
+        if(results === null) {
             throw new Error(ChannelsModelInterface.NotFoundChannelIdError);
         }
 
-        if(!results[0].hasLogoData) {
+        if(!results.hasLogoData) {
             throw new Error(ChannelsModelInterface.NotFoundLogoError);
         }
 
