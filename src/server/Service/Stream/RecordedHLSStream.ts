@@ -56,7 +56,7 @@ class RecordedHLSStream extends Stream {
 
         let filePath: string | null = null;
         if(this.encodedId === null && recorded[0].recPath !== null) {
-            filePath = String(recorded[0].recPath);
+            filePath = recorded[0].recPath;
         } else if(this.encodedId !== null) {
             let encoded = await this.encodedDB.findId(this.encodedId);
             if(encoded === null) { throw new Error('EncodedFileIsNotFound'); }

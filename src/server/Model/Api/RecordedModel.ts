@@ -290,7 +290,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
         let filePath: string;
         if(typeof encodedId === 'undefined') {
             if(recorded[0].recPath === null) { throw new Error(RecordedModelInterface.NotFoundRecordedFileError); }
-            filePath = String(recorded[0].recPath);
+            filePath = recorded[0].recPath!;
         } else {
             const encoded = await this.encodedDB.findId(encodedId);
             if(encoded === null) { throw new Error(RecordedModelInterface.NotFoundRecordedFileError); }
@@ -447,7 +447,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
         let filePath: string;
         if(typeof encodedId === 'undefined') {
             if(recorded[0].recPath === null) { throw new Error(RecordedModelInterface.NotFoundRecordedFileError); }
-            filePath = String(recorded[0].recPath);
+            filePath = recorded[0].recPath!;
         } else {
             const encoded = await this.encodedDB.findId(encodedId);
             if(encoded === null) { throw new Error(RecordedModelInterface.NotFoundRecordedFileError); }

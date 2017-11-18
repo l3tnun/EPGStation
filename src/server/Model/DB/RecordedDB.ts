@@ -251,19 +251,27 @@ class RecordedDB extends DBBase implements RecordedDBInterface {
     }
 
     /**
-    * recPath をフルパスへ書き換える
     * @param programs: DBSchema.RecordedSchema[]
     */
     private fixResult(programs: DBSchema.RecordedSchema[]): DBSchema.RecordedSchema[] {
         let baseDir = Util.getRecordedPath();
         let thumbnailDir = Util.getThumbnailPath();
         return programs.map((program) => {
+            program.channelType = <any>String(program.channelType);
+            program.name = String(program.name);
+            if(program.description !== null) { program.description = String(program.description); }
+            if(program.extended !== null) { program.extended = String(program.extended); }
+
             if(program.recPath !== null) {
+                //フルパスへ書き換える
                 program.recPath = path.join(baseDir, program.recPath);
             }
             if(program.thumbnailPath !== null) {
+                //フルパスへ書き換える
                 program.thumbnailPath = path.join(thumbnailDir, program.thumbnailPath);
             }
+
+            program.recording = Boolean(program.recording);
             return program;
         });
     }
@@ -272,7 +280,7 @@ class RecordedDB extends DBBase implements RecordedDBInterface {
     * id が一番古いレコードを返す
     * @return Promise<DBSchema.RecordedSchema[]>
     */
-    public async findOld():  Promise<DBSchema.RecordedSchema[]> {
+    public async findOld(): Promise<DBSchema.RecordedSchema[]> {
         let programs = await this.runQuery(`select * from ${ DBSchema.TableName.Recorded } order by id asc limit 1`);
         return this.fixResult(<DBSchema.RecordedSchema[]>programs);
     }

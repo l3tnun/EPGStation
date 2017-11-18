@@ -133,14 +133,14 @@ class RecordingManager extends Base implements RecordingManagerInterface {
         //録画データを DB 上から削除
         await this.recordedDB.delete(id);
 
-        if(Boolean(recorded.recording)) {
+        if(recorded.recording) {
             //録画中なら録画停止
             this.stop(recorded.programId);
         }
 
         if(recorded.recPath !== null) {
             //録画実データを削除
-            fs.unlink(String(recorded.recPath), (err) => {
+            fs.unlink(recorded.recPath, (err) => {
             if(err) {
                     this.log.system.error(`delete recorded error: ${ id }`);
                     this.log.system.error(String(err));
@@ -160,7 +160,7 @@ class RecordingManager extends Base implements RecordingManagerInterface {
 
         //サムネイルを削除
         if(recorded.thumbnailPath !== null) {
-            fs.unlink(String(recorded.thumbnailPath), (err) => {
+            fs.unlink(recorded.thumbnailPath, (err) => {
                 if(err) {
                     this.log.system.error(`recorded failed to delete thumbnail ${ id }`);
                     this.log.system.error(String(err));
@@ -209,7 +209,7 @@ class RecordingManager extends Base implements RecordingManagerInterface {
             //削除するデータがある場合
             if(recorded.length !== 0 && recorded[0].recPath !== null) {
                 //削除
-                fs.unlink(String(recorded[0].recPath), (err) => {
+                fs.unlink(recorded[0].recPath!, (err) => {
                     this.log.system.info(`delete ts file: ${ recordedId }`);
                     if(err) {
                         this.log.system.error(`delete ts file error: ${ recordedId }`);
