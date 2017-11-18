@@ -118,13 +118,12 @@ class RecordingManager extends Base implements RecordingManagerInterface {
         this.log.system.info(`delete recorded file ${ id }`);
 
         // id で指定された recorded を取得
-        let results = await this.recordedDB.findId(id);
-        if(results.length == 0) {
+        let recorded = await this.recordedDB.findId(id);
+        if(recorded === null) {
             // id で指定された recorded がなかった
             throw new Error('RecordingManagerNotFoundRecordedProgram');
         }
 
-        let recorded = results[0];
         //エンコードデータを取得
         let encoded = await this.encodedDB.findRecordedId(id)
 
@@ -207,9 +206,9 @@ class RecordingManager extends Base implements RecordingManagerInterface {
             let recorded = await this.recordedDB.findId(recordedId);
 
             //削除するデータがある場合
-            if(recorded.length !== 0 && recorded[0].recPath !== null) {
+            if(recorded !== null && recorded.recPath !== null) {
                 //削除
-                fs.unlink(recorded[0].recPath!, (err) => {
+                fs.unlink(recorded.recPath, (err) => {
                     this.log.system.info(`delete ts file: ${ recordedId }`);
                     if(err) {
                         this.log.system.error(`delete ts file error: ${ recordedId }`);
@@ -451,8 +450,7 @@ class RecordingManager extends Base implements RecordingManagerInterface {
             }
 
             // recorded から削除されていないか確認
-            let results =  await this.recordedDB.findId(recorded.id);
-            if(results.length !== 0) {
+            if(await this.recordedDB.findId(recorded.id) !== null) {
                 // recording 状態を解除
                 await this.recordedDB.removeRecording(recorded.id)
 

@@ -143,16 +143,16 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
             if(info.type === 'RecordedHLS' && typeof info.recordedId !== 'undefined') {
                 let recorded = await this.recordedDB.findId(info.recordedId);
 
-                if(recorded.length > 0) {
+                if(recorded !== null) {
                     let channel = await this.servicesDB.findId(recorded[0].channelId);
-                    info.channelName = channel.length > 0 ? channel[0].name : String(recorded[0].channelId);
+                    info.channelName = channel.length > 0 ? channel[0].name : String(recorded.channelId);
 
-                    info.title = recorded[0].name;
-                    info.startAt = recorded[0].startAt;
-                    info.endAt = recorded[0].endAt;
-                    info.channelType = recorded[0].channelType;
-                    if(recorded[0].description !== null) { info.description = recorded[0].description; }
-                    if(recorded[0].extended !== null) { info.extended = recorded[0].extended; }
+                    info.title = recorded.name;
+                    info.startAt = recorded.startAt;
+                    info.endAt = recorded.endAt;
+                    info.channelType = recorded.channelType;
+                    if(recorded.description !== null) { info.description = recorded.description; }
+                    if(recorded.extended !== null) { info.extended = recorded.extended; }
                 }
             }
         }

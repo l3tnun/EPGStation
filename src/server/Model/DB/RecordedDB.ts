@@ -21,8 +21,8 @@ interface RecordedDBInterface extends DBBase {
     addThumbnail(id: number, filePath: string): Promise<void>;
     removeRecording(id: number): Promise<void>;
     removeAllRecording(): Promise<void>;
-    findId(id: number): Promise<DBSchema.RecordedSchema[]>;
-    findOld():  Promise<DBSchema.RecordedSchema[]>;
+    findId(id: number): Promise<DBSchema.RecordedSchema | null>;
+    findOld():  Promise<DBSchema.RecordedSchema | null>;
     findAll(limit: number, offset: number, option?: findQuery): Promise<DBSchema.RecordedSchema[]>;
     getTotal(option?: findQuery): Promise<number>;
     getRuleTag(): Promise<DBSchema.RuleTag[]>;
@@ -243,11 +243,11 @@ class RecordedDB extends DBBase implements RecordedDBInterface {
     /**
     * id 検索
     * @param id: recorded id
-    * @return Promise<DBSchema.RecordedSchema[]>
+    * @return Promise<DBSchema.RecordedSchema | null>
     */
-    public async findId(id: number): Promise<DBSchema.RecordedSchema[]> {
+    public async findId(id: number): Promise<DBSchema.RecordedSchema | null> {
         let programs = await this.runQuery(`select * from ${ DBSchema.TableName.Recorded } where id = ${ id }`);
-        return this.fixResult(<DBSchema.RecordedSchema[]>programs);
+        return this.getFirst(await this.fixResult(<DBSchema.RecordedSchema[]>programs));
     }
 
     /**
@@ -278,11 +278,11 @@ class RecordedDB extends DBBase implements RecordedDBInterface {
 
     /**
     * id が一番古いレコードを返す
-    * @return Promise<DBSchema.RecordedSchema[]>
+    * @return Promise<DBSchema.RecordedSchema | null>
     */
-    public async findOld(): Promise<DBSchema.RecordedSchema[]> {
+    public async findOld(): Promise<DBSchema.RecordedSchema | null> {
         let programs = await this.runQuery(`select * from ${ DBSchema.TableName.Recorded } order by id asc limit 1`);
-        return this.fixResult(<DBSchema.RecordedSchema[]>programs);
+        return this.getFirst(await this.fixResult(<DBSchema.RecordedSchema[]>programs));
     }
 
     /**
