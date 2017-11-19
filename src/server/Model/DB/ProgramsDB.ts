@@ -27,7 +27,7 @@ interface ProgramsDBInterface extends DBBase {
     findBroadcasting(addition?: apid.UnixtimeMS): Promise<DBSchema.ScheduleProgramItem[]>;
     findBroadcastingChanel(channelId: apid.ServiceItemId, addition?: apid.UnixtimeMS): Promise<DBSchema.ScheduleProgramItem[]>;
     deleteOldPrograms(): Promise<void>;
-    findId(id: number, isNow?: boolean): Promise<DBSchema.ProgramSchema[]>;
+    findId(id: number, isNow?: boolean): Promise<DBSchema.ProgramSchema | null>;
     findRule(option: SearchInterface, fields?: string | null, limit?: number | null): Promise<DBSchema.ProgramSchema[]>;
 }
 
@@ -316,11 +316,11 @@ class ProgramsDB extends DBBase implements ProgramsDBInterface {
     * id 検索
     * @param id: id
     * @param isNow: boolean 現在時刻以降を探す場合 ture, すべて探す場合は false
-    * @return Promise<DBSchema.ProgramSchema[]>
+    * @return Promise<DBSchema.ProgramSchema | null>
     */
-    public async findId(id: number, isNow: boolean = false): Promise<DBSchema.ProgramSchema[]> {
+    public async findId(id: number, isNow: boolean = false): Promise<DBSchema.ProgramSchema | null> {
         let option = isNow ? `and endAt > ${ new Date().getTime() }` : '';
-        return <DBSchema.ProgramSchema[]>this.fixResult(<DBSchema.ProgramSchema[]>await this.runQuery(`select * from ${ DBSchema.TableName.Programs } where id = ${ id } ${ option }`));
+        return this.getFirst(<DBSchema.ProgramSchema[]>this.fixResult(<DBSchema.ProgramSchema[]>await this.runQuery(`select * from ${ DBSchema.TableName.Programs } where id = ${ id } ${ option }`)));
     }
 
     /**
