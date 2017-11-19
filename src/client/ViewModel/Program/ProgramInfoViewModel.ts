@@ -6,6 +6,7 @@ import { BalloonModelInterface } from '../../Model/Balloon/BallonModel';
 import { ConfigApiModelInterface } from '../../Model/Api/ConfigApiModel';
 import { SnackbarModelInterface } from '../../Model/Snackbar/SnackbarModel';
 import GenreUtil from '../../Util/GenreUtil';
+import { videoComponentType, audioComponentType, audioSamplingRate } from '../../lib/event';
 
 /**
 * ProgramInfoViewModel
@@ -165,6 +166,39 @@ class ProgramInfoViewModel extends ViewModel {
         if(this.program === null || typeof this.program.genre1 === 'undefined') { return ''; }
 
         return GenreUtil.getGenres(this.program.genre1, this.program.genre2);
+    }
+
+    /**
+    * video 情報を取得
+    * @return video info
+    */
+    public getVideoInfo(): string {
+        if(this.program === null || typeof this.program.videoComponentType === 'undefined') { return ''; }
+
+        const str = videoComponentType[this.program.videoComponentType];
+        return typeof str === 'undefined' ? '' : str;
+    }
+
+    /**
+    * 音声情報を取得
+    * @return audio info
+    */
+    public getAudioMode(): string {
+        if(this.program === null || typeof this.program.audioComponentType === 'undefined') { return ''; }
+
+        const str = audioComponentType[this.program.audioComponentType];
+        return typeof str === 'undefined' ? '' : str;
+    }
+
+    /**
+    * 音声サンプリングレートを返す
+    * @return audio sampling rate
+    */
+    public getAudioSamplingRate(): string {
+        if(this.program === null || typeof this.program.audioSamplingRate === 'undefined') { return ''; }
+
+        const str = audioSamplingRate[this.program.audioSamplingRate];
+        return typeof str === 'undefined' ? '' : str;
     }
 
     /**
