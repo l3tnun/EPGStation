@@ -144,7 +144,7 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
                 let recorded = await this.recordedDB.findId(info.recordedId);
 
                 if(recorded !== null) {
-                    let channel = await this.servicesDB.findId(recorded[0].channelId);
+                    let channel = await this.servicesDB.findId(recorded.channelId);
                     info.channelName = channel !== null ? channel.name : String(recorded.channelId);
 
                     info.title = recorded.name;
