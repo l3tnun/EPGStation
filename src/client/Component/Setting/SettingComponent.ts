@@ -61,6 +61,14 @@ class SettingComponent extends ParentComponent<void> {
 
         return m('div', { class : 'setting-content mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col' }, [
             m('ul', { class: 'mdl-list' }, [
+                this.createListItem(
+                    'ナビゲーションを自動で開く',
+                    this.createToggle(
+                        () => { return this.viewModel.tmpValue.isAutoOpenNavigation; },
+                    (value) => { this.viewModel.tmpValue.isAutoOpenNavigation = value; },
+                    )
+                ),
+
                 fixScroll,
 
                 this.createListItem(
