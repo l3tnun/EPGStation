@@ -210,7 +210,11 @@ class ProgramsDB extends DBBase implements ProgramsDBInterface {
 
         let str = '';
         for(let key in extended) {
-            str += `\n◇${key}\n${ extended[key] }`;
+            if(key.slice(0, 1) === '◇') {
+                str += `\n${key}\n${ extended[key] }`
+            } else {
+                str += `\n◇${key}\n${ extended[key] }`;
+            }
         }
 
         return StrUtil.toHalf(str).trim();
