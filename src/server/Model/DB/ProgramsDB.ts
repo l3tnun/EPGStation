@@ -26,9 +26,8 @@ interface ProgramsDBInterface extends DBBase {
     findScheduleId(startAt: apid.UnixtimeMS, endAt: apid.UnixtimeMS, channelId: apid.ServiceItemId): Promise<DBSchema.ScheduleProgramItem[]>;
     findBroadcasting(addition?: apid.UnixtimeMS): Promise<DBSchema.ScheduleProgramItem[]>;
     findBroadcastingChanel(channelId: apid.ServiceItemId, addition?: apid.UnixtimeMS): Promise<DBSchema.ScheduleProgramItem[]>;
-    find(query: string): Promise<DBSchema.ProgramSchema[]>;
+    deleteOldPrograms(): Promise<void>;
     findId(id: number, isNow?: boolean): Promise<DBSchema.ProgramSchema[]>;
-    findAll(): Promise<DBSchema.ProgramSchema[]>;
     findRule(option: SearchInterface, fields?: string | null, limit?: number | null): Promise<DBSchema.ProgramSchema[]>;
 }
 
@@ -233,10 +232,6 @@ class ProgramsDB extends DBBase implements ProgramsDBInterface {
         return this.runQuery(`delete from ${ DBSchema.TableName.Programs } where endAt < ${ new Date().getTime()  - (1 * 60 * 60 * 1000) }`);
     }
 
-    public find(query: string): Promise<DBSchema.ProgramSchema[]> {
-        return this.runQuery(query);
-    }
-
     /**
     * 番組表データを取得
     * @param startAt: 開始時刻
@@ -315,14 +310,6 @@ class ProgramsDB extends DBBase implements ProgramsDBInterface {
     public findId(id: number, isNow: boolean = false): Promise<DBSchema.ProgramSchema[]> {
         let option = isNow ? `and endAt > ${ new Date().getTime() }` : '';
         return this.runQuery(`select * from ${ DBSchema.TableName.Programs } where id = ${ id } ${ option }`);
-    }
-
-    /**
-    * 全件取得
-    * @return Promise<DBSchema.ProgramSchema[]>
-    */
-    public findAll(): Promise<DBSchema.ProgramSchema[]> {
-        return this.runQuery(`select * from ${ DBSchema.TableName.Programs }`);
     }
 
     /**
