@@ -329,6 +329,18 @@ definitions:
         $ref: '#/definitions/ProgramGenreLv2'
       channelType:
         $ref: '#/definitions/ChannelType'
+      videoType:
+        $ref: '#/definitions/ProgramVideoType'
+      videoResolution:
+        $ref: '#/definitions/ProgramVideoResolution'
+      videoStreamContent:
+        type: integer
+      videoComponentType:
+        type: integer
+      audioSamplingRate:
+        $ref: '#/definitions/ProgramAudioSamplingRate'
+      audioComponentType:
+        type: integer
 
   ScheduleServiceItem:
     type: object

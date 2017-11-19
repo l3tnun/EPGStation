@@ -1,6 +1,7 @@
 import ViewModel from './ViewModel';
 import * as apid from '../../../api';
 import { ConfigApiModelInterface } from '../Model/Api/ConfigApiModel';
+import { SettingModelInterface } from '../Model/Setting/SettingModel';
 
 /**
 * NavigationViewModel
@@ -8,10 +9,15 @@ import { ConfigApiModelInterface } from '../Model/Api/ConfigApiModel';
 */
 class NavigationViewModel extends ViewModel {
     private configApiModel: ConfigApiModelInterface;
+    private setting: SettingModelInterface;
 
-    constructor(configApiModel: ConfigApiModelInterface) {
+    constructor(
+        configApiModel: ConfigApiModelInterface,
+        setting: SettingModelInterface,
+    ) {
         super();
         this.configApiModel = configApiModel;
+        this.setting = setting;
     }
 
     /**
@@ -20,6 +26,14 @@ class NavigationViewModel extends ViewModel {
     */
     public getConfig(): apid.Config | null {
         return this.configApiModel.getConfig();
+    }
+
+    /**
+    * navigation を自動で開くか
+    * @return boolean
+    */
+    public isAutoOpen(): boolean {
+        return this.setting.value.isAutoOpenNavigation;
     }
 }
 

@@ -57,7 +57,7 @@ export interface RulesSchema {
     ignoreKeyword: string | null;
     keyCS: boolean | null;
     keyRegExp: boolean | null;
-    title:  boolean | null;
+    title: boolean | null;
     description: boolean | null;
     extended: boolean | null;
     GR: boolean | null;
@@ -129,6 +129,14 @@ export interface ScheduleProgramItem {
     genre1: number | null;
     genre2: number | null;
     channelType: apid.ChannelType;
+
+    videoType: apid.ProgramVideoType | null
+    videoResolution: apid.ProgramVideoResolution | null;
+    videoStreamContent: number | null;
+    videoComponentType: number | null;
+
+    audioSamplingRate: apid.ProgramAudioSamplingRate | null;
+    audioComponentType: number | null;
 }
 
 export interface RuleTag {

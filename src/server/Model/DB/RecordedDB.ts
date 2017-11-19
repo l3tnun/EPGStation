@@ -13,16 +13,16 @@ interface findQuery {
 
 interface RecordedDBInterface extends DBBase {
     create(): Promise<void>;
-    insert(program: DBSchema.RecordedSchema): Promise<any>;
-    replace(program: DBSchema.RecordedSchema): Promise<any>;
+    insert(program: DBSchema.RecordedSchema): Promise<number>;
+    replace(program: DBSchema.RecordedSchema): Promise<void>;
     delete(id: number): Promise<void>;
     deleteRecPath(id: number): Promise<void>;
     deleteRuleId(ruleId: number): Promise<void>;
     addThumbnail(id: number, filePath: string): Promise<void>;
     removeRecording(id: number): Promise<void>;
     removeAllRecording(): Promise<void>;
-    findId(id: number): Promise<DBSchema.RecordedSchema[]>;
-    findOld():  Promise<DBSchema.RecordedSchema[]>;
+    findId(id: number): Promise<DBSchema.RecordedSchema | null>;
+    findOld():  Promise<DBSchema.RecordedSchema | null>;
     findAll(limit: number, offset: number, option?: findQuery): Promise<DBSchema.RecordedSchema[]>;
     getTotal(option?: findQuery): Promise<number>;
     getRuleTag(): Promise<DBSchema.RuleTag[]>;
@@ -67,9 +67,9 @@ class RecordedDB extends DBBase implements RecordedDBInterface {
     /**
     * recorded 挿入
     * @param program: DBSchema.RecordedSchema
-    * @param Promise<any>
+    * @param Promise<number> insertId
     */
-    public insert(program: DBSchema.RecordedSchema): Promise<any> {
+    public async insert(program: DBSchema.RecordedSchema): Promise<number> {
         let query = `insert into ${ DBSchema.TableName.Recorded } (`
             + 'programId, '
             + 'channelId, '
@@ -121,15 +121,15 @@ class RecordedDB extends DBBase implements RecordedDBInterface {
         value.push(program.thumbnailPath);
         value.push(program.recording);
 
-        return this.runQuery(query, value);
+        return this.getInsertId(await this.runQuery(query, value));
     }
 
     /**
     * recorded 更新
     * @param program: DBSchema.RecordedSchema
-    * @param Promise<any>
+    * @param Promise<void>
     */
-    public replace(program: DBSchema.RecordedSchema): Promise<any> {
+    public async replace(program: DBSchema.RecordedSchema): Promise<void> {
         let query = `replace into ${ DBSchema.TableName.Recorded } (`
             + 'id, '
             + 'programId, '
@@ -183,7 +183,7 @@ class RecordedDB extends DBBase implements RecordedDBInterface {
         value.push(program.thumbnailPath);
         value.push(program.recording);
 
-        return this.runQuery(query, value);
+        await this.runQuery(query, value);
     }
 
     /**
@@ -243,38 +243,46 @@ class RecordedDB extends DBBase implements RecordedDBInterface {
     /**
     * id 検索
     * @param id: recorded id
-    * @return Promise<DBSchema.RecordedSchema[]>
+    * @return Promise<DBSchema.RecordedSchema | null>
     */
-    public async findId(id: number): Promise<DBSchema.RecordedSchema[]> {
+    public async findId(id: number): Promise<DBSchema.RecordedSchema | null> {
         let programs = await this.runQuery(`select * from ${ DBSchema.TableName.Recorded } where id = ${ id }`);
-        return this.fixResult(<DBSchema.RecordedSchema[]>programs);
+        return this.getFirst(await this.fixResult(<DBSchema.RecordedSchema[]>programs));
     }
 
     /**
-    * recPath をフルパスへ書き換える
     * @param programs: DBSchema.RecordedSchema[]
     */
     private fixResult(programs: DBSchema.RecordedSchema[]): DBSchema.RecordedSchema[] {
         let baseDir = Util.getRecordedPath();
         let thumbnailDir = Util.getThumbnailPath();
         return programs.map((program) => {
+            program.channelType = <any>String(program.channelType);
+            program.name = String(program.name);
+            if(program.description !== null) { program.description = String(program.description); }
+            if(program.extended !== null) { program.extended = String(program.extended); }
+
             if(program.recPath !== null) {
+                //フルパスへ書き換える
                 program.recPath = path.join(baseDir, program.recPath);
             }
             if(program.thumbnailPath !== null) {
+                //フルパスへ書き換える
                 program.thumbnailPath = path.join(thumbnailDir, program.thumbnailPath);
             }
+
+            program.recording = Boolean(program.recording);
             return program;
         });
     }
 
     /**
     * id が一番古いレコードを返す
-    * @return Promise<DBSchema.RecordedSchema[]>
+    * @return Promise<DBSchema.RecordedSchema | null>
     */
-    public async findOld():  Promise<DBSchema.RecordedSchema[]> {
+    public async findOld(): Promise<DBSchema.RecordedSchema | null> {
         let programs = await this.runQuery(`select * from ${ DBSchema.TableName.Recorded } order by id asc limit 1`);
-        return this.fixResult(<DBSchema.RecordedSchema[]>programs);
+        return this.getFirst(await this.fixResult(<DBSchema.RecordedSchema[]>programs));
     }
 
     /**

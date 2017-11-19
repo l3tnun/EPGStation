@@ -52,15 +52,15 @@ class RecordedHLSStream extends Stream {
 
         // file path を取得
         let recorded = await this.recordedDB.findId(this.recordedId);
-        if(recorded.length === 0) { throw new Error('RecordedFileIsNotFound'); }
+        if(recorded === null) { throw new Error('RecordedFileIsNotFound'); }
 
         let filePath: string | null = null;
-        if(this.encodedId === null && recorded[0].recPath !== null) {
-            filePath = String(recorded[0].recPath);
+        if(this.encodedId === null && recorded.recPath !== null) {
+            filePath = recorded.recPath;
         } else if(this.encodedId !== null) {
             let encoded = await this.encodedDB.findId(this.encodedId);
-            if(encoded.length === 0) { throw new Error('EncodedFileIsNotFound'); }
-            filePath = String(encoded[0].path);
+            if(encoded === null) { throw new Error('EncodedFileIsNotFound'); }
+            filePath = encoded.path;
         }
 
         if(filePath === null) { throw new Error('FileIsNotFound'); }

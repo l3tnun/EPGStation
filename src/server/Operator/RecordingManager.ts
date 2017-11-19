@@ -118,13 +118,12 @@ class RecordingManager extends Base implements RecordingManagerInterface {
         this.log.system.info(`delete recorded file ${ id }`);
 
         // id で指定された recorded を取得
-        let results = await this.recordedDB.findId(id);
-        if(results.length == 0) {
+        let recorded = await this.recordedDB.findId(id);
+        if(recorded === null) {
             // id で指定された recorded がなかった
             throw new Error('RecordingManagerNotFoundRecordedProgram');
         }
 
-        let recorded = results[0];
         //エンコードデータを取得
         let encoded = await this.encodedDB.findRecordedId(id)
 
@@ -133,14 +132,14 @@ class RecordingManager extends Base implements RecordingManagerInterface {
         //録画データを DB 上から削除
         await this.recordedDB.delete(id);
 
-        if(Boolean(recorded.recording)) {
+        if(recorded.recording) {
             //録画中なら録画停止
             this.stop(recorded.programId);
         }
 
         if(recorded.recPath !== null) {
             //録画実データを削除
-            fs.unlink(String(recorded.recPath), (err) => {
+            fs.unlink(recorded.recPath, (err) => {
             if(err) {
                     this.log.system.error(`delete recorded error: ${ id }`);
                     this.log.system.error(String(err));
@@ -150,7 +149,7 @@ class RecordingManager extends Base implements RecordingManagerInterface {
 
         //エンコード実データを削除
         encoded.forEach((file) => {
-            fs.unlink(String(file.path), (err) => {
+            fs.unlink(file.path, (err) => {
                 if(err) {
                     this.log.system.error(`delete encode file error: ${ file.path }`);
                     this.log.system.error(String(err));
@@ -160,7 +159,7 @@ class RecordingManager extends Base implements RecordingManagerInterface {
 
         //サムネイルを削除
         if(recorded.thumbnailPath !== null) {
-            fs.unlink(String(recorded.thumbnailPath), (err) => {
+            fs.unlink(recorded.thumbnailPath, (err) => {
                 if(err) {
                     this.log.system.error(`recorded failed to delete thumbnail ${ id }`);
                     this.log.system.error(String(err));
@@ -200,18 +199,16 @@ class RecordingManager extends Base implements RecordingManagerInterface {
         this.log.system.info(`add encode file: ${ recordedId }`);
 
         // DB にエンコードファイルを追加
-        let encoded = await this.encodedDB.insert(recordedId, name, filePath);
-        //encoded id
-        let encodedId = <number>(encoded.insertId);
+        const encodedId = await this.encodedDB.insert(recordedId, name, filePath);
 
         // ts 削除
         if(delTs) {
             let recorded = await this.recordedDB.findId(recordedId);
 
             //削除するデータがある場合
-            if(recorded.length !== 0 && recorded[0].recPath !== null) {
+            if(recorded !== null && recorded.recPath !== null) {
                 //削除
-                fs.unlink(String(recorded[0].recPath), (err) => {
+                fs.unlink(recorded.recPath, (err) => {
                     this.log.system.info(`delete ts file: ${ recordedId }`);
                     if(err) {
                         this.log.system.error(`delete ts file error: ${ recordedId }`);
@@ -415,7 +412,7 @@ class RecordingManager extends Base implements RecordingManagerInterface {
         };
 
         try {
-            recorded.id = <number>(( await this.recordedDB.insert(recorded) ).insertId);
+            recorded.id = await this.recordedDB.insert(recorded);
             //録画終了時処理
             stream.once('end', () => { this.recEnd(recData, recFile, recorded); });
 
@@ -453,33 +450,32 @@ class RecordingManager extends Base implements RecordingManagerInterface {
             }
 
             // recorded から削除されていないか確認
-            let results =  await this.recordedDB.findId(recorded.id);
-            if(results.length !== 0) {
+            if(await this.recordedDB.findId(recorded.id) !== null) {
                 // recording 状態を解除
                 await this.recordedDB.removeRecording(recorded.id)
 
                 // 番組情報を最新に更新する
                 const program = await this.programsDB.findId(recorded.programId);
-                if(program.length > 0) {
+                if(program !== null) {
                     await this.recordedDB.replace({
                         id: recorded.id,
                         programId: recorded.programId,
-                        channelId: program[0].channelId,
-                        channelType: program[0].channelType,
-                        startAt: program[0].startAt,
-                        endAt: program[0].endAt,
-                        duration: program[0].duration,
-                        name: program[0].name,
-                        description: program[0].description,
-                        extended: program[0].extended,
-                        genre1: program[0].genre1,
-                        genre2: program[0].genre2,
-                        videoType: program[0].videoType,
-                        videoResolution: program[0].videoResolution,
-                        videoStreamContent: program[0].videoStreamContent,
-                        videoComponentType: program[0].videoComponentType,
-                        audioSamplingRate: program[0].audioSamplingRate,
-                        audioComponentType: program[0].audioComponentType,
+                        channelId: program.channelId,
+                        channelType: program.channelType,
+                        startAt: program.startAt,
+                        endAt: program.endAt,
+                        duration: program.duration,
+                        name: program.name,
+                        description: program.description,
+                        extended: program.extended,
+                        genre1: program.genre1,
+                        genre2: program.genre2,
+                        videoType: program.videoType,
+                        videoResolution: program.videoResolution,
+                        videoStreamContent: program.videoStreamContent,
+                        videoComponentType: program.videoComponentType,
+                        audioSamplingRate: program.audioSamplingRate,
+                        audioComponentType: program.audioComponentType,
                         recPath: recData.recPath!,
                         ruleId: typeof recData.reserve.ruleId === 'undefined' ? null : recData.reserve.ruleId,
                         thumbnailPath: null,
@@ -532,9 +528,9 @@ class RecordingManager extends Base implements RecordingManagerInterface {
         // get channel name
         let channelName = String(reserve.program.channelId);
         try {
-            let results = await this.servicesDB.findId(reserve.program.channelId)
-            if(results.length !== 0) {
-                channelName = results[0].name;
+            let channel = await this.servicesDB.findId(reserve.program.channelId)
+            if(channel !== null) {
+                channelName = channel.name;
             }
         } catch(err) {
             this.log.system.error(err);

@@ -68,7 +68,10 @@ namespace ViewModelFactorySetting {
             balloonModel,
             channelsApiModel,
         ));
-        factory.reg('NavigationViewModel', new NavigationViewModel(configModel));
+        factory.reg('NavigationViewModel', new NavigationViewModel(
+            configModel,
+            settingModel,
+        ));
         factory.reg('ProgramViewModel', new ProgramViewModel(
             scheduleApiModel,
             reservesApiModel,

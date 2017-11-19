@@ -69,8 +69,7 @@ class RuleManager extends Base implements RuleManagerInterface {
             // rule を DB に追加
             let ruleId: number;
             try {
-                let result = await this.rulesDB.insert(this.convertRule(rule));
-                ruleId = <number>(result.insertId);
+                ruleId = await this.rulesDB.insert(this.convertRule(rule));
             } catch(err) {
                 this.isRunning = false;
                 throw err;
@@ -100,8 +99,7 @@ class RuleManager extends Base implements RuleManagerInterface {
 
         // rule が存在するか db 上から検索
         try {
-            const result = await this.rulesDB.findId(ruleId);
-            if(result.length === 0) { throw new Error('RuleIsNotFound'); }
+            if(await this.rulesDB.findId(ruleId) === null) { throw new Error('RuleIsNotFound'); }
         } catch(err) {
             this.isRunning = false;
             throw err;

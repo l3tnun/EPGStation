@@ -5,10 +5,10 @@ import Util from '../../Util/Util';
 
 interface EncodedDBInterface extends DBBase {
     create(): Promise<void>;
-    insert(recordedId: number, name: string, path: string): Promise<any>;
+    insert(recordedId: number, name: string, path: string): Promise<number>;
     delete(id: number): Promise<void>;
     deleteRecordedId(recordedId: number): Promise<void>;
-    findId(id: number): Promise<DBSchema.EncodedSchema[]>;
+    findId(id: number): Promise<DBSchema.EncodedSchema | null>;
     findRecordedId(recordedId: number): Promise<DBSchema.EncodedSchema[]>;
 }
 
@@ -34,9 +34,9 @@ class EncodedDB extends DBBase implements EncodedDBInterface {
     * @param recordedId: recordedId
     * @param name: name
     * @para, filePath: file path
-    * @return Promise<any>
+    * @return Promise<number> insertId
     */
-    public insert(recordedId: number, name: string, filePath: string): Promise<any> {
+    public async insert(recordedId: number, name: string, filePath: string): Promise<number> {
         let query = `insert into ${ DBSchema.TableName.Encoded } (`
             + 'recordedId,'
             + 'name, '
@@ -51,7 +51,7 @@ class EncodedDB extends DBBase implements EncodedDBInterface {
             filePath.slice(Util.getRecordedPath().length + path.sep.length),
         ];
 
-        return this.runQuery(query, value);
+        return this.getInsertId(await this.runQuery(query, value));
     }
 
     /**
@@ -75,21 +75,23 @@ class EncodedDB extends DBBase implements EncodedDBInterface {
     /**
     * id 検索
     * @param id: encoded id
-    * @return Promise<DBSchema.EncodedSchema[]>
+    * @return Promise<DBSchema.EncodedSchema | null>
     */
-    public async findId(id: number): Promise<DBSchema.EncodedSchema[]> {
+    public async findId(id: number): Promise<DBSchema.EncodedSchema | null> {
         let programs = await this.runQuery(`select * from ${ DBSchema.TableName.Encoded } where id = ${ id }`);
-        return this.fixResult(<DBSchema.EncodedSchema[]>programs);
+        return this.getFirst(this.fixResult(<DBSchema.EncodedSchema[]>programs));
     }
 
     /**
-    * path をフルパスへ書き換える
     * @param programs: DBSchema.RecordedSchema[]
     */
     private fixResult(programs: DBSchema.EncodedSchema[]): DBSchema.EncodedSchema[] {
         let baseDir = Util.getRecordedPath();
         return programs.map((program) => {
+            // path をフルパスへ書き換える
             program.path = path.join(baseDir, program.path);
+            // name を string へ
+            program.name = String(program.name);
             return program;
         });
     }

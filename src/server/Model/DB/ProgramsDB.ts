@@ -26,9 +26,8 @@ interface ProgramsDBInterface extends DBBase {
     findScheduleId(startAt: apid.UnixtimeMS, endAt: apid.UnixtimeMS, channelId: apid.ServiceItemId): Promise<DBSchema.ScheduleProgramItem[]>;
     findBroadcasting(addition?: apid.UnixtimeMS): Promise<DBSchema.ScheduleProgramItem[]>;
     findBroadcastingChanel(channelId: apid.ServiceItemId, addition?: apid.UnixtimeMS): Promise<DBSchema.ScheduleProgramItem[]>;
-    find(query: string): Promise<DBSchema.ProgramSchema[]>;
-    findId(id: number, isNow?: boolean): Promise<DBSchema.ProgramSchema[]>;
-    findAll(): Promise<DBSchema.ProgramSchema[]>;
+    deleteOldPrograms(): Promise<void>;
+    findId(id: number, isNow?: boolean): Promise<DBSchema.ProgramSchema | null>;
     findRule(option: SearchInterface, fields?: string | null, limit?: number | null): Promise<DBSchema.ProgramSchema[]>;
 }
 
@@ -211,7 +210,11 @@ class ProgramsDB extends DBBase implements ProgramsDBInterface {
 
         let str = '';
         for(let key in extended) {
-            str += `\n◇${key}\n${ extended[key] }`;
+            if(key.slice(0, 1) === '◇') {
+                str += `\n${key}\n${ extended[key] }`
+            } else {
+                str += `\n◇${key}\n${ extended[key] }`;
+            }
         }
 
         return StrUtil.toHalf(str).trim();
@@ -233,10 +236,6 @@ class ProgramsDB extends DBBase implements ProgramsDBInterface {
         return this.runQuery(`delete from ${ DBSchema.TableName.Programs } where endAt < ${ new Date().getTime()  - (1 * 60 * 60 * 1000) }`);
     }
 
-    public find(query: string): Promise<DBSchema.ProgramSchema[]> {
-        return this.runQuery(query);
-    }
-
     /**
     * 番組表データを取得
     * @param startAt: 開始時刻
@@ -244,14 +243,25 @@ class ProgramsDB extends DBBase implements ProgramsDBInterface {
     * @param type: 放送波
     * @return Promise<DBSchema.ScheduleProgramItem[]>
     */
-    public findSchedule(startAt: apid.UnixtimeMS, endAt: apid.UnixtimeMS, type: apid.ChannelType): Promise<DBSchema.ScheduleProgramItem[]> {
-        let query = 'select id, channelId, startAt, endAt, isFree, name, description, extended, genre1, genre2, channelType '
+    public async findSchedule(startAt: apid.UnixtimeMS, endAt: apid.UnixtimeMS, type: apid.ChannelType): Promise<DBSchema.ScheduleProgramItem[]> {
+        let query = `select ${ ProgramsDBInterface.ScheduleProgramItemColumns } `
             + `from ${ DBSchema.TableName.Programs } `
             + `where channelType = '${ type }' `
             + `and endAt >= ${ startAt } and ${ endAt } > startAt `
             + 'order by startAt';
 
-        return this.runQuery(query);
+        return <DBSchema.ScheduleProgramItem[]>this.fixResult(<DBSchema.ScheduleProgramItem[]>await this.runQuery(query));
+    }
+
+    /**
+    * @param programs: ScheduleProgramItem[] | ProgramSchema[]
+    * @return ScheduleProgramItem[] | ProgramSchema[]
+    */
+    private fixResult(programs: DBSchema.ScheduleProgramItem[] | DBSchema.ProgramSchema[]): DBSchema.ScheduleProgramItem[] | DBSchema.ProgramSchema[] {
+        return (<any>programs).map((program: any) => {
+            program.isFree = Boolean(program.isFree);
+            return program;
+        });
     }
 
     /**
@@ -261,14 +271,14 @@ class ProgramsDB extends DBBase implements ProgramsDBInterface {
     * @param channelId: channel id
     * @return Promise<DBSchema.ScheduleProgramItem[]>
     */
-    public findScheduleId(startAt: apid.UnixtimeMS, endAt: apid.UnixtimeMS, channelId: apid.ServiceItemId): Promise<DBSchema.ScheduleProgramItem[]> {
-        let query = 'select id, channelId, startAt, endAt, isFree, name, description, extended, genre1, genre2, channelType '
+    public async findScheduleId(startAt: apid.UnixtimeMS, endAt: apid.UnixtimeMS, channelId: apid.ServiceItemId): Promise<DBSchema.ScheduleProgramItem[]> {
+        let query = `select ${ ProgramsDBInterface.ScheduleProgramItemColumns } `
             + `from ${ DBSchema.TableName.Programs } `
             + `where channelId = ${ channelId } `
             + `and endAt >= ${ startAt } and ${ endAt } > startAt `
             + 'order by startAt';
 
-        return this.runQuery(query);
+        return <DBSchema.ScheduleProgramItem[]>this.fixResult(<DBSchema.ScheduleProgramItem[]>await this.runQuery(query));
     }
 
     /**
@@ -276,16 +286,16 @@ class ProgramsDB extends DBBase implements ProgramsDBInterface {
     * @param addition 加算時間(ms)
     * @return Promise<DBSchema.ScheduleProgramItem[]>
     */
-    public findBroadcasting(addition: apid.UnixtimeMS = 0): Promise<DBSchema.ScheduleProgramItem[]> {
+    public async findBroadcasting(addition: apid.UnixtimeMS = 0): Promise<DBSchema.ScheduleProgramItem[]> {
         let now = new Date().getTime();
         now += addition;
 
-        let query = 'select id, channelId, startAt, endAt, isFree, name, description, extended, genre1, genre2, channelType '
+        let query = `select ${ ProgramsDBInterface.ScheduleProgramItemColumns } `
             + `from ${ DBSchema.TableName.Programs } `
             + `where endAt >= ${ now } and ${ now } > startAt `
             + 'order by startAt';
 
-        return this.runQuery(query);
+        return <DBSchema.ScheduleProgramItem[]>this.fixResult(<DBSchema.ScheduleProgramItem[]>await this.runQuery(query));
     }
 
     /**
@@ -294,35 +304,27 @@ class ProgramsDB extends DBBase implements ProgramsDBInterface {
     * @param addition 加算時間(ms)
     * @return  Promise<DBSchema.ScheduleProgramItem[]>
     */
-    public findBroadcastingChanel(channelId: apid.ServiceItemId, addition: apid.UnixtimeMS = 0): Promise<DBSchema.ScheduleProgramItem[]> {
+    public async findBroadcastingChanel(channelId: apid.ServiceItemId, addition: apid.UnixtimeMS = 0): Promise<DBSchema.ScheduleProgramItem[]> {
         let now = new Date().getTime();
         now += addition;
 
-        let query = 'select id, channelId, startAt, endAt, isFree, name, description, extended, genre1, genre2, channelType '
+        let query = `select ${ ProgramsDBInterface.ScheduleProgramItemColumns } `
             + `from ${ DBSchema.TableName.Programs } `
             + `where endAt > ${ now } and ${ now } >= startAt and channelId = ${ channelId } `
             + 'order by startAt';
 
-        return this.runQuery(query);
+        return <DBSchema.ScheduleProgramItem[]>this.fixResult(<DBSchema.ScheduleProgramItem[]>await this.runQuery(query));
     }
 
     /**
     * id 検索
     * @param id: id
     * @param isNow: boolean 現在時刻以降を探す場合 ture, すべて探す場合は false
-    * @return Promise<DBSchema.ProgramSchema[]>
+    * @return Promise<DBSchema.ProgramSchema | null>
     */
-    public findId(id: number, isNow: boolean = false): Promise<DBSchema.ProgramSchema[]> {
+    public async findId(id: number, isNow: boolean = false): Promise<DBSchema.ProgramSchema | null> {
         let option = isNow ? `and endAt > ${ new Date().getTime() }` : '';
-        return this.runQuery(`select * from ${ DBSchema.TableName.Programs } where id = ${ id } ${ option }`);
-    }
-
-    /**
-    * 全件取得
-    * @return Promise<DBSchema.ProgramSchema[]>
-    */
-    public findAll(): Promise<DBSchema.ProgramSchema[]> {
-        return this.runQuery(`select * from ${ DBSchema.TableName.Programs }`);
+        return this.getFirst(<DBSchema.ProgramSchema[]>this.fixResult(<DBSchema.ProgramSchema[]>await this.runQuery(`select * from ${ DBSchema.TableName.Programs } where id = ${ id } ${ option }`)));
     }
 
     /**
@@ -330,12 +332,12 @@ class ProgramsDB extends DBBase implements ProgramsDBInterface {
     * @param option: SearchInterface
     * @return Promise<DBSchema.ProgramSchema[]>
     */
-    public findRule(option: SearchInterface, fields: string | null = null, limit: number | null = null): Promise<DBSchema.ProgramSchema[]> {
+    public async findRule(option: SearchInterface, fields: string | null = null, limit: number | null = null): Promise<DBSchema.ProgramSchema[]> {
         if(fields === null) { fields = '*'; }
         let query = `select ${ fields } from ${ DBSchema.TableName.Programs } ${ this.createQuery(option) } order by startAt asc`;
         if(limit != null) { query += ` limit ${ limit }`; }
 
-        return this.runQuery(query);
+        return <DBSchema.ProgramSchema[]>this.fixResult(<DBSchema.ProgramSchema[]>await this.runQuery(query));
     }
 
     /**
@@ -540,6 +542,10 @@ class ProgramsDB extends DBBase implements ProgramsDBInterface {
 
         return queryStr;
     }
+}
+
+namespace ProgramsDBInterface {
+    export const ScheduleProgramItemColumns = 'id, channelId, startAt, endAt, isFree, name, description, extended, genre1, genre2, channelType, videoType, videoResolution, videoStreamContent, videoComponentType, audioSamplingRate, audioComponentType';
 }
 
 export { ChannelTypeHash, ProgramsDBInterface, ProgramsDB }

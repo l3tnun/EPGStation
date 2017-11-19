@@ -368,16 +368,16 @@ class ReservationManager extends Base {
         const finalize = () => { this.unLockExecution(exeId); }
 
         //番組情報を取得
-        let programs: DBSchema.ProgramSchema[];
+        let program: DBSchema.ProgramSchema | null;
         try {
-            programs = await this.programDB.findId(programId, true);
+            program = await this.programDB.findId(programId, true);
         } catch(err) {
             finalize();
             throw err;
         }
 
         // programId に該当する録画データがなかった
-        if(programs.length === 0) {
+        if(program === null) {
             finalize();
             this.log.system.error(`program is not found: ${ programId }`);
             throw new Error('ProgramIsNotFound');
@@ -385,7 +385,7 @@ class ReservationManager extends Base {
 
         //追加する予約情報を生成
         let addReserve: ReserveProgram = {
-            program: programs[0],
+            program: program,
             isSkip: false,
             isManual: true,
             manualId: new Date().getTime(),
@@ -516,16 +516,16 @@ class ReservationManager extends Base {
         }
 
         //番組情報を取得
-        let programs: DBSchema.ProgramSchema[];
+        let program: DBSchema.ProgramSchema | null;
         try {
-            programs = await this.programDB.findId(manualMatche!.program.id, true);
+            program = await this.programDB.findId(manualMatche!.program.id, true);
         } catch(err) {
             finalize();
             throw err;
         }
 
         // 該当する番組情報がなかった
-        if(programs.length === 0) {
+        if(program === null) {
             this.reserves = newReserves;
             this.writeReservesFile();
             finalize();
@@ -533,7 +533,7 @@ class ReservationManager extends Base {
         }
 
         //番組情報を更新
-        manualMatche.program = programs[0];
+        manualMatche.program = program;
         manualMatche.isConflict = false;
         newReserves.push(manualMatche);
 
@@ -570,8 +570,8 @@ class ReservationManager extends Base {
         let rule: DBSchema.RulesSchema | null = null;
         try {
             let result = await this.rulesDB.findId(ruleId);
-            if(result.length !== 0 && result[0].enable) {
-                rule = result[0];
+            if(result !== null && result.enable) {
+                rule = result;
             }
         } catch(err) {
             finalize();

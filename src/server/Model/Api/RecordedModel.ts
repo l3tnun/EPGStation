@@ -143,18 +143,18 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
     * @return Promise<{}>
     */
     public async getId(recordedId: number): Promise<{}> {
-        let result = await this.recordedDB.findId(recordedId);
+        let recorded = await this.recordedDB.findId(recordedId);
         let infoIndex = await this.getEncodingInfoIndex();
 
-        if(result.length === 0) {
+        if(recorded === null) {
             throw new Error(RecordedModelInterface.NotFoundRecordedIdError);
         }
 
         let encodedFiles = await this.encodedDB.findRecordedId(recordedId);
 
         let encodingInfo = infoIndex[recordedId];
-        if(typeof encodingInfo !== 'undefined') { result[0]['encoding'] = encodingInfo; }
-        return this.fixResult(result[0], encodedFiles);
+        if(typeof encodingInfo !== 'undefined') { recorded['encoding'] = encodingInfo; }
+        return this.fixResult(recorded, encodedFiles);
     }
 
     /**
@@ -169,7 +169,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
         data['hasThumbnail'] = data['thumbnailPath'] !== null
         delete data['thumbnailPath'];
 
-        data['recording'] = Boolean(data['recording']);
+        data['recording'] = data['recording'];
 
         data['original'] = data['recPath'] !== null
 
@@ -182,7 +182,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
                 return {
                     encodedId: file.id,
                     name: file.name,
-                    filename: encodeURIComponent(path.basename(String(file.path))),
+                    filename: encodeURIComponent(path.basename(file.path)),
                 }
             });
         }
@@ -196,13 +196,13 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
     * @return Promise<string>
     */
     public async getThumbnailPath(recordedId: number): Promise<string> {
-        let result = await this.recordedDB.findId(recordedId);
+        let recorded = await this.recordedDB.findId(recordedId);
 
-        if(result.length === 0 || result[0].thumbnailPath === null) {
+        if(recorded === null || recorded.thumbnailPath === null) {
             throw new Error(RecordedModelInterface.NotFoundRecordedThumbnailError);
         }
 
-        return result[0].thumbnailPath!;
+        return recorded.thumbnailPath;
     }
 
     /**
@@ -214,14 +214,14 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
     public async getFilePath(recordedId: number, encodedId: number | undefined): Promise<recordedFilePathInfo> {
         let isEncoded: boolean = typeof encodedId !== 'undefined';
 
-        let result: DBSchema.RecordedSchema[] | DBSchema.EncodedSchema[];
+        let result: DBSchema.RecordedSchema | DBSchema.EncodedSchema | null;
         result = isEncoded ? await this.encodedDB.findId(encodedId!) : await this.recordedDB.findId(recordedId);
 
-        if(result.length === 0) {
+        if(result === null) {
             throw new Error(RecordedModelInterface.NotFoundRecordedFileError);
         }
 
-        let filePath: string | null = isEncoded ? (<DBSchema.EncodedSchema[]>result)[0].path : (<DBSchema.RecordedSchema[]>result)[0].recPath;
+        let filePath: string | null = isEncoded ? (<DBSchema.EncodedSchema>result).path : (<DBSchema.RecordedSchema>result).recPath;
         if(filePath === null) {
             throw new Error(RecordedModelInterface.NotFoundRecordedFileError);
         }
@@ -284,17 +284,17 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
         //recorded 情報の確認
         const recorded = await this.recordedDB.findId(recordedId);
         // 録画情報が無い
-        if(recorded.length === 0) { throw new Error(RecordedModelInterface.NotFoundRecordedIdError); }
+        if(recorded === null) { throw new Error(RecordedModelInterface.NotFoundRecordedIdError); }
 
         // ファイルパス取得
         let filePath: string;
         if(typeof encodedId === 'undefined') {
-            if(recorded[0].recPath === null) { throw new Error(RecordedModelInterface.NotFoundRecordedFileError); }
-            filePath = String(recorded[0].recPath);
+            if(recorded.recPath === null) { throw new Error(RecordedModelInterface.NotFoundRecordedFileError); }
+            filePath = recorded.recPath!;
         } else {
             const encoded = await this.encodedDB.findId(encodedId);
-            if(encoded.length === 0) { throw new Error(RecordedModelInterface.NotFoundRecordedFileError); }
-            filePath = String(encoded[0].path);
+            if(encoded === null) { throw new Error(RecordedModelInterface.NotFoundRecordedFileError); }
+            filePath = encoded.path;
         }
 
         //エンコードのソースファイルか確認
@@ -307,7 +307,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
         }
 
         // ファイル削除
-        fs.unlink(String(filePath), (err) => {
+        fs.unlink(filePath, (err) => {
             if(err) { throw new Error(RecordedModelInterface.DeleteFileError); }
         });
 
@@ -370,12 +370,12 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
     public async getM3u8(host: string, isSecure: boolean, recordedId: number, encodedId: number | undefined): Promise<PLayList> {
         let recorded = await this.recordedDB.findId(recordedId);
         let encoded = typeof encodedId !== 'undefined' ? await this.encodedDB.findId(encodedId) : null;
-        if(recorded.length === 0 || recorded[0].recPath === null && encoded === null || encoded !== null && encoded.length === 0) {
+        if(recorded === null || recorded.recPath === null && encoded === null) {
             throw new Error(RecordedModelInterface.NotFoundRecordedFileError);
         }
 
-        let name = recorded[0].name;
-        let duration = Math.floor(recorded[0].duration / 1000);
+        let name = recorded.name;
+        let duration = Math.floor(recorded.duration / 1000);
         let url = `${ isSecure ? 'https' : 'http' }://${ host }/api/recorded/${ recordedId }/file`;
         if(encoded !== null) { url += `?encodedId=${ encodedId }`; }
 
@@ -383,7 +383,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
         + `#EXTINF: ${ duration }, ${ name }\n`
         + url;
 
-        let fileName = encoded === null ? path.basename(String(recorded[0].recPath)) : path.basename(String(encoded[0].path));
+        let fileName = encoded === null ? path.basename(String(recorded.recPath)) : path.basename(encoded.path);
         return {
             name: encodeURIComponent(fileName + '.m3u8'),
             playList: playList,
@@ -407,7 +407,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
 
         let recorded = await this.recordedDB.findId(recordedId);
         let encoded = typeof encodedId !== 'undefined' ? await this.encodedDB.findId(encodedId) : null;
-        if(recorded.length === 0 || recorded[0].recPath === null && encoded === null || encoded !== null && encoded.length === 0) {
+        if(recorded === null || recorded.recPath === null && encoded === null) {
             throw new Error(RecordedModelInterface.NotFoundRecordedFileError);
         }
 
@@ -438,29 +438,29 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
         //recorded 情報の確認
         const recorded = await this.recordedDB.findId(recordedId);
         // 録画情報が無い
-        if(recorded.length === 0) { throw new Error(RecordedModelInterface.NotFoundRecordedIdError); }
+        if(recorded === null) { throw new Error(RecordedModelInterface.NotFoundRecordedIdError); }
 
         // 録画中か確認
-        if(recorded[0].recording) { throw new Error(RecordedModelInterface.IsRecordingError); }
+        if(recorded.recording) { throw new Error(RecordedModelInterface.IsRecordingError); }
 
         // ファイルパス取得
         let filePath: string;
         if(typeof encodedId === 'undefined') {
-            if(recorded[0].recPath === null) { throw new Error(RecordedModelInterface.NotFoundRecordedFileError); }
-            filePath = String(recorded[0].recPath);
+            if(recorded.recPath === null) { throw new Error(RecordedModelInterface.NotFoundRecordedFileError); }
+            filePath = recorded.recPath;
         } else {
             const encoded = await this.encodedDB.findId(encodedId);
-            if(encoded.length === 0) { throw new Error(RecordedModelInterface.NotFoundRecordedFileError); }
-            filePath = String(encoded[0].path);
+            if(encoded === null) { throw new Error(RecordedModelInterface.NotFoundRecordedFileError); }
+            filePath = encoded.path;
         }
 
         //エンコードを追加
         this.encodeManager.push({
-            recordedId: recorded[0].id,
+            recordedId: recorded.id,
             source: filePath,
             mode: mode,
             delTs: false,
-            recordedProgram: recorded[0],
+            recordedProgram: recorded,
         }, typeof encodedId === 'undefined');
     }
 }

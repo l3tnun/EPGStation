@@ -3,12 +3,12 @@ import * as DBSchema from './DBSchema';
 
 interface RulesDBInterface extends DBBase {
     create(): Promise<void>;
-    insert(rule: DBSchema.RulesSchema): Promise<any>;
+    insert(rule: DBSchema.RulesSchema): Promise<number>;
     update(id: number, rule: DBSchema.RulesSchema): Promise<void>;
     delete(id: number): Promise<void>;
     enable(id: number): Promise<void>;
     disable(id: number): Promise<void>;
-    findId(id: number): Promise<DBSchema.RulesSchema[]>;
+    findId(id: number): Promise<DBSchema.RulesSchema | null>;
     findAllId(): Promise<{ id: number }[]>;
     findAllIdAndKeyword(): Promise<{ id: number, keyword: string }[]>;
     findAll(limit?: number, offset?: number): Promise<DBSchema.RulesSchema[]>;
@@ -62,9 +62,9 @@ class RulesDB extends DBBase implements RulesDBInterface {
     /**
     * データ挿入
     * @param rule: DBSchema.RulesSchema
-    * @return Promise<void>
+    * @return Promise<number> insertId
     */
-    public insert(rule: DBSchema.RulesSchema): Promise<any> {
+    public async insert(rule: DBSchema.RulesSchema): Promise<number> {
         let query = `insert into ${ DBSchema.TableName.Rules } (`
             + 'keyword, '
             + 'ignoreKeyword, '
@@ -132,7 +132,7 @@ class RulesDB extends DBBase implements RulesDBInterface {
         value.push(rule.directory3);
         value.push(rule.delTs);
 
-        return this.runQuery(query, value);
+        return this.getInsertId(await this.runQuery(query, value));
     }
 
 
@@ -244,10 +244,33 @@ class RulesDB extends DBBase implements RulesDBInterface {
     /**
     * id 検索
     * @param id: rule id
-    * @return Promise<DBSchema.RulesSchema[]>
+    * @return Promise<DBSchema.RulesSchema>
     */
-    public findId(id: number): Promise<DBSchema.RulesSchema[]> {
-        return this.runQuery(`select * from ${ DBSchema.TableName.Rules } where id = ${ id }`);
+    public async findId(id: number): Promise<DBSchema.RulesSchema | null> {
+        return this.getFirst(this.fixResult(<DBSchema.RulesSchema[]> await this.runQuery(`select * from ${ DBSchema.TableName.Rules } where id = ${ id }`)));
+    }
+
+    /**
+    * @param DBSchema.RulesSchema[]
+    * @return DBSchema.RulesSchema[]
+    */
+    private fixResult(rules: DBSchema.RulesSchema[]): DBSchema.RulesSchema[] {
+        return rules.map((rule) => {
+            if(rule.keyCS != null) { rule.keyCS = Boolean(rule.keyCS); }
+            if(rule.keyRegExp != null) { rule.keyRegExp = Boolean(rule.keyRegExp); }
+            if(rule.title != null) { rule.title = Boolean(rule.title); }
+            if(rule.description != null) { rule.description = Boolean(rule.description); }
+            if(rule.extended != null) { rule.extended = Boolean(rule.extended); }
+            if(rule.GR != null) { rule.GR = Boolean(rule.GR); }
+            if(rule.BS != null) { rule.BS = Boolean(rule.BS); }
+            if(rule.CS != null) { rule.CS = Boolean(rule.CS); }
+            if(rule.SKY != null) { rule.SKY = Boolean(rule.SKY); }
+            if(rule.isFree != null) { rule.isFree = Boolean(rule.isFree); }
+            if(rule.enable != null) { rule.enable = Boolean(rule.enable); }
+            if(rule.delTs != null) { rule.delTs = Boolean(rule.delTs); }
+
+            return rule;
+        });
     }
 
     /**
@@ -272,11 +295,11 @@ class RulesDB extends DBBase implements RulesDBInterface {
     * @param offset: offset
     * @return Promise<DBSchema.RulesSchema[]>
     */
-    public findAll(limit?: number, offset: number = 0): Promise<DBSchema.RulesSchema[]> {
+    public async findAll(limit?: number, offset: number = 0): Promise<DBSchema.RulesSchema[]> {
         let query = `select * from ${ DBSchema.TableName.Rules }`;
         if(typeof limit !== 'undefined') { query += ` limit ${ offset }, ${ limit }` }
 
-        return this.runQuery(query);
+        return this.fixResult(<DBSchema.RulesSchema[]> await this.runQuery(query));
     }
 
     /**

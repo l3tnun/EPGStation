@@ -41,7 +41,7 @@ class RulesModel extends ApiModel implements RulesModelInterface {
 
         let results: any[] = [];
         datas.forEach((result: DBSchema.RulesSchema) => {
-            results.push(this.fixResult(result));
+            results.push(ApiUtil.deleteNullinHash(result));
         });
 
         return {
@@ -56,34 +56,13 @@ class RulesModel extends ApiModel implements RulesModelInterface {
     * @return Promise<{}>
     */
     public async getId(ruleId: number): Promise<{}> {
-        let result = await this.rulesDB.findId(ruleId);
+        let rule = await this.rulesDB.findId(ruleId);
 
-        if(result.length === 0) {
+        if(rule === null) {
             throw new Error(RulesModelInterface.NotFoundRuleIdError);
         }
 
-        return this.fixResult(result[0]);
-    }
-
-    /**
-    * DBSchema.RulesSchema の boolean 値を number から boolean へ正す
-    * @param data: DBSchema.RulesSchema
-    * @return {};
-    */
-    private fixResult(data: DBSchema.RulesSchema): {} {
-        if(data.keyCS != null) { data.keyCS = Boolean(data.keyCS); }
-        if(data.keyRegExp != null) { data.keyRegExp = Boolean(data.keyRegExp); }
-        if(data.title != null) { data.title = Boolean(data.title); }
-        if(data.description != null) { data.description = Boolean(data.description); }
-        if(data.extended != null) { data.extended = Boolean(data.extended); }
-        if(data.GR != null) { data.GR = Boolean(data.GR); }
-        if(data.BS != null) { data.BS = Boolean(data.BS); }
-        if(data.CS != null) { data.CS = Boolean(data.CS); }
-        if(data.SKY != null) { data.SKY = Boolean(data.SKY); }
-        if(data.enable != null) { data.enable = Boolean(data.enable); }
-        if(data.delTs != null) { data.delTs = Boolean(data.delTs); }
-
-        return ApiUtil.deleteNullinHash(data);
+        return ApiUtil.deleteNullinHash(rule);
     }
 
     /**

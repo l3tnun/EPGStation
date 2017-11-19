@@ -22,14 +22,17 @@ class ProgramInfoComponent extends Component<void> {
             m('div', { class: 'title' }, this.viewModel.getTitle()),
             this.createChannel(),
             this.createTime(),
-            this.crateItem('genre', this.viewModel.getGenres()),
-            this.crateItem('description', this.viewModel.getDescription()),
-            this.crateItem('extended', this.viewModel.getExtended(), (vnode: m.VnodeDOM<void, this>) => {
+            this.createItem('genre', this.viewModel.getGenres()),
+            this.createItem('description', this.viewModel.getDescription()),
+            this.createItem('extended', this.viewModel.getExtended(), (vnode: m.VnodeDOM<void, this>) => {
                 let str = this.viewModel.getExtended();
                 str = str.replace(/(http:\/\/[\x21-\x7e]+)/gi, "<a href='$1' target='_blank'>$1</a>");
                 str = str.replace(/(https:\/\/[\x21-\x7e]+)/gi, "<a href='$1' target='_blank'>$1</a>");
                 (<HTMLElement>vnode.dom).innerHTML = str;
             }),
+            this.createItem('video', '映像: ' + this.viewModel.getVideoInfo()),
+            this.createItem('audio-mode', '音声: ' + this.viewModel.getAudioMode()),
+            this.createItem('audio-sampling-rate', 'サンプリングレート: ' + this.viewModel.getAudioSamplingRate()),
         ]);
     }
 
@@ -69,7 +72,7 @@ class ProgramInfoComponent extends Component<void> {
     * @param text: text
     * @return item
     */
-    private crateItem(
+    private createItem(
         className: string,
         text: string,
         onupdate: ((vnode: m.VnodeDOM<void, this>) => void) | null = null,
