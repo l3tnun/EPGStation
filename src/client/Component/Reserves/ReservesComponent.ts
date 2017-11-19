@@ -64,7 +64,7 @@ class ReservesComponent extends ParentComponent<void> {
                 m(BalloonComponent, {
                     id: ReservesMenuViewModel.id,
                     content: m(ReservesMenuComponent),
-                    maxWidth: 106,
+                    maxWidth: 94,
                     horizontalOnly: true,
                 }),
                 m(BalloonComponent, {
