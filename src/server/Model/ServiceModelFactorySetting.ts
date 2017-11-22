@@ -1,9 +1,9 @@
 import factory from './ModelFactory';
-import { ServicesDB } from './DB/ServicesDB';
-import { ProgramsDB } from './DB/ProgramsDB';
-import { RulesDB } from './DB/RulesDB';
-import { RecordedDB } from './DB/RecordedDB';
-import { EncodedDB } from './DB/EncodedDB';
+import MySQLServicesDB from './DB/MySQL/ServicesDB';
+import MySQLProgramsDB from './DB/MySQL/ProgramsDB';
+import MySQLRulesDB from './DB/MySQL/RulesDB';
+import MySQLRecordedDB from './DB/MySQL/RecordedDB';
+import MySQLEncodedDB from './DB/MySQL/EncodedDB';
 import { RulesModel } from './Api/RulesModel';
 import { RecordedModel } from './Api/RecordedModel';
 import { ChannelsModel } from './Api/ChannelsModel';
@@ -30,6 +30,12 @@ namespace ModelFactorySetting {
     * Model をセットする
     */
     export const init = (): void => {
+        const servicesDB = new MySQLServicesDB();
+        const programsDB = new MySQLProgramsDB();
+        const rulesDB = new MySQLRulesDB();
+        const recordedDB = new MySQLRecordedDB();
+        const encodedDB = new MySQLEncodedDB();
+
         let encodeProcessManager = EncodeProcessManager.getInstance();
         EncodeManager.init(encodeProcessManager);
         let encodeManager = EncodeManager.getInstance();
@@ -42,21 +48,21 @@ namespace ModelFactorySetting {
         let ipc = IPCClient.getInstance();
         encodeModel.setIPC(ipc);
 
-        factory.reg('RulesModel', () => { return new RulesModel(ipc, new RulesDB()) });
+        factory.reg('RulesModel', () => { return new RulesModel(ipc, rulesDB) });
         factory.reg('RecordedModel', () => { return new RecordedModel(
             ipc,
-            new RecordedDB(),
-            new EncodedDB(),
-            new RulesDB(),
-            new ServicesDB(),
+            recordedDB,
+            encodedDB,
+            rulesDB,
+            servicesDB,
             encodeManager,
             StreamManager.getInstance(),
         ); });
-        factory.reg('ChannelsModel', () => { return new ChannelsModel(new ServicesDB()); });
+        factory.reg('ChannelsModel', () => { return new ChannelsModel(servicesDB); });
         factory.reg('ReservesModel', () => { return new ReservesModel(ipc); });
         factory.reg('ScheduleModel', () => { return new ScheduleModel(
-            new ProgramsDB(),
-            new ServicesDB(),
+            programsDB,
+            servicesDB,
             ipc,
         ); });
         factory.reg('ConfigModel', () => { return new ConfigModel(); });
@@ -67,16 +73,16 @@ namespace ModelFactorySetting {
             (chanelId: apid.ServiceItemId, mode: number) => { return new MpegTsLiveStream(chanelId, mode); },
             (recordedId: apid.RecordedId, mode: number, encodedId: apid.EncodedId | null) => {
                 return new RecordedHLSStream(
-                    new RecordedDB(),
-                    new EncodedDB(),
+                    recordedDB,
+                    encodedDB,
                     recordedId,
                     mode,
                     encodedId,
                 );
             },
-            new ProgramsDB(),
-            new ServicesDB(),
-            new RecordedDB(),
+            programsDB,
+            servicesDB,
+            recordedDB,
         ); });
     }
 }

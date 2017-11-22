@@ -5,15 +5,17 @@ import CreateMirakurunClient from '../Util/CreateMirakurunClient';
 import { Logger } from '../Logger';
 import Configuration from '../Configuration';
 import Base from '../Base';
-import { ServicesDB } from '../Model/DB/ServicesDB';
-import { ChannelTypeHash, ProgramsDB } from '../Model/DB/ProgramsDB';
+import { ServicesDBInterface } from '../Model/DB/ServicesDB';
+import MySQLServicesDB from '../Model/DB/MySQL/ServicesDB';
+import { ChannelTypeHash, ProgramsDBInterface } from '../Model/DB/ProgramsDB';
+import MySQLProgramsDB from '../Model/DB/MySQL/ProgramsDB';
 
 /**
 * Mirakurun のデータを取得して DB を更新する
 */
 class MirakurunUpdater extends Base {
-    private servicesDB: ServicesDB;
-    private programsDB: ProgramsDB;
+    private servicesDB: ServicesDBInterface;
+    private programsDB: ProgramsDBInterface;
     private mirakurun: Mirakurun;
 
     private services: apid.Service[] = [];
@@ -25,8 +27,8 @@ class MirakurunUpdater extends Base {
     * @param programsDB: ProgramsDB
     */
     constructor(
-        servicesDB: ServicesDB,
-        programsDB: ProgramsDB,
+        servicesDB: ServicesDBInterface,
+        programsDB: ProgramsDBInterface,
     ) {
         super();
         this.servicesDB = servicesDB;
@@ -133,6 +135,6 @@ namespace MirakurunUpdater {
 Logger.initialize();
 Configuration.getInstance().initialize(path.join(__dirname, '..', '..', '..', 'config', 'config.json'));
 
-let updater = new MirakurunUpdater(new ServicesDB(), new ProgramsDB());
+let updater = new MirakurunUpdater(new MySQLServicesDB(), new MySQLProgramsDB());
 updater.update();
 
