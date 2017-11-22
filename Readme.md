@@ -46,19 +46,21 @@ $ npm run build
 ```
 
 ## 設定
-
-#### config.json の設定
+#### config.json のコピー
 
 ````
 $ cp config/config.sample.json config/config.json
-$ vim config/config.json
 ````
 
-SQLite3 使用時は ```dbType``` を ```sqlite3``` に設定してください。
+#### 使用するデータベース
 
-MySQL 使用時は ```mysql``` の設定を設定してください。
+データベースに MySQL もしくは SQLite3 を使用することができます。MySQL の準備が可能であれば MySQL の使用を推奨します。SQLite3 では検索時の正規表現が使用できないので注意してください。ただ、面倒な設定が不要なので手軽に試すことができます
 
-あとは ```mirakurunPath```, ```encode``` の設定をすればとりあえず動きます
+db を変更する場合は config.json の ```dbType``` を ```sqlite3``` もしくは ```mysql``` に変更してください
+
+#### config.json の設定
+
+データベースの設定が済んでいれば ```mirakurunPath```, ```encode``` の設定をすればとりあえず動きます
 
 ffmpeg のパスはデフォルトで ```/usr/local/bin/ffmpeg``` となっています
 
