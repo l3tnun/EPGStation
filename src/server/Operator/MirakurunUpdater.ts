@@ -5,10 +5,13 @@ import CreateMirakurunClient from '../Util/CreateMirakurunClient';
 import { Logger } from '../Logger';
 import Configuration from '../Configuration';
 import Base from '../Base';
-import { ServicesDBInterface } from '../Model/DB/ServicesDB';
 import MySQLServicesDB from '../Model/DB/MySQL/ServicesDB';
-import { ChannelTypeHash, ProgramsDBInterface } from '../Model/DB/ProgramsDB';
 import MySQLProgramsDB from '../Model/DB/MySQL/ProgramsDB';
+import SQLite3ServicesDB from '../Model/DB/SQLite3/ServicesDB';
+import SQLite3ProgramsDB from '../Model/DB/SQLite3/ProgramsDB';
+import { ServicesDBInterface } from '../Model/DB/ServicesDB';
+import { ChannelTypeHash, ProgramsDBInterface } from '../Model/DB/ProgramsDB';
+import Util from '../Util/Util';
 
 /**
 * Mirakurun のデータを取得して DB を更新する
@@ -135,6 +138,11 @@ namespace MirakurunUpdater {
 Logger.initialize();
 Configuration.getInstance().initialize(path.join(__dirname, '..', '..', '..', 'config', 'config.json'));
 
-let updater = new MirakurunUpdater(new MySQLServicesDB(), new MySQLProgramsDB());
+
+const isMysql = Util.getDBType() === 'mysql';
+const servicesDB = isMysql ? new MySQLServicesDB() : new SQLite3ServicesDB();
+const programsDB = isMysql ? new MySQLProgramsDB() : new SQLite3ProgramsDB();
+
+let updater = new MirakurunUpdater(servicesDB, programsDB);
 updater.update();
 

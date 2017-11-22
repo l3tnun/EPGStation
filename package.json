@@ -44,6 +44,7 @@
     "request": "^2.83.0",
     "socket.io": "^1.7.4",
     "socket.io-client": "^1.7.4",
+    "sqlite3": "^3.1.13",
     "swagger-ui-express": "^2.0.8"
   },
   "devDependencies": {
@@ -61,6 +62,7 @@
     "@types/request": "^2.0.6",
     "@types/socket.io": "^1.4.31",
     "@types/socket.io-client": "^1.4.31",
+    "@types/sqlite3": "^3.1.1",
     "del": "^3.0.0",
     "gulp": "^3.9.1",
     "gulp-clean-css": "^3.9.0",

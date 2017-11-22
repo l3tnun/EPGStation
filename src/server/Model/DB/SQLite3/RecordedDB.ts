@@ -1,24 +1,24 @@
 import * as path from 'path';
-import MySQLBase from './MySQLBase';
+import SQLite3Base from './SQLite3Base';
 import * as DBSchema from '../DBSchema';
 import StrUtil from '../../../Util/StrUtil';
 import Util from '../../../Util/Util';
 import { findQuery, RecordedDBInterface } from '../RecordedDB';
 
-class RecordedDB extends MySQLBase implements RecordedDBInterface {
+class RecordedDB extends SQLite3Base implements RecordedDBInterface {
     /**
     * create table
     * @return Promise<void>
     */
     public create(): Promise<void> {
-        let query = `CREATE TABLE IF NOT EXISTS ${ DBSchema.TableName.Recorded } (`
-            + 'id int primary key auto_increment, '
-            + 'programId bigint not null, '
-            + 'channelId bigint not null, '
+        let query = `create table if not exists ${ DBSchema.TableName.Recorded } (`
+            + 'id integer primary key autoincrement, '
+            + 'programId integer not null, '
+            + 'channelId integer not null, '
             + 'channelType text not null, '
-            + 'startAt bigint not null, '
-            + 'endAt bigint not null, '
-            + 'duration bigint not null, '
+            + 'startAt integer not null, '
+            + 'endAt integer not null, '
+            + 'duration integer not null, '
             + 'name text not null, '
             + 'description text null, '
             + 'extended text null, '
@@ -33,8 +33,8 @@ class RecordedDB extends MySQLBase implements RecordedDBInterface {
             + 'recPath text, '
             + 'ruleId int, '
             + 'thumbnailPath text, '
-            + 'recording boolean '
-        + ') engine=InnoDB;'
+            + 'recording integer '
+        + ');'
 
         return this.runQuery(query);
     }
@@ -44,7 +44,7 @@ class RecordedDB extends MySQLBase implements RecordedDBInterface {
     * @param program: DBSchema.RecordedSchema
     * @param Promise<number> insertId
     */
-    public async insert(program: DBSchema.RecordedSchema): Promise<number> {
+    public insert(program: DBSchema.RecordedSchema): Promise<number> {
         let query = `insert into ${ DBSchema.TableName.Recorded } (`
             + 'programId, '
             + 'channelId, '
@@ -96,7 +96,7 @@ class RecordedDB extends MySQLBase implements RecordedDBInterface {
         value.push(program.thumbnailPath);
         value.push(program.recording);
 
-        return this.getInsertId(await this.runQuery(query, value));
+        return this.runInsert(query, value);
     }
 
     /**
@@ -204,7 +204,7 @@ class RecordedDB extends MySQLBase implements RecordedDBInterface {
     * @return Promise<void>
     */
     public removeRecording(id: number): Promise<void> {
-        return this.runQuery(`update ${ DBSchema.TableName.Recorded } set recording = false where id = ${ id }`);
+        return this.runQuery(`update ${ DBSchema.TableName.Recorded } set recording = 0 where id = ${ id }`);
     }
 
     /**
@@ -212,7 +212,7 @@ class RecordedDB extends MySQLBase implements RecordedDBInterface {
     * @return Promise<void>
     */
     public removeAllRecording(): Promise<void> {
-        return this.runQuery(`update ${ DBSchema.TableName.Recorded } set recording = false where recording = ${ true }`);
+        return this.runQuery(`update ${ DBSchema.TableName.Recorded } set recording = 0 where recording = 1`);
     }
 
     /**
