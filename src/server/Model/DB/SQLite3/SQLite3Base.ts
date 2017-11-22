@@ -7,16 +7,25 @@ import Util from '../../../Util/Util';
 * SQLite3Base クラス
 */
 abstract class SQLite3Base extends DBBase {
-    protected db: sqlite3.Database;
+    protected static db: sqlite3.Database | null = null;
+    protected static isEnableForeignKey = false;
 
     constructor() {
         super();
 
-        const dbPath = this.config.getConfig().dbPath || path.join(__dirname, '..', '..', '..', '..', '..', 'data', 'database.db');
-        this.db = new sqlite3.Database(dbPath);
+        if(!SQLite3Base.isEnableForeignKey) {
+            //外部キー制約を有効化
+            this.runQuery(`pragma foreign_keys = ON`);
+        }
+    }
 
-        //外部キー制約を有効化
-        this.runQuery(`pragma foreign_keys = ON`);
+    private getDB(): sqlite3.Database {
+        if(SQLite3Base.db === null) {
+            const dbPath = this.config.getConfig().dbPath || path.join(__dirname, '..', '..', '..', '..', '..', 'data', 'database.db');
+            SQLite3Base.db = new sqlite3.Database(dbPath);
+        }
+
+        return SQLite3Base.db;
     }
 
     /**
@@ -35,7 +44,7 @@ abstract class SQLite3Base extends DBBase {
     */
     public end(): Promise<void> {
         return new Promise<void>((resolve: () => void, reject: (err: Error) => void) => {
-            this.db.close((err) => {
+            this.getDB().close((err) => {
                 if(err) {
                     reject(err);
                     return;
@@ -52,14 +61,14 @@ abstract class SQLite3Base extends DBBase {
     */
     protected runQuery<T>(query: string, values?: any): Promise<T> {
         return new Promise<T>((resolve: (row: T) => void, reject: (err: Error) => void ) => {
-            this.db.serialize(() => {
+            this.getDB().serialize(() => {
                 if(typeof values === 'undefined') {
-                    this.db.all(query, (err, rows) => {
+                    this.getDB().all(query, (err, rows) => {
                         if(err) { reject(err); return; }
                         resolve(<T>(<any>rows));
                     });
                 } else {
-                    this.db.all(query, values, (err, rows) => {
+                    this.getDB().all(query, values, (err, rows) => {
                         if(err) { reject(err); return; }
                         resolve(<T>(<any>rows));
                     });
@@ -78,14 +87,14 @@ abstract class SQLite3Base extends DBBase {
     */
     protected manyInsert(deleteTableName: string, datas: { query: string, values: any[] }[], isDelete: boolean, insertWait: number = 0): Promise<void> {
         return new Promise<void>((resolve: () => void, reject: (err: Error) => void) => {
-            this.db.serialize(() => {
+            this.getDB().serialize(() => {
                 // トランザクション開始
-                this.db.exec('begin transaction');
+                this.getDB().exec('begin transaction');
 
                 new Promise(async (resolve: () => void, reject: (err: Error) => void) => {
                     if(isDelete) {
                         // delete DB data
-                        this.db.run(`delete from ${ deleteTableName }`, (err) => {
+                        this.getDB().run(`delete from ${ deleteTableName }`, (err) => {
                             if(err) { reject(err); return; }
                         });
                     }
@@ -94,7 +103,7 @@ abstract class SQLite3Base extends DBBase {
                     for(let data of datas) {
                         await (() => {
                             return new Promise((resolve: () => void, reject: (err: Error) => void) => {
-                                this.db.run(data.query, data.values, (err) => {
+                                this.getDB().run(data.query, data.values, (err) => {
                                     if(err) { reject(err); return; }
                                     resolve();
                                 });
@@ -107,13 +116,13 @@ abstract class SQLite3Base extends DBBase {
                 })
                 .then(() => {
                     // commit
-                    this.db.exec('commit');
+                    this.getDB().exec('commit');
                     resolve();
                 })
                 .catch((err) => {
                     this.log.system.error(err);
                     // rollback
-                    this.db.exec('rollback');
+                    this.getDB().exec('rollback');
                     reject(err);
                 });
             });
@@ -127,14 +136,14 @@ abstract class SQLite3Base extends DBBase {
     */
     protected runInsert(query: string, values?: any): Promise<number> {
         return new Promise<number>((resolve: (insertId: number) => void, reject: (err: Error) => void ) => {
-            this.db.serialize(() => {
+            this.getDB().serialize(() => {
                 if(typeof values === 'undefined') {
-                    this.db.run(query, function(err) {
+                    this.getDB().run(query, function(err) {
                         if(err) { reject(err); return; }
                         resolve(this.lastID);
                     });
                 } else {
-                    this.db.run(query, values, function(err) {
+                    this.getDB().run(query, values, function(err) {
                         if(err) { reject(err); return; }
                         resolve(this.lastID);
                     });
