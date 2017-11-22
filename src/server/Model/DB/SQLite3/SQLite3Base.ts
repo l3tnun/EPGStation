@@ -57,20 +57,28 @@ abstract class SQLite3Base extends DBBase {
     /**
     * query を実行する
     * @param query
+    * @param values: any
+    * @param isEnableCS: boolean 大文字小文字を区別するか
     * @return Promise<T>
     */
-    protected runQuery<T>(query: string, values?: any): Promise<T> {
+    protected runQuery<T>(query: string, values: any | null = null, isEnableCS: boolean = false): Promise<T> {
         return new Promise<T>((resolve: (row: T) => void, reject: (err: Error) => void ) => {
             this.getDB().serialize(() => {
-                if(typeof values === 'undefined') {
+                if(isEnableCS) { this.runQuery(`pragma case_sensitive_like = 1`); }
+
+                const exec = (err: Error | null, result: any) => {
+                    if(err) { reject(err); return; }
+                    if(isEnableCS) { this.runQuery(`pragma case_sensitive_like = 0`); }
+                    resolve(<T>(<any>result));
+                };
+
+                if(values === null) {
                     this.getDB().all(query, (err, rows) => {
-                        if(err) { reject(err); return; }
-                        resolve(<T>(<any>rows));
+                        exec(err, rows);
                     });
                 } else {
                     this.getDB().all(query, values, (err, rows) => {
-                        if(err) { reject(err); return; }
-                        resolve(<T>(<any>rows));
+                        exec(err, rows);
                     });
                 }
             });
@@ -170,14 +178,6 @@ abstract class SQLite3Base extends DBBase {
     */
     protected getFirst<T>(result: T[]): T | null {
         return result.length === 0 ? null : result[0];
-    }
-
-    /**
-    * 大小文字区別
-    * @param status: boolean
-    */
-    protected setCS(status: boolean): Promise<void> {
-        return this.runQuery(`pragma case_sensitive_like = ${ Number(status)}`);
     }
 }
 

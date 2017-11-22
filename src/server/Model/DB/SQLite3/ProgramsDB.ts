@@ -312,22 +312,7 @@ class ProgramsDB extends SQLite3Base implements ProgramsDBInterface {
         let query = `select ${ fields } from ${ DBSchema.TableName.Programs } ${ this.createQuery(option) } order by startAt asc`;
         if(limit != null) { query += ` limit ${ limit }`; }
 
-        //大文字小文字の区別をセット
-        const cs = Boolean(option.keyCS);
-        await this.setCS(cs);
-
-        let result: DBSchema.ProgramSchema[];
-        try {
-            result = <DBSchema.ProgramSchema[]>this.fixResult(<DBSchema.ProgramSchema[]>await this.runQuery(query));
-        } catch(err) {
-            await this.runQuery('pragma case_sensitive_like = 0');
-            throw err;
-        }
-
-        //大文字小文字の区別を元に戻す
-        await this.setCS(false);
-
-        return result;
+        return <DBSchema.ProgramSchema[]>this.fixResult(<DBSchema.ProgramSchema[]>await this.runQuery(query, null, Boolean(option.keyCS)));
     }
 
     /**
