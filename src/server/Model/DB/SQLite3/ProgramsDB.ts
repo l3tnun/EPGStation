@@ -55,7 +55,8 @@ class ProgramsDB extends SQLite3Base implements ProgramsDBInterface {
     public insert(channelTypes: ChannelTypeHash, programs: apid.Program[], isDelete: boolean = true): Promise<void> {
         const config = this.config.getConfig();
         // 一度に挿入する数
-        const insertMax = 10;
+        let insertMax = config.programInsertMax || 10;
+        if(insertMax > 10) { insertMax = 10; }
         // 挿入後の wait
         const insertWait = config.programInsertWait || 0;
 
