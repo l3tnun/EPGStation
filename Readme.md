@@ -19,7 +19,7 @@ iOS, Android での操作感を重視しています
 * [Node.js](http://nodejs.org/) ^6.5.x || ~ 8
 * [Mirakurun](https://github.com/Chinachu/Mirakurun) ^2.5.7
 * Linux, macOS, Windows (実験的)
-* [MySQL](https://www.mysql.com/jp/) or [MariaDB](https://mariadb.org/) (character-set-server = utf8)
+* [SQLite](https://www.sqlite.org/) or [MySQL](https://www.mysql.com/jp/) ( [MariaDB](https://mariadb.org/) ) (character-set-server = utf8)
 * [FFmpeg](http://ffmpeg.org/)
 * [Python 2.7](https://www.python.org/) diskusage で使用される node-gyp で必要
 * [GCC](https://gcc.gnu.org/) diskusage で使用される node-gyp で必要
@@ -54,7 +54,11 @@ $ cp config/config.sample.json config/config.json
 $ vim config/config.json
 ````
 
-mirakurunPath, mysql, encode の設定をすればとりあえず動きます
+SQLite3 使用時は ```dbType``` を ```sqlite3``` に設定してください。
+
+MySQL 使用時は ```mysql``` の設定を設定してください。
+
+あとは ```mirakurunPath```, ```encode``` の設定をすればとりあえず動きます
 
 ffmpeg のパスはデフォルトで ```/usr/local/bin/ffmpeg``` となっています
 
