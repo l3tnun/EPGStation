@@ -1,6 +1,7 @@
 {
     "serverPort": "8888",
     "mirakurunPath": "http+unix://%2Fvar%2Frun%2Fmirakurun.sock/",
+    "dbType": "mysql",
     "mysql": {
         "host": "127.0.0.1",
         "user": "epgstation",

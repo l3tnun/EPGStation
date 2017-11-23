@@ -3,6 +3,14 @@ import Configuration from '../Configuration';
 
 namespace Util {
     /**
+    * config の dbType を返す
+    * @return 'mysql' | 'sqlite3'
+    */
+    export const getDBType = (): 'mysql' | 'sqlite3' => {
+        return Configuration.getInstance().getConfig().dbType || 'mysql';
+    }
+
+    /**
     * config の recorded path を返す
     * @return string
     */

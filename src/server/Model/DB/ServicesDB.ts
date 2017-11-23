@@ -10,30 +10,12 @@ interface ServicesDBInterface extends DBBase {
     findChannelType(types: (apid.ChannelType)[] ): Promise<DBSchema.ServiceSchema[]>;
 }
 
-/**
-* ServicesDB
-*/
-class ServicesDB extends DBBase implements ServicesDBInterface {
+abstract class ServicesDB extends DBBase implements ServicesDBInterface {
     /**
     * create table
     * @return Promise<void>
     */
-    public create(): Promise<void> {
-        let query = `CREATE TABLE IF NOT EXISTS ${ DBSchema.TableName.Services } (`
-            + 'id BIGINT primary key unique, '
-            + 'serviceId integer not null, '
-            + 'networkId integer not null, '
-            + 'name text not null, '
-            + 'remoteControlKeyId integer null, '
-            + 'hasLogoData boolean, '
-            + 'channelType text, '
-            + 'channelTypeId integer, '
-            + 'channel text, '
-            + 'type integer null'
-            + ');'
-
-        return this.runQuery(query);
-    }
+    abstract create(): Promise<void>;
 
     /**
     * データ挿入
@@ -77,7 +59,7 @@ class ServicesDB extends DBBase implements ServicesDBInterface {
             datas.push({ query: queryStr, values: data });
         });
 
-        return this.manyInsert(DBSchema.TableName.Services, datas, isDelete);
+        return this.operator.manyInsert(DBSchema.TableName.Services, datas, isDelete);
     }
 
     /**
@@ -105,14 +87,14 @@ class ServicesDB extends DBBase implements ServicesDBInterface {
     * @return Promise<DBSchema.ServiceSchema | null>
     */
     public async findId(id: number): Promise<DBSchema.ServiceSchema | null> {
-        return this.getFirst(this.fixResult(<DBSchema.ServiceSchema[]> await this.runQuery(`select * from ${ DBSchema.TableName.Services } where id = ${ id }`)));
+        return this.operator.getFirst(this.fixResult(<DBSchema.ServiceSchema[]> await this.operator.runQuery(`select * from ${ DBSchema.TableName.Services } where id = ${ id }`)));
     }
 
     /**
     * @param services: DBSchema.ServiceSchema[]
     * @return DBSchema.ServiceSchema[]
     */
-    private fixResult(services: DBSchema.ServiceSchema[]): DBSchema.ServiceSchema[] {
+    protected fixResult(services: DBSchema.ServiceSchema[]): DBSchema.ServiceSchema[] {
         return services.map((service) => {
             service.hasLogoData = Boolean(service.hasLogoData);
             return service;
@@ -124,7 +106,7 @@ class ServicesDB extends DBBase implements ServicesDBInterface {
     * @return Promise<DBSchema.ServiceSchema[]>
     */
     public async findAll(): Promise<DBSchema.ServiceSchema[]> {
-        return this.fixResult(<DBSchema.ServiceSchema[]> await this.runQuery(`select * from ${ DBSchema.TableName.Services } order by channelTypeId, remoteControlKeyId, id`));
+        return this.fixResult(<DBSchema.ServiceSchema[]> await this.operator.runQuery(`select * from ${ DBSchema.TableName.Services } order by channelTypeId, remoteControlKeyId, id`));
     }
 
     /**
@@ -139,7 +121,7 @@ class ServicesDB extends DBBase implements ServicesDBInterface {
         });
         str = str.slice(0, -1);
 
-        return this.fixResult(<DBSchema.ServiceSchema[]> await this.runQuery(`select * from ${ DBSchema.TableName.Services } where channelType in (${ str }) order by channelTypeId, remoteControlKeyId, id`));
+        return this.fixResult(<DBSchema.ServiceSchema[]> await this.operator.runQuery(`select * from ${ DBSchema.TableName.Services } where channelType in (${ str }) order by channelTypeId, remoteControlKeyId, id`));
     }
 }
 

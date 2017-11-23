@@ -1,5 +1,5 @@
-import * as path from 'path';
 import DBBase from './DBBase';
+import * as path from 'path';
 import * as DBSchema from './DBSchema';
 import Util from '../../Util/Util';
 
@@ -12,22 +12,16 @@ interface EncodedDBInterface extends DBBase {
     findRecordedId(recordedId: number): Promise<DBSchema.EncodedSchema[]>;
 }
 
-class EncodedDB extends DBBase implements EncodedDBInterface {
+/**
+* EncodedDB クラス
+* 各 DB で共通部分をまとめる
+*/
+abstract class EncodedDB extends DBBase implements EncodedDBInterface {
     /**
     * create table
     * @return Promise<void>
     */
-    public create(): Promise<void> {
-        let query = `CREATE TABLE IF NOT EXISTS ${ DBSchema.TableName.Encoded } (`
-            + 'id int primary key auto_increment, '
-            + 'recordedId int, '
-            + 'name text not null, '
-            + 'path text not null, '
-            + `foreign key(recordedId) references ${ DBSchema.TableName.Recorded }(id) `
-        + ') engine=InnoDB;'
-
-        return this.runQuery(query);
-    }
+    abstract create(): Promise<void>;
 
     /**
     * encoded 挿入
@@ -36,7 +30,7 @@ class EncodedDB extends DBBase implements EncodedDBInterface {
     * @para, filePath: file path
     * @return Promise<number> insertId
     */
-    public async insert(recordedId: number, name: string, filePath: string): Promise<number> {
+    public insert(recordedId: number, name: string, filePath: string): Promise<number> {
         let query = `insert into ${ DBSchema.TableName.Encoded } (`
             + 'recordedId,'
             + 'name, '
@@ -51,7 +45,7 @@ class EncodedDB extends DBBase implements EncodedDBInterface {
             filePath.slice(Util.getRecordedPath().length + path.sep.length),
         ];
 
-        return this.getInsertId(await this.runQuery(query, value));
+        return this.operator.runInsert(query, value);
     }
 
     /**
@@ -60,7 +54,7 @@ class EncodedDB extends DBBase implements EncodedDBInterface {
     * @return Promise<void>
     */
     public delete(id: number): Promise<void> {
-        return this.runQuery(`delete from ${ DBSchema.TableName.Encoded } where id = ${ id }`);
+        return this.operator.runQuery(`delete from ${ DBSchema.TableName.Encoded } where id = ${ id }`);
     }
 
     /**
@@ -69,7 +63,7 @@ class EncodedDB extends DBBase implements EncodedDBInterface {
     * @return Promise<void>
     */
     public deleteRecordedId(recordedId: number): Promise<void> {
-        return this.runQuery(`delete from ${ DBSchema.TableName.Encoded } where recordedId = ${ recordedId }`);
+        return this.operator.runQuery(`delete from ${ DBSchema.TableName.Encoded } where recordedId = ${ recordedId }`);
     }
 
     /**
@@ -78,14 +72,14 @@ class EncodedDB extends DBBase implements EncodedDBInterface {
     * @return Promise<DBSchema.EncodedSchema | null>
     */
     public async findId(id: number): Promise<DBSchema.EncodedSchema | null> {
-        let programs = await this.runQuery(`select * from ${ DBSchema.TableName.Encoded } where id = ${ id }`);
-        return this.getFirst(this.fixResult(<DBSchema.EncodedSchema[]>programs));
+        let programs = await this.operator.runQuery(`select * from ${ DBSchema.TableName.Encoded } where id = ${ id }`);
+        return this.operator.getFirst(this.fixResult(<DBSchema.EncodedSchema[]>programs));
     }
 
     /**
     * @param programs: DBSchema.RecordedSchema[]
     */
-    private fixResult(programs: DBSchema.EncodedSchema[]): DBSchema.EncodedSchema[] {
+    protected fixResult(programs: DBSchema.EncodedSchema[]): DBSchema.EncodedSchema[] {
         let baseDir = Util.getRecordedPath();
         return programs.map((program) => {
             // path をフルパスへ書き換える
@@ -102,7 +96,7 @@ class EncodedDB extends DBBase implements EncodedDBInterface {
     * @return Promise<DBSchema.EncodedSchema[]>
     */
     public async findRecordedId(recordedId: number): Promise<DBSchema.EncodedSchema[]> {
-        let programs = await this.runQuery(`select * from ${ DBSchema.TableName.Encoded } where recordedId = ${ recordedId }`);
+        let programs = await this.operator.runQuery(`select * from ${ DBSchema.TableName.Encoded } where recordedId = ${ recordedId }`);
         return this.fixResult(<DBSchema.EncodedSchema[]>programs);
     }
 }

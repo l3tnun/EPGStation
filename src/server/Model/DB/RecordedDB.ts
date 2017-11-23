@@ -1,8 +1,8 @@
-import * as path from 'path';
 import DBBase from './DBBase';
+import * as path from 'path';
 import * as DBSchema from './DBSchema';
-import StrUtil from '../..//Util/StrUtil';
-import Util from '../..//Util/Util';
+import Util from '../../Util/Util';
+import StrUtil from '../../Util/StrUtil';
 
 interface findQuery {
     ruleId?: number | null,
@@ -30,46 +30,19 @@ interface RecordedDBInterface extends DBBase {
     getGenreTag(): Promise<DBSchema.GenreTag[]>;
 }
 
-class RecordedDB extends DBBase implements RecordedDBInterface {
+abstract class RecordedDB extends DBBase implements RecordedDBInterface {
     /**
     * create table
     * @return Promise<void>
     */
-    public create(): Promise<void> {
-        let query = `CREATE TABLE IF NOT EXISTS ${ DBSchema.TableName.Recorded } (`
-            + 'id int primary key auto_increment, '
-            + 'programId bigint not null, '
-            + 'channelId bigint not null, '
-            + 'channelType text not null, '
-            + 'startAt bigint not null, '
-            + 'endAt bigint not null, '
-            + 'duration bigint not null, '
-            + 'name text not null, '
-            + 'description text null, '
-            + 'extended text null, '
-            + 'genre1 integer null, '
-            + 'genre2 integer null, '
-            + 'videoType text null, '
-            + 'videoResolution text null, '
-            + 'videoStreamContent integer null, '
-            + 'videoComponentType integer null, '
-            + 'audioSamplingRate integer null, '
-            + 'audioComponentType integer null, '
-            + 'recPath text, '
-            + 'ruleId int, '
-            + 'thumbnailPath text, '
-            + 'recording boolean '
-        + ') engine=InnoDB;'
-
-        return this.runQuery(query);
-    }
+    abstract create(): Promise<void>;
 
     /**
     * recorded 挿入
     * @param program: DBSchema.RecordedSchema
     * @param Promise<number> insertId
     */
-    public async insert(program: DBSchema.RecordedSchema): Promise<number> {
+    public insert(program: DBSchema.RecordedSchema): Promise<number> {
         let query = `insert into ${ DBSchema.TableName.Recorded } (`
             + 'programId, '
             + 'channelId, '
@@ -121,7 +94,7 @@ class RecordedDB extends DBBase implements RecordedDBInterface {
         value.push(program.thumbnailPath);
         value.push(program.recording);
 
-        return this.getInsertId(await this.runQuery(query, value));
+        return this.operator.runInsert(query, value);
     }
 
     /**
@@ -183,7 +156,7 @@ class RecordedDB extends DBBase implements RecordedDBInterface {
         value.push(program.thumbnailPath);
         value.push(program.recording);
 
-        await this.runQuery(query, value);
+        await this.operator.runQuery(query, value);
     }
 
     /**
@@ -192,7 +165,7 @@ class RecordedDB extends DBBase implements RecordedDBInterface {
     * @return Promise<void>
     */
     public delete(id: number): Promise<void> {
-        return this.runQuery(`delete from ${ DBSchema.TableName.Recorded } where id = ${ id }`);
+        return this.operator.runQuery(`delete from ${ DBSchema.TableName.Recorded } where id = ${ id }`);
     }
 
     /**
@@ -201,7 +174,7 @@ class RecordedDB extends DBBase implements RecordedDBInterface {
     * @return Promise<void>
     */
     public deleteRecPath(id: number): Promise<void> {
-        return this.runQuery(`update ${ DBSchema.TableName.Recorded } set recPath = null where id = ${ id }`);
+        return this.operator.runQuery(`update ${ DBSchema.TableName.Recorded } set recPath = null where id = ${ id }`);
     }
 
     /**
@@ -210,7 +183,7 @@ class RecordedDB extends DBBase implements RecordedDBInterface {
     * @return Promise<void>
     */
     public deleteRuleId(ruleId: number): Promise<void> {
-        return this.runQuery(`update ${ DBSchema.TableName.Recorded } set ruleId = null where ruleId = ${ ruleId }`);
+        return this.operator.runQuery(`update ${ DBSchema.TableName.Recorded } set ruleId = null where ruleId = ${ ruleId }`);
     }
 
     /**
@@ -221,24 +194,21 @@ class RecordedDB extends DBBase implements RecordedDBInterface {
     */
     public addThumbnail(id: number, filePath: string): Promise<void> {
         let thumbnailDir = Util.getThumbnailPath();
-        return this.runQuery(`update ${ DBSchema.TableName.Recorded } set thumbnailPath = '${ filePath.slice(thumbnailDir.length + path.sep.length) }' where id = ${ id }`);
+        return this.operator.runQuery(`update ${ DBSchema.TableName.Recorded } set thumbnailPath = '${ filePath.slice(thumbnailDir.length + path.sep.length) }' where id = ${ id }`);
     }
+
     /**
     * recording 状態を解除する
     * @param id: recorded id
     * @return Promise<void>
     */
-    public removeRecording(id: number): Promise<void> {
-        return this.runQuery(`update ${ DBSchema.TableName.Recorded } set recording = false where id = ${ id }`);
-    }
+    abstract removeRecording(id: number): Promise<void>;
 
     /**
     * recording 状態をすべて解除する
     * @return Promise<void>
     */
-    public removeAllRecording(): Promise<void> {
-        return this.runQuery(`update ${ DBSchema.TableName.Recorded } set recording = false where recording = ${ true }`);
-    }
+    abstract removeAllRecording(): Promise<void>;
 
     /**
     * id 検索
@@ -246,22 +216,17 @@ class RecordedDB extends DBBase implements RecordedDBInterface {
     * @return Promise<DBSchema.RecordedSchema | null>
     */
     public async findId(id: number): Promise<DBSchema.RecordedSchema | null> {
-        let programs = await this.runQuery(`select * from ${ DBSchema.TableName.Recorded } where id = ${ id }`);
-        return this.getFirst(await this.fixResult(<DBSchema.RecordedSchema[]>programs));
+        let programs = await this.operator.runQuery(`select * from ${ DBSchema.TableName.Recorded } where id = ${ id }`);
+        return this.operator.getFirst(await this.fixResult(<DBSchema.RecordedSchema[]>programs));
     }
 
     /**
     * @param programs: DBSchema.RecordedSchema[]
     */
-    private fixResult(programs: DBSchema.RecordedSchema[]): DBSchema.RecordedSchema[] {
+    protected fixResult(programs: DBSchema.RecordedSchema[]): DBSchema.RecordedSchema[] {
         let baseDir = Util.getRecordedPath();
         let thumbnailDir = Util.getThumbnailPath();
         return programs.map((program) => {
-            program.channelType = <any>String(program.channelType);
-            program.name = String(program.name);
-            if(program.description !== null) { program.description = String(program.description); }
-            if(program.extended !== null) { program.extended = String(program.extended); }
-
             if(program.recPath !== null) {
                 //フルパスへ書き換える
                 program.recPath = path.join(baseDir, program.recPath);
@@ -281,8 +246,8 @@ class RecordedDB extends DBBase implements RecordedDBInterface {
     * @return Promise<DBSchema.RecordedSchema | null>
     */
     public async findOld(): Promise<DBSchema.RecordedSchema | null> {
-        let programs = await this.runQuery(`select * from ${ DBSchema.TableName.Recorded } order by id asc limit 1`);
-        return this.getFirst(await this.fixResult(<DBSchema.RecordedSchema[]>programs));
+        let programs = await this.operator.runQuery(`select * from ${ DBSchema.TableName.Recorded } order by id asc limit 1`);
+        return this.operator.getFirst(await this.fixResult(<DBSchema.RecordedSchema[]>programs));
     }
 
     /**
@@ -301,7 +266,7 @@ class RecordedDB extends DBBase implements RecordedDBInterface {
 
         query += ` order by id desc limit ${ offset }, ${ limit }`;
 
-        let programs = await this.runQuery(query);
+        let programs = await this.operator.runQuery(query);
         return this.fixResult(<DBSchema.RecordedSchema[]>programs);
     }
 
@@ -352,7 +317,7 @@ class RecordedDB extends DBBase implements RecordedDBInterface {
     * @return Promise<number>
     */
     public getTotal(option: findQuery = {}): Promise<number> {
-        return this.total(DBSchema.TableName.Recorded, this.buildFindQuery(option));
+        return this.operator.total(DBSchema.TableName.Recorded, this.buildFindQuery(option));
     }
 
     /**
@@ -384,7 +349,7 @@ class RecordedDB extends DBBase implements RecordedDBInterface {
     * @return Promise<T>
     */
     private getTag<T>(item: string): Promise<T> {
-        return this.runQuery(`select count(*) as cnt, ${ item } from ${ DBSchema.TableName.Recorded } group by ${ item } order by ${ item } asc`);
+        return this.operator.runQuery(`select count(*) as cnt, ${ item } from ${ DBSchema.TableName.Recorded } group by ${ item } order by ${ item } asc`);
     }
 }
 

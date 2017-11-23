@@ -1,9 +1,9 @@
 import * as apid from '../../../../node_modules/mirakurun/api';
 import DBBase from './DBBase';
 import * as DBSchema from './DBSchema';
+import { SearchInterface } from '../../Operator/RuleInterface';
 import DateUtil from '../../Util/DateUtil';
 import StrUtil from '../../Util/StrUtil';
-import { SearchInterface } from '../../Operator/RuleInterface';
 
 /**
 * 放送波索引
@@ -26,49 +26,28 @@ interface ProgramsDBInterface extends DBBase {
     findScheduleId(startAt: apid.UnixtimeMS, endAt: apid.UnixtimeMS, channelId: apid.ServiceItemId): Promise<DBSchema.ScheduleProgramItem[]>;
     findBroadcasting(addition?: apid.UnixtimeMS): Promise<DBSchema.ScheduleProgramItem[]>;
     findBroadcastingChanel(channelId: apid.ServiceItemId, addition?: apid.UnixtimeMS): Promise<DBSchema.ScheduleProgramItem[]>;
-    deleteOldPrograms(): Promise<void>;
     findId(id: number, isNow?: boolean): Promise<DBSchema.ProgramSchema | null>;
     findRule(option: SearchInterface, fields?: string | null, limit?: number | null): Promise<DBSchema.ProgramSchema[]>;
+}
+
+namespace ProgramsDBInterface {
+    export const ScheduleProgramItemColumns = 'id, channelId, startAt, endAt, isFree, name, description, extended, genre1, genre2, channelType, videoType, videoResolution, videoStreamContent, videoComponentType, audioSamplingRate, audioComponentType';
 }
 
 /**
 * ProgramsDB
 */
-class ProgramsDB extends DBBase implements ProgramsDBInterface {
+abstract class ProgramsDB extends DBBase implements ProgramsDBInterface {
     /**
     * create table
     * @return Promise<void>
     */
-    public create(): Promise<void> {
-        let query = `CREATE TABLE IF NOT EXISTS ${ DBSchema.TableName.Programs } (`
-            + 'id BIGINT primary key unique, '
-            + 'channelId bigint not null, '
-            + 'eventId bigint not null, '
-            + 'serviceId integer not null, '
-            + 'networkId integer not null, '
-            + 'startAt bigint not null, '
-            + 'endAt bigint not null, '
-            + 'startHour integer not null, '
-            + 'week integer not null, '
-            + 'duration bigint not null, '
-            + 'isFree boolean not null, '
-            + 'name text not null, '
-            + 'description text null, '
-            + 'extended text null, '
-            + 'genre1 integer null, '
-            + 'genre2 integer null, '
-            + 'channelType text not null, '
-            + 'channel text not null, '
-            + 'videoType text null, '
-            + 'videoResolution text null, '
-            + 'videoStreamContent integer null, '
-            + 'videoComponentType integer null, '
-            + 'audioSamplingRate integer null, '
-            + 'audioComponentType integer null '
-            + ');'
+    abstract create(): Promise<void>;
 
-        return this.runQuery(query);
-    }
+    /**
+    * insert 時の config を取得
+    */
+    abstract getInsertConfig(): { insertMax: number, insertWait: number };
 
     /**
     * Programs 挿入
@@ -78,11 +57,7 @@ class ProgramsDB extends DBBase implements ProgramsDBInterface {
     * @return Promise<void>
     */
     public insert(channelTypes: ChannelTypeHash, programs: apid.Program[], isDelete: boolean = true): Promise<void> {
-        const config = this.config.getConfig();
-        // 一度に挿入する数
-        const insertMax = config.programInsertMax || 100;
-        // 挿入後の wait
-        const insertWait = config.programInsertWait || 0;
+        const config = this.getInsertConfig();
 
         //insert query str
         let queryStr = `replace into ${ DBSchema.TableName.Programs } (`
@@ -184,7 +159,7 @@ class ProgramsDB extends DBBase implements ProgramsDBInterface {
             cnt += 1;
 
             // values にデータが溜まったら datas に吐き出す
-            if(cnt === insertMax || index == programs.length - 1) {
+            if(cnt === config.insertMax || index == programs.length - 1) {
                 let str = queryStr;
                 for(let i = 0; i < cnt; i++) {
                     str += '( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ),'
@@ -197,7 +172,7 @@ class ProgramsDB extends DBBase implements ProgramsDBInterface {
             }
         });
 
-        return this.manyInsert(DBSchema.TableName.Programs, datas, isDelete, insertWait);
+        return this.operator.manyInsert(DBSchema.TableName.Programs, datas, isDelete, config.insertWait);
     }
 
     /**
@@ -226,14 +201,14 @@ class ProgramsDB extends DBBase implements ProgramsDBInterface {
     * @return Promise<void>
     */
     public delete(programId: number): Promise<void> {
-        return this.runQuery(`delete from ${ DBSchema.TableName.Programs } where id = ${ programId }`);
+        return this.operator.runQuery(`delete from ${ DBSchema.TableName.Programs } where id = ${ programId }`);
     }
 
     /**
     * 1 時間以上経過した program を削除
     */
     public deleteOldPrograms(): Promise<void> {
-        return this.runQuery(`delete from ${ DBSchema.TableName.Programs } where endAt < ${ new Date().getTime()  - (1 * 60 * 60 * 1000) }`);
+        return this.operator.runQuery(`delete from ${ DBSchema.TableName.Programs } where endAt < ${ new Date().getTime()  - (1 * 60 * 60 * 1000) }`);
     }
 
     /**
@@ -250,14 +225,14 @@ class ProgramsDB extends DBBase implements ProgramsDBInterface {
             + `and endAt >= ${ startAt } and ${ endAt } > startAt `
             + 'order by startAt';
 
-        return <DBSchema.ScheduleProgramItem[]>this.fixResult(<DBSchema.ScheduleProgramItem[]>await this.runQuery(query));
+        return <DBSchema.ScheduleProgramItem[]>this.fixResult(<DBSchema.ScheduleProgramItem[]>await this.operator.runQuery(query));
     }
 
     /**
     * @param programs: ScheduleProgramItem[] | ProgramSchema[]
     * @return ScheduleProgramItem[] | ProgramSchema[]
     */
-    private fixResult(programs: DBSchema.ScheduleProgramItem[] | DBSchema.ProgramSchema[]): DBSchema.ScheduleProgramItem[] | DBSchema.ProgramSchema[] {
+    protected fixResult(programs: DBSchema.ScheduleProgramItem[] | DBSchema.ProgramSchema[]): DBSchema.ScheduleProgramItem[] | DBSchema.ProgramSchema[] {
         return (<any>programs).map((program: any) => {
             program.isFree = Boolean(program.isFree);
             return program;
@@ -278,7 +253,7 @@ class ProgramsDB extends DBBase implements ProgramsDBInterface {
             + `and endAt >= ${ startAt } and ${ endAt } > startAt `
             + 'order by startAt';
 
-        return <DBSchema.ScheduleProgramItem[]>this.fixResult(<DBSchema.ScheduleProgramItem[]>await this.runQuery(query));
+        return <DBSchema.ScheduleProgramItem[]>this.fixResult(<DBSchema.ScheduleProgramItem[]>await this.operator.runQuery(query));
     }
 
     /**
@@ -295,7 +270,7 @@ class ProgramsDB extends DBBase implements ProgramsDBInterface {
             + `where endAt >= ${ now } and ${ now } > startAt `
             + 'order by startAt';
 
-        return <DBSchema.ScheduleProgramItem[]>this.fixResult(<DBSchema.ScheduleProgramItem[]>await this.runQuery(query));
+        return <DBSchema.ScheduleProgramItem[]>this.fixResult(<DBSchema.ScheduleProgramItem[]>await this.operator.runQuery(query));
     }
 
     /**
@@ -313,7 +288,7 @@ class ProgramsDB extends DBBase implements ProgramsDBInterface {
             + `where endAt > ${ now } and ${ now } >= startAt and channelId = ${ channelId } `
             + 'order by startAt';
 
-        return <DBSchema.ScheduleProgramItem[]>this.fixResult(<DBSchema.ScheduleProgramItem[]>await this.runQuery(query));
+        return <DBSchema.ScheduleProgramItem[]>this.fixResult(<DBSchema.ScheduleProgramItem[]>await this.operator.runQuery(query));
     }
 
     /**
@@ -324,7 +299,7 @@ class ProgramsDB extends DBBase implements ProgramsDBInterface {
     */
     public async findId(id: number, isNow: boolean = false): Promise<DBSchema.ProgramSchema | null> {
         let option = isNow ? `and endAt > ${ new Date().getTime() }` : '';
-        return this.getFirst(<DBSchema.ProgramSchema[]>this.fixResult(<DBSchema.ProgramSchema[]>await this.runQuery(`select * from ${ DBSchema.TableName.Programs } where id = ${ id } ${ option }`)));
+        return this.operator.getFirst(<DBSchema.ProgramSchema[]>this.fixResult(<DBSchema.ProgramSchema[]>await this.operator.runQuery(`select * from ${ DBSchema.TableName.Programs } where id = ${ id } ${ option }`)));
     }
 
     /**
@@ -337,8 +312,28 @@ class ProgramsDB extends DBBase implements ProgramsDBInterface {
         let query = `select ${ fields } from ${ DBSchema.TableName.Programs } ${ this.createQuery(option) } order by startAt asc`;
         if(limit != null) { query += ` limit ${ limit }`; }
 
-        return <DBSchema.ProgramSchema[]>this.fixResult(<DBSchema.ProgramSchema[]>await this.runQuery(query));
+        return <DBSchema.ProgramSchema[]>this.fixResult(<DBSchema.ProgramSchema[]>await this.runFindRule(query, Boolean(option.keyCS)));
     }
+
+    /**
+    * ルール検索実行部分
+    * @param query: string
+    * @param cs: boolean
+    * @return Promise<DBSchema.ProgramSchema[]>
+    */
+    abstract runFindRule(query: string, cs: boolean): Promise<DBSchema.ProgramSchema[]>;
+
+    /**
+    * regexp が有効か
+    * @return boolean
+    */
+    abstract isEnableRegExp(): boolean;
+
+    /**
+    * 大文字小文字判定が有効か
+    * @return boolean
+    */
+    abstract isEnableCS(): boolean;
 
     /**
     * ルール検索用の where 以下の条件を生成する
@@ -456,6 +451,9 @@ class ProgramsDB extends DBBase implements ProgramsDBInterface {
                 extended: Boolean(option.extended),
             }
 
+            if(!this.isEnableRegExp()) { keyOption.regExp = false; }
+            if(!this.isEnableCS()) { keyOption.cs = false; }
+
             //keyword
             if(typeof option.keyword !== 'undefined') {
                 let keyword = option.keyword.replace(/'/g, "\\'"); // ' を \' へ置換
@@ -542,10 +540,6 @@ class ProgramsDB extends DBBase implements ProgramsDBInterface {
 
         return queryStr;
     }
-}
-
-namespace ProgramsDBInterface {
-    export const ScheduleProgramItemColumns = 'id, channelId, startAt, endAt, isFree, name, description, extended, genre1, genre2, channelType, videoType, videoResolution, videoStreamContent, videoComponentType, audioSamplingRate, audioComponentType';
 }
 
 export { ChannelTypeHash, ProgramsDBInterface, ProgramsDB }

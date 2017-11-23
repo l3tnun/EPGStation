@@ -156,6 +156,8 @@ class Operator {
 
         // ルールが削除されたとき recorded の整合性をとる
         if(!isRetry && status === 'delete') {
+            // SQLite3 使用時に正しく動作しないので sleep
+            await Util.sleep(100);
             try {
                 await this.recordingManager.deleteRule(ruleId);
             } catch(err) {

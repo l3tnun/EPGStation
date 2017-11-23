@@ -5,15 +5,22 @@ import CreateMirakurunClient from '../Util/CreateMirakurunClient';
 import { Logger } from '../Logger';
 import Configuration from '../Configuration';
 import Base from '../Base';
-import { ServicesDB } from '../Model/DB/ServicesDB';
-import { ChannelTypeHash, ProgramsDB } from '../Model/DB/ProgramsDB';
+import MySQLOperator from '../Model/DB/MySQL/MySQLOperator';
+import SQLite3Operator from '../Model/DB/SQLite3/SQLite3Operator';
+import MySQLServicesDB from '../Model/DB/MySQL/MySQLServicesDB';
+import MySQLProgramsDB from '../Model/DB/MySQL/MySQLProgramsDB';
+import SQLite3ServicesDB from '../Model/DB/SQLite3/SQLite3ServicesDB';
+import SQLite3ProgramsDB from '../Model/DB/SQLite3/SQLite3ProgramsDB';
+import { ServicesDBInterface } from '../Model/DB/ServicesDB';
+import { ChannelTypeHash, ProgramsDBInterface } from '../Model/DB/ProgramsDB';
+import Util from '../Util/Util';
 
 /**
 * Mirakurun のデータを取得して DB を更新する
 */
 class MirakurunUpdater extends Base {
-    private servicesDB: ServicesDB;
-    private programsDB: ProgramsDB;
+    private servicesDB: ServicesDBInterface;
+    private programsDB: ProgramsDBInterface;
     private mirakurun: Mirakurun;
 
     private services: apid.Service[] = [];
@@ -25,8 +32,8 @@ class MirakurunUpdater extends Base {
     * @param programsDB: ProgramsDB
     */
     constructor(
-        servicesDB: ServicesDB,
-        programsDB: ProgramsDB,
+        servicesDB: ServicesDBInterface,
+        programsDB: ProgramsDBInterface,
     ) {
         super();
         this.servicesDB = servicesDB;
@@ -133,6 +140,12 @@ namespace MirakurunUpdater {
 Logger.initialize();
 Configuration.getInstance().initialize(path.join(__dirname, '..', '..', '..', 'config', 'config.json'));
 
-let updater = new MirakurunUpdater(new ServicesDB(), new ProgramsDB());
+
+const isMysql = Util.getDBType() === 'mysql';
+const operator = isMysql ? new MySQLOperator() : new SQLite3Operator();
+const servicesDB = isMysql ? new MySQLServicesDB(operator) : new SQLite3ServicesDB(operator);
+const programsDB = isMysql ? new MySQLProgramsDB(operator) : new SQLite3ProgramsDB(operator);
+
+let updater = new MirakurunUpdater(servicesDB, programsDB);
 updater.update();
 

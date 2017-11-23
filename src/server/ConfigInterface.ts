@@ -4,6 +4,8 @@
 interface ConfigInterface {
     serverPort: number;
     mirakurunPath: string;
+    dbType: 'mysql' | 'sqlite3';
+    dbPath: string;
     mysql: {
         host: string,
         user: string,

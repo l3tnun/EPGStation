@@ -5,7 +5,9 @@ Config.json
 | -------- | --- | ---------- | --- |  --- |
 | serverPort | number | | yes | ポート番号 |
 | mirakurunPath | string | | yes | Mirakurunのパス(URL) |
-| mysql | {} | | yes | mysql の設定 |
+| dbType | mysql \| sqlite3 | mysql | no | 使用する データベースを指定する |
+| dbPath | string | EPGStation/data/database.db | no | SQLite3 使用時の db ファイルの保存場所 | 
+| mysql | {} | | no | MySQL の設定 (dbType が mysql の場合は必須) |
 | gid | string \| number | | no | gid の設定 |
 | uid | string \| number | | no | uid の設定 |
 | programInsertMax | number | 100 | no | DB へ番組情報を挿入するときの 1 回あたりの件数 |
