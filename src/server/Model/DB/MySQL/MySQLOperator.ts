@@ -1,25 +1,25 @@
 import * as mysql from 'mysql';
-import DBBase from '../DBBase';
+import DBOperator from '../DBOperator';
 import Util from '../../../Util/Util';
 
 /**
-* MySQLBase クラス
+* MySQLOperator クラス
 */
-abstract class MySQLBase extends DBBase {
+class MySQLOperator extends DBOperator {
     protected static pool: mysql.IPool | null = null;
 
     /**
     * get Pool
     * @return Pool
     */
-    protected getPool(): mysql.IPool{
-        if(MySQLBase.pool === null) {
+    public getPool(): mysql.IPool{
+        if(MySQLOperator.pool === null) {
             let config = this.config.getConfig().mysql;
             if(typeof config.connectTimeout === 'undefined') { config.connectTimeout = 5000; }
-            MySQLBase.pool = mysql.createPool(config);
+            MySQLOperator.pool = mysql.createPool(config);
         }
 
-        return MySQLBase.pool;
+        return MySQLOperator.pool;
     }
 
     /**
@@ -67,7 +67,7 @@ abstract class MySQLBase extends DBBase {
     * @param query
     * @return Promise<T>
     */
-    protected runQuery<T>(query: string, values?: any): Promise<T> {
+    public runQuery<T>(query: string, values?: any): Promise<T> {
         return new Promise<T>((resolve: (row: T) => void, reject: (err: mysql.IError) => void) => {
             this.getPool().getConnection((err, connection) => {
                 if(err) { reject(err); return; }
@@ -97,7 +97,7 @@ abstract class MySQLBase extends DBBase {
     * @param insertWait インサート時の wait (ms)
     * @return Promise<pg.QueryResult>
     */
-    protected manyInsert(deleteTableName: string, datas: { query: string, values?: any[] }[], isDelete: boolean, insertWait: number = 0): Promise<void> {
+    public manyInsert(deleteTableName: string, datas: { query: string, values?: any[] }[], isDelete: boolean, insertWait: number = 0): Promise<void> {
         let connection: mysql.IConnection;
         let failed = (err: mysql.IError, reject: (err: mysql.IError) => void) => {
             connection.rollback(() => { connection.release(); });
@@ -164,7 +164,7 @@ abstract class MySQLBase extends DBBase {
     * @param value
     * @return Promise<number> insertId
     */
-    protected runInsert(query: string, values?: any): Promise<number> {
+    public runInsert(query: string, values?: any): Promise<number> {
         return new Promise<number>((resolve: (insertId: number) => void, reject: (err: Error) => void ) => {
             this.getPool().getConnection((err, connection) => {
                 if(err) { reject(err); return; }
@@ -185,27 +185,7 @@ abstract class MySQLBase extends DBBase {
             });
         });
     }
-
-    /**
-    * 件数取得
-    * @param tableName: string
-    * @return Promise<number>
-    */
-    protected async total(tableName: string, option: string = ''): Promise<number> {
-        let result = await this.runQuery(`select count(id) as total from ${ tableName } ${ option }`);
-
-        return result[0].total;
-    }
-
-    /**
-    * 取得した結果の先頭だけ返す。結果が空なら null
-    * @param result<T[]>
-    * @return T | null
-    */
-    protected getFirst<T>(result: T[]): T | null {
-        return result.length === 0 ? null : result[0];
-    }
 }
 
-export default MySQLBase;
+export default MySQLOperator;
 

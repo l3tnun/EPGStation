@@ -1,14 +1,16 @@
 import factory from './ModelFactory';
-import MySQLServicesDB from './DB/MySQL/ServicesDB';
-import MySQLProgramsDB from './DB/MySQL/ProgramsDB';
-import MySQLRulesDB from './DB/MySQL/RulesDB';
-import MySQLRecordedDB from './DB/MySQL/RecordedDB';
-import MySQLEncodedDB from './DB/MySQL/EncodedDB';
-import SQLite3ServicesDB from './DB/SQLite3/ServicesDB';
-import SQLite3ProgramsDB from './DB/SQLite3/ProgramsDB';
-import SQLite3RulesDB from './DB/SQLite3/RulesDB';
-import SQLite3RecordedDB from './DB/SQLite3/RecordedDB';
-import SQLite3EncodedDB from './DB/SQLite3/EncodedDB';
+import MySQLOperator from './DB/MySQL/MySQLOperator';
+import SQLite3Operator from './DB/SQLite3/SQLite3Operator';
+import MySQLServicesDB from './DB/MySQL/MySQLServicesDB';
+import MySQLProgramsDB from './DB/MySQL/MySQLProgramsDB';
+import MySQLRulesDB from './DB/MySQL/MySQLRulesDB';
+import MySQLRecordedDB from './DB/MySQL/MySQLRecordedDB';
+import MySQLEncodedDB from './DB/MySQL/MySQLEncodedDB';
+import SQLite3ServicesDB from './DB/SQLite3/SQLite3ServicesDB';
+import SQLite3ProgramsDB from './DB/SQLite3/SQLite3ProgramsDB';
+import SQLite3RulesDB from './DB/SQLite3/SQLite3RulesDB';
+import SQLite3RecordedDB from './DB/SQLite3/SQLite3RecordedDB';
+import SQLite3EncodedDB from './DB/SQLite3/SQLite3EncodedDB';
 import { IPCServer } from './IPC/IPCServer';
 import { ExternalProcessModel } from './ExternalProcessModel';
 import Util from '../Util/Util';
@@ -23,18 +25,20 @@ namespace ModelFactorySetting {
     export const init = (): void => {
         if(Util.getDBType() === 'mysql') {
             // mysql
-            factory.reg('ServicesDB', () => { return new MySQLServicesDB() });
-            factory.reg('ProgramsDB', () => { return new MySQLProgramsDB() });
-            factory.reg('RulesDB', () => { return new MySQLRulesDB() });
-            factory.reg('RecordedDB', () => { return new MySQLRecordedDB() });
-            factory.reg('EncodedDB', () => { return new MySQLEncodedDB() });
+            const operator = new MySQLOperator();
+            factory.reg('ServicesDB', () => { return new MySQLServicesDB(operator) });
+            factory.reg('ProgramsDB', () => { return new MySQLProgramsDB(operator) });
+            factory.reg('RulesDB', () => { return new MySQLRulesDB(operator) });
+            factory.reg('RecordedDB', () => { return new MySQLRecordedDB(operator) });
+            factory.reg('EncodedDB', () => { return new MySQLEncodedDB(operator) });
         } else {
             // sqlite3
-            factory.reg('ServicesDB', () => { return new SQLite3ServicesDB() });
-            factory.reg('ProgramsDB', () => { return new SQLite3ProgramsDB() });
-            factory.reg('RulesDB', () => { return new SQLite3RulesDB() });
-            factory.reg('RecordedDB', () => { return new SQLite3RecordedDB() });
-            factory.reg('EncodedDB', () => { return new SQLite3EncodedDB() });
+            const operator = new SQLite3Operator();
+            factory.reg('ServicesDB', () => { return new SQLite3ServicesDB(operator) });
+            factory.reg('ProgramsDB', () => { return new SQLite3ProgramsDB(operator) });
+            factory.reg('RulesDB', () => { return new SQLite3RulesDB(operator) });
+            factory.reg('RecordedDB', () => { return new SQLite3RecordedDB(operator) });
+            factory.reg('EncodedDB', () => { return new SQLite3EncodedDB(operator) });
         }
 
         factory.reg('IPCServer', () => { return IPCServer.getInstance(); });

@@ -1,31 +1,31 @@
 import * as sqlite3 from 'sqlite3';
 import * as path from 'path';
-import DBBase from '../DBBase';
+import DBOperator from '../DBOperator';
 import Util from '../../../Util/Util';
 
 /**
-* SQLite3Base クラス
+* SQLite3Operator クラス
 */
-abstract class SQLite3Base extends DBBase {
+class SQLite3Operator extends DBOperator {
     protected static db: sqlite3.Database | null = null;
     protected static isEnableForeignKey = false;
 
     constructor() {
         super();
 
-        if(!SQLite3Base.isEnableForeignKey) {
+        if(!SQLite3Operator.isEnableForeignKey) {
             //外部キー制約を有効化
             this.runQuery(`pragma foreign_keys = ON`);
         }
     }
 
     private getDB(): sqlite3.Database {
-        if(SQLite3Base.db === null) {
+        if(SQLite3Operator.db === null) {
             const dbPath = this.config.getConfig().dbPath || path.join(__dirname, '..', '..', '..', '..', '..', 'data', 'database.db');
-            SQLite3Base.db = new sqlite3.Database(dbPath);
+            SQLite3Operator.db = new sqlite3.Database(dbPath);
         }
 
-        return SQLite3Base.db;
+        return SQLite3Operator.db;
     }
 
     /**
@@ -61,7 +61,7 @@ abstract class SQLite3Base extends DBBase {
     * @param isEnableCS: boolean 大文字小文字を区別するか
     * @return Promise<T>
     */
-    protected runQuery<T>(query: string, values: any | null = null, isEnableCS: boolean = false): Promise<T> {
+    public runQuery<T>(query: string, values: any | null = null, isEnableCS: boolean = false): Promise<T> {
         return new Promise<T>((resolve: (row: T) => void, reject: (err: Error) => void ) => {
             this.getDB().serialize(() => {
                 if(isEnableCS) { this.runQuery(`pragma case_sensitive_like = 1`); }
@@ -93,7 +93,7 @@ abstract class SQLite3Base extends DBBase {
     * @param insertWait インサート時の wait (ms)
     * @return Promise<pg.QueryResult>
     */
-    protected manyInsert(deleteTableName: string, datas: { query: string, values: any[] }[], isDelete: boolean, insertWait: number = 0): Promise<void> {
+    public manyInsert(deleteTableName: string, datas: { query: string, values?: any[] }[], isDelete: boolean, insertWait: number = 0): Promise<void> {
         return new Promise<void>((resolve: () => void, reject: (err: Error) => void) => {
             this.getDB().serialize(() => {
                 // トランザクション開始
@@ -142,7 +142,7 @@ abstract class SQLite3Base extends DBBase {
     * @param query
     * @return Promise<number> insertId
     */
-    protected runInsert(query: string, values?: any): Promise<number> {
+    public runInsert(query: string, values?: any): Promise<number> {
         return new Promise<number>((resolve: (insertId: number) => void, reject: (err: Error) => void ) => {
             this.getDB().serialize(() => {
                 if(typeof values === 'undefined') {
@@ -159,27 +159,7 @@ abstract class SQLite3Base extends DBBase {
             });
         });
     }
-
-    /**
-    * 件数取得
-    * @param tableName: string
-    * @return Promise<number>
-    */
-    protected async total(tableName: string, option: string = ''): Promise<number> {
-        let result = await this.runQuery(`select count(id) as total from ${ tableName } ${ option }`);
-
-        return result[0].total;
-    }
-
-    /**
-    * 取得した結果の先頭だけ返す。結果が空なら null
-    * @param result<T[]>
-    * @return T | null
-    */
-    protected getFirst<T>(result: T[]): T | null {
-        return result.length === 0 ? null : result[0];
-    }
 }
 
-export default SQLite3Base;
+export default SQLite3Operator;
 

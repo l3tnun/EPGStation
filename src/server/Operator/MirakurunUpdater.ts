@@ -5,10 +5,12 @@ import CreateMirakurunClient from '../Util/CreateMirakurunClient';
 import { Logger } from '../Logger';
 import Configuration from '../Configuration';
 import Base from '../Base';
-import MySQLServicesDB from '../Model/DB/MySQL/ServicesDB';
-import MySQLProgramsDB from '../Model/DB/MySQL/ProgramsDB';
-import SQLite3ServicesDB from '../Model/DB/SQLite3/ServicesDB';
-import SQLite3ProgramsDB from '../Model/DB/SQLite3/ProgramsDB';
+import MySQLOperator from '../Model/DB/MySQL/MySQLOperator';
+import SQLite3Operator from '../Model/DB/SQLite3/SQLite3Operator';
+import MySQLServicesDB from '../Model/DB/MySQL/MySQLServicesDB';
+import MySQLProgramsDB from '../Model/DB/MySQL/MySQLProgramsDB';
+import SQLite3ServicesDB from '../Model/DB/SQLite3/SQLite3ServicesDB';
+import SQLite3ProgramsDB from '../Model/DB/SQLite3/SQLite3ProgramsDB';
 import { ServicesDBInterface } from '../Model/DB/ServicesDB';
 import { ChannelTypeHash, ProgramsDBInterface } from '../Model/DB/ProgramsDB';
 import Util from '../Util/Util';
@@ -140,8 +142,9 @@ Configuration.getInstance().initialize(path.join(__dirname, '..', '..', '..', 'c
 
 
 const isMysql = Util.getDBType() === 'mysql';
-const servicesDB = isMysql ? new MySQLServicesDB() : new SQLite3ServicesDB();
-const programsDB = isMysql ? new MySQLProgramsDB() : new SQLite3ProgramsDB();
+const operator = isMysql ? new MySQLOperator() : new SQLite3Operator();
+const servicesDB = isMysql ? new MySQLServicesDB(operator) : new SQLite3ServicesDB(operator);
+const programsDB = isMysql ? new MySQLProgramsDB(operator) : new SQLite3ProgramsDB(operator);
 
 let updater = new MirakurunUpdater(servicesDB, programsDB);
 updater.update();
