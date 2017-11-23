@@ -28,7 +28,7 @@ class EncodedDB extends MySQLBase implements EncodedDBInterface {
     * @para, filePath: file path
     * @return Promise<number> insertId
     */
-    public async insert(recordedId: number, name: string, filePath: string): Promise<number> {
+    public insert(recordedId: number, name: string, filePath: string): Promise<number> {
         let query = `insert into ${ DBSchema.TableName.Encoded } (`
             + 'recordedId,'
             + 'name, '
@@ -43,7 +43,7 @@ class EncodedDB extends MySQLBase implements EncodedDBInterface {
             filePath.slice(Util.getRecordedPath().length + path.sep.length),
         ];
 
-        return this.getInsertId(await this.runQuery(query, value));
+        return this.runInsert(query, value);
     }
 
     /**

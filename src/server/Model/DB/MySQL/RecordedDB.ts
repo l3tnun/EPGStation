@@ -44,7 +44,7 @@ class RecordedDB extends MySQLBase implements RecordedDBInterface {
     * @param program: DBSchema.RecordedSchema
     * @param Promise<number> insertId
     */
-    public async insert(program: DBSchema.RecordedSchema): Promise<number> {
+    public insert(program: DBSchema.RecordedSchema): Promise<number> {
         let query = `insert into ${ DBSchema.TableName.Recorded } (`
             + 'programId, '
             + 'channelId, '
@@ -96,7 +96,7 @@ class RecordedDB extends MySQLBase implements RecordedDBInterface {
         value.push(program.thumbnailPath);
         value.push(program.recording);
 
-        return this.getInsertId(await this.runQuery(query, value));
+        return this.runInsert(query, value);
     }
 
     /**

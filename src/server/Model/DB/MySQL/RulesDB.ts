@@ -51,7 +51,7 @@ class RulesDB extends MySQLBase implements RulesDBInterface {
     * @param rule: DBSchema.RulesSchema
     * @return Promise<number> insertId
     */
-    public async insert(rule: DBSchema.RulesSchema): Promise<number> {
+    public insert(rule: DBSchema.RulesSchema): Promise<number> {
         let query = `insert into ${ DBSchema.TableName.Rules } (`
             + 'keyword, '
             + 'ignoreKeyword, '
@@ -119,7 +119,7 @@ class RulesDB extends MySQLBase implements RulesDBInterface {
         value.push(rule.directory3);
         value.push(rule.delTs);
 
-        return this.getInsertId(await this.runQuery(query, value));
+        return this.runInsert(query, value);
     }
 
 

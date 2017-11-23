@@ -159,6 +159,34 @@ abstract class MySQLBase extends DBBase {
     }
 
     /**
+    * insert with insertId
+    * @param query
+    * @param value
+    * @return Promise<number> insertId
+    */
+    protected runInsert(query: string, values?: any): Promise<number> {
+        return new Promise<number>((resolve: (insertId: number) => void, reject: (err: Error) => void ) => {
+            this.getPool().getConnection((err, connection) => {
+                if(err) { reject(err); return; }
+
+                if(typeof values === 'undefined') {
+                    connection.query(query, (err, result) => {
+                        connection.release();
+                        if(err) { reject(err); return; }
+                        resolve(<number>(<any>result).insertId);
+                    });
+                } else {
+                    connection.query(query, values, (err, result) => {
+                        connection.release();
+                        if(err) { reject(err); return; }
+                        resolve(<number>(<any>result).insertId);
+                    });
+                }
+            });
+        });
+    }
+
+    /**
     * 件数取得
     * @param tableName: string
     * @return Promise<number>
@@ -176,15 +204,6 @@ abstract class MySQLBase extends DBBase {
     */
     protected getFirst<T>(result: T[]): T | null {
         return result.length === 0 ? null : result[0];
-    }
-
-    /**
-    * 挿入したレコードの id を取得
-    * @param result
-    * @return insertId
-    */
-    protected getInsertId(result: any): number {
-        return <number>(<any>result).insertId;
     }
 }
 
