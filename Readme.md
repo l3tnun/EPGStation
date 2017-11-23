@@ -56,7 +56,7 @@ $ cp config/config.sample.json config/config.json
 
 データベースに MySQL もしくは SQLite3 を使用することができます。MySQL の準備が可能であれば MySQL の使用を推奨します。SQLite3 では検索時の正規表現が使用できないので注意してください。ただ、面倒な設定が不要なので手軽に試すことができます
 
-db を変更する場合は config.json の ```dbType``` を ```sqlite3``` もしくは ```mysql``` に変更してください
+データベースの指定は config.json の ```dbType``` を ```sqlite3``` もしくは ```mysql``` に指定してください
 
 #### config.json の設定
 
