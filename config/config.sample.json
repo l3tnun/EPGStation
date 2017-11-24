@@ -10,6 +10,7 @@
         "connectTimeout": 1000,
         "connectionLimit": 10
     },
+    "ffmpeg": "/usr/local/bin/ffmpeg",
     "maxEncode": 2,
     "encode": [
         {
