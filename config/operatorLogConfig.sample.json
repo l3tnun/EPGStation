@@ -4,21 +4,21 @@
             "type": "file",
             "maxLogSize": 1048576,
             "backups": 3,
-            "filename": "/hoge/EPGStation/logs/Operator/system.log",
+            "filename": "%OperatorSystem%",
             "pattern": "-yyyy-MM-dd"
         },
         "access": {
             "type": "file",
             "maxLogSize": 1048576,
             "backups": 3,
-            "filename": "/hoge/EPGStation/logs/Operator/access.log",
+            "filename": "%OperatorAccess%",
             "pattern": "-yyyy-MM-dd"
         },
         "stream": {
             "type": "file",
             "maxLogSize": 1048576,
             "backups": 3,
-            "filename": "/hoge/EPGStation/logs/Operator/stream.log",
+            "filename": "%OperatorStream%",
             "pattern": "-yyyy-MM-dd"
         },
         "console": { "type": "console" },
