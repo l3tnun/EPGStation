@@ -79,11 +79,7 @@ windows での URL Scheme 設定については [doc/win-url-scheme.md](doc/win-
 ````
 $ cp config/operatorLogConfig.sample.json config/operatorLogConfig.json
 $ cp config/serviceLogConfig.sample.json config/serviceLogConfig.json
-$ vim config/operatorLogConfig.json
-$ vim config/serviceLogConfig.json
 ````
-
-filename の部分をフルパスで設定してください
 
 ## 起動方法
 ````
