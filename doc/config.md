@@ -75,6 +75,7 @@ Config.json
 | -------- | --- | ---- |
 | INPUT | string | 入力ファイルパス |
 | OUTPUT | string | 出力ファイルパス |
+| FFMPEG | string | ffmpeg パス |
 | VIDEOTYPE | string \| null | "mpeg2" \| "h.264" \| "h.265" |
 | VIDEORESOLUTION | string \| null | "240p" \| "480i" \| "480p" \| "720p" \| "1080i" \| "2160p" \| "4320p" | null |
 | VIDEOSTREAMCONTENT | number \| null | video streamType |
@@ -89,6 +90,7 @@ Config.json
 | -------- | --- |
 | %INPUT% | 入力ファイルパス |
 | %OUTPUT% | 出力ファイルパス |
+| %ROOT% | EPGStation の root パス |
 
 -----
 
@@ -116,6 +118,12 @@ Config.json
 | -------- | ---- | ---- | --- |
 | name | string | yes | web で表示される名前 |
 | cmd | string | no | エンコードコマンド 指定しない場合は無変換配信になる |
+
+#### cmd で置換される文字列
+
+| プロパティ | 説明 |
+| -------- | --- |
+| %FFMPEG% | ffmpeg パス |
 
 ----
 
@@ -165,6 +173,9 @@ Config.json
 | %OUTPUT% | 出力ファイルパス |
 | %streamFileDir% | config. streamFilePath |
 | %streamNum% | ストリーム番号 |
+| %FFMPEG% | ffmpeg パス |
+
+---
 
 ### kodiHosts
 | プロパティ | 種類 | 必須 | 説明 |

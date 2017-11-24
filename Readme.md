@@ -60,9 +60,7 @@ $ cp config/config.sample.json config/config.json
 
 #### config.json の設定
 
-データベースの設定が済んでいれば ```mirakurunPath```, ```encode``` の設定をすればとりあえず動きます
-
-ffmpeg のパスはデフォルトで ```/usr/local/bin/ffmpeg``` となっています
+データベースの設定が済んでいれば ```mirakurunPath```, ```ffmpeg``` の設定をすればとりあえず動きます
 
 詳細は [doc/config.md](doc/config.md) を参照してください
 
@@ -79,11 +77,7 @@ windows での URL Scheme 設定については [doc/win-url-scheme.md](doc/win-
 ````
 $ cp config/operatorLogConfig.sample.json config/operatorLogConfig.json
 $ cp config/serviceLogConfig.sample.json config/serviceLogConfig.json
-$ vim config/operatorLogConfig.json
-$ vim config/serviceLogConfig.json
 ````
-
-filename の部分をフルパスで設定してください
 
 ## 起動方法
 ````

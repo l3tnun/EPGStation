@@ -77,7 +77,10 @@ class RecordedHLSStream extends Stream {
 
         try {
             // エンコードプロセス生成
-            const cmd = recordedHLS[this.mode].cmd.replace(/%streamFileDir%/g, streamFilePath).replace(/%streamNum%/g, String(streamNumber));
+            const cmd = recordedHLS[this.mode].cmd.replace('%FFMPEG%', Util.getFFmpegPath())
+                .replace(/%streamFileDir%/g, streamFilePath)
+                .replace(/%streamNum%/g, String(streamNumber));
+
             this.enc = await this.process.create(filePath, `${ streamFilePath }\/stream${ streamNumber }.m3u8`, cmd, Stream.priority);
 
             this.enc.on('exit', (code: number) => { if(code != 0) { this.ChildExit(streamNumber); } });

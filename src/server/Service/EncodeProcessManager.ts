@@ -1,4 +1,5 @@
 import * as events from 'events';
+import * as path from 'path';
 import * as fs from 'fs';
 import Base from '../Base';
 import { spawn, ChildProcess, SpawnOptions } from 'child_process';
@@ -51,6 +52,9 @@ class EncodeProcessManager extends Base implements EncodeProcessManagerInterface
     * @return Promise<ChildProcess>
     */
     public create(input: string, output: string, cmd: string, priority: number, spawnOption?:SpawnOptions): Promise<ChildProcess> {
+        // replace %ROOT%
+        cmd = cmd.replace('%ROOT%', path.join(__dirname, '..', '..', '..'));
+
         return new Promise<ChildProcess>(async (resolve: (child: ChildProcess) => void, reject: (err: Error) => void) => {
             // プロセス数が上限に達しているとき
             if(this.childs.length >= this.maxEncode) {

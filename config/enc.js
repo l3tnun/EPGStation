@@ -1,5 +1,5 @@
 const spawn = require('child_process').spawn;
-const ffmpeg = '/usr/local/bin/ffmpeg';
+const ffmpeg = process.env.FFMPEG;
 
 let mode = 'main';
 if(process.argv.length >= 3 && (process.argv[2] === 'main' || process.argv[2] === 'sub')) {

@@ -1,3 +1,5 @@
+import * as path from 'path';
+import * as fs from 'fs';
 import * as log4js from 'log4js';
 
 interface LoggerInterface {
@@ -34,7 +36,35 @@ namespace Logger {
                 }
             });
         } else {
-            log4js.configure(logPath);
+            // read log file
+            let str: string | null = null;
+            try {
+                str = fs.readFileSync(logPath, 'utf-8');
+            } catch(e) {
+                if(e.code === 'ENOENT') {
+                    console.error('log file is not found.');
+                } else {
+                    console.error(e);
+                }
+            }
+            if(str === null) { process.exit(1); }
+
+            // replace path
+            str = str!.replace('%OperatorSystem%', path.join(__dirname, '..', '..', 'logs', 'Operator', 'system.log'))
+                .replace('%OperatorAccess%', path.join(__dirname, '..', '..', 'logs', 'Operator', 'access.log'))
+                .replace('%OperatorStream%', path.join(__dirname, '..', '..', 'logs', 'Operator', 'stream.log'))
+                .replace('%ServiceSystem%', path.join(__dirname, '..', '..', 'logs', 'Service', 'system.log'))
+                .replace('%ServiceAccess%', path.join(__dirname, '..', '..', 'logs', 'Service', 'access.log'))
+                .replace('%ServiceStream%', path.join(__dirname, '..', '..', 'logs', 'Service', 'stream.log'))
+
+            // set log config
+            try {
+                const config: log4js.Configuration = JSON.parse(str);
+                log4js.configure(config);
+            } catch(err) {
+                console.error('log file parse error');
+                process.exit(1);
+            }
         }
 
         logger = {

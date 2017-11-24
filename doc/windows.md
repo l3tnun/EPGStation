@@ -3,9 +3,9 @@ Windows でのインストール方法
 
 ## 必要なもの
 
-* [Node.js](https://nodejs.org/ja/) LTS 版 (6.x.x) がおすすめです
+* [Node.js](https://nodejs.org/ja/) LTS 版がおすすめです
 * [FFmpeg](http://ffmpeg.org/download.html) 最新の安定版
-* [MySQL](https://dev.mysql.com/) (試していませんが [MariaDB](https://mariadb.org/) でも大丈夫なはずです)
+* [MySQL](https://dev.mysql.com/) or [MariaDB](https://mariadb.org/) (※ SQLite3 で使用する場合は不要です)
 
 ## あると便利なもの
 
@@ -20,7 +20,7 @@ Windows でのインストール方法
 
 ダウンロードした ffmpeg.exe を適当な場所へ配置してくだい
 
-## MySQL のインストール
+## MySQL のインストール (※ SQLite3 で使用する場合は不要です)
 
 5.7.19 においては [ Visual Studio 2013 の Visual C++ 再頒布可能パッケージ](https://www.microsoft.com/ja-jp/download/details.aspx?id=40784) が必要になるのでダウンロードしてインストールしておくといいと思います
 
@@ -71,7 +71,7 @@ EPGStation で使用するポートを開放してください
 
 git をインストール済みの方は git で、そうでない方は zip で適当な場所へダウンロードしてください
 
-あとは Readme に書いてあるとおりですが、config.json, operatorLogConfig.json, serviceLogConfig.json での設定で幾つか注意点があります。
+あとは Readme に書いてあるとおりですが、config.json での設定で幾つか注意点があります。
 
 ### 改行コード
 
@@ -82,22 +82,6 @@ git をインストール済みの方は git で、そうでない方は zip で
 ### パス名区切り文字
 
 unix 系では ```/``` を使用するため *.sample.json では ```/hoge/huga/piyo``` と書かれていますが、windows では ```\\hoge\\huga\\piyo``` このように書いてください
-
-### serviceLogConfig.json
-```categories``` の ```access``` の ```appenders``` に ```stdout``` を含まないでください
-
-WebUI が応答しなくなる不具合を確認しています
-
-serviceLogConfig の stdout の出力は子プロセスになっている関係で表示されないため、基本的には不要です
-
-```
-    "categories": {
-        "default": { "appenders": [ "console", "stdout" ], "level": "info" },
-        "system": { "appenders": [ "system", "stdout" ], "level": "info" },
-        "access": { "appenders": [ "access" ], "level": "info" },
-        "stream": { "appenders": [ "stream", "stdout" ], "level": "info" }
-    }
-```
 
 ### config.json
 
@@ -122,18 +106,6 @@ enc.sh を起動するようになっていますが、 windows では動かな�
 ```
 
 この ```PROGRA~1``` は 8.3 形式の表記方法で、 Program Files を指しています。cmd.exe にて ```dir /x c:\``` と打ち込むと確認できます
-
-enc.js の以下の部分を ffmpeg.exe のパスに書き換えることも忘れないでください
-
-```
-const ffmpeg = '/usr/local/bin/ffmpeg';
-```
-
-または、以下のように enc.js ではなく直接 ffmpeg.exe を指定しても ok です
-
-```
-"cmd": "C:\\ffmpeg\\ffmpeg.exe -dual_mono_mode main -i %INPUT% -c:a aac -ar 48000 -ab 192k -ac 2 -c:v libx264 -s 1280x720 -filter:v yadif -aspect 16:9 -crf 23 -f mp4 %OUTPUT%"
-```
 
 注意点としては bat ファイル (cmd.exe) は、 SIGKILL を送っても死なないため使用できないことです。エンコード中に録画を削除すると録画ファイルが消えません。そのため、SIGKILL を送ったら死ぬような方法を指定してください
 
