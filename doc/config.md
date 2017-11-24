@@ -75,6 +75,7 @@ Config.json
 | -------- | --- | ---- |
 | INPUT | string | 入力ファイルパス |
 | OUTPUT | string | 出力ファイルパス |
+| FFMPEG | string | ffmpeg パス |
 | VIDEOTYPE | string \| null | "mpeg2" \| "h.264" \| "h.265" |
 | VIDEORESOLUTION | string \| null | "240p" \| "480i" \| "480p" \| "720p" \| "1080i" \| "2160p" \| "4320p" | null |
 | VIDEOSTREAMCONTENT | number \| null | video streamType |
@@ -89,6 +90,7 @@ Config.json
 | -------- | --- |
 | %INPUT% | 入力ファイルパス |
 | %OUTPUT% | 出力ファイルパス |
+| %ROOT% | EPGStation の root パス |
 
 -----
 

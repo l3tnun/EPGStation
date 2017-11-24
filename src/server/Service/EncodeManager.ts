@@ -227,6 +227,7 @@ class EncodeManager extends Base implements EncodeManagerInterface {
             env: {
                 INPUT: program.source,
                 OUTPUT: output,
+                FFMPEG: Util.getFFmpegPath(),
                 VIDEOTYPE: program.recordedProgram.videoType || '',
                 VIDEORESOLUTION: program.recordedProgram.videoResolution || '',
                 VIDEOSTREAMCONTENT: program.recordedProgram.videoStreamContent || '',

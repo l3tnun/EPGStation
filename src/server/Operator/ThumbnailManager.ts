@@ -65,7 +65,7 @@ class ThumbnailManager extends Base implements ThumbnailManagerInterface {
         let thumbnailPath = path.join(thumbnailDir, `${ program.id }.jpg`);
         let thumbnailSize = config.thumbnailSize || '480x270';
         let thumbnailPosition = config.thumbnailPosition || 5;
-        let ffmpeg = config.ffmpeg || '/usr/local/bin/ffmpeg';
+        let ffmpeg = Util.getFFmpegPath();
 
         // thumbnailDir の存在確認
         try {

@@ -29,6 +29,14 @@ namespace Util {
     }
 
     /**
+    * config の ffmpeg path を返す
+    * @return string
+    */
+    export const getFFmpegPath = (): string => {
+        return Configuration.getInstance().getConfig().ffmpeg || '/usr/local/bin/ffmpeg';
+    }
+
+    /**
     * config の streamFilePath を返す
     * @return string
     */
