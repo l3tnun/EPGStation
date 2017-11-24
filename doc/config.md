@@ -119,6 +119,12 @@ Config.json
 | name | string | yes | web で表示される名前 |
 | cmd | string | no | エンコードコマンド 指定しない場合は無変換配信になる |
 
+#### cmd で置換される文字列
+
+| プロパティ | 説明 |
+| -------- | --- |
+| %FFMPEG% | ffmpeg パス |
+
 ----
 
 ### recordedViewer
@@ -167,6 +173,9 @@ Config.json
 | %OUTPUT% | 出力ファイルパス |
 | %streamFileDir% | config. streamFilePath |
 | %streamNum% | ストリーム番号 |
+| %FFMPEG% | ffmpeg パス |
+
+---
 
 ### kodiHosts
 | プロパティ | 種類 | 必須 | 説明 |

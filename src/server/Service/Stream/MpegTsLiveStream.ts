@@ -3,6 +3,7 @@ import * as http from 'http';
 import { StreamInfo, Stream } from './Stream';
 import * as apid from '../../../../api';
 import CreateMirakurun from '../../Util/CreateMirakurunClient';
+import Util from '../../Util/Util';
 import ProcessUtil from '../Util/ProcessUtil';
 
 interface MpegTsLiveStreamInfo extends StreamInfo {
@@ -49,8 +50,10 @@ class MpegTsLiveStream extends Stream {
                 this.stream.on('end', () => { this.ChildExit(streamNumber); });
                 this.stream.on('error', () => { this.ChildExit(streamNumber); });
             } else {
+                const cmd = config[this.mode].cmd.replace('%FFMPEG%', Util.getFFmpegPath());
+
                 // 変換時
-                this.enc = await this.process.create('', '', config[this.mode].cmd, Stream.priority);
+                this.enc = await this.process.create('', '', cmd, Stream.priority);
 
                 // mirakurun のストリームをエンコードプロセスへパイプする
                 this.stream.pipe(this.enc.stdin);
