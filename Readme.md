@@ -60,9 +60,7 @@ $ cp config/config.sample.json config/config.json
 
 #### config.json の設定
 
-データベースの設定が済んでいれば ```mirakurunPath```, ```encode``` の設定をすればとりあえず動きます
-
-ffmpeg のパスはデフォルトで ```/usr/local/bin/ffmpeg``` となっています
+データベースの設定が済んでいれば ```mirakurunPath```, ```ffmpeg``` の設定をすればとりあえず動きます
 
 詳細は [doc/config.md](doc/config.md) を参照してください
 
