@@ -1,6 +1,5 @@
 #!/bin/bash
 
-ffprobe_cmd=/usr/local/bin/ffprobe
 mode=$1
 
 if [ "$mode" = "" ]; then
@@ -8,7 +7,7 @@ if [ "$mode" = "" ]; then
 fi
 
 function getHeight() {
-    echo `$ffprobe_cmd -v 0 -show_streams -of flat=s=_:h=0 "$INPUT" | grep stream_0_width | awk -F= '{print \$2}'`
+    echo $VIDEORESOLUTION | sed -e "s/[^0-9]//g"
 }
 
 if [ `getHeight` -gt 720 ]; then
