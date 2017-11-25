@@ -14,6 +14,7 @@ import RecordedMenuComponent from '../Recorded/RecordedMenuComponent';
 import RecordedDeleteComponent from '../Recorded/RecordedDeleteComponent';
 import RecordedEncodeComponent from '../Recorded/RecordedEncodeComponent';
 import TabComponent from '../TabComponent';
+import TopPageViewModel from '../../ViewModel/TopPageViewModel';
 import ReservesViewModel from '../../ViewModel/Reserves/ReservesViewModel';
 import ProgramInfoViewModel from '../../ViewModel/Program/ProgramInfoViewModel';
 import ReservesMenuViewModel from '../../ViewModel/Reserves/ReservesMenuViewModel';
@@ -26,6 +27,7 @@ import DateUtil from '../../Util/DateUtil';
 * TopPageComponent
 */
 class TopPageComponent extends ParentComponent<void> {
+    private viewModel: TopPageViewModel;
     private recordedViewModel: RecordedViewModel;
     private recordedMenuViewModel: RecordedMenuViewModel;
     private recordedInfoViewModel: RecordedInfoViewModel;
@@ -36,6 +38,7 @@ class TopPageComponent extends ParentComponent<void> {
 
     constructor() {
         super();
+        this.viewModel = <TopPageViewModel>(factory.get('TopPageViewModel'));
         this.recordedViewModel = <RecordedViewModel>(factory.get('RecordedViewModel'));
         this.recordedMenuViewModel = <RecordedMenuViewModel>(factory.get('RecordedMenuViewModel'));
         this.recordedInfoViewModel = <RecordedInfoViewModel>(factory.get('RecordedInfoViewModel'));
@@ -43,13 +46,14 @@ class TopPageComponent extends ParentComponent<void> {
         this.reservesMenuViewModel = <ReservesMenuViewModel>(factory.get('ReservesMenuViewModel'));
         this.programInfo = <ProgramInfoViewModel>(factory.get('ProgramInfoViewModel'));
         this.balloon = <BalloonViewModel>(factory.get('BalloonViewModel'));
+        this.recordedMenuViewModel = <RecordedMenuViewModel>(factory.get('RecordedMenuViewModel'));
     }
 
-    protected initViewModel(status: ViewModelStatus = 'init'): void {
+    protected async initViewModel(status: ViewModelStatus = 'init'): Promise<void> {
         super.initViewModel(status);
+        await this.viewModel.init();
         this.recordedViewModel.init(status);
         this.reservesViewModel.init(status);
-        this.recordedMenuViewModel = <RecordedMenuViewModel>(factory.get('RecordedMenuViewModel'));
     }
 
     /**
@@ -192,10 +196,15 @@ class TopPageComponent extends ParentComponent<void> {
     private createReserves(): m.Child {
         const viewLength = this.reservesViewModel.getReserves().reserves.length;
         const total = this.reservesViewModel.getReserves().total;
+        const conflictsCount = this.viewModel.getConflictsCount();
+        const title = conflictsCount === 0 ? `予約 ${ viewLength }/${ total }` : m('div', {
+            class: 'mdl-badge',
+            'data-badge': conflictsCount,
+            onclick: () => { m.route.set('/reserves?mode=conflicts'); },
+        }, `予約 ${ viewLength }/${ total }`);
 
         return m('div', { class: 'reserves mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col' }, [
-            m('div', { class: 'parent-title' }, `予約 ${ viewLength }/${ total }`),
-
+            m('div', { class: 'parent-title mdl-badge' }, title ),
             m('div', { class: 'child non-scroll' }, [
                 this.reservesViewModel.getReserves().reserves.map((reserve) => {
                     return this.createReserveCard(reserve);

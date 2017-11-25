@@ -22,9 +22,9 @@ interface RulesApiModelInterface extends ApiModel {
 */
 class RulesApiModel extends ApiModel implements RulesApiModelInterface {
     private rules: apid.Rules = { rules: [], total: 0 };
-    private rule: apid.Rule | null;
-    private limit: number;
-    private offset: number;
+    private rule: apid.Rule | null = null;
+    private limit: number = 0;
+    private offset: number = 0;
 
     public init(): void {
         super.init();

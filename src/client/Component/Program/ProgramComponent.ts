@@ -58,7 +58,7 @@ class ProgramComponent extends ParentComponent<void> {
                 title: this.createTitle(),
                 button: [
                     m("label", {
-                        class: "header-menu-button",
+                        class: "header-menu-button mdl-button mdl-js-button mdl-button--icon",
                         onclick: (event: Event) => {
                             this.timeBalloon.setNowNum(this.viewModel.getTimeParam().start);
                             this.balloon.open(ProgramTimeBalloonViewModel.id, event);
