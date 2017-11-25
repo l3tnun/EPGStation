@@ -59,7 +59,7 @@ class RecordedComponent extends ParentComponent<void> {
                 title: '録画済み',
                 button: [
                     m('label', {
-                        class: 'header-menu-button',
+                        class: 'header-menu-button mdl-button mdl-js-button mdl-button--icon',
                         onclick: (e: Event) => {
                             this.searchViewModel.reset();
                             this.balloon.open(RecordedSearchViewModel.id, e);

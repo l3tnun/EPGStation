@@ -99,7 +99,7 @@ class HeaderComponent extends Component<HeaderArgs> {
                 // button
                 this.button,
                 m('label', {
-                    class: 'header-menu-button',
+                    class: 'header-menu-button mdl-button mdl-js-button mdl-button--icon',
                     onclick: (e: Event) => {
                         this.balloon.open(HeaderViewModel.menuId, e);
                     },
