@@ -86,6 +86,7 @@ class RecordedInfoComponent extends Component<void> {
     */
     private createDownload(): m.Child[] {
         return <m.Child[]>[
+            m('div', { class: 'title' }, this.viewModel.getTitle()),
             m('div', { class: 'video-title' }, 'ビデオファイル'),
             this.viewModel.getVideoSrc(true).map((video) => {
                 return m('a', {
@@ -127,7 +128,7 @@ class RecordedInfoComponent extends Component<void> {
     * createStreaming tab
     */
     private createStreaming(): m.Child[] {
-        let child: m.Child[] = [];
+        let child: m.Child[] = [ m('div', { class: 'title' }, this.viewModel.getTitle()) ];
 
         // HLS 配信
         if(this.viewModel.isEnabledRecordedHLS()) {
