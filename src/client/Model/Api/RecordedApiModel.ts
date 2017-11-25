@@ -32,14 +32,14 @@ namespace RecordedApiModelInterface {
 * /api/recorded
 */
 class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
-    private recorded: apid.RecordedPrograms;
+    private recorded: apid.RecordedPrograms = { recorded: [], total: 0 };
     private tags: apid.RecordedTags = {
         rule: [],
         channel: [],
         genre: [],
     };
-    private limit: number;
-    private offset: number;
+    private limit: number = 0;
+    private offset: number = 0;
     private option: findQuery = {}
 
     public init(): void {

@@ -18,6 +18,7 @@ interface ReservesApiModelInterface extends ApiModel {
     fetchReserves(limit: number, offset: number): Promise<void>;
     fetchConflicts(limit: number, offset: number): Promise<void>;
     fetchAllId(): Promise<AllReserves | null>;
+    fetchConflictCount(): Promise<number>;
     getReserves(): apid.Reserves;
     getConflicts(): apid.Reserves;
     getAllId(): AllReserves | null;
@@ -151,6 +152,28 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
         }
 
         return this.allReserves;
+    }
+
+    /**
+    * conflicts 数を取得
+    * /api/reserves/all
+    * @return Promise<void>
+    */
+    public async fetchConflictCount(): Promise<number> {
+        try {
+            const allId = <apid.ReserveAllId> await <any> m.request({
+                method: 'GET',
+                url: '/api/reserves/all',
+            });
+
+            return allId.conflicts.length;
+        } catch(err) {
+            console.error('/api/reserves/all');
+            console.error(err);
+            this.openSnackbar('重複件数取得に失敗しました');
+        }
+
+        return 0;
     }
 
     /**
