@@ -19,7 +19,14 @@ class SQLite3Operator extends DBOperator {
                 const dbPath = this.config.getConfig().dbPath || path.join(__dirname, '..', '..', '..', '..', '..', 'data', 'database.db');
                 SQLite3Operator.db = new sqlite3.Database(dbPath);
                 try {
-                    await this.initConfig(SQLite3Operator.db);
+                    // load extension
+                    const config = this.config.getConfig().sqlite3;
+                    if(typeof config !== 'undefined' && typeof config.extensions !== 'undefined') {
+                        for(let filePath of config.extensions) {
+                            await this.loadExtension(SQLite3Operator.db, filePath);
+                        }
+                    }
+                    await this.setForeignKeyConfig(SQLite3Operator.db);
                 } catch(err) {
                     reject(err);
                 }
@@ -30,15 +37,12 @@ class SQLite3Operator extends DBOperator {
     }
 
     /**
-    * init config
-    * @param db: sqlite3.Database
+    * load Extension
     */
-    private initConfig(db: sqlite3.Database): Promise<void> {
-        return new Promise<void>((resolve: () => void, reject: (err: Error) => void ) => {
-            db.serialize(async () => {
-                try {
-                    await this.setForeignKeyConfig(db);
-                } catch(err) {
+    private loadExtension(db: sqlite3.Database, filePath: string): Promise<void> {
+        return new Promise<void>((resolve: () => void, reject: (err: Error) => void) => {
+            (<any>db).loadExtension(filePath, (err: Error | null) => {
+                if(err) {
                     reject(err);
                     return;
                 }
@@ -53,12 +57,14 @@ class SQLite3Operator extends DBOperator {
     */
     private setForeignKeyConfig(db: sqlite3.Database): Promise<void> {
         return new Promise<void>((resolve: () => void) => {
-            db.run(`pragma foreign_keys = ON`, (err) => {
-                if(err) {
-                    this.log.system.warn(`sqlite3 foreign keys set error`);
-                    this.log.system.warn(err.message);
-                }
-                resolve();
+            db.serialize(() => {
+                db.run(`pragma foreign_keys = ON`, (err) => {
+                    if(err) {
+                        this.log.system.warn(`sqlite3 foreign keys set error`);
+                        this.log.system.warn(err.message);
+                    }
+                    resolve();
+                });
             });
         });
     }

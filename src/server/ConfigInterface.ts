@@ -7,20 +7,24 @@ interface ConfigInterface {
     dbType: 'mysql' | 'sqlite3';
     dbPath: string;
     mysql: {
-        host: string,
-        user: string,
-        password: string,
-        database: string,
-        connectTimeout: number,
-        connectionLimit: number,
+        host: string;
+        user: string;
+        password: string;
+        database: string;
+        connectTimeout: number;
+        connectionLimit: number;
+    };
+    sqlite3: {
+        extensions: string[];
+        regexp: boolean;
     };
     gid: string | number;
     uid: string | number;
     continuousEPGUpdater: boolean;
     programInsertMax: number;
     programInsertWait: number;
-    serviceOrder: number[],
-    excludeServices: number[],
+    serviceOrder: number[];
+    excludeServices: number[];
     reserves: string;
     recPriority: number;
     conflictPriority: number;
@@ -36,11 +40,11 @@ interface ConfigInterface {
     ffmpeg: string;
     maxEncode: number;
     encode: {
-        name: string,
-        cmd: string,
-        suffix: string,
-        rate?: number,
-        default?: boolean,
+        name: string;
+        cmd: string;
+        suffix: string;
+        rate?: number;
+        default?: boolean;
     }[];
     delts: boolean;
     storageLimitCheckIntervalTime: number;
