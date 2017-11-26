@@ -8,6 +8,7 @@ Config.json
 | dbType | mysql \| sqlite3 | mysql | no | 使用する データベースを指定する |
 | dbPath | string | EPGStation/data/database.db | no | SQLite3 使用時の db ファイルの保存場所 | 
 | mysql | {} | | no | MySQL の設定 (dbType が mysql の場合は必須) |
+| sqlite3 | {} | | no | SQLite3 の拡張設定 |
 | gid | string \| number | | no | gid の設定 |
 | uid | string \| number | | no | uid の設定 |
 | programInsertMax | number | 100 | no | DB へ番組情報を挿入するときの 1 回あたりの件数 |
@@ -56,6 +57,17 @@ Config.json
 | database | string | yes | 使用するデータベース名 |
 | connectTimeout | number | no | 接続タイムアウト時間 (ms) |
 | connectionLimit | number | no | 同時接続数 |
+
+----
+
+### sqlite3
+
+| プロパティ | 種類 | 必須 | 説明 |
+| -------- | ---- | ---- |--- |
+| extensions | string[] | yse | SQLite3 使用時に読み込む拡張のパス |
+| regexp | boolean | yes | 正規表現検索が有効か |
+
+拡張の詳細は[こちら](https://github.com/mapbox/node-sqlite3/wiki/Extensions)
 
 ----
 
