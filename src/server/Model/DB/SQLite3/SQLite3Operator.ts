@@ -8,24 +8,65 @@ import Util from '../../../Util/Util';
 */
 class SQLite3Operator extends DBOperator {
     protected static db: sqlite3.Database | null = null;
-    protected static isEnableForeignKey = false;
 
-    constructor() {
-        super();
+    /**
+    * get DB connection
+    * Promise<sqlite3.Database>
+    */
+    private getDB(): Promise<sqlite3.Database> {
+        return new Promise<sqlite3.Database>(async (resolve: (result: sqlite3.Database) => void, reject: (err: Error) => void) => {
+            if(SQLite3Operator.db === null) {
+                const dbPath = this.config.getConfig().dbPath || path.join(__dirname, '..', '..', '..', '..', '..', 'data', 'database.db');
+                SQLite3Operator.db = new sqlite3.Database(dbPath);
+                try {
+                    // load extension
+                    const config = this.config.getConfig().sqlite3;
+                    if(typeof config !== 'undefined' && typeof config.extensions !== 'undefined') {
+                        for(let filePath of config.extensions) {
+                            await this.loadExtension(SQLite3Operator.db, filePath);
+                        }
+                    }
+                    await this.setForeignKeyConfig(SQLite3Operator.db);
+                } catch(err) {
+                    reject(err);
+                }
+            }
 
-        if(!SQLite3Operator.isEnableForeignKey) {
-            //外部キー制約を有効化
-            this.runQuery(`pragma foreign_keys = ON`);
-        }
+            resolve(SQLite3Operator.db);
+        });
     }
 
-    private getDB(): sqlite3.Database {
-        if(SQLite3Operator.db === null) {
-            const dbPath = this.config.getConfig().dbPath || path.join(__dirname, '..', '..', '..', '..', '..', 'data', 'database.db');
-            SQLite3Operator.db = new sqlite3.Database(dbPath);
-        }
+    /**
+    * load Extension
+    */
+    private loadExtension(db: sqlite3.Database, filePath: string): Promise<void> {
+        return new Promise<void>((resolve: () => void, reject: (err: Error) => void) => {
+            (<any>db).loadExtension(filePath, (err: Error | null) => {
+                if(err) {
+                    reject(err);
+                    return;
+                }
+                resolve();
+            });
+        });
+    }
 
-        return SQLite3Operator.db;
+    /**
+    * set foreign key config
+    * @param db: sqlite3.Database
+    */
+    private setForeignKeyConfig(db: sqlite3.Database): Promise<void> {
+        return new Promise<void>((resolve: () => void) => {
+            db.serialize(() => {
+                db.run(`pragma foreign_keys = ON`, (err) => {
+                    if(err) {
+                        this.log.system.warn(`sqlite3 foreign keys set error`);
+                        this.log.system.warn(err.message);
+                    }
+                    resolve();
+                });
+            });
+        });
     }
 
     /**
@@ -43,8 +84,8 @@ class SQLite3Operator extends DBOperator {
     * @return Promise<void>
     */
     public end(): Promise<void> {
-        return new Promise<void>((resolve: () => void, reject: (err: Error) => void) => {
-            this.getDB().close((err) => {
+        return new Promise<void>(async (resolve: () => void, reject: (err: Error) => void) => {
+            (await this.getDB()).close((err) => {
                 if(err) {
                     reject(err);
                     return;
@@ -62,25 +103,43 @@ class SQLite3Operator extends DBOperator {
     * @return Promise<T>
     */
     public runQuery<T>(query: string, values: any | null = null, isEnableCS: boolean = false): Promise<T> {
-        return new Promise<T>((resolve: (row: T) => void, reject: (err: Error) => void ) => {
-            this.getDB().serialize(() => {
-                if(isEnableCS) { this.runQuery(`pragma case_sensitive_like = 1`); }
+        return new Promise<T>(async (resolve: (row: T) => void, reject: (err: Error) => void ) => {
+            let db = await this.getDB();
+            db.serialize(async () => {
+                if(isEnableCS) { await this.setCS(db, true); }
 
-                const exec = (err: Error | null, result: any) => {
+                const exec = async (err: Error | null, result: any) => {
                     if(err) { reject(err); return; }
-                    if(isEnableCS) { this.runQuery(`pragma case_sensitive_like = 0`); }
+                    if(isEnableCS) { await this.setCS(db, false); }
                     resolve(<T>(<any>result));
                 };
 
                 if(values === null) {
-                    this.getDB().all(query, (err, rows) => {
+                    db.all(query, (err, rows) => {
                         exec(err, rows);
                     });
                 } else {
-                    this.getDB().all(query, values, (err, rows) => {
+                    db.all(query, values, (err, rows) => {
                         exec(err, rows);
                     });
                 }
+            });
+        });
+    }
+
+    /**
+    * set case sensitive like
+    * @param db: sqlite3.Database
+    * @param isEnableCS: boolean
+    */
+    private setCS(db: sqlite3.Database, isEnableCS: boolean): Promise<void> {
+        return new Promise<void>((resolve: () => void, reject: (err: Error) => void ) => {
+            db.run(`pragma case_sensitive_like = ${ Number(isEnableCS) }`, (err) => {
+                if(err) {
+                    reject(err);
+                    return;
+                }
+                resolve();
             });
         });
     }
@@ -94,15 +153,16 @@ class SQLite3Operator extends DBOperator {
     * @return Promise<pg.QueryResult>
     */
     public manyInsert(deleteTableName: string, datas: { query: string, values?: any[] }[], isDelete: boolean, insertWait: number = 0): Promise<void> {
-        return new Promise<void>((resolve: () => void, reject: (err: Error) => void) => {
-            this.getDB().serialize(() => {
+        return new Promise<void>(async (resolve: () => void, reject: (err: Error) => void) => {
+            let db = await this.getDB();
+            db.serialize(() => {
                 // トランザクション開始
-                this.getDB().exec('begin transaction');
+                db.exec('begin transaction');
 
                 new Promise(async (resolve: () => void, reject: (err: Error) => void) => {
                     if(isDelete) {
                         // delete DB data
-                        this.getDB().run(`delete from ${ deleteTableName }`, (err) => {
+                        db.run(`delete from ${ deleteTableName }`, (err) => {
                             if(err) { reject(err); return; }
                         });
                     }
@@ -111,7 +171,7 @@ class SQLite3Operator extends DBOperator {
                     for(let data of datas) {
                         await (() => {
                             return new Promise((resolve: () => void, reject: (err: Error) => void) => {
-                                this.getDB().run(data.query, data.values, (err) => {
+                                db.run(data.query, data.values, (err) => {
                                     if(err) { reject(err); return; }
                                     resolve();
                                 });
@@ -124,13 +184,13 @@ class SQLite3Operator extends DBOperator {
                 })
                 .then(() => {
                     // commit
-                    this.getDB().exec('commit');
+                    db.exec('commit');
                     resolve();
                 })
                 .catch((err) => {
                     this.log.system.error(err);
                     // rollback
-                    this.getDB().exec('rollback');
+                    db.exec('rollback');
                     reject(err);
                 });
             });
@@ -143,15 +203,16 @@ class SQLite3Operator extends DBOperator {
     * @return Promise<number> insertId
     */
     public runInsert(query: string, values?: any): Promise<number> {
-        return new Promise<number>((resolve: (insertId: number) => void, reject: (err: Error) => void ) => {
-            this.getDB().serialize(() => {
+        return new Promise<number>(async (resolve: (insertId: number) => void, reject: (err: Error) => void ) => {
+            let db = await this.getDB();
+            db.serialize(() => {
                 if(typeof values === 'undefined') {
-                    this.getDB().run(query, function(err) {
+                    db.run(query, function(err) {
                         if(err) { reject(err); return; }
                         resolve(this.lastID);
                     });
                 } else {
-                    this.getDB().run(query, values, function(err) {
+                    db.run(query, values, function(err) {
                         if(err) { reject(err); return; }
                         resolve(this.lastID);
                     });

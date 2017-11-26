@@ -1,10 +1,23 @@
 import * as DBSchema from '../DBSchema';
 import { ProgramsDB } from '../ProgramsDB';
+import DBOperator from '../DBOperator';
 
 /**
 * SQLite3ProgramsDB
 */
 class SQLite3ProgramsDB extends ProgramsDB {
+    private regExp: boolean = false;
+
+    constructor(operator: DBOperator) {
+        super(operator);
+
+        // config で regexp 用の拡張が設定されているか
+        const config = this.config.getConfig().sqlite3;
+        if(typeof config !== 'undefined' && typeof config.extensions !== 'undefined' && config.regexp) {
+            this.regExp = true;
+        }
+    }
+
     /**
     * create table
     * @return Promise<void>
@@ -69,7 +82,7 @@ class SQLite3ProgramsDB extends ProgramsDB {
     * @return boolean
     */
     public isEnableRegExp(): boolean {
-        return false;
+        return this.regExp;
     }
 
     /**
