@@ -21,7 +21,7 @@ class Tuner extends Base {
     * @return boolean 予約情報が追加できなかった場合 false
     */
     public add(program: DBSchema.ProgramSchema): boolean {
-        if(this.types.indexOf(program.channelType) === -1 && (
+        if(this.types.indexOf(program.channelType) !== -1 && (
             this.programs.length === 0
             || this.programs[0].channel === program.channel
         )) {
