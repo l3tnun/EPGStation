@@ -7,7 +7,6 @@ import HeaderViewModel from '../ViewModel/HeaderViewModel';
 interface HeaderArgs {
     title: string;
     button?: m.Children[];
-    tab?: string[];
     headerStyle?: string;
 }
 
@@ -37,17 +36,6 @@ class HeaderComponent extends Component<HeaderArgs> {
 
         if(typeof vnode.attrs.button !== 'undefined') {
             this.button = vnode.attrs.button;
-        }
-
-        if(typeof vnode.attrs.tab !== 'undefined') {
-            this.tab = m('div', { class: 'mdl-layout__tab-bar mdl-js-ripple-effect' },
-                vnode.attrs.tab.map((name, index) => {
-                    return m('a', {
-                        href: `#tab-${ index }`,
-                        class: 'mdl-layout__tab' + (index === 0 ? ' is-active' : '')
-                    }, name);
-                }),
-            );
         }
     }
 
