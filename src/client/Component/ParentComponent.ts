@@ -9,7 +9,12 @@ import * as events from '../IoEvents';
 import StreamInfoViewModel from '../ViewModel/Stream/StreamInfoViewModel';
 
 interface queryInterface {
-    [key: string]: any,
+    [key: string]: any;
+}
+
+interface History {
+    url: string;
+    data: any | null;
 }
 
 /**
@@ -26,10 +31,59 @@ abstract class ParentComponent<T> extends Component<T> {
     private static ioStatus: { [key: string]: { isActive: boolean, isInited: boolean } } = {};
     private static io: SocketIOClient.Socket | null = null;
 
+    private static isSettedPopstate: boolean = false;
+    private static history: History[] | null = null;
+    private static historyPosition: number = 0;
+    private static isBack: boolean = false;
+    private static isForward: boolean = false;
+
     constructor() {
         super();
         this._balloon = <BalloonViewModel>(factory.get('BalloonViewModel'));
         this._streamInfo = <StreamInfoViewModel>(factory.get('StreamInfoViewModel'))
+
+        if(!ParentComponent.isSettedPopstate) {
+            ParentComponent.isSettedPopstate = true;
+             window.addEventListener('popstate', () => {
+                if(ParentComponent.history === null) { return; }
+
+                const back = ParentComponent.history[ParentComponent.historyPosition - 1];
+                const forward = ParentComponent.history[ParentComponent.historyPosition + 1];
+                const current = location.href;
+                if(typeof back !== 'undefined' && back.url === current) {
+                    ParentComponent.isBack = true;
+                    ParentComponent.isForward = false;
+                } else if(typeof forward !== 'undefined' && forward.url === current) {
+                    ParentComponent.isBack = false;
+                    ParentComponent.isForward = true;
+                } else {
+                    ParentComponent.isBack = false;
+                    ParentComponent.isForward = false;
+                }
+            });
+        }
+    }
+
+    /**
+    * history に データを記憶
+    */
+    protected saveHistoryData(data: any): void {
+        if(ParentComponent.history === null) {
+            throw new Error('history is null');
+        }
+
+        ParentComponent.history[ParentComponent.historyPosition].data = data;
+    }
+
+    /**
+    * history からデータを取り出す
+    */
+    protected getHistoryData(): T | null {
+        if(ParentComponent.history === null) {
+            throw new Error('history is null');
+        }
+
+        return <T>ParentComponent.history[ParentComponent.historyPosition].data;
     }
 
     /**
@@ -37,7 +91,40 @@ abstract class ParentComponent<T> extends Component<T> {
     * status に状態が入る
     */
     protected initViewModel(status: ViewModelStatus = 'init'): void {
-        setTimeout(() => { this._streamInfo.init(status); }, 0);
+        setTimeout(() => {
+            this._streamInfo.init(status);
+
+            // set history
+            if(status === 'init' || status === 'update') {
+                if(ParentComponent.history === null) {
+                    ParentComponent.history = [{
+                        url: location.href,
+                        data: null,
+                    }];
+                    ParentComponent.historyPosition = 0;
+                } else if(ParentComponent.isBack && ParentComponent.historyPosition - 1 >= 0 && ParentComponent.history[ParentComponent.historyPosition - 1].url === location.href) {
+                    // back
+                    ParentComponent.historyPosition -= 1;
+                    ParentComponent.isBack = false;
+                } else if(ParentComponent.isForward && ParentComponent.historyPosition + 1 <= ParentComponent.history.length - 1 && ParentComponent.history[ParentComponent.historyPosition + 1].url === location.href) {
+                    // forward
+                    ParentComponent.historyPosition += 1;
+                    ParentComponent.isForward = false;
+                } else if(ParentComponent.history[ParentComponent.historyPosition].url !== location.href) {
+                    // new page
+                    ParentComponent.historyPosition += 1;
+
+                    if (typeof ParentComponent.history[ParentComponent.historyPosition] !== 'undefined') {
+                        ParentComponent.history = ParentComponent.history.splice(0, ParentComponent.historyPosition);
+                    }
+
+                    ParentComponent.history.push({
+                        url: location.href,
+                        data: null,
+                    });
+                }
+            }
+        }, 0);
     }
 
     /**

@@ -24,6 +24,8 @@ class ReservesComponent extends ParentComponent<void> {
     private balloon: BalloonViewModel;
     private programInfo: ProgramInfoViewModel;
 
+    private isNeedRestorePosition: boolean = false;
+
     constructor() {
         super();
         this.viewModel = <ReservesViewModel>(factory.get('ReservesViewModel'));
@@ -34,7 +36,13 @@ class ReservesComponent extends ParentComponent<void> {
 
     protected initViewModel(status: ViewModelStatus = 'init'): void {
         super.initViewModel(status);
-        this.viewModel.init(status);
+        this.viewModel.init(status).
+        then(() => {
+            if(status === 'init' || status === 'update') {
+                this.isNeedRestorePosition = true;
+                m.redraw();
+            }
+        });
     }
 
     /**
@@ -51,6 +59,9 @@ class ReservesComponent extends ParentComponent<void> {
             content: [
                 this.createContent(),
             ],
+            scrollStoped: (scrollTop: number) => {
+                this.saveHistoryData(scrollTop);
+            },
             notMainContent: [
                 m(BalloonComponent, {
                     id: ProgramInfoViewModel.id,
@@ -82,7 +93,18 @@ class ReservesComponent extends ParentComponent<void> {
     * @return m.Child
     */
     private createContent(): m.Child {
-        return m('div', { class: 'reserves' } , [
+        return m('div', {
+            class: 'reserves',
+            onupdate: () => {
+                if(this.isNeedRestorePosition) {
+                    this.isNeedRestorePosition = false;
+                    const scrollTop = <number | null>this.getHistoryData();
+                    if(scrollTop === null) { return; }
+                    const main = document.getElementById(MainLayoutComponent.id);
+                    if(main !== null) { main.scrollTop = scrollTop; }
+                }
+            },
+        } , [
             this.createCardView(),
             this.createTableView(),
             m(PaginationComponent, {

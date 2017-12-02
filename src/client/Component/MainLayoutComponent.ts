@@ -16,19 +16,41 @@ interface MainLayoutArgs {
     menuWidth?: number;
     menuContent?: { attrs: { [key: string]: any }, text: string }[];
     mainLayoutStyle?: string;
+    scrollStoped?: (position: number) => void;
 }
 
 /**
 * MainLayoutComponent
 */
 class MainLayoutComponent extends Component<MainLayoutArgs> {
+    private scrollTimerId: NodeJS.Timer | null = null;
+
     /**
     * view
     */
     public view(vnode: m.Vnode<MainLayoutArgs, this>): m.Children {
         let main: m.Child;
         if(typeof vnode.attrs.content !== 'undefined') {
-            main = m('main', { class: 'mdl-layout__content non-scroll' }, [
+            main = m('main', {
+                id: MainLayoutComponent.id,
+                class: 'mdl-layout__content non-scroll',
+                oncreate: (mainVnode: m.VnodeDOM<void, any>) => {
+                    if(typeof vnode.attrs.scrollStoped === 'undefined') { return; }
+
+                    (<HTMLElement>(mainVnode.dom)).addEventListener('scroll', () => {
+                        if(this.scrollTimerId) {
+                            clearTimeout(this.scrollTimerId);
+                        }
+
+                        this.scrollTimerId = setTimeout(() => {
+                            this.scrollTimerId = null;
+                            if(typeof vnode.attrs.scrollStoped !== 'undefined') {
+                                vnode.attrs.scrollStoped((<HTMLElement>(mainVnode.dom)).scrollTop);
+                            }
+                        }, 50);
+                    });
+                },
+            }, [
                 m('div', { class: 'page-content' }, vnode.attrs.content)
             ])
         }
@@ -61,6 +83,10 @@ class MainLayoutComponent extends Component<MainLayoutArgs> {
             m(SnackbarComponent),
         ]);
     }
+}
+
+namespace MainLayoutComponent {
+    export const id = 'main-layout';
 }
 
 export default MainLayoutComponent;
