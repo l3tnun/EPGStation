@@ -2,6 +2,7 @@ import * as m from 'mithril';
 import Component from '../Component';
 import factory from '../../ViewModel/ViewModelFactory';
 import ReservesMenuViewModel from '../../ViewModel/Reserves/ReservesMenuViewModel';
+import Util from '../../Util/Util';
 
 /**
 * ReservesMenuComponent
@@ -24,7 +25,7 @@ class ReservesMenuComponent extends Component<void> {
                     this.viewModel.close();
                     let ruleId = this.viewModel.getRuleId();
                     if(ruleId === null) { return; }
-                    setTimeout(() => { m.route.set('/search', { rule: ruleId }); }, 200);
+                    setTimeout(() => { Util.move('/search', { rule: ruleId }); }, 200);
                 },
                 style: this.viewModel.getRuleId() === null ? 'display: none;' : '',
             }, 'mode_edit', 'edit'),

@@ -3,6 +3,7 @@ import Component from '../Component';
 import factory from '../../ViewModel/ViewModelFactory';
 import ProgramInfoViewModel from '../../ViewModel/Program/ProgramInfoViewModel';
 import ProgramViewModel from '../../ViewModel/Program/ProgramViewModel';
+import Util from '../../Util/Util';
 
 /**
 * ProgramInfoActionComponent
@@ -34,7 +35,7 @@ class ProgramInfoActionComponent extends Component<void> {
                     onclick: () => {
                         this.viewModel.close();
                         setTimeout(() => {
-                            m.route.set('/search', this.createSearchQuery());
+                            Util.move('/search', this.createSearchQuery());
                         }, 200);
                     }
                 }, '検索'),

@@ -3,6 +3,7 @@ import Component from './Component';
 import factory from '../ViewModel/ViewModelFactory';
 import BalloonViewModel from '../ViewModel/Balloon/BalloonViewModel';
 import HeaderViewModel from '../ViewModel/HeaderViewModel';
+import Util from '../Util/Util';
 
 interface HeaderArgs {
     title: string;
@@ -48,10 +49,10 @@ class HeaderComponent extends Component<HeaderArgs> {
         let config = this.viewModel.getConfig();
         this.broadcastLink = []
         if(config !== null) {
-            if(config.broadcast.GR) { this.broadcastLink.push(this.createLink('GR', '/program?type=GR')); }
-            if(config.broadcast.BS) { this.broadcastLink.push(this.createLink('BS', '/program?type=BS')); }
-            if(config.broadcast.CS) { this.broadcastLink.push(this.createLink('CS', '/program?type=CS')); }
-            if(config.broadcast.SKY) { this.broadcastLink.push(this.createLink('SKY', '/program?type=SKY')); }
+            if(config.broadcast.GR) { this.broadcastLink.push(this.createLink('GR', '/program', { type: 'GR' })); }
+            if(config.broadcast.BS) { this.broadcastLink.push(this.createLink('BS', '/program', { type: 'BS' })); }
+            if(config.broadcast.CS) { this.broadcastLink.push(this.createLink('CS', '/program', { type: 'CS' })); }
+            if(config.broadcast.SKY) { this.broadcastLink.push(this.createLink('SKY', '/program', { type: 'SKY' })); }
         }
     }
 
@@ -79,7 +80,7 @@ class HeaderComponent extends Component<HeaderArgs> {
                     this.broadcastLink,
                     this.createLink('録画済み', '/recorded'),
                     this.createLink('予約', '/reserves'),
-                    this.createLink('重複', '/reserves?mode=conflicts'),
+                    this.createLink('重複', '/reserves', { mode: 'conflicts' }),
                     this.createLink('検索', '/search'),
                     this.createLink('ルール', '/rules'),
                 ]),
@@ -103,15 +104,16 @@ class HeaderComponent extends Component<HeaderArgs> {
     * navigation link を生成する
     * @param name: name
     * @param href: href
+    * @param query: any = {}}
     * @return m.Child
     */
-    private createLink(name: string, href: string): m.Child {
+    private createLink(name: string, href: string, query: any = {}): m.Child {
         return m('a', {
             class: 'mdl-navigation__link',
             onclick: () => {
-                if(m.route.get() === href) { return; }
+                if(Util.isEqualURL(href, query)) { return; }
 
-                m.route.set(href);
+                Util.move(href, query);
             },
         }, name)
     }

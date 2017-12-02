@@ -2,6 +2,7 @@ import * as m from 'mithril';
 import Component from '../Component';
 import factory from '../../ViewModel/ViewModelFactory';
 import RecordedMenuViewModel from '../../ViewModel/Recorded/RecordedMenuViewModel';
+import Util from '../../Util/Util';
 
 /**
 * RecordedMenuComponent
@@ -26,7 +27,7 @@ class RecordedMenuComponent extends Component<void> {
                 onclick: () => {
                     this.viewModel.close();
                     if(Number(m.route.param('rule')) === ruleId) { return; };
-                    m.route.set('/recorded', { rule: ruleId });
+                    Util.move('/recorded', { rule: ruleId });
                 },
             }, 'search', 'search'),
             this.createItem({

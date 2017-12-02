@@ -4,6 +4,7 @@ import { ViewModelStatus } from '../../Enums';
 import MainLayoutComponent from '../MainLayoutComponent';
 import factory from '../../ViewModel/ViewModelFactory';
 import ReservesViewModel from '../../ViewModel/Reserves/ReservesViewModel';
+import Util from '../../Util/Util';
 import DateUtil from '../../Util/DateUtil';
 import * as apid from '../../../../api';
 import PaginationComponent from '../PaginationComponent';
@@ -195,7 +196,7 @@ class ReservesComponent extends ParentComponent<void> {
                         class: ReservesComponent.nonNumeric + ' day',
                         onclick: () => {
                             let start = DateUtil.getJaDate(new Date(reserve.program.startAt));
-                            m.route.set('/program', {
+                            Util.move('/program', {
                                 ch: reserve.program.channelId,
                                 time: DateUtil.format(start, 'YYMMddhh'),
                             });
@@ -226,7 +227,7 @@ class ReservesComponent extends ParentComponent<void> {
             class: ReservesComponent.nonNumeric + ' duration',
             onclick: () => {
                 let start = DateUtil.getJaDate(new Date(program.startAt));
-                m.route.set('/program', {
+                Util.move('/program', {
                     type: program.channelType,
                     time: DateUtil.format(start, 'YYMMddhh'),
                 });
@@ -270,7 +271,7 @@ class ReservesComponent extends ParentComponent<void> {
                 m('button', {
                     class: 'mdl-button mdl-js-button mdl-button--icon',
                     style: typeof reserve.ruleId === 'undefined' ? 'visibility: hidden;' : '',
-                    onclick: () => { m.route.set('/search', { rule: reserve.ruleId }); },
+                    onclick: () => { Util.move('/search', { rule: reserve.ruleId }); },
                 },
                     m('i', { class: 'material-icons' }, 'mode_edit')
                 ),

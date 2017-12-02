@@ -21,6 +21,7 @@ import ReservesMenuViewModel from '../../ViewModel/Reserves/ReservesMenuViewMode
 import ProgramInfoComponent from '../Program/ProgramInfoComponent';
 import ReservesMenuComponent from '../Reserves/ReservesMenuComponent';
 import ReservesDeleteComponent from '../Reserves/ReservesDeleteComponent';
+import Util from '../../Util/Util';
 import DateUtil from '../../Util/DateUtil';
 
 /**
@@ -145,7 +146,7 @@ class TopPageComponent extends ParentComponent<void> {
                 this.recordedViewModel.getRecorded().recorded.map((recorded) => {
                     return this.createRecordedCard(recorded);
                 }),
-                this.createMore(viewLength, total, '/recorded?page=2'),
+                this.createMore(viewLength, total, '/recorded', { page: 2 }),
             ]),
         ]);
     }
@@ -200,7 +201,7 @@ class TopPageComponent extends ParentComponent<void> {
         const title = conflictsCount === 0 ? `予約 ${ viewLength }/${ total }` : m('div', {
             class: 'mdl-badge',
             'data-badge': conflictsCount,
-            onclick: () => { m.route.set('/reserves?mode=conflicts'); },
+            onclick: () => { Util.move('/reserves', { mode: 'conflicts' }); },
         }, `予約 ${ viewLength }/${ total }`);
 
         return m('div', { class: 'reserves mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col' }, [
@@ -209,7 +210,7 @@ class TopPageComponent extends ParentComponent<void> {
                 this.reservesViewModel.getReserves().reserves.map((reserve) => {
                     return this.createReserveCard(reserve);
                 }),
-                this.createMore(viewLength, total, '/reserves?page=2'),
+                this.createMore(viewLength, total, '/reserves', { page: 2 }),
             ])
         ]);
     }
@@ -275,13 +276,13 @@ class TopPageComponent extends ParentComponent<void> {
     * @param total: 総数
     * @param href: url
     */
-    private createMore(viewLength: number, total: number, href: string): m.Child | null {
+    private createMore(viewLength: number, total: number, href: string, query: { [key: string]: any }): m.Child | null {
         if(!(total > viewLength)) { return null; }
 
         return m('div', { class: 'more' } , [
             m('a', {
                 class: 'mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--primary',
-                onclick: () => { m.route.set(href); }
+                onclick: () => { Util.move(href, query); }
             }, 'more'),
         ]);
     }

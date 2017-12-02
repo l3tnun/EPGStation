@@ -101,7 +101,7 @@ class ProgramTimeBalloonViewModel extends ViewModel {
             let query = Util.getCopyQuery();
             query.time = time;
             this.close();
-            m.route.set(m.route.get().split('?')[0], query);
+            Util.move(m.route.get().split('?')[0], query);
         } else {
             this.snackbar.open('現在ページと同じ設定です');
         }

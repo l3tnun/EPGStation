@@ -1,4 +1,3 @@
-import * as m from 'mithril';
 import ViewModel from '../ViewModel';
 import { BalloonModelInterface } from '../../Model/Balloon/BallonModel';
 import * as apid from '../../../../api';
@@ -304,7 +303,7 @@ class RecordedInfoViewModel extends ViewModel {
         this.close();
 
         //ページ移動
-        setTimeout(() => { m.route.set('/stream/watch', { stream: streamNumber }); }, 200);
+        setTimeout(() => { Util.move('/stream/watch', { stream: streamNumber }); }, 200);
     }
 
     /**

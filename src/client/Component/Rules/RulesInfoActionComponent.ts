@@ -4,6 +4,7 @@ import factory from '../../ViewModel/ViewModelFactory';
 import RulesInfoViewModel from '../../ViewModel/Rules/RulesInfoViewModel';
 import BalloonViewModel from '../../ViewModel/Balloon/BalloonViewModel';
 import RulesDeleteViewModel from '../../ViewModel/Rules/RulesDeleteViewModel';
+import Util from '../../Util/Util';
 
 /**
 * RulesInfoActionComponent
@@ -36,7 +37,7 @@ class RulesInfoActionComponent extends Component<void> {
                         setTimeout(() => {
                             let rule = this.viewModel.get();
                             if(rule === null) { return; }
-                            m.route.set('/search', { rule: rule.id });
+                            Util.move('/search', { rule: rule.id });
                         }, 200);
                     }
                 }, '編集'),
@@ -49,7 +50,7 @@ class RulesInfoActionComponent extends Component<void> {
 
                         setTimeout(() => {
                             if(rule === null) { return; }
-                            m.route.set('/recorded', { rule: rule.id });
+                            Util.move('/recorded', { rule: rule.id });
                         }, 200);
                     },
                 }, '番組一覧'),

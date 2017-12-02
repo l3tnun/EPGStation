@@ -27,10 +27,10 @@ class NavigationComponent extends Component<void> {
         this.broadcastLink = []
         if(config !== null) {
             if(typeof config.mpegTsStreaming !== 'undefined') { this.broadcastLink.push(this.createLink('ライブ', '/stream/program')); }
-            if(config.broadcast.GR) { this.broadcastLink.push(this.createLink('番組表(GR)', '/program?type=GR')); }
-            if(config.broadcast.BS) { this.broadcastLink.push(this.createLink('番組表(BS)', '/program?type=BS')); }
-            if(config.broadcast.CS) { this.broadcastLink.push(this.createLink('番組表(CS)', '/program?type=CS')); }
-            if(config.broadcast.SKY) { this.broadcastLink.push(this.createLink('番組表(SKY)', '/program?type=SKY')); }
+            if(config.broadcast.GR) { this.broadcastLink.push(this.createLink('番組表(GR)', '/program', { type: 'GR' })); }
+            if(config.broadcast.BS) { this.broadcastLink.push(this.createLink('番組表(BS)', '/program', { type: 'BS' })); }
+            if(config.broadcast.CS) { this.broadcastLink.push(this.createLink('番組表(CS)', '/program', { type: 'CS' })); }
+            if(config.broadcast.SKY) { this.broadcastLink.push(this.createLink('番組表(SKY)', '/program', { type: 'SKY' })); }
         }
     }
 
@@ -54,13 +54,13 @@ class NavigationComponent extends Component<void> {
         }, [
             m(StreamNavigationInfoComponent),
             this.createTitle('EPGStation', {
-                onclick: () => { if(m.route.get() !== '/') { m.route.set('/'); } }
+                onclick: () => { if(m.route.get() !== '/') { Util.move('/'); } }
             }),
             m('nav', { class: 'mdl-navigation' }, [
                 this.broadcastLink,
                 this.createLink('録画済み', '/recorded'),
                 this.createLink('予約', '/reserves'),
-                this.createLink('重複', '/reserves?mode=conflicts'),
+                this.createLink('重複', '/reserves', { mode: 'conflicts' }),
                 this.createLink('検索', '/search'),
                 this.createLink('ルール', '/rules'),
                 this.createLink('設定', '/setting'),
@@ -83,16 +83,18 @@ class NavigationComponent extends Component<void> {
     * link を作成
     * @param name: name
     * @param href: href
+    * @param query: any = {}
     * @return m.Child
     */
-    private createLink(name: string, href: string): m.Child {
+    private createLink(name: string, href: string, query: any = {}): m.Child {
         return m('a', {
             class: 'mdl-navigation__link',
             onclick: () => {
                 return new Promise<void>((resolve: () => void): void => {
                     this.close();
-                    if(m.route.get() === href) { return; }
-                    setTimeout(() => { m.route.set(href); resolve(); }, 200);
+
+                    if(Util.isEqualURL(href, query)) { return; }
+                    setTimeout(() => { Util.move(href, query); resolve(); }, 200);
                 });
             },
         }, name);

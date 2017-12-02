@@ -5,6 +5,7 @@ import factory from '../../ViewModel/ViewModelFactory';
 import StreamWatchViewModel from '../../ViewModel/Stream/StreamWatchViewModel';
 import MainLayoutComponent from '../MainLayoutComponent';
 import StreamWatchVideoComponent from './StreamWatchVideoComponent';
+import Util from '../../Util/Util';
 import DateUtil from '../../Util/DateUtil';
 import * as apid from '../../../../api';
 
@@ -59,7 +60,7 @@ class StreamWatchComponent extends ParentComponent<void> {
             class: 'fab-right-bottom mdl-shadow--8dp mdl-button mdl-js-button mdl-button--fab mdl-button--colored',
             onclick: async () => {
                 if(typeof m.route.param('stream') === 'undefined') {
-                    m.route.set('/');
+                    Util.move('/');
                     return;
                 }
 

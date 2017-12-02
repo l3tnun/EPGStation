@@ -14,6 +14,7 @@ import RulesDeleteComponent from './RulesDeleteComponent';
 import RulesInfoViewModel from '../../ViewModel/Rules/RulesInfoViewModel';
 import RulesInfoComponent from './RulesInfoComponent';
 import RulesInfoActionComponent from './RulesInfoActionComponent';
+import Util from '../../Util/Util';
 
 /**
 * RulesComponent
@@ -205,7 +206,7 @@ class RulesComponent extends ParentComponent<void> {
                 m('button', {
                     class: 'mdl-button mdl-js-button mdl-button--icon',
                     onclick: () => {
-                        m.route.set('/recorded', { rule: rule.id });
+                        Util.move('/recorded', { rule: rule.id });
                     },
                 },
                     m('i', { class: 'material-icons' }, 'list')
@@ -214,7 +215,7 @@ class RulesComponent extends ParentComponent<void> {
                 m('button', {
                     class: 'mdl-button mdl-js-button mdl-button--icon',
                     onclick: () => {
-                        m.route.set('/search', { rule: rule.id });
+                        Util.move('/search', { rule: rule.id });
                     },
                 },
                     m('i', { class: 'material-icons' }, 'mode_edit')
