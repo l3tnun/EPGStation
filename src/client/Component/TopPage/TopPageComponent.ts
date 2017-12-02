@@ -281,8 +281,7 @@ class TopPageComponent extends ParentComponent<void> {
         return m('div', { class: 'more' } , [
             m('a', {
                 class: 'mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--primary',
-                href: href,
-                oncreate: m.route.link,
+                onclick: () => { m.route.set(href); }
             }, 'more'),
         ]);
     }

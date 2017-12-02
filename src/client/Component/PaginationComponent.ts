@@ -27,8 +27,7 @@ class PaginationComponent extends Component<PaginationArgs> {
                 m('a', {
                     class: 'button hover material-icons',
                     style: vnode.attrs.page <= 1 ? 'visibility: hidden;' : '',
-                    href: this.createHref(vnode.attrs.page, -1),
-                    oncreate: m.route.link,
+                    onclick: () => { m.route.set(this.createHref(vnode.attrs.page, -1)) },
                 }, 'navigate_before'),
 
                 // text
