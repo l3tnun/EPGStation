@@ -73,6 +73,7 @@ abstract class ParentComponent<T> extends Component<T> {
         }
 
         ParentComponent.history[ParentComponent.historyPosition].data = data;
+        this.saveStorage();
     }
 
     /**
@@ -97,19 +98,17 @@ abstract class ParentComponent<T> extends Component<T> {
             // set history
             if(status === 'init' || status === 'update') {
                 if(ParentComponent.history === null) {
-                    ParentComponent.history = [{
-                        url: location.href,
-                        data: null,
-                    }];
-                    ParentComponent.historyPosition = 0;
+                    this.restoreHistory();
                 } else if(ParentComponent.isBack && ParentComponent.historyPosition - 1 >= 0 && ParentComponent.history[ParentComponent.historyPosition - 1].url === location.href) {
                     // back
                     ParentComponent.historyPosition -= 1;
                     ParentComponent.isBack = false;
+                    this.saveStorage();
                 } else if(ParentComponent.isForward && ParentComponent.historyPosition + 1 <= ParentComponent.history.length - 1 && ParentComponent.history[ParentComponent.historyPosition + 1].url === location.href) {
                     // forward
                     ParentComponent.historyPosition += 1;
                     ParentComponent.isForward = false;
+                    this.saveStorage();
                 } else if(ParentComponent.history[ParentComponent.historyPosition].url !== location.href) {
                     // new page
                     ParentComponent.historyPosition += 1;
@@ -122,9 +121,41 @@ abstract class ParentComponent<T> extends Component<T> {
                         url: location.href,
                         data: null,
                     });
+                    this.saveStorage();
                 }
             }
         }, 0);
+    }
+
+    /**
+    * sessionStorage に history を保存
+    */
+    private saveStorage(): void {
+        window.sessionStorage.setItem(ParentComponent.storageKey, JSON.stringify({
+            history: ParentComponent.history,
+            position: ParentComponent.historyPosition,
+        }));
+    }
+
+    /**
+    * history を復元
+    */
+    private restoreHistory(): void {
+        const str = window.sessionStorage.getItem(ParentComponent.storageKey);
+        if(str === null) {
+            ParentComponent.history = [{
+                url: location.href,
+                data: null,
+            }];
+            ParentComponent.historyPosition = 0;
+            this.saveStorage();
+
+            return;
+        }
+
+        const data = <any>JSON.parse(str);
+        ParentComponent.history = data.history;
+        ParentComponent.historyPosition = data.position;
     }
 
     /**
@@ -245,6 +276,10 @@ abstract class ParentComponent<T> extends Component<T> {
     protected abstract getComponentName(): string;
 
     public abstract view(vnode: m.Vnode<T, any>): m.Children | null | void;
+}
+
+namespace ParentComponent {
+    export const storageKey = 'historyInfo';
 }
 
 export default ParentComponent;
