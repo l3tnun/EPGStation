@@ -99,12 +99,12 @@ abstract class ParentComponent<T> extends Component<T> {
             if(status === 'init' || status === 'update') {
                 if(ParentComponent.history === null) {
                     this.restoreHistory();
-                } else if(ParentComponent.isBack && ParentComponent.historyPosition - 1 >= 0 && ParentComponent.history[ParentComponent.historyPosition - 1].url === location.href) {
+                } else if(ParentComponent.isBack) {
                     // back
                     ParentComponent.historyPosition -= 1;
                     ParentComponent.isBack = false;
                     this.saveStorage();
-                } else if(ParentComponent.isForward && ParentComponent.historyPosition + 1 <= ParentComponent.history.length - 1 && ParentComponent.history[ParentComponent.historyPosition + 1].url === location.href) {
+                } else if(ParentComponent.isForward) {
                     // forward
                     ParentComponent.historyPosition += 1;
                     ParentComponent.isForward = false;
