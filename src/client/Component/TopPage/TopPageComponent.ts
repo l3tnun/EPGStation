@@ -24,6 +24,12 @@ import ReservesDeleteComponent from '../Reserves/ReservesDeleteComponent';
 import Util from '../../Util/Util';
 import DateUtil from '../../Util/DateUtil';
 
+interface ScrollPosition {
+    main: number;
+    recorded: number;
+    reserves: number;
+}
+
 /**
 * TopPageComponent
 */
@@ -36,6 +42,7 @@ class TopPageComponent extends ParentComponent<void> {
     private reservesMenuViewModel: ReservesMenuViewModel;
     private programInfo: ProgramInfoViewModel;
     private balloon: BalloonViewModel;
+    private scrollPosition: ScrollPosition = { main: 0, recorded: 0, reserves: 0 };
 
     constructor() {
         super();
@@ -52,9 +59,10 @@ class TopPageComponent extends ParentComponent<void> {
 
     protected async initViewModel(status: ViewModelStatus = 'init'): Promise<void> {
         super.initViewModel(status);
+        await this.recordedViewModel.init(status);
+        await this.reservesViewModel.init(status);
         await this.viewModel.init();
-        this.recordedViewModel.init(status);
-        this.reservesViewModel.init(status);
+        this.setRestorePositionFlag(status);
     }
 
     /**
@@ -124,7 +132,81 @@ class TopPageComponent extends ParentComponent<void> {
     * @return m.Child
     */
     private createContent(): m.Child {
-        return m('div', { class: 'top-page' + (window.innerWidth < 800 ? ' non-scroll' : '') }, [
+        return m('div', {
+            class: 'top-page' + (window.innerWidth < 800 ? ' non-scroll' : ''),
+            oncreate: (vnode: m.VnodeDOM<void, this>) => {
+                // scroll position を保存
+
+                const main = <HTMLElement>vnode.dom;
+                const recorded = <HTMLElement>document.getElementById(TopPageComponent.recordedId);
+                const reserves = <HTMLElement>document.getElementById(TopPageComponent.reservesId);
+
+                let url = location.href;
+                let mainTimerId: NodeJS.Timer | null = null;
+                let recordedTimerId: NodeJS.Timer | null = null;
+                let reservesTimerId: NodeJS.Timer | null = null;
+
+                const scroll = (
+                    getTimer: () => NodeJS.Timer | null,
+                    setTimer: (timer: NodeJS.Timer) => void,
+                    setNullTimer: () => void,
+                    savePosition: () => void,
+                ) => {
+                    const timer = getTimer();
+                    if(timer) { clearTimeout(timer); }
+
+                    setTimer(setTimeout(() => {
+                        if(url !== location.href) { url = location.href; return; }
+                        setNullTimer();
+                        savePosition();
+                        this.saveHistoryData(this.scrollPosition);
+                    }, 50));
+                }
+
+                main.onscroll = () => { scroll(
+                    () => { return mainTimerId; },
+                    (timer: NodeJS.Timer) => { mainTimerId = timer; },
+                    () => { mainTimerId = null; },
+                    () => {
+                        this.scrollPosition.main = main.scrollTop;
+                        this.scrollPosition.recorded = 0;
+                        this.scrollPosition.reserves = 0;
+                    },
+                ) }
+
+                recorded.onscroll = () => { scroll(
+                    () => { return recordedTimerId; },
+                    (timer: NodeJS.Timer) => { recordedTimerId = timer; },
+                    () => { recordedTimerId = null; },
+                    () => {
+                        this.scrollPosition.main = 0;
+                        this.scrollPosition.recorded = recorded.scrollTop;
+                    },
+                ) }
+
+                reserves.onscroll = () => { scroll(
+                    () => { return reservesTimerId; },
+                    (timer: NodeJS.Timer) => { reservesTimerId = timer; },
+                    () => { reservesTimerId = null; },
+                    () => {
+                        this.scrollPosition.main = 0;
+                        this.scrollPosition.reserves = reserves.scrollTop;
+                    },
+                ) }
+            },
+            onupdate: (vnode: m.VnodeDOM<void, this>) => {
+                if(!this.isNeedRestorePosition) { return; }
+                this.isNeedRestorePosition = false;
+
+                // scroll position の復元
+                const position = <ScrollPosition | null>this.getHistoryData();
+                if(position === null) { return; }
+
+                vnode.dom.scrollTop = position.main;
+                document.getElementById(TopPageComponent.recordedId)!.scrollTop = position.recorded;
+                document.getElementById(TopPageComponent.reservesId)!.scrollTop = position.reserves;
+            },
+        }, [
             this.createRecorded(),
             this.createReserves(),
             m('div', { class: 'clear: both;' }),
@@ -142,7 +224,10 @@ class TopPageComponent extends ParentComponent<void> {
         return m('div', { class: 'recorded mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col' }, [
             m('div', { class: 'parent-title' }, `録画済み ${ viewLength }/${ total }`),
 
-            m('div', { class: 'child non-scroll' }, [
+            m('div', {
+                id: TopPageComponent.recordedId,
+                class: 'child non-scroll',
+            }, [
                 this.recordedViewModel.getRecorded().recorded.map((recorded) => {
                     return this.createRecordedCard(recorded);
                 }),
@@ -206,7 +291,10 @@ class TopPageComponent extends ParentComponent<void> {
 
         return m('div', { class: 'reserves mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col' }, [
             m('div', { class: 'parent-title mdl-badge' }, title ),
-            m('div', { class: 'child non-scroll' }, [
+            m('div', {
+                id: TopPageComponent.reservesId,
+                class: 'child non-scroll',
+            }, [
                 this.reservesViewModel.getReserves().reserves.map((reserve) => {
                     return this.createReserveCard(reserve);
                 }),
@@ -286,6 +374,11 @@ class TopPageComponent extends ParentComponent<void> {
             }, 'more'),
         ]);
     }
+}
+
+namespace TopPageComponent {
+    export const recordedId = 'recorded-main';
+    export const reservesId = 'reserves-main';
 }
 
 export default TopPageComponent;
