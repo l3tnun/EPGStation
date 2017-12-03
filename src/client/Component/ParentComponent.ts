@@ -7,6 +7,7 @@ import factory from '../ViewModel/ViewModelFactory';
 import BalloonViewModel from '../ViewModel/Balloon/BalloonViewModel';
 import * as events from '../IoEvents';
 import StreamInfoViewModel from '../ViewModel/Stream/StreamInfoViewModel';
+import MainLayoutComponent from './MainLayoutComponent';
 
 interface queryInterface {
     [key: string]: any;
@@ -36,6 +37,8 @@ abstract class ParentComponent<T> extends Component<T> {
     private static historyPosition: number = 0;
     private static isBack: boolean = false;
     private static isForward: boolean = false;
+
+    protected isNeedRestorePosition: boolean = false;
 
     constructor() {
         super();
@@ -156,6 +159,32 @@ abstract class ParentComponent<T> extends Component<T> {
         const data = <any>JSON.parse(str);
         ParentComponent.history = data.history;
         ParentComponent.historyPosition = data.position;
+    }
+
+    /**
+    * isNeedResorePosition をセットする initViewModel の最後で呼び出す
+    * @param status: ViewModelStatus
+    */
+    protected setRestorePositionFlag(status: ViewModelStatus): void {
+        if(status === 'init' || status === 'update') {
+            this.isNeedRestorePosition = true;
+            m.redraw();
+        }
+    }
+
+    /**
+    * MainLayout での scroll position を復元する
+    * onupdate で呼び出す
+    */
+    protected restoreMainLayoutPosition(): void {
+        if(!this.isNeedRestorePosition) { return; }
+
+        this.isNeedRestorePosition = false;
+        const scrollTop = <number | null>this.getHistoryData();
+        if(scrollTop === null) { return; }
+
+        const main = document.getElementById(MainLayoutComponent.id);
+        if(main !== null) { main.scrollTop = scrollTop; }
     }
 
     /**

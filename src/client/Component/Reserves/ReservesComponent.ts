@@ -25,8 +25,6 @@ class ReservesComponent extends ParentComponent<void> {
     private balloon: BalloonViewModel;
     private programInfo: ProgramInfoViewModel;
 
-    private isNeedRestorePosition: boolean = false;
-
     constructor() {
         super();
         this.viewModel = <ReservesViewModel>(factory.get('ReservesViewModel'));
@@ -39,10 +37,7 @@ class ReservesComponent extends ParentComponent<void> {
         super.initViewModel(status);
         this.viewModel.init(status).
         then(() => {
-            if(status === 'init' || status === 'update') {
-                this.isNeedRestorePosition = true;
-                m.redraw();
-            }
+            this.setRestorePositionFlag(status);
         });
     }
 
@@ -96,15 +91,7 @@ class ReservesComponent extends ParentComponent<void> {
     private createContent(): m.Child {
         return m('div', {
             class: 'reserves',
-            onupdate: () => {
-                if(this.isNeedRestorePosition) {
-                    this.isNeedRestorePosition = false;
-                    const scrollTop = <number | null>this.getHistoryData();
-                    if(scrollTop === null) { return; }
-                    const main = document.getElementById(MainLayoutComponent.id);
-                    if(main !== null) { main.scrollTop = scrollTop; }
-                }
-            },
+            onupdate: () => { this.restoreMainLayoutPosition(); },
         } , [
             this.createCardView(),
             this.createTableView(),

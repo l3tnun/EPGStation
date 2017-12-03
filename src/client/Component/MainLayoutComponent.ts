@@ -37,12 +37,14 @@ class MainLayoutComponent extends Component<MainLayoutArgs> {
                 oncreate: (mainVnode: m.VnodeDOM<void, any>) => {
                     if(typeof vnode.attrs.scrollStoped === 'undefined') { return; }
 
+                    let url = location.href;
                     (<HTMLElement>(mainVnode.dom)).addEventListener('scroll', () => {
                         if(this.scrollTimerId) {
                             clearTimeout(this.scrollTimerId);
                         }
 
                         this.scrollTimerId = setTimeout(() => {
+                            if(url !== location.href) { url = location.href; return; }
                             this.scrollTimerId = null;
                             if(typeof vnode.attrs.scrollStoped !== 'undefined') {
                                 vnode.attrs.scrollStoped((<HTMLElement>(mainVnode.dom)).scrollTop);

@@ -4,6 +4,7 @@ import { ViewModelStatus } from '../../Enums';
 import * as apid from '../../../../api';
 import { findQuery, RecordedApiModelInterface } from '../../Model/Api/RecordedApiModel';
 import { ChannelsApiModelInterface } from '../../Model/Api/ChannelsApiModel';
+import Util from '../../Util/Util';
 import DateUtil from '../../Util/DateUtil';
 import { SettingModelInterface } from '../../Model/Setting/SettingModel';
 
@@ -33,10 +34,10 @@ class RecordedViewModel extends ViewModel {
     * init
     * @param status: ViewModelStatus
     */
-    public init(status: ViewModelStatus = 'init'): void {
+    public init(status: ViewModelStatus = 'init'): Promise<void> {
         super.init(status);
 
-        if(status === 'reload' || status === 'updateIo') { this.reloadInit(); return; }
+        if(status === 'reload' || status === 'updateIo') { return this.reloadInit(); }
 
         this.limit = typeof m.route.param('length') === 'undefined' ? this.setting.value.recordedLength : Number(m.route.param('length'));
         this.offset = typeof m.route.param('page') === 'undefined' ? 0 : (Number(m.route.param('page')) - 1) * this.limit;
@@ -51,10 +52,13 @@ class RecordedViewModel extends ViewModel {
         m.redraw();
 
         //録画一覧を更新
-        setTimeout(async () => {
-            await this.recordedApiModel.fetchRecorded(this.limit, this.offset, this.option);
-            await this.recordedApiModel.fetchTags();
-        }, 100);
+        return Util.sleep(100)
+        .then(() => {
+            return this.recordedApiModel.fetchRecorded(this.limit, this.offset, this.option);
+        })
+        .then(() => {
+            return this.recordedApiModel.fetchTags();
+        })
     }
 
     /**
