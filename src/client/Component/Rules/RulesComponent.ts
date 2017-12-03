@@ -35,7 +35,10 @@ class RulesComponent extends ParentComponent<void> {
 
     protected initViewModel(status: ViewModelStatus = 'init'): void {
         super.initViewModel(status);
-        this.viewModel.init(status);
+        this.viewModel.init(status)
+        .then(() => {
+            this.setRestorePositionFlag(status);
+        });
     }
 
     /**
@@ -52,6 +55,9 @@ class RulesComponent extends ParentComponent<void> {
             content: [
                 this.createContent(),
             ],
+            scrollStoped: (scrollTop: number) => {
+                this.saveHistoryData(scrollTop);
+            },
             notMainContent: [
                 m(BalloonComponent, {
                     id: RulesDeleteViewModel.id,
@@ -76,7 +82,10 @@ class RulesComponent extends ParentComponent<void> {
     * @return m.Child
     */
     private createContent(): m.Child {
-        return m('div', { class: 'rules-content' }, [
+        return m('div', {
+            class: 'rules-content',
+            onupdate: () => { this.restoreMainLayoutPosition(); },
+        }, [
             this.createCardView(),
             this.createTableView(),
             m(PaginationComponent, {
