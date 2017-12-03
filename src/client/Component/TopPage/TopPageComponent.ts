@@ -60,8 +60,8 @@ class TopPageComponent extends ParentComponent<void> {
     protected async initViewModel(status: ViewModelStatus = 'init'): Promise<void> {
         super.initViewModel(status);
         await this.recordedViewModel.init(status);
-        await this.reservesViewModel.init(status);
         await this.viewModel.init();
+        await this.reservesViewModel.init(status);
         this.setRestorePositionFlag(status);
     }
 
