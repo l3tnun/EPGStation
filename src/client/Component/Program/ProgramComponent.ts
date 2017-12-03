@@ -41,7 +41,10 @@ class ProgramComponent extends ParentComponent<void> {
 
     protected initViewModel(status: ViewModelStatus = 'init'): void {
         super.initViewModel(status);
-        this.viewModel.init(status);
+        this.viewModel.init(status)
+        .then(() => {
+            this.setRestorePositionFlag(status);
+        });
     }
 
     /**
@@ -120,7 +123,20 @@ class ProgramComponent extends ParentComponent<void> {
                     m(ChannelComponent),
                     m('div', { class: 'child' }, [
                         m(TimeScaleComponent),
-                        m(BoardComponent),
+                        m(BoardComponent,{
+                            scrollStoped: (top: number, left: number) => {
+                                this.saveHistoryData({ top: top, left: left });
+                            },
+                            isNeedRestorePosition: () => {
+                                return this.isNeedRestorePosition;
+                            },
+                            resetRestorePositionFlag: () => {
+                                this.isNeedRestorePosition = false;
+                            },
+                            getPosition: () => {
+                                return <{ top: number, left: number } | null>this.getHistoryData();
+                            },
+                        }),
                     ]),
                     m(ProgressComponent),
                 ]),
