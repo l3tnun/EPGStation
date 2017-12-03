@@ -22,7 +22,10 @@ class SettingComponent extends ParentComponent<void> {
         if(status === 'init') {
             this.viewModel.setTemp();
         }
-        this.setRestorePositionFlag(status);
+        Util.sleep(10)
+        .then(() => {
+            this.setRestorePositionFlag(status);
+        });
     }
 
     /**
