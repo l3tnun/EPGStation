@@ -14,6 +14,7 @@ interface queryInterface {
 }
 
 interface History {
+    id: number | null; // dummy query を格納する (dummy query は一意のため)
     url: string;
     data: any | null;
 }
@@ -37,6 +38,7 @@ abstract class ParentComponent<T> extends Component<T> {
     private static historyPosition: number = 0;
     private static isBack: boolean = false;
     private static isForward: boolean = false;
+    private static isPopstate: boolean = false;
 
     protected isNeedRestorePosition: boolean = false;
 
@@ -49,6 +51,8 @@ abstract class ParentComponent<T> extends Component<T> {
             ParentComponent.isSettedPopstate = true;
              window.addEventListener('popstate', () => {
                 if(ParentComponent.history === null) { return; }
+
+                ParentComponent.isPopstate = true;
 
                 const back = ParentComponent.history[ParentComponent.historyPosition - 1];
                 const forward = ParentComponent.history[ParentComponent.historyPosition + 1];
@@ -69,6 +73,7 @@ abstract class ParentComponent<T> extends Component<T> {
 
     /**
     * history に データを記憶
+    * @param data: any
     */
     protected saveHistoryData(data: any): void {
         if(ParentComponent.history === null) {
@@ -92,7 +97,7 @@ abstract class ParentComponent<T> extends Component<T> {
 
     /**
     * initViewModel
-    * status に状態が入る
+    * @param status: ViewModelStatus
     */
     protected initViewModel(status: ViewModelStatus = 'init'): void {
         setTimeout(() => {
@@ -106,12 +111,21 @@ abstract class ParentComponent<T> extends Component<T> {
                     // back
                     ParentComponent.historyPosition -= 1;
                     ParentComponent.isBack = false;
-                    this.saveStorage();
                 } else if(ParentComponent.isForward) {
                     // forward
                     ParentComponent.historyPosition += 1;
                     ParentComponent.isForward = false;
-                    this.saveStorage();
+                } else if(ParentComponent.isPopstate && !ParentComponent.isBack && !ParentComponent.isForward) {
+                    // ブラウザで一気に戻る or 進んだ場合
+                    // dummy query を使用して該当位置を検索する
+                    const id = this.getDummyQuery()
+                    const newPosition = ParentComponent.history.findIndex((h) => {
+                        return h.id === id;
+                    });
+
+                    if(newPosition !== -1) {
+                        ParentComponent.historyPosition = newPosition;
+                    }
                 } else if(ParentComponent.history[ParentComponent.historyPosition].url !== location.href) {
                     // new page
                     ParentComponent.historyPosition += 1;
@@ -121,11 +135,14 @@ abstract class ParentComponent<T> extends Component<T> {
                     }
 
                     ParentComponent.history.push({
+                        id: this.getDummyQuery(),
                         url: location.href,
                         data: null,
                     });
-                    this.saveStorage();
                 }
+
+                ParentComponent.isPopstate = false;
+                this.saveStorage();
             }
         }, 0);
     }
@@ -147,18 +164,26 @@ abstract class ParentComponent<T> extends Component<T> {
         const str = window.sessionStorage.getItem(ParentComponent.storageKey);
         if(str === null) {
             ParentComponent.history = [{
+                id: this.getDummyQuery(),
                 url: location.href,
                 data: null,
             }];
             ParentComponent.historyPosition = 0;
-            this.saveStorage();
-
             return;
         }
 
         const data = <any>JSON.parse(str);
         ParentComponent.history = data.history;
         ParentComponent.historyPosition = data.position;
+    }
+
+    /**
+    * dummy query を返す
+    * @return number | null
+    */
+    private getDummyQuery(): number | null {
+        const dummy = m.route.param('dummy');
+        return typeof dummy === 'undefined' ? null : Number(dummy);
     }
 
     /**
