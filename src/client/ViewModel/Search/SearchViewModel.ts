@@ -9,6 +9,7 @@ import { ChannelsApiModelInterface } from '../../Model/Api/ChannelsApiModel';
 import { genre1, genre2 } from '../../lib/event';
 import { SnackbarModelInterface } from '../../Model/Snackbar/SnackbarModel';
 import { RulesApiModelInterface } from '../../Model/Api/RulesApiModel';
+import Util from '../../Util/Util';
 
 /**
 * SearchViewModel
@@ -534,7 +535,7 @@ class SearchViewModel extends ViewModel {
         try {
             await this.rulesApiModel.add(this.createAddRule());
             this.snackbar.open('ルール追加');
-            setTimeout(() => { m.route.set('/rules'); }, 1000);
+            setTimeout(() => { Util.move('/rules'); }, 1000);
         } catch(err) {
             console.error(err);
             this.snackbar.open('ルール追加失敗');
@@ -554,7 +555,7 @@ class SearchViewModel extends ViewModel {
         try {
             await this.rulesApiModel.update(Number(ruleId), this.createAddRule());
             this.snackbar.open('ルール更新');
-            setTimeout(() => { m.route.set('/rules'); }, 1000);
+            setTimeout(() => { Util.move('/rules'); }, 1000);
         } catch(err) {
             console.error(err);
             this.snackbar.open('ルール更新失敗');

@@ -7,6 +7,7 @@ import { ConfigApiModelInterface } from '../../Model/Api/ConfigApiModel';
 import { SnackbarModelInterface } from '../../Model/Snackbar/SnackbarModel';
 import { SettingModelInterface } from '../../Model/Setting/SettingModel';
 import CreateStreamLink from './CreateStreamLink';
+import Util from '../../Util/Util';
 
 /**
 * StreamsApiModel
@@ -126,10 +127,9 @@ class StreamInfoViewModel extends ViewModel {
 
             location.href = url;
         } else if(info.type === 'RecordedHLS') {
-            const url = `/stream/watch?stream=${ info.streamNumber }`;
-            if(m.route.get() === url) { return; }
+            if(Number(m.route.param('stream')) === info.streamNumber) { return; }
 
-            setTimeout(() => { m.route.set(url); }, 200);
+            setTimeout(() => { Util.move('/stream/watch', { stream: info.streamNumber }); }, 200);
         }
     }
 }

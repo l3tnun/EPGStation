@@ -10,10 +10,17 @@ import BalloonViewModel from '../../ViewModel/Balloon/BalloonViewModel';
 import ProgramInfoViewModel from '../../ViewModel/Program/ProgramInfoViewModel';
 import ProgramGenreViewModel from '../../ViewModel/Program/ProgramGenreViewModel';
 
+interface BoardArgs {
+    scrollStoped: (top: number, left: number) => void;
+    isNeedRestorePosition: () => boolean;
+    resetRestorePositionFlag: () => void;
+    getPosition: () => { top: number, left: number } | null;
+}
+
 /**
 * BoardComponent
 */
-class BoardComponent extends Component<void> {
+class BoardComponent extends Component<BoardArgs> {
     private viewModel: ProgramViewModel;
     private infoViewModel: ProgramInfoViewModel;
     private genreViewModel: ProgramGenreViewModel;
@@ -33,7 +40,7 @@ class BoardComponent extends Component<void> {
     /**
     * view
     */
-    public view(): m.Children | null {
+    public view(mainVnode: m.Vnode<BoardArgs, this>): m.Children | null {
         // 予約情報を取得
         let reserves = this.viewModel.getReserves();
         if(reserves === null) { return null; }
@@ -47,25 +54,48 @@ class BoardComponent extends Component<void> {
 
         return m('div', {
             class: 'board non-scroll',
-            oncreate:(vnode: m.VnodeDOM<void, this>) => {
+            oncreate: (vnode: m.VnodeDOM<BoardArgs, this>) => {
                 if(this.viewModel.isFixScroll()) { return; }
 
                 let element = <HTMLElement> vnode.dom;
                 let channel = <HTMLElement> document.getElementsByClassName(ProgramViewModel.channlesName)[0];
                 let time = <HTMLElement> document.getElementsByClassName(ProgramViewModel.timescaleName)[0];
 
+                let url = location.href;
+                let scrollTimerId: NodeJS.Timer | null = null;
+
                 // scroll 設定
                 element.onscroll = () => {
                     channel.scrollLeft = element.scrollLeft;
                     time.scrollTop = element.scrollTop;
+
+                    if(scrollTimerId) { clearTimeout(scrollTimerId); }
+
+                    scrollTimerId = setTimeout(() => {
+                        if(url !== location.href) { url = location.href; return; }
+                        scrollTimerId = null;
+                        mainVnode.attrs.scrollStoped(element.scrollTop, element.scrollLeft);
+                    }, 50);
                 }
+            },
+            onupdate: (vnode: m.VnodeDOM<BoardArgs, this>) => {
+                if(this.viewModel.isFixScroll() || !mainVnode.attrs.isNeedRestorePosition()) { return; }
+                mainVnode.attrs.resetRestorePositionFlag();
+
+                // scroll position を復元する
+                const position = mainVnode.attrs.getPosition();
+                if(position === null) { return; }
+                let element = <HTMLElement> vnode.dom;
+                element.scrollTop = position.top;
+                element.scrollLeft = position.left;
             },
         }, [
             schedules.map((schedule, i) => {
                 return m('div', {
                     class: 'station',
-                    style: `left: calc(${ i } * var(--channel-width) + var(--time-width))`,
-                    oncreate: (vnode: m.VnodeDOM<void, this>) => {
+                    style: `left: calc(${ i } * var(--channel-width) + var(--time-width));`
+                    + `height: calc(60 * var(--time-base-height) * ${ this.viewModel.getLengthParam() })`,
+                    oncreate: (vnode: m.VnodeDOM<BoardArgs, this>) => {
                         this.createStationChild(vnode.dom, schedule, i);
 
                         // progress 非表示
@@ -73,7 +103,7 @@ class BoardComponent extends Component<void> {
                             setTimeout(() => { this.viewModel.progressShow = false; m.redraw(); }, 200);
                         }
                     },
-                    onupdate: (vnode: m.VnodeDOM<void, this>) => {
+                    onupdate: (vnode: m.VnodeDOM<BoardArgs, this>) => {
                         if(!this.viewModel.reloadUpdateDom) { return; }
 
                         // remove child

@@ -14,6 +14,7 @@ import RulesDeleteComponent from './RulesDeleteComponent';
 import RulesInfoViewModel from '../../ViewModel/Rules/RulesInfoViewModel';
 import RulesInfoComponent from './RulesInfoComponent';
 import RulesInfoActionComponent from './RulesInfoActionComponent';
+import Util from '../../Util/Util';
 
 /**
 * RulesComponent
@@ -34,7 +35,10 @@ class RulesComponent extends ParentComponent<void> {
 
     protected initViewModel(status: ViewModelStatus = 'init'): void {
         super.initViewModel(status);
-        this.viewModel.init(status);
+        this.viewModel.init(status)
+        .then(() => {
+            this.setRestorePositionFlag(status);
+        });
     }
 
     /**
@@ -51,6 +55,9 @@ class RulesComponent extends ParentComponent<void> {
             content: [
                 this.createContent(),
             ],
+            scrollStoped: (scrollTop: number) => {
+                this.saveHistoryData(scrollTop);
+            },
             notMainContent: [
                 m(BalloonComponent, {
                     id: RulesDeleteViewModel.id,
@@ -75,7 +82,10 @@ class RulesComponent extends ParentComponent<void> {
     * @return m.Child
     */
     private createContent(): m.Child {
-        return m('div', { class: 'rules-content' }, [
+        return m('div', {
+            class: 'rules-content',
+            onupdate: () => { this.restoreMainLayoutPosition(); },
+        }, [
             this.createCardView(),
             this.createTableView(),
             m(PaginationComponent, {
@@ -205,7 +215,7 @@ class RulesComponent extends ParentComponent<void> {
                 m('button', {
                     class: 'mdl-button mdl-js-button mdl-button--icon',
                     onclick: () => {
-                        m.route.set('/recorded', { rule: rule.id });
+                        Util.move('/recorded', { rule: rule.id });
                     },
                 },
                     m('i', { class: 'material-icons' }, 'list')
@@ -214,7 +224,7 @@ class RulesComponent extends ParentComponent<void> {
                 m('button', {
                     class: 'mdl-button mdl-js-button mdl-button--icon',
                     onclick: () => {
-                        m.route.set('/search', { rule: rule.id });
+                        Util.move('/search', { rule: rule.id });
                     },
                 },
                     m('i', { class: 'material-icons' }, 'mode_edit')

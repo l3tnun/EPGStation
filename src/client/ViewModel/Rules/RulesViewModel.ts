@@ -6,6 +6,7 @@ import { RulesApiModelInterface } from '../../Model/Api/RulesApiModel';
 import { ChannelsApiModelInterface } from '../../Model/Api/ChannelsApiModel';
 import { SnackbarModelInterface } from '../../Model/Snackbar/SnackbarModel';
 import { SettingModelInterface } from '../../Model/Setting/SettingModel';
+import Util from '../../Util/Util';
 
 /**
 * RulesViewModel
@@ -35,10 +36,10 @@ class RulesViewModel extends ViewModel {
     * init
     * @param status: ViewModelStatus
     */
-    public init(status: ViewModelStatus = 'init'): void {
+    public init(status: ViewModelStatus = 'init'): Promise<void> {
         super.init(status);
 
-        if(status === 'reload' || status === 'updateIo') { this.reloadInit(); return; }
+        if(status === 'reload' || status === 'updateIo') { return this.reloadInit(); }
 
         this.limit = typeof m.route.param('length') === 'undefined' ? this.setting.value.ruleLength : Number(m.route.param('length'));
         this.offset = typeof m.route.param('page') === 'undefined' ? 0 : (Number(m.route.param('page')) - 1) * this.limit;
@@ -47,9 +48,10 @@ class RulesViewModel extends ViewModel {
         m.redraw();
 
         //ルール一覧を更新
-        setTimeout(async () => {
-            await this.rulesApiModel.fetchRules(this.limit, this.offset);
-        }, 100);
+        return Util.sleep(100)
+        .then(() => {
+            return this.rulesApiModel.fetchRules(this.limit, this.offset);
+        });
     }
 
     /**

@@ -2,6 +2,7 @@ import * as m from 'mithril';
 import Component from '../Component';
 import factory from '../../ViewModel/ViewModelFactory';
 import ProgramViewModel from '../../ViewModel/Program/ProgramViewModel';
+import Util from '../../Util/Util';
 import DateUtil from '../../Util/DateUtil';
 import * as apid from '../../../../api';
 import StreamSelectViewModel from '../../ViewModel/Stream/StreamSelectViewModel'
@@ -73,7 +74,7 @@ class ChannelComponent extends Component<void> {
             query.time = m.route.param('time');
         }
 
-        m.route.set('/program', query);
+        Util.move('/program', query);
     }
 }
 

@@ -27,8 +27,7 @@ class PaginationComponent extends Component<PaginationArgs> {
                 m('a', {
                     class: 'button hover material-icons',
                     style: vnode.attrs.page <= 1 ? 'visibility: hidden;' : '',
-                    href: this.createHref(vnode.attrs.page, -1),
-                    oncreate: m.route.link,
+                    onclick: () => { this.createHref(vnode.attrs.page, -1); },
                 }, 'navigate_before'),
 
                 // text
@@ -38,14 +37,13 @@ class PaginationComponent extends Component<PaginationArgs> {
                 m('a', {
                     class: 'button hover material-icons',
                     style: vnode.attrs.total <= vnode.attrs.length * vnode.attrs.page ? 'visibility: hidden;' : '',
-                    href: this.createHref(vnode.attrs.page, 1),
-                    oncreate: m.route.link,
+                    onclick: () => { this.createHref(vnode.attrs.page, 1) },
                 }, 'navigate_next'),
             ]),
         ]);
     }
 
-    private createHref(page: number, add: number): string {
+    private createHref(page: number, add: number): void {
         let query = Util.getCopyQuery();
         page += add;
         if(page > 1) {
@@ -54,10 +52,7 @@ class PaginationComponent extends Component<PaginationArgs> {
             delete query.page;
         }
 
-        let route = m.route.get().split('?')[0];
-        let queryStr = m.buildQueryString(query);
-
-        return queryStr.length === 0 ? route : route + '?' +  queryStr;
+        Util.move(m.route.get().split('?')[0], query);
     }
 }
 

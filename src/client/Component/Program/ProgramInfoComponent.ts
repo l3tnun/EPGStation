@@ -2,6 +2,7 @@ import * as m from 'mithril';
 import Component from '../Component';
 import factory from '../../ViewModel/ViewModelFactory';
 import ProgramInfoViewModel from '../../ViewModel/Program/ProgramInfoViewModel';
+import Util from '../../Util/Util';
 
 /**
 * ProgramInfoComponent
@@ -46,7 +47,7 @@ class ProgramInfoComponent extends Component<void> {
             onclick: () => {
                 if(m.route.get().split('?')[0] === '/program') { return; }
 
-                m.route.set('/program', this.viewModel.getChannelLinkQuery())
+                Util.move('/program', this.viewModel.getChannelLinkQuery())
             },
         }, this.viewModel.getChannelName());
     }
@@ -61,7 +62,7 @@ class ProgramInfoComponent extends Component<void> {
             onclick: () => {
                 if(m.route.get().split('?')[0] === '/program') { return; }
 
-                m.route.set('/program', this.viewModel.getProgramsLinkQuery())
+                Util.move('/program', this.viewModel.getProgramsLinkQuery())
             },
         }, this.viewModel.getTime());
     }

@@ -22,6 +22,10 @@ class SettingComponent extends ParentComponent<void> {
         if(status === 'init') {
             this.viewModel.setTemp();
         }
+        Util.sleep(10)
+        .then(() => {
+            this.setRestorePositionFlag(status);
+        });
     }
 
     /**
@@ -38,6 +42,9 @@ class SettingComponent extends ParentComponent<void> {
             content: [
                 this.createContent(),
             ],
+            scrollStoped: (scrollTop: number) => {
+                this.saveHistoryData(scrollTop);
+            },
         });
     }
 
@@ -59,7 +66,10 @@ class SettingComponent extends ParentComponent<void> {
             );
         }
 
-        return m('div', { class : 'setting-content mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col' }, [
+        return m('div', {
+            class : 'setting-content mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col',
+            onupdate: () => { this.restoreMainLayoutPosition(); },
+        }, [
             m('ul', { class: 'mdl-list' }, [
                 this.createListItem(
                     'ナビゲーションを自動で開く',

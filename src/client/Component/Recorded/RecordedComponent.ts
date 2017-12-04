@@ -42,7 +42,10 @@ class RecordedComponent extends ParentComponent<void> {
 
     protected initViewModel(status: ViewModelStatus = 'init'): void {
         super.initViewModel(status);
-        this.viewModel.init(status);
+        this.viewModel.init(status)
+        .then(() => {
+            this.setRestorePositionFlag(status);
+        });
     }
 
     /**
@@ -70,6 +73,9 @@ class RecordedComponent extends ParentComponent<void> {
             content: [
                 this.createContent(),
             ],
+            scrollStoped: (scrollTop: number) => {
+                this.saveHistoryData(scrollTop);
+            },
             notMainContent: [
                 m(BalloonComponent, {
                     id: RecordedInfoViewModel.id,
@@ -119,7 +125,10 @@ class RecordedComponent extends ParentComponent<void> {
                 this.resizeElement = <HTMLElement>(vnode.dom);
                 window.addEventListener('resize', this.resizeListener, false);
             },
-            onupdate: () => { this.resize(); },
+            onupdate: () => {
+                this.resize();
+                this.restoreMainLayoutPosition();
+            },
             onremove: () => {
                 window.removeEventListener('resize', this.resizeListener, false );
             }

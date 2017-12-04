@@ -165,6 +165,42 @@ namespace Util {
             setTimeout(() => { resolve(); }, msec);
         });
     }
+
+    /**
+    * m.route.set する際に query に dummy を追加する
+    * @param href: string
+    * @param query: any
+    */
+    export const move = (href: string, query: { [key: string]: any } = {}) => {
+        query['dummy'] = new Date().getTime();
+        m.route.set(href, query);
+    }
+
+    /**
+    * url が同じかチェック
+    * @param href: string
+    * @param query: { [key: string]: any }
+    * @return boolean
+    */
+    export const isEqualURL = (href: string, query: { [key: string]: any } = {}): boolean => {
+        const tmpQuery = Util.getCopyQuery();
+        let isEqual = true;
+        for(let key in tmpQuery) {
+            if(key !== 'dummy' && query[key] !== tmpQuery[key]) {
+                isEqual = false;
+            }
+        }
+
+        if(isEqual) {
+            for(let key in query) {
+                if(key !== 'dummy' && query[key] !== tmpQuery[key]) {
+                    isEqual = false;
+                }
+            }
+        }
+
+        return (isEqual && m.route.get().split('?')[0] === href);
+    }
 }
 
 export default Util;

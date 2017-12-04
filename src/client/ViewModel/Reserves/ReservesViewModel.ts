@@ -5,6 +5,7 @@ import * as apid from '../../../../api';
 import { ReservesApiModelInterface } from '../../Model/Api/ReservesApiModel';
 import { ChannelsApiModelInterface } from '../../Model/Api/ChannelsApiModel';
 import { SettingModelInterface } from '../../Model/Setting/SettingModel';
+import Util from '../../Util/Util';
 
 enum Mode {
     reserves,
@@ -37,7 +38,7 @@ class ReservesViewModel extends ViewModel {
     * init
     * @param status: ViewModelStatus
     */
-    public init(status: ViewModelStatus = 'init'): void {
+    public init(status: ViewModelStatus = 'init'): Promise<void> {
         super.init(status);
 
         if(typeof m.route.param('mode') === 'undefined') {
@@ -46,7 +47,7 @@ class ReservesViewModel extends ViewModel {
             this.mode = Mode.conflicts;
         }
 
-        if(status === 'reload' || status === 'updateIo') { this.reloadInit(); return; }
+        if(status === 'reload' || status === 'updateIo') { this.reloadInit(); return Promise.resolve(); }
 
         this.limit = typeof m.route.param('length') === 'undefined' ? this.setting.value.reservesLength : Number(m.route.param('length'));
         this.offset = typeof m.route.param('page') === 'undefined' ? 0 : (Number(m.route.param('page')) - 1) * this.limit;
@@ -54,10 +55,11 @@ class ReservesViewModel extends ViewModel {
         this.reservesApiModel.init();
         m.redraw();
 
-        //予約一覧を更新
-        setTimeout(async () => {
-            await this.fetch(this.limit, this.offset);
-        }, 100);
+        return Util.sleep(200)
+        .then(() => {
+            //予約一覧を更新
+            return this.fetch(this.limit, this.offset);
+        });
     }
 
     /**

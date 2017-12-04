@@ -3,6 +3,7 @@ import ViewModel from '../ViewModel';
 import { ViewModelStatus } from '../../Enums';
 import * as apid from '../../../../api';
 import { ScheduleApiModelInterface } from '../../Model/Api/ScheduleApiModel';
+import Util from '../../Util/Util';
 import DateUtil from '../../Util/DateUtil';
 import { AllReserves, ReservesApiModelInterface } from '../../Model/Api/ReservesApiModel';
 import { SettingModelInterface } from '../../Model/Setting/SettingModel';
@@ -41,7 +42,7 @@ class ProgramViewModel extends ViewModel {
     * init
     * @param status: ViewModelStatus
     */
-    public async init(status: ViewModelStatus = 'init'): Promise<void> {
+    public init(status: ViewModelStatus = 'init'): Promise<void> {
         super.init(status);
 
         if(status === 'reload') { return this.reloadUpdate(); }
@@ -59,11 +60,16 @@ class ProgramViewModel extends ViewModel {
         m.redraw();
 
         // 番組データを更新 & 反映
-        setTimeout(async () => {
-            await this.updateSchedule();
-            await this.updateReserves();
+        return Util.sleep(100)
+        .then(() => {
+            return this.updateSchedule();
+        })
+        .then(() => {
+            return this.updateReserves();
+        })
+        .then(() => {
             m.redraw();
-        }, 100);
+        });
     }
 
     /**
@@ -239,6 +245,14 @@ class ProgramViewModel extends ViewModel {
     */
     public isFixScroll(): boolean {
         return this.setting.value.programFixScroll;
+    }
+
+    /**
+    * 時刻の長さを返す
+    * @param number
+    */
+    public getLengthParam(): number {
+        return typeof this.lengthParam === 'undefined' ? 24 : this.lengthParam;
     }
 }
 

@@ -41,7 +41,10 @@ class ProgramComponent extends ParentComponent<void> {
 
     protected initViewModel(status: ViewModelStatus = 'init'): void {
         super.initViewModel(status);
-        this.viewModel.init(status);
+        this.viewModel.init(status)
+        .then(() => {
+            this.setRestorePositionFlag(status);
+        });
     }
 
     /**
@@ -96,9 +99,21 @@ class ProgramComponent extends ParentComponent<void> {
                         const element = <HTMLElement>document.getElementsByClassName('mdl-layout')[0];
                         const channel = <HTMLElement>document.getElementsByClassName(ProgramViewModel.channlesName)[0];
                         const time = <HTMLElement>document.getElementsByClassName(ProgramViewModel.timescaleName)[0];
+
+                        let url = location.href;
+                        let scrollTimerId: NodeJS.Timer | null = null;
+
                         element.onscroll = () => {
                             channel.scrollLeft = element.scrollLeft;
                             time.scrollTop = element.scrollTop;
+
+                            if(scrollTimerId) { clearTimeout(scrollTimerId); }
+
+                            scrollTimerId = setTimeout(() => {
+                                if(url !== location.href) { url = location.href; return; }
+                                scrollTimerId = null;
+                                this.saveHistoryData({ top: element.scrollTop, left: element.scrollLeft })
+                            }, 50);
                         }
 
                         // navigation のズレを修正
@@ -116,11 +131,35 @@ class ProgramComponent extends ParentComponent<void> {
                             }, 200);
                         }
                     },
+                    onupdate: () => {
+                        if(!this.viewModel.isFixScroll() || !this.isNeedRestorePosition) { return; }
+                        this.isNeedRestorePosition = false;
+
+                        // scroll position を復元する
+                        const position = <{ top: number, left: number } | null>this.getHistoryData();
+                        if(position === null) { return; }
+                        const element = <HTMLElement>document.getElementsByClassName('mdl-layout')[0];
+                        element.scrollTop = position.top;
+                        element.scrollLeft = position.left;
+                    },
                 }, [
                     m(ChannelComponent),
                     m('div', { class: 'child' }, [
                         m(TimeScaleComponent),
-                        m(BoardComponent),
+                        m(BoardComponent,{
+                            scrollStoped: (top: number, left: number) => {
+                                this.saveHistoryData({ top: top, left: left });
+                            },
+                            isNeedRestorePosition: () => {
+                                return this.isNeedRestorePosition;
+                            },
+                            resetRestorePositionFlag: () => {
+                                this.isNeedRestorePosition = false;
+                            },
+                            getPosition: () => {
+                                return <{ top: number, left: number } | null>this.getHistoryData();
+                            },
+                        }),
                     ]),
                     m(ProgressComponent),
                 ]),

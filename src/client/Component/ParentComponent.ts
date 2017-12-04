@@ -7,9 +7,16 @@ import factory from '../ViewModel/ViewModelFactory';
 import BalloonViewModel from '../ViewModel/Balloon/BalloonViewModel';
 import * as events from '../IoEvents';
 import StreamInfoViewModel from '../ViewModel/Stream/StreamInfoViewModel';
+import MainLayoutComponent from './MainLayoutComponent';
 
 interface queryInterface {
-    [key: string]: any,
+    [key: string]: any;
+}
+
+interface History {
+    id: number | null; // dummy query を格納する (dummy query は一意のため)
+    url: string;
+    data: any | null;
 }
 
 /**
@@ -26,18 +33,183 @@ abstract class ParentComponent<T> extends Component<T> {
     private static ioStatus: { [key: string]: { isActive: boolean, isInited: boolean } } = {};
     private static io: SocketIOClient.Socket | null = null;
 
+    private static isSettedPopstate: boolean = false;
+    private static history: History[] | null = null;
+    private static historyPosition: number = 0;
+    private static isBack: boolean = false;
+    private static isForward: boolean = false;
+    private static isPopstate: boolean = false;
+
+    protected isNeedRestorePosition: boolean = false;
+
     constructor() {
         super();
         this._balloon = <BalloonViewModel>(factory.get('BalloonViewModel'));
         this._streamInfo = <StreamInfoViewModel>(factory.get('StreamInfoViewModel'))
+
+        if(!ParentComponent.isSettedPopstate) {
+            ParentComponent.isSettedPopstate = true;
+             window.addEventListener('popstate', () => {
+                if(ParentComponent.history === null) { return; }
+
+                ParentComponent.isPopstate = true;
+
+                const back = ParentComponent.history[ParentComponent.historyPosition - 1];
+                const forward = ParentComponent.history[ParentComponent.historyPosition + 1];
+                const current = location.href;
+                if(typeof back !== 'undefined' && back.url === current) {
+                    ParentComponent.isBack = true;
+                    ParentComponent.isForward = false;
+                } else if(typeof forward !== 'undefined' && forward.url === current) {
+                    ParentComponent.isBack = false;
+                    ParentComponent.isForward = true;
+                } else {
+                    ParentComponent.isBack = false;
+                    ParentComponent.isForward = false;
+                }
+            });
+        }
+    }
+
+    /**
+    * history に データを記憶
+    * @param data: any
+    */
+    protected saveHistoryData(data: any): void {
+        if(ParentComponent.history === null) {
+            throw new Error('history is null');
+        }
+
+        ParentComponent.history[ParentComponent.historyPosition].data = data;
+        this.saveStorage();
+    }
+
+    /**
+    * history からデータを取り出す
+    */
+    protected getHistoryData(): T | null {
+        if(ParentComponent.history === null) {
+            throw new Error('history is null');
+        }
+
+        return <T>ParentComponent.history[ParentComponent.historyPosition].data;
     }
 
     /**
     * initViewModel
-    * status に状態が入る
+    * @param status: ViewModelStatus
     */
     protected initViewModel(status: ViewModelStatus = 'init'): void {
-        setTimeout(() => { this._streamInfo.init(status); }, 0);
+        setTimeout(() => {
+            this._streamInfo.init(status);
+
+            // set history
+            if(status === 'init' || status === 'update') {
+                if(ParentComponent.history === null) {
+                    this.restoreHistory();
+                } else if(ParentComponent.isBack) {
+                    // back
+                    ParentComponent.historyPosition -= 1;
+                    ParentComponent.isBack = false;
+                } else if(ParentComponent.isForward) {
+                    // forward
+                    ParentComponent.historyPosition += 1;
+                    ParentComponent.isForward = false;
+                } else if(ParentComponent.isPopstate && !ParentComponent.isBack && !ParentComponent.isForward) {
+                    // ブラウザで一気に戻る or 進んだ場合
+                    // dummy query を使用して該当位置を検索する
+                    const id = this.getDummyQuery()
+                    const newPosition = ParentComponent.history.findIndex((h) => {
+                        return h.id === id;
+                    });
+
+                    if(newPosition !== -1) {
+                        ParentComponent.historyPosition = newPosition;
+                    }
+                } else if(ParentComponent.history[ParentComponent.historyPosition].url !== location.href) {
+                    // new page
+                    ParentComponent.historyPosition += 1;
+
+                    if (typeof ParentComponent.history[ParentComponent.historyPosition] !== 'undefined') {
+                        ParentComponent.history = ParentComponent.history.splice(0, ParentComponent.historyPosition);
+                    }
+
+                    ParentComponent.history.push({
+                        id: this.getDummyQuery(),
+                        url: location.href,
+                        data: null,
+                    });
+                }
+
+                ParentComponent.isPopstate = false;
+                this.saveStorage();
+            }
+        }, 0);
+    }
+
+    /**
+    * sessionStorage に history を保存
+    */
+    private saveStorage(): void {
+        window.sessionStorage.setItem(ParentComponent.storageKey, JSON.stringify({
+            history: ParentComponent.history,
+            position: ParentComponent.historyPosition,
+        }));
+    }
+
+    /**
+    * history を復元
+    */
+    private restoreHistory(): void {
+        const str = window.sessionStorage.getItem(ParentComponent.storageKey);
+        if(str === null) {
+            ParentComponent.history = [{
+                id: this.getDummyQuery(),
+                url: location.href,
+                data: null,
+            }];
+            ParentComponent.historyPosition = 0;
+            return;
+        }
+
+        const data = <any>JSON.parse(str);
+        ParentComponent.history = data.history;
+        ParentComponent.historyPosition = data.position;
+    }
+
+    /**
+    * dummy query を返す
+    * @return number | null
+    */
+    private getDummyQuery(): number | null {
+        const dummy = m.route.param('dummy');
+        return typeof dummy === 'undefined' ? null : Number(dummy);
+    }
+
+    /**
+    * isNeedResorePosition をセットする initViewModel の最後で呼び出す
+    * @param status: ViewModelStatus
+    */
+    protected setRestorePositionFlag(status: ViewModelStatus): void {
+        if(status === 'init' || status === 'update') {
+            this.isNeedRestorePosition = true;
+            m.redraw();
+        }
+    }
+
+    /**
+    * MainLayout での scroll position を復元する
+    * onupdate で呼び出す
+    */
+    protected restoreMainLayoutPosition(): void {
+        if(!this.isNeedRestorePosition) { return; }
+
+        this.isNeedRestorePosition = false;
+        const scrollTop = <number | null>this.getHistoryData();
+        if(scrollTop === null) { return; }
+
+        const main = document.getElementById(MainLayoutComponent.id);
+        if(main !== null) { main.scrollTop = scrollTop; }
     }
 
     /**
@@ -158,6 +330,10 @@ abstract class ParentComponent<T> extends Component<T> {
     protected abstract getComponentName(): string;
 
     public abstract view(vnode: m.Vnode<T, any>): m.Children | null | void;
+}
+
+namespace ParentComponent {
+    export const storageKey = 'historyInfo';
 }
 
 export default ParentComponent;

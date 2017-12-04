@@ -63,7 +63,9 @@ class RecordedSearchViewModel extends ViewModel {
             if(this.channel !== -1) { query.channel = this.channel; }
             if(this.genre !== -1) { query.genre1 = this.genre; }
 
-            m.route.set(m.route.get().split('?')[0], query);
+            const route = m.route.get().split('?')[0];
+            if(Util.isEqualURL(route, query)) { return; }
+            Util.move(route, query);
         }, 200);
     }
 
