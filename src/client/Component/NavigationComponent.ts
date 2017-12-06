@@ -54,7 +54,7 @@ class NavigationComponent extends Component<void> {
         }, [
             m(StreamNavigationInfoComponent),
             this.createTitle('EPGStation', {
-                onclick: () => { if(m.route.get() !== '/') { Util.move('/'); } }
+                onclick: () => { if(m.route.get().split('?')[0] !== '/') { Util.move('/'); } }
             }),
             m('nav', { class: 'mdl-navigation' }, [
                 this.broadcastLink,
