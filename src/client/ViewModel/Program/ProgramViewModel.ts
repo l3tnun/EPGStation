@@ -106,7 +106,7 @@ class ProgramViewModel extends ViewModel {
 
             // 番組表の取得
             await this.scheduleApiModel.fetchSchedule(<apid.ChannelType>type, Number(this.startTimeParam), this.lengthParam);
-        } else {
+        } else if(typeof m.route.param('ch') !== 'undefined') {
             // 単極表表示
             this.lengthParam = 24;
 
