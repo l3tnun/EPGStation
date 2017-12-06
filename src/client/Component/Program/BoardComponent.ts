@@ -79,7 +79,7 @@ class BoardComponent extends Component<BoardArgs> {
                 }
             },
             onupdate: (vnode: m.VnodeDOM<BoardArgs, this>) => {
-                if(this.viewModel.isFixScroll() || !mainVnode.attrs.isNeedRestorePosition()) { return; }
+                if(this.viewModel.isFixScroll() || !mainVnode.attrs.isNeedRestorePosition() || this.viewModel.progressShow) { return; }
                 mainVnode.attrs.resetRestorePositionFlag();
 
                 // scroll position を復元する

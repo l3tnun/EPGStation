@@ -132,7 +132,7 @@ class ProgramComponent extends ParentComponent<void> {
                         }
                     },
                     onupdate: () => {
-                        if(!this.viewModel.isFixScroll() || !this.isNeedRestorePosition) { return; }
+                        if(!this.viewModel.isFixScroll() || !this.isNeedRestorePosition || this.viewModel.progressShow) { return; }
                         this.isNeedRestorePosition = false;
 
                         // scroll position を復元する
