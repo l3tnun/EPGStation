@@ -54,6 +54,9 @@ class EncodeProcessManager extends Base implements EncodeProcessManagerInterface
     public create(input: string, output: string, cmd: string, priority: number, spawnOption?:SpawnOptions): Promise<ChildProcess> {
         // replace %ROOT%
         cmd = cmd.replace('%ROOT%', path.join(__dirname, '..', '..', '..'));
+        if(process.platform === 'win32') {
+            cmd = cmd.replace(/\\/g, '\\\\')
+        }
 
         return new Promise<ChildProcess>(async (resolve: (child: ChildProcess) => void, reject: (err: Error) => void) => {
             // プロセス数が上限に達しているとき
