@@ -50,16 +50,22 @@ namespace Logger {
             if(str === null) { process.exit(1); }
 
             // replace path
-            str = str!.replace('%OperatorSystem%', path.join(__dirname, '..', '..', 'logs', 'Operator', 'system.log'))
-                .replace('%OperatorAccess%', path.join(__dirname, '..', '..', 'logs', 'Operator', 'access.log'))
-                .replace('%OperatorStream%', path.join(__dirname, '..', '..', 'logs', 'Operator', 'stream.log'))
-                .replace('%ServiceSystem%', path.join(__dirname, '..', '..', 'logs', 'Service', 'system.log'))
-                .replace('%ServiceAccess%', path.join(__dirname, '..', '..', 'logs', 'Service', 'access.log'))
-                .replace('%ServiceStream%', path.join(__dirname, '..', '..', 'logs', 'Service', 'stream.log'))
-
             if(process.platform === 'win32') {
-                str = str.replace(/\\/g, '\\\\')
+                str = str!.replace('%OperatorSystem%', path.join(__dirname, '..', '..', 'logs', 'Operator', 'system.log').replace(/\\/g, '\\\\'))
+                    .replace('%OperatorAccess%', path.join(__dirname, '..', '..', 'logs', 'Operator', 'access.log').replace(/\\/g, '\\\\'))
+                    .replace('%OperatorStream%', path.join(__dirname, '..', '..', 'logs', 'Operator', 'stream.log').replace(/\\/g, '\\\\'))
+                    .replace('%ServiceSystem%', path.join(__dirname, '..', '..', 'logs', 'Service', 'system.log').replace(/\\/g, '\\\\'))
+                    .replace('%ServiceAccess%', path.join(__dirname, '..', '..', 'logs', 'Service', 'access.log').replace(/\\/g, '\\\\'))
+                    .replace('%ServiceStream%', path.join(__dirname, '..', '..', 'logs', 'Service', 'stream.log').replace(/\\/g, '\\\\'))
+            } else {
+                str = str!.replace('%OperatorSystem%', path.join(__dirname, '..', '..', 'logs', 'Operator', 'system.log'))
+                    .replace('%OperatorAccess%', path.join(__dirname, '..', '..', 'logs', 'Operator', 'access.log'))
+                    .replace('%OperatorStream%', path.join(__dirname, '..', '..', 'logs', 'Operator', 'stream.log'))
+                    .replace('%ServiceSystem%', path.join(__dirname, '..', '..', 'logs', 'Service', 'system.log'))
+                    .replace('%ServiceAccess%', path.join(__dirname, '..', '..', 'logs', 'Service', 'access.log'))
+                    .replace('%ServiceStream%', path.join(__dirname, '..', '..', 'logs', 'Service', 'stream.log'))
             }
+
             try {
                 const config: log4js.Configuration = JSON.parse(str);
                 log4js.configure(config);

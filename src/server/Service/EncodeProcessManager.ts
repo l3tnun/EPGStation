@@ -53,9 +53,10 @@ class EncodeProcessManager extends Base implements EncodeProcessManagerInterface
     */
     public create(input: string, output: string, cmd: string, priority: number, spawnOption?:SpawnOptions): Promise<ChildProcess> {
         // replace %ROOT%
-        cmd = cmd.replace('%ROOT%', path.join(__dirname, '..', '..', '..'));
         if(process.platform === 'win32') {
-            cmd = cmd.replace(/\\/g, '\\\\')
+            cmd = cmd.replace('%ROOT%', path.join(__dirname, '..', '..', '..').replace(/\\/g, '\\\\'));
+        } else {
+            cmd = cmd.replace('%ROOT%', path.join(__dirname, '..', '..', '..'));
         }
 
         return new Promise<ChildProcess>(async (resolve: (child: ChildProcess) => void, reject: (err: Error) => void) => {
