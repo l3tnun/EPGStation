@@ -102,7 +102,7 @@ ffmpeg のパスを ```C:\\ffmpeg\\ffmpeg.exe``` のように指定してくだ�
 enc.sh を起動するようになっていますが、 windows では動かないので ```config/enc.js``` へ書き換えでください
 
 ```
-"cmd": "C:\\PROGRA~1\\nodejs\\node.exe C:\\hoge\\EPGStation\\config\\enc.js main"
+"cmd": "C:\\PROGRA~1\\nodejs\\node.exe %ROOT%\\config\\enc.js main"
 ```
 
 この ```PROGRA~1``` は 8.3 形式の表記方法で、 Program Files を指しています。cmd.exe にて ```dir /x c:\``` と打ち込むと確認できます
