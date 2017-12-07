@@ -57,7 +57,9 @@ namespace Logger {
                 .replace('%ServiceAccess%', path.join(__dirname, '..', '..', 'logs', 'Service', 'access.log'))
                 .replace('%ServiceStream%', path.join(__dirname, '..', '..', 'logs', 'Service', 'stream.log'))
 
-            // set log config
+            if(process.platform === 'win32') {
+                str = str.replace(/\\/g, '\\\\')
+            }
             try {
                 const config: log4js.Configuration = JSON.parse(str);
                 log4js.configure(config);
