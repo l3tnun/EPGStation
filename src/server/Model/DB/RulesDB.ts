@@ -60,7 +60,7 @@ abstract class RulesDB extends DBBase implements RulesDBInterface {
             + 'directory3, '
             + 'delTs '
         + ') VALUES ('
-            + '?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?'
+            + this.operator.createValueStr(1, 30)
         + ');';
 
         let value: any[] = [];

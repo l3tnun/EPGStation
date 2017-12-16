@@ -63,6 +63,29 @@ abstract class DBOperator extends Model {
     public getFirst<T>(result: T[]): T | null {
         return result.length === 0 ? null : result[0];
     }
+
+    /**
+    * values 文字列を生成する
+    * @param start: number
+    * @param end: number
+    */
+    public createValueStr(start: number, end: number): string {
+        let str = "";
+
+        if(start > end) {
+            throw new Error('createValueStr args error');
+        }
+
+        for(let i = start; i <= end; i++) {
+            if(i === end) {
+                str += '?'
+            } else {
+                str += '?, '
+            }
+        }
+
+        return str;
+    }
 }
 
 export default DBOperator;

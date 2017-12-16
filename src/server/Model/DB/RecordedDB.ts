@@ -66,7 +66,7 @@ abstract class RecordedDB extends DBBase implements RecordedDBInterface {
             + 'thumbnailPath, '
             + 'recording '
         + ') VALUES ('
-            + '?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?'
+            this.operator.createValueStr(1, 21)
         + ');'
 
         let baseDir = Util.getRecordedPath();
@@ -127,7 +127,7 @@ abstract class RecordedDB extends DBBase implements RecordedDBInterface {
             + 'thumbnailPath, '
             + 'recording '
         + ') VALUES ('
-            + '?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?'
+            + this.operator.createValueStr(1, 22)
         + ');'
 
         let baseDir = Util.getRecordedPath();

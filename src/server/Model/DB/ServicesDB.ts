@@ -36,7 +36,7 @@ abstract class ServicesDB extends DBBase implements ServicesDBInterface {
             + 'channel, '
             + 'type '
         + ') VALUES ('
-            + '?, ?, ?, ?, ?, ?, ?, ?, ?, ?'
+            + this.operator.createValueStr(1, 10)
         + ');';
 
         let datas: any[] = [];

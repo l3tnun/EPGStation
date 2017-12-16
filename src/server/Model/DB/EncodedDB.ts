@@ -36,7 +36,7 @@ abstract class EncodedDB extends DBBase implements EncodedDBInterface {
             + 'name, '
             + 'path '
         + ') VALUES ('
-            + '?, ?, ?'
+            + this.operator.createValueStr(1, 3)
         + ');'
 
         let value: any[] = [

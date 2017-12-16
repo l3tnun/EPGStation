@@ -162,7 +162,9 @@ abstract class ProgramsDB extends DBBase implements ProgramsDBInterface {
             if(cnt === config.insertMax || index == programs.length - 1) {
                 let str = queryStr;
                 for(let i = 0; i < cnt; i++) {
-                    str += '( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ),'
+                    str += '( '
+                    + this.operator.createValueStr(1, 24)
+                    + ' ),'
                 }
                 str = str.substr(0, str.length - 1);
 
