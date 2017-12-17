@@ -103,7 +103,8 @@ abstract class RecordedDB extends DBBase implements RecordedDBInterface {
     * @param Promise<void>
     */
     public async replace(program: DBSchema.RecordedSchema): Promise<void> {
-        let query = `replace into ${ DBSchema.TableName.Recorded } (`
+        const isReplace = this.operator.getUpsertType() === 'replace';
+        let query = `${ isReplace ? 'replace' : 'insert' } into ${ DBSchema.TableName.Recorded } (`
             + 'id, '
             + 'programId, '
             + 'channelId, '
@@ -128,7 +129,32 @@ abstract class RecordedDB extends DBBase implements RecordedDBInterface {
             + 'recording '
         + ') VALUES ('
             + this.operator.createValueStr(1, 22)
-        + ');'
+        + ')'
+
+        if(!isReplace) {
+            query += ' on conflict (id) do update set '
+                + 'programId = excluded.programId, '
+                + 'channelId = excluded.channelId, '
+                + 'channelType = excluded.channelType, '
+                + 'startAt = excluded.startAt, '
+                + 'endAt = excluded.endAt, '
+                + 'duration = excluded.duration, '
+                + 'name = excluded.name, '
+                + 'description = excluded.description, '
+                + 'extended = excluded.extended, '
+                + 'genre1 = excluded.genre1, '
+                + 'genre2 = excluded.genre2, '
+                + 'videoType = excluded.videoType, '
+                + 'videoResolution = excluded.videoResolution, '
+                + 'videoStreamContent = excluded.videoStreamContent, '
+                + 'videoComponentType = excluded.videoComponentType, '
+                + 'audioSamplingRate = excluded.audioSamplingRate, '
+                + 'audioComponentType = excluded.audioComponentType, '
+                + 'recPath = excluded.recPath, '
+                + 'ruleId = excluded.ruleId, '
+                + 'thumbnailPath = excluded.thumbnailPath, '
+                + 'recording = excluded.recording '
+        }
 
         let baseDir = Util.getRecordedPath();
 
@@ -246,7 +272,7 @@ abstract class RecordedDB extends DBBase implements RecordedDBInterface {
     * @return Promise<DBSchema.RecordedSchema | null>
     */
     public async findOld(): Promise<DBSchema.RecordedSchema | null> {
-        let programs = await this.operator.runQuery(`select * from ${ DBSchema.TableName.Recorded } order by id asc limit 1`);
+        let programs = await this.operator.runQuery(`select * from ${ DBSchema.TableName.Recorded } order by id asc ${ this.operator.createLimitStr(1) }`);
         return this.operator.getFirst(await this.fixResult(<DBSchema.RecordedSchema[]>programs));
     }
 
@@ -264,7 +290,7 @@ abstract class RecordedDB extends DBBase implements RecordedDBInterface {
 
         query += this.buildFindQuery(option);
 
-        query += ` order by id desc limit ${ offset }, ${ limit }`;
+        query += ` order by id desc ${ this.operator.createLimitStr(limit, offset) }`;
 
         let programs = await this.operator.runQuery(query);
         return this.fixResult(<DBSchema.RecordedSchema[]>programs);

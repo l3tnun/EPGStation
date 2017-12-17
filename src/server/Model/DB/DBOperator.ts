@@ -86,6 +86,27 @@ abstract class DBOperator extends Model {
 
         return str;
     }
+
+    /**
+    * get upsert type
+    * @return replace | conflict
+    */
+    public getUpsertType(): 'replace' | 'conflict' {
+        return 'replace';
+    }
+
+    /**
+    * create limit and offset str
+    * @param limit: number
+    * @param offset: number
+    */
+    public createLimitStr(limit: number, offset?: number): string {
+        if(typeof offset === 'undefined') {
+            return `limit ${ limit}`;
+        } else {
+            return `limit ${ offset }, ${ limit }`;
+        }
+    }
 }
 
 export default DBOperator;

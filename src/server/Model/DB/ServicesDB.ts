@@ -24,7 +24,8 @@ abstract class ServicesDB extends DBBase implements ServicesDBInterface {
     * @return Promise<void>
     */
     public insert(services: apid.Service[], isDelete: boolean = true): Promise<void> {
-        let queryStr = `replace into ${ DBSchema.TableName.Services } (`
+        const isReplace = this.operator.getUpsertType() === 'replace';
+        let queryStr = `${ isReplace ? 'replace' : 'insert' } into ${ DBSchema.TableName.Services } (`
             + 'id, '
             + 'serviceId, '
             + 'networkId, '
@@ -37,7 +38,20 @@ abstract class ServicesDB extends DBBase implements ServicesDBInterface {
             + 'type '
         + ') VALUES ('
             + this.operator.createValueStr(1, 10)
-        + ');';
+        + ')';
+
+        if(!isReplace) {
+            queryStr += ' on conflict (id) do update set '
+                + 'serviceId = excluded.serviceId, '
+                + 'networkId = excluded.networkId, '
+                + 'name = excluded.name, '
+                + 'remoteControlKeyId = excluded.remoteControlKeyId, '
+                + 'hasLogoData = excluded.hasLogoData, '
+                + 'channelType = excluded.channelType, '
+                + 'channelTypeId = excluded.channelTypeId, '
+                + 'channel = excluded.channel, '
+                + 'type = excluded.type '
+        }
 
         let datas: any[] = [];
         services.forEach((service) => {

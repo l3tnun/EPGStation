@@ -34,11 +34,26 @@ class PostgreSQLOperator extends DBOperator {
     * end
     * @return Promise<void>
     */
-    public end(): Promise<void> {
-        return this.getPool().end()
-        .then(() => {
-            PostgreSQLOperator.pool = null;
+    public async end(): Promise<void> {
+        const pool = this.getPool();
+        const client = await pool.connect();
+
+        return new Promise<void>((resolve: () => void, reject: (err: Error) => void) => {
+            // dummy query
+            // これがないと drain を取りこぼしてしまう
+            client.query('select 1;', (err) => {
+                if(err) { reject(err); }
+            });
+
+            client.on('drain', () => {
+                client.end();
+                client.on('end', () => {
+                    PostgreSQLOperator.pool = null;
+                    resolve();
+                });
+            });
         });
+
     }
 
     /**
@@ -168,6 +183,50 @@ class PostgreSQLOperator extends DBOperator {
         }
 
         return result.oid;
+    }
+
+    /**
+    * values 文字列を生成する
+    * @param start: number
+    * @param end: number
+    */
+    public createValueStr(start: number, end: number): string {
+        let str = "";
+
+        if(start > end) {
+            throw new Error('createValueStr args error');
+        }
+
+        for(let i = start; i <= end; i++) {
+            if(i === end) {
+                str += `$${ i }`
+            } else {
+                str += `$${ i }, `
+            }
+        }
+
+        return str;
+    }
+
+    /**
+    * get upsert type
+    * @return replace | conflict
+    */
+    public getUpsertType(): 'replace' | 'conflict' {
+        return 'conflict';
+    }
+
+    /**
+    * create limit and offset str
+    * @param limit: number
+    * @param offset: number
+    */
+    public createLimitStr(limit: number, offset?: number): string {
+        if(typeof offset === 'undefined') {
+            return `limit ${ limit}`;
+        } else {
+            return `limit ${ limit } offset ${ offset }`;
+        }
     }
 }
 

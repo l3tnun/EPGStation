@@ -57,10 +57,11 @@ abstract class ProgramsDB extends DBBase implements ProgramsDBInterface {
     * @return Promise<void>
     */
     public insert(channelTypes: ChannelTypeHash, programs: apid.Program[], isDelete: boolean = true): Promise<void> {
+        const isReplace = this.operator.getUpsertType() === 'replace';
         const config = this.getInsertConfig();
 
         //insert query str
-        let queryStr = `replace into ${ DBSchema.TableName.Programs } (`
+        let queryStr = `${ isReplace ? 'replace' : 'insert' } into ${ DBSchema.TableName.Programs } (`
                 + 'id,'
                 + 'channelId,'
                 + 'eventId,'
@@ -161,12 +162,41 @@ abstract class ProgramsDB extends DBBase implements ProgramsDBInterface {
             // values にデータが溜まったら datas に吐き出す
             if(cnt === config.insertMax || index == programs.length - 1) {
                 let str = queryStr;
+                let valueCnt = 0;
                 for(let i = 0; i < cnt; i++) {
                     str += '( '
-                    + this.operator.createValueStr(1, 24)
+                    + this.operator.createValueStr(valueCnt + 1, valueCnt + 24)
                     + ' ),'
+                    valueCnt += 24;
                 }
                 str = str.substr(0, str.length - 1);
+
+                if(!isReplace) {
+                    str += ' on conflict (id) do update set '
+                        + 'channelId = excluded.channelId, '
+                        + 'eventId = excluded.eventId, '
+                        + 'serviceId = excluded.serviceId, '
+                        + 'networkId = excluded.networkId, '
+                        + 'startAt = excluded.startAt, '
+                        + 'endAt = excluded.endAt, '
+                        + 'startHour = excluded.startHour, '
+                        + 'week = excluded.week, '
+                        + 'duration = excluded.duration, '
+                        + 'isFree = excluded.isFree, '
+                        + 'name = excluded.name, '
+                        + 'description = excluded.description, '
+                        + 'extended = excluded.extended, '
+                        + 'genre1 = excluded.genre1, '
+                        + 'genre2 = excluded.genre2, '
+                        + 'channelType = excluded.channelType, '
+                        + 'channel = excluded.channel, '
+                        + 'videoType = excluded.videoType, '
+                        + 'videoResolution = excluded.videoResolution, '
+                        + 'videoStreamContent = excluded.videoStreamContent, '
+                        + 'videoComponentType = excluded.videoComponentType, '
+                        + 'audioSamplingRate = excluded.audioSamplingRate, '
+                        + 'audioComponentType = excluded.audioComponentType '
+                }
 
                 datas.push({ query: str, values: values });
                 values = [];

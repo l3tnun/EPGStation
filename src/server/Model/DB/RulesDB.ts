@@ -255,7 +255,7 @@ abstract class RulesDB extends DBBase implements RulesDBInterface {
     */
     public async findAll(limit?: number, offset: number = 0): Promise<DBSchema.RulesSchema[]> {
         let query = `select * from ${ DBSchema.TableName.Rules }`;
-        if(typeof limit !== 'undefined') { query += ` limit ${ offset }, ${ limit }` }
+        if(typeof limit !== 'undefined') { query += ` ${ this.operator.createLimitStr(limit, offset) }` }
 
         return this.fixResult(<DBSchema.RulesSchema[]> await this.operator.runQuery(query));
     }

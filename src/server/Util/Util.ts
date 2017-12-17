@@ -6,7 +6,7 @@ namespace Util {
     * config の dbType を返す
     * @return 'mysql' | 'sqlite3'
     */
-    export const getDBType = (): 'mysql' | 'sqlite3' => {
+    export const getDBType = (): 'mysql' | 'sqlite3' | 'postgres' => {
         return Configuration.getInstance().getConfig().dbType || 'mysql';
     }
 

@@ -1,6 +1,13 @@
 import factory from './ModelFactory';
+import { ServicesDBInterface } from './DB/ServicesDB';
+import { ProgramsDBInterface } from './DB/ProgramsDB';
+import { RulesDBInterface } from './DB/RulesDB';
+import { RecordedDBInterface } from './DB/RecordedDB';
+import { EncodedDBInterface } from './DB/EncodedDB';
+import DBOperator from './DB/DBOperator';
 import MySQLOperator from './DB/MySQL/MySQLOperator';
 import SQLite3Operator from './DB/SQLite3/SQLite3Operator';
+import PostgreSQLOperator from './DB/PostgreSQL/PostgreSQLOperator';
 import MySQLServicesDB from './DB/MySQL/MySQLServicesDB';
 import MySQLProgramsDB from './DB/MySQL/MySQLProgramsDB';
 import MySQLRulesDB from './DB/MySQL/MySQLRulesDB';
@@ -11,6 +18,11 @@ import SQLite3ProgramsDB from './DB/SQLite3/SQLite3ProgramsDB';
 import SQLite3RulesDB from './DB/SQLite3/SQLite3RulesDB';
 import SQLite3RecordedDB from './DB/SQLite3/SQLite3RecordedDB';
 import SQLite3EncodedDB from './DB/SQLite3/SQLite3EncodedDB';
+import PostgreSQLServicesDB from './DB/PostgreSQL/PostgreSQLServicesDB';
+import PostgreSQLProgramsDB from './DB/PostgreSQL/PostgreSQLProgramsDB';
+import PostgreSQLRulesDB from './DB/PostgreSQL/PostgreSQLRulesDB';
+import PostgreSQLRecordedDB from './DB/PostgreSQL/PostgreSQLRecordedDB';
+import PostgreSQLEncodedDB from './DB/PostgreSQL/PostgreSQLEncodedDB';
 import { RulesModel } from './Api/RulesModel';
 import { RecordedModel } from './Api/RecordedModel';
 import { ChannelsModel } from './Api/ChannelsModel';
@@ -38,13 +50,41 @@ namespace ModelFactorySetting {
     * Model をセットする
     */
     export const init = (): void => {
-        const isMysql = Util.getDBType() === 'mysql';
-        const operator = isMysql ? new MySQLOperator() : new SQLite3Operator();
-        const servicesDB = isMysql ? new MySQLServicesDB(operator) : new SQLite3ServicesDB(operator);
-        const programsDB = isMysql ? new MySQLProgramsDB(operator) : new SQLite3ProgramsDB(operator);
-        const rulesDB = isMysql ? new MySQLRulesDB(operator) : new SQLite3RulesDB(operator);
-        const recordedDB = isMysql ? new MySQLRecordedDB(operator) : new SQLite3RecordedDB(operator);
-        const encodedDB = isMysql ? new MySQLEncodedDB(operator) : new SQLite3EncodedDB(operator);
+        let operator: DBOperator;
+        let servicesDB: ServicesDBInterface;
+        let programsDB: ProgramsDBInterface;
+        let rulesDB: RulesDBInterface;
+        let recordedDB: RecordedDBInterface;
+        let encodedDB: EncodedDBInterface;
+
+        switch (Util.getDBType()) {
+            case 'mysql':
+                operator = new MySQLOperator();
+                servicesDB = new MySQLServicesDB(operator);
+                programsDB = new MySQLProgramsDB(operator);
+                rulesDB = new MySQLRulesDB(operator);
+                recordedDB = new MySQLRecordedDB(operator)
+                encodedDB = new MySQLEncodedDB(operator);
+                break;
+
+            case 'sqlite3':
+                operator = new SQLite3Operator();
+                servicesDB = new SQLite3ServicesDB(operator);
+                programsDB = new SQLite3ProgramsDB(operator);
+                rulesDB = new SQLite3RulesDB(operator);
+                recordedDB = new SQLite3RecordedDB(operator)
+                encodedDB = new SQLite3EncodedDB(operator);
+                break;
+
+            case 'postgres':
+                operator = new PostgreSQLOperator();
+                servicesDB = new PostgreSQLServicesDB(operator);
+                programsDB = new PostgreSQLProgramsDB(operator);
+                rulesDB = new PostgreSQLRulesDB(operator);
+                recordedDB = new PostgreSQLRecordedDB(operator)
+                encodedDB = new PostgreSQLEncodedDB(operator);
+                break;
+        }
 
         let encodeProcessManager = EncodeProcessManager.getInstance();
         EncodeManager.init(encodeProcessManager);

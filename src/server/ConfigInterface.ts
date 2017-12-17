@@ -4,7 +4,7 @@
 interface ConfigInterface {
     serverPort: number;
     mirakurunPath: string;
-    dbType: 'mysql' | 'sqlite3';
+    dbType: 'mysql' | 'sqlite3' | 'postgres';
     dbPath: string;
     mysql: {
         host: string;
@@ -18,6 +18,14 @@ interface ConfigInterface {
         extensions: string[];
         regexp: boolean;
     };
+    postgres: {
+        host: string;
+        port: number;
+        user: string;
+        database: string;
+        password: string;
+        idleTimeoutMillis: number;
+    }
     gid: string | number;
     uid: string | number;
     continuousEPGUpdater: boolean;
