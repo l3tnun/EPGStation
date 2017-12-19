@@ -27,11 +27,7 @@ interface ProgramsDBInterface extends DBBase {
     findBroadcasting(addition?: apid.UnixtimeMS): Promise<DBSchema.ScheduleProgramItem[]>;
     findBroadcastingChanel(channelId: apid.ServiceItemId, addition?: apid.UnixtimeMS): Promise<DBSchema.ScheduleProgramItem[]>;
     findId(id: number, isNow?: boolean): Promise<DBSchema.ProgramSchema | null>;
-    findRule(option: SearchInterface, fields?: string | null, limit?: number | null): Promise<DBSchema.ProgramSchema[]>;
-}
-
-namespace ProgramsDBInterface {
-    export const ScheduleProgramItemColumns = 'id, channelId, startAt, endAt, isFree, name, description, extended, genre1, genre2, channelType, videoType, videoResolution, videoStreamContent, videoComponentType, audioSamplingRate, audioComponentType';
+    findRule(option: SearchInterface, isMinColumn?: boolean, limit?: number | null): Promise<DBSchema.ProgramSchema[]>;
 }
 
 /**
@@ -48,6 +44,14 @@ abstract class ProgramsDB extends DBBase implements ProgramsDBInterface {
     * insert 時の config を取得
     */
     abstract getInsertConfig(): { insertMax: number, insertWait: number };
+
+    /**
+    * min columns
+    * @return string
+    */
+    protected getMinColumns(): string {
+        return 'id, channelId, startAt, endAt, isFree, name, description, extended, genre1, genre2, channelType, videoType, videoResolution, videoStreamContent, videoComponentType, audioSamplingRate, audioComponentType';
+    }
 
     /**
     * Programs 挿入
@@ -251,7 +255,7 @@ abstract class ProgramsDB extends DBBase implements ProgramsDBInterface {
     * @return Promise<DBSchema.ScheduleProgramItem[]>
     */
     public async findSchedule(startAt: apid.UnixtimeMS, endAt: apid.UnixtimeMS, type: apid.ChannelType): Promise<DBSchema.ScheduleProgramItem[]> {
-        let query = `select ${ ProgramsDBInterface.ScheduleProgramItemColumns } `
+        let query = `select ${ this.getMinColumns() } `
             + `from ${ DBSchema.TableName.Programs } `
             + `where channelType = '${ type }' `
             + `and endAt >= ${ startAt } and ${ endAt } > startAt `
@@ -279,7 +283,7 @@ abstract class ProgramsDB extends DBBase implements ProgramsDBInterface {
     * @return Promise<DBSchema.ScheduleProgramItem[]>
     */
     public async findScheduleId(startAt: apid.UnixtimeMS, endAt: apid.UnixtimeMS, channelId: apid.ServiceItemId): Promise<DBSchema.ScheduleProgramItem[]> {
-        let query = `select ${ ProgramsDBInterface.ScheduleProgramItemColumns } `
+        let query = `select ${ this.getMinColumns() } `
             + `from ${ DBSchema.TableName.Programs } `
             + `where channelId = ${ channelId } `
             + `and endAt >= ${ startAt } and ${ endAt } > startAt `
@@ -297,7 +301,7 @@ abstract class ProgramsDB extends DBBase implements ProgramsDBInterface {
         let now = new Date().getTime();
         now += addition;
 
-        let query = `select ${ ProgramsDBInterface.ScheduleProgramItemColumns } `
+        let query = `select ${ this.getMinColumns() } `
             + `from ${ DBSchema.TableName.Programs } `
             + `where endAt >= ${ now } and ${ now } > startAt `
             + 'order by startAt';
@@ -315,7 +319,7 @@ abstract class ProgramsDB extends DBBase implements ProgramsDBInterface {
         let now = new Date().getTime();
         now += addition;
 
-        let query = `select ${ ProgramsDBInterface.ScheduleProgramItemColumns } `
+        let query = `select ${ this.getMinColumns() } `
             + `from ${ DBSchema.TableName.Programs } `
             + `where endAt > ${ now } and ${ now } >= startAt and channelId = ${ channelId } `
             + 'order by startAt';
@@ -331,7 +335,7 @@ abstract class ProgramsDB extends DBBase implements ProgramsDBInterface {
     */
     public async findId(id: number, isNow: boolean = false): Promise<DBSchema.ProgramSchema | null> {
         let option = isNow ? `and endAt > ${ new Date().getTime() }` : '';
-        return this.operator.getFirst(<DBSchema.ProgramSchema[]>this.fixResult(<DBSchema.ProgramSchema[]>await this.operator.runQuery(`select * from ${ DBSchema.TableName.Programs } where id = ${ id } ${ option }`)));
+        return this.operator.getFirst(<DBSchema.ProgramSchema[]>this.fixResult(<DBSchema.ProgramSchema[]>await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Programs } where id = ${ id } ${ option }`)));
     }
 
     /**
@@ -339,9 +343,9 @@ abstract class ProgramsDB extends DBBase implements ProgramsDBInterface {
     * @param option: SearchInterface
     * @return Promise<DBSchema.ProgramSchema[]>
     */
-    public async findRule(option: SearchInterface, fields: string | null = null, limit: number | null = null): Promise<DBSchema.ProgramSchema[]> {
-        if(fields === null) { fields = '*'; }
-        let query = `select ${ fields } from ${ DBSchema.TableName.Programs } ${ this.createQuery(option) } order by startAt asc`;
+    public async findRule(option: SearchInterface, isMinColumn: boolean = false, limit: number | null = null): Promise<DBSchema.ProgramSchema[]> {
+        const column = isMinColumn ? this.getMinColumns() : this.getAllColumns();
+        let query = `select ${ column } from ${ DBSchema.TableName.Programs } ${ this.createQuery(option) } order by startAt asc`;
         if(limit != null) { query += ` limit ${ limit }`; }
 
         return <DBSchema.ProgramSchema[]>this.fixResult(<DBSchema.ProgramSchema[]>await this.runFindRule(query, Boolean(option.keyCS)));

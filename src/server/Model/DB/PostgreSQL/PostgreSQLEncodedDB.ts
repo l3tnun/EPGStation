@@ -16,6 +16,14 @@ class PostgreSQLEncodedDB extends EncodedDB {
 
         return this.operator.runQuery(query);
     }
+
+    /**
+    * all columns
+    * @return string
+    */
+    public getAllColumns(): string {
+        return 'id, recordedId as "recordedId", name, path';
+    }
 }
 
 export default PostgreSQLEncodedDB;

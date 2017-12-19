@@ -25,6 +25,14 @@ class PostgreSQLServicesDB extends ServicesDB {
 
         return this.operator.runQuery(query);
     }
+
+    /**
+    * all columns
+    * @return string
+    */
+    public getAllColumns(): string {
+        return 'id, serviceId as "serviceId", networkId as "networkId", name, remoteControlKeyId as "remoteControlKeyId", hasLogoData as "hasLogoData", channelType as "channelType", channelTypeId as "channelTypeId", channel, type';
+    }
 }
 
 export default PostgreSQLServicesDB;

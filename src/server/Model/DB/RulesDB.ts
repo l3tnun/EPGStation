@@ -61,7 +61,7 @@ abstract class RulesDB extends DBBase implements RulesDBInterface {
             + 'delTs '
         + ') VALUES ('
             + this.operator.createValueStr(1, 30)
-        + ');';
+        + `) ${ this.operator.getReturningStr() }`;
 
         let value: any[] = [];
         value.push(rule.keyword);
@@ -205,7 +205,7 @@ abstract class RulesDB extends DBBase implements RulesDBInterface {
     * @return Promise<DBSchema.RulesSchema>
     */
     public async findId(id: number): Promise<DBSchema.RulesSchema | null> {
-        return this.operator.getFirst(this.fixResult(<DBSchema.RulesSchema[]> await this.operator.runQuery(`select * from ${ DBSchema.TableName.Rules } where id = ${ id }`)));
+        return this.operator.getFirst(this.fixResult(<DBSchema.RulesSchema[]> await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Rules } where id = ${ id }`)));
     }
 
     /**
@@ -254,7 +254,7 @@ abstract class RulesDB extends DBBase implements RulesDBInterface {
     * @return Promise<DBSchema.RulesSchema[]>
     */
     public async findAll(limit?: number, offset: number = 0): Promise<DBSchema.RulesSchema[]> {
-        let query = `select * from ${ DBSchema.TableName.Rules }`;
+        let query = `select ${ this.getAllColumns() } from ${ DBSchema.TableName.Rules }`;
         if(typeof limit !== 'undefined') { query += ` ${ this.operator.createLimitStr(limit, offset) }` }
 
         return this.fixResult(<DBSchema.RulesSchema[]> await this.operator.runQuery(query));

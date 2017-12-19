@@ -107,6 +107,14 @@ abstract class DBOperator extends Model {
             return `limit ${ offset }, ${ limit }`;
         }
     }
+
+    /**
+    * returning
+    * @return string
+    */
+    public getReturningStr(): string {
+        return '';
+    }
 }
 
 export default DBOperator;

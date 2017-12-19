@@ -37,7 +37,7 @@ abstract class EncodedDB extends DBBase implements EncodedDBInterface {
             + 'path '
         + ') VALUES ('
             + this.operator.createValueStr(1, 3)
-        + ');'
+        + `) ${ this.operator.getReturningStr() }`;
 
         let value: any[] = [
             recordedId,
@@ -72,7 +72,7 @@ abstract class EncodedDB extends DBBase implements EncodedDBInterface {
     * @return Promise<DBSchema.EncodedSchema | null>
     */
     public async findId(id: number): Promise<DBSchema.EncodedSchema | null> {
-        let programs = await this.operator.runQuery(`select * from ${ DBSchema.TableName.Encoded } where id = ${ id }`);
+        let programs = await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Encoded } where id = ${ id }`);
         return this.operator.getFirst(this.fixResult(<DBSchema.EncodedSchema[]>programs));
     }
 
@@ -96,7 +96,7 @@ abstract class EncodedDB extends DBBase implements EncodedDBInterface {
     * @return Promise<DBSchema.EncodedSchema[]>
     */
     public async findRecordedId(recordedId: number): Promise<DBSchema.EncodedSchema[]> {
-        let programs = await this.operator.runQuery(`select * from ${ DBSchema.TableName.Encoded } where recordedId = ${ recordedId }`);
+        let programs = await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Encoded } where recordedId = ${ recordedId }`);
         return this.fixResult(<DBSchema.EncodedSchema[]>programs);
     }
 }

@@ -51,6 +51,14 @@ class PostgreSQLRecordedDB extends RecordedDB {
     public removeAllRecording(): Promise<void> {
         return this.operator.runQuery(`update ${ DBSchema.TableName.Recorded } set recording = false where recording = ${ true }`);
     }
+
+    /**
+    * all columns
+    * @return string
+    */
+    public getAllColumns(): string {
+        return 'id, programId as "programId", channelId as "channelId", channelType as "channelType", startAt as "startAt", endAt as "endAt", duration, name, description, extended, genre1, genre2, videoType as "videoType", videoResolution as "videoResolution", videoStreamContent as "videoStreamContent", videoComponentType as "videoComponentType", audioSamplingRate as "audioSamplingRate", audioComponentType as "audioComponentType", recPath as "recPath", ruleId as "ruleId", thumbnailPath as "thumbnailPath", recording';
+    }
 }
 
 export default PostgreSQLRecordedDB;

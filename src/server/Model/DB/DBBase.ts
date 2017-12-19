@@ -27,6 +27,14 @@ abstract class DBBase extends Model {
     public end(): Promise<void> {
         return this.operator.end();
     }
+
+    /**
+    * all columns
+    * @return string
+    */
+    public getAllColumns(): string {
+        return '*';
+    }
 }
 
 export default DBBase;

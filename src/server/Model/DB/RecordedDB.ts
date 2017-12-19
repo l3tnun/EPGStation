@@ -66,8 +66,8 @@ abstract class RecordedDB extends DBBase implements RecordedDBInterface {
             + 'thumbnailPath, '
             + 'recording '
         + ') VALUES ('
-            this.operator.createValueStr(1, 21)
-        + ');'
+            + this.operator.createValueStr(1, 21)
+        + `) ${ this.operator.getReturningStr() }`;
 
         let baseDir = Util.getRecordedPath();
 
@@ -242,7 +242,7 @@ abstract class RecordedDB extends DBBase implements RecordedDBInterface {
     * @return Promise<DBSchema.RecordedSchema | null>
     */
     public async findId(id: number): Promise<DBSchema.RecordedSchema | null> {
-        let programs = await this.operator.runQuery(`select * from ${ DBSchema.TableName.Recorded } where id = ${ id }`);
+        let programs = await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Recorded } where id = ${ id }`);
         return this.operator.getFirst(await this.fixResult(<DBSchema.RecordedSchema[]>programs));
     }
 
@@ -272,7 +272,7 @@ abstract class RecordedDB extends DBBase implements RecordedDBInterface {
     * @return Promise<DBSchema.RecordedSchema | null>
     */
     public async findOld(): Promise<DBSchema.RecordedSchema | null> {
-        let programs = await this.operator.runQuery(`select * from ${ DBSchema.TableName.Recorded } order by id asc ${ this.operator.createLimitStr(1) }`);
+        let programs = await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Recorded } order by id asc ${ this.operator.createLimitStr(1) }`);
         return this.operator.getFirst(await this.fixResult(<DBSchema.RecordedSchema[]>programs));
     }
 
@@ -286,7 +286,7 @@ abstract class RecordedDB extends DBBase implements RecordedDBInterface {
     * @return Promise<DBSchema.RecordedSchema[]>
     */
     public async findAll(limit: number, offset: number = 0, option: findQuery = {}): Promise<DBSchema.RecordedSchema[]> {
-        let query = `select * from ${ DBSchema.TableName.Recorded } `;
+        let query = `select ${ this.getAllColumns() } from ${ DBSchema.TableName.Recorded } `;
 
         query += this.buildFindQuery(option);
 

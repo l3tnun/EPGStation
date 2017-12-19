@@ -8,6 +8,13 @@ import Util from '../../../Util/Util';
 class PostgreSQLOperator extends DBOperator {
     protected static pool: pg.Pool | null = null;
 
+    constructor() {
+        super();
+
+        // bigInt を number で返すように変換する
+        pg.types.setTypeParser(20, (val) => { return parseInt(val); });
+    }
+
     /**
     * get Pool
     * @return Pool
@@ -182,7 +189,12 @@ class PostgreSQLOperator extends DBOperator {
             throw err;
         }
 
-        return result.oid;
+        if(result.rows.length >= 1 && typeof result.rows[0].id !== 'undefined') {
+            return <number>result.rows[0].id
+        } else {
+            this.log.system.warn('insert id is not found.');
+            return 0;
+        }
     }
 
     /**
@@ -227,6 +239,14 @@ class PostgreSQLOperator extends DBOperator {
         } else {
             return `limit ${ limit } offset ${ offset }`;
         }
+    }
+
+    /**
+    * returning
+    * @return string
+    */
+    public getReturningStr(): string {
+        return 'returning id';
     }
 }
 

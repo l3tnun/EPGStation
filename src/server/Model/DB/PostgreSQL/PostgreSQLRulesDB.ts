@@ -61,6 +61,14 @@ class PostgreSQLRulesDB extends RulesDB {
     public disable(id: number): Promise<void> {
         return this.operator.runQuery(`update ${ DBSchema.TableName.Rules } set enable = false where id = ${ id }`);
     }
+
+    /**
+    * all columns
+    * @return string
+    */
+    public getAllColumns(): string {
+        return 'id, keyword, ignoreKeyword as "ignoreKeyword", keyCS as "keyCS", keyRegExp as "keyRegExp", title, description, extended, GR as "GR", BS as "BS", CS as "CS", SKY as "SKY", station, genrelv1, genrelv2, startTime as "startTime", timeRange as "timeRange", week, isFree as "isFree", durationMin as "durationMin", durationMax as "durationMax", enable, directory, recordedFormat, mode1, directory1, mode2, directory2, mode3, directory3, delTs';
+    }
 }
 
 export default PostgreSQLRulesDB;
