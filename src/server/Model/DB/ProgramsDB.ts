@@ -43,7 +43,13 @@ abstract class ProgramsDB extends DBBase implements ProgramsDBInterface {
     /**
     * insert 時の config を取得
     */
-    abstract getInsertConfig(): { insertMax: number, insertWait: number };
+    public getInsertConfig(): { insertMax: number, insertWait: number } {
+        const config = this.config.getConfig();
+        return {
+            insertMax: config.programInsertMax || 100,
+            insertWait: config.programInsertWait || 0,
+        }
+    }
 
     /**
     * min columns
@@ -357,19 +363,25 @@ abstract class ProgramsDB extends DBBase implements ProgramsDBInterface {
     * @param cs: boolean
     * @return Promise<DBSchema.ProgramSchema[]>
     */
-    abstract runFindRule(query: string, cs: boolean): Promise<DBSchema.ProgramSchema[]>;
+    public runFindRule(query: string, _cs: boolean): Promise<DBSchema.ProgramSchema[]> {
+        return this.operator.runQuery(query);
+    }
 
     /**
     * regexp が有効か
     * @return boolean
     */
-    abstract isEnableRegExp(): boolean;
+    public isEnableRegExp(): boolean {
+        return true;
+    }
 
     /**
     * 大文字小文字判定が有効か
     * @return boolean
     */
-    abstract isEnableCS(): boolean;
+    public isEnableCS(): boolean {
+        return true;
+    }
 
     /**
     * ルール検索用の where 以下の条件を生成する

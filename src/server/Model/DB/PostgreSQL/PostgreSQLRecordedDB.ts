@@ -36,23 +36,6 @@ class PostgreSQLRecordedDB extends RecordedDB {
     }
 
     /**
-    * recording 状態を解除する
-    * @param id: recorded id
-    * @return Promise<void>
-    */
-    public removeRecording(id: number): Promise<void> {
-        return this.operator.runQuery(`update ${ DBSchema.TableName.Recorded } set recording = false where id = ${ id }`);
-    }
-
-    /**
-    * recording 状態をすべて解除する
-    * @return Promise<void>
-    */
-    public removeAllRecording(): Promise<void> {
-        return this.operator.runQuery(`update ${ DBSchema.TableName.Recorded } set recording = false where recording = ${ true }`);
-    }
-
-    /**
     * all columns
     * @return string
     */

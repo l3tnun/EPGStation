@@ -39,42 +39,6 @@ class MySQLProgramsDB extends ProgramsDB {
 
         return this.operator.runQuery(query);
     }
-
-    /**
-    * insert 時の config を取得
-    */
-    public getInsertConfig(): { insertMax: number, insertWait: number } {
-        const config = this.config.getConfig();
-        return {
-            insertMax: config.programInsertMax || 100,
-            insertWait: config.programInsertWait || 0,
-        }
-    }
-
-    /**
-    * ルール検索実行部分
-    * @param query: string
-    * @return Promise<DBSchema.ProgramSchema[]>
-    */
-    public runFindRule(query: string): Promise<DBSchema.ProgramSchema[]> {
-        return this.operator.runQuery(query);
-    }
-
-    /**
-    * regexp が有効か
-    * @return boolean
-    */
-    public isEnableRegExp(): boolean {
-        return true;
-    }
-
-    /**
-    * 大文字小文字判定が有効か
-    * @return boolean
-    */
-    public isEnableCS(): boolean {
-        return true;
-    }
 }
 
 export default MySQLProgramsDB;

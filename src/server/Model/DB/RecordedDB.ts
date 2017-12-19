@@ -228,13 +228,17 @@ abstract class RecordedDB extends DBBase implements RecordedDBInterface {
     * @param id: recorded id
     * @return Promise<void>
     */
-    abstract removeRecording(id: number): Promise<void>;
+    public removeRecording(id: number): Promise<void> {
+        return this.operator.runQuery(`update ${ DBSchema.TableName.Recorded } set recording = false where id = ${ id }`);
+    }
 
     /**
     * recording 状態をすべて解除する
     * @return Promise<void>
     */
-    abstract removeAllRecording(): Promise<void>;
+    public removeAllRecording(): Promise<void> {
+        return this.operator.runQuery(`update ${ DBSchema.TableName.Recorded } set recording = false where recording = true`);
+    }
 
     /**
     * id 検索
