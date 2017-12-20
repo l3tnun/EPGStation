@@ -378,7 +378,7 @@ abstract class RecordedDB extends DBBase implements RecordedDBInterface {
     * 指定した項目の集計
     * @return Promise<T>
     */
-    private getTag<T>(item: string): Promise<T> {
+    protected getTag<T>(item: string): Promise<T> {
         return this.operator.runQuery(`select count(*) as cnt, ${ item } from ${ DBSchema.TableName.Recorded } group by ${ item } order by ${ item } asc`);
     }
 }
