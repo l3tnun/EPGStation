@@ -76,7 +76,7 @@ Config.json
 
 | プロパティ | 種類 | 必須 | 説明 |
 | -------- | ---- | ---- |--- |
-| host | string | yse | mysql host |
+| host | string | yse | postgres host |
 | user | string | yes | user |
 | password | string | yes |パスワード |
 | database | string | yes | 使用するデータベース名 |
