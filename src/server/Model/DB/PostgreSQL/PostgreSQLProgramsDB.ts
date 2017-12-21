@@ -50,6 +50,14 @@ class PostgreSQLProgramsDB extends ProgramsDB {
     }
 
     /**
+    * create like str
+    * @param cs: boolean 大小文字区別
+    */
+    public createLikeStr(cs: boolean): string {
+        return cs ? 'like' : 'ilike';
+    }
+
+    /**
     * create isFree option
     * @param isFree: boolean
     * @return string

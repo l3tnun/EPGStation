@@ -92,6 +92,13 @@ class SQLite3ProgramsDB extends ProgramsDB {
     public isEnableCS(): boolean {
         return false;
     }
+
+    /**
+    * create like str
+    */
+    public createLikeStr(): string {
+        return 'like';
+    }
 }
 
 export default SQLite3ProgramsDB;

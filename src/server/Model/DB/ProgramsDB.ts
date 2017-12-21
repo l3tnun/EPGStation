@@ -423,6 +423,14 @@ abstract class ProgramsDB extends DBBase implements ProgramsDBInterface {
     }
 
     /**
+    * create like str
+    * @param cs: boolean 大小文字区別
+    */
+    public createLikeStr(cs: boolean): string {
+        return cs ? 'like binary' : 'like';
+    }
+
+    /**
     * ルール検索用の where 以下の条件を生成する
     * @param option: SearchInterface
     * @return string
@@ -660,10 +668,9 @@ abstract class ProgramsDB extends DBBase implements ProgramsDBInterface {
             // あいまい検索
             StrUtil.toHalf(keyword).trim().split(' ').forEach((str) => {
                 let baseStr = `'%${ str }%'`;
-                if(keyOption.cs) { baseStr = 'binary ' + baseStr; }
-                if(keyOption.title) { nameQuery.push(`name like ${ baseStr }`); }
-                if(keyOption.description) { descriptionQuery.push(`description like ${ baseStr }`); }
-                if(keyOption.extended) { extendedQuery.push(`extended like ${ baseStr }`); }
+                if(keyOption.title) { nameQuery.push(`name ${ this.createLikeStr(keyOption.cs) } ${ baseStr }`); }
+                if(keyOption.description) { descriptionQuery.push(`description ${ this.createLikeStr(keyOption.cs) } ${ baseStr }`); }
+                if(keyOption.extended) { extendedQuery.push(`extended ${ this.createLikeStr(keyOption.cs) } ${ baseStr }`); }
             });
         }
 
@@ -689,10 +696,9 @@ abstract class ProgramsDB extends DBBase implements ProgramsDBInterface {
         StrUtil.toHalf(ignoreKeyword).trim().split(' ').forEach((str) => {
             // あいまい検索
             let baseStr = `'%${ str }%'`;
-            if(keyOption.cs) { baseStr = 'binary ' + baseStr; }
-            if(keyOption.title) { nameQuery.push(`name not like ${ baseStr }`); }
-            if(keyOption.description) { descriptionQuery.push(`description not like ${ baseStr }`); }
-            if(keyOption.extended) { extendedQuery.push(`extended not like ${ baseStr }`); }
+            if(keyOption.title) { nameQuery.push(`name not ${ this.createLikeStr(keyOption.cs) } ${ baseStr }`); }
+            if(keyOption.description) { descriptionQuery.push(`description not ${ this.createLikeStr(keyOption.cs) } ${ baseStr }`); }
+            if(keyOption.extended) { extendedQuery.push(`extended not ${ this.createLikeStr(keyOption.cs) } ${ baseStr }`); }
         });
 
         return {
