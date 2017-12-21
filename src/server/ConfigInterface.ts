@@ -13,6 +13,7 @@ interface ConfigInterface {
         database: string;
         connectTimeout: number;
         connectionLimit: number;
+        connectionTimeoutMillis: number;
     };
     sqlite3: {
         extensions: string[];
