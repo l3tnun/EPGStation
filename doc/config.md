@@ -5,10 +5,11 @@ Config.json
 | -------- | --- | ---------- | --- |  --- |
 | serverPort | number | | yes | ポート番号 |
 | mirakurunPath | string | | yes | Mirakurunのパス(URL) |
-| dbType | mysql \| sqlite3 | mysql | no | 使用する データベースを指定する |
+| dbType | mysql \| sqlite3 \| postgres | mysql | no | 使用する データベースを指定する |
 | dbPath | string | EPGStation/data/database.db | no | SQLite3 使用時の db ファイルの保存場所 | 
 | mysql | {} | | no | MySQL の設定 (dbType が mysql の場合は必須) |
 | sqlite3 | {} | | no | SQLite3 の拡張設定 |
+| postgres | {} | | no | PostgreSQL の設定 (dbType が postgres の場合は必須) |
 | gid | string \| number | | no | gid の設定 |
 | uid | string \| number | | no | uid の設定 |
 | programInsertMax | number | 100 | no | DB へ番組情報を挿入するときの 1 回あたりの件数 |
@@ -68,6 +69,20 @@ Config.json
 | regexp | boolean | yes | 正規表現検索が有効か |
 
 拡張の詳細は[こちら](https://github.com/mapbox/node-sqlite3/wiki/Extensions)
+
+----
+
+### postgres
+
+| プロパティ | 種類 | 必須 | 説明 |
+| -------- | ---- | ---- |--- |
+| host | string | yse | mysql host |
+| user | string | yes | user |
+| password | string | yes |パスワード |
+| database | string | yes | 使用するデータベース名 |
+| port | string | yes | port 番号 |
+| idleTimeoutMillis | number | no | アイドル状態を維持できる時間 (ms) |
+| connectionTimeoutMillis | number | no | 接続タイムアウト時間 (ms) |
 
 ----
 
