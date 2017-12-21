@@ -25,6 +25,17 @@ class SQLite3ServicesDB extends ServicesDB {
 
         return this.operator.runQuery(query);
     }
+
+    /**
+    * @param services: DBSchema.ServiceSchema[]
+    * @return DBSchema.ServiceSchema[]
+    */
+    protected fixResults(services: DBSchema.ServiceSchema[]): DBSchema.ServiceSchema[] {
+        return services.map((service) => {
+            service.hasLogoData = Boolean(service.hasLogoData);
+            return service;
+        });
+    }
 }
 
 export default SQLite3ServicesDB;

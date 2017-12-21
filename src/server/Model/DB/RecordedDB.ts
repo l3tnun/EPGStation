@@ -247,28 +247,38 @@ abstract class RecordedDB extends DBBase implements RecordedDBInterface {
     */
     public async findId(id: number): Promise<DBSchema.RecordedSchema | null> {
         let programs = await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Recorded } where id = ${ id }`);
-        return this.operator.getFirst(await this.fixResult(<DBSchema.RecordedSchema[]>programs));
+        return this.operator.getFirst(await this.fixResults(<DBSchema.RecordedSchema[]>programs));
     }
 
     /**
     * @param programs: DBSchema.RecordedSchema[]
     */
-    protected fixResult(programs: DBSchema.RecordedSchema[]): DBSchema.RecordedSchema[] {
+    protected fixResults(programs: DBSchema.RecordedSchema[]): DBSchema.RecordedSchema[] {
         let baseDir = Util.getRecordedPath();
         let thumbnailDir = Util.getThumbnailPath();
         return programs.map((program) => {
-            if(program.recPath !== null) {
-                //フルパスへ書き換える
-                program.recPath = path.join(baseDir, program.recPath);
-            }
-            if(program.thumbnailPath !== null) {
-                //フルパスへ書き換える
-                program.thumbnailPath = path.join(thumbnailDir, program.thumbnailPath);
-            }
-
-            program.recording = Boolean(program.recording);
-            return program;
+            return this.fixResult(baseDir, thumbnailDir, program);
         });
+    }
+
+    /**
+    * @param baseDir: string
+    * @param thumbnailDir: string
+    * @param program: DBSchema.RecordedSchema
+    * @return DBSchema.RecordedSchema
+    */
+    protected fixResult(baseDir: string, thumbnailDir: string, program: DBSchema.RecordedSchema): DBSchema.RecordedSchema {
+        if(program.recPath !== null) {
+            //フルパスへ書き換える
+            program.recPath = path.join(baseDir, program.recPath);
+        }
+
+        if(program.thumbnailPath !== null) {
+            //フルパスへ書き換える
+            program.thumbnailPath = path.join(thumbnailDir, program.thumbnailPath);
+        }
+
+        return program;
     }
 
     /**
@@ -277,7 +287,7 @@ abstract class RecordedDB extends DBBase implements RecordedDBInterface {
     */
     public async findOld(): Promise<DBSchema.RecordedSchema | null> {
         let programs = await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Recorded } order by id asc ${ this.operator.createLimitStr(1) }`);
-        return this.operator.getFirst(await this.fixResult(<DBSchema.RecordedSchema[]>programs));
+        return this.operator.getFirst(await this.fixResults(<DBSchema.RecordedSchema[]>programs));
     }
 
     /**
@@ -297,7 +307,7 @@ abstract class RecordedDB extends DBBase implements RecordedDBInterface {
         query += ` order by id desc ${ this.operator.createLimitStr(limit, offset) }`;
 
         let programs = await this.operator.runQuery(query);
-        return this.fixResult(<DBSchema.RecordedSchema[]>programs);
+        return this.fixResults(<DBSchema.RecordedSchema[]>programs);
     }
 
     /**

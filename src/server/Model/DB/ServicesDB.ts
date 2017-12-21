@@ -101,18 +101,15 @@ abstract class ServicesDB extends DBBase implements ServicesDBInterface {
     * @return Promise<DBSchema.ServiceSchema | null>
     */
     public async findId(id: number): Promise<DBSchema.ServiceSchema | null> {
-        return this.operator.getFirst(this.fixResult(<DBSchema.ServiceSchema[]> await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Services } where id = ${ id }`)));
+        return this.operator.getFirst(this.fixResults(<DBSchema.ServiceSchema[]> await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Services } where id = ${ id }`)));
     }
 
     /**
     * @param services: DBSchema.ServiceSchema[]
     * @return DBSchema.ServiceSchema[]
     */
-    protected fixResult(services: DBSchema.ServiceSchema[]): DBSchema.ServiceSchema[] {
-        return services.map((service) => {
-            service.hasLogoData = Boolean(service.hasLogoData);
-            return service;
-        });
+    protected fixResults(services: DBSchema.ServiceSchema[]): DBSchema.ServiceSchema[] {
+        return services;
     }
 
     /**
@@ -120,7 +117,7 @@ abstract class ServicesDB extends DBBase implements ServicesDBInterface {
     * @return Promise<DBSchema.ServiceSchema[]>
     */
     public async findAll(): Promise<DBSchema.ServiceSchema[]> {
-        return this.fixResult(<DBSchema.ServiceSchema[]> await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Services } order by channelTypeId, remoteControlKeyId, id`));
+        return this.fixResults(<DBSchema.ServiceSchema[]> await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Services } order by channelTypeId, remoteControlKeyId, id`));
     }
 
     /**
@@ -135,7 +132,7 @@ abstract class ServicesDB extends DBBase implements ServicesDBInterface {
         });
         str = str.slice(0, -1);
 
-        return this.fixResult(<DBSchema.ServiceSchema[]> await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Services } where channelType in (${ str }) order by channelTypeId, remoteControlKeyId, id`));
+        return this.fixResults(<DBSchema.ServiceSchema[]> await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Services } where channelType in (${ str }) order by channelTypeId, remoteControlKeyId, id`));
     }
 }
 

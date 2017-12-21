@@ -209,30 +209,15 @@ abstract class RulesDB extends DBBase implements RulesDBInterface {
     * @return Promise<DBSchema.RulesSchema>
     */
     public async findId(id: number): Promise<DBSchema.RulesSchema | null> {
-        return this.operator.getFirst(this.fixResult(<DBSchema.RulesSchema[]> await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Rules } where id = ${ id }`)));
+        return this.operator.getFirst(this.fixResults(<DBSchema.RulesSchema[]> await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Rules } where id = ${ id }`)));
     }
 
     /**
     * @param DBSchema.RulesSchema[]
     * @return DBSchema.RulesSchema[]
     */
-    private fixResult(rules: DBSchema.RulesSchema[]): DBSchema.RulesSchema[] {
-        return rules.map((rule) => {
-            if(rule.keyCS != null) { rule.keyCS = Boolean(rule.keyCS); }
-            if(rule.keyRegExp != null) { rule.keyRegExp = Boolean(rule.keyRegExp); }
-            if(rule.title != null) { rule.title = Boolean(rule.title); }
-            if(rule.description != null) { rule.description = Boolean(rule.description); }
-            if(rule.extended != null) { rule.extended = Boolean(rule.extended); }
-            if(rule.GR != null) { rule.GR = Boolean(rule.GR); }
-            if(rule.BS != null) { rule.BS = Boolean(rule.BS); }
-            if(rule.CS != null) { rule.CS = Boolean(rule.CS); }
-            if(rule.SKY != null) { rule.SKY = Boolean(rule.SKY); }
-            if(rule.isFree != null) { rule.isFree = Boolean(rule.isFree); }
-            if(rule.enable != null) { rule.enable = Boolean(rule.enable); }
-            if(rule.delTs != null) { rule.delTs = Boolean(rule.delTs); }
-
-            return rule;
-        });
+    protected fixResults(rules: DBSchema.RulesSchema[]): DBSchema.RulesSchema[] {
+        return rules;
     }
 
     /**
@@ -261,7 +246,7 @@ abstract class RulesDB extends DBBase implements RulesDBInterface {
         let query = `select ${ this.getAllColumns() } from ${ DBSchema.TableName.Rules }`;
         if(typeof limit !== 'undefined') { query += ` ${ this.operator.createLimitStr(limit, offset) }` }
 
-        return this.fixResult(<DBSchema.RulesSchema[]> await this.operator.runQuery(query));
+        return this.fixResults(<DBSchema.RulesSchema[]> await this.operator.runQuery(query));
     }
 
     /**

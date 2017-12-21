@@ -297,18 +297,15 @@ abstract class ProgramsDB extends DBBase implements ProgramsDBInterface {
             + `and endAt >= ${ startAt } and ${ endAt } > startAt `
             + 'order by startAt';
 
-        return <DBSchema.ScheduleProgramItem[]>this.fixResult(<DBSchema.ScheduleProgramItem[]>await this.operator.runQuery(query));
+        return <DBSchema.ScheduleProgramItem[]>this.fixResults(<DBSchema.ScheduleProgramItem[]>await this.operator.runQuery(query));
     }
 
     /**
     * @param programs: ScheduleProgramItem[] | ProgramSchema[]
     * @return ScheduleProgramItem[] | ProgramSchema[]
     */
-    protected fixResult(programs: DBSchema.ScheduleProgramItem[] | DBSchema.ProgramSchema[]): DBSchema.ScheduleProgramItem[] | DBSchema.ProgramSchema[] {
-        return (<any>programs).map((program: any) => {
-            program.isFree = Boolean(program.isFree);
-            return program;
-        });
+    protected fixResults(programs: DBSchema.ScheduleProgramItem[] | DBSchema.ProgramSchema[]): DBSchema.ScheduleProgramItem[] | DBSchema.ProgramSchema[] {
+        return programs;
     }
 
     /**
@@ -325,7 +322,7 @@ abstract class ProgramsDB extends DBBase implements ProgramsDBInterface {
             + `and endAt >= ${ startAt } and ${ endAt } > startAt `
             + 'order by startAt';
 
-        return <DBSchema.ScheduleProgramItem[]>this.fixResult(<DBSchema.ScheduleProgramItem[]>await this.operator.runQuery(query));
+        return <DBSchema.ScheduleProgramItem[]>this.fixResults(<DBSchema.ScheduleProgramItem[]>await this.operator.runQuery(query));
     }
 
     /**
@@ -342,7 +339,7 @@ abstract class ProgramsDB extends DBBase implements ProgramsDBInterface {
             + `where endAt >= ${ now } and ${ now } > startAt `
             + 'order by startAt';
 
-        return <DBSchema.ScheduleProgramItem[]>this.fixResult(<DBSchema.ScheduleProgramItem[]>await this.operator.runQuery(query));
+        return <DBSchema.ScheduleProgramItem[]>this.fixResults(<DBSchema.ScheduleProgramItem[]>await this.operator.runQuery(query));
     }
 
     /**
@@ -360,7 +357,7 @@ abstract class ProgramsDB extends DBBase implements ProgramsDBInterface {
             + `where endAt > ${ now } and ${ now } >= startAt and channelId = ${ channelId } `
             + 'order by startAt';
 
-        return <DBSchema.ScheduleProgramItem[]>this.fixResult(<DBSchema.ScheduleProgramItem[]>await this.operator.runQuery(query));
+        return <DBSchema.ScheduleProgramItem[]>this.fixResults(<DBSchema.ScheduleProgramItem[]>await this.operator.runQuery(query));
     }
 
     /**
@@ -371,7 +368,7 @@ abstract class ProgramsDB extends DBBase implements ProgramsDBInterface {
     */
     public async findId(id: number, isNow: boolean = false): Promise<DBSchema.ProgramSchema | null> {
         let option = isNow ? `and endAt > ${ new Date().getTime() }` : '';
-        return this.operator.getFirst(<DBSchema.ProgramSchema[]>this.fixResult(<DBSchema.ProgramSchema[]>await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Programs } where id = ${ id } ${ option }`)));
+        return this.operator.getFirst(<DBSchema.ProgramSchema[]>this.fixResults(<DBSchema.ProgramSchema[]>await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Programs } where id = ${ id } ${ option }`)));
     }
 
     /**
@@ -384,7 +381,7 @@ abstract class ProgramsDB extends DBBase implements ProgramsDBInterface {
         let query = `select ${ column } from ${ DBSchema.TableName.Programs } ${ this.createQuery(option) } order by startAt asc`;
         if(limit != null) { query += ` limit ${ limit }`; }
 
-        return <DBSchema.ProgramSchema[]>this.fixResult(<DBSchema.ProgramSchema[]>await this.runFindRule(query, Boolean(option.keyCS)));
+        return <DBSchema.ProgramSchema[]>this.fixResults(<DBSchema.ProgramSchema[]>await this.runFindRule(query, Boolean(option.keyCS)));
     }
 
     /**

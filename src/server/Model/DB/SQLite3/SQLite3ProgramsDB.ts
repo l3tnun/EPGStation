@@ -68,6 +68,17 @@ class SQLite3ProgramsDB extends ProgramsDB {
     }
 
     /**
+    * @param programs: ScheduleProgramItem[] | ProgramSchema[]
+    * @return ScheduleProgramItem[] | ProgramSchema[]
+    */
+    protected fixResults(programs: DBSchema.ScheduleProgramItem[] | DBSchema.ProgramSchema[]): DBSchema.ScheduleProgramItem[] | DBSchema.ProgramSchema[] {
+        return (<any>programs).map((program: any) => {
+            program.isFree = Boolean(program.isFree);
+            return program;
+        });
+    }
+
+    /**
     * ルール検索実行部分
     * @param query: string
     * @param cs: boolean

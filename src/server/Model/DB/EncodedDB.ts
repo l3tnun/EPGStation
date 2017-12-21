@@ -73,13 +73,13 @@ abstract class EncodedDB extends DBBase implements EncodedDBInterface {
     */
     public async findId(id: number): Promise<DBSchema.EncodedSchema | null> {
         let programs = await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Encoded } where id = ${ id }`);
-        return this.operator.getFirst(this.fixResult(<DBSchema.EncodedSchema[]>programs));
+        return this.operator.getFirst(this.fixResults(<DBSchema.EncodedSchema[]>programs));
     }
 
     /**
     * @param programs: DBSchema.RecordedSchema[]
     */
-    protected fixResult(programs: DBSchema.EncodedSchema[]): DBSchema.EncodedSchema[] {
+    protected fixResults(programs: DBSchema.EncodedSchema[]): DBSchema.EncodedSchema[] {
         let baseDir = Util.getRecordedPath();
         return programs.map((program) => {
             // path をフルパスへ書き換える
@@ -97,7 +97,7 @@ abstract class EncodedDB extends DBBase implements EncodedDBInterface {
     */
     public async findRecordedId(recordedId: number): Promise<DBSchema.EncodedSchema[]> {
         let programs = await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Encoded } where recordedId = ${ recordedId }`);
-        return this.fixResult(<DBSchema.EncodedSchema[]>programs);
+        return this.fixResults(<DBSchema.EncodedSchema[]>programs);
     }
 }
 

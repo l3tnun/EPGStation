@@ -16,6 +16,15 @@ class MySQLOperator extends DBOperator {
         if(MySQLOperator.pool === null) {
             let config = this.config.getConfig().mysql;
             if(typeof config.connectTimeout === 'undefined') { config.connectTimeout = 5000; }
+
+            // boolean 型を Javascript の Boolean へ変換する
+            (<any>config).typeCast = (field: any, next: () => void) => {
+                if (field.type === 'TINY' && field.length === 1) {
+                    return field.string() === '1';
+                }
+                return next();
+            }
+
             MySQLOperator.pool = mysql.createPool(config);
         }
 
