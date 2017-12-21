@@ -19,7 +19,10 @@ iOS, Android での操作感を重視しています
 * [Node.js](http://nodejs.org/) ^6.5.x || ~ 8
 * [Mirakurun](https://github.com/Chinachu/Mirakurun) ^2.5.7
 * Linux, macOS, Windows (実験的)
-* [SQLite](https://www.sqlite.org/) or [MySQL](https://www.mysql.com/jp/) ( [MariaDB](https://mariadb.org/) ) (character-set-server = utf8)
+* データベース
+	* [MySQL](https://www.mysql.com/jp/) ( [MariaDB](https://mariadb.org/) ) (character-set-server = utf8)
+	* [SQLite](https://www.sqlite.org/)
+	* [PostgreSQL](https://www.postgresql.org/) (version 9.5 以上)
 * [FFmpeg](http://ffmpeg.org/)
 * [Python 2.7](https://www.python.org/) diskusage で使用される node-gyp で必要
 * [GCC](https://gcc.gnu.org/) diskusage で使用される node-gyp で必要
@@ -54,9 +57,9 @@ $ cp config/config.sample.json config/config.json
 
 #### 使用するデータベース
 
-データベースに MySQL もしくは SQLite3 を使用することができます。MySQL の準備が可能であれば MySQL の使用を推奨します。
+データベースには MySQL (推奨) or SQLite3 or PostgreSQL が使用可能です。データベースの指定は config.json の ```dbType``` を ```mysql``` or ```sqlite3``` or ```postgres``` に指定してください。詳細は [doc/config.md](doc/config.md) を参照してください
 
-データベースの指定は config.json の ```dbType``` を ```sqlite3``` もしくは ```mysql``` に指定してください
+SQLite3 は [node-sqlite3](https://github.com/mapbox/node-sqlite3) を使用しているためシステム側での SQLite3 のインストールは不要です
 
 SQLite3 使用時の正規表現での検索の有効化については[こちら](doc/sqlite3-regexp.md)
 
@@ -66,11 +69,14 @@ SQLite3 使用時の正規表現での検索の有効化については[こち�
 
 詳細は [doc/config.md](doc/config.md) を参照してください
 
-mac での URL Scheme 設定については [doc/mac-url-scheme.md](doc/mac-url-scheme.md) を参照してください
 
-windows での URL Scheme 設定については [doc/win-url-scheme.md](doc/win-url-scheme.md) を参照してください
+##### URL Scheme
 
-その他の環境での URL Scheme の設定や個別に無効化したい場合については WebUI の設定で各ブラウザごとに設定してください
+* mac -> [doc/mac-url-scheme.md](doc/mac-url-scheme.md)
+* windows -> [doc/win-url-scheme.md](doc/win-url-scheme.md)
+* iOS, Android -> config.json を設定
+
+上記以外の環境での設定は WebUI の設定で各ブラウザごとに設定してください
 
 記述方法は [doc/config.md](https://github.com/l3tnun/EPGStation/blob/master/doc/config.md#recordedviewer-recordeddownloader-mpegtsviewer-%E3%81%A7%E7%BD%AE%E6%8F%9B%E3%81%95%E3%82%8C%E3%82%8B%E6%96%87%E5%AD%97%E5%88%97) に準じます
 
