@@ -41,6 +41,15 @@ class PostgreSQLProgramsDB extends ProgramsDB {
     }
 
     /**
+    * create regexp str
+    * @param cs: boolean 大小文字区別
+    * @return string
+    */
+    public createRegexpStr(cs: boolean): string {
+        return cs ? '~' : '~*';
+    }
+
+    /**
     * create isFree option
     * @param isFree: boolean
     * @return string
@@ -48,7 +57,6 @@ class PostgreSQLProgramsDB extends ProgramsDB {
     protected createIsFree(isFree: boolean): string {
         return `isFree = ${ Boolean(isFree) }`
     }
-
 
     /**
     * all columns

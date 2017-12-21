@@ -406,6 +406,15 @@ abstract class ProgramsDB extends DBBase implements ProgramsDBInterface {
     }
 
     /**
+    * create regexp str
+    * @param cs: boolean 大小文字区別
+    * @return string
+    */
+    public createRegexpStr(cs: boolean): string {
+        return cs ? 'regexp binary' : 'regexp';
+    }
+
+    /**
     * 大文字小文字判定が有効か
     * @return boolean
     */
@@ -644,10 +653,9 @@ abstract class ProgramsDB extends DBBase implements ProgramsDBInterface {
         if(keyOption.regExp) {
             // 正規表現
             let baseStr = `'${ keyword }'`;
-            if(keyOption.cs) { baseStr = 'binary ' + baseStr; }
-            if(keyOption.title) { nameQuery.push(`name regexp ${ baseStr }`); }
-            if(keyOption.description) { descriptionQuery.push(`description regexp ${ baseStr }`); }
-            if(keyOption.extended) { extendedQuery.push(`extended regexp ${ baseStr }`); }
+            if(keyOption.title) { nameQuery.push(`name ${ this.createRegexpStr(keyOption.cs) } ${ baseStr }`); }
+            if(keyOption.description) { descriptionQuery.push(`description ${ this.createRegexpStr(keyOption.cs) } ${ baseStr }`); }
+            if(keyOption.extended) { extendedQuery.push(`extended ${ this.createRegexpStr(keyOption.cs) } ${ baseStr }`); }
         } else {
             // あいまい検索
             StrUtil.toHalf(keyword).trim().split(' ').forEach((str) => {
