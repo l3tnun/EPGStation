@@ -36,6 +36,13 @@ class PostgreSQLRecordedDB extends RecordedDB {
     }
 
     /**
+    * create like str
+    */
+    public createLikeStr(): string {
+        return 'ilike';
+    }
+
+    /**
     * 指定した項目の集計
     * @return Promise<T>
     */

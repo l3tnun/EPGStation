@@ -324,7 +324,7 @@ abstract class RecordedDB extends DBBase implements RecordedDBInterface {
             let keyword = option.keyword.replace(/'/g, "\\'"); // ' を \' へ置換
             StrUtil.toHalf(keyword).trim().split(' ').forEach((str) => {
                 let baseStr = `'%${ str }%'`;
-                query.push(`(name like ${ baseStr } or description like ${ baseStr })`);
+                query.push(`(name ${ this.createLikeStr() } ${ baseStr } or description ${ this.createLikeStr() } ${ baseStr })`);
             });
         }
 
@@ -340,6 +340,13 @@ abstract class RecordedDB extends DBBase implements RecordedDBInterface {
         }
 
         return str;
+    }
+
+    /**
+    * create like str
+    */
+    public createLikeStr(): string {
+        return 'like';
     }
 
     /**
