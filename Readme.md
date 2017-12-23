@@ -114,6 +114,22 @@ http://host:prot/api/debug
 
 上記にアクセスすると Swagger UI で API の確認が可能です
 
+## データベースのバックアップとレストア
+
+バックアップ
+
+```
+npm run backup FILENAME
+```
+
+レストア
+
+```
+npm run restore FILENAME
+```
+
+データベース接続設定は config.json を参照します。バックアップデータはデータベースに依存しないので MySQL からバックアップ -> SQLite3 へレストアなども可能です
+
 ## Android 6.0 以上での注意
 
 Android の設定 -> ユーザー補助 にて "操作の監視" が必要なサービスを ON にしていると、番組表の動作が著しく重くなります
