@@ -158,7 +158,7 @@ abstract class EncodedDB extends DBBase implements EncodedDBInterface {
     * @return Promise<DBSchema.EncodedSchema[]>
     */
     public async findRecordedId(recordedId: number): Promise<DBSchema.EncodedSchema[]> {
-        let programs = await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Encoded } where recordedId = ${ recordedId }`);
+        let programs = await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Encoded } where recordedId = ${ recordedId } order by id asc`);
         return this.fixResults(<DBSchema.EncodedSchema[]>programs);
     }
 }

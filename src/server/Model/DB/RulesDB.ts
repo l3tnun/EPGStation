@@ -297,7 +297,7 @@ abstract class RulesDB extends DBBase implements RulesDBInterface {
     * @return Promise<DBSchema.RulesSchema[]>
     */
     public findAllId(): Promise<{ id: number }[]> {
-        return this.operator.runQuery(`select id from ${ DBSchema.TableName.Rules }`);
+        return this.operator.runQuery(`select id from ${ DBSchema.TableName.Rules } order by id asc`);
     }
 
     /**
@@ -305,7 +305,7 @@ abstract class RulesDB extends DBBase implements RulesDBInterface {
     * @return Promise<DBSchema.RulesSchema[]>
     */
     public findAllIdAndKeyword(): Promise<{ id: number, keyword: string }[]> {
-        return this.operator.runQuery(`select id, keyword from ${ DBSchema.TableName.Rules }`);
+        return this.operator.runQuery(`select id, keyword from ${ DBSchema.TableName.Rules } order by id asc`);
     }
 
     /**
@@ -315,7 +315,7 @@ abstract class RulesDB extends DBBase implements RulesDBInterface {
     * @return Promise<DBSchema.RulesSchema[]>
     */
     public async findAll(limit?: number, offset: number = 0): Promise<DBSchema.RulesSchema[]> {
-        let query = `select ${ this.getAllColumns() } from ${ DBSchema.TableName.Rules }`;
+        let query = `select ${ this.getAllColumns() } from ${ DBSchema.TableName.Rules } order by id asc`;
         if(typeof limit !== 'undefined') { query += ` ${ this.operator.createLimitStr(limit, offset) }` }
 
         return this.fixResults(<DBSchema.RulesSchema[]> await this.operator.runQuery(query));
