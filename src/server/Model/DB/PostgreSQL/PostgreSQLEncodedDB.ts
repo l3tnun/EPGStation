@@ -18,6 +18,19 @@ class PostgreSQLEncodedDB extends EncodedDB {
     }
 
     /**
+    * resotre
+    * @param programs: DBSchema.EncodedSchema[]
+    * @param isDelete: boolean = true
+    * @param hasBaseDir: boolean = true
+    */
+    public async restore(programs: DBSchema.EncodedSchema[], isDelete: boolean = true, hasBaseDir: boolean = true): Promise<void> {
+        await super.restore(programs, isDelete, hasBaseDir);
+
+        // シーケンス値の修正
+        await this.operator.runQuery(`select setval('${ DBSchema.TableName.Encoded }_id_seq', (select max(id) from ${ DBSchema.TableName.Encoded }))`);
+    }
+
+    /**
     * all columns
     * @return string
     */

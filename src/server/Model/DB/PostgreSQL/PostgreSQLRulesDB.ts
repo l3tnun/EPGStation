@@ -45,6 +45,18 @@ class PostgreSQLRulesDB extends RulesDB {
     }
 
     /**
+    * restore
+    * @param rules: DBSchema.RulesSchema[]
+    * @param isDelete: boolean = true
+    */
+    public async restore(rules: DBSchema.RulesSchema[], isDelete: boolean = true): Promise<void> {
+        await super.restore(rules, isDelete);
+
+        // シーケンス値の修正
+        await this.operator.runQuery(`select setval('${ DBSchema.TableName.Rules }_id_seq', (select max(id) from ${ DBSchema.TableName.Rules }))`);
+    }
+
+    /**
     * all columns
     * @return string
     */

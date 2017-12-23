@@ -36,6 +36,19 @@ class PostgreSQLRecordedDB extends RecordedDB {
     }
 
     /**
+    * restore
+    * @param program: DBSchema.RecordedSchema[]
+    * @param isDelete: boolean
+    * @param hasBaseDir: boolean
+    */
+    public async restore(programs: DBSchema.RecordedSchema[], isDelete: boolean = true, hasBaseDir: boolean = true): Promise<void> {
+        await super.restore(programs, isDelete, hasBaseDir);
+
+        // シーケンス値の修正
+        await this.operator.runQuery(`select setval('${ DBSchema.TableName.Recorded }_id_seq', (select max(id) from ${ DBSchema.TableName.Recorded }))`);
+    }
+
+    /**
     * create like str
     */
     public createLikeStr(): string {
