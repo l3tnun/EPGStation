@@ -140,7 +140,7 @@ class ProgramInfoActionComponent extends Component<void> {
                         onclick: m.withAttr('checked', (value) => { this.viewModel.delTs = value; }),
                         onupdate: (vnode: m.VnodeDOM<void, this>) => { this.checkboxOnUpdate(<HTMLInputElement>(vnode.dom)); },
                     }),
-                    m('span', { class: 'mdl-checkbox__label' }, 'ts削除'),
+                    m('span', { class: 'mdl-checkbox__label' }, 'TS削除'),
                 ]),
                 m('div', { class: 'pulldown mdl-layout-spacer' }, [
                     m('select', {
