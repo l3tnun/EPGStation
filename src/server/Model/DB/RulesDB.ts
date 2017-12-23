@@ -3,7 +3,9 @@ import * as DBSchema from './DBSchema';
 
 interface RulesDBInterface extends DBBase {
     create(): Promise<void>;
+    drop(): Promise<void>;
     insert(rule: DBSchema.RulesSchema): Promise<number>;
+    restore(rules: DBSchema.RulesSchema[], isDelete?: boolean): Promise<void>;
     update(id: number, rule: DBSchema.RulesSchema): Promise<void>;
     delete(id: number): Promise<void>;
     enable(id: number): Promise<void>;
@@ -23,42 +25,20 @@ abstract class RulesDB extends DBBase implements RulesDBInterface {
     abstract create(): Promise<void>;
 
     /**
+    * drop table
+    */
+    public drop(): Promise<void> {
+        return this.operator.runQuery(`drop table if exists ${ DBSchema.TableName.Rules }`);
+    }
+
+    /**
     * データ挿入
     * @param rule: DBSchema.RulesSchema
     * @return Promise<number> insertId
     */
     public insert(rule: DBSchema.RulesSchema): Promise<number> {
         let query = `insert into ${ DBSchema.TableName.Rules } (`
-            + 'keyword, '
-            + 'ignoreKeyword, '
-            + 'keyCS, '
-            + 'keyRegExp, '
-            + 'title, '
-            + 'description, '
-            + 'extended, '
-            + 'GR, '
-            + 'BS, '
-            + 'CS, '
-            + 'SKY, '
-            + 'station, '
-            + 'genrelv1, '
-            + 'genrelv2, '
-            + 'startTime, '
-            + 'timeRange, '
-            + 'week, '
-            + 'isFree, '
-            + 'durationMin, '
-            + 'durationMax, '
-            + 'enable, '
-            + 'directory, '
-            + 'recordedFormat, '
-            + 'mode1, '
-            + 'directory1, '
-            + 'mode2, '
-            + 'directory2, '
-            + 'mode3, '
-            + 'directory3, '
-            + 'delTs '
+            + this.createInsertColumnStr(false)
         + ') VALUES ('
             + this.operator.createValueStr(1, 30)
         + `) ${ this.operator.getReturningStr() }`;
@@ -96,6 +76,98 @@ abstract class RulesDB extends DBBase implements RulesDBInterface {
         value.push(rule.delTs);
 
         return this.operator.runInsert(query, value);
+    }
+
+    /**
+    * insert 時のカラムを生成
+    * @param hasId: boolean
+    * @return string
+    */
+    private createInsertColumnStr(hasId: boolean): string {
+        return (hasId ? 'id, ' : '')
+            + 'keyword, '
+            + 'ignoreKeyword, '
+            + 'keyCS, '
+            + 'keyRegExp, '
+            + 'title, '
+            + 'description, '
+            + 'extended, '
+            + 'GR, '
+            + 'BS, '
+            + 'CS, '
+            + 'SKY, '
+            + 'station, '
+            + 'genrelv1, '
+            + 'genrelv2, '
+            + 'startTime, '
+            + 'timeRange, '
+            + 'week, '
+            + 'isFree, '
+            + 'durationMin, '
+            + 'durationMax, '
+            + 'enable, '
+            + 'directory, '
+            + 'recordedFormat, '
+            + 'mode1, '
+            + 'directory1, '
+            + 'mode2, '
+            + 'directory2, '
+            + 'mode3, '
+            + 'directory3, '
+            + 'delTs '
+    }
+
+    /**
+    * restore
+    * @param rules: DBSchema.RulesSchema[]
+    * @param isDelete: boolean = true
+    */
+    public restore(rules: DBSchema.RulesSchema[], isDelete: boolean = true): Promise<void> {
+        let query = `insert into ${ DBSchema.TableName.Rules } (`
+            + this.createInsertColumnStr(true)
+        + ') VALUES ('
+            + this.operator.createValueStr(1, 31)
+        + `)`;
+
+        let values: any[] = [];
+        for(let rule of rules) {
+            let value: any[] = [];
+            value.push(rule.id);
+            value.push(rule.keyword);
+            value.push(rule.ignoreKeyword);
+            value.push(rule.keyCS);
+            value.push(rule.keyRegExp);
+            value.push(rule.title);
+            value.push(rule.description);
+            value.push(rule.extended);
+            value.push(rule.GR);
+            value.push(rule.BS);
+            value.push(rule.CS);
+            value.push(rule.SKY);
+            value.push(rule.station);
+            value.push(rule.genrelv1);
+            value.push(rule.genrelv2);
+            value.push(rule.startTime);
+            value.push(rule.timeRange);
+            value.push(rule.week);
+            value.push(rule.isFree);
+            value.push(rule.durationMin);
+            value.push(rule.durationMax);
+            value.push(rule.enable);
+            value.push(rule.directory);
+            value.push(rule.recordedFormat);
+            value.push(rule.mode1);
+            value.push(rule.directory1);
+            value.push(rule.mode2);
+            value.push(rule.directory2);
+            value.push(rule.mode3);
+            value.push(rule.directory3);
+            value.push(rule.delTs);
+
+            values.push({query: query, values: value });
+        }
+
+        return this.operator.manyInsert(DBSchema.TableName.Rules, values, isDelete);
     }
 
     /**

@@ -12,7 +12,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "task": "gulp",
     "install-win-service": "winser -i -a",
-    "uninstall-win-service": "winser -r -x"
+    "uninstall-win-service": "winser -r -x",
+    "backup": "node dist/server/DBTools.js -m backup -o",
+    "restore": "node dist/server/DBTools.js -m restore -o"
   },
   "repository": {
     "type": "git",
