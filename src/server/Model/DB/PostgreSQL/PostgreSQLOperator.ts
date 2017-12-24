@@ -154,7 +154,7 @@ class PostgreSQLOperator extends DBOperator {
 
                 // commit
                 try {
-                    client.query('commit');
+                    await client.query('commit');
                 } catch(err) {
                     this.log.system.error('transaction commit error');
                     await failed(err);
