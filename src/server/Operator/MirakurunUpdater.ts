@@ -5,12 +5,16 @@ import CreateMirakurunClient from '../Util/CreateMirakurunClient';
 import { Logger } from '../Logger';
 import Configuration from '../Configuration';
 import Base from '../Base';
+import DBOperator from '../Model/DB/DBOperator';
 import MySQLOperator from '../Model/DB/MySQL/MySQLOperator';
 import SQLite3Operator from '../Model/DB/SQLite3/SQLite3Operator';
+import PostgreSQLOperator from '../Model/DB/PostgreSQL/PostgreSQLOperator';
 import MySQLServicesDB from '../Model/DB/MySQL/MySQLServicesDB';
 import MySQLProgramsDB from '../Model/DB/MySQL/MySQLProgramsDB';
 import SQLite3ServicesDB from '../Model/DB/SQLite3/SQLite3ServicesDB';
 import SQLite3ProgramsDB from '../Model/DB/SQLite3/SQLite3ProgramsDB';
+import PostgreSQLServicesDB from '../Model/DB/PostgreSQL/PostgreSQLServicesDB';
+import PostgreSQLProgramsDB from '../Model/DB/PostgreSQL/PostgreSQLProgramsDB';
 import { ServicesDBInterface } from '../Model/DB/ServicesDB';
 import { ChannelTypeHash, ProgramsDBInterface } from '../Model/DB/ProgramsDB';
 import Util from '../Util/Util';
@@ -140,12 +144,31 @@ namespace MirakurunUpdater {
 Logger.initialize();
 Configuration.getInstance().initialize(path.join(__dirname, '..', '..', '..', 'config', 'config.json'));
 
+let operator: DBOperator;
+let servicesDB: ServicesDBInterface;
+let programsDB: ProgramsDBInterface;
+switch(Util.getDBType()) {
+    case 'mysql':
+        operator = new MySQLOperator();
+        servicesDB = new MySQLServicesDB(operator);
+        programsDB = new MySQLProgramsDB(operator);
+        break;
 
-const isMysql = Util.getDBType() === 'mysql';
-const operator = isMysql ? new MySQLOperator() : new SQLite3Operator();
-const servicesDB = isMysql ? new MySQLServicesDB(operator) : new SQLite3ServicesDB(operator);
-const programsDB = isMysql ? new MySQLProgramsDB(operator) : new SQLite3ProgramsDB(operator);
+    case 'sqlite3':
+        operator = new SQLite3Operator();
+        servicesDB = new SQLite3ServicesDB(operator);
+        programsDB = new SQLite3ProgramsDB(operator);
+        break;
 
-let updater = new MirakurunUpdater(servicesDB, programsDB);
+    case 'postgres':
+        operator = new PostgreSQLOperator();
+        servicesDB = new PostgreSQLServicesDB(operator);
+        programsDB = new PostgreSQLProgramsDB(operator);
+        break;
+}
+
+process.on('unhandledRejection', console.dir);
+
+let updater = new MirakurunUpdater(servicesDB!, programsDB!);
 updater.update();
 

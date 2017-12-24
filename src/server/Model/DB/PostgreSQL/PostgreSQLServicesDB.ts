@@ -4,19 +4,19 @@ import { ServicesDB } from '../ServicesDB';
 /**
 * ServicesDB
 */
-class SQLite3ServicesDB extends ServicesDB {
+class PostgreSQLServicesDB extends ServicesDB {
     /**
     * create table
     * @return Promise<void>
     */
     public create(): Promise<void> {
         let query = `create table if not exists ${ DBSchema.TableName.Services } (`
-            + 'id integer primary key unique, '
+            + 'id bigint primary key, '
             + 'serviceId integer not null, '
             + 'networkId integer not null, '
             + 'name text not null, '
             + 'remoteControlKeyId integer null, '
-            + 'hasLogoData integer, '
+            + 'hasLogoData boolean, '
             + 'channelType text, '
             + 'channelTypeId integer, '
             + 'channel text, '
@@ -27,16 +27,13 @@ class SQLite3ServicesDB extends ServicesDB {
     }
 
     /**
-    * @param services: DBSchema.ServiceSchema[]
-    * @return DBSchema.ServiceSchema[]
+    * all columns
+    * @return string
     */
-    protected fixResults(services: DBSchema.ServiceSchema[]): DBSchema.ServiceSchema[] {
-        return services.map((service) => {
-            service.hasLogoData = Boolean(service.hasLogoData);
-            return service;
-        });
+    public getAllColumns(): string {
+        return 'id, serviceId as "serviceId", networkId as "networkId", name, remoteControlKeyId as "remoteControlKeyId", hasLogoData as "hasLogoData", channelType as "channelType", channelTypeId as "channelTypeId", channel, type';
     }
 }
 
-export default SQLite3ServicesDB;
+export default PostgreSQLServicesDB;
 

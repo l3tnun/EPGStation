@@ -3,7 +3,9 @@ import * as DBSchema from './DBSchema';
 
 interface RulesDBInterface extends DBBase {
     create(): Promise<void>;
+    drop(): Promise<void>;
     insert(rule: DBSchema.RulesSchema): Promise<number>;
+    restore(rules: DBSchema.RulesSchema[], isDelete?: boolean): Promise<void>;
     update(id: number, rule: DBSchema.RulesSchema): Promise<void>;
     delete(id: number): Promise<void>;
     enable(id: number): Promise<void>;
@@ -23,45 +25,23 @@ abstract class RulesDB extends DBBase implements RulesDBInterface {
     abstract create(): Promise<void>;
 
     /**
+    * drop table
+    */
+    public drop(): Promise<void> {
+        return this.operator.runQuery(`drop table if exists ${ DBSchema.TableName.Rules }`);
+    }
+
+    /**
     * データ挿入
     * @param rule: DBSchema.RulesSchema
     * @return Promise<number> insertId
     */
     public insert(rule: DBSchema.RulesSchema): Promise<number> {
         let query = `insert into ${ DBSchema.TableName.Rules } (`
-            + 'keyword, '
-            + 'ignoreKeyword, '
-            + 'keyCS, '
-            + 'keyRegExp, '
-            + 'title, '
-            + 'description, '
-            + 'extended, '
-            + 'GR, '
-            + 'BS, '
-            + 'CS, '
-            + 'SKY, '
-            + 'station, '
-            + 'genrelv1, '
-            + 'genrelv2, '
-            + 'startTime, '
-            + 'timeRange, '
-            + 'week, '
-            + 'isFree, '
-            + 'durationMin, '
-            + 'durationMax, '
-            + 'enable, '
-            + 'directory, '
-            + 'recordedFormat, '
-            + 'mode1, '
-            + 'directory1, '
-            + 'mode2, '
-            + 'directory2, '
-            + 'mode3, '
-            + 'directory3, '
-            + 'delTs '
+            + this.createInsertColumnStr(false)
         + ') VALUES ('
-            + '?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?'
-        + ');';
+            + this.operator.createValueStr(1, 30)
+        + `) ${ this.operator.getReturningStr() }`;
 
         let value: any[] = [];
         value.push(rule.keyword);
@@ -96,6 +76,98 @@ abstract class RulesDB extends DBBase implements RulesDBInterface {
         value.push(rule.delTs);
 
         return this.operator.runInsert(query, value);
+    }
+
+    /**
+    * insert 時のカラムを生成
+    * @param hasId: boolean
+    * @return string
+    */
+    private createInsertColumnStr(hasId: boolean): string {
+        return (hasId ? 'id, ' : '')
+            + 'keyword, '
+            + 'ignoreKeyword, '
+            + 'keyCS, '
+            + 'keyRegExp, '
+            + 'title, '
+            + 'description, '
+            + 'extended, '
+            + 'GR, '
+            + 'BS, '
+            + 'CS, '
+            + 'SKY, '
+            + 'station, '
+            + 'genrelv1, '
+            + 'genrelv2, '
+            + 'startTime, '
+            + 'timeRange, '
+            + 'week, '
+            + 'isFree, '
+            + 'durationMin, '
+            + 'durationMax, '
+            + 'enable, '
+            + 'directory, '
+            + 'recordedFormat, '
+            + 'mode1, '
+            + 'directory1, '
+            + 'mode2, '
+            + 'directory2, '
+            + 'mode3, '
+            + 'directory3, '
+            + 'delTs '
+    }
+
+    /**
+    * restore
+    * @param rules: DBSchema.RulesSchema[]
+    * @param isDelete: boolean = true
+    */
+    public restore(rules: DBSchema.RulesSchema[], isDelete: boolean = true): Promise<void> {
+        let query = `insert into ${ DBSchema.TableName.Rules } (`
+            + this.createInsertColumnStr(true)
+        + ') VALUES ('
+            + this.operator.createValueStr(1, 31)
+        + `)`;
+
+        let values: any[] = [];
+        for(let rule of rules) {
+            let value: any[] = [];
+            value.push(rule.id);
+            value.push(rule.keyword);
+            value.push(rule.ignoreKeyword);
+            value.push(rule.keyCS);
+            value.push(rule.keyRegExp);
+            value.push(rule.title);
+            value.push(rule.description);
+            value.push(rule.extended);
+            value.push(rule.GR);
+            value.push(rule.BS);
+            value.push(rule.CS);
+            value.push(rule.SKY);
+            value.push(rule.station);
+            value.push(rule.genrelv1);
+            value.push(rule.genrelv2);
+            value.push(rule.startTime);
+            value.push(rule.timeRange);
+            value.push(rule.week);
+            value.push(rule.isFree);
+            value.push(rule.durationMin);
+            value.push(rule.durationMax);
+            value.push(rule.enable);
+            value.push(rule.directory);
+            value.push(rule.recordedFormat);
+            value.push(rule.mode1);
+            value.push(rule.directory1);
+            value.push(rule.mode2);
+            value.push(rule.directory2);
+            value.push(rule.mode3);
+            value.push(rule.directory3);
+            value.push(rule.delTs);
+
+            values.push({query: query, values: value });
+        }
+
+        return this.operator.manyInsert(DBSchema.TableName.Rules, values, isDelete);
     }
 
     /**
@@ -190,14 +262,18 @@ abstract class RulesDB extends DBBase implements RulesDBInterface {
     * @param id: rule id
     * @return Promise<void>
     */
-    abstract enable(id: number): Promise<void>;
+    public enable(id: number): Promise<void> {
+        return this.operator.runQuery(`update ${ DBSchema.TableName.Rules } set enable = true where id = ${ id }`);
+    }
 
     /**
     * rule を無効化
     * @param id: rule id
     * @return Promise<void>
     */
-    abstract disable(id: number): Promise<void>;
+    public disable(id: number): Promise<void> {
+        return this.operator.runQuery(`update ${ DBSchema.TableName.Rules } set enable = false where id = ${ id }`);
+    }
 
     /**
     * id 検索
@@ -205,30 +281,15 @@ abstract class RulesDB extends DBBase implements RulesDBInterface {
     * @return Promise<DBSchema.RulesSchema>
     */
     public async findId(id: number): Promise<DBSchema.RulesSchema | null> {
-        return this.operator.getFirst(this.fixResult(<DBSchema.RulesSchema[]> await this.operator.runQuery(`select * from ${ DBSchema.TableName.Rules } where id = ${ id }`)));
+        return this.operator.getFirst(this.fixResults(<DBSchema.RulesSchema[]> await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Rules } where id = ${ id }`)));
     }
 
     /**
     * @param DBSchema.RulesSchema[]
     * @return DBSchema.RulesSchema[]
     */
-    private fixResult(rules: DBSchema.RulesSchema[]): DBSchema.RulesSchema[] {
-        return rules.map((rule) => {
-            if(rule.keyCS != null) { rule.keyCS = Boolean(rule.keyCS); }
-            if(rule.keyRegExp != null) { rule.keyRegExp = Boolean(rule.keyRegExp); }
-            if(rule.title != null) { rule.title = Boolean(rule.title); }
-            if(rule.description != null) { rule.description = Boolean(rule.description); }
-            if(rule.extended != null) { rule.extended = Boolean(rule.extended); }
-            if(rule.GR != null) { rule.GR = Boolean(rule.GR); }
-            if(rule.BS != null) { rule.BS = Boolean(rule.BS); }
-            if(rule.CS != null) { rule.CS = Boolean(rule.CS); }
-            if(rule.SKY != null) { rule.SKY = Boolean(rule.SKY); }
-            if(rule.isFree != null) { rule.isFree = Boolean(rule.isFree); }
-            if(rule.enable != null) { rule.enable = Boolean(rule.enable); }
-            if(rule.delTs != null) { rule.delTs = Boolean(rule.delTs); }
-
-            return rule;
-        });
+    protected fixResults(rules: DBSchema.RulesSchema[]): DBSchema.RulesSchema[] {
+        return rules;
     }
 
     /**
@@ -236,7 +297,7 @@ abstract class RulesDB extends DBBase implements RulesDBInterface {
     * @return Promise<DBSchema.RulesSchema[]>
     */
     public findAllId(): Promise<{ id: number }[]> {
-        return this.operator.runQuery(`select id from ${ DBSchema.TableName.Rules }`);
+        return this.operator.runQuery(`select id from ${ DBSchema.TableName.Rules } order by id asc`);
     }
 
     /**
@@ -244,7 +305,7 @@ abstract class RulesDB extends DBBase implements RulesDBInterface {
     * @return Promise<DBSchema.RulesSchema[]>
     */
     public findAllIdAndKeyword(): Promise<{ id: number, keyword: string }[]> {
-        return this.operator.runQuery(`select id, keyword from ${ DBSchema.TableName.Rules }`);
+        return this.operator.runQuery(`select id, keyword from ${ DBSchema.TableName.Rules } order by id asc`);
     }
 
     /**
@@ -254,10 +315,10 @@ abstract class RulesDB extends DBBase implements RulesDBInterface {
     * @return Promise<DBSchema.RulesSchema[]>
     */
     public async findAll(limit?: number, offset: number = 0): Promise<DBSchema.RulesSchema[]> {
-        let query = `select * from ${ DBSchema.TableName.Rules }`;
-        if(typeof limit !== 'undefined') { query += ` limit ${ offset }, ${ limit }` }
+        let query = `select ${ this.getAllColumns() } from ${ DBSchema.TableName.Rules } order by id asc`;
+        if(typeof limit !== 'undefined') { query += ` ${ this.operator.createLimitStr(limit, offset) }` }
 
-        return this.fixResult(<DBSchema.RulesSchema[]> await this.operator.runQuery(query));
+        return this.fixResults(<DBSchema.RulesSchema[]> await this.operator.runQuery(query));
     }
 
     /**

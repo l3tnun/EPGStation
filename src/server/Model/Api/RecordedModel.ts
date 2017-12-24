@@ -77,9 +77,13 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
     * @param offset: number
     * @return Promise<any>
     */
-    public async getAll(limit: number, offset: number, option: findQuery = {}): Promise<any> {
-        let datas = await this.recordedDB.findAll(limit, offset, option);
-        let total = await this.recordedDB.getTotal(option);
+    public async getAll(limit: number, offset: number, query: findQuery = {}): Promise<any> {
+        let datas = await this.recordedDB.findAll({
+            limit: limit,
+            offset: offset,
+            query: query,
+        });
+        let total = await this.recordedDB.getTotal(query);
         let infoIndex = await this.getEncodingInfoIndex();
 
         let results: any[] = [];

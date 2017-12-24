@@ -51,6 +51,19 @@ class SQLite3RecordedDB extends RecordedDB {
     public removeAllRecording(): Promise<void> {
         return this.operator.runQuery(`update ${ DBSchema.TableName.Recorded } set recording = 0 where recording = 1`);
     }
+
+    /**
+    * @param baseDir: string
+    * @param thumbnailDir: string
+    * @param program: DBSchema.RecordedSchema
+    * @return DBSchema.RecordedSchema
+    */
+    protected fixResult(baseDir: string, thumbnailDir: string, program: DBSchema.RecordedSchema, addBaseDir: boolean = true): DBSchema.RecordedSchema {
+        program = super.fixResult(baseDir, thumbnailDir, program, addBaseDir);
+
+        program.recording = Boolean(program.recording);
+        return program;
+    }
 }
 
 export default SQLite3RecordedDB;

@@ -190,9 +190,7 @@ class ScheduleModel extends ApiModel implements ScheduleModelInterface {
             throw new Error(ScheduleModelInterface.searchOptionIsIncorrect);
         }
 
-        let programs = await this.programDB.findRule(searchOption,
-            ProgramsDBInterface.ScheduleProgramItemColumns,
-        300);
+        let programs = await this.programDB.findRule(searchOption, true, 300);
 
         return programs.map((program) => {
             return ApiUtil.deleteNullinHash(program);

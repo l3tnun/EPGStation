@@ -1,6 +1,6 @@
 {
   "name": "EPGStation",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "DTV Software in Japan.",
   "main": "dist/server/index.js",
   "scripts": {
@@ -12,7 +12,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "task": "gulp",
     "install-win-service": "winser -i -a",
-    "uninstall-win-service": "winser -r -x"
+    "uninstall-win-service": "winser -r -x",
+    "backup": "node dist/server/DBTools.js -m backup -o",
+    "restore": "node dist/server/DBTools.js -m restore -o"
   },
   "repository": {
     "type": "git",
@@ -41,6 +43,7 @@
     "mithril": "^1.1.5",
     "mkdirp": "^0.5.1",
     "mysql": "^2.15.0",
+    "pg": "^7.4.0",
     "request": "^2.83.0",
     "socket.io": "^1.7.4",
     "socket.io-client": "^1.7.4",
@@ -59,6 +62,7 @@
     "@types/mkdirp": "^0.5.1",
     "@types/mysql": "0.0.34",
     "@types/node": "^8.0.44",
+    "@types/pg": "^7.4.1",
     "@types/request": "^2.0.6",
     "@types/socket.io": "^1.4.31",
     "@types/socket.io-client": "^1.4.31",
