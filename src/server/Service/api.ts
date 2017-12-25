@@ -86,7 +86,7 @@ export const responseFile = (req: express.Request, res: express.Response, filePa
         responseHeaders['Content-Length'] = stat.size;
         responseHeaders['Accept-Ranges'] = 'bytes';
 
-        sendResponse(200, req, res, responseHeaders, fs.createReadStream(filePath));
+        sendResponse(200, req, res, responseHeaders, req.method === 'HEAD' ? null : fs.createReadStream(filePath));
         return;
     }
 
