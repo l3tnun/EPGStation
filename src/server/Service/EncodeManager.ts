@@ -311,7 +311,7 @@ class EncodeManager extends Base implements EncodeManagerInterface {
     */
     private getFilePath(dir: string, sourcePath: string, suffix: string, conflict: number = 0): string {
         //ファイルパス生成
-        let fileName = path.basename(sourcePath);
+        let fileName = path.basename(sourcePath,  path.extname(sourcePath));
         if(conflict > 0) { fileName += `(${ conflict })`; }
         fileName += suffix;
         let source = path.join(dir, fileName);
