@@ -202,6 +202,18 @@ class Operator {
         //サムネイル生成
         this.thumbnailManager.push(program);
 
+        const config = this.config.getConfig();
+
+        // ts 前処理
+        if(typeof config.tsModify !== 'undefined' && program.recPath !== null) {
+            await this.ipc.setEncode({
+                recordedId: program.id,
+                source: program.recPath,
+                delTs: false,
+                recordedProgram: program,
+            });
+        }
+
         //エンコード
         if(encodeOption !== null) {
             //エンコードオプションを生成
@@ -235,7 +247,7 @@ class Operator {
         this.ipc.notifIo();
 
         // 外部コマンド実行
-        let cmd = this.config.getConfig().recordedEndCommand;
+        let cmd = config.recordedEndCommand;
         if(typeof cmd !== 'undefined') {
             this.externalProcess.run(cmd, program);
         }

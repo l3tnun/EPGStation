@@ -56,6 +56,10 @@ interface ConfigInterface {
         default?: boolean;
     }[];
     delts: boolean;
+    tsModify: {
+        cmd: string;
+        rate?: number;
+    },
     storageLimitCheckIntervalTime: number;
     storageLimitThreshold: number;
     storageLimitAction: 'remove' | 'none';
