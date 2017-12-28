@@ -32,6 +32,7 @@ Config.json
 | maxEncode | number | 0 | no | エンコードプロセスの起動上限数 |
 | encode | {}[] | | no | エンコード設定 |
 | delts | boolean | false | no | 手動予約時の ts 削除チェックボックスのデフォルト設定 |
+| tsModify | {} | | no | ts を直接加工する時の処理。encode 前に実行される |
 | storageLimitCheckIntervalTime | number | 60 | no | ストレージ空き容量をチェックする間隔 (秒) |
 | storageLimitThreshold | number | 0 | no | ストレージ空き容量限界閾値 (MB) |
 | storageLimitAction | "remove" | "none" | no | ストレージ空き容量が限界閾値を超えたときの動作 remove で最も古い録画番組から削除される |
@@ -120,6 +121,19 @@ Config.json
 | %ROOT% | EPGStation の root パス |
 
 -----
+
+### tsModify
+
+| プロパティ | 種類 | 必須 | default| 説明 |
+| -------- | ---- | ---- | --- | --- |
+| cmd | string | yse | | ts 処理コマンド |
+| rate | number | no | 4.0 | タイムアウト率 録画時間 * rate だけ待つ  |
+
+cmd 実行時の引数、環境変数は encode と同一
+
+maxEncode を 1 以上に設定すること
+
+----
 
 ### recordedStartCommand, recordedEndCommand
 
