@@ -117,9 +117,8 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
                     encoding[encodingInfo.encoding.recordedId] = [];
                 }
 
-                let name = typeof config[encodingInfo.encoding.mode] === 'undefined' ? 'undefined' : config[encodingInfo.encoding.mode].name;
                 encoding[encodingInfo.encoding.recordedId].push({
-                    name: name,
+                    name: encodingInfo.encoding.name,
                     isEncoding: true,
                 });
             }
@@ -130,9 +129,8 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
                     encoding[program.recordedId] = [];
                 }
 
-                let name = typeof config[program.mode] === 'undefined' ? 'undefined' : config[program.mode].name;
                 encoding[program.recordedId].push({
-                    name: name,
+                    name: program.name,
                     isEncoding: false,
                 });
             }

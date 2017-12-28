@@ -11,15 +11,23 @@ import Util from '../Util/Util';
 interface EncodeProgram {
     recordedId: number;
     source: string;
-    mode: number;
+    mode?: number; // tsModify の場合存在しない
     directory?: string;
     delTs: boolean;
     recordedProgram: DBSchema.RecordedSchema;
 }
 
+interface EncodeQueue extends EncodeProgram {
+    name: string;
+    cmd: string;
+    suffix: string | null;
+    rate: number;
+}
+
 interface EncodingProgram {
+    name: string;
     recordedId: number;
-    mode: number;
+    mode?: number;
     source: string;
 }
 
@@ -28,8 +36,15 @@ interface EncodingInfo {
     queue: EncodingProgram[];
 }
 
+interface EncodeConfigInfo {
+    name: string;
+    cmd: string;
+    suffix: string | null;
+    rate: number;
+}
+
 interface EncodeManagerInterface {
-    addListener(callback: (recordedId: number, name: string, output: string, delTs: boolean) => void): void;
+    addListener(callback: (recordedId: number, name: string, output: string, delTs: boolean, isTsModify: boolean) => void): void;
     getEncodingId(): number | null;
     getEncodingInfo(): EncodingInfo;
     cancel(recordedId: number): void;
@@ -44,10 +59,17 @@ class EncodeManager extends Base implements EncodeManagerInterface {
     private static instance: EncodeManager;
     private static inited: boolean = false;
     private encodeProcessManager: EncodeProcessManagerInterface;
-    private queue: EncodeProgram[] = [];
+    private queue: EncodeQueue[] = [];
     private isRunning: boolean = false;
     //エンコード中のプロセスとプログラムを格納する
-    private encodingData: { child: ChildProcess, program: EncodeProgram, source: string, output: string, timerId: NodeJS.Timer } | null = null;
+    private encodingData: {
+        child: ChildProcess,
+        program: EncodeProgram,
+        name: string,
+        source: string,
+        output: string,
+        timerId: NodeJS.Timer,
+    } | null = null;
     private listener: events.EventEmitter = new events.EventEmitter();
 
     public static getInstance(): EncodeManager {
@@ -73,9 +95,9 @@ class EncodeManager extends Base implements EncodeManagerInterface {
     * エンコード完了時に実行されるイベントに追加
     @param callback ルール更新時に実行される
     */
-    public addListener(callback: (recordedId: number, name: string, output: string, delTs: boolean) => void): void {
-        this.listener.on(EncodeManager.ENCODE_FIN_EVENT, (recordedId: number, name: string, output: string, delTs: boolean) => {
-            callback(recordedId, name, output, delTs);
+    public addListener(callback: (recordedId: number, name: string, output: string, delTs: boolean, isTsModify: boolean) => void): void {
+        this.listener.on(EncodeManager.ENCODE_FIN_EVENT, (recordedId: number, name: string, output: string, delTs: boolean, isTsModify: boolean) => {
+            callback(recordedId, name, output, delTs, isTsModify);
         });
     }
 
@@ -91,18 +113,26 @@ class EncodeManager extends Base implements EncodeManagerInterface {
 
         if(this.encodingData !== null) {
             result.encoding = {
+                name: this.encodingData.name,
                 recordedId: this.encodingData.program.recordedId,
-                mode: this.encodingData.program.mode,
                 source: this.encodingData.source,
+            }
+            if(typeof this.encodingData.program.mode !== 'undefined') {
+                result.encoding.mode = this.encodingData.program.mode;
             }
         }
 
         for(let program of this.queue) {
-            result.queue.push({
+            let info: EncodingProgram = {
+                name: program.name,
                 recordedId: program.recordedId,
-                mode: program.mode,
                 source: program.source,
-            });
+            }
+            if(typeof program.mode !== 'undefined') {
+                info.mode = program.mode;
+            }
+
+            result.queue.push(info);
         }
 
         return result;
@@ -157,7 +187,7 @@ class EncodeManager extends Base implements EncodeManagerInterface {
     * @param isCopy: true: delTs を受け継ぐ, false: 受け継がない
     */
     public push(program: EncodeProgram, isCopy: boolean = false): void {
-        this.log.system.info(`push encode: ${ program.source } ${ program.mode }`);
+        this.log.system.info(`push encode: ${ program.source } ${ typeof program.mode === 'undefined' ? 'tsModify' : program.mode }`);
 
         // ts 削除設定を同じ recordedId の program から受け継ぐ
         if(isCopy) {
@@ -173,8 +203,58 @@ class EncodeManager extends Base implements EncodeManagerInterface {
             }
         }
 
-        this.queue.push(program);
+        let config: EncodeConfigInfo
+        try {
+            config = this.getEncodeConfig(program.mode);
+        } catch(err) {
+            this.log.system.error(err.message);
+            return;
+        }
+
+        (<EncodeQueue>program).name = config.name;
+        (<EncodeQueue>program).cmd = config.cmd;
+        (<EncodeQueue>program).suffix = config.suffix;
+        (<EncodeQueue>program).rate = config.rate;
+        this.queue.push(<EncodeQueue>program);
         this.encode();
+    }
+
+    /**
+    * エンコード設定情報を取得
+    * @return EncodeConfigInfo
+    * @throws tsModifyIsNotFound
+    * @throws encodeConfigIsNotFound
+    */
+    private getEncodeConfig(mode: number | undefined): EncodeConfigInfo {
+        const config = this.config.getConfig();
+        const encodeConfig = config.encode;
+        const tsModify = config.tsModify;
+
+        if(typeof mode === 'undefined') {
+            if(typeof tsModify === 'undefined') {
+                this.log.system.error('tsModify is not found');
+                throw new Error('tsModifyIsNotFound');
+            }
+
+            return {
+                name: 'tsModify',
+                cmd: tsModify.cmd,
+                suffix: null,
+                rate: tsModify.rate || 4.0,
+            }
+        }
+
+        if(typeof encodeConfig === 'undefined' || typeof encodeConfig[mode] === 'undefined') {
+            this.log.system.error(`encode config is not found: ${ mode }`);
+            throw new Error('encodeConfigIsNotFound');
+        }
+
+        return {
+            name: encodeConfig[mode].name,
+            cmd: encodeConfig[mode].cmd,
+            suffix: encodeConfig[mode].suffix,
+            rate: encodeConfig[mode].rate || 4.0,
+        }
     }
 
     /**
@@ -189,15 +269,6 @@ class EncodeManager extends Base implements EncodeManagerInterface {
         let program = this.queue.shift();
         if(typeof program === 'undefined') { this.isRunning = false; return; }
 
-        // config のエンコード設定をチェック
-        let config = this.config.getConfig();
-        let encodeConfig = config.encode;
-        if(typeof encodeConfig === 'undefined' || typeof encodeConfig[program.mode] === 'undefined') {
-            this.log.system.error(`encode config is not found: ${ program.mode }`);
-            this.finalize();
-            return;
-        }
-
         // エンコードするファイルの存在確認
         try {
             fs.statSync(program.source);
@@ -208,9 +279,8 @@ class EncodeManager extends Base implements EncodeManagerInterface {
             return;
         }
 
-        let dir = path.join(Util.getRecordedPath(), Util.replacePathName(program.directory || ''));
-
         // dir の存在確認
+        const dir = path.join(Util.getRecordedPath(), Util.replacePathName(program.directory || ''));
         try {
             fs.statSync(dir);
         } catch(e) {
@@ -219,11 +289,10 @@ class EncodeManager extends Base implements EncodeManagerInterface {
             mkdirp.sync(dir);
         }
 
-        this.log.system.info(`encode start: ${ program.source }`);
-        let output = this.getFilePath(dir, program.source, encodeConfig[program.mode].suffix);
-        let name = encodeConfig[program.mode].name;
+        this.log.system.info(`encode start: ${ program.source } ${ program.name }`);
+        const output = program.suffix === null ? program.source : this.getFilePath(dir, program.source, program.suffix);
 
-        let option = {
+        const option = {
             env: {
                 INPUT: program.source,
                 OUTPUT: output,
@@ -237,14 +306,15 @@ class EncodeManager extends Base implements EncodeManagerInterface {
                 CHANNELID: program.recordedProgram.channelId,
             }
         }
-        this.encodeProcessManager.create(program.source, output, encodeConfig[program.mode].cmd, EncodeManager.priority, option)
+        this.encodeProcessManager.create(program.source, output, program.cmd, EncodeManager.priority, option)
         .then((child) => {
             if(typeof program === 'undefined') { return; }
 
-            const timeout = program.recordedProgram.duration * ( encodeConfig[program.mode].rate || 4 );
+            const timeout = program.recordedProgram.duration * (program.rate);
             this.encodingData = {
                 child: child,
                 program: program,
+                name: program.name,
                 source: program.source,
                 output: output,
                 timerId: setTimeout(() => { child.kill('SIGKILL'); }, timeout),
@@ -269,7 +339,7 @@ class EncodeManager extends Base implements EncodeManagerInterface {
                         this.log.system.info(`fin encode: ${ output }`);
 
                         //通知
-                        this.eventsNotify(program.recordedId, name, output, this.encodingData!.program.delTs);
+                        this.eventsNotify(program.recordedId, program.name, output, this.encodingData!.program.delTs, program.suffix === null);
                     }
                 }
 
@@ -330,8 +400,8 @@ class EncodeManager extends Base implements EncodeManagerInterface {
     * @param recordedId: recorded id
     * @param output: output
     */
-    private eventsNotify(recordedId: number, name: string, output: string, delTs: boolean): void {
-        this.listener.emit(EncodeManager.ENCODE_FIN_EVENT, recordedId, name, output, delTs);
+    private eventsNotify(recordedId: number, name: string, output: string, delTs: boolean, isTsModify: boolean): void {
+        this.listener.emit(EncodeManager.ENCODE_FIN_EVENT, recordedId, name, output, delTs, isTsModify);
     }
 }
 
