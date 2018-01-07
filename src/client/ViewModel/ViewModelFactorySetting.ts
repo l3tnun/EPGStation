@@ -88,6 +88,7 @@ namespace ViewModelFactorySetting {
             snackbarModel,
         ));
         factory.reg('ProgramTimeBalloonViewModel', new ProgramTimeBalloonViewModel(
+            configModel,
             balloonModel,
             snackbarModel,
         ));

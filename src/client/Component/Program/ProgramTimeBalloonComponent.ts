@@ -20,6 +20,11 @@ class ProgramTimeBalloonComponent extends Component<void> {
     public view(): m.Children {
         return [
             m('div', { class: 'program-time-balloon' }, [
+                this.createSelect('types',
+                    (value: string) => { this.viewModel.typeValue = value; },
+                    (vnode: m.VnodeDOM<void, this>) => { this.selectOnUpdate(<HTMLInputElement>(vnode.dom), this.viewModel.typeValue); },
+                    this.viewModel.getTypes(),
+                ),
                 this.createSelect('days',
                     (value: number) => { this.viewModel.dayValue = Number(value); },
                     (vnode: m.VnodeDOM<void, this>) => { this.selectOnUpdate(<HTMLInputElement>(vnode.dom), this.viewModel.dayValue); },
@@ -51,9 +56,9 @@ class ProgramTimeBalloonComponent extends Component<void> {
     */
     private createSelect(
         name: string,
-        onchange: (value: number) => void,
+        onchange: (value: number | string) => void,
         onupdate: (vnode: m.VnodeDOM<void, this>) => void,
-        values: { value: number, name: string }[],
+        values: { value: number | string, name: string }[],
     ): m.Child {
         return m('div', { class: `pulldown mdl-layout-spacer ${ name }` }, [
             m('select', {

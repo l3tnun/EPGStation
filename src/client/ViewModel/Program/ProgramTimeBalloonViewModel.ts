@@ -1,5 +1,6 @@
 import * as m from 'mithril';
 import ViewModel from '../ViewModel';
+import { ConfigApiModelInterface } from '../../Model/Api/ConfigApiModel';
 import { BalloonModelInterface } from '../../Model/Balloon/BallonModel';
 import DateUtil from '../../Util/DateUtil';
 import Util from '../../Util/Util';
@@ -10,17 +11,21 @@ import { SnackbarModelInterface } from '../../Model/Snackbar/SnackbarModel';
 */
 class ProgramTimeBalloonViewModel extends ViewModel {
     private nowNum: number | null = null;
+    private configApiModel: ConfigApiModelInterface;
     private balloon: BalloonModelInterface;
     private snackbar: SnackbarModelInterface;
 
+    public typeValue: string | null = null;
     public dayValue: number = -1;
     public hourValue: number = -1;
 
     constructor(
+        configApiModel: ConfigApiModelInterface,
         balloon: BalloonModelInterface,
         snackbar: SnackbarModelInterface,
     ) {
         super();
+        this.configApiModel = configApiModel;
         this.balloon = balloon;
         this.snackbar = snackbar;
     }
@@ -30,6 +35,7 @@ class ProgramTimeBalloonViewModel extends ViewModel {
     */
     public setNowNum(num: number): void {
         this.nowNum = num;
+        this.typeValue = this.getTypeParam();
         this.dayValue = -1;
         this.hourValue = -1;
     }
@@ -39,6 +45,42 @@ class ProgramTimeBalloonViewModel extends ViewModel {
     */
     public close(): void {
         this.balloon.close();
+    }
+
+    /**
+    * 放送波を返す
+    * @return { value: string, name: string }[]
+    */
+    public getTypes(): { value: string, name: string }[] {
+        if(this.typeValue === null) { return []; }
+
+        const config = this.configApiModel.getConfig();
+        if(config === null) { return []; }
+
+        let types: { value: string, name: string }[] = [];
+
+        if(config.broadcast.GR) {
+            types.push({ value: 'GR', name: 'GR' });
+        }
+        if(config.broadcast.BS) {
+            types.push({ value: 'BS', name: 'BS' });
+        }
+        if(config.broadcast.CS) {
+            types.push({ value: 'CS', name: 'CS' });
+        }
+        if(config.broadcast.SKY) {
+            types.push({ value: 'SKY', name: 'SKY' });
+        }
+
+        return types;
+    }
+
+    /**
+    * query から放送波を返す
+    * @return string
+    */
+    private getTypeParam(): string {
+        return m.route.param('type');
     }
 
     /**
@@ -94,16 +136,17 @@ class ProgramTimeBalloonViewModel extends ViewModel {
     * 入力された日付に移動する
     */
     public show(): void {
-        if(this.nowNum === null) { return; }
+        if(this.nowNum === null || this.typeValue === null) { return; }
 
         let time = String(this.dayValue) + (`0${ this.hourValue }`).slice(-2);
-        if(time !== DateUtil.format(DateUtil.getJaDate(new Date(this.nowNum)), 'YYMMddhh')) {
+        if(time === DateUtil.format(DateUtil.getJaDate(new Date(this.nowNum)), 'YYMMddhh') && this.getTypeParam() === this.typeValue) {
+            this.snackbar.open('現在ページと同じ設定です');
+        } else {
             let query = Util.getCopyQuery();
             query.time = time;
+            query.type = this.typeValue;
             this.close();
             Util.move(m.route.get().split('?')[0], query);
-        } else {
-            this.snackbar.open('現在ページと同じ設定です');
         }
     }
 }

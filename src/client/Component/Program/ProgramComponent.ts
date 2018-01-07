@@ -174,7 +174,7 @@ class ProgramComponent extends ParentComponent<void> {
                 m(BalloonComponent, {
                     id: ProgramTimeBalloonViewModel.id,
                     content: m(ProgramTimeBalloonComponent),
-                    maxWidth: 250,
+                    maxWidth: 262,
                     verticalOnly: true,
                 }),
                 m(BalloonComponent, {
