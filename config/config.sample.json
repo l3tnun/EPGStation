@@ -1,4 +1,5 @@
 {
+    "readOnlyOnce": false,
     "serverPort": "8888",
     "mirakurunPath": "http+unix://%2Fvar%2Frun%2Fmirakurun.sock/",
     "dbType": "mysql",

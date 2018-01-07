@@ -35,7 +35,8 @@ class Configuration {
     * @return config
     */
     public getConfig(): ConfigInterface {
-        this.updateConfig();
+        // readOnlyOnce が有効のときは config を update しない
+        if(this.config === null || !this.config.readOnlyOnce) { this.updateConfig(); }
         return this.config!;
     }
 
@@ -54,7 +55,7 @@ class Configuration {
             } else {
                 this.log.system.fatal(e);
             }
-            if(this.config == null) { process.exit(); }
+            if(this.config === null) { process.exit(); }
         }
 
         //JSON parse configFile
@@ -62,7 +63,7 @@ class Configuration {
             this.config = JSON.parse(configFile);
         } catch(e) {
             this.log.system.fatal('config.json parse error');
-            if(this.config == null) { process.exit(); }
+            if(this.config === null) { process.exit(); }
         }
     }
 }
