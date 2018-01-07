@@ -8,7 +8,7 @@ export const get: Operation = async (req, res) => {
 
     try {
         let filePath = await recordeds.getThumbnailPath(req.params.id);
-        api.responseFile(req, res, filePath, 'image/jpeg');
+        res.sendFile(filePath);
     } catch(err) {
         if(err.message === RecordedModelInterface.NotFoundRecordedThumbnailError) {
             api.responseError(res, { code: 404,  message: 'Recorded Thumbnail is not Found' });
