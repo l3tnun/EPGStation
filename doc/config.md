@@ -3,6 +3,7 @@ Config.json
 
 | プロパティ | 種類 | デフォルト値 | 必須 | 説明 |
 | -------- | --- | ---------- | --- |  --- |
+| readOnlyOnce | boolean | false | no | config.json の読み込みを1度だけに制限する |
 | serverPort | number | | yes | ポート番号 |
 | mirakurunPath | string | | yes | Mirakurunのパス(URL) |
 | dbType | mysql \| sqlite3 \| postgres | mysql | no | 使用する データベースを指定する |
