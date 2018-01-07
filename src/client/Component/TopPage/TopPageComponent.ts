@@ -261,7 +261,7 @@ class TopPageComponent extends ParentComponent<void> {
                 m('div', { class: 'thumbnail-container' }, [
                     m('img', {
                         class: 'thumbnail',
-                        src: recorded.hasThumbnail ? `/thumbnail/${ recorded.id }.jpg` : '/img/noimg.png',
+                        src: recorded.hasThumbnail ? `/api/recorded/${ recorded.id }/thumbnail` : '/img/noimg.png',
                         onerror: (e: Event) => { (<HTMLImageElement>e.target).src = '/img/noimg.png'; },
                     }),
                 ]),

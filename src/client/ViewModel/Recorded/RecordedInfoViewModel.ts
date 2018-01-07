@@ -197,7 +197,7 @@ class RecordedInfoViewModel extends ViewModel {
     * @return string
     */
     public getThumnbailSrc(): string | null {
-        return this.recorded === null || !this.recorded.hasThumbnail ? '/img/noimg.png' : `/thumbnail/${ this.recorded.id }.jpg`;
+        return this.recorded === null || !this.recorded.hasThumbnail ? '/img/noimg.png' : `/api/recorded/${ this.recorded.id }/thumbnail`;
     }
 
     /**
