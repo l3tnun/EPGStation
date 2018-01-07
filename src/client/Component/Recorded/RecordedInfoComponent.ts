@@ -45,6 +45,8 @@ class RecordedInfoComponent extends Component<void> {
     * info tab
     */
     private createInfo(): m.Child[] {
+        let extended = this.viewModel.getExtended();
+
         return <m.Child[]>[
             m('div', { class: 'title' }, this.viewModel.getTitle()),
             m('div', { class: 'channel' }, this.viewModel.getChannelName()),
@@ -69,13 +71,12 @@ class RecordedInfoComponent extends Component<void> {
             m('div', { class: 'description' }, this.viewModel.getDescription()),
             m('div', {
                 class: 'extended',
+                style: extended.length === 0 ? 'display: none;' : '',
                 onupdate: (vnode: m.VnodeDOM<void, this>) => {
-                    let str = this.viewModel.getExtended();
-                    if(str.length === 0) { str = ' '; }
-
-                    str = str.replace(/(http:\/\/[\x21-\x7e]+)/gi, "<a href='$1' target='_blank'>$1</a>");
-                    str = str.replace(/(https:\/\/[\x21-\x7e]+)/gi, "<a href='$1' target='_blank'>$1</a>");
-                    (<HTMLElement>vnode.dom).innerHTML = str;
+                    if(extended.length === 0) { return; }
+                    extended = extended.replace(/(http:\/\/[\x21-\x7e]+)/gi, "<a href='$1' target='_blank'>$1</a>");
+                    extended = extended.replace(/(https:\/\/[\x21-\x7e]+)/gi, "<a href='$1' target='_blank'>$1</a>");
+                    (<HTMLElement>vnode.dom).innerHTML = extended;
                 },
             }, this.viewModel.getExtended()),
         ];
