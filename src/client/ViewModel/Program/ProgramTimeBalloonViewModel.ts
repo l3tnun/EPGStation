@@ -79,8 +79,9 @@ class ProgramTimeBalloonViewModel extends ViewModel {
     * query から放送波を返す
     * @return string
     */
-    private getTypeParam(): string {
-        return m.route.param('type');
+    private getTypeParam(): string | null {
+        const type = m.route.param('type');
+        return typeof type === 'undefined' ? null : type;
     }
 
     /**
@@ -136,15 +137,16 @@ class ProgramTimeBalloonViewModel extends ViewModel {
     * 入力された日付に移動する
     */
     public show(): void {
-        if(this.nowNum === null || this.typeValue === null) { return; }
+        if(this.nowNum === null) { return; }
 
-        let time = String(this.dayValue) + (`0${ this.hourValue }`).slice(-2);
-        if(time === DateUtil.format(DateUtil.getJaDate(new Date(this.nowNum)), 'YYMMddhh') && this.getTypeParam() === this.typeValue) {
+        const time = String(this.dayValue) + (`0${ this.hourValue }`).slice(-2);
+        const type = this.getTypeParam();
+        if(time === DateUtil.format(DateUtil.getJaDate(new Date(this.nowNum)), 'YYMMddhh') && (type === null || type === this.typeValue)) {
             this.snackbar.open('現在ページと同じ設定です');
         } else {
             let query = Util.getCopyQuery();
             query.time = time;
-            query.type = this.typeValue;
+            if(this.typeValue !== null) { query.type = this.typeValue; }
             this.close();
             Util.move(m.route.get().split('?')[0], query);
         }
