@@ -20,21 +20,23 @@ class ProgramInfoComponent extends Component<void> {
     */
     public view(): m.Child {
         return m('div', { class: 'program-info' }, [
-            m('div', { class: 'title' }, this.viewModel.getTitle()),
-            this.createChannel(),
-            this.createTime(),
-            this.createItem('genre', this.viewModel.getGenres()),
-            this.createItem('description', this.viewModel.getDescription()),
-            this.createItem('extended', this.viewModel.getExtended(), (vnode: m.VnodeDOM<void, this>) => {
-                let str = this.viewModel.getExtended();
-                str = str.replace(/(http:\/\/[\x21-\x7e]+)/gi, "<a href='$1' target='_blank'>$1</a>");
-                str = str.replace(/(https:\/\/[\x21-\x7e]+)/gi, "<a href='$1' target='_blank'>$1</a>");
-                (<HTMLElement>vnode.dom).innerHTML = str;
-            }),
-            this.createItem('video', '映像: ' + this.viewModel.getVideoInfo()),
-            this.createItem('audio-mode', '音声: ' + this.viewModel.getAudioMode()),
-            this.createItem('audio-sampling-rate', 'サンプリングレート: ' + this.viewModel.getAudioSamplingRate()),
-            this.createItem('is-free', this.viewModel.getIsFree()),
+            m('div', { class: 'content-parent' }, [
+                m('div', { class: 'title' }, this.viewModel.getTitle()),
+                this.createChannel(),
+                this.createTime(),
+                this.createItem('genre', this.viewModel.getGenres()),
+                this.createItem('description', this.viewModel.getDescription()),
+                this.createItem('extended', this.viewModel.getExtended(), (vnode: m.VnodeDOM<void, this>) => {
+                    let str = this.viewModel.getExtended();
+                    str = str.replace(/(http:\/\/[\x21-\x7e]+)/gi, "<a href='$1' target='_blank'>$1</a>");
+                    str = str.replace(/(https:\/\/[\x21-\x7e]+)/gi, "<a href='$1' target='_blank'>$1</a>");
+                    (<HTMLElement>vnode.dom).innerHTML = str;
+                }),
+                this.createItem('video', '映像: ' + this.viewModel.getVideoInfo()),
+                this.createItem('audio-mode', '音声: ' + this.viewModel.getAudioMode()),
+                this.createItem('audio-sampling-rate', 'サンプリングレート: ' + this.viewModel.getAudioSamplingRate()),
+                this.createItem('is-free', this.viewModel.getIsFree()),
+            ])
         ]);
     }
 
