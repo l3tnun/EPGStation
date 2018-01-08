@@ -1,3 +1,4 @@
+import * as m from 'mithril';
 import ViewModel from '../ViewModel';
 import { BalloonModelInterface } from '../../Model/Balloon/BallonModel';
 import * as apid from '../../../../api';
@@ -83,6 +84,25 @@ class RecordedInfoViewModel extends ViewModel {
     */
     public set(recorded: apid.RecordedProgram): void {
         this.recorded = recorded;
+    }
+
+    /**
+    * recorded を更新する
+    */
+    public update(): void {
+        if(this.recorded === null) { return; }
+
+        for(let data of this.recordedApiModel.getRecorded().recorded) {
+            if(data.id === this.recorded.id) {
+                // 更新
+                this.recorded = data;
+                setTimeout(() => { m.redraw(); }, 200);
+                return;
+            }
+        }
+
+        // 一覧から削除された
+        this.close();
     }
 
     /**

@@ -63,6 +63,10 @@ class TopPageComponent extends ParentComponent<void> {
         await this.viewModel.init();
         await this.reservesViewModel.init(status);
         this.setRestorePositionFlag(status);
+
+        if(status !== 'init') {
+            this.recordedInfoViewModel.update();
+         }
     }
 
     /**

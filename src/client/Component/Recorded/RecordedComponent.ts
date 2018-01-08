@@ -45,6 +45,11 @@ class RecordedComponent extends ParentComponent<void> {
         this.viewModel.init(status)
         .then(() => {
             this.setRestorePositionFlag(status);
+        })
+        .then(() => {
+            if(status !== 'init') {
+                this.infoViewModel.update();
+            }
         });
     }
 
