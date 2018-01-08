@@ -34,6 +34,7 @@ class ProgramInfoComponent extends Component<void> {
             this.createItem('video', '映像: ' + this.viewModel.getVideoInfo()),
             this.createItem('audio-mode', '音声: ' + this.viewModel.getAudioMode()),
             this.createItem('audio-sampling-rate', 'サンプリングレート: ' + this.viewModel.getAudioSamplingRate()),
+            this.createItem('is-free', this.viewModel.getIsFree()),
         ]);
     }
 
