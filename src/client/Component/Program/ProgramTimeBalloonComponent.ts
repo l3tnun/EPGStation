@@ -18,17 +18,28 @@ class ProgramTimeBalloonComponent extends Component<void> {
     * view
     */
     public view(): m.Children {
+        const types = this.viewModel.getTypes();
+        const hasTypes = types.length > 0;
+
         return [
             m('div', { class: 'program-time-balloon' }, [
+                this.createSelect('types',
+                    (value: string) => { this.viewModel.typeValue = value; },
+                    (vnode: m.VnodeDOM<void, this>) => { this.selectOnUpdate(<HTMLInputElement>(vnode.dom), this.viewModel.typeValue); },
+                    this.viewModel.getTypes(),
+                    hasTypes ? '' : 'display: none;',
+                ),
                 this.createSelect('days',
                     (value: number) => { this.viewModel.dayValue = Number(value); },
                     (vnode: m.VnodeDOM<void, this>) => { this.selectOnUpdate(<HTMLInputElement>(vnode.dom), this.viewModel.dayValue); },
                     this.viewModel.getDays(),
+                    hasTypes ? '' : 'width: 50%',
                 ),
                 this.createSelect('hours',
                     (value: number) => { this.viewModel.hourValue = Number(value); },
                     (vnode: m.VnodeDOM<void, this>) => { this.selectOnUpdate(<HTMLInputElement>(vnode.dom), this.viewModel.hourValue); },
                     this.viewModel.getHours(),
+                    hasTypes ? '' : 'width: 50%',
                 ),
             ]),
             m('div', { class: 'mdl-dialog__actions' }, [
@@ -51,11 +62,15 @@ class ProgramTimeBalloonComponent extends Component<void> {
     */
     private createSelect(
         name: string,
-        onchange: (value: number) => void,
+        onchange: (value: number | string) => void,
         onupdate: (vnode: m.VnodeDOM<void, this>) => void,
-        values: { value: number, name: string }[],
+        values: { value: number | string, name: string }[],
+        style: string,
     ): m.Child {
-        return m('div', { class: `pulldown mdl-layout-spacer ${ name }` }, [
+        return m('div', {
+            class: `pulldown mdl-layout-spacer ${ name }`,
+            style: style,
+        }, [
             m('select', {
                 class: 'mdl-textfield__input program-dialog-label',
                 onchange: m.withAttr('value', (value) => { onchange(value); }),

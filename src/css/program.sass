@@ -4,27 +4,31 @@ $board-line: 1px solid #ccc;
 $board-line-x2: 2px solid #ccc;
 $window-width: 600px
 
-$chennel-height: 30px;
-$chennel-width: 140px;
-$chennel-mobile-height: 20px;
-$chennel-mobile-width: 100px;
-
-$timescale-height: 180px;
-$timescale-width: 30px;
-$timescale-mobile-height: 120px;
-$timescale-mobile-width: 20px;
-
-$board-fontsize: 10pt;
-$board-mobile-fontsize: 7.5pt;
-
 .ProgramTable
-    --time-width: 0px;
+    --channel-tablet-height: 30px;
+    --channel-tablet-width: 140px;
+    --channel-tablet-fontsize: 15px;
+    --channel-mobile-height: 20px;
+    --channel-mobile-width: 100px;
+    --channel-mobile-fontsize: 12px;
+
+    --timescale-tablet-height: 180px;
+    --timescale-tablet-width: 30px;
+    --timescale-tablet-fontsize: 17px;
+    --timescale-mobile-height: 120px;
+    --timescale-mobile-width: 20px;
+    --timescale-mobile-fontsize: 12px;
+
+    --board-tablet-fontsize: 10pt;
+    --board-mobile-fontsize: 7.5pt;
+
     width: 100%;
     height: 100%;
     overflow: hidden;
     .channels
         position: absolute;
         overflow: hidden;
+        height: var(--channel-height);
         width: 100%;
         z-index: 4;
         .item
@@ -41,14 +45,24 @@ $board-mobile-fontsize: 7.5pt;
             justify-content: center;
             text-align: center;
             vertical-align: middle;
+            max-width: var(--timescale-width);
+            min-width: var(--channel-width);
+            max-height: var(--channel-height);
+            min-height: var(--channel-height);
+            line-height: var(--channel-height);
+            font-size: var(--channel-fontsize);
             &:first-child
                 visibility: hidden;
+                max-width: var(--timescale-width);
+                min-width: var(--timescale-width);
             &:nth-last-child(2)
                 border-right: $board-line-x2;
     .child
         width: 100%;
         position: absolute;
+        height: calc(100% - (var(--header-height) + var(--channel-height)));
         .board
+            top: var(--channel-height);
             z-index: 4;
             height: 100%;
             overflow: auto;
@@ -58,6 +72,8 @@ $board-mobile-fontsize: 7.5pt;
                 position: absolute;
                 box-sizing: border-box;
                 border-top: $board-line;
+                max-width: var(--channel-width);
+                min-width: var(--channel-width);
 
                 &:first-child
                     .item
@@ -73,6 +89,9 @@ $board-mobile-fontsize: 7.5pt;
                     border-bottom: $board-line;
                     border-left: $board-line;
                     border-right: $board-line;
+                    font-size: var(--board-fontsize)
+                    max-width: var(--channel-width);
+                    min-width: var(--channel-width);
                     margin: 0;
                     padding: 0;
                     line-height: 1.2em;
@@ -113,10 +132,16 @@ $board-mobile-fontsize: 7.5pt;
             overflow: hidden;
             height: 100%;
             z-index: 4;
+            padding-top: var(--channel-height);
             .item
                 box-sizing: border-box;
                 border-top: 2px solid #fff;
                 color: #fff;
+                max-width: var(--timescale-width);
+                min-width: var(--timescale-width);
+                max-height: var(--timescale-height);
+                min-height: var(--timescale-height);
+                font-size: var(--timescale-fontsize);
 
             .time-4
                 background: #98c32f;
@@ -180,123 +205,53 @@ $board-mobile-fontsize: 7.5pt;
             top: 50%;
             left: 50%;
 
-// android 用 scroll 修正
+/* android 用 scroll 修正 */
 .ProgramTable.fix-scroll
     .channels
+        top: var(--header-height);
         position: fixed;
         z-index: 3;
     .child
         .timescale
+            padding-top: var(--header-height);
             position: fixed;
             z-index: 2;
+        padding-top: var(--channel-height);
         .board
             position: static;
             z-index: 1;
+            margin-left: var(--timescale-width);
+            padding-top: var(--header-height);
 
-/** tablet */
+            .boardbar
+                left: var(--timescale-width);
+
+/* tablet */
 @media screen and (min-width: $window-width)
     .ProgramTable
-        --time-base-height: $timescale-height / 60;
-        --timescale-width: $timescale-width;
-        --channel-width: $chennel-width;
-        .channels
-            height: $chennel-height;
-            .item
-                max-width: $timescale-width;
-                min-width: $chennel-width;
-                max-height: $chennel-height;
-                min-height: $chennel-height;
-                line-height: $chennel-height;
-                font-size: 15px;
-                &:first-child
-                    max-width: $timescale-width;
-                    min-width: $timescale-width;
-        .child
-            height: calc(100% - 86px);
-            .board
-                top: $chennel-height;
-                .station
-                    max-width: $chennel-width;
-                    min-width: $chennel-width;
-                    .item
-                        font-size: $board-fontsize
-                        max-width: $chennel-width;
-                        min-width: $chennel-width;
-            .timescale
-                padding-top: $chennel-height;
-                .item
-                    max-width: $timescale-width;
-                    min-width: $timescale-width;
-                    max-height: $timescale-height;
-                    min-height: $timescale-height;
-                    font-size: 17px;
-
-    // android 用 scroll 修正
-    .ProgramTable.fix-scroll
-        --time-width: $timescale-width;
-        .channels
-            top: $header-max-height;
-        .child
-            .timescale
-                padding-top: $header-max-height;
-            padding-top: $chennel-height;
-            .board
-                margin-left: $timescale-width;
-                padding-top: $header-max-height;
+        --timescale-height: var(--timescale-tablet-height);
+        --timescale-width: var(--timescale-tablet-width);
+        --timescale-fontsize: var(--timescale-tablet-fontsize);
+        --channel-height: var(--channel-tablet-height);
+        --channel-width: var(--channel-tablet-width);
+        --channel-fontsize: var(--channel-tablet-fontsize);
+        --board-fontsize: var(--board-tablet-fontsize);
+        --header-height: $header-min-height;
 
 /* mobile*/
 @media screen and (max-width: $window-width)
     .ProgramTable
-        --time-base-height: $timescale-mobile-height / 60;
-        --timescale-width: $timescale-mobile-width;
-        --channel-width: $chennel-mobile-width;
-        .channels
-            height: $chennel-mobile-height;
-            .item
-                max-width: $chennel-mobile-width;
-                min-width: $chennel-mobile-width;
-                max-height: $chennel-mobile-height;
-                min-height: $chennel-mobile-height;
-                line-height: $chennel-mobile-height;
-                font-size: 12px;
-                &:first-child
-                    max-width: $timescale-mobile-width;
-                    min-width: $timescale-mobile-width;
-        .child
-            height: calc(100% - 76px);
-            .board
-                top: $chennel-mobile-height;
-                .station
-                    max-width: $chennel-mobile-width;
-                    min-width: $chennel-mobile-width;
-                    .item
-                        font-size: $board-mobile-fontsize
-                        max-width: $chennel-mobile-width;
-                        min-width: $chennel-mobile-width;
-            .timescale
-                padding-top: $chennel-mobile-height;
-                .item
-                    max-height: $timescale-mobile-height;
-                    min-height: $timescale-mobile-height;
-                    max-width: $timescale-mobile-width;
-                    min-width: $timescale-mobile-width;
-                    font-size: 12px;
-
-    // android 用 scroll 修正
-    .ProgramTable.fix-scroll
-        --time-width: $timescale-mobile-width;
-        .channels
-            top: $header-min-height;
-        .child
-            .timescale
-                padding-top: $header-min-height;
-            padding-top: $chennel-mobile-height;
-            .board
-                margin-left: $timescale-mobile-width;
-                padding-top: $header-min-height;
+        --timescale-height: var(--timescale-mobile-height);
+        --timescale-width: var(--timescale-mobile-width);
+        --timescale-fontsize: var(--timescale-mobile-fontsize);
+        --channel-height: var(--channel-mobile-height);
+        --channel-width: var(--channel-mobile-width);
+        --channel-fontsize: var(--channel-mobile-fontsize);
+        --board-fontsize: var(--board-mobile-fontsize);
+        --header-height: $header-min-height;
 
 /* header が高くなる */
 @media screen and (min-width: $header-height + 1)
     .ProgramTable
-        .child
-            height: calc(100% - 94px);
+        --header-height: $header-max-height;
+

@@ -93,8 +93,10 @@ class BoardComponent extends Component<BoardArgs> {
             schedules.map((schedule, i) => {
                 return m('div', {
                     class: 'station',
-                    style: `left: calc(${ i } * var(--channel-width) + var(--time-width));`
-                    + `height: calc(60 * var(--time-base-height) * ${ this.viewModel.getLengthParam() })`,
+                    style: `left: calc(${ i } * var(--channel-width)`
+                    + (this.viewModel.isFixScroll() ? ` + var(--timescale-width)` : '')
+                    + ');'
+                    + `height: calc(var(--timescale-height) * ${ this.viewModel.getLengthParam() });`,
                     oncreate: (vnode: m.VnodeDOM<BoardArgs, this>) => {
                         this.createStationChild(vnode.dom, schedule, i);
 
@@ -216,7 +218,7 @@ class BoardComponent extends Component<BoardArgs> {
 
         return this.createTextElement('div', {
             class: 'item nodata',
-            style: `height: calc(${ height } * var(--time-base-height)); top: calc(${ position } * var(--time-base-height));`,
+            style: `height: calc(${ height } * (var(--timescale-height) / 60)); top: calc(${ position } * (var(--timescale-height) / 60));`,
         },
         'n');
     }
@@ -262,7 +264,7 @@ class BoardComponent extends Component<BoardArgs> {
 
         let element = this.createParentElement('div', {
             class: classStr,
-            style: `height: calc(${ height } * var(--time-base-height)); top: calc(${ position } * var(--time-base-height));`,
+            style: `height: calc(${ height } * (var(--timescale-height) / 60)); top: calc(${ position } * (var(--timescale-height) / 60));`,
             onclick: (event: Event) => {
                 this.infoViewModel.set(program, channel);
                 this.balloon.open(ProgramInfoViewModel.id, event);

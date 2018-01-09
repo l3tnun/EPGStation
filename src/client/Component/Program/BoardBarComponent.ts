@@ -41,11 +41,13 @@ class BoardBarComponent extends Component<void> {
     * 長さと位置を計算する
     */
     private createStyle(): string {
-        let str = `width: calc(${ this.viewModel.getChannels().length } * var(--channel-width)); left: var(--time-width);`;
+        let str = `width: calc(${ this.viewModel.getChannels().length } * var(--channel-width));`;
         let start = this.viewModel.getTimeParam().start;
         if(start !== 0) {
             let position = Math.floor((new Date().getTime() - start) / 1000 / 60);
-            str += `top: calc(${ position } * var(--time-base-height));`
+            str += `top: calc((${ position } * (var(--timescale-height) / 60))`
+            + (this.viewModel.isFixScroll() ? ' + var(--header-height) + var(--channel-height)' : '')
+            + ');'
         }
 
         return str;

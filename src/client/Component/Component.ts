@@ -37,11 +37,13 @@ abstract class Component<T> extends Base implements m.ClassComponent<T> {
     * @param element: element
     * @param value: value
     */
-    protected selectOnUpdate(element: HTMLInputElement, value: number): void {
-        if(typeof value === 'undefined') { return; }
+    protected selectOnUpdate(element: HTMLInputElement, value: number | string | null): void {
+        if(typeof value === 'undefined' || value === null) { return; }
 
-        if(Number(element.value) != value) {
+        if(typeof value === 'number' && Number(element.value) != value) {
             element.value = String(value);
+        } else if(typeof value === 'string' && element.value != value) {
+            element.value = value;
         }
     }
 

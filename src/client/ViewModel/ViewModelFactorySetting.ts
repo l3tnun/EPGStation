@@ -88,6 +88,7 @@ namespace ViewModelFactorySetting {
             snackbarModel,
         ));
         factory.reg('ProgramTimeBalloonViewModel', new ProgramTimeBalloonViewModel(
+            configModel,
             balloonModel,
             snackbarModel,
         ));
@@ -124,6 +125,7 @@ namespace ViewModelFactorySetting {
         factory.reg('ReservesViewModel', new ReservesViewModel(
             reservesApiModel,
             channelsApiModel,
+            scheduleApiModel,
             settingModel,
         ));
         factory.reg('ReservesMenuViewModel', new ReservesMenuViewModel(

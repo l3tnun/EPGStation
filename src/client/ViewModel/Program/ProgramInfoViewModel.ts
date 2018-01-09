@@ -202,6 +202,16 @@ class ProgramInfoViewModel extends ViewModel {
     }
 
     /**
+    * 無料放送 or 有料放送かを返す
+    * @return string
+    */
+    public getIsFree(): string {
+        if(this.program === null) { return ''; }
+
+        return this.program.isFree ? '無料放送' : '有料放送';
+    }
+
+    /**
     * close balloon
     */
     public close(): void {

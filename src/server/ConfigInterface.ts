@@ -2,6 +2,7 @@
 * config.json の定義
 */
 interface ConfigInterface {
+    readOnlyOnce: boolean;
     serverPort: number;
     mirakurunPath: string;
     dbType: 'mysql' | 'sqlite3' | 'postgres';

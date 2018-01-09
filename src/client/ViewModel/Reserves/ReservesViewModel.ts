@@ -4,6 +4,7 @@ import { ViewModelStatus } from '../../Enums';
 import * as apid from '../../../../api';
 import { ReservesApiModelInterface } from '../../Model/Api/ReservesApiModel';
 import { ChannelsApiModelInterface } from '../../Model/Api/ChannelsApiModel';
+import { ScheduleApiModelInterface } from '../../Model/Api/ScheduleApiModel';
 import { SettingModelInterface } from '../../Model/Setting/SettingModel';
 import Util from '../../Util/Util';
 
@@ -18,6 +19,7 @@ enum Mode {
 class ReservesViewModel extends ViewModel {
     private reservesApiModel: ReservesApiModelInterface;
     private channels: ChannelsApiModelInterface;
+    private scheduleApiModel: ScheduleApiModelInterface;
     private setting: SettingModelInterface;
     private limit: number = 0;
     private offset: number = 0;
@@ -26,11 +28,13 @@ class ReservesViewModel extends ViewModel {
     constructor(
         reservesApiModel: ReservesApiModelInterface,
         channels: ChannelsApiModelInterface,
+        scheduleApiModel: ScheduleApiModelInterface,
         setting: SettingModelInterface,
     ) {
         super();
         this.reservesApiModel = reservesApiModel;
         this.channels = channels;
+        this.scheduleApiModel = scheduleApiModel;
         this.setting = setting;
     }
 
@@ -53,6 +57,7 @@ class ReservesViewModel extends ViewModel {
         this.offset = typeof m.route.param('page') === 'undefined' ? 0 : (Number(m.route.param('page')) - 1) * this.limit;
 
         this.reservesApiModel.init();
+        this.scheduleApiModel.init();
         m.redraw();
 
         return Util.sleep(200)
@@ -117,6 +122,13 @@ class ReservesViewModel extends ViewModel {
     */
     public getLimit(): number {
         return this.limit;
+    }
+
+    /**
+    * 予約情報更新を開始する
+    */
+    public startUpdateReserves(): Promise<void> {
+        return this.scheduleApiModel.startUpdateReserves();
     }
 }
 

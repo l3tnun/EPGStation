@@ -52,6 +52,16 @@ class ReservesComponent extends ParentComponent<void> {
     public view(): m.Child {
         return m(MainLayoutComponent, {
             header: { title: m.route.param('mode') === 'conflicts' ? '重複' : '予約' },
+            menuContent: [
+                { attrs: {
+                    onclick: () => {
+                        this.balloon.close();
+                        setTimeout(() => {
+                            this.viewModel.startUpdateReserves();
+                        }, 200);
+                    }
+                }, text: '予約情報更新' },
+            ],
             content: [
                 this.createContent(),
             ],
