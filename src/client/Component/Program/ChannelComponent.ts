@@ -1,7 +1,7 @@
 import * as m from 'mithril';
 import Component from '../Component';
 import factory from '../../ViewModel/ViewModelFactory';
-import ProgramViewModel from '../../ViewModel/Program/ProgramViewModel';
+import { ProgramViewModel } from '../../ViewModel/Program/ProgramViewModel';
 import Util from '../../Util/Util';
 import DateUtil from '../../Util/DateUtil';
 import * as apid from '../../../../api';

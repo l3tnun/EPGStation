@@ -8,6 +8,14 @@ import DateUtil from '../../Util/DateUtil';
 import { AllReserves, ReservesApiModelInterface } from '../../Model/Api/ReservesApiModel';
 import { SettingModelInterface } from '../../Model/Setting/SettingModel';
 
+interface ProgramViewInfo {
+    element: HTMLElement,
+    top: number,
+    left: number,
+    end: number,
+    isVisible: boolean,
+}
+
 /**
 * ProgramViewModel
 */
@@ -26,6 +34,9 @@ class ProgramViewModel extends ViewModel {
 
     // reload で番組表 DOM を更新することを伝える
     public reloadUpdateDom: boolean = false;
+
+    // 番組表描画情報を格納する
+    public items: ProgramViewInfo[] = [];
 
     constructor(
         scheduleApiModel: ScheduleApiModelInterface,
@@ -254,12 +265,78 @@ class ProgramViewModel extends ViewModel {
     public getLengthParam(): number {
         return typeof this.lengthParam === 'undefined' ? 24 : this.lengthParam;
     }
+
+    /**
+    * 番組表の描画範囲を限定するか
+    * @return boolean
+    */
+    public isEnableDraw(): boolean {
+        return !Util.uaIsSafari() && !(Util.uaIsAndroid() && !this.isFixScroll());
+    }
+
+    /**
+    * 番組表の描画
+    */
+    public draw(): void {
+        if(!this.isEnableDraw() || this.items.length <= 0) { return; }
+
+        const element = <HTMLElement>(this.isFixScroll() ? document.getElementsByClassName('mdl-layout')[0] : document.querySelector(`.${ ProgramViewModel.boardName }`));
+        if(element === null) { return; }
+
+        const stationWidth = this.getCssVariable('--channel-width');
+        const timeBaseHeight = this.getCssVariable('--timescale-height') / 60;
+        let viewWidth: number;
+        let viewHeight: number;
+        if(this.isFixScroll()) {
+            const viewElement = <HTMLElement>document.querySelector(`.${ ProgramViewModel.programTableName }`);
+            if(viewElement === null) { return; }
+            viewWidth = viewElement.offsetWidth;
+            viewHeight = viewElement.offsetHeight;
+        } else {
+            viewWidth = element.offsetWidth;
+            viewHeight = element.offsetHeight;
+        }
+
+        this.items.forEach((item) => {
+            const stationLeft = stationWidth * item.left - element.scrollLeft;
+            const stationRight = stationWidth + stationLeft;
+            const itemTop = item.top * timeBaseHeight - element.scrollTop;
+            const itemEnd = item.end * timeBaseHeight - element.scrollTop;
+
+            // 表示範囲か
+            if(0 <= stationRight && stationLeft <= viewWidth && 0 <= itemEnd && itemTop <= viewHeight) {
+                if(!item.isVisible) {
+                    item.element.style.display = '';
+                    item.isVisible = true;
+                }
+            } else {
+                if(item.isVisible) {
+                    item.element.style.display = 'none';
+                    item.isVisible = false;
+                }
+            }
+        });
+    }
+
+    /**
+    * get CSS Variables
+    * @param name
+    * @return number
+    */
+    private getCssVariable(name: string): number {
+        const element = document.querySelector(`.${ ProgramViewModel.programTableName }`);
+        if(element === null) { return 0; }
+        const style = window.getComputedStyle(element);
+        return Number(style.getPropertyValue(name).trim().replace('px', ''));
+    }
 }
 
 namespace ProgramViewModel {
+    export const programTableName = 'ProgramTable';
+    export const boardName = 'board';
     export const channlesName = 'channels';
     export const timescaleName = 'timescale';
 }
 
-export default ProgramViewModel;
+export { ProgramViewInfo, ProgramViewModel };
 

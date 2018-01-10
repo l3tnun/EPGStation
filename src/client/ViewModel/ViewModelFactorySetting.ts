@@ -15,7 +15,7 @@ import { SettingModel } from '../Model/Setting/SettingModel';
 import HeaderViewModel from './HeaderViewModel';
 import NavigationViewModel from './NavigationViewModel';
 import TopPageViewModel from './TopPageViewModel';
-import ProgramViewModel from './Program/ProgramViewModel';
+import { ProgramViewModel } from './Program/ProgramViewModel';
 import SnackbarViewModel from './Snackbar/SnackbarViewModel';
 import BalloonViewModel from './Balloon/BalloonViewModel';
 import ProgramInfoViewModel from './Program/ProgramInfoViewModel';

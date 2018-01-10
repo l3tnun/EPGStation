@@ -2,7 +2,7 @@ import * as m from 'mithril';
 import Component from '../Component';
 import factory from '../../ViewModel/ViewModelFactory';
 import ProgramGenreViewModel from '../../ViewModel/Program/ProgramGenreViewModel';
-import ProgramViewModel from '../../ViewModel/Program/ProgramViewModel';
+import { ProgramViewModel } from '../../ViewModel/Program/ProgramViewModel';
 
 /**
 * ProgramGenreActionComponent
