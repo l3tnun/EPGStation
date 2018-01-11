@@ -267,6 +267,14 @@ class ProgramViewModel extends ViewModel {
     }
 
     /**
+    * 番組表の描画範囲を最小にするか
+    * @return boolean
+    */
+    public isMinimumDrawing(): boolean {
+        return this.setting.value.programMinimumDrawing;
+    }
+
+    /**
     * 番組表の描画範囲を限定するか
     * @return boolean
     */
@@ -297,6 +305,7 @@ class ProgramViewModel extends ViewModel {
             viewHeight = element.offsetHeight;
         }
 
+        const isMinimumDrawing = this.isMinimumDrawing();
         this.items.forEach((item) => {
             const stationLeft = stationWidth * item.left - element.scrollLeft;
             const stationRight = stationWidth + stationLeft;
@@ -310,7 +319,7 @@ class ProgramViewModel extends ViewModel {
                     item.isVisible = true;
                 }
             } else {
-                if(item.isVisible) {
+                if(item.isVisible && isMinimumDrawing) {
                     item.element.style.display = 'none';
                     item.isVisible = false;
                 }

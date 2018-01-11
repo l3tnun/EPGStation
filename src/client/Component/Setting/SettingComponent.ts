@@ -66,6 +66,17 @@ class SettingComponent extends ParentComponent<void> {
             );
         }
 
+        let minimumDrawing: m.Child | null = null;
+        if(!Util.uaIsSafari()) {
+            minimumDrawing = this.createListItem(
+                '番組表描画範囲の最小化',
+                this.createToggle(
+                    () => { return this.viewModel.tmpValue.programMinimumDrawing; },
+                    (value) => { this.viewModel.tmpValue.programMinimumDrawing = value; },
+                )
+            );
+        }
+
         return m('div', {
             class : 'setting-content mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col',
             onupdate: () => { this.restoreMainLayoutPosition(); },
@@ -80,6 +91,7 @@ class SettingComponent extends ParentComponent<void> {
                 ),
 
                 fixScroll,
+                minimumDrawing,
 
                 this.createListItem(
                     '番組表時間',
