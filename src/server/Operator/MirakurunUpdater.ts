@@ -160,7 +160,7 @@ switch(Util.getDBType()) {
         programsDB = new SQLite3ProgramsDB(operator);
         break;
 
-    case 'postgres':
+    case 'postgresql':
         operator = new PostgreSQLOperator();
         servicesDB = new PostgreSQLServicesDB(operator);
         programsDB = new PostgreSQLProgramsDB(operator);
