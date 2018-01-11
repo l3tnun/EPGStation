@@ -52,6 +52,7 @@ class BoardComponent extends Component<BoardArgs> {
         this.storedGenre = genre === null ? {} : genre;
 
         const schedules = this.viewModel.getSchedule();
+        if(schedules.length === 0) { return null; }
 
         return m('div', {
             class: `${ ProgramViewModel.boardName } non-scroll`,
@@ -99,15 +100,14 @@ class BoardComponent extends Component<BoardArgs> {
                     + `height: calc(var(--timescale-height) * ${ this.viewModel.getLengthParam() });`
                     + 'position: absolute;',
                 oncreate: (vnode: m.VnodeDOM<BoardArgs, this>) => {
-                    schedules.forEach((schedule, i) => {
-                        this.createStationChild(vnode.dom, schedule, i);
+                    // add child
+                    for(let i = 0; i < schedules.length; i++) {
+                        this.createStationChild(vnode.dom, schedules[i], i);
+                    }
 
-                        // progress 非表示
-                        if(i === this.viewModel.getSchedule().length - 1) {
-                            this.viewModel.draw();
-                            setTimeout(() => { this.viewModel.progressShow = false; m.redraw(); }, 200);
-                        }
-                    })
+                    // progress 非表示
+                    this.viewModel.draw();
+                    setTimeout(() => { this.viewModel.progressShow = false; m.redraw(); }, 200);
                 },
                 onupdate: (vnode: m.VnodeDOM<BoardArgs, this>) => {
                     if(!this.viewModel.reloadUpdateDom) { return; }
@@ -117,15 +117,13 @@ class BoardComponent extends Component<BoardArgs> {
                         vnode.dom.removeChild(vnode.dom.childNodes[i]);
                     }
 
-                    schedules.forEach((schedule, i) => {
-                        this.createStationChild(vnode.dom, schedule, i);
+                    // add child
+                    for(let i = 0; i < schedules.length; i++) {
+                        this.createStationChild(vnode.dom, schedules[i], i);
+                    }
 
-                        // progress 非表示 & reloadUpdateDom = false
-                        if(i === this.viewModel.getSchedule().length - 1) {
-                            this.viewModel.draw();
-                            setTimeout(() => { this.viewModel.reloadUpdateDom = false; this.viewModel.progressShow = false; m.redraw(); }, 200);
-                        }
-                    });
+                    this.viewModel.draw();
+                    setTimeout(() => { this.viewModel.reloadUpdateDom = false; this.viewModel.progressShow = false; m.redraw(); }, 200);
                 },
             }, [
                 m(BoardBarComponent),
