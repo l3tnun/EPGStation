@@ -57,7 +57,7 @@ $ cp config/config.sample.json config/config.json
 
 #### 使用するデータベース
 
-データベースには MySQL (推奨) or SQLite3 or PostgreSQL が使用可能です。データベースの指定は config.json の ```dbType``` を ```mysql``` or ```sqlite3``` or ```postgres``` に指定してください。詳細は [doc/config.md](doc/config.md) を参照してください
+データベースには MySQL (推奨) or SQLite3 or PostgreSQL が使用可能です。データベースの指定は config.json の ```dbType``` を ```mysql``` or ```sqlite3``` or ```postgresql``` に指定してください。詳細は [doc/config.md](doc/config.md) を参照してください
 
 SQLite3 は [node-sqlite3](https://github.com/mapbox/node-sqlite3) を使用しているためシステム側での SQLite3 のインストールは不要です
 
