@@ -32,6 +32,8 @@ class ProgramComponent extends ParentComponent<void> {
     private timeBalloon: ProgramTimeBalloonViewModel;
     private balloon: BalloonViewModel;
 
+    private resizeListener = debounce(() => { this.viewModel.draw(); }, 50);
+
     constructor() {
         super();
         this.viewModel = <ProgramViewModel>(factory.get('ProgramViewModel'));
@@ -94,6 +96,9 @@ class ProgramComponent extends ParentComponent<void> {
                 m('div', {
                     class: ProgramViewModel.programTableName + (this.viewModel.isFixScroll() ? ' fix-scroll' : ''),
                     oncreate: () => {
+                        // 表示範囲 resize
+                        if(this.viewModel.isEnableDraw()) { window.addEventListener('resize', this.resizeListener, false); }
+
                         if(!this.viewModel.isFixScroll()) { return; }
 
                         const element = <HTMLElement>document.getElementsByClassName('mdl-layout')[0];
@@ -141,6 +146,10 @@ class ProgramComponent extends ParentComponent<void> {
                         const element = <HTMLElement>document.getElementsByClassName('mdl-layout')[0];
                         element.scrollTop = position.top;
                         element.scrollLeft = position.left;
+                    },
+                    onremove: () => {
+                        // 表示範囲 resize
+                        if(this.viewModel.isEnableDraw()) { window.removeEventListener('resize', this.resizeListener, false ); }
                     },
                 }, [
                     m(ChannelComponent),
