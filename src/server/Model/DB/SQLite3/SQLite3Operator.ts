@@ -150,7 +150,6 @@ class SQLite3Operator extends DBOperator {
     * @param datas インサートするデータ
     * @param isDelete: データを削除するか true: 削除, false: 削除しない
     * @param insertWait インサート時の wait (ms)
-    * @return Promise<pg.QueryResult>
     */
     public manyInsert(deleteTableName: string, datas: { query: string, values?: any[] }[], isDelete: boolean, insertWait: number = 0): Promise<void> {
         return new Promise<void>(async (resolve: () => void, reject: (err: Error) => void) => {
