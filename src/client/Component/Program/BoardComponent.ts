@@ -113,7 +113,7 @@ class BoardComponent extends Component<BoardArgs> {
                     if(!this.viewModel.reloadUpdateDom) { return; }
 
                     // remove child
-                    for (let i = vnode.dom.childNodes.length - 1; i >= 0; i--) {
+                    for (let i = vnode.dom.childNodes.length - 1; i > 0; i--) {
                         vnode.dom.removeChild(vnode.dom.childNodes[i]);
                     }
 
