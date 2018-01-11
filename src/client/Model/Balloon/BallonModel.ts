@@ -40,10 +40,14 @@ class BalloonModel extends Model implements BalloonModelInterface {
     * すべてのバルーンを閉じる
     */
     public close(): void {
+        let needsRedraw = false;
         for(let key in this.balloons) {
-            this.balloons[key].close();
+            if(this.balloons[key].get()) {
+                this.balloons[key].close();
+                needsRedraw = true;
+            }
         }
-        m.redraw();
+        if(needsRedraw) { m.redraw(); }
     }
 
     /**

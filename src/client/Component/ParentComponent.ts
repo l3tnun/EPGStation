@@ -1,4 +1,5 @@
 import * as m from 'mithril';
+import { debounce } from 'lodash';
 import * as socketIo from 'socket.io-client';
 import Component from './Component';
 import { ViewModelStatus } from '../Enums';
@@ -29,6 +30,7 @@ abstract class ParentComponent<T> extends Component<T> {
     private queryChanged: boolean = false;
     private _balloon: BalloonViewModel;
     private _streamInfo: StreamInfoViewModel;
+    private _resizeListener = debounce(() => { this._balloon.close(); }, 100);
 
     private static ioStatus: { [key: string]: { isActive: boolean, isInited: boolean } } = {};
     private static io: SocketIOClient.Socket | null = null;
@@ -284,6 +286,16 @@ abstract class ParentComponent<T> extends Component<T> {
     }
 
     /**
+    * oncreate
+    */
+    public oncreate(vnode: m.VnodeDOM<T, this>): any {
+        super.oncreate(vnode);
+
+        // window resize 時に balloon を閉じる
+        window.addEventListener('resize', this._resizeListener, false);
+    }
+
+    /**
     * ViewModeel の init が必要であるかチェック
     * 必要であれば this.queryChanged = true;
     */
@@ -323,6 +335,8 @@ abstract class ParentComponent<T> extends Component<T> {
     }
 
     public onremove(vnode: m.VnodeDOM<T, any>): any {
+        window.removeEventListener('resize', this._resizeListener, false );
+
         ParentComponent.ioStatus[this.getComponentName()].isActive = false;
         return super.onremove(vnode);
     }
