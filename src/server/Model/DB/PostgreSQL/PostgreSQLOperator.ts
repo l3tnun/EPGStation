@@ -21,7 +21,7 @@ class PostgreSQLOperator extends DBOperator {
     */
     public getPool(): pg.Pool {
         if(PostgreSQLOperator.pool === null) {
-            let config = this.config.getConfig().postgres;
+            let config = this.config.getConfig().postgresql;
             if(typeof config.idleTimeoutMillis === 'undefined') { config.idleTimeoutMillis = 5000; }
             PostgreSQLOperator.pool = new pg.Pool(config);
         }

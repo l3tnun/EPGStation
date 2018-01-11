@@ -20,7 +20,7 @@ interface ConfigInterface {
         extensions: string[];
         regexp: boolean;
     };
-    postgres: {
+    postgresql: {
         host: string;
         port: number;
         user: string;
