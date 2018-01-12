@@ -40,7 +40,6 @@ class MainLayoutComponent extends Component<MainLayoutArgs> {
                     (<HTMLElement>(mainVnode.dom)).addEventListener('scroll', throttle(() => {
                         if(url !== location.href) { url = location.href; return; }
                         if(typeof vnode.attrs.scrollStoped !== 'undefined') {
-                            console.log('save scroll position');
                             vnode.attrs.scrollStoped((<HTMLElement>(mainVnode.dom)).scrollTop);
                         }
                     }, 50), false);
