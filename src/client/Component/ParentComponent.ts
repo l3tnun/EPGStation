@@ -1,5 +1,5 @@
 import * as m from 'mithril';
-import { debounce } from 'lodash';
+import { throttle } from 'lodash';
 import * as socketIo from 'socket.io-client';
 import Component from './Component';
 import { ViewModelStatus } from '../Enums';
@@ -30,7 +30,7 @@ abstract class ParentComponent<T> extends Component<T> {
     private queryChanged: boolean = false;
     private _balloon: BalloonViewModel;
     private _streamInfo: StreamInfoViewModel;
-    private _resizeListener = debounce(() => { this._balloon.close(); }, 100);
+    private _resizeListener = throttle(() => { this._balloon.close(); }, 100);
 
     private static ioStatus: { [key: string]: { isActive: boolean, isInited: boolean } } = {};
     private static io: SocketIOClient.Socket | null = null;

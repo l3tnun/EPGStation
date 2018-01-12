@@ -1,5 +1,5 @@
 import * as m from 'mithril';
-import { debounce } from 'lodash';
+import { throttle } from 'lodash';
 import ParentComponent from '../ParentComponent';
 import { ViewModelStatus } from '../../Enums';
 import MainLayoutComponent from '../MainLayoutComponent';
@@ -32,7 +32,7 @@ class ProgramComponent extends ParentComponent<void> {
     private timeBalloon: ProgramTimeBalloonViewModel;
     private balloon: BalloonViewModel;
 
-    private resizeListener = debounce(() => { this.viewModel.draw(); }, 50);
+    private resizeListener = throttle(() => { this.viewModel.draw(); }, 50);
 
     constructor() {
         super();
@@ -113,7 +113,7 @@ class ProgramComponent extends ParentComponent<void> {
 
                         // scroll position
                         let url = location.href;
-                        element.addEventListener('scroll', debounce(() => {
+                        element.addEventListener('scroll', throttle(() => {
                             if(url !== location.href) { url = location.href; return; }
                             this.saveHistoryData({ top: element.scrollTop, left: element.scrollLeft })
                         }, 50), true);

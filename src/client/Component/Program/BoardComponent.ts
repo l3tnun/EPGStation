@@ -1,5 +1,5 @@
 import * as m from 'mithril';
-import { debounce } from 'lodash';
+import { throttle } from 'lodash';
 import Component from '../Component';
 import factory from '../../ViewModel/ViewModelFactory';
 import { ProgramViewModel, ProgramViewInfo } from '../../ViewModel/Program/ProgramViewModel';
@@ -71,7 +71,7 @@ class BoardComponent extends Component<BoardArgs> {
 
                 // scroll position
                 let url = location.href;
-                element.addEventListener('scroll', debounce(() => {
+                element.addEventListener('scroll', throttle(() => {
                     if(url !== location.href) { url = location.href; return; }
                     mainVnode.attrs.scrollStoped(element.scrollTop, element.scrollLeft);
                 }, 50), true);
