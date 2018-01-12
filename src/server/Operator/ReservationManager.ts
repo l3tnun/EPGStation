@@ -716,6 +716,7 @@ class ReservationManager extends Base {
 
     /**
     * 予約情報を生成する
+    * 平面走査法のような事をしている
     * @param matches 予約したい番組情報
     * @return ReserveProgram[] 予約情報
     */
@@ -754,7 +755,10 @@ class ReservationManager extends Base {
         }
 
         // list を time でソート
-        list.sort((a, b) => { return a.time - b.time });
+        list.sort((a, b) => {
+            const time = a.time - b.time;
+            return time === 0 ? a.idx - b.idx : time
+        });
 
         // 予約情報が格納可能かチェックする
         let reserves: { reserve: ReserveProgram, idx: number }[] = [];
