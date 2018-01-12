@@ -1,9 +1,10 @@
 import * as m from 'mithril';
+import { throttle } from 'lodash';
 import ParentComponent from '../ParentComponent';
 import { ViewModelStatus } from '../../Enums';
 import MainLayoutComponent from '../MainLayoutComponent';
 import factory from '../../ViewModel/ViewModelFactory';
-import ProgramViewModel from '../../ViewModel/Program/ProgramViewModel';
+import { ProgramViewModel } from '../../ViewModel/Program/ProgramViewModel';
 import ChannelComponent from './ChannelComponent';
 import TimeScaleComponent from './TimeScaleComponent';
 import BoardComponent from './BoardComponent';
@@ -30,6 +31,8 @@ class ProgramComponent extends ParentComponent<void> {
     private genre: ProgramGenreViewModel;
     private timeBalloon: ProgramTimeBalloonViewModel;
     private balloon: BalloonViewModel;
+
+    private resizeListener = throttle(() => { this.viewModel.draw(); }, 50);
 
     constructor() {
         super();
@@ -60,13 +63,13 @@ class ProgramComponent extends ParentComponent<void> {
             header: {
                 title: this.createTitle(),
                 button: [
-                    m("label", {
-                        class: "header-menu-button mdl-button mdl-js-button mdl-button--icon",
+                    m('label', {
+                        class: 'header-menu-button mdl-button mdl-js-button mdl-button--icon',
                         onclick: (event: Event) => {
                             this.timeBalloon.setNowNum(this.viewModel.getTimeParam().start);
                             this.balloon.open(ProgramTimeBalloonViewModel.id, event);
                         },
-                    }, m("i", { class: "material-icons" }, "schedule")),
+                    }, m('i', { class: 'material-icons' }, 'schedule')),
                 ],
                 headerStyle: this.viewModel.isFixScroll() ? 'position: fixed;' : '',
             },
@@ -91,30 +94,32 @@ class ProgramComponent extends ParentComponent<void> {
             ],
             notMainContent: [
                 m('div', {
-                    class: 'ProgramTable' + (this.viewModel.isFixScroll() ? ' fix-scroll' : ''),
+                    class: ProgramViewModel.programTableName + (this.viewModel.isFixScroll() ? ' fix-scroll' : ''),
                     oncreate: () => {
+                        // 表示範囲 resize
+                        if(this.viewModel.isEnableDraw()) { window.addEventListener('resize', this.resizeListener, false); }
+
                         if(!this.viewModel.isFixScroll()) { return; }
 
-                        // scroll 設定
                         const element = <HTMLElement>document.getElementsByClassName('mdl-layout')[0];
+
+                        // scroll
                         const channel = <HTMLElement>document.getElementsByClassName(ProgramViewModel.channlesName)[0];
                         const time = <HTMLElement>document.getElementsByClassName(ProgramViewModel.timescaleName)[0];
-
-                        let url = location.href;
-                        let scrollTimerId: NodeJS.Timer | null = null;
-
-                        element.onscroll = () => {
+                        element.addEventListener('scroll', () => {
                             channel.scrollLeft = element.scrollLeft;
                             time.scrollTop = element.scrollTop;
+                        }, false);
 
-                            if(scrollTimerId) { clearTimeout(scrollTimerId); }
+                        // scroll position
+                        let url = location.href;
+                        element.addEventListener('scroll', throttle(() => {
+                            if(url !== location.href) { url = location.href; return; }
+                            this.saveHistoryData({ top: element.scrollTop, left: element.scrollLeft })
+                        }, 50), true);
 
-                            scrollTimerId = setTimeout(() => {
-                                if(url !== location.href) { url = location.href; return; }
-                                scrollTimerId = null;
-                                this.saveHistoryData({ top: element.scrollTop, left: element.scrollLeft })
-                            }, 50);
-                        }
+                        // 表示範囲設定
+                        element.addEventListener('scroll', () => { this.viewModel.draw(); }, true);
 
                         // navigation のズレを修正
                         const naviButton = <HTMLElement>document.getElementsByClassName('mdl-layout__drawer-button')[0];
@@ -141,6 +146,10 @@ class ProgramComponent extends ParentComponent<void> {
                         const element = <HTMLElement>document.getElementsByClassName('mdl-layout')[0];
                         element.scrollTop = position.top;
                         element.scrollLeft = position.left;
+                    },
+                    onremove: () => {
+                        // 表示範囲 resize
+                        if(this.viewModel.isEnableDraw()) { window.removeEventListener('resize', this.resizeListener, false ); }
                     },
                 }, [
                     m(ChannelComponent),

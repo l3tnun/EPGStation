@@ -1,7 +1,8 @@
 import * as m from 'mithril';
+import { throttle } from 'lodash';
 import Component from '../Component';
 import factory from '../../ViewModel/ViewModelFactory';
-import ProgramViewModel from '../../ViewModel/Program/ProgramViewModel';
+import { ProgramViewModel, ProgramViewInfo } from '../../ViewModel/Program/ProgramViewModel';
 import * as apid from '../../../../api';
 import { AllReserves } from '../../Model/Api/ReservesApiModel';
 import DateUtil from '../../Util/DateUtil';
@@ -51,31 +52,33 @@ class BoardComponent extends Component<BoardArgs> {
         this.storedGenre = genre === null ? {} : genre;
 
         const schedules = this.viewModel.getSchedule();
+        if(schedules.length === 0) { return null; }
 
         return m('div', {
-            class: 'board non-scroll',
+            class: `${ ProgramViewModel.boardName } non-scroll`,
             oncreate: (vnode: m.VnodeDOM<BoardArgs, this>) => {
                 if(this.viewModel.isFixScroll()) { return; }
 
                 let element = <HTMLElement> vnode.dom;
+
+                // scroll
                 let channel = <HTMLElement> document.getElementsByClassName(ProgramViewModel.channlesName)[0];
                 let time = <HTMLElement> document.getElementsByClassName(ProgramViewModel.timescaleName)[0];
-
-                let url = location.href;
-                let scrollTimerId: NodeJS.Timer | null = null;
-
-                // scroll 設定
-                element.onscroll = () => {
+                element.addEventListener('scroll', () => {
                     channel.scrollLeft = element.scrollLeft;
                     time.scrollTop = element.scrollTop;
+                }, false);
 
-                    if(scrollTimerId) { clearTimeout(scrollTimerId); }
+                // scroll position
+                let url = location.href;
+                element.addEventListener('scroll', throttle(() => {
+                    if(url !== location.href) { url = location.href; return; }
+                    mainVnode.attrs.scrollStoped(element.scrollTop, element.scrollLeft);
+                }, 50), true);
 
-                    scrollTimerId = setTimeout(() => {
-                        if(url !== location.href) { url = location.href; return; }
-                        scrollTimerId = null;
-                        mainVnode.attrs.scrollStoped(element.scrollTop, element.scrollLeft);
-                    }, 50);
+                // 表示範囲設定
+                if(this.viewModel.isEnableDraw()) {
+                    element.addEventListener('scroll', () => { this.viewModel.draw(); }, true);
                 }
             },
             onupdate: (vnode: m.VnodeDOM<BoardArgs, this>) => {
@@ -90,39 +93,41 @@ class BoardComponent extends Component<BoardArgs> {
                 element.scrollLeft = position.left;
             },
         }, [
-            schedules.map((schedule, i) => {
-                return m('div', {
-                    class: 'station',
-                    style: `left: calc(${ i } * var(--channel-width)`
-                    + (this.viewModel.isFixScroll() ? ` + var(--timescale-width)` : '')
-                    + ');'
-                    + `height: calc(var(--timescale-height) * ${ this.viewModel.getLengthParam() });`,
-                    oncreate: (vnode: m.VnodeDOM<BoardArgs, this>) => {
-                        this.createStationChild(vnode.dom, schedule, i);
-
-                        // progress 非表示
-                        if(i ==  this.viewModel.getSchedule().length - 1) {
-                            setTimeout(() => { this.viewModel.progressShow = false; m.redraw(); }, 200);
-                        }
-                    },
-                    onupdate: (vnode: m.VnodeDOM<BoardArgs, this>) => {
-                        if(!this.viewModel.reloadUpdateDom) { return; }
-
-                        // remove child
-                        for (let i = vnode.dom.childNodes.length - 1; i >= 0; i--) {
-                            vnode.dom.removeChild(vnode.dom.childNodes[i]);
-                        }
-
-                        this.createStationChild(vnode.dom, schedule, i);
-
-                        // progress 非表示 & reloadUpdateDom = false
-                        if(i ==  this.viewModel.getSchedule().length - 1) {
-                            setTimeout(() => { this.viewModel.reloadUpdateDom = false; this.viewModel.progressShow = false; m.redraw(); }, 200);
-                        }
+            m('div', {
+                class: 'frame',
+                style: `min-width: calc(${ schedules.length } * var(--channel-width));`
+                    + `max-width: calc(${ schedules.length } * var(--channel-width));`
+                    + `height: calc(var(--timescale-height) * ${ this.viewModel.getLengthParam() });`
+                    + 'position: absolute;',
+                oncreate: (vnode: m.VnodeDOM<BoardArgs, this>) => {
+                    // add child
+                    for(let i = 0; i < schedules.length; i++) {
+                        this.createStationChild(vnode.dom, schedules[i], i);
                     }
-                })
-            }),
-            m(BoardBarComponent),
+
+                    // progress 非表示
+                    this.viewModel.draw();
+                    setTimeout(() => { this.viewModel.progressShow = false; m.redraw(); }, 200);
+                },
+                onupdate: (vnode: m.VnodeDOM<BoardArgs, this>) => {
+                    if(!this.viewModel.reloadUpdateDom) { return; }
+
+                    // remove child
+                    for (let i = vnode.dom.childNodes.length - 1; i > 0; i--) {
+                        vnode.dom.removeChild(vnode.dom.childNodes[i]);
+                    }
+
+                    // add child
+                    for(let i = 0; i < schedules.length; i++) {
+                        this.createStationChild(vnode.dom, schedules[i], i);
+                    }
+
+                    this.viewModel.draw();
+                    setTimeout(() => { this.viewModel.reloadUpdateDom = false; this.viewModel.progressShow = false; m.redraw(); }, 200);
+                },
+            }, [
+                m(BoardBarComponent),
+            ]),
         ]);
     }
 
@@ -133,6 +138,9 @@ class BoardComponent extends Component<BoardArgs> {
     * @param column:番組表内の列位置
     */
     private createStationChild(element: Element, schedule: apid.ScheduleProgram, column: number): void {
+        if(column === 0) { this.viewModel.items = []; }
+
+        const isEnableDraw = this.viewModel.isEnableDraw();
         let programs = schedule.programs;
         let time = this.viewModel.getTimeParam();
 
@@ -143,7 +151,7 @@ class BoardComponent extends Component<BoardArgs> {
             time.end += addTime;
         }
 
-        let childs: Element[] = [];
+        let childs: ProgramViewInfo[] = [];
         let programsLength = programs.length;
         programs.forEach((program, i) => {
             // 時刻
@@ -153,28 +161,61 @@ class BoardComponent extends Component<BoardArgs> {
             let dummyEnd = i - 1 < 0 ? time.start : programs[i - 1].endAt;
             if(dummyEnd - start < 0) {
                 // 一つ前のプログラムと連続でないため間にダミーを追加
-                childs.push(this.createDummy(this.getHeight(dummyEnd, start), this.getPosition(time.start, dummyEnd)));
+                const height = this.getHeight(dummyEnd, start);
+                const position = this.getPosition(time.start, dummyEnd);
+                childs.push({
+                    element: this.createDummy(height, position, column, isEnableDraw),
+                    top: position,
+                    left: column,
+                    end: position + height,
+                    isVisible: false,
+                });
             }
 
             // 番組を追加
             if(start !== end) {
-                childs.push(this.createContent(this.getHeight(start, end), this.getPosition(time.start, start), program, schedule.channel));
+                const height = this.getHeight(start, end);
+                const position = this.getPosition(time.start, start);
+                childs.push({
+                    element: this.createContent(height, position, program, schedule.channel, column, isEnableDraw),
+                    top: position,
+                    left: column,
+                    end: position + height,
+                    isVisible: false,
+                });
             }
 
             // 最後の番組と番組表の終了時刻に空きがあったら埋める
             if(programsLength - 1 === i && time.end > end) {
-                childs.push(this.createDummy(this.getHeight(end, time.end), this.getPosition(time.start, end)));
+                const height = this.getHeight(end, time.end);
+                const position = this.getPosition(time.start, end);
+                childs.push({
+                    element: this.createDummy(height, position, column, isEnableDraw),
+                    top: position,
+                    left: column,
+                    end: position + height,
+                    isVisible: false,
+                });
             }
         });
 
         // programs が空
         if(childs.length === 0) {
-            childs.push(this.createDummy(this.getHeight(time.start, time.end), this.getPosition(time.start, time.start)));
+            const height = this.getHeight(time.start, time.end);
+            const position = this.getPosition(time.start, time.start);
+            childs.push({
+                element: this.createDummy(height, position, column, isEnableDraw),
+                top: position,
+                left: column,
+                end: position + height,
+                isVisible: false,
+            });
         }
 
         let fragment = document.createDocumentFragment();
         childs.map((child) => {
-            fragment.appendChild(child);
+            this.viewModel.items.push(child);
+            fragment.appendChild(child.element);
         });
         element.appendChild(fragment);
     }
@@ -207,18 +248,32 @@ class BoardComponent extends Component<BoardArgs> {
         return Math.ceil((startProgram - startTime) / 6);
     }
 
+
+    /**
+    * left を生成
+    * @param column: number
+    * @return string;
+    */
+    private createLeftStyle(column: number): string {
+        return `left: calc(${ column } * var(--channel-width) - 1px);`;
+    }
+
     /**
     * dummy 要素を作成
     * @param heght: height
     * @param position: position
-    * @return Element
+    * @param column: number
+    * @param isEnableDraw: boolean
+    * @return HTMLElement
     */
-    private createDummy(height: number, position: number): Element {
+    private createDummy(height: number, position: number, column: number, isEnableDraw: boolean): HTMLElement {
         if(height == 0) { return document.createElement('div'); }
 
         return this.createTextElement('div', {
             class: 'item nodata',
-            style: `height: calc(${ height } * (var(--timescale-height) / 60)); top: calc(${ position } * (var(--timescale-height) / 60));`,
+            style: `height: calc(${ height } * (var(--timescale-height) / 60)); top: calc(${ position } * (var(--timescale-height) / 60));`
+            + ( isEnableDraw ? 'display: none;' : '')
+            + this.createLeftStyle(column),
         },
         'n');
     }
@@ -228,9 +283,18 @@ class BoardComponent extends Component<BoardArgs> {
     * @param height: height
     * @param position: position
     * @param program: program
-    * @return Element
+    * @param column: number
+    * @param isEnableDraw: boolean
+    * @return HTMLElement
     */
-    private createContent(height: number, position: number, program: apid.ScheduleProgramItem, channel: apid.ScheduleServiceItem): Element {
+    private createContent(
+        height: number,
+        position: number,
+        program: apid.ScheduleProgramItem,
+        channel: apid.ScheduleServiceItem,
+        column: number,
+        isEnableDraw: boolean,
+    ): HTMLElement {
         if(height === 0) { return document.createElement('div'); }
 
         let classStr = 'item';
@@ -255,7 +319,7 @@ class BoardComponent extends Component<BoardArgs> {
             }
         }
 
-        let child: Element[] = [];
+        let child: HTMLElement[] = [];
         child.push(this.createTextElement('div', { class: 'title' }, program.name));
         child.push(this.createTextElement('div', { class: 'time' }, DateUtil.format(DateUtil.getJaDate(new Date(program.startAt)), 'hh:mm:ss')));
         if(typeof program.description !== 'undefined') {
@@ -264,7 +328,9 @@ class BoardComponent extends Component<BoardArgs> {
 
         let element = this.createParentElement('div', {
             class: classStr,
-            style: `height: calc(${ height } * (var(--timescale-height) / 60)); top: calc(${ position } * (var(--timescale-height) / 60));`,
+            style: `height: calc(${ height } * (var(--timescale-height) / 60)); top: calc(${ position } * (var(--timescale-height) / 60));`
+                + ( isEnableDraw ? 'display: none;' : '')
+                + this.createLeftStyle(column),
             onclick: (event: Event) => {
                 this.infoViewModel.set(program, channel);
                 this.balloon.open(ProgramInfoViewModel.id, event);
@@ -282,9 +348,9 @@ class BoardComponent extends Component<BoardArgs> {
     * @param tag: tag
     * @param attrs: attrs
     * @param childs: childs
-    * @return Element
+    * @return HTMLElement
     */
-    private createParentElement(tag: string, attrs: { [key: string]: any }, childs: Element[]): Element {
+    private createParentElement(tag: string, attrs: { [key: string]: any }, childs: Element[]): HTMLElement {
         let element = document.createElement(tag);
         for(let key in attrs) {
             if(key === 'onclick') {
@@ -307,9 +373,9 @@ class BoardComponent extends Component<BoardArgs> {
     * @param tag: tag
     * @param attrs: attrs
     * @param text: text
-    * @return Element
+    * @return HTMLElement
     */
-    private createTextElement(tag: string, attrs: { [key: string]: any }, text: string): Element {
+    private createTextElement(tag: string, attrs: { [key: string]: any }, text: string): HTMLElement {
         let element = document.createElement(tag);
         for(let key in attrs) { element.setAttribute(key, attrs[key]); }
         element.innerText = text;

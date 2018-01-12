@@ -6,13 +6,13 @@ import Util from '../../../Util/Util';
 * MySQLOperator クラス
 */
 class MySQLOperator extends DBOperator {
-    protected static pool: mysql.IPool | null = null;
+    protected static pool: mysql.Pool | null = null;
 
     /**
     * get Pool
     * @return Pool
     */
-    public getPool(): mysql.IPool{
+    public getPool(): mysql.Pool {
         if(MySQLOperator.pool === null) {
             let config = this.config.getConfig().mysql;
             if(typeof config.connectTimeout === 'undefined') { config.connectTimeout = 5000; }
@@ -60,7 +60,7 @@ class MySQLOperator extends DBOperator {
     * @return Promise<void>
     */
     public end(): Promise<void> {
-        return new Promise<void>((resolve: () => void, reject: (err: mysql.IError) => void) => {
+        return new Promise<void>((resolve: () => void, reject: (err: Error) => void) => {
             this.getPool().end((err) => {
                 if(err) {
                     reject(err);
@@ -77,7 +77,7 @@ class MySQLOperator extends DBOperator {
     * @return Promise<T>
     */
     public runQuery<T>(query: string, values?: any): Promise<T> {
-        return new Promise<T>((resolve: (row: T) => void, reject: (err: mysql.IError) => void) => {
+        return new Promise<T>((resolve: (row: T) => void, reject: (err: Error) => void) => {
             this.getPool().getConnection((err, connection) => {
                 if(err) { reject(err); return; }
 
@@ -104,17 +104,16 @@ class MySQLOperator extends DBOperator {
     * @param datas インサートするデータ
     * @param isDelete: データを削除するか true: 削除, false: 削除しない
     * @param insertWait インサート時の wait (ms)
-    * @return Promise<pg.QueryResult>
     */
     public manyInsert(deleteTableName: string, datas: { query: string, values?: any[] }[], isDelete: boolean, insertWait: number = 0): Promise<void> {
-        let connection: mysql.IConnection;
-        let failed = (err: mysql.IError, reject: (err: mysql.IError) => void) => {
+        let connection: mysql.PoolConnection;
+        let failed = (err: Error, reject: (err: Error) => void) => {
             connection.rollback(() => { connection.release(); });
             connection.release();
             reject(err);
         }
 
-        return new Promise<void>((resolve: () => void, reject: (err: mysql.IError) => void) => {
+        return new Promise<void>((resolve: () => void, reject: (err: Error) => void) => {
             this.getPool().getConnection((err, con) => {
                 if(err) { reject(err); return; }
 
@@ -123,7 +122,7 @@ class MySQLOperator extends DBOperator {
                 connection.beginTransaction((err) => {
                     if(err) { connection.release(); reject(err); return; }
 
-                    new Promise((resolve: () => void, reject: (err: mysql.IError) => void) => {
+                    new Promise((resolve: () => void, reject: (err: Error) => void) => {
                         if(!isDelete) { resolve(); return; }
 
                         connection.query(`delete from ${ deleteTableName }`, (err) => {
@@ -134,7 +133,7 @@ class MySQLOperator extends DBOperator {
                     .then(async () => {
                         for(let data of datas) {
                             await (() => {
-                                return new Promise((resolve: () => void, reject: (err: mysql.IError) => void) => {
+                                return new Promise((resolve: () => void, reject: (err: Error) => void) => {
                                     if(typeof data.values === 'undefined') {
                                         connection.query(data.query, (err) => {
                                             if(err) { reject(err); return; }

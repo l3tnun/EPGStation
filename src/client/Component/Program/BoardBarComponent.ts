@@ -1,7 +1,7 @@
 import * as m from 'mithril';
 import Component from '../Component';
 import factory from '../../ViewModel/ViewModelFactory';
-import ProgramViewModel from '../../ViewModel/Program/ProgramViewModel';
+import { ProgramViewModel } from '../../ViewModel/Program/ProgramViewModel';
 
 /**
 * BoardBarComponent
@@ -45,9 +45,7 @@ class BoardBarComponent extends Component<void> {
         let start = this.viewModel.getTimeParam().start;
         if(start !== 0) {
             let position = Math.floor((new Date().getTime() - start) / 1000 / 60);
-            str += `top: calc((${ position } * (var(--timescale-height) / 60))`
-            + (this.viewModel.isFixScroll() ? ' + var(--header-height) + var(--channel-height)' : '')
-            + ');'
+            str += `top: calc((${ position } * (var(--timescale-height) / 60)));`;
         }
 
         return str;

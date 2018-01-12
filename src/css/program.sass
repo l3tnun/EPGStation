@@ -55,8 +55,6 @@ $window-width: 600px
                 visibility: hidden;
                 max-width: var(--timescale-width);
                 min-width: var(--timescale-width);
-            &:nth-last-child(2)
-                border-right: $board-line-x2;
     .child
         width: 100%;
         position: absolute;
@@ -68,27 +66,18 @@ $window-width: 600px
             overflow: auto;
             display: flex;
             position: relative;
-            .station
+            .frame
                 position: absolute;
                 box-sizing: border-box;
-                border-top: $board-line;
                 max-width: var(--channel-width);
                 min-width: var(--channel-width);
+                border-left: $board-line;
 
-                &:first-child
-                    .item
-                        border-left: $board-line-x2;
-                &:nth-last-child(2)
-                    .item
-                        border-right: $board-line-x2;
                 .item
                     position: absolute;
                     overflow: hidden;
                     box-sizing: border-box;
-                    border-top: $board-line;
-                    border-bottom: $board-line;
-                    border-left: $board-line;
-                    border-right: $board-line;
+                    border: $board-line;
                     font-size: var(--board-fontsize)
                     max-width: var(--channel-width);
                     min-width: var(--channel-width);
@@ -96,8 +85,6 @@ $window-width: 600px
                     padding: 0;
                     line-height: 1.2em;
                     color: black;
-                    &:last-child
-                        border-bottom: $board-line-x2;
 
                     .title
                         font-weight: bold;
@@ -106,7 +93,7 @@ $window-width: 600px
                     &.reserve
                         border: 4px solid red;
                     &.hide
-                        background-color: #F8F8F8;
+                        background-color: #f8f8f8;
                         color: #888;
                     &.conflict
                         background-color: #fffd6b;
@@ -125,7 +112,8 @@ $window-width: 600px
                 background-color: red;
                 height: 2px;
                 overflow: hidden;
-                left: 0;
+                left: -1px;
+                z-index: 4;
 
         .timescale
             float: left;
@@ -135,7 +123,8 @@ $window-width: 600px
             padding-top: var(--channel-height);
             .item
                 box-sizing: border-box;
-                border-top: 2px solid #fff;
+                border-top: 1px solid #fff;
+                border-bottom: 1px solid #fff;
                 color: #fff;
                 max-width: var(--timescale-width);
                 min-width: var(--timescale-width);
@@ -224,7 +213,7 @@ $window-width: 600px
             padding-top: var(--header-height);
 
             .boardbar
-                left: var(--timescale-width);
+                z-index: 1;
 
 /* tablet */
 @media screen and (min-width: $window-width)

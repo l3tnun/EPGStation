@@ -6,11 +6,11 @@ Config.json
 | readOnlyOnce | boolean | false | no | config.json の読み込みを1度だけに制限する |
 | serverPort | number | | yes | ポート番号 |
 | mirakurunPath | string | | yes | Mirakurunのパス(URL) |
-| dbType | mysql \| sqlite3 \| postgres | mysql | no | 使用する データベースを指定する |
+| dbType | mysql \| sqlite3 \| postgresql | mysql | no | 使用する データベースを指定する |
 | dbPath | string | EPGStation/data/database.db | no | SQLite3 使用時の db ファイルの保存場所 | 
 | mysql | {} | | no | MySQL の設定 (dbType が mysql の場合は必須) |
 | sqlite3 | {} | | no | SQLite3 の拡張設定 |
-| postgres | {} | | no | PostgreSQL の設定 (dbType が postgres の場合は必須) |
+| postgresql | {} | | no | PostgreSQL の設定 (dbType が postgresql の場合は必須) |
 | gid | string \| number | | no | gid の設定 |
 | uid | string \| number | | no | uid の設定 |
 | programInsertMax | number | 100 | no | DB へ番組情報を挿入するときの 1 回あたりの件数 |
@@ -74,11 +74,11 @@ Config.json
 
 ----
 
-### postgres
+### postgresql
 
 | プロパティ | 種類 | 必須 | 説明 |
 | -------- | ---- | ---- |--- |
-| host | string | yse | postgres host |
+| host | string | yse | postgresql host |
 | user | string | yes | user |
 | password | string | yes |パスワード |
 | database | string | yes | 使用するデータベース名 |

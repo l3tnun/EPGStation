@@ -5,7 +5,7 @@ interface ConfigInterface {
     readOnlyOnce: boolean;
     serverPort: number;
     mirakurunPath: string;
-    dbType: 'mysql' | 'sqlite3' | 'postgres';
+    dbType: 'mysql' | 'sqlite3' | 'postgresql';
     dbPath: string;
     mysql: {
         host: string;
@@ -20,7 +20,7 @@ interface ConfigInterface {
         extensions: string[];
         regexp: boolean;
     };
-    postgres: {
+    postgresql: {
         host: string;
         port: number;
         user: string;

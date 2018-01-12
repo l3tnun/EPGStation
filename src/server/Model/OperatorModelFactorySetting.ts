@@ -50,7 +50,7 @@ namespace ModelFactorySetting {
                 factory.reg('EncodedDB', () => { return new SQLite3EncodedDB(operator) });
                 break;
 
-            case 'postgres':
+            case 'postgresql':
                 operator = new PostgreSQLOperator();
                 factory.reg('ServicesDB', () => { return new PostgreSQLServicesDB(operator) });
                 factory.reg('ProgramsDB', () => { return new PostgreSQLProgramsDB(operator) });

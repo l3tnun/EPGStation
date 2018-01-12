@@ -4,6 +4,7 @@ import { StorageModelInterface } from '../Storage/StorageModel';
 interface SettingValue {
     isAutoOpenNavigation: boolean;
     programFixScroll: boolean;
+    programMinimumDrawing: boolean;
     programLength: number;
     recordedLength: number;
     reservesLength: number;
@@ -105,6 +106,7 @@ class SettingModel extends Model implements SettingModelInterface {
         return {
             isAutoOpenNavigation: true,
             programFixScroll: false,
+            programMinimumDrawing: false,
             programLength: 24,
             recordedLength: 24,
             reservesLength: 24,

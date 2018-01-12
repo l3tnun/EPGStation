@@ -61,7 +61,7 @@ abstract class ServicesDB extends DBBase implements ServicesDBInterface {
                 service.id,
                 service.serviceId,
                 service.networkId,
-                service.name,
+                service.name.replace(/\x00/g, ''), // PostgreSQL 非対応文字
                 typeof service.remoteControlKeyId === 'undefined' ? null : service.remoteControlKeyId,
                 Boolean(service.hasLogoData),
                 service.channel.type,

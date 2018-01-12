@@ -76,7 +76,7 @@ namespace ModelFactorySetting {
                 encodedDB = new SQLite3EncodedDB(operator);
                 break;
 
-            case 'postgres':
+            case 'postgresql':
                 operator = new PostgreSQLOperator();
                 servicesDB = new PostgreSQLServicesDB(operator);
                 programsDB = new PostgreSQLProgramsDB(operator);

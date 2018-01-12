@@ -1,4 +1,5 @@
 import * as m from 'mithril';
+import { throttle } from 'lodash';
 import ParentComponent from '../ParentComponent';
 import { ViewModelStatus } from '../../Enums';
 import MainLayoutComponent from '../MainLayoutComponent';
@@ -140,63 +141,33 @@ class TopPageComponent extends ParentComponent<void> {
             class: 'top-page' + (window.innerWidth < 800 ? ' non-scroll' : ''),
             oncreate: (vnode: m.VnodeDOM<void, this>) => {
                 // scroll position を保存
-
                 const main = <HTMLElement>vnode.dom;
                 const recorded = <HTMLElement>document.getElementById(TopPageComponent.recordedId);
                 const reserves = <HTMLElement>document.getElementById(TopPageComponent.reservesId);
-
                 let url = location.href;
-                let mainTimerId: NodeJS.Timer | null = null;
-                let recordedTimerId: NodeJS.Timer | null = null;
-                let reservesTimerId: NodeJS.Timer | null = null;
 
-                const scroll = (
-                    getTimer: () => NodeJS.Timer | null,
-                    setTimer: (timer: NodeJS.Timer) => void,
-                    setNullTimer: () => void,
-                    savePosition: () => void,
-                ) => {
-                    const timer = getTimer();
-                    if(timer) { clearTimeout(timer); }
+                main.addEventListener('scroll', throttle(() => {
+                    if(url !== location.href) { url = location.href; return; }
+                    this.scrollPosition.main = main.scrollTop;
+                    this.scrollPosition.recorded = 0;
+                    this.scrollPosition.reserves = 0;
+                    this.saveHistoryData(this.scrollPosition);
+                }, 50));
 
-                    setTimer(setTimeout(() => {
-                        if(url !== location.href) { url = location.href; return; }
-                        setNullTimer();
-                        savePosition();
-                        this.saveHistoryData(this.scrollPosition);
-                    }, 50));
-                }
+                recorded.addEventListener('scroll', throttle(() => {
+                    if(url !== location.href) { url = location.href; return; }
+                    this.scrollPosition.main = 0;
+                    this.scrollPosition.recorded = recorded.scrollTop;
+                    this.saveHistoryData(this.scrollPosition);
+                }, 50));
 
-                main.onscroll = () => { scroll(
-                    () => { return mainTimerId; },
-                    (timer: NodeJS.Timer) => { mainTimerId = timer; },
-                    () => { mainTimerId = null; },
-                    () => {
-                        this.scrollPosition.main = main.scrollTop;
-                        this.scrollPosition.recorded = 0;
-                        this.scrollPosition.reserves = 0;
-                    },
-                ) }
+                reserves.addEventListener('scroll', throttle(() => {
+                    if(url !== location.href) { url = location.href; return; }
+                    this.scrollPosition.main = 0;
+                    this.scrollPosition.reserves = reserves.scrollTop;
+                    this.saveHistoryData(this.scrollPosition);
+                }, 50));
 
-                recorded.onscroll = () => { scroll(
-                    () => { return recordedTimerId; },
-                    (timer: NodeJS.Timer) => { recordedTimerId = timer; },
-                    () => { recordedTimerId = null; },
-                    () => {
-                        this.scrollPosition.main = 0;
-                        this.scrollPosition.recorded = recorded.scrollTop;
-                    },
-                ) }
-
-                reserves.onscroll = () => { scroll(
-                    () => { return reservesTimerId; },
-                    (timer: NodeJS.Timer) => { reservesTimerId = timer; },
-                    () => { reservesTimerId = null; },
-                    () => {
-                        this.scrollPosition.main = 0;
-                        this.scrollPosition.reserves = reserves.scrollTop;
-                    },
-                ) }
             },
             onupdate: (vnode: m.VnodeDOM<void, this>) => {
                 if(!this.isNeedRestorePosition) { return; }

@@ -18,7 +18,8 @@ namespace StrUtil {
             .replace(/‘/g, '`')
             .replace(/￥/g, '\\')
             .replace(/　/g, ' ')
-            .replace(/〜/g, '~');
+            .replace(/〜/g, '~')
+            .replace(/\x00/g, ''); // PostgreSQL 非対応文字
     }
 }
 

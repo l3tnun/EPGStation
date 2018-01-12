@@ -21,7 +21,7 @@ class PostgreSQLOperator extends DBOperator {
     */
     public getPool(): pg.Pool {
         if(PostgreSQLOperator.pool === null) {
-            let config = this.config.getConfig().postgres;
+            let config = this.config.getConfig().postgresql;
             if(typeof config.idleTimeoutMillis === 'undefined') { config.idleTimeoutMillis = 5000; }
             PostgreSQLOperator.pool = new pg.Pool(config);
         }
@@ -93,7 +93,6 @@ class PostgreSQLOperator extends DBOperator {
     * @param datas インサートするデータ
     * @param isDelete: データを削除するか true: 削除, false: 削除しない
     * @param insertWait インサート時の wait (ms)
-    * @return Promise<pg.QueryResult>
     */
     public manyInsert(deleteTableName: string, datas: { query: string, values?: any[] }[], isDelete: boolean, insertWait: number = 0): Promise<void> {
         return new Promise<void>(async (resolve: () => void, reject: (err: Error) => void) => {
