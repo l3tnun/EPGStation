@@ -1,4 +1,5 @@
 import * as m from 'mithril';
+import { throttle } from 'lodash';
 import Component from './Component';
 import NavigationComponent from './NavigationComponent';
 import { HeaderArgs, HeaderComponent } from './HeaderComponent';
@@ -23,8 +24,6 @@ interface MainLayoutArgs {
 * MainLayoutComponent
 */
 class MainLayoutComponent extends Component<MainLayoutArgs> {
-    private scrollTimerId: NodeJS.Timer | null = null;
-
     /**
     * view
     */
@@ -38,19 +37,13 @@ class MainLayoutComponent extends Component<MainLayoutArgs> {
                     if(typeof vnode.attrs.scrollStoped === 'undefined') { return; }
 
                     let url = location.href;
-                    (<HTMLElement>(mainVnode.dom)).addEventListener('scroll', () => {
-                        if(this.scrollTimerId) {
-                            clearTimeout(this.scrollTimerId);
+                    (<HTMLElement>(mainVnode.dom)).addEventListener('scroll', throttle(() => {
+                        if(url !== location.href) { url = location.href; return; }
+                        if(typeof vnode.attrs.scrollStoped !== 'undefined') {
+                            console.log('save scroll position');
+                            vnode.attrs.scrollStoped((<HTMLElement>(mainVnode.dom)).scrollTop);
                         }
-
-                        this.scrollTimerId = setTimeout(() => {
-                            if(url !== location.href) { url = location.href; return; }
-                            this.scrollTimerId = null;
-                            if(typeof vnode.attrs.scrollStoped !== 'undefined') {
-                                vnode.attrs.scrollStoped((<HTMLElement>(mainVnode.dom)).scrollTop);
-                            }
-                        }, 50);
-                    });
+                    }, 50), false);
                 },
             }, [
                 m('div', { class: 'page-content' }, vnode.attrs.content)
