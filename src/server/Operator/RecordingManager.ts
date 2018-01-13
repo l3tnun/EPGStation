@@ -317,7 +317,7 @@ class RecordingManager extends Base implements RecordingManagerInterface {
     private async prepRecord(reserve: ReserveProgram, retry: number = 0): Promise<void> {
         this.log.system.info(`preprec: ${ reserve.program.id } ${ reserve.program.name }`);
 
-        //録画優先度を設定
+        // 録画優先度を設定
         this.mirakurun.priority = reserve.isConflict ? (this.config.getConfig().conflictPriority || 1) : (this.config.getConfig().recPriority || 2);
 
         let recData: recordingProgram | null = null;
@@ -335,7 +335,7 @@ class RecordingManager extends Base implements RecordingManagerInterface {
             };
         }
 
-        //番組ストリームを取得
+        // 番組ストリームを取得
         try {
             let stream = await this.mirakurun.getProgramStream(reserve.program.id, true);
 
@@ -350,20 +350,22 @@ class RecordingManager extends Base implements RecordingManagerInterface {
                 // recording から削除
                 this.removeRecording(reserve.program.id);
             } else if(recData !== null) {
-                this.doRecord(recData, stream);
+                await this.doRecord(recData, stream);
             }
         } catch(err) {
             this.log.system.error(`preprec failed: ${ reserve.program.id } ${ reserve.program.name }`);
-            this.log.system.error(err);
+            this.log.system.debug(err);
 
-            //retry
+            // retry
             setTimeout(() => {
-                if(retry <= 3) {
+                if(retry < 2) {
                     this.prepRecord(reserve, retry + 1);
                 } else {
+                    // rmove reserves
                     this.removeRecording(reserve.program.id);
+                    this.reservationManager.cancel(reserve.program.id);
                 }
-            }, 5000);
+            }, 1000 * 5);
         }
     }
 
@@ -373,58 +375,87 @@ class RecordingManager extends Base implements RecordingManagerInterface {
     * @param stream: http.IncomingMessage
     */
     private async doRecord(recData: recordingProgram, stream: http.IncomingMessage): Promise<void> {
-        //保存先パス
+        // 保存先パス
         const recPath = await this.getRecPath(recData.reserve);
         recData.recPath = recPath;
         recData.stream = stream;
 
         this.log.system.info(`recording: ${ recData.reserve.program.id } ${ recData.reserve.program.name }`);
 
-        //保存ストリーム
+        // ストリームを保存
         const recFile = fs.createWriteStream(recPath, { flags: 'a' });
         this.log.system.info(`recording stream: ${ recPath }`);
         stream.pipe(recFile);
 
-        //recorded に追加
-        let recorded = {
-            id: 0,
-            programId: recData.reserve.program.id,
-            channelId: recData.reserve.program.channelId,
-            channelType: recData.reserve.program.channelType,
-            startAt: recData.reserve.program.startAt,
-            endAt: recData.reserve.program.endAt,
-            duration: recData.reserve.program.duration,
-            name: recData.reserve.program.name,
-            description: recData.reserve.program.description,
-            extended: recData.reserve.program.extended,
-            genre1: recData.reserve.program.genre1,
-            genre2: recData.reserve.program.genre2,
-            videoType: recData.reserve.program.videoType,
-            videoResolution: recData.reserve.program.videoResolution,
-            videoStreamContent: recData.reserve.program.videoStreamContent,
-            videoComponentType: recData.reserve.program.videoComponentType,
-            audioSamplingRate: recData.reserve.program.audioSamplingRate,
-            audioComponentType: recData.reserve.program.audioComponentType,
-            recPath: recData.recPath!,
-            ruleId: typeof recData.reserve.ruleId === 'undefined' ? null : recData.reserve.ruleId,
-            thumbnailPath: null,
-            recording: true,
-        };
+        return new Promise<void>((resolve: () => void, reject: (error: Error) => void) => {
+            // set timeout
+            let recordingStartTimer = setTimeout(() => {
+                this.log.system.error(`recording failed: ${ recData.reserve.program.id } ${ recData.reserve.program.name }`);
 
-        try {
-            recorded.id = await this.recordedDB.insert(recorded);
-            //録画終了時処理
-            stream.once('end', () => { this.recEnd(recData, recFile, recorded); });
+                // delete file
+                fs.unlink(recPath, (err) => {
+                    if(err) {
+                        this.log.system.error(`delete error: ${ recData.reserve.program.id } ${ recData.reserve.program.name }`);
+                        this.log.system.error(String(err));
+                    }
+                });
 
-            //録画開始を通知
-            this.startEventsNotify(recorded);
-        } catch(err) {
-            this.log.system.error(`recording add DB error: ${ recData.reserve.program.id } ${ recData.reserve.program.name }`);
-            this.log.system.error(err);
+                // disconnect stream
+                stream.unpipe();
+                stream.destroy();
 
-            //録画を終了させる
-            this.recEnd(recData, recFile, null);
-        }
+                reject(new Error(`recordingStartError`));
+            }, 1000 * 5);
+
+            stream.once('data', async () => {
+                clearTimeout(recordingStartTimer);
+
+                this.log.system.info(`add recorded: ${ recData.reserve.program.id } ${ recData.reserve.program.name }`);
+
+                // add DB
+                let recorded = {
+                    id: 0,
+                    programId: recData.reserve.program.id,
+                    channelId: recData.reserve.program.channelId,
+                    channelType: recData.reserve.program.channelType,
+                    startAt: recData.reserve.program.startAt,
+                    endAt: recData.reserve.program.endAt,
+                    duration: recData.reserve.program.duration,
+                    name: recData.reserve.program.name,
+                    description: recData.reserve.program.description,
+                    extended: recData.reserve.program.extended,
+                    genre1: recData.reserve.program.genre1,
+                    genre2: recData.reserve.program.genre2,
+                    videoType: recData.reserve.program.videoType,
+                    videoResolution: recData.reserve.program.videoResolution,
+                    videoStreamContent: recData.reserve.program.videoStreamContent,
+                    videoComponentType: recData.reserve.program.videoComponentType,
+                    audioSamplingRate: recData.reserve.program.audioSamplingRate,
+                    audioComponentType: recData.reserve.program.audioComponentType,
+                    recPath: recData.recPath!,
+                    ruleId: typeof recData.reserve.ruleId === 'undefined' ? null : recData.reserve.ruleId,
+                    thumbnailPath: null,
+                    recording: true,
+                };
+
+                try {
+                    recorded.id = await this.recordedDB.insert(recorded);
+                    //録画終了時処理
+                    stream.once('end', () => { this.recEnd(recData, recFile, recorded); });
+
+                    //録画開始を通知
+                    this.startEventsNotify(recorded);
+                } catch(err) {
+                    this.log.system.error(`add recording error: ${ recData.reserve.program.id } ${ recData.reserve.program.name }`);
+                    this.log.system.error(err);
+
+                    //録画を終了させる
+                    this.recEnd(recData, recFile, null);
+                }
+
+                resolve();
+            });
+        });
     }
 
     /**
