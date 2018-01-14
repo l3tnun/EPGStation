@@ -12,6 +12,7 @@ import { StorageApiModel } from '../Model/Api/StorageApiModel';
 import { StorageModel } from '../Model/Storage/StorageModel';
 import { StreamsApiModel } from '../Model/Api/StreamsApiModel';
 import { SettingModel } from '../Model/Setting/SettingModel';
+import { ProgramSettingModel } from '../Model/Program/ProgramSettingModel';
 import HeaderViewModel from './HeaderViewModel';
 import NavigationViewModel from './NavigationViewModel';
 import TopPageViewModel from './TopPageViewModel';
@@ -21,6 +22,7 @@ import BalloonViewModel from './Balloon/BalloonViewModel';
 import ProgramInfoViewModel from './Program/ProgramInfoViewModel';
 import ProgramTimeBalloonViewModel from './Program/ProgramTimeBalloonViewModel';
 import ProgramGenreViewModel from './Program/ProgramGenreViewModel';
+import ProgramSettingViewModel from './Program/ProgramSettingViewModel';
 import RecordedViewModel from './Recorded/RecordedViewModel';
 import RecordedInfoViewModel from './Recorded/RecordedInfoViewModel';
 import RecordedMenuViewModel from './Recorded/RecordedMenuViewModel';
@@ -62,6 +64,7 @@ namespace ViewModelFactorySetting {
         let storageModel = new StorageModel();
         let streamApiModel = new StreamsApiModel(snackbarModel);
         let settingModel = new SettingModel(storageModel);
+        let programSettingModel = new ProgramSettingModel(storageModel);
 
         //reg
         factory.reg('HeaderViewModel', new HeaderViewModel(
@@ -78,6 +81,7 @@ namespace ViewModelFactorySetting {
             scheduleApiModel,
             reservesApiModel,
             settingModel,
+            programSettingModel,
         ));
         factory.reg('SnackbarViewModel', new SnackbarViewModel(snackbarModel));
         factory.reg('BalloonViewModel', new BalloonViewModel(balloonModel));
@@ -96,6 +100,10 @@ namespace ViewModelFactorySetting {
             balloonModel,
             snackbarModel,
             storageModel,
+        ));
+        factory.reg('ProgramSettingViewModel', new ProgramSettingViewModel(
+            programSettingModel,
+            snackbarModel,
         ));
         factory.reg('RecordedViewModel', new RecordedViewModel(
             recordedApiModel,

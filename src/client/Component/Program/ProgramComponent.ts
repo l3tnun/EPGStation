@@ -9,6 +9,7 @@ import ChannelComponent from './ChannelComponent';
 import TimeScaleComponent from './TimeScaleComponent';
 import BoardComponent from './BoardComponent';
 import ProgressComponent from './ProgressComponent';
+import Util from '../../Util/Util';
 import DateUtil from '../../Util/DateUtil';
 import { BalloonComponent } from '../BalloonComponent';
 import ProgramInfoComponent from './ProgramInfoComponent';
@@ -78,6 +79,14 @@ class ProgramComponent extends ParentComponent<void> {
                     onclick: () => {
                         this.balloon.close();
                         setTimeout(() => {
+                            Util.move('/program/setting');
+                        }, 200);
+                    }
+                }, text: 'サイズ設定' },
+                { attrs: {
+                    onclick: () => {
+                        this.balloon.close();
+                        setTimeout(() => {
                             this.genre.init();
                             this.balloon.open(ProgramGenreViewModel.id);
                         }, 200);
@@ -98,6 +107,9 @@ class ProgramComponent extends ParentComponent<void> {
                     oncreate: () => {
                         // 表示範囲 resize
                         if(this.viewModel.isEnableDraw()) { window.addEventListener('resize', this.resizeListener, false); }
+
+                        // programSetting を適応
+                        this.viewModel.setProgramSetting();
 
                         if(!this.viewModel.isFixScroll()) { return; }
 

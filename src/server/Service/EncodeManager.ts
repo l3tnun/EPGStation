@@ -6,6 +6,7 @@ import * as mkdirp from 'mkdirp';
 import Base from '../Base';
 import { EncodeProcessManagerInterface } from './EncodeProcessManager';
 import * as DBSchema from '../Model/DB/DBSchema';
+import ProcessUtil from './Util/ProcessUtil';
 import Util from '../Util/Util';
 
 interface EncodeProgram {
@@ -150,7 +151,7 @@ class EncodeManager extends Base implements EncodeManagerInterface {
     * エンコードキャンセル
     * @param recordedId: recorded id
     */
-    public cancel(recordedId: number): void {
+    public async cancel(recordedId: number): Promise<void> {
         this.log.system.info(`cancel encode: ${ recordedId }`);
 
         // queue から該当する id のプログラムを削除
@@ -164,7 +165,7 @@ class EncodeManager extends Base implements EncodeManagerInterface {
             let output = this.encodingData.output;
 
             //kill
-            this.encodingData. child.kill('SIGKILL');
+            await ProcessUtil.kill(this.encodingData.child);
             this.log.system.info(`stop encode: ${ recordedId }`);
 
             // 少し待ってから削除

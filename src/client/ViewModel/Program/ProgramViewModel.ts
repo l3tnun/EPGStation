@@ -7,6 +7,7 @@ import Util from '../../Util/Util';
 import DateUtil from '../../Util/DateUtil';
 import { AllReserves, ReservesApiModelInterface } from '../../Model/Api/ReservesApiModel';
 import { SettingModelInterface } from '../../Model/Setting/SettingModel';
+import { ProgramSettingModelInterface } from '../../Model/Program/ProgramSettingModel';
 
 interface ProgramViewInfo {
     element: HTMLElement,
@@ -23,6 +24,7 @@ class ProgramViewModel extends ViewModel {
     private scheduleApiModel: ScheduleApiModelInterface;
     private reservesApiModel: ReservesApiModelInterface;
     private setting: SettingModelInterface;
+    private programSetting: ProgramSettingModelInterface;
     // 更新時刻パラメータ
     private startTimeParam: string;
     private lengthParam: number;
@@ -42,11 +44,13 @@ class ProgramViewModel extends ViewModel {
         scheduleApiModel: ScheduleApiModelInterface,
         reservesApiModel: ReservesApiModelInterface,
         setting: SettingModelInterface,
+        programSetting: ProgramSettingModelInterface,
     ) {
         super();
         this.scheduleApiModel = scheduleApiModel;
         this.reservesApiModel = reservesApiModel;
         this.setting = setting;
+        this.programSetting = programSetting;
     }
 
     /**
@@ -337,6 +341,31 @@ class ProgramViewModel extends ViewModel {
         if(element === null) { return 0; }
         const style = window.getComputedStyle(element);
         return Number(style.getPropertyValue(name).trim().replace('px', ''));
+    }
+
+    /**
+    * set program setting
+    */
+    public setProgramSetting(): void {
+        const element = <HTMLElement>document.querySelector(`.${ ProgramViewModel.programTableName }`);
+        if(element === null) { return; }
+
+        const value = this.programSetting.value;
+        element.style.setProperty('--channel-tablet-height', `${ value.tablet.channelHeight }px`);
+        element.style.setProperty('--channel-tablet-width', `${ value.tablet.channelWidth }px`);
+        element.style.setProperty('--channel-tablet-fontsize', `${ value.tablet.channelFontsize }px`);
+        element.style.setProperty('--timescale-tablet-height', `${ value.tablet.timescaleHeight }px`);
+        element.style.setProperty('--timescale-tablet-width', `${ value.tablet.timescaleWidth }px`);
+        element.style.setProperty('--timescale-tablet-fontsize', `${ value.tablet.timescaleFontsize }px`);
+        element.style.setProperty('--board-tablet-fontsize', `${ value.tablet.boardFontsize }pt`);
+
+        element.style.setProperty('--channel-mobile-height', `${ value.mobile.channelHeight }px`);
+        element.style.setProperty('--channel-mobile-width', `${ value.mobile.channelWidth }px`);
+        element.style.setProperty('--channel-mobile-fontsize', `${ value.mobile.channelFontsize }px`);
+        element.style.setProperty('--timescale-mobile-height', `${ value.mobile.timescaleHeight }px`);
+        element.style.setProperty('--timescale-mobile-width', `${ value.mobile.timescaleWidth }px`);
+        element.style.setProperty('--timescale-mobile-fontsize', `${ value.mobile.timescaleFontsize }px`);
+        element.style.setProperty('--board-mobile-fontsize', `${ value.mobile.boardFontsize }pt`);
     }
 }
 
