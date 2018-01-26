@@ -1,5 +1,10 @@
 import * as child_process from 'child_process';
 import * as path from 'path';
+import { Logger } from './Logger';
+import Configuration from './Configuration';
+import DBVersionChecker from './DBVersionChecker';
+import ConnectionChecker from './ConnectionChecker';
+import MainModelFactorySetting from './Model/MainModelFactorySetting';
 import Operator from './Operator/Operator';
 import factory from './Model/ModelFactory'
 import { IPCServerInterface } from './Model/IPC/IPCServer';
@@ -32,11 +37,22 @@ const runService = () => {
     child.once('error', () => { runService(); });
 }
 
-new Operator().run()
-.then(() => {
-    runService();
-})
-.catch((err) => {
-    console.error(err);
-});
+Logger.initialize(path.join(__dirname, '..', '..', 'config', 'operatorLogConfig.json'));
+Configuration.getInstance().initialize(path.join(__dirname, '..', '..', 'config', 'config.json'));
+
+// set models
+MainModelFactorySetting.init();
+
+(async () => {
+    try {
+        const checker = new ConnectionChecker();
+        await checker.checkMirakurun();
+        await checker.checkDB();
+        await new DBVersionChecker().run();
+        await new Operator().run()
+        runService();
+    } catch(err) {
+        console.error(err);
+    }
+})();
 

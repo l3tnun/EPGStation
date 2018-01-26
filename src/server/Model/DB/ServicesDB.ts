@@ -1,8 +1,8 @@
 import * as apid from '../../../../node_modules/mirakurun/api';
-import DBBase from './DBBase';
+import DBTableBase from './DBTableBase';
 import * as DBSchema from './DBSchema';
 
-interface ServicesDBInterface extends DBBase {
+interface ServicesDBInterface extends DBTableBase {
     create(): Promise<void>;
     insert(services: apid.Service[], isDelete?: boolean): Promise<void>;
     findId(id: number): Promise<DBSchema.ServiceSchema | null>;
@@ -10,7 +10,15 @@ interface ServicesDBInterface extends DBBase {
     findChannelType(types: (apid.ChannelType)[] ): Promise<DBSchema.ServiceSchema[]>;
 }
 
-abstract class ServicesDB extends DBBase implements ServicesDBInterface {
+abstract class ServicesDB extends DBTableBase implements ServicesDBInterface {
+    /**
+    * get table name
+    * @return string
+    */
+    protected getTableName(): string {
+        return DBSchema.TableName.Services;
+    }
+
     /**
     * create table
     * @return Promise<void>

@@ -436,6 +436,8 @@ class RecordingManager extends Base implements RecordingManagerInterface {
                     ruleId: typeof recData.reserve.ruleId === 'undefined' ? null : recData.reserve.ruleId,
                     thumbnailPath: null,
                     recording: true,
+                    protection: false,
+                    filesize: null,
                 };
 
                 try {
@@ -511,8 +513,12 @@ class RecordingManager extends Base implements RecordingManagerInterface {
                         ruleId: typeof recData.reserve.ruleId === 'undefined' ? null : recData.reserve.ruleId,
                         thumbnailPath: null,
                         recording: false,
+                        protection: false,
+                        filesize: null,
                     });
                 }
+
+                // TODO update filesize
 
                 //録画完了を通知
                 let encodeOption = typeof recData.reserve.encodeOption === 'undefined' ? null : recData.reserve.encodeOption;

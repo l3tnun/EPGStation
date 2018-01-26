@@ -45,6 +45,24 @@ abstract class DBOperator extends Model {
     abstract runInsert(query: string, values?: any | null): Promise<number>;
 
     /**
+    * トランザクション処理
+    * @param callback: transaction で実行する処理
+    * @return Promise<void>
+    */
+    abstract async runTransaction(
+        callback: (
+            exec: (query: string, values?: any) => Promise<void>
+        ) => Promise<void>,
+    ): Promise<void>;
+
+    /**
+    * テーブルが存在するか
+    * @param table name
+    * @return boolean
+    */
+    abstract async exists(tableName: string): Promise<boolean>;
+
+    /**
     * 件数取得
     * @param tableName: string
     * @return Promise<number>
@@ -114,6 +132,17 @@ abstract class DBOperator extends Model {
     */
     public getReturningStr(): string {
         return '';
+    }
+
+    /**
+    * カラム追加の query 文字列を生成する
+    * @param tableName: table 名
+    * @param columnName: column 名
+    * @param columnDefine: column 定義
+    * @return string
+    */
+    public createAddcolumnQueryStr(tableName: string, columnName: string, columnDefine: string): string {
+        return `alter table ${ tableName } add ${ columnName } ${ columnDefine }`;
     }
 }
 

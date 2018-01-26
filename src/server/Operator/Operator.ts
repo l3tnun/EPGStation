@@ -1,12 +1,7 @@
-import * as path from 'path';
 import * as apid from '../../../node_modules/mirakurun/api';
-import { LoggerInterface, Logger } from '../Logger';
-import Configuration from '../Configuration';
+import Base from '../Base';
 import Util from '../Util/Util';
-
-import ModelFactorySetting from '../Model/OperatorModelFactorySetting';
 import ModelFactory from '../Model/ModelFactory';
-import DBBase from '../Model/DB/DBBase';
 import { ProgramsDBInterface } from '../Model/DB/ProgramsDB';
 import { RulesDBInterface } from '../Model/DB/RulesDB';
 import { RecordedDBInterface } from '../Model/DB/RecordedDB';
@@ -24,15 +19,10 @@ import { IPCServerInterface } from '../Model/IPC/IPCServer';
 import { ExternalProcessModelInterface } from '../Model/ExternalProcessModel';
 import { StorageCheckManager } from './StorageCheckManager'
 
-import Mirakurun from 'mirakurun';
-import CreateMirakurunClient from '../Util/CreateMirakurunClient';
-
 /**
 * Operator
 */
-class Operator {
-    private config: Configuration;
-    private log: LoggerInterface;
+class Operator extends Base {
     private reservationManager: ReservationManager;
     private ruleManager: RuleManager;
     private mirakurun: MirakurunManager;
@@ -44,12 +34,7 @@ class Operator {
     private storageCheckManager: StorageCheckManager;
 
     constructor() {
-        Logger.initialize(path.join(__dirname, '..', '..', '..', 'config', 'operatorLogConfig.json'));
-        Configuration.getInstance().initialize(path.join(__dirname, '..', '..', '..', 'config', 'config.json'));
-        this.log = Logger.getLogger();
-        this.config = Configuration.getInstance();
-
-        ModelFactorySetting.init();
+        super();
 
         process.on('uncaughtException', (error: Error) => {
             this.log.system.fatal(`uncaughtException: ${ error }`);
@@ -62,24 +47,30 @@ class Operator {
     * 初期設定
     */
     private async init(): Promise<void> {
+        let servicesDB = <ServicesDBInterface>(ModelFactory.get('ServicesDB'));
         let programsDB = <ProgramsDBInterface>(ModelFactory.get('ProgramsDB'));
         let rulesDB = <RulesDBInterface>(ModelFactory.get('RulesDB'));
         let recordedDB = <RecordedDBInterface>(ModelFactory.get('RecordedDB'));
         let encodedDB = <EncodedDBInterface>(ModelFactory.get('EncodedDB'));
-        let servicesDB = <ServicesDBInterface>(ModelFactory.get('ServicesDB'));
         this.ipc = <IPCServerInterface>(ModelFactory.get('IPCServer'));
         this.externalProcess = <ExternalProcessModelInterface>(ModelFactory.get('ExternalProcessModel'))
 
         try {
             // DB table 作成
+            await servicesDB.create();
+            this.log.system.info('ServicesDB created');
+
+            await programsDB.create();
+            this.log.system.info('ProgramsDB created');
+
             await rulesDB.create()
-            this.log.system.info('RulesDB create');
+            this.log.system.info('RulesDB created');
 
             await recordedDB.create();
-            this.log.system.info('RecordedDB create');
+            this.log.system.info('RecordedDB created');
 
             await encodedDB.create();
-            this.log.system.info('EncodedDB create');
+            this.log.system.info('EncodedDB created');
 
             await recordedDB.removeAllRecording();
         } catch(err) {
@@ -281,40 +272,9 @@ class Operator {
     }
 
     /**
-    * mirakurun が起動するのを待つ
-    * @param mirakurun: Mirakurun
-    */
-    private async waitMirakurun(mirakurun: Mirakurun): Promise<void> {
-        try {
-            await mirakurun.getStatus();
-        } catch(err) {
-            this.log.system.info('wait mirakurun');
-            await Util.sleep(1000);
-            return await this.waitMirakurun(mirakurun);
-        }
-    }
-
-    /**
-    * wait db
-    */
-    private async waitDB(db: DBBase): Promise<void> {
-        try {
-            await db.ping();
-        } catch(err) {
-            this.log.system.info('wait DB');
-            await Util.sleep(5000);
-            await this.waitDB(db);
-        }
-    }
-
-    /**
     * run
     */
     public async run(): Promise<void> {
-        // wait
-        await this.waitMirakurun(CreateMirakurunClient.get());
-        await this.waitDB(<ProgramsDBInterface>(ModelFactory.get('ProgramsDB')));
-
         await this.init();
 
         // reserves の古い予約を削除しておく

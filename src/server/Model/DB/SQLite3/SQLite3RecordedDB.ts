@@ -29,7 +29,9 @@ class SQLite3RecordedDB extends RecordedDB {
             + 'recPath text, '
             + 'ruleId int, '
             + 'thumbnailPath text, '
-            + 'recording integer '
+            + 'recording integer, '
+            + 'protection integer default 0, '
+            + 'filesize integer null default null '
         + ');'
 
         return this.operator.runQuery(query);
@@ -62,6 +64,7 @@ class SQLite3RecordedDB extends RecordedDB {
         program = super.fixResult(baseDir, thumbnailDir, program, addBaseDir);
 
         program.recording = Boolean(program.recording);
+        program.protection = Boolean(program.protection);
         return program;
     }
 }

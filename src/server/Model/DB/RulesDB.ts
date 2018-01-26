@@ -1,7 +1,7 @@
-import DBBase from './DBBase';
+import DBTableBase from './DBTableBase';
 import * as DBSchema from './DBSchema';
 
-interface RulesDBInterface extends DBBase {
+interface RulesDBInterface extends DBTableBase {
     create(): Promise<void>;
     drop(): Promise<void>;
     insert(rule: DBSchema.RulesSchema): Promise<number>;
@@ -17,7 +17,15 @@ interface RulesDBInterface extends DBBase {
     getTotal(): Promise<number>;
 }
 
-abstract class RulesDB extends DBBase implements RulesDBInterface {
+abstract class RulesDB extends DBTableBase implements RulesDBInterface {
+    /**
+    * get table name
+    * @return string
+    */
+    protected getTableName(): string {
+        return DBSchema.TableName.Rules;
+    }
+
     /**
     * create table
     * @return Promise<void>

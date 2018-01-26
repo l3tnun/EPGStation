@@ -68,10 +68,6 @@ class MirakurunUpdater extends Base {
 
             this.services = services;
 
-            return this.servicesDB.create();
-        })
-        .then(() => {
-            console.log('create ServicesDB done.');
             return this.servicesDB.insert(this.services);
         })
         .then(() => {
@@ -81,11 +77,6 @@ class MirakurunUpdater extends Base {
         .then((programs) => {
             console.log(`mirakurun -> programs: ${ programs.length }`);
             this.programs = programs;
-
-            return this.programsDB.create();
-        })
-        .then(() => {
-            console.log('create ProgramsDB done.');
 
             // 放送波索引
             let channelTypes: ChannelTypeHash = {};

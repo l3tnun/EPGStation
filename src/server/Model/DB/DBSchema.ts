@@ -108,6 +108,8 @@ export interface RecordedSchema {
     ruleId: number | null;
     thumbnailPath: string | null;
     recording: boolean;
+    protection: boolean;
+    filesize: number | null;
 }
 
 export interface EncodedSchema {
@@ -115,6 +117,7 @@ export interface EncodedSchema {
     recordedId: number; //外部キー
     name: string;
     path: string;
+    filesize: number | null;
 }
 
 export interface ScheduleProgramItem {

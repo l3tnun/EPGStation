@@ -1,4 +1,4 @@
-import DBBase from './DBBase';
+import DBTableBase from './DBTableBase';
 import * as path from 'path';
 import * as DBSchema from './DBSchema';
 import Util from '../../Util/Util';
@@ -18,7 +18,7 @@ interface findQuery {
     keyword?: string,
 }
 
-interface RecordedDBInterface extends DBBase {
+interface RecordedDBInterface extends DBTableBase {
     create(): Promise<void>;
     drop(): Promise<void>;
     insert(program: DBSchema.RecordedSchema): Promise<number>;
@@ -39,7 +39,15 @@ interface RecordedDBInterface extends DBBase {
     getGenreTag(): Promise<DBSchema.GenreTag[]>;
 }
 
-abstract class RecordedDB extends DBBase implements RecordedDBInterface {
+abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
+    /**
+    * get table name
+    * @return string
+    */
+    protected getTableName(): string {
+        return DBSchema.TableName.Recorded;
+    }
+
     /**
     * create table
     * @return Promise<void>
@@ -63,7 +71,7 @@ abstract class RecordedDB extends DBBase implements RecordedDBInterface {
         let query = `insert into ${ DBSchema.TableName.Recorded } (`
             + this.createInsertColumnStr(false)
         + ') VALUES ('
-            + this.operator.createValueStr(1, 21)
+            + this.operator.createValueStr(1, 23)
         + `) ${ this.operator.getReturningStr() }`;
 
         const baseDir = Util.getRecordedPath();
@@ -90,6 +98,8 @@ abstract class RecordedDB extends DBBase implements RecordedDBInterface {
         value.push(program.ruleId);
         value.push(program.thumbnailPath);
         value.push(program.recording);
+        value.push(program.protection);
+        value.push(program.filesize);
 
         return this.operator.runInsert(query, value);
     }
@@ -121,7 +131,9 @@ abstract class RecordedDB extends DBBase implements RecordedDBInterface {
             + 'recPath, '
             + 'ruleId, '
             + 'thumbnailPath, '
-            + 'recording '
+            + 'recording, '
+            + 'protection, '
+            + 'filesize '
     }
 
     /**
@@ -134,7 +146,7 @@ abstract class RecordedDB extends DBBase implements RecordedDBInterface {
         let query = `insert into ${ DBSchema.TableName.Recorded } (`
             + this.createInsertColumnStr(true)
         + ') VALUES ('
-            + this.operator.createValueStr(1, 22)
+            + this.operator.createValueStr(1, 24)
         + `)`;
 
         const baseDir = Util.getRecordedPath();
@@ -170,8 +182,10 @@ abstract class RecordedDB extends DBBase implements RecordedDBInterface {
             value.push(program.ruleId);
             value.push(program.thumbnailPath);
             value.push(program.recording);
+            value.push(program.protection);
+            value.push(program.filesize);
 
-            values.push({query: query, values: value });
+            values.push({ query: query, values: value });
         }
 
 
@@ -188,7 +202,7 @@ abstract class RecordedDB extends DBBase implements RecordedDBInterface {
         let query = `${ isReplace ? 'replace' : 'insert' } into ${ DBSchema.TableName.Recorded } (`
             + this.createInsertColumnStr(true)
         + ') VALUES ('
-            + this.operator.createValueStr(1, 22)
+            + this.operator.createValueStr(1, 24)
         + ')'
 
         if(!isReplace) {
@@ -213,7 +227,9 @@ abstract class RecordedDB extends DBBase implements RecordedDBInterface {
                 + 'recPath = excluded.recPath, '
                 + 'ruleId = excluded.ruleId, '
                 + 'thumbnailPath = excluded.thumbnailPath, '
-                + 'recording = excluded.recording '
+                + 'recording = excluded.recording, '
+                + 'protection = excluded.protection, '
+                + 'filesize = excluded.filesize '
         }
 
         const baseDir = Util.getRecordedPath();
@@ -241,6 +257,8 @@ abstract class RecordedDB extends DBBase implements RecordedDBInterface {
         value.push(program.ruleId);
         value.push(program.thumbnailPath);
         value.push(program.recording);
+        value.push(program.protection);
+        value.push(program.filesize);
 
         await this.operator.runQuery(query, value);
     }

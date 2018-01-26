@@ -193,6 +193,67 @@ class MySQLOperator extends DBOperator {
             });
         });
     }
+
+    /**
+    * トランザクション処理
+    * @param callback: transaction で実行する処理
+    * @return Promise<void>
+    */
+    public async runTransaction(
+        callback: (
+            exec: (query: string, values?: any) => Promise<void>
+        ) => Promise<void>,
+    ): Promise<void> {
+        let connection: mysql.PoolConnection;
+        let failed = (err: Error, reject: (err: Error) => void) => {
+            connection.rollback(() => { connection.release(); });
+            connection.release();
+            reject(err);
+        }
+
+        return new Promise<void>((resolve: () => void, reject: (err: Error) => void) => {
+            this.getPool().getConnection((err, con) => {
+                if(err) { reject(err); return; }
+
+                connection = con;
+
+                connection.beginTransaction((err) => {
+                    if(err) { connection.release(); reject(err); return; }
+
+                    callback((query: string, values?: any) => {
+                        return new Promise<void>((resolve: () => void, reject: (err: Error) => void) => {
+                            connection.query(query, values, (err) => {
+                                if(err) { reject(err); return; }
+                                resolve();
+                            });
+                        });
+                    })
+                    .then(() => {
+                        //commit
+                        connection.commit((err) => {
+                            if(err) { failed(err, reject); return; }
+                            connection.release();
+                            resolve();
+                        });
+                    })
+                    .catch((err) => {
+                        failed(err, reject);
+                    });
+                });
+            });
+        });
+    }
+
+    /**
+    * テーブルが存在するか
+    * @param table name
+    * @return boolean
+    */
+    public async exists(tableName: string): Promise<boolean> {
+        const result = <any[]>await this.runQuery(`show tables like '${ tableName }';`);
+
+        return result.length !== 0;
+    }
 }
 
 export default MySQLOperator;

@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as minimist from 'minimist';
 import { Logger } from './Logger';
 import Configuration from './Configuration';
-import ModelFactorySetting from './Model/OperatorModelFactorySetting';
+import ModelFactorySetting from './Model/MainModelFactorySetting';
 import factory from './Model/ModelFactory'
 import * as DBSchema from './Model/DB/DBSchema';
 import { RulesDBInterface } from './Model/DB/RulesDB';

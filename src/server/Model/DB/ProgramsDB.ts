@@ -1,5 +1,5 @@
 import * as apid from '../../../../node_modules/mirakurun/api';
-import DBBase from './DBBase';
+import DBTableBase from './DBTableBase';
 import * as DBSchema from './DBSchema';
 import { SearchInterface } from '../../Operator/RuleInterface';
 import DateUtil from '../../Util/DateUtil';
@@ -47,7 +47,7 @@ interface KeywordQuery {
     extended: string[];
 }
 
-interface ProgramsDBInterface extends DBBase {
+interface ProgramsDBInterface extends DBTableBase {
     create(): Promise<void>;
     insert(channelTypes: ChannelTypeHash, programs: apid.Program[], isDelete?: boolean): Promise<void>;
     delete(programId: number): Promise<void>;
@@ -63,7 +63,15 @@ interface ProgramsDBInterface extends DBBase {
 /**
 * ProgramsDB
 */
-abstract class ProgramsDB extends DBBase implements ProgramsDBInterface {
+abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
+    /**
+    * get table name
+    * @return string
+    */
+    protected getTableName(): string {
+        return DBSchema.TableName.Programs;
+    }
+
     /**
     * create table
     * @return Promise<void>

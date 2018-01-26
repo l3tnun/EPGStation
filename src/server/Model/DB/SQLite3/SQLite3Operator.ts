@@ -219,6 +219,67 @@ class SQLite3Operator extends DBOperator {
             });
         });
     }
+
+    /**
+    * トランザクション処理
+    * @param callback: transaction で実行する処理
+    * @return Promise<void>
+    */
+    public async runTransaction(
+        callback: (
+            exec: (query: string, values?: any) => Promise<void>
+        ) => Promise<void>,
+    ): Promise<void> {
+        return new Promise<void>(async (resolve: () => void, reject: (err: Error) => void) => {
+            let db = await this.getDB();
+            db.serialize(() => {
+                // トランザクション開始
+                db.exec('begin transaction');
+
+                callback((query: string, values?: any) => {
+                    return new Promise<void>((resolve: () => void, reject: (err: Error) => void) => {
+                        db.run(query, values, (err) => {
+                            if(err) { reject(err); return; }
+                            resolve();
+                        });
+                    });
+                })
+                .then(() => {
+                    // commit
+                    db.exec('commit');
+                    resolve();
+                })
+                .catch((err) => {
+                    this.log.system.error(err);
+                    // rollback
+                    db.exec('rollback');
+                    reject(err);
+                });
+            });
+        });
+    }
+
+    /**
+    * テーブルが存在するか
+    * @param table name
+    * @return boolean
+    */
+    public async exists(tableName: string): Promise<boolean> {
+        const result = <{ cnt: number }[]>await this.runQuery(`select count(*) as cnt from sqlite_master where type='table' and name='${ tableName}';`);
+
+        return result.length !== 0 && result[0].cnt === 1;
+    }
+
+    /**
+    * カラム追加の query 文字列を生成する
+    * @param tableName: table 名
+    * @param columnName: column 名
+    * @param columnDefine: column 定義
+    * @return string
+    */
+    public createAddcolumnQueryStr(tableName: string, columnName: string, columnDefine: string): string {
+        return `alter table ${ tableName } add column ${ columnName } ${ columnDefine }`;
+    }
 }
 
 export default SQLite3Operator;

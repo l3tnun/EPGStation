@@ -7,6 +7,7 @@ interface ConfigInterface {
     mirakurunPath: string;
     dbType: 'mysql' | 'sqlite3' | 'postgresql';
     dbPath: string;
+    dbInfoPath: string;
     mysql: {
         host: string;
         user: string;

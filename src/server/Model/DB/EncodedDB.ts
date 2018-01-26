@@ -1,9 +1,9 @@
-import DBBase from './DBBase';
+import DBTableBase from './DBTableBase';
 import * as path from 'path';
 import * as DBSchema from './DBSchema';
 import Util from '../../Util/Util';
 
-interface EncodedDBInterface extends DBBase {
+interface EncodedDBInterface extends DBTableBase {
     create(): Promise<void>;
     drop(): Promise<void>;
     insert(recordedId: number, name: string, path: string): Promise<number>;
@@ -19,7 +19,15 @@ interface EncodedDBInterface extends DBBase {
 * EncodedDB クラス
 * 各 DB で共通部分をまとめる
 */
-abstract class EncodedDB extends DBBase implements EncodedDBInterface {
+abstract class EncodedDB extends DBTableBase implements EncodedDBInterface {
+    /**
+    * get table name
+    * @return string
+    */
+    protected getTableName(): string {
+        return DBSchema.TableName.Encoded;
+    }
+
     /**
     * create table
     * @return Promise<void>
@@ -40,17 +48,19 @@ abstract class EncodedDB extends DBBase implements EncodedDBInterface {
     * @para, filePath: file path
     * @return Promise<number> insertId
     */
-    public insert(recordedId: number, name: string, filePath: string): Promise<number> {
+    // TODO 引数 DBSchema.EncodedSchema へ変更
+    public insert(recordedId: number, name: string, filePath: string, filesize: number | null = null): Promise<number> {
         let query = `insert into ${ DBSchema.TableName.Encoded } (`
             + this.createInsertColumnStr(false)
         + ') VALUES ('
-            + this.operator.createValueStr(1, 3)
+            + this.operator.createValueStr(1, 4)
         + `) ${ this.operator.getReturningStr() }`;
 
         let value: any[] = [
             recordedId,
             name,
             filePath.slice(Util.getRecordedPath().length + path.sep.length),
+            filesize,
         ];
 
         return this.operator.runInsert(query, value);
@@ -65,7 +75,8 @@ abstract class EncodedDB extends DBBase implements EncodedDBInterface {
         return (hasId ? 'id, ' : '')
             + 'recordedId,'
             + 'name, '
-            + 'path '
+            + 'path, '
+            + 'filesize '
     }
 
     /**
@@ -78,7 +89,7 @@ abstract class EncodedDB extends DBBase implements EncodedDBInterface {
         let query = `insert into ${ DBSchema.TableName.Encoded } (`
             + this.createInsertColumnStr(true)
         + ') VALUES ('
-            + this.operator.createValueStr(1, 4)
+            + this.operator.createValueStr(1, 5)
         + `)`;
 
         let values: any[] = [];
@@ -88,6 +99,7 @@ abstract class EncodedDB extends DBBase implements EncodedDBInterface {
                 program.recordedId,
                 program.name,
                 hasBaseDir ? program.path.slice(Util.getRecordedPath().length + path.sep.length) : program.path,
+                program.filesize,
             ];
 
             values.push({query: query, values: value });
