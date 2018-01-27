@@ -18,6 +18,7 @@ Config.json
 | serviceOrder | number[] | | no | チャンネル並び替え mirakurun:40772/api/services で id を確認できる |
 | excludeServices | number[] | | no | 除外するチャンネル mirakurun:40772/api/services で id を確認できる |
 | reserves | string | EPGStation/data/reserves.json | no | reserves.json の保存場所 フルパスで指定する |
+| dbInfoPath | string | EPGStation/data/dbinfo.json | no | dbinfo.json の保存場所 フルパスで指定する |
 | recPriority | number | 2 | no | 録画時の優先度 |
 | conflictPriority | number | 1 | no | 重複時の録画優先度 |
 | recorded | string | EPGStation/recorded | no | 録画ファイル保存先 フルパスで指定する |
