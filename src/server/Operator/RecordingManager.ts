@@ -16,6 +16,7 @@ import { ReserveProgram } from './ReserveProgramInterface';
 import { EncodeInterface } from './RuleInterface';
 import DateUtil from '../Util/DateUtil';
 import Util from '../Util/Util';
+import FileUtil from '../Util/FileUtil';
 import { ReservationManagerInterface } from './ReservationManager';
 
 interface recordingProgram {
@@ -199,7 +200,7 @@ class RecordingManager extends Base implements RecordingManagerInterface {
         this.log.system.info(`add encode file: ${ recordedId }`);
 
         // DB にエンコードファイルを追加
-        const encodedId = await this.encodedDB.insert(recordedId, name, filePath);
+        const encodedId = await this.encodedDB.insert(recordedId, name, filePath, FileUtil.getFileSize(filePath));
 
         // ts 削除
         if(delTs) {

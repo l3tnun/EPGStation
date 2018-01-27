@@ -181,11 +181,14 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
         // エンコードファイルを追加
         if(encodedFiles.length > 0) {
             data['encoded'] = encodedFiles.map((file) => {
-                return {
+                let encoded = {
                     encodedId: file.id,
                     name: file.name,
                     filename: encodeURIComponent(path.basename(file.path)),
                 }
+
+                if(file.filesize !== null) { encoded['filesize'] = file.filesize; }
+                return encoded;
             });
         }
 

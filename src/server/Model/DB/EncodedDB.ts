@@ -6,7 +6,7 @@ import Util from '../../Util/Util';
 interface EncodedDBInterface extends DBTableBase {
     create(): Promise<void>;
     drop(): Promise<void>;
-    insert(recordedId: number, name: string, path: string): Promise<number>;
+    insert(recordedId: number, name: string, path: string, filesize: number | null): Promise<number>;
     restore(programs: DBSchema.EncodedSchema[], isDelete?: boolean, hasBaseDir?: boolean): Promise<void>;
     delete(id: number): Promise<void>;
     deleteRecordedId(recordedId: number): Promise<void>;
@@ -45,11 +45,11 @@ abstract class EncodedDB extends DBTableBase implements EncodedDBInterface {
     * encoded 挿入
     * @param recordedId: recordedId
     * @param name: name
-    * @para, filePath: file path
+    * @param filePath: file path
+    * @param fileSize: file size
     * @return Promise<number> insertId
     */
-    // TODO 引数 DBSchema.EncodedSchema へ変更
-    public insert(recordedId: number, name: string, filePath: string, filesize: number | null = null): Promise<number> {
+    public insert(recordedId: number, name: string, filePath: string, filesize: number | null): Promise<number> {
         let query = `insert into ${ DBSchema.TableName.Encoded } (`
             + this.createInsertColumnStr(false)
         + ') VALUES ('
@@ -73,7 +73,7 @@ abstract class EncodedDB extends DBTableBase implements EncodedDBInterface {
     */
     private createInsertColumnStr(hasId: boolean): string {
         return (hasId ? 'id, ' : '')
-            + 'recordedId,'
+            + 'recordedId, '
             + 'name, '
             + 'path, '
             + 'filesize '
