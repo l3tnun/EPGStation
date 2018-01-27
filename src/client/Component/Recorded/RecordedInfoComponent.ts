@@ -90,10 +90,12 @@ class RecordedInfoComponent extends Component<void> {
             m('div', { class: 'title' }, this.viewModel.getTitle()),
             m('div', { class: 'video-title' }, 'ビデオファイル'),
             this.viewModel.getVideoSrc(true).map((video) => {
+                let str = video.name;
+                if(video.filesize !== null) { str += ` (${ video.filesize })`; }
                 return m('a', {
                     class: 'recorded-link mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect',
                     href: video.path,
-                }, video.name);
+                }, str);
             }),
 
             this.viewModel.getEncoding().map((video) => {
