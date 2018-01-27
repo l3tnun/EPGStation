@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as DBSchema from './DBSchema';
 import Util from '../../Util/Util';
 import StrUtil from '../../Util/StrUtil';
+import FileUtil from '../../Util/FileUtil';
 
 interface findAllOption {
     limit?: number;
@@ -30,6 +31,7 @@ interface RecordedDBInterface extends DBTableBase {
     addThumbnail(id: number, filePath: string): Promise<void>;
     removeRecording(id: number): Promise<void>;
     removeAllRecording(): Promise<void>;
+    updateFileSize(recordedId: number): Promise<void>;
     findId(id: number): Promise<DBSchema.RecordedSchema | null>;
     findOld():  Promise<DBSchema.RecordedSchema | null>;
     findAll(option: findAllOption): Promise<DBSchema.RecordedSchema[]>;
@@ -278,7 +280,7 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
     * @return Promise<void>
     */
     public deleteRecPath(id: number): Promise<void> {
-        return this.operator.runQuery(`update ${ DBSchema.TableName.Recorded } set recPath = null where id = ${ id }`);
+        return this.operator.runQuery(`update ${ DBSchema.TableName.Recorded } set recPath = null, filesize = null where id = ${ id }`);
     }
 
     /**
@@ -316,6 +318,18 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
     */
     public removeAllRecording(): Promise<void> {
         return this.operator.runQuery(`update ${ DBSchema.TableName.Recorded } set recording = false where recording = true`);
+    }
+
+    /**
+    * filesize を更新する
+    * @return Promise<void>
+    */
+    public async updateFileSize(recordedId: number): Promise<void> {
+        const recorded = await this.findId(recordedId);
+        if(recorded === null || recorded.recPath === null) { return; }
+
+        const size = FileUtil.getFileSize(recorded.recPath);
+        await this.operator.runQuery(`update ${ DBSchema.TableName.Recorded } set filesize = ${ size } where id = ${ recordedId }`);
     }
 
     /**

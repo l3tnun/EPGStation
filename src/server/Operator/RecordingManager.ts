@@ -518,7 +518,8 @@ class RecordingManager extends Base implements RecordingManagerInterface {
                     });
                 }
 
-                // TODO update filesize
+                // update filesize
+                await this.recordedDB.updateFileSize(recorded.id);
 
                 //録画完了を通知
                 let encodeOption = typeof recData.reserve.encodeOption === 'undefined' ? null : recData.reserve.encodeOption;
