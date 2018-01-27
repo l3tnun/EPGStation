@@ -141,6 +141,7 @@ abstract class EncodedDB extends DBTableBase implements EncodedDBInterface {
                 const size = FileUtil.getFileSize(program.path);
                 await this.operator.runQuery(`update ${ DBSchema.TableName.Encoded } set filesize = ${ size } where id = ${ program.id }`);
             } catch(err) {
+                this.log.system.warn(`${ program.recPath } update filesize error.`);
             }
         }
     }

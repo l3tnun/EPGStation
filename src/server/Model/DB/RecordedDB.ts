@@ -346,6 +346,7 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
                 const size = FileUtil.getFileSize(program.recPath!);
                 await this.operator.runQuery(`update ${ DBSchema.TableName.Recorded } set filesize = ${ size } where id = ${ program.id }`);
             } catch(err) {
+                this.log.system.warn(`${ program.recPath } update filesize error.`);
             }
         }
     }
