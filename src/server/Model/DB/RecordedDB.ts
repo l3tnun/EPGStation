@@ -32,6 +32,7 @@ interface RecordedDBInterface extends DBTableBase {
     removeRecording(id: number): Promise<void>;
     removeAllRecording(): Promise<void>;
     updateFileSize(recordedId: number): Promise<void>;
+    updateAllNullFileSize(): Promise<void>;
     findId(id: number): Promise<DBSchema.RecordedSchema | null>;
     findOld():  Promise<DBSchema.RecordedSchema | null>;
     findAll(option: findAllOption): Promise<DBSchema.RecordedSchema[]>;
@@ -330,6 +331,24 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
 
         const size = FileUtil.getFileSize(recorded.recPath);
         await this.operator.runQuery(`update ${ DBSchema.TableName.Recorded } set filesize = ${ size } where id = ${ recordedId }`);
+    }
+
+    /**
+    * ファイルが存在して filesize が null のデータを更新する
+    * @return Promise<void>
+    */
+    public async updateAllNullFileSize(): Promise<void> {
+        let programs = <DBSchema.RecordedSchema[]> await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Recorded } where filesize is null and recPath is not null`);
+        programs = await this.fixResults(programs);
+
+        for(let program of programs) {
+            let size: number | null = null;
+            try {
+                size = FileUtil.getFileSize(program.recPath!);
+                await this.operator.runQuery(`update ${ DBSchema.TableName.Recorded } set filesize = ${ size } where id = ${ program.id }`);
+            } catch(err) {
+            }
+        }
     }
 
     /**

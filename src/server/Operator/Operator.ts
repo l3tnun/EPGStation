@@ -73,9 +73,11 @@ class Operator extends Base {
             this.log.system.info('EncodedDB created');
 
             await recordedDB.removeAllRecording();
+            await recordedDB.updateAllNullFileSize();
         } catch(err) {
-            this.log.system.error('DB create error');
-            this.log.system.error(err);
+            this.log.system.fatal('Operator init error');
+            this.log.system.fatal(err);
+            process.exit(1);
         };
 
         ReservationManager.init(programsDB, rulesDB, this.ipc);
