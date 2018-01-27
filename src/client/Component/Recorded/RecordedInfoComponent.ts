@@ -60,7 +60,7 @@ class RecordedInfoComponent extends Component<void> {
                 }, video.name);
             }),
 
-            this.viewModel.getEncofing().map((video) => {
+            this.viewModel.getEncoding().map((video) => {
                 return m('a', {
                     class: 'recorded-link mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect',
                     disabled: ' ',
@@ -96,7 +96,7 @@ class RecordedInfoComponent extends Component<void> {
                 }, video.name);
             }),
 
-            this.viewModel.getEncofing().map((video) => {
+            this.viewModel.getEncoding().map((video) => {
                 return m('a', {
                     class: 'recorded-link mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect',
                     disabled: ' ',
@@ -115,7 +115,7 @@ class RecordedInfoComponent extends Component<void> {
                 }, video.name);
             }),
 
-            this.viewModel.getEncofing().map((video) => {
+            this.viewModel.getEncoding().map((video) => {
                 if(Util.uaIsMobile()) { return null; }
                 return m('a', {
                     class: 'recorded-link mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect',

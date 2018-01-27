@@ -182,7 +182,7 @@ class RecordedInfoViewModel extends ViewModel {
     /**
     * エンコード待機、エンコード中の情報を取得
     */
-    public getEncofing(): { name: string, isEncoding: boolean, }[] {
+    public getEncoding(): { name: string, isEncoding: boolean, }[] {
         return this.recorded === null || typeof this.recorded.encoding === 'undefined' ? [] : this.recorded.encoding;
     }
 
