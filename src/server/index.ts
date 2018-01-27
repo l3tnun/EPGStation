@@ -2,7 +2,7 @@ import * as child_process from 'child_process';
 import * as path from 'path';
 import { Logger } from './Logger';
 import Configuration from './Configuration';
-import DBVersionChecker from './DBVersionChecker';
+import DBRevisionChecker from './DBRevisionChecker';
 import ConnectionChecker from './ConnectionChecker';
 import MainModelFactorySetting from './Model/MainModelFactorySetting';
 import Operator from './Operator/Operator';
@@ -48,7 +48,7 @@ MainModelFactorySetting.init();
         const checker = new ConnectionChecker();
         await checker.checkMirakurun();
         await checker.checkDB();
-        await new DBVersionChecker().run();
+        await new DBRevisionChecker().run();
         await new Operator().run()
         runService();
     } catch(err) {

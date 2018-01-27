@@ -49,6 +49,7 @@ interface KeywordQuery {
 
 interface ProgramsDBInterface extends DBTableBase {
     create(): Promise<void>;
+    drop(): Promise<void>;
     insert(channelTypes: ChannelTypeHash, programs: apid.Program[], isDelete?: boolean): Promise<void>;
     delete(programId: number): Promise<void>;
     deleteOldPrograms(): Promise<void>;
@@ -77,6 +78,13 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
     * @return Promise<void>
     */
     abstract create(): Promise<void>;
+
+    /**
+    * drop table
+    */
+    public drop(): Promise<void> {
+        return this.operator.runQuery(`drop table if exists ${ DBSchema.TableName.Programs }`);
+    }
 
     /**
     * insert 時の config を取得

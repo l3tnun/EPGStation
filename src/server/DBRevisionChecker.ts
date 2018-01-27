@@ -4,19 +4,16 @@ import Base from './Base';
 import factory from './Model/ModelFactory';
 import MigrationBase from './Model/DB/MigrationBase';
 import DBTableBase from './Model/DB/DBTableBase';
-
-interface DBVersionInfo {
-    revision: number;
-}
+import DBRevisionInfo from './DBRevisionInfoInterface';
 
 /**
-* DBVersionChecker
+* DBRevisionChecker
 */
-class DBVersionChecker extends Base {
+class DBRevisionChecker extends Base {
     private migrations: MigrationBase[] = [];
     private tables: DBTableBase[] = [];
     private infoFilePath: string;
-    private dbInfo: DBVersionInfo | null = null;
+    private dbInfo: DBRevisionInfo | null = null;
     private currentRevision: number = 0;
 
     public constructor() {
@@ -88,6 +85,30 @@ class DBVersionChecker extends Base {
     }
 
     /**
+    * get current revision
+    * @return number
+    */
+    public getCurrentRevision(): number {
+        return this.currentRevision;
+    }
+
+    /**
+    * get DBRevisionInfo
+    * @return DBRevisionInfo
+    */
+    public getDBRevisionInfo(): DBRevisionInfo | null {
+        return this.dbInfo;
+    }
+
+    /**
+    * create new File
+    */
+    public createNewFile(): void {
+        this.dbInfo = { revision: this.currentRevision };
+        this.writeFile();
+    }
+
+    /**
     * DB revision 情報をファイルから読み込む
     */
     private readFile(): void {
@@ -123,5 +144,5 @@ class DBVersionChecker extends Base {
     }
 }
 
-export default DBVersionChecker;
+export default DBRevisionChecker;
 
