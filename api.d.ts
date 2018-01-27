@@ -106,6 +106,7 @@ export interface EncodedProgram {
     encodedId: EncodedId;
     name: string;
     filename: string;
+    filesize?: number;
 }
 
 export interface EncodingInfo {
@@ -136,6 +137,8 @@ export interface RecordedProgram {
     audioSamplingRate?: ProgramAudioSamplingRate;
     audioComponentType?: number;
     recording: boolean;
+    protection: boolean;
+    filesize?: number;
     hasThumbnail: boolean;
     original: boolean;
     filename?: string;
