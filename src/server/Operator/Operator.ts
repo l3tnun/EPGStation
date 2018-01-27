@@ -74,6 +74,7 @@ class Operator extends Base {
 
             await recordedDB.removeAllRecording();
             await recordedDB.updateAllNullFileSize();
+            await encodedDB.updateAllNullFileSize();
         } catch(err) {
             this.log.system.fatal('Operator init error');
             this.log.system.fatal(err);

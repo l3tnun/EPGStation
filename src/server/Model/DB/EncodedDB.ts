@@ -2,6 +2,7 @@ import DBTableBase from './DBTableBase';
 import * as path from 'path';
 import * as DBSchema from './DBSchema';
 import Util from '../../Util/Util';
+import FileUtil from '../../Util/FileUtil';
 
 interface EncodedDBInterface extends DBTableBase {
     create(): Promise<void>;
@@ -10,6 +11,7 @@ interface EncodedDBInterface extends DBTableBase {
     restore(programs: DBSchema.EncodedSchema[], isDelete?: boolean, hasBaseDir?: boolean): Promise<void>;
     delete(id: number): Promise<void>;
     deleteRecordedId(recordedId: number): Promise<void>;
+    updateAllNullFileSize(): Promise<void>;
     findId(id: number): Promise<DBSchema.EncodedSchema | null>;
     findAll(sAddBaseDir?: boolean): Promise<DBSchema.EncodedSchema[]>;
     findRecordedId(recordedId: number): Promise<DBSchema.EncodedSchema[]>;
@@ -124,6 +126,23 @@ abstract class EncodedDB extends DBTableBase implements EncodedDBInterface {
     */
     public deleteRecordedId(recordedId: number): Promise<void> {
         return this.operator.runQuery(`delete from ${ DBSchema.TableName.Encoded } where recordedId = ${ recordedId }`);
+    }
+
+    /**
+    * filesize が null のデータを更新する
+    * @return Promise<void>
+    */
+    public async updateAllNullFileSize(): Promise<void> {
+        let programs = <DBSchema.EncodedSchema[]> await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Encoded } where filesize is null`);
+        programs = this.fixResults(programs);
+
+        for(let program of programs) {
+            try {
+                const size = FileUtil.getFileSize(program.path);
+                await this.operator.runQuery(`update ${ DBSchema.TableName.Encoded } set filesize = ${ size } where id = ${ program.id }`);
+            } catch(err) {
+            }
+        }
     }
 
     /**
