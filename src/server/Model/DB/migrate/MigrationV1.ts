@@ -45,7 +45,7 @@ abstract class MigrationV1 extends MigrationBase {
     * @return string
     */
     protected getRecordedFileSizeColumnDefine(): string {
-        return 'integer null default null';
+        return 'bigint null default null';
     }
 
     /**
@@ -53,7 +53,7 @@ abstract class MigrationV1 extends MigrationBase {
     * @return string
     */
     protected getEncodedFileSizeColumnDefine(): string {
-        return 'integer null default null';
+        return 'bigint null default null';
     }
 }
 

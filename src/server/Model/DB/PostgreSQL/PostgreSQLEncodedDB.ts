@@ -12,7 +12,7 @@ class PostgreSQLEncodedDB extends EncodedDB {
             + `recordedId integer references ${ DBSchema.TableName.Recorded } (id), `
             + 'name text not null, '
             + 'path text not null, '
-            + 'filesize integer null default null '
+            + 'filesize bigint null default null '
         + ');'
 
         return this.operator.runQuery(query);

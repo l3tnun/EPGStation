@@ -31,7 +31,7 @@ class PostgreSQLRecordedDB extends RecordedDB {
             + 'thumbnailPath text, '
             + 'recording boolean, '
             + 'protection boolean default false, '
-            + 'filesize integer null default null '
+            + 'filesize bigint null default null '
         + ');'
 
         return this.operator.runQuery(query);
