@@ -1,7 +1,6 @@
 import * as sqlite3 from 'sqlite3';
 import * as path from 'path';
 import DBOperator from '../DBOperator';
-import Util from '../../../Util/Util';
 
 /**
 * SQLite3Operator クラス
@@ -140,58 +139,6 @@ class SQLite3Operator extends DBOperator {
                     return;
                 }
                 resolve();
-            });
-        });
-    }
-
-    /**
-    * 大量のデータをインサートする
-    * @param deleteTableName レコードを削除するテーブルの名前
-    * @param datas インサートするデータ
-    * @param isDelete: データを削除するか true: 削除, false: 削除しない
-    * @param insertWait インサート時の wait (ms)
-    */
-    public manyInsert(deleteTableName: string, datas: { query: string, values?: any[] }[], isDelete: boolean, insertWait: number = 0): Promise<void> {
-        return new Promise<void>(async (resolve: () => void, reject: (err: Error) => void) => {
-            let db = await this.getDB();
-            db.serialize(() => {
-                // トランザクション開始
-                db.exec('begin transaction');
-
-                new Promise(async (resolve: () => void, reject: (err: Error) => void) => {
-                    if(isDelete) {
-                        // delete DB data
-                        db.run(`delete from ${ deleteTableName }`, (err) => {
-                            if(err) { reject(err); return; }
-                        });
-                    }
-
-                    //データ挿入
-                    for(let data of datas) {
-                        await (() => {
-                            return new Promise((resolve: () => void, reject: (err: Error) => void) => {
-                                db.run(data.query, data.values, (err) => {
-                                    if(err) { reject(err); return; }
-                                    resolve();
-                                });
-                            });
-                        })();
-                        if(insertWait > 0) { await Util.sleep(insertWait); }
-                    }
-
-                    resolve();
-                })
-                .then(() => {
-                    // commit
-                    db.exec('commit');
-                    resolve();
-                })
-                .catch((err) => {
-                    this.log.system.error(err);
-                    // rollback
-                    db.exec('rollback');
-                    reject(err);
-                });
             });
         });
     }

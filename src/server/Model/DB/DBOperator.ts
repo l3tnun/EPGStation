@@ -1,4 +1,5 @@
 import Model from '../Model';
+import Util from '../../Util/Util';
 
 /**
 * DBOperator クラス
@@ -34,7 +35,20 @@ abstract class DBOperator extends Model {
     * @param insertWait インサート時の wait (ms)
     * @return Promise<void>
     */
-    abstract manyInsert(deleteTableName: string, datas: { query: string, values?: any[] }[], isDelete: boolean, insertWait?: number): Promise<void>;
+    public manyInsert(deleteTableName: string, datas: { query: string, values?: any[] }[], isDelete: boolean, insertWait: number = 0): Promise<void> {
+        return this.runTransaction(async (exec: (query: string, values?: any) => Promise<void>) => {
+            // delete data
+            if(isDelete) {
+                await exec(`delete from ${ deleteTableName }`);
+            }
+
+            // insert data
+            for(let data of datas) {
+                await exec(data.query, data.values);
+                if(insertWait > 0) { await Util.sleep(insertWait); }
+            }
+        });
+    }
 
     /**
     * insert with insertId

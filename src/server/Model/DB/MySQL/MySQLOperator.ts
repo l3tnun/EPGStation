@@ -1,6 +1,5 @@
 import * as mysql from 'mysql';
 import DBOperator from '../DBOperator';
-import Util from '../../../Util/Util';
 
 /**
 * MySQLOperator クラス
@@ -94,74 +93,6 @@ class MySQLOperator extends DBOperator {
                         resolve(<T>result);
                     });
                 }
-            });
-        });
-    }
-
-    /**
-    * 大量のデータをインサートする
-    * @param deleteTableName レコードを削除するテーブルの名前
-    * @param datas インサートするデータ
-    * @param isDelete: データを削除するか true: 削除, false: 削除しない
-    * @param insertWait インサート時の wait (ms)
-    */
-    public manyInsert(deleteTableName: string, datas: { query: string, values?: any[] }[], isDelete: boolean, insertWait: number = 0): Promise<void> {
-        let connection: mysql.PoolConnection;
-        let failed = (err: Error, reject: (err: Error) => void) => {
-            connection.rollback(() => { connection.release(); });
-            connection.release();
-            reject(err);
-        }
-
-        return new Promise<void>((resolve: () => void, reject: (err: Error) => void) => {
-            this.getPool().getConnection((err, con) => {
-                if(err) { reject(err); return; }
-
-                connection = con;
-
-                connection.beginTransaction((err) => {
-                    if(err) { connection.release(); reject(err); return; }
-
-                    new Promise((resolve: () => void, reject: (err: Error) => void) => {
-                        if(!isDelete) { resolve(); return; }
-
-                        connection.query(`delete from ${ deleteTableName }`, (err) => {
-                            if(err) { reject(err); return; }
-                            resolve();
-                        })
-                    })
-                    .then(async () => {
-                        for(let data of datas) {
-                            await (() => {
-                                return new Promise((resolve: () => void, reject: (err: Error) => void) => {
-                                    if(typeof data.values === 'undefined') {
-                                        connection.query(data.query, (err) => {
-                                            if(err) { reject(err); return; }
-                                            resolve();
-                                        });
-                                    } else {
-                                        connection.query(data.query, data.values, (err) => {
-                                            if(err) { reject(err); return; }
-                                            resolve();
-                                        });
-                                    }
-                                })
-                            })();
-                            if(insertWait > 0) { await Util.sleep(insertWait); }
-                        }
-                    })
-                    .then(() => {
-                        //commit
-                        connection.commit((err) => {
-                            if(err) { failed(err, reject); return; }
-                            connection.release();
-                            resolve();
-                        });
-                    })
-                    .catch((err) => {
-                        failed(err, reject);
-                    });
-                });
             });
         });
     }
