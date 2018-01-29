@@ -1,15 +1,17 @@
-import DBBase from './DBBase';
+import DBTableBase from './DBTableBase';
 import * as path from 'path';
 import * as DBSchema from './DBSchema';
 import Util from '../../Util/Util';
+import FileUtil from '../../Util/FileUtil';
 
-interface EncodedDBInterface extends DBBase {
+interface EncodedDBInterface extends DBTableBase {
     create(): Promise<void>;
     drop(): Promise<void>;
-    insert(recordedId: number, name: string, path: string): Promise<number>;
+    insert(recordedId: number, name: string, path: string, filesize: number | null): Promise<number>;
     restore(programs: DBSchema.EncodedSchema[], isDelete?: boolean, hasBaseDir?: boolean): Promise<void>;
     delete(id: number): Promise<void>;
     deleteRecordedId(recordedId: number): Promise<void>;
+    updateAllNullFileSize(): Promise<void>;
     findId(id: number): Promise<DBSchema.EncodedSchema | null>;
     findAll(sAddBaseDir?: boolean): Promise<DBSchema.EncodedSchema[]>;
     findRecordedId(recordedId: number): Promise<DBSchema.EncodedSchema[]>;
@@ -19,7 +21,15 @@ interface EncodedDBInterface extends DBBase {
 * EncodedDB クラス
 * 各 DB で共通部分をまとめる
 */
-abstract class EncodedDB extends DBBase implements EncodedDBInterface {
+abstract class EncodedDB extends DBTableBase implements EncodedDBInterface {
+    /**
+    * get table name
+    * @return string
+    */
+    protected getTableName(): string {
+        return DBSchema.TableName.Encoded;
+    }
+
     /**
     * create table
     * @return Promise<void>
@@ -37,20 +47,22 @@ abstract class EncodedDB extends DBBase implements EncodedDBInterface {
     * encoded 挿入
     * @param recordedId: recordedId
     * @param name: name
-    * @para, filePath: file path
+    * @param filePath: file path
+    * @param fileSize: file size
     * @return Promise<number> insertId
     */
-    public insert(recordedId: number, name: string, filePath: string): Promise<number> {
+    public insert(recordedId: number, name: string, filePath: string, filesize: number | null): Promise<number> {
         let query = `insert into ${ DBSchema.TableName.Encoded } (`
             + this.createInsertColumnStr(false)
         + ') VALUES ('
-            + this.operator.createValueStr(1, 3)
+            + this.operator.createValueStr(1, 4)
         + `) ${ this.operator.getReturningStr() }`;
 
         let value: any[] = [
             recordedId,
             name,
             filePath.slice(Util.getRecordedPath().length + path.sep.length),
+            filesize,
         ];
 
         return this.operator.runInsert(query, value);
@@ -63,9 +75,10 @@ abstract class EncodedDB extends DBBase implements EncodedDBInterface {
     */
     private createInsertColumnStr(hasId: boolean): string {
         return (hasId ? 'id, ' : '')
-            + 'recordedId,'
+            + 'recordedId, '
             + 'name, '
-            + 'path '
+            + 'path, '
+            + 'filesize '
     }
 
     /**
@@ -78,7 +91,7 @@ abstract class EncodedDB extends DBBase implements EncodedDBInterface {
         let query = `insert into ${ DBSchema.TableName.Encoded } (`
             + this.createInsertColumnStr(true)
         + ') VALUES ('
-            + this.operator.createValueStr(1, 4)
+            + this.operator.createValueStr(1, 5)
         + `)`;
 
         let values: any[] = [];
@@ -88,6 +101,7 @@ abstract class EncodedDB extends DBBase implements EncodedDBInterface {
                 program.recordedId,
                 program.name,
                 hasBaseDir ? program.path.slice(Util.getRecordedPath().length + path.sep.length) : program.path,
+                program.filesize,
             ];
 
             values.push({query: query, values: value });
@@ -112,6 +126,24 @@ abstract class EncodedDB extends DBBase implements EncodedDBInterface {
     */
     public deleteRecordedId(recordedId: number): Promise<void> {
         return this.operator.runQuery(`delete from ${ DBSchema.TableName.Encoded } where recordedId = ${ recordedId }`);
+    }
+
+    /**
+    * filesize が null のデータを更新する
+    * @return Promise<void>
+    */
+    public async updateAllNullFileSize(): Promise<void> {
+        let programs = <DBSchema.EncodedSchema[]> await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Encoded } where filesize is null`);
+        programs = this.fixResults(programs);
+
+        for(let program of programs) {
+            try {
+                const size = FileUtil.getFileSize(program.path);
+                await this.operator.runQuery(`update ${ DBSchema.TableName.Encoded } set filesize = ${ size } where id = ${ program.id }`);
+            } catch(err) {
+                this.log.system.warn(`${ program.path } update filesize error.`);
+            }
+        }
     }
 
     /**

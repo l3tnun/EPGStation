@@ -1,4 +1,5 @@
 import Model from '../Model';
+import Util from '../../Util/Util';
 
 /**
 * DBOperator クラス
@@ -34,7 +35,20 @@ abstract class DBOperator extends Model {
     * @param insertWait インサート時の wait (ms)
     * @return Promise<void>
     */
-    abstract manyInsert(deleteTableName: string, datas: { query: string, values?: any[] }[], isDelete: boolean, insertWait?: number): Promise<void>;
+    public manyInsert(deleteTableName: string, datas: { query: string, values?: any[] }[], isDelete: boolean, insertWait: number = 0): Promise<void> {
+        return this.runTransaction(async (exec: (query: string, values?: any) => Promise<void>) => {
+            // delete data
+            if(isDelete) {
+                await exec(`delete from ${ deleteTableName }`);
+            }
+
+            // insert data
+            for(let data of datas) {
+                await exec(data.query, data.values);
+                if(insertWait > 0) { await Util.sleep(insertWait); }
+            }
+        });
+    }
 
     /**
     * insert with insertId
@@ -43,6 +57,24 @@ abstract class DBOperator extends Model {
     * @return Promise<number> insertId
     */
     abstract runInsert(query: string, values?: any | null): Promise<number>;
+
+    /**
+    * トランザクション処理
+    * @param callback: transaction で実行する処理
+    * @return Promise<void>
+    */
+    abstract async runTransaction(
+        callback: (
+            exec: (query: string, values?: any) => Promise<void>
+        ) => Promise<void>,
+    ): Promise<void>;
+
+    /**
+    * テーブルが存在するか
+    * @param table name
+    * @return boolean
+    */
+    abstract async exists(tableName: string): Promise<boolean>;
 
     /**
     * 件数取得
@@ -114,6 +146,17 @@ abstract class DBOperator extends Model {
     */
     public getReturningStr(): string {
         return '';
+    }
+
+    /**
+    * カラム追加の query 文字列を生成する
+    * @param tableName: table 名
+    * @param columnName: column 名
+    * @param columnDefine: column 定義
+    * @return string
+    */
+    public createAddcolumnQueryStr(tableName: string, columnName: string, columnDefine: string): string {
+        return `alter table ${ tableName } add ${ columnName } ${ columnDefine }`;
     }
 }
 

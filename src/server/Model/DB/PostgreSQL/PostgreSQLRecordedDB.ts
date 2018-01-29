@@ -29,7 +29,9 @@ class PostgreSQLRecordedDB extends RecordedDB {
             + 'recPath text, '
             + 'ruleId integer, '
             + 'thumbnailPath text, '
-            + 'recording boolean '
+            + 'recording boolean, '
+            + 'protection boolean default false, '
+            + 'filesize bigint null default null '
         + ');'
 
         return this.operator.runQuery(query);
@@ -60,7 +62,7 @@ class PostgreSQLRecordedDB extends RecordedDB {
     * @return Promise<T>
     */
     protected getTag<T>(item: string): Promise<T> {
-        return this.operator.runQuery(`select count(*) as cnt, ${ item } as "${ item }" from ${ DBSchema.TableName.Recorded } group by ${ item } order by ${ item } asc`);
+        return this.operator.runQuery(`select count(*) as cnt, ${ item } as "${ item }" from ${ DBSchema.TableName.Recorded } group by ${ item } order by ${ item } asc nulls first`);
     }
 
     /**
@@ -68,7 +70,7 @@ class PostgreSQLRecordedDB extends RecordedDB {
     * @return string
     */
     public getAllColumns(): string {
-        return 'id, programId as "programId", channelId as "channelId", channelType as "channelType", startAt as "startAt", endAt as "endAt", duration, name, description, extended, genre1, genre2, videoType as "videoType", videoResolution as "videoResolution", videoStreamContent as "videoStreamContent", videoComponentType as "videoComponentType", audioSamplingRate as "audioSamplingRate", audioComponentType as "audioComponentType", recPath as "recPath", ruleId as "ruleId", thumbnailPath as "thumbnailPath", recording';
+        return 'id, programId as "programId", channelId as "channelId", channelType as "channelType", startAt as "startAt", endAt as "endAt", duration, name, description, extended, genre1, genre2, videoType as "videoType", videoResolution as "videoResolution", videoStreamContent as "videoStreamContent", videoComponentType as "videoComponentType", audioSamplingRate as "audioSamplingRate", audioComponentType as "audioComponentType", recPath as "recPath", ruleId as "ruleId", thumbnailPath as "thumbnailPath", recording, protection, filesize';
     }
 }
 

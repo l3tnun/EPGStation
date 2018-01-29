@@ -110,7 +110,7 @@ class RecordedInfoViewModel extends ViewModel {
     * @param download: true: download mode, false: not download mode
     * @return video source
     */
-    public getVideoSrc(download: boolean = false): { name: string, path: string }[] {
+    public getVideoSrc(download: boolean = false): { name: string, path: string, filesize: string | null }[] {
         const config = this.config.getConfig();
         const setting = this.setting.get();
         if(this.recorded === null || config === null || setting === null) { return []; }
@@ -146,7 +146,7 @@ class RecordedInfoViewModel extends ViewModel {
             }
         }
 
-        let result: { name: string, path: string }[] = [];
+        let result: { name: string, path: string, filesize: string | null }[] = [];
         // ts ファイル
         if(this.recorded.original) {
             let url = download ? `/api/recorded/${ this.recorded.id }/file?mode=download` : `/api/recorded/${ this.recorded.id }/file`;
@@ -158,7 +158,11 @@ class RecordedInfoViewModel extends ViewModel {
                     url = url.replace(/FILENAME/g, this.recorded.filename);
                 }
             }
-            result.push({ name: 'TS', path: url });
+            result.push({
+                name: 'TS',
+                path: url,
+                filesize: this.createFileSizeStr(this.recorded.filesize),
+            });
         }
 
         //エンコード済みファイル
@@ -172,7 +176,11 @@ class RecordedInfoViewModel extends ViewModel {
                     url = urlScheme.replace(/ADDRESS/g, full);
                     url = url.replace(/FILENAME/g, encoded.filename);
                 }
-                result.push({ name: encoded.name, path: url });
+                result.push({
+                    name: encoded.name,
+                    path: url,
+                    filesize: this.createFileSizeStr(encoded.filesize),
+                });
             }
         }
 
@@ -180,9 +188,26 @@ class RecordedInfoViewModel extends ViewModel {
     }
 
     /**
+    * create file size str
+    * @param size: number | undefined
+    * @return string | null
+    */
+    private createFileSizeStr(size: number | undefined): string | null {
+        if(typeof size === 'undefined') { return null; }
+
+        let cnt = 0;
+        for(; cnt <= RecordedInfoViewModel.fileSizeUnits.length; cnt++) {
+            if(size < 1000) { break; }
+            size /= 1024;
+        }
+
+        return `${ size.toFixed(1) }${ RecordedInfoViewModel.fileSizeUnits[cnt] }`;
+    }
+
+    /**
     * エンコード待機、エンコード中の情報を取得
     */
-    public getEncofing(): { name: string, isEncoding: boolean, }[] {
+    public getEncoding(): { name: string, isEncoding: boolean, }[] {
         return this.recorded === null || typeof this.recorded.encoding === 'undefined' ? [] : this.recorded.encoding;
     }
 
@@ -379,6 +404,7 @@ class RecordedInfoViewModel extends ViewModel {
 
 namespace RecordedInfoViewModel {
     export const id = 'recorded-info';
+    export const fileSizeUnits = ['B', 'KB', 'MB', 'GB'];
 }
 
 export default RecordedInfoViewModel;

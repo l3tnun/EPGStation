@@ -11,7 +11,8 @@ class PostgreSQLEncodedDB extends EncodedDB {
             + 'id serial primary key, '
             + `recordedId integer references ${ DBSchema.TableName.Recorded } (id), `
             + 'name text not null, '
-            + 'path text not null '
+            + 'path text not null, '
+            + 'filesize bigint null default null '
         + ');'
 
         return this.operator.runQuery(query);
@@ -35,7 +36,7 @@ class PostgreSQLEncodedDB extends EncodedDB {
     * @return string
     */
     public getAllColumns(): string {
-        return 'id, recordedId as "recordedId", name, path';
+        return 'id, recordedId as "recordedId", name, path, filesize';
     }
 }
 

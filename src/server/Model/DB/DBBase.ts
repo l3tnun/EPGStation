@@ -11,30 +11,6 @@ abstract class DBBase extends Model {
         super();
         this.operator = operator;
     }
-
-    /**
-    * ping
-    * @return Promise<void>
-    */
-    public ping(): Promise<void> {
-        return this.operator.ping();
-    }
-
-    /**
-    * end
-    * @return Promise<void>
-    */
-    public end(): Promise<void> {
-        return this.operator.end();
-    }
-
-    /**
-    * all columns
-    * @return string
-    */
-    public getAllColumns(): string {
-        return '*';
-    }
 }
 
 export default DBBase;

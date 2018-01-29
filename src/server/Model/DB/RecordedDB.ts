@@ -1,8 +1,9 @@
-import DBBase from './DBBase';
+import DBTableBase from './DBTableBase';
 import * as path from 'path';
 import * as DBSchema from './DBSchema';
 import Util from '../../Util/Util';
 import StrUtil from '../../Util/StrUtil';
+import FileUtil from '../../Util/FileUtil';
 
 interface findAllOption {
     limit?: number;
@@ -18,7 +19,7 @@ interface findQuery {
     keyword?: string,
 }
 
-interface RecordedDBInterface extends DBBase {
+interface RecordedDBInterface extends DBTableBase {
     create(): Promise<void>;
     drop(): Promise<void>;
     insert(program: DBSchema.RecordedSchema): Promise<number>;
@@ -30,6 +31,8 @@ interface RecordedDBInterface extends DBBase {
     addThumbnail(id: number, filePath: string): Promise<void>;
     removeRecording(id: number): Promise<void>;
     removeAllRecording(): Promise<void>;
+    updateFileSize(recordedId: number): Promise<void>;
+    updateAllNullFileSize(): Promise<void>;
     findId(id: number): Promise<DBSchema.RecordedSchema | null>;
     findOld():  Promise<DBSchema.RecordedSchema | null>;
     findAll(option: findAllOption): Promise<DBSchema.RecordedSchema[]>;
@@ -39,7 +42,15 @@ interface RecordedDBInterface extends DBBase {
     getGenreTag(): Promise<DBSchema.GenreTag[]>;
 }
 
-abstract class RecordedDB extends DBBase implements RecordedDBInterface {
+abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
+    /**
+    * get table name
+    * @return string
+    */
+    protected getTableName(): string {
+        return DBSchema.TableName.Recorded;
+    }
+
     /**
     * create table
     * @return Promise<void>
@@ -63,7 +74,7 @@ abstract class RecordedDB extends DBBase implements RecordedDBInterface {
         let query = `insert into ${ DBSchema.TableName.Recorded } (`
             + this.createInsertColumnStr(false)
         + ') VALUES ('
-            + this.operator.createValueStr(1, 21)
+            + this.operator.createValueStr(1, 23)
         + `) ${ this.operator.getReturningStr() }`;
 
         const baseDir = Util.getRecordedPath();
@@ -90,6 +101,8 @@ abstract class RecordedDB extends DBBase implements RecordedDBInterface {
         value.push(program.ruleId);
         value.push(program.thumbnailPath);
         value.push(program.recording);
+        value.push(program.protection);
+        value.push(program.filesize);
 
         return this.operator.runInsert(query, value);
     }
@@ -121,7 +134,9 @@ abstract class RecordedDB extends DBBase implements RecordedDBInterface {
             + 'recPath, '
             + 'ruleId, '
             + 'thumbnailPath, '
-            + 'recording '
+            + 'recording, '
+            + 'protection, '
+            + 'filesize '
     }
 
     /**
@@ -134,7 +149,7 @@ abstract class RecordedDB extends DBBase implements RecordedDBInterface {
         let query = `insert into ${ DBSchema.TableName.Recorded } (`
             + this.createInsertColumnStr(true)
         + ') VALUES ('
-            + this.operator.createValueStr(1, 22)
+            + this.operator.createValueStr(1, 24)
         + `)`;
 
         const baseDir = Util.getRecordedPath();
@@ -170,8 +185,10 @@ abstract class RecordedDB extends DBBase implements RecordedDBInterface {
             value.push(program.ruleId);
             value.push(program.thumbnailPath);
             value.push(program.recording);
+            value.push(program.protection);
+            value.push(program.filesize);
 
-            values.push({query: query, values: value });
+            values.push({ query: query, values: value });
         }
 
 
@@ -188,7 +205,7 @@ abstract class RecordedDB extends DBBase implements RecordedDBInterface {
         let query = `${ isReplace ? 'replace' : 'insert' } into ${ DBSchema.TableName.Recorded } (`
             + this.createInsertColumnStr(true)
         + ') VALUES ('
-            + this.operator.createValueStr(1, 22)
+            + this.operator.createValueStr(1, 24)
         + ')'
 
         if(!isReplace) {
@@ -213,7 +230,9 @@ abstract class RecordedDB extends DBBase implements RecordedDBInterface {
                 + 'recPath = excluded.recPath, '
                 + 'ruleId = excluded.ruleId, '
                 + 'thumbnailPath = excluded.thumbnailPath, '
-                + 'recording = excluded.recording '
+                + 'recording = excluded.recording, '
+                + 'protection = excluded.protection, '
+                + 'filesize = excluded.filesize '
         }
 
         const baseDir = Util.getRecordedPath();
@@ -241,6 +260,8 @@ abstract class RecordedDB extends DBBase implements RecordedDBInterface {
         value.push(program.ruleId);
         value.push(program.thumbnailPath);
         value.push(program.recording);
+        value.push(program.protection);
+        value.push(program.filesize);
 
         await this.operator.runQuery(query, value);
     }
@@ -260,7 +281,7 @@ abstract class RecordedDB extends DBBase implements RecordedDBInterface {
     * @return Promise<void>
     */
     public deleteRecPath(id: number): Promise<void> {
-        return this.operator.runQuery(`update ${ DBSchema.TableName.Recorded } set recPath = null where id = ${ id }`);
+        return this.operator.runQuery(`update ${ DBSchema.TableName.Recorded } set recPath = null, filesize = null where id = ${ id }`);
     }
 
     /**
@@ -298,6 +319,36 @@ abstract class RecordedDB extends DBBase implements RecordedDBInterface {
     */
     public removeAllRecording(): Promise<void> {
         return this.operator.runQuery(`update ${ DBSchema.TableName.Recorded } set recording = false where recording = true`);
+    }
+
+    /**
+    * filesize を更新する
+    * @return Promise<void>
+    */
+    public async updateFileSize(recordedId: number): Promise<void> {
+        const recorded = await this.findId(recordedId);
+        if(recorded === null || recorded.recPath === null) { return; }
+
+        const size = FileUtil.getFileSize(recorded.recPath);
+        await this.operator.runQuery(`update ${ DBSchema.TableName.Recorded } set filesize = ${ size } where id = ${ recordedId }`);
+    }
+
+    /**
+    * ファイルが存在して filesize が null のデータを更新する
+    * @return Promise<void>
+    */
+    public async updateAllNullFileSize(): Promise<void> {
+        let programs = <DBSchema.RecordedSchema[]> await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Recorded } where filesize is null and recPath is not null`);
+        programs = await this.fixResults(programs);
+
+        for(let program of programs) {
+            try {
+                const size = FileUtil.getFileSize(program.recPath!);
+                await this.operator.runQuery(`update ${ DBSchema.TableName.Recorded } set filesize = ${ size } where id = ${ program.id }`);
+            } catch(err) {
+                this.log.system.warn(`${ program.recPath } update filesize error.`);
+            }
+        }
     }
 
     /**

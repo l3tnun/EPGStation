@@ -411,6 +411,8 @@ definitions:
       filename:
         type: string
         description: 'ファイル名'
+      filesize:
+        type: integer
 
   EncodingInfo:
     type: object
@@ -437,6 +439,7 @@ definitions:
       - hasThumbnail
       - original
       - recording
+      - protection
     properties:
       id:
         $ref: '#/definitions/RecordedId'
@@ -476,6 +479,11 @@ definitions:
       recording:
         type: boolean
         description: '録画中か'
+      protection:
+        type: boolean
+        description: '自動削除から保護するか'
+      filesize:
+        type: integer
       hasThumbnail:
         type: boolean
         description: 'サムネイルが作成済みか'

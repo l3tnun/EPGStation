@@ -12,6 +12,7 @@ class MySQLEncodedDB extends EncodedDB {
             + 'recordedId int, '
             + 'name text not null, '
             + 'path text not null, '
+            + 'filesize bigint null default null, '
             + `foreign key(recordedId) references ${ DBSchema.TableName.Recorded }(id) `
         + ') engine=InnoDB;'
 

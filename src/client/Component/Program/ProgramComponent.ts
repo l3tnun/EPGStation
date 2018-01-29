@@ -126,6 +126,7 @@ class ProgramComponent extends ParentComponent<void> {
                         // scroll position
                         let url = location.href;
                         element.addEventListener('scroll', throttle(() => {
+                            if(this.viewModel.progressShow) { return; }
                             if(url !== location.href) { url = location.href; return; }
                             this.saveHistoryData({ top: element.scrollTop, left: element.scrollLeft })
                         }, 50), true);

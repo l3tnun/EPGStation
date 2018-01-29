@@ -93,6 +93,7 @@ namespace ModelFactorySetting {
         let encodeModel = new EncodeModel(
             encodeManager,
             SocketIoServer.getInstance(),
+            recordedDB!,
         );
         IPCClient.init(encodeModel);
         let ipc = IPCClient.getInstance();

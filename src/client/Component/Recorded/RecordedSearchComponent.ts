@@ -64,7 +64,7 @@ class RecordedSearchComponent extends Component<void> {
     */
     private createRuleSelector(rules: apid.RecordedRuleTag[]): m.Child[] {
         return [
-            m('div', '自動録画キーワード'),
+            m('div', 'ルール'),
             m('div', { class: 'pulldown mdl-layout-spacer' }, [
                 m('select', {
                     value: this.viewModel.rule,
@@ -75,7 +75,7 @@ class RecordedSearchComponent extends Component<void> {
                         this.selectOnUpdate(<HTMLInputElement>(vnode.dom), this.viewModel.rule);
                     }
                 }, [
-                    m('option', { value: '-1' }, '自動キーワード選択'),
+                    m('option', { value: '-1' }, 'ルールを選択'),
                     rules.map((rule) => {
                         return m('option', { value: rule.ruleId === null ? 0 : rule.ruleId }, `${ rule.name }(${ rule.cnt })`);
                     }),
