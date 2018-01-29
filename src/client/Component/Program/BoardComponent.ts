@@ -72,6 +72,7 @@ class BoardComponent extends Component<BoardArgs> {
                 // scroll position
                 let url = location.href;
                 element.addEventListener('scroll', throttle(() => {
+                    if(this.viewModel.progressShow) { return; }
                     if(url !== location.href) { url = location.href; return; }
                     mainVnode.attrs.scrollStoped(element.scrollTop, element.scrollLeft);
                 }, 50), true);
