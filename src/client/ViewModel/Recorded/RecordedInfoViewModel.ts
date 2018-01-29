@@ -197,7 +197,7 @@ class RecordedInfoViewModel extends ViewModel {
 
         let cnt = 0;
         for(; cnt <= RecordedInfoViewModel.fileSizeUnits.length; cnt++) {
-            if(size < 1024) { break; }
+            if(size < 1000) { break; }
             size /= 1024;
         }
 
