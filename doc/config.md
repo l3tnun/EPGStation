@@ -56,6 +56,7 @@ Config.json
 | プロパティ | 種類 | 必須 | 説明 |
 | -------- | ---- | ---- |--- |
 | host | string | yse | mysql host |
+| port | number | no | port 番号 |
 | user | string | yes | user |
 | password | string | yes |パスワード |
 | database | string | yes | 使用するデータベース名 |
@@ -83,7 +84,7 @@ Config.json
 | user | string | yes | user |
 | password | string | yes |パスワード |
 | database | string | yes | 使用するデータベース名 |
-| port | string | yes | port 番号 |
+| port | number | yes | port 番号 |
 | idleTimeoutMillis | number | no | アイドル状態を維持できる時間 (ms) |
 | connectionTimeoutMillis | number | no | 接続タイムアウト時間 (ms) |
 
