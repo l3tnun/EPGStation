@@ -62,7 +62,7 @@ class PostgreSQLRecordedDB extends RecordedDB {
     * @return Promise<T>
     */
     protected getTag<T>(item: string): Promise<T> {
-        return this.operator.runQuery(`select count(*) as cnt, ${ item } as "${ item }" from ${ DBSchema.TableName.Recorded } group by ${ item } order by ${ item } asc`);
+        return this.operator.runQuery(`select count(*) as cnt, ${ item } as "${ item }" from ${ DBSchema.TableName.Recorded } group by ${ item } order by ${ item } asc nulls first`);
     }
 
     /**
