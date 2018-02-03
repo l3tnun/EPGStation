@@ -41,11 +41,11 @@
     "mpegTsStreaming": [
         {
             "name": "1280x720(main)",
-            "cmd": "%FFMPEG% -re -dual_mono_mode main -i pipe:0 -c:a aac -ar 48000 -ab 192k -ac 2 -c:v libx264 -s 1280x720 -filter:v yadif -aspect 16:9 -vb 3000k -f mpegts pipe:1"
+            "cmd": "%FFMPEG% -re -dual_mono_mode main -i pipe:0 -c:a aac -ar 48000 -ab 192k -ac 2 -c:v libx264 -s 1280x720 -vf yadif -preset veryfast -aspect 16:9 -vb 3000k -f mpegts pipe:1"
         },
         {
             "name": "720x480(main)",
-            "cmd": "%FFMPEG% -re -dual_mono_mode main -i pipe:0 -c:a aac -ar 48000 -ab 128k -ac 2 -c:v libx264 -s 720x480 -filter:v yadif -aspect 16:9 -vb 1500k -f mpegts pipe:1"
+            "cmd": "%FFMPEG% -re -dual_mono_mode main -i pipe:0 -c:a aac -ar 48000 -ab 128k -ac 2 -c:v libx264 -s 720x480 -vf yadif -preset veryfast -aspect 16:9 -vb 1500k -f mpegts pipe:1"
         },
         {
             "name": "無変換"
@@ -58,11 +58,11 @@
     "recordedHLS": [
         {
             "name": "1280x720(main)",
-            "cmd": "%FFMPEG% -dual_mono_mode main -i %INPUT% -f hls -hls_time 3 -hls_list_size 0 -hls_allow_cache 1 -hls_segment_filename %streamFileDir%/stream%streamNum%-%09d.ts -threads auto -c:a aac -ar 48000 -ab 192k -ac 2 -c:v libx264 -s 1280x720 -aspect 16:9 -vb 3000k -flags +loop-global_header %OUTPUT%"
+            "cmd": "%FFMPEG% -dual_mono_mode main -i %INPUT% -f hls -hls_time 3 -hls_list_size 0 -hls_allow_cache 1 -hls_segment_filename %streamFileDir%/stream%streamNum%-%09d.ts -threads auto -c:a aac -ar 48000 -ab 192k -ac 2 -c:v libx264 -s 1280x720 -preset veryfast -aspect 16:9 -vb 3000k -flags +loop-global_header %OUTPUT%"
         },
         {
             "name": "720x480(main)",
-            "cmd": "%FFMPEG% -dual_mono_mode main -i %INPUT% -f hls -hls_time 3 -hls_list_size 0 -hls_allow_cache 1 -hls_segment_filename %streamFileDir%/stream%streamNum%-%09d.ts -threads auto -c:a aac -ar 48000 -ab 128k -ac 2 -c:v libx264 -s 720x480 -aspect 16:9 -vb 1500k -flags +loop-global_header %OUTPUT%"
+            "cmd": "%FFMPEG% -dual_mono_mode main -i %INPUT% -f hls -hls_time 3 -hls_list_size 0 -hls_allow_cache 1 -hls_segment_filename %streamFileDir%/stream%streamNum%-%09d.ts -threads auto -c:a aac -ar 48000 -ab 128k -ac 2 -c:v libx264 -s 720x480 -preset veryfast -aspect 16:9 -vb 1500k -flags +loop-global_header %OUTPUT%"
         }
     ]
 }
