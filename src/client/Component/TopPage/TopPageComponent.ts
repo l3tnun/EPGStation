@@ -67,7 +67,7 @@ class TopPageComponent extends ParentComponent<void> {
 
         if(status !== 'init') {
             this.recordedInfoViewModel.update();
-         }
+        }
     }
 
     /**
