@@ -57,6 +57,7 @@ class RecordedInfoComponent extends Component<void> {
                 return m('a', {
                     class: 'recorded-link mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect',
                     href: video.path,
+                    onclick: () => { if(Util.uaIsiOS()) { this.viewModel.close(); } },
                 }, video.name);
             }),
 
@@ -95,6 +96,7 @@ class RecordedInfoComponent extends Component<void> {
                 return m('a', {
                     class: 'recorded-link mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect',
                     href: video.path,
+                    onclick: () => { if(Util.uaIsiOS()) { this.viewModel.close(); } },
                 }, str);
             }),
 

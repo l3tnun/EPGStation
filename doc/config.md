@@ -114,6 +114,8 @@ Config.json
 | AUDIOSAMPLINGRATE | number \| null | 16000 \| 22050 \| 24000 \|  32000 \| 44100 \| 48000 |
 | AUDIOCOMPONENTTYPE | number \| null | audio componentType|
 | CHANNELID | number | channelId mirakurun:40772/api/services で id を確認できる |
+| GENRE1 | number | genre1 |
+| GENRE2 | number | genre2 |
 
 #### cmd で置換される文字列
 

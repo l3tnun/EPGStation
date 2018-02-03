@@ -292,7 +292,9 @@ abstract class ParentComponent<T> extends Component<T> {
         super.oncreate(vnode);
 
         // window resize 時に balloon を閉じる
-        window.addEventListener('resize', this._resizeListener, false);
+        if(!Util.uaIsAndroid()) {
+            window.addEventListener('resize', this._resizeListener, false);
+        }
     }
 
     /**
@@ -335,7 +337,9 @@ abstract class ParentComponent<T> extends Component<T> {
     }
 
     public onremove(vnode: m.VnodeDOM<T, any>): any {
-        window.removeEventListener('resize', this._resizeListener, false );
+        if(!Util.uaIsAndroid()) {
+            window.removeEventListener('resize', this._resizeListener, false );
+        }
 
         ParentComponent.ioStatus[this.getComponentName()].isActive = false;
         return super.onremove(vnode);
