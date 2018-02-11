@@ -18,7 +18,7 @@ class ProgressComponent extends Component<void> {
     * view
     */
     public view(): m.Children | null {
-        if(!this.viewModel.progressShow || this.viewModel.getSchedule().length === 0) { return null; }
+        if(!this.viewModel.progressShow) { return null; }
 
         return m('div', { class: 'progress' }, [
             m('div', { class: 'mdl-spinner mdl-spinner--single-color mdl-js-spinner is-active' })

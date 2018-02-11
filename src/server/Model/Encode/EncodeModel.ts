@@ -29,7 +29,8 @@ class EncodeModel extends Model implements EncodeModelInterface {
         this.socket = socket;
         this.recordedDB = recordedDB;
 
-        this.encodeManager.addListener((id, name, filePath, delTs, isTsModify) => { this.encodeFinCallback(id, name, filePath, delTs, isTsModify); });
+        this.encodeManager.addEncodeDoneListener((id, name, filePath, delTs, isTsModify) => { this.encodeFinCallback(id, name, filePath, delTs, isTsModify); });
+        this.encodeManager.addEncodeErrorListener(() => { this.encodeErrorCallback(); });
     }
 
     /**
@@ -61,12 +62,20 @@ class EncodeModel extends Model implements EncodeModelInterface {
                 // ts ファイルのファイルサイズ更新
                 await this.recordedDB.updateFileSize(recordedId);
             }
-
-            // socket.io で通知
-            this.socket.notifyClient();
         } catch(err) {
             this.log.system.error(err);
         }
+
+        // socket.io で通知
+        this.socket.notifyClient();
+    }
+
+    /**
+    * エンコード失敗時の callback
+    */
+    private encodeErrorCallback(): void {
+        // socket.io で通知
+        this.socket.notifyClient();
     }
 }
 
