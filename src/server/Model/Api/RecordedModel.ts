@@ -175,7 +175,9 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
 
         data['original'] = data['recPath'] !== null
 
-        data['filename'] = encodeURIComponent(path.basename(String(data['recPath'])));
+        if(data['recPath'] !== null) {
+            data['filename'] = encodeURIComponent(path.basename(String(data['recPath'])));
+        }
         delete data['recPath'];
 
         // エンコードファイルを追加
