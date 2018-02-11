@@ -53,7 +53,7 @@
     ],
     "mpegTsViewer": {
         "ios": "vlc-x-callback://x-callback-url/stream?url=http://ADDRESS",
-        "android": "intent://ADDRESS#Intent;package=org.videolan.vlc;type=video;scheme=http;end"
+        "android": "intent://ADDRESS#Intent;package=com.mxtech.videoplayer.ad;type=video;scheme=http;end"
     },
     "recordedHLS": [
         {
