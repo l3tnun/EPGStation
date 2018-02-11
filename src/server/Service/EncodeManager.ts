@@ -45,7 +45,8 @@ interface EncodeConfigInfo {
 }
 
 interface EncodeManagerInterface {
-    addListener(callback: (recordedId: number, name: string, output: string, delTs: boolean, isTsModify: boolean) => void): void;
+    addEncodeDoneListener(callback: (recordedId: number, name: string, output: string, delTs: boolean, isTsModify: boolean) => void): void;
+    addEncodeErrorListener(callback: () => void): void;
     getEncodingId(): number | null;
     getEncodingInfo(): EncodingInfo;
     cancel(recordedId: number): void;
@@ -71,7 +72,8 @@ class EncodeManager extends Base implements EncodeManagerInterface {
         output: string,
         timerId: NodeJS.Timer,
     } | null = null;
-    private listener: events.EventEmitter = new events.EventEmitter();
+    private doneListener: events.EventEmitter = new events.EventEmitter();
+    private errorListener: events.EventEmitter = new events.EventEmitter();
 
     public static getInstance(): EncodeManager {
         if(!this.inited) {
@@ -96,9 +98,19 @@ class EncodeManager extends Base implements EncodeManagerInterface {
     * エンコード完了時に実行されるイベントに追加
     @param callback ルール更新時に実行される
     */
-    public addListener(callback: (recordedId: number, name: string, output: string, delTs: boolean, isTsModify: boolean) => void): void {
-        this.listener.on(EncodeManager.ENCODE_FIN_EVENT, (recordedId: number, name: string, output: string, delTs: boolean, isTsModify: boolean) => {
+    public addEncodeDoneListener(callback: (recordedId: number, name: string, output: string, delTs: boolean, isTsModify: boolean) => void): void {
+        this.doneListener.on(EncodeManager.ENCODE_FIN_EVENT, (recordedId: number, name: string, output: string, delTs: boolean, isTsModify: boolean) => {
             callback(recordedId, name, output, delTs, isTsModify);
+        });
+    }
+
+    /**
+    * エンコード失敗時に実行されるイベントに追加
+    * @param callback
+    */
+    public addEncodeErrorListener(callback: () => void): void {
+        this.errorListener.on(EncodeManager.ENCODE_ERROR_EVENT, () => {
+            callback();
         });
     }
 
@@ -277,6 +289,7 @@ class EncodeManager extends Base implements EncodeManagerInterface {
             // ファイルが存在しない
             this.log.system.error(`encode file is not found: ${ program.source }`);
             this.finalize();
+            this.errorNotify();
             return;
         }
 
@@ -338,27 +351,31 @@ class EncodeManager extends Base implements EncodeManagerInterface {
                 } else {
                     if(code !== 0) {
                         this.log.system.error(`encode failed: ${ output }`);
+                        throw new Error('EncodeFineCodeIsNotZero');
                     } else {
                         this.log.system.info(`fin encode: ${ output }`);
 
                         //通知
-                        this.eventsNotify(program.recordedId, program.name, output, this.encodingData!.program.delTs, program.suffix === null);
+                        this.doneNotify(program.recordedId, program.name, output, this.encodingData!.program.delTs, program.suffix === null);
                     }
                 }
 
                 this.finalize();
+                this.errorNotify();
             });
 
             child.on('error', (err) => {
                 this.log.system.error(`encode error`);
                 this.log.system.error(String(err));
                 this.finalize();
+                this.errorNotify();
             });
         })
         .catch((err) => {
             this.log.system.error(`encode error`);
             this.log.system.error(String(err));
             this.finalize();
+            this.errorNotify();
         });
     }
 
@@ -403,14 +420,22 @@ class EncodeManager extends Base implements EncodeManagerInterface {
     * @param recordedId: recorded id
     * @param output: output
     */
-    private eventsNotify(recordedId: number, name: string, output: string, delTs: boolean, isTsModify: boolean): void {
-        this.listener.emit(EncodeManager.ENCODE_FIN_EVENT, recordedId, name, output, delTs, isTsModify);
+    private doneNotify(recordedId: number, name: string, output: string, delTs: boolean, isTsModify: boolean): void {
+        this.doneListener.emit(EncodeManager.ENCODE_FIN_EVENT, recordedId, name, output, delTs, isTsModify);
+    }
+
+    /**
+    * エンコード失敗を通知
+    */
+    private errorNotify(): void {
+        this.errorListener.emit(EncodeManager.ENCODE_ERROR_EVENT);
     }
 }
 
 namespace EncodeManager {
     export const priority = 10;
-    export const ENCODE_FIN_EVENT = 'encodeFin'
+    export const ENCODE_FIN_EVENT = 'encodeFin';
+    export const ENCODE_ERROR_EVENT = 'encodeError';
 }
 
 export { EncodeManagerInterface, EncodeProgram, EncodingInfo, EncodeManager };
