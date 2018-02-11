@@ -15,7 +15,7 @@ namespace CreateStreamLink {
     ): string | null => {
         if(config === null || setting === null) { return null; }
 
-        let url = `/api/streams/live/${ channelId }/mpegts/playlist?mode=${ mode }`;
+        let url = `/api/streams/live/${ channelId }/mpegts${ Util.uaIsMobile() ? '' : '/playlist' }?mode=${ mode }`;
 
         // Mac Safari では正しく解釈できないため m3u8 ファイルを開く
         if(Util.uaIsMac() && Util.uaIsSafari()) { return url; }
