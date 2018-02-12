@@ -2,7 +2,7 @@ import * as http from 'http';
 import { ChildProcess } from 'child_process';
 import Base from '../../Base';
 import * as enums from './StreamTypeInterface';
-import { EncodeProcessManagerInterface, EncodeProcessManager } from '../EncodeProcessManager';
+import { EncodeProcessManageModelInterface } from '../../Model/Service/Encode/EncodeProcessManageModel';
 import { StreamManagerInterface, StreamManager } from './StreamManager';
 
 interface StreamInfo {
@@ -11,14 +11,16 @@ interface StreamInfo {
 }
 
 abstract class Stream extends Base {
-    protected process: EncodeProcessManagerInterface;
+    protected process: EncodeProcessManageModelInterface;
     private manager: StreamManagerInterface;
     private viewCnt: number = 0;
     private streamNumber: number;
 
-    constructor() {
+    constructor(
+        process: EncodeProcessManageModelInterface,
+    ) {
         super();
-        this.process = EncodeProcessManager.getInstance();
+        this.process = process;
         this.manager = StreamManager.getInstance();
     }
 

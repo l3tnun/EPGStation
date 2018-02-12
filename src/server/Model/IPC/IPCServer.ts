@@ -8,7 +8,7 @@ import { RuleManageModelInterface } from '../Operator/Rule/RuleManageModel';
 import { RuleInterface, EncodeInterface } from '../Operator/RuleInterface';
 import * as apid from '../../../../node_modules/mirakurun/api';
 import * as events from '../../IoEvents';
-import { EncodeProgram } from '../../Service/EncodeManager';
+import { EncodeProgram } from '../Service/Encode/EncodeManageModel';
 
 interface IPCServerInterface extends Model {
     setModels(

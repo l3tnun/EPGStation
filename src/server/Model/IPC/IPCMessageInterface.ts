@@ -1,4 +1,4 @@
-import { EncodeProgram } from '../../Service/EncodeManager';
+import { EncodeProgram } from '../Service/Encode/EncodeManageModel';
 
 /**
 * IPC 通信で使用する message の 定義

@@ -1,10 +1,11 @@
 import { ChildProcess } from 'child_process';
 import * as http from 'http';
+import { EncodeProcessManageModelInterface } from '../../Model/Service/Encode/EncodeProcessManageModel';
 import { StreamInfo, Stream } from './Stream';
 import * as apid from '../../../../api';
 import CreateMirakurun from '../../Util/CreateMirakurunClient';
 import Util from '../../Util/Util';
-import ProcessUtil from '../Util/ProcessUtil';
+import ProcessUtil from '../../Util/ProcessUtil';
 
 interface MpegTsLiveStreamInfo extends StreamInfo {
     channelId: apid.ServiceItemId;
@@ -23,8 +24,11 @@ class MpegTsLiveStream extends Stream {
     * @param channelId: channel id
     * @param mode: config.mpegTsStreaming の index number
     */
-    constructor(channelId: apid.ServiceItemId, mode: number) {
-        super();
+    constructor(
+        process: EncodeProcessManageModelInterface,
+        channelId: apid.ServiceItemId, mode: number,
+    ) {
+        super(process);
 
         this.channelId = channelId;
         this.mode = mode;

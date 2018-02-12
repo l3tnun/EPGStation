@@ -1,5 +1,5 @@
 import Model from '../Model';
-import { EncodeManagerInterface, EncodeProgram } from '../../Service/EncodeManager';
+import { EncodeManageModelInterface, EncodeProgram } from '../Service/Encode/EncodeManageModel';
 import SocketIoServer from '../../Service/SocketIoServer';
 import { IPCClientInterface } from '../IPC/IPCClient';
 import { RecordedDBInterface } from '../DB/RecordedDB';
@@ -14,23 +14,23 @@ interface EncodeModelInterface extends Model {
 * エンコードのセットを行う
 */
 class EncodeModel extends Model implements EncodeModelInterface {
-    private encodeManager: EncodeManagerInterface;
+    private encodeManage: EncodeManageModelInterface;
     private socket: SocketIoServer;
     private ipc: IPCClientInterface;
     private recordedDB: RecordedDBInterface;
 
     constructor(
-        encodeManager: EncodeManagerInterface,
+        encodeManage: EncodeManageModelInterface,
         socket: SocketIoServer,
         recordedDB: RecordedDBInterface,
     ) {
         super();
-        this.encodeManager = encodeManager;
+        this.encodeManage = encodeManage;
         this.socket = socket;
         this.recordedDB = recordedDB;
 
-        this.encodeManager.addEncodeDoneListener((id, name, filePath, delTs, isTsModify) => { this.encodeFinCallback(id, name, filePath, delTs, isTsModify); });
-        this.encodeManager.addEncodeErrorListener(() => { this.encodeErrorCallback(); });
+        this.encodeManage.addEncodeDoneListener((id, name, filePath, delTs, isTsModify) => { this.encodeFinCallback(id, name, filePath, delTs, isTsModify); });
+        this.encodeManage.addEncodeErrorListener(() => { this.encodeErrorCallback(); });
     }
 
     /**
@@ -45,7 +45,7 @@ class EncodeModel extends Model implements EncodeModelInterface {
     * @param program: EncodeProgram
     */
     public push(program: EncodeProgram): void {
-        this.encodeManager.push(program);
+        this.encodeManage.push(program);
     }
 
     /**

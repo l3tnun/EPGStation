@@ -8,7 +8,7 @@ import { RulesDBInterface } from '../DB/RulesDB';
 import { ServicesDBInterface } from '../DB/ServicesDB';
 import * as DBSchema from '../DB/DBSchema';
 import ApiUtil from './ApiUtil';
-import { EncodeManagerInterface } from '../../Service/EncodeManager';
+import { EncodeManageModelInterface } from '../Service/Encode/EncodeManageModel';
 import { StreamManagerInterface } from '../../Service/Stream/StreamManager';
 import { PLayList } from './PlayListInterface';
 
@@ -49,7 +49,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
     private encodedDB: EncodedDBInterface;
     private rulesDB: RulesDBInterface;
     private servicesDB: ServicesDBInterface;
-    private encodeManager: EncodeManagerInterface;
+    private encodeManage: EncodeManageModelInterface;
     private streamManager: StreamManagerInterface;
 
     constructor(
@@ -58,7 +58,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
         encodedDB: EncodedDBInterface,
         rulesDB: RulesDBInterface,
         servicesDB: ServicesDBInterface,
-        encodeManager: EncodeManagerInterface,
+        encodeManage: EncodeManageModelInterface,
         streamManager: StreamManagerInterface,
     ) {
         super();
@@ -67,7 +67,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
         this.encodedDB = encodedDB;
         this.rulesDB = rulesDB;
         this.servicesDB = servicesDB;
-        this.encodeManager = encodeManager;
+        this.encodeManage = encodeManage;
         this.streamManager = streamManager;
     }
 
@@ -105,7 +105,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
     * @return Promise<encodingInfoIndex>
     */
     private async getEncodingInfoIndex(): Promise<encodingInfoIndex> {
-        let encodingInfo = await this.encodeManager.getEncodingInfo();
+        let encodingInfo = await this.encodeManage.getEncodingInfo();
 
         let encoding: encodingInfoIndex = {};
 
@@ -265,7 +265,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
                 throw new Error(RecordedModelInterface.RecordedIsStreamingNowError);
             }
         });
-        this.encodeManager.cancel(recordedId);
+        this.encodeManage.cancel(recordedId);
         await this.ipc.recordedDelete(recordedId);
     }
 
@@ -305,7 +305,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
         }
 
         //エンコードのソースファイルか確認
-        const info = this.encodeManager.getEncodingInfo();
+        const info = this.encodeManage.getEncodingInfo();
         if(info.encoding !== null && info.encoding.source === filePath) {
             throw new Error(RecordedModelInterface.FileIsLockedError);
         }
@@ -462,7 +462,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
         }
 
         //エンコードを追加
-        this.encodeManager.push({
+        this.encodeManage.push({
             recordedId: recorded.id,
             source: filePath,
             mode: mode,
