@@ -27,6 +27,7 @@ import PostgreSQLRecordedDB from './DB/PostgreSQL/PostgreSQLRecordedDB';
 import PostgreSQLEncodedDB from './DB/PostgreSQL/PostgreSQLEncodedDB';
 import PostgreSQLMigrationV1 from './DB/PostgreSQL/migrate/PostgreSQLMigrationV1';
 
+import { DBInitializationModel } from './Operator/DBInitializationModel';
 import { MirakurunManageModel } from './Operator/EPGUpdate/MirakurunManageModel';
 import { RecordingManageModel } from './Operator/Recording/RecordingManageModel';
 import { ReservationManageModel } from './Operator/Reservation/ReservationManageModel';
@@ -93,6 +94,15 @@ namespace ModelFactorySetting {
         factory.reg('EncodedDB', () => { return encodedDB; });
 
         // set Operator Manage Models
+        const dbInitializationModel = new DBInitializationModel(
+            servicesDB!,
+            programsDB!,
+            rulesDB!,
+            recordedDB!,
+            encodedDB!,
+        );
+        factory.reg('DBInitializationModel', () => { return dbInitializationModel; });
+
         const ipc = new IPCServer();
 
         const reservationManage = new ReservationManageModel(

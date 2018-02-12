@@ -2,12 +2,8 @@ import * as apid from '../../../node_modules/mirakurun/api';
 import Base from '../Base';
 import Util from '../Util/Util';
 import factory from '../Model/ModelFactory';
-import { ProgramsDBInterface } from '../Model/DB/ProgramsDB';
-import { RulesDBInterface } from '../Model/DB/RulesDB';
-import { RecordedDBInterface } from '../Model/DB/RecordedDB';
-import { EncodedDBInterface } from '../Model/DB/EncodedDB';
-import { ServicesDBInterface } from '../Model/DB/ServicesDB';
 import * as DBSchema from '../Model/DB/DBSchema';
+import { DBInitializationModelInterface } from '../Model/Operator/DBInitializationModel';
 import { MirakurunManageModelInterface } from '../Model/Operator/EPGUpdate/MirakurunManageModel';
 import { RuleEventStatus, RuleManageModelInterface } from '../Model/Operator/Rule/RuleManageModel';
 import { ReservationManageModelInterface } from '../Model/Operator/Reservation/ReservationManageModel';
@@ -45,39 +41,11 @@ class Operator extends Base {
     * 初期設定
     */
     private async init(): Promise<void> {
-        let servicesDB = <ServicesDBInterface>factory.get('ServicesDB');
-        let programsDB = <ProgramsDBInterface>factory.get('ProgramsDB');
-        let rulesDB = <RulesDBInterface>factory.get('RulesDB');
-        let recordedDB = <RecordedDBInterface>factory.get('RecordedDB');
-        let encodedDB = <EncodedDBInterface>factory.get('EncodedDB');
         this.ipc = <IPCServerInterface>factory.get('IPCServer');
         this.externalProcess = <ExternalProcessModelInterface>factory.get('ExternalProcessModel');
 
-        try {
-            // DB table 作成
-            await servicesDB.create();
-            this.log.system.info('ServicesDB created');
-
-            await programsDB.create();
-            this.log.system.info('ProgramsDB created');
-
-            await rulesDB.create()
-            this.log.system.info('RulesDB created');
-
-            await recordedDB.create();
-            this.log.system.info('RecordedDB created');
-
-            await encodedDB.create();
-            this.log.system.info('EncodedDB created');
-
-            await recordedDB.removeAllRecording();
-            await recordedDB.updateAllNullFileSize();
-            await encodedDB.updateAllNullFileSize();
-        } catch(err) {
-            this.log.system.fatal('Operator init error');
-            this.log.system.fatal(err);
-            process.exit(1);
-        };
+        // DB init
+        (<DBInitializationModelInterface>factory.get('DBInitializationModel')).run();
 
         this.ruleManage = <RuleManageModelInterface>factory.get('RuleManageModel');
         this.mirakurunManage = <MirakurunManageModelInterface>factory.get('MirakurunManageModel');
@@ -85,9 +53,6 @@ class Operator extends Base {
         this.recordingManage = <RecordingManageModelInterface>factory.get('RecordingManageModel');
         this.thumbnailManage = <ThumbnailManageModelInterface>factory.get('ThumbnailManageModel');
         this.storageCheckManage = <StorageCheckManageModelInterface>factory.get('StorageCheckManageModel');
-
-        //終了時に DB 接続を切断
-        process.on('exit', () => { programsDB.end(); });
 
         //addListener
         this.mirakurunManage.addListener((tuners) => { this.epgUpdateCallback(tuners); });
