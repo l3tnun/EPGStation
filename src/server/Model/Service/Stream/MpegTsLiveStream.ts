@@ -1,11 +1,12 @@
 import { ChildProcess } from 'child_process';
 import * as http from 'http';
-import { EncodeProcessManageModelInterface } from '../../Model/Service/Encode/EncodeProcessManageModel';
+import { EncodeProcessManageModelInterface } from '../Encode/EncodeProcessManageModel';
+import { StreamManageModelInterface } from './StreamManageModel';
 import { StreamInfo, Stream } from './Stream';
-import * as apid from '../../../../api';
-import CreateMirakurun from '../../Util/CreateMirakurunClient';
-import Util from '../../Util/Util';
-import ProcessUtil from '../../Util/ProcessUtil';
+import * as apid from '../../../../../api';
+import CreateMirakurun from '../../../Util/CreateMirakurunClient';
+import Util from '../../../Util/Util';
+import ProcessUtil from '../../../Util/ProcessUtil';
 
 interface MpegTsLiveStreamInfo extends StreamInfo {
     channelId: apid.ServiceItemId;
@@ -21,14 +22,17 @@ class MpegTsLiveStream extends Stream {
     private stream: http.IncomingMessage | null = null;
 
     /**
+    * @param process: EncodeProcessManageModelInterface
+    * @param manager: StreamManageModelInterface
     * @param channelId: channel id
     * @param mode: config.mpegTsStreaming の index number
     */
     constructor(
         process: EncodeProcessManageModelInterface,
+        manager: StreamManageModelInterface,
         channelId: apid.ServiceItemId, mode: number,
     ) {
-        super(process);
+        super(process, manager);
 
         this.channelId = channelId;
         this.mode = mode;

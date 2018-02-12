@@ -36,9 +36,9 @@ import { EncodeManageModel } from './Service/Encode/EncodeManageModel';
 import { EncodeModel } from './Encode/EncodeModel';
 import { StreamsModel } from './Api/StreamsModel';
 import { SocketIoManageModel } from './Service/SocketIoManageModel';
-import { StreamManager } from '../Service/Stream/StreamManager';
-import { MpegTsLiveStream } from '../Service/Stream/MpegTsLiveStream';
-import { RecordedHLSStream } from '../Service/Stream/RecordedHLSStream';
+import { StreamManageModel } from './Service/Stream/StreamManageModel';
+import { MpegTsLiveStream } from './Service/Stream/MpegTsLiveStream';
+import { RecordedHLSStream } from './Service/Stream/RecordedHLSStream';
 import Util from '../Util/Util';
 import * as apid from '../../../api';
 
@@ -92,8 +92,6 @@ namespace ModelFactorySetting {
         const socketIoServer = new SocketIoManageModel();
         factory.reg('SocketIoManageModel', () => { return socketIoServer; });
 
-        StreamManager.init(socketIoServer);
-
         const encodeModel = new EncodeModel(
             encodeManage,
             socketIoServer,
@@ -105,6 +103,8 @@ namespace ModelFactorySetting {
 
         encodeModel.setIPC(ipc);
 
+        const streamManage = new StreamManageModel(socketIoServer);
+
         factory.reg('RulesModel', () => { return new RulesModel(ipc, rulesDB) });
         factory.reg('RecordedModel', () => { return new RecordedModel(
             ipc,
@@ -113,7 +113,7 @@ namespace ModelFactorySetting {
             rulesDB,
             servicesDB,
             encodeManage,
-            StreamManager.getInstance(),
+            streamManage,
         ); });
         factory.reg('ChannelsModel', () => { return new ChannelsModel(servicesDB); });
         factory.reg('ReservesModel', () => { return new ReservesModel(ipc); });
@@ -126,11 +126,17 @@ namespace ModelFactorySetting {
         factory.reg('StorageModel', () => { return new StorageModel(); });
         factory.reg('EncodeModel', () => { return encodeModel; });
         factory.reg('StreamsModel', () => { return new StreamsModel(
-            StreamManager.getInstance(),
-            (chanelId: apid.ServiceItemId, mode: number) => { return new MpegTsLiveStream(encodeProcessManage, chanelId, mode); },
+            streamManage,
+            (chanelId: apid.ServiceItemId, mode: number) => { return new MpegTsLiveStream(
+                encodeProcessManage,
+                streamManage,
+                chanelId,
+                mode,
+            ); },
             (recordedId: apid.RecordedId, mode: number, encodedId: apid.EncodedId | null) => {
                 return new RecordedHLSStream(
                     encodeProcessManage,
+                    streamManage,
                     recordedDB,
                     encodedDB,
                     recordedId,

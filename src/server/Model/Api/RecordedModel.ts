@@ -9,7 +9,7 @@ import { ServicesDBInterface } from '../DB/ServicesDB';
 import * as DBSchema from '../DB/DBSchema';
 import ApiUtil from './ApiUtil';
 import { EncodeManageModelInterface } from '../Service/Encode/EncodeManageModel';
-import { StreamManagerInterface } from '../../Service/Stream/StreamManager';
+import { StreamManageModelInterface } from '../Service/Stream/StreamManageModel';
 import { PLayList } from './PlayListInterface';
 
 interface recordedFilePathInfo {
@@ -50,7 +50,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
     private rulesDB: RulesDBInterface;
     private servicesDB: ServicesDBInterface;
     private encodeManage: EncodeManageModelInterface;
-    private streamManager: StreamManagerInterface;
+    private streamManage: StreamManageModelInterface;
 
     constructor(
         ipc: IPCClientInterface,
@@ -59,7 +59,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
         rulesDB: RulesDBInterface,
         servicesDB: ServicesDBInterface,
         encodeManage: EncodeManageModelInterface,
-        streamManager: StreamManagerInterface,
+        streamManage: StreamManageModelInterface,
     ) {
         super();
         this.ipc = ipc;
@@ -68,7 +68,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
         this.rulesDB = rulesDB;
         this.servicesDB = servicesDB;
         this.encodeManage = encodeManage;
-        this.streamManager = streamManager;
+        this.streamManage = streamManage;
     }
 
     /**
@@ -259,7 +259,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
     * @return Promise<void>
     */
     public async deleteAllRecorded(recordedId: number): Promise<void> {
-        this.streamManager.getStreamInfos().forEach((info) => {
+        this.streamManage.getStreamInfos().forEach((info) => {
             // 配信中か？
             if(typeof info.recordedId !== 'undefined' && info.recordedId === recordedId) {
                 throw new Error(RecordedModelInterface.RecordedIsStreamingNowError);
@@ -281,7 +281,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
     * @return Promise<void>
     */
     public async deleteRecorded(recordedId: number, encodedId: number | undefined): Promise<void> {
-        this.streamManager.getStreamInfos().forEach((info) => {
+        this.streamManage.getStreamInfos().forEach((info) => {
             // 配信中か？
             if(typeof info.recordedId !== 'undefined' && info.recordedId === recordedId) {
                 throw new Error(RecordedModelInterface.RecordedIsStreamingNowError);

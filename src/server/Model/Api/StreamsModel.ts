@@ -1,9 +1,9 @@
 import ApiModel from './ApiModel';
 import * as apid from '../../../../api';
-import { StreamManagerInterface } from '../../Service/Stream/StreamManager';
-import { Stream } from '../../Service/Stream/Stream';
-import { MpegTsLiveStream } from '../../Service/Stream/MpegTsLiveStream';
-import { RecordedHLSStream } from '../../Service/Stream/RecordedHLSStream';
+import { StreamManageModelInterface } from '../Service/Stream/StreamManageModel';
+import { Stream } from '../Service/Stream/Stream';
+import { MpegTsLiveStream } from '../Service/Stream/MpegTsLiveStream';
+import { RecordedHLSStream } from '../Service/Stream/RecordedHLSStream';
 import { ProgramsDBInterface } from '../DB/ProgramsDB';
 import { ServicesDBInterface } from '../DB/ServicesDB';
 import { RecordedDBInterface } from '../DB/RecordedDB';
@@ -30,13 +30,13 @@ interface StreamsModelInterface extends ApiModel {
 class StreamsModel extends ApiModel implements StreamsModelInterface {
     private createMpegTsLiveStream: (channelId: apid.ServiceItemId, mode: number) => MpegTsLiveStream;
     private createRecordedHLSStream: (recordedId: apid.RecordedId, mode: number, encodedId: apid.EncodedId | null) => RecordedHLSStream;
-    private streamManager: StreamManagerInterface;
+    private streamManage: StreamManageModelInterface;
     private programDB: ProgramsDBInterface;
     private servicesDB: ServicesDBInterface;
     private recordedDB: RecordedDBInterface;
 
     constructor(
-        streamManager: StreamManagerInterface,
+        streamManage: StreamManageModelInterface,
         createMpegTsLiveStream: (channelId: apid.ServiceItemId, mode: number) => MpegTsLiveStream,
         createRecordedHLSStream: (recordedId: apid.RecordedId, mode: number, encodedId: apid.EncodedId | null) => RecordedHLSStream,
         programDB: ProgramsDBInterface,
@@ -44,7 +44,7 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
         recordedDB: RecordedDBInterface,
     ) {
         super();
-        this.streamManager = streamManager;
+        this.streamManage = streamManage;
         this.createMpegTsLiveStream = createMpegTsLiveStream;
         this.createRecordedHLSStream = createRecordedHLSStream;
         this.programDB = programDB;
@@ -60,20 +60,20 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
     */
     public async getLiveMpegTs(channelId: apid.ServiceItemId, mode: number): Promise<StreamModelInfo> {
         // 同じパラメータの stream がないか確認する
-        let infos = this.streamManager.getStreamInfos();
+        let infos = this.streamManage.getStreamInfos();
         for(let info of infos) {
             if(info.type === 'MpegTsLive' && info.channelId === channelId && info.mode === mode) {
                 return {
-                    stream: this.streamManager.getStream(info.streamNumber)!,
+                    stream: this.streamManage.getStream(info.streamNumber)!,
                     streamNumber: info.streamNumber,
                 }
             }
         }
 
         let stream = this.createMpegTsLiveStream(channelId, mode);
-        let streamNumber = await this.streamManager.start(stream);
+        let streamNumber = await this.streamManage.start(stream);
 
-        let result = this.streamManager.getStream(streamNumber);
+        let result = this.streamManage.getStream(streamNumber);
         if(result === null) { throw new Error('CreateStreamError'); }
 
         let encChild = result.getEncChild();
@@ -95,7 +95,7 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
     */
     public async getRecordedHLS(recordedId: apid.RecordedId, mode: number, encodedId: apid.EncodedId | null): Promise<number> {
         let stream = this.createRecordedHLSStream(recordedId, mode, encodedId);
-        let streamNumber = await this.streamManager.start(stream);
+        let streamNumber = await this.streamManage.start(stream);
 
         return streamNumber;
     }
@@ -104,21 +104,21 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
     * stop stream
     */
     public stop(streamNumber: number): Promise<void> {
-        return this.streamManager.stop(streamNumber);
+        return this.streamManage.stop(streamNumber);
     }
 
     /**
     * すべてのストリームを強制停止
     */
     public forcedStopAll(): Promise<void> {
-        return this.streamManager.forcedStopAll();
+        return this.streamManage.forcedStopAll();
     }
 
     /**
     * ストリーム情報を取得
     */
     public async getInfos(): Promise<{ [key: string]: any }[]> {
-        let infos: { [key: string]: any }[] = this.streamManager.getStreamInfos();
+        let infos: { [key: string]: any }[] = this.streamManage.getStreamInfos();
 
         for(let info of infos) {
             if(typeof info.type === 'undefined') { continue; }

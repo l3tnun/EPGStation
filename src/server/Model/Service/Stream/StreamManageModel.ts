@@ -1,13 +1,13 @@
 import * as fs from 'fs';
-import Base from '../../Base';
+import Model from '../../Model';
 import { Stream } from './Stream';
 import StreamStatus from './StreamStatus';
 import * as enums from './StreamTypeInterface';
-import * as apid from '../../../../api';
+import * as apid from '../../../../../api';
 import { MpegTsLiveStreamInfo } from './MpegTsLiveStream';
 import { RecordedHLSStreamInfo } from './RecordedHLSStream';
-import { SocketIoManageModelInterface } from '../../Model/Service/SocketIoManageModel';
-import Util from '../../Util/Util';
+import { SocketIoManageModelInterface } from '../SocketIoManageModel';
+import Util from '../../../Util/Util';
 
 /**
 * Stream 情報
@@ -24,7 +24,7 @@ interface StreamStatusInfo {
     mode?: number, // config の index number
 }
 
-interface StreamManagerInterface {
+interface StreamManageModelInterface {
     getStreamInfo(num: number): StreamStatusInfo | null;
     getStreamInfos(): StreamStatusInfo[];
     getStream(streamNumber: number): Stream | null;
@@ -34,32 +34,15 @@ interface StreamManagerInterface {
 }
 
 /**
-* StreamManager
+* StreamManageModel
 * Stream の管理を行う
 */
-class StreamManager extends Base implements StreamManagerInterface {
-    private static instance: StreamManager;
-    private static inited: boolean = false;
-
+class StreamManageModel extends Model implements StreamManageModelInterface {
     private socketIo: SocketIoManageModelInterface;
     private maxStreaming: number;
     private streamStatus: { [key: number]: StreamStatus } = {};
 
-    public static getInstance(): StreamManager {
-        if(!this.inited) {
-            throw new Error('StreamManagerCreateError');
-        }
-
-        return this.instance;
-    }
-
-    public static init(socketIo: SocketIoManageModelInterface): void {
-        if(this.inited) { return; }
-        this.instance = new StreamManager(socketIo);
-        this.inited = true;
-    }
-
-    private constructor(socketIo: SocketIoManageModelInterface) {
+    constructor(socketIo: SocketIoManageModelInterface) {
         super();
 
         this.socketIo = socketIo;
@@ -267,5 +250,5 @@ class StreamManager extends Base implements StreamManagerInterface {
     }
 }
 
-export { StreamManagerInterface, StreamManager };
+export { StreamManageModelInterface, StreamManageModel };
 
