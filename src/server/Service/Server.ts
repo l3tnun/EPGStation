@@ -6,7 +6,8 @@ import * as openapi from 'express-openapi';
 import * as bodyParser from 'body-parser';
 import * as log4js from 'log4js';
 import Base from '../Base';
-import SocketIoServer from './SocketIoServer';
+import factory from '../Model/ModelFactory';
+import { SocketIoManageModelInterface } from '../Model/Service/SocketIoManageModel';
 import Util from '../Util/Util';
 
 /**
@@ -95,7 +96,7 @@ class Server extends Base {
         });
 
         // socket.io
-        SocketIoServer.getInstance().initialize(server);
+        (<SocketIoManageModelInterface>factory.get('SocketIoManageModel')).initialize(server);
     }
 }
 

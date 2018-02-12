@@ -35,7 +35,7 @@ import { EncodeProcessManageModel } from './Service/Encode/EncodeProcessManageMo
 import { EncodeManageModel } from './Service/Encode/EncodeManageModel';
 import { EncodeModel } from './Encode/EncodeModel';
 import { StreamsModel } from './Api/StreamsModel';
-import SocketIoServer from '../Service/SocketIoServer';
+import { SocketIoManageModel } from './Service/SocketIoManageModel';
 import { StreamManager } from '../Service/Stream/StreamManager';
 import { MpegTsLiveStream } from '../Service/Stream/MpegTsLiveStream';
 import { RecordedHLSStream } from '../Service/Stream/RecordedHLSStream';
@@ -89,12 +89,17 @@ namespace ModelFactorySetting {
         const encodeProcessManage = new EncodeProcessManageModel();
         const encodeManage = new EncodeManageModel(encodeProcessManage);
 
+        const socketIoServer = new SocketIoManageModel();
+        factory.reg('SocketIoManageModel', () => { return socketIoServer; });
+
+        StreamManager.init(socketIoServer);
+
         const encodeModel = new EncodeModel(
             encodeManage,
-            SocketIoServer.getInstance(),
+            socketIoServer,
             recordedDB!,
         );
-        IPCClient.init(encodeModel);
+        IPCClient.init(encodeModel, socketIoServer);
         const ipc = IPCClient.getInstance();
         encodeModel.setIPC(ipc);
 

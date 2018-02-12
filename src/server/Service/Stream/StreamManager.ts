@@ -6,7 +6,7 @@ import * as enums from './StreamTypeInterface';
 import * as apid from '../../../../api';
 import { MpegTsLiveStreamInfo } from './MpegTsLiveStream';
 import { RecordedHLSStreamInfo } from './RecordedHLSStream';
-import SocketIoServer from '../SocketIoServer';
+import { SocketIoManageModelInterface } from '../../Model/Service/SocketIoManageModel';
 import Util from '../../Util/Util';
 
 /**
@@ -39,20 +39,30 @@ interface StreamManagerInterface {
 */
 class StreamManager extends Base implements StreamManagerInterface {
     private static instance: StreamManager;
+    private static inited: boolean = false;
 
+    private socketIo: SocketIoManageModelInterface;
     private maxStreaming: number;
     private streamStatus: { [key: number]: StreamStatus } = {};
 
     public static getInstance(): StreamManager {
-        if(!this.instance) {
-            this.instance = new StreamManager();
+        if(!this.inited) {
+            throw new Error('StreamManagerCreateError');
         }
 
         return this.instance;
     }
 
-    private constructor() {
+    public static init(socketIo: SocketIoManageModelInterface): void {
+        if(this.inited) { return; }
+        this.instance = new StreamManager(socketIo);
+        this.inited = true;
+    }
+
+    private constructor(socketIo: SocketIoManageModelInterface) {
         super();
+
+        this.socketIo = socketIo;
 
         // エンコード数上限を取得
         this.maxStreaming = this.config.getConfig().maxStreaming || 0;
@@ -253,7 +263,7 @@ class StreamManager extends Base implements StreamManagerInterface {
     * socketio 通知
     */
     private notify(): void {
-        SocketIoServer.getInstance().notifyClient();
+        this.socketIo.notifyClient();
     }
 }
 

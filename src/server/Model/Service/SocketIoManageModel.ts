@@ -1,26 +1,25 @@
 import * as http from 'http';
 import * as socketio from 'socket.io';
-import Base from '../Base';
-import * as events from '../IoEvents';
+import Model from '../Model';
+import * as events from '../../IoEvents';
+
+interface SocketIoManageModelInterface extends Model {
+    initialize(server: http.Server): void;
+    getSockets(): SocketIO.Namespace;
+    notifyClient(): void;
+}
 
 /**
-* SocketIoServer
+* SocketIoManageModel
 * socket.io の設定を行う
 */
-class SocketIoServer extends Base {
-    private static instance: SocketIoServer;
+class SocketIoManageModel extends Model implements SocketIoManageModelInterface {
     private io: SocketIO.Server | null = null;
 
-    public static getInstance(): SocketIoServer {
-        if(!this.instance) {
-            this.instance = new SocketIoServer();
-        }
-
-        return this.instance;
-    }
-
-    private constructor() { super(); }
-
+    /**
+    * http.Server セット
+    * @param server: http.Server
+    */
     public initialize(server: http.Server): void {
         this.io = socketio(server);
 
@@ -35,7 +34,7 @@ class SocketIoServer extends Base {
     */
     public getSockets(): SocketIO.Namespace {
         if(this.io == null) {
-            throw new Error('must call SocketIoServer initialize');
+            throw new Error('must call SocketIoManageModel initialize');
         }
 
         return this.io.sockets;
@@ -49,5 +48,5 @@ class SocketIoServer extends Base {
     }
 }
 
-export default SocketIoServer;
+export { SocketIoManageModel, SocketIoManageModelInterface };
 

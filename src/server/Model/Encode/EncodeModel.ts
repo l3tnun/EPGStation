@@ -1,6 +1,6 @@
 import Model from '../Model';
 import { EncodeManageModelInterface, EncodeProgram } from '../Service/Encode/EncodeManageModel';
-import SocketIoServer from '../../Service/SocketIoServer';
+import { SocketIoManageModelInterface } from '../Service/SocketIoManageModel';
 import { IPCClientInterface } from '../IPC/IPCClient';
 import { RecordedDBInterface } from '../DB/RecordedDB';
 
@@ -15,13 +15,13 @@ interface EncodeModelInterface extends Model {
 */
 class EncodeModel extends Model implements EncodeModelInterface {
     private encodeManage: EncodeManageModelInterface;
-    private socket: SocketIoServer;
+    private socket: SocketIoManageModelInterface;
     private ipc: IPCClientInterface;
     private recordedDB: RecordedDBInterface;
 
     constructor(
         encodeManage: EncodeManageModelInterface,
-        socket: SocketIoServer,
+        socket: SocketIoManageModelInterface,
         recordedDB: RecordedDBInterface,
     ) {
         super();

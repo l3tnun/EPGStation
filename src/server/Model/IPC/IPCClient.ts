@@ -4,7 +4,7 @@ import { IPCClientMessage, IPCServerMessage, IPCServerSocketIoMessage, IPCServer
 import { ReserveAllId, ReserveLimit } from '../Operator/Reservation/ReservationManageModel';
 import { EncodeInterface, RuleInterface } from '../Operator/RuleInterface';
 import * as apid from '../../../../node_modules/mirakurun/api';
-import SocketIoServer from '../../Service/SocketIoServer';
+import { SocketIoManageModelInterface } from '../Service/SocketIoManageModel';
 import { EncodeModelInterface } from '../Encode/EncodeModel';
 
 interface IPCClientInterface extends Model {
@@ -34,6 +34,7 @@ class IPCClient extends Model implements IPCClientInterface {
     private static isInited: boolean = false;
     private static instance: IPCClientInterface;
     private encodeModel: EncodeModelInterface;
+    private socketIo: SocketIoManageModelInterface;
     private listener: events.EventEmitter = new events.EventEmitter();
 
     public static getInstance(): IPCClientInterface {
@@ -44,16 +45,23 @@ class IPCClient extends Model implements IPCClientInterface {
         return this.instance;
     }
 
-    public static init(encodeModel: EncodeModelInterface) {
+    public static init(
+        encodeModel: EncodeModelInterface,
+        socketIo: SocketIoManageModelInterface,
+    ) {
         if(this.isInited) { return; }
-        this.instance = new IPCClient(encodeModel);
+        this.instance = new IPCClient(encodeModel, socketIo);
         this.isInited = true;
     }
 
-    private constructor(encodeModel: EncodeModelInterface) {
+    private constructor(
+        encodeModel: EncodeModelInterface,
+        socketIo: SocketIoManageModelInterface,
+    ) {
         super();
 
         this.encodeModel = encodeModel;
+        this.socketIo = socketIo;
         if(typeof process.send === 'undefined') {
             this.log.system.error('IPCClient is not child process');
             throw new Error('IPCClientIsNotChildProcess');
@@ -66,7 +74,7 @@ class IPCClient extends Model implements IPCClientInterface {
                     this.encodeModel.push((<IPCServerEncodeMessage>msg).program);
                 } else {
                     // server からの socket.io message 送信依頼
-                    SocketIoServer.getInstance().notifyClient();
+                    this.socketIo.notifyClient();
                 }
             } else {
                 // client -> server の返答
