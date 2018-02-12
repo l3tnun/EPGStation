@@ -1,9 +1,8 @@
 import * as events from 'events';
 import Model from '../Model';
 import { IPCClientMessage, IPCServerMessage, IPCServerSocketIoMessage, IPCServerEncodeMessage, IPCMessageDefinition } from './IPCMessageInterface';
-import { ReserveAllId, ReserveLimit } from '../../Operator/ReservationManager';
-import { EncodeInterface } from '../../Operator/RuleInterface';
-import { RuleInterface } from '../../Operator/RuleInterface';
+import { ReserveAllId, ReserveLimit } from '../Operator/Reservation/ReservationManageModel';
+import { EncodeInterface, RuleInterface } from '../Operator/RuleInterface';
 import * as apid from '../../../../node_modules/mirakurun/api';
 import SocketIoServer from '../../Service/SocketIoServer';
 import { EncodeModelInterface } from '../Encode/EncodeModel';

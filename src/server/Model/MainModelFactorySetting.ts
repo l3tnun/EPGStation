@@ -1,4 +1,9 @@
 import factory from './ModelFactory';
+import { ServicesDBInterface } from './DB/ServicesDB';
+import { ProgramsDBInterface } from './DB/ProgramsDB';
+import { RulesDBInterface } from './DB/RulesDB';
+import { RecordedDBInterface } from './DB/RecordedDB';
+import { EncodedDBInterface } from './DB/EncodedDB';
 import DBOperator from './DB/DBOperator';
 import MySQLOperator from './DB/MySQL/MySQLOperator';
 import SQLite3Operator from './DB/SQLite3/SQLite3Operator';
@@ -21,6 +26,14 @@ import PostgreSQLRulesDB from './DB/PostgreSQL/PostgreSQLRulesDB';
 import PostgreSQLRecordedDB from './DB/PostgreSQL/PostgreSQLRecordedDB';
 import PostgreSQLEncodedDB from './DB/PostgreSQL/PostgreSQLEncodedDB';
 import PostgreSQLMigrationV1 from './DB/PostgreSQL/migrate/PostgreSQLMigrationV1';
+
+import { MirakurunManageModel } from './Operator/EPGUpdate/MirakurunManageModel';
+import { RecordingManageModel } from './Operator/Recording/RecordingManageModel';
+import { ReservationManageModel } from './Operator/Reservation/ReservationManageModel';
+import { RuleManageModel } from './Operator/Rule/RuleManageModel';
+import { StorageCheckManageModel } from './Operator/Storage/StorageCheckManageModel';
+import { ThumbnailManageModel } from './Operator/Thumbnail/ThumbnailManageModel';
+
 import { IPCServer } from './IPC/IPCServer';
 import { ExternalProcessModel } from './ExternalProcessModel';
 import Util from '../Util/Util';
@@ -33,40 +46,93 @@ namespace ModelFactorySetting {
     * Model をセットする
     */
     export const init = (): void => {
+        // set DB Models
         let operator: DBOperator;
+        let servicesDB: ServicesDBInterface;
+        let programsDB: ProgramsDBInterface;
+        let rulesDB: RulesDBInterface;
+        let recordedDB: RecordedDBInterface;
+        let encodedDB: EncodedDBInterface;
+
         switch (Util.getDBType()) {
             case 'mysql':
                 operator = new MySQLOperator();
-                factory.reg('ServicesDB', () => { return new MySQLServicesDB(operator) });
-                factory.reg('ProgramsDB', () => { return new MySQLProgramsDB(operator) });
-                factory.reg('RulesDB', () => { return new MySQLRulesDB(operator) });
-                factory.reg('RecordedDB', () => { return new MySQLRecordedDB(operator) });
-                factory.reg('EncodedDB', () => { return new MySQLEncodedDB(operator) });
+                servicesDB = new MySQLServicesDB(operator);
+                programsDB = new MySQLProgramsDB(operator);
+                rulesDB = new MySQLRulesDB(operator);
+                recordedDB = new MySQLRecordedDB(operator)
+                encodedDB = new MySQLEncodedDB(operator);
                 factory.reg('MigrationV1', () => { return new MySQLMigrationV1(operator) });
                 break;
 
             case 'sqlite3':
                 operator = new SQLite3Operator();
-                factory.reg('ServicesDB', () => { return new SQLite3ServicesDB(operator) });
-                factory.reg('ProgramsDB', () => { return new SQLite3ProgramsDB(operator) });
-                factory.reg('RulesDB', () => { return new SQLite3RulesDB(operator) });
-                factory.reg('RecordedDB', () => { return new SQLite3RecordedDB(operator) });
-                factory.reg('EncodedDB', () => { return new SQLite3EncodedDB(operator) });
+                servicesDB = new SQLite3ServicesDB(operator);
+                programsDB = new SQLite3ProgramsDB(operator);
+                rulesDB = new SQLite3RulesDB(operator);
+                recordedDB = new SQLite3RecordedDB(operator)
+                encodedDB = new SQLite3EncodedDB(operator);
                 factory.reg('MigrationV1', () => { return new SQLite3MigrationV1(operator) });
                 break;
 
             case 'postgresql':
                 operator = new PostgreSQLOperator();
-                factory.reg('ServicesDB', () => { return new PostgreSQLServicesDB(operator) });
-                factory.reg('ProgramsDB', () => { return new PostgreSQLProgramsDB(operator) });
-                factory.reg('RulesDB', () => { return new PostgreSQLRulesDB(operator) });
-                factory.reg('RecordedDB', () => { return new PostgreSQLRecordedDB(operator) });
-                factory.reg('EncodedDB', () => { return new PostgreSQLEncodedDB(operator) });
+                servicesDB = new PostgreSQLServicesDB(operator);
+                programsDB = new PostgreSQLProgramsDB(operator);
+                rulesDB = new PostgreSQLRulesDB(operator);
+                recordedDB = new PostgreSQLRecordedDB(operator)
+                encodedDB = new PostgreSQLEncodedDB(operator);
                 factory.reg('MigrationV1', () => { return new PostgreSQLMigrationV1(operator) });
                 break;
         }
 
-        factory.reg('IPCServer', () => { return IPCServer.getInstance(); });
+        factory.reg('ServicesDB', () => { return servicesDB; });
+        factory.reg('ProgramsDB', () => { return programsDB; });
+        factory.reg('RulesDB', () => { return rulesDB; });
+        factory.reg('RecordedDB', () => { return recordedDB; });
+        factory.reg('EncodedDB', () => { return encodedDB; });
+
+        // set Operator Manage Models
+        const ipc = new IPCServer();
+
+        const reservationManage = new ReservationManageModel(
+            programsDB!,
+            rulesDB!,
+            ipc,
+        );
+        const mirakurunManage = new MirakurunManageModel();
+        const recordingManage = new RecordingManageModel(
+            recordedDB!,
+            encodedDB!,
+            servicesDB!,
+            programsDB!,
+            reservationManage,
+        );
+        const ruleManageModel = new RuleManageModel(rulesDB!);
+        const storageCheckManageModel = new StorageCheckManageModel(
+            recordedDB!,
+            recordingManage,
+            ipc,
+        );
+        const thumbnailManageModel = new ThumbnailManageModel();
+
+        ipc.setModels(
+            mirakurunManage,
+            reservationManage,
+            recordingManage,
+            ruleManageModel,
+        );
+
+        factory.reg('MirakurunManageModel', () => { return mirakurunManage });
+        factory.reg('ReservationManageModel', () => { return reservationManage; });
+        factory.reg('RecordingManageModel', () => { return recordingManage; });
+        factory.reg('RuleManageModel', () => { return ruleManageModel; });
+        factory.reg('StorageCheckManageModel', () => { return storageCheckManageModel; });
+        factory.reg('ThumbnailManageModel', () => { return thumbnailManageModel; });
+
+        // set IPCServer
+        factory.reg('IPCServer', () => { return ipc; });
+
         factory.reg('ExternalProcessModel', () => { return new ExternalProcessModel(); });
     }
 }

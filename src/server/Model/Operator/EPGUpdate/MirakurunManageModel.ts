@@ -1,55 +1,46 @@
 import * as child_process from 'child_process';
 import * as path from 'path';
 import * as events from 'events';
-import * as apid from '../../../node_modules/mirakurun/api';
+import * as apid from '../../../../../node_modules/mirakurun/api';
+import Model from '../../Model';
 
-import Base from '../Base';
-
-interface MirakurunManagerInterface {
+interface MirakurunManageModelInterface extends Model {
+    addListener(callback: (tuners: apid.TunerDevice[]) => void): void;
     update(): void;
     getTuners(): apid.TunerDevice[];
 }
 
 /**
-* MirakurunManager
+* MirakurunManageModel
 * MirakurunUpdater を起動して DB を更新する
 */
-class MirakurunManager extends Base implements MirakurunManagerInterface {
-    private static instance: MirakurunManager;
+class MirakurunManageModel extends Model implements MirakurunManageModelInterface {
     private isRunning: boolean = false;
     private tuners: apid.TunerDevice[] = [];
     private listener: events.EventEmitter = new events.EventEmitter();
-
-    public static getInstance(): MirakurunManager {
-        if(!this.instance) {
-            this.instance = new MirakurunManager();
-        }
-
-        return this.instance;
-    }
 
     /**
     * Mirakurun 更新時に実行されるイベントに追加
     @param callback Mirakurun 更新時に実行される
     */
     public addListener(callback: (tuners: apid.TunerDevice[]) => void): void {
-        this.listener.on(MirakurunManager.MIRAKURUN_UPDATE_EVENT, () => {
+        this.listener.on(MirakurunManageModel.MIRAKURUN_UPDATE_EVENT, () => {
             callback(this.tuners);
         });
     }
 
     /**
     * mirakurun から EPG データを取得する
-    * @throws MirakurunManagerIsRunning update が他で動いているとき
+    * @throws MirakurunManageModelIsRunning update が他で動いているとき
     */
     public update(): void {
         if(this.isRunning) {
-            throw new Error('MirakurunManagerIsRunning');
+            throw new Error('MirakurunManageModelIsRunning');
         }
 
         this.isRunning = true;
 
-        let updater = child_process.fork(path.join(__dirname, 'MirakurunUpdater.js'), [], { silent: true });
+        let updater = child_process.fork(path.join(__dirname, 'MirakurunUpdateExecutor.js'), [], { silent: true });
         this.log.system.info(`start Updater pid: ${ updater.pid }`);
 
         updater.stdout.on('data', (data: string) => {
@@ -84,13 +75,13 @@ class MirakurunManager extends Base implements MirakurunManagerInterface {
     * Mirakurun 更新を通知
     */
     private eventsNotify(): void {
-        this.listener.emit(MirakurunManager.MIRAKURUN_UPDATE_EVENT);
+        this.listener.emit(MirakurunManageModel.MIRAKURUN_UPDATE_EVENT);
     }
 }
 
-namespace MirakurunManager {
+namespace MirakurunManageModel {
     export const MIRAKURUN_UPDATE_EVENT = "updateMirakurun";
 }
 
-export { MirakurunManagerInterface, MirakurunManager };
+export { MirakurunManageModelInterface, MirakurunManageModel };
 

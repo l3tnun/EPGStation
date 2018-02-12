@@ -1,35 +1,35 @@
 import * as apid from '../../../node_modules/mirakurun/api';
 import Base from '../Base';
 import Util from '../Util/Util';
-import ModelFactory from '../Model/ModelFactory';
+import factory from '../Model/ModelFactory';
 import { ProgramsDBInterface } from '../Model/DB/ProgramsDB';
 import { RulesDBInterface } from '../Model/DB/RulesDB';
 import { RecordedDBInterface } from '../Model/DB/RecordedDB';
 import { EncodedDBInterface } from '../Model/DB/EncodedDB';
 import { ServicesDBInterface } from '../Model/DB/ServicesDB';
 import * as DBSchema from '../Model/DB/DBSchema';
-import { MirakurunManager } from './MirakurunManager';
-import { RuleEventStatus, RuleManager } from './RuleManager';
-import { ReservationManager } from './ReservationManager';
-import { RecordingManager } from './RecordingManager';
-import { ThumbnailManager } from './ThumbnailManager';
-import { EncodeInterface } from './RuleInterface';
+import { MirakurunManageModelInterface } from '../Model/Operator/EPGUpdate/MirakurunManageModel';
+import { RuleEventStatus, RuleManageModelInterface } from '../Model/Operator/Rule/RuleManageModel';
+import { ReservationManageModelInterface } from '../Model/Operator/Reservation/ReservationManageModel';
+import { RecordingManageModelInterface } from '../Model/Operator/Recording/RecordingManageModel';
+import { ThumbnailManageModelInterface } from '../Model/Operator/Thumbnail/ThumbnailManageModel';
+import { StorageCheckManageModelInterface } from '../Model/Operator/Storage/StorageCheckManageModel'
+import { EncodeInterface } from '../Model/Operator/RuleInterface';
 import { IPCServerInterface } from '../Model/IPC/IPCServer';
 import { ExternalProcessModelInterface } from '../Model/ExternalProcessModel';
-import { StorageCheckManager } from './StorageCheckManager'
 
 /**
 * Operator
 */
 class Operator extends Base {
-    private reservationManager: ReservationManager;
-    private ruleManager: RuleManager;
-    private mirakurun: MirakurunManager;
-    private recordingManager: RecordingManager;
-    private thumbnailManager: ThumbnailManager;
+    private reservationManage: ReservationManageModelInterface;
+    private ruleManage: RuleManageModelInterface;
+    private mirakurunManage: MirakurunManageModelInterface;
+    private recordingManage: RecordingManageModelInterface;
+    private thumbnailManage: ThumbnailManageModelInterface;
     private ipc: IPCServerInterface;
     private externalProcess: ExternalProcessModelInterface;
-    private storageCheckManager: StorageCheckManager;
+    private storageCheckManage: StorageCheckManageModelInterface;
 
     constructor() {
         super();
@@ -45,13 +45,13 @@ class Operator extends Base {
     * 初期設定
     */
     private async init(): Promise<void> {
-        let servicesDB = <ServicesDBInterface>(ModelFactory.get('ServicesDB'));
-        let programsDB = <ProgramsDBInterface>(ModelFactory.get('ProgramsDB'));
-        let rulesDB = <RulesDBInterface>(ModelFactory.get('RulesDB'));
-        let recordedDB = <RecordedDBInterface>(ModelFactory.get('RecordedDB'));
-        let encodedDB = <EncodedDBInterface>(ModelFactory.get('EncodedDB'));
-        this.ipc = <IPCServerInterface>(ModelFactory.get('IPCServer'));
-        this.externalProcess = <ExternalProcessModelInterface>(ModelFactory.get('ExternalProcessModel'))
+        let servicesDB = <ServicesDBInterface>factory.get('ServicesDB');
+        let programsDB = <ProgramsDBInterface>factory.get('ProgramsDB');
+        let rulesDB = <RulesDBInterface>factory.get('RulesDB');
+        let recordedDB = <RecordedDBInterface>factory.get('RecordedDB');
+        let encodedDB = <EncodedDBInterface>factory.get('EncodedDB');
+        this.ipc = <IPCServerInterface>factory.get('IPCServer');
+        this.externalProcess = <ExternalProcessModelInterface>factory.get('ExternalProcessModel');
 
         try {
             // DB table 作成
@@ -79,64 +79,52 @@ class Operator extends Base {
             process.exit(1);
         };
 
-        ReservationManager.init(programsDB, rulesDB, this.ipc);
-        RuleManager.init(rulesDB);
-        this.ruleManager = RuleManager.getInstance();
-        this.mirakurun = MirakurunManager.getInstance();
-        this.reservationManager = ReservationManager.getInstance();
-        RecordingManager.init(recordedDB, encodedDB, servicesDB, programsDB, this.reservationManager);
-        this.recordingManager = RecordingManager.getInstance();
-        this.thumbnailManager = ThumbnailManager.getInstance();
-        StorageCheckManager.init(recordedDB, this.recordingManager, this.ipc);
-        this.storageCheckManager = StorageCheckManager.getInstance();
-
-        // IPCServer に manager をセット
-        this.ipc.setManagers({
-            reservation: this.reservationManager,
-            recording: this.recordingManager,
-            rule: this.ruleManager,
-            mirakurun: this.mirakurun,
-        });
+        this.ruleManage = <RuleManageModelInterface>factory.get('RuleManageModel');
+        this.mirakurunManage = <MirakurunManageModelInterface>factory.get('MirakurunManageModel');
+        this.reservationManage = <ReservationManageModelInterface>factory.get('ReservationManageModel');
+        this.recordingManage = <RecordingManageModelInterface>factory.get('RecordingManageModel');
+        this.thumbnailManage = <ThumbnailManageModelInterface>factory.get('ThumbnailManageModel');
+        this.storageCheckManage = <StorageCheckManageModelInterface>factory.get('StorageCheckManageModel');
 
         //終了時に DB 接続を切断
         process.on('exit', () => { programsDB.end(); });
 
         //addListener
-        this.mirakurun.addListener((tuners) => { this.mirakurunUpdateCallback(tuners); });
-        this.ruleManager.addListener((id, status) => { this.ruleManagerUpdateCallback(id, status); });
-        this.recordingManager.recStartListener((program) => { this.recordingStartCallback(program); });
-        this.recordingManager.recEndListener((program, encode) => { this.recordingFinCallback(program, encode); });
-        this.thumbnailManager.addListener((id, thumbnailPath) => { this.thumbnailCreateCallback(id, thumbnailPath); });
+        this.mirakurunManage.addListener((tuners) => { this.epgUpdateCallback(tuners); });
+        this.ruleManage.addListener((id, status) => { this.ruleUpdateCallback(id, status); });
+        this.recordingManage.recStartListener((program) => { this.recordingStartCallback(program); });
+        this.recordingManage.recEndListener((program, encode) => { this.recordingFinCallback(program, encode); });
+        this.thumbnailManage.addListener((id, thumbnailPath) => { this.thumbnailCreateCallback(id, thumbnailPath); });
     }
 
     /**
-    * MirakurunManager Update 終了の callback
+    * EPG 更新終了の callback
     * @param tuners: apid.TunerDevice[]
     */
-    private async mirakurunUpdateCallback(tuners: apid.TunerDevice[]): Promise<void> {
-        this.reservationManager.setTuners(tuners);
+    private async epgUpdateCallback(tuners: apid.TunerDevice[]): Promise<void> {
+        this.reservationManage.setTuners(tuners);
 
         //すべての予約を更新
         try {
-            await this.reservationManager.updateAll();
+            await this.reservationManage.updateAll();
         } catch(err) {
-            this.log.system.error('ReservationManager update Error');
+            this.log.system.error('ReservationManage update Error');
             this.log.system.error(err);
 
-            setTimeout(() => { this.mirakurunUpdateCallback(tuners) }, 1000);
+            setTimeout(() => { this.epgUpdateCallback(tuners) }, 1000);
         };
     }
 
     /**
-    * RuleManager Update 終了の callback
+    * ルール更新終了の callback
     * @param ruleId: rule id
     * @param status: RuleEventStatus
     * @param isRetry: true: retry, false: retry ではない
     */
-    private async ruleManagerUpdateCallback(ruleId: number, status: RuleEventStatus, isRetry: boolean = false): Promise<void> {
+    private async ruleUpdateCallback(ruleId: number, status: RuleEventStatus, isRetry: boolean = false): Promise<void> {
         // ルールが削除 or 無効化されたとき、そのルールの予約を停止する
         if(!isRetry && (status === 'delete' || status === 'disable')) {
-            this.recordingManager.stopRuleId(ruleId);
+            this.recordingManage.stopRuleId(ruleId);
         }
 
         // ルールが削除されたとき recorded の整合性をとる
@@ -144,7 +132,7 @@ class Operator extends Base {
             // SQLite3 使用時に正しく動作しないので sleep
             await Util.sleep(100);
             try {
-                await this.recordingManager.deleteRule(ruleId);
+                await this.recordingManage.deleteRule(ruleId);
             } catch(err) {
                 this.log.system.error(err);
             }
@@ -152,11 +140,11 @@ class Operator extends Base {
 
         // ルールが更新されたので予約を更新する
         try {
-            await this.reservationManager.updateRule(ruleId);
+            await this.reservationManage.updateRule(ruleId);
         } catch(err) {
-            this.log.system.error('ReservationManager update Error');
+            this.log.system.error('ReservationManage update Error');
             this.log.system.error(err);
-            setTimeout(() => { this.ruleManagerUpdateCallback(ruleId, status, true) }, 1000);
+            setTimeout(() => { this.ruleUpdateCallback(ruleId, status, true) }, 1000);
         }
     }
 
@@ -185,7 +173,7 @@ class Operator extends Base {
         if(program === null) { return; }
 
         //サムネイル生成
-        this.thumbnailManager.push(program);
+        this.thumbnailManage.push(program);
 
         const config = this.config.getConfig();
 
@@ -245,7 +233,7 @@ class Operator extends Base {
     */
     private async thumbnailCreateCallback(recordedId: number, thumbnailPath: string): Promise<void> {
         try {
-            await this.recordingManager.addThumbnail(recordedId, thumbnailPath);
+            await this.recordingManage.addThumbnail(recordedId, thumbnailPath);
 
             // socket.io で通知
             this.ipc.notifIo();
@@ -259,7 +247,7 @@ class Operator extends Base {
     */
     private updateDB(): void {
         try {
-            this.mirakurun.update();
+            this.mirakurunManage.update();
         } catch(e) {
             this.log.system.error(e);
         }
@@ -272,7 +260,7 @@ class Operator extends Base {
         await this.init();
 
         // reserves の古い予約を削除しておく
-        this.reservationManager.clean();
+        this.reservationManage.clean();
 
         //DB 初回更新
         this.updateDB();
@@ -285,12 +273,12 @@ class Operator extends Base {
 
         //予約監視
         setInterval(() => {
-            this.recordingManager.check(this.reservationManager.getReservesAll());
+            this.recordingManage.check(this.reservationManage.getReservesAll());
         }, 1000 * 3);
 
         // recrding のゴミを掃除
         setInterval(() => {
-            this.recordingManager.cleanRecording();
+            this.recordingManage.cleanRecording();
         }, 1000 * 60 * 60);
 
         //ストレージ空き容量チェック
@@ -302,7 +290,7 @@ class Operator extends Base {
 
     private checkStorage(intervalTime: number, storageLimitThreshold: number): void {
         setTimeout(async () => {
-            let intervalTime = await this.storageCheckManager.check(storageLimitThreshold);
+            let intervalTime = await this.storageCheckManage.check(storageLimitThreshold);
             this.checkStorage(intervalTime, storageLimitThreshold);
         }, intervalTime);
     }

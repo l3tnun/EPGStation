@@ -1,58 +1,38 @@
 import * as fs from 'fs';
 import { spawn } from 'child_process';
 import * as diskusage from 'diskusage';
-import Base from '../Base';
-import { RecordedDBInterface } from '../Model/DB/RecordedDB';
-import { IPCServerInterface } from '../Model/IPC/IPCServer';
-import Util from '../Util/Util';
-import { RecordingManagerInterface } from './RecordingManager';
+import Model from '../../Model';
+import { RecordedDBInterface } from '../../DB/RecordedDB';
+import { IPCServerInterface } from '../../IPC/IPCServer';
+import Util from '../../../Util/Util';
+import { RecordingManageModelInterface } from '../Recording/RecordingManageModel';
 
-interface StorageCheckManagerInterface {
+interface StorageCheckManageModelInterface extends Model {
     check(threshold: number): Promise<number>;
 }
 
 /**
 * ストレージの空き容量を監視する
 */
-class StorageCheckManager extends Base implements StorageCheckManagerInterface {
-    private static instance: StorageCheckManager;
-    private static inited: boolean = false;
+class StorageCheckManageModel extends Model implements StorageCheckManageModelInterface {
     private recordedDB: RecordedDBInterface;
     private ipc: IPCServerInterface;
-    private recordingManager: RecordingManagerInterface;
+    private recordingManage: RecordingManageModelInterface;
     private intervalTime: number;
     private dir: string;
     private action: 'remove' | 'none';
     private cmd: string | null;
 
-    public static getInstance(): StorageCheckManager {
-        if(!this.inited) {
-            throw new Error('StorageCheckManagerCreateInstanceError');
-        }
-
-        return this.instance;
-    }
-
-    public static init(
+    constructor(
         recordedDB: RecordedDBInterface,
-        recordingManager: RecordingManagerInterface,
-        ipc: IPCServerInterface,
-    ) {
-        if(this.inited) { return; }
-        this.instance = new StorageCheckManager(recordedDB, recordingManager, ipc);
-        this.inited = true;
-    }
-
-    private constructor(
-        recordedDB: RecordedDBInterface,
-        recordingManager: RecordingManagerInterface,
+        recordingManage: RecordingManageModelInterface,
         ipc: IPCServerInterface,
     ) {
         super();
 
         this.recordedDB = recordedDB;
         this.ipc = ipc;
-        this.recordingManager = recordingManager;
+        this.recordingManage = recordingManage;
         const config = this.config.getConfig();
         this.intervalTime = (config.storageLimitCheckIntervalTime | 60) * 1000;
         this.dir = Util.getRecordedPath();
@@ -93,7 +73,7 @@ class StorageCheckManager extends Base implements StorageCheckManagerInterface {
             // 削除
             let recorded = await this.recordedDB.findOld();
             if(recorded !== null) {
-                await this.recordingManager.deleteAll(recorded.id);
+                await this.recordingManage.deleteAll(recorded.id);
                 this.ipc.notifIo();
                 intervalTime = 1000;
             }
@@ -121,5 +101,5 @@ class StorageCheckManager extends Base implements StorageCheckManagerInterface {
     }
 }
 
-export { StorageCheckManagerInterface, StorageCheckManager };
+export { StorageCheckManageModelInterface, StorageCheckManageModel };
 

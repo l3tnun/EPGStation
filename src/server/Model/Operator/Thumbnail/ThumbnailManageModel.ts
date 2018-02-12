@@ -3,39 +3,29 @@ import * as fs from 'fs';
 import * as events from 'events';
 import { spawn } from 'child_process';
 import * as mkdirp from 'mkdirp';
-import Base from '../Base';
-import * as DBSchema from '../Model/DB/DBSchema';
-import Util from '../Util/Util';
+import Model from '../../Model';
+import * as DBSchema from '../../DB/DBSchema';
+import Util from '../../../Util/Util';
 
-interface ThumbnailManagerInterface {
+interface ThumbnailManageModelInterface extends Model {
+    addListener(callback: (id: number, thumbnailPath: string) => void): void;
     push(program: DBSchema.RecordedSchema): void;
 }
 
 /**
 * サムネイルを生成する
 */
-class ThumbnailManager extends Base implements ThumbnailManagerInterface {
-    private static instance: ThumbnailManager;
+class ThumbnailManageModel extends Model implements ThumbnailManageModelInterface {
     private queue: DBSchema.RecordedSchema[] = [];
     private isRunning: boolean = false;
     private listener: events.EventEmitter = new events.EventEmitter();
-
-    public static getInstance(): ThumbnailManager {
-        if(!this.instance) {
-            this.instance = new ThumbnailManager();
-        }
-
-        return this.instance;
-    }
-
-    private constructor() { super(); }
 
     /**
     * サムネイル生成完了時に実行されるイベントに追加
     @param callback ルール更新時に実行される
     */
     public addListener(callback: (id: number, thumbnailPath: string) => void): void {
-        this.listener.on(ThumbnailManager.THUMBANIL_CREATE_EVENT, (id: number, thumbnailPath: string) => { callback(id, thumbnailPath); });
+        this.listener.on(ThumbnailManageModel.THUMBANIL_CREATE_EVENT, (id: number, thumbnailPath: string) => { callback(id, thumbnailPath); });
     }
 
     /**
@@ -148,13 +138,13 @@ class ThumbnailManager extends Base implements ThumbnailManagerInterface {
     * @param thumbnailPath: thumbnailPath
     */
     private eventsNotify(recordedId: number, thumbnailPath: string): void {
-        this.listener.emit(ThumbnailManager.THUMBANIL_CREATE_EVENT, recordedId, thumbnailPath);
+        this.listener.emit(ThumbnailManageModel.THUMBANIL_CREATE_EVENT, recordedId, thumbnailPath);
     }
 }
 
-namespace ThumbnailManager {
+namespace ThumbnailManageModel {
     export const THUMBANIL_CREATE_EVENT = 'createThumbnail';
 }
 
-export { ThumbnailManagerInterface, ThumbnailManager };
+export { ThumbnailManageModelInterface, ThumbnailManageModel };
 

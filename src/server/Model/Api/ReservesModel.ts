@@ -1,7 +1,7 @@
 import ApiModel from './ApiModel';
 import { IPCClientInterface } from '../IPC/IPCClient';
-import { ReserveProgram } from '../../Operator/ReserveProgramInterface';
-import { EncodeInterface } from '../../Operator/RuleInterface';
+import { ReserveProgram } from '../Operator/ReserveProgramInterface';
+import { EncodeInterface } from '../Operator/RuleInterface';
 import ApiUtil from './ApiUtil';
 import * as apid from '../../../../node_modules/mirakurun/api';
 

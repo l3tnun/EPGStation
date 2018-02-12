@@ -5,7 +5,7 @@ import * as DBSchema from '../DB/DBSchema';
 import ApiUtil from './ApiUtil';
 import DateUtil from '../../Util/DateUtil';
 import * as apid from '../../../../node_modules/mirakurun/api';
-import { SearchInterface } from '../../Operator/RuleInterface';
+import { SearchInterface } from '../Operator/RuleInterface';
 import CheckRule from '../../Util/CheckRule';
 import { IPCClientInterface } from '../IPC/IPCClient';
 
