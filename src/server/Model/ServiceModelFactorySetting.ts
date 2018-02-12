@@ -99,8 +99,10 @@ namespace ModelFactorySetting {
             socketIoServer,
             recordedDB!,
         );
-        IPCClient.init(encodeModel, socketIoServer);
-        const ipc = IPCClient.getInstance();
+
+        const ipc = new IPCClient()
+        ipc.setModels(encodeModel, socketIoServer);
+
         encodeModel.setIPC(ipc);
 
         factory.reg('RulesModel', () => { return new RulesModel(ipc, rulesDB) });

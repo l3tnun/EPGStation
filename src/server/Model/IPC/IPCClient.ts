@@ -31,37 +31,13 @@ interface IPCClientInterface extends Model {
 * @throws IPCClientIsNotChildProcess fork で起動していないとき
 */
 class IPCClient extends Model implements IPCClientInterface {
-    private static isInited: boolean = false;
-    private static instance: IPCClientInterface;
     private encodeModel: EncodeModelInterface;
     private socketIo: SocketIoManageModelInterface;
     private listener: events.EventEmitter = new events.EventEmitter();
 
-    public static getInstance(): IPCClientInterface {
-        if(!this.isInited) {
-            throw new Error('IPCClientCreateInstanceError');
-        }
-
-        return this.instance;
-    }
-
-    public static init(
-        encodeModel: EncodeModelInterface,
-        socketIo: SocketIoManageModelInterface,
-    ) {
-        if(this.isInited) { return; }
-        this.instance = new IPCClient(encodeModel, socketIo);
-        this.isInited = true;
-    }
-
-    private constructor(
-        encodeModel: EncodeModelInterface,
-        socketIo: SocketIoManageModelInterface,
-    ) {
+    constructor() {
         super();
 
-        this.encodeModel = encodeModel;
-        this.socketIo = socketIo;
         if(typeof process.send === 'undefined') {
             this.log.system.error('IPCClient is not child process');
             throw new Error('IPCClientIsNotChildProcess');
@@ -81,6 +57,14 @@ class IPCClient extends Model implements IPCClientInterface {
                 this.listener.emit(String((<IPCServerMessage>msg).id), msg);
             }
         });
+    }
+
+    public setModels(
+        encodeModel: EncodeModelInterface,
+        socketIo: SocketIoManageModelInterface,
+    ) {
+        this.encodeModel = encodeModel;
+        this.socketIo = socketIo;
     }
 
     /**
