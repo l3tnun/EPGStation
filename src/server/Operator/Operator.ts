@@ -9,7 +9,6 @@ import { EncodedDBInterface } from '../Model/DB/EncodedDB';
 import { ServicesDBInterface } from '../Model/DB/ServicesDB';
 import * as DBSchema from '../Model/DB/DBSchema';
 import { MirakurunManager } from './MirakurunManager';
-import { MirakurunEPGUpdateManager } from './MirakurunEPGUpdateManager';
 import { RuleEventStatus, RuleManager } from './RuleManager';
 import { ReservationManager } from './ReservationManager';
 import { RecordingManager } from './RecordingManager';
@@ -26,7 +25,6 @@ class Operator extends Base {
     private reservationManager: ReservationManager;
     private ruleManager: RuleManager;
     private mirakurun: MirakurunManager;
-    private mirakurunEPGUpdateManager: MirakurunEPGUpdateManager;
     private recordingManager: RecordingManager;
     private thumbnailManager: ThumbnailManager;
     private ipc: IPCServerInterface;
@@ -85,8 +83,6 @@ class Operator extends Base {
         RuleManager.init(rulesDB);
         this.ruleManager = RuleManager.getInstance();
         this.mirakurun = MirakurunManager.getInstance();
-        MirakurunEPGUpdateManager.init(servicesDB, programsDB);
-        this.mirakurunEPGUpdateManager = MirakurunEPGUpdateManager.getInstance();
         this.reservationManager = ReservationManager.getInstance();
         RecordingManager.init(recordedDB, encodedDB, servicesDB, programsDB, this.reservationManager);
         this.recordingManager = RecordingManager.getInstance();
@@ -129,11 +125,6 @@ class Operator extends Base {
 
             setTimeout(() => { this.mirakurunUpdateCallback(tuners) }, 1000);
         };
-
-        if(Util.isContinuousEPGUpdater()) {
-            // EPG ストリーム更新開始
-            await this.mirakurunEPGUpdateManager.start();
-        }
     }
 
     /**
@@ -283,27 +274,13 @@ class Operator extends Base {
         // reserves の古い予約を削除しておく
         this.reservationManager.clean();
 
-        if(Util.isContinuousEPGUpdater()) {
-            // EPG 更新のストリームの受信を開始
-            await this.mirakurunEPGUpdateManager.run();
-        }
-
         //DB 初回更新
         this.updateDB();
 
         //定期的に 予約情報を更新する
         const reservesUpdateIntervalTime = this.config.getConfig().reservesUpdateIntervalTime || 10;
         setInterval(async () => {
-            if(Util.isContinuousEPGUpdater()) {
-                try {
-                    await this.reservationManager.updateAll();
-                } catch(err) {
-                    this.log.system.error('ReservationManager update Error');
-                    this.log.system.error(err);
-                }
-            } else {
-                this.updateDB();
-            }
+            this.updateDB();
         }, reservesUpdateIntervalTime * 60 * 1000)
 
         //予約監視
@@ -311,18 +288,9 @@ class Operator extends Base {
             this.recordingManager.check(this.reservationManager.getReservesAll());
         }, 1000 * 3);
 
-        let programsDB = <ProgramsDBInterface>(ModelFactory.get('ProgramsDB'));
+        // recrding のゴミを掃除
         setInterval(() => {
-            // recrding のゴミを掃除
             this.recordingManager.cleanRecording();
-            if(Util.isContinuousEPGUpdater()) {
-                // 1 時間以上経過したデータを削除
-                programsDB.deleteOldPrograms()
-                .catch((err) => {
-                    this.log.system.error('old programs delete error');
-                    this.log.system.error(err);
-                });
-            }
         }, 1000 * 60 * 60);
 
         //ストレージ空き容量チェック

@@ -31,7 +31,6 @@ interface ConfigInterface {
     }
     gid: string | number;
     uid: string | number;
-    continuousEPGUpdater: boolean;
     programInsertMax: number;
     programInsertWait: number;
     serviceOrder: number[];

@@ -10,7 +10,6 @@ import * as apid from '../../../../node_modules/mirakurun/api';
 import * as events from '../../IoEvents';
 import { EncodeProgram } from '../../Service/EncodeManager';
 import { MirakurunManagerInterface } from '../../Operator/MirakurunManager';
-import Util from '../../Util/Util';
 
 interface IPCServerInterface extends Model {
     setManagers(managers: Managers): void;
@@ -241,11 +240,7 @@ class IPCServer extends Model implements IPCServerInterface {
         // update Reserves
         this.functions[IPCMessageDefinition.updateReserves] = async (id: number) => {
             try {
-                if(Util.isContinuousEPGUpdater()) {
-                    this.managers.reservation.updateAll();
-                } else {
-                    this.managers.mirakurun.update();
-                }
+                this.managers.mirakurun.update();
                 this.send({ id: id });
             } catch(err) {
                 this.send({ id: id, error: err.message });
