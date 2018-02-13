@@ -1,18 +1,16 @@
 import Base from '../Base';
 import factory from '../Model/ModelFactory';
-import * as DBSchema from '../Model/DB/DBSchema';
 import { DBInitializationModelInterface } from '../Model/Operator/DBInitializationModel';
 import { MirakurunManageModelInterface } from '../Model/Operator/EPGUpdate/MirakurunManageModel';
 import { ReservationManageModelInterface } from '../Model/Operator/Reservation/ReservationManageModel';
 import { RecordingManageModelInterface } from '../Model/Operator/Recording/RecordingManageModel';
 import { ThumbnailManageModelInterface } from '../Model/Operator/Thumbnail/ThumbnailManageModel';
 import { StorageCheckManageModelInterface } from '../Model/Operator/Storage/StorageCheckManageModel'
-import { EncodeInterface } from '../Model/Operator/RuleInterface';
-import { ExternalProcessModelInterface } from '../Model/Operator/ExternalProcessModel';
 import { IPCServerInterface } from '../Model/IPC/IPCServer';
 import { EPGUpdateFinModelInterface } from '../Model/Operator/Callbacks/EPGUpdateFinModel';
 import { RuleUpdateFinModelInterface } from '../Model/Operator/Callbacks/RuleUpdateFinModel';
 import { RecordingStartModelInterface } from '../Model/Operator/Callbacks/RecordingStartModel';
+import { RecordingFinModelInterface } from '../Model/Operator/Callbacks/RecordingFinModel';
 
 /**
 * Operator
@@ -26,8 +24,8 @@ class Operator extends Base {
     private storageCheckManage: StorageCheckManageModelInterface;
     private epgUpdateFinModel: EPGUpdateFinModelInterface;
     private ruleUpdateFinModel: RuleUpdateFinModelInterface;
-    private externalProcess: ExternalProcessModelInterface;
     private recordingStartModel: RecordingStartModelInterface;
+    private recordingFinModel: RecordingFinModelInterface;
 
     constructor() {
         super();
@@ -55,78 +53,15 @@ class Operator extends Base {
         this.storageCheckManage = <StorageCheckManageModelInterface>factory.get('StorageCheckManageModel');
         this.epgUpdateFinModel = <EPGUpdateFinModelInterface>factory.get('EPGUpdateFinModel');
         this.ruleUpdateFinModel = <RuleUpdateFinModelInterface>factory.get('RuleUpdateFinModel');
-        this.externalProcess = <ExternalProcessModelInterface>factory.get('ExternalProcessModel');
         this.recordingStartModel = <RecordingStartModelInterface>factory.get('RecordingStartModel');
+        this.recordingFinModel = <RecordingFinModelInterface>factory.get('RecordingFinModel');
 
         //addListener
         this.epgUpdateFinModel.set();
         this.ruleUpdateFinModel.set();
         this.recordingStartModel.set();
-        this.recordingManage.recEndListener((program, encode) => { this.recordingFinCallback(program, encode); });
+        this.recordingFinModel.set();
         this.thumbnailManage.addListener((id, thumbnailPath) => { this.thumbnailCreateCallback(id, thumbnailPath); });
-    }
-
-    /**
-    * 録画完了時の callback
-    * @param program: DBSchema.RecordedSchema | null
-    * @param encodeOption: EncodeInterface | null
-    * program が null の場合は録画中に recorded から削除された
-    */
-    private async recordingFinCallback(program: DBSchema.RecordedSchema | null, encodeOption: EncodeInterface | null): Promise<void> {
-        if(program === null) { return; }
-
-        //サムネイル生成
-        this.thumbnailManage.push(program);
-
-        const config = this.config.getConfig();
-
-        // ts 前処理
-        if(typeof config.tsModify !== 'undefined' && program.recPath !== null) {
-            await this.ipc.setEncode({
-                recordedId: program.id,
-                source: program.recPath,
-                delTs: false,
-                recordedProgram: program,
-            });
-        }
-
-        //エンコード
-        if(encodeOption !== null) {
-            //エンコードオプションを生成
-            let settings: { mode: number, directory?: string }[] = [];
-            let encCnt = 0;
-            if(typeof encodeOption.mode1 !== 'undefined') {
-                settings.push({ mode: encodeOption.mode1, directory: encodeOption.directory1 }); encCnt += 1;
-            }
-            if(typeof encodeOption.mode2 !== 'undefined') {
-                settings.push({ mode: encodeOption.mode2, directory: encodeOption.directory2 }); encCnt += 1;
-            }
-            if(typeof encodeOption.mode3 !== 'undefined') {
-                settings.push({ mode: encodeOption.mode3, directory: encodeOption.directory3 }); encCnt += 1;
-            }
-
-            //エンコードを依頼する
-            for(let i = 0; i < settings.length; i++) {
-                if(program.recPath === null) { continue; }
-                await this.ipc.setEncode({
-                    recordedId: program.id,
-                    source: program.recPath,
-                    mode: settings[i].mode,
-                    directory: settings[i].directory,
-                    delTs: i === encCnt - 1 ? encodeOption.delTs : false,
-                    recordedProgram: program,
-                });
-            }
-        }
-
-        // socket.io で通知
-        this.ipc.notifIo();
-
-        // 外部コマンド実行
-        let cmd = config.recordedEndCommand;
-        if(typeof cmd !== 'undefined') {
-            this.externalProcess.run(cmd, program);
-        }
     }
 
     /**
