@@ -36,9 +36,10 @@ import { StorageCheckManageModel } from './Operator/Storage/StorageCheckManageMo
 import { ThumbnailManageModel } from './Operator/Thumbnail/ThumbnailManageModel';
 import { EPGUpdateFinModel } from './Operator/Callbacks/EPGUpdateFinModel';
 import { RuleUpdateFinModel } from './Operator/Callbacks/RuleUpdateFinModel';
+import { ExternalProcessModel } from './Operator/ExternalProcessModel';
+import { RecordingStartModel } from './Operator/Callbacks/RecordingStartModel';
 
 import { IPCServer } from './IPC/IPCServer';
-import { ExternalProcessModel } from './Operator/ExternalProcessModel';
 import Util from '../Util/Util';
 
 /**
@@ -127,6 +128,12 @@ namespace ModelFactorySetting {
             recordingManage,
             ruleManageModel,
         );
+        const externalProcess = new ExternalProcessModel();
+        const recordingStartModel = new RecordingStartModel(
+            recordingManage,
+            externalProcess,
+            ipc,
+        );
 
         ipc.setModels(
             mirakurunManage,
@@ -149,9 +156,10 @@ namespace ModelFactorySetting {
         factory.reg('StorageCheckManageModel', () => { return storageCheckManageModel; });
         factory.reg('ThumbnailManageModel', () => { return thumbnailManageModel; });
         factory.reg('IPCServer', () => { return ipc; });
-        factory.reg('ExternalProcessModel', () => { return new ExternalProcessModel(); });
+        factory.reg('ExternalProcessModel', () => { return externalProcess; });
         factory.reg('EPGUpdateFinModel', () => { return epgUpdateFinModel; });
         factory.reg('RuleUpdateFinModel', () => { return ruleUpdateFinModel; });
+        factory.reg('RecordingStartModel', () => { return recordingStartModel; });
     }
 }
 

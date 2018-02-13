@@ -12,6 +12,7 @@ import { ExternalProcessModelInterface } from '../Model/Operator/ExternalProcess
 import { IPCServerInterface } from '../Model/IPC/IPCServer';
 import { EPGUpdateFinModelInterface } from '../Model/Operator/Callbacks/EPGUpdateFinModel';
 import { RuleUpdateFinModelInterface } from '../Model/Operator/Callbacks/RuleUpdateFinModel';
+import { RecordingStartModelInterface } from '../Model/Operator/Callbacks/RecordingStartModel';
 
 /**
 * Operator
@@ -22,10 +23,11 @@ class Operator extends Base {
     private recordingManage: RecordingManageModelInterface;
     private thumbnailManage: ThumbnailManageModelInterface;
     private ipc: IPCServerInterface;
-    private externalProcess: ExternalProcessModelInterface;
     private storageCheckManage: StorageCheckManageModelInterface;
     private epgUpdateFinModel: EPGUpdateFinModelInterface;
     private ruleUpdateFinModel: RuleUpdateFinModelInterface;
+    private externalProcess: ExternalProcessModelInterface;
+    private recordingStartModel: RecordingStartModelInterface;
 
     constructor() {
         super();
@@ -42,7 +44,6 @@ class Operator extends Base {
     */
     private async init(): Promise<void> {
         this.ipc = <IPCServerInterface>factory.get('IPCServer');
-        this.externalProcess = <ExternalProcessModelInterface>factory.get('ExternalProcessModel');
 
         // DB init
         (<DBInitializationModelInterface>factory.get('DBInitializationModel')).run();
@@ -54,28 +55,15 @@ class Operator extends Base {
         this.storageCheckManage = <StorageCheckManageModelInterface>factory.get('StorageCheckManageModel');
         this.epgUpdateFinModel = <EPGUpdateFinModelInterface>factory.get('EPGUpdateFinModel');
         this.ruleUpdateFinModel = <RuleUpdateFinModelInterface>factory.get('RuleUpdateFinModel');
+        this.externalProcess = <ExternalProcessModelInterface>factory.get('ExternalProcessModel');
+        this.recordingStartModel = <RecordingStartModelInterface>factory.get('RecordingStartModel');
 
         //addListener
         this.epgUpdateFinModel.set();
         this.ruleUpdateFinModel.set();
-        this.recordingManage.recStartListener((program) => { this.recordingStartCallback(program); });
+        this.recordingStartModel.set();
         this.recordingManage.recEndListener((program, encode) => { this.recordingFinCallback(program, encode); });
         this.thumbnailManage.addListener((id, thumbnailPath) => { this.thumbnailCreateCallback(id, thumbnailPath); });
-    }
-
-    /**
-    * 録画開始時の callback
-    * @param program: DBSchema.RecordedSchema
-    */
-    private recordingStartCallback(program: DBSchema.RecordedSchema): void {
-        // socket.io で通知
-        this.ipc.notifIo();
-
-        // 外部コマンド実行
-        let cmd = this.config.getConfig().recordedStartCommand;
-        if(typeof cmd !== 'undefined') {
-            this.externalProcess.run(cmd, program);
-        }
     }
 
     /**
