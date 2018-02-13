@@ -1,13 +1,10 @@
 import Model from '../../Model';
+import CallbackBaseModelInterface from './CallbackBaseModelInterface';
 import { RecordingManageModelInterface } from '../../Operator/Recording/RecordingManageModel';
 import { ThumbnailManageModelInterface } from '../../Operator/Thumbnail/ThumbnailManageModel';
 import { IPCServerInterface } from '../../IPC/IPCServer';
 
-interface ThumbnailCreateFinModelInterface extends Model {
-    set(): void;
-}
-
-class ThumbnailCreateFinModel extends Model implements ThumbnailCreateFinModelInterface {
+class ThumbnailCreateFinModel extends Model implements CallbackBaseModelInterface {
     private recordingManage: RecordingManageModelInterface;
     private thumbnailManage: ThumbnailManageModelInterface;
     private ipc: IPCServerInterface;
@@ -44,5 +41,5 @@ class ThumbnailCreateFinModel extends Model implements ThumbnailCreateFinModelIn
     }
 }
 
-export { ThumbnailCreateFinModelInterface, ThumbnailCreateFinModel }
+export default ThumbnailCreateFinModel;
 

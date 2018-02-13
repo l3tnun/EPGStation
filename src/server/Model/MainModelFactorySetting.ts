@@ -34,12 +34,12 @@ import { ReservationManageModel } from './Operator/Reservation/ReservationManage
 import { RuleManageModel } from './Operator/Rule/RuleManageModel';
 import { StorageCheckManageModel } from './Operator/Storage/StorageCheckManageModel';
 import { ThumbnailManageModel } from './Operator/Thumbnail/ThumbnailManageModel';
-import { EPGUpdateFinModel } from './Operator/Callbacks/EPGUpdateFinModel';
-import { RuleUpdateFinModel } from './Operator/Callbacks/RuleUpdateFinModel';
 import { ExternalProcessModel } from './Operator/ExternalProcessModel';
-import { RecordingStartModel } from './Operator/Callbacks/RecordingStartModel';
-import { RecordingFinModel } from './Operator/Callbacks/RecordingFinModel';
-import { ThumbnailCreateFinModel } from './Operator/Callbacks/ThumbnailCreateFinModel';
+import EPGUpdateFinModel from './Operator/Callbacks/EPGUpdateFinModel';
+import RuleUpdateFinModel from './Operator/Callbacks/RuleUpdateFinModel';
+import RecordingStartModel from './Operator/Callbacks/RecordingStartModel';
+import RecordingFinModel from './Operator/Callbacks/RecordingFinModel';
+import ThumbnailCreateFinModel from './Operator/Callbacks/ThumbnailCreateFinModel';
 
 import { IPCServer } from './IPC/IPCServer';
 import Util from '../Util/Util';

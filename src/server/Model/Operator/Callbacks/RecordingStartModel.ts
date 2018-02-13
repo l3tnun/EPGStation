@@ -1,18 +1,15 @@
 import Model from '../../Model';
+import CallbackBaseModelInterface from './CallbackBaseModelInterface';
 import * as DBSchema from '../../DB/DBSchema';
 import { RecordingManageModelInterface } from '../../Operator/Recording/RecordingManageModel';
 import { ExternalProcessModelInterface } from '../../Operator/ExternalProcessModel';
 import { IPCServerInterface } from '../../IPC/IPCServer';
 
-interface RecordingStartModelInterface extends Model {
-    set(): void;
-}
-
 /**
 * RecordingStartModel
 * 録画開始後の処理
 */
-class RecordingStartModel extends Model implements RecordingStartModelInterface {
+class RecordingStartModel extends Model implements CallbackBaseModelInterface {
     private recordingManage: RecordingManageModelInterface;
     private externalProcess: ExternalProcessModelInterface;
     private ipc: IPCServerInterface;
@@ -48,5 +45,5 @@ class RecordingStartModel extends Model implements RecordingStartModelInterface 
     }
 }
 
-export { RecordingStartModelInterface, RecordingStartModel }
+export default RecordingStartModel;
 

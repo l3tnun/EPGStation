@@ -1,4 +1,5 @@
 import Model from '../../Model';
+import CallbackBaseModelInterface from './CallbackBaseModelInterface';
 import * as DBSchema from '../../DB/DBSchema';
 import { EncodeInterface } from '../../Operator/RuleInterface';
 import { RecordingManageModelInterface } from '../../Operator/Recording/RecordingManageModel';
@@ -6,15 +7,11 @@ import { ThumbnailManageModelInterface } from '../../Operator/Thumbnail/Thumbnai
 import { ExternalProcessModelInterface } from '../../Operator/ExternalProcessModel';
 import { IPCServerInterface } from '../../IPC/IPCServer';
 
-interface RecordingFinModelInterface extends Model {
-    set(): void;
-}
-
 /**
 * RecordingFinModel
 * 録画終了後の処理
 */
-class RecordingFinModel extends Model implements RecordingFinModelInterface {
+class RecordingFinModel extends Model implements CallbackBaseModelInterface {
     private recordingManage: RecordingManageModelInterface;
     private thumbnailManage: ThumbnailManageModelInterface;
     private externalProcess: ExternalProcessModelInterface;
@@ -101,5 +98,5 @@ class RecordingFinModel extends Model implements RecordingFinModelInterface {
     }
 }
 
-export { RecordingFinModelInterface, RecordingFinModel };
+export default RecordingFinModel;
 

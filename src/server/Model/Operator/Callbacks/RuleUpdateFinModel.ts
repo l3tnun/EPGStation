@@ -1,18 +1,15 @@
 import Model from '../../Model';
+import CallbackBaseModelInterface from './CallbackBaseModelInterface';
 import { ReservationManageModelInterface } from '../../Operator/Reservation/ReservationManageModel';
 import { RecordingManageModelInterface } from '../../Operator/Recording/RecordingManageModel';
 import { RuleEventStatus, RuleManageModelInterface } from '../../Operator/Rule/RuleManageModel';
 import Util from '../../../Util/Util';
 
-interface RuleUpdateFinModelInterface extends Model {
-    set(): void;
-}
-
 /**
 * RuleUpdateFinModel
 * Rule 更新終了後の処理
 */
-class RuleUpdateFinModel extends Model implements RuleUpdateFinModelInterface {
+class RuleUpdateFinModel extends Model implements CallbackBaseModelInterface {
     private reservationManage: ReservationManageModelInterface;
     private recordingManage: RecordingManageModelInterface;
     private ruleManage: RuleManageModelInterface;
@@ -66,5 +63,5 @@ class RuleUpdateFinModel extends Model implements RuleUpdateFinModelInterface {
     }
 }
 
-export { RuleUpdateFinModelInterface, RuleUpdateFinModel }
+export default RuleUpdateFinModel;
 

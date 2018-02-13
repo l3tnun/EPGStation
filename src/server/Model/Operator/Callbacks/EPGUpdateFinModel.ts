@@ -1,17 +1,14 @@
 import * as apid from '../../../../../node_modules/mirakurun/api';
 import Model from '../../Model';
+import CallbackBaseModelInterface from './CallbackBaseModelInterface';
 import { MirakurunManageModelInterface } from '../../Operator/EPGUpdate/MirakurunManageModel';
 import { ReservationManageModelInterface } from '../../Operator/Reservation/ReservationManageModel';
-
-interface EPGUpdateFinModelInterface extends Model {
-    set(): void;
-}
 
 /**
 * EPGUpdateFinModel
 * EPG 更新終了後の処理
 */
-class EPGUpdateFinModel extends Model implements EPGUpdateFinModelInterface {
+class EPGUpdateFinModel extends Model implements CallbackBaseModelInterface {
     private mirakurunManage: MirakurunManageModelInterface;
     private reservationManage: ReservationManageModelInterface;
     
@@ -44,5 +41,5 @@ class EPGUpdateFinModel extends Model implements EPGUpdateFinModelInterface {
     }
 }
 
-export { EPGUpdateFinModelInterface, EPGUpdateFinModel };
+export default EPGUpdateFinModel;
 

@@ -5,11 +5,7 @@ import { MirakurunManageModelInterface } from '../Model/Operator/EPGUpdate/Mirak
 import { ReservationManageModelInterface } from '../Model/Operator/Reservation/ReservationManageModel';
 import { RecordingManageModelInterface } from '../Model/Operator/Recording/RecordingManageModel';
 import { StorageCheckManageModelInterface } from '../Model/Operator/Storage/StorageCheckManageModel'
-import { EPGUpdateFinModelInterface } from '../Model/Operator/Callbacks/EPGUpdateFinModel';
-import { RuleUpdateFinModelInterface } from '../Model/Operator/Callbacks/RuleUpdateFinModel';
-import { RecordingStartModelInterface } from '../Model/Operator/Callbacks/RecordingStartModel';
-import { RecordingFinModelInterface } from '../Model/Operator/Callbacks/RecordingFinModel';
-import { ThumbnailCreateFinModelInterface } from '../Model/Operator/Callbacks/ThumbnailCreateFinModel';
+import CallbackBaseModelInterface from '../Model/Operator/Callbacks/CallbackBaseModelInterface';
 
 /**
 * Operator
@@ -19,11 +15,6 @@ class Operator extends Base {
     private mirakurunManage: MirakurunManageModelInterface;
     private recordingManage: RecordingManageModelInterface;
     private storageCheckManage: StorageCheckManageModelInterface;
-    private epgUpdateFinModel: EPGUpdateFinModelInterface;
-    private ruleUpdateFinModel: RuleUpdateFinModelInterface;
-    private recordingStartModel: RecordingStartModelInterface;
-    private recordingFinModel: RecordingFinModelInterface;
-    private thumbnailCreateFinModel: ThumbnailCreateFinModelInterface;
 
     constructor() {
         super();
@@ -33,6 +24,11 @@ class Operator extends Base {
         });
 
         process.on('unhandledRejection', console.dir);
+
+        this.mirakurunManage = <MirakurunManageModelInterface>factory.get('MirakurunManageModel');
+        this.reservationManage = <ReservationManageModelInterface>factory.get('ReservationManageModel');
+        this.recordingManage = <RecordingManageModelInterface>factory.get('RecordingManageModel');
+        this.storageCheckManage = <StorageCheckManageModelInterface>factory.get('StorageCheckManageModel');
     }
 
     /**
@@ -42,21 +38,12 @@ class Operator extends Base {
         // DB init
         (<DBInitializationModelInterface>factory.get('DBInitializationModel')).run();
 
-        this.mirakurunManage = <MirakurunManageModelInterface>factory.get('MirakurunManageModel');
-        this.reservationManage = <ReservationManageModelInterface>factory.get('ReservationManageModel');
-        this.recordingManage = <RecordingManageModelInterface>factory.get('RecordingManageModel');
-        this.storageCheckManage = <StorageCheckManageModelInterface>factory.get('StorageCheckManageModel');
-        this.epgUpdateFinModel = <EPGUpdateFinModelInterface>factory.get('EPGUpdateFinModel');
-        this.ruleUpdateFinModel = <RuleUpdateFinModelInterface>factory.get('RuleUpdateFinModel');
-        this.recordingStartModel = <RecordingStartModelInterface>factory.get('RecordingStartModel');
-        this.recordingFinModel = <RecordingFinModelInterface>factory.get('RecordingFinModel');
-        this.thumbnailCreateFinModel = <ThumbnailCreateFinModelInterface>factory.get('ThumbnailCreateFinModel');
-
-        this.epgUpdateFinModel.set();
-        this.ruleUpdateFinModel.set();
-        this.recordingStartModel.set();
-        this.recordingFinModel.set();
-        this.thumbnailCreateFinModel.set();
+        // set callback
+        (<CallbackBaseModelInterface>factory.get('EPGUpdateFinModel')).set();
+        (<CallbackBaseModelInterface>factory.get('RuleUpdateFinModel')).set();
+        (<CallbackBaseModelInterface>factory.get('RecordingStartModel')).set();
+        (<CallbackBaseModelInterface>factory.get('RecordingFinModel')).set();
+        (<CallbackBaseModelInterface>factory.get('ThumbnailCreateFinModel')).set();
     }
 
     /**
