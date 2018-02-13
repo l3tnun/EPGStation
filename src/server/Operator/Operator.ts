@@ -1,10 +1,8 @@
 import Base from '../Base';
-import Util from '../Util/Util';
 import factory from '../Model/ModelFactory';
 import * as DBSchema from '../Model/DB/DBSchema';
 import { DBInitializationModelInterface } from '../Model/Operator/DBInitializationModel';
 import { MirakurunManageModelInterface } from '../Model/Operator/EPGUpdate/MirakurunManageModel';
-import { RuleEventStatus, RuleManageModelInterface } from '../Model/Operator/Rule/RuleManageModel';
 import { ReservationManageModelInterface } from '../Model/Operator/Reservation/ReservationManageModel';
 import { RecordingManageModelInterface } from '../Model/Operator/Recording/RecordingManageModel';
 import { ThumbnailManageModelInterface } from '../Model/Operator/Thumbnail/ThumbnailManageModel';
@@ -13,13 +11,13 @@ import { EncodeInterface } from '../Model/Operator/RuleInterface';
 import { ExternalProcessModelInterface } from '../Model/Operator/ExternalProcessModel';
 import { IPCServerInterface } from '../Model/IPC/IPCServer';
 import { EPGUpdateFinModelInterface } from '../Model/Operator/Callbacks/EPGUpdateFinModel';
+import { RuleUpdateFinModelInterface } from '../Model/Operator/Callbacks/RuleUpdateFinModel';
 
 /**
 * Operator
 */
 class Operator extends Base {
     private reservationManage: ReservationManageModelInterface;
-    private ruleManage: RuleManageModelInterface;
     private mirakurunManage: MirakurunManageModelInterface;
     private recordingManage: RecordingManageModelInterface;
     private thumbnailManage: ThumbnailManageModelInterface;
@@ -27,6 +25,7 @@ class Operator extends Base {
     private externalProcess: ExternalProcessModelInterface;
     private storageCheckManage: StorageCheckManageModelInterface;
     private epgUpdateFinModel: EPGUpdateFinModelInterface;
+    private ruleUpdateFinModel: RuleUpdateFinModelInterface;
 
     constructor() {
         super();
@@ -48,53 +47,20 @@ class Operator extends Base {
         // DB init
         (<DBInitializationModelInterface>factory.get('DBInitializationModel')).run();
 
-        this.ruleManage = <RuleManageModelInterface>factory.get('RuleManageModel');
         this.mirakurunManage = <MirakurunManageModelInterface>factory.get('MirakurunManageModel');
         this.reservationManage = <ReservationManageModelInterface>factory.get('ReservationManageModel');
         this.recordingManage = <RecordingManageModelInterface>factory.get('RecordingManageModel');
         this.thumbnailManage = <ThumbnailManageModelInterface>factory.get('ThumbnailManageModel');
         this.storageCheckManage = <StorageCheckManageModelInterface>factory.get('StorageCheckManageModel');
         this.epgUpdateFinModel = <EPGUpdateFinModelInterface>factory.get('EPGUpdateFinModel');
+        this.ruleUpdateFinModel = <RuleUpdateFinModelInterface>factory.get('RuleUpdateFinModel');
 
         //addListener
         this.epgUpdateFinModel.set();
-        this.ruleManage.addListener((id, status) => { this.ruleUpdateCallback(id, status); });
+        this.ruleUpdateFinModel.set();
         this.recordingManage.recStartListener((program) => { this.recordingStartCallback(program); });
         this.recordingManage.recEndListener((program, encode) => { this.recordingFinCallback(program, encode); });
         this.thumbnailManage.addListener((id, thumbnailPath) => { this.thumbnailCreateCallback(id, thumbnailPath); });
-    }
-
-    /**
-    * ルール更新終了の callback
-    * @param ruleId: rule id
-    * @param status: RuleEventStatus
-    * @param isRetry: true: retry, false: retry ではない
-    */
-    private async ruleUpdateCallback(ruleId: number, status: RuleEventStatus, isRetry: boolean = false): Promise<void> {
-        // ルールが削除 or 無効化されたとき、そのルールの予約を停止する
-        if(!isRetry && (status === 'delete' || status === 'disable')) {
-            this.recordingManage.stopRuleId(ruleId);
-        }
-
-        // ルールが削除されたとき recorded の整合性をとる
-        if(!isRetry && status === 'delete') {
-            // SQLite3 使用時に正しく動作しないので sleep
-            await Util.sleep(100);
-            try {
-                await this.recordingManage.deleteRule(ruleId);
-            } catch(err) {
-                this.log.system.error(err);
-            }
-        }
-
-        // ルールが更新されたので予約を更新する
-        try {
-            await this.reservationManage.updateRule(ruleId);
-        } catch(err) {
-            this.log.system.error('ReservationManage update Error');
-            this.log.system.error(err);
-            setTimeout(() => { this.ruleUpdateCallback(ruleId, status, true) }, 1000);
-        }
     }
 
     /**

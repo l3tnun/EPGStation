@@ -35,6 +35,7 @@ import { RuleManageModel } from './Operator/Rule/RuleManageModel';
 import { StorageCheckManageModel } from './Operator/Storage/StorageCheckManageModel';
 import { ThumbnailManageModel } from './Operator/Thumbnail/ThumbnailManageModel';
 import { EPGUpdateFinModel } from './Operator/Callbacks/EPGUpdateFinModel';
+import { RuleUpdateFinModel } from './Operator/Callbacks/RuleUpdateFinModel';
 
 import { IPCServer } from './IPC/IPCServer';
 import { ExternalProcessModel } from './Operator/ExternalProcessModel';
@@ -117,16 +118,21 @@ namespace ModelFactorySetting {
             ipc,
         );
         const thumbnailManageModel = new ThumbnailManageModel();
+        const epgUpdateFinModel = new EPGUpdateFinModel(
+            mirakurunManage,
+            reservationManage,
+        );
+        const ruleUpdateFinModel = new RuleUpdateFinModel(
+            reservationManage,
+            recordingManage,
+            ruleManageModel,
+        );
 
         ipc.setModels(
             mirakurunManage,
             reservationManage,
             recordingManage,
             ruleManageModel,
-        );
-        const epgUpdateFinModel = new EPGUpdateFinModel(
-            mirakurunManage,
-            reservationManage,
         );
 
         // reg
@@ -145,6 +151,7 @@ namespace ModelFactorySetting {
         factory.reg('IPCServer', () => { return ipc; });
         factory.reg('ExternalProcessModel', () => { return new ExternalProcessModel(); });
         factory.reg('EPGUpdateFinModel', () => { return epgUpdateFinModel; });
+        factory.reg('RuleUpdateFinModel', () => { return ruleUpdateFinModel; });
     }
 }
 
