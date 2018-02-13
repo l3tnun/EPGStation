@@ -39,6 +39,7 @@ import { RuleUpdateFinModel } from './Operator/Callbacks/RuleUpdateFinModel';
 import { ExternalProcessModel } from './Operator/ExternalProcessModel';
 import { RecordingStartModel } from './Operator/Callbacks/RecordingStartModel';
 import { RecordingFinModel } from './Operator/Callbacks/RecordingFinModel';
+import { ThumbnailCreateFinModel } from './Operator/Callbacks/ThumbnailCreateFinModel';
 
 import { IPCServer } from './IPC/IPCServer';
 import Util from '../Util/Util';
@@ -141,6 +142,11 @@ namespace ModelFactorySetting {
             externalProcess,
             ipc,
         );
+        const thumbnailCreateFinModel = new ThumbnailCreateFinModel(
+            recordingManage,
+            thumbnailManageModel,
+            ipc,
+        );
 
         ipc.setModels(
             mirakurunManage,
@@ -167,6 +173,7 @@ namespace ModelFactorySetting {
         factory.reg('RuleUpdateFinModel', () => { return ruleUpdateFinModel; });
         factory.reg('RecordingStartModel', () => { return recordingStartModel; });
         factory.reg('RecordingFinModel', () => { return recordingFinModel; });
+        factory.reg('ThumbnailCreateFinModel', () => { return thumbnailCreateFinModel; });
     }
 }
 
