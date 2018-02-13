@@ -5,7 +5,7 @@ import { ReserveAllId, ReserveLimit } from '../Operator/Reservation/ReservationM
 import { EncodeInterface, RuleInterface } from '../Operator/RuleInterface';
 import * as apid from '../../../../node_modules/mirakurun/api';
 import { SocketIoManageModelInterface } from '../Service/SocketIoManageModel';
-import { EncodeModelInterface } from '../Encode/EncodeModel';
+import { EncodeModelInterface } from '../Service/Encode/EncodeModel';
 
 interface IPCClientInterface extends Model {
     getReserveAllId(): Promise<ReserveAllId>;

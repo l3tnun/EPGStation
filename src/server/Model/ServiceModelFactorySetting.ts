@@ -33,7 +33,7 @@ import { ConfigModel } from './Api/ConfigModel';
 import { StorageModel } from './Api/StorageModel';
 import { EncodeProcessManageModel } from './Service/Encode/EncodeProcessManageModel';
 import { EncodeManageModel } from './Service/Encode/EncodeManageModel';
-import { EncodeModel } from './Encode/EncodeModel';
+import { EncodeModel } from './Service/Encode/EncodeModel';
 import { StreamsModel } from './Api/StreamsModel';
 import { SocketIoManageModel } from './Service/SocketIoManageModel';
 import { StreamManageModel } from './Service/Stream/StreamManageModel';
@@ -92,16 +92,16 @@ namespace ModelFactorySetting {
         const socketIoServer = new SocketIoManageModel();
         factory.reg('SocketIoManageModel', () => { return socketIoServer; });
 
+        const ipc = new IPCClient()
+
         const encodeModel = new EncodeModel(
             encodeManage,
             socketIoServer,
             recordedDB!,
+            ipc,
         );
 
-        const ipc = new IPCClient()
         ipc.setModels(encodeModel, socketIoServer);
-
-        encodeModel.setIPC(ipc);
 
         const streamManage = new StreamManageModel(socketIoServer);
 

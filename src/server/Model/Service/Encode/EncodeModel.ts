@@ -1,11 +1,10 @@
-import Model from '../Model';
-import { EncodeManageModelInterface, EncodeProgram } from '../Service/Encode/EncodeManageModel';
-import { SocketIoManageModelInterface } from '../Service/SocketIoManageModel';
-import { IPCClientInterface } from '../IPC/IPCClient';
-import { RecordedDBInterface } from '../DB/RecordedDB';
+import Model from '../../Model';
+import { EncodeManageModelInterface, EncodeProgram } from './EncodeManageModel';
+import { SocketIoManageModelInterface } from '../SocketIoManageModel';
+import { IPCClientInterface } from '../../IPC/IPCClient';
+import { RecordedDBInterface } from '../../DB/RecordedDB';
 
 interface EncodeModelInterface extends Model {
-    setIPC(ipc: IPCClientInterface): void;
     push(program: EncodeProgram): void;
 }
 
@@ -23,21 +22,16 @@ class EncodeModel extends Model implements EncodeModelInterface {
         encodeManage: EncodeManageModelInterface,
         socket: SocketIoManageModelInterface,
         recordedDB: RecordedDBInterface,
+        ipc: IPCClientInterface,
     ) {
         super();
         this.encodeManage = encodeManage;
         this.socket = socket;
         this.recordedDB = recordedDB;
+        this.ipc = ipc;
 
         this.encodeManage.addEncodeDoneListener((id, name, filePath, delTs, isTsModify) => { this.encodeFinCallback(id, name, filePath, delTs, isTsModify); });
         this.encodeManage.addEncodeErrorListener(() => { this.encodeErrorCallback(); });
-    }
-
-    /**
-    * IPCClient をセット
-    */
-    public setIPC(ipc: IPCClientInterface): void {
-        this.ipc = ipc;
     }
 
     /**
