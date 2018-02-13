@@ -36,7 +36,7 @@ import { StorageCheckManageModel } from './Operator/Storage/StorageCheckManageMo
 import { ThumbnailManageModel } from './Operator/Thumbnail/ThumbnailManageModel';
 
 import { IPCServer } from './IPC/IPCServer';
-import { ExternalProcessModel } from './ExternalProcessModel';
+import { ExternalProcessModel } from './Operator/ExternalProcessModel';
 import Util from '../Util/Util';
 
 /**

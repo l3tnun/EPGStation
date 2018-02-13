@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import { spawn } from 'child_process';
-import Model from './Model';
-import { RecordedSchema } from './DB/DBSchema';
+import Model from '../Model';
+import { RecordedSchema } from '../DB/DBSchema';
 
 interface ExternalProcessModelInterface extends Model {
     run(cmd: string, program: RecordedSchema): void;

@@ -11,8 +11,8 @@ import { RecordingManageModelInterface } from '../Model/Operator/Recording/Recor
 import { ThumbnailManageModelInterface } from '../Model/Operator/Thumbnail/ThumbnailManageModel';
 import { StorageCheckManageModelInterface } from '../Model/Operator/Storage/StorageCheckManageModel'
 import { EncodeInterface } from '../Model/Operator/RuleInterface';
+import { ExternalProcessModelInterface } from '../Model/Operator/ExternalProcessModel';
 import { IPCServerInterface } from '../Model/IPC/IPCServer';
-import { ExternalProcessModelInterface } from '../Model/ExternalProcessModel';
 
 /**
 * Operator
