@@ -1,4 +1,3 @@
-import * as apid from '../../../node_modules/mirakurun/api';
 import Base from '../Base';
 import Util from '../Util/Util';
 import factory from '../Model/ModelFactory';
@@ -13,6 +12,7 @@ import { StorageCheckManageModelInterface } from '../Model/Operator/Storage/Stor
 import { EncodeInterface } from '../Model/Operator/RuleInterface';
 import { ExternalProcessModelInterface } from '../Model/Operator/ExternalProcessModel';
 import { IPCServerInterface } from '../Model/IPC/IPCServer';
+import { EPGUpdateFinModelInterface } from '../Model/Operator/Callbacks/EPGUpdateFinModel';
 
 /**
 * Operator
@@ -26,6 +26,7 @@ class Operator extends Base {
     private ipc: IPCServerInterface;
     private externalProcess: ExternalProcessModelInterface;
     private storageCheckManage: StorageCheckManageModelInterface;
+    private epgUpdateFinModel: EPGUpdateFinModelInterface;
 
     constructor() {
         super();
@@ -53,31 +54,14 @@ class Operator extends Base {
         this.recordingManage = <RecordingManageModelInterface>factory.get('RecordingManageModel');
         this.thumbnailManage = <ThumbnailManageModelInterface>factory.get('ThumbnailManageModel');
         this.storageCheckManage = <StorageCheckManageModelInterface>factory.get('StorageCheckManageModel');
+        this.epgUpdateFinModel = <EPGUpdateFinModelInterface>factory.get('EPGUpdateFinModel');
 
         //addListener
-        this.mirakurunManage.addListener((tuners) => { this.epgUpdateCallback(tuners); });
+        this.epgUpdateFinModel.set();
         this.ruleManage.addListener((id, status) => { this.ruleUpdateCallback(id, status); });
         this.recordingManage.recStartListener((program) => { this.recordingStartCallback(program); });
         this.recordingManage.recEndListener((program, encode) => { this.recordingFinCallback(program, encode); });
         this.thumbnailManage.addListener((id, thumbnailPath) => { this.thumbnailCreateCallback(id, thumbnailPath); });
-    }
-
-    /**
-    * EPG 更新終了の callback
-    * @param tuners: apid.TunerDevice[]
-    */
-    private async epgUpdateCallback(tuners: apid.TunerDevice[]): Promise<void> {
-        this.reservationManage.setTuners(tuners);
-
-        //すべての予約を更新
-        try {
-            await this.reservationManage.updateAll();
-        } catch(err) {
-            this.log.system.error('ReservationManage update Error');
-            this.log.system.error(err);
-
-            setTimeout(() => { this.epgUpdateCallback(tuners) }, 1000);
-        };
     }
 
     /**
