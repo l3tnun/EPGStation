@@ -88,23 +88,19 @@ namespace ModelFactorySetting {
 
         const encodeProcessManage = new EncodeProcessManageModel();
         const encodeManage = new EncodeManageModel(encodeProcessManage);
-
-        const socketIoServer = new SocketIoManageModel();
-        factory.reg('SocketIoManageModel', () => { return socketIoServer; });
-
+        const socketIoManage = new SocketIoManageModel();
         const ipc = new IPCClient()
-
         const encodeModel = new EncodeModel(
             encodeManage,
-            socketIoServer,
+            socketIoManage,
             recordedDB!,
             ipc,
         );
+        const streamManage = new StreamManageModel(socketIoManage);
 
-        ipc.setModels(encodeModel, socketIoServer);
+        ipc.setModels(encodeModel, socketIoManage);
 
-        const streamManage = new StreamManageModel(socketIoServer);
-
+        factory.reg('SocketIoManageModel', () => { return socketIoManage; });
         factory.reg('RulesModel', () => { return new RulesModel(ipc, rulesDB) });
         factory.reg('RecordedModel', () => { return new RecordedModel(
             ipc,

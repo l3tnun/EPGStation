@@ -87,12 +87,6 @@ namespace ModelFactorySetting {
                 break;
         }
 
-        factory.reg('ServicesDB', () => { return servicesDB; });
-        factory.reg('ProgramsDB', () => { return programsDB; });
-        factory.reg('RulesDB', () => { return rulesDB; });
-        factory.reg('RecordedDB', () => { return recordedDB; });
-        factory.reg('EncodedDB', () => { return encodedDB; });
-
         // set Operator Manage Models
         const dbInitializationModel = new DBInitializationModel(
             servicesDB!,
@@ -101,10 +95,7 @@ namespace ModelFactorySetting {
             recordedDB!,
             encodedDB!,
         );
-        factory.reg('DBInitializationModel', () => { return dbInitializationModel; });
-
         const ipc = new IPCServer();
-
         const reservationManage = new ReservationManageModel(
             programsDB!,
             rulesDB!,
@@ -133,16 +124,20 @@ namespace ModelFactorySetting {
             ruleManageModel,
         );
 
+        // reg
+        factory.reg('ServicesDB', () => { return servicesDB; });
+        factory.reg('ProgramsDB', () => { return programsDB; });
+        factory.reg('RulesDB', () => { return rulesDB; });
+        factory.reg('RecordedDB', () => { return recordedDB; });
+        factory.reg('EncodedDB', () => { return encodedDB; });
+        factory.reg('DBInitializationModel', () => { return dbInitializationModel; });
         factory.reg('MirakurunManageModel', () => { return mirakurunManage });
         factory.reg('ReservationManageModel', () => { return reservationManage; });
         factory.reg('RecordingManageModel', () => { return recordingManage; });
         factory.reg('RuleManageModel', () => { return ruleManageModel; });
         factory.reg('StorageCheckManageModel', () => { return storageCheckManageModel; });
         factory.reg('ThumbnailManageModel', () => { return thumbnailManageModel; });
-
-        // set IPCServer
         factory.reg('IPCServer', () => { return ipc; });
-
         factory.reg('ExternalProcessModel', () => { return new ExternalProcessModel(); });
     }
 }
