@@ -28,7 +28,6 @@ interface RecordingManageModelInterface extends Model {
     recStartListener(callback: (program: DBSchema.RecordedSchema) => void): void;
     recEndListener(callback: (program: DBSchema.RecordedSchema | null, encodeOption: EncodeInterface | null) => void): void;
     deleteAll(id: number): Promise<void>;
-    deleteRule(id: number): Promise<void>;
     check(reserves: ReserveProgram[]): void;
     stop(id: number): void;
     stopRuleId(ruleId: number): void;
@@ -144,16 +143,6 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
                 }
             });
         }
-    }
-
-    /**
-    * id で指定した ruleId をもつ recorded 内のプログラムの ruleId をすべて削除(nullにする)
-    * rule が削除されたときに呼ぶ
-    * @param id: rule id
-    */
-    public deleteRule(id: number): Promise<void> {
-        this.log.system.info(`delete recorded program ruleId ${ id }`);
-        return this.recordedDB.deleteRuleId(id);
     }
 
     /**

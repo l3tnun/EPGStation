@@ -5,6 +5,7 @@ import { EncodedDBInterface } from '../../DB/EncodedDB';
 import FileUtil from '../../../Util/FileUtil';
 
 interface RecordedManageModelInterface extends Model {
+    deleteRule(id: number): Promise<void>;
     addThumbnail(id: number, thumbnailPath: string): Promise<void>;
     addEncodeFile(recordedId: number, name: string, filePath: string, delTs: boolean): Promise<number>;
 }
@@ -22,6 +23,16 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
 
         this.recordedDB = recordedDB;
         this.encodedDB = encodedDB;
+    }
+
+    /**
+    * id で指定した ruleId をもつ recorded 内のプログラムの ruleId をすべて削除(nullにする)
+    * rule が削除されたときに呼ぶ
+    * @param id: rule id
+    */
+    public deleteRule(id: number): Promise<void> {
+        this.log.system.info(`delete recorded program ruleId ${ id }`);
+        return this.recordedDB.deleteRuleId(id);
     }
 
     /**

@@ -2,6 +2,7 @@ import Model from '../../Model';
 import CallbackBaseModelInterface from './CallbackBaseModelInterface';
 import { ReservationManageModelInterface } from '../../Operator/Reservation/ReservationManageModel';
 import { RecordingManageModelInterface } from '../../Operator/Recording/RecordingManageModel';
+import { RecordedManageModelInterface } from '../../Operator/Recorded/RecordedManageModel';
 import { RuleEventStatus, RuleManageModelInterface } from '../../Operator/Rule/RuleManageModel';
 import Util from '../../../Util/Util';
 
@@ -12,16 +13,19 @@ import Util from '../../../Util/Util';
 class RuleUpdateFinModel extends Model implements CallbackBaseModelInterface {
     private reservationManage: ReservationManageModelInterface;
     private recordingManage: RecordingManageModelInterface;
+    private recordedManage: RecordedManageModelInterface;
     private ruleManage: RuleManageModelInterface;
 
     constructor(
         reservationManage: ReservationManageModelInterface,
         recordingManage: RecordingManageModelInterface,
+        recordedManage: RecordedManageModelInterface,
         ruleManage: RuleManageModelInterface,
     ) {
         super();
 
         this.recordingManage = recordingManage;
+        this.recordedManage = recordedManage;
         this.reservationManage = reservationManage;
         this.ruleManage = ruleManage;
     }
@@ -46,7 +50,7 @@ class RuleUpdateFinModel extends Model implements CallbackBaseModelInterface {
             // SQLite3 使用時に正しく動作しないので sleep
             await Util.sleep(100);
             try {
-                await this.recordingManage.deleteRule(ruleId);
+                await this.recordedManage.deleteRule(ruleId);
             } catch(err) {
                 this.log.system.error(err);
             }

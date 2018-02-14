@@ -133,6 +133,7 @@ namespace ModelFactorySetting {
         const ruleUpdateFinModel = new RuleUpdateFinModel(
             reservationManage,
             recordingManage,
+            recordedManage,
             ruleManageModel,
         );
         const externalProcess = new ExternalProcessModel();
