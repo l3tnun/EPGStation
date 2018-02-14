@@ -110,7 +110,6 @@ namespace ModelFactorySetting {
         const mirakurunManage = new MirakurunManageModel();
         const recordingManage = new RecordingManageModel(
             recordedDB!,
-            encodedDB!,
             servicesDB!,
             programsDB!,
             reservationManage,
@@ -118,11 +117,12 @@ namespace ModelFactorySetting {
         const recordedManage = new RecordedManageModel(
             recordedDB!,
             encodedDB!,
+            recordingManage,
         );
         const ruleManageModel = new RuleManageModel(rulesDB!);
         const storageCheckManageModel = new StorageCheckManageModel(
             recordedDB!,
-            recordingManage,
+            recordedManage,
             ipc,
         );
         const thumbnailManageModel = new ThumbnailManageModel();

@@ -162,7 +162,7 @@ class IPCServer extends Model implements IPCServerInterface {
             let recordedId: number = args.recordedId;
 
             try {
-                await this.recordingManage.deleteAll(recordedId);
+                await this.recordedManage.delete(recordedId);
                 this.send({ id: id });
             } catch(err) {
                  this.send({ id: id, error: err.message });

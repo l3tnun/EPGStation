@@ -5,7 +5,7 @@ import Model from '../../Model';
 import { RecordedDBInterface } from '../../DB/RecordedDB';
 import { IPCServerInterface } from '../../IPC/IPCServer';
 import Util from '../../../Util/Util';
-import { RecordingManageModelInterface } from '../Recording/RecordingManageModel';
+import { RecordedManageModelInterface } from '../Recorded/RecordedManageModel';
 
 interface StorageCheckManageModelInterface extends Model {
     check(threshold: number): Promise<number>;
@@ -17,7 +17,7 @@ interface StorageCheckManageModelInterface extends Model {
 class StorageCheckManageModel extends Model implements StorageCheckManageModelInterface {
     private recordedDB: RecordedDBInterface;
     private ipc: IPCServerInterface;
-    private recordingManage: RecordingManageModelInterface;
+    private recordedManage: RecordedManageModelInterface;
     private intervalTime: number;
     private dir: string;
     private action: 'remove' | 'none';
@@ -25,14 +25,14 @@ class StorageCheckManageModel extends Model implements StorageCheckManageModelIn
 
     constructor(
         recordedDB: RecordedDBInterface,
-        recordingManage: RecordingManageModelInterface,
+        recordedManage: RecordedManageModelInterface,
         ipc: IPCServerInterface,
     ) {
         super();
 
         this.recordedDB = recordedDB;
         this.ipc = ipc;
-        this.recordingManage = recordingManage;
+        this.recordedManage = recordedManage;
         const config = this.config.getConfig();
         this.intervalTime = (config.storageLimitCheckIntervalTime | 60) * 1000;
         this.dir = Util.getRecordedPath();
@@ -73,7 +73,7 @@ class StorageCheckManageModel extends Model implements StorageCheckManageModelIn
             // 削除
             let recorded = await this.recordedDB.findOld();
             if(recorded !== null) {
-                await this.recordingManage.deleteAll(recorded.id);
+                await this.recordedManage.delete(recorded.id);
                 this.ipc.notifIo();
                 intervalTime = 1000;
             }

@@ -7,7 +7,6 @@ import Model from '../../Model';
 import Mirakurun from 'mirakurun';
 import * as apid from '../../../../../node_modules/mirakurun/api';
 import { RecordedDBInterface } from '../../DB/RecordedDB';
-import { EncodedDBInterface } from '../../DB/EncodedDB';
 import { ServicesDBInterface } from '../../DB/ServicesDB';
 import { ProgramsDBInterface } from '../../DB/ProgramsDB';
 import * as DBSchema from '../../DB/DBSchema';
@@ -27,7 +26,6 @@ interface recordingProgram {
 interface RecordingManageModelInterface extends Model {
     recStartListener(callback: (program: DBSchema.RecordedSchema) => void): void;
     recEndListener(callback: (program: DBSchema.RecordedSchema | null, encodeOption: EncodeInterface | null) => void): void;
-    deleteAll(id: number): Promise<void>;
     check(reserves: ReserveProgram[]): void;
     stop(id: number): void;
     stopRuleId(ruleId: number): void;
@@ -43,14 +41,12 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
     private recording: recordingProgram[] = [];
     private mirakurun: Mirakurun;
     private recordedDB: RecordedDBInterface;
-    private encodedDB: EncodedDBInterface;
     private servicesDB: ServicesDBInterface;
     private programsDB: ProgramsDBInterface;
     private reservationManage: ReservationManageModelInterface;
 
     constructor(
         recordedDB: RecordedDBInterface,
-        encodedDB: EncodedDBInterface,
         servicesDB: ServicesDBInterface,
         programsDB: ProgramsDBInterface,
         reservationManage: ReservationManageModelInterface,
@@ -58,7 +54,6 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
         super();
 
         this.recordedDB = recordedDB;
-        this.encodedDB = encodedDB;
         this.servicesDB = servicesDB;
         this.programsDB = programsDB;
         this.reservationManage = reservationManage;
@@ -83,66 +78,6 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
         this.listener.on(RecordingManageModel.RECORDING_FIN_EVENT, (program: DBSchema.RecordedSchema | null, encodeOption: EncodeInterface | null) => {
             callback(program, encodeOption);
         });
-    }
-
-    /**
-    * id で指定した録画を削除
-    * @param id: recorded id
-    * @throws RecordingManageModelNotFoundRecordedProgram id で指定したプログラムが存在しない場合
-    * @return Promise<void>
-    */
-    public async deleteAll(id: number): Promise<void> {
-        this.log.system.info(`delete recorded file ${ id }`);
-
-        // id で指定された recorded を取得
-        let recorded = await this.recordedDB.findId(id);
-        if(recorded === null) {
-            // id で指定された recorded がなかった
-            throw new Error('RecordingManageModelNotFoundRecordedProgram');
-        }
-
-        //エンコードデータを取得
-        let encoded = await this.encodedDB.findRecordedId(id)
-
-        //エンコードデータを DB 上から削除
-        await this.encodedDB.deleteRecordedId(id);
-        //録画データを DB 上から削除
-        await this.recordedDB.delete(id);
-
-        if(recorded.recording) {
-            //録画中なら録画停止
-            this.stop(recorded.programId);
-        }
-
-        if(recorded.recPath !== null) {
-            //録画実データを削除
-            fs.unlink(recorded.recPath, (err) => {
-            if(err) {
-                    this.log.system.error(`delete recorded error: ${ id }`);
-                    this.log.system.error(String(err));
-                }
-            });
-        }
-
-        //エンコード実データを削除
-        encoded.forEach((file) => {
-            fs.unlink(file.path, (err) => {
-                if(err) {
-                    this.log.system.error(`delete encode file error: ${ file.path }`);
-                    this.log.system.error(String(err));
-                }
-            });
-        });
-
-        //サムネイルを削除
-        if(recorded.thumbnailPath !== null) {
-            fs.unlink(recorded.thumbnailPath, (err) => {
-                if(err) {
-                    this.log.system.error(`recorded failed to delete thumbnail ${ id }`);
-                    this.log.system.error(String(err));
-                }
-            });
-        }
     }
 
     /**
