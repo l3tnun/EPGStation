@@ -158,7 +158,7 @@ class IPCServer extends Model implements IPCServerInterface {
         };
 
         // Recorded
-        this.functions[IPCMessageDefinition.recordedDeleteAll] = async (id: number, args: any) => {
+        this.functions[IPCMessageDefinition.recordedDelete] = async (id: number, args: any) => {
             let recordedId: number = args.recordedId;
 
             try {

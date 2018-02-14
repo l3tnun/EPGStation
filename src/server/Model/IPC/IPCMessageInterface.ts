@@ -33,7 +33,7 @@ namespace IPCMessageDefinition {
     export const addReserve  = 'addReserve';
     export const cancelReserve = 'cancelReserve';
     export const removeReserveSkip = 'removeReserveSkip';
-    export const recordedDeleteAll = 'recordedDeleteAll';
+    export const recordedDelete = 'recordedDelete';
     export const ruleDisable = 'ruleDisable';
     export const ruleEnable = 'ruleEnable';
     export const ruleDelete = 'ruleDelete';
