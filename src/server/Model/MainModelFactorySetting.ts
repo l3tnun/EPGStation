@@ -115,7 +115,7 @@ namespace ModelFactorySetting {
             programsDB!,
             reservationManage,
         );
-        const recordedManageModel = new RecordedManageModel(
+        const recordedManage = new RecordedManageModel(
             recordedDB!,
             encodedDB!,
         );
@@ -148,7 +148,7 @@ namespace ModelFactorySetting {
             ipc,
         );
         const thumbnailCreateFinModel = new ThumbnailCreateFinModel(
-            recordingManage,
+            recordedManage,
             thumbnailManageModel,
             ipc,
         );
@@ -157,7 +157,7 @@ namespace ModelFactorySetting {
             mirakurunManage,
             reservationManage,
             recordingManage,
-            recordedManageModel,
+            recordedManage,
             ruleManageModel,
         );
 
@@ -171,7 +171,7 @@ namespace ModelFactorySetting {
         factory.reg('MirakurunManageModel', () => { return mirakurunManage });
         factory.reg('ReservationManageModel', () => { return reservationManage; });
         factory.reg('RecordingManageModel', () => { return recordingManage; });
-        factory.reg('RecordedManageModel', () => { return recordedManageModel; });
+        factory.reg('RecordedManageModel', () => { return recordedManage; });
         factory.reg('RuleManageModel', () => { return ruleManageModel; });
         factory.reg('StorageCheckManageModel', () => { return storageCheckManageModel; });
         factory.reg('ThumbnailManageModel', () => { return thumbnailManageModel; });

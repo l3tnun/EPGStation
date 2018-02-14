@@ -5,6 +5,7 @@ import { EncodedDBInterface } from '../../DB/EncodedDB';
 import FileUtil from '../../../Util/FileUtil';
 
 interface RecordedManageModelInterface extends Model {
+    addThumbnail(id: number, thumbnailPath: string): Promise<void>;
     addEncodeFile(recordedId: number, name: string, filePath: string, delTs: boolean): Promise<number>;
 }
 
@@ -21,6 +22,17 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
 
         this.recordedDB = recordedDB;
         this.encodedDB = encodedDB;
+    }
+
+    /**
+    * サムネイルのパスを追加する
+    * @param id: recorded id
+    * @param thumbnailPath: thumbnail file path
+    * @return Promise<void>
+    */
+    public addThumbnail(id: number, thumbnailPath: string): Promise<void> {
+        this.log.system.info(`add thumbnail: ${ id }`);
+        return this.recordedDB.addThumbnail(id, thumbnailPath);
     }
 
     /**

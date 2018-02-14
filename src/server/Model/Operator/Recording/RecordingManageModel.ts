@@ -29,7 +29,6 @@ interface RecordingManageModelInterface extends Model {
     recEndListener(callback: (program: DBSchema.RecordedSchema | null, encodeOption: EncodeInterface | null) => void): void;
     deleteAll(id: number): Promise<void>;
     deleteRule(id: number): Promise<void>;
-    addThumbnail(id: number, thumbnailPath: string): Promise<void>;
     check(reserves: ReserveProgram[]): void;
     stop(id: number): void;
     stopRuleId(ruleId: number): void;
@@ -155,17 +154,6 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
     public deleteRule(id: number): Promise<void> {
         this.log.system.info(`delete recorded program ruleId ${ id }`);
         return this.recordedDB.deleteRuleId(id);
-    }
-
-    /**
-    * サムネイルのパスを追加する
-    * @param id: recorded id
-    * @param thumbnailPath: thumbnail file path
-    * @return Promise<void>
-    */
-    public addThumbnail(id: number, thumbnailPath: string): Promise<void> {
-        this.log.system.info(`add thumbnail: ${ id }`);
-        return this.recordedDB.addThumbnail(id, thumbnailPath);
     }
 
     /**

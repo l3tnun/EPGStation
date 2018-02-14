@@ -1,22 +1,22 @@
 import Model from '../../Model';
 import CallbackBaseModelInterface from './CallbackBaseModelInterface';
-import { RecordingManageModelInterface } from '../../Operator/Recording/RecordingManageModel';
+import { RecordedManageModelInterface } from '../../Operator/Recorded/RecordedManageModel';
 import { ThumbnailManageModelInterface } from '../../Operator/Thumbnail/ThumbnailManageModel';
 import { IPCServerInterface } from '../../IPC/IPCServer';
 
 class ThumbnailCreateFinModel extends Model implements CallbackBaseModelInterface {
-    private recordingManage: RecordingManageModelInterface;
+    private recordedManage: RecordedManageModelInterface;
     private thumbnailManage: ThumbnailManageModelInterface;
     private ipc: IPCServerInterface;
 
     constructor(
-        recordingManage: RecordingManageModelInterface,
+        recordedManage: RecordedManageModelInterface,
         thumbnailManage: ThumbnailManageModelInterface,
         ipc: IPCServerInterface,
     ) {
         super();
 
-        this.recordingManage = recordingManage;
+        this.recordedManage = recordedManage;
         this.thumbnailManage = thumbnailManage;
         this.ipc = ipc;
     }
@@ -31,7 +31,7 @@ class ThumbnailCreateFinModel extends Model implements CallbackBaseModelInterfac
     */
     private async callback(recordedId: number, thumbnailPath: string): Promise<void> {
         try {
-            await this.recordingManage.addThumbnail(recordedId, thumbnailPath);
+            await this.recordedManage.addThumbnail(recordedId, thumbnailPath);
 
             // socket.io で通知
             this.ipc.notifIo();
