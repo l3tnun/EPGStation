@@ -30,6 +30,7 @@ import PostgreSQLMigrationV1 from './DB/PostgreSQL/migrate/PostgreSQLMigrationV1
 import { DBInitializationModel } from './Operator/DBInitializationModel';
 import { MirakurunManageModel } from './Operator/EPGUpdate/MirakurunManageModel';
 import { RecordingManageModel } from './Operator/Recording/RecordingManageModel';
+import { RecordedManageModel } from './Operator/Recorded/RecordedManageModel';
 import { ReservationManageModel } from './Operator/Reservation/ReservationManageModel';
 import { RuleManageModel } from './Operator/Rule/RuleManageModel';
 import { StorageCheckManageModel } from './Operator/Storage/StorageCheckManageModel';
@@ -114,6 +115,10 @@ namespace ModelFactorySetting {
             programsDB!,
             reservationManage,
         );
+        const recordedManageModel = new RecordedManageModel(
+            recordedDB!,
+            encodedDB!,
+        );
         const ruleManageModel = new RuleManageModel(rulesDB!);
         const storageCheckManageModel = new StorageCheckManageModel(
             recordedDB!,
@@ -152,6 +157,7 @@ namespace ModelFactorySetting {
             mirakurunManage,
             reservationManage,
             recordingManage,
+            recordedManageModel,
             ruleManageModel,
         );
 
@@ -165,6 +171,7 @@ namespace ModelFactorySetting {
         factory.reg('MirakurunManageModel', () => { return mirakurunManage });
         factory.reg('ReservationManageModel', () => { return reservationManage; });
         factory.reg('RecordingManageModel', () => { return recordingManage; });
+        factory.reg('RecordedManageModel', () => { return recordedManageModel; });
         factory.reg('RuleManageModel', () => { return ruleManageModel; });
         factory.reg('StorageCheckManageModel', () => { return storageCheckManageModel; });
         factory.reg('ThumbnailManageModel', () => { return thumbnailManageModel; });

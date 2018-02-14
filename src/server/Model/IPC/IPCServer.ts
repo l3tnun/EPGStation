@@ -4,6 +4,7 @@ import { IPCClientMessage, IPCServerMessage, IPCMessageDefinition } from './IPCM
 import { MirakurunManageModelInterface } from '../Operator/EPGUpdate/MirakurunManageModel';
 import { ReservationManageModelInterface } from '../Operator/Reservation/ReservationManageModel';
 import { RecordingManageModelInterface } from '../Operator/Recording/RecordingManageModel';
+import { RecordedManageModelInterface } from '../Operator/Recorded/RecordedManageModel';
 import { RuleManageModelInterface } from '../Operator/Rule/RuleManageModel';
 import { RuleInterface, EncodeInterface } from '../Operator/RuleInterface';
 import * as apid from '../../../../node_modules/mirakurun/api';
@@ -15,6 +16,7 @@ interface IPCServerInterface extends Model {
         mirakurunManage: MirakurunManageModelInterface,
         reservationManage: ReservationManageModelInterface,
         recordingManage: RecordingManageModelInterface,
+        recordedManage: RecordedManageModelInterface,
         ruleManage: RuleManageModelInterface,
     ): void;
     register(child: ChildProcess): void;
@@ -28,6 +30,7 @@ interface IPCServerInterface extends Model {
 class IPCServer extends Model implements IPCServerInterface {
     private mirakurunManage: MirakurunManageModelInterface;
     private reservationManage: ReservationManageModelInterface;
+    private recordedManage: RecordedManageModelInterface;
     private recordingManage: RecordingManageModelInterface;
     private ruleManage: RuleManageModelInterface;
     private child: ChildProcess;
@@ -47,11 +50,13 @@ class IPCServer extends Model implements IPCServerInterface {
         mirakurunManage: MirakurunManageModelInterface,
         reservationManage: ReservationManageModelInterface,
         recordingManage: RecordingManageModelInterface,
+        recordedManage: RecordedManageModelInterface,
         ruleManage: RuleManageModelInterface,
     ): void {
         this.mirakurunManage = mirakurunManage;
         this.reservationManage = reservationManage;
         this.recordingManage = recordingManage;
+        this.recordedManage = recordedManage;
         this.ruleManage = ruleManage;
     }
 
@@ -229,7 +234,7 @@ class IPCServer extends Model implements IPCServerInterface {
             let delTs: boolean = args.delTs;
 
             try {
-                let encodedId = await this.recordingManage.addEncodeFile(recordedId, name, filePath, delTs);
+                let encodedId = await this.recordedManage.addEncodeFile(recordedId, name, filePath, delTs);
                 this.send({ id: id, value: encodedId });
             } catch(err) {
                 this.send({ id: id, error: err.message });

@@ -17,7 +17,6 @@ import { ReservationManageModelInterface } from '../Reservation/ReservationManag
 import CreateMirakurunClient from '../../../Util/CreateMirakurunClient';
 import DateUtil from '../../../Util/DateUtil';
 import Util from '../../../Util/Util';
-import FileUtil from '../../../Util/FileUtil';
 
 interface recordingProgram {
     reserve: ReserveProgram;
@@ -31,7 +30,6 @@ interface RecordingManageModelInterface extends Model {
     deleteAll(id: number): Promise<void>;
     deleteRule(id: number): Promise<void>;
     addThumbnail(id: number, thumbnailPath: string): Promise<void>;
-    addEncodeFile(recordedId: number, name: string, filePath: string, delTs: boolean): Promise<number>;
     check(reserves: ReserveProgram[]): void;
     stop(id: number): void;
     stopRuleId(ruleId: number): void;
@@ -168,40 +166,6 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
     public addThumbnail(id: number, thumbnailPath: string): Promise<void> {
         this.log.system.info(`add thumbnail: ${ id }`);
         return this.recordedDB.addThumbnail(id, thumbnailPath);
-    }
-
-    /**
-    * エンコードしたファイルのパスを追加する
-    * @param id: recorded id
-    * @param filePath: encode file path
-    * @return Promise<void>
-    */
-    public async addEncodeFile(recordedId: number, name: string, filePath: string, delTs: boolean): Promise<number> {
-        this.log.system.info(`add encode file: ${ recordedId }`);
-
-        // DB にエンコードファイルを追加
-        const encodedId = await this.encodedDB.insert(recordedId, name, filePath, FileUtil.getFileSize(filePath));
-
-        // ts 削除
-        if(delTs) {
-            let recorded = await this.recordedDB.findId(recordedId);
-
-            //削除するデータがある場合
-            if(recorded !== null && recorded.recPath !== null) {
-                //削除
-                fs.unlink(recorded.recPath, (err) => {
-                    this.log.system.info(`delete ts file: ${ recordedId }`);
-                    if(err) {
-                        this.log.system.error(`delete ts file error: ${ recordedId }`);
-                    }
-                });
-
-                // DB 上から recPath を削除
-                await this.recordedDB.deleteRecPath(recordedId);
-            }
-        }
-
-        return encodedId;
     }
 
     /**
