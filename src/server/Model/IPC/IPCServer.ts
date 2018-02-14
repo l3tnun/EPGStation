@@ -169,6 +169,29 @@ class IPCServer extends Model implements IPCServerInterface {
             }
         };
 
+        this.functions[IPCMessageDefinition.recordedFileDelete] = async (id: number, args: any) => {
+            let recordedId: number = args.recordedId;
+
+            try {
+                await this.recordedManage.deleteFile(recordedId);
+                this.send({ id: id });
+            } catch(err) {
+                 this.send({ id: id, error: err.message });
+            }
+        };
+
+        this.functions[IPCMessageDefinition.recordedEncodeFileDelete] = async (id: number, args: any) => {
+            let encodedId: number = args.encodedId;
+
+            try {
+                await this.recordedManage.deleteEncodedFile(encodedId);
+                this.send({ id: id });
+            } catch(err) {
+                 this.send({ id: id, error: err.message });
+            }
+        };
+
+
         //Rule
         this.functions[IPCMessageDefinition.ruleDisable] = async (id: number, args: any) => {
             let ruleId: number = args.ruleId;

@@ -16,6 +16,8 @@ interface IPCClientInterface extends Model {
     cancelReserve(programId: apid.ProgramId): Promise<void>;
     removeReserveSkip(programId: apid.ProgramId): Promise<void>;
     recordedDelete(recordedId: number): Promise<void>;
+    recordedDeleteFile(recordedId: number): Promise<void>;
+    recordedDeleteEncodeFile(encodedId: number): Promise<void>;
     ruleDisable(ruleId: number): Promise<void>;
     ruleEnable(ruleId: number): Promise<void>;
     ruleDelete(ruleId: number): Promise<void>;
@@ -151,6 +153,26 @@ class IPCClient extends Model implements IPCClientInterface {
     */
     public async recordedDelete(recordedId: number): Promise<void> {
         let id = this.send(IPCMessageDefinition.recordedDelete, { recordedId: recordedId });
+        await this.receive(id);
+    }
+
+    /**
+    * 録画の ts ファイルを削除する
+    * @param recordedId: recorded id
+    * @return Promise<void>
+    */
+    public async recordedDeleteFile(recordedId: number): Promise<void> {
+        let id = this.send(IPCMessageDefinition.recordedFileDelete, { recordedId: recordedId });
+        await this.receive(id);
+    }
+
+    /**
+    * 録画の encoded ファイルを削除する
+    * @param encodedId: encoded id
+    * @return Promise<void>
+    */
+    public async recordedDeleteEncodeFile(encodedId: number): Promise<void> {
+        let id = this.send(IPCMessageDefinition.recordedEncodeFileDelete, { encodedId: encodedId });
         await this.receive(id);
     }
 

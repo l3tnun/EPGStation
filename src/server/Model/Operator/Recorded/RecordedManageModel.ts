@@ -7,6 +7,8 @@ import FileUtil from '../../../Util/FileUtil';
 
 interface RecordedManageModelInterface extends Model {
     delete(id: number): Promise<void>;
+    deleteFile(id: number): Promise<void>;
+    deleteEncodedFile(encodedId: number): Promise<void>;
     deleteRule(id: number): Promise<void>;
     addThumbnail(id: number, thumbnailPath: string): Promise<void>;
     addEncodeFile(recordedId: number, name: string, filePath: string, delTs: boolean): Promise<number>;
@@ -89,6 +91,40 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
         }
     }
 
+    /**
+    * ts ファイル削除
+    * @param id: recorded id
+    */
+    public async deleteFile(id: number): Promise<void> {
+        const recorded = await this.recordedDB.findId(id);
+
+        if(recorded === null || recorded.recPath === null) { throw new Error('RecordedTsFileIsNotFound'); }
+
+        // ファイル削除
+        fs.unlink(recorded.recPath, (err) => {
+            if(err) { throw err; }
+        });
+
+        // DB 上から削除
+        await this.recordedDB.deleteRecPath(id);
+    }
+
+    /**
+    * encoded ファイル削除
+    * @param encodedId: encoded id
+    */
+    public async deleteEncodedFile(encodedId: number): Promise<void> {
+        const encoded = await this.encodedDB.findId(encodedId);
+        if(encoded === null) { throw new Error('EncodedFileIsNotFound'); }
+
+        // ファイル削除
+        fs.unlink(encoded.path, (err) => {
+            if(err) { throw err; }
+        });
+
+        // DB 上から削除
+        await this.encodedDB.delete(encodedId);
+    }
 
     /**
     * id で指定した ruleId をもつ recorded 内のプログラムの ruleId をすべて削除(nullにする)

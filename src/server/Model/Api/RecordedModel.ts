@@ -1,5 +1,4 @@
 import * as path from 'path';
-import * as fs from 'fs';
 import ApiModel from './ApiModel';
 import { IPCClientInterface } from '../IPC/IPCClient';
 import { findQuery, RecordedDBInterface } from '../DB/RecordedDB';
@@ -313,16 +312,11 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
             if(q.source === filePath) { throw new Error(RecordedModelInterface.FileIsLockedError); }
         }
 
-        // ファイル削除
-        fs.unlink(filePath, (err) => {
-            if(err) { throw new Error(RecordedModelInterface.DeleteFileError); }
-        });
-
-        // DB 上から削除
+        // 削除
         if(typeof encodedId === 'undefined') {
-            await this.recordedDB.deleteRecPath(recordedId);
+            await this.ipc.recordedDeleteFile(recordedId);
         } else {
-            await this.encodedDB.delete(encodedId);
+            await this.ipc.recordedDeleteEncodeFile(encodedId);
         }
     }
 
