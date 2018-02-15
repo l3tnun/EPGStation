@@ -3,21 +3,19 @@ import * as fs from 'fs';
 import * as http from 'http';
 import * as events from 'events';
 import * as mkdirp from 'mkdirp'
-import Base from '../Base';
+import Model from '../../Model';
 import Mirakurun from 'mirakurun';
-import * as apid from '../../../node_modules/mirakurun/api';
-import { RecordedDBInterface } from '../Model/DB/RecordedDB';
-import { EncodedDBInterface } from '../Model/DB/EncodedDB';
-import { ServicesDBInterface } from '../Model/DB/ServicesDB';
-import { ProgramsDBInterface } from '../Model/DB/ProgramsDB';
-import * as DBSchema from '../Model/DB/DBSchema';
-import CreateMirakurunClient from '../Util/CreateMirakurunClient';
-import { ReserveProgram } from './ReserveProgramInterface';
-import { EncodeInterface } from './RuleInterface';
-import DateUtil from '../Util/DateUtil';
-import Util from '../Util/Util';
-import FileUtil from '../Util/FileUtil';
-import { ReservationManagerInterface } from './ReservationManager';
+import * as apid from '../../../../../node_modules/mirakurun/api';
+import { RecordedDBInterface } from '../../DB/RecordedDB';
+import { ServicesDBInterface } from '../../DB/ServicesDB';
+import { ProgramsDBInterface } from '../../DB/ProgramsDB';
+import * as DBSchema from '../../DB/DBSchema';
+import { ReserveProgram } from '../ReserveProgramInterface';
+import { EncodeInterface } from '../RuleInterface';
+import { ReservationManageModelInterface } from '../Reservation/ReservationManageModel';
+import CreateMirakurunClient from '../../../Util/CreateMirakurunClient';
+import DateUtil from '../../../Util/DateUtil';
+import Util from '../../../Util/Util';
 
 interface recordingProgram {
     reserve: ReserveProgram;
@@ -25,11 +23,9 @@ interface recordingProgram {
     recPath?: string;
 }
 
-interface RecordingManagerInterface {
-    deleteAll(id: number): Promise<void>;
-    deleteRule(id: number): Promise<void>;
-    addThumbnail(id: number, thumbnailPath: string): Promise<void>;
-    addEncodeFile(recordedId: number, name: string, filePath: string, delTs: boolean): Promise<number>;
+interface RecordingManageModelInterface extends Model {
+    recStartListener(callback: (program: DBSchema.RecordedSchema) => void): void;
+    recEndListener(callback: (program: DBSchema.RecordedSchema | null, encodeOption: EncodeInterface | null) => void): void;
     check(reserves: ReserveProgram[]): void;
     stop(id: number): void;
     stopRuleId(ruleId: number): void;
@@ -38,54 +34,29 @@ interface RecordingManagerInterface {
 
 /**
 * 録画を行う
-* @throws RecordingManagerCreateInstanceError init が呼ばれていない場合
+* @throws RecordingManageModelCreateInstanceError init が呼ばれていない場合
 */
-class RecordingManager extends Base implements RecordingManagerInterface {
-    private static instance: RecordingManager;
-    private static inited: boolean = false;
+class RecordingManageModel extends Model implements RecordingManageModelInterface {
     private listener: events.EventEmitter = new events.EventEmitter();
     private recording: recordingProgram[] = [];
     private mirakurun: Mirakurun;
     private recordedDB: RecordedDBInterface;
-    private encodedDB: EncodedDBInterface;
     private servicesDB: ServicesDBInterface;
     private programsDB: ProgramsDBInterface;
-    private reservationManager: ReservationManagerInterface;
+    private reservationManage: ReservationManageModelInterface;
 
-    public static getInstance(): RecordingManager {
-        if(!this.inited) {
-            throw new Error('RecordingManagerCreateInstanceError');
-        }
-
-        return this.instance;
-    }
-
-    public static init(
+    constructor(
         recordedDB: RecordedDBInterface,
-        encodedDB: EncodedDBInterface,
         servicesDB: ServicesDBInterface,
         programsDB: ProgramsDBInterface,
-        reservationManager: ReservationManagerInterface,
-    ): void {
-        if(this.inited) { return; }
-        this.instance = new RecordingManager(recordedDB, encodedDB, servicesDB, programsDB, reservationManager);
-        this.inited = true;
-    }
-
-    private constructor(
-        recordedDB: RecordedDBInterface,
-        encodedDB: EncodedDBInterface,
-        servicesDB: ServicesDBInterface,
-        programsDB: ProgramsDBInterface,
-        reservationManager: ReservationManagerInterface,
+        reservationManage: ReservationManageModelInterface,
     ) {
         super();
 
         this.recordedDB = recordedDB;
-        this.encodedDB = encodedDB;
         this.servicesDB = servicesDB;
         this.programsDB = programsDB;
-        this.reservationManager = reservationManager;
+        this.reservationManage = reservationManage;
         this.mirakurun = CreateMirakurunClient.get();
     }
 
@@ -94,7 +65,7 @@ class RecordingManager extends Base implements RecordingManagerInterface {
     * @param callback 録画開始時に実行される
     */
     public recStartListener(callback: (program: DBSchema.RecordedSchema) => void): void {
-        this.listener.on(RecordingManager.RECORDING_START_EVENT, (program: DBSchema.RecordedSchema) => {
+        this.listener.on(RecordingManageModel.RECORDING_START_EVENT, (program: DBSchema.RecordedSchema) => {
             callback(program);
         });
     }
@@ -104,124 +75,9 @@ class RecordingManager extends Base implements RecordingManagerInterface {
     * @param callback 録画完了時に実行される
     */
     public recEndListener(callback: (program: DBSchema.RecordedSchema | null, encodeOption: EncodeInterface | null) => void): void {
-        this.listener.on(RecordingManager.RECORDING_FIN_EVENT, (program: DBSchema.RecordedSchema | null, encodeOption: EncodeInterface | null) => {
+        this.listener.on(RecordingManageModel.RECORDING_FIN_EVENT, (program: DBSchema.RecordedSchema | null, encodeOption: EncodeInterface | null) => {
             callback(program, encodeOption);
         });
-    }
-
-    /**
-    * id で指定した録画を削除
-    * @param id: recorded id
-    * @throws RecordingManagerNotFoundRecordedProgram id で指定したプログラムが存在しない場合
-    * @return Promise<void>
-    */
-    public async deleteAll(id: number): Promise<void> {
-        this.log.system.info(`delete recorded file ${ id }`);
-
-        // id で指定された recorded を取得
-        let recorded = await this.recordedDB.findId(id);
-        if(recorded === null) {
-            // id で指定された recorded がなかった
-            throw new Error('RecordingManagerNotFoundRecordedProgram');
-        }
-
-        //エンコードデータを取得
-        let encoded = await this.encodedDB.findRecordedId(id)
-
-        //エンコードデータを DB 上から削除
-        await this.encodedDB.deleteRecordedId(id);
-        //録画データを DB 上から削除
-        await this.recordedDB.delete(id);
-
-        if(recorded.recording) {
-            //録画中なら録画停止
-            this.stop(recorded.programId);
-        }
-
-        if(recorded.recPath !== null) {
-            //録画実データを削除
-            fs.unlink(recorded.recPath, (err) => {
-            if(err) {
-                    this.log.system.error(`delete recorded error: ${ id }`);
-                    this.log.system.error(String(err));
-                }
-            });
-        }
-
-        //エンコード実データを削除
-        encoded.forEach((file) => {
-            fs.unlink(file.path, (err) => {
-                if(err) {
-                    this.log.system.error(`delete encode file error: ${ file.path }`);
-                    this.log.system.error(String(err));
-                }
-            });
-        });
-
-        //サムネイルを削除
-        if(recorded.thumbnailPath !== null) {
-            fs.unlink(recorded.thumbnailPath, (err) => {
-                if(err) {
-                    this.log.system.error(`recorded failed to delete thumbnail ${ id }`);
-                    this.log.system.error(String(err));
-                }
-            });
-        }
-    }
-
-    /**
-    * id で指定した ruleId をもつ recorded 内のプログラムの ruleId をすべて削除(nullにする)
-    * rule が削除されたときに呼ぶ
-    * @param id: rule id
-    */
-    public deleteRule(id: number): Promise<void> {
-        this.log.system.info(`delete recorded program ruleId ${ id }`);
-        return this.recordedDB.deleteRuleId(id);
-    }
-
-    /**
-    * サムネイルのパスを追加する
-    * @param id: recorded id
-    * @param thumbnailPath: thumbnail file path
-    * @return Promise<void>
-    */
-    public addThumbnail(id: number, thumbnailPath: string): Promise<void> {
-        this.log.system.info(`add thumbnail: ${ id }`);
-        return this.recordedDB.addThumbnail(id, thumbnailPath);
-    }
-
-    /**
-    * エンコードしたファイルのパスを追加する
-    * @param id: recorded id
-    * @param filePath: encode file path
-    * @return Promise<void>
-    */
-    public async addEncodeFile(recordedId: number, name: string, filePath: string, delTs: boolean): Promise<number> {
-        this.log.system.info(`add encode file: ${ recordedId }`);
-
-        // DB にエンコードファイルを追加
-        const encodedId = await this.encodedDB.insert(recordedId, name, filePath, FileUtil.getFileSize(filePath));
-
-        // ts 削除
-        if(delTs) {
-            let recorded = await this.recordedDB.findId(recordedId);
-
-            //削除するデータがある場合
-            if(recorded !== null && recorded.recPath !== null) {
-                //削除
-                fs.unlink(recorded.recPath, (err) => {
-                    this.log.system.info(`delete ts file: ${ recordedId }`);
-                    if(err) {
-                        this.log.system.error(`delete ts file error: ${ recordedId }`);
-                    }
-                });
-
-                // DB 上から recPath を削除
-                await this.recordedDB.deleteRecPath(recordedId);
-            }
-        }
-
-        return encodedId;
     }
 
     /**
@@ -234,7 +90,7 @@ class RecordingManager extends Base implements RecordingManagerInterface {
             // スキップ || コンフリクト || 時刻超過
             if(reserve.isSkip || now > reserve.program.endAt) { return; }
 
-            if(reserve.program.startAt - now < RecordingManager.prepTime && !this.isRecording(reserve.program.id)) {
+            if(reserve.program.startAt - now < RecordingManageModel.prepTime && !this.isRecording(reserve.program.id)) {
                 //録画準備
                 this.prepRecord(reserve);
             }
@@ -341,7 +197,7 @@ class RecordingManager extends Base implements RecordingManagerInterface {
             let stream = await this.mirakurun.getProgramStream(reserve.program.id, true);
 
             // 録画予約がストリーム準備中に削除されていないか確認
-            if(this.reservationManager.getReserve(reserve.program.id) === null) {
+            if(this.reservationManage.getReserve(reserve.program.id) === null) {
                 // 予約が削除されていた
                 this.log.system.error(`program id: ${ reserve.program.id } is deleted`);
                 //stream 停止
@@ -364,7 +220,7 @@ class RecordingManager extends Base implements RecordingManagerInterface {
                 } else {
                     // rmove reserves
                     this.removeRecording(reserve.program.id);
-                    this.reservationManager.cancel(reserve.program.id);
+                    this.reservationManage.cancel(reserve.program.id);
                 }
             }, 1000 * 5);
         }
@@ -537,8 +393,8 @@ class RecordingManager extends Base implements RecordingManagerInterface {
         }
 
         //予約一覧から削除
-        this.reservationManager.cancel(recData.reserve.program.id);
-        this.reservationManager.clean();
+        this.reservationManage.cancel(recData.reserve.program.id);
+        this.reservationManage.clean();
 
         //録画中から削除
         this.removeRecording(recData.reserve.program.id);
@@ -634,7 +490,7 @@ class RecordingManager extends Base implements RecordingManagerInterface {
     * @param encodeOption: EncodeInterface | null
     */
     private finEventsNotify(program: DBSchema.RecordedSchema | null, encodeOption: EncodeInterface | null): void {
-        this.listener.emit(RecordingManager.RECORDING_FIN_EVENT, program, encodeOption);
+        this.listener.emit(RecordingManageModel.RECORDING_FIN_EVENT, program, encodeOption);
     }
 
     /**
@@ -642,15 +498,15 @@ class RecordingManager extends Base implements RecordingManagerInterface {
     * @param program: DBSchema.RecordedSchema | null
     */
     private startEventsNotify(program: DBSchema.RecordedSchema): void {
-        this.listener.emit(RecordingManager.RECORDING_START_EVENT, program);
+        this.listener.emit(RecordingManageModel.RECORDING_START_EVENT, program);
     }
 }
 
-namespace RecordingManager {
+namespace RecordingManageModel {
     export const RECORDING_START_EVENT = 'recordingStart';
     export const RECORDING_FIN_EVENT = 'recordingFin';
     export const prepTime: number = 1000 * 15;
 }
 
-export { RecordingManagerInterface, RecordingManager };
+export { RecordingManageModelInterface, RecordingManageModel };
 

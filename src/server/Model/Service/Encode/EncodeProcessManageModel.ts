@@ -1,11 +1,11 @@
 import * as events from 'events';
 import * as path from 'path';
 import * as fs from 'fs';
-import Base from '../Base';
+import Model from '../../Model';
 import { spawn, ChildProcess, SpawnOptions } from 'child_process';
-import ProcessUtil from './Util/ProcessUtil';
+import ProcessUtil from '../../../Util/ProcessUtil';
 
-interface EncodeProcessManagerInterface {
+interface EncodeProcessManageModelInterface extends Model {
     eventsNotify(createTime: number): void;
     create(input: string, output: string, cmd: string, priority: number, spawnOption?:SpawnOptions): Promise<ChildProcess>;
 }
@@ -13,21 +13,12 @@ interface EncodeProcessManagerInterface {
 /**
 * config のエンコードプロセス数の上限に沿ってプロセスの生成を行う
 */
-class EncodeProcessManager extends Base implements EncodeProcessManagerInterface {
-    private static instance: EncodeProcessManager;
+class EncodeProcessManageModel extends Model implements EncodeProcessManageModelInterface {
     private maxEncode: number;
     private childs: { child: ChildProcess, priority: number, createTime: number }[] = [];
     private listener: events.EventEmitter = new events.EventEmitter();
 
-    public static getInstance(): EncodeProcessManager {
-        if(!this.instance) {
-            this.instance = new EncodeProcessManager();
-        }
-
-        return this.instance;
-    }
-
-    private constructor() {
+    constructor() {
         super();
         let config = this.config.getConfig();
 
@@ -38,7 +29,7 @@ class EncodeProcessManager extends Base implements EncodeProcessManagerInterface
     * child process が死んだことを通知する
     */
     public eventsNotify(createTime: number): void {
-        this.listener.emit(EncodeProcessManager.killChildEvent, createTime);
+        this.listener.emit(EncodeProcessManageModel.killChildEvent, createTime);
     }
 
     /**
@@ -54,9 +45,9 @@ class EncodeProcessManager extends Base implements EncodeProcessManagerInterface
     public create(input: string, output: string, cmd: string, priority: number, spawnOption?:SpawnOptions): Promise<ChildProcess> {
         // replace %ROOT%
         if(process.platform === 'win32') {
-            cmd = cmd.replace('%ROOT%', path.join(__dirname, '..', '..', '..').replace(/\\/g, '\\\\'));
+            cmd = cmd.replace('%ROOT%', path.join(__dirname, '..', '..', '..', '..', '..',).replace(/\\/g, '\\\\'));
         } else {
-            cmd = cmd.replace('%ROOT%', path.join(__dirname, '..', '..', '..'));
+            cmd = cmd.replace('%ROOT%', path.join(__dirname, '..', '..', '..', '..', '..',));
         }
 
         return new Promise<ChildProcess>(async (resolve: (child: ChildProcess) => void, reject: (err: Error) => void) => {
@@ -72,7 +63,7 @@ class EncodeProcessManager extends Base implements EncodeProcessManagerInterface
                         await this.killChild(this.childs[i].createTime)
 
                         // 殺されるのを待つ
-                        this.listener.once(EncodeProcessManager.killChildEvent, () => {
+                        this.listener.once(EncodeProcessManageModel.killChildEvent, () => {
                             // プロセス生成 & 登録
                             let child = this.buildProcess(input, output, cmd, priority, spawnOption);
                             this.childs.unshift(child);
@@ -85,7 +76,7 @@ class EncodeProcessManager extends Base implements EncodeProcessManagerInterface
 
                 //殺せるプロセスが無くプロセスの生成ができなかった
                 if(!isFound) {
-                    reject(new Error('EncodeProcessManagerCreateError'));
+                    reject(new Error('EncodeProcessManageModelCreateError'));
                 }
             } else {
                 // プロセス生成 & 登録
@@ -105,7 +96,7 @@ class EncodeProcessManager extends Base implements EncodeProcessManagerInterface
     * @param priority: number
     * @param spawnOption?:SpawnOptions
     * @return ChildProcess
-    * @throws EncodeProcessManagerNotFoundBin cmd で指定したプロセスが存在しない場合
+    * @throws EncodeProcessManageModelNotFoundBin cmd で指定したプロセスが存在しない場合
     */
     private buildProcess(input: string, output: string, cmd: string, priority: number, spawnOption?:SpawnOptions): {
         child: ChildProcess,
@@ -122,7 +113,7 @@ class EncodeProcessManager extends Base implements EncodeProcessManagerInterface
         }
 
         if(typeof bin === 'undefined') {
-            throw new Error(EncodeProcessManager.NotFoundBinError);
+            throw new Error(EncodeProcessManageModel.NotFoundBinError);
         }
 
         // bin の存在確認
@@ -130,7 +121,7 @@ class EncodeProcessManager extends Base implements EncodeProcessManagerInterface
             fs.statSync(bin);
         } catch(e) {
             this.log.system.error(`${ bin } is not found`);
-            throw new Error(EncodeProcessManager.NotFoundBinError);
+            throw new Error(EncodeProcessManageModel.NotFoundBinError);
         }
 
         let child = spawn(bin, args, spawnOption);
@@ -156,7 +147,7 @@ class EncodeProcessManager extends Base implements EncodeProcessManagerInterface
     * 指定された createTime の child を殺して削除する
     * @param createTime: number
     * @param removeOnly: boolean childs から削除するのみ
-    * @throws EncodeProcessManagerKillChildError 該当する child がなかった場合
+    * @throws EncodeProcessManageModelKillChildError 該当する child がなかった場合
     */
     private async killChild(createTime: number, removeOnly: boolean = false): Promise<void> {
         let isError = true;
@@ -179,15 +170,15 @@ class EncodeProcessManager extends Base implements EncodeProcessManagerInterface
         }
 
         if(isError && !removeOnly) {
-            throw new Error('EncodeProcessManagerKillChildError');
+            throw new Error('EncodeProcessManageModelKillChildError');
         }
     }
 }
 
-namespace EncodeProcessManager {
-    export const NotFoundBinError = 'EncodeProcessManagerNotFoundBin';
+namespace EncodeProcessManageModel {
+    export const NotFoundBinError = 'EncodeProcessManageModelNotFoundBin';
     export const killChildEvent = 'killChild'
 }
 
-export { EncodeProcessManagerInterface, EncodeProcessManager }
+export { EncodeProcessManageModelInterface, EncodeProcessManageModel }
 

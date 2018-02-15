@@ -1,10 +1,12 @@
 import { ChildProcess } from 'child_process';
+import { EncodeProcessManageModelInterface } from '../Encode/EncodeProcessManageModel';
+import { StreamManageModelInterface } from './StreamManageModel';
 import { StreamInfo, Stream } from './Stream';
-import * as apid from '../../../../api';
-import ProcessUtil from '../Util/ProcessUtil';
-import { RecordedDBInterface } from '../../Model/DB/RecordedDB';
-import { EncodedDBInterface } from '../../Model/DB/EncodedDB';
-import Util from '../../Util/Util';
+import * as apid from '../../../../../api';
+import { RecordedDBInterface } from '../../DB/RecordedDB';
+import { EncodedDBInterface } from '../../DB/EncodedDB';
+import ProcessUtil from '../../../Util/ProcessUtil';
+import Util from '../../../Util/Util';
 import HLSFileDeleter from './HLSFileDeleter';
 
 interface RecordedHLSStreamInfo extends StreamInfo {
@@ -25,6 +27,8 @@ class RecordedHLSStream extends Stream {
     private fileDeleter: HLSFileDeleter | null = null;
 
     /**
+    * @param process: EncodeProcessManageModelInterface
+    * @param manager: StreamManageModelInterface
     * @param recordedDB: RecordedDB
     * @param encodedDB: EncodedDB
     * @param recordedId: recorded id
@@ -32,13 +36,15 @@ class RecordedHLSStream extends Stream {
     * @param encodedId: encoded id
     */
     constructor(
+        process: EncodeProcessManageModelInterface,
+        manager: StreamManageModelInterface,
         recordedDB: RecordedDBInterface,
         encodedDB: EncodedDBInterface,
         recordedId: apid.RecordedId,
         mode: number,
         encodedId: apid.EncodedId | null = null,
     ) {
-        super();
+        super(process, manager);
 
         this.recordedDB = recordedDB;
         this.encodedDB = encodedDB;

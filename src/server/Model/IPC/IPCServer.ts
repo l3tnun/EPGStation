@@ -1,60 +1,63 @@
 import { ChildProcess } from 'child_process';
 import Model from '../Model';
 import { IPCClientMessage, IPCServerMessage, IPCMessageDefinition } from './IPCMessageInterface';
-import { ReservationManagerInterface } from '../../Operator/ReservationManager';
-import { EncodeInterface } from '../../Operator/RuleInterface';
-import { RecordingManagerInterface } from '../../Operator/RecordingManager';
-import { RuleManagerInterface } from '../../Operator/RuleManager';
-import { RuleInterface } from '../../Operator/RuleInterface';
+import { MirakurunManageModelInterface } from '../Operator/EPGUpdate/MirakurunManageModel';
+import { ReservationManageModelInterface } from '../Operator/Reservation/ReservationManageModel';
+import { RecordingManageModelInterface } from '../Operator/Recording/RecordingManageModel';
+import { RecordedManageModelInterface } from '../Operator/Recorded/RecordedManageModel';
+import { RuleManageModelInterface } from '../Operator/Rule/RuleManageModel';
+import { RuleInterface, EncodeInterface } from '../Operator/RuleInterface';
 import * as apid from '../../../../node_modules/mirakurun/api';
 import * as events from '../../IoEvents';
-import { EncodeProgram } from '../../Service/EncodeManager';
-import { MirakurunManagerInterface } from '../../Operator/MirakurunManager';
-import Util from '../../Util/Util';
+import { EncodeProgram } from '../Service/Encode/EncodeManageModel';
 
 interface IPCServerInterface extends Model {
-    setManagers(managers: Managers): void;
+    setModels(
+        mirakurunManage: MirakurunManageModelInterface,
+        reservationManage: ReservationManageModelInterface,
+        recordingManage: RecordingManageModelInterface,
+        recordedManage: RecordedManageModelInterface,
+        ruleManage: RuleManageModelInterface,
+    ): void;
     register(child: ChildProcess): void;
     notifIo(): void;
     setEncode(program: EncodeProgram): void;
-}
-
-interface Managers {
-    reservation: ReservationManagerInterface;
-    recording: RecordingManagerInterface;
-    rule: RuleManagerInterface;
-    mirakurun: MirakurunManagerInterface;
 }
 
 /**
 * IPC 通信サーバ
 */
 class IPCServer extends Model implements IPCServerInterface {
-    private static instance: IPCServerInterface;
+    private mirakurunManage: MirakurunManageModelInterface;
+    private reservationManage: ReservationManageModelInterface;
+    private recordedManage: RecordedManageModelInterface;
+    private recordingManage: RecordingManageModelInterface;
+    private ruleManage: RuleManageModelInterface;
     private child: ChildProcess;
-    private managers: Managers;
     private functions: {
         [key: string]: ((id: number, args: any) => void)
     } = {};
 
-    public static getInstance(): IPCServerInterface {
-        if(!this.instance) {
-            this.instance = new IPCServer();
-        }
-
-        return this.instance;
-    }
-
-    private constructor() {
+    constructor() {
         super();
         this.init();
     }
 
     /**
-    * manager をセット
+    * Model をセット
     */
-    public setManagers(managers: Managers): void {
-        this.managers = managers;
+    public setModels(
+        mirakurunManage: MirakurunManageModelInterface,
+        reservationManage: ReservationManageModelInterface,
+        recordingManage: RecordingManageModelInterface,
+        recordedManage: RecordedManageModelInterface,
+        ruleManage: RuleManageModelInterface,
+    ): void {
+        this.mirakurunManage = mirakurunManage;
+        this.reservationManage = reservationManage;
+        this.recordingManage = recordingManage;
+        this.recordedManage = recordedManage;
+        this.ruleManage = ruleManage;
     }
 
     /**
@@ -98,28 +101,28 @@ class IPCServer extends Model implements IPCServerInterface {
     private init(): void {
         // Reserves
         this.functions[IPCMessageDefinition.getReserveAllId] = (id: number) => {
-            let value = this.managers.reservation.getReservesAllId();
+            let value = this.reservationManage.getReservesAllId();
             this.send({ id: id, value: value });
         };
 
         this.functions[IPCMessageDefinition.getReserves] = (id: number, args: any) => {
             let limit: number = args.limit;
             let offset: number = args.offset;
-            let value = this.managers.reservation.getReserves(limit, offset);
+            let value = this.reservationManage.getReserves(limit, offset);
             this.send({ id: id, value: value });
         };
 
         this.functions[IPCMessageDefinition.getReserveConflicts] = (id: number, args: any) => {
             let limit: number = args.limit;
             let offset: number = args.offset;
-            let value = this.managers.reservation.getConflicts(limit, offset);
+            let value = this.reservationManage.getConflicts(limit, offset);
             this.send({ id: id, value: value });
         };
 
         this.functions[IPCMessageDefinition.getReserveSkips] = (id: number, args: any) => {
             let limit: number = args.limit;
             let offset: number = args.offset;
-            let value = this.managers.reservation.getSkips(limit, offset);
+            let value = this.reservationManage.getSkips(limit, offset);
             this.send({ id: id, value: value });
         };
 
@@ -128,7 +131,7 @@ class IPCServer extends Model implements IPCServerInterface {
             let encode: EncodeInterface = args.encode;
 
             try {
-                await this.managers.reservation.addReserve(programId, encode);
+                await this.reservationManage.addReserve(programId, encode);
                 this.send({ id: id });
             } catch(err) {
                 this.send({ id: id, error: err.message });
@@ -139,8 +142,8 @@ class IPCServer extends Model implements IPCServerInterface {
             let programId: apid.ProgramId = args.programId;
 
             try {
-                await this.managers.reservation.cancel(programId);
-                await this.managers.recording.stop(programId);
+                await this.reservationManage.cancel(programId);
+                await this.recordingManage.stop(programId);
                 this.send({ id: id });
             } catch(err) {
                 this.send({ id: id, error: err.message });
@@ -150,28 +153,51 @@ class IPCServer extends Model implements IPCServerInterface {
         this.functions[IPCMessageDefinition.removeReserveSkip] = async (id: number, args: any) => {
             let programId: apid.ProgramId = args.programId;
 
-            await this.managers.reservation.removeSkip(programId);
+            await this.reservationManage.removeSkip(programId);
             this.send({ id: id });
         };
 
         // Recorded
-        this.functions[IPCMessageDefinition.recordedDeleteAll] = async (id: number, args: any) => {
+        this.functions[IPCMessageDefinition.recordedDelete] = async (id: number, args: any) => {
             let recordedId: number = args.recordedId;
 
             try {
-                await this.managers.recording.deleteAll(recordedId);
+                await this.recordedManage.delete(recordedId);
                 this.send({ id: id });
             } catch(err) {
                  this.send({ id: id, error: err.message });
             }
         };
 
+        this.functions[IPCMessageDefinition.recordedFileDelete] = async (id: number, args: any) => {
+            let recordedId: number = args.recordedId;
+
+            try {
+                await this.recordedManage.deleteFile(recordedId);
+                this.send({ id: id });
+            } catch(err) {
+                 this.send({ id: id, error: err.message });
+            }
+        };
+
+        this.functions[IPCMessageDefinition.recordedEncodeFileDelete] = async (id: number, args: any) => {
+            let encodedId: number = args.encodedId;
+
+            try {
+                await this.recordedManage.deleteEncodedFile(encodedId);
+                this.send({ id: id });
+            } catch(err) {
+                 this.send({ id: id, error: err.message });
+            }
+        };
+
+
         //Rule
         this.functions[IPCMessageDefinition.ruleDisable] = async (id: number, args: any) => {
             let ruleId: number = args.ruleId;
 
             try {
-                await this.managers.rule.disable(ruleId);
+                await this.ruleManage.disable(ruleId);
                 this.send({ id: id });
             } catch(err) {
                 this.send({ id: id, error: err.message });
@@ -182,7 +208,7 @@ class IPCServer extends Model implements IPCServerInterface {
             let ruleId: number = args.ruleId;
 
             try {
-                await this.managers.rule.enable(ruleId);
+                await this.ruleManage.enable(ruleId);
                 this.send({ id: id });
             } catch(err) {
                 this.send({ id: id, error: err.message });
@@ -193,7 +219,7 @@ class IPCServer extends Model implements IPCServerInterface {
             let ruleId: number = args.ruleId;
 
             try {
-                await this.managers.rule.delete(ruleId);
+                await this.ruleManage.delete(ruleId);
                 this.send({ id: id });
             } catch(err) {
                 this.send({ id: id, error: err.message });
@@ -204,7 +230,7 @@ class IPCServer extends Model implements IPCServerInterface {
             let rule: RuleInterface = args.rule;
 
             try {
-                let ruleId = await this.managers.rule.add(rule);
+                let ruleId = await this.ruleManage.add(rule);
                 this.send({ id: id,  value: ruleId });
             } catch(err) {
                 this.send({ id: id, error: err.message });
@@ -216,7 +242,7 @@ class IPCServer extends Model implements IPCServerInterface {
             let rule: RuleInterface = args.rule;
 
             try {
-                await this.managers.rule.update(ruleId, rule);
+                await this.ruleManage.update(ruleId, rule);
                 this.send({ id: id });
             } catch(err) {
                 this.send({ id: id, error: err.message });
@@ -231,7 +257,7 @@ class IPCServer extends Model implements IPCServerInterface {
             let delTs: boolean = args.delTs;
 
             try {
-                let encodedId = await this.managers.recording.addEncodeFile(recordedId, name, filePath, delTs);
+                let encodedId = await this.recordedManage.addEncodeFile(recordedId, name, filePath, delTs);
                 this.send({ id: id, value: encodedId });
             } catch(err) {
                 this.send({ id: id, error: err.message });
@@ -241,11 +267,7 @@ class IPCServer extends Model implements IPCServerInterface {
         // update Reserves
         this.functions[IPCMessageDefinition.updateReserves] = async (id: number) => {
             try {
-                if(Util.isContinuousEPGUpdater()) {
-                    this.managers.reservation.updateAll();
-                } else {
-                    this.managers.mirakurun.update();
-                }
+                this.mirakurunManage.update();
                 this.send({ id: id });
             } catch(err) {
                 this.send({ id: id, error: err.message });

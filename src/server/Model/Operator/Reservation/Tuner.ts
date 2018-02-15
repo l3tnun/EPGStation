@@ -3,9 +3,9 @@
 * ResvationManager で使用する
 */
 
-import * as apid from '../../../node_modules/mirakurun/api';
-import Base from '../Base';
-import * as DBSchema from '../Model/DB/DBSchema';
+import * as apid from '../../../../../node_modules/mirakurun/api';
+import Base from '../../../Base';
+import * as DBSchema from '../../DB/DBSchema';
 
 class Tuner extends Base {
     private types: apid.ChannelType[];

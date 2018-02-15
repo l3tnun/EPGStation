@@ -3,11 +3,11 @@ import * as fs from 'fs';
 import * as events from 'events';
 import { ChildProcess } from 'child_process';
 import * as mkdirp from 'mkdirp';
-import Base from '../Base';
-import { EncodeProcessManagerInterface } from './EncodeProcessManager';
-import * as DBSchema from '../Model/DB/DBSchema';
-import ProcessUtil from './Util/ProcessUtil';
-import Util from '../Util/Util';
+import Model from '../../Model';
+import { EncodeProcessManageModelInterface } from './EncodeProcessManageModel';
+import * as DBSchema from '../../DB/DBSchema';
+import ProcessUtil from '../../../Util/ProcessUtil';
+import Util from '../../../Util/Util';
 
 interface EncodeProgram {
     recordedId: number;
@@ -44,7 +44,7 @@ interface EncodeConfigInfo {
     rate: number;
 }
 
-interface EncodeManagerInterface {
+interface EncodeManageModelInterface extends Model {
     addEncodeDoneListener(callback: (recordedId: number, name: string, output: string, delTs: boolean, isTsModify: boolean) => void): void;
     addEncodeErrorListener(callback: () => void): void;
     getEncodingId(): number | null;
@@ -55,14 +55,12 @@ interface EncodeManagerInterface {
 
 /**
 * 録画済みファイルのエンコードを行う
-* @throws EncodeManagerCreateInstanceError init が呼ばれなかった場合
 */
-class EncodeManager extends Base implements EncodeManagerInterface {
-    private static instance: EncodeManager;
-    private static inited: boolean = false;
-    private encodeProcessManager: EncodeProcessManagerInterface;
+class EncodeManageModel extends Model implements EncodeManageModelInterface {
+    private encodeProcessManage: EncodeProcessManageModelInterface;
     private queue: EncodeQueue[] = [];
     private isRunning: boolean = false;
+
     //エンコード中のプロセスとプログラムを格納する
     private encodingData: {
         child: ChildProcess,
@@ -72,26 +70,13 @@ class EncodeManager extends Base implements EncodeManagerInterface {
         output: string,
         timerId: NodeJS.Timer,
     } | null = null;
+
     private doneListener: events.EventEmitter = new events.EventEmitter();
     private errorListener: events.EventEmitter = new events.EventEmitter();
 
-    public static getInstance(): EncodeManager {
-        if(!this.inited) {
-            throw new Error('EncodeManagerCreateInstanceError');
-        }
-
-        return this.instance;
-    }
-
-   public static init(encodeProcessManager: EncodeProcessManagerInterface) {
-        if(this.inited) { return; }
-        this.instance = new EncodeManager(encodeProcessManager);
-        this.inited = true;
-    }
-
-    private constructor(encodeProcessManager: EncodeProcessManagerInterface) {
+    constructor(encodeProcessManage: EncodeProcessManageModelInterface) {
         super();
-        this.encodeProcessManager = encodeProcessManager;
+        this.encodeProcessManage = encodeProcessManage;
     }
 
     /**
@@ -99,7 +84,7 @@ class EncodeManager extends Base implements EncodeManagerInterface {
     @param callback ルール更新時に実行される
     */
     public addEncodeDoneListener(callback: (recordedId: number, name: string, output: string, delTs: boolean, isTsModify: boolean) => void): void {
-        this.doneListener.on(EncodeManager.ENCODE_FIN_EVENT, (recordedId: number, name: string, output: string, delTs: boolean, isTsModify: boolean) => {
+        this.doneListener.on(EncodeManageModel.ENCODE_FIN_EVENT, (recordedId: number, name: string, output: string, delTs: boolean, isTsModify: boolean) => {
             callback(recordedId, name, output, delTs, isTsModify);
         });
     }
@@ -109,7 +94,7 @@ class EncodeManager extends Base implements EncodeManagerInterface {
     * @param callback
     */
     public addEncodeErrorListener(callback: () => void): void {
-        this.errorListener.on(EncodeManager.ENCODE_ERROR_EVENT, () => {
+        this.errorListener.on(EncodeManageModel.ENCODE_ERROR_EVENT, () => {
             callback();
         });
     }
@@ -322,7 +307,7 @@ class EncodeManager extends Base implements EncodeManagerInterface {
                 GENRE2: program.recordedProgram.genre2,
             }
         }
-        this.encodeProcessManager.create(program.source, output, program.cmd, EncodeManager.priority, option)
+        this.encodeProcessManage.create(program.source, output, program.cmd, EncodeManageModel.priority, option)
         .then((child) => {
             if(typeof program === 'undefined') { return; }
 
@@ -421,22 +406,22 @@ class EncodeManager extends Base implements EncodeManagerInterface {
     * @param output: output
     */
     private doneNotify(recordedId: number, name: string, output: string, delTs: boolean, isTsModify: boolean): void {
-        this.doneListener.emit(EncodeManager.ENCODE_FIN_EVENT, recordedId, name, output, delTs, isTsModify);
+        this.doneListener.emit(EncodeManageModel.ENCODE_FIN_EVENT, recordedId, name, output, delTs, isTsModify);
     }
 
     /**
     * エンコード失敗を通知
     */
     private errorNotify(): void {
-        this.errorListener.emit(EncodeManager.ENCODE_ERROR_EVENT);
+        this.errorListener.emit(EncodeManageModel.ENCODE_ERROR_EVENT);
     }
 }
 
-namespace EncodeManager {
+namespace EncodeManageModel {
     export const priority = 10;
     export const ENCODE_FIN_EVENT = 'encodeFin';
     export const ENCODE_ERROR_EVENT = 'encodeError';
 }
 
-export { EncodeManagerInterface, EncodeProgram, EncodingInfo, EncodeManager };
+export { EncodeManageModelInterface, EncodeProgram, EncodingInfo, EncodeManageModel };
 

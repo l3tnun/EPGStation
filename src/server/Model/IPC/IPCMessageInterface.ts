@@ -1,4 +1,4 @@
-import { EncodeProgram } from '../../Service/EncodeManager';
+import { EncodeProgram } from '../Service/Encode/EncodeManageModel';
 
 /**
 * IPC 通信で使用する message の 定義
@@ -33,7 +33,9 @@ namespace IPCMessageDefinition {
     export const addReserve  = 'addReserve';
     export const cancelReserve = 'cancelReserve';
     export const removeReserveSkip = 'removeReserveSkip';
-    export const recordedDeleteAll = 'recordedDeleteAll';
+    export const recordedDelete = 'recordedDelete';
+    export const recordedFileDelete = 'recordedFileDelete';
+    export const recordedEncodeFileDelete = 'recordedEncodeFileDelete';
     export const ruleDisable = 'ruleDisable';
     export const ruleEnable = 'ruleEnable';
     export const ruleDelete = 'ruleDelete';

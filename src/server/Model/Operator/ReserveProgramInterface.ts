@@ -1,4 +1,4 @@
-import * as DBSchema from '../Model/DB/DBSchema';
+import * as DBSchema from '../DB/DBSchema';
 import { OptionInterface, EncodeInterface } from './RuleInterface';
 
 export interface ReserveProgram {

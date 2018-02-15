@@ -1,9 +1,9 @@
 import * as http from 'http';
 import { ChildProcess } from 'child_process';
-import Base from '../../Base';
+import Base from '../../../Base';
 import * as enums from './StreamTypeInterface';
-import { EncodeProcessManagerInterface, EncodeProcessManager } from '../EncodeProcessManager';
-import { StreamManagerInterface, StreamManager } from './StreamManager';
+import { EncodeProcessManageModelInterface } from '../Encode/EncodeProcessManageModel';
+import { StreamManageModelInterface } from './StreamManageModel';
 
 interface StreamInfo {
     type: enums.StreamType;
@@ -11,15 +11,22 @@ interface StreamInfo {
 }
 
 abstract class Stream extends Base {
-    protected process: EncodeProcessManagerInterface;
-    private manager: StreamManagerInterface;
+    protected process: EncodeProcessManageModelInterface;
+    private manager: StreamManageModelInterface;
     private viewCnt: number = 0;
     private streamNumber: number;
 
-    constructor() {
+    /**
+    * @param process: EncodeProcessManageModelInterface
+    * @param manager: StreamManageModelInterface
+    */
+    constructor(
+        process: EncodeProcessManageModelInterface,
+        manager: StreamManageModelInterface,
+    ) {
         super();
-        this.process = EncodeProcessManager.getInstance();
-        this.manager = StreamManager.getInstance();
+        this.process = process;
+        this.manager = manager;
     }
 
     public async start(streamNumber: number): Promise<void> {

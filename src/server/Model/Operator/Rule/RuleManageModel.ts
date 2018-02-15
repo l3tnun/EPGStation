@@ -1,11 +1,12 @@
 import * as events from 'events';
-import Base from '../Base';
-import { RuleInterface } from './RuleInterface';
-import { RulesDBInterface } from '../Model/DB/RulesDB';
-import * as DBSchema from '../Model/DB/DBSchema';
-import CheckRule from '../Util/CheckRule';
+import Model from '../../Model';
+import { RuleInterface } from '../RuleInterface';
+import { RulesDBInterface } from '../../DB/RulesDB';
+import * as DBSchema from '../../DB/DBSchema';
+import CheckRule from '../../../Util/CheckRule';
 
-interface RuleManagerInterface {
+interface RuleManageModelInterface extends Model {
+    addListener(callback: (ruleId: number, status: RuleEventStatus) => void): void;
     add(rule: RuleInterface): Promise<number>;
     update(ruleId: number, rule: RuleInterface): Promise<void>;
     enable(ruleId: number): Promise<void>;
@@ -17,30 +18,14 @@ type RuleEventStatus = 'add' | 'update' | 'enable' | 'disable' | 'delete'
 
 /**
 * 録画ルールの管理を行う
-* @throws RuleManagerCreateError init が呼ばれていないとき
+* @throws RuleManageModelCreateError init が呼ばれていないとき
 */
-class RuleManager extends Base implements RuleManagerInterface {
-    private static instance: RuleManager;
-    private static inited: boolean = false;
+class RuleManageModel extends Model implements RuleManageModelInterface {
     private isRunning: boolean = false;
     private listener: events.EventEmitter = new events.EventEmitter();
     private rulesDB: RulesDBInterface;
 
-    public static getInstance(): RuleManager {
-        if(!this.inited) {
-            throw new Error('RuleManagerCreateError');
-        }
-
-        return this.instance;
-    }
-
-    public static init(rulesDB: RulesDBInterface): void {
-        if(this.inited) { return; }
-        this.instance = new RuleManager(rulesDB);
-        this.inited = true;
-    }
-
-    private constructor(rulesDB: RulesDBInterface) {
+    constructor(rulesDB: RulesDBInterface) {
         super();
         this.rulesDB = rulesDB;
     }
@@ -50,18 +35,18 @@ class RuleManager extends Base implements RuleManagerInterface {
     @param callback ルール更新時に実行される
     */
     public addListener(callback: (ruleId: number, status: RuleEventStatus) => void): void {
-        this.listener.on(RuleManager.RULE_UPDATE_EVENT, (ruleId: number, status: RuleEventStatus) => { callback(ruleId, status); });
+        this.listener.on(RuleManageModel.RULE_UPDATE_EVENT, (ruleId: number, status: RuleEventStatus) => { callback(ruleId, status); });
     }
 
     /**
     * ルール追加
     * @param rule: RuleInterface
-    * @throws RuleManagerIsRunning 他で実行中
+    * @throws RuleManageModelIsRunning 他で実行中
     * @throws AddRuleError 追加しようとしたルールに問題がある場合
     * @return Promise<number> 追加した rule の id が格納される
     */
     public async add(rule: RuleInterface): Promise<number> {
-        if(this.isRunning) { throw new Error(RuleManager.RunningError); }
+        if(this.isRunning) { throw new Error(RuleManageModel.RunningError); }
         this.isRunning = true;
 
         // option のチェック
@@ -94,7 +79,7 @@ class RuleManager extends Base implements RuleManagerInterface {
     * @return Promise<void>
     */
     public async update(ruleId: number, rule: RuleInterface): Promise<void> {
-        if(this.isRunning) { throw new Error(RuleManager.RunningError); }
+        if(this.isRunning) { throw new Error(RuleManageModel.RunningError); }
         this.isRunning = true;
 
         // rule が存在するか db 上から検索
@@ -128,11 +113,11 @@ class RuleManager extends Base implements RuleManagerInterface {
     /**
     * ルールの有効化
     * @param id: number
-    * @throws RuleManagerIsRunning 他で実行中
+    * @throws RuleManageModelIsRunning 他で実行中
     * @return Promise<void>;
     */
     public async enable(ruleId: number): Promise<void> {
-        if(this.isRunning) { throw new Error(RuleManager.RunningError); }
+        if(this.isRunning) { throw new Error(RuleManageModel.RunningError); }
         this.isRunning = true;
 
         try {
@@ -150,11 +135,11 @@ class RuleManager extends Base implements RuleManagerInterface {
     /**
     * ルールの無効化
     * @param id: number
-    * @throws RuleManagerIsRunning 他で実行中
+    * @throws RuleManageModelIsRunning 他で実行中
     * @return Promise<void>;
     */
     public async disable(ruleId: number): Promise<void> {
-        if(this.isRunning) { throw new Error(RuleManager.RunningError); }
+        if(this.isRunning) { throw new Error(RuleManageModel.RunningError); }
         this.isRunning = true;
 
         try {
@@ -172,11 +157,11 @@ class RuleManager extends Base implements RuleManagerInterface {
     /**
     * ルールの削除
     * @param id: number
-    * @throws RuleManagerIsRunning 他で実行中
+    * @throws RuleManageModelIsRunning 他で実行中
     * @return Promise<void>;
     */
     public async delete(ruleId: number): Promise<void> {
-        if(this.isRunning) { throw new Error(RuleManager.RunningError); }
+        if(this.isRunning) { throw new Error(RuleManageModel.RunningError); }
         this.isRunning = true;
 
         try {
@@ -250,14 +235,14 @@ class RuleManager extends Base implements RuleManagerInterface {
     * @param status: status
     */
     private eventsNotify(ruleId: number, status: RuleEventStatus): void {
-        this.listener.emit(RuleManager.RULE_UPDATE_EVENT, ruleId, status)
+        this.listener.emit(RuleManageModel.RULE_UPDATE_EVENT, ruleId, status)
     }
 }
 
-namespace RuleManager {
+namespace RuleManageModel {
     export const RULE_UPDATE_EVENT = 'updateRules';
-    export const RunningError = 'RuleManagerIsRunning';
+    export const RunningError = 'RuleManageModelIsRunning';
 }
 
-export { RuleEventStatus, RuleManagerInterface, RuleManager };
+export { RuleEventStatus, RuleManageModelInterface, RuleManageModel };
 

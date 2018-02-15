@@ -1,13 +1,13 @@
 import * as fs from 'fs';
-import Base from '../../Base';
+import Model from '../../Model';
 import { Stream } from './Stream';
 import StreamStatus from './StreamStatus';
 import * as enums from './StreamTypeInterface';
-import * as apid from '../../../../api';
+import * as apid from '../../../../../api';
 import { MpegTsLiveStreamInfo } from './MpegTsLiveStream';
 import { RecordedHLSStreamInfo } from './RecordedHLSStream';
-import SocketIoServer from '../SocketIoServer';
-import Util from '../../Util/Util';
+import { SocketIoManageModelInterface } from '../SocketIoManageModel';
+import Util from '../../../Util/Util';
 
 /**
 * Stream 情報
@@ -24,7 +24,7 @@ interface StreamStatusInfo {
     mode?: number, // config の index number
 }
 
-interface StreamManagerInterface {
+interface StreamManageModelInterface {
     getStreamInfo(num: number): StreamStatusInfo | null;
     getStreamInfos(): StreamStatusInfo[];
     getStream(streamNumber: number): Stream | null;
@@ -34,25 +34,18 @@ interface StreamManagerInterface {
 }
 
 /**
-* StreamManager
+* StreamManageModel
 * Stream の管理を行う
 */
-class StreamManager extends Base implements StreamManagerInterface {
-    private static instance: StreamManager;
-
+class StreamManageModel extends Model implements StreamManageModelInterface {
+    private socketIo: SocketIoManageModelInterface;
     private maxStreaming: number;
     private streamStatus: { [key: number]: StreamStatus } = {};
 
-    public static getInstance(): StreamManager {
-        if(!this.instance) {
-            this.instance = new StreamManager();
-        }
-
-        return this.instance;
-    }
-
-    private constructor() {
+    constructor(socketIo: SocketIoManageModelInterface) {
         super();
+
+        this.socketIo = socketIo;
 
         // エンコード数上限を取得
         this.maxStreaming = this.config.getConfig().maxStreaming || 0;
@@ -253,9 +246,9 @@ class StreamManager extends Base implements StreamManagerInterface {
     * socketio 通知
     */
     private notify(): void {
-        SocketIoServer.getInstance().notifyClient();
+        this.socketIo.notifyClient();
     }
 }
 
-export { StreamManagerInterface, StreamManager };
+export { StreamManageModelInterface, StreamManageModel };
 

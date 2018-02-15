@@ -1,5 +1,4 @@
 import * as path from 'path';
-import * as fs from 'fs';
 import ApiModel from './ApiModel';
 import { IPCClientInterface } from '../IPC/IPCClient';
 import { findQuery, RecordedDBInterface } from '../DB/RecordedDB';
@@ -8,8 +7,8 @@ import { RulesDBInterface } from '../DB/RulesDB';
 import { ServicesDBInterface } from '../DB/ServicesDB';
 import * as DBSchema from '../DB/DBSchema';
 import ApiUtil from './ApiUtil';
-import { EncodeManagerInterface } from '../../Service/EncodeManager';
-import { StreamManagerInterface } from '../../Service/Stream/StreamManager';
+import { EncodeManageModelInterface } from '../Service/Encode/EncodeManageModel';
+import { StreamManageModelInterface } from '../Service/Stream/StreamManageModel';
 import { PLayList } from './PlayListInterface';
 
 interface recordedFilePathInfo {
@@ -49,8 +48,8 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
     private encodedDB: EncodedDBInterface;
     private rulesDB: RulesDBInterface;
     private servicesDB: ServicesDBInterface;
-    private encodeManager: EncodeManagerInterface;
-    private streamManager: StreamManagerInterface;
+    private encodeManage: EncodeManageModelInterface;
+    private streamManage: StreamManageModelInterface;
 
     constructor(
         ipc: IPCClientInterface,
@@ -58,8 +57,8 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
         encodedDB: EncodedDBInterface,
         rulesDB: RulesDBInterface,
         servicesDB: ServicesDBInterface,
-        encodeManager: EncodeManagerInterface,
-        streamManager: StreamManagerInterface,
+        encodeManage: EncodeManageModelInterface,
+        streamManage: StreamManageModelInterface,
     ) {
         super();
         this.ipc = ipc;
@@ -67,8 +66,8 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
         this.encodedDB = encodedDB;
         this.rulesDB = rulesDB;
         this.servicesDB = servicesDB;
-        this.encodeManager = encodeManager;
-        this.streamManager = streamManager;
+        this.encodeManage = encodeManage;
+        this.streamManage = streamManage;
     }
 
     /**
@@ -105,7 +104,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
     * @return Promise<encodingInfoIndex>
     */
     private async getEncodingInfoIndex(): Promise<encodingInfoIndex> {
-        let encodingInfo = await this.encodeManager.getEncodingInfo();
+        let encodingInfo = await this.encodeManage.getEncodingInfo();
 
         let encoding: encodingInfoIndex = {};
 
@@ -259,13 +258,13 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
     * @return Promise<void>
     */
     public async deleteAllRecorded(recordedId: number): Promise<void> {
-        this.streamManager.getStreamInfos().forEach((info) => {
+        this.streamManage.getStreamInfos().forEach((info) => {
             // 配信中か？
             if(typeof info.recordedId !== 'undefined' && info.recordedId === recordedId) {
                 throw new Error(RecordedModelInterface.RecordedIsStreamingNowError);
             }
         });
-        this.encodeManager.cancel(recordedId);
+        this.encodeManage.cancel(recordedId);
         await this.ipc.recordedDelete(recordedId);
     }
 
@@ -281,7 +280,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
     * @return Promise<void>
     */
     public async deleteRecorded(recordedId: number, encodedId: number | undefined): Promise<void> {
-        this.streamManager.getStreamInfos().forEach((info) => {
+        this.streamManage.getStreamInfos().forEach((info) => {
             // 配信中か？
             if(typeof info.recordedId !== 'undefined' && info.recordedId === recordedId) {
                 throw new Error(RecordedModelInterface.RecordedIsStreamingNowError);
@@ -305,7 +304,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
         }
 
         //エンコードのソースファイルか確認
-        const info = this.encodeManager.getEncodingInfo();
+        const info = this.encodeManage.getEncodingInfo();
         if(info.encoding !== null && info.encoding.source === filePath) {
             throw new Error(RecordedModelInterface.FileIsLockedError);
         }
@@ -313,16 +312,11 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
             if(q.source === filePath) { throw new Error(RecordedModelInterface.FileIsLockedError); }
         }
 
-        // ファイル削除
-        fs.unlink(filePath, (err) => {
-            if(err) { throw new Error(RecordedModelInterface.DeleteFileError); }
-        });
-
-        // DB 上から削除
+        // 削除
         if(typeof encodedId === 'undefined') {
-            await this.recordedDB.deleteRecPath(recordedId);
+            await this.ipc.recordedDeleteFile(recordedId);
         } else {
-            await this.encodedDB.delete(encodedId);
+            await this.ipc.recordedDeleteEncodeFile(encodedId);
         }
     }
 
@@ -462,7 +456,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
         }
 
         //エンコードを追加
-        this.encodeManager.push({
+        this.encodeManage.push({
             recordedId: recorded.id,
             source: filePath,
             mode: mode,

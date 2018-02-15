@@ -31,14 +31,14 @@ import { IPCClient } from './IPC/IPCClient';
 import { ScheduleModel } from './Api/ScheduleModel';
 import { ConfigModel } from './Api/ConfigModel';
 import { StorageModel } from './Api/StorageModel';
-import { EncodeProcessManager } from '../Service/EncodeProcessManager';
-import { EncodeManager } from '../Service/EncodeManager';
-import { EncodeModel } from './Encode/EncodeModel';
+import { EncodeProcessManageModel } from './Service/Encode/EncodeProcessManageModel';
+import { EncodeManageModel } from './Service/Encode/EncodeManageModel';
+import { EncodeModel } from './Service/Encode/EncodeModel';
 import { StreamsModel } from './Api/StreamsModel';
-import SocketIoServer from '../Service/SocketIoServer';
-import { StreamManager } from '../Service/Stream/StreamManager';
-import { MpegTsLiveStream } from '../Service/Stream/MpegTsLiveStream';
-import { RecordedHLSStream } from '../Service/Stream/RecordedHLSStream';
+import { SocketIoManageModel } from './Service/SocketIoManageModel';
+import { StreamManageModel } from './Service/Stream/StreamManageModel';
+import { MpegTsLiveStream } from './Service/Stream/MpegTsLiveStream';
+import { RecordedHLSStream } from './Service/Stream/RecordedHLSStream';
 import Util from '../Util/Util';
 import * as apid from '../../../api';
 
@@ -86,19 +86,21 @@ namespace ModelFactorySetting {
                 break;
         }
 
-        let encodeProcessManager = EncodeProcessManager.getInstance();
-        EncodeManager.init(encodeProcessManager);
-        let encodeManager = EncodeManager.getInstance();
-
-        let encodeModel = new EncodeModel(
-            encodeManager,
-            SocketIoServer.getInstance(),
+        const encodeProcessManage = new EncodeProcessManageModel();
+        const encodeManage = new EncodeManageModel(encodeProcessManage);
+        const socketIoManage = new SocketIoManageModel();
+        const ipc = new IPCClient()
+        const encodeModel = new EncodeModel(
+            encodeManage,
+            socketIoManage,
             recordedDB!,
+            ipc,
         );
-        IPCClient.init(encodeModel);
-        let ipc = IPCClient.getInstance();
-        encodeModel.setIPC(ipc);
+        const streamManage = new StreamManageModel(socketIoManage);
 
+        ipc.setModels(encodeModel, socketIoManage);
+
+        factory.reg('SocketIoManageModel', () => { return socketIoManage; });
         factory.reg('RulesModel', () => { return new RulesModel(ipc, rulesDB) });
         factory.reg('RecordedModel', () => { return new RecordedModel(
             ipc,
@@ -106,8 +108,8 @@ namespace ModelFactorySetting {
             encodedDB,
             rulesDB,
             servicesDB,
-            encodeManager,
-            StreamManager.getInstance(),
+            encodeManage,
+            streamManage,
         ); });
         factory.reg('ChannelsModel', () => { return new ChannelsModel(servicesDB); });
         factory.reg('ReservesModel', () => { return new ReservesModel(ipc); });
@@ -120,10 +122,17 @@ namespace ModelFactorySetting {
         factory.reg('StorageModel', () => { return new StorageModel(); });
         factory.reg('EncodeModel', () => { return encodeModel; });
         factory.reg('StreamsModel', () => { return new StreamsModel(
-            StreamManager.getInstance(),
-            (chanelId: apid.ServiceItemId, mode: number) => { return new MpegTsLiveStream(chanelId, mode); },
+            streamManage,
+            (chanelId: apid.ServiceItemId, mode: number) => { return new MpegTsLiveStream(
+                encodeProcessManage,
+                streamManage,
+                chanelId,
+                mode,
+            ); },
             (recordedId: apid.RecordedId, mode: number, encodedId: apid.EncodedId | null) => {
                 return new RecordedHLSStream(
+                    encodeProcessManage,
+                    streamManage,
                     recordedDB,
                     encodedDB,
                     recordedId,

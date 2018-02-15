@@ -1,6 +1,6 @@
 import * as fs from 'fs';
-import Base from '../../Base';
-import Util from '../../Util/Util';
+import Base from '../../../Base';
+import Util from '../../../Util/Util';
 
 /**
 * HLSFileDeleter

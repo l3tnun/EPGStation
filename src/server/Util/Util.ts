@@ -45,20 +45,6 @@ namespace Util {
     }
 
     /**
-    * config の continuousEPGUpdater を返す
-    * 一度値が確定すると変更されない
-    * @return boolean
-    */
-    let continuousEPGUpdater: boolean | null = null;
-    export const isContinuousEPGUpdater = (): boolean => {
-        if(continuousEPGUpdater === null) {
-            continuousEPGUpdater = Configuration.getInstance().getConfig().continuousEPGUpdater || false;
-        }
-
-        return continuousEPGUpdater;
-    }
-
-    /**
     * sleep
     * @param msec: ミリ秒
     */

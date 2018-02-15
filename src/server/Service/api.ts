@@ -1,7 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as express from 'express';
-import SocketIoServer from './SocketIoServer';
+import factory from '../Model/ModelFactory';
+import { SocketIoManageModelInterface } from '../Model/Service/SocketIoManageModel';
 import { PLayList } from '../Model/Api/PlayListInterface';
 
 export interface IError {
@@ -51,7 +52,7 @@ export const responseJSON = (res: express.Response, code: number, body?: any): e
 * socket.io で client へ状態が更新されたことを通知する
 */
 export const notifyClient = (): void => {
-    SocketIoServer.getInstance().notifyClient();
+    (<SocketIoManageModelInterface>factory.get('SocketIoManageModel')).notifyClient();
 }
 
 /**

@@ -1,18 +1,18 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import * as events from 'events'
-import Base from '../Base';
-import * as apid from '../../../node_modules/mirakurun/api';
+import Model from '../../Model';
+import * as apid from '../../../../../node_modules/mirakurun/api';
+import { ProgramsDBInterface } from '../../DB/ProgramsDB';
+import { IPCServerInterface } from '../../IPC/IPCServer';
+import { RulesDBInterface } from '../../DB/RulesDB';
+import * as DBSchema from '../../DB/DBSchema';
 import Tuner from './Tuner';
-import { SearchInterface, OptionInterface, EncodeInterface } from './RuleInterface';
-import { ProgramsDBInterface } from '../Model/DB/ProgramsDB';
-import { IPCServerInterface } from '../Model/IPC/IPCServer';
-import { RulesDBInterface } from '../Model/DB/RulesDB';
-import * as DBSchema from '../Model/DB/DBSchema';
-import { ReserveProgram } from './ReserveProgramInterface';
-import Util from '../Util/Util';
-import DateUtil from '../Util/DateUtil';
-import CheckRule from '../Util/CheckRule';
+import { SearchInterface, OptionInterface, EncodeInterface } from '../RuleInterface';
+import { ReserveProgram } from '../ReserveProgramInterface';
+import Util from '../../../Util/Util';
+import DateUtil from '../../../Util/DateUtil';
+import CheckRule from '../../../Util/CheckRule';
 
 interface ExeQueueData {
     id: string;
@@ -35,7 +35,7 @@ interface ReserveLimit {
     total: number;
 }
 
-interface ReservationManagerInterface {
+interface ReservationManageModelInterface extends Model {
     setTuners(tuners: apid.TunerDevice[]): void;
     getReserve(programId: apid.ProgramId): ReserveProgram | null;
     getReservesAll(limit?: number, offset?: number): ReserveProgram[];
@@ -52,14 +52,11 @@ interface ReservationManagerInterface {
 }
 
 /**
-* ReservationManager
+* ReservationManageModel
 * 予約の管理を行う
-* @throws ReservationManagerCreateError init を呼ばないと起こる
+* @throws ReservationManageModelCreateError init を呼ばないと起こる
 */
-class ReservationManager extends Base {
-    private static instance: ReservationManager;
-    private static inited: boolean = false;
-
+class ReservationManageModel extends Model {
     private lockId: string | null = null;
     private exeQueue: ExeQueueData[] = [];
     private exeEventEmitter: events.EventEmitter = new events.EventEmitter();
@@ -71,27 +68,16 @@ class ReservationManager extends Base {
     private tuners: Tuner[] = [];
     private reservesPath: string;
 
-    public static init(programDB: ProgramsDBInterface, rulesDB: RulesDBInterface, ipc: IPCServerInterface) {
-        if(ReservationManager.inited) { return; }
-        ReservationManager.inited = true;
-        this.instance = new ReservationManager(programDB, rulesDB, ipc);
-        ReservationManager.inited = true;
-    }
-
-    public static getInstance(): ReservationManager {
-        if(!ReservationManager.inited) {
-            throw new Error('ReservationManagerCreateError');
-        }
-
-        return this.instance;
-    }
-
-    private constructor(programDB: ProgramsDBInterface, rulesDB: RulesDBInterface, ipc: IPCServerInterface) {
+    constructor(
+        programDB: ProgramsDBInterface,
+        rulesDB: RulesDBInterface,
+        ipc: IPCServerInterface
+    ) {
         super();
         this.programDB = programDB;
         this.rulesDB = rulesDB;
         this.ipc = ipc;
-        this.reservesPath = this.config.getConfig().reserves || path.join(__dirname, '..', '..', '..', 'data', 'reserves.json');
+        this.reservesPath = this.config.getConfig().reserves || path.join(__dirname, '..', '..', '..', '..', '..', 'data', 'reserves.json');
         this.readReservesFile();
 
         this.exeEventEmitter.setMaxListeners(1000);
@@ -123,11 +109,11 @@ class ReservationManager extends Base {
             const onDone = (id: string) => {
                 if(id === data.id) {
                     resolve(data.id);
-                    this.exeEventEmitter.removeListener(ReservationManager.UNLOCK_EVENT, onDone);
+                    this.exeEventEmitter.removeListener(ReservationManageModel.UNLOCK_EVENT, onDone);
                 }
             }
 
-            this.exeEventEmitter.on(ReservationManager.UNLOCK_EVENT, onDone);
+            this.exeEventEmitter.on(ReservationManageModel.UNLOCK_EVENT, onDone);
 
             this.unLockExecution(data.id);
         });
@@ -148,7 +134,7 @@ class ReservationManager extends Base {
             const q = this.exeQueue.shift();
             if(typeof q !== 'undefined') {
                 this.lockId = q.id;
-                this.exeEventEmitter.emit(ReservationManager.UNLOCK_EVENT, q.id);
+                this.exeEventEmitter.emit(ReservationManageModel.UNLOCK_EVENT, q.id);
             }
         }
     }
@@ -352,14 +338,14 @@ class ReservationManager extends Base {
     * 手動予約追加
     * @param programId: number program id
     * @return Promise<void>
-    * @throws ReservationManagerAddFailed 予約に失敗
+    * @throws ReservationManageModelAddFailed 予約に失敗
     */
     public async addReserve(programId: apid.ProgramId, encode: EncodeInterface | null = null): Promise<void> {
         // encode option が正しいかチェック
         if(encode != null && !(new CheckRule().checkEncodeOption(encode))) {
             this.log.system.error('addReserve Failed');
-            this.log.system.error('ReservationManager is Running');
-            throw new Error('ReservationManagerAddFailed');
+            this.log.system.error('ReservationManageModel is Running');
+            throw new Error('ReservationManageModelAddFailed');
         }
 
         const exeId = await this.getExecution(1);
@@ -402,7 +388,7 @@ class ReservationManager extends Base {
             if(reserve.program.id == programId) {
                 this.log.system.error(`program is reserves: ${ programId }`);
                 finalize();
-                throw new Error('ReservationManagerAddFailed');
+                throw new Error('ReservationManageModelAddFailed');
             }
 
             // 該当する予約情報をコピー
@@ -426,7 +412,7 @@ class ReservationManager extends Base {
             if(reserve.isConflict) {
                 finalize();
                 this.log.system.error(`program id conflict: ${ programId }`);
-                throw new Error('ReservationManagerAddReserveConflict');
+                throw new Error('ReservationManageModelAddReserveConflict');
             }
         }
 
@@ -878,9 +864,9 @@ class ReservationManager extends Base {
     }
 }
 
-namespace ReservationManager {
+namespace ReservationManageModel {
     export const UNLOCK_EVENT = 'ExeUnlock';
 }
 
-export { ReserveAllId, ReserveLimit, ReservationManagerInterface, ReservationManager };
+export { ReserveAllId, ReserveLimit, ReservationManageModelInterface, ReservationManageModel };
 

@@ -1,12 +1,11 @@
 import * as events from 'events';
 import Model from '../Model';
 import { IPCClientMessage, IPCServerMessage, IPCServerSocketIoMessage, IPCServerEncodeMessage, IPCMessageDefinition } from './IPCMessageInterface';
-import { ReserveAllId, ReserveLimit } from '../../Operator/ReservationManager';
-import { EncodeInterface } from '../../Operator/RuleInterface';
-import { RuleInterface } from '../../Operator/RuleInterface';
+import { ReserveAllId, ReserveLimit } from '../Operator/Reservation/ReservationManageModel';
+import { EncodeInterface, RuleInterface } from '../Operator/RuleInterface';
 import * as apid from '../../../../node_modules/mirakurun/api';
-import SocketIoServer from '../../Service/SocketIoServer';
-import { EncodeModelInterface } from '../Encode/EncodeModel';
+import { SocketIoManageModelInterface } from '../Service/SocketIoManageModel';
+import { EncodeModelInterface } from '../Service/Encode/EncodeModel';
 
 interface IPCClientInterface extends Model {
     getReserveAllId(): Promise<ReserveAllId>;
@@ -17,6 +16,8 @@ interface IPCClientInterface extends Model {
     cancelReserve(programId: apid.ProgramId): Promise<void>;
     removeReserveSkip(programId: apid.ProgramId): Promise<void>;
     recordedDelete(recordedId: number): Promise<void>;
+    recordedDeleteFile(recordedId: number): Promise<void>;
+    recordedDeleteEncodeFile(encodedId: number): Promise<void>;
     ruleDisable(ruleId: number): Promise<void>;
     ruleEnable(ruleId: number): Promise<void>;
     ruleDelete(ruleId: number): Promise<void>;
@@ -32,29 +33,13 @@ interface IPCClientInterface extends Model {
 * @throws IPCClientIsNotChildProcess fork で起動していないとき
 */
 class IPCClient extends Model implements IPCClientInterface {
-    private static isInited: boolean = false;
-    private static instance: IPCClientInterface;
     private encodeModel: EncodeModelInterface;
+    private socketIo: SocketIoManageModelInterface;
     private listener: events.EventEmitter = new events.EventEmitter();
 
-    public static getInstance(): IPCClientInterface {
-        if(!this.isInited) {
-            throw new Error('IPCClientCreateInstanceError');
-        }
-
-        return this.instance;
-    }
-
-    public static init(encodeModel: EncodeModelInterface) {
-        if(this.isInited) { return; }
-        this.instance = new IPCClient(encodeModel);
-        this.isInited = true;
-    }
-
-    private constructor(encodeModel: EncodeModelInterface) {
+    constructor() {
         super();
 
-        this.encodeModel = encodeModel;
         if(typeof process.send === 'undefined') {
             this.log.system.error('IPCClient is not child process');
             throw new Error('IPCClientIsNotChildProcess');
@@ -67,13 +52,21 @@ class IPCClient extends Model implements IPCClientInterface {
                     this.encodeModel.push((<IPCServerEncodeMessage>msg).program);
                 } else {
                     // server からの socket.io message 送信依頼
-                    SocketIoServer.getInstance().notifyClient();
+                    this.socketIo.notifyClient();
                 }
             } else {
                 // client -> server の返答
                 this.listener.emit(String((<IPCServerMessage>msg).id), msg);
             }
         });
+    }
+
+    public setModels(
+        encodeModel: EncodeModelInterface,
+        socketIo: SocketIoManageModelInterface,
+    ) {
+        this.encodeModel = encodeModel;
+        this.socketIo = socketIo;
     }
 
     /**
@@ -159,7 +152,27 @@ class IPCClient extends Model implements IPCClientInterface {
     * @return Promise<void>
     */
     public async recordedDelete(recordedId: number): Promise<void> {
-        let id = this.send(IPCMessageDefinition.recordedDeleteAll, { recordedId: recordedId });
+        let id = this.send(IPCMessageDefinition.recordedDelete, { recordedId: recordedId });
+        await this.receive(id);
+    }
+
+    /**
+    * 録画の ts ファイルを削除する
+    * @param recordedId: recorded id
+    * @return Promise<void>
+    */
+    public async recordedDeleteFile(recordedId: number): Promise<void> {
+        let id = this.send(IPCMessageDefinition.recordedFileDelete, { recordedId: recordedId });
+        await this.receive(id);
+    }
+
+    /**
+    * 録画の encoded ファイルを削除する
+    * @param encodedId: encoded id
+    * @return Promise<void>
+    */
+    public async recordedDeleteEncodeFile(encodedId: number): Promise<void> {
+        let id = this.send(IPCMessageDefinition.recordedEncodeFileDelete, { encodedId: encodedId });
         await this.receive(id);
     }
 

@@ -1,7 +1,7 @@
 import * as apid from '../../../../node_modules/mirakurun/api';
 import DBTableBase from './DBTableBase';
 import * as DBSchema from './DBSchema';
-import { SearchInterface } from '../../Operator/RuleInterface';
+import { SearchInterface } from '../Operator/RuleInterface';
 import DateUtil from '../../Util/DateUtil';
 import StrUtil from '../../Util/StrUtil';
 

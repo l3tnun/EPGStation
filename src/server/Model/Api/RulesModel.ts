@@ -3,7 +3,7 @@ import { IPCClientInterface } from '../IPC/IPCClient';
 import { RulesDBInterface } from '../DB/RulesDB';
 import * as DBSchema from '../DB/DBSchema';
 import ApiUtil from './ApiUtil';
-import { RuleInterface } from '../../Operator/RuleInterface';
+import { RuleInterface } from '../Operator/RuleInterface';
 
 interface RulesModelInterface extends ApiModel {
     getAll(limit: number | undefined, offset: number): Promise<{}[]>;

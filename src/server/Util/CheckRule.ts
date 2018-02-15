@@ -1,5 +1,5 @@
 import Base from '../Base';
-import { RuleInterface, SearchInterface, OptionInterface, EncodeInterface } from '../Operator/RuleInterface';
+import { RuleInterface, SearchInterface, OptionInterface, EncodeInterface } from '../Model/Operator/RuleInterface';
 
 /**
 * Rule の各オプションがただしいかチェックする
