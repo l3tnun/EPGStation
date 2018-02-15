@@ -295,6 +295,7 @@ definitions:
     type: object
     required:
       - id
+      - eventId
       - channelId
       - startAt
       - endAt
@@ -305,6 +306,8 @@ definitions:
       id:
         $ref: '#/definitions/ProgramId'
         description: 'program id'
+      eventId:
+        $ref: '#/definitions/EventId'
       channelId:
         $ref: '#/definitions/ServiceItemId'
       startAt:
