@@ -83,7 +83,9 @@ class ChannelsModel extends ApiModel implements ChannelsModelInterface {
                 }
             }
 
-            str += `#EXTINF:-1 tvg-id="${ channel.id }" group-title="${ channel.channelType }",${ channel.name }　\n`;
+            let logo = '';
+            if(channel.hasLogoData) { logo = `tvg-logo="${ isSecure ? 'https' : 'http' }://${ host }/api/channels/${ channel.id }/logo"`; }
+            str += `#EXTINF:-1 tvg-id="${ channel.id }" ${ logo } group-title="${ channel.channelType }",${ channel.name }　\n`;
             str += `${ isSecure ? 'https' : 'http' }://${ host }/api/streams/live/${ channel.id }/mpegts?mode=${ mode }\n`;
         }
 
