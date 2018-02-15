@@ -69,9 +69,21 @@ class ChannelsModel extends ApiModel implements ChannelsModelInterface {
     public async getIPTVChannelList(host: string, isSecure: boolean, mode: number): Promise<string> {
         const channels = await this.servicesDB.findAll();
 
+        let channelIndex: { [key: string]: number } = {};
+
         let str = '#EXTM3U\n';
         for(let channel of channels) {
-            str += `#EXTINF:-1 tvg-id="${ channel.id }",${ channel.name }\n`;
+            if(channel.type !== 1) { continue; }
+            if(typeof channelIndex[channel.name] === 'undefined') {
+                channelIndex[channel.name] = 0;
+            } else {
+                channelIndex[channel.name] += 1;
+                for(let i = 0; i <= channelIndex[channel.name]; i++) {
+                    channel.name += ' ';
+                }
+            }
+
+            str += `#EXTINF:-1 tvg-id="${ channel.id }" group-title="${ channel.channelType }",${ channel.name }　\n`;
             str += `${ isSecure ? 'https' : 'http' }://${ host }/api/streams/live/${ channel.id }/mpegts?mode=${ mode }\n`;
         }
 

@@ -13,6 +13,7 @@ interface ScheduleModelInterface extends ApiModel {
     getSchedule(time: number, length: number, type: apid.ChannelType): Promise<{}[]>;
     getScheduleId(time: number, channelId: number): Promise<{}>;
     getBroadcasting(addition: number): Promise<{}>;
+    getIPTVepg(): Promise<string>;
     searchProgram(searchOption: SearchInterface): Promise<{}[]>;
     updateReserves(): Promise<void>;
 }
@@ -177,6 +178,71 @@ class ScheduleModel extends ApiModel implements ScheduleModelInterface {
         if(channel.remoteControlKeyId !== null) { c['remoteControlKeyId'] = channel.remoteControlKeyId; }
 
         return c;
+    }
+
+    /**
+    * Kodi IPTV 番組情報を生成
+    * @return Promise<string>
+    */
+    public async getIPTVepg(): Promise<string> {
+        const now = new Date().getTime();
+        const programs = await this.programDB.findSchedule(now, now + 1000 * 60 * 60 * 24 * 7);
+        const channels = await this.serviceDB.findAll();
+
+        // channelId ごとに programs をまとめる
+        let programsIndex: { [key: number]: DBSchema.ScheduleProgramItem[] } = {};
+        for(let program of programs) {
+            if(typeof programsIndex[program.channelId] === 'undefined') {
+                programsIndex[program.channelId] = [];
+            }
+
+            program.name = this.replaceStr(program.name);
+            if(program.description !== null) {
+                program.description = this.replaceStr(program.description);
+            }
+            programsIndex[program.channelId].push(program);
+        }
+
+
+        let str = '<?xml version="1.0" encoding="UTF-8"?>\n'
+            + '<!DOCTYPE tv SYSTEM "xmltv.dtd">\n'
+            + '<tv generator-info-name="EPGStation">\n'
+        for(let channel of channels) {
+            if(typeof programsIndex[channel.id] === 'undefined') { continue; }
+            str += `  <channel id="${ channel.id }" tp="${ channel.channel }">\n`;
+            str += `    <display-name lang="ja_JP">${ channel.name }</display-name>\n`;
+            str += `    <service_id>${  channel.serviceId }</service_id>\n`;
+            str += '  </channel>\n';
+
+            for(let program of programsIndex[channel.id]) {
+                str += `  <programme start="${ this.getTimeStr(program.startAt) }" stop="${ this.getTimeStr(program.endAt) }" channel="${ program.channelId }" event_id="${ program.eventId }">\n`;
+                str += `    <title lang="ja_JP">${ program.name }</title>\n`;
+                if(program.description !== null) { str += `    <desc lang="ja_JP">${ program.description }</desc>\n`; }
+                // TODO category
+                str += '  </programme>\n';
+            }
+        }
+        str += '</tv>';
+
+        return str;
+    }
+
+    /**
+    * xml での禁止文字列を置き換える
+    * @param str: string
+    * @return string
+    */
+    private replaceStr(str: string): string {
+        return str.replace(/</g,'＜').replace(/>/g,'＞').replace(/&/g, '＆').replace(/"/g, '”').replace(/'/g, '’');
+    }
+
+    /**
+    * iptv 用の時刻文字列を生成する
+    * @param time: apid.UnixtimeMS
+    @return string
+    */
+    private getTimeStr(time: apid.UnixtimeMS): string {
+        return DateUtil.format(new Date(time), 'yyyyMMddhhmmss +0900');
     }
 
     /**
