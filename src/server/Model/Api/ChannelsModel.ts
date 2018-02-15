@@ -8,6 +8,7 @@ import * as apid from '../../../../node_modules/mirakurun/api';
 interface ChannelsModelInterface extends ApiModel {
     getAll(): Promise<{}[]>;
     getLogo(channelId: apid.ServiceItemId): Promise<Buffer>;
+    getIPTVChannelList(host: string, isSecure: boolean, mode: number): Promise<string>;
 }
 
 namespace ChannelsModelInterface {
@@ -56,6 +57,25 @@ class ChannelsModel extends ApiModel implements ChannelsModelInterface {
 
         let mirakurun = CreateMirakurunClient.get();
         return mirakurun.getLogoImage(channelId);
+    }
+
+    /**
+    * Kodi IPTV channel list を生成
+    * @param host: host
+    * @param isSecure: https か
+    * @param mode: transcode mode
+    * @return Promise<string>
+    */
+    public async getIPTVChannelList(host: string, isSecure: boolean, mode: number): Promise<string> {
+        const channels = await this.servicesDB.findAll();
+
+        let str = '#EXTM3U\n';
+        for(let channel of channels) {
+            str += `#EXTINF:-1 tvg-id="${ channel.id }",${ channel.name }\n`;
+            str += `${ isSecure ? 'https' : 'http' }://${ host }/api/streams/live/${ channel.id }/mpegts?mode=${ mode }\n`;
+        }
+
+        return str;
     }
 }
 
