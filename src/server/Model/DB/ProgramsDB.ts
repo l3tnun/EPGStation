@@ -312,7 +312,6 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
 
         if(typeof type !== 'undefined') {
             query += `channelType = '${ type }' and `;
-        } else {
         }
 
         query += `endAt >= ${ startAt } and ${ endAt } > startAt `

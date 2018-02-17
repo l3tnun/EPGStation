@@ -3,7 +3,6 @@ import * as api from '../../api';
 import factory from '../../../Model/ModelFactory';
 import { IPTVModelInterface } from '../../../Model/Api/IPTVModel';
 
-
 export const get: Operation = async (req, res) => {
     const iptv = <IPTVModelInterface>(factory.get('IPTVModel'));
 

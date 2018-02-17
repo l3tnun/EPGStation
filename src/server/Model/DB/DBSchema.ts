@@ -122,7 +122,6 @@ export interface EncodedSchema {
 
 export interface ScheduleProgramItem {
     id: apid.ProgramId;
-    eventId: apid.EventId;
     channelId: number;
     startAt: apid.UnixtimeMS;
     endAt: apid.UnixtimeMS;
