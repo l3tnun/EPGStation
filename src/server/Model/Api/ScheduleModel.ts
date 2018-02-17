@@ -204,22 +204,21 @@ class ScheduleModel extends ApiModel implements ScheduleModelInterface {
         }
 
 
-        let str = '<?xml version="1.0" encoding="UTF-8"?>\n'
-            + '<!DOCTYPE tv SYSTEM "xmltv.dtd">\n'
-            + '<tv generator-info-name="EPGStation">\n'
+        let str = '<?xml version="1.0" encoding="UTF-8"?>'
+            + '<!DOCTYPE tv SYSTEM "xmltv.dtd">'
+            + '<tv generator-info-name="EPGStation">'
         for(let channel of channels) {
             if(typeof programsIndex[channel.id] === 'undefined') { continue; }
-            str += `  <channel id="${ channel.id }" tp="${ channel.channel }">\n`;
-            str += `    <display-name lang="ja_JP">${ channel.name }</display-name>\n`;
-            str += `    <service_id>${  channel.serviceId }</service_id>\n`;
-            str += '  </channel>\n';
+            str += `<channel id="${ channel.id }" tp="${ channel.channel }">`;
+            str += `<display-name lang="ja_JP">${ channel.name }</display-name>`;
+            str += `<service_id>${  channel.serviceId }</service_id>`;
+            str += '</channel>\n';
 
             for(let program of programsIndex[channel.id]) {
-                str += `  <programme start="${ this.getTimeStr(program.startAt) }" stop="${ this.getTimeStr(program.endAt) }" channel="${ program.channelId }" event_id="${ program.eventId }">\n`;
-                str += `    <title lang="ja_JP">${ program.name }</title>\n`;
-                if(program.description !== null) { str += `    <desc lang="ja_JP">${ program.description }</desc>\n`; }
-                // TODO category
-                str += '  </programme>\n';
+                str += `<programme start="${ this.getTimeStr(program.startAt) }" stop="${ this.getTimeStr(program.endAt) }" channel="${ program.channelId }" event_id="${ program.eventId }">`;
+                str += `<title lang="ja_JP">${ program.name }</title>`;
+                if(program.description !== null) { str += `    <desc lang="ja_JP">${ program.description }</desc>`; }
+                str += '</programme>';
             }
         }
         str += '</tv>';
