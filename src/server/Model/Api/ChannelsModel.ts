@@ -67,7 +67,10 @@ class ChannelsModel extends ApiModel implements ChannelsModelInterface {
     * @return Promise<string>
     */
     public async getIPTVChannelList(host: string, isSecure: boolean, mode: number): Promise<string> {
-        const channels = await this.servicesDB.findAll();
+        let channels = await this.servicesDB.findAll();
+
+        // sort
+        channels = ApiUtil.sortItems(channels, this.config.getConfig().serviceOrder || []);
 
         let channelIndex: { [key: string]: number } = {};
 
