@@ -215,7 +215,7 @@ class ScheduleModel extends ApiModel implements ScheduleModelInterface {
             str += '</channel>\n';
 
             for(let program of programsIndex[channel.id]) {
-                str += `<programme start="${ this.getTimeStr(program.startAt) }" stop="${ this.getTimeStr(program.endAt) }" channel="${ program.channelId }" event_id="${ program.eventId }">`;
+                str += `<programme start="${ this.getTimeStr(program.startAt) }" stop="${ this.getTimeStr(program.endAt) }" channel="${ program.channelId }">`;
                 str += `<title lang="ja_JP">${ program.name }</title>`;
                 if(program.description !== null) { str += `    <desc lang="ja_JP">${ program.description }</desc>`; }
                 str += '</programme>';
