@@ -52,7 +52,8 @@ class PostgreSQLOperator extends DBOperator {
             });
 
             client.on('drain', () => {
-                client.end();
+                client.release();
+                pool.end();
                 client.on('end', () => {
                     PostgreSQLOperator.pool = null;
                     resolve();
@@ -179,7 +180,7 @@ class PostgreSQLOperator extends DBOperator {
         ) => Promise<void>,
     ): Promise<void> {
         return new Promise<void>(async (resolve: () => void, reject: (err: Error) => void) => {
-            this.getPool().connect(async (err: Error, client: pg.Client, done: () => void) => {
+            this.getPool().connect(async (err: Error, client: pg.PoolClient, done: () => void) => {
                 if(err) {
                     this.log.system.error('connect error');
                     this.log.system.error(err.message);

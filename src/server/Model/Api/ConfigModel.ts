@@ -1,5 +1,6 @@
 import ApiModel from './ApiModel';
 import CreateMirakurunClient from '../../Util/CreateMirakurunClient';
+import * as apid from '../../../../node_modules/mirakurun/api';
 
 interface ConfigModelInterface extends ApiModel {
     getConfig(): Promise<{}>;
@@ -20,7 +21,7 @@ class ConfigModel extends ApiModel implements ConfigModelInterface {
         let broadcast = { GR: false, BS: false, CS: false, SKY: false };
         for(let tuner of tuners) {
             for(let key in broadcast) {
-                if(tuner.types.indexOf(key) !== -1) {
+                if(tuner.types.indexOf(<apid.ChannelType>key) !== -1) {
                     broadcast[key] = true;
                 }
             }
