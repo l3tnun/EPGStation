@@ -62,7 +62,6 @@ export interface ScheduleProgram {
 
 export interface ScheduleProgramItem {
     id: ProgramId;
-    eventId: EventId;
     channelId: ServiceItemId;
     startAt: UnixtimeMS;
     endAt: UnixtimeMS;
