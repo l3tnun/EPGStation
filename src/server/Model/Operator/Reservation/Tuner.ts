@@ -13,7 +13,7 @@ class Tuner extends Base {
 
     constructor(tuner: apid.TunerDevice) {
         super();
-        this.types = <any>tuner.types; //TODO mirakurun の api.d.ts が修正されたら any を削除
+        this.types = tuner.types;
     }
 
     /**

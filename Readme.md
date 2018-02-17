@@ -130,6 +130,10 @@ npm run restore FILENAME
 
 データベース接続設定は config.json を参照します。バックアップデータはデータベースに依存しないので MySQL からバックアップ -> SQLite3 へレストアなども可能です
 
+## Kodi との連携
+
+[doc/kodi.md](doc/kodi.md) を参照してください
+
 ## Android での番組表の表示高速化
 
 性能が低い Android 端末の場合番組表の描画に時間がかかる場合があります

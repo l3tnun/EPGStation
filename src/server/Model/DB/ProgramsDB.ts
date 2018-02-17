@@ -53,7 +53,7 @@ interface ProgramsDBInterface extends DBTableBase {
     insert(channelTypes: ChannelTypeHash, programs: apid.Program[], isDelete?: boolean): Promise<void>;
     delete(programId: number): Promise<void>;
     deleteOldPrograms(): Promise<void>;
-    findSchedule(startAt: apid.UnixtimeMS, endAt: apid.UnixtimeMS, type: apid.ChannelType): Promise<DBSchema.ScheduleProgramItem[]>;
+    findSchedule(startAt: apid.UnixtimeMS, endAt: apid.UnixtimeMS, type?: apid.ChannelType): Promise<DBSchema.ScheduleProgramItem[]>;
     findScheduleId(startAt: apid.UnixtimeMS, endAt: apid.UnixtimeMS, channelId: apid.ServiceItemId): Promise<DBSchema.ScheduleProgramItem[]>;
     findBroadcasting(addition?: apid.UnixtimeMS): Promise<DBSchema.ScheduleProgramItem[]>;
     findBroadcastingChanel(channelId: apid.ServiceItemId, addition?: apid.UnixtimeMS): Promise<DBSchema.ScheduleProgramItem[]>;
@@ -306,11 +306,15 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
     * @param type: 放送波
     * @return Promise<DBSchema.ScheduleProgramItem[]>
     */
-    public async findSchedule(startAt: apid.UnixtimeMS, endAt: apid.UnixtimeMS, type: apid.ChannelType): Promise<DBSchema.ScheduleProgramItem[]> {
+    public async findSchedule(startAt: apid.UnixtimeMS, endAt: apid.UnixtimeMS, type?: apid.ChannelType): Promise<DBSchema.ScheduleProgramItem[]> {
         let query = `select ${ this.getMinColumns() } `
-            + `from ${ DBSchema.TableName.Programs } `
-            + `where channelType = '${ type }' `
-            + `and endAt >= ${ startAt } and ${ endAt } > startAt `
+            + `from ${ DBSchema.TableName.Programs } where `;
+
+        if(typeof type !== 'undefined') {
+            query += `channelType = '${ type }' and `;
+        }
+
+        query += `endAt >= ${ startAt } and ${ endAt } > startAt `
             + 'order by startAt';
 
         return <DBSchema.ScheduleProgramItem[]>this.fixResults(<DBSchema.ScheduleProgramItem[]>await this.operator.runQuery(query));

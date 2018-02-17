@@ -23,18 +23,18 @@ namespace ScheduleModelInterface {
 }
 
 class ScheduleModel extends ApiModel implements ScheduleModelInterface {
-    private programDB: ProgramsDBInterface;
-    private serviceDB: ServicesDBInterface;
+    private programsDB: ProgramsDBInterface;
+    private servicesDB: ServicesDBInterface;
     private ipc: IPCClientInterface;
 
     constructor(
-        programDB: ProgramsDBInterface,
-        serviceDB: ServicesDBInterface,
+        programsDB: ProgramsDBInterface,
+        servicesDB: ServicesDBInterface,
         ipc: IPCClientInterface,
     ) {
         super();
-        this.programDB = programDB;
-        this.serviceDB = serviceDB;
+        this.programsDB = programsDB;
+        this.servicesDB = servicesDB;
         this.ipc = ipc;
     }
 
@@ -47,8 +47,8 @@ class ScheduleModel extends ApiModel implements ScheduleModelInterface {
     */
     public async getSchedule(time: number, length: number, type: apid.ChannelType): Promise<{}[]> {
         let times = this.getTime(time, length);
-        let programs = await this.programDB.findSchedule(times.startAt, times.endAt, type);
-        let channels = await this.serviceDB.findChannelType([type]);
+        let programs = await this.programsDB.findSchedule(times.startAt, times.endAt, type);
+        let channels = await this.servicesDB.findChannelType([type]);
 
         // sort
         channels = ApiUtil.sortItems(channels, this.config.getConfig().serviceOrder || []);
@@ -88,10 +88,10 @@ class ScheduleModel extends ApiModel implements ScheduleModelInterface {
         let programs: DBSchema.ScheduleProgramItem[][] = [];
         for(let i = 0; i < 7; i++) {
             let addTime = i * 24 * 60 * 60 * 1000;
-            programs.push(await this.programDB.findScheduleId(times.startAt + addTime, times.endAt + addTime, channelId));
+            programs.push(await this.programsDB.findScheduleId(times.startAt + addTime, times.endAt + addTime, channelId));
         }
 
-        let channel = await this.serviceDB.findId(channelId);
+        let channel = await this.servicesDB.findId(channelId);
 
         if(channel === null) { throw new Error(ScheduleModelInterface.channelIdIsNotFoundError); }
 
@@ -109,8 +109,8 @@ class ScheduleModel extends ApiModel implements ScheduleModelInterface {
     * @return Promise<{}>
     */
     public async getBroadcasting(addition: number): Promise<{}> {
-        let programs = await this.programDB.findBroadcasting(addition * 1000 * 60);
-        let channels = await this.serviceDB.findAll();
+        let programs = await this.programsDB.findBroadcasting(addition * 1000 * 60);
+        let channels = await this.servicesDB.findAll();
 
         // sort
         channels = ApiUtil.sortItems(channels, this.config.getConfig().serviceOrder || []);
@@ -190,7 +190,7 @@ class ScheduleModel extends ApiModel implements ScheduleModelInterface {
             throw new Error(ScheduleModelInterface.searchOptionIsIncorrect);
         }
 
-        let programs = await this.programDB.findRule(searchOption, true, 300);
+        let programs = await this.programsDB.findRule(searchOption, true, 300);
 
         return programs.map((program) => {
             return ApiUtil.deleteNullinHash(program);
