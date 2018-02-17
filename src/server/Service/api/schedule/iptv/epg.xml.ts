@@ -3,11 +3,11 @@ import * as api from '../../../api';
 import factory from '../../../../Model/ModelFactory';
 import { ScheduleModelInterface } from '../../../../Model/Api/ScheduleModel';
 
-export const get: Operation = async (_req, res) => {
+export const get: Operation = async (req, res) => {
     let schedules = <ScheduleModelInterface>(factory.get('ScheduleModel'));
 
     try {
-        let result = await schedules.getIPTVepg();
+        let result = await schedules.getIPTVepg(req.query.days);
         res.setHeader('Content-Type', 'application/xml; charset="UTF-8"');
         res.status(200);
         res.end(result);
@@ -20,6 +20,17 @@ get.apiDoc = {
     summary: 'IPTV epg を取得',
     tags: ['schedule'],
     description: 'IPTV epg を取得する',
+    parameters: [
+        {
+            name: 'days',
+            in: 'query',
+            description: '表示する日数',
+            type: 'integer',
+            minimum: 1,
+            maximum: 8,
+            default: 3,
+        }
+    ],
     produces: ["application/xml"],
     responses: {
         200: {

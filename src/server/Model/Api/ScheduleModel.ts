@@ -13,7 +13,7 @@ interface ScheduleModelInterface extends ApiModel {
     getSchedule(time: number, length: number, type: apid.ChannelType): Promise<{}[]>;
     getScheduleId(time: number, channelId: number): Promise<{}>;
     getBroadcasting(addition: number): Promise<{}>;
-    getIPTVepg(): Promise<string>;
+    getIPTVepg(days: number): Promise<string>;
     searchProgram(searchOption: SearchInterface): Promise<{}[]>;
     updateReserves(): Promise<void>;
 }
@@ -184,9 +184,9 @@ class ScheduleModel extends ApiModel implements ScheduleModelInterface {
     * Kodi IPTV 番組情報を生成
     * @return Promise<string>
     */
-    public async getIPTVepg(): Promise<string> {
+    public async getIPTVepg(days: number): Promise<string> {
         const now = new Date().getTime();
-        const programs = await this.programDB.findSchedule(now, now + 1000 * 60 * 60 * 24 * 7);
+        const programs = await this.programDB.findSchedule(now, now + 1000 * 60 * 60 * 24 * days);
         const channels = await this.serviceDB.findAll();
 
         // channelId ごとに programs をまとめる
