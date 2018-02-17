@@ -1,13 +1,13 @@
 import { Operation } from 'express-openapi';
-import * as api from '../../../api';
-import factory from '../../../../Model/ModelFactory';
-import { ScheduleModelInterface } from '../../../../Model/Api/ScheduleModel';
+import * as api from '../../api';
+import factory from '../../../Model/ModelFactory';
+import { IPTVModelInterface } from '../../../Model/Api/IPTVModel';
 
 export const get: Operation = async (req, res) => {
-    let schedules = <ScheduleModelInterface>(factory.get('ScheduleModel'));
+    const iptv = <IPTVModelInterface>(factory.get('IPTVModel'));
 
     try {
-        let result = await schedules.getIPTVepg(req.query.days);
+        let result = await iptv.getEpg(req.query.days);
         res.setHeader('Content-Type', 'application/xml; charset="UTF-8"');
         res.status(200);
         res.end(result);
@@ -18,7 +18,7 @@ export const get: Operation = async (req, res) => {
 
 get.apiDoc = {
     summary: 'IPTV epg を取得',
-    tags: ['schedule'],
+    tags: ['iptv'],
     description: 'IPTV epg を取得する',
     parameters: [
         {

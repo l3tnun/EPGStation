@@ -30,6 +30,7 @@ import { ReservesModel } from './Api/ReservesModel';
 import { IPCClient } from './IPC/IPCClient';
 import { ScheduleModel } from './Api/ScheduleModel';
 import { ConfigModel } from './Api/ConfigModel';
+import { IPTVModel } from './Api/IPTVModel';
 import { StorageModel } from './Api/StorageModel';
 import { EncodeProcessManageModel } from './Service/Encode/EncodeProcessManageModel';
 import { EncodeManageModel } from './Service/Encode/EncodeManageModel';
@@ -119,6 +120,10 @@ namespace ModelFactorySetting {
             ipc,
         ); });
         factory.reg('ConfigModel', () => { return new ConfigModel(); });
+        factory.reg('IPTVModel', () => { return new IPTVModel(
+            programsDB,
+            servicesDB,
+        ); });
         factory.reg('StorageModel', () => { return new StorageModel(); });
         factory.reg('EncodeModel', () => { return encodeModel; });
         factory.reg('StreamsModel', () => { return new StreamsModel(

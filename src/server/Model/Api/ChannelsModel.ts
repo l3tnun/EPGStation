@@ -8,7 +8,6 @@ import * as apid from '../../../../node_modules/mirakurun/api';
 interface ChannelsModelInterface extends ApiModel {
     getAll(): Promise<{}[]>;
     getLogo(channelId: apid.ServiceItemId): Promise<Buffer>;
-    getIPTVChannelList(host: string, isSecure: boolean, mode: number): Promise<string>;
 }
 
 namespace ChannelsModelInterface {
@@ -57,42 +56,6 @@ class ChannelsModel extends ApiModel implements ChannelsModelInterface {
 
         let mirakurun = CreateMirakurunClient.get();
         return mirakurun.getLogoImage(channelId);
-    }
-
-    /**
-    * Kodi IPTV channel list を生成
-    * @param host: host
-    * @param isSecure: https か
-    * @param mode: transcode mode
-    * @return Promise<string>
-    */
-    public async getIPTVChannelList(host: string, isSecure: boolean, mode: number): Promise<string> {
-        let channels = await this.servicesDB.findAll();
-
-        // sort
-        channels = ApiUtil.sortItems(channels, this.config.getConfig().serviceOrder || []);
-
-        let channelIndex: { [key: string]: number } = {};
-
-        let str = '#EXTM3U\n';
-        for(let channel of channels) {
-            if(channel.type !== 1) { continue; }
-            if(typeof channelIndex[channel.name] === 'undefined') {
-                channelIndex[channel.name] = 0;
-            } else {
-                channelIndex[channel.name] += 1;
-                for(let i = 0; i <= channelIndex[channel.name]; i++) {
-                    channel.name += ' ';
-                }
-            }
-
-            let logo = '';
-            if(channel.hasLogoData) { logo = `tvg-logo="${ isSecure ? 'https' : 'http' }://${ host }/api/channels/${ channel.id }/logo"`; }
-            str += `#EXTINF:-1 tvg-id="${ channel.id }" ${ logo } group-title="${ channel.channelType }",${ channel.name }　\n`;
-            str += `${ isSecure ? 'https' : 'http' }://${ host }/api/streams/live/${ channel.id }/mpegts?mode=${ mode }\n`;
-        }
-
-        return str;
     }
 }
 

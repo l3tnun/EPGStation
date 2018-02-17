@@ -1,14 +1,14 @@
 import { Operation } from 'express-openapi';
-import * as api from '../../../api';
-import factory from '../../../../Model/ModelFactory';
-import { ChannelsModelInterface } from '../../../../Model/Api/ChannelsModel';
+import * as api from '../../api';
+import factory from '../../../Model/ModelFactory';
+import { IPTVModelInterface } from '../../../Model/Api/IPTVModel';
 
 
 export const get: Operation = async (req, res) => {
-    let channels = <ChannelsModelInterface>(factory.get('ChannelsModel'));
+    const iptv = <IPTVModelInterface>(factory.get('IPTVModel'));
 
     try {
-        let result = await channels.getIPTVChannelList(req.headers.host, req.secure, req.query.mode);
+        let result = await iptv.getChannelList(req.headers.host, req.secure, req.query.mode);
         res.setHeader('Content-Type', 'application/x-mpegURL; charset="UTF-8"');
         res.status(200);
         res.end(result);
@@ -19,7 +19,7 @@ export const get: Operation = async (req, res) => {
 
 get.apiDoc = {
     summary: 'IPTV channel list を取得',
-    tags: ['channels'],
+    tags: ['iptv'],
     description: 'IPTV channel list を取得する',
     parameters: [
         {
