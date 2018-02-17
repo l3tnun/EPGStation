@@ -16,3 +16,4 @@ data/*.json
 node_modules
 dist
 !.gitkeep
+package-lock.json
