@@ -102,7 +102,7 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
     * @return string
     */
     protected getMinColumns(): string {
-        return 'id, eventId, channelId, startAt, endAt, isFree, name, description, extended, genre1, genre2, channelType, videoType, videoResolution, videoStreamContent, videoComponentType, audioSamplingRate, audioComponentType';
+        return 'id, channelId, startAt, endAt, isFree, name, description, extended, genre1, genre2, channelType, videoType, videoResolution, videoStreamContent, videoComponentType, audioSamplingRate, audioComponentType';
     }
 
     /**
