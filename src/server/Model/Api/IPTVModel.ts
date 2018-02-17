@@ -18,6 +18,7 @@ interface IPTVModelInterface extends ApiModel {
 class IPTVModel extends ApiModel implements IPTVModelInterface {
     private programsDB: ProgramsDBInterface;
     private servicesDB: ServicesDBInterface;
+    private timezone: string;
 
     constructor(
         programsDB: ProgramsDBInterface,
@@ -26,6 +27,8 @@ class IPTVModel extends ApiModel implements IPTVModelInterface {
         super();
         this.programsDB = programsDB;
         this.servicesDB = servicesDB;
+
+        this.timezone = new Date().toString().replace(/^.*GMT([+-]\d{4}).*$/,'$1');
     }
 
     /**
@@ -128,7 +131,7 @@ class IPTVModel extends ApiModel implements IPTVModelInterface {
     @return string
     */
     private getTimeStr(time: apid.UnixtimeMS): string {
-        return DateUtil.format(new Date(time), 'yyyyMMddhhmmss +0900');
+        return DateUtil.format(new Date(time), `yyyyMMddhhmmss ${ this.timezone }`);
     }
 }
 
