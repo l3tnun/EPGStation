@@ -199,6 +199,9 @@ class ScheduleModel extends ApiModel implements ScheduleModelInterface {
             program.name = this.replaceStr(program.name);
             if(program.description !== null) {
                 program.description = this.replaceStr(program.description);
+                if(program.extended !== null) {
+                    program.description += this.replaceStr(program.extended);
+                }
             }
             programsIndex[program.channelId].push(program);
         }
