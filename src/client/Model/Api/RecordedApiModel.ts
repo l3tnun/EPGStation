@@ -217,7 +217,7 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
 
         await m.request({
             method: 'POST',
-            url: `/api/recorded/${ recordedId }/file`,
+            url: `/api/recorded/${ recordedId }/encode`,
             data: query,
         });
     }
