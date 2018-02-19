@@ -3,6 +3,45 @@ import * as api from '../../../api';
 import factory from '../../../../Model/ModelFactory';
 import { RecordedModelInterface } from '../../../../Model/Api/RecordedModel';
 
+export const del: Operation = async (req, res) => {
+    let recordeds = <RecordedModelInterface>(factory.get('RecordedModel'));
+
+    try {
+        await recordeds.cancelEncode(req.params.id);
+        api.responseJSON(res, 200, { code: 200 });
+        api.notifyClient();
+    } catch(err) {
+        api.responseServerError(res, err.message);
+    }
+};
+
+del.apiDoc = {
+    summary: 'エンコードをキャンセル',
+    tags: ['recorded'],
+    description: 'エンコードをキャンセルする',
+    parameters: [
+        {
+            name: 'id',
+            in: 'path',
+            description: 'recorded id',
+            required: true,
+            type: 'integer',
+            minimum: 1,
+        },
+    ],
+    responses: {
+        200: {
+            description: 'エンコードをキャンセルしました',
+        },
+        default: {
+            description: '予期しないエラー',
+            schema: {
+                $ref: '#/definitions/Error'
+            }
+        }
+    }
+}
+
 export const post: Operation = async (req, res) => {
     let recordeds = <RecordedModelInterface>(factory.get('RecordedModel'));
 

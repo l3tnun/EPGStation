@@ -29,6 +29,7 @@ interface RecordedModelInterface extends ApiModel {
     getM3u8(host: string, isSecure: boolean, recordedId: number, encodedId: number | undefined): Promise<PLayList>;
     sendToKodi(host: string, isSecure: boolean, kodi: number, recordedId: number, encodedId: number | undefined): Promise<void>;
     addEncode(recordedId: number, mode: number, encodedId: number | undefined): Promise<void>;
+    cancelEncode(recordedId: number): Promise<void>;
 }
 
 namespace RecordedModelInterface {
@@ -463,6 +464,14 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
             delTs: false,
             recordedProgram: recorded,
         }, typeof encodedId === 'undefined');
+    }
+
+    /**
+    * エンコードキャンセル
+    * @param recordedId
+    */
+    public async cancelEncode(recordedId: number): Promise<void> {
+        await this.encodeManage.cancel(recordedId);
     }
 }
 
