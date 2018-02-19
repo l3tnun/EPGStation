@@ -11,7 +11,7 @@ interface ScheduleQuery {
 interface ScheduleApiModelInterface extends ApiModel {
     init(): void;
     fetchSchedule(type: apid.ChannelType, time: number, length?: number): Promise<void>;
-    fetchScheduleId(channelId: apid.ServiceItemId, time: number): Promise<void>;
+    fetchScheduleId(channelId: apid.ServiceItemId, time: number, days: number): Promise<void>;
     fetchScheduleBroadcasting(time: number): Promise<void>;
     startUpdateReserves(): Promise<void>;
     search(option: apid.RuleSearch): Promise<apid.ScheduleProgramItem[]>;
@@ -59,9 +59,10 @@ class ScheduleApiModel extends ApiModel implements ScheduleApiModelInterface {
     * channelId を指定して番組表を取得
     * /api/schedule/{id}
     */
-    public async fetchScheduleId(channelId: apid.ServiceItemId, time: number): Promise<void> {
+    public async fetchScheduleId(channelId: apid.ServiceItemId, time: number, days: number): Promise<void> {
         let query = {
-            time: time
+            time: time,
+            days: days,
         }
 
         try {

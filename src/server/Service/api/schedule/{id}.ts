@@ -7,7 +7,7 @@ export const get: Operation = async (req, res) => {
     let schedules = <ScheduleModelInterface>(factory.get('ScheduleModel'));
 
     try {
-        let results = await schedules.getScheduleId(req.query.time, req.params.id);
+        let results = await schedules.getScheduleId(req.query.time, req.params.id, req.query.days);
         api.responseJSON(res, 200, results);
     } catch(err) {
         if(err.message === ScheduleModelInterface.channelIdIsNotFoundError) {
@@ -19,9 +19,9 @@ export const get: Operation = async (req, res) => {
 };
 
 get.apiDoc = {
-    summary: 'チャンネル別の番組表を一週間分取得',
+    summary: 'チャンネル別の番組表を取得',
     tags: ['schedule'],
-    description: 'チャンネル別の番組表を一週間分取得する',
+    description: 'チャンネル別の番組表を取得する',
     parameters: [
         {
             name: 'id',
@@ -29,6 +29,15 @@ get.apiDoc = {
             description: 'channel id',
             required: true,
             type: 'integer'
+        },
+        {
+            name: 'days',
+            in: 'query',
+            description: '表示する日数',
+            type: 'integer',
+            minimum: 1,
+            maximum: 8,
+            default: 7,
         },
         { $ref: '#/parameters/scheduleTime' },
     ],
