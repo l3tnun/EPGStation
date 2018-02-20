@@ -2,24 +2,31 @@ import * as m from 'mithril';
 import ApiModel from './ApiModel';
 import * as apid from '../../../../api';
 
-interface findQuery {
+interface FindQueryOption {
     rule?: number,
     genre1?: number,
     channel?: number,
     keyword?: string,
 }
 
+interface EncodeQueryOption {
+    mode: number;
+    encodedId?: number;
+    directory?: string;
+    isOutputTheOriginalDirectory?: boolean;
+}
+
 interface RecordedApiModelInterface extends ApiModel {
     init(): void;
     update(): Promise<void>;
-    fetchRecorded(limit: number, offset: number, option: findQuery): Promise<void>;
+    fetchRecorded(limit: number, offset: number, option: FindQueryOption): Promise<void>;
     fetchTags(): Promise<void>;
     deleteAll(recordedId: apid.RecordedId): Promise<void>;
     delete(recordedId: apid.RecordedId, encodedId: apid.EncodedId | null): Promise<void>;
     sendToKodi(kodi: number, recordedId: number, encodedId: number | null): Promise<void>;
     getRecorded(): apid.RecordedPrograms;
     getTags(): apid.RecordedTags;
-    addEncode(recordedId: apid.RecordedId, mode: number, encodedId: apid.EncodedId | null): Promise<void>;
+    addEncode(recordedId: apid.RecordedId, option: EncodeQueryOption): Promise<void>;
 }
 
 namespace RecordedApiModelInterface {
@@ -40,7 +47,7 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
     };
     private limit: number = 0;
     private offset: number = 0;
-    private option: findQuery = {}
+    private option: FindQueryOption = {}
 
     public init(): void {
         super.init();
@@ -63,7 +70,7 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
     * @param limit: limit
     * @param offset: offset
     */
-    public async fetchRecorded(limit: number, offset: number, option: findQuery): Promise<void> {
+    public async fetchRecorded(limit: number, offset: number, option: FindQueryOption): Promise<void> {
         this.limit = limit;
         this.offset = offset;
         this.option = option;
@@ -205,24 +212,18 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
     * エンコード追加
     * /api/recorded/{id}/file post
     * @param recordedId: recorded id
-    * @param mode: mode
-    * @param encodedId: encoded id
+    * @param option: EncodeQueryOption
     * @return Promise<void>
     */
-    public async addEncode(recordedId: apid.RecordedId, mode: number, encodedId: apid.EncodedId | null): Promise<void> {
-        const query: { mode: number, encodedId?: number } = {
-            mode: mode,
-        };
-        if(encodedId !== null) { query.encodedId = encodedId; }
-
+    public async addEncode(recordedId: apid.RecordedId, option: EncodeQueryOption): Promise<void> {
         await m.request({
             method: 'POST',
             url: `/api/recorded/${ recordedId }/encode`,
-            data: query,
+            data: option,
         });
     }
 
 }
 
-export { findQuery, RecordedApiModelInterface, RecordedApiModel };
+export { FindQueryOption, EncodeQueryOption, RecordedApiModelInterface, RecordedApiModel };
 

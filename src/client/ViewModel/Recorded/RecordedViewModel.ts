@@ -2,7 +2,7 @@ import * as m from 'mithril';
 import ViewModel from '../ViewModel';
 import { ViewModelStatus } from '../../Enums';
 import * as apid from '../../../../api';
-import { findQuery, RecordedApiModelInterface } from '../../Model/Api/RecordedApiModel';
+import { FindQueryOption, RecordedApiModelInterface } from '../../Model/Api/RecordedApiModel';
 import { ChannelsApiModelInterface } from '../../Model/Api/ChannelsApiModel';
 import Util from '../../Util/Util';
 import DateUtil from '../../Util/DateUtil';
@@ -17,7 +17,7 @@ class RecordedViewModel extends ViewModel {
     private setting: SettingModelInterface;
     private limit: number = 0;
     private offset: number = 0;
-    private option: findQuery = {};
+    private option: FindQueryOption = {};
 
     constructor(
         recordedApiModel: RecordedApiModelInterface,

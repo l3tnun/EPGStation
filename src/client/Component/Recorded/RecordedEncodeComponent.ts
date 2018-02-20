@@ -45,6 +45,18 @@ class RecordedEncodeComponent extends Component<void> {
                         return m('option', { value: option.value }, option.name);
                     })),
                 ]),
+                m('div', { class: 'encode-output-checkbox' }, [
+                    m('label', { class: 'mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect' }, [
+                        m('input', {
+                            type: 'checkbox',
+                            class: 'mdl-checkbox__input',
+                            checked: this.viewModel.isOutputTheOriginalDirectory,
+                            onclick: m.withAttr('checked', (value) => { this.viewModel.isOutputTheOriginalDirectory = value; }),
+                            onupdate: (vnode: m.VnodeDOM<void, this>) => { this.checkboxOnUpdate(<HTMLInputElement>(vnode.dom)); },
+                        }),
+                        m('span', { class: 'mdl-checkbox__label' }, '元ファイルと同じ場所に保存する')
+                    ]),
+                ]),
             ]),
             m('div', { class: 'mdl-dialog__actions' }, [
                 m('button', {
