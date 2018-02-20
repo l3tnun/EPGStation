@@ -7,16 +7,24 @@ import { RulesDBInterface } from '../DB/RulesDB';
 import { ServicesDBInterface } from '../DB/ServicesDB';
 import * as DBSchema from '../DB/DBSchema';
 import ApiUtil from './ApiUtil';
-import { EncodeManageModelInterface } from '../Service/Encode/EncodeManageModel';
+import { EncodeProgram, EncodeManageModelInterface } from '../Service/Encode/EncodeManageModel';
 import { StreamManageModelInterface } from '../Service/Stream/StreamManageModel';
 import { PLayList } from './PlayListInterface';
+import Util from '../../Util/Util';
 
 interface recordedFilePathInfo {
-    path: string,
-    mime: string,
+    path: string;
+    mime: string;
 }
 
 type encodingInfoIndex = { [key: number]: { name: string, isEncoding: boolean }[] }
+
+interface EncodeAddOption {
+    mode: number;
+    encodedId?: number;
+    directory?: string;
+    isOutputTheOriginalDirectory?: boolean;
+}
 
 interface RecordedModelInterface extends ApiModel {
     getAll(limit: number, offset: number, option?: findQuery): Promise<{}[]>
@@ -28,7 +36,7 @@ interface RecordedModelInterface extends ApiModel {
     getGenreTags(): Promise<{}>;
     getM3u8(host: string, isSecure: boolean, recordedId: number, encodedId: number | undefined): Promise<PLayList>;
     sendToKodi(host: string, isSecure: boolean, kodi: number, recordedId: number, encodedId: number | undefined): Promise<void>;
-    addEncode(recordedId: number, mode: number, encodedId: number | undefined): Promise<void>;
+    addEncode(recordedId: number, option: EncodeAddOption): Promise<void>;
     cancelEncode(recordedId: number): Promise<void>;
 }
 
@@ -422,18 +430,17 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
     /**
     * encode 手動追加
     * @param recordedId: recorded id
-    * @param mode: encode mode
-    * @param encodedId: encoded id
+    * @param option: EncodeAddOption
     * @throws EncodeModeIsNotFound 指定したエンコード設定がない場合
     * @throws NotFoundRecordedId 指定した recordedId の録画情報が無い
     * @throws IsRecording 指定した recordedId の録画が録画中
     * @throws NotFoundRecordedFileError ts ファイルがすでに削除されている
     * @return Promise<void>
     */
-    public async addEncode(recordedId: number, mode: number, encodedId: number | undefined): Promise<void> {
+    public async addEncode(recordedId: number, option: EncodeAddOption): Promise<void> {
         // エンコード設定が存在するか確認
         const encodeConfig = this.config.getConfig().encode;
-        if(typeof encodeConfig === 'undefined' || typeof encodeConfig[mode] === 'undefined') {
+        if(typeof encodeConfig === 'undefined' || typeof encodeConfig[option.mode] === 'undefined') {
             throw new Error(RecordedModelInterface.EncodeModeIsNotFoundError);
         }
 
@@ -447,23 +454,34 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
 
         // ファイルパス取得
         let filePath: string;
-        if(typeof encodedId === 'undefined') {
+        if(typeof option.encodedId === 'undefined') {
             if(recorded.recPath === null) { throw new Error(RecordedModelInterface.NotFoundRecordedFileError); }
             filePath = recorded.recPath;
         } else {
-            const encoded = await this.encodedDB.findId(encodedId);
+            const encoded = await this.encodedDB.findId(option.encodedId);
             if(encoded === null) { throw new Error(RecordedModelInterface.NotFoundRecordedFileError); }
             filePath = encoded.path;
         }
 
-        //エンコードを追加
-        this.encodeManage.push({
+        // encode option 生成
+        let encodeProgram: EncodeProgram = {
             recordedId: recorded.id,
             source: filePath,
-            mode: mode,
+            mode: option.mode,
             delTs: false,
             recordedProgram: recorded,
-        }, typeof encodedId === 'undefined');
+        }
+
+        if(typeof option.isOutputTheOriginalDirectory !== 'undefined' && option.isOutputTheOriginalDirectory) {
+            // 入力元と同じディレクトリに出力する
+            option.directory = filePath.slice(Util.getRecordedPath().length + path.sep.length);
+        } else if(typeof option.directory !== 'undefined') {
+            // ディレクトリ情報追加
+            encodeProgram.directory = option.directory;
+        }
+
+        //エンコードを追加
+        this.encodeManage.push(encodeProgram, typeof option.encodedId === 'undefined');
     }
 
     /**

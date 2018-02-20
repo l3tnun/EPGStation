@@ -4,7 +4,7 @@ import factory from '../../../../Model/ModelFactory';
 import { RecordedModelInterface } from '../../../../Model/Api/RecordedModel';
 
 export const del: Operation = async (req, res) => {
-    let recordeds = <RecordedModelInterface>(factory.get('RecordedModel'));
+    const recordeds = <RecordedModelInterface>(factory.get('RecordedModel'));
 
     try {
         await recordeds.cancelEncode(req.params.id);
@@ -43,10 +43,10 @@ del.apiDoc = {
 }
 
 export const post: Operation = async (req, res) => {
-    let recordeds = <RecordedModelInterface>(factory.get('RecordedModel'));
+    const recordeds = <RecordedModelInterface>(factory.get('RecordedModel'));
 
     try {
-        await recordeds.addEncode(req.params.id, req.body.mode, req.body.encodedId);
+        await recordeds.addEncode(req.params.id, req.body);
         api.responseJSON(res, 200, { code: 200, result: 'ok' });
         api.notifyClient();
     } catch(err) {
