@@ -202,7 +202,29 @@ class RecordedMenuViewModel extends ViewModel {
             await this.recordedApiModel.addEncode(this.recorded.id, option);
             this.snackbar.open(`エンコードキューに追加しました`);
         } catch(err) {
-            this.snackbar.open(`エンコードキューに追加に失敗しました`);
+            this.snackbar.open(`エンコードキューへの追加に失敗しました`);
+        }
+    }
+
+    /**
+    * encode 中か
+    * @return boolean
+    */
+    public isEncoding(): boolean {
+        return this.recorded === null ? false : typeof this.recorded.encoding !== 'undefined';
+    }
+
+    /**
+    * encode cancel
+    */
+    public async cancelEncode(): Promise<void> {
+        if(this.recorded === null) { return; }
+
+        try {
+            await this.recordedApiModel.cancelEncode(this.recorded.id);
+            this.snackbar.open('エンコードをキャンセルしました');
+        } catch(err) {
+            this.snackbar.open('エンコードのキャンセルに失敗しました');
         }
     }
 }

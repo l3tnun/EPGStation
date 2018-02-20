@@ -27,6 +27,7 @@ interface RecordedApiModelInterface extends ApiModel {
     getRecorded(): apid.RecordedPrograms;
     getTags(): apid.RecordedTags;
     addEncode(recordedId: apid.RecordedId, option: EncodeQueryOption): Promise<void>;
+    cancelEncode(recordedId: apid.RecordedId): Promise<void>;
 }
 
 namespace RecordedApiModelInterface {
@@ -210,7 +211,7 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
 
     /**
     * エンコード追加
-    * /api/recorded/{id}/file post
+    * /api/recorded/{id}/encode post
     * @param recordedId: recorded id
     * @param option: EncodeQueryOption
     * @return Promise<void>
@@ -223,6 +224,17 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
         });
     }
 
+    /**
+    * エンコードキャンセル
+    * /api/recorded/{id}/encode delete
+    * @param recordedId: recorded id
+    */
+    public async cancelEncode(recordedId: apid.RecordedId): Promise<void> {
+        await m.request({
+            method: 'DELETE',
+            url: `/api/recorded/${ recordedId }/encode`,
+        });
+    }
 }
 
 export { FindQueryOption, EncodeQueryOption, RecordedApiModelInterface, RecordedApiModel };
