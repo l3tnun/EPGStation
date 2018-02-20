@@ -474,7 +474,12 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
 
         if(typeof option.isOutputTheOriginalDirectory !== 'undefined' && option.isOutputTheOriginalDirectory) {
             // 入力元と同じディレクトリに出力する
-            encodeProgram.directory = path.dirname(filePath.slice(Util.getRecordedPath().length + path.sep.length));
+            const recordedDir = Util.getRecordedPath();
+            const directory = path.dirname(filePath.slice(Util.getRecordedPath().length + path.sep.length));
+
+            if(path.normalize(recordedDir) !== path.normalize(path.join(recordedDir, directory))) {
+                encodeProgram.directory = directory;
+            }
         } else if(typeof option.directory !== 'undefined') {
             // ディレクトリ情報追加
             encodeProgram.directory = option.directory;
