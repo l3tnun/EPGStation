@@ -166,16 +166,15 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
             this.log.system.info(`stop encode: ${ recordedId }`);
 
             // 少し待ってから削除
-            setTimeout(() => {
-                fs.unlink(output, (err) => {
-                    this.log.system.info(`delete encode file: ${ output }`);
-                    if(err) {
-                        this.log.system.error(`delete encode file error: ${ output }`);
-                        this.log.system.error(String(err));
-                    }
-                    this.finalize();
-                });
-            }, 1000);
+            await Util.sleep(1000);
+            fs.unlink(output, (err) => {
+                this.log.system.info(`delete encode file: ${ output }`);
+                if(err) {
+                    this.log.system.error(`delete encode file error: ${ output }`);
+                    this.log.system.error(String(err));
+                }
+                this.finalize();
+            });
         }
     }
 

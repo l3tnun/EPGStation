@@ -11,7 +11,7 @@ import { IPCClientInterface } from '../IPC/IPCClient';
 
 interface ScheduleModelInterface extends ApiModel {
     getSchedule(time: number, length: number, type: apid.ChannelType): Promise<{}[]>;
-    getScheduleId(time: number, channelId: number): Promise<{}>;
+    getScheduleId(time: number, channelId: number, days: number): Promise<{}>;
     getBroadcasting(addition: number): Promise<{}>;
     searchProgram(searchOption: SearchInterface): Promise<{}[]>;
     updateReserves(): Promise<void>;
@@ -79,14 +79,14 @@ class ScheduleModel extends ApiModel implements ScheduleModelInterface {
     /**
     * チャンネル別の番組データを取得
     * @param time: YYMMDDHH
-    * @param length: 長さ
     * @param channelId: channel id
+    * @param days: 日数
     * @return Promise<{}>
     */
-    public async getScheduleId(time: number, channelId: number): Promise<{}> {
+    public async getScheduleId(time: number, channelId: number, days: number): Promise<{}> {
         let times = this.getTime(time, 24);
         let programs: DBSchema.ScheduleProgramItem[][] = [];
-        for(let i = 0; i < 7; i++) {
+        for(let i = 0; i < days; i++) {
             let addTime = i * 24 * 60 * 60 * 1000;
             programs.push(await this.programsDB.findScheduleId(times.startAt + addTime, times.endAt + addTime, channelId));
         }

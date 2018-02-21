@@ -125,7 +125,14 @@ class ProgramViewModel extends ViewModel {
             // 単極表表示
             this.lengthParam = 24;
 
-            this.scheduleApiModel.fetchScheduleId(Number(m.route.param('ch')), Number(this.startTimeParam));
+            let days = typeof m.route.param('days') === 'undefined' ? 8 : Number(m.route.param('days'));
+            if(days < 1 || days > 8) { days = 8; }
+
+            this.scheduleApiModel.fetchScheduleId(
+                Number(m.route.param('ch')),
+                Number(this.startTimeParam),
+                days,
+            );
         }
     }
 

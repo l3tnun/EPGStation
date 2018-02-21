@@ -1,15 +1,9 @@
 import ViewModel from '../ViewModel';
 import * as apid from '../../../../api';
 import { BalloonModelInterface } from '../../Model/Balloon/BallonModel';
-import { RecordedApiModelInterface } from '../../Model/Api/RecordedApiModel';
+import { EncodeQueryOption, RecordedApiModelInterface } from '../../Model/Api/RecordedApiModel';
 import { SnackbarModelInterface } from '../../Model/Snackbar/SnackbarModel';
 import { ConfigApiModelInterface } from '../../Model/Api/ConfigApiModel';
-
-interface deleteFile {
-    name: string;
-    encodedId: number | null;
-    checked: boolean;
-}
 
 /**
 * RecordedMenuViewModel
@@ -22,9 +16,14 @@ class RecordedMenuViewModel extends ViewModel {
     private recorded: apid.RecordedProgram | null = null;
     private encodeStatus: boolean = false; // true: encode 有効
 
-    public recordedFiles: deleteFile[] = [];
+    public recordedFiles: {
+        name: string;
+        encodedId: number | null;
+        checked: boolean;
+    }[] = [];
     public encodeModeOptionValue: number = 0;
     public encodeSourceOptionValue: number = 0;
+    public isOutputTheOriginalDirectory: boolean = false;
 
     constructor(
         balloon: BalloonModelInterface,
@@ -61,6 +60,7 @@ class RecordedMenuViewModel extends ViewModel {
         this.encodeStatus = config.enableEncode;
         this.encodeSourceOptionValue = 0;
         this.encodeModeOptionValue = 0;
+        this.isOutputTheOriginalDirectory = false;
     }
 
     /**
@@ -188,15 +188,43 @@ class RecordedMenuViewModel extends ViewModel {
     public async addEncode(): Promise<void> {
         if(this.recorded === null) { return; }
 
+        let option: EncodeQueryOption = {
+            mode: this.encodeModeOptionValue,
+            isOutputTheOriginalDirectory: this.isOutputTheOriginalDirectory,
+        }
+
+        const encodedId = this.recordedFiles[this.encodeSourceOptionValue].encodedId;
+        if(encodedId !== null) {
+            option.encodedId = encodedId;
+        }
+
         try {
-            await this.recordedApiModel.addEncode(
-                this.recorded.id,
-                this.encodeModeOptionValue,
-                this.recordedFiles[this.encodeSourceOptionValue].encodedId
-            );
+            await this.recordedApiModel.addEncode(this.recorded.id, option);
             this.snackbar.open(`エンコードキューに追加しました`);
         } catch(err) {
-            this.snackbar.open(`エンコードキューに追加に失敗しました`);
+            this.snackbar.open(`エンコードキューへの追加に失敗しました`);
+        }
+    }
+
+    /**
+    * encode 中か
+    * @return boolean
+    */
+    public isEncoding(): boolean {
+        return this.recorded === null ? false : typeof this.recorded.encoding !== 'undefined';
+    }
+
+    /**
+    * encode cancel
+    */
+    public async cancelEncode(): Promise<void> {
+        if(this.recorded === null) { return; }
+
+        try {
+            await this.recordedApiModel.cancelEncode(this.recorded.id);
+            this.snackbar.open('エンコードをキャンセルしました');
+        } catch(err) {
+            this.snackbar.open('エンコードのキャンセルに失敗しました');
         }
     }
 }

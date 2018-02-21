@@ -585,6 +585,12 @@ definitions:
         type: integer
       encodedId:
         $ref: '#/definitions/EncodedId'
+      directory:
+        description: 'ディレクトリ'
+        type: string
+      isOutputTheOriginalDirectory:
+        description: '入力元と同じディレクトリに出力するか'
+        type: boolean
 
   AddReserve:
     type: object

@@ -1,3 +1,5 @@
+/// <reference path="./swaggerUiExpress.d.ts" />
+
 import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'js-yaml';
@@ -5,6 +7,7 @@ import * as express from 'express';
 import * as openapi from 'express-openapi';
 import * as bodyParser from 'body-parser';
 import * as log4js from 'log4js';
+import * as swaggerUi from 'swagger-ui-express';
 import Base from '../Base';
 import factory from '../Model/ModelFactory';
 import { SocketIoManageModelInterface } from '../Model/Service/SocketIoManageModel';
@@ -33,7 +36,6 @@ class Server extends Base {
         }
 
         // swagger ui
-        const swaggerUi = require('swagger-ui-express');
         this.app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(api));
         this.app.get('/api/debug', (_req, res) => res.redirect('/api-docs/?url=/api/docs'));
 
