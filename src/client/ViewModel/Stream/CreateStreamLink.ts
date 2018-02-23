@@ -39,8 +39,8 @@ namespace CreateStreamLink {
                 baseUrl = setting.customURLScheme;
             }
 
-            // viewer の設定がなかった場合
-            if(baseUrl === null) { throw new Error('NotFoundViewerApp'); }
+            // ios or android で viewer の設定がなかった場合
+            if(baseUrl === null && (Util.uaIsiOS() || Util.uaIsAndroid())) { throw new Error('NotFoundViewerApp'); }
         }
 
         if(baseUrl === null) {
