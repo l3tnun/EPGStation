@@ -2,15 +2,15 @@ import * as DBSchema from '../DBSchema';
 import { ProgramsDB } from '../ProgramsDB';
 
 /**
-* MySQLProgramsDB
-*/
+ * MySQLProgramsDB
+ */
 class MySQLProgramsDB extends ProgramsDB {
     /**
-    * create table
-    * @return Promise<void>
-    */
+     * create table
+     * @return Promise<void>
+     */
     public create(): Promise<void> {
-        let query = `CREATE TABLE IF NOT EXISTS ${ DBSchema.TableName.Programs } (`
+        const query = `CREATE TABLE IF NOT EXISTS ${ DBSchema.TableName.Programs } (`
             + 'id BIGINT primary key unique, '
             + 'channelId bigint not null, '
             + 'eventId bigint not null, '
@@ -35,7 +35,7 @@ class MySQLProgramsDB extends ProgramsDB {
             + 'videoComponentType integer null, '
             + 'audioSamplingRate integer null, '
             + 'audioComponentType integer null '
-            + ');'
+            + ');';
 
         return this.operator.runQuery(query);
     }

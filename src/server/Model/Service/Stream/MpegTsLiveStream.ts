@@ -1,20 +1,20 @@
 import { ChildProcess } from 'child_process';
 import * as http from 'http';
-import { EncodeProcessManageModelInterface } from '../Encode/EncodeProcessManageModel';
-import { StreamManageModelInterface } from './StreamManageModel';
-import { StreamInfo, Stream } from './Stream';
 import * as apid from '../../../../../api';
 import CreateMirakurun from '../../../Util/CreateMirakurunClient';
-import Util from '../../../Util/Util';
 import ProcessUtil from '../../../Util/ProcessUtil';
+import Util from '../../../Util/Util';
+import { EncodeProcessManageModelInterface } from '../Encode/EncodeProcessManageModel';
+import { Stream, StreamInfo } from './Stream';
+import { StreamManageModelInterface } from './StreamManageModel';
 
 interface MpegTsLiveStreamInfo extends StreamInfo {
     channelId: apid.ServiceItemId;
 }
 
 /**
-* mpeg2ts ライブ配信
-*/
+ * mpeg2ts ライブ配信
+ */
 class MpegTsLiveStream extends Stream {
     private channelId: apid.ServiceItemId;
     private mode: number;
@@ -22,11 +22,11 @@ class MpegTsLiveStream extends Stream {
     private stream: http.IncomingMessage | null = null;
 
     /**
-    * @param process: EncodeProcessManageModelInterface
-    * @param manager: StreamManageModelInterface
-    * @param channelId: channel id
-    * @param mode: config.mpegTsStreaming の index number
-    */
+     * @param process: EncodeProcessManageModelInterface
+     * @param manager: StreamManageModelInterface
+     * @param channelId: channel id
+     * @param mode: config.mpegTsStreaming の index number
+     */
     constructor(
         process: EncodeProcessManageModelInterface,
         manager: StreamManageModelInterface,
@@ -50,9 +50,9 @@ class MpegTsLiveStream extends Stream {
 
             // エンコードプロセス生成
             const config = this.config.getConfig().mpegTsStreaming;
-            if(typeof config === 'undefined' || typeof config[this.mode] === 'undefined') { throw new Error('MpegTsLiveStreamConfigError'); }
+            if (typeof config === 'undefined' || typeof config[this.mode] === 'undefined') { throw new Error('MpegTsLiveStreamConfigError'); }
 
-            if(typeof config[this.mode].cmd === 'undefined') {
+            if (typeof config[this.mode].cmd === 'undefined') {
                 // 無変換時
                 this.stream.on('close', () => { this.ChildExit(streamNumber); });
                 this.stream.on('end', () => { this.ChildExit(streamNumber); });
@@ -71,19 +71,19 @@ class MpegTsLiveStream extends Stream {
 
                 this.enc.stderr.on('data', (data) => { this.log.stream.debug(String(data)); });
             }
-        } catch(err) {
+        } catch (err) {
             await this.stop();
             throw err;
         }
     }
 
     public async stop(): Promise<void> {
-        if(this.stream !== null) {
+        if (this.stream !== null) {
             this.stream.unpipe();
             this.stream.destroy();
         }
 
-        if(this.enc !== null) {
+        if (this.enc !== null) {
             await ProcessUtil.kill(this.enc);
         }
     }

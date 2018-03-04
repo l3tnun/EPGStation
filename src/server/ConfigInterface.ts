@@ -1,6 +1,6 @@
 /**
-* config.json の定義
-*/
+ * config.json の定義
+ */
 interface ConfigInterface {
     readOnlyOnce: boolean;
     serverPort: number;
@@ -28,7 +28,7 @@ interface ConfigInterface {
         database: string;
         password: string;
         idleTimeoutMillis: number;
-    }
+    };
     gid: string | number;
     uid: string | number;
     programInsertMax: number;
@@ -60,7 +60,7 @@ interface ConfigInterface {
     tsModify: {
         cmd: string;
         rate?: number;
-    },
+    };
     storageLimitCheckIntervalTime: number;
     storageLimitThreshold: number;
     storageLimitAction: 'remove' | 'none';

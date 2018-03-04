@@ -1,15 +1,15 @@
 import { Operation } from 'express-openapi';
-import * as api from '../../api';
-import factory from '../../../Model/ModelFactory';
 import { ScheduleModelInterface } from '../../../Model/Api/ScheduleModel';
+import factory from '../../../Model/ModelFactory';
+import * as api from '../../api';
 
-export const get: Operation = async (req, res) => {
-    let schedules = <ScheduleModelInterface>(factory.get('ScheduleModel'));
+export const get: Operation = async(req, res) => {
+    const schedules = <ScheduleModelInterface> factory.get('ScheduleModel');
 
     try {
-        let results = await schedules.getBroadcasting(req.query.time);
+        const results = await schedules.getBroadcasting(req.query.time);
         api.responseJSON(res, 200, results);
-    } catch(err) {
+    } catch (err) {
         api.responseServerError(res, err.message);
     }
 };
@@ -25,15 +25,15 @@ get.apiDoc = {
         200: {
             description: '放映中の番組データを取得しました',
             schema: {
-                $ref: '#/definitions/ScheduleProgram'
-            }
+                $ref: '#/definitions/ScheduleProgram',
+            },
         },
         default: {
             description: '予期しないエラー',
             schema: {
-                $ref: '#/definitions/Error'
-            }
-        }
-    }
+                $ref: '#/definitions/Error',
+            },
+        },
+    },
 };
 

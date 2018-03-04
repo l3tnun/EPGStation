@@ -1,18 +1,18 @@
 import * as fs from 'fs';
-import * as path from 'path';
 import * as minimist from 'minimist';
-import { Logger } from './Logger';
+import * as path from 'path';
 import Configuration from './Configuration';
-import ModelFactorySetting from './Model/MainModelFactorySetting';
-import factory from './Model/ModelFactory'
-import * as DBSchema from './Model/DB/DBSchema';
-import { ServicesDBInterface } from './Model/DB/ServicesDB';
-import { ProgramsDBInterface } from './Model/DB/ProgramsDB';
-import { RulesDBInterface } from './Model/DB/RulesDB';
-import { RecordedDBInterface } from './Model/DB/RecordedDB';
-import { EncodedDBInterface } from './Model/DB/EncodedDB';
 import DBRevisionChecker from './DBRevisionChecker';
 import DBRevisionInfo from './DBRevisionInfoInterface';
+import { Logger } from './Logger';
+import * as DBSchema from './Model/DB/DBSchema';
+import { EncodedDBInterface } from './Model/DB/EncodedDB';
+import { ProgramsDBInterface } from './Model/DB/ProgramsDB';
+import { RecordedDBInterface } from './Model/DB/RecordedDB';
+import { RulesDBInterface } from './Model/DB/RulesDB';
+import { ServicesDBInterface } from './Model/DB/ServicesDB';
+import ModelFactorySetting from './Model/MainModelFactorySetting';
+import factory from './Model/ModelFactory';
 
 interface BackupData {
     rules: DBSchema.RulesSchema[];
@@ -34,17 +34,17 @@ class DBTools {
     constructor() {
         // 引数チェック
         const args = minimist(process.argv.slice(2), {
+            alias: {
+                m: 'mode',
+                o: 'output',
+            },
             string: [
                 'output',
                 'mode',
             ],
-            alias: {
-                o: 'output',
-                m: 'mode',
-            },
         });
 
-        if(
+        if (
             typeof args.output === 'undefined' || args.output === ''
             || typeof args.mode === 'undefined' || args.mode === ''
         ) {
@@ -52,7 +52,7 @@ class DBTools {
             process.exit(1);
         }
 
-        if(args.mode !== 'backup' && args.mode !== 'restore') {
+        if (args.mode !== 'backup' && args.mode !== 'restore') {
             console.error('mode の指定が間違っています');
             process.exit(1);
         }
@@ -64,18 +64,18 @@ class DBTools {
         this.dbRevisionChecker = new DBRevisionChecker();
 
         // DB Model を取得
-        this.servicesDB = <ServicesDBInterface>factory.get('ServicesDB')
-        this.programsDB = <ProgramsDBInterface>factory.get('ProgramsDB')
-        this.rulesDB = <RulesDBInterface>factory.get('RulesDB');
-        this.recordedDB = <RecordedDBInterface>factory.get('RecordedDB');
-        this.encodedDB = <EncodedDBInterface>factory.get('EncodedDB');
+        this.servicesDB = <ServicesDBInterface> factory.get('ServicesDB');
+        this.programsDB = <ProgramsDBInterface> factory.get('ProgramsDB');
+        this.rulesDB = <RulesDBInterface> factory.get('RulesDB');
+        this.recordedDB = <RecordedDBInterface> factory.get('RecordedDB');
+        this.encodedDB = <EncodedDBInterface> factory.get('EncodedDB');
     }
 
     /**
-    * run
-    */
+     * run
+     */
     public async run(): Promise<void> {
-        if(this.mode === 'backup') {
+        if (this.mode === 'backup') {
             await this.backup();
         } else {
             await this.restore();
@@ -86,15 +86,16 @@ class DBTools {
     }
 
     /**
-    * backup
-    */
+     * backup
+     */
     private async backup(): Promise<void> {
         console.log('--- read datas ---');
         console.log('DB Revision Info');
         const dbRevisionInfo = await this.dbRevisionChecker.getDBRevisionInfo();
 
-        if(dbRevisionInfo === null) {
+        if (dbRevisionInfo === null) {
             console.error('DB Revision Info is not found');
+
             return;
         }
 
@@ -108,11 +109,11 @@ class DBTools {
         const encoded = await this.encodedDB.findAll(false);
 
         const backup: BackupData = {
-            rules: rules,
-            recorded: recorded,
-            encoded: encoded,
             dbRevisionInfo: dbRevisionInfo,
-        }
+            encoded: encoded,
+            recorded: recorded,
+            rules: rules,
+        };
 
         console.log('--- writing ---');
 
@@ -126,16 +127,17 @@ class DBTools {
     }
 
     /**
-    * restore
-    */
+     * restore
+     */
     private async restore(): Promise<void> {
         // read backup
         let backup: BackupData;
         try {
-            let file = fs.readFileSync(this.filePath, 'utf-8');
+            const file: string | null = fs.readFileSync(this.filePath, 'utf-8');
+            if (file === null) { throw new Error('file is null'); }
             backup = JSON.parse(file);
-        } catch(err) {
-            if(err.code == 'ENOENT') {
+        } catch (err) {
+            if (err.code === 'ENOENT') {
                 console.error(`${ this.filePath } is not found`);
                 process.exit(1);
             } else {
@@ -148,7 +150,7 @@ class DBTools {
         // db revision check
         console.log('--- check DB Revision ---');
         const currentRevision = this.dbRevisionChecker.getCurrentRevision();
-        if(currentRevision !== backup!.dbRevisionInfo.revision) {
+        if (currentRevision !== backup!.dbRevisionInfo.revision) {
             console.error('Revision information is wrong');
             process.exit(1);
         }
@@ -183,7 +185,7 @@ class DBTools {
         await this.programsDB.create();
 
         console.log('Rules');
-        await this.rulesDB.create()
+        await this.rulesDB.create();
 
         console.log('Recorded');
         await this.recordedDB.create();

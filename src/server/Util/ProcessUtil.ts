@@ -2,11 +2,11 @@ import { ChildProcess } from 'child_process';
 
 namespace ProcessUtil {
     /**
-    * セットしたプロセスを前処理をしてから殺す
-    * @param child: ChildProcess
-    * @param wait: number default 500
-    */
-    export const kill = (child: ChildProcess, wait: number = 500): Promise<void> => {
+     * セットしたプロセスを前処理をしてから殺す
+     * @param child: ChildProcess
+     * @param wait: number default 500
+     */
+    export const kill = (child: ChildProcess, wait = 500): Promise<void> => {
         return new Promise<void>((resolve: () => void, reject: (err: Error) => void) => {
             try {
                 child.stdin.end();
@@ -21,11 +21,11 @@ namespace ProcessUtil {
                     child.kill('SIGKILL');
                     resolve();
                 }, wait);
-            } catch(err) {
+            } catch (err) {
                 reject(err);
             }
         });
-    }
+    };
 }
 
 export default ProcessUtil;

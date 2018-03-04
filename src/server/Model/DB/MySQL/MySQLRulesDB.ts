@@ -3,11 +3,11 @@ import { RulesDB } from '../RulesDB';
 
 class MySQLRulesDB extends RulesDB {
     /**
-    * create table
-    * @return Promise<void>
-    */
+     * create table
+     * @return Promise<void>
+     */
     public create(): Promise<void> {
-        let query = `CREATE TABLE IF NOT EXISTS ${ DBSchema.TableName.Rules } (`
+        const query = `CREATE TABLE IF NOT EXISTS ${ DBSchema.TableName.Rules } (`
             + 'id int primary key auto_increment, '
             + 'keyword text, '
             + 'ignoreKeyword text, '
@@ -40,7 +40,7 @@ class MySQLRulesDB extends RulesDB {
             + 'directory3 text, '
             + 'delTs boolean, '
             + 'index(id) '
-        + ');'
+        + ');';
 
         return this.operator.runQuery(query);
     }

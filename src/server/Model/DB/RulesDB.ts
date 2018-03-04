@@ -1,5 +1,5 @@
-import DBTableBase from './DBTableBase';
 import * as DBSchema from './DBSchema';
+import DBTableBase from './DBTableBase';
 
 interface RulesDBInterface extends DBTableBase {
     create(): Promise<void>;
@@ -12,46 +12,46 @@ interface RulesDBInterface extends DBTableBase {
     disable(id: number): Promise<void>;
     findId(id: number): Promise<DBSchema.RulesSchema | null>;
     findAllId(): Promise<{ id: number }[]>;
-    findAllIdAndKeyword(): Promise<{ id: number, keyword: string }[]>;
+    findAllIdAndKeyword(): Promise<{ id: number; keyword: string }[]>;
     findAll(limit?: number, offset?: number): Promise<DBSchema.RulesSchema[]>;
     getTotal(): Promise<number>;
 }
 
 abstract class RulesDB extends DBTableBase implements RulesDBInterface {
     /**
-    * get table name
-    * @return string
-    */
+     * get table name
+     * @return string
+     */
     protected getTableName(): string {
         return DBSchema.TableName.Rules;
     }
 
     /**
-    * create table
-    * @return Promise<void>
-    */
-    abstract create(): Promise<void>;
+     * create table
+     * @return Promise<void>
+     */
+    public abstract create(): Promise<void>;
 
     /**
-    * drop table
-    */
+     * drop table
+     */
     public drop(): Promise<void> {
         return this.operator.runQuery(`drop table if exists ${ DBSchema.TableName.Rules }`);
     }
 
     /**
-    * データ挿入
-    * @param rule: DBSchema.RulesSchema
-    * @return Promise<number> insertId
-    */
+     * データ挿入
+     * @param rule: DBSchema.RulesSchema
+     * @return Promise<number> insertId
+     */
     public insert(rule: DBSchema.RulesSchema): Promise<number> {
-        let query = `insert into ${ DBSchema.TableName.Rules } (`
+        const query = `insert into ${ DBSchema.TableName.Rules } (`
             + this.createInsertColumnStr(false)
         + ') VALUES ('
             + this.operator.createValueStr(1, 30)
         + `) ${ this.operator.getReturningStr() }`;
 
-        let value: any[] = [];
+        const value: any[] = [];
         value.push(rule.keyword);
         value.push(rule.ignoreKeyword);
         value.push(rule.keyCS);
@@ -87,10 +87,10 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
     }
 
     /**
-    * insert 時のカラムを生成
-    * @param hasId: boolean
-    * @return string
-    */
+     * insert 時のカラムを生成
+     * @param hasId: boolean
+     * @return string
+     */
     private createInsertColumnStr(hasId: boolean): string {
         return (hasId ? 'id, ' : '')
             + 'keyword, '
@@ -122,24 +122,24 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
             + 'directory2, '
             + 'mode3, '
             + 'directory3, '
-            + 'delTs '
+            + 'delTs ';
     }
 
     /**
-    * restore
-    * @param rules: DBSchema.RulesSchema[]
-    * @param isDelete: boolean = true
-    */
+     * restore
+     * @param rules: DBSchema.RulesSchema[]
+     * @param isDelete: boolean = true
+     */
     public restore(rules: DBSchema.RulesSchema[], isDelete: boolean = true): Promise<void> {
-        let query = `insert into ${ DBSchema.TableName.Rules } (`
+        const query = `insert into ${ DBSchema.TableName.Rules } (`
             + this.createInsertColumnStr(true)
         + ') VALUES ('
             + this.operator.createValueStr(1, 31)
-        + `)`;
+        + ')';
 
-        let values: any[] = [];
-        for(let rule of rules) {
-            let value: any[] = [];
+        const values: any[] = [];
+        for (const rule of rules) {
+            const value: any[] = [];
             value.push(rule.id);
             value.push(rule.keyword);
             value.push(rule.ignoreKeyword);
@@ -179,164 +179,164 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
     }
 
     /**
-    * データ更新
-    * @param id: rule id
-    * @param rule: DBSchema.RulesSchema
-    * @return Promise<void>
-    */
+     * データ更新
+     * @param id: rule id
+     * @param rule: DBSchema.RulesSchema
+     * @return Promise<void>
+     */
     public update(id: number, rule: DBSchema.RulesSchema): Promise<void> {
-        let querys: string[] = [];
-        if(rule.keyword !== null) { querys.push(`keyword = "${ rule.keyword.replace(/"/g, '\\"') }"`); }
-        else { querys.push("keyword = null"); }
-        if(rule.ignoreKeyword !== null) { querys.push(`ignoreKeyword = "${ rule.ignoreKeyword.replace(/"/g, '\\"') }"`); }
-        else { querys.push("ignoreKeyword = null"); }
-        if(rule.keyCS !== null) { querys.push(`keyCS = ${ Number(rule.keyCS) }`); }
-        else { querys.push("keyCS = null"); }
-        if(rule.keyRegExp !== null) { querys.push(`keyRegExp = ${ Number(rule.keyRegExp) }`); }
-        else { querys.push("keyRegExp = null"); }
-        if(rule.title !== null) { querys.push(`title = ${ Number(rule.title) }`); }
-        else { querys.push("title = null"); }
-        if(rule.description !== null) { querys.push(`description = ${ Number(rule.description) }`); }
-        else { querys.push("description = null"); }
-        if(rule.extended !== null) { querys.push(`extended = ${ Number(rule.extended) }`); }
-        else { querys.push("extended = null"); }
-        if(rule.GR !== null) { querys.push(`GR = ${ Number(rule.GR) }`); }
-        else { querys.push("GR = null"); }
-        if(rule.BS !== null) { querys.push(`BS = ${ Number(rule.BS) }`); }
-        else { querys.push("BS = null"); }
-        if(rule.CS !== null) { querys.push(`CS = ${ Number(rule.CS) }`); }
-        else { querys.push("CS = null"); }
-        if(rule.SKY !== null) { querys.push(`SKY = ${ Number(rule.SKY) }`); }
-        else { querys.push("SKY = null"); }
-        if(rule.station !== null) { querys.push(`station = ${ rule.station }`) }
-        else { querys.push("station = null"); }
-        if(rule.genrelv1 !== null) { querys.push(`genrelv1 = ${ rule.genrelv1 }`) }
-        else { querys.push("genrelv1 = null"); }
-        if(rule.genrelv2 !== null) { querys.push(`genrelv2 = ${ rule.genrelv2 }`) }
-        else { querys.push("genrelv2 = null"); }
-        if(rule.startTime !== null) { querys.push(`startTime = ${ rule.startTime }`) }
-        else { querys.push("startTime = null"); }
-        if(rule.timeRange !== null) { querys.push(`timeRange = ${ rule.timeRange }`) }
-        else { querys.push("timeRange = null"); }
+        const querys: string[] = [];
+        if (rule.keyword !== null) { querys.push(`keyword = "${ rule.keyword.replace(/"/g, '\\"') }"`); }
+        else { querys.push('keyword = null'); }
+        if (rule.ignoreKeyword !== null) { querys.push(`ignoreKeyword = "${ rule.ignoreKeyword.replace(/"/g, '\\"') }"`); }
+        else { querys.push('ignoreKeyword = null'); }
+        if (rule.keyCS !== null) { querys.push(`keyCS = ${ Number(rule.keyCS) }`); }
+        else { querys.push('keyCS = null'); }
+        if (rule.keyRegExp !== null) { querys.push(`keyRegExp = ${ Number(rule.keyRegExp) }`); }
+        else { querys.push('keyRegExp = null'); }
+        if (rule.title !== null) { querys.push(`title = ${ Number(rule.title) }`); }
+        else { querys.push('title = null'); }
+        if (rule.description !== null) { querys.push(`description = ${ Number(rule.description) }`); }
+        else { querys.push('description = null'); }
+        if (rule.extended !== null) { querys.push(`extended = ${ Number(rule.extended) }`); }
+        else { querys.push('extended = null'); }
+        if (rule.GR !== null) { querys.push(`GR = ${ Number(rule.GR) }`); }
+        else { querys.push('GR = null'); }
+        if (rule.BS !== null) { querys.push(`BS = ${ Number(rule.BS) }`); }
+        else { querys.push('BS = null'); }
+        if (rule.CS !== null) { querys.push(`CS = ${ Number(rule.CS) }`); }
+        else { querys.push('CS = null'); }
+        if (rule.SKY !== null) { querys.push(`SKY = ${ Number(rule.SKY) }`); }
+        else { querys.push('SKY = null'); }
+        if (rule.station !== null) { querys.push(`station = ${ rule.station }`); }
+        else { querys.push('station = null'); }
+        if (rule.genrelv1 !== null) { querys.push(`genrelv1 = ${ rule.genrelv1 }`); }
+        else { querys.push('genrelv1 = null'); }
+        if (rule.genrelv2 !== null) { querys.push(`genrelv2 = ${ rule.genrelv2 }`); }
+        else { querys.push('genrelv2 = null'); }
+        if (rule.startTime !== null) { querys.push(`startTime = ${ rule.startTime }`); }
+        else { querys.push('startTime = null'); }
+        if (rule.timeRange !== null) { querys.push(`timeRange = ${ rule.timeRange }`); }
+        else { querys.push('timeRange = null'); }
         querys.push(`week = ${ rule.week }`);
-        if(rule.isFree !== null) { querys.push(`isFree = ${ Number(rule.isFree) }`); }
-        else { querys.push("isFree = null"); }
-        if(rule.durationMin !== null) { querys.push(`durationMin = ${ rule.durationMin }`) }
-        else { querys.push("durationMin = null"); }
-        if(rule.durationMax !== null) { querys.push(`durationMax = ${ rule.durationMax }`) }
-        else { querys.push("durationMax = null"); }
+        if (rule.isFree !== null) { querys.push(`isFree = ${ Number(rule.isFree) }`); }
+        else { querys.push('isFree = null'); }
+        if (rule.durationMin !== null) { querys.push(`durationMin = ${ rule.durationMin }`); }
+        else { querys.push('durationMin = null'); }
+        if (rule.durationMax !== null) { querys.push(`durationMax = ${ rule.durationMax }`); }
+        else { querys.push('durationMax = null'); }
         querys.push(`enable = ${ Number(rule.enable) }`);
-        if(rule.directory !== null) { querys.push(`directory = "${ rule.directory.replace(/"/g, '\\"') }"`); }
-        else { querys.push("directory = null"); }
-        if(rule.recordedFormat !== null) { querys.push(`recordedFormat = "${ rule.recordedFormat.replace(/"/g, '\\"') }"`); }
-        else { querys.push("recordedFormat = null"); }
-        if(rule.mode1 !== null) { querys.push(`mode1 = ${ rule.mode1 }`) }
-        else { querys.push("mode1 = null"); }
-        if(rule.directory1 !== null) { querys.push(`directory1 = "${ rule.directory1.replace(/"/g, '\\"') }"`); }
-        else { querys.push("directory1 = null"); }
-        if(rule.mode2 !== null) { querys.push(`mode2 = ${ rule.mode2 }`) }
-        else { querys.push("mode2 = null"); }
-        if(rule.directory2 !== null) { querys.push(`directory2 = "${ rule.directory2.replace(/"/g, '\\"') }"`); }
-        else { querys.push("directory2 = null"); }
-        if(rule.mode3 !== null) { querys.push(`mode3 = ${ rule.mode3 }`) }
-        else { querys.push("mode3 = null"); }
-        if(rule.directory3 !== null) { querys.push(`directory3 = "${ rule.directory3.replace(/"/g, '\\"') }"`); }
-        else { querys.push("directory3 = null"); }
-        if(rule.delTs !== null) { querys.push(`delTs = ${ Number(rule.delTs) }`); }
-        else { querys.push("delTs = null"); }
+        if (rule.directory !== null) { querys.push(`directory = "${ rule.directory.replace(/"/g, '\\"') }"`); }
+        else { querys.push('directory = null'); }
+        if (rule.recordedFormat !== null) { querys.push(`recordedFormat = "${ rule.recordedFormat.replace(/"/g, '\\"') }"`); }
+        else { querys.push('recordedFormat = null'); }
+        if (rule.mode1 !== null) { querys.push(`mode1 = ${ rule.mode1 }`); }
+        else { querys.push('mode1 = null'); }
+        if (rule.directory1 !== null) { querys.push(`directory1 = "${ rule.directory1.replace(/"/g, '\\"') }"`); }
+        else { querys.push('directory1 = null'); }
+        if (rule.mode2 !== null) { querys.push(`mode2 = ${ rule.mode2 }`); }
+        else { querys.push('mode2 = null'); }
+        if (rule.directory2 !== null) { querys.push(`directory2 = "${ rule.directory2.replace(/"/g, '\\"') }"`); }
+        else { querys.push('directory2 = null'); }
+        if (rule.mode3 !== null) { querys.push(`mode3 = ${ rule.mode3 }`); }
+        else { querys.push('mode3 = null'); }
+        if (rule.directory3 !== null) { querys.push(`directory3 = "${ rule.directory3.replace(/"/g, '\\"') }"`); }
+        else { querys.push('directory3 = null'); }
+        if (rule.delTs !== null) { querys.push(`delTs = ${ Number(rule.delTs) }`); }
+        else { querys.push('delTs = null'); }
 
         // query 組み立て
-        let queryStr = `update ${ DBSchema.TableName.Rules }`
-        if(querys.length > 0) { queryStr += ' set' };
-        querys.forEach((query) => { queryStr += ` ${ query },` });
-        if(querys.length > 0) { queryStr = queryStr.slice(0, -1); };
+        let queryStr = `update ${ DBSchema.TableName.Rules }`;
+        if (querys.length > 0) { queryStr += ' set'; }
+        querys.forEach((query) => { queryStr += ` ${ query },`; });
+        if (querys.length > 0) { queryStr = queryStr.slice(0, -1); }
 
-        queryStr += ` where id = ${ id }`
+        queryStr += ` where id = ${ id }`;
 
         return this.operator.runQuery(queryStr);
     }
 
     /**
-    * rule を削除
-    * @param id: rule id
-    * @return Promise<void>
-    */
+     * rule を削除
+     * @param id: rule id
+     * @return Promise<void>
+     */
     public delete(id: number): Promise<void> {
         return this.operator.runQuery(`delete from ${ DBSchema.TableName.Rules } where id = ${ id }`);
     }
 
     /**
-    * rule を有効化
-    * @param id: rule id
-    * @return Promise<void>
-    */
+     * rule を有効化
+     * @param id: rule id
+     * @return Promise<void>
+     */
     public enable(id: number): Promise<void> {
         return this.operator.runQuery(`update ${ DBSchema.TableName.Rules } set enable = true where id = ${ id }`);
     }
 
     /**
-    * rule を無効化
-    * @param id: rule id
-    * @return Promise<void>
-    */
+     * rule を無効化
+     * @param id: rule id
+     * @return Promise<void>
+     */
     public disable(id: number): Promise<void> {
         return this.operator.runQuery(`update ${ DBSchema.TableName.Rules } set enable = false where id = ${ id }`);
     }
 
     /**
-    * id 検索
-    * @param id: rule id
-    * @return Promise<DBSchema.RulesSchema>
-    */
+     * id 検索
+     * @param id: rule id
+     * @return Promise<DBSchema.RulesSchema>
+     */
     public async findId(id: number): Promise<DBSchema.RulesSchema | null> {
         return this.operator.getFirst(this.fixResults(<DBSchema.RulesSchema[]> await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Rules } where id = ${ id }`)));
     }
 
     /**
-    * @param DBSchema.RulesSchema[]
-    * @return DBSchema.RulesSchema[]
-    */
+     * @param DBSchema.RulesSchema[]
+     * @return DBSchema.RulesSchema[]
+     */
     protected fixResults(rules: DBSchema.RulesSchema[]): DBSchema.RulesSchema[] {
         return rules;
     }
 
     /**
-    * 全件 ID 取得
-    * @return Promise<DBSchema.RulesSchema[]>
-    */
+     * 全件 ID 取得
+     * @return Promise<DBSchema.RulesSchema[]>
+     */
     public findAllId(): Promise<{ id: number }[]> {
         return this.operator.runQuery(`select id from ${ DBSchema.TableName.Rules } order by id asc`);
     }
 
     /**
-    * 全件の id と keyword を取得
-    * @return Promise<DBSchema.RulesSchema[]>
-    */
-    public findAllIdAndKeyword(): Promise<{ id: number, keyword: string }[]> {
+     * 全件の id と keyword を取得
+     * @return Promise<DBSchema.RulesSchema[]>
+     */
+    public findAllIdAndKeyword(): Promise<{ id: number; keyword: string }[]> {
         return this.operator.runQuery(`select id, keyword from ${ DBSchema.TableName.Rules } order by id asc`);
     }
 
     /**
-    * 全件取得
-    * @param limit: limit
-    * @param offset: offset
-    * @return Promise<DBSchema.RulesSchema[]>
-    */
+     * 全件取得
+     * @param limit: limit
+     * @param offset: offset
+     * @return Promise<DBSchema.RulesSchema[]>
+     */
     public async findAll(limit?: number, offset: number = 0): Promise<DBSchema.RulesSchema[]> {
         let query = `select ${ this.getAllColumns() } from ${ DBSchema.TableName.Rules } order by id asc`;
-        if(typeof limit !== 'undefined') { query += ` ${ this.operator.createLimitStr(limit, offset) }` }
+        if (typeof limit !== 'undefined') { query += ` ${ this.operator.createLimitStr(limit, offset) }`; }
 
         return this.fixResults(<DBSchema.RulesSchema[]> await this.operator.runQuery(query));
     }
 
     /**
-    * 件数取得
-    * @return Promise<number>
-    */
+     * 件数取得
+     * @return Promise<number>
+     */
     public getTotal(): Promise<number> {
         return this.operator.total(DBSchema.TableName.Rules);
     }
 }
 
-export { RulesDBInterface, RulesDB }
+export { RulesDBInterface, RulesDB };
 

@@ -1,15 +1,15 @@
 import { Operation } from 'express-openapi';
-import * as api from '../api';
-import factory from '../../Model/ModelFactory';
 import { RulesModelInterface } from '../../Model/Api/RulesModel';
+import factory from '../../Model/ModelFactory';
+import * as api from '../api';
 
-export const get: Operation = async (req, res) => {
-    let rules = <RulesModelInterface>(factory.get('RulesModel'));
+export const get: Operation = async(req, res) => {
+    const rules = <RulesModelInterface> factory.get('RulesModel');
 
     try {
-        let results = await rules.getAll(req.query.limit, req.query.offset);
+        const results = await rules.getAll(req.query.limit, req.query.offset);
         api.responseJSON(res, 200, results);
-    } catch(err) {
+    } catch (err) {
         api.responseServerError(res, err.message);
     }
 };
@@ -31,29 +31,29 @@ get.apiDoc = {
                     rules: {
                         type: 'array',
                         items: {
-                            $ref: '#/definitions/Rule'
-                        }
+                            $ref: '#/definitions/Rule',
+                        },
                     },
-                    total: { $ref: '#/definitions/total' }
-                }
-            }
+                    total: { $ref: '#/definitions/total' },
+                },
+            },
         },
         default: {
             description: '予期しないエラー',
             schema: {
-                $ref: '#/definitions/Error'
-            }
-        }
-    }
+                $ref: '#/definitions/Error',
+            },
+        },
+    },
 };
 
-export const post: Operation = async (req, res) => {
-    let rules = <RulesModelInterface>(factory.get('RulesModel'));
+export const post: Operation = async(req, res) => {
+    const rules = <RulesModelInterface> factory.get('RulesModel');
 
     try {
-        let results = await rules.addRule(req.body);
+        const results = await rules.addRule(req.body);
         api.responseJSON(res, 201, results);
-    } catch(err) {
+    } catch (err) {
         api.responseServerError(res, err.message);
     }
 };
@@ -69,9 +69,9 @@ post.apiDoc = {
             description: '必要な項目の組み合わせが複雑なので Model を確認すること',
             required: true,
             schema: {
-                $ref: '#/definitions/AddRule'
-            }
-        }
+                $ref: '#/definitions/AddRule',
+            },
+        },
     ],
     responses: {
         201: {
@@ -80,17 +80,17 @@ post.apiDoc = {
                 type: 'object',
                 properties: {
                     id: {
-                        $ref: '#/definitions/RuleId'
-                    }
-                }
-            }
+                        $ref: '#/definitions/RuleId',
+                    },
+                },
+            },
         },
         default: {
             description: '予期しないエラー',
             schema: {
-                $ref: '#/definitions/Error'
-            }
-        }
-    }
-}
+                $ref: '#/definitions/Error',
+            },
+        },
+    },
+};
 

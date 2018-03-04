@@ -3,18 +3,18 @@ import { EncodedDB } from '../EncodedDB';
 
 class SQLite3EncodedDB extends EncodedDB {
     /**
-    * create table
-    * @return Promise<void>
-    */
+     * create table
+     * @return Promise<void>
+     */
     public create(): Promise<void> {
-        let query = `create table if not exists ${ DBSchema.TableName.Encoded } (`
+        const query = `create table if not exists ${ DBSchema.TableName.Encoded } (`
             + 'id integer primary key autoincrement, '
             + 'recordedId integer, '
             + 'name text not null, '
             + 'path text not null, '
             + 'filesize integer null default null, '
             + `foreign key(recordedId) references ${ DBSchema.TableName.Recorded }(id) `
-        + ');'
+        + ');';
 
         return this.operator.runQuery(query);
     }

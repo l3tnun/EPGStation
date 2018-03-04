@@ -3,11 +3,11 @@ import { RulesDB } from '../RulesDB';
 
 class SQLite3RulesDB extends RulesDB {
     /**
-    * create table
-    * @return Promise<void>
-    */
+     * create table
+     * @return Promise<void>
+     */
     public create(): Promise<void> {
-        let query = `create table if not exists ${ DBSchema.TableName.Rules } (`
+        const query = `create table if not exists ${ DBSchema.TableName.Rules } (`
             + 'id integer primary key autoincrement, '
             + 'keyword text, '
             + 'ignoreKeyword text, '
@@ -39,47 +39,47 @@ class SQLite3RulesDB extends RulesDB {
             + 'mode3 integer, '
             + 'directory3 text, '
             + 'delTs integer '
-        + ');'
+        + ');';
 
         return this.operator.runQuery(query);
     }
 
     /**
-    * rule を有効化
-    * @param id: rule id
-    * @return Promise<void>
-    */
+     * rule を有効化
+     * @param id: rule id
+     * @return Promise<void>
+     */
     public enable(id: number): Promise<void> {
         return this.operator.runQuery(`update ${ DBSchema.TableName.Rules } set enable = 1 where id = ${ id }`);
     }
 
     /**
-    * rule を無効化
-    * @param id: rule id
-    * @return Promise<void>
-    */
+     * rule を無効化
+     * @param id: rule id
+     * @return Promise<void>
+     */
     public disable(id: number): Promise<void> {
         return this.operator.runQuery(`update ${ DBSchema.TableName.Rules } set enable = 0 where id = ${ id }`);
     }
 
     /**
-    * @param DBSchema.RulesSchema[]
-    * @return DBSchema.RulesSchema[]
-    */
+     * @param DBSchema.RulesSchema[]
+     * @return DBSchema.RulesSchema[]
+     */
     protected fixResults(rules: DBSchema.RulesSchema[]): DBSchema.RulesSchema[] {
         return rules.map((rule) => {
-            if(rule.keyCS != null) { rule.keyCS = Boolean(rule.keyCS); }
-            if(rule.keyRegExp != null) { rule.keyRegExp = Boolean(rule.keyRegExp); }
-            if(rule.title != null) { rule.title = Boolean(rule.title); }
-            if(rule.description != null) { rule.description = Boolean(rule.description); }
-            if(rule.extended != null) { rule.extended = Boolean(rule.extended); }
-            if(rule.GR != null) { rule.GR = Boolean(rule.GR); }
-            if(rule.BS != null) { rule.BS = Boolean(rule.BS); }
-            if(rule.CS != null) { rule.CS = Boolean(rule.CS); }
-            if(rule.SKY != null) { rule.SKY = Boolean(rule.SKY); }
-            if(rule.isFree != null) { rule.isFree = Boolean(rule.isFree); }
-            if(rule.enable != null) { rule.enable = Boolean(rule.enable); }
-            if(rule.delTs != null) { rule.delTs = Boolean(rule.delTs); }
+            if (rule.keyCS !== null) { rule.keyCS = Boolean(rule.keyCS); }
+            if (rule.keyRegExp !== null) { rule.keyRegExp = Boolean(rule.keyRegExp); }
+            if (rule.title !== null) { rule.title = Boolean(rule.title); }
+            if (rule.description !== null) { rule.description = Boolean(rule.description); }
+            if (rule.extended !== null) { rule.extended = Boolean(rule.extended); }
+            if (rule.GR !== null) { rule.GR = Boolean(rule.GR); }
+            if (rule.BS !== null) { rule.BS = Boolean(rule.BS); }
+            if (rule.CS !== null) { rule.CS = Boolean(rule.CS); }
+            if (rule.SKY !== null) { rule.SKY = Boolean(rule.SKY); }
+            if (rule.isFree !== null) { rule.isFree = Boolean(rule.isFree); }
+            if (rule.enable !== null) { rule.enable = Boolean(rule.enable); }
+            if (rule.delTs !== null) { rule.delTs = Boolean(rule.delTs); }
 
             return rule;
         });

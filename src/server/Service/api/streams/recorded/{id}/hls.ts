@@ -1,10 +1,10 @@
 import { Operation } from 'express-openapi';
-import * as api from '../../../../api';
-import factory from '../../../../../Model/ModelFactory';
 import { StreamsModelInterface } from '../../../../../Model/Api/StreamsModel';
+import factory from '../../../../../Model/ModelFactory';
+import * as api from '../../../../api';
 
-export const get: Operation = async (req, res) => {
-    let streams = <StreamsModelInterface>(factory.get('StreamsModel'));
+export const get: Operation = async(req, res) => {
+    const streams = <StreamsModelInterface> factory.get('StreamsModel');
 
     try {
         const streamNumber = await streams.getRecordedHLS(
@@ -14,7 +14,7 @@ export const get: Operation = async (req, res) => {
         );
 
         api.responseJSON(res, 200, { streamNumber: streamNumber });
-    } catch(err) {
+    } catch (err) {
         api.responseServerError(res, err.message);
     }
 };
@@ -29,7 +29,7 @@ get.apiDoc = {
             in: 'path',
             description: 'recorded id',
             required: true,
-            type: 'integer'
+            type: 'integer',
         },
         {
             name: 'mode',
@@ -43,21 +43,21 @@ get.apiDoc = {
             in: 'query',
             description: 'encoded id',
             type: 'integer',
-        }
+        },
     ],
     responses: {
         200: {
             description: 'HLS 配信開始',
             schema: {
-                $ref: '#/definitions/HLSStream'
-            }
+                $ref: '#/definitions/HLSStream',
+            },
         },
         default: {
             description: '予期しないエラー',
             schema: {
-                $ref: '#/definitions/Error'
-            }
-        }
-    }
+                $ref: '#/definitions/Error',
+            },
+        },
+    },
 };
 

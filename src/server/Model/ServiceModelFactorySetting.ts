@@ -1,55 +1,62 @@
-import factory from './ModelFactory';
-import { ServicesDBInterface } from './DB/ServicesDB';
-import { ProgramsDBInterface } from './DB/ProgramsDB';
-import { RulesDBInterface } from './DB/RulesDB';
-import { RecordedDBInterface } from './DB/RecordedDB';
-import { EncodedDBInterface } from './DB/EncodedDB';
-import DBOperator from './DB/DBOperator';
-import MySQLOperator from './DB/MySQL/MySQLOperator';
-import SQLite3Operator from './DB/SQLite3/SQLite3Operator';
-import PostgreSQLOperator from './DB/PostgreSQL/PostgreSQLOperator';
-import MySQLServicesDB from './DB/MySQL/MySQLServicesDB';
-import MySQLProgramsDB from './DB/MySQL/MySQLProgramsDB';
-import MySQLRulesDB from './DB/MySQL/MySQLRulesDB';
-import MySQLRecordedDB from './DB/MySQL/MySQLRecordedDB';
-import MySQLEncodedDB from './DB/MySQL/MySQLEncodedDB';
-import SQLite3ServicesDB from './DB/SQLite3/SQLite3ServicesDB';
-import SQLite3ProgramsDB from './DB/SQLite3/SQLite3ProgramsDB';
-import SQLite3RulesDB from './DB/SQLite3/SQLite3RulesDB';
-import SQLite3RecordedDB from './DB/SQLite3/SQLite3RecordedDB';
-import SQLite3EncodedDB from './DB/SQLite3/SQLite3EncodedDB';
-import PostgreSQLServicesDB from './DB/PostgreSQL/PostgreSQLServicesDB';
-import PostgreSQLProgramsDB from './DB/PostgreSQL/PostgreSQLProgramsDB';
-import PostgreSQLRulesDB from './DB/PostgreSQL/PostgreSQLRulesDB';
-import PostgreSQLRecordedDB from './DB/PostgreSQL/PostgreSQLRecordedDB';
-import PostgreSQLEncodedDB from './DB/PostgreSQL/PostgreSQLEncodedDB';
-import { RulesModel } from './Api/RulesModel';
-import { RecordedModel } from './Api/RecordedModel';
+import * as apid from '../../../api';
 import { ChannelsModel } from './Api/ChannelsModel';
-import { ReservesModel } from './Api/ReservesModel';
-import { IPCClient } from './IPC/IPCClient';
-import { ScheduleModel } from './Api/ScheduleModel';
 import { ConfigModel } from './Api/ConfigModel';
 import { IPTVModel } from './Api/IPTVModel';
+import { RecordedModel } from './Api/RecordedModel';
+import { ReservesModel } from './Api/ReservesModel';
+import { RulesModel } from './Api/RulesModel';
+import { ScheduleModel } from './Api/ScheduleModel';
 import { StorageModel } from './Api/StorageModel';
-import { EncodeProcessManageModel } from './Service/Encode/EncodeProcessManageModel';
+import { StreamsModel } from './Api/StreamsModel';
+
+import Util from '../Util/Util';
+
+import DBOperator from './DB/DBOperator';
+import { EncodedDBInterface } from './DB/EncodedDB';
+import { ProgramsDBInterface } from './DB/ProgramsDB';
+import { RecordedDBInterface } from './DB/RecordedDB';
+import { RulesDBInterface } from './DB/RulesDB';
+import { ServicesDBInterface } from './DB/ServicesDB';
+
+import MySQLEncodedDB from './DB/MySQL/MySQLEncodedDB';
+import MySQLOperator from './DB/MySQL/MySQLOperator';
+import MySQLProgramsDB from './DB/MySQL/MySQLProgramsDB';
+import MySQLRecordedDB from './DB/MySQL/MySQLRecordedDB';
+import MySQLRulesDB from './DB/MySQL/MySQLRulesDB';
+import MySQLServicesDB from './DB/MySQL/MySQLServicesDB';
+
+import PostgreSQLEncodedDB from './DB/PostgreSQL/PostgreSQLEncodedDB';
+import PostgreSQLOperator from './DB/PostgreSQL/PostgreSQLOperator';
+import PostgreSQLProgramsDB from './DB/PostgreSQL/PostgreSQLProgramsDB';
+import PostgreSQLRecordedDB from './DB/PostgreSQL/PostgreSQLRecordedDB';
+import PostgreSQLRulesDB from './DB/PostgreSQL/PostgreSQLRulesDB';
+import PostgreSQLServicesDB from './DB/PostgreSQL/PostgreSQLServicesDB';
+
+import SQLite3EncodedDB from './DB/SQLite3/SQLite3EncodedDB';
+import SQLite3Operator from './DB/SQLite3/SQLite3Operator';
+import SQLite3ProgramsDB from './DB/SQLite3/SQLite3ProgramsDB';
+import SQLite3RecordedDB from './DB/SQLite3/SQLite3RecordedDB';
+import SQLite3RulesDB from './DB/SQLite3/SQLite3RulesDB';
+import SQLite3ServicesDB from './DB/SQLite3/SQLite3ServicesDB';
+
+import { IPCClient } from './IPC/IPCClient';
+import factory from './ModelFactory';
+
 import { EncodeManageModel } from './Service/Encode/EncodeManageModel';
 import { EncodeModel } from './Service/Encode/EncodeModel';
-import { StreamsModel } from './Api/StreamsModel';
+import { EncodeProcessManageModel } from './Service/Encode/EncodeProcessManageModel';
 import { SocketIoManageModel } from './Service/SocketIoManageModel';
-import { StreamManageModel } from './Service/Stream/StreamManageModel';
 import { MpegTsLiveStream } from './Service/Stream/MpegTsLiveStream';
 import { RecordedHLSStream } from './Service/Stream/RecordedHLSStream';
-import Util from '../Util/Util';
-import * as apid from '../../../api';
+import { StreamManageModel } from './Service/Stream/StreamManageModel';
 
 /**
-* Service 用の Model 設定
-*/
+ * Service 用の Model 設定
+ */
 namespace ModelFactorySetting {
     /**
-    * Model をセットする
-    */
+     * Model をセットする
+     */
     export const init = (): void => {
         let operator: DBOperator;
         let servicesDB: ServicesDBInterface;
@@ -64,7 +71,7 @@ namespace ModelFactorySetting {
                 servicesDB = new MySQLServicesDB(operator);
                 programsDB = new MySQLProgramsDB(operator);
                 rulesDB = new MySQLRulesDB(operator);
-                recordedDB = new MySQLRecordedDB(operator)
+                recordedDB = new MySQLRecordedDB(operator);
                 encodedDB = new MySQLEncodedDB(operator);
                 break;
 
@@ -73,7 +80,7 @@ namespace ModelFactorySetting {
                 servicesDB = new SQLite3ServicesDB(operator);
                 programsDB = new SQLite3ProgramsDB(operator);
                 rulesDB = new SQLite3RulesDB(operator);
-                recordedDB = new SQLite3RecordedDB(operator)
+                recordedDB = new SQLite3RecordedDB(operator);
                 encodedDB = new SQLite3EncodedDB(operator);
                 break;
 
@@ -82,7 +89,7 @@ namespace ModelFactorySetting {
                 servicesDB = new PostgreSQLServicesDB(operator);
                 programsDB = new PostgreSQLProgramsDB(operator);
                 rulesDB = new PostgreSQLRulesDB(operator);
-                recordedDB = new PostgreSQLRecordedDB(operator)
+                recordedDB = new PostgreSQLRecordedDB(operator);
                 encodedDB = new PostgreSQLEncodedDB(operator);
                 break;
         }
@@ -90,7 +97,7 @@ namespace ModelFactorySetting {
         const encodeProcessManage = new EncodeProcessManageModel();
         const encodeManage = new EncodeManageModel(encodeProcessManage);
         const socketIoManage = new SocketIoManageModel();
-        const ipc = new IPCClient()
+        const ipc = new IPCClient();
         const encodeModel = new EncodeModel(
             encodeManage,
             socketIoManage,
@@ -102,7 +109,7 @@ namespace ModelFactorySetting {
         ipc.setModels(encodeModel, socketIoManage);
 
         factory.reg('SocketIoManageModel', () => { return socketIoManage; });
-        factory.reg('RulesModel', () => { return new RulesModel(ipc, rulesDB) });
+        factory.reg('RulesModel', () => { return new RulesModel(ipc, rulesDB); });
         factory.reg('RecordedModel', () => { return new RecordedModel(
             ipc,
             recordedDB,
@@ -128,13 +135,13 @@ namespace ModelFactorySetting {
         factory.reg('EncodeModel', () => { return encodeModel; });
         factory.reg('StreamsModel', () => { return new StreamsModel(
             streamManage,
-            (chanelId: apid.ServiceItemId, mode: number) => { return new MpegTsLiveStream(
+            (chanelId: apid.ServiceItemId, mode: number): MpegTsLiveStream => { return new MpegTsLiveStream(
                 encodeProcessManage,
                 streamManage,
                 chanelId,
                 mode,
             ); },
-            (recordedId: apid.RecordedId, mode: number, encodedId: apid.EncodedId | null) => {
+            (recordedId: apid.RecordedId, mode: number, encodedId: apid.EncodedId | null): RecordedHLSStream => {
                 return new RecordedHLSStream(
                     encodeProcessManage,
                     streamManage,
@@ -149,7 +156,7 @@ namespace ModelFactorySetting {
             servicesDB,
             recordedDB,
         ); });
-    }
+    };
 }
 
 export default ModelFactorySetting;

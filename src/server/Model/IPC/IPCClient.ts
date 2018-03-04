@@ -1,11 +1,11 @@
 import * as events from 'events';
+import * as apid from '../../../../node_modules/mirakurun/api';
 import Model from '../Model';
-import { IPCClientMessage, IPCServerMessage, IPCServerSocketIoMessage, IPCServerEncodeMessage, IPCMessageDefinition } from './IPCMessageInterface';
 import { ReserveAllId, ReserveLimit } from '../Operator/Reservation/ReservationManageModel';
 import { EncodeInterface, RuleInterface } from '../Operator/RuleInterface';
-import * as apid from '../../../../node_modules/mirakurun/api';
-import { SocketIoManageModelInterface } from '../Service/SocketIoManageModel';
 import { EncodeModelInterface } from '../Service/Encode/EncodeModel';
+import { SocketIoManageModelInterface } from '../Service/SocketIoManageModel';
+import { IPCClientMessage, IPCMessageDefinition, IPCServerEncodeMessage, IPCServerMessage, IPCServerSocketIoMessage } from './IPCMessageInterface';
 
 interface IPCClientInterface extends Model {
     getReserveAllId(): Promise<ReserveAllId>;
@@ -28,10 +28,10 @@ interface IPCClientInterface extends Model {
 }
 
 /**
-* IPC 通信クライアント
-* @throws IPCClientCreateInstanceError init が呼ばれていないとき
-* @throws IPCClientIsNotChildProcess fork で起動していないとき
-*/
+ * IPC 通信クライアント
+ * @throws IPCClientCreateInstanceError init が呼ばれていないとき
+ * @throws IPCClientIsNotChildProcess fork で起動していないとき
+ */
 class IPCClient extends Model implements IPCClientInterface {
     private encodeModel: EncodeModelInterface;
     private socketIo: SocketIoManageModelInterface;
@@ -40,23 +40,23 @@ class IPCClient extends Model implements IPCClientInterface {
     constructor() {
         super();
 
-        if(typeof process.send === 'undefined') {
+        if (typeof process.send === 'undefined') {
             this.log.system.error('IPCClient is not child process');
             throw new Error('IPCClientIsNotChildProcess');
         }
 
         process.on('message', (msg: IPCServerMessage | IPCServerSocketIoMessage | IPCServerEncodeMessage) => {
-            if(typeof (<IPCServerMessage>msg).id === 'undefined') {
-                if((<IPCServerEncodeMessage>msg).msg === IPCMessageDefinition.setEncodeToClient) {
+            if (typeof (<IPCServerMessage> msg).id === 'undefined') {
+                if ((<IPCServerEncodeMessage> msg).msg === IPCMessageDefinition.setEncodeToClient) {
                     // server からのエンコード依頼
-                    this.encodeModel.push((<IPCServerEncodeMessage>msg).program);
+                    this.encodeModel.push((<IPCServerEncodeMessage> msg).program);
                 } else {
                     // server からの socket.io message 送信依頼
                     this.socketIo.notifyClient();
                 }
             } else {
                 // client -> server の返答
-                this.listener.emit(String((<IPCServerMessage>msg).id), msg);
+                this.listener.emit(String((<IPCServerMessage> msg).id), msg);
             }
         });
     }
@@ -64,208 +64,208 @@ class IPCClient extends Model implements IPCClientInterface {
     public setModels(
         encodeModel: EncodeModelInterface,
         socketIo: SocketIoManageModelInterface,
-    ) {
+    ): void {
         this.encodeModel = encodeModel;
         this.socketIo = socketIo;
     }
 
     /**
-    * 予約に含まれるの program id だけを取得する
-    * @return Promise<ReserveAllId>
-    */
+     * 予約に含まれるの program id だけを取得する
+     * @return Promise<ReserveAllId>
+     */
     public async getReserveAllId(): Promise<ReserveAllId> {
-        let id = this.send(IPCMessageDefinition.getReserveAllId);
-        let result = await this.receive(id);
+        const id = this.send(IPCMessageDefinition.getReserveAllId);
+        const result = await this.receive(id);
 
-        return <ReserveAllId>(result.value);
+        return <ReserveAllId> result.value;
     }
 
     /**
-    * 予約一覧を取得する
-    * @return Promise<ReserveLimit>
-    */
+     * 予約一覧を取得する
+     * @return Promise<ReserveLimit>
+     */
     public async getReserves(limit: number, offset: number): Promise<ReserveLimit> {
-        let id = this.send(IPCMessageDefinition.getReserves, { limit: limit, offset: offset });
-        let result = await this.receive(id);
+        const id = this.send(IPCMessageDefinition.getReserves, { limit: limit, offset: offset });
+        const result = await this.receive(id);
 
-        return <ReserveLimit>(result.value)
+        return <ReserveLimit> result.value;
     }
 
     /**
-    * 重複を取得する
-    * @return Promise<ReserveLimit>
-    */
+     * 重複を取得する
+     * @return Promise<ReserveLimit>
+     */
     public async getReserveConflicts(limit: number, offset: number): Promise<ReserveLimit> {
-        let id = this.send(IPCMessageDefinition.getReserveConflicts, { limit: limit, offset: offset });
-        let result = await this.receive(id);
+        const id = this.send(IPCMessageDefinition.getReserveConflicts, { limit: limit, offset: offset });
+        const result = await this.receive(id);
 
-        return <ReserveLimit>(result.value)
+        return <ReserveLimit> result.value;
     }
 
     /**
-    * スキップを取得する
-    * @return Promise<ReserveLimit>
-    */
+     * スキップを取得する
+     * @return Promise<ReserveLimit>
+     */
     public async getReserveSkips(limit: number, offset: number): Promise<ReserveLimit> {
-        let id = this.send(IPCMessageDefinition.getReserveSkips, { limit: limit, offset: offset });
-        let result = await this.receive(id);
+        const id = this.send(IPCMessageDefinition.getReserveSkips, { limit: limit, offset: offset });
+        const result = await this.receive(id);
 
-        return <ReserveLimit>(result.value)
+        return <ReserveLimit> result.value;
     }
 
     /**
-    * 予約追加
-    * @param programId: program id
-    * @param encode: EncodeInterface
-    * @return Promise<void>
-    */
+     * 予約追加
+     * @param programId: program id
+     * @param encode: EncodeInterface
+     * @return Promise<void>
+     */
     public async addReserve(programId: apid.ProgramId, encode?: EncodeInterface): Promise<void> {
-        let args = { programId: programId };
-        if(typeof encode !== 'undefined') { args['encode'] = encode; }
-        let id = this.send(IPCMessageDefinition.addReserve, args);
+        const args = { programId: programId };
+        if (typeof encode !== 'undefined') { args['encode'] = encode; }
+        const id = this.send(IPCMessageDefinition.addReserve, args);
         await this.receive(id);
     }
 
     /**
-    * 予約キャンセル
-    * @param programId: program id
-    * @return Promise<void>
-    */
+     * 予約キャンセル
+     * @param programId: program id
+     * @return Promise<void>
+     */
     public async cancelReserve(programId: apid.ProgramId): Promise<void> {
-        let id = this.send(IPCMessageDefinition.cancelReserve, { programId: programId });
+        const id = this.send(IPCMessageDefinition.cancelReserve, { programId: programId });
         await this.receive(id);
     }
 
     /**
-    * 予約対象から除外され状態を解除する
-    * @param programId: program id
-    * @return Promise<void>
-    */
+     * 予約対象から除外され状態を解除する
+     * @param programId: program id
+     * @return Promise<void>
+     */
     public async removeReserveSkip(programId: apid.ProgramId): Promise<void> {
-        let id = this.send(IPCMessageDefinition.removeReserveSkip, { programId: programId });
+        const id = this.send(IPCMessageDefinition.removeReserveSkip, { programId: programId });
         await this.receive(id);
     }
 
     /**
-    * 録画を削除する
-    * @param recordedId: recorded id
-    * @return Promise<void>
-    */
+     * 録画を削除する
+     * @param recordedId: recorded id
+     * @return Promise<void>
+     */
     public async recordedDelete(recordedId: number): Promise<void> {
-        let id = this.send(IPCMessageDefinition.recordedDelete, { recordedId: recordedId });
+        const id = this.send(IPCMessageDefinition.recordedDelete, { recordedId: recordedId });
         await this.receive(id);
     }
 
     /**
-    * 録画の ts ファイルを削除する
-    * @param recordedId: recorded id
-    * @return Promise<void>
-    */
+     * 録画の ts ファイルを削除する
+     * @param recordedId: recorded id
+     * @return Promise<void>
+     */
     public async recordedDeleteFile(recordedId: number): Promise<void> {
-        let id = this.send(IPCMessageDefinition.recordedFileDelete, { recordedId: recordedId });
+        const id = this.send(IPCMessageDefinition.recordedFileDelete, { recordedId: recordedId });
         await this.receive(id);
     }
 
     /**
-    * 録画の encoded ファイルを削除する
-    * @param encodedId: encoded id
-    * @return Promise<void>
-    */
+     * 録画の encoded ファイルを削除する
+     * @param encodedId: encoded id
+     * @return Promise<void>
+     */
     public async recordedDeleteEncodeFile(encodedId: number): Promise<void> {
-        let id = this.send(IPCMessageDefinition.recordedEncodeFileDelete, { encodedId: encodedId });
+        const id = this.send(IPCMessageDefinition.recordedEncodeFileDelete, { encodedId: encodedId });
         await this.receive(id);
     }
 
     /**
-    * rule を無効化する
-    * @param ruleId: rule id
-    * @return Promise<void>
-    */
+     * rule を無効化する
+     * @param ruleId: rule id
+     * @return Promise<void>
+     */
     public async ruleDisable(ruleId: number): Promise<void> {
-        let id = this.send(IPCMessageDefinition.ruleDisable, { ruleId: ruleId });
+        const id = this.send(IPCMessageDefinition.ruleDisable, { ruleId: ruleId });
         await this.receive(id);
     }
 
     /**
-    * rule を有効化する
-    * @param ruleId: rule id
-    * @return Promise<void>
-    */
+     * rule を有効化する
+     * @param ruleId: rule id
+     * @return Promise<void>
+     */
     public async ruleEnable(ruleId: number): Promise<void> {
-        let id = this.send(IPCMessageDefinition.ruleEnable, { ruleId: ruleId });
+        const id = this.send(IPCMessageDefinition.ruleEnable, { ruleId: ruleId });
         await this.receive(id);
     }
 
     /**
-    * rule を削除する
-    * @param ruleId: rule id
-    * @return Promise<void>
-    */
+     * rule を削除する
+     * @param ruleId: rule id
+     * @return Promise<void>
+     */
     public async ruleDelete(ruleId: number): Promise<void> {
-        let id = this.send(IPCMessageDefinition.ruleDelete, { ruleId: ruleId });
+        const id = this.send(IPCMessageDefinition.ruleDelete, { ruleId: ruleId });
         await this.receive(id);
     }
 
     /**
-    * rule を追加する
-    * @param rule: RuleInterface
-    * @return Promise<number>: rule id
-    */
+     * rule を追加する
+     * @param rule: RuleInterface
+     * @return Promise<number>: rule id
+     */
     public async ruleAdd(rule: RuleInterface): Promise<number> {
-        let id = this.send(IPCMessageDefinition.ruleAdd, { rule: rule });
-        let result = await this.receive(id);
+        const id = this.send(IPCMessageDefinition.ruleAdd, { rule: rule });
+        const result = await this.receive(id);
 
-        return <number>(result.value);
+        return <number> result.value;
     }
 
     /**
-    * rule を更新する
-    * @param rule: RuleInterface
-    * @return Promise<void>
-    */
+     * rule を更新する
+     * @param rule: RuleInterface
+     * @return Promise<void>
+     */
     public async ruleUpdate(ruleId: number, rule: RuleInterface): Promise<void> {
-        let id = this.send(IPCMessageDefinition.ruleUpdate, { ruleId: ruleId, rule: rule });
+        const id = this.send(IPCMessageDefinition.ruleUpdate, { ruleId: ruleId, rule: rule });
         await this.receive(id);
     }
 
     /**
-    * エンコード済みファイルを追加する
-    * @return Promise<number> encodedId
-    */
+     * エンコード済みファイルを追加する
+     * @return Promise<number> encodedId
+     */
     public async addEncodeFile(recordedId: number, name: string, filePath: string, delTs: boolean): Promise<number> {
-        let id = this.send(IPCMessageDefinition.addEncodeFile, {
+        const id = this.send(IPCMessageDefinition.addEncodeFile, {
             recordedId: recordedId,
             name: name,
             filePath: filePath,
             delTs: delTs,
         });
-        let result = await this.receive(id);
+        const result = await this.receive(id);
 
-        return <number>(result.value);
+        return <number> result.value;
     }
 
     /**
-    * 予約情報の更新
-    * @return Promise<void>
-    */
+     * 予約情報の更新
+     * @return Promise<void>
+     */
     public async updateReserves(): Promise<void> {
-        let id = this.send(IPCMessageDefinition.updateReserves);
+        const id = this.send(IPCMessageDefinition.updateReserves);
         await this.receive(id);
     }
 
     /**
-    * message 送信
-    * @param msg: string
-    * @param value: any
-    * @return id
-    */
+     * message 送信
+     * @param msg: string
+     * @param value: any
+     * @return id
+     */
     private send(msg: string, value: any | null = null): number {
-        let data: IPCClientMessage = {
+        const data: IPCClientMessage = {
             id: new Date().getTime(),
             msg: msg,
-        }
+        };
 
-        if(value !== null) {
+        if (value !== null) {
             data.value = value;
         }
 
@@ -275,14 +275,14 @@ class IPCClient extends Model implements IPCClientInterface {
     }
 
     /**
-    * 受信
-    * @param id: number
-    * @return Promise<IPCServerMessage>
-    */
+     * 受信
+     * @param id: number
+     * @return Promise<IPCServerMessage>
+     */
     private receive(id: number): Promise<IPCServerMessage> {
         return new Promise<IPCServerMessage>((resolve: (msg: IPCServerMessage) => void, reject: (err: Error) => void) => {
             this.listener.once(String(id), (msg: IPCServerMessage) => {
-                if(typeof msg.error !== 'undefined') {
+                if (typeof msg.error !== 'undefined') {
                     reject(new Error(msg.error));
                 } else {
                     resolve(msg);
@@ -297,4 +297,5 @@ class IPCClient extends Model implements IPCClientInterface {
     }
 }
 
-export { IPCClientInterface, IPCClient }
+export { IPCClientInterface, IPCClient };
+

@@ -3,11 +3,11 @@ import { RecordedDB } from '../RecordedDB';
 
 class PostgreSQLRecordedDB extends RecordedDB {
     /**
-    * create table
-    * @return Promise<void>
-    */
+     * create table
+     * @return Promise<void>
+     */
     public create(): Promise<void> {
-        let query = `create table if not exists ${ DBSchema.TableName.Recorded } (`
+        const query = `create table if not exists ${ DBSchema.TableName.Recorded } (`
             + 'id serial primary key, '
             + 'programId bigint not null, '
             + 'channelId bigint not null, '
@@ -32,17 +32,17 @@ class PostgreSQLRecordedDB extends RecordedDB {
             + 'recording boolean, '
             + 'protection boolean default false, '
             + 'filesize bigint null default null '
-        + ');'
+        + ');';
 
         return this.operator.runQuery(query);
     }
 
     /**
-    * restore
-    * @param program: DBSchema.RecordedSchema[]
-    * @param isDelete: boolean
-    * @param hasBaseDir: boolean
-    */
+     * restore
+     * @param program: DBSchema.RecordedSchema[]
+     * @param isDelete: boolean
+     * @param hasBaseDir: boolean
+     */
     public async restore(programs: DBSchema.RecordedSchema[], isDelete: boolean = true, hasBaseDir: boolean = true): Promise<void> {
         await super.restore(programs, isDelete, hasBaseDir);
 
@@ -51,24 +51,24 @@ class PostgreSQLRecordedDB extends RecordedDB {
     }
 
     /**
-    * create like str
-    */
+     * create like str
+     */
     public createLikeStr(): string {
         return 'ilike';
     }
 
     /**
-    * 指定した項目の集計
-    * @return Promise<T>
-    */
+     * 指定した項目の集計
+     * @return Promise<T>
+     */
     protected getTag<T>(item: string): Promise<T> {
         return this.operator.runQuery(`select count(*) as cnt, ${ item } as "${ item }" from ${ DBSchema.TableName.Recorded } group by ${ item } order by ${ item } asc nulls first`);
     }
 
     /**
-    * all columns
-    * @return string
-    */
+     * all columns
+     * @return string
+     */
     public getAllColumns(): string {
         return 'id, programId as "programId", channelId as "channelId", channelType as "channelType", startAt as "startAt", endAt as "endAt", duration, name, description, extended, genre1, genre2, videoType as "videoType", videoResolution as "videoResolution", videoStreamContent as "videoStreamContent", videoComponentType as "videoComponentType", audioSamplingRate as "audioSamplingRate", audioComponentType as "audioComponentType", recPath as "recPath", ruleId as "ruleId", thumbnailPath as "thumbnailPath", recording, protection, filesize';
     }

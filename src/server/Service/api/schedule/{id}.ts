@@ -1,16 +1,16 @@
 import { Operation } from 'express-openapi';
-import * as api from '../../api';
-import factory from '../../../Model/ModelFactory';
 import { ScheduleModelInterface } from '../../../Model/Api/ScheduleModel';
+import factory from '../../../Model/ModelFactory';
+import * as api from '../../api';
 
-export const get: Operation = async (req, res) => {
-    let schedules = <ScheduleModelInterface>(factory.get('ScheduleModel'));
+export const get: Operation = async(req, res) => {
+    const schedules = <ScheduleModelInterface> factory.get('ScheduleModel');
 
     try {
-        let results = await schedules.getScheduleId(req.query.time, req.params.id, req.query.days);
+        const results = await schedules.getScheduleId(req.query.time, req.params.id, req.query.days);
         api.responseJSON(res, 200, results);
-    } catch(err) {
-        if(err.message === ScheduleModelInterface.channelIdIsNotFoundError) {
+    } catch (err) {
+        if (err.message === ScheduleModelInterface.channelIdIsNotFoundError) {
             api.responseError(res, { code: 404,  message: 'channelId is not found' });
         } else {
             api.responseServerError(res, err.message);
@@ -28,7 +28,7 @@ get.apiDoc = {
             in: 'path',
             description: 'channel id',
             required: true,
-            type: 'integer'
+            type: 'integer',
         },
         {
             name: 'days',
@@ -45,15 +45,15 @@ get.apiDoc = {
         200: {
             description: 'チャンネル別の番組表を取得しました',
             schema: {
-                $ref: '#/definitions/SchedulePrograms'
-            }
+                $ref: '#/definitions/SchedulePrograms',
+            },
         },
         default: {
             description: '予期しないエラー',
             schema: {
-                $ref: '#/definitions/Error'
-            }
-        }
-    }
+                $ref: '#/definitions/Error',
+            },
+        },
+    },
 };
 

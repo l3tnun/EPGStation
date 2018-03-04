@@ -1,22 +1,22 @@
-import DBTableBase from './DBTableBase';
 import * as path from 'path';
-import * as DBSchema from './DBSchema';
-import Util from '../../Util/Util';
-import StrUtil from '../../Util/StrUtil';
 import FileUtil from '../../Util/FileUtil';
+import StrUtil from '../../Util/StrUtil';
+import Util from '../../Util/Util';
+import * as DBSchema from './DBSchema';
+import DBTableBase from './DBTableBase';
 
-interface findAllOption {
+interface FindAllOption {
     limit?: number;
     offset?: number;
-    query?: findQuery;
+    query?: FindQuery;
     isAddBaseDir?: boolean;
 }
 
-interface findQuery {
-    ruleId?: number | null,
-    genre1?: number,
-    channelId?: number,
-    keyword?: string,
+interface FindQuery {
+    ruleId?: number | null;
+    genre1?: number;
+    channelId?: number;
+    keyword?: string;
 }
 
 interface RecordedDBInterface extends DBTableBase {
@@ -34,9 +34,9 @@ interface RecordedDBInterface extends DBTableBase {
     updateFileSize(recordedId: number): Promise<void>;
     updateAllNullFileSize(): Promise<void>;
     findId(id: number): Promise<DBSchema.RecordedSchema | null>;
-    findOld():  Promise<DBSchema.RecordedSchema | null>;
-    findAll(option: findAllOption): Promise<DBSchema.RecordedSchema[]>;
-    getTotal(option?: findQuery): Promise<number>;
+    findOld(): Promise<DBSchema.RecordedSchema | null>;
+    findAll(option: FindAllOption): Promise<DBSchema.RecordedSchema[]>;
+    getTotal(option?: FindQuery): Promise<number>;
     getRuleTag(): Promise<DBSchema.RuleTag[]>;
     getChannelTag(): Promise<DBSchema.ChannelTag[]>;
     getGenreTag(): Promise<DBSchema.GenreTag[]>;
@@ -44,34 +44,34 @@ interface RecordedDBInterface extends DBTableBase {
 
 abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
     /**
-    * get table name
-    * @return string
-    */
+     * get table name
+     * @return string
+     */
     protected getTableName(): string {
         return DBSchema.TableName.Recorded;
     }
 
     /**
-    * create table
-    * @return Promise<void>
-    */
-    abstract create(): Promise<void>;
+     * create table
+     * @return Promise<void>
+     */
+    public abstract create(): Promise<void>;
 
     /**
-    * drop table
-    */
+     * drop table
+     */
     public drop(): Promise<void> {
         return this.operator.runQuery(`drop table if exists ${ DBSchema.TableName.Recorded }`);
     }
 
 
     /**
-    * recorded 挿入
-    * @param program: DBSchema.RecordedSchema
-    * @param Promise<number> insertId
-    */
+     * recorded 挿入
+     * @param program: DBSchema.RecordedSchema
+     * @param Promise<number> insertId
+     */
     public insert(program: DBSchema.RecordedSchema): Promise<number> {
-        let query = `insert into ${ DBSchema.TableName.Recorded } (`
+        const query = `insert into ${ DBSchema.TableName.Recorded } (`
             + this.createInsertColumnStr(false)
         + ') VALUES ('
             + this.operator.createValueStr(1, 23)
@@ -79,7 +79,7 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
 
         const baseDir = Util.getRecordedPath();
 
-        let value: any[] = [];
+        const value: any[] = [];
         value.push(program.programId);
         value.push(program.channelId);
         value.push(program.channelType);
@@ -108,10 +108,10 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
     }
 
     /**
-    * insert 時のカラムを生成
-    * @param hasId: boolean
-    * @return string
-    */
+     * insert 時のカラムを生成
+     * @param hasId: boolean
+     * @return string
+     */
     private createInsertColumnStr(hasId: boolean): string {
         return (hasId ? 'id, ' : '')
             + 'programId, '
@@ -136,30 +136,30 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
             + 'thumbnailPath, '
             + 'recording, '
             + 'protection, '
-            + 'filesize '
+            + 'filesize ';
     }
 
     /**
-    * restore
-    * @param program: DBSchema.RecordedSchema[]
-    * @param isDelete: boolean
-    * @param hasBaseDir: boolean
-    */
+     * restore
+     * @param program: DBSchema.RecordedSchema[]
+     * @param isDelete: boolean
+     * @param hasBaseDir: boolean
+     */
     public restore(programs: DBSchema.RecordedSchema[], isDelete: boolean = true, hasBaseDir: boolean = true): Promise<void> {
-        let query = `insert into ${ DBSchema.TableName.Recorded } (`
+        const query = `insert into ${ DBSchema.TableName.Recorded } (`
             + this.createInsertColumnStr(true)
         + ') VALUES ('
             + this.operator.createValueStr(1, 24)
-        + `)`;
+        + ')';
 
         const baseDir = Util.getRecordedPath();
 
-        let values: any[] = [];
-        for(let program of programs) {
-            let value: any[] = [];
+        const values: any[] = [];
+        for (const program of programs) {
+            const value: any[] = [];
 
             let recPath = program.recPath === null ? null : program.recPath;
-            if(recPath !== null && hasBaseDir) {
+            if (recPath !== null && hasBaseDir) {
                 recPath = recPath.slice(baseDir.length + path.sep.length);
             }
 
@@ -196,19 +196,19 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
     }
 
     /**
-    * recorded 更新
-    * @param program: DBSchema.RecordedSchema
-    * @param Promise<void>
-    */
+     * recorded 更新
+     * @param program: DBSchema.RecordedSchema
+     * @param Promise<void>
+     */
     public async replace(program: DBSchema.RecordedSchema): Promise<void> {
         const isReplace = this.operator.getUpsertType() === 'replace';
         let query = `${ isReplace ? 'replace' : 'insert' } into ${ DBSchema.TableName.Recorded } (`
             + this.createInsertColumnStr(true)
         + ') VALUES ('
             + this.operator.createValueStr(1, 24)
-        + ')'
+        + ')';
 
-        if(!isReplace) {
+        if (!isReplace) {
             query += ' on conflict (id) do update set '
                 + 'programId = excluded.programId, '
                 + 'channelId = excluded.channelId, '
@@ -232,12 +232,12 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
                 + 'thumbnailPath = excluded.thumbnailPath, '
                 + 'recording = excluded.recording, '
                 + 'protection = excluded.protection, '
-                + 'filesize = excluded.filesize '
+                + 'filesize = excluded.filesize ';
         }
 
         const baseDir = Util.getRecordedPath();
 
-        let value: any[] = [];
+        const value: any[] = [];
         value.push(program.id);
         value.push(program.programId);
         value.push(program.channelId);
@@ -267,127 +267,130 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
     }
 
     /**
-    * recorded を削除
-    * @param id: recorded id
-    * @return Promise<void>
-    */
+     * recorded を削除
+     * @param id: recorded id
+     * @return Promise<void>
+     */
     public delete(id: number): Promise<void> {
         return this.operator.runQuery(`delete from ${ DBSchema.TableName.Recorded } where id = ${ id }`);
     }
 
     /**
-    * recPath を削除
-    * @param id: recorded id
-    * @return Promise<void>
-    */
+     * recPath を削除
+     * @param id: recorded id
+     * @return Promise<void>
+     */
     public deleteRecPath(id: number): Promise<void> {
         return this.operator.runQuery(`update ${ DBSchema.TableName.Recorded } set recPath = null, filesize = null where id = ${ id }`);
     }
 
     /**
-    * ruleId を削除
-    * @param ruleId: rule id
-    * @return Promise<void>
-    */
+     * ruleId を削除
+     * @param ruleId: rule id
+     * @return Promise<void>
+     */
     public deleteRuleId(ruleId: number): Promise<void> {
         return this.operator.runQuery(`update ${ DBSchema.TableName.Recorded } set ruleId = null where ruleId = ${ ruleId }`);
     }
 
     /**
-    * thumbnail filePath を追加
-    * @param id: recorded id
-    * @param filePath: thumbnail path
-    * @return Promise<void>
-    */
+     * thumbnail filePath を追加
+     * @param id: recorded id
+     * @param filePath: thumbnail path
+     * @return Promise<void>
+     */
     public addThumbnail(id: number, filePath: string): Promise<void> {
-        let thumbnailDir = Util.getThumbnailPath();
+        const thumbnailDir = Util.getThumbnailPath();
+
         return this.operator.runQuery(`update ${ DBSchema.TableName.Recorded } set thumbnailPath = '${ filePath.slice(thumbnailDir.length + path.sep.length) }' where id = ${ id }`);
     }
 
     /**
-    * recording 状態を解除する
-    * @param id: recorded id
-    * @return Promise<void>
-    */
+     * recording 状態を解除する
+     * @param id: recorded id
+     * @return Promise<void>
+     */
     public removeRecording(id: number): Promise<void> {
         return this.operator.runQuery(`update ${ DBSchema.TableName.Recorded } set recording = false where id = ${ id }`);
     }
 
     /**
-    * recording 状態をすべて解除する
-    * @return Promise<void>
-    */
+     * recording 状態をすべて解除する
+     * @return Promise<void>
+     */
     public removeAllRecording(): Promise<void> {
         return this.operator.runQuery(`update ${ DBSchema.TableName.Recorded } set recording = false where recording = true`);
     }
 
     /**
-    * filesize を更新する
-    * @return Promise<void>
-    */
+     * filesize を更新する
+     * @return Promise<void>
+     */
     public async updateFileSize(recordedId: number): Promise<void> {
         const recorded = await this.findId(recordedId);
-        if(recorded === null || recorded.recPath === null) { return; }
+        if (recorded === null || recorded.recPath === null) { return; }
 
         const size = FileUtil.getFileSize(recorded.recPath);
         await this.operator.runQuery(`update ${ DBSchema.TableName.Recorded } set filesize = ${ size } where id = ${ recordedId }`);
     }
 
     /**
-    * ファイルが存在して filesize が null のデータを更新する
-    * @return Promise<void>
-    */
+     * ファイルが存在して filesize が null のデータを更新する
+     * @return Promise<void>
+     */
     public async updateAllNullFileSize(): Promise<void> {
         let programs = <DBSchema.RecordedSchema[]> await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Recorded } where filesize is null and recPath is not null`);
         programs = await this.fixResults(programs);
 
-        for(let program of programs) {
+        for (const program of programs) {
             try {
                 const size = FileUtil.getFileSize(program.recPath!);
                 await this.operator.runQuery(`update ${ DBSchema.TableName.Recorded } set filesize = ${ size } where id = ${ program.id }`);
-            } catch(err) {
+            } catch (err) {
                 this.log.system.warn(`${ program.recPath } update filesize error.`);
             }
         }
     }
 
     /**
-    * id 検索
-    * @param id: recorded id
-    * @return Promise<DBSchema.RecordedSchema | null>
-    */
+     * id 検索
+     * @param id: recorded id
+     * @return Promise<DBSchema.RecordedSchema | null>
+     */
     public async findId(id: number): Promise<DBSchema.RecordedSchema | null> {
-        let programs = await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Recorded } where id = ${ id }`);
-        return this.operator.getFirst(await this.fixResults(<DBSchema.RecordedSchema[]>programs));
+        const programs = await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Recorded } where id = ${ id }`);
+
+        return this.operator.getFirst(await this.fixResults(<DBSchema.RecordedSchema[]> programs));
     }
 
     /**
-    * @param programs: DBSchema.RecordedSchema[]
-    * @param isAddBaseDir: boolean = false
-    */
+     * @param programs: DBSchema.RecordedSchema[]
+     * @param isAddBaseDir: boolean = false
+     */
     protected fixResults(programs: DBSchema.RecordedSchema[], isAddBaseDir: boolean = true): DBSchema.RecordedSchema[] {
-        let baseDir = Util.getRecordedPath();
-        let thumbnailDir = Util.getThumbnailPath();
+        const baseDir = Util.getRecordedPath();
+        const thumbnailDir = Util.getThumbnailPath();
+
         return programs.map((program) => {
             return this.fixResult(baseDir, thumbnailDir, program, isAddBaseDir);
         });
     }
 
     /**
-    * @param baseDir: string
-    * @param thumbnailDir: string
-    * @param program: DBSchema.RecordedSchema
-    * @param isAddBaseDir: boolean
-    * @return DBSchema.RecordedSchema
-    */
+     * @param baseDir: string
+     * @param thumbnailDir: string
+     * @param program: DBSchema.RecordedSchema
+     * @param isAddBaseDir: boolean
+     * @return DBSchema.RecordedSchema
+     */
     protected fixResult(baseDir: string, thumbnailDir: string, program: DBSchema.RecordedSchema, isAddBaseDir: boolean): DBSchema.RecordedSchema {
-        if(isAddBaseDir && program.recPath !== null) {
-            //フルパスへ書き換える
+        if (isAddBaseDir && program.recPath !== null) {
+            // フルパスへ書き換える
             program.recPath = path.join(baseDir, program.recPath);
         }
 
-        if(isAddBaseDir && program.thumbnailPath !== null) {
-            //フルパスへ書き換える
+        if (isAddBaseDir && program.thumbnailPath !== null) {
+            // フルパスへ書き換える
             program.thumbnailPath = path.join(thumbnailDir, program.thumbnailPath);
         }
 
@@ -395,71 +398,73 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
     }
 
     /**
-    * id が一番古いレコードを返す
-    * @return Promise<DBSchema.RecordedSchema | null>
-    */
+     * id が一番古いレコードを返す
+     * @return Promise<DBSchema.RecordedSchema | null>
+     */
     public async findOld(): Promise<DBSchema.RecordedSchema | null> {
-        let programs = await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Recorded } order by id asc ${ this.operator.createLimitStr(1) }`);
-        return this.operator.getFirst(await this.fixResults(<DBSchema.RecordedSchema[]>programs));
+        const programs = await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Recorded } order by id asc ${ this.operator.createLimitStr(1) }`);
+
+        return this.operator.getFirst(await this.fixResults(<DBSchema.RecordedSchema[]> programs));
     }
 
     /**
-    * 全件取得
-    * @param option: findAllOption
-    * @return Promise<DBSchema.RecordedSchema[]>
-    */
-    public async findAll(option: findAllOption): Promise<DBSchema.RecordedSchema[]> {
+     * 全件取得
+     * @param option: FindAllOption
+     * @return Promise<DBSchema.RecordedSchema[]>
+     */
+    public async findAll(option: FindAllOption): Promise<DBSchema.RecordedSchema[]> {
         let query = `select ${ this.getAllColumns() } from ${ DBSchema.TableName.Recorded } `;
 
-        if(typeof option.query !== 'undefined') {
+        if (typeof option.query !== 'undefined') {
             query += this.buildFindQuery(option.query || {});
         }
 
-        query += ` order by id desc`;
+        query += ' order by id desc';
 
-        if(typeof option.limit !== 'undefined') {
+        if (typeof option.limit !== 'undefined') {
             query += ` ${ this.operator.createLimitStr(option.limit, option.offset || 0) }`;
         }
 
-        let programs = await this.operator.runQuery(query);
-        return this.fixResults(<DBSchema.RecordedSchema[]>programs, option.isAddBaseDir);
+        const programs = await this.operator.runQuery(query);
+
+        return this.fixResults(<DBSchema.RecordedSchema[]> programs, option.isAddBaseDir);
     }
 
     /**
-    * findQuery を組み立てる
-    * @param findQuery
-    * @return string
-    */
-    private buildFindQuery(option: findQuery): string {
-        let query: string[] = [];
+     * FindQuery を組み立てる
+     * @param FindQuery
+     * @return string
+     */
+    private buildFindQuery(option: FindQuery): string {
+        const query: string[] = [];
 
-        if(typeof option.ruleId !== 'undefined') {
+        if (typeof option.ruleId !== 'undefined') {
             query.push(option.ruleId === null ? 'ruleId is null' : `ruleId = ${ option.ruleId }`);
         }
 
-        if(typeof option.genre1 !== 'undefined') {
+        if (typeof option.genre1 !== 'undefined') {
             query.push(`genre1 = ${ option.genre1 }`);
         }
 
-        if(typeof option.channelId !== 'undefined') {
+        if (typeof option.channelId !== 'undefined') {
             query.push(`channelId = ${ option.channelId }`);
         }
 
-        if(typeof option.keyword !== 'undefined') {
-            let keyword = option.keyword.replace(/'/g, "\\'"); // ' を \' へ置換
-            StrUtil.toHalf(keyword).trim().split(' ').forEach((str) => {
-                let baseStr = `'%${ str }%'`;
+        if (typeof option.keyword !== 'undefined') {
+            const keyword = option.keyword.replace(/'/g, "\\'"); // ' を \' へ置換
+            StrUtil.toHalf(keyword).trim().split(' ').forEach((s) => {
+                const baseStr = `'%${ s }%'`;
                 query.push(`(name ${ this.createLikeStr() } ${ baseStr } or description ${ this.createLikeStr() } ${ baseStr })`);
             });
         }
 
         let str = '';
-        if(query.length > 0) {
+        if (query.length > 0) {
             str += ' where';
             query.forEach((q, i) => {
                 str += ` ${ q }`;
-                if(i < query.length - 1) {
-                    str += ' and'
+                if (i < query.length - 1) {
+                    str += ' and';
                 }
             });
         }
@@ -468,52 +473,52 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
     }
 
     /**
-    * create like str
-    */
+     * create like str
+     */
     public createLikeStr(): string {
         return 'like';
     }
 
     /**
-    * 件数取得
-    * @return Promise<number>
-    */
-    public getTotal(option: findQuery = {}): Promise<number> {
+     * 件数取得
+     * @return Promise<number>
+     */
+    public getTotal(option: FindQuery = {}): Promise<number> {
         return this.operator.total(DBSchema.TableName.Recorded, this.buildFindQuery(option));
     }
 
     /**
-    * rule id 集計
-    * @return Promise<DBSchema.RuleTag[]>
-    */
+     * rule id 集計
+     * @return Promise<DBSchema.RuleTag[]>
+     */
     public getRuleTag(): Promise<DBSchema.RuleTag[]> {
         return this.getTag('ruleId');
     }
 
     /**
-    * channel id 集計
-    * @return Promise<DBSchema.ChannelTag[]>
-    */
+     * channel id 集計
+     * @return Promise<DBSchema.ChannelTag[]>
+     */
     public getChannelTag(): Promise<DBSchema.ChannelTag[]> {
         return this.getTag('channelId');
     }
 
     /**
-    * genre1 集計
-    * @return Promise<DBSchema.GenreTag[]>
-    */
+     * genre1 集計
+     * @return Promise<DBSchema.GenreTag[]>
+     */
     public getGenreTag(): Promise<DBSchema.GenreTag[]> {
         return this.getTag('genre1');
     }
 
     /**
-    * 指定した項目の集計
-    * @return Promise<T>
-    */
+     * 指定した項目の集計
+     * @return Promise<T>
+     */
     protected getTag<T>(item: string): Promise<T> {
         return this.operator.runQuery(`select count(*) as cnt, ${ item } from ${ DBSchema.TableName.Recorded } group by ${ item } order by ${ item } asc`);
     }
 }
 
-export { findQuery, RecordedDBInterface, RecordedDB };
+export { FindQuery, RecordedDBInterface, RecordedDB };
 

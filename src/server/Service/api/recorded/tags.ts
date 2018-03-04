@@ -1,15 +1,15 @@
 import { Operation } from 'express-openapi';
-import * as api from '../../api';
-import factory from '../../../Model/ModelFactory';
 import { RecordedModelInterface } from '../../../Model/Api/RecordedModel';
+import factory from '../../../Model/ModelFactory';
+import * as api from '../../api';
 
-export const get: Operation = async (_req, res) => {
-    let recordeds = <RecordedModelInterface>(factory.get('RecordedModel'));
+export const get: Operation = async(_req, res) => {
+    const recordeds = <RecordedModelInterface> factory.get('RecordedModel');
 
     try {
-        let result = await recordeds.getGenreTags();
+        const result = await recordeds.getGenreTags();
         api.responseJSON(res, 200, result);
-    } catch(err) {
+    } catch (err) {
         api.responseServerError(res, err.message);
     }
 };
@@ -22,15 +22,15 @@ get.apiDoc = {
         200: {
             description: '録画のタグを取得しました',
             schema: {
-                $ref: '#/definitions/RecordedTags'
-            }
+                $ref: '#/definitions/RecordedTags',
+            },
         },
         default: {
             description: '予期しないエラー',
             schema: {
-                $ref: '#/definitions/Error'
-            }
-        }
-    }
+                $ref: '#/definitions/Error',
+            },
+        },
+    },
 };
 

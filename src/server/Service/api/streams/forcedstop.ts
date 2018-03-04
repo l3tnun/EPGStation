@@ -1,15 +1,15 @@
 import { Operation } from 'express-openapi';
-import * as api from '../../api';
-import factory from '../../../Model/ModelFactory';
 import { StreamsModelInterface } from '../../../Model/Api/StreamsModel';
+import factory from '../../../Model/ModelFactory';
+import * as api from '../../api';
 
-export const del: Operation = async (_req, res) => {
-    let streams = <StreamsModelInterface>(factory.get('StreamsModel'));
+export const del: Operation = async(_req, res) => {
+    const streams = <StreamsModelInterface> factory.get('StreamsModel');
 
     try {
         await streams.forcedStopAll();
         api.responseJSON(res, 200, { code: 200 });
-    } catch(err) {
+    } catch (err) {
         api.responseServerError(res, err.message);
     }
 };
@@ -25,9 +25,9 @@ del.apiDoc = {
         default: {
             description: '予期しないエラー',
             schema: {
-                $ref: '#/definitions/Error'
-            }
-        }
-    }
+                $ref: '#/definitions/Error',
+            },
+        },
+    },
 };
 

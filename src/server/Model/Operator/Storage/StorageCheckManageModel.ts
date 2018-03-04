@@ -1,10 +1,10 @@
-import * as fs from 'fs';
 import { spawn } from 'child_process';
 import * as diskusage from 'diskusage';
-import Model from '../../Model';
+import * as fs from 'fs';
+import Util from '../../../Util/Util';
 import { RecordedDBInterface } from '../../DB/RecordedDB';
 import { IPCServerInterface } from '../../IPC/IPCServer';
-import Util from '../../../Util/Util';
+import Model from '../../Model';
 import { RecordedManageModelInterface } from '../Recorded/RecordedManageModel';
 
 interface StorageCheckManageModelInterface extends Model {
@@ -12,8 +12,8 @@ interface StorageCheckManageModelInterface extends Model {
 }
 
 /**
-* ストレージの空き容量を監視する
-*/
+ * ストレージの空き容量を監視する
+ */
 class StorageCheckManageModel extends Model implements StorageCheckManageModelInterface {
     private recordedDB: RecordedDBInterface;
     private ipc: IPCServerInterface;
@@ -37,13 +37,13 @@ class StorageCheckManageModel extends Model implements StorageCheckManageModelIn
         this.intervalTime = (config.storageLimitCheckIntervalTime | 60) * 1000;
         this.dir = Util.getRecordedPath();
         this.action = config.storageLimitAction || 'none';
-        this.cmd = config.storageLimitCmd || null;       
+        this.cmd = config.storageLimitCmd || null;
     }
 
     /**
-    * check
-    * @return Promise<number> 次の待ち時間を返す(ms)
-    */
+     * check
+     * @return Promise<number> 次の待ち時間を返す(ms)
+     */
     public async check(threshold: number): Promise<number> {
         let free: number;
 
@@ -51,45 +51,47 @@ class StorageCheckManageModel extends Model implements StorageCheckManageModelIn
             // 空き容量を取得
             free = await new Promise<number>((resolve: (free: number) => void, reject: (err: Error) => void) => {
                 diskusage.check(this.dir, (err, result) => {
-                    if(err) {
+                    if (err) {
                         reject(err);
                     } else {
                         resolve(result.available / 1024 / 1024);
                     }
                 });
             });
-        } catch(err) {
+        } catch (err) {
             this.log.system.error('StorageCheckError');
             this.log.system.error(err);
+
             return this.intervalTime;
         }
 
-        if(free > threshold) { return this.intervalTime; }
+        if (free > threshold) { return this.intervalTime; }
         this.log.system.info(`free: ${ free }, threshold: ${ threshold }`);
 
         let intervalTime = this.intervalTime;
 
-        if(this.action === 'remove') {
+        if (this.action === 'remove') {
             // 削除
-            let recorded = await this.recordedDB.findOld();
-            if(recorded !== null) {
+            const recorded = await this.recordedDB.findOld();
+            if (recorded !== null) {
                 await this.recordedManage.delete(recorded.id);
                 this.ipc.notifIo();
                 intervalTime = 1000;
             }
         }
 
-        if(this.cmd !== null) {
-            let args = this.cmd.split(' ');
+        if (this.cmd !== null) {
+            const args = this.cmd.split(' ');
             const bin = args.shift();
 
             // cmd の実行
             try {
                 // cmd の存在確認
-                if(typeof bin === 'undefined') { throw new Error('storageLimitCmdIsUndefined'); }
+                if (typeof bin === 'undefined') { throw new Error('storageLimitCmdIsUndefined'); }
                 fs.statSync(bin);
-            } catch(err) {
+            } catch (err) {
                 this.log.system.error(`${ bin } is not found.`);
+
                 return intervalTime;
             }
 

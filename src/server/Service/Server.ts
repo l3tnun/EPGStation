@@ -1,12 +1,12 @@
 /// <reference path="./swaggerUiExpress.d.ts" />
 
-import * as fs from 'fs';
-import * as path from 'path';
-import * as yaml from 'js-yaml';
+import * as bodyParser from 'body-parser';
 import * as express from 'express';
 import * as openapi from 'express-openapi';
-import * as bodyParser from 'body-parser';
+import * as fs from 'fs';
+import * as yaml from 'js-yaml';
 import * as log4js from 'log4js';
+import * as path from 'path';
 import * as swaggerUi from 'swagger-ui-express';
 import Base from '../Base';
 import factory from '../Model/ModelFactory';
@@ -14,8 +14,8 @@ import { SocketIoManageModelInterface } from '../Model/Service/SocketIoManageMod
 import Util from '../Util/Util';
 
 /**
-* Server
-*/
+ * Server
+ */
 class Server extends Base {
     private app = express();
 
@@ -29,34 +29,34 @@ class Server extends Base {
         const pkg = require(path.join('..', '..', '..', 'package.json'));
 
         // read api.yml
-        let api = yaml.safeLoad(fs.readFileSync(path.join(__dirname, '..', '..', '..', 'api.yml'), 'utf-8'));
+        const api = yaml.safeLoad(fs.readFileSync(path.join(__dirname, '..', '..', '..', 'api.yml'), 'utf-8'));
         api.info = {
-            version: pkg.version,
             title: pkg.name,
-        }
+            version: pkg.version,
+        };
 
         // swagger ui
         this.app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(api));
-        this.app.get('/api/debug', (_req, res) => res.redirect('/api-docs/?url=/api/docs'));
+        this.app.get('/api/debug', (_req, res) => { return res.redirect('/api-docs/?url=/api/docs'); });
 
         // init express-openapi
         openapi.initialize({
-            app: this.app,
             apiDoc: api,
-            paths: path.join(__dirname, 'api'),
+            app: this.app,
             consumesMiddleware: {
                 'application/json': bodyParser.json(),
-                'text/text': bodyParser.text()
+                'text/text': bodyParser.text(),
             },
-            errorMiddleware: (err, _req, res, _next) => {
+            docsPath: '/docs',
+            errorMiddleware: (err, _req, res) => {
                 res.status(400);
                 res.json(err);
             },
-            errorTransformer: (openapi, _jsonschema) => {
-                return openapi.message;
+            errorTransformer: (openApi) => {
+                return openApi.message;
             },
-            docsPath: '/docs',
-            exposeApiDocs: true
+            exposeApiDocs: true,
+            paths: path.join(__dirname, 'api'),
         });
 
         // static mime
@@ -89,8 +89,8 @@ class Server extends Base {
     }
 
     /**
-    * 開始
-    */
+     * 開始
+     */
     public start(): void {
         const port = this.config.getConfig().serverPort || 8888;
         const server = this.app.listen(port, () => {
@@ -98,7 +98,7 @@ class Server extends Base {
         });
 
         // socket.io
-        (<SocketIoManageModelInterface>factory.get('SocketIoManageModel')).initialize(server);
+        (<SocketIoManageModelInterface> factory.get('SocketIoManageModel')).initialize(server);
     }
 }
 

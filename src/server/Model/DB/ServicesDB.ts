@@ -1,6 +1,6 @@
 import * as apid from '../../../../node_modules/mirakurun/api';
-import DBTableBase from './DBTableBase';
 import * as DBSchema from './DBSchema';
+import DBTableBase from './DBTableBase';
 
 interface ServicesDBInterface extends DBTableBase {
     create(): Promise<void>;
@@ -8,37 +8,37 @@ interface ServicesDBInterface extends DBTableBase {
     insert(services: apid.Service[], isDelete?: boolean): Promise<void>;
     findId(id: number): Promise<DBSchema.ServiceSchema | null>;
     findAll(): Promise<DBSchema.ServiceSchema[]>;
-    findChannelType(types: (apid.ChannelType)[] ): Promise<DBSchema.ServiceSchema[]>;
+    findChannelType(types: apid.ChannelType[]): Promise<DBSchema.ServiceSchema[]>;
 }
 
 abstract class ServicesDB extends DBTableBase implements ServicesDBInterface {
     /**
-    * get table name
-    * @return string
-    */
+     * get table name
+     * @return string
+     */
     protected getTableName(): string {
         return DBSchema.TableName.Services;
     }
 
     /**
-    * create table
-    * @return Promise<void>
-    */
-    abstract create(): Promise<void>;
+     * create table
+     * @return Promise<void>
+     */
+    public abstract create(): Promise<void>;
 
     /**
-    * drop table
-    */
+     * drop table
+     */
     public drop(): Promise<void> {
         return this.operator.runQuery(`drop table if exists ${ DBSchema.TableName.Services }`);
     }
 
     /**
-    * データ挿入
-    * @param services: Services
-    * @param isDelete: 挿入時に古いデータを削除するか true: 削除, false: 削除しない
-    * @return Promise<void>
-    */
+     * データ挿入
+     * @param services: Services
+     * @param isDelete: 挿入時に古いデータを削除するか true: 削除, false: 削除しない
+     * @return Promise<void>
+     */
     public insert(services: apid.Service[], isDelete: boolean = true): Promise<void> {
         const isReplace = this.operator.getUpsertType() === 'replace';
         let queryStr = `${ isReplace ? 'replace' : 'insert' } into ${ DBSchema.TableName.Services } (`
@@ -56,7 +56,7 @@ abstract class ServicesDB extends DBTableBase implements ServicesDBInterface {
             + this.operator.createValueStr(1, 10)
         + ')';
 
-        if(!isReplace) {
+        if (!isReplace) {
             queryStr += ' on conflict (id) do update set '
                 + 'serviceId = excluded.serviceId, '
                 + 'networkId = excluded.networkId, '
@@ -66,14 +66,14 @@ abstract class ServicesDB extends DBTableBase implements ServicesDBInterface {
                 + 'channelType = excluded.channelType, '
                 + 'channelTypeId = excluded.channelTypeId, '
                 + 'channel = excluded.channel, '
-                + 'type = excluded.type '
+                + 'type = excluded.type ';
         }
 
-        let datas: any[] = [];
+        const datas: any[] = [];
         services.forEach((service) => {
-            if(typeof service.channel === 'undefined') { return; }
+            if (typeof service.channel === 'undefined') { return; }
 
-            let data = [
+            const data = [
                 service.id,
                 service.serviceId,
                 service.networkId,
@@ -83,7 +83,7 @@ abstract class ServicesDB extends DBTableBase implements ServicesDBInterface {
                 service.channel.type,
                 this.getChannelTypeId(service.channel.type),
                 service.channel.channel,
-                typeof service['type'] === 'undefined' ? null : service['type']
+                typeof service['type'] === 'undefined' ? null : service['type'],
             ];
 
             datas.push({ query: queryStr, values: data });
@@ -93,11 +93,11 @@ abstract class ServicesDB extends DBTableBase implements ServicesDBInterface {
     }
 
     /**
-    * ChannelTypeId を取得する
-    * @paramChannelTypeId
-    */
+     * ChannelTypeId を取得する
+     * @paramChannelTypeId
+     */
     private getChannelTypeId(type: string): number {
-        switch(type) {
+        switch (type) {
             case 'GR':
                 return 0;
             case 'BS':
@@ -112,39 +112,39 @@ abstract class ServicesDB extends DBTableBase implements ServicesDBInterface {
     }
 
     /**
-    * id 検索
-    * @param id: id
-    * @return Promise<DBSchema.ServiceSchema | null>
-    */
+     * id 検索
+     * @param id: id
+     * @return Promise<DBSchema.ServiceSchema | null>
+     */
     public async findId(id: number): Promise<DBSchema.ServiceSchema | null> {
         return this.operator.getFirst(this.fixResults(<DBSchema.ServiceSchema[]> await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Services } where id = ${ id }`)));
     }
 
     /**
-    * @param services: DBSchema.ServiceSchema[]
-    * @return DBSchema.ServiceSchema[]
-    */
+     * @param services: DBSchema.ServiceSchema[]
+     * @return DBSchema.ServiceSchema[]
+     */
     protected fixResults(services: DBSchema.ServiceSchema[]): DBSchema.ServiceSchema[] {
         return services;
     }
 
     /**
-    * 全件取得
-    * @return Promise<DBSchema.ServiceSchema[]>
-    */
+     * 全件取得
+     * @return Promise<DBSchema.ServiceSchema[]>
+     */
     public async findAll(): Promise<DBSchema.ServiceSchema[]> {
         return this.fixResults(<DBSchema.ServiceSchema[]> await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Services } order by channelTypeId, remoteControlKeyId, id`));
     }
 
     /**
-    * 放送波指定取得
-    * @param types GR | BS | CS | SKY
-    * @return Promise<DBSchema.ServiceSchema[]>
-    */
-    public async findChannelType(types: (apid.ChannelType)[] ): Promise<DBSchema.ServiceSchema[]> {
+     * 放送波指定取得
+     * @param types GR | BS | CS | SKY
+     * @return Promise<DBSchema.ServiceSchema[]>
+     */
+    public async findChannelType(types: apid.ChannelType[]): Promise<DBSchema.ServiceSchema[]> {
         let str = '';
         types.forEach((type) => {
-            str += `'${ type }',`
+            str += `'${ type }',`;
         });
         str = str.slice(0, -1);
 

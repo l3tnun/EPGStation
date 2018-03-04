@@ -3,11 +3,11 @@ import { RecordedDB } from '../RecordedDB';
 
 class MySQLRecordedDB extends RecordedDB {
     /**
-    * create table
-    * @return Promise<void>
-    */
+     * create table
+     * @return Promise<void>
+     */
     public create(): Promise<void> {
-        let query = `CREATE TABLE IF NOT EXISTS ${ DBSchema.TableName.Recorded } (`
+        const query = `CREATE TABLE IF NOT EXISTS ${ DBSchema.TableName.Recorded } (`
             + 'id int primary key auto_increment, '
             + 'programId bigint not null, '
             + 'channelId bigint not null, '
@@ -32,7 +32,7 @@ class MySQLRecordedDB extends RecordedDB {
             + 'recording boolean, '
             + 'protection boolean default false, '
             + 'filesize bigint null default null '
-        + ') engine=InnoDB;'
+        + ') engine=InnoDB;';
 
         return this.operator.runQuery(query);
     }

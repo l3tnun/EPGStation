@@ -5,6 +5,7 @@ const path = require('path');
 const gulp = require('gulp');
 const del = require('del');
 const plumber = require('gulp-plumber');
+const tslint = require("gulp-tslint");
 const typescript = require('gulp-typescript');
 const sourcemaps = require('gulp-sourcemaps');
 const minimist = require('minimist');
@@ -90,7 +91,17 @@ gulp.task('clean-server', () => {
     return del([config.server.dst]);
 })
 
-gulp.task('build-server', ['clean-server'],() => {
+gulp.task('tslint-server', () => {
+    return gulp
+        .src(config.server.src)
+        .pipe(tslint())
+        .pipe(tslint.report({
+            emitError: false,
+            summarizeFailureOutput: true
+        }));
+});
+
+gulp.task('build-server', ['clean-server', 'tslint-server'],() => {
     return gulp.src(config.server.src)
         .pipe(plumber())
         .pipe(sourcemaps.init())
@@ -140,17 +151,18 @@ gulp.task('client-css-build', () => {
 gulp.task('clean', ['clean-server', 'clean-client', 'clean-client-css']);
 
 //build
-gulp.task('build', ['clean', 'build-server', 'build-client', 'client-css-build']);
+gulp.task('build', ['clean', 'tslint-server', 'build-server', 'build-client', 'client-css-build']);
 
 gulp.task('watch', [
         'clean-server',
+        'tslint-server',
         'build-server',
         'clean-client',
         'build-client',
         'clean-client-css',
         'client-css-build'
     ], () => {
-    gulp.watch(config.server.src, ['clean-server', 'build-server']);
+    gulp.watch(config.server.src, ['clean-server', 'tslint-server', 'build-server']);
     gulp.watch(config.client.src, ['clean-client', 'build-client']);
     gulp.watch(config.client.css.src, ['clean-client-css', 'client-css-build']);
 });

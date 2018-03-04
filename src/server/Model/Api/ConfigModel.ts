@@ -1,6 +1,6 @@
-import ApiModel from './ApiModel';
-import CreateMirakurunClient from '../../Util/CreateMirakurunClient';
 import * as apid from '../../../../node_modules/mirakurun/api';
+import CreateMirakurunClient from '../../Util/CreateMirakurunClient';
+import ApiModel from './ApiModel';
 
 interface ConfigModelInterface extends ApiModel {
     getConfig(): Promise<{}>;
@@ -8,32 +8,32 @@ interface ConfigModelInterface extends ApiModel {
 
 class ConfigModel extends ApiModel implements ConfigModelInterface {
     /**
-    * config を取得
-    * @return Promise<{}>
-    */
+     * config を取得
+     * @return Promise<{}>
+     */
     public async getConfig(): Promise<{}> {
-        let results: {} = {};
+        const results: {} = {};
 
-        let config = this.config.getConfig();
+        const config = this.config.getConfig();
 
-        let mirakurun = CreateMirakurunClient.get();
-        let tuners = await mirakurun.getTuners();
-        let broadcast = { GR: false, BS: false, CS: false, SKY: false };
-        for(let tuner of tuners) {
-            for(let key in broadcast) {
-                if(tuner.types.indexOf(<apid.ChannelType>key) !== -1) {
+        const mirakurun = CreateMirakurunClient.get();
+        const tuners = await mirakurun.getTuners();
+        const broadcast = { GR: false, BS: false, CS: false, SKY: false };
+        for (const tuner of tuners) {
+            for (const key in broadcast) {
+                if (tuner.types.indexOf(<apid.ChannelType> key) !== -1) {
                     broadcast[key] = true;
                 }
             }
         }
 
-        if(typeof config.encode === 'undefined') {
+        if (typeof config.encode === 'undefined') {
             results['enableEncode'] = false;
         } else {
             results['enableEncode'] = true;
             results['encodeOption'] = [];
             config.encode.forEach((e, i) => {
-                if(Boolean(e.default)) {
+                if (Boolean(e.default)) {
                     results['defaultEncode'] = i;
                 }
                 results['encodeOption'].push(e.name);
@@ -44,26 +44,26 @@ class ConfigModel extends ApiModel implements ConfigModelInterface {
 
         results['broadcast'] = broadcast;
 
-        if(typeof config.recordedViewer !== 'undefined') { results['recordedViewer'] = config.recordedViewer; }
-        if(typeof config.recordedDownloader !== 'undefined') { results['recordedDownloader'] = config.recordedDownloader; }
+        if (typeof config.recordedViewer !== 'undefined') { results['recordedViewer'] = config.recordedViewer; }
+        if (typeof config.recordedDownloader !== 'undefined') { results['recordedDownloader'] = config.recordedDownloader; }
 
-        if(typeof config.mpegTsStreaming !== 'undefined') {
+        if (typeof config.mpegTsStreaming !== 'undefined') {
             results['mpegTsStreaming'] = config.mpegTsStreaming.map((option) => {
                 return option.name;
             });
 
-            if(typeof config.mpegTsViewer !== 'undefined') {
+            if (typeof config.mpegTsViewer !== 'undefined') {
                 results['mpegTsViewer'] = config.mpegTsViewer;
             }
         }
 
-        if(typeof config.recordedHLS !== 'undefined') {
+        if (typeof config.recordedHLS !== 'undefined') {
             results['recordedHLS'] = config.recordedHLS.map((option) => {
                 return option.name;
             });
         }
 
-        if(typeof config.kodiHosts !== 'undefined') {
+        if (typeof config.kodiHosts !== 'undefined') {
             results['kodiHosts'] = config.kodiHosts.map((host) => {
                 return host.name;
             });
@@ -73,5 +73,5 @@ class ConfigModel extends ApiModel implements ConfigModelInterface {
     }
 }
 
-export { ConfigModelInterface, ConfigModel }
+export { ConfigModelInterface, ConfigModel };
 
