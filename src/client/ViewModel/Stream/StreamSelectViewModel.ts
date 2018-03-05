@@ -1,15 +1,14 @@
-//import * as m from 'mithril';
-import ViewModel from '../ViewModel';
 import * as apid from '../../../../api';
 import { ConfigApiModelInterface } from '../../Model/Api/ConfigApiModel';
 import { BalloonModelInterface } from '../../Model/Balloon/BallonModel';
-import { SnackbarModelInterface } from '../../Model/Snackbar/SnackbarModel';
 import { SettingModelInterface } from '../../Model/Setting/SettingModel';
+import { SnackbarModelInterface } from '../../Model/Snackbar/SnackbarModel';
+import ViewModel from '../ViewModel';
 import CreateStreamLink from './CreateStreamLink';
 
 /**
-* StreamSelectViewModel
-*/
+ * StreamSelectViewModel
+ */
 class StreamSelectViewModel extends ViewModel {
     private config: ConfigApiModelInterface;
     private setting: SettingModelInterface;
@@ -20,7 +19,7 @@ class StreamSelectViewModel extends ViewModel {
     // 単局表示のページ移動用
     private jumpStation: (() => void) | null = null;
 
-    //ストリームオプション
+    // ストリームオプション
     public streamOptionValue: number = 0;
 
     constructor(
@@ -37,39 +36,39 @@ class StreamSelectViewModel extends ViewModel {
     }
 
     /**
-    * set
-    * @param channel: apid.ScheduleServiceItem
-    */
+     * set
+     * @param channel: apid.ScheduleServiceItem
+     */
     public set(channel: apid.ScheduleServiceItem, jumpStation: (() => void) | null = null): void {
         this.channel = channel;
         this.jumpStation = jumpStation;
     }
 
     /**
-    * チャンネル名を返す
-    * @return string
-    */
+     * チャンネル名を返す
+     * @return string
+     */
     public getName(): string {
         return this.channel === null ? '' : this.channel.name;
     }
 
     /**
-    * ストリームオプションを返す
-    * @return { name: string, value: number }
-    */
-    public getOptions(): { name: string, value: number }[] {
-        let config = this.config.getConfig();
+     * ストリームオプションを返す
+     * @return { name: string, value: number }
+     */
+    public getOptions(): { name: string; value: number }[] {
+        const config = this.config.getConfig();
 
         return config === null || typeof config.mpegTsStreaming === 'undefined' ? [] : config.mpegTsStreaming.map((option, index) => {
-            return { name: option, value: index }
+            return { name: option, value: index };
         });
     }
 
     /**
-    * 視聴ページへ飛ぶ
-    */
+     * 視聴ページへ飛ぶ
+     */
     public view(): void {
-        if(this.channel === null) { return; }
+        if (this.channel === null) { return; }
 
         const setting = this.setting.get();
         let url: string | null = null;
@@ -83,37 +82,38 @@ class StreamSelectViewModel extends ViewModel {
                 this.channel.id,
                 this.streamOptionValue,
             );
-        } catch(err) {
+        } catch (err) {
             console.error(err);
             this.snackbar.open('視聴用アプリの設定がされていません');
+
             return;
         }
 
-        if(url === null) { return; }
+        if (url === null) { return; }
 
         location.href = url;
     }
 
     /**
-    * 単局表示のボタンの表示が必要か
-    * @return boolean ture: 必要, false: 不要
-    */
+     * 単局表示のボタンの表示が必要か
+     * @return boolean ture: 必要, false: 不要
+     */
     public hasJumpStationButton(): boolean {
         return this.jumpStation !== null;
     }
 
     /**
-    * 単局ページへ移動する
-    */
+     * 単局ページへ移動する
+     */
     public moveStationPage(): void {
-        if(this.jumpStation === null) { return; }
+        if (this.jumpStation === null) { return; }
 
         this.jumpStation();
     }
 
     /**
-    * close balloon
-    */
+     * close balloon
+     */
     public close(): void {
         this.balloon.close();
     }

@@ -1,12 +1,12 @@
-import ViewModel from './ViewModel';
 import * as apid from '../../../api';
+import { ChannelsApiModelInterface } from '../Model/Api/ChannelsApiModel';
 import { ConfigApiModelInterface } from '../Model/Api/ConfigApiModel';
 import { BalloonModelInterface } from '../Model/Balloon/BallonModel';
-import { ChannelsApiModelInterface } from '../Model/Api/ChannelsApiModel';
+import ViewModel from './ViewModel';
 
 /**
-* HeaderViewModel
-*/
+ * HeaderViewModel
+ */
 class HeaderViewModel extends ViewModel {
     private configApiModel: ConfigApiModelInterface;
     private balloon: BalloonModelInterface;
@@ -24,8 +24,8 @@ class HeaderViewModel extends ViewModel {
     }
 
     /**
-    * init
-    */
+     * init
+     */
     public init(): void {
         super.init();
         this.configApiModel.update();
@@ -33,16 +33,16 @@ class HeaderViewModel extends ViewModel {
     }
 
     /**
-    * getConfig
-    * @return apid.Config | null
-    */
+     * getConfig
+     * @return apid.Config | null
+     */
     public getConfig(): apid.Config | null {
         return this.configApiModel.getConfig();
     }
 
     /**
-    * close menu
-    */
+     * close menu
+     */
     public close(): void {
         this.balloon.close();
     }

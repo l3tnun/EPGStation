@@ -1,16 +1,16 @@
 import * as m from 'mithril';
-import Component from '../Component';
-import factory from '../../ViewModel/ViewModelFactory';
-import StreamProgramCardsViewModel from '../../ViewModel/Stream/StreamProgramCardsViewModel';
-import TabComponent from '../TabComponent';
 import * as apid from '../../../../api';
 import DateUtil from '../../Util/DateUtil';
-import StreamSelectViewModel from '../../ViewModel/Stream/StreamSelectViewModel'
 import BalloonViewModel from '../../ViewModel/Balloon/BalloonViewModel';
+import StreamProgramCardsViewModel from '../../ViewModel/Stream/StreamProgramCardsViewModel';
+import StreamSelectViewModel from '../../ViewModel/Stream/StreamSelectViewModel';
+import factory from '../../ViewModel/ViewModelFactory';
+import Component from '../Component';
+import TabComponent from '../TabComponent';
 
 /**
-* StreamProgramCardsComponent
-*/
+ * StreamProgramCardsComponent
+ */
 class StreamProgramCardsComponent extends Component<void> {
     private viewModel: StreamProgramCardsViewModel;
     private selectorViewModel: StreamSelectViewModel;
@@ -18,14 +18,14 @@ class StreamProgramCardsComponent extends Component<void> {
 
     constructor() {
         super();
-        this.viewModel = <StreamProgramCardsViewModel>(factory.get('StreamProgramCardsViewModel'));
-        this.selectorViewModel = <StreamSelectViewModel>(factory.get('StreamSelectViewModel'));
-        this.balloon = <BalloonViewModel>(factory.get('BalloonViewModel'));
+        this.viewModel = <StreamProgramCardsViewModel> factory.get('StreamProgramCardsViewModel');
+        this.selectorViewModel = <StreamSelectViewModel> factory.get('StreamSelectViewModel');
+        this.balloon = <BalloonViewModel> factory.get('BalloonViewModel');
     }
 
     protected initViewModel(): void {
         super.initViewModel();
-        //setTimeout を挟まないとストレージ空き容量ダイアログのグラフが描画されなくなる
+        // setTimeout を挟まないとストレージ空き容量ダイアログのグラフが描画されなくなる
         this.viewModel.init();
     }
 
@@ -35,20 +35,19 @@ class StreamProgramCardsComponent extends Component<void> {
         return super.onremove(vnode);
     }
 
-
     /**
-    * view
-    */
+     * view
+     */
     public view(): m.Child {
-        let broadcasts = this.viewModel.getBroadcastList();
+        const broadcasts = this.viewModel.getBroadcastList();
 
         return m('div', { class: 'stream-programs-cards' }, [
             m(TabComponent, { tabs: broadcasts, contentId: StreamProgramCardsViewModel.contentId }),
             m('div', { id: StreamProgramCardsViewModel.contentId, class: 'non-scroll' }, [
                 this.viewModel.getPrograms(broadcasts[this.viewModel.getTabPosition()]).map((item) => {
                     return m('div', { class: 'mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col' },
-                        this.createContent(item)
-                    )
+                        this.createContent(item),
+                    );
                 }),
                 m('div', { style: 'height: 36px; visibility: hidden;' }, 'dummy'),
             ]),
@@ -56,17 +55,17 @@ class StreamProgramCardsComponent extends Component<void> {
     }
 
     /**
-    * content
-    * @param item: apid.ScheduleProgram
-    * @return m.Child
-    */
+     * content
+     * @param item: apid.ScheduleProgram
+     * @return m.Child
+     */
     private createContent(item: apid.ScheduleProgram): m.Child {
         return m('div', {
             class: 'mdl-card__supporting-text',
             onclick: (e: Event) => {
                 this.selectorViewModel.set(item.channel);
                 this.balloon.open(StreamSelectViewModel.id, e);
-            }
+            },
         }, [
             m('div', { class: 'name' }, item.channel.name),
             m('div', { class: 'time' }, this.createTimeStr(item.programs[0])),
@@ -76,13 +75,13 @@ class StreamProgramCardsComponent extends Component<void> {
     }
 
     /**
-    * create time str
-    * @param program: apid.ScheduleProgramItem
-    * @param string
-    */
+     * create time str
+     * @param program: apid.ScheduleProgramItem
+     * @param string
+     */
     private createTimeStr(program: apid.ScheduleProgramItem): string {
-        let start = DateUtil.getJaDate(new Date(program.startAt));
-        let end = DateUtil.getJaDate(new Date(program.endAt));
+        const start = DateUtil.getJaDate(new Date(program.startAt));
+        const end = DateUtil.getJaDate(new Date(program.endAt));
 
         return DateUtil.format(start, 'hh:mm:ss') + ' ~ ' + DateUtil.format(end, 'hh:mm:ss');
     }

@@ -62,9 +62,9 @@ let webpackConfig = {
 }
 
 /**
-* 引数
-* NODE_ENVに指定がなければ開発モードをデフォルトにする
-*/
+ * 引数
+ * NODE_ENVに指定がなければ開発モードをデフォルトにする
+ */
 const knownOptions = {
   string: 'env',
   default: { env: process.env.NODE_ENV || 'development' }
@@ -73,16 +73,16 @@ const knownOptions = {
 const options = minimist(process.argv.slice(2), knownOptions);
 const isProduction = (options.env === 'production') ? true : false;
 
-if(isProduction) {
-    //本番
-    //app.js の圧縮
+if (isProduction) {
+    // 本番
+    // app.js の圧縮
     webpackConfig["plugins"] = [
-        //new webpack.optimize.OccurrenceOrderPlugin(),
+        // new webpack.optimize.OccurrenceOrderPlugin(),
         new webpack.optimize.UglifyJsPlugin({ output: { comments: false } })
     ];
 } else {
-    //開発
-    //source-map の有効化
+    // 開発
+    // source-map の有効化
     webpackConfig["devtool"] = "#source-map";
 }
 
@@ -110,12 +110,22 @@ gulp.task('build-server', ['clean-server', 'tslint-server'],() => {
         .pipe(gulp.dest(config.server.dst));
 });
 
-//client
+// client
 gulp.task('clean-client', () => {
     return del([config.client.dst]);
 })
 
-gulp.task('build-client', ['clean-client'], () => {
+gulp.task('tslint-client', () => {
+    return gulp
+        .src(config.client.src)
+        .pipe(tslint())
+        .pipe(tslint.report({
+            emitError: false,
+            summarizeFailureOutput: true
+        }));
+});
+
+gulp.task('build-client', ['clean-client', 'tslint-client'], () => {
     return gulp.src(config.client.src)
         .pipe(plumber())
         .pipe(webpackStream(webpackConfig))
@@ -136,7 +146,7 @@ gulp.task('client-css-build', () => {
         .pipe(sass())
         .pipe(concat('style.css'))
 
-    if(isProduction) {
+    if (isProduction) {
         return result
             .pipe(cleanCSS())
             .pipe(gulp.dest(config.client.css.dst));
@@ -147,17 +157,18 @@ gulp.task('client-css-build', () => {
     }
 });
 
-//clean
+// clean
 gulp.task('clean', ['clean-server', 'clean-client', 'clean-client-css']);
 
-//build
-gulp.task('build', ['clean', 'tslint-server', 'build-server', 'build-client', 'client-css-build']);
+// build
+gulp.task('build', ['clean', 'build-server', 'build-client', 'client-css-build']);
 
 gulp.task('watch', [
         'clean-server',
         'tslint-server',
         'build-server',
         'clean-client',
+        'tslint-client',
         'build-client',
         'clean-client-css',
         'client-css-build'

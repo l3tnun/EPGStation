@@ -1,26 +1,26 @@
-import * as m from 'mithril';
 import { throttle } from 'lodash';
-import Component from '../Component';
-import factory from '../../ViewModel/ViewModelFactory';
-import { ProgramViewModel, ProgramViewInfo } from '../../ViewModel/Program/ProgramViewModel';
+import * as m from 'mithril';
 import * as apid from '../../../../api';
 import { AllReserves } from '../../Model/Api/ReservesApiModel';
 import DateUtil from '../../Util/DateUtil';
-import BoardBarComponent from './BoardBarComponent';
 import BalloonViewModel from '../../ViewModel/Balloon/BalloonViewModel';
-import ProgramInfoViewModel from '../../ViewModel/Program/ProgramInfoViewModel';
 import ProgramGenreViewModel from '../../ViewModel/Program/ProgramGenreViewModel';
+import ProgramInfoViewModel from '../../ViewModel/Program/ProgramInfoViewModel';
+import { ProgramViewInfo, ProgramViewModel  } from '../../ViewModel/Program/ProgramViewModel';
+import factory from '../../ViewModel/ViewModelFactory';
+import Component from '../Component';
+import BoardBarComponent from './BoardBarComponent';
 
 interface BoardArgs {
-    scrollStoped: (top: number, left: number) => void;
-    isNeedRestorePosition: () => boolean;
-    resetRestorePositionFlag: () => void;
-    getPosition: () => { top: number, left: number } | null;
+    scrollStoped(top: number, left: number): void;
+    isNeedRestorePosition(): boolean;
+    resetRestorePositionFlag(): void;
+    getPosition(): { top: number; left: number } | null;
 }
 
 /**
-* BoardComponent
-*/
+ * BoardComponent
+ */
 class BoardComponent extends Component<BoardArgs> {
     private viewModel: ProgramViewModel;
     private infoViewModel: ProgramInfoViewModel;
@@ -28,42 +28,42 @@ class BoardComponent extends Component<BoardArgs> {
 
     private balloon: BalloonViewModel;
     private allReserves: AllReserves;
-    private storedGenre: { [key: number]: boolean; } = {};
+    private storedGenre: { [key: number]: boolean } = {};
 
     constructor() {
         super();
-        this.viewModel = <ProgramViewModel>(factory.get('ProgramViewModel'));
-        this.infoViewModel = <ProgramInfoViewModel>(factory.get('ProgramInfoViewModel'));
-        this.genreViewModel = <ProgramGenreViewModel>(factory.get('ProgramGenreViewModel'));
-        this.balloon = <BalloonViewModel>(factory.get('BalloonViewModel'));
+        this.viewModel = <ProgramViewModel> factory.get('ProgramViewModel');
+        this.infoViewModel = <ProgramInfoViewModel> factory.get('ProgramInfoViewModel');
+        this.genreViewModel = <ProgramGenreViewModel> factory.get('ProgramGenreViewModel');
+        this.balloon = <BalloonViewModel> factory.get('BalloonViewModel');
     }
 
     /**
-    * view
-    */
+     * view
+     */
     public view(mainVnode: m.Vnode<BoardArgs, this>): m.Children | null {
         // 予約情報を取得
-        let reserves = this.viewModel.getReserves();
-        if(reserves === null) { return null; }
+        const reserves = this.viewModel.getReserves();
+        if (reserves === null) { return null; }
         this.allReserves = reserves;
 
         // ジャンル情報を取得
-        let genre = this.genreViewModel.get();
+        const genre = this.genreViewModel.get();
         this.storedGenre = genre === null ? {} : genre;
 
         const schedules = this.viewModel.getSchedule();
-        if(schedules.length === 0) { return null; }
+        if (schedules.length === 0) { return null; }
 
         return m('div', {
             class: `${ ProgramViewModel.boardName } non-scroll`,
             oncreate: (vnode: m.VnodeDOM<BoardArgs, this>) => {
-                if(this.viewModel.isFixScroll()) { return; }
+                if (this.viewModel.isFixScroll()) { return; }
 
-                let element = <HTMLElement> vnode.dom;
+                const element = <HTMLElement> vnode.dom;
 
                 // scroll
-                let channel = <HTMLElement> document.getElementsByClassName(ProgramViewModel.channlesName)[0];
-                let time = <HTMLElement> document.getElementsByClassName(ProgramViewModel.timescaleName)[0];
+                const channel = <HTMLElement> document.getElementsByClassName(ProgramViewModel.channlesName)[0];
+                const time = <HTMLElement> document.getElementsByClassName(ProgramViewModel.timescaleName)[0];
                 element.addEventListener('scroll', () => {
                     channel.scrollLeft = element.scrollLeft;
                     time.scrollTop = element.scrollTop;
@@ -72,24 +72,28 @@ class BoardComponent extends Component<BoardArgs> {
                 // scroll position
                 let url = location.href;
                 element.addEventListener('scroll', throttle(() => {
-                    if(this.viewModel.progressShow) { return; }
-                    if(url !== location.href) { url = location.href; return; }
+                    if (this.viewModel.progressShow) { return; }
+                    if (url !== location.href) {
+                        url = location.href;
+
+                        return;
+                    }
                     mainVnode.attrs.scrollStoped(element.scrollTop, element.scrollLeft);
                 }, 50), true);
 
                 // 表示範囲設定
-                if(this.viewModel.isEnableDraw()) {
+                if (this.viewModel.isEnableDraw()) {
                     element.addEventListener('scroll', () => { this.viewModel.draw(); }, true);
                 }
             },
             onupdate: (vnode: m.VnodeDOM<BoardArgs, this>) => {
-                if(this.viewModel.isFixScroll() || !mainVnode.attrs.isNeedRestorePosition() || this.viewModel.progressShow) { return; }
+                if (this.viewModel.isFixScroll() || !mainVnode.attrs.isNeedRestorePosition() || this.viewModel.progressShow) { return; }
                 mainVnode.attrs.resetRestorePositionFlag();
 
                 // scroll position を復元する
                 const position = mainVnode.attrs.getPosition();
-                if(position === null) { return; }
-                let element = <HTMLElement> vnode.dom;
+                if (position === null) { return; }
+                const element = <HTMLElement> vnode.dom;
                 element.scrollTop = position.top;
                 element.scrollLeft = position.left;
             },
@@ -102,7 +106,7 @@ class BoardComponent extends Component<BoardArgs> {
                     + 'position: absolute;',
                 oncreate: (vnode: m.VnodeDOM<BoardArgs, this>) => {
                     // add child
-                    for(let i = 0; i < schedules.length; i++) {
+                    for (let i = 0; i < schedules.length; i++) {
                         this.createStationChild(vnode.dom, schedules[i], i);
                     }
 
@@ -111,7 +115,7 @@ class BoardComponent extends Component<BoardArgs> {
                     setTimeout(() => { this.viewModel.progressShow = false; m.redraw(); }, 200);
                 },
                 onupdate: (vnode: m.VnodeDOM<BoardArgs, this>) => {
-                    if(!this.viewModel.reloadUpdateDom) { return; }
+                    if (!this.viewModel.reloadUpdateDom) { return; }
 
                     // remove child
                     for (let i = vnode.dom.childNodes.length - 1; i > 0; i--) {
@@ -119,7 +123,7 @@ class BoardComponent extends Component<BoardArgs> {
                     }
 
                     // add child
-                    for(let i = 0; i < schedules.length; i++) {
+                    for (let i = 0; i < schedules.length; i++) {
                         this.createStationChild(vnode.dom, schedules[i], i);
                     }
 
@@ -133,34 +137,34 @@ class BoardComponent extends Component<BoardArgs> {
     }
 
     /**
-    * 番組表を生成する
-    * @param element: Element
-    * @param program: apid.ScheduleProgramItem
-    * @param column:番組表内の列位置
-    */
+     * 番組表を生成する
+     * @param element: Element
+     * @param program: apid.ScheduleProgramItem
+     * @param column:番組表内の列位置
+     */
     private createStationChild(element: Element, schedule: apid.ScheduleProgram, column: number): void {
-        if(column === 0) { this.viewModel.items = []; }
+        if (column === 0) { this.viewModel.items = []; }
 
         const isEnableDraw = this.viewModel.isEnableDraw();
-        let programs = schedule.programs;
-        let time = this.viewModel.getTimeParam();
+        const programs = schedule.programs;
+        const time = this.viewModel.getTimeParam();
 
         // 単局表示時
-        if(typeof m.route.param('ch') !== 'undefined') {
-            let addTime = column * 24 * 60 * 60 * 1000;
+        if (typeof m.route.param('ch') !== 'undefined') {
+            const addTime = column * 24 * 60 * 60 * 1000;
             time.start += addTime;
             time.end += addTime;
         }
 
-        let childs: ProgramViewInfo[] = [];
-        let programsLength = programs.length;
+        const childs: ProgramViewInfo[] = [];
+        const programsLength = programs.length;
         programs.forEach((program, i) => {
             // 時刻
-            let start = program.startAt < time.start ? time.start : program.startAt;
-            let end = program.endAt > time.end ? time.end : program.endAt;
+            const start = program.startAt < time.start ? time.start : program.startAt;
+            const end = program.endAt > time.end ? time.end : program.endAt;
 
-            let dummyEnd = i - 1 < 0 ? time.start : programs[i - 1].endAt;
-            if(dummyEnd - start < 0) {
+            const dummyEnd = i - 1 < 0 ? time.start : programs[i - 1].endAt;
+            if (dummyEnd - start < 0) {
                 // 一つ前のプログラムと連続でないため間にダミーを追加
                 const height = this.getHeight(dummyEnd, start);
                 const position = this.getPosition(time.start, dummyEnd);
@@ -174,7 +178,7 @@ class BoardComponent extends Component<BoardArgs> {
             }
 
             // 番組を追加
-            if(start !== end) {
+            if (start !== end) {
                 const height = this.getHeight(start, end);
                 const position = this.getPosition(time.start, start);
                 childs.push({
@@ -187,7 +191,7 @@ class BoardComponent extends Component<BoardArgs> {
             }
 
             // 最後の番組と番組表の終了時刻に空きがあったら埋める
-            if(programsLength - 1 === i && time.end > end) {
+            if (programsLength - 1 === i && time.end > end) {
                 const height = this.getHeight(end, time.end);
                 const position = this.getPosition(time.start, end);
                 childs.push({
@@ -201,7 +205,7 @@ class BoardComponent extends Component<BoardArgs> {
         });
 
         // programs が空
-        if(childs.length === 0) {
+        if (childs.length === 0) {
             const height = this.getHeight(time.start, time.end);
             const position = this.getPosition(time.start, time.start);
             childs.push({
@@ -213,7 +217,7 @@ class BoardComponent extends Component<BoardArgs> {
             });
         }
 
-        let fragment = document.createDocumentFragment();
+        const fragment = document.createDocumentFragment();
         childs.map((child) => {
             this.viewModel.items.push(child);
             fragment.appendChild(child.element);
@@ -222,11 +226,11 @@ class BoardComponent extends Component<BoardArgs> {
     }
 
     /**
-    * 高さを計算
-    * @param start: number
-    * @param end: number
-    * @return height
-    */
+     * 高さを計算
+     * @param start: number
+     * @param end: number
+     * @return height
+     */
     private getHeight(start: number, end: number): number {
         // 端数秒切り捨て
         start = Math.floor(start / 10000);
@@ -236,11 +240,11 @@ class BoardComponent extends Component<BoardArgs> {
     }
 
     /**
-    * 位置を計算
-    * @param startTime: number
-    * @param startProgram: number
-    * @return position
-    */
+     * 位置を計算
+     * @param startTime: number
+     * @param startProgram: number
+     * @return position
+     */
     private getPosition(startTime: number, startProgram: number): number {
         // 端数秒切り捨て
         startTime = Math.floor(startTime / 10000);
@@ -251,43 +255,43 @@ class BoardComponent extends Component<BoardArgs> {
 
 
     /**
-    * left を生成
-    * @param column: number
-    * @return string;
-    */
+     * left を生成
+     * @param column: number
+     * @return string;
+     */
     private createLeftStyle(column: number): string {
         return `left: calc(${ column } * var(--channel-width) - 1px);`;
     }
 
     /**
-    * dummy 要素を作成
-    * @param heght: height
-    * @param position: position
-    * @param column: number
-    * @param isEnableDraw: boolean
-    * @return HTMLElement
-    */
+     * dummy 要素を作成
+     * @param heght: height
+     * @param position: position
+     * @param column: number
+     * @param isEnableDraw: boolean
+     * @return HTMLElement
+     */
     private createDummy(height: number, position: number, column: number, isEnableDraw: boolean): HTMLElement {
-        if(height == 0) { return document.createElement('div'); }
+        if (height === 0) { return document.createElement('div'); }
 
         return this.createTextElement('div', {
             class: 'item nodata',
             style: `height: calc(${ height } * (var(--timescale-height) / 60)); top: calc(${ position } * (var(--timescale-height) / 60));`
-            + ( isEnableDraw ? 'display: none;' : '')
+            + (isEnableDraw ? 'display: none;' : '')
             + this.createLeftStyle(column),
         },
         'n');
     }
 
     /**
-    * 通常の番組情報を作成
-    * @param height: height
-    * @param position: position
-    * @param program: program
-    * @param column: number
-    * @param isEnableDraw: boolean
-    * @return HTMLElement
-    */
+     * 通常の番組情報を作成
+     * @param height: height
+     * @param position: position
+     * @param program: program
+     * @param column: number
+     * @param isEnableDraw: boolean
+     * @return HTMLElement
+     */
     private createContent(
         height: number,
         position: number,
@@ -296,18 +300,18 @@ class BoardComponent extends Component<BoardArgs> {
         column: number,
         isEnableDraw: boolean,
     ): HTMLElement {
-        if(height === 0) { return document.createElement('div'); }
+        if (height === 0) { return document.createElement('div'); }
 
         let classStr = 'item';
-        if(typeof program.genre1 !== 'undefined') {
-            if(typeof this.storedGenre[program.genre1] !== 'undefined' && !this.storedGenre[program.genre1]) {
+        if (typeof program.genre1 !== 'undefined') {
+            if (typeof this.storedGenre[program.genre1] !== 'undefined' && !this.storedGenre[program.genre1]) {
                 classStr += ' hide';
             } else {
                 classStr += ` ctg-${ program.genre1 }`;
             }
         }
-        if(typeof this.allReserves[program.id] !== 'undefined') {
-            switch(this.allReserves[program.id].status) {
+        if (typeof this.allReserves[program.id] !== 'undefined') {
+            switch (this.allReserves[program.id].status) {
                 case 'reserve':
                     classStr += ' reserve';
                     break;
@@ -320,22 +324,22 @@ class BoardComponent extends Component<BoardArgs> {
             }
         }
 
-        let child: HTMLElement[] = [];
+        const child: HTMLElement[] = [];
         child.push(this.createTextElement('div', { class: 'title' }, program.name));
         child.push(this.createTextElement('div', { class: 'time' }, DateUtil.format(DateUtil.getJaDate(new Date(program.startAt)), 'hh:mm:ss')));
-        if(typeof program.description !== 'undefined') {
-            child.push(this.createTextElement('div', { class: 'description' }, program.description))
+        if (typeof program.description !== 'undefined') {
+            child.push(this.createTextElement('div', { class: 'description' }, program.description));
         }
 
-        let element = this.createParentElement('div', {
+        const element = this.createParentElement('div', {
             class: classStr,
             style: `height: calc(${ height } * (var(--timescale-height) / 60)); top: calc(${ position } * (var(--timescale-height) / 60));`
-                + ( isEnableDraw ? 'display: none;' : '')
+                + (isEnableDraw ? 'display: none;' : '')
                 + this.createLeftStyle(column),
             onclick: (event: Event) => {
                 this.infoViewModel.set(program, channel);
                 this.balloon.open(ProgramInfoViewModel.id, event);
-            }
+            },
         }, child);
 
         // cache に追加
@@ -345,16 +349,16 @@ class BoardComponent extends Component<BoardArgs> {
     }
 
     /**
-    * 子要素付き element を生成する
-    * @param tag: tag
-    * @param attrs: attrs
-    * @param childs: childs
-    * @return HTMLElement
-    */
+     * 子要素付き element を生成する
+     * @param tag: tag
+     * @param attrs: attrs
+     * @param childs: childs
+     * @return HTMLElement
+     */
     private createParentElement(tag: string, attrs: { [key: string]: any }, childs: Element[]): HTMLElement {
-        let element = document.createElement(tag);
-        for(let key in attrs) {
-            if(key === 'onclick') {
+        const element = document.createElement(tag);
+        for (const key in attrs) {
+            if (key === 'onclick') {
                 element.onclick = attrs[key];
             } else {
                 element.setAttribute(key, attrs[key]);
@@ -370,15 +374,15 @@ class BoardComponent extends Component<BoardArgs> {
     }
 
     /**
-    * 子要素付き element を生成する
-    * @param tag: tag
-    * @param attrs: attrs
-    * @param text: text
-    * @return HTMLElement
-    */
+     * 子要素付き element を生成する
+     * @param tag: tag
+     * @param attrs: attrs
+     * @param text: text
+     * @return HTMLElement
+     */
     private createTextElement(tag: string, attrs: { [key: string]: any }, text: string): HTMLElement {
-        let element = document.createElement(tag);
-        for(let key in attrs) { element.setAttribute(key, attrs[key]); }
+        const element = document.createElement(tag);
+        for (const key in attrs) { element.setAttribute(key, attrs[key]); }
         element.innerText = text;
 
         return element;

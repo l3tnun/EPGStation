@@ -1,16 +1,16 @@
-import ViewModel from '../ViewModel';
 import * as apid from '../../../../api';
-import { AllReserveItem, ReservesApiModelInterface } from '../../Model/Api/ReservesApiModel';
-import DateUtil from '../../Util/DateUtil';
-import { BalloonModelInterface } from '../../Model/Balloon/BallonModel';
+import { audioComponentType, audioSamplingRate, videoComponentType } from '../../lib/event';
 import { ConfigApiModelInterface } from '../../Model/Api/ConfigApiModel';
+import { AllReserveItem, ReservesApiModelInterface } from '../../Model/Api/ReservesApiModel';
+import { BalloonModelInterface } from '../../Model/Balloon/BallonModel';
 import { SnackbarModelInterface } from '../../Model/Snackbar/SnackbarModel';
+import DateUtil from '../../Util/DateUtil';
 import GenreUtil from '../../Util/GenreUtil';
-import { videoComponentType, audioComponentType, audioSamplingRate } from '../../lib/event';
+import ViewModel from '../ViewModel';
 
 /**
-* ProgramInfoViewModel
-*/
+ * ProgramInfoViewModel
+ */
 class ProgramInfoViewModel extends ViewModel {
     private reserves: ReservesApiModelInterface;
     private balloon: BalloonModelInterface;
@@ -19,9 +19,9 @@ class ProgramInfoViewModel extends ViewModel {
     private program: apid.ScheduleProgramItem | null = null;
     private channel: apid.ScheduleServiceItem | null = null;
 
-    //エンコードオプション
+    // エンコードオプション
     private encodeStatus: boolean = false; // true: エンコード有効
-    public delTs: boolean;
+    public delTS: boolean;
     public encodeDefault: boolean;
     public encodeOptionValue: number;
 
@@ -39,85 +39,77 @@ class ProgramInfoViewModel extends ViewModel {
     }
 
     /**
-    * set program data
-    * @param program: program
-    * @param channel: channel
-    */
+     * set program data
+     * @param program: program
+     * @param channel: channel
+     */
     public set(program: apid.ScheduleProgramItem, channel: apid.ScheduleServiceItem): void {
         this.program = program;
         this.channel = channel;
 
-        //エンコードオプションをセットする
-        let config = this.config.getConfig();
-        if(config === null) { return; }
-        if(config.enableEncode) {
+        // エンコードオプションをセットする
+        const config = this.config.getConfig();
+        if (config === null) { return; }
+        if (config.enableEncode) {
             this.encodeStatus = true;
-            if(typeof config.delTs === 'undefined') {
-                this.delTs = false;
-            } else {
-                this.delTs = config.delTs;
-            }
-
-            if(typeof config.defaultEncode !== 'undefined') {
-                this.encodeOptionValue = config.defaultEncode;
-            } else {
-                this.encodeOptionValue = -1;
-            }
+            this.delTS = typeof config.delTs === 'undefined' ? false : config.delTs;
+            this.encodeOptionValue = typeof config.defaultEncode !== 'undefined' ? config.defaultEncode : -1;
         } else {
             this.encodeStatus = false;
         }
     }
 
     /**
-    * get program
-    * @return porogram
-    */
+     * get program
+     * @return porogram
+     */
     public getProgram(): apid.ScheduleProgramItem | null {
         return this.program;
     }
 
     /**
-    * title 取得
-    * @return title
-    */
+     * title 取得
+     * @return title
+     */
     public getTitle(): string {
-        if(this.program === null) { return ''; }
+        if (this.program === null) { return ''; }
 
         return this.program.name;
     }
 
     /**
-    * channel 名取得
-    * @return channel name
-    */
+     * channel 名取得
+     * @return channel name
+     */
     public getChannelName(): string {
-        if(this.channel === null) { return ''; }
+        if (this.channel === null) { return ''; }
 
         return this.channel.name;
     }
 
     /**
-    * 時刻を取得
-    * @return start time and end time
-    */
+     * 時刻を取得
+     * @return start time and end time
+     */
     public getTime(): string {
-        if(this.program === null) { return '' }
+        if (this.program === null) { return ''; }
 
-        let start = DateUtil.getJaDate(new Date(this.program.startAt));
-        let end = DateUtil.getJaDate(new Date(this.program.endAt));
-        let duration = Math.floor((this.program.endAt - this.program.startAt) / 1000 / 60);
+        const start = DateUtil.getJaDate(new Date(this.program.startAt));
+        const end = DateUtil.getJaDate(new Date(this.program.endAt));
+        const duration = Math.floor((this.program.endAt - this.program.startAt) / 1000 / 60);
 
-        return DateUtil.format(start, 'MM/dd(w) hh:mm:ss') + ' ~ ' + DateUtil.format(end, 'hh:mm:ss') + ` (${ duration }分)`
+        return DateUtil.format(start, 'MM/dd(w) hh:mm:ss') + ' ~ ' + DateUtil.format(end, 'hh:mm:ss') + ` (${ duration }分)`;
     }
 
     /**
-    * /program へ飛ぶためのリンク query を生成
-    * @return { time: string }
-    */
+     * /program へ飛ぶためのリンク query を生成
+     * @return { time: string }
+     */
     public getProgramsLinkQuery(): { [key: string]: any } {
-        if(this.program === null) { return {}; }
+        if (this.program === null) { return {}; }
 
-        let start = DateUtil.getJaDate(new Date(this.program.startAt));
+        const start = DateUtil.getJaDate(new Date(this.program.startAt));
+
         return {
             type: this.program.channelType,
             time: DateUtil.format(start, 'YYMMddhh'),
@@ -125,13 +117,13 @@ class ProgramInfoViewModel extends ViewModel {
     }
 
     /**
-    * /program へ飛ぶためのリンク query を生成
-    * @return { time: string }
-    */
+     * /program へ飛ぶためのリンク query を生成
+     * @return { time: string }
+     */
     public getChannelLinkQuery(): { [key: string]: any } {
-        if(this.program === null) { return {}; }
+        if (this.program === null) { return {}; }
+        const start = DateUtil.getJaDate(new Date(this.program.startAt));
 
-        let start = DateUtil.getJaDate(new Date(this.program.startAt));
         return {
             ch: this.program.channelId,
             time: DateUtil.format(start, 'YYMMddhh'),
@@ -139,102 +131,102 @@ class ProgramInfoViewModel extends ViewModel {
     }
 
     /**
-    * description を取得
-    * @return description
-    */
+     * description を取得
+     * @return description
+     */
     public getDescription(): string {
-        if(this.program === null || typeof this.program.description === 'undefined') { return ''; }
+        if (this.program === null || typeof this.program.description === 'undefined') { return ''; }
 
         return this.program.description;
     }
 
     /**
-    * extended を取得
-    * @return extended
-    */
+     * extended を取得
+     * @return extended
+     */
     public getExtended(): string {
-        if(this.program === null || typeof this.program.extended === 'undefined') { return ''; }
+        if (this.program === null || typeof this.program.extended === 'undefined') { return ''; }
 
         return this.program.extended;
     }
 
     /**
-    * genre1, genre2 をまとめて取得
-    * @return genre1 / genre2
-    */
+     * genre1, genre2 をまとめて取得
+     * @return genre1 / genre2
+     */
     public getGenres(): string {
-        if(this.program === null || typeof this.program.genre1 === 'undefined') { return ''; }
+        if (this.program === null || typeof this.program.genre1 === 'undefined') { return ''; }
 
         return GenreUtil.getGenres(this.program.genre1, this.program.genre2);
     }
 
     /**
-    * video 情報を取得
-    * @return video info
-    */
+     * video 情報を取得
+     * @return video info
+     */
     public getVideoInfo(): string {
-        if(this.program === null || typeof this.program.videoComponentType === 'undefined') { return ''; }
-
+        if (this.program === null || typeof this.program.videoComponentType === 'undefined') { return ''; }
         const str = videoComponentType[this.program.videoComponentType];
+
         return typeof str === 'undefined' ? '' : str;
     }
 
     /**
-    * 音声情報を取得
-    * @return audio info
-    */
+     * 音声情報を取得
+     * @return audio info
+     */
     public getAudioMode(): string {
-        if(this.program === null || typeof this.program.audioComponentType === 'undefined') { return ''; }
-
+        if (this.program === null || typeof this.program.audioComponentType === 'undefined') { return ''; }
         const str = audioComponentType[this.program.audioComponentType];
+
         return typeof str === 'undefined' ? '' : str;
     }
 
     /**
-    * 音声サンプリングレートを返す
-    * @return audio sampling rate
-    */
+     * 音声サンプリングレートを返す
+     * @return audio sampling rate
+     */
     public getAudioSamplingRate(): string {
-        if(this.program === null || typeof this.program.audioSamplingRate === 'undefined') { return ''; }
-
+        if (this.program === null || typeof this.program.audioSamplingRate === 'undefined') { return ''; }
         const str = audioSamplingRate[this.program.audioSamplingRate];
+
         return typeof str === 'undefined' ? '' : str;
     }
 
     /**
-    * 無料放送 or 有料放送かを返す
-    * @return string
-    */
+     * 無料放送 or 有料放送かを返す
+     * @return string
+     */
     public getIsFree(): string {
-        if(this.program === null) { return ''; }
+        if (this.program === null) { return ''; }
 
         return this.program.isFree ? '無料放送' : '有料放送';
     }
 
     /**
-    * close balloon
-    */
+     * close balloon
+     */
     public close(): void {
         this.balloon.close();
     }
 
     /**
-    * エンコードオプションが有効か
-    * @return true: 有効, false: 無効
-    */
+     * エンコードオプションが有効か
+     * @return true: 有効, false: 無効
+     */
     public isEnableEncode(): boolean {
         return this.encodeStatus;
     }
 
     /**
-    * エンコードオプションを取得する
-    * @return encode option
-    */
-    public getEncodeOption(): { value: number, name: string }[] {
-        let config = this.config.getConfig();
-        if(!this.encodeStatus || config === null || typeof config.encodeOption === 'undefined') { return []; }
+     * エンコードオプションを取得する
+     * @return encode option
+     */
+    public getEncodeOption(): { value: number; name: string }[] {
+        const config = this.config.getConfig();
+        if (!this.encodeStatus || config === null || typeof config.encodeOption === 'undefined') { return []; }
 
-        let result = [{ value: -1, name: 'TS' }];
+        const result = [{ value: -1, name: 'TS' }];
         config.encodeOption.forEach((option, i) => {
             result.push({ value: i, name: option });
         });
@@ -243,68 +235,68 @@ class ProgramInfoViewModel extends ViewModel {
     }
 
     /**
-    * 予約状態を返す
-    * @return AllReserves | null
-    */
+     * 予約状態を返す
+     * @return AllReserves | null
+     */
     public getReserveStatus(): AllReserveItem | null {
-        let allId = this.reserves.getAllId();
-        if(this.program === null || allId === null) { return null; }
+        const allId = this.reserves.getAllId();
+        if (this.program === null || allId === null) { return null; }
 
-        let reserve = allId[this.program.id];
+        const reserve = allId[this.program.id];
 
         return typeof reserve === 'undefined' ? null : reserve;
     }
 
     /**
-    * 予約追加
-    * @return Promise<void>
-    */
+     * 予約追加
+     * @return Promise<void>
+     */
     public async addReserve(): Promise<void> {
-        if(this.program === null) { return; }
+        if (this.program === null) { return; }
 
         try {
-            if(this.isEnableEncode() && this.encodeOptionValue !== -1) {
+            if (this.isEnableEncode() && this.encodeOptionValue !== -1) {
                 await this.reserves.addReserve(this.program.id, {
                     mode1: this.encodeOptionValue,
-                    delTs: this.delTs,
+                    delTs: this.delTS,
                 });
             } else {
                 await this.reserves.addReserve(this.program.id);
             }
             this.snackbar.open(`予約: ${ this.program.name }`);
-        } catch(err) {
+        } catch (err) {
             console.error(err);
             this.snackbar.open(`予約失敗: ${ this.program.name }`);
         }
     }
 
     /**
-    * 予約削除
-    * @return Promise<void>
-    */
+     * 予約削除
+     * @return Promise<void>
+     */
     public async deleteReserve(): Promise<void> {
-        if(this.program === null) { return; }
+        if (this.program === null) { return; }
 
         try {
             await this.reserves.deleteReserve(this.program.id);
             this.snackbar.open(`削除: ${ this.program.name }`);
-        } catch(err) {
+        } catch (err) {
             console.error(err);
             this.snackbar.open(`削除失敗: ${ this.program.name }`);
         }
     }
 
     /**
-    * 予約除外状態を解除
-    * @return Promise<void>
-    */
+     * 予約除外状態を解除
+     * @return Promise<void>
+     */
     public async deleteSkip(): Promise<void> {
-        if(this.program === null) { return; }
+        if (this.program === null) { return; }
 
         try {
             await this.reserves.deleteSkip(this.program.id);
             this.snackbar.open(`除外: ${ this.program.name }`);
-        } catch(err) {
+        } catch (err) {
             console.error(err);
             this.snackbar.open(`除外失敗: ${ this.program.name }`);
         }

@@ -1,22 +1,22 @@
 import * as m from 'mithril';
-import Component from '../Component';
-import factory from '../../ViewModel/ViewModelFactory';
 import ReservesMenuViewModel from '../../ViewModel/Reserves/ReservesMenuViewModel';
+import factory from '../../ViewModel/ViewModelFactory';
+import Component from '../Component';
 
 /**
-* ReservesDeleteComponent
-*/
+ * ReservesDeleteComponent
+ */
 class ReservesDeleteComponent extends Component<void> {
     private viewModel: ReservesMenuViewModel;
 
     constructor() {
         super();
-        this.viewModel = <ReservesMenuViewModel>(factory.get('ReservesMenuViewModel'));
+        this.viewModel = <ReservesMenuViewModel> factory.get('ReservesMenuViewModel');
     }
 
     /**
-    * view
-    */
+     * view
+     */
     public view(): m.Child {
         return m('div', [
             m('div', { class: 'recorded-delete' }, this.viewModel.getTitle() + 'を削除しますか。'),
@@ -27,13 +27,13 @@ class ReservesDeleteComponent extends Component<void> {
                         // delete video
                         this.viewModel.delete();
                         this.viewModel.close();
-                    }
+                    },
                 }, '削除'),
                 m('button', {
                     class: 'mdl-button mdl-js-button mdl-button--accent',
-                    onclick: () => { this.viewModel.close(); }
-                }, 'キャンセル' ),
-            ])
+                    onclick: () => { this.viewModel.close(); },
+                }, 'キャンセル'),
+            ]),
         ]);
     }
 }

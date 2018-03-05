@@ -1,35 +1,35 @@
 import * as m from 'mithril';
-import Component from '../Component';
-import factory from '../../ViewModel/ViewModelFactory';
+import Util from '../../Util/Util';
 import RecordedInfoViewModel from '../../ViewModel/Recorded/RecordedInfoViewModel';
-import Util from '../../Util/Util'
+import factory from '../../ViewModel/ViewModelFactory';
+import Component from '../Component';
 
 /**
-* RecrodedInfoComponent
-*/
+ * RecrodedInfoComponent
+ */
 class RecordedInfoComponent extends Component<void> {
     private viewModel: RecordedInfoViewModel;
 
     constructor() {
         super();
 
-        this.viewModel = <RecordedInfoViewModel>(factory.get('RecordedInfoViewModel'));
+        this.viewModel = <RecordedInfoViewModel> factory.get('RecordedInfoViewModel');
     }
 
     /**
-    * view
-    */
+     * view
+     */
     public view(): m.Child {
-        return m('div', { id: 'recorded-info-content' } ,[
+        return m('div', { id: 'recorded-info-content' }, [
             m('div', { class: 'tab-content' }, this.createTabContent()),
         ]);
     }
 
     /**
-    * tab content
-    */
+     * tab content
+     */
     private createTabContent(): m.Child[] | null {
-        switch(this.viewModel.getTabPosition()) {
+        switch (this.viewModel.getTabPosition()) {
             case 0:
                 return this.createInfo();
             case 1:
@@ -42,12 +42,12 @@ class RecordedInfoComponent extends Component<void> {
     }
 
     /**
-    * info tab
-    */
+     * info tab
+     */
     private createInfo(): m.Child[] {
         let extended = this.viewModel.getExtended();
 
-        return <m.Child[]>[
+        return <m.Child[]> [
             m('div', { class: 'title' }, this.viewModel.getTitle()),
             m('div', { class: 'channel' }, this.viewModel.getChannelName()),
             m('div', { class: 'time' }, this.viewModel.getTimeStr()),
@@ -57,7 +57,7 @@ class RecordedInfoComponent extends Component<void> {
                 return m('a', {
                     class: 'recorded-link mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect',
                     href: video.path,
-                    onclick: () => { if(Util.uaIsiOS()) { this.viewModel.close(); } },
+                    onclick: () => { if (Util.uaIsiOS()) { this.viewModel.close(); } },
                 }, video.name);
             }),
 
@@ -74,29 +74,30 @@ class RecordedInfoComponent extends Component<void> {
                 class: 'extended',
                 style: extended.length === 0 ? 'display: none;' : '',
                 onupdate: (vnode: m.VnodeDOM<void, this>) => {
-                    if(extended.length === 0) { return; }
+                    if (extended.length === 0) { return; }
                     extended = extended.replace(/(http:\/\/[\x21-\x7e]+)/gi, "<a href='$1' target='_blank'>$1</a>");
                     extended = extended.replace(/(https:\/\/[\x21-\x7e]+)/gi, "<a href='$1' target='_blank'>$1</a>");
-                    (<HTMLElement>vnode.dom).innerHTML = extended;
+                    (<HTMLElement> vnode.dom).innerHTML = extended;
                 },
             }, this.viewModel.getExtended()),
         ];
     }
 
     /**
-    * download tab
-    */
+     * download tab
+     */
     private createDownload(): m.Child[] {
-        return <m.Child[]>[
+        return <m.Child[]> [
             m('div', { class: 'title' }, this.viewModel.getTitle()),
             m('div', { class: 'video-title' }, 'ビデオファイル'),
             this.viewModel.getVideoSrc(true).map((video) => {
                 let str = video.name;
-                if(video.filesize !== null) { str += ` (${ video.filesize })`; }
+                if (video.filesize !== null) { str += ` (${ video.filesize })`; }
+
                 return m('a', {
                     class: 'recorded-link mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect',
                     href: video.path,
-                    onclick: () => { if(Util.uaIsiOS()) { this.viewModel.close(); } },
+                    onclick: () => { if (Util.uaIsiOS()) { this.viewModel.close(); } },
                 }, str);
             }),
 
@@ -112,7 +113,8 @@ class RecordedInfoComponent extends Component<void> {
                 style: Util.uaIsMobile() ? 'display: none;' : '',
             }, 'プレイリスト'),
             this.viewModel.getPlayList().map((video) => {
-                if(Util.uaIsAndroid() || Util.uaIsiOS()) { return null; }
+                if (Util.uaIsAndroid() || Util.uaIsiOS()) { return null; }
+
                 return m('a', {
                     class: 'recorded-link mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect',
                     href: video.path,
@@ -120,7 +122,8 @@ class RecordedInfoComponent extends Component<void> {
             }),
 
             this.viewModel.getEncoding().map((video) => {
-                if(Util.uaIsMobile()) { return null; }
+                if (Util.uaIsMobile()) { return null; }
+
                 return m('a', {
                     class: 'recorded-link mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect',
                     disabled: ' ',
@@ -130,21 +133,21 @@ class RecordedInfoComponent extends Component<void> {
     }
 
     /**
-    * createStreaming tab
-    */
+     * createStreaming tab
+     */
     private createStreaming(): m.Child[] {
-        let child: m.Child[] = [ m('div', { class: 'title' }, this.viewModel.getTitle()) ];
+        const child: m.Child[] = [ m('div', { class: 'title' }, this.viewModel.getTitle()) ];
 
         // HLS 配信
-        if(this.viewModel.isEnabledRecordedHLS()) {
-            Array.prototype.push.apply(child,[
+        if (this.viewModel.isEnabledRecordedHLS()) {
+            Array.prototype.push.apply(child, [
                 m('div', { class: 'video-title' }, 'HLS 配信'),
                 m('div', { class: 'pulldown mdl-layout-spacer' }, [
                     m('select', {
                         class: 'mdl-textfield__input program-dialog-label',
                         onchange: m.withAttr('value', (value) => { this.viewModel.hlsOptionValue = Number(value); }),
                         onupdate: (vnode: m.VnodeDOM<void, this>) => {
-                            this.selectOnUpdate(<HTMLInputElement>(vnode.dom), this.viewModel.hlsOptionValue);
+                            this.selectOnUpdate(<HTMLInputElement> (vnode.dom), this.viewModel.hlsOptionValue);
                         },
                     }, this.createHLSOptions()),
                 ]),
@@ -161,15 +164,15 @@ class RecordedInfoComponent extends Component<void> {
         }
 
         // kodi 配信
-        if(this.viewModel.isEnabledKodi()) {
-            Array.prototype.push.apply(child,[
+        if (this.viewModel.isEnabledKodi()) {
+            Array.prototype.push.apply(child, [
                 m('div', { class: 'video-title' }, 'kodi 配信'),
                 m('div', { class: 'pulldown mdl-layout-spacer' }, [
                     m('select', {
                         class: 'mdl-textfield__input program-dialog-label',
                         onchange: m.withAttr('value', (value) => { this.viewModel.kodiOptionValue = Number(value); }),
                         onupdate: (vnode: m.VnodeDOM<void, this>) => {
-                            this.selectOnUpdate(<HTMLInputElement>(vnode.dom), this.viewModel.kodiOptionValue);
+                            this.selectOnUpdate(<HTMLInputElement> (vnode.dom), this.viewModel.kodiOptionValue);
                         },
                     }, this.createKodiOptions()),
                 ]),
@@ -181,7 +184,7 @@ class RecordedInfoComponent extends Component<void> {
                             this.viewModel.sendToKodi(typeof video.encodedId === 'undefined' ? null : video.encodedId);
                         },
                     }, video.name);
-                })
+                }),
             ]);
         }
 
@@ -189,9 +192,9 @@ class RecordedInfoComponent extends Component<void> {
     }
 
     /**
-    * HLS 配信の option を生成する
-    * @return m.Child[]
-    */
+     * HLS 配信の option を生成する
+     * @return m.Child[]
+     */
     private createHLSOptions(): m.Child[] {
         return this.viewModel.getHLSOptions().map((option) => {
             return m('option', { value: option.value }, option.name);
@@ -199,9 +202,9 @@ class RecordedInfoComponent extends Component<void> {
     }
 
     /**
-    * kodi 配信の option を生成する
-    * @return m.Child[]
-    */
+     * kodi 配信の option を生成する
+     * @return m.Child[]
+     */
     private createKodiOptions(): m.Child[] {
         return this.viewModel.getKodiOptions().map((option) => {
             return m('option', { value: option.value }, option.name);
@@ -209,24 +212,24 @@ class RecordedInfoComponent extends Component<void> {
     }
 
     /**
-    * thumnbail 要素を生成
-    * @return m.Child | null
-    */
+     * thumnbail 要素を生成
+     * @return m.Child | null
+     */
     private createThumnbail(): m.Child | null {
-        let src = this.viewModel.getThumnbailSrc();
-        if(src === null) { return null; }
+        const src = this.viewModel.getThumnbailSrc();
+        if (src === null) { return null; }
 
         return m('img', {
             class: 'thumbnail',
             src: src,
-            onerror: (e: Event) => { (<HTMLImageElement>e.target).src = '/img/noimg.png'; },
+            onerror: (e: Event) => { (<HTMLImageElement> e.target).src = '/img/noimg.png'; },
         });
     }
 }
 
 namespace RecordedInfoComponent {
     export const downloadPanel = 'recorded-donwload-panel';
-    export const watchPanel = 'recorded-watch-panel'
+    export const watchPanel = 'recorded-watch-panel';
 }
 
 export default RecordedInfoComponent;

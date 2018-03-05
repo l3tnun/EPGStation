@@ -1,8 +1,8 @@
 import Base from '../Base';
 
 /**
-* Model 抽象クラス
-*/
+ * Model 抽象クラス
+ */
 abstract class Model extends Base {
 }
 

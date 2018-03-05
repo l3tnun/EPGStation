@@ -1,9 +1,9 @@
-import ViewModel from '../ViewModel';
 import { StreamsApiModelInterface } from '../../Model/Api/StreamsApiModel';
+import ViewModel from '../ViewModel';
 
 /**
-* StreamForcedStopViewModel
-*/
+ * StreamForcedStopViewModel
+ */
 class StreamForcedStopViewModel extends ViewModel {
     private streamsApiModel: StreamsApiModelInterface;
 
@@ -13,8 +13,8 @@ class StreamForcedStopViewModel extends ViewModel {
     }
 
     /**
-    * forecd stop all
-    */
+     * forecd stop all
+     */
     public async forcedStopAll(): Promise<void> {
         await this.streamsApiModel.forcedStopAll();
     }

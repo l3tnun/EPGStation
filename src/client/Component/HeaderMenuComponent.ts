@@ -1,33 +1,33 @@
 import * as m from 'mithril';
-import Component from './Component';
-import factory from '../ViewModel/ViewModelFactory';
 import HeaderViewModel from '../ViewModel/HeaderViewModel';
 import StorageViewModel from '../ViewModel/Storage/StorageViewModel';
+import factory from '../ViewModel/ViewModelFactory';
+import Component from './Component';
 
 interface HeaderMenuArgs {
-    content?: { attrs: { [key: string]: any }, text: string }[];
+    content?: { attrs: { [key: string]: any }; text: string }[];
 }
 
 /**
-* HeaderMenuComponent
-*/
+ * HeaderMenuComponent
+ */
 class HeaderMenuComponent extends Component<HeaderMenuArgs> {
     private viewModel: HeaderViewModel;
     private storage: StorageViewModel;
 
     constructor() {
         super();
-        this.viewModel = <HeaderViewModel>(factory.get('HeaderViewModel'));
-        this.storage = <StorageViewModel>(factory.get('StorageViewModel'));
+        this.viewModel = <HeaderViewModel> factory.get('HeaderViewModel');
+        this.storage = <StorageViewModel> factory.get('StorageViewModel');
     }
 
     /**
-    * view
-    */
+     * view
+     */
     public view(vnode: m.Vnode<HeaderMenuArgs, this>): m.Child {
-        let child: m.Child[] = [];
+        const child: m.Child[] = [];
 
-        if(typeof vnode.attrs.content !== 'undefined') {
+        if (typeof vnode.attrs.content !== 'undefined') {
             vnode.attrs.content.map((con) => {
                 child.push(this.createItem(con.attrs, con.text));
             });
@@ -46,8 +46,8 @@ class HeaderMenuComponent extends Component<HeaderMenuArgs> {
         ]);
     }
 
-    private createItem(attrs: { [key: string]: any }, text: string) {
-        attrs.class = 'item'
+    private createItem(attrs: { [key: string]: any }, text: string): m.Child {
+        attrs.class = 'item';
 
         return m('div', attrs, text);
     }

@@ -14,8 +14,8 @@ export const genre1 = {
     0xC: '予備',
     0xD: '予備',
     0xE: '拡張',
-    0xF: 'その他'
-}
+    0xF: 'その他',
+};
 
 export const genre2 = {
     0x0: {
@@ -34,7 +34,7 @@ export const genre2 = {
         0xC: '',
         0xD: '',
         0xE: '',
-        0xF: 'その他'
+        0xF: 'その他',
     },
     0x1: {
         0x0: 'スポーツニュース',
@@ -52,7 +52,7 @@ export const genre2 = {
         0xC: '',
         0xD: '',
         0xE: '',
-        0xF: 'その他'
+        0xF: 'その他',
     },
     0x2: {
         0x0: '芸能・ワイドショー',
@@ -70,7 +70,7 @@ export const genre2 = {
         0xC: '',
         0xD: '',
         0xE: '',
-        0xF: 'その他'
+        0xF: 'その他',
     },
     0x3: {
         0x0: '国内ドラマ',
@@ -88,7 +88,7 @@ export const genre2 = {
         0xC: '',
         0xD: '',
         0xE: '',
-        0xF: 'その他'
+        0xF: 'その他',
     },
     0x4: {
         0x0: '国内ロック・ポップス',
@@ -106,7 +106,7 @@ export const genre2 = {
         0xC: '',
         0xD: '',
         0xE: '',
-        0xF: 'その他'
+        0xF: 'その他',
     },
     0x5: {
         0x0: 'クイズ',
@@ -124,7 +124,7 @@ export const genre2 = {
         0xC: '',
         0xD: '',
         0xE: '',
-        0xF: 'その他'
+        0xF: 'その他',
     },
     0x6: {
         0x0: '洋画',
@@ -142,7 +142,7 @@ export const genre2 = {
         0xC: '',
         0xD: '',
         0xE: '',
-        0xF: 'その他'
+        0xF: 'その他',
     },
     0x7: {
         0x0: '国内アニメ',
@@ -160,7 +160,7 @@ export const genre2 = {
         0xC: '',
         0xD: '',
         0xE: '',
-        0xF: 'その他'
+        0xF: 'その他',
     },
     0x8: {
         0x0: '社会・時事',
@@ -178,7 +178,7 @@ export const genre2 = {
         0xC: '',
         0xD: '',
         0xE: '',
-        0xF: 'その他'
+        0xF: 'その他',
     },
     0x9: {
         0x0: '現代劇・新劇',
@@ -196,7 +196,7 @@ export const genre2 = {
         0xC: '',
         0xD: '',
         0xE: '',
-        0xF: 'その他'
+        0xF: 'その他',
     },
     0xA: {
         0x0: '旅・釣り・アウトドア',
@@ -214,7 +214,7 @@ export const genre2 = {
         0xC: '教育問題',
         0xD: '',
         0xE: '',
-        0xF: 'その他'
+        0xF: 'その他',
     },
     0xB: {
         0x0: '高齢者',
@@ -232,7 +232,7 @@ export const genre2 = {
         0xC: '',
         0xD: '',
         0xE: '',
-        0xF: 'その他'
+        0xF: 'その他',
     },
     0xC: {
         0x0: '',
@@ -250,7 +250,7 @@ export const genre2 = {
         0xC: '',
         0xD: '',
         0xE: '',
-        0xF: ''
+        0xF: '',
     },
     0xD: {
         0x0: '',
@@ -268,7 +268,7 @@ export const genre2 = {
         0xC: '',
         0xD: '',
         0xE: '',
-        0xF: ''
+        0xF: '',
     },
     0xE: {
         0x0: 'BS/地上デジタル放送用番組付属情報',
@@ -286,7 +286,7 @@ export const genre2 = {
         0xC: '',
         0xD: '',
         0xE: '',
-        0xF: ''
+        0xF: '',
     },
     0xF: {
         0x0: '',
@@ -304,9 +304,9 @@ export const genre2 = {
         0xC: '',
         0xD: '',
         0xE: '',
-        0xF: 'その他'
+        0xF: 'その他',
     },
-}
+};
 
 export const videoComponentType = {
     0x01: '480i(525i), アスペクト比4:3',
@@ -342,7 +342,7 @@ export const videoComponentType = {
     0xF2: '180p アスペクト比16:9 パンベクトルあり',
     0xF3: '180p アスペクト比16:9 パンベクトルなし',
     0xF4: '180p アスペクト比 > 16:9',
-}
+};
 
 export const audioComponentType = {
     0b00000: '将来使用のためリザーブ',
@@ -377,7 +377,7 @@ export const audioComponentType = {
     0b11101: '将来使用のためリザーブ',
     0b11110: '将来使用のためリザーブ',
     0b11111: '将来使用のためリザーブ',
-}
+};
 
 export const audioSamplingRate = {
     16000: '16kHz',
@@ -386,5 +386,5 @@ export const audioSamplingRate = {
     32000: '32kHz',
     44100: '44.1kHz',
     48000: '48kHz',
-}
+};
 

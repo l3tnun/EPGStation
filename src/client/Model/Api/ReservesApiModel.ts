@@ -1,6 +1,6 @@
 import * as m from 'mithril';
-import ApiModel from './ApiModel';
 import * as apid from '../../../../api';
+import ApiModel from './ApiModel';
 
 interface AllReserves {
     [key: number]: AllReserveItem;
@@ -28,9 +28,9 @@ interface ReservesApiModelInterface extends ApiModel {
 }
 
 /**
-* ReservesApiModel
-* /api/reserves を取得
-*/
+ * ReservesApiModel
+ * /api/reserves を取得
+ */
 class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
     private limit: number;
     private offset: number;
@@ -39,8 +39,8 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
     private conflicts: apid.Reserves = { reserves: [], total: 0 };
 
     /**
-    * 初期化
-    */
+     * 初期化
+     */
     public init(): void {
         super.init();
         this.allReserves = null;
@@ -49,33 +49,33 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
     }
 
     /**
-    * query を現在の状況のまま予約一覧を更新する
-    */
+     * query を現在の状況のまま予約一覧を更新する
+     */
     public async updateReserves(): Promise<void> {
         return this.fetchReserves(this.limit, this.offset);
     }
 
     /**
-    * query を現在の状況のまま重複一覧を更新する
-    */
+     * query を現在の状況のまま重複一覧を更新する
+     */
     public async updateConflicts(): Promise<void> {
         return this.fetchConflicts(this.limit, this.offset);
     }
 
     /**
-    * 予約一覧を取得
-    * /api/reserves
-    * @param limit: limit
-    * @param offfset: offset
-    * @return Promise<void>
-    */
+     * 予約一覧を取得
+     * /api/reserves
+     * @param limit: limit
+     * @param offfset: offset
+     * @return Promise<void>
+     */
     public async fetchReserves(limit: number, offset: number): Promise<void> {
         this.limit = limit;
         this.offset = offset;
-        let query = {
+        const query = {
             limit: limit,
             offset: offset,
-        }
+        };
 
         try {
             this.reserves = await <any> m.request({
@@ -83,7 +83,7 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
                 url: '/api/reserves',
                 data: query,
             });
-        } catch(err) {
+        } catch (err) {
             this.reserves = { reserves: [], total: 0 };
             console.error('/api/reserves');
             console.error(err);
@@ -92,19 +92,19 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
     }
 
     /**
-    * 重複一覧を取得
-    * /api/reserves/conflicts
-    * @param limit: limit
-    * @param offfset: offset
-    * @return Promise<void>
-    */
+     * 重複一覧を取得
+     * /api/reserves/conflicts
+     * @param limit: limit
+     * @param offfset: offset
+     * @return Promise<void>
+     */
     public async fetchConflicts(limit: number, offset: number): Promise<void> {
         this.limit = limit;
         this.offset = offset;
-        let query = {
+        const query = {
             limit: limit,
             offset: offset,
-        }
+        };
 
         try {
             this.conflicts = await <any> m.request({
@@ -112,7 +112,7 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
                 url: '/api/reserves/conflicts',
                 data: query,
             });
-        } catch(err) {
+        } catch (err) {
             this.conflicts = { reserves: [], total: 0 };
             console.error('/api/reserves/conflicts');
             console.error(err);
@@ -121,30 +121,30 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
     }
 
     /**
-    * すべての予約状態を取得
-    * /api/reserves/all
-    * @return Promise<void>
-    */
+     * すべての予約状態を取得
+     * /api/reserves/all
+     * @return Promise<void>
+     */
     public async fetchAllId(): Promise<AllReserves | null> {
         try {
-            let allId = await <any> m.request({
+            const allId = await <any> m.request({
                 method: 'GET',
                 url: '/api/reserves/all',
             });
 
             this.allReserves = {};
-            for(let reserve of allId.reserves) {
+            for (const reserve of allId.reserves) {
                 this.allReserves[reserve.programId] = { status: 'reserve', item: reserve };
             }
 
-            for(let reserve of allId.conflicts) {
+            for (const reserve of allId.conflicts) {
                 this.allReserves[reserve.programId] = { status: 'conflict', item: reserve };
             }
 
-            for(let reserve of allId.skips) {
+            for (const reserve of allId.skips) {
                 this.allReserves[reserve.programId] = { status: 'skip', item: reserve };
             }
-        } catch(err) {
+        } catch (err) {
             this.allReserves = null;
             console.error('/api/reserves/all');
             console.error(err);
@@ -155,10 +155,10 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
     }
 
     /**
-    * conflicts 数を取得
-    * /api/reserves/all
-    * @return Promise<void>
-    */
+     * conflicts 数を取得
+     * /api/reserves/all
+     * @return Promise<void>
+     */
     public async fetchConflictCount(): Promise<number> {
         try {
             const allId = <apid.ReserveAllId> await <any> m.request({
@@ -167,7 +167,7 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
             });
 
             return allId.conflicts.length;
-        } catch(err) {
+        } catch (err) {
             console.error('/api/reserves/all');
             console.error(err);
             this.openSnackbar('重複件数取得に失敗しました');
@@ -177,42 +177,42 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
     }
 
     /**
-    * reserves を取得
-    * @return apid.Reserves
-    */
+     * reserves を取得
+     * @return apid.Reserves
+     */
     public getReserves(): apid.Reserves {
         return this.reserves;
     }
 
     /**
-    * conflicts を取得
-    * @return apid.Reserves
-    */
+     * conflicts を取得
+     * @return apid.Reserves
+     */
     public getConflicts(): apid.Reserves {
         return this.conflicts;
     }
 
     /**
-    * allId を取得
-    * @return apid.ReserveAllId | null
-    */
+     * allId を取得
+     * @return apid.ReserveAllId | null
+     */
     public getAllId(): AllReserves | null {
         return this.allReserves;
     }
 
     /**
-    * 予約追加
-    * @param programId: program id
-    * @param option: encode option
-    * @return Promise<void>
-    */
+     * 予約追加
+     * @param programId: program id
+     * @param option: encode option
+     * @return Promise<void>
+     */
     public async addReserve(programId: apid.ProgramId, option: apid.RuleEncode | null = null): Promise<void> {
         try {
-            let query: { programId: number, encode?: apid.RuleEncode } = {
-                programId: programId
-            }
+            const query: { programId: number; encode?: apid.RuleEncode } = {
+                programId: programId,
+            };
 
-            if(option !== null) {
+            if (option !== null) {
                 query.encode = option;
             }
 
@@ -222,17 +222,17 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
                 data: query,
             });
 
-        } catch(err) {
+        } catch (err) {
             console.error('/api/reserves: post');
             throw(err);
         }
     }
 
     /**
-    * 予約削除
-    * @param programId: program id
-    * @return Promise<void>
-    */
+     * 予約削除
+     * @param programId: program id
+     * @return Promise<void>
+     */
     public async deleteReserve(programId: apid.ProgramId): Promise<void> {
         try {
             await <any> m.request({
@@ -240,17 +240,17 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
                 url: `/api/reserves/${ programId}`,
             });
 
-        } catch(err) {
+        } catch (err) {
             console.error(`/api/reserves/${ programId }: delete`);
             throw(err);
         }
     }
 
     /**
-    * 予約除外状態を解除
-    * @param programId: program id
-    * @return Promise<void>
-    */
+     * 予約除外状態を解除
+     * @param programId: program id
+     * @return Promise<void>
+     */
     public async deleteSkip(programId: apid.ProgramId): Promise<void> {
         try {
             await <any> m.request({
@@ -258,7 +258,7 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
                 url: `/api/reserves/${ programId}/skip`,
             });
 
-        } catch(err) {
+        } catch (err) {
             console.error(`/api/reserves/${ programId }/skip: delete`);
             throw(err);
         }

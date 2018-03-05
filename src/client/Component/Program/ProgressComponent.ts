@@ -1,27 +1,27 @@
 import * as m from 'mithril';
-import Component from '../Component';
-import factory from '../../ViewModel/ViewModelFactory';
 import { ProgramViewModel } from '../../ViewModel/Program/ProgramViewModel';
+import factory from '../../ViewModel/ViewModelFactory';
+import Component from '../Component';
 
 /**
-* ProgressComponent
-*/
+ * ProgressComponent
+ */
 class ProgressComponent extends Component<void> {
     private viewModel: ProgramViewModel;
 
     constructor() {
         super();
-        this.viewModel = <ProgramViewModel>(factory.get('ProgramViewModel'));
+        this.viewModel = <ProgramViewModel> factory.get('ProgramViewModel');
     }
 
     /**
-    * view
-    */
+     * view
+     */
     public view(): m.Children | null {
-        if(!this.viewModel.progressShow) { return null; }
+        if (!this.viewModel.progressShow) { return null; }
 
         return m('div', { class: 'progress' }, [
-            m('div', { class: 'mdl-spinner mdl-spinner--single-color mdl-js-spinner is-active' })
+            m('div', { class: 'mdl-spinner mdl-spinner--single-color mdl-js-spinner is-active' }),
         ]);
     }
 }

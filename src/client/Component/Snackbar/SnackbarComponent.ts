@@ -1,47 +1,47 @@
 import * as m from 'mithril';
-import Component from '../Component';
-import factory from '../../ViewModel/ViewModelFactory';
 import SnackbarViewModel from '../../ViewModel/Snackbar/SnackbarViewModel';
+import factory from '../../ViewModel/ViewModelFactory';
+import Component from '../Component';
 
 /**
-* Material Design Lite の Snackbar を使うための拡張
-*/
+ * Material Design Lite の Snackbar を使うための拡張
+ */
 interface MaterialSnackbar extends HTMLElement {
     MaterialSnackbar: {
-        showSnackbar(data : {
-            message?: string,
-            actionHandler?: (event: any) => any,
-            actionText?: string,
-            timeout?: number
+        showSnackbar(data: {
+            message?: string;
+            actionHandler?(event: any): any;
+            actionText?: string;
+            timeout?: number;
         }): void;
-    }
+    };
 }
 
 /**
-* Snackbar View
-*/
+ * Snackbar View
+ */
 class SnackbarComponent extends Component<void> {
     private viewModel: SnackbarViewModel;
 
     constructor() {
         super();
-        this.viewModel = <SnackbarViewModel>(factory.get('SnackbarViewModel'));
+        this.viewModel = <SnackbarViewModel> factory.get('SnackbarViewModel');
     }
 
     /**
-    * view
-    */
+     * view
+     */
     public view(): m.Children {
         return m('div', {
                 class: 'mdl-js-snackbar mdl-snackbar',
                 onupdate: (vnode: m.VnodeDOM<void, this>) => {
-                    let message = this.viewModel.get();
-                    if(message == null) { return; }
-                    (<MaterialSnackbar>(vnode.dom)).MaterialSnackbar.showSnackbar({ message: message });
-                }
+                    const message = this.viewModel.get();
+                    if (message === null) { return; }
+                    (<MaterialSnackbar> (vnode.dom)).MaterialSnackbar.showSnackbar({ message: message });
+                },
             }, [
-            m('div', { class: 'mdl-snackbar__text' } ),
-            m('button', { class: 'mdl-snackbar__action', type: 'button' } )
+            m('div', { class: 'mdl-snackbar__text' }),
+            m('button', { class: 'mdl-snackbar__action', type: 'button' }),
         ]);
     }
 }

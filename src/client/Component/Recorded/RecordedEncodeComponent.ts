@@ -1,22 +1,22 @@
 import * as m from 'mithril';
-import Component from '../Component';
-import factory from '../../ViewModel/ViewModelFactory';
 import RecordedMenuViewModel from '../../ViewModel/Recorded/RecordedMenuViewModel';
+import factory from '../../ViewModel/ViewModelFactory';
+import Component from '../Component';
 
 /**
-* RecordedEncodeComponent
-*/
+ * RecordedEncodeComponent
+ */
 class RecordedEncodeComponent extends Component<void> {
     private viewModel: RecordedMenuViewModel;
 
     constructor() {
         super();
-        this.viewModel = <RecordedMenuViewModel>(factory.get('RecordedMenuViewModel'));
+        this.viewModel = <RecordedMenuViewModel> factory.get('RecordedMenuViewModel');
     }
 
     /**
-    * view
-    */
+     * view
+     */
     public view(): m.Child {
         return m('div', [
             m('div', { class: 'recorded-encode-content' }, [
@@ -27,7 +27,7 @@ class RecordedEncodeComponent extends Component<void> {
                         class: 'mdl-textfield__input program-dialog-label',
                         onchange: m.withAttr('value', (value) => { this.viewModel.encodeSourceOptionValue = Number(value); }),
                         onupdate: (vnode: m.VnodeDOM<void, this>) => {
-                            this.selectOnUpdate(<HTMLInputElement>(vnode.dom), this.viewModel.encodeSourceOptionValue);
+                            this.selectOnUpdate(<HTMLInputElement> (vnode.dom), this.viewModel.encodeSourceOptionValue);
                         },
                     }, this.viewModel.recordedFiles.map((option, i) => {
                         return m('option', { value: i }, option.name);
@@ -39,7 +39,7 @@ class RecordedEncodeComponent extends Component<void> {
                         class: 'mdl-textfield__input program-dialog-label',
                         onchange: m.withAttr('value', (value) => { this.viewModel.encodeModeOptionValue = Number(value); }),
                         onupdate: (vnode: m.VnodeDOM<void, this>) => {
-                            this.selectOnUpdate(<HTMLInputElement>(vnode.dom), this.viewModel.encodeModeOptionValue);
+                            this.selectOnUpdate(<HTMLInputElement> (vnode.dom), this.viewModel.encodeModeOptionValue);
                         },
                     }, this.viewModel.getEncodeOption().map((option) => {
                         return m('option', { value: option.value }, option.name);
@@ -52,9 +52,9 @@ class RecordedEncodeComponent extends Component<void> {
                             class: 'mdl-checkbox__input',
                             checked: this.viewModel.isOutputTheOriginalDirectory,
                             onclick: m.withAttr('checked', (value) => { this.viewModel.isOutputTheOriginalDirectory = value; }),
-                            onupdate: (vnode: m.VnodeDOM<void, this>) => { this.checkboxOnUpdate(<HTMLInputElement>(vnode.dom)); },
+                            onupdate: (vnode: m.VnodeDOM<void, this>) => { this.checkboxOnUpdate(<HTMLInputElement> (vnode.dom)); },
                         }),
-                        m('span', { class: 'mdl-checkbox__label' }, '元ファイルと同じ場所に保存する')
+                        m('span', { class: 'mdl-checkbox__label' }, '元ファイルと同じ場所に保存する'),
                     ]),
                 ]),
             ]),
@@ -65,13 +65,13 @@ class RecordedEncodeComponent extends Component<void> {
                         // add encode
                         this.viewModel.addEncode();
                         this.viewModel.close();
-                    }
+                    },
                 }, '追加'),
                 m('button', {
                     class: 'mdl-button mdl-js-button mdl-button--accent',
-                    onclick: () => { this.viewModel.close(); }
-                }, 'キャンセル' ),
-            ])
+                    onclick: () => { this.viewModel.close(); },
+                }, 'キャンセル'),
+            ]),
         ]);
     }
 }

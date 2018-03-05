@@ -1,26 +1,26 @@
 import * as m from 'mithril';
-import Component from '../Component';
-import factory from '../../ViewModel/ViewModelFactory';
 import RulesInfoViewModel from '../../ViewModel/Rules/RulesInfoViewModel';
+import factory from '../../ViewModel/ViewModelFactory';
+import Component from '../Component';
 import RulesUtil from './RulesUtil';
 
 /**
-* RulesInfoComponent
-*/
+ * RulesInfoComponent
+ */
 class RulesInfoComponent extends Component<void> {
     private viewModel: RulesInfoViewModel;
 
     constructor() {
         super();
-        this.viewModel = <RulesInfoViewModel>(factory.get('RulesInfoViewModel'));
+        this.viewModel = <RulesInfoViewModel> factory.get('RulesInfoViewModel');
     }
 
     /**
-    * view
-    */
+     * view
+     */
     public view(): m.Child {
-        let rule = this.viewModel.get();
-        if(rule === null) { return m('div'); }
+        const rule = this.viewModel.get();
+        if (rule === null) { return m('div'); }
 
         return m('div', [
             m('div', { class: 'rules-info' }, [
@@ -34,14 +34,14 @@ class RulesInfoComponent extends Component<void> {
                 this.createItem('time', '時刻', RulesUtil.createTimStr(rule)),
                 this.createItem('dow', '曜日', RulesUtil.createDowStr(rule)),
             ]),
-        ])
+        ]);
     }
 
     private createItem(className: string, title: string, text: string): m.Child {
         return m('div', { class: className }, [
             title + ': ',
             m('span', text),
-        ])
+        ]);
     }
 }
 

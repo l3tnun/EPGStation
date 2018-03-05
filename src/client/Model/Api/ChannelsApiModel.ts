@@ -1,6 +1,6 @@
 import * as m from 'mithril';
-import ApiModel from './ApiModel';
 import * as apid from '../../../../api';
+import ApiModel from './ApiModel';
 
 interface ChannelsApiModelInterface extends ApiModel {
     fetchChannel(): Promise<apid.ServiceItem[]>;
@@ -9,18 +9,18 @@ interface ChannelsApiModelInterface extends ApiModel {
 }
 
 /**
-* ChannelsApiModel
-* /api/channel を取得
-*/
+ * ChannelsApiModel
+ * /api/channel を取得
+ */
 class ChannelsApiModel extends ApiModel implements ChannelsApiModelInterface {
     private channels: apid.ServiceItem[] = [];
     private channelIndex: { [key: number]: apid.ServiceItem } | null = null;
 
     /**
-    * channel をすべて取得
-    */
+     * channel をすべて取得
+     */
     public async fetchChannel(): Promise<apid.ServiceItem[]> {
-        if(this.channelIndex === null) {
+        if (this.channelIndex === null) {
             this.channelIndex = {};
         } else {
             // 取得済み
@@ -32,14 +32,14 @@ class ChannelsApiModel extends ApiModel implements ChannelsApiModelInterface {
                 method: 'GET',
                 url: '/api/channels',
             });
-        } catch(err) {
+        } catch (err) {
             this.channels = [];
             console.error('/api/channels');
             console.error(err);
             this.openSnackbar('チャンネル情報取得に失敗しました');
         }
 
-        for(let channel of this.channels) {
+        for (const channel of this.channels) {
             this.channelIndex[channel.id] = channel;
         }
 
@@ -47,21 +47,22 @@ class ChannelsApiModel extends ApiModel implements ChannelsApiModelInterface {
     }
 
     /**
-    * channel を取得
-    */
+     * channel を取得
+     */
     public getChannels(): apid.ServiceItem[] {
         return this.channels;
     }
 
     /**
-    * channel id を指定して取得
-    * @param channelId: channel id
-    * @return apid.ServiceItem | null
-    */
+     * channel id を指定して取得
+     * @param channelId: channel id
+     * @return apid.ServiceItem | null
+     */
     public getChannel(channelId: apid.ServiceItemId): apid.ServiceItem | null {
-        if(this.channelIndex === null) { return null; }
+        if (this.channelIndex === null) { return null; }
 
-        let channel = this.channelIndex[channelId];
+        const channel = this.channelIndex[channelId];
+
         return typeof channel === 'undefined' ? null : channel;
     }
 }

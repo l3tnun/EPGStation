@@ -1,6 +1,6 @@
 import * as m from 'mithril';
-import ApiModel from './ApiModel';
 import * as apid from '../../../../api';
+import ApiModel from './ApiModel';
 
 interface ScheduleQuery {
     type: apid.ChannelType;
@@ -19,9 +19,9 @@ interface ScheduleApiModelInterface extends ApiModel {
 }
 
 /**
-* ScheduleApiModel
-* /api/schedule を取得
-*/
+ * ScheduleApiModel
+ * /api/schedule を取得
+ */
 class ScheduleApiModel extends ApiModel implements ScheduleApiModelInterface {
     private schedulePrograms: apid.ScheduleProgram[] = [];
 
@@ -31,15 +31,15 @@ class ScheduleApiModel extends ApiModel implements ScheduleApiModelInterface {
     }
 
     /**
-    * 番組表を取得
-    * /api/schedule
-    */
+     * 番組表を取得
+     * /api/schedule
+     */
     public async fetchSchedule(type: apid.ChannelType, time: number, length: number = 24): Promise<void> {
-        let query: ScheduleQuery = {
+        const query: ScheduleQuery = {
             type: type,
             length: length,
             time: time,
-        }
+        };
 
         try {
             this.schedulePrograms = await <any> m.request({
@@ -47,7 +47,7 @@ class ScheduleApiModel extends ApiModel implements ScheduleApiModelInterface {
                 url: '/api/schedule',
                 data: query,
             });
-        } catch(err) {
+        } catch (err) {
             this.schedulePrograms = [];
             console.error('/api/schedule');
             console.error(err);
@@ -56,14 +56,14 @@ class ScheduleApiModel extends ApiModel implements ScheduleApiModelInterface {
     }
 
     /**
-    * channelId を指定して番組表を取得
-    * /api/schedule/{id}
-    */
+     * channelId を指定して番組表を取得
+     * /api/schedule/{id}
+     */
     public async fetchScheduleId(channelId: apid.ServiceItemId, time: number, days: number): Promise<void> {
-        let query = {
+        const query = {
             time: time,
             days: days,
-        }
+        };
 
         try {
             this.schedulePrograms = await <any> m.request({
@@ -71,7 +71,7 @@ class ScheduleApiModel extends ApiModel implements ScheduleApiModelInterface {
                 url: `/api/schedule/${ channelId }`,
                 data: query,
             });
-        } catch(err) {
+        } catch (err) {
             this.schedulePrograms = [];
             console.error(`/api/schedule/${ channelId }`);
             console.error(err);
@@ -80,28 +80,28 @@ class ScheduleApiModel extends ApiModel implements ScheduleApiModelInterface {
     }
 
     /**
-    * 放送中の番組情報を取得
-    * /api/schedule/broadcasting
-    */
+     * 放送中の番組情報を取得
+     * /api/schedule/broadcasting
+     */
     public async fetchScheduleBroadcasting(time: number = 0): Promise<void> {
-        let query = time > 0 ? `?time=${ time }` : '';
+        const query = time > 0 ? `?time=${ time }` : '';
 
         try {
             this.schedulePrograms = await <any> m.request({
                 method: 'GET',
                 url: `/api/schedule/broadcasting${ query }`,
             });
-        } catch(err) {
+        } catch (err) {
             this.schedulePrograms = [];
-            console.error(`/api/schedule/broadcasting`);
+            console.error('/api/schedule/broadcasting');
             console.error(err);
             this.openSnackbar('放映中の番組情報取得に失敗しました');
         }
     }
 
     /**
-    * 予約情報更新
-    */
+     * 予約情報更新
+     */
     public async startUpdateReserves(): Promise<void> {
         try {
             await m.request({
@@ -109,7 +109,7 @@ class ScheduleApiModel extends ApiModel implements ScheduleApiModelInterface {
                 url: '/api/schedule/update',
             });
             this.openSnackbar('予約情報更新を開始しました');
-        } catch(err) {
+        } catch (err) {
             console.error('/api/schedule/update');
             console.error(err);
             this.openSnackbar('予約更新に失敗しました');
@@ -117,10 +117,10 @@ class ScheduleApiModel extends ApiModel implements ScheduleApiModelInterface {
     }
 
     /**
-    * search
-    * @param option: apid.RuleSearch
-    * @return Promise<apid.ScheduleProgramItem[]>
-    */
+     * search
+     * @param option: apid.RuleSearch
+     * @return Promise<apid.ScheduleProgramItem[]>
+     */
     public async search(option: apid.RuleSearch): Promise<apid.ScheduleProgramItem[]> {
         return await <any> m.request({
             method: 'POST',
@@ -130,9 +130,9 @@ class ScheduleApiModel extends ApiModel implements ScheduleApiModelInterface {
     }
 
     /**
-    * schedule の取得
-    * @return apid.ScheduleProgram[]
-    */
+     * schedule の取得
+     * @return apid.ScheduleProgram[]
+     */
     public getSchedule(): apid.ScheduleProgram[] {
         return this.schedulePrograms;
     }

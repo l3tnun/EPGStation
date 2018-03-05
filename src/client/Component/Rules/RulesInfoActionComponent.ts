@@ -1,14 +1,14 @@
 import * as m from 'mithril';
-import Component from '../Component';
-import factory from '../../ViewModel/ViewModelFactory';
-import RulesInfoViewModel from '../../ViewModel/Rules/RulesInfoViewModel';
+import Util from '../../Util/Util';
 import BalloonViewModel from '../../ViewModel/Balloon/BalloonViewModel';
 import RulesDeleteViewModel from '../../ViewModel/Rules/RulesDeleteViewModel';
-import Util from '../../Util/Util';
+import RulesInfoViewModel from '../../ViewModel/Rules/RulesInfoViewModel';
+import factory from '../../ViewModel/ViewModelFactory';
+import Component from '../Component';
 
 /**
-* RulesInfoActionComponent
-*/
+ * RulesInfoActionComponent
+ */
 class RulesInfoActionComponent extends Component<void> {
     private viewModel: RulesInfoViewModel;
     private balloon: BalloonViewModel;
@@ -16,14 +16,14 @@ class RulesInfoActionComponent extends Component<void> {
 
     constructor() {
         super();
-        this.viewModel = <RulesInfoViewModel>(factory.get('RulesInfoViewModel'));
-        this.balloon = <BalloonViewModel>(factory.get('BalloonViewModel'));
-        this.deleteViewModel = <RulesDeleteViewModel>(factory.get('RulesDeleteViewModel'));
+        this.viewModel = <RulesInfoViewModel> factory.get('RulesInfoViewModel');
+        this.balloon = <BalloonViewModel> factory.get('BalloonViewModel');
+        this.deleteViewModel = <RulesDeleteViewModel> factory.get('RulesDeleteViewModel');
     }
 
     /**
-    * view
-    */
+     * view
+     */
     public view(): m.Child {
         return m('div', [
             m('hr', { style: 'margin: 0px;' }),
@@ -35,21 +35,21 @@ class RulesInfoActionComponent extends Component<void> {
                     onclick: () => {
                         this.viewModel.close();
                         setTimeout(() => {
-                            let rule = this.viewModel.get();
-                            if(rule === null) { return; }
+                            const rule = this.viewModel.get();
+                            if (rule === null) { return; }
                             Util.move('/search', { rule: rule.id });
                         }, 200);
-                    }
+                    },
                 }, '編集'),
                 m('button', {
                     type: 'button',
                     class: 'mdl-button mdl-js-button mdl-button--primary',
                     onclick: () => {
-                        let rule = this.viewModel.get();
+                        const rule = this.viewModel.get();
                         this.viewModel.close();
 
                         setTimeout(() => {
-                            if(rule === null) { return; }
+                            if (rule === null) { return; }
                             Util.move('/recorded', { rule: rule.id });
                         }, 200);
                     },
@@ -58,11 +58,11 @@ class RulesInfoActionComponent extends Component<void> {
                     type: 'button',
                     class: 'mdl-button mdl-js-button mdl-button--primary',
                     onclick: (e: Event) => {
-                        let rule = this.viewModel.get();
+                        const rule = this.viewModel.get();
                         this.viewModel.close();
 
                         setTimeout(() => {
-                            if(rule === null) { return; }
+                            if (rule === null) { return; }
                             this.deleteViewModel.set(rule);
                             this.balloon.open(RulesDeleteViewModel.id, e);
                         }, 200);

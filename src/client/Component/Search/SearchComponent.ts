@@ -1,27 +1,27 @@
 import * as m from 'mithril';
-import ParentComponent from '../ParentComponent';
 import { ViewModelStatus } from '../../Enums';
-import MainLayoutComponent from '../MainLayoutComponent';
-import factory from '../../ViewModel/ViewModelFactory';
-import SearchViewModel from '../../ViewModel/Search/SearchViewModel';
-import SearchOptionComponent from './SearchOptionComponent'
-import SearchResultsComponent from './SearchResultsComponent';
-import SearchAddComponent from './SearchAddComponent';
-import { BalloonComponent } from '../BalloonComponent';
-import ProgramInfoComponent from '../Program/ProgramInfoComponent';
-import ProgramInfoActionComponent from '../Program/ProgramInfoActionComponent';
-import ProgramInfoViewModel from '../../ViewModel/Program/ProgramInfoViewModel';
 import Scroll from '../../Util/Scroll';
+import ProgramInfoViewModel from '../../ViewModel/Program/ProgramInfoViewModel';
+import SearchViewModel from '../../ViewModel/Search/SearchViewModel';
+import factory from '../../ViewModel/ViewModelFactory';
+import { BalloonComponent } from '../BalloonComponent';
+import MainLayoutComponent from '../MainLayoutComponent';
+import ParentComponent from '../ParentComponent';
+import ProgramInfoActionComponent from '../Program/ProgramInfoActionComponent';
+import ProgramInfoComponent from '../Program/ProgramInfoComponent';
+import SearchAddComponent from './SearchAddComponent';
+import SearchOptionComponent from './SearchOptionComponent';
+import SearchResultsComponent from './SearchResultsComponent';
 
 /**
-* SearchComponent
-*/
+ * SearchComponent
+ */
 class SearchComponent extends ParentComponent<void> {
     private viewModel: SearchViewModel;
 
     constructor() {
         super();
-        this.viewModel = <SearchViewModel>(factory.get('SearchViewModel'));
+        this.viewModel = <SearchViewModel> factory.get('SearchViewModel');
     }
 
     protected initViewModel(status: ViewModelStatus = 'init'): void {
@@ -30,13 +30,13 @@ class SearchComponent extends ParentComponent<void> {
     }
 
     /**
-    * page name
-    */
+     * page name
+     */
     protected getComponentName(): string { return 'Search'; }
 
     /**
-    * view
-    */
+     * view
+     */
     public view(): m.Child {
         return m(MainLayoutComponent, {
             header: { title: typeof m.route.param('rule') === 'undefined' ? '検索' : 'ルール編集' },
@@ -46,13 +46,14 @@ class SearchComponent extends ParentComponent<void> {
                     m(SearchResultsComponent),
                     m(SearchAddComponent),
                 ]),
-                //scroll top button
-                m('button', { class: 'fab-left-bottom mdl-shadow--8dp mdl-button mdl-js-button mdl-button--fab mdl-button--colored',
+                // scroll top button
+                m('button', {
+                    class: 'fab-left-bottom mdl-shadow--8dp mdl-button mdl-js-button mdl-button--fab mdl-button--colored',
                     onclick: () => {
-                        let mainLayout = document.getElementsByClassName('mdl-layout__content')[0];
+                        const mainLayout = document.getElementsByClassName('mdl-layout__content')[0];
                         Scroll.scrollTo(mainLayout, mainLayout.scrollTop, 0, mainLayout.scrollTop - window.innerHeight < 600 ? 300 : 500);
-                    }
-                }, m('i', { class: 'material-icons' }, 'arrow_upward') ),
+                    },
+                }, m('i', { class: 'material-icons' }, 'arrow_upward')),
             ],
             notMainContent: [
                 m(BalloonComponent, {

@@ -1,30 +1,30 @@
 import * as m from 'mithril';
-import Component from '../Component';
-import factory from '../../ViewModel/ViewModelFactory';
-import ReservesMenuViewModel from '../../ViewModel/Reserves/ReservesMenuViewModel';
 import Util from '../../Util/Util';
+import ReservesMenuViewModel from '../../ViewModel/Reserves/ReservesMenuViewModel';
+import factory from '../../ViewModel/ViewModelFactory';
+import Component from '../Component';
 
 /**
-* ReservesMenuComponent
-*/
+ * ReservesMenuComponent
+ */
 class ReservesMenuComponent extends Component<void> {
     private viewModel: ReservesMenuViewModel;
 
     constructor() {
         super();
-        this.viewModel = <ReservesMenuViewModel>(factory.get('ReservesMenuViewModel'));
+        this.viewModel = <ReservesMenuViewModel> factory.get('ReservesMenuViewModel');
     }
 
     /**
-    * view
-    */
+     * view
+     */
     public view(): m.Child {
         return m('div', { class: 'reserve-menu' }, [
             this.createItem({
                 onclick: () => {
                     this.viewModel.close();
-                    let ruleId = this.viewModel.getRuleId();
-                    if(ruleId === null) { return; }
+                    const ruleId = this.viewModel.getRuleId();
+                    if (ruleId === null) { return; }
                     setTimeout(() => { Util.move('/search', { rule: ruleId }); }, 200);
                 },
                 style: this.viewModel.getRuleId() === null ? 'display: none;' : '',
@@ -41,8 +41,8 @@ class ReservesMenuComponent extends Component<void> {
         attrs.class = 'menu-item';
 
         return m('div', attrs, [
-            m('i', { class: 'menu-icon material-icons' }, iconName ),
-            m('div', { class: 'menu-text' }, text)
+            m('i', { class: 'menu-icon material-icons' }, iconName),
+            m('div', { class: 'menu-text' }, text),
         ]);
     }
 }

@@ -1,18 +1,18 @@
 import * as m from 'mithril';
-import Component from '../Component';
-import factory from '../../ViewModel/ViewModelFactory';
-import StreamInfoViewModel from '../../ViewModel/Stream/StreamInfoViewModel';
 import Util from '../../Util/Util';
+import StreamInfoViewModel from '../../ViewModel/Stream/StreamInfoViewModel';
+import factory from '../../ViewModel/ViewModelFactory';
+import Component from '../Component';
 
 /**
-* StreamNavigationInfoComponent
-*/
+ * StreamNavigationInfoComponent
+ */
 class StreamNavigationInfoComponent extends Component<void> {
     private viewModel: StreamInfoViewModel;
 
     constructor() {
         super();
-        this.viewModel = <StreamInfoViewModel>(factory.get('StreamInfoViewModel'));
+        this.viewModel = <StreamInfoViewModel> factory.get('StreamInfoViewModel');
     }
 
     public onremove(vnode: m.VnodeDOM<void, this>): any {
@@ -22,10 +22,10 @@ class StreamNavigationInfoComponent extends Component<void> {
     }
 
     /**
-    * view
-    */
+     * view
+     */
     public view(): m.Child[] | null {
-        if(this.viewModel.getStreamInfos().length === 0) { return null; }
+        if (this.viewModel.getStreamInfos().length === 0) { return null; }
 
         return [
             m('span', { class: 'mdl-layout-title' }, '配信中'),

@@ -5,7 +5,7 @@
         "member-ordering": [
             true,
             {
-                "order": [ "static-field", "instance-field", "constructor" ]
+                "order": [ "instance-field", "constructor" ]
             }
         ],
         "no-empty-interface": true,
@@ -49,7 +49,7 @@
         "no-debugger": true,
         "no-duplicate-super": true,
         "no-duplicate-variable": [ true, "check-parameters" ],
-        "no-empty": true,
+        "no-empty": false,
         "no-eval": true,
         "no-invalid-template-strings": true,
         "no-invalid-this": [ true, "check-function-in-method" ],

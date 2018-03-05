@@ -1,29 +1,29 @@
-import * as m from 'mithril';
 import { throttle } from 'lodash';
-import ParentComponent from '../ParentComponent';
-import { ViewModelStatus } from '../../Enums';
-import MainLayoutComponent from '../MainLayoutComponent';
-import factory from '../../ViewModel/ViewModelFactory';
+import * as m from 'mithril';
 import * as apid from '../../../../api';
-import RecordedViewModel from '../../ViewModel/Recorded/RecordedViewModel';
-import { BalloonComponent } from '../BalloonComponent';
+import { ViewModelStatus } from '../../Enums';
+import DateUtil from '../../Util/DateUtil';
+import Util from '../../Util/Util';
 import BalloonViewModel from '../../ViewModel/Balloon/BalloonViewModel';
-import RecordedInfoComponent from '../Recorded/RecordedInfoComponent';
+import ProgramInfoViewModel from '../../ViewModel/Program/ProgramInfoViewModel';
 import RecordedInfoViewModel from '../../ViewModel/Recorded/RecordedInfoViewModel';
 import RecordedMenuViewModel from '../../ViewModel/Recorded/RecordedMenuViewModel';
-import RecordedMenuComponent from '../Recorded/RecordedMenuComponent';
+import RecordedViewModel from '../../ViewModel/Recorded/RecordedViewModel';
+import ReservesMenuViewModel from '../../ViewModel/Reserves/ReservesMenuViewModel';
+import ReservesViewModel from '../../ViewModel/Reserves/ReservesViewModel';
+import TopPageViewModel from '../../ViewModel/TopPageViewModel';
+import factory from '../../ViewModel/ViewModelFactory';
+import { BalloonComponent } from '../BalloonComponent';
+import MainLayoutComponent from '../MainLayoutComponent';
+import ParentComponent from '../ParentComponent';
+import ProgramInfoComponent from '../Program/ProgramInfoComponent';
 import RecordedDeleteComponent from '../Recorded/RecordedDeleteComponent';
 import RecordedEncodeComponent from '../Recorded/RecordedEncodeComponent';
-import TabComponent from '../TabComponent';
-import TopPageViewModel from '../../ViewModel/TopPageViewModel';
-import ReservesViewModel from '../../ViewModel/Reserves/ReservesViewModel';
-import ProgramInfoViewModel from '../../ViewModel/Program/ProgramInfoViewModel';
-import ReservesMenuViewModel from '../../ViewModel/Reserves/ReservesMenuViewModel';
-import ProgramInfoComponent from '../Program/ProgramInfoComponent';
-import ReservesMenuComponent from '../Reserves/ReservesMenuComponent';
+import RecordedInfoComponent from '../Recorded/RecordedInfoComponent';
+import RecordedMenuComponent from '../Recorded/RecordedMenuComponent';
 import ReservesDeleteComponent from '../Reserves/ReservesDeleteComponent';
-import Util from '../../Util/Util';
-import DateUtil from '../../Util/DateUtil';
+import ReservesMenuComponent from '../Reserves/ReservesMenuComponent';
+import TabComponent from '../TabComponent';
 
 interface ScrollPosition {
     main: number;
@@ -32,8 +32,8 @@ interface ScrollPosition {
 }
 
 /**
-* TopPageComponent
-*/
+ * TopPageComponent
+ */
 class TopPageComponent extends ParentComponent<void> {
     private viewModel: TopPageViewModel;
     private recordedViewModel: RecordedViewModel;
@@ -47,15 +47,15 @@ class TopPageComponent extends ParentComponent<void> {
 
     constructor() {
         super();
-        this.viewModel = <TopPageViewModel>(factory.get('TopPageViewModel'));
-        this.recordedViewModel = <RecordedViewModel>(factory.get('RecordedViewModel'));
-        this.recordedMenuViewModel = <RecordedMenuViewModel>(factory.get('RecordedMenuViewModel'));
-        this.recordedInfoViewModel = <RecordedInfoViewModel>(factory.get('RecordedInfoViewModel'));
-        this.reservesViewModel = <ReservesViewModel>(factory.get('ReservesViewModel'));
-        this.reservesMenuViewModel = <ReservesMenuViewModel>(factory.get('ReservesMenuViewModel'));
-        this.programInfo = <ProgramInfoViewModel>(factory.get('ProgramInfoViewModel'));
-        this.balloon = <BalloonViewModel>(factory.get('BalloonViewModel'));
-        this.recordedMenuViewModel = <RecordedMenuViewModel>(factory.get('RecordedMenuViewModel'));
+        this.viewModel = <TopPageViewModel> factory.get('TopPageViewModel');
+        this.recordedViewModel = <RecordedViewModel> factory.get('RecordedViewModel');
+        this.recordedMenuViewModel = <RecordedMenuViewModel> factory.get('RecordedMenuViewModel');
+        this.recordedInfoViewModel = <RecordedInfoViewModel> factory.get('RecordedInfoViewModel');
+        this.reservesViewModel = <ReservesViewModel> factory.get('ReservesViewModel');
+        this.reservesMenuViewModel = <ReservesMenuViewModel> factory.get('ReservesMenuViewModel');
+        this.programInfo = <ProgramInfoViewModel> factory.get('ProgramInfoViewModel');
+        this.balloon = <BalloonViewModel> factory.get('BalloonViewModel');
+        this.recordedMenuViewModel = <RecordedMenuViewModel> factory.get('RecordedMenuViewModel');
     }
 
     protected async initViewModel(status: ViewModelStatus = 'init'): Promise<void> {
@@ -65,19 +65,19 @@ class TopPageComponent extends ParentComponent<void> {
         await this.reservesViewModel.init(status);
         this.setRestorePositionFlag(status);
 
-        if(status !== 'init') {
+        if (status !== 'init') {
             this.recordedInfoViewModel.update();
         }
     }
 
     /**
-    * page name
-    */
+     * page name
+     */
     protected getComponentName(): string { return 'TopPage'; }
 
     /**
-    * view
-    */
+     * view
+     */
     public view(): m.Children {
         return m(MainLayoutComponent, {
             header: { title: 'EPGStation' },
@@ -133,21 +133,25 @@ class TopPageComponent extends ParentComponent<void> {
     }
 
     /**
-    * main content
-    * @return m.Child
-    */
+     * main content
+     * @return m.Child
+     */
     private createContent(): m.Child {
         return m('div', {
             class: 'top-page' + (window.innerWidth < 800 ? ' non-scroll' : ''),
             oncreate: (vnode: m.VnodeDOM<void, this>) => {
                 // scroll position を保存
-                const main = <HTMLElement>vnode.dom;
-                const recorded = <HTMLElement>document.getElementById(TopPageComponent.recordedId);
-                const reserves = <HTMLElement>document.getElementById(TopPageComponent.reservesId);
+                const main = <HTMLElement> vnode.dom;
+                const recorded = <HTMLElement> document.getElementById(TopPageComponent.recordedId);
+                const reserves = <HTMLElement> document.getElementById(TopPageComponent.reservesId);
                 let url = location.href;
 
                 main.addEventListener('scroll', throttle(() => {
-                    if(url !== location.href) { url = location.href; return; }
+                    if (url !== location.href) {
+                        url = location.href;
+
+                        return;
+                    }
                     this.scrollPosition.main = main.scrollTop;
                     this.scrollPosition.recorded = 0;
                     this.scrollPosition.reserves = 0;
@@ -155,14 +159,22 @@ class TopPageComponent extends ParentComponent<void> {
                 }, 50));
 
                 recorded.addEventListener('scroll', throttle(() => {
-                    if(url !== location.href) { url = location.href; return; }
+                    if (url !== location.href) {
+                        url = location.href;
+
+                        return;
+                    }
                     this.scrollPosition.main = 0;
                     this.scrollPosition.recorded = recorded.scrollTop;
                     this.saveHistoryData(this.scrollPosition);
                 }, 50));
 
                 reserves.addEventListener('scroll', throttle(() => {
-                    if(url !== location.href) { url = location.href; return; }
+                    if (url !== location.href) {
+                        url = location.href;
+
+                        return;
+                    }
                     this.scrollPosition.main = 0;
                     this.scrollPosition.reserves = reserves.scrollTop;
                     this.saveHistoryData(this.scrollPosition);
@@ -170,12 +182,12 @@ class TopPageComponent extends ParentComponent<void> {
 
             },
             onupdate: (vnode: m.VnodeDOM<void, this>) => {
-                if(!this.isNeedRestorePosition) { return; }
+                if (!this.isNeedRestorePosition) { return; }
                 this.isNeedRestorePosition = false;
 
                 // scroll position の復元
-                const position = <ScrollPosition | null>this.getHistoryData();
-                if(position === null) { return; }
+                const position = <ScrollPosition | null> this.getHistoryData();
+                if (position === null) { return; }
 
                 vnode.dom.scrollTop = position.main;
                 document.getElementById(TopPageComponent.recordedId)!.scrollTop = position.recorded;
@@ -189,9 +201,9 @@ class TopPageComponent extends ParentComponent<void> {
     }
 
     /**
-    * recorded content
-    * @return m.Child
-    */
+     * recorded content
+     * @return m.Child
+     */
     private createRecorded(): m.Child {
         const viewLength = this.recordedViewModel.getRecorded().recorded.length;
         const total = this.recordedViewModel.getRecorded().total;
@@ -212,10 +224,10 @@ class TopPageComponent extends ParentComponent<void> {
     }
 
     /**
-    * recorded card
-    * @param recorded: apid.RecordedProgram
-    * @return m.Child
-    */
+     * recorded card
+     * @param recorded: apid.RecordedProgram
+     * @return m.Child
+     */
     private createRecordedCard(recorded: apid.RecordedProgram): m.Child {
         return m('div', { class: 'recorded-card mdl-card mdl-cell mdl-cell--12-col' }, [
             m('button', {
@@ -223,49 +235,52 @@ class TopPageComponent extends ParentComponent<void> {
                 onclick: (e: Event) => {
                     this.recordedMenuViewModel.set(recorded);
                     this.balloon.open(RecordedMenuViewModel.id, e);
-                }
+                },
             }, [
-                m('i', { class: 'material-icons' }, 'more_vert' ),
+                m('i', { class: 'material-icons' }, 'more_vert'),
             ]),
             m('div', {
                 onclick: (e: Event) => {
                     this.recordedInfoViewModel.set(recorded);
                     this.balloon.open(RecordedInfoViewModel.id, e);
-                }
+                },
             }, [
                 m('div', { class: 'thumbnail-container' }, [
                     m('img', {
                         class: 'thumbnail',
                         src: recorded.hasThumbnail ? `/api/recorded/${ recorded.id }/thumbnail` : '/img/noimg.png',
-                        onerror: (e: Event) => { (<HTMLImageElement>e.target).src = '/img/noimg.png'; },
+                        onerror: (e: Event) => { (<HTMLImageElement> e.target).src = '/img/noimg.png'; },
                     }),
                 ]),
                 m('div', { class: 'text-container' }, [
-                    m('div', { class: 'title' }, recorded.name ),
+                    m('div', { class: 'title' }, recorded.name),
                     m('div', { class: 'channel' }, this.recordedViewModel.getChannelName(recorded.channelId)),
-                    m('div', { class: 'time' }, this.recordedViewModel.getTimeStr(recorded) ),
-                    m('div', { class: 'description' }, recorded.description ),
+                    m('div', { class: 'time' }, this.recordedViewModel.getTimeStr(recorded)),
+                    m('div', { class: 'description' }, recorded.description),
                 ]),
             ]),
         ]);
     }
 
     /**
-    * reserves content
-    * @return m.Child
-    */
+     * reserves content
+     * @return m.Child
+     */
     private createReserves(): m.Child {
         const viewLength = this.reservesViewModel.getReserves().reserves.length;
         const total = this.reservesViewModel.getReserves().total;
         const conflictsCount = this.viewModel.getConflictsCount();
-        const title = conflictsCount === 0 ? `予約 ${ viewLength }/${ total }` : m('div', {
-            class: 'mdl-badge',
-            'data-badge': conflictsCount,
-            onclick: () => { Util.move('/reserves', { mode: 'conflicts' }); },
-        }, `予約 ${ viewLength }/${ total }`);
+        const title = conflictsCount === 0 ? `予約 ${ viewLength }/${ total }` :
+            m('div', {
+                // tslint:disable-next-line
+                class: 'mdl-badge', 
+                'data-badge': conflictsCount,
+                // tslint:disable-next-line
+                onclick: () => { Util.move('/reserves', { mode: 'conflicts' }); },
+            }, `予約 ${ viewLength }/${ total }`);
 
         return m('div', { class: 'reserves mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col' }, [
-            m('div', { class: 'parent-title mdl-badge' }, title ),
+            m('div', { class: 'parent-title mdl-badge' }, title),
             m('div', {
                 id: TopPageComponent.reservesId,
                 class: 'child non-scroll',
@@ -274,15 +289,15 @@ class TopPageComponent extends ParentComponent<void> {
                     return this.createReserveCard(reserve);
                 }),
                 this.createMore(viewLength, total, '/reserves', { page: 2 }),
-            ])
+            ]),
         ]);
     }
 
     /**
-    * reserve card
-    * @param reserve: apid.Reserve
-    * @return m.Child
-    */
+     * reserve card
+     * @param reserve: apid.Reserve
+     * @return m.Child
+     */
     private createReserveCard(reserve: apid.Reserve): m.Child {
         return m('div', { class: 'reserves-card not-hide mdl-card mdl-cell mdl-cell--12-col' }, [
             m('button', {
@@ -293,9 +308,9 @@ class TopPageComponent extends ParentComponent<void> {
                     this.balloon.open(ReservesMenuViewModel.id, e);
                 },
             }, [
-                m('i', { class: 'material-icons' }, 'more_vert' ) //menu icon
+                m('i', { class: 'material-icons' }, 'more_vert'), // menu icon
             ]),
-            //番組情報
+            // 番組情報
             m('div', {
                 class: 'mdl-card__supporting-text',
                 onclick: (event: Event) => { this.openProgramInfo(event, reserve); },
@@ -304,48 +319,48 @@ class TopPageComponent extends ParentComponent<void> {
                 m('div', { class: 'time' }, this.getReservesCardTime(reserve.program)),
                 m('div', { class: 'channel' }, this.reservesViewModel.getChannelName(reserve.program.channelId)),
                 m('div', { class: 'description' }, reserve.program.description),
-            ])
+            ]),
         ]);
     }
 
     /**
-    * click 時に programInfo を開く
-    * @param event: Event
-    * @param reserve: reserve
-    */
+     * click 時に programInfo を開く
+     * @param event: Event
+     * @param reserve: reserve
+     */
     private openProgramInfo(event: Event, reserve: apid.Reserve): void {
-        let channel = this.reservesViewModel.getChannel(reserve.program.channelId);
-        if(channel === null) { return; }
+        const channel = this.reservesViewModel.getChannel(reserve.program.channelId);
+        if (channel === null) { return; }
 
         this.programInfo.set(reserve.program, channel);
         this.balloon.open(ProgramInfoViewModel.id, event);
     }
 
     /**
-    * getReservesCardTime
-    * @return string
-    */
+     * getReservesCardTime
+     * @return string
+     */
     private getReservesCardTime(program: apid.ReserveProgram): string {
-        let start = DateUtil.getJaDate(new Date(program.startAt));
-        let end = DateUtil.getJaDate(new Date(program.endAt));
-        let duration = Math.floor((program.endAt - program.startAt) / 1000 / 60);
+        const start = DateUtil.getJaDate(new Date(program.startAt));
+        const end = DateUtil.getJaDate(new Date(program.endAt));
+        const duration = Math.floor((program.endAt - program.startAt) / 1000 / 60);
 
         return DateUtil.format(start, 'MM/dd(w) hh:mm:ss') + '~' + DateUtil.format(end, 'hh:mm:ss') + `(${ duration }分)`;
     }
 
     /**
-    * more
-    * @param viewLength: 表示件数
-    * @param total: 総数
-    * @param href: url
-    */
+     * more
+     * @param viewLength: 表示件数
+     * @param total: 総数
+     * @param href: url
+     */
     private createMore(viewLength: number, total: number, href: string, query: { [key: string]: any }): m.Child | null {
-        if(!(total > viewLength)) { return null; }
+        if (!(total > viewLength)) { return null; }
 
         return m('div', { class: 'more' } , [
             m('a', {
                 class: 'mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--primary',
-                onclick: () => { Util.move(href, query); }
+                onclick: () => { Util.move(href, query); },
             }, 'more'),
         ]);
     }

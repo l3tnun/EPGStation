@@ -1,12 +1,12 @@
-import * as m from 'mithril';
 import * as Hls from 'hls.js';
-import Component from '../Component';
-import factory from '../../ViewModel/ViewModelFactory';
+import * as m from 'mithril';
 import StreamWatchViewModel from '../../ViewModel/Stream/StreamWatchViewModel';
+import factory from '../../ViewModel/ViewModelFactory';
+import Component from '../Component';
 
 /**
-* StreamWatchVideoComponent
-*/
+ * StreamWatchVideoComponent
+ */
 class StreamWatchVideoComponent extends Component<void> {
     private viewModel: StreamWatchViewModel;
     private hls: Hls | null = null;
@@ -15,14 +15,14 @@ class StreamWatchVideoComponent extends Component<void> {
     constructor() {
         super();
 
-        this.viewModel = <StreamWatchViewModel>(factory.get('StreamWatchViewModel'));
+        this.viewModel = <StreamWatchViewModel> factory.get('StreamWatchViewModel');
     }
 
     /**
-    * view
-    */
+     * view
+     */
     public view(): m.Child {
-        if(this.viewModel.isEnable()) {
+        if (this.viewModel.isEnable()) {
             return m('video', {
                 preload: 'none',
                 height: '$auto',
@@ -30,83 +30,83 @@ class StreamWatchVideoComponent extends Component<void> {
                 controls: ' ',
                 playsinline: ' ',
                 oncreate: (vnode: m.VnodeDOM<void, this>) => {
-                    if(typeof m.route.param('stream') === 'undefined') { return; }
+                    if (typeof m.route.param('stream') === 'undefined') { return; }
 
-                    //set source
+                    // set source
                     this.videoSrc = this.viewModel.getSource();
-                    (<HTMLVideoElement>(vnode.dom)).src = this.videoSrc;
+                    (<HTMLVideoElement> vnode.dom).src = this.videoSrc;
 
-                    //hls.js
-                    this.createHls(<HTMLVideoElement>vnode.dom);
-                    if(this.hls !== null) { return; }
+                    // hls.js
+                    this.createHls(<HTMLVideoElement> vnode.dom);
+                    if (this.hls !== null) { return; }
 
-                    //error 処理追加
-                    (<HTMLVideoElement>(vnode.dom)).addEventListener('error', () => {
-                        if(m.route.get().split('?')[0].indexOf('/stream') !== -1) {
+                    // error 処理追加
+                    (<HTMLVideoElement> vnode.dom).addEventListener('error', () => {
+                        if (m.route.get().split('?')[0].indexOf('/stream') !== -1) {
                             this.viewModel.openSnackbar('ビデオ再生に失敗しました');
                         }
                     }, true);
 
-                    //再生
+                    // 再生
                     try {
-                        (<HTMLVideoElement>(vnode.dom)).load();
-                        (<HTMLVideoElement>(vnode.dom)).play();
-                    } catch(err) {
+                        (<HTMLVideoElement> vnode.dom).load();
+                        (<HTMLVideoElement> vnode.dom).play();
+                    } catch (err) {
                         console.error(err);
                     }
                 },
                 onupdate: (vnode: m.VnodeDOM<void, this>) => {
-                    if(typeof m.route.param('stream') === 'undefined') { return; }
+                    if (typeof m.route.param('stream') === 'undefined') { return; }
 
                     // video src とページの stream のズレを修正
-                    if(this.viewModel.getSource() !== this.videoSrc) {
+                    if (this.viewModel.getSource() !== this.videoSrc) {
                         this.videoSrc = this.viewModel.getSource();
                         try {
-                            (<HTMLVideoElement>(vnode.dom)).pause();
-                        } catch(err) {
+                            (<HTMLVideoElement> vnode.dom).pause();
+                        } catch (err) {
                             console.error(err);
                         }
                         try {
-                            if(this.hls === null) {
-                                (<HTMLVideoElement>(vnode.dom)).src = this.videoSrc;
-                                (<HTMLVideoElement>(vnode.dom)).load();
-                                (<HTMLVideoElement>(vnode.dom)).play();
+                            if (this.hls === null) {
+                                (<HTMLVideoElement> vnode.dom).src = this.videoSrc;
+                                (<HTMLVideoElement> vnode.dom).load();
+                                (<HTMLVideoElement> vnode.dom).play();
                             } else {
                                 this.destoryHls();
-                                this.createHls(<HTMLVideoElement>vnode.dom);
+                                this.createHls(<HTMLVideoElement> vnode.dom);
                             }
-                        } catch(err) {
+                        } catch (err) {
                             console.error(err);
                         }
                     }
                 },
                 onremove: (vnode: m.VnodeDOM<void, this>) => {
                     try {
-                        (<HTMLVideoElement>(vnode.dom)).pause();
-                        (<HTMLVideoElement>(vnode.dom)).src = '';
-                        (<HTMLVideoElement>(vnode.dom)).load();
-                    } catch(err) {
+                        (<HTMLVideoElement> vnode.dom).pause();
+                        (<HTMLVideoElement> vnode.dom).src = '';
+                        (<HTMLVideoElement> vnode.dom).load();
+                    } catch (err) {
                         console.log(err);
                     }
 
                     this.destoryHls();
-                }
+                },
             });
         } else {
             // 視聴可能になるまで待機中
-            return m('div', { class: 'video-player-background' },[
+            return m('div', { class: 'video-player-background' }, [
                 m('div', {
-                    class: 'mdl-spinner mdl-spinner--single-color mdl-js-spinner is-active'
-                })
+                    class: 'mdl-spinner mdl-spinner--single-color mdl-js-spinner is-active',
+                }),
             ]);
         }
     }
 
     /**
-    * create hls
-    */
+     * create hls
+     */
     private createHls(element: HTMLVideoElement): void {
-        if(!Hls.isSupported()) { return; }
+        if (!Hls.isSupported()) { return; }
 
         this.hls = new Hls();
         this.hls.loadSource(this.videoSrc);
@@ -117,10 +117,10 @@ class StreamWatchVideoComponent extends Component<void> {
     }
 
     /**
-    * destory hls
-    */
+     * destory hls
+     */
     private destoryHls(): void {
-        if(this.hls === null) { return; }
+        if (this.hls === null) { return; }
         this.hls.destroy();
         this.hls = null;
     }
