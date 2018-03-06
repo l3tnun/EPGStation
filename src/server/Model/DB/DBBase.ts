@@ -2,8 +2,8 @@ import Model from '../Model';
 import DBOperator from './DBOperator';
 
 /**
-* DBBase クラス
-*/
+ * DBBase クラス
+ */
 abstract class DBBase extends Model {
     protected operator: DBOperator;
 

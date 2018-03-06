@@ -1,10 +1,10 @@
 import { Operation } from 'express-openapi';
-import * as api from '../../../../api';
-import factory from '../../../../../Model/ModelFactory';
 import { StreamModelInfo, StreamsModelInterface } from '../../../../../Model/Api/StreamsModel';
+import factory from '../../../../../Model/ModelFactory';
+import * as api from '../../../../api';
 
-export const get: Operation = async (req, res) => {
-    let streams = <StreamsModelInterface>(factory.get('StreamsModel'));
+export const get: Operation = async(req, res) => {
+    const streams = <StreamsModelInterface> factory.get('StreamsModel');
 
     let info: StreamModelInfo | null = null;
     try {
@@ -16,46 +16,46 @@ export const get: Operation = async (req, res) => {
         res.setHeader('Content-Type', 'video/MP2T');
         res.status(200);
 
-        //接続切断時
-        req.on('close', async () => {
-            if(info !== null) { info.stream.countDown(); }
+        // 接続切断時
+        req.on('close', async() => {
+            if (info !== null) { info.stream.countDown(); }
             await streams.stop(info!.streamNumber);
         });
 
-        if(encChild !== null) {
+        if (encChild !== null) {
             encChild.stdout.pipe(res);
 
             // enc コマンド終了時
-            encChild.on('exit', async () => {
-                if(info !== null) { info.stream.resetCount(); }
+            encChild.on('exit', async() => {
+                if (info !== null) { info.stream.resetCount(); }
                 res.end();
             });
 
             // enc コマンドエラー時
-            encChild.on('error', async () => {
-                if(info !== null) { info.stream.resetCount(); }
+            encChild.on('error', async() => {
+                if (info !== null) { info.stream.resetCount(); }
                 res.end();
             });
 
             // カウントアップする
             info.stream.countUp();
-        } else if(mirakurunStream !== null) {
+        } else if (mirakurunStream !== null) {
             // 無変換
             mirakurunStream.pipe(res);
 
             // ストリーム終了 or エラー時の処理
-            mirakurunStream.on('close', async () => {
-                if(info !== null) { info.stream.resetCount(); }
+            mirakurunStream.on('close', async() => {
+                if (info !== null) { info.stream.resetCount(); }
                 res.end();
             });
 
-            mirakurunStream.on('exit', async () => {
-                if(info !== null) { info.stream.resetCount(); }
+            mirakurunStream.on('exit', async() => {
+                if (info !== null) { info.stream.resetCount(); }
                 res.end();
             });
 
-            mirakurunStream.on('error', async () => {
-                if(info !== null) { info.stream.resetCount(); }
+            mirakurunStream.on('error', async() => {
+                if (info !== null) { info.stream.resetCount(); }
                 res.end();
             });
 
@@ -66,10 +66,10 @@ export const get: Operation = async (req, res) => {
             info.stream.resetCount();
             throw new Error('CreatetMpegTsLiveStreamChildError');
         }
-    } catch(err) {
+    } catch (err) {
         api.responseServerError(res, err.message);
-        if(info !== null) {
-            (<StreamModelInfo>info).stream.resetCount();
+        if (info !== null) {
+            (<StreamModelInfo> info).stream.resetCount();
         }
     }
 };
@@ -84,7 +84,7 @@ get.apiDoc = {
             in: 'path',
             description: 'channel id',
             required: true,
-            type: 'integer'
+            type: 'integer',
         },
         {
             name: 'mode',
@@ -92,19 +92,19 @@ get.apiDoc = {
             description: 'encode mode',
             required: true,
             type: 'integer',
-        }
+        },
     ],
     produces: ['video/MP2T'],
     responses: {
         200: {
-            description: 'mpegts ストリーム'
+            description: 'mpegts ストリーム',
         },
         default: {
             description: '予期しないエラー',
             schema: {
-                $ref: '#/definitions/Error'
-            }
-        }
-    }
+                $ref: '#/definitions/Error',
+            },
+        },
+    },
 };
 

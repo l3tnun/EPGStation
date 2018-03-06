@@ -1,16 +1,16 @@
 import { Operation } from 'express-openapi';
-import * as api from '../../../api';
-import factory from '../../../../Model/ModelFactory';
 import { RecordedModelInterface } from '../../../../Model/Api/RecordedModel';
+import factory from '../../../../Model/ModelFactory';
+import * as api from '../../../api';
 
-export const get: Operation = async (req, res) => {
-    let recordeds = <RecordedModelInterface>(factory.get('RecordedModel'));
+export const get: Operation = async(req, res) => {
+    const recordeds = <RecordedModelInterface> factory.get('RecordedModel');
 
     try {
-        let filePath = await recordeds.getThumbnailPath(req.params.id);
+        const filePath = await recordeds.getThumbnailPath(req.params.id);
         res.sendFile(filePath);
-    } catch(err) {
-        if(err.message === RecordedModelInterface.NotFoundRecordedThumbnailError) {
+    } catch (err) {
+        if (err.message === RecordedModelInterface.NotFoundRecordedThumbnailError) {
             api.responseError(res, { code: 404,  message: 'Recorded Thumbnail is not Found' });
         } else {
             api.responseServerError(res, err.message);
@@ -28,25 +28,25 @@ get.apiDoc = {
             in: 'path',
             description: 'recorded id',
             required: true,
-            type: 'integer'
+            type: 'integer',
         },
     ],
     produces: [
-        "image/jpg"
+        'image/jpg',
     ],
     responses: {
         200: {
-            description: 'ok'
+            description: 'ok',
         },
         404: {
-            description: 'Not found'
+            description: 'Not found',
         },
         default: {
             description: '予期しないエラー',
             schema: {
-                $ref: '#/definitions/Error'
-            }
-        }
-    }
+                $ref: '#/definitions/Error',
+            },
+        },
+    },
 };
 

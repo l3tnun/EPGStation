@@ -27,8 +27,8 @@ interface ProgramSettingModelInterface extends Model {
 }
 
 /**
-* ProgramSettingModel
-*/
+ * ProgramSettingModel
+ */
 class ProgramSettingModel extends Model implements ProgramSettingModelInterface {
     private storageModel: StorageModelInterface;
 
@@ -41,18 +41,18 @@ class ProgramSettingModel extends Model implements ProgramSettingModelInterface 
     }
 
     /**
-    * init
-    */
+     * init
+     */
     public init(): void {
-        let stored = this.get();
+        const stored = this.get();
 
         // 設定情報がない場合は作成
-        if(stored === null) {
+        if (stored === null) {
             this.value = this.getDefaultValue();
             try {
                 this.storageModel.set(ProgramSettingModelInterface.storageKey, this.value);
                 this.isEnable = true;
-            } catch(err) {
+            } catch (err) {
                 this.isEnable = false;
                 console.error('ProgramSettingModel storage write error');
                 console.error(err);
@@ -64,30 +64,30 @@ class ProgramSettingModel extends Model implements ProgramSettingModelInterface 
     }
 
     /**
-    * 設定情報を取得
-    */
+     * 設定情報を取得
+     */
     public get(): ProgramSettingValue | null {
         return this.storageModel.get(ProgramSettingModelInterface.storageKey);
     }
 
     /**
-    * 設定情報を削除
-    */
+     * 設定情報を削除
+     */
     public remove(): void {
         this.storageModel.remove(ProgramSettingModelInterface.storageKey);
     }
 
     /**
-    * 設定情報の更新
-    */
+     * 設定情報の更新
+     */
     public update(): void {
-        if(!this.isEnable || this.value === null) { return; }
+        if (!this.isEnable || this.value === null) { return; }
         this.storageModel.set(ProgramSettingModelInterface.storageKey, this.value);
     }
 
     /**
-    * set default value
-    */
+     * set default value
+     */
     public getDefaultValue(): ProgramSettingValue {
         return {
             tablet: {

@@ -1,12 +1,12 @@
-import ViewModel from '../ViewModel';
 import * as apid from '../../../../api';
 import { RulesApiModelInterface } from '../../Model/Api/RulesApiModel';
 import { BalloonModelInterface } from '../../Model/Balloon/BallonModel';
 import { SnackbarModelInterface } from '../../Model/Snackbar/SnackbarModel';
+import ViewModel from '../ViewModel';
 
 /**
-* RulesDeleteViewModel
-*/
+ * RulesDeleteViewModel
+ */
 class RulesDeleteViewModel extends ViewModel {
     private rulesApiModel: RulesApiModelInterface;
     private balloon: BalloonModelInterface;
@@ -25,39 +25,39 @@ class RulesDeleteViewModel extends ViewModel {
     }
 
     /**
-    * rule のセット
-    * @param rule: Rule
-    */
+     * rule のセット
+     * @param rule: Rule
+     */
     public set(rule: apid.Rule): void {
         this.rule = rule;
     }
 
     /**
-    * get keyword
-    * @return keyword
-    */
+     * get keyword
+     * @return keyword
+     */
     public getKeyword(): string {
         return this.rule === null || typeof this.rule.keyword === 'undefined' ? '' : this.rule.keyword;
     }
 
     /**
-    * close balloon
-    */
+     * close balloon
+     */
     public close(): void {
         this.balloon.close();
     }
 
     /**
-    * rule 削除
-    * @param rule: Rule
-    */
+     * rule 削除
+     * @param rule: Rule
+     */
     public async delete(): Promise<void> {
-        if(this.rule === null) { return; }
+        if (this.rule === null) { return; }
 
         try {
             await this.rulesApiModel.delete(this.rule.id);
             this.snackbar.open(`削除: ${ this.rule.keyword }`);
-        } catch(err) {
+        } catch (err) {
             console.error(err);
             this.snackbar.open(`削除失敗: ${ this.rule.keyword }`);
         }

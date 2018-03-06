@@ -1,22 +1,22 @@
 import * as m from 'mithril';
-import Component from '../Component';
-import factory from '../../ViewModel/ViewModelFactory';
 import { ProgramViewModel } from '../../ViewModel/Program/ProgramViewModel';
+import factory from '../../ViewModel/ViewModelFactory';
+import Component from '../Component';
 
 /**
-* TimeScaleComponent
-*/
+ * TimeScaleComponent
+ */
 class TimeScaleComponent extends Component<void> {
     private viewModel: ProgramViewModel;
 
     constructor() {
         super();
-        this.viewModel = <ProgramViewModel>(factory.get('ProgramViewModel'));
+        this.viewModel = <ProgramViewModel> factory.get('ProgramViewModel');
     }
 
     /**
-    * view
-    */
+     * view
+     */
     public view(): m.Children {
         return m('div', { class: ProgramViewModel.timescaleName }, [
             this.viewModel.getTimes().map((time) => {

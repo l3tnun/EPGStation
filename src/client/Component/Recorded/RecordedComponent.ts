@@ -1,43 +1,43 @@
 import * as m from 'mithril';
-import ParentComponent from '../ParentComponent';
-import { ViewModelStatus } from '../../Enums';
-import MainLayoutComponent from '../MainLayoutComponent';
-import factory from '../../ViewModel/ViewModelFactory';
-import RecordedViewModel from '../../ViewModel/Recorded/RecordedViewModel';
 import * as apid from '../../../../api';
-import { BalloonComponent } from '../BalloonComponent';
+import { ViewModelStatus } from '../../Enums';
 import BalloonViewModel from '../../ViewModel/Balloon/BalloonViewModel';
-import RecordedInfoComponent from './RecordedInfoComponent';
 import RecordedInfoViewModel from '../../ViewModel/Recorded/RecordedInfoViewModel';
 import RecordedMenuViewModel from '../../ViewModel/Recorded/RecordedMenuViewModel';
-import RecordedMenuComponent from './RecordedMenuComponent';
+import RecordedSearchViewModel from '../../ViewModel/Recorded/RecordedSearchViewModel';
+import RecordedViewModel from '../../ViewModel/Recorded/RecordedViewModel';
+import factory from '../../ViewModel/ViewModelFactory';
+import { BalloonComponent } from '../BalloonComponent';
+import MainLayoutComponent from '../MainLayoutComponent';
+import PaginationComponent from '../PaginationComponent';
+import ParentComponent from '../ParentComponent';
+import TabComponent from '../TabComponent';
 import RecordedDeleteComponent from './RecordedDeleteComponent';
 import RecordedEncodeComponent from './RecordedEncodeComponent';
-import RecordedSearchViewModel from '../../ViewModel/Recorded/RecordedSearchViewModel';
-import RecordedSearchComponent from './RecordedSearchComponent';
+import RecordedInfoComponent from './RecordedInfoComponent';
+import RecordedMenuComponent from './RecordedMenuComponent';
 import RecordedSearchActionComponent from './RecordedSearchActionComponent';
-import PaginationComponent from '../PaginationComponent';
-import TabComponent from '../TabComponent';
+import RecordedSearchComponent from './RecordedSearchComponent';
 
 /**
-* RecordedComponent
-*/
+ * RecordedComponent
+ */
 class RecordedComponent extends ParentComponent<void> {
     private viewModel: RecordedViewModel;
     private infoViewModel: RecordedInfoViewModel;
     private menuViewModel: RecordedMenuViewModel;
     private searchViewModel: RecordedSearchViewModel;
     private balloon: BalloonViewModel;
-    private resizeListener = (() => { setTimeout(() => { this.resize() }, 100); }).bind(this);
+    private resizeListener = (() => { setTimeout(() => { this.resize(); }, 100); }).bind(this);
     private resizeElement: HTMLElement | null = null;
 
     constructor() {
         super();
-        this.viewModel = <RecordedViewModel>(factory.get('RecordedViewModel'));
-        this.infoViewModel = <RecordedInfoViewModel>(factory.get('RecordedInfoViewModel'));
-        this.menuViewModel = <RecordedMenuViewModel>(factory.get('RecordedMenuViewModel'));
-        this.searchViewModel = <RecordedSearchViewModel>(factory.get('RecordedSearchViewModel'));
-        this.balloon = <BalloonViewModel>(factory.get('BalloonViewModel'));
+        this.viewModel = <RecordedViewModel> factory.get('RecordedViewModel');
+        this.infoViewModel = <RecordedInfoViewModel> factory.get('RecordedInfoViewModel');
+        this.menuViewModel = <RecordedMenuViewModel> factory.get('RecordedMenuViewModel');
+        this.searchViewModel = <RecordedSearchViewModel> factory.get('RecordedSearchViewModel');
+        this.balloon = <BalloonViewModel> factory.get('BalloonViewModel');
     }
 
     protected initViewModel(status: ViewModelStatus = 'init'): void {
@@ -47,20 +47,20 @@ class RecordedComponent extends ParentComponent<void> {
             this.setRestorePositionFlag(status);
         })
         .then(() => {
-            if(status !== 'init') {
+            if (status !== 'init') {
                 this.infoViewModel.update();
             }
         });
     }
 
     /**
-    * page name
-    */
+     * page name
+     */
     protected getComponentName(): string { return 'Recorded'; }
 
     /**
-    * view
-    */
+     * view
+     */
     public view(): m.Child {
         return m(MainLayoutComponent, {
             header: {
@@ -115,19 +115,19 @@ class RecordedComponent extends ParentComponent<void> {
                     verticalOnly: true,
                     foreBalloon: true,
                 }),
-            ]
+            ],
         });
     }
 
     /**
-    * content
-    * @return m.Child
-    */
+     * content
+     * @return m.Child
+     */
     private createContent(): m.Child {
         return m('div', {
             class: 'recorded-content',
             oncreate: (vnode: m.VnodeDOM<void, this>) => {
-                this.resizeElement = <HTMLElement>(vnode.dom);
+                this.resizeElement = <HTMLElement> (vnode.dom);
                 window.addEventListener('resize', this.resizeListener, false);
             },
             onupdate: () => {
@@ -135,8 +135,8 @@ class RecordedComponent extends ParentComponent<void> {
                 this.restoreMainLayoutPosition();
             },
             onremove: () => {
-                window.removeEventListener('resize', this.resizeListener, false );
-            }
+                window.removeEventListener('resize', this.resizeListener, false);
+            },
         }, [
             this.viewModel.getRecorded().recorded.map((recorded) => {
                 return this.createCard(recorded);
@@ -150,23 +150,27 @@ class RecordedComponent extends ParentComponent<void> {
     }
 
     /**
-    * resize
-    */
+     * resize
+     */
     private resize(): void {
-        if(this.resizeElement == null) { return; }
+        if (this.resizeElement === null) { return; }
 
-        if(window.innerWidth <= RecordedComponent.cardWidth * 2 + RecordedComponent.widthMargin ) { this.resizeElement.style.width = ''; return; }
+        if (window.innerWidth <= RecordedComponent.cardWidth * 2 + RecordedComponent.widthMargin) {
+            this.resizeElement.style.width = '';
 
-        let width = Math.floor(window.innerWidth / RecordedComponent.cardWidth) * RecordedComponent.cardWidth || RecordedComponent.cardWidth;
+            return;
+        }
+
+        const width = Math.floor(window.innerWidth / RecordedComponent.cardWidth) * RecordedComponent.cardWidth || RecordedComponent.cardWidth;
 
         this.resizeElement.style.width = width + 'px';
     }
 
     /**
-    * card
-    * @param recorded: apid.RecordedProgram
-    * @return m.Child
-    */
+     * card
+     * @param recorded: apid.RecordedProgram
+     * @return m.Child
+     */
     private createCard(recorded: apid.RecordedProgram): m.Child {
         return m('div', { class: 'recorded-card mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col' }, [
             m('button', {
@@ -174,28 +178,28 @@ class RecordedComponent extends ParentComponent<void> {
                 onclick: (e: Event) => {
                     this.menuViewModel.set(recorded);
                     this.balloon.open(RecordedMenuViewModel.id, e);
-                }
+                },
             }, [
-                m('i', { class: 'material-icons' }, 'more_vert' ),
+                m('i', { class: 'material-icons' }, 'more_vert'),
             ]),
             m('div', {
                 onclick: (e: Event) => {
                     this.infoViewModel.set(recorded);
                     this.balloon.open(RecordedInfoViewModel.id, e);
-                }
+                },
             }, [
                 m('div', { class: 'thumbnail-container' }, [
                     m('img', {
                         class: 'thumbnail',
                         src: recorded.hasThumbnail ? `/api/recorded/${ recorded.id }/thumbnail` : '/img/noimg.png',
-                        onerror: (e: Event) => { (<HTMLImageElement>e.target).src = '/img/noimg.png'; },
+                        onerror: (e: Event) => { (<HTMLImageElement> e.target).src = '/img/noimg.png'; },
                     }),
                 ]),
                 m('div', { class: 'text-container' }, [
-                    m('div', { class: 'title' }, recorded.name ),
+                    m('div', { class: 'title' }, recorded.name),
                     m('div', { class: 'channel' }, this.viewModel.getChannelName(recorded.channelId)),
-                    m('div', { class: 'time' }, this.viewModel.getTimeStr(recorded) ),
-                    m('div', { class: 'description' }, recorded.description ),
+                    m('div', { class: 'time' }, this.viewModel.getTimeStr(recorded)),
+                    m('div', { class: 'description' }, recorded.description),
                 ]),
             ]),
         ]);

@@ -1,13 +1,13 @@
 import * as m from 'mithril';
-import ViewModel from '../ViewModel';
-import { BalloonModelInterface } from '../../Model/Balloon/BallonModel';
-import { RecordedApiModelInterface } from '../../Model/Api/RecordedApiModel';
 import * as apid from '../../../../api';
+import { RecordedApiModelInterface } from '../../Model/Api/RecordedApiModel';
+import { BalloonModelInterface } from '../../Model/Balloon/BallonModel';
 import Util from '../../Util/Util';
+import ViewModel from '../ViewModel';
 
 /**
-* RecordedSearchViewModel
-*/
+ * RecordedSearchViewModel
+ */
 class RecordedSearchViewModel extends ViewModel {
     private balloon: BalloonModelInterface;
     private recordedApiModel: RecordedApiModelInterface;
@@ -27,16 +27,16 @@ class RecordedSearchViewModel extends ViewModel {
     }
 
     /**
-    * recorded tags を返す
-    * @return apid.RecordedTags
-    */
+     * recorded tags を返す
+     * @return apid.RecordedTags
+     */
     public getTags(): apid.RecordedTags {
         return this.recordedApiModel.getTags();
     }
 
     /**
-    * 入力項目のリセット
-    */
+     * 入力項目のリセット
+     */
     public reset(): void {
         this.keyword = typeof m.route.param('keyword') === 'undefined' ? '' : m.route.param('keyword');
         this.rule = typeof m.route.param('rule') === 'undefined' ? -1 : Number(m.route.param('rule'));
@@ -45,12 +45,12 @@ class RecordedSearchViewModel extends ViewModel {
     }
 
     /**
-    * search
-    */
+     * search
+     */
     public search(): void {
         this.close();
         setTimeout(() => {
-            let query = Util.getCopyQuery();
+            const query = Util.getCopyQuery();
 
             delete query.keyword;
             delete query.rule;
@@ -58,20 +58,20 @@ class RecordedSearchViewModel extends ViewModel {
             delete query.genre1;
             delete query.page;
 
-            if(this.keyword.length > 0) { query.keyword = this.keyword; }
-            if(this.rule !== -1) { query.rule = this.rule; }
-            if(this.channel !== -1) { query.channel = this.channel; }
-            if(this.genre !== -1) { query.genre1 = this.genre; }
+            if (this.keyword.length > 0) { query.keyword = this.keyword; }
+            if (this.rule !== -1) { query.rule = this.rule; }
+            if (this.channel !== -1) { query.channel = this.channel; }
+            if (this.genre !== -1) { query.genre1 = this.genre; }
 
             const route = m.route.get().split('?')[0];
-            if(Util.isEqualURL(route, query)) { return; }
+            if (Util.isEqualURL(route, query)) { return; }
             Util.move(route, query);
         }, 200);
     }
 
     /**
-    * close balloon
-    */
+     * close balloon
+     */
     public close(): void {
         this.balloon.close();
     }

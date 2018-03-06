@@ -28,8 +28,8 @@ interface SettingModelInterface extends Model {
 }
 
 /**
-* Setting Model
-*/
+ * Setting Model
+ */
 class SettingModel extends Model implements SettingModelInterface {
     private storageModel: StorageModelInterface;
 
@@ -42,28 +42,28 @@ class SettingModel extends Model implements SettingModelInterface {
     }
 
     /**
-    * init
-    */
+     * init
+     */
     public init(): void {
-        let stored = this.get();
+        const stored = this.get();
 
         // 設定情報がなければ作成する
-        if(stored === null) {
+        if (stored === null) {
             this.value = this.getDefaultValue();
             try {
                 this.storageModel.set(SettingModelInterface.storageKey, this.value);
                 this.isEnable = true;
-            } catch(err) {
+            } catch (err) {
                 this.isEnable = false;
                 console.error('SettingModel storage write error');
                 console.error(err);
             }
         } else {
-            //デフォルト値と比較して足りない項目があれば追加する
+            // デフォルト値と比較して足りない項目があれば追加する
             const defaultValue = this.getDefaultValue();
             let needsUpdate = false;
-            for(let key in defaultValue) {
-                if(typeof stored[key] === 'undefined') {
+            for (const key in defaultValue) {
+                if (typeof stored[key] === 'undefined') {
                     stored[key] = defaultValue[key];
                     needsUpdate = true;
                 }
@@ -72,36 +72,36 @@ class SettingModel extends Model implements SettingModelInterface {
             this.value = stored;
             this.isEnable = true;
 
-            //追加された項目があったら更新する
-            if(needsUpdate) { this.update(); }
+            // 追加された項目があったら更新する
+            if (needsUpdate) { this.update(); }
         }
     }
 
     /**
-    * 設定情報を取得
-    */
+     * 設定情報を取得
+     */
     public get(): SettingValue | null {
         return this.storageModel.get(SettingModelInterface.storageKey);
     }
 
     /**
-    * 設定情報を削除
-    */
+     * 設定情報を削除
+     */
     public remove(): void {
         this.storageModel.remove(SettingModelInterface.storageKey);
     }
 
     /**
-    * 設定情報の更新
-    */
+     * 設定情報の更新
+     */
     public update(): void {
-        if(!this.isEnable || this.value === null) { return; }
+        if (!this.isEnable || this.value === null) { return; }
         this.storageModel.set(SettingModelInterface.storageKey, this.value);
     }
 
     /**
-    * set default value
-    */
+     * set default value
+     */
     public getDefaultValue(): SettingValue {
         return {
             isAutoOpenNavigation: true,

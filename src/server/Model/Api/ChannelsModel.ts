@@ -1,9 +1,9 @@
-import ApiModel from './ApiModel';
-import { ServicesDBInterface } from '../DB/ServicesDB';
-import * as DBSchema from '../DB/DBSchema';
-import CreateMirakurunClient from '../../Util/CreateMirakurunClient';
-import ApiUtil from './ApiUtil';
 import * as apid from '../../../../node_modules/mirakurun/api';
+import CreateMirakurunClient from '../../Util/CreateMirakurunClient';
+import * as DBSchema from '../DB/DBSchema';
+import { ServicesDBInterface } from '../DB/ServicesDB';
+import ApiModel from './ApiModel';
+import ApiUtil from './ApiUtil';
 
 interface ChannelsModelInterface extends ApiModel {
     getAll(): Promise<{}[]>;
@@ -11,8 +11,8 @@ interface ChannelsModelInterface extends ApiModel {
 }
 
 namespace ChannelsModelInterface {
-    export const NotFoundChannelIdError = 'NotFoundChannelId'
-    export const NotFoundLogoError = 'NotFoundLogo'
+    export const NotFoundChannelIdError = 'NotFoundChannelId';
+    export const NotFoundLogoError = 'NotFoundLogo';
 }
 
 class ChannelsModel extends ApiModel implements ChannelsModelInterface {
@@ -24,13 +24,13 @@ class ChannelsModel extends ApiModel implements ChannelsModelInterface {
     }
 
     /**
-    * channel をすべて取得
-    * @return Promise<any>
-    */
+     * channel をすべて取得
+     * @return Promise<any>
+     */
     public async getAll(): Promise<any> {
-        let datas = await this.servicesDB.findAll();
+        const datas = await this.servicesDB.findAll();
 
-        let results: any[] = [];
+        const results: any[] = [];
         datas.forEach((result: DBSchema.ServiceSchema) => {
             results.push(ApiUtil.deleteNullinHash(result));
         });
@@ -39,25 +39,26 @@ class ChannelsModel extends ApiModel implements ChannelsModelInterface {
     }
 
     /**
-    * logo を取得
-    * @param channelId: channel id
-    * @return Promise<Buffer>
-    */
+     * logo を取得
+     * @param channelId: channel id
+     * @return Promise<Buffer>
+     */
     public async getLogo(channelId: apid.ServiceItemId): Promise<Buffer> {
-        let results = await this.servicesDB.findId(channelId);
+        const results = await this.servicesDB.findId(channelId);
 
-        if(results === null) {
+        if (results === null) {
             throw new Error(ChannelsModelInterface.NotFoundChannelIdError);
         }
 
-        if(!results.hasLogoData) {
+        if (!results.hasLogoData) {
             throw new Error(ChannelsModelInterface.NotFoundLogoError);
         }
 
-        let mirakurun = CreateMirakurunClient.get();
+        const mirakurun = CreateMirakurunClient.get();
+
         return mirakurun.getLogoImage(channelId);
     }
 }
 
-export { ChannelsModelInterface, ChannelsModel }
+export { ChannelsModelInterface, ChannelsModel };
 

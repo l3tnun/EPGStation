@@ -1,12 +1,12 @@
 import * as m from 'mithril';
-import Component from '../Component';
-import factory from '../../ViewModel/ViewModelFactory';
 import ProgramGenreViewModel from '../../ViewModel/Program/ProgramGenreViewModel';
 import { ProgramViewModel } from '../../ViewModel/Program/ProgramViewModel';
+import factory from '../../ViewModel/ViewModelFactory';
+import Component from '../Component';
 
 /**
-* ProgramGenreActionComponent
-*/
+ * ProgramGenreActionComponent
+ */
 class ProgramGenreActionComponent extends Component<void> {
     private viewModel: ProgramGenreViewModel;
     private programViewModel: ProgramViewModel;
@@ -14,18 +14,18 @@ class ProgramGenreActionComponent extends Component<void> {
     constructor() {
         super();
 
-        this.viewModel = <ProgramGenreViewModel>(factory.get('ProgramGenreViewModel'));
-        this.programViewModel = <ProgramViewModel>(factory.get('ProgramViewModel'));
+        this.viewModel = <ProgramGenreViewModel> factory.get('ProgramGenreViewModel');
+        this.programViewModel = <ProgramViewModel> factory.get('ProgramViewModel');
     }
 
     /**
-    * view
-    */
+     * view
+     */
     public view(): m.Child {
         return m('div', [
             m('hr', { style: 'margin: 0;' }),
             m('div', { class: 'mdl-dialog__actions', style: 'height: 36px;' }, [
-                //更新ボタン
+                // 更新ボタン
                 m('button', {
                     class: 'mdl-button mdl-js-button mdl-button--primary',
                     onclick: () => {
@@ -33,18 +33,18 @@ class ProgramGenreActionComponent extends Component<void> {
                         // genre 更新
                         this.viewModel.update();
 
-                        //番組表を再描画
+                        // 番組表を再描画
                         this.programViewModel.init();
-                    }
+                    },
                 }, '更新'),
 
-                //キャンセルボタン
+                // キャンセルボタン
                 m('button', {
                     class: 'mdl-button mdl-js-button mdl-button--accent',
                     onclick: () => {
                         this.viewModel.close();
-                    }
-                }, 'キャンセル')
+                    },
+                }, 'キャンセル'),
             ]),
         ]);
     }

@@ -1,12 +1,12 @@
-import ViewModel from '../ViewModel';
 import * as apid from '../../../../api';
-import { BalloonModelInterface } from '../../Model/Balloon/BallonModel';
 import { ReservesApiModelInterface } from '../../Model/Api/ReservesApiModel';
+import { BalloonModelInterface } from '../../Model/Balloon/BallonModel';
 import { SnackbarModelInterface } from '../../Model/Snackbar/SnackbarModel';
+import ViewModel from '../ViewModel';
 
 /**
-* ReservesMenuViewModel
-*/
+ * ReservesMenuViewModel
+ */
 class ReservesMenuViewModel extends ViewModel {
     private balloon: BalloonModelInterface;
     private reservesApiModel: ReservesApiModelInterface;
@@ -25,32 +25,32 @@ class ReservesMenuViewModel extends ViewModel {
     }
 
     /**
-    * reserve のセット
-    * @param reserve: apid.Reserve
-    */
+     * reserve のセット
+     * @param reserve: apid.Reserve
+     */
     public set(reserve: apid.Reserve): void {
         this.reserve = reserve;
     }
 
     /**
-    * ruleId の取得
-    * @return rule id | null
-    */
+     * ruleId の取得
+     * @return rule id | null
+     */
     public getRuleId(): number | null {
         return this.reserve === null || typeof this.reserve.ruleId === 'undefined' ? null : this.reserve.ruleId;
     }
 
     /**
-    * get title
-    * @return title
-    */
+     * get title
+     * @return title
+     */
     public getTitle(): string {
         return this.reserve === null ? '' : this.reserve.program.name;
     }
 
     /**
-    * open delete dialog
-    */
+     * open delete dialog
+     */
     public openDelete(): void {
         this.close();
         setTimeout(() => {
@@ -59,22 +59,22 @@ class ReservesMenuViewModel extends ViewModel {
     }
 
     /**
-    * close balloon
-    */
+     * close balloon
+     */
     public close(): void {
         this.balloon.close();
     }
 
     /**
-    * delete recorded file
-    */
+     * delete recorded file
+     */
     public async delete(): Promise<void> {
-        if(this.reserve === null) { return; }
+        if (this.reserve === null) { return; }
 
         try {
             await this.reservesApiModel.deleteReserve(this.reserve.program.id);
             this.snackbar.open(`削除: ${ this.reserve.program.name }`);
-        } catch(err) {
+        } catch (err) {
             console.error(err);
             this.snackbar.open(`削除失敗: ${ this.reserve.program.name }`);
         }

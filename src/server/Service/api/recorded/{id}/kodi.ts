@@ -1,16 +1,16 @@
 import { Operation } from 'express-openapi';
-import * as api from '../../../api';
-import factory from '../../../../Model/ModelFactory';
 import { RecordedModelInterface } from '../../../../Model/Api/RecordedModel';
+import factory from '../../../../Model/ModelFactory';
+import * as api from '../../../api';
 
-export const post: Operation = async (req, res) => {
-    let recordeds = <RecordedModelInterface>(factory.get('RecordedModel'));
+export const post: Operation = async(req, res) => {
+    const recordeds = <RecordedModelInterface> factory.get('RecordedModel');
 
     try {
         await recordeds.sendToKodi(req.headers.host, req.secure, req.body.kodi, req.params.id, req.body.encodedId);
         api.responseJSON(res, 200, { code: 200, result: 'ok' });
-    } catch(err) {
-        if(err.message === RecordedModelInterface.NotFoundRecordedFileError) {
+    } catch (err) {
+        if (err.message === RecordedModelInterface.NotFoundRecordedFileError) {
             api.responseError(res, { code: 404,  message: 'Recorded file is not Found' });
         } else {
             api.responseServerError(res, err.message);
@@ -28,30 +28,30 @@ post.apiDoc = {
             in: 'path',
             description: 'recorded id',
             required: true,
-            type: 'integer'
+            type: 'integer',
         },
         {
             name: 'body',
             in: 'body',
             required: true,
             schema: {
-                $ref: '#/definitions/RecordedSendToKodi'
-            }
-        }
+                $ref: '#/definitions/RecordedSendToKodi',
+            },
+        },
     ],
     responses: {
         200: {
-            description: 'ok'
+            description: 'ok',
         },
         404: {
-            description: 'Not found'
+            description: 'Not found',
         },
         default: {
             description: '予期しないエラー',
             schema: {
-                $ref: '#/definitions/Error'
-            }
-        }
-    }
+                $ref: '#/definitions/Error',
+            },
+        },
+    },
 };
 

@@ -1,22 +1,22 @@
 import * as m from 'mithril';
-import Component from '../Component';
-import factory from '../../ViewModel/ViewModelFactory';
 import StreamProgramCardsViewModel from '../../ViewModel/Stream/StreamProgramCardsViewModel';
+import factory from '../../ViewModel/ViewModelFactory';
+import Component from '../Component';
 
 /**
-* StreamProgramTimeComponent
-*/
+ * StreamProgramTimeComponent
+ */
 class StreamProgramTimeComponent extends Component<void> {
     private viewModel: StreamProgramCardsViewModel;
 
     constructor() {
         super();
-        this.viewModel = <StreamProgramCardsViewModel>(factory.get('StreamProgramCardsViewModel'));
+        this.viewModel = <StreamProgramCardsViewModel> factory.get('StreamProgramCardsViewModel');
     }
 
     /**
-    * view
-    */
+     * view
+     */
     public view(): m.Child {
         return m('div', { class: 'stream-time-content' }, [
             m('button', {

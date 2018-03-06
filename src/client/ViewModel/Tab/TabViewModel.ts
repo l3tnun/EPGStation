@@ -1,5 +1,5 @@
-import ViewModel from '../ViewModel';
 import { TabModelInterface } from '../../Model/Tab/TabModel';
+import ViewModel from '../ViewModel';
 
 class TabViewModel extends ViewModel {
     private model: TabModelInterface;
@@ -10,8 +10,8 @@ class TabViewModel extends ViewModel {
     }
 
     /**
-    * init
-    */
+     * init
+     */
     public init(): void {
         this.model.init();
     }

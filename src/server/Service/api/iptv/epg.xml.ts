@@ -1,17 +1,17 @@
 import { Operation } from 'express-openapi';
-import * as api from '../../api';
-import factory from '../../../Model/ModelFactory';
 import { IPTVModelInterface } from '../../../Model/Api/IPTVModel';
+import factory from '../../../Model/ModelFactory';
+import * as api from '../../api';
 
-export const get: Operation = async (req, res) => {
-    const iptv = <IPTVModelInterface>(factory.get('IPTVModel'));
+export const get: Operation = async(req, res) => {
+    const iptv = <IPTVModelInterface> factory.get('IPTVModel');
 
     try {
-        let result = await iptv.getEpg(req.query.days);
+        const result = await iptv.getEpg(req.query.days);
         res.setHeader('Content-Type', 'application/xml; charset="UTF-8"');
         res.status(200);
         res.end(result);
-    } catch(err) {
+    } catch (err) {
         api.responseServerError(res, err.message);
     }
 };
@@ -29,19 +29,19 @@ get.apiDoc = {
             minimum: 1,
             maximum: 8,
             default: 3,
-        }
+        },
     ],
-    produces: ["application/xml"],
+    produces: ['application/xml'],
     responses: {
         200: {
-            description: 'epg を取得しました'
+            description: 'epg を取得しました',
         },
         default: {
             description: '予期しないエラー',
             schema: {
-                $ref: '#/definitions/Error'
-            }
-        }
-    }
+                $ref: '#/definitions/Error',
+            },
+        },
+    },
 };
 

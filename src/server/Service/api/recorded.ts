@@ -1,20 +1,20 @@
 import { Operation } from 'express-openapi';
-import * as api from '../api';
-import factory from '../../Model/ModelFactory';
 import { RecordedModelInterface } from '../../Model/Api/RecordedModel';
+import factory from '../../Model/ModelFactory';
+import * as api from '../api';
 
-export const get: Operation = async (req, res) => {
-    let recorded = <RecordedModelInterface>(factory.get('RecordedModel'));
+export const get: Operation = async(req, res) => {
+    const recorded = <RecordedModelInterface> factory.get('RecordedModel');
 
     try {
-        let results = await recorded.getAll(req.query.limit, req.query.offset, {
+        const results = await recorded.getAll(req.query.limit, req.query.offset, {
             ruleId: req.query.rule === 0 ? null : req.query.rule,
             genre1: req.query.genre1,
             channelId: req.query.channel,
             keyword: req.query.keyword,
         });
         api.responseJSON(res, 200, results);
-    } catch(err) {
+    } catch (err) {
         api.responseServerError(res, err.message);
     }
 };
@@ -40,19 +40,19 @@ get.apiDoc = {
                     recorded: {
                         type: 'array',
                         items: {
-                            $ref: '#/definitions/RecordedProgram'
-                        }
+                            $ref: '#/definitions/RecordedProgram',
+                        },
                     },
-                    total: { $ref: '#/definitions/total' }
-                }
-            }
+                    total: { $ref: '#/definitions/total' },
+                },
+            },
         },
         default: {
             description: '予期しないエラー',
             schema: {
-                $ref: '#/definitions/Error'
-            }
-        }
-    }
+                $ref: '#/definitions/Error',
+            },
+        },
+    },
 };
 

@@ -1,6 +1,6 @@
 import * as child_process from 'child_process';
-import * as path from 'path';
 import * as events from 'events';
+import * as path from 'path';
 import * as apid from '../../../../../node_modules/mirakurun/api';
 import Model from '../../Model';
 
@@ -11,18 +11,18 @@ interface MirakurunManageModelInterface extends Model {
 }
 
 /**
-* MirakurunManageModel
-* MirakurunUpdater を起動して DB を更新する
-*/
+ * MirakurunManageModel
+ * MirakurunUpdater を起動して DB を更新する
+ */
 class MirakurunManageModel extends Model implements MirakurunManageModelInterface {
     private isRunning: boolean = false;
     private tuners: apid.TunerDevice[] = [];
     private listener: events.EventEmitter = new events.EventEmitter();
 
     /**
-    * Mirakurun 更新時に実行されるイベントに追加
-    @param callback Mirakurun 更新時に実行される
-    */
+     * Mirakurun 更新時に実行されるイベントに追加
+     * @param callback Mirakurun 更新時に実行される
+     */
     public addListener(callback: (tuners: apid.TunerDevice[]) => void): void {
         this.listener.on(MirakurunManageModel.MIRAKURUN_UPDATE_EVENT, () => {
             callback(this.tuners);
@@ -30,17 +30,17 @@ class MirakurunManageModel extends Model implements MirakurunManageModelInterfac
     }
 
     /**
-    * mirakurun から EPG データを取得する
-    * @throws MirakurunManageModelIsRunning update が他で動いているとき
-    */
+     * mirakurun から EPG データを取得する
+     * @throws MirakurunManageModelIsRunning update が他で動いているとき
+     */
     public update(): void {
-        if(this.isRunning) {
+        if (this.isRunning) {
             throw new Error('MirakurunManageModelIsRunning');
         }
 
         this.isRunning = true;
 
-        let updater = child_process.fork(path.join(__dirname, 'MirakurunUpdateExecutor.js'), [], { silent: true });
+        const updater = child_process.fork(path.join(__dirname, 'MirakurunUpdateExecutor.js'), [], { silent: true });
         this.log.system.info(`start Updater pid: ${ updater.pid }`);
 
         updater.stdout.on('data', (data: string) => {
@@ -51,12 +51,12 @@ class MirakurunManageModel extends Model implements MirakurunManageModelInterfac
             this.log.system.error(String(data).slice(0, -1));
         });
 
-        updater.once('exit', (code) => { if(code !== 0) { this.log.system.error('MirakurunUpdater abort'); } this.isRunning = false; });
+        updater.once('exit', (code) => { if (code !== 0) { this.log.system.error('MirakurunUpdater abort'); } this.isRunning = false; });
         updater.once('disconnect', () => { this.isRunning = false; });
         updater.once('error', () => { this.isRunning = false; });
 
         updater.on('message', (msg) => {
-            if(msg.msg === 'tuner') {
+            if (msg.msg === 'tuner') {
                 this.tuners = msg.tuners;
                 this.isRunning = false;
                 this.eventsNotify();
@@ -65,22 +65,22 @@ class MirakurunManageModel extends Model implements MirakurunManageModelInterfac
     }
 
     /**
-    * @return tuners
-    */
+     * @return tuners
+     */
     public getTuners(): apid.TunerDevice[] {
         return JSON.parse(JSON.stringify(this.tuners));
     }
 
     /**
-    * Mirakurun 更新を通知
-    */
+     * Mirakurun 更新を通知
+     */
     private eventsNotify(): void {
         this.listener.emit(MirakurunManageModel.MIRAKURUN_UPDATE_EVENT);
     }
 }
 
 namespace MirakurunManageModel {
-    export const MIRAKURUN_UPDATE_EVENT = "updateMirakurun";
+    export const MIRAKURUN_UPDATE_EVENT = 'updateMirakurun';
 }
 
 export { MirakurunManageModelInterface, MirakurunManageModel };

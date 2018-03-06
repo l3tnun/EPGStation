@@ -1,10 +1,10 @@
 /**
-* 検索, ルール作成の定義
-*/
+ * 検索, ルール作成の定義
+ */
 export interface RuleInterface {
-    search: SearchInterface,
-    option: OptionInterface,
-    encode?: EncodeInterface,
+    search: SearchInterface;
+    option: OptionInterface;
+    encode?: EncodeInterface;
 }
 
 export interface SearchInterface {
@@ -13,7 +13,7 @@ export interface SearchInterface {
     // keyworoption
     keyCS?: boolean;
     keyRegExp?: boolean;
-    title?:  boolean;
+    title?: boolean;
     description?: boolean;
     extended?: boolean;
     // broadcast

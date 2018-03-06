@@ -1,24 +1,24 @@
 import * as m from 'mithril';
-import ParentComponent from '../ParentComponent';
-import { ViewModelStatus } from '../../Enums';
-import MainLayoutComponent from '../MainLayoutComponent';
-import factory from '../../ViewModel/ViewModelFactory';
-import ReservesViewModel from '../../ViewModel/Reserves/ReservesViewModel';
-import Util from '../../Util/Util';
-import DateUtil from '../../Util/DateUtil';
 import * as apid from '../../../../api';
-import PaginationComponent from '../PaginationComponent';
-import { BalloonComponent } from '../BalloonComponent';
+import { ViewModelStatus } from '../../Enums';
+import DateUtil from '../../Util/DateUtil';
+import Util from '../../Util/Util';
 import BalloonViewModel from '../../ViewModel/Balloon/BalloonViewModel';
 import ProgramInfoViewModel from '../../ViewModel/Program/ProgramInfoViewModel';
 import ReservesMenuViewModel from '../../ViewModel/Reserves/ReservesMenuViewModel';
+import ReservesViewModel from '../../ViewModel/Reserves/ReservesViewModel';
+import factory from '../../ViewModel/ViewModelFactory';
+import { BalloonComponent } from '../BalloonComponent';
+import MainLayoutComponent from '../MainLayoutComponent';
+import PaginationComponent from '../PaginationComponent';
+import ParentComponent from '../ParentComponent';
 import ProgramInfoComponent from '../Program/ProgramInfoComponent';
-import ReservesMenuComponent from './ReservesMenuComponent';
 import ReservesDeleteComponent from './ReservesDeleteComponent';
+import ReservesMenuComponent from './ReservesMenuComponent';
 
 /**
-* ReservesComponent
-*/
+ * ReservesComponent
+ */
 class ReservesComponent extends ParentComponent<void> {
     private viewModel: ReservesViewModel;
     private menuViewModel: ReservesMenuViewModel;
@@ -27,10 +27,10 @@ class ReservesComponent extends ParentComponent<void> {
 
     constructor() {
         super();
-        this.viewModel = <ReservesViewModel>(factory.get('ReservesViewModel'));
-        this.menuViewModel = <ReservesMenuViewModel>(factory.get('ReservesMenuViewModel'));
-        this.balloon = <BalloonViewModel>(factory.get('BalloonViewModel'));
-        this.programInfo = <ProgramInfoViewModel>(factory.get('ProgramInfoViewModel'));
+        this.viewModel = <ReservesViewModel> factory.get('ReservesViewModel');
+        this.menuViewModel = <ReservesMenuViewModel> factory.get('ReservesMenuViewModel');
+        this.balloon = <BalloonViewModel> factory.get('BalloonViewModel');
+        this.programInfo = <ProgramInfoViewModel> factory.get('ProgramInfoViewModel');
     }
 
     protected initViewModel(status: ViewModelStatus = 'init'): void {
@@ -42,25 +42,28 @@ class ReservesComponent extends ParentComponent<void> {
     }
 
     /**
-    * page name
-    */
+     * page name
+     */
     protected getComponentName(): string { return 'Reserves'; }
 
     /**
-    * view
-    */
+     * view
+     */
     public view(): m.Child {
         return m(MainLayoutComponent, {
             header: { title: m.route.param('mode') === 'conflicts' ? '重複' : '予約' },
             menuContent: [
-                { attrs: {
-                    onclick: () => {
-                        this.balloon.close();
-                        setTimeout(() => {
-                            this.viewModel.startUpdateReserves();
-                        }, 200);
-                    }
-                }, text: '予約情報更新' },
+                {
+                    attrs: {
+                        onclick: () => {
+                            this.balloon.close();
+                            setTimeout(() => {
+                                this.viewModel.startUpdateReserves();
+                            }, 200);
+                        },
+                    },
+                    text: '予約情報更新',
+                },
             ],
             content: [
                 this.createContent(),
@@ -95,9 +98,9 @@ class ReservesComponent extends ParentComponent<void> {
     }
 
     /**
-    * content
-    * @return m.Child
-    */
+     * content
+     * @return m.Child
+     */
     private createContent(): m.Child {
         return m('div', {
             class: 'reserves',
@@ -114,9 +117,9 @@ class ReservesComponent extends ParentComponent<void> {
     }
 
     /**
-    * create card content
-    * @return m.Child[]
-    */
+     * create card content
+     * @return m.Child[]
+     */
     private createCardView(): m.Child[] {
         return this.viewModel.getReserves().reserves.map((reserve) => {
             return m('div', { class: 'reserves-card mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col' }, [
@@ -128,9 +131,9 @@ class ReservesComponent extends ParentComponent<void> {
                         this.balloon.open(ReservesMenuViewModel.id, e);
                     },
                 }, [
-                    m('i', { class: 'material-icons' }, 'more_vert' ) //menu icon
+                    m('i', { class: 'material-icons' }, 'more_vert'), // menu icon
                 ]),
-                //番組情報
+                // 番組情報
                 m('div', {
                     class: 'mdl-card__supporting-text',
                     onclick: (event: Event) => { this.openProgramInfo(event, reserve); },
@@ -139,40 +142,40 @@ class ReservesComponent extends ParentComponent<void> {
                     m('div', { class: 'time' }, this.getCardTime(reserve.program)),
                     m('div', { class: 'channel' }, this.viewModel.getChannelName(reserve.program.channelId)),
                     m('div', { class: 'description' }, reserve.program.description),
-                ])
+                ]),
             ]);
         });
     }
 
     /**
-    * click 時に programInfo を開く
-    * @param event: Event
-    * @param reserve: reserve
-    */
+     * click 時に programInfo を開く
+     * @param event: Event
+     * @param reserve: reserve
+     */
     private openProgramInfo(event: Event, reserve: apid.Reserve): void {
-        let channel = this.viewModel.getChannel(reserve.program.channelId);
-        if(channel === null) { return; }
+        const channel = this.viewModel.getChannel(reserve.program.channelId);
+        if (channel === null) { return; }
 
         this.programInfo.set(reserve.program, channel);
         this.balloon.open(ProgramInfoViewModel.id, event);
     }
 
     /**
-    * getCardTime
-    * @return string
-    */
+     * getCardTime
+     * @return string
+     */
     private getCardTime(program: apid.ReserveProgram): string {
-        let start = DateUtil.getJaDate(new Date(program.startAt));
-        let end = DateUtil.getJaDate(new Date(program.endAt));
-        let duration = Math.floor((program.endAt - program.startAt) / 1000 / 60);
+        const start = DateUtil.getJaDate(new Date(program.startAt));
+        const end = DateUtil.getJaDate(new Date(program.endAt));
+        const duration = Math.floor((program.endAt - program.startAt) / 1000 / 60);
 
         return DateUtil.format(start, 'MM/dd(w) hh:mm:ss') + '~' + DateUtil.format(end, 'hh:mm:ss') + `(${ duration }分)`;
     }
 
     /**
-    * create table content
-    * @return m.Child
-    */
+     * create table content
+     * @return m.Child
+     */
     private createTableView(): m.Child {
         return m('table', {
             class: 'mdl-data-table mdl-js-data-table mdl-shadow--2dp',
@@ -192,7 +195,7 @@ class ReservesComponent extends ParentComponent<void> {
                     m('td', {
                         class: ReservesComponent.nonNumeric + ' day',
                         onclick: () => {
-                            let start = DateUtil.getJaDate(new Date(reserve.program.startAt));
+                            const start = DateUtil.getJaDate(new Date(reserve.program.startAt));
                             Util.move('/program', {
                                 ch: reserve.program.channelId,
                                 time: DateUtil.format(start, 'YYMMddhh'),
@@ -215,20 +218,21 @@ class ReservesComponent extends ParentComponent<void> {
     }
 
     /**
-    * getDurationItem
-    * @return m.Child
-    */
+     * getDurationItem
+     * @return m.Child
+     */
     private getDurationItem(program: apid.ReserveProgram): m.Child {
-        let times = this.getTimes(program);
+        const times = this.getTimes(program);
+
         return m('td', {
             class: ReservesComponent.nonNumeric + ' duration',
             onclick: () => {
-                let start = DateUtil.getJaDate(new Date(program.startAt));
+                const start = DateUtil.getJaDate(new Date(program.startAt));
                 Util.move('/program', {
                     type: program.channelType,
                     time: DateUtil.format(start, 'YYMMddhh'),
                 });
-            }
+            },
         }, [
             `${ times.start } ~ ${ times.end }`,
             m('div', times.duration),
@@ -236,29 +240,29 @@ class ReservesComponent extends ParentComponent<void> {
     }
 
     /**
-    * getTableDayTime
-    * @return string
-    */
+     * getTableDayTime
+     * @return string
+     */
     private getDayTime(program: apid.ReserveProgram): string {
-        let start = DateUtil.getJaDate(new Date(program.startAt));
+        const start = DateUtil.getJaDate(new Date(program.startAt));
 
-        return DateUtil.format(start, 'MM/dd(w)')
+        return DateUtil.format(start, 'MM/dd(w)');
     }
 
     /**
-    * getTimes
-    * @return string
-    */
-    private getTimes(program: apid.ReserveProgram): { start: string, end: string, duration: string } {
-        let start = DateUtil.getJaDate(new Date(program.startAt));
-        let end = DateUtil.getJaDate(new Date(program.endAt));
-        let duration = Math.floor((program.endAt - program.startAt) / 1000 / 60);
+     * getTimes
+     * @return string
+     */
+    private getTimes(program: apid.ReserveProgram): { start: string; end: string; duration: string } {
+        const start = DateUtil.getJaDate(new Date(program.startAt));
+        const end = DateUtil.getJaDate(new Date(program.endAt));
+        const duration = Math.floor((program.endAt - program.startAt) / 1000 / 60);
 
         return {
             start: DateUtil.format(start, 'hh:mm:ss'),
             end: DateUtil.format(end, 'hh:mm:ss'),
             duration: `(${ duration }分)`,
-        }
+        };
     }
 
     private createTableOption(reserve: apid.Reserve): m.Child {
@@ -270,7 +274,7 @@ class ReservesComponent extends ParentComponent<void> {
                     style: typeof reserve.ruleId === 'undefined' ? 'visibility: hidden;' : '',
                     onclick: () => { Util.move('/search', { rule: reserve.ruleId }); },
                 },
-                    m('i', { class: 'material-icons' }, 'mode_edit')
+                    m('i', { class: 'material-icons' }, 'mode_edit'),
                 ),
                 // delete
                 m('button', {
@@ -280,9 +284,9 @@ class ReservesComponent extends ParentComponent<void> {
                         this.menuViewModel.openDelete();
                     },
                 },
-                    m('i', { class: 'material-icons' }, 'delete')
+                    m('i', { class: 'material-icons' }, 'delete'),
                 ),
-            ])
+            ]),
         ]);
     }
 }

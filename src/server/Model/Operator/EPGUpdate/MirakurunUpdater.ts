@@ -1,13 +1,13 @@
-import * as apid from '../../../../../node_modules/mirakurun/api';
 import Mirakurun from 'mirakurun';
-import CreateMirakurunClient from '../../../Util/CreateMirakurunClient';
+import * as apid from '../../../../../node_modules/mirakurun/api';
 import Base from '../../../Base';
-import { ServicesDBInterface } from '../../DB/ServicesDB';
+import CreateMirakurunClient from '../../../Util/CreateMirakurunClient';
 import { ChannelTypeHash, ProgramsDBInterface } from '../../DB/ProgramsDB';
+import { ServicesDBInterface } from '../../DB/ServicesDB';
 
 /**
-* Mirakurun のデータを取得して DB を更新する
-*/
+ * Mirakurun のデータを取得して DB を更新する
+ */
 class MirakurunUpdater extends Base {
     private servicesDB: ServicesDBInterface;
     private programsDB: ProgramsDBInterface;
@@ -18,9 +18,9 @@ class MirakurunUpdater extends Base {
     private tuners: apid.TunerDevice[] = [];
 
     /**
-    * @param servicesDB: ServicesDB
-    * @param programsDB: ProgramsDB
-    */
+     * @param servicesDB: ServicesDB
+     * @param programsDB: ProgramsDB
+     */
     constructor(
         servicesDB: ServicesDBInterface,
         programsDB: ProgramsDBInterface,
@@ -33,9 +33,9 @@ class MirakurunUpdater extends Base {
     }
 
     /**
-    * mirakurun から EPG データを取得して DB へ保存する
-    * @param callback: すべての更新が終わったら呼ばれる
-    */
+     * mirakurun から EPG データを取得して DB へ保存する
+     * @param callback: すべての更新が終わったら呼ばれる
+     */
     public update(): void {
         Promise.resolve()
         .then(() => {
@@ -45,8 +45,8 @@ class MirakurunUpdater extends Base {
             console.log(`mirakurun -> services: ${ services.length }`);
 
             const excludeServices = this.config.getConfig().excludeServices || [];
-            for(let i = 0; i < services.length; i++) {
-                if(excludeServices.indexOf(services[i].id) !== -1) {
+            for (let i = 0; i < services.length; i++) {
+                if (excludeServices.indexOf(services[i].id) !== -1) {
                     services.splice(i, 1);
                     i -= 1;
                 }
@@ -58,6 +58,7 @@ class MirakurunUpdater extends Base {
         })
         .then(() => {
             console.log('insert Services done');
+
             return this.mirakurun.getPrograms();
         })
         .then((programs) => {
@@ -65,34 +66,35 @@ class MirakurunUpdater extends Base {
             this.programs = programs;
 
             // 放送波索引
-            let channelTypes: ChannelTypeHash = {};
-            for(let service of this.services) {
-                if(typeof service.channel === 'undefined') { continue; }
-                if(typeof channelTypes[service.networkId] === 'undefined') {
-                    channelTypes[service.networkId] = {}
+            const channelTypes: ChannelTypeHash = {};
+            for (const service of this.services) {
+                if (typeof service.channel === 'undefined') { continue; }
+                if (typeof channelTypes[service.networkId] === 'undefined') {
+                    channelTypes[service.networkId] = {};
                 }
                 channelTypes[service.networkId][service.serviceId] = {
                     type: service.channel.type,
-                    channel: service.channel.channel
-                }
+                    channel: service.channel.channel,
+                };
             }
 
             return this.programsDB.insert(channelTypes, this.programs);
         })
         .then(() => {
             console.log('insert Programs done.');
+
             return this.mirakurun.getTuners();
         })
         .then((tuners) => {
             console.log(`mirakurun => tuners: ${ tuners.length }`);
             this.tuners = tuners;
 
-            //DB の pool 終了
-            //DBBase を継承したクラスのインスタンスならどれでも良い
-            return this.servicesDB.end()
+            // DB の pool 終了
+            // DBBase を継承したクラスのインスタンスならどれでも良い
+            return this.servicesDB.end();
         }).then(() => {
-            //tuner 情報を親プロセスへ渡す
-            if(typeof process.send !== 'undefined') {
+            // tuner 情報を親プロセスへ渡す
+            if (typeof process.send !== 'undefined') {
                 process.send({ msg: 'tuner', tuners: this.getTuners() });
             }
 
@@ -106,8 +108,8 @@ class MirakurunUpdater extends Base {
     }
 
     /**
-    * @return tuners
-    */
+     * @return tuners
+     */
     public getTuners(): apid.TunerDevice[] {
         return this.tuners;
     }

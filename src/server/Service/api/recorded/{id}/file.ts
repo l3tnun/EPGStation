@@ -1,16 +1,16 @@
 import { Operation } from 'express-openapi';
-import * as api from '../../../api';
-import factory from '../../../../Model/ModelFactory';
 import { RecordedModelInterface } from '../../../../Model/Api/RecordedModel';
+import factory from '../../../../Model/ModelFactory';
+import * as api from '../../../api';
 
-export const get: Operation = async (req, res) => {
-    let recordeds = <RecordedModelInterface>(factory.get('RecordedModel'));
+export const get: Operation = async(req, res) => {
+    const recordeds = <RecordedModelInterface> factory.get('RecordedModel');
 
     try {
-        let file = await recordeds.getFilePath(req.params.id, req.query.encodedId);
+        const file = await recordeds.getFilePath(req.params.id, req.query.encodedId);
         api.responseFile(req, res, file.path, file.mime, req.query.mode === 'download');
-    } catch(err) {
-        if(err.message === RecordedModelInterface.NotFoundRecordedFileError) {
+    } catch (err) {
+        if (err.message === RecordedModelInterface.NotFoundRecordedFileError) {
             api.responseError(res, { code: 404,  message: 'Recorded file is not Found' });
         } else {
             api.responseServerError(res, err.message);
@@ -28,7 +28,7 @@ get.apiDoc = {
             in: 'path',
             description: 'recorded id',
             required: true,
-            type: 'integer'
+            type: 'integer',
         },
         {
             name: 'encodedId',
@@ -41,8 +41,8 @@ get.apiDoc = {
             in: 'query',
             description: 'mode',
             type: 'string',
-            enum: [ 'download' ]
-        }
+            enum: ['download'],
+        },
     ],
     produces: [
         'video/mpeg',
@@ -52,29 +52,29 @@ get.apiDoc = {
     ],
     responses: {
         200: {
-            description: 'ok'
+            description: 'ok',
         },
         404: {
-            description: 'Not found'
+            description: 'Not found',
         },
         default: {
             description: '予期しないエラー',
             schema: {
-                $ref: '#/definitions/Error'
-            }
-        }
-    }
+                $ref: '#/definitions/Error',
+            },
+        },
+    },
 };
 
-export const del: Operation = async (req, res) => {
-    let recordeds = <RecordedModelInterface>(factory.get('RecordedModel'));
+export const del: Operation = async(req, res) => {
+    const recordeds = <RecordedModelInterface> factory.get('RecordedModel');
 
     try {
         await recordeds.deleteRecorded(req.params.id, req.query.encodedId);
         api.responseJSON(res, 200, { code: 200 });
         api.notifyClient();
-    } catch(err) {
-        switch(err.message) {
+    } catch (err) {
+        switch (err.message) {
             case RecordedModelInterface.NotFoundRecordedIdError:
                 api.responseError(res, { code: 404,  message: 'id is not found' });
                 break;
@@ -104,7 +104,7 @@ del.apiDoc = {
             in: 'path',
             description: 'recorded id',
             required: true,
-            type: 'integer'
+            type: 'integer',
         },
         {
             name: 'encodedId',
@@ -126,9 +126,9 @@ del.apiDoc = {
         default: {
             description: '予期しないエラー',
             schema: {
-                $ref: '#/definitions/Error'
-            }
-        }
-    }
-}
+                $ref: '#/definitions/Error',
+            },
+        },
+    },
+};
 

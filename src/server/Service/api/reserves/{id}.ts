@@ -1,15 +1,15 @@
 import { Operation } from 'express-openapi';
-import * as api from '../../api';
-import factory from '../../../Model/ModelFactory';
 import { ReservesModelInterface } from '../../../Model/Api/ReservesModel';
+import factory from '../../../Model/ModelFactory';
+import * as api from '../../api';
 
-export const del: Operation = async (req, res) => {
-    let reserves = <ReservesModelInterface>(factory.get('ReservesModel'));
+export const del: Operation = async(req, res) => {
+    const reserves = <ReservesModelInterface> factory.get('ReservesModel');
 
     try {
         await reserves.cancelReserve(req.params.id);
         api.responseJSON(res, 200, { code: 200 });
-    } catch(err) {
+    } catch (err) {
         api.responseServerError(res, err.message);
     }
 };
@@ -24,8 +24,8 @@ del.apiDoc = {
             in: 'path',
             description: 'program id',
             required: true,
-            type: 'integer'
-        }
+            type: 'integer',
+        },
     ],
     responses: {
         200: {
@@ -34,9 +34,9 @@ del.apiDoc = {
         default: {
             description: '予期しないエラー',
             schema: {
-                $ref: '#/definitions/Error'
-            }
-        }
-    }
+                $ref: '#/definitions/Error',
+            },
+        },
+    },
 };
 

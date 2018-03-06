@@ -1,22 +1,22 @@
 import * as m from 'mithril';
-import Component from '../Component';
-import factory from '../../ViewModel/ViewModelFactory';
 import StreamSelectViewModel from '../../ViewModel/Stream/StreamSelectViewModel';
+import factory from '../../ViewModel/ViewModelFactory';
+import Component from '../Component';
 
 /**
-* StreamSelectComponent
-*/
+ * StreamSelectComponent
+ */
 class StreamSelectComponent extends Component<void> {
     private viewModel: StreamSelectViewModel;
 
     constructor() {
         super();
-        this.viewModel = <StreamSelectViewModel>(factory.get('StreamSelectViewModel'));
+        this.viewModel = <StreamSelectViewModel> factory.get('StreamSelectViewModel');
     }
 
     /**
-    * view
-    */
+     * view
+     */
     public view(): m.Child {
         return m('div', [
 
@@ -27,7 +27,7 @@ class StreamSelectComponent extends Component<void> {
                         class: 'mdl-textfield__input program-dialog-label',
                         onchange: m.withAttr('value', (value) => { this.viewModel.streamOptionValue = Number(value); }),
                         onupdate: (vnode: m.VnodeDOM<void, this>) => {
-                            this.selectOnUpdate(<HTMLInputElement>(vnode.dom), this.viewModel.streamOptionValue)
+                            this.selectOnUpdate(<HTMLInputElement> (vnode.dom), this.viewModel.streamOptionValue);
                         },
                     }, this.createOptions()),
                 ]),
@@ -40,7 +40,7 @@ class StreamSelectComponent extends Component<void> {
                     onclick: () => {
                         this.viewModel.close();
                         this.viewModel.view();
-                    }
+                    },
                 }, '視聴'),
 
                 m('button', {
@@ -52,22 +52,22 @@ class StreamSelectComponent extends Component<void> {
                         setTimeout(() => {
                             this.viewModel.moveStationPage();
                         }, 200);
-                    }
+                    },
                 }, '単局表示'),
 
                 m('button', {
                     type: 'button',
                     class: 'mdl-button mdl-js-button mdl-button--accent close',
-                    onclick: () => { this.viewModel.close(); }
+                    onclick: () => { this.viewModel.close(); },
                 }, '閉じる'),
             ]),
         ]);
     }
 
     /**
-    * selector の option を生成する
-    * @return m.Child[]
-    */
+     * selector の option を生成する
+     * @return m.Child[]
+     */
     private createOptions(): m.Child[] {
         return this.viewModel.getOptions().map((option) => {
             return m('option', { value: option.value }, option.name);

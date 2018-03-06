@@ -1,9 +1,9 @@
-import ApiModel from './ApiModel';
-import { IPCClientInterface } from '../IPC/IPCClient';
-import { RulesDBInterface } from '../DB/RulesDB';
 import * as DBSchema from '../DB/DBSchema';
-import ApiUtil from './ApiUtil';
+import { RulesDBInterface } from '../DB/RulesDB';
+import { IPCClientInterface } from '../IPC/IPCClient';
 import { RuleInterface } from '../Operator/RuleInterface';
+import ApiModel from './ApiModel';
+import ApiUtil from './ApiUtil';
 
 interface RulesModelInterface extends ApiModel {
     getAll(limit: number | undefined, offset: number): Promise<{}[]>;
@@ -16,7 +16,7 @@ interface RulesModelInterface extends ApiModel {
 }
 
 namespace RulesModelInterface {
-    export const NotFoundRuleIdError = 'NotFoundRuleId'
+    export const NotFoundRuleIdError = 'NotFoundRuleId';
 }
 
 class RulesModel extends ApiModel implements RulesModelInterface {
@@ -30,35 +30,35 @@ class RulesModel extends ApiModel implements RulesModelInterface {
     }
 
     /**
-    * rule をすべて取得
-    * @param limit: number | undefined
-    * @param offset: number
-    * @return Promise<any>
-    */
+     * rule をすべて取得
+     * @param limit: number | undefined
+     * @param offset: number
+     * @return Promise<any>
+     */
     public async getAll(limit: number | undefined, offset: number): Promise<any> {
-        let datas = await this.rulesDB.findAll(limit, offset);
-        let total = await this.rulesDB.getTotal();
+        const datas = await this.rulesDB.findAll(limit, offset);
+        const total = await this.rulesDB.getTotal();
 
-        let results: any[] = [];
+        const results: any[] = [];
         datas.forEach((result: DBSchema.RulesSchema) => {
             results.push(ApiUtil.deleteNullinHash(result));
         });
 
         return {
             rules: results,
-            total: total
-        }
+            total: total,
+        };
     }
 
     /**
-    * rule を id 取得
-    * @param ruleId: rule id
-    * @return Promise<{}>
-    */
+     * rule を id 取得
+     * @param ruleId: rule id
+     * @return Promise<{}>
+     */
     public async getId(ruleId: number): Promise<{}> {
-        let rule = await this.rulesDB.findId(ruleId);
+        const rule = await this.rulesDB.findId(ruleId);
 
-        if(rule === null) {
+        if (rule === null) {
             throw new Error(RulesModelInterface.NotFoundRuleIdError);
         }
 
@@ -66,53 +66,53 @@ class RulesModel extends ApiModel implements RulesModelInterface {
     }
 
     /**
-    * rule を無効化
-    * @param ruleId: rule id
-    * @return Promise<void>
-    */
+     * rule を無効化
+     * @param ruleId: rule id
+     * @return Promise<void>
+     */
     public async disableRule(ruleId: number): Promise<void> {
         await this.ipc.ruleDisable(ruleId);
     }
 
     /**
-    * rule を有効化
-    * @param ruleId: rule id
-    * @return Promise<void>
-    */
+     * rule を有効化
+     * @param ruleId: rule id
+     * @return Promise<void>
+     */
     public async enableRule(ruleId: number): Promise<void> {
         await this.ipc.ruleEnable(ruleId);
     }
 
     /**
-    * rule を削除
-    * @param ruleId: rule id
-    * @return Promise<void>
-    */
+     * rule を削除
+     * @param ruleId: rule id
+     * @return Promise<void>
+     */
     public async deleteRule(ruleId: number): Promise<void> {
         await this.ipc.ruleDelete(ruleId);
     }
 
     /**
-    * rule を追加
-    * @param rule: RuleInterface
-    * @return Promise<{ id: number }>: rule id
-    */
+     * rule を追加
+     * @param rule: RuleInterface
+     * @return Promise<{ id: number }>: rule id
+     */
     public async addRule(rule: RuleInterface): Promise<{ id: number }> {
-        let ruleId = await this.ipc.ruleAdd(rule);
+        const ruleId = await this.ipc.ruleAdd(rule);
 
         return { id: ruleId };
     }
 
     /**
-    * rule を更新
-    * @param ruleId: rule id
-    * @param rule: RuleInterface
-    * @return Promise<void>
-    */
+     * rule を更新
+     * @param ruleId: rule id
+     * @param rule: RuleInterface
+     * @return Promise<void>
+     */
     public async updateRule(ruleId: number, rule: RuleInterface): Promise<void> {
         await this.ipc.ruleUpdate(ruleId, rule);
     }
 }
 
-export { RulesModelInterface, RulesModel }
+export { RulesModelInterface, RulesModel };
 

@@ -1,18 +1,17 @@
 import * as m from 'mithril';
-import SearchOptionBaseComponent from './SearchOptionBaseComponent';
-import factory from '../../ViewModel/ViewModelFactory';
 import SearchViewModel from '../../ViewModel/Search/SearchViewModel';
+import factory from '../../ViewModel/ViewModelFactory';
+import SearchOptionBaseComponent from './SearchOptionBaseComponent';
 
 /**
-* SearchOptionComponent
-*/
-
+ * SearchOptionComponent
+ */
 class SearchOptionComponent extends SearchOptionBaseComponent<void> {
     private viewModel: SearchViewModel;
 
     constructor() {
         super();
-        this.viewModel = <SearchViewModel>(factory.get('SearchViewModel'));
+        this.viewModel = <SearchViewModel> factory.get('SearchViewModel');
     }
 
     public view(): m.Child {
@@ -31,9 +30,9 @@ class SearchOptionComponent extends SearchOptionBaseComponent<void> {
     }
 
     /**
-    * キーワード
-    * @return keyword option
-    */
+     * キーワード
+     * @return keyword option
+     */
     private createKeyword(): m.Child {
         return this.createContentFrame('キーワード', [
             m('div', { class: 'option-text-box mdl-cell--12-col mdl-textfield mdl-js-textfield' }, [
@@ -43,24 +42,24 @@ class SearchOptionComponent extends SearchOptionBaseComponent<void> {
                     value: this.viewModel.keyword,
                     onchange: m.withAttr('value', (value) => { this.viewModel.keyword = value; }),
                     onupdate: (vnode: m.VnodeDOM<void, this>) => {
-                        //enter key で検索
-                        (<HTMLInputElement>vnode.dom).onkeydown = (e) => {
-                            if(e.keyCode == 13) {
-                                this.viewModel.keyword = (<HTMLInputElement>vnode.dom).value;
+                        // enter key で検索
+                        (<HTMLInputElement> vnode.dom).onkeydown = (e) => {
+                            if (e.keyCode === 13) {
+                                this.viewModel.keyword = (<HTMLInputElement> vnode.dom).value;
                                 this.viewModel.search();
-                                (<HTMLInputElement>vnode.dom).blur();
+                                (<HTMLInputElement> vnode.dom).blur();
                             }
-                        }
-                    }
-                })
+                        };
+                    },
+                }),
             ]),
         ]);
     }
 
     /**
-    * 除外キーワード & options
-    * @return ignore keyword option
-    */
+     * 除外キーワード & options
+     * @return ignore keyword option
+     */
     private createIgnoreKeyword(): m.Child {
         return this.createContentFrame('除外キーワード', [
             m('div', { class: 'option-text-box mdl-cell--12-col mdl-textfield mdl-js-textfield' }, [
@@ -70,21 +69,21 @@ class SearchOptionComponent extends SearchOptionBaseComponent<void> {
                     value: this.viewModel.ignoreKeyword,
                     onchange: m.withAttr('value', (value) => { this.viewModel.ignoreKeyword = value; }),
                     onupdate: (vnode: m.VnodeDOM<void, this>) => {
-                         //enter key で検索
-                        (<HTMLInputElement>vnode.dom).onkeydown = (e) => {
-                            if(e.keyCode == 13) {
-                                this.viewModel.ignoreKeyword = (<HTMLInputElement>vnode.dom).value;
+                         // enter key で検索
+                        (<HTMLInputElement> vnode.dom).onkeydown = (e) => {
+                            if (e.keyCode === 13) {
+                                this.viewModel.ignoreKeyword = (<HTMLInputElement> vnode.dom).value;
                                 this.viewModel.search();
-                                (<HTMLInputElement>vnode.dom).blur();
+                                (<HTMLInputElement> vnode.dom).blur();
                             }
-                        }
-                    }
-                })
+                        };
+                    },
+                }),
             ]),
 
             m('div', {
                 class: 'mdl-cell mdl-cell--12-col mdl-grid mdl-grid--no',
-                style: 'padding: 0;'
+                style: 'padding: 0;',
             }, [
                 this.createCheckBox(
                     '大小区別',
@@ -111,43 +110,42 @@ class SearchOptionComponent extends SearchOptionBaseComponent<void> {
                     () => { return this.viewModel.extended; },
                     (value: boolean) => { this.viewModel.extended = value; },
                 ),
-            ])
+            ]),
         ]);
     }
 
     /**
-    * 放送局 & 放送波チェックボックス
-    */
+     * 放送局 & 放送波チェックボックス
+     */
     private createBroadcaster(): m.Child {
         return this.createContentFrame('放送局', [
-            //放送局プルダウン
+            // 放送局プルダウン
             m('div', { style: 'display: flex; width: 100%;' }, [
                  m('div', { class: 'pulldown mdl-layout-spacer' }, [
                     m('select', {
                         value: this.viewModel.station,
-                        onchange: m.withAttr('value', (value) => { this.viewModel.station = Number(value); })
+                        onchange: m.withAttr('value', (value) => { this.viewModel.station = Number(value); }),
                     }, [
                         m('option', { value: '0' }, 'すべて'),
                         this.viewModel.getChannels().map((channel) => {
                             return m('option', { value: channel.id }, channel.name);
                         }),
-                    ])
-                ])
+                    ]),
+                ]),
             ]),
 
             m('div', {
                 class: 'mdl-cell mdl-cell--12-col mdl-grid mdl-grid--no',
-                style: 'margin-top: 12px; padding: 0;'
-            }, this.createBroadCastCheckBox())
-
+                style: 'margin-top: 12px; padding: 0;',
+            }, this.createBroadCastCheckBox()),
         ]);
     }
 
     /**
-    * 放送波のチェックボックス生成
-    */
+     * 放送波のチェックボックス生成
+     */
     private createBroadCastCheckBox(): m.Child[] {
-        let result: m.Child[] = [];
+        const result: m.Child[] = [];
 
         result.push(this.createCheckBox(
             'GR',
@@ -177,11 +175,11 @@ class SearchOptionComponent extends SearchOptionBaseComponent<void> {
     }
 
     /**
-    * 対象ジャンル
-    */
+     * 対象ジャンル
+     */
     private createGenres(): m.Child {
         return this.createContentFrame('対象ジャンル', [
-            //ジャンルセレクタ
+            // ジャンルセレクタ
             m('div', { style: 'display: flex; width: 50%;' }, [
                 m('div', { class: 'pulldown mdl-layout-spacer' }, [
                     m('select', {
@@ -189,68 +187,68 @@ class SearchOptionComponent extends SearchOptionBaseComponent<void> {
                         onchange: m.withAttr('value', (value) => {
                             this.viewModel.genrelv1 = Number(value);
                             this.viewModel.initGenre2();
-                        })
+                        }),
                     },
                         m('option', { value: '-1' }, 'すべて'),
                         this.viewModel.getGenre1().map((genre) => {
-                            return m('option', { value: genre.value }, genre.name );
-                        })
-                    )
-                ])
+                            return m('option', { value: genre.value }, genre.name);
+                        }),
+                    ),
+                ]),
             ]),
 
-            //サブジャンルセレクタ
+            // サブジャンルセレクタ
             m('div', { style: 'display: flex; width: 50%;' }, [
                 m('div', { class: 'pulldown mdl-layout-spacer' }, [
                     m('select', {
                         value: this.viewModel.genrelv2,
-                        onchange: m.withAttr('value', (value) => { this.viewModel.genrelv2 = Number(value); })
+                        onchange: m.withAttr('value', (value) => { this.viewModel.genrelv2 = Number(value); }),
                     },
                         m('option', { value: '-1' }, 'すべて'),
                         this.viewModel.getGenre2().map((genre) => {
-                            return m('option', { value: genre.value }, genre.name );
-                        })
-                    )
-                ])
+                            return m('option', { value: genre.value }, genre.name);
+                        }),
+                    ),
+                ]),
             ]),
         ]);
     }
 
     /**
-    * 対象時刻 & 曜日
-    */
+     * 対象時刻 & 曜日
+     */
     private createTimes(): m.Child {
         return this.createContentFrame('対象時刻', [
-            //開始時刻セレクタ
+            // 開始時刻セレクタ
             m('div', [
                 m('div', { class: 'pulldown mdl-layout-spacer' }, [
                     m('select', {
                         value: this.viewModel.startTime,
                         onchange: m.withAttr('value', (value) => {
-                            this.viewModel.startTime = Number(value)
-                        })
-                    }, this.createStartTimeOption() )
-                ])
+                            this.viewModel.startTime = Number(value);
+                        }),
+                    }, this.createStartTimeOption()),
+                ]),
             ]),
 
             m('div', {
-                style: 'padding: 0px 12px; font-size: 16px; margin-top: 12.5px;'
+                style: 'padding: 0px 12px; font-size: 16px; margin-top: 12.5px;',
             }, 'から'),
 
-            //時刻幅セレクタ
+            // 時刻幅セレクタ
             m('div', [
                 m('div', { class: 'pulldown mdl-layout-spacer' }, [
                     m('select', {
                         value: this.viewModel.timeRange,
-                        onchange: m.withAttr('value', (value) => { this.viewModel.timeRange = Number(value); } )
+                        onchange: m.withAttr('value', (value) => { this.viewModel.timeRange = Number(value); }),
                     }, this.createTimeRangeOption()),
-                ])
+                ]),
             ]),
 
-            //曜日チェックボックス
+            // 曜日チェックボックス
             m('div', {
                 class: 'mdl-cell mdl-cell--12-col mdl-grid mdl-grid--no',
-                style: 'margin-top: 12px; padding: 0;'
+                style: 'margin-top: 12px; padding: 0;',
             }, [
                 this.createCheckBox(
                     '月',
@@ -287,52 +285,55 @@ class SearchOptionComponent extends SearchOptionBaseComponent<void> {
                     () => { return this.viewModel.sun; },
                     (value: boolean) => { this.viewModel.sun = value; },
                 ),
-            ])
+            ]),
         ]);
     }
 
     /**
-    * 開始時刻のオプション
-    */
+     * 開始時刻のオプション
+     */
     private createStartTimeOption(): m.Child[] {
-        let result = [ m('option', { value: '24' }, 'なし') ];
-        for(let i = 0; i < 24; i++) { result.push( m('option', { value: `${ i }` }, `${ i }時`) ) }
+        const result = [ m('option', { value: '24' }, 'なし') ];
+        for (let i = 0; i < 24; i++) { result.push(m('option', { value: `${ i }` }, `${ i }時`)); }
 
         return result;
     }
 
     /**
-    * 時刻幅
-    */
-    private createTimeRangeOption():  m.Child[] {
-        let result: m.Child[] = [];
-        for(let i = 1; i < 24; i++) { result.push( m('option', { value: `${ i }` }, i + '時間') ); }
+     * 時刻幅
+     */
+    private createTimeRangeOption(): m.Child[] {
+        const result: m.Child[] = [];
+        for (let i = 1; i < 24; i++) { result.push(m('option', { value: `${ i }` }, i + '時間')); }
+
         return result;
     }
 
     /**
-    * 長さ
-    */
+     * 長さ
+     */
     private createDuration(): m.Child {
         return this.createContentFrame('長さ', [
             m('div', { class: 'duration-box' }, [
                 m('div', { class: 'duration-text' }, '最小(分)'),
 
                 m('div', { class: 'option-text-box mdl-cell--12-col mdl-textfield mdl-js-textfield' }, [
-                    m('input', { class: 'mdl-textfield__input', type: 'number', pattern: '-?[0-9]*(\.[0-9]+)?',
+                    m('input', {
+                        class: 'mdl-textfield__input',
+                        type: 'number', pattern: '-?[0-9]*(\.[0-9]+)?',
                         value: (() => {
-                            if(this.viewModel.durationMin === 0) { return; }
+                            if (this.viewModel.durationMin === 0) { return; }
                             else { return this.viewModel.durationMin; }
                         })(),
                         onchange: m.withAttr('value', (value) => {
                             let num = Number(value);
-                            if(isNaN(num)) { num = 0; }
+                            if (isNaN(num)) { num = 0; }
                             this.viewModel.durationMin = num;
                         }),
                         onupdate: (vnode: m.VnodeDOM<void, this>) => {
-                            this.inputNumberOnUpdate(<HTMLInputElement>vnode.dom, this.viewModel.durationMin);
+                            this.inputNumberOnUpdate(<HTMLInputElement> vnode.dom, this.viewModel.durationMin);
                         },
-                    })
+                    }),
                 ]),
             ]),
 
@@ -340,28 +341,30 @@ class SearchOptionComponent extends SearchOptionBaseComponent<void> {
                 m('div', { class: 'duration-text' }, '最長(分)'),
 
                 m('div', { class: 'option-text-box mdl-cell--12-col mdl-textfield mdl-js-textfield' }, [
-                    m('input', { class: 'mdl-textfield__input', type: 'number', pattern: '-?[0-9]*(\.[0-9]+)?',
+                    m('input', {
+                        class: 'mdl-textfield__input',
+                        type: 'number', pattern: '-?[0-9]*(\.[0-9]+)?',
                         value: (() => {
-                            if(this.viewModel.durationMax === 0) { return; }
+                            if (this.viewModel.durationMax === 0) { return; }
                             else { return this.viewModel.durationMax; }
                         })(),
                         onchange: m.withAttr('value', (value) => {
                             let num = Number(value);
-                            if(isNaN(num)) { num = 0; }
+                            if (isNaN(num)) { num = 0; }
                             this.viewModel.durationMax = num;
                         }),
                         onupdate: (vnode: m.VnodeDOM<void, this>) => {
-                            this.inputNumberOnUpdate(<HTMLInputElement>vnode.dom, this.viewModel.durationMax);
+                            this.inputNumberOnUpdate(<HTMLInputElement> vnode.dom, this.viewModel.durationMax);
                         },
-                    })
+                    }),
                 ]),
             ]),
         ]);
     }
 
     /**
-    * その他
-    */
+     * その他
+     */
     private createOther(): m.Child {
         return this.createContentFrame('その他', [
             m('div', { style: 'margin-top: 12px;' } , [
@@ -370,29 +373,29 @@ class SearchOptionComponent extends SearchOptionBaseComponent<void> {
                     () => { return this.viewModel.isFree; },
                     (value: boolean) => { this.viewModel.isFree = value; },
                 ),
-            ])
+            ]),
         ]);
     }
 
     /**
-    * アクションボタン
-    */
+     * アクションボタン
+     */
     private createActionButtons(): m.Child {
         return m('div', { class: 'mdl-dialog__actions mdl-card__actions mdl-card--border' }, [
-            //検索ボタン
+            // 検索ボタン
             m('button', {
                 class: 'no-hover mdl-button mdl-js-button mdl-button--primary',
-                onclick: () => {this.viewModel.search(); }
-            }, '検索' ),
+                onclick: () => {this.viewModel.search(); },
+            }, '検索'),
 
-            //キャンセル or 元に戻すボタン
+            // キャンセル or 元に戻すボタン
             m('button', {
                 class: 'no-hover mdl-button mdl-js-button mdl-button--accent',
                 onclick: () => {
                     this.viewModel.initSearchOption();
                     this.viewModel.clearSearchResults();
-                }
-            }, 'クリア')
+                },
+            }, 'クリア'),
         ]);
     }
 }

@@ -1,16 +1,16 @@
 import { Operation } from 'express-openapi';
-import * as api from '../../../api';
-import factory from '../../../../Model/ModelFactory';
 import { RecordedModelInterface } from '../../../../Model/Api/RecordedModel';
+import factory from '../../../../Model/ModelFactory';
+import * as api from '../../../api';
 
-export const get: Operation = async (req, res) => {
-    let recordeds = <RecordedModelInterface>(factory.get('RecordedModel'));
+export const get: Operation = async(req, res) => {
+    const recordeds = <RecordedModelInterface> factory.get('RecordedModel');
 
     try {
-        let list = await recordeds.getM3u8(req.headers.host, req.secure, req.params.id, req.query.encodedId);
+        const list = await recordeds.getM3u8(req.headers.host, req.secure, req.params.id, req.query.encodedId);
         api.responsePlayList(req, res, list);
-    } catch(err) {
-        if(err.message === RecordedModelInterface.NotFoundRecordedFileError) {
+    } catch (err) {
+        if (err.message === RecordedModelInterface.NotFoundRecordedFileError) {
             api.responseError(res, { code: 404,  message: 'Recorded file is not Found' });
         } else {
             api.responseServerError(res, err.message);
@@ -28,31 +28,31 @@ get.apiDoc = {
             in: 'path',
             description: 'recorded id',
             required: true,
-            type: 'integer'
+            type: 'integer',
         },
         {
             name: 'encodedId',
             in: 'query',
             description: 'encoded id',
             type: 'integer',
-        }
+        },
     ],
     produces: [
         'application/x-mpegURL',
     ],
     responses: {
         200: {
-            description: 'ok'
+            description: 'ok',
         },
         404: {
-            description: 'Not found'
+            description: 'Not found',
         },
         default: {
             description: '予期しないエラー',
             schema: {
-                $ref: '#/definitions/Error'
-            }
-        }
-    }
+                $ref: '#/definitions/Error',
+            },
+        },
+    },
 };
 

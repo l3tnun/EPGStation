@@ -1,16 +1,16 @@
 import { Operation } from 'express-openapi';
-import * as api from '../../api';
-import factory from '../../../Model/ModelFactory';
 import { RecordedModelInterface } from '../../../Model/Api/RecordedModel';
+import factory from '../../../Model/ModelFactory';
+import * as api from '../../api';
 
-export const get: Operation = async (req, res) => {
-    let recordeds = <RecordedModelInterface>(factory.get('RecordedModel'));
+export const get: Operation = async(req, res) => {
+    const recordeds = <RecordedModelInterface> factory.get('RecordedModel');
 
     try {
-        let result = await recordeds.getId(req.params.id);
+        const result = await recordeds.getId(req.params.id);
         api.responseJSON(res, 200, result);
-    } catch(err) {
-        if(err.message === RecordedModelInterface.NotFoundRecordedIdError) {
+    } catch (err) {
+        if (err.message === RecordedModelInterface.NotFoundRecordedIdError) {
             api.responseError(res, { code: 404,  message: 'Recorded Id is not Found' });
         } else {
             api.responseServerError(res, err.message);
@@ -28,15 +28,15 @@ get.apiDoc = {
             in: 'path',
             description: 'recorded id',
             required: true,
-            type: 'integer'
-        }
+            type: 'integer',
+        },
     ],
     responses: {
         200: {
             description: '録画 を id 取得しました',
             schema: {
-                $ref: '#/definitions/RecordedProgram'
-            }
+                $ref: '#/definitions/RecordedProgram',
+            },
         },
         404: {
             description: '指定された id の 録画データがない',
@@ -44,21 +44,21 @@ get.apiDoc = {
         default: {
             description: '予期しないエラー',
             schema: {
-                $ref: '#/definitions/Error'
-            }
-        }
-    }
+                $ref: '#/definitions/Error',
+            },
+        },
+    },
 };
 
-export const del: Operation = async (req, res) => {
-    let recordeds = <RecordedModelInterface>(factory.get('RecordedModel'));
+export const del: Operation = async(req, res) => {
+    const recordeds = <RecordedModelInterface> factory.get('RecordedModel');
 
     try {
         await recordeds.deleteAllRecorded(req.params.id);
         api.responseJSON(res, 200, { code: 200 });
         api.notifyClient();
-    } catch(err) {
-        if(err.message === RecordedModelInterface.RecordedIsStreamingNowError) {
+    } catch (err) {
+        if (err.message === RecordedModelInterface.RecordedIsStreamingNowError) {
              api.responseError(res, { code: 409,  message: 'is streaming now' });
         } else {
             api.responseServerError(res, err.message);
@@ -76,8 +76,8 @@ del.apiDoc = {
             in: 'path',
             description: 'recorded id',
             required: true,
-            type: 'integer'
-        }
+            type: 'integer',
+        },
     ],
     responses: {
         200: {
@@ -89,10 +89,9 @@ del.apiDoc = {
         default: {
             description: '予期しないエラー',
             schema: {
-                $ref: '#/definitions/Error'
-            }
-        }
-    }
+                $ref: '#/definitions/Error',
+            },
+        },
+    },
 };
-
 

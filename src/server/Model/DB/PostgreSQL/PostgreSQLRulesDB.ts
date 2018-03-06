@@ -3,11 +3,11 @@ import { RulesDB } from '../RulesDB';
 
 class PostgreSQLRulesDB extends RulesDB {
     /**
-    * create table
-    * @return Promise<void>
-    */
+     * create table
+     * @return Promise<void>
+     */
     public create(): Promise<void> {
-        let query = `create table if not exists ${ DBSchema.TableName.Rules } (`
+        const query = `create table if not exists ${ DBSchema.TableName.Rules } (`
             + 'id serial primary key, '
             + 'keyword text, '
             + 'ignoreKeyword text, '
@@ -39,16 +39,16 @@ class PostgreSQLRulesDB extends RulesDB {
             + 'mode3 integer, '
             + 'directory3 text, '
             + 'delTs boolean '
-        + ');'
+        + ');';
 
         return this.operator.runQuery(query);
     }
 
     /**
-    * restore
-    * @param rules: DBSchema.RulesSchema[]
-    * @param isDelete: boolean = true
-    */
+     * restore
+     * @param rules: DBSchema.RulesSchema[]
+     * @param isDelete: boolean = true
+     */
     public async restore(rules: DBSchema.RulesSchema[], isDelete: boolean = true): Promise<void> {
         await super.restore(rules, isDelete);
 
@@ -57,9 +57,9 @@ class PostgreSQLRulesDB extends RulesDB {
     }
 
     /**
-    * all columns
-    * @return string
-    */
+     * all columns
+     * @return string
+     */
     public getAllColumns(): string {
         return 'id, keyword, ignoreKeyword as "ignoreKeyword", keyCS as "keyCS", keyRegExp as "keyRegExp", title, description, extended, GR as "GR", BS as "BS", CS as "CS", SKY as "SKY", station, genrelv1, genrelv2, startTime as "startTime", timeRange as "timeRange", week, isFree as "isFree", durationMin as "durationMin", durationMax as "durationMax", enable, directory, recordedFormat, mode1, directory1, mode2, directory2, mode3, directory3, delTs';
     }

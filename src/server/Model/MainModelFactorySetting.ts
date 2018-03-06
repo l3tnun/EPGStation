@@ -1,57 +1,59 @@
-import factory from './ModelFactory';
-import { ServicesDBInterface } from './DB/ServicesDB';
-import { ProgramsDBInterface } from './DB/ProgramsDB';
-import { RulesDBInterface } from './DB/RulesDB';
-import { RecordedDBInterface } from './DB/RecordedDB';
-import { EncodedDBInterface } from './DB/EncodedDB';
-import DBOperator from './DB/DBOperator';
-import MySQLOperator from './DB/MySQL/MySQLOperator';
-import SQLite3Operator from './DB/SQLite3/SQLite3Operator';
-import PostgreSQLOperator from './DB/PostgreSQL/PostgreSQLOperator';
-import MySQLServicesDB from './DB/MySQL/MySQLServicesDB';
-import MySQLProgramsDB from './DB/MySQL/MySQLProgramsDB';
-import MySQLRulesDB from './DB/MySQL/MySQLRulesDB';
-import MySQLRecordedDB from './DB/MySQL/MySQLRecordedDB';
-import MySQLEncodedDB from './DB/MySQL/MySQLEncodedDB';
-import MySQLMigrationV1 from './DB/MySQL/migrate/MySQLMigrationV1';
-import SQLite3ServicesDB from './DB/SQLite3/SQLite3ServicesDB';
-import SQLite3ProgramsDB from './DB/SQLite3/SQLite3ProgramsDB';
-import SQLite3RulesDB from './DB/SQLite3/SQLite3RulesDB';
-import SQLite3RecordedDB from './DB/SQLite3/SQLite3RecordedDB';
-import SQLite3EncodedDB from './DB/SQLite3/SQLite3EncodedDB';
-import SQLite3MigrationV1 from './DB/SQLite3/migrate/SQLite3MigrationV1';
-import PostgreSQLServicesDB from './DB/PostgreSQL/PostgreSQLServicesDB';
-import PostgreSQLProgramsDB from './DB/PostgreSQL/PostgreSQLProgramsDB';
-import PostgreSQLRulesDB from './DB/PostgreSQL/PostgreSQLRulesDB';
-import PostgreSQLRecordedDB from './DB/PostgreSQL/PostgreSQLRecordedDB';
-import PostgreSQLEncodedDB from './DB/PostgreSQL/PostgreSQLEncodedDB';
-import PostgreSQLMigrationV1 from './DB/PostgreSQL/migrate/PostgreSQLMigrationV1';
 
+import DBOperator from './DB/DBOperator';
+import { EncodedDBInterface } from './DB/EncodedDB';
+import MySQLMigrationV1 from './DB/MySQL/migrate/MySQLMigrationV1';
+import MySQLEncodedDB from './DB/MySQL/MySQLEncodedDB';
+import MySQLOperator from './DB/MySQL/MySQLOperator';
+import MySQLProgramsDB from './DB/MySQL/MySQLProgramsDB';
+import MySQLRecordedDB from './DB/MySQL/MySQLRecordedDB';
+import MySQLRulesDB from './DB/MySQL/MySQLRulesDB';
+import MySQLServicesDB from './DB/MySQL/MySQLServicesDB';
+import PostgreSQLMigrationV1 from './DB/PostgreSQL/migrate/PostgreSQLMigrationV1';
+import PostgreSQLEncodedDB from './DB/PostgreSQL/PostgreSQLEncodedDB';
+import PostgreSQLOperator from './DB/PostgreSQL/PostgreSQLOperator';
+import PostgreSQLProgramsDB from './DB/PostgreSQL/PostgreSQLProgramsDB';
+import PostgreSQLRecordedDB from './DB/PostgreSQL/PostgreSQLRecordedDB';
+import PostgreSQLRulesDB from './DB/PostgreSQL/PostgreSQLRulesDB';
+import PostgreSQLServicesDB from './DB/PostgreSQL/PostgreSQLServicesDB';
+import { ProgramsDBInterface } from './DB/ProgramsDB';
+import { RecordedDBInterface } from './DB/RecordedDB';
+import { RulesDBInterface } from './DB/RulesDB';
+import { ServicesDBInterface } from './DB/ServicesDB';
+import SQLite3MigrationV1 from './DB/SQLite3/migrate/SQLite3MigrationV1';
+import SQLite3EncodedDB from './DB/SQLite3/SQLite3EncodedDB';
+import SQLite3Operator from './DB/SQLite3/SQLite3Operator';
+import SQLite3ProgramsDB from './DB/SQLite3/SQLite3ProgramsDB';
+import SQLite3RecordedDB from './DB/SQLite3/SQLite3RecordedDB';
+import SQLite3RulesDB from './DB/SQLite3/SQLite3RulesDB';
+import SQLite3ServicesDB from './DB/SQLite3/SQLite3ServicesDB';
+
+import { IPCServer } from './IPC/IPCServer';
+import factory from './ModelFactory';
+
+import EPGUpdateFinModel from './Operator/Callbacks/EPGUpdateFinModel';
+import RecordingFinModel from './Operator/Callbacks/RecordingFinModel';
+import RecordingStartModel from './Operator/Callbacks/RecordingStartModel';
+import RuleUpdateFinModel from './Operator/Callbacks/RuleUpdateFinModel';
+import ThumbnailCreateFinModel from './Operator/Callbacks/ThumbnailCreateFinModel';
 import { DBInitializationModel } from './Operator/DBInitializationModel';
 import { MirakurunManageModel } from './Operator/EPGUpdate/MirakurunManageModel';
-import { RecordingManageModel } from './Operator/Recording/RecordingManageModel';
+import { ExternalProcessModel } from './Operator/ExternalProcessModel';
 import { RecordedManageModel } from './Operator/Recorded/RecordedManageModel';
+import { RecordingManageModel } from './Operator/Recording/RecordingManageModel';
 import { ReservationManageModel } from './Operator/Reservation/ReservationManageModel';
 import { RuleManageModel } from './Operator/Rule/RuleManageModel';
 import { StorageCheckManageModel } from './Operator/Storage/StorageCheckManageModel';
 import { ThumbnailManageModel } from './Operator/Thumbnail/ThumbnailManageModel';
-import { ExternalProcessModel } from './Operator/ExternalProcessModel';
-import EPGUpdateFinModel from './Operator/Callbacks/EPGUpdateFinModel';
-import RuleUpdateFinModel from './Operator/Callbacks/RuleUpdateFinModel';
-import RecordingStartModel from './Operator/Callbacks/RecordingStartModel';
-import RecordingFinModel from './Operator/Callbacks/RecordingFinModel';
-import ThumbnailCreateFinModel from './Operator/Callbacks/ThumbnailCreateFinModel';
 
-import { IPCServer } from './IPC/IPCServer';
 import Util from '../Util/Util';
 
 /**
-* Model 設定
-*/
+ * Model 設定
+ */
 namespace ModelFactorySetting {
     /**
-    * Model をセットする
-    */
+     * Model をセットする
+     */
     export const init = (): void => {
         // set DB Models
         let operator: DBOperator;
@@ -67,9 +69,9 @@ namespace ModelFactorySetting {
                 servicesDB = new MySQLServicesDB(operator);
                 programsDB = new MySQLProgramsDB(operator);
                 rulesDB = new MySQLRulesDB(operator);
-                recordedDB = new MySQLRecordedDB(operator)
+                recordedDB = new MySQLRecordedDB(operator);
                 encodedDB = new MySQLEncodedDB(operator);
-                factory.reg('MigrationV1', () => { return new MySQLMigrationV1(operator) });
+                factory.reg('MigrationV1', () => { return new MySQLMigrationV1(operator); });
                 break;
 
             case 'sqlite3':
@@ -77,9 +79,9 @@ namespace ModelFactorySetting {
                 servicesDB = new SQLite3ServicesDB(operator);
                 programsDB = new SQLite3ProgramsDB(operator);
                 rulesDB = new SQLite3RulesDB(operator);
-                recordedDB = new SQLite3RecordedDB(operator)
+                recordedDB = new SQLite3RecordedDB(operator);
                 encodedDB = new SQLite3EncodedDB(operator);
-                factory.reg('MigrationV1', () => { return new SQLite3MigrationV1(operator) });
+                factory.reg('MigrationV1', () => { return new SQLite3MigrationV1(operator); });
                 break;
 
             case 'postgresql':
@@ -87,9 +89,9 @@ namespace ModelFactorySetting {
                 servicesDB = new PostgreSQLServicesDB(operator);
                 programsDB = new PostgreSQLProgramsDB(operator);
                 rulesDB = new PostgreSQLRulesDB(operator);
-                recordedDB = new PostgreSQLRecordedDB(operator)
+                recordedDB = new PostgreSQLRecordedDB(operator);
                 encodedDB = new PostgreSQLEncodedDB(operator);
-                factory.reg('MigrationV1', () => { return new PostgreSQLMigrationV1(operator) });
+                factory.reg('MigrationV1', () => { return new PostgreSQLMigrationV1(operator); });
                 break;
         }
 
@@ -169,7 +171,7 @@ namespace ModelFactorySetting {
         factory.reg('RecordedDB', () => { return recordedDB; });
         factory.reg('EncodedDB', () => { return encodedDB; });
         factory.reg('DBInitializationModel', () => { return dbInitializationModel; });
-        factory.reg('MirakurunManageModel', () => { return mirakurunManage });
+        factory.reg('MirakurunManageModel', () => { return mirakurunManage; });
         factory.reg('ReservationManageModel', () => { return reservationManage; });
         factory.reg('RecordingManageModel', () => { return recordingManage; });
         factory.reg('RecordedManageModel', () => { return recordedManage; });
@@ -182,7 +184,7 @@ namespace ModelFactorySetting {
         factory.reg('RecordingStartModel', () => { return recordingStartModel; });
         factory.reg('RecordingFinModel', () => { return recordingFinModel; });
         factory.reg('ThumbnailCreateFinModel', () => { return thumbnailCreateFinModel; });
-    }
+    };
 }
 
 export default ModelFactorySetting;

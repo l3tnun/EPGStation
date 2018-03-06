@@ -2,8 +2,8 @@ import Model from '../Model';
 import { SnackbarModelInterface } from '../Snackbar/SnackbarModel';
 
 /**
-* ApiModel 抽象クラス
-*/
+ * ApiModel 抽象クラス
+ */
 abstract class ApiModel extends Model {
     private snackbar: SnackbarModelInterface;
 
@@ -14,15 +14,15 @@ abstract class ApiModel extends Model {
     }
 
     /**
-    * 初期化
-    * overwrite して使うこと
-    */
+     * 初期化
+     * overwrite して使うこと
+     */
     public init(): void {}
 
     /**
-    * open snackbar
-    * @param message: message
-    */
+     * open snackbar
+     * @param message: message
+     */
     protected openSnackbar(message: string): void {
         this.snackbar.open(message);
     }

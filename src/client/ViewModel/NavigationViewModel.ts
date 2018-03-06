@@ -1,12 +1,12 @@
-import ViewModel from './ViewModel';
 import * as apid from '../../../api';
 import { ConfigApiModelInterface } from '../Model/Api/ConfigApiModel';
 import { SettingModelInterface } from '../Model/Setting/SettingModel';
+import ViewModel from './ViewModel';
 
 /**
-* NavigationViewModel
-* configApiModel は HeaderViewModel で初期化しているため get だけ
-*/
+ * NavigationViewModel
+ * configApiModel は HeaderViewModel で初期化しているため get だけ
+ */
 class NavigationViewModel extends ViewModel {
     private configApiModel: ConfigApiModelInterface;
     private setting: SettingModelInterface;
@@ -21,17 +21,17 @@ class NavigationViewModel extends ViewModel {
     }
 
     /**
-    * getConfig
-    * @return apid.Config | null
-    */
+     * getConfig
+     * @return apid.Config | null
+     */
     public getConfig(): apid.Config | null {
         return this.configApiModel.getConfig();
     }
 
     /**
-    * navigation を自動で開くか
-    * @return boolean
-    */
+     * navigation を自動で開くか
+     * @return boolean
+     */
     public isAutoOpen(): boolean {
         return this.setting.value.isAutoOpenNavigation;
     }

@@ -5,7 +5,7 @@ export enum TableName {
     Programs = 'Programs',
     Rules = 'Rules',
     Recorded = 'Recorded',
-    Encoded = 'Encoded'
+    Encoded = 'Encoded',
 }
 
 export interface ServiceSchema {
@@ -18,7 +18,7 @@ export interface ServiceSchema {
     channelType: apid.ChannelType;
     channelTypeId: number;
     channel: string;
-    type: number | null; //192 がワンセグ?
+    type: number | null; // 192 がワンセグ?
 }
 
 export interface ProgramSchema {
@@ -42,7 +42,7 @@ export interface ProgramSchema {
     channelType: apid.ChannelType;
     channel: string;
 
-    videoType: apid.ProgramVideoType | null
+    videoType: apid.ProgramVideoType | null;
     videoResolution: apid.ProgramVideoResolution | null;
     videoStreamContent: number | null;
     videoComponentType: number | null;
@@ -98,7 +98,7 @@ export interface RecordedSchema {
     extended: string | null;
     genre1: number | null;
     genre2: number | null;
-    videoType: apid.ProgramVideoType | null
+    videoType: apid.ProgramVideoType | null;
     videoResolution: apid.ProgramVideoResolution | null;
     videoStreamContent: number | null;
     videoComponentType: number | null;
@@ -114,7 +114,7 @@ export interface RecordedSchema {
 
 export interface EncodedSchema {
     id: number;
-    recordedId: number; //外部キー
+    recordedId: number; // 外部キー
     name: string;
     path: string;
     filesize: number | null;
@@ -133,7 +133,7 @@ export interface ScheduleProgramItem {
     genre2: number | null;
     channelType: apid.ChannelType;
 
-    videoType: apid.ProgramVideoType | null
+    videoType: apid.ProgramVideoType | null;
     videoResolution: apid.ProgramVideoResolution | null;
     videoStreamContent: number | null;
     videoComponentType: number | null;

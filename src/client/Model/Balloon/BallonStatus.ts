@@ -1,7 +1,7 @@
 /**
-* BalloonStatus
-* Balloon の表示、非表示の状態を保持する
-*/
+ * BalloonStatus
+ * Balloon の表示、非表示の状態を保持する
+ */
 class BalloonStatus {
     private status: boolean = false;
 

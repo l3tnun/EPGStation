@@ -1,72 +1,74 @@
-import factory from './ViewModelFactory';
-import { ConfigApiModel } from '../Model/Api/ConfigApiModel';
-import { ScheduleApiModel } from '../Model/Api/ScheduleApiModel';
-import { ReservesApiModel } from '../Model/Api/ReservesApiModel';
-import { SnackbarModel } from '../Model/Snackbar/SnackbarModel';
-import { BalloonModel } from '../Model/Balloon/BallonModel';
-import { RecordedApiModel } from '../Model/Api/RecordedApiModel';
 import { ChannelsApiModel } from '../Model/Api/ChannelsApiModel';
-import { TabModel } from '../Model/Tab/TabModel';
+import { ConfigApiModel } from '../Model/Api/ConfigApiModel';
+import { RecordedApiModel } from '../Model/Api/RecordedApiModel';
+import { ReservesApiModel } from '../Model/Api/ReservesApiModel';
 import { RulesApiModel } from '../Model/Api/RulesApiModel';
+import { ScheduleApiModel } from '../Model/Api/ScheduleApiModel';
 import { StorageApiModel } from '../Model/Api/StorageApiModel';
-import { StorageModel } from '../Model/Storage/StorageModel';
 import { StreamsApiModel } from '../Model/Api/StreamsApiModel';
-import { SettingModel } from '../Model/Setting/SettingModel';
+import { BalloonModel } from '../Model/Balloon/BallonModel';
 import { ProgramSettingModel } from '../Model/Program/ProgramSettingModel';
+import { SettingModel } from '../Model/Setting/SettingModel';
+import { SnackbarModel } from '../Model/Snackbar/SnackbarModel';
+import { StorageModel } from '../Model/Storage/StorageModel';
+import { TabModel } from '../Model/Tab/TabModel';
+
+import BalloonViewModel from './Balloon/BalloonViewModel';
 import HeaderViewModel from './HeaderViewModel';
 import NavigationViewModel from './NavigationViewModel';
-import TopPageViewModel from './TopPageViewModel';
-import { ProgramViewModel } from './Program/ProgramViewModel';
-import SnackbarViewModel from './Snackbar/SnackbarViewModel';
-import BalloonViewModel from './Balloon/BalloonViewModel';
-import ProgramInfoViewModel from './Program/ProgramInfoViewModel';
-import ProgramTimeBalloonViewModel from './Program/ProgramTimeBalloonViewModel';
 import ProgramGenreViewModel from './Program/ProgramGenreViewModel';
+import ProgramInfoViewModel from './Program/ProgramInfoViewModel';
 import ProgramSettingViewModel from './Program/ProgramSettingViewModel';
-import RecordedViewModel from './Recorded/RecordedViewModel';
+import ProgramTimeBalloonViewModel from './Program/ProgramTimeBalloonViewModel';
+import { ProgramViewModel } from './Program/ProgramViewModel';
 import RecordedInfoViewModel from './Recorded/RecordedInfoViewModel';
 import RecordedMenuViewModel from './Recorded/RecordedMenuViewModel';
 import RecordedSearchViewModel from './Recorded/RecordedSearchViewModel';
-import TabViewModel from './Tab/TabViewModel';
-import ReservesViewModel from './Reserves/ReservesViewModel';
+import RecordedViewModel from './Recorded/RecordedViewModel';
 import ReservesMenuViewModel from './Reserves/ReservesMenuViewModel';
-import RulesViewModel from './Rules/RulesViewModel';
+import ReservesViewModel from './Reserves/ReservesViewModel';
 import RulesDeleteViewModel from './Rules/RulesDeleteViewModel';
 import RulesInfoViewModel from './Rules/RulesInfoViewModel';
+import RulesViewModel from './Rules/RulesViewModel';
 import SearchViewModel from './Search/SearchViewModel';
+import SettingViewModel from './Setting/SettingViewModel';
+import SnackbarViewModel from './Snackbar/SnackbarViewModel';
 import StorageViewModel from './Storage/StorageViewModel';
+import StreamForcedStopViewModel from './Stream/StreamForcedStopViewModel';
+import StreamInfoViewModel from './Stream/StreamInfoViewModel';
 import StreamProgramCardsViewModel from './Stream/StreamProgramCardsViewModel';
 import StreamSelectViewModel from './Stream/StreamSelectViewModel';
-import StreamInfoViewModel from './Stream/StreamInfoViewModel';
-import StreamForcedStopViewModel from './Stream/StreamForcedStopViewModel';
 import StreamWatchViewModel from './Stream/StreamWatchViewModel';
-import SettingViewModel from './Setting/SettingViewModel';
+import TabViewModel from './Tab/TabViewModel';
+import TopPageViewModel from './TopPageViewModel';
+
+import factory from './ViewModelFactory';
 
 /**
-* ViewModelFactory の設定
-*/
+ * ViewModelFactory の設定
+ */
 namespace ViewModelFactorySetting {
     /**
-    * ViewModel をセットする
-    */
+     * ViewModel をセットする
+     */
     export const init = (): void => {
         // model
-        let snackbarModel = new SnackbarModel();
-        let configModel = new ConfigApiModel(snackbarModel);
-        let scheduleApiModel = new ScheduleApiModel(snackbarModel);
-        let reservesApiModel = new ReservesApiModel(snackbarModel);
-        let balloonModel = new BalloonModel();
-        let recordedApiModel = new RecordedApiModel(snackbarModel);
-        let channelsApiModel = new ChannelsApiModel(snackbarModel);
-        let tabModel = new TabModel();
-        let rulesApiModel = new RulesApiModel(snackbarModel);
-        let storageApiModel = new StorageApiModel(snackbarModel);
-        let storageModel = new StorageModel();
-        let streamApiModel = new StreamsApiModel(snackbarModel);
-        let settingModel = new SettingModel(storageModel);
-        let programSettingModel = new ProgramSettingModel(storageModel);
+        const snackbarModel = new SnackbarModel();
+        const configModel = new ConfigApiModel(snackbarModel);
+        const scheduleApiModel = new ScheduleApiModel(snackbarModel);
+        const reservesApiModel = new ReservesApiModel(snackbarModel);
+        const balloonModel = new BalloonModel();
+        const recordedApiModel = new RecordedApiModel(snackbarModel);
+        const channelsApiModel = new ChannelsApiModel(snackbarModel);
+        const tabModel = new TabModel();
+        const rulesApiModel = new RulesApiModel(snackbarModel);
+        const storageApiModel = new StorageApiModel(snackbarModel);
+        const storageModel = new StorageModel();
+        const streamApiModel = new StreamsApiModel(snackbarModel);
+        const settingModel = new SettingModel(storageModel);
+        const programSettingModel = new ProgramSettingModel(storageModel);
 
-        //reg
+        // reg
         factory.reg('HeaderViewModel', new HeaderViewModel(
             configModel,
             balloonModel,
@@ -196,7 +198,7 @@ namespace ViewModelFactorySetting {
             settingModel,
             snackbarModel,
         ));
-    }
+    };
 }
 
 export default ViewModelFactorySetting;

@@ -2,15 +2,15 @@ import * as DBSchema from '../DBSchema';
 import { ServicesDB } from '../ServicesDB';
 
 /**
-* ServicesDB
-*/
+ * ServicesDB
+ */
 class MySQLServicesDB extends ServicesDB {
     /**
-    * create table
-    * @return Promise<void>
-    */
+     * create table
+     * @return Promise<void>
+     */
     public create(): Promise<void> {
-        let query = `CREATE TABLE IF NOT EXISTS ${ DBSchema.TableName.Services } (`
+        const query = `CREATE TABLE IF NOT EXISTS ${ DBSchema.TableName.Services } (`
             + 'id BIGINT primary key unique, '
             + 'serviceId integer not null, '
             + 'networkId integer not null, '
@@ -21,7 +21,7 @@ class MySQLServicesDB extends ServicesDB {
             + 'channelTypeId integer, '
             + 'channel text, '
             + 'type integer null'
-            + ');'
+            + ');';
 
         return this.operator.runQuery(query);
     }

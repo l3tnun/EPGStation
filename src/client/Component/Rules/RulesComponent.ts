@@ -1,24 +1,24 @@
 import * as m from 'mithril';
-import ParentComponent from '../ParentComponent';
-import { ViewModelStatus } from '../../Enums';
-import MainLayoutComponent from '../MainLayoutComponent';
-import factory from '../../ViewModel/ViewModelFactory';
-import RulesViewModel from '../../ViewModel/Rules/RulesViewModel';
 import * as apid from '../../../../api';
-import PaginationComponent from '../PaginationComponent';
-import RulesUtil from './RulesUtil';
-import { BalloonComponent } from '../BalloonComponent';
+import { ViewModelStatus } from '../../Enums';
+import Util from '../../Util/Util';
 import BalloonViewModel from '../../ViewModel/Balloon/BalloonViewModel';
 import RulesDeleteViewModel from '../../ViewModel/Rules/RulesDeleteViewModel';
-import RulesDeleteComponent from './RulesDeleteComponent';
 import RulesInfoViewModel from '../../ViewModel/Rules/RulesInfoViewModel';
-import RulesInfoComponent from './RulesInfoComponent';
+import RulesViewModel from '../../ViewModel/Rules/RulesViewModel';
+import factory from '../../ViewModel/ViewModelFactory';
+import { BalloonComponent } from '../BalloonComponent';
+import MainLayoutComponent from '../MainLayoutComponent';
+import PaginationComponent from '../PaginationComponent';
+import ParentComponent from '../ParentComponent';
+import RulesDeleteComponent from './RulesDeleteComponent';
 import RulesInfoActionComponent from './RulesInfoActionComponent';
-import Util from '../../Util/Util';
+import RulesInfoComponent from './RulesInfoComponent';
+import RulesUtil from './RulesUtil';
 
 /**
-* RulesComponent
-*/
+ * RulesComponent
+ */
 class RulesComponent extends ParentComponent<void> {
     private viewModel: RulesViewModel;
     private balloon: BalloonViewModel;
@@ -27,10 +27,10 @@ class RulesComponent extends ParentComponent<void> {
 
     constructor() {
         super();
-        this.viewModel = <RulesViewModel>(factory.get('RulesViewModel'));
-        this.balloon = <BalloonViewModel>(factory.get('BalloonViewModel'));
-        this.deleteViewModel = <RulesDeleteViewModel>(factory.get('RulesDeleteViewModel'));
-        this.infoViewModel = <RulesInfoViewModel>(factory.get('RulesInfoViewModel'));
+        this.viewModel = <RulesViewModel> factory.get('RulesViewModel');
+        this.balloon = <BalloonViewModel> factory.get('BalloonViewModel');
+        this.deleteViewModel = <RulesDeleteViewModel> factory.get('RulesDeleteViewModel');
+        this.infoViewModel = <RulesInfoViewModel> factory.get('RulesInfoViewModel');
     }
 
     protected initViewModel(status: ViewModelStatus = 'init'): void {
@@ -42,13 +42,13 @@ class RulesComponent extends ParentComponent<void> {
     }
 
     /**
-    * page name
-    */
+     * page name
+     */
     protected getComponentName(): string { return 'Rule'; }
 
     /**
-    * view
-    */
+     * view
+     */
     public view(): m.Child {
         return m(MainLayoutComponent, {
             header: { title: 'ルール' },
@@ -78,9 +78,9 @@ class RulesComponent extends ParentComponent<void> {
     }
 
     /**
-    * content
-    * @return m.Child
-    */
+     * content
+     * @return m.Child
+     */
     private createContent(): m.Child {
         return m('div', {
             class: 'rules-content',
@@ -97,9 +97,9 @@ class RulesComponent extends ParentComponent<void> {
     }
 
     /**
-    * create card content
-    * @return m.Child[]
-    */
+     * create card content
+     * @return m.Child[]
+     */
     private createCardView(): m.Child[] {
         return this.viewModel.getRules().rules.map((rule) => {
             return m('div', { class: 'rule-card mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col' }, [
@@ -107,7 +107,7 @@ class RulesComponent extends ParentComponent<void> {
                     class: 'mdl-card__supporting-text',
                     onclick: (e: Event) => {
                         // toggle
-                        if((<HTMLElement>e.target).className.indexOf('mdl-card__supporting-text') === -1) { return; }
+                        if ((<HTMLElement> e.target).className.indexOf('mdl-card__supporting-text') === -1) { return; }
 
                         this.infoViewModel.set(rule);
                         this.balloon.open(RulesInfoViewModel.id, e);
@@ -116,7 +116,7 @@ class RulesComponent extends ParentComponent<void> {
                     // text
                     m('div', { class: 'title' }, rule.keyword),
 
-                    //toogle
+                    // toogle
                     this.createToggle(rule),
                 ]),
             ]);
@@ -124,22 +124,22 @@ class RulesComponent extends ParentComponent<void> {
     }
 
     /**
-    * create toggle
-    * @return m.Chid
-    */
+     * create toggle
+     * @return m.Chid
+     */
     private createToggle(rule: apid.Rule): m.Child {
         return m('label', {
             class: 'mdl-switch mdl-js-switch mdl-js-ripple-effect',
             onupdate: (vnode: m.VnodeDOM<void, this>) => {
-                this.toggleLabelOnUpdate(<HTMLInputElement>vnode.dom, rule.enable);
-            }
+                this.toggleLabelOnUpdate(<HTMLInputElement> vnode.dom, rule.enable);
+            },
         }, [
             m('input', {
                 type: 'checkbox',
                 class: 'mdl-switch__input',
                 checked: rule.enable,
                 onclick: m.withAttr('checked', (value) => {
-                    if(value) {
+                    if (value) {
                         this.viewModel.enable(rule);
                     } else {
                         this.viewModel.disable(rule);
@@ -151,21 +151,21 @@ class RulesComponent extends ParentComponent<void> {
     }
 
     /**
-    * create chanel name
-    * @param rule: Rule
-    * @return string
-    */
+     * create chanel name
+     * @param rule: Rule
+     * @return string
+     */
     private createChannelName(rule: apid.Rule): string {
-        if(typeof rule.station === 'undefined') { return '-'; }
+        if (typeof rule.station === 'undefined') { return '-'; }
 
         return this.viewModel.getChannelName(rule.station);
     }
 
     /**
-    * create table content
-    * @param rule: Rule
-    * @return m.Child
-    */
+     * create table content
+     * @param rule: Rule
+     * @return m.Child
+     */
     private createTableView(): m.Child {
         return m('table', {
             class: 'mdl-data-table mdl-js-data-table mdl-shadow--2dp',
@@ -204,10 +204,10 @@ class RulesComponent extends ParentComponent<void> {
     }
 
     /**
-    * create table option
-    * @param rule: Rule
-    * @return m.Child
-    */
+     * create table option
+     * @param rule: Rule
+     * @return m.Child
+     */
     private createTableOption(rule: apid.Rule): m.Child {
         return m('td', { class: RulesComponent.nonNumeric + ' option' }, [
             m('div', { class: 'option-container' }, [
@@ -218,7 +218,7 @@ class RulesComponent extends ParentComponent<void> {
                         Util.move('/recorded', { rule: rule.id });
                     },
                 },
-                    m('i', { class: 'material-icons' }, 'list')
+                    m('i', { class: 'material-icons' }, 'list'),
                 ),
                 // edit rule
                 m('button', {
@@ -227,7 +227,7 @@ class RulesComponent extends ParentComponent<void> {
                         Util.move('/search', { rule: rule.id });
                     },
                 },
-                    m('i', { class: 'material-icons' }, 'mode_edit')
+                    m('i', { class: 'material-icons' }, 'mode_edit'),
                 ),
                 // delete
                 m('button', {
@@ -237,9 +237,9 @@ class RulesComponent extends ParentComponent<void> {
                         this.balloon.open(RulesDeleteViewModel.id, e);
                     },
                 },
-                    m('i', { class: 'material-icons' }, 'delete')
+                    m('i', { class: 'material-icons' }, 'delete'),
                 ),
-            ])
+            ]),
         ]);
     }
 }

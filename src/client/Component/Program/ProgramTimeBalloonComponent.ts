@@ -1,23 +1,23 @@
 import * as m from 'mithril';
-import Component from '../Component';
-import factory from '../../ViewModel/ViewModelFactory';
-import ProgramTimeBalloonViewModel from '../../ViewModel/Program/ProgramTimeBalloonViewModel';
 import Util from '../../Util/Util';
+import ProgramTimeBalloonViewModel from '../../ViewModel/Program/ProgramTimeBalloonViewModel';
+import factory from '../../ViewModel/ViewModelFactory';
+import Component from '../Component';
 
 /**
-* ProgramTimeBalloonComponent
-*/
+ * ProgramTimeBalloonComponent
+ */
 class ProgramTimeBalloonComponent extends Component<void> {
     private viewModel: ProgramTimeBalloonViewModel;
 
     constructor() {
         super();
-        this.viewModel = <ProgramTimeBalloonViewModel>(factory.get('ProgramTimeBalloonViewModel'));
+        this.viewModel = <ProgramTimeBalloonViewModel> factory.get('ProgramTimeBalloonViewModel');
     }
 
     /**
-    * view
-    */
+     * view
+     */
     public view(): m.Children {
         const types = this.viewModel.getTypes();
         const hasTypes = types.length > 0;
@@ -26,19 +26,19 @@ class ProgramTimeBalloonComponent extends Component<void> {
             m('div', { class: 'program-time-balloon' }, [
                 this.createSelect('types',
                     (value: string) => { this.viewModel.typeValue = value; },
-                    (vnode: m.VnodeDOM<void, this>) => { this.selectOnUpdate(<HTMLInputElement>(vnode.dom), this.viewModel.typeValue); },
+                    (vnode: m.VnodeDOM<void, this>) => { this.selectOnUpdate(<HTMLInputElement> (vnode.dom), this.viewModel.typeValue); },
                     this.viewModel.getTypes(),
                     hasTypes ? '' : 'display: none;',
                 ),
                 this.createSelect('days',
                     (value: number) => { this.viewModel.dayValue = Number(value); },
-                    (vnode: m.VnodeDOM<void, this>) => { this.selectOnUpdate(<HTMLInputElement>(vnode.dom), this.viewModel.dayValue); },
+                    (vnode: m.VnodeDOM<void, this>) => { this.selectOnUpdate(<HTMLInputElement> (vnode.dom), this.viewModel.dayValue); },
                     this.viewModel.getDays(),
                     hasTypes ? '' : 'width: 50%',
                 ),
                 this.createSelect('hours',
                     (value: number) => { this.viewModel.hourValue = Number(value); },
-                    (vnode: m.VnodeDOM<void, this>) => { this.selectOnUpdate(<HTMLInputElement>(vnode.dom), this.viewModel.hourValue); },
+                    (vnode: m.VnodeDOM<void, this>) => { this.selectOnUpdate(<HTMLInputElement> (vnode.dom), this.viewModel.hourValue); },
                     this.viewModel.getHours(),
                     hasTypes ? '' : 'width: 50%',
                 ),
@@ -59,13 +59,13 @@ class ProgramTimeBalloonComponent extends Component<void> {
     }
 
     /**
-    * create select
-    */
+     * create select
+     */
     private createSelect(
         name: string,
         onchange: (value: number | string) => void,
         onupdate: (vnode: m.VnodeDOM<void, this>) => void,
-        values: { value: number | string, name: string }[],
+        values: { value: number | string; name: string }[],
         style: string,
     ): m.Child {
         return m('div', {
@@ -80,8 +80,8 @@ class ProgramTimeBalloonComponent extends Component<void> {
             },
                 values.map((v) => {
                     return m('option', { value: v.value, }, v.name);
-                })
-            )
+                }),
+            ),
         ]);
     }
 }

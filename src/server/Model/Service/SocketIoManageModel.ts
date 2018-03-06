@@ -1,7 +1,7 @@
 import * as http from 'http';
 import * as socketio from 'socket.io';
-import Model from '../Model';
 import * as events from '../../IoEvents';
+import Model from '../Model';
 
 interface SocketIoManageModelInterface extends Model {
     initialize(server: http.Server): void;
@@ -10,30 +10,28 @@ interface SocketIoManageModelInterface extends Model {
 }
 
 /**
-* SocketIoManageModel
-* socket.io の設定を行う
-*/
+ * SocketIoManageModel
+ * socket.io の設定を行う
+ */
 class SocketIoManageModel extends Model implements SocketIoManageModelInterface {
     private io: SocketIO.Server | null = null;
 
     /**
-    * http.Server セット
-    * @param server: http.Server
-    */
+     * http.Server セット
+     * @param server: http.Server
+     */
     public initialize(server: http.Server): void {
         this.io = socketio(server);
 
         this.log.system.info('SocketIo Server has started.');
-        this.io.sockets.on('connection', (_socket: SocketIO.Socket) => {
-        });
     }
 
     /**
-    * socket を返す
-    * @return SocketIO.Namespace
-    */
+     * socket を返す
+     * @return SocketIO.Namespace
+     */
     public getSockets(): SocketIO.Namespace {
-        if(this.io == null) {
+        if (this.io === null) {
             throw new Error('must call SocketIoManageModel initialize');
         }
 
@@ -41,8 +39,8 @@ class SocketIoManageModel extends Model implements SocketIoManageModelInterface 
     }
 
     /**
-    * client へ状態の更新を通知する
-    */
+     * client へ状態の更新を通知する
+     */
     public notifyClient(): void {
         this.getSockets().emit(events.updateStatus);
     }

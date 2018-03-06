@@ -1,13 +1,13 @@
-import ViewModel from '../ViewModel';
 import * as apid from '../../../../api';
-import { BalloonModelInterface } from '../../Model/Balloon/BallonModel';
-import { EncodeQueryOption, RecordedApiModelInterface } from '../../Model/Api/RecordedApiModel';
-import { SnackbarModelInterface } from '../../Model/Snackbar/SnackbarModel';
 import { ConfigApiModelInterface } from '../../Model/Api/ConfigApiModel';
+import { EncodeQueryOption, RecordedApiModelInterface } from '../../Model/Api/RecordedApiModel';
+import { BalloonModelInterface } from '../../Model/Balloon/BallonModel';
+import { SnackbarModelInterface } from '../../Model/Snackbar/SnackbarModel';
+import ViewModel from '../ViewModel';
 
 /**
-* RecordedMenuViewModel
-*/
+ * RecordedMenuViewModel
+ */
 class RecordedMenuViewModel extends ViewModel {
     private balloon: BalloonModelInterface;
     private recordedApiModel: RecordedApiModelInterface;
@@ -39,24 +39,24 @@ class RecordedMenuViewModel extends ViewModel {
     }
 
     /**
-    * recorded のセット
-    * @param recorded: recorded
-    */
+     * recorded のセット
+     * @param recorded: recorded
+     */
     public set(recorded: apid.RecordedProgram): void {
         this.recorded = recorded;
 
         this.recordedFiles = [];
-        if(this.recorded.original) {
+        if (this.recorded.original) {
             this.recordedFiles.push({ name: 'TS', encodedId: null, checked: true });
         }
-        if(typeof this.recorded.encoded !== 'undefined') {
-            for(let encoded of this.recorded.encoded) {
+        if (typeof this.recorded.encoded !== 'undefined') {
+            for (const encoded of this.recorded.encoded) {
                 this.recordedFiles.push({ name: encoded.name, encodedId: encoded.encodedId, checked: true });
             }
         }
 
         const config = this.config.getConfig();
-        if(config === null) { return; }
+        if (config === null) { return; }
         this.encodeStatus = config.enableEncode;
         this.encodeSourceOptionValue = 0;
         this.encodeModeOptionValue = 0;
@@ -64,24 +64,24 @@ class RecordedMenuViewModel extends ViewModel {
     }
 
     /**
-    * get title
-    * @return title
-    */
+     * get title
+     * @return title
+     */
     public getTitle(): string {
         return this.recorded === null ? '' : this.recorded.name;
     }
 
     /**
-    * get rule id
-    * @return rule id | null
-    */
+     * get rule id
+     * @return rule id | null
+     */
     public getRuleId(): apid.RuleId | null {
-        return this.recorded == null || typeof this.recorded.ruleId === 'undefined' ? null : this.recorded.ruleId;
+        return this.recorded === null || typeof this.recorded.ruleId === 'undefined' ? null : this.recorded.ruleId;
     }
 
     /**
-    * open delete dialog
-    */
+     * open delete dialog
+     */
     public openDelete(): void {
         this.close();
         setTimeout(() => {
@@ -90,30 +90,30 @@ class RecordedMenuViewModel extends ViewModel {
     }
 
     /**
-    * close balloon
-    */
+     * close balloon
+     */
     public close(): void {
         this.balloon.close();
     }
 
     /**
-    * delete recorded file
-    */
+     * delete recorded file
+     */
     public async delete(): Promise<void> {
-        if(this.recorded === null) { return; }
+        if (this.recorded === null) { return; }
 
         let deleteCnt = 0;
         this.recordedFiles.map((file) => {
-            if(file.checked) { deleteCnt += 1; }
+            if (file.checked) { deleteCnt += 1; }
         });
 
-        if(deleteCnt === this.recordedFiles.length) {
+        if (deleteCnt === this.recordedFiles.length) {
             // delete all
             try {
                 await this.recordedApiModel.deleteAll(this.recorded.id);
                 this.snackbar.open(`削除: ${ this.recorded.name }`);
-            } catch(err) {
-                if(err.message === RecordedApiModelInterface.isStreamingNowError) {
+            } catch (err) {
+                if (err.message === RecordedApiModelInterface.isStreamingNowError) {
                     this.snackbar.open(`配信中のため削除失敗: ${ this.recorded.name }`);
                 } else {
                     console.error(err);
@@ -121,17 +121,17 @@ class RecordedMenuViewModel extends ViewModel {
                 }
             }
         } else {
-            let deleteCnt = 0;
-            //個別削除
-            for(let file of this.recordedFiles) {
-                if(!file.checked) { continue; }
+            deleteCnt = 0;
+            // 個別削除
+            for (const file of this.recordedFiles) {
+                if (!file.checked) { continue; }
 
                 try {
                     await this.recordedApiModel.delete(this.recorded!.id, file.encodedId);
                     deleteCnt += 1;
-                } catch(err) {
+                } catch (err) {
                     console.error(err);
-                    if(err.message === RecordedApiModelInterface.isLockedError) {
+                    if (err.message === RecordedApiModelInterface.isLockedError) {
                         this.snackbar.open(`ファイルがロックされています: ${ file.name }`);
                     } else {
                         this.snackbar.open(`ファイルの削除に失敗しました: ${ file.name }`);
@@ -139,7 +139,7 @@ class RecordedMenuViewModel extends ViewModel {
                 }
             }
 
-            if(deleteCnt > 0) {
+            if (deleteCnt > 0) {
                 this.snackbar.open(`指定したファイルを削除しました: ${ this.recorded.name }`);
             }
         }
@@ -149,22 +149,22 @@ class RecordedMenuViewModel extends ViewModel {
     }
 
     /**
-    * エンコードオプションが有効か
-    * @return true: 有効, false: 無効
-    */
+     * エンコードオプションが有効か
+     * @return true: 有効, false: 無効
+     */
     public isEnableEncode(): boolean {
         return this.encodeStatus && this.recorded !== null && !this.recorded.recording;
     }
 
     /**
-    * エンコードオプションを取得する
-    * @return encode option
-    */
-    public getEncodeOption(): { value: number, name: string }[] {
-        let config = this.config.getConfig();
-        if(!this.encodeStatus || config === null || typeof config.encodeOption === 'undefined') { return []; }
+     * エンコードオプションを取得する
+     * @return encode option
+     */
+    public getEncodeOption(): { value: number; name: string }[] {
+        const config = this.config.getConfig();
+        if (!this.encodeStatus || config === null || typeof config.encodeOption === 'undefined') { return []; }
 
-        let result: { value: number, name: string }[] = [];
+        const result: { value: number; name: string }[] = [];
         config.encodeOption.forEach((option, i) => {
             result.push({ value: i, name: option });
         });
@@ -173,8 +173,8 @@ class RecordedMenuViewModel extends ViewModel {
     }
 
     /**
-    * open encode dialog
-    */
+     * open encode dialog
+     */
     public openEncode(): void {
         this.close();
         setTimeout(() => {
@@ -183,56 +183,56 @@ class RecordedMenuViewModel extends ViewModel {
     }
 
     /**
-    * encode 追加
-    */
+     * encode 追加
+     */
     public async addEncode(): Promise<void> {
-        if(this.recorded === null) { return; }
+        if (this.recorded === null) { return; }
 
-        let option: EncodeQueryOption = {
+        const option: EncodeQueryOption = {
             mode: this.encodeModeOptionValue,
             isOutputTheOriginalDirectory: this.isOutputTheOriginalDirectory,
-        }
+        };
 
         const encodedId = this.recordedFiles[this.encodeSourceOptionValue].encodedId;
-        if(encodedId !== null) {
+        if (encodedId !== null) {
             option.encodedId = encodedId;
         }
 
         try {
             await this.recordedApiModel.addEncode(this.recorded.id, option);
-            this.snackbar.open(`エンコードキューに追加しました`);
-        } catch(err) {
-            this.snackbar.open(`エンコードキューへの追加に失敗しました`);
+            this.snackbar.open('エンコードキューに追加しました');
+        } catch (err) {
+            this.snackbar.open('エンコードキューへの追加に失敗しました');
         }
     }
 
     /**
-    * encode 中か
-    * @return boolean
-    */
+     * encode 中か
+     * @return boolean
+     */
     public isEncoding(): boolean {
         return this.recorded === null ? false : typeof this.recorded.encoding !== 'undefined';
     }
 
     /**
-    * encode cancel
-    */
+     * encode cancel
+     */
     public async cancelEncode(): Promise<void> {
-        if(this.recorded === null) { return; }
+        if (this.recorded === null) { return; }
 
         try {
             await this.recordedApiModel.cancelEncode(this.recorded.id);
             this.snackbar.open('エンコードをキャンセルしました');
-        } catch(err) {
+        } catch (err) {
             this.snackbar.open('エンコードのキャンセルに失敗しました');
         }
     }
 }
 
 namespace RecordedMenuViewModel {
-    export const id = 'recorded-menu'
-    export const deleteId = 'recorded-delete'
-    export const encodeId = 'recorded-encode'
+    export const id = 'recorded-menu';
+    export const deleteId = 'recorded-delete';
+    export const encodeId = 'recorded-encode';
 }
 
 export default RecordedMenuViewModel;

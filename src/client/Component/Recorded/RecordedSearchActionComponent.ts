@@ -1,23 +1,23 @@
 import * as m from 'mithril';
-import Component from '../Component';
-import factory from '../../ViewModel/ViewModelFactory';
 import RecordedSearchViewModel from '../../ViewModel/Recorded/RecordedSearchViewModel';
+import factory from '../../ViewModel/ViewModelFactory';
+import Component from '../Component';
 
 /**
-* RecordedSearchActionComponent
-*/
+ * RecordedSearchActionComponent
+ */
 class RecordedSearchActionComponent extends Component<void> {
     private viewModel: RecordedSearchViewModel;
 
     constructor() {
         super();
 
-        this.viewModel = <RecordedSearchViewModel>(factory.get('RecordedSearchViewModel'));
+        this.viewModel = <RecordedSearchViewModel> factory.get('RecordedSearchViewModel');
     }
 
     /**
-    * view
-    */
+     * view
+     */
     public view(): m.Child {
         return m('div', [
             m('hr', { style: 'margin: 0px;' }),

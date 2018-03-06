@@ -1,16 +1,16 @@
 import * as m from 'mithril';
-import Component from '../Component';
-import factory from '../../ViewModel/ViewModelFactory';
-import { ProgramViewModel } from '../../ViewModel/Program/ProgramViewModel';
-import Util from '../../Util/Util';
-import DateUtil from '../../Util/DateUtil';
 import * as apid from '../../../../api';
-import StreamSelectViewModel from '../../ViewModel/Stream/StreamSelectViewModel'
+import DateUtil from '../../Util/DateUtil';
+import Util from '../../Util/Util';
 import BalloonViewModel from '../../ViewModel/Balloon/BalloonViewModel';
+import { ProgramViewModel } from '../../ViewModel/Program/ProgramViewModel';
+import StreamSelectViewModel from '../../ViewModel/Stream/StreamSelectViewModel';
+import factory from '../../ViewModel/ViewModelFactory';
+import Component from '../Component';
 
 /**
-* ChannelComponent
-*/
+ * ChannelComponent
+ */
 class ChannelComponent extends Component<void> {
     private viewModel: ProgramViewModel;
     private streamSelector: StreamSelectViewModel;
@@ -18,24 +18,24 @@ class ChannelComponent extends Component<void> {
 
     constructor() {
         super();
-        this.viewModel = <ProgramViewModel>(factory.get('ProgramViewModel'));
-        this.streamSelector = <StreamSelectViewModel>(factory.get('StreamSelectViewModel'));
-        this.balloon = <BalloonViewModel>(factory.get('BalloonViewModel'));
+        this.viewModel = <ProgramViewModel> factory.get('ProgramViewModel');
+        this.streamSelector = <StreamSelectViewModel> factory.get('StreamSelectViewModel');
+        this.balloon = <BalloonViewModel> factory.get('BalloonViewModel');
     }
 
     /**
-    * view
-    */
+     * view
+     */
     public view(): m.Children {
-        let childs: m.Children[] = [ m('div', { class: 'item' }, 'dummy') ];
-        if(typeof m.route.param('type') !== 'undefined') {
-            //通常の番組表表示
+        const childs: m.Children[] = [ m('div', { class: 'item' }, 'dummy') ];
+        if (typeof m.route.param('type') !== 'undefined') {
+            // 通常の番組表表示
             Array.prototype.push.apply(childs, this.viewModel.getChannels().map((channel, i) => {
                 return m('div', {
                     class: 'item',
                     style: `left: calc(${ i } * var(--channel-width) + var(--timescale-width));`,
                     onclick: (e: Event) => {
-                        if(this.streamSelector.getOptions().length > 0) {
+                        if (this.streamSelector.getOptions().length > 0) {
                             this.streamSelector.set(channel, () => { this.jumpSingleStation(channel); });
                             this.balloon.open(StreamSelectViewModel.id, e);
                         } else {
@@ -45,10 +45,11 @@ class ChannelComponent extends Component<void> {
                 }, channel.name);
             }));
         } else {
-            //単局表示
-            let start = this.viewModel.getTimeParam().start;
+            // 単局表示
+            const start = this.viewModel.getTimeParam().start;
             Array.prototype.push.apply(childs, this.viewModel.getSchedule().map((_s, i) => {
-                let addTime = i * 24 * 60 * 60 * 1000;
+                const addTime = i * 24 * 60 * 60 * 1000;
+
                 return m('div', {
                     class: 'item',
                     style: `left: calc(${ i } * var(--channel-width) + var(--timescale-width));`,
@@ -62,15 +63,15 @@ class ChannelComponent extends Component<void> {
     }
 
     /**
-    * 単極表示のページへ飛ぶ
-    * channel: channel データ
-    */
+     * 単極表示のページへ飛ぶ
+     * channel: channel データ
+     */
     private jumpSingleStation(channel: apid.ScheduleServiceItem): void {
-        let query: { ch: number, time?: string } = {
+        const query: { ch: number; time?: string } = {
             ch: channel.id,
-        }
+        };
 
-        if(typeof m.route.param('time') !== 'undefined') {
+        if (typeof m.route.param('time') !== 'undefined') {
             query.time = m.route.param('time');
         }
 

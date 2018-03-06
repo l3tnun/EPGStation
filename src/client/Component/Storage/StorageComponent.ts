@@ -1,22 +1,22 @@
 import * as m from 'mithril';
-import Component from '../Component';
-import factory from '../../ViewModel/ViewModelFactory';
 import StorageViewModel from '../../ViewModel/Storage/StorageViewModel';
+import factory from '../../ViewModel/ViewModelFactory';
+import Component from '../Component';
 
 /**
-* StorageComponent
-*/
+ * StorageComponent
+ */
 class StorageComponent extends Component<void> {
     private viewModel: StorageViewModel;
 
     constructor() {
         super();
-        this.viewModel = <StorageViewModel>(factory.get('StorageViewModel'));
+        this.viewModel = <StorageViewModel> factory.get('StorageViewModel');
     }
 
     /**
-    * view
-    */
+     * view
+     */
     public view(): m.Child {
         return m('div', [
             m('div', { class: 'storage-content' }, [
@@ -27,9 +27,9 @@ class StorageComponent extends Component<void> {
                 m('canvas', {
                     id: StorageViewModel.chartId,
                     width: '200',
-                    height: '200'
-                })
-            ])
+                    height: '200',
+                }),
+            ]),
         ]);
     }
 }

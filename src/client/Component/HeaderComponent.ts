@@ -1,9 +1,9 @@
 import * as m from 'mithril';
-import Component from './Component';
-import factory from '../ViewModel/ViewModelFactory';
+import Util from '../Util/Util';
 import BalloonViewModel from '../ViewModel/Balloon/BalloonViewModel';
 import HeaderViewModel from '../ViewModel/HeaderViewModel';
-import Util from '../Util/Util';
+import factory from '../ViewModel/ViewModelFactory';
+import Component from './Component';
 
 interface HeaderArgs {
     title: string;
@@ -12,8 +12,8 @@ interface HeaderArgs {
 }
 
 /**
-* HeaderComponent
-*/
+ * HeaderComponent
+ */
 class HeaderComponent extends Component<HeaderArgs> {
     private button: m.Children[] | null;
     private tab: m.Children | null;
@@ -23,8 +23,8 @@ class HeaderComponent extends Component<HeaderArgs> {
 
     constructor() {
         super();
-        this.viewModel = <HeaderViewModel>(factory.get('HeaderViewModel'));
-        this.balloon = <BalloonViewModel>(factory.get('BalloonViewModel'));
+        this.viewModel = <HeaderViewModel> factory.get('HeaderViewModel');
+        this.balloon = <BalloonViewModel> factory.get('BalloonViewModel');
     }
 
     protected initViewModel(): void {
@@ -35,30 +35,30 @@ class HeaderComponent extends Component<HeaderArgs> {
     public oninit(vnode: m.Vnode<HeaderArgs, this>): void {
         super.oninit(vnode);
 
-        if(typeof vnode.attrs.button !== 'undefined') {
+        if (typeof vnode.attrs.button !== 'undefined') {
             this.button = vnode.attrs.button;
         }
     }
 
     /**
-    * 放送波のリンクを生成する
-    */
+     * 放送波のリンクを生成する
+     */
     private setBroadcastLink(): void {
-        if(this.broadcastLink.length !== 0) { return; }
+        if (this.broadcastLink.length !== 0) { return; }
 
-        let config = this.viewModel.getConfig();
-        this.broadcastLink = []
-        if(config !== null) {
-            if(config.broadcast.GR) { this.broadcastLink.push(this.createLink('GR', '/program', { type: 'GR' })); }
-            if(config.broadcast.BS) { this.broadcastLink.push(this.createLink('BS', '/program', { type: 'BS' })); }
-            if(config.broadcast.CS) { this.broadcastLink.push(this.createLink('CS', '/program', { type: 'CS' })); }
-            if(config.broadcast.SKY) { this.broadcastLink.push(this.createLink('SKY', '/program', { type: 'SKY' })); }
+        const config = this.viewModel.getConfig();
+        this.broadcastLink = [];
+        if (config !== null) {
+            if (config.broadcast.GR) { this.broadcastLink.push(this.createLink('GR', '/program', { type: 'GR' })); }
+            if (config.broadcast.BS) { this.broadcastLink.push(this.createLink('BS', '/program', { type: 'BS' })); }
+            if (config.broadcast.CS) { this.broadcastLink.push(this.createLink('CS', '/program', { type: 'CS' })); }
+            if (config.broadcast.SKY) { this.broadcastLink.push(this.createLink('SKY', '/program', { type: 'SKY' })); }
         }
     }
 
     /**
-    * view
-    */
+     * view
+     */
     public view(vnode: m.Vnode<HeaderArgs, this>): m.Children {
         this.setBroadcastLink();
 
@@ -66,13 +66,13 @@ class HeaderComponent extends Component<HeaderArgs> {
             class: 'mdl-layout__header',
             style: typeof vnode.attrs.headerStyle === 'undefined' ? '' : vnode.attrs.headerStyle,
             oncreate: () => { document.title = vnode.attrs.title; },
-            onupdate: () => { if(vnode.attrs.title !== document.title) { document.title = vnode.attrs.title; } },
+            onupdate: () => { if (vnode.attrs.title !== document.title) { document.title = vnode.attrs.title; } },
         }, [
             m('div', { class: 'mdl-layout__header-row' }, [
                 // title
                 m('span', { class: 'mdl-layout-title' }, vnode.attrs.title),
 
-                //右側にナビゲーションを整列させる
+                // 右側にナビゲーションを整列させる
                 m('div', { class: 'mdl-layout-spacer' }),
 
                 // 右上のナビゲーション
@@ -101,21 +101,21 @@ class HeaderComponent extends Component<HeaderArgs> {
     }
 
     /**
-    * navigation link を生成する
-    * @param name: name
-    * @param href: href
-    * @param query: any = {}}
-    * @return m.Child
-    */
+     * navigation link を生成する
+     * @param name: name
+     * @param href: href
+     * @param query: any = {}}
+     * @return m.Child
+     */
     private createLink(name: string, href: string, query: any = {}): m.Child {
         return m('a', {
             class: 'mdl-navigation__link',
             onclick: () => {
-                if(Util.isEqualURL(href, query)) { return; }
+                if (Util.isEqualURL(href, query)) { return; }
 
                 Util.move(href, query);
             },
-        }, name)
+        }, name);
     }
 }
 

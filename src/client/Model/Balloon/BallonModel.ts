@@ -13,22 +13,22 @@ class BalloonModel extends Model implements BalloonModelInterface {
     private balloons: { [key: string]: BalloonStatus } = {};
 
     /**
-    * 管理するバルーンを追加
-    * @param id: string
-    */
+     * 管理するバルーンを追加
+     * @param id: string
+     */
     public add(id: string): void {
-        if(typeof this.balloons[id] === 'undefined') {
+        if (typeof this.balloons[id] === 'undefined') {
             this.balloons[id] = new BalloonStatus();
         }
     }
 
     /**
-    * 指定した id のバルーンを開く
-    * @param id: string
-    * @throws BalloonIsNotFound 指定された id のバルーンがなかった場合
-    */
+     * 指定した id のバルーンを開く
+     * @param id: string
+     * @throws BalloonIsNotFound 指定された id のバルーンがなかった場合
+     */
     public open(id: string): void {
-        if(typeof this.balloons[id] === 'undefined') {
+        if (typeof this.balloons[id] === 'undefined') {
             throw new Error(BalloonModel.balloonIsNotFound);
         }
 
@@ -37,27 +37,27 @@ class BalloonModel extends Model implements BalloonModelInterface {
     }
 
     /**
-    * すべてのバルーンを閉じる
-    */
+     * すべてのバルーンを閉じる
+     */
     public close(): void {
         let needsRedraw = false;
-        for(let key in this.balloons) {
-            if(this.balloons[key].get()) {
+        for (const key in this.balloons) {
+            if (this.balloons[key].get()) {
                 this.balloons[key].close();
                 needsRedraw = true;
             }
         }
-        if(needsRedraw) { m.redraw(); }
+        if (needsRedraw) { m.redraw(); }
     }
 
     /**
-    * 指定された id のバルーンが開いているか
-    * @param id: string
-    * @throws BalloonIsNotFound 指定された id のバルーンがなかった場合
-    * @return true: open, false: close
-    */
+     * 指定された id のバルーンが開いているか
+     * @param id: string
+     * @throws BalloonIsNotFound 指定された id のバルーンがなかった場合
+     * @return true: open, false: close
+     */
     public isOpen(id: string): boolean {
-        if(typeof this.balloons[id] === 'undefined') {
+        if (typeof this.balloons[id] === 'undefined') {
             throw new Error(BalloonModel.balloonIsNotFound);
         }
 

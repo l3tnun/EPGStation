@@ -1,17 +1,17 @@
 import * as apid from '../../../../../node_modules/mirakurun/api';
 import Model from '../../Model';
-import CallbackBaseModelInterface from './CallbackBaseModelInterface';
 import { MirakurunManageModelInterface } from '../../Operator/EPGUpdate/MirakurunManageModel';
 import { ReservationManageModelInterface } from '../../Operator/Reservation/ReservationManageModel';
+import CallbackBaseModelInterface from './CallbackBaseModelInterface';
 
 /**
-* EPGUpdateFinModel
-* EPG 更新終了後の処理
-*/
+ * EPGUpdateFinModel
+ * EPG 更新終了後の処理
+ */
 class EPGUpdateFinModel extends Model implements CallbackBaseModelInterface {
     private mirakurunManage: MirakurunManageModelInterface;
     private reservationManage: ReservationManageModelInterface;
-    
+
     constructor(
         mirakurunManage: MirakurunManageModelInterface,
         reservationManage: ReservationManageModelInterface,
@@ -29,15 +29,15 @@ class EPGUpdateFinModel extends Model implements CallbackBaseModelInterface {
     private async callback(tuners: apid.TunerDevice[]): Promise<void> {
         this.reservationManage.setTuners(tuners);
 
-        //すべての予約を更新
+        // すべての予約を更新
         try {
             await this.reservationManage.updateAll();
-        } catch(err) {
+        } catch (err) {
             this.log.system.error('ReservationManage update Error');
             this.log.system.error(err);
 
-            setTimeout(() => { this.callback(tuners) }, 1000);
-        };
+            setTimeout(() => { this.callback(tuners); }, 1000);
+        }
     }
 }
 

@@ -1,12 +1,12 @@
 import * as Chart from 'chart.js';
-import ViewModel from '../ViewModel';
 import * as apid from '../../../../api';
-import { BalloonModelInterface } from '../../Model/Balloon/BallonModel';
 import { StorageApiModelInterface } from '../../Model/Api/StorageApiModel';
+import { BalloonModelInterface } from '../../Model/Balloon/BallonModel';
+import ViewModel from '../ViewModel';
 
 /**
-* StorageViewModel
-*/
+ * StorageViewModel
+ */
 class StorageViewModel extends ViewModel {
     private balloon: BalloonModelInterface;
     private storage: StorageApiModelInterface;
@@ -22,15 +22,15 @@ class StorageViewModel extends ViewModel {
     }
 
     /**
-    * init
-    */
+     * init
+     */
     public init(): void {
         this.storage.init();
-        if(this.chart != null) {
+        if (this.chart !== null) {
             try {
                 this.chart.clear();
                 this.chart.destroy();
-            } catch(e) {
+            } catch (e) {
             }
         }
         this.storage.fetchStorage()
@@ -40,17 +40,17 @@ class StorageViewModel extends ViewModel {
     }
 
     /**
-    * get Storage info
-    */
+     * get Storage info
+     */
     public get(): apid.DiskStatus {
         return this.storage.getStorage();
     }
 
     /**
-    *　グラフを表示
-    */
+     * グラフを表示
+     */
     public show(): void {
-        let ctx = (<HTMLCanvasElement>document.getElementById(StorageViewModel.chartId))!.getContext('2d')!;
+        const ctx = (<HTMLCanvasElement> document.getElementById(StorageViewModel.chartId))!.getContext('2d')!;
         this.chart = new Chart(ctx, {
             type: 'doughnut',
             data: {
@@ -59,23 +59,23 @@ class StorageViewModel extends ViewModel {
                     data: [this.get().free, this.get().used],
                     backgroundColor: [
                         '#EF3C79',
-                        '#FBCBDB'
-                    ]
-                }]
-            }
+                        '#FBCBDB',
+                    ],
+                }],
+            },
         });
     }
 
     /**
-    * open
-    */
+     * open
+     */
     public open(): void {
         this.balloon.open(StorageViewModel.id);
     }
 
     /**
-    * close balloon
-    */
+     * close balloon
+     */
     public close(): void {
         this.balloon.close();
     }
@@ -83,7 +83,7 @@ class StorageViewModel extends ViewModel {
 
 namespace StorageViewModel {
     export const id = 'storage-id';
-    export const chartId = 'storage-chart'
+    export const chartId = 'storage-chart';
 }
 
 export default StorageViewModel;

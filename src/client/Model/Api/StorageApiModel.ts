@@ -1,6 +1,6 @@
 import * as m from 'mithril';
-import ApiModel from './ApiModel';
 import * as apid from '../../../../api';
+import ApiModel from './ApiModel';
 
 interface StorageApiModelInterface extends ApiModel {
     init(): void;
@@ -9,9 +9,9 @@ interface StorageApiModelInterface extends ApiModel {
 }
 
 /**
-* StorageApiModel
-* /api/storage
-*/
+ * StorageApiModel
+ * /api/storage
+ */
 class StorageApiModel extends ApiModel implements StorageApiModelInterface {
     private diskStatus: apid.DiskStatus = { free: 0, used: 0, total: 0, };
 
@@ -21,15 +21,15 @@ class StorageApiModel extends ApiModel implements StorageApiModelInterface {
     }
 
     /**
-    * ディスク情報を取得
-    */
+     * ディスク情報を取得
+     */
     public async fetchStorage(): Promise<void> {
         try {
             this.diskStatus = await <any> m.request({
                 method: 'GET',
                 url: '/api/storage',
             });
-        } catch(err) {
+        } catch (err) {
             this.diskStatus = { free: 0, used: 0, total: 0, };
             console.error('/api/storage');
             console.error(err);
@@ -38,13 +38,13 @@ class StorageApiModel extends ApiModel implements StorageApiModelInterface {
     }
 
     /**
-    * diskStatus を取得
-    * @return apid.DiskStatus
-    */
+     * diskStatus を取得
+     * @return apid.DiskStatus
+     */
     public getStorage(): apid.DiskStatus {
         return this.diskStatus;
     }
 }
 
-export { StorageApiModelInterface, StorageApiModel }
+export { StorageApiModelInterface, StorageApiModel };
 

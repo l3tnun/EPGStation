@@ -1,7 +1,7 @@
-import ApiModel from './ApiModel';
-import Util from '../../Util/Util';
 import * as diskusage from 'diskusage';
 import { DiskStatus } from '../../../../api';
+import Util from '../../Util/Util';
+import ApiModel from './ApiModel';
 
 interface StorageModelInterface extends ApiModel {
     getStatus(): Promise<DiskStatus>;
@@ -9,10 +9,11 @@ interface StorageModelInterface extends ApiModel {
 
 class StorageModel extends ApiModel implements StorageModelInterface {
     public getStatus(): Promise<DiskStatus> {
-        let dir = Util.getRecordedPath();
+        const dir = Util.getRecordedPath();
+
         return new Promise<DiskStatus>((resolve: (usage: DiskStatus) => void, reject: (err: Error) => void) => {
             diskusage.check(dir, (err, result) => {
-                if(err) {
+                if (err) {
                     reject(err);
                 } else {
                     resolve({

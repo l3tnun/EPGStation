@@ -1,9 +1,9 @@
-import * as http from 'http';
 import { ChildProcess } from 'child_process';
+import * as http from 'http';
 import Base from '../../../Base';
-import * as enums from './StreamTypeInterface';
 import { EncodeProcessManageModelInterface } from '../Encode/EncodeProcessManageModel';
 import { StreamManageModelInterface } from './StreamManageModel';
+import * as enums from './StreamTypeInterface';
 
 interface StreamInfo {
     type: enums.StreamType;
@@ -17,9 +17,9 @@ abstract class Stream extends Base {
     private streamNumber: number;
 
     /**
-    * @param process: EncodeProcessManageModelInterface
-    * @param manager: StreamManageModelInterface
-    */
+     * @param process: EncodeProcessManageModelInterface
+     * @param manager: StreamManageModelInterface
+     */
     constructor(
         process: EncodeProcessManageModelInterface,
         manager: StreamManageModelInterface,
@@ -39,18 +39,18 @@ abstract class Stream extends Base {
     public abstract getMirakurunStream(): http.IncomingMessage | null;
 
     /**
-    * child Process が終了したときの処理
-    * @param streamNumber
-    * @param resetCount default: true
-    */
+     * child Process が終了したときの処理
+     * @param streamNumber
+     * @param resetCount default: true
+     */
     protected ChildExit(streamNumber: number, resetCount: boolean = true): void {
-        if(resetCount) { this.resetCount(); }
+        if (resetCount) { this.resetCount(); }
         this.manager.stop(streamNumber);
     }
 
     /**
-    * mirakurun の優先度を返す
-    */
+     * mirakurun の優先度を返す
+     */
     protected getPriority(): number {
         return this.config.getConfig().streamingPriority || 0;
     }
@@ -64,7 +64,7 @@ abstract class Stream extends Base {
 
     public resetCount(isStop: boolean = true): void {
         this.viewCnt = 0;
-        if(isStop) { this.manager.stop(this.streamNumber); }
+        if (isStop) { this.manager.stop(this.streamNumber); }
     }
 
     public getCount(): number { return this.viewCnt; }

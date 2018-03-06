@@ -1,25 +1,25 @@
 import * as m from 'mithril';
-import ParentComponent from '../../ParentComponent';
 import { ViewModelStatus } from '../../../Enums';
-import MainLayoutComponent from '../../MainLayoutComponent';
-import factory from '../../../ViewModel/ViewModelFactory';
-import ProgramSettingViewModel from '../../../ViewModel/Program/ProgramSettingViewModel';
 import Util from '../../../Util/Util';
+import ProgramSettingViewModel from '../../../ViewModel/Program/ProgramSettingViewModel';
+import factory from '../../../ViewModel/ViewModelFactory';
+import MainLayoutComponent from '../../MainLayoutComponent';
+import ParentComponent from '../../ParentComponent';
 
 /**
-* ProgramSettingComponent
-*/
+ * ProgramSettingComponent
+ */
 class ProgramSettingComponent extends ParentComponent<void> {
     private viewModel: ProgramSettingViewModel;
 
     constructor() {
         super();
-        this.viewModel = <ProgramSettingViewModel>(factory.get('ProgramSettingViewModel'));
+        this.viewModel = <ProgramSettingViewModel> factory.get('ProgramSettingViewModel');
     }
 
     protected initViewModel(status: ViewModelStatus = 'init'): void {
         super.initViewModel(status);
-        if(status === 'init') {
+        if (status === 'init') {
             this.viewModel.setTemp();
         }
         Util.sleep(10)
@@ -29,13 +29,13 @@ class ProgramSettingComponent extends ParentComponent<void> {
     }
 
     /**
-    * page name
-    */
+     * page name
+     */
     protected getComponentName(): string { return 'ProgramSetting'; }
 
     /**
-    * view
-    */
+     * view
+     */
     public view(): m.Child {
         return m(MainLayoutComponent, {
             header: { title: '番組表設定' },
@@ -49,11 +49,11 @@ class ProgramSettingComponent extends ParentComponent<void> {
     }
 
     /**
-    * create content
-    * @return m.Child
-    */
+     * create content
+     * @return m.Child
+     */
     public createContent(): m.Child {
-        let buttonHover = Util.uaIsMobile() ? ' no-hover' : '';
+        const buttonHover = Util.uaIsMobile() ? ' no-hover' : '';
 
         return m('div', {
             class : 'program-setting-content mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col',
@@ -93,7 +93,7 @@ class ProgramSettingComponent extends ParentComponent<void> {
                 m('button', {
                     type: 'button',
                     class: 'mdl-button mdl-js-button mdl-button--primary' + buttonHover,
-                    onclick: () => { this.viewModel.save(); }
+                    onclick: () => { this.viewModel.save(); },
                 }, '保存'),
 
                 m('button', {
@@ -106,24 +106,24 @@ class ProgramSettingComponent extends ParentComponent<void> {
     }
 
     /**
-    * create content frame
-    * @param name: name
-    * @param content: content
-    * @return m.Child
-    */
+     * create content frame
+     * @param name: name
+     * @param content: content
+     * @return m.Child
+     */
     protected createContentFrame(name: string, content: m.Child | m.Child[] | null): m.Child {
         return m('div', { class: 'mdl-cell mdl-cell--12-col mdl-grid mdl-grid--no-spacing' }, [
             m('div', { class: 'title mdl-cell mdl-cell--3-col mdl-cell--2-col-tablet' }, name),
-            m('div', { class: 'mdl-cell mdl-cell--6-col mdl-cell--9-col-desktop mdl-grid mdl-grid--no-spacing' }, content)
+            m('div', { class: 'mdl-cell mdl-cell--6-col mdl-cell--9-col-desktop mdl-grid mdl-grid--no-spacing' }, content),
         ]);
     }
 
     /**
-    * create number Box
-    * @param getValue: () => string
-    * @param setValue: (value: string) => void
-    * @return m.Child
-    */
+     * create number Box
+     * @param getValue: () => string
+     * @param setValue: (value: string) => void
+     * @return m.Child
+     */
     private createNumberBox(name: string, getValue: () => number, setValue: (value: number) => void): m.Child {
         return m('div', { class: 'number-box' }, [
             m('div', { class: 'number-title' }, name),
@@ -136,15 +136,15 @@ class ProgramSettingComponent extends ParentComponent<void> {
                     min: '1',
                     value: getValue(),
                     onchange: m.withAttr('value', (value) => {
-                        let num = parseFloat(value);
-                        if(isNaN(num) || typeof num !== 'number' || num < 0.01) { return }
+                        const num = parseFloat(value);
+                        if (isNaN(num) || typeof num !== 'number' || num < 0.01) { return; }
                         setValue(num);
                     }),
                     onupdate: (vnode: m.VnodeDOM<void, this>) => {
-                        this.inputNumberOnUpdate(<HTMLInputElement>vnode.dom, getValue());
+                        this.inputNumberOnUpdate(<HTMLInputElement> vnode.dom, getValue());
                     },
-                })
-            ])
+                }),
+            ]),
         ]);
     }
 }

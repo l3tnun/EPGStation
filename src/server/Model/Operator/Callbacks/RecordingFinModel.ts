@@ -1,16 +1,16 @@
-import Model from '../../Model';
-import CallbackBaseModelInterface from './CallbackBaseModelInterface';
 import * as DBSchema from '../../DB/DBSchema';
-import { EncodeInterface } from '../../Operator/RuleInterface';
-import { RecordingManageModelInterface } from '../../Operator/Recording/RecordingManageModel';
-import { ThumbnailManageModelInterface } from '../../Operator/Thumbnail/ThumbnailManageModel';
-import { ExternalProcessModelInterface } from '../../Operator/ExternalProcessModel';
 import { IPCServerInterface } from '../../IPC/IPCServer';
+import Model from '../../Model';
+import { ExternalProcessModelInterface } from '../../Operator/ExternalProcessModel';
+import { RecordingManageModelInterface } from '../../Operator/Recording/RecordingManageModel';
+import { EncodeInterface } from '../../Operator/RuleInterface';
+import { ThumbnailManageModelInterface } from '../../Operator/Thumbnail/ThumbnailManageModel';
+import CallbackBaseModelInterface from './CallbackBaseModelInterface';
 
 /**
-* RecordingFinModel
-* 録画終了後の処理
-*/
+ * RecordingFinModel
+ * 録画終了後の処理
+ */
 class RecordingFinModel extends Model implements CallbackBaseModelInterface {
     private recordingManage: RecordingManageModelInterface;
     private thumbnailManage: ThumbnailManageModelInterface;
@@ -36,20 +36,20 @@ class RecordingFinModel extends Model implements CallbackBaseModelInterface {
     }
 
     /**
-    * @param program: DBSchema.RecordedSchema | null
-    * @param encodeOption: EncodeInterface | null
-    * program が null の場合は録画中に recorded から削除された
-    */
+     * @param program: DBSchema.RecordedSchema | null
+     * @param encodeOption: EncodeInterface | null
+     * program が null の場合は録画中に recorded から削除された
+     */
     private async callback(program: DBSchema.RecordedSchema | null, encodeOption: EncodeInterface | null): Promise<void> {
-        if(program === null) { return; }
+        if (program === null) { return; }
 
-        //サムネイル生成
+        // サムネイル生成
         this.thumbnailManage.push(program);
 
         const config = this.config.getConfig();
 
         // ts 前処理
-        if(typeof config.tsModify !== 'undefined' && program.recPath !== null) {
+        if (typeof config.tsModify !== 'undefined' && program.recPath !== null) {
             await this.ipc.setEncode({
                 recordedId: program.id,
                 source: program.recPath,
@@ -58,24 +58,24 @@ class RecordingFinModel extends Model implements CallbackBaseModelInterface {
             });
         }
 
-        //エンコード
-        if(encodeOption !== null) {
-            //エンコードオプションを生成
-            let settings: { mode: number, directory?: string }[] = [];
+        // エンコード
+        if (encodeOption !== null) {
+            // エンコードオプションを生成
+            const settings: { mode: number; directory?: string }[] = [];
             let encCnt = 0;
-            if(typeof encodeOption.mode1 !== 'undefined') {
+            if (typeof encodeOption.mode1 !== 'undefined') {
                 settings.push({ mode: encodeOption.mode1, directory: encodeOption.directory1 }); encCnt += 1;
             }
-            if(typeof encodeOption.mode2 !== 'undefined') {
+            if (typeof encodeOption.mode2 !== 'undefined') {
                 settings.push({ mode: encodeOption.mode2, directory: encodeOption.directory2 }); encCnt += 1;
             }
-            if(typeof encodeOption.mode3 !== 'undefined') {
+            if (typeof encodeOption.mode3 !== 'undefined') {
                 settings.push({ mode: encodeOption.mode3, directory: encodeOption.directory3 }); encCnt += 1;
             }
 
-            //エンコードを依頼する
-            for(let i = 0; i < settings.length; i++) {
-                if(program.recPath === null) { continue; }
+            // エンコードを依頼する
+            for (let i = 0; i < settings.length; i++) {
+                if (program.recPath === null) { continue; }
                 await this.ipc.setEncode({
                     recordedId: program.id,
                     source: program.recPath,
@@ -91,8 +91,8 @@ class RecordingFinModel extends Model implements CallbackBaseModelInterface {
         this.ipc.notifIo();
 
         // 外部コマンド実行
-        let cmd = config.recordedEndCommand;
-        if(typeof cmd !== 'undefined') {
+        const cmd = config.recordedEndCommand;
+        if (typeof cmd !== 'undefined') {
             this.externalProcess.run(cmd, program);
         }
     }

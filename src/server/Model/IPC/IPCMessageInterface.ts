@@ -1,8 +1,8 @@
 import { EncodeProgram } from '../Service/Encode/EncodeManageModel';
 
 /**
-* IPC 通信で使用する message の 定義
-*/
+ * IPC 通信で使用する message の 定義
+ */
 interface IPCClientMessage {
     id: number;
     msg: string;

@@ -1,23 +1,23 @@
 import * as m from 'mithril';
-import Component from '../Component';
-import factory from '../../ViewModel/ViewModelFactory';
-import RecordedMenuViewModel from '../../ViewModel/Recorded/RecordedMenuViewModel';
 import Util from '../../Util/Util';
+import RecordedMenuViewModel from '../../ViewModel/Recorded/RecordedMenuViewModel';
+import factory from '../../ViewModel/ViewModelFactory';
+import Component from '../Component';
 
 /**
-* RecordedMenuComponent
-*/
+ * RecordedMenuComponent
+ */
 class RecordedMenuComponent extends Component<void> {
     private viewModel: RecordedMenuViewModel;
 
     constructor() {
         super();
-        this.viewModel = <RecordedMenuViewModel>(factory.get('RecordedMenuViewModel'));
+        this.viewModel = <RecordedMenuViewModel> factory.get('RecordedMenuViewModel');
     }
 
     /**
-    * view
-    */
+     * view
+     */
     public view(): m.Child {
         const ruleId = this.viewModel.getRuleId();
 
@@ -26,7 +26,7 @@ class RecordedMenuComponent extends Component<void> {
                 style: ruleId === null ? 'display: none;' : '',
                 onclick: () => {
                     this.viewModel.close();
-                    if(Number(m.route.param('rule')) === ruleId) { return; };
+                    if (Number(m.route.param('rule')) === ruleId) { return; }
                     Util.move('/recorded', { rule: ruleId });
                 },
             }, 'search', 'search'),
@@ -55,8 +55,8 @@ class RecordedMenuComponent extends Component<void> {
         attrs.class = 'menu-item';
 
         return m('div', attrs, [
-            m('i', { class: 'menu-icon material-icons' }, iconName ),
-            m('div', { class: 'menu-text' }, text)
+            m('i', { class: 'menu-icon material-icons' }, iconName),
+            m('div', { class: 'menu-text' }, text),
         ]);
     }
 }

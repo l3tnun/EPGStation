@@ -1,10 +1,10 @@
-import ViewModel from '../ViewModel';
-import { ProgramSettingValue, ProgramSettingModelInterface } from '../../Model/Program/ProgramSettingModel';
+import { ProgramSettingModelInterface, ProgramSettingValue } from '../../Model/Program/ProgramSettingModel';
 import { SnackbarModelInterface } from '../../Model/Snackbar/SnackbarModel';
+import ViewModel from '../ViewModel';
 
 /**
-* ProgramSettingViewModel
-*/
+ * ProgramSettingViewModel
+ */
 class ProgramSettingViewModel extends ViewModel {
     private settingModel: ProgramSettingModelInterface;
     private snackbar: SnackbarModelInterface;
@@ -21,40 +21,40 @@ class ProgramSettingViewModel extends ViewModel {
     }
 
     /**
-    * init
-    * main で一度だけ初期化される
-    */
+     * init
+     * main で一度だけ初期化される
+     */
     public init(): void {
         this.settingModel.init();
     }
 
     /**
-    * 設定画面を開くときに呼ぶ
-    * 一時保存領域のセット
-    */
+     * 設定画面を開くときに呼ぶ
+     * 一時保存領域のセット
+     */
     public setTemp(): void {
         this.tmpValue = JSON.parse(JSON.stringify(this.settingModel.value));
     }
 
     /**
-    * isEnable
-    * @return boolean
-    */
+     * isEnable
+     * @return boolean
+     */
     public isEnable(): boolean {
         return this.settingModel.isEnable;
     }
 
     /**
-    * 設定画面を開くときに呼ぶ
-    * 一時保存領域のセット
-    */
+     * 設定画面を開くときに呼ぶ
+     * 一時保存領域のセット
+     */
     public reset(): void {
         this.tmpValue = this.settingModel.getDefaultValue();
     }
 
     /**
-    * save
-    */
+     * save
+     */
     public save(): void {
         this.settingModel.value = this.tmpValue;
         this.settingModel.update();

@@ -8,32 +8,32 @@ namespace DateUtil {
         mm: (date: Date): string => { return ('0' + date.getMinutes()).slice(-2); },
         ss: (date: Date): string => { return ('0' + date.getSeconds()).slice(-2); },
         w: (date: Date): string => { return ['日', '月', '火', '水', '木', '金', '土'][date.getDay()]; },
-    }
+    };
 
     /**
-    * Date を string に変換
-    * @param date: Date
-    * @param formatStr: string yyyy MM dd hh mm ss w
-    * @return string
-    */
+     * Date を string に変換
+     * @param date: Date
+     * @param formatStr: string yyyy MM dd hh mm ss w
+     * @return string
+     */
     export const format = (date: Date, formatStr: string): string => {
-        for (let key in fmt) {
+        for (const key in fmt) {
             formatStr = formatStr.replace(key, fmt[key](date));
         }
 
         return formatStr;
-    }
+    };
 
     /**
-    * 日本時間を返す
-    * @param localDate Date
-    * @return Date
-    */
+     * 日本時間を返す
+     * @param localDate Date
+     * @return Date
+     */
     export const getJaDate = (localDate: Date): Date => {
-        let offSet = (localDate.getTimezoneOffset() * 60 * 1000 ) + ( 1000 * 60 * 60 * 9 );
-        return new Date( localDate.getTime() + offSet );
-    }
+        const offSet = (localDate.getTimezoneOffset() * 60 * 1000) + (1000 * 60 * 60 * 9);
 
+        return new Date(localDate.getTime() + offSet);
+    };
 }
 
 export default DateUtil;

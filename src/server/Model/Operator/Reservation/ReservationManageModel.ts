@@ -1,18 +1,18 @@
-import * as path from 'path';
+import * as events from 'events';
 import * as fs from 'fs';
-import * as events from 'events'
-import Model from '../../Model';
+import * as path from 'path';
 import * as apid from '../../../../../node_modules/mirakurun/api';
-import { ProgramsDBInterface } from '../../DB/ProgramsDB';
-import { IPCServerInterface } from '../../IPC/IPCServer';
-import { RulesDBInterface } from '../../DB/RulesDB';
-import * as DBSchema from '../../DB/DBSchema';
-import Tuner from './Tuner';
-import { SearchInterface, OptionInterface, EncodeInterface } from '../RuleInterface';
-import { ReserveProgram } from '../ReserveProgramInterface';
-import Util from '../../../Util/Util';
-import DateUtil from '../../../Util/DateUtil';
 import CheckRule from '../../../Util/CheckRule';
+import DateUtil from '../../../Util/DateUtil';
+import Util from '../../../Util/Util';
+import * as DBSchema from '../../DB/DBSchema';
+import { ProgramsDBInterface } from '../../DB/ProgramsDB';
+import { RulesDBInterface } from '../../DB/RulesDB';
+import { IPCServerInterface } from '../../IPC/IPCServer';
+import Model from '../../Model';
+import { ReserveProgram } from '../ReserveProgramInterface';
+import { EncodeInterface, OptionInterface, SearchInterface } from '../RuleInterface';
+import Tuner from './Tuner';
 
 interface ExeQueueData {
     id: string;
@@ -20,14 +20,14 @@ interface ExeQueueData {
 }
 
 interface ReserveAllId {
-    reserves: ReserveAllItem[],
-    conflicts: ReserveAllItem[],
-    skips: ReserveAllItem[],
+    reserves: ReserveAllItem[];
+    conflicts: ReserveAllItem[];
+    skips: ReserveAllItem[];
 }
 
 interface ReserveAllItem {
-    programId: number,
-    ruleId?: number,
+    programId: number;
+    ruleId?: number;
 }
 
 interface ReserveLimit {
@@ -52,10 +52,10 @@ interface ReservationManageModelInterface extends Model {
 }
 
 /**
-* ReservationManageModel
-* 予約の管理を行う
-* @throws ReservationManageModelCreateError init を呼ばないと起こる
-*/
+ * ReservationManageModel
+ * 予約の管理を行う
+ * @throws ReservationManageModelCreateError init を呼ばないと起こる
+ */
 class ReservationManageModel extends Model {
     private lockId: string | null = null;
     private exeQueue: ExeQueueData[] = [];
@@ -64,14 +64,14 @@ class ReservationManageModel extends Model {
     private programDB: ProgramsDBInterface;
     private rulesDB: RulesDBInterface;
     private ipc: IPCServerInterface;
-    private reserves: ReserveProgram[] = []; //予約
+    private reserves: ReserveProgram[] = []; // 予約
     private tuners: Tuner[] = [];
     private reservesPath: string;
 
     constructor(
         programDB: ProgramsDBInterface,
         rulesDB: RulesDBInterface,
-        ipc: IPCServerInterface
+        ipc: IPCServerInterface,
     ) {
         super();
         this.programDB = programDB;
@@ -84,22 +84,22 @@ class ReservationManageModel extends Model {
     }
 
     /**
-    * 実行権を取得
-    * @param priority 優先度
-    * @param Promise<string> 実行 id を返す
-    */
+     * 実行権を取得
+     * @param priority 優先度
+     * @param Promise<string> 実行 id を返す
+     */
     private getExecution(priority: number): Promise<string> {
         const data: ExeQueueData = {
             id: new Date().getTime().toString(16) + Math.floor(1000 * Math.random()).toString(16),
             priority: priority,
-        }
+        };
 
         // queue に挿入
         let position = 0;
         const len = this.exeQueue.length;
-        for(; position < len; position++) {
+        for (; position < len; position++) {
             const q = this.exeQueue[position];
-            if(q.priority < data.priority) {
+            if (q.priority < data.priority) {
                 break;
             }
         }
@@ -107,11 +107,11 @@ class ReservationManageModel extends Model {
 
         return new Promise<string>((resolve: (value: string) => void) => {
             const onDone = (id: string) => {
-                if(id === data.id) {
+                if (id === data.id) {
                     resolve(data.id);
                     this.exeEventEmitter.removeListener(ReservationManageModel.UNLOCK_EVENT, onDone);
                 }
-            }
+            };
 
             this.exeEventEmitter.on(ReservationManageModel.UNLOCK_EVENT, onDone);
 
@@ -120,19 +120,19 @@ class ReservationManageModel extends Model {
     }
 
     /**
-    * 実行権をアンロック
-    * @param id: number
-    */
+     * 実行権をアンロック
+     * @param id: number
+     */
     private unLockExecution(id: string): void {
-        if(this.lockId === id) {
-            //アンロック
+        if (this.lockId === id) {
+            // アンロック
             this.lockId = null;
         }
 
-        if(this.lockId === null) {
-            //次の操作に実行権を渡す
+        if (this.lockId === null) {
+            // 次の操作に実行権を渡す
             const q = this.exeQueue.shift();
-            if(typeof q !== 'undefined') {
+            if (typeof q !== 'undefined') {
                 this.lockId = q.id;
                 this.exeEventEmitter.emit(ReservationManageModel.UNLOCK_EVENT, q.id);
             }
@@ -140,9 +140,9 @@ class ReservationManageModel extends Model {
     }
 
     /**
-    * チューナ情報をセット
-    * @param tuners: TunerDevice[]
-    */
+     * チューナ情報をセット
+     * @param tuners: TunerDevice[]
+     */
     public setTuners(tuners: apid.TunerDevice[]): void {
         this.tuners = tuners.map((tuner) => {
             return new Tuner(tuner);
@@ -150,13 +150,13 @@ class ReservationManageModel extends Model {
     }
 
     /**
-    * 指定した id の予約状態を取得する
-    * @param programId: program id
-    * @return ReserveProgram | null
-    */
+     * 指定した id の予約状態を取得する
+     * @param programId: program id
+     * @return ReserveProgram | null
+     */
     public getReserve(programId: apid.ProgramId): ReserveProgram | null {
-        for(let reserve of this.reserves) {
-            if(reserve.program.id === programId) {
+        for (const reserve of this.reserves) {
+            if (reserve.program.id === programId) {
                 return reserve;
             }
         }
@@ -165,36 +165,37 @@ class ReservationManageModel extends Model {
     }
 
     /**
-    * すべての予約状態を取得する
-    * @return ReserveProgram[]
-    */
+     * すべての予約状態を取得する
+     * @return ReserveProgram[]
+     */
     public getReservesAll(limit?: number, offset: number = 0): ReserveProgram[] {
-        if(typeof limit !== 'undefined') {
+        if (typeof limit !== 'undefined') {
             return this.reserves.slice(offset, limit + offset);
         }
+
         return this.reserves;
     }
 
     /**
-    * 予約の program id だけを取得する
-    * @return ReserveAllId
-    */
+     * 予約の program id だけを取得する
+     * @return ReserveAllId
+     */
     public getReservesAllId(): ReserveAllId {
-        let reserves: ReserveAllItem[] = [];
-        let conflicts: ReserveAllItem[] = [];
-        let skips: ReserveAllItem[] = [];
+        const reserves: ReserveAllItem[] = [];
+        const conflicts: ReserveAllItem[] = [];
+        const skips: ReserveAllItem[] = [];
 
         this.reserves.forEach((reserve) => {
-            let result: ReserveAllItem = {
+            const result: ReserveAllItem = {
                 programId: reserve.program.id,
-            }
-            if(typeof reserve.ruleId !== 'undefined') {
+            };
+            if (typeof reserve.ruleId !== 'undefined') {
                 result.ruleId = reserve.ruleId;
             }
 
-            if(reserve.isConflict) {
+            if (reserve.isConflict) {
                 conflicts.push(result);
-            } else if(reserve.isSkip) {
+            } else if (reserve.isSkip) {
                 skips.push(result);
             } else {
                 reserves.push(result);
@@ -205,15 +206,15 @@ class ReservationManageModel extends Model {
             reserves: reserves,
             conflicts: conflicts,
             skips: skips,
-        }
+        };
     }
 
     /**
-    * 予約状態を取得する
-    * @return ReserveProgram[]
-    */
+     * 予約状態を取得する
+     * @return ReserveProgram[]
+     */
     public getReserves(limit?: number, offset: number = 0): ReserveLimit {
-        let reserves = this.reserves.filter((reserve) => {
+        const reserves = this.reserves.filter((reserve) => {
             return !reserve.isConflict && !reserve.isSkip;
         });
 
@@ -224,11 +225,11 @@ class ReservationManageModel extends Model {
     }
 
     /**
-    * コンフリクト状態を取得する
-    * @return ReserveProgram[]
-    */
+     * コンフリクト状態を取得する
+     * @return ReserveProgram[]
+     */
     public getConflicts(limit?: number, offset: number = 0): ReserveLimit {
-        let reserves = this.reserves.filter((reserve) => {
+        const reserves = this.reserves.filter((reserve) => {
             return reserve.isConflict;
         });
 
@@ -239,11 +240,11 @@ class ReservationManageModel extends Model {
     }
 
     /**
-    * スキップを取得する
-    * @return ReserveProgram[]
-    */
+     * スキップを取得する
+     * @return ReserveProgram[]
+     */
     public getSkips(limit?: number, offset: number = 0): ReserveLimit {
-        let reserves = this.reserves.filter((reserve) => {
+        const reserves = this.reserves.filter((reserve) => {
             return reserve.isSkip;
         });
 
@@ -254,24 +255,24 @@ class ReservationManageModel extends Model {
     }
 
     /**
-    * 予約削除(手動予約) or 予約スキップ(ルール予約)
-    * @param id: program id
-    * @return Promise<void>
-    */
+     * 予約削除(手動予約) or 予約スキップ(ルール予約)
+     * @param id: program id
+     * @return Promise<void>
+     */
     public async cancel(id: apid.ProgramId): Promise<void> {
         const exeId = await this.getExecution(1);
 
         let needsUpdate = false;
-        for(let i = 0; i < this.reserves.length; i++) {
-            if(this.reserves[i].program.id === id) {
-                if(this.reserves[i].isManual) {
-                    //手動予約なら削除
+        for (let i = 0; i < this.reserves.length; i++) {
+            if (this.reserves[i].program.id === id) {
+                if (this.reserves[i].isManual) {
+                    // 手動予約なら削除
                     this.reserves.splice(i, 1);
                     this.log.system.info(`cancel reserve: ${ id }`);
                     needsUpdate = true;
                     break;
                 } else {
-                    //ルール予約ならスキップを有効化
+                    // ルール予約ならスキップを有効化
                     this.reserves[i].isSkip = true;
                     // skip すれば録画されないのでコンフリクトはしない
                     this.reserves[i].isConflict = false;
@@ -282,26 +283,26 @@ class ReservationManageModel extends Model {
             }
         }
 
-        if(needsUpdate) {
+        if (needsUpdate) {
             setTimeout(() => {
                 this.log.system.info('start update (cancel)');
 
                 // 予約情報をコピー
-                let matches: ReserveProgram[] = [];
-                for(let reserve of this.reserves) {
-                    let r: any = {};
+                const matches: ReserveProgram[] = [];
+                for (const reserve of this.reserves) {
+                    const r: any = {};
                     Object.assign(r, reserve);
                     r.isConflict = false;
                     matches.push(r);
                 }
 
-                //予約情報更新
+                // 予約情報更新
                 this.reserves = this.createReserves(matches);
                 this.writeReservesFile();
 
                 this.unLockExecution(exeId);
 
-                //通知
+                // 通知
                 this.ipc.notifIo();
 
                 this.log.system.info('update (cancel) done');
@@ -312,19 +313,19 @@ class ReservationManageModel extends Model {
     }
 
     /**
-    * 予約対象から除外され状態を解除する
-    * @param id: number program id
-    * @return Promise<void>
-    */
+     * 予約対象から除外され状態を解除する
+     * @param id: number program id
+     * @return Promise<void>
+     */
     public async removeSkip(id: apid.ProgramId): Promise<void> {
         const exeId = await this.getExecution(1);
 
-        for(let i = 0; i < this.reserves.length; i++) {
-            if(this.reserves[i].program.id === id) {
+        for (let i = 0; i < this.reserves.length; i++) {
+            if (this.reserves[i].program.id === id) {
                 this.reserves[i].isSkip = false;
                 this.log.system.info(`remove skip: ${ id }`);
 
-                if(typeof this.reserves[i].ruleId !== 'undefined') {
+                if (typeof this.reserves[i].ruleId !== 'undefined') {
                     this.updateRule(this.reserves[i].ruleId!);
                 }
                 break;
@@ -335,14 +336,14 @@ class ReservationManageModel extends Model {
     }
 
     /**
-    * 手動予約追加
-    * @param programId: number program id
-    * @return Promise<void>
-    * @throws ReservationManageModelAddFailed 予約に失敗
-    */
+     * 手動予約追加
+     * @param programId: number program id
+     * @return Promise<void>
+     * @throws ReservationManageModelAddFailed 予約に失敗
+     */
     public async addReserve(programId: apid.ProgramId, encode: EncodeInterface | null = null): Promise<void> {
         // encode option が正しいかチェック
-        if(encode != null && !(new CheckRule().checkEncodeOption(encode))) {
+        if (encode !== null && !(new CheckRule().checkEncodeOption(encode))) {
             this.log.system.error('addReserve Failed');
             this.log.system.error('ReservationManageModel is Running');
             throw new Error('ReservationManageModelAddFailed');
@@ -351,53 +352,53 @@ class ReservationManageModel extends Model {
         const exeId = await this.getExecution(1);
         this.log.system.info(`addReserve: ${ programId }`);
 
-        const finalize = () => { this.unLockExecution(exeId); }
+        const finalize = () => { this.unLockExecution(exeId); };
 
-        //番組情報を取得
+        // 番組情報を取得
         let program: DBSchema.ProgramSchema | null;
         try {
             program = await this.programDB.findId(programId, true);
-        } catch(err) {
+        } catch (err) {
             finalize();
             throw err;
         }
 
         // programId に該当する録画データがなかった
-        if(program === null) {
+        if (program === null) {
             finalize();
             this.log.system.error(`program is not found: ${ programId }`);
             throw new Error('ProgramIsNotFound');
         }
 
-        //追加する予約情報を生成
-        let addReserve: ReserveProgram = {
+        // 追加する予約情報を生成
+        const addReserve: ReserveProgram = {
             program: program,
             isSkip: false,
             isManual: true,
             manualId: new Date().getTime(),
             isConflict: false,
         };
-        if(encode != null) {
+        if (encode !== null) {
             addReserve.encodeOption = encode;
         }
 
-        //追加する予約情報と重複する時間帯の予約済み番組情報を conflict, skip は除外して取得
-        //すでに予約済みの場合はエラー
-        let reserves: ReserveProgram[] = [];
-        for(let reserve of this.reserves) {
-            if(reserve.program.id == programId) {
+        // 追加する予約情報と重複する時間帯の予約済み番組情報を conflict, skip は除外して取得
+        // すでに予約済みの場合はエラー
+        const reserves: ReserveProgram[] = [];
+        for (const reserve of this.reserves) {
+            if (reserve.program.id === programId) {
                 this.log.system.error(`program is reserves: ${ programId }`);
                 finalize();
                 throw new Error('ReservationManageModelAddFailed');
             }
 
             // 該当する予約情報をコピー
-            if(!reserve.isConflict
+            if (!reserve.isConflict
                 && !reserve.isSkip
                 && reserve.program.startAt <= addReserve.program.endAt
                 && reserve.program.endAt >= addReserve.program.startAt
             ) {
-                let r: any = {};
+                const r: any = {};
                 Object.assign(r, reserve);
                 reserves.push(r);
             }
@@ -408,8 +409,8 @@ class ReservationManageModel extends Model {
         const newReserves = this.createReserves(reserves);
 
         // conflict したかチェック
-        for(let reserve of newReserves) {
-            if(reserve.isConflict) {
+        for (const reserve of newReserves) {
+            if (reserve.isConflict) {
                 finalize();
                 this.log.system.error(`program id conflict: ${ programId }`);
                 throw new Error('ReservationManageModelAddReserveConflict');
@@ -418,7 +419,7 @@ class ReservationManageModel extends Model {
 
         // 保存
         this.reserves.push(addReserve);
-        this.reserves.sort((a, b) => { return a.program.startAt - b.program.startAt });
+        this.reserves.sort((a, b) => { return a.program.startAt - b.program.startAt; });
         this.writeReservesFile();
 
         finalize();
@@ -430,34 +431,34 @@ class ReservationManageModel extends Model {
     }
 
     /**
-    * すべての予約状態を更新
-    * @return Promise<void>
-    */
+     * すべての予約状態を更新
+     * @return Promise<void>
+     */
     public async updateAll(): Promise<void> {
         this.log.system.info('start updateAll');
 
-        let rules = await this.rulesDB.findAllId();
+        const rules = await this.rulesDB.findAllId();
 
         // ruleIndex を作成
-        let ruleIndex: { [key: number]: boolean } = {};
+        const ruleIndex: { [key: number]: boolean } = {};
         rules.forEach((result) => { ruleIndex[result.id] = true; });
 
-        //存在しない rule を削除
-        let newReserves = this.reserves.filter((reserve) => {
+        // 存在しない rule を削除
+        const newReserves = this.reserves.filter((reserve) => {
             return !(typeof reserve.ruleId !== 'undefined' && typeof ruleIndex[reserve.ruleId] === 'undefined');
         });
         this.reserves = newReserves;
         this.writeReservesFile();
 
-        //手動予約の情報を更新する
-        for(let reserve of this.reserves) {
-            if(!reserve.isManual || typeof reserve.manualId === 'undefined') { continue; }
+        // 手動予約の情報を更新する
+        for (const reserve of this.reserves) {
+            if (!reserve.isManual || typeof reserve.manualId === 'undefined') { continue; }
             await Util.sleep(10);
             await this.updateManual(reserve.manualId!);
         }
 
-        // rule 予約の情報を更新する 
-        for(let rule of rules) {
+        // rule 予約の情報を更新する
+        for (const rule of rules) {
             await Util.sleep(10);
             await this.updateRule(rule.id, 0, false);
         }
@@ -469,25 +470,25 @@ class ReservationManageModel extends Model {
     }
 
     /**
-    * 指定した 手動予約の更新
-    * @param manualId: manual id
-    * @return Promise<void>
-    */
+     * 指定した 手動予約の更新
+     * @param manualId: manual id
+     * @return Promise<void>
+     */
     public async updateManual(manualId: number): Promise<void> {
         this.log.system.info(`start UpdateManualId: ${ manualId }`);
 
         const exeId = await this.getExecution(0);
-        const finalize = () => { this.unLockExecution(exeId); }
+        const finalize = () => { this.unLockExecution(exeId); };
 
         // reserves の中から manualId の予約情報をコピーする
         let manualMatche: ReserveProgram | null = null;
         // manualId に該当する予約を削除した予約情報を作成
-        let newReserves: ReserveProgram[] = [];
-        for(let reserve of this.reserves) {
-            let r: any = {};
+        const newReserves: ReserveProgram[] = [];
+        for (const reserve of this.reserves) {
+            const r: any = {};
             Object.assign(r, reserve);
 
-            if(reserve.manualId === manualId) {
+            if (reserve.manualId === manualId) {
                 manualMatche = r;
             } else {
                 newReserves.push(r);
@@ -495,30 +496,32 @@ class ReservationManageModel extends Model {
         }
 
         // reserves から削除されていた
-        if(manualMatche === null) {
+        if (manualMatche === null) {
             finalize();
             this.log.system.warn(`updateManual error: ${ manualId }`);
+
             return;
         }
 
-        //番組情報を取得
+        // 番組情報を取得
         let program: DBSchema.ProgramSchema | null;
         try {
             program = await this.programDB.findId(manualMatche!.program.id, true);
-        } catch(err) {
+        } catch (err) {
             finalize();
             throw err;
         }
 
         // 該当する番組情報がなかった
-        if(program === null) {
+        if (program === null) {
             this.reserves = newReserves;
             this.writeReservesFile();
             finalize();
+
             return;
         }
 
-        //番組情報を更新
+        // 番組情報を更新
         manualMatche.program = program;
         manualMatche.isConflict = false;
         newReserves.push(manualMatche);
@@ -530,8 +533,8 @@ class ReservationManageModel extends Model {
         finalize();
 
         // conflict を表示
-        for(let reserve of this.reserves) {
-            if(!reserve.isConflict || reserve.manualId !== manualId) { continue; }
+        for (const reserve of this.reserves) {
+            if (!reserve.isConflict || reserve.manualId !== manualId) { continue; }
             this.log.system.warn(`conflict: ${ reserve.program.id } ${ DateUtil.format(new Date(reserve.program.startAt), 'yyyy-MM-ddThh:mm:ss') } ${ reserve.program.name }`);
         }
 
@@ -539,64 +542,63 @@ class ReservationManageModel extends Model {
     }
 
     /**
-    * 指定した rule の予約を更新
-    * @param ruleId: rule id
-    * @param priority: 優先度
-    * @param needsNotify: 通知が必要か
-    * @return Promise<void>
-    */
+     * 指定した rule の予約を更新
+     * @param ruleId: rule id
+     * @param priority: 優先度
+     * @param needsNotify: 通知が必要か
+     * @return Promise<void>
+     */
     public async updateRule(ruleId: number, priority: number = 1, needsNotify: boolean = true): Promise<void> {
         const exeId = await this.getExecution(priority);
-
-        const finalize = () => { this.unLockExecution(exeId); }
+        const finalize = () => { this.unLockExecution(exeId); };
 
         this.log.system.info(`start update rule: ${ ruleId }`);
 
         // rule を取得
         let rule: DBSchema.RulesSchema | null = null;
         try {
-            let result = await this.rulesDB.findId(ruleId);
-            if(result !== null && result.enable) {
+            const result = await this.rulesDB.findId(ruleId);
+            if (result !== null && result.enable) {
                 rule = result;
             }
-        } catch(err) {
+        } catch (err) {
             finalize();
             throw err;
         }
 
         // 番組情報を取得
-        let programs: DBSchema.ProgramSchema[] = []
-        if(rule !== null) {;
+        let programs: DBSchema.ProgramSchema[] = [];
+        if (rule !== null) {
             try {
                 programs = await this.programDB.findRule(this.createSearchOption(rule));
-            } catch(err) {
+            } catch (err) {
                 finalize();
                 throw err;
             }
         }
 
         // スキップ情報
-        let skipIndex: { [key: number]: boolean } = {};
+        const skipIndex: { [key: number]: boolean } = {};
         // ruleId を除外した予約情報を生成
-        let matches: ReserveProgram[] = [];
-        for(let reserve of this.reserves) {
-            //スキップ情報を記録
-            if(reserve.isSkip) { skipIndex[reserve.program.id] = reserve.isSkip; }
+        const matches: ReserveProgram[] = [];
+        for (const reserve of this.reserves) {
+            // スキップ情報を記録
+            if (reserve.isSkip) { skipIndex[reserve.program.id] = reserve.isSkip; }
 
-            if(typeof reserve.ruleId === 'undefined' || reserve.ruleId !== ruleId) {
-                let r: any = {};
+            if (typeof reserve.ruleId === 'undefined' || reserve.ruleId !== ruleId) {
+                const r: any = {};
                 Object.assign(r, reserve);
                 r.isConflict = false;
                 matches.push(r);
             }
         }
 
-        if(rule !== null) {
+        if (rule !== null) {
             // ruleId の番組情報を追加
             const ruleOption = this.createOption(rule);
             const encodeOption = this.createEncodeOption(rule);
-            for(let program of programs) {
-                let data: ReserveProgram = {
+            for (const program of programs) {
+                const data: ReserveProgram = {
                     program: program,
                     ruleId: ruleId,
                     ruleOption: ruleOption,
@@ -604,7 +606,7 @@ class ReservationManageModel extends Model {
                     isManual: false,
                     isConflict: false,
                 };
-                if(encodeOption !== null) {
+                if (encodeOption !== null) {
                     data.encodeOption = encodeOption;
                 }
                 matches.push(data);
@@ -618,111 +620,111 @@ class ReservationManageModel extends Model {
         finalize();
 
         // conflict を表示
-        for(let reserve of this.reserves) {
-            if(!reserve.isConflict || reserve.ruleId !== ruleId) { continue; }
+        for (const reserve of this.reserves) {
+            if (!reserve.isConflict || reserve.ruleId !== ruleId) { continue; }
             this.log.system.warn(`conflict: ${ reserve.program.id } ${ DateUtil.format(new Date(reserve.program.startAt), 'yyyy-MM-ddThh:mm:ss') } ${ reserve.program.name }`);
         }
 
-        //通知
-        if(needsNotify) { this.ipc.notifIo(); }
+        // 通知
+        if (needsNotify) { this.ipc.notifIo(); }
 
         this.log.system.info(`update rule: ${ ruleId } done`);
     }
 
     /**
-    * RulesSchema から searchInterface を生成する
-    * @param rule: DBSchema.RulesSchema
-    * @return SearchInterface
-    */
+     * RulesSchema から searchInterface を生成する
+     * @param rule: DBSchema.RulesSchema
+     * @return SearchInterface
+     */
     private createSearchOption(rule: DBSchema.RulesSchema): SearchInterface {
-        let search: SearchInterface = {
-            week: rule.week
-        }
+        const search: SearchInterface = {
+            week: rule.week,
+        };
 
-        if(rule.keyword !== null)       { search.keyword       = rule.keyword       }
-        if(rule.ignoreKeyword !== null) { search.ignoreKeyword = rule.ignoreKeyword }
-        if(rule.keyCS !== null)         { search.keyCS         = rule.keyCS         }
-        if(rule.keyRegExp !== null)     { search.keyRegExp     = rule.keyRegExp     }
-        if(rule.title !== null)         { search.title         = rule.title         }
-        if(rule.description !== null)   { search.description   = rule.description   }
-        if(rule.extended !== null)      { search.extended      = rule.extended      }
-        if(rule.GR !== null)            { search.GR            = rule.GR            }
-        if(rule.BS !== null)            { search.BS            = rule.BS            }
-        if(rule.CS !== null)            { search.CS            = rule.CS            }
-        if(rule.SKY !== null)           { search.SKY           = rule.SKY           }
-        if(rule.station !== null)       { search.station       = rule.station       }
-        if(rule.genrelv1 !== null)      { search.genrelv1      = rule.genrelv1      }
-        if(rule.genrelv2 !== null)      { search.genrelv2      = rule.genrelv2      }
-        if(rule.startTime !== null)     { search.startTime     = rule.startTime     }
-        if(rule.timeRange !== null)     { search.timeRange     = rule.timeRange     }
-        if(rule.isFree !== null)        { search.isFree        = rule.isFree        }
-        if(rule.durationMin !== null)   { search.durationMin   = rule.durationMin   }
-        if(rule.durationMax !== null)   { search.durationMax   = rule.durationMax   }
+        if (rule.keyword !== null)       { search.keyword       = rule.keyword;       }
+        if (rule.ignoreKeyword !== null) { search.ignoreKeyword = rule.ignoreKeyword; }
+        if (rule.keyCS !== null)         { search.keyCS         = rule.keyCS;         }
+        if (rule.keyRegExp !== null)     { search.keyRegExp     = rule.keyRegExp;     }
+        if (rule.title !== null)         { search.title         = rule.title;         }
+        if (rule.description !== null)   { search.description   = rule.description;   }
+        if (rule.extended !== null)      { search.extended      = rule.extended;      }
+        if (rule.GR !== null)            { search.GR            = rule.GR;            }
+        if (rule.BS !== null)            { search.BS            = rule.BS;            }
+        if (rule.CS !== null)            { search.CS            = rule.CS;            }
+        if (rule.SKY !== null)           { search.SKY           = rule.SKY;           }
+        if (rule.station !== null)       { search.station       = rule.station;       }
+        if (rule.genrelv1 !== null)      { search.genrelv1      = rule.genrelv1;      }
+        if (rule.genrelv2 !== null)      { search.genrelv2      = rule.genrelv2;      }
+        if (rule.startTime !== null)     { search.startTime     = rule.startTime;     }
+        if (rule.timeRange !== null)     { search.timeRange     = rule.timeRange;     }
+        if (rule.isFree !== null)        { search.isFree        = rule.isFree;        }
+        if (rule.durationMin !== null)   { search.durationMin   = rule.durationMin;   }
+        if (rule.durationMax !== null)   { search.durationMax   = rule.durationMax;   }
 
         return search;
     }
 
     /**
-    * RulesSchema から OptionInterface を生成する
-    * @param rule: DBSchema.RulesSchema
-    * @return OptionInterface
-    */
+     * RulesSchema から OptionInterface を生成する
+     * @param rule: DBSchema.RulesSchema
+     * @return OptionInterface
+     */
     private createOption(rule: DBSchema.RulesSchema): OptionInterface {
-        let option: OptionInterface = {
-            enable: rule.enable
+        const option: OptionInterface = {
+            enable: rule.enable,
         };
 
-        if(rule.directory !== null) { option.directory = rule.directory; }
-        if(rule.recordedFormat !== null) { option.recordedFormat = rule.recordedFormat; }
+        if (rule.directory !== null) { option.directory = rule.directory; }
+        if (rule.recordedFormat !== null) { option.recordedFormat = rule.recordedFormat; }
 
         return option;
     }
 
     /**
-    * RulesSchema から EncodeInterface を生成する
-    * @param rule: DBSchema.RulesSchema
-    * @return OptionInterface | null
-    */
+     * RulesSchema から EncodeInterface を生成する
+     * @param rule: DBSchema.RulesSchema
+     * @return OptionInterface | null
+     */
     public createEncodeOption(rule: DBSchema.RulesSchema): EncodeInterface | null {
-        if(rule.delTs === null) { return null; }
+        if (rule.delTs === null) { return null; }
 
-        let encode: EncodeInterface = {
-            delTs: rule.delTs
-        }
+        const encode: EncodeInterface = {
+            delTs: rule.delTs,
+        };
 
-        if(rule.mode1 !== null) { encode.mode1 = rule.mode1; }
-        if(rule.directory1 !== null) { encode.directory1 = rule.directory1; }
-        if(rule.mode2 !== null) { encode.mode2 = rule.mode2; }
-        if(rule.directory2 !== null) { encode.directory2 = rule.directory2; }
-        if(rule.mode3 !== null) { encode.mode3 = rule.mode3; }
-        if(rule.directory3 !== null) { encode.directory3 = rule.directory3; }
+        if (rule.mode1 !== null) { encode.mode1 = rule.mode1; }
+        if (rule.directory1 !== null) { encode.directory1 = rule.directory1; }
+        if (rule.mode2 !== null) { encode.mode2 = rule.mode2; }
+        if (rule.directory2 !== null) { encode.directory2 = rule.directory2; }
+        if (rule.mode3 !== null) { encode.mode3 = rule.mode3; }
+        if (rule.directory3 !== null) { encode.directory3 = rule.directory3; }
 
         return encode;
     }
 
     /**
-    * 予約情報を生成する
-    * 平面走査法のような事をしている
-    * @param matches 予約したい番組情報
-    * @return ReserveProgram[] 予約情報
-    */
+     * 予約情報を生成する
+     * 平面走査法のような事をしている
+     * @param matches 予約したい番組情報
+     * @return ReserveProgram[] 予約情報
+     */
     private createReserves(matches: ReserveProgram[]): ReserveProgram[] {
-        //重複チェックのために programId でソート
+        // 重複チェックのために programId でソート
         matches.sort(this.sortReserveProgram);
 
-        let list: {
-            time: apid.UnixtimeMS,
-            isStart: boolean,
-            idx: number, // matches index
+        const list: {
+            time: apid.UnixtimeMS;
+            isStart: boolean;
+            idx: number; // matches index
         }[] = [];
 
         // 重複チェック用 index
-        let programIndex: { [key: number]: boolean } = {};
+        const programIndex: { [key: number]: boolean } = {};
 
         // list を生成
-        for(let i = 0; i < matches.length; i++) {
+        for (let i = 0; i < matches.length; i++) {
             // programId がすでに存在する場合は list に追加しない
-            if(typeof programIndex[matches[i].program.id] === 'undefined') {
+            if (typeof programIndex[matches[i].program.id] === 'undefined') {
                 programIndex[matches[i].program.id] = true;
             } else {
                 continue;
@@ -743,15 +745,16 @@ class ReservationManageModel extends Model {
         // list を time でソート
         list.sort((a, b) => {
             const time = a.time - b.time;
-            return time === 0 ? a.idx - b.idx : time
+
+            return time === 0 ? a.idx - b.idx : time;
         });
 
         // 予約情報が格納可能かチェックする
-        let reserves: { reserve: ReserveProgram, idx: number }[] = [];
-        for(let l of list) {
-            if(matches[l.idx].isSkip) { continue; }
+        const reserves: { reserve: ReserveProgram; idx: number }[] = [];
+        for (const l of list) {
+            if (matches[l.idx].isSkip) { continue; }
 
-            if(l.isStart) {
+            if (l.isStart) {
                 // add
                 reserves.push({ reserve: matches[l.idx], idx: l.idx });
             } else {
@@ -768,80 +771,80 @@ class ReservationManageModel extends Model {
             });
 
             this.log.system.debug('--------------------');
-            for(let r of reserves) {
-                this.log.system.debug(<any>{
+            for (const r of reserves) {
+                this.log.system.debug(<any> {
                     name: r.reserve.program.name,
                     ruleId: r.reserve.ruleId!,
                 });
             }
 
             // tuner clear
-            for(let i = 0; i < this.tuners.length; i++) {
+            for (let i = 0; i < this.tuners.length; i++) {
                 this.tuners[i].clear();
             }
 
-            //重複の評価
-            for(let reserve of reserves) {
-                if(matches[reserve.idx].isSkip) { continue; }
+            // 重複の評価
+            for (const reserve of reserves) {
+                if (matches[reserve.idx].isSkip) { continue; }
 
                 let isConflict = true;
-                for(let i = 0; i < this.tuners.length; i++) {
-                    if(this.tuners[i].add(matches[reserve.idx].program)) {
+                for (let i = 0; i < this.tuners.length; i++) {
+                    if (this.tuners[i].add(matches[reserve.idx].program)) {
                         isConflict = false;
                         break;
                     }
                 }
 
-                if(isConflict) {
+                if (isConflict) {
                     matches[reserve.idx].isConflict = true;
                 }
             }
         }
 
         // list から重複を除外した予約情報を生成
-        let newReserves: ReserveProgram[] = [];
-        for(let l of list) {
-            if(l.isStart) { newReserves.push(matches[l.idx]); }
+        const newReserves: ReserveProgram[] = [];
+        for (const l of list) {
+            if (l.isStart) { newReserves.push(matches[l.idx]); }
         }
 
-        return newReserves.sort((a, b) => { return a.program.startAt - b.program.startAt });
+        return newReserves.sort((a, b) => { return a.program.startAt - b.program.startAt; });
     }
 
     /**
-    * ReserveProgram のソート用関数
-    * manualId が小さい > manualId が大きい > ruleId が小さい > ruleId が大きい の順で判定する
-    * @param a: ReserveProgram
-    * @param b: ReserveProgram
-    * @return number
-    */
+     * ReserveProgram のソート用関数
+     * manualId が小さい > manualId が大きい > ruleId が小さい > ruleId が大きい の順で判定する
+     * @param a: ReserveProgram
+     * @param b: ReserveProgram
+     * @return number
+     */
     private sortReserveProgram(a: ReserveProgram, b: ReserveProgram): number {
-        if(a.isManual && b.isManual) { return a.manualId! - b.manualId!; }
-        if(a.isManual && !b.isManual) { return -1; }
-        if(!a.isManual && b.isManual) { return 1; }
-        if(!a.isManual && !b.isManual) { return a.ruleId! - b.ruleId!; }
+        if (a.isManual && b.isManual) { return a.manualId! - b.manualId!; }
+        if (a.isManual && !b.isManual) { return -1; }
+        if (!a.isManual && b.isManual) { return 1; }
+        if (!a.isManual && !b.isManual) { return a.ruleId! - b.ruleId!; }
 
         return 0;
     }
 
     /**
-    * 終了時刻を過ぎている予約を削除する
-    */
+     * 終了時刻を過ぎている予約を削除する
+     */
     public clean(): void {
-        let now = new Date().getTime();
+        const now = new Date().getTime();
         this.reserves = this.reserves.filter((reserve) => {
             return !(now > reserve.program.endAt);
         });
     }
 
     /**
-    * 予約をファイルから読み込む
-    */
+     * 予約をファイルから読み込む
+     */
     private readReservesFile(): void {
         try {
-            let reserves = fs.readFileSync(this.reservesPath, "utf-8");
+            const reserves = fs.readFileSync(this.reservesPath, 'utf-8');
             this.reserves = JSON.parse(reserves);
-        } catch(e) {
-            if(e.code == 'ENOENT') {
+        } catch (e) {
+            if (e.code === 'ENOENT') {
                 this.log.system.warn('reserves.json is not found.');
                 this.reserves = [];
             } else {
@@ -853,13 +856,13 @@ class ReservationManageModel extends Model {
     }
 
     /**
-    * 予約をファイルへ書き込む
-    */
+     * 予約をファイルへ書き込む
+     */
     private writeReservesFile(): void {
         fs.writeFileSync(
             this.reservesPath,
             JSON.stringify(this.reserves),
-            { encoding: 'utf-8' }
+            { encoding: 'utf-8' },
         );
     }
 }

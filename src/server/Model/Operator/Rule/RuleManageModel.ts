@@ -1,9 +1,9 @@
 import * as events from 'events';
+import CheckRule from '../../../Util/CheckRule';
+import * as DBSchema from '../../DB/DBSchema';
+import { RulesDBInterface } from '../../DB/RulesDB';
 import Model from '../../Model';
 import { RuleInterface } from '../RuleInterface';
-import { RulesDBInterface } from '../../DB/RulesDB';
-import * as DBSchema from '../../DB/DBSchema';
-import CheckRule from '../../../Util/CheckRule';
 
 interface RuleManageModelInterface extends Model {
     addListener(callback: (ruleId: number, status: RuleEventStatus) => void): void;
@@ -14,12 +14,12 @@ interface RuleManageModelInterface extends Model {
     delete(ruleId: number): Promise<void>;
 }
 
-type RuleEventStatus = 'add' | 'update' | 'enable' | 'disable' | 'delete'
+type RuleEventStatus = 'add' | 'update' | 'enable' | 'disable' | 'delete';
 
 /**
-* 録画ルールの管理を行う
-* @throws RuleManageModelCreateError init が呼ばれていないとき
-*/
+ * 録画ルールの管理を行う
+ * @throws RuleManageModelCreateError init が呼ばれていないとき
+ */
 class RuleManageModel extends Model implements RuleManageModelInterface {
     private isRunning: boolean = false;
     private listener: events.EventEmitter = new events.EventEmitter();
@@ -31,31 +31,31 @@ class RuleManageModel extends Model implements RuleManageModelInterface {
     }
 
     /**
-    * ルール更新時に実行されるイベントに追加
-    @param callback ルール更新時に実行される
-    */
+     * ルール更新時に実行されるイベントに追加
+     * @param callback ルール更新時に実行される
+     */
     public addListener(callback: (ruleId: number, status: RuleEventStatus) => void): void {
         this.listener.on(RuleManageModel.RULE_UPDATE_EVENT, (ruleId: number, status: RuleEventStatus) => { callback(ruleId, status); });
     }
 
     /**
-    * ルール追加
-    * @param rule: RuleInterface
-    * @throws RuleManageModelIsRunning 他で実行中
-    * @throws AddRuleError 追加しようとしたルールに問題がある場合
-    * @return Promise<number> 追加した rule の id が格納される
-    */
+     * ルール追加
+     * @param rule: RuleInterface
+     * @throws RuleManageModelIsRunning 他で実行中
+     * @throws AddRuleError 追加しようとしたルールに問題がある場合
+     * @return Promise<number> 追加した rule の id が格納される
+     */
     public async add(rule: RuleInterface): Promise<number> {
-        if(this.isRunning) { throw new Error(RuleManageModel.RunningError); }
+        if (this.isRunning) { throw new Error(RuleManageModel.RunningError); }
         this.isRunning = true;
 
         // option のチェック
-        if(new CheckRule().checkRule(rule)) {
+        if (new CheckRule().checkRule(rule)) {
             // rule を DB に追加
             let ruleId: number;
             try {
                 ruleId = await this.rulesDB.insert(this.convertRule(rule));
-            } catch(err) {
+            } catch (err) {
                 this.isRunning = false;
                 throw err;
             }
@@ -72,30 +72,30 @@ class RuleManageModel extends Model implements RuleManageModelInterface {
     }
 
     /**
-    * ルールの更新
-    * @param ruleId: rule id
-    * @param rule: RuleInterface
-    * @throws UpdateRuleError 追加しようとしたルールに問題がある場合
-    * @return Promise<void>
-    */
+     * ルールの更新
+     * @param ruleId: rule id
+     * @param rule: RuleInterface
+     * @throws UpdateRuleError 追加しようとしたルールに問題がある場合
+     * @return Promise<void>
+     */
     public async update(ruleId: number, rule: RuleInterface): Promise<void> {
-        if(this.isRunning) { throw new Error(RuleManageModel.RunningError); }
+        if (this.isRunning) { throw new Error(RuleManageModel.RunningError); }
         this.isRunning = true;
 
         // rule が存在するか db 上から検索
         try {
-            if(await this.rulesDB.findId(ruleId) === null) { throw new Error('RuleIsNotFound'); }
-        } catch(err) {
+            if (await this.rulesDB.findId(ruleId) === null) { throw new Error('RuleIsNotFound'); }
+        } catch (err) {
             this.isRunning = false;
             throw err;
         }
 
         // option のチェック
-        if(new CheckRule().checkRule(rule)) {
+        if (new CheckRule().checkRule(rule)) {
             // rule 更新
             try {
                 await this.rulesDB.update(ruleId, this.convertRule(rule));
-            } catch(err) {
+            } catch (err) {
                 this.isRunning = false;
                 throw err;
             }
@@ -109,20 +109,20 @@ class RuleManageModel extends Model implements RuleManageModelInterface {
             throw new Error('UpdateRuleError');
         }
     }
-  
+
     /**
-    * ルールの有効化
-    * @param id: number
-    * @throws RuleManageModelIsRunning 他で実行中
-    * @return Promise<void>;
-    */
+     * ルールの有効化
+     * @param id: number
+     * @throws RuleManageModelIsRunning 他で実行中
+     * @return Promise<void>;
+     */
     public async enable(ruleId: number): Promise<void> {
-        if(this.isRunning) { throw new Error(RuleManageModel.RunningError); }
+        if (this.isRunning) { throw new Error(RuleManageModel.RunningError); }
         this.isRunning = true;
 
         try {
             await this.rulesDB.enable(ruleId);
-        } catch(err) {
+        } catch (err) {
             this.isRunning = false;
             throw err;
         }
@@ -133,18 +133,18 @@ class RuleManageModel extends Model implements RuleManageModelInterface {
     }
 
     /**
-    * ルールの無効化
-    * @param id: number
-    * @throws RuleManageModelIsRunning 他で実行中
-    * @return Promise<void>;
-    */
+     * ルールの無効化
+     * @param id: number
+     * @throws RuleManageModelIsRunning 他で実行中
+     * @return Promise<void>;
+     */
     public async disable(ruleId: number): Promise<void> {
-        if(this.isRunning) { throw new Error(RuleManageModel.RunningError); }
+        if (this.isRunning) { throw new Error(RuleManageModel.RunningError); }
         this.isRunning = true;
 
         try {
             await this.rulesDB.disable(ruleId);
-        } catch(err) {
+        } catch (err) {
             this.isRunning = false;
             throw err;
         }
@@ -155,18 +155,18 @@ class RuleManageModel extends Model implements RuleManageModelInterface {
     }
 
     /**
-    * ルールの削除
-    * @param id: number
-    * @throws RuleManageModelIsRunning 他で実行中
-    * @return Promise<void>;
-    */
+     * ルールの削除
+     * @param id: number
+     * @throws RuleManageModelIsRunning 他で実行中
+     * @return Promise<void>;
+     */
     public async delete(ruleId: number): Promise<void> {
-        if(this.isRunning) { throw new Error(RuleManageModel.RunningError); }
+        if (this.isRunning) { throw new Error(RuleManageModel.RunningError); }
         this.isRunning = true;
 
         try {
             await this.rulesDB.delete(ruleId);
-        } catch(err) {
+        } catch (err) {
             this.isRunning = false;
             throw err;
         }
@@ -177,12 +177,12 @@ class RuleManageModel extends Model implements RuleManageModelInterface {
     }
 
     /**
-    * RuleInterface を DBSchema.RulesSchema へ変換する
-    * @param rule: RuleInterface
-    * @return DBSchema.RulesSchema
-    */
+     * RuleInterface を DBSchema.RulesSchema へ変換する
+     * @param rule: RuleInterface
+     * @return DBSchema.RulesSchema
+     */
     private convertRule(rule: RuleInterface): DBSchema.RulesSchema {
-        let data: DBSchema.RulesSchema = {
+        const data: DBSchema.RulesSchema = {
             id: 0,
             keyword: typeof rule.search.keyword === 'undefined' ? null : rule.search.keyword,
             ignoreKeyword: typeof rule.search.ignoreKeyword === 'undefined' ? null : rule.search.ignoreKeyword,
@@ -216,7 +216,7 @@ class RuleManageModel extends Model implements RuleManageModelInterface {
             delTs: null,
         };
 
-        if(typeof rule.encode !== 'undefined') {
+        if (typeof rule.encode !== 'undefined') {
             data.mode1 = typeof rule.encode.mode1 === 'undefined' ? null : rule.encode.mode1;
             data.directory1 = typeof rule.encode.directory1 === 'undefined' ? null : rule.encode.directory1;
             data.mode2 = typeof rule.encode.mode2 === 'undefined' ? null : rule.encode.mode2;
@@ -230,12 +230,12 @@ class RuleManageModel extends Model implements RuleManageModelInterface {
     }
 
     /**
-    * ルール変更を通知
-    * @param ruleId: rule id
-    * @param status: status
-    */
+     * ルール変更を通知
+     * @param ruleId: rule id
+     * @param status: status
+     */
     private eventsNotify(ruleId: number, status: RuleEventStatus): void {
-        this.listener.emit(RuleManageModel.RULE_UPDATE_EVENT, ruleId, status)
+        this.listener.emit(RuleManageModel.RULE_UPDATE_EVENT, ruleId, status);
     }
 }
 

@@ -1,12 +1,12 @@
 import DBBase from './DBBase';
 
 /**
-* MigrationBase
-*/
+ * MigrationBase
+ */
 abstract class MigrationBase extends DBBase {
-    abstract readonly revision: number;
+    public abstract readonly revision: number;
 
-    abstract upgrade(): Promise<void>;
+    public abstract upgrade(): Promise<void>;
 }
 
 export default MigrationBase;

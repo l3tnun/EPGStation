@@ -1,26 +1,26 @@
 import * as m from 'mithril';
-import Component from '../Component';
-import factory from '../../ViewModel/ViewModelFactory';
+import Util from '../../Util/Util';
 import ProgramInfoViewModel from '../../ViewModel/Program/ProgramInfoViewModel';
 import { ProgramViewModel } from '../../ViewModel/Program/ProgramViewModel';
-import Util from '../../Util/Util';
+import factory from '../../ViewModel/ViewModelFactory';
+import Component from '../Component';
 
 /**
-* ProgramInfoActionComponent
-*/
+ * ProgramInfoActionComponent
+ */
 class ProgramInfoActionComponent extends Component<void> {
     private viewModel: ProgramInfoViewModel;
     private programViewModel: ProgramViewModel;
 
     constructor() {
         super();
-        this.viewModel = <ProgramInfoViewModel>(factory.get('ProgramInfoViewModel'));
-        this.programViewModel = <ProgramViewModel>(factory.get('ProgramViewModel'));
+        this.viewModel = <ProgramInfoViewModel> factory.get('ProgramInfoViewModel');
+        this.programViewModel = <ProgramViewModel> factory.get('ProgramViewModel');
     }
 
     /**
-    * view
-    */
+     * view
+     */
     public view(): m.Child {
         return m('div', [
             m('hr', { style: 'margin: 0px;' }),
@@ -37,7 +37,7 @@ class ProgramInfoActionComponent extends Component<void> {
                         setTimeout(() => {
                             Util.move('/search', this.createSearchQuery());
                         }, 200);
-                    }
+                    },
                 }, '検索'),
                 m('button', {
                     type: 'button',
@@ -49,36 +49,36 @@ class ProgramInfoActionComponent extends Component<void> {
     }
 
     /**
-    * 予約ボタン
-    * @return m.Child | null
-    */
+     * 予約ボタン
+     * @return m.Child | null
+     */
     private createReserveButton(): m.Child | null {
-        let reserve = this.viewModel.getReserveStatus();
+        const reserve = this.viewModel.getReserveStatus();
         let name = '';
         let onclick: () => Promise<void>;
 
-        if(reserve === null) {
+        if (reserve === null) {
             name = '予約';
-            onclick = () => { return this.viewModel.addReserve(); }
-        } else if(reserve.status === 'reserve' || reserve.status === 'conflict') {
+            onclick = () => { return this.viewModel.addReserve(); };
+        } else if (reserve.status === 'reserve' || reserve.status === 'conflict') {
             name = '削除';
-            onclick = () => { return this.viewModel.deleteReserve(); }
+            onclick = () => { return this.viewModel.deleteReserve(); };
         } else {
             name = '除外解除';
-            onclick = () => { return this.viewModel.deleteSkip(); }
+            onclick = () => { return this.viewModel.deleteSkip(); };
         }
 
         return m('button', {
             type: 'button',
             class: 'mdl-button mdl-js-button mdl-button--primary',
-            onclick: async () => {
+            onclick: async() => {
                 try {
                     await onclick();
-                } catch(err) {
+                } catch (err) {
                     console.error(err);
                 }
 
-                //予約情報を更新する
+                // 予約情報を更新する
                 this.programViewModel.updateReservesOnly();
                 this.viewModel.close();
             },
@@ -86,49 +86,49 @@ class ProgramInfoActionComponent extends Component<void> {
     }
 
     /**
-    * 検索用の query を生成する
-    * @return query
-    */
+     * 検索用の query を生成する
+     * @return query
+     */
     private createSearchQuery(): { [key: string]: string | number } {
-        let program = this.viewModel.getProgram();
-        if(program === null) { return {}; }
+        const program = this.viewModel.getProgram();
+        if (program === null) { return {}; }
 
-        let query: { [key: string]: string | number } = {
+        const query: { [key: string]: string | number } = {
             keyword: this.createKeywordStr(program.name),
             channel: program.channelId,
         };
 
-        if(typeof program.genre1 !== 'undefined') { query.genre1 = program.genre1; }
-        if(typeof program.genre2 !== 'undefined') { query.genre2 = program.genre2; }
+        if (typeof program.genre1 !== 'undefined') { query.genre1 = program.genre1; }
+        if (typeof program.genre2 !== 'undefined') { query.genre2 = program.genre2; }
 
         return query;
     }
 
     /**
-    * 検索 query の keyword 文字列を生成する
-    * @param title: title
-    * @return keyword
-    */
+     * 検索 query の keyword 文字列を生成する
+     * @param title: title
+     * @return keyword
+     */
     private createKeywordStr(title: string): string {
-        let outTitle = title.trim();
+        const outTitle = title.trim();
         let delimiter = ' #';
-        if(outTitle.indexOf(' #') === -1 ) {
+        if (outTitle.indexOf(' #') === -1) {
             delimiter = outTitle.indexOf('「') === -1 ? '' : '「';
         }
 
         let keyword: string[] = [];
-        if( delimiter.length > 0 ){ keyword = outTitle.split(delimiter); }
-        if( typeof keyword[0] === 'undefined' || keyword[0].length === 0 || keyword[0] === '' ) { keyword[0] = outTitle; }
+        if (delimiter.length > 0) { keyword = outTitle.split(delimiter); }
+        if (typeof keyword[0] === 'undefined' || keyword[0].length === 0 || keyword[0] === '') { keyword[0] = outTitle; }
 
         return keyword[0];
     }
 
     /**
-    * エンコードオプション
-    * @return m.Child | null
-    */
+     * エンコードオプション
+     * @return m.Child | null
+     */
     private createEncodeOption(): m.Child | null {
-        if(!this.viewModel.isEnableEncode() || this.viewModel.getReserveStatus() !== null) { return null; }
+        if (!this.viewModel.isEnableEncode() || this.viewModel.getReserveStatus() !== null) { return null; }
 
         return m('div', { class: 'action' }, [
             m('div', { class: 'encode' }, [
@@ -136,9 +136,9 @@ class ProgramInfoActionComponent extends Component<void> {
                     m('input', {
                         type: 'checkbox',
                         class: 'mdl-checkbox__input',
-                        checked: this.viewModel.delTs,
-                        onclick: m.withAttr('checked', (value) => { this.viewModel.delTs = value; }),
-                        onupdate: (vnode: m.VnodeDOM<void, this>) => { this.checkboxOnUpdate(<HTMLInputElement>(vnode.dom)); },
+                        checked: this.viewModel.delTS,
+                        onclick: m.withAttr('checked', (value) => { this.viewModel.delTS = value; }),
+                        onupdate: (vnode: m.VnodeDOM<void, this>) => { this.checkboxOnUpdate(<HTMLInputElement> (vnode.dom)); },
                     }),
                     m('span', { class: 'mdl-checkbox__label' }, 'TS削除'),
                 ]),
@@ -147,7 +147,7 @@ class ProgramInfoActionComponent extends Component<void> {
                         class: 'mdl-textfield__input program-dialog-label',
                         onchange: m.withAttr('value', (value) => { this.viewModel.encodeOptionValue = Number(value); }),
                         onupdate: (vnode: m.VnodeDOM<void, this>) => {
-                            this.selectOnUpdate(<HTMLInputElement>(vnode.dom), this.viewModel.encodeOptionValue)
+                            this.selectOnUpdate(<HTMLInputElement> (vnode.dom), this.viewModel.encodeOptionValue);
                         },
                     }, this.createEncodeValues()),
                 ]),
@@ -156,9 +156,9 @@ class ProgramInfoActionComponent extends Component<void> {
     }
 
     /**
-    * エンコードオプションのセレクタの中身
-    * @return m.Child[];
-    */
+     * エンコードオプションのセレクタの中身
+     * @return m.Child[];
+     */
     private createEncodeValues(): m.Child[] {
         return this.viewModel.getEncodeOption().map((option) => {
              return m('option', { value: option.value }, option.name);

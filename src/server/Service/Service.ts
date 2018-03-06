@@ -1,12 +1,12 @@
 import * as path from 'path';
-import { LoggerInterface, Logger } from '../Logger';
 import Configuration from '../Configuration';
-import Server from './Server';
+import { Logger, LoggerInterface } from '../Logger';
 import ModelFactorySetting from '../Model/ServiceModelFactorySetting';
+import Server from './Server';
 
 /**
-* Service
-*/
+ * Service
+ */
 class Service {
     private log: LoggerInterface;
 
@@ -20,8 +20,8 @@ class Service {
     }
 
     /**
-    * 初期設定
-    */
+     * 初期設定
+     */
     private init(): void {
         Logger.initialize(path.join(__dirname, '..', '..', '..', 'config', 'serviceLogConfig.json'));
         Configuration.getInstance().initialize(path.join(__dirname, '..', '..', '..', 'config', 'config.json'));
@@ -29,8 +29,8 @@ class Service {
     }
 
     /**
-    * run
-    */
+     * run
+     */
     public run(): void {
         new Server().start();
     }
