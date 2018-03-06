@@ -26,7 +26,7 @@ child.on('error', (err) => {
     throw new Error(err);
 });
 
-process.on('exit', () => {
+process.on('SIGINT', () => {
     child.kill('SIGINT');
 });
 

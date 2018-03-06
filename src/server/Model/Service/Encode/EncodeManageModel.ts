@@ -329,7 +329,7 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
             // debug 用
             child.stderr.on('data', (data) => { this.log.system.debug(String(data)); });
 
-            child.on('exit', (code) => {
+            child.on('exit', (code, signal) => {
                 if (typeof program === 'undefined') {
                     fs.unlink(output, (err) => {
                         this.log.system.error(`delete encode file, program is no found: ${ output }`);
@@ -339,7 +339,8 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
                         }
                     });
                 } else {
-                    if (code !== 0) {
+                    this.log.system.info(`code { code : ${ code }, signal: ${ signal } }`);
+                    if (code !== 0 || signal === 'SIGINT') {
                         this.log.system.error(`encode failed: ${ output }`);
                         throw new Error('EncodeFineCodeIsNotZero');
                     } else {
