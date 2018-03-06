@@ -18,7 +18,7 @@ namespace ProcessUtil {
                 child.stderr.removeAllListeners('data');
 
                 setTimeout(() => {
-                    child.kill('SIGKILL');
+                    child.kill('SIGTERM');
                     resolve();
                 }, wait);
             } catch (err) {
