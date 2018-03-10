@@ -742,11 +742,19 @@ class ReservationManageModel extends Model {
             });
         }
 
-        // list を time でソート
+        // list を ソート
         list.sort((a, b) => {
             const time = a.time - b.time;
 
-            return time === 0 ? a.idx - b.idx : time;
+            if (time !== 0) {
+                return time;
+            } else if (a.isStart && !b.isStart) {
+                return 1;
+            } else if (!a.isStart && b.isStart) {
+                return -1;
+            } else {
+                return a.idx - b.idx;
+            }
         });
 
         // 予約情報が格納可能かチェックする
