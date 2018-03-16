@@ -326,9 +326,6 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
             let isError = true;
             if (this.encodingData === null) {
                 this.log.system.fatal('encoding data is null');
-            } else if (code !== 0) {
-                // エンコードプロセスがエラー終了時
-                this.log.system.error(`encode failed: ${ output }`);
             } else if (this.encodingData.isStoped && output !== program.source) {
                 // encode 停止時 かつ tsModify ではない
                 await Util.sleep(1000);
