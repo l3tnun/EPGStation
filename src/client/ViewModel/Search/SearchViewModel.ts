@@ -111,12 +111,14 @@ class SearchViewModel extends ViewModel {
         if (this.rule === null && typeof m.route.param('rule') !== 'undefined') { return; }
         m.redraw();
 
-        setTimeout(async() => {
-            await this.updateReserves();
-            if (typeof m.route.param('rule') !== 'undefined' || typeof m.route.param('keyword') !== 'undefined') {
+        await Util.sleep(100);
+        await this.updateReserves();
+        if (typeof m.route.param('rule') !== 'undefined' || typeof m.route.param('keyword') !== 'undefined') {
+            Util.sleep(100)
+            .then(() => {
                 this.search();
-            }
-        }, 100);
+            });
+        }
     }
 
     /**

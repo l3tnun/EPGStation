@@ -4,6 +4,7 @@ import { ViewModelStatus } from '../../Enums';
 import DateUtil from '../../Util/DateUtil';
 import Util from '../../Util/Util';
 import BalloonViewModel from '../../ViewModel/Balloon/BalloonViewModel';
+import MainLayoutViewModel from '../../ViewModel/MainLayoutViewModel';
 import ProgramInfoViewModel from '../../ViewModel/Program/ProgramInfoViewModel';
 import ReservesMenuViewModel from '../../ViewModel/Reserves/ReservesMenuViewModel';
 import ReservesViewModel from '../../ViewModel/Reserves/ReservesViewModel';
@@ -21,6 +22,7 @@ import ReservesMenuComponent from './ReservesMenuComponent';
  */
 class ReservesComponent extends ParentComponent<void> {
     private viewModel: ReservesViewModel;
+    private mainLayoutViewModel: MainLayoutViewModel;
     private menuViewModel: ReservesMenuViewModel;
     private balloon: BalloonViewModel;
     private programInfo: ProgramInfoViewModel;
@@ -28,6 +30,7 @@ class ReservesComponent extends ParentComponent<void> {
     constructor() {
         super();
         this.viewModel = <ReservesViewModel> factory.get('ReservesViewModel');
+        this.mainLayoutViewModel = <MainLayoutViewModel> factory.get('MainLayoutViewModel');
         this.menuViewModel = <ReservesMenuViewModel> factory.get('ReservesMenuViewModel');
         this.balloon = <BalloonViewModel> factory.get('BalloonViewModel');
         this.programInfo = <ProgramInfoViewModel> factory.get('ProgramInfoViewModel');
@@ -35,9 +38,13 @@ class ReservesComponent extends ParentComponent<void> {
 
     protected initViewModel(status: ViewModelStatus = 'init'): void {
         super.initViewModel(status);
+
+        this.mainLayoutViewModel.init(status);
+
         this.viewModel.init(status).
         then(() => {
             this.setRestorePositionFlag(status);
+            this.mainLayoutViewModel.update();
         });
     }
 

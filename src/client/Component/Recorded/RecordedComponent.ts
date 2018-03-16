@@ -2,6 +2,7 @@ import * as m from 'mithril';
 import * as apid from '../../../../api';
 import { ViewModelStatus } from '../../Enums';
 import BalloonViewModel from '../../ViewModel/Balloon/BalloonViewModel';
+import MainLayoutViewModel from '../../ViewModel/MainLayoutViewModel';
 import RecordedInfoViewModel from '../../ViewModel/Recorded/RecordedInfoViewModel';
 import RecordedMenuViewModel from '../../ViewModel/Recorded/RecordedMenuViewModel';
 import RecordedSearchViewModel from '../../ViewModel/Recorded/RecordedSearchViewModel';
@@ -24,6 +25,7 @@ import RecordedSearchComponent from './RecordedSearchComponent';
  */
 class RecordedComponent extends ParentComponent<void> {
     private viewModel: RecordedViewModel;
+    private mainLayoutViewModel: MainLayoutViewModel;
     private infoViewModel: RecordedInfoViewModel;
     private menuViewModel: RecordedMenuViewModel;
     private searchViewModel: RecordedSearchViewModel;
@@ -34,6 +36,7 @@ class RecordedComponent extends ParentComponent<void> {
     constructor() {
         super();
         this.viewModel = <RecordedViewModel> factory.get('RecordedViewModel');
+        this.mainLayoutViewModel = <MainLayoutViewModel> factory.get('MainLayoutViewModel');
         this.infoViewModel = <RecordedInfoViewModel> factory.get('RecordedInfoViewModel');
         this.menuViewModel = <RecordedMenuViewModel> factory.get('RecordedMenuViewModel');
         this.searchViewModel = <RecordedSearchViewModel> factory.get('RecordedSearchViewModel');
@@ -42,9 +45,13 @@ class RecordedComponent extends ParentComponent<void> {
 
     protected initViewModel(status: ViewModelStatus = 'init'): void {
         super.initViewModel(status);
+
+        this.mainLayoutViewModel.init(status);
+
         this.viewModel.init(status)
         .then(() => {
             this.setRestorePositionFlag(status);
+            this.mainLayoutViewModel.update();
         })
         .then(() => {
             if (status !== 'init') {

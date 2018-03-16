@@ -1,6 +1,7 @@
 import * as m from 'mithril';
 import { ViewModelStatus } from '../../../Enums';
 import Util from '../../../Util/Util';
+import MainLayoutViewModel from '../../../ViewModel/MainLayoutViewModel';
 import ProgramSettingViewModel from '../../../ViewModel/Program/ProgramSettingViewModel';
 import factory from '../../../ViewModel/ViewModelFactory';
 import MainLayoutComponent from '../../MainLayoutComponent';
@@ -11,20 +12,26 @@ import ParentComponent from '../../ParentComponent';
  */
 class ProgramSettingComponent extends ParentComponent<void> {
     private viewModel: ProgramSettingViewModel;
+    private mainLayoutViewModel: MainLayoutViewModel;
 
     constructor() {
         super();
         this.viewModel = <ProgramSettingViewModel> factory.get('ProgramSettingViewModel');
+        this.mainLayoutViewModel = <MainLayoutViewModel> factory.get('MainLayoutViewModel');
     }
 
     protected initViewModel(status: ViewModelStatus = 'init'): void {
         super.initViewModel(status);
+
+        this.mainLayoutViewModel.init(status);
+
         if (status === 'init') {
             this.viewModel.setTemp();
         }
-        Util.sleep(10)
+        Util.sleep(100)
         .then(() => {
             this.setRestorePositionFlag(status);
+            this.mainLayoutViewModel.update();
         });
     }
 

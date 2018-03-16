@@ -15,6 +15,7 @@ import { TabModel } from '../Model/Tab/TabModel';
 
 import BalloonViewModel from './Balloon/BalloonViewModel';
 import HeaderViewModel from './HeaderViewModel';
+import MainLayoutViewModel from './MainLayoutViewModel';
 import NavigationViewModel from './NavigationViewModel';
 import ProgramGenreViewModel from './Program/ProgramGenreViewModel';
 import ProgramInfoViewModel from './Program/ProgramInfoViewModel';
@@ -74,6 +75,7 @@ namespace ViewModelFactorySetting {
             balloonModel,
             channelsApiModel,
         ));
+        factory.reg('MainLayoutViewModel', new MainLayoutViewModel());
         factory.reg('NavigationViewModel', new NavigationViewModel(
             configModel,
             settingModel,
