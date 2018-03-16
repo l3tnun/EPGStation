@@ -12,6 +12,7 @@ interface RecordedManageModelInterface extends Model {
     deleteRule(id: number): Promise<void>;
     addThumbnail(id: number, thumbnailPath: string): Promise<void>;
     addEncodeFile(recordedId: number, name: string, filePath: string, delTs: boolean): Promise<number>;
+    updateTsFileSize(recordedId: number): Promise<void>;
 }
 
 class RecordedManageModel extends Model implements RecordedManageModelInterface {
@@ -182,6 +183,14 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
         }
 
         return encodedId;
+    }
+
+    /**
+     * @param recordedId: recorded id
+     * @return Promise<void>
+     */
+    public async updateTsFileSize(recordedId: number): Promise<void> {
+        await this.recordedDB.updateFileSize(recordedId);
     }
 }
 

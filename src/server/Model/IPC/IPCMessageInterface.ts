@@ -42,6 +42,7 @@ namespace IPCMessageDefinition {
     export const ruleAdd = 'ruleAdd';
     export const ruleUpdate = 'ruleUpdate';
     export const addEncodeFile = 'addEncodeFile';
+    export const updateTsFileSize = 'updateTsFileSize';
     export const setEncodeToClient = 'setEncodeToClient';
     export const updateReserves = 'updateReserves';
 }
