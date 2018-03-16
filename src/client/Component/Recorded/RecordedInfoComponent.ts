@@ -51,6 +51,7 @@ class RecordedInfoComponent extends Component<void> {
             m('div', { class: 'title' }, this.viewModel.getTitle()),
             m('div', { class: 'channel' }, this.viewModel.getChannelName()),
             m('div', { class: 'time' }, this.viewModel.getTimeStr()),
+            m('div', { class: 'genre' }, this.viewModel.getGenres()),
 
             m('div', { class: 'video-title' }, 'ビデオファイル'),
             this.viewModel.getVideoSrc().map((video) => {

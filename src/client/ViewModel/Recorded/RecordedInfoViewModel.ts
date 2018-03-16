@@ -8,6 +8,7 @@ import { BalloonModelInterface } from '../../Model/Balloon/BallonModel';
 import { SettingModelInterface } from '../../Model/Setting/SettingModel';
 import { TabModelInterface } from '../../Model/Tab/TabModel';
 import DateUtil from '../../Util/DateUtil';
+import GenreUtil from '../../Util/GenreUtil';
 import Util from '../../Util/Util';
 import ViewModel from '../ViewModel';
 
@@ -280,6 +281,16 @@ class RecordedInfoViewModel extends ViewModel {
         const duration = Math.floor((this.recorded.endAt - this.recorded.startAt) / 1000 / 60);
 
         return DateUtil.format(start, 'MM/dd(w) hh:mm:ss') + ' ~ ' + DateUtil.format(end, 'hh:mm:ss') + `(${ duration }分)`;
+    }
+
+    /**
+     * genre1, genre2 をまとめて取得
+     * @return genre1 / genre2
+     */
+    public getGenres(): string {
+        if (this.recorded === null || typeof this.recorded.genre1 === 'undefined') { return ''; }
+
+        return GenreUtil.getGenres(this.recorded.genre1, this.recorded.genre2);
     }
 
     /**
