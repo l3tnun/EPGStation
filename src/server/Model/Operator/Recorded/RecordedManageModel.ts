@@ -186,6 +186,7 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
     }
 
     /**
+     * ts ファイルのサイズを更新
      * @param recordedId: recorded id
      * @return Promise<void>
      */
