@@ -3,7 +3,6 @@ import * as apid from '../../../../api';
 import { ViewModelStatus } from '../../Enums';
 import Util from '../../Util/Util';
 import BalloonViewModel from '../../ViewModel/Balloon/BalloonViewModel';
-import MainLayoutViewModel from '../../ViewModel/MainLayoutViewModel';
 import RulesDeleteViewModel from '../../ViewModel/Rules/RulesDeleteViewModel';
 import RulesInfoViewModel from '../../ViewModel/Rules/RulesInfoViewModel';
 import RulesViewModel from '../../ViewModel/Rules/RulesViewModel';
@@ -22,7 +21,6 @@ import RulesUtil from './RulesUtil';
  */
 class RulesComponent extends ParentComponent<void> {
     private viewModel: RulesViewModel;
-    private mainLayoutViewModel: MainLayoutViewModel;
     private balloon: BalloonViewModel;
     private deleteViewModel: RulesDeleteViewModel;
     private infoViewModel: RulesInfoViewModel;
@@ -30,22 +28,13 @@ class RulesComponent extends ParentComponent<void> {
     constructor() {
         super();
         this.viewModel = <RulesViewModel> factory.get('RulesViewModel');
-        this.mainLayoutViewModel = <MainLayoutViewModel> factory.get('MainLayoutViewModel');
         this.balloon = <BalloonViewModel> factory.get('BalloonViewModel');
         this.deleteViewModel = <RulesDeleteViewModel> factory.get('RulesDeleteViewModel');
         this.infoViewModel = <RulesInfoViewModel> factory.get('RulesInfoViewModel');
     }
 
-    protected initViewModel(status: ViewModelStatus = 'init'): void {
-        super.initViewModel(status);
-
-        this.mainLayoutViewModel.init(status);
-
-        this.viewModel.init(status)
-        .then(() => {
-            this.setRestorePositionFlag(status);
-            this.mainLayoutViewModel.update();
-        });
+    protected async parentInitViewModel(status: ViewModelStatus): Promise<void> {
+        await this.viewModel.init(status);
     }
 
     /**

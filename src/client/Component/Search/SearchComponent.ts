@@ -1,7 +1,6 @@
 import * as m from 'mithril';
 import { ViewModelStatus } from '../../Enums';
 import Scroll from '../../Util/Scroll';
-import MainLayoutViewModel from '../../ViewModel/MainLayoutViewModel';
 import ProgramInfoViewModel from '../../ViewModel/Program/ProgramInfoViewModel';
 import SearchViewModel from '../../ViewModel/Search/SearchViewModel';
 import factory from '../../ViewModel/ViewModelFactory';
@@ -19,23 +18,14 @@ import SearchResultsComponent from './SearchResultsComponent';
  */
 class SearchComponent extends ParentComponent<void> {
     private viewModel: SearchViewModel;
-    private mainLayoutViewModel: MainLayoutViewModel;
 
     constructor() {
         super();
         this.viewModel = <SearchViewModel> factory.get('SearchViewModel');
-        this.mainLayoutViewModel = <MainLayoutViewModel> factory.get('MainLayoutViewModel');
     }
 
-    protected initViewModel(status: ViewModelStatus = 'init'): void {
-        super.initViewModel(status);
-
-        this.mainLayoutViewModel.init(status);
-
-        this.viewModel.init(status)
-        .then(() => {
-            this.mainLayoutViewModel.update();
-        });
+    protected async parentInitViewModel(status: ViewModelStatus): Promise<void> {
+        await this.viewModel.init(status);
     }
 
     /**

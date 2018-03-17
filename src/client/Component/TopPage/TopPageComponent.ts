@@ -58,12 +58,10 @@ class TopPageComponent extends ParentComponent<void> {
         this.recordedMenuViewModel = <RecordedMenuViewModel> factory.get('RecordedMenuViewModel');
     }
 
-    protected async initViewModel(status: ViewModelStatus = 'init'): Promise<void> {
-        super.initViewModel(status);
+    protected async parentInitViewModel(status: ViewModelStatus = 'init'): Promise<void> {
         await this.recordedViewModel.init(status);
         await this.viewModel.init();
         await this.reservesViewModel.init(status);
-        this.setRestorePositionFlag(status);
 
         if (status !== 'init') {
             this.recordedInfoViewModel.update();

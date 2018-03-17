@@ -30,7 +30,7 @@ class StreamProgramCardsViewModel extends ViewModel {
     /**
      * init
      */
-    public init(status: ViewModelStatus = 'init'): void {
+    public async init(status: ViewModelStatus = 'init'): Promise<void> {
         super.init(status);
 
         if (status === 'init') {
@@ -38,9 +38,7 @@ class StreamProgramCardsViewModel extends ViewModel {
             this.scheduleApiModel.init();
         }
 
-        setTimeout(async() => {
-            await this.updateProgram();
-        }, 100);
+        await this.updateProgram();
     }
 
     /**

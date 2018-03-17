@@ -22,13 +22,12 @@ class StreamWatchComponent extends ParentComponent<void> {
         this.viewModel = <StreamWatchViewModel> factory.get('StreamWatchViewModel');
     }
 
-    protected initViewModel(status: ViewModelStatus = 'init'): void {
-        super.initViewModel(status);
-
+    protected async parentInitViewModel(status: ViewModelStatus): Promise<void> {
         if (status === 'init') {
             this.hasInfo = false;
         }
-        this.viewModel.init(status);
+
+        await this.viewModel.init(status);
     }
 
     /**
