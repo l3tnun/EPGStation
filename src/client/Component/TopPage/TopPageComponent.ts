@@ -5,6 +5,7 @@ import { ViewModelStatus } from '../../Enums';
 import DateUtil from '../../Util/DateUtil';
 import Util from '../../Util/Util';
 import BalloonViewModel from '../../ViewModel/Balloon/BalloonViewModel';
+import MainLayoutViewModel from '../../ViewModel/MainLayoutViewModel';
 import ProgramInfoViewModel from '../../ViewModel/Program/ProgramInfoViewModel';
 import RecordedInfoViewModel from '../../ViewModel/Recorded/RecordedInfoViewModel';
 import RecordedMenuViewModel from '../../ViewModel/Recorded/RecordedMenuViewModel';
@@ -36,6 +37,7 @@ interface ScrollPosition {
  */
 class TopPageComponent extends ParentComponent<void> {
     private viewModel: TopPageViewModel;
+    private mainLayoutViewModel: MainLayoutViewModel;
     private recordedViewModel: RecordedViewModel;
     private recordedMenuViewModel: RecordedMenuViewModel;
     private recordedInfoViewModel: RecordedInfoViewModel;
@@ -48,6 +50,7 @@ class TopPageComponent extends ParentComponent<void> {
     constructor() {
         super();
         this.viewModel = <TopPageViewModel> factory.get('TopPageViewModel');
+        this.mainLayoutViewModel = <MainLayoutViewModel> factory.get('MainLayoutViewModel');
         this.recordedViewModel = <RecordedViewModel> factory.get('RecordedViewModel');
         this.recordedMenuViewModel = <RecordedMenuViewModel> factory.get('RecordedMenuViewModel');
         this.recordedInfoViewModel = <RecordedInfoViewModel> factory.get('RecordedInfoViewModel');
@@ -59,9 +62,9 @@ class TopPageComponent extends ParentComponent<void> {
     }
 
     protected async parentInitViewModel(status: ViewModelStatus = 'init'): Promise<void> {
-        await this.recordedViewModel.init(status);
+        await this.recordedViewModel.init(status, 0);
         await this.viewModel.init();
-        await this.reservesViewModel.init(status);
+        await this.reservesViewModel.init(status, 0);
 
         if (status !== 'init') {
             this.recordedInfoViewModel.update();
@@ -136,7 +139,7 @@ class TopPageComponent extends ParentComponent<void> {
      */
     private createContent(): m.Child {
         return m('div', {
-            class: 'top-page' + (window.innerWidth < 800 ? ' non-scroll' : ''),
+            class: 'main-layout-animation top-page' + (window.innerWidth < 800 ? ' non-scroll' : ''),
             oncreate: (vnode: m.VnodeDOM<void, this>) => {
                 // scroll position を保存
                 const main = <HTMLElement> vnode.dom;
@@ -180,6 +183,8 @@ class TopPageComponent extends ParentComponent<void> {
 
             },
             onupdate: (vnode: m.VnodeDOM<void, this>) => {
+                (<HTMLElement> vnode.dom).style.opacity = this.mainLayoutViewModel.isShow() ? '1' : '0';
+
                 if (!this.isNeedRestorePosition) { return; }
                 this.isNeedRestorePosition = false;
 

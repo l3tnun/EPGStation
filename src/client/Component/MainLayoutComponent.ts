@@ -41,8 +41,7 @@ class MainLayoutComponent extends Component<MainLayoutArgs> {
         if (typeof vnode.attrs.content !== 'undefined') {
             main = m('main', {
                 id: MainLayoutComponent.id,
-                class: 'mdl-layout__content non-scroll',
-                style: 'opacity: 0; transition: all 0.2s ease 0s;',
+                class: 'mdl-layout__content non-scroll main-layout-animation',
                 oncreate: (mainVnode: m.VnodeDOM<void, any>) => {
                     if (typeof vnode.attrs.scrollStoped === 'undefined') { return; }
 

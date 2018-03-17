@@ -1,5 +1,4 @@
 import { ReservesApiModelInterface } from '../Model/Api/ReservesApiModel';
-import Util from '../Util/Util';
 import ViewModel from './ViewModel';
 
 /**
@@ -19,7 +18,6 @@ class TopPageViewModel extends ViewModel {
      */
     public async init(): Promise<void> {
         // 予約 id 一覧を取得
-        await Util.sleep(100);
         this.conflictsCount = await this.reservesApiModel.fetchConflictCount();
     }
 

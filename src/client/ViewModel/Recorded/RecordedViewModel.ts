@@ -34,7 +34,7 @@ class RecordedViewModel extends ViewModel {
      * init
      * @param status: ViewModelStatus
      */
-    public init(status: ViewModelStatus = 'init'): Promise<void> {
+    public init(status: ViewModelStatus = 'init', wait: number = 100): Promise<void> {
         super.init(status);
 
         if (status === 'reload' || status === 'updateIo') { return this.reloadInit(); }
@@ -52,7 +52,7 @@ class RecordedViewModel extends ViewModel {
         m.redraw();
 
         // 録画一覧を更新
-        return Util.sleep(100)
+        return Util.sleep(wait)
         .then(() => {
             return this.recordedApiModel.fetchRecorded(this.limit, this.offset, this.option);
         })
