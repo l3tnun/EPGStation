@@ -180,11 +180,7 @@ class ProgramComponent extends ParentComponent<void> {
                     m('div', {
                         class: 'main-layout-animation',
                         onupdate: (vnode: m.VnodeDOM<void, this>) => {
-                            if (this.mainLayoutViewModel.isShow() && !this.viewModel.progressShow) {
-                                (<HTMLElement> vnode.dom).style.opacity = '1';
-                            } else {
-                                (<HTMLElement> vnode.dom).style.opacity = '0';
-                            }
+                            (<HTMLElement> vnode.dom).style.opacity = (this.mainLayoutViewModel.isShow() && !this.viewModel.progressShow) ? '1' : '0';
                         },
                     }, [
                         m(ChannelComponent),
