@@ -1,7 +1,9 @@
 import * as m from 'mithril';
 import * as apid from '../../../../api';
 import DateUtil from '../../Util/DateUtil';
+import Util from '../../Util/Util';
 import BalloonViewModel from '../../ViewModel/Balloon/BalloonViewModel';
+import MainLayoutViewModel from '../../ViewModel/MainLayoutViewModel';
 import StreamProgramCardsViewModel from '../../ViewModel/Stream/StreamProgramCardsViewModel';
 import StreamSelectViewModel from '../../ViewModel/Stream/StreamSelectViewModel';
 import factory from '../../ViewModel/ViewModelFactory';
@@ -13,12 +15,14 @@ import TabComponent from '../TabComponent';
  */
 class StreamProgramCardsComponent extends Component<void> {
     private viewModel: StreamProgramCardsViewModel;
+    private mainLayoutViewModel: MainLayoutViewModel;
     private selectorViewModel: StreamSelectViewModel;
     private balloon: BalloonViewModel;
 
     constructor() {
         super();
         this.viewModel = <StreamProgramCardsViewModel> factory.get('StreamProgramCardsViewModel');
+        this.mainLayoutViewModel = <MainLayoutViewModel> factory.get('MainLayoutViewModel');
         this.selectorViewModel = <StreamSelectViewModel> factory.get('StreamSelectViewModel');
         this.balloon = <BalloonViewModel> factory.get('BalloonViewModel');
     }
@@ -41,7 +45,17 @@ class StreamProgramCardsComponent extends Component<void> {
     public view(): m.Child {
         const broadcasts = this.viewModel.getBroadcastList();
 
-        return m('div', { class: 'stream-programs-cards' }, [
+        return m('div', {
+            class: 'stream-programs-cards main-layout-animation',
+            onupdate: async(vnode: m.VnodeDOM<void, this>) => {
+                if (this.mainLayoutViewModel.isShow()) {
+                    await Util.sleep(100);
+                    (<HTMLElement> vnode.dom).style.opacity = '1';
+                } else {
+                    (<HTMLElement> vnode.dom).style.opacity = '0';
+                }
+            },
+        }, [
             m(TabComponent, { tabs: broadcasts, contentId: StreamProgramCardsViewModel.contentId }),
             m('div', { id: StreamProgramCardsViewModel.contentId, class: 'non-scroll' }, [
                 this.viewModel.getPrograms(broadcasts[this.viewModel.getTabPosition()]).map((item) => {
