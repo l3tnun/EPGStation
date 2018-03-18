@@ -128,8 +128,8 @@ export interface RecordedProgram {
     name: string;
     description?: string;
     extended?: string;
-    genre1?: string;
-    genre2?: string;
+    genre1?: number;
+    genre2?: number;
     videoType?: ProgramVideoType;
     videoResolution?: ProgramVideoResolution;
     videoStreamContent?: number;

@@ -5,6 +5,7 @@ import { ViewModelStatus } from '../Enums';
 import * as events from '../IoEvents';
 import Util from '../Util/Util';
 import BalloonViewModel from '../ViewModel/Balloon/BalloonViewModel';
+import MainLayoutViewModel from '../ViewModel/MainLayoutViewModel';
 import StreamInfoViewModel from '../ViewModel/Stream/StreamInfoViewModel';
 import factory from '../ViewModel/ViewModelFactory';
 import Component from './Component';
@@ -29,6 +30,7 @@ abstract class ParentComponent<T> extends Component<T> {
     private newQuery: QueryInterface = {};
     private queryChanged: boolean = false;
     private _balloon: BalloonViewModel;
+    private _mainLayout: MainLayoutViewModel;
     private _streamInfo: StreamInfoViewModel;
     private _resizeListener = throttle(() => { this._balloon.close(); }, 100);
 
@@ -47,6 +49,7 @@ abstract class ParentComponent<T> extends Component<T> {
     constructor() {
         super();
         this._balloon = <BalloonViewModel> factory.get('BalloonViewModel');
+        this._mainLayout = <MainLayoutViewModel> factory.get('MainLayoutViewModel');
         this._streamInfo = <StreamInfoViewModel> factory.get('StreamInfoViewModel');
 
         if (!ParentComponent.isSettedPopstate) {
@@ -102,6 +105,8 @@ abstract class ParentComponent<T> extends Component<T> {
      * @param status: ViewModelStatus
      */
     protected initViewModel(status: ViewModelStatus = 'init'): void {
+        this._mainLayout.init(status);
+
         setTimeout(() => {
             this._streamInfo.init(status);
 
@@ -147,7 +152,20 @@ abstract class ParentComponent<T> extends Component<T> {
                 this.saveStorage();
             }
         }, 0);
+
+        this.parentInitViewModel(status)
+        .then(() => {
+            this.setRestorePositionFlag(status);
+            this._mainLayout.update();
+        });
     }
+
+    /**
+     * 子 class での initViewModel
+     * @param status: ViewModelStatus
+     * @return Promise<void>
+     */
+    protected abstract parentInitViewModel(status: ViewModelStatus): Promise<void>;
 
     /**
      * sessionStorage に history を保存
@@ -194,7 +212,7 @@ abstract class ParentComponent<T> extends Component<T> {
      * isNeedResorePosition をセットする initViewModel の最後で呼び出す
      * @param status: ViewModelStatus
      */
-    protected setRestorePositionFlag(status: ViewModelStatus): void {
+    private setRestorePositionFlag(status: ViewModelStatus): void {
         if (status === 'init' || status === 'update') {
             this.isNeedRestorePosition = true;
             m.redraw();

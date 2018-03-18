@@ -101,7 +101,6 @@ namespace ModelFactorySetting {
         const encodeModel = new EncodeModel(
             encodeManage,
             socketIoManage,
-            recordedDB!,
             ipc,
         );
         const streamManage = new StreamManageModel(socketIoManage);

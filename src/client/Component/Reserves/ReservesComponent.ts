@@ -33,12 +33,8 @@ class ReservesComponent extends ParentComponent<void> {
         this.programInfo = <ProgramInfoViewModel> factory.get('ProgramInfoViewModel');
     }
 
-    protected initViewModel(status: ViewModelStatus = 'init'): void {
-        super.initViewModel(status);
-        this.viewModel.init(status).
-        then(() => {
-            this.setRestorePositionFlag(status);
-        });
+    protected async parentInitViewModel(status: ViewModelStatus): Promise<void> {
+        await this.viewModel.init(status);
     }
 
     /**

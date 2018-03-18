@@ -4,6 +4,7 @@ import { ViewModelStatus } from '../../Enums';
 import DateUtil from '../../Util/DateUtil';
 import Util from '../../Util/Util';
 import BalloonViewModel from '../../ViewModel/Balloon/BalloonViewModel';
+import MainLayoutViewModel from '../../ViewModel/MainLayoutViewModel';
 import ProgramGenreViewModel from '../../ViewModel/Program/ProgramGenreViewModel';
 import ProgramInfoViewModel from '../../ViewModel/Program/ProgramInfoViewModel';
 import ProgramTimeBalloonViewModel from '../../ViewModel/Program/ProgramTimeBalloonViewModel';
@@ -29,6 +30,7 @@ import TimeScaleComponent from './TimeScaleComponent';
  */
 class ProgramComponent extends ParentComponent<void> {
     private viewModel: ProgramViewModel;
+    private mainLayoutViewModel: MainLayoutViewModel;
     private genre: ProgramGenreViewModel;
     private timeBalloon: ProgramTimeBalloonViewModel;
     private balloon: BalloonViewModel;
@@ -38,17 +40,14 @@ class ProgramComponent extends ParentComponent<void> {
     constructor() {
         super();
         this.viewModel = <ProgramViewModel> factory.get('ProgramViewModel');
+        this.mainLayoutViewModel = <MainLayoutViewModel> factory.get('MainLayoutViewModel');
         this.genre = <ProgramGenreViewModel> factory.get('ProgramGenreViewModel');
         this.timeBalloon = <ProgramTimeBalloonViewModel> factory.get('ProgramTimeBalloonViewModel');
         this.balloon = <BalloonViewModel> factory.get('BalloonViewModel');
     }
 
-    protected initViewModel(status: ViewModelStatus = 'init'): void {
-        super.initViewModel(status);
-        this.viewModel.init(status)
-        .then(() => {
-            this.setRestorePositionFlag(status);
-        });
+    protected async parentInitViewModel(status: ViewModelStatus): Promise<void> {
+        await this.viewModel.init(status);
     }
 
     /**
@@ -178,23 +177,30 @@ class ProgramComponent extends ParentComponent<void> {
                         if (this.viewModel.isEnableDraw()) { window.removeEventListener('resize', this.resizeListener, false); }
                     },
                 }, [
-                    m(ChannelComponent),
-                    m('div', { class: 'child' }, [
-                        m(TimeScaleComponent),
-                        m(BoardComponent, {
-                            scrollStoped: (top: number, left: number) => {
-                                this.saveHistoryData({ top: top, left: left });
-                            },
-                            isNeedRestorePosition: () => {
-                                return this.isNeedRestorePosition;
-                            },
-                            resetRestorePositionFlag: () => {
-                                this.isNeedRestorePosition = false;
-                            },
-                            getPosition: () => {
-                                return <{ top: number; left: number } | null> this.getHistoryData();
-                            },
-                        }),
+                    m('div', {
+                        class: 'main-layout-animation',
+                        onupdate: (vnode: m.VnodeDOM<void, this>) => {
+                            (<HTMLElement> vnode.dom).style.opacity = (this.mainLayoutViewModel.isShow() && !this.viewModel.progressShow) ? '1' : '0';
+                        },
+                    }, [
+                        m(ChannelComponent),
+                        m('div', { class: 'child' }, [
+                            m(TimeScaleComponent),
+                            m(BoardComponent, {
+                                scrollStoped: (top: number, left: number) => {
+                                    this.saveHistoryData({ top: top, left: left });
+                                },
+                                isNeedRestorePosition: () => {
+                                    return this.isNeedRestorePosition;
+                                },
+                                resetRestorePositionFlag: () => {
+                                    this.isNeedRestorePosition = false;
+                                },
+                                getPosition: () => {
+                                    return <{ top: number; left: number } | null> this.getHistoryData();
+                                },
+                            }),
+                        ]),
                     ]),
                     m(ProgressComponent),
                 ]),

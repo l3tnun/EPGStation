@@ -33,12 +33,8 @@ class RulesComponent extends ParentComponent<void> {
         this.infoViewModel = <RulesInfoViewModel> factory.get('RulesInfoViewModel');
     }
 
-    protected initViewModel(status: ViewModelStatus = 'init'): void {
-        super.initViewModel(status);
-        this.viewModel.init(status)
-        .then(() => {
-            this.setRestorePositionFlag(status);
-        });
+    protected async parentInitViewModel(status: ViewModelStatus): Promise<void> {
+        await this.viewModel.init(status);
     }
 
     /**

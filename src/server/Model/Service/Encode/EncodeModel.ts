@@ -1,4 +1,3 @@
-import { RecordedDBInterface } from '../../DB/RecordedDB';
 import { IPCClientInterface } from '../../IPC/IPCClient';
 import Model from '../../Model';
 import { SocketIoManageModelInterface } from '../SocketIoManageModel';
@@ -16,18 +15,15 @@ class EncodeModel extends Model implements EncodeModelInterface {
     private encodeManage: EncodeManageModelInterface;
     private socket: SocketIoManageModelInterface;
     private ipc: IPCClientInterface;
-    private recordedDB: RecordedDBInterface;
 
     constructor(
         encodeManage: EncodeManageModelInterface,
         socket: SocketIoManageModelInterface,
-        recordedDB: RecordedDBInterface,
         ipc: IPCClientInterface,
     ) {
         super();
         this.encodeManage = encodeManage;
         this.socket = socket;
-        this.recordedDB = recordedDB;
         this.ipc = ipc;
 
         this.encodeManage.addEncodeDoneListener((id, name, filePath, delTs, isTsModify) => { this.encodeFinCallback(id, name, filePath, delTs, isTsModify); });
@@ -54,7 +50,7 @@ class EncodeModel extends Model implements EncodeModelInterface {
                 await this.ipc.addEncodeFile(recordedId, name, filePath, delTs);
             } else {
                 // ts ファイルのファイルサイズ更新
-                await this.recordedDB.updateFileSize(recordedId);
+                await this.ipc.updateTsFileSize(recordedId);
             }
         } catch (err) {
             this.log.system.error(err);

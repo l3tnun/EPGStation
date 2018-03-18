@@ -40,17 +40,12 @@ class RecordedComponent extends ParentComponent<void> {
         this.balloon = <BalloonViewModel> factory.get('BalloonViewModel');
     }
 
-    protected initViewModel(status: ViewModelStatus = 'init'): void {
-        super.initViewModel(status);
-        this.viewModel.init(status)
-        .then(() => {
-            this.setRestorePositionFlag(status);
-        })
-        .then(() => {
-            if (status !== 'init') {
-                this.infoViewModel.update();
-            }
-        });
+    protected async parentInitViewModel(status: ViewModelStatus): Promise<void> {
+        await this.viewModel.init(status);
+
+        if (status !== 'init') {
+            this.infoViewModel.update();
+        }
     }
 
     /**

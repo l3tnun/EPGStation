@@ -3,6 +3,7 @@ import * as apid from '../../../../api';
 import { ViewModelStatus } from '../../Enums';
 import DateUtil from '../../Util/DateUtil';
 import Util from '../../Util/Util';
+import MainLayoutViewModel from '../../ViewModel/MainLayoutViewModel';
 import StreamWatchViewModel from '../../ViewModel/Stream/StreamWatchViewModel';
 import factory from '../../ViewModel/ViewModelFactory';
 import MainLayoutComponent from '../MainLayoutComponent';
@@ -14,21 +15,23 @@ import StreamWatchVideoComponent from './StreamWatchVideoComponent';
  */
 class StreamWatchComponent extends ParentComponent<void> {
     private viewModel: StreamWatchViewModel;
+    private mainLayoutViewModel: MainLayoutViewModel;
     private hasInfo: boolean = false;
 
     constructor() {
         super();
 
         this.viewModel = <StreamWatchViewModel> factory.get('StreamWatchViewModel');
+        this.mainLayoutViewModel = <MainLayoutViewModel> factory.get('MainLayoutViewModel');
     }
 
-    protected initViewModel(status: ViewModelStatus = 'init'): void {
-        super.initViewModel(status);
-
+    protected async parentInitViewModel(status: ViewModelStatus): Promise<void> {
         if (status === 'init') {
             this.hasInfo = false;
         }
-        this.viewModel.init(status);
+
+        await this.viewModel.init(status);
+        await Util.sleep(300);
     }
 
     /**
@@ -43,7 +46,12 @@ class StreamWatchComponent extends ParentComponent<void> {
         return m(MainLayoutComponent, {
             header: { title: '視聴' },
             content: [
-                m('div', { class: 'stream-video' }, [
+                m('div', {
+                    class: 'stream-video main-layout-animation',
+                    onupdate: (vnode: m.VnodeDOM<void, this>) => {
+                        (<HTMLElement> vnode.dom).style.opacity = this.mainLayoutViewModel.isShow() ? '1' : '0';
+                    },
+                }, [
                     this.createStopButton(),
                     m(StreamWatchVideoComponent),
                     this.createStreamInfo(),

@@ -24,6 +24,7 @@ interface IPCClientInterface extends Model {
     ruleAdd(rule: RuleInterface): Promise<number>;
     ruleUpdate(ruleId: number, rule: RuleInterface): Promise<void>;
     addEncodeFile(recordedId: number, name: string, filePath: string, delTs: boolean): Promise<number>;
+    updateTsFileSize(recordedId: number): Promise<void>;
     updateReserves(): Promise<void>;
 }
 
@@ -242,6 +243,18 @@ class IPCClient extends Model implements IPCClientInterface {
         const result = await this.receive(id);
 
         return <number> result.value;
+    }
+
+    /**
+     * ts ファイルのサイズを更新
+     * @param recordedId: recorded id
+     * @return Promise<void>
+     */
+    public async updateTsFileSize(recordedId: number): Promise<void> {
+        const id = this.send(IPCMessageDefinition.updateTsFileSize, {
+            recordedId: recordedId,
+        });
+        await this.receive(id);
     }
 
     /**

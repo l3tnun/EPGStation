@@ -69,6 +69,7 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
         source: string;
         output: string;
         timerId: NodeJS.Timer;
+        isStoped: boolean; // encode 停止時に ture にする
     } | null = null;
 
     private doneListener: events.EventEmitter = new events.EventEmitter();
@@ -158,23 +159,9 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
 
         // 現在エンコード中ならプロセスを kill
         if (this.encodingData !== null && this.encodingData.program.recordedId === recordedId) {
-            // kill する前にファイルパスを記憶
-            const output = this.encodingData.output;
-
             // kill
+            this.encodingData.isStoped = true;
             await ProcessUtil.kill(this.encodingData.child);
-            this.log.system.info(`stop encode: ${ recordedId }`);
-
-            // 少し待ってから削除
-            await Util.sleep(1000);
-            fs.unlink(output, (err) => {
-                this.log.system.info(`delete encode file: ${ output }`);
-                if (err) {
-                    this.log.system.error(`delete encode file error: ${ output }`);
-                    this.log.system.error(String(err));
-                }
-                this.finalize();
-            });
         }
     }
 
@@ -258,7 +245,7 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
     /**
      * queue からプログラムを取り出してエンコードする
      */
-    private encode(): void {
+    private async encode(): Promise<void> {
         // 実行中なら return
         if (this.isRunning) { return; }
         this.isRunning = true; // ロック
@@ -295,8 +282,7 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
 
         this.log.system.info(`encode start: ${ program.source } ${ program.name }`);
         const output = program.suffix === null ? program.source : this.getFilePath(dir, program.source, program.suffix);
-
-        const option = {
+        const child = await this.encodeProcessManage.create(program.source, output, program.cmd, EncodeManageModel.priority, {
             env: {
                 INPUT: program.source,
                 OUTPUT: output,
@@ -311,58 +297,60 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
                 GENRE1: program.recordedProgram.genre1,
                 GENRE2: program.recordedProgram.genre2,
             },
-        };
-        this.encodeProcessManage.create(program.source, output, program.cmd, EncodeManageModel.priority, option)
-        .then((child) => {
-            if (typeof program === 'undefined') { return; }
+        });
 
-            const timeout = program.recordedProgram.duration * (program.rate);
-            this.encodingData = {
-                child: child,
-                program: program,
-                name: program.name,
-                source: program.source,
-                output: output,
-                timerId: setTimeout(() => { child.kill('SIGKILL'); }, timeout),
-            };
-
-            // debug 用
-            child.stderr.on('data', (data) => { this.log.system.debug(String(data)); });
-
-            child.on('exit', (code, signal) => {
-                if (typeof program === 'undefined') {
-                    fs.unlink(output, (err) => {
-                        this.log.system.error(`delete encode file, program is no found: ${ output }`);
-                        if (err) {
-                            this.log.system.error(`delete encode file failed: ${ output }`);
-                            this.log.system.error(String(err));
-                        }
-                    });
-                } else {
-                    this.log.system.info(`code { code : ${ code }, signal: ${ signal } }`);
-                    if (code !== 0 || signal === 'SIGINT') {
-                        this.log.system.error(`encode failed: ${ output }`);
-                        throw new Error('EncodeFineCodeIsNotZero');
-                    } else {
-                        this.log.system.info(`fin encode: ${ output }`);
-
-                        // 通知
-                        this.doneNotify(program.recordedId, program.name, output, this.encodingData!.program.delTs, program.suffix === null);
-                    }
+        this.encodingData = {
+            child: child,
+            program: program,
+            name: program.name,
+            source: program.source,
+            output: output,
+            timerId: setTimeout(() => {
+                // 設定した時間が経過したらエンコードを強制停止
+                this.log.system.error(`encoding process timed out: ${ output }`);
+                if (this.encodingData !== null && this.encodingData.source === program.source && this.encodingData.output === output) {
+                    this.encodingData.isStoped = true;
                 }
+                ProcessUtil.kill(child);
+            }, program.recordedProgram.duration * program.rate),
+            isStoped: false,
+        };
 
-                this.finalize();
-                this.errorNotify();
-            });
+        // debug 用
+        child.stderr.on('data', (data) => { this.log.system.debug(String(data)); });
 
-            child.on('error', (err) => {
-                this.log.system.error('encode error');
-                this.log.system.error(String(err));
-                this.finalize();
-                this.errorNotify();
-            });
-        })
-        .catch((err) => {
+        child.on('exit', async(code, signal) => {
+            // exit code
+            this.log.system.info(`code { code : ${ code }, signal: ${ signal } }`);
+
+            let isError = true;
+            if (this.encodingData === null) {
+                this.log.system.fatal('encoding data is null');
+            } else if (this.encodingData.isStoped && output !== program.source) {
+                // encode 停止時 かつ tsModify ではない
+                await Util.sleep(1000);
+
+                // output を削除
+                fs.unlink(output, (err) => {
+                    this.log.system.info(`delete encoding file: ${ output }`);
+                    if (err) {
+                        this.log.system.error(`delete encoding file error: ${ output }`);
+                        this.log.system.error(err.message);
+                    }
+                });
+            } else {
+                this.log.system.info(`fin encode: ${ output }`);
+
+                isError = false;
+                this.doneNotify(program.recordedId, program.name, output, this.encodingData.program.delTs, program.suffix === null);
+            }
+
+            if (isError) { this.errorNotify(); }
+
+            this.finalize();
+        });
+
+        child.on('error', (err) => {
             this.log.system.error('encode error');
             this.log.system.error(String(err));
             this.finalize();
@@ -380,7 +368,7 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
         }
         this.isRunning = false;
         this.encodingData = null;
-        setTimeout(() => { this.encode(); }, 0);
+        setImmediate(() => { this.encode(); }, 0);
     }
 
     /**

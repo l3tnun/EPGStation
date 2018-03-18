@@ -42,7 +42,7 @@ class ReservesViewModel extends ViewModel {
      * init
      * @param status: ViewModelStatus
      */
-    public init(status: ViewModelStatus = 'init'): Promise<void> {
+    public init(status: ViewModelStatus = 'init', wait: number = 200): Promise<void> {
         super.init(status);
 
         if (typeof m.route.param('mode') === 'undefined') {
@@ -64,7 +64,7 @@ class ReservesViewModel extends ViewModel {
         this.scheduleApiModel.init();
         m.redraw();
 
-        return Util.sleep(200)
+        return Util.sleep(wait)
         .then(() => {
             // 予約一覧を更新
             return this.fetch(this.limit, this.offset);

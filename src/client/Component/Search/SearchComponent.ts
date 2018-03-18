@@ -24,9 +24,8 @@ class SearchComponent extends ParentComponent<void> {
         this.viewModel = <SearchViewModel> factory.get('SearchViewModel');
     }
 
-    protected initViewModel(status: ViewModelStatus = 'init'): void {
-        super.initViewModel(status);
-        this.viewModel.init(status);
+    protected async parentInitViewModel(status: ViewModelStatus): Promise<void> {
+        await this.viewModel.init(status);
     }
 
     /**

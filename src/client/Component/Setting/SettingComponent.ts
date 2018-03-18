@@ -17,15 +17,11 @@ class SettingComponent extends ParentComponent<void> {
         this.viewModel = <SettingViewModel> factory.get('SettingViewModel');
     }
 
-    protected initViewModel(status: ViewModelStatus = 'init'): void {
-        super.initViewModel(status);
+    protected async parentInitViewModel(status: ViewModelStatus): Promise<void> {
         if (status === 'init') {
             this.viewModel.setTemp();
         }
-        Util.sleep(10)
-        .then(() => {
-            this.setRestorePositionFlag(status);
-        });
+        await Util.sleep(100);
     }
 
     /**

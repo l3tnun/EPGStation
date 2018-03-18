@@ -1,7 +1,9 @@
 import { throttle } from 'lodash';
 import * as m from 'mithril';
 import HeaderViewModel from '../ViewModel/HeaderViewModel';
+import MainLayoutViewModel from '../ViewModel/MainLayoutViewModel';
 import StorageViewModel from '../ViewModel/Storage/StorageViewModel';
+import factory from '../ViewModel/ViewModelFactory';
 import { BalloonComponent } from './BalloonComponent';
 import Component from './Component';
 import { HeaderArgs, HeaderComponent } from './HeaderComponent';
@@ -24,6 +26,13 @@ interface MainLayoutArgs {
  * MainLayoutComponent
  */
 class MainLayoutComponent extends Component<MainLayoutArgs> {
+    private viewModel: MainLayoutViewModel;
+
+    constructor() {
+        super();
+        this.viewModel = <MainLayoutViewModel> factory.get('MainLayoutViewModel');
+    }
+
     /**
      * view
      */
@@ -32,7 +41,7 @@ class MainLayoutComponent extends Component<MainLayoutArgs> {
         if (typeof vnode.attrs.content !== 'undefined') {
             main = m('main', {
                 id: MainLayoutComponent.id,
-                class: 'mdl-layout__content non-scroll',
+                class: 'mdl-layout__content non-scroll main-layout-animation',
                 oncreate: (mainVnode: m.VnodeDOM<void, any>) => {
                     if (typeof vnode.attrs.scrollStoped === 'undefined') { return; }
 
@@ -47,6 +56,9 @@ class MainLayoutComponent extends Component<MainLayoutArgs> {
                             vnode.attrs.scrollStoped((<HTMLElement> (mainVnode.dom)).scrollTop);
                         }
                     }, 50), false);
+                },
+                onupdate: (mainVnode: m.VnodeDOM<void, any>) => {
+                    (<HTMLElement> mainVnode.dom).style.opacity = this.viewModel.isShow() ? '1' : '0';
                 },
             }, [
                 m('div', { class: 'page-content' }, vnode.attrs.content),

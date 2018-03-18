@@ -27,11 +27,9 @@ class StreamProgramComponent extends ParentComponent<void> {
         this.balloon = <BalloonViewModel> factory.get('BalloonViewModel');
     }
 
-    protected initViewModel(status: ViewModelStatus = 'init'): void {
-        super.initViewModel(status);
-
+    protected async parentInitViewModel(status: ViewModelStatus): Promise<void> {
         if (status === 'reload' || status === 'updateIo') {
-            this.cardsViewModel.init(status);
+            await this.cardsViewModel.init(status);
         }
     }
 
