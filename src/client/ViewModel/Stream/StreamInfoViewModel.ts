@@ -35,7 +35,7 @@ class StreamInfoViewModel extends ViewModel {
     /**
      * init
      */
-    public init(status: ViewModelStatus = 'init'): void {
+    public async init(status: ViewModelStatus = 'init'): Promise<void> {
         super.init(status);
 
         if (status === 'init') {
@@ -43,9 +43,8 @@ class StreamInfoViewModel extends ViewModel {
             m.redraw();
         }
 
-        setTimeout(async() => {
-            await this.updateInfos();
-        }, 100);
+        await Util.sleep(100);
+        await this.updateInfos();
     }
 
     /**

@@ -224,8 +224,8 @@ $window-width: 600px
         --channel-height: var(--channel-tablet-height);
         --channel-width: var(--channel-tablet-width);
         --channel-fontsize: var(--channel-tablet-fontsize);
+        --header-height: #{ $header-min-height }; // gulp-sass 3.2.0 以降 #{} で囲わないと変換されない
         --board-fontsize: var(--board-tablet-fontsize);
-        --header-height: $header-min-height;
 
 /* mobile*/
 @media screen and (max-width: $window-width)
@@ -237,10 +237,10 @@ $window-width: 600px
         --channel-width: var(--channel-mobile-width);
         --channel-fontsize: var(--channel-mobile-fontsize);
         --board-fontsize: var(--board-mobile-fontsize);
-        --header-height: $header-min-height;
+        --header-height: #{ $header-min-height }; // gulp-sass 3.2.0 以降 #{} で囲わないと変換されない
 
 /* header が高くなる */
 @media screen and (min-width: $header-height + 1)
     .ProgramTable
-        --header-height: $header-max-height;
+        --header-height: #{ $header-max-height }; // gulp-sass 3.2.0 以降 #{} で囲わないと変換されない
 
