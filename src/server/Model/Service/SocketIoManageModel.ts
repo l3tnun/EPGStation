@@ -1,5 +1,5 @@
 import * as http from 'http';
-import * as socketio from 'socket.io';
+import * as SocketIO from 'socket.io';
 import * as events from '../../IoEvents';
 import Model from '../Model';
 
@@ -21,7 +21,7 @@ class SocketIoManageModel extends Model implements SocketIoManageModelInterface 
      * @param server: http.Server
      */
     public initialize(server: http.Server): void {
-        this.io = socketio(server);
+        this.io = SocketIO(server);
 
         this.log.system.info('SocketIo Server has started.');
     }
