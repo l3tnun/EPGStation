@@ -1,5 +1,6 @@
 import * as Hls from 'hls.js';
 import * as m from 'mithril';
+import Util from '../../Util/Util';
 import StreamWatchViewModel from '../../ViewModel/Stream/StreamWatchViewModel';
 import factory from '../../ViewModel/ViewModelFactory';
 import Component from '../Component';
@@ -40,13 +41,6 @@ class StreamWatchVideoComponent extends Component<void> {
                     this.createHls(<HTMLVideoElement> vnode.dom);
                     if (this.hls !== null) { return; }
 
-                    // error 処理追加
-                    (<HTMLVideoElement> vnode.dom).addEventListener('error', () => {
-                        if (m.route.get().split('?')[0].indexOf('/stream') !== -1) {
-                            this.viewModel.openSnackbar('ビデオ再生に失敗しました');
-                        }
-                    }, true);
-
                     // 再生
                     try {
                         (<HTMLVideoElement> vnode.dom).load();
@@ -86,7 +80,7 @@ class StreamWatchVideoComponent extends Component<void> {
                         (<HTMLVideoElement> vnode.dom).src = '';
                         (<HTMLVideoElement> vnode.dom).load();
                     } catch (err) {
-                        console.log(err);
+                        console.error(err);
                     }
 
                     this.destoryHls();
@@ -106,7 +100,7 @@ class StreamWatchVideoComponent extends Component<void> {
      * create hls
      */
     private createHls(element: HTMLVideoElement): void {
-        if (!Hls.isSupported()) { return; }
+        if (!Hls.isSupported() || Util.uaIsiOS() || Util.uaIsSafari()) { return; }
 
         this.hls = new Hls();
         this.hls.loadSource(this.videoSrc);

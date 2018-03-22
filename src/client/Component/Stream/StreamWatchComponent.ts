@@ -26,7 +26,7 @@ class StreamWatchComponent extends ParentComponent<void> {
     }
 
     protected async parentInitViewModel(status: ViewModelStatus): Promise<void> {
-        if (status === 'init') {
+        if (status === 'init' || status === 'update') {
             this.hasInfo = false;
         }
 
@@ -86,7 +86,7 @@ class StreamWatchComponent extends ParentComponent<void> {
     private createStreamInfo(): m.Child | null {
         const info = this.viewModel.getInfo();
         if (info === null) {
-            if (this.hasInfo) {
+            if (this.hasInfo && this.mainLayoutViewModel.isShow()) {
                 // 他の端末でストリームが停止された
                 this.hasInfo = false;
                 history.back();
