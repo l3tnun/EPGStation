@@ -7,6 +7,7 @@ import { RecordingManageModelInterface } from '../Recording/RecordingManageModel
 
 interface RecordedManageModelInterface extends Model {
     delete(id: number): Promise<void>;
+    deletes(ids: number[]): Promise<number[]>;
     deleteFile(id: number): Promise<void>;
     deleteEncodedFile(encodedId: number): Promise<void>;
     deleteRule(id: number): Promise<void>;
@@ -39,14 +40,14 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
      * @return Promise<void>
      */
     public async delete(id: number): Promise<void> {
-        this.log.system.info(`delete recorded file ${ id }`);
-
         // id で指定された recorded を取得
         const recorded = await this.recordedDB.findId(id);
         if (recorded === null) {
             // id で指定された recorded がなかった
             throw new Error('RecordingManageModelNotFoundRecordedProgram');
         }
+
+        this.log.system.info(`delete recorded file ${ id }`);
 
         // エンコードデータを取得
         const encoded = await this.encodedDB.findRecordedId(id);
@@ -72,14 +73,14 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
         }
 
         // エンコード実データを削除
-        encoded.forEach((file) => {
+        for (const file of encoded) {
             fs.unlink(file.path, (err) => {
                 if (err) {
                     this.log.system.error(`delete encode file error: ${ file.path }`);
                     this.log.system.error(String(err));
                 }
             });
-        });
+        }
 
         // サムネイルを削除
         if (recorded.thumbnailPath !== null) {
@@ -90,6 +91,24 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
                 }
             });
         }
+    }
+
+    /**
+     * 複数 id 指定削除
+     * @param ids: recorded ids
+     * @return Promise<number[]> 削除時にエラーが発生した recorded id の配列を返す
+     */
+    public async deletes(ids: number[]): Promise<number[]> {
+        const errors: number[] = [];
+        for (const id of ids) {
+            try {
+                await this.delete(id);
+            } catch (err) {
+                errors.push(id);
+            }
+        }
+
+        return errors;
     }
 
     /**
