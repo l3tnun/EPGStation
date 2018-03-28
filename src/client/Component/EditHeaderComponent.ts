@@ -1,4 +1,5 @@
 import * as m from 'mithril';
+import Util from '../Util/Util';
 import Component from './Component';
 
 interface EditHeaderArgs {
@@ -19,7 +20,16 @@ class EditHeaderComponent extends Component<EditHeaderArgs> {
         if (!vnode.attrs.isShow()) { return null; }
 
         return m('div', {
-            class: 'edit-header',
+            class: 'edit-header main-layout-animation',
+            onupdate: async(mainVnode: m.VnodeDOM<void, any>) => {
+                await Util.sleep(100);
+                (<HTMLElement> mainVnode.dom).style.opacity = '1';
+            },
+            onbeforeremove: async(mainVnode: m.VnodeDOM<void, any>) => {
+                console.log('onremove');
+                (<HTMLElement> mainVnode.dom).style.opacity = '0';
+                await Util.sleep(200);
+            },
         }, [
             m('div', {
                 class: 'drawer-button',
