@@ -150,15 +150,21 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
      * @param recordedId: recorded id
      */
     public async cancel(recordedId: number): Promise<void> {
-        this.log.system.info(`cancel encode: ${ recordedId }`);
-
         // queue から該当する id のプログラムを削除
-        this.queue = this.queue.filter((program) => {
+        const newQueue = this.queue.filter((program) => {
             return !(program.recordedId === recordedId);
         });
 
+        if (this.queue.length !== newQueue.length) {
+            this.log.system.info(`remove encode: ${ recordedId }`);
+        }
+
+        this.queue = newQueue;
+
         // 現在エンコード中ならプロセスを kill
         if (this.encodingData !== null && this.encodingData.program.recordedId === recordedId) {
+            this.log.system.info(`cancel encode: ${ recordedId }`);
+
             // kill
             this.encodingData.isStoped = true;
             await ProcessUtil.kill(this.encodingData.child);
@@ -323,21 +329,41 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
             // exit code
             this.log.system.info(`code { code : ${ code }, signal: ${ signal } }`);
 
+            const isTsModify = output === program.source;
             let isError = true;
             if (this.encodingData === null) {
                 this.log.system.fatal('encoding data is null');
-            } else if (this.encodingData.isStoped && output !== program.source) {
+            } else if (this.encodingData.isStoped) {
                 // encode 停止時 かつ tsModify ではない
-                await Util.sleep(1000);
-
-                // output を削除
-                fs.unlink(output, (err) => {
+                if (!isTsModify) {
+                    // output を削除
                     this.log.system.info(`delete encoding file: ${ output }`);
-                    if (err) {
+                    await Util.sleep(1000);
+
+                    try {
+                        await this.removeFile(output);
+                    } catch (err) {
                         this.log.system.error(`delete encoding file error: ${ output }`);
                         this.log.system.error(err.message);
                     }
-                });
+                }
+            } else if (code !== 0) {
+                // エンコードが正常に終了しなかった
+                this.log.system.error(`encode failed: ${ output }`);
+
+                // tsModify ではない
+                if (!isTsModify) {
+                    // output を削除
+                    this.log.system.info(`delete encoding file: ${ output }`);
+                    await Util.sleep(1000);
+
+                    try {
+                        await this.removeFile(output);
+                    } catch (err) {
+                        this.log.system.error(`delete encoding file error: ${ output }`);
+                        this.log.system.error(err.message);
+                    }
+                }
             } else {
                 this.log.system.info(`fin encode: ${ output }`);
 
@@ -355,6 +381,23 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
             this.log.system.error(String(err));
             this.finalize();
             this.errorNotify();
+        });
+    }
+
+    /**
+     * remove file
+     * @param file: file path
+     * @return Promise<void>
+     */
+    private removeFile(file: string): Promise<void> {
+        return new Promise<void>((resolve: () => void, reject: (error: Error) => void) => {
+            fs.unlink(file, (err) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
         });
     }
 
