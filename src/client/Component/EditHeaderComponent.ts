@@ -22,7 +22,6 @@ class EditHeaderComponent extends Component<EditHeaderArgs> {
         return m('div', {
             class: 'edit-header main-layout-animation',
             onupdate: async(mainVnode: m.VnodeDOM<void, any>) => {
-                await Util.sleep(100);
                 (<HTMLElement> mainVnode.dom).style.opacity = '1';
             },
             onbeforeremove: async(mainVnode: m.VnodeDOM<void, any>) => {
