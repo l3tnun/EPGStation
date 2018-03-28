@@ -126,7 +126,7 @@ class RecordedComponent extends ParentComponent<void> {
                     title: 'タイトル',
                     button: [
                         {
-                            onclick: () => {},
+                            onclick: () => { this.viewModel.selectAll(); },
                             name: 'select_all',
                         },
                         {

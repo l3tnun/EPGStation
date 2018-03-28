@@ -168,6 +168,28 @@ class RecordedViewModel extends ViewModel {
     }
 
     /**
+     * select all
+     * 全て選択済みであれば選択を解除する
+     */
+    public selectAll(): void {
+        let isUnselect = true;
+        for (const key in this.editSelectIndex) {
+            if (!this.editSelectIndex[key]) {
+                isUnselect = false;
+            }
+            this.editSelectIndex[key] = true;
+        }
+
+        if (isUnselect) {
+            for (const key in this.editSelectIndex) {
+                this.editSelectIndex[key] = false;
+            }
+        }
+
+        m.redraw();
+    }
+
+    /**
      * is selecting
      * @param recordedId: recorded id
      * @return boolean
