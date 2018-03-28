@@ -199,6 +199,21 @@ class RecordedViewModel extends ViewModel {
 
         return this.editSelectIndex[recordedId];
     }
+
+    /**
+     * 選択した要素の件数を返す
+     * @return number
+     */
+    public getSelectedCnt(): number {
+        if (!this.isEditing()) { return 0; }
+
+        let cnt = 0;
+        for (const key in this.editSelectIndex) {
+            if (this.editSelectIndex[key]) { cnt += 1; }
+        }
+
+        return cnt;
+    }
 }
 
 export default RecordedViewModel;

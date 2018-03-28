@@ -123,7 +123,7 @@ class RecordedComponent extends ParentComponent<void> {
                     foreBalloon: true,
                 }),
                 m(EditHeaderComponent, {
-                    title: 'タイトル',
+                    title: `${ this.viewModel.getSelectedCnt() }件選択`,
                     button: [
                         {
                             onclick: () => { this.viewModel.selectAll(); },
@@ -147,7 +147,7 @@ class RecordedComponent extends ParentComponent<void> {
      */
     private createContent(): m.Child {
         return m('div', {
-            class: 'recorded-content' + ( this.viewModel.isEditing() ? ' is-editing' : ''),
+            class: 'recorded-content' + (this.viewModel.isEditing() ? ' is-editing' : ''),
             oncreate: (vnode: m.VnodeDOM<void, this>) => {
                 this.resizeElement = <HTMLElement> (vnode.dom);
                 window.addEventListener('resize', this.resizeListener, false);
