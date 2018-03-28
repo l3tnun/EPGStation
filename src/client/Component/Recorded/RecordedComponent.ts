@@ -147,7 +147,7 @@ class RecordedComponent extends ParentComponent<void> {
      */
     private createContent(): m.Child {
         return m('div', {
-            class: 'recorded-content',
+            class: 'recorded-content' + ( this.viewModel.isEditing() ? ' is-editing' : ''),
             oncreate: (vnode: m.VnodeDOM<void, this>) => {
                 this.resizeElement = <HTMLElement> (vnode.dom);
                 window.addEventListener('resize', this.resizeListener, false);
