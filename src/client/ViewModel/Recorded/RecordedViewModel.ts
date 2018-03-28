@@ -63,7 +63,7 @@ class RecordedViewModel extends ViewModel {
     }
 
     /**
-     * reload 時の init
+     * データ取得
      */
     private async fetchData(): Promise<void> {
         await this.recordedApiModel.fetchRecorded(this.limit, this.offset, this.option);
