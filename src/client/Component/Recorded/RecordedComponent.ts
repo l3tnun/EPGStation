@@ -194,7 +194,28 @@ class RecordedComponent extends ParentComponent<void> {
      * @return m.Child
      */
     private createCard(recorded: apid.RecordedProgram): m.Child {
-        return m('div', { class: 'recorded-card mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col' }, [
+        return m('div', {
+            class: 'recorded-card mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col',
+            oncreate: (vnode: m.VnodeDOM<void, any>) => {
+                // useCapture を ture にして click を優先させる
+                (<HTMLElement> vnode.dom).addEventListener('click', (e) => {
+                    if (!this.viewModel.isEditing()) { return; }
+
+                    // 選択
+                    this.viewModel.select(recorded.id);
+
+                    // 子要素に伝播させない
+                    e.stopPropagation();
+                }, true);
+            },
+            onupdate: (vnode: m.VnodeDOM<void, any>) => {
+                if (this.viewModel.isSelecting(recorded.id)) {
+                    (<HTMLElement> vnode.dom).classList.add('selected');
+                } else {
+                    (<HTMLElement> vnode.dom).classList.remove('selected');
+                }
+            },
+        }, [
             m('button', {
                 class: 'mdl-button mdl-js-button mdl-button--icon',
                 onclick: (e: Event) => {

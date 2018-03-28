@@ -20,6 +20,7 @@ class RecordedViewModel extends ViewModel {
     private option: FindQueryOption = {};
 
     private isEditMode: boolean = false;
+    private editSelectIndex: { [key: number]: boolean } = {};
 
     constructor(
         recordedApiModel: RecordedApiModelInterface,
@@ -67,6 +68,10 @@ class RecordedViewModel extends ViewModel {
     private async fetchData(): Promise<void> {
         await this.recordedApiModel.fetchRecorded(this.limit, this.offset, this.option);
         await this.recordedApiModel.fetchTags();
+
+        if (this.isEditing()) {
+            this.setEditSelectIndex();
+        }
     }
 
     /**
@@ -120,6 +125,7 @@ class RecordedViewModel extends ViewModel {
      * 編集中に切り替え
      */
     public startEditMode(): void {
+        this.setEditSelectIndex();
         this.isEditMode = true;
     }
 
@@ -127,7 +133,49 @@ class RecordedViewModel extends ViewModel {
      * 編集モード終了
      */
     public endEditMode(): void {
+        this.editSelectIndex = {};
         this.isEditMode = false;
+    }
+
+    /**
+     * set edit select Index
+     */
+    private setEditSelectIndex(): void {
+        const recorded = this.getRecorded().recorded;
+        const newSelectIndex: { [key: number]: boolean } = {};
+        for (const r of recorded) {
+            const oldData = this.editSelectIndex[r.id];
+            newSelectIndex[r.id] = typeof oldData === 'undefined' ? false : oldData;
+        }
+
+        // update
+        this.editSelectIndex = newSelectIndex;
+    }
+
+    /**
+     * select
+     * @param recordedId: recorded id
+     */
+    public select(recordedId: number): void {
+        if (!this.isEditing()) { return; }
+        if (typeof this.editSelectIndex[recordedId] === 'undefined') {
+            throw new Error(`${ recordedId } is not found.`);
+        }
+
+        this.editSelectIndex[recordedId] = !this.editSelectIndex[recordedId];
+
+        m.redraw();
+    }
+
+    /**
+     * is selecting
+     * @param recordedId: recorded id
+     * @return boolean
+     */
+    public isSelecting(recordedId: number): boolean {
+        if (!this.isEditing()) { return false; }
+
+        return this.editSelectIndex[recordedId];
     }
 }
 
