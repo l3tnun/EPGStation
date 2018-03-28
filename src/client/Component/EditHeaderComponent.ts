@@ -21,10 +21,12 @@ class EditHeaderComponent extends Component<EditHeaderArgs> {
         return m('div', {
             class: 'edit-header',
         }, [
-            m('div', { class: 'drawer-button' }, [
+            m('div', {
+                class: 'drawer-button',
+                onclick: () => { vnode.attrs.close(); },
+            }, [
                 m('i', {
                     class: 'material-icons',
-                    onclick: () => { vnode.attrs.close(); },
                 }, 'close'),
             ]),
             m('span', { class: 'title' }, vnode.attrs.title),
