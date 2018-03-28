@@ -150,15 +150,21 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
      * @param recordedId: recorded id
      */
     public async cancel(recordedId: number): Promise<void> {
-        this.log.system.info(`cancel encode: ${ recordedId }`);
-
         // queue から該当する id のプログラムを削除
-        this.queue = this.queue.filter((program) => {
+        const newQueue = this.queue.filter((program) => {
             return !(program.recordedId === recordedId);
         });
 
+        if (this.queue.length !== newQueue.length) {
+            this.log.system.info(`remove encode: ${ recordedId }`);
+        }
+
+        this.queue = newQueue;
+
         // 現在エンコード中ならプロセスを kill
         if (this.encodingData !== null && this.encodingData.program.recordedId === recordedId) {
+            this.log.system.info(`cancel encode: ${ recordedId }`);
+
             // kill
             this.encodingData.isStoped = true;
             await ProcessUtil.kill(this.encodingData.child);
