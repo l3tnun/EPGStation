@@ -8,6 +8,7 @@ import RecordedSearchViewModel from '../../ViewModel/Recorded/RecordedSearchView
 import RecordedViewModel from '../../ViewModel/Recorded/RecordedViewModel';
 import factory from '../../ViewModel/ViewModelFactory';
 import { BalloonComponent } from '../BalloonComponent';
+import EditHeaderComponent from '../EditHeaderComponent';
 import MainLayoutComponent from '../MainLayoutComponent';
 import PaginationComponent from '../PaginationComponent';
 import ParentComponent from '../ParentComponent';
@@ -70,6 +71,17 @@ class RecordedComponent extends ParentComponent<void> {
                     }, m('i', { class: 'material-icons' }, 'search')),
                 ],
             },
+            menuContent: [
+                {
+                    attrs: {
+                        onclick: () => {
+                            this.balloon.close();
+                            this.viewModel.startEditMode();
+                        },
+                    },
+                    text: '編集',
+                },
+            ],
             content: [
                 this.createContent(),
             ],
@@ -109,6 +121,21 @@ class RecordedComponent extends ParentComponent<void> {
                     maxWidth: 400,
                     verticalOnly: true,
                     foreBalloon: true,
+                }),
+                m(EditHeaderComponent, {
+                    title: 'タイトル',
+                    button: [
+                        {
+                            onclick: () => {},
+                            name: 'select_all',
+                        },
+                        {
+                            onclick: () => {},
+                            name: 'delete',
+                        },
+                    ],
+                    isShow: () => { return this.viewModel.isEditing(); },
+                    close: () => { this.viewModel.endEditMode(); },
                 }),
             ],
         });

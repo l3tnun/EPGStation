@@ -19,6 +19,8 @@ class RecordedViewModel extends ViewModel {
     private offset: number = 0;
     private option: FindQueryOption = {};
 
+    private isEditMode: boolean = false;
+
     constructor(
         recordedApiModel: RecordedApiModelInterface,
         channels: ChannelsApiModelInterface,
@@ -37,7 +39,8 @@ class RecordedViewModel extends ViewModel {
     public init(status: ViewModelStatus = 'init', wait: number = 100): Promise<void> {
         super.init(status);
 
-        if (status === 'reload' || status === 'updateIo') { return this.reloadInit(); }
+        if (status === 'init' || status === 'update') { this.endEditMode(); }
+        if (status === 'reload' || status === 'updateIo') { return this.fetchData(); }
 
         this.limit = typeof m.route.param('length') === 'undefined' ? this.setting.value.recordedLength : Number(m.route.param('length'));
         this.offset = typeof m.route.param('page') === 'undefined' ? 0 : (Number(m.route.param('page')) - 1) * this.limit;
@@ -54,17 +57,14 @@ class RecordedViewModel extends ViewModel {
         // 録画一覧を更新
         return Util.sleep(wait)
         .then(() => {
-            return this.recordedApiModel.fetchRecorded(this.limit, this.offset, this.option);
-        })
-        .then(() => {
-            return this.recordedApiModel.fetchTags();
+            return this.fetchData();
         });
     }
 
     /**
      * reload 時の init
      */
-    private async reloadInit(): Promise<void> {
+    private async fetchData(): Promise<void> {
         await this.recordedApiModel.fetchRecorded(this.limit, this.offset, this.option);
         await this.recordedApiModel.fetchTags();
     }
@@ -106,6 +106,28 @@ class RecordedViewModel extends ViewModel {
      */
     public getLimit(): number {
         return this.limit;
+    }
+
+    /**
+     * 編集中か
+     * @return boolean
+     */
+    public isEditing(): boolean {
+        return this.isEditMode;
+    }
+
+    /**
+     * 編集中に切り替え
+     */
+    public startEditMode(): void {
+        this.isEditMode = true;
+    }
+
+    /**
+     * 編集モード終了
+     */
+    public endEditMode(): void {
+        this.isEditMode = false;
     }
 }
 
