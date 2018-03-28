@@ -26,7 +26,6 @@ class EditHeaderComponent extends Component<EditHeaderArgs> {
                 (<HTMLElement> mainVnode.dom).style.opacity = '1';
             },
             onbeforeremove: async(mainVnode: m.VnodeDOM<void, any>) => {
-                console.log('onremove');
                 (<HTMLElement> mainVnode.dom).style.opacity = '0';
                 await Util.sleep(200);
             },
