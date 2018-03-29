@@ -1,6 +1,7 @@
 import * as m from 'mithril';
 import * as apid from '../../../../api';
 import { ViewModelStatus } from '../../Enums';
+import Util from '../../Util/Util';
 import BalloonViewModel from '../../ViewModel/Balloon/BalloonViewModel';
 import RecordedInfoViewModel from '../../ViewModel/Recorded/RecordedInfoViewModel';
 import RecordedMenuViewModel from '../../ViewModel/Recorded/RecordedMenuViewModel';
@@ -123,7 +124,7 @@ class RecordedComponent extends ParentComponent<void> {
                     foreBalloon: true,
                 }),
                 m(EditHeaderComponent, {
-                    title: `${ this.viewModel.getSelectedCnt() }件選択`,
+                    title: `${ this.viewModel.getSelectedCnt() } 件選択`,
                     button: [
                         {
                             onclick: () => { this.viewModel.selectAll(); },
@@ -231,7 +232,17 @@ class RecordedComponent extends ParentComponent<void> {
                     this.balloon.open(RecordedInfoViewModel.id, e);
                 },
             }, [
-                m('div', { class: 'thumbnail-container' }, [
+                m('div', {
+                    class: 'thumbnail-container',
+                    onclick: (e: Event) => {
+                        // firefox にて pointer-events: none; では img が白くなってしまうため
+                        if (Util.uaIsFirefox()) {
+                            setTimeout(() => {
+                                (<HTMLElement> (<HTMLElement> e.target).parentNode).click();
+                            }, 10);
+                        }
+                    },
+                }, [
                     m('img', {
                         class: 'thumbnail',
                         src: recorded.hasThumbnail ? `/api/recorded/${ recorded.id }/thumbnail` : '/img/noimg.png',
