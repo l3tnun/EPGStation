@@ -29,7 +29,7 @@ class Server extends Base {
         const pkg = require(path.join('..', '..', '..', 'package.json'));
 
         // read api.yml
-        const api = yaml.safeLoad(fs.readFileSync(path.join(__dirname, '..', '..', '..', 'api.yml'), 'utf-8'));
+        const api = <openapi.OpenApi.ApiDefinition> yaml.safeLoad(fs.readFileSync(path.join(__dirname, '..', '..', '..', 'api.yml'), 'utf-8'));
         api.info = {
             title: pkg.name,
             version: pkg.version,
