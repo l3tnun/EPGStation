@@ -4,6 +4,7 @@ import { ViewModelStatus } from '../../Enums';
 import { ChannelsApiModelInterface } from '../../Model/Api/ChannelsApiModel';
 import { FindQueryOption, RecordedApiModelInterface } from '../../Model/Api/RecordedApiModel';
 import { SettingModelInterface } from '../../Model/Setting/SettingModel';
+import { SnackbarModelInterface } from '../../Model/Snackbar/SnackbarModel';
 import DateUtil from '../../Util/DateUtil';
 import Util from '../../Util/Util';
 import ViewModel from '../ViewModel';
@@ -15,6 +16,7 @@ class RecordedViewModel extends ViewModel {
     private recordedApiModel: RecordedApiModelInterface;
     private channels: ChannelsApiModelInterface;
     private setting: SettingModelInterface;
+    private snackbar: SnackbarModelInterface;
     private limit: number = 0;
     private offset: number = 0;
     private option: FindQueryOption = {};
@@ -26,11 +28,13 @@ class RecordedViewModel extends ViewModel {
         recordedApiModel: RecordedApiModelInterface,
         channels: ChannelsApiModelInterface,
         setting: SettingModelInterface,
+        snackbar: SnackbarModelInterface,
     ) {
         super();
         this.recordedApiModel = recordedApiModel;
         this.channels = channels;
         this.setting = setting;
+        this.snackbar = snackbar;
     }
 
     /**
@@ -214,6 +218,18 @@ class RecordedViewModel extends ViewModel {
 
         return cnt;
     }
+
+    /**
+     * open snack bar
+     * @param str: string
+     */
+    public openSnackbar(str: string): void {
+        this.snackbar.open(str);
+    }
+}
+
+namespace RecordedViewModel {
+    export const multipleDeleteId = 'recorded-multiple-delete';
 }
 
 export default RecordedViewModel;

@@ -18,6 +18,7 @@ import RecordedDeleteComponent from './RecordedDeleteComponent';
 import RecordedEncodeComponent from './RecordedEncodeComponent';
 import RecordedInfoComponent from './RecordedInfoComponent';
 import RecordedMenuComponent from './RecordedMenuComponent';
+import RecordedMultipleDeleteCompoent from './RecordedMultipleDeleteCompoent';
 import RecordedSearchActionComponent from './RecordedSearchActionComponent';
 import RecordedSearchComponent from './RecordedSearchComponent';
 
@@ -123,6 +124,12 @@ class RecordedComponent extends ParentComponent<void> {
                     verticalOnly: true,
                     foreBalloon: true,
                 }),
+                m(BalloonComponent, {
+                    id: RecordedViewModel.multipleDeleteId,
+                    content: m(RecordedMultipleDeleteCompoent),
+                    maxWidth: 300,
+                    forceDialog: true,
+                }),
                 m(EditHeaderComponent, {
                     title: `${ this.viewModel.getSelectedCnt() } 件選択`,
                     button: [
@@ -131,7 +138,13 @@ class RecordedComponent extends ParentComponent<void> {
                             name: 'select_all',
                         },
                         {
-                            onclick: () => {},
+                            onclick: () => {
+                                if (this.viewModel.getSelectedCnt() > 0) {
+                                    this.balloon.open(RecordedViewModel.multipleDeleteId);
+                                } else {
+                                    this.viewModel.openSnackbar('番組を選択してください。');
+                                }
+                            },
                             name: 'delete',
                         },
                     ],
