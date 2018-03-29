@@ -210,14 +210,11 @@ class RecordedComponent extends ParentComponent<void> {
     private createCard(recorded: apid.RecordedProgram): m.Child {
         return m('div', {
             class: 'recorded-card mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col',
-            onclick: (e: Event) => {
+            onclick: () => {
                 if (!this.viewModel.isEditing()) { return; }
 
                 // 選択
                 this.viewModel.select(recorded.id);
-
-                // 子要素に伝播させない
-                e.stopPropagation();
             },
             onupdate: (vnode: m.VnodeDOM<void, any>) => {
                 if (this.viewModel.isSelecting(recorded.id)) {
