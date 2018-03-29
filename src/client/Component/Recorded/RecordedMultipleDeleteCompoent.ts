@@ -28,6 +28,7 @@ class RecordedMultipleDeleteComponent extends Component<void> {
                     class: 'mdl-button mdl-js-button mdl-button--primary',
                     onclick: () => {
                         // delete video
+                        this.viewModel.deleteSelectedRecorded();
                         this.balloon.close();
                     },
                 }, '削除'),

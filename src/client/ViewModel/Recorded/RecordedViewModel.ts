@@ -226,6 +226,29 @@ class RecordedViewModel extends ViewModel {
     public openSnackbar(str: string): void {
         this.snackbar.open(str);
     }
+
+    /**
+     * 選択した録画を削除
+     * @return Promise<void>
+     */
+    public async deleteSelectedRecorded(): Promise<void> {
+        const ids: number[] = [];
+        for (const key in this.editSelectIndex) {
+            if (this.editSelectIndex[key]) {
+                ids.push(parseInt(key, 10));
+            }
+        }
+
+        try {
+            await this.recordedApiModel.deleteMultiple(ids);
+            this.snackbar.open('選択した録画を削除しました。');
+        } catch (err) {
+            this.snackbar.open('一部録画が削除されませんでした。');
+        }
+
+        this.endEditMode();
+        m.redraw();
+    }
 }
 
 namespace RecordedViewModel {

@@ -23,6 +23,7 @@ interface RecordedApiModelInterface extends ApiModel {
     fetchTags(): Promise<void>;
     deleteAll(recordedId: apid.RecordedId): Promise<void>;
     delete(recordedId: apid.RecordedId, encodedId: apid.EncodedId | null): Promise<void>;
+    deleteMultiple(recordedIds: apid.RecordedId[]): Promise<void>;
     sendToKodi(kodi: number, recordedId: number, encodedId: number | null): Promise<void>;
     getRecorded(): apid.RecordedPrograms;
     getTags(): apid.RecordedTags;
@@ -161,6 +162,28 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
                 return xhr.responseText;
             },
         });
+    }
+
+    /**
+     * 複数録画削除
+     * /api/recorded/delete post
+     * @param recordedIds: recorded ids
+     * @throws DeleteMultipleError 一部削除に失敗した場合
+     */
+    public async deleteMultiple(recordedIds: apid.RecordedId[]): Promise<void> {
+        const option = {
+            recordedIds: recordedIds,
+        };
+
+        const result = <apid.RecordedDeleteMultipleResult> await m.request({
+            method: 'POST',
+            url: '/api/recorded/delete',
+            data: option,
+        });
+
+        if (result.results.length > 0) {
+            throw new Error('DeleteMultipleError');
+        }
     }
 
     /**
