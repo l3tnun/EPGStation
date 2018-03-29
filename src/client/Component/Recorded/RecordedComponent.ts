@@ -210,17 +210,14 @@ class RecordedComponent extends ParentComponent<void> {
     private createCard(recorded: apid.RecordedProgram): m.Child {
         return m('div', {
             class: 'recorded-card mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col',
-            oncreate: (vnode: m.VnodeDOM<void, any>) => {
-                // useCapture を ture にして click を優先させる
-                (<HTMLElement> vnode.dom).addEventListener('click', (e) => {
-                    if (!this.viewModel.isEditing()) { return; }
+            onclick: (e: Event) => {
+                if (!this.viewModel.isEditing()) { return; }
 
-                    // 選択
-                    this.viewModel.select(recorded.id);
+                // 選択
+                this.viewModel.select(recorded.id);
 
-                    // 子要素に伝播させない
-                    e.stopPropagation();
-                }, true);
+                // 子要素に伝播させない
+                e.stopPropagation();
             },
             onupdate: (vnode: m.VnodeDOM<void, any>) => {
                 if (this.viewModel.isSelecting(recorded.id)) {
@@ -233,6 +230,8 @@ class RecordedComponent extends ParentComponent<void> {
             m('button', {
                 class: 'mdl-button mdl-js-button mdl-button--icon',
                 onclick: (e: Event) => {
+                    if (this.viewModel.isEditing()) { return; }
+
                     this.menuViewModel.set(recorded);
                     this.balloon.open(RecordedMenuViewModel.id, e);
                 },
@@ -241,6 +240,8 @@ class RecordedComponent extends ParentComponent<void> {
             ]),
             m('div', {
                 onclick: (e: Event) => {
+                    if (this.viewModel.isEditing()) { return; }
+
                     this.infoViewModel.set(recorded);
                     this.balloon.open(RecordedInfoViewModel.id, e);
                 },
@@ -248,6 +249,8 @@ class RecordedComponent extends ParentComponent<void> {
                 m('div', {
                     class: 'thumbnail-container',
                     onclick: (e: Event) => {
+                        if (this.viewModel.isEditing()) { return; }
+
                         // firefox にて pointer-events: none; では img が白くなってしまうため
                         if (Util.uaIsFirefox()) {
                             setTimeout(() => {
