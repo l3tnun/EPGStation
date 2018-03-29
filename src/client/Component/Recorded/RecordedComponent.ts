@@ -1,6 +1,7 @@
 import * as m from 'mithril';
 import * as apid from '../../../../api';
 import { ViewModelStatus } from '../../Enums';
+import Util from '../../Util/Util';
 import BalloonViewModel from '../../ViewModel/Balloon/BalloonViewModel';
 import RecordedInfoViewModel from '../../ViewModel/Recorded/RecordedInfoViewModel';
 import RecordedMenuViewModel from '../../ViewModel/Recorded/RecordedMenuViewModel';
@@ -8,6 +9,7 @@ import RecordedSearchViewModel from '../../ViewModel/Recorded/RecordedSearchView
 import RecordedViewModel from '../../ViewModel/Recorded/RecordedViewModel';
 import factory from '../../ViewModel/ViewModelFactory';
 import { BalloonComponent } from '../BalloonComponent';
+import EditHeaderComponent from '../EditHeaderComponent';
 import MainLayoutComponent from '../MainLayoutComponent';
 import PaginationComponent from '../PaginationComponent';
 import ParentComponent from '../ParentComponent';
@@ -16,6 +18,7 @@ import RecordedDeleteComponent from './RecordedDeleteComponent';
 import RecordedEncodeComponent from './RecordedEncodeComponent';
 import RecordedInfoComponent from './RecordedInfoComponent';
 import RecordedMenuComponent from './RecordedMenuComponent';
+import RecordedMultipleDeleteCompoent from './RecordedMultipleDeleteCompoent';
 import RecordedSearchActionComponent from './RecordedSearchActionComponent';
 import RecordedSearchComponent from './RecordedSearchComponent';
 
@@ -70,6 +73,17 @@ class RecordedComponent extends ParentComponent<void> {
                     }, m('i', { class: 'material-icons' }, 'search')),
                 ],
             },
+            menuContent: [
+                {
+                    attrs: {
+                        onclick: () => {
+                            this.balloon.close();
+                            this.viewModel.startEditMode();
+                        },
+                    },
+                    text: '編集',
+                },
+            ],
             content: [
                 this.createContent(),
             ],
@@ -110,6 +124,33 @@ class RecordedComponent extends ParentComponent<void> {
                     verticalOnly: true,
                     foreBalloon: true,
                 }),
+                m(BalloonComponent, {
+                    id: RecordedViewModel.multipleDeleteId,
+                    content: m(RecordedMultipleDeleteCompoent),
+                    maxWidth: 300,
+                    forceDialog: true,
+                }),
+                m(EditHeaderComponent, {
+                    title: `${ this.viewModel.getSelectedCnt() } 件選択`,
+                    button: [
+                        {
+                            onclick: () => { this.viewModel.selectAll(); },
+                            name: 'select_all',
+                        },
+                        {
+                            onclick: () => {
+                                if (this.viewModel.getSelectedCnt() > 0) {
+                                    this.balloon.open(RecordedViewModel.multipleDeleteId);
+                                } else {
+                                    this.viewModel.openSnackbar('番組を選択してください。');
+                                }
+                            },
+                            name: 'delete',
+                        },
+                    ],
+                    isShow: () => { return this.viewModel.isEditing(); },
+                    close: () => { this.viewModel.endEditMode(); },
+                }),
             ],
         });
     }
@@ -120,7 +161,7 @@ class RecordedComponent extends ParentComponent<void> {
      */
     private createContent(): m.Child {
         return m('div', {
-            class: 'recorded-content',
+            class: 'recorded-content' + (this.viewModel.isEditing() ? ' is-editing' : ''),
             oncreate: (vnode: m.VnodeDOM<void, this>) => {
                 this.resizeElement = <HTMLElement> (vnode.dom);
                 window.addEventListener('resize', this.resizeListener, false);
@@ -167,10 +208,27 @@ class RecordedComponent extends ParentComponent<void> {
      * @return m.Child
      */
     private createCard(recorded: apid.RecordedProgram): m.Child {
-        return m('div', { class: 'recorded-card mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col' }, [
+        return m('div', {
+            class: 'recorded-card mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col',
+            onclick: () => {
+                if (!this.viewModel.isEditing()) { return; }
+
+                // 選択
+                this.viewModel.select(recorded.id);
+            },
+            onupdate: (vnode: m.VnodeDOM<void, any>) => {
+                if (this.viewModel.isSelecting(recorded.id)) {
+                    (<HTMLElement> vnode.dom).classList.add('selected');
+                } else {
+                    (<HTMLElement> vnode.dom).classList.remove('selected');
+                }
+            },
+        }, [
             m('button', {
                 class: 'mdl-button mdl-js-button mdl-button--icon',
                 onclick: (e: Event) => {
+                    if (this.viewModel.isEditing()) { return; }
+
                     this.menuViewModel.set(recorded);
                     this.balloon.open(RecordedMenuViewModel.id, e);
                 },
@@ -179,11 +237,25 @@ class RecordedComponent extends ParentComponent<void> {
             ]),
             m('div', {
                 onclick: (e: Event) => {
+                    if (this.viewModel.isEditing()) { return; }
+
                     this.infoViewModel.set(recorded);
                     this.balloon.open(RecordedInfoViewModel.id, e);
                 },
             }, [
-                m('div', { class: 'thumbnail-container' }, [
+                m('div', {
+                    class: 'thumbnail-container',
+                    onclick: (e: Event) => {
+                        if (this.viewModel.isEditing()) { return; }
+
+                        // firefox にて pointer-events: none; では img が白くなってしまうため
+                        if (Util.uaIsFirefox()) {
+                            setTimeout(() => {
+                                (<HTMLElement> (<HTMLElement> e.target).parentNode).click();
+                            }, 10);
+                        }
+                    },
+                }, [
                     m('img', {
                         class: 'thumbnail',
                         src: recorded.hasThumbnail ? `/api/recorded/${ recorded.id }/thumbnail` : '/img/noimg.png',

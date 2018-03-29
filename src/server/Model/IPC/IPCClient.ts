@@ -16,6 +16,7 @@ interface IPCClientInterface extends Model {
     cancelReserve(programId: apid.ProgramId): Promise<void>;
     removeReserveSkip(programId: apid.ProgramId): Promise<void>;
     recordedDelete(recordedId: number): Promise<void>;
+    recordedDeletes(recordedId: number[]): Promise<number[]>;
     recordedDeleteFile(recordedId: number): Promise<void>;
     recordedDeleteEncodeFile(encodedId: number): Promise<void>;
     ruleDisable(ruleId: number): Promise<void>;
@@ -155,6 +156,18 @@ class IPCClient extends Model implements IPCClientInterface {
     public async recordedDelete(recordedId: number): Promise<void> {
         const id = this.send(IPCMessageDefinition.recordedDelete, { recordedId: recordedId });
         await this.receive(id);
+    }
+
+    /**
+     * 録画を複数削除する
+     * @param recordedIds: recorded ids
+     * @return Promise<number[]> 削除できなかった要素を返す
+     */
+    public async recordedDeletes(recordedIds: number[]): Promise<number[]> {
+        const id = this.send(IPCMessageDefinition.recordedDeletes, { recordedIds: recordedIds });
+        const result = await this.receive(id);
+
+        return <number[]> result.value;
     }
 
     /**

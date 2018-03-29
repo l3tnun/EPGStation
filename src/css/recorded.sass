@@ -19,6 +19,9 @@ $window-width-margin: 30px
             .mdl-button
                 position: absolute;
                 right: 0px;
+
+        .recorded-card.selected
+            color: white;
     
         .thumbnail-container
             height: 92px;
@@ -89,9 +92,27 @@ $window-width-margin: 30px
         .material-icons
             pointer-events: none;
 
+    .recorded-card.selected
+        background-color: #4285f4;
+
+        .text-container
+            color: white;
+
     .title, .description
         font-weight: bold;
     .thumbnail-container, .text-container
         pointer-events: none;
 
+    .pagination
+        opacity: 1;
+        transition: all 0.2s ease 0s;
+
+.recorded-content.is-editing
+    .pagination
+        opacity: 0;
+
+@-moz-document url-prefix()
+    .recorded-content
+        .thumbnail-container
+            pointer-events: auto;
 

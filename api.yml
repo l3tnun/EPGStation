@@ -592,6 +592,16 @@ definitions:
         description: '入力元と同じディレクトリに出力するか'
         type: boolean
 
+  RecordedDeletes:
+    type: object
+    required:
+      - recordedIds
+    properties:
+      recordedIds:
+        type: array
+        items:
+          $ref: '#/definitions/RecordedId'
+
   AddReserve:
     type: object
     required:

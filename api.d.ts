@@ -170,6 +170,10 @@ export interface RecordedGenreTag {
     genre1: number | null;
 }
 
+export interface RecordedDeleteMultipleResult {
+    results: number[];
+}
+
 export interface Reserves {
     reserves: Reserve[];
     total: number;
