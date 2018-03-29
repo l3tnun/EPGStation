@@ -37,6 +37,7 @@ interface RecordedModelInterface extends ApiModel {
     getThumbnailPath(recordedId: number): Promise<string>;
     getFilePath(recordedId: number, encodedId: number | undefined): Promise<RecordedFilePathInfo>;
     deleteAllRecorded(recordedId: number): Promise<void>;
+    deleteRecordeds(recordedIds: number[]): Promise<number[]>;
     deleteRecorded(recordedId: number, encodedId: number | undefined): Promise<void>;
     getGenreTags(): Promise<{}>;
     getM3u8(host: string, isSecure: boolean, recordedId: number, encodedId: number | undefined): Promise<PLayList>;
@@ -274,14 +275,52 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
      * @return Promise<void>
      */
     public async deleteAllRecorded(recordedId: number): Promise<void> {
-        this.streamManage.getStreamInfos().forEach((info) => {
+        const infos = this.streamManage.getStreamInfos();
+        for (const info of infos) {
             // 配信中か？
             if (typeof info.recordedId !== 'undefined' && info.recordedId === recordedId) {
                 throw new Error(RecordedModelInterface.RecordedIsStreamingNowError);
             }
-        });
+        }
+
         this.encodeManage.cancel(recordedId);
         await this.ipc.recordedDelete(recordedId);
+    }
+
+    /**
+     * 録画を複数削除
+     * @param recordedIds: recorded ids
+     * @return Promise<number[]> 削除できなかった recorded ids を返す
+     */
+    public async deleteRecordeds(recordedIds: number[]): Promise<number[]> {
+        // 配信中の録画の recordedId の索引を作成
+        const infos = this.streamManage.getStreamInfos();
+        const recordedStreamIndex: { [key: number]: boolean } = {};
+        for (const info of infos) {
+            if (typeof info.recordedId !== 'undefined') {
+                recordedStreamIndex[info.recordedId] = true;
+            }
+        }
+
+        // 配信中の要素を取り除く
+        const ids: number[] = [];
+        const excludedIds: number[] = [];
+        for (const recordedId of recordedIds) {
+            // 配信中か？
+            if (typeof recordedStreamIndex[recordedId] === 'undefined') {
+                ids.push(recordedId);
+            } else {
+                excludedIds.push(recordedId);
+            }
+        }
+
+        // 削除
+        const errors = await this.ipc.recordedDeletes(ids);
+
+        // 削除できなかった ids と配信中で取り除かれた要素を結合
+        Array.prototype.push.apply(excludedIds, errors);
+
+        return excludedIds;
     }
 
     /**
