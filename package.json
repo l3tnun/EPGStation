@@ -30,6 +30,8 @@
     "node": "^6.x.x || ~8"
   },
   "dependencies": {
+    "@types/basic-auth": "1.1.2",
+    "basic-auth": "2.0.0",
     "body-parser": "1.18.2",
     "chart.js": "2.7.2",
     "diskusage": "0.2.4",

@@ -29,6 +29,10 @@ interface ConfigInterface {
         password: string;
         idleTimeoutMillis: number;
     };
+    basicAuth: {
+        user: string;
+        password: string;
+    };
     gid: string | number;
     uid: string | number;
     programInsertMax: number;
