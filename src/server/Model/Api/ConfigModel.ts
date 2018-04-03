@@ -16,6 +16,19 @@ class ConfigModel extends ApiModel implements ConfigModelInterface {
 
         const config = this.config.getConfig();
 
+        // basic 認証の情報を付加する
+        if (typeof config.basicAuth !== 'undefined') {
+            if (typeof config.recordedViewer !== 'undefined') {
+                this.replaceBasicAuthAddress(config.basicAuth, config.recordedViewer);
+            }
+            if (typeof config.recordedDownloader !== 'undefined') {
+                this.replaceBasicAuthAddress(config.basicAuth, config.recordedDownloader);
+            }
+            if (typeof config.mpegTsViewer !== 'undefined') {
+                this.replaceBasicAuthAddress(config.basicAuth, config.mpegTsViewer);
+            }
+        }
+
         const mirakurun = CreateMirakurunClient.get();
         const tuners = await mirakurun.getTuners();
         const broadcast = { GR: false, BS: false, CS: false, SKY: false };
@@ -70,6 +83,17 @@ class ConfigModel extends ApiModel implements ConfigModelInterface {
         }
 
         return results;
+    }
+
+    /**
+     * ADDRESS を user:password@ADDRESS に置き換える
+     * @param info: { user: string; password: string }
+     * @param config: { [key: string]: string }
+     */
+    private replaceBasicAuthAddress(info: { user: string; password: string }, config: { [key: string]: string }): void {
+        for (const key in config) {
+            config[key] = config[key].replace(/ADDRESS/g, `${ info.user }:${ info.password }@ADDRESS`);
+        }
     }
 }
 

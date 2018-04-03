@@ -1,5 +1,6 @@
 import * as request from 'request';
 import * as url from 'url';
+import * as urljoin from 'url-join';
 import * as DBSchema from '../DB/DBSchema';
 
 namespace ApiUtil {
@@ -96,6 +97,28 @@ namespace ApiUtil {
                 }
             });
         });
+    };
+
+    /**
+     * Create m3u8 Play List Str
+     * @param host: host
+     * @param isSecure: boolean
+     * @param baseUrl: http://host 以下の url
+     */
+    export const createM3U8PlayListStr = (conf: {
+        host: string;
+        isSecure: boolean;
+        name: string;
+        duration: number;
+        baseUrl: string;
+        basicAuth?: { user: string; password: string };
+    }): string => {
+        const auth = typeof conf.basicAuth === 'undefined' ? '' : `${ conf.basicAuth.user }:${ conf.basicAuth.password }@`;
+        const fullUrl = urljoin(`${ conf.isSecure ? 'https' : 'http' }://${ auth }${ conf.host }`, conf.baseUrl);
+
+        return '#EXTM3U\n'
+        + `#EXTINF: ${ conf.duration }, ${ conf.name }\n`
+        + fullUrl;
     };
 }
 

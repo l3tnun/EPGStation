@@ -1,7 +1,7 @@
 import * as express from 'express';
 import * as fs from 'fs';
 import * as path from 'path';
-import { PLayList } from '../Model/Api/PlayListInterface';
+import { PlayList } from '../Model/Api/PlayListInterface';
 import factory from '../Model/ModelFactory';
 import { SocketIoManageModelInterface } from '../Model/Service/SocketIoManageModel';
 
@@ -58,9 +58,9 @@ export const notifyClient = (): void => {
 };
 
 /**
- * PLayList を m3u8 としてレスポンスする
+ * PlayList を m3u8 としてレスポンスする
  */
-export const responsePlayList = (req: express.Request, res: express.Response, list: PLayList): void => {
+export const responsePlayList = (req: express.Request, res: express.Response, list: PlayList): void => {
     res.setHeader('Content-Type', 'application/x-mpegURL; charset="UTF-8"');
     const disposition = /firefox|Firefox/.test(<string> req.headers['user-agent']) ? 'inline' : 'attachment';
     res.setHeader('Content-Disposition', `${ disposition }; filename*=UTF-8''${ list.name };`);
