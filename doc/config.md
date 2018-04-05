@@ -11,6 +11,7 @@ Config.json
 | mysql | {} | | no | MySQL の設定 (dbType が mysql の場合は必須) |
 | sqlite3 | {} | | no | SQLite3 の拡張設定 |
 | postgresql | {} | | no | PostgreSQL の設定 (dbType が postgresql の場合は必須) |
+| basicAuth | {} | | no | BASIC 認証設定 |
 | gid | string \| number | | no | gid の設定 |
 | uid | string \| number | | no | uid の設定 |
 | programInsertMax | number | 100 | no | DB へ番組情報を挿入するときの 1 回あたりの件数 |
@@ -89,6 +90,15 @@ Config.json
 | connectionTimeoutMillis | number | no | 接続タイムアウト時間 (ms) |
 
 ----
+
+### basicAuth
+
+| プロパティ | 種類 | 必須 | 説明 |
+| -------- | ---- | ---- |--- |
+| user | string | yes | ユーザー名 |
+| password | string | yes | パスワード |
+
+---
 
 ### encode
 
