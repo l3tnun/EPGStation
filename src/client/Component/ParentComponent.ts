@@ -153,11 +153,16 @@ abstract class ParentComponent<T> extends Component<T> {
             }
         }, 0);
 
-        this.parentInitViewModel(status)
-        .then(() => {
+        (async() => {
+            try {
+                await this.parentInitViewModel(status);
+            } catch (err) {
+                console.error(err);
+            }
+
             this.setRestorePositionFlag(status);
             this._mainLayout.update();
-        });
+        })();
     }
 
     /**

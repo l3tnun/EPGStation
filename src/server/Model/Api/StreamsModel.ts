@@ -7,7 +7,8 @@ import { RecordedHLSStream } from '../Service/Stream/RecordedHLSStream';
 import { Stream } from '../Service/Stream/Stream';
 import { StreamManageModelInterface } from '../Service/Stream/StreamManageModel';
 import ApiModel from './ApiModel';
-import { PLayList } from './PlayListInterface';
+import ApiUtil from './ApiUtil';
+import { PlayList } from './PlayListInterface';
 
 interface StreamModelInfo {
     stream: Stream;
@@ -24,7 +25,7 @@ interface StreamsModelInterface extends ApiModel {
     stop(streamNumber: number): Promise<void>;
     forcedStopAll(): Promise<void>;
     getInfos(): any;
-    getLiveM3u8(host: string, isSecure: boolean, channelId: apid.ServiceItemId, mode: number): Promise<PLayList>;
+    getLiveM3u8(host: string, isSecure: boolean, channelId: apid.ServiceItemId, mode: number): Promise<PlayList>;
 }
 
 class StreamsModel extends ApiModel implements StreamsModelInterface {
@@ -164,20 +165,22 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
      * @param host: host
      * @param channelId: channel id
      * @param mode: config.MpegTsStreaming の index 番号
-     * @return Promise<PLayList>
+     * @return Promise<PlayList>
      */
-    public async getLiveM3u8(host: string, isSecure: boolean, channelId: apid.ServiceItemId, mode: number): Promise<PLayList> {
+    public async getLiveM3u8(host: string, isSecure: boolean, channelId: apid.ServiceItemId, mode: number): Promise<PlayList> {
         const channel = await this.servicesDB.findId(channelId);
         if (channel === null) { throw new Error(StreamsModelInterface.channleIsNotFoundError); }
 
-        const name = channel.name;
-        const playList = '#EXTM3U\n'
-        + `#EXTINF: ${ 0 }, ${ name }\n`
-        + `${ isSecure ? 'https' : 'http' }://${ host }/api/streams/live/${ channelId }/mpegts?mode=${ mode }`;
-
         return {
-            name: encodeURIComponent(name + '.m3u8'),
-            playList: playList,
+            name: encodeURIComponent(channel.name + '.m3u8'),
+            playList: ApiUtil.createM3U8PlayListStr({
+                host: host,
+                isSecure: isSecure,
+                name: channel.name,
+                duration: 0,
+                baseUrl: `/api/streams/live/${ channelId }/mpegts?mode=${ mode }`,
+                basicAuth: this.config.getConfig().basicAuth,
+            }),
         };
     }
 }

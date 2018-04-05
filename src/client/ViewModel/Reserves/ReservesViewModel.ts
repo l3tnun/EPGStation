@@ -102,6 +102,14 @@ class ReservesViewModel extends ViewModel {
     }
 
     /**
+     * 現在のページを取得
+     * @return number
+     */
+    public getPage(): number {
+        return this.reservesApiModel.getPage();
+    }
+
+    /**
      * id を指定して channel 名を取得する
      * @param channelId: channel id
      * @return string

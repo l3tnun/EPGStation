@@ -87,6 +87,14 @@ class RecordedViewModel extends ViewModel {
     }
 
     /**
+     * 現在のページを取得
+     * @return number
+     */
+    public getPage(): number {
+        return this.recordedApiModel.getPage();
+    }
+
+    /**
      * id を指定して channel 名を取得する
      * @param channelId: channel id
      * @return string

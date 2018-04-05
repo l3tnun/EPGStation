@@ -39,10 +39,11 @@ class IPTVModel extends ApiModel implements IPTVModelInterface {
      * @return Promise<string>
      */
     public async getChannelList(host: string, isSecure: boolean, mode: number): Promise<string> {
+        const config = this.config.getConfig();
         let channels = await this.servicesDB.findAll();
 
         // sort
-        channels = ApiUtil.sortItems(channels, this.config.getConfig().serviceOrder || []);
+        channels = ApiUtil.sortItems(channels, config.serviceOrder || []);
 
         const channelIndex: { [key: string]: number } = {};
 
@@ -58,11 +59,12 @@ class IPTVModel extends ApiModel implements IPTVModelInterface {
                 }
             }
 
+            const auth = typeof config.basicAuth === 'undefined' ? '' : `${ config.basicAuth.user }:${ config.basicAuth.password }@`;
             let logo = '';
-            if (channel.hasLogoData) { logo = `tvg-logo="${ isSecure ? 'https' : 'http' }://${ host }/api/channels/${ channel.id }/logo"`; }
+            if (channel.hasLogoData) { logo = `tvg-logo="${ isSecure ? 'https' : 'http' }://${ auth }${ host }/api/channels/${ channel.id }/logo"`; }
             // tslint:disable-next-line:no-irregular-whitespace
             str += `#EXTINF:-1 tvg-id="${ channel.id }" ${ logo } group-title="${ channel.channelType }",${ channel.name }　\n`;
-            str += `${ isSecure ? 'https' : 'http' }://${ host }/api/streams/live/${ channel.id }/mpegts?mode=${ mode }\n`;
+            str += `${ isSecure ? 'https' : 'http' }://${ auth }${ host }/api/streams/live/${ channel.id }/mpegts?mode=${ mode }\n`;
         }
 
         return str;
@@ -102,7 +104,7 @@ class IPTVModel extends ApiModel implements IPTVModelInterface {
             if (typeof programsIndex[channel.id] === 'undefined') { continue; }
             str += `<channel id="${ channel.id }" tp="${ channel.channel }">`;
             str += `<display-name lang="ja_JP">${ channel.name }</display-name>`;
-            str += `<service_id>${  channel.serviceId }</service_id>`;
+            str += `<service_id>${ channel.serviceId }</service_id>`;
             str += '</channel>\n';
 
             for (const program of programsIndex[channel.id]) {

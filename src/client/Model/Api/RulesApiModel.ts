@@ -8,6 +8,7 @@ interface RulesApiModelInterface extends ApiModel {
     fetchRules(limit: number, offset: number): Promise<void>;
     fetchRule(ruleId: apid.RuleId): Promise<void>;
     getRules(): apid.Rules;
+    getPage(): number;
     getRule(): apid.Rule | null;
     enable(ruleId: apid.RuleId): Promise<void>;
     disable(ruleId: apid.RuleId): Promise<void>;
@@ -25,6 +26,7 @@ class RulesApiModel extends ApiModel implements RulesApiModelInterface {
     private rule: apid.Rule | null = null;
     private limit: number = 0;
     private offset: number = 0;
+    private currentPage: number = 1;
 
     public init(): void {
         super.init();
@@ -59,6 +61,8 @@ class RulesApiModel extends ApiModel implements RulesApiModelInterface {
                 url: '/api/rules',
                 data: query,
             });
+
+            this.currentPage = this.offset / this.limit + 1;
         } catch (err) {
             this.rules = { rules: [], total: 0 };
             console.error('/api/rules');
@@ -92,6 +96,14 @@ class RulesApiModel extends ApiModel implements RulesApiModelInterface {
      */
     public getRules(): apid.Rules {
         return this.rules;
+    }
+
+    /**
+     * 現在のページを取得
+     * @return number
+     */
+    public getPage(): number {
+        return this.currentPage;
     }
 
     /**

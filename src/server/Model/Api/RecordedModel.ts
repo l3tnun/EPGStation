@@ -10,7 +10,7 @@ import { EncodeManageModelInterface, EncodeProgram } from '../Service/Encode/Enc
 import { StreamManageModelInterface } from '../Service/Stream/StreamManageModel';
 import ApiModel from './ApiModel';
 import ApiUtil from './ApiUtil';
-import { PLayList } from './PlayListInterface';
+import { PlayList } from './PlayListInterface';
 
 interface RecordedFilePathInfo {
     path: string;
@@ -40,7 +40,7 @@ interface RecordedModelInterface extends ApiModel {
     deleteRecordeds(recordedIds: number[]): Promise<number[]>;
     deleteRecorded(recordedId: number, encodedId: number | undefined): Promise<void>;
     getGenreTags(): Promise<{}>;
-    getM3u8(host: string, isSecure: boolean, recordedId: number, encodedId: number | undefined): Promise<PLayList>;
+    getM3u8(host: string, isSecure: boolean, recordedId: number, encodedId: number | undefined): Promise<PlayList>;
     sendToKodi(host: string, isSecure: boolean, kodi: number, recordedId: number, encodedId: number | undefined): Promise<void>;
     addEncode(recordedId: number, option: EncodeAddOption): Promise<void>;
     cancelEncode(recordedId: number): Promise<void>;
@@ -421,29 +421,30 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
      * @param isSecure: boolean true: https, false: http
      * @param recordedId: recorded id
      * @param encodedId: encoded id
-     * @return Promise<PLayList>
+     * @return Promise<PlayList>
      */
-    public async getM3u8(host: string, isSecure: boolean, recordedId: number, encodedId: number | undefined): Promise<PLayList> {
+    public async getM3u8(host: string, isSecure: boolean, recordedId: number, encodedId: number | undefined): Promise<PlayList> {
         const recorded = await this.recordedDB.findId(recordedId);
         const encoded = typeof encodedId !== 'undefined' ? await this.encodedDB.findId(encodedId) : null;
         if (recorded === null || recorded.recPath === null && encoded === null) {
             throw new Error(RecordedModelInterface.NotFoundRecordedFileError);
         }
 
-        const name = recorded.name;
-        const duration = Math.floor(recorded.duration / 1000);
-        let url = `${ isSecure ? 'https' : 'http' }://${ host }/api/recorded/${ recordedId }/file`;
-        if (encoded !== null) { url += `?encodedId=${ encodedId }`; }
-
-        const playList = '#EXTM3U\n'
-        + `#EXTINF: ${ duration }, ${ name }\n`
-        + url;
+        let baseUrl = `/api/recorded/${ recordedId }/file`;
+        if (encoded !== null) { baseUrl += `?encodedId=${ encodedId }`; }
 
         const fileName = encoded === null ? path.basename(String(recorded.recPath)) : path.basename(encoded.path);
 
         return {
             name: encodeURIComponent(fileName + '.m3u8'),
-            playList: playList,
+            playList: ApiUtil.createM3U8PlayListStr({
+                host: host,
+                isSecure: isSecure,
+                name: recorded.name,
+                duration: Math.floor(recorded.duration / 1000),
+                baseUrl: baseUrl,
+                basicAuth: this.config.getConfig().basicAuth,
+            }),
         };
     }
 
@@ -468,7 +469,9 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
             throw new Error(RecordedModelInterface.NotFoundRecordedFileError);
         }
 
-        let source = `${ isSecure ? 'https' : 'http' }://${ host }/api/recorded/${ recordedId }/file`;
+        const basicAuth = this.config.getConfig().basicAuth;
+        const auth = typeof basicAuth === 'undefined' ? '' : `${ basicAuth.user }:${ basicAuth.password }@`;
+        let source = `${ isSecure ? 'https' : 'http' }://${ auth }${ host }/api/recorded/${ recordedId }/file`;
         if (encoded !== null) { source += `?encodedId=${ encodedId }`; }
 
         await ApiUtil.sendToKodi(source, kodiConfig[kodi].host, kodiConfig[kodi].user, kodiConfig[kodi].pass);

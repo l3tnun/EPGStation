@@ -12,6 +12,7 @@ import Base from '../Base';
 import factory from '../Model/ModelFactory';
 import { SocketIoManageModelInterface } from '../Model/Service/SocketIoManageModel';
 import Util from '../Util/Util';
+import BasicAuth from './BasicAuth';
 
 /**
  * Server
@@ -24,6 +25,12 @@ class Server extends Base {
 
         // log
         this.app.use(log4js.connectLogger(this.log.access, { level: 'info' }));
+
+        // basic auth
+        const basicAuthConfig = this.config.getConfig().basicAuth;
+        if (typeof basicAuthConfig !== 'undefined') {
+            this.app.use(BasicAuth(basicAuthConfig.user, basicAuthConfig.password));
+        }
 
         // read pkg
         const pkg = require(path.join('..', '..', '..', 'package.json'));
