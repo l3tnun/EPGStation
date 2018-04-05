@@ -109,7 +109,7 @@ enc.sh を起動するようになっていますが、 windows では動かな�
 
 ## サービス化
 
-[winser](https://github.com/jfromaniello/winser) がインストールされいる環境であれば、以下のコマンドを管理者権限で実行するとサービス化できます
+[winser](https://github.com/jfromaniello/winser) がインストールされている環境であれば、以下のコマンドを管理者権限で実行するとサービス化できます
 
 ```
 npm run install-win-service
