@@ -42,7 +42,18 @@ class EditHeaderComponent extends Component<EditHeaderArgs> {
                 vnode.attrs.button.map((button) => {
                     return m('label', {
                         class: 'menu-button header-menu-button mdl-button mdl-js-button mdl-button--icon',
-                        onclick: (event: Event) => { button.onclick(event); },
+                        onclick: (event: Event) => {
+                            if (Util.uaIsMobile()) {
+                                // mobile では :active が正しく機能しないため
+                                setTimeout(async() => {
+                                    (<HTMLElement> event.target).style.background = '';
+                                    await Util.sleep(150);
+                                    (<HTMLElement> event.target).style.background = 'transparent';
+                                }, 100);
+                            }
+
+                            button.onclick(event);
+                        },
                     }, m('i', { class: 'material-icons' }, button.name));
                 }),
             ]),
