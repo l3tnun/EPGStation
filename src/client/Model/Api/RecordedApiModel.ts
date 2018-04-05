@@ -26,6 +26,7 @@ interface RecordedApiModelInterface extends ApiModel {
     deleteMultiple(recordedIds: apid.RecordedId[]): Promise<void>;
     sendToKodi(kodi: number, recordedId: number, encodedId: number | null): Promise<void>;
     getRecorded(): apid.RecordedPrograms;
+    getPage(): number;
     getTags(): apid.RecordedTags;
     addEncode(recordedId: apid.RecordedId, option: EncodeQueryOption): Promise<void>;
     cancelEncode(recordedId: apid.RecordedId): Promise<void>;
@@ -50,6 +51,7 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
     private limit: number = 0;
     private offset: number = 0;
     private option: FindQueryOption = {};
+    private currentPage: number = 1;
 
     public init(): void {
         super.init();
@@ -93,6 +95,9 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
                 url: '/api/recorded',
                 data: query,
             });
+
+            this.currentPage = this.offset / this.limit + 1;
+            console.log(this.currentPage);
         } catch (err) {
             this.recorded = { recorded: [], total: 0 };
             console.error('/api/recorded');
@@ -224,6 +229,14 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
      */
     public getRecorded(): apid.RecordedPrograms {
         return this.recorded;
+    }
+
+    /**
+     * 現在のページを取得
+     * @return number
+     */
+    public getPage(): number {
+        return this.currentPage;
     }
 
     /**
