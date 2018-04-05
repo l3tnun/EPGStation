@@ -469,7 +469,9 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
             throw new Error(RecordedModelInterface.NotFoundRecordedFileError);
         }
 
-        let source = `${ isSecure ? 'https' : 'http' }://${ host }/api/recorded/${ recordedId }/file`;
+        const basicAuth = this.config.getConfig().basicAuth;
+        const auth = typeof basicAuth === 'undefined' ? '' : `${ basicAuth.user }:${ basicAuth.password }@`;
+        let source = `${ isSecure ? 'https' : 'http' }://${ auth }${ host }/api/recorded/${ recordedId }/file`;
         if (encoded !== null) { source += `?encodedId=${ encodedId }`; }
 
         await ApiUtil.sendToKodi(source, kodiConfig[kodi].host, kodiConfig[kodi].user, kodiConfig[kodi].pass);
