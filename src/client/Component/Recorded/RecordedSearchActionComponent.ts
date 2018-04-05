@@ -1,4 +1,5 @@
 import * as m from 'mithril';
+import Util from '../../Util/Util';
 import RecordedSearchViewModel from '../../ViewModel/Recorded/RecordedSearchViewModel';
 import factory from '../../ViewModel/ViewModelFactory';
 import Component from '../Component';
@@ -32,7 +33,16 @@ class RecordedSearchActionComponent extends Component<void> {
                 m('button', {
                     type: 'button',
                     class: 'mdl-button mdl-js-button mdl-button--primary',
-                    onclick: () => { this.viewModel.reset(); },
+                    onclick: async(event: Event) => {
+                        this.viewModel.reset();
+
+                        if (Util.uaIsMobile()) {
+                            // mobile では :active が正しく機能しないため
+                            (<HTMLElement> event.target).style.background = '';
+                            await Util.sleep(300);
+                            (<HTMLElement> event.target).style.background = 'transparent';
+                        }
+                    },
                 }, 'リセット'),
 
                 m('button', {
