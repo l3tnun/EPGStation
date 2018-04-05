@@ -97,7 +97,6 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
             });
 
             this.currentPage = this.offset / this.limit + 1;
-            console.log(this.currentPage);
         } catch (err) {
             this.recorded = { recorded: [], total: 0 };
             console.error('/api/recorded');
