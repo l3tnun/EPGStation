@@ -87,7 +87,7 @@ class RulesComponent extends ParentComponent<void> {
             m(PaginationComponent, {
                 total: this.viewModel.getRules().total,
                 length: this.viewModel.getLimit(),
-                page: typeof m.route.param('page') === 'undefined' ? 1 : Number(m.route.param('page')),
+                page: this.viewModel.getPage(),
             }),
         ]);
     }

@@ -70,6 +70,14 @@ class RulesViewModel extends ViewModel {
     }
 
     /**
+     * 現在のページを取得
+     * @return number
+     */
+    public getPage(): number {
+        return this.rulesApiModel.getPage();
+    }
+
+    /**
      * id を指定して channel 名を取得する
      * @param channelId: channel id
      * @return string
