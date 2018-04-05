@@ -20,6 +20,7 @@ interface ReservesApiModelInterface extends ApiModel {
     fetchAllId(): Promise<AllReserves | null>;
     fetchConflictCount(): Promise<number>;
     getReserves(): apid.Reserves;
+    getPage(): number;
     getConflicts(): apid.Reserves;
     getAllId(): AllReserves | null;
     addReserve(programId: apid.ProgramId, option?: apid.RuleEncode): Promise<void>;
@@ -34,6 +35,7 @@ interface ReservesApiModelInterface extends ApiModel {
 class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
     private limit: number;
     private offset: number;
+    private currentPage: number = 1;
     private allReserves: AllReserves | null = null;
     private reserves: apid.Reserves = { reserves: [], total: 0 };
     private conflicts: apid.Reserves = { reserves: [], total: 0 };
@@ -83,6 +85,8 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
                 url: '/api/reserves',
                 data: query,
             });
+
+            this.currentPage = this.offset / this.limit + 1;
         } catch (err) {
             this.reserves = { reserves: [], total: 0 };
             console.error('/api/reserves');
@@ -182,6 +186,14 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
      */
     public getReserves(): apid.Reserves {
         return this.reserves;
+    }
+
+    /**
+     * 現在のページを取得
+     * @return number
+     */
+    public getPage(): number {
+        return this.currentPage;
     }
 
     /**
