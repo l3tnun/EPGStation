@@ -26,7 +26,7 @@ class EncodeModel extends Model implements EncodeModelInterface {
         this.socket = socket;
         this.ipc = ipc;
 
-        this.encodeManage.addEncodeDoneListener((id, name, filePath, delTs, isTsModify) => { this.encodeFinCallback(id, name, filePath, delTs, isTsModify); });
+        this.encodeManage.addEncodeDoneListener((id, name, output, delTs, isTsModify) => { this.encodeFinCallback(id, name, output, delTs, isTsModify); });
         this.encodeManage.addEncodeErrorListener(() => { this.encodeErrorCallback(); });
     }
 
@@ -40,17 +40,20 @@ class EncodeModel extends Model implements EncodeModelInterface {
 
     /**
      * エンコード完了時の callback
-     * @param recordedId: recorded id
-     * @param filePath: encode file path
      */
-    private async encodeFinCallback(recordedId: number, name: string, filePath: string, delTs: boolean, isTsModify: boolean): Promise<void> {
+    private async encodeFinCallback(recordedId: number, name: string, output: string | null, delTs: boolean, isTsModify: boolean): Promise<void> {
         try {
-            if (!isTsModify) {
-                // エンコード済みファイルを DB へ追加
-                await this.ipc.addEncodeFile(recordedId, name, filePath, delTs);
+            if (output === null) {
+                if (isTsModify) {
+                    // ts ファイルのファイルサイズ更新
+                    await this.ipc.updateTsFileSize(recordedId);
+                } else if (delTs) {
+                    // tsModify でなく ts 削除が有効な場合は録画一覧から削除
+                    await this.ipc.recordedDelete(recordedId);
+                }
             } else {
-                // ts ファイルのファイルサイズ更新
-                await this.ipc.updateTsFileSize(recordedId);
+                // エンコード済みファイルを DB へ追加
+                await this.ipc.addEncodeFile(recordedId, name, output, delTs);
             }
         } catch (err) {
             this.log.system.error(err);
