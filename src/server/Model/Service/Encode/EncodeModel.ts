@@ -63,7 +63,12 @@ class EncodeModel extends Model implements EncodeModelInterface {
                 }
             } else {
                 // エンコード済みファイルを DB へ追加
-                await this.ipc.addEncodeFile(recordedId, name, output, delTs);
+                await this.ipc.addEncodeFile(recordedId, name, output);
+
+                // ts を削除
+                if (delTs) {
+                    await this.ipc.recordedDeleteFile(recordedId);
+                }
             }
         } catch (err) {
             this.log.system.error(err);

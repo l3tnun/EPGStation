@@ -24,7 +24,7 @@ interface IPCClientInterface extends Model {
     ruleDelete(ruleId: number): Promise<void>;
     ruleAdd(rule: RuleInterface): Promise<number>;
     ruleUpdate(ruleId: number, rule: RuleInterface): Promise<void>;
-    addEncodeFile(recordedId: number, name: string, filePath: string, delTs: boolean): Promise<number>;
+    addEncodeFile(recordedId: number, name: string, filePath: string): Promise<number>;
     updateTsFileSize(recordedId: number): Promise<void>;
     updateReserves(): Promise<void>;
 }
@@ -246,12 +246,11 @@ class IPCClient extends Model implements IPCClientInterface {
      * エンコード済みファイルを追加する
      * @return Promise<number> encodedId
      */
-    public async addEncodeFile(recordedId: number, name: string, filePath: string, delTs: boolean): Promise<number> {
+    public async addEncodeFile(recordedId: number, name: string, filePath: string): Promise<number> {
         const id = this.send(IPCMessageDefinition.addEncodeFile, {
             recordedId: recordedId,
             name: name,
             filePath: filePath,
-            delTs: delTs,
         });
         const result = await this.receive(id);
 

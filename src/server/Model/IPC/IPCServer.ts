@@ -265,10 +265,9 @@ class IPCServer extends Model implements IPCServerInterface {
             const recordedId: number = args.recordedId;
             const name: string = args.name;
             const filePath: string = args.filePath;
-            const delTs: boolean = args.delTs;
 
             try {
-                const encodedId = await this.recordedManage.addEncodeFile(recordedId, name, filePath, delTs);
+                const encodedId = await this.recordedManage.addEncodeFile(recordedId, name, filePath);
                 this.send({ id: id, value: encodedId });
             } catch (err) {
                 this.send({ id: id, error: err.message });

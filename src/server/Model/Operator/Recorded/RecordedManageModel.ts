@@ -12,7 +12,7 @@ interface RecordedManageModelInterface extends Model {
     deleteEncodedFile(encodedId: number): Promise<void>;
     deleteRule(id: number): Promise<void>;
     addThumbnail(id: number, thumbnailPath: string): Promise<void>;
-    addEncodeFile(recordedId: number, name: string, filePath: string, delTs: boolean): Promise<number>;
+    addEncodeFile(recordedId: number, name: string, filePath: string): Promise<number>;
     updateTsFileSize(recordedId: number): Promise<void>;
 }
 
@@ -176,30 +176,11 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
      * @param filePath: encode file path
      * @return Promise<void>
      */
-    public async addEncodeFile(recordedId: number, name: string, filePath: string, delTs: boolean): Promise<number> {
+    public async addEncodeFile(recordedId: number, name: string, filePath: string): Promise<number> {
         this.log.system.info(`add encode file: ${ recordedId }`);
 
         // DB にエンコードファイルを追加
         const encodedId = await this.encodedDB.insert(recordedId, name, filePath, FileUtil.getFileSize(filePath));
-
-        // ts 削除
-        if (delTs) {
-            const recorded = await this.recordedDB.findId(recordedId);
-
-            // 削除するデータがある場合
-            if (recorded !== null && recorded.recPath !== null) {
-                // 削除
-                fs.unlink(recorded.recPath, (err) => {
-                    this.log.system.info(`delete ts file: ${ recordedId }`);
-                    if (err) {
-                        this.log.system.error(`delete ts file error: ${ recordedId }`);
-                    }
-                });
-
-                // DB 上から recPath を削除
-                await this.recordedDB.deleteRecPath(recordedId);
-            }
-        }
 
         return encodedId;
     }
