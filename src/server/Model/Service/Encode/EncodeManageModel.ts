@@ -383,7 +383,7 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
                     }
                 }
             } else {
-                this.log.system.info(`fin encode: ${ output }`);
+                this.log.system.info(`fin encode: ${ output === null ? program.source : output }`);
 
                 isError = false;
                 const encodedId = typeof program.encodedId === 'undefined' ? null : program.encodedId;
