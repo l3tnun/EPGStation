@@ -100,6 +100,7 @@ namespace ModelFactorySetting {
         const ipc = new IPCClient();
         const encodeModel = new EncodeModel(
             encodeManage,
+            encodedDB!,
             socketIoManage,
             ipc,
         );

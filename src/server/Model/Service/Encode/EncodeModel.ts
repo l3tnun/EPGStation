@@ -1,3 +1,4 @@
+import { EncodedDBInterface } from '../../DB/EncodedDB';
 import { IPCClientInterface } from '../../IPC/IPCClient';
 import Model from '../../Model';
 import { SocketIoManageModelInterface } from '../SocketIoManageModel';
@@ -13,16 +14,19 @@ interface EncodeModelInterface extends Model {
  */
 class EncodeModel extends Model implements EncodeModelInterface {
     private encodeManage: EncodeManageModelInterface;
+    private encodedDB: EncodedDBInterface;
     private socket: SocketIoManageModelInterface;
     private ipc: IPCClientInterface;
 
     constructor(
         encodeManage: EncodeManageModelInterface,
+        encodedDB: EncodedDBInterface,
         socket: SocketIoManageModelInterface,
         ipc: IPCClientInterface,
     ) {
         super();
         this.encodeManage = encodeManage;
+        this.encodedDB = encodedDB;
         this.socket = socket;
         this.ipc = ipc;
 
@@ -48,8 +52,14 @@ class EncodeModel extends Model implements EncodeModelInterface {
                     // ts ファイルのファイルサイズ更新
                     await this.ipc.updateTsFileSize(recordedId);
                 } else if (delTs) {
-                    // tsModify でなく ts 削除が有効な場合は録画一覧から削除
-                    await this.ipc.recordedDelete(recordedId);
+                    const encodedList = await this.encodedDB.findRecordedId(recordedId);
+                    if (encodedList.length === 0) {
+                        // ts だけなので録画一覧から削除
+                        await this.ipc.recordedDelete(recordedId);
+                    } else {
+                        // encoded が存在するので ts ファイルのみ削除する
+                        await this.ipc.recordedDeleteFile(recordedId);
+                    }
                 }
             } else {
                 // エンコード済みファイルを DB へ追加
