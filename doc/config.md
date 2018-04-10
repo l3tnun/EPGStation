@@ -121,7 +121,7 @@ suffix が未記述の場合非エンコードコマンドとして認識され�
 | INPUT | string | 入力ファイルパス |
 | OUTPUT | string | 出力ファイルパス |
 | FFMPEG | string | ffmpeg パス |
-| CURRENTDIR | string | 予約時に設定した directory 文字列 |
+| DIR | string | 予約時に設定した directory 文字列 |
 | NAME | string | 番組名 |
 | DESCRIPTION | string \| null | 番組概要 |
 | EXTENDED | string \| null | 番組詳細 |

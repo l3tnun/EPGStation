@@ -299,7 +299,7 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
                 RECORDEDID: program.recordedId,
                 INPUT: program.source,
                 OUTPUT: output === null ? '' : output,
-                CURRENTDIR: program.directory || '',
+                DIR: program.directory || '',
                 FFMPEG: Util.getFFmpegPath(),
                 NAME: program.recordedProgram.name,
                 DESCRIPTION: program.recordedProgram.description || '',
