@@ -521,6 +521,9 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
             delTs: false,
             recordedProgram: recorded,
         };
+        if (typeof option.encodedId !== 'undefined') {
+            encodeProgram.encodedId = option.encodedId;
+        }
 
         if (typeof option.isOutputTheOriginalDirectory !== 'undefined' && option.isOutputTheOriginalDirectory) {
             // 入力元と同じディレクトリに出力する

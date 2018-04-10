@@ -14,6 +14,7 @@ interface RecordedManageModelInterface extends Model {
     addThumbnail(id: number, thumbnailPath: string): Promise<void>;
     addEncodeFile(recordedId: number, name: string, filePath: string): Promise<number>;
     updateTsFileSize(recordedId: number): Promise<void>;
+    updateEncodedFileSize(encodedId: number): Promise<void>;
 }
 
 class RecordedManageModel extends Model implements RecordedManageModelInterface {
@@ -192,6 +193,15 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
      */
     public async updateTsFileSize(recordedId: number): Promise<void> {
         await this.recordedDB.updateFileSize(recordedId);
+    }
+
+    /**
+     * encoded ファイルのサイズを更新
+     * @param encodedId: encoded id
+     * @return Promise<void>
+     */
+    public async updateEncodedFileSize(encodedId: number): Promise<void> {
+        await this.encodedDB.updateFileSize(encodedId);
     }
 }
 

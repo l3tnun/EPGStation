@@ -286,6 +286,18 @@ class IPCServer extends Model implements IPCServerInterface {
             }
         };
 
+        // update encoded file size
+        this.functions[IPCMessageDefinition.updateEncodedFileSize] = async(id: number, args: any) => {
+            const encodedId: number = args.encodedId;
+
+            try {
+                await this.recordedManage.updateEncodedFileSize(encodedId);
+                this.send({ id: id });
+            } catch (err) {
+                this.send({ id: id, error: err.message });
+            }
+        };
+
         // update Reserves
         this.functions[IPCMessageDefinition.updateReserves] = async(id: number) => {
             try {

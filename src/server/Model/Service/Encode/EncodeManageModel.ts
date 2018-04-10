@@ -11,6 +11,7 @@ import { EncodeProcessManageModelInterface } from './EncodeProcessManageModel';
 
 interface EncodeProgram {
     recordedId: number;
+    encodedId?: number;
     source: string;
     mode?: number; // tsModify の場合存在しない
     directory?: string;
@@ -28,6 +29,7 @@ interface EncodeQueue extends EncodeProgram {
 interface EncodingProgram {
     name: string;
     recordedId: number;
+    encodedId?: number;
     mode?: number;
     source: string;
 }
@@ -45,7 +47,7 @@ interface EncodeConfigInfo {
 }
 
 interface EncodeManageModelInterface extends Model {
-    addEncodeDoneListener(callback: (recordedId: number, name: string, output: string | null, delTs: boolean, isTsModify: boolean) => void): void;
+    addEncodeDoneListener(callback: (recordedId: number, encodedId: number | null, name: string, output: string | null, delTs: boolean) => void): void;
     addEncodeErrorListener(callback: () => void): void;
     getEncodingId(): number | null;
     getEncodingInfo(): EncodingInfo;
@@ -84,9 +86,9 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
      * エンコード完了時に実行されるイベントに追加
      * @param callback ルール更新時に実行される
      */
-    public addEncodeDoneListener(callback: (recordedId: number, name: string, output: string | null, delTs: boolean, isTsModify: boolean) => void): void {
-        this.doneListener.on(EncodeManageModel.ENCODE_FIN_EVENT, (recordedId: number, name: string, output: string | null, delTs: boolean, isTsModify: boolean) => {
-            callback(recordedId, name, output, delTs, isTsModify);
+    public addEncodeDoneListener(callback: (recordedId: number, encodedId: number | null, name: string, output: string | null, delTs: boolean) => void): void {
+        this.doneListener.on(EncodeManageModel.ENCODE_FIN_EVENT, (recordedId: number, encodedId: number | null, name: string, output: string | null, delTs: boolean) => {
+            callback(recordedId, encodedId, name, output, delTs);
         });
     }
 
@@ -116,6 +118,9 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
                 recordedId: this.encodingData.program.recordedId,
                 source: this.encodingData.source,
             };
+            if (typeof this.encodingData.program.encodedId !== 'undefined') {
+                result.encoding.encodedId = this.encodingData.program.encodedId;
+            }
             if (typeof this.encodingData.program.mode !== 'undefined') {
                 result.encoding.mode = this.encodingData.program.mode;
             }
@@ -127,6 +132,9 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
                 recordedId: program.recordedId,
                 source: program.source,
             };
+            if (typeof program.encodedId !== 'undefined') {
+                info.encodedId = program.encodedId;
+            }
             if (typeof program.mode !== 'undefined') {
                 info.mode = program.mode;
             }
@@ -378,7 +386,8 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
                 this.log.system.info(`fin encode: ${ output }`);
 
                 isError = false;
-                this.doneNotify(program.recordedId, program.name, output, this.encodingData.program.delTs, program.name === EncodeManageModel.TSModifyName);
+                const encodedId = typeof program.encodedId === 'undefined' ? null : program.encodedId;
+                this.doneNotify(program.recordedId, encodedId, program.name, output, this.encodingData.program.delTs);
             }
 
             if (isError) { this.errorNotify(); }
@@ -451,13 +460,13 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
     /**
      * エンコード完了を通知
      * @param recordedId: recorded id
+     * @param encodedId: encoded id | null
      * @param name: program name
      * @param output: output
      * @param delTs: ts を削除するか
-     * @param isTsModify: ts modify か
      */
-    private doneNotify(recordedId: number, name: string, output: string | null, delTs: boolean, isTsModify: boolean): void {
-        this.doneListener.emit(EncodeManageModel.ENCODE_FIN_EVENT, recordedId, name, output, delTs, isTsModify);
+    private doneNotify(recordedId: number, encodedId: number | null, name: string, output: string | null, delTs: boolean): void {
+        this.doneListener.emit(EncodeManageModel.ENCODE_FIN_EVENT, recordedId, encodedId, name, output, delTs);
     }
 
     /**
