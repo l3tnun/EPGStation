@@ -42,8 +42,8 @@ import SQLite3ServicesDB from './DB/SQLite3/SQLite3ServicesDB';
 import { IPCClient } from './IPC/IPCClient';
 import factory from './ModelFactory';
 
+import { EncodeFinModel } from './Service/Encode/EncodeFinModel';
 import { EncodeManageModel } from './Service/Encode/EncodeManageModel';
-import { EncodeModel } from './Service/Encode/EncodeModel';
 import { EncodeProcessManageModel } from './Service/Encode/EncodeProcessManageModel';
 import { SocketIoManageModel } from './Service/SocketIoManageModel';
 import { MpegTsLiveStream } from './Service/Stream/MpegTsLiveStream';
@@ -98,7 +98,7 @@ namespace ModelFactorySetting {
         const encodeManage = new EncodeManageModel(encodeProcessManage);
         const socketIoManage = new SocketIoManageModel();
         const ipc = new IPCClient();
-        const encodeModel = new EncodeModel(
+        const encodeFinModel = new EncodeFinModel(
             encodeManage,
             encodedDB!,
             socketIoManage,
@@ -106,7 +106,7 @@ namespace ModelFactorySetting {
         );
         const streamManage = new StreamManageModel(socketIoManage);
 
-        ipc.setModels(encodeModel, socketIoManage);
+        ipc.setModels(encodeManage, socketIoManage);
 
         factory.reg('SocketIoManageModel', () => { return socketIoManage; });
         factory.reg('RulesModel', () => { return new RulesModel(ipc, rulesDB); });
@@ -132,7 +132,7 @@ namespace ModelFactorySetting {
             servicesDB,
         ); });
         factory.reg('StorageModel', () => { return new StorageModel(); });
-        factory.reg('EncodeModel', () => { return encodeModel; });
+        factory.reg('EncodeFinModel', () => { return encodeFinModel; });
         factory.reg('StreamsModel', () => { return new StreamsModel(
             streamManage,
             (chanelId: apid.ServiceItemId, mode: number): MpegTsLiveStream => { return new MpegTsLiveStream(

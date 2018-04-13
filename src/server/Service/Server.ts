@@ -10,6 +10,7 @@ import * as path from 'path';
 import * as swaggerUi from 'swagger-ui-express';
 import Base from '../Base';
 import factory from '../Model/ModelFactory';
+import { EncodeFinModelInterface } from '../Model/Service/Encode/EncodeFinModel';
 import { SocketIoManageModelInterface } from '../Model/Service/SocketIoManageModel';
 import Util from '../Util/Util';
 import BasicAuth from './BasicAuth';
@@ -106,6 +107,9 @@ class Server extends Base {
 
         // socket.io
         (<SocketIoManageModelInterface> factory.get('SocketIoManageModel')).initialize(server);
+
+        // encode 終了後
+        (<EncodeFinModelInterface> factory.get('EncodeFinModel')).set();
     }
 }
 

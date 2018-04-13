@@ -2,17 +2,17 @@ import { EncodedDBInterface } from '../../DB/EncodedDB';
 import { IPCClientInterface } from '../../IPC/IPCClient';
 import Model from '../../Model';
 import { SocketIoManageModelInterface } from '../SocketIoManageModel';
-import { EncodeManageModelInterface, EncodeProgram } from './EncodeManageModel';
+import { EncodeManageModelInterface } from './EncodeManageModel';
 
-interface EncodeModelInterface extends Model {
-    push(program: EncodeProgram): void;
+interface EncodeFinModelInterface extends Model {
+    set(): void;
 }
 
 /**
- * EncodeModel
- * エンコードのセットを行う
+ * EncodeFinModel
+ * エンコード終了後の処理を行う
  */
-class EncodeModel extends Model implements EncodeModelInterface {
+class EncodeFinModel extends Model implements EncodeFinModelInterface {
     private encodeManage: EncodeManageModelInterface;
     private encodedDB: EncodedDBInterface;
     private socket: SocketIoManageModelInterface;
@@ -30,18 +30,16 @@ class EncodeModel extends Model implements EncodeModelInterface {
         this.socket = socket;
         this.ipc = ipc;
 
-        this.encodeManage.addEncodeDoneListener((recordedId, encodedId, name, output, delTs) => {
-            this.encodeFinCallback(recordedId, encodedId, name, output, delTs);
-        });
         this.encodeManage.addEncodeErrorListener(() => { this.encodeErrorCallback(); });
     }
 
     /**
-     * エンコードの依頼を受ける
-     * @param program: EncodeProgram
+     * callback のセット
      */
-    public push(program: EncodeProgram): void {
-        this.encodeManage.push(program);
+    public set(): void {
+        this.encodeManage.addEncodeDoneListener((recordedId, encodedId, name, output, delTs) => {
+            this.encodeFinCallback(recordedId, encodedId, name, output, delTs);
+        });
     }
 
     /**
@@ -96,5 +94,5 @@ class EncodeModel extends Model implements EncodeModelInterface {
     }
 }
 
-export { EncodeModelInterface, EncodeModel };
+export { EncodeFinModelInterface, EncodeFinModel };
 

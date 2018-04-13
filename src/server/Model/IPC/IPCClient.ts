@@ -3,7 +3,7 @@ import * as apid from '../../../../node_modules/mirakurun/api';
 import Model from '../Model';
 import { ReserveAllId, ReserveLimit } from '../Operator/Reservation/ReservationManageModel';
 import { EncodeInterface, RuleInterface } from '../Operator/RuleInterface';
-import { EncodeModelInterface } from '../Service/Encode/EncodeModel';
+import { EncodeManageModelInterface } from '../Service/Encode/EncodeManageModel';
 import { SocketIoManageModelInterface } from '../Service/SocketIoManageModel';
 import { IPCClientMessage, IPCMessageDefinition, IPCServerEncodeMessage, IPCServerMessage, IPCServerSocketIoMessage } from './IPCMessageInterface';
 
@@ -36,7 +36,7 @@ interface IPCClientInterface extends Model {
  * @throws IPCClientIsNotChildProcess fork で起動していないとき
  */
 class IPCClient extends Model implements IPCClientInterface {
-    private encodeModel: EncodeModelInterface;
+    private encodeManage: EncodeManageModelInterface;
     private socketIo: SocketIoManageModelInterface;
     private listener: events.EventEmitter = new events.EventEmitter();
 
@@ -52,7 +52,7 @@ class IPCClient extends Model implements IPCClientInterface {
             if (typeof (<IPCServerMessage> msg).id === 'undefined') {
                 if ((<IPCServerEncodeMessage> msg).msg === IPCMessageDefinition.setEncodeToClient) {
                     // server からのエンコード依頼
-                    this.encodeModel.push((<IPCServerEncodeMessage> msg).program);
+                    this.encodeManage.push((<IPCServerEncodeMessage> msg).program);
                 } else {
                     // server からの socket.io message 送信依頼
                     this.socketIo.notifyClient();
@@ -65,10 +65,10 @@ class IPCClient extends Model implements IPCClientInterface {
     }
 
     public setModels(
-        encodeModel: EncodeModelInterface,
+        encodeManage: EncodeManageModelInterface,
         socketIo: SocketIoManageModelInterface,
     ): void {
-        this.encodeModel = encodeModel;
+        this.encodeManage = encodeManage;
         this.socketIo = socketIo;
     }
 
