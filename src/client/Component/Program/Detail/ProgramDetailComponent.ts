@@ -51,6 +51,7 @@ class ProgramDetailComponent extends ParentComponent<void> {
 
         return m('div', {
             class: 'program-detail-content',
+            onupdate: () => { this.restoreMainLayoutPosition(); },
         }, [
             this.createProgramCard(schedule),
             this.createOptionCard(),
@@ -96,8 +97,7 @@ class ProgramDetailComponent extends ParentComponent<void> {
      */
     private createOptionCard(): m.Child {
         return m('div', {
-            class: 'option-card mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col',
-            onupdate: () => { this.restoreMainLayoutPosition(); },
+            class: 'option-card mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col'
         }, [
             m('div', { class: 'mdl-card__supporting-text' }, [
                 this.createSaveDirectory(),

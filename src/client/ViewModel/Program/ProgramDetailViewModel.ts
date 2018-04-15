@@ -61,7 +61,7 @@ class ProgramDetailViewModel extends ViewModel {
             return this.updateSchedule();
         })
         .then(() => {
-            this.setConfig();
+            return this.setConfig();
         });
     }
 
@@ -89,9 +89,13 @@ class ProgramDetailViewModel extends ViewModel {
     /**
      * config から設定を読み込む
      */
-    private setConfig(): void {
+    private async setConfig(): Promise<void> {
         const config = this.config.getConfig();
-        if (config === null) { return; }
+        if (config === null) {
+            await Util.sleep(300);
+
+            return this.setConfig();
+        }
 
         this.enableEncode = config.enableEncode;
         this.encodeOption = this.enableEncode && typeof config.encodeOption !== 'undefined' ? config.encodeOption : [];
@@ -109,7 +113,7 @@ class ProgramDetailViewModel extends ViewModel {
         this.programId = programId;
 
         // 番組情報の取得
-        this.scheduleApiModel.fetchScheduleDetail(this.programId);
+        await this.scheduleApiModel.fetchScheduleDetail(this.programId);
     }
 
     /**
