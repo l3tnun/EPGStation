@@ -41,6 +41,19 @@ class ProgramInfoActionComponent extends Component<void> {
                 }, '検索'),
                 m('button', {
                     type: 'button',
+                    class: 'mdl-button mdl-js-button mdl-button--primary',
+                    onclick: () => {
+                        this.viewModel.close();
+                        const program = this.viewModel.getProgram();
+                        if (program === null) { return; }
+
+                        setTimeout(() => {
+                            Util.move(`/program/detail/${ program.id }`);
+                        }, 200);
+                    },
+                }, '詳細'),
+                m('button', {
+                    type: 'button',
                     class: 'mdl-button mdl-js-button mdl-button--accent close',
                     onclick: () => { this.viewModel.close(); },
                 }, '閉じる'),

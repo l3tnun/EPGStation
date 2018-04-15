@@ -12,6 +12,7 @@ interface ScheduleApiModelInterface extends ApiModel {
     init(): void;
     fetchSchedule(type: apid.ChannelType, time: number, length?: number): Promise<void>;
     fetchScheduleId(channelId: apid.ServiceItemId, time: number, days: number): Promise<void>;
+    fetchScheduleDetail(programId: apid.ProgramId): Promise<void>;
     fetchScheduleBroadcasting(time: number): Promise<void>;
     startUpdateReserves(): Promise<void>;
     search(option: apid.RuleSearch): Promise<apid.ScheduleProgramItem[]>;
@@ -76,6 +77,24 @@ class ScheduleApiModel extends ApiModel implements ScheduleApiModelInterface {
             console.error(`/api/schedule/${ channelId }`);
             console.error(err);
             this.openSnackbar('単局番組情報取得に失敗しました');
+        }
+    }
+
+    /**
+     * programId を指定して番組情報を取得
+     * /api/schedule/detail/{id}
+     */
+    public async fetchScheduleDetail(programId: apid.ProgramId): Promise<void> {
+        try {
+            this.schedulePrograms = await <any> m.request({
+                method: 'GET',
+                url: `/api/schedule/detail/${ programId }`,
+            });
+        } catch (err) {
+            this.schedulePrograms = [];
+            console.error('/api/schedule/detail');
+            console.error(err);
+            this.openSnackbar('番組情報取得に失敗しました');
         }
     }
 
