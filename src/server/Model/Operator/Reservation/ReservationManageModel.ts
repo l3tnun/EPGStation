@@ -10,6 +10,7 @@ import { ProgramsDBInterface } from '../../DB/ProgramsDB';
 import { RulesDBInterface } from '../../DB/RulesDB';
 import { IPCServerInterface } from '../../IPC/IPCServer';
 import Model from '../../Model';
+import { AddReserveInterface } from '../ManualReserveInterface';
 import { ReserveProgram } from '../ReserveProgramInterface';
 import { EncodeInterface, OptionInterface, SearchInterface } from '../RuleInterface';
 import Tuner from './Tuner';
@@ -45,7 +46,7 @@ interface ReservationManageModelInterface extends Model {
     getSkips(limit?: number, offset?: number): ReserveLimit;
     cancel(id: apid.ProgramId): void;
     removeSkip(id: apid.ProgramId): Promise<void>;
-    addReserve(programId: apid.ProgramId, encode?: EncodeInterface): Promise<void>;
+    addReserve(option: AddReserveInterface): Promise<void>;
     updateAll(): Promise<void>;
     updateRule(ruleId: number): Promise<void>;
     clean(): void;
@@ -337,27 +338,27 @@ class ReservationManageModel extends Model {
 
     /**
      * 手動予約追加
-     * @param programId: number program id
+     * @param option: AddReserveInterface
      * @return Promise<void>
      * @throws ReservationManageModelAddFailed 予約に失敗
      */
-    public async addReserve(programId: apid.ProgramId, encode: EncodeInterface | null = null): Promise<void> {
+    public async addReserve(option: AddReserveInterface): Promise<void> {
         // encode option が正しいかチェック
-        if (encode !== null && !(new CheckRule().checkEncodeOption(encode))) {
+        if (typeof option.encode !== 'undefined' && !(new CheckRule().checkEncodeOption(option.encode))) {
             this.log.system.error('addReserve Failed');
             this.log.system.error('ReservationManageModel is Running');
             throw new Error('ReservationManageModelAddFailed');
         }
 
         const exeId = await this.getExecution(1);
-        this.log.system.info(`addReserve: ${ programId }`);
+        this.log.system.info(`addReserve: ${ option.programId }`);
 
         const finalize = () => { this.unLockExecution(exeId); };
 
         // 番組情報を取得
         let program: DBSchema.ProgramSchema | null;
         try {
-            program = await this.programDB.findId(programId, true);
+            program = await this.programDB.findId(option.programId, true);
         } catch (err) {
             finalize();
             throw err;
@@ -366,7 +367,7 @@ class ReservationManageModel extends Model {
         // programId に該当する録画データがなかった
         if (program === null) {
             finalize();
-            this.log.system.error(`program is not found: ${ programId }`);
+            this.log.system.error(`program is not found: ${ option.programId }`);
             throw new Error('ProgramIsNotFound');
         }
 
@@ -378,16 +379,16 @@ class ReservationManageModel extends Model {
             manualId: new Date().getTime(),
             isConflict: false,
         };
-        if (encode !== null) {
-            addReserve.encodeOption = encode;
+        if (typeof option.encode !== 'undefined') {
+            addReserve.encodeOption = option.encode;
         }
 
         // 追加する予約情報と重複する時間帯の予約済み番組情報を conflict, skip は除外して取得
         // すでに予約済みの場合はエラー
         const reserves: ReserveProgram[] = [];
         for (const reserve of this.reserves) {
-            if (reserve.program.id === programId) {
-                this.log.system.error(`program is reserves: ${ programId }`);
+            if (reserve.program.id === option.programId) {
+                this.log.system.error(`program is reserves: ${ option.programId }`);
                 finalize();
                 throw new Error('ReservationManageModelAddFailed');
             }
@@ -412,7 +413,7 @@ class ReservationManageModel extends Model {
         for (const reserve of newReserves) {
             if (reserve.isConflict) {
                 finalize();
-                this.log.system.error(`program id conflict: ${ programId }`);
+                this.log.system.error(`program id conflict: ${ option.programId }`);
                 throw new Error('ReservationManageModelAddReserveConflict');
             }
         }
@@ -427,7 +428,7 @@ class ReservationManageModel extends Model {
         // 通知
         this.ipc.notifIo();
 
-        this.log.system.info(`success addReserve: ${ programId }`);
+        this.log.system.info(`success addReserve: ${ option.programId }`);
     }
 
     /**

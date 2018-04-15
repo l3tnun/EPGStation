@@ -51,7 +51,7 @@ export const post: Operation = async(req, res) => {
     const reserves = <ReservesModelInterface> factory.get('ReservesModel');
 
     try {
-        await reserves.addReserve(req.body.programId, req.body.encode);
+        await reserves.addReserve(req.body);
         api.responseJSON(res, 201, { code: 201 });
         api.notifyClient();
     } catch (err) {

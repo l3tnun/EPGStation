@@ -1,8 +1,9 @@
 import * as events from 'events';
 import * as apid from '../../../../node_modules/mirakurun/api';
 import Model from '../Model';
+import { AddReserveInterface } from '../Operator/ManualReserveInterface';
 import { ReserveAllId, ReserveLimit } from '../Operator/Reservation/ReservationManageModel';
-import { EncodeInterface, RuleInterface } from '../Operator/RuleInterface';
+import { RuleInterface } from '../Operator/RuleInterface';
 import { EncodeManageModelInterface } from '../Service/Encode/EncodeManageModel';
 import { SocketIoManageModelInterface } from '../Service/SocketIoManageModel';
 import { IPCClientMessage, IPCMessageDefinition, IPCServerEncodeMessage, IPCServerMessage, IPCServerSocketIoMessage } from './IPCMessageInterface';
@@ -12,7 +13,7 @@ interface IPCClientInterface extends Model {
     getReserves(limit: number, offset: number): Promise<ReserveLimit>;
     getReserveConflicts(limit: number, offset: number): Promise<ReserveLimit>;
     getReserveSkips(limit: number, offset: number): Promise<ReserveLimit>;
-    addReserve(programId: apid.ProgramId, encode?: EncodeInterface): Promise<void>;
+    addReserve(option: AddReserveInterface): Promise<void>;
     cancelReserve(programId: apid.ProgramId): Promise<void>;
     removeReserveSkip(programId: apid.ProgramId): Promise<void>;
     recordedDelete(recordedId: number): Promise<void>;
@@ -118,14 +119,11 @@ class IPCClient extends Model implements IPCClientInterface {
 
     /**
      * 予約追加
-     * @param programId: program id
-     * @param encode: EncodeInterface
+     * @param option: AddReserveInterface
      * @return Promise<void>
      */
-    public async addReserve(programId: apid.ProgramId, encode?: EncodeInterface): Promise<void> {
-        const args = { programId: programId };
-        if (typeof encode !== 'undefined') { args['encode'] = encode; }
-        const id = this.send(IPCMessageDefinition.addReserve, args);
+    public async addReserve(option: AddReserveInterface): Promise<void> {
+        const id = this.send(IPCMessageDefinition.addReserve, { option: option });
         await this.receive(id);
     }
 

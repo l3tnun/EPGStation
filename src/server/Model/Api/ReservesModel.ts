@@ -1,7 +1,7 @@
 import * as apid from '../../../../node_modules/mirakurun/api';
 import { IPCClientInterface } from '../IPC/IPCClient';
+import { AddReserveInterface } from '../Operator/ManualReserveInterface';
 import { ReserveProgram } from '../Operator/ReserveProgramInterface';
-import { EncodeInterface } from '../Operator/RuleInterface';
 import ApiModel from './ApiModel';
 import ApiUtil from './ApiUtil';
 
@@ -10,7 +10,7 @@ interface ReservesModelInterface extends ApiModel {
     getReserves(limit: number, offset: number): Promise<{}[]>;
     getConflicts(limit: number, offset: number): Promise<{}[]>;
     getSkips(limit: number, offset: number): Promise<{}[]>;
-    addReserve(programId: apid.ProgramId, encode?: EncodeInterface): Promise<void>;
+    addReserve(option: AddReserveInterface): Promise<void>;
     cancelReserve(programId: apid.ProgramId): Promise<void>;
     removeReserveSkip(programId: apid.ProgramId): Promise<void>;
 }
@@ -100,12 +100,11 @@ class ReservesModel extends ApiModel implements ReservesModelInterface {
 
     /**
      * 予約追加
-     * @param programId: program id
-     * @param encode?: EncodeInterface
+     * @param option: AddReserveInterface
      * @return Promise<void>
      */
-    public async addReserve(programId: apid.ProgramId, encode?: EncodeInterface): Promise<void> {
-        await this.ipc.addReserve(programId, encode);
+    public async addReserve(option: AddReserveInterface): Promise<void> {
+        await this.ipc.addReserve(option);
     }
 
     /**
