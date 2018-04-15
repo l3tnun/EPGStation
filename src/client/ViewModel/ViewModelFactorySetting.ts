@@ -112,6 +112,7 @@ namespace ViewModelFactorySetting {
         ));
         factory.reg('ProgramDetailViewModel', new ProgramDetailViewModel(
             scheduleApiModel,
+            configModel,
             snackbarModel,
         ));
         factory.reg('RecordedViewModel', new RecordedViewModel(
