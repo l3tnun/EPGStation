@@ -20,7 +20,6 @@ class ProgramDetailViewModel extends ViewModel {
     private config: ConfigApiModelInterface;
     private snackbar: SnackbarModelInterface;
 
-    private programId: apid.ProgramId | null = null;
     private enableEncode: boolean = false;
     private encodeOption: string[] = [];
 
@@ -114,10 +113,9 @@ class ProgramDetailViewModel extends ViewModel {
             this.openSnackbar('Program Id が不正です。');
             throw new Error('program id is NaN');
         }
-        this.programId = programId;
 
         // 番組情報の取得
-        await this.scheduleApiModel.fetchScheduleDetail(this.programId);
+        await this.scheduleApiModel.fetchScheduleDetail(programId);
     }
 
     /**
