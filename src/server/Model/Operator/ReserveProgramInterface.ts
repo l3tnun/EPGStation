@@ -1,4 +1,5 @@
 import * as DBSchema from '../DB/DBSchema';
+import { AddReserveOptionInterface } from './ManualReserveInterface';
 import { EncodeInterface, OptionInterface } from './RuleInterface';
 
 export interface ReserveProgram {
@@ -20,6 +21,7 @@ export interface RuleReserveProgram extends ReserveProgram {
  * 手動予約
  */
 export interface ManualReserveProgram extends ReserveProgram {
+    manualOption?: AddReserveOptionInterface;
     manualId?: number;
 }
 

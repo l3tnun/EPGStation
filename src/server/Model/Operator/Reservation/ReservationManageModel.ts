@@ -378,6 +378,9 @@ class ReservationManageModel extends Model {
             manualId: new Date().getTime(),
             isConflict: false,
         };
+        if (typeof option.option !== 'undefined') {
+            addReserve.manualOption = option.option;
+        }
         if (typeof option.encode !== 'undefined') {
             addReserve.encodeOption = option.encode;
         }
