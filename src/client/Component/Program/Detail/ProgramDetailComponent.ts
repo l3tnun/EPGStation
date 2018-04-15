@@ -97,7 +97,7 @@ class ProgramDetailComponent extends ParentComponent<void> {
      */
     private createOptionCard(): m.Child {
         return m('div', {
-            class: 'option-card mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col'
+            class: 'option-card mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col',
         }, [
             m('div', { class: 'mdl-card__supporting-text' }, [
                 this.createSaveDirectory(),
