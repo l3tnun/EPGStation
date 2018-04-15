@@ -145,7 +145,7 @@ class ProgramDetailComponent extends ParentComponent<void> {
      * エンコード
      */
     private createEncode(): m.Child | null {
-        // if (!this.viewModel.isEnableEncode()) { return null; }
+        if (!this.viewModel.isEnableEncode()) { return null; }
 
         return this.createContentFrame('エンコード', [
             this.createTranscodeContent(0),

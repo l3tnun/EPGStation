@@ -186,6 +186,14 @@ class ProgramDetailViewModel extends ViewModel {
     }
 
     /**
+     * encode が有効か
+     * @return true: 有効, false: 無効
+     */
+    public isEnableEncode(): boolean {
+        return this.enableEncode;
+    }
+
+    /**
      * 時刻を生成
      * @param startAt: UnixtimeMS
      * @param endAt: UnixtimeMS
