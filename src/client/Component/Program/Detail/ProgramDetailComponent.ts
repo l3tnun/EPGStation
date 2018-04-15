@@ -1,6 +1,7 @@
 import * as m from 'mithril';
 import * as apid from '../../../../../api';
 import { ViewModelStatus } from '../../../Enums';
+import Util from '../../../Util/Util';
 import ProgramDetailViewModel from '../../../ViewModel/Program/ProgramDetailViewModel';
 import factory from '../../../ViewModel/ViewModelFactory';
 import MainLayoutComponent from '../../MainLayoutComponent';
@@ -203,6 +204,17 @@ class ProgramDetailComponent extends ParentComponent<void> {
             m('button', {
                 class: 'mdl-button mdl-js-button mdl-button--primary',
                 onclick: async() => {
+                    // 予約追加
+                    try {
+                        await this.viewModel.add();
+                        this.viewModel.openSnackbar('予約追加');
+                        await Util.sleep(1000);
+                    } catch (err) {
+                        this.viewModel.openSnackbar('予約追加に失敗しました');
+
+                        return;
+                    }
+
                     window.history.back();
                 },
             }, '予約'),

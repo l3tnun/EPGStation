@@ -23,7 +23,7 @@ interface ReservesApiModelInterface extends ApiModel {
     getPage(): number;
     getConflicts(): apid.Reserves;
     getAllId(): AllReserves | null;
-    addReserve(programId: apid.ProgramId, option?: apid.RuleEncode): Promise<void>;
+    addReserve(option: apid.AddReserve): Promise<void>;
     deleteReserve(programId: apid.ProgramId): Promise<void>;
     deleteSkip(programId: apid.ProgramId): Promise<void>;
 }
@@ -214,24 +214,15 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
 
     /**
      * 予約追加
-     * @param programId: program id
-     * @param option: encode option
+     * @param option: AddReserve
      * @return Promise<void>
      */
-    public async addReserve(programId: apid.ProgramId, option: apid.RuleEncode | null = null): Promise<void> {
+    public async addReserve(option: apid.AddReserve): Promise<void> {
         try {
-            const query: { programId: number; encode?: apid.RuleEncode } = {
-                programId: programId,
-            };
-
-            if (option !== null) {
-                query.encode = option;
-            }
-
             await <any> m.request({
                 method: 'POST',
                 url: '/api/reserves',
-                data: query,
+                data: option,
             });
 
         } catch (err) {

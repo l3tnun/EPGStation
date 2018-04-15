@@ -3,6 +3,7 @@ import * as apid from '../../../../api';
 import { ViewModelStatus } from '../../Enums';
 import { audioComponentType, audioSamplingRate, videoComponentType } from '../../lib/event';
 import { ConfigApiModelInterface } from '../../Model/Api/ConfigApiModel';
+import { ReservesApiModelInterface } from '../../Model/Api/ReservesApiModel';
 import { ScheduleApiModelInterface } from '../../Model/Api/ScheduleApiModel';
 import { SnackbarModelInterface } from '../../Model/Snackbar/SnackbarModel';
 import DateUtil from '../../Util/DateUtil';
@@ -15,6 +16,7 @@ import ViewModel from '../ViewModel';
  */
 class ProgramDetailViewModel extends ViewModel {
     private scheduleApiModel: ScheduleApiModelInterface;
+    private reserves: ReservesApiModelInterface;
     private config: ConfigApiModelInterface;
     private snackbar: SnackbarModelInterface;
 
@@ -33,11 +35,13 @@ class ProgramDetailViewModel extends ViewModel {
 
     constructor(
         scheduleApiModel: ScheduleApiModelInterface,
+        reserves: ReservesApiModelInterface,
         config: ConfigApiModelInterface,
         snackbar: SnackbarModelInterface,
     ) {
         super();
         this.scheduleApiModel = scheduleApiModel;
+        this.reserves = reserves;
         this.config = config;
         this.snackbar = snackbar;
     }
@@ -114,6 +118,55 @@ class ProgramDetailViewModel extends ViewModel {
 
         // 番組情報の取得
         await this.scheduleApiModel.fetchScheduleDetail(this.programId);
+    }
+
+    /**
+     * 予約
+     */
+    public async add(): Promise<void> {
+        const schedule = this.getSchedule();
+        if (schedule === null) { return; }
+
+        const option: apid.AddReserve = {
+            programId: schedule.programs[0].id,
+        };
+
+        // option
+        if (this.directory.length !== 0 || this.recordedFormat.length !== 0) {
+            option.option = {};
+            if (this.directory.length !== 0) { option.option.directory = this.directory; }
+            if (this.recordedFormat.length !== 0) { option.option.recordedFormat = this.recordedFormat; }
+        }
+
+        // encode
+        if (this.encodeModes[0].mode !== -1) {
+            option.encode = {
+                mode1: this.encodeModes[0].mode,
+                delTs: this.delTs,
+            };
+            // mode1 directory
+            if (this.encodeModes[0].directory.length !== 0) {
+                option.encode.directory1 = this.encodeModes[0].directory;
+            }
+
+            // mode2
+            if (this.encodeModes[1].mode !== -1) {
+                option.encode.mode2 = this.encodeModes[1].mode;
+            }
+            if (this.encodeModes[1].directory.length !== 0) {
+                option.encode.directory2 = this.encodeModes[1].directory;
+            }
+
+            // mode3
+            if (this.encodeModes[2].mode !== -1) {
+                option.encode.mode3 = this.encodeModes[2].mode;
+            }
+            if (this.encodeModes[2].directory.length !== 0) {
+                option.encode.directory3 = this.encodeModes[2].directory;
+            }
+        }
+
+        await this.reserves.addReserve(option);
     }
 
     /**

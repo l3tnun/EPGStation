@@ -219,6 +219,17 @@ export interface ReserveProgram {
     audioComponentType?: number;
 }
 
+export interface AddReserve {
+    programId: ProgramId;
+    option?: AddReserveOption;
+    encode?: RuleEncode;
+}
+
+export interface AddReserveOption {
+    directory?: string;
+    recordedFormat?: string;
+}
+
 export interface Rules {
     rules: Rule[];
     total: number;
