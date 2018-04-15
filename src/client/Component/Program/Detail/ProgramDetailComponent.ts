@@ -49,7 +49,7 @@ class ProgramDetailComponent extends ParentComponent<void> {
         if (schedule === null) { return null; }
 
         return m('div', {
-            class: 'search-content',
+            class: 'program-detail-content',
         }, [
             this.createOptionCard(),
         ]);
@@ -90,7 +90,7 @@ class ProgramDetailComponent extends ParentComponent<void> {
      */
     private createFileNameFormat(): m.Child {
         return this.createContentFrame('ファイル名形式', [
-            m('div', { class: '.option-text-box mdl-cell--12-col mdl-textfield mdl-js-textfield' }, [
+            m('div', { class: 'option-text-box mdl-cell--12-col mdl-textfield mdl-js-textfield' }, [
                 m('input', {
                     class: 'mdl-textfield__input',
                     type: 'text',
