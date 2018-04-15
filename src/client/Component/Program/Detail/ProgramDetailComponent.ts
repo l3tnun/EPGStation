@@ -1,4 +1,5 @@
 import * as m from 'mithril';
+import * as apid from '../../../../../api';
 import { ViewModelStatus } from '../../../Enums';
 import ProgramDetailViewModel from '../../../ViewModel/Program/ProgramDetailViewModel';
 import factory from '../../../ViewModel/ViewModelFactory';
@@ -51,10 +52,48 @@ class ProgramDetailComponent extends ParentComponent<void> {
         return m('div', {
             class: 'program-detail-content',
         }, [
+            this.createProgramCard(schedule),
             this.createOptionCard(),
         ]);
     }
 
+    /**
+     * program card
+     * @param schedule: apid.ScheduleProgram
+     * @return m.Child
+     */
+    private createProgramCard(schedule: apid.ScheduleProgram): m.Child {
+        return m('div', {
+            class: 'program-card mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col',
+        }, [
+            m('div', { class: 'mdl-card__supporting-text' }, [
+                m('div', { class: 'title' }, schedule.programs[0].name),
+                m('div', { class: 'channel' }, schedule.channel.name),
+                m('div', { class: 'time' },
+                    this.viewModel.createTimeStr(schedule.programs[0].startAt, schedule.programs[0].endAt),
+                ),
+                m('div', { class: 'genre' },
+                    this.viewModel.createGenresStr(schedule.programs[0].genre1, schedule.programs[0].genre2),
+                ),
+                m('div', { class: 'description' }, schedule.programs[0].description),
+                m('div', { class: 'video' },
+                    '映像: ' + this.viewModel.createVideoInfoStr(schedule.programs[0].videoComponentType),
+                ),
+                m('div', { class: 'audio-mode' },
+                    '音声: ' + this.viewModel.createAudioModeStr(schedule.programs[0].audioComponentType),
+                ),
+                m('div', { class: 'audio-sampling-rate' },
+                    'サンプリングレート: ' + this.viewModel.createAudioSamplingRateStr(schedule.programs[0].audioSamplingRate),
+                ),
+                m('div', { class: 'is-free' }, schedule.programs[0].isFree ? '無料放送' : '有料放送'),
+            ]),
+        ]);
+    }
+
+    /**
+     * option card
+     * @return m.Child
+     */
     private createOptionCard(): m.Child {
         return m('div', {
             class: 'option-card mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col',

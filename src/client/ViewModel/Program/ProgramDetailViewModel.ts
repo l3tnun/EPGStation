@@ -1,9 +1,12 @@
 import * as m from 'mithril';
 import * as apid from '../../../../api';
 import { ViewModelStatus } from '../../Enums';
+import { audioComponentType, audioSamplingRate, videoComponentType } from '../../lib/event';
 import { ConfigApiModelInterface } from '../../Model/Api/ConfigApiModel';
 import { ScheduleApiModelInterface } from '../../Model/Api/ScheduleApiModel';
 import { SnackbarModelInterface } from '../../Model/Snackbar/SnackbarModel';
+import DateUtil from '../../Util/DateUtil';
+import GenreUtil from '../../Util/GenreUtil';
 import Util from '../../Util/Util';
 import ViewModel from '../ViewModel';
 
@@ -125,6 +128,61 @@ class ProgramDetailViewModel extends ViewModel {
      */
     public getEncodeOption(): string[] {
         return this.encodeOption;
+    }
+
+    /**
+     * 時刻を生成
+     * @param startAt: UnixtimeMS
+     * @param endAt: UnixtimeMS
+     * @return str
+     */
+    public createTimeStr(startAt: apid.UnixtimeMS, endAt: apid.UnixtimeMS): string {
+        const start = DateUtil.getJaDate(new Date(startAt));
+        const end = DateUtil.getJaDate(new Date(endAt));
+        const duration = Math.floor((endAt - startAt) / 1000 / 60);
+
+        return DateUtil.format(start, 'MM/dd(w) hh:mm:ss') + ' ~ ' + DateUtil.format(end, 'hh:mm:ss') + ` (${ duration }分)`;
+    }
+
+    /**
+     * genre1, genre2 をまとめて生成
+     * @return genre1 / genre2
+     */
+    public createGenresStr(genre1?: apid.ProgramGenreLv1 , genre2?: apid.ProgramGenreLv2): string {
+        return GenreUtil.getGenres(genre1, genre2);
+    }
+
+    /**
+     * video 情報を生成
+     * @return video info
+     */
+    public createVideoInfoStr(type?: number): string {
+        if (typeof type === 'undefined') { return ''; }
+        const str = videoComponentType[type];
+
+        return typeof str === 'undefined' ? '' : str;
+    }
+
+    /**
+     * 音声情報を生成
+     * @return audio info
+     */
+    public createAudioModeStr(type?: number): string {
+        if (typeof type === 'undefined') { return ''; }
+        const str = audioComponentType[type];
+
+        return typeof str === 'undefined' ? '' : str;
+    }
+
+    /**
+     * 音声サンプリングレートを生成
+     * @return audio sampling rate
+     */
+    public createAudioSamplingRateStr(rate?: apid.ProgramAudioSamplingRate): string {
+        if (typeof rate === 'undefined') { return ''; }
+        const str = audioSamplingRate[rate];
+
+        return typeof str === 'undefined' ? '' : str;
     }
 
     /**
