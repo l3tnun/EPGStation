@@ -14,7 +14,7 @@ import { RecordedDBInterface } from '../../DB/RecordedDB';
 import { ServicesDBInterface } from '../../DB/ServicesDB';
 import Model from '../../Model';
 import { ReservationManageModelInterface } from '../Reservation/ReservationManageModel';
-import { ReserveProgram } from '../ReserveProgramInterface';
+import { ReserveProgram, RuleReserveProgram } from '../ReserveProgramInterface';
 import { EncodeInterface } from '../RuleInterface';
 
 interface RecordingProgram {
@@ -120,7 +120,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
         this.log.system.info(`stop ruleId recording: ${ ruleId }`);
         const records = this.recording.filter((record) => {
 
-            return record.reserve.ruleId === ruleId;
+            return (<RuleReserveProgram> record.reserve).ruleId === ruleId;
         });
 
         for (const record of records) {
@@ -272,6 +272,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
                 this.log.system.info(`add recorded: ${ recData.reserve.program.id } ${ recData.reserve.program.name }`);
 
                 // add DB
+                const ruleId = (<RuleReserveProgram> recData.reserve).ruleId;
                 const recorded = {
                     id: 0,
                     programId: recData.reserve.program.id,
@@ -292,7 +293,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
                     audioSamplingRate: recData.reserve.program.audioSamplingRate,
                     audioComponentType: recData.reserve.program.audioComponentType,
                     recPath: recData.recPath!,
-                    ruleId: typeof recData.reserve.ruleId === 'undefined' ? null : recData.reserve.ruleId,
+                    ruleId: typeof ruleId === 'undefined' ? null : ruleId,
                     thumbnailPath: null,
                     recording: true,
                     protection: false,
@@ -349,6 +350,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
                 // 番組情報を最新に更新する
                 const program = await this.programsDB.findId(recorded.programId);
                 if (program !== null) {
+                    const ruleId = (<RuleReserveProgram> recData.reserve).ruleId;
                     await this.recordedDB.replace({
                         id: recorded.id,
                         programId: recorded.programId,
@@ -369,7 +371,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
                         audioSamplingRate: program.audioSamplingRate,
                         audioComponentType: program.audioComponentType,
                         recPath: recData.recPath!,
-                        ruleId: typeof recData.reserve.ruleId === 'undefined' ? null : recData.reserve.ruleId,
+                        ruleId: typeof ruleId === 'undefined' ? null : ruleId,
                         thumbnailPath: null,
                         recording: false,
                         protection: false,
@@ -411,10 +413,11 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
     private async getRecPath(reserve: ReserveProgram, conflict: number = 0): Promise<string> {
         const config = this.config.getConfig();
 
+        const ruleOption = (<RuleReserveProgram> reserve).ruleOption;
         // ファイル名
         // base file name
-        let fileName = typeof reserve.ruleOption !== 'undefined' && typeof reserve.ruleOption.recordedFormat !== 'undefined' ?
-            reserve.ruleOption.recordedFormat : config.recordedFormat || '%YEAR%年%MONTH%月%DAY%日%HOUR%時%MIN%分%SEC%秒-%TITLE%';
+        let fileName = typeof ruleOption !== 'undefined' && typeof ruleOption.recordedFormat !== 'undefined' ?
+            ruleOption.recordedFormat : config.recordedFormat || '%YEAR%年%MONTH%月%DAY%日%HOUR%時%MIN%分%SEC%秒-%TITLE%';
 
         const jaDate = DateUtil.getJaDate(new Date(reserve.program.startAt));
 
@@ -457,8 +460,8 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
 
         // ディレクトリ
         let recDir = Util.getRecordedPath();
-        if (typeof reserve.ruleOption !== 'undefined' && typeof reserve.ruleOption.directory !== 'undefined') {
-            recDir = path.join(recDir, Util.replacePathName(reserve.ruleOption.directory));
+        if (typeof ruleOption !== 'undefined' && typeof ruleOption.directory !== 'undefined') {
+            recDir = path.join(recDir, Util.replacePathName(ruleOption.directory));
         }
 
         // ファイルパス

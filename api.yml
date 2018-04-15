@@ -629,16 +629,12 @@ definitions:
     type: object
     required:
       - program
-      - isManual
     description: 'program は必須項目'
     properties:
       program:
         $ref: '#/definitions/ReserveProgram'
       ruleId:
         $ref: '#/definitions/RuleId'
-      isManual:
-        type: boolean
-        description: '手動予約か'
 
   ReserveAllId:
     type: object

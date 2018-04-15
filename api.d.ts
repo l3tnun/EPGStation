@@ -182,7 +182,6 @@ export interface Reserves {
 export interface Reserve {
     program: ReserveProgram;
     ruleId?: RuleId;
-    isManual: boolean;
 }
 
 export interface ReserveAllId {
