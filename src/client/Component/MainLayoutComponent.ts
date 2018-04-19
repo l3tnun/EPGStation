@@ -1,5 +1,6 @@
 import { throttle } from 'lodash';
 import * as m from 'mithril';
+import Util from '../Util/Util';
 import HeaderViewModel from '../ViewModel/HeaderViewModel';
 import MainLayoutViewModel from '../ViewModel/MainLayoutViewModel';
 import StorageViewModel from '../ViewModel/Storage/StorageViewModel';
@@ -19,6 +20,7 @@ interface MainLayoutArgs {
     menuWidth?: number;
     menuContent?: { attrs: { [key: string]: any }; text: string }[];
     mainLayoutStyle?: string;
+    mainOnUpdate?(mainVnode: m.VnodeDOM<void, any>): any;
     scrollStoped?(position: number): void;
 }
 
@@ -58,7 +60,15 @@ class MainLayoutComponent extends Component<MainLayoutArgs> {
                     }, 50), false);
                 },
                 onupdate: (mainVnode: m.VnodeDOM<void, any>) => {
-                    (<HTMLElement> mainVnode.dom).style.opacity = this.viewModel.isShow() ? '1' : '0';
+                    if (typeof vnode.attrs.mainOnUpdate === 'undefined') {
+                        (<HTMLElement> mainVnode.dom).style.opacity = this.viewModel.isShow() ? '1' : '0';
+                    } else {
+                        return vnode.attrs.mainOnUpdate(mainVnode);
+                    }
+                },
+                onbeforeremove: async(mainVnode: m.VnodeDOM<void, any>) => {
+                    (<HTMLElement> mainVnode.dom).style.opacity = '0';
+                    await Util.sleep(200);
                 },
             }, [
                 m('div', { class: 'page-content' }, vnode.attrs.content),

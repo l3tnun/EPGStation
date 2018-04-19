@@ -2,7 +2,6 @@ import * as m from 'mithril';
 import * as apid from '../../../../api';
 import DateUtil from '../../Util/DateUtil';
 import GenreUtil from '../../Util/GenreUtil';
-import Scroll from '../../Util/Scroll';
 import BalloonViewModel from '../../ViewModel/Balloon/BalloonViewModel';
 import ProgramInfoViewModel from '../../ViewModel/Program/ProgramInfoViewModel';
 import SearchViewModel from '../../ViewModel/Search/SearchViewModel';
@@ -31,9 +30,8 @@ class SearchResultsComponent extends Component<void> {
         return m('div', { style: 'margin-top: 32px;' }, [
             // ヒット件数
             m('div', {
+                id: SearchViewModel.hitId,
                 class: 'hit-num',
-                oncreate: (vnode: m.VnodeDOM<void, this>) => { this.scroll(vnode.dom); },
-                onupdate: (vnode: m.VnodeDOM<void, this>) => { this.scroll(vnode.dom); },
             }, results.length + '件ヒットしました。'),
 
             // 検索結果
@@ -41,19 +39,6 @@ class SearchResultsComponent extends Component<void> {
                 return this.createContent(program);
             }),
         ]);
-    }
-
-    /**
-     * スクロール処理
-     */
-    private scroll(element: Element): void {
-        if (!this.viewModel.isNeedScroll) { return; }
-        this.viewModel.isNeedScroll = false;
-        const mainLayout = document.getElementsByClassName('mdl-layout__content')[0];
-        const start = mainLayout.scrollTop;
-        const end = element.getBoundingClientRect().top - 70 + mainLayout.scrollTop;
-
-        setTimeout(() => { Scroll.scrollTo(mainLayout, start, end, 200); }, 100);
     }
 
     /**

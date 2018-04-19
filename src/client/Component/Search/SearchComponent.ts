@@ -1,6 +1,8 @@
 import * as m from 'mithril';
 import { ViewModelStatus } from '../../Enums';
 import Scroll from '../../Util/Scroll';
+import Util from '../../Util/Util';
+import MainLayoutViewModel from '../../ViewModel/MainLayoutViewModel';
 import ProgramInfoViewModel from '../../ViewModel/Program/ProgramInfoViewModel';
 import SearchViewModel from '../../ViewModel/Search/SearchViewModel';
 import factory from '../../ViewModel/ViewModelFactory';
@@ -18,13 +20,24 @@ import SearchResultsComponent from './SearchResultsComponent';
  */
 class SearchComponent extends ParentComponent<void> {
     private viewModel: SearchViewModel;
+    private mainLayoutViewModel: MainLayoutViewModel;
 
     constructor() {
         super();
         this.viewModel = <SearchViewModel> factory.get('SearchViewModel');
+        this.mainLayoutViewModel = <MainLayoutViewModel> factory.get('MainLayoutViewModel');
     }
 
     protected async parentInitViewModel(status: ViewModelStatus): Promise<void> {
+        if (status === 'update') {
+            // ページ移動
+            const mainLayout = document.getElementById(MainLayoutComponent.id);
+            if (mainLayout !== null) {
+                mainLayout.scrollTop = 0;
+                await Util.sleep(100);
+            }
+        }
+
         await this.viewModel.init(status);
     }
 
@@ -65,6 +78,24 @@ class SearchComponent extends ParentComponent<void> {
                     forceDialog: window.innerHeight < 900,
                 }),
             ],
+            mainOnUpdate: (mainVnode: m.VnodeDOM<void, any>) => {
+                const mainLayout = <HTMLElement> mainVnode.dom;
+                // 表示アニメーション設定 一度表示したら非表示にしない
+                if (this.mainLayoutViewModel.isShow()) {
+                    mainLayout.style.opacity = '1';
+                }
+
+                // 検索後の scroll 処理
+                if (this.viewModel.isNeedScroll) {
+                    const hit = document.getElementById(SearchViewModel.hitId);
+                    if (hit === null) { return; }
+                    this.viewModel.isNeedScroll = false;
+                    const start = mainLayout.scrollTop;
+                    const end = hit.getBoundingClientRect().top - 70 + mainLayout.scrollTop;
+
+                    setTimeout(() => { Scroll.scrollTo(mainLayout, start, end, 200); }, 100);
+                }
+            },
         });
     }
 }
