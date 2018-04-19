@@ -11,6 +11,7 @@ import { EncodeProcessManageModelInterface } from './EncodeProcessManageModel';
 
 interface EncodeProgram {
     recordedId: number;
+    encodedId?: number;
     source: string;
     mode?: number; // tsModify の場合存在しない
     directory?: string;
@@ -28,6 +29,7 @@ interface EncodeQueue extends EncodeProgram {
 interface EncodingProgram {
     name: string;
     recordedId: number;
+    encodedId?: number;
     mode?: number;
     source: string;
 }
@@ -45,7 +47,7 @@ interface EncodeConfigInfo {
 }
 
 interface EncodeManageModelInterface extends Model {
-    addEncodeDoneListener(callback: (recordedId: number, name: string, output: string, delTs: boolean, isTsModify: boolean) => void): void;
+    addEncodeDoneListener(callback: (recordedId: number, encodedId: number | null, name: string, output: string | null, delTs: boolean) => void): void;
     addEncodeErrorListener(callback: () => void): void;
     getEncodingId(): number | null;
     getEncodingInfo(): EncodingInfo;
@@ -67,7 +69,7 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
         program: EncodeProgram;
         name: string;
         source: string;
-        output: string;
+        output: string | null;
         timerId: NodeJS.Timer;
         isStoped: boolean; // encode 停止時に ture にする
     } | null = null;
@@ -84,9 +86,9 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
      * エンコード完了時に実行されるイベントに追加
      * @param callback ルール更新時に実行される
      */
-    public addEncodeDoneListener(callback: (recordedId: number, name: string, output: string, delTs: boolean, isTsModify: boolean) => void): void {
-        this.doneListener.on(EncodeManageModel.ENCODE_FIN_EVENT, (recordedId: number, name: string, output: string, delTs: boolean, isTsModify: boolean) => {
-            callback(recordedId, name, output, delTs, isTsModify);
+    public addEncodeDoneListener(callback: (recordedId: number, encodedId: number | null, name: string, output: string | null, delTs: boolean) => void): void {
+        this.doneListener.on(EncodeManageModel.ENCODE_FIN_EVENT, (recordedId: number, encodedId: number | null, name: string, output: string | null, delTs: boolean) => {
+            callback(recordedId, encodedId, name, output, delTs);
         });
     }
 
@@ -116,6 +118,9 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
                 recordedId: this.encodingData.program.recordedId,
                 source: this.encodingData.source,
             };
+            if (typeof this.encodingData.program.encodedId !== 'undefined') {
+                result.encoding.encodedId = this.encodingData.program.encodedId;
+            }
             if (typeof this.encodingData.program.mode !== 'undefined') {
                 result.encoding.mode = this.encodingData.program.mode;
             }
@@ -127,6 +132,9 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
                 recordedId: program.recordedId,
                 source: program.source,
             };
+            if (typeof program.encodedId !== 'undefined') {
+                info.encodedId = program.encodedId;
+            }
             if (typeof program.mode !== 'undefined') {
                 info.mode = program.mode;
             }
@@ -177,7 +185,7 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
      * @param isCopy: true: delTs を受け継ぐ, false: 受け継がない
      */
     public push(program: EncodeProgram, isCopy: boolean = false): void {
-        this.log.system.info(`push encode: ${ program.source } ${ typeof program.mode === 'undefined' ? 'tsModify' : program.mode }`);
+        this.log.system.info(`push encode: ${ program.source } ${ typeof program.mode === 'undefined' ? EncodeManageModel.TSModifyName : program.mode }`);
 
         // ts 削除設定を同じ recordedId の program から受け継ぐ
         if (isCopy) {
@@ -228,7 +236,7 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
             }
 
             return {
-                name: 'tsModify',
+                name: EncodeManageModel.TSModifyName,
                 cmd: tsModify.cmd,
                 suffix: null,
                 rate: tsModify.rate || 4.0,
@@ -240,10 +248,13 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
             throw new Error('encodeConfigIsNotFound');
         }
 
+        // 非エンコードの場合 null
+        const suffix = encodeConfig[mode].suffix;
+
         return {
             name: encodeConfig[mode].name,
             cmd: encodeConfig[mode].cmd,
-            suffix: encodeConfig[mode].suffix,
+            suffix: typeof suffix === 'undefined' ? null : suffix,
             rate: encodeConfig[mode].rate || 4.0,
         };
     }
@@ -278,21 +289,29 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
 
         // dir の存在確認
         const dir = path.join(Util.getRecordedPath(), Util.replacePathName(program.directory || ''));
-        try {
-            fs.statSync(dir);
-        } catch (e) {
-            // ディレクトリが存在しなければ作成
-            this.log.system.info(`mkdirp: ${ dir }`);
-            mkdirp.sync(dir);
+        if (program.suffix !== null) {
+            // program.suffix が null でない = output がある場合はディレクトリをチェック
+            try {
+                fs.statSync(dir);
+            } catch (e) {
+                // ディレクトリが存在しなければ作成
+                this.log.system.info(`mkdirp: ${ dir }`);
+                mkdirp.sync(dir);
+            }
         }
 
         this.log.system.info(`encode start: ${ program.source } ${ program.name }`);
-        const output = program.suffix === null ? program.source : this.getFilePath(dir, program.source, program.suffix);
+        const output = program.suffix === null ? null : this.getFilePath(dir, program.source, program.suffix);
         const child = await this.encodeProcessManage.create(program.source, output, program.cmd, EncodeManageModel.priority, {
             env: {
+                RECORDEDID: program.recordedId,
                 INPUT: program.source,
-                OUTPUT: output,
+                OUTPUT: output === null ? '' : output,
+                DIR: program.directory || '',
                 FFMPEG: Util.getFFmpegPath(),
+                NAME: program.recordedProgram.name,
+                DESCRIPTION: program.recordedProgram.description || '',
+                EXTENDED: program.recordedProgram.extended || '',
                 VIDEOTYPE: program.recordedProgram.videoType || '',
                 VIDEORESOLUTION: program.recordedProgram.videoResolution || '',
                 VIDEOSTREAMCONTENT: program.recordedProgram.videoStreamContent || '',
@@ -329,13 +348,12 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
             // exit code
             this.log.system.info(`code { code : ${ code }, signal: ${ signal } }`);
 
-            const isTsModify = output === program.source;
             let isError = true;
             if (this.encodingData === null) {
                 this.log.system.fatal('encoding data is null');
             } else if (this.encodingData.isStoped) {
-                // encode 停止時 かつ tsModify ではない
-                if (!isTsModify) {
+                // encode 停止時 かつ出力ファイルあり
+                if (output !== null) {
                     // output を削除
                     this.log.system.info(`delete encoding file: ${ output }`);
                     await Util.sleep(1000);
@@ -351,8 +369,8 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
                 // エンコードが正常に終了しなかった
                 this.log.system.error(`encode failed: ${ output }`);
 
-                // tsModify ではない
-                if (!isTsModify) {
+                // 出力ファイルあり
+                if (output !== null) {
                     // output を削除
                     this.log.system.info(`delete encoding file: ${ output }`);
                     await Util.sleep(1000);
@@ -365,10 +383,11 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
                     }
                 }
             } else {
-                this.log.system.info(`fin encode: ${ output }`);
+                this.log.system.info(`fin encode: ${ output === null ? program.source : output }`);
 
                 isError = false;
-                this.doneNotify(program.recordedId, program.name, output, this.encodingData.program.delTs, program.suffix === null);
+                const encodedId = typeof program.encodedId === 'undefined' ? null : program.encodedId;
+                this.doneNotify(program.recordedId, encodedId, program.name, output, this.encodingData.program.delTs);
             }
 
             if (isError) { this.errorNotify(); }
@@ -441,10 +460,13 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
     /**
      * エンコード完了を通知
      * @param recordedId: recorded id
+     * @param encodedId: encoded id | null
+     * @param name: program name
      * @param output: output
+     * @param delTs: ts を削除するか
      */
-    private doneNotify(recordedId: number, name: string, output: string, delTs: boolean, isTsModify: boolean): void {
-        this.doneListener.emit(EncodeManageModel.ENCODE_FIN_EVENT, recordedId, name, output, delTs, isTsModify);
+    private doneNotify(recordedId: number, encodedId: number | null, name: string, output: string | null, delTs: boolean): void {
+        this.doneListener.emit(EncodeManageModel.ENCODE_FIN_EVENT, recordedId, encodedId, name, output, delTs);
     }
 
     /**
@@ -456,6 +478,7 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
 }
 
 namespace EncodeManageModel {
+    export const TSModifyName = 'tsModify';
     export const priority = 10;
     export const ENCODE_FIN_EVENT = 'encodeFin';
     export const ENCODE_ERROR_EVENT = 'encodeError';

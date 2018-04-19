@@ -1,4 +1,5 @@
 import * as m from 'mithril';
+import ProgramDetailComponent from './Component/Program/Detail/ProgramDetailComponent';
 import ProgramComponent from './Component/Program/ProgramComponent';
 import ProgramSettingComponent from './Component/Program/Setting/ProgramSettingComponent';
 import RecordedComponent from './Component/Recorded/RecordedComponent';
@@ -33,6 +34,7 @@ m.route(document.body, '/', {
     '/stream/program': StreamProgramComponent,
     '/stream/watch': StreamWatchComponent,
     '/program': ProgramComponent,
+    '/program/detail/:programId': ProgramDetailComponent,
     '/program/setting': ProgramSettingComponent,
     '/recorded': RecordedComponent,
     '/reserves': ReservesComponent,

@@ -12,6 +12,7 @@ interface EncodedDBInterface extends DBTableBase {
     delete(id: number): Promise<void>;
     deleteRecordedId(recordedId: number): Promise<void>;
     updateAllNullFileSize(): Promise<void>;
+    updateFileSize(encodedId: number): Promise<void>;
     findId(id: number): Promise<DBSchema.EncodedSchema | null>;
     findAll(sAddBaseDir?: boolean): Promise<DBSchema.EncodedSchema[]>;
     findRecordedId(recordedId: number): Promise<DBSchema.EncodedSchema[]>;
@@ -144,6 +145,19 @@ abstract class EncodedDB extends DBTableBase implements EncodedDBInterface {
                 this.log.system.warn(`${ program.path } update filesize error.`);
             }
         }
+    }
+
+    /**
+     * filesize を更新する
+     * @param encodedId: encoded Id
+     * @return Promise<void>
+     */
+    public async updateFileSize(encodedId: number): Promise<void> {
+        const encoded = await this.findId(encodedId);
+        if (encoded === null || encoded.filesize === null) { return; }
+
+        const size = FileUtil.getFileSize(encoded.path);
+        await this.operator.runQuery(`update ${ DBSchema.TableName.Encoded } set filesize = ${ size } where id = ${ encodedId }`);
     }
 
     /**

@@ -609,23 +609,32 @@ definitions:
     properties:
       programId:
         $ref: '#/definitions/ProgramId'
+      option:
+        $ref: '#/definitions/AddReserveOption'
       encode:
         $ref: '#/definitions/RuleEncode'
+
+  AddReserveOption:
+    type: object
+    description: '手動予約オプション'
+    properties:
+      directory:
+        type: string
+        description: '録画データの保存場所'
+      recordedFormat:
+        type: string
+        description: '録画ファイル名フォーマット'
 
   Reserve:
     type: object
     required:
       - program
-      - isManual
     description: 'program は必須項目'
     properties:
       program:
         $ref: '#/definitions/ReserveProgram'
       ruleId:
         $ref: '#/definitions/RuleId'
-      isManual:
-        type: boolean
-        description: '手動予約か'
 
   ReserveAllId:
     type: object

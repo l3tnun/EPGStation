@@ -105,18 +105,26 @@ Config.json
 | プロパティ | 種類 | 必須 | default| 説明 |
 | -------- | ---- | ---- | --- | --- |
 | name | string | yse | | web で表示される名前 |
-| cmd | string | yse | | エンコードコマンド |
-| suffix | string | yse | | ファイル名の後ろに付加される文字列 (拡張子) |
+| cmd | string | yse | | コマンド |
+| suffix | string | no | | ファイル名の後ろに付加される文字列 (拡張子) |
 | rate | number | no | 4.0 | タイムアウト率 録画時間 * rate だけ待つ  |
 | default | boolean | no | | 手動予約時のデフォルトのモードにするか |
+
+※ encode となっているが、録画後にファイルを移動する等の非エンコードコマンドの登録も行える。
+suffix が未記述の場合非エンコードコマンドとして認識され、下記の環境変数の OUTPUT が空となる
 
 #### cmd 実行時に渡される環境変数
 
 | プロパティ | 種類 | 説明 |
 | -------- | --- | ---- |
+| RECORDEDID | number | recorded id |
 | INPUT | string | 入力ファイルパス |
 | OUTPUT | string | 出力ファイルパス |
 | FFMPEG | string | ffmpeg パス |
+| DIR | string | 予約時に設定した directory 文字列 |
+| NAME | string | 番組名 |
+| DESCRIPTION | string \| null | 番組概要 |
+| EXTENDED | string \| null | 番組詳細 |
 | VIDEOTYPE | string \| null | "mpeg2" \| "h.264" \| "h.265" |
 | VIDEORESOLUTION | string \| null | "240p" \| "480i" \| "480p" \| "720p" \| "1080i" \| "2160p" \| "4320p" | null |
 | VIDEOSTREAMCONTENT | number \| null | video streamType |

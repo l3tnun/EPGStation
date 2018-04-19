@@ -12,6 +12,7 @@ import ApiUtil from './ApiUtil';
 interface ScheduleModelInterface extends ApiModel {
     getSchedule(time: number, length: number, type: apid.ChannelType): Promise<{}[]>;
     getScheduleId(time: number, channelId: number, days: number): Promise<{}>;
+    getScheduleDetail(programId: number): Promise<{}>;
     getBroadcasting(addition: number): Promise<{}>;
     searchProgram(searchOption: SearchInterface): Promise<{}[]>;
     updateReserves(): Promise<void>;
@@ -19,6 +20,7 @@ interface ScheduleModelInterface extends ApiModel {
 
 namespace ScheduleModelInterface {
     export const channelIdIsNotFoundError = 'channelIdIsNotFound';
+    export const programlIdIsNotFoundError = 'programIdIsNotFound';
     export const searchOptionIsIncorrect = 'searchOptionIsIncorrect';
 }
 
@@ -101,6 +103,24 @@ class ScheduleModel extends ApiModel implements ScheduleModelInterface {
                 programs: program,
             };
         });
+    }
+
+    /**
+     * program id を指定して番組データを取得
+     * @param programid: prgoram id
+     * @return Promise<{}>
+     */
+    public async getScheduleDetail(programId: number): Promise<{}> {
+        const program = await this.programsDB.findIdMiniColumn(programId);
+        if (program === null) { throw new Error(ScheduleModelInterface.programlIdIsNotFoundError); }
+
+        const channel = await this.servicesDB.findId(program.channelId);
+        if (channel === null) { throw new Error(ScheduleModelInterface.channelIdIsNotFoundError); }
+
+        return [{
+            channel: this.createChannel(channel),
+            programs: [ApiUtil.deleteNullinHash(program)],
+        }];
     }
 
     /**

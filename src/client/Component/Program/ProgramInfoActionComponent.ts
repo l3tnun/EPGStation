@@ -39,6 +39,7 @@ class ProgramInfoActionComponent extends Component<void> {
                         }, 200);
                     },
                 }, '検索'),
+                this.createDetailButton(),
                 m('button', {
                     type: 'button',
                     class: 'mdl-button mdl-js-button mdl-button--accent close',
@@ -83,6 +84,28 @@ class ProgramInfoActionComponent extends Component<void> {
                 this.viewModel.close();
             },
         }, name);
+    }
+
+    /**
+     * 詳細ボタン
+     * @return m.Child
+     */
+    private createDetailButton(): m.Child | null {
+        if (this.viewModel.getReserveStatus() !== null) { return null; }
+
+        return m('button', {
+            type: 'button',
+            class: 'mdl-button mdl-js-button mdl-button--primary',
+            onclick: () => {
+                this.viewModel.close();
+                const program = this.viewModel.getProgram();
+                if (program === null) { return; }
+
+                setTimeout(() => {
+                    Util.move(`/program/detail/${ program.id }`);
+                }, 200);
+            },
+        }, '詳細');
     }
 
     /**

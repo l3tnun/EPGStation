@@ -58,6 +58,7 @@ interface ProgramsDBInterface extends DBTableBase {
     findBroadcasting(addition?: apid.UnixtimeMS): Promise<DBSchema.ScheduleProgramItem[]>;
     findBroadcastingChanel(channelId: apid.ServiceItemId, addition?: apid.UnixtimeMS): Promise<DBSchema.ScheduleProgramItem[]>;
     findId(id: number, isNow?: boolean): Promise<DBSchema.ProgramSchema | null>;
+    findIdMiniColumn(id: number): Promise<DBSchema.ScheduleProgramItem | null>;
     findRule(option: SearchInterface, isMinColumn?: boolean, limit?: number | null): Promise<DBSchema.ProgramSchema[]>;
 }
 
@@ -391,6 +392,15 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
         const option = isNow ? `and endAt > ${ new Date().getTime() }` : '';
 
         return this.operator.getFirst(<DBSchema.ProgramSchema[]> this.fixResults(<DBSchema.ProgramSchema[]> await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Programs } where id = ${ id } ${ option }`)));
+    }
+
+    /**
+     * id 検索 (mini column)
+     * @param id: id
+     * @return Promise<DBSchema.ScheduleProgramItem | null>
+     */
+    public async findIdMiniColumn(id: number): Promise<DBSchema.ScheduleProgramItem | null> {
+        return this.operator.getFirst(<DBSchema.ScheduleProgramItem[]> this.fixResults(<DBSchema.ScheduleProgramItem[]> await this.operator.runQuery(`select ${ this.getMinColumns() } from ${ DBSchema.TableName.Programs } where id = ${ id }`)));
     }
 
     /**

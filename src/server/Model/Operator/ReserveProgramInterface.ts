@@ -1,14 +1,27 @@
 import * as DBSchema from '../DB/DBSchema';
+import { AddReserveOptionInterface } from './ManualReserveInterface';
 import { EncodeInterface, OptionInterface } from './RuleInterface';
 
 export interface ReserveProgram {
     program: DBSchema.ProgramSchema;
-    ruleId?: number;
-    ruleOption?: OptionInterface;
     encodeOption?: EncodeInterface;
     isSkip: boolean;
-    isManual: boolean; // 手動予約時にtrue
-    manualId?: number; // 手動予約時に追加する
     isConflict: boolean;
+}
+
+/**
+ * ルール予約
+ */
+export interface RuleReserveProgram extends ReserveProgram {
+    ruleId?: number;
+    ruleOption?: OptionInterface;
+}
+
+/**
+ * 手動予約
+ */
+export interface ManualReserveProgram extends ReserveProgram {
+    manualOption?: AddReserveOptionInterface;
+    manualId?: number;
 }
 

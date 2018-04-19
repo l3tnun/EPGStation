@@ -3,11 +3,12 @@ import * as apid from '../../../../node_modules/mirakurun/api';
 import * as events from '../../IoEvents';
 import Model from '../Model';
 import { MirakurunManageModelInterface } from '../Operator/EPGUpdate/MirakurunManageModel';
+import { AddReserveInterface } from '../Operator/ManualReserveInterface';
 import { RecordedManageModelInterface } from '../Operator/Recorded/RecordedManageModel';
 import { RecordingManageModelInterface } from '../Operator/Recording/RecordingManageModel';
 import { ReservationManageModelInterface } from '../Operator/Reservation/ReservationManageModel';
 import { RuleManageModelInterface } from '../Operator/Rule/RuleManageModel';
-import { EncodeInterface, RuleInterface } from '../Operator/RuleInterface';
+import { RuleInterface } from '../Operator/RuleInterface';
 import { EncodeProgram } from '../Service/Encode/EncodeManageModel';
 import { IPCClientMessage, IPCMessageDefinition, IPCServerMessage } from './IPCMessageInterface';
 
@@ -127,11 +128,10 @@ class IPCServer extends Model implements IPCServerInterface {
         };
 
         this.functions[IPCMessageDefinition.addReserve] = async(id: number, args: any) => {
-            const programId: apid.ProgramId = args.programId;
-            const encode: EncodeInterface = args.encode;
+            const option: AddReserveInterface = args.option;
 
             try {
-                await this.reservationManage.addReserve(programId, encode);
+                await this.reservationManage.addReserve(option);
                 this.send({ id: id });
             } catch (err) {
                 this.send({ id: id, error: err.message });
@@ -265,10 +265,9 @@ class IPCServer extends Model implements IPCServerInterface {
             const recordedId: number = args.recordedId;
             const name: string = args.name;
             const filePath: string = args.filePath;
-            const delTs: boolean = args.delTs;
 
             try {
-                const encodedId = await this.recordedManage.addEncodeFile(recordedId, name, filePath, delTs);
+                const encodedId = await this.recordedManage.addEncodeFile(recordedId, name, filePath);
                 this.send({ id: id, value: encodedId });
             } catch (err) {
                 this.send({ id: id, error: err.message });
@@ -281,6 +280,18 @@ class IPCServer extends Model implements IPCServerInterface {
 
             try {
                 await this.recordedManage.updateTsFileSize(recordedId);
+                this.send({ id: id });
+            } catch (err) {
+                this.send({ id: id, error: err.message });
+            }
+        };
+
+        // update encoded file size
+        this.functions[IPCMessageDefinition.updateEncodedFileSize] = async(id: number, args: any) => {
+            const encodedId: number = args.encodedId;
+
+            try {
+                await this.recordedManage.updateEncodedFileSize(encodedId);
                 this.send({ id: id });
             } catch (err) {
                 this.send({ id: id, error: err.message });

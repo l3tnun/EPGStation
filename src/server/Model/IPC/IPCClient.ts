@@ -1,9 +1,10 @@
 import * as events from 'events';
 import * as apid from '../../../../node_modules/mirakurun/api';
 import Model from '../Model';
+import { AddReserveInterface } from '../Operator/ManualReserveInterface';
 import { ReserveAllId, ReserveLimit } from '../Operator/Reservation/ReservationManageModel';
-import { EncodeInterface, RuleInterface } from '../Operator/RuleInterface';
-import { EncodeModelInterface } from '../Service/Encode/EncodeModel';
+import { RuleInterface } from '../Operator/RuleInterface';
+import { EncodeManageModelInterface } from '../Service/Encode/EncodeManageModel';
 import { SocketIoManageModelInterface } from '../Service/SocketIoManageModel';
 import { IPCClientMessage, IPCMessageDefinition, IPCServerEncodeMessage, IPCServerMessage, IPCServerSocketIoMessage } from './IPCMessageInterface';
 
@@ -12,7 +13,7 @@ interface IPCClientInterface extends Model {
     getReserves(limit: number, offset: number): Promise<ReserveLimit>;
     getReserveConflicts(limit: number, offset: number): Promise<ReserveLimit>;
     getReserveSkips(limit: number, offset: number): Promise<ReserveLimit>;
-    addReserve(programId: apid.ProgramId, encode?: EncodeInterface): Promise<void>;
+    addReserve(option: AddReserveInterface): Promise<void>;
     cancelReserve(programId: apid.ProgramId): Promise<void>;
     removeReserveSkip(programId: apid.ProgramId): Promise<void>;
     recordedDelete(recordedId: number): Promise<void>;
@@ -24,8 +25,9 @@ interface IPCClientInterface extends Model {
     ruleDelete(ruleId: number): Promise<void>;
     ruleAdd(rule: RuleInterface): Promise<number>;
     ruleUpdate(ruleId: number, rule: RuleInterface): Promise<void>;
-    addEncodeFile(recordedId: number, name: string, filePath: string, delTs: boolean): Promise<number>;
+    addEncodeFile(recordedId: number, name: string, filePath: string): Promise<number>;
     updateTsFileSize(recordedId: number): Promise<void>;
+    updateEncodedFileSize(encodedId: number): Promise<void>;
     updateReserves(): Promise<void>;
 }
 
@@ -35,7 +37,7 @@ interface IPCClientInterface extends Model {
  * @throws IPCClientIsNotChildProcess fork で起動していないとき
  */
 class IPCClient extends Model implements IPCClientInterface {
-    private encodeModel: EncodeModelInterface;
+    private encodeManage: EncodeManageModelInterface;
     private socketIo: SocketIoManageModelInterface;
     private listener: events.EventEmitter = new events.EventEmitter();
 
@@ -51,7 +53,7 @@ class IPCClient extends Model implements IPCClientInterface {
             if (typeof (<IPCServerMessage> msg).id === 'undefined') {
                 if ((<IPCServerEncodeMessage> msg).msg === IPCMessageDefinition.setEncodeToClient) {
                     // server からのエンコード依頼
-                    this.encodeModel.push((<IPCServerEncodeMessage> msg).program);
+                    this.encodeManage.push((<IPCServerEncodeMessage> msg).program);
                 } else {
                     // server からの socket.io message 送信依頼
                     this.socketIo.notifyClient();
@@ -64,10 +66,10 @@ class IPCClient extends Model implements IPCClientInterface {
     }
 
     public setModels(
-        encodeModel: EncodeModelInterface,
+        encodeManage: EncodeManageModelInterface,
         socketIo: SocketIoManageModelInterface,
     ): void {
-        this.encodeModel = encodeModel;
+        this.encodeManage = encodeManage;
         this.socketIo = socketIo;
     }
 
@@ -117,14 +119,11 @@ class IPCClient extends Model implements IPCClientInterface {
 
     /**
      * 予約追加
-     * @param programId: program id
-     * @param encode: EncodeInterface
+     * @param option: AddReserveInterface
      * @return Promise<void>
      */
-    public async addReserve(programId: apid.ProgramId, encode?: EncodeInterface): Promise<void> {
-        const args = { programId: programId };
-        if (typeof encode !== 'undefined') { args['encode'] = encode; }
-        const id = this.send(IPCMessageDefinition.addReserve, args);
+    public async addReserve(option: AddReserveInterface): Promise<void> {
+        const id = this.send(IPCMessageDefinition.addReserve, { option: option });
         await this.receive(id);
     }
 
@@ -246,12 +245,11 @@ class IPCClient extends Model implements IPCClientInterface {
      * エンコード済みファイルを追加する
      * @return Promise<number> encodedId
      */
-    public async addEncodeFile(recordedId: number, name: string, filePath: string, delTs: boolean): Promise<number> {
+    public async addEncodeFile(recordedId: number, name: string, filePath: string): Promise<number> {
         const id = this.send(IPCMessageDefinition.addEncodeFile, {
             recordedId: recordedId,
             name: name,
             filePath: filePath,
-            delTs: delTs,
         });
         const result = await this.receive(id);
 
@@ -266,6 +264,18 @@ class IPCClient extends Model implements IPCClientInterface {
     public async updateTsFileSize(recordedId: number): Promise<void> {
         const id = this.send(IPCMessageDefinition.updateTsFileSize, {
             recordedId: recordedId,
+        });
+        await this.receive(id);
+    }
+
+    /**
+     * encoded ファイルのファイルサイズを更新
+     * @param encodedId: encoded id
+     * @return Promise<void>
+     */
+    public async updateEncodedFileSize(encodedId: number): Promise<void> {
+        const id = this.send(IPCMessageDefinition.updateEncodedFileSize, {
+            encodedId: encodedId,
         });
         await this.receive(id);
     }

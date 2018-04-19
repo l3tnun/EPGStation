@@ -570,5 +570,9 @@ class SearchViewModel extends ViewModel {
     }
 }
 
+namespace SearchViewModel {
+    export const hitId = 'search-hit-id';
+}
+
 export default SearchViewModel;
 

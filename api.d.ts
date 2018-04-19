@@ -182,7 +182,6 @@ export interface Reserves {
 export interface Reserve {
     program: ReserveProgram;
     ruleId?: RuleId;
-    isManual: boolean;
 }
 
 export interface ReserveAllId {
@@ -218,6 +217,17 @@ export interface ReserveProgram {
     videoComponentType?: number;
     audioSamplingRate?: ProgramAudioSamplingRate;
     audioComponentType?: number;
+}
+
+export interface AddReserve {
+    programId: ProgramId;
+    option?: AddReserveOption;
+    encode?: RuleEncode;
+}
+
+export interface AddReserveOption {
+    directory?: string;
+    recordedFormat?: string;
 }
 
 export interface Rules {

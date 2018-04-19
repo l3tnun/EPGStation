@@ -10,7 +10,8 @@ import { ProgramsDBInterface } from '../../DB/ProgramsDB';
 import { RulesDBInterface } from '../../DB/RulesDB';
 import { IPCServerInterface } from '../../IPC/IPCServer';
 import Model from '../../Model';
-import { ReserveProgram } from '../ReserveProgramInterface';
+import { AddReserveInterface } from '../ManualReserveInterface';
+import { ManualReserveProgram, ReserveProgram, RuleReserveProgram } from '../ReserveProgramInterface';
 import { EncodeInterface, OptionInterface, SearchInterface } from '../RuleInterface';
 import Tuner from './Tuner';
 
@@ -45,7 +46,7 @@ interface ReservationManageModelInterface extends Model {
     getSkips(limit?: number, offset?: number): ReserveLimit;
     cancel(id: apid.ProgramId): void;
     removeSkip(id: apid.ProgramId): Promise<void>;
-    addReserve(programId: apid.ProgramId, encode?: EncodeInterface): Promise<void>;
+    addReserve(option: AddReserveInterface): Promise<void>;
     updateAll(): Promise<void>;
     updateRule(ruleId: number): Promise<void>;
     clean(): void;
@@ -189,8 +190,8 @@ class ReservationManageModel extends Model {
             const result: ReserveAllItem = {
                 programId: reserve.program.id,
             };
-            if (typeof reserve.ruleId !== 'undefined') {
-                result.ruleId = reserve.ruleId;
+            if (typeof (<RuleReserveProgram> reserve).ruleId !== 'undefined') {
+                result.ruleId = (<RuleReserveProgram> reserve).ruleId;
             }
 
             if (reserve.isConflict) {
@@ -265,7 +266,7 @@ class ReservationManageModel extends Model {
         let needsUpdate = false;
         for (let i = 0; i < this.reserves.length; i++) {
             if (this.reserves[i].program.id === id) {
-                if (this.reserves[i].isManual) {
+                if (typeof (<ManualReserveProgram> this.reserves[i]).manualId !== 'undefined') {
                     // 手動予約なら削除
                     this.reserves.splice(i, 1);
                     this.log.system.info(`cancel reserve: ${ id }`);
@@ -325,8 +326,8 @@ class ReservationManageModel extends Model {
                 this.reserves[i].isSkip = false;
                 this.log.system.info(`remove skip: ${ id }`);
 
-                if (typeof this.reserves[i].ruleId !== 'undefined') {
-                    this.updateRule(this.reserves[i].ruleId!);
+                if (typeof (<RuleReserveProgram> this.reserves[i]).ruleId !== 'undefined') {
+                    this.updateRule((<RuleReserveProgram> this.reserves[i]).ruleId!);
                 }
                 break;
             }
@@ -337,27 +338,27 @@ class ReservationManageModel extends Model {
 
     /**
      * 手動予約追加
-     * @param programId: number program id
+     * @param option: AddReserveInterface
      * @return Promise<void>
      * @throws ReservationManageModelAddFailed 予約に失敗
      */
-    public async addReserve(programId: apid.ProgramId, encode: EncodeInterface | null = null): Promise<void> {
+    public async addReserve(option: AddReserveInterface): Promise<void> {
         // encode option が正しいかチェック
-        if (encode !== null && !(new CheckRule().checkEncodeOption(encode))) {
+        if (typeof option.encode !== 'undefined' && !(new CheckRule().checkEncodeOption(option.encode))) {
             this.log.system.error('addReserve Failed');
             this.log.system.error('ReservationManageModel is Running');
             throw new Error('ReservationManageModelAddFailed');
         }
 
         const exeId = await this.getExecution(1);
-        this.log.system.info(`addReserve: ${ programId }`);
+        this.log.system.info(`addReserve: ${ option.programId }`);
 
         const finalize = () => { this.unLockExecution(exeId); };
 
         // 番組情報を取得
         let program: DBSchema.ProgramSchema | null;
         try {
-            program = await this.programDB.findId(programId, true);
+            program = await this.programDB.findId(option.programId, true);
         } catch (err) {
             finalize();
             throw err;
@@ -366,28 +367,30 @@ class ReservationManageModel extends Model {
         // programId に該当する録画データがなかった
         if (program === null) {
             finalize();
-            this.log.system.error(`program is not found: ${ programId }`);
+            this.log.system.error(`program is not found: ${ option.programId }`);
             throw new Error('ProgramIsNotFound');
         }
 
         // 追加する予約情報を生成
-        const addReserve: ReserveProgram = {
+        const addReserve: ManualReserveProgram = {
             program: program,
             isSkip: false,
-            isManual: true,
             manualId: new Date().getTime(),
             isConflict: false,
         };
-        if (encode !== null) {
-            addReserve.encodeOption = encode;
+        if (typeof option.option !== 'undefined') {
+            addReserve.manualOption = option.option;
+        }
+        if (typeof option.encode !== 'undefined') {
+            addReserve.encodeOption = option.encode;
         }
 
         // 追加する予約情報と重複する時間帯の予約済み番組情報を conflict, skip は除外して取得
         // すでに予約済みの場合はエラー
         const reserves: ReserveProgram[] = [];
         for (const reserve of this.reserves) {
-            if (reserve.program.id === programId) {
-                this.log.system.error(`program is reserves: ${ programId }`);
+            if (reserve.program.id === option.programId) {
+                this.log.system.error(`program is reserves: ${ option.programId }`);
                 finalize();
                 throw new Error('ReservationManageModelAddFailed');
             }
@@ -412,7 +415,7 @@ class ReservationManageModel extends Model {
         for (const reserve of newReserves) {
             if (reserve.isConflict) {
                 finalize();
-                this.log.system.error(`program id conflict: ${ programId }`);
+                this.log.system.error(`program id conflict: ${ option.programId }`);
                 throw new Error('ReservationManageModelAddReserveConflict');
             }
         }
@@ -427,7 +430,7 @@ class ReservationManageModel extends Model {
         // 通知
         this.ipc.notifIo();
 
-        this.log.system.info(`success addReserve: ${ programId }`);
+        this.log.system.info(`success addReserve: ${ option.programId }`);
     }
 
     /**
@@ -445,16 +448,18 @@ class ReservationManageModel extends Model {
 
         // 存在しない rule を削除
         const newReserves = this.reserves.filter((reserve) => {
-            return !(typeof reserve.ruleId !== 'undefined' && typeof ruleIndex[reserve.ruleId] === 'undefined');
+            const ruleId = (<RuleReserveProgram> reserve).ruleId;
+
+            return !(typeof ruleId !== 'undefined' && typeof ruleIndex[ruleId] === 'undefined');
         });
         this.reserves = newReserves;
         this.writeReservesFile();
 
         // 手動予約の情報を更新する
         for (const reserve of this.reserves) {
-            if (!reserve.isManual || typeof reserve.manualId === 'undefined') { continue; }
+            if (typeof (<ManualReserveProgram> reserve).manualId === 'undefined') { continue; }
             await Util.sleep(10);
-            await this.updateManual(reserve.manualId!);
+            await this.updateManual((<ManualReserveProgram> reserve).manualId!);
         }
 
         // rule 予約の情報を更新する
@@ -488,7 +493,7 @@ class ReservationManageModel extends Model {
             const r: any = {};
             Object.assign(r, reserve);
 
-            if (reserve.manualId === manualId) {
+            if ((<ManualReserveProgram> reserve).manualId === manualId) {
                 manualMatche = r;
             } else {
                 newReserves.push(r);
@@ -534,7 +539,7 @@ class ReservationManageModel extends Model {
 
         // conflict を表示
         for (const reserve of this.reserves) {
-            if (!reserve.isConflict || reserve.manualId !== manualId) { continue; }
+            if (!reserve.isConflict || (<ManualReserveProgram> reserve).manualId !== manualId) { continue; }
             this.log.system.warn(`conflict: ${ reserve.program.id } ${ DateUtil.format(new Date(reserve.program.startAt), 'yyyy-MM-ddThh:mm:ss') } ${ reserve.program.name }`);
         }
 
@@ -585,7 +590,7 @@ class ReservationManageModel extends Model {
             // スキップ情報を記録
             if (reserve.isSkip) { skipIndex[reserve.program.id] = reserve.isSkip; }
 
-            if (typeof reserve.ruleId === 'undefined' || reserve.ruleId !== ruleId) {
+            if (typeof (<RuleReserveProgram> reserve).ruleId === 'undefined' || (<RuleReserveProgram> reserve).ruleId !== ruleId) {
                 const r: any = {};
                 Object.assign(r, reserve);
                 r.isConflict = false;
@@ -598,12 +603,11 @@ class ReservationManageModel extends Model {
             const ruleOption = this.createOption(rule);
             const encodeOption = this.createEncodeOption(rule);
             for (const program of programs) {
-                const data: ReserveProgram = {
+                const data: RuleReserveProgram = {
                     program: program,
                     ruleId: ruleId,
                     ruleOption: ruleOption,
                     isSkip: typeof skipIndex[program.id] === 'undefined' ? false : skipIndex[program.id],
-                    isManual: false,
                     isConflict: false,
                 };
                 if (encodeOption !== null) {
@@ -621,7 +625,7 @@ class ReservationManageModel extends Model {
 
         // conflict を表示
         for (const reserve of this.reserves) {
-            if (!reserve.isConflict || reserve.ruleId !== ruleId) { continue; }
+            if (!reserve.isConflict || (<RuleReserveProgram> reserve).ruleId !== ruleId) { continue; }
             this.log.system.warn(`conflict: ${ reserve.program.id } ${ DateUtil.format(new Date(reserve.program.startAt), 'yyyy-MM-ddThh:mm:ss') } ${ reserve.program.name }`);
         }
 
@@ -782,7 +786,7 @@ class ReservationManageModel extends Model {
             for (const r of reserves) {
                 this.log.system.debug(<any> {
                     name: r.reserve.program.name,
-                    ruleId: r.reserve.ruleId!,
+                    ruleId: (<RuleReserveProgram> r.reserve).ruleId,
                 });
             }
 
@@ -826,10 +830,13 @@ class ReservationManageModel extends Model {
      * @return number
      */
     private sortReserveProgram(a: ReserveProgram, b: ReserveProgram): number {
-        if (a.isManual && b.isManual) { return a.manualId! - b.manualId!; }
-        if (a.isManual && !b.isManual) { return -1; }
-        if (!a.isManual && b.isManual) { return 1; }
-        if (!a.isManual && !b.isManual) { return a.ruleId! - b.ruleId!; }
+        const aIsManual = typeof (<ManualReserveProgram> a).manualId !== 'undefined';
+        const bIsManual = typeof (<ManualReserveProgram> b).manualId !== 'undefined';
+
+        if (aIsManual && bIsManual) { return (<ManualReserveProgram> a).manualId! - (<ManualReserveProgram> b).manualId!; }
+        if (aIsManual && !bIsManual) { return -1; }
+        if (!aIsManual && bIsManual) { return 1; }
+        if (!aIsManual && !bIsManual) { return (<RuleReserveProgram> a).ruleId! - (<RuleReserveProgram> b).ruleId!; }
 
         return 0;
     }

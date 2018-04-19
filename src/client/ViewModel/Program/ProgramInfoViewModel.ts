@@ -256,12 +256,15 @@ class ProgramInfoViewModel extends ViewModel {
 
         try {
             if (this.isEnableEncode() && this.encodeOptionValue !== -1) {
-                await this.reserves.addReserve(this.program.id, {
-                    mode1: this.encodeOptionValue,
-                    delTs: this.delTS,
+                await this.reserves.addReserve({
+                    programId: this.program.id,
+                    encode: {
+                        mode1: this.encodeOptionValue,
+                        delTs: this.delTS,
+                    },
                 });
             } else {
-                await this.reserves.addReserve(this.program.id);
+                await this.reserves.addReserve({ programId: this.program.id });
             }
             this.snackbar.open(`予約: ${ this.program.name }`);
         } catch (err) {

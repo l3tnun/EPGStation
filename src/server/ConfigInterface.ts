@@ -56,7 +56,7 @@ interface ConfigInterface {
     encode: {
         name: string;
         cmd: string;
-        suffix: string;
+        suffix?: string; // 非エンコードコマンドの場合 undefined
         rate?: number;
         default?: boolean;
     }[];

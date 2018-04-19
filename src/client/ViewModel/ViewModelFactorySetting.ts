@@ -17,6 +17,7 @@ import BalloonViewModel from './Balloon/BalloonViewModel';
 import HeaderViewModel from './HeaderViewModel';
 import MainLayoutViewModel from './MainLayoutViewModel';
 import NavigationViewModel from './NavigationViewModel';
+import ProgramDetailViewModel from './Program/ProgramDetailViewModel';
 import ProgramGenreViewModel from './Program/ProgramGenreViewModel';
 import ProgramInfoViewModel from './Program/ProgramInfoViewModel';
 import ProgramSettingViewModel from './Program/ProgramSettingViewModel';
@@ -107,6 +108,12 @@ namespace ViewModelFactorySetting {
         ));
         factory.reg('ProgramSettingViewModel', new ProgramSettingViewModel(
             programSettingModel,
+            snackbarModel,
+        ));
+        factory.reg('ProgramDetailViewModel', new ProgramDetailViewModel(
+            scheduleApiModel,
+            reservesApiModel,
+            configModel,
             snackbarModel,
         ));
         factory.reg('RecordedViewModel', new RecordedViewModel(

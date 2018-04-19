@@ -7,7 +7,7 @@ import Model from '../../Model';
 
 interface EncodeProcessManageModelInterface extends Model {
     eventsNotify(createTime: number): void;
-    create(input: string, output: string, cmd: string, priority: number, spawnOption?: SpawnOptions): Promise<ChildProcess>;
+    create(input: string, output: string | null, cmd: string, priority: number, spawnOption?: SpawnOptions): Promise<ChildProcess>;
 }
 
 /**
@@ -36,13 +36,13 @@ class EncodeProcessManageModel extends Model implements EncodeProcessManageModel
      * エンコードプロセスを生成する
      * プロセスが上限に達しているとき priority が高いプロセスが生成されようとすると、それより低いプロセスが殺される
      * @param input: input file name
-     * @param output: output file name
+     * @param output: output file name | null
      * @param cmd: cmd string %INPUT% と %OUTPUT% を input と output で置換する
      * @param priority: number 大きいほど優先度が高くなる
      * @param spawnOption?:SpawnOptions
      * @return Promise<ChildProcess>
      */
-    public create(input: string, output: string, cmd: string, priority: number, spawnOption?: SpawnOptions): Promise<ChildProcess> {
+    public create(input: string, output: string | null, cmd: string, priority: number, spawnOption?: SpawnOptions): Promise<ChildProcess> {
         // replace %ROOT%
         cmd = process.platform === 'win32' ?
             cmd.replace('%ROOT%', path.join(__dirname, '..', '..', '..', '..', '..').replace(/\\/g, '\\\\')) :
@@ -89,14 +89,14 @@ class EncodeProcessManageModel extends Model implements EncodeProcessManageModel
     /**
      * エンコードプロセスを生成する
      * @param input: input file name
-     * @param output: output file name
+     * @param output: output file name | null
      * @param cmd: cmd string %INPUT% と %OUTPUT% を input と output で置換する
      * @param priority: number
      * @param spawnOption?:SpawnOptions
      * @return ChildProcess
      * @throws EncodeProcessManageModelNotFoundBin cmd で指定したプロセスが存在しない場合
      */
-    private buildProcess(input: string, output: string, cmd: string, priority: number, spawnOption?: SpawnOptions): {
+    private buildProcess(input: string, output: string | null, cmd: string, priority: number, spawnOption?: SpawnOptions): {
         child: ChildProcess;
         priority: number;
         createTime: number;
@@ -107,7 +107,9 @@ class EncodeProcessManageModel extends Model implements EncodeProcessManageModel
         // input, output を置換
         for (let i = 0; i < args.length; i++) {
             args[i] = args[i].replace(/%INPUT%/g, input);
-            args[i] = args[i].replace(/%OUTPUT%/g, output);
+            if (output !== null) {
+                args[i] = args[i].replace(/%OUTPUT%/g, output);
+            }
         }
 
         if (typeof bin === 'undefined') {
