@@ -302,27 +302,36 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
 
         this.log.system.info(`encode start: ${ program.source } ${ program.name }`);
         const output = program.suffix === null ? null : this.getFilePath(dir, program.source, program.suffix);
-        const child = await this.encodeProcessManage.create(program.source, output, program.cmd, EncodeManageModel.priority, {
-            env: {
-                RECORDEDID: program.recordedId,
-                INPUT: program.source,
-                OUTPUT: output === null ? '' : output,
-                DIR: program.directory || '',
-                FFMPEG: Util.getFFmpegPath(),
-                NAME: program.recordedProgram.name,
-                DESCRIPTION: program.recordedProgram.description || '',
-                EXTENDED: program.recordedProgram.extended || '',
-                VIDEOTYPE: program.recordedProgram.videoType || '',
-                VIDEORESOLUTION: program.recordedProgram.videoResolution || '',
-                VIDEOSTREAMCONTENT: program.recordedProgram.videoStreamContent || '',
-                VIDEOCOMPONENTTYPE: program.recordedProgram.videoComponentType || '',
-                AUDIOSAMPLINGRATE: program.recordedProgram.audioSamplingRate || '',
-                AUDIOCOMPONENTTYPE: program.recordedProgram.audioComponentType || '',
-                CHANNELID: program.recordedProgram.channelId,
-                GENRE1: program.recordedProgram.genre1,
-                GENRE2: program.recordedProgram.genre2,
-            },
-        });
+        let child: ChildProcess;
+        try {
+            child = await this.encodeProcessManage.create(program.source, output, program.cmd, EncodeManageModel.priority, {
+                env: {
+                    RECORDEDID: program.recordedId,
+                    INPUT: program.source,
+                    OUTPUT: output === null ? '' : output,
+                    DIR: program.directory || '',
+                    FFMPEG: Util.getFFmpegPath(),
+                    NAME: program.recordedProgram.name,
+                    DESCRIPTION: program.recordedProgram.description || '',
+                    EXTENDED: program.recordedProgram.extended || '',
+                    VIDEOTYPE: program.recordedProgram.videoType || '',
+                    VIDEORESOLUTION: program.recordedProgram.videoResolution || '',
+                    VIDEOSTREAMCONTENT: program.recordedProgram.videoStreamContent || '',
+                    VIDEOCOMPONENTTYPE: program.recordedProgram.videoComponentType || '',
+                    AUDIOSAMPLINGRATE: program.recordedProgram.audioSamplingRate || '',
+                    AUDIOCOMPONENTTYPE: program.recordedProgram.audioComponentType || '',
+                    CHANNELID: program.recordedProgram.channelId,
+                    GENRE1: program.recordedProgram.genre1,
+                    GENRE2: program.recordedProgram.genre2,
+                },
+            });
+        } catch (err) {
+            this.log.system.error('encode process create error');
+            this.finalize();
+            this.errorNotify();
+
+            return;
+        }
 
         this.encodingData = {
             child: child,

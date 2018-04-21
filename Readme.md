@@ -45,6 +45,7 @@ $ npm run build
 ```
 $ git pull
 $ npm update
+$ npm update -D
 $ npm run build
 ```
 
