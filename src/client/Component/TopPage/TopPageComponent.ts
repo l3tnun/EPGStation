@@ -335,7 +335,22 @@ class TopPageComponent extends ParentComponent<void> {
         const channel = this.reservesViewModel.getChannel(reserve.program.channelId);
         if (channel === null) { return; }
 
-        this.programInfo.set(reserve.program, channel);
+        const reservesOption = {
+            ruleId: reserve.ruleId,
+            option: reserve.option,
+            encode: reserve.encode,
+        };
+
+        let isNull = true;
+        for (const key in reservesOption) {
+            if (typeof reservesOption[key] === 'undefined') {
+                delete reservesOption[key];
+            } else {
+                isNull = false;
+            }
+        }
+
+        this.programInfo.set(reserve.program, channel, isNull ? null : reservesOption);
         this.balloon.open(ProgramInfoViewModel.id, event);
     }
 

@@ -36,6 +36,11 @@ class ProgramInfoComponent extends Component<void> {
                 this.createItem('audio-mode', '音声: ' + this.viewModel.getAudioMode()),
                 this.createItem('audio-sampling-rate', 'サンプリングレート: ' + this.viewModel.getAudioSamplingRate()),
                 this.createItem('is-free', this.viewModel.getIsFree()),
+                this.createItem(
+                    'reserve-type',
+                    '予約種類: ' + (this.viewModel.getReserveOptionRuleId() === null ? '手動' : 'ルール'),
+                ),
+                this.createReserveOption(),
             ]),
         ]);
     }
@@ -68,6 +73,74 @@ class ProgramInfoComponent extends Component<void> {
                 Util.move('/program', this.viewModel.getProgramsLinkQuery());
             },
         }, this.viewModel.getTime());
+    }
+
+    /**
+     * create reserve option
+     * @return m.Child[] | null
+     */
+    public createReserveOption(): m.Child[] | null {
+        const option = this.viewModel.getReservesOption();
+        if (option === null) { return null; }
+
+        const content: m.Child[] = [m('hr', { style: this.viewModel.hasReserveOption() ? '' : 'display: none;' })];
+
+        if (typeof option.option !== 'undefined') {
+            content.push(this.createItem(
+                'option-directory',
+                'ディレクトリ: ' + (option.option.directory || 'ルート'),
+            ));
+            content.push(this.createItem(
+                'option-recordedFormat',
+                'ファイル名形式: ' + (option.option.recordedFormat || 'デフォルト'),
+            ));
+        }
+
+        if (typeof option.encode !== 'undefined') {
+            const names = this.viewModel.getEncodeOptionNames();
+            // mode1
+            if (typeof option.encode.mode1 !== 'undefined') {
+                content.push(this.createItem(
+                    'encode-mode',
+                    `mode1: ${ names[option.encode.mode1] || option.encode.mode1 }`,
+                ));
+
+                if (typeof option.encode.directory1 !== 'undefined') {
+                    content.push(this.createItem('encode-directory', `dir1: ${ option.encode.directory1 }`));
+                }
+            }
+
+            // mode2
+            if (typeof option.encode.mode2 !== 'undefined') {
+                content.push(this.createItem(
+                    'encode-mode',
+                    `mode2: ${ names[option.encode.mode2] || option.encode.mode2 }`,
+                ));
+
+                if (typeof option.encode.directory2 !== 'undefined') {
+                    content.push(this.createItem('encode-directory', `dir2: ${ option.encode.directory2 }`));
+                }
+            }
+
+            // mode3
+            if (typeof option.encode.mode3 !== 'undefined') {
+                content.push(this.createItem(
+                    'encode-mode',
+                    `mode3: ${ names[option.encode.mode3] || option.encode.mode3 }`,
+                ));
+
+                if (typeof option.encode.directory3 !== 'undefined') {
+                    content.push(this.createItem('encode-directory', `dir3: ${ option.encode.directory3 }`));
+                }
+            }
+
+            content.push(this.createItem(
+                'del-ts',
+                'TS 削除: ' + (option.encode.delTs ? '有効' : '無効'),
+            ));
+        }
+
+        return content;
     }
 
     /**
