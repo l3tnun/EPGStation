@@ -57,17 +57,36 @@ class EncodeProcessManageModel extends Model implements EncodeProcessManageModel
                 for (let i = 0; i < this.childs.length; i++) {
                     // priority が低いプロセスが見つかった
                     if (priority > this.childs[i].priority) {
-                        // kill
-                        await this.killChild(this.childs[i].createTime);
+                        const createTime = this.childs[i].createTime;
+                        let timeoutId: NodeJS.Timer;
 
-                        // 殺されるのを待つ
-                        this.listener.once(EncodeProcessManageModel.killChildEvent, () => {
+                        // プロセスを生成
+                        const createChild = (killedCreateTime: number) => {
+                            if (killedCreateTime !== createTime) { return; }
+
+                            // listner 登録解除
+                            this.removeListener(createChild);
+
                             // プロセス生成 & 登録
                             const child = this.buildProcess(input, output, cmd, priority, spawnOption);
                             this.childs.unshift(child);
                             resolve(child.child);
-                            this.log.system.info('kill & create new encode child');
-                        });
+                            clearInterval(timeoutId);
+                            this.log.system.info(`kill & create new encode child: ${ child.createTime }`);
+                        };
+
+                        // timeout 設定
+                        timeoutId = setTimeout(() => {
+                            this.removeListener(createChild);
+                            this.log.system.error(`EncodeProcessManageModel timeout error: ${ createTime }`);
+                            reject(new Error('EncodeProcessManageModelTimeoutError'));
+                        }, 3 * 1000);
+
+                        this.addListener(createChild);
+
+                        // kill
+                        await this.killChild(this.childs[i].createTime);
+
                         isFound = true;
                     }
                 }
@@ -81,9 +100,25 @@ class EncodeProcessManageModel extends Model implements EncodeProcessManageModel
                 const child = this.buildProcess(input, output, cmd, priority, spawnOption);
                 this.childs.unshift(child);
                 resolve(child.child);
-                this.log.system.info('create new encode child');
+                this.log.system.info(`create new encode child: ${ child.createTime }`);
             }
         });
+    }
+
+    /**
+     * add listener
+     * @param callback: (killedCreateTime: number) => void
+     */
+    private addListener(callback: (killedCreateTime?: number) => void): void {
+        this.listener.on(EncodeProcessManageModel.killChildEvent, callback);
+    }
+
+    /**
+     * remove listener
+     * @param callback: (killedCreateTime: number) => void
+     */
+    private removeListener(callback: (killedCreateTime?: number) => void): void {
+        this.listener.removeListener(EncodeProcessManageModel.killChildEvent, callback);
     }
 
     /**
@@ -128,14 +163,14 @@ class EncodeProcessManageModel extends Model implements EncodeProcessManageModel
         const createTime = new Date().getTime();
 
         // this.childs から削除
-        child.on('error', () => {
-            this.killChild(createTime, true)
+        child.on('error', async() => {
+            await this.killChild(createTime, true)
             .catch((err) => { this.log.system.error(err); });
             this.eventsNotify(createTime);
         });
 
-        child.on('exit', () => {
-            this.killChild(createTime, true)
+        child.on('exit', async() => {
+            await this.killChild(createTime, true)
             .catch((err) => { this.log.system.error(err); });
             this.eventsNotify(createTime);
         });
