@@ -14,7 +14,7 @@ import { RecordedDBInterface } from '../../DB/RecordedDB';
 import { ServicesDBInterface } from '../../DB/ServicesDB';
 import Model from '../../Model';
 import { ReservationManageModelInterface } from '../Reservation/ReservationManageModel';
-import { ManualReserveProgram, ReserveProgram, RuleReserveProgram } from '../ReserveProgramInterface';
+import { ReserveProgram, RuleReserveProgram } from '../ReserveProgramInterface';
 import { EncodeInterface } from '../RuleInterface';
 
 interface RecordingProgram {
@@ -413,7 +413,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
     private async getRecPath(reserve: ReserveProgram, conflict: number = 0): Promise<string> {
         const config = this.config.getConfig();
 
-        const option = (<RuleReserveProgram> reserve).ruleOption || (<ManualReserveProgram> reserve).manualOption;
+        const option = reserve.option;
         // ファイル名
         // base file name
         let fileName = typeof option !== 'undefined' && typeof option.recordedFormat !== 'undefined' ?

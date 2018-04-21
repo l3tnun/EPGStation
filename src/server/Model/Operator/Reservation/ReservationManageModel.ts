@@ -10,9 +10,8 @@ import { ProgramsDBInterface } from '../../DB/ProgramsDB';
 import { RulesDBInterface } from '../../DB/RulesDB';
 import { IPCServerInterface } from '../../IPC/IPCServer';
 import Model from '../../Model';
-import { AddReserveInterface } from '../ManualReserveInterface';
-import { ManualReserveProgram, ReserveProgram, RuleReserveProgram } from '../ReserveProgramInterface';
-import { EncodeInterface, OptionInterface, SearchInterface } from '../RuleInterface';
+import { AddReserveInterface, ManualReserveProgram, ReserveOptionInterface, ReserveProgram, RuleReserveProgram } from '../ReserveProgramInterface';
+import { EncodeInterface, SearchInterface } from '../RuleInterface';
 import Tuner from './Tuner';
 
 interface ExeQueueData {
@@ -379,7 +378,7 @@ class ReservationManageModel extends Model {
             isConflict: false,
         };
         if (typeof option.option !== 'undefined') {
-            addReserve.manualOption = option.option;
+            addReserve.option = option.option;
         }
         if (typeof option.encode !== 'undefined') {
             addReserve.encodeOption = option.encode;
@@ -600,16 +599,20 @@ class ReservationManageModel extends Model {
 
         if (rule !== null) {
             // ruleId の番組情報を追加
-            const ruleOption = this.createOption(rule);
             const encodeOption = this.createEncodeOption(rule);
             for (const program of programs) {
                 const data: RuleReserveProgram = {
                     program: program,
                     ruleId: ruleId,
-                    ruleOption: ruleOption,
                     isSkip: typeof skipIndex[program.id] === 'undefined' ? false : skipIndex[program.id],
                     isConflict: false,
                 };
+
+                const option = this.createOption(rule);
+                if (option !== null) {
+                    data.option = option;
+                }
+
                 if (encodeOption !== null) {
                     data.encodeOption = encodeOption;
                 }
@@ -673,10 +676,8 @@ class ReservationManageModel extends Model {
      * @param rule: DBSchema.RulesSchema
      * @return OptionInterface
      */
-    private createOption(rule: DBSchema.RulesSchema): OptionInterface {
-        const option: OptionInterface = {
-            enable: rule.enable,
-        };
+    private createOption(rule: DBSchema.RulesSchema): ReserveOptionInterface | null {
+        const option: ReserveOptionInterface = {};
 
         if (rule.directory !== null) { option.directory = rule.directory; }
         if (rule.recordedFormat !== null) { option.recordedFormat = rule.recordedFormat; }

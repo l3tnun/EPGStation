@@ -1,8 +1,8 @@
 import * as events from 'events';
 import * as apid from '../../../../node_modules/mirakurun/api';
 import Model from '../Model';
-import { AddReserveInterface } from '../Operator/ManualReserveInterface';
 import { ReserveAllId, ReserveLimit } from '../Operator/Reservation/ReservationManageModel';
+import { AddReserveInterface } from '../Operator/ReserveProgramInterface';
 import { RuleInterface } from '../Operator/RuleInterface';
 import { EncodeManageModelInterface } from '../Service/Encode/EncodeManageModel';
 import { SocketIoManageModelInterface } from '../Service/SocketIoManageModel';
