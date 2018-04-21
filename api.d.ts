@@ -182,6 +182,8 @@ export interface Reserves {
 export interface Reserve {
     program: ReserveProgram;
     ruleId?: RuleId;
+    option?: AddReserveOption;
+    encode?: RuleEncode;
 }
 
 export interface ReserveAllId {

@@ -92,6 +92,9 @@ class ReservesModel extends ApiModel implements ReservesModelInterface {
 
             if (typeof (<RuleReserveProgram> reserve).ruleId !== 'undefined') { result['ruleId'] = (<RuleReserveProgram> reserve).ruleId; }
 
+            if (typeof reserve.option !== 'undefined') { result['option'] = reserve.option; }
+            if (typeof reserve.encodeOption !== 'undefined') { result['encodeOption'] = reserve.encodeOption; }
+
             return result;
         });
     }

@@ -635,6 +635,10 @@ definitions:
         $ref: '#/definitions/ReserveProgram'
       ruleId:
         $ref: '#/definitions/RuleId'
+      option:
+        $ref: '#/definitions/AddReserveOption'
+      encode:
+        $ref: '#/definitions/RuleEncode'
 
   ReserveAllId:
     type: object
