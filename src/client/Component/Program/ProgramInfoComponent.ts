@@ -86,7 +86,10 @@ class ProgramInfoComponent extends Component<void> {
 
         if (typeof option.option !== 'undefined') {
             content.push(m('hr'));
-            content.push(m('div', { class: 'option-parent' }, [
+            content.push(m('div', {
+                class: 'option-parent',
+                style: typeof option.encode === 'undefined' ? 'padding-bottom: 16px;' : '',
+            }, [
                 this.createItem('title', 'オプション'),
                 this.createItem(
                     'reserve-type',
