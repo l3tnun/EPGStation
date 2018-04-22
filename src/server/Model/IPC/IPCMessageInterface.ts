@@ -31,6 +31,7 @@ namespace IPCMessageDefinition {
     export const getReserveConflicts = 'getReserveConflicts';
     export const getReserveSkips = 'getReserveSkips';
     export const addReserve  = 'addReserve';
+    export const editReserve  = 'editReserve';
     export const cancelReserve = 'cancelReserve';
     export const removeReserveSkip = 'removeReserveSkip';
     export const recordedDelete = 'recordedDelete';

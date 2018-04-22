@@ -30,6 +30,7 @@ interface RecordingManageModelInterface extends Model {
     stop(id: number): void;
     stopRuleId(ruleId: number): void;
     cleanRecording(): void;
+    isRecording(programId: apid.ProgramId): boolean;
 }
 
 /**
@@ -145,7 +146,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
      * @param programId: programId
      * @return true: 録画中, false: 録画中ではない
      */
-    private isRecording(programId: apid.ProgramId): boolean {
+    public isRecording(programId: apid.ProgramId): boolean {
         for (let i = 0; i < this.recording.length; i++) {
             if (this.recording[i].reserve.program.id === programId) {
                 return true;

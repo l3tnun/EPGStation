@@ -10,6 +10,7 @@ import { ProgramsDBInterface } from '../../DB/ProgramsDB';
 import { RulesDBInterface } from '../../DB/RulesDB';
 import { IPCServerInterface } from '../../IPC/IPCServer';
 import Model from '../../Model';
+import { RecordingManageModelInterface } from '../Recording/RecordingManageModel';
 import { AddReserveInterface, ManualReserveProgram, ReserveOptionInterface, ReserveProgram, RuleReserveProgram } from '../ReserveProgramInterface';
 import { EncodeInterface, SearchInterface } from '../RuleInterface';
 import Tuner from './Tuner';
@@ -36,6 +37,7 @@ interface ReserveLimit {
 }
 
 interface ReservationManageModelInterface extends Model {
+    setRecordedManageModel(recordingManage: RecordingManageModelInterface): void;
     setTuners(tuners: apid.TunerDevice[]): void;
     getReserve(programId: apid.ProgramId): ReserveProgram | null;
     getReservesAll(limit?: number, offset?: number): ReserveProgram[];
@@ -46,9 +48,16 @@ interface ReservationManageModelInterface extends Model {
     cancel(id: apid.ProgramId): void;
     removeSkip(id: apid.ProgramId): Promise<void>;
     addReserve(option: AddReserveInterface): Promise<void>;
+    editReserve(option: AddReserveInterface): Promise<void>;
     updateAll(): Promise<void>;
     updateRule(ruleId: number): Promise<void>;
     clean(): void;
+}
+
+namespace ReservationManageModelInterface {
+    export const ProgramIsNotFindError = 'ProgramIsNotFindError';
+    export const EditRuleError = 'EditRuleError';
+    export const IsRecordingError = 'IsRecordingError';
 }
 
 /**
@@ -64,6 +73,7 @@ class ReservationManageModel extends Model {
     private programDB: ProgramsDBInterface;
     private rulesDB: RulesDBInterface;
     private ipc: IPCServerInterface;
+    private recordingManage: RecordingManageModelInterface;
     private reserves: ReserveProgram[] = []; // 予約
     private tuners: Tuner[] = [];
     private reservesPath: string;
@@ -81,6 +91,14 @@ class ReservationManageModel extends Model {
         this.readReservesFile();
 
         this.exeEventEmitter.setMaxListeners(1000);
+    }
+
+    /**
+     * RecordingManageModel をセットする
+     * @param recordingManage: RecordingManageModelInterface
+     */
+    public setRecordedManageModel(recordingManage: RecordingManageModelInterface): void {
+        this.recordingManage = recordingManage;
     }
 
     /**
@@ -430,6 +448,56 @@ class ReservationManageModel extends Model {
         this.ipc.notifIo();
 
         this.log.system.info(`success addReserve: ${ option.programId }`);
+    }
+
+    /**
+     * 手動予約編集
+     * @param option: AddReserveInterface
+     * @return Promise<void>
+     * @throws ProgramIsNotFindError 指定した programId の予約が存在しない
+     * @throws EditRuleError 編集しようとした予約情報がルール予約だった
+     * @throws IsRecordingError 編集しようとした予約情報が予約中だった
+     */
+    public async editReserve(option: AddReserveInterface): Promise<void> {
+        const exeId = await this.getExecution(1);
+        this.log.system.info(`editReserve: ${ option.programId }`);
+
+        let index = -1;
+        for (let i = 0; i < this.reserves.length; i++) {
+            if (this.reserves[i].program.id === option.programId) {
+                index = i;
+                break;
+            }
+        }
+
+        if (index === -1) {
+            this.unLockExecution(exeId);
+            throw new Error(ReservationManageModelInterface.ProgramIsNotFindError);
+        }
+        if (typeof (<RuleReserveProgram> this.reserves[index]).ruleId !== 'undefined') {
+            this.unLockExecution(exeId);
+            throw new Error(ReservationManageModelInterface.EditRuleError);
+        }
+        if (this.recordingManage.isRecording(option.programId)) {
+            this.unLockExecution(exeId);
+            throw new Error(ReservationManageModelInterface.IsRecordingError);
+        }
+
+        // update option
+        if (typeof option.option === 'undefined') {
+            delete this.reserves[index].option;
+        } else {
+            this.reserves[index].option = option.option;
+        }
+
+        // update encode option
+        if (typeof option.encode === 'undefined') {
+            delete this.reserves[index].encodeOption;
+        } else {
+            this.reserves[index].encodeOption = option.encode;
+        }
+
+        this.unLockExecution(exeId);
     }
 
     /**

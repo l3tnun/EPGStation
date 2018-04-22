@@ -10,6 +10,7 @@ interface ReservesModelInterface extends ApiModel {
     getConflicts(limit: number, offset: number): Promise<{}[]>;
     getSkips(limit: number, offset: number): Promise<{}[]>;
     addReserve(option: AddReserveInterface): Promise<void>;
+    editReserve(option: AddReserveInterface): Promise<void>;
     cancelReserve(programId: apid.ProgramId): Promise<void>;
     removeReserveSkip(programId: apid.ProgramId): Promise<void>;
 }
@@ -106,6 +107,15 @@ class ReservesModel extends ApiModel implements ReservesModelInterface {
      */
     public async addReserve(option: AddReserveInterface): Promise<void> {
         await this.ipc.addReserve(option);
+    }
+
+    /**
+     * 手動予約編集
+     * @param option: AddReserveInterface
+     * @return Promise<void>
+     */
+    public async editReserve(option: AddReserveInterface): Promise<void> {
+        await this.ipc.editReserve(option);
     }
 
     /**

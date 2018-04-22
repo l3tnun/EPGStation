@@ -14,6 +14,7 @@ interface IPCClientInterface extends Model {
     getReserveConflicts(limit: number, offset: number): Promise<ReserveLimit>;
     getReserveSkips(limit: number, offset: number): Promise<ReserveLimit>;
     addReserve(option: AddReserveInterface): Promise<void>;
+    editReserve(option: AddReserveInterface): Promise<void>;
     cancelReserve(programId: apid.ProgramId): Promise<void>;
     removeReserveSkip(programId: apid.ProgramId): Promise<void>;
     recordedDelete(recordedId: number): Promise<void>;
@@ -124,6 +125,16 @@ class IPCClient extends Model implements IPCClientInterface {
      */
     public async addReserve(option: AddReserveInterface): Promise<void> {
         const id = this.send(IPCMessageDefinition.addReserve, { option: option });
+        await this.receive(id);
+    }
+
+    /**
+     * 手動予約編集
+     * @param option: AddReserveInterface
+     * @return Promise<void>
+     */
+    public async editReserve(option: AddReserveInterface): Promise<void> {
+        const id = this.send(IPCMessageDefinition.editReserve, { option: option });
         await this.receive(id);
     }
 

@@ -614,6 +614,14 @@ definitions:
       encode:
         $ref: '#/definitions/RuleEncode'
 
+  EditReserve:
+    type: object
+    properties:
+      option:
+        $ref: '#/definitions/AddReserveOption'
+      encode:
+        $ref: '#/definitions/RuleEncode'
+
   AddReserveOption:
     type: object
     description: '手動予約オプション'

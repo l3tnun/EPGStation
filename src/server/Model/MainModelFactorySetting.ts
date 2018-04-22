@@ -109,13 +109,15 @@ namespace ModelFactorySetting {
             rulesDB!,
             ipc,
         );
-        const mirakurunManage = new MirakurunManageModel();
         const recordingManage = new RecordingManageModel(
             recordedDB!,
             servicesDB!,
             programsDB!,
             reservationManage,
         );
+        reservationManage.setRecordedManageModel(recordingManage);
+
+        const mirakurunManage = new MirakurunManageModel();
         const recordedManage = new RecordedManageModel(
             recordedDB!,
             encodedDB!,
