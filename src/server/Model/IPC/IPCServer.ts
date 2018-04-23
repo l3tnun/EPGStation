@@ -106,6 +106,12 @@ class IPCServer extends Model implements IPCServerInterface {
             this.send({ id: id, value: value });
         };
 
+        this.functions[IPCMessageDefinition.getReserve] = (id: number, args: any) => {
+            const programId: number = args.programId;
+            const value = this.reservationManage.getReserve(programId);
+            this.send({ id: id, value: value });
+        };
+
         this.functions[IPCMessageDefinition.getReserves] = (id: number, args: any) => {
             const limit: number = args.limit;
             const offset: number = args.offset;

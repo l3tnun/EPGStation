@@ -2,7 +2,7 @@ import * as events from 'events';
 import * as apid from '../../../../node_modules/mirakurun/api';
 import Model from '../Model';
 import { ReserveAllId, ReserveLimit } from '../Operator/Reservation/ReservationManageModel';
-import { AddReserveInterface } from '../Operator/ReserveProgramInterface';
+import { AddReserveInterface, ReserveProgram } from '../Operator/ReserveProgramInterface';
 import { RuleInterface } from '../Operator/RuleInterface';
 import { EncodeManageModelInterface } from '../Service/Encode/EncodeManageModel';
 import { SocketIoManageModelInterface } from '../Service/SocketIoManageModel';
@@ -10,6 +10,7 @@ import { IPCClientMessage, IPCMessageDefinition, IPCServerEncodeMessage, IPCServ
 
 interface IPCClientInterface extends Model {
     getReserveAllId(): Promise<ReserveAllId>;
+    getReserve(programId: number): Promise<ReserveProgram | null>;
     getReserves(limit: number, offset: number): Promise<ReserveLimit>;
     getReserveConflicts(limit: number, offset: number): Promise<ReserveLimit>;
     getReserveSkips(limit: number, offset: number): Promise<ReserveLimit>;
@@ -83,6 +84,18 @@ class IPCClient extends Model implements IPCClientInterface {
         const result = await this.receive(id);
 
         return <ReserveAllId> result.value;
+    }
+
+    /**
+     * 予約を取得する
+     * @param programId: program id
+     * @return  Promise<ReserveProgram | null>
+     */
+    public async getReserve(programId: number): Promise<ReserveProgram | null> {
+        const id = this.send(IPCMessageDefinition.getReserve, { programId: programId });
+        const result = await this.receive(id);
+
+        return <ReserveProgram | null> result.value;
     }
 
     /**

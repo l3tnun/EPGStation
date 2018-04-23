@@ -27,6 +27,7 @@ interface IPCServerEncodeMessage {
 
 namespace IPCMessageDefinition {
     export const getReserveAllId = 'getReserveAllId';
+    export const getReserve = 'getReserve';
     export const getReserves = 'getReserves';
     export const getReserveConflicts = 'getReserveConflicts';
     export const getReserveSkips = 'getReserveSkips';

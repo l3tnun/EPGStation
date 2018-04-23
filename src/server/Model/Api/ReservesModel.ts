@@ -6,6 +6,7 @@ import ApiUtil from './ApiUtil';
 
 interface ReservesModelInterface extends ApiModel {
     getReserveAllId(): Promise<{}>;
+    getReserve(programId: number): Promise<{}[]>;
     getReserves(limit: number, offset: number): Promise<{}[]>;
     getConflicts(limit: number, offset: number): Promise<{}[]>;
     getSkips(limit: number, offset: number): Promise<{}[]>;
@@ -36,6 +37,16 @@ class ReservesModel extends ApiModel implements ReservesModelInterface {
     }
 
     /**
+     * 予約を取得
+     * @param programId: program id
+     */
+    public async getReserve(programId: number): Promise<any | null> {
+        const result = await this.ipc.getReserve(programId);
+
+        return result === null ? null : this.fixReserve(result);
+    }
+
+    /**
      * 予約情報を取得
      * @param limit: limit
      * @param offset: offset
@@ -45,7 +56,7 @@ class ReservesModel extends ApiModel implements ReservesModelInterface {
         const result = await this.ipc.getReserves(limit, offset);
 
         return {
-            reserves: this.fixReserve(result.reserves),
+            reserves: this.fixReserves(result.reserves),
             total: result.total,
         };
     }
@@ -60,7 +71,7 @@ class ReservesModel extends ApiModel implements ReservesModelInterface {
         const result = await this.ipc.getReserveConflicts(limit, offset);
 
         return {
-            reserves: this.fixReserve(result.reserves),
+            reserves: this.fixReserves(result.reserves),
             total: result.total,
         };
     }
@@ -75,7 +86,7 @@ class ReservesModel extends ApiModel implements ReservesModelInterface {
         const result = await this.ipc.getReserveSkips(limit, offset);
 
         return {
-            reserves: this.fixReserve(result.reserves),
+            reserves: this.fixReserves(result.reserves),
             total: result.total,
         };
     }
@@ -85,19 +96,28 @@ class ReservesModel extends ApiModel implements ReservesModelInterface {
      * @param reserves: ReserveProgram[]
      * @return any[]
      */
-    private fixReserve(reserves: ReserveProgram[]): any[] {
+    private fixReserves(reserves: ReserveProgram[]): any[] {
         return reserves.map((reserve) => {
-            const result = {
-                program: ApiUtil.fixReserveProgram(reserve.program),
-            };
-
-            if (typeof (<RuleReserveProgram> reserve).ruleId !== 'undefined') { result['ruleId'] = (<RuleReserveProgram> reserve).ruleId; }
-
-            if (typeof reserve.option !== 'undefined') { result['option'] = reserve.option; }
-            if (typeof reserve.encodeOption !== 'undefined') { result['encode'] = reserve.encodeOption; }
-
-            return result;
+            return this.fixReserve(reserve);
         });
+    }
+
+    /**
+     * ReserveProgram の修正
+     * @param reserve: ReserveProgram
+     * @return any
+     */
+    private fixReserve(reserve: ReserveProgram): any {
+        const result = {
+            program: ApiUtil.fixReserveProgram(reserve.program),
+        };
+
+        if (typeof (<RuleReserveProgram> reserve).ruleId !== 'undefined') { result['ruleId'] = (<RuleReserveProgram> reserve).ruleId; }
+
+        if (typeof reserve.option !== 'undefined') { result['option'] = reserve.option; }
+        if (typeof reserve.encodeOption !== 'undefined') { result['encode'] = reserve.encodeOption; }
+
+        return result;
     }
 
     /**
