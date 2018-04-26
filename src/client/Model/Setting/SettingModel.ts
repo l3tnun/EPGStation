@@ -3,6 +3,7 @@ import { StorageModelInterface } from '../Storage/StorageModel';
 
 interface SettingValue {
     isAutoOpenNavigation: boolean;
+    isEnabledPageMovementAnimation: boolean;
     programFixScroll: boolean;
     programMinimumDrawing: boolean;
     programLength: number;
@@ -105,6 +106,7 @@ class SettingModel extends Model implements SettingModelInterface {
     public getDefaultValue(): SettingValue {
         return {
             isAutoOpenNavigation: true,
+            isEnabledPageMovementAnimation: true,
             programFixScroll: false,
             programMinimumDrawing: false,
             programLength: 24,

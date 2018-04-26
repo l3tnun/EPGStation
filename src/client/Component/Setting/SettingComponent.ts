@@ -86,6 +86,14 @@ class SettingComponent extends ParentComponent<void> {
                     ),
                 ),
 
+                this.createListItem(
+                    'ページ移動アニメーション',
+                    this.createToggle(
+                        () => { return this.viewModel.tmpValue.isEnabledPageMovementAnimation; },
+                        (value) => { this.viewModel.tmpValue.isEnabledPageMovementAnimation = value; },
+                    ),
+                ),
+
                 fixScroll,
                 minimumDrawing,
 
