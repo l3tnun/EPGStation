@@ -24,10 +24,14 @@ class ReservesMenuComponent extends Component<void> {
                 onclick: () => {
                     this.viewModel.close();
                     const ruleId = this.viewModel.getRuleId();
-                    if (ruleId === null) { return; }
-                    setTimeout(() => { Util.move('/search', { rule: ruleId }); }, 200);
+                    setTimeout(() => {
+                        if (ruleId === null) {
+                            Util.move(`/program/detail/${ this.viewModel.getProgramId() }`, { mode: 'edit' });
+                        } else {
+                            Util.move('/search', { rule: ruleId });
+                        }
+                    }, 200);
                 },
-                style: this.viewModel.getRuleId() === null ? 'display: none;' : '',
             }, 'mode_edit', 'edit'),
             this.createItem({
                 onclick: () => {

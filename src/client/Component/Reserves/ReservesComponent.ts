@@ -282,8 +282,13 @@ class ReservesComponent extends ParentComponent<void> {
                 // edit rule
                 m('button', {
                     class: 'mdl-button mdl-js-button mdl-button--icon',
-                    style: typeof reserve.ruleId === 'undefined' ? 'visibility: hidden;' : '',
-                    onclick: () => { Util.move('/search', { rule: reserve.ruleId }); },
+                    onclick: () => {
+                        if (typeof reserve.ruleId === 'undefined') {
+                            Util.move(`/program/detail/${ reserve.program.id }`, { mode: 'edit' });
+                        } else {
+                            Util.move('/search', { rule: reserve.ruleId });
+                        }
+                    },
                 },
                     m('i', { class: 'material-icons' }, 'mode_edit'),
                 ),

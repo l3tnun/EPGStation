@@ -33,6 +33,14 @@ class ReservesMenuViewModel extends ViewModel {
     }
 
     /**
+     * programId の取得
+     * @return program id | null
+     */
+    public getProgramId(): number | null {
+        return this.reserve === null ? null : this.reserve.program.id;
+    }
+
+    /**
      * ruleId の取得
      * @return rule id | null
      */
