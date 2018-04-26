@@ -73,7 +73,7 @@ class ProgramDetailViewModel extends ViewModel {
 
         this.initInputOption();
         this.scheduleApiModel.init();
-        m.redraw();
+        if (status === 'update') { m.redraw(); }
 
         return Util.sleep(100)
         .then(() => {

@@ -72,7 +72,7 @@ class ProgramViewModel extends ViewModel {
         this.reloadUpdateDom = false;
         this.reservesApiModel.init();
         this.scheduleApiModel.init();
-        m.redraw();
+        if (status === 'update') { m.redraw(); }
 
         // 番組データを更新 & 反映
         return Util.sleep(100)
@@ -83,7 +83,7 @@ class ProgramViewModel extends ViewModel {
             return this.updateReserves();
         })
         .then(() => {
-            m.redraw();
+            setTimeout(() => { m.redraw(); }, 100);
         });
     }
 

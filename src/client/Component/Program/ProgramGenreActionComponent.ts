@@ -34,7 +34,7 @@ class ProgramGenreActionComponent extends Component<void> {
                         this.viewModel.update();
 
                         // 番組表を再描画
-                        this.programViewModel.init();
+                        this.programViewModel.init('update');
                     },
                 }, '更新'),
 

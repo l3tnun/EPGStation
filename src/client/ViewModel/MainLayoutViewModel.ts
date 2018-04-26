@@ -15,7 +15,7 @@ class MainLayoutViewModel extends ViewModel {
     public init(status: ViewModelStatus): void {
         if (status === 'init' || status === 'update') {
             this.hasViewData = false;
-            m.redraw();
+            if (status === 'update') { m.redraw(); }
         }
     }
 

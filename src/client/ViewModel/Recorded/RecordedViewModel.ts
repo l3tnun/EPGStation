@@ -57,7 +57,7 @@ class RecordedViewModel extends ViewModel {
         if (typeof m.route.param('keyword') !== 'undefined') { this.option.keyword = m.route.param('keyword'); }
 
         this.recordedApiModel.init();
-        m.redraw();
+        if (status === 'update') { m.redraw(); }
 
         // 録画一覧を更新
         return Util.sleep(wait)
