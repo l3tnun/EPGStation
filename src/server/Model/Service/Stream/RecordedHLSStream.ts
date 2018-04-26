@@ -87,7 +87,15 @@ class RecordedHLSStream extends Stream {
                 .replace(/%streamFileDir%/g, streamFilePath)
                 .replace(/%streamNum%/g, String(streamNumber));
 
-            this.enc = await this.process.create(filePath, `${ streamFilePath }\/stream${ streamNumber }.m3u8`, cmd, Stream.priority);
+            this.enc = await this.process.create(
+                filePath,
+                `${ streamFilePath }\/stream${ streamNumber }.m3u8`,
+                cmd,
+                Stream.priority,
+                {
+                    cwd: streamFilePath,
+                },
+            );
 
             this.enc.on('exit', (code: number) => { if (code !== 0) { this.ChildExit(streamNumber); } });
             this.enc.on('error', () => { this.ChildExit(streamNumber); });
