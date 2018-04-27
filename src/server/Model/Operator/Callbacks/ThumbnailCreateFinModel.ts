@@ -1,3 +1,4 @@
+import * as fs from 'fs';
 import { IPCServerInterface } from '../../IPC/IPCServer';
 import Model from '../../Model';
 import { RecordedManageModelInterface } from '../../Operator/Recorded/RecordedManageModel';
@@ -36,7 +37,17 @@ class ThumbnailCreateFinModel extends Model implements CallbackBaseModelInterfac
             // socket.io で通知
             this.ipc.notifIo();
         } catch (err) {
+            this.log.system.error(`thumbnail add error: ${ recordedId }`);
             this.log.system.error(err);
+
+            // サムネイル削除
+            this.log.system.error(`delete thumbnail: ${ thumbnailPath }`);
+            fs.unlink(thumbnailPath, (e) => {
+                if (e) {
+                    this.log.system.error(`delete thumbnail error: ${ thumbnailPath }`);
+                    this.log.system.error(e.message);
+                }
+            });
         }
     }
 }
