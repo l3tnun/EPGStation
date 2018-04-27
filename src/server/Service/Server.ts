@@ -78,6 +78,7 @@ class Server extends Base {
         express.static.mime.define({'image/png': ['png']});
         express.static.mime.define({'image/jpg': ['jpg']});
         express.static.mime.define({'video/mpeg': ['ts']});
+        express.static.mime.define({'application/octet-stream': ['m4s']});
         express.static.mime.define({'video/MP2T': ['m3u8']});
 
         // static files

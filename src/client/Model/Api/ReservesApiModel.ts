@@ -15,15 +15,18 @@ interface ReservesApiModelInterface extends ApiModel {
     init(): void;
     updateReserves(): Promise<void>;
     updateConflicts(): Promise<void>;
+    fetchReserve(programId: apid.ProgramId): Promise<void>;
     fetchReserves(limit: number, offset: number): Promise<void>;
     fetchConflicts(limit: number, offset: number): Promise<void>;
     fetchAllId(): Promise<AllReserves | null>;
     fetchConflictCount(): Promise<number>;
+    getReserve(): apid.Reserve | null;
     getReserves(): apid.Reserves;
     getPage(): number;
     getConflicts(): apid.Reserves;
     getAllId(): AllReserves | null;
     addReserve(option: apid.AddReserve): Promise<void>;
+    updateReserve(option: apid.AddReserve): Promise<void>;
     deleteReserve(programId: apid.ProgramId): Promise<void>;
     deleteSkip(programId: apid.ProgramId): Promise<void>;
 }
@@ -39,6 +42,7 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
     private allReserves: AllReserves | null = null;
     private reserves: apid.Reserves = { reserves: [], total: 0 };
     private conflicts: apid.Reserves = { reserves: [], total: 0 };
+    private reserve: apid.Reserve | null = null;
 
     /**
      * 初期化
@@ -46,6 +50,7 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
     public init(): void {
         super.init();
         this.allReserves = null;
+        this.reserve = null;
         this.reserves = { reserves: [], total: 0 };
         this.conflicts = { reserves: [], total: 0 };
     }
@@ -62,6 +67,26 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
      */
     public async updateConflicts(): Promise<void> {
         return this.fetchConflicts(this.limit, this.offset);
+    }
+
+    /**
+     * 予約を id 取得
+     * /reserves/{id}
+     * @param programId: program id
+     * @return Promise<void>
+     */
+    public async fetchReserve(programId: apid.ProgramId): Promise<void> {
+        try {
+            this.reserve = await <any> m.request({
+                method: 'GET',
+                url: `/api/reserves/${ programId }`,
+            });
+        } catch (err) {
+            this.reserve = null;
+            console.error('/api/reserves/{id}');
+            console.error(err);
+            this.openSnackbar('予約情報取得に失敗しました');
+        }
     }
 
     /**
@@ -181,6 +206,14 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
     }
 
     /**
+     * reserve を取得
+     * @return apid.Reserve | null
+     */
+    public getReserve(): apid.Reserve | null {
+        return this.reserve;
+    }
+
+    /**
      * reserves を取得
      * @return apid.Reserves
      */
@@ -222,6 +255,28 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
             await <any> m.request({
                 method: 'POST',
                 url: '/api/reserves',
+                data: option,
+            });
+
+        } catch (err) {
+            console.error('/api/reserves: post');
+            throw(err);
+        }
+    }
+
+    /**
+     * 予約更新
+     * @param option: AddReserve
+     * @return Promise<void>
+     */
+    public async updateReserve(option: apid.AddReserve): Promise<void> {
+        const programId = option.programId;
+        delete option.programId;
+
+        try {
+            await <any> m.request({
+                method: 'PUT',
+                url: `/api/reserves/${ programId }`,
                 data: option,
             });
 

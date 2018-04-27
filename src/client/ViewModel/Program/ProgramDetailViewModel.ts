@@ -20,8 +20,12 @@ class ProgramDetailViewModel extends ViewModel {
     private config: ConfigApiModelInterface;
     private snackbar: SnackbarModelInterface;
 
+    private isEditing: boolean = false;
+    private reserve: apid.Reserve | null = null;
+
     private enableEncode: boolean = false;
     private encodeOption: string[] = [];
+
 
     public directory: string = '';
     public recordedFormat: string = '';
@@ -49,15 +53,27 @@ class ProgramDetailViewModel extends ViewModel {
      * init
      * @param status: ViewModelStatus
      */
-    public init(status: ViewModelStatus = 'init'): Promise<void> {
+    public async init(status: ViewModelStatus = 'init', isEditing: boolean = false): Promise<void> {
         super.init(status);
 
         if (status === 'reload' || status === 'updateIo') { return this.reloadUpdate(); }
 
         // 初期化
+        this.reserve = null;
+        this.isEditing = isEditing;
+        if (this.isEditing) {
+            // 予約情報取得
+            await this.reserves.fetchReserve(this.getProgramId())
+            .catch((err) => {
+                console.error(err);
+                this.openSnackbar('予約情報取得に失敗しました');
+            });
+            this.reserve = this.reserves.getReserve();
+        }
+
         this.initInputOption();
         this.scheduleApiModel.init();
-        m.redraw();
+        if (status === 'update') { m.redraw(); }
 
         return Util.sleep(100)
         .then(() => {
@@ -66,6 +82,20 @@ class ProgramDetailViewModel extends ViewModel {
         .then(() => {
             return this.setConfig();
         });
+    }
+
+    /**
+     * get Program Id
+     * @return number
+     */
+    private getProgramId(): number {
+        const programId = parseInt(m.route.param('programId'), 10);
+        if (isNaN(programId)) {
+            this.openSnackbar('Program Id が不正です。');
+            throw new Error('program id is NaN');
+        }
+
+        return programId;
     }
 
     /**
@@ -87,6 +117,49 @@ class ProgramDetailViewModel extends ViewModel {
             { mode: -1, directory: '', },
         ];
         this.delTs = false;
+
+        // 予約情報から各種オプションを取得する
+        if (this.reserve !== null) {
+            // option
+            if (typeof this.reserve.option !== 'undefined') {
+                if (typeof this.reserve.option.directory !== 'undefined') {
+                    this.directory = this.reserve.option.directory;
+                }
+                if (typeof this.reserve.option.recordedFormat !== 'undefined') {
+                    this.recordedFormat = this.reserve.option.recordedFormat;
+                }
+            }
+
+            // encode
+            if (typeof this.reserve.encode !== 'undefined') {
+                // mode1
+                if (typeof this.reserve.encode.mode1 !== 'undefined') {
+                    this.encodeModes[0].mode = this.reserve.encode.mode1;
+                }
+                if (typeof this.reserve.encode.directory1 !== 'undefined') {
+                    this.encodeModes[0].directory = this.reserve.encode.directory1;
+                }
+
+                // mode2
+                if (typeof this.reserve.encode.mode2 !== 'undefined') {
+                    this.encodeModes[1].mode = this.reserve.encode.mode2;
+                }
+                if (typeof this.reserve.encode.directory2 !== 'undefined') {
+                    this.encodeModes[1].directory = this.reserve.encode.directory2;
+                }
+
+                // mode3
+                if (typeof this.reserve.encode.mode3 !== 'undefined') {
+                    this.encodeModes[2].mode = this.reserve.encode.mode3;
+                }
+                if (typeof this.reserve.encode.directory3 !== 'undefined') {
+                    this.encodeModes[2].directory = this.reserve.encode.directory3;
+                }
+
+                // delTs
+                this.delTs = this.reserve.encode.delTs;
+            }
+        }
     }
 
     /**
@@ -108,25 +181,33 @@ class ProgramDetailViewModel extends ViewModel {
      * 番組データを取得する
      */
     public async updateSchedule(): Promise<void> {
-        const programId = parseInt(m.route.param('programId'), 10);
-        if (isNaN(programId)) {
-            this.openSnackbar('Program Id が不正です。');
-            throw new Error('program id is NaN');
-        }
-
         // 番組情報の取得
-        await this.scheduleApiModel.fetchScheduleDetail(programId);
+        await this.scheduleApiModel.fetchScheduleDetail(this.getProgramId());
     }
 
     /**
-     * 予約
+     * 予約追加
+     * @return Promise<void>
      */
     public async add(): Promise<void> {
-        const schedule = this.getSchedule();
-        if (schedule === null) { return; }
+        await this.reserves.addReserve(this.createAddReserve());
+    }
 
+    /**
+     * 予約更新
+     * @return Promise<void>
+     */
+    public async update(): Promise<void> {
+        await this.reserves.updateReserve(this.createAddReserve());
+    }
+
+    /**
+     * create AddReserve
+     * @return apid.AddReserve
+     */
+    private createAddReserve(): apid.AddReserve {
         const option: apid.AddReserve = {
-            programId: schedule.programs[0].id,
+            programId: this.getProgramId(),
         };
 
         // option
@@ -164,7 +245,7 @@ class ProgramDetailViewModel extends ViewModel {
             }
         }
 
-        await this.reserves.addReserve(option);
+        return option;
     }
 
     /**
@@ -191,6 +272,14 @@ class ProgramDetailViewModel extends ViewModel {
      */
     public isEnableEncode(): boolean {
         return this.enableEncode;
+    }
+
+    /**
+     * 編集モードか
+     * @return boolean
+     */
+    public isEditMode(): boolean {
+        return this.isEditing;
     }
 
     /**

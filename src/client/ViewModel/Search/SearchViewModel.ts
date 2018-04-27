@@ -109,7 +109,7 @@ class SearchViewModel extends ViewModel {
         }
 
         if (this.rule === null && typeof m.route.param('rule') !== 'undefined') { return; }
-        m.redraw();
+        if (status === 'update') { m.redraw(); }
 
         await Util.sleep(100);
         await this.updateReserves();

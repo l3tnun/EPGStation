@@ -220,7 +220,7 @@ abstract class ParentComponent<T> extends Component<T> {
     private setRestorePositionFlag(status: ViewModelStatus): void {
         if (status === 'init' || status === 'update') {
             this.isNeedRestorePosition = true;
-            m.redraw();
+            if (status === 'update') { m.redraw(); }
         }
     }
 

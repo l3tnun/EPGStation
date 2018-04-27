@@ -20,7 +20,10 @@ class ProgramInfoComponent extends Component<void> {
      */
     public view(): m.Child {
         return m('div', { class: 'program-info' }, [
-            m('div', { class: 'content-parent' }, [
+            m('div', {
+                class: 'content-parent',
+                style: this.viewModel.hasReserveOption() ? 'padding-bottom: 0;' : '',
+            }, [
                 m('div', { class: 'title' }, this.viewModel.getTitle()),
                 this.createChannel(),
                 this.createTime(),
@@ -37,6 +40,7 @@ class ProgramInfoComponent extends Component<void> {
                 this.createItem('audio-sampling-rate', 'サンプリングレート: ' + this.viewModel.getAudioSamplingRate()),
                 this.createItem('is-free', this.viewModel.getIsFree()),
             ]),
+            this.createReserveOption(),
         ]);
     }
 
@@ -68,6 +72,90 @@ class ProgramInfoComponent extends Component<void> {
                 Util.move('/program', this.viewModel.getProgramsLinkQuery());
             },
         }, this.viewModel.getTime());
+    }
+
+    /**
+     * create reserve option
+     * @return m.Child[] | null
+     */
+    public createReserveOption(): m.Child[] | null {
+        const option = this.viewModel.getReservesOption();
+        if (option === null) { return null; }
+
+        const content: m.Child[] = [];
+
+        if (typeof option.option !== 'undefined') {
+            content.push(m('hr'));
+            content.push(m('div', {
+                class: 'option-parent',
+                style: typeof option.encode === 'undefined' ? 'padding-bottom: 16px;' : '',
+            }, [
+                this.createItem('title', 'オプション'),
+                this.createItem(
+                    'reserve-type',
+                    '予約種類: ' + (this.viewModel.getReserveOptionRuleId() === null ? '手動' : 'ルール'),
+                ),
+                this.createItem(
+                    'option-directory',
+                    'ディレクトリ: ' + (option.option.directory || 'ルート'),
+                ),
+                this.createItem(
+                    'option-recordedFormat',
+                    'ファイル名形式: ' + (option.option.recordedFormat || 'デフォルト'),
+                ),
+            ]));
+        }
+
+        if (typeof option.encode !== 'undefined') {
+            content.push(m('hr'));
+
+            const encodeContent: m.Child[] = [this.createItem('title', 'エンコード')];
+            const names = this.viewModel.getEncodeOptionNames();
+            // mode1
+            if (typeof option.encode.mode1 !== 'undefined') {
+                encodeContent.push(this.createItem(
+                    'encode-mode',
+                    `mode1: ${ names[option.encode.mode1] || option.encode.mode1 }`,
+                ));
+
+                if (typeof option.encode.directory1 !== 'undefined') {
+                    encodeContent.push(this.createItem('encode-directory', `dir1: ${ option.encode.directory1 }`));
+                }
+            }
+
+            // mode2
+            if (typeof option.encode.mode2 !== 'undefined') {
+                encodeContent.push(this.createItem(
+                    'encode-mode',
+                    `mode2: ${ names[option.encode.mode2] || option.encode.mode2 }`,
+                ));
+
+                if (typeof option.encode.directory2 !== 'undefined') {
+                    encodeContent.push(this.createItem('encode-directory', `dir2: ${ option.encode.directory2 }`));
+                }
+            }
+
+            // mode3
+            if (typeof option.encode.mode3 !== 'undefined') {
+                encodeContent.push(this.createItem(
+                    'encode-mode',
+                    `mode3: ${ names[option.encode.mode3] || option.encode.mode3 }`,
+                ));
+
+                if (typeof option.encode.directory3 !== 'undefined') {
+                    encodeContent.push(this.createItem('encode-directory', `dir3: ${ option.encode.directory3 }`));
+                }
+            }
+
+            encodeContent.push(this.createItem(
+                'del-ts',
+                'TS 削除: ' + (option.encode.delTs ? '有効' : '無効'),
+            ));
+
+            content.push(m('div', { class: 'encode-parent' }, encodeContent));
+        }
+
+        return content;
     }
 
     /**

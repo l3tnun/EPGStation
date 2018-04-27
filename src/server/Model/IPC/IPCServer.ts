@@ -3,10 +3,10 @@ import * as apid from '../../../../node_modules/mirakurun/api';
 import * as events from '../../IoEvents';
 import Model from '../Model';
 import { MirakurunManageModelInterface } from '../Operator/EPGUpdate/MirakurunManageModel';
-import { AddReserveInterface } from '../Operator/ManualReserveInterface';
 import { RecordedManageModelInterface } from '../Operator/Recorded/RecordedManageModel';
 import { RecordingManageModelInterface } from '../Operator/Recording/RecordingManageModel';
 import { ReservationManageModelInterface } from '../Operator/Reservation/ReservationManageModel';
+import { AddReserveInterface } from '../Operator/ReserveProgramInterface';
 import { RuleManageModelInterface } from '../Operator/Rule/RuleManageModel';
 import { RuleInterface } from '../Operator/RuleInterface';
 import { EncodeProgram } from '../Service/Encode/EncodeManageModel';
@@ -106,6 +106,12 @@ class IPCServer extends Model implements IPCServerInterface {
             this.send({ id: id, value: value });
         };
 
+        this.functions[IPCMessageDefinition.getReserve] = (id: number, args: any) => {
+            const programId: number = args.programId;
+            const value = this.reservationManage.getReserve(programId);
+            this.send({ id: id, value: value });
+        };
+
         this.functions[IPCMessageDefinition.getReserves] = (id: number, args: any) => {
             const limit: number = args.limit;
             const offset: number = args.offset;
@@ -132,6 +138,17 @@ class IPCServer extends Model implements IPCServerInterface {
 
             try {
                 await this.reservationManage.addReserve(option);
+                this.send({ id: id });
+            } catch (err) {
+                this.send({ id: id, error: err.message });
+            }
+        };
+
+        this.functions[IPCMessageDefinition.editReserve] = async(id: number, args: any) => {
+            const option: AddReserveInterface = args.option;
+
+            try {
+                await this.reservationManage.editReserve(option);
                 this.send({ id: id });
             } catch (err) {
                 this.send({ id: id, error: err.message });

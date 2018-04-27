@@ -14,7 +14,7 @@ import { RecordedDBInterface } from '../../DB/RecordedDB';
 import { ServicesDBInterface } from '../../DB/ServicesDB';
 import Model from '../../Model';
 import { ReservationManageModelInterface } from '../Reservation/ReservationManageModel';
-import { ManualReserveProgram, ReserveProgram, RuleReserveProgram } from '../ReserveProgramInterface';
+import { ReserveProgram, RuleReserveProgram } from '../ReserveProgramInterface';
 import { EncodeInterface } from '../RuleInterface';
 
 interface RecordingProgram {
@@ -30,6 +30,7 @@ interface RecordingManageModelInterface extends Model {
     stop(id: number): void;
     stopRuleId(ruleId: number): void;
     cleanRecording(): void;
+    isRecording(programId: apid.ProgramId): boolean;
 }
 
 /**
@@ -145,7 +146,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
      * @param programId: programId
      * @return true: 録画中, false: 録画中ではない
      */
-    private isRecording(programId: apid.ProgramId): boolean {
+    public isRecording(programId: apid.ProgramId): boolean {
         for (let i = 0; i < this.recording.length; i++) {
             if (this.recording[i].reserve.program.id === programId) {
                 return true;
@@ -413,7 +414,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
     private async getRecPath(reserve: ReserveProgram, conflict: number = 0): Promise<string> {
         const config = this.config.getConfig();
 
-        const option = (<RuleReserveProgram> reserve).ruleOption || (<ManualReserveProgram> reserve).manualOption;
+        const option = reserve.option;
         // ファイル名
         // base file name
         let fileName = typeof option !== 'undefined' && typeof option.recordedFormat !== 'undefined' ?

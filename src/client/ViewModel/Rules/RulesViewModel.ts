@@ -45,7 +45,7 @@ class RulesViewModel extends ViewModel {
         this.offset = typeof m.route.param('page') === 'undefined' ? 0 : (Number(m.route.param('page')) - 1) * this.limit;
 
         this.rulesApiModel.init();
-        m.redraw();
+        if (status === 'update') { m.redraw(); }
 
         // ルール一覧を更新
         return Util.sleep(100)

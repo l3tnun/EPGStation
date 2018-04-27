@@ -1,8 +1,8 @@
 import * as events from 'events';
 import * as apid from '../../../../node_modules/mirakurun/api';
 import Model from '../Model';
-import { AddReserveInterface } from '../Operator/ManualReserveInterface';
 import { ReserveAllId, ReserveLimit } from '../Operator/Reservation/ReservationManageModel';
+import { AddReserveInterface, ReserveProgram } from '../Operator/ReserveProgramInterface';
 import { RuleInterface } from '../Operator/RuleInterface';
 import { EncodeManageModelInterface } from '../Service/Encode/EncodeManageModel';
 import { SocketIoManageModelInterface } from '../Service/SocketIoManageModel';
@@ -10,10 +10,12 @@ import { IPCClientMessage, IPCMessageDefinition, IPCServerEncodeMessage, IPCServ
 
 interface IPCClientInterface extends Model {
     getReserveAllId(): Promise<ReserveAllId>;
+    getReserve(programId: number): Promise<ReserveProgram | null>;
     getReserves(limit: number, offset: number): Promise<ReserveLimit>;
     getReserveConflicts(limit: number, offset: number): Promise<ReserveLimit>;
     getReserveSkips(limit: number, offset: number): Promise<ReserveLimit>;
     addReserve(option: AddReserveInterface): Promise<void>;
+    editReserve(option: AddReserveInterface): Promise<void>;
     cancelReserve(programId: apid.ProgramId): Promise<void>;
     removeReserveSkip(programId: apid.ProgramId): Promise<void>;
     recordedDelete(recordedId: number): Promise<void>;
@@ -85,6 +87,18 @@ class IPCClient extends Model implements IPCClientInterface {
     }
 
     /**
+     * 予約を取得する
+     * @param programId: program id
+     * @return  Promise<ReserveProgram | null>
+     */
+    public async getReserve(programId: number): Promise<ReserveProgram | null> {
+        const id = this.send(IPCMessageDefinition.getReserve, { programId: programId });
+        const result = await this.receive(id);
+
+        return <ReserveProgram | null> result.value;
+    }
+
+    /**
      * 予約一覧を取得する
      * @return Promise<ReserveLimit>
      */
@@ -124,6 +138,16 @@ class IPCClient extends Model implements IPCClientInterface {
      */
     public async addReserve(option: AddReserveInterface): Promise<void> {
         const id = this.send(IPCMessageDefinition.addReserve, { option: option });
+        await this.receive(id);
+    }
+
+    /**
+     * 手動予約編集
+     * @param option: AddReserveInterface
+     * @return Promise<void>
+     */
+    public async editReserve(option: AddReserveInterface): Promise<void> {
+        const id = this.send(IPCMessageDefinition.editReserve, { option: option });
         await this.receive(id);
     }
 

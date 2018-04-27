@@ -19,7 +19,7 @@ class ProgramDetailComponent extends ParentComponent<void> {
     }
 
     protected async parentInitViewModel(status: ViewModelStatus): Promise<void> {
-        await this.viewModel.init(status);
+        await this.viewModel.init(status, m.route.param('mode') === 'edit');
     }
 
     /**
@@ -32,7 +32,7 @@ class ProgramDetailComponent extends ParentComponent<void> {
      */
     public view(): m.Child {
         return m(MainLayoutComponent, {
-            header: { title: '番組詳細予約' },
+            header: { title: this.viewModel.isEditMode() ? '番組予約編集' : '番組詳細予約' },
             content: [
                 this.createContent(),
             ],
@@ -204,20 +204,25 @@ class ProgramDetailComponent extends ParentComponent<void> {
             m('button', {
                 class: 'mdl-button mdl-js-button mdl-button--primary',
                 onclick: async() => {
-                    // 予約追加
+                    // 予約追加 or 更新
+                    const isEditMode = this.viewModel.isEditMode();
                     try {
-                        await this.viewModel.add();
-                        this.viewModel.openSnackbar('予約追加');
+                        if (isEditMode) {
+                            await this.viewModel.update();
+                        } else {
+                            await this.viewModel.add();
+                        }
+                        this.viewModel.openSnackbar(isEditMode ? '予約更新' : '予約追加');
                         await Util.sleep(1000);
                     } catch (err) {
-                        this.viewModel.openSnackbar('予約追加に失敗しました');
+                        this.viewModel.openSnackbar((isEditMode ? '予約更新' : '予約追加') + 'に失敗しました');
 
                         return;
                     }
 
                     window.history.back();
                 },
-            }, '予約'),
+            }, this.viewModel.isEditMode() ? '更新' : '予約'),
 
             // キャンセルボタン
             m('button', {

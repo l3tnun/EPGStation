@@ -8,6 +8,12 @@ import DateUtil from '../../Util/DateUtil';
 import GenreUtil from '../../Util/GenreUtil';
 import ViewModel from '../ViewModel';
 
+interface ReservesOption {
+    ruleId?: apid.RuleId;
+    option?: apid.AddReserveOption;
+    encode?: apid.RuleEncode;
+}
+
 /**
  * ProgramInfoViewModel
  */
@@ -18,6 +24,7 @@ class ProgramInfoViewModel extends ViewModel {
     private snackbar: SnackbarModelInterface;
     private program: apid.ScheduleProgramItem | null = null;
     private channel: apid.ScheduleServiceItem | null = null;
+    private reservesOption: ReservesOption | null = null;
 
     // エンコードオプション
     private encodeStatus: boolean = false; // true: エンコード有効
@@ -43,9 +50,10 @@ class ProgramInfoViewModel extends ViewModel {
      * @param program: program
      * @param channel: channel
      */
-    public set(program: apid.ScheduleProgramItem, channel: apid.ScheduleServiceItem): void {
+    public set(program: apid.ScheduleProgramItem, channel: apid.ScheduleServiceItem, reservesOption: ReservesOption | null = null): void {
         this.program = program;
         this.channel = channel;
+        this.reservesOption = reservesOption;
 
         // エンコードオプションをセットする
         const config = this.config.getConfig();
@@ -201,6 +209,41 @@ class ProgramInfoViewModel extends ViewModel {
         if (this.program === null) { return ''; }
 
         return this.program.isFree ? '無料放送' : '有料放送';
+    }
+
+    /**
+     * 予約オプションを持っているか
+     * @return boolean
+     */
+    public hasReserveOption(): boolean {
+        return this.reservesOption !== null;
+    }
+
+    /**
+     * 予約オプションの rule id 取得
+     * @return apid.RuleId | null
+     */
+    public getReserveOptionRuleId(): apid.RuleId | null {
+        return this.reservesOption === null || typeof this.reservesOption.ruleId === 'undefined' ?
+            null : this.reservesOption.ruleId;
+    }
+
+    /**
+     * get ReservesOption
+     * @return ReservesOption | null
+     */
+    public getReservesOption(): ReservesOption | null {
+        return this.reservesOption;
+    }
+
+    /**
+     * get encode option name
+     * @return string[]
+     */
+    public getEncodeOptionNames(): string[] {
+        const config = this.config.getConfig();
+
+        return config === null || typeof config.encodeOption === 'undefined' ? [] : config.encodeOption;
     }
 
     /**

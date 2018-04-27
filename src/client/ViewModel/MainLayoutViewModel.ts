@@ -1,12 +1,19 @@
 import * as m from 'mithril';
 import { ViewModelStatus } from '../Enums';
+import { SettingModelInterface } from '../Model/Setting/SettingModel';
 import ViewModel from './ViewModel';
 
 /**
  * MainLayoutViewModel
  */
 class MainLayoutViewModel extends ViewModel {
+    private setting: SettingModelInterface;
     private hasViewData: boolean = false;
+
+    constructor(setting: SettingModelInterface) {
+        super();
+        this.setting = setting;
+    }
 
     /**
      * init ParentComponent の init で呼ぶ
@@ -14,8 +21,8 @@ class MainLayoutViewModel extends ViewModel {
      */
     public init(status: ViewModelStatus): void {
         if (status === 'init' || status === 'update') {
-            this.hasViewData = false;
-            m.redraw();
+            this.hasViewData = !this.setting.value.isEnabledPageMovementAnimation;
+            if (status === 'update') { m.redraw(); }
         }
     }
 

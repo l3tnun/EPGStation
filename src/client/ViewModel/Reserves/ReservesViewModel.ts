@@ -62,7 +62,7 @@ class ReservesViewModel extends ViewModel {
 
         this.reservesApiModel.init();
         this.scheduleApiModel.init();
-        m.redraw();
+        if (status === 'update') { m.redraw(); }
 
         return Util.sleep(wait)
         .then(() => {

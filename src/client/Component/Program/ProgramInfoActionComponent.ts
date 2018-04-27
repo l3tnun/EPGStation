@@ -91,21 +91,41 @@ class ProgramInfoActionComponent extends Component<void> {
      * @return m.Child
      */
     private createDetailButton(): m.Child | null {
-        if (this.viewModel.getReserveStatus() !== null) { return null; }
+        const reserve = this.viewModel.getReserveStatus();
+        // 手動予約でコンフリクトしている場合は除外
+        if (reserve !== null && typeof reserve.item.ruleId === 'undefined' && reserve.status === 'conflict') { return null; }
+
+        const isRule = reserve !== null && typeof reserve.item.ruleId !== 'undefined';
+
+        // 検索ページでルール検索の場合は除外
+        if (m.route.get().split('?')[0] === '/search' && typeof m.route.param('rule') !== 'undefined') { return null; }
+
+        const name = isRule
+            ? 'ルール'
+            : reserve === null
+                ? '詳細'
+                : '編集';
 
         return m('button', {
             type: 'button',
             class: 'mdl-button mdl-js-button mdl-button--primary',
             onclick: () => {
                 this.viewModel.close();
-                const program = this.viewModel.getProgram();
-                if (program === null) { return; }
 
-                setTimeout(() => {
-                    Util.move(`/program/detail/${ program.id }`);
-                }, 200);
+                if (isRule) {
+                    setTimeout(() => {
+                        Util.move('/search', { rule: reserve!.item.ruleId });
+                    }, 200);
+                } else {
+                    const program = this.viewModel.getProgram();
+                    if (program === null) { return; }
+
+                    setTimeout(() => {
+                        Util.move(`/program/detail/${ program.id }`, reserve === null ? {} : { mode: 'edit' });
+                    }, 200);
+                }
             },
-        }, '詳細');
+        }, name);
     }
 
     /**

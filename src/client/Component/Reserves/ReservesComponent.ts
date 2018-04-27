@@ -152,7 +152,22 @@ class ReservesComponent extends ParentComponent<void> {
         const channel = this.viewModel.getChannel(reserve.program.channelId);
         if (channel === null) { return; }
 
-        this.programInfo.set(reserve.program, channel);
+        const reservesOption = {
+            ruleId: reserve.ruleId,
+            option: reserve.option,
+            encode: reserve.encode,
+        };
+
+        let isNull = true;
+        for (const key in reservesOption) {
+            if (typeof reservesOption[key] === 'undefined') {
+                delete reservesOption[key];
+            } else {
+                isNull = false;
+            }
+        }
+
+        this.programInfo.set(reserve.program, channel, isNull ? null : reservesOption);
         this.balloon.open(ProgramInfoViewModel.id, event);
     }
 
@@ -267,8 +282,13 @@ class ReservesComponent extends ParentComponent<void> {
                 // edit rule
                 m('button', {
                     class: 'mdl-button mdl-js-button mdl-button--icon',
-                    style: typeof reserve.ruleId === 'undefined' ? 'visibility: hidden;' : '',
-                    onclick: () => { Util.move('/search', { rule: reserve.ruleId }); },
+                    onclick: () => {
+                        if (typeof reserve.ruleId === 'undefined') {
+                            Util.move(`/program/detail/${ reserve.program.id }`, { mode: 'edit' });
+                        } else {
+                            Util.move('/search', { rule: reserve.ruleId });
+                        }
+                    },
                 },
                     m('i', { class: 'material-icons' }, 'mode_edit'),
                 ),
