@@ -58,15 +58,14 @@ class RecordedInfoComponent extends Component<void> {
                 return m('a', {
                     class: 'recorded-link mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect',
                     onclick: () => {
-                        if (Util.uaIsiOS()) {
-                            this.viewModel.close();
-                        } else if (Util.uaIsFirefox() && video.isUrlScheme) {
+                        if (Util.uaIsFirefox() && video.isUrlScheme) {
                             const w = window.open(video.path);
                             if (w !== null) {
                                 setTimeout(() => { w.close(); }, 200);
                             }
                         } else {
                             location.href = video.path;
+                            if (Util.uaIsiOS()) { this.viewModel.close(); }
                         }
                     },
                 }, video.name);
