@@ -114,7 +114,7 @@ class RecordedInfoViewModel extends ViewModel {
      * @param download: true: download mode, false: not download mode
      * @return video source
      */
-    public getVideoSrc(download: boolean = false): { name: string; path: string; filesize: string | null }[] {
+    public getVideoSrc(download: boolean = false): { name: string; path: string; filesize: string | null; isUrlScheme: boolean }[] {
         const config = this.config.getConfig();
         const setting = this.setting.get();
         if (this.recorded === null || config === null || setting === null) { return []; }
@@ -122,20 +122,20 @@ class RecordedInfoViewModel extends ViewModel {
         // url scheme 用のベースリンクを取得
         let urlScheme: string | null = null;
 
-        let isEnableUrlScheme = false;
+        let isEnabledUrlScheme = false;
         if (download) {
             if (setting.isEnableRecordedDownloaderURLScheme) {
                 urlScheme = setting.customRecordedDownloaderURLScheme;
-                isEnableUrlScheme = true;
+                isEnabledUrlScheme = true;
             }
         } else {
             if (setting.isEnableRecordedViewerURLScheme) {
                 urlScheme = setting.customRecordedViewerURLScheme;
-                isEnableUrlScheme = true;
+                isEnabledUrlScheme = true;
             }
         }
 
-        if (urlScheme === null && isEnableUrlScheme) {
+        if (urlScheme === null && isEnabledUrlScheme) {
             const app: { ios: string; android: string; mac: string; win: string } | undefined = download ? config.recordedDownloader : config.recordedViewer;
             if (typeof app !== 'undefined') {
                 if (Util.uaIsiOS() && typeof app.ios !== 'undefined') {
@@ -150,7 +150,7 @@ class RecordedInfoViewModel extends ViewModel {
             }
         }
 
-        const result: { name: string; path: string; filesize: string | null }[] = [];
+        const result: { name: string; path: string; filesize: string | null; isUrlScheme: boolean }[] = [];
         // ts ファイル
         if (this.recorded.original) {
             let url = download ? `/api/recorded/${ this.recorded.id }/file?mode=download` : `/api/recorded/${ this.recorded.id }/file`;
@@ -166,6 +166,7 @@ class RecordedInfoViewModel extends ViewModel {
                 name: 'TS',
                 path: url,
                 filesize: this.createFileSizeStr(this.recorded.filesize),
+                isUrlScheme: urlScheme !== null,
             });
         }
 
@@ -184,6 +185,7 @@ class RecordedInfoViewModel extends ViewModel {
                     name: encoded.name,
                     path: url,
                     filesize: this.createFileSizeStr(encoded.filesize),
+                    isUrlScheme: urlScheme !== null,
                 });
             }
         }
