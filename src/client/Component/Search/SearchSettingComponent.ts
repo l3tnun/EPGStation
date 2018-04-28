@@ -40,6 +40,20 @@ class SearchSettingComponent extends Component<void> {
                     (value) => { this.viewModel.tmpValue.setKeyowordToDirectory = value; },
                 ),
             ),
+            this.createListItem(
+                'デフォルトエンコード設定',
+                this.createToggle(
+                    () => { return this.viewModel.tmpValue.setDefaultEncodeOption; },
+                    (value) => { this.viewModel.tmpValue.setDefaultEncodeOption = value; },
+                ),
+            ),
+            this.createListItem(
+                '元ファイルの自動削除',
+                this.createToggle(
+                    () => { return this.viewModel.tmpValue.delTs; },
+                    (value) => { this.viewModel.tmpValue.delTs = value; },
+                ),
+            ),
         ];
     }
 

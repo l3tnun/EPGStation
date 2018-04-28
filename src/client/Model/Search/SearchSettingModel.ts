@@ -2,6 +2,8 @@ import StorageTemplateModel from '../Storage/StorageTemplateModel';
 
 interface SearchSettingValue {
     setKeyowordToDirectory: boolean;
+    setDefaultEncodeOption: boolean;
+    delTs: boolean;
 }
 
 /**
@@ -22,6 +24,8 @@ class SearchSettingModel extends StorageTemplateModel<SearchSettingValue> {
     public getDefaultValue(): SearchSettingValue {
         return {
             setKeyowordToDirectory: false,
+            setDefaultEncodeOption: false,
+            delTs: false,
         };
     }
 }

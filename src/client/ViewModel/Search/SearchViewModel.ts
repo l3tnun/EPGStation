@@ -376,13 +376,24 @@ class SearchViewModel extends ViewModel {
         this.settingOptions();
 
         if (this.rule === null) {
+            const config = this.config.getConfig();
+            const setting = this.searchSettingModel.getValue();
             // 設定の検索時にキーワードをコピーが有効な場合
-            if (this.searchSettingModel.getValue().setKeyowordToDirectory && this.keyword.length > 0) {
+            if (setting.setKeyowordToDirectory && this.keyword.length > 0) {
                 this.directory = this.keyword;
                 this.encodeModes[0].directory = this.keyword;
                 this.encodeModes[1].directory = this.keyword;
                 this.encodeModes[2].directory = this.keyword;
             }
+
+            // デフォルトエンコード設定
+            if (setting.setDefaultEncodeOption && config !== null) {
+                if (typeof config.defaultEncode !== 'undefined') {
+                    this.encodeModes[0].mode = config.defaultEncode;
+                }
+            }
+
+            this.delTs = setting.delTs;
         }
 
         // 検索
