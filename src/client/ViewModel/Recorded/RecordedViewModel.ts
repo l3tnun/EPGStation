@@ -3,8 +3,9 @@ import * as apid from '../../../../api';
 import { ViewModelStatus } from '../../Enums';
 import { ChannelsApiModelInterface } from '../../Model/Api/ChannelsApiModel';
 import { FindQueryOption, RecordedApiModelInterface } from '../../Model/Api/RecordedApiModel';
-import { SettingModelInterface } from '../../Model/Setting/SettingModel';
+import { SettingValue } from '../../Model/Setting/SettingModel';
 import { SnackbarModelInterface } from '../../Model/Snackbar/SnackbarModel';
+import StorageTemplateModel from '../../Model/Storage/StorageTemplateModel';
 import DateUtil from '../../Util/DateUtil';
 import Util from '../../Util/Util';
 import ViewModel from '../ViewModel';
@@ -15,7 +16,7 @@ import ViewModel from '../ViewModel';
 class RecordedViewModel extends ViewModel {
     private recordedApiModel: RecordedApiModelInterface;
     private channels: ChannelsApiModelInterface;
-    private setting: SettingModelInterface;
+    private setting: StorageTemplateModel<SettingValue>;
     private snackbar: SnackbarModelInterface;
     private limit: number = 0;
     private offset: number = 0;
@@ -27,7 +28,7 @@ class RecordedViewModel extends ViewModel {
     constructor(
         recordedApiModel: RecordedApiModelInterface,
         channels: ChannelsApiModelInterface,
-        setting: SettingModelInterface,
+        setting: StorageTemplateModel<SettingValue>,
         snackbar: SnackbarModelInterface,
     ) {
         super();
@@ -47,7 +48,7 @@ class RecordedViewModel extends ViewModel {
         if (status === 'init' || status === 'update') { this.endEditMode(); }
         if (status === 'reload' || status === 'updateIo') { return this.fetchData(); }
 
-        this.limit = typeof m.route.param('length') === 'undefined' ? this.setting.value.recordedLength : Number(m.route.param('length'));
+        this.limit = typeof m.route.param('length') === 'undefined' ? this.setting.getValue().recordedLength : Number(m.route.param('length'));
         this.offset = typeof m.route.param('page') === 'undefined' ? 0 : (Number(m.route.param('page')) - 1) * this.limit;
 
         this.option = {};

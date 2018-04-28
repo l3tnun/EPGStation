@@ -1,6 +1,7 @@
 import * as apid from '../../../api';
 import { ConfigApiModelInterface } from '../Model/Api/ConfigApiModel';
-import { SettingModelInterface } from '../Model/Setting/SettingModel';
+import { SettingValue } from '../Model/Setting/SettingModel';
+import StorageTemplateModel from '../Model/Storage/StorageTemplateModel';
 import ViewModel from './ViewModel';
 
 /**
@@ -9,11 +10,11 @@ import ViewModel from './ViewModel';
  */
 class NavigationViewModel extends ViewModel {
     private configApiModel: ConfigApiModelInterface;
-    private setting: SettingModelInterface;
+    private setting: StorageTemplateModel<SettingValue>;
 
     constructor(
         configApiModel: ConfigApiModelInterface,
-        setting: SettingModelInterface,
+        setting: StorageTemplateModel<SettingValue>,
     ) {
         super();
         this.configApiModel = configApiModel;
@@ -33,7 +34,7 @@ class NavigationViewModel extends ViewModel {
      * @return boolean
      */
     public isAutoOpen(): boolean {
-        return this.setting.value.isAutoOpenNavigation;
+        return this.setting.getValue().isAutoOpenNavigation;
     }
 }
 

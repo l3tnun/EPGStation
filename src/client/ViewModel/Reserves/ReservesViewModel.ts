@@ -4,7 +4,8 @@ import { ViewModelStatus } from '../../Enums';
 import { ChannelsApiModelInterface } from '../../Model/Api/ChannelsApiModel';
 import { ReservesApiModelInterface } from '../../Model/Api/ReservesApiModel';
 import { ScheduleApiModelInterface } from '../../Model/Api/ScheduleApiModel';
-import { SettingModelInterface } from '../../Model/Setting/SettingModel';
+import { SettingValue } from '../../Model/Setting/SettingModel';
+import StorageTemplateModel from '../../Model/Storage/StorageTemplateModel';
 import Util from '../../Util/Util';
 import ViewModel from '../ViewModel';
 
@@ -20,7 +21,7 @@ class ReservesViewModel extends ViewModel {
     private reservesApiModel: ReservesApiModelInterface;
     private channels: ChannelsApiModelInterface;
     private scheduleApiModel: ScheduleApiModelInterface;
-    private setting: SettingModelInterface;
+    private setting: StorageTemplateModel<SettingValue>;
     private limit: number = 0;
     private offset: number = 0;
     private mode: Mode;
@@ -29,7 +30,7 @@ class ReservesViewModel extends ViewModel {
         reservesApiModel: ReservesApiModelInterface,
         channels: ChannelsApiModelInterface,
         scheduleApiModel: ScheduleApiModelInterface,
-        setting: SettingModelInterface,
+        setting: StorageTemplateModel<SettingValue>,
     ) {
         super();
         this.reservesApiModel = reservesApiModel;
@@ -57,7 +58,7 @@ class ReservesViewModel extends ViewModel {
             return Promise.resolve();
         }
 
-        this.limit = typeof m.route.param('length') === 'undefined' ? this.setting.value.reservesLength : Number(m.route.param('length'));
+        this.limit = typeof m.route.param('length') === 'undefined' ? this.setting.getValue().reservesLength : Number(m.route.param('length'));
         this.offset = typeof m.route.param('page') === 'undefined' ? 0 : (Number(m.route.param('page')) - 1) * this.limit;
 
         this.reservesApiModel.init();
