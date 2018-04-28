@@ -7,7 +7,9 @@ import { ConfigApiModelInterface } from '../../Model/Api/ConfigApiModel';
 import { ReservesApiModelInterface } from '../../Model/Api/ReservesApiModel';
 import { RulesApiModelInterface } from '../../Model/Api/RulesApiModel';
 import { ScheduleApiModelInterface } from '../../Model/Api/ScheduleApiModel';
+import { SearchSettingValue } from '../../Model/Search/SearchSettingModel';
 import { SnackbarModelInterface } from '../../Model/Snackbar/SnackbarModel';
+import StorageTemplateModel from '../../Model/Storage/StorageTemplateModel';
 import Util from '../../Util/Util';
 import ViewModel from '../ViewModel';
 
@@ -19,6 +21,7 @@ class SearchViewModel extends ViewModel {
     private reservesApiModel: ReservesApiModelInterface;
     private rulesApiModel: RulesApiModelInterface;
     private channels: ChannelsApiModelInterface;
+    private searchSettingModel: StorageTemplateModel<SearchSettingValue>;
     private snackbar: SnackbarModelInterface;
     private config: ConfigApiModelInterface;
     private enableEncode: boolean = false;
@@ -72,6 +75,7 @@ class SearchViewModel extends ViewModel {
         rulesApiModel: RulesApiModelInterface,
         config: ConfigApiModelInterface,
         channels: ChannelsApiModelInterface,
+        searchSettingModel: StorageTemplateModel<SearchSettingValue>,
         snackbar: SnackbarModelInterface,
     ) {
         super();
@@ -80,6 +84,7 @@ class SearchViewModel extends ViewModel {
         this.rulesApiModel = rulesApiModel;
         this.config = config;
         this.channels = channels;
+        this.searchSettingModel = searchSettingModel;
         this.snackbar = snackbar;
     }
 
@@ -369,6 +374,16 @@ class SearchViewModel extends ViewModel {
         // init での呼び出しだと config が null の場合があるため
         this.setConfig();
         this.settingOptions();
+
+        if (this.rule === null) {
+            // 設定の検索時にキーワードをコピーが有効な場合
+            if (this.searchSettingModel.getValue().setKeyowordToDirectory && this.keyword.length > 0) {
+                this.directory = this.keyword;
+                this.encodeModes[0].directory = this.keyword;
+                this.encodeModes[1].directory = this.keyword;
+                this.encodeModes[2].directory = this.keyword;
+            }
+        }
 
         // 検索
         try {

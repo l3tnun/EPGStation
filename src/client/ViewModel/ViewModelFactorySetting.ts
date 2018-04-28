@@ -181,6 +181,7 @@ namespace ViewModelFactorySetting {
             rulesApiModel,
             configModel,
             channelsApiModel,
+            searchSettingModel,
             snackbarModel,
         ));
         factory.reg('StorageViewModel', new StorageViewModel(
