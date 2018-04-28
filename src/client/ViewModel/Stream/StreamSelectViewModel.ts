@@ -1,8 +1,9 @@
 import * as apid from '../../../../api';
 import { ConfigApiModelInterface } from '../../Model/Api/ConfigApiModel';
 import { BalloonModelInterface } from '../../Model/Balloon/BallonModel';
-import { SettingModelInterface } from '../../Model/Setting/SettingModel';
+import { SettingValue } from '../../Model/Setting/SettingModel';
 import { SnackbarModelInterface } from '../../Model/Snackbar/SnackbarModel';
+import StorageTemplateModel from '../../Model/Storage/StorageTemplateModel';
 import ViewModel from '../ViewModel';
 import CreateStreamLink from './CreateStreamLink';
 
@@ -11,7 +12,7 @@ import CreateStreamLink from './CreateStreamLink';
  */
 class StreamSelectViewModel extends ViewModel {
     private config: ConfigApiModelInterface;
-    private setting: SettingModelInterface;
+    private setting: StorageTemplateModel<SettingValue>;
     private balloon: BalloonModelInterface;
     private channel: apid.ScheduleServiceItem | null = null;
     private snackbar: SnackbarModelInterface;
@@ -26,7 +27,7 @@ class StreamSelectViewModel extends ViewModel {
         config: ConfigApiModelInterface,
         balloon: BalloonModelInterface,
         snackbar: SnackbarModelInterface,
-        setting: SettingModelInterface,
+        setting: StorageTemplateModel<SettingValue>,
     ) {
         super();
         this.config = config;

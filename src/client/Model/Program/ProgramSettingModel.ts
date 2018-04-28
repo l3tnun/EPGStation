@@ -1,5 +1,4 @@
-import Model from '../Model';
-import { StorageModelInterface } from '../Storage/StorageModel';
+import StorageTemplateModel from '../Storage/StorageTemplateModel';
 
 interface SizeValues {
     channelHeight: number;
@@ -16,73 +15,16 @@ interface ProgramSettingValue {
     mobile: SizeValues;
 }
 
-interface ProgramSettingModelInterface extends Model {
-    value: ProgramSettingValue;
-    init(): void;
-    get(): ProgramSettingValue | null;
-    remove(): void;
-    update(): void;
-    getDefaultValue(): ProgramSettingValue;
-    readonly isEnable: boolean;
-}
-
 /**
  * ProgramSettingModel
  */
-class ProgramSettingModel extends Model implements ProgramSettingModelInterface {
-    private storageModel: StorageModelInterface;
-
-    public isEnable: boolean = false;
-    public value: ProgramSettingValue;
-
-    constructor(storageModel: StorageModelInterface) {
-        super();
-        this.storageModel = storageModel;
-    }
-
+class ProgramSettingModel extends StorageTemplateModel<ProgramSettingValue> {
     /**
-     * init
+     * get storage key
+     * @return string;
      */
-    public init(): void {
-        const stored = this.get();
-
-        // 設定情報がない場合は作成
-        if (stored === null) {
-            this.value = this.getDefaultValue();
-            try {
-                this.storageModel.set(ProgramSettingModelInterface.storageKey, this.value);
-                this.isEnable = true;
-            } catch (err) {
-                this.isEnable = false;
-                console.error('ProgramSettingModel storage write error');
-                console.error(err);
-            }
-        } else {
-            this.value = stored;
-            this.isEnable = true;
-        }
-    }
-
-    /**
-     * 設定情報を取得
-     */
-    public get(): ProgramSettingValue | null {
-        return this.storageModel.get(ProgramSettingModelInterface.storageKey);
-    }
-
-    /**
-     * 設定情報を削除
-     */
-    public remove(): void {
-        this.storageModel.remove(ProgramSettingModelInterface.storageKey);
-    }
-
-    /**
-     * 設定情報の更新
-     */
-    public update(): void {
-        if (!this.isEnable || this.value === null) { return; }
-        this.storageModel.set(ProgramSettingModelInterface.storageKey, this.value);
+    protected getStorageKey(): string {
+        return 'programSetting';
     }
 
     /**
@@ -112,9 +54,5 @@ class ProgramSettingModel extends Model implements ProgramSettingModelInterface 
     }
 }
 
-namespace ProgramSettingModelInterface {
-    export const storageKey = 'programSetting';
-}
-
-export { ProgramSettingValue, ProgramSettingModelInterface, ProgramSettingModel };
+export { ProgramSettingValue, ProgramSettingModel };
 

@@ -5,7 +5,8 @@ import { ConfigApiModelInterface } from '../../Model/Api/ConfigApiModel';
 import { RecordedApiModelInterface } from '../../Model/Api/RecordedApiModel';
 import { StreamsApiModelInterface } from '../../Model/Api/StreamsApiModel';
 import { BalloonModelInterface } from '../../Model/Balloon/BallonModel';
-import { SettingModelInterface } from '../../Model/Setting/SettingModel';
+import { SettingValue } from '../../Model/Setting/SettingModel';
+import StorageTemplateModel from '../../Model/Storage/StorageTemplateModel';
 import { TabModelInterface } from '../../Model/Tab/TabModel';
 import DateUtil from '../../Util/DateUtil';
 import GenreUtil from '../../Util/GenreUtil';
@@ -17,7 +18,7 @@ import ViewModel from '../ViewModel';
  */
 class RecordedInfoViewModel extends ViewModel {
     private config: ConfigApiModelInterface;
-    private setting: SettingModelInterface;
+    private setting: StorageTemplateModel<SettingValue>;
     private balloon: BalloonModelInterface;
     private recorded: apid.RecordedProgram | null = null;
     private channels: ChannelsApiModelInterface;
@@ -35,7 +36,7 @@ class RecordedInfoViewModel extends ViewModel {
         streamApiModel: StreamsApiModelInterface,
         balloon: BalloonModelInterface,
         tab: TabModelInterface,
-        setting: SettingModelInterface,
+        setting: StorageTemplateModel<SettingValue>,
     ) {
         super();
         this.config = config;
@@ -116,8 +117,8 @@ class RecordedInfoViewModel extends ViewModel {
      */
     public getVideoSrc(download: boolean = false): { name: string; path: string; filesize: string | null; isUrlScheme: boolean }[] {
         const config = this.config.getConfig();
-        const setting = this.setting.get();
-        if (this.recorded === null || config === null || setting === null) { return []; }
+        const setting = this.setting.getValue();
+        if (this.recorded === null || config === null) { return []; }
 
         // url scheme 用のベースリンクを取得
         let urlScheme: string | null = null;

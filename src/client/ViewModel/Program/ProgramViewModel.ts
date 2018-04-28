@@ -3,8 +3,9 @@ import * as apid from '../../../../api';
 import { ViewModelStatus } from '../../Enums';
 import { AllReserves, ReservesApiModelInterface } from '../../Model/Api/ReservesApiModel';
 import { ScheduleApiModelInterface } from '../../Model/Api/ScheduleApiModel';
-import { ProgramSettingModelInterface } from '../../Model/Program/ProgramSettingModel';
-import { SettingModelInterface } from '../../Model/Setting/SettingModel';
+import { ProgramSettingValue } from '../../Model/Program/ProgramSettingModel';
+import { SettingValue } from '../../Model/Setting/SettingModel';
+import StorageTemplateModel from '../../Model/Storage/StorageTemplateModel';
 import DateUtil from '../../Util/DateUtil';
 import Util from '../../Util/Util';
 import ViewModel from '../ViewModel';
@@ -23,8 +24,8 @@ interface ProgramViewInfo {
 class ProgramViewModel extends ViewModel {
     private scheduleApiModel: ScheduleApiModelInterface;
     private reservesApiModel: ReservesApiModelInterface;
-    private setting: SettingModelInterface;
-    private programSetting: ProgramSettingModelInterface;
+    private setting: StorageTemplateModel<SettingValue>;
+    private programSetting: StorageTemplateModel<ProgramSettingValue>;
     // 更新時刻パラメータ
     private startTimeParam: string;
     private lengthParam: number;
@@ -43,8 +44,8 @@ class ProgramViewModel extends ViewModel {
     constructor(
         scheduleApiModel: ScheduleApiModelInterface,
         reservesApiModel: ReservesApiModelInterface,
-        setting: SettingModelInterface,
-        programSetting: ProgramSettingModelInterface,
+        setting: StorageTemplateModel<SettingValue>,
+        programSetting: StorageTemplateModel<ProgramSettingValue>,
     ) {
         super();
         this.scheduleApiModel = scheduleApiModel;
@@ -115,7 +116,7 @@ class ProgramViewModel extends ViewModel {
         if (typeof m.route.param('type') !== 'undefined') {
             // 通常の番組表表示
             const type = m.route.param('type');
-            this.lengthParam = typeof m.route.param('length') === 'undefined' ? this.setting.value.programLength : Number(m.route.param('length'));
+            this.lengthParam = typeof m.route.param('length') === 'undefined' ? this.setting.getValue().programLength : Number(m.route.param('length'));
 
             // 番組表の取得
             await this.scheduleApiModel.fetchSchedule(<apid.ChannelType> type, Number(this.startTimeParam), this.lengthParam);
@@ -264,7 +265,7 @@ class ProgramViewModel extends ViewModel {
      * @return boolean true: 要変更, false: 変更不要
      */
     public isFixScroll(): boolean {
-        return this.setting.value.programFixScroll;
+        return this.setting.getValue().programFixScroll;
     }
 
     /**
@@ -280,7 +281,7 @@ class ProgramViewModel extends ViewModel {
      * @return boolean
      */
     public isMinimumDrawing(): boolean {
-        return this.setting.value.programMinimumDrawing;
+        return this.setting.getValue().programMinimumDrawing;
     }
 
     /**
@@ -356,7 +357,7 @@ class ProgramViewModel extends ViewModel {
         const element = <HTMLElement> document.querySelector(`.${ ProgramViewModel.programTableName }`);
         if (element === null) { return; }
 
-        const value = this.programSetting.value;
+        const value = this.programSetting.getValue();
         element.style.setProperty('--channel-tablet-height', `${ value.tablet.channelHeight }px`);
         element.style.setProperty('--channel-tablet-width', `${ value.tablet.channelWidth }px`);
         element.style.setProperty('--channel-tablet-fontsize', `${ value.tablet.channelFontsize }px`);

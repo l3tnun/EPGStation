@@ -3,8 +3,9 @@ import * as apid from '../../../../api';
 import { ViewModelStatus } from '../../Enums';
 import { ConfigApiModelInterface } from '../../Model/Api/ConfigApiModel';
 import { StreamsApiModelInterface } from '../../Model/Api/StreamsApiModel';
-import { SettingModelInterface } from '../../Model/Setting/SettingModel';
+import { SettingValue } from '../../Model/Setting/SettingModel';
 import { SnackbarModelInterface } from '../../Model/Snackbar/SnackbarModel';
+import StorageTemplateModel from '../../Model/Storage/StorageTemplateModel';
 import Util from '../../Util/Util';
 import ViewModel from '../ViewModel';
 import CreateStreamLink from './CreateStreamLink';
@@ -15,7 +16,7 @@ import CreateStreamLink from './CreateStreamLink';
 class StreamInfoViewModel extends ViewModel {
     private streamsApiModel: StreamsApiModelInterface;
     private config: ConfigApiModelInterface;
-    private setting: SettingModelInterface;
+    private setting: StorageTemplateModel<SettingValue>;
     private snackbar: SnackbarModelInterface;
     private timer: NodeJS.Timer | null = null;
 
@@ -23,7 +24,7 @@ class StreamInfoViewModel extends ViewModel {
         streamsApiModel: StreamsApiModelInterface,
         config: ConfigApiModelInterface,
         snackbar: SnackbarModelInterface,
-        setting: SettingModelInterface,
+        setting: StorageTemplateModel<SettingValue>,
     ) {
         super();
         this.streamsApiModel = streamsApiModel;

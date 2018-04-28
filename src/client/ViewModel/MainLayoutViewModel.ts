@@ -1,16 +1,17 @@
 import * as m from 'mithril';
 import { ViewModelStatus } from '../Enums';
-import { SettingModelInterface } from '../Model/Setting/SettingModel';
+import { SettingValue } from '../Model/Setting/SettingModel';
+import StorageTemplateModel from '../Model/Storage/StorageTemplateModel';
 import ViewModel from './ViewModel';
 
 /**
  * MainLayoutViewModel
  */
 class MainLayoutViewModel extends ViewModel {
-    private setting: SettingModelInterface;
+    private setting: StorageTemplateModel<SettingValue>;
     private hasViewData: boolean = false;
 
-    constructor(setting: SettingModelInterface) {
+    constructor(setting: StorageTemplateModel<SettingValue>) {
         super();
         this.setting = setting;
     }
@@ -21,7 +22,7 @@ class MainLayoutViewModel extends ViewModel {
      */
     public init(status: ViewModelStatus): void {
         if (status === 'init' || status === 'update') {
-            this.hasViewData = !this.setting.value.isEnabledPageMovementAnimation;
+            this.hasViewData = !this.setting.getValue().isEnabledPageMovementAnimation;
             if (status === 'update') { m.redraw(); }
         }
     }
