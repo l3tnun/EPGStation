@@ -8,6 +8,7 @@ import { StorageApiModel } from '../Model/Api/StorageApiModel';
 import { StreamsApiModel } from '../Model/Api/StreamsApiModel';
 import { BalloonModel } from '../Model/Balloon/BallonModel';
 import { ProgramSettingModel } from '../Model/Program/ProgramSettingModel';
+import { SearchSettingModel } from '../Model/Search/SearchSettingModel';
 import { SettingModel } from '../Model/Setting/SettingModel';
 import { SnackbarModel } from '../Model/Snackbar/SnackbarModel';
 import { StorageModel } from '../Model/Storage/StorageModel';
@@ -32,6 +33,7 @@ import ReservesViewModel from './Reserves/ReservesViewModel';
 import RulesDeleteViewModel from './Rules/RulesDeleteViewModel';
 import RulesInfoViewModel from './Rules/RulesInfoViewModel';
 import RulesViewModel from './Rules/RulesViewModel';
+import SearchSettingViewModel from './Search/SearchSettingViewModel';
 import SearchViewModel from './Search/SearchViewModel';
 import SettingViewModel from './Setting/SettingViewModel';
 import SnackbarViewModel from './Snackbar/SnackbarViewModel';
@@ -67,6 +69,7 @@ namespace ViewModelFactorySetting {
         const storageApiModel = new StorageApiModel(snackbarModel);
         const storageModel = new StorageModel();
         const streamApiModel = new StreamsApiModel(snackbarModel);
+        const searchSettingModel = new SearchSettingModel(storageModel);
         const settingModel = new SettingModel(storageModel);
         const programSettingModel = new ProgramSettingModel(storageModel);
 
@@ -167,6 +170,10 @@ namespace ViewModelFactorySetting {
         factory.reg('RulesInfoViewModel', new RulesInfoViewModel(
             balloonModel,
             channelsApiModel,
+        ));
+        factory.reg('SearchSettingViewModel', new SearchSettingViewModel(
+            searchSettingModel,
+            snackbarModel,
         ));
         factory.reg('SearchViewModel', new SearchViewModel(
             scheduleApiModel,

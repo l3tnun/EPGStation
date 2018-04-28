@@ -2,8 +2,10 @@ import * as m from 'mithril';
 import { ViewModelStatus } from '../../Enums';
 import Scroll from '../../Util/Scroll';
 import Util from '../../Util/Util';
+import BalloonViewModel from '../../ViewModel/Balloon/BalloonViewModel';
 import MainLayoutViewModel from '../../ViewModel/MainLayoutViewModel';
 import ProgramInfoViewModel from '../../ViewModel/Program/ProgramInfoViewModel';
+import SearchSettingViewModel from '../../ViewModel/Search/SearchSettingViewModel';
 import SearchViewModel from '../../ViewModel/Search/SearchViewModel';
 import factory from '../../ViewModel/ViewModelFactory';
 import { BalloonComponent } from '../BalloonComponent';
@@ -14,6 +16,8 @@ import ProgramInfoComponent from '../Program/ProgramInfoComponent';
 import SearchAddComponent from './SearchAddComponent';
 import SearchOptionComponent from './SearchOptionComponent';
 import SearchResultsComponent from './SearchResultsComponent';
+import SearchSettingActionComponent from './SearchSettingActionComponent';
+import SearchSettingComponent from './SearchSettingComponent';
 
 /**
  * SearchComponent
@@ -21,11 +25,15 @@ import SearchResultsComponent from './SearchResultsComponent';
 class SearchComponent extends ParentComponent<void> {
     private viewModel: SearchViewModel;
     private mainLayoutViewModel: MainLayoutViewModel;
+    private searchSettingViewModel: SearchSettingViewModel;
+    private balloon: BalloonViewModel;
 
     constructor() {
         super();
         this.viewModel = <SearchViewModel> factory.get('SearchViewModel');
         this.mainLayoutViewModel = <MainLayoutViewModel> factory.get('MainLayoutViewModel');
+        this.balloon = <BalloonViewModel> factory.get('BalloonViewModel');
+        this.searchSettingViewModel = <SearchSettingViewModel> factory.get('SearchSettingViewModel');
     }
 
     protected async parentInitViewModel(status: ViewModelStatus): Promise<void> {
@@ -67,6 +75,20 @@ class SearchComponent extends ParentComponent<void> {
                     },
                 }, m('i', { class: 'material-icons' }, 'arrow_upward')),
             ],
+            menuContent: [
+                {
+                    attrs: {
+                        onclick: () => {
+                            this.balloon.close();
+                            setTimeout(() => {
+                                this.searchSettingViewModel.setTemp();
+                                this.balloon.open(SearchSettingViewModel.id);
+                            }, 200);
+                        },
+                    },
+                    text: '設定',
+                },
+            ],
             notMainContent: [
                 m(BalloonComponent, {
                     id: ProgramInfoViewModel.id,
@@ -76,6 +98,12 @@ class SearchComponent extends ParentComponent<void> {
                     maxHeight: 450,
                     dialogMaxWidth: 600,
                     forceDialog: window.innerHeight < 900,
+                }),
+                m(BalloonComponent, {
+                    id: SearchSettingViewModel.id,
+                    content: m(SearchSettingComponent),
+                    action: m(SearchSettingActionComponent),
+                    maxWidth: 310,
                 }),
             ],
             mainOnUpdate: (mainVnode: m.VnodeDOM<void, any>) => {

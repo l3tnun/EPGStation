@@ -25,6 +25,7 @@ if (Util.uaIsAndroid()) {
 }
 
 // 設定情報の初期化
+factory.get('SearchSettingViewModel').init();
 factory.get('SettingViewModel').init();
 factory.get('ProgramSettingViewModel').init();
 
