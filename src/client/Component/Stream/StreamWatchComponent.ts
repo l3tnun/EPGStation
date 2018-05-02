@@ -8,6 +8,7 @@ import StreamWatchViewModel from '../../ViewModel/Stream/StreamWatchViewModel';
 import factory from '../../ViewModel/ViewModelFactory';
 import MainLayoutComponent from '../MainLayoutComponent';
 import ParentComponent from '../ParentComponent';
+import VideoContainerComponent from '../Video/VideoContainerComponent';
 import StreamWatchVideoComponent from './StreamWatchVideoComponent';
 
 /**
@@ -53,7 +54,9 @@ class StreamWatchComponent extends ParentComponent<void> {
                     },
                 }, [
                     this.createStopButton(),
-                    m(StreamWatchVideoComponent),
+                    m(VideoContainerComponent, {
+                        video: m(StreamWatchVideoComponent),
+                    }),
                     this.createStreamInfo(),
                 ]),
             ],

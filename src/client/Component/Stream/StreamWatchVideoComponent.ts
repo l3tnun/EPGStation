@@ -106,7 +106,11 @@ class StreamWatchVideoComponent extends Component<void> {
         this.hls.loadSource(this.videoSrc);
         this.hls.attachMedia(element);
         this.hls.on(Hls.Events.MANIFEST_PARSED, () => {
-            element.play();
+            try {
+                element.play();
+            } catch (err) {
+                console.error(err);
+            }
         });
     }
 
