@@ -16,6 +16,8 @@ class RecordedPlayerViewModel extends ViewModel {
     ) {
         super();
         this.balloon = balloon;
+
+        this.balloon.regDisableCloseAllId(RecordedPlayerViewModel.id);
     }
 
     /**

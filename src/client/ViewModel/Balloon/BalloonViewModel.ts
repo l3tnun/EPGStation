@@ -16,6 +16,7 @@ class BalloonViewModel extends ViewModel {
     public init(): void {
         super.init();
         this.model.close();
+        this.model.enableClose();
     }
 
     /**
@@ -61,6 +62,28 @@ class BalloonViewModel extends ViewModel {
      */
     public getEvent(): Event {
         return this.event;
+    }
+
+    /**
+     * close を無効化
+     */
+    public disableClose(): void {
+        this.model.disableClose();
+    }
+
+    /**
+     * close を有効化
+     */
+    public enableClose(): void {
+        this.model.enableClose();
+    }
+
+    /**
+     * close id 指定なしの時に close しない id を設定
+     * @param id: string
+     */
+    public regDisableCloseAllId(id: string): void {
+        this.model.regDisableCloseAllId(id);
     }
 }
 

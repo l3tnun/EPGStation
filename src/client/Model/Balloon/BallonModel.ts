@@ -8,10 +8,15 @@ interface BalloonModelInterface extends Model {
     setCloseCallback(id: string, callback: () => void): void;
     close(id?: string): void;
     isOpen(id: string): boolean;
+    disableClose(): void;
+    enableClose(): void;
+    regDisableCloseAllId(id: string): void;
 }
 
 class BalloonModel extends Model implements BalloonModelInterface {
     private balloons: { [key: string]: BalloonStatus } = {};
+    private isDisableClose: boolean = false;
+    private disableCloseAllIds: { [key: string]: boolean } = {};
 
     /**
      * 管理するバルーンを追加
@@ -55,10 +60,14 @@ class BalloonModel extends Model implements BalloonModelInterface {
      * @param id: string id を指定して閉じる場合は指定する
      */
     public close(id?: string): void {
+        if (this.isDisableClose) { return; }
+
         let needsRedraw = false;
 
         if (typeof id === 'undefined') {
             for (const key in this.balloons) {
+                if (!!this.disableCloseAllIds[key]) { continue; }
+
                 if (this.balloons[key].get()) {
                     this.balloons[key].close();
                     needsRedraw = true;
@@ -83,6 +92,28 @@ class BalloonModel extends Model implements BalloonModelInterface {
         }
 
         return this.balloons[id].get();
+    }
+
+    /**
+     * close を無効化
+     */
+    public disableClose(): void {
+        this.isDisableClose = true;
+    }
+
+    /**
+     * close を有効化
+     */
+    public enableClose(): void {
+        this.isDisableClose = false;
+    }
+
+    /**
+     * close id 指定なしの時に close しない id を設定
+     * @param id: string
+     */
+    public regDisableCloseAllId(id: string): void {
+        this.disableCloseAllIds[id] = true;
     }
 }
 

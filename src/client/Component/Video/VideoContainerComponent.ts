@@ -1,5 +1,7 @@
 import * as m from 'mithril';
 import Util from '../../Util/Util';
+import BalloonViewModel from '../../ViewModel/Balloon/BalloonViewModel';
+import factory from '../../ViewModel/ViewModelFactory';
 import Component from '../Component';
 
 interface ControlArgs {
@@ -12,6 +14,7 @@ interface ControlArgs {
  * VideoContainerComponent
  */
 class VideoContainerComponent extends Component<ControlArgs> {
+    private balloon: BalloonViewModel;
     private containerElement: HTMLElement | null = null;
     private videoElement: HTMLVideoElement | null = null;
     private controlerElement: HTMLElement | null = null;
@@ -23,6 +26,12 @@ class VideoContainerComponent extends Component<ControlArgs> {
     private isEnablePip: boolean;
     private controlHideTimerId: NodeJS.Timer;
     private disableMouseleave = false;
+
+    constructor() {
+        super();
+
+        this.balloon = <BalloonViewModel> factory.get('BalloonViewModel');
+    }
 
     /**
      * view
@@ -109,6 +118,7 @@ class VideoContainerComponent extends Component<ControlArgs> {
 
     /**
      * on fullscreenChange
+     * iOS では動作しないので注意
      */
     private fullscreenChange(): void {
         if (this.containerElement === null) { return; }
@@ -117,6 +127,7 @@ class VideoContainerComponent extends Component<ControlArgs> {
             this.containerElement.classList.add('fullscreen');
         } else {
             this.containerElement.classList.remove('fullscreen');
+            setTimeout(() => { this.balloon.enableClose(); }, 1000);
         }
 
         setTimeout(() => { this.hideControl(); }, VideoContainerComponent.VideoSeekInterval);
@@ -578,10 +589,18 @@ class VideoContainerComponent extends Component<ControlArgs> {
             else if ((<any> document).mozCancelFullScreen) { (<any> document).mozCancelFullScreen(); }
             else if ((<any> document).webkitCancelFullScreen) { (<any> document).webkitCancelFullScreen(); }
             else if ((<any> document).msExitFullscreen) { (<any> document).msExitFullscreen(); }
+            setTimeout(() => { this.balloon.enableClose(); }, 1000);
         } else {
+            this.balloon.disableClose();
+
             if (!this.requestFullscreen(this.containerElement) && this.videoElement !== null) {
                 this.requestFullscreen(this.videoElement);
             }
+            setTimeout(() => {
+                if (!this.isFullScreen() || Util.uaIsiOS()) {
+                    this.balloon.enableClose();
+                }
+            }, 1000);
         }
     }
 
@@ -590,7 +609,7 @@ class VideoContainerComponent extends Component<ControlArgs> {
      * @return boolean
      */
     private isFullScreen(): boolean {
-        return !!((<any> document).fullScreen || (<any> document).webkitIsFullScreen || (<any> document).mozFullScreen || (<any> document).msFullscreenElement || (<any> document).fullscreenElement);
+        return !!((<any> document).fullScreen || (<any> document).webkitIsFullScreen || (<any> document).mozFullScreen || (<any> document).msFullscreenElement || (<any> document).fullscreenElement) || (this.videoElement !== null && (<any> this.videoElement).webkitDisplayingFullscreen);
     }
 
     /**
