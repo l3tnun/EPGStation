@@ -18,6 +18,7 @@ interface VideoSrcInfo {
     path: string; filesize: string | null;
     isUrlScheme: boolean;
     encodedId?: number;
+    useWebPlayer: boolean;
 }
 
 /**
@@ -169,7 +170,8 @@ class RecordedInfoViewModel extends ViewModel {
         const result: VideoSrcInfo[] = [];
         // ts ファイル
         if (this.recorded.original) {
-            let url = download ? `/api/recorded/${ this.recorded.id }/file?mode=download` : `/api/recorded/${ this.recorded.id }/file`;
+            let url = download ? `/api/recorded/${ this.recorded.id }/file?mode=download`
+                : urlScheme === null ? `/api/recorded/${ this.recorded.id }/playlist` : `/api/recorded/${ this.recorded.id }/file`;
             if (urlScheme !== null) {
                 let full = location.host + url;
                 if (urlScheme.match(/vlc-x-callback/)) { full = encodeURIComponent(full); }
@@ -183,6 +185,7 @@ class RecordedInfoViewModel extends ViewModel {
                 path: url,
                 filesize: this.createFileSizeStr(this.recorded.filesize),
                 isUrlScheme: urlScheme !== null,
+                useWebPlayer: false,
             });
         }
 
@@ -191,7 +194,7 @@ class RecordedInfoViewModel extends ViewModel {
             for (const encoded of this.recorded.encoded) {
                 let url = download ? `/api/recorded/${ this.recorded.id }/file?encodedId=${ encoded.encodedId }&mode=download`
                         : `/api/recorded/${ this.recorded.id }/file?encodedId=${ encoded.encodedId }`;
-                if (urlScheme !== null) {
+                if (urlScheme !== null && !setting.prioritizeWebPlayerOverURLScheme) {
                     let full = location.host + url;
                     if (urlScheme.match(/vlc-x-callback/)) { full = encodeURIComponent(full); }
                     url = urlScheme.replace(/ADDRESS/g, full);
@@ -201,8 +204,9 @@ class RecordedInfoViewModel extends ViewModel {
                     name: encoded.name,
                     path: url,
                     filesize: this.createFileSizeStr(encoded.filesize),
-                    isUrlScheme: urlScheme !== null,
+                    isUrlScheme: urlScheme !== null && !setting.prioritizeWebPlayerOverURLScheme,
                     encodedId: encoded.encodedId,
+                    useWebPlayer: setting.prioritizeWebPlayerOverURLScheme,
                 });
             }
         }
