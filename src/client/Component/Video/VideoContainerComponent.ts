@@ -295,7 +295,11 @@ class VideoContainerComponent extends Component<ControlArgs> {
                     onclick: () => {
                         if (typeof vnode.attrs.closeButtonCallback === 'undefined') { return; }
 
-                        vnode.attrs.closeButtonCallback();
+                        if (this.isFullScreen()) {
+                            this.switchFullScreen();
+                        } else {
+                            vnode.attrs.closeButtonCallback();
+                        }
                     },
                 }, 'close'),
             ]);

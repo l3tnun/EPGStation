@@ -127,6 +127,13 @@ $play-button-size: 24px
       left: 0;
       margin: auto
 
+    .video-controls
+        .titles
+            .close
+                @-moz-document url-prefix()
+                    display: none;
+                    pointer-events : none;
+
 // live streaming
 .video-container.live-streaming
     .video-controls
