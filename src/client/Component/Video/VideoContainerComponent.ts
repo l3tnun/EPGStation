@@ -7,6 +7,8 @@ import Component from '../Component';
 interface ControlArgs {
     disableControl?: boolean;
     isLiveStreaming?: boolean;
+    enableCloseButton?: boolean;
+    closeButtonCallnack?(): void;
     video: m.Child | null;
 }
 
@@ -280,10 +282,24 @@ class VideoContainerComponent extends Component<ControlArgs> {
      * @return m.Child | null
      */
     private createControl(vnode: m.Vnode<ControlArgs, this>): m.Child | null {
-        if (vnode.attrs.disableControl || this.videoElement === null) { return null; }
+        if (!!vnode.attrs.disableControl || this.videoElement === null) { return null; }
 
         const isMobile = Util.uaIsMobile();
         const timeStr = this.createDurationStr();
+
+        let titlesElement: m.Child | null = null;
+        if (!!vnode.attrs.enableCloseButton) {
+            titlesElement = m('div', { class: 'titles' }, [
+                m('i', {
+                    class: 'close material-icons',
+                    onclick: () => {
+                        if (typeof vnode.attrs.closeButtonCallnack === 'undefined') { return; }
+
+                        vnode.attrs.closeButtonCallnack();
+                    },
+                }, 'close'),
+            ]);
+        }
 
         return m('div', {
             class: 'video-controls ios-no-click-color ' + (isMobile ? '' : 'hide'),
@@ -308,6 +324,7 @@ class VideoContainerComponent extends Component<ControlArgs> {
                 this.hideControl(300);
             },
         }, [
+            titlesElement,
             m('div', { class: 'times' }, [
                 m('span', { class: 'current-time' }, timeStr.current),
                 m('input', {

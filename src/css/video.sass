@@ -1,3 +1,4 @@
+$controls-color: rgba(255, 255, 255, 0.75)
 $controls-max-width: 540px
 $option-button-hide-width: 520px
 $pip-button-hide-width: 430px
@@ -33,7 +34,18 @@ $play-button-size: 24px
         bottom: 0;
         width: 100%;
         transition: all 0.1s ease 0s;
-        background-color: rgba(255, 255, 255, 0.75);
+        background-color: $controls-color
+
+        .titles
+            position: fixed;
+            top: 0;
+            left: 0;
+            padding: 8px;
+            .close
+                padding: 8px;
+                margin: 4px;
+                border-radius: 50%;
+                background-color: $controls-color
 
         .times
             display: flex;
