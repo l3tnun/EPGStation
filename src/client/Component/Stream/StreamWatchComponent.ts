@@ -70,12 +70,6 @@ class StreamWatchComponent extends ParentComponent<void> {
         return m('button', {
             class: 'fab-right-bottom mdl-shadow--8dp mdl-button mdl-js-button mdl-button--fab mdl-button--colored',
             onclick: async() => {
-                if (typeof m.route.param('stream') === 'undefined') {
-                    Util.move('/');
-
-                    return;
-                }
-
                 await this.viewModel.stop();
             },
         }, [
