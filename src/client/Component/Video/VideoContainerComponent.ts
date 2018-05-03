@@ -20,9 +20,6 @@ class VideoContainerComponent extends Component<ControlArgs> {
     private containerElement: HTMLElement | null = null;
     private videoElement: HTMLVideoElement | null = null;
     private controlerElement: HTMLElement | null = null;
-    private seekbarElement: HTMLInputElement | null = null;
-    private currentTimeElement: HTMLElement | null = null;
-    private durationTimeElement: HTMLElement | null = null;
     private seekBar: number = 0;
     private speed: number = 1;
     private stopTimeUpdate: boolean = false;
@@ -214,20 +211,7 @@ class VideoContainerComponent extends Component<ControlArgs> {
 
                     this.seekBar = (VideoContainerComponent.VideoSeekInterval / this.getVideoDuration()) * this.getVideoCurrentTime();
                     if (isNaN(this.seekBar)) { this.seekBar = 0; }
-
-                    // update seekbar
-                    if (this.seekbarElement !== null) {
-                        this.seekbarElement.value = String(this.seekBar);
-                    }
-
-                    // update time str
-                    const timeStr = this.createDurationStr();
-                    if (this.currentTimeElement !== null) {
-                        this.currentTimeElement.textContent = timeStr.current;
-                    }
-                    if (this.durationTimeElement !== null) {
-                        this.durationTimeElement.textContent = timeStr.duration;
-                    }
+                    m.redraw();
 
                     // slider
                     if (this.containerElement === null) { return; }
@@ -346,21 +330,13 @@ class VideoContainerComponent extends Component<ControlArgs> {
         }, [
             titlesElement,
             m('div', { class: 'times' }, [
-                m('span', {
-                    class: 'current-time',
-                    oncreate: (v: m.VnodeDOM<void, any>) => {
-                        this.currentTimeElement = <HTMLElement> v.dom;
-                    },
-                }, timeStr.current),
+                m('span', { class: 'current-time' }, timeStr.current),
                 m('input', {
                     class: 'seek-bar mdl-slider mdl-js-slider',
                     type: 'range',
                     value: this.seekBar,
                     min: 0,
                     max: VideoContainerComponent.VideoSeekInterval,
-                    oncreate: (v: m.VnodeDOM<void, any>) => {
-                        this.seekbarElement = <HTMLInputElement> v.dom;
-                    },
                     onupdate: (v: m.VnodeDOM<void, any>) => {
                         v.dom.classList.remove('is-lowest-value');
                     },
@@ -378,12 +354,7 @@ class VideoContainerComponent extends Component<ControlArgs> {
                         this.seekBar = value;
                     }),
                 }),
-                m('span', {
-                    class: 'duration',
-                    oncreate: (v: m.VnodeDOM<void, any>) => {
-                        this.durationTimeElement = <HTMLElement> v.dom;
-                    },
-                }, timeStr.duration),
+                m('span', { class: 'duration' }, timeStr.duration),
             ]),
             m('div', { class: 'buttons-parent' }, [
                 m('div', { class: 'volume-buttons' }, [
