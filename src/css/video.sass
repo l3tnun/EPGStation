@@ -122,10 +122,12 @@ $play-button-size: 24px
             .play-buttons
                 .play-back, .play-skip
                     display: none;
+                    pointer-events : none;
 
             .right-buttons
                 .speed
                     display: none;
+                    pointer-events : none;
 
 // mobile
 .video-container.mobile
@@ -134,6 +136,7 @@ $play-button-size: 24px
             .volume-buttons
                 .volume-bar
                     display: none;
+                    pointer-events : none;
 
 // disable pip
 .video-container.disable-pip
@@ -142,6 +145,7 @@ $play-button-size: 24px
             .right-buttons
                 .pip
                     display: none;
+                    pointer-events : none;
 
 // pip mode
 .video-container.pip-mode
@@ -150,6 +154,14 @@ $play-button-size: 24px
             .right-buttons
                 .full-screen
                     display: none;
+                    pointer-events : none;
+
+// hide controls
+.video-container
+    .video-controls.hide
+        input, .pulldown
+            pointer-events : none;
+
 
 // option button hide
 @media screen and (max-width: $option-button-hide-width)
