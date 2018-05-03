@@ -218,7 +218,6 @@ class VideoContainerComponent extends Component<ControlArgs> {
                     // update seekbar
                     if (this.seekbarElement !== null) {
                         this.seekbarElement.value = String(this.seekBar);
-                        this.seekbarElement.classList.remove('is-lowest-value');
                     }
 
                     // update time str
