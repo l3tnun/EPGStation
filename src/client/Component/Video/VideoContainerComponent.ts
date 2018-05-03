@@ -357,8 +357,6 @@ class VideoContainerComponent extends Component<ControlArgs> {
                     m('i', {
                         class: 'mute material-icons',
                         onclick: () => {
-                            if (this.isHidingControl()) { return; }
-
                             this.switchMute();
                         },
                     }, this.videoElement.muted || this.videoElement.volume === 0 ? 'volume_off' : 'volume_up'),
@@ -385,8 +383,6 @@ class VideoContainerComponent extends Component<ControlArgs> {
                     m('i', {
                         class: 'play-pause material-icons',
                         onclick: () => {
-                            if (this.isHidingControl()) { return; }
-
                             this.switchPlay();
                         },
                     }, this.videoElement.paused ? 'play_arrow' : 'pause'),
@@ -419,8 +415,6 @@ class VideoContainerComponent extends Component<ControlArgs> {
                         class: 'pip material-icons',
                         type: 'button',
                         onclick: () => {
-                            if (this.isHidingControl()) { return; }
-
                             this.switchPip();
                         },
                     }, this.isPipMode() ? 'picture_in_picture_alt' : 'picture_in_picture'),
@@ -428,8 +422,6 @@ class VideoContainerComponent extends Component<ControlArgs> {
                         class: 'full-screen material-icons',
                         type: 'button',
                         onclick: () => {
-                            if (this.isHidingControl()) { return; }
-
                             this.switchFullScreen();
                         },
                     }, this.isFullScreen() ? 'fullscreen_exit' : 'fullscreen'),
@@ -485,7 +477,7 @@ class VideoContainerComponent extends Component<ControlArgs> {
      */
     private backTime(time: number): void {
         const currentTime = this.getVideoCurrentTime();
-        if (this.isHidingControl() || this.videoElement === null || currentTime <= 0) { return; }
+        if (this.videoElement === null || currentTime <= 0) { return; }
 
         const backTime = currentTime - time;
         this.videoElement.currentTime = backTime < 0 ? 0 : backTime;
@@ -511,7 +503,7 @@ class VideoContainerComponent extends Component<ControlArgs> {
      * @param time: number
      */
     private skipTime(time: number): void {
-        if (this.isHidingControl() || this.videoElement === null) { return; }
+        if (this.videoElement === null) { return; }
 
         const duration = Math.floor(this.getVideoDuration());
         const skipTime = this.getVideoCurrentTime() + time;
