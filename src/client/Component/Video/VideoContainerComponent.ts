@@ -57,7 +57,8 @@ class VideoContainerComponent extends Component<ControlArgs> {
             class: 'video-container'
                 + (!!vnode.attrs.isLiveStreaming ? ' live-streaming' : '')
                 + (Util.uaIsMobile() ? ' mobile' : '')
-                + (!this.isEnablePip ? ' disable-pip' : ''),
+                + (!this.isEnablePip ? ' disable-pip' : '')
+                + (this.isPipMode() ? ' pip-mode' : ''),
             oncreate: (mainVnode: m.VnodeDOM<void, any>) => {
                 this.setElements(<HTMLElement> mainVnode.dom);
                 this.seekBar = 0;
