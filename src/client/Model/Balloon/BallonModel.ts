@@ -5,7 +5,7 @@ import BalloonStatus from './BallonStatus';
 interface BalloonModelInterface extends Model {
     add(id: string): void;
     open(id: string): void;
-    close(): void;
+    close(id?: string): void;
     isOpen(id: string): boolean;
 }
 
@@ -37,15 +37,22 @@ class BalloonModel extends Model implements BalloonModelInterface {
     }
 
     /**
-     * すべてのバルーンを閉じる
+     * バルーンを閉じる
+     * @param id: string id を指定して閉じる場合は指定する
      */
-    public close(): void {
+    public close(id?: string): void {
         let needsRedraw = false;
-        for (const key in this.balloons) {
-            if (this.balloons[key].get()) {
-                this.balloons[key].close();
-                needsRedraw = true;
+
+        if (typeof id === 'undefined') {
+            for (const key in this.balloons) {
+                if (this.balloons[key].get()) {
+                    this.balloons[key].close();
+                    needsRedraw = true;
+                }
             }
+        } else if (typeof this.balloons[id] !== 'undefined') {
+            this.balloons[id].close();
+            needsRedraw = true;
         }
         if (needsRedraw) { m.redraw(); }
     }

@@ -39,9 +39,10 @@ class BalloonViewModel extends ViewModel {
 
     /**
      * すべてのバルーンを閉じる
+     * @param id: string id を指定して閉じる場合は指定する
      */
-    public close(): void {
-        this.model.close();
+    public close(id?: string): void {
+        this.model.close(id);
     }
 
     /**

@@ -88,7 +88,7 @@ class BalloonComponent extends Component<BalloonArgs> {
         return m('div', {
             id: this.id,
             class: 'balloonBackground' + (this.isDialogMode() ? ' dialogbackground' : ''),
-            onclick: () => { this.viewModel.close(); },
+            onclick: () => { this.viewModel.close(this.id); },
             onupdate: (v: m.VnodeDOM<BalloonArgs, this>) => {
                 this.MainOnUpdate(v);
             },
