@@ -583,7 +583,7 @@ class VideoContainerComponent extends Component<ControlArgs> {
      * video が inline か?
      */
     private isPipMode(): boolean {
-        return this.isEnablePip && (<any> this.videoElement!).webkitPresentationMode === 'picture-in-picture';
+        return this.isEnablePip && this.videoElement !== null && (<any> this.videoElement).webkitPresentationMode === 'picture-in-picture';
     }
 
     /**
