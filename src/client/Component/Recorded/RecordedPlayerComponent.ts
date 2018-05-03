@@ -33,7 +33,7 @@ class RecordedPlayerComponent extends Component<void> {
                 m(VideoContainerComponent, {
                     video: this.createVideo(),
                     enableCloseButton: true,
-                    closeButtonCallnack: () => { this.viewModel.close(); },
+                    closeButtonCallback: () => { this.viewModel.close(); },
                 }),
             ]),
         ]);

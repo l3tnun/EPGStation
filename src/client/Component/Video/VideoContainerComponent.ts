@@ -8,7 +8,7 @@ interface ControlArgs {
     disableControl?: boolean;
     isLiveStreaming?: boolean;
     enableCloseButton?: boolean;
-    closeButtonCallnack?(): void;
+    closeButtonCallback?(): void;
     video: m.Child | null;
 }
 
@@ -293,9 +293,9 @@ class VideoContainerComponent extends Component<ControlArgs> {
                 m('i', {
                     class: 'close material-icons',
                     onclick: () => {
-                        if (typeof vnode.attrs.closeButtonCallnack === 'undefined') { return; }
+                        if (typeof vnode.attrs.closeButtonCallback === 'undefined') { return; }
 
-                        vnode.attrs.closeButtonCallnack();
+                        vnode.attrs.closeButtonCallback();
                     },
                 }, 'close'),
             ]);
