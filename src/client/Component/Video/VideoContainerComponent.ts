@@ -26,6 +26,8 @@ class VideoContainerComponent extends Component<ControlArgs> {
     private isEnablePip: boolean;
     private controlHideTimerId: NodeJS.Timer;
     private disableMouseleave = false;
+    private doubleClickFlag = false;
+    private doubleClickTimerId: NodeJS.Timer;
 
     constructor() {
         super();
@@ -86,6 +88,20 @@ class VideoContainerComponent extends Component<ControlArgs> {
             },
             onclick: () => {
                 if (this.controlerElement === null) { return; }
+
+                if (this.doubleClickFlag) {
+                    clearTimeout(this.doubleClickTimerId);
+                    this.doubleClickFlag = false;
+
+                    this.switchFullScreen();
+
+                    return;
+                }
+
+                this.doubleClickFlag = true;
+                this.doubleClickTimerId = setTimeout(() => {
+                    this.doubleClickFlag = false;
+                }, 200);
 
                 if (this.isHidingControl()) {
                     this.showControl();
