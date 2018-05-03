@@ -5,7 +5,7 @@ import Component from '../Component';
 interface ControlArgs {
     disableControl?: boolean;
     isLiveStreaming?: boolean;
-    video: m.Child;
+    video: m.Child | null;
 }
 
 /**
@@ -90,10 +90,7 @@ class VideoContainerComponent extends Component<ControlArgs> {
             },
         }, [
             // ios 用 dummy
-            m('div', {
-                class: 'dummy-video-content ios-no-click-color',
-                onclick: () => {},
-            }, 'dummy'),
+            this.createDummy(),
             vnode.attrs.video,
             this.createControl(vnode),
         ]);
@@ -234,6 +231,19 @@ class VideoContainerComponent extends Component<ControlArgs> {
         if (this.videoElement === null) { return 0; }
 
         return Math.floor(this.getVideoDuration()) * (this.seekBar / VideoContainerComponent.VideoSeekInterval);
+    }
+
+    /**
+     * ios 用 dummy
+     * @return m.Child | null
+     */
+    private createDummy(): m.Child | null {
+        if (this.videoElement === null) { return null; }
+
+        return m('div', {
+            class: 'dummy-video-content ios-no-click-color',
+            onclick: () => {},
+        }, 'dummy');
     }
 
     /**

@@ -549,7 +549,7 @@ class BalloonComponent extends Component<BalloonArgs> {
         const actionHeight = action === null ? 0 : action.offsetHeight;
         const contentsHeight = headHeight + content.offsetHeight + actionHeight;
 
-        if (contentsHeight >= parentHeight) {
+        if (contentsHeight > parentHeight) {
             let contentHeight = parentHeight - (actionHeight + headHeight);
 
             if (contentHeight < 0) {

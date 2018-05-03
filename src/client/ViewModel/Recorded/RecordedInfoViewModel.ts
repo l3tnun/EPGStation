@@ -13,6 +13,13 @@ import GenreUtil from '../../Util/GenreUtil';
 import Util from '../../Util/Util';
 import ViewModel from '../ViewModel';
 
+interface VideoSrcInfo {
+    name: string;
+    path: string; filesize: string | null;
+    isUrlScheme: boolean;
+    encodedId?: number;
+}
+
 /**
  * RecordedInfoViewModel
  */
@@ -91,6 +98,14 @@ class RecordedInfoViewModel extends ViewModel {
     }
 
     /**
+     * get recorded
+     * @return apid.RecordedProgram | null
+     */
+    public getRecorded(): apid.RecordedProgram | null {
+        return this.recorded;
+    }
+
+    /**
      * recorded を更新する
      */
     public update(): void {
@@ -115,7 +130,7 @@ class RecordedInfoViewModel extends ViewModel {
      * @param download: true: download mode, false: not download mode
      * @return video source
      */
-    public getVideoSrc(download: boolean = false): { name: string; path: string; filesize: string | null; isUrlScheme: boolean }[] {
+    public getVideoSrc(download: boolean = false): VideoSrcInfo[] {
         const config = this.config.getConfig();
         const setting = this.setting.getValue();
         if (this.recorded === null || config === null) { return []; }
@@ -151,7 +166,7 @@ class RecordedInfoViewModel extends ViewModel {
             }
         }
 
-        const result: { name: string; path: string; filesize: string | null; isUrlScheme: boolean }[] = [];
+        const result: VideoSrcInfo[] = [];
         // ts ファイル
         if (this.recorded.original) {
             let url = download ? `/api/recorded/${ this.recorded.id }/file?mode=download` : `/api/recorded/${ this.recorded.id }/file`;
@@ -187,6 +202,7 @@ class RecordedInfoViewModel extends ViewModel {
                     path: url,
                     filesize: this.createFileSizeStr(encoded.filesize),
                     isUrlScheme: urlScheme !== null,
+                    encodedId: encoded.encodedId,
                 });
             }
         }

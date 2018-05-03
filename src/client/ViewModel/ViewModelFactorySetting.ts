@@ -26,6 +26,7 @@ import ProgramTimeBalloonViewModel from './Program/ProgramTimeBalloonViewModel';
 import { ProgramViewModel } from './Program/ProgramViewModel';
 import RecordedInfoViewModel from './Recorded/RecordedInfoViewModel';
 import RecordedMenuViewModel from './Recorded/RecordedMenuViewModel';
+import RecordedPlayerViewModel from './Recorded/RecordedPlayerViewModel';
 import RecordedSearchViewModel from './Recorded/RecordedSearchViewModel';
 import RecordedViewModel from './Recorded/RecordedViewModel';
 import ReservesMenuViewModel from './Reserves/ReservesMenuViewModel';
@@ -139,6 +140,9 @@ namespace ViewModelFactorySetting {
             recordedApiModel,
             snackbarModel,
             configModel,
+        ));
+        factory.reg('RecordedPlayerViewModel', new RecordedPlayerViewModel(
+            balloonModel,
         ));
         factory.reg('RecordedSearchViewModel', new RecordedSearchViewModel(
             balloonModel,

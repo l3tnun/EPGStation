@@ -5,6 +5,7 @@ import Util from '../../Util/Util';
 import BalloonViewModel from '../../ViewModel/Balloon/BalloonViewModel';
 import RecordedInfoViewModel from '../../ViewModel/Recorded/RecordedInfoViewModel';
 import RecordedMenuViewModel from '../../ViewModel/Recorded/RecordedMenuViewModel';
+import RecordedPlayerViewModel from '../../ViewModel/Recorded/RecordedPlayerViewModel';
 import RecordedSearchViewModel from '../../ViewModel/Recorded/RecordedSearchViewModel';
 import RecordedViewModel from '../../ViewModel/Recorded/RecordedViewModel';
 import factory from '../../ViewModel/ViewModelFactory';
@@ -19,6 +20,7 @@ import RecordedEncodeComponent from './RecordedEncodeComponent';
 import RecordedInfoComponent from './RecordedInfoComponent';
 import RecordedMenuComponent from './RecordedMenuComponent';
 import RecordedMultipleDeleteCompoent from './RecordedMultipleDeleteCompoent';
+import RecordedPlayerComponent from './RecordedPlayerComponent';
 import RecordedSearchActionComponent from './RecordedSearchActionComponent';
 import RecordedSearchComponent from './RecordedSearchComponent';
 
@@ -115,6 +117,13 @@ class RecordedComponent extends ParentComponent<void> {
                     id: RecordedMenuViewModel.encodeId,
                     content: m(RecordedEncodeComponent),
                     maxWidth: 350,
+                }),
+                m(BalloonComponent, {
+                    id: RecordedPlayerViewModel.id,
+                    content: m(RecordedPlayerComponent),
+                    maxWidth: RecordedPlayerViewModel.maxWidth,
+                    dialogMargin: 0,
+                    forceDialog: true,
                 }),
                 m(BalloonComponent, {
                     id: RecordedSearchViewModel.id,

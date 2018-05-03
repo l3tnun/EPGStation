@@ -1,6 +1,7 @@
 import * as m from 'mithril';
 import Util from '../../Util/Util';
 import RecordedInfoViewModel from '../../ViewModel/Recorded/RecordedInfoViewModel';
+import RecordedPlayerViewModel from '../../ViewModel/Recorded/RecordedPlayerViewModel';
 import factory from '../../ViewModel/ViewModelFactory';
 import Component from '../Component';
 
@@ -9,11 +10,13 @@ import Component from '../Component';
  */
 class RecordedInfoComponent extends Component<void> {
     private viewModel: RecordedInfoViewModel;
+    private playerViewModel: RecordedPlayerViewModel;
 
     constructor() {
         super();
 
         this.viewModel = <RecordedInfoViewModel> factory.get('RecordedInfoViewModel');
+        this.playerViewModel = <RecordedPlayerViewModel> factory.get('RecordedPlayerViewModel');
     }
 
     /**
@@ -64,8 +67,17 @@ class RecordedInfoComponent extends Component<void> {
                                 setTimeout(() => { w.close(); }, 200);
                             }
                         } else {
-                            location.href = video.path;
-                            if (Util.uaIsiOS()) { this.viewModel.close(); }
+                            if (typeof video.encodedId === 'undefined') {
+                                location.href = video.path;
+                                if (Util.uaIsiOS()) { this.viewModel.close(); }
+                            } else {
+                                // TODO switch player config
+                                const recorded = this.viewModel.getRecorded();
+                                if (recorded !== null) {
+                                    this.playerViewModel.set(recorded, video.encodedId);
+                                    this.playerViewModel.open();
+                                }
+                            }
                         }
                     },
                 }, video.name);

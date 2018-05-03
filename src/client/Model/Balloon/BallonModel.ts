@@ -5,6 +5,7 @@ import BalloonStatus from './BallonStatus';
 interface BalloonModelInterface extends Model {
     add(id: string): void;
     open(id: string): void;
+    setCloseCallback(id: string, callback: () => void): void;
     close(id?: string): void;
     isOpen(id: string): boolean;
 }
@@ -34,6 +35,19 @@ class BalloonModel extends Model implements BalloonModelInterface {
 
         this.balloons[id].open();
         m.redraw();
+    }
+
+    /**
+     * close 時に実行する callback を登録
+     * @param id: id
+     * @param allback: () => void
+     */
+    public setCloseCallback(id: string, callback: () => void): void {
+        if (typeof this.balloons[id] === 'undefined') {
+            throw new Error(BalloonModel.balloonIsNotFound);
+        }
+
+        this.balloons[id].setCallback(callback);
     }
 
     /**
