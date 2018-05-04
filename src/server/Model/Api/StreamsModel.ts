@@ -5,7 +5,7 @@ import { ServicesDBInterface } from '../DB/ServicesDB';
 import { MpegTsLiveStream } from '../Service/Stream/MpegTsLiveStream';
 import { RecordedHLSStream } from '../Service/Stream/RecordedHLSStream';
 import { Stream } from '../Service/Stream/Stream';
-import { StreamManageModelInterface } from '../Service/Stream/StreamManageModel';
+import { LiveStreamStatusInfo, StreamManageModelInterface } from '../Service/Stream/StreamManageModel';
 import ApiModel from './ApiModel';
 import ApiUtil from './ApiUtil';
 import { PlayList } from './PlayListInterface';
@@ -63,7 +63,7 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
         // 同じパラメータの stream がないか確認する
         const infos = this.streamManage.getStreamInfos();
         for (const info of infos) {
-            if (info.type === 'MpegTsLive' && info.channelId === channelId && info.mode === mode) {
+            if (info.type === 'MpegTsLive' && (<LiveStreamStatusInfo> info).channelId === channelId && info.mode === mode) {
                 return {
                     stream: this.streamManage.getStream(info.streamNumber)!,
                     streamNumber: info.streamNumber,

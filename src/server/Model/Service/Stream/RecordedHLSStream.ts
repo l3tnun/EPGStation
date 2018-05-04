@@ -127,8 +127,6 @@ class RecordedHLSStream extends Stream {
     }
 
     public getEncChild(): ChildProcess | null { return this.enc; }
-
-    public getMirakurunStream(): null { return null; }
 }
 
 export { RecordedHLSStreamInfo, RecordedHLSStream };
