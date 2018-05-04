@@ -65,7 +65,7 @@ class StreamInfoViewModel extends ViewModel {
         let minEndTime = 6048000000;
         const now = new Date().getTime();
         this.getStreamInfos().forEach((info) => {
-            if (info.type !== 'MpegTsLive') { return; }
+            if (typeof info.type === 'undefined' || !info.type.includes('Live')) { return; }
             const endTime = info.endAt! - now;
             if (minEndTime > endTime) {
                 minEndTime = endTime;

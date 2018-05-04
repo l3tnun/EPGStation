@@ -18,6 +18,7 @@ class StreamWatchComponent extends ParentComponent<void> {
     private viewModel: StreamWatchViewModel;
     private mainLayoutViewModel: MainLayoutViewModel;
     private hasInfo: boolean = false;
+    private isLive: boolean = false;
 
     constructor() {
         super();
@@ -55,6 +56,7 @@ class StreamWatchComponent extends ParentComponent<void> {
                 }, [
                     this.createStopButton(),
                     m(VideoContainerComponent, {
+                        isLiveStreaming: this.isLive,
                         video: m(StreamWatchVideoComponent),
                     }),
                     this.createStreamInfo(),
@@ -92,15 +94,15 @@ class StreamWatchComponent extends ParentComponent<void> {
             return null;
         }
 
-        const isLive = typeof info.type !== 'undefined' && info.type.includes('Live');
+        this.isLive = typeof info.type !== 'undefined' && info.type.includes('Live');
         this.hasInfo = true;
 
         return m('div', { class: 'stream-info' }, [
             m('div', { class: 'mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col' }, [
                 m('div', { class: 'mdl-card__supporting-text' }, [
-                    m('div', { class: 'title' }, isLive ? info.channelName : info.title),
+                    m('div', { class: 'title' }, this.isLive ? info.channelName : info.title),
                     m('div', { class: 'time' }, this.createTimeStr(info)),
-                    m('div', { class: 'name' }, isLive ? info.title : info.channelName),
+                    m('div', { class: 'name' }, this.isLive ? info.title : info.channelName),
                     m('div', { class: 'description' }, info.description),
                 ]),
             ]),
