@@ -55,6 +55,8 @@ class ConfigModel extends ApiModel implements ConfigModelInterface {
             results['delTs'] = typeof config.delts === 'undefined' ? false : config.delts;
         }
 
+        results['enableLiveStreaming'] = typeof config.mpegTsStreaming !== 'undefined' || typeof config.liveHLS !== 'undefined';
+
         results['broadcast'] = broadcast;
 
         if (typeof config.recordedViewer !== 'undefined') { results['recordedViewer'] = config.recordedViewer; }

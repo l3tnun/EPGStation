@@ -181,10 +181,14 @@ definitions:
     type: object
     required:
       - enableEncode
+      - enableLiveStreaming
       - boradcast
     properties:
       enableEncode:
         description: 'エンコードが有効か'
+        type: boolean
+      enableLiveStreaming:
+        description: 'ライブ視聴が有効か'
         type: boolean
       encodeOption:
         type: array
