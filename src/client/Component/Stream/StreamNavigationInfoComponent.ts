@@ -37,7 +37,7 @@ class StreamNavigationInfoComponent extends Component<void> {
                             Util.closeNavigation();
                             this.viewModel.view(index);
                         },
-                    }, info.type === 'MpegTsLive' ? info.channelName : info.title);
+                    }, info.type === 'MpegTsLive' || info.type === 'HLSLive' ? info.channelName : info.title);
                 }),
             ]),
         ];

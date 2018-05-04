@@ -128,7 +128,7 @@ class StreamInfoViewModel extends ViewModel {
             if (url === null) { return; }
 
             location.href = url;
-        } else if (info.type === 'RecordedHLS') {
+        } else if (info.type === 'RecordedHLS' || info.type === 'HLSLive') {
             if (Number(m.route.param('stream')) === info.streamNumber) { return; }
 
             setTimeout(() => { Util.move('/stream/watch', { stream: info.streamNumber }); }, 200);
