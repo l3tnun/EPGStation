@@ -71,7 +71,7 @@ class ConfigModel extends ApiModel implements ConfigModelInterface {
         }
 
         if (typeof config.liveHLS !== 'undefined') {
-            results['liveHLS'] = config.recordedHLS.map((option) => {
+            results['liveHLS'] = config.liveHLS.map((option) => {
                 return option.name;
             });
         }

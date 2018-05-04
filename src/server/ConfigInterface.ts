@@ -99,7 +99,7 @@ interface ConfigInterface {
     liveHLS: {
         name: string;
         cmd: string;
-    };
+    }[];
     kodiHosts: {
         name: string;
         host: string;
