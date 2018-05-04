@@ -52,6 +52,7 @@ export interface Config {
         win: string;
     };
     recordedHLS?: string[];
+    liveHLS?: string[];
     kodiHosts?: string[];
 }
 

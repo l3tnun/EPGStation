@@ -260,6 +260,11 @@ definitions:
         items:
           description: 'HLS での録画済みファイルの配信設定'
           type: string
+      liveHLS:
+        type: array
+        items:
+          description: 'HLS ライブ配信の設定'
+          type: string
       kodiHosts:
         type: array
         items:
