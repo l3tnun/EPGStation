@@ -330,17 +330,17 @@ interface StreamInfo {
     streamNumber: number;
     isEnable: boolean;
     viewCnt: number;
-    isNull: boolean,
-    type?: 'MpegTsLive' | 'RecordedHLS',
-    channelId?: ServiceItemId,
-    recordedId?: RecordedId,
-    mode?: number,
-    channelName?: string,
-    title?: string,
-    startAt?: UnixtimeMS,
-    endAt?: UnixtimeMS,
-    channelType?: ChannelType,
-    description?: string,
-    extended?: string,
+    isNull: boolean;
+    type?: 'HLSLive' | 'MpegTsLive' | 'RecordedHLS';
+    channelId?: ServiceItemId;
+    recordedId?: RecordedId;
+    mode?: number;
+    channelName?: string;
+    title?: string;
+    startAt?: UnixtimeMS;
+    endAt?: UnixtimeMS;
+    channelType?: ChannelType;
+    description?: string;
+    extended?: string;
 }
 

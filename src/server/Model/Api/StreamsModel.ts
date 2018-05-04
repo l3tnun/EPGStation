@@ -147,7 +147,7 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
 
         for (const info of infos) {
             if (typeof info.type === 'undefined') { continue; }
-            if (info.type === 'MpegTsLive' && typeof info.channelId !== 'undefined') {
+            if ((info.type === 'MpegTsLive' || info.type === 'HLSLive') && typeof info.channelId !== 'undefined') {
                 const channel = await this.servicesDB.findId(info.channelId);
                 const program = await this.programDB.findBroadcastingChanel(info.channelId);
 

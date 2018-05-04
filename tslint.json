@@ -99,7 +99,7 @@
         "one-variable-per-declaration": [ true, "ignore-for-loop" ],
         "ordered-imports": true,
         "prefer-method-signature": true,
-        "prefer-switch": true,
+        "prefer-switch": false,
         "quotemark": [ true, "single", "avoid-template", "avoid-escape" ],
         "semicolon": [ true, "always" ],
         "space-before-function-paren": [ true, "never" ],

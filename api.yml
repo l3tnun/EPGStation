@@ -1019,6 +1019,7 @@ definitions:
       type:
         type: string
         enum:
+          - HLSLive
           - MpegTsLive
           - RecordedHLS
       channelId:
