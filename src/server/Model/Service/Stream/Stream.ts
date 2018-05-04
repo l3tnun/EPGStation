@@ -35,7 +35,7 @@ abstract class Stream extends Base {
 
     public abstract stop(): Promise<void>;
     public abstract getInfo(): StreamInfo;
-    public abstract getEncChild(): ChildProcess | null;
+    public getEncChild(): ChildProcess | null { return null; }
     public getMirakurunStream(): http.IncomingMessage | null { return null; }
 
     /**

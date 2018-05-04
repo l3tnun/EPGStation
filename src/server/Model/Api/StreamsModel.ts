@@ -2,6 +2,7 @@ import * as apid from '../../../../api';
 import { ProgramsDBInterface } from '../DB/ProgramsDB';
 import { RecordedDBInterface } from '../DB/RecordedDB';
 import { ServicesDBInterface } from '../DB/ServicesDB';
+import { HLSLiveStream } from '../Service/Stream/HLSLiveStream';
 import { MpegTsLiveStream } from '../Service/Stream/MpegTsLiveStream';
 import { RecordedHLSStream } from '../Service/Stream/RecordedHLSStream';
 import { Stream } from '../Service/Stream/Stream';
@@ -20,6 +21,7 @@ namespace StreamsModelInterface {
 }
 
 interface StreamsModelInterface extends ApiModel {
+    getHLSLive(channelId: apid.ServiceItemId, mode: number): Promise<number>;
     getLiveMpegTs(channelId: apid.ServiceItemId, mode: number): Promise<StreamModelInfo>;
     getRecordedHLS(recordedId: apid.RecordedId, mode: number, encodedId: apid.EncodedId | null): Promise<number>;
     stop(streamNumber: number): Promise<void>;
@@ -29,6 +31,7 @@ interface StreamsModelInterface extends ApiModel {
 }
 
 class StreamsModel extends ApiModel implements StreamsModelInterface {
+    private createHLSLiveStream: (channelId: apid.ServiceItemId, mode: number) => HLSLiveStream;
     private createMpegTsLiveStream: (channelId: apid.ServiceItemId, mode: number) => MpegTsLiveStream;
     private createRecordedHLSStream: (recordedId: apid.RecordedId, mode: number, encodedId: apid.EncodedId | null) => RecordedHLSStream;
     private streamManage: StreamManageModelInterface;
@@ -38,6 +41,7 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
 
     constructor(
         streamManage: StreamManageModelInterface,
+        createHLSLiveStream: (channelId: apid.ServiceItemId, mode: number) => HLSLiveStream,
         createMpegTsLiveStream: (channelId: apid.ServiceItemId, mode: number) => MpegTsLiveStream,
         createRecordedHLSStream: (recordedId: apid.RecordedId, mode: number, encodedId: apid.EncodedId | null) => RecordedHLSStream,
         programDB: ProgramsDBInterface,
@@ -46,6 +50,7 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
     ) {
         super();
         this.streamManage = streamManage;
+        this.createHLSLiveStream = createHLSLiveStream;
         this.createMpegTsLiveStream = createMpegTsLiveStream;
         this.createRecordedHLSStream = createRecordedHLSStream;
         this.programDB = programDB;
@@ -54,7 +59,27 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
     }
 
     /**
-     * ライブ視聴
+     * HLS ライブ視聴
+     * @param channelId: channel id
+     * @param mode: config.MpegTsStreaming の index 番号
+     * @return Promise<number>
+     */
+    public async getHLSLive(channelId: apid.ServiceItemId, mode: number): Promise<number> {
+        // 同じパラメータの stream がないか確認する
+        const infos = this.streamManage.getStreamInfos();
+        for (const info of infos) {
+            if (info.type === 'HLSLive' && (<LiveStreamStatusInfo> info).channelId === channelId && info.mode === mode) {
+                return info.streamNumber;
+            }
+        }
+
+        const stream = this.createHLSLiveStream(channelId, mode);
+
+        return await this.streamManage.start(stream);
+    }
+
+    /**
+     * MpegTs ライブ視聴
      * @param channelId: channel id
      * @param mode: config.MpegTsStreaming の index 番号
      * @return Promise<StreamModelInfo>

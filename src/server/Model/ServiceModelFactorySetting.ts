@@ -46,6 +46,7 @@ import { EncodeFinModel } from './Service/Encode/EncodeFinModel';
 import { EncodeManageModel } from './Service/Encode/EncodeManageModel';
 import { EncodeProcessManageModel } from './Service/Encode/EncodeProcessManageModel';
 import { SocketIoManageModel } from './Service/SocketIoManageModel';
+import { HLSLiveStream } from './Service/Stream/HLSLiveStream';
 import { MpegTsLiveStream } from './Service/Stream/MpegTsLiveStream';
 import { RecordedHLSStream } from './Service/Stream/RecordedHLSStream';
 import { StreamManageModel } from './Service/Stream/StreamManageModel';
@@ -135,6 +136,12 @@ namespace ModelFactorySetting {
         factory.reg('EncodeFinModel', () => { return encodeFinModel; });
         factory.reg('StreamsModel', () => { return new StreamsModel(
             streamManage,
+            (chanelId: apid.ServiceItemId, mode: number): HLSLiveStream => { return new HLSLiveStream(
+                encodeProcessManage,
+                streamManage,
+                chanelId,
+                mode,
+            ); },
             (chanelId: apid.ServiceItemId, mode: number): MpegTsLiveStream => { return new MpegTsLiveStream(
                 encodeProcessManage,
                 streamManage,

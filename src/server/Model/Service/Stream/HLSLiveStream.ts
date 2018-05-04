@@ -1,28 +1,26 @@
 import { ChildProcess } from 'child_process';
+import * as http from 'http';
 import * as apid from '../../../../../api';
+import CreateMirakurun from '../../../Util/CreateMirakurunClient';
 import ProcessUtil from '../../../Util/ProcessUtil';
 import Util from '../../../Util/Util';
-import { EncodedDBInterface } from '../../DB/EncodedDB';
-import { RecordedDBInterface } from '../../DB/RecordedDB';
 import { EncodeProcessManageModelInterface } from '../Encode/EncodeProcessManageModel';
 import HLSFileDeleter from './HLSFileDeleter';
 import { Stream, StreamInfo } from './Stream';
 import { StreamManageModelInterface } from './StreamManageModel';
 
-interface RecordedHLSStreamInfo extends StreamInfo {
-    recordedId: apid.RecordedId;
+interface HLSLiveStreamInfo extends StreamInfo {
+    channelId: apid.ServiceItemId;
 }
 
 /**
  * 録画済みファイル HLS 配信
  */
-class RecordedHLSStream extends Stream {
-    private recordedId: apid.RecordedId;
-    private encodedId: apid.EncodedId | null;
+class HLSLiveStream extends Stream {
+    private channelId: apid.ServiceItemId;
     private mode: number;
     private enc: ChildProcess | null = null;
-    private recordedDB: RecordedDBInterface;
-    private encodedDB: EncodedDBInterface;
+    private stream: http.IncomingMessage | null = null;
 
     private fileDeleter: HLSFileDeleter | null = null;
 
@@ -38,57 +36,43 @@ class RecordedHLSStream extends Stream {
     constructor(
         process: EncodeProcessManageModelInterface,
         manager: StreamManageModelInterface,
-        recordedDB: RecordedDBInterface,
-        encodedDB: EncodedDBInterface,
-        recordedId: apid.RecordedId,
+        channelId: apid.ServiceItemId,
         mode: number,
-        encodedId: apid.EncodedId | null = null,
     ) {
         super(process, manager);
 
-        this.recordedDB = recordedDB;
-        this.encodedDB = encodedDB;
-        this.recordedId = recordedId;
+        this.channelId = channelId;
         this.mode = mode;
-        this.encodedId = encodedId;
     }
 
     public async start(streamNumber: number): Promise<void> {
         await super.start(streamNumber);
 
-        // file path を取得
-        const recorded = await this.recordedDB.findId(this.recordedId);
-        if (recorded === null) { throw new Error('RecordedFileIsNotFound'); }
-
-        let filePath: string | null = null;
-        if (this.encodedId === null && recorded.recPath !== null) {
-            filePath = recorded.recPath;
-        } else if (this.encodedId !== null) {
-            const encoded = await this.encodedDB.findId(this.encodedId);
-            if (encoded === null) { throw new Error('EncodedFileIsNotFound'); }
-            filePath = encoded.path;
-        }
-
-        if (filePath === null) { throw new Error('FileIsNotFound'); }
-
         // config の取得
-        const config = this.config.getConfig();
+        const config = this.config.getConfig().liveHLS;
         const streamFilePath = Util.getStreamFilePath();
-        const recordedHLS = config.recordedHLS;
-        if (typeof recordedHLS === 'undefined' || typeof recordedHLS[this.mode] === 'undefined') { throw new Error('recordedHLSConfigError'); }
+        if (typeof config === 'undefined' || typeof config[this.mode] === 'undefined') { throw new Error('LiveHLSStreamConfigError'); }
+
+        // cmd の生成
+        const cmd = config[this.mode].cmd.replace('%FFMPEG%', Util.getFFmpegPath())
+            .replace(/%streamFileDir%/g, streamFilePath)
+            .replace(/%streamNum%/g, String(streamNumber));
 
         // ゴミファイルを削除
         this.fileDeleter = new HLSFileDeleter(streamNumber);
         this.fileDeleter.deleteAllFiles();
 
-        try {
-            // エンコードプロセス生成
-            const cmd = recordedHLS[this.mode].cmd.replace('%FFMPEG%', Util.getFFmpegPath())
-                .replace(/%streamFileDir%/g, streamFilePath)
-                .replace(/%streamNum%/g, String(streamNumber));
+        // mirakurun 準備
+        const mirakurun = CreateMirakurun.get();
+        mirakurun.priority = this.getPriority();
 
+        try {
+            // 放送波受信
+            this.stream = await mirakurun.getServiceStream(this.channelId);
+
+            // エンコードプロセス生成
             this.enc = await this.process.create(
-                filePath,
+                '',
                 `${ streamFilePath }\/stream${ streamNumber }.m3u8`,
                 cmd,
                 Stream.priority,
@@ -97,10 +81,16 @@ class RecordedHLSStream extends Stream {
                 },
             );
 
-            this.enc.on('exit', (code: number) => { if (code !== 0) { this.ChildExit(streamNumber); } });
+            // mirakurun のストリームをエンコードプロセスへパイプする
+            this.stream.pipe(this.enc.stdin);
+
+            this.enc.on('exit', () => { this.ChildExit(streamNumber); });
             this.enc.on('error', () => { this.ChildExit(streamNumber); });
 
             this.enc.stderr.on('data', (data) => { this.log.stream.debug(String(data)); });
+
+            // ファイル自動削除開始
+            this.fileDeleter.startDeleteTsFiles();
         } catch (err) {
             await this.stop();
             throw err;
@@ -108,24 +98,31 @@ class RecordedHLSStream extends Stream {
     }
 
     public async stop(): Promise<void> {
+        if (this.stream !== null) {
+            this.stream.unpipe();
+            this.stream.destroy();
+        }
+
         if (this.enc !== null) {
             await ProcessUtil.kill(this.enc);
         }
 
         if (this.fileDeleter !== null) {
+            // 自動ファイル削除を停止
+            this.fileDeleter.stopDelteTsFiles();
             // 変換済みファイルを削除
             this.fileDeleter.deleteAllFiles();
         }
     }
 
-    public getInfo(): RecordedHLSStreamInfo {
+    public getInfo(): HLSLiveStreamInfo {
         return {
-            type: 'RecordedHLS',
-            recordedId: this.recordedId,
+            type: 'HLSLive',
+            channelId: this.channelId,
             mode: this.mode,
         };
     }
 }
 
-export { RecordedHLSStreamInfo, RecordedHLSStream };
+export { HLSLiveStreamInfo, HLSLiveStream };
 
