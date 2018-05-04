@@ -1,6 +1,7 @@
 import * as m from 'mithril';
 import * as apid from '../../../../api';
 import { ViewModelStatus } from '../../Enums';
+import { ConfigApiModelInterface } from '../../Model/Api/ConfigApiModel';
 import { AllReserves, ReservesApiModelInterface } from '../../Model/Api/ReservesApiModel';
 import { ScheduleApiModelInterface } from '../../Model/Api/ScheduleApiModel';
 import { ProgramSettingValue } from '../../Model/Program/ProgramSettingModel';
@@ -22,6 +23,7 @@ interface ProgramViewInfo {
  * ProgramViewModel
  */
 class ProgramViewModel extends ViewModel {
+    private config: ConfigApiModelInterface;
     private scheduleApiModel: ScheduleApiModelInterface;
     private reservesApiModel: ReservesApiModelInterface;
     private setting: StorageTemplateModel<SettingValue>;
@@ -42,12 +44,14 @@ class ProgramViewModel extends ViewModel {
     public items: ProgramViewInfo[] = [];
 
     constructor(
+        config: ConfigApiModelInterface,
         scheduleApiModel: ScheduleApiModelInterface,
         reservesApiModel: ReservesApiModelInterface,
         setting: StorageTemplateModel<SettingValue>,
         programSetting: StorageTemplateModel<ProgramSettingValue>,
     ) {
         super();
+        this.config = config;
         this.scheduleApiModel = scheduleApiModel;
         this.reservesApiModel = reservesApiModel;
         this.setting = setting;
@@ -194,6 +198,16 @@ class ProgramViewModel extends ViewModel {
             this.domCache[programId] = [];
         }
         this.domCache[programId].push(element);
+    }
+
+    /**
+     * live streaming に対応しているか
+     * @return boolean
+     */
+    public enableLiveStreaming(): boolean {
+        const config = this.config.getConfig();
+
+        return config !== null && config.enableLiveStreaming;
     }
 
     /**

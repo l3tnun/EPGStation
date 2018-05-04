@@ -87,6 +87,7 @@ namespace ViewModelFactorySetting {
         ));
         factory.reg('TopPageViewModel', new TopPageViewModel(reservesApiModel));
         factory.reg('ProgramViewModel', new ProgramViewModel(
+            configModel,
             scheduleApiModel,
             reservesApiModel,
             settingModel,
@@ -199,6 +200,7 @@ namespace ViewModelFactorySetting {
         ));
         factory.reg('StreamSelectViewModel', new StreamSelectViewModel(
             configModel,
+            streamApiModel,
             balloonModel,
             snackbarModel,
             settingModel,

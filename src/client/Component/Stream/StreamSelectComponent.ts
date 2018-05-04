@@ -20,16 +20,33 @@ class StreamSelectComponent extends Component<void> {
     public view(): m.Child {
         return m('div', [
 
-            m('div', { class: 'stream-select-content' }, [
+            m('div', {
+                class: 'stream-select-content ' + (this.viewModel.isMultiTypes()  ? 'multi-type' : ''),
+            }, [
                 m('div', { class: 'name' }, this.viewModel.getName()),
-                m('div', { class: 'pulldown mdl-layout-spacer' }, [
-                    m('select', {
-                        class: 'mdl-textfield__input program-dialog-label',
-                        onchange: m.withAttr('value', (value) => { this.viewModel.streamOptionValue = Number(value); }),
-                        onupdate: (vnode: m.VnodeDOM<void, this>) => {
-                            this.selectOnUpdate(<HTMLInputElement> (vnode.dom), this.viewModel.streamOptionValue);
-                        },
-                    }, this.createOptions()),
+                m('div', { class: 'pulldown-parent' }, [
+                    m('div', { class: 'type pulldown mdl-layout-spacer' }, [
+                        m('select', {
+                            class: 'mdl-textfield__input program-dialog-label',
+                            onchange: m.withAttr('value', (value) => {
+                                if (value === this.viewModel.streamTypeValue) { return; }
+                                this.viewModel.streamTypeValue = value;
+                                this.viewModel.streamOptionValue = 0;
+                            }),
+                            onupdate: (vnode: m.VnodeDOM<void, this>) => {
+                                this.selectOnUpdate(<HTMLInputElement> (vnode.dom), this.viewModel.streamTypeValue);
+                            },
+                        }, this.createTypeOption()),
+                    ]),
+                    m('div', { class: 'mode pulldown mdl-layout-spacer' }, [
+                        m('select', {
+                            class: 'mdl-textfield__input program-dialog-label',
+                            onchange: m.withAttr('value', (value) => { this.viewModel.streamOptionValue = Number(value); }),
+                            onupdate: (vnode: m.VnodeDOM<void, this>) => {
+                                this.selectOnUpdate(<HTMLInputElement> (vnode.dom), this.viewModel.streamOptionValue);
+                            },
+                        }, this.createOptions()),
+                    ]),
                 ]),
             ]),
 
@@ -65,7 +82,17 @@ class StreamSelectComponent extends Component<void> {
     }
 
     /**
-     * selector の option を生成する
+     * type option を生成する
+     * @return m.Child[]
+     */
+    private createTypeOption(): m.Child[] {
+        return this.viewModel.getTypeOption().map((name) => {
+            return m('option', { value: name }, name);
+        });
+    }
+
+    /**
+     * mode option を生成する
      * @return m.Child[]
      */
     private createOptions(): m.Child[] {
