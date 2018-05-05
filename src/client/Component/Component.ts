@@ -6,10 +6,10 @@ abstract class Component<T> extends Base implements m.ClassComponent<T> {
      * ViewModel の init
      * overwrite して使う
      */
-    protected initViewModel(): void {}
+    protected initViewModel(): any {}
 
     public oninit(_vnode: m.Vnode<T, this>): any {
-        this.initViewModel();
+        return this.initViewModel();
     }
 
     public oncreate(_vnode: m.VnodeDOM<T, this>): any {}

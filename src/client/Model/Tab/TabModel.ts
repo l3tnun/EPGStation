@@ -1,3 +1,4 @@
+import * as m from 'mithril';
 import Model from '../Model';
 
 interface TabModelInterface extends Model {
@@ -39,6 +40,8 @@ class TabModel extends Model implements TabModelInterface {
         }
 
         this.tabPosition[id] = position;
+
+        m.redraw();
     }
 }
 

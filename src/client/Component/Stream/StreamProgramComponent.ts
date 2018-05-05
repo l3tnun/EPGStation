@@ -58,7 +58,20 @@ class StreamProgramComponent extends ParentComponent<void> {
                 },
             ],
             notMainContent: [
-                m(StreamProgramCardsComponent),
+                m(StreamProgramCardsComponent, {
+                    scrollStoped: (scroll: number, tab: number) => {
+                        this.saveHistoryData({ scroll: scroll, tab: tab });
+                    },
+                    isNeedRestorePosition: () => {
+                        return this.isNeedRestorePosition;
+                    },
+                    resetRestorePositionFlag: () => {
+                        this.isNeedRestorePosition = false;
+                    },
+                    getPosition: () => {
+                        return <{ scroll: number; tab: number } | null> this.getHistoryData();
+                    },
+                }),
                 m(BalloonComponent, {
                     id: StreamSelectViewModel.id,
                     content: m(StreamSelectComponent),
