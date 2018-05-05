@@ -1,3 +1,4 @@
+import { throttle } from 'lodash';
 import * as m from 'mithril';
 import Util from '../../Util/Util';
 import BalloonViewModel from '../../ViewModel/Balloon/BalloonViewModel';
@@ -62,7 +63,8 @@ class VideoContainerComponent extends Component<ControlArgs> {
                 + (!this.isEnablePip ? ' disable-pip' : '')
                 + (this.isPipMode() ? ' pip-mode' : ''),
             oncreate: (mainVnode: m.VnodeDOM<void, any>) => {
-                this.setElements(<HTMLElement> mainVnode.dom);
+                const element = <HTMLElement> mainVnode.dom;
+                this.setElements(element);
                 this.seekBar = 0;
                 this.speed = 1;
                 this.stopTimeUpdate = false;
@@ -72,6 +74,14 @@ class VideoContainerComponent extends Component<ControlArgs> {
                 document.addEventListener('mozfullscreenchange', this.fullScreenListener, false);
                 document.addEventListener('MSFullscreenChange', this.fullScreenListener, false);
                 document.addEventListener('fullscreenchange', this.fullScreenListener, false);
+
+                let mouseTimer: NodeJS.Timer;
+                element.addEventListener('mousemove', throttle(() => {
+                    clearTimeout(mouseTimer);
+                    this.showMouseCursor();
+
+                    mouseTimer = setTimeout(() => { this.hideMouseCursor(); }, 1000);
+                }, 100), false);
             },
             onupdate: (mainVnode: m.VnodeDOM<void, any>) => {
                 this.setElements(<HTMLElement> mainVnode.dom);
@@ -144,8 +154,10 @@ class VideoContainerComponent extends Component<ControlArgs> {
 
         if (this.isFullScreen()) {
             this.containerElement.classList.add('fullscreen');
+            this.hideMouseCursor();
         } else {
             this.containerElement.classList.remove('fullscreen');
+            this.showMouseCursor();
             setTimeout(() => { this.balloon.enableClose(); }, 1000);
         }
 
@@ -181,6 +193,24 @@ class VideoContainerComponent extends Component<ControlArgs> {
      */
     private isHidingControl(): boolean {
         return this.controlerElement !== null && this.controlerElement.classList.contains('hide');
+    }
+
+    /**
+     * mouse cursor を非表示にする
+     */
+    private hideMouseCursor(): void {
+        if (this.containerElement === null) { return; }
+
+        this.containerElement.classList.add('hide-mouse-cursor');
+    }
+
+    /**
+     * mouse cursor を表示する
+     */
+    private showMouseCursor(): void {
+        if (this.containerElement === null) { return; }
+
+        this.containerElement.classList.remove('hide-mouse-cursor');
     }
 
     /**
