@@ -69,11 +69,11 @@ class StreamProgramCardsComponent extends Component<StramCardArgs> {
 
                         // get position
                         const position = mainVnode.attrs.getPosition();
-                        if (position === null) { return; }
-
-                        // restore position
-                        this.viewModel.setTabPosition(position.tab);
-                        this.contentElement.scrollTop = position.scroll;
+                        if (position !== null) {
+                            // restore position
+                            this.viewModel.setTabPosition(position.tab);
+                            this.contentElement.scrollTop = position.scroll;
+                        }
                     }
                     (<HTMLElement> vnode.dom).style.opacity = '1';
                 } else {
