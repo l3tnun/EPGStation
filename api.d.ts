@@ -54,6 +54,7 @@ export interface Config {
     };
     recordedHLS?: string[];
     liveHLS?: string[];
+    liveWebM?: string[];
     kodiHosts?: string[];
 }
 
