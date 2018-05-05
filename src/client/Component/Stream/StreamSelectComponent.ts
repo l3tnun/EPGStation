@@ -32,6 +32,8 @@ class StreamSelectComponent extends Component<void> {
                                 if (value === this.viewModel.streamTypeValue) { return; }
                                 this.viewModel.streamTypeValue = value;
                                 this.viewModel.streamOptionValue = 0;
+
+                                this.viewModel.saveValues();
                             }),
                             onupdate: (vnode: m.VnodeDOM<void, this>) => {
                                 this.selectOnUpdate(<HTMLInputElement> (vnode.dom), this.viewModel.streamTypeValue);
@@ -41,7 +43,11 @@ class StreamSelectComponent extends Component<void> {
                     m('div', { class: 'mode pulldown mdl-layout-spacer' }, [
                         m('select', {
                             class: 'mdl-textfield__input program-dialog-label',
-                            onchange: m.withAttr('value', (value) => { this.viewModel.streamOptionValue = Number(value); }),
+                            onchange: m.withAttr('value', (value) => {
+                                this.viewModel.streamOptionValue = Number(value);
+
+                                this.viewModel.saveValues();
+                            }),
                             onupdate: (vnode: m.VnodeDOM<void, this>) => {
                                 this.selectOnUpdate(<HTMLInputElement> (vnode.dom), this.viewModel.streamOptionValue);
                             },

@@ -28,6 +28,7 @@ if (Util.uaIsAndroid()) {
 factory.get('SearchSettingViewModel').init();
 factory.get('SettingViewModel').init();
 factory.get('ProgramSettingViewModel').init();
+factory.get('StreamSelectSettingViewModel').init();
 
 m.route.prefix('#!');
 m.route(document.body, '/', {

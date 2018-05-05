@@ -1,15 +1,15 @@
 import * as apid from '../../../../api';
+import { StreamType } from '../../Enums';
 import { ConfigApiModelInterface } from '../../Model/Api/ConfigApiModel';
 import { StreamsApiModelInterface } from '../../Model/Api/StreamsApiModel';
 import { BalloonModelInterface } from '../../Model/Balloon/BallonModel';
 import { SettingValue } from '../../Model/Setting/SettingModel';
 import { SnackbarModelInterface } from '../../Model/Snackbar/SnackbarModel';
 import StorageTemplateModel from '../../Model/Storage/StorageTemplateModel';
+import { StreamSelectSettingValue } from '../../Model/Stream/StreamSelectSettingModel';
 import Util from '../../Util/Util';
 import ViewModel from '../ViewModel';
 import CreateStreamLink from './CreateStreamLink';
-
-type StreamType = 'M2TS' | 'HLS';
 
 /**
  * StreamSelectViewModel
@@ -18,6 +18,7 @@ class StreamSelectViewModel extends ViewModel {
     private config: ConfigApiModelInterface;
     private streamApiModel: StreamsApiModelInterface;
     private setting: StorageTemplateModel<SettingValue>;
+    private selectSetting: StorageTemplateModel<StreamSelectSettingValue>;
     private balloon: BalloonModelInterface;
     private channel: apid.ScheduleServiceItem | null = null;
     private snackbar: SnackbarModelInterface;
@@ -36,6 +37,7 @@ class StreamSelectViewModel extends ViewModel {
         balloon: BalloonModelInterface,
         snackbar: SnackbarModelInterface,
         setting: StorageTemplateModel<SettingValue>,
+        selectSetting: StorageTemplateModel<StreamSelectSettingValue>,
     ) {
         super();
         this.config = config;
@@ -43,6 +45,7 @@ class StreamSelectViewModel extends ViewModel {
         this.balloon = balloon;
         this.snackbar = snackbar;
         this.setting = setting;
+        this.selectSetting = selectSetting;
     }
 
     /**
@@ -53,8 +56,23 @@ class StreamSelectViewModel extends ViewModel {
         // type 設定
         const config = this.config.getConfig();
         if (this.streamTypeValue === null && config !== null) {
-            this.streamTypeValue = typeof config.mpegTsStreaming !== 'undefined' ? 'M2TS' : 'HLS';
+            // 複数の配信方式があるか
             this.hasMultiType = typeof config.mpegTsStreaming !== 'undefined' && typeof config.liveHLS !== 'undefined';
+
+            const selectValue = this.selectSetting.getValue();
+            if (selectValue.type === 'M2TS' && typeof config.mpegTsStreaming !== 'undefined') {
+                this.streamTypeValue = 'M2TS';
+                if (typeof config.mpegTsStreaming[selectValue.mode] !== 'undefined') {
+                    this.streamOptionValue = selectValue.mode;
+                }
+            } else if (selectValue.type === 'HLS' && typeof config.liveHLS !== 'undefined') {
+                this.streamTypeValue = 'HLS';
+                if (typeof config.liveHLS[selectValue.mode] !== 'undefined') {
+                    this.streamOptionValue = selectValue.mode;
+                }
+            } else {
+                this.streamTypeValue = typeof config.mpegTsStreaming !== 'undefined' ? 'M2TS' : 'HLS';
+            }
         }
 
         this.channel = channel;
@@ -88,6 +106,19 @@ class StreamSelectViewModel extends ViewModel {
     }
 
     /**
+     * 選択したオプションを記憶する
+     */
+    public saveValues(): void {
+        if (this.streamTypeValue === null) { return; }
+
+        // save value
+        this.selectSetting.setValue({
+            type: this.streamTypeValue,
+            mode: this.streamOptionValue,
+        });
+    }
+
+    /**
      * ストリームオプションを返す
      * @return { name: string, value: number }
      */
@@ -114,6 +145,7 @@ class StreamSelectViewModel extends ViewModel {
     public async view(): Promise<void> {
         if (this.channel === null || this.streamTypeValue === null) { return; }
 
+        // view
         if (this.streamTypeValue === 'M2TS') {
             // M2TS
             const setting = this.setting.get();
