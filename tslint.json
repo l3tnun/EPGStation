@@ -71,7 +71,6 @@
         "use-isnan": true,
         "eofline": true,
         "indent": [ true, "spaces", 4 ],
-        "linebreak-style": [ true, "LF" ],
         "max-classes-per-file": [ true, 1 ],
         "no-duplicate-imports": true,
         "no-mergeable-namespace": true,
