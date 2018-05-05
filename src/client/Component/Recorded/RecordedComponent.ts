@@ -95,7 +95,11 @@ class RecordedComponent extends ParentComponent<void> {
             notMainContent: [
                 m(BalloonComponent, {
                     id: RecordedInfoViewModel.id,
-                    head: m(TabComponent, { tabs: this.infoViewModel.getTabTitles(), contentId: 'recorded-info-content' }),
+                    head: m(TabComponent, {
+                        id: RecordedInfoViewModel.tabId,
+                        tabs: this.infoViewModel.getTabTitles(),
+                        contentId: RecordedInfoViewModel.contentId,
+                    }),
                     content: m(RecordedInfoComponent),
                     maxWidth: 400,
                     maxHeight: 480,

@@ -88,7 +88,11 @@ class TopPageComponent extends ParentComponent<void> {
                 this.createContent(),
                 m(BalloonComponent, {
                     id: RecordedInfoViewModel.id,
-                    head: m(TabComponent, { tabs: this.recordedInfoViewModel.getTabTitles(), contentId: 'recorded-info-content' }),
+                    head: m(TabComponent, {
+                        id: RecordedInfoViewModel.tabId,
+                        tabs: this.recordedInfoViewModel.getTabTitles(),
+                        contentId: RecordedInfoViewModel.contentId,
+                    }),
                     content: m(RecordedInfoComponent),
                     maxWidth: 400,
                     maxHeight: 480,

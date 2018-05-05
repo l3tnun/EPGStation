@@ -56,7 +56,11 @@ class StreamProgramCardsComponent extends Component<void> {
                 }
             },
         }, [
-            m(TabComponent, { tabs: broadcasts, contentId: StreamProgramCardsViewModel.contentId }),
+            m(TabComponent, {
+                id: StreamProgramCardsViewModel.tabId,
+                tabs: broadcasts,
+                contentId: StreamProgramCardsViewModel.contentId,
+            }),
             m('div', { id: StreamProgramCardsViewModel.contentId, class: 'non-scroll' }, [
                 this.viewModel.getPrograms(broadcasts[this.viewModel.getTabPosition()]).map((item) => {
                     return m('div', { class: 'mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col' },

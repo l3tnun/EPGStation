@@ -435,12 +435,14 @@ class RecordedInfoViewModel extends ViewModel {
      * tab position
      */
     public getTabPosition(): number {
-        return this.tab.get();
+        return this.tab.get(RecordedInfoViewModel.tabId);
     }
 }
 
 namespace RecordedInfoViewModel {
     export const id = 'recorded-info';
+    export const tabId = 'recorded-info-tab';
+    export const contentId = 'recorded-info-content';
     export const fileSizeUnits = ['B', 'KB', 'MB', 'GB'];
 }
 
