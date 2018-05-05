@@ -1028,9 +1028,10 @@ definitions:
       type:
         type: string
         enum:
-          - HLSLive
           - MpegTsLive
           - RecordedHLS
+          - HLSLive
+          - WebMLive
       channelId:
         $ref: '#/definitions/ServiceItemId'
       recordedId:

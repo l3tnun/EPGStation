@@ -333,7 +333,7 @@ interface StreamInfo {
     isEnable: boolean;
     viewCnt: number;
     isNull: boolean;
-    type?: 'HLSLive' | 'MpegTsLive' | 'RecordedHLS';
+    type?: 'MpegTsLive' | 'RecordedHLS' | 'HLSLive' | 'WebMLive';
     channelId?: ServiceItemId;
     recordedId?: RecordedId;
     mode?: number;

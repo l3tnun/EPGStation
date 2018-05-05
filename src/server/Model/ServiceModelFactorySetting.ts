@@ -50,6 +50,7 @@ import { HLSLiveStream } from './Service/Stream/HLSLiveStream';
 import { MpegTsLiveStream } from './Service/Stream/MpegTsLiveStream';
 import { RecordedHLSStream } from './Service/Stream/RecordedHLSStream';
 import { StreamManageModel } from './Service/Stream/StreamManageModel';
+import { WebMLiveStream } from './Service/Stream/WebMLiveStream';
 
 /**
  * Service 用の Model 設定
@@ -137,6 +138,12 @@ namespace ModelFactorySetting {
         factory.reg('StreamsModel', () => { return new StreamsModel(
             streamManage,
             (chanelId: apid.ServiceItemId, mode: number): HLSLiveStream => { return new HLSLiveStream(
+                encodeProcessManage,
+                streamManage,
+                chanelId,
+                mode,
+            ); },
+            (chanelId: apid.ServiceItemId, mode: number): WebMLiveStream => { return new WebMLiveStream(
                 encodeProcessManage,
                 streamManage,
                 chanelId,

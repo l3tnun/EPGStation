@@ -7,6 +7,7 @@ import { MpegTsLiveStream } from '../Service/Stream/MpegTsLiveStream';
 import { RecordedHLSStream } from '../Service/Stream/RecordedHLSStream';
 import { Stream } from '../Service/Stream/Stream';
 import { LiveStreamStatusInfo, StreamManageModelInterface } from '../Service/Stream/StreamManageModel';
+import { WebMLiveStream } from '../Service/Stream/WebMLiveStream';
 import ApiModel from './ApiModel';
 import ApiUtil from './ApiUtil';
 import { PlayList } from './PlayListInterface';
@@ -22,6 +23,7 @@ namespace StreamsModelInterface {
 
 interface StreamsModelInterface extends ApiModel {
     getHLSLive(channelId: apid.ServiceItemId, mode: number): Promise<number>;
+    getWebMLive(channelId: apid.ServiceItemId, mode: number): Promise<StreamModelInfo>;
     getLiveMpegTs(channelId: apid.ServiceItemId, mode: number): Promise<StreamModelInfo>;
     getRecordedHLS(recordedId: apid.RecordedId, mode: number, encodedId: apid.EncodedId | null): Promise<number>;
     stop(streamNumber: number): Promise<void>;
@@ -32,6 +34,7 @@ interface StreamsModelInterface extends ApiModel {
 
 class StreamsModel extends ApiModel implements StreamsModelInterface {
     private createHLSLiveStream: (channelId: apid.ServiceItemId, mode: number) => HLSLiveStream;
+    private createWebMLiveStream: (channelId: apid.ServiceItemId, mode: number) => WebMLiveStream;
     private createMpegTsLiveStream: (channelId: apid.ServiceItemId, mode: number) => MpegTsLiveStream;
     private createRecordedHLSStream: (recordedId: apid.RecordedId, mode: number, encodedId: apid.EncodedId | null) => RecordedHLSStream;
     private streamManage: StreamManageModelInterface;
@@ -42,6 +45,7 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
     constructor(
         streamManage: StreamManageModelInterface,
         createHLSLiveStream: (channelId: apid.ServiceItemId, mode: number) => HLSLiveStream,
+        createWebMLiveStream: (channelId: apid.ServiceItemId, mode: number) => WebMLiveStream,
         createMpegTsLiveStream: (channelId: apid.ServiceItemId, mode: number) => MpegTsLiveStream,
         createRecordedHLSStream: (recordedId: apid.RecordedId, mode: number, encodedId: apid.EncodedId | null) => RecordedHLSStream,
         programDB: ProgramsDBInterface,
@@ -51,6 +55,7 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
         super();
         this.streamManage = streamManage;
         this.createHLSLiveStream = createHLSLiveStream;
+        this.createWebMLiveStream = createWebMLiveStream;
         this.createMpegTsLiveStream = createMpegTsLiveStream;
         this.createRecordedHLSStream = createRecordedHLSStream;
         this.programDB = programDB;
@@ -76,6 +81,29 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
         const stream = this.createHLSLiveStream(channelId, mode);
 
         return await this.streamManage.start(stream);
+    }
+
+    /**
+     * webm ライブ視聴
+     * @param channelId: channel id
+     * @param mode: config.MpegTsStreaming の index 番号
+     * @return Promise<StreamModelInfo>
+     */
+    public async getWebMLive(channelId: apid.ServiceItemId, mode: number): Promise<StreamModelInfo> {
+        const stream = this.createWebMLiveStream(channelId, mode);
+        const streamNumber = await this.streamManage.start(stream);
+
+        const result = this.streamManage.getStream(streamNumber);
+        if (result === null) { throw new Error('CreateStreamError'); }
+
+        const encChild = result.getEncChild();
+        if (encChild !== null) {
+            encChild.stderr.on('data', (data) => {
+                this.log.stream.debug(String(data));
+            });
+        }
+
+        return { stream: result, streamNumber: streamNumber };
     }
 
     /**
@@ -147,7 +175,7 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
 
         for (const info of infos) {
             if (typeof info.type === 'undefined') { continue; }
-            if ((info.type === 'MpegTsLive' || info.type === 'HLSLive') && typeof info.channelId !== 'undefined') {
+            if (info.type.includes('Live') && typeof info.channelId !== 'undefined') {
                 const channel = await this.servicesDB.findId(info.channelId);
                 const program = await this.programDB.findBroadcastingChanel(info.channelId);
 
@@ -165,7 +193,7 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
                 }
             }
 
-            if (info.type === 'RecordedHLS' && typeof info.recordedId !== 'undefined') {
+            if (info.type.includes('Recorded') && typeof info.recordedId !== 'undefined') {
                 const recorded = await this.recordedDB.findId(info.recordedId);
 
                 if (recorded !== null) {

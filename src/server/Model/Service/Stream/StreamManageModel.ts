@@ -78,10 +78,10 @@ class StreamManageModel extends Model implements StreamManageModelInterface {
             mode: streamInfo.mode,
         };
 
-        if (streamInfo.type === 'MpegTsLive' || streamInfo.type === 'HLSLive') {
+        if (streamInfo.type.includes('Live')) {
             (<LiveStreamStatusInfo> result).channelId = (<MpegTsLiveStreamInfo> streamInfo).channelId;
         }
-        if (streamInfo.type === 'RecordedHLS') {
+        if (streamInfo.type.includes('Recorded')) {
             (<RecordedStreamStatusInfo> result).recordedId = (<RecordedHLSStreamInfo> streamInfo).recordedId;
         }
 

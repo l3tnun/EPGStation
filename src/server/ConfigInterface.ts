@@ -100,6 +100,10 @@ interface ConfigInterface {
         name: string;
         cmd: string;
     }[];
+    liveWebM: {
+        name: string;
+        cmd: string;
+    }[];
     kodiHosts: {
         name: string;
         host: string;

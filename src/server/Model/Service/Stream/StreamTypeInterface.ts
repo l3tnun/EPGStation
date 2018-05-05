@@ -1,5 +1,5 @@
 /**
  * Stream 種類定義
  */
-export type StreamType = 'MpegTsLive' | 'RecordedHLS' | 'HLSLive';
+export type StreamType = 'MpegTsLive' | 'RecordedHLS' | 'HLSLive' | 'WebMLive';
 
