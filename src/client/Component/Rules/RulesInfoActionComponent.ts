@@ -28,7 +28,7 @@ class RulesInfoActionComponent extends Component<void> {
         return m('div', [
             m('hr', { style: 'margin: 0px;' }),
 
-            m('div', { class: 'mdl-dialog__actions' }, [
+            m('div', { class: 'rule-action mdl-dialog__actions' }, [
                 m('button', {
                     type: 'button',
                     class: 'mdl-button mdl-js-button mdl-button--primary',
