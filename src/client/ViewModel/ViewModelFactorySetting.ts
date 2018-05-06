@@ -42,6 +42,7 @@ import SnackbarViewModel from './Snackbar/SnackbarViewModel';
 import StorageViewModel from './Storage/StorageViewModel';
 import StreamForcedStopViewModel from './Stream/StreamForcedStopViewModel';
 import StreamInfoViewModel from './Stream/StreamInfoViewModel';
+import StreamLivePlayerViewModel from './Stream/StreamLivePlayerViewModel';
 import StreamProgramCardsViewModel from './Stream/StreamProgramCardsViewModel';
 import StreamSelectSettingViewModel from './Stream/StreamSelectSettingViewModel';
 import StreamSelectViewModel from './Stream/StreamSelectViewModel';
@@ -218,6 +219,9 @@ namespace ViewModelFactorySetting {
             configModel,
             snackbarModel,
             settingModel,
+        ));
+        factory.reg('StreamLivePlayerViewModel', new StreamLivePlayerViewModel(
+            balloonModel,
         ));
         factory.reg('StreamForcedStopViewModel', new StreamForcedStopViewModel(
             streamApiModel,

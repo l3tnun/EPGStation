@@ -1,4 +1,5 @@
 import * as m from 'mithril';
+import StreamLivePlayerViewModel from '../../ViewModel/Stream/StreamLivePlayerViewModel';
 import StreamSelectViewModel from '../../ViewModel/Stream/StreamSelectViewModel';
 import factory from '../../ViewModel/ViewModelFactory';
 import Component from '../Component';
@@ -8,10 +9,12 @@ import Component from '../Component';
  */
 class StreamSelectComponent extends Component<void> {
     private viewModel: StreamSelectViewModel;
+    private livePlayerViewModel: StreamLivePlayerViewModel;
 
     constructor() {
         super();
         this.viewModel = <StreamSelectViewModel> factory.get('StreamSelectViewModel');
+        this.livePlayerViewModel = <StreamLivePlayerViewModel> factory.get('StreamLivePlayerViewModel');
     }
 
     /**
@@ -62,7 +65,15 @@ class StreamSelectComponent extends Component<void> {
                     class: 'mdl-button mdl-js-button mdl-button--primary',
                     onclick: () => {
                         this.viewModel.close();
-                        this.viewModel.view();
+                        if (this.viewModel.streamTypeValue === 'WebM') {
+                            const channel = this.viewModel.getChannel();
+                            if (channel === null) { return; }
+
+                            this.livePlayerViewModel.set(channel, this.viewModel.streamOptionValue);
+                            this.livePlayerViewModel.open();
+                        } else {
+                            this.viewModel.view();
+                        }
                     },
                 }, '視聴'),
 

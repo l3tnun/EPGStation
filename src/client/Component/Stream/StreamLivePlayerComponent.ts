@@ -1,18 +1,18 @@
 import * as m from 'mithril';
-import RecordedPlayerViewModel from '../../ViewModel/Recorded/RecordedPlayerViewModel';
+import StreamLivePlayerViewModel from '../../ViewModel/Stream/StreamLivePlayerViewModel';
 import factory from '../../ViewModel/ViewModelFactory';
 import Component from '../Component';
 import VideoContainerComponent from '../Video/VideoContainerComponent';
 
 /**
- * RecordedPlayerComponent
+ * StreamLivePlayerComponent
  */
-class RecordedPlayerComponent extends Component<void> {
-    private viewModel: RecordedPlayerViewModel;
+class StreamLivePlayerComponent extends Component<void> {
+    private viewModel: StreamLivePlayerViewModel;
 
     constructor() {
         super();
-        this.viewModel = <RecordedPlayerViewModel> factory.get('RecordedPlayerViewModel');
+        this.viewModel = <StreamLivePlayerViewModel> factory.get('StreamLivePlayerViewModel');
     }
 
     /**
@@ -20,19 +20,20 @@ class RecordedPlayerComponent extends Component<void> {
      */
     public view(): m.Child {
         let width = window.innerWidth;
-        if (width > RecordedPlayerViewModel.maxWidth) { width = RecordedPlayerViewModel.maxWidth; }
+        if (width > StreamLivePlayerViewModel.maxWidth) { width = StreamLivePlayerViewModel.maxWidth; }
         const height = width / 16 * 9;
 
         return m('div', {
-            class: 'recorded-player-parent',
+            class: 'stream-live-player-parent',
         }, [
             m('div', {
-                class: 'recorded-player',
+                class: 'stream-live-player',
                 style: `width: ${ width }px; height: ${ height }px;`,
             }, [
                 m(VideoContainerComponent, {
                     video: this.createVideo(),
                     height: height,
+                    isLiveStreaming: true,
                     enableCloseButton: true,
                     closeButtonCallback: () => { this.viewModel.close(); },
                 }),
@@ -92,5 +93,5 @@ class RecordedPlayerComponent extends Component<void> {
     }
 }
 
-export default RecordedPlayerComponent;
+export default StreamLivePlayerComponent;
 

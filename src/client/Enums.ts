@@ -3,4 +3,4 @@
  */
 
 export type ViewModelStatus = 'init' | 'update' | 'reload' | 'updateIo';
-export type StreamType = 'M2TS' | 'HLS';
+export type StreamType = 'M2TS' | 'HLS' | 'WebM';

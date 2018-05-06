@@ -70,8 +70,20 @@ class StreamSelectViewModel extends ViewModel {
                 if (typeof config.liveHLS[selectValue.mode] !== 'undefined') {
                     this.streamOptionValue = selectValue.mode;
                 }
+            } else if (selectValue.type === 'WebM' && typeof config.liveWebM !== 'undefined') {
+                this.streamTypeValue = 'WebM';
+                if (typeof config.liveWebM[selectValue.mode] !== 'undefined') {
+                    this.streamOptionValue = selectValue.mode;
+                }
             } else {
-                this.streamTypeValue = typeof config.mpegTsStreaming !== 'undefined' ? 'M2TS' : 'HLS';
+                this.streamTypeValue = 'M2TS';
+                if (typeof config.mpegTsStreaming !== 'undefined') {
+                    this.streamTypeValue = 'M2TS';
+                } else if (typeof config.liveHLS !== 'undefined') {
+                    this.streamTypeValue = 'HLS';
+                } else if (typeof config.liveWebM !== 'undefined') {
+                    this.streamTypeValue = 'WebM';
+                }
             }
         }
 
@@ -99,10 +111,15 @@ class StreamSelectViewModel extends ViewModel {
      * get type option
      */
     public getTypeOption(): StreamType[] {
-        return [
-            'M2TS',
-            'HLS',
-        ];
+        const types: StreamType[] = [];
+        const config = this.config.getConfig();
+        if (config === null) { return []; }
+
+        if (typeof config.mpegTsStreaming !== 'undefined') { types.push('M2TS'); }
+        if (typeof config.liveHLS !== 'undefined') { types.push('HLS'); }
+        if (typeof config.liveWebM !== 'undefined') { types.push('WebM'); }
+
+        return types;
     }
 
     /**
@@ -132,6 +149,10 @@ class StreamSelectViewModel extends ViewModel {
             });
         } else if (this.streamTypeValue === 'HLS' && typeof config.liveHLS !== 'undefined') {
             return config.liveHLS.map((option, index) => {
+                return { name: option, value: index };
+            });
+        } else if (this.streamTypeValue === 'WebM' && typeof config.liveWebM !== 'undefined') {
+            return config.liveWebM.map((option, index) => {
                 return { name: option, value: index };
             });
         } else {
@@ -170,7 +191,7 @@ class StreamSelectViewModel extends ViewModel {
             if (url === null) { return; }
 
             location.href = url;
-        } else {
+        } else if (this.streamTypeValue === 'HLS') {
             // HLS
             this.close();
 
@@ -182,6 +203,14 @@ class StreamSelectViewModel extends ViewModel {
             // ページ移動
             setTimeout(() => { Util.move('/stream/watch', { stream: streamNumber }); }, 200);
         }
+    }
+
+    /**
+     * get channel
+     * @return apid.ScheduleServiceItem | null
+     */
+    public getChannel(): apid.ScheduleServiceItem | null {
+        return this.channel;
     }
 
     /**
