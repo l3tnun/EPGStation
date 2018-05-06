@@ -32,12 +32,14 @@ class StreamNavigationInfoComponent extends Component<void> {
             m('nav', { class: 'mdl-navigation' }, [
                 this.viewModel.getStreamInfos().map((info, index) => {
                     return m('a', {
-                        class: 'mdl-navigation__link',
+                        class: 'mdl-navigation__link' + (info.type === 'WebMLive' ? ' disable' : ''),
                         onclick: () => {
+                            if (info.type === 'WebMLive') { return; }
+
                             Util.closeNavigation();
                             this.viewModel.view(index);
                         },
-                    }, info.type === 'MpegTsLive' || info.type === 'HLSLive' ? info.channelName : info.title);
+                    }, typeof info.type !== 'undefined' && info.type.includes('Live') ? info.channelName : info.title);
                 }),
             ]),
         ];
