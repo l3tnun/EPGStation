@@ -56,8 +56,12 @@ class StreamSelectViewModel extends ViewModel {
         // type 設定
         const config = this.config.getConfig();
         if (this.streamTypeValue === null && config !== null) {
+            let typeCnt = 0;
+            if (typeof config.mpegTsStreaming !== 'undefined') { typeCnt += 1; }
+            if (typeof config.liveHLS !== 'undefined') { typeCnt += 1; }
+            if (typeof config.liveWebM !== 'undefined') { typeCnt += 1; }
             // 複数の配信方式があるか
-            this.hasMultiType = typeof config.mpegTsStreaming !== 'undefined' && typeof config.liveHLS !== 'undefined';
+            this.hasMultiType = typeCnt > 1;
 
             const selectValue = this.selectSetting.getValue();
             if (selectValue.type === 'M2TS' && typeof config.mpegTsStreaming !== 'undefined') {
