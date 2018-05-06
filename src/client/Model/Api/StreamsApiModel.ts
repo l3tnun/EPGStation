@@ -6,6 +6,7 @@ interface StreamsApiModelInterface extends ApiModel {
     init(): void;
     fetchInfos(): Promise<void>;
     getInfos(): apid.StreamInfo[];
+    startLiveHLS(channelId: apid.ServiceItemId, mode: number): Promise<number>;
     startRecordedHLS(recordedId: apid.RecordedId, mode: number, encodedId?: apid.EncodedId | null): Promise<number>;
     stop(streamNumber: number): Promise<void>;
     forcedStopAll(): Promise<void>;
@@ -49,11 +50,35 @@ class StreamsApiModel extends ApiModel implements StreamsApiModelInterface {
     }
 
     /**
+     * HLS ライブ配信
+     * @param channelId: channel id
+     * @param mode: mode
+     * @return Promise<number> stream number
+     */
+    public async startLiveHLS(channelId: apid.ServiceItemId, mode: number): Promise<number> {
+        try {
+            const stream: apid.HLSStream = await <any> m.request({
+                method: 'GET',
+                url: `/api/streams/live/${ channelId }/hls`,
+                data: { mode: mode },
+            });
+
+            return stream.streamNumber;
+        } catch (err) {
+            console.error(`/api/live/${ channelId }/hls`);
+            console.error({ mode: mode });
+            console.error(err);
+            this.openSnackbar('HLS 配信開始に失敗しました');
+            throw err;
+        }
+    }
+
+    /**
      * 録画済みファイルの HLS 配信を開始する
      * @param recordedId: recorded id
      * @param mode: mode
      * @param encodedId: encoded id
-     * @return number stream number
+     * @return Promise<number> stream number
      */
     public async startRecordedHLS(recordedId: apid.RecordedId, mode: number, encodedId: apid.EncodedId | null = null): Promise<number> {
         const query: { mode: number; encodedId?: number } = { mode: mode };

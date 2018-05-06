@@ -100,9 +100,18 @@ class StreamProgramCardsViewModel extends ViewModel {
 
     /**
      * tab position
+     * @return number
      */
     public getTabPosition(): number {
-        return this.tab.get();
+        return this.tab.get(StreamProgramCardsViewModel.tabId);
+    }
+
+    /**
+     * set tab positon
+     * @param position: number
+     */
+    public setTabPosition(position: number): void {
+        this.tab.set(StreamProgramCardsViewModel.tabId, position);
     }
 
     /**
@@ -140,6 +149,7 @@ class StreamProgramCardsViewModel extends ViewModel {
 }
 
 namespace StreamProgramCardsViewModel {
+    export const tabId = 'stream-programs-cards-tab';
     export const contentId = 'stream-programs-cards-content';
 }
 

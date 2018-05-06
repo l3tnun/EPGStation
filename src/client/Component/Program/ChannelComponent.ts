@@ -35,7 +35,7 @@ class ChannelComponent extends Component<void> {
                     class: 'item',
                     style: `left: calc(${ i } * var(--channel-width) + var(--timescale-width));`,
                     onclick: (e: Event) => {
-                        if (this.streamSelector.getOptions().length > 0) {
+                        if (this.viewModel.enableLiveStreaming()) {
                             this.streamSelector.set(channel, () => { this.jumpSingleStation(channel); });
                             this.balloon.open(StreamSelectViewModel.id, e);
                         } else {

@@ -1,3 +1,4 @@
+import { throttle } from 'lodash';
 import * as m from 'mithril';
 import * as apid from '../../../../api';
 import DateUtil from '../../Util/DateUtil';
@@ -10,14 +11,23 @@ import factory from '../../ViewModel/ViewModelFactory';
 import Component from '../Component';
 import TabComponent from '../TabComponent';
 
+interface StramCardArgs {
+    scrollStoped(scroll: number, tab: number): void;
+    isNeedRestorePosition(): boolean;
+    resetRestorePositionFlag(): void;
+    getPosition(): { scroll: number; tab: number } | null;
+}
+
 /**
  * StreamProgramCardsComponent
  */
-class StreamProgramCardsComponent extends Component<void> {
+class StreamProgramCardsComponent extends Component<StramCardArgs> {
     private viewModel: StreamProgramCardsViewModel;
     private mainLayoutViewModel: MainLayoutViewModel;
     private selectorViewModel: StreamSelectViewModel;
     private balloon: BalloonViewModel;
+    private contentElement: HTMLElement;
+    private isDoneInit: boolean = false;
 
     constructor() {
         super();
@@ -27,13 +37,17 @@ class StreamProgramCardsComponent extends Component<void> {
         this.balloon = <BalloonViewModel> factory.get('BalloonViewModel');
     }
 
-    protected initViewModel(): void {
+    protected async initViewModel(): Promise<void> {
+        this.isDoneInit = false;
         super.initViewModel();
-        // setTimeout を挟まないとストレージ空き容量ダイアログのグラフが描画されなくなる
-        this.viewModel.init();
+        await this.viewModel.init();
+        setTimeout(() => {
+            this.isDoneInit = true;
+            m.redraw();
+        }, 100);
     }
 
-    public onremove(vnode: m.VnodeDOM<void, this>): any {
+    public onremove(vnode: m.VnodeDOM<StramCardArgs, this>): any {
         this.viewModel.stopTimer();
 
         return super.onremove(vnode);
@@ -42,22 +56,48 @@ class StreamProgramCardsComponent extends Component<void> {
     /**
      * view
      */
-    public view(): m.Child {
+    public view(mainVnode: m.Vnode<StramCardArgs, this>): m.Child {
         const broadcasts = this.viewModel.getBroadcastList();
 
         return m('div', {
             class: 'stream-programs-cards main-layout-animation',
-            onupdate: async(vnode: m.VnodeDOM<void, this>) => {
-                if (this.mainLayoutViewModel.isShow()) {
+            onupdate: async(vnode: m.VnodeDOM<any, this>) => {
+                if (this.mainLayoutViewModel.isShow() && this.isDoneInit) {
                     await Util.sleep(100);
+                    if (mainVnode.attrs.isNeedRestorePosition()) {
+                        mainVnode.attrs.resetRestorePositionFlag();
+
+                        // get position
+                        const position = mainVnode.attrs.getPosition();
+                        if (position !== null) {
+                            // restore position
+                            this.viewModel.setTabPosition(position.tab);
+                            this.contentElement.scrollTop = position.scroll;
+                        }
+                    }
                     (<HTMLElement> vnode.dom).style.opacity = '1';
                 } else {
                     (<HTMLElement> vnode.dom).style.opacity = '0';
                 }
             },
         }, [
-            m(TabComponent, { tabs: broadcasts, contentId: StreamProgramCardsViewModel.contentId }),
-            m('div', { id: StreamProgramCardsViewModel.contentId, class: 'non-scroll' }, [
+            m(TabComponent, {
+                id: StreamProgramCardsViewModel.tabId,
+                tabs: broadcasts,
+                contentId: StreamProgramCardsViewModel.contentId,
+            }),
+            m('div', {
+                id: StreamProgramCardsViewModel.contentId,
+                class: 'non-scroll',
+                oncreate: (vnode: m.VnodeDOM<any, this>) => {
+                    // save scroll position && tab position
+                    const element = <HTMLElement> vnode.dom;
+                    this.contentElement = element;
+                    element.addEventListener('scroll', throttle(() => {
+                        mainVnode.attrs.scrollStoped(element.scrollTop, this.viewModel.getTabPosition());
+                    }, 50), false);
+                },
+            }, [
                 this.viewModel.getPrograms(broadcasts[this.viewModel.getTabPosition()]).map((item) => {
                     return m('div', { class: 'mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col' },
                         this.createContent(item),

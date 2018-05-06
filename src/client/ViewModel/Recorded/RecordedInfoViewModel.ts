@@ -13,6 +13,14 @@ import GenreUtil from '../../Util/GenreUtil';
 import Util from '../../Util/Util';
 import ViewModel from '../ViewModel';
 
+interface VideoSrcInfo {
+    name: string;
+    path: string; filesize: string | null;
+    isUrlScheme: boolean;
+    encodedId?: number;
+    useWebPlayer: boolean;
+}
+
 /**
  * RecordedInfoViewModel
  */
@@ -91,6 +99,14 @@ class RecordedInfoViewModel extends ViewModel {
     }
 
     /**
+     * get recorded
+     * @return apid.RecordedProgram | null
+     */
+    public getRecorded(): apid.RecordedProgram | null {
+        return this.recorded;
+    }
+
+    /**
      * recorded を更新する
      */
     public update(): void {
@@ -115,7 +131,7 @@ class RecordedInfoViewModel extends ViewModel {
      * @param download: true: download mode, false: not download mode
      * @return video source
      */
-    public getVideoSrc(download: boolean = false): { name: string; path: string; filesize: string | null; isUrlScheme: boolean }[] {
+    public getVideoSrc(download: boolean = false): VideoSrcInfo[] {
         const config = this.config.getConfig();
         const setting = this.setting.getValue();
         if (this.recorded === null || config === null) { return []; }
@@ -151,10 +167,11 @@ class RecordedInfoViewModel extends ViewModel {
             }
         }
 
-        const result: { name: string; path: string; filesize: string | null; isUrlScheme: boolean }[] = [];
+        const result: VideoSrcInfo[] = [];
         // ts ファイル
         if (this.recorded.original) {
-            let url = download ? `/api/recorded/${ this.recorded.id }/file?mode=download` : `/api/recorded/${ this.recorded.id }/file`;
+            let url = download ? `/api/recorded/${ this.recorded.id }/file?mode=download`
+                : urlScheme === null ? `/api/recorded/${ this.recorded.id }/playlist` : `/api/recorded/${ this.recorded.id }/file`;
             if (urlScheme !== null) {
                 let full = location.host + url;
                 if (urlScheme.match(/vlc-x-callback/)) { full = encodeURIComponent(full); }
@@ -168,6 +185,7 @@ class RecordedInfoViewModel extends ViewModel {
                 path: url,
                 filesize: this.createFileSizeStr(this.recorded.filesize),
                 isUrlScheme: urlScheme !== null,
+                useWebPlayer: false,
             });
         }
 
@@ -176,7 +194,7 @@ class RecordedInfoViewModel extends ViewModel {
             for (const encoded of this.recorded.encoded) {
                 let url = download ? `/api/recorded/${ this.recorded.id }/file?encodedId=${ encoded.encodedId }&mode=download`
                         : `/api/recorded/${ this.recorded.id }/file?encodedId=${ encoded.encodedId }`;
-                if (urlScheme !== null) {
+                if (urlScheme !== null && !setting.prioritizeWebPlayerOverURLScheme) {
                     let full = location.host + url;
                     if (urlScheme.match(/vlc-x-callback/)) { full = encodeURIComponent(full); }
                     url = urlScheme.replace(/ADDRESS/g, full);
@@ -186,7 +204,9 @@ class RecordedInfoViewModel extends ViewModel {
                     name: encoded.name,
                     path: url,
                     filesize: this.createFileSizeStr(encoded.filesize),
-                    isUrlScheme: urlScheme !== null,
+                    isUrlScheme: urlScheme !== null && !setting.prioritizeWebPlayerOverURLScheme,
+                    encodedId: encoded.encodedId,
+                    useWebPlayer: setting.prioritizeWebPlayerOverURLScheme,
                 });
             }
         }
@@ -415,12 +435,14 @@ class RecordedInfoViewModel extends ViewModel {
      * tab position
      */
     public getTabPosition(): number {
-        return this.tab.get();
+        return this.tab.get(RecordedInfoViewModel.tabId);
     }
 }
 
 namespace RecordedInfoViewModel {
     export const id = 'recorded-info';
+    export const tabId = 'recorded-info-tab';
+    export const contentId = 'recorded-info-content';
     export const fileSizeUnits = ['B', 'KB', 'MB', 'GB'];
 }
 

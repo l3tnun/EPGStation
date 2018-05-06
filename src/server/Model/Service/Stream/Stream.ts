@@ -35,8 +35,8 @@ abstract class Stream extends Base {
 
     public abstract stop(): Promise<void>;
     public abstract getInfo(): StreamInfo;
-    public abstract getEncChild(): ChildProcess | null;
-    public abstract getMirakurunStream(): http.IncomingMessage | null;
+    public getEncChild(): ChildProcess | null { return null; }
+    public getMirakurunStream(): http.IncomingMessage | null { return null; }
 
     /**
      * child Process が終了したときの処理

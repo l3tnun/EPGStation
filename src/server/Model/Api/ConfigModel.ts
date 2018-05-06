@@ -55,6 +55,8 @@ class ConfigModel extends ApiModel implements ConfigModelInterface {
             results['delTs'] = typeof config.delts === 'undefined' ? false : config.delts;
         }
 
+        results['enableLiveStreaming'] = typeof config.mpegTsStreaming !== 'undefined' || typeof config.liveHLS !== 'undefined' || typeof config.liveWebM !== 'undefined';
+
         results['broadcast'] = broadcast;
 
         if (typeof config.recordedViewer !== 'undefined') { results['recordedViewer'] = config.recordedViewer; }
@@ -70,8 +72,20 @@ class ConfigModel extends ApiModel implements ConfigModelInterface {
             }
         }
 
+        if (typeof config.liveHLS !== 'undefined') {
+            results['liveHLS'] = config.liveHLS.map((option) => {
+                return option.name;
+            });
+        }
+
         if (typeof config.recordedHLS !== 'undefined') {
             results['recordedHLS'] = config.recordedHLS.map((option) => {
+                return option.name;
+            });
+        }
+
+        if (typeof config.liveWebM !== 'undefined') {
+            results['liveWebM'] = config.liveWebM.map((option) => {
                 return option.name;
             });
         }

@@ -9,6 +9,7 @@ import MainLayoutViewModel from '../../ViewModel/MainLayoutViewModel';
 import ProgramInfoViewModel from '../../ViewModel/Program/ProgramInfoViewModel';
 import RecordedInfoViewModel from '../../ViewModel/Recorded/RecordedInfoViewModel';
 import RecordedMenuViewModel from '../../ViewModel/Recorded/RecordedMenuViewModel';
+import RecordedPlayerViewModel from '../../ViewModel/Recorded/RecordedPlayerViewModel';
 import RecordedViewModel from '../../ViewModel/Recorded/RecordedViewModel';
 import ReservesMenuViewModel from '../../ViewModel/Reserves/ReservesMenuViewModel';
 import ReservesViewModel from '../../ViewModel/Reserves/ReservesViewModel';
@@ -22,6 +23,7 @@ import RecordedDeleteComponent from '../Recorded/RecordedDeleteComponent';
 import RecordedEncodeComponent from '../Recorded/RecordedEncodeComponent';
 import RecordedInfoComponent from '../Recorded/RecordedInfoComponent';
 import RecordedMenuComponent from '../Recorded/RecordedMenuComponent';
+import RecordedPlayerComponent from '../Recorded/RecordedPlayerComponent';
 import ReservesDeleteComponent from '../Reserves/ReservesDeleteComponent';
 import ReservesMenuComponent from '../Reserves/ReservesMenuComponent';
 import TabComponent from '../TabComponent';
@@ -86,7 +88,11 @@ class TopPageComponent extends ParentComponent<void> {
                 this.createContent(),
                 m(BalloonComponent, {
                     id: RecordedInfoViewModel.id,
-                    head: m(TabComponent, { tabs: this.recordedInfoViewModel.getTabTitles(), contentId: 'recorded-info-content' }),
+                    head: m(TabComponent, {
+                        id: RecordedInfoViewModel.tabId,
+                        tabs: this.recordedInfoViewModel.getTabTitles(),
+                        contentId: RecordedInfoViewModel.contentId,
+                    }),
                     content: m(RecordedInfoComponent),
                     maxWidth: 400,
                     maxHeight: 480,
@@ -108,6 +114,13 @@ class TopPageComponent extends ParentComponent<void> {
                     id: RecordedMenuViewModel.encodeId,
                     content: m(RecordedEncodeComponent),
                     maxWidth: 350,
+                }),
+                m(BalloonComponent, {
+                    id: RecordedPlayerViewModel.id,
+                    content: m(RecordedPlayerComponent),
+                    maxWidth: RecordedPlayerViewModel.maxWidth,
+                    dialogMargin: 0,
+                    forceDialog: true,
                 }),
                 m(BalloonComponent, {
                     id: ProgramInfoViewModel.id,

@@ -48,6 +48,8 @@ Config.json
 | mpegTsViewer | {} | | no | ライブ視聴を ios, android で視聴するときのアプリ設定 |
 | streamFilePath | string | EPGStation/data/streamfiles | no | HLS 配信時に使用される一時領域 |
 | recordedHLS | {}[] | | no | 録画済みファイルを HLS 配信時に使用するオプション |
+| liveHLS | {}[] | | no | HLS でライブ視聴時に使用するオプション |
+| liveWebM | {}[] | | no | webm でライブ視聴時に使用するオプション |
 | kodiHosts | {}[] | | no | kodi 配信時に使用するオプション |
 
 ## プロパティ詳細解説
@@ -222,7 +224,23 @@ maxEncode を 1 以上に設定すること
 | ADDRESS | url |
 | FILENAME | ファイル名 |
 
+---
+
 ### recordedHLS
+
+| プロパティ | 種類 | 説明 |
+| -------- | ---- | --- |
+| name | string | web で表示される名前 |
+| cmd | string | エンコードコマンド |
+
+### liveHLS
+
+| プロパティ | 種類 | 説明 |
+| -------- | ---- | --- |
+| name | string | web で表示される名前 |
+| cmd | string | エンコードコマンド |
+
+### liveWebM
 
 | プロパティ | 種類 | 説明 |
 | -------- | ---- | --- |
@@ -233,8 +251,6 @@ maxEncode を 1 以上に設定すること
 
 | プロパティ | 説明 |
 | -------- | --- |
-| %INPUT% | 入力ファイルパス |
-| %OUTPUT% | 出力ファイルパス |
 | %streamFileDir% | config. streamFilePath |
 | %streamNum% | ストリーム番号 |
 | %FFMPEG% | ffmpeg パス |

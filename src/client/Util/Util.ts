@@ -76,6 +76,13 @@ namespace Util {
     };
 
     /**
+     * UA が iPhone か判定
+     */
+    export const uaIsiPhone = (): boolean => {
+        return /iPhone/.test(navigator.userAgent);
+    };
+
+    /**
      * UA が Android か判定
      * @return boolean
      */

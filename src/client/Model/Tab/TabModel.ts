@@ -1,25 +1,52 @@
+import * as m from 'mithril';
 import Model from '../Model';
 
 interface TabModelInterface extends Model {
-    init(): void;
-    get(): number;
-    set(value: number): void;
+    add(id: string): void;
+    get(id: string): number;
+    set(id: string, position: number): void;
 }
 
 class TabModel extends Model implements TabModelInterface {
-    private tabIndex: number = 0;
+    private tabPosition: { [key: string]: number } = {};
 
-    public init(): void {
-        this.tabIndex = 0;
+    /**
+     * 管理する tab を追加
+     * @param id: string
+     */
+    public add(id: string): void {
+        if (typeof this.tabPosition[id] === 'undefined') {
+            this.tabPosition[id] = 0;
+        }
     }
 
-    public get(): number {
-        return this.tabIndex;
+    /**
+     * tab の位置を取得
+     * @param id: string
+     */
+    public get(id: string): number {
+        return typeof this.tabPosition[id] === 'undefined' ? 0 : this.tabPosition[id];
     }
 
-    public set(value: number): void {
-        this.tabIndex = value;
+    /**
+     * tab の位置をセット
+     * @param id: string
+     * @param position: number
+     */
+    public set(id: string, position: number): void {
+        if (typeof this.tabPosition[id] === 'undefined') {
+            console.error(id);
+            throw new Error(TabModel.IdIsNotFoundError);
+        }
+
+        this.tabPosition[id] = position;
+
+        m.redraw();
     }
+}
+
+namespace TabModel {
+    export const IdIsNotFoundError = 'IdIsNotFoundError';
 }
 
 export { TabModelInterface, TabModel };

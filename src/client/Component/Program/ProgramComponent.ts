@@ -9,11 +9,13 @@ import ProgramGenreViewModel from '../../ViewModel/Program/ProgramGenreViewModel
 import ProgramInfoViewModel from '../../ViewModel/Program/ProgramInfoViewModel';
 import ProgramTimeBalloonViewModel from '../../ViewModel/Program/ProgramTimeBalloonViewModel';
 import { ProgramViewModel } from '../../ViewModel/Program/ProgramViewModel';
+import StreamLivePlayerViewModel from '../../ViewModel/Stream/StreamLivePlayerViewModel';
 import StreamSelectViewModel from '../../ViewModel/Stream/StreamSelectViewModel';
 import factory from '../../ViewModel/ViewModelFactory';
 import { BalloonComponent } from '../BalloonComponent';
 import MainLayoutComponent from '../MainLayoutComponent';
 import ParentComponent from '../ParentComponent';
+import StreamLivePlayerComponent from '../Stream/StreamLivePlayerComponent';
 import StreamSelectComponent from '../Stream/StreamSelectComponent';
 import BoardComponent from './BoardComponent';
 import ChannelComponent from './ChannelComponent';
@@ -223,6 +225,13 @@ class ProgramComponent extends ParentComponent<void> {
                     content: m(ProgramGenreComponent),
                     action: m(ProgramGenreActionComponent),
                     maxWidth: 400,
+                }),
+                m(BalloonComponent, {
+                    id: StreamLivePlayerViewModel.id,
+                    content: m(StreamLivePlayerComponent),
+                    maxWidth: StreamLivePlayerViewModel.maxWidth,
+                    dialogMargin: 0,
+                    forceDialog: true,
                 }),
                 m(BalloonComponent, {
                     id: StreamSelectViewModel.id,

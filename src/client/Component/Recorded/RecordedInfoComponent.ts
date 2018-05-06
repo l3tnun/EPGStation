@@ -1,6 +1,7 @@
 import * as m from 'mithril';
 import Util from '../../Util/Util';
 import RecordedInfoViewModel from '../../ViewModel/Recorded/RecordedInfoViewModel';
+import RecordedPlayerViewModel from '../../ViewModel/Recorded/RecordedPlayerViewModel';
 import factory from '../../ViewModel/ViewModelFactory';
 import Component from '../Component';
 
@@ -9,11 +10,13 @@ import Component from '../Component';
  */
 class RecordedInfoComponent extends Component<void> {
     private viewModel: RecordedInfoViewModel;
+    private playerViewModel: RecordedPlayerViewModel;
 
     constructor() {
         super();
 
         this.viewModel = <RecordedInfoViewModel> factory.get('RecordedInfoViewModel');
+        this.playerViewModel = <RecordedPlayerViewModel> factory.get('RecordedPlayerViewModel');
     }
 
     /**
@@ -58,10 +61,21 @@ class RecordedInfoComponent extends Component<void> {
                 return m('a', {
                     class: 'recorded-link mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect',
                     onclick: () => {
-                        if (Util.uaIsFirefox() && video.isUrlScheme) {
-                            const w = window.open(video.path);
-                            if (w !== null) {
-                                setTimeout(() => { w.close(); }, 200);
+                        if (video.isUrlScheme) {
+                            if (Util.uaIsFirefox()) {
+                                const w = window.open(video.path);
+                                if (w !== null) {
+                                    setTimeout(() => { w.close(); }, 200);
+                                }
+                            } else {
+                                location.href = video.path;
+                                if (Util.uaIsiOS()) { this.viewModel.close(); }
+                            }
+                        } else if (video.useWebPlayer && typeof video.encodedId !== 'undefined') {
+                            const recorded = this.viewModel.getRecorded();
+                            if (recorded !== null) {
+                                this.playerViewModel.set(recorded, video.encodedId);
+                                this.playerViewModel.open();
                             }
                         } else {
                             location.href = video.path;

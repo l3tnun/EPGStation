@@ -6,6 +6,7 @@ import factory from '../ViewModel/ViewModelFactory';
 import Component from './Component';
 
 interface TabArgs {
+    id: string;
     tabs: string[];
     contentId: string;
 }
@@ -15,6 +16,7 @@ interface TabArgs {
  */
 class TabComponent extends Component<TabArgs> {
     private viewModel: TabViewModel;
+    private id: string;
 
     constructor() {
         super();
@@ -30,11 +32,19 @@ class TabComponent extends Component<TabArgs> {
      * view
      */
     public view(vnode: m.Vnode<TabArgs, this>): m.Child {
-        return m('div', { class: 'mdl-tabs mdl-js-tabs mdl-js-ripple-effect' }, [
+        this.id = vnode.attrs.id;
+        this.viewModel.add(this.id);
+
+        const position = this.viewModel.get(this.id);
+
+        return m('div', {
+            id: this.id,
+            class: 'mdl-tabs mdl-js-tabs mdl-js-ripple-effect',
+        }, [
             m('div', { class: 'tabs-bar' }, [
                 vnode.attrs.tabs.map((tab, i) => {
                     return m('div', {
-                        class: (i === 0 ? 'tab is-active' : 'tab'),
+                        class: (i === position ? 'tab is-active' : 'tab'),
                         onclick: (e: Event) => { this.tabClick(e, i, vnode.attrs.contentId); },
                     }, tab);
                 }),
@@ -61,7 +71,7 @@ class TabComponent extends Component<TabArgs> {
 
         if (isChangeTab) {
             (<HTMLElement> e.target).classList.add('is-active');
-            this.viewModel.set(index);
+            this.viewModel.set(this.id, index);
         }
 
         const content = <HTMLElement> document.getElementById(contentId);

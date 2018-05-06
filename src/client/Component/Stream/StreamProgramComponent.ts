@@ -2,12 +2,14 @@ import * as m from 'mithril';
 import { ViewModelStatus } from '../../Enums';
 import BalloonViewModel from '../../ViewModel/Balloon/BalloonViewModel';
 import StreamForcedStopViewModel from '../../ViewModel/Stream/StreamForcedStopViewModel';
+import StreamLivePlayerViewModel from '../../ViewModel/Stream/StreamLivePlayerViewModel';
 import StreamProgramCardsViewModel from '../../ViewModel/Stream/StreamProgramCardsViewModel';
 import StreamSelectViewModel from '../../ViewModel/Stream/StreamSelectViewModel';
 import factory from '../../ViewModel/ViewModelFactory';
 import { BalloonComponent } from '../BalloonComponent';
 import MainLayoutComponent from '../MainLayoutComponent';
 import ParentComponent from '../ParentComponent';
+import StreamLivePlayerComponent from './StreamLivePlayerComponent';
 import StreamProgramCardsComponent from './StreamProgramCardsComponent';
 import StreamProgramTimeComponent from './StreamProgramTimeComponent';
 import StreamSelectComponent from './StreamSelectComponent';
@@ -58,12 +60,32 @@ class StreamProgramComponent extends ParentComponent<void> {
                 },
             ],
             notMainContent: [
-                m(StreamProgramCardsComponent),
+                m(StreamProgramCardsComponent, {
+                    scrollStoped: (scroll: number, tab: number) => {
+                        this.saveHistoryData({ scroll: scroll, tab: tab });
+                    },
+                    isNeedRestorePosition: () => {
+                        return this.isNeedRestorePosition;
+                    },
+                    resetRestorePositionFlag: () => {
+                        this.isNeedRestorePosition = false;
+                    },
+                    getPosition: () => {
+                        return <{ scroll: number; tab: number } | null> this.getHistoryData();
+                    },
+                }),
                 m(BalloonComponent, {
                     id: StreamSelectViewModel.id,
                     content: m(StreamSelectComponent),
                     maxWidth: 400,
                     forceDialog: window.innerHeight < 480,
+                }),
+                m(BalloonComponent, {
+                    id: StreamLivePlayerViewModel.id,
+                    content: m(StreamLivePlayerComponent),
+                    maxWidth: StreamLivePlayerViewModel.maxWidth,
+                    dialogMargin: 0,
+                    forceDialog: true,
                 }),
                 m(StreamProgramTimeComponent),
             ],

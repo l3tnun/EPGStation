@@ -65,7 +65,7 @@ class StreamInfoViewModel extends ViewModel {
         let minEndTime = 6048000000;
         const now = new Date().getTime();
         this.getStreamInfos().forEach((info) => {
-            if (info.type !== 'MpegTsLive') { return; }
+            if (typeof info.type === 'undefined' || !info.type.includes('Live')) { return; }
             const endTime = info.endAt! - now;
             if (minEndTime > endTime) {
                 minEndTime = endTime;
@@ -128,7 +128,7 @@ class StreamInfoViewModel extends ViewModel {
             if (url === null) { return; }
 
             location.href = url;
-        } else if (info.type === 'RecordedHLS') {
+        } else if (info.type === 'RecordedHLS' || info.type === 'HLSLive') {
             if (Number(m.route.param('stream')) === info.streamNumber) { return; }
 
             setTimeout(() => { Util.move('/stream/watch', { stream: info.streamNumber }); }, 200);

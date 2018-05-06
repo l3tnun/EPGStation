@@ -182,6 +182,13 @@ class SettingComponent extends ParentComponent<void> {
                         (value) => { this.viewModel.tmpValue.isEnableRecordedViewerURLScheme = value; },
                     ),
                 ),
+                this.createListItem(
+                    'Web Player での再生を優先する',
+                    this.createToggle(
+                        () => { return this.viewModel.tmpValue.prioritizeWebPlayerOverURLScheme; },
+                        (value) => { this.viewModel.tmpValue.prioritizeWebPlayerOverURLScheme = value; },
+                    ),
+                ),
                 this.createTextBox(
                     () => {
                         const value = this.viewModel.tmpValue.customRecordedViewerURLScheme;

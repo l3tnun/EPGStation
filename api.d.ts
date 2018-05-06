@@ -23,6 +23,7 @@ export type ProgramAudioSamplingRate = 16000 | 22050 | 24000 | 32000 | 44100 | 4
 
 export interface Config {
     enableEncode: boolean;
+    enableLiveStreaming: boolean;
     encodeOption?: string[];
     defaultEncode?: number;
     delTs?: boolean;
@@ -52,6 +53,8 @@ export interface Config {
         win: string;
     };
     recordedHLS?: string[];
+    liveHLS?: string[];
+    liveWebM?: string[];
     kodiHosts?: string[];
 }
 
@@ -330,17 +333,17 @@ interface StreamInfo {
     streamNumber: number;
     isEnable: boolean;
     viewCnt: number;
-    isNull: boolean,
-    type?: 'MpegTsLive' | 'RecordedHLS',
-    channelId?: ServiceItemId,
-    recordedId?: RecordedId,
-    mode?: number,
-    channelName?: string,
-    title?: string,
-    startAt?: UnixtimeMS,
-    endAt?: UnixtimeMS,
-    channelType?: ChannelType,
-    description?: string,
-    extended?: string,
+    isNull: boolean;
+    type?: 'MpegTsLive' | 'RecordedHLS' | 'HLSLive' | 'WebMLive';
+    channelId?: ServiceItemId;
+    recordedId?: RecordedId;
+    mode?: number;
+    channelName?: string;
+    title?: string;
+    startAt?: UnixtimeMS;
+    endAt?: UnixtimeMS;
+    channelType?: ChannelType;
+    description?: string;
+    extended?: string;
 }
 

@@ -7,7 +7,7 @@ import { RulesDBInterface } from '../DB/RulesDB';
 import { ServicesDBInterface } from '../DB/ServicesDB';
 import { IPCClientInterface } from '../IPC/IPCClient';
 import { EncodeManageModelInterface, EncodeProgram } from '../Service/Encode/EncodeManageModel';
-import { StreamManageModelInterface } from '../Service/Stream/StreamManageModel';
+import { RecordedStreamStatusInfo, StreamManageModelInterface } from '../Service/Stream/StreamManageModel';
 import ApiModel from './ApiModel';
 import ApiUtil from './ApiUtil';
 import { PlayList } from './PlayListInterface';
@@ -278,7 +278,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
         const infos = this.streamManage.getStreamInfos();
         for (const info of infos) {
             // 配信中か？
-            if (typeof info.recordedId !== 'undefined' && info.recordedId === recordedId) {
+            if (typeof (<RecordedStreamStatusInfo> info).recordedId !== 'undefined' && (<RecordedStreamStatusInfo> info).recordedId === recordedId) {
                 throw new Error(RecordedModelInterface.RecordedIsStreamingNowError);
             }
         }
@@ -297,8 +297,8 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
         const infos = this.streamManage.getStreamInfos();
         const recordedStreamIndex: { [key: number]: boolean } = {};
         for (const info of infos) {
-            if (typeof info.recordedId !== 'undefined') {
-                recordedStreamIndex[info.recordedId] = true;
+            if (typeof (<RecordedStreamStatusInfo> info).recordedId !== 'undefined') {
+                recordedStreamIndex[(<RecordedStreamStatusInfo> info).recordedId!] = true;
             }
         }
 
@@ -337,7 +337,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
     public async deleteRecorded(recordedId: number, encodedId: number | undefined): Promise<void> {
         this.streamManage.getStreamInfos().forEach((data) => {
             // 配信中か？
-            if (typeof data.recordedId !== 'undefined' && data.recordedId === recordedId) {
+            if (typeof (<RecordedStreamStatusInfo> data).recordedId !== 'undefined' && (<RecordedStreamStatusInfo> data).recordedId === recordedId) {
                 throw new Error(RecordedModelInterface.RecordedIsStreamingNowError);
             }
         });

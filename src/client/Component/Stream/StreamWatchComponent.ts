@@ -8,6 +8,7 @@ import StreamWatchViewModel from '../../ViewModel/Stream/StreamWatchViewModel';
 import factory from '../../ViewModel/ViewModelFactory';
 import MainLayoutComponent from '../MainLayoutComponent';
 import ParentComponent from '../ParentComponent';
+import VideoContainerComponent from '../Video/VideoContainerComponent';
 import StreamWatchVideoComponent from './StreamWatchVideoComponent';
 
 /**
@@ -17,6 +18,7 @@ class StreamWatchComponent extends ParentComponent<void> {
     private viewModel: StreamWatchViewModel;
     private mainLayoutViewModel: MainLayoutViewModel;
     private hasInfo: boolean = false;
+    private isLive: boolean = false;
 
     constructor() {
         super();
@@ -53,7 +55,10 @@ class StreamWatchComponent extends ParentComponent<void> {
                     },
                 }, [
                     this.createStopButton(),
-                    m(StreamWatchVideoComponent),
+                    m(VideoContainerComponent, {
+                        isLiveStreaming: this.isLive,
+                        video: m(StreamWatchVideoComponent),
+                    }),
                     this.createStreamInfo(),
                 ]),
             ],
@@ -67,12 +72,6 @@ class StreamWatchComponent extends ParentComponent<void> {
         return m('button', {
             class: 'fab-right-bottom mdl-shadow--8dp mdl-button mdl-js-button mdl-button--fab mdl-button--colored',
             onclick: async() => {
-                if (typeof m.route.param('stream') === 'undefined') {
-                    Util.move('/');
-
-                    return;
-                }
-
                 await this.viewModel.stop();
             },
         }, [
@@ -95,14 +94,15 @@ class StreamWatchComponent extends ParentComponent<void> {
             return null;
         }
 
+        this.isLive = typeof info.type !== 'undefined' && info.type.includes('Live');
         this.hasInfo = true;
 
         return m('div', { class: 'stream-info' }, [
             m('div', { class: 'mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col' }, [
                 m('div', { class: 'mdl-card__supporting-text' }, [
-                    m('div', { class: 'title' }, info.title),
+                    m('div', { class: 'title' }, this.isLive ? info.channelName : info.title),
                     m('div', { class: 'time' }, this.createTimeStr(info)),
-                    m('div', { class: 'name' }, info.channelName),
+                    m('div', { class: 'name' }, this.isLive ? info.title : info.channelName),
                     m('div', { class: 'description' }, info.description),
                 ]),
             ]),

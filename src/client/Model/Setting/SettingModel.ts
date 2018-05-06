@@ -1,3 +1,4 @@
+import Util from '../../Util/Util';
 import StorageTemplateModel from '../Storage/StorageTemplateModel';
 
 interface SettingValue {
@@ -12,6 +13,7 @@ interface SettingValue {
     isEnableMegTsStreamingURLScheme: boolean;
     customMegTsStreamingURLScheme: string | null;
     isEnableRecordedViewerURLScheme: boolean;
+    prioritizeWebPlayerOverURLScheme: boolean;
     customRecordedViewerURLScheme: string | null;
     isEnableRecordedDownloaderURLScheme: boolean;
     customRecordedDownloaderURLScheme: string | null;
@@ -45,6 +47,7 @@ class SettingModel extends StorageTemplateModel<SettingValue> {
             isEnableMegTsStreamingURLScheme: true,
             customMegTsStreamingURLScheme: null,
             isEnableRecordedViewerURLScheme: true,
+            prioritizeWebPlayerOverURLScheme: !Util.uaIsiOS() && !Util.uaIsAndroid(),
             customRecordedViewerURLScheme: null,
             isEnableRecordedDownloaderURLScheme: true,
             customRecordedDownloaderURLScheme: null,

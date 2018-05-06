@@ -9,20 +9,27 @@ import { Stream } from './Stream';
 import StreamStatus from './StreamStatus';
 import * as enums from './StreamTypeInterface';
 
-/**
- * Stream 情報
- * StreamInfo と StreamStatus から生成される
- */
-interface StreamStatusInfo {
+interface StreamBaseStatusInfo {
     streamNumber: number;
     isEnable: boolean; // 視聴可能か
     viewCnt: number; // 視聴数 (HLS では変動しない)
-    isNull: boolean; // stream が null の場合
+    isNull: boolean; // stream が null の場合 (encode が完了している場合)
     type?: enums.StreamType;
-    channelId?: apid.ServiceItemId; // MpegTsLive 固有の情報
-    recordedId?: apid.RecordedId;  // RecordedHLS 固有の情報
     mode?: number; // config の index number
 }
+
+interface LiveStreamStatusInfo extends StreamBaseStatusInfo {
+    channelId?: apid.ServiceItemId;
+}
+
+interface RecordedStreamStatusInfo extends StreamBaseStatusInfo {
+    recordedId?: apid.RecordedId;
+}
+
+/**
+ * Stream 情報
+ */
+type StreamStatusInfo = LiveStreamStatusInfo | RecordedStreamStatusInfo;
 
 interface StreamManageModelInterface {
     getStreamInfo(num: number): StreamStatusInfo | null;
@@ -62,7 +69,7 @@ class StreamManageModel extends Model implements StreamManageModelInterface {
         const stream = this.streamStatus[num].stream!;
         const streamInfo = stream.getInfo();
 
-        const result: StreamStatusInfo =  {
+        const result: StreamBaseStatusInfo =  {
             streamNumber: num,
             isEnable: this.streamStatus[num].isEnable,
             viewCnt: stream.getCount(),
@@ -71,10 +78,14 @@ class StreamManageModel extends Model implements StreamManageModelInterface {
             mode: streamInfo.mode,
         };
 
-        if (streamInfo.type === 'MpegTsLive') { result.channelId = (<MpegTsLiveStreamInfo> streamInfo).channelId; }
-        if (streamInfo.type === 'RecordedHLS') { result.recordedId = (<RecordedHLSStreamInfo> streamInfo).recordedId; }
+        if (streamInfo.type.includes('Live')) {
+            (<LiveStreamStatusInfo> result).channelId = (<MpegTsLiveStreamInfo> streamInfo).channelId;
+        }
+        if (streamInfo.type.includes('Recorded')) {
+            (<RecordedStreamStatusInfo> result).recordedId = (<RecordedHLSStreamInfo> streamInfo).recordedId;
+        }
 
-        return result;
+        return <StreamStatusInfo> result;
     }
 
     /**
@@ -253,5 +264,5 @@ class StreamManageModel extends Model implements StreamManageModelInterface {
     }
 }
 
-export { StreamManageModelInterface, StreamManageModel };
+export { LiveStreamStatusInfo, RecordedStreamStatusInfo, StreamManageModelInterface, StreamManageModel };
 
