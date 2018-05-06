@@ -15,8 +15,9 @@ class StreamLivePlayerViewModel extends ViewModel {
         balloon: BalloonModelInterface,
     ) {
         super();
-
         this.balloon = balloon;
+
+        this.balloon.regDisableCloseAllId(StreamLivePlayerViewModel.id);
     }
 
     /**
