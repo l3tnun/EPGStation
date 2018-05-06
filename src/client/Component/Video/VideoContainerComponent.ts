@@ -63,7 +63,7 @@ class VideoContainerComponent extends Component<ControlArgs> {
                 + (Util.uaIsMobile() ? ' mobile' : '')
                 + (!this.isEnablePip ? ' disable-pip' : '')
                 + (this.isPipMode() ? ' pip-mode' : ''),
-            style: typeof vnode.attrs.height !== 'undefined' ? `height: ${ vnode.attrs.height }px;` : '',
+            style: !this.isFullScreen() && typeof vnode.attrs.height !== 'undefined' ? `height: ${ vnode.attrs.height }px;` : '',
             oncreate: (mainVnode: m.VnodeDOM<void, any>) => {
                 const element = <HTMLElement> mainVnode.dom;
                 this.setElements(element);
