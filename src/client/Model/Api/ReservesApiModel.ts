@@ -1,4 +1,3 @@
-import * as m from 'mithril';
 import * as apid from '../../../../api';
 import ApiModel from './ApiModel';
 
@@ -77,7 +76,7 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
      */
     public async fetchReserve(programId: apid.ProgramId): Promise<void> {
         try {
-            this.reserve = await <any> m.request({
+            this.reserve = await <any> this.request({
                 method: 'GET',
                 url: `/api/reserves/${ programId }`,
             });
@@ -105,7 +104,7 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
         };
 
         try {
-            this.reserves = await <any> m.request({
+            this.reserves = await <any> this.request({
                 method: 'GET',
                 url: '/api/reserves',
                 data: query,
@@ -136,7 +135,7 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
         };
 
         try {
-            this.conflicts = await <any> m.request({
+            this.conflicts = await <any> this.request({
                 method: 'GET',
                 url: '/api/reserves/conflicts',
                 data: query,
@@ -156,7 +155,7 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
      */
     public async fetchAllId(): Promise<AllReserves | null> {
         try {
-            const allId = await <any> m.request({
+            const allId = await <any> this.request({
                 method: 'GET',
                 url: '/api/reserves/all',
             });
@@ -190,7 +189,7 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
      */
     public async fetchConflictCount(): Promise<number> {
         try {
-            const allId = <apid.ReserveAllId> await <any> m.request({
+            const allId = <apid.ReserveAllId> await <any> this.request({
                 method: 'GET',
                 url: '/api/reserves/all',
             });
@@ -252,7 +251,7 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
      */
     public async addReserve(option: apid.AddReserve): Promise<void> {
         try {
-            await <any> m.request({
+            await <any> this.request({
                 method: 'POST',
                 url: '/api/reserves',
                 data: option,
@@ -274,7 +273,7 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
         delete option.programId;
 
         try {
-            await <any> m.request({
+            await <any> this.request({
                 method: 'PUT',
                 url: `/api/reserves/${ programId }`,
                 data: option,
@@ -293,7 +292,7 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
      */
     public async deleteReserve(programId: apid.ProgramId): Promise<void> {
         try {
-            await <any> m.request({
+            await <any> this.request({
                 method: 'DELETE',
                 url: `/api/reserves/${ programId}`,
             });
@@ -311,7 +310,7 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
      */
     public async deleteSkip(programId: apid.ProgramId): Promise<void> {
         try {
-            await <any> m.request({
+            await <any> this.request({
                 method: 'DELETE',
                 url: `/api/reserves/${ programId}/skip`,
             });

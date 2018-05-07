@@ -1,4 +1,3 @@
-import * as m from 'mithril';
 import * as apid from '../../../../api';
 import ApiModel from './ApiModel';
 
@@ -56,7 +55,7 @@ class RulesApiModel extends ApiModel implements RulesApiModelInterface {
         };
 
         try {
-            this.rules = await <any> m.request({
+            this.rules = await <any> this.request({
                 method: 'GET',
                 url: '/api/rules',
                 data: query,
@@ -78,7 +77,7 @@ class RulesApiModel extends ApiModel implements RulesApiModelInterface {
      */
     public async fetchRule(ruleId: apid.RuleId): Promise<void> {
         try {
-            this.rule = await <any> m.request({
+            this.rule = await <any> this.request({
                 method: 'GET',
                 url: `/api/rules/${ ruleId }`,
             });
@@ -120,7 +119,7 @@ class RulesApiModel extends ApiModel implements RulesApiModelInterface {
      * @return Promise<void>
      */
     public async enable(ruleId: apid.RuleId): Promise<void> {
-        await m.request({
+        await this.request({
             method: 'PUT',
             url: `/api/rules/${ ruleId }/enable`,
         });
@@ -133,7 +132,7 @@ class RulesApiModel extends ApiModel implements RulesApiModelInterface {
      * @return Promise<void>
      */
     public async disable(ruleId: apid.RuleId): Promise<void> {
-        await m.request({
+        await this.request({
             method: 'PUT',
             url: `/api/rules/${ ruleId }/disable`,
         });
@@ -146,7 +145,7 @@ class RulesApiModel extends ApiModel implements RulesApiModelInterface {
      * @return Promise<void>
      */
     public async delete(ruleId: apid.RuleId): Promise<void> {
-        await m.request({
+        await this.request({
             method: 'DELETE',
             url: `/api/rules/${ ruleId }`,
         });
@@ -159,7 +158,7 @@ class RulesApiModel extends ApiModel implements RulesApiModelInterface {
      * @return Promise<void>
      */
     public async add(rule: apid.AddRule): Promise<void> {
-        await m.request({
+        await this.request({
             method: 'POST',
             url: '/api/rules',
             data: rule,
@@ -173,7 +172,7 @@ class RulesApiModel extends ApiModel implements RulesApiModelInterface {
      * @return Promise<void>
      */
     public async update(ruleId: apid.RuleId, rule: apid.AddRule): Promise<void> {
-        await m.request({
+        await this.request({
             method: 'PUT',
             url: `/api/rules/${ ruleId }`,
             data: rule,

@@ -1,4 +1,3 @@
-import * as m from 'mithril';
 import * as apid from '../../../../api';
 import ApiModel from './ApiModel';
 
@@ -28,7 +27,7 @@ class ChannelsApiModel extends ApiModel implements ChannelsApiModelInterface {
         }
 
         try {
-            this.channels = await <any> m.request({
+            this.channels = await <any> this.request({
                 method: 'GET',
                 url: '/api/channels',
             });

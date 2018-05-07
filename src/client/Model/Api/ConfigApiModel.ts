@@ -1,4 +1,3 @@
-import * as m from 'mithril';
 import * as apid from '../../../../api';
 import ApiModel from './ApiModel';
 
@@ -22,7 +21,7 @@ class ConfigApiModel extends ApiModel implements ConfigApiModelInterface {
         if (this.config !== null) { return; }
 
         try {
-            this.config = <apid.Config> await m.request({
+            this.config = <apid.Config> await this.request({
                 method: 'GET',
                 url: '/api/config',
             });

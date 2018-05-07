@@ -1,4 +1,3 @@
-import * as m from 'mithril';
 import * as apid from '../../../../api';
 import ApiModel from './ApiModel';
 
@@ -43,7 +42,7 @@ class ScheduleApiModel extends ApiModel implements ScheduleApiModelInterface {
         };
 
         try {
-            this.schedulePrograms = await <any> m.request({
+            this.schedulePrograms = await <any> this.request({
                 method: 'GET',
                 url: '/api/schedule',
                 data: query,
@@ -67,7 +66,7 @@ class ScheduleApiModel extends ApiModel implements ScheduleApiModelInterface {
         };
 
         try {
-            this.schedulePrograms = await <any> m.request({
+            this.schedulePrograms = await <any> this.request({
                 method: 'GET',
                 url: `/api/schedule/${ channelId }`,
                 data: query,
@@ -86,7 +85,7 @@ class ScheduleApiModel extends ApiModel implements ScheduleApiModelInterface {
      */
     public async fetchScheduleDetail(programId: apid.ProgramId): Promise<void> {
         try {
-            this.schedulePrograms = await <any> m.request({
+            this.schedulePrograms = await <any> this.request({
                 method: 'GET',
                 url: `/api/schedule/detail/${ programId }`,
             });
@@ -106,7 +105,7 @@ class ScheduleApiModel extends ApiModel implements ScheduleApiModelInterface {
         const query = time > 0 ? `?time=${ time }` : '';
 
         try {
-            this.schedulePrograms = await <any> m.request({
+            this.schedulePrograms = await <any> this.request({
                 method: 'GET',
                 url: `/api/schedule/broadcasting${ query }`,
             });
@@ -123,7 +122,7 @@ class ScheduleApiModel extends ApiModel implements ScheduleApiModelInterface {
      */
     public async startUpdateReserves(): Promise<void> {
         try {
-            await m.request({
+            await this.request({
                 method: 'PUT',
                 url: '/api/schedule/update',
             });
@@ -141,7 +140,7 @@ class ScheduleApiModel extends ApiModel implements ScheduleApiModelInterface {
      * @return Promise<apid.ScheduleProgramItem[]>
      */
     public async search(option: apid.RuleSearch): Promise<apid.ScheduleProgramItem[]> {
-        return await <any> m.request({
+        return await <any> this.request({
             method: 'POST',
             url: '/api/schedule/search',
             data: option,
