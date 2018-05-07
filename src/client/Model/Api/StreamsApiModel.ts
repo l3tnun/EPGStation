@@ -28,12 +28,12 @@ class StreamsApiModel extends ApiModel implements StreamsApiModelInterface {
      */
     public async fetchInfos(): Promise<void> {
         try {
-            this.infos = await <any> this.request({
+            const infos = await <any> this.request({
                 method: 'GET',
                 url: '/api/streams/info',
             });
+            this.infos = infos;
         } catch (err) {
-            this.infos = [];
             console.error('/api/streams/info');
             console.error(err);
             this.openSnackbar('ストリーム情報取得に失敗しました');

@@ -28,9 +28,10 @@ class StreamWatchViewModel extends ViewModel {
     public async init(status: ViewModelStatus = 'init'): Promise<void> {
         super.init(status);
 
-        this.streamNumber = typeof m.route.param('stream') === 'undefined' ? null : Number(m.route.param('stream'));
-
-        this.streamApiModel.init();
+        if (status === 'init' || status === 'update') {
+            this.streamNumber = typeof m.route.param('stream') === 'undefined' ? null : Number(m.route.param('stream'));
+            this.streamApiModel.init();
+        }
 
         await this.streamApiModel.fetchInfos();
     }
