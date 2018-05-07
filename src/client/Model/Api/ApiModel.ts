@@ -36,8 +36,11 @@ abstract class ApiModel extends Model {
      * @param options: Mithril.RequestOptions<T> & { url: string }
      */
     protected request<T>(options: m.RequestOptions<T> & { url: string }): Promise<T> {
-        return this.queue.add<T>(() => {
-            return m.request<T>(options);
+        return this.queue.add<T>(async() => {
+            const result = await m.request<T>(options);
+            setTimeout(() => { m.redraw(); }, 0);
+
+            return result;
         });
     }
 }
