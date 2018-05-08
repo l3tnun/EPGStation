@@ -27,6 +27,9 @@ class ConfigModel extends ApiModel implements ConfigModelInterface {
             if (typeof config.mpegTsViewer !== 'undefined') {
                 this.replaceBasicAuthAddress(config.basicAuth, config.mpegTsViewer);
             }
+            if (typeof config.HLSViewer !== 'undefined') {
+                this.replaceBasicAuthAddress(config.basicAuth, config.HLSViewer);
+            }
         }
 
         const mirakurun = CreateMirakurunClient.get();
