@@ -55,6 +55,14 @@ mysql> grant all on database_name.* to username@localhost identified by 'passwor
 mysql> quit
 ```
 
+EPGStation 使用中は MySQL のバイナリログが大量に生成されてディスクを圧迫するので、MySQL の設定 (my.ini) を変えることをおすすめします。
+
+```
+expire_logs_days = 1
+```
+
+MySQL の設定をよく調べてから適応してください。
+
 ## ビルドツールのインストール
 
 管理者権限で以下のコマンドを実行してください

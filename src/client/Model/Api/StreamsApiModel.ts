@@ -1,4 +1,3 @@
-import * as m from 'mithril';
 import * as apid from '../../../../api';
 import ApiModel from './ApiModel';
 
@@ -29,12 +28,12 @@ class StreamsApiModel extends ApiModel implements StreamsApiModelInterface {
      */
     public async fetchInfos(): Promise<void> {
         try {
-            this.infos = await <any> m.request({
+            const infos = await <any> this.request({
                 method: 'GET',
                 url: '/api/streams/info',
             });
+            this.infos = infos;
         } catch (err) {
-            this.infos = [];
             console.error('/api/streams/info');
             console.error(err);
             this.openSnackbar('ストリーム情報取得に失敗しました');
@@ -57,7 +56,7 @@ class StreamsApiModel extends ApiModel implements StreamsApiModelInterface {
      */
     public async startLiveHLS(channelId: apid.ServiceItemId, mode: number): Promise<number> {
         try {
-            const stream: apid.HLSStream = await <any> m.request({
+            const stream: apid.HLSStream = await <any> this.request({
                 method: 'GET',
                 url: `/api/streams/live/${ channelId }/hls`,
                 data: { mode: mode },
@@ -85,7 +84,7 @@ class StreamsApiModel extends ApiModel implements StreamsApiModelInterface {
         if (encodedId !== null) { query.encodedId = encodedId; }
 
         try {
-            const stream: apid.HLSStream = await <any> m.request({
+            const stream: apid.HLSStream = await <any> this.request({
                 method: 'GET',
                 url: `/api/streams/recorded/${ recordedId }/hls`,
                 data: query,
@@ -107,7 +106,7 @@ class StreamsApiModel extends ApiModel implements StreamsApiModelInterface {
      */
     public async stop(streamNumber: number): Promise<void> {
         try {
-            await m.request({
+            await this.request({
                 method: 'DELETE',
                 url: `/api/streams/${ streamNumber }`,
             });
@@ -124,7 +123,7 @@ class StreamsApiModel extends ApiModel implements StreamsApiModelInterface {
      */
     public async forcedStopAll(): Promise<void> {
         try {
-            await m.request({
+            await this.request({
                 method: 'DELETE',
                 url: '/api/streams/forcedstop',
             });

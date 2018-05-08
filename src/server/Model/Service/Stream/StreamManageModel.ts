@@ -201,7 +201,7 @@ class StreamManageModel extends Model implements StreamManageModelInterface {
 
         this.streamStatus[streamNumber].stream = stream;
 
-        if (stream.getInfo().type === 'MpegTsLive') {
+        if (stream.getInfo().type === 'MpegTsLive' || stream.getInfo().type === 'WebMLive') {
             this.streamStatus[streamNumber].isEnable = true;
         } else {
             // HLS

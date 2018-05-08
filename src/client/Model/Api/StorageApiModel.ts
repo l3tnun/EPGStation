@@ -1,4 +1,3 @@
-import * as m from 'mithril';
 import * as apid from '../../../../api';
 import ApiModel from './ApiModel';
 
@@ -25,7 +24,7 @@ class StorageApiModel extends ApiModel implements StorageApiModelInterface {
      */
     public async fetchStorage(): Promise<void> {
         try {
-            this.diskStatus = await <any> m.request({
+            this.diskStatus = await <any> this.request({
                 method: 'GET',
                 url: '/api/storage',
             });

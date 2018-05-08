@@ -1,4 +1,3 @@
-import * as m from 'mithril';
 import * as apid from '../../../../api';
 import ApiModel from './ApiModel';
 
@@ -90,7 +89,7 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
         if (typeof option.keyword !== 'undefined') { query.keyword = option.keyword; }
 
         try {
-            this.recorded = await <any> m.request({
+            this.recorded = await <any> this.request({
                 method: 'GET',
                 url: '/api/recorded',
                 data: query,
@@ -111,7 +110,7 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
      */
     public async fetchTags(): Promise<void> {
         try {
-            this.tags = await <any> m.request({
+            this.tags = await <any> this.request({
                 method: 'GET',
                 url: '/api/recorded/tags',
             });
@@ -135,7 +134,7 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
      * @throws isStreamingNow: 配信中の場合発生
      */
     public async deleteAll(recordedId: apid.RecordedId): Promise<void> {
-        await m.request({
+        await this.request({
             method: 'DELETE',
             url: `/api/recorded/${ recordedId }`,
             extract: (xhr) => {
@@ -157,7 +156,7 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
     public async delete(recordedId: apid.RecordedId, encodedId: apid.EncodedId | null): Promise<void> {
         const query = encodedId === null ? '' : `?encodedId=${ encodedId }`;
 
-        await m.request({
+        await this.request({
             method: 'DELETE',
             url: `/api/recorded/${ recordedId }/file${ query }`,
             extract: (xhr) => {
@@ -179,7 +178,7 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
             recordedIds: recordedIds,
         };
 
-        const result = <apid.RecordedDeleteMultipleResult> await m.request({
+        const result = <apid.RecordedDeleteMultipleResult> await this.request({
             method: 'POST',
             url: '/api/recorded/delete',
             data: option,
@@ -208,7 +207,7 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
         }
 
         try {
-            await m.request({
+            await this.request({
                 method: 'POST',
                 url: `/api/recorded/${ recordedId }/kodi`,
                 data: query,
@@ -254,7 +253,7 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
      * @return Promise<void>
      */
     public async addEncode(recordedId: apid.RecordedId, option: EncodeQueryOption): Promise<void> {
-        await m.request({
+        await this.request({
             method: 'POST',
             url: `/api/recorded/${ recordedId }/encode`,
             data: option,
@@ -267,7 +266,7 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
      * @param recordedId: recorded id
      */
     public async cancelEncode(recordedId: apid.RecordedId): Promise<void> {
-        await m.request({
+        await this.request({
             method: 'DELETE',
             url: `/api/recorded/${ recordedId }/encode`,
         });

@@ -104,7 +104,7 @@ abstract class ParentComponent<T> extends Component<T> {
      * initViewModel
      * @param status: ViewModelStatus
      */
-    protected initViewModel(status: ViewModelStatus = 'init'): void {
+    protected async initViewModel(status: ViewModelStatus = 'init'): Promise<any> {
         this._mainLayout.init(status);
 
         setTimeout(() => {
@@ -153,16 +153,14 @@ abstract class ParentComponent<T> extends Component<T> {
             }
         }, 0);
 
-        (async() => {
-            try {
-                await this.parentInitViewModel(status);
-            } catch (err) {
-                console.error(err);
-            }
+        try {
+            await this.parentInitViewModel(status);
+        } catch (err) {
+            console.error(err);
+        }
 
-            this.setRestorePositionFlag(status);
-            this._mainLayout.update();
-        })();
+        this.setRestorePositionFlag(status);
+        this._mainLayout.update();
     }
 
     /**
@@ -242,10 +240,10 @@ abstract class ParentComponent<T> extends Component<T> {
     /**
      * query を記憶
      */
-    public oninit(_vnode: m.Vnode<T, any>): any {
+    public async oninit(_vnode: m.Vnode<T, any>): Promise<any> {
         this.query = Util.getCopyQuery();
         this.queryChanged = false;
-        this.initViewModel('init');
+        await this.initViewModel('init');
 
         if (typeof ParentComponent.ioStatus[this.getComponentName()] === 'undefined') {
             ParentComponent.ioStatus[this.getComponentName()] = { isActive: false, isInited: false };

@@ -27,6 +27,9 @@ class ConfigModel extends ApiModel implements ConfigModelInterface {
             if (typeof config.mpegTsViewer !== 'undefined') {
                 this.replaceBasicAuthAddress(config.basicAuth, config.mpegTsViewer);
             }
+            if (typeof config.HLSViewer !== 'undefined') {
+                this.replaceBasicAuthAddress(config.basicAuth, config.HLSViewer);
+            }
         }
 
         const mirakurun = CreateMirakurunClient.get();
@@ -83,6 +86,8 @@ class ConfigModel extends ApiModel implements ConfigModelInterface {
                 return option.name;
             });
         }
+
+        if (typeof config.HLSViewer !== 'undefined') { results['HLSViewer'] = config.HLSViewer; }
 
         if (typeof config.liveWebM !== 'undefined') {
             results['liveWebM'] = config.liveWebM.map((option) => {

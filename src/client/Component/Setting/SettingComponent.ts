@@ -217,6 +217,24 @@ class SettingComponent extends ParentComponent<void> {
                         this.viewModel.tmpValue.customRecordedDownloaderURLScheme = value ? value : null;
                     },
                 ),
+
+                this.createListItem(
+                    'HLS 視聴のURL設定',
+                    this.createToggle(
+                        () => { return this.viewModel.tmpValue.isEnableHLSViewerURLScheme; },
+                        (value) => { this.viewModel.tmpValue.isEnableHLSViewerURLScheme = value; },
+                    ),
+                ),
+                this.createTextBox(
+                    () => {
+                        const value = this.viewModel.tmpValue.customHLSViewerURLScheme;
+
+                        return value === null ? '' : value;
+                    },
+                    (value) => {
+                        this.viewModel.tmpValue.customHLSViewerURLScheme = value ? value : null;
+                    },
+                ),
             ]),
 
             m('div', { class: 'mdl-dialog__actions' }, [

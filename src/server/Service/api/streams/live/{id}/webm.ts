@@ -12,6 +12,9 @@ export const get: Operation = async(req, res) => {
         const encChild = info.stream.getEncChild();
 
         res.setHeader('Content-Type', 'video/webm');
+        res.header('Cache-Control', 'private, no-cache, no-store, must-revalidate');
+        res.header('Expires', '-1');
+        res.header('Pragma', 'no-cache');
         res.status(200);
 
         // 接続切断時
