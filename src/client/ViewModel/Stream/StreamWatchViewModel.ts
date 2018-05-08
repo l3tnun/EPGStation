@@ -75,7 +75,7 @@ class StreamWatchViewModel extends ViewModel {
                 baseURL = config.HLSViewer.ios;
             } else if (Util.uaIsAndroid() && typeof config.HLSViewer.android !== 'undefined') {
                 baseURL = config.HLSViewer.android;
-            } else if (Util.uaIsMac() && typeof config.HLSViewer.mac !== 'undefined') {
+            } else if (Util.uaIsMac() && !Util.uaIsSafari() && typeof config.HLSViewer.mac !== 'undefined') {
                 baseURL = config.HLSViewer.mac;
             } else if (Util.uaIsWindows() && typeof config.HLSViewer.win !== 'undefined') {
                 baseURL = config.HLSViewer.win;
