@@ -32,6 +32,7 @@ class VideoContainerComponent extends Component<ControlArgs> {
     private disableMouseleave = false;
     private doubleClickFlag = false;
     private doubleClickTimerId: NodeJS.Timer;
+    private isWaiting: boolean = false;
 
     constructor() {
         super();
@@ -94,6 +95,7 @@ class VideoContainerComponent extends Component<ControlArgs> {
                 this.seekBar = 0;
                 this.speed = 1;
                 this.stopTimeUpdate = false;
+                this.isWaiting = false;
 
                 document.removeEventListener('keydown', this.keyDwonListener, false);
                 document.removeEventListener('webkitfullscreenchange', this.fullScreenListener, false);
@@ -129,8 +131,7 @@ class VideoContainerComponent extends Component<ControlArgs> {
                 }
             },
         }, [
-            // ios 用 dummy
-            this.createDummy(),
+            this.createLoading(),
             vnode.attrs.video,
             this.createControl(vnode),
         ]);
@@ -238,6 +239,7 @@ class VideoContainerComponent extends Component<ControlArgs> {
                 this.seekBar = 0;
                 this.speed = 1;
 
+                // 時刻更新時
                 this.videoElement.addEventListener('timeupdate', () => {
                     if (this.videoElement === null || this.stopTimeUpdate) { return; }
 
@@ -257,9 +259,25 @@ class VideoContainerComponent extends Component<ControlArgs> {
                     lower.style.flexGrow = `${ value }`;
                     upper.style.flexGrow = `${ 1 - value }`;
                 });
+
+                // 読み込み中
+                this.videoElement.addEventListener('waiting', () => {
+                    this.isWaiting = true;
+                    m.redraw();
+                });
+
+                // 読み込み完了
+                this.videoElement.addEventListener('loadeddata', () => {
+                    this.isWaiting = false;
+                    m.redraw();
+                });
             }
         } else {
             this.videoElement = null;
+            if (!disableControl) {
+                this.isWaiting = true;
+                m.redraw();
+            }
         }
     }
 
@@ -296,16 +314,25 @@ class VideoContainerComponent extends Component<ControlArgs> {
     }
 
     /**
-     * ios 用 dummy
+     * loading
      * @return m.Child | null
      */
-    private createDummy(): m.Child | null {
-        if (this.videoElement === null) { return null; }
+    private createLoading(): m.Child | null {
+        if (!this.isWaiting) {
+            return m('div', {
+                class: 'loading-video-content hide ios-no-click-color',
+                onclick: () => {},
+            }, 'not-loading');
+        }
 
         return m('div', {
-            class: 'dummy-video-content ios-no-click-color',
+            class: 'loading-video-content ios-no-click-color',
             onclick: () => {},
-        }, 'dummy');
+        }, [
+            m('div', {
+                class: 'mdl-spinner mdl-spinner--single-color mdl-js-spinner is-active',
+            }),
+        ]);
     }
 
     /**

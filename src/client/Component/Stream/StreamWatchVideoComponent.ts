@@ -88,11 +88,7 @@ class StreamWatchVideoComponent extends Component<void> {
             });
         } else {
             // 視聴可能になるまで待機中
-            return m('div', { class: 'video-player-background' }, [
-                m('div', {
-                    class: 'mdl-spinner mdl-spinner--single-color mdl-js-spinner is-active',
-                }),
-            ]);
+            return m('div', { class: 'video-player-background' });
         }
     }
 
