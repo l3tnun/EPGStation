@@ -103,6 +103,12 @@ interface ConfigInterface {
         name: string;
         cmd: string;
     }[];
+    HLSViewer: {
+        ios: string;
+        android: string;
+        mac: string;
+        win: string;
+    };
     liveWebM: {
         name: string;
         cmd: string;

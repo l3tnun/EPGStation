@@ -84,6 +84,8 @@ class ConfigModel extends ApiModel implements ConfigModelInterface {
             });
         }
 
+        if (typeof config.HLSViewer !== 'undefined') { results['HLSViewer'] = config.HLSViewer; }
+
         if (typeof config.liveWebM !== 'undefined') {
             results['liveWebM'] = config.liveWebM.map((option) => {
                 return option.name;

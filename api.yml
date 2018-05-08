@@ -219,7 +219,7 @@ definitions:
           SKY:
             type: boolean
       recordedViewer:
-        description: 'mobile 用録画ファイル視聴用設定'
+        description: '録画ファイル視聴アプリ設定'
         type: object
         properties:
           ios:
@@ -231,7 +231,7 @@ definitions:
           win:
             type: string
       recordedDownloader:
-        description: 'mobile 用録画ファイルダウンロード用設定'
+        description: '録画ファイルダウンロードアプリ設定'
         type: object
         properties:
           ios:
@@ -248,7 +248,7 @@ definitions:
           description: 'mpeg ts streaming ライブ視聴の設定'
           type: string
       mpegTsViewer:
-        description: 'mpeg ts streaming の viewer の設定'
+        description: 'mpeg ts streaming の 視聴アプリ設定'
         type: object
         properties:
           ios:
@@ -269,6 +269,18 @@ definitions:
         items:
           description: 'HLS ライブ配信の設定'
           type: string
+      HLSViewer:
+        description: 'HLS 視聴アプリ設定'
+        type: object
+        properties:
+          ios:
+            type: string
+          android:
+            type: string
+          mac:
+            type: string
+          win:
+            type: string
       liveWebM:
         type: array
         items:

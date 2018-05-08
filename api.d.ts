@@ -54,6 +54,12 @@ export interface Config {
     };
     recordedHLS?: string[];
     liveHLS?: string[];
+    HLSViewer?: {
+        ios: string;
+        android: string;
+        mac: string;
+        win: string;
+    };
     liveWebM?: string[];
     kodiHosts?: string[];
 }
