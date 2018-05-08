@@ -244,7 +244,7 @@ class VideoContainerComponent extends Component<ControlArgs> {
                     if (this.videoElement === null || this.stopTimeUpdate) { return; }
 
                     this.seekBar = (VideoContainerComponent.VideoSeekInterval / this.getVideoDuration()) * this.getVideoCurrentTime();
-                    if (isNaN(this.seekBar)) { this.seekBar = 0; }
+                    if (isNaN(this.seekBar) || this.seekBar === Infinity) { this.seekBar = 0; }
                     m.redraw();
 
                     // slider
