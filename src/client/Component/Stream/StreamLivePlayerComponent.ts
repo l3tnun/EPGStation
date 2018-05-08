@@ -59,7 +59,7 @@ class StreamLivePlayerComponent extends Component<void> {
                 if (src === null) { return; }
 
                 // set src
-                (<HTMLVideoElement> vnode.dom).src = src;
+                (<HTMLVideoElement> vnode.dom).src = src + `&dummy=${ new Date().getTime() }`;
 
                 // set callback
                 this.viewModel.setCloseCallback(() => {
