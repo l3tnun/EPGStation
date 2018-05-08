@@ -40,15 +40,16 @@ Config.json
 | storageLimitThreshold | number | 0 | no | ストレージ空き容量限界閾値 (MB) |
 | storageLimitAction | "remove" | "none" | no | ストレージ空き容量が限界閾値を超えたときの動作 remove で最も古い録画番組から削除される |
 | storageLimitCmd | string | | no | ストレージ空き容量が限界閾値を超えたときに実行するコマンド |
-| recordedViewer | {} | | no | 録画済み番組を ios, android で視聴するときのアプリ設定 |
-| recordedDownloader | {} | | no | 録画済み番組を ios, android でダウンロードするときのアプリ設定 |
+| recordedViewer | {} | | no | 録画済み番組を ios, android, mac, windows で視聴するときのアプリ設定 |
+| recordedDownloader | {} | | no | 録画済み番組を ios, android, mac, windows でダウンロードするときのアプリ設定 |
 | maxStreaming | number | 0 | no | ストリーミング配信の上限数 |
 | streamingPriority | number | 0 | no | ライブ視聴時の優先度 |
 | mpegTsStreaming | {}[] | | no | ライブ視聴の設定 |
-| mpegTsViewer | {} | | no | ライブ視聴を ios, android で視聴するときのアプリ設定 |
+| mpegTsViewer | {} | | no | ライブ視聴を ios, android, mac, windows で視聴するときのアプリ設定 |
 | streamFilePath | string | EPGStation/data/streamfiles | no | HLS 配信時に使用される一時領域 |
 | recordedHLS | {}[] | | no | 録画済みファイルを HLS 配信時に使用するオプション |
 | liveHLS | {}[] | | no | HLS でライブ視聴時に使用するオプション |
+| HLSViewer | {} | | no | HLS 配信を ios, android, mac, windows で視聴するときのアプリ設定 |
 | liveWebM | {}[] | | no | webm でライブ視聴時に使用するオプション |
 | kodiHosts | {}[] | | no | kodi 配信時に使用するオプション |
 
@@ -200,6 +201,7 @@ maxEncode を 1 以上に設定すること
 | ios | string | iOS での録画視聴アプリの設定 |
 | android | string | Android での録画視聴アプリの設定 |
 | mac | string | macOS での URL Scheme 設定 (Safari では動作しない) |
+| win | string | Windows での URL Scheme 設定 |
 
 ### recordedDownloader
 
@@ -208,6 +210,7 @@ maxEncode を 1 以上に設定すること
 | ios | string | iOS での録画ファイルのダウンロードアプリの設定 |
 | android | string | Android での録画ファイルのダウンロードアプリの設定 |
 | mac | string | macOS での URL Scheme 設定 (Safari では動作しない) |
+| win | string | Windows での URL Scheme 設定 |
 
 ### mpegTsViewer
 
@@ -216,6 +219,16 @@ maxEncode を 1 以上に設定すること
 | ios | string | iOS でのライブ視聴アプリの設定 |
 | android | string | Android でのライブ視聴アプリの設定 |
 | mac | string | macOS での URL Scheme 設定 (Safari では動作しない) |
+| win | string | Windows での URL Scheme 設定 |
+
+### HLSViewer
+
+| プロパティ | 種類 | 説明 |
+| -------- | ---- | --- |
+| ios | string | iOS での HLS 配信視聴アプリの設定 |
+| android | string | Android での HLS 配信視聴アプリの設定 |
+| mac | string | macOS での URL Scheme 設定 (Safari では動作しない) |
+| win | string | Windows での URL Scheme 設定 |
 
 #### recordedViewer, recordedDownloader, mpegTsViewer で置換される文字列
 
