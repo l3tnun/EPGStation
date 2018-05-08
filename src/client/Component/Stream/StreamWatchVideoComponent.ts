@@ -25,6 +25,7 @@ class StreamWatchVideoComponent extends Component<void> {
     public view(): m.Child {
         if (this.viewModel.isEnable()) {
             return m('video', {
+                id: StreamWatchViewModel.videoId,
                 preload: 'none',
                 height: '$auto',
                 width: '100%',

@@ -228,6 +228,8 @@ namespace ViewModelFactorySetting {
         ));
         factory.reg('StreamWatchViewModel', new StreamWatchViewModel(
             streamApiModel,
+            configModel,
+            settingModel,
             snackbarModel,
         ));
         factory.reg('SettingViewModel', new SettingViewModel(

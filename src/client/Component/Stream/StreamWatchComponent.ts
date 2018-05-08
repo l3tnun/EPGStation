@@ -3,6 +3,7 @@ import * as apid from '../../../../api';
 import { ViewModelStatus } from '../../Enums';
 import DateUtil from '../../Util/DateUtil';
 import Util from '../../Util/Util';
+import BalloonViewModel from '../../ViewModel/Balloon/BalloonViewModel';
 import MainLayoutViewModel from '../../ViewModel/MainLayoutViewModel';
 import StreamWatchViewModel from '../../ViewModel/Stream/StreamWatchViewModel';
 import factory from '../../ViewModel/ViewModelFactory';
@@ -16,6 +17,7 @@ import StreamWatchVideoComponent from './StreamWatchVideoComponent';
  */
 class StreamWatchComponent extends ParentComponent<void> {
     private viewModel: StreamWatchViewModel;
+    private balloon: BalloonViewModel;
     private mainLayoutViewModel: MainLayoutViewModel;
     private hasInfo: boolean = false;
     private isLive: boolean = false;
@@ -24,6 +26,7 @@ class StreamWatchComponent extends ParentComponent<void> {
         super();
 
         this.viewModel = <StreamWatchViewModel> factory.get('StreamWatchViewModel');
+        this.balloon = <BalloonViewModel> factory.get('BalloonViewModel');
         this.mainLayoutViewModel = <MainLayoutViewModel> factory.get('MainLayoutViewModel');
     }
 
@@ -47,6 +50,25 @@ class StreamWatchComponent extends ParentComponent<void> {
     public view(): m.Child {
         return m(MainLayoutComponent, {
             header: { title: '視聴' },
+            menuContent: [
+                {
+                    attrs: {
+                        style: this.viewModel.getCustomURL() === null ? 'display: none;' : '',
+                        onclick: () => {
+                            this.balloon.close();
+                            const url = this.viewModel.getCustomURL();
+                            if (url !== null) {
+                                const video = <HTMLVideoElement | null> document.getElementById(StreamWatchViewModel.videoId);
+                                if (video === null) { return; }
+
+                                video.pause();
+                                location.href = url;
+                            }
+                        },
+                    },
+                    text: 'アプリで開く',
+                },
+            ],
             content: [
                 m('div', {
                     class: 'stream-video main-layout-animation',
