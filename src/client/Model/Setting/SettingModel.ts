@@ -17,6 +17,8 @@ interface SettingValue {
     customRecordedViewerURLScheme: string | null;
     isEnableRecordedDownloaderURLScheme: boolean;
     customRecordedDownloaderURLScheme: string | null;
+    isEnableHLSViewerURLScheme: boolean;
+    customHLSViewerURLScheme: string | null;
 }
 
 /**
@@ -51,6 +53,8 @@ class SettingModel extends StorageTemplateModel<SettingValue> {
             customRecordedViewerURLScheme: null,
             isEnableRecordedDownloaderURLScheme: true,
             customRecordedDownloaderURLScheme: null,
+            isEnableHLSViewerURLScheme: true,
+            customHLSViewerURLScheme: null,
         };
     }
 }
