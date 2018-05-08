@@ -281,8 +281,9 @@ class VideoContainerComponent extends Component<ControlArgs> {
         } else {
             this.videoElement = null;
             if (!disableControl) {
+                const needRedraw = this.isWaiting === false;
                 this.isWaiting = true;
-                m.redraw();
+                if (needRedraw) { m.redraw(); }
             }
         }
     }
