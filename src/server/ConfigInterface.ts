@@ -73,11 +73,13 @@ interface ConfigInterface {
         ios: string;
         android: string;
         mac: string;
+        win: string;
     };
     recordedDownloader: {
         ios: string;
         android: string;
         mac: string;
+        win: string;
     };
 
     maxStreaming: number;
@@ -90,6 +92,7 @@ interface ConfigInterface {
         ios: string;
         android: string;
         mac: string;
+        win: string;
     };
     streamFilePath: string;
     recordedHLS: {
