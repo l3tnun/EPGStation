@@ -52,6 +52,7 @@ interface ConfigInterface {
     thumbnailSize: string;
     thumbnailPosition: number;
     ffmpeg: string;
+    ffprobe: string;
     maxEncode: number;
     encode: {
         name: string;
@@ -93,6 +94,14 @@ interface ConfigInterface {
         android: string;
         mac: string;
         win: string;
+    };
+    recordedStreaming: {
+        mpegTs: {
+            name: string;
+            cmd: string;
+            vb: string;
+            ab: string;
+        }[];
     };
     streamFilePath: string;
     recordedHLS: {

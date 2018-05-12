@@ -5,12 +5,8 @@ import CreateMirakurun from '../../../Util/CreateMirakurunClient';
 import ProcessUtil from '../../../Util/ProcessUtil';
 import Util from '../../../Util/Util';
 import { EncodeProcessManageModelInterface } from '../Encode/EncodeProcessManageModel';
-import { Stream, StreamInfo } from './Stream';
+import { LiveStreamInfo, Stream } from './Stream';
 import { StreamManageModelInterface } from './StreamManageModel';
-
-interface MpegTsLiveStreamInfo extends StreamInfo {
-    channelId: apid.ServiceItemId;
-}
 
 /**
  * mpeg2ts ライブ配信
@@ -88,7 +84,7 @@ class MpegTsLiveStream extends Stream {
         }
     }
 
-    public getInfo(): MpegTsLiveStreamInfo {
+    public getInfo(): LiveStreamInfo {
         return {
             type: 'MpegTsLive',
             channelId: this.channelId,
@@ -101,5 +97,5 @@ class MpegTsLiveStream extends Stream {
     public getMirakurunStream(): http.IncomingMessage | null { return this.stream; }
 }
 
-export { MpegTsLiveStreamInfo, MpegTsLiveStream };
+export default MpegTsLiveStream;
 

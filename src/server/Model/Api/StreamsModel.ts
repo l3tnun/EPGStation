@@ -2,12 +2,13 @@ import * as apid from '../../../../api';
 import { ProgramsDBInterface } from '../DB/ProgramsDB';
 import { RecordedDBInterface } from '../DB/RecordedDB';
 import { ServicesDBInterface } from '../DB/ServicesDB';
-import { HLSLiveStream } from '../Service/Stream/HLSLiveStream';
-import { MpegTsLiveStream } from '../Service/Stream/MpegTsLiveStream';
-import { RecordedHLSStream } from '../Service/Stream/RecordedHLSStream';
+import HLSLiveStream from '../Service/Stream/HLSLiveStream';
+import MpegTsLiveStream from '../Service/Stream/MpegTsLiveStream';
+import RecordedHLSStream from '../Service/Stream/RecordedHLSStream';
+import RecordedStreamingMpegTsStream from '../Service/Stream/RecordedStreamingMpegTsStream';
 import { Stream } from '../Service/Stream/Stream';
 import { LiveStreamStatusInfo, StreamManageModelInterface } from '../Service/Stream/StreamManageModel';
-import { WebMLiveStream } from '../Service/Stream/WebMLiveStream';
+import WebMLiveStream from '../Service/Stream/WebMLiveStream';
 import ApiModel from './ApiModel';
 import ApiUtil from './ApiUtil';
 import { PlayList } from './PlayListInterface';
@@ -26,6 +27,7 @@ interface StreamsModelInterface extends ApiModel {
     getWebMLive(channelId: apid.ServiceItemId, mode: number): Promise<StreamModelInfo>;
     getLiveMpegTs(channelId: apid.ServiceItemId, mode: number): Promise<StreamModelInfo>;
     getRecordedHLS(recordedId: apid.RecordedId, mode: number, encodedId: apid.EncodedId | null): Promise<number>;
+    getRecordedStreamingMpegTs(recordedId: apid.RecordedId, mode: number, startTime: number, headerRangeStr: string | null): Promise<{ stream: RecordedStreamingMpegTsStream; streamNumber: number }>;
     stop(streamNumber: number): Promise<void>;
     forcedStopAll(): Promise<void>;
     getInfos(): any;
@@ -37,6 +39,7 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
     private createWebMLiveStream: (channelId: apid.ServiceItemId, mode: number) => WebMLiveStream;
     private createMpegTsLiveStream: (channelId: apid.ServiceItemId, mode: number) => MpegTsLiveStream;
     private createRecordedHLSStream: (recordedId: apid.RecordedId, mode: number, encodedId: apid.EncodedId | null) => RecordedHLSStream;
+    private createRecordedStreamingMpegTsStream: (recordedId: apid.RecordedId, mode: number, startTime: number, headerRangeStr: string | null) => RecordedStreamingMpegTsStream;
     private streamManage: StreamManageModelInterface;
     private programDB: ProgramsDBInterface;
     private servicesDB: ServicesDBInterface;
@@ -48,6 +51,7 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
         createWebMLiveStream: (channelId: apid.ServiceItemId, mode: number) => WebMLiveStream,
         createMpegTsLiveStream: (channelId: apid.ServiceItemId, mode: number) => MpegTsLiveStream,
         createRecordedHLSStream: (recordedId: apid.RecordedId, mode: number, encodedId: apid.EncodedId | null) => RecordedHLSStream,
+        createRecordedStreamingMpegTsStream: (recordedId: apid.RecordedId, mode: number, startTime: number, headerRangeStr: string | null) => RecordedStreamingMpegTsStream,
         programDB: ProgramsDBInterface,
         servicesDB: ServicesDBInterface,
         recordedDB: RecordedDBInterface,
@@ -58,6 +62,7 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
         this.createWebMLiveStream = createWebMLiveStream;
         this.createMpegTsLiveStream = createMpegTsLiveStream;
         this.createRecordedHLSStream = createRecordedHLSStream;
+        this.createRecordedStreamingMpegTsStream = createRecordedStreamingMpegTsStream;
         this.programDB = programDB;
         this.servicesDB = servicesDB;
         this.recordedDB = recordedDB;
@@ -151,6 +156,22 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
         const stream = this.createRecordedHLSStream(recordedId, mode, encodedId);
 
         return await this.streamManage.start(stream);
+    }
+
+    /**
+     * 録画済みファイル mpeg ts ストリーミング配信
+     * @param recordedId: recorded id
+     * @param mode: mode
+     * @param startTime: 開始時刻(秒)
+     * @param: request.headers.range
+     */
+    public async getRecordedStreamingMpegTs(recordedId: apid.RecordedId, mode: number, startTime: number, headerRangeStr: string | null): Promise<{ stream: RecordedStreamingMpegTsStream; streamNumber: number }> {
+        const stream = this.createRecordedStreamingMpegTsStream(recordedId, mode, startTime, headerRangeStr);
+        const streamNumber = await this.streamManage.start(stream);
+
+        if (this.streamManage.getStream(streamNumber) === null) { throw new Error('CreateStreamError'); }
+
+        return { stream: stream, streamNumber: streamNumber };
     }
 
     /**

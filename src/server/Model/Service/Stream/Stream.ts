@@ -1,6 +1,8 @@
-import { ChildProcess } from 'child_process';
+import { ChildProcess, exec } from 'child_process';
 import * as http from 'http';
+import * as apid from '../../../../../api';
 import Base from '../../../Base';
+import Util from '../../../Util/Util';
 import { EncodeProcessManageModelInterface } from '../Encode/EncodeProcessManageModel';
 import { StreamManageModelInterface } from './StreamManageModel';
 import * as enums from './StreamTypeInterface';
@@ -8,6 +10,20 @@ import * as enums from './StreamTypeInterface';
 interface StreamInfo {
     type: enums.StreamType;
     mode: number;
+}
+
+interface RecordedStreamInfo extends StreamInfo {
+    recordedId: apid.RecordedId;
+}
+
+interface VideoInfo {
+    duration: number;
+    size: number;
+    bitRate: number;
+}
+
+interface LiveStreamInfo extends StreamInfo {
+    channelId: apid.ServiceItemId;
 }
 
 abstract class Stream extends Base {
@@ -68,11 +84,34 @@ abstract class Stream extends Base {
     }
 
     public getCount(): number { return this.viewCnt; }
+
+    /**
+     * ffprobe で動画情報を取得する
+     * @return Promise<VideoInfo>
+     */
+    protected getVideoInfo(filePath: string): Promise<VideoInfo> {
+        return new Promise<VideoInfo>((resolve: (result: VideoInfo) => void, reject: (error: Error) => void) => {
+            exec(`${ Util.getFFprobePath() } -v 0 -show_format -of json "${ filePath }"`, (err, std) => {
+                if (err) {
+                    reject(err);
+
+                    return;
+                }
+                const result = <any> JSON.parse(std);
+
+                resolve({
+                    duration: parseFloat(result.format.duration),
+                    size: parseInt(result.format.size, 10),
+                    bitRate: parseFloat(result.format.bit_rate),
+                });
+            });
+        });
+    }
 }
 
 namespace Stream {
     export const priority = 0;
 }
 
-export { StreamInfo, Stream };
+export { RecordedStreamInfo, LiveStreamInfo, Stream };
 

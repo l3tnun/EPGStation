@@ -6,12 +6,8 @@ import { EncodedDBInterface } from '../../DB/EncodedDB';
 import { RecordedDBInterface } from '../../DB/RecordedDB';
 import { EncodeProcessManageModelInterface } from '../Encode/EncodeProcessManageModel';
 import HLSFileDeleter from './HLSFileDeleter';
-import { Stream, StreamInfo } from './Stream';
+import { RecordedStreamInfo, Stream } from './Stream';
 import { StreamManageModelInterface } from './StreamManageModel';
-
-interface RecordedHLSStreamInfo extends StreamInfo {
-    recordedId: apid.RecordedId;
-}
 
 /**
  * 録画済みファイル HLS 配信
@@ -118,7 +114,7 @@ class RecordedHLSStream extends Stream {
         }
     }
 
-    public getInfo(): RecordedHLSStreamInfo {
+    public getInfo(): RecordedStreamInfo {
         return {
             type: 'RecordedHLS',
             recordedId: this.recordedId,
@@ -127,5 +123,5 @@ class RecordedHLSStream extends Stream {
     }
 }
 
-export { RecordedHLSStreamInfo, RecordedHLSStream };
+export default RecordedHLSStream;
 

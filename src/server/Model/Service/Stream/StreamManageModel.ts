@@ -3,9 +3,7 @@ import * as apid from '../../../../../api';
 import Util from '../../../Util/Util';
 import Model from '../../Model';
 import { SocketIoManageModelInterface } from '../SocketIoManageModel';
-import { MpegTsLiveStreamInfo } from './MpegTsLiveStream';
-import { RecordedHLSStreamInfo } from './RecordedHLSStream';
-import { Stream } from './Stream';
+import { LiveStreamInfo, RecordedStreamInfo, Stream } from './Stream';
 import StreamStatus from './StreamStatus';
 import * as enums from './StreamTypeInterface';
 
@@ -79,10 +77,10 @@ class StreamManageModel extends Model implements StreamManageModelInterface {
         };
 
         if (streamInfo.type.includes('Live')) {
-            (<LiveStreamStatusInfo> result).channelId = (<MpegTsLiveStreamInfo> streamInfo).channelId;
+            (<LiveStreamStatusInfo> result).channelId = (<LiveStreamInfo> streamInfo).channelId;
         }
         if (streamInfo.type.includes('Recorded')) {
-            (<RecordedStreamStatusInfo> result).recordedId = (<RecordedHLSStreamInfo> streamInfo).recordedId;
+            (<RecordedStreamStatusInfo> result).recordedId = (<RecordedStreamInfo> streamInfo).recordedId;
         }
 
         return <StreamStatusInfo> result;

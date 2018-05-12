@@ -46,11 +46,12 @@ import { EncodeFinModel } from './Service/Encode/EncodeFinModel';
 import { EncodeManageModel } from './Service/Encode/EncodeManageModel';
 import { EncodeProcessManageModel } from './Service/Encode/EncodeProcessManageModel';
 import { SocketIoManageModel } from './Service/SocketIoManageModel';
-import { HLSLiveStream } from './Service/Stream/HLSLiveStream';
-import { MpegTsLiveStream } from './Service/Stream/MpegTsLiveStream';
-import { RecordedHLSStream } from './Service/Stream/RecordedHLSStream';
+import HLSLiveStream from './Service/Stream/HLSLiveStream';
+import MpegTsLiveStream from './Service/Stream/MpegTsLiveStream';
+import RecordedHLSStream from './Service/Stream/RecordedHLSStream';
+import RecordedStreamingMpegTsStream from './Service/Stream/RecordedStreamingMpegTsStream';
 import { StreamManageModel } from './Service/Stream/StreamManageModel';
-import { WebMLiveStream } from './Service/Stream/WebMLiveStream';
+import WebMLiveStream from './Service/Stream/WebMLiveStream';
 
 /**
  * Service 用の Model 設定
@@ -164,6 +165,17 @@ namespace ModelFactorySetting {
                     recordedId,
                     mode,
                     encodedId,
+                );
+            },
+            (recordedId: apid.RecordedId, mode: number, startTime: number, headerRangeStr: string | null): RecordedStreamingMpegTsStream => {
+                return new RecordedStreamingMpegTsStream(
+                    encodeProcessManage,
+                    streamManage,
+                    recordedDB,
+                    recordedId,
+                    mode,
+                    startTime,
+                    headerRangeStr,
                 );
             },
             programsDB,

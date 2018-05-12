@@ -39,6 +39,14 @@ namespace Util {
     };
 
     /**
+     * config の ffprobe path を返す
+     * @return string
+     */
+    export const getFFprobePath = (): string => {
+        return Configuration.getInstance().getConfig().ffprobe || '/usr/local/bin/ffprobe';
+    };
+
+    /**
      * config の streamFilePath を返す
      * @return string
      */

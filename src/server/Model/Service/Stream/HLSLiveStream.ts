@@ -6,12 +6,8 @@ import ProcessUtil from '../../../Util/ProcessUtil';
 import Util from '../../../Util/Util';
 import { EncodeProcessManageModelInterface } from '../Encode/EncodeProcessManageModel';
 import HLSFileDeleter from './HLSFileDeleter';
-import { Stream, StreamInfo } from './Stream';
+import { LiveStreamInfo, Stream } from './Stream';
 import { StreamManageModelInterface } from './StreamManageModel';
-
-interface HLSLiveStreamInfo extends StreamInfo {
-    channelId: apid.ServiceItemId;
-}
 
 /**
  * 録画済みファイル HLS 配信
@@ -115,7 +111,7 @@ class HLSLiveStream extends Stream {
         }
     }
 
-    public getInfo(): HLSLiveStreamInfo {
+    public getInfo(): LiveStreamInfo {
         return {
             type: 'HLSLive',
             channelId: this.channelId,
@@ -124,5 +120,5 @@ class HLSLiveStream extends Stream {
     }
 }
 
-export { HLSLiveStreamInfo, HLSLiveStream };
+export default HLSLiveStream;
 
