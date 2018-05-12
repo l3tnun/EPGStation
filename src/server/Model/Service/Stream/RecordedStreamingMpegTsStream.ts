@@ -1,5 +1,4 @@
 import { ChildProcess } from 'child_process';
-import * as fs from 'fs';
 import * as apid from '../../../../../api';
 import ProcessUtil from '../../../Util/ProcessUtil';
 import Util from '../../../Util/Util';
@@ -7,11 +6,6 @@ import { RecordedDBInterface } from '../../DB/RecordedDB';
 import { EncodeProcessManageModelInterface } from '../Encode/EncodeProcessManageModel';
 import { RecordedStreamInfo, Stream } from './Stream';
 import { StreamManageModelInterface } from './StreamManageModel';
-
-interface Range {
-    start?: number;
-    end?: number;
-}
 
 interface ResponseInfo {
     header: { [key: string]: string | number };
@@ -28,7 +22,6 @@ class RecordedStreamingMpegTsStream extends Stream {
     private startTime: number;
     private headerRangeStr: string | null = null;
     private enc: ChildProcess | null = null;
-    private fileStream: fs.ReadStream | null;
     private recordedDB: RecordedDBInterface;
 
     private header: { [key: string]: string | number } = {};
@@ -48,7 +41,7 @@ class RecordedStreamingMpegTsStream extends Stream {
         this.recordedDB = recordedDB;
         this.recordedId = recordedId;
         this.mode = mode;
-        this.startTime = startTime < 0 ? 1 : startTime;
+        this.startTime = startTime < 0 ? 0 : startTime;
         this.headerRangeStr = headerRangeStr;
     }
 
@@ -79,25 +72,25 @@ class RecordedStreamingMpegTsStream extends Stream {
         totalSize -= bitrate / 8 * this.startTime;
         totalSize = Math.floor(totalSize);
 
-        // create range & header
-        const range: Range = {
-            start: videoInfo.bitRate / 8 * this.startTime,
-        };
-
+        // set start position & set header
+        let ss = 0;
         if (this.headerRangeStr !== null) {
             const bytes = this.headerRangeStr.replace(/bytes=/, '').split('-');
             const rStart = parseInt(bytes[0], 10);
             const rEnd = parseInt(bytes[1], 10) || totalSize - 1;
 
-            range.start = Math.round(rStart / bitrate * videoInfo.bitRate);
-            range.end = Math.round(rEnd / bitrate * videoInfo.bitRate);
-            if (range.start > videoInfo.size || range.end > videoInfo.size) {
+            // 範囲チェック
+            const start = rStart / bitrate * 8 + this.startTime;
+            const end = rEnd / bitrate * 8 - this.startTime;
+            if (start > videoInfo.duration || end > videoInfo.duration) {
                 throw new Error(RecordedStreamingMpegTsStream.OutOfRangeError);
             }
 
             this.header['Content-Range'] = `bytes ${ rStart }-${ rEnd }/${ totalSize }`;
             this.header['Content-Length'] = rEnd - rStart + 1;
             this.responseNumber = 206;
+
+            ss = Math.floor(start);
         } else {
             this.header['Accept-Ranges'] = 'bytes';
             this.header['Content-Length'] = totalSize;
@@ -105,22 +98,17 @@ class RecordedStreamingMpegTsStream extends Stream {
         }
 
         try {
-            // file read stream の生成
-            this.fileStream = fs.createReadStream(recorded.recPath, range);
-
             // cmd の生成
             const cmd = config.cmd
                 .replace(/%FFMPEG%/g, Util.getFFmpegPath())
+                .replace(/%SS%/g, `${ ss }`)
                 .replace(/%VB%/g, `${ config.vb }`)
                 .replace(/%VBUFFER%/g, `${ config.vb * 8 }`)
                 .replace(/%AB%/g, `${ config.ab }`)
                 .replace(/%ABUFFER%/g, `${ config.ab * 8 }`);
 
             // エンコードプロセス生成
-            this.enc = await this.process.create('', '', cmd, Stream.priority);
-
-            // ファイルストリームをエンコードプロセスへパイプする
-            this.fileStream.pipe(this.enc.stdin);
+            this.enc = await this.process.create(recorded.recPath, '', cmd, Stream.priority);
 
             this.enc.on('exit', () => { this.ChildExit(streamNumber); });
             this.enc.on('error', () => { this.ChildExit(streamNumber); });
@@ -178,11 +166,6 @@ class RecordedStreamingMpegTsStream extends Stream {
     }
 
     public async stop(): Promise<void> {
-        if (this.fileStream !== null) {
-            this.fileStream.unpipe();
-            this.fileStream.destroy();
-        }
-
         if (this.enc !== null) {
             await ProcessUtil.kill(this.enc);
         }
