@@ -24,6 +24,7 @@ interface RecordingProgram {
 }
 
 interface RecordingManageModelInterface extends Model {
+    recPreStartListener(callback: (program: DBSchema.ProgramSchema) => void): void;
     recStartListener(callback: (program: DBSchema.RecordedSchema) => void): void;
     recEndListener(callback: (program: DBSchema.RecordedSchema | null, encodeOption: EncodeInterface | null) => void): void;
     check(reserves: ReserveProgram[]): void;
@@ -59,6 +60,16 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
         this.programsDB = programsDB;
         this.reservationManage = reservationManage;
         this.mirakurun = CreateMirakurunClient.get();
+    }
+
+    /**
+     * 録画開始前の準備中に実行されるイベントに追加
+     * @param callback 録画開始前の準備中に実行される
+     */
+    public recPreStartListener(callback: (program: DBSchema.ProgramSchema) => void): void {
+        this.listener.on(RecordingManageModel.RECORDING_PRE_START_EVENT, (program: DBSchema.ProgramSchema) => {
+            callback(program);
+        });
     }
 
     /**
@@ -185,6 +196,9 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
             // recording へ追加
             recData = { reserve: reserve };
             this.recording.push(recData);
+
+            // 録画準備中を通知
+            this.preStartEventsNotify(reserve.program);
         } else {
             // retry であるためデータを探す
             for (let i = 0; i < this.recording.length; i++) {
@@ -497,6 +511,14 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
     }
 
     /**
+     * 録画準備開始を通知
+     * @param program: DBSchema.ProgramSchema
+     */
+    private preStartEventsNotify(program: DBSchema.ProgramSchema): void {
+        this.listener.emit(RecordingManageModel.RECORDING_PRE_START_EVENT, program);
+    }
+
+    /**
      * 録画開始を通知
      * @param program: DBSchema.RecordedSchema | null
      */
@@ -506,6 +528,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
 }
 
 namespace RecordingManageModel {
+    export const RECORDING_PRE_START_EVENT = 'recordingPreStart';
     export const RECORDING_START_EVENT = 'recordingStart';
     export const RECORDING_FIN_EVENT = 'recordingFin';
     export const prepTime: number = 1000 * 15;

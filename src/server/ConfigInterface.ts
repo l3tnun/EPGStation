@@ -43,6 +43,7 @@ interface ConfigInterface {
     recPriority: number;
     conflictPriority: number;
     recorded: string;
+    recordedPreStartCommand: string;
     recordedStartCommand: string;
     recordedEndCommand: string;
     recordedFormat: string;
