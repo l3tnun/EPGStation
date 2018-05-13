@@ -344,7 +344,6 @@ interface StreamInfo {
     streamNumber: number;
     isEnable: boolean;
     viewCnt: number;
-    isNull: boolean;
     type?: 'MpegTsLive' | 'RecordedHLS' | 'HLSLive' | 'WebMLive' | 'MpegTsRecordedStreaming' | 'MultiTypeRecordedStreaming';
     channelId?: ServiceItemId;
     recordedId?: RecordedId;

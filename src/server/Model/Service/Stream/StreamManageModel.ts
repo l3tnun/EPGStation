@@ -11,7 +11,6 @@ interface StreamBaseStatusInfo {
     streamNumber: number;
     isEnable: boolean; // 視聴可能か
     viewCnt: number; // 視聴数 (HLS では変動しない)
-    isNull: boolean; // stream が null の場合 (encode が完了している場合)
     type?: enums.StreamType;
     mode?: number; // config の index number
 }
@@ -71,7 +70,6 @@ class StreamManageModel extends Model implements StreamManageModelInterface {
             streamNumber: num,
             isEnable: this.streamStatus[num].isEnable,
             viewCnt: stream.getCount(),
-            isNull: false,
             type: streamInfo.type,
             mode: streamInfo.mode,
         };
@@ -100,7 +98,6 @@ class StreamManageModel extends Model implements StreamManageModelInterface {
                     streamNumber: i,
                     isEnable: false,
                     viewCnt: 0,
-                    isNull: true,
                 });
             } else {
                 results.push(result);
@@ -199,12 +196,12 @@ class StreamManageModel extends Model implements StreamManageModelInterface {
 
         this.streamStatus[streamNumber].stream = stream;
 
-        if (stream.getInfo().type === 'MpegTsLive' || stream.getInfo().type === 'WebMLive') {
-            this.streamStatus[streamNumber].isEnable = true;
-        } else {
+        if (stream.getInfo().type.includes('HLS')) {
             // HLS
             // ファイルを定期的に監視して stream.isEnable = true にする
             this.checkStreamEnable(streamNumber);
+        } else {
+            this.streamStatus[streamNumber].isEnable = true;
         }
 
         this.log.stream.info(`start stream: ${ streamNumber }`);

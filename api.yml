@@ -1048,7 +1048,6 @@ definitions:
       - streamNumber
       - isEnable
       - viewCnt
-      - isNull
     properties:
       streamNumber:
         type: integer
@@ -1056,8 +1055,6 @@ definitions:
         type: boolean
       viewCnt:
         type: integer
-      isNull:
-        type: boolean
       type:
         type: string
         enum:
