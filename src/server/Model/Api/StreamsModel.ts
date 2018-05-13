@@ -104,10 +104,7 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
         const stream = this.createWebMLiveStream(channelId, mode);
         const streamNumber = await this.streamManage.start(stream);
 
-        const result = this.streamManage.getStream(streamNumber);
-        if (result === null) { throw new Error('CreateStreamError'); }
-
-        return { stream: result, streamNumber: streamNumber };
+        return { stream: stream, streamNumber: streamNumber };
     }
 
     /**
@@ -131,10 +128,7 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
         const stream = this.createMpegTsLiveStream(channelId, mode);
         const streamNumber = await this.streamManage.start(stream);
 
-        const result = this.streamManage.getStream(streamNumber);
-        if (result === null) { throw new Error('CreateStreamError'); }
-
-        return { stream: result, streamNumber: streamNumber };
+        return { stream: stream, streamNumber: streamNumber };
     }
 
     /**
@@ -161,8 +155,6 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
         const stream = this.createRecordedStreamingMpegTsStream(recordedId, mode, startTime, headerRangeStr);
         const streamNumber = await this.streamManage.start(stream);
 
-        if (this.streamManage.getStream(streamNumber) === null) { throw new Error('CreateStreamError'); }
-
         return { stream: stream, streamNumber: streamNumber };
     }
 
@@ -177,10 +169,7 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
         const stream = this.createRecordedStreamingMultiTypeStream(recordedId, mode, startTime, containerType);
         const streamNumber = await this.streamManage.start(stream);
 
-        const result = this.streamManage.getStream(streamNumber);
-        if (result === null) { throw new Error('CreateStreamError'); }
-
-        return { stream: result, streamNumber: streamNumber };
+        return { stream: stream, streamNumber: streamNumber };
     }
 
     /**
