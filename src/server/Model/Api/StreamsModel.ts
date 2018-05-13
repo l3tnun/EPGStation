@@ -20,7 +20,8 @@ interface StreamModelInfo {
 }
 
 namespace StreamsModelInterface {
-    export const channleIsNotFoundError = 'channelIsNotDound';
+    export const channleIsNotFoundError = 'channelIsNotFound';
+    export const recordedIsNotFoundError = 'recordedIsNotFound';
 }
 
 interface StreamsModelInterface extends ApiModel {
@@ -34,6 +35,7 @@ interface StreamsModelInterface extends ApiModel {
     forcedStopAll(): Promise<void>;
     getInfos(): any;
     getLiveM3u8(host: string, isSecure: boolean, channelId: apid.ServiceItemId, mode: number): Promise<PlayList>;
+    getRecordedStreamingM3u8(host: string, isSecure: boolean, recordedId: apid.RecordedId, mode: number): Promise<PlayList>;
 }
 
 class StreamsModel extends ApiModel implements StreamsModelInterface {
@@ -251,6 +253,30 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
                 name: channel.name,
                 duration: 0,
                 baseUrl: `/api/streams/live/${ channelId }/mpegts?mode=${ mode }`,
+                basicAuth: this.config.getConfig().basicAuth,
+            }),
+        };
+    }
+
+    /**
+     * ストリーミング (mpegTs) 視聴用の m3u8 ファイルを生成
+     * @param host: host
+     * @param recordedId: recorded id
+     * @param mode: config.recordedStreaming.mpegTs の index 番号
+     * @return Promise<PlayList>
+     */
+    public async getRecordedStreamingM3u8(host: string, isSecure: boolean, recordedId: apid.RecordedId, mode: number): Promise<PlayList> {
+        const recorded = await this.recordedDB.findId(recordedId);
+        if (recorded === null || recorded.recPath === null) { throw new Error(StreamsModelInterface.recordedIsNotFoundError); }
+
+        return {
+            name: encodeURIComponent(recorded.name + '.m3u8'),
+            playList: ApiUtil.createM3U8PlayListStr({
+                host: host,
+                isSecure: isSecure,
+                name: recorded.name,
+                duration: Math.floor(recorded.duration / 1000),
+                baseUrl: `/api/streams/recorded/${ recordedId }/streaming/mpegts?mode=${ mode }`,
                 basicAuth: this.config.getConfig().basicAuth,
             }),
         };
