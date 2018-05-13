@@ -30,6 +30,7 @@ Config.json
 | thumbnailSize | string | 480x270 | no |  サムネイルの解像度 |
 | thumbnailPosition | number | 5 | no |  サムネイル生成の時間 (秒) |
 | ffmpeg | string | /usr/local/bin/ffmpeg | no |  サムネイル生成に使用する ffmpeg のパス |
+| recordedPreStartCommand | string | | no | 録画準備開始後に実行するコマンド |
 | recordedStartCommand | string | | no | 録画開始時に実行するコマンド |
 | recordedEndCommand | string | | no | 録画終了時に実行するコマンド |
 | maxEncode | number | 0 | no | エンコードプロセスの起動上限数 |
@@ -158,6 +159,24 @@ suffix が未記述の場合非エンコードコマンドとして認識され�
 cmd 実行時の引数、環境変数は encode と同一
 
 maxEncode を 1 以上に設定すること
+
+----
+
+### recordedPreStartCommand
+
+#### 実行時に渡される環境変数
+
+| プロパティ | 種類 | 説明 |
+| -------- | --- | ---- |
+| PROGRAMID | number | program id |
+| CHANNELTYPE | string | 'GR' \| 'BS' \| 'CS' \| 'SKY' |
+| CHANNELID | number | channel id |
+| STARTAT | number | 開始時刻 (UNIX time) |
+| ENDAT | number | 終了時刻 (UNIX time) |
+| DURATION | number | 長さ (ms) |
+| NAME | string | 番組名 |
+| DESCRIPTION | string \| null | 番組概要 |
+| EXTENDED | string \| null | 番組詳細 |
 
 ----
 
