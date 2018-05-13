@@ -107,13 +107,6 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
         const result = this.streamManage.getStream(streamNumber);
         if (result === null) { throw new Error('CreateStreamError'); }
 
-        const encChild = result.getEncChild();
-        if (encChild !== null) {
-            encChild.stderr.on('data', (data) => {
-                this.log.stream.debug(String(data));
-            });
-        }
-
         return { stream: result, streamNumber: streamNumber };
     }
 
@@ -140,13 +133,6 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
 
         const result = this.streamManage.getStream(streamNumber);
         if (result === null) { throw new Error('CreateStreamError'); }
-
-        const encChild = result.getEncChild();
-        if (encChild !== null) {
-            encChild.stderr.on('data', (data) => {
-                this.log.stream.debug(String(data));
-            });
-        }
 
         return { stream: result, streamNumber: streamNumber };
     }
