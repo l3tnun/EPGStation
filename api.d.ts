@@ -52,6 +52,11 @@ export interface Config {
         mac: string;
         win: string;
     };
+    recordedStreaming?: {
+        mpegTs: string[];
+        webm: string[];
+        mp4: string[];
+    };
     recordedHLS?: string[];
     liveHLS?: string[];
     HLSViewer?: {

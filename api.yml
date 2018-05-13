@@ -259,6 +259,22 @@ definitions:
             type: string
           win:
             type: string
+      recordedStreaming:
+        description: '録画ストリーミング配信'
+        type: object
+        properties:
+          mpegTs:
+            type: array
+            items:
+              type: string
+          webm:
+            type: array
+            items:
+              type: string
+          mp4:
+            type: array
+            items:
+              type: string
       recordedHLS:
         type: array
         items:
