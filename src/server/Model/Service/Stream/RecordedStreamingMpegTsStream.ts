@@ -50,7 +50,7 @@ class RecordedStreamingMpegTsStream extends Stream {
 
         // 録画情報を取得
         const recorded = await this.recordedDB.findId(this.recordedId);
-        if (recorded === null || recorded.recPath === null || recorded.recording) { throw new Error(RecordedStreamingMpegTsStream.FileIsNotFoundError); }
+        if (recorded === null || recorded.recPath === null) { throw new Error(RecordedStreamingMpegTsStream.FileIsNotFoundError); }
 
         // ファイル情報を取得
         const videoInfo = await this.getVideoInfo(recorded.recPath);
@@ -74,27 +74,31 @@ class RecordedStreamingMpegTsStream extends Stream {
 
         // set start position & set header
         let ss = 0;
-        if (this.headerRangeStr !== null) {
-            const bytes = this.headerRangeStr.replace(/bytes=/, '').split('-');
-            const rStart = parseInt(bytes[0], 10);
-            const rEnd = parseInt(bytes[1], 10) || totalSize - 1;
+        if (!recorded.recording) {
+            if (this.headerRangeStr !== null) {
+                const bytes = this.headerRangeStr.replace(/bytes=/, '').split('-');
+                const rStart = parseInt(bytes[0], 10);
+                const rEnd = parseInt(bytes[1], 10) || totalSize - 1;
 
-            // 範囲チェック
-            const start = rStart / bitrate * 8 + this.startTime;
-            const end = rEnd / bitrate * 8 - this.startTime;
-            if (start > videoInfo.duration || end > videoInfo.duration) {
-                throw new Error(RecordedStreamingMpegTsStream.OutOfRangeError);
+                // 範囲チェック
+                const start = rStart / bitrate * 8 + this.startTime;
+                const end = rEnd / bitrate * 8 - this.startTime;
+                if (start > videoInfo.duration || end > videoInfo.duration) {
+                    throw new Error(RecordedStreamingMpegTsStream.OutOfRangeError);
+                }
+
+                this.header['Content-Range'] = `bytes ${ rStart }-${ rEnd }/${ totalSize }`;
+                this.header['Content-Length'] = rEnd - rStart + 1;
+                this.responseNumber = 206;
+
+                ss = Math.floor(start);
+            } else {
+                this.header['Accept-Ranges'] = 'bytes';
+                this.header['Content-Length'] = totalSize;
+                this.responseNumber = 200;
             }
-
-            this.header['Content-Range'] = `bytes ${ rStart }-${ rEnd }/${ totalSize }`;
-            this.header['Content-Length'] = rEnd - rStart + 1;
-            this.responseNumber = 206;
-
-            ss = Math.floor(start);
         } else {
-            this.header['Accept-Ranges'] = 'bytes';
-            this.header['Content-Length'] = totalSize;
-            this.responseNumber = 200;
+            ss = this.startTime;
         }
 
         try {
@@ -102,10 +106,11 @@ class RecordedStreamingMpegTsStream extends Stream {
             const cmd = config.cmd
                 .replace(/%FFMPEG%/g, Util.getFFmpegPath())
                 .replace(/%SS%/g, `${ ss }`)
-                .replace(/%VB%/g, `${ config.vb }`)
-                .replace(/%VBUFFER%/g, `${ config.vb * 8 }`)
-                .replace(/%AB%/g, `${ config.ab }`)
-                .replace(/%ABUFFER%/g, `${ config.ab * 8 }`);
+                .replace(/%RE%/g, recorded.recording ? '-re' : '')
+                .replace(/%VB%/g, `-b:v ${ config.vb } -minrate:v ${ config.vb } -maxrate:v ${ config.vb }`)
+                .replace(/%VBUFFER%/g, recorded.recording ? '' : `-bufsize:v ${ config.vb * 8 }`)
+                .replace(/%AB%/g, `-b:a ${ config.ab } -minrate:a ${ config.ab } -maxrate:a ${ config.ab }`)
+                .replace(/%ABUFFER%/g, recorded.recording ? '' : `-bufsize:a ${ config.ab * 8 }`);
 
             // エンコードプロセス生成
             this.enc = await this.process.create(recorded.recPath, '', cmd, Stream.priority);
