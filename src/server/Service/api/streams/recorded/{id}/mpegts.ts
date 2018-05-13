@@ -1,8 +1,8 @@
 import { Operation } from 'express-openapi';
-import { StreamsModelInterface } from '../../../../../../Model/Api/StreamsModel';
-import factory from '../../../../../../Model/ModelFactory';
-import { Stream } from '../../../../../../Model/Service/Stream/Stream';
-import * as api from '../../../../../api';
+import { StreamsModelInterface } from '../../../../../Model/Api/StreamsModel';
+import factory from '../../../../../Model/ModelFactory';
+import { Stream } from '../../../../../Model/Service/Stream/Stream';
+import * as api from '../../../../api';
 
 export const get: Operation = async(req, res) => {
     const streams = <StreamsModelInterface> factory.get('StreamsModel');

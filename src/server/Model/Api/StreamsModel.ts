@@ -276,7 +276,7 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
                 isSecure: isSecure,
                 name: recorded.name,
                 duration: Math.floor(recorded.duration / 1000),
-                baseUrl: `/api/streams/recorded/${ recordedId }/streaming/mpegts?mode=${ mode }`,
+                baseUrl: `/api/streams/recorded/${ recordedId }/mpegts?mode=${ mode }`,
                 basicAuth: this.config.getConfig().basicAuth,
             }),
         };
