@@ -7,25 +7,19 @@ import { EncodeProcessManageModelInterface } from '../Encode/EncodeProcessManage
 import { RecordedStreamInfo, Stream } from './Stream';
 import { StreamManageModelInterface } from './StreamManageModel';
 
-interface ResponseInfo {
-    header: { [key: string]: string | number };
-    responseNumber: number;
-}
+type ContainerType = 'webm' | 'mp4';
 
 /**
- * RecordedStreamingMpegTsStream
- * 録画済み mpeg ts streaming
+ * RecordedStreamingMultiTypeStream
+ * 録画済み webm or mp4 streaming
  */
-class RecordedStreamingMpegTsStream extends Stream {
+class RecordedStreamingMultiTypeStream extends Stream {
+    private containerType: ContainerType;
     private recordedId: apid.RecordedId;
     private mode: number;
     private startTime: number;
-    private headerRangeStr: string | null = null;
     private enc: ChildProcess | null = null;
     private recordedDB: RecordedDBInterface;
-
-    private header: { [key: string]: string | number } = {};
-    private responseNumber: number = 200;
 
     constructor(
         process: EncodeProcessManageModelInterface,
@@ -34,7 +28,7 @@ class RecordedStreamingMpegTsStream extends Stream {
         recordedId: apid.RecordedId,
         mode: number,
         startTime: number,
-        headerRangeStr: string | null,
+        containerType: ContainerType,
     ) {
         super(process, manager);
 
@@ -42,7 +36,7 @@ class RecordedStreamingMpegTsStream extends Stream {
         this.recordedId = recordedId;
         this.mode = mode;
         this.startTime = startTime < 0 ? 0 : startTime;
-        this.headerRangeStr = headerRangeStr;
+        this.containerType = containerType;
     }
 
     public async start(streamNumber: number): Promise<void> {
@@ -61,51 +55,12 @@ class RecordedStreamingMpegTsStream extends Stream {
         }
 
         // config を取得
-        const config = this.getConfig('mpegTs', this.mode);
-
-        // ビットレート計算
-        let bitrate = config.vb !== 0 && config.ab !== 0 ? (config.vb + config.ab) : 0;
-        if (bitrate === 0) { bitrate = videoInfo.bitRate; }
-
-        // total size 計算
-        let totalSize = bitrate === 0 ? videoInfo.size : bitrate / 8 * videoInfo.duration;
-        totalSize -= bitrate / 8 * this.startTime;
-        totalSize = Math.floor(totalSize);
-
-        // set start position & set header
-        let ss = 0;
-        if (!recorded.recording) {
-            if (this.headerRangeStr !== null) {
-                const bytes = this.headerRangeStr.replace(/bytes=/, '').split('-');
-                const rStart = parseInt(bytes[0], 10);
-                const rEnd = parseInt(bytes[1], 10) || totalSize - 1;
-
-                // 範囲チェック
-                const start = rStart / bitrate * 8 + this.startTime;
-                const end = rEnd / bitrate * 8 - this.startTime;
-                if (start > videoInfo.duration || end > videoInfo.duration) {
-                    throw new Error(RecordedStreamingMpegTsStream.OutOfRangeError);
-                }
-
-                this.header['Content-Range'] = `bytes ${ rStart }-${ rEnd }/${ totalSize }`;
-                this.header['Content-Length'] = rEnd - rStart + 1;
-                this.responseNumber = 206;
-
-                ss = Math.floor(start);
-            } else {
-                this.header['Accept-Ranges'] = 'bytes';
-                this.header['Content-Length'] = totalSize;
-                this.responseNumber = 200;
-            }
-        } else {
-            ss = this.startTime;
-        }
-
+        const config = this.getConfig(this.containerType, this.mode);
         try {
             // cmd の生成
             const cmd = config.cmd
                 .replace(/%FFMPEG%/g, Util.getFFmpegPath())
-                .replace(/%SS%/g, `${ ss }`)
+                .replace(/%SS%/g, `${ this.startTime }`)
                 .replace(/%RE%/g, recorded.recording ? '-re' : '')
                 .replace(/%VB%/g, `-b:v ${ config.vb } -minrate:v ${ config.vb } -maxrate:v ${ config.vb }`)
                 .replace(/%VBUFFER%/g, recorded.recording ? '' : `-bufsize:v ${ config.vb * 8 }`)
@@ -133,21 +88,14 @@ class RecordedStreamingMpegTsStream extends Stream {
 
     public getInfo(): RecordedStreamInfo {
         return {
-            type: 'MpegTsRecordedStreaming',
+            type: 'MultiTypeRecordedStreaming',
             recordedId: this.recordedId,
             mode: this.mode,
         };
     }
 
     public getEncChild(): ChildProcess | null { return this.enc; }
-
-    public getResponseInfo(): ResponseInfo {
-        return {
-            header: this.header,
-            responseNumber: this.responseNumber,
-        };
-    }
 }
 
-export default RecordedStreamingMpegTsStream;
+export { ContainerType, RecordedStreamingMultiTypeStream };
 

@@ -102,6 +102,18 @@ interface ConfigInterface {
             vb: string;
             ab: string;
         }[];
+        webm: {
+            name: string;
+            cmd: string;
+            vb: string;
+            ab: string;
+        }[];
+        mp4: {
+            name: string;
+            cmd: string;
+            vb: string;
+            ab: string;
+        }[];
     };
     streamFilePath: string;
     recordedHLS: {

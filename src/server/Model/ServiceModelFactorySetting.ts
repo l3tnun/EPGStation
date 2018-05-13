@@ -50,6 +50,7 @@ import HLSLiveStream from './Service/Stream/HLSLiveStream';
 import MpegTsLiveStream from './Service/Stream/MpegTsLiveStream';
 import RecordedHLSStream from './Service/Stream/RecordedHLSStream';
 import RecordedStreamingMpegTsStream from './Service/Stream/RecordedStreamingMpegTsStream';
+import { ContainerType, RecordedStreamingMultiTypeStream } from './Service/Stream/RecordedStreamingMultiTypeStream';
 import { StreamManageModel } from './Service/Stream/StreamManageModel';
 import WebMLiveStream from './Service/Stream/WebMLiveStream';
 
@@ -176,6 +177,17 @@ namespace ModelFactorySetting {
                     mode,
                     startTime,
                     headerRangeStr,
+                );
+            },
+            (recordedId: apid.RecordedId, mode: number, startTime: number, containerType: ContainerType): RecordedStreamingMultiTypeStream => {
+                return new RecordedStreamingMultiTypeStream(
+                    encodeProcessManage,
+                    streamManage,
+                    recordedDB,
+                    recordedId,
+                    mode,
+                    startTime,
+                    containerType,
                 );
             },
             programsDB,

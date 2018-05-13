@@ -8,22 +8,19 @@ export const get: Operation = async(req, res) => {
     const streams = <StreamsModelInterface> factory.get('StreamsModel');
 
     try {
-        const info = await streams.getRecordedStreamingMpegTs(
+        const info = await streams.getRecordedStreamingMultiType(
             req.params.id,
             req.query.mode,
             req.query.ss,
-            typeof req.headers.range === 'undefined' ? null : req.headers.range,
+            'webm',
         );
         const encChild = info.stream.getEncChild();
 
-        const responseInfo = info.stream.getResponseInfo();
-
-        for (const key in responseInfo.header) {
-            res.setHeader(key, responseInfo.header[key]);
-        }
-
-        res.setHeader('Content-Type', 'video/MP2T');
-        res.status(responseInfo.responseNumber);
+        res.setHeader('Content-Type', 'video/webm');
+        res.header('Cache-Control', 'private, no-cache, no-store, must-revalidate');
+        res.header('Expires', '-1');
+        res.header('Pragma', 'no-cache');
+        res.status(200);
 
         // 接続切断時
         req.on('close', async() => {
@@ -45,7 +42,7 @@ export const get: Operation = async(req, res) => {
                 res.end();
             });
         } else {
-            throw new Error('CreatetRecordedStreamingMpegTsStreamChildError');
+            throw new Error('CreatetRecordedStreamingWebMStreamChildError');
         }
     } catch (err) {
         if (err.message === Stream.OutOfRangeError) {
@@ -59,9 +56,9 @@ export const get: Operation = async(req, res) => {
 };
 
 get.apiDoc = {
-    summary: '録画済みファイルの mpegts ストリーミング配信',
+    summary: '録画済みファイルの webm ストリーミング配信',
     tags: ['streams'],
-    description: '録画済みファイルの mpegts ストリーミング配信をする',
+    description: '録画済みファイルの webm ストリーミング配信をする',
     parameters: [
         {
             name: 'id',

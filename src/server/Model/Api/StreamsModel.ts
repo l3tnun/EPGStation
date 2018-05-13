@@ -6,6 +6,7 @@ import HLSLiveStream from '../Service/Stream/HLSLiveStream';
 import MpegTsLiveStream from '../Service/Stream/MpegTsLiveStream';
 import RecordedHLSStream from '../Service/Stream/RecordedHLSStream';
 import RecordedStreamingMpegTsStream from '../Service/Stream/RecordedStreamingMpegTsStream';
+import { ContainerType, RecordedStreamingMultiTypeStream } from '../Service/Stream/RecordedStreamingMultiTypeStream';
 import { Stream } from '../Service/Stream/Stream';
 import { LiveStreamStatusInfo, StreamManageModelInterface } from '../Service/Stream/StreamManageModel';
 import WebMLiveStream from '../Service/Stream/WebMLiveStream';
@@ -28,6 +29,7 @@ interface StreamsModelInterface extends ApiModel {
     getLiveMpegTs(channelId: apid.ServiceItemId, mode: number): Promise<StreamModelInfo>;
     getRecordedHLS(recordedId: apid.RecordedId, mode: number, encodedId: apid.EncodedId | null): Promise<number>;
     getRecordedStreamingMpegTs(recordedId: apid.RecordedId, mode: number, startTime: number, headerRangeStr: string | null): Promise<{ stream: RecordedStreamingMpegTsStream; streamNumber: number }>;
+    getRecordedStreamingMultiType(recordedId: apid.RecordedId, mode: number, startTime: number, containerType: ContainerType): Promise<StreamModelInfo>;
     stop(streamNumber: number): Promise<void>;
     forcedStopAll(): Promise<void>;
     getInfos(): any;
@@ -40,6 +42,8 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
     private createMpegTsLiveStream: (channelId: apid.ServiceItemId, mode: number) => MpegTsLiveStream;
     private createRecordedHLSStream: (recordedId: apid.RecordedId, mode: number, encodedId: apid.EncodedId | null) => RecordedHLSStream;
     private createRecordedStreamingMpegTsStream: (recordedId: apid.RecordedId, mode: number, startTime: number, headerRangeStr: string | null) => RecordedStreamingMpegTsStream;
+
+    private createRecordedStreamingMultiTypeStream: (recordedId: apid.RecordedId, mode: number, startTime: number, containerType: ContainerType) => RecordedStreamingMultiTypeStream;
     private streamManage: StreamManageModelInterface;
     private programDB: ProgramsDBInterface;
     private servicesDB: ServicesDBInterface;
@@ -52,6 +56,7 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
         createMpegTsLiveStream: (channelId: apid.ServiceItemId, mode: number) => MpegTsLiveStream,
         createRecordedHLSStream: (recordedId: apid.RecordedId, mode: number, encodedId: apid.EncodedId | null) => RecordedHLSStream,
         createRecordedStreamingMpegTsStream: (recordedId: apid.RecordedId, mode: number, startTime: number, headerRangeStr: string | null) => RecordedStreamingMpegTsStream,
+        createRecordedStreamingMultiTypeStream: (recordedId: apid.RecordedId, mode: number, startTime: number, containerType: ContainerType) => RecordedStreamingMultiTypeStream,
         programDB: ProgramsDBInterface,
         servicesDB: ServicesDBInterface,
         recordedDB: RecordedDBInterface,
@@ -63,6 +68,7 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
         this.createMpegTsLiveStream = createMpegTsLiveStream;
         this.createRecordedHLSStream = createRecordedHLSStream;
         this.createRecordedStreamingMpegTsStream = createRecordedStreamingMpegTsStream;
+        this.createRecordedStreamingMultiTypeStream = createRecordedStreamingMultiTypeStream;
         this.programDB = programDB;
         this.servicesDB = servicesDB;
         this.recordedDB = recordedDB;
@@ -172,6 +178,23 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
         if (this.streamManage.getStream(streamNumber) === null) { throw new Error('CreateStreamError'); }
 
         return { stream: stream, streamNumber: streamNumber };
+    }
+
+    /**
+     * 録画済みファイル マルチタイプストリーミング配信
+     * @param recordedId: recorded id
+     * @param mode: mode
+     * @param startTime: 開始時刻(秒)
+     * @param containerType: ContainerType
+     */
+    public async getRecordedStreamingMultiType(recordedId: apid.RecordedId, mode: number, startTime: number, containerType: ContainerType): Promise<StreamModelInfo> {
+        const stream = this.createRecordedStreamingMultiTypeStream(recordedId, mode, startTime, containerType);
+        const streamNumber = await this.streamManage.start(stream);
+
+        const result = this.streamManage.getStream(streamNumber);
+        if (result === null) { throw new Error('CreateStreamError'); }
+
+        return { stream: result, streamNumber: streamNumber };
     }
 
     /**

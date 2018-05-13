@@ -107,11 +107,64 @@ abstract class Stream extends Base {
             });
         });
     }
+
+    /**
+     * config.recordedStreaming.? を返す
+     * @param type: 'mpegTs' | 'webm' | 'mp4'
+     * @param mode: number
+     * @return {
+     *     cmd: string;
+     *     vb: number
+     *     ab: number;
+     * }
+     * @throws GetConfigError
+     * @throws GetBittrateError
+     */
+    protected getConfig(type: 'mpegTs' | 'webm' | 'mp4', mode: number): {
+        cmd: string;
+        vb: number;
+        ab: number;
+    } {
+        const config = this.config.getConfig();
+        if (
+            typeof config.recordedStreaming === 'undefined'
+            || typeof config.recordedStreaming[type] === 'undefined'
+            || typeof (<any> config.recordedStreaming[type])[mode] === 'undefined'
+        ) {
+            throw new Error('GetConfigError');
+        }
+        const setting = config.recordedStreaming[type][mode];
+
+        return {
+            cmd: setting.cmd,
+            vb: this.getBitrate(setting.vb),
+            ab: this.getBitrate(setting.ab),
+        };
+    }
+
+    /**
+     * bitrate を取得する
+     * @param str: string
+     * @return number
+     * @throws GetBittrateError
+     */
+    private getBitrate(str: string): number {
+        if (str.match(/^[0-9]+k$/i)) {
+            return parseInt(str, 10) * 1024;
+        } else if (str.match(/^[0-9]+m$/i)) {
+            return parseInt(str, 10) * 1024 * 1024;
+        }
+
+        throw new Error('GetBittrateError');
+    }
 }
 
 namespace Stream {
     export const priority = 0;
+    export const FileIsNotFoundError = 'FileIsNotFoundError';
+    export const OutOfRangeError = 'OutOfRangeError';
 }
+
 
 export { RecordedStreamInfo, LiveStreamInfo, Stream };
 
