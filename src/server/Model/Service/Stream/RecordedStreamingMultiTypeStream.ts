@@ -2,6 +2,7 @@ import { ChildProcess } from 'child_process';
 import * as apid from '../../../../../api';
 import ProcessUtil from '../../../Util/ProcessUtil';
 import Util from '../../../Util/Util';
+import { VideoUtil } from '../../../Util/VideoUtil';
 import { RecordedDBInterface } from '../../DB/RecordedDB';
 import { EncodeProcessManageModelInterface } from '../Encode/EncodeProcessManageModel';
 import { RecordedStreamInfo, Stream } from './Stream';
@@ -47,7 +48,7 @@ class RecordedStreamingMultiTypeStream extends Stream {
         if (recorded === null || recorded.recPath === null) { throw new Error(Stream.FileIsNotFoundError); }
 
         // ファイル情報を取得
-        const videoInfo = await this.getVideoInfo(recorded.recPath);
+        const videoInfo = await VideoUtil.getVideoInfo(recorded.recPath);
 
         // 開始時刻が動画の長さを超えていた
         if (this.startTime > videoInfo.duration) {
@@ -55,7 +56,7 @@ class RecordedStreamingMultiTypeStream extends Stream {
         }
 
         // config を取得
-        const config = this.getConfig(this.containerType, this.mode);
+        const config = VideoUtil.getConfig(this.containerType, this.mode);
         try {
             // cmd の生成
             const cmd = config.cmd

@@ -8,6 +8,21 @@ export const get: Operation = async(req, res) => {
     const streams = <StreamsModelInterface> factory.get('StreamsModel');
 
     try {
+        if (req.method === 'HEAD') {
+            const header = await streams.getRecordedStreamingMpegTsHEADInfo(
+                req.params.id,
+                req.query.mode,
+                req.query.ss,
+                typeof req.headers.range === 'undefined' ? null : req.headers.range,
+            );
+
+            res.status(200);
+            res.set(header);
+            res.end();
+
+            return;
+        }
+
         const info = await streams.getRecordedStreamingMpegTs(
             req.params.id,
             req.query.mode,
@@ -18,12 +33,8 @@ export const get: Operation = async(req, res) => {
 
         const responseInfo = info.stream.getResponseInfo();
 
-        for (const key in responseInfo.header) {
-            res.setHeader(key, responseInfo.header[key]);
-        }
-
-        res.setHeader('Content-Type', 'video/MP2T');
-        res.status(responseInfo.responseNumber);
+        res.set(responseInfo.header);
+        res.status(responseInfo.responseCode);
 
         // 接続切断時
         req.on('close', async() => {

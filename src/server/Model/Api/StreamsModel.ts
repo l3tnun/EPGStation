@@ -29,6 +29,7 @@ interface StreamsModelInterface extends ApiModel {
     getWebMLive(channelId: apid.ServiceItemId, mode: number): Promise<StreamModelInfo>;
     getLiveMpegTs(channelId: apid.ServiceItemId, mode: number): Promise<StreamModelInfo>;
     getRecordedHLS(recordedId: apid.RecordedId, mode: number, encodedId: apid.EncodedId | null): Promise<number>;
+    getRecordedStreamingMpegTsHEADInfo(recordedId: apid.RecordedId, mode: number, startTime: number, headerRangeStr: string | null): Promise<{ [key: string]: string | number }>;
     getRecordedStreamingMpegTs(recordedId: apid.RecordedId, mode: number, startTime: number, headerRangeStr: string | null): Promise<{ stream: RecordedStreamingMpegTsStream; streamNumber: number }>;
     getRecordedStreamingMultiType(recordedId: apid.RecordedId, mode: number, startTime: number, containerType: ContainerType): Promise<StreamModelInfo>;
     stop(streamNumber: number): Promise<void>;
@@ -144,6 +145,16 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
         const stream = this.createRecordedHLSStream(recordedId, mode, encodedId);
 
         return await this.streamManage.start(stream);
+    }
+
+    /**
+     * 録画済みファイル mpeg ts ストリーミング配信時の method === 'HEAD' のときの header 情報を取得する
+     * @return Promise<{ [key: string]: string | number }>
+     */
+    public async getRecordedStreamingMpegTsHEADInfo(recordedId: apid.RecordedId, mode: number, startTime: number, headerRangeStr: string | null): Promise<{ [key: string]: string | number }> {
+        const stream = this.createRecordedStreamingMpegTsStream(recordedId, mode, startTime, headerRangeStr);
+
+        return await stream.getHEADResponseInfo();
     }
 
     /**
