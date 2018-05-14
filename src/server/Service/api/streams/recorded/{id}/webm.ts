@@ -5,6 +5,21 @@ import { Stream } from '../../../../../Model/Service/Stream/Stream';
 import * as api from '../../../../api';
 
 export const get: Operation = async(req, res) => {
+    const header = {
+        'Content-Type': 'video/webm',
+        'Cache-Control': 'private, no-cache, no-store, must-revalidate',
+        'Expires': '-1',
+        'Pragma': 'no-cache',
+    };
+
+    if (req.method === 'HEAD') {
+        res.status(200);
+        res.set(header);
+        res.end();
+
+        return;
+    }
+
     const streams = <StreamsModelInterface> factory.get('StreamsModel');
 
     try {
@@ -16,11 +31,14 @@ export const get: Operation = async(req, res) => {
         );
         const encChild = info.stream.getEncChild();
 
-        res.setHeader('Content-Type', 'video/webm');
-        res.header('Cache-Control', 'private, no-cache, no-store, must-revalidate');
-        res.header('Expires', '-1');
-        res.header('Pragma', 'no-cache');
         res.status(200);
+        res.set(header);
+
+        if (req.method === 'HEAD') {
+            res.end();
+
+            return;
+        }
 
         // 接続切断時
         req.on('close', async() => {
