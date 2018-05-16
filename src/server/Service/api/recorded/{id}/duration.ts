@@ -8,7 +8,7 @@ export const get: Operation = async(req, res) => {
 
     try {
         const result = await recordeds.getDuration(req.params.id);
-        api.responseJSON(res, 200, { diration: result });
+        api.responseJSON(res, 200, { duration: result });
     } catch (err) {
         if (err.message === RecordedModelInterface.NotFoundRecordedIdError) {
             api.responseError(res, { code: 404,  message: 'Recorded Id is not Found' });
