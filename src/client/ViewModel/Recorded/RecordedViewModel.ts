@@ -71,7 +71,7 @@ class RecordedViewModel extends ViewModel {
      * データ取得
      */
     private async fetchData(): Promise<void> {
-        await this.recordedApiModel.fetchRecorded(this.limit, this.offset, this.option);
+        await this.recordedApiModel.fetchRecordeds(this.limit, this.offset, this.option);
         await this.recordedApiModel.fetchTags();
 
         if (this.isEditing()) {
@@ -83,8 +83,8 @@ class RecordedViewModel extends ViewModel {
      * recorded 一覧を返す
      * @return apid.RecordedPrograms
      */
-    public getRecorded(): apid.RecordedPrograms {
-        return this.recordedApiModel.getRecorded();
+    public getRecordeds(): apid.RecordedPrograms {
+        return this.recordedApiModel.getRecordeds();
     }
 
     /**
@@ -154,7 +154,7 @@ class RecordedViewModel extends ViewModel {
      * set edit select Index
      */
     private setEditSelectIndex(): void {
-        const recorded = this.getRecorded().recorded;
+        const recorded = this.getRecordeds().recorded;
         const newSelectIndex: { [key: number]: boolean } = {};
         for (const r of recorded) {
             const oldData = this.editSelectIndex[r.id];

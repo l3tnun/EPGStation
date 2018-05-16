@@ -3,6 +3,7 @@ import ProgramDetailComponent from './Component/Program/Detail/ProgramDetailComp
 import ProgramComponent from './Component/Program/ProgramComponent';
 import ProgramSettingComponent from './Component/Program/Setting/ProgramSettingComponent';
 import RecordedComponent from './Component/Recorded/RecordedComponent';
+import RecordedWatchComponent from './Component/Recorded/Watch/RecordedWatchComponent';
 import ReservesComponent from './Component/Reserves/ReservesComponent';
 import RulesComponent from './Component/Rules/RulesComponent';
 import SearchComponent from './Component/Search/SearchComponent';
@@ -39,6 +40,7 @@ m.route(document.body, '/', {
     '/program/detail/:programId': ProgramDetailComponent,
     '/program/setting': ProgramSettingComponent,
     '/recorded': RecordedComponent,
+    '/recorded/:recordedId/watch': RecordedWatchComponent,
     '/reserves': ReservesComponent,
     '/rules': RulesComponent,
     '/search': SearchComponent,

@@ -187,11 +187,11 @@ class RecordedComponent extends ParentComponent<void> {
                 window.removeEventListener('resize', this.resizeListener, false);
             },
         }, [
-            this.viewModel.getRecorded().recorded.map((recorded) => {
+            this.viewModel.getRecordeds().recorded.map((recorded) => {
                 return this.createCard(recorded);
             }),
             m(PaginationComponent, {
-                total: this.viewModel.getRecorded().total,
+                total: this.viewModel.getRecordeds().total,
                 length: this.viewModel.getLimit(),
                 page: this.viewModel.getPage(),
             }),

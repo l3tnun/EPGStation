@@ -221,8 +221,8 @@ class TopPageComponent extends ParentComponent<void> {
      * @return m.Child
      */
     private createRecorded(): m.Child {
-        const viewLength = this.recordedViewModel.getRecorded().recorded.length;
-        const total = this.recordedViewModel.getRecorded().total;
+        const viewLength = this.recordedViewModel.getRecordeds().recorded.length;
+        const total = this.recordedViewModel.getRecordeds().total;
 
         return m('div', { class: 'recorded mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col' }, [
             m('div', { class: 'parent-title' }, `録画済み ${ viewLength }/${ total }`),
@@ -231,7 +231,7 @@ class TopPageComponent extends ParentComponent<void> {
                 id: TopPageComponent.recordedId,
                 class: 'child non-scroll',
             }, [
-                this.recordedViewModel.getRecorded().recorded.map((recorded) => {
+                this.recordedViewModel.getRecordeds().recorded.map((recorded) => {
                     return this.createRecordedCard(recorded);
                 }),
                 this.createMore(viewLength, total, '/recorded', { page: 2 }),

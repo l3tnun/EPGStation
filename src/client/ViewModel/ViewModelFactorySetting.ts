@@ -30,6 +30,7 @@ import RecordedMenuViewModel from './Recorded/RecordedMenuViewModel';
 import RecordedPlayerViewModel from './Recorded/RecordedPlayerViewModel';
 import RecordedSearchViewModel from './Recorded/RecordedSearchViewModel';
 import RecordedViewModel from './Recorded/RecordedViewModel';
+import RecordedWatchViewModel from './Recorded/RecordedWatchViewModel';
 import ReservesMenuViewModel from './Reserves/ReservesMenuViewModel';
 import ReservesViewModel from './Reserves/ReservesViewModel';
 import RulesDeleteViewModel from './Rules/RulesDeleteViewModel';
@@ -130,6 +131,10 @@ namespace ViewModelFactorySetting {
             channelsApiModel,
             settingModel,
             snackbarModel,
+        ));
+        factory.reg('RecordedWatchViewModel', new RecordedWatchViewModel(
+            recordedApiModel,
+            channelsApiModel,
         ));
         factory.reg('RecordedInfoViewModel', new RecordedInfoViewModel(
             configModel,
