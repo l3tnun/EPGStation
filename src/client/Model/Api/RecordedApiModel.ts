@@ -20,6 +20,7 @@ interface RecordedApiModelInterface extends ApiModel {
     update(): Promise<void>;
     fetchRecordeds(limit: number, offset: number, option: FindQueryOption): Promise<void>;
     fetchRecorded(recordedId: apid.RecordedId): Promise<void>;
+    fetchDuration(recordedId: apid.RecordedId): Promise<void>;
     fetchTags(): Promise<void>;
     deleteAll(recordedId: apid.RecordedId): Promise<void>;
     delete(recordedId: apid.RecordedId, encodedId: apid.EncodedId | null): Promise<void>;
@@ -27,6 +28,7 @@ interface RecordedApiModelInterface extends ApiModel {
     sendToKodi(kodi: number, recordedId: number, encodedId: number | null): Promise<void>;
     getRecordeds(): apid.RecordedPrograms;
     getRecorded(): apid.RecordedProgram | null;
+    getDuration(): number;
     getPage(): number;
     getTags(): apid.RecordedTags;
     addEncode(recordedId: apid.RecordedId, option: EncodeQueryOption): Promise<void>;
@@ -45,6 +47,7 @@ namespace RecordedApiModelInterface {
 class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
     private recordeds: apid.RecordedPrograms = { recorded: [], total: 0 };
     private recorded: apid.RecordedProgram | null = null;
+    private duration: number = 0;
     private tags: apid.RecordedTags = {
         rule: [],
         channel: [],
@@ -61,6 +64,8 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
             recorded: [],
             total: 0,
         };
+        this.recorded = null;
+        this.duration = 0;
     }
 
     /**
@@ -122,6 +127,24 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
             console.error(`/api/recorded/${ recordedId }`);
             console.error(err);
             this.openSnackbar('録画情報取得に失敗しました');
+        }
+    }
+
+    /**
+     * 動画の長さを取得
+     */
+    public async fetchDuration(recordedId: apid.RecordedId): Promise<void> {
+        try {
+            const result = await <any> this.request({
+                method: 'GET',
+                url: `/api/recorded/${ recordedId }/duration`,
+            });
+
+            this.duration = result.duration;
+        } catch (err) {
+            console.error(`/api/recorded/${ recordedId}/duration`);
+            console.error(err);
+            this.openSnackbar('動画の長さ取得に失敗しました');
         }
     }
 
@@ -256,6 +279,14 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
      */
     public getRecorded(): apid.RecordedProgram | null {
         return this.recorded;
+    }
+
+    /**
+     * duration の取得
+     * @return number
+     */
+    public getDuration(): number {
+        return this.duration;
     }
 
     /**

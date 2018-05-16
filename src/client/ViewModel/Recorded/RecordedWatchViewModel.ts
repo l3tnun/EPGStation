@@ -13,6 +13,7 @@ class RecordedWatchViewModel extends ViewModel {
     private channels: ChannelsApiModelInterface;
 
     private recordedId: apid.RecordedId;
+    private dataGetTime: number;
 
     constructor(
         recordedApiModel: RecordedApiModelInterface,
@@ -30,6 +31,8 @@ class RecordedWatchViewModel extends ViewModel {
     public async init(status: ViewModelStatus = 'init'): Promise<void> {
         super.init(status);
 
+        if (status === 'init' || status === 'update') { this.recordedApiModel.init(); }
+
         this.recordedId = parseInt(m.route.param('recordedId'), 10);
         await this.fetchData();
     }
@@ -39,6 +42,8 @@ class RecordedWatchViewModel extends ViewModel {
      */
     private async fetchData(): Promise<void> {
         await this.recordedApiModel.fetchRecorded(this.recordedId);
+        await this.recordedApiModel.fetchDuration(this.recordedId);
+        this.dataGetTime = new Date().getTime();
     }
 
     /**
@@ -47,6 +52,28 @@ class RecordedWatchViewModel extends ViewModel {
      */
     public getRecorded(): apid.RecordedProgram | null {
         return this.recordedApiModel.getRecorded();
+    }
+
+    /**
+     * get Duration
+     * @return number
+     */
+    public getDuration(): number {
+        const duration = this.recordedApiModel.getDuration();
+
+        return this.isRecording()
+            ? duration + Math.floor((new Date().getTime() - this.dataGetTime) / 1000)
+            : duration;
+    }
+
+    /**
+     * 録画中か
+     * @return boolean
+     */
+    private isRecording(): boolean {
+        const recorded = this.getRecorded();
+
+        return recorded === null ? false : recorded.recording;
     }
 
     /**

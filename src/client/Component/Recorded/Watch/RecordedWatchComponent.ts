@@ -72,7 +72,7 @@ class RecordedWatchComponent extends ParentComponent<void> {
             return null;
         }
 
-        return m('div', { class: 'recorded-info', }, [
+        return m('div', { class: 'recorded-info' }, [
             m('div', { class: 'mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col' }, [
                 m('div', { class: 'mdl-card__supporting-text' }, [
                     m('div', { class: 'title' }, recorded.name),
