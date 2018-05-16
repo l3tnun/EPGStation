@@ -544,6 +544,14 @@ definitions:
         items:
           $ref: '#/definitions/EncodingInfo'
 
+  RecordedDurationInfo:
+    type: object
+    required:
+      - duration
+    properties:
+      duration:
+        type: integer
+
   RecordingProgram:
     $ref: '#/definitions/ReserveProgram'
 

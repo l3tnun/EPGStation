@@ -161,6 +161,10 @@ export interface RecordedProgram {
     encoding?: EncodingInfo[];
 }
 
+export interface RecordedDurationInfo {
+    duration: number;
+}
+
 export interface RecordedTags {
     rule: RecordedRuleTag[];
     channel: RecordedChannelTag[];

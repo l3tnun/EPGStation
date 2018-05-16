@@ -1,5 +1,6 @@
 import * as path from 'path';
 import Util from '../../Util/Util';
+import { VideoUtil } from '../../Util/VideoUtil';
 import * as DBSchema from '../DB/DBSchema';
 import { EncodedDBInterface } from '../DB/EncodedDB';
 import { FindQuery, RecordedDBInterface } from '../DB/RecordedDB';
@@ -34,6 +35,7 @@ interface EncodeAddOption {
 interface RecordedModelInterface extends ApiModel {
     getAll(limit: number, offset: number, option?: FindQuery): Promise<{}[]>;
     getId(recordedId: number): Promise<{}>;
+    getDuration(recordedId: number): Promise<number | null>;
     getThumbnailPath(recordedId: number): Promise<string>;
     getFilePath(recordedId: number, encodedId: number | undefined): Promise<RecordedFilePathInfo>;
     deleteAllRecorded(recordedId: number): Promise<void>;
@@ -172,6 +174,22 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
         if (typeof encodingInfo !== 'undefined') { recorded['encoding'] = encodingInfo; }
 
         return this.fixResult(recorded, encodedFiles);
+    }
+
+    /**
+     * 動画の実際の長さを取得する
+     * @param recordedId: recorded id
+     * @return Promise<number>
+     */
+    public async getDuration(recordedId: number): Promise<number | null> {
+        const recorded = await this.recordedDB.findId(recordedId);
+        if (recorded === null || recorded.recPath === null) {
+            throw new Error(RecordedModelInterface.NotFoundRecordedIdError);
+        }
+
+        const info = await VideoUtil.getVideoInfo(recorded.recPath);
+
+        return Math.floor(info.duration);
     }
 
     /**
