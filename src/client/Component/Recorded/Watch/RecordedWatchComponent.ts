@@ -6,6 +6,7 @@ import RecordedWatchViewModel from '../../../ViewModel/Recorded/RecordedWatchVie
 import factory from '../../../ViewModel/ViewModelFactory';
 import MainLayoutComponent from '../../MainLayoutComponent';
 import ParentComponent from '../../ParentComponent';
+import RecordedWatchVideoComponent from './RecordedWatchVideoComponent';
 
 /**
  * RecordedWatchComponent
@@ -49,17 +50,11 @@ class RecordedWatchComponent extends ParentComponent<void> {
         return m('div', {
             class: 'recorded-watch',
         }, [
-            this.createVideo(),
+            m('div', { class: 'video-parent' }, [
+                m(RecordedWatchVideoComponent),
+            ]),
             this.createRecordedInfo(),
         ]);
-    }
-
-    /**
-     * create video
-     * @return m.Child
-     */
-    private createVideo(): m.Child {
-        return m('div', 'video');
     }
 
     /**

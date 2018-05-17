@@ -13,6 +13,9 @@ class RecordedWatchViewModel extends ViewModel {
     private channels: ChannelsApiModelInterface;
 
     private recordedId: apid.RecordedId;
+    private mode: number;
+    private type: 'webm' | 'mp4';
+    private playBackPosition: number;
     private dataGetTime: number;
 
     constructor(
@@ -31,9 +34,14 @@ class RecordedWatchViewModel extends ViewModel {
     public async init(status: ViewModelStatus = 'init'): Promise<void> {
         super.init(status);
 
-        if (status === 'init' || status === 'update') { this.recordedApiModel.init(); }
+        if (status === 'init' || status === 'update') {
+            this.recordedApiModel.init();
+            this.playBackPosition = 0;
+        }
 
         this.recordedId = parseInt(m.route.param('recordedId'), 10);
+        this.mode = parseInt(m.route.param('mode'), 10);
+        this.type = <any> m.route.param('type');
         await this.fetchData();
     }
 
@@ -67,6 +75,14 @@ class RecordedWatchViewModel extends ViewModel {
     }
 
     /**
+     * get video source
+     * @return string
+     */
+    public getSource(): string {
+        return `/api/streams/recorded/${ this.recordedId }/${ this.type }?mode=${ this.mode }&ss=${ this.playBackPosition }`;
+    }
+
+    /**
      * 録画中か
      * @return boolean
      */
@@ -85,6 +101,19 @@ class RecordedWatchViewModel extends ViewModel {
         const channel = this.channels.getChannel(channelId);
 
         return channel === null ? String(channelId) : channel.name;
+    }
+
+    /**
+     * 再生位置を変更
+     * @param position: number
+     * @throws OutOfRangeError ビデオの長さの範囲外の場合
+     */
+    public changePLayBackPosition(position: number): void {
+        if (this.getDuration() < position) {
+            throw new Error('OutOfRangeError');
+        }
+
+        this.playBackPosition = position;
     }
 }
 
