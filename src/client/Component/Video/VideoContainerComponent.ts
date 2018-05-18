@@ -241,23 +241,7 @@ class VideoContainerComponent extends Component<ControlArgs> {
 
                 // 時刻更新時
                 this.videoElement.addEventListener('timeupdate', () => {
-                    if (this.videoElement === null || this.stopTimeUpdate) { return; }
-
-                    this.seekBar = (VideoContainerComponent.VideoSeekInterval / this.getVideoDuration()) * this.getVideoCurrentTime();
-                    if (isNaN(this.seekBar) || this.seekBar === Infinity) { this.seekBar = 0; }
-                    m.redraw();
-
-                    // slider
-                    if (this.containerElement === null) { return; }
-                    const l = this.containerElement.getElementsByClassName('mdl-slider__background-lower');
-                    const u = this.containerElement.getElementsByClassName('mdl-slider__background-upper');
-                    if (l.length === 0 || u.length === 0) { return; }
-                    const lower = <HTMLElement> l[0];
-                    const upper = <HTMLElement> u[0];
-
-                    const value = this.seekBar / VideoContainerComponent.VideoSeekInterval;
-                    lower.style.flexGrow = `${ value }`;
-                    upper.style.flexGrow = `${ 1 - value }`;
+                    this.timeupdate();
                 });
 
                 // 読み込み中
@@ -289,10 +273,33 @@ class VideoContainerComponent extends Component<ControlArgs> {
     }
 
     /**
+     * video timeupdate
+     */
+    private timeupdate(): void {
+        if (this.videoElement === null || this.stopTimeUpdate) { return; }
+
+        this.seekBar = (VideoContainerComponent.VideoSeekInterval / this.getVideoDuration()) * this.getVideoCurrentTime();
+        if (isNaN(this.seekBar) || this.seekBar === Infinity) { this.seekBar = 0; }
+        m.redraw();
+
+        // slider
+        if (this.containerElement === null) { return; }
+        const l = this.containerElement.getElementsByClassName('mdl-slider__background-lower');
+        const u = this.containerElement.getElementsByClassName('mdl-slider__background-upper');
+        if (l.length === 0 || u.length === 0) { return; }
+        const lower = <HTMLElement> l[0];
+        const upper = <HTMLElement> u[0];
+
+        const value = this.seekBar / VideoContainerComponent.VideoSeekInterval;
+        lower.style.flexGrow = `${ value }`;
+        upper.style.flexGrow = `${ 1 - value }`;
+    }
+
+    /**
      * get video duration
      * @return number
      */
-    private getVideoDuration(): number {
+    protected getVideoDuration(): number {
         if (this.videoElement === null) { return 0; }
         const duration = this.videoElement.duration;
 
@@ -303,11 +310,20 @@ class VideoContainerComponent extends Component<ControlArgs> {
      * get video current time
      * @return number
      */
-    private getVideoCurrentTime(): number {
+    protected getVideoCurrentTime(): number {
         if (this.videoElement === null) { return 0; }
         const currentTime = this.videoElement.currentTime;
 
         return currentTime === Infinity || isNaN(currentTime) ? 0 : currentTime;
+    }
+
+    /**
+     * update video currentTime
+     */
+    protected updateVideoCurrentTime(position: number): void {
+        if (this.videoElement === null) { return; }
+
+        this.videoElement.currentTime = position;
     }
 
     /**
@@ -412,7 +428,7 @@ class VideoContainerComponent extends Component<ControlArgs> {
                         if (this.videoElement === null) { return; }
 
                         this.seekBar = value;
-                        this.videoElement.currentTime = this.getSeekCurrentTime();
+                        this.updateVideoCurrentTime(this.getSeekCurrentTime());
                     }),
                     oninput: m.withAttr('value', (value) => {
                         // seekbar 移動中
@@ -550,7 +566,7 @@ class VideoContainerComponent extends Component<ControlArgs> {
         if (this.videoElement === null || currentTime <= 0) { return; }
 
         const backTime = currentTime - time;
-        this.videoElement.currentTime = backTime < 0 ? 0 : backTime;
+        this.updateVideoCurrentTime(backTime < 0 ? 0 : backTime);
 
         this.seekBar = backTime / Math.floor(this.getVideoDuration()) * VideoContainerComponent.VideoSeekInterval;
     }
@@ -577,7 +593,7 @@ class VideoContainerComponent extends Component<ControlArgs> {
 
         const duration = Math.floor(this.getVideoDuration());
         const skipTime = this.getVideoCurrentTime() + time;
-        this.videoElement.currentTime = skipTime > duration ? duration : skipTime;
+        this.updateVideoCurrentTime(skipTime > duration ? duration : skipTime);
 
         this.seekBar = skipTime / Math.floor(this.getVideoDuration()) * VideoContainerComponent.VideoSeekInterval;
     }

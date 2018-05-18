@@ -33,7 +33,7 @@ class RecordedWatchVideoComponent extends Component<void> {
 
                 // 再生
                 try {
-                    element.src = this.source;
+                    element.src = this.source + `&dummy=${ new Date().getTime() }`;
                     element.load();
                     element.play();
                 } catch (err) {
@@ -46,14 +46,15 @@ class RecordedWatchVideoComponent extends Component<void> {
                 // video source 変更
                 if (source !== this.source) {
                     const element = <HTMLVideoElement> vnode.dom;
+                    const isPaused = element.paused;
                     this.source = source;
 
                     try {
                         element.pause();
-                        element.src = this.source;
+                        element.src = this.source + `&dummy=${ new Date().getTime() }`;
                         await Util.sleep(500);
                         element.load();
-                        element.play();
+                        if (!isPaused) { element.play(); }
                     } catch (err) {
                         console.error(err);
                     }

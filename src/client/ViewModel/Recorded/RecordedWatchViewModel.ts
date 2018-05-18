@@ -115,6 +115,14 @@ class RecordedWatchViewModel extends ViewModel {
 
         this.playBackPosition = position;
     }
+
+    /**
+     * video の再生開始位置を取得
+     * @return number;
+     */
+    public getPlayBackStartPosition(): number {
+        return this.playBackPosition;
+    }
 }
 
 export default RecordedWatchViewModel;
