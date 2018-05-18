@@ -27,12 +27,9 @@ class RecordedWatchSelectComponent extends Component<void> {
                         m('select', {
                             class: 'mdl-textfield__input',
                             onchange: m.withAttr('value', (value) => {
+                                if (value === this.viewModel.streamingTypeValue) { return; }
                                 this.viewModel.streamingTypeValue = value;
-
-                                const options = this.viewModel.getOptions();
-                                if (typeof options[this.viewModel.streamingModeValue] === 'undefined') {
-                                    this.viewModel.streamingModeValue = 0;
-                                }
+                                this.viewModel.streamingModeValue = 0;
                             }),
                             onupdate: (vnode: m.VnodeDOM<void, this>) => {
                                 this.selectOnUpdate(<HTMLInputElement> (vnode.dom), this.viewModel.streamingTypeValue);
