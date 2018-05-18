@@ -2,6 +2,8 @@ import * as apid from '../../../../api';
 import { StreamingTypes } from '../../Enums';
 import { ConfigApiModelInterface } from '../../Model/Api/ConfigApiModel';
 import { BalloonModelInterface } from '../../Model/Balloon/BallonModel';
+import { RecordedWatchSelectSettingValue } from '../../Model/Recorded/RecordedWatchSelectSettingModel';
+import StorageTemplateModel from '../../Model/Storage/StorageTemplateModel';
 import Util from '../../Util/Util';
 import ViewModel from '../ViewModel';
 
@@ -9,6 +11,7 @@ import ViewModel from '../ViewModel';
 class RecordedWatchSelectViewModel extends ViewModel {
     private config: ConfigApiModelInterface;
     private balloon: BalloonModelInterface;
+    private selectSetting: StorageTemplateModel<RecordedWatchSelectSettingValue>;
 
     private recorded: apid.RecordedProgram | null = null;
     private openOriginalUrl: () => void;
@@ -18,11 +21,13 @@ class RecordedWatchSelectViewModel extends ViewModel {
     constructor(
         config: ConfigApiModelInterface,
         balloon: BalloonModelInterface,
+        selectSetting: StorageTemplateModel<RecordedWatchSelectSettingValue>,
     ) {
         super();
 
         this.config = config;
         this.balloon = balloon;
+        this.selectSetting = selectSetting;
     }
 
     /**
@@ -35,10 +40,14 @@ class RecordedWatchSelectViewModel extends ViewModel {
         this.openOriginalUrl = openOriginalUrl;
 
         if (this.streamingTypeValue === null) {
-            const options = this.getTypeOption();
-            if (options.length > 0) {
-                this.streamingTypeValue = options[0];
-            }
+            const types = this.getTypeOption();
+            const selectValue = this.selectSetting.getValue();
+            this.streamingTypeValue = types.indexOf(selectValue.type) === -1 ? types[0] : selectValue.type;
+
+            const options = this.getOptions();
+            this.streamingModeValue = typeof options[selectValue.mode] === 'undefined' ? 0 : selectValue.mode;
+
+            this.saveValues();
         }
     }
 
@@ -80,6 +89,20 @@ class RecordedWatchSelectViewModel extends ViewModel {
     public getName(): string {
         return this.recorded !== null ? this.recorded.name : '';
     }
+
+    /**
+     * 選択したオプションを記憶する
+     */
+    public saveValues(): void {
+        if (this.streamingTypeValue === null) { return; }
+
+        // save value
+        this.selectSetting.setValue({
+            type: this.streamingTypeValue,
+            mode: this.streamingModeValue,
+        });
+    }
+
 
     /**
      * isEnabledStreaming

@@ -30,6 +30,7 @@ factory.get('SearchSettingViewModel').init();
 factory.get('SettingViewModel').init();
 factory.get('ProgramSettingViewModel').init();
 factory.get('StreamSelectSettingViewModel').init();
+factory.get('RecordedWatchSelectSettingViewModel').init();
 
 m.route.prefix('#!');
 m.route(document.body, '/', {
