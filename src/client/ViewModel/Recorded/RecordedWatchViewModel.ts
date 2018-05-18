@@ -79,7 +79,7 @@ class RecordedWatchViewModel extends ViewModel {
      * @return string
      */
     public getSource(): string {
-        return `/api/streams/recorded/${ this.recordedId }/${ this.type }?mode=${ this.mode }&ss=${ this.playBackPosition }`;
+        return `/api/streams/recorded/${ this.recordedId }/${ this.type }?mode=${ this.mode }&ss=${ Math.floor(this.playBackPosition) }`;
     }
 
     /**
