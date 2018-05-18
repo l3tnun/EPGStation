@@ -146,7 +146,7 @@ $play-button-size: 24px
             .close
                 @-moz-document url-prefix()
                     display: none;
-                    pointer-events : none;
+                    pointer-events: none;
 
 // live streaming
 .video-container.live-streaming
@@ -155,12 +155,12 @@ $play-button-size: 24px
             .play-buttons
                 .play-back, .play-skip
                     display: none;
-                    pointer-events : none;
+                    pointer-events: none;
 
             .right-buttons
                 .speed
                     display: none;
-                    pointer-events : none;
+                    pointer-events: none;
 
 // mobile
 .video-container.mobile
@@ -169,7 +169,7 @@ $play-button-size: 24px
             .volume-buttons
                 .volume-bar
                     display: none;
-                    pointer-events : none;
+                    pointer-events: none;
 
 // disable pip
 .video-container.disable-pip
@@ -178,7 +178,15 @@ $play-button-size: 24px
             .right-buttons
                 .pip
                     display: none;
-                    pointer-events : none;
+                    pointer-events: none;
+
+.video-container.disable-speed-control
+    .video-controls
+        .buttons-parent
+            .right-buttons
+                .speed
+                    display: none;
+                    pointer-events: none;
 
 // pip mode
 .video-container.pip-mode
@@ -187,13 +195,13 @@ $play-button-size: 24px
             .right-buttons
                 .full-screen
                     display: none;
-                    pointer-events : none;
+                    pointer-events: none;
 
 // hide controls
 .video-container
     .video-controls.hide
         input, .pulldown, .material-icons
-            pointer-events : none;
+            pointer-events: none;
 
 
 // option button hide
@@ -204,7 +212,7 @@ $play-button-size: 24px
                 .play-buttons
                     .option
                         opacity: 0;
-                        pointer-events : none;
+                        pointer-events: none;
 
 // pip button hide
 @media screen and (max-width: $pip-button-hide-width)
@@ -214,7 +222,7 @@ $play-button-size: 24px
                 .right-buttons
                     .pip
                         display: none;
-                        pointer-events : none;
+                        pointer-events: none;
 
 // play button の間隔を縮める
 @media screen and (max-width: $small-play-button-width)

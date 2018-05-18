@@ -86,7 +86,7 @@ class RecordedWatchViewModel extends ViewModel {
      * 録画中か
      * @return boolean
      */
-    private isRecording(): boolean {
+    public isRecording(): boolean {
         const recorded = this.getRecorded();
 
         return recorded === null ? false : recorded.recording;

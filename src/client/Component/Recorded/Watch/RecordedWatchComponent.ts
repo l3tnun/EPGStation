@@ -54,6 +54,7 @@ class RecordedWatchComponent extends ParentComponent<void> {
             m('div', { class: 'video-parent' }, [
                 m(RecordedWatchVideoContainerComponent, {
                     video: m(RecordedWatchVideoComponent),
+                    disableSpeedControl: this.viewModel.isRecording(),
                 }),
             ]),
             this.createRecordedInfo(),

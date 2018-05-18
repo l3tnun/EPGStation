@@ -8,6 +8,7 @@ import Component from '../Component';
 interface ControlArgs {
     disableControl?: boolean;
     isLiveStreaming?: boolean;
+    disableSpeedControl?: boolean;
     enableCloseButton?: boolean;
     closeButtonCallback?(): void;
     video: m.Child | null;
@@ -58,12 +59,17 @@ class VideoContainerComponent extends Component<ControlArgs> {
             ]);
         }
 
+        if (!!vnode.attrs.disableSpeedControl) {
+            this.speed = 1;
+        }
+
         return m('div', {
             class: 'video-container'
                 + (!!vnode.attrs.isLiveStreaming ? ' live-streaming' : '')
                 + (Util.uaIsMobile() ? ' mobile' : '')
                 + (!this.isEnablePip ? ' disable-pip' : '')
-                + (this.isPipMode() ? ' pip-mode' : ''),
+                + (this.isPipMode() ? ' pip-mode' : '')
+                + (!!vnode.attrs.disableSpeedControl ? ' disable-speed-control' : ''),
             style: !this.isFullScreen() && typeof vnode.attrs.height !== 'undefined' ? `height: ${ vnode.attrs.height }px;` : '',
             oncreate: (mainVnode: m.VnodeDOM<void, any>) => {
                 const element = <HTMLElement> mainVnode.dom;
