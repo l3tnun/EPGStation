@@ -16,7 +16,9 @@ class RecordedWatchViewModel extends ViewModel {
     private mode: number;
     private type: 'webm' | 'mp4';
     private playBackPosition: number;
+    private tentativePlayBackPosition: number = 0;
     private dataGetTime: number;
+    private callChangeTimerId: NodeJS.Timer;
 
     constructor(
         recordedApiModel: RecordedApiModelInterface,
@@ -37,6 +39,7 @@ class RecordedWatchViewModel extends ViewModel {
         if (status === 'init' || status === 'update') {
             this.recordedApiModel.init();
             this.playBackPosition = 0;
+            this.tentativePlayBackPosition = 0;
         }
 
         this.recordedId = parseInt(m.route.param('recordedId'), 10);
@@ -113,7 +116,14 @@ class RecordedWatchViewModel extends ViewModel {
             throw new Error('OutOfRangeError');
         }
 
-        this.playBackPosition = position;
+        this.tentativePlayBackPosition = position;
+
+        clearTimeout(this.callChangeTimerId);
+        this.callChangeTimerId = setTimeout(() => {
+            this.playBackPosition = position;
+            this.tentativePlayBackPosition = 0;
+            m.redraw();
+        }, 500);
     }
 
     /**
@@ -121,7 +131,7 @@ class RecordedWatchViewModel extends ViewModel {
      * @return number;
      */
     public getPlayBackStartPosition(): number {
-        return this.playBackPosition;
+        return this.tentativePlayBackPosition !== 0 ? this.tentativePlayBackPosition : this.playBackPosition;
     }
 }
 
