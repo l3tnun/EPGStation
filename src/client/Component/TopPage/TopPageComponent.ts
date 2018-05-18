@@ -11,6 +11,7 @@ import RecordedInfoViewModel from '../../ViewModel/Recorded/RecordedInfoViewMode
 import RecordedMenuViewModel from '../../ViewModel/Recorded/RecordedMenuViewModel';
 import RecordedPlayerViewModel from '../../ViewModel/Recorded/RecordedPlayerViewModel';
 import RecordedViewModel from '../../ViewModel/Recorded/RecordedViewModel';
+import RecordedWatchSelectViewModel from '../../ViewModel/Recorded/RecordedWatchSelectViewModel';
 import ReservesMenuViewModel from '../../ViewModel/Reserves/ReservesMenuViewModel';
 import ReservesViewModel from '../../ViewModel/Reserves/ReservesViewModel';
 import TopPageViewModel from '../../ViewModel/TopPageViewModel';
@@ -24,6 +25,7 @@ import RecordedEncodeComponent from '../Recorded/RecordedEncodeComponent';
 import RecordedInfoComponent from '../Recorded/RecordedInfoComponent';
 import RecordedMenuComponent from '../Recorded/RecordedMenuComponent';
 import RecordedPlayerComponent from '../Recorded/RecordedPlayerComponent';
+import RecordedWatchSelectComponent from '../Recorded/RecordedWatchSelectComponent';
 import ReservesDeleteComponent from '../Reserves/ReservesDeleteComponent';
 import ReservesMenuComponent from '../Reserves/ReservesMenuComponent';
 import TabComponent from '../TabComponent';
@@ -97,6 +99,12 @@ class TopPageComponent extends ParentComponent<void> {
                     maxWidth: 400,
                     maxHeight: 480,
                     dialogMaxWidth: 600,
+                }),
+                m(BalloonComponent, {
+                    id: RecordedWatchSelectViewModel.id,
+                    content: m(RecordedWatchSelectComponent),
+                    maxWidth: 400,
+                    forceDialog: true,
                 }),
                 m(BalloonComponent, {
                     id: RecordedMenuViewModel.id,
