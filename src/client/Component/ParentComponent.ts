@@ -338,7 +338,7 @@ abstract class ParentComponent<T> extends Component<T> {
         // query の変更で initViewModel する場合は state を適宜変更する
         if (this.queryChanged) {
             // close balloon
-            setTimeout(() => { this._balloon.close(); }, 0);
+            setTimeout(() => { this._balloon.forceToCloseAll(); }, 0);
             // init viewModel
             setTimeout(() => { this.initViewModel('update'); }, 0);
         }
@@ -351,7 +351,7 @@ abstract class ParentComponent<T> extends Component<T> {
         // setTimeout で遅らせないと次のページで constructor が２度呼ばれてしまう
         await new Promise<void>((resolve: () => void) => {
             setTimeout(() => {
-                this._balloon.close();
+                this._balloon.forceToCloseAll();
                 resolve();
             }, 0);
         });

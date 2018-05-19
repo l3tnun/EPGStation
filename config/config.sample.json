@@ -13,6 +13,7 @@
         "connectionLimit": 10
     },
     "ffmpeg": "/usr/local/bin/ffmpeg",
+    "ffprobe": "/usr/local/bin/ffprobe",
     "maxEncode": 2,
     "encode": [
         {
@@ -92,6 +93,51 @@
             "name": "720x480(main)",
             "cmd": "%FFMPEG% -re -dual_mono_mode main -i pipe:0 -c:a libvorbis -b:a 128k -c:v vp8 -s 720x480 -b:v 1500k -deadline realtime -speed 4 -cpu-used -8 -filter:v yadif -f webm pipe:1"
         }
-    ]
+    ],
+
+    "recordedStreaming": {
+        "webm": [
+            {
+                "name": "1280x720",
+                "cmd": "%FFMPEG% -ss %SS% -dual_mono_mode main %RE% -i %INPUT% -threads 0 -c:a libvorbis -ar 48000 -ac 2 -c:v vp8 -s 1280x720 %VB% %VBUFFER% %AB% %ABUFFER% -deadline realtime -speed 4 -cpu-used -8 -filter:v yadif -y -f webm pipe:1",
+                "vb": "3000k",
+                "ab": "192k"
+            },
+            {
+                "name": "640x360",
+                "cmd": "%FFMPEG% -ss %SS% -dual_mono_mode main %RE% -i %INPUT% -threads 0 -c:a libvorbis -ar 48000 -ac 2 -c:v vp8 -s 640x360 %VB% %VBUFFER% %AB% %ABUFFER% -deadline realtime -speed 4 -cpu-used -8 -filter:v yadif -y -f webm pipe:1",
+                "vb": "1500k",
+                "ab": "128k"
+            }
+        ],
+        "mp4": [
+            {
+                "name": "1280x720",
+                "cmd": "%FFMPEG% -ss %SS% -dual_mono_mode main %RE% -i %INPUT% -threads 0 -c:v h264 -c:a aac -ar 48000 -ac 2 -s 1280x720 %VB% %VBUFFER% %AB% %ABUFFER% -filter:v yadif -profile:v baseline -preset veryfast -tune fastdecode,zerolatency -movflags frag_keyframe+empty_moov+faststart+default_base_moof -y -f mp4 pipe:1",
+                "vb": "3000k",
+                "ab": "192k"
+            },
+            {
+                "name": "640x360",
+                "cmd": "%FFMPEG% -ss %SS% -dual_mono_mode main %RE% -i %INPUT% -threads 0 -c:v h264 -c:a aac -ar 48000 -ac 2 -s 640x360 %VB% %VBUFFER% %AB% %ABUFFER% -filter:v yadif -profile:v baseline -preset veryfast -tune fastdecode,zerolatency -movflags frag_keyframe+empty_moov+faststart+default_base_moof -y -f mp4 pipe:1",
+                "vb": "1500k",
+                "ab": "128k"
+            }
+        ],
+        "mpegTs": [
+            {
+                "name": "1280x720 (H.264)",
+                "cmd": "%FFMPEG% -ss %SS% -dual_mono_mode main %RE% -i %INPUT% -t %T% -threads 0 -filter:v yadif -c:v h264 -c:a aac -ar 48000 -ac 2 -s 1280x720 %VB% %VBUFFER% %AB% %ABUFFER% -profile:v baseline -preset veryfast -tune fastdecode,zerolatency -y -f mpegts pipe:1",
+                "vb": "3000k",
+                "ab": "192k"
+            },
+            {
+                "name": "640x360 (H.264)",
+                "cmd": "%FFMPEG% -ss %SS% -dual_mono_mode main %RE% -i %INPUT% -t %T% -threads 0 -filter:v yadif -c:v h264 -c:a aac -ar 48000 -ac 2 -s 640x360 %VB% %VBUFFER% %AB% %ABUFFER% -profile:v baseline -preset veryfast -tune fastdecode,zerolatency -y -f mpegts pipe:1",
+                "vb": "1500k",
+                "ab": "128k"
+            }
+        ]
+    }
 }
 

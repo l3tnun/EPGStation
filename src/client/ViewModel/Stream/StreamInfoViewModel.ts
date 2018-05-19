@@ -51,7 +51,7 @@ class StreamInfoViewModel extends ViewModel {
     /**
      * ストリーム情報を更新 & 自動更新用のタイマーをセット
      */
-    private async updateInfos(): Promise<void> {
+    public async updateInfos(): Promise<void> {
         this.stopTimer();
         try {
             await this.streamsApiModel.fetchInfos();

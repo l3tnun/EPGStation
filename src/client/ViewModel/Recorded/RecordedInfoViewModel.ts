@@ -112,7 +112,7 @@ class RecordedInfoViewModel extends ViewModel {
     public update(): void {
         if (this.recorded === null) { return; }
 
-        for (const data of this.recordedApiModel.getRecorded().recorded) {
+        for (const data of this.recordedApiModel.getRecordeds().recorded) {
             if (data.id === this.recorded.id) {
                 // 更新
                 this.recorded = data;

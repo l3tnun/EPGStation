@@ -136,7 +136,7 @@ class EncodeProcessManageModel extends Model implements EncodeProcessManageModel
         priority: number;
         createTime: number;
     } {
-        const args = cmd.split(' ');
+        let args = cmd.split(' ');
         const bin = args.shift();
 
         // input, output を置換
@@ -146,6 +146,11 @@ class EncodeProcessManageModel extends Model implements EncodeProcessManageModel
                 args[i] = args[i].replace(/%OUTPUT%/g, output);
             }
         }
+
+        // 空白を削除
+        args = args.filter((arg) => {
+            return arg.length > 0;
+        });
 
         if (typeof bin === 'undefined') {
             throw new Error(EncodeProcessManageModel.NotFoundBinError);

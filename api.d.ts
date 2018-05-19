@@ -52,6 +52,11 @@ export interface Config {
         mac: string;
         win: string;
     };
+    recordedStreaming?: {
+        mpegTs: string[];
+        webm: string[];
+        mp4: string[];
+    };
     recordedHLS?: string[];
     liveHLS?: string[];
     HLSViewer?: {
@@ -154,6 +159,10 @@ export interface RecordedProgram {
     ruleId?: RuleId;
     encoded: EncodedProgram[];
     encoding?: EncodingInfo[];
+}
+
+export interface RecordedDurationInfo {
+    duration: number;
 }
 
 export interface RecordedTags {
@@ -339,10 +348,10 @@ interface StreamInfo {
     streamNumber: number;
     isEnable: boolean;
     viewCnt: number;
-    isNull: boolean;
-    type?: 'MpegTsLive' | 'RecordedHLS' | 'HLSLive' | 'WebMLive';
+    type?: 'MpegTsLive' | 'RecordedHLS' | 'HLSLive' | 'WebMLive' | 'MpegTsRecordedStreaming' | 'MultiTypeRecordedStreaming';
     channelId?: ServiceItemId;
     recordedId?: RecordedId;
+    encodedId?: EncodedId;
     mode?: number;
     channelName?: string;
     title?: string;

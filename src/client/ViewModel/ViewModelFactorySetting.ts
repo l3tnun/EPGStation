@@ -8,6 +8,7 @@ import { StorageApiModel } from '../Model/Api/StorageApiModel';
 import { StreamsApiModel } from '../Model/Api/StreamsApiModel';
 import { BalloonModel } from '../Model/Balloon/BallonModel';
 import { ProgramSettingModel } from '../Model/Program/ProgramSettingModel';
+import { RecordedWatchSelectSettingModel } from '../Model/Recorded/RecordedWatchSelectSettingModel';
 import { SearchSettingModel } from '../Model/Search/SearchSettingModel';
 import { SettingModel } from '../Model/Setting/SettingModel';
 import { SnackbarModel } from '../Model/Snackbar/SnackbarModel';
@@ -30,6 +31,9 @@ import RecordedMenuViewModel from './Recorded/RecordedMenuViewModel';
 import RecordedPlayerViewModel from './Recorded/RecordedPlayerViewModel';
 import RecordedSearchViewModel from './Recorded/RecordedSearchViewModel';
 import RecordedViewModel from './Recorded/RecordedViewModel';
+import RecordedWatchSelectSettingViewModel from './Recorded/RecordedWatchSelectSettingViewModel';
+import RecordedWatchSelectViewModel from './Recorded/RecordedWatchSelectViewModel';
+import RecordedWatchViewModel from './Recorded/RecordedWatchViewModel';
 import ReservesMenuViewModel from './Reserves/ReservesMenuViewModel';
 import ReservesViewModel from './Reserves/ReservesViewModel';
 import RulesDeleteViewModel from './Rules/RulesDeleteViewModel';
@@ -77,6 +81,7 @@ namespace ViewModelFactorySetting {
         const searchSettingModel = new SearchSettingModel(storageModel);
         const settingModel = new SettingModel(storageModel);
         const programSettingModel = new ProgramSettingModel(storageModel);
+        const recordedWatchSelectSettingModel = new RecordedWatchSelectSettingModel(storageModel);
 
         // reg
         factory.reg('HeaderViewModel', new HeaderViewModel(
@@ -130,6 +135,19 @@ namespace ViewModelFactorySetting {
             channelsApiModel,
             settingModel,
             snackbarModel,
+        ));
+        factory.reg('RecordedWatchSelectSettingViewModel', new RecordedWatchSelectSettingViewModel(
+            recordedWatchSelectSettingModel,
+            snackbarModel,
+        ));
+        factory.reg('RecordedWatchSelectViewModel', new RecordedWatchSelectViewModel(
+            configModel,
+            balloonModel,
+            recordedWatchSelectSettingModel,
+        ));
+        factory.reg('RecordedWatchViewModel', new RecordedWatchViewModel(
+            recordedApiModel,
+            channelsApiModel,
         ));
         factory.reg('RecordedInfoViewModel', new RecordedInfoViewModel(
             configModel,
