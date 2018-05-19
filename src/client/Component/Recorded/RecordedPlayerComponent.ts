@@ -28,7 +28,7 @@ class RecordedPlayerComponent extends Component<void> {
         }, [
             m('div', {
                 class: 'recorded-player',
-                style: `width: ${ width }px; height: ${ height }px;`,
+                style: `margin: 0 auto; width: ${ width }px; height: ${ height }px;`,
             }, [
                 m(VideoContainerComponent, {
                     video: this.createVideo(),

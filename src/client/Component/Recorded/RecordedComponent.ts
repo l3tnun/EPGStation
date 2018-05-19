@@ -8,6 +8,7 @@ import RecordedMenuViewModel from '../../ViewModel/Recorded/RecordedMenuViewMode
 import RecordedPlayerViewModel from '../../ViewModel/Recorded/RecordedPlayerViewModel';
 import RecordedSearchViewModel from '../../ViewModel/Recorded/RecordedSearchViewModel';
 import RecordedViewModel from '../../ViewModel/Recorded/RecordedViewModel';
+import RecordedWatchSelectViewModel from '../../ViewModel/Recorded/RecordedWatchSelectViewModel';
 import factory from '../../ViewModel/ViewModelFactory';
 import { BalloonComponent } from '../BalloonComponent';
 import EditHeaderComponent from '../EditHeaderComponent';
@@ -23,6 +24,7 @@ import RecordedMultipleDeleteCompoent from './RecordedMultipleDeleteCompoent';
 import RecordedPlayerComponent from './RecordedPlayerComponent';
 import RecordedSearchActionComponent from './RecordedSearchActionComponent';
 import RecordedSearchComponent from './RecordedSearchComponent';
+import RecordedWatchSelectComponent from './RecordedWatchSelectComponent';
 
 /**
  * RecordedComponent
@@ -104,6 +106,13 @@ class RecordedComponent extends ParentComponent<void> {
                     maxWidth: 400,
                     maxHeight: 480,
                     dialogMaxWidth: RecordedComponent.cardWidth * 2 - 1,
+                    forceDialog: Util.uaIsiOS(),
+                }),
+                m(BalloonComponent, {
+                    id: RecordedWatchSelectViewModel.id,
+                    content: m(RecordedWatchSelectComponent),
+                    maxWidth: 400,
+                    forceDialog: true,
                 }),
                 m(BalloonComponent, {
                     id: RecordedMenuViewModel.id,
@@ -187,11 +196,11 @@ class RecordedComponent extends ParentComponent<void> {
                 window.removeEventListener('resize', this.resizeListener, false);
             },
         }, [
-            this.viewModel.getRecorded().recorded.map((recorded) => {
+            this.viewModel.getRecordeds().recorded.map((recorded) => {
                 return this.createCard(recorded);
             }),
             m(PaginationComponent, {
-                total: this.viewModel.getRecorded().total,
+                total: this.viewModel.getRecordeds().total,
                 length: this.viewModel.getLimit(),
                 page: this.viewModel.getPage(),
             }),

@@ -5,6 +5,7 @@ import DateUtil from '../../Util/DateUtil';
 import Util from '../../Util/Util';
 import BalloonViewModel from '../../ViewModel/Balloon/BalloonViewModel';
 import MainLayoutViewModel from '../../ViewModel/MainLayoutViewModel';
+import StreamInfoViewModel from '../../ViewModel/Stream/StreamInfoViewModel';
 import StreamWatchViewModel from '../../ViewModel/Stream/StreamWatchViewModel';
 import factory from '../../ViewModel/ViewModelFactory';
 import MainLayoutComponent from '../MainLayoutComponent';
@@ -17,6 +18,7 @@ import StreamWatchVideoComponent from './StreamWatchVideoComponent';
  */
 class StreamWatchComponent extends ParentComponent<void> {
     private viewModel: StreamWatchViewModel;
+    private streamInfo: StreamInfoViewModel;
     private balloon: BalloonViewModel;
     private mainLayoutViewModel: MainLayoutViewModel;
     private hasInfo: boolean = false;
@@ -26,6 +28,7 @@ class StreamWatchComponent extends ParentComponent<void> {
         super();
 
         this.viewModel = <StreamWatchViewModel> factory.get('StreamWatchViewModel');
+        this.streamInfo = <StreamInfoViewModel> factory.get('StreamInfoViewModel');
         this.balloon = <BalloonViewModel> factory.get('BalloonViewModel');
         this.mainLayoutViewModel = <MainLayoutViewModel> factory.get('MainLayoutViewModel');
     }
@@ -120,7 +123,12 @@ class StreamWatchComponent extends ParentComponent<void> {
         this.hasInfo = true;
 
         return m('div', { class: 'stream-info' }, [
-            m('div', { class: 'mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col' }, [
+            m('div', {
+                class: 'mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col',
+                onclick: () => {
+                    this.streamInfo.updateInfos();
+                },
+            }, [
                 m('div', { class: 'mdl-card__supporting-text' }, [
                     m('div', { class: 'title' }, this.isLive ? info.channelName : info.title),
                     m('div', { class: 'time' }, this.createTimeStr(info)),

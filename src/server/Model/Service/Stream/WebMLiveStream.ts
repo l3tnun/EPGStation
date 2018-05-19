@@ -5,12 +5,8 @@ import CreateMirakurun from '../../../Util/CreateMirakurunClient';
 import ProcessUtil from '../../../Util/ProcessUtil';
 import Util from '../../../Util/Util';
 import { EncodeProcessManageModelInterface } from '../Encode/EncodeProcessManageModel';
-import { Stream, StreamInfo } from './Stream';
+import { LiveStreamInfo, Stream } from './Stream';
 import { StreamManageModelInterface } from './StreamManageModel';
-
-interface WebMLiveStreamInfo extends StreamInfo {
-    channelId: apid.ServiceItemId;
-}
 
 /**
  * webm ライブ配信
@@ -79,7 +75,7 @@ class WebMLiveStream extends Stream {
         }
     }
 
-    public getInfo(): WebMLiveStreamInfo {
+    public getInfo(): LiveStreamInfo {
         return {
             type: 'WebMLive',
             channelId: this.channelId,
@@ -90,5 +86,5 @@ class WebMLiveStream extends Stream {
     public getEncChild(): ChildProcess | null { return this.enc; }
 }
 
-export { WebMLiveStreamInfo, WebMLiveStream };
+export default WebMLiveStream;
 

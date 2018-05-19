@@ -1,5 +1,6 @@
 import { ChildProcess } from 'child_process';
 import * as http from 'http';
+import * as apid from '../../../../../api';
 import Base from '../../../Base';
 import { EncodeProcessManageModelInterface } from '../Encode/EncodeProcessManageModel';
 import { StreamManageModelInterface } from './StreamManageModel';
@@ -8,6 +9,15 @@ import * as enums from './StreamTypeInterface';
 interface StreamInfo {
     type: enums.StreamType;
     mode: number;
+}
+
+interface RecordedStreamInfo extends StreamInfo {
+    recordedId: apid.RecordedId;
+    encodedId?: apid.EncodedId;
+}
+
+interface LiveStreamInfo extends StreamInfo {
+    channelId: apid.ServiceItemId;
 }
 
 abstract class Stream extends Base {
@@ -72,7 +82,10 @@ abstract class Stream extends Base {
 
 namespace Stream {
     export const priority = 0;
+    export const FileIsNotFoundError = 'FileIsNotFoundError';
+    export const OutOfRangeError = 'OutOfRangeError';
 }
 
-export { StreamInfo, Stream };
+
+export { RecordedStreamInfo, LiveStreamInfo, Stream };
 

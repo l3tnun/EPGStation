@@ -47,6 +47,13 @@ class BalloonViewModel extends ViewModel {
     }
 
     /**
+     * バルーンを強制的に全て閉じる
+     */
+    public forceToCloseAll(): void {
+        this.model.forceToCloseAll();
+    }
+
+    /**
      * 指定された id のバルーンが開いているか
      * @param id: string
      * @throws BalloonIsNotFound 指定された id のバルーンがなかった場合

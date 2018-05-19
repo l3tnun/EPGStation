@@ -46,11 +46,13 @@ import { EncodeFinModel } from './Service/Encode/EncodeFinModel';
 import { EncodeManageModel } from './Service/Encode/EncodeManageModel';
 import { EncodeProcessManageModel } from './Service/Encode/EncodeProcessManageModel';
 import { SocketIoManageModel } from './Service/SocketIoManageModel';
-import { HLSLiveStream } from './Service/Stream/HLSLiveStream';
-import { MpegTsLiveStream } from './Service/Stream/MpegTsLiveStream';
-import { RecordedHLSStream } from './Service/Stream/RecordedHLSStream';
+import HLSLiveStream from './Service/Stream/HLSLiveStream';
+import MpegTsLiveStream from './Service/Stream/MpegTsLiveStream';
+import RecordedHLSStream from './Service/Stream/RecordedHLSStream';
+import RecordedStreamingMpegTsStream from './Service/Stream/RecordedStreamingMpegTsStream';
+import { ContainerType, RecordedStreamingMultiTypeStream } from './Service/Stream/RecordedStreamingMultiTypeStream';
 import { StreamManageModel } from './Service/Stream/StreamManageModel';
-import { WebMLiveStream } from './Service/Stream/WebMLiveStream';
+import WebMLiveStream from './Service/Stream/WebMLiveStream';
 
 /**
  * Service 用の Model 設定
@@ -100,13 +102,14 @@ namespace ModelFactorySetting {
         const encodeManage = new EncodeManageModel(encodeProcessManage);
         const socketIoManage = new SocketIoManageModel();
         const ipc = new IPCClient();
+        const streamManage = new StreamManageModel(socketIoManage);
         const encodeFinModel = new EncodeFinModel(
             encodeManage,
+            streamManage,
             encodedDB!,
             socketIoManage,
             ipc,
         );
-        const streamManage = new StreamManageModel(socketIoManage);
 
         ipc.setModels(encodeManage, socketIoManage);
 
@@ -164,6 +167,28 @@ namespace ModelFactorySetting {
                     recordedId,
                     mode,
                     encodedId,
+                );
+            },
+            (recordedId: apid.RecordedId, mode: number, startTime: number, headerRangeStr: string | null): RecordedStreamingMpegTsStream => {
+                return new RecordedStreamingMpegTsStream(
+                    encodeProcessManage,
+                    streamManage,
+                    recordedDB,
+                    recordedId,
+                    mode,
+                    startTime,
+                    headerRangeStr,
+                );
+            },
+            (recordedId: apid.RecordedId, mode: number, startTime: number, containerType: ContainerType): RecordedStreamingMultiTypeStream => {
+                return new RecordedStreamingMultiTypeStream(
+                    encodeProcessManage,
+                    streamManage,
+                    recordedDB,
+                    recordedId,
+                    mode,
+                    startTime,
+                    containerType,
                 );
             },
             programsDB,

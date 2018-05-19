@@ -259,6 +259,22 @@ definitions:
             type: string
           win:
             type: string
+      recordedStreaming:
+        description: '録画ストリーミング配信'
+        type: object
+        properties:
+          mpegTs:
+            type: array
+            items:
+              type: string
+          webm:
+            type: array
+            items:
+              type: string
+          mp4:
+            type: array
+            items:
+              type: string
       recordedHLS:
         type: array
         items:
@@ -527,6 +543,14 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/EncodingInfo'
+
+  RecordedDurationInfo:
+    type: object
+    required:
+      - duration
+    properties:
+      duration:
+        type: integer
 
   RecordingProgram:
     $ref: '#/definitions/ReserveProgram'
@@ -1032,7 +1056,6 @@ definitions:
       - streamNumber
       - isEnable
       - viewCnt
-      - isNull
     properties:
       streamNumber:
         type: integer
@@ -1040,8 +1063,6 @@ definitions:
         type: boolean
       viewCnt:
         type: integer
-      isNull:
-        type: boolean
       type:
         type: string
         enum:
@@ -1049,10 +1070,14 @@ definitions:
           - RecordedHLS
           - HLSLive
           - WebMLive
+          - MpegTsRecordedStreaming
+          - MultiTypeRecordedStreaming
       channelId:
         $ref: '#/definitions/ServiceItemId'
       recordedId:
         $ref: '#/definitions/RecordedId'
+      encodedId:
+        $ref: '#/definitions/EncodedId'
       mode:
         type: integer
       channelName:

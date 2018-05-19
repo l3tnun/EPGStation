@@ -2,12 +2,14 @@ import * as apid from '../../../../api';
 import { ProgramsDBInterface } from '../DB/ProgramsDB';
 import { RecordedDBInterface } from '../DB/RecordedDB';
 import { ServicesDBInterface } from '../DB/ServicesDB';
-import { HLSLiveStream } from '../Service/Stream/HLSLiveStream';
-import { MpegTsLiveStream } from '../Service/Stream/MpegTsLiveStream';
-import { RecordedHLSStream } from '../Service/Stream/RecordedHLSStream';
+import HLSLiveStream from '../Service/Stream/HLSLiveStream';
+import MpegTsLiveStream from '../Service/Stream/MpegTsLiveStream';
+import RecordedHLSStream from '../Service/Stream/RecordedHLSStream';
+import RecordedStreamingMpegTsStream from '../Service/Stream/RecordedStreamingMpegTsStream';
+import { ContainerType, RecordedStreamingMultiTypeStream } from '../Service/Stream/RecordedStreamingMultiTypeStream';
 import { Stream } from '../Service/Stream/Stream';
 import { LiveStreamStatusInfo, StreamManageModelInterface } from '../Service/Stream/StreamManageModel';
-import { WebMLiveStream } from '../Service/Stream/WebMLiveStream';
+import WebMLiveStream from '../Service/Stream/WebMLiveStream';
 import ApiModel from './ApiModel';
 import ApiUtil from './ApiUtil';
 import { PlayList } from './PlayListInterface';
@@ -18,7 +20,8 @@ interface StreamModelInfo {
 }
 
 namespace StreamsModelInterface {
-    export const channleIsNotFoundError = 'channelIsNotDound';
+    export const channleIsNotFoundError = 'channelIsNotFound';
+    export const recordedIsNotFoundError = 'recordedIsNotFound';
 }
 
 interface StreamsModelInterface extends ApiModel {
@@ -26,10 +29,14 @@ interface StreamsModelInterface extends ApiModel {
     getWebMLive(channelId: apid.ServiceItemId, mode: number): Promise<StreamModelInfo>;
     getLiveMpegTs(channelId: apid.ServiceItemId, mode: number): Promise<StreamModelInfo>;
     getRecordedHLS(recordedId: apid.RecordedId, mode: number, encodedId: apid.EncodedId | null): Promise<number>;
+    getRecordedStreamingMpegTsHEADInfo(recordedId: apid.RecordedId, mode: number, startTime: number, headerRangeStr: string | null): Promise<{ [key: string]: string | number }>;
+    getRecordedStreamingMpegTs(recordedId: apid.RecordedId, mode: number, startTime: number, headerRangeStr: string | null): Promise<{ stream: RecordedStreamingMpegTsStream; streamNumber: number }>;
+    getRecordedStreamingMultiType(recordedId: apid.RecordedId, mode: number, startTime: number, containerType: ContainerType): Promise<StreamModelInfo>;
     stop(streamNumber: number): Promise<void>;
     forcedStopAll(): Promise<void>;
     getInfos(): any;
     getLiveM3u8(host: string, isSecure: boolean, channelId: apid.ServiceItemId, mode: number): Promise<PlayList>;
+    getRecordedStreamingM3u8(host: string, isSecure: boolean, recordedId: apid.RecordedId, mode: number): Promise<PlayList>;
 }
 
 class StreamsModel extends ApiModel implements StreamsModelInterface {
@@ -37,6 +44,9 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
     private createWebMLiveStream: (channelId: apid.ServiceItemId, mode: number) => WebMLiveStream;
     private createMpegTsLiveStream: (channelId: apid.ServiceItemId, mode: number) => MpegTsLiveStream;
     private createRecordedHLSStream: (recordedId: apid.RecordedId, mode: number, encodedId: apid.EncodedId | null) => RecordedHLSStream;
+    private createRecordedStreamingMpegTsStream: (recordedId: apid.RecordedId, mode: number, startTime: number, headerRangeStr: string | null) => RecordedStreamingMpegTsStream;
+
+    private createRecordedStreamingMultiTypeStream: (recordedId: apid.RecordedId, mode: number, startTime: number, containerType: ContainerType) => RecordedStreamingMultiTypeStream;
     private streamManage: StreamManageModelInterface;
     private programDB: ProgramsDBInterface;
     private servicesDB: ServicesDBInterface;
@@ -48,6 +58,8 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
         createWebMLiveStream: (channelId: apid.ServiceItemId, mode: number) => WebMLiveStream,
         createMpegTsLiveStream: (channelId: apid.ServiceItemId, mode: number) => MpegTsLiveStream,
         createRecordedHLSStream: (recordedId: apid.RecordedId, mode: number, encodedId: apid.EncodedId | null) => RecordedHLSStream,
+        createRecordedStreamingMpegTsStream: (recordedId: apid.RecordedId, mode: number, startTime: number, headerRangeStr: string | null) => RecordedStreamingMpegTsStream,
+        createRecordedStreamingMultiTypeStream: (recordedId: apid.RecordedId, mode: number, startTime: number, containerType: ContainerType) => RecordedStreamingMultiTypeStream,
         programDB: ProgramsDBInterface,
         servicesDB: ServicesDBInterface,
         recordedDB: RecordedDBInterface,
@@ -58,6 +70,8 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
         this.createWebMLiveStream = createWebMLiveStream;
         this.createMpegTsLiveStream = createMpegTsLiveStream;
         this.createRecordedHLSStream = createRecordedHLSStream;
+        this.createRecordedStreamingMpegTsStream = createRecordedStreamingMpegTsStream;
+        this.createRecordedStreamingMultiTypeStream = createRecordedStreamingMultiTypeStream;
         this.programDB = programDB;
         this.servicesDB = servicesDB;
         this.recordedDB = recordedDB;
@@ -93,17 +107,7 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
         const stream = this.createWebMLiveStream(channelId, mode);
         const streamNumber = await this.streamManage.start(stream);
 
-        const result = this.streamManage.getStream(streamNumber);
-        if (result === null) { throw new Error('CreateStreamError'); }
-
-        const encChild = result.getEncChild();
-        if (encChild !== null) {
-            encChild.stderr.on('data', (data) => {
-                this.log.stream.debug(String(data));
-            });
-        }
-
-        return { stream: result, streamNumber: streamNumber };
+        return { stream: stream, streamNumber: streamNumber };
     }
 
     /**
@@ -127,17 +131,7 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
         const stream = this.createMpegTsLiveStream(channelId, mode);
         const streamNumber = await this.streamManage.start(stream);
 
-        const result = this.streamManage.getStream(streamNumber);
-        if (result === null) { throw new Error('CreateStreamError'); }
-
-        const encChild = result.getEncChild();
-        if (encChild !== null) {
-            encChild.stderr.on('data', (data) => {
-                this.log.stream.debug(String(data));
-            });
-        }
-
-        return { stream: result, streamNumber: streamNumber };
+        return { stream: stream, streamNumber: streamNumber };
     }
 
     /**
@@ -151,6 +145,44 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
         const stream = this.createRecordedHLSStream(recordedId, mode, encodedId);
 
         return await this.streamManage.start(stream);
+    }
+
+    /**
+     * 録画済みファイル mpeg ts ストリーミング配信時の method === 'HEAD' のときの header 情報を取得する
+     * @return Promise<{ [key: string]: string | number }>
+     */
+    public async getRecordedStreamingMpegTsHEADInfo(recordedId: apid.RecordedId, mode: number, startTime: number, headerRangeStr: string | null): Promise<{ [key: string]: string | number }> {
+        const stream = this.createRecordedStreamingMpegTsStream(recordedId, mode, startTime, headerRangeStr);
+
+        return await stream.getHEADResponseInfo();
+    }
+
+    /**
+     * 録画済みファイル mpeg ts ストリーミング配信
+     * @param recordedId: recorded id
+     * @param mode: mode
+     * @param startTime: 開始時刻(秒)
+     * @param: request.headers.range
+     */
+    public async getRecordedStreamingMpegTs(recordedId: apid.RecordedId, mode: number, startTime: number, headerRangeStr: string | null): Promise<{ stream: RecordedStreamingMpegTsStream; streamNumber: number }> {
+        const stream = this.createRecordedStreamingMpegTsStream(recordedId, mode, startTime, headerRangeStr);
+        const streamNumber = await this.streamManage.start(stream);
+
+        return { stream: stream, streamNumber: streamNumber };
+    }
+
+    /**
+     * 録画済みファイル マルチタイプストリーミング配信
+     * @param recordedId: recorded id
+     * @param mode: mode
+     * @param startTime: 開始時刻(秒)
+     * @param containerType: ContainerType
+     */
+    public async getRecordedStreamingMultiType(recordedId: apid.RecordedId, mode: number, startTime: number, containerType: ContainerType): Promise<StreamModelInfo> {
+        const stream = this.createRecordedStreamingMultiTypeStream(recordedId, mode, startTime, containerType);
+        const streamNumber = await this.streamManage.start(stream);
+
+        return { stream: stream, streamNumber: streamNumber };
     }
 
     /**
@@ -232,6 +264,30 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
                 name: channel.name,
                 duration: 0,
                 baseUrl: `/api/streams/live/${ channelId }/mpegts?mode=${ mode }`,
+                basicAuth: this.config.getConfig().basicAuth,
+            }),
+        };
+    }
+
+    /**
+     * ストリーミング (mpegTs) 視聴用の m3u8 ファイルを生成
+     * @param host: host
+     * @param recordedId: recorded id
+     * @param mode: config.recordedStreaming.mpegTs の index 番号
+     * @return Promise<PlayList>
+     */
+    public async getRecordedStreamingM3u8(host: string, isSecure: boolean, recordedId: apid.RecordedId, mode: number): Promise<PlayList> {
+        const recorded = await this.recordedDB.findId(recordedId);
+        if (recorded === null || recorded.recPath === null) { throw new Error(StreamsModelInterface.recordedIsNotFoundError); }
+
+        return {
+            name: encodeURIComponent(recorded.name + '.m3u8'),
+            playList: ApiUtil.createM3U8PlayListStr({
+                host: host,
+                isSecure: isSecure,
+                name: recorded.name,
+                duration: Math.floor(recorded.duration / 1000),
+                baseUrl: `/api/streams/recorded/${ recordedId }/mpegts?mode=${ mode }`,
                 basicAuth: this.config.getConfig().basicAuth,
             }),
         };

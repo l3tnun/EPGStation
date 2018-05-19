@@ -75,6 +75,27 @@ class ConfigModel extends ApiModel implements ConfigModelInterface {
             }
         }
 
+        if (typeof config.recordedStreaming !== 'undefined') {
+            results['recordedStreaming'] = {};
+            if (typeof config.recordedStreaming.mpegTs !== 'undefined') {
+                results['recordedStreaming']['mpegTs'] = config.recordedStreaming.mpegTs.map((option) => {
+                    return option.name;
+                });
+            }
+
+            if (typeof config.recordedStreaming.webm !== 'undefined') {
+                results['recordedStreaming']['webm'] = config.recordedStreaming.webm.map((option) => {
+                    return option.name;
+                });
+            }
+
+            if (typeof config.recordedStreaming.mp4 !== 'undefined') {
+                results['recordedStreaming']['mp4'] = config.recordedStreaming.mp4.map((option) => {
+                    return option.name;
+                });
+            }
+        }
+
         if (typeof config.liveHLS !== 'undefined') {
             results['liveHLS'] = config.liveHLS.map((option) => {
                 return option.name;

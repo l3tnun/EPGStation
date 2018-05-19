@@ -18,13 +18,17 @@ interface EncodeQueryOption {
 interface RecordedApiModelInterface extends ApiModel {
     init(): void;
     update(): Promise<void>;
-    fetchRecorded(limit: number, offset: number, option: FindQueryOption): Promise<void>;
+    fetchRecordeds(limit: number, offset: number, option: FindQueryOption): Promise<void>;
+    fetchRecorded(recordedId: apid.RecordedId): Promise<void>;
+    fetchDuration(recordedId: apid.RecordedId): Promise<void>;
     fetchTags(): Promise<void>;
     deleteAll(recordedId: apid.RecordedId): Promise<void>;
     delete(recordedId: apid.RecordedId, encodedId: apid.EncodedId | null): Promise<void>;
     deleteMultiple(recordedIds: apid.RecordedId[]): Promise<void>;
     sendToKodi(kodi: number, recordedId: number, encodedId: number | null): Promise<void>;
-    getRecorded(): apid.RecordedPrograms;
+    getRecordeds(): apid.RecordedPrograms;
+    getRecorded(): apid.RecordedProgram | null;
+    getDuration(): number;
     getPage(): number;
     getTags(): apid.RecordedTags;
     addEncode(recordedId: apid.RecordedId, option: EncodeQueryOption): Promise<void>;
@@ -41,7 +45,9 @@ namespace RecordedApiModelInterface {
  * /api/recorded
  */
 class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
-    private recorded: apid.RecordedPrograms = { recorded: [], total: 0 };
+    private recordeds: apid.RecordedPrograms = { recorded: [], total: 0 };
+    private recorded: apid.RecordedProgram | null = null;
+    private duration: number = 0;
     private tags: apid.RecordedTags = {
         rule: [],
         channel: [],
@@ -54,17 +60,19 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
 
     public init(): void {
         super.init();
-        this.recorded = {
+        this.recordeds = {
             recorded: [],
             total: 0,
         };
+        this.recorded = null;
+        this.duration = 0;
     }
 
     /**
      * query を現在の状況のまま更新する
      */
     public async update(): Promise<void> {
-        return this.fetchRecorded(this.limit, this.offset, this.option);
+        return this.fetchRecordeds(this.limit, this.offset, this.option);
     }
 
     /**
@@ -73,7 +81,7 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
      * @param limit: limit
      * @param offset: offset
      */
-    public async fetchRecorded(limit: number, offset: number, option: FindQueryOption): Promise<void> {
+    public async fetchRecordeds(limit: number, offset: number, option: FindQueryOption): Promise<void> {
         this.limit = limit;
         this.offset = offset;
         this.option = option;
@@ -89,7 +97,7 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
         if (typeof option.keyword !== 'undefined') { query.keyword = option.keyword; }
 
         try {
-            this.recorded = await <any> this.request({
+            this.recordeds = await <any> this.request({
                 method: 'GET',
                 url: '/api/recorded',
                 data: query,
@@ -97,10 +105,46 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
 
             this.currentPage = this.offset / this.limit + 1;
         } catch (err) {
-            this.recorded = { recorded: [], total: 0 };
+            this.recordeds = { recorded: [], total: 0 };
             console.error('/api/recorded');
             console.error(err);
             this.openSnackbar('録画情報取得に失敗しました');
+        }
+    }
+
+    /**
+     * 録画情報を取得
+     * @param recordedId: recorded id
+     */
+    public async fetchRecorded(recordedId: apid.RecordedId): Promise<void> {
+        try {
+            this.recorded = await <any> this.request({
+                method: 'GET',
+                url: `/api/recorded/${ recordedId }`,
+            });
+        } catch (err) {
+            this.recorded = null;
+            console.error(`/api/recorded/${ recordedId }`);
+            console.error(err);
+            this.openSnackbar('録画情報取得に失敗しました');
+        }
+    }
+
+    /**
+     * 動画の長さを取得
+     */
+    public async fetchDuration(recordedId: apid.RecordedId): Promise<void> {
+        try {
+            const result = await <any> this.request({
+                method: 'GET',
+                url: `/api/recorded/${ recordedId }/duration`,
+            });
+
+            this.duration = result.duration;
+        } catch (err) {
+            console.error(`/api/recorded/${ recordedId}/duration`);
+            console.error(err);
+            this.openSnackbar('動画の長さ取得に失敗しました');
         }
     }
 
@@ -222,11 +266,27 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
     }
 
     /**
-     * recorded の取得
+     * recordeds の取得
      * @return apid.RecordedPrograms
      */
-    public getRecorded(): apid.RecordedPrograms {
+    public getRecordeds(): apid.RecordedPrograms {
+        return this.recordeds;
+    }
+
+    /**
+     * recorded の取得
+     * @return apid.RecordedProgram | null;
+     */
+    public getRecorded(): apid.RecordedProgram | null {
         return this.recorded;
+    }
+
+    /**
+     * duration の取得
+     * @return number
+     */
+    public getDuration(): number {
+        return this.duration;
     }
 
     /**

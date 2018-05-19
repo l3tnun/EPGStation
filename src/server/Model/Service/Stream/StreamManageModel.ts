@@ -3,9 +3,7 @@ import * as apid from '../../../../../api';
 import Util from '../../../Util/Util';
 import Model from '../../Model';
 import { SocketIoManageModelInterface } from '../SocketIoManageModel';
-import { MpegTsLiveStreamInfo } from './MpegTsLiveStream';
-import { RecordedHLSStreamInfo } from './RecordedHLSStream';
-import { Stream } from './Stream';
+import { LiveStreamInfo, RecordedStreamInfo, Stream } from './Stream';
 import StreamStatus from './StreamStatus';
 import * as enums from './StreamTypeInterface';
 
@@ -13,23 +11,23 @@ interface StreamBaseStatusInfo {
     streamNumber: number;
     isEnable: boolean; // 視聴可能か
     viewCnt: number; // 視聴数 (HLS では変動しない)
-    isNull: boolean; // stream が null の場合 (encode が完了している場合)
     type?: enums.StreamType;
     mode?: number; // config の index number
 }
 
 interface LiveStreamStatusInfo extends StreamBaseStatusInfo {
-    channelId?: apid.ServiceItemId;
+    channelId: apid.ServiceItemId;
 }
 
 interface RecordedStreamStatusInfo extends StreamBaseStatusInfo {
-    recordedId?: apid.RecordedId;
+    recordedId: apid.RecordedId;
+    encodedId?: apid.EncodedId;
 }
 
 /**
  * Stream 情報
  */
-type StreamStatusInfo = LiveStreamStatusInfo | RecordedStreamStatusInfo;
+type StreamStatusInfo = StreamBaseStatusInfo | LiveStreamStatusInfo | RecordedStreamStatusInfo;
 
 interface StreamManageModelInterface {
     getStreamInfo(num: number): StreamStatusInfo | null;
@@ -73,16 +71,18 @@ class StreamManageModel extends Model implements StreamManageModelInterface {
             streamNumber: num,
             isEnable: this.streamStatus[num].isEnable,
             viewCnt: stream.getCount(),
-            isNull: false,
             type: streamInfo.type,
             mode: streamInfo.mode,
         };
 
         if (streamInfo.type.includes('Live')) {
-            (<LiveStreamStatusInfo> result).channelId = (<MpegTsLiveStreamInfo> streamInfo).channelId;
+            (<LiveStreamStatusInfo> result).channelId = (<LiveStreamInfo> streamInfo).channelId;
         }
         if (streamInfo.type.includes('Recorded')) {
-            (<RecordedStreamStatusInfo> result).recordedId = (<RecordedHLSStreamInfo> streamInfo).recordedId;
+            (<RecordedStreamStatusInfo> result).recordedId = (<RecordedStreamInfo> streamInfo).recordedId;
+            if (typeof (<RecordedStreamStatusInfo> streamInfo).encodedId !== 'undefined') {
+                (<RecordedStreamStatusInfo> result).encodedId = (<RecordedStreamInfo> streamInfo).encodedId;
+            }
         }
 
         return <StreamStatusInfo> result;
@@ -102,7 +102,6 @@ class StreamManageModel extends Model implements StreamManageModelInterface {
                     streamNumber: i,
                     isEnable: false,
                     viewCnt: 0,
-                    isNull: true,
                 });
             } else {
                 results.push(result);
@@ -201,12 +200,12 @@ class StreamManageModel extends Model implements StreamManageModelInterface {
 
         this.streamStatus[streamNumber].stream = stream;
 
-        if (stream.getInfo().type === 'MpegTsLive' || stream.getInfo().type === 'WebMLive') {
-            this.streamStatus[streamNumber].isEnable = true;
-        } else {
+        if (stream.getInfo().type.includes('HLS')) {
             // HLS
             // ファイルを定期的に監視して stream.isEnable = true にする
             this.checkStreamEnable(streamNumber);
+        } else {
+            this.streamStatus[streamNumber].isEnable = true;
         }
 
         this.log.stream.info(`start stream: ${ streamNumber }`);
