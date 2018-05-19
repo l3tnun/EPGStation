@@ -99,6 +99,7 @@ class TopPageComponent extends ParentComponent<void> {
                     maxWidth: 400,
                     maxHeight: 480,
                     dialogMaxWidth: 600,
+                    forceDialog: Util.uaIsiOS(),
                 }),
                 m(BalloonComponent, {
                     id: RecordedWatchSelectViewModel.id,
@@ -136,7 +137,7 @@ class TopPageComponent extends ParentComponent<void> {
                     maxWidth: 450,
                     maxHeight: 450,
                     dialogMaxWidth: 600,
-                    forceDialog: window.innerHeight < 900 && window.innerWidth < 780,
+                    forceDialog: window.innerHeight < 900 && window.innerWidth < 780 || Util.uaIsiOS(),
                 }),
                 m(BalloonComponent, {
                     id: ReservesMenuViewModel.id,

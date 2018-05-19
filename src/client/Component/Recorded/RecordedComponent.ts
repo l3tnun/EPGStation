@@ -106,6 +106,7 @@ class RecordedComponent extends ParentComponent<void> {
                     maxWidth: 400,
                     maxHeight: 480,
                     dialogMaxWidth: RecordedComponent.cardWidth * 2 - 1,
+                    forceDialog: Util.uaIsiOS(),
                 }),
                 m(BalloonComponent, {
                     id: RecordedWatchSelectViewModel.id,
