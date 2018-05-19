@@ -30,6 +30,7 @@ Config.json
 | thumbnailSize | string | 480x270 | no |  サムネイルの解像度 |
 | thumbnailPosition | number | 5 | no |  サムネイル生成の時間 (秒) |
 | ffmpeg | string | /usr/local/bin/ffmpeg | no |  サムネイル生成に使用する ffmpeg のパス |
+| ffprobe | string | /usr/local/bin/ffprobe | no | 動画情報取得に使用する ffprobe のパス |
 | recordedStartCommand | string | | no | 録画開始時に実行するコマンド |
 | recordedEndCommand | string | | no | 録画終了時に実行するコマンド |
 | maxEncode | number | 0 | no | エンコードプロセスの起動上限数 |
@@ -46,6 +47,7 @@ Config.json
 | streamingPriority | number | 0 | no | ライブ視聴時の優先度 |
 | mpegTsStreaming | {}[] | | no | ライブ視聴の設定 |
 | mpegTsViewer | {} | | no | ライブ視聴を ios, android, mac, windows で視聴するときのアプリ設定 |
+| recordedStreaming | {} | | no | 録画 (TS) のストリーミング視聴設定 |
 | streamFilePath | string | EPGStation/data/streamfiles | no | HLS 配信時に使用される一時領域 |
 | recordedHLS | {}[] | | no | 録画済みファイルを HLS 配信時に使用するオプション |
 | liveHLS | {}[] | | no | HLS でライブ視聴時に使用するオプション |
@@ -191,6 +193,39 @@ maxEncode を 1 以上に設定すること
 | プロパティ | 説明 |
 | -------- | --- |
 | %FFMPEG% | ffmpeg パス |
+
+---
+
+### recordedStreaming
+
+| プロパティ | 種類 | 必須 | 説明 |
+| -------- | ---- | ---- | --- |
+| webm | {}[] | no | webm 配信時の設定 |
+| mp4 | {}[] | no | mp4 配信時の設定 |
+| mpegTs | {}[] | no | mpegts 配信時の設定 |
+
+#### 各種プロパティ
+
+| プロパティ | 種類 | 必須 | 説明 |
+| -------- | ---- | ---- | --- |
+| name | string | yes | web で表示される名前 |
+| cmd | string | yes | エンコードコマンド |
+| vb | string | yes | video ビットレート |
+| ab | string  | yes | audio ビットレート |
+
+#### cmd で置換される文字列
+
+| プロパティ | 説明 |
+| -------- | ---- |
+| %FFMPEG% | ffmpeg パス |
+| %INPUT% | 入力ファイルパス |
+| %SS% | 開始時刻 (秒) |
+| %T% | 切り出し時間 (秒) |
+| %RE% | -re オプション |
+| %VB% | ビデオビットレートオプション |
+| %VBUFFER% | ビデオバッファオプション |
+| %AB% | 音声ビットレートオプション |
+| %ABUFFER% | 音声バッファオプション |
 
 ----
 
