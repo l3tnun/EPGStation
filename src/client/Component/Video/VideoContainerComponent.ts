@@ -267,6 +267,12 @@ class VideoContainerComponent extends Component<ControlArgs> {
                     this.isWaiting = false;
                     m.redraw();
                 });
+
+                // 終了
+                this.videoElement.addEventListener('ended', () => {
+                    this.isWaiting = false;
+                    m.redraw();
+                });
             }
         } else {
             this.videoElement = null;
