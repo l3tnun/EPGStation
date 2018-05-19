@@ -101,9 +101,9 @@ http 接続なら ```http://host:port```
 
 ※ Windows に Mirakurun をインストールするのが面倒で名前付きパイプでは動作確認していません。動かなかったら教えていただけると助かります。
 
-#### ffmpeg
+#### ffmpeg, ffprobe
 
-ffmpeg のパスを ```C:\\ffmpeg\\ffmpeg.exe``` のように指定してください
+パスを ```C:\\ffmpeg\\ffmpeg.exe``` のように指定してください
 
 #### encode
 
