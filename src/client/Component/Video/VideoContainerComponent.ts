@@ -400,7 +400,7 @@ class VideoContainerComponent extends Component<ControlArgs> {
         }
 
         return m('div', {
-            class: 'video-controls ios-no-click-color ' + (isMobile ? '' : 'hide'),
+            class: 'video-controls ios-no-click-color ' + (isMobile && !Util.uaIsAndroid() ? '' : 'hide'),
             oncreate: (mainVnode: m.VnodeDOM<void, any>) => {
                 this.controlerElement = <HTMLElement> mainVnode.dom;
             },
