@@ -1076,6 +1076,8 @@ definitions:
         $ref: '#/definitions/ServiceItemId'
       recordedId:
         $ref: '#/definitions/RecordedId'
+      encodedId:
+        $ref: '#/definitions/EncodedId'
       mode:
         type: integer
       channelName:

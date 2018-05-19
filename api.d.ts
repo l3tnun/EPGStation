@@ -351,6 +351,7 @@ interface StreamInfo {
     type?: 'MpegTsLive' | 'RecordedHLS' | 'HLSLive' | 'WebMLive' | 'MpegTsRecordedStreaming' | 'MultiTypeRecordedStreaming';
     channelId?: ServiceItemId;
     recordedId?: RecordedId;
+    encodedId?: EncodedId;
     mode?: number;
     channelName?: string;
     title?: string;

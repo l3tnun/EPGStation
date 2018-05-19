@@ -16,17 +16,18 @@ interface StreamBaseStatusInfo {
 }
 
 interface LiveStreamStatusInfo extends StreamBaseStatusInfo {
-    channelId?: apid.ServiceItemId;
+    channelId: apid.ServiceItemId;
 }
 
 interface RecordedStreamStatusInfo extends StreamBaseStatusInfo {
-    recordedId?: apid.RecordedId;
+    recordedId: apid.RecordedId;
+    encodedId?: apid.EncodedId;
 }
 
 /**
  * Stream 情報
  */
-type StreamStatusInfo = LiveStreamStatusInfo | RecordedStreamStatusInfo;
+type StreamStatusInfo = StreamBaseStatusInfo | LiveStreamStatusInfo | RecordedStreamStatusInfo;
 
 interface StreamManageModelInterface {
     getStreamInfo(num: number): StreamStatusInfo | null;
@@ -79,6 +80,9 @@ class StreamManageModel extends Model implements StreamManageModelInterface {
         }
         if (streamInfo.type.includes('Recorded')) {
             (<RecordedStreamStatusInfo> result).recordedId = (<RecordedStreamInfo> streamInfo).recordedId;
+            if (typeof (<RecordedStreamStatusInfo> streamInfo).encodedId !== 'undefined') {
+                (<RecordedStreamStatusInfo> result).encodedId = (<RecordedStreamInfo> streamInfo).encodedId;
+            }
         }
 
         return <StreamStatusInfo> result;

@@ -13,6 +13,7 @@ interface StreamInfo {
 
 interface RecordedStreamInfo extends StreamInfo {
     recordedId: apid.RecordedId;
+    encodedId?: apid.EncodedId;
 }
 
 interface LiveStreamInfo extends StreamInfo {

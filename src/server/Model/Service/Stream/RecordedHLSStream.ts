@@ -115,11 +115,17 @@ class RecordedHLSStream extends Stream {
     }
 
     public getInfo(): RecordedStreamInfo {
-        return {
+        const info: RecordedStreamInfo = {
             type: 'RecordedHLS',
             recordedId: this.recordedId,
             mode: this.mode,
         };
+
+        if (this.encodedId !== null) {
+            info.encodedId = this.encodedId;
+        }
+
+        return info;
     }
 }
 
