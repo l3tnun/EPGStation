@@ -128,8 +128,8 @@ class RecordedWatchSelectViewModel extends ViewModel {
             // WebM
             Util.move(`/recorded/${ this.recorded.id }/watch?type=webm&mode=${ this.streamingModeValue }`);
         } else if (this.streamingTypeValue === 'MP4') {
-            // WebM
-            Util.move(`/recorded/${ this.recorded.id }/watch?type=webm&mode=${ this.streamingModeValue }`);
+            // MP4
+            Util.move(`/recorded/${ this.recorded.id }/watch?type=mp4&mode=${ this.streamingModeValue }`);
         }
     }
 
