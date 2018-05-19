@@ -2,6 +2,7 @@ import { EncodedDBInterface } from '../../DB/EncodedDB';
 import { IPCClientInterface } from '../../IPC/IPCClient';
 import Model from '../../Model';
 import { SocketIoManageModelInterface } from '../SocketIoManageModel';
+import { RecordedStreamStatusInfo, StreamManageModelInterface } from '../Stream/StreamManageModel';
 import { EncodeManageModelInterface } from './EncodeManageModel';
 
 interface EncodeFinModelInterface extends Model {
@@ -14,18 +15,21 @@ interface EncodeFinModelInterface extends Model {
  */
 class EncodeFinModel extends Model implements EncodeFinModelInterface {
     private encodeManage: EncodeManageModelInterface;
+    private streamManage: StreamManageModelInterface;
     private encodedDB: EncodedDBInterface;
     private socket: SocketIoManageModelInterface;
     private ipc: IPCClientInterface;
 
     constructor(
         encodeManage: EncodeManageModelInterface,
+        streamManage: StreamManageModelInterface,
         encodedDB: EncodedDBInterface,
         socket: SocketIoManageModelInterface,
         ipc: IPCClientInterface,
     ) {
         super();
         this.encodeManage = encodeManage;
+        this.streamManage = streamManage;
         this.encodedDB = encodedDB;
         this.socket = socket;
         this.ipc = ipc;
@@ -65,7 +69,7 @@ class EncodeFinModel extends Model implements EncodeFinModelInterface {
                         await this.ipc.recordedDelete(recordedId);
                     } else {
                         // encoded が存在するので ts ファイルのみ削除する
-                        await this.ipc.recordedDeleteFile(recordedId);
+                        await this.deleteTsFile(recordedId);
                     }
                 }
             } else {
@@ -74,7 +78,7 @@ class EncodeFinModel extends Model implements EncodeFinModelInterface {
 
                 // ts を削除
                 if (delTs) {
-                    await this.ipc.recordedDeleteFile(recordedId);
+                    await this.deleteTsFile(recordedId);
                 }
             }
         } catch (err) {
@@ -83,6 +87,26 @@ class EncodeFinModel extends Model implements EncodeFinModelInterface {
 
         // socket.io で通知
         this.socket.notifyClient();
+    }
+
+    /**
+     * delete ts
+     * @param recordedId: recorded id
+     */
+    private async deleteTsFile(recordedId: number): Promise<void> {
+        // 配信中かチェック
+        const infos = this.streamManage.getStreamInfos();
+        for (const info of infos) {
+            if (
+                (<RecordedStreamStatusInfo> info).recordedId === recordedId
+                && typeof (<RecordedStreamStatusInfo> info).encodedId === 'undefined'
+            ) {
+                // ts ファイル配信中
+                return;
+            }
+        }
+
+        await this.ipc.recordedDeleteFile(recordedId);
     }
 
     /**

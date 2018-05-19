@@ -102,13 +102,14 @@ namespace ModelFactorySetting {
         const encodeManage = new EncodeManageModel(encodeProcessManage);
         const socketIoManage = new SocketIoManageModel();
         const ipc = new IPCClient();
+        const streamManage = new StreamManageModel(socketIoManage);
         const encodeFinModel = new EncodeFinModel(
             encodeManage,
+            streamManage,
             encodedDB!,
             socketIoManage,
             ipc,
         );
-        const streamManage = new StreamManageModel(socketIoManage);
 
         ipc.setModels(encodeManage, socketIoManage);
 
