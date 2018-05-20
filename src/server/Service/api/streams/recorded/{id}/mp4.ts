@@ -21,6 +21,13 @@ export const get: Operation = async(req, res) => {
     }
 
     const streams = <StreamsModelInterface> factory.get('StreamsModel');
+    let streamNumber: number | null = null;
+
+    const stop = async() => {
+        if (streamNumber !== null) {
+            await streams.stop(streamNumber);
+        }
+    };
 
     try {
         const info = await streams.getRecordedStreamingMultiType(
@@ -29,14 +36,15 @@ export const get: Operation = async(req, res) => {
             req.query.ss,
             'mp4',
         );
+        streamNumber = info.streamNumber;
         const encChild = info.stream.getEncChild();
 
         res.status(200);
         res.set(header);
 
         // 接続切断時
-        req.on('close', async() => {
-            await streams.stop(info.streamNumber);
+        req.on('close', () => {
+            stop();
         });
 
         if (encChild !== null) {
@@ -44,19 +52,21 @@ export const get: Operation = async(req, res) => {
 
             // enc コマンド終了時
             encChild.on('exit', async() => {
-                await streams.stop(info.streamNumber);
+                await stop();
                 res.end();
             });
 
             // enc コマンドエラー時
             encChild.on('error', async() => {
-                await streams.stop(info.streamNumber);
+                await stop();
                 res.end();
             });
         } else {
             throw new Error('CreatetRecordedStreamingMp4StreamChildError');
         }
     } catch (err) {
+        await stop();
+
         if (err.message === Stream.OutOfRangeError) {
             api.responseError(res, { code: 416,  message: 'out of range' });
         } else if (err.message === Stream.FileIsNotFoundError) {
