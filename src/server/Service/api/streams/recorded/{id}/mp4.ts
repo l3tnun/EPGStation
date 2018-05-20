@@ -21,12 +21,12 @@ export const get: Operation = async(req, res) => {
     }
 
     const streams = <StreamsModelInterface> factory.get('StreamsModel');
-    let streamNumber: number | null = null;
+    let stream: Stream | null = null;
 
     const stop = async() => {
-        if (streamNumber !== null) {
-            await streams.stop(streamNumber);
-        }
+        if (stream === null) { return; }
+        await stream.stop()
+        .catch(() => {});
     };
 
     try {
@@ -36,7 +36,7 @@ export const get: Operation = async(req, res) => {
             req.query.ss,
             'mp4',
         );
-        streamNumber = info.streamNumber;
+        stream = info.stream;
         const encChild = info.stream.getEncChild();
 
         res.status(200);
