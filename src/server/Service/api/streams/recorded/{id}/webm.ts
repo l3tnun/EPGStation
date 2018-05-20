@@ -21,6 +21,20 @@ export const get: Operation = async(req, res) => {
     }
 
     const streams = <StreamsModelInterface> factory.get('StreamsModel');
+    let stream: Stream | null = null;
+    let isClosed: boolean = false;
+
+    const stop = async() => {
+        if (stream === null) { return; }
+        await stream.stop()
+        .catch(() => {});
+    };
+
+    // 接続切断時
+    req.on('close', () => {
+        isClosed = true;
+        stop();
+    });
 
     try {
         const info = await streams.getRecordedStreamingMultiType(
@@ -29,40 +43,38 @@ export const get: Operation = async(req, res) => {
             req.query.ss,
             'webm',
         );
+        stream = info.stream;
         const encChild = info.stream.getEncChild();
 
-        res.status(200);
-        res.set(header);
-
-        if (req.method === 'HEAD') {
-            res.end();
+        if (isClosed) {
+            await stop();
 
             return;
         }
 
-        // 接続切断時
-        req.on('close', async() => {
-            await streams.stop(info.streamNumber);
-        });
+        res.status(200);
+        res.set(header);
 
         if (encChild !== null) {
             encChild.stdout.pipe(res);
 
             // enc コマンド終了時
             encChild.on('exit', async() => {
-                await streams.stop(info.streamNumber);
+                await stop();
                 res.end();
             });
 
             // enc コマンドエラー時
             encChild.on('error', async() => {
-                await streams.stop(info.streamNumber);
+                await stop();
                 res.end();
             });
         } else {
             throw new Error('CreatetRecordedStreamingWebMStreamChildError');
         }
     } catch (err) {
+        await stop();
+
         if (err.message === Stream.OutOfRangeError) {
             api.responseError(res, { code: 416,  message: 'out of range' });
         } else if (err.message === Stream.FileIsNotFoundError) {
