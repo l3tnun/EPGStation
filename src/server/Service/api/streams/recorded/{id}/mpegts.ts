@@ -6,6 +6,13 @@ import * as api from '../../../../api';
 
 export const get: Operation = async(req, res) => {
     const streams = <StreamsModelInterface> factory.get('StreamsModel');
+    let stream: Stream | null = null;
+
+    const stop = async() => {
+        if (stream === null) { return; }
+        await stream.stop()
+        .catch(() => {});
+    };
 
     try {
         if (req.method === 'HEAD') {
@@ -29,6 +36,7 @@ export const get: Operation = async(req, res) => {
             req.query.ss,
             typeof req.headers.range === 'undefined' ? null : req.headers.range,
         );
+        stream = info.stream;
         const encChild = info.stream.getEncChild();
 
         const responseInfo = info.stream.getResponseInfo();
@@ -38,7 +46,7 @@ export const get: Operation = async(req, res) => {
 
         // 接続切断時
         req.on('close', async() => {
-            await streams.stop(info.streamNumber);
+            await stop();
         });
 
         if (encChild !== null) {
@@ -46,19 +54,21 @@ export const get: Operation = async(req, res) => {
 
             // enc コマンド終了時
             encChild.on('exit', async() => {
-                await streams.stop(info.streamNumber);
+                await stop();
                 res.end();
             });
 
             // enc コマンドエラー時
             encChild.on('error', async() => {
-                await streams.stop(info.streamNumber);
+                await stop();
                 res.end();
             });
         } else {
             throw new Error('CreatetRecordedStreamingMpegTsStreamChildError');
         }
     } catch (err) {
+        await stop();
+
         if (err.message === Stream.OutOfRangeError) {
             api.responseError(res, { code: 416,  message: 'out of range' });
         } else if (err.message === Stream.FileIsNotFoundError) {
