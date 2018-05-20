@@ -34,7 +34,6 @@ export const get: Operation = async(req, res) => {
         res.setHeader('Content-Type', 'video/MP2T');
         res.status(200);
 
-
         if (encChild !== null) {
             encChild.stdout.pipe(res);
 

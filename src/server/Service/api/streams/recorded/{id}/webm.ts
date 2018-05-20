@@ -55,7 +55,6 @@ export const get: Operation = async(req, res) => {
         res.status(200);
         res.set(header);
 
-
         if (encChild !== null) {
             encChild.stdout.pipe(res);
 
