@@ -1,10 +1,24 @@
 import { Operation } from 'express-openapi';
 import { StreamModelInfo, StreamsModelInterface } from '../../../../../Model/Api/StreamsModel';
 import factory from '../../../../../Model/ModelFactory';
+import { Stream } from '../../../../../Model/Service/Stream/Stream';
 import * as api from '../../../../api';
 
 export const get: Operation = async(req, res) => {
     const streams = <StreamsModelInterface> factory.get('StreamsModel');
+    let isClosed: boolean = false;
+
+    const stop = async() => {
+        if (info === null) {  return; }
+        info.stream.countDown();
+        await streams.stop(info.streamNumber);
+    };
+
+    // 接続切断時
+    req.on('close', async() => {
+        isClosed = true;
+        await stop();
+    });
 
     let info: StreamModelInfo | null = null;
     try {
@@ -13,14 +27,13 @@ export const get: Operation = async(req, res) => {
         const encChild = info.stream.getEncChild();
         const mirakurunStream = info.stream.getMirakurunStream();
 
+        if (isClosed) {
+            await stop();
+        }
+
         res.setHeader('Content-Type', 'video/MP2T');
         res.status(200);
 
-        // 接続切断時
-        req.on('close', async() => {
-            if (info !== null) { info.stream.countDown(); }
-            await streams.stop(info!.streamNumber);
-        });
 
         if (encChild !== null) {
             encChild.stdout.pipe(res);
