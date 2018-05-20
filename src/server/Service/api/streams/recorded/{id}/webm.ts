@@ -22,12 +22,19 @@ export const get: Operation = async(req, res) => {
 
     const streams = <StreamsModelInterface> factory.get('StreamsModel');
     let stream: Stream | null = null;
+    let isClosed: boolean = false;
 
     const stop = async() => {
         if (stream === null) { return; }
         await stream.stop()
         .catch(() => {});
     };
+
+    // 接続切断時
+    req.on('close', () => {
+        isClosed = true;
+        stop();
+    });
 
     try {
         const info = await streams.getRecordedStreamingMultiType(
@@ -39,13 +46,15 @@ export const get: Operation = async(req, res) => {
         stream = info.stream;
         const encChild = info.stream.getEncChild();
 
+        if (isClosed) {
+            await stop();
+
+            return;
+        }
+
         res.status(200);
         res.set(header);
 
-        // 接続切断時
-        req.on('close', () => {
-            stop();
-        });
 
         if (encChild !== null) {
             encChild.stdout.pipe(res);

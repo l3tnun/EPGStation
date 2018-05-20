@@ -7,12 +7,19 @@ import * as api from '../../../../api';
 export const get: Operation = async(req, res) => {
     const streams = <StreamsModelInterface> factory.get('StreamsModel');
     let stream: Stream | null = null;
+    let isClosed: boolean = false;
 
     const stop = async() => {
         if (stream === null) { return; }
         await stream.stop()
         .catch(() => {});
     };
+
+    // 接続切断時
+    req.on('close', async() => {
+        isClosed = true;
+        await stop();
+    });
 
     try {
         if (req.method === 'HEAD') {
@@ -39,15 +46,16 @@ export const get: Operation = async(req, res) => {
         stream = info.stream;
         const encChild = info.stream.getEncChild();
 
+        if (isClosed) {
+            await stop();
+
+            return;
+        }
+
         const responseInfo = info.stream.getResponseInfo();
 
         res.set(responseInfo.header);
         res.status(responseInfo.responseCode);
-
-        // 接続切断時
-        req.on('close', async() => {
-            await stop();
-        });
 
         if (encChild !== null) {
             encChild.stdout.pipe(res);
