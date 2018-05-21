@@ -150,8 +150,6 @@ abstract class ParentComponent<T> extends Component<T> {
 
                 ParentComponent.isPopstate = false;
                 this.saveStorage();
-
-                setTimeout(() => { m.redraw(); }, 0);
             }
         }, 0);
 
