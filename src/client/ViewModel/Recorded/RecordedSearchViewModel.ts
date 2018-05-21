@@ -24,6 +24,16 @@ class RecordedSearchViewModel extends ViewModel {
         super();
         this.balloon = balloon;
         this.recordedApiModel = recordedApiModel;
+
+        this.balloon.regDisableCloseAllId(RecordedSearchViewModel.id);
+
+        if (Util.uaIsAndroid()) {
+            window.addEventListener('orientationchange', () => {
+                if (!this.balloon.isOpen(RecordedSearchViewModel.id)) { return; }
+
+                this.close();
+            }, false);
+        }
     }
 
     /**
@@ -73,7 +83,7 @@ class RecordedSearchViewModel extends ViewModel {
      * close balloon
      */
     public close(): void {
-        this.balloon.close();
+        this.balloon.close(RecordedSearchViewModel.id);
     }
 }
 
