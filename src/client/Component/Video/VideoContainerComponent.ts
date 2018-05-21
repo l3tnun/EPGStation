@@ -385,7 +385,7 @@ class VideoContainerComponent extends Component<ControlArgs> {
         if (!!vnode.attrs.enableCloseButton) {
             titlesElement = m('div', { class: 'titles' }, [
                 m('i', {
-                    class: 'close material-icons',
+                    class: 'close material-icons mdl-shadow--2dp',
                     onclick: () => {
                         if (typeof vnode.attrs.closeButtonCallback === 'undefined') { return; }
 
@@ -400,7 +400,7 @@ class VideoContainerComponent extends Component<ControlArgs> {
         }
 
         return m('div', {
-            class: 'video-controls ios-no-click-color ' + (isMobile && !Util.uaIsAndroid() ? '' : 'hide'),
+            class: 'video-controls mdl-shadow--2dp ios-no-click-color ' + (isMobile && !Util.uaIsAndroid() ? '' : 'hide'),
             oncreate: (mainVnode: m.VnodeDOM<void, any>) => {
                 this.controlerElement = <HTMLElement> mainVnode.dom;
             },
