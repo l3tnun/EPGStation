@@ -5,6 +5,7 @@ import Util from '../../../Util/Util';
 import { StreamingVideoConfig, VideoInfo, VideoUtil } from '../../../Util/VideoUtil';
 import { RecordedDBInterface } from '../../DB/RecordedDB';
 import { EncodeProcessManageModelInterface } from '../Encode/EncodeProcessManageModel';
+import { SocketIoManageModelInterface } from '../SocketIoManageModel';
 import { RecordedStreamInfo, Stream } from './Stream';
 import { StreamManageModelInterface } from './StreamManageModel';
 
@@ -30,6 +31,7 @@ class RecordedStreamingMpegTsStream extends Stream {
 
     constructor(
         process: EncodeProcessManageModelInterface,
+        socketIo: SocketIoManageModelInterface,
         manager: StreamManageModelInterface,
         recordedDB: RecordedDBInterface,
         recordedId: apid.RecordedId,
@@ -37,7 +39,7 @@ class RecordedStreamingMpegTsStream extends Stream {
         startTime: number,
         headerRangeStr: string | null,
     ) {
-        super(process, manager);
+        super(process, socketIo, manager);
 
         this.recordedDB = recordedDB;
         this.recordedId = recordedId;
@@ -185,6 +187,8 @@ class RecordedStreamingMpegTsStream extends Stream {
         if (this.enc !== null) {
             await ProcessUtil.kill(this.enc);
         }
+
+        await super.stop();
     }
 
     public getInfo(): RecordedStreamInfo {

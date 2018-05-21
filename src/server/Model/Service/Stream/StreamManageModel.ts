@@ -159,8 +159,6 @@ class StreamManageModel extends Model implements StreamManageModelInterface {
         await stream.stop();
 
         this.log.stream.info(`stop stream: ${ streamNumber }`);
-
-        this.notify();
     }
 
     /**

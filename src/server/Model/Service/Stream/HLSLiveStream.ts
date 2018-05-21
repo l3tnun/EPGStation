@@ -5,6 +5,7 @@ import CreateMirakurun from '../../../Util/CreateMirakurunClient';
 import ProcessUtil from '../../../Util/ProcessUtil';
 import Util from '../../../Util/Util';
 import { EncodeProcessManageModelInterface } from '../Encode/EncodeProcessManageModel';
+import { SocketIoManageModelInterface } from '../SocketIoManageModel';
 import HLSFileDeleter from './HLSFileDeleter';
 import { LiveStreamInfo, Stream } from './Stream';
 import { StreamManageModelInterface } from './StreamManageModel';
@@ -31,11 +32,12 @@ class HLSLiveStream extends Stream {
      */
     constructor(
         process: EncodeProcessManageModelInterface,
+        socketIo: SocketIoManageModelInterface,
         manager: StreamManageModelInterface,
         channelId: apid.ServiceItemId,
         mode: number,
     ) {
-        super(process, manager);
+        super(process, socketIo, manager);
 
         this.channelId = channelId;
         this.mode = mode;
@@ -109,6 +111,8 @@ class HLSLiveStream extends Stream {
             // 変換済みファイルを削除
             this.fileDeleter.deleteAllFiles();
         }
+
+        await super.stop();
     }
 
     public getInfo(): LiveStreamInfo {

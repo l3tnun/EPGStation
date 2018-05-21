@@ -5,6 +5,7 @@ import Util from '../../../Util/Util';
 import { EncodedDBInterface } from '../../DB/EncodedDB';
 import { RecordedDBInterface } from '../../DB/RecordedDB';
 import { EncodeProcessManageModelInterface } from '../Encode/EncodeProcessManageModel';
+import { SocketIoManageModelInterface } from '../SocketIoManageModel';
 import HLSFileDeleter from './HLSFileDeleter';
 import { RecordedStreamInfo, Stream } from './Stream';
 import { StreamManageModelInterface } from './StreamManageModel';
@@ -33,6 +34,7 @@ class RecordedHLSStream extends Stream {
      */
     constructor(
         process: EncodeProcessManageModelInterface,
+        socketIo: SocketIoManageModelInterface,
         manager: StreamManageModelInterface,
         recordedDB: RecordedDBInterface,
         encodedDB: EncodedDBInterface,
@@ -40,7 +42,7 @@ class RecordedHLSStream extends Stream {
         mode: number,
         encodedId: apid.EncodedId | null = null,
     ) {
-        super(process, manager);
+        super(process, socketIo, manager);
 
         this.recordedDB = recordedDB;
         this.encodedDB = encodedDB;
@@ -112,6 +114,8 @@ class RecordedHLSStream extends Stream {
             // 変換済みファイルを削除
             this.fileDeleter.deleteAllFiles();
         }
+
+        await super.stop();
     }
 
     public getInfo(): RecordedStreamInfo {

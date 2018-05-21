@@ -142,18 +142,21 @@ namespace ModelFactorySetting {
             streamManage,
             (chanelId: apid.ServiceItemId, mode: number): HLSLiveStream => { return new HLSLiveStream(
                 encodeProcessManage,
+                socketIoManage,
                 streamManage,
                 chanelId,
                 mode,
             ); },
             (chanelId: apid.ServiceItemId, mode: number): WebMLiveStream => { return new WebMLiveStream(
                 encodeProcessManage,
+                socketIoManage,
                 streamManage,
                 chanelId,
                 mode,
             ); },
             (chanelId: apid.ServiceItemId, mode: number): MpegTsLiveStream => { return new MpegTsLiveStream(
                 encodeProcessManage,
+                socketIoManage,
                 streamManage,
                 chanelId,
                 mode,
@@ -161,6 +164,7 @@ namespace ModelFactorySetting {
             (recordedId: apid.RecordedId, mode: number, encodedId: apid.EncodedId | null): RecordedHLSStream => {
                 return new RecordedHLSStream(
                     encodeProcessManage,
+                    socketIoManage,
                     streamManage,
                     recordedDB,
                     encodedDB,
@@ -172,6 +176,7 @@ namespace ModelFactorySetting {
             (recordedId: apid.RecordedId, mode: number, startTime: number, headerRangeStr: string | null): RecordedStreamingMpegTsStream => {
                 return new RecordedStreamingMpegTsStream(
                     encodeProcessManage,
+                    socketIoManage,
                     streamManage,
                     recordedDB,
                     recordedId,
@@ -183,6 +188,7 @@ namespace ModelFactorySetting {
             (recordedId: apid.RecordedId, mode: number, startTime: number, containerType: ContainerType): RecordedStreamingMultiTypeStream => {
                 return new RecordedStreamingMultiTypeStream(
                     encodeProcessManage,
+                    socketIoManage,
                     streamManage,
                     recordedDB,
                     recordedId,

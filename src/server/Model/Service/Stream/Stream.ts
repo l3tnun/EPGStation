@@ -3,6 +3,7 @@ import * as http from 'http';
 import * as apid from '../../../../../api';
 import Base from '../../../Base';
 import { EncodeProcessManageModelInterface } from '../Encode/EncodeProcessManageModel';
+import { SocketIoManageModelInterface } from '../SocketIoManageModel';
 import { StreamManageModelInterface } from './StreamManageModel';
 import * as enums from './StreamTypeInterface';
 
@@ -22,6 +23,7 @@ interface LiveStreamInfo extends StreamInfo {
 
 abstract class Stream extends Base {
     protected process: EncodeProcessManageModelInterface;
+    private socketIo: SocketIoManageModelInterface;
     private manager: StreamManageModelInterface;
     private viewCnt: number = 0;
     private streamNumber: number;
@@ -32,10 +34,12 @@ abstract class Stream extends Base {
      */
     constructor(
         process: EncodeProcessManageModelInterface,
+        socketIo: SocketIoManageModelInterface,
         manager: StreamManageModelInterface,
     ) {
         super();
         this.process = process;
+        this.socketIo = socketIo;
         this.manager = manager;
     }
 
@@ -43,7 +47,10 @@ abstract class Stream extends Base {
         this.streamNumber = streamNumber;
     }
 
-    public abstract stop(): Promise<void>;
+    public async stop(): Promise<void> {
+        this.notify();
+    }
+
     public abstract getInfo(): StreamInfo;
     public getEncChild(): ChildProcess | null { return null; }
     public getMirakurunStream(): http.IncomingMessage | null { return null; }
@@ -78,6 +85,13 @@ abstract class Stream extends Base {
     }
 
     public getCount(): number { return this.viewCnt; }
+
+    /**
+     * socketio 通知
+     */
+    private notify(): void {
+        this.socketIo.notifyClient();
+    }
 }
 
 namespace Stream {
