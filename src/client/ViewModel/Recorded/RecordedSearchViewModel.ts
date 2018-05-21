@@ -25,9 +25,9 @@ class RecordedSearchViewModel extends ViewModel {
         this.balloon = balloon;
         this.recordedApiModel = recordedApiModel;
 
-        this.balloon.regDisableCloseAllId(RecordedSearchViewModel.id);
-
         if (Util.uaIsAndroid()) {
+            this.balloon.regDisableCloseAllId(RecordedSearchViewModel.id);
+
             window.addEventListener('orientationchange', () => {
                 if (!this.balloon.isOpen(RecordedSearchViewModel.id)) { return; }
 
