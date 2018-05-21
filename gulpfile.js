@@ -1,11 +1,11 @@
-"use strict";
+'use strict';
 
 const fs = require('fs');
 const path = require('path');
 const gulp = require('gulp');
 const del = require('del');
 const plumber = require('gulp-plumber');
-const tslint = require("gulp-tslint");
+const tslint = require('gulp-tslint');
 const typescript = require('gulp-typescript');
 const sourcemaps = require('gulp-sourcemaps');
 const minimist = require('minimist');
@@ -45,22 +45,6 @@ const config = {
     }
 };
 
-let webpackConfig = {
-    output: {
-        filename: 'app.js'
-    },
-
-    resolve: {
-        extensions: ['.ts', '.webpack.js', '.web.js', '.js']
-    },
-
-    cache: true,
-
-    module: {
-        loaders: [ { test: /\.ts$/, loader: 'ts-loader' } ]
-    }
-}
-
 /**
  * 引数
  * NODE_ENVに指定がなければ開発モードをデフォルトにする
@@ -69,21 +53,35 @@ const knownOptions = {
   string: 'env',
   default: { env: process.env.NODE_ENV || 'development' }
 };
-
 const options = minimist(process.argv.slice(2), knownOptions);
-const isProduction = (options.env === 'production') ? true : false;
+const isProduction = options.env === 'production';
 
-if (isProduction) {
-    // 本番
-    // app.js の圧縮
-    webpackConfig["plugins"] = [
-        // new webpack.optimize.OccurrenceOrderPlugin(),
-        new webpack.optimize.UglifyJsPlugin({ output: { comments: false } })
-    ];
-} else {
-    // 開発
-    // source-map の有効化
-    webpackConfig["devtool"] = "#source-map";
+// webpack 設定
+const webpackConfig = {
+    mode: options.env,
+    output: {
+        filename: 'app.js'
+    },
+    resolve: {
+        extensions: ['.ts', '.webpack.js', '.web.js', '.js']
+    },
+    cache: true,
+    module: {
+        rules: [
+            { test: /\.ts$/, loader: 'ts-loader' }
+        ]
+    },
+    plugins: [
+        new webpack.optimize.OccurrenceOrderPlugin()
+    ],
+    performance: {
+        hints: false
+    }
+}
+
+if (!isProduction) {
+    // enable source map
+    webpackConfig.devtool = 'source-map';
 }
 
 // server
@@ -128,7 +126,7 @@ gulp.task('tslint-client', () => {
 gulp.task('build-client', ['clean-client', 'tslint-client'], () => {
     return gulp.src(config.client.src)
         .pipe(plumber())
-        .pipe(webpackStream(webpackConfig))
+        .pipe(webpackStream(webpackConfig, webpack))
         .pipe(gulp.dest(config.client.dst))
         .on('error', (error) => {
             console.error(error);
