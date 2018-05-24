@@ -34,8 +34,21 @@ class RecordedWatchVideoContainerComponent extends VideoContainerComponent {
      * @param position: number
      */
     protected updateVideoCurrentTime(position: number): void {
+        if (this.viewModel.isRecording()) {
+            let duration = this.getVideoDuration() - RecordedWatchVideoContainerComponent.recordingMargin;
+            if (duration < 0) { duration = 0; }
+
+            if (position > duration) {
+                position = duration;
+            }
+        }
+
         this.viewModel.changePLayBackPosition(position);
     }
+}
+
+namespace RecordedWatchVideoContainerComponent {
+    export const recordingMargin = 10;
 }
 
 export default RecordedWatchVideoContainerComponent;
