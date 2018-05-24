@@ -1,4 +1,5 @@
 import { ChildProcess } from 'child_process';
+import * as fs from 'fs';
 import * as apid from '../../../../../api';
 import ProcessUtil from '../../../Util/ProcessUtil';
 import Util from '../../../Util/Util';
@@ -21,6 +22,7 @@ class RecordedStreamingMultiTypeStream extends Stream {
     private mode: number;
     private startTime: number;
     private enc: ChildProcess | null = null;
+    private fileStream: fs.ReadStream | null = null;
     private recordedDB: RecordedDBInterface;
 
     constructor(
@@ -60,10 +62,14 @@ class RecordedStreamingMultiTypeStream extends Stream {
         // config を取得
         const config = VideoUtil.getConfig(this.containerType, this.mode);
         try {
+            // file read stream の生成
+            this.fileStream = fs.createReadStream(recorded.recPath, {
+                start: videoInfo.bitRate / 8 * this.startTime,
+            });
+
             // cmd の生成
             const cmd = config.cmd
                 .replace(/%FFMPEG%/g, Util.getFFmpegPath())
-                .replace(/%SS%/g, `${ this.startTime }`)
                 .replace(/%RE%/g, recorded.recording ? '-re' : '')
                 .replace(/%VB%/g, `-b:v ${ config.vb } -minrate:v ${ config.vb } -maxrate:v ${ config.vb }`)
                 .replace(/%VBUFFER%/g, recorded.recording ? '' : `-bufsize:v ${ config.vb * 8 }`)
@@ -71,7 +77,10 @@ class RecordedStreamingMultiTypeStream extends Stream {
                 .replace(/%ABUFFER%/g, recorded.recording ? '' : `-bufsize:a ${ config.ab * 8 }`);
 
             // エンコードプロセス生成
-            this.enc = await this.process.create(recorded.recPath, '', cmd, Stream.priority);
+            this.enc = await this.process.create('pipe:0', '', cmd, Stream.priority);
+
+            // pipe
+            this.fileStream.pipe(this.enc.stdin);
 
             this.enc.on('exit', () => { this.ChildExit(streamNumber); });
             this.enc.on('error', () => { this.ChildExit(streamNumber); });
@@ -84,6 +93,11 @@ class RecordedStreamingMultiTypeStream extends Stream {
     }
 
     public async stop(): Promise<void> {
+        if (this.fileStream !== null) {
+            this.fileStream.unpipe();
+            this.fileStream.destroy();
+        }
+
         if (this.enc !== null) {
             await ProcessUtil.kill(this.enc);
         }

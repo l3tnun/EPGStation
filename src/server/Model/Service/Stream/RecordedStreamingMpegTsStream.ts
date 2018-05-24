@@ -1,4 +1,5 @@
 import { ChildProcess } from 'child_process';
+import * as fs from 'fs';
 import * as apid from '../../../../../api';
 import ProcessUtil from '../../../Util/ProcessUtil';
 import Util from '../../../Util/Util';
@@ -24,6 +25,7 @@ class RecordedStreamingMpegTsStream extends Stream {
     private startTime: number;
     private headerRangeStr: string | null = null;
     private enc: ChildProcess | null = null;
+    private fileStream: fs.ReadStream | null = null;
     private recordedDB: RecordedDBInterface;
 
     private header: { [key: string]: string | number } = {};
@@ -125,9 +127,11 @@ class RecordedStreamingMpegTsStream extends Stream {
         const bitrate = this.getBitrate(config, videoInfo);
         const totalSize = this.getTotalSize(videoInfo, bitrate);
 
-        // set start position & set header
-        let ss = 0;
-        let t = Math.floor(videoInfo.duration);
+        // set position & set header
+        const range: { start: number; end?: number } = {
+            start: videoInfo.bitRate / 8 * this.startTime,
+        };
+
         this.header['Content-Type'] = 'video/mpeg';
         if (!recorded.recording) {
             if (this.headerRangeStr !== null) {
@@ -136,34 +140,30 @@ class RecordedStreamingMpegTsStream extends Stream {
                 const rStart = parseInt(bytes[1], 10) || totalSize - rEnd;
 
                 // 範囲チェック
-                const start = rStart / bitrate * 8 + this.startTime;
-                const end = rEnd / bitrate * 8 - this.startTime;
-                if (start > videoInfo.duration || end > videoInfo.duration) {
+                range.start = Math.round(rStart / bitrate * videoInfo.bitRate);
+                range.end = Math.round(rEnd / bitrate * videoInfo.bitRate);
+                if (range.start > videoInfo.size || range.end > videoInfo.size) {
                     throw new Error(RecordedStreamingMpegTsStream.OutOfRangeError);
                 }
 
                 this.header['Content-Range'] = `bytes ${ rStart }-${ rEnd }/${ totalSize }`;
                 this.header['Content-Length'] = rEnd - rStart + 1;
                 this.responseCode = 206;
-
-                ss = Math.floor(start);
-                t = Math.floor(end);
             } else {
                 this.header['Content-Length'] = totalSize;
                 this.responseCode = 200;
             }
 
             this.header['Accept-Ranges'] = 'bytes';
-        } else {
-            ss = this.startTime;
         }
 
         try {
+            // file read stream の生成
+            this.fileStream = fs.createReadStream(recorded.recPath, range);
+
             // cmd の生成
             const cmd = config.cmd
                 .replace(/%FFMPEG%/g, Util.getFFmpegPath())
-                .replace(/%SS%/g, `${ ss }`)
-                .replace(/%T%/g, `${ t }`)
                 .replace(/%RE%/g, recorded.recording ? '-re' : '')
                 .replace(/%VB%/g, `-b:v ${ config.vb } -minrate:v ${ config.vb } -maxrate:v ${ config.vb }`)
                 .replace(/%VBUFFER%/g, recorded.recording ? '' : `-bufsize:v ${ config.vb * 8 }`)
@@ -171,7 +171,10 @@ class RecordedStreamingMpegTsStream extends Stream {
                 .replace(/%ABUFFER%/g, recorded.recording ? '' : `-bufsize:a ${ config.ab * 8 }`);
 
             // エンコードプロセス生成
-            this.enc = await this.process.create(recorded.recPath, '', cmd, Stream.priority);
+            this.enc = await this.process.create('pipe:0', '', cmd, Stream.priority);
+
+            // pipe
+            this.fileStream.pipe(this.enc.stdin);
 
             this.enc.on('exit', () => { this.ChildExit(streamNumber); });
             this.enc.on('error', () => { this.ChildExit(streamNumber); });
@@ -184,6 +187,11 @@ class RecordedStreamingMpegTsStream extends Stream {
     }
 
     public async stop(): Promise<void> {
+        if (this.fileStream !== null) {
+            this.fileStream.unpipe();
+            this.fileStream.destroy();
+        }
+
         if (this.enc !== null) {
             await ProcessUtil.kill(this.enc);
         }
