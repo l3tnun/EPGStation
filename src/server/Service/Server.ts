@@ -67,7 +67,7 @@ class Server extends Base {
         const storage = multer.diskStorage({
             destination: uploadTempDir,
             filename: (req, file, cb) => {
-                const fileName = file.fieldname + '-' + Date.now();
+                const fileName = file.fieldname + '-' + new Date().getTime().toString(16) + Math.floor(100000 * Math.random()).toString(16);
                 cb(null, fileName);
 
                 // 切断時はファイルを削除
@@ -94,11 +94,16 @@ class Server extends Base {
                 'application/json': bodyParser.json(),
                 'text/text': bodyParser.text(),
                 'multipart/form-data': (req, res, next) => {
-                    upload.single('file')(req, res, (err) => {
+                    upload.fields([
+                        { name: 'ts', maxCount: 1 },
+                        { name: 'encode', maxCount: 5 },
+                    ])(req, res, (err) => {
                         if (err) { return next(err.message); }
 
-                        if (typeof req.file !== 'undefined' && typeof req.file.fieldname !== 'undefined') {
-                            req.body[req.file.fieldname] = req.file;
+                        if (typeof req.files !== 'undefined') {
+                            for (const fieldname in req.files) {
+                                req.body[fieldname] = req.files[fieldname];
+                            }
                         }
 
                         return next();
