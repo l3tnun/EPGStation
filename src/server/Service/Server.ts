@@ -96,9 +96,10 @@ class Server extends Base {
                 'multipart/form-data': (req, res, next) => {
                     upload.single('file')(req, res, (err) => {
                         if (err) { return next(err.message); }
-                        if (typeof req.file === 'undefined' || typeof req.file.fieldname === 'undefined') { return next('filed name is not found'); }
 
-                        req.body[req.file.fieldname] = req.file;
+                        if (typeof req.file !== 'undefined' && typeof req.file.fieldname !== 'undefined') {
+                            req.body[req.file.fieldname] = req.file;
+                        }
 
                         return next();
                     });
