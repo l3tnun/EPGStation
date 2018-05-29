@@ -52,6 +52,7 @@ interface ConfigInterface {
     thumbnail: string;
     thumbnailSize: string;
     thumbnailPosition: number;
+    uploadTempDir: string;
     ffmpeg: string;
     ffprobe: string;
     maxEncode: number;

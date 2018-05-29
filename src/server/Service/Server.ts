@@ -6,6 +6,8 @@ import * as openapi from 'express-openapi';
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as log4js from 'log4js';
+import * as mkdirp from 'mkdirp';
+import * as multer from 'multer';
 import * as path from 'path';
 import * as swaggerUi from 'swagger-ui-express';
 import Base from '../Base';
@@ -27,8 +29,11 @@ class Server extends Base {
         // log
         this.app.use(log4js.connectLogger(this.log.access, { level: 'info' }));
 
+        // config
+        const config = this.config.getConfig();
+
         // basic auth
-        const basicAuthConfig = this.config.getConfig().basicAuth;
+        const basicAuthConfig = config.basicAuth;
         if (typeof basicAuthConfig !== 'undefined') {
             this.app.use(BasicAuth(basicAuthConfig.user, basicAuthConfig.password));
         }
@@ -47,6 +52,40 @@ class Server extends Base {
         this.app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(api));
         this.app.get('/api/debug', (_req, res) => { return res.redirect('/api-docs/?url=/api/docs'); });
 
+
+        // uploader dir
+        const uploadTempDir = config.uploadTempDir || './data/upload';
+        try {
+            fs.statSync(uploadTempDir);
+        } catch (e) {
+            // ディレクトリが存在しなければ作成する
+            this.log.system.info(`mkdirp: ${ uploadTempDir }`);
+            mkdirp.sync(uploadTempDir);
+        }
+
+        // uploader
+        const storage = multer.diskStorage({
+            destination: uploadTempDir,
+            filename: (req, file, cb) => {
+                const fileName = file.fieldname + '-' + Date.now();
+                cb(null, fileName);
+
+                // 切断時はファイルを削除
+                (<any> req).on('close', () => {
+                    const filePath = path.join(uploadTempDir, fileName);
+                    fs.unlink(filePath, (err) => {
+                        if (err) {
+                            this.log.access.error(`upload file delete error: ${ filePath }`);
+                            this.log.access.error(err.message);
+                        } else {
+                            this.log.access.info(`delete upload file: ${ filePath }`);
+                        }
+                    });
+                });
+            },
+        });
+        const upload = multer({ storage: storage });
+
         // init express-openapi
         openapi.initialize({
             apiDoc: api,
@@ -54,6 +93,16 @@ class Server extends Base {
             consumesMiddleware: {
                 'application/json': bodyParser.json(),
                 'text/text': bodyParser.text(),
+                'multipart/form-data': (req, res, next) => {
+                    upload.single('file')(req, res, (err) => {
+                        if (err) { return next(err.message); }
+                        if (typeof req.file === 'undefined' || typeof req.file.fieldname === 'undefined') { return next('filed name is not found'); }
+
+                        req.body[req.file.fieldname] = req.file;
+
+                        return next();
+                    });
+                },
             },
             docsPath: '/docs',
             errorMiddleware: (err, _req, res) => {
