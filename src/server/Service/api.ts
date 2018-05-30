@@ -4,6 +4,7 @@ import * as path from 'path';
 import { PlayList } from '../Model/Api/PlayListInterface';
 import factory from '../Model/ModelFactory';
 import { SocketIoManageModelInterface } from '../Model/Service/SocketIoManageModel';
+import FileUtil from '../Util/FileUtil';
 
 export interface IError {
     readonly code: number;
@@ -156,3 +157,19 @@ const sendResponse = (code: number, req: express.Request, res: express.Response,
     }
 };
 
+/**
+ * multipart/form-data でアップロードされたファイルを削除する
+ */
+export const deleteUploadFiles = async(files: { [key: string]: { path: string }[] }): Promise<void> => {
+    if (typeof files === 'undefined') { return; }
+
+    for (const key in files) {
+        for (const file of files[key]) {
+            try {
+                fs.statSync(file.path);
+                await FileUtil.promiseUnlink(file.path);
+            } catch (err) {
+            }
+        }
+    }
+};

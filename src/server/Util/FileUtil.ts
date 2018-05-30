@@ -19,6 +19,22 @@ namespace FileUtil {
             throw new Error('FileIsNotFound');
         }
     };
+
+    /**
+     * Promise Unlink
+     * @param filePath: file path
+     */
+    export const promiseUnlink = (filePath: string): Promise<void> => {
+        return new Promise<void>((reslove: () => void, reject: (error: Error) => void) => {
+            fs.unlink(filePath, (err) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    reslove();
+                }
+            });
+        });
+    };
 }
 
 export default FileUtil;

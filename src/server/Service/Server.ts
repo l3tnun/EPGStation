@@ -14,6 +14,7 @@ import Base from '../Base';
 import factory from '../Model/ModelFactory';
 import { EncodeFinModelInterface } from '../Model/Service/Encode/EncodeFinModel';
 import { SocketIoManageModelInterface } from '../Model/Service/SocketIoManageModel';
+import FileUtil from '../Util/FileUtil';
 import Util from '../Util/Util';
 import BasicAuth from './BasicAuth';
 
@@ -71,16 +72,15 @@ class Server extends Base {
                 cb(null, fileName);
 
                 // 切断時はファイルを削除
-                (<any> req).on('close', () => {
+                (<any> req).on('close', async() => {
                     const filePath = path.join(uploadTempDir, fileName);
-                    fs.unlink(filePath, (err) => {
-                        if (err) {
-                            this.log.access.error(`upload file delete error: ${ filePath }`);
-                            this.log.access.error(err.message);
-                        } else {
-                            this.log.access.info(`delete upload file: ${ filePath }`);
-                        }
-                    });
+                    try {
+                        await FileUtil.promiseUnlink(filePath);
+                        this.log.access.info(`delete upload file: ${ filePath }`);
+                    } catch (err) {
+                        this.log.access.error(`upload file delete error: ${ filePath }`);
+                        this.log.access.error(err.message);
+                    }
                 });
             },
         });
@@ -101,9 +101,7 @@ class Server extends Base {
                         if (err) { return next(err.message); }
 
                         if (typeof req.files !== 'undefined') {
-                            for (const fieldname in req.files) {
-                                req.body[fieldname] = req.files[fieldname];
-                            }
+                            req.body.files = req.files;
                         }
 
                         return next();
