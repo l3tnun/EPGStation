@@ -160,16 +160,9 @@ const sendResponse = (code: number, req: express.Request, res: express.Response,
 /**
  * multipart/form-data でアップロードされたファイルを削除する
  */
-export const deleteUploadFiles = async(files: { [key: string]: { path: string }[] }): Promise<void> => {
-    if (typeof files === 'undefined') { return; }
+export const deleteUploadFile = async(file: { path: string }): Promise<void> => {
+    if (typeof file === 'undefined') { return; }
 
-    for (const key in files) {
-        for (const file of files[key]) {
-            try {
-                fs.statSync(file.path);
-                await FileUtil.promiseUnlink(file.path);
-            } catch (err) {
-            }
-        }
-    }
+    await FileUtil.promiseUnlink(file.path)
+    .catch(() => {});
 };

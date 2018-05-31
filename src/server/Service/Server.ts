@@ -94,14 +94,11 @@ class Server extends Base {
                 'application/json': bodyParser.json(),
                 'text/text': bodyParser.text(),
                 'multipart/form-data': (req, res, next) => {
-                    upload.fields([
-                        { name: 'ts', maxCount: 1 },
-                        { name: 'encode', maxCount: 5 },
-                    ])(req, res, (err) => {
+                    upload.single('file')(req, res, (err) => {
                         if (err) { return next(err.message); }
 
-                        if (typeof req.files !== 'undefined') {
-                            req.body.files = req.files;
+                        if (typeof req.file !== 'undefined' && typeof req.file.fieldname !== 'undefined') {
+                            req.body[req.file.fieldname] = req.file;
                         }
 
                         return next();
@@ -114,6 +111,8 @@ class Server extends Base {
                 res.json(err);
             },
             errorTransformer: (openApi) => {
+                this.log.system.error(<any> openApi);
+
                 return openApi.message;
             },
             exposeApiDocs: true,
