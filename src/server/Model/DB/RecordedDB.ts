@@ -31,6 +31,7 @@ interface RecordedDBInterface extends DBTableBase {
     addThumbnail(id: number, filePath: string): Promise<void>;
     removeRecording(id: number): Promise<void>;
     removeAllRecording(): Promise<void>;
+    updateTsFilePath(recordedId: number, filePath: string): Promise<void>;
     updateFileSize(recordedId: number): Promise<void>;
     updateAllNullFileSize(): Promise<void>;
     findId(id: number): Promise<DBSchema.RecordedSchema | null>;
@@ -320,6 +321,21 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
      */
     public removeAllRecording(): Promise<void> {
         return this.operator.runQuery(`update ${ DBSchema.TableName.Recorded } set recording = false where recording = true`);
+    }
+
+    /**
+     * recPath を更新する
+     * @param recordedId: recorded id
+     * @param filePath: file path
+     * @return Promise<void>
+     */
+    public async updateTsFilePath(recordedId: number, filePath: string): Promise<void> {
+        const recorded = await this.findId(recordedId);
+        if (recorded === null) { throw new Error('RecordedIsNotFound'); }
+
+        const query = `update ${ DBSchema.TableName.Recorded } set recPath = ${ this.operator.createValueStr(1, 1) } where id = ${ recordedId }`;
+
+        await this.operator.runQuery(query, [filePath.slice(Util.getRecordedPath().length + path.sep.length)]);
     }
 
     /**

@@ -1,9 +1,21 @@
 import * as fs from 'fs';
+import * as mkdirp from 'mkdirp';
+import * as path from 'path';
 import FileUtil from '../../../Util/FileUtil';
+import Util from '../../../Util/Util';
 import { EncodedDBInterface } from '../../DB/EncodedDB';
 import { RecordedDBInterface } from '../../DB/RecordedDB';
 import Model from '../../Model';
 import { RecordingManageModelInterface } from '../Recording/RecordingManageModel';
+
+interface ExternalFileInfo {
+    recordedId: number;
+    isEncoded: boolean;
+    viewName: string;
+    fileName: string;
+    uploadPath: string;
+    directory?: string;
+}
 
 interface RecordedManageModelInterface extends Model {
     delete(id: number): Promise<void>;
@@ -13,6 +25,7 @@ interface RecordedManageModelInterface extends Model {
     deleteRule(id: number): Promise<void>;
     addThumbnail(id: number, thumbnailPath: string): Promise<void>;
     addEncodeFile(recordedId: number, name: string, filePath: string): Promise<number>;
+    addRecordedExternalFile(info: ExternalFileInfo): Promise<void>;
     updateTsFileSize(recordedId: number): Promise<void>;
     updateEncodedFileSize(encodedId: number): Promise<void>;
 }
@@ -187,6 +200,112 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
     }
 
     /**
+     * アップロードされた動画ファイルを追加する
+     * @param info: ExternalFileInfo
+     * @return Promise<void>
+     */
+    public async addRecordedExternalFile(info: ExternalFileInfo): Promise<void> {
+        this.log.system.info(`add external file: ${ info.recordedId }`);
+
+        // 指定された recorded を取得
+        const recorded = await this.recordedDB.findId(info.recordedId);
+        if (recorded === null) {
+            // id で指定された recorded がなかった
+            throw new Error('RecordedIdIsNotFound');
+        }
+
+        // dir
+        let dir = Util.getRecordedPath();
+        if (typeof info.directory !== 'undefined') {
+            dir = path.join(dir, info.directory);
+
+            // check dir
+            try {
+                fs.statSync(dir);
+            } catch (err) {
+                // mkdir directory
+                this.log.system.info(`mkdirp: ${ dir }`);
+                mkdirp.sync(dir);
+            }
+        }
+
+        // get file path
+        const filePath = this.getExternalFilePath(dir, info.fileName);
+
+        // move file
+        try {
+            await FileUtil.promiseRename(info.uploadPath, filePath);
+        } catch (err) {
+            await FileUtil.promiseUnlink(info.uploadPath)
+            .catch(() => {});
+            await FileUtil.promiseUnlink(filePath)
+            .catch(() => {});
+
+            throw err;
+        }
+
+        // エラー時にファイルを削除する関数
+        const deleteFiles = async() => {
+            await FileUtil.promiseUnlink(filePath)
+            .catch(() => {});
+        };
+
+        // DB に反映
+        if (info.isEncoded) {
+            // encoded file
+            try {
+                await this.addEncodeFile(info.recordedId, info.viewName, filePath);
+            } catch (err) {
+                await deleteFiles();
+                throw err;
+            }
+        } else {
+            // ts file
+            if (recorded.recPath !== null) {
+                // すでに ts ファイルがある場合
+                this.log.system.error(`ts file already exists: ${ info.recordedId }`);
+                throw new Error('TsFileAlreadyExists');
+            }
+
+            try {
+                await this.recordedDB.updateTsFilePath(info.recordedId, filePath);
+                await this.updateTsFileSize(info.recordedId);
+            } catch (err) {
+                await deleteFiles();
+                throw err;
+            }
+        }
+
+        // TODO create thumbnail
+        if (recorded.thumbnailPath === null) {
+        }
+    }
+
+    /**
+     * アップロードファイルの file path を取得する
+     * @param dir: directory
+     * @param fileName: file name
+     * @param conflict: 同名ファイルがあった場合カウントされる
+     * @return string
+     */
+    private getExternalFilePath(dir: string, fileName: string, conflict: number = 0): string {
+        const extname = path.extname(fileName);
+        const name = fileName.slice(0, fileName.length - extname.length);
+        const count = conflict > 0 ? `(${ conflict })` : '';
+
+        const filePath = path.join(dir, `${ name }${ count }${ extname }`);
+
+        try {
+            // 同盟のファイルが存在するか確認
+            fs.statSync(filePath);
+
+            return this.getExternalFilePath(dir, fileName, conflict + 1);
+        } catch (err) {
+            return filePath;
+        }
+    }
+
+    /**
      * ts ファイルのサイズを更新
      * @param recordedId: recorded id
      * @return Promise<void>
@@ -205,5 +324,5 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
     }
 }
 
-export { RecordedManageModelInterface, RecordedManageModel };
+export { ExternalFileInfo, RecordedManageModelInterface, RecordedManageModel };
 

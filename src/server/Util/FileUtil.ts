@@ -35,6 +35,24 @@ namespace FileUtil {
             });
         });
     };
+
+    /**
+     * Promise file rename
+     * @param oldPath: old file path
+     * @param newPath: new file path
+     * @return Promise<void>
+     */
+    export const promiseRename = (oldPath: string, newPath: string): Promise<void> => {
+        return new Promise<void>((reslove: () => void, reject: (error: Error) => void) => {
+            fs.rename(oldPath, newPath, (err) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    reslove();
+                }
+            });
+        });
+    };
 }
 
 export default FileUtil;

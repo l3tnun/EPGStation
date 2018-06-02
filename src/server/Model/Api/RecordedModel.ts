@@ -7,6 +7,7 @@ import { FindQuery, RecordedDBInterface } from '../DB/RecordedDB';
 import { RulesDBInterface } from '../DB/RulesDB';
 import { ServicesDBInterface } from '../DB/ServicesDB';
 import { IPCClientInterface } from '../IPC/IPCClient';
+import { ExternalFileInfo } from '../Operator/Recorded/RecordedManageModel';
 import { EncodeManageModelInterface, EncodeProgram } from '../Service/Encode/EncodeManageModel';
 import { RecordedStreamStatusInfo, StreamManageModelInterface } from '../Service/Stream/StreamManageModel';
 import ApiModel from './ApiModel';
@@ -44,6 +45,7 @@ interface RecordedModelInterface extends ApiModel {
     getGenreTags(): Promise<{}>;
     getM3u8(host: string, isSecure: boolean, recordedId: number, encodedId: number | undefined): Promise<PlayList>;
     sendToKodi(host: string, isSecure: boolean, kodi: number, recordedId: number, encodedId: number | undefined): Promise<void>;
+    addExternalFile(info: ExternalFileInfo): Promise<void>;
     addEncode(recordedId: number, option: EncodeAddOption): Promise<void>;
     cancelEncode(recordedId: number): Promise<void>;
 }
@@ -493,6 +495,15 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
         if (encoded !== null) { source += `?encodedId=${ encodedId }`; }
 
         await ApiUtil.sendToKodi(source, kodiConfig[kodi].host, kodiConfig[kodi].user, kodiConfig[kodi].pass);
+    }
+
+    /**
+     * upload された動画ファイルを追加する
+     * @param info: ExternalFileInfo
+     * @return Promise<void>
+     */
+    public async addExternalFile(info: ExternalFileInfo): Promise<void> {
+        await this.ipc.addRecordedExternalFile(info);
     }
 
     /**
