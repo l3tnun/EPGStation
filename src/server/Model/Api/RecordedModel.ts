@@ -7,7 +7,7 @@ import { FindQuery, RecordedDBInterface } from '../DB/RecordedDB';
 import { RulesDBInterface } from '../DB/RulesDB';
 import { ServicesDBInterface } from '../DB/ServicesDB';
 import { IPCClientInterface } from '../IPC/IPCClient';
-import { ExternalFileInfo } from '../Operator/Recorded/RecordedManageModel';
+import { ExternalFileInfo, NewRecorded } from '../Operator/Recorded/RecordedManageModel';
 import { EncodeManageModelInterface, EncodeProgram } from '../Service/Encode/EncodeManageModel';
 import { RecordedStreamStatusInfo, StreamManageModelInterface } from '../Service/Stream/StreamManageModel';
 import ApiModel from './ApiModel';
@@ -46,6 +46,7 @@ interface RecordedModelInterface extends ApiModel {
     getM3u8(host: string, isSecure: boolean, recordedId: number, encodedId: number | undefined): Promise<PlayList>;
     sendToKodi(host: string, isSecure: boolean, kodi: number, recordedId: number, encodedId: number | undefined): Promise<void>;
     addExternalFile(info: ExternalFileInfo): Promise<void>;
+    createNewRecorded(info: NewRecorded): Promise<{ id: number }>;
     addEncode(recordedId: number, option: EncodeAddOption): Promise<void>;
     cancelEncode(recordedId: number): Promise<void>;
 }
@@ -504,6 +505,17 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
      */
     public async addExternalFile(info: ExternalFileInfo): Promise<void> {
         await this.ipc.addRecordedExternalFile(info);
+    }
+
+    /**
+     * 録画新規作成
+     * @param info: NewRecorded
+     * @return Promise<{ id: number }> recordedId
+     */
+    public async createNewRecorded(info: NewRecorded): Promise<{ id: number }> {
+        const recordedId = await this.ipc.createNewRecorded(info);
+
+        return { id: recordedId };
     }
 
     /**

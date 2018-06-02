@@ -1,7 +1,7 @@
 import * as events from 'events';
 import * as apid from '../../../../node_modules/mirakurun/api';
 import Model from '../Model';
-import { ExternalFileInfo } from '../Operator/Recorded/RecordedManageModel';
+import { ExternalFileInfo, NewRecorded } from '../Operator/Recorded/RecordedManageModel';
 import { ReserveAllId, ReserveLimit } from '../Operator/Reservation/ReservationManageModel';
 import { AddReserveInterface, ReserveProgram } from '../Operator/ReserveProgramInterface';
 import { RuleInterface } from '../Operator/RuleInterface';
@@ -30,6 +30,7 @@ interface IPCClientInterface extends Model {
     ruleUpdate(ruleId: number, rule: RuleInterface): Promise<void>;
     addEncodeFile(recordedId: number, name: string, filePath: string): Promise<number>;
     addRecordedExternalFile(info: ExternalFileInfo): Promise<void>;
+    createNewRecorded(info: NewRecorded): Promise<number>;
     updateTsFileSize(recordedId: number): Promise<void>;
     updateEncodedFileSize(encodedId: number): Promise<void>;
     updateReserves(): Promise<void>;
@@ -292,6 +293,20 @@ class IPCClient extends Model implements IPCClientInterface {
             info: info,
         });
         await this.receive(id);
+    }
+
+    /**
+     * recorded を新規作成
+     * @param info: NewRecorded
+     * @return Promise<number> recordedId
+     */
+    public async createNewRecorded(info: NewRecorded): Promise<number> {
+        const id = this.send(IPCMessageDefinition.createNewRecorded, {
+            info: info,
+        });
+        const result = await this.receive(id);
+
+        return <number> result.value;
     }
 
     /**

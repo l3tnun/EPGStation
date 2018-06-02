@@ -14,6 +14,7 @@ export const get: Operation = async(req, res) => {
             keyword: req.query.keyword,
         });
         api.responseJSON(res, 200, results);
+        api.notifyClient();
     } catch (err) {
         api.responseServerError(res, err.message);
     }
@@ -44,6 +45,52 @@ get.apiDoc = {
                         },
                     },
                     total: { $ref: '#/definitions/total' },
+                },
+            },
+        },
+        default: {
+            description: '予期しないエラー',
+            schema: {
+                $ref: '#/definitions/Error',
+            },
+        },
+    },
+};
+
+export const post: Operation = async(req, res) => {
+    const recorded = <RecordedModelInterface> factory.get('RecordedModel');
+
+    try {
+        const result = await recorded.createNewRecorded(req.body);
+        api.responseJSON(res, 201, result);
+    } catch (err) {
+        api.responseServerError(res, err.message);
+    }
+};
+
+post.apiDoc = {
+    summary: '録画新規作成',
+    tags: ['recorded'],
+    description: '録画新規作成する',
+    parameters: [
+        {
+            name: 'body',
+            in: 'body',
+            required: true,
+            schema: {
+                $ref: '#/definitions/NewRecorded',
+            },
+        },
+    ],
+    responses: {
+        201: {
+            description: 'ok',
+            schema: {
+                type: 'object',
+                properties: {
+                    id: {
+                        $ref: '#/definitions/RecordedId',
+                    },
                 },
             },
         },

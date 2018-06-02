@@ -123,6 +123,7 @@ namespace ModelFactorySetting {
         const recordedManage = new RecordedManageModel(
             recordedDB!,
             encodedDB!,
+            servicesDB!,
             recordingManage,
             thumbnailManageModel,
         );

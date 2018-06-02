@@ -1,10 +1,12 @@
 import * as fs from 'fs';
 import * as mkdirp from 'mkdirp';
 import * as path from 'path';
+import * as apid from '../../../../../api';
 import FileUtil from '../../../Util/FileUtil';
 import Util from '../../../Util/Util';
 import { EncodedDBInterface } from '../../DB/EncodedDB';
 import { RecordedDBInterface } from '../../DB/RecordedDB';
+import { ServicesDBInterface } from '../../DB/ServicesDB';
 import Model from '../../Model';
 import { RecordingManageModelInterface } from '../Recording/RecordingManageModel';
 import { ThumbnailManageModelInterface, ThumbnailRecordedProgram } from '../Thumbnail/ThumbnailManageModel';
@@ -18,6 +20,24 @@ interface ExternalFileInfo {
     directory?: string;
 }
 
+interface NewRecorded {
+    channelId: apid.ServiceItemId;
+    startAt: apid.UnixtimeMS;
+    endAt: apid.UnixtimeMS;
+    name: string;
+    description: string | null;
+    extended: string | null;
+    genre1: number | null;
+    genre2: number | null;
+    videoType: apid.ProgramVideoType | null;
+    videoResolution: apid.ProgramVideoResolution | null;
+    videoStreamContent: number | null;
+    videoComponentType: number | null;
+    audioSamplingRate: apid.ProgramAudioSamplingRate | null;
+    audioComponentType: number | null;
+    ruleId: number | null;
+}
+
 interface RecordedManageModelInterface extends Model {
     delete(id: number): Promise<void>;
     deletes(ids: number[]): Promise<number[]>;
@@ -27,6 +47,7 @@ interface RecordedManageModelInterface extends Model {
     addThumbnail(id: number, thumbnailPath: string): Promise<void>;
     addEncodeFile(recordedId: number, name: string, filePath: string): Promise<number>;
     addRecordedExternalFile(info: ExternalFileInfo): Promise<void>;
+    createNewRecorded(info: NewRecorded): Promise<number>;
     updateTsFileSize(recordedId: number): Promise<void>;
     updateEncodedFileSize(encodedId: number): Promise<void>;
 }
@@ -34,12 +55,14 @@ interface RecordedManageModelInterface extends Model {
 class RecordedManageModel extends Model implements RecordedManageModelInterface {
     private recordedDB: RecordedDBInterface;
     private encodedDB: EncodedDBInterface;
+    private servicesDB: ServicesDBInterface;
     private recordingManage: RecordingManageModelInterface;
     private thumbnailManage: ThumbnailManageModelInterface;
 
     constructor(
         recordedDB: RecordedDBInterface,
         encodedDB: EncodedDBInterface,
+        servicesDB: ServicesDBInterface,
         recordingManage: RecordingManageModelInterface,
         thumbnailManage: ThumbnailManageModelInterface,
     ) {
@@ -47,6 +70,7 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
 
         this.recordedDB = recordedDB;
         this.encodedDB = encodedDB;
+        this.servicesDB = servicesDB;
         this.recordingManage = recordingManage;
         this.thumbnailManage = thumbnailManage;
     }
@@ -318,6 +342,46 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
     }
 
     /**
+     * recorded を新規作成
+     * @param info NewRecorded
+     * @return Promise<number> recordedId
+     */
+    public async createNewRecorded(info: NewRecorded): Promise<number> {
+        const channel = await this.servicesDB.findId(info.channelId);
+        if (channel === null) { throw new Error('ChannelIdIsNotFound'); }
+
+        const duration = Math.floor(info.endAt - info.startAt);
+        if (duration < 0) { throw new Error('TimeError'); }
+
+        return await this.recordedDB.insert({
+            id: 0,
+            programId: 0,
+            channelId: info.channelId,
+            channelType: channel.channelType,
+            startAt: info.startAt,
+            endAt: info.endAt,
+            duration: duration,
+            name: info.name,
+            description: info.description,
+            extended: info.extended,
+            genre1: info.genre1,
+            genre2: info.genre2,
+            videoType: info.videoType,
+            videoResolution: info.videoResolution,
+            videoStreamContent: info.videoStreamContent,
+            videoComponentType: info.videoComponentType,
+            audioSamplingRate: info.audioSamplingRate,
+            audioComponentType: info.audioComponentType,
+            recPath: null,
+            ruleId: info.ruleId,
+            thumbnailPath: null,
+            recording: false,
+            protection: false,
+            filesize: null,
+        });
+    }
+
+    /**
      * ts ファイルのサイズを更新
      * @param recordedId: recorded id
      * @return Promise<void>
@@ -336,5 +400,5 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
     }
 }
 
-export { ExternalFileInfo, RecordedManageModelInterface, RecordedManageModel };
+export { ExternalFileInfo, NewRecorded, RecordedManageModelInterface, RecordedManageModel };
 
