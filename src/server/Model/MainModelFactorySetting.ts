@@ -119,10 +119,12 @@ namespace ModelFactorySetting {
         reservationManage.setRecordedManageModel(recordingManage);
 
         const mirakurunManage = new MirakurunManageModel();
+        const thumbnailManageModel = new ThumbnailManageModel(encodedDB!);
         const recordedManage = new RecordedManageModel(
             recordedDB!,
             encodedDB!,
             recordingManage,
+            thumbnailManageModel,
         );
         const ruleManageModel = new RuleManageModel(rulesDB!);
         const storageCheckManageModel = new StorageCheckManageModel(
@@ -130,7 +132,6 @@ namespace ModelFactorySetting {
             recordedManage,
             ipc,
         );
-        const thumbnailManageModel = new ThumbnailManageModel();
         const epgUpdateFinModel = new EPGUpdateFinModel(
             mirakurunManage,
             reservationManage,

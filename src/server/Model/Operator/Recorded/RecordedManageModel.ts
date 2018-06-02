@@ -7,6 +7,7 @@ import { EncodedDBInterface } from '../../DB/EncodedDB';
 import { RecordedDBInterface } from '../../DB/RecordedDB';
 import Model from '../../Model';
 import { RecordingManageModelInterface } from '../Recording/RecordingManageModel';
+import { ThumbnailManageModelInterface, ThumbnailRecordedProgram } from '../Thumbnail/ThumbnailManageModel';
 
 interface ExternalFileInfo {
     recordedId: number;
@@ -34,17 +35,20 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
     private recordedDB: RecordedDBInterface;
     private encodedDB: EncodedDBInterface;
     private recordingManage: RecordingManageModelInterface;
+    private thumbnailManage: ThumbnailManageModelInterface;
 
     constructor(
         recordedDB: RecordedDBInterface,
         encodedDB: EncodedDBInterface,
         recordingManage: RecordingManageModelInterface,
+        thumbnailManage: ThumbnailManageModelInterface,
     ) {
         super();
 
         this.recordedDB = recordedDB;
         this.encodedDB = encodedDB;
         this.recordingManage = recordingManage;
+        this.thumbnailManage = thumbnailManage;
     }
 
     /**
@@ -251,10 +255,11 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
         };
 
         // DB に反映
+        let encodedId: number | null = null;
         if (info.isEncoded) {
             // encoded file
             try {
-                await this.addEncodeFile(info.recordedId, info.viewName, filePath);
+                encodedId = await this.addEncodeFile(info.recordedId, info.viewName, filePath);
             } catch (err) {
                 await deleteFiles();
                 throw err;
@@ -276,8 +281,15 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
             }
         }
 
-        // TODO create thumbnail
+        // create thumbnail
         if (recorded.thumbnailPath === null) {
+            if (encodedId !== null) {
+                (<ThumbnailRecordedProgram> recorded).encodedId = encodedId;
+            } else {
+                recorded.recPath = filePath;
+            }
+
+            this.thumbnailManage.push(<ThumbnailRecordedProgram> recorded);
         }
     }
 
