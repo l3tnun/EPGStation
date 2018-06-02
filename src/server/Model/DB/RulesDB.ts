@@ -1,6 +1,11 @@
 import * as DBSchema from './DBSchema';
 import DBTableBase from './DBTableBase';
 
+interface RuleList {
+    id: number;
+    keyword: string | null;
+}
+
 interface RulesDBInterface extends DBTableBase {
     create(): Promise<void>;
     drop(): Promise<void>;
@@ -14,6 +19,7 @@ interface RulesDBInterface extends DBTableBase {
     findAllId(): Promise<{ id: number }[]>;
     findAllIdAndKeyword(): Promise<{ id: number; keyword: string }[]>;
     findAll(limit?: number, offset?: number): Promise<DBSchema.RulesSchema[]>;
+    getList(): Promise<RuleList[]>;
     getTotal(): Promise<number>;
 }
 
@@ -327,6 +333,14 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
         if (typeof limit !== 'undefined') { query += ` ${ this.operator.createLimitStr(limit, offset) }`; }
 
         return this.fixResults(<DBSchema.RulesSchema[]> await this.operator.runQuery(query));
+    }
+
+    /**
+     * keyword と id の一覧を取得
+     * @return Promise<RuleList[]>
+     */
+    public async getList(): Promise<RuleList[]> {
+        return <RuleList[]> await this.operator.runQuery(`select id, keyword from ${ DBSchema.TableName.Rules } order by id asc`);
     }
 
     /**

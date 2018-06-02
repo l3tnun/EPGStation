@@ -835,6 +835,18 @@ definitions:
       audioComponentType:
         type: integer
 
+  RuleList:
+    type: object
+    required:
+      - id
+    properties:
+      id:
+        $ref: '#/definitions/RuleId'
+        description: 'rule id'
+      keyword:
+        type: string
+        description: '検索文字列'
+
   Rule:
     type: object
     required:

@@ -8,6 +8,7 @@ import ApiUtil from './ApiUtil';
 interface RulesModelInterface extends ApiModel {
     getAll(limit: number | undefined, offset: number): Promise<{}[]>;
     getId(ruleId: number): Promise<{}>;
+    getRuleList(): Promise<{}[]>;
     disableRule(ruleId: number): Promise<void>;
     enableRule(ruleId: number): Promise<void>;
     deleteRule(ruleId: number): Promise<void>;
@@ -63,6 +64,18 @@ class RulesModel extends ApiModel implements RulesModelInterface {
         }
 
         return ApiUtil.deleteNullinHash(rule);
+    }
+
+    /**
+     * rule list を取得
+     * @return Promise<{}[]>
+     */
+    public async getRuleList(): Promise<{}[]> {
+        const list = await this.rulesDB.getList();
+
+        return list.map((l) => {
+            return ApiUtil.deleteNullinHash(l);
+        });
     }
 
     /**
