@@ -255,6 +255,11 @@ export interface Rules {
     total: number;
 }
 
+export interface RuleList {
+    id: RuleId;
+    keyword?: string;
+}
+
 export interface Rule {
     id: RuleId;
     keyword?: string;

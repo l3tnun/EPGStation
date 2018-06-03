@@ -6,9 +6,11 @@ interface RulesApiModelInterface extends ApiModel {
     updateRules(): Promise<void>;
     fetchRules(limit: number, offset: number): Promise<void>;
     fetchRule(ruleId: apid.RuleId): Promise<void>;
+    fetchRuleList(): Promise<void>;
     getRules(): apid.Rules;
     getPage(): number;
     getRule(): apid.Rule | null;
+    getRuleList(): apid.RuleList[];
     enable(ruleId: apid.RuleId): Promise<void>;
     disable(ruleId: apid.RuleId): Promise<void>;
     delete(ruleId: apid.RuleId): Promise<void>;
@@ -23,6 +25,7 @@ interface RulesApiModelInterface extends ApiModel {
 class RulesApiModel extends ApiModel implements RulesApiModelInterface {
     private rules: apid.Rules = { rules: [], total: 0 };
     private rule: apid.Rule | null = null;
+    private ruleList: apid.RuleList[] = [];
     private limit: number = 0;
     private offset: number = 0;
     private currentPage: number = 1;
@@ -90,6 +93,24 @@ class RulesApiModel extends ApiModel implements RulesApiModelInterface {
     }
 
     /**
+     * Rule List を取得
+     * /api/rule/list
+     */
+    public async fetchRuleList(): Promise<void> {
+        try {
+            this.ruleList = await <any> this.request({
+                method: 'GET',
+                url: '/api/rules/list',
+            });
+        } catch (err) {
+            this.ruleList = [];
+            console.error('/api/rules/list');
+            console.error(err);
+            this.openSnackbar('ルール一覧取得に失敗しました');
+        }
+    }
+
+    /**
      * rules を取得
      * @return apid.Rules
      */
@@ -111,6 +132,14 @@ class RulesApiModel extends ApiModel implements RulesApiModelInterface {
      */
     public getRule(): apid.Rule | null {
         return this.rule;
+    }
+
+    /**
+     * rule list を取得
+     * @return apid.RuleList[]
+     */
+    public getRuleList(): apid.RuleList[] {
+        return this.ruleList;
     }
 
     /**
