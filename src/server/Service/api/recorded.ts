@@ -14,7 +14,6 @@ export const get: Operation = async(req, res) => {
             keyword: req.query.keyword,
         });
         api.responseJSON(res, 200, results);
-        api.notifyClient();
     } catch (err) {
         api.responseServerError(res, err.message);
     }
@@ -63,6 +62,7 @@ export const post: Operation = async(req, res) => {
     try {
         const result = await recorded.createNewRecorded(req.body);
         api.responseJSON(res, 201, result);
+        api.notifyClient();
     } catch (err) {
         api.responseServerError(res, err.message);
     }
