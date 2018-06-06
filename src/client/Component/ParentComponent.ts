@@ -368,6 +368,16 @@ abstract class ParentComponent<T> extends Component<T> {
     protected abstract getComponentName(): string;
 
     public abstract view(vnode: m.Vnode<T, any>): m.Children | null | void;
+
+    /**
+     * get MainLayout
+     * @return HTMLElement | null
+     */
+    protected getMainLayout(): HTMLElement | null {
+        const layouts = document.getElementsByClassName('mdl-layout__content');
+
+        return layouts.length === 0 ? null : <HTMLElement> layouts[0];
+    }
 }
 
 namespace ParentComponent {

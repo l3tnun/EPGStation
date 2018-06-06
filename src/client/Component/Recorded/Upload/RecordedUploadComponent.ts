@@ -1,9 +1,15 @@
 import * as m from 'mithril';
 import { ViewModelStatus } from '../../../Enums';
+import Scroll from '../../../Util/Scroll';
+import Util from '../../../Util/Util';
 import RecordedUploadViewModel from '../../../ViewModel/Recorded/RecordedUploadViewModel';
 import factory from '../../../ViewModel/ViewModelFactory';
 import MainLayoutComponent from '../../MainLayoutComponent';
 import ParentComponent from '../../ParentComponent';
+
+interface HTMLInputEvent extends Event {
+    target: HTMLInputElement & EventTarget;
+}
 
 /**
  * RecordedUploadComponent
@@ -19,6 +25,8 @@ class RecordedUploadComponent extends ParentComponent<void> {
 
     protected async parentInitViewModel(status: ViewModelStatus): Promise<void> {
         this.viewModel.init(status);
+
+        await Util.sleep(100);
     }
 
     /**
@@ -34,6 +42,20 @@ class RecordedUploadComponent extends ParentComponent<void> {
             header: { title: 'アップロード' },
             content: [
                 this.createContent(),
+                m('button', {
+                    class: 'fab-right-bottom mdl-shadow--8dp mdl-button mdl-js-button mdl-button--fab mdl-button--colored',
+                    onclick: async() => {
+                        this.viewModel.createNewEncode();
+
+                        await Util.sleep(100);
+                        m.redraw();
+
+                        const mainLayout = this.getMainLayout();
+                        if (mainLayout === null) { return; }
+
+                        Scroll.scrollTo(mainLayout, mainLayout.scrollTop, mainLayout.scrollHeight - mainLayout.clientHeight, 300);
+                    },
+                }, m('i', { class: 'material-icons' }, 'add')),
             ],
             scrollStoped: (scrollTop: number) => {
                 this.saveHistoryData(scrollTop);
@@ -54,9 +76,14 @@ class RecordedUploadComponent extends ParentComponent<void> {
                 this.createBroadcaster(),
                 this.createGenres(),
                 this.createRules(),
+                this.createDate(),
+                this.createDuration(),
                 this.createTitle(),
                 this.createDescription(),
                 this.createExtended(),
+                this.createDirectory(),
+                this.createTsFile(),
+                this.createEncodeFiles(),
             ]),
             this.createActionButtons(),
         ]);
@@ -148,6 +175,64 @@ class RecordedUploadComponent extends ParentComponent<void> {
     }
 
     /**
+     * create date
+     * @return m.Child
+     */
+    private createDate(): m.Child {
+        return this.createContentFrame('日付', [
+            m('div', {
+                class: 'mdl-cell--12-col mdl-textfield mdl-js-textfield',
+                style: 'display: flex; width: 50%;',
+            }, [
+                m('input', {
+                    class: 'mdl-textfield__input',
+                    type: 'date',
+                    value: this.viewModel.date,
+                    onchange: m.withAttr('value', (value) => { this.viewModel.date = value; }),
+                }),
+            ]),
+            m('div', {
+                class: 'mdl-cell--12-col mdl-textfield mdl-js-textfield',
+                style: 'display: flex; width: 50%;',
+            }, [
+                m('input', {
+                    class: 'mdl-textfield__input',
+                    type: 'time',
+                    value: this.viewModel.time,
+                    onchange: m.withAttr('value', (value) => { this.viewModel.time = value; }),
+                }),
+            ]),
+        ]);
+    }
+
+    /**
+     * create duration
+     * @return m.Child
+     */
+    private createDuration(): m.Child {
+        return this.createContentFrame('長さ(分)', [
+            m('div', { class: 'mdl-cell--12-col mdl-textfield mdl-js-textfield' }, [
+                m('input', {
+                    class: 'mdl-textfield__input',
+                    type: 'number', pattern: '-?[0-9]*(\.[0-9]+)?',
+                    value: (() => {
+                        if (this.viewModel.duration === 0) { return; }
+                        else { return this.viewModel.duration; }
+                    })(),
+                    onchange: m.withAttr('value', (value) => {
+                        let num = Number(value);
+                        if (isNaN(num)) { num = 0; }
+                        this.viewModel.duration = num;
+                    }),
+                    onupdate: (vnode: m.VnodeDOM<void, this>) => {
+                        this.inputNumberOnUpdate(<HTMLInputElement> vnode.dom, this.viewModel.duration);
+                    },
+                }),
+            ]),
+        ]);
+    }
+
+    /**
      * create title
      * @return m.Child
      */
@@ -204,6 +289,116 @@ class RecordedUploadComponent extends ParentComponent<void> {
     }
 
     /**
+     * create directory
+     * @return m.Child
+     */
+    private createDirectory(): m.Child {
+        return this.createContentFrame('ディレクトリ', [
+            m('div', { class: 'mdl-cell--12-col mdl-textfield mdl-js-textfield' }, [
+                m('input', {
+                    class: 'mdl-textfield__input',
+                    type: 'text',
+                    value: this.viewModel.directory,
+                    onchange: m.withAttr('value', (value) => { this.viewModel.directory = value; }),
+                }),
+            ]),
+        ]);
+    }
+
+    /**
+     * create ts file
+     * @return m.Child
+     */
+    private createTsFile(): m.Child {
+        return this.createContentFrame('TS ファイル', [
+            this.createFileInput('File',
+                () => { return this.viewModel.tsFile; },
+                (file) => { this.viewModel.tsFile = file; },
+                () => { return this.viewModel.tsName; },
+                (dir) => { this.viewModel.tsName = dir; },
+            ),
+        ]);
+    }
+
+    /**
+     * create file input
+     * @param id
+     * m.Child
+     */
+    private createFileInput(
+        placeholder: string,
+        getFile: () => File | null,
+        setFile: (file: File | null) => void,
+        getName: () => string,
+        getDir: (name: string) => void,
+    ): m.Child {
+        const file = getFile();
+
+        return m('div', { class: 'file mdl-cell--12-col' }, [
+            m('div', { class: 'mdl-textfield mdl-js-textfield file-field' }, [
+                m('input', {
+                    class: 'mdl-textfield__input',
+                    placeholder: placeholder,
+                    onupdate: (vnode: m.VnodeDOM<void, any>) => {
+                        (<HTMLInputElement> vnode.dom).value = file === null ? placeholder : file.name;
+                    },
+                    type: 'text',
+                    readonly: ' ',
+                }),
+                m('label', { class: 'mdl-button mdl-js-button mdl-button--icon' }, [
+                    file === null
+                    ? m('i', { class: 'material-icons' }, [
+                        'attach_file',
+                        m('input', {
+                            type: 'file',
+                            onchange: (e: HTMLInputEvent) => {
+                                if (e.target.files === null) { return; }
+                                setFile(e.target.files[0]);
+                            },
+                        }),
+                    ])
+                    : m('i', {
+                        class: 'material-icons',
+                        onclick: () => {
+                            setFile(null);
+
+                            return false;
+                        },
+                    }, 'clear'),
+                ]),
+            ]),
+            m('div', { class: 'mdl-textfield mdl-js-textfield directory-field' }, [
+                m('input', {
+                    class: 'mdl-textfield__input',
+                    type: 'text',
+                    placeholder: 'name',
+                    value: getName(),
+                    onchange: m.withAttr('value', (value) => { getDir(value); }),
+                }),
+            ]),
+        ]);
+    }
+
+    /**
+     * create encode files
+     * @return m.Child
+     */
+    private createEncodeFiles(): m.Child | null {
+        if (this.viewModel.encodeFiles.length === 0) { return null; }
+
+        return this.createContentFrame('エンコードファイル',
+            this.viewModel.encodeFiles.map((_encode, idx) => {
+                return this.createFileInput(`Encode File${ idx + 1 }`,
+                    () => { return this.viewModel.encodeFiles[idx].file; },
+                    (file) => { this.viewModel.encodeFiles[idx].file = file; },
+                    () => { return this.viewModel.encodeFiles[idx].name; },
+                    (name) => { this.viewModel.encodeFiles[idx].name = name; },
+                );
+            }),
+        );
+    }
+
+    /**
      * create action buttons
      * @return m.Child
      */
@@ -212,8 +407,10 @@ class RecordedUploadComponent extends ParentComponent<void> {
             m('button', {
                 type: 'button',
                 class: 'mdl-button mdl-js-button mdl-button--primary',
-                onclick: () => {},
-            }, '保存'),
+                onclick: () => {
+                    this.viewModel.upload();
+                },
+            }, 'アップロード'),
             m('button', {
                 type: 'button',
                 class: 'mdl-button mdl-js-button mdl-button--accent close',

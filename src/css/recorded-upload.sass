@@ -1,5 +1,7 @@
+$window-width: 800px;
+
 .recorded-upload-content
-    max-width: 800px;
+    max-width: $window-width;
     margin-left: auto;
     margin-right: auto;
 
@@ -11,4 +13,19 @@
 
     .mdl-dialog__actions
         padding-top: 0;
+
+    .file
+        .file-field, .directory-field
+            width: 100%;
+
+        .file-field
+            .mdl-textfield__input
+                width: calc(100% - 32px);
+
+            label
+                right: 0;
+
+@media screen and (max-width: $window-width + 128px)
+    .recorded-upload-content
+        margin-bottom: 78px;
 

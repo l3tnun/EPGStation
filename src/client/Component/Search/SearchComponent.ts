@@ -70,7 +70,9 @@ class SearchComponent extends ParentComponent<void> {
                 m('button', {
                     class: 'fab-left-bottom mdl-shadow--8dp mdl-button mdl-js-button mdl-button--fab mdl-button--colored',
                     onclick: () => {
-                        const mainLayout = document.getElementsByClassName('mdl-layout__content')[0];
+                        const mainLayout = this.getMainLayout();
+                        if (mainLayout === null) { return; }
+
                         Scroll.scrollTo(mainLayout, mainLayout.scrollTop, 0, mainLayout.scrollTop - window.innerHeight < 600 ? 300 : 500);
                     },
                 }, m('i', { class: 'material-icons' }, 'arrow_upward')),

@@ -5,6 +5,11 @@ import { ChannelsApiModelInterface } from '../../Model/Api/ChannelsApiModel';
 import { RulesApiModelInterface } from '../../Model/Api/RulesApiModel';
 import ViewModel from '../ViewModel';
 
+interface UploadFile {
+    file: File | null;
+    name: string;
+}
+
 /**
  * RecordedUploadViewModel
  */
@@ -16,9 +21,16 @@ class RecordedUploadViewModel extends ViewModel {
     public genrelv1: apid.ProgramGenreLv1 = -1;
     public genrelv2: apid.ProgramGenreLv1 = -1;
     public ruleId: number = 0;
+    public date: string = '';
+    public time: string = '';
+    public duration: number = 0;
     public title: string = '';
     public description: string = '';
     public extended: string = '';
+    public directory: string = '';
+    public tsFile: File | null = null;
+    public tsName: string = '';
+    public encodeFiles: UploadFile[] = [];
 
     constructor(
         channels: ChannelsApiModelInterface,
@@ -51,9 +63,16 @@ class RecordedUploadViewModel extends ViewModel {
         this.genrelv1 = -1;
         this.initGenre2();
         this.ruleId = 0;
+        this.date = '';
+        this.time = '';
+        this.duration = 0;
         this.title = '';
         this.description = '';
         this.extended = '';
+        this.directory = '';
+        this.tsFile = null;
+        this.tsName = '';
+        this.encodeFiles = [];
     }
 
     /**
@@ -103,10 +122,27 @@ class RecordedUploadViewModel extends ViewModel {
 
     /**
      * get rule list
-     * @return
+     * @return apid.RuleList[]
      */
     public getRuleList(): apid.RuleList[] {
         return this.rules.getRuleList();
+    }
+
+    /**
+     * create new encode file
+     */
+    public createNewEncode(): void {
+        this.encodeFiles.push({
+            file: null,
+            name: '',
+        });
+    }
+
+    /**
+     * upload file
+     */
+    public upload(): void {
+        // TODO upload
     }
 }
 
