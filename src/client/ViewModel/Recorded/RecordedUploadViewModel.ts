@@ -4,6 +4,7 @@ import { genre1, genre2 } from '../../lib/event';
 import { ChannelsApiModelInterface } from '../../Model/Api/ChannelsApiModel';
 import { RecordedApiModelInterface, UploadQueryOption } from '../../Model/Api/RecordedApiModel';
 import { RulesApiModelInterface } from '../../Model/Api/RulesApiModel';
+import { BalloonModelInterface } from '../../Model/Balloon/BallonModel';
 import { SnackbarModelInterface } from '../../Model/Snackbar/SnackbarModel';
 import ViewModel from '../ViewModel';
 
@@ -20,6 +21,7 @@ class RecordedUploadViewModel extends ViewModel {
     private rules: RulesApiModelInterface;
     private recorded: RecordedApiModelInterface;
     private snackbar: SnackbarModelInterface;
+    private balloon: BalloonModelInterface;
 
     private newRecordedId: number | null = null;
 
@@ -43,6 +45,7 @@ class RecordedUploadViewModel extends ViewModel {
         rules: RulesApiModelInterface,
         recorded: RecordedApiModelInterface,
         snackbar: SnackbarModelInterface,
+        balloon: BalloonModelInterface,
     ) {
         super();
 
@@ -50,6 +53,9 @@ class RecordedUploadViewModel extends ViewModel {
         this.rules = rules;
         this.recorded = recorded;
         this.snackbar = snackbar;
+        this.balloon = balloon;
+
+        this.balloon.regDisableCloseAllId(RecordedUploadViewModel.uploadingId);
     }
 
     /**
@@ -236,6 +242,8 @@ class RecordedUploadViewModel extends ViewModel {
             files.push(option);
         }
 
+        this.open();
+
         // upload file
         for (const file of files) {
             await this.recorded.uploadFile(file)
@@ -244,10 +252,15 @@ class RecordedUploadViewModel extends ViewModel {
             });
 
             // upload 中断
-            if (this.newRecordedId === null) { return; }
+            if (this.newRecordedId === null) {
+                this.close();
+
+                return;
+            }
         }
 
         this.newRecordedId = null;
+        this.close();
         this.snackbar.open('アップロードが完了しました。');
     }
 
@@ -266,6 +279,24 @@ class RecordedUploadViewModel extends ViewModel {
 
         this.snackbar.open('アップロードを中断しました。');
     }
+
+    /**
+     * open balloon
+     */
+    private open(): void {
+        this.balloon.open(RecordedUploadViewModel.uploadingId);
+    }
+
+    /**
+     * close balloon
+     */
+    public close(): void {
+        this.balloon.close(RecordedUploadViewModel.uploadingId);
+    }
+}
+
+namespace RecordedUploadViewModel {
+    export const uploadingId = 'uploading';
 }
 
 export default RecordedUploadViewModel;

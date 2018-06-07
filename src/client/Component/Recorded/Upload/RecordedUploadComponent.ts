@@ -4,8 +4,10 @@ import Scroll from '../../../Util/Scroll';
 import Util from '../../../Util/Util';
 import RecordedUploadViewModel from '../../../ViewModel/Recorded/RecordedUploadViewModel';
 import factory from '../../../ViewModel/ViewModelFactory';
+import { BalloonComponent } from '../../BalloonComponent';
 import MainLayoutComponent from '../../MainLayoutComponent';
 import ParentComponent from '../../ParentComponent';
+import RecordedUploadBalloonComponnet from './RecordedUploadBalloonComponnet';
 
 interface HTMLInputEvent extends Event {
     target: HTMLInputElement & EventTarget;
@@ -60,6 +62,16 @@ class RecordedUploadComponent extends ParentComponent<void> {
             scrollStoped: (scrollTop: number) => {
                 this.saveHistoryData(scrollTop);
             },
+            notMainContent: [
+                m(BalloonComponent, {
+                    id: RecordedUploadViewModel.uploadingId,
+                    content: m(RecordedUploadBalloonComponnet),
+                    maxWidth: 300,
+                    maxHeight: 300,
+                    forceDialog: true,
+                    forceModal: true,
+                }),
+            ],
         });
     }
 
