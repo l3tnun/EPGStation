@@ -140,6 +140,8 @@ namespace ViewModelFactorySetting {
         factory.reg('RecordedUploadViewModel', new RecordedUploadViewModel(
             channelsApiModel,
             rulesApiModel,
+            recordedApiModel,
+            snackbarModel,
         ));
         factory.reg('RecordedWatchSelectSettingViewModel', new RecordedWatchSelectSettingViewModel(
             recordedWatchSelectSettingModel,

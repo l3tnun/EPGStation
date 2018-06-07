@@ -161,6 +161,24 @@ export interface RecordedProgram {
     encoding?: EncodingInfo[];
 }
 
+export interface NewRecorded {
+    channelId: ServiceItemId;
+    startAt: UnixtimeMS;
+    endAt: UnixtimeMS;
+    name: string;
+    description?: string;
+    extended?: string;
+    genre1?: number;
+    genre2?: number;
+    videoType?: ProgramVideoType;
+    videoResolution?: ProgramVideoResolution;
+    videoStreamContent?: number;
+    videoComponentType?: number;
+    audioSamplingRate?: ProgramAudioSamplingRate;
+    audioComponentType?: number;
+    ruleId?: RuleId;
+}
+
 export interface RecordedDurationInfo {
     duration: number;
 }

@@ -2,7 +2,9 @@ import * as apid from '../../../../api';
 import { ViewModelStatus } from '../../Enums';
 import { genre1, genre2 } from '../../lib/event';
 import { ChannelsApiModelInterface } from '../../Model/Api/ChannelsApiModel';
+import { RecordedApiModelInterface, UploadQueryOption } from '../../Model/Api/RecordedApiModel';
 import { RulesApiModelInterface } from '../../Model/Api/RulesApiModel';
+import { SnackbarModelInterface } from '../../Model/Snackbar/SnackbarModel';
 import ViewModel from '../ViewModel';
 
 interface UploadFile {
@@ -16,6 +18,10 @@ interface UploadFile {
 class RecordedUploadViewModel extends ViewModel {
     private channels: ChannelsApiModelInterface;
     private rules: RulesApiModelInterface;
+    private recorded: RecordedApiModelInterface;
+    private snackbar: SnackbarModelInterface;
+
+    private newRecordedId: number | null = null;
 
     public station: number = 0;
     public genrelv1: apid.ProgramGenreLv1 = -1;
@@ -35,11 +41,15 @@ class RecordedUploadViewModel extends ViewModel {
     constructor(
         channels: ChannelsApiModelInterface,
         rules: RulesApiModelInterface,
+        recorded: RecordedApiModelInterface,
+        snackbar: SnackbarModelInterface,
     ) {
         super();
 
         this.channels = channels;
         this.rules = rules;
+        this.recorded = recorded;
+        this.snackbar = snackbar;
     }
 
     /**
@@ -50,6 +60,7 @@ class RecordedUploadViewModel extends ViewModel {
 
         if (status === 'init' || status === 'update') {
             this.initInput();
+            this.newRecordedId = null;
 
             await this.rules.fetchRuleList();
         }
@@ -141,8 +152,119 @@ class RecordedUploadViewModel extends ViewModel {
     /**
      * upload file
      */
-    public upload(): void {
-        // TODO upload
+    public async upload(): Promise<void> {
+        // 必須項目が埋まっているかチェック
+        if (this.station === 0 || this.date.length === 0 || this.time.length === 0 || this.duration === 0 || this.title.length === 0) {
+            this.snackbar.open('必要な項目が入力されていません。');
+
+            return;
+        }
+
+        if (this.tsFile === null) {
+            let isError = true;
+            for (const encoded of this.encodeFiles) {
+                if (encoded.file !== null) {
+                    isError = false;
+                    break;
+                }
+            }
+
+            if (isError) {
+                this.snackbar.open('アップロードするファイルを 1 つ以上選択してください。');
+
+                return;
+            }
+        }
+
+        // startAt
+        const dates = this.date.split('-');
+        const startAt = new Date(`${ dates[0] }/${ dates[1] }/${ dates[2] } ${ this.time }:00 +0900`).getTime();
+
+        // create new recorded option
+        const newRecorded: apid.NewRecorded = {
+            channelId: this.station,
+            startAt: startAt,
+            endAt: startAt + this.duration,
+            name: this.title,
+        };
+
+        if (this.description.length !== 0) { newRecorded.description = this.description; }
+        if (this.extended.length !== 0) { newRecorded.extended = this.extended; }
+        if (this.genrelv1 !== -1) {
+            newRecorded.genre1 = this.genrelv1;
+            if (this.genrelv2 !== -1) {
+                newRecorded.genre2 = this.genrelv2;
+            }
+        }
+        if (this.ruleId !== 0) { newRecorded.ruleId = this.ruleId; }
+
+        // create new recorded
+        this.newRecordedId = await this.recorded.createNewRecord(newRecorded);
+
+        // create upload file option
+        const files: UploadQueryOption[] = [];
+
+        // ts file option
+        if (this.tsFile !== null) {
+            const tsOption: UploadQueryOption = {
+                id: this.newRecordedId,
+                encoded: false,
+                name: this.tsName.length === 0 ? 'TS' : this.tsName,
+                file: this.tsFile,
+            };
+            if (this.directory.length !== 0) {
+                tsOption.directory = this.directory;
+            }
+
+            files.push(tsOption);
+        }
+
+        // encoded file option
+        for (const encoded of this.encodeFiles) {
+            if (encoded.file === null) { continue; }
+
+            const option: UploadQueryOption = {
+                id: this.newRecordedId,
+                encoded: true,
+                name: encoded.name.length === 0 ? 'TS' : encoded.name,
+                file: encoded.file,
+            };
+            if (this.directory.length !== 0) {
+                option.directory = this.directory;
+            }
+
+            files.push(option);
+        }
+
+        // upload file
+        for (const file of files) {
+            await this.recorded.uploadFile(file)
+            .catch((err) => {
+                console.error(err);
+            });
+
+            // upload 中断
+            if (this.newRecordedId === null) { return; }
+        }
+
+        this.newRecordedId = null;
+        this.snackbar.open('アップロードが完了しました。');
+    }
+
+    /**
+     * file upload をキャンセル
+     */
+    public async abortUpload(): Promise<void> {
+        if (this.newRecordedId === null) { return; }
+
+        // cancel upload
+        this.recorded.abortUpload();
+
+        // delete recorded
+        await this.recorded.deleteAll(this.newRecordedId);
+        this.newRecordedId = null;
+
+        this.snackbar.open('アップロードを中断しました。');
     }
 }
 
