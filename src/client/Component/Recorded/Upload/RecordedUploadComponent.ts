@@ -227,6 +227,7 @@ class RecordedUploadComponent extends ParentComponent<void> {
                 m('input', {
                     class: 'mdl-textfield__input',
                     type: 'number', pattern: '-?[0-9]*(\.[0-9]+)?',
+                    placeholder: '長さ',
                     value: (() => {
                         if (this.viewModel.duration === 0) { return; }
                         else { return this.viewModel.duration; }
@@ -254,6 +255,7 @@ class RecordedUploadComponent extends ParentComponent<void> {
                 m('input', {
                     class: 'mdl-textfield__input',
                     type: 'text',
+                    placeholder: 'title',
                     value: this.viewModel.title,
                     onchange: m.withAttr('value', (value) => { this.viewModel.title = value; }),
                 }),
@@ -272,7 +274,7 @@ class RecordedUploadComponent extends ParentComponent<void> {
             }, [
                 m('textarea', {
                     class: 'mdl-textfield__input',
-                    // type: 'text',
+                    placeholder: '概要',
                     value: this.viewModel.description,
                     onchange: m.withAttr('value', (value) => { this.viewModel.description = value; }),
                     rows: 3,
@@ -292,6 +294,7 @@ class RecordedUploadComponent extends ParentComponent<void> {
             }, [
                 m('textarea', {
                     class: 'mdl-textfield__input',
+                    placeholder: '詳細',
                     value: this.viewModel.extended,
                     onchange: m.withAttr('value', (value) => { this.viewModel.extended = value; }),
                     rows: 3,
@@ -310,6 +313,7 @@ class RecordedUploadComponent extends ParentComponent<void> {
                 m('input', {
                     class: 'mdl-textfield__input',
                     type: 'text',
+                    placeholder: 'directory',
                     value: this.viewModel.directory,
                     onchange: m.withAttr('value', (value) => { this.viewModel.directory = value; }),
                 }),
