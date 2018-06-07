@@ -1,5 +1,8 @@
 @import 'variables';
 
+$placeholder-color: #999898
+$placeholder-weight: lighter
+
 body
     -webkit-text-size-adjust: 100%;
 
@@ -65,6 +68,25 @@ select
 .main-layout-animation
     opacity: 0;
     transition: all 0.2s ease 0s;
+
+/** placeholder color **/
+::-webkit-input-placeholder
+    color:    $placeholder-color;
+    font-weight: $placeholder-weight;
+
+::-moz-placeholder
+    color:    $placeholder-color;
+    font-weight: $placeholder-weight;
+    opacity:  1;
+
+::-ms-input-placeholder
+    color:    $placeholder-color;
+    font-weight: $placeholder-weight;
+
+/* Most modern browsers support this now. */
+::placeholder
+    color:   $placeholder-color;
+    font-weight: $placeholder-weight;
 
 @media screen and (min-width: $top-page-switching-width)
     .top-page.non-scroll-enable
