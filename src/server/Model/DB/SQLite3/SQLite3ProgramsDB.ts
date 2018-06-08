@@ -82,12 +82,11 @@ class SQLite3ProgramsDB extends ProgramsDB {
     /**
      * ルール検索実行部分
      * @param query: string
-     * @param values: any[]
      * @param cs: boolean
      * @return Promise<DBSchema.ProgramSchema[]>
      */
-    public runFindRule(query: string, values: any[], cs: boolean): Promise<DBSchema.ProgramSchema[]> {
-        return this.operator.runQuery(query, values, cs);
+    public runFindRule(query: string, cs: boolean): Promise<DBSchema.ProgramSchema[]> {
+        return this.operator.runQuery(query, null, cs);
     }
 
     /**
