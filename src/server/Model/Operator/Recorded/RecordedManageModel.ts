@@ -265,6 +265,8 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
             this.log.system.info(`move file ${ info.uploadPath } to ${ filePath }`);
             await FileUtil.promiseRename(info.uploadPath, filePath);
         } catch (err) {
+            this.log.system.error('move file error');
+            this.log.system.error(<any> err);
             await FileUtil.promiseUnlink(info.uploadPath)
             .catch(() => {});
             await FileUtil.promiseUnlink(filePath)
@@ -287,6 +289,8 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
                 encodedId = await this.addEncodeFile(info.recordedId, info.viewName, filePath);
                 this.log.system.info(`created new encoded: ${ encodedId }`);
             } catch (err) {
+                this.log.system.error('created new encoded error');
+                this.log.system.error(<any> err);
                 await deleteFiles();
                 throw err;
             }
@@ -303,6 +307,8 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
                 await this.updateTsFileSize(info.recordedId);
                 this.log.system.info(`update ts file: ${ info.recordedId }`);
             } catch (err) {
+                this.log.system.error('update ts error');
+                this.log.system.error(<any> err);
                 await deleteFiles();
                 throw err;
             }
