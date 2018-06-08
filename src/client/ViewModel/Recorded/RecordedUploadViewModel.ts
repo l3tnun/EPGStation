@@ -190,7 +190,7 @@ class RecordedUploadViewModel extends ViewModel {
         const newRecorded: apid.NewRecorded = {
             channelId: this.station,
             startAt: startAt,
-            endAt: startAt + this.duration,
+            endAt: startAt + (this.duration * 60 * 1000),
             name: this.title,
         };
 
