@@ -192,10 +192,21 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
      */
     public update(id: number, rule: DBSchema.RulesSchema): Promise<void> {
         const querys: string[] = [];
-        if (rule.keyword !== null) { querys.push(`keyword = "${ rule.keyword.replace(/"/g, '\\"') }"`); }
-        else { querys.push('keyword = null'); }
-        if (rule.ignoreKeyword !== null) { querys.push(`ignoreKeyword = "${ rule.ignoreKeyword.replace(/"/g, '\\"') }"`); }
-        else { querys.push('ignoreKeyword = null'); }
+        const values: any[] = [];
+
+        if (rule.keyword !== null) {
+            querys.push(`keyword = ${ this.operator.createValueStr(values.length + 1, values.length + 1) }`);
+            values.push(rule.keyword);
+        } else {
+            querys.push('keyword = null');
+        }
+        if (rule.ignoreKeyword !== null) {
+            querys.push(`ignoreKeyword = ${ this.operator.createValueStr(values.length + 1, values.length + 1) }`);
+            values.push(rule.ignoreKeyword);
+        } else {
+            querys.push('ignoreKeyword = null');
+        }
+
         if (rule.keyCS !== null) { querys.push(`keyCS = ${ Number(rule.keyCS) }`); }
         else { querys.push('keyCS = null'); }
         if (rule.keyRegExp !== null) { querys.push(`keyRegExp = ${ Number(rule.keyRegExp) }`); }
@@ -232,22 +243,46 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
         if (rule.durationMax !== null) { querys.push(`durationMax = ${ rule.durationMax }`); }
         else { querys.push('durationMax = null'); }
         querys.push(`enable = ${ Number(rule.enable) }`);
-        if (rule.directory !== null) { querys.push(`directory = "${ rule.directory.replace(/"/g, '\\"') }"`); }
-        else { querys.push('directory = null'); }
-        if (rule.recordedFormat !== null) { querys.push(`recordedFormat = "${ rule.recordedFormat.replace(/"/g, '\\"') }"`); }
-        else { querys.push('recordedFormat = null'); }
+
+        if (rule.directory !== null) {
+            querys.push(`directory = ${ this.operator.createValueStr(values.length + 1, values.length + 1) }`);
+            values.push(rule.directory);
+        } else {
+            querys.push('directory = null');
+        }
+        if (rule.recordedFormat !== null) {
+            querys.push(`recordedFormat = ${ this.operator.createValueStr(values.length + 1, values.length + 1) }`);
+            values.push(rule.recordedFormat);
+        } else {
+            querys.push('recordedFormat = null');
+        }
+
         if (rule.mode1 !== null) { querys.push(`mode1 = ${ rule.mode1 }`); }
         else { querys.push('mode1 = null'); }
-        if (rule.directory1 !== null) { querys.push(`directory1 = "${ rule.directory1.replace(/"/g, '\\"') }"`); }
-        else { querys.push('directory1 = null'); }
         if (rule.mode2 !== null) { querys.push(`mode2 = ${ rule.mode2 }`); }
         else { querys.push('mode2 = null'); }
-        if (rule.directory2 !== null) { querys.push(`directory2 = "${ rule.directory2.replace(/"/g, '\\"') }"`); }
-        else { querys.push('directory2 = null'); }
         if (rule.mode3 !== null) { querys.push(`mode3 = ${ rule.mode3 }`); }
         else { querys.push('mode3 = null'); }
-        if (rule.directory3 !== null) { querys.push(`directory3 = "${ rule.directory3.replace(/"/g, '\\"') }"`); }
-        else { querys.push('directory3 = null'); }
+
+        if (rule.directory1 !== null) {
+            querys.push(`directory1 = ${ this.operator.createValueStr(values.length + 1, values.length + 1) }`);
+            values.push(rule.directory1);
+        } else {
+            querys.push('directory1 = null');
+        }
+        if (rule.directory2 !== null) {
+            querys.push(`directory2 = ${ this.operator.createValueStr(values.length + 1, values.length + 1) }`);
+            values.push(rule.directory2);
+        } else {
+            querys.push('directory2 = null');
+        }
+        if (rule.directory3 !== null) {
+            querys.push(`directory3 = ${ this.operator.createValueStr(values.length + 1, values.length + 1) }`);
+            values.push(rule.directory3);
+        } else {
+            querys.push('directory3 = null');
+        }
+
         if (rule.delTs !== null) { querys.push(`delTs = ${ Number(rule.delTs) }`); }
         else { querys.push('delTs = null'); }
 
@@ -259,7 +294,7 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
 
         queryStr += ` where id = ${ id }`;
 
-        return this.operator.runQuery(queryStr);
+        return this.operator.runQuery(queryStr, values);
     }
 
     /**

@@ -410,20 +410,23 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
      */
     public async findRule(option: SearchInterface, isMinColumn: boolean = false, limit: number | null = null): Promise<DBSchema.ProgramSchema[]> {
         const column = isMinColumn ? this.getMinColumns() : this.getAllColumns();
-        let query = `select ${ column } from ${ DBSchema.TableName.Programs } ${ this.createQuery(option) } order by startAt asc`;
+        const options = this.createQuery(option);
+
+        let query = `select ${ column } from ${ DBSchema.TableName.Programs } ${ options.query } order by startAt asc`;
         if (limit !== null) { query += ` limit ${ limit }`; }
 
-        return <DBSchema.ProgramSchema[]> this.fixResults(<DBSchema.ProgramSchema[]> await this.runFindRule(query, Boolean(option.keyCS)));
+        return <DBSchema.ProgramSchema[]> this.fixResults(<DBSchema.ProgramSchema[]> await this.runFindRule(query, options.values, Boolean(option.keyCS)));
     }
 
     /**
      * ルール検索実行部分
      * @param query: string
+     * @param values: any[]
      * @param cs: boolean
      * @return Promise<DBSchema.ProgramSchema[]>
      */
-    public runFindRule(query: string, _cs: boolean): Promise<DBSchema.ProgramSchema[]> {
-        return this.operator.runQuery(query);
+    public runFindRule(query: string, values: any[], _cs: boolean): Promise<DBSchema.ProgramSchema[]> {
+        return this.operator.runQuery(query, values);
     }
 
     /**
@@ -462,10 +465,11 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
     /**
      * ルール検索用の where 以下の条件を生成する
      * @param option: SearchInterface
-     * @return string
+     * @return { query: string; values: any[] }
      */
-    private createQuery(option: SearchInterface): string {
+    private createQuery(option: SearchInterface): { query: string; values: any[] } {
         const query: string[] = [];
+        let values: any[] = [];
 
         // week
         if (typeof option.week !== 'undefined' && option.week < 0x7f) {
@@ -531,18 +535,20 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
 
             // keyword
             if (typeof option.keyword !== 'undefined') {
-                const result = this.createKeyword(option.keyword, keyOption);
-                Array.prototype.push.apply(title, result.title);
-                Array.prototype.push.apply(description, result.description);
-                Array.prototype.push.apply(extended, result.extended);
+                const result = this.createKeyword(option.keyword, keyOption, values);
+                Array.prototype.push.apply(title, result.query.title);
+                Array.prototype.push.apply(description, result.query.description);
+                Array.prototype.push.apply(extended, result.query.extended);
+                values = result.values;
             }
 
             // ignoreKeyword
             if (typeof option.ignoreKeyword !== 'undefined') {
-                const result = this.createIgnoreKeyword(option.ignoreKeyword, keyOption);
-                Array.prototype.push.apply(title, result.title);
-                Array.prototype.push.apply(description, result.description);
-                Array.prototype.push.apply(extended, result.extended);
+                const result = this.createIgnoreKeyword(option.ignoreKeyword, keyOption, values);
+                Array.prototype.push.apply(title, result.query.title);
+                Array.prototype.push.apply(description, result.query.description);
+                Array.prototype.push.apply(extended, result.query.extended);
+                values = result.values;
             }
 
             const or: string[] = [];
@@ -558,7 +564,7 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
            queryStr = queryStr + ' and ' + this.createAndQuery(query);
         }
 
-        return queryStr;
+        return { query: queryStr, values: values };
     }
 
     /**
@@ -679,34 +685,54 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
      * create keyword
      * @param keyword: string
      * @param keyOption: KeywordOption
-     * @return KeywordQuery
+     * @param values: any[]
+     * @return { query: KeywordQuery; values: any[] }
      */
-    protected createKeyword(keyword: string, keyOption: KeywordOption): KeywordQuery {
+    protected createKeyword(keyword: string, keyOption: KeywordOption, values: any[]): { query: KeywordQuery; values: any[] } {
         const nameQuery: string[] = [];
         const descriptionQuery: string[] = [];
         const extendedQuery: string[] = [];
 
-        keyword = keyword.replace(/'/g, "\\'"); // ' を \' へ置換
         if (keyOption.regExp) {
             // 正規表現
-            const baseStr = `'${ keyword }'`;
-            if (keyOption.title) { nameQuery.push(`name ${ this.createRegexpStr(keyOption.cs) } ${ baseStr }`); }
-            if (keyOption.description) { descriptionQuery.push(`description ${ this.createRegexpStr(keyOption.cs) } ${ baseStr }`); }
-            if (keyOption.extended) { extendedQuery.push(`extended ${ this.createRegexpStr(keyOption.cs) } ${ baseStr }`); }
+            if (keyOption.title) {
+                nameQuery.push(`name ${ this.createRegexpStr(keyOption.cs) } ${ this.operator.createValueStr(values.length + 1, values.length + 1) }`);
+                values.push(keyword);
+            }
+            if (keyOption.description) {
+                descriptionQuery.push(`description ${ this.createRegexpStr(keyOption.cs) } ${ this.operator.createValueStr(values.length + 1, values.length + 1) }`);
+                values.push(keyword);
+            }
+            if (keyOption.extended) {
+                extendedQuery.push(`extended ${ this.createRegexpStr(keyOption.cs) } ${ this.operator.createValueStr(values.length + 1, values.length + 1) }`);
+                values.push(keyword);
+            }
         } else {
             // あいまい検索
             StrUtil.toHalf(keyword).trim().split(' ').forEach((str) => {
-                const baseStr = `'%${ str }%'`;
-                if (keyOption.title) { nameQuery.push(`name ${ this.createLikeStr(keyOption.cs) } ${ baseStr }`); }
-                if (keyOption.description) { descriptionQuery.push(`description ${ this.createLikeStr(keyOption.cs) } ${ baseStr }`); }
-                if (keyOption.extended) { extendedQuery.push(`extended ${ this.createLikeStr(keyOption.cs) } ${ baseStr }`); }
+                str = `%${ str }%`;
+                if (keyOption.title) {
+                    nameQuery.push(`name ${ this.createLikeStr(keyOption.cs) } ${ this.operator.createValueStr(values.length + 1, values.length + 1) }`);
+                    values.push(str);
+                }
+                if (keyOption.description) {
+                    descriptionQuery.push(`description ${ this.createLikeStr(keyOption.cs) } ${ this.operator.createValueStr(values.length + 1, values.length + 1) }`);
+                    values.push(str);
+                }
+                if (keyOption.extended) {
+                    extendedQuery.push(`extended ${ this.createLikeStr(keyOption.cs) } ${ this.operator.createValueStr(values.length + 1, values.length + 1) }`);
+                    values.push(str);
+                }
             });
         }
 
         return {
-            title: nameQuery,
-            description: descriptionQuery,
-            extended: extendedQuery,
+            query: {
+                title: nameQuery,
+                description: descriptionQuery,
+                extended: extendedQuery,
+            },
+            values: values,
         };
     }
 
@@ -714,26 +740,40 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
      * create ignore keyword
      * @param ignoreKeyword: string
      * @param keyOption: KeywordOption
-     * @return KeywordQuery
+     * @param values: any[]
+     * @return { query: KeywordQuery; values: any[] }
      */
-    protected createIgnoreKeyword(ignoreKeyword: string, keyOption: KeywordOption): KeywordQuery {
+    protected createIgnoreKeyword(ignoreKeyword: string, keyOption: KeywordOption, values: any[]): { query: KeywordQuery; values: any[] } {
         const nameQuery: string[] = [];
         const descriptionQuery: string[] = [];
         const extendedQuery: string[] = [];
 
-        ignoreKeyword = ignoreKeyword.replace(/'/g, "\\'");
         StrUtil.toHalf(ignoreKeyword).trim().split(' ').forEach((str) => {
+            str = `%${ str }%`;
+
             // あいまい検索
-            const baseStr = `'%${ str }%'`;
-            if (keyOption.title) { nameQuery.push(`name not ${ this.createLikeStr(keyOption.cs) } ${ baseStr }`); }
-            if (keyOption.description) { descriptionQuery.push(`description not ${ this.createLikeStr(keyOption.cs) } ${ baseStr }`); }
-            if (keyOption.extended) { extendedQuery.push(`extended not ${ this.createLikeStr(keyOption.cs) } ${ baseStr }`); }
+            ignoreKeyword = ignoreKeyword.replace(/'/g, "\\'");
+            if (keyOption.title) {
+                nameQuery.push(`name not ${ this.createLikeStr(keyOption.cs) } ${ this.operator.createValueStr(values.length + 1, values.length + 1) }`);
+                values.push(str);
+            }
+            if (keyOption.description) {
+                descriptionQuery.push(`description not ${ this.createLikeStr(keyOption.cs) } ${ this.operator.createValueStr(values.length + 1, values.length + 1) }`);
+                values.push(str);
+            }
+            if (keyOption.extended) {
+                extendedQuery.push(`extended not ${ this.createLikeStr(keyOption.cs) } ${ this.operator.createValueStr(values.length + 1, values.length + 1) }`);
+                values.push(str);
+            }
         });
 
-        return {
-            title: nameQuery,
-            description: descriptionQuery,
-            extended: extendedQuery,
+        return{
+            query: {
+                title: nameQuery,
+                description: descriptionQuery,
+                extended: extendedQuery,
+            },
+            values: values,
         };
     }
 

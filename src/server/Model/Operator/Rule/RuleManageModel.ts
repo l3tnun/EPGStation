@@ -96,6 +96,8 @@ class RuleManageModel extends Model implements RuleManageModelInterface {
             try {
                 await this.rulesDB.update(ruleId, this.convertRule(rule));
             } catch (err) {
+                this.log.system.error(`rule update error: ${ ruleId }`);
+                this.log.system.error(<any> err);
                 this.isRunning = false;
                 throw err;
             }

@@ -431,8 +431,11 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
     public async findAll(option: FindAllOption): Promise<DBSchema.RecordedSchema[]> {
         let query = `select ${ this.getAllColumns() } from ${ DBSchema.TableName.Recorded } `;
 
+        let values: any[] = [];
         if (typeof option.query !== 'undefined') {
-            query += this.buildFindQuery(option.query || {});
+            const findQuery = this.buildFindQuery(option.query || {});
+            query += findQuery.query;
+            values = findQuery.values;
         }
 
         query += ' order by id desc';
@@ -441,7 +444,7 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
             query += ` ${ this.operator.createLimitStr(option.limit, option.offset || 0) }`;
         }
 
-        const programs = await this.operator.runQuery(query);
+        const programs = await this.operator.runQuery(query, values);
 
         return this.fixResults(<DBSchema.RecordedSchema[]> programs, option.isAddBaseDir);
     }
@@ -449,10 +452,11 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
     /**
      * FindQuery を組み立てる
      * @param FindQuery
-     * @return string
+     * @return { query: string; values: any[] }
      */
-    private buildFindQuery(option: FindQuery): string {
+    private buildFindQuery(option: FindQuery): { query: string; values: any[] } {
         const query: string[] = [];
+        const values: any[] = [];
 
         if (typeof option.ruleId !== 'undefined') {
             query.push(option.ruleId === null ? 'ruleId is null' : `ruleId = ${ option.ruleId }`);
@@ -467,10 +471,13 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
         }
 
         if (typeof option.keyword !== 'undefined') {
-            const keyword = option.keyword.replace(/'/g, "\\'"); // ' を \' へ置換
-            StrUtil.toHalf(keyword).trim().split(' ').forEach((s) => {
-                const baseStr = `'%${ s }%'`;
-                query.push(`(name ${ this.createLikeStr() } ${ baseStr } or description ${ this.createLikeStr() } ${ baseStr })`);
+            StrUtil.toHalf(option.keyword).trim().split(' ').forEach((s) => {
+                s = `%${ s }%`;
+                const nameStr = `${ this.operator.createValueStr(values.length + 1, values.length + 1) }`;
+                values.push(s);
+                const descriptionStr = `${ this.operator.createValueStr(values.length + 1, values.length + 1) }`;
+                values.push(s);
+                query.push(`(name ${ this.createLikeStr() } ${ nameStr } or description ${ this.createLikeStr() } ${ descriptionStr })`);
             });
         }
 
@@ -485,7 +492,7 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
             });
         }
 
-        return str;
+        return { query: str, values: values };
     }
 
     /**
@@ -500,7 +507,9 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
      * @return Promise<number>
      */
     public getTotal(option: FindQuery = {}): Promise<number> {
-        return this.operator.total(DBSchema.TableName.Recorded, this.buildFindQuery(option));
+        const findQuery = this.buildFindQuery(option);
+
+        return this.operator.total(DBSchema.TableName.Recorded, findQuery.query, findQuery.values);
     }
 
     /**
