@@ -356,7 +356,7 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
         const duration = Math.floor(info.endAt - info.startAt);
         if (duration < 0) { throw new Error('TimeError'); }
 
-        return await this.recordedDB.insert({
+        const recordedId = await this.recordedDB.insert({
             id: 0,
             programId: 0,
             channelId: info.channelId,
@@ -382,6 +382,10 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
             protection: false,
             filesize: null,
         });
+
+        this.log.system.info(`create new recorded: ${ recordedId }`);
+
+        return recordedId;
     }
 
     /**
