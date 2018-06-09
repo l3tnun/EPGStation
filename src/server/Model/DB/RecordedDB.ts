@@ -418,7 +418,7 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
      * @return Promise<DBSchema.RecordedSchema | null>
      */
     public async findOld(): Promise<DBSchema.RecordedSchema | null> {
-        const programs = await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Recorded } order by id asc ${ this.operator.createLimitStr(1) }`);
+        const programs = await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Recorded } order by startAt asc, id asc ${ this.operator.createLimitStr(1) }`);
 
         return this.operator.getFirst(await this.fixResults(<DBSchema.RecordedSchema[]> programs));
     }
@@ -438,7 +438,7 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
             values = findQuery.values;
         }
 
-        query += ' order by id desc';
+        query += ' order by startAt desc, id desc';
 
         if (typeof option.limit !== 'undefined') {
             query += ` ${ this.operator.createLimitStr(option.limit, option.offset || 0) }`;
