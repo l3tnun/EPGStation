@@ -29,6 +29,7 @@ Config.json
 | thumbnail | string | EPGStation/thumbnail | no | サムネイルファイルの保存先 |
 | thumbnailSize | string | 480x270 | no |  サムネイルの解像度 |
 | thumbnailPosition | number | 5 | no |  サムネイル生成の時間 (秒) |
+| uploadTempDir | string | EPGStation/data/upload | no | ファイルアップロード時に使用する一時領域 |
 | ffmpeg | string | /usr/local/bin/ffmpeg | no |  サムネイル生成に使用する ffmpeg のパス |
 | ffprobe | string | /usr/local/bin/ffprobe | no | 動画情報取得に使用する ffprobe のパス |
 | recordedPreStartCommand | string | | no | 録画準備開始後に実行するコマンド |
