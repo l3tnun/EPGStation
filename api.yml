@@ -642,6 +642,48 @@ definitions:
         description: '入力元と同じディレクトリに出力するか'
         type: boolean
 
+  NewRecorded:
+    type: object
+    required:
+      - channelId
+      - startAt
+      - endAt
+      - name
+    properties:
+      channelId:
+        $ref: '#/definitions/ServiceItemId'
+      startAt:
+        $ref: '#/definitions/UnixtimeMS'
+      endAt:
+        $ref: '#/definitions/UnixtimeMS'
+      name:
+        type: string
+        description: '番組タイトル'
+      description:
+        type: string
+        description: '番組詳細'
+      extended:
+        type: string
+        description: '番組拡張'
+      genre1:
+        $ref: '#/definitions/ProgramGenreLv1'
+      genre2:
+        $ref: '#/definitions/ProgramGenreLv2'
+      videoType:
+        $ref: '#/definitions/ProgramVideoType'
+      videoResolution:
+        $ref: '#/definitions/ProgramVideoResolution'
+      videoStreamContent:
+        type: integer
+      videoComponentType:
+        type: integer
+      audioSamplingRate:
+        $ref: '#/definitions/ProgramAudioSamplingRate'
+      audioComponentType:
+        type: integer
+      ruleId:
+        $ref: '#/definitions/RuleId'
+
   RecordedDeletes:
     type: object
     required:
@@ -792,6 +834,18 @@ definitions:
         $ref: '#/definitions/ProgramAudioSamplingRate'
       audioComponentType:
         type: integer
+
+  RuleList:
+    type: object
+    required:
+      - id
+    properties:
+      id:
+        $ref: '#/definitions/RuleId'
+        description: 'rule id'
+      keyword:
+        type: string
+        description: '検索文字列'
 
   Rule:
     type: object

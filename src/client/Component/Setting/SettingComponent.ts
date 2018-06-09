@@ -173,6 +173,7 @@ class SettingComponent extends ParentComponent<void> {
                     (value) => {
                         this.viewModel.tmpValue.customMegTsStreamingURLScheme = value ? value : null;
                     },
+                    'URL Scheme',
                 ),
 
                 this.createListItem(
@@ -198,6 +199,7 @@ class SettingComponent extends ParentComponent<void> {
                     (value) => {
                         this.viewModel.tmpValue.customRecordedViewerURLScheme = value ? value : null;
                     },
+                    'URL Scheme',
                 ),
 
                 this.createListItem(
@@ -216,6 +218,7 @@ class SettingComponent extends ParentComponent<void> {
                     (value) => {
                         this.viewModel.tmpValue.customRecordedDownloaderURLScheme = value ? value : null;
                     },
+                    'URL Scheme',
                 ),
 
                 this.createListItem(
@@ -234,6 +237,7 @@ class SettingComponent extends ParentComponent<void> {
                     (value) => {
                         this.viewModel.tmpValue.customHLSViewerURLScheme = value ? value : null;
                     },
+                    'URL Scheme',
                 ),
             ]),
 
@@ -309,15 +313,17 @@ class SettingComponent extends ParentComponent<void> {
     /**
      * create TextBox
      * @param getValue: () => string
-     * @param setValue: (value: string) => void
+     * @param setValue: (value: string) => void,
+     * @param placeholder: string
      * @return m.Child
      */
-    private createTextBox(getValue: () => string, setValue: (value: string) => void): m.Child {
+    private createTextBox(getValue: () => string, setValue: (value: string) => void, placeholder: string): m.Child {
         return m('li', { class: 'mdl-list__item' }, [
             m('div', { class: 'mdl-cell--12-col mdl-textfield mdl-js-textfield' }, [
                  m('input', {
                     class: 'mdl-textfield__input',
                     type: 'text',
+                    placeholder: placeholder,
                     value: getValue(),
                     onchange: m.withAttr('value', (value) => { setValue(value); }),
                 }),

@@ -39,6 +39,7 @@ class SearchOptionComponent extends SearchOptionBaseComponent<void> {
                  m('input', {
                     class: 'mdl-textfield__input',
                     type: 'text',
+                    placeholder: 'keyword',
                     value: this.viewModel.keyword,
                     onchange: m.withAttr('value', (value) => { this.viewModel.keyword = value; }),
                     onupdate: (vnode: m.VnodeDOM<void, this>) => {
@@ -66,6 +67,7 @@ class SearchOptionComponent extends SearchOptionBaseComponent<void> {
                  m('input', {
                     class: 'mdl-textfield__input',
                     type: 'text',
+                    placeholder: 'ignore keyword',
                     value: this.viewModel.ignoreKeyword,
                     onchange: m.withAttr('value', (value) => { this.viewModel.ignoreKeyword = value; }),
                     onupdate: (vnode: m.VnodeDOM<void, this>) => {

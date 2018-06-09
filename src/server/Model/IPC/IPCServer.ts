@@ -3,7 +3,7 @@ import * as apid from '../../../../node_modules/mirakurun/api';
 import * as events from '../../IoEvents';
 import Model from '../Model';
 import { MirakurunManageModelInterface } from '../Operator/EPGUpdate/MirakurunManageModel';
-import { RecordedManageModelInterface } from '../Operator/Recorded/RecordedManageModel';
+import { ExternalFileInfo, NewRecorded, RecordedManageModelInterface } from '../Operator/Recorded/RecordedManageModel';
 import { RecordingManageModelInterface } from '../Operator/Recording/RecordingManageModel';
 import { ReservationManageModelInterface } from '../Operator/Reservation/ReservationManageModel';
 import { AddReserveInterface } from '../Operator/ReserveProgramInterface';
@@ -286,6 +286,30 @@ class IPCServer extends Model implements IPCServerInterface {
             try {
                 const encodedId = await this.recordedManage.addEncodeFile(recordedId, name, filePath);
                 this.send({ id: id, value: encodedId });
+            } catch (err) {
+                this.send({ id: id, error: err.message });
+            }
+        };
+
+        // add recorded externalFile
+        this.functions[IPCMessageDefinition.addRecordedExternalFile] = async(id: number, args: any) => {
+            const info: ExternalFileInfo = args.info;
+
+            try {
+                await this.recordedManage.addRecordedExternalFile(info);
+                this.send({ id: id });
+            } catch (err) {
+                this.send({ id: id, error: err.message });
+            }
+        };
+
+        // create new recorded
+        this.functions[IPCMessageDefinition.createNewRecorded] = async(id: number, args: any) => {
+            const info: NewRecorded = args.info;
+
+            try {
+                const recordedId = await this.recordedManage.createNewRecorded(info);
+                this.send({ id: id, value: recordedId });
             } catch (err) {
                 this.send({ id: id, error: err.message });
             }

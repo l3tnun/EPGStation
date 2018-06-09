@@ -44,7 +44,7 @@ class StreamInfoViewModel extends ViewModel {
             m.redraw();
         }
 
-        await Util.sleep(100);
+        await Util.sleep(500);
         await this.updateInfos();
     }
 

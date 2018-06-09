@@ -5,20 +5,34 @@ import * as mkdirp from 'mkdirp';
 import * as path from 'path';
 import Util from '../../../Util/Util';
 import * as DBSchema from '../../DB/DBSchema';
+import { EncodedDBInterface } from '../../DB/EncodedDB';
 import Model from '../../Model';
+
+interface ThumbnailRecordedProgram extends DBSchema.RecordedSchema {
+    encodedId?: number;
+}
 
 interface ThumbnailManageModelInterface extends Model {
     addListener(callback: (id: number, thumbnailPath: string) => void): void;
-    push(program: DBSchema.RecordedSchema): void;
+    push(program: ThumbnailRecordedProgram): void;
 }
 
 /**
  * サムネイルを生成する
  */
 class ThumbnailManageModel extends Model implements ThumbnailManageModelInterface {
-    private queue: DBSchema.RecordedSchema[] = [];
+    private encodedDB: EncodedDBInterface;
+    private queue: ThumbnailRecordedProgram[] = [];
     private isRunning: boolean = false;
     private listener: events.EventEmitter = new events.EventEmitter();
+
+    constructor(
+        encodedDB: EncodedDBInterface,
+    ) {
+        super();
+
+        this.encodedDB = encodedDB;
+    }
 
     /**
      * サムネイル生成完了時に実行されるイベントに追加
@@ -30,10 +44,21 @@ class ThumbnailManageModel extends Model implements ThumbnailManageModelInterfac
 
     /**
      * キューにプログラムを積む
-     * @param program: DBSchema.RecordedSchema
+     * @param program: ThumbnailRecordedProgram
      */
-    public push(program: DBSchema.RecordedSchema): void {
+    public push(program: ThumbnailRecordedProgram): void {
         this.log.system.info(`push thumbnail: ${ program.id }`);
+
+        // 同じ recorded id の program がないかチェックする
+        let conflict = false;
+        for (const p of this.queue) {
+            if (p.id === p.id) {
+                conflict = true;
+                break;
+            }
+        }
+        if (conflict) { return; }
+
         this.queue.push(program);
         this.create();
     }
@@ -41,7 +66,7 @@ class ThumbnailManageModel extends Model implements ThumbnailManageModelInterfac
     /**
      * queue からプログラムを取り出してサムネイルを生成する
      */
-    private create(): void {
+    private async create(): Promise<void> {
         // 実行中なら return
         if (this.isRunning) { return; }
         this.isRunning = true; // ロック
@@ -80,8 +105,20 @@ class ThumbnailManageModel extends Model implements ThumbnailManageModelInterfac
             return;
         }
 
-        // program.recPath が null か
-        if (program.recPath === null) {
+        let filePath: string | null = null;
+        if (typeof program.encodedId === 'undefined') {
+            // ts file
+            filePath = program.recPath;
+        } else {
+            // encoded file
+            const encoded = await this.encodedDB.findId(program.encodedId);
+            if (encoded !== null) {
+                filePath = encoded.path;
+            }
+        }
+
+        // filePath が null か
+        if (filePath === null) {
             this.log.system.error(`thumbnail program path is null: ${ program.id }`);
             this.finalize();
 
@@ -91,7 +128,7 @@ class ThumbnailManageModel extends Model implements ThumbnailManageModelInterfac
         // create thumbnail
         const cmd = (`-y -i %INPUT% -ss ${ thumbnailPosition } -vframes 1 -f image2 -s ${ thumbnailSize } ${ thumbnailPath }`).split(' ');
         for (let i = 0; i < cmd.length; i++) {
-            cmd[i] = cmd[i].replace(/%INPUT%/, program.recPath);
+            cmd[i] = cmd[i].replace(/%INPUT%/, filePath);
         }
 
         const child = spawn(ffmpeg, cmd);
@@ -152,5 +189,5 @@ namespace ThumbnailManageModel {
     export const THUMBANIL_CREATE_EVENT = 'createThumbnail';
 }
 
-export { ThumbnailManageModelInterface, ThumbnailManageModel };
+export { ThumbnailRecordedProgram, ThumbnailManageModelInterface, ThumbnailManageModel };
 

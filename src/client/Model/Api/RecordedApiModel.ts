@@ -1,3 +1,4 @@
+import * as m from 'mithril';
 import * as apid from '../../../../api';
 import ApiModel from './ApiModel';
 
@@ -15,6 +16,14 @@ interface EncodeQueryOption {
     isOutputTheOriginalDirectory?: boolean;
 }
 
+interface UploadQueryOption {
+    id: number;
+    directory?: string;
+    encoded: boolean;
+    name: string;
+    file: File;
+}
+
 interface RecordedApiModelInterface extends ApiModel {
     init(): void;
     update(): Promise<void>;
@@ -22,6 +31,9 @@ interface RecordedApiModelInterface extends ApiModel {
     fetchRecorded(recordedId: apid.RecordedId): Promise<void>;
     fetchDuration(recordedId: apid.RecordedId): Promise<void>;
     fetchTags(): Promise<void>;
+    createNewRecord(recorded: apid.NewRecorded): Promise<number>;
+    uploadFile(query: UploadQueryOption): Promise<void>;
+    abortUpload(): void;
     deleteAll(recordedId: apid.RecordedId): Promise<void>;
     delete(recordedId: apid.RecordedId, encodedId: apid.EncodedId | null): Promise<void>;
     deleteMultiple(recordedIds: apid.RecordedId[]): Promise<void>;
@@ -53,6 +65,7 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
         channel: [],
         genre: [],
     };
+    private uploadXHR: XMLHttpRequest | null = null;
     private limit: number = 0;
     private offset: number = 0;
     private option: FindQueryOption = {};
@@ -66,6 +79,7 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
         };
         this.recorded = null;
         this.duration = 0;
+        this.uploadXHR = null;
     }
 
     /**
@@ -168,6 +182,60 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
             console.error(err);
             this.openSnackbar('録画タグ情報取得に失敗しました');
         }
+    }
+
+    /**
+     * 新しい recorded の作成
+     * /api/recorded post
+     * @param recorded: apid.NewRecorded
+     * @return Promise<number> recorded id
+     */
+    public async createNewRecord(recorded: apid.NewRecorded): Promise<number> {
+        const result = <{ id: number }> await this.request({
+            method: 'POST',
+            url: '/api/recorded',
+            data: recorded,
+        });
+
+        return result.id;
+    }
+
+    /**
+     * file の upload
+     * /api/recorded/{id}/upload
+     * @param query: UploadQueryOption
+     * @return Promise<void>
+     */
+    public async uploadFile(query: UploadQueryOption): Promise<void> {
+        const data = new FormData();
+        for (const key in query) {
+            if (key === 'id') { continue; }
+            data.append(key, query[key]);
+        }
+
+        try {
+            // this.request だと abort 後動かなくなる
+            await m.request({
+                method: 'POST',
+                url: `/api/recorded/${ query.id }/upload`,
+                data: data,
+                config: (xhr: XMLHttpRequest) => { this.uploadXHR = xhr; },
+            });
+            this.uploadXHR = null;
+        } catch (err) {
+            this.uploadXHR = null;
+            throw err;
+        }
+    }
+
+    /**
+     * upload のキャンセル
+     */
+    public abortUpload(): void {
+        if (this.uploadXHR === null) { return; }
+
+        this.uploadXHR.abort();
+        this.uploadXHR = null;
     }
 
     /**
@@ -333,5 +401,5 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
     }
 }
 
-export { FindQueryOption, EncodeQueryOption, RecordedApiModelInterface, RecordedApiModel };
+export { FindQueryOption, EncodeQueryOption, UploadQueryOption, RecordedApiModelInterface, RecordedApiModel };
 

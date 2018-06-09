@@ -18,7 +18,7 @@ export type remoteControlKeyId = number;
 export type ProgramGenreLv1 = number;
 export type ProgramGenreLv2 = number;
 export type ProgramVideoType = 'mpeg2' | 'h.264' | 'h.265';
-export type ProgramVideoResolution = '240p' | '480i' | '480p' | '720p' | '1080i' | '1080p' | '2160p' | '4320p';
+export type ProgramVideoResolution = '240p' | '480i' | '480p' | '720p' | '1080i' | '2160p' | '4320p';
 export type ProgramAudioSamplingRate = 16000 | 22050 | 24000 | 32000 | 44100 | 48000;
 
 export interface Config {
@@ -161,6 +161,24 @@ export interface RecordedProgram {
     encoding?: EncodingInfo[];
 }
 
+export interface NewRecorded {
+    channelId: ServiceItemId;
+    startAt: UnixtimeMS;
+    endAt: UnixtimeMS;
+    name: string;
+    description?: string;
+    extended?: string;
+    genre1?: number;
+    genre2?: number;
+    videoType?: ProgramVideoType;
+    videoResolution?: ProgramVideoResolution;
+    videoStreamContent?: number;
+    videoComponentType?: number;
+    audioSamplingRate?: ProgramAudioSamplingRate;
+    audioComponentType?: number;
+    ruleId?: RuleId;
+}
+
 export interface RecordedDurationInfo {
     duration: number;
 }
@@ -253,6 +271,11 @@ export interface AddReserveOption {
 export interface Rules {
     rules: Rule[];
     total: number;
+}
+
+export interface RuleList {
+    id: RuleId;
+    keyword?: string;
 }
 
 export interface Rule {

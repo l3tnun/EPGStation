@@ -6,12 +6,15 @@ import * as openapi from 'express-openapi';
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as log4js from 'log4js';
+import * as mkdirp from 'mkdirp';
+import * as multer from 'multer';
 import * as path from 'path';
 import * as swaggerUi from 'swagger-ui-express';
 import Base from '../Base';
 import factory from '../Model/ModelFactory';
 import { EncodeFinModelInterface } from '../Model/Service/Encode/EncodeFinModel';
 import { SocketIoManageModelInterface } from '../Model/Service/SocketIoManageModel';
+import FileUtil from '../Util/FileUtil';
 import Util from '../Util/Util';
 import BasicAuth from './BasicAuth';
 
@@ -27,8 +30,11 @@ class Server extends Base {
         // log
         this.app.use(log4js.connectLogger(this.log.access, { level: 'info' }));
 
+        // config
+        const config = this.config.getConfig();
+
         // basic auth
-        const basicAuthConfig = this.config.getConfig().basicAuth;
+        const basicAuthConfig = config.basicAuth;
         if (typeof basicAuthConfig !== 'undefined') {
             this.app.use(BasicAuth(basicAuthConfig.user, basicAuthConfig.password));
         }
@@ -47,6 +53,39 @@ class Server extends Base {
         this.app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(api));
         this.app.get('/api/debug', (_req, res) => { return res.redirect('/api-docs/?url=/api/docs'); });
 
+
+        // uploader dir
+        const uploadTempDir = config.uploadTempDir || './data/upload';
+        try {
+            fs.statSync(uploadTempDir);
+        } catch (e) {
+            // ディレクトリが存在しなければ作成する
+            this.log.system.info(`mkdirp: ${ uploadTempDir }`);
+            mkdirp.sync(uploadTempDir);
+        }
+
+        // uploader
+        const storage = multer.diskStorage({
+            destination: uploadTempDir,
+            filename: (req, file, cb) => {
+                const fileName = file.fieldname + '-' + new Date().getTime().toString(16) + Math.floor(100000 * Math.random()).toString(16);
+                cb(null, fileName);
+
+                // 切断時はファイルを削除
+                (<any> req).on('close', async() => {
+                    const filePath = path.join(uploadTempDir, fileName);
+                    try {
+                        await FileUtil.promiseUnlink(filePath);
+                        this.log.access.info(`delete upload file: ${ filePath }`);
+                    } catch (err) {
+                        this.log.access.error(`upload file delete error: ${ filePath }`);
+                        this.log.access.error(err.message);
+                    }
+                });
+            },
+        });
+        const upload = multer({ storage: storage });
+
         // init express-openapi
         openapi.initialize({
             apiDoc: api,
@@ -54,6 +93,17 @@ class Server extends Base {
             consumesMiddleware: {
                 'application/json': bodyParser.json(),
                 'text/text': bodyParser.text(),
+                'multipart/form-data': (req, res, next) => {
+                    upload.single('file')(req, res, (err) => {
+                        if (err) { return next(err.message); }
+
+                        if (typeof req.file !== 'undefined' && typeof req.file.fieldname !== 'undefined') {
+                            req.body[req.file.fieldname] = req.file;
+                        }
+
+                        return next();
+                    });
+                },
             },
             docsPath: '/docs',
             errorMiddleware: (err, _req, res) => {
@@ -61,6 +111,8 @@ class Server extends Base {
                 res.json(err);
             },
             errorTransformer: (openApi) => {
+                this.log.system.error(<any> openApi);
+
                 return openApi.message;
             },
             exposeApiDocs: true,

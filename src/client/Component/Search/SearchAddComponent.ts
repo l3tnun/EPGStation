@@ -55,6 +55,7 @@ class SearchAddComponent extends SearchOptionBaseComponent<void> {
                 m('input', {
                     class: 'mdl-textfield__input',
                     type: 'text',
+                    placeholder: 'directory',
                     value: this.viewModel.directory,
                     onchange: m.withAttr('value', (value) => { this.viewModel.directory = value; }),
                 }),
@@ -71,6 +72,7 @@ class SearchAddComponent extends SearchOptionBaseComponent<void> {
                 m('input', {
                     class: 'mdl-textfield__input',
                     type: 'text',
+                    placeholder: 'file format',
                     value: this.viewModel.recordedFormat,
                     onchange: m.withAttr('value', (value) => { this.viewModel.recordedFormat = value; }),
                 }),
@@ -124,6 +126,7 @@ class SearchAddComponent extends SearchOptionBaseComponent<void> {
                 m('input', {
                     class: 'mdl-textfield__input',
                     type: 'text',
+                    placeholder: 'directory',
                     value: this.viewModel.encodeModes[num].directory,
                     onchange: m.withAttr('value', (value) => {
                         this.viewModel.encodeModes[num].directory = value;

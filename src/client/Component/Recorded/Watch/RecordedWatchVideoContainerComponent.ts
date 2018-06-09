@@ -26,7 +26,9 @@ class RecordedWatchVideoContainerComponent extends VideoContainerComponent {
      * @return number
      */
     protected getVideoCurrentTime(): number {
-        return this.viewModel.getPlayBackStartPosition() + super.getVideoCurrentTime();
+        const time = this.viewModel.getPlayBackStartPosition() + super.getVideoCurrentTime();
+
+        return time === Infinity || isNaN(time) ? 0 : time;
     }
 
     /**

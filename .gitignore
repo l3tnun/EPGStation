@@ -12,6 +12,7 @@ config/*.json
 !operatorLogConfig.sample.json
 !serviceLogConfig.sample.json
 data/*.json
+data/upload/*
 node_modules
 dist
 !.gitkeep

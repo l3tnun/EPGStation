@@ -31,6 +31,7 @@ interface RecordedDBInterface extends DBTableBase {
     addThumbnail(id: number, filePath: string): Promise<void>;
     removeRecording(id: number): Promise<void>;
     removeAllRecording(): Promise<void>;
+    updateTsFilePath(recordedId: number, filePath: string): Promise<void>;
     updateFileSize(recordedId: number): Promise<void>;
     updateAllNullFileSize(): Promise<void>;
     findId(id: number): Promise<DBSchema.RecordedSchema | null>;
@@ -323,6 +324,21 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
     }
 
     /**
+     * recPath を更新する
+     * @param recordedId: recorded id
+     * @param filePath: file path
+     * @return Promise<void>
+     */
+    public async updateTsFilePath(recordedId: number, filePath: string): Promise<void> {
+        const recorded = await this.findId(recordedId);
+        if (recorded === null) { throw new Error('RecordedIsNotFound'); }
+
+        const query = `update ${ DBSchema.TableName.Recorded } set recPath = ${ this.operator.createValueStr(1, 1) } where id = ${ recordedId }`;
+
+        await this.operator.runQuery(query, [filePath.slice(Util.getRecordedPath().length + path.sep.length)]);
+    }
+
+    /**
      * filesize を更新する
      * @return Promise<void>
      */
@@ -402,7 +418,7 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
      * @return Promise<DBSchema.RecordedSchema | null>
      */
     public async findOld(): Promise<DBSchema.RecordedSchema | null> {
-        const programs = await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Recorded } order by id asc ${ this.operator.createLimitStr(1) }`);
+        const programs = await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Recorded } order by startAt asc, id asc ${ this.operator.createLimitStr(1) }`);
 
         return this.operator.getFirst(await this.fixResults(<DBSchema.RecordedSchema[]> programs));
     }
@@ -415,17 +431,20 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
     public async findAll(option: FindAllOption): Promise<DBSchema.RecordedSchema[]> {
         let query = `select ${ this.getAllColumns() } from ${ DBSchema.TableName.Recorded } `;
 
+        let values: any[] = [];
         if (typeof option.query !== 'undefined') {
-            query += this.buildFindQuery(option.query || {});
+            const findQuery = this.buildFindQuery(option.query || {});
+            query += findQuery.query;
+            values = findQuery.values;
         }
 
-        query += ' order by id desc';
+        query += ' order by startAt desc, id desc';
 
         if (typeof option.limit !== 'undefined') {
             query += ` ${ this.operator.createLimitStr(option.limit, option.offset || 0) }`;
         }
 
-        const programs = await this.operator.runQuery(query);
+        const programs = await this.operator.runQuery(query, values);
 
         return this.fixResults(<DBSchema.RecordedSchema[]> programs, option.isAddBaseDir);
     }
@@ -433,10 +452,11 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
     /**
      * FindQuery を組み立てる
      * @param FindQuery
-     * @return string
+     * @return { query: string; values: any[] }
      */
-    private buildFindQuery(option: FindQuery): string {
+    private buildFindQuery(option: FindQuery): { query: string; values: any[] } {
         const query: string[] = [];
+        const values: any[] = [];
 
         if (typeof option.ruleId !== 'undefined') {
             query.push(option.ruleId === null ? 'ruleId is null' : `ruleId = ${ option.ruleId }`);
@@ -451,10 +471,13 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
         }
 
         if (typeof option.keyword !== 'undefined') {
-            const keyword = option.keyword.replace(/'/g, "\\'"); // ' を \' へ置換
-            StrUtil.toHalf(keyword).trim().split(' ').forEach((s) => {
-                const baseStr = `'%${ s }%'`;
-                query.push(`(name ${ this.createLikeStr() } ${ baseStr } or description ${ this.createLikeStr() } ${ baseStr })`);
+            StrUtil.toHalf(option.keyword).trim().split(' ').forEach((s) => {
+                s = `%${ s }%`;
+                const nameStr = `${ this.operator.createValueStr(values.length + 1, values.length + 1) }`;
+                values.push(s);
+                const descriptionStr = `${ this.operator.createValueStr(values.length + 1, values.length + 1) }`;
+                values.push(s);
+                query.push(`(name ${ this.createLikeStr() } ${ nameStr } or description ${ this.createLikeStr() } ${ descriptionStr })`);
             });
         }
 
@@ -469,7 +492,7 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
             });
         }
 
-        return str;
+        return { query: str, values: values };
     }
 
     /**
@@ -484,7 +507,9 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
      * @return Promise<number>
      */
     public getTotal(option: FindQuery = {}): Promise<number> {
-        return this.operator.total(DBSchema.TableName.Recorded, this.buildFindQuery(option));
+        const findQuery = this.buildFindQuery(option);
+
+        return this.operator.total(DBSchema.TableName.Recorded, findQuery.query, findQuery.values);
     }
 
     /**

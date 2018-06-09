@@ -87,6 +87,17 @@ class RecordedComponent extends ParentComponent<void> {
                     },
                     text: '編集',
                 },
+                {
+                    attrs: {
+                        style: Util.uaIsMobile() ? 'display: none;' : '',
+                        onclick: async() => {
+                            this.balloon.close();
+                            await Util.sleep(200);
+                            Util.move('/recorded/upload');
+                        },
+                    },
+                    text: 'アップロード',
+                },
             ],
             content: [
                 this.createContent(),

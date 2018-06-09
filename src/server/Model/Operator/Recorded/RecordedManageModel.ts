@@ -1,9 +1,42 @@
 import * as fs from 'fs';
+import * as mkdirp from 'mkdirp';
+import * as path from 'path';
+import * as apid from '../../../../../api';
 import FileUtil from '../../../Util/FileUtil';
+import Util from '../../../Util/Util';
 import { EncodedDBInterface } from '../../DB/EncodedDB';
 import { RecordedDBInterface } from '../../DB/RecordedDB';
+import { ServicesDBInterface } from '../../DB/ServicesDB';
 import Model from '../../Model';
 import { RecordingManageModelInterface } from '../Recording/RecordingManageModel';
+import { ThumbnailManageModelInterface, ThumbnailRecordedProgram } from '../Thumbnail/ThumbnailManageModel';
+
+interface ExternalFileInfo {
+    recordedId: number;
+    isEncoded: boolean;
+    viewName: string;
+    fileName: string;
+    uploadPath: string;
+    directory?: string;
+}
+
+interface NewRecorded {
+    channelId: apid.ServiceItemId;
+    startAt: apid.UnixtimeMS;
+    endAt: apid.UnixtimeMS;
+    name: string;
+    description: string | null;
+    extended: string | null;
+    genre1: number | null;
+    genre2: number | null;
+    videoType: apid.ProgramVideoType | null;
+    videoResolution: apid.ProgramVideoResolution | null;
+    videoStreamContent: number | null;
+    videoComponentType: number | null;
+    audioSamplingRate: apid.ProgramAudioSamplingRate | null;
+    audioComponentType: number | null;
+    ruleId: number | null;
+}
 
 interface RecordedManageModelInterface extends Model {
     delete(id: number): Promise<void>;
@@ -13,6 +46,8 @@ interface RecordedManageModelInterface extends Model {
     deleteRule(id: number): Promise<void>;
     addThumbnail(id: number, thumbnailPath: string): Promise<void>;
     addEncodeFile(recordedId: number, name: string, filePath: string): Promise<number>;
+    addRecordedExternalFile(info: ExternalFileInfo): Promise<void>;
+    createNewRecorded(info: NewRecorded): Promise<number>;
     updateTsFileSize(recordedId: number): Promise<void>;
     updateEncodedFileSize(encodedId: number): Promise<void>;
 }
@@ -20,18 +55,24 @@ interface RecordedManageModelInterface extends Model {
 class RecordedManageModel extends Model implements RecordedManageModelInterface {
     private recordedDB: RecordedDBInterface;
     private encodedDB: EncodedDBInterface;
+    private servicesDB: ServicesDBInterface;
     private recordingManage: RecordingManageModelInterface;
+    private thumbnailManage: ThumbnailManageModelInterface;
 
     constructor(
         recordedDB: RecordedDBInterface,
         encodedDB: EncodedDBInterface,
+        servicesDB: ServicesDBInterface,
         recordingManage: RecordingManageModelInterface,
+        thumbnailManage: ThumbnailManageModelInterface,
     ) {
         super();
 
         this.recordedDB = recordedDB;
         this.encodedDB = encodedDB;
+        this.servicesDB = servicesDB;
         this.recordingManage = recordingManage;
+        this.thumbnailManage = thumbnailManage;
     }
 
     /**
@@ -187,6 +228,181 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
     }
 
     /**
+     * アップロードされた動画ファイルを追加する
+     * @param info: ExternalFileInfo
+     * @return Promise<void>
+     */
+    public async addRecordedExternalFile(info: ExternalFileInfo): Promise<void> {
+        this.log.system.info(`add external file: ${ info.recordedId }`);
+
+        // 指定された recorded を取得
+        const recorded = await this.recordedDB.findId(info.recordedId);
+        if (recorded === null) {
+            // id で指定された recorded がなかった
+            throw new Error('RecordedIdIsNotFound');
+        }
+
+        // dir
+        let dir = Util.getRecordedPath();
+        if (typeof info.directory !== 'undefined') {
+            dir = path.join(dir, info.directory);
+
+            // check dir
+            try {
+                fs.statSync(dir);
+            } catch (err) {
+                // mkdir directory
+                this.log.system.info(`mkdirp: ${ dir }`);
+                mkdirp.sync(dir);
+            }
+        }
+
+        // get file path
+        const filePath = this.getExternalFilePath(dir, info.fileName);
+
+        // move file
+        try {
+            this.log.system.info(`rename file ${ info.uploadPath } to ${ filePath }`);
+            await FileUtil.promiseRename(info.uploadPath, filePath);
+        } catch (err) {
+            this.log.system.error('rename file error');
+            this.log.system.error(<any> err);
+
+            // move を試す
+            try {
+                this.log.system.info(`move file ${ info.uploadPath } to ${ filePath }`);
+                await FileUtil.promiseMove(info.uploadPath, filePath);
+            } catch (e) {
+                this.log.system.error('move file error');
+                this.log.system.error(<any> e);
+                await FileUtil.promiseUnlink(info.uploadPath)
+                .catch(() => {});
+
+                throw new Error('FileMoveError');
+            }
+        }
+
+        // エラー時にファイルを削除する関数
+        const deleteFiles = async() => {
+            await FileUtil.promiseUnlink(filePath)
+            .catch(() => {});
+        };
+
+        // DB に反映
+        let encodedId: number | null = null;
+        if (info.isEncoded) {
+            // encoded file
+            try {
+                encodedId = await this.addEncodeFile(info.recordedId, info.viewName, filePath);
+                this.log.system.info(`created new encoded: ${ encodedId }`);
+            } catch (err) {
+                this.log.system.error('created new encoded error');
+                this.log.system.error(<any> err);
+                await deleteFiles();
+                throw err;
+            }
+        } else {
+            // ts file
+            if (recorded.recPath !== null) {
+                // すでに ts ファイルがある場合
+                this.log.system.error(`ts file already exists: ${ info.recordedId }`);
+                await deleteFiles();
+                throw new Error('TsFileAlreadyExists');
+            }
+
+            try {
+                await this.recordedDB.updateTsFilePath(info.recordedId, filePath);
+                await this.updateTsFileSize(info.recordedId);
+                this.log.system.info(`update ts file: ${ info.recordedId }`);
+            } catch (err) {
+                this.log.system.error('update ts error');
+                this.log.system.error(<any> err);
+                await deleteFiles();
+                throw err;
+            }
+        }
+
+        // create thumbnail
+        if (recorded.thumbnailPath === null) {
+            if (encodedId !== null) {
+                (<ThumbnailRecordedProgram> recorded).encodedId = encodedId;
+            } else {
+                recorded.recPath = filePath;
+            }
+
+            this.thumbnailManage.push(<ThumbnailRecordedProgram> recorded);
+        }
+    }
+
+    /**
+     * アップロードファイルの file path を取得する
+     * @param dir: directory
+     * @param fileName: file name
+     * @param conflict: 同名ファイルがあった場合カウントされる
+     * @return string
+     */
+    private getExternalFilePath(dir: string, fileName: string, conflict: number = 0): string {
+        const extname = path.extname(fileName);
+        const name = fileName.slice(0, fileName.length - extname.length);
+        const count = conflict > 0 ? `(${ conflict })` : '';
+
+        const filePath = path.join(dir, `${ name }${ count }${ extname }`);
+
+        try {
+            // 同盟のファイルが存在するか確認
+            fs.statSync(filePath);
+
+            return this.getExternalFilePath(dir, fileName, conflict + 1);
+        } catch (err) {
+            return filePath;
+        }
+    }
+
+    /**
+     * recorded を新規作成
+     * @param info NewRecorded
+     * @return Promise<number> recordedId
+     */
+    public async createNewRecorded(info: NewRecorded): Promise<number> {
+        const channel = await this.servicesDB.findId(info.channelId);
+        if (channel === null) { throw new Error('ChannelIdIsNotFound'); }
+
+        const duration = Math.floor(info.endAt - info.startAt);
+        if (duration < 0) { throw new Error('TimeError'); }
+
+        const recordedId = await this.recordedDB.insert({
+            id: 0,
+            programId: 0,
+            channelId: info.channelId,
+            channelType: channel.channelType,
+            startAt: info.startAt,
+            endAt: info.endAt,
+            duration: duration,
+            name: info.name,
+            description: info.description,
+            extended: info.extended,
+            genre1: info.genre1,
+            genre2: info.genre2,
+            videoType: info.videoType,
+            videoResolution: info.videoResolution,
+            videoStreamContent: info.videoStreamContent,
+            videoComponentType: info.videoComponentType,
+            audioSamplingRate: info.audioSamplingRate,
+            audioComponentType: info.audioComponentType,
+            recPath: null,
+            ruleId: info.ruleId,
+            thumbnailPath: null,
+            recording: false,
+            protection: false,
+            filesize: null,
+        });
+
+        this.log.system.info(`create new recorded: ${ recordedId }`);
+
+        return recordedId;
+    }
+
+    /**
      * ts ファイルのサイズを更新
      * @param recordedId: recorded id
      * @return Promise<void>
@@ -205,5 +421,5 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
     }
 }
 
-export { RecordedManageModelInterface, RecordedManageModel };
+export { ExternalFileInfo, NewRecorded, RecordedManageModelInterface, RecordedManageModel };
 

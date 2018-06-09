@@ -23,6 +23,7 @@ interface BalloonArgs {
     verticalOnly?: boolean; // 垂直方向を優先する
     horizontalOnly?: boolean; // 水平方向に限定する
     forceDialog?: boolean; // dialog mode を強制する
+    forceModal?: boolean; // 範囲外をクリックしても閉じないようにする
     foreBalloon?: boolean; // balloon を強制する
 }
 
@@ -40,6 +41,7 @@ class BalloonComponent extends Component<BalloonArgs> {
     private verticalOnly: boolean;
     private horizontalOnly: boolean;
     private forceDialog: boolean;
+    private forceModal: boolean;
     private foreBalloon: boolean;
 
     private viewModel: BalloonViewModel;
@@ -75,6 +77,7 @@ class BalloonComponent extends Component<BalloonArgs> {
         this.verticalOnly = typeof vnode.attrs.verticalOnly === 'undefined' ? false : vnode.attrs.verticalOnly;
         this.horizontalOnly = typeof vnode.attrs.horizontalOnly === 'undefined' ? false : vnode.attrs.horizontalOnly;
         this.forceDialog = typeof vnode.attrs.forceDialog === 'undefined' ? false : vnode.attrs.forceDialog;
+        this.forceModal = typeof vnode.attrs.forceModal === 'undefined' ? false : vnode.attrs.forceModal;
         this.foreBalloon = typeof vnode.attrs.foreBalloon === 'undefined' ? false : vnode.attrs.foreBalloon;
         this.viewModel.add(this.id);
     }
@@ -88,7 +91,10 @@ class BalloonComponent extends Component<BalloonArgs> {
         return m('div', {
             id: this.id,
             class: 'balloonBackground' + (this.isDialogMode() ? ' dialogbackground' : ''),
-            onclick: () => { this.viewModel.close(this.id); },
+            onclick: () => {
+                if (this.forceModal) { return; }
+                this.viewModel.close(this.id);
+            },
             onupdate: (v: m.VnodeDOM<BalloonArgs, this>) => {
                 this.MainOnUpdate(v);
             },
