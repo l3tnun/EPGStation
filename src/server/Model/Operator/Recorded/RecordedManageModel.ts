@@ -262,17 +262,24 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
 
         // move file
         try {
-            this.log.system.info(`move file ${ info.uploadPath } to ${ filePath }`);
+            this.log.system.info(`rename file ${ info.uploadPath } to ${ filePath }`);
             await FileUtil.promiseRename(info.uploadPath, filePath);
         } catch (err) {
-            this.log.system.error('move file error');
+            this.log.system.error('rename file error');
             this.log.system.error(<any> err);
-            await FileUtil.promiseUnlink(info.uploadPath)
-            .catch(() => {});
-            await FileUtil.promiseUnlink(filePath)
-            .catch(() => {});
 
-            throw err;
+            // move を試す
+            try {
+                this.log.system.info(`move file ${ info.uploadPath } to ${ filePath }`);
+                await FileUtil.promiseMove(info.uploadPath, filePath);
+            } catch (e) {
+                this.log.system.error('move file error');
+                this.log.system.error(<any> e);
+                await FileUtil.promiseUnlink(info.uploadPath)
+                .catch(() => {});
+
+                throw new Error('FileMoveError');
+            }
         }
 
         // エラー時にファイルを削除する関数
@@ -299,6 +306,7 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
             if (recorded.recPath !== null) {
                 // すでに ts ファイルがある場合
                 this.log.system.error(`ts file already exists: ${ info.recordedId }`);
+                await deleteFiles();
                 throw new Error('TsFileAlreadyExists');
             }
 
