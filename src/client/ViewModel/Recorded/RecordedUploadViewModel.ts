@@ -247,8 +247,17 @@ class RecordedUploadViewModel extends ViewModel {
         // upload file
         for (const file of files) {
             await this.recorded.uploadFile(file)
-            .catch((err) => {
+            .catch(async(err) => {
                 console.error(err);
+                this.close();
+                this.snackbar.open('ファイルのアップロードに失敗しました。');
+
+                // delete recorded
+                if (this.newRecordedId !== null) {
+                    await this.recorded.deleteAll(this.newRecordedId);
+                }
+
+                throw err;
             });
 
             // upload 中断
