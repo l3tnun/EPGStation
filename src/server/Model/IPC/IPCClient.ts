@@ -292,7 +292,7 @@ class IPCClient extends Model implements IPCClientInterface {
         const id = this.send(IPCMessageDefinition.addRecordedExternalFile, {
             info: info,
         });
-        await this.receive(id);
+        await this.receive(id, 30 * 60 * 1000);
     }
 
     /**
@@ -366,9 +366,10 @@ class IPCClient extends Model implements IPCClientInterface {
     /**
      * 受信
      * @param id: number
+     * @param timeout: number
      * @return Promise<IPCServerMessage>
      */
-    private receive(id: number): Promise<IPCServerMessage> {
+    private receive(id: number, timeout: number = 5000): Promise<IPCServerMessage> {
         return new Promise<IPCServerMessage>((resolve: (msg: IPCServerMessage) => void, reject: (err: Error) => void) => {
             this.listener.once(String(id), (msg: IPCServerMessage) => {
                 if (typeof msg.error !== 'undefined') {
@@ -381,7 +382,7 @@ class IPCClient extends Model implements IPCClientInterface {
             // timeout
             setTimeout(() => {
                 reject(new Error('IPCTimeout'));
-            }, 5000);
+            }, timeout);
         });
     }
 }
