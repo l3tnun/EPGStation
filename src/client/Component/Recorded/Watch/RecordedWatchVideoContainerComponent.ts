@@ -26,7 +26,10 @@ class RecordedWatchVideoContainerComponent extends VideoContainerComponent {
      * @return number
      */
     protected getVideoCurrentTime(): number {
-        const time = this.viewModel.getPlayBackStartPosition() + super.getVideoCurrentTime();
+        let time = this.viewModel.getPlayBackStartPosition();
+
+        // 再生位置変更中は加算しない
+        if (!this.viewModel.isChangingPosition()) { time += super.getVideoCurrentTime(); }
 
         return time === Infinity || isNaN(time) ? 0 : time;
     }

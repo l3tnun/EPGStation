@@ -131,7 +131,16 @@ class RecordedWatchViewModel extends ViewModel {
      * @return number;
      */
     public getPlayBackStartPosition(): number {
-        return this.tentativePlayBackPosition !== 0 ? this.tentativePlayBackPosition : this.playBackPosition;
+        // 再生位置変更中は仮の再生位置を返す
+        return this.isChangingPosition() ? this.tentativePlayBackPosition : this.playBackPosition;
+    }
+
+    /**
+     * 再生位置変更中か
+     * @return boolean
+     */
+    public isChangingPosition(): boolean {
+        return this.tentativePlayBackPosition !== 0;
     }
 }
 

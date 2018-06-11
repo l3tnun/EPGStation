@@ -290,8 +290,8 @@ class VideoContainerComponent extends Component<ControlArgs> {
     private timeupdate(): void {
         if (this.videoElement === null || this.stopTimeUpdate) { return; }
 
-        this.seekBar = (VideoContainerComponent.VideoSeekInterval / this.getVideoDuration()) * this.getVideoCurrentTime();
-        if (isNaN(this.seekBar) || this.seekBar === Infinity) { this.seekBar = 0; }
+        const newSeekBar = (VideoContainerComponent.VideoSeekInterval / this.getVideoDuration()) * this.getVideoCurrentTime();
+        this.seekBar = isNaN(newSeekBar) || newSeekBar === Infinity ? 0 : newSeekBar;
         m.redraw();
 
         // slider
