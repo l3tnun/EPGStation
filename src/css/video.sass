@@ -60,11 +60,14 @@ $play-button-size: 24px
             top: 0;
             left: 0;
             padding: 8px;
-            .close
+            .close, .rotation
                 padding: 8px;
                 margin: 4px;
                 border-radius: 50%;
                 background-color: $controls-color
+
+            .rotation
+                display: none;
 
         .times
             display: flex;
@@ -152,6 +155,12 @@ $play-button-size: 24px
                 @-moz-document url-prefix()
                     display: none;
                     pointer-events: none;
+
+.video-container.fullscreen.enabled-rotation
+    .video-controls
+        .titles
+            .rotation
+                display: inline-block;
 
 // live streaming
 .video-container.live-streaming

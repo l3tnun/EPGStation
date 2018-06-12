@@ -34,6 +34,7 @@ class VideoContainerComponent extends Component<ControlArgs> {
     private doubleClickFlag = false;
     private doubleClickTimerId: NodeJS.Timer;
     private isWaiting: boolean = false;
+    private isEnabledRotation: boolean = typeof (<any> window.screen).orientation !== 'undefined' && Util.uaIsMobile();
 
     constructor() {
         super();
@@ -69,7 +70,8 @@ class VideoContainerComponent extends Component<ControlArgs> {
                 + (Util.uaIsMobile() ? ' mobile' : '')
                 + (!this.isEnablePip ? ' disable-pip' : '')
                 + (this.isPipMode() ? ' pip-mode' : '')
-                + (!!vnode.attrs.disableSpeedControl ? ' disable-speed-control' : ''),
+                + (!!vnode.attrs.disableSpeedControl ? ' disable-speed-control' : '')
+                + (this.isEnabledRotation ? ' enabled-rotation' : ''),
             style: !this.isFullScreen() && typeof vnode.attrs.height !== 'undefined' ? `height: ${ vnode.attrs.height }px;` : '',
             oncreate: (mainVnode: m.VnodeDOM<void, any>) => {
                 const element = <HTMLElement> mainVnode.dom;
@@ -381,22 +383,28 @@ class VideoContainerComponent extends Component<ControlArgs> {
         const isMobile = Util.uaIsMobile();
         const timeStr = this.createDurationStr();
 
-        let titlesElement: m.Child | null = null;
-        if (!!vnode.attrs.enableCloseButton) {
-            titlesElement = m('div', { class: 'titles' }, [
-                m('i', {
-                    class: 'close material-icons mdl-shadow--2dp',
-                    onclick: () => {
-                        if (typeof vnode.attrs.closeButtonCallback === 'undefined') { return; }
+        const titlesChild = [];
 
-                        if (this.isFullScreen()) {
-                            this.switchFullScreen();
-                        } else {
-                            vnode.attrs.closeButtonCallback();
-                        }
-                    },
-                }, 'close'),
-            ]);
+        if (!!vnode.attrs.enableCloseButton) {
+            titlesChild.push(m('i', {
+                class: 'close material-icons mdl-shadow--2dp',
+                onclick: () => {
+                    if (typeof vnode.attrs.closeButtonCallback === 'undefined') { return; }
+
+                    if (this.isFullScreen()) {
+                        this.switchFullScreen();
+                    } else {
+                        vnode.attrs.closeButtonCallback();
+                    }
+                },
+            }, 'close'));
+        }
+
+        if (this.isEnabledRotation) {
+            titlesChild.push(m('i', {
+                class: 'rotation material-icons mdl-shadow--2dp',
+                onclick: () => { this.switchRotation(); },
+            }, 'screen_rotation'));
         }
 
         return m('div', {
@@ -422,7 +430,7 @@ class VideoContainerComponent extends Component<ControlArgs> {
                 this.hideControl(300);
             },
         }, [
-            titlesElement,
+            m('div', { class: 'titles' }, titlesChild),
             m('div', { class: 'times' }, [
                 m('span', { class: 'current-time' }, timeStr.current),
                 m('input', {
@@ -720,6 +728,10 @@ class VideoContainerComponent extends Component<ControlArgs> {
             if (!this.requestFullscreen(this.containerElement) && this.videoElement !== null) {
                 this.requestFullscreen(this.videoElement);
             }
+
+            // 画面回転
+            this.switchRotation();
+
             setTimeout(() => {
                 if (!this.isFullScreen() || Util.uaIsiOS()) {
                     this.balloon.enableClose();
@@ -751,6 +763,30 @@ class VideoContainerComponent extends Component<ControlArgs> {
         /* tslint:enable:newline-before-return */
 
         return false;
+    }
+
+    /**
+     * full screen 時の画面回転状態を変更
+     */
+    private async switchRotation(): Promise<void> {
+        if (!this.isEnabledRotation) { return; }
+
+        try {
+            if (this.isLandscape()) {
+                await (<any> window.screen).orientation.lock('natural');
+            } else {
+                await (<any> window.screen).orientation.lock('landscape');
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    /**
+     * 回転状態か？
+     */
+    private isLandscape(): boolean {
+        return !this.isEnabledRotation || (<any> window.screen).orientation.angle !== 0;
     }
 }
 
