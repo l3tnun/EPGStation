@@ -721,7 +721,10 @@ class VideoContainerComponent extends Component<ControlArgs> {
             else if ((<any> document).mozCancelFullScreen) { (<any> document).mozCancelFullScreen(); }
             else if ((<any> document).webkitCancelFullScreen) { (<any> document).webkitCancelFullScreen(); }
             else if ((<any> document).msExitFullscreen) { (<any> document).msExitFullscreen(); }
-            setTimeout(() => { this.balloon.enableClose(); }, 1000);
+            setTimeout(() => {
+                this.balloon.enableClose();
+                m.redraw();
+            }, 1000);
         } else {
             this.balloon.disableClose();
 
