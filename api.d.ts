@@ -66,6 +66,7 @@ export interface Config {
         win: string;
     };
     liveWebM?: string[];
+    liveMP4?: string[];
     kodiHosts?: string[];
 }
 

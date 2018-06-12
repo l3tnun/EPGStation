@@ -302,6 +302,11 @@ definitions:
         items:
           description: 'WebM ライブ配信の設定'
           type: string
+      liveMP4:
+        type: array
+        items:
+          description: 'MP4 ライブ配信の設定'
+          type: string
       kodiHosts:
         type: array
         items:
