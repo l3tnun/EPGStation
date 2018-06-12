@@ -3,6 +3,7 @@ import { ProgramsDBInterface } from '../DB/ProgramsDB';
 import { RecordedDBInterface } from '../DB/RecordedDB';
 import { ServicesDBInterface } from '../DB/ServicesDB';
 import HLSLiveStream from '../Service/Stream/HLSLiveStream';
+import MP4LiveStream from '../Service/Stream/MP4LiveStream';
 import MpegTsLiveStream from '../Service/Stream/MpegTsLiveStream';
 import RecordedHLSStream from '../Service/Stream/RecordedHLSStream';
 import RecordedStreamingMpegTsStream from '../Service/Stream/RecordedStreamingMpegTsStream';
@@ -26,6 +27,7 @@ namespace StreamsModelInterface {
 
 interface StreamsModelInterface extends ApiModel {
     getHLSLive(channelId: apid.ServiceItemId, mode: number): Promise<number>;
+    getMP4Live(channelId: apid.ServiceItemId, mode: number): Promise<StreamModelInfo>;
     getWebMLive(channelId: apid.ServiceItemId, mode: number): Promise<StreamModelInfo>;
     getLiveMpegTs(channelId: apid.ServiceItemId, mode: number): Promise<StreamModelInfo>;
     getRecordedHLS(recordedId: apid.RecordedId, mode: number, encodedId: apid.EncodedId | null): Promise<number>;
@@ -41,6 +43,7 @@ interface StreamsModelInterface extends ApiModel {
 
 class StreamsModel extends ApiModel implements StreamsModelInterface {
     private createHLSLiveStream: (channelId: apid.ServiceItemId, mode: number) => HLSLiveStream;
+    private createMP4LiveStream: (channelId: apid.ServiceItemId, mode: number) => MP4LiveStream;
     private createWebMLiveStream: (channelId: apid.ServiceItemId, mode: number) => WebMLiveStream;
     private createMpegTsLiveStream: (channelId: apid.ServiceItemId, mode: number) => MpegTsLiveStream;
     private createRecordedHLSStream: (recordedId: apid.RecordedId, mode: number, encodedId: apid.EncodedId | null) => RecordedHLSStream;
@@ -55,6 +58,7 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
     constructor(
         streamManage: StreamManageModelInterface,
         createHLSLiveStream: (channelId: apid.ServiceItemId, mode: number) => HLSLiveStream,
+        createMP4LiveStream: (channelId: apid.ServiceItemId, mode: number) => MP4LiveStream,
         createWebMLiveStream: (channelId: apid.ServiceItemId, mode: number) => WebMLiveStream,
         createMpegTsLiveStream: (channelId: apid.ServiceItemId, mode: number) => MpegTsLiveStream,
         createRecordedHLSStream: (recordedId: apid.RecordedId, mode: number, encodedId: apid.EncodedId | null) => RecordedHLSStream,
@@ -67,6 +71,7 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
         super();
         this.streamManage = streamManage;
         this.createHLSLiveStream = createHLSLiveStream;
+        this.createMP4LiveStream = createMP4LiveStream;
         this.createWebMLiveStream = createWebMLiveStream;
         this.createMpegTsLiveStream = createMpegTsLiveStream;
         this.createRecordedHLSStream = createRecordedHLSStream;
@@ -95,6 +100,19 @@ class StreamsModel extends ApiModel implements StreamsModelInterface {
         const stream = this.createHLSLiveStream(channelId, mode);
 
         return await this.streamManage.start(stream);
+    }
+
+    /**
+     * mp4 ライブ視聴
+     * @param channelId: channel id
+     * @param mode: config.MpegTsStreaming の index 番号
+     * @return Promise<StreamModelInfo>
+     */
+    public async getMP4Live(channelId: apid.ServiceItemId, mode: number): Promise<StreamModelInfo> {
+        const stream = this.createMP4LiveStream(channelId, mode);
+        const streamNumber = await this.streamManage.start(stream);
+
+        return { stream: stream, streamNumber: streamNumber };
     }
 
     /**

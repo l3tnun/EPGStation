@@ -94,6 +94,16 @@
             "cmd": "%FFMPEG% -re -dual_mono_mode main -i pipe:0 -c:a libvorbis -b:a 128k -c:v vp8 -s 720x480 -b:v 1500k -deadline realtime -speed 4 -cpu-used -8 -filter:v yadif -f webm pipe:1"
         }
     ],
+    "liveMP4": [
+        {
+            "name": "1280x720",
+            "cmd": "%FFMPEG% -dual_mono_mode main -re -i pipe:0 -threads 0 -c:a aac -ar 48000 -ac 2 -ab 192k -c:v h264 -s 1280x720 -vb 3000k -filter:v yadif -profile:v baseline -preset veryfast -tune fastdecode,zerolatency -movflags frag_keyframe+empty_moov+faststart+default_base_moof -y -f mp4 pipe:1"
+        },
+        {
+            "name": "720x480",
+            "cmd": "%FFMPEG% -dual_mono_mode main -re -i pipe:0 -threads 0 -c:a aac -ar 48000 -ac 2 -ab 128k -c:v h264 -s 720x480 -vb 1500k -filter:v yadif -profile:v baseline -preset veryfast -tune fastdecode,zerolatency -movflags frag_keyframe+empty_moov+faststart+default_base_moof -y -f mp4 pipe:1"
+        }
+    ],
 
     "recordedStreaming": {
         "webm": [

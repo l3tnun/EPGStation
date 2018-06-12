@@ -47,6 +47,7 @@ import { EncodeManageModel } from './Service/Encode/EncodeManageModel';
 import { EncodeProcessManageModel } from './Service/Encode/EncodeProcessManageModel';
 import { SocketIoManageModel } from './Service/SocketIoManageModel';
 import HLSLiveStream from './Service/Stream/HLSLiveStream';
+import MP4LiveStream from './Service/Stream/MP4LiveStream';
 import MpegTsLiveStream from './Service/Stream/MpegTsLiveStream';
 import RecordedHLSStream from './Service/Stream/RecordedHLSStream';
 import RecordedStreamingMpegTsStream from './Service/Stream/RecordedStreamingMpegTsStream';
@@ -141,6 +142,13 @@ namespace ModelFactorySetting {
         factory.reg('StreamsModel', () => { return new StreamsModel(
             streamManage,
             (chanelId: apid.ServiceItemId, mode: number): HLSLiveStream => { return new HLSLiveStream(
+                encodeProcessManage,
+                socketIoManage,
+                streamManage,
+                chanelId,
+                mode,
+            ); },
+            (chanelId: apid.ServiceItemId, mode: number): MP4LiveStream => { return new MP4LiveStream(
                 encodeProcessManage,
                 socketIoManage,
                 streamManage,

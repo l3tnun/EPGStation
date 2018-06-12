@@ -65,11 +65,12 @@ class StreamSelectComponent extends Component<void> {
                     class: 'mdl-button mdl-js-button mdl-button--primary',
                     onclick: () => {
                         this.viewModel.close();
-                        if (this.viewModel.streamTypeValue === 'WebM') {
+                        const type = this.viewModel.streamTypeValue;
+                        if (type === 'WebM' || type === 'MP4') {
                             const channel = this.viewModel.getChannel();
                             if (channel === null) { return; }
 
-                            this.livePlayerViewModel.set(channel, this.viewModel.streamOptionValue);
+                            this.livePlayerViewModel.set(channel, type === 'WebM' ? 'webm' : 'mp4', this.viewModel.streamOptionValue);
                             this.livePlayerViewModel.open();
                         } else {
                             this.viewModel.view();

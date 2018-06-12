@@ -66,6 +66,7 @@ export interface Config {
         win: string;
     };
     liveWebM?: string[];
+    liveMP4?: string[];
     kodiHosts?: string[];
 }
 
@@ -371,7 +372,7 @@ interface StreamInfo {
     streamNumber: number;
     isEnable: boolean;
     viewCnt: number;
-    type?: 'MpegTsLive' | 'RecordedHLS' | 'HLSLive' | 'WebMLive' | 'MpegTsRecordedStreaming' | 'MultiTypeRecordedStreaming';
+    type?: 'MpegTsLive' | 'RecordedHLS' | 'HLSLive' | 'WebMLive' | 'MP4Live' | 'MpegTsRecordedStreaming' | 'MultiTypeRecordedStreaming';
     channelId?: ServiceItemId;
     recordedId?: RecordedId;
     encodedId?: EncodedId;

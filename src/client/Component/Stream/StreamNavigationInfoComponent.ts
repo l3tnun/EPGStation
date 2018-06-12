@@ -31,7 +31,7 @@ class StreamNavigationInfoComponent extends Component<void> {
             m('span', { class: 'mdl-layout-title' }, '配信中'),
             m('nav', { class: 'mdl-navigation' }, [
                 this.viewModel.getStreamInfos().map((info, index) => {
-                    const isDisabled = typeof info.type === 'undefined' || info.type === 'WebMLive' || info.type.includes('RecordedStreaming');
+                    const isDisabled = typeof info.type === 'undefined' || info.type === 'WebMLive' || info.type === 'MP4Live' || info.type.includes('RecordedStreaming');
 
                     return m('a', {
                         class: 'mdl-navigation__link' + (isDisabled ? ' disable' : ''),

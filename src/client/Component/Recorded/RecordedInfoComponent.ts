@@ -63,7 +63,7 @@ class RecordedInfoComponent extends Component<void> {
             this.viewModel.getVideoSrc().map((video) => {
                 return m('a', {
                     class: 'recorded-link mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect',
-                    onclick: () => {
+                    onclick: async() => {
                         if (this.selectViewModel.isEnabledStreaming() && typeof video.encodedId === 'undefined' && !Util.uaIsiOS()) {
                             // TS ストリーミング再生
                             const recorded = this.viewModel.getRecorded();
@@ -101,6 +101,10 @@ class RecordedInfoComponent extends Component<void> {
                         } else if (video.useWebPlayer && typeof video.encodedId !== 'undefined') {
                             const recorded = this.viewModel.getRecorded();
                             if (recorded !== null) {
+                                if (Util.uaIsAndroid()) {
+                                    this.viewModel.close();
+                                    await Util.sleep(300);
+                                }
                                 this.playerViewModel.set(recorded, video.encodedId);
                                 this.playerViewModel.open();
                             }

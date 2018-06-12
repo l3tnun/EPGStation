@@ -29,7 +29,7 @@ class RecordedSearchViewModel extends ViewModel {
             this.balloon.regDisableCloseAllId(RecordedSearchViewModel.id);
 
             window.addEventListener('orientationchange', () => {
-                if (!this.balloon.isOpen(RecordedSearchViewModel.id)) { return; }
+                if (document.getElementById(RecordedSearchViewModel.id) === null || !this.balloon.isOpen(RecordedSearchViewModel.id)) { return; }
 
                 this.close();
             }, false);
