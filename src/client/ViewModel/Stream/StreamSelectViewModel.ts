@@ -60,6 +60,7 @@ class StreamSelectViewModel extends ViewModel {
             if (typeof config.mpegTsStreaming !== 'undefined') { typeCnt += 1; }
             if (typeof config.liveHLS !== 'undefined') { typeCnt += 1; }
             if (typeof config.liveWebM !== 'undefined') { typeCnt += 1; }
+            if (typeof config.liveMP4 !== 'undefined') { typeCnt += 1; }
             // 複数の配信方式があるか
             this.hasMultiType = typeCnt > 1;
 
@@ -79,6 +80,11 @@ class StreamSelectViewModel extends ViewModel {
                 if (typeof config.liveWebM[selectValue.mode] !== 'undefined') {
                     this.streamOptionValue = selectValue.mode;
                 }
+            } else if (selectValue.type === 'MP4' && typeof config.liveMP4 !== 'undefined') {
+                this.streamTypeValue = 'MP4';
+                if (typeof config.liveMP4[selectValue.mode] !== 'undefined') {
+                    this.streamOptionValue = selectValue.mode;
+                }
             } else {
                 this.streamTypeValue = 'M2TS';
                 if (typeof config.mpegTsStreaming !== 'undefined') {
@@ -87,6 +93,8 @@ class StreamSelectViewModel extends ViewModel {
                     this.streamTypeValue = 'HLS';
                 } else if (typeof config.liveWebM !== 'undefined') {
                     this.streamTypeValue = 'WebM';
+                } else if (typeof config.liveMP4 !== 'undefined') {
+                    this.streamTypeValue = 'MP4';
                 }
             }
         }
@@ -122,6 +130,7 @@ class StreamSelectViewModel extends ViewModel {
         if (typeof config.mpegTsStreaming !== 'undefined') { types.push('M2TS'); }
         if (typeof config.liveHLS !== 'undefined') { types.push('HLS'); }
         if (typeof config.liveWebM !== 'undefined') { types.push('WebM'); }
+        if (typeof config.liveMP4 !== 'undefined') { types.push('MP4'); }
 
         return types;
     }
@@ -157,6 +166,10 @@ class StreamSelectViewModel extends ViewModel {
             });
         } else if (this.streamTypeValue === 'WebM' && typeof config.liveWebM !== 'undefined') {
             return config.liveWebM.map((option, index) => {
+                return { name: option, value: index };
+            });
+        } else if (this.streamTypeValue === 'MP4' && typeof config.liveMP4 !== 'undefined') {
+            return config.liveMP4.map((option, index) => {
                 return { name: option, value: index };
             });
         } else {

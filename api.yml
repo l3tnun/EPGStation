@@ -1129,6 +1129,7 @@ definitions:
           - RecordedHLS
           - HLSLive
           - WebMLive
+          - MP4Live
           - MpegTsRecordedStreaming
           - MultiTypeRecordedStreaming
       channelId:

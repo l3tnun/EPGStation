@@ -3,12 +3,15 @@ import * as apid from '../../../../api';
 import { BalloonModelInterface } from '../../Model/Balloon/BallonModel';
 import ViewModel from '../ViewModel';
 
+type StreamTypes = 'webm' | 'mp4';
+
 /**
  * StreamLivePlayerViewModel
  */
 class StreamLivePlayerViewModel extends ViewModel {
     private balloon: BalloonModelInterface;
     private channel: apid.ScheduleServiceItem | null = null;
+    private type: StreamTypes | null = null;
     private mode: number | null = null;
 
     constructor(
@@ -25,8 +28,9 @@ class StreamLivePlayerViewModel extends ViewModel {
      * @param channel: apid.ScheduleServiceItem
      * @param mode: number
      */
-    public set(channel: apid.ScheduleServiceItem, mode: number): void {
+    public set(channel: apid.ScheduleServiceItem, type: StreamTypes, mode: number): void {
         this.channel = channel;
+        this.type = type;
         this.mode = mode;
 
         m.redraw();
@@ -37,9 +41,9 @@ class StreamLivePlayerViewModel extends ViewModel {
      * @return string | null
      */
     public getSrc(): string | null {
-        if (this.channel === null || this.mode === null) { return null; }
+        if (this.channel === null || this.type === null || this.mode === null) { return null; }
 
-        return `/api/streams/live/${ this.channel.id }/webm?mode=${ this.mode }`;
+        return `/api/streams/live/${ this.channel.id }/${ this.type }?mode=${ this.mode }`;
     }
 
     /**
