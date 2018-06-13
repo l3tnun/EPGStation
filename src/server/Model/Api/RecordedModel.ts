@@ -479,6 +479,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
      * @return Promise<void>
      */
     public async sendToKodi(host: string, isSecure: boolean, kodi: number, recordedId: number, encodedId: number | undefined): Promise<void> {
+        host = ApiUtil.getHost(host);
         const kodiConfig = this.config.getConfig().kodiHosts;
         if (typeof kodiConfig === 'undefined' || typeof kodiConfig[kodi] === 'undefined') {
             throw new Error('KodiConfigIsNotFound');

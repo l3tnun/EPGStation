@@ -209,6 +209,14 @@ namespace Util {
 
         return (isEqual && m.route.get().split('?')[0] === href);
     };
+
+    /**
+     * get subdirectory
+     * @return string
+     */
+    export const getSubDirectory = (): string => {
+        return window.location.pathname.replace(/\/[^\/]*$/, '');
+    };
 }
 
 export default Util;

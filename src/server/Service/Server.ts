@@ -10,6 +10,7 @@ import * as mkdirp from 'mkdirp';
 import * as multer from 'multer';
 import * as path from 'path';
 import * as swaggerUi from 'swagger-ui-express';
+import * as urljoin from 'url-join';
 import Base from '../Base';
 import factory from '../Model/ModelFactory';
 import { EncodeFinModelInterface } from '../Model/Service/Encode/EncodeFinModel';
@@ -23,6 +24,7 @@ import BasicAuth from './BasicAuth';
  */
 class Server extends Base {
     private app = express();
+    private subDirectory: string | null = null;
 
     constructor() {
         super();
@@ -32,6 +34,7 @@ class Server extends Base {
 
         // config
         const config = this.config.getConfig();
+        this.subDirectory = Util.getSubDirectory();
 
         // basic auth
         const basicAuthConfig = config.basicAuth;
@@ -44,15 +47,15 @@ class Server extends Base {
 
         // read api.yml
         const api = <openapi.OpenApi.ApiDefinition> yaml.safeLoad(fs.readFileSync(path.join(__dirname, '..', '..', '..', 'api.yml'), 'utf-8'));
+        api.basePath = this.createUrl('/api');
         api.info = {
             title: pkg.name,
             version: pkg.version,
         };
 
         // swagger ui
-        this.app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(api));
-        this.app.get('/api/debug', (_req, res) => { return res.redirect('/api-docs/?url=/api/docs'); });
-
+        this.app.use(this.createUrl('/api-docs'), swaggerUi.serve, swaggerUi.setup(api));
+        this.app.get(this.createUrl('/api/debug'), (_req, res) => { return res.redirect(this.createUrl('/api-docs/?url=' + this.createUrl('/api/docs'))); });
 
         // uploader dir
         const uploadTempDir = config.uploadTempDir || './data/upload';
@@ -134,19 +137,23 @@ class Server extends Base {
         express.static.mime.define({'video/MP2T': ['m3u8']});
 
         // static files
-        this.app.use('/', express.static(path.join(__dirname, '..', '..', '..', 'html')));
-        this.app.use('/material-design-icons', express.static(path.join(__dirname, '..', '..', '..', 'node_modules', 'material-design-icons')));
-        this.app.use('/material-design-lite', express.static(path.join(__dirname, '..', '..', '..', 'node_modules', 'material-design-lite')));
-        this.app.use('/js', express.static(path.join(__dirname, '..', '..', '..', 'dist', 'client')));
-        this.app.use('/css', express.static(path.join(__dirname, '..', '..', '..', 'dist', 'css')));
-        this.app.use('/img', express.static(path.join(__dirname, '..', '..', '..', 'img')));
-        this.app.use('/icon', express.static(path.join(__dirname, '..', '..', '..', 'icon')));
+        this.app.use(this.createUrl('/'), express.static(path.join(__dirname, '..', '..', '..', 'html')));
+        this.app.use(this.createUrl('/material-design-icons'), express.static(path.join(__dirname, '..', '..', '..', 'node_modules', 'material-design-icons')));
+        this.app.use(this.createUrl('/material-design-lite'), express.static(path.join(__dirname, '..', '..', '..', 'node_modules', 'material-design-lite')));
+        this.app.use(this.createUrl('/js'), express.static(path.join(__dirname, '..', '..', '..', 'dist', 'client')));
+        this.app.use(this.createUrl('/css'), express.static(path.join(__dirname, '..', '..', '..', 'dist', 'css')));
+        this.app.use(this.createUrl('/img'), express.static(path.join(__dirname, '..', '..', '..', 'img')));
+        this.app.use(this.createUrl('/icon'), express.static(path.join(__dirname, '..', '..', '..', 'icon')));
 
         // thumbnail
-        this.app.use('/thumbnail', express.static(Util.getThumbnailPath()));
+        this.app.use(this.createUrl('/thumbnail'), express.static(Util.getThumbnailPath()));
 
         // streamfile
-        this.app.use('/streamfiles', express.static(Util.getStreamFilePath()));
+        this.app.use(this.createUrl('/streamfiles'), express.static(Util.getStreamFilePath()));
+    }
+
+    private createUrl(str: string): string {
+        return this.subDirectory === null ? str : urljoin(this.subDirectory, str);
     }
 
     /**

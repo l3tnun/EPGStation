@@ -39,7 +39,7 @@ class RecordedPlayerViewModel extends ViewModel {
     public getSrc(): string | null {
         if (this.recorded === null) { return null; }
 
-        let src = `/api/recorded/${ this.recorded.id }/file`;
+        let src = `./api/recorded/${ this.recorded.id }/file`;
         if (this.encodedId !== null) { src += `?encodedId=${ this.encodedId }`; }
 
         return src;

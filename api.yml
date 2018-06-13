@@ -1,5 +1,4 @@
 swagger: "2.0"
-basePath: "/api"
 consumes:
   - application/json
 produces:

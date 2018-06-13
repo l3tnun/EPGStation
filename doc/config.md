@@ -5,6 +5,7 @@ Config.json
 | -------- | --- | ---------- | --- |  --- |
 | readOnlyOnce | boolean | false | no | config.json の読み込みを1度だけに制限する |
 | serverPort | number | | yes | ポート番号 |
+| subDirectory | string | | no | サブディレクトリ |
 | mirakurunPath | string | | yes | Mirakurunのパス(URL) |
 | dbType | mysql \| sqlite3 \| postgresql | mysql | no | 使用する データベースを指定する |
 | dbPath | string | EPGStation/data/database.db | no | SQLite3 使用時の db ファイルの保存場所 | 

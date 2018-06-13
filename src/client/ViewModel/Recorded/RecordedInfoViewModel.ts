@@ -170,7 +170,8 @@ class RecordedInfoViewModel extends ViewModel {
         const result: VideoSrcInfo[] = [];
         // ts ファイル
         if (this.recorded.original) {
-            let url = download ? `/api/recorded/${ this.recorded.id }/file?mode=download`
+            let url = Util.getSubDirectory();
+            url += download ? `/api/recorded/${ this.recorded.id }/file?mode=download`
                 : urlScheme === null ? `/api/recorded/${ this.recorded.id }/playlist` : `/api/recorded/${ this.recorded.id }/file`;
             if (urlScheme !== null) {
                 let full = location.host + url;
@@ -192,7 +193,8 @@ class RecordedInfoViewModel extends ViewModel {
         // エンコード済みファイル
         if (typeof this.recorded.encoded !== 'undefined') {
             for (const encoded of this.recorded.encoded) {
-                let url = download ? `/api/recorded/${ this.recorded.id }/file?encodedId=${ encoded.encodedId }&mode=download`
+                let url = Util.getSubDirectory();
+                url += download ? `/api/recorded/${ this.recorded.id }/file?encodedId=${ encoded.encodedId }&mode=download`
                         : `/api/recorded/${ this.recorded.id }/file?encodedId=${ encoded.encodedId }`;
                 if (urlScheme !== null && !setting.prioritizeWebPlayerOverURLScheme) {
                     let full = location.host + url;
@@ -251,13 +253,13 @@ class RecordedInfoViewModel extends ViewModel {
 
         // ts ファイル
         if (this.recorded.original) {
-            result.push({ name: 'TS', path: `/api/recorded/${ this.recorded.id }/playlist` });
+            result.push({ name: 'TS', path: `./api/recorded/${ this.recorded.id }/playlist` });
         }
 
         // エンコード済みファイル
         if (typeof this.recorded.encoded !== 'undefined') {
             for (const encoded of this.recorded.encoded) {
-                result.push({ name: encoded.name, path: `/api/recorded/${ this.recorded.id }/playlist?encodedId=${ encoded.encodedId }` });
+                result.push({ name: encoded.name, path: `./api/recorded/${ this.recorded.id }/playlist?encodedId=${ encoded.encodedId }` });
             }
         }
 
@@ -269,7 +271,7 @@ class RecordedInfoViewModel extends ViewModel {
      * @return string
      */
     public getThumnbailSrc(): string | null {
-        return this.recorded === null || !this.recorded.hasThumbnail ? '/img/noimg.png' : `/api/recorded/${ this.recorded.id }/thumbnail`;
+        return this.recorded === null || !this.recorded.hasThumbnail ? './img/noimg.png' : `./api/recorded/${ this.recorded.id }/thumbnail`;
     }
 
     /**

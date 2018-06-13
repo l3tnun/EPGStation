@@ -60,14 +60,14 @@ class RulesApiModel extends ApiModel implements RulesApiModelInterface {
         try {
             this.rules = await <any> this.request({
                 method: 'GET',
-                url: '/api/rules',
+                url: './api/rules',
                 data: query,
             });
 
             this.currentPage = this.offset / this.limit + 1;
         } catch (err) {
             this.rules = { rules: [], total: 0 };
-            console.error('/api/rules');
+            console.error('./api/rules');
             console.error(err);
             this.openSnackbar('ルール情報取得に失敗しました');
         }
@@ -82,11 +82,11 @@ class RulesApiModel extends ApiModel implements RulesApiModelInterface {
         try {
             this.rule = await <any> this.request({
                 method: 'GET',
-                url: `/api/rules/${ ruleId }`,
+                url: `./api/rules/${ ruleId }`,
             });
         } catch (err) {
             this.rule = null;
-            console.error(`/api/rules/${ ruleId }`);
+            console.error(`./api/rules/${ ruleId }`);
             console.error(err);
             this.openSnackbar('ルール取得に失敗しました');
         }
@@ -100,11 +100,11 @@ class RulesApiModel extends ApiModel implements RulesApiModelInterface {
         try {
             this.ruleList = await <any> this.request({
                 method: 'GET',
-                url: '/api/rules/list',
+                url: './api/rules/list',
             });
         } catch (err) {
             this.ruleList = [];
-            console.error('/api/rules/list');
+            console.error('./api/rules/list');
             console.error(err);
             this.openSnackbar('ルール一覧取得に失敗しました');
         }
@@ -150,7 +150,7 @@ class RulesApiModel extends ApiModel implements RulesApiModelInterface {
     public async enable(ruleId: apid.RuleId): Promise<void> {
         await this.request({
             method: 'PUT',
-            url: `/api/rules/${ ruleId }/enable`,
+            url: `./api/rules/${ ruleId }/enable`,
         });
         await this.updateRules();
     }
@@ -163,7 +163,7 @@ class RulesApiModel extends ApiModel implements RulesApiModelInterface {
     public async disable(ruleId: apid.RuleId): Promise<void> {
         await this.request({
             method: 'PUT',
-            url: `/api/rules/${ ruleId }/disable`,
+            url: `./api/rules/${ ruleId }/disable`,
         });
         await this.updateRules();
     }
@@ -176,7 +176,7 @@ class RulesApiModel extends ApiModel implements RulesApiModelInterface {
     public async delete(ruleId: apid.RuleId): Promise<void> {
         await this.request({
             method: 'DELETE',
-            url: `/api/rules/${ ruleId }`,
+            url: `./api/rules/${ ruleId }`,
         });
         await this.updateRules();
     }
@@ -189,7 +189,7 @@ class RulesApiModel extends ApiModel implements RulesApiModelInterface {
     public async add(rule: apid.AddRule): Promise<void> {
         await this.request({
             method: 'POST',
-            url: '/api/rules',
+            url: './api/rules',
             data: rule,
         });
     }
@@ -203,7 +203,7 @@ class RulesApiModel extends ApiModel implements RulesApiModelInterface {
     public async update(ruleId: apid.RuleId, rule: apid.AddRule): Promise<void> {
         await this.request({
             method: 'PUT',
-            url: `/api/rules/${ ruleId }`,
+            url: `./api/rules/${ ruleId }`,
             data: rule,
         });
     }

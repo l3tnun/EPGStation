@@ -1,6 +1,6 @@
 {
   "name": "EPGStation",
-  "version": "0.9.2",
+  "version": "0.9.3",
   "description": "DTV Software in Japan.",
   "main": "dist/server/index.js",
   "scripts": {

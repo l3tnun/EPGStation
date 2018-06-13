@@ -1,6 +1,8 @@
 import * as http from 'http';
 import * as SocketIO from 'socket.io';
+import * as urljoin from 'url-join';
 import * as events from '../../IoEvents';
+import Util from '../../Util/Util';
 import Model from '../Model';
 
 interface SocketIoManageModelInterface extends Model {
@@ -21,7 +23,10 @@ class SocketIoManageModel extends Model implements SocketIoManageModelInterface 
      * @param server: http.Server
      */
     public initialize(server: http.Server): void {
-        this.io = SocketIO(server);
+        const subDirectory = Util.getSubDirectory();
+        this.io = SocketIO(server, {
+            path: subDirectory === null ? '/socket.io' : urljoin(subDirectory, '/socket.io'),
+        });
 
         this.log.system.info('SocketIo Server has started.');
     }
