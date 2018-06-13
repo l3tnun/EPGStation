@@ -253,7 +253,7 @@ abstract class ParentComponent<T> extends Component<T> {
 
         // 一度だけ socket.io の接続を行う
         if (ParentComponent.io === null) {
-            ParentComponent.io = socketIo.connect(`${ window.location.protocol }//${ window.location.host }${ window.location.pathname.replace(/\/[^\/]*$/, '') }`);
+            ParentComponent.io = socketIo.connect(`${ window.location.protocol }//${ window.location.host }${ Util.getSubDirectory() }`);
             // socket.io 切断時の設定
             this.disconnectIo(ParentComponent.io);
         }

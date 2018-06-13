@@ -170,7 +170,7 @@ class RecordedInfoViewModel extends ViewModel {
         const result: VideoSrcInfo[] = [];
         // ts ファイル
         if (this.recorded.original) {
-            let url = window.location.pathname.replace(/\/[^\/]*$/, '');
+            let url = Util.getSubDirectory();
             url += download ? `/api/recorded/${ this.recorded.id }/file?mode=download`
                 : urlScheme === null ? `/api/recorded/${ this.recorded.id }/playlist` : `/api/recorded/${ this.recorded.id }/file`;
             if (urlScheme !== null) {
@@ -193,7 +193,7 @@ class RecordedInfoViewModel extends ViewModel {
         // エンコード済みファイル
         if (typeof this.recorded.encoded !== 'undefined') {
             for (const encoded of this.recorded.encoded) {
-                let url = window.location.pathname.replace(/\/[^\/]*$/, '');
+                let url = Util.getSubDirectory();
                 url += download ? `/api/recorded/${ this.recorded.id }/file?encodedId=${ encoded.encodedId }&mode=download`
                         : `/api/recorded/${ this.recorded.id }/file?encodedId=${ encoded.encodedId }`;
                 if (urlScheme !== null && !setting.prioritizeWebPlayerOverURLScheme) {
