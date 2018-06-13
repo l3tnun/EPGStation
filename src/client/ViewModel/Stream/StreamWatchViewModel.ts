@@ -125,7 +125,7 @@ class StreamWatchViewModel extends ViewModel {
      * @return string
      */
     public getSource(): string {
-        return this.streamNumber === null ? '' : `/streamfiles/stream${ this.streamNumber }.m3u8`;
+        return this.streamNumber === null ? '' : `./streamfiles/stream${ this.streamNumber }.m3u8`;
     }
 
     /**

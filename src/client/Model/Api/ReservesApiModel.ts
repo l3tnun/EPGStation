@@ -78,11 +78,11 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
         try {
             this.reserve = await <any> this.request({
                 method: 'GET',
-                url: `/api/reserves/${ programId }`,
+                url: `./api/reserves/${ programId }`,
             });
         } catch (err) {
             this.reserve = null;
-            console.error('/api/reserves/{id}');
+            console.error('./api/reserves/{id}');
             console.error(err);
             this.openSnackbar('予約情報取得に失敗しました');
         }
@@ -106,14 +106,14 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
         try {
             this.reserves = await <any> this.request({
                 method: 'GET',
-                url: '/api/reserves',
+                url: './api/reserves',
                 data: query,
             });
 
             this.currentPage = this.offset / this.limit + 1;
         } catch (err) {
             this.reserves = { reserves: [], total: 0 };
-            console.error('/api/reserves');
+            console.error('./api/reserves');
             console.error(err);
             this.openSnackbar('予約情報取得に失敗しました');
         }
@@ -137,12 +137,12 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
         try {
             this.conflicts = await <any> this.request({
                 method: 'GET',
-                url: '/api/reserves/conflicts',
+                url: './api/reserves/conflicts',
                 data: query,
             });
         } catch (err) {
             this.conflicts = { reserves: [], total: 0 };
-            console.error('/api/reserves/conflicts');
+            console.error('./api/reserves/conflicts');
             console.error(err);
             this.openSnackbar('重複情報取得に失敗しました');
         }
@@ -157,7 +157,7 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
         try {
             const allId = await <any> this.request({
                 method: 'GET',
-                url: '/api/reserves/all',
+                url: './api/reserves/all',
             });
 
             this.allReserves = {};
@@ -174,7 +174,7 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
             }
         } catch (err) {
             this.allReserves = null;
-            console.error('/api/reserves/all');
+            console.error('./api/reserves/all');
             console.error(err);
             this.openSnackbar('予約状態取得に失敗しました');
         }
@@ -191,12 +191,12 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
         try {
             const allId = <apid.ReserveAllId> await <any> this.request({
                 method: 'GET',
-                url: '/api/reserves/all',
+                url: './api/reserves/all',
             });
 
             return allId.conflicts.length;
         } catch (err) {
-            console.error('/api/reserves/all');
+            console.error('./api/reserves/all');
             console.error(err);
             this.openSnackbar('重複件数取得に失敗しました');
         }
@@ -253,12 +253,12 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
         try {
             await <any> this.request({
                 method: 'POST',
-                url: '/api/reserves',
+                url: './api/reserves',
                 data: option,
             });
 
         } catch (err) {
-            console.error('/api/reserves: post');
+            console.error('./api/reserves: post');
             throw(err);
         }
     }
@@ -275,12 +275,12 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
         try {
             await <any> this.request({
                 method: 'PUT',
-                url: `/api/reserves/${ programId }`,
+                url: `./api/reserves/${ programId }`,
                 data: option,
             });
 
         } catch (err) {
-            console.error('/api/reserves: post');
+            console.error('./api/reserves: post');
             throw(err);
         }
     }
@@ -294,11 +294,11 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
         try {
             await <any> this.request({
                 method: 'DELETE',
-                url: `/api/reserves/${ programId}`,
+                url: `./api/reserves/${ programId}`,
             });
 
         } catch (err) {
-            console.error(`/api/reserves/${ programId }: delete`);
+            console.error(`./api/reserves/${ programId }: delete`);
             throw(err);
         }
     }
@@ -312,11 +312,11 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
         try {
             await <any> this.request({
                 method: 'DELETE',
-                url: `/api/reserves/${ programId}/skip`,
+                url: `./api/reserves/${ programId}/skip`,
             });
 
         } catch (err) {
-            console.error(`/api/reserves/${ programId }/skip: delete`);
+            console.error(`./api/reserves/${ programId }/skip: delete`);
             throw(err);
         }
     }

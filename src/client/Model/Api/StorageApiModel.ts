@@ -26,11 +26,11 @@ class StorageApiModel extends ApiModel implements StorageApiModelInterface {
         try {
             this.diskStatus = await <any> this.request({
                 method: 'GET',
-                url: '/api/storage',
+                url: './api/storage',
             });
         } catch (err) {
             this.diskStatus = { free: 0, used: 0, total: 0, };
-            console.error('/api/storage');
+            console.error('./api/storage');
             console.error(err);
             this.openSnackbar('ストレージ情報取得に失敗しました');
         }

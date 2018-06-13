@@ -29,11 +29,11 @@ class ChannelsApiModel extends ApiModel implements ChannelsApiModelInterface {
         try {
             this.channels = await <any> this.request({
                 method: 'GET',
-                url: '/api/channels',
+                url: './api/channels',
             });
         } catch (err) {
             this.channels = [];
-            console.error('/api/channels');
+            console.error('./api/channels');
             console.error(err);
             this.openSnackbar('チャンネル情報取得に失敗しました');
         }

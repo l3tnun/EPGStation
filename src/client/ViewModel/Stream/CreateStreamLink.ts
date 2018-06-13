@@ -45,10 +45,10 @@ namespace CreateStreamLink {
 
         if (baseUrl === null) {
             // url scheme 設定がないので playlist を返す
-            return `/api/streams/live/${ channelId }/mpegts/playlist?mode=${ mode }`;
+            return `./api/streams/live/${ channelId }/mpegts/playlist?mode=${ mode }`;
         } else {
             // url scheme 設定があったので使用する
-            let source = `/api/streams/live/${ channelId }/mpegts?mode=${ mode }`;
+            let source = `./api/streams/live/${ channelId }/mpegts?mode=${ mode }`;
             if (baseUrl.match(/vlc-x-callback/)) { source = encodeURIComponent(source); }
 
             return baseUrl.replace(/ADDRESS/g, location.host + source);

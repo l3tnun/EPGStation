@@ -23,11 +23,11 @@ class ConfigApiModel extends ApiModel implements ConfigApiModelInterface {
         try {
             this.config = <apid.Config> await this.request({
                 method: 'GET',
-                url: '/api/config',
+                url: './api/config',
             });
         } catch (err) {
             this.config = null;
-            console.error('/api/config');
+            console.error('./api/config');
             console.error(err);
             this.openSnackbar('サーバー設定情報取得に失敗しました');
         }

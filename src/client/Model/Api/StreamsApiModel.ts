@@ -30,11 +30,11 @@ class StreamsApiModel extends ApiModel implements StreamsApiModelInterface {
         try {
             const infos = await <any> this.request({
                 method: 'GET',
-                url: '/api/streams/info',
+                url: './api/streams/info',
             });
             this.infos = infos;
         } catch (err) {
-            console.error('/api/streams/info');
+            console.error('./api/streams/info');
             console.error(err);
             this.openSnackbar('ストリーム情報取得に失敗しました');
         }
@@ -58,13 +58,13 @@ class StreamsApiModel extends ApiModel implements StreamsApiModelInterface {
         try {
             const stream: apid.HLSStream = await <any> this.request({
                 method: 'GET',
-                url: `/api/streams/live/${ channelId }/hls`,
+                url: `./api/streams/live/${ channelId }/hls`,
                 data: { mode: mode },
             });
 
             return stream.streamNumber;
         } catch (err) {
-            console.error(`/api/live/${ channelId }/hls`);
+            console.error(`./api/live/${ channelId }/hls`);
             console.error({ mode: mode });
             console.error(err);
             this.openSnackbar('HLS 配信開始に失敗しました');
@@ -86,13 +86,13 @@ class StreamsApiModel extends ApiModel implements StreamsApiModelInterface {
         try {
             const stream: apid.HLSStream = await <any> this.request({
                 method: 'GET',
-                url: `/api/streams/recorded/${ recordedId }/hls`,
+                url: `./api/streams/recorded/${ recordedId }/hls`,
                 data: query,
             });
 
             return stream.streamNumber;
         } catch (err) {
-            console.error(`/api/streams/${ recordedId }/hls`);
+            console.error(`./api/streams/${ recordedId }/hls`);
             console.error(query);
             console.error(err);
             this.openSnackbar('HLS 配信開始に失敗しました');
@@ -108,11 +108,11 @@ class StreamsApiModel extends ApiModel implements StreamsApiModelInterface {
         try {
             await this.request({
                 method: 'DELETE',
-                url: `/api/streams/${ streamNumber }`,
+                url: `./api/streams/${ streamNumber }`,
             });
             this.openSnackbar('ストリームを停止しました');
         } catch (err) {
-            console.error(`/api/streams/${ streamNumber }`);
+            console.error(`./api/streams/${ streamNumber }`);
             console.error(err);
             this.openSnackbar('ストリームの停止に失敗しました');
         }
@@ -125,12 +125,12 @@ class StreamsApiModel extends ApiModel implements StreamsApiModelInterface {
         try {
             await this.request({
                 method: 'DELETE',
-                url: '/api/streams/forcedstop',
+                url: './api/streams/forcedstop',
             });
             this.openSnackbar('全てのストリーム停止しました');
         } catch (err) {
             this.infos = [];
-            console.error('/api/streams/forcedstop');
+            console.error('./api/streams/forcedstop');
             console.error(err);
             this.openSnackbar('ストリーム停止に失敗しました');
         }

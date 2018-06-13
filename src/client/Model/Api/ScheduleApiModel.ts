@@ -44,12 +44,12 @@ class ScheduleApiModel extends ApiModel implements ScheduleApiModelInterface {
         try {
             this.schedulePrograms = await <any> this.request({
                 method: 'GET',
-                url: '/api/schedule',
+                url: './api/schedule',
                 data: query,
             });
         } catch (err) {
             this.schedulePrograms = [];
-            console.error('/api/schedule');
+            console.error('./api/schedule');
             console.error(err);
             this.openSnackbar('番組情報取得に失敗しました');
         }
@@ -68,12 +68,12 @@ class ScheduleApiModel extends ApiModel implements ScheduleApiModelInterface {
         try {
             this.schedulePrograms = await <any> this.request({
                 method: 'GET',
-                url: `/api/schedule/${ channelId }`,
+                url: `./api/schedule/${ channelId }`,
                 data: query,
             });
         } catch (err) {
             this.schedulePrograms = [];
-            console.error(`/api/schedule/${ channelId }`);
+            console.error(`./api/schedule/${ channelId }`);
             console.error(err);
             this.openSnackbar('単局番組情報取得に失敗しました');
         }
@@ -87,11 +87,11 @@ class ScheduleApiModel extends ApiModel implements ScheduleApiModelInterface {
         try {
             this.schedulePrograms = await <any> this.request({
                 method: 'GET',
-                url: `/api/schedule/detail/${ programId }`,
+                url: `./api/schedule/detail/${ programId }`,
             });
         } catch (err) {
             this.schedulePrograms = [];
-            console.error('/api/schedule/detail');
+            console.error('./api/schedule/detail');
             console.error(err);
             this.openSnackbar('番組情報取得に失敗しました');
         }
@@ -107,11 +107,11 @@ class ScheduleApiModel extends ApiModel implements ScheduleApiModelInterface {
         try {
             this.schedulePrograms = await <any> this.request({
                 method: 'GET',
-                url: `/api/schedule/broadcasting${ query }`,
+                url: `./api/schedule/broadcasting${ query }`,
             });
         } catch (err) {
             this.schedulePrograms = [];
-            console.error('/api/schedule/broadcasting');
+            console.error('./api/schedule/broadcasting');
             console.error(err);
             this.openSnackbar('放映中の番組情報取得に失敗しました');
         }
@@ -124,11 +124,11 @@ class ScheduleApiModel extends ApiModel implements ScheduleApiModelInterface {
         try {
             await this.request({
                 method: 'PUT',
-                url: '/api/schedule/update',
+                url: './api/schedule/update',
             });
             this.openSnackbar('予約情報更新を開始しました');
         } catch (err) {
-            console.error('/api/schedule/update');
+            console.error('./api/schedule/update');
             console.error(err);
             this.openSnackbar('予約更新に失敗しました');
         }
@@ -142,7 +142,7 @@ class ScheduleApiModel extends ApiModel implements ScheduleApiModelInterface {
     public async search(option: apid.RuleSearch): Promise<apid.ScheduleProgramItem[]> {
         return await <any> this.request({
             method: 'POST',
-            url: '/api/schedule/search',
+            url: './api/schedule/search',
             data: option,
         });
     }

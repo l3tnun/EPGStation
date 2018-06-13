@@ -113,14 +113,14 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
         try {
             this.recordeds = await <any> this.request({
                 method: 'GET',
-                url: '/api/recorded',
+                url: './api/recorded',
                 data: query,
             });
 
             this.currentPage = this.offset / this.limit + 1;
         } catch (err) {
             this.recordeds = { recorded: [], total: 0 };
-            console.error('/api/recorded');
+            console.error('./api/recorded');
             console.error(err);
             this.openSnackbar('録画情報取得に失敗しました');
         }
@@ -134,11 +134,11 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
         try {
             this.recorded = await <any> this.request({
                 method: 'GET',
-                url: `/api/recorded/${ recordedId }`,
+                url: `./api/recorded/${ recordedId }`,
             });
         } catch (err) {
             this.recorded = null;
-            console.error(`/api/recorded/${ recordedId }`);
+            console.error(`./api/recorded/${ recordedId }`);
             console.error(err);
             this.openSnackbar('録画情報取得に失敗しました');
         }
@@ -151,12 +151,12 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
         try {
             const result = await <any> this.request({
                 method: 'GET',
-                url: `/api/recorded/${ recordedId }/duration`,
+                url: `./api/recorded/${ recordedId }/duration`,
             });
 
             this.duration = result.duration;
         } catch (err) {
-            console.error(`/api/recorded/${ recordedId}/duration`);
+            console.error(`./api/recorded/${ recordedId}/duration`);
             console.error(err);
             this.openSnackbar('動画の長さ取得に失敗しました');
         }
@@ -170,7 +170,7 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
         try {
             this.tags = await <any> this.request({
                 method: 'GET',
-                url: '/api/recorded/tags',
+                url: './api/recorded/tags',
             });
         } catch (err) {
             this.tags = {
@@ -178,7 +178,7 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
                 channel: [],
                 genre: [],
             };
-            console.error('/api/recorded/tags');
+            console.error('./api/recorded/tags');
             console.error(err);
             this.openSnackbar('録画タグ情報取得に失敗しました');
         }
@@ -193,7 +193,7 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
     public async createNewRecord(recorded: apid.NewRecorded): Promise<number> {
         const result = <{ id: number }> await this.request({
             method: 'POST',
-            url: '/api/recorded',
+            url: './api/recorded',
             data: recorded,
         });
 
@@ -217,7 +217,7 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
             // this.request だと abort 後動かなくなる
             await m.request({
                 method: 'POST',
-                url: `/api/recorded/${ query.id }/upload`,
+                url: `./api/recorded/${ query.id }/upload`,
                 data: data,
                 config: (xhr: XMLHttpRequest) => { this.uploadXHR = xhr; },
             });
@@ -248,7 +248,7 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
     public async deleteAll(recordedId: apid.RecordedId): Promise<void> {
         await this.request({
             method: 'DELETE',
-            url: `/api/recorded/${ recordedId }`,
+            url: `./api/recorded/${ recordedId }`,
             extract: (xhr) => {
                 if (xhr.status === 409) { throw new Error(RecordedApiModelInterface.isStreamingNowError); }
 
@@ -270,7 +270,7 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
 
         await this.request({
             method: 'DELETE',
-            url: `/api/recorded/${ recordedId }/file${ query }`,
+            url: `./api/recorded/${ recordedId }/file${ query }`,
             extract: (xhr) => {
                 if (xhr.status === 423) { throw new Error(RecordedApiModelInterface.isLockedError); }
 
@@ -292,7 +292,7 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
 
         const result = <apid.RecordedDeleteMultipleResult> await this.request({
             method: 'POST',
-            url: '/api/recorded/delete',
+            url: './api/recorded/delete',
             data: option,
         });
 
@@ -321,13 +321,13 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
         try {
             await this.request({
                 method: 'POST',
-                url: `/api/recorded/${ recordedId }/kodi`,
+                url: `./api/recorded/${ recordedId }/kodi`,
                 data: query,
             });
 
             this.openSnackbar('kodi へ送信しました');
         } catch (err) {
-            console.error(`/api/recorded/${ recordedId }/kodi POST`);
+            console.error(`./api/recorded/${ recordedId }/kodi POST`);
             console.error(err);
             this.openSnackbar('kodi への送信に失敗しました');
         }
@@ -383,7 +383,7 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
     public async addEncode(recordedId: apid.RecordedId, option: EncodeQueryOption): Promise<void> {
         await this.request({
             method: 'POST',
-            url: `/api/recorded/${ recordedId }/encode`,
+            url: `./api/recorded/${ recordedId }/encode`,
             data: option,
         });
     }
@@ -396,7 +396,7 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
     public async cancelEncode(recordedId: apid.RecordedId): Promise<void> {
         await this.request({
             method: 'DELETE',
-            url: `/api/recorded/${ recordedId }/encode`,
+            url: `./api/recorded/${ recordedId }/encode`,
         });
     }
 }

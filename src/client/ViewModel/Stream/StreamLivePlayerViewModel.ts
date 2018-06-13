@@ -43,7 +43,7 @@ class StreamLivePlayerViewModel extends ViewModel {
     public getSrc(): string | null {
         if (this.channel === null || this.type === null || this.mode === null) { return null; }
 
-        return `/api/streams/live/${ this.channel.id }/${ this.type }?mode=${ this.mode }`;
+        return `./api/streams/live/${ this.channel.id }/${ this.type }?mode=${ this.mode }`;
     }
 
     /**
