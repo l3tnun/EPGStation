@@ -1,7 +1,18 @@
 import * as path from 'path';
+import * as urljoin from 'url-join';
 import Configuration from '../Configuration';
 
 namespace Util {
+    /**
+     * config の subDirectory を返す
+     * @return string
+     */
+    export const getSubDirectory = (): string | null => {
+        const sub = Configuration.getInstance().getConfig().subDirectory || null;
+
+        return sub === null ? null : urljoin('/', sub);
+    };
+
     /**
      * config の dbType を返す
      * @return 'mysql' | 'sqlite3'

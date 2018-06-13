@@ -1,6 +1,7 @@
 import * as request from 'request';
 import * as url from 'url';
 import * as urljoin from 'url-join';
+import Util from '../../Util/Util';
 import * as DBSchema from '../DB/DBSchema';
 
 namespace ApiUtil {
@@ -114,11 +115,22 @@ namespace ApiUtil {
         basicAuth?: { user: string; password: string };
     }): string => {
         const auth = typeof conf.basicAuth === 'undefined' ? '' : `${ conf.basicAuth.user }:${ conf.basicAuth.password }@`;
-        const fullUrl = urljoin(`${ conf.isSecure ? 'https' : 'http' }://${ auth }${ conf.host }`, conf.baseUrl);
+        const fullUrl = urljoin(`${ conf.isSecure ? 'https' : 'http' }://${ auth }${ ApiUtil.getHost(conf.host) }`, conf.baseUrl);
 
         return '#EXTM3U\n'
         + `#EXTINF: ${ conf.duration }, ${ conf.name }\n`
         + fullUrl;
+    };
+
+    /**
+     * host に サブディレクトリを追加して返す
+     * @param baseHost: host
+     * @return string
+     */
+    export const getHost = (baseHost: string): string => {
+        const subDirectory = Util.getSubDirectory();
+
+        return subDirectory === null ? baseHost : urljoin(baseHost, subDirectory);
     };
 }
 

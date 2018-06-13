@@ -4,6 +4,7 @@
 interface ConfigInterface {
     readOnlyOnce: boolean;
     serverPort: number;
+    subDirectory: string;
     mirakurunPath: string;
     dbType: 'mysql' | 'sqlite3' | 'postgresql';
     dbPath: string;

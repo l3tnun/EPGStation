@@ -40,6 +40,7 @@ class IPTVModel extends ApiModel implements IPTVModelInterface {
      */
     public async getChannelList(host: string, isSecure: boolean, mode: number): Promise<string> {
         const config = this.config.getConfig();
+        host = ApiUtil.getHost(host);
         let channels = await this.servicesDB.findAll();
 
         // sort
