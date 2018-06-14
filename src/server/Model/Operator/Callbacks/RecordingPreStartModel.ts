@@ -1,5 +1,5 @@
 import { spawn } from 'child_process';
-import * as fs from 'fs';
+import ProcessUtil from '../../../Util/ProcessUtil';
 import * as DBSchema from '../../DB/DBSchema';
 import { IPCServerInterface } from '../../IPC/IPCServer';
 import Model from '../../Model';
@@ -39,25 +39,18 @@ class RecordingPreStartModel extends Model implements CallbackBaseModelInterface
         const cmd = this.config.getConfig().recordedPreStartCommand;
         if (typeof cmd === 'undefined') { return; }
 
-        const args = cmd.split(' ');
-        const bin = args.shift();
+        this.log.system.info(`run: ${ cmd }`);
 
-        if (typeof bin === 'undefined') {
-            this.log.system.error('cmd is not found');
-
-            return;
-        }
-
-        // bin の存在確認
+        let cmds: ProcessUtil.Cmds;
         try {
-            fs.statSync(bin);
+            cmds = ProcessUtil.parseCmdStr(cmd);
         } catch (err) {
-            this.log.system.error(`${ bin } is not found`);
+            this.log.system.error(<any> err);
 
             return;
         }
 
-        const child = spawn(bin, args, {
+        const child = spawn(cmds.bin, cmds.args, {
             env: {
                 PROGRAMID: program.id,
                 CHANNELTYPE: program.channelType,

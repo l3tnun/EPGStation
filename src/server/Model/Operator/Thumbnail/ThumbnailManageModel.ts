@@ -39,7 +39,13 @@ class ThumbnailManageModel extends Model implements ThumbnailManageModelInterfac
      * @param callback ルール更新時に実行される
      */
     public addListener(callback: (id: number, thumbnailPath: string) => void): void {
-        this.listener.on(ThumbnailManageModel.THUMBANIL_CREATE_EVENT, (id: number, thumbnailPath: string) => { callback(id, thumbnailPath); });
+        this.listener.on(ThumbnailManageModel.THUMBANIL_CREATE_EVENT, (id: number, thumbnailPath: string) => {
+            try {
+                callback(id, thumbnailPath);
+            } catch (err) {
+                this.log.system.error(<any> err);
+            }
+        });
     }
 
     /**

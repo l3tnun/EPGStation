@@ -217,6 +217,16 @@ namespace Util {
     export const getSubDirectory = (): string => {
         return window.location.pathname.replace(/\/[^\/]*$/, '');
     };
+
+    /**
+     * get mdl-layout element
+     * @return HTMLElement | null
+     */
+    export const getMDLLayout = (): HTMLElement | null => {
+        const elements = document.getElementsByClassName('mdl-layout');
+
+        return elements.length === 0 ? null : <HTMLElement> elements[0];
+    };
 }
 
 export default Util;

@@ -312,7 +312,7 @@ class ProgramViewModel extends ViewModel {
     public draw(): void {
         if (!this.isEnableDraw() || this.items.length <= 0) { return; }
 
-        const element = <HTMLElement> (this.isFixScroll() ? document.getElementsByClassName('mdl-layout')[0] : document.querySelector(`.${ ProgramViewModel.boardName }`));
+        const element = this.isFixScroll() ? Util.getMDLLayout() : <HTMLElement> document.querySelector(`.${ ProgramViewModel.boardName }`);
         if (element === null) { return; }
 
         const stationWidth = this.getCssVariable('--channel-width');

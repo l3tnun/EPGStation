@@ -25,7 +25,11 @@ class MirakurunManageModel extends Model implements MirakurunManageModelInterfac
      */
     public addListener(callback: (tuners: apid.TunerDevice[]) => void): void {
         this.listener.on(MirakurunManageModel.MIRAKURUN_UPDATE_EVENT, () => {
-            callback(this.tuners);
+            try {
+                callback(this.tuners);
+            } catch (err) {
+                this.log.system.error(<any> err);
+            }
         });
     }
 
