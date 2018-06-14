@@ -179,7 +179,7 @@ class VideoWatchComponent extends ParentComponent<void> {
                 try {
                     (<HTMLVideoElement> vnode.dom).load();
                     (<HTMLVideoElement> vnode.dom).play()
-                    .catch(async(err) => {
+                    .catch((err) => {
                         console.error(err);
 
                         this.playError = true;
