@@ -9,6 +9,7 @@ import VideoContainerComponent from '../Video/VideoContainerComponent';
  */
 class StreamLivePlayerComponent extends Component<void> {
     private viewModel: StreamLivePlayerViewModel;
+    private playError: boolean = false;
 
     constructor() {
         super();
@@ -45,8 +46,15 @@ class StreamLivePlayerComponent extends Component<void> {
      * create video
      * @return m.Child | null
      */
-    private createVideo(): m.Child {
-        if (this.viewModel.getSrc() === null) { return m('div', 'dummy'); }
+    private createVideo(): m.Child | null {
+        if (this.viewModel.getSrc() === null) { return null; }
+
+        if (this.playError) {
+            this.playError = false;
+            setTimeout(() => { m.redraw(); }, 500);
+
+            return null;
+        }
 
         return m('video', {
             preload: 'none',
@@ -75,7 +83,13 @@ class StreamLivePlayerComponent extends Component<void> {
                 // 再生
                 try {
                     (<HTMLVideoElement> vnode.dom).load();
-                    (<HTMLVideoElement> vnode.dom).play();
+                    (<HTMLVideoElement> vnode.dom).play()
+                    .catch((err) => {
+                        console.error(err);
+
+                        this.playError = true;
+                        m.redraw();
+                    });
                 } catch (err) {
                     console.error(err);
                 }

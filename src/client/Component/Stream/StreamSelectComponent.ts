@@ -1,4 +1,5 @@
 import * as m from 'mithril';
+import Util from '../../Util/Util';
 import StreamLivePlayerViewModel from '../../ViewModel/Stream/StreamLivePlayerViewModel';
 import StreamSelectViewModel from '../../ViewModel/Stream/StreamSelectViewModel';
 import factory from '../../ViewModel/ViewModelFactory';
@@ -70,8 +71,16 @@ class StreamSelectComponent extends Component<void> {
                             const channel = this.viewModel.getChannel();
                             if (channel === null) { return; }
 
-                            this.livePlayerViewModel.set(channel, type === 'WebM' ? 'webm' : 'mp4', this.viewModel.streamOptionValue);
-                            this.livePlayerViewModel.open();
+                            if (Util.uaIsAndroid()) {
+                                Util.move('/video/watch', {
+                                    channelId: channel.id,
+                                    type: type === 'WebM' ? 'webm' : 'mp4',
+                                    mode: this.viewModel.streamOptionValue,
+                                });
+                            } else {
+                                this.livePlayerViewModel.set(channel, type === 'WebM' ? 'webm' : 'mp4', this.viewModel.streamOptionValue);
+                                this.livePlayerViewModel.open();
+                            }
                         } else {
                             this.viewModel.view();
                         }
