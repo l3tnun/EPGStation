@@ -172,6 +172,8 @@ class VideoContainerComponent extends Component<ControlArgs> {
             setTimeout(() => { this.balloon.enableClose(); }, 1000);
         }
 
+        m.redraw();
+
         setTimeout(() => { this.hideControl(); }, VideoContainerComponent.VideoSeekInterval);
     }
 
@@ -721,10 +723,6 @@ class VideoContainerComponent extends Component<ControlArgs> {
             else if ((<any> document).mozCancelFullScreen) { (<any> document).mozCancelFullScreen(); }
             else if ((<any> document).webkitCancelFullScreen) { (<any> document).webkitCancelFullScreen(); }
             else if ((<any> document).msExitFullscreen) { (<any> document).msExitFullscreen(); }
-            setTimeout(() => {
-                this.balloon.enableClose();
-                m.redraw();
-            }, 1000);
         } else {
             this.balloon.disableClose();
 
