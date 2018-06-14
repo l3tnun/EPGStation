@@ -36,9 +36,6 @@ class VideoContainerComponent extends Component<ControlArgs> {
     private isWaiting: boolean = false;
     private isEnabledRotation: boolean = typeof (<any> window.screen).orientation !== 'undefined' && Util.uaIsMobile();
 
-    private mdlLayoutScrollTop: number = 0;
-    private mdlLayoutScrollLeft: number = 0;
-
     constructor() {
         super();
 
@@ -167,41 +164,15 @@ class VideoContainerComponent extends Component<ControlArgs> {
         if (this.containerElement === null) { return; }
 
         if (this.isFullScreen()) {
-            // フルスクリーンに切り替わった
             this.containerElement.classList.add('fullscreen');
             this.hideMouseCursor();
         } else {
-            // フルスクリーン終了
             this.containerElement.classList.remove('fullscreen');
             this.showMouseCursor();
-            this.restoreMDLLayoutScrollPosition(); // ずれた mdl-layout の scroll 位置を修正
-            m.redraw();
             setTimeout(() => { this.balloon.enableClose(); }, 1000);
         }
 
         setTimeout(() => { this.hideControl(); }, VideoContainerComponent.VideoSeekInterval);
-    }
-
-    /**
-     * mdl-layout の scroll 位置を保存する
-     */
-    private saveMDLLayoutScrollPosition(): void {
-        const mdlLayout = Util.getMDLLayout();
-        if (mdlLayout !== null) {
-            this.mdlLayoutScrollTop = mdlLayout.scrollTop;
-            this.mdlLayoutScrollLeft = mdlLayout.scrollLeft;
-        }
-    }
-
-    /**
-     * mdl-layout の scroll 位置を復元する
-     */
-    private restoreMDLLayoutScrollPosition(): void {
-        const mdlLayout = Util.getMDLLayout();
-        if (mdlLayout !== null) {
-            mdlLayout.scrollTop = this.mdlLayoutScrollTop;
-            mdlLayout.scrollLeft = this.mdlLayoutScrollLeft;
-        }
     }
 
     /**
@@ -750,10 +721,11 @@ class VideoContainerComponent extends Component<ControlArgs> {
             else if ((<any> document).mozCancelFullScreen) { (<any> document).mozCancelFullScreen(); }
             else if ((<any> document).webkitCancelFullScreen) { (<any> document).webkitCancelFullScreen(); }
             else if ((<any> document).msExitFullscreen) { (<any> document).msExitFullscreen(); }
+            setTimeout(() => {
+                this.balloon.enableClose();
+                m.redraw();
+            }, 1000);
         } else {
-            // フルスクリーン時に mdl-layout の scroll 位置がずれるので記憶しておく
-            this.saveMDLLayoutScrollPosition();
-
             this.balloon.disableClose();
 
             if (!this.requestFullscreen(this.containerElement) && this.videoElement !== null) {
