@@ -1,5 +1,5 @@
 import { spawn } from 'child_process';
-import * as fs from 'fs';
+import ProcessUtil from '../../Util/ProcessUtil';
 import { RecordedSchema } from '../DB/DBSchema';
 import Model from '../Model';
 
@@ -13,25 +13,18 @@ interface ExternalProcessModelInterface extends Model {
  */
 class ExternalProcessModel extends Model implements ExternalProcessModelInterface {
     public run(cmd: string, program: RecordedSchema): void {
-        const args = cmd.split(' ');
-        const bin = args.shift();
+        this.log.system.info(`run: ${ cmd }`);
 
-        if (typeof bin === 'undefined') {
-            this.log.system.error('cmd is not found');
-
-            return;
-        }
-
-        // bin の存在確認
+        let cmds: ProcessUtil.Cmds;
         try {
-            fs.statSync(bin);
+            cmds = ProcessUtil.parseCmdStr(cmd);
         } catch (err) {
-            this.log.system.error(`${ bin } is not found`);
+            this.log.system.error(<any> err);
 
             return;
         }
 
-        const child = spawn(bin, args, {
+        const child = spawn(cmds.bin, cmds.args, {
             env: {
                 RECORDEDID: program.id,
                 PROGRAMID: program.programId,

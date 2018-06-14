@@ -1,4 +1,5 @@
 import { ChildProcess } from 'child_process';
+import * as fs from 'fs';
 
 namespace ProcessUtil {
     /**
@@ -25,6 +26,38 @@ namespace ProcessUtil {
                 reject(err);
             }
         });
+    };
+
+    export interface Cmds {
+        bin: string;
+        args: string[];
+    }
+
+    /**
+     * 渡された cmd 文字列を bin と args に分離する
+     * @param cmd: string
+     * @return ProcessUtil.Cmds
+     */
+    export const parseCmdStr = (cmd: string): ProcessUtil.Cmds => {
+        const args = cmd.split(' ');
+        const bin = args.shift();
+        if (typeof bin === 'undefined') {
+            throw new Error('CmdParseError');
+        }
+
+        // bin の存在確認
+        try {
+            fs.statSync(bin);
+        } catch (e) {
+            throw new Error('CmdBinIsNotFound');
+        }
+
+        return {
+            bin: bin,
+            args: args.filter((arg) => {
+                return arg.length > 0;
+            }),
+        };
     };
 }
 

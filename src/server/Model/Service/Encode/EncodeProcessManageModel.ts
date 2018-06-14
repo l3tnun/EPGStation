@@ -1,6 +1,5 @@
 import { ChildProcess, spawn, SpawnOptions } from 'child_process';
 import * as events from 'events';
-import * as fs from 'fs';
 import * as path from 'path';
 import ProcessUtil from '../../../Util/ProcessUtil';
 import Model from '../../Model';
@@ -136,35 +135,17 @@ class EncodeProcessManageModel extends Model implements EncodeProcessManageModel
         priority: number;
         createTime: number;
     } {
-        let args = cmd.split(' ');
-        const bin = args.shift();
+        const cmds = ProcessUtil.parseCmdStr(cmd);
 
         // input, output を置換
-        for (let i = 0; i < args.length; i++) {
-            args[i] = args[i].replace(/%INPUT%/g, input);
+        for (let i = 0; i < cmds.args.length; i++) {
+            cmds.args[i] = cmds.args[i].replace(/%INPUT%/g, input);
             if (output !== null) {
-                args[i] = args[i].replace(/%OUTPUT%/g, output);
+                cmds.args[i] = cmds.args[i].replace(/%OUTPUT%/g, output);
             }
         }
 
-        // 空白を削除
-        args = args.filter((arg) => {
-            return arg.length > 0;
-        });
-
-        if (typeof bin === 'undefined') {
-            throw new Error(EncodeProcessManageModel.NotFoundBinError);
-        }
-
-        // bin の存在確認
-        try {
-            fs.statSync(bin);
-        } catch (e) {
-            this.log.system.error(`${ bin } is not found`);
-            throw new Error(EncodeProcessManageModel.NotFoundBinError);
-        }
-
-        const child = spawn(bin, args, spawnOption);
+        const child = spawn(cmds.bin, cmds.args, spawnOption);
         const createTime = new Date().getTime();
 
         // this.childs から削除

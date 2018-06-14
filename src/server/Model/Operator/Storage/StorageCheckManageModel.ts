@@ -1,6 +1,6 @@
 import { spawn } from 'child_process';
 import * as diskusage from 'diskusage';
-import * as fs from 'fs';
+import ProcessUtil from '../../../Util/ProcessUtil';
 import Util from '../../../Util/Util';
 import { RecordedDBInterface } from '../../DB/RecordedDB';
 import { IPCServerInterface } from '../../IPC/IPCServer';
@@ -81,22 +81,16 @@ class StorageCheckManageModel extends Model implements StorageCheckManageModelIn
         }
 
         if (this.cmd !== null) {
-            const args = this.cmd.split(' ');
-            const bin = args.shift();
-
             // cmd の実行
             try {
-                // cmd の存在確認
-                if (typeof bin === 'undefined') { throw new Error('storageLimitCmdIsUndefined'); }
-                fs.statSync(bin);
+                this.log.system.info(`run: ${ this.cmd }`);
+                const cmds = ProcessUtil.parseCmdStr(this.cmd);
+                spawn(cmds.bin, cmds.args);
             } catch (err) {
-                this.log.system.error(`${ bin } is not found.`);
+                this.log.system.error(<any> err);
 
                 return intervalTime;
             }
-
-            spawn(bin, args);
-            this.log.system.info(`run: ${ this.cmd }`);
         }
 
         return intervalTime;
