@@ -123,7 +123,8 @@ class ProgramComponent extends ParentComponent<void> {
 
                         if (!this.viewModel.isFixScroll()) { return; }
 
-                        const element = <HTMLElement> document.getElementsByClassName('mdl-layout')[0];
+                        const element = Util.getMDLLayout();
+                        if (element === null) { return; }
 
                         // scroll
                         const channel = <HTMLElement> document.getElementsByClassName(ProgramViewModel.channlesName)[0];
@@ -170,7 +171,8 @@ class ProgramComponent extends ParentComponent<void> {
                         // scroll position を復元する
                         const position = <{ top: number; left: number } | null> this.getHistoryData();
                         if (position === null) { return; }
-                        const element = <HTMLElement> document.getElementsByClassName('mdl-layout')[0];
+                        const element = Util.getMDLLayout();
+                        if (element === null) { return; }
                         element.scrollTop = position.top;
                         element.scrollLeft = position.left;
                     },
