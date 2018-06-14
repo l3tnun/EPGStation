@@ -105,8 +105,16 @@ class RecordedInfoComponent extends Component<void> {
                                     this.viewModel.close();
                                     await Util.sleep(300);
                                 }
-                                this.playerViewModel.set(recorded, video.encodedId);
-                                this.playerViewModel.open();
+
+                                if (Util.uaIsAndroid()) {
+                                    Util.move('/video/watch', {
+                                        recordedId: recorded.id,
+                                        encodedId: video.encodedId,
+                                    });
+                                } else {
+                                    this.playerViewModel.set(recorded, video.encodedId);
+                                    this.playerViewModel.open();
+                                }
                             }
                         } else {
                             location.href = video.path;

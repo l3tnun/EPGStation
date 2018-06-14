@@ -12,6 +12,7 @@ import SettingComponent from './Component/Setting/SettingComponent';
 import StreamProgramComponent from './Component/Stream/StreamProgramComponent';
 import StreamWatchComponent from './Component/Stream/StreamWatchComponent';
 import TopPageComponent from './Component/TopPage/TopPageComponent';
+import VideoWatchComponent from './Component/VideoWatch/VideoWatchComponent';
 import Util from './Util/Util';
 import factory from './ViewModel/ViewModelFactory';
 import ViewModelFactorySetting from './ViewModel/ViewModelFactorySetting';
@@ -48,5 +49,6 @@ m.route(document.body, '/', {
     '/rules': RulesComponent,
     '/search': SearchComponent,
     '/setting': SettingComponent,
+    '/video/watch': VideoWatchComponent,
 });
 

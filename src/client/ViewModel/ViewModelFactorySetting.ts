@@ -54,6 +54,7 @@ import StreamSelectViewModel from './Stream/StreamSelectViewModel';
 import StreamWatchViewModel from './Stream/StreamWatchViewModel';
 import TabViewModel from './Tab/TabViewModel';
 import TopPageViewModel from './TopPageViewModel';
+import VideoWatchViewModel from './VideoWatch/VideoWatchViewModel';
 
 import factory from './ViewModelFactory';
 
@@ -261,6 +262,11 @@ namespace ViewModelFactorySetting {
         factory.reg('SettingViewModel', new SettingViewModel(
             settingModel,
             snackbarModel,
+        ));
+        factory.reg('VideoWatchViewModel', new VideoWatchViewModel(
+            recordedApiModel,
+            channelsApiModel,
+            streamApiModel,
         ));
     };
 }
