@@ -68,7 +68,11 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
      */
     public recPreStartListener(callback: (program: DBSchema.ProgramSchema) => void): void {
         this.listener.on(RecordingManageModel.RECORDING_PRE_START_EVENT, (program: DBSchema.ProgramSchema) => {
-            callback(program);
+            try {
+                callback(program);
+            } catch (err) {
+                this.log.system.error(<any> err);
+            }
         });
     }
 
@@ -78,7 +82,11 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
      */
     public recStartListener(callback: (program: DBSchema.RecordedSchema) => void): void {
         this.listener.on(RecordingManageModel.RECORDING_START_EVENT, (program: DBSchema.RecordedSchema) => {
-            callback(program);
+            try {
+                callback(program);
+            } catch (err) {
+                this.log.system.error(<any> err);
+            }
         });
     }
 
@@ -88,7 +96,11 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
      */
     public recEndListener(callback: (program: DBSchema.RecordedSchema | null, encodeOption: EncodeInterface | null) => void): void {
         this.listener.on(RecordingManageModel.RECORDING_FIN_EVENT, (program: DBSchema.RecordedSchema | null, encodeOption: EncodeInterface | null) => {
-            callback(program, encodeOption);
+            try {
+                callback(program, encodeOption);
+            } catch (err) {
+                this.log.system.error(<any> err);
+            }
         });
     }
 

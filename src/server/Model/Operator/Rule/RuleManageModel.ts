@@ -35,7 +35,13 @@ class RuleManageModel extends Model implements RuleManageModelInterface {
      * @param callback ルール更新時に実行される
      */
     public addListener(callback: (ruleId: number, status: RuleEventStatus) => void): void {
-        this.listener.on(RuleManageModel.RULE_UPDATE_EVENT, (ruleId: number, status: RuleEventStatus) => { callback(ruleId, status); });
+        this.listener.on(RuleManageModel.RULE_UPDATE_EVENT, (ruleId: number, status: RuleEventStatus) => {
+            try {
+                callback(ruleId, status);
+            } catch (err) {
+                this.log.system.error(<any> err);
+            }
+        });
     }
 
     /**

@@ -74,8 +74,7 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
         isStoped: boolean; // encode 停止時に ture にする
     } | null = null;
 
-    private doneListener: events.EventEmitter = new events.EventEmitter();
-    private errorListener: events.EventEmitter = new events.EventEmitter();
+    private listener: events.EventEmitter = new events.EventEmitter();
 
     constructor(encodeProcessManage: EncodeProcessManageModelInterface) {
         super();
@@ -87,8 +86,12 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
      * @param callback ルール更新時に実行される
      */
     public addEncodeDoneListener(callback: (recordedId: number, encodedId: number | null, name: string, output: string | null, delTs: boolean) => void): void {
-        this.doneListener.on(EncodeManageModel.ENCODE_FIN_EVENT, (recordedId: number, encodedId: number | null, name: string, output: string | null, delTs: boolean) => {
-            callback(recordedId, encodedId, name, output, delTs);
+        this.listener.on(EncodeManageModel.ENCODE_FIN_EVENT, (recordedId: number, encodedId: number | null, name: string, output: string | null, delTs: boolean) => {
+            try {
+                callback(recordedId, encodedId, name, output, delTs);
+            } catch (err) {
+                this.log.system.info(<any> err);
+            }
         });
     }
 
@@ -97,8 +100,12 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
      * @param callback
      */
     public addEncodeErrorListener(callback: () => void): void {
-        this.errorListener.on(EncodeManageModel.ENCODE_ERROR_EVENT, () => {
-            callback();
+        this.listener.on(EncodeManageModel.ENCODE_ERROR_EVENT, () => {
+            try {
+                callback();
+            } catch (err) {
+                this.log.system.error(<any> err);
+            }
         });
     }
 
@@ -475,14 +482,14 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
      * @param delTs: ts を削除するか
      */
     private doneNotify(recordedId: number, encodedId: number | null, name: string, output: string | null, delTs: boolean): void {
-        this.doneListener.emit(EncodeManageModel.ENCODE_FIN_EVENT, recordedId, encodedId, name, output, delTs);
+        this.listener.emit(EncodeManageModel.ENCODE_FIN_EVENT, recordedId, encodedId, name, output, delTs);
     }
 
     /**
      * エンコード失敗を通知
      */
     private errorNotify(): void {
-        this.errorListener.emit(EncodeManageModel.ENCODE_ERROR_EVENT);
+        this.listener.emit(EncodeManageModel.ENCODE_ERROR_EVENT);
     }
 }
 
