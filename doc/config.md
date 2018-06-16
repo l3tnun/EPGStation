@@ -34,8 +34,10 @@ Config.json
 | ffmpeg | string | /usr/local/bin/ffmpeg | no |  サムネイル生成に使用する ffmpeg のパス |
 | ffprobe | string | /usr/local/bin/ffprobe | no | 動画情報取得に使用する ffprobe のパス |
 | recordedPreStartCommand | string | | no | 録画準備開始後に実行するコマンド |
+| recordedPrepRecFailedCommand | string | | no | 録画準備失敗時に実行するコマンド |
 | recordedStartCommand | string | | no | 録画開始時に実行するコマンド |
 | recordedEndCommand | string | | no | 録画終了時に実行するコマンド |
+| recordedFailedCommand | string | | no | 録画中のエラー発生時に実行するコマンド |
 | maxEncode | number | 0 | no | エンコードプロセスの起動上限数 |
 | encode | {}[] | | no | エンコード設定 |
 | delts | boolean | false | no | 手動予約時の ts 削除チェックボックスのデフォルト設定 |
@@ -166,7 +168,7 @@ maxEncode を 1 以上に設定すること
 
 ----
 
-### recordedPreStartCommand
+### recordedPreStartCommand, recordedPrepRecFailedCommand
 
 #### 実行時に渡される環境変数
 
@@ -184,7 +186,7 @@ maxEncode を 1 以上に設定すること
 
 ----
 
-### recordedStartCommand, recordedEndCommand
+### recordedStartCommand, recordedEndCommand, recordedFailedCommand
 
 #### 実行時に渡される環境変数
 

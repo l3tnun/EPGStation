@@ -31,7 +31,9 @@ import { IPCServer } from './IPC/IPCServer';
 import factory from './ModelFactory';
 
 import EPGUpdateFinModel from './Operator/Callbacks/EPGUpdateFinModel';
+import RecordingFailedModel from './Operator/Callbacks/RecordingFailedModel';
 import RecordingFinModel from './Operator/Callbacks/RecordingFinModel';
+import RecordingPrepRecFailedModel from './Operator/Callbacks/RecordingPrepRecFailedModel';
 import RecordingPreStartModel from './Operator/Callbacks/RecordingPreStartModel';
 import RecordingStartModel from './Operator/Callbacks/RecordingStartModel';
 import RuleUpdateFinModel from './Operator/Callbacks/RuleUpdateFinModel';
@@ -144,6 +146,9 @@ namespace ModelFactorySetting {
             ruleManageModel,
         );
         const externalProcess = new ExternalProcessModel();
+        const recordingPrepRecFailedModel = new RecordingPrepRecFailedModel(
+            recordingManage,
+        );
         const recordingPreStartModel = new RecordingPreStartModel(
             recordingManage,
             ipc,
@@ -158,6 +163,10 @@ namespace ModelFactorySetting {
             thumbnailManageModel,
             externalProcess,
             ipc,
+        );
+        const recordingFailedModel = new RecordingFailedModel(
+            recordingManage,
+            externalProcess,
         );
         const thumbnailCreateFinModel = new ThumbnailCreateFinModel(
             recordedManage,
@@ -190,9 +199,11 @@ namespace ModelFactorySetting {
         factory.reg('IPCServer', () => { return ipc; });
         factory.reg('EPGUpdateFinModel', () => { return epgUpdateFinModel; });
         factory.reg('RuleUpdateFinModel', () => { return ruleUpdateFinModel; });
+        factory.reg('RecordingPrepRecFailedModel', () => { return recordingPrepRecFailedModel; });
         factory.reg('RecordingPreStartModel', () => { return recordingPreStartModel; });
         factory.reg('RecordingStartModel', () => { return recordingStartModel; });
         factory.reg('RecordingFinModel', () => { return recordingFinModel; });
+        factory.reg('RecordingFailedModel', () => { return recordingFailedModel; });
         factory.reg('ThumbnailCreateFinModel', () => { return thumbnailCreateFinModel; });
     };
 }

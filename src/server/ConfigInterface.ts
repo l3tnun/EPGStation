@@ -45,8 +45,10 @@ interface ConfigInterface {
     conflictPriority: number;
     recorded: string;
     recordedPreStartCommand: string;
+    recordedPrepRecFailedCommand: string;
     recordedStartCommand: string;
     recordedEndCommand: string;
+    recordedFailedCommand: string;
     recordedFormat: string;
     fileExtension: string;
     reservesUpdateIntervalTime: number;
