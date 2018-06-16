@@ -28,6 +28,7 @@ interface RecordingManageModelInterface extends Model {
     preprecFailedListener(callback: (program: DBSchema.ProgramSchema) => void): void;
     recStartListener(callback: (program: DBSchema.RecordedSchema) => void): void;
     recEndListener(callback: (program: DBSchema.RecordedSchema | null, encodeOption: EncodeInterface | null) => void): void;
+    recFailedListener(callback: (program: DBSchema.RecordedSchema) => void): void;
     check(reserves: ReserveProgram[]): void;
     stop(id: number): void;
     stopRuleId(ruleId: number): void;
@@ -113,6 +114,20 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
         this.listener.on(RecordingManageModel.RECORDING_FIN_EVENT, (program: DBSchema.RecordedSchema | null, encodeOption: EncodeInterface | null) => {
             try {
                 callback(program, encodeOption);
+            } catch (err) {
+                this.log.system.error(<any> err);
+            }
+        });
+    }
+
+    /**
+     * 録画中にエラーが発生した時に実行されるイベントに追加
+     * @param callback 録画中にエラーが発生した時に実行される
+     */
+    public recFailedListener(callback: (program: DBSchema.RecordedSchema) => void): void {
+        this.listener.on(RecordingManageModel.RECORDING_FAILED_EVENT, (program: DBSchema.RecordedSchema) => {
+            try {
+                callback(program);
             } catch (err) {
                 this.log.system.error(<any> err);
             }
@@ -355,7 +370,10 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
                     this.log.system.error(err);
 
                     // 録画を終了させる
-                    this.recEnd(recData, recFile, null);
+                    await this.recEnd(recData, recFile, null);
+
+                    // 録画途中でエラーが発生した事を通知
+                    this.recordingFailedEventsNotify(recorded);
                 }
 
                 resolve();
@@ -561,6 +579,14 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
     private finEventsNotify(program: DBSchema.RecordedSchema | null, encodeOption: EncodeInterface | null): void {
         this.listener.emit(RecordingManageModel.RECORDING_FIN_EVENT, program, encodeOption);
     }
+
+    /**
+     * 録画中にエラーが発生した事を通知
+     * @param program: DBSchema.ProgramSchema
+     */
+    private recordingFailedEventsNotify(program: DBSchema.RecordedSchema): void {
+        this.listener.emit(RecordingManageModel.RECORDING_FAILED_EVENT, program);
+    }
 }
 
 namespace RecordingManageModel {
@@ -568,6 +594,7 @@ namespace RecordingManageModel {
     export const PREPREC_FAILED_EVENT = 'preprecFailed';
     export const RECORDING_START_EVENT = 'recordingStart';
     export const RECORDING_FIN_EVENT = 'recordingFin';
+    export const RECORDING_FAILED_EVENT = 'recordingFailed';
     export const prepTime: number = 1000 * 15;
 }
 

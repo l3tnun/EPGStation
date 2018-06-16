@@ -31,6 +31,7 @@ import { IPCServer } from './IPC/IPCServer';
 import factory from './ModelFactory';
 
 import EPGUpdateFinModel from './Operator/Callbacks/EPGUpdateFinModel';
+import RecordingFailedModel from './Operator/Callbacks/RecordingFailedModel';
 import RecordingFinModel from './Operator/Callbacks/RecordingFinModel';
 import RecordingPrepRecFailedModel from './Operator/Callbacks/RecordingPrepRecFailedModel';
 import RecordingPreStartModel from './Operator/Callbacks/RecordingPreStartModel';
@@ -163,6 +164,10 @@ namespace ModelFactorySetting {
             externalProcess,
             ipc,
         );
+        const recordingFailedModel = new RecordingFailedModel(
+            recordingManage,
+            externalProcess,
+        );
         const thumbnailCreateFinModel = new ThumbnailCreateFinModel(
             recordedManage,
             thumbnailManageModel,
@@ -198,6 +203,7 @@ namespace ModelFactorySetting {
         factory.reg('RecordingPreStartModel', () => { return recordingPreStartModel; });
         factory.reg('RecordingStartModel', () => { return recordingStartModel; });
         factory.reg('RecordingFinModel', () => { return recordingFinModel; });
+        factory.reg('RecordingFailedModel', () => { return recordingFailedModel; });
         factory.reg('ThumbnailCreateFinModel', () => { return thumbnailCreateFinModel; });
     };
 }
