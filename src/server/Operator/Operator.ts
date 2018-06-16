@@ -42,6 +42,7 @@ class Operator extends Base {
         (<CallbackBaseModelInterface> factory.get('EPGUpdateFinModel')).set();
         (<CallbackBaseModelInterface> factory.get('RuleUpdateFinModel')).set();
         (<CallbackBaseModelInterface> factory.get('RecordingPreStartModel')).set();
+        (<CallbackBaseModelInterface> factory.get('RecordingPrepRecFailedModel')).set();
         (<CallbackBaseModelInterface> factory.get('RecordingStartModel')).set();
         (<CallbackBaseModelInterface> factory.get('RecordingFinModel')).set();
         (<CallbackBaseModelInterface> factory.get('ThumbnailCreateFinModel')).set();

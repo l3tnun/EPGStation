@@ -32,6 +32,7 @@ import factory from './ModelFactory';
 
 import EPGUpdateFinModel from './Operator/Callbacks/EPGUpdateFinModel';
 import RecordingFinModel from './Operator/Callbacks/RecordingFinModel';
+import RecordingPrepRecFailedModel from './Operator/Callbacks/RecordingPrepRecFailedModel';
 import RecordingPreStartModel from './Operator/Callbacks/RecordingPreStartModel';
 import RecordingStartModel from './Operator/Callbacks/RecordingStartModel';
 import RuleUpdateFinModel from './Operator/Callbacks/RuleUpdateFinModel';
@@ -144,6 +145,9 @@ namespace ModelFactorySetting {
             ruleManageModel,
         );
         const externalProcess = new ExternalProcessModel();
+        const recordingPrepRecFailedModel = new RecordingPrepRecFailedModel(
+            recordingManage,
+        );
         const recordingPreStartModel = new RecordingPreStartModel(
             recordingManage,
             ipc,
@@ -190,6 +194,7 @@ namespace ModelFactorySetting {
         factory.reg('IPCServer', () => { return ipc; });
         factory.reg('EPGUpdateFinModel', () => { return epgUpdateFinModel; });
         factory.reg('RuleUpdateFinModel', () => { return ruleUpdateFinModel; });
+        factory.reg('RecordingPrepRecFailedModel', () => { return recordingPrepRecFailedModel; });
         factory.reg('RecordingPreStartModel', () => { return recordingPreStartModel; });
         factory.reg('RecordingStartModel', () => { return recordingStartModel; });
         factory.reg('RecordingFinModel', () => { return recordingFinModel; });

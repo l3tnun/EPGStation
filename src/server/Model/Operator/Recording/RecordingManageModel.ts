@@ -25,6 +25,7 @@ interface RecordingProgram {
 
 interface RecordingManageModelInterface extends Model {
     recPreStartListener(callback: (program: DBSchema.ProgramSchema) => void): void;
+    preprecFailedListener(callback: (program: DBSchema.ProgramSchema) => void): void;
     recStartListener(callback: (program: DBSchema.RecordedSchema) => void): void;
     recEndListener(callback: (program: DBSchema.RecordedSchema | null, encodeOption: EncodeInterface | null) => void): void;
     check(reserves: ReserveProgram[]): void;
@@ -68,6 +69,20 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
      */
     public recPreStartListener(callback: (program: DBSchema.ProgramSchema) => void): void {
         this.listener.on(RecordingManageModel.RECORDING_PRE_START_EVENT, (program: DBSchema.ProgramSchema) => {
+            try {
+                callback(program);
+            } catch (err) {
+                this.log.system.error(<any> err);
+            }
+        });
+    }
+
+    /**
+     * 録画開始前の準備中にエラーが発生した場合に実行されるイベントに追加
+     * @param callback 録画開始前の準備中にエラーが発生した場合実行される
+     */
+    public preprecFailedListener(callback: (program: DBSchema.ProgramSchema) => void): void {
+        this.listener.on(RecordingManageModel.PREPREC_FAILED_EVENT, (program: DBSchema.ProgramSchema) => {
             try {
                 callback(program);
             } catch (err) {
@@ -240,7 +255,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
             }
         } catch (err) {
             this.log.system.error(`preprec failed: ${ reserve.program.id } ${ reserve.program.name }`);
-            this.log.system.debug(err);
+            this.log.system.error(err);
 
             // retry
             setTimeout(() => {
@@ -250,6 +265,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
                     // rmove reserves
                     this.removeRecording(reserve.program.id);
                     this.reservationManage.cancel(reserve.program.id);
+                    this.prepRecFailedEventsNotify(reserve.program);
                 }
             }, 1000 * 5);
         }
@@ -514,20 +530,19 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
     }
 
     /**
-     * 録画完了を通知
-     * @param program: DBSchema.RecordedSchema | null
-     * @param encodeOption: EncodeInterface | null
-     */
-    private finEventsNotify(program: DBSchema.RecordedSchema | null, encodeOption: EncodeInterface | null): void {
-        this.listener.emit(RecordingManageModel.RECORDING_FIN_EVENT, program, encodeOption);
-    }
-
-    /**
      * 録画準備開始を通知
      * @param program: DBSchema.ProgramSchema
      */
     private preStartEventsNotify(program: DBSchema.ProgramSchema): void {
         this.listener.emit(RecordingManageModel.RECORDING_PRE_START_EVENT, program);
+    }
+
+    /**
+     * 録画準備失敗の通知
+     * @param program: DBSchema.ProgramSchema
+     */
+    private prepRecFailedEventsNotify(program: DBSchema.ProgramSchema): void {
+        this.listener.emit(RecordingManageModel.PREPREC_FAILED_EVENT, program);
     }
 
     /**
@@ -537,10 +552,20 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
     private startEventsNotify(program: DBSchema.RecordedSchema): void {
         this.listener.emit(RecordingManageModel.RECORDING_START_EVENT, program);
     }
+
+    /**
+     * 録画完了を通知
+     * @param program: DBSchema.RecordedSchema | null
+     * @param encodeOption: EncodeInterface | null
+     */
+    private finEventsNotify(program: DBSchema.RecordedSchema | null, encodeOption: EncodeInterface | null): void {
+        this.listener.emit(RecordingManageModel.RECORDING_FIN_EVENT, program, encodeOption);
+    }
 }
 
 namespace RecordingManageModel {
     export const RECORDING_PRE_START_EVENT = 'recordingPreStart';
+    export const PREPREC_FAILED_EVENT = 'preprecFailed';
     export const RECORDING_START_EVENT = 'recordingStart';
     export const RECORDING_FIN_EVENT = 'recordingFin';
     export const prepTime: number = 1000 * 15;
