@@ -2,28 +2,35 @@
 import DBOperator from './DB/DBOperator';
 import { EncodedDBInterface } from './DB/EncodedDB';
 import MySQLMigrationV1 from './DB/MySQL/migrate/MySQLMigrationV1';
+import MySQLMigrationV2 from './DB/MySQL/migrate/MySQLMigrationV2';
 import MySQLEncodedDB from './DB/MySQL/MySQLEncodedDB';
 import MySQLOperator from './DB/MySQL/MySQLOperator';
 import MySQLProgramsDB from './DB/MySQL/MySQLProgramsDB';
 import MySQLRecordedDB from './DB/MySQL/MySQLRecordedDB';
+import MySQLRecordedHistoryDB from './DB/MySQL/MySQLRecordedHistoryDB';
 import MySQLRulesDB from './DB/MySQL/MySQLRulesDB';
 import MySQLServicesDB from './DB/MySQL/MySQLServicesDB';
 import PostgreSQLMigrationV1 from './DB/PostgreSQL/migrate/PostgreSQLMigrationV1';
+import PostgreSQLMigrationV2 from './DB/PostgreSQL/migrate/PostgreSQLMigrationV2';
 import PostgreSQLEncodedDB from './DB/PostgreSQL/PostgreSQLEncodedDB';
 import PostgreSQLOperator from './DB/PostgreSQL/PostgreSQLOperator';
 import PostgreSQLProgramsDB from './DB/PostgreSQL/PostgreSQLProgramsDB';
 import PostgreSQLRecordedDB from './DB/PostgreSQL/PostgreSQLRecordedDB';
+import PostgreSQLRecordedHistoryDB from './DB/PostgreSQL/PostgreSQLRecordedHistoryDB';
 import PostgreSQLRulesDB from './DB/PostgreSQL/PostgreSQLRulesDB';
 import PostgreSQLServicesDB from './DB/PostgreSQL/PostgreSQLServicesDB';
 import { ProgramsDBInterface } from './DB/ProgramsDB';
 import { RecordedDBInterface } from './DB/RecordedDB';
+import { RecordedHistoryDBInterface } from './DB/RecordedHistoryDB';
 import { RulesDBInterface } from './DB/RulesDB';
 import { ServicesDBInterface } from './DB/ServicesDB';
 import SQLite3MigrationV1 from './DB/SQLite3/migrate/SQLite3MigrationV1';
+import SQLite3MigrationV2 from './DB/SQLite3/migrate/SQLite3MigrationV2';
 import SQLite3EncodedDB from './DB/SQLite3/SQLite3EncodedDB';
 import SQLite3Operator from './DB/SQLite3/SQLite3Operator';
 import SQLite3ProgramsDB from './DB/SQLite3/SQLite3ProgramsDB';
 import SQLite3RecordedDB from './DB/SQLite3/SQLite3RecordedDB';
+import SQLite3RecordedHistoryDB from './DB/SQLite3/SQLite3RecordedHistoryDB';
 import SQLite3RulesDB from './DB/SQLite3/SQLite3RulesDB';
 import SQLite3ServicesDB from './DB/SQLite3/SQLite3ServicesDB';
 
@@ -65,6 +72,7 @@ namespace ModelFactorySetting {
         let rulesDB: RulesDBInterface;
         let recordedDB: RecordedDBInterface;
         let encodedDB: EncodedDBInterface;
+        let recordedHistoryDB: RecordedHistoryDBInterface;
 
         switch (Util.getDBType()) {
             case 'mysql':
@@ -74,7 +82,9 @@ namespace ModelFactorySetting {
                 rulesDB = new MySQLRulesDB(operator);
                 recordedDB = new MySQLRecordedDB(operator);
                 encodedDB = new MySQLEncodedDB(operator);
+                recordedHistoryDB = new MySQLRecordedHistoryDB(operator);
                 factory.reg('MigrationV1', () => { return new MySQLMigrationV1(operator); });
+                factory.reg('MigrationV2', () => { return new MySQLMigrationV2(operator); });
                 break;
 
             case 'sqlite3':
@@ -84,7 +94,9 @@ namespace ModelFactorySetting {
                 rulesDB = new SQLite3RulesDB(operator);
                 recordedDB = new SQLite3RecordedDB(operator);
                 encodedDB = new SQLite3EncodedDB(operator);
+                recordedHistoryDB = new SQLite3RecordedHistoryDB(operator);
                 factory.reg('MigrationV1', () => { return new SQLite3MigrationV1(operator); });
+                factory.reg('MigrationV2', () => { return new SQLite3MigrationV2(operator); });
                 break;
 
             case 'postgresql':
@@ -94,7 +106,9 @@ namespace ModelFactorySetting {
                 rulesDB = new PostgreSQLRulesDB(operator);
                 recordedDB = new PostgreSQLRecordedDB(operator);
                 encodedDB = new PostgreSQLEncodedDB(operator);
+                recordedHistoryDB = new PostgreSQLRecordedHistoryDB(operator);
                 factory.reg('MigrationV1', () => { return new PostgreSQLMigrationV1(operator); });
+                factory.reg('MigrationV2', () => { return new PostgreSQLMigrationV2(operator); });
                 break;
         }
 
@@ -105,6 +119,7 @@ namespace ModelFactorySetting {
             rulesDB!,
             recordedDB!,
             encodedDB!,
+            recordedHistoryDB!,
         );
         const ipc = new IPCServer();
         const reservationManage = new ReservationManageModel(
@@ -188,6 +203,7 @@ namespace ModelFactorySetting {
         factory.reg('RulesDB', () => { return rulesDB; });
         factory.reg('RecordedDB', () => { return recordedDB; });
         factory.reg('EncodedDB', () => { return encodedDB; });
+        factory.reg('RecordedHistoryDB', () => { return recordedHistoryDB; });
         factory.reg('DBInitializationModel', () => { return dbInitializationModel; });
         factory.reg('MirakurunManageModel', () => { return mirakurunManage; });
         factory.reg('ReservationManageModel', () => { return reservationManage; });

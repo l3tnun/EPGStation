@@ -36,6 +36,7 @@ class SQLite3ProgramsDB extends ProgramsDB {
             + 'duration integer not null, '
             + 'isFree integer not null, '
             + 'name text not null, '
+            + 'shortName text null, '
             + 'description text null, '
             + 'extended text null, '
             + 'genre1 integer null, '

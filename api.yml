@@ -1035,6 +1035,12 @@ definitions:
       durationMax:
         type: integer
         description: '最大長'
+      avoidDuplicate:
+        type: boolean
+        description: '録画履歴から重複番組を削除する'
+      periodToAvoidDuplicate:
+        type: integer
+        description: '録画履歴から重複番組を削除する期間'
 
   RuleOption:
     type: object

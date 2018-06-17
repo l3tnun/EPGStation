@@ -340,6 +340,8 @@ export interface RuleSearch {
     isFree?: boolean;
     durationMin?: number;
     durationMax?: number;
+    avoidDuplicate?: boolean;
+    periodToAvoidDuplicate?: number;
 }
 
 export interface RuleOption {

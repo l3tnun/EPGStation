@@ -132,6 +132,7 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
                 + 'duration,'
                 + 'isFree,'
                 + 'name,'
+                + 'shortName,'
                 + 'description,'
                 + 'extended,'
                 + 'genre1,'
@@ -176,6 +177,7 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
             const channelType = channelTypes[program.networkId][program.serviceId].type;
             const channel = channelTypes[program.networkId][program.serviceId].channel;
 
+            const name = StrUtil.toHalf(program.name);
             const tmp = [
                 program.id,
                 parseInt(program.networkId + (program.serviceId / 100000).toFixed(5).slice(2), 10),
@@ -188,7 +190,8 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
                 date.getDay(),
                 program.duration,
                 program.isFree,
-                StrUtil.toHalf(program.name),
+                name,
+                StrUtil.deleteBrackets(name),
                 typeof program.description === 'undefined' || program.description === '' ? null : StrUtil.toHalf(program.description),
                 this.createExtendedStr(program.extended),
                 genre1,
@@ -223,9 +226,9 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
                 let valueCnt = 0;
                 for (let i = 0; i < cnt; i++) {
                     str += '( '
-                    + this.operator.createValueStr(valueCnt + 1, valueCnt + 24)
+                    + this.operator.createValueStr(valueCnt + 1, valueCnt + 25)
                     + ' ),';
-                    valueCnt += 24;
+                    valueCnt += 25;
                 }
                 str = str.substr(0, str.length - 1);
 
@@ -242,6 +245,7 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
                         + 'duration = excluded.duration, '
                         + 'isFree = excluded.isFree, '
                         + 'name = excluded.name, '
+                        + 'shortName = excluded.shortName, '
                         + 'description = excluded.description, '
                         + 'extended = excluded.extended, '
                         + 'genre1 = excluded.genre1, '

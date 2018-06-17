@@ -29,6 +29,8 @@ class MySQLRulesDB extends RulesDB {
             + 'isFree boolean, '
             + 'durationMin integer, '
             + 'durationMax integer, '
+            + 'avoidDuplicate boolean default false, '
+            + 'periodToAvoidDuplicate integer null default null, '
             + 'enable boolean, '
             + 'directory text, '
             + 'recordedFormat text, '

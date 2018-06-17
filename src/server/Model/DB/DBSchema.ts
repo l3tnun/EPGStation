@@ -6,6 +6,7 @@ export enum TableName {
     Rules = 'Rules',
     Recorded = 'Recorded',
     Encoded = 'Encoded',
+    RecordedHistory = 'RecordedHistory',
 }
 
 export interface ServiceSchema {
@@ -35,6 +36,7 @@ export interface ProgramSchema {
     isFree: boolean;
 
     name: string;
+    shortName: string | null;
     description: string | null;
     extended: string | null;
     genre1: number | null;
@@ -73,6 +75,8 @@ export interface RulesSchema {
     isFree: boolean | null;
     durationMin: number | null;
     durationMax: number | null;
+    avoidDuplicate: boolean;
+    periodToAvoidDuplicate: number | null;
     enable: boolean;
     directory: string | null;
     recordedFormat: string | null;
@@ -118,6 +122,11 @@ export interface EncodedSchema {
     name: string;
     path: string;
     filesize: number | null;
+}
+
+export interface RecordedHistorySchema {
+    name: string;
+    end: apid.UnixtimeMS;
 }
 
 export interface ScheduleProgramItem {

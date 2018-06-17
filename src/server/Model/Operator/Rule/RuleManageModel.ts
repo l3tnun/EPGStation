@@ -212,6 +212,8 @@ class RuleManageModel extends Model implements RuleManageModelInterface {
             isFree: typeof rule.search.isFree === 'undefined' ? null : rule.search.isFree,
             durationMin: typeof rule.search.durationMin === 'undefined' ? null : rule.search.durationMin,
             durationMax: typeof rule.search.durationMax === 'undefined' ? null : rule.search.durationMax,
+            avoidDuplicate: typeof rule.search.avoidDuplicate === 'undefined' ? false : rule.search.avoidDuplicate,
+            periodToAvoidDuplicate: typeof rule.search.periodToAvoidDuplicate === 'undefined' ? null : rule.search.periodToAvoidDuplicate,
             enable: rule.option.enable,
             directory: typeof rule.option.directory === 'undefined' ? null : rule.option.directory,
             recordedFormat: typeof rule.option.recordedFormat === 'undefined' ? null : rule.option.recordedFormat,

@@ -1,6 +1,7 @@
 import { EncodedDBInterface } from '../DB/EncodedDB';
 import { ProgramsDBInterface } from '../DB/ProgramsDB';
 import { RecordedDBInterface } from '../DB/RecordedDB';
+import { RecordedHistoryDBInterface } from '../DB/RecordedHistoryDB';
 import { RulesDBInterface } from '../DB/RulesDB';
 import { ServicesDBInterface } from '../DB/ServicesDB';
 import Model from '../Model';
@@ -18,6 +19,7 @@ class DBInitializationModel extends Model implements DBInitializationModelInterf
     private rulesDB: RulesDBInterface;
     private recordedDB: RecordedDBInterface;
     private encodedDB: EncodedDBInterface;
+    private recordedHistoryDB: RecordedHistoryDBInterface;
 
     constructor(
         servicesDB: ServicesDBInterface,
@@ -25,6 +27,7 @@ class DBInitializationModel extends Model implements DBInitializationModelInterf
         rulesDB: RulesDBInterface,
         recordedDB: RecordedDBInterface,
         encodedDB: EncodedDBInterface,
+        recordedHistoryDB: RecordedHistoryDBInterface,
     ) {
         super();
 
@@ -33,6 +36,7 @@ class DBInitializationModel extends Model implements DBInitializationModelInterf
         this.rulesDB = rulesDB;
         this.recordedDB = recordedDB;
         this.encodedDB = encodedDB;
+        this.recordedHistoryDB = recordedHistoryDB;
     }
 
     public async run(): Promise<void> {
@@ -52,6 +56,9 @@ class DBInitializationModel extends Model implements DBInitializationModelInterf
 
             await this.encodedDB.create();
             this.log.system.info('EncodedDB created');
+
+            await this.recordedHistoryDB.create();
+            this.log.system.info('RecordedHistoryDB created');
 
             await this.recordedDB.removeAllRecording();
             await this.recordedDB.updateAllNullFileSize();
