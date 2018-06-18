@@ -131,6 +131,7 @@ namespace ModelFactorySetting {
             recordedDB!,
             servicesDB!,
             programsDB!,
+            recordedHistoryDB!,
             reservationManage,
         );
         reservationManage.setRecordedManageModel(recordingManage);

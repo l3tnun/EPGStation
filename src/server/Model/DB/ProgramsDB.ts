@@ -556,6 +556,12 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
             query.push(`(${ this.createOrQuery(or) })`);
         }
 
+        // 重複回避
+        if (!!option.avoidDuplicate && typeof option.periodToAvoidDuplicate !== 'undefined') {
+            const now = new Date().getTime();
+            query.push(`shortName not in (select name from ${ DBSchema.TableName.RecordedHistory } where end <= ${ now } and end >= ${ now - (option.periodToAvoidDuplicate * 24 * 60 * 60 * 1000) } and end <= ${ now })`);
+        }
+
         // join query
         let queryStr = `where endAt > ${ new Date().getTime() }`;
         if (query.length > 0) {

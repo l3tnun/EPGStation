@@ -1040,6 +1040,7 @@ definitions:
         description: '録画履歴から重複番組を削除する'
       periodToAvoidDuplicate:
         type: integer
+        minimum: 1
         description: '録画履歴から重複番組を削除する期間'
 
   RuleOption:
