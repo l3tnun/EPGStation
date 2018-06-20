@@ -70,6 +70,15 @@ abstract class DBOperator extends Model {
     ): Promise<void>;
 
     /**
+     * boolean を文字列に変換
+     * @param value: boolean
+     * @return string
+     */
+    public convertBoolean(value: boolean): string {
+        return `${ value }`;
+    }
+
+    /**
      * テーブルが存在するか
      * @param table name
      * @return boolean

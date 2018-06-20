@@ -59,15 +59,6 @@ class PostgreSQLProgramsDB extends ProgramsDB {
     }
 
     /**
-     * create isFree option
-     * @param isFree: boolean
-     * @return string
-     */
-    protected createIsFree(isFree: boolean): string {
-        return `isFree = ${ Boolean(isFree) }`;
-    }
-
-    /**
      * all columns
      * @return string
      */

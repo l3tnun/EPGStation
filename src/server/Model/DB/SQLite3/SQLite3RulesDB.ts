@@ -47,24 +47,6 @@ class SQLite3RulesDB extends RulesDB {
     }
 
     /**
-     * rule を有効化
-     * @param id: rule id
-     * @return Promise<void>
-     */
-    public enable(id: number): Promise<void> {
-        return this.operator.runQuery(`update ${ DBSchema.TableName.Rules } set enable = 1 where id = ${ id }`);
-    }
-
-    /**
-     * rule を無効化
-     * @param id: rule id
-     * @return Promise<void>
-     */
-    public disable(id: number): Promise<void> {
-        return this.operator.runQuery(`update ${ DBSchema.TableName.Rules } set enable = 0 where id = ${ id }`);
-    }
-
-    /**
      * @param DBSchema.RulesSchema[]
      * @return DBSchema.RulesSchema[]
      */

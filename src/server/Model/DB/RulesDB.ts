@@ -213,23 +213,23 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
             querys.push('ignoreKeyword = null');
         }
 
-        if (rule.keyCS !== null) { querys.push(`keyCS = ${ Number(rule.keyCS) }`); }
+        if (rule.keyCS !== null) { querys.push(`keyCS = ${ this.operator.convertBoolean(rule.keyCS) }`); }
         else { querys.push('keyCS = null'); }
-        if (rule.keyRegExp !== null) { querys.push(`keyRegExp = ${ Number(rule.keyRegExp) }`); }
+        if (rule.keyRegExp !== null) { querys.push(`keyRegExp = ${ this.operator.convertBoolean(rule.keyRegExp) }`); }
         else { querys.push('keyRegExp = null'); }
-        if (rule.title !== null) { querys.push(`title = ${ Number(rule.title) }`); }
+        if (rule.title !== null) { querys.push(`title = ${ this.operator.convertBoolean(rule.title) }`); }
         else { querys.push('title = null'); }
-        if (rule.description !== null) { querys.push(`description = ${ Number(rule.description) }`); }
+        if (rule.description !== null) { querys.push(`description = ${ this.operator.convertBoolean(rule.description) }`); }
         else { querys.push('description = null'); }
-        if (rule.extended !== null) { querys.push(`extended = ${ Number(rule.extended) }`); }
+        if (rule.extended !== null) { querys.push(`extended = ${ this.operator.convertBoolean(rule.extended) }`); }
         else { querys.push('extended = null'); }
-        if (rule.GR !== null) { querys.push(`GR = ${ Number(rule.GR) }`); }
+        if (rule.GR !== null) { querys.push(`GR = ${ this.operator.convertBoolean(rule.GR) }`); }
         else { querys.push('GR = null'); }
-        if (rule.BS !== null) { querys.push(`BS = ${ Number(rule.BS) }`); }
+        if (rule.BS !== null) { querys.push(`BS = ${ this.operator.convertBoolean(rule.BS) }`); }
         else { querys.push('BS = null'); }
-        if (rule.CS !== null) { querys.push(`CS = ${ Number(rule.CS) }`); }
+        if (rule.CS !== null) { querys.push(`CS = ${ this.operator.convertBoolean(rule.CS) }`); }
         else { querys.push('CS = null'); }
-        if (rule.SKY !== null) { querys.push(`SKY = ${ Number(rule.SKY) }`); }
+        if (rule.SKY !== null) { querys.push(`SKY = ${ this.operator.convertBoolean(rule.SKY) }`); }
         else { querys.push('SKY = null'); }
         if (rule.station !== null) { querys.push(`station = ${ rule.station }`); }
         else { querys.push('station = null'); }
@@ -242,16 +242,16 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
         if (rule.timeRange !== null) { querys.push(`timeRange = ${ rule.timeRange }`); }
         else { querys.push('timeRange = null'); }
         querys.push(`week = ${ rule.week }`);
-        if (rule.isFree !== null) { querys.push(`isFree = ${ Number(rule.isFree) }`); }
+        if (rule.isFree !== null) { querys.push(`isFree = ${ this.operator.convertBoolean(rule.isFree) }`); }
         else { querys.push('isFree = null'); }
         if (rule.durationMin !== null) { querys.push(`durationMin = ${ rule.durationMin }`); }
         else { querys.push('durationMin = null'); }
         if (rule.durationMax !== null) { querys.push(`durationMax = ${ rule.durationMax }`); }
         else { querys.push('durationMax = null'); }
-        querys.push(`avoidDuplicate = ${ Number(rule.avoidDuplicate) }`);
+        querys.push(`avoidDuplicate = ${ this.operator.convertBoolean(rule.avoidDuplicate) }`);
         if (rule.periodToAvoidDuplicate !== null) { querys.push(`periodToAvoidDuplicate = ${ rule.periodToAvoidDuplicate }`); }
         else { querys.push('periodToAvoidDuplicate = null'); }
-        querys.push(`enable = ${ Number(rule.enable) }`);
+        querys.push(`enable = ${ this.operator.convertBoolean(rule.enable) }`);
 
         if (rule.directory !== null) {
             querys.push(`directory = ${ this.operator.createValueStr(values.length + 1, values.length + 1) }`);
@@ -292,7 +292,7 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
             querys.push('directory3 = null');
         }
 
-        if (rule.delTs !== null) { querys.push(`delTs = ${ Number(rule.delTs) }`); }
+        if (rule.delTs !== null) { querys.push(`delTs = ${ this.operator.convertBoolean(rule.delTs) }`); }
         else { querys.push('delTs = null'); }
 
         // query 組み立て
@@ -321,7 +321,7 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
      * @return Promise<void>
      */
     public enable(id: number): Promise<void> {
-        return this.operator.runQuery(`update ${ DBSchema.TableName.Rules } set enable = true where id = ${ id }`);
+        return this.operator.runQuery(`update ${ DBSchema.TableName.Rules } set enable = ${ this.operator.convertBoolean(true) } where id = ${ id }`);
     }
 
     /**
@@ -330,7 +330,7 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
      * @return Promise<void>
      */
     public disable(id: number): Promise<void> {
-        return this.operator.runQuery(`update ${ DBSchema.TableName.Rules } set enable = false where id = ${ id }`);
+        return this.operator.runQuery(`update ${ DBSchema.TableName.Rules } set enable = ${ this.operator.convertBoolean(false) } where id = ${ id }`);
     }
 
     /**

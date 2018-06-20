@@ -599,7 +599,7 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
      * @return string
      */
     protected createIsFree(isFree: boolean): string {
-        return `isFree = ${ Number(isFree) }`;
+        return `isFree = ${ this.operator.convertBoolean(isFree) }`;
     }
 
     /**
