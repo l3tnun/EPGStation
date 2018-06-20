@@ -312,7 +312,7 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
      * @return Promise<void>
      */
     public removeRecording(id: number): Promise<void> {
-        return this.operator.runQuery(`update ${ DBSchema.TableName.Recorded } set recording = false where id = ${ id }`);
+        return this.operator.runQuery(`update ${ DBSchema.TableName.Recorded } set recording = ${ this.operator.convertBoolean(false) } where id = ${ id }`);
     }
 
     /**
@@ -320,7 +320,7 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
      * @return Promise<void>
      */
     public removeAllRecording(): Promise<void> {
-        return this.operator.runQuery(`update ${ DBSchema.TableName.Recorded } set recording = false where recording = true`);
+        return this.operator.runQuery(`update ${ DBSchema.TableName.Recorded } set recording = ${ this.operator.convertBoolean(false) } where recording = ${ this.operator.convertBoolean(true) }`);
     }
 
     /**

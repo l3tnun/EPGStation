@@ -230,6 +230,15 @@ class SQLite3Operator extends DBOperator {
     }
 
     /**
+     * boolean を文字列に変換
+     * @param value: boolean
+     * @return string
+     */
+    public convertBoolean(value: boolean): string {
+        return `${ Number(value) }`;
+    }
+
+    /**
      * テーブルが存在するか
      * @param table name
      * @return boolean
