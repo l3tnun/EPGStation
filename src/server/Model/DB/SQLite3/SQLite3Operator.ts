@@ -139,7 +139,7 @@ class SQLite3Operator extends DBOperator {
      */
     private setCS(db: sqlite3.Database, isEnableCS: boolean): Promise<void> {
         return new Promise<void>((resolve: () => void, reject: (error: Error) => void) => {
-            db.run(`pragma case_sensitive_like = ${ Number(isEnableCS) }`, (err) => {
+            db.run(`pragma case_sensitive_like = ${ this.convertBoolean(isEnableCS) }`, (err) => {
                 if (err) {
                     reject(err);
 
