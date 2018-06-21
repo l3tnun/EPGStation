@@ -301,6 +301,8 @@ export interface Rule {
     isFree?: boolean;
     durationMin?: number;
     durationMax?: number;
+    avoidDuplicate: boolean;
+    periodToAvoidDuplicate?: number;
     enable: boolean;
     directory?: string;
     recordedFormat?: string;
