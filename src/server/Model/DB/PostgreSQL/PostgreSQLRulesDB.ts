@@ -29,7 +29,7 @@ class PostgreSQLRulesDB extends RulesDB {
             + 'isFree boolean, '
             + 'durationMin integer, '
             + 'durationMax integer, '
-            + 'avoidDuplicate text null, '
+            + 'avoidDuplicate boolean default false,'
             + 'periodToAvoidDuplicate integer null default null, '
             + 'enable boolean, '
             + 'directory text, '
