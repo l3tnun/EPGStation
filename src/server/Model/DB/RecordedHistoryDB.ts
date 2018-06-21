@@ -7,6 +7,7 @@ interface RecordedHistoryDBInterface extends DBTableBase {
     insert(program: DBSchema.RecordedHistorySchema): Promise<number>;
     restore(programs: DBSchema.RecordedHistorySchema[], isDelete?: boolean): Promise<void>;
     delete(time: number): Promise<void>;
+    findAll(): Promise<DBSchema.RecordedHistorySchema[]>;
 }
 
 /**
@@ -80,6 +81,7 @@ abstract class RecordedHistoryDB extends DBTableBase implements RecordedHistoryD
         const values: any[] = [];
         for (const program of programs) {
             const value: any[] = [];
+            value.push(program.id);
             value.push(program.name);
             value.push(program.end);
 
@@ -96,6 +98,14 @@ abstract class RecordedHistoryDB extends DBTableBase implements RecordedHistoryD
      */
     public delete(time: number): Promise<void> {
         return this.operator.runQuery(`delete from ${ DBSchema.TableName.RecordedHistory } where end <= ${ time }`);
+    }
+
+    /**
+     * 全件取得
+     * @return Promise<DBSchema.RecordedHistorySchema[]>
+     */
+    public async findAll(): Promise<DBSchema.RecordedHistorySchema[]> {
+        return <DBSchema.RecordedHistorySchema[]> await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.RecordedHistory } order by id`);
     }
 }
 
