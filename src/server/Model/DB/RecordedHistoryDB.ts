@@ -4,7 +4,7 @@ import DBTableBase from './DBTableBase';
 interface RecordedHistoryDBInterface extends DBTableBase {
     create(): Promise<void>;
     drop(): Promise<void>;
-    insert(program: DBSchema.RecordedHistorySchema): Promise<void>;
+    insert(program: DBSchema.RecordedHistorySchema): Promise<number>;
     restore(programs: DBSchema.RecordedHistorySchema[], isDelete?: boolean): Promise<void>;
 }
 
@@ -40,26 +40,27 @@ abstract class RecordedHistoryDB extends DBTableBase implements RecordedHistoryD
      * @param program: DBSchema.RecordedHistorySchema
      * @return Promise<number> insertId
      */
-    public async insert(program: DBSchema.RecordedHistorySchema): Promise<void> {
+    public insert(program: DBSchema.RecordedHistorySchema): Promise<number> {
         const query = `insert into ${ DBSchema.TableName.RecordedHistory } (`
-            + this.createInsertColumnStr()
+            + this.createInsertColumnStr(false)
         + ') VALUES ('
             + this.operator.createValueStr(1, 2)
-        + ')';
+        + `) ${ this.operator.getReturningStr() }`;
 
         const value: any[] = [];
         value.push(program.name);
         value.push(program.end);
 
-        await this.operator.runQuery(query, value);
+        return this.operator.runQuery(query, value);
     }
 
     /**
      * insert 時のカラムを生成
      * @return string
      */
-    private createInsertColumnStr(): string {
-        return 'name, '
+    private createInsertColumnStr(hasId: boolean): string {
+        return (hasId ? 'id, ' : '')
+            + 'name, '
             + 'end ';
     }
 
@@ -70,9 +71,9 @@ abstract class RecordedHistoryDB extends DBTableBase implements RecordedHistoryD
      */
     public restore(programs: DBSchema.RecordedHistorySchema[], isDelete: boolean = true): Promise<void> {
         const query = `insert into ${ DBSchema.TableName.RecordedHistory } (`
-            + this.createInsertColumnStr()
+            + this.createInsertColumnStr(true)
         + ') VALUES ('
-            + this.operator.createValueStr(1, 2)
+            + this.operator.createValueStr(1, 3)
         + ')';
 
         const values: any[] = [];

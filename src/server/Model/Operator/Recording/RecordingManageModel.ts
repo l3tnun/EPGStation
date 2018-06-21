@@ -447,11 +447,13 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
                     });
 
                     historyProgram = {
+                        id: 0,
                         name: program.name,
                         end: program.endAt,
                     };
                 } else {
                     historyProgram = {
+                        id: 0,
                         name: recorded.name,
                         end: recorded.endAt,
                     };
