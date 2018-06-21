@@ -714,27 +714,29 @@ class ReservationManageModel extends Model {
     private createSearchOption(rule: DBSchema.RulesSchema): SearchInterface {
         const search: SearchInterface = {
             week: rule.week,
+            avoidDuplicate: rule.avoidDuplicate,
         };
 
-        if (rule.keyword !== null)       { search.keyword       = rule.keyword;       }
-        if (rule.ignoreKeyword !== null) { search.ignoreKeyword = rule.ignoreKeyword; }
-        if (rule.keyCS !== null)         { search.keyCS         = rule.keyCS;         }
-        if (rule.keyRegExp !== null)     { search.keyRegExp     = rule.keyRegExp;     }
-        if (rule.title !== null)         { search.title         = rule.title;         }
-        if (rule.description !== null)   { search.description   = rule.description;   }
-        if (rule.extended !== null)      { search.extended      = rule.extended;      }
-        if (rule.GR !== null)            { search.GR            = rule.GR;            }
-        if (rule.BS !== null)            { search.BS            = rule.BS;            }
-        if (rule.CS !== null)            { search.CS            = rule.CS;            }
-        if (rule.SKY !== null)           { search.SKY           = rule.SKY;           }
-        if (rule.station !== null)       { search.station       = rule.station;       }
-        if (rule.genrelv1 !== null)      { search.genrelv1      = rule.genrelv1;      }
-        if (rule.genrelv2 !== null)      { search.genrelv2      = rule.genrelv2;      }
-        if (rule.startTime !== null)     { search.startTime     = rule.startTime;     }
-        if (rule.timeRange !== null)     { search.timeRange     = rule.timeRange;     }
-        if (rule.isFree !== null)        { search.isFree        = rule.isFree;        }
-        if (rule.durationMin !== null)   { search.durationMin   = rule.durationMin;   }
-        if (rule.durationMax !== null)   { search.durationMax   = rule.durationMax;   }
+        if (rule.keyword !== null)                  { search.keyword       = rule.keyword;       }
+        if (rule.ignoreKeyword !== null)            { search.ignoreKeyword = rule.ignoreKeyword; }
+        if (rule.keyCS !== null)                    { search.keyCS         = rule.keyCS;         }
+        if (rule.keyRegExp !== null)                { search.keyRegExp     = rule.keyRegExp;     }
+        if (rule.title !== null)                    { search.title         = rule.title;         }
+        if (rule.description !== null)              { search.description   = rule.description;   }
+        if (rule.extended !== null)                 { search.extended      = rule.extended;      }
+        if (rule.GR !== null)                       { search.GR            = rule.GR;            }
+        if (rule.BS !== null)                       { search.BS            = rule.BS;            }
+        if (rule.CS !== null)                       { search.CS            = rule.CS;            }
+        if (rule.SKY !== null)                      { search.SKY           = rule.SKY;           }
+        if (rule.station !== null)                  { search.station       = rule.station;       }
+        if (rule.genrelv1 !== null)                 { search.genrelv1      = rule.genrelv1;      }
+        if (rule.genrelv2 !== null)                 { search.genrelv2      = rule.genrelv2;      }
+        if (rule.startTime !== null)                { search.startTime     = rule.startTime;     }
+        if (rule.timeRange !== null)                { search.timeRange     = rule.timeRange;     }
+        if (rule.isFree !== null)                   { search.isFree        = rule.isFree;        }
+        if (rule.durationMin !== null)              { search.durationMin   = rule.durationMin;   }
+        if (rule.durationMax !== null)              { search.durationMax   = rule.durationMax;   }
+        if (rule.periodToAvoidDuplicate !== null)   { search.periodToAvoidDuplicate = rule.periodToAvoidDuplicate; }
 
         return search;
     }
