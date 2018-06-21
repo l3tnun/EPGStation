@@ -10,7 +10,7 @@ class MySQLRecordedHistoryDB extends RecordedHistoryDB {
         const query = `CREATE TABLE IF NOT EXISTS ${ DBSchema.TableName.RecordedHistory } (`
             + 'id int primary key auto_increment, '
             + 'name text not null, '
-            + 'end bigint not null '
+            + 'endAt bigint not null '
         + ');';
 
         return this.operator.runQuery(query);

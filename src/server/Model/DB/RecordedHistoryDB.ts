@@ -51,7 +51,7 @@ abstract class RecordedHistoryDB extends DBTableBase implements RecordedHistoryD
 
         const value: any[] = [];
         value.push(program.name);
-        value.push(program.end);
+        value.push(program.endAt);
 
         return this.operator.runQuery(query, value);
     }
@@ -63,7 +63,7 @@ abstract class RecordedHistoryDB extends DBTableBase implements RecordedHistoryD
     private createInsertColumnStr(hasId: boolean): string {
         return (hasId ? 'id, ' : '')
             + 'name, '
-            + 'end ';
+            + 'endAt ';
     }
 
     /**
@@ -83,7 +83,7 @@ abstract class RecordedHistoryDB extends DBTableBase implements RecordedHistoryD
             const value: any[] = [];
             value.push(program.id);
             value.push(program.name);
-            value.push(program.end);
+            value.push(program.endAt);
 
             values.push({ query: query, values: value });
         }
@@ -97,7 +97,7 @@ abstract class RecordedHistoryDB extends DBTableBase implements RecordedHistoryD
      * @param time: UnixtimeMS
      */
     public delete(time: number): Promise<void> {
-        return this.operator.runQuery(`delete from ${ DBSchema.TableName.RecordedHistory } where end <= ${ time }`);
+        return this.operator.runQuery(`delete from ${ DBSchema.TableName.RecordedHistory } where endAt <= ${ time }`);
     }
 
     /**

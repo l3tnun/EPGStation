@@ -13,7 +13,7 @@ class PostgreSQLRecordedHistoryDB extends RecordedHistoryDB {
         const query = `create table if not exists ${ DBSchema.TableName.RecordedHistory } (`
             + 'id serial primary key, '
             + 'name text not null, '
-            + 'end bigint not null '
+            + 'endAt bigint not null '
             + ');';
 
         return this.operator.runQuery(query);
@@ -29,6 +29,14 @@ class PostgreSQLRecordedHistoryDB extends RecordedHistoryDB {
 
         // シーケンス値の修正
         await this.operator.runQuery(`select setval('${ DBSchema.TableName.RecordedHistory }_id_seq', (select max(id) from ${ DBSchema.TableName.RecordedHistory }))`);
+    }
+
+    /**
+     * all columns
+     * @return string
+     */
+    public getAllColumns(): string {
+        return 'id, name, endAt as "endAt"';
     }
 }
 

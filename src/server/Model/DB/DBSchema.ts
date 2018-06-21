@@ -127,7 +127,7 @@ export interface EncodedSchema {
 export interface RecordedHistorySchema {
     id: number;
     name: string;
-    end: apid.UnixtimeMS;
+    endAt: apid.UnixtimeMS;
 }
 
 export interface ScheduleProgramItem {

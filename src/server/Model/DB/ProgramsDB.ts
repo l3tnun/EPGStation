@@ -559,7 +559,7 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
         // 重複回避
         if (!!option.avoidDuplicate && typeof option.periodToAvoidDuplicate !== 'undefined') {
             const now = new Date().getTime();
-            query.push(`shortName not in (select name from ${ DBSchema.TableName.RecordedHistory } where end <= ${ now } and end >= ${ now - (option.periodToAvoidDuplicate * 24 * 60 * 60 * 1000) } and end <= ${ now })`);
+            query.push(`shortName not in (select name from ${ DBSchema.TableName.RecordedHistory } where endAt <= ${ now } and endAt >= ${ now - (option.periodToAvoidDuplicate * 24 * 60 * 60 * 1000) } and endAt <= ${ now })`);
         }
 
         // join query
