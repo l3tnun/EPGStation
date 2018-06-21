@@ -6,6 +6,7 @@ interface RecordedHistoryDBInterface extends DBTableBase {
     drop(): Promise<void>;
     insert(program: DBSchema.RecordedHistorySchema): Promise<number>;
     restore(programs: DBSchema.RecordedHistorySchema[], isDelete?: boolean): Promise<void>;
+    delete(time: number): Promise<void>;
 }
 
 /**
@@ -86,6 +87,15 @@ abstract class RecordedHistoryDB extends DBTableBase implements RecordedHistoryD
         }
 
         return this.operator.manyInsert(DBSchema.TableName.RecordedHistory, values, isDelete);
+    }
+
+
+    /**
+     * delete 指定した日付より古い番組を削除
+     * @param time: UnixtimeMS
+     */
+    public delete(time: number): Promise<void> {
+        return this.operator.runQuery(`delete from ${ DBSchema.TableName.RecordedHistory } where end <= ${ time }`);
     }
 }
 

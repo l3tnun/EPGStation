@@ -154,6 +154,7 @@ namespace ModelFactorySetting {
         const epgUpdateFinModel = new EPGUpdateFinModel(
             mirakurunManage,
             reservationManage,
+            recordedHistoryDB!,
         );
         const ruleUpdateFinModel = new RuleUpdateFinModel(
             reservationManage,

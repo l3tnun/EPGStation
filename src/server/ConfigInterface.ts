@@ -50,6 +50,7 @@ interface ConfigInterface {
     recordedEndCommand: string;
     recordedFailedCommand: string;
     recordedFormat: string;
+    recordedHistoryRetentionPeriodDays: number;
     fileExtension: string;
     reservesUpdateIntervalTime: number;
     thumbnail: string;
