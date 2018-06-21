@@ -178,11 +178,11 @@ class DBTools {
         console.log('Rules');
         await this.rulesDB.drop();
 
-        console.log('Recorded');
-        await this.recordedDB.drop();
-
         console.log('Encoded');
         await this.encodedDB.drop();
+
+        console.log('Recorded');
+        await this.recordedDB.drop();
 
         console.log('RecordedHistory');
         await this.recordedHistoryDB.drop();
