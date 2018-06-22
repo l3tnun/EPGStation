@@ -44,6 +44,7 @@ import { RecordedManageModel } from './Operator/Recorded/RecordedManageModel';
 import { RecordedExternalProcessModel } from './Operator/RecordedExternalProcessModel';
 import { RecordingManageModel } from './Operator/Recording/RecordingManageModel';
 import { ReservationManageModel } from './Operator/Reservation/ReservationManageModel';
+import { ReserveExternalProcessModel } from './Operator/ReserveExternalProcessModel';
 import { RuleManageModel } from './Operator/Rule/RuleManageModel';
 import { StorageCheckManageModel } from './Operator/Storage/StorageCheckManageModel';
 import { ThumbnailManageModel } from './Operator/Thumbnail/ThumbnailManageModel';
@@ -146,11 +147,14 @@ namespace ModelFactorySetting {
             ruleManageModel,
         );
         const recordedExternalProcess = new RecordedExternalProcessModel();
+        const reserveExternalProcessModel = new ReserveExternalProcessModel();
         const recordingPrepRecFailedModel = new RecordingPrepRecFailedModel(
             recordingManage,
+            reserveExternalProcessModel,
         );
         const recordingPreStartModel = new RecordingPreStartModel(
             recordingManage,
+            reserveExternalProcessModel,
             ipc,
         );
         const recordingStartModel = new RecordingStartModel(

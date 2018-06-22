@@ -1,9 +1,8 @@
-import { spawn } from 'child_process';
-import ProcessUtil from '../../../Util/ProcessUtil';
 import * as DBSchema from '../../DB/DBSchema';
 import { IPCServerInterface } from '../../IPC/IPCServer';
 import Model from '../../Model';
 import { RecordingManageModelInterface } from '../../Operator/Recording/RecordingManageModel';
+import { ReserveExternalProcessModelInterface } from '../../Operator/ReserveExternalProcessModel';
 import CallbackBaseModelInterface from './CallbackBaseModelInterface';
 
 /**
@@ -12,15 +11,18 @@ import CallbackBaseModelInterface from './CallbackBaseModelInterface';
  */
 class RecordingPreStartModel extends Model implements CallbackBaseModelInterface {
     private recordingManage: RecordingManageModelInterface;
+    private externalProcess: ReserveExternalProcessModelInterface;
     private ipc: IPCServerInterface;
 
     constructor(
         recordingManage: RecordingManageModelInterface,
+        externalProcess: ReserveExternalProcessModelInterface,
         ipc: IPCServerInterface,
     ) {
         super();
 
         this.recordingManage = recordingManage;
+        this.externalProcess = externalProcess;
         this.ipc = ipc;
     }
 
@@ -29,7 +31,7 @@ class RecordingPreStartModel extends Model implements CallbackBaseModelInterface
     }
 
     /**
-     * @param program: DBSchema.RecordedSchema
+     * @param program: DBSchema.ProgramSchema
      */
     private callback(program: DBSchema.ProgramSchema): void {
         // socket.io で通知
@@ -37,41 +39,9 @@ class RecordingPreStartModel extends Model implements CallbackBaseModelInterface
 
         // 外部コマンド実行
         const cmd = this.config.getConfig().recordedPreStartCommand;
-        if (typeof cmd === 'undefined') { return; }
-
-        this.log.system.info(`run: ${ cmd }`);
-
-        let cmds: ProcessUtil.Cmds;
-        try {
-            cmds = ProcessUtil.parseCmdStr(cmd);
-        } catch (err) {
-            this.log.system.error(<any> err);
-
-            return;
+        if (typeof cmd !== 'undefined') {
+            this.externalProcess.run(cmd, program, 'recording pre start');
         }
-
-        const child = spawn(cmds.bin, cmds.args, {
-            env: {
-                PROGRAMID: program.id,
-                CHANNELTYPE: program.channelType,
-                CHANNELID: program.channelId,
-                STARTAT: program.startAt,
-                ENDAT: program.endAt,
-                DURATION: program.duration,
-                NAME: program.name,
-                DESCRIPTION: program.description,
-                EXTENDED: program.extended,
-            },
-        });
-
-        child.on('exit', () => {
-            this.log.system.info('recording pre start process is fin');
-        });
-
-        child.on('error', (err) => {
-            this.log.system.error('recording pre start process is error');
-            this.log.system.error(String(err));
-        });
     }
 }
 
