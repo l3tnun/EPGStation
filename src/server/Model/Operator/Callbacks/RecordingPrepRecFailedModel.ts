@@ -29,11 +29,11 @@ class RecordingPrepRecFailedModel extends Model implements CallbackBaseModelInte
     /**
      * @param program: DBSchema.ProgramSchema
      */
-    private callback(program: DBSchema.ProgramSchema): void {
+    private async callback(program: DBSchema.ProgramSchema): Promise<void> {
         // 外部コマンド実行
         const cmd = this.config.getConfig().recordedPrepRecFailedCommand;
         if (typeof cmd !== 'undefined') {
-            this.externalProcess.run(cmd, program, 'recording preprec failed');
+            await this.externalProcess.run(cmd, program, 'recording preprec failed');
         }
     }
 }

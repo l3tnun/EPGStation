@@ -147,7 +147,7 @@ namespace ModelFactorySetting {
             ruleManageModel,
         );
         const recordedExternalProcess = new RecordedExternalProcessModel(servicesDB!);
-        const reserveExternalProcessModel = new ReserveExternalProcessModel();
+        const reserveExternalProcessModel = new ReserveExternalProcessModel(servicesDB!);
         const recordingPrepRecFailedModel = new RecordingPrepRecFailedModel(
             recordingManage,
             reserveExternalProcessModel,

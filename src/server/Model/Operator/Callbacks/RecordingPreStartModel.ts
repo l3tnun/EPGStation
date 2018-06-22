@@ -33,14 +33,14 @@ class RecordingPreStartModel extends Model implements CallbackBaseModelInterface
     /**
      * @param program: DBSchema.ProgramSchema
      */
-    private callback(program: DBSchema.ProgramSchema): void {
+    private async callback(program: DBSchema.ProgramSchema): Promise<void> {
         // socket.io で通知
         this.ipc.notifIo();
 
         // 外部コマンド実行
         const cmd = this.config.getConfig().recordedPreStartCommand;
         if (typeof cmd !== 'undefined') {
-            this.externalProcess.run(cmd, program, 'recording pre start');
+            await this.externalProcess.run(cmd, program, 'recording pre start');
         }
     }
 }
