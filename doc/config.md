@@ -177,6 +177,7 @@ maxEncode を 1 以上に設定すること
 | PROGRAMID | number | program id |
 | CHANNELTYPE | string | 'GR' \| 'BS' \| 'CS' \| 'SKY' |
 | CHANNELID | number | channel id |
+| CHANNELNAME | string \| null | 放送局名 |
 | STARTAT | number | 開始時刻 (UNIX time) |
 | ENDAT | number | 終了時刻 (UNIX time) |
 | DURATION | number | 長さ (ms) |
@@ -195,12 +196,15 @@ maxEncode を 1 以上に設定すること
 | RECORDEDID | number | recorded id |
 | PROGRAMID | number | program id |
 | CHANNELTYPE | string | 'GR' \| 'BS' \| 'CS' \| 'SKY' |
+| CHANNELID | number | channel id |
+| CHANNELNAME | string \| null | 放送局名 |
 | STARTAT | number | 開始時刻 (UNIX time) |
 | ENDAT | number | 終了時刻 (UNIX time) |
 | DURATION | number | 長さ (ms) |
 | NAME | string | 番組名 |
 | DESCRIPTION | string \| null | 番組概要 |
 | EXTENDED | string \| null | 番組詳細 |
+| RECPATH | string | ts のファイルパス |
 
 ---
 
