@@ -1,6 +1,6 @@
 import * as DBSchema from '../../DB/DBSchema';
 import Model from '../../Model';
-import { ExternalProcessModelInterface } from '../../Operator/ExternalProcessModel';
+import { RecordedExternalProcessModelInterface } from '../../Operator/RecordedExternalProcessModel';
 import { RecordingManageModelInterface } from '../../Operator/Recording/RecordingManageModel';
 import CallbackBaseModelInterface from './CallbackBaseModelInterface';
 
@@ -10,11 +10,11 @@ import CallbackBaseModelInterface from './CallbackBaseModelInterface';
  */
 class RecordingFailedModel extends Model implements CallbackBaseModelInterface {
     private recordingManage: RecordingManageModelInterface;
-    private externalProcess: ExternalProcessModelInterface;
+    private externalProcess: RecordedExternalProcessModelInterface;
 
     constructor(
         recordingManage: RecordingManageModelInterface,
-        externalProcess: ExternalProcessModelInterface,
+        externalProcess: RecordedExternalProcessModelInterface,
     ) {
         super();
 
@@ -33,7 +33,7 @@ class RecordingFailedModel extends Model implements CallbackBaseModelInterface {
         // 外部コマンド実行
         const cmd = this.config.getConfig().recordedFailedCommand;
         if (typeof cmd !== 'undefined') {
-            this.externalProcess.run(cmd, program);
+            this.externalProcess.run(cmd, program, 'recording failed');
         }
     }
 }

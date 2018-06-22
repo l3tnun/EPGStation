@@ -3,17 +3,22 @@ import ProcessUtil from '../../Util/ProcessUtil';
 import { RecordedSchema } from '../DB/DBSchema';
 import Model from '../Model';
 
-interface ExternalProcessModelInterface extends Model {
-    run(cmd: string, program: RecordedSchema): void;
+interface RecordedExternalProcessModelInterface extends Model {
+    run(cmd: string, program: RecordedSchema, name: string): void;
 }
 
 /**
- * ExternalProcessMode
- * 録画開始時や終了時に外部コマンドを実行する
+ * RecordedExternalProcessMode
+ * 録画情報を元に外部コマンドを実行する
  */
-class ExternalProcessModel extends Model implements ExternalProcessModelInterface {
-    public run(cmd: string, program: RecordedSchema): void {
-        this.log.system.info(`run: ${ cmd }`);
+class RecordedExternalProcessModel extends Model implements RecordedExternalProcessModelInterface {
+    /**
+     * @param cmd: cmd
+     * @param program: RecordedSchema
+     * @param name: process name
+     */
+    public run(cmd: string, program: RecordedSchema, name: string): void {
+        this.log.system.info(`${ name } process run: ${ cmd }`);
 
         let cmds: ProcessUtil.Cmds;
         try {
@@ -39,15 +44,15 @@ class ExternalProcessModel extends Model implements ExternalProcessModelInterfac
         });
 
         child.on('exit', () => {
-            this.log.system.info('external process is fin');
+            this.log.system.info(`${ name } process is fin`);
         });
 
         child.on('error', (err) => {
-            this.log.system.error('external process is error');
+            this.log.system.error(`${ name } process is error`);
             this.log.system.error(String(err));
         });
     }
 }
 
-export { ExternalProcessModelInterface, ExternalProcessModel };
+export { RecordedExternalProcessModelInterface, RecordedExternalProcessModel };
 

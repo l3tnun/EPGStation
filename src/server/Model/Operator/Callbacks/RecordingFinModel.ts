@@ -1,7 +1,7 @@
 import * as DBSchema from '../../DB/DBSchema';
 import { IPCServerInterface } from '../../IPC/IPCServer';
 import Model from '../../Model';
-import { ExternalProcessModelInterface } from '../../Operator/ExternalProcessModel';
+import { RecordedExternalProcessModelInterface } from '../../Operator/RecordedExternalProcessModel';
 import { RecordingManageModelInterface } from '../../Operator/Recording/RecordingManageModel';
 import { EncodeInterface } from '../../Operator/RuleInterface';
 import { ThumbnailManageModelInterface } from '../../Operator/Thumbnail/ThumbnailManageModel';
@@ -14,13 +14,13 @@ import CallbackBaseModelInterface from './CallbackBaseModelInterface';
 class RecordingFinModel extends Model implements CallbackBaseModelInterface {
     private recordingManage: RecordingManageModelInterface;
     private thumbnailManage: ThumbnailManageModelInterface;
-    private externalProcess: ExternalProcessModelInterface;
+    private externalProcess: RecordedExternalProcessModelInterface;
     private ipc: IPCServerInterface;
 
     constructor(
         recordingManage: RecordingManageModelInterface,
         thumbnailManage: ThumbnailManageModelInterface,
-        externalProcess: ExternalProcessModelInterface,
+        externalProcess: RecordedExternalProcessModelInterface,
         ipc: IPCServerInterface,
     ) {
         super();
@@ -93,7 +93,7 @@ class RecordingFinModel extends Model implements CallbackBaseModelInterface {
         // 外部コマンド実行
         const cmd = config.recordedEndCommand;
         if (typeof cmd !== 'undefined') {
-            this.externalProcess.run(cmd, program);
+            this.externalProcess.run(cmd, program, 'recording fin');
         }
     }
 }
