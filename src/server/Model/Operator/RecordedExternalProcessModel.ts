@@ -5,7 +5,7 @@ import { ServicesDBInterface } from '../DB/ServicesDB';
 import Model from '../Model';
 
 interface RecordedExternalProcessModelInterface extends Model {
-    run(cmd: string, program: RecordedSchema, name: string): void;
+    run(cmd: string, program: RecordedSchema, name: string): Promise<void>;
 }
 
 /**
