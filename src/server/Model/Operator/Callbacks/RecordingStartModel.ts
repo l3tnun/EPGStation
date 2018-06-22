@@ -33,14 +33,14 @@ class RecordingStartModel extends Model implements CallbackBaseModelInterface {
     /**
      * @param program: DBSchema.RecordedSchema
      */
-    private callback(program: DBSchema.RecordedSchema): void {
+    private async callback(program: DBSchema.RecordedSchema): Promise<void> {
         // socket.io で通知
         this.ipc.notifIo();
 
         // 外部コマンド実行
         const cmd = this.config.getConfig().recordedStartCommand;
         if (typeof cmd !== 'undefined') {
-            this.externalProcess.run(cmd, program, 'recording start');
+            await this.externalProcess.run(cmd, program, 'recording start');
         }
     }
 }

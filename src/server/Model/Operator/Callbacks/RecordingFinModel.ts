@@ -93,7 +93,7 @@ class RecordingFinModel extends Model implements CallbackBaseModelInterface {
         // 外部コマンド実行
         const cmd = config.recordedEndCommand;
         if (typeof cmd !== 'undefined') {
-            this.externalProcess.run(cmd, program, 'recording fin');
+            await this.externalProcess.run(cmd, program, 'recording fin');
         }
     }
 }

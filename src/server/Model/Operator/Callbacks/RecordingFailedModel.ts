@@ -29,11 +29,11 @@ class RecordingFailedModel extends Model implements CallbackBaseModelInterface {
     /**
      * @param program: DBSchema.RecordedSchema
      */
-    private callback(program: DBSchema.RecordedSchema): void {
+    private async callback(program: DBSchema.RecordedSchema): Promise<void> {
         // 外部コマンド実行
         const cmd = this.config.getConfig().recordedFailedCommand;
         if (typeof cmd !== 'undefined') {
-            this.externalProcess.run(cmd, program, 'recording failed');
+            await this.externalProcess.run(cmd, program, 'recording failed');
         }
     }
 }
