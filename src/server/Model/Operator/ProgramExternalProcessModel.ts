@@ -4,15 +4,15 @@ import { ProgramSchema } from '../DB/DBSchema';
 import { ServicesDBInterface } from '../DB/ServicesDB';
 import Model from '../Model';
 
-interface ReserveExternalProcessModelInterface extends Model {
+interface ProgramExternalProcessModelInterface extends Model {
     run(cmd: string, program: ProgramSchema, name: string): Promise<void>;
 }
 
 /**
- * ReserveExternalProcessMode
+ * ProgramExternalProcessMode
  * 番組情報を元に外部コマンドを実行する
  */
-class ReserveExternalProcessModel extends Model implements ReserveExternalProcessModelInterface {
+class ProgramExternalProcessModel extends Model implements ProgramExternalProcessModelInterface {
     private servicesDB: ServicesDBInterface;
 
     constructor(servicesDB: ServicesDBInterface) {
@@ -66,5 +66,5 @@ class ReserveExternalProcessModel extends Model implements ReserveExternalProces
     }
 }
 
-export { ReserveExternalProcessModelInterface, ReserveExternalProcessModel };
+export { ProgramExternalProcessModelInterface, ProgramExternalProcessModel };
 

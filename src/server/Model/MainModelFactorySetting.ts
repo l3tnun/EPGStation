@@ -40,11 +40,11 @@ import RuleUpdateFinModel from './Operator/Callbacks/RuleUpdateFinModel';
 import ThumbnailCreateFinModel from './Operator/Callbacks/ThumbnailCreateFinModel';
 import { DBInitializationModel } from './Operator/DBInitializationModel';
 import { MirakurunManageModel } from './Operator/EPGUpdate/MirakurunManageModel';
+import { ProgramExternalProcessModel } from './Operator/ProgramExternalProcessModel';
 import { RecordedManageModel } from './Operator/Recorded/RecordedManageModel';
 import { RecordedExternalProcessModel } from './Operator/RecordedExternalProcessModel';
 import { RecordingManageModel } from './Operator/Recording/RecordingManageModel';
 import { ReservationManageModel } from './Operator/Reservation/ReservationManageModel';
-import { ReserveExternalProcessModel } from './Operator/ReserveExternalProcessModel';
 import { RuleManageModel } from './Operator/Rule/RuleManageModel';
 import { StorageCheckManageModel } from './Operator/Storage/StorageCheckManageModel';
 import { ThumbnailManageModel } from './Operator/Thumbnail/ThumbnailManageModel';
@@ -147,14 +147,14 @@ namespace ModelFactorySetting {
             ruleManageModel,
         );
         const recordedExternalProcess = new RecordedExternalProcessModel(servicesDB!);
-        const reserveExternalProcessModel = new ReserveExternalProcessModel(servicesDB!);
+        const programExternalProcessModel = new ProgramExternalProcessModel(servicesDB!);
         const recordingPrepRecFailedModel = new RecordingPrepRecFailedModel(
             recordingManage,
-            reserveExternalProcessModel,
+            programExternalProcessModel,
         );
         const recordingPreStartModel = new RecordingPreStartModel(
             recordingManage,
-            reserveExternalProcessModel,
+            programExternalProcessModel,
             ipc,
         );
         const recordingStartModel = new RecordingStartModel(

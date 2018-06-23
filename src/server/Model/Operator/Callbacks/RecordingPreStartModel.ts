@@ -1,8 +1,8 @@
 import * as DBSchema from '../../DB/DBSchema';
 import { IPCServerInterface } from '../../IPC/IPCServer';
 import Model from '../../Model';
+import { ProgramExternalProcessModelInterface } from '../../Operator/ProgramExternalProcessModel';
 import { RecordingManageModelInterface } from '../../Operator/Recording/RecordingManageModel';
-import { ReserveExternalProcessModelInterface } from '../../Operator/ReserveExternalProcessModel';
 import CallbackBaseModelInterface from './CallbackBaseModelInterface';
 
 /**
@@ -11,12 +11,12 @@ import CallbackBaseModelInterface from './CallbackBaseModelInterface';
  */
 class RecordingPreStartModel extends Model implements CallbackBaseModelInterface {
     private recordingManage: RecordingManageModelInterface;
-    private externalProcess: ReserveExternalProcessModelInterface;
+    private externalProcess: ProgramExternalProcessModelInterface;
     private ipc: IPCServerInterface;
 
     constructor(
         recordingManage: RecordingManageModelInterface,
-        externalProcess: ReserveExternalProcessModelInterface,
+        externalProcess: ProgramExternalProcessModelInterface,
         ipc: IPCServerInterface,
     ) {
         super();

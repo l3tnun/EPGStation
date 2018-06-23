@@ -1,7 +1,7 @@
 import * as DBSchema from '../../DB/DBSchema';
 import Model from '../../Model';
+import { ProgramExternalProcessModelInterface } from '../../Operator/ProgramExternalProcessModel';
 import { RecordingManageModelInterface } from '../../Operator/Recording/RecordingManageModel';
-import { ReserveExternalProcessModelInterface } from '../../Operator/ReserveExternalProcessModel';
 import CallbackBaseModelInterface from './CallbackBaseModelInterface';
 
 /**
@@ -10,11 +10,11 @@ import CallbackBaseModelInterface from './CallbackBaseModelInterface';
  */
 class RecordingPrepRecFailedModel extends Model implements CallbackBaseModelInterface {
     private recordingManage: RecordingManageModelInterface;
-    private externalProcess: ReserveExternalProcessModelInterface;
+    private externalProcess: ProgramExternalProcessModelInterface;
 
     constructor(
         recordingManage: RecordingManageModelInterface,
-        externalProcess: ReserveExternalProcessModelInterface,
+        externalProcess: ProgramExternalProcessModelInterface,
     ) {
         super();
 
