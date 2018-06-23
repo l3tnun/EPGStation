@@ -146,8 +146,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
     public check(reserves: ReserveProgram[]): void {
         const now = new Date().getTime();
         reserves.forEach((reserve) => {
-            // スキップ || コンフリクト || 時刻超過
-            if (reserve.isSkip || now > reserve.program.endAt) { return; }
+            if (reserve.isSkip || (<RuleReserveProgram> reserve).isOverlap || now > reserve.program.endAt) { return; }
 
             if (reserve.program.startAt - now < RecordingManageModel.prepTime && !this.isRecording(reserve.program.id)) {
                 // 録画準備
