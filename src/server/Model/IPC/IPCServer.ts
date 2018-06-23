@@ -133,6 +133,13 @@ class IPCServer extends Model implements IPCServerInterface {
             this.send({ id: id, value: value });
         };
 
+        this.functions[IPCMessageDefinition.getReserveOverlaps] = (id: number, args: any) => {
+            const limit: number = args.limit;
+            const offset: number = args.offset;
+            const value = this.reservationManage.getOverlaps(limit, offset);
+            this.send({ id: id, value: value });
+        };
+
         this.functions[IPCMessageDefinition.addReserve] = async(id: number, args: any) => {
             const option: AddReserveInterface = args.option;
 

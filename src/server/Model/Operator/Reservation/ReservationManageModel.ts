@@ -46,6 +46,7 @@ interface ReservationManageModelInterface extends Model {
     getReserves(limit?: number, offset?: number): ReserveLimit;
     getConflicts(limit?: number, offset?: number): ReserveLimit;
     getSkips(limit?: number, offset?: number): ReserveLimit;
+    getOverlaps(limit?: number, offset?: number): ReserveLimit;
     cancel(id: apid.ProgramId): void;
     removeSkip(id: apid.ProgramId): Promise<void>;
     addReserve(option: AddReserveInterface): Promise<void>;
@@ -269,6 +270,21 @@ class ReservationManageModel extends Model {
     public getSkips(limit?: number, offset: number = 0): ReserveLimit {
         const reserves = this.reserves.filter((reserve) => {
             return reserve.isSkip;
+        });
+
+        return {
+            reserves: typeof limit === 'undefined' ? reserves : reserves.slice(offset, limit + offset),
+            total: reserves.length,
+        };
+    }
+
+    /**
+     * overlaps を取得する
+     * @return ReserveProgram[]
+     */
+    public getOverlaps(limit?: number, offset: number = 0): ReserveLimit {
+        const reserves = this.reserves.filter((reserve) => {
+            return Boolean((<RuleReserveProgram> reserve).isOverlap);
         });
 
         return {

@@ -10,6 +10,7 @@ interface ReservesModelInterface extends ApiModel {
     getReserves(limit: number, offset: number): Promise<{}[]>;
     getConflicts(limit: number, offset: number): Promise<{}[]>;
     getSkips(limit: number, offset: number): Promise<{}[]>;
+    getOverlaps(limit: number, offset: number): Promise<{}[]>;
     addReserve(option: AddReserveInterface): Promise<void>;
     editReserve(option: AddReserveInterface): Promise<void>;
     cancelReserve(programId: apid.ProgramId): Promise<void>;
@@ -90,6 +91,22 @@ class ReservesModel extends ApiModel implements ReservesModelInterface {
             total: result.total,
         };
     }
+
+    /**
+     * 予約 overlap 情報を取得
+     * @param limit: limit
+     * @param offset: offset
+     * @return Promise<any>
+     */
+    public async getOverlaps(limit: number, offset: number): Promise<any> {
+        const result = await this.ipc.getReserveOverlaps(limit, offset);
+
+        return {
+            reserves: this.fixReserves(result.reserves),
+            total: result.total,
+        };
+    }
+
 
     /**
      * ReserveProgram[] の修正

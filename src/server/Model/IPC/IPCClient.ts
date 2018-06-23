@@ -15,6 +15,7 @@ interface IPCClientInterface extends Model {
     getReserves(limit: number, offset: number): Promise<ReserveLimit>;
     getReserveConflicts(limit: number, offset: number): Promise<ReserveLimit>;
     getReserveSkips(limit: number, offset: number): Promise<ReserveLimit>;
+    getReserveOverlaps(limit: number, offset: number): Promise<ReserveLimit>;
     addReserve(option: AddReserveInterface): Promise<void>;
     editReserve(option: AddReserveInterface): Promise<void>;
     cancelReserve(programId: apid.ProgramId): Promise<void>;
@@ -129,6 +130,17 @@ class IPCClient extends Model implements IPCClientInterface {
      */
     public async getReserveSkips(limit: number, offset: number): Promise<ReserveLimit> {
         const id = this.send(IPCMessageDefinition.getReserveSkips, { limit: limit, offset: offset });
+        const result = await this.receive(id);
+
+        return <ReserveLimit> result.value;
+    }
+
+    /**
+     * overlap を取得する
+     * @return Promise<ReserveLimit>
+     */
+    public async getReserveOverlaps(limit: number, offset: number): Promise<ReserveLimit> {
+        const id = this.send(IPCMessageDefinition.getReserveOverlaps, { limit: limit, offset: offset });
         const result = await this.receive(id);
 
         return <ReserveLimit> result.value;
