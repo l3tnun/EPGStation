@@ -1051,8 +1051,8 @@ definitions:
         description: '録画履歴から重複番組を削除する'
       periodToAvoidDuplicate:
         type: integer
-        minimum: 1
-        description: '録画履歴から重複番組を削除する期間'
+        minimum: 0
+        description: '録画履歴から重複番組を削除する期間 0 = 期間なし'
 
   RuleOption:
     type: object

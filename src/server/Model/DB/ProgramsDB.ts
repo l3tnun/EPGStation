@@ -420,9 +420,13 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
             const now = new Date().getTime();
             column += ', case when shortName in '
                 + '('
-                    + `select name from ${ DBSchema.TableName.RecordedHistory }`
-                    + ` where endAt <= ${ now } and endAt >= ${ now - (option.periodToAvoidDuplicate * 24 * 60 * 60 * 1000) } and endAt <= ${ now }`
-                + `) then ${ this.getOverlapColumn() } end`
+                + `select name from ${ DBSchema.TableName.RecordedHistory }`
+                + ` where endAt <= ${ now }`;
+            if (option.periodToAvoidDuplicate > 0) {
+                column += ` and endAt >= ${ now - (option.periodToAvoidDuplicate * 24 * 60 * 60 * 1000) } and endAt <= ${ now }`;
+            }
+
+            column += `) then ${ this.getOverlapColumn() } end`
                 + ' as overlap';
         }
 

@@ -453,7 +453,7 @@ class SearchViewModel extends ViewModel {
 
         if (this.durationMax <= this.durationMin) { this.durationMax = 0; }
 
-        if (this.periodToAvoidDuplicate <= 0) {
+        if (this.periodToAvoidDuplicate < 0) {
             this.periodToAvoidDuplicate = 6;
         }
     }
@@ -499,7 +499,7 @@ class SearchViewModel extends ViewModel {
         if (this.durationMin > 0) { option.durationMin = this.durationMin * 60; }
         if (this.durationMax > 0 && this.durationMax >= this.durationMin) { option.durationMax = this.durationMax * 60; }
 
-        if (this.avoidDuplicate && this.periodToAvoidDuplicate > 0) {
+        if (this.avoidDuplicate && this.periodToAvoidDuplicate >= 0) {
             option.avoidDuplicate = true;
             option.periodToAvoidDuplicate = this.periodToAvoidDuplicate;
         }

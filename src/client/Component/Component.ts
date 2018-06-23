@@ -69,10 +69,6 @@ abstract class Component<T> extends Base implements m.ClassComponent<T> {
         if (Number(element.value) !== value) {
             element.value = String(value);
         }
-
-        if (value <= 0) {
-            element.value = '';
-        }
     }
 }
 

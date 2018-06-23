@@ -379,14 +379,13 @@ class SearchOptionComponent extends SearchOptionBaseComponent<void> {
                 m('div', { class: 'period-box' }, [
                     m('input', {
                         class: 'mdl-textfield__input',
-                        type: 'number', pattern: '-?[0-9]*(\.[0-9]+)?',
+                        type: 'number', pattern: '^[0-9]+$',
                         value: (() => {
-                            if (this.viewModel.periodToAvoidDuplicate === 0) { return; }
-                            else { return this.viewModel.periodToAvoidDuplicate; }
+                            return this.viewModel.periodToAvoidDuplicate;
                         })(),
                         onchange: m.withAttr('value', (value) => {
                             let num = Number(value);
-                            if (isNaN(num)) { num = 7; }
+                            if (value.length === 0 || isNaN(num)) { num = 6; }
                             this.viewModel.periodToAvoidDuplicate = num;
                         }),
                         onupdate: (vnode: m.VnodeDOM<void, this>) => {
