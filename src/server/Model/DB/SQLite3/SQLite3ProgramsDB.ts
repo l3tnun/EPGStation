@@ -69,15 +69,26 @@ class SQLite3ProgramsDB extends ProgramsDB {
     }
 
     /**
-     * @param programs: ScheduleProgramItem[] | ProgramSchema[]
+     * @param programs: ScheduleProgramItem[] | ProgramSchema[] | ProgramSchemaWithOverlap[]
      * @return ScheduleProgramItem[] | ProgramSchema[]
      */
-    protected fixResults(programs: DBSchema.ScheduleProgramItem[] | DBSchema.ProgramSchema[]): DBSchema.ScheduleProgramItem[] | DBSchema.ProgramSchema[] {
+    protected fixResults(programs: DBSchema.ScheduleProgramItem[] | DBSchema.ProgramSchema[] | DBSchema.ProgramSchemaWithOverlap[]): DBSchema.ScheduleProgramItem[] | DBSchema.ProgramSchema[] | DBSchema.ProgramSchemaWithOverlap[] {
         return (<any> programs).map((program: any) => {
             program.isFree = Boolean(program.isFree);
+            if (typeof (<DBSchema.ProgramSchemaWithOverlap> program).overlap !== 'undefined') {
+                (<DBSchema.ProgramSchemaWithOverlap> program).overlap = Boolean((<DBSchema.ProgramSchemaWithOverlap> program).overlap);
+            }
 
             return program;
         });
+    }
+
+    /**
+     * overlap のカラム設定
+     * @return string
+     */
+    protected getOverlapColumn(): string {
+        return '1 else 0';
     }
 
     /**

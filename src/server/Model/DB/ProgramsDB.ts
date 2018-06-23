@@ -59,7 +59,7 @@ interface ProgramsDBInterface extends DBTableBase {
     findBroadcastingChanel(channelId: apid.ServiceItemId, addition?: apid.UnixtimeMS): Promise<DBSchema.ScheduleProgramItem[]>;
     findId(id: number, isNow?: boolean): Promise<DBSchema.ProgramSchema | null>;
     findIdMiniColumn(id: number): Promise<DBSchema.ScheduleProgramItem | null>;
-    findRule(option: SearchInterface, isMinColumn?: boolean, limit?: number | null): Promise<DBSchema.ProgramSchema[]>;
+    findRule(option: SearchInterface, isMinColumn?: boolean, limit?: number | null): Promise<DBSchema.ProgramSchemaWithOverlap[]>;
 }
 
 /**
@@ -327,10 +327,10 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
     }
 
     /**
-     * @param programs: ScheduleProgramItem[] | ProgramSchema[]
-     * @return ScheduleProgramItem[] | ProgramSchema[]
+     * @param programs: ScheduleProgramItem[] | ProgramSchema[] | ProgramSchemaWithOverlap[]
+     * @return ScheduleProgramItem[] | ProgramSchema[] | ProgramSchemaWithOverlap[]
      */
-    protected fixResults(programs: DBSchema.ScheduleProgramItem[] | DBSchema.ProgramSchema[]): DBSchema.ScheduleProgramItem[] | DBSchema.ProgramSchema[] {
+    protected fixResults(programs: DBSchema.ScheduleProgramItem[] | DBSchema.ProgramSchema[] | DBSchema.ProgramSchemaWithOverlap[]): DBSchema.ScheduleProgramItem[] | DBSchema.ProgramSchema[] | DBSchema.ProgramSchemaWithOverlap[] {
         return programs;
     }
 
@@ -410,14 +410,34 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
     /**
      * ルール検索
      * @param option: SearchInterface
-     * @return Promise<DBSchema.ProgramSchema[]>
+     * @return Promise<DBSchema.ProgramSchemaWithOverlap[]>
      */
-    public async findRule(option: SearchInterface, isMinColumn: boolean = false, limit: number | null = null): Promise<DBSchema.ProgramSchema[]> {
-        const column = isMinColumn ? this.getMinColumns() : this.getAllColumns();
+    public async findRule(option: SearchInterface, isMinColumn: boolean = false, limit: number | null = null): Promise<DBSchema.ProgramSchemaWithOverlap[]> {
+        let column = isMinColumn ? this.getMinColumns() : this.getAllColumns();
+
+        // 重複回避
+        if (!!option.avoidDuplicate && typeof option.periodToAvoidDuplicate !== 'undefined') {
+            const now = new Date().getTime();
+            column += ', case when shortName in '
+                + '('
+                    + `select name from ${ DBSchema.TableName.RecordedHistory }`
+                    + ` where endAt <= ${ now } and endAt >= ${ now - (option.periodToAvoidDuplicate * 24 * 60 * 60 * 1000) } and endAt <= ${ now }`
+                + `) then ${ this.getOverlapColumn() } end`
+                + ' as overlap';
+        }
+
         let query = `select ${ column } from ${ DBSchema.TableName.Programs } ${ this.createQuery(option) } order by startAt asc`;
         if (limit !== null) { query += ` limit ${ limit }`; }
 
         return <DBSchema.ProgramSchema[]> this.fixResults(<DBSchema.ProgramSchema[]> await this.runFindRule(query, Boolean(option.keyCS)));
+    }
+
+    /**
+     * overlap のカラム設定
+     * @return string
+     */
+    protected getOverlapColumn(): string {
+        return 'true else false';
     }
 
     /**
@@ -554,12 +574,6 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
             if (description.length > 0) { or.push(`(${ this.createAndQuery(description) })`); }
             if (extended.length > 0) { or.push(`(${ this.createAndQuery(extended) })`); }
             query.push(`(${ this.createOrQuery(or) })`);
-        }
-
-        // 重複回避
-        if (!!option.avoidDuplicate && typeof option.periodToAvoidDuplicate !== 'undefined') {
-            const now = new Date().getTime();
-            query.push(`shortName not in (select name from ${ DBSchema.TableName.RecordedHistory } where endAt <= ${ now } and endAt >= ${ now - (option.periodToAvoidDuplicate * 24 * 60 * 60 * 1000) } and endAt <= ${ now })`);
         }
 
         // join query

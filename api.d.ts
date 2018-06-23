@@ -93,6 +93,7 @@ export interface ScheduleProgramItem {
     videoComponentType?: number;
     audioSamplingRate?: ProgramAudioSamplingRate;
     audioComponentType?: number;
+    overlap?: boolean;
 }
 
 export interface ScheduleServiceItem {

@@ -53,6 +53,13 @@ export interface ProgramSchema {
     audioComponentType: number | null;
 }
 
+/**
+ * 重複検索
+ */
+export interface ProgramSchemaWithOverlap extends ProgramSchema {
+    overlap?: boolean;
+}
+
 export interface RulesSchema {
     id: number;
     keyword: string | null;

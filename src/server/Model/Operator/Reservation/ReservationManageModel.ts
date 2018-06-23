@@ -639,7 +639,7 @@ class ReservationManageModel extends Model {
         }
 
         // 番組情報を取得
-        let programs: DBSchema.ProgramSchema[] = [];
+        let programs: DBSchema.ProgramSchemaWithOverlap[] = [];
         if (rule !== null) {
             try {
                 programs = await this.programDB.findRule(this.createSearchOption(rule));
@@ -673,6 +673,7 @@ class ReservationManageModel extends Model {
                     program: program,
                     ruleId: ruleId,
                     isSkip: typeof skipIndex[program.id] === 'undefined' ? false : skipIndex[program.id],
+                    isOverlap: Boolean(program.overlap),
                     isConflict: false,
                 };
 
@@ -868,7 +869,7 @@ class ReservationManageModel extends Model {
 
             // 重複の評価
             for (const reserve of reserves) {
-                if (matches[reserve.idx].isSkip) { continue; }
+                if (matches[reserve.idx].isSkip || (<RuleReserveProgram> matches[reserve.idx]).isOverlap) { continue; }
 
                 let isConflict = true;
                 for (let i = 0; i < this.tuners.length; i++) {
