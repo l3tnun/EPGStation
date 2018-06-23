@@ -238,7 +238,7 @@ class ReservationManageModel extends Model {
      */
     public getReserves(limit?: number, offset: number = 0): ReserveLimit {
         const reserves = this.reserves.filter((reserve) => {
-            return !reserve.isConflict && !reserve.isSkip;
+            return !reserve.isConflict && !reserve.isSkip && !(<RuleReserveProgram> reserve).isOverlap;
         });
 
         return {

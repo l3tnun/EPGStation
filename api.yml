@@ -846,6 +846,9 @@ definitions:
         $ref: '#/definitions/ProgramAudioSamplingRate'
       audioComponentType:
         type: integer
+      overlap:
+        description: '録画履歴と重複しているか'
+        type: boolean
 
   RuleList:
     type: object

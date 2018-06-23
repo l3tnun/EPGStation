@@ -258,6 +258,7 @@ export interface ReserveProgram {
     videoComponentType?: number;
     audioSamplingRate?: ProgramAudioSamplingRate;
     audioComponentType?: number;
+    overlap?: boolean;
 }
 
 export interface AddReserve {
