@@ -11,6 +11,7 @@ import CallbackBaseModelInterface from './CallbackBaseModelInterface';
 class RecordingFailedModel extends Model implements CallbackBaseModelInterface {
     private recordingManage: RecordingManageModelInterface;
     private externalProcess: RecordedExternalProcessModelInterface;
+    private cmd: string;
 
     constructor(
         recordingManage: RecordingManageModelInterface,
@@ -20,9 +21,13 @@ class RecordingFailedModel extends Model implements CallbackBaseModelInterface {
 
         this.recordingManage = recordingManage;
         this.externalProcess = externalProcess;
+
+        this.cmd = this.config.getConfig().recordedFailedCommand;
     }
 
     public set(): void {
+        if (typeof this.cmd === 'undefined') { return; }
+
         this.recordingManage.recFailedListener((program) => { this.callback(program); });
     }
 
@@ -31,10 +36,7 @@ class RecordingFailedModel extends Model implements CallbackBaseModelInterface {
      */
     private async callback(program: DBSchema.RecordedSchema): Promise<void> {
         // 外部コマンド実行
-        const cmd = this.config.getConfig().recordedFailedCommand;
-        if (typeof cmd !== 'undefined') {
-            await this.externalProcess.run(cmd, program, 'recording failed');
-        }
+        await this.externalProcess.run(this.cmd, program, 'recording failed');
     }
 }
 

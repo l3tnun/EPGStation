@@ -13,6 +13,7 @@ class RecordingStartModel extends Model implements CallbackBaseModelInterface {
     private recordingManage: RecordingManageModelInterface;
     private externalProcess: RecordedExternalProcessModelInterface;
     private ipc: IPCServerInterface;
+    private cmd: string;
 
     constructor(
         recordingManage: RecordingManageModelInterface,
@@ -24,9 +25,13 @@ class RecordingStartModel extends Model implements CallbackBaseModelInterface {
         this.recordingManage = recordingManage;
         this.externalProcess = externalProcess;
         this.ipc = ipc;
+
+        this.cmd = this.config.getConfig().recordedStartCommand;
     }
 
     public set(): void {
+        if (typeof this.cmd === 'undefined') { return; }
+
         this.recordingManage.recStartListener((program) => { this.callback(program); });
     }
 
@@ -38,10 +43,7 @@ class RecordingStartModel extends Model implements CallbackBaseModelInterface {
         this.ipc.notifIo();
 
         // 外部コマンド実行
-        const cmd = this.config.getConfig().recordedStartCommand;
-        if (typeof cmd !== 'undefined') {
-            await this.externalProcess.run(cmd, program, 'recording start');
-        }
+        await this.externalProcess.run(this.cmd, program, 'recording start');
     }
 }
 

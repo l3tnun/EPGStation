@@ -1,3 +1,4 @@
+import ConfigInterface from '../../../ConfigInterface';
 import * as DBSchema from '../../DB/DBSchema';
 import { IPCServerInterface } from '../../IPC/IPCServer';
 import Model from '../../Model';
@@ -16,6 +17,7 @@ class RecordingFinModel extends Model implements CallbackBaseModelInterface {
     private thumbnailManage: ThumbnailManageModelInterface;
     private externalProcess: RecordedExternalProcessModelInterface;
     private ipc: IPCServerInterface;
+    private conf: ConfigInterface;
 
     constructor(
         recordingManage: RecordingManageModelInterface,
@@ -29,6 +31,8 @@ class RecordingFinModel extends Model implements CallbackBaseModelInterface {
         this.thumbnailManage = thumbnailManage;
         this.externalProcess = externalProcess;
         this.ipc = ipc;
+
+        this.conf = this.config.getConfig();
     }
 
     public set(): void {
@@ -46,10 +50,8 @@ class RecordingFinModel extends Model implements CallbackBaseModelInterface {
         // サムネイル生成
         this.thumbnailManage.push(program);
 
-        const config = this.config.getConfig();
-
         // ts 前処理
-        if (typeof config.tsModify !== 'undefined' && program.recPath !== null) {
+        if (typeof this.conf.tsModify !== 'undefined' && program.recPath !== null) {
             await this.ipc.setEncode({
                 recordedId: program.id,
                 source: program.recPath,
@@ -91,7 +93,7 @@ class RecordingFinModel extends Model implements CallbackBaseModelInterface {
         this.ipc.notifIo();
 
         // 外部コマンド実行
-        const cmd = config.recordedEndCommand;
+        const cmd = this.conf.recordedEndCommand;
         if (typeof cmd !== 'undefined') {
             await this.externalProcess.run(cmd, program, 'recording fin');
         }
