@@ -286,7 +286,7 @@ class SearchViewModel extends ViewModel {
      * getReserve
      * @return program id を指定して状態を取得する
      */
-    public getReserveStatus(programId: apid.ProgramId): 'reserve' | 'conflict' | 'skip' | null {
+    public getReserveStatus(programId: apid.ProgramId): 'reserve' | 'conflict' | 'skip' | 'overlap' | null {
         const reserves = this.reservesApiModel.getAllId();
         if (reserves === null || typeof reserves[programId] === 'undefined') { return null; }
 

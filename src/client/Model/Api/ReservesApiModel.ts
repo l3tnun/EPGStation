@@ -6,7 +6,7 @@ interface AllReserves {
 }
 
 interface AllReserveItem {
-    status: 'reserve' | 'conflict' | 'skip';
+    status: 'reserve' | 'conflict' | 'skip' | 'overlap';
     item: apid.ReserveAllItem;
 }
 
@@ -171,6 +171,10 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
 
             for (const reserve of allId.skips) {
                 this.allReserves[reserve.programId] = { status: 'skip', item: reserve };
+            }
+
+            for (const reserve of allId.overlaps) {
+                this.allReserves[reserve.programId] = { status: 'overlap', item: reserve };
             }
         } catch (err) {
             this.allReserves = null;
