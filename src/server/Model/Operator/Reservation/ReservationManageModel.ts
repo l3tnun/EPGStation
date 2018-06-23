@@ -310,7 +310,7 @@ class ReservationManageModel extends Model {
                     this.log.system.info(`cancel reserve: ${ id }`);
                     needsUpdate = true;
                     break;
-                } else {
+                } else if (!Boolean((<RuleReserveProgram> this.reserves[i]).isOverlap)) {
                     // ルール予約ならスキップを有効化
                     this.reserves[i].isSkip = true;
                     // skip すれば録画されないのでコンフリクトはしない
@@ -319,6 +319,8 @@ class ReservationManageModel extends Model {
                     needsUpdate = true;
                     break;
                 }
+
+                break;
             }
         }
 
@@ -423,7 +425,7 @@ class ReservationManageModel extends Model {
             addReserve.encodeOption = option.encode;
         }
 
-        // 追加する予約情報と重複する時間帯の予約済み番組情報を conflict, skip は除外して取得
+        // 追加する予約情報と重複する時間帯の予約済み番組情報を conflict, skip, overlap は除外して取得
         // すでに予約済みの場合はエラー
         const reserves: ReserveProgram[] = [];
         for (const reserve of this.reserves) {
@@ -436,6 +438,7 @@ class ReservationManageModel extends Model {
             // 該当する予約情報をコピー
             if (!reserve.isConflict
                 && !reserve.isSkip
+                && !Boolean((<RuleReserveProgram> reserve).isOverlap)
                 && reserve.program.startAt <= addReserve.program.endAt
                 && reserve.program.endAt >= addReserve.program.startAt
             ) {
