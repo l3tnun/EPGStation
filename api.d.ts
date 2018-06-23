@@ -228,6 +228,7 @@ export interface ReserveAllId {
     reserves: ReserveAllItem[];
     conflicts: ReserveAllItem[];
     skips: ReserveAllItem[];
+    overlaps: ReserveAllItem[];
 }
 
 export interface ReserveAllItem {

@@ -24,6 +24,7 @@ interface ReserveAllId {
     reserves: ReserveAllItem[];
     conflicts: ReserveAllItem[];
     skips: ReserveAllItem[];
+    overlaps: ReserveAllItem[];
 }
 
 interface ReserveAllItem {
@@ -202,6 +203,7 @@ class ReservationManageModel extends Model {
         const reserves: ReserveAllItem[] = [];
         const conflicts: ReserveAllItem[] = [];
         const skips: ReserveAllItem[] = [];
+        const overlaps: ReserveAllItem[] = [];
 
         this.reserves.forEach((reserve) => {
             const result: ReserveAllItem = {
@@ -215,6 +217,8 @@ class ReservationManageModel extends Model {
                 conflicts.push(result);
             } else if (reserve.isSkip) {
                 skips.push(result);
+            } else if ((<RuleReserveProgram> reserve).isOverlap) {
+                overlaps.push(result);
             } else {
                 reserves.push(result);
             }
@@ -224,6 +228,7 @@ class ReservationManageModel extends Model {
             reserves: reserves,
             conflicts: conflicts,
             skips: skips,
+            overlaps: overlaps,
         };
     }
 

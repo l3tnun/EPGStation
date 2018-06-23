@@ -754,6 +754,7 @@ definitions:
       - reserves
       - conflicts
       - skips
+      - overlaps
     properties:
       reserves:
         type: array
@@ -764,6 +765,10 @@ definitions:
         items:
           $ref: '#/definitions/ReserveAllItem'
       skips:
+        type: array
+        items:
+          $ref: '#/definitions/ReserveAllItem'
+      overlaps:
         type: array
         items:
           $ref: '#/definitions/ReserveAllItem'
