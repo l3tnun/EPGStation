@@ -23,7 +23,6 @@ class SearchOptionComponent extends SearchOptionBaseComponent<void> {
                 this.createGenres(),
                 this.createTimes(),
                 this.createDuration(),
-                this.createAvoidDuplicate(),
                 this.createOther(),
             ]),
             this.createActionButtons(),
@@ -360,40 +359,6 @@ class SearchOptionComponent extends SearchOptionBaseComponent<void> {
                             this.inputNumberOnUpdate(<HTMLInputElement> vnode.dom, this.viewModel.durationMax);
                         },
                     }),
-                ]),
-            ]),
-        ]);
-    }
-
-    /**
-     * 重複回避
-     */
-    private createAvoidDuplicate(): m.Child {
-        return this.createContentFrame('重複', [
-            m('div', { class: 'option-text-box mdl-cell--12-col mdl-textfield mdl-js-textfield' }, [
-                this.createCheckBox(
-                    '録画済み番組を排除',
-                    () => { return this.viewModel.avoidDuplicate; },
-                    (value: boolean) => { this.viewModel.avoidDuplicate = value; },
-                ),
-                m('div', { class: 'period-box' }, [
-                    m('input', {
-                        class: 'mdl-textfield__input',
-                        type: 'number', pattern: '^[0-9]+$',
-                        value: (() => {
-                            return this.viewModel.periodToAvoidDuplicate;
-                        })(),
-                        onchange: m.withAttr('value', (value) => {
-                            let num = Number(value);
-                            if (value.length === 0 || isNaN(num)) { num = 6; }
-                            this.viewModel.periodToAvoidDuplicate = num;
-                        }),
-                        onupdate: (vnode: m.VnodeDOM<void, this>) => {
-                            this.inputNumberOnUpdate(<HTMLInputElement> vnode.dom, this.viewModel.periodToAvoidDuplicate);
-                        },
-                    }),
-
-                    m('div', { class: 'period-text' }, '日間'),
                 ]),
             ]),
         ]);
