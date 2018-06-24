@@ -27,16 +27,28 @@
         pointer-events: none;
 
 .mdl-layout__header-row
+    padding-right: 20px;
     .mdl-layout-title
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
         line-height: 21px;
         padding-top: 0px;
-        width: calc(100% - 810px);
         @-moz-document url-prefix()
             /*firefox だけタイトルの上が見切れる*/
             line-height: 26px;
+
+    @media screen and (min-width: $header-height)
+        .mdl-layout-title.title-cnt-0
+            width: calc(100% - 562px);
+        .mdl-layout-title.title-cnt-1
+            width: calc(100% - 638px);
+        .mdl-layout-title.title-cnt-2
+            width: calc(100% - 705px);
+        .mdl-layout-title.title-cnt-3
+            width: calc(100% - 772px);
+        .mdl-layout-title.title-cnt-4
+            width: calc(100% - 841px);
 
     @media screen and (max-width: $header-height)
         .mdl-layout-title
