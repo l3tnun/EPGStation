@@ -488,6 +488,10 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
             historyProgram.name = StrUtil.deleteBrackets(historyProgram.name);
             this.log.system.info(`save recorded history: ${ historyProgram.name }`);
             await this.recordedHistoryDB.insert(historyProgram);
+
+            // overlpa 更新
+            await this.reservationManage.updateRule(ruleId)
+            .catch(() => {});
         }
     }
 
