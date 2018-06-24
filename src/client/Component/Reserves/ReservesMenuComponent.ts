@@ -22,6 +22,8 @@ class ReservesMenuComponent extends Component<void> {
      * view
      */
     public view(): m.Child {
+        const isOverlap = this.reservesViewModel.getMode() === ReserveMode.overlaps;
+
         return m('div', { class: 'reserve-menu' }, [
             this.createItem({
                 onclick: () => {
@@ -40,13 +42,12 @@ class ReservesMenuComponent extends Component<void> {
                 onclick: () => {
                     this.viewModel.openDelete();
                 },
-            }, 'delete', 'delete',
-            this.reservesViewModel.getMode() === ReserveMode.overlaps),
+            }, isOverlap ? 'lock_open' : 'delete', isOverlap ? '解除' : 'delete'),
         ]);
     }
 
-    private createItem(attrs: { [key: string]: any }, iconName: string, text: string, isHidden: boolean = false): m.Child {
-        attrs.class = 'menu-item' + (isHidden ? ' dsable' : '');
+    private createItem(attrs: { [key: string]: any }, iconName: string, text: string): m.Child {
+        attrs.class = 'menu-item';
 
         return m('div', attrs, [
             m('i', { class: 'menu-icon material-icons' }, iconName),

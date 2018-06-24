@@ -280,7 +280,7 @@ class ReservesComponent extends ParentComponent<void> {
         const isOverlaps = this.viewModel.getMode() === ReserveMode.overlaps;
 
         return m('td', { class: ReservesComponent.nonNumeric + ' option' }, [
-            m('div', { class: 'option-container' + (isOverlaps ? ' overlap' : '')  }, [
+            m('div', { class: 'option-container' }, [
                 // edit rule
                 m('button', {
                     class: 'mdl-button mdl-js-button mdl-button--icon',
@@ -296,13 +296,13 @@ class ReservesComponent extends ParentComponent<void> {
                 ),
                 // delete
                 m('button', {
-                    class: 'delete mdl-button mdl-js-button mdl-button--icon',
+                    class: 'mdl-button mdl-js-button mdl-button--icon',
                     onclick: () => {
                         this.menuViewModel.set(reserve);
                         this.menuViewModel.openDelete();
                     },
                 },
-                    m('i', { class: 'material-icons' }, 'delete'),
+                    m('i', { class: 'material-icons' }, isOverlaps ? 'lock_open' : 'delete'),
                 ),
             ]),
         ]);
