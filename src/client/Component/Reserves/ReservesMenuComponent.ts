@@ -1,6 +1,7 @@
 import * as m from 'mithril';
 import Util from '../../Util/Util';
 import ReservesMenuViewModel from '../../ViewModel/Reserves/ReservesMenuViewModel';
+import { ReserveMode, ReservesViewModel } from '../../ViewModel/Reserves/ReservesViewModel';
 import factory from '../../ViewModel/ViewModelFactory';
 import Component from '../Component';
 
@@ -9,10 +10,12 @@ import Component from '../Component';
  */
 class ReservesMenuComponent extends Component<void> {
     private viewModel: ReservesMenuViewModel;
+    private reservesViewModel: ReservesViewModel;
 
     constructor() {
         super();
         this.viewModel = <ReservesMenuViewModel> factory.get('ReservesMenuViewModel');
+        this.reservesViewModel = <ReservesViewModel> factory.get('ReservesViewModel');
     }
 
     /**
@@ -37,12 +40,13 @@ class ReservesMenuComponent extends Component<void> {
                 onclick: () => {
                     this.viewModel.openDelete();
                 },
-            }, 'delete', 'delete'),
+            }, 'delete', 'delete',
+            this.reservesViewModel.getMode() === ReserveMode.overlaps),
         ]);
     }
 
-    private createItem(attrs: { [key: string]: any }, iconName: string, text: string): m.Child {
-        attrs.class = 'menu-item';
+    private createItem(attrs: { [key: string]: any }, iconName: string, text: string, isHidden: boolean = false): m.Child {
+        attrs.class = 'menu-item' + (isHidden ? ' dsable' : '');
 
         return m('div', attrs, [
             m('i', { class: 'menu-icon material-icons' }, iconName),

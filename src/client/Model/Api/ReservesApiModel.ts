@@ -14,15 +14,18 @@ interface ReservesApiModelInterface extends ApiModel {
     init(): void;
     updateReserves(): Promise<void>;
     updateConflicts(): Promise<void>;
+    updateOverlaps(): Promise<void>;
     fetchReserve(programId: apid.ProgramId): Promise<void>;
     fetchReserves(limit: number, offset: number): Promise<void>;
     fetchConflicts(limit: number, offset: number): Promise<void>;
+    fetchOverlaps(limit: number, offset: number): Promise<void>;
     fetchAllId(): Promise<AllReserves | null>;
     fetchConflictCount(): Promise<number>;
     getReserve(): apid.Reserve | null;
     getReserves(): apid.Reserves;
     getPage(): number;
     getConflicts(): apid.Reserves;
+    getOverlaps(): apid.Reserves;
     getAllId(): AllReserves | null;
     addReserve(option: apid.AddReserve): Promise<void>;
     updateReserve(option: apid.AddReserve): Promise<void>;
@@ -42,6 +45,7 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
     private allReserves: AllReserves | null = null;
     private reserves: apid.Reserves = { reserves: [], total: 0 };
     private conflicts: apid.Reserves = { reserves: [], total: 0 };
+    private overlaps: apid.Reserves = { reserves: [], total: 0 };
     private reserve: apid.Reserve | null = null;
 
     /**
@@ -63,10 +67,17 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
     }
 
     /**
-     * query を現在の状況のまま重複一覧を更新する
+     * query を現在の状況のまま conflict 一覧を更新する
      */
     public async updateConflicts(): Promise<void> {
         return this.fetchConflicts(this.limit, this.offset);
+    }
+
+    /**
+     * query を現在の状況のまま overlap 一覧を更新する
+     */
+    public async updateOverlaps(): Promise<void> {
+        return this.fetchOverlaps(this.limit, this.offset);
     }
 
     /**
@@ -121,7 +132,7 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
     }
 
     /**
-     * 重複一覧を取得
+     * conflict 一覧を取得
      * /api/reserves/conflicts
      * @param limit: limit
      * @param offfset: offset
@@ -144,6 +155,35 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
         } catch (err) {
             this.conflicts = { reserves: [], total: 0 };
             console.error('./api/reserves/conflicts');
+            console.error(err);
+            this.openSnackbar('衝突情報取得に失敗しました');
+        }
+    }
+
+    /**
+     * overlap 一覧を取得
+     * /api/reserves/overlaps
+     * @param limit: limit
+     * @param offfset: offset
+     * @return Promise<void>
+     */
+    public async fetchOverlaps(limit: number, offset: number): Promise<void> {
+        this.limit = limit;
+        this.offset = offset;
+        const query = {
+            limit: limit,
+            offset: offset,
+        };
+
+        try {
+            this.overlaps = await <any> this.request({
+                method: 'GET',
+                url: './api/reserves/overlaps',
+                data: query,
+            });
+        } catch (err) {
+            this.overlaps = { reserves: [], total: 0 };
+            console.error('./api/reserves/overlaps');
             console.error(err);
             this.openSnackbar('重複情報取得に失敗しました');
         }
@@ -239,6 +279,14 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
      */
     public getConflicts(): apid.Reserves {
         return this.conflicts;
+    }
+
+    /**
+     * overlaps を取得
+     * @return apid.Reserves
+     */
+    public getOverlaps(): apid.Reserves {
+        return this.overlaps;
     }
 
     /**

@@ -13,7 +13,7 @@ import RecordedPlayerViewModel from '../../ViewModel/Recorded/RecordedPlayerView
 import RecordedViewModel from '../../ViewModel/Recorded/RecordedViewModel';
 import RecordedWatchSelectViewModel from '../../ViewModel/Recorded/RecordedWatchSelectViewModel';
 import ReservesMenuViewModel from '../../ViewModel/Reserves/ReservesMenuViewModel';
-import ReservesViewModel from '../../ViewModel/Reserves/ReservesViewModel';
+import { ReservesViewModel } from '../../ViewModel/Reserves/ReservesViewModel';
 import TopPageViewModel from '../../ViewModel/TopPageViewModel';
 import factory from '../../ViewModel/ViewModelFactory';
 import { BalloonComponent } from '../BalloonComponent';
