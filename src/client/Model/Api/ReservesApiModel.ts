@@ -57,6 +57,7 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
         this.reserve = null;
         this.reserves = { reserves: [], total: 0 };
         this.conflicts = { reserves: [], total: 0 };
+        this.overlaps = { reserves: [], total: 0 };
     }
 
     /**
