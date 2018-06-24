@@ -153,6 +153,8 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
                 url: './api/reserves/conflicts',
                 data: query,
             });
+
+            this.currentPage = this.offset / this.limit + 1;
         } catch (err) {
             this.conflicts = { reserves: [], total: 0 };
             console.error('./api/reserves/conflicts');
@@ -182,6 +184,8 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
                 url: './api/reserves/overlaps',
                 data: query,
             });
+
+            this.currentPage = this.offset / this.limit + 1;
         } catch (err) {
             this.overlaps = { reserves: [], total: 0 };
             console.error('./api/reserves/overlaps');
