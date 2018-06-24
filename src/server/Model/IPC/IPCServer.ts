@@ -181,6 +181,13 @@ class IPCServer extends Model implements IPCServerInterface {
             this.send({ id: id });
         };
 
+        this.functions[IPCMessageDefinition.disableReserveOverlap] = async(id: number, args: any) => {
+            const programId: apid.ProgramId = args.programId;
+
+            await this.reservationManage.disableOverlap(programId);
+            this.send({ id: id });
+        };
+
         // Recorded
         this.functions[IPCMessageDefinition.recordedDelete] = async(id: number, args: any) => {
             const recordedId: number = args.recordedId;

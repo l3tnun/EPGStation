@@ -49,6 +49,7 @@ interface ReservationManageModelInterface extends Model {
     getOverlaps(limit?: number, offset?: number): ReserveLimit;
     cancel(id: apid.ProgramId): void;
     removeSkip(id: apid.ProgramId): Promise<void>;
+    disableOverlap(id: apid.ProgramId): Promise<void>;
     addReserve(option: AddReserveInterface): Promise<void>;
     editReserve(option: AddReserveInterface): Promise<void>;
     updateAll(): Promise<void>;
@@ -310,17 +311,23 @@ class ReservationManageModel extends Model {
                     this.log.system.info(`cancel reserve: ${ id }`);
                     needsUpdate = true;
                     break;
-                } else if (!Boolean((<RuleReserveProgram> this.reserves[i]).isOverlap)) {
-                    // ルール予約ならスキップを有効化
-                    this.reserves[i].isSkip = true;
-                    // skip すれば録画されないのでコンフリクトはしない
-                    this.reserves[i].isConflict = false;
-                    this.log.system.info(`add skip: ${ id }`);
+                } else {
+                    // ルール予約
+                    if (!!(<DBSchema.ProgramSchemaWithOverlap> this.reserves[i].program).overlap) {
+                        // overlap
+                        (<RuleReserveProgram> this.reserves[i]).disableOverlap = false;
+                        (<RuleReserveProgram> this.reserves[i]).isOverlap = true;
+                        this.log.system.info(`add overlap: ${ id }`);
+                    } else {
+                        // skip
+                        this.reserves[i].isSkip = true;
+                        // skip すれば録画されないのでコンフリクトはしない
+                        this.reserves[i].isConflict = false;
+                        this.log.system.info(`add skip: ${ id }`);
+                    }
                     needsUpdate = true;
                     break;
                 }
-
-                break;
             }
         }
 
@@ -367,7 +374,31 @@ class ReservationManageModel extends Model {
                 this.log.system.info(`remove skip: ${ id }`);
 
                 if (typeof (<RuleReserveProgram> this.reserves[i]).ruleId !== 'undefined') {
-                    this.updateRule((<RuleReserveProgram> this.reserves[i]).ruleId!);
+                    this.updateRule((<RuleReserveProgram> this.reserves[i]).ruleId);
+                }
+                break;
+            }
+        }
+
+        this.unLockExecution(exeId);
+    }
+
+    /**
+     * overlap を解除する
+     * @param id: program id
+     * @return Promise<void>
+     */
+    public async disableOverlap(id: apid.ProgramId): Promise<void> {
+        const exeId = await this.getExecution(1);
+
+        for (let i = 0; i < this.reserves.length; i++) {
+            if (this.reserves[i].program.id === id) {
+                (<RuleReserveProgram> this.reserves[i]).disableOverlap = true;
+                (<RuleReserveProgram> this.reserves[i]).isOverlap = false;
+                this.log.system.info(`disable overlap: ${ id }`);
+
+                if (typeof (<RuleReserveProgram> this.reserves[i]).ruleId !== 'undefined') {
+                    this.updateRule((<RuleReserveProgram> this.reserves[i]).ruleId);
                 }
                 break;
             }
@@ -675,11 +706,18 @@ class ReservationManageModel extends Model {
 
         // スキップ情報
         const skipIndex: { [key: number]: boolean } = {};
+        // overlap 有効状態
+        const overlapIndex: { [key: number]: boolean } = {};
         // ruleId を除外した予約情報を生成
         const matches: ReserveProgram[] = [];
         for (const reserve of this.reserves) {
             // スキップ情報を記録
             if (reserve.isSkip) { skipIndex[reserve.program.id] = reserve.isSkip; }
+
+            // overlap 有効状態を記録
+            if ((<RuleReserveProgram> reserve).disableOverlap) {
+                overlapIndex[reserve.program.id] = (<RuleReserveProgram> reserve).disableOverlap;
+            }
 
             if (typeof (<RuleReserveProgram> reserve).ruleId === 'undefined' || (<RuleReserveProgram> reserve).ruleId !== ruleId) {
                 const r: any = {};
@@ -696,10 +734,15 @@ class ReservationManageModel extends Model {
                 const data: RuleReserveProgram = {
                     program: program,
                     ruleId: ruleId,
-                    isSkip: typeof skipIndex[program.id] === 'undefined' ? false : skipIndex[program.id],
+                    isSkip: !!skipIndex[program.id],
                     isOverlap: Boolean(program.overlap),
+                    disableOverlap: !!overlapIndex[program.id],
                     isConflict: false,
                 };
+
+                if (data.disableOverlap) {
+                    data.isOverlap = false;
+                }
 
                 const option = this.createOption(rule);
                 if (option !== null) {

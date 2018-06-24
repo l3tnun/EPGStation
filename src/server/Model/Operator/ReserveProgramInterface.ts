@@ -16,6 +16,7 @@ export interface ReserveProgram {
 export interface RuleReserveProgram extends ReserveProgram {
     ruleId: number;
     isOverlap: boolean;
+    disableOverlap: boolean;
 }
 
 /**

@@ -15,6 +15,7 @@ interface ReservesModelInterface extends ApiModel {
     editReserve(option: AddReserveInterface): Promise<void>;
     cancelReserve(programId: apid.ProgramId): Promise<void>;
     removeReserveSkip(programId: apid.ProgramId): Promise<void>;
+    disableReserveOverlap(programId: apid.ProgramId): Promise<void>;
 }
 
 namespace ReservesModelInterface {
@@ -171,6 +172,15 @@ class ReservesModel extends ApiModel implements ReservesModelInterface {
      */
     public async removeReserveSkip(programId: apid.ProgramId): Promise<void> {
         await this.ipc.removeReserveSkip(programId);
+    }
+
+    /**
+     * overlap 状態を解除する
+     * @param programId: program id
+     * @return Promise<void>
+     */
+    public async disableReserveOverlap(programId: apid.ProgramId): Promise<void> {
+        await this.ipc.disableReserveOverlap(programId);
     }
 }
 

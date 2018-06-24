@@ -20,6 +20,7 @@ interface IPCClientInterface extends Model {
     editReserve(option: AddReserveInterface): Promise<void>;
     cancelReserve(programId: apid.ProgramId): Promise<void>;
     removeReserveSkip(programId: apid.ProgramId): Promise<void>;
+    disableReserveOverlap(programId: apid.ProgramId): Promise<void>;
     recordedDelete(recordedId: number): Promise<void>;
     recordedDeletes(recordedId: number[]): Promise<number[]>;
     recordedDeleteFile(recordedId: number): Promise<void>;
@@ -183,6 +184,16 @@ class IPCClient extends Model implements IPCClientInterface {
      */
     public async removeReserveSkip(programId: apid.ProgramId): Promise<void> {
         const id = this.send(IPCMessageDefinition.removeReserveSkip, { programId: programId });
+        await this.receive(id);
+    }
+
+    /**
+     * overlap を解除する
+     * @param programId: program id
+     * @return Promise<void>
+     */
+    public async disableReserveOverlap(programId: apid.ProgramId): Promise<void> {
+        const id = this.send(IPCMessageDefinition.disableReserveOverlap, { programId: programId });
         await this.receive(id);
     }
 
