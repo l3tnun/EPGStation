@@ -418,21 +418,16 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
         // 重複回避
         if (!!option.avoidDuplicate && typeof option.periodToAvoidDuplicate !== 'undefined') {
             const now = new Date().getTime();
-            const period = option.periodToAvoidDuplicate * 24 * 60 * 60 * 1000;
             column += ', case when shortName in '
                 + '('
                 + `select name from ${ DBSchema.TableName.RecordedHistory }`
                 + ` where endAt <= ${ now }`;
             if (option.periodToAvoidDuplicate > 0) {
-                column += ` and endAt >= ${ now - period } and endAt <= ${ now }`;
-            }
-            column += ')';
-
-            if (option.periodToAvoidDuplicate > 0) {
-                column += ` and endAt >= ${ now } and startAt <= ${ now + period }`;
+                column += ` and endAt >= ${ now - (option.periodToAvoidDuplicate * 24 * 60 * 60 * 1000) } and endAt <= ${ now }`;
             }
 
-            column += ` then ${ this.getOverlapColumn() } end as overlap`;
+            column += `) then ${ this.getOverlapColumn() } end`
+                + ' as overlap';
         }
 
         let query = `select ${ column } from ${ DBSchema.TableName.Programs } ${ this.createQuery(option) } order by startAt asc`;
