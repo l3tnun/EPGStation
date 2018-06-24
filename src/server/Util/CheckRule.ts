@@ -77,6 +77,11 @@ class CheckRule extends Base {
         if (typeof search.durationMax !== 'undefined' && search.durationMax < 0) { return false; }
         if (typeof search.durationMin !== 'undefined' && typeof search.durationMax !== 'undefined' && search.durationMin > search.durationMax) { return false; }
 
+        // 重複
+        if (!(typeof search.avoidDuplicate !== 'undefined' && typeof search.periodToAvoidDuplicate !== 'undefined' && search.periodToAvoidDuplicate >= 0)) {
+            return false;
+        }
+
         return true;
     }
 
