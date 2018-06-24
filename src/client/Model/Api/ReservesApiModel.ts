@@ -28,6 +28,7 @@ interface ReservesApiModelInterface extends ApiModel {
     updateReserve(option: apid.AddReserve): Promise<void>;
     deleteReserve(programId: apid.ProgramId): Promise<void>;
     deleteSkip(programId: apid.ProgramId): Promise<void>;
+    disableOverlap(programId: apid.ProgramId): Promise<void>;
 }
 
 /**
@@ -321,6 +322,24 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
 
         } catch (err) {
             console.error(`./api/reserves/${ programId }/skip: delete`);
+            throw(err);
+        }
+    }
+
+    /**
+     * overlap を解除
+     * @param programId: program id
+     * @return Promise<void>
+     */
+    public async disableOverlap(programId: apid.ProgramId): Promise<void> {
+        try {
+            await <any> this.request({
+                method: 'DELETE',
+                url: `./api/reserves/${ programId}/overlap`,
+            });
+
+        } catch (err) {
+            console.error(`./api/reserves/${ programId }/overlap: delete`);
             throw(err);
         }
     }

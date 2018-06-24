@@ -347,6 +347,22 @@ class ProgramInfoViewModel extends ViewModel {
             this.snackbar.open(`除外失敗: ${ this.program.name }`);
         }
     }
+
+    /**
+     * overlap を解除
+     * @return Promise<void>
+     */
+    public async disableOverlap(): Promise<void> {
+        if (this.program === null) { return; }
+
+        try {
+            await this.reserves.disableOverlap(this.program.id);
+            this.snackbar.open(`解除: ${ this.program.name }`);
+        } catch (err) {
+            console.error(err);
+            this.snackbar.open(`解除失敗: ${ this.program.name }`);
+        }
+    }
 }
 
 namespace ProgramInfoViewModel {
