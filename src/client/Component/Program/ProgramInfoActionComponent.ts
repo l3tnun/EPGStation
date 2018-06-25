@@ -64,9 +64,14 @@ class ProgramInfoActionComponent extends Component<void> {
         } else if (reserve.status === 'reserve' || reserve.status === 'conflict') {
             name = '削除';
             onclick = () => { return this.viewModel.deleteReserve(); };
-        } else {
+        } else if (reserve.status === 'skip') {
             name = '除外解除';
             onclick = () => { return this.viewModel.deleteSkip(); };
+        } else if (reserve.status === 'overlap') {
+            name = '重複解除';
+            onclick = () => { return this.viewModel.disableOverlap(); };
+        } else {
+            return null;
         }
 
         return m('button', {

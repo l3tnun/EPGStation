@@ -1,5 +1,6 @@
 import * as m from 'mithril';
 import ReservesMenuViewModel from '../../ViewModel/Reserves/ReservesMenuViewModel';
+import { ReserveMode, ReservesViewModel } from '../../ViewModel/Reserves/ReservesViewModel';
 import factory from '../../ViewModel/ViewModelFactory';
 import Component from '../Component';
 
@@ -8,27 +9,35 @@ import Component from '../Component';
  */
 class ReservesDeleteComponent extends Component<void> {
     private viewModel: ReservesMenuViewModel;
+    private reservesViewModel: ReservesViewModel;
 
     constructor() {
         super();
         this.viewModel = <ReservesMenuViewModel> factory.get('ReservesMenuViewModel');
+        this.reservesViewModel = <ReservesViewModel> factory.get('ReservesViewModel');
     }
 
     /**
      * view
      */
     public view(): m.Child {
+        const isOverlap = this.reservesViewModel.getMode() === ReserveMode.overlaps;
+
         return m('div', [
-            m('div', { class: 'recorded-delete' }, this.viewModel.getTitle() + 'を削除しますか。'),
+            m('div', { class: 'recorded-delete' }, `${ this.viewModel.getTitle() }を${ isOverlap ? '重複解除' : '削除' }しますか。`),
             m('div', { class: 'mdl-dialog__actions' }, [
                 m('button', {
                     class: 'mdl-button mdl-js-button mdl-button--primary',
                     onclick: () => {
                         // delete video
-                        this.viewModel.delete();
+                        if (isOverlap) {
+                            this.viewModel.disableOverlap();
+                        } else {
+                            this.viewModel.delete();
+                        }
                         this.viewModel.close();
                     },
-                }, '削除'),
+                }, isOverlap ? '重複解除' : '削除'),
                 m('button', {
                     class: 'mdl-button mdl-js-button mdl-button--accent',
                     onclick: () => { this.viewModel.close(); },

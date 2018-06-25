@@ -33,6 +33,7 @@ Config.json
 | uploadTempDir | string | EPGStation/data/upload | no | ファイルアップロード時に使用する一時領域 |
 | ffmpeg | string | /usr/local/bin/ffmpeg | no |  サムネイル生成に使用する ffmpeg のパス |
 | ffprobe | string | /usr/local/bin/ffprobe | no | 動画情報取得に使用する ffprobe のパス |
+| recordedHistoryRetentionPeriodDays | number | 30 | no | ルール予約時の番組名を保存期間 |
 | recordedPreStartCommand | string | | no | 録画準備開始後に実行するコマンド |
 | recordedPrepRecFailedCommand | string | | no | 録画準備失敗時に実行するコマンド |
 | recordedStartCommand | string | | no | 録画開始時に実行するコマンド |

@@ -133,6 +133,13 @@ class IPCServer extends Model implements IPCServerInterface {
             this.send({ id: id, value: value });
         };
 
+        this.functions[IPCMessageDefinition.getReserveOverlaps] = (id: number, args: any) => {
+            const limit: number = args.limit;
+            const offset: number = args.offset;
+            const value = this.reservationManage.getOverlaps(limit, offset);
+            this.send({ id: id, value: value });
+        };
+
         this.functions[IPCMessageDefinition.addReserve] = async(id: number, args: any) => {
             const option: AddReserveInterface = args.option;
 
@@ -171,6 +178,13 @@ class IPCServer extends Model implements IPCServerInterface {
             const programId: apid.ProgramId = args.programId;
 
             await this.reservationManage.removeSkip(programId);
+            this.send({ id: id });
+        };
+
+        this.functions[IPCMessageDefinition.disableReserveOverlap] = async(id: number, args: any) => {
+            const programId: apid.ProgramId = args.programId;
+
+            await this.reservationManage.disableOverlap(programId);
             this.send({ id: id });
         };
 

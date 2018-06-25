@@ -11,7 +11,6 @@ import factory from './Model/ModelFactory';
  */
 class DBRevisionChecker extends Base {
     private migrations: MigrationBase[] = [];
-    private tables: DBTableBase[] = [];
     private infoFilePath: string;
     private dbInfo: DBRevisionInfo | null = null;
     private currentRevision = 0;
@@ -20,12 +19,7 @@ class DBRevisionChecker extends Base {
         super();
 
         this.migrations.push(<MigrationBase> factory.get('MigrationV1'));
-
-        this.tables.push(<DBTableBase> factory.get('ServicesDB'));
-        this.tables.push(<DBTableBase> factory.get('ProgramsDB'));
-        this.tables.push(<DBTableBase> factory.get('RulesDB'));
-        this.tables.push(<DBTableBase> factory.get('RecordedDB'));
-        this.tables.push(<DBTableBase> factory.get('EncodedDB'));
+        this.migrations.push(<MigrationBase> factory.get('MigrationV2'));
 
         this.infoFilePath = this.config.getConfig().dbInfoPath || path.join(__dirname, '..', '..', 'data', 'dbinfo.json');
         this.readFile();
@@ -44,22 +38,38 @@ class DBRevisionChecker extends Base {
     public async run(): Promise<void> {
         // DB 情報がない
         if (this.dbInfo === null) {
-            let cnt = 0;
-            for (const table of this.tables) {
-                if (await table.exists()) { cnt += 1; }
-            }
+            const servicesDB = <DBTableBase> factory.get('ServicesDB');
+            const programsDB = <DBTableBase> factory.get('ProgramsDB');
+            const rulesDB = <DBTableBase> factory.get('RulesDB');
+            const recordedDB = <DBTableBase> factory.get('RecordedDB');
+            const encodedDB = <DBTableBase> factory.get('EncodedDB');
+            const recordedHistoryDB = <DBTableBase> factory.get('RecordedHistoryDB');
 
-            if (cnt === 0) {
+            // 各 Table が存在するか
+            const tableStatus = {
+                Services: await servicesDB.exists(),
+                Programs: await programsDB.exists(),
+                Rules: await rulesDB.exists(),
+                Recorded: await recordedDB.exists(),
+                Encoded: await encodedDB.exists(),
+                RecordedHistory: await recordedHistoryDB.exists(),
+            };
+
+            if (!tableStatus.Services && !tableStatus.Programs && !tableStatus.Rules && !tableStatus.Recorded && !tableStatus.Encoded && !tableStatus.RecordedHistory) {
                 // 新規
                 this.dbInfo = { revision: this.currentRevision };
                 this.writeFile();
                 this.log.system.info('create dbinfo.json');
 
                 return;
-            } else if (cnt === 5) {
+            } else if (tableStatus.Services && tableStatus.Programs && tableStatus.Rules && tableStatus.Recorded && tableStatus.Encoded && !tableStatus.RecordedHistory) {
                 // version 0.5.9 以下からのアップグレード
                 this.dbInfo = { revision: 0 };
                 this.log.system.info('upgrade from less than or equal to version 0.5.9');
+            } else if (tableStatus.Services && tableStatus.Programs && tableStatus.Rules && tableStatus.Recorded && tableStatus.Encoded && tableStatus.RecordedHistory) {
+                // version 0.9.7 以上のはずだが dbinfo.json ファイルが欠落している
+                this.log.system.fatal('dbinfo.json is missing.');
+                process.exit(1);
             } else {
                 // DB table が欠損している
                 this.log.system.fatal('DB table is missing.');

@@ -36,7 +36,7 @@ import RecordedWatchSelectSettingViewModel from './Recorded/RecordedWatchSelectS
 import RecordedWatchSelectViewModel from './Recorded/RecordedWatchSelectViewModel';
 import RecordedWatchViewModel from './Recorded/RecordedWatchViewModel';
 import ReservesMenuViewModel from './Reserves/ReservesMenuViewModel';
-import ReservesViewModel from './Reserves/ReservesViewModel';
+import { ReservesViewModel } from './Reserves/ReservesViewModel';
 import RulesDeleteViewModel from './Rules/RulesDeleteViewModel';
 import RulesInfoViewModel from './Rules/RulesInfoViewModel';
 import RulesViewModel from './Rules/RulesViewModel';

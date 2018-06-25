@@ -6,7 +6,7 @@ interface AllReserves {
 }
 
 interface AllReserveItem {
-    status: 'reserve' | 'conflict' | 'skip';
+    status: 'reserve' | 'conflict' | 'skip' | 'overlap';
     item: apid.ReserveAllItem;
 }
 
@@ -14,20 +14,24 @@ interface ReservesApiModelInterface extends ApiModel {
     init(): void;
     updateReserves(): Promise<void>;
     updateConflicts(): Promise<void>;
+    updateOverlaps(): Promise<void>;
     fetchReserve(programId: apid.ProgramId): Promise<void>;
     fetchReserves(limit: number, offset: number): Promise<void>;
     fetchConflicts(limit: number, offset: number): Promise<void>;
+    fetchOverlaps(limit: number, offset: number): Promise<void>;
     fetchAllId(): Promise<AllReserves | null>;
     fetchConflictCount(): Promise<number>;
     getReserve(): apid.Reserve | null;
     getReserves(): apid.Reserves;
     getPage(): number;
     getConflicts(): apid.Reserves;
+    getOverlaps(): apid.Reserves;
     getAllId(): AllReserves | null;
     addReserve(option: apid.AddReserve): Promise<void>;
     updateReserve(option: apid.AddReserve): Promise<void>;
     deleteReserve(programId: apid.ProgramId): Promise<void>;
     deleteSkip(programId: apid.ProgramId): Promise<void>;
+    disableOverlap(programId: apid.ProgramId): Promise<void>;
 }
 
 /**
@@ -41,6 +45,7 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
     private allReserves: AllReserves | null = null;
     private reserves: apid.Reserves = { reserves: [], total: 0 };
     private conflicts: apid.Reserves = { reserves: [], total: 0 };
+    private overlaps: apid.Reserves = { reserves: [], total: 0 };
     private reserve: apid.Reserve | null = null;
 
     /**
@@ -52,6 +57,7 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
         this.reserve = null;
         this.reserves = { reserves: [], total: 0 };
         this.conflicts = { reserves: [], total: 0 };
+        this.overlaps = { reserves: [], total: 0 };
     }
 
     /**
@@ -62,10 +68,17 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
     }
 
     /**
-     * query を現在の状況のまま重複一覧を更新する
+     * query を現在の状況のまま conflict 一覧を更新する
      */
     public async updateConflicts(): Promise<void> {
         return this.fetchConflicts(this.limit, this.offset);
+    }
+
+    /**
+     * query を現在の状況のまま overlap 一覧を更新する
+     */
+    public async updateOverlaps(): Promise<void> {
+        return this.fetchOverlaps(this.limit, this.offset);
     }
 
     /**
@@ -120,7 +133,7 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
     }
 
     /**
-     * 重複一覧を取得
+     * conflict 一覧を取得
      * /api/reserves/conflicts
      * @param limit: limit
      * @param offfset: offset
@@ -140,9 +153,42 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
                 url: './api/reserves/conflicts',
                 data: query,
             });
+
+            this.currentPage = this.offset / this.limit + 1;
         } catch (err) {
             this.conflicts = { reserves: [], total: 0 };
             console.error('./api/reserves/conflicts');
+            console.error(err);
+            this.openSnackbar('衝突情報取得に失敗しました');
+        }
+    }
+
+    /**
+     * overlap 一覧を取得
+     * /api/reserves/overlaps
+     * @param limit: limit
+     * @param offfset: offset
+     * @return Promise<void>
+     */
+    public async fetchOverlaps(limit: number, offset: number): Promise<void> {
+        this.limit = limit;
+        this.offset = offset;
+        const query = {
+            limit: limit,
+            offset: offset,
+        };
+
+        try {
+            this.overlaps = await <any> this.request({
+                method: 'GET',
+                url: './api/reserves/overlaps',
+                data: query,
+            });
+
+            this.currentPage = this.offset / this.limit + 1;
+        } catch (err) {
+            this.overlaps = { reserves: [], total: 0 };
+            console.error('./api/reserves/overlaps');
             console.error(err);
             this.openSnackbar('重複情報取得に失敗しました');
         }
@@ -171,6 +217,10 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
 
             for (const reserve of allId.skips) {
                 this.allReserves[reserve.programId] = { status: 'skip', item: reserve };
+            }
+
+            for (const reserve of allId.overlaps) {
+                this.allReserves[reserve.programId] = { status: 'overlap', item: reserve };
             }
         } catch (err) {
             this.allReserves = null;
@@ -234,6 +284,14 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
      */
     public getConflicts(): apid.Reserves {
         return this.conflicts;
+    }
+
+    /**
+     * overlaps を取得
+     * @return apid.Reserves
+     */
+    public getOverlaps(): apid.Reserves {
+        return this.overlaps;
     }
 
     /**
@@ -317,6 +375,24 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
 
         } catch (err) {
             console.error(`./api/reserves/${ programId }/skip: delete`);
+            throw(err);
+        }
+    }
+
+    /**
+     * overlap を解除
+     * @param programId: program id
+     * @return Promise<void>
+     */
+    public async disableOverlap(programId: apid.ProgramId): Promise<void> {
+        try {
+            await <any> this.request({
+                method: 'DELETE',
+                url: `./api/reserves/${ programId}/overlap`,
+            });
+
+        } catch (err) {
+            console.error(`./api/reserves/${ programId }/overlap: delete`);
             throw(err);
         }
     }

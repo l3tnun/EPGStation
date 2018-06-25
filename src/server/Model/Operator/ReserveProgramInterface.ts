@@ -14,14 +14,16 @@ export interface ReserveProgram {
  * ルール予約
  */
 export interface RuleReserveProgram extends ReserveProgram {
-    ruleId?: number;
+    ruleId: number;
+    isOverlap: boolean;
+    disableOverlap: boolean;
 }
 
 /**
  * 手動予約
  */
 export interface ManualReserveProgram extends ReserveProgram {
-    manualId?: number;
+    manualId: number;
 }
 
 export interface ReserveOptionInterface {
