@@ -15,10 +15,12 @@ interface IPCClientInterface extends Model {
     getReserves(limit: number, offset: number): Promise<ReserveLimit>;
     getReserveConflicts(limit: number, offset: number): Promise<ReserveLimit>;
     getReserveSkips(limit: number, offset: number): Promise<ReserveLimit>;
+    getReserveOverlaps(limit: number, offset: number): Promise<ReserveLimit>;
     addReserve(option: AddReserveInterface): Promise<void>;
     editReserve(option: AddReserveInterface): Promise<void>;
     cancelReserve(programId: apid.ProgramId): Promise<void>;
     removeReserveSkip(programId: apid.ProgramId): Promise<void>;
+    disableReserveOverlap(programId: apid.ProgramId): Promise<void>;
     recordedDelete(recordedId: number): Promise<void>;
     recordedDeletes(recordedId: number[]): Promise<number[]>;
     recordedDeleteFile(recordedId: number): Promise<void>;
@@ -135,6 +137,17 @@ class IPCClient extends Model implements IPCClientInterface {
     }
 
     /**
+     * overlap を取得する
+     * @return Promise<ReserveLimit>
+     */
+    public async getReserveOverlaps(limit: number, offset: number): Promise<ReserveLimit> {
+        const id = this.send(IPCMessageDefinition.getReserveOverlaps, { limit: limit, offset: offset });
+        const result = await this.receive(id);
+
+        return <ReserveLimit> result.value;
+    }
+
+    /**
      * 予約追加
      * @param option: AddReserveInterface
      * @return Promise<void>
@@ -171,6 +184,16 @@ class IPCClient extends Model implements IPCClientInterface {
      */
     public async removeReserveSkip(programId: apid.ProgramId): Promise<void> {
         const id = this.send(IPCMessageDefinition.removeReserveSkip, { programId: programId });
+        await this.receive(id);
+    }
+
+    /**
+     * overlap を解除する
+     * @param programId: program id
+     * @return Promise<void>
+     */
+    public async disableReserveOverlap(programId: apid.ProgramId): Promise<void> {
+        const id = this.send(IPCMessageDefinition.disableReserveOverlap, { programId: programId });
         await this.receive(id);
     }
 

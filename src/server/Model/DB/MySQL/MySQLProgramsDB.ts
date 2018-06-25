@@ -23,6 +23,7 @@ class MySQLProgramsDB extends ProgramsDB {
             + 'duration bigint not null, '
             + 'isFree boolean not null, '
             + 'name text not null, '
+            + 'shortName text null, '
             + 'description text null, '
             + 'extended text null, '
             + 'genre1 integer null, '

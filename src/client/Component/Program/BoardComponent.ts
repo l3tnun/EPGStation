@@ -321,6 +321,9 @@ class BoardComponent extends Component<BoardArgs> {
                 case 'skip':
                     classStr += ' skip';
                     break;
+                case 'overlap':
+                    classStr += ' overlap';
+                    break;
             }
         }
 

@@ -30,6 +30,8 @@ export interface SearchInterface {
     isFree?: boolean;
     durationMin?: number;
     durationMax?: number;
+    avoidDuplicate?: boolean;
+    periodToAvoidDuplicate?: number;
 }
 
 export interface OptionInterface {

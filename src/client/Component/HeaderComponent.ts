@@ -62,6 +62,15 @@ class HeaderComponent extends Component<HeaderArgs> {
     public view(vnode: m.Vnode<HeaderArgs, this>): m.Children {
         this.setBroadcastLink();
 
+        let titleCnt = 0;
+        const config = this.viewModel.getConfig();
+        if (config !== null) {
+            if (config.broadcast.GR) { titleCnt += 1; }
+            if (config.broadcast.BS) { titleCnt += 1; }
+            if (config.broadcast.CS) { titleCnt += 1; }
+            if (config.broadcast.SKY) { titleCnt += 1; }
+        }
+
         return m('header', {
             class: 'mdl-layout__header',
             style: typeof vnode.attrs.headerStyle === 'undefined' ? '' : vnode.attrs.headerStyle,
@@ -70,7 +79,7 @@ class HeaderComponent extends Component<HeaderArgs> {
         }, [
             m('div', { class: 'mdl-layout__header-row' }, [
                 // title
-                m('span', { class: 'mdl-layout-title' }, vnode.attrs.title),
+                m('span', { class: `mdl-layout-title title-cnt-${ titleCnt }` }, vnode.attrs.title),
 
                 // 右側にナビゲーションを整列させる
                 m('div', { class: 'mdl-layout-spacer' }),
@@ -80,7 +89,8 @@ class HeaderComponent extends Component<HeaderArgs> {
                     this.broadcastLink,
                     this.createLink('録画済み', '/recorded'),
                     this.createLink('予約', '/reserves'),
-                    this.createLink('重複', '/reserves', { mode: 'conflicts' }),
+                    this.createLink('競合', '/reserves', { mode: 'conflicts' }),
+                    this.createLink('重複', '/reserves', { mode: 'overlaps' }),
                     this.createLink('検索', '/search'),
                     this.createLink('ルール', '/rules'),
                 ]),

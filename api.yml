@@ -387,6 +387,9 @@ definitions:
         $ref: '#/definitions/ProgramAudioSamplingRate'
       audioComponentType:
         type: integer
+      overlap:
+        description: '録画履歴と重複しているか'
+        type: boolean
 
   ScheduleServiceItem:
     type: object
@@ -751,6 +754,7 @@ definitions:
       - reserves
       - conflicts
       - skips
+      - overlaps
     properties:
       reserves:
         type: array
@@ -761,6 +765,10 @@ definitions:
         items:
           $ref: '#/definitions/ReserveAllItem'
       skips:
+        type: array
+        items:
+          $ref: '#/definitions/ReserveAllItem'
+      overlaps:
         type: array
         items:
           $ref: '#/definitions/ReserveAllItem'
@@ -838,6 +846,9 @@ definitions:
         $ref: '#/definitions/ProgramAudioSamplingRate'
       audioComponentType:
         type: integer
+      overlap:
+        description: '録画履歴と重複しているか'
+        type: boolean
 
   RuleList:
     type: object
@@ -1035,6 +1046,13 @@ definitions:
       durationMax:
         type: integer
         description: '最大長'
+      avoidDuplicate:
+        type: boolean
+        description: '録画履歴から重複番組を削除する'
+      periodToAvoidDuplicate:
+        type: integer
+        minimum: 0
+        description: '録画履歴から重複番組を削除する期間 0 = 期間なし'
 
   RuleOption:
     type: object

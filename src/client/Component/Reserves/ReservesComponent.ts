@@ -6,7 +6,7 @@ import Util from '../../Util/Util';
 import BalloonViewModel from '../../ViewModel/Balloon/BalloonViewModel';
 import ProgramInfoViewModel from '../../ViewModel/Program/ProgramInfoViewModel';
 import ReservesMenuViewModel from '../../ViewModel/Reserves/ReservesMenuViewModel';
-import ReservesViewModel from '../../ViewModel/Reserves/ReservesViewModel';
+import { ReserveMode, ReservesViewModel } from '../../ViewModel/Reserves/ReservesViewModel';
 import factory from '../../ViewModel/ViewModelFactory';
 import { BalloonComponent } from '../BalloonComponent';
 import MainLayoutComponent from '../MainLayoutComponent';
@@ -47,7 +47,7 @@ class ReservesComponent extends ParentComponent<void> {
      */
     public view(): m.Child {
         return m(MainLayoutComponent, {
-            header: { title: m.route.param('mode') === 'conflicts' ? '重複' : '予約' },
+            header: { title: this.viewModel.getTitle() },
             menuContent: [
                 {
                     attrs: {
@@ -277,6 +277,8 @@ class ReservesComponent extends ParentComponent<void> {
     }
 
     private createTableOption(reserve: apid.Reserve): m.Child {
+        const isOverlaps = this.viewModel.getMode() === ReserveMode.overlaps;
+
         return m('td', { class: ReservesComponent.nonNumeric + ' option' }, [
             m('div', { class: 'option-container' }, [
                 // edit rule
@@ -300,7 +302,7 @@ class ReservesComponent extends ParentComponent<void> {
                         this.menuViewModel.openDelete();
                     },
                 },
-                    m('i', { class: 'material-icons' }, 'delete'),
+                    m('i', { class: 'material-icons' }, isOverlaps ? 'lock_open' : 'delete'),
                 ),
             ]),
         ]);

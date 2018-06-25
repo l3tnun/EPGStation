@@ -9,6 +9,7 @@ import * as DBSchema from './Model/DB/DBSchema';
 import { EncodedDBInterface } from './Model/DB/EncodedDB';
 import { ProgramsDBInterface } from './Model/DB/ProgramsDB';
 import { RecordedDBInterface } from './Model/DB/RecordedDB';
+import { RecordedHistoryDBInterface } from './Model/DB/RecordedHistoryDB';
 import { RulesDBInterface } from './Model/DB/RulesDB';
 import { ServicesDBInterface } from './Model/DB/ServicesDB';
 import ModelFactorySetting from './Model/MainModelFactorySetting';
@@ -18,6 +19,7 @@ interface BackupData {
     rules: DBSchema.RulesSchema[];
     recorded: DBSchema.RecordedSchema[];
     encoded: DBSchema.EncodedSchema[];
+    recordedHistory: DBSchema.RecordedHistorySchema[];
     dbRevisionInfo: DBRevisionInfo;
 }
 
@@ -30,6 +32,7 @@ class DBTools {
     private rulesDB: RulesDBInterface;
     private recordedDB: RecordedDBInterface;
     private encodedDB: EncodedDBInterface;
+    private recordedHistoryDB: RecordedHistoryDBInterface;
 
     constructor() {
         // 引数チェック
@@ -69,6 +72,7 @@ class DBTools {
         this.rulesDB = <RulesDBInterface> factory.get('RulesDB');
         this.recordedDB = <RecordedDBInterface> factory.get('RecordedDB');
         this.encodedDB = <EncodedDBInterface> factory.get('EncodedDB');
+        this.recordedHistoryDB = <RecordedHistoryDBInterface> factory.get('RecordedHistoryDB');
     }
 
     /**
@@ -108,11 +112,15 @@ class DBTools {
         console.log('Recorded');
         const encoded = await this.encodedDB.findAll(false);
 
+        console.log('RecordedHistory');
+        const recordedHistory = await this.recordedHistoryDB.findAll();
+
         const backup: BackupData = {
             dbRevisionInfo: dbRevisionInfo,
             encoded: encoded,
             recorded: recorded,
             rules: rules,
+            recordedHistory: recordedHistory,
         };
 
         console.log('--- writing ---');
@@ -176,6 +184,9 @@ class DBTools {
         console.log('Recorded');
         await this.recordedDB.drop();
 
+        console.log('RecordedHistory');
+        await this.recordedHistoryDB.drop();
+
         // create tables
         console.log('--- create tables ---');
         console.log('Services');
@@ -193,6 +204,9 @@ class DBTools {
         console.log('Encoded');
         await this.encodedDB.create();
 
+        console.log('RecordedHistory');
+        await this.recordedHistoryDB.create();
+
         // restore
         console.log('--- resotre tables---');
         console.log('Rules');
@@ -203,6 +217,9 @@ class DBTools {
 
         console.log('Encoded');
         await this.encodedDB.restore(backup!.encoded, false, false);
+
+        console.log('RecordedHistory');
+        await this.recordedHistoryDB.restore(backup!.recordedHistory, false);
 
         console.log('--- complete ---');
     }

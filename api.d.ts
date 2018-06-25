@@ -93,6 +93,7 @@ export interface ScheduleProgramItem {
     videoComponentType?: number;
     audioSamplingRate?: ProgramAudioSamplingRate;
     audioComponentType?: number;
+    overlap?: boolean;
 }
 
 export interface ScheduleServiceItem {
@@ -227,6 +228,7 @@ export interface ReserveAllId {
     reserves: ReserveAllItem[];
     conflicts: ReserveAllItem[];
     skips: ReserveAllItem[];
+    overlaps: ReserveAllItem[];
 }
 
 export interface ReserveAllItem {
@@ -256,6 +258,7 @@ export interface ReserveProgram {
     videoComponentType?: number;
     audioSamplingRate?: ProgramAudioSamplingRate;
     audioComponentType?: number;
+    overlap?: boolean;
 }
 
 export interface AddReserve {
@@ -301,6 +304,8 @@ export interface Rule {
     isFree?: boolean;
     durationMin?: number;
     durationMax?: number;
+    avoidDuplicate: boolean;
+    periodToAvoidDuplicate?: number;
     enable: boolean;
     directory?: string;
     recordedFormat?: string;
@@ -340,6 +345,8 @@ export interface RuleSearch {
     isFree?: boolean;
     durationMin?: number;
     durationMax?: number;
+    avoidDuplicate?: boolean;
+    periodToAvoidDuplicate?: number;
 }
 
 export interface RuleOption {
