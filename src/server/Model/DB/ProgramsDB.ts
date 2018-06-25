@@ -421,7 +421,7 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
             const now = new Date().getTime();
             column += ', case when id in '
                 + '('
-                + `select distinct P.id from ${ DBSchema.TableName.Programs } as P, ${ DBSchema.TableName.RecordedHistory } as R`
+                + `select P.id from ${ DBSchema.TableName.Programs } as P, ${ DBSchema.TableName.RecordedHistory } as R`
                 + ' where P.shortName = R.name'
                 + ` and R.endAt <= ${ now }`;
             if (option.periodToAvoidDuplicate > 0) {
