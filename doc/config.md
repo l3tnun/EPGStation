@@ -26,7 +26,9 @@ Config.json
 | recorded | string | EPGStation/recorded | no | 録画ファイル保存先 フルパスで指定する |
 | recordedFormat | string | %YEAR%年%MONTH%月%DAY%日%HOUR%時%MIN%分%SEC%秒-%TITLE% | no | 録画フォーマット |
 | fileExtension | string | .ts | no | 録画ファイル拡張子 |
-| reservesUpdateIntervalTime | number | 10 | no| 予約情報を更新する時間の間隔 (分) 
+| reservesUpdateIntervalTime | number | 10 | no| 予約情報を更新する時間の間隔 (分) |
+| suppressReservesUpdateAllLog | boolean | false | no | 予約定期更新時のログ出力を抑えるか |
+| suppressEPGUpdateLog | boolean | false | no | EPG 更新時のログ出力を抑えるか |
 | thumbnail | string | EPGStation/thumbnail | no | サムネイルファイルの保存先 |
 | thumbnailSize | string | 480x270 | no |  サムネイルの解像度 |
 | thumbnailPosition | number | 5 | no |  サムネイル生成の時間 (秒) |
@@ -34,6 +36,7 @@ Config.json
 | ffmpeg | string | /usr/local/bin/ffmpeg | no |  サムネイル生成に使用する ffmpeg のパス |
 | ffprobe | string | /usr/local/bin/ffprobe | no | 動画情報取得に使用する ffprobe のパス |
 | recordedHistoryRetentionPeriodDays | number | 30 | no | ルール予約時の番組名を保存期間 |
+| reservationAddedCommand | string | | no | 予約追加後に実行するコマンド |
 | recordedPreStartCommand | string | | no | 録画準備開始後に実行するコマンド |
 | recordedPrepRecFailedCommand | string | | no | 録画準備失敗時に実行するコマンド |
 | recordedStartCommand | string | | no | 録画開始時に実行するコマンド |
@@ -169,7 +172,7 @@ maxEncode を 1 以上に設定すること
 
 ----
 
-### recordedPreStartCommand, recordedPrepRecFailedCommand
+### reservationAddedCommand, recordedPreStartCommand, recordedPrepRecFailedCommand
 
 #### 実行時に渡される環境変数
 
