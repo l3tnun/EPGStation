@@ -30,8 +30,6 @@ class RecordingPreStartModel extends Model implements CallbackBaseModelInterface
     }
 
     public set(): void {
-        if (typeof this.cmd === 'undefined') { return; }
-
         this.recordingManage.recPreStartListener((program) => { this.callback(program); });
     }
 
@@ -43,6 +41,7 @@ class RecordingPreStartModel extends Model implements CallbackBaseModelInterface
         this.ipc.notifIo();
 
         // 外部コマンド実行
+        if (typeof this.cmd === 'undefined') { return; }
         await this.externalProcess.run(this.cmd, program, 'recording pre start');
     }
 }
