@@ -54,6 +54,7 @@ interface ConfigInterface {
     recordedHistoryRetentionPeriodDays: number;
     fileExtension: string;
     reservesUpdateIntervalTime: number;
+    suppressReservesUpdateAllLog: boolean;
     thumbnail: string;
     thumbnailSize: string;
     thumbnailPosition: number;

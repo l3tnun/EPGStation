@@ -82,6 +82,7 @@ class ReservationManageModel extends Model {
     private reserves: ReserveProgram[] = []; // 予約
     private tuners: Tuner[] = [];
     private reservesPath: string;
+    private suppressReservesUpdateAllLog: boolean = false;
 
     constructor(
         programDB: ProgramsDBInterface,
@@ -92,7 +93,9 @@ class ReservationManageModel extends Model {
         this.programDB = programDB;
         this.rulesDB = rulesDB;
         this.ipc = ipc;
-        this.reservesPath = this.config.getConfig().reserves || path.join(__dirname, '..', '..', '..', '..', '..', 'data', 'reserves.json');
+        const config =  this.config.getConfig();
+        this.suppressReservesUpdateAllLog = !!config.suppressReservesUpdateAllLog;
+        this.reservesPath = config.reserves || path.join(__dirname, '..', '..', '..', '..', '..', 'data', 'reserves.json');
         this.readReservesFile();
 
         this.exeEventEmitter.setMaxListeners(1000);
@@ -612,7 +615,7 @@ class ReservationManageModel extends Model {
         // 通知
         this.ipc.notifIo();
 
-        this.log.system.info('updateAll done');
+        this.log.system.info('done updateAll');
     }
 
     /**
@@ -620,8 +623,10 @@ class ReservationManageModel extends Model {
      * @param manualId: manual id
      * @return Promise<void>
      */
-    public async updateManual(manualId: number): Promise<void> {
-        this.log.system.info(`start UpdateManualId: ${ manualId }`);
+    private async updateManual(manualId: number): Promise<void> {
+        if (!this.suppressReservesUpdateAllLog) {
+            this.log.system.info(`start UpdateManualId: ${ manualId }`);
+        }
 
         const exeId = await this.getExecution(0);
         const finalize = () => { this.unLockExecution(exeId); };
@@ -684,7 +689,9 @@ class ReservationManageModel extends Model {
             this.writeConflictLog(reserve);
         }
 
-        this.log.system.info(`UpdateManualId: ${ manualId } done`);
+        if (!this.suppressReservesUpdateAllLog) {
+            this.log.system.info(`UpdateManualId: ${ manualId } done`);
+        }
     }
 
     /**
@@ -698,7 +705,9 @@ class ReservationManageModel extends Model {
         const exeId = await this.getExecution(priority);
         const finalize = () => { this.unLockExecution(exeId); };
 
-        this.log.system.info(`start update rule: ${ ruleId }`);
+        if (!this.suppressReservesUpdateAllLog) {
+            this.log.system.info(`start update rule: ${ ruleId }`);
+        }
 
         // rule を取得
         let rule: DBSchema.RulesSchema | null = null;
@@ -708,6 +717,8 @@ class ReservationManageModel extends Model {
                 rule = result;
             }
         } catch (err) {
+            this.log.system.error(`rule id: ${ ruleId } is not found.`);
+            this.log.system.error(err);
             finalize();
             throw err;
         }
@@ -718,6 +729,8 @@ class ReservationManageModel extends Model {
             try {
                 programs = await this.programDB.findRule(this.createSearchOption(rule));
             } catch (err) {
+                this.log.system.error(`rule id: ${ ruleId } search error`);
+                this.log.system.error(err);
                 finalize();
                 throw err;
             }
@@ -801,7 +814,9 @@ class ReservationManageModel extends Model {
         // 通知
         if (needsNotify) { this.ipc.notifIo(); }
 
-        this.log.system.info(`update rule: ${ ruleId } done`);
+        if (!this.suppressReservesUpdateAllLog) {
+            this.log.system.info(`update rule: ${ ruleId } done`);
+        }
     }
 
     /**
