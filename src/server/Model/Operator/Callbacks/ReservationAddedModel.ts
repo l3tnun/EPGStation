@@ -5,10 +5,10 @@ import { ReservationManageModelInterface } from '../../Operator/Reservation/Rese
 import CallbackBaseModelInterface from './CallbackBaseModelInterface';
 
 /**
- * ReservationAddModel
+ * ReservationAddedModel
  * 録画準備開始後の処理
  */
-class ReservationAddModel extends Model implements CallbackBaseModelInterface {
+class ReservationAddedModel extends Model implements CallbackBaseModelInterface {
     private reservationManage: ReservationManageModelInterface;
     private externalProcess: ProgramExternalProcessModelInterface;
     private cmd: string;
@@ -22,7 +22,7 @@ class ReservationAddModel extends Model implements CallbackBaseModelInterface {
         this.reservationManage = reservationManage;
         this.externalProcess = externalProcess;
 
-        this.cmd = this.config.getConfig().reservationAddCommand;
+        this.cmd = this.config.getConfig().reservationAddedCommand;
     }
 
     public set(): void {
@@ -40,5 +40,5 @@ class ReservationAddModel extends Model implements CallbackBaseModelInterface {
     }
 }
 
-export default ReservationAddModel;
+export default ReservationAddedModel;
 
