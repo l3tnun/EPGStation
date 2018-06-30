@@ -2,9 +2,9 @@ import { spawn } from 'child_process';
 import ProcessUtil from '../../Util/ProcessUtil';
 import { ProgramSchema } from '../DB/DBSchema';
 import { ServicesDBInterface } from '../DB/ServicesDB';
-import Model from '../Model';
+import QueueProcessBaseModel from './QueueProcessBaseModel';
 
-interface ProgramExternalProcessModelInterface extends Model {
+interface ProgramExternalProcessModelInterface extends QueueProcessBaseModel {
     run(cmd: string, program: ProgramSchema, name: string): Promise<void>;
 }
 
@@ -12,7 +12,7 @@ interface ProgramExternalProcessModelInterface extends Model {
  * ProgramExternalProcessMode
  * 番組情報を元に外部コマンドを実行する
  */
-class ProgramExternalProcessModel extends Model implements ProgramExternalProcessModelInterface {
+class ProgramExternalProcessModel extends QueueProcessBaseModel implements ProgramExternalProcessModelInterface {
     private servicesDB: ServicesDBInterface;
 
     constructor(servicesDB: ServicesDBInterface) {
@@ -27,41 +27,47 @@ class ProgramExternalProcessModel extends Model implements ProgramExternalProces
      * @param name: process name
      */
     public async run(cmd: string, program: ProgramSchema, name: string): Promise<void> {
-        this.log.system.info(`${ name } process run: ${ cmd }`);
+        await this.push(async() => {
+            this.log.system.info(`${ name } process run: ${ cmd }`);
 
-        let cmds: ProcessUtil.Cmds;
-        try {
-            cmds = ProcessUtil.parseCmdStr(cmd);
-        } catch (err) {
-            this.log.system.error(<any> err);
+            let cmds: ProcessUtil.Cmds;
+            try {
+                cmds = ProcessUtil.parseCmdStr(cmd);
+            } catch (err) {
+                this.log.system.error(<any> err);
 
-            return;
-        }
+                return;
+            }
 
-        const channel = await this.servicesDB.findId(program.channelId);
+            const channel = await this.servicesDB.findId(program.channelId);
 
-        const child = spawn(cmds.bin, cmds.args, {
-            env: {
-                PROGRAMID: program.id,
-                CHANNELTYPE: program.channelType,
-                CHANNELID: program.channelId,
-                CHANNELNAME: channel === null ? null : channel.name,
-                STARTAT: program.startAt,
-                ENDAT: program.endAt,
-                DURATION: program.duration,
-                NAME: program.name,
-                DESCRIPTION: program.description,
-                EXTENDED: program.extended,
-            },
-        });
+            return new Promise<void>((resolve: () => void) => {
+                const child = spawn(cmds.bin, cmds.args, {
+                    env: {
+                        PROGRAMID: program.id,
+                        CHANNELTYPE: program.channelType,
+                        CHANNELID: program.channelId,
+                        CHANNELNAME: channel === null ? null : channel.name,
+                        STARTAT: program.startAt,
+                        ENDAT: program.endAt,
+                        DURATION: program.duration,
+                        NAME: program.name,
+                        DESCRIPTION: program.description,
+                        EXTENDED: program.extended,
+                    },
+                });
 
-        child.on('exit', () => {
-            this.log.system.info(`${ name } process is fin`);
-        });
+                child.on('exit', () => {
+                    this.log.system.info(`${ name } process is fin`);
+                    resolve();
+                });
 
-        child.on('error', (err) => {
-            this.log.system.error(`${ name } process is error`);
-            this.log.system.error(String(err));
+                child.on('error', (err) => {
+                    this.log.system.error(`${ name } process is error`);
+                    this.log.system.error(String(err));
+                    resolve();
+                });
+            });
         });
     }
 }
