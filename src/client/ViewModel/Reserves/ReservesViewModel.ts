@@ -9,9 +9,10 @@ import StorageTemplateModel from '../../Model/Storage/StorageTemplateModel';
 import Util from '../../Util/Util';
 import ViewModel from '../ViewModel';
 
-enum Mode {
+enum ReserveMode {
     reserves,
     conflicts,
+    overlaps,
 }
 
 /**
@@ -24,7 +25,7 @@ class ReservesViewModel extends ViewModel {
     private setting: StorageTemplateModel<SettingValue>;
     private limit: number = 0;
     private offset: number = 0;
-    private mode: Mode;
+    private mode: ReserveMode;
 
     constructor(
         reservesApiModel: ReservesApiModelInterface,
@@ -47,9 +48,11 @@ class ReservesViewModel extends ViewModel {
         super.init(status);
 
         if (typeof m.route.param('mode') === 'undefined') {
-            this.mode = Mode.reserves;
+            this.mode = ReserveMode.reserves;
         } else if (m.route.param('mode') === 'conflicts') {
-            this.mode = Mode.conflicts;
+            this.mode = ReserveMode.conflicts;
+        } else if (m.route.param('mode') === 'overlaps') {
+            this.mode = ReserveMode.overlaps;
         }
 
         if (status === 'reload' || status === 'updateIo') {
@@ -83,10 +86,26 @@ class ReservesViewModel extends ViewModel {
      * 予約を更新する
      */
     private async fetch(limit: number, offset: number): Promise<void> {
-        if (this.mode === Mode.reserves) {
+        if (this.mode === ReserveMode.reserves) {
             return await this.reservesApiModel.fetchReserves(limit, offset);
-        } else {
+        } else if (this.mode === ReserveMode.conflicts) {
             return await this.reservesApiModel.fetchConflicts(limit, offset);
+        } else {
+            return await this.reservesApiModel.fetchOverlaps(limit, offset);
+        }
+    }
+
+    /**
+     * get title
+     * @return string
+     */
+    public getTitle(): string {
+        if (this.mode === ReserveMode.reserves) {
+            return '予約';
+        } else if (this.mode === ReserveMode.conflicts) {
+            return '競合';
+        } else {
+            return '重複';
         }
     }
 
@@ -95,10 +114,12 @@ class ReservesViewModel extends ViewModel {
      * @return apid.Reserves
      */
     public getReserves(): apid.Reserves {
-        if (this.mode === Mode.reserves) {
+        if (this.mode === ReserveMode.reserves) {
             return this.reservesApiModel.getReserves();
-        } else {
+        } else if (this.mode === ReserveMode.conflicts) {
             return this.reservesApiModel.getConflicts();
+        } else {
+            return this.reservesApiModel.getOverlaps();
         }
     }
 
@@ -145,7 +166,11 @@ class ReservesViewModel extends ViewModel {
     public startUpdateReserves(): Promise<void> {
         return this.scheduleApiModel.startUpdateReserves();
     }
+
+    public getMode(): ReserveMode {
+        return this.mode;
+    }
 }
 
-export default ReservesViewModel;
+export { ReserveMode, ReservesViewModel };
 

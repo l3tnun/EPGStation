@@ -7,10 +7,12 @@ import * as path from 'path';
 import * as apid from '../../../../../node_modules/mirakurun/api';
 import CreateMirakurunClient from '../../../Util/CreateMirakurunClient';
 import DateUtil from '../../../Util/DateUtil';
+import StrUtil from '../../../Util/StrUtil';
 import Util from '../../../Util/Util';
 import * as DBSchema from '../../DB/DBSchema';
 import { ProgramsDBInterface } from '../../DB/ProgramsDB';
 import { RecordedDBInterface } from '../../DB/RecordedDB';
+import { RecordedHistoryDBInterface } from '../../DB/RecordedHistoryDB';
 import { ServicesDBInterface } from '../../DB/ServicesDB';
 import Model from '../../Model';
 import { ReservationManageModelInterface } from '../Reservation/ReservationManageModel';
@@ -47,12 +49,14 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
     private recordedDB: RecordedDBInterface;
     private servicesDB: ServicesDBInterface;
     private programsDB: ProgramsDBInterface;
+    private recordedHistoryDB: RecordedHistoryDBInterface;
     private reservationManage: ReservationManageModelInterface;
 
     constructor(
         recordedDB: RecordedDBInterface,
         servicesDB: ServicesDBInterface,
         programsDB: ProgramsDBInterface,
+        recordedHistoryDB: RecordedHistoryDBInterface,
         reservationManage: ReservationManageModelInterface,
     ) {
         super();
@@ -60,6 +64,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
         this.recordedDB = recordedDB;
         this.servicesDB = servicesDB;
         this.programsDB = programsDB;
+        this.recordedHistoryDB = recordedHistoryDB;
         this.reservationManage = reservationManage;
         this.mirakurun = CreateMirakurunClient.get();
     }
@@ -141,8 +146,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
     public check(reserves: ReserveProgram[]): void {
         const now = new Date().getTime();
         reserves.forEach((reserve) => {
-            // スキップ || コンフリクト || 時刻超過
-            if (reserve.isSkip || now > reserve.program.endAt) { return; }
+            if (reserve.isSkip || (<RuleReserveProgram> reserve).isOverlap || now > reserve.program.endAt) { return; }
 
             if (reserve.program.startAt - now < RecordingManageModel.prepTime && !this.isRecording(reserve.program.id)) {
                 // 録画準備
@@ -397,6 +401,9 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
         // stop recFile
         recFile.end();
 
+        // RecordedHistory に保存する番組情報
+        let historyProgram: DBSchema.RecordedHistorySchema | null = null;
+        const ruleId = (<RuleReserveProgram> recData.reserve).ruleId || null;
         try {
             if (recorded === null) {
                 // DB に録画データが書き込めなかったとき
@@ -411,7 +418,6 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
                 // 番組情報を最新に更新する
                 const program = await this.programsDB.findId(recorded.programId);
                 if (program !== null) {
-                    const ruleId = (<RuleReserveProgram> recData.reserve).ruleId;
                     await this.recordedDB.replace({
                         id: recorded.id,
                         programId: recorded.programId,
@@ -432,12 +438,24 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
                         audioSamplingRate: program.audioSamplingRate,
                         audioComponentType: program.audioComponentType,
                         recPath: recData.recPath!,
-                        ruleId: typeof ruleId === 'undefined' ? null : ruleId,
+                        ruleId: ruleId,
                         thumbnailPath: null,
                         recording: false,
                         protection: false,
                         filesize: null,
                     });
+
+                    historyProgram = {
+                        id: 0,
+                        name: program.name,
+                        endAt: program.endAt,
+                    };
+                } else {
+                    historyProgram = {
+                        id: 0,
+                        name: recorded.name,
+                        endAt: recorded.endAt,
+                    };
                 }
 
                 // update filesize
@@ -448,6 +466,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
                 this.finEventsNotify(recorded, encodeOption);
 
                 this.log.system.info(`recording finish: ${ recData.reserve.program.id } ${ recData.reserve.program.name }`);
+
             } else {
                 // recorded から削除されていた
                 this.finEventsNotify(null, null);
@@ -463,6 +482,17 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
 
         // 録画中から削除
         this.removeRecording(recData.reserve.program.id);
+
+        if (historyProgram !== null && ruleId !== null) {
+            // 番組名保存
+            historyProgram.name = StrUtil.deleteBrackets(historyProgram.name);
+            this.log.system.info(`save recorded history: ${ historyProgram.name }`);
+            await this.recordedHistoryDB.insert(historyProgram);
+
+            // overlpa 更新
+            await this.reservationManage.updateRule(ruleId)
+            .catch(() => {});
+        }
     }
 
     /**

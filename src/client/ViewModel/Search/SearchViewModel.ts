@@ -59,6 +59,8 @@ class SearchViewModel extends ViewModel {
     public isFree: boolean = false;
     public durationMin: number = 0;
     public durationMax: number = 0;
+    public avoidDuplicate: boolean = false;
+    public periodToAvoidDuplicate: number = 6;
     public enable: boolean = true;
     public directory: string = '';
     public recordedFormat: string = '';
@@ -163,6 +165,8 @@ class SearchViewModel extends ViewModel {
         this.isFree = false;
         this.durationMin = 0;
         this.durationMax = 0;
+        this.avoidDuplicate = false;
+        this.periodToAvoidDuplicate = 6;
 
         if (this.rule !== null) {
             if (typeof this.rule.keyword !== 'undefined') { this.keyword = this.rule.keyword; }
@@ -194,6 +198,8 @@ class SearchViewModel extends ViewModel {
             if (typeof this.rule.isFree !== 'undefined') { this.isFree = this.rule.isFree; }
             if (typeof this.rule.durationMin !== 'undefined') { this.durationMin = Math.floor(this.rule.durationMin / 60); }
             if (typeof this.rule.durationMax !== 'undefined') { this.durationMax = Math.floor(this.rule.durationMax / 60); }
+            this.avoidDuplicate = this.rule.avoidDuplicate;
+            if (typeof this.rule.periodToAvoidDuplicate !== 'undefined') { this.periodToAvoidDuplicate = this.rule.periodToAvoidDuplicate; }
         }
 
         if (typeof m.route.param('keyword') !== 'undefined') {
@@ -280,7 +286,7 @@ class SearchViewModel extends ViewModel {
      * getReserve
      * @return program id を指定して状態を取得する
      */
-    public getReserveStatus(programId: apid.ProgramId): 'reserve' | 'conflict' | 'skip' | null {
+    public getReserveStatus(programId: apid.ProgramId): 'reserve' | 'conflict' | 'skip' | 'overlap' | null {
         const reserves = this.reservesApiModel.getAllId();
         if (reserves === null || typeof reserves[programId] === 'undefined') { return null; }
 
@@ -446,6 +452,10 @@ class SearchViewModel extends ViewModel {
         }
 
         if (this.durationMax <= this.durationMin) { this.durationMax = 0; }
+
+        if (this.periodToAvoidDuplicate < 0) {
+            this.periodToAvoidDuplicate = 6;
+        }
     }
 
     /**
@@ -488,6 +498,11 @@ class SearchViewModel extends ViewModel {
         if (this.isFree) { option.isFree = true; }
         if (this.durationMin > 0) { option.durationMin = this.durationMin * 60; }
         if (this.durationMax > 0 && this.durationMax >= this.durationMin) { option.durationMax = this.durationMax * 60; }
+
+        if (this.avoidDuplicate && this.periodToAvoidDuplicate >= 0) {
+            option.avoidDuplicate = true;
+            option.periodToAvoidDuplicate = this.periodToAvoidDuplicate;
+        }
 
         return option;
     }

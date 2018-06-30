@@ -24,6 +24,7 @@ interface ReserveAllId {
     reserves: ReserveAllItem[];
     conflicts: ReserveAllItem[];
     skips: ReserveAllItem[];
+    overlaps: ReserveAllItem[];
 }
 
 interface ReserveAllItem {
@@ -46,8 +47,10 @@ interface ReservationManageModelInterface extends Model {
     getReserves(limit?: number, offset?: number): ReserveLimit;
     getConflicts(limit?: number, offset?: number): ReserveLimit;
     getSkips(limit?: number, offset?: number): ReserveLimit;
+    getOverlaps(limit?: number, offset?: number): ReserveLimit;
     cancel(id: apid.ProgramId): void;
     removeSkip(id: apid.ProgramId): Promise<void>;
+    disableOverlap(id: apid.ProgramId): Promise<void>;
     addReserve(option: AddReserveInterface): Promise<void>;
     editReserve(option: AddReserveInterface): Promise<void>;
     updateAll(): Promise<void>;
@@ -218,6 +221,7 @@ class ReservationManageModel extends Model {
         const reserves: ReserveAllItem[] = [];
         const conflicts: ReserveAllItem[] = [];
         const skips: ReserveAllItem[] = [];
+        const overlaps: ReserveAllItem[] = [];
 
         this.reserves.forEach((reserve) => {
             const result: ReserveAllItem = {
@@ -231,6 +235,8 @@ class ReservationManageModel extends Model {
                 conflicts.push(result);
             } else if (reserve.isSkip) {
                 skips.push(result);
+            } else if ((<RuleReserveProgram> reserve).isOverlap) {
+                overlaps.push(result);
             } else {
                 reserves.push(result);
             }
@@ -240,6 +246,7 @@ class ReservationManageModel extends Model {
             reserves: reserves,
             conflicts: conflicts,
             skips: skips,
+            overlaps: overlaps,
         };
     }
 
@@ -249,7 +256,7 @@ class ReservationManageModel extends Model {
      */
     public getReserves(limit?: number, offset: number = 0): ReserveLimit {
         const reserves = this.reserves.filter((reserve) => {
-            return !reserve.isConflict && !reserve.isSkip;
+            return !reserve.isConflict && !reserve.isSkip && !Boolean((<RuleReserveProgram> reserve).isOverlap);
         });
 
         return {
@@ -289,6 +296,21 @@ class ReservationManageModel extends Model {
     }
 
     /**
+     * overlaps を取得する
+     * @return ReserveProgram[]
+     */
+    public getOverlaps(limit?: number, offset: number = 0): ReserveLimit {
+        const reserves = this.reserves.filter((reserve) => {
+            return Boolean((<RuleReserveProgram> reserve).isOverlap);
+        });
+
+        return {
+            reserves: typeof limit === 'undefined' ? reserves : reserves.slice(offset, limit + offset),
+            total: reserves.length,
+        };
+    }
+
+    /**
      * 予約削除(手動予約) or 予約スキップ(ルール予約)
      * @param id: program id
      * @return Promise<void>
@@ -306,11 +328,19 @@ class ReservationManageModel extends Model {
                     needsUpdate = true;
                     break;
                 } else {
-                    // ルール予約ならスキップを有効化
-                    this.reserves[i].isSkip = true;
-                    // skip すれば録画されないのでコンフリクトはしない
-                    this.reserves[i].isConflict = false;
-                    this.log.system.info(`add skip: ${ id }`);
+                    // ルール予約
+                    if (!!(<DBSchema.ProgramSchemaWithOverlap> this.reserves[i].program).overlap) {
+                        // overlap
+                        (<RuleReserveProgram> this.reserves[i]).disableOverlap = false;
+                        (<RuleReserveProgram> this.reserves[i]).isOverlap = true;
+                        this.log.system.info(`add overlap: ${ id }`);
+                    } else {
+                        // skip
+                        this.reserves[i].isSkip = true;
+                        // skip すれば録画されないのでコンフリクトはしない
+                        this.reserves[i].isConflict = false;
+                        this.log.system.info(`add skip: ${ id }`);
+                    }
                     needsUpdate = true;
                     break;
                 }
@@ -360,7 +390,31 @@ class ReservationManageModel extends Model {
                 this.log.system.info(`remove skip: ${ id }`);
 
                 if (typeof (<RuleReserveProgram> this.reserves[i]).ruleId !== 'undefined') {
-                    this.updateRule((<RuleReserveProgram> this.reserves[i]).ruleId!);
+                    this.updateRule((<RuleReserveProgram> this.reserves[i]).ruleId);
+                }
+                break;
+            }
+        }
+
+        this.unLockExecution(exeId);
+    }
+
+    /**
+     * overlap を解除する
+     * @param id: program id
+     * @return Promise<void>
+     */
+    public async disableOverlap(id: apid.ProgramId): Promise<void> {
+        const exeId = await this.getExecution(1);
+
+        for (let i = 0; i < this.reserves.length; i++) {
+            if (this.reserves[i].program.id === id) {
+                (<RuleReserveProgram> this.reserves[i]).disableOverlap = true;
+                (<RuleReserveProgram> this.reserves[i]).isOverlap = false;
+                this.log.system.info(`disable overlap: ${ id }`);
+
+                if (typeof (<RuleReserveProgram> this.reserves[i]).ruleId !== 'undefined') {
+                    this.updateRule((<RuleReserveProgram> this.reserves[i]).ruleId);
                 }
                 break;
             }
@@ -418,7 +472,7 @@ class ReservationManageModel extends Model {
             addReserve.encodeOption = option.encode;
         }
 
-        // 追加する予約情報と重複する時間帯の予約済み番組情報を conflict, skip は除外して取得
+        // 追加する予約情報と重複する時間帯の予約済み番組情報を conflict, skip, overlap は除外して取得
         // すでに予約済みの場合はエラー
         const reserves: ReserveProgram[] = [];
         for (const reserve of this.reserves) {
@@ -431,6 +485,7 @@ class ReservationManageModel extends Model {
             // 該当する予約情報をコピー
             if (!reserve.isConflict
                 && !reserve.isSkip
+                && !Boolean((<RuleReserveProgram> reserve).isOverlap)
                 && reserve.program.startAt <= addReserve.program.endAt
                 && reserve.program.endAt >= addReserve.program.startAt
             ) {
@@ -658,7 +713,7 @@ class ReservationManageModel extends Model {
         }
 
         // 番組情報を取得
-        let programs: DBSchema.ProgramSchema[] = [];
+        let programs: DBSchema.ProgramSchemaWithOverlap[] = [];
         if (rule !== null) {
             try {
                 programs = await this.programDB.findRule(this.createSearchOption(rule));
@@ -670,6 +725,7 @@ class ReservationManageModel extends Model {
 
         const skipIndex: { [key: number]: boolean } = {}; // スキップ情報
         const diffIndex: { [key: number]: ReserveProgram } = {}; // 差分情報
+        const overlapIndex: { [key: number]: boolean } = {}; // overlap 有効状態
         // ruleId を除外した予約情報を生成
         const matches: ReserveProgram[] = [];
         for (const reserve of this.reserves) {
@@ -679,6 +735,11 @@ class ReservationManageModel extends Model {
             // 差分情報記録
             if ((<RuleReserveProgram> reserve).ruleId === ruleId) {
                 diffIndex[reserve.program.id] = reserve;
+            }
+
+            // overlap 有効状態を記録
+            if ((<RuleReserveProgram> reserve).disableOverlap) {
+                overlapIndex[reserve.program.id] = (<RuleReserveProgram> reserve).disableOverlap;
             }
 
             if (typeof (<RuleReserveProgram> reserve).ruleId === 'undefined' || (<RuleReserveProgram> reserve).ruleId !== ruleId) {
@@ -696,9 +757,15 @@ class ReservationManageModel extends Model {
                 const data: RuleReserveProgram = {
                     program: program,
                     ruleId: ruleId,
-                    isSkip: typeof skipIndex[program.id] === 'undefined' ? false : skipIndex[program.id],
+                    isSkip: !!skipIndex[program.id],
+                    isOverlap: Boolean(program.overlap),
+                    disableOverlap: !!overlapIndex[program.id],
                     isConflict: false,
                 };
+
+                if (data.disableOverlap) {
+                    data.isOverlap = false;
+                }
 
                 const option = this.createOption(rule);
                 if (option !== null) {
@@ -753,27 +820,29 @@ class ReservationManageModel extends Model {
     private createSearchOption(rule: DBSchema.RulesSchema): SearchInterface {
         const search: SearchInterface = {
             week: rule.week,
+            avoidDuplicate: rule.avoidDuplicate,
         };
 
-        if (rule.keyword !== null)       { search.keyword       = rule.keyword;       }
-        if (rule.ignoreKeyword !== null) { search.ignoreKeyword = rule.ignoreKeyword; }
-        if (rule.keyCS !== null)         { search.keyCS         = rule.keyCS;         }
-        if (rule.keyRegExp !== null)     { search.keyRegExp     = rule.keyRegExp;     }
-        if (rule.title !== null)         { search.title         = rule.title;         }
-        if (rule.description !== null)   { search.description   = rule.description;   }
-        if (rule.extended !== null)      { search.extended      = rule.extended;      }
-        if (rule.GR !== null)            { search.GR            = rule.GR;            }
-        if (rule.BS !== null)            { search.BS            = rule.BS;            }
-        if (rule.CS !== null)            { search.CS            = rule.CS;            }
-        if (rule.SKY !== null)           { search.SKY           = rule.SKY;           }
-        if (rule.station !== null)       { search.station       = rule.station;       }
-        if (rule.genrelv1 !== null)      { search.genrelv1      = rule.genrelv1;      }
-        if (rule.genrelv2 !== null)      { search.genrelv2      = rule.genrelv2;      }
-        if (rule.startTime !== null)     { search.startTime     = rule.startTime;     }
-        if (rule.timeRange !== null)     { search.timeRange     = rule.timeRange;     }
-        if (rule.isFree !== null)        { search.isFree        = rule.isFree;        }
-        if (rule.durationMin !== null)   { search.durationMin   = rule.durationMin;   }
-        if (rule.durationMax !== null)   { search.durationMax   = rule.durationMax;   }
+        if (rule.keyword !== null)                  { search.keyword       = rule.keyword;       }
+        if (rule.ignoreKeyword !== null)            { search.ignoreKeyword = rule.ignoreKeyword; }
+        if (rule.keyCS !== null)                    { search.keyCS         = rule.keyCS;         }
+        if (rule.keyRegExp !== null)                { search.keyRegExp     = rule.keyRegExp;     }
+        if (rule.title !== null)                    { search.title         = rule.title;         }
+        if (rule.description !== null)              { search.description   = rule.description;   }
+        if (rule.extended !== null)                 { search.extended      = rule.extended;      }
+        if (rule.GR !== null)                       { search.GR            = rule.GR;            }
+        if (rule.BS !== null)                       { search.BS            = rule.BS;            }
+        if (rule.CS !== null)                       { search.CS            = rule.CS;            }
+        if (rule.SKY !== null)                      { search.SKY           = rule.SKY;           }
+        if (rule.station !== null)                  { search.station       = rule.station;       }
+        if (rule.genrelv1 !== null)                 { search.genrelv1      = rule.genrelv1;      }
+        if (rule.genrelv2 !== null)                 { search.genrelv2      = rule.genrelv2;      }
+        if (rule.startTime !== null)                { search.startTime     = rule.startTime;     }
+        if (rule.timeRange !== null)                { search.timeRange     = rule.timeRange;     }
+        if (rule.isFree !== null)                   { search.isFree        = rule.isFree;        }
+        if (rule.durationMin !== null)              { search.durationMin   = rule.durationMin;   }
+        if (rule.durationMax !== null)              { search.durationMax   = rule.durationMax;   }
+        if (rule.periodToAvoidDuplicate !== null)   { search.periodToAvoidDuplicate = rule.periodToAvoidDuplicate; }
 
         return search;
     }
@@ -905,7 +974,7 @@ class ReservationManageModel extends Model {
 
             // 重複の評価
             for (const reserve of reserves) {
-                if (matches[reserve.idx].isSkip) { continue; }
+                if (matches[reserve.idx].isSkip || (<RuleReserveProgram> matches[reserve.idx]).isOverlap) { continue; }
 
                 let isConflict = true;
                 for (let i = 0; i < this.tuners.length; i++) {

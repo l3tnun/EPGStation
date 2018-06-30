@@ -23,6 +23,7 @@ class PostgreSQLProgramsDB extends ProgramsDB {
             + 'duration bigint not null, '
             + 'isFree boolean not null, '
             + 'name text not null, '
+            + 'shortName text null, '
             + 'description text null, '
             + 'extended text null, '
             + 'genre1 integer null, '
@@ -62,7 +63,7 @@ class PostgreSQLProgramsDB extends ProgramsDB {
      * @return string
      */
     public getAllColumns(): string {
-        return 'id, channelId as "channelId", eventId as "eventId", serviceId as "serviceId", networkId as "networkId", startAt as "startAt", endAt as "endAt", startHour as "startHour", week, duration, isFree as "isFree", name, description, extended, genre1, genre2, channelType as "channelType", channel, videoType as "videoType", videoResolution as "videoResolution", videoStreamContent as "videoStreamContent", videoComponentType as "videoComponentType", audioSamplingRate as "audioSamplingRate", audioComponentType as "audioComponentType"';
+        return 'id, channelId as "channelId", eventId as "eventId", serviceId as "serviceId", networkId as "networkId", startAt as "startAt", endAt as "endAt", startHour as "startHour", week, duration, isFree as "isFree", name, shortName as "shortName", description, extended, genre1, genre2, channelType as "channelType", channel, videoType as "videoType", videoResolution as "videoResolution", videoStreamContent as "videoStreamContent", videoComponentType as "videoComponentType", audioSamplingRate as "audioSamplingRate", audioComponentType as "audioComponentType"';
     }
 
     /**

@@ -1,6 +1,7 @@
 import * as m from 'mithril';
 import Util from '../../Util/Util';
 import ReservesMenuViewModel from '../../ViewModel/Reserves/ReservesMenuViewModel';
+import { ReserveMode, ReservesViewModel } from '../../ViewModel/Reserves/ReservesViewModel';
 import factory from '../../ViewModel/ViewModelFactory';
 import Component from '../Component';
 
@@ -9,16 +10,20 @@ import Component from '../Component';
  */
 class ReservesMenuComponent extends Component<void> {
     private viewModel: ReservesMenuViewModel;
+    private reservesViewModel: ReservesViewModel;
 
     constructor() {
         super();
         this.viewModel = <ReservesMenuViewModel> factory.get('ReservesMenuViewModel');
+        this.reservesViewModel = <ReservesViewModel> factory.get('ReservesViewModel');
     }
 
     /**
      * view
      */
     public view(): m.Child {
+        const isOverlap = this.reservesViewModel.getMode() === ReserveMode.overlaps;
+
         return m('div', { class: 'reserve-menu' }, [
             this.createItem({
                 onclick: () => {
@@ -37,7 +42,7 @@ class ReservesMenuComponent extends Component<void> {
                 onclick: () => {
                     this.viewModel.openDelete();
                 },
-            }, 'delete', 'delete'),
+            }, isOverlap ? 'lock_open' : 'delete', isOverlap ? '解除' : 'delete'),
         ]);
     }
 

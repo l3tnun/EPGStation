@@ -48,7 +48,7 @@ namespace CreateStreamLink {
             return `./api/streams/live/${ channelId }/mpegts/playlist?mode=${ mode }`;
         } else {
             // url scheme 設定があったので使用する
-            let source = `./api/streams/live/${ channelId }/mpegts?mode=${ mode }`;
+            let source = `${ Util.getSubDirectory() }/api/streams/live/${ channelId }/mpegts?mode=${ mode }`;
             if (baseUrl.match(/vlc-x-callback/)) { source = encodeURIComponent(source); }
 
             return baseUrl.replace(/ADDRESS/g, location.host + source);

@@ -54,7 +54,7 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
         const query = `insert into ${ DBSchema.TableName.Rules } (`
             + this.createInsertColumnStr(false)
         + ') VALUES ('
-            + this.operator.createValueStr(1, 30)
+            + this.operator.createValueStr(1, 32)
         + `) ${ this.operator.getReturningStr() }`;
 
         const value: any[] = [];
@@ -78,6 +78,8 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
         value.push(rule.isFree);
         value.push(rule.durationMin);
         value.push(rule.durationMax);
+        value.push(rule.avoidDuplicate);
+        value.push(rule.periodToAvoidDuplicate);
         value.push(rule.enable);
         value.push(rule.directory);
         value.push(rule.recordedFormat);
@@ -119,6 +121,8 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
             + 'isFree, '
             + 'durationMin, '
             + 'durationMax, '
+            + 'avoidDuplicate, '
+            + 'periodToAvoidDuplicate, '
             + 'enable, '
             + 'directory, '
             + 'recordedFormat, '
@@ -140,7 +144,7 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
         const query = `insert into ${ DBSchema.TableName.Rules } (`
             + this.createInsertColumnStr(true)
         + ') VALUES ('
-            + this.operator.createValueStr(1, 31)
+            + this.operator.createValueStr(1, 33)
         + ')';
 
         const values: any[] = [];
@@ -167,6 +171,8 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
             value.push(rule.isFree);
             value.push(rule.durationMin);
             value.push(rule.durationMax);
+            value.push(rule.avoidDuplicate);
+            value.push(rule.periodToAvoidDuplicate);
             value.push(rule.enable);
             value.push(rule.directory);
             value.push(rule.recordedFormat);
@@ -242,6 +248,9 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
         else { querys.push('durationMin = null'); }
         if (rule.durationMax !== null) { querys.push(`durationMax = ${ rule.durationMax }`); }
         else { querys.push('durationMax = null'); }
+        querys.push(`avoidDuplicate = ${ this.operator.convertBoolean(rule.avoidDuplicate) }`);
+        if (rule.periodToAvoidDuplicate !== null) { querys.push(`periodToAvoidDuplicate = ${ rule.periodToAvoidDuplicate }`); }
+        else { querys.push('periodToAvoidDuplicate = null'); }
         querys.push(`enable = ${ this.operator.convertBoolean(rule.enable) }`);
 
         if (rule.directory !== null) {

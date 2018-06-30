@@ -10,10 +10,12 @@ interface ReservesModelInterface extends ApiModel {
     getReserves(limit: number, offset: number): Promise<{}[]>;
     getConflicts(limit: number, offset: number): Promise<{}[]>;
     getSkips(limit: number, offset: number): Promise<{}[]>;
+    getOverlaps(limit: number, offset: number): Promise<{}[]>;
     addReserve(option: AddReserveInterface): Promise<void>;
     editReserve(option: AddReserveInterface): Promise<void>;
     cancelReserve(programId: apid.ProgramId): Promise<void>;
     removeReserveSkip(programId: apid.ProgramId): Promise<void>;
+    disableReserveOverlap(programId: apid.ProgramId): Promise<void>;
 }
 
 namespace ReservesModelInterface {
@@ -92,6 +94,22 @@ class ReservesModel extends ApiModel implements ReservesModelInterface {
     }
 
     /**
+     * 予約 overlap 情報を取得
+     * @param limit: limit
+     * @param offset: offset
+     * @return Promise<any>
+     */
+    public async getOverlaps(limit: number, offset: number): Promise<any> {
+        const result = await this.ipc.getReserveOverlaps(limit, offset);
+
+        return {
+            reserves: this.fixReserves(result.reserves),
+            total: result.total,
+        };
+    }
+
+
+    /**
      * ReserveProgram[] の修正
      * @param reserves: ReserveProgram[]
      * @return any[]
@@ -154,6 +172,15 @@ class ReservesModel extends ApiModel implements ReservesModelInterface {
      */
     public async removeReserveSkip(programId: apid.ProgramId): Promise<void> {
         await this.ipc.removeReserveSkip(programId);
+    }
+
+    /**
+     * overlap 状態を解除する
+     * @param programId: program id
+     * @return Promise<void>
+     */
+    public async disableReserveOverlap(programId: apid.ProgramId): Promise<void> {
+        await this.ipc.disableReserveOverlap(programId);
     }
 }
 

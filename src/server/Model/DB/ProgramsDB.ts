@@ -59,7 +59,7 @@ interface ProgramsDBInterface extends DBTableBase {
     findBroadcastingChanel(channelId: apid.ServiceItemId, addition?: apid.UnixtimeMS): Promise<DBSchema.ScheduleProgramItem[]>;
     findId(id: number, isNow?: boolean): Promise<DBSchema.ProgramSchema | null>;
     findIdMiniColumn(id: number): Promise<DBSchema.ScheduleProgramItem | null>;
-    findRule(option: SearchInterface, isMinColumn?: boolean, limit?: number | null): Promise<DBSchema.ProgramSchema[]>;
+    findRule(option: SearchInterface, isMinColumn?: boolean, limit?: number | null): Promise<DBSchema.ProgramSchemaWithOverlap[]>;
 }
 
 /**
@@ -132,6 +132,7 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
                 + 'duration,'
                 + 'isFree,'
                 + 'name,'
+                + 'shortName,'
                 + 'description,'
                 + 'extended,'
                 + 'genre1,'
@@ -176,6 +177,7 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
             const channelType = channelTypes[program.networkId][program.serviceId].type;
             const channel = channelTypes[program.networkId][program.serviceId].channel;
 
+            const name = StrUtil.toHalf(program.name);
             const tmp = [
                 program.id,
                 parseInt(program.networkId + (program.serviceId / 100000).toFixed(5).slice(2), 10),
@@ -188,7 +190,8 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
                 date.getDay(),
                 program.duration,
                 program.isFree,
-                StrUtil.toHalf(program.name),
+                name,
+                StrUtil.deleteBrackets(name),
                 typeof program.description === 'undefined' || program.description === '' ? null : StrUtil.toHalf(program.description),
                 this.createExtendedStr(program.extended),
                 genre1,
@@ -223,9 +226,9 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
                 let valueCnt = 0;
                 for (let i = 0; i < cnt; i++) {
                     str += '( '
-                    + this.operator.createValueStr(valueCnt + 1, valueCnt + 24)
+                    + this.operator.createValueStr(valueCnt + 1, valueCnt + 25)
                     + ' ),';
-                    valueCnt += 24;
+                    valueCnt += 25;
                 }
                 str = str.substr(0, str.length - 1);
 
@@ -242,6 +245,7 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
                         + 'duration = excluded.duration, '
                         + 'isFree = excluded.isFree, '
                         + 'name = excluded.name, '
+                        + 'shortName = excluded.shortName, '
                         + 'description = excluded.description, '
                         + 'extended = excluded.extended, '
                         + 'genre1 = excluded.genre1, '
@@ -323,10 +327,10 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
     }
 
     /**
-     * @param programs: ScheduleProgramItem[] | ProgramSchema[]
-     * @return ScheduleProgramItem[] | ProgramSchema[]
+     * @param programs: ScheduleProgramItem[] | ProgramSchema[] | ProgramSchemaWithOverlap[]
+     * @return ScheduleProgramItem[] | ProgramSchema[] | ProgramSchemaWithOverlap[]
      */
-    protected fixResults(programs: DBSchema.ScheduleProgramItem[] | DBSchema.ProgramSchema[]): DBSchema.ScheduleProgramItem[] | DBSchema.ProgramSchema[] {
+    protected fixResults(programs: DBSchema.ScheduleProgramItem[] | DBSchema.ProgramSchema[] | DBSchema.ProgramSchemaWithOverlap[]): DBSchema.ScheduleProgramItem[] | DBSchema.ProgramSchema[] | DBSchema.ProgramSchemaWithOverlap[] {
         return programs;
     }
 
@@ -406,14 +410,41 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
     /**
      * ルール検索
      * @param option: SearchInterface
-     * @return Promise<DBSchema.ProgramSchema[]>
+     * @return Promise<DBSchema.ProgramSchemaWithOverlap[]>
      */
-    public async findRule(option: SearchInterface, isMinColumn: boolean = false, limit: number | null = null): Promise<DBSchema.ProgramSchema[]> {
-        const column = isMinColumn ? this.getMinColumns() : this.getAllColumns();
+    public async findRule(option: SearchInterface, isMinColumn: boolean = false, limit: number | null = null): Promise<DBSchema.ProgramSchemaWithOverlap[]> {
+        let column = isMinColumn ? this.getMinColumns() : this.getAllColumns();
+
+        // 重複回避
+        if (!!option.avoidDuplicate && typeof option.periodToAvoidDuplicate !== 'undefined') {
+            const period = option.periodToAvoidDuplicate * 24 * 60 * 60 * 1000;
+            const now = new Date().getTime();
+            column += ', case when id in '
+                + '('
+                + `select P.id from ${ DBSchema.TableName.Programs } as P, ${ DBSchema.TableName.RecordedHistory } as R`
+                + ' where P.shortName = R.name'
+                + ` and R.endAt <= ${ now }`;
+            if (option.periodToAvoidDuplicate > 0) {
+                column += ` and R.endAt >= ${ now - period } and R.endAt <= ${ now }`
+                    + ` and P.endAt <= (R.endAt + ${ period })`;
+            }
+
+            column += `) then ${ this.getOverlapColumn() } end`
+                + ' as overlap';
+        }
+
         let query = `select ${ column } from ${ DBSchema.TableName.Programs } ${ this.createQuery(option) } order by startAt asc`;
         if (limit !== null) { query += ` limit ${ limit }`; }
 
         return <DBSchema.ProgramSchema[]> this.fixResults(<DBSchema.ProgramSchema[]> await this.runFindRule(query, Boolean(option.keyCS)));
+    }
+
+    /**
+     * overlap のカラム設定
+     * @return string
+     */
+    protected getOverlapColumn(): string {
+        return 'true else false';
     }
 
     /**

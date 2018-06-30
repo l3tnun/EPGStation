@@ -89,6 +89,22 @@ class ReservesMenuViewModel extends ViewModel {
 
         await this.reservesApiModel.updateReserves();
     }
+
+    /**
+     * overlap を解除
+     * @return Promise<void>
+     */
+    public async disableOverlap(): Promise<void> {
+        if (this.reserve === null) { return; }
+
+        try {
+            await this.reservesApiModel.disableOverlap(this.reserve.program.id);
+            this.snackbar.open(`解除: ${ this.reserve.program.name }`);
+        } catch (err) {
+            console.error(err);
+            this.snackbar.open(`解除失敗: ${ this.reserve.program.name }`);
+        }
+    }
 }
 
 namespace ReservesMenuViewModel {

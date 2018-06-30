@@ -1,4 +1,5 @@
 import * as apid from '../../../../../node_modules/mirakurun/api';
+import { RecordedHistoryDBInterface } from '../../DB/RecordedHistoryDB';
 import Model from '../../Model';
 import { MirakurunManageModelInterface } from '../../Operator/EPGUpdate/MirakurunManageModel';
 import { ReservationManageModelInterface } from '../../Operator/Reservation/ReservationManageModel';
@@ -11,15 +12,21 @@ import CallbackBaseModelInterface from './CallbackBaseModelInterface';
 class EPGUpdateFinModel extends Model implements CallbackBaseModelInterface {
     private mirakurunManage: MirakurunManageModelInterface;
     private reservationManage: ReservationManageModelInterface;
+    private recordedHistoryDB: RecordedHistoryDBInterface;
+    private recordedHistoryRetentionPeriodDays: number;
 
     constructor(
         mirakurunManage: MirakurunManageModelInterface,
         reservationManage: ReservationManageModelInterface,
+        recordedHistoryDB: RecordedHistoryDBInterface,
     ) {
         super();
 
         this.mirakurunManage = mirakurunManage;
         this.reservationManage = reservationManage;
+        this.recordedHistoryDB = recordedHistoryDB;
+
+        this.recordedHistoryRetentionPeriodDays = this.config.getConfig().recordedHistoryRetentionPeriodDays || 30;
     }
 
     public set(): void {
@@ -29,15 +36,21 @@ class EPGUpdateFinModel extends Model implements CallbackBaseModelInterface {
     private async callback(tuners: apid.TunerDevice[]): Promise<void> {
         this.reservationManage.setTuners(tuners);
 
+        // RecordedHistory の保存期間外のデータを削除
+        await this.recordedHistoryDB.delete(new Date().getTime() - this.recordedHistoryRetentionPeriodDays * 24 * 60 * 60 * 1000)
+        .catch((err) => {
+            this.log.system.error('RecordedHistory Delete Error');
+            this.log.system.error(err);
+        });
+
         // すべての予約を更新
-        try {
-            await this.reservationManage.updateAll();
-        } catch (err) {
+        await this.reservationManage.updateAll()
+        .catch((err) => {
             this.log.system.error('ReservationManage update Error');
             this.log.system.error(err);
 
             setTimeout(() => { this.callback(tuners); }, 1000);
-        }
+        });
     }
 }
 
