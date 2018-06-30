@@ -37,14 +37,19 @@ class MirakurunUpdater extends Base {
      * @param callback: すべての更新が終わったら呼ばれる
      */
     public update(): void {
+        const config = this.config.getConfig();
+        const suppressLog = !!config.suppressEPGUpdateLog;
+
         Promise.resolve()
         .then(() => {
             return this.mirakurun.getServices();
         })
         .then((services) => {
-            console.log(`mirakurun -> services: ${ services.length }`);
+            if (!suppressLog) {
+                console.log(`mirakurun -> services: ${ services.length }`);
+            }
 
-            const excludeServices = this.config.getConfig().excludeServices || [];
+            const excludeServices = config.excludeServices || [];
             for (let i = 0; i < services.length; i++) {
                 if (excludeServices.indexOf(services[i].id) !== -1) {
                     services.splice(i, 1);
@@ -57,12 +62,16 @@ class MirakurunUpdater extends Base {
             return this.servicesDB.insert(this.services);
         })
         .then(() => {
-            console.log('insert Services done');
+            if (!suppressLog) {
+                console.log('insert Services done');
+            }
 
             return this.mirakurun.getPrograms();
         })
         .then((programs) => {
-            console.log(`mirakurun -> programs: ${ programs.length }`);
+            if (!suppressLog) {
+                console.log(`mirakurun -> programs: ${ programs.length }`);
+            }
             this.programs = programs;
 
             // 放送波索引
@@ -81,12 +90,16 @@ class MirakurunUpdater extends Base {
             return this.programsDB.insert(channelTypes, this.programs);
         })
         .then(() => {
-            console.log('insert Programs done.');
+            if (!suppressLog) {
+                console.log('insert Programs done.');
+            }
 
             return this.mirakurun.getTuners();
         })
         .then((tuners) => {
-            console.log(`mirakurun => tuners: ${ tuners.length }`);
+            if (!suppressLog) {
+                console.log(`mirakurun -> tuners: ${ tuners.length }`);
+            }
             this.tuners = tuners;
 
             // DB の pool 終了
@@ -97,8 +110,6 @@ class MirakurunUpdater extends Base {
             if (typeof process.send !== 'undefined') {
                 process.send({ msg: 'tuner', tuners: this.getTuners() });
             }
-
-            console.log('updater done');
         })
         .catch((error: any) => {
             console.error('mirakurun updater failed');

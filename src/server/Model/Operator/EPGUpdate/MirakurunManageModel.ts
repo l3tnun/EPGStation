@@ -55,7 +55,16 @@ class MirakurunManageModel extends Model implements MirakurunManageModelInterfac
             this.log.system.error(String(data).slice(0, -1));
         });
 
-        updater.once('exit', (code) => { if (code !== 0) { this.log.system.error('MirakurunUpdater abort'); } this.isRunning = false; });
+        updater.once('exit', (code) => {
+            if (code === 0) {
+                this.log.system.info('updater done');
+                this.eventsNotify();
+            } else {
+                this.log.system.error('MirakurunUpdater abort');
+            }
+            this.isRunning = false;
+        });
+
         updater.once('disconnect', () => { this.isRunning = false; });
         updater.once('error', () => { this.isRunning = false; });
 
@@ -63,7 +72,6 @@ class MirakurunManageModel extends Model implements MirakurunManageModelInterfac
             if (msg.msg === 'tuner') {
                 this.tuners = msg.tuners;
                 this.isRunning = false;
-                this.eventsNotify();
             }
         });
     }

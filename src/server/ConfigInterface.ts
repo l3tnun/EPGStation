@@ -55,6 +55,7 @@ interface ConfigInterface {
     fileExtension: string;
     reservesUpdateIntervalTime: number;
     suppressReservesUpdateAllLog: boolean;
+    suppressEPGUpdateLog: boolean;
     thumbnail: string;
     thumbnailSize: string;
     thumbnailPosition: number;
