@@ -43,6 +43,7 @@ import RecordingFinModel from './Operator/Callbacks/RecordingFinModel';
 import RecordingPrepRecFailedModel from './Operator/Callbacks/RecordingPrepRecFailedModel';
 import RecordingPreStartModel from './Operator/Callbacks/RecordingPreStartModel';
 import RecordingStartModel from './Operator/Callbacks/RecordingStartModel';
+import ReservationAddModel from './Operator/Callbacks/ReservationAddModel';
 import RuleUpdateFinModel from './Operator/Callbacks/RuleUpdateFinModel';
 import ThumbnailCreateFinModel from './Operator/Callbacks/ThumbnailCreateFinModel';
 import { DBInitializationModel } from './Operator/DBInitializationModel';
@@ -179,6 +180,10 @@ namespace ModelFactorySetting {
             recordedExternalProcess,
             ipc,
         );
+        const reservationAddModel = new ReservationAddModel(
+            reservationManage,
+            programExternalProcessModel,
+        );
         const recordingFinModel = new RecordingFinModel(
             recordingManage,
             thumbnailManageModel,
@@ -224,6 +229,7 @@ namespace ModelFactorySetting {
         factory.reg('RecordingPrepRecFailedModel', () => { return recordingPrepRecFailedModel; });
         factory.reg('RecordingPreStartModel', () => { return recordingPreStartModel; });
         factory.reg('RecordingStartModel', () => { return recordingStartModel; });
+        factory.reg('ReservationAddModel', () => { return reservationAddModel; });
         factory.reg('RecordingFinModel', () => { return recordingFinModel; });
         factory.reg('RecordingFailedModel', () => { return recordingFailedModel; });
         factory.reg('ThumbnailCreateFinModel', () => { return thumbnailCreateFinModel; });

@@ -44,6 +44,7 @@ interface ConfigInterface {
     recPriority: number;
     conflictPriority: number;
     recorded: string;
+    reservationAddCommand: string;
     recordedPreStartCommand: string;
     recordedPrepRecFailedCommand: string;
     recordedStartCommand: string;
