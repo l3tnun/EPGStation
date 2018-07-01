@@ -1,5 +1,4 @@
 import * as m from 'mithril';
-import StrUtil from '../../Util/StrUtil';
 import Util from '../../Util/Util';
 import ProgramInfoViewModel from '../../ViewModel/Program/ProgramInfoViewModel';
 import { ProgramViewModel } from '../../ViewModel/Program/ProgramViewModel';
@@ -159,7 +158,13 @@ class ProgramInfoActionComponent extends Component<void> {
      * @return keyword
      */
     private createKeywordStr(title: string): string {
-        const outTitle = StrUtil.deleteBrackets(title);
+        const outTitle = title
+            .replace(/\[.+?\]/g, ' ')
+            .replace(/\【.+?\】/g, ' ')
+            .replace(/\「.+?\」/g, ' ')
+            .replace(/\(.\)/g, ' ')
+            .replace(/ +/g, ' ')
+            .trim();
         let delimiter = ' #';
         if (outTitle.indexOf(' #') === -1) {
             delimiter = outTitle.indexOf('「') === -1 ? '' : '「';
