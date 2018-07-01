@@ -44,6 +44,7 @@ interface ConfigInterface {
     recPriority: number;
     conflictPriority: number;
     recorded: string;
+    reservationAddedCommand: string;
     recordedPreStartCommand: string;
     recordedPrepRecFailedCommand: string;
     recordedStartCommand: string;
@@ -53,6 +54,8 @@ interface ConfigInterface {
     recordedHistoryRetentionPeriodDays: number;
     fileExtension: string;
     reservesUpdateIntervalTime: number;
+    suppressReservesUpdateAllLog: boolean;
+    suppressEPGUpdateLog: boolean;
     thumbnail: string;
     thumbnailSize: string;
     thumbnailPosition: number;

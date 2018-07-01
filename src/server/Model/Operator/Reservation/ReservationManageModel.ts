@@ -38,6 +38,7 @@ interface ReserveLimit {
 }
 
 interface ReservationManageModelInterface extends Model {
+    addReservationListener(callback: (program: DBSchema.ProgramSchema) => void): void;
     setRecordedManageModel(recordingManage: RecordingManageModelInterface): void;
     setTuners(tuners: apid.TunerDevice[]): void;
     getReserve(programId: apid.ProgramId): ReserveProgram | null;
@@ -72,6 +73,7 @@ class ReservationManageModel extends Model {
     private lockId: string | null = null;
     private exeQueue: ExeQueueData[] = [];
     private exeEventEmitter: events.EventEmitter = new events.EventEmitter();
+    private listener: events.EventEmitter = new events.EventEmitter();
 
     private programDB: ProgramsDBInterface;
     private rulesDB: RulesDBInterface;
@@ -80,6 +82,7 @@ class ReservationManageModel extends Model {
     private reserves: ReserveProgram[] = []; // 予約
     private tuners: Tuner[] = [];
     private reservesPath: string;
+    private suppressReservesUpdateAllLog: boolean = false;
 
     constructor(
         programDB: ProgramsDBInterface,
@@ -90,10 +93,26 @@ class ReservationManageModel extends Model {
         this.programDB = programDB;
         this.rulesDB = rulesDB;
         this.ipc = ipc;
-        this.reservesPath = this.config.getConfig().reserves || path.join(__dirname, '..', '..', '..', '..', '..', 'data', 'reserves.json');
+        const config =  this.config.getConfig();
+        this.suppressReservesUpdateAllLog = !!config.suppressReservesUpdateAllLog;
+        this.reservesPath = config.reserves || path.join(__dirname, '..', '..', '..', '..', '..', 'data', 'reserves.json');
         this.readReservesFile();
 
         this.exeEventEmitter.setMaxListeners(1000);
+    }
+
+    /**
+     * 予約追加時に実行されるイベントに追加
+     * @param callback 予約追加時に実行される
+     */
+    public addReservationListener(callback: (program: DBSchema.ProgramSchema) => void): void {
+        this.listener.on(ReservationManageModel.ADD_RESERVATION_EVENT, (program: DBSchema.ProgramSchema) => {
+            try {
+                callback(program);
+            } catch (err) {
+                this.log.system.error(<any> err);
+            }
+        });
     }
 
     /**
@@ -285,7 +304,7 @@ class ReservationManageModel extends Model {
      */
     public getOverlaps(limit?: number, offset: number = 0): ReserveLimit {
         const reserves = this.reserves.filter((reserve) => {
-            return Boolean((<RuleReserveProgram> reserve).isOverlap);
+            return !reserve.isSkip && Boolean((<RuleReserveProgram> reserve).isOverlap);
         });
 
         return {
@@ -502,6 +521,9 @@ class ReservationManageModel extends Model {
         // 通知
         this.ipc.notifIo();
 
+        // 新規追加通知
+        this.addEventsNotify(addReserve.program);
+
         this.log.system.info(`success addReserve: ${ option.programId }`);
     }
 
@@ -593,7 +615,7 @@ class ReservationManageModel extends Model {
         // 通知
         this.ipc.notifIo();
 
-        this.log.system.info('updateAll done');
+        this.log.system.info('done updateAll');
     }
 
     /**
@@ -601,8 +623,10 @@ class ReservationManageModel extends Model {
      * @param manualId: manual id
      * @return Promise<void>
      */
-    public async updateManual(manualId: number): Promise<void> {
-        this.log.system.info(`start UpdateManualId: ${ manualId }`);
+    private async updateManual(manualId: number): Promise<void> {
+        if (!this.suppressReservesUpdateAllLog) {
+            this.log.system.info(`start UpdateManualId: ${ manualId }`);
+        }
 
         const exeId = await this.getExecution(0);
         const finalize = () => { this.unLockExecution(exeId); };
@@ -662,10 +686,12 @@ class ReservationManageModel extends Model {
         // conflict を表示
         for (const reserve of this.reserves) {
             if (!reserve.isConflict || (<ManualReserveProgram> reserve).manualId !== manualId) { continue; }
-            this.log.system.warn(`conflict: ${ reserve.program.id } ${ DateUtil.format(new Date(reserve.program.startAt), 'yyyy-MM-ddThh:mm:ss') } ${ reserve.program.name }`);
+            this.writeConflictLog(reserve);
         }
 
-        this.log.system.info(`UpdateManualId: ${ manualId } done`);
+        if (!this.suppressReservesUpdateAllLog) {
+            this.log.system.info(`UpdateManualId: ${ manualId } done`);
+        }
     }
 
     /**
@@ -679,7 +705,9 @@ class ReservationManageModel extends Model {
         const exeId = await this.getExecution(priority);
         const finalize = () => { this.unLockExecution(exeId); };
 
-        this.log.system.info(`start update rule: ${ ruleId }`);
+        if (!this.suppressReservesUpdateAllLog) {
+            this.log.system.info(`start update rule: ${ ruleId }`);
+        }
 
         // rule を取得
         let rule: DBSchema.RulesSchema | null = null;
@@ -689,6 +717,8 @@ class ReservationManageModel extends Model {
                 rule = result;
             }
         } catch (err) {
+            this.log.system.error(`rule id: ${ ruleId } is not found.`);
+            this.log.system.error(err);
             finalize();
             throw err;
         }
@@ -699,20 +729,26 @@ class ReservationManageModel extends Model {
             try {
                 programs = await this.programDB.findRule(this.createSearchOption(rule));
             } catch (err) {
+                this.log.system.error(`rule id: ${ ruleId } search error`);
+                this.log.system.error(err);
                 finalize();
                 throw err;
             }
         }
 
-        // スキップ情報
-        const skipIndex: { [key: number]: boolean } = {};
-        // overlap 有効状態
-        const overlapIndex: { [key: number]: boolean } = {};
+        const skipIndex: { [key: number]: boolean } = {}; // スキップ情報
+        const diffIndex: { [key: number]: ReserveProgram } = {}; // 差分情報
+        const overlapIndex: { [key: number]: boolean } = {}; // overlap 有効状態
         // ruleId を除外した予約情報を生成
         const matches: ReserveProgram[] = [];
         for (const reserve of this.reserves) {
             // スキップ情報を記録
             if (reserve.isSkip) { skipIndex[reserve.program.id] = reserve.isSkip; }
+
+            // 差分情報記録
+            if ((<RuleReserveProgram> reserve).ruleId === ruleId) {
+                diffIndex[reserve.program.id] = reserve;
+            }
 
             // overlap 有効状態を記録
             if ((<RuleReserveProgram> reserve).disableOverlap) {
@@ -764,14 +800,31 @@ class ReservationManageModel extends Model {
 
         // conflict を表示
         for (const reserve of this.reserves) {
-            if (!reserve.isConflict || (<RuleReserveProgram> reserve).ruleId !== ruleId) { continue; }
-            this.log.system.warn(`conflict: ${ reserve.program.id } ${ DateUtil.format(new Date(reserve.program.startAt), 'yyyy-MM-ddThh:mm:ss') } ${ reserve.program.name }`);
+            if ((<RuleReserveProgram> reserve).ruleId !== ruleId || reserve.isSkip) { continue; }
+
+            if (reserve.isConflict) {
+                // コンフリクト
+                this.writeConflictLog(reserve);
+            } else if (typeof diffIndex[reserve.program.id] === 'undefined') {
+                // 新規追加
+                this.addEventsNotify(reserve.program);
+            }
         }
 
         // 通知
         if (needsNotify) { this.ipc.notifIo(); }
 
-        this.log.system.info(`update rule: ${ ruleId } done`);
+        if (!this.suppressReservesUpdateAllLog) {
+            this.log.system.info(`update rule: ${ ruleId } done`);
+        }
+    }
+
+    /**
+     * write conflict log
+     * @param reserve: ReserveProgram
+     */
+    private writeConflictLog(reserve: ReserveProgram): void {
+        this.log.system.warn(`conflict: ${ reserve.program.id } ${ DateUtil.format(new Date(reserve.program.startAt), 'yyyy-MM-ddThh:mm:ss') } ${ reserve.program.name }`);
     }
 
     /**
@@ -1019,10 +1072,19 @@ class ReservationManageModel extends Model {
             { encoding: 'utf-8' },
         );
     }
+
+    /**
+     * 録画が新規追加されたことを通知
+     * @param program: DBSchema.ProgramSchema
+     */
+    private addEventsNotify(program: DBSchema.ProgramSchema): void {
+        this.listener.emit(ReservationManageModel.ADD_RESERVATION_EVENT, program);
+    }
 }
 
 namespace ReservationManageModel {
     export const UNLOCK_EVENT = 'ExeUnlock';
+    export const ADD_RESERVATION_EVENT = 'addReservation';
 }
 
 export { ReserveAllId, ReserveLimit, ReservationManageModelInterface, ReservationManageModel };

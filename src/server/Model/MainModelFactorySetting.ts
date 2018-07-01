@@ -43,12 +43,14 @@ import RecordingFinModel from './Operator/Callbacks/RecordingFinModel';
 import RecordingPrepRecFailedModel from './Operator/Callbacks/RecordingPrepRecFailedModel';
 import RecordingPreStartModel from './Operator/Callbacks/RecordingPreStartModel';
 import RecordingStartModel from './Operator/Callbacks/RecordingStartModel';
+import ReservationAddedModel from './Operator/Callbacks/ReservationAddedModel';
 import RuleUpdateFinModel from './Operator/Callbacks/RuleUpdateFinModel';
 import ThumbnailCreateFinModel from './Operator/Callbacks/ThumbnailCreateFinModel';
 import { DBInitializationModel } from './Operator/DBInitializationModel';
 import { MirakurunManageModel } from './Operator/EPGUpdate/MirakurunManageModel';
-import { ExternalProcessModel } from './Operator/ExternalProcessModel';
+import { ProgramExternalProcessModel } from './Operator/ProgramExternalProcessModel';
 import { RecordedManageModel } from './Operator/Recorded/RecordedManageModel';
+import { RecordedExternalProcessModel } from './Operator/RecordedExternalProcessModel';
 import { RecordingManageModel } from './Operator/Recording/RecordingManageModel';
 import { ReservationManageModel } from './Operator/Reservation/ReservationManageModel';
 import { RuleManageModel } from './Operator/Rule/RuleManageModel';
@@ -162,28 +164,35 @@ namespace ModelFactorySetting {
             recordedManage,
             ruleManageModel,
         );
-        const externalProcess = new ExternalProcessModel();
+        const recordedExternalProcess = new RecordedExternalProcessModel(servicesDB!);
+        const programExternalProcessModel = new ProgramExternalProcessModel(servicesDB!);
         const recordingPrepRecFailedModel = new RecordingPrepRecFailedModel(
             recordingManage,
+            programExternalProcessModel,
         );
         const recordingPreStartModel = new RecordingPreStartModel(
             recordingManage,
+            programExternalProcessModel,
             ipc,
         );
         const recordingStartModel = new RecordingStartModel(
             recordingManage,
-            externalProcess,
+            recordedExternalProcess,
             ipc,
+        );
+        const reservationAddModel = new ReservationAddedModel(
+            reservationManage,
+            programExternalProcessModel,
         );
         const recordingFinModel = new RecordingFinModel(
             recordingManage,
             thumbnailManageModel,
-            externalProcess,
+            recordedExternalProcess,
             ipc,
         );
         const recordingFailedModel = new RecordingFailedModel(
             recordingManage,
-            externalProcess,
+            recordedExternalProcess,
         );
         const thumbnailCreateFinModel = new ThumbnailCreateFinModel(
             recordedManage,
@@ -220,6 +229,7 @@ namespace ModelFactorySetting {
         factory.reg('RecordingPrepRecFailedModel', () => { return recordingPrepRecFailedModel; });
         factory.reg('RecordingPreStartModel', () => { return recordingPreStartModel; });
         factory.reg('RecordingStartModel', () => { return recordingStartModel; });
+        factory.reg('ReservationAddedModel', () => { return reservationAddModel; });
         factory.reg('RecordingFinModel', () => { return recordingFinModel; });
         factory.reg('RecordingFailedModel', () => { return recordingFailedModel; });
         factory.reg('ThumbnailCreateFinModel', () => { return thumbnailCreateFinModel; });

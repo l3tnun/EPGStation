@@ -418,7 +418,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
                 // 番組情報を最新に更新する
                 const program = await this.programsDB.findId(recorded.programId);
                 if (program !== null) {
-                    await this.recordedDB.replace({
+                    recorded = {
                         id: recorded.id,
                         programId: recorded.programId,
                         channelId: program.channelId,
@@ -443,7 +443,8 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
                         recording: false,
                         protection: false,
                         filesize: null,
-                    });
+                    };
+                    await this.recordedDB.replace(recorded);
 
                     historyProgram = {
                         id: 0,
@@ -469,6 +470,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
 
             } else {
                 // recorded から削除されていた
+                recorded = null;
                 this.finEventsNotify(null, null);
                 this.log.system.info(`recoding deleted: ${ recData.reserve.program.name }`);
             }
@@ -477,19 +479,23 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
         }
 
         // 予約一覧から削除
-        this.reservationManage.cancel(recData.reserve.program.id);
-        this.reservationManage.clean();
+        let deleted = false;
+        if (recorded === null || recorded.endAt <= new Date().getTime()) {
+            this.reservationManage.cancel(recData.reserve.program.id);
+            this.reservationManage.clean();
+            deleted = true;
+        }
 
         // 録画中から削除
         this.removeRecording(recData.reserve.program.id);
 
-        if (historyProgram !== null && ruleId !== null) {
+        if (deleted && historyProgram !== null && ruleId !== null) {
             // 番組名保存
             historyProgram.name = StrUtil.deleteBrackets(historyProgram.name);
             this.log.system.info(`save recorded history: ${ historyProgram.name }`);
             await this.recordedHistoryDB.insert(historyProgram);
 
-            // overlpa 更新
+            // overlap 更新
             await this.reservationManage.updateRule(ruleId)
             .catch(() => {});
         }

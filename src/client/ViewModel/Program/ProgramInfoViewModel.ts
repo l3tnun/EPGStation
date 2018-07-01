@@ -341,10 +341,10 @@ class ProgramInfoViewModel extends ViewModel {
 
         try {
             await this.reserves.deleteSkip(this.program.id);
-            this.snackbar.open(`除外: ${ this.program.name }`);
+            this.snackbar.open(`除外解除: ${ this.program.name }`);
         } catch (err) {
             console.error(err);
-            this.snackbar.open(`除外失敗: ${ this.program.name }`);
+            this.snackbar.open(`除外解除失敗: ${ this.program.name }`);
         }
     }
 
@@ -357,10 +357,10 @@ class ProgramInfoViewModel extends ViewModel {
 
         try {
             await this.reserves.disableOverlap(this.program.id);
-            this.snackbar.open(`解除: ${ this.program.name }`);
+            this.snackbar.open(`重複解除: ${ this.program.name }`);
         } catch (err) {
             console.error(err);
-            this.snackbar.open(`解除失敗: ${ this.program.name }`);
+            this.snackbar.open(`重複解除失敗: ${ this.program.name }`);
         }
     }
 }

@@ -158,7 +158,13 @@ class ProgramInfoActionComponent extends Component<void> {
      * @return keyword
      */
     private createKeywordStr(title: string): string {
-        const outTitle = title.trim();
+        const outTitle = title
+            .replace(/\[.+?\]/g, ' ')
+            .replace(/\【.+?\】/g, ' ')
+            .replace(/\「.+?\」/g, ' ')
+            .replace(/\(.\)/g, ' ')
+            .replace(/ +/g, ' ')
+            .trim();
         let delimiter = ' #';
         if (outTitle.indexOf(' #') === -1) {
             delimiter = outTitle.indexOf('「') === -1 ? '' : '「';

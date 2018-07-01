@@ -1,7 +1,7 @@
 import * as DBSchema from '../../DB/DBSchema';
 import { IPCServerInterface } from '../../IPC/IPCServer';
 import Model from '../../Model';
-import { ExternalProcessModelInterface } from '../../Operator/ExternalProcessModel';
+import { RecordedExternalProcessModelInterface } from '../../Operator/RecordedExternalProcessModel';
 import { RecordingManageModelInterface } from '../../Operator/Recording/RecordingManageModel';
 import CallbackBaseModelInterface from './CallbackBaseModelInterface';
 
@@ -11,12 +11,13 @@ import CallbackBaseModelInterface from './CallbackBaseModelInterface';
  */
 class RecordingStartModel extends Model implements CallbackBaseModelInterface {
     private recordingManage: RecordingManageModelInterface;
-    private externalProcess: ExternalProcessModelInterface;
+    private externalProcess: RecordedExternalProcessModelInterface;
     private ipc: IPCServerInterface;
+    private cmd: string;
 
     constructor(
         recordingManage: RecordingManageModelInterface,
-        externalProcess: ExternalProcessModelInterface,
+        externalProcess: RecordedExternalProcessModelInterface,
         ipc: IPCServerInterface,
     ) {
         super();
@@ -24,6 +25,8 @@ class RecordingStartModel extends Model implements CallbackBaseModelInterface {
         this.recordingManage = recordingManage;
         this.externalProcess = externalProcess;
         this.ipc = ipc;
+
+        this.cmd = this.config.getConfig().recordedStartCommand;
     }
 
     public set(): void {
@@ -33,15 +36,13 @@ class RecordingStartModel extends Model implements CallbackBaseModelInterface {
     /**
      * @param program: DBSchema.RecordedSchema
      */
-    private callback(program: DBSchema.RecordedSchema): void {
+    private async callback(program: DBSchema.RecordedSchema): Promise<void> {
         // socket.io で通知
         this.ipc.notifIo();
 
         // 外部コマンド実行
-        const cmd = this.config.getConfig().recordedStartCommand;
-        if (typeof cmd !== 'undefined') {
-            this.externalProcess.run(cmd, program);
-        }
+        if (typeof this.cmd === 'undefined') { return; }
+        await this.externalProcess.run(this.cmd, program, 'recording start');
     }
 }
 
