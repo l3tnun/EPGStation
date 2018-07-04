@@ -152,7 +152,7 @@ class RulesComponent extends ParentComponent<void> {
      * @return string
      */
     private createChannelName(rule: apid.Rule): string {
-        if (typeof rule.station === 'undefined') { return '-'; }
+        if (typeof rule.station === 'undefined') { return RulesUtil.createBroadcastStr(rule); }
 
         return this.viewModel.getChannelName(rule.station);
     }
@@ -172,12 +172,12 @@ class RulesComponent extends ParentComponent<void> {
                 m('th', { class: RulesComponent.nonNumeric }, 'キーワード'),
                 m('th', { class: RulesComponent.nonNumeric }, '除外キーワード'),
                 m('th', { class: RulesComponent.nonNumeric }, 'オプション'),
-                m('th', { class: RulesComponent.nonNumeric }, '放送波'),
                 m('th', { class: RulesComponent.nonNumeric }, '放送局'),
                 m('th', { class: RulesComponent.nonNumeric }, 'ジャンル'),
                 m('th', { class: RulesComponent.nonNumeric }, 'サブジャンル'),
                 m('th', { class: RulesComponent.nonNumeric }, '時刻'),
                 m('th', { class: RulesComponent.nonNumeric }, '曜日'),
+                m('th', { class: RulesComponent.nonNumeric }, '予約数'),
                 m('th', { class: RulesComponent.nonNumeric }, ''), // option
             ])),
 
@@ -186,13 +186,13 @@ class RulesComponent extends ParentComponent<void> {
                     m('td', { class: 'toggle' }, m('div', { class: 'toggle-container' }, this.createToggle(rule))),
                     m('td', { class: RulesComponent.nonNumeric + ' keyword' }, RulesUtil.createKeywordStr(rule)),
                     m('td', { class: RulesComponent.nonNumeric + ' ignore-keyword' }, RulesUtil.createIgnoreKeywordStr(rule)),
-                    m('td', { class: RulesComponent.nonNumeric + ' option' }, RulesUtil.createOptionStr(rule)),
-                    m('td', { class: RulesComponent.nonNumeric + ' broadcast' }, RulesUtil.createBroadcastStr(rule)),
+                    m('td', { class: RulesComponent.nonNumeric + ' search-option' }, RulesUtil.createOptionStr(rule)),
                     m('td', { class: RulesComponent.nonNumeric + ' channel' }, this.createChannelName(rule)),
                     m('td', { class: RulesComponent.nonNumeric + ' genre1' }, RulesUtil.createGenre1(rule)),
                     m('td', { class: RulesComponent.nonNumeric + ' genre2' }, RulesUtil.createGenre2(rule)),
                     m('td', { class: RulesComponent.nonNumeric + ' time' }, RulesUtil.createTimStr(rule)),
                     m('td', { class: RulesComponent.nonNumeric + ' dow' }, RulesUtil.createDowStr(rule)),
+                    m('td', { class: RulesComponent.nonNumeric + ' reservation' }, this.viewModel.getRuleReservesCount(rule.id)),
                     this.createTableOption(rule),
                 ]);
             })),

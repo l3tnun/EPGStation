@@ -2,6 +2,7 @@ import * as m from 'mithril';
 import * as apid from '../../../../api';
 import { ViewModelStatus } from '../../Enums';
 import { ChannelsApiModelInterface } from '../../Model/Api/ChannelsApiModel';
+import { ReservesApiModelInterface, RuleReservesCount } from '../../Model/Api/ReservesApiModel';
 import { RulesApiModelInterface } from '../../Model/Api/RulesApiModel';
 import { SettingValue } from '../../Model/Setting/SettingModel';
 import { SnackbarModelInterface } from '../../Model/Snackbar/SnackbarModel';
@@ -15,20 +16,24 @@ import ViewModel from '../ViewModel';
 class RulesViewModel extends ViewModel {
     private rulesApiModel: RulesApiModelInterface;
     private channels: ChannelsApiModelInterface;
+    private reservesApiModel: ReservesApiModelInterface;
     private snackbar: SnackbarModelInterface;
     private setting: StorageTemplateModel<SettingValue>;
     private limit: number = 0;
     private offset: number = 0;
+    private ruleReservesCount: RuleReservesCount = {};
 
     constructor(
         rulesApiModel: RulesApiModelInterface,
         channels: ChannelsApiModelInterface,
+        reservesApiModel: ReservesApiModelInterface,
         snackbar: SnackbarModelInterface,
         setting: StorageTemplateModel<SettingValue>,
     ) {
         super();
         this.rulesApiModel = rulesApiModel;
         this.channels = channels;
+        this.reservesApiModel = reservesApiModel;
         this.snackbar = snackbar;
         this.setting = setting;
     }
@@ -37,7 +42,7 @@ class RulesViewModel extends ViewModel {
      * init
      * @param status: ViewModelStatus
      */
-    public init(status: ViewModelStatus = 'init'): Promise<void> {
+    public async init(status: ViewModelStatus = 'init'): Promise<void> {
         super.init(status);
 
         if (status === 'reload' || status === 'updateIo') { return this.reloadInit(); }
@@ -46,20 +51,27 @@ class RulesViewModel extends ViewModel {
         this.offset = typeof m.route.param('page') === 'undefined' ? 0 : (Number(m.route.param('page')) - 1) * this.limit;
 
         this.rulesApiModel.init();
+        this.reservesApiModel.init();
         if (status === 'update') { m.redraw(); }
 
         // ルール一覧を更新
-        return Util.sleep(100)
-        .then(() => {
-            return this.rulesApiModel.fetchRules(this.limit, this.offset);
-        });
+        await Util.sleep(100);
+        await this.fetchData();
     }
 
     /**
      * reload 時の init
      */
-    private async reloadInit(): Promise<void> {
+    private reloadInit(): Promise<void> {
+        return this.fetchData();
+    }
+
+    /**
+     * fetchData
+     */
+    private async fetchData(): Promise<void> {
         await this.rulesApiModel.fetchRules(this.limit, this.offset);
+        this.ruleReservesCount = await this.reservesApiModel.fetchRuleReservesCountCount();
     }
 
     /**
@@ -94,6 +106,17 @@ class RulesViewModel extends ViewModel {
      */
     public getLimit(): number {
         return this.limit;
+    }
+
+    /**
+     * 指定した rule id の予約件数を返す
+     * @param ruleId: number
+     * @return number;
+     */
+    public getRuleReservesCount(ruleId: number): number | string {
+        const count = this.ruleReservesCount[ruleId];
+
+        return typeof count === 'undefined' ? '-' : count;
     }
 
     /**

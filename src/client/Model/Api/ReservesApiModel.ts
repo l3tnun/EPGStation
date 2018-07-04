@@ -10,6 +10,10 @@ interface AllReserveItem {
     item: apid.ReserveAllItem;
 }
 
+interface RuleReservesCount {
+    [key: number]: number;
+}
+
 interface ReservesApiModelInterface extends ApiModel {
     init(): void;
     updateReserves(): Promise<void>;
@@ -21,6 +25,7 @@ interface ReservesApiModelInterface extends ApiModel {
     fetchOverlaps(limit: number, offset: number): Promise<void>;
     fetchAllId(): Promise<AllReserves | null>;
     fetchConflictCount(): Promise<number>;
+    fetchRuleReservesCountCount(): Promise<RuleReservesCount>;
     getReserve(): apid.Reserve | null;
     getReserves(): apid.Reserves;
     getPage(): number;
@@ -197,7 +202,7 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
     /**
      * すべての予約状態を取得
      * /api/reserves/all
-     * @return Promise<void>
+     * @return Promise<AllReserves | null>
      */
     public async fetchAllId(): Promise<AllReserves | null> {
         try {
@@ -235,7 +240,7 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
     /**
      * conflicts 数を取得
      * /api/reserves/all
-     * @return Promise<void>
+     * @return Promise<number>
      */
     public async fetchConflictCount(): Promise<number> {
         try {
@@ -252,6 +257,38 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
         }
 
         return 0;
+    }
+
+    /**
+     * ルールごとの予約件数を取得
+     * /api/reserves/all
+     * @return Promise<RuleReservesCount>
+     */
+    public async fetchRuleReservesCountCount(): Promise<RuleReservesCount> {
+        const reserves: RuleReservesCount = {};
+
+        try {
+            const allId = <apid.ReserveAllId> await <any> this.request({
+                method: 'GET',
+                url: './api/reserves/all',
+            });
+
+            for (const item of allId.reserves) {
+                if (typeof item.ruleId === 'undefined') { continue; }
+
+                if (typeof reserves[item.ruleId] === 'undefined') {
+                    reserves[item.ruleId] = 1;
+                } else {
+                    reserves[item.ruleId] += 1;
+                }
+            }
+        } catch (err) {
+            console.error('./api/reserves/all');
+            console.error(err);
+            this.openSnackbar('予約件数取得に失敗しました');
+        }
+
+        return reserves;
     }
 
     /**
@@ -398,5 +435,5 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
     }
 }
 
-export { AllReserves, AllReserveItem, ReservesApiModelInterface, ReservesApiModel };
+export { AllReserves, AllReserveItem, ReservesApiModelInterface, ReservesApiModel, RuleReservesCount };
 
