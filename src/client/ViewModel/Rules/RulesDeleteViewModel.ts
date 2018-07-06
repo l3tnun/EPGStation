@@ -54,12 +54,13 @@ class RulesDeleteViewModel extends ViewModel {
     public async delete(): Promise<void> {
         if (this.rule === null) { return; }
 
+        const keyword = typeof this.rule.keyword === 'undefined' ? '-' : this.rule.keyword;
         try {
             await this.rulesApiModel.delete(this.rule.id);
-            this.snackbar.open(`削除: ${ this.rule.keyword }`);
+            this.snackbar.open(`削除: ${ keyword }`);
         } catch (err) {
             console.error(err);
-            this.snackbar.open(`削除失敗: ${ this.rule.keyword }`);
+            this.snackbar.open(`削除失敗: ${ keyword }`);
         }
     }
 }
