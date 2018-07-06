@@ -19,7 +19,7 @@ class TopPageViewModel extends ViewModel {
      */
     public async init(): Promise<void> {
         // 予約 id 一覧を取得
-        await Util.sleep(100);
+        await Util.sleep(300);
         this.conflictsCount = await this.reservesApiModel.fetchConflictCount();
     }
 

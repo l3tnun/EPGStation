@@ -161,7 +161,6 @@ class ProgramInfoActionComponent extends Component<void> {
         const outTitle = title
             .replace(/\[.+?\]/g, ' ')
             .replace(/\【.+?\】/g, ' ')
-            .replace(/\「.+?\」/g, ' ')
             .replace(/\(.\)/g, ' ')
             .replace(/ +/g, ' ')
             .trim();

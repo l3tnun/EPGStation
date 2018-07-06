@@ -195,6 +195,7 @@ namespace ViewModelFactorySetting {
         factory.reg('RulesViewModel', new RulesViewModel(
             rulesApiModel,
             channelsApiModel,
+            reservesApiModel,
             snackbarModel,
             settingModel,
         ));

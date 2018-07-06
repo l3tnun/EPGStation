@@ -25,6 +25,12 @@ class RecordedMenuComponent extends Component<void> {
             this.createItem({
                 style: ruleId === null ? 'display: none;' : '',
                 onclick: () => {
+                    Util.move('/search', { rule: ruleId });
+                },
+            }, 'link', 'rule'),
+            this.createItem({
+                style: ruleId === null ? 'display: none;' : '',
+                onclick: () => {
                     this.viewModel.close();
                     if (Number(m.route.param('rule')) === ruleId) { return; }
                     Util.move('/recorded', { rule: ruleId });
