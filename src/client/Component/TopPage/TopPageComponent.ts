@@ -67,12 +67,16 @@ class TopPageComponent extends ParentComponent<void> {
 
     protected async parentInitViewModel(status: ViewModelStatus = 'init'): Promise<void> {
         await this.recordedViewModel.init(status, 0);
-        await this.viewModel.init();
         await this.reservesViewModel.init(status, 0);
 
         if (status !== 'init') {
             this.recordedInfoViewModel.update();
         }
+
+        this.viewModel.init()
+        .catch((err) => {
+            console.error(err);
+        });
     }
 
     /**
