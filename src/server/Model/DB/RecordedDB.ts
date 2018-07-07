@@ -28,6 +28,7 @@ interface RecordedDBInterface extends DBTableBase {
     delete(id: number): Promise<void>;
     deleteRecPath(id: number): Promise<void>;
     deleteRuleId(ruleId: number): Promise<void>;
+    cleanup(): Promise<void>;
     addThumbnail(id: number, filePath: string): Promise<void>;
     removeRecording(id: number): Promise<void>;
     removeAllRecording(): Promise<void>;
@@ -41,7 +42,7 @@ interface RecordedDBInterface extends DBTableBase {
     getRuleTag(): Promise<DBSchema.RuleTag[]>;
     getChannelTag(): Promise<DBSchema.ChannelTag[]>;
     getGenreTag(): Promise<DBSchema.GenreTag[]>;
-    getAllFiles(): Promise<string[]>;
+    getAllFiles(): Promise<{ id: number; recPath: string }[]>;
 }
 
 abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
@@ -293,6 +294,14 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
      */
     public deleteRuleId(ruleId: number): Promise<void> {
         return this.operator.runQuery(`update ${ DBSchema.TableName.Recorded } set ruleId = null where ruleId = ${ ruleId }`);
+    }
+
+    /**
+     * recPath が null で encoded も存在しない項目を削除
+     * @return Promise<void>
+     */
+    public cleanup(): Promise<void> {
+        return this.operator.runQuery(`delete from ${ DBSchema.TableName.Recorded } where recPath is null and id not in (select recordedId as id from ${ DBSchema.TableName.Encoded })`);
     }
 
     /**
@@ -557,20 +566,23 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
 
     /**
      * ファイルパス一覧を取得
-     * @return Promise<string[]>
+     * @return Promise<{ id: number; recPath: string }[]>
      */
-    public async getAllFiles(): Promise<string[]> {
-        const results = <{ recPath: string }[]> await this.operator.runQuery(`select ${ this.getRecPathColumnStr() } from ${ DBSchema.TableName.Recorded } where recPath is not null order by id`);
+    public async getAllFiles(): Promise<{ id: number; recPath: string }[]> {
+        const results = <{ id: number; recPath: string }[]> await this.operator.runQuery(`select id, ${ this.getRecPathColumnStr() } from ${ DBSchema.TableName.Recorded } where recPath is not null order by id`);
 
         const baseDir = Util.getRecordedPath();
 
         return results.map((result) => {
-            return this.fixRecPath(baseDir, result.recPath);
+            return {
+                id: result.id,
+                recPath: this.fixRecPath(baseDir, result.recPath),
+            };
         });
     }
 
     /**
-     * get recPath columnStr
+     * get recPath column str
      * @return string
      */
     protected getRecPathColumnStr(): string {

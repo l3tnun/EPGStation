@@ -164,6 +164,23 @@ namespace FileUtil {
             });
         });
     };
+
+    /**
+     * ファイル存在確認
+     * @param file: string
+     * @return Promise<boolean>
+     */
+    export const checkFile = (file: string): Promise<boolean> => {
+        return new Promise<boolean>((resolve: (result: boolean) => void) => {
+            fs.stat(file, (err) => {
+                if (err) {
+                    resolve(false);
+                } else {
+                    resolve(true);
+                }
+            });
+        });
+    };
 }
 
 export default FileUtil;

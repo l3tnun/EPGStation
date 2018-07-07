@@ -74,7 +74,7 @@ class PostgreSQLRecordedDB extends RecordedDB {
     }
 
     /**
-     * get recPath columnStr
+     * get recPath column str
      * @return string
      */
     protected getRecPathColumnStr(): string {

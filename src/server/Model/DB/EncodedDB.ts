@@ -16,7 +16,7 @@ interface EncodedDBInterface extends DBTableBase {
     findId(id: number): Promise<DBSchema.EncodedSchema | null>;
     findAll(sAddBaseDir?: boolean): Promise<DBSchema.EncodedSchema[]>;
     findRecordedId(recordedId: number): Promise<DBSchema.EncodedSchema[]>;
-    getAllFiles(): Promise<string[]>;
+    getAllFiles(): Promise<{ id: number; path: string }[]>;
 }
 
 /**
@@ -227,15 +227,18 @@ abstract class EncodedDB extends DBTableBase implements EncodedDBInterface {
 
     /**
      * ファイルパス一覧を取得
-     * @return Promise<string[]>
+     * @return Promise<{ id: number; path: string }[]>
      */
-    public async getAllFiles(): Promise<string[]> {
-        const results = <{ path: string }[]> await this.operator.runQuery(`select path from ${ DBSchema.TableName.Encoded }`);
+    public async getAllFiles(): Promise<{ id: number; path: string }[]> {
+        const results = <{ id: number; path: string }[]> await this.operator.runQuery(`select id, path from ${ DBSchema.TableName.Encoded }`);
 
         const baseDir = Util.getRecordedPath();
 
         return results.map((result) => {
-            return this.fixPath(baseDir, result.path);
+            return {
+                id: result.id,
+                path: this.fixPath(baseDir, result.path),
+            };
         });
     }
 }

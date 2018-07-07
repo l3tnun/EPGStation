@@ -434,10 +434,43 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
         const encodedFiles = await this.encodedDB.getAllFiles();
         const recordingFiles = await this.recordingManage.getRecordingPath();
 
+        // recorded 上に登録があるが存在しないファイルを削除する
+        for (const file of recordedFiles) {
+            if (!await FileUtil.checkFile(file.recPath)) {
+                this.log.system.info(`delete recorded: ${ file.id }`);
+                await this.recordedDB.deleteRecPath(file.id)
+                .catch((err) => {
+                    this.log.system.error(`delete recorded error: ${ file.id }`);
+                    this.log.system.error(err);
+                });
+            }
+        }
+
+        // encoded 上に登録があるが存在しないファイルを削除する
+        for (const file of encodedFiles) {
+            if (!await FileUtil.checkFile(file.path)) {
+                this.log.system.info(`delete encoded: ${ file.id }`);
+                await this.encodedDB.delete(file.id)
+                .catch((err) => {
+                    this.log.system.error(`delete encoded error: ${ file.id }`);
+                    this.log.system.error(err);
+                });
+            }
+        }
+
+        // recorded 上で ts も encoded も存在しない項目を削除
+        this.log.system.info('recordedDB cleanup');
+        await this.recordedDB.cleanup()
+        .catch((err) => {
+            this.log.system.error('recordedDB cleanup error');
+            this.log.system.error(err);
+        });
+
+        // DB 上に存在しないファイルを削除する
         // ファイル検索のための索引を作成
         const filesIndex: { [key: string]: boolean } = {};
-        for (const file of recordedFiles) { filesIndex[file] = true; }
-        for (const file of encodedFiles) { filesIndex[file] = true; }
+        for (const file of recordedFiles) { filesIndex[file.recPath] = true; }
+        for (const file of encodedFiles) { filesIndex[file.path] = true; }
         for (const file of recordingFiles) { filesIndex[file] = true; }
 
         // ファイルを削除
@@ -454,8 +487,8 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
 
         // ディレクトリ検索のための索引を作成
         const directoriesIndex: { [key: string]: boolean } = {};
-        for (const file of recordedFiles) { directoriesIndex[path.dirname(file)] = true; }
-        for (const file of encodedFiles) { directoriesIndex[path.dirname(file)] = true; }
+        for (const file of recordedFiles) { directoriesIndex[path.dirname(file.recPath)] = true; }
+        for (const file of encodedFiles) { directoriesIndex[path.dirname(file.path)] = true; }
         for (const file of recordingFiles) { directoriesIndex[path.dirname(file)] = true; }
 
         // 削除時にネストが深いディレクトリから削除するためソート
