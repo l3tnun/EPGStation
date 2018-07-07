@@ -49,11 +49,22 @@ mysql> show variables like "char%";
 
 確認ができたら EPGStation で使用するデータベースの作成をしてください
 
+* MySQL 5.x の場合
+
 ```
 mysql> create database database_name;
 mysql> grant all on database_name.* to username@localhost identified by 'password';
 mysql> quit
 ```
+
+* MySQL 8.x の場合
+
+```
+create database database_name;
+grant all on database_name.* to username@localhost;
+alter user username@localhost identified with mysql_native_password BY 'password';
+```
+
 
 EPGStation 使用中は MySQL のバイナリログが大量に生成されてディスクを圧迫するので、MySQL の設定 (my.ini) を変えることをおすすめします。
 
