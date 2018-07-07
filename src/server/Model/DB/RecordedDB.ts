@@ -41,6 +41,7 @@ interface RecordedDBInterface extends DBTableBase {
     getRuleTag(): Promise<DBSchema.RuleTag[]>;
     getChannelTag(): Promise<DBSchema.ChannelTag[]>;
     getGenreTag(): Promise<DBSchema.GenreTag[]>;
+    getAllFiles(): Promise<string[]>;
 }
 
 abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
@@ -402,7 +403,7 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
     protected fixResult(baseDir: string, thumbnailDir: string, program: DBSchema.RecordedSchema, isAddBaseDir: boolean): DBSchema.RecordedSchema {
         if (isAddBaseDir && program.recPath !== null) {
             // フルパスへ書き換える
-            program.recPath = path.join(baseDir, program.recPath);
+            program.recPath = this.fixRecPath(baseDir, program.recPath);
         }
 
         if (isAddBaseDir && program.thumbnailPath !== null) {
@@ -411,6 +412,16 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
         }
 
         return program;
+    }
+
+    /**
+     * recPath 修正
+     * @param baseDir: string
+     * @param recPath: string
+     * @return string
+     */
+    private fixRecPath(baseDir: string, recPath: string): string {
+        return path.join(baseDir, recPath);
     }
 
     /**
@@ -542,6 +553,28 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
      */
     protected getTag<T>(item: string): Promise<T> {
         return this.operator.runQuery(`select count(*) as cnt, ${ item } from ${ DBSchema.TableName.Recorded } group by ${ item } order by ${ item } asc`);
+    }
+
+    /**
+     * ファイルパス一覧を取得
+     * @return Promise<string[]>
+     */
+    public async getAllFiles(): Promise<string[]> {
+        const results = <{ recPath: string }[]> await this.operator.runQuery(`select ${ this.getRecPathColumnStr() } from ${ DBSchema.TableName.Recorded } where recPath is not null order by id`);
+
+        const baseDir = Util.getRecordedPath();
+
+        return results.map((result) => {
+            return this.fixRecPath(baseDir, result.recPath);
+        });
+    }
+
+    /**
+     * get recPath columnStr
+     * @return string
+     */
+    protected getRecPathColumnStr(): string {
+        return 'recPath';
     }
 }
 

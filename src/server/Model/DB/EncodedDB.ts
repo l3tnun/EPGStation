@@ -16,6 +16,7 @@ interface EncodedDBInterface extends DBTableBase {
     findId(id: number): Promise<DBSchema.EncodedSchema | null>;
     findAll(sAddBaseDir?: boolean): Promise<DBSchema.EncodedSchema[]>;
     findRecordedId(recordedId: number): Promise<DBSchema.EncodedSchema[]>;
+    getAllFiles(): Promise<string[]>;
 }
 
 /**
@@ -181,13 +182,23 @@ abstract class EncodedDB extends DBTableBase implements EncodedDBInterface {
         return programs.map((program) => {
             if (isAddBaseDir) {
                 // path をフルパスへ書き換える
-                program.path = path.join(baseDir, program.path);
+                program.path = this.fixPath(baseDir, program.path);
             }
             // name を string へ
             program.name = String(program.name);
 
             return program;
         });
+    }
+
+    /**
+     * path 修正
+     * @param baseDir: string
+     * @param filePath: string
+     * @return string
+     */
+    private fixPath(baseDir: string, filePath: string): string {
+        return path.join(baseDir, filePath);
     }
 
     /**
@@ -212,6 +223,20 @@ abstract class EncodedDB extends DBTableBase implements EncodedDBInterface {
         const programs = await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Encoded } where recordedId = ${ recordedId } order by id asc`);
 
         return this.fixResults(<DBSchema.EncodedSchema[]> programs);
+    }
+
+    /**
+     * ファイルパス一覧を取得
+     * @return Promise<string[]>
+     */
+    public async getAllFiles(): Promise<string[]> {
+        const results = <{ path: string }[]> await this.operator.runQuery(`select path from ${ DBSchema.TableName.Encoded }`);
+
+        const baseDir = Util.getRecordedPath();
+
+        return results.map((result) => {
+            return this.fixPath(baseDir, result.path);
+        });
     }
 }
 

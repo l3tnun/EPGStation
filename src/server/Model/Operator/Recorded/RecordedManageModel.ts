@@ -50,6 +50,7 @@ interface RecordedManageModelInterface extends Model {
     createNewRecorded(info: NewRecorded): Promise<number>;
     updateTsFileSize(recordedId: number): Promise<void>;
     updateEncodedFileSize(encodedId: number): Promise<void>;
+    cleanup(): Promise<void>;
 }
 
 class RecordedManageModel extends Model implements RecordedManageModelInterface {
@@ -418,6 +419,67 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
      */
     public async updateEncodedFileSize(encodedId: number): Promise<void> {
         await this.encodedDB.updateFileSize(encodedId);
+    }
+
+    /**
+     * recorded ファイルの整理
+     * DB に登録されていないファイルの削除
+     * @return Promise<void>
+     */
+    public async cleanup(): Promise<void> {
+        this.log.system.info('start recorded files clean up');
+
+        const fileList = await FileUtil.getFileList(Util.getRecordedPath());
+        const recordedFiles = await this.recordedDB.getAllFiles();
+        const encodedFiles = await this.encodedDB.getAllFiles();
+        const recordingFiles = await this.recordingManage.getRecordingPath();
+
+        // ファイル検索のための索引を作成
+        const filesIndex: { [key: string]: boolean } = {};
+        for (const file of recordedFiles) { filesIndex[file] = true; }
+        for (const file of encodedFiles) { filesIndex[file] = true; }
+        for (const file of recordingFiles) { filesIndex[file] = true; }
+
+        // ファイルを削除
+        for (const file of fileList.files) {
+            if (typeof filesIndex[file] === 'undefined') {
+                this.log.system.info(`delete file: ${ file }`);
+                await FileUtil.promiseUnlink(file)
+                .catch((err) => {
+                    this.log.system.error(`delete file error: ${ file }`);
+                    this.log.system.error(err);
+                });
+            }
+        }
+
+        // ディレクトリ検索のための索引を作成
+        const directoriesIndex: { [key: string]: boolean } = {};
+        for (const file of recordedFiles) { directoriesIndex[path.dirname(file)] = true; }
+        for (const file of encodedFiles) { directoriesIndex[path.dirname(file)] = true; }
+        for (const file of recordingFiles) { directoriesIndex[path.dirname(file)] = true; }
+
+        // 削除時にネストが深いディレクトリから削除するためソート
+        fileList.directories.sort((dir1, dir2) => { return dir2.length - dir1.length;  });
+
+        // ディレクトリ削除
+        for (const directory of fileList.directories) {
+            if (typeof directoriesIndex[directory] === 'undefined') {
+                this.log.system.info(`delete directory: ${ directory }`);
+                try {
+                    const isEmpty = await FileUtil.isEmptyDirectory(directory);
+                    if (isEmpty) {
+                        await FileUtil.promiseRmdir(directory);
+                    } else {
+                        this.log.system.warn(`directory is not empty: ${ directory }`);
+                    }
+                } catch (err) {
+                    this.log.system.error(`delete directory error: ${ directory }`);
+                    this.log.system.error(err);
+                }
+            }
+        }
+
+        this.log.system.info('recorded files clean up completed');
     }
 }
 

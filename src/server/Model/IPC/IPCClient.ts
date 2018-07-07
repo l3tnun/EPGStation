@@ -25,6 +25,7 @@ interface IPCClientInterface extends Model {
     recordedDeletes(recordedId: number[]): Promise<number[]>;
     recordedDeleteFile(recordedId: number): Promise<void>;
     recordedDeleteEncodeFile(encodedId: number): Promise<void>;
+    recordedCleanup(): Promise<void>;
     ruleDisable(ruleId: number): Promise<void>;
     ruleEnable(ruleId: number): Promise<void>;
     ruleDelete(ruleId: number): Promise<void>;
@@ -240,6 +241,15 @@ class IPCClient extends Model implements IPCClientInterface {
     }
 
     /**
+     * 録画 cleanup
+     * @return Promise<void>
+     */
+    public async recordedCleanup(): Promise<void> {
+        const id = this.send(IPCMessageDefinition.recordedClenaup);
+        await this.receive(id, null);
+    }
+
+    /**
      * rule を無効化する
      * @param ruleId: rule id
      * @return Promise<void>
@@ -389,10 +399,10 @@ class IPCClient extends Model implements IPCClientInterface {
     /**
      * 受信
      * @param id: number
-     * @param timeout: number
+     * @param timeout: number | null
      * @return Promise<IPCServerMessage>
      */
-    private receive(id: number, timeout: number = 5000): Promise<IPCServerMessage> {
+    private receive(id: number, timeout: number | null = 5000): Promise<IPCServerMessage> {
         return new Promise<IPCServerMessage>((resolve: (msg: IPCServerMessage) => void, reject: (err: Error) => void) => {
             this.listener.once(String(id), (msg: IPCServerMessage) => {
                 if (typeof msg.error !== 'undefined') {
@@ -402,10 +412,12 @@ class IPCClient extends Model implements IPCClientInterface {
                 }
             });
 
-            // timeout
-            setTimeout(() => {
-                reject(new Error('IPCTimeout'));
-            }, timeout);
+            if (timeout !== null) {
+                // timeout
+                setTimeout(() => {
+                    reject(new Error('IPCTimeout'));
+                }, timeout);
+            }
         });
     }
 }
