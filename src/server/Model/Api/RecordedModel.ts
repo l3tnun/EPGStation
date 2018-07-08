@@ -49,6 +49,7 @@ interface RecordedModelInterface extends ApiModel {
     createNewRecorded(info: NewRecorded): Promise<{ id: number }>;
     addEncode(recordedId: number, option: EncodeAddOption): Promise<void>;
     cancelEncode(recordedId: number): Promise<void>;
+    cleanup(): Promise<void>;
 }
 
 namespace RecordedModelInterface {
@@ -590,6 +591,13 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
      */
     public async cancelEncode(recordedId: number): Promise<void> {
         await this.encodeManage.cancel(recordedId);
+    }
+
+    /**
+     * 録画 cleanup
+     */
+    public cleanup(): Promise<void> {
+        return this.ipc.recordedCleanup();
     }
 }
 

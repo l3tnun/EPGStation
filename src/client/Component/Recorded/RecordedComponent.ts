@@ -3,6 +3,7 @@ import * as apid from '../../../../api';
 import { ViewModelStatus } from '../../Enums';
 import Util from '../../Util/Util';
 import BalloonViewModel from '../../ViewModel/Balloon/BalloonViewModel';
+import RecordedCleanupViewModel from '../../ViewModel/Recorded/RecordedCleanupViewModel';
 import RecordedInfoViewModel from '../../ViewModel/Recorded/RecordedInfoViewModel';
 import RecordedMenuViewModel from '../../ViewModel/Recorded/RecordedMenuViewModel';
 import RecordedPlayerViewModel from '../../ViewModel/Recorded/RecordedPlayerViewModel';
@@ -16,6 +17,7 @@ import MainLayoutComponent from '../MainLayoutComponent';
 import PaginationComponent from '../PaginationComponent';
 import ParentComponent from '../ParentComponent';
 import TabComponent from '../TabComponent';
+import RecordedCleanupBalloonComponent from './RecordedCleanupBalloonComponent';
 import RecordedDeleteComponent from './RecordedDeleteComponent';
 import RecordedEncodeComponent from './RecordedEncodeComponent';
 import RecordedInfoComponent from './RecordedInfoComponent';
@@ -31,6 +33,7 @@ import RecordedWatchSelectComponent from './RecordedWatchSelectComponent';
  */
 class RecordedComponent extends ParentComponent<void> {
     private viewModel: RecordedViewModel;
+    private cleanupViewModel: RecordedCleanupViewModel;
     private infoViewModel: RecordedInfoViewModel;
     private menuViewModel: RecordedMenuViewModel;
     private searchViewModel: RecordedSearchViewModel;
@@ -41,6 +44,7 @@ class RecordedComponent extends ParentComponent<void> {
     constructor() {
         super();
         this.viewModel = <RecordedViewModel> factory.get('RecordedViewModel');
+        this.cleanupViewModel = <RecordedCleanupViewModel> factory.get('RecordedCleanupViewModel');
         this.infoViewModel = <RecordedInfoViewModel> factory.get('RecordedInfoViewModel');
         this.menuViewModel = <RecordedMenuViewModel> factory.get('RecordedMenuViewModel');
         this.searchViewModel = <RecordedSearchViewModel> factory.get('RecordedSearchViewModel');
@@ -89,6 +93,17 @@ class RecordedComponent extends ParentComponent<void> {
                 },
                 {
                     attrs: {
+                        onclick: () => {
+                            this.balloon.close();
+                            this.cleanupViewModel.init();
+                            this.cleanupViewModel.open();
+                            this.cleanupViewModel.cleanup();
+                        },
+                    },
+                    text: 'クリーンアップ',
+                },
+                {
+                    attrs: {
                         style: Util.uaIsMobile() ? 'display: none;' : '',
                         onclick: async() => {
                             this.balloon.close();
@@ -106,6 +121,14 @@ class RecordedComponent extends ParentComponent<void> {
                 this.saveHistoryData(scrollTop);
             },
             notMainContent: [
+                m(BalloonComponent, {
+                    id: RecordedCleanupViewModel.cleanupId,
+                    content: m(RecordedCleanupBalloonComponent),
+                    maxWidth: 300,
+                    maxHeight: 300,
+                    forceDialog: true,
+                    forceModal: true,
+                }),
                 m(BalloonComponent, {
                     id: RecordedInfoViewModel.id,
                     head: m(TabComponent, {

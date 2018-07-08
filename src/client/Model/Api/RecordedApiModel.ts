@@ -45,6 +45,7 @@ interface RecordedApiModelInterface extends ApiModel {
     getTags(): apid.RecordedTags;
     addEncode(recordedId: apid.RecordedId, option: EncodeQueryOption): Promise<void>;
     cancelEncode(recordedId: apid.RecordedId): Promise<void>;
+    cleanup(): Promise<void>;
 }
 
 namespace RecordedApiModelInterface {
@@ -397,6 +398,17 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
         await this.request({
             method: 'DELETE',
             url: `./api/recorded/${ recordedId }/encode`,
+        });
+    }
+
+    /**
+     * 録画の cleanup
+     * /api/recorded/cleanup
+     */
+    public async cleanup(): Promise<void> {
+        await this.request({
+            method: 'POST',
+            url: './api/recorded/cleanup',
         });
     }
 }

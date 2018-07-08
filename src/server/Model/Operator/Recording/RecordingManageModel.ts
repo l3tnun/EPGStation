@@ -36,6 +36,7 @@ interface RecordingManageModelInterface extends Model {
     stopRuleId(ruleId: number): void;
     cleanRecording(): void;
     isRecording(programId: apid.ProgramId): boolean;
+    getRecordingPath(): string[];
 }
 
 /**
@@ -211,6 +212,21 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
         }
 
         return false;
+    }
+
+    /**
+     * 録画中のファイルパスを返す
+     * @return string[]
+     */
+    public getRecordingPath(): string[] {
+        const results: string[] = [];
+        for (const program of this.recording) {
+            if (typeof program.recPath !== 'undefined') {
+                results.push(program.recPath);
+            }
+        }
+
+        return results;
     }
 
     /**

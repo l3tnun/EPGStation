@@ -36,11 +36,13 @@ interface RecordedDBInterface extends DBTableBase {
     updateAllNullFileSize(): Promise<void>;
     findId(id: number): Promise<DBSchema.RecordedSchema | null>;
     findOld(): Promise<DBSchema.RecordedSchema | null>;
+    findCleanupList(): Promise<{ id: number }[]>;
     findAll(option: FindAllOption): Promise<DBSchema.RecordedSchema[]>;
     getTotal(option?: FindQuery): Promise<number>;
     getRuleTag(): Promise<DBSchema.RuleTag[]>;
     getChannelTag(): Promise<DBSchema.ChannelTag[]>;
     getGenreTag(): Promise<DBSchema.GenreTag[]>;
+    getAllFiles(): Promise<{ id: number; recPath: string }[]>;
 }
 
 abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
@@ -402,7 +404,7 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
     protected fixResult(baseDir: string, thumbnailDir: string, program: DBSchema.RecordedSchema, isAddBaseDir: boolean): DBSchema.RecordedSchema {
         if (isAddBaseDir && program.recPath !== null) {
             // フルパスへ書き換える
-            program.recPath = path.join(baseDir, program.recPath);
+            program.recPath = this.fixRecPath(baseDir, program.recPath);
         }
 
         if (isAddBaseDir && program.thumbnailPath !== null) {
@@ -414,6 +416,16 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
     }
 
     /**
+     * recPath 修正
+     * @param baseDir: string
+     * @param recPath: string
+     * @return string
+     */
+    private fixRecPath(baseDir: string, recPath: string): string {
+        return path.join(baseDir, recPath);
+    }
+
+    /**
      * id が一番古いレコードを返す
      * @return Promise<DBSchema.RecordedSchema | null>
      */
@@ -421,6 +433,14 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
         const programs = await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Recorded } order by startAt asc, id asc ${ this.operator.createLimitStr(1) }`);
 
         return this.operator.getFirst(await this.fixResults(<DBSchema.RecordedSchema[]> programs));
+    }
+
+    /**
+     * recPath が null で encoded も存在しない項目の id を列挙
+     * @return Promise<number>
+     */
+    public async findCleanupList(): Promise<{ id: number }[]> {
+        return <{ id: number }[]> await this.operator.runQuery(`select id from ${ DBSchema.TableName.Recorded } where recPath is null and id not in (select recordedId as id from ${ DBSchema.TableName.Encoded })`);
     }
 
     /**
@@ -542,6 +562,31 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
      */
     protected getTag<T>(item: string): Promise<T> {
         return this.operator.runQuery(`select count(*) as cnt, ${ item } from ${ DBSchema.TableName.Recorded } group by ${ item } order by ${ item } asc`);
+    }
+
+    /**
+     * ファイルパス一覧を取得
+     * @return Promise<{ id: number; recPath: string }[]>
+     */
+    public async getAllFiles(): Promise<{ id: number; recPath: string }[]> {
+        const results = <{ id: number; recPath: string }[]> await this.operator.runQuery(`select id, ${ this.getRecPathColumnStr() } from ${ DBSchema.TableName.Recorded } where recPath is not null order by id`);
+
+        const baseDir = Util.getRecordedPath();
+
+        return results.map((result) => {
+            return {
+                id: result.id,
+                recPath: this.fixRecPath(baseDir, result.recPath),
+            };
+        });
+    }
+
+    /**
+     * get recPath column str
+     * @return string
+     */
+    protected getRecPathColumnStr(): string {
+        return 'recPath';
     }
 }
 

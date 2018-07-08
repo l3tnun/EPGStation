@@ -72,6 +72,14 @@ class PostgreSQLRecordedDB extends RecordedDB {
     public getAllColumns(): string {
         return 'id, programId as "programId", channelId as "channelId", channelType as "channelType", startAt as "startAt", endAt as "endAt", duration, name, description, extended, genre1, genre2, videoType as "videoType", videoResolution as "videoResolution", videoStreamContent as "videoStreamContent", videoComponentType as "videoComponentType", audioSamplingRate as "audioSamplingRate", audioComponentType as "audioComponentType", recPath as "recPath", ruleId as "ruleId", thumbnailPath as "thumbnailPath", recording, protection, filesize';
     }
+
+    /**
+     * get recPath column str
+     * @return string
+     */
+    protected getRecPathColumnStr(): string {
+        return 'recPath as "recPath"';
+    }
 }
 
 export default PostgreSQLRecordedDB;
