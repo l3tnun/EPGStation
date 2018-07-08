@@ -460,11 +460,20 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
 
         // recorded 上で ts も encoded も存在しない項目を削除
         this.log.system.info('recordedDB cleanup');
-        await this.recordedDB.cleanup()
-        .catch((err) => {
+        try {
+            const programs = await this.recordedDB.findCleanupList();
+            for (const program of programs) {
+                try {
+                    await this.delete(program.id);
+                } catch (err) {
+                    this.log.system.error(`delete recorded error: ${ program.id }`);
+                    this.log.system.error(err);
+                }
+            }
+        } catch (err) {
             this.log.system.error('recordedDB cleanup error');
             this.log.system.error(err);
-        });
+        }
 
         // DB 上に存在しないファイルを削除する
         // ファイル検索のための索引を作成

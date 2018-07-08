@@ -28,7 +28,6 @@ interface RecordedDBInterface extends DBTableBase {
     delete(id: number): Promise<void>;
     deleteRecPath(id: number): Promise<void>;
     deleteRuleId(ruleId: number): Promise<void>;
-    cleanup(): Promise<void>;
     addThumbnail(id: number, filePath: string): Promise<void>;
     removeRecording(id: number): Promise<void>;
     removeAllRecording(): Promise<void>;
@@ -37,6 +36,7 @@ interface RecordedDBInterface extends DBTableBase {
     updateAllNullFileSize(): Promise<void>;
     findId(id: number): Promise<DBSchema.RecordedSchema | null>;
     findOld(): Promise<DBSchema.RecordedSchema | null>;
+    findCleanupList(): Promise<{ id: number }[]>;
     findAll(option: FindAllOption): Promise<DBSchema.RecordedSchema[]>;
     getTotal(option?: FindQuery): Promise<number>;
     getRuleTag(): Promise<DBSchema.RuleTag[]>;
@@ -297,14 +297,6 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
     }
 
     /**
-     * recPath が null で encoded も存在しない項目を削除
-     * @return Promise<void>
-     */
-    public cleanup(): Promise<void> {
-        return this.operator.runQuery(`delete from ${ DBSchema.TableName.Recorded } where recPath is null and id not in (select recordedId as id from ${ DBSchema.TableName.Encoded })`);
-    }
-
-    /**
      * thumbnail filePath を追加
      * @param id: recorded id
      * @param filePath: thumbnail path
@@ -441,6 +433,14 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
         const programs = await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Recorded } order by startAt asc, id asc ${ this.operator.createLimitStr(1) }`);
 
         return this.operator.getFirst(await this.fixResults(<DBSchema.RecordedSchema[]> programs));
+    }
+
+    /**
+     * recPath が null で encoded も存在しない項目の id を列挙
+     * @return Promise<number>
+     */
+    public async findCleanupList(): Promise<{ id: number }[]> {
+        return <{ id: number }[]> await this.operator.runQuery(`select id from ${ DBSchema.TableName.Recorded } where recPath is null and id not in (select recordedId as id from ${ DBSchema.TableName.Encoded })`);
     }
 
     /**
