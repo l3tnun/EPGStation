@@ -52,6 +52,7 @@ import { ProgramExternalProcessModel } from './Operator/ProgramExternalProcessMo
 import { RecordedManageModel } from './Operator/Recorded/RecordedManageModel';
 import { RecordedExternalProcessModel } from './Operator/RecordedExternalProcessModel';
 import { RecordingManageModel } from './Operator/Recording/RecordingManageModel';
+import { TSCheckerModel } from './Operator/Recording/TSCheckerModel';
 import { ReservationManageModel } from './Operator/Reservation/ReservationManageModel';
 import { RuleManageModel } from './Operator/Rule/RuleManageModel';
 import { StorageCheckManageModel } from './Operator/Storage/StorageCheckManageModel';
@@ -135,6 +136,7 @@ namespace ModelFactorySetting {
             programsDB!,
             recordedHistoryDB!,
             reservationManage,
+            () => { return new TSCheckerModel(); },
         );
         reservationManage.setRecordedManageModel(recordingManage);
 

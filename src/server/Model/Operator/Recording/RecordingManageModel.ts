@@ -18,6 +18,7 @@ import Model from '../../Model';
 import { ReservationManageModelInterface } from '../Reservation/ReservationManageModel';
 import { ReserveProgram, RuleReserveProgram } from '../ReserveProgramInterface';
 import { EncodeInterface } from '../RuleInterface';
+import { TSCheckerModelInterface } from './TSCheckerModel';
 
 interface RecordingProgram {
     reserve: ReserveProgram;
@@ -52,6 +53,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
     private programsDB: ProgramsDBInterface;
     private recordedHistoryDB: RecordedHistoryDBInterface;
     private reservationManage: ReservationManageModelInterface;
+    private getTsChecker: () => TSCheckerModelInterface;
 
     constructor(
         recordedDB: RecordedDBInterface,
@@ -59,6 +61,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
         programsDB: ProgramsDBInterface,
         recordedHistoryDB: RecordedHistoryDBInterface,
         reservationManage: ReservationManageModelInterface,
+        getTsChecker: () => TSCheckerModelInterface,
     ) {
         super();
 
@@ -67,6 +70,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
         this.programsDB = programsDB;
         this.recordedHistoryDB = recordedHistoryDB;
         this.reservationManage = reservationManage;
+        this.getTsChecker = getTsChecker;
         this.mirakurun = CreateMirakurunClient.get();
     }
 
@@ -324,6 +328,9 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
         this.log.system.info(`recording stream: ${ recPath }`);
         stream.pipe(recFile);
 
+        const tsChecker = this.getTsChecker();
+        tsChecker.set(stream);
+
         return new Promise<void>((resolve: () => void, reject: (error: Error) => void) => {
             // set timeout
             const recordingStartTimer = setTimeout(() => {
@@ -381,7 +388,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
                 try {
                     recorded.id = await this.recordedDB.insert(recorded);
                     // 録画終了時処理
-                    stream.once('end', () => { this.recEnd(recData, recFile, recorded); });
+                    stream.once('end', () => { this.recEnd(recData, recFile, recorded, tsChecker); });
 
                     // 録画開始を通知
                     this.startEventsNotify(recorded);
@@ -407,7 +414,12 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
      * @param recFile: fs.WriteStream
      * @param recorded: DBSchema.RecordedSchema | null DB 上のデータ
      */
-    private async recEnd(recData: RecordingProgram, recFile: fs.WriteStream, recorded: DBSchema.RecordedSchema | null): Promise<void> {
+    private async recEnd(
+        recData: RecordingProgram,
+        recFile: fs.WriteStream,
+        recorded: DBSchema.RecordedSchema | null,
+        tsChecker: TSCheckerModelInterface | null = null,
+    ): Promise<void> {
         if (typeof recData.stream === 'undefined') { return; }
 
         // stream 停止
@@ -477,6 +489,12 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
 
                 // update filesize
                 await this.recordedDB.updateFileSize(recorded.id);
+
+                // drop 情報
+                if (tsChecker !== null) {
+                    const dropLog = await tsChecker.getResult();
+                    this.log.system.info(dropLog as any);
+                }
 
                 // 録画完了を通知
                 const encodeOption = typeof recData.reserve.encodeOption === 'undefined' ? null : recData.reserve.encodeOption;
