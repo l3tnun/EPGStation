@@ -90,11 +90,13 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
     /**
      * insert 時の config を取得
      */
-    public getInsertConfig(): { insertMax: number; insertWait: number } {
+    private getInsertConfig(): { insertMax: number; insertWait: number } {
         const config = this.config.getConfig();
+        let insertMax = config.programInsertMax || 10;
+        if (insertMax > 10) { insertMax = 10; }
 
         return {
-            insertMax: config.programInsertMax || 100,
+            insertMax: insertMax,
             insertWait: config.programInsertWait || 0,
         };
     }
