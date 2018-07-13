@@ -15,7 +15,7 @@ Config.json
 | basicAuth | {} | | no | BASIC 認証設定 |
 | gid | string \| number | | no | gid の設定 |
 | uid | string \| number | | no | uid の設定 |
-| programInsertMax | number | 100 | no | DB へ番組情報を挿入するときの 1 回あたりの件数 |
+| programInsertMax | number | 10 | no | DB へ番組情報を挿入するときの 1 回あたりの件数。1 ~ 10 までの間で指定可能 |
 | programInsertWait | number | 0 | no | DB へ番組情報を挿入するときの 1 回あたりの待機時間 |
 | serviceOrder | number[] | | no | チャンネル並び替え mirakurun:40772/api/services で id を確認できる |
 | excludeServices | number[] | | no | 除外するチャンネル mirakurun:40772/api/services で id を確認できる |

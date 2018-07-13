@@ -55,20 +55,6 @@ class SQLite3ProgramsDB extends ProgramsDB {
     }
 
     /**
-     * insert 時の config を取得
-     */
-    public getInsertConfig(): { insertMax: number; insertWait: number } {
-        const config = this.config.getConfig();
-        let insertMax = config.programInsertMax || 10;
-        if (insertMax > 10) { insertMax = 10; }
-
-        return {
-            insertMax: insertMax,
-            insertWait: config.programInsertWait || 0,
-        };
-    }
-
-    /**
      * @param programs: ScheduleProgramItem[] | ProgramSchema[] | ProgramSchemaWithOverlap[]
      * @return ScheduleProgramItem[] | ProgramSchema[]
      */
