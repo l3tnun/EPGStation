@@ -47,6 +47,15 @@ interface KeywordQuery {
     extended: string[];
 }
 
+/**
+ * keyword values
+ */
+interface KeywordValues {
+    title: string[];
+    description: string[];
+    extended: string[];
+}
+
 interface ProgramsDBInterface extends DBTableBase {
     create(): Promise<void>;
     drop(): Promise<void>;
@@ -416,6 +425,7 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
      */
     public async findRule(option: SearchInterface, isMinColumn: boolean = false, limit: number | null = null): Promise<DBSchema.ProgramSchemaWithOverlap[]> {
         let column = isMinColumn ? this.getMinColumns() : this.getAllColumns();
+        const options = this.createQuery(option);
 
         // 重複回避
         if (!!option.avoidDuplicate && typeof option.periodToAvoidDuplicate !== 'undefined') {
@@ -435,10 +445,10 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
                 + ' as overlap';
         }
 
-        let query = `select ${ column } from ${ DBSchema.TableName.Programs } ${ this.createQuery(option) } order by startAt asc`;
+        let query = `select ${ column } from ${ DBSchema.TableName.Programs } ${ options.query } order by startAt asc`;
         if (limit !== null) { query += ` limit ${ limit }`; }
 
-        return <DBSchema.ProgramSchema[]> this.fixResults(<DBSchema.ProgramSchema[]> await this.runFindRule(query, Boolean(option.keyCS)));
+        return <DBSchema.ProgramSchema[]> this.fixResults(<DBSchema.ProgramSchema[]> await this.runFindRule(query, options.values, Boolean(option.keyCS)));
     }
 
     /**
@@ -452,11 +462,12 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
     /**
      * ルール検索実行部分
      * @param query: string
+     * @param values: any[]
      * @param cs: boolean
      * @return Promise<DBSchema.ProgramSchema[]>
      */
-    public runFindRule(query: string, _cs: boolean): Promise<DBSchema.ProgramSchema[]> {
-        return this.operator.runQuery(query);
+    public runFindRule(query: string, values: any[], _cs: boolean): Promise<DBSchema.ProgramSchema[]> {
+        return this.operator.runQuery(query, values);
     }
 
     /**
@@ -495,10 +506,11 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
     /**
      * ルール検索用の where 以下の条件を生成する
      * @param option: SearchInterface
-     * @return string
+     * @return { query: string; values: any[] }
      */
-    private createQuery(option: SearchInterface): string {
+    private createQuery(option: SearchInterface): { query: string; values: any[] } {
         const query: string[] = [];
+        const values: any[] = [];
 
         // week
         if (typeof option.week !== 'undefined' && option.week < 0x7f) {
@@ -558,30 +570,49 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
             if (!this.isEnableRegExp()) { keyOption.regExp = false; }
             if (!this.isEnableCS()) { keyOption.cs = false; }
 
-            const title: string[] = [];
-            const description: string[] = [];
-            const extended: string[] = [];
+            const titleQuery: string[] = [];
+            const descriptionQuery: string[] = [];
+            const extendedQuery: string[] = [];
+            const titleValues: any[] = [];
+            const descriptionValues: any[] = [];
+            const extendedValues: any[] = [];
 
             // keyword
             if (typeof option.keyword !== 'undefined') {
-                const result = this.createKeyword(option.keyword, keyOption);
-                Array.prototype.push.apply(title, result.title);
-                Array.prototype.push.apply(description, result.description);
-                Array.prototype.push.apply(extended, result.extended);
+                const result = this.createKeyword(option.keyword, keyOption, values.length);
+                Array.prototype.push.apply(titleQuery, result.query.title);
+                Array.prototype.push.apply(titleValues, result.value.title);
+                Array.prototype.push.apply(descriptionQuery, result.query.description);
+                Array.prototype.push.apply(descriptionValues, result.value.description);
+                Array.prototype.push.apply(extendedQuery, result.query.extended);
+                Array.prototype.push.apply(extendedValues, result.value.extended);
             }
 
             // ignoreKeyword
             if (typeof option.ignoreKeyword !== 'undefined') {
-                const result = this.createIgnoreKeyword(option.ignoreKeyword, keyOption);
-                Array.prototype.push.apply(title, result.title);
-                Array.prototype.push.apply(description, result.description);
-                Array.prototype.push.apply(extended, result.extended);
+                const valuesLength = values.length + titleValues.length + descriptionValues.length + extendedValues.length;
+                const result = this.createIgnoreKeyword(option.ignoreKeyword, keyOption, valuesLength);
+                Array.prototype.push.apply(titleQuery, result.query.title);
+                Array.prototype.push.apply(titleValues, result.value.title);
+                Array.prototype.push.apply(descriptionQuery, result.query.description);
+                Array.prototype.push.apply(descriptionValues, result.value.description);
+                Array.prototype.push.apply(extendedQuery, result.query.extended);
+                Array.prototype.push.apply(extendedValues, result.value.extended);
             }
 
             const or: string[] = [];
-            if (title.length > 0) { or.push(`(${ this.createAndQuery(title) })`); }
-            if (description.length > 0) { or.push(`(${ this.createAndQuery(description) })`); }
-            if (extended.length > 0) { or.push(`(${ this.createAndQuery(extended) })`); }
+            if (titleQuery.length > 0) {
+                or.push(`(${ this.createAndQuery(titleQuery) })`);
+                Array.prototype.push.apply(values, titleValues);
+            }
+            if (descriptionQuery.length > 0) {
+                or.push(`(${ this.createAndQuery(descriptionQuery) })`);
+                Array.prototype.push.apply(values, descriptionValues);
+            }
+            if (extendedQuery.length > 0) {
+                or.push(`(${ this.createAndQuery(extendedQuery) })`);
+                Array.prototype.push.apply(values, extendedValues);
+            }
             query.push(`(${ this.createOrQuery(or) })`);
         }
 
@@ -591,7 +622,7 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
            queryStr = queryStr + ' and ' + this.createAndQuery(query);
         }
 
-        return queryStr;
+        return { query: queryStr, values: values };
     }
 
     /**
@@ -712,34 +743,69 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
      * create keyword
      * @param keyword: string
      * @param keyOption: KeywordOption
-     * @return KeywordQuery
+     * @param cnt: number values length
+     * @return { query: KeywordQuery; value: KeywordValues }
      */
-    protected createKeyword(keyword: string, keyOption: KeywordOption): KeywordQuery {
-        const nameQuery: string[] = [];
+    protected createKeyword(keyword: string, keyOption: KeywordOption, cnt: number): { query: KeywordQuery; value: KeywordValues } {
+        const titleQuery: string[] = [];
         const descriptionQuery: string[] = [];
         const extendedQuery: string[] = [];
+        const titleValues: any[] = [];
+        const descriptionValues: any[] = [];
+        const extendedValues: any[] = [];
 
-        keyword = keyword.replace(/'/g, "\\'"); // ' を \' へ置換
         if (keyOption.regExp) {
             // 正規表現
-            const baseStr = `'${ keyword }'`;
-            if (keyOption.title) { nameQuery.push(`name ${ this.createRegexpStr(keyOption.cs) } ${ baseStr }`); }
-            if (keyOption.description) { descriptionQuery.push(`description ${ this.createRegexpStr(keyOption.cs) } ${ baseStr }`); }
-            if (keyOption.extended) { extendedQuery.push(`extended ${ this.createRegexpStr(keyOption.cs) } ${ baseStr }`); }
+            const regexpStr = this.createRegexpStr(keyOption.cs);
+            if (keyOption.title) {
+                cnt += 1;
+                titleQuery.push(`name ${ regexpStr } ${ this.operator.createValueStr(cnt, cnt) }`);
+                titleValues.push(keyword);
+            }
+            if (keyOption.description) {
+                cnt += 1;
+                descriptionQuery.push(`description ${ regexpStr } ${ this.operator.createValueStr(cnt, cnt) }`);
+                descriptionValues.push(keyword);
+            }
+            if (keyOption.extended) {
+                cnt += 1;
+                extendedQuery.push(`extended ${ regexpStr } ${ this.operator.createValueStr(cnt, cnt) }`);
+                extendedValues.push(keyword);
+            }
         } else {
             // あいまい検索
+            const likeStr = this.createLikeStr(keyOption.cs);
             StrUtil.toHalf(keyword).trim().split(' ').forEach((str) => {
-                const baseStr = `'%${ str }%'`;
-                if (keyOption.title) { nameQuery.push(`name ${ this.createLikeStr(keyOption.cs) } ${ baseStr }`); }
-                if (keyOption.description) { descriptionQuery.push(`description ${ this.createLikeStr(keyOption.cs) } ${ baseStr }`); }
-                if (keyOption.extended) { extendedQuery.push(`extended ${ this.createLikeStr(keyOption.cs) } ${ baseStr }`); }
+                str = `%${ str }%`;
+                if (keyOption.title) {
+                    cnt += 1;
+                    titleQuery.push(`name ${ likeStr } ${ this.operator.createValueStr(cnt, cnt) }`);
+                    titleValues.push(str);
+                }
+                if (keyOption.description) {
+                    cnt += 1;
+                    descriptionQuery.push(`description ${ likeStr } ${ this.operator.createValueStr(cnt, cnt) }`);
+                    descriptionValues.push(str);
+                }
+                if (keyOption.extended) {
+                    cnt += 1;
+                    extendedQuery.push(`extended ${ likeStr } ${ this.operator.createValueStr(cnt, cnt) }`);
+                    extendedValues.push(str);
+                }
             });
         }
 
         return {
-            title: nameQuery,
-            description: descriptionQuery,
-            extended: extendedQuery,
+            query: {
+                title: titleQuery,
+                description: descriptionQuery,
+                extended: extendedQuery,
+            },
+            value: {
+                title: titleValues,
+                description: descriptionValues,
+                extended: extendedValues,
+            },
         };
     }
 
@@ -747,26 +813,49 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
      * create ignore keyword
      * @param ignoreKeyword: string
      * @param keyOption: KeywordOption
-     * @return KeywordQuery
+     * @param cnt: number
+     * @return { query: KeywordQuery; value: KeywordValues }
      */
-    protected createIgnoreKeyword(ignoreKeyword: string, keyOption: KeywordOption): KeywordQuery {
-        const nameQuery: string[] = [];
+    protected createIgnoreKeyword(ignoreKeyword: string, keyOption: KeywordOption, cnt: number): { query: KeywordQuery; value: KeywordValues } {
+        const titleQuery: string[] = [];
         const descriptionQuery: string[] = [];
         const extendedQuery: string[] = [];
+        const titleValues: any[] = [];
+        const descriptionValues: any[] = [];
+        const extendedValues: any[] = [];
 
-        ignoreKeyword = ignoreKeyword.replace(/'/g, "\\'");
+        const likeStr = this.createLikeStr(keyOption.cs);
         StrUtil.toHalf(ignoreKeyword).trim().split(' ').forEach((str) => {
-            // あいまい検索
-            const baseStr = `'%${ str }%'`;
-            if (keyOption.title) { nameQuery.push(`name not ${ this.createLikeStr(keyOption.cs) } ${ baseStr }`); }
-            if (keyOption.description) { descriptionQuery.push(`description not ${ this.createLikeStr(keyOption.cs) } ${ baseStr }`); }
-            if (keyOption.extended) { extendedQuery.push(`extended not ${ this.createLikeStr(keyOption.cs) } ${ baseStr }`); }
+            str = `%${ str }%`;
+
+            if (keyOption.title) {
+                cnt += 1;
+                titleQuery.push(`name not ${ likeStr } ${ this.operator.createValueStr(cnt, cnt) }`);
+                titleValues.push(str);
+            }
+            if (keyOption.description) {
+                cnt += 1;
+                descriptionQuery.push(`description not ${ likeStr } ${ this.operator.createValueStr(cnt, cnt) }`);
+                descriptionValues.push(str);
+            }
+            if (keyOption.extended) {
+                cnt += 1;
+                extendedQuery.push(`extended not ${ likeStr } ${ this.operator.createValueStr(cnt, cnt) }`);
+                extendedValues.push(str);
+            }
         });
 
         return {
-            title: nameQuery,
-            description: descriptionQuery,
-            extended: extendedQuery,
+            query: {
+                title: titleQuery,
+                description: descriptionQuery,
+                extended: extendedQuery,
+            },
+            value: {
+                title: titleValues,
+                description: descriptionValues,
+                extended: extendedValues,
+            },
         };
     }
 
