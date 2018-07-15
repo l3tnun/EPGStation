@@ -100,6 +100,12 @@ class IPCServer extends Model implements IPCServerInterface {
      * init
      */
     private init(): void {
+        // MirakurunManager
+        this.functions[IPCMessageDefinition.getTuners] = (id: number) => {
+            const value = this.mirakurunManage.getTuners();
+            this.send({ id: id, value: value });
+        };
+
         // Reserves
         this.functions[IPCMessageDefinition.getReserveAllId] = (id: number) => {
             const value = this.reservationManage.getReservesAllId();

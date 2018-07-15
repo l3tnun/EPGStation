@@ -132,7 +132,7 @@ namespace ModelFactorySetting {
             servicesDB,
             ipc,
         ); });
-        factory.reg('ConfigModel', () => { return new ConfigModel(); });
+        factory.reg('ConfigModel', () => { return new ConfigModel(ipc); });
         factory.reg('IPTVModel', () => { return new IPTVModel(
             programsDB,
             servicesDB,

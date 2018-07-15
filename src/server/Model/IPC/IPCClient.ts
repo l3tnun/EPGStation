@@ -10,6 +10,7 @@ import { SocketIoManageModelInterface } from '../Service/SocketIoManageModel';
 import { IPCClientMessage, IPCMessageDefinition, IPCServerEncodeMessage, IPCServerMessage, IPCServerSocketIoMessage } from './IPCMessageInterface';
 
 interface IPCClientInterface extends Model {
+    getTuners(): Promise<apid.TunerDevice[]>;
     getReserveAllId(): Promise<ReserveAllId>;
     getReserve(programId: number): Promise<ReserveProgram | null>;
     getReserves(limit: number, offset: number): Promise<ReserveLimit>;
@@ -79,6 +80,17 @@ class IPCClient extends Model implements IPCClientInterface {
     ): void {
         this.encodeManage = encodeManage;
         this.socketIo = socketIo;
+    }
+
+    /**
+     * tuner 一覧を取得
+     * @return Promise<apid.TunerDevice[]>
+     */
+    public async getTuners(): Promise<apid.TunerDevice[]> {
+        const id = this.send(IPCMessageDefinition.getTuners);
+        const result = await this.receive(id);
+
+        return <apid.TunerDevice[]> result.value;
     }
 
     /**
