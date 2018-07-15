@@ -24,6 +24,7 @@ class VideoContainerComponent extends Component<ControlArgs> {
     private videoElement: HTMLVideoElement | null = null;
     private controlerElement: HTMLElement | null = null;
     private disableControl: boolean = false;
+    private isLiveStreaming: boolean = false;
     private seekBar: number = 0;
     private speed: number = 1;
     private stopTimeUpdate: boolean = false;
@@ -48,6 +49,7 @@ class VideoContainerComponent extends Component<ControlArgs> {
      */
     public view(vnode: m.Vnode<ControlArgs, this>): m.Children {
         this.disableControl = !!vnode.attrs.disableControl;
+        this.isLiveStreaming = !!vnode.attrs.isLiveStreaming;
 
         if (!!vnode.attrs.disableSpeedControl) {
             this.speed = 1;
@@ -55,7 +57,7 @@ class VideoContainerComponent extends Component<ControlArgs> {
 
         return m('div', {
             class: 'video-container'
-                + (!!vnode.attrs.isLiveStreaming ? ' live-streaming' : '')
+                + (this.isLiveStreaming ? ' live-streaming' : '')
                 + (Util.uaIsMobile() ? ' mobile' : '')
                 + (!this.isEnablePip ? ' disable-pip' : '')
                 + (this.isPipMode() ? ' pip-mode' : '')
@@ -142,9 +144,30 @@ class VideoContainerComponent extends Component<ControlArgs> {
      * @param event: KeyboardEvent
      */
     private onKeyDown(event: KeyboardEvent): void {
+        if (this.disableControl || this.videoElement === null) { return; }
+
         // space key 入力時に再生状態の反転
         if (event.keyCode === 32) {
             this.switchPlay();
+        }
+
+        if (!this.isLiveStreaming) {
+            // -10 seek
+            if (event.keyCode === 37) {
+                this.backTime(10);
+                m.redraw();
+            }
+
+            // +10 seek
+            if (event.keyCode === 39) {
+                this.skipTime(10);
+                m.redraw();
+            }
+        }
+
+        // switch mute
+        if (event.keyCode === 77) {
+            this.switchMute();
         }
     }
 
