@@ -21,7 +21,7 @@ class SearchAddComponent extends SearchOptionBaseComponent<void> {
             class: 'option-card mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col',
             style: 'margin: 38px auto;',
         }, [
-            m('div', { class: 'mdl-card__supporting-text' }, [
+            m('div', { class: 'add-card mdl-card__supporting-text' }, [
                 this.createOptionCheckBox(),
                 this.createAvoidDuplicate(),
                 this.createSaveDirectory(),
@@ -139,10 +139,10 @@ class SearchAddComponent extends SearchOptionBaseComponent<void> {
      * トランスコードのオプションを生成する
      */
     private createTranscodeContent(num: number): m.Child {
-        return m('div', { style: 'width: 100%;' }, [
+        return m('div', { class: 'encode-content' }, [
             // セレクタ
-            m('div', { style: 'display: table-cell;' }, `設定${ num + 1 }: モード`),
-            m('div', { style: 'display: table-cell; padding: 0px 12px;' }, [
+            m('div', { class: 'mode' }, `設定${ num + 1 }: モード`),
+            m('div', { class: 'selector' }, [
                 m('div', { class: 'pulldown mdl-layout-spacer' }, [
                     m('select', {
                         value: this.viewModel.encodeModes[num].mode,
