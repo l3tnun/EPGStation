@@ -800,7 +800,7 @@ class ReservationManageModel extends Model {
 
         // conflict を表示
         for (const reserve of this.reserves) {
-            if ((<RuleReserveProgram> reserve).ruleId !== ruleId || reserve.isSkip) { continue; }
+            if ((<RuleReserveProgram> reserve).ruleId !== ruleId || reserve.isSkip || (<RuleReserveProgram> reserve).isOverlap) { continue; }
 
             if (reserve.isConflict) {
                 // コンフリクト
