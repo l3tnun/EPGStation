@@ -23,6 +23,8 @@ class VideoContainerComponent extends Component<ControlArgs> {
     private containerElement: HTMLElement | null = null;
     private videoElement: HTMLVideoElement | null = null;
     private controlerElement: HTMLElement | null = null;
+    private disableControl: boolean = false;
+    private isLiveStreaming: boolean = false;
     private seekBar: number = 0;
     private speed: number = 1;
     private stopTimeUpdate: boolean = false;
@@ -46,19 +48,8 @@ class VideoContainerComponent extends Component<ControlArgs> {
      * view
      */
     public view(vnode: m.Vnode<ControlArgs, this>): m.Children {
-        if (!!vnode.attrs.disableControl) {
-            return m('div', {
-                class: 'video-container',
-                oncreate: (mainVnode: m.VnodeDOM<void, any>) => {
-                    this.setElements(<HTMLElement> mainVnode.dom, true);
-                },
-                onupdate: (mainVnode: m.VnodeDOM<void, any>) => {
-                    this.setElements(<HTMLElement> mainVnode.dom, true);
-                },
-            }, [
-                vnode.attrs.video,
-            ]);
-        }
+        this.disableControl = !!vnode.attrs.disableControl;
+        this.isLiveStreaming = !!vnode.attrs.isLiveStreaming;
 
         if (!!vnode.attrs.disableSpeedControl) {
             this.speed = 1;
@@ -66,7 +57,7 @@ class VideoContainerComponent extends Component<ControlArgs> {
 
         return m('div', {
             class: 'video-container'
-                + (!!vnode.attrs.isLiveStreaming ? ' live-streaming' : '')
+                + (this.isLiveStreaming ? ' live-streaming' : '')
                 + (Util.uaIsMobile() ? ' mobile' : '')
                 + (!this.isEnablePip ? ' disable-pip' : '')
                 + (this.isPipMode() ? ' pip-mode' : '')
@@ -76,6 +67,8 @@ class VideoContainerComponent extends Component<ControlArgs> {
             oncreate: (mainVnode: m.VnodeDOM<void, any>) => {
                 const element = <HTMLElement> mainVnode.dom;
                 this.setElements(element);
+                if (this.disableControl) { return; }
+
                 this.seekBar = 0;
                 this.speed = 1;
                 this.stopTimeUpdate = false;
@@ -105,6 +98,7 @@ class VideoContainerComponent extends Component<ControlArgs> {
                 this.stopTimeUpdate = false;
                 this.isWaiting = false;
 
+                if (this.disableControl) { return; }
                 document.removeEventListener('keydown', this.keyDwonListener, false);
                 document.removeEventListener('webkitfullscreenchange', this.fullScreenListener, false);
                 document.removeEventListener('mozfullscreenchange', this.fullScreenListener, false);
@@ -150,9 +144,30 @@ class VideoContainerComponent extends Component<ControlArgs> {
      * @param event: KeyboardEvent
      */
     private onKeyDown(event: KeyboardEvent): void {
+        if (this.disableControl || this.videoElement === null) { return; }
+
         // space key 入力時に再生状態の反転
         if (event.keyCode === 32) {
             this.switchPlay();
+        }
+
+        if (!this.isLiveStreaming) {
+            // -10 seek
+            if (event.keyCode === 37) {
+                this.backTime(10);
+                m.redraw();
+            }
+
+            // +10 seek
+            if (event.keyCode === 39) {
+                this.skipTime(10);
+                m.redraw();
+            }
+        }
+
+        // switch mute
+        if (event.keyCode === 77) {
+            this.switchMute();
         }
     }
 
@@ -229,30 +244,31 @@ class VideoContainerComponent extends Component<ControlArgs> {
     /**
      * set elements
      * @param container: HTMLElement
-     * @param disableControl: boolean
      */
-    private setElements(container: HTMLElement, disableControl: boolean = false): void {
+    private setElements(container: HTMLElement): void {
         this.containerElement = container;
         const videos = container.getElementsByTagName('video');
 
         if (videos.length > 0) {
-            const needSetTimeUpdate = this.videoElement === null;
+            const needVideoSetting = this.videoElement === null;
             this.videoElement = <HTMLVideoElement> videos[0];
-            this.videoElement.controls = disableControl;
+            this.videoElement.controls = this.disableControl;
 
             // set pip
             this.isEnablePip = (<any> this.videoElement).webkitSupportsPresentationMode
                 && typeof (<any> this.videoElement).webkitSupportsPresentationMode === 'function'
                 && !Util.uaIsiPhone();
 
-            if (needSetTimeUpdate && !disableControl) {
-                this.seekBar = 0;
-                this.speed = 1;
+            if (needVideoSetting) {
+                if (!this.disableControl) {
+                    this.seekBar = 0;
+                    this.speed = 1;
 
-                // 時刻更新時
-                this.videoElement.addEventListener('timeupdate', () => {
-                    this.timeupdate();
-                });
+                    // 時刻更新時
+                    this.videoElement.addEventListener('timeupdate', () => {
+                        this.timeupdate();
+                    });
+                }
 
                 // 読み込み中
                 this.videoElement.addEventListener('waiting', () => {
@@ -280,11 +296,10 @@ class VideoContainerComponent extends Component<ControlArgs> {
             }
         } else {
             this.videoElement = null;
-            if (!disableControl) {
-                const needRedraw = this.isWaiting === false;
-                this.isWaiting = true;
-                if (needRedraw) { m.redraw(); }
+            if (!this.disableControl && !this.isWaiting) {
+                m.redraw();
             }
+            this.isWaiting = true;
         }
     }
 
@@ -357,21 +372,23 @@ class VideoContainerComponent extends Component<ControlArgs> {
      * @return m.Child | null
      */
     private createLoading(): m.Child | null {
-        if (!this.isWaiting) {
+        if (this.isWaiting) {
+            return m('div', {
+                class: 'loading-video-content ios-no-click-color',
+                onclick: () => {},
+            }, [
+                m('div', {
+                    class: 'mdl-spinner mdl-spinner--single-color mdl-js-spinner is-active',
+                }),
+            ]);
+        } else if (this.disableControl) {
+            return null;
+        } else {
             return m('div', {
                 class: 'loading-video-content hide ios-no-click-color',
                 onclick: () => {},
             }, 'not-loading');
         }
-
-        return m('div', {
-            class: 'loading-video-content ios-no-click-color',
-            onclick: () => {},
-        }, [
-            m('div', {
-                class: 'mdl-spinner mdl-spinner--single-color mdl-js-spinner is-active',
-            }),
-        ]);
     }
 
     /**
@@ -380,7 +397,7 @@ class VideoContainerComponent extends Component<ControlArgs> {
      * @return m.Child | null
      */
     private createControl(vnode: m.Vnode<ControlArgs, this>): m.Child | null {
-        if (!!vnode.attrs.disableControl || this.videoElement === null) { return null; }
+        if (this.disableControl || this.videoElement === null) { return null; }
 
         const isMobile = Util.uaIsMobile();
         const timeStr = this.createDurationStr();
