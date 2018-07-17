@@ -102,7 +102,7 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
 
         if (recorded.recording) {
             // 録画中なら録画停止
-            this.recordingManage.stop(recorded.programId);
+            this.recordingManage.stop(recorded.programId, true);
         }
 
         if (recorded.recPath !== null) {
@@ -134,6 +134,8 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
                 }
             });
         }
+
+        // TODO delete log file
     }
 
     /**
@@ -426,6 +428,7 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
      * DB に登録されていないファイルの削除
      * @return Promise<void>
      */
+    // TODO log ファイル除外
     public async cleanup(): Promise<void> {
         this.log.system.info('start recorded files clean up');
 

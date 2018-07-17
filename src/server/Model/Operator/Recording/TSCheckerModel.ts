@@ -2,28 +2,28 @@
 
 import * as aribts from 'aribts';
 import * as events from 'events';
+import * as fs from 'fs';
 import * as stream from 'stream';
 import Model from '../../Model';
 
-interface DropLog {
-    [pid: number]: DropLogItem;
-}
-
-interface DropLogItem extends aribts.ResultItem {
-    name: string;
-}
-
 interface TSCheckerModelInterface extends Model {
-    set(readableStream: stream.Readable): void;
-    getResult(): Promise<DropLog>;
+    set(tsPath: string, readableStream: stream.Readable): void;
+    getFilePath(): string | null;
+    getResult(): Promise<aribts.Result>;
+    setDeleted(): void;
 }
 
 class TSCheckerModel extends Model implements TSCheckerModelInterface {
     private listener: events.EventEmitter = new events.EventEmitter();
+    private logPath: string | null = null;
+    private isDeleted: boolean = false;
     private result: aribts.Result | null = null;
     private pidIndex: { [key: number]: string } = {};
+    private time: Date | null = null;
 
-    public set(readableStream: stream.Readable): void {
+    public set(tsPath: string, readableStream: stream.Readable): void {
+        this.logPath = this.getLogPath(tsPath);
+
         const transformStream = new stream.Transform({
             // tslint:disable-next-line:space-before-function-paren
             transform: function (chunk: any, _encoding: string, done: () => void): void {
@@ -55,10 +55,40 @@ class TSCheckerModel extends Model implements TSCheckerModelInterface {
             }
         });
 
-        tsPacketAnalyzer.on('finish', () => {
+        let hasError = false;
+        tsPacketAnalyzer.on('packetError', (pid, counter, expected) => {
+            this.appendFile(`error: (pid: ${ this.pidToString(pid) }, counter: ${ counter }, expected: ${ expected }, time: ${ this.getTime() })\n`);
+            hasError = true;
+        });
+
+        tsPacketAnalyzer.on('packetDrop', (pid, counter, expected) => {
+            this.appendFile(`drop (pid: ${ this.pidToString(pid) }, counter: ${ counter }, expected: ${ expected }, time: ${ this.getTime() })\n`);
+            hasError = true;
+        });
+
+        tsPacketAnalyzer.on('packetScrambling', (pid) => {
+            this.appendFile(`scrambling (pid: ${ this.pidToString(pid) }, time: ${ this.getTime() })\n`);
+            hasError = true;
+        });
+
+        tsPacketAnalyzer.on('finish', async() => {
             const result = tsPacketAnalyzer.getResult();
             this.result = result;
             this.listener.emit(TSCheckerModel.FinishEvent, result);
+
+            if (this.isDeleted) { return; }
+
+            if (hasError) {
+                await this.appendFile('\n');
+            }
+            for (const pid of Object.keys(result)) {
+                const pidNum = parseInt(pid, 10);
+                await this.appendFile(`pid: ${ this.pidToString(pidNum) }, packet: ${ result[pid].packet }, error: ${ result[pid].error }, drop: ${ result[pid].drop }, scrambling: ${ result[pid].drop }, name: ${ this.getPIDName(pidNum) }\n`);
+            }
+        });
+
+        tsSectionAnalyzer.on('time', (time) => {
+            this.time = time;
         });
 
         tsSectionParser.on('pmt', tsPacketSelector.onPmt.bind(tsPacketSelector));
@@ -72,6 +102,71 @@ class TSCheckerModel extends Model implements TSCheckerModelInterface {
         tsPacketParser.pipe(tsPacketSelector);
         tsSectionParser.pipe(tsSectionAnalyzer);
         tsSectionParser.pipe(tsSectionUpdater);
+    }
+
+    /**
+     * log file path を返す
+     * @param tsPath: ts file path
+     * @param conflict: number
+     * @return string
+     */
+    private getLogPath(tsPath: string, conflict: number = 0): string {
+        let filePath = tsPath;
+        if (conflict > 0) { filePath += `(${ conflict })`; }
+        filePath += '.log';
+
+        // 同名ファイルが存在するか確認
+        try {
+            fs.statSync(filePath);
+
+            return this.getLogPath(tsPath, conflict + 1);
+        } catch (err) {
+            return filePath;
+        }
+    }
+
+    /**
+     * log 追記
+     * @param str
+     * @return Promise<void>
+     */
+    private async appendFile(str: string): Promise <void> {
+        if (this.logPath === null) {
+            throw new Error('LogFilePathIsNull');
+        }
+
+        if (this.isDeleted) {
+            this.log.system.warn(`log file is deleted: ${ this.logPath }`);
+
+            return;
+        }
+
+        return new Promise<void>((resolve: () => void, reject: (error: Error) => void) => {
+            fs.appendFile(this.logPath!, str, (err) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
+        });
+    }
+
+    /**
+     * pid を文字列に変換
+     * @param pid: number
+     * @return string
+     */
+    private pidToString(pid: number): string {
+        return `0x${ ('000' + pid.toString(16)).slice(-4) }`;
+    }
+
+    /**
+     * get time
+     * @return string
+     */
+    private getTime(): string {
+        return this.time === null ? '' : `${ this.time.getTime() }`;
     }
 
     /**
@@ -116,23 +211,23 @@ class TSCheckerModel extends Model implements TSCheckerModelInterface {
     }
 
     /**
+     * ログのファイルパス取得
+     * @return string | null
+     */
+    public getFilePath(): string | null {
+        return this.logPath;
+    }
+
+    /**
      * 結果の取得
      */
-    public async getResult(): Promise<DropLog> {
+    public async getResult(): Promise<aribts.Result> {
         await this.setResult();
         if (this.result === null) {
             throw new Error('GetDropResultError');
         }
 
-        const result: DropLog = {};
-
-        // name 追加
-        for (const key in this.result) {
-            result[key] = <DropLogItem> this.result[key];
-            result[key].name = this.getPIDName(parseInt(key, 10));
-        }
-
-        return result;
+        return this.result;
     }
 
     /**
@@ -225,11 +320,18 @@ class TSCheckerModel extends Model implements TSCheckerModelInterface {
 
         return name;
     }
+
+    /**
+     * ts ファイルが削除されたことをセット
+     */
+    public setDeleted(): void {
+        this.isDeleted = true;
+    }
 }
 
 namespace TSCheckerModel {
     export const FinishEvent = 'Finish';
 }
 
-export { DropLog, DropLogItem, TSCheckerModelInterface, TSCheckerModel };
+export { TSCheckerModelInterface, TSCheckerModel };
 
