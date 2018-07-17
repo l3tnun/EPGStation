@@ -109,7 +109,7 @@ class Server extends Base {
                 },
             },
             docsPath: '/docs',
-            errorMiddleware: (err, _req, res) => {
+            errorMiddleware: (err, _req, res, _next) => {
                 res.status(400);
                 res.json(err);
             },

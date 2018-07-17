@@ -1,5 +1,5 @@
 import * as apid from '../../../../node_modules/mirakurun/api';
-import CreateMirakurunClient from '../../Util/CreateMirakurunClient';
+import { IPCClientInterface } from '../IPC/IPCClient';
 import ApiModel from './ApiModel';
 
 interface ConfigModelInterface extends ApiModel {
@@ -7,6 +7,15 @@ interface ConfigModelInterface extends ApiModel {
 }
 
 class ConfigModel extends ApiModel implements ConfigModelInterface {
+    private ipc: IPCClientInterface;
+
+    constructor(
+        ipc: IPCClientInterface,
+    ) {
+        super();
+        this.ipc = ipc;
+    }
+
     /**
      * config を取得
      * @return Promise<{}>
@@ -32,8 +41,7 @@ class ConfigModel extends ApiModel implements ConfigModelInterface {
             }
         }
 
-        const mirakurun = CreateMirakurunClient.get();
-        const tuners = await mirakurun.getTuners();
+        const tuners = await this.ipc.getTuners();
         const broadcast = { GR: false, BS: false, CS: false, SKY: false };
         for (const tuner of tuners) {
             for (const key in broadcast) {

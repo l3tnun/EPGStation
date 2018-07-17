@@ -26,6 +26,7 @@ interface IPCServerEncodeMessage {
 }
 
 namespace IPCMessageDefinition {
+    export const getTuners = 'getTuners';
     export const getReserveAllId = 'getReserveAllId';
     export const getReserve = 'getReserve';
     export const getReserves = 'getReserves';
