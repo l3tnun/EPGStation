@@ -248,6 +248,14 @@ class IPCServer extends Model implements IPCServerInterface {
             }
         };
 
+        this.functions[IPCMessageDefinition.recordedRegenerateThumbnail] = async(id: number) => {
+            try {
+                await this.recordedManage.regenerateThumbnail();
+                this.send({ id: id });
+            } catch (err) {
+                this.send({ id: id, error: err.message });
+            }
+        };
 
         // Rule
         this.functions[IPCMessageDefinition.ruleDisable] = async(id: number, args: any) => {

@@ -37,7 +37,7 @@ interface RecordedDBInterface extends DBTableBase {
     findId(id: number): Promise<DBSchema.RecordedSchema | null>;
     findOld(): Promise<DBSchema.RecordedSchema | null>;
     findCleanupList(): Promise<{ id: number }[]>;
-    findAll(option: FindAllOption): Promise<DBSchema.RecordedSchema[]>;
+    findAll(option?: FindAllOption): Promise<DBSchema.RecordedSchema[]>;
     getTotal(option?: FindQuery): Promise<number>;
     getRuleTag(): Promise<DBSchema.RuleTag[]>;
     getChannelTag(): Promise<DBSchema.ChannelTag[]>;
@@ -448,7 +448,7 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
      * @param option: FindAllOption
      * @return Promise<DBSchema.RecordedSchema[]>
      */
-    public async findAll(option: FindAllOption): Promise<DBSchema.RecordedSchema[]> {
+    public async findAll(option: FindAllOption = {}): Promise<DBSchema.RecordedSchema[]> {
         let query = `select ${ this.getAllColumns() } from ${ DBSchema.TableName.Recorded } `;
 
         let values: any[] = [];
