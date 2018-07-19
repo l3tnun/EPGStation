@@ -557,7 +557,7 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
             }
 
             if (sourcePath === null) {
-                this.log.system.error(`recordedId: ${ recorded.id } is not has video file`);
+                this.log.system.error(`recordedId: ${ recorded.id } does not have video file`);
                 continue;
             }
 
