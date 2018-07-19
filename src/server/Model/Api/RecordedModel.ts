@@ -50,6 +50,7 @@ interface RecordedModelInterface extends ApiModel {
     addEncode(recordedId: number, option: EncodeAddOption): Promise<void>;
     cancelEncode(recordedId: number): Promise<void>;
     cleanup(): Promise<void>;
+    regenerateThumbnail(): Promise<void>;
 }
 
 namespace RecordedModelInterface {
@@ -598,6 +599,13 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
      */
     public cleanup(): Promise<void> {
         return this.ipc.recordedCleanup();
+    }
+
+    /**
+     * 録画サムネイル再生成
+     */
+    public regenerateThumbnail(): Promise<void> {
+        return this.ipc.recordedRegenerateThumbnail();
     }
 }
 

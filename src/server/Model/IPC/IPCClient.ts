@@ -27,6 +27,7 @@ interface IPCClientInterface extends Model {
     recordedDeleteFile(recordedId: number): Promise<void>;
     recordedDeleteEncodeFile(encodedId: number): Promise<void>;
     recordedCleanup(): Promise<void>;
+    recordedRegenerateThumbnail(): Promise<void>;
     ruleDisable(ruleId: number): Promise<void>;
     ruleEnable(ruleId: number): Promise<void>;
     ruleDelete(ruleId: number): Promise<void>;
@@ -258,6 +259,15 @@ class IPCClient extends Model implements IPCClientInterface {
      */
     public async recordedCleanup(): Promise<void> {
         const id = this.send(IPCMessageDefinition.recordedClenaup);
+        await this.receive(id, null);
+    }
+
+    /**
+     * 録画 サムネイル再生成
+     * @return Promise<void>
+     */
+    public async recordedRegenerateThumbnail(): Promise<void> {
+        const id = this.send(IPCMessageDefinition.recordedRegenerateThumbnail);
         await this.receive(id, null);
     }
 

@@ -51,6 +51,7 @@ interface RecordedManageModelInterface extends Model {
     updateTsFileSize(recordedId: number): Promise<void>;
     updateEncodedFileSize(encodedId: number): Promise<void>;
     cleanup(): Promise<void>;
+    regenerateThumbnail(): Promise<void>;
 }
 
 class RecordedManageModel extends Model implements RecordedManageModelInterface {
@@ -522,6 +523,50 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
         }
 
         this.log.system.info('recorded files clean up completed');
+    }
+
+    /**
+     * サムネイル再生成
+     * @return Promise<void>
+     */
+    public async regenerateThumbnail(): Promise<void> {
+        this.log.system.info('start regenerate thumbnail request');
+
+        const recordeds = await this.recordedDB.findAll();
+
+        for (const recorded of recordeds) {
+            // サムネイルが存在しているか確認
+            if (recorded.thumbnailPath !== null) {
+                try {
+                    fs.statSync(recorded.thumbnailPath);
+                    continue;
+                }  catch (e) {
+                }
+            }
+
+            let sourcePath: string | null = null;
+            if (recorded.recPath === null) {
+                // encoded からファイルパスを取得する
+                const encodeds = await this.encodedDB.findRecordedId(recorded.id);
+                if (encodeds.length > 0) {
+                    sourcePath = encodeds[0].path;
+                }
+            } else {
+                // ts ファイルあり
+                sourcePath = recorded.recPath;
+            }
+
+            if (sourcePath === null) {
+                this.log.system.error(`recordedId: ${ recorded.id } is not has video file`);
+                continue;
+            }
+
+            // サムネイルの再生成を依頼
+            this.log.system.info(`regenerate thumbnail: ${ recorded.id }`);
+            this.thumbnailManage.push(<ThumbnailRecordedProgram> recorded);
+        }
+
+        this.log.system.info('regenerate thumbnail request completed');
     }
 }
 
