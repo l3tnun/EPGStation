@@ -550,6 +550,7 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
                 const encodeds = await this.encodedDB.findRecordedId(recorded.id);
                 if (encodeds.length > 0) {
                     sourcePath = encodeds[0].path;
+                    (<ThumbnailRecordedProgram> recorded).encodedId = encodeds[0].id;
                 }
             } else {
                 // ts ファイルあり
