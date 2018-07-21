@@ -1,9 +1,7 @@
 # config.json 詳細マニュアル
 ## コンフィグ逆引きレシピ
-
-- [コンフィグ逆引きレシピ](#コンフィグ逆引きレシピ)
 - [基本設定](#基本設定)
-    - [readOnlyOnce](#readonlyonce)
+    - [コンフィグの読み込みを起動時だけにしたい](#readonlyonce)
     - [EPGStationの待ち受けポートを変えたい](#serverport)
     - [アクセス時にユーザー認証を行いたい](#basicauth)
     - [別マシンで動作するMirakurunを使いたい](#mirakurunpath)
@@ -14,9 +12,9 @@
     - [SQLite3のデータベース保存先を変更したい](#dbpath)
     - [利用するFFmpegを明示的に指定したい](#ffmpeg)
     - [利用するFFprobeを明示的に指定したい](#ffprobe)
-    - [gid](#gid)
-    - [uid](#uid)
-    - [subDirectory](#subdirectory)
+    - [自動起動時のGIDを指定したい](#gid)
+    - [自動起動時のUIDを指定したい](#uid)
+    - [リバースプロキシのサブディレクトリとして利用したい](#subdirectory)
 - [詳細設定](#詳細設定)
     - [録画時のMirakurun優先度を変更したい](#recpriority)
     - [録画重複時のMirakurun優先度を変更したい](#conflictpriority)
@@ -54,12 +52,12 @@
     - [空き容量のしきい値を変更したい](#storagelimitthreshold)
     - [空き容量の確認頻度を変更したい](#storagelimitcheckintervaltime)
 - [視聴設定](#視聴設定)
+    - [ライブ視聴の視聴アプリを変えたい](#mpegtsviewer)
     - [録画番組の視聴アプリを変えたい](#recordedviewer)
     - [録画番組のダウンロードアプリを変えたい](#recordeddownloader)
     - [同時にライブ視聴できる数を制限したい](#maxstreaming)
     - [ライブ視聴時のMirakurun優先度を変更したい](#streamingpriority)
     - [ライブ視聴時のトランスコード設定を変更したい](#mpegtsstreaming)
-    - [ライブ視聴の視聴アプリを変えたい](#mpegtsviewer)
     - [録画番組視聴時のトランスコード設定を変更したい](#recordedstreaming)
     - [HLS配信時の一時ファイルの出力先を変更したい](#streamfilepath)
     - [録画番組のHLS配信時の設定を変更したい](#recordedhls)
@@ -71,10 +69,11 @@
 
 ## 基本設定
 ### readOnlyOnce
-#### config.json の読み込みを1度だけに制限する
+#### config.json の読み込みを起動時の1度だけに制限する
 | 種類 | デフォルト値 | 必須 |
 | --- | ---------- | --- |
 | boolean | false | no |
+- デフォルトでは、外部コマンド実行時などにコンフィグファイルを読み込み直す
 ```json
 "readOnlyOnce": true
 ```
@@ -82,12 +81,17 @@
 #### EPGStationがWebアクセスを待ち受けるポート番号
 | 種類 | デフォルト値 | 必須 |
 | --- | ---------- | --- |
-| number |8888| yes |
+| number | 8888 | yes |
 ```json
 "serverPort": 8888
 ```
 ### basicAuth
 #### BASIC認証の設定
+| 種類 | デフォルト値 | 必須 |
+| --- | ---------- | --- |
+| {} | - | no |
+- 子プロパティは以下の通り
+
 | 子プロパティ名 | 種類 | 必須 | 説明 |
 | --- | --- | ---------- | --- |
 | user | string | yes | BASIC認証ログイン時のユーザー名 |
@@ -102,7 +106,7 @@
 #### 利用するMirakurunのパスもしくはURL
 | 種類 | デフォルト値 | 必須 |
 | --- | ---------- | --- |
-| string |  | yes |
+| string | - | yes |
 ```json
 "mirakurunPath": "http://localhost:40772"
 ```
@@ -212,12 +216,13 @@
 "uid": "fuga"
 ```
 ### subDirectory
-#### サブディレクトリ（？）
+#### リバースプロキシ利用時にサブディレクトリとして動作させる
 | 種類 | デフォルト値 | 必須 |
 | --- | ---------- | --- |
-| string |  | no |
+| string | - | no |
+- `http://<IPaddress>:<Port>/<subDirectory>`として動作する
 ```json
-"subDirectory": "./subdir"
+"subDirectory": "subdir"
 ```
 ## 詳細設定
 ### recPriority
@@ -291,7 +296,7 @@
 | 種類 | デフォルト値 | 必須 |
 | --- | ---------- | --- |
 | number[] |  | no |
-- `(Mirakurun URL)/api/services`で確認できるサービスIDを入力
+- `http://<MirakurunAddress>/api/services`で確認できるサービスIDを入力
 ```json
 "serviceOrder": [1024, 1032, 1040, 1048, 1056, 1064, 1072]
 ```
@@ -300,7 +305,7 @@
 | 種類 | デフォルト値 | 必須 |
 | --- | ---------- | --- |
 | number[] |  | no |
-- `(Mirakurun URL)/api/services`で確認できるサービスIDを入力
+- `http://<MirakurunAddress>/api/services`で確認できるサービスIDを入力
 ```json
 "excludeServices": [1088, 23608]
 ```
@@ -340,6 +345,7 @@
 | --- | ---------- | --- |
 | string | .ts | no |
 - MPEG2-TSの拡張子は`.ts` `.mts` `.m2t` `.m2ts`のいずれかが望ましい
+- ピリオド`.`を付け忘れないように
 ```json
 "fileExtension": ".m2ts"
 ```
@@ -402,7 +408,7 @@
 #### 録画準備の失敗時に実行されるコマンド
 | 種類 | デフォルト値 | 必須 |
 | --- | ---------- | --- |
-| string |  | no |
+| string | - | no |
 - 実行時に渡される環境変数は以下の通り
 
 | 変数名 | 種類 | 説明 |
@@ -430,7 +436,7 @@
 #### 録画中のエラー発生時に実行するコマンド
 | 種類 | デフォルト値 | 必須 |
 | --- | ---------- | --- |
-| string |  | no |
+| string | - | no |
 - 実行時に渡される環境変数は以下の通り
 
 | 変数名 | 種類 | 説明 |
@@ -497,7 +503,7 @@
             "name": "H264",
             "cmd": "node %ROOT%/config/enc.js main",
             "suffix": ".mp4",
-            "rate": 10.0
+            "rate": 10.0,
             "default": false
         },
         {
@@ -552,7 +558,7 @@
 #### ストレージ空き容量が限界閾値を超えたときに実行するコマンド
 | 種類 | デフォルト値 | 必須 |
 | --- | ---------- | --- |
-| string |  | no |
+| string | - | no |
 ```json
 "storageLimitCmd": "node /home/hoge/fuga.sh"
 ```
@@ -573,29 +579,33 @@
 "storageLimitCheckIntervalTime": 120
 ```
 ## 視聴設定
+### mpegTsViewer
+#### ライブ視聴時のアプリ設定
 ### recordedViewer
 #### 録画済み番組を視聴するときのアプリ設定
-| 子プロパティ名 | 種類 | 必須 | 説明 |
-| --- | --- | ---------- | --- |
-| ios | string | no | 実行するコマンド |
-| android | string | no | 実行するコマンド |
-| mac | string | no | 実行するコマンド |
-| win | string | no | 実行するコマンド |
-```json
-"recordedViewer": {
-        "ios": "infuse://x-callback-url/play?url=http://ADDRESS",
-        "android": "intent://ADDRESS#Intent;package=com.mxtech.videoplayer.ad;type=video;scheme=http;end"
-    }
-```
 ### recordedDownloader
 #### 録画済み番組をダウンロードするときのアプリ設定
 | 子プロパティ名 | 種類 | 必須 | 説明 |
 | --- | --- | ---------- | --- |
-| ios | string | no | iOSでの録画ファイルのダウンロード設定 |
-| android | string | no | Androidでの録画ファイルのダウンロード設定 |
+| ios | string | no | iOSでのライブ視聴アプリの設定 |
+| android | string | no | Androidでのライブ視聴アプリの設定 |
 | mac | string | no | MacでのURL Scheme設定 |
 | win | string | no | WindowsでのURL Scheme設定 |
+- 設定内で置換される変数は以下の通り
+
+| 変数名 | 説明 |
+| -------- | --- |
+| ADDRESS | EPGStationのMPEG-TS配信URL |
+| FILENAME | 出力されるファイル名 |
 ```json
+"mpegTsViewer": {
+        "ios": "vlc-x-callback://x-callback-url/stream?url=http://ADDRESS",
+        "android": "intent://ADDRESS#Intent;package=com.mxtech.videoplayer.ad;type=video;scheme=http;end"
+    },
+"recordedViewer": {
+        "ios": "infuse://x-callback-url/play?url=http://ADDRESS",
+        "android": "intent://ADDRESS#Intent;package=com.mxtech.videoplayer.ad;type=video;scheme=http;end"
+    },
 "recordedDownloader": {
         "ios": "vlc-x-callback://x-callback-url/download?url=http://ADDRESS&filename=FILENAME",
         "android": "intent://ADDRESS#Intent;package=com.dv.adm;type=video;scheme=http;end"
@@ -606,7 +616,7 @@
 | 種類 | デフォルト値 | 必須 |
 | --- | ---------- | --- |
 | number | 0 | no |
-- `0`でチューナーと同じ数
+- `0`もしくは指定なしの場合、ストリーミング配信機能はオフ
 ```json
 "maxStreaming": 1
 ```
@@ -615,7 +625,7 @@
 | 種類 | デフォルト値 | 必須 |
 | --- | ---------- | --- |
 | number | 0 | no |
-- `0`で録画時と同じ値
+- `recPriority`より大きな値を指定した場合、録画が中断される可能性あり
 ```json
 "streamingPriority": 50
 ```
@@ -641,26 +651,6 @@
             "name": "無変換"
         }
     ],
-```
-### mpegTsViewer
-#### ライブ視聴時のアプリ設定
-| 子プロパティ名 | 種類 | 必須 | 説明 |
-| --- | --- | ---------- | --- |
-| ios | string | no | iOSでのライブ視聴アプリの設定 |
-| android | string | no | Androidでのライブ視聴アプリの設定 |
-| mac | string | no | MacでのURL Scheme設定 |
-| win | string | no | WindowsでのURL Scheme設定 |
-- 設定内で置換される変数は以下の通り
-
-| 変数名 | 説明 |
-| -------- | --- |
-| %ADDRESS% | EPGStationのMPEG-TS配信URL |
-| %FILENAME% | 出力されるファイル名 |
-```json
-"mpegTsViewer": {
-        "ios": "vlc-x-callback://x-callback-url/stream?url=http://ADDRESS",
-        "android": "intent://ADDRESS#Intent;package=com.mxtech.videoplayer.ad;type=video;scheme=http;end"
-    },
 ```
 ### recordedStreaming
 #### 録画済み番組視聴時のトランスコード設定
@@ -700,19 +690,19 @@
         },
         {
             "name": "WebM 2",
-            .....
+            // 以下略
         }
     ],
     "mp4": [
         {
             "name": "hogehoge",
-            .....
+            // 以下略
         }
     ],
     "mpegTs": [
         {
             "name": "fugafuga",
-            .....
+            // 以下略
         }
     ]
 }
