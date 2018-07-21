@@ -54,6 +54,7 @@ interface ConfigInterface {
     recordedHistoryRetentionPeriodDays: number;
     fileExtension: string;
     reservesUpdateIntervalTime: number;
+    isEnabledDropCheck: boolean;
     suppressReservesUpdateAllLog: boolean;
     suppressEPGUpdateLog: boolean;
     thumbnail: string;

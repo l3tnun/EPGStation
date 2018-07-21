@@ -335,11 +335,13 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
         stream.pipe(recFile);
 
         // ts checker 追加
-        // TODO config で制御する
-        const tsChecker = this.getTsChecker();
-        await tsChecker.set(recPath, stream);
-        const logFilePath = tsChecker.getFilePath();
-        recData.checker = tsChecker;
+        let logFilePath: string | null = null;
+        if (this.config.getConfig().isEnabledDropCheck || false) {
+            const tsChecker = this.getTsChecker();
+            await tsChecker.set(recPath, stream);
+            logFilePath = tsChecker.getFilePath();
+            recData.checker = tsChecker;
+        }
 
         return new Promise<void>((resolve: () => void, reject: (error: Error) => void) => {
             // set timeout
