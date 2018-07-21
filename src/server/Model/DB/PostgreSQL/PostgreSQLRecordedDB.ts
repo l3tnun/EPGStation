@@ -84,6 +84,14 @@ class PostgreSQLRecordedDB extends RecordedDB {
     protected getRecPathColumnStr(): string {
         return 'recPath as "recPath"';
     }
+
+    /**
+     * get logPath column str
+     * @return string
+     */
+    protected getLogPathColumnStr(): string {
+        return 'logPath as "logPath"';
+    }
 }
 
 export default PostgreSQLRecordedDB;

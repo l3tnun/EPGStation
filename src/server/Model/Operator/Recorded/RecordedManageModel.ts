@@ -485,7 +485,12 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
         // DB 上に存在しないファイルを削除する
         // ファイル検索のための索引を作成
         const filesIndex: { [key: string]: boolean } = {};
-        for (const file of recordedFiles) { filesIndex[file.recPath] = true; }
+        for (const file of recordedFiles) {
+            filesIndex[file.recPath] = true;
+            if (file.logPath !== null) {
+                filesIndex[file.logPath] = true;
+            }
+        }
         for (const file of encodedFiles) { filesIndex[file.path] = true; }
         for (const file of recordingFiles) { filesIndex[file] = true; }
 

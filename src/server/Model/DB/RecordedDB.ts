@@ -25,6 +25,12 @@ interface CntItem {
     scrambling: number;
 }
 
+interface RecordedFilesItem {
+    id: number;
+    recPath: string;
+    logPath: string | null;
+}
+
 interface RecordedDBInterface extends DBTableBase {
     create(): Promise<void>;
     drop(): Promise<void>;
@@ -49,7 +55,7 @@ interface RecordedDBInterface extends DBTableBase {
     getRuleTag(): Promise<DBSchema.RuleTag[]>;
     getChannelTag(): Promise<DBSchema.ChannelTag[]>;
     getGenreTag(): Promise<DBSchema.GenreTag[]>;
-    getAllFiles(): Promise<{ id: number; recPath: string }[]>;
+    getAllFiles(): Promise<RecordedFilesItem[]>;
 }
 
 abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
@@ -609,17 +615,20 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
 
     /**
      * ファイルパス一覧を取得
-     * @return Promise<{ id: number; recPath: string }[]>
+     * @return Promise<RecordedFilesItem[]>
      */
-    public async getAllFiles(): Promise<{ id: number; recPath: string }[]> {
-        const results = <{ id: number; recPath: string }[]> await this.operator.runQuery(`select id, ${ this.getRecPathColumnStr() } from ${ DBSchema.TableName.Recorded } where recPath is not null order by id`);
+    public async getAllFiles(): Promise<RecordedFilesItem[]> {
+        const results = <{ id: number; recPath: string; logPath: string | null }[]> await this.operator.runQuery(`select id, ${ this.getRecPathColumnStr() }, ${ this.getLogPathColumnStr() } from ${ DBSchema.TableName.Recorded } where recPath is not null order by id`);
 
         const baseDir = Util.getRecordedPath();
 
         return results.map((result) => {
+            const logPath = result.logPath;
+
             return {
                 id: result.id,
                 recPath: this.fixRecPath(baseDir, result.recPath),
+                logPath: logPath === null ? null : this.fixRecPath(baseDir, logPath),
             };
         });
     }
@@ -630,6 +639,14 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
      */
     protected getRecPathColumnStr(): string {
         return 'recPath';
+    }
+
+    /**
+     * get logPath column str
+     * @return string
+     */
+    protected getLogPathColumnStr(): string {
+        return 'logPath';
     }
 }
 
