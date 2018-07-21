@@ -203,6 +203,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
      */
     private fixResult(data: {}, encodedFiles: DBSchema.EncodedSchema[]): {} {
         delete data['duration'];
+        delete data['logPath'];
 
         // thumbnaul があるか
         data['hasThumbnail'] = data['thumbnailPath'] !== null;
