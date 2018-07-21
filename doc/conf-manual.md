@@ -12,9 +12,6 @@
     - [SQLite3のデータベース保存先を変更したい](#dbpath)
     - [利用するFFmpegを明示的に指定したい](#ffmpeg)
     - [利用するFFprobeを明示的に指定したい](#ffprobe)
-    - [自動起動時のGIDを指定したい](#gid)
-    - [自動起動時のUIDを指定したい](#uid)
-    - [リバースプロキシのサブディレクトリとして利用したい](#subdirectory)
 - [詳細設定](#詳細設定)
     - [録画時のMirakurun優先度を変更したい](#recpriority)
     - [録画重複時のMirakurun優先度を変更したい](#conflictpriority)
@@ -26,6 +23,9 @@
     - [番組情報更新時のログ出力を抑えたい](#suppressepgupdatelog)
     - [チャンネルの並び順を変更したい](#serviceorder)
     - [特定のチャンネルは除外したい](#excludeservices)
+    - [自動起動時のGIDを指定したい](#gid)
+    - [自動起動時のUIDを指定したい](#uid)
+    - [リバースプロキシのサブディレクトリとして利用したい](#subdirectory)
 - [ファイル保存先](#ファイル保存先)
     - [録画ファイルの保存先を変更したい](#recorded)
     - [録画ファイルのファイル名を変更したい](#recordedformat)
@@ -199,31 +199,6 @@
 ```json
 "ffprobe": "/usr/bin/ffprobe"
 ```
-### gid
-#### EPGStationが利用するグループID・グループ名
-| 種類 | デフォルト値 | 必須 |
-| --- | ---------- | --- |
-| string \| number |  | no |
-```json
-"gid": "hoge"
-```
-### uid
-#### EPGStationが利用するユーザーID・ユーザー名
-| 種類 | デフォルト値 | 必須 |
-| --- | ---------- | --- |
-| string \| number |  | no |
-```json
-"uid": "fuga"
-```
-### subDirectory
-#### リバースプロキシ利用時にサブディレクトリとして動作させる
-| 種類 | デフォルト値 | 必須 |
-| --- | ---------- | --- |
-| string | - | no |
-- `http://<IPaddress>:<Port>/<subDirectory>`として動作する
-```json
-"subDirectory": "subdir"
-```
 ## 詳細設定
 ### recPriority
 #### 録画時にMirakurunへ渡されるプライオリティ
@@ -308,6 +283,31 @@
 - `http://<MirakurunAddress>/api/services`で確認できるサービスIDを入力
 ```json
 "excludeServices": [1088, 23608]
+```
+### gid
+#### EPGStationが利用するグループID・グループ名
+| 種類 | デフォルト値 | 必須 |
+| --- | ---------- | --- |
+| string \| number | - | no |
+```json
+"gid": "hoge"
+```
+### uid
+#### EPGStationが利用するユーザーID・ユーザー名
+| 種類 | デフォルト値 | 必須 |
+| --- | ---------- | --- |
+| string \| number | - | no |
+```json
+"uid": "fuga"
+```
+### subDirectory
+#### リバースプロキシ利用時にサブディレクトリとして動作させる
+| 種類 | デフォルト値 | 必須 |
+| --- | ---------- | --- |
+| string | - | no |
+- `http://<IPaddress>:<Port>/<subDirectory>`として動作する
+```json
+"subDirectory": "subdir"
 ```
 ## ファイル保存先
 ### recorded
