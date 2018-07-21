@@ -337,7 +337,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
         // ts checker 追加
         // TODO config で制御する
         const tsChecker = this.getTsChecker();
-        tsChecker.set(recPath, stream);
+        await tsChecker.set(recPath, stream);
         const logFilePath = tsChecker.getFilePath();
         recData.checker = tsChecker;
 
@@ -374,7 +374,6 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
 
                 this.log.system.info(`add recorded: ${ recData.reserve.program.id } ${ recData.reserve.program.name }`);
 
-                // TODO add log file path
                 // add DB
                 const ruleId = (<RuleReserveProgram> recData.reserve).ruleId;
                 const recorded = {
@@ -402,7 +401,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
                     recording: true,
                     protection: false,
                     filesize: null,
-                    logPath: null,
+                    logPath: logFilePath,
                     errorCnt: null,
                     dropCnt: null,
                     scramblingCnt: null,
@@ -493,7 +492,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
                         recording: false,
                         protection: false,
                         filesize: null,
-                        logPath: null,
+                        logPath: recorded.logPath,
                         errorCnt: null,
                         dropCnt: null,
                         scramblingCnt: null,
@@ -536,7 +535,12 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
                         scrambling: scrambling,
                     });
 
-                    // TODO update DB
+                    // update cnt
+                    await this.recordedDB.updateCnt(recorded.id, {
+                        error: error,
+                        drop: drop,
+                        scrambling: scrambling,
+                    });
                 }
 
                 // 録画完了を通知

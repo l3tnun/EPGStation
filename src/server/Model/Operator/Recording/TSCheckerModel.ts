@@ -4,10 +4,11 @@ import * as aribts from 'aribts';
 import * as events from 'events';
 import * as fs from 'fs';
 import * as stream from 'stream';
+import FileUtil from '../../../Util/FileUtil';
 import Model from '../../Model';
 
 interface TSCheckerModelInterface extends Model {
-    set(tsPath: string, readableStream: stream.Readable): void;
+    set(tsPath: string, readableStream: stream.Readable): Promise<void>;
     getFilePath(): string | null;
     getResult(): Promise<aribts.Result>;
     setDeleted(): void;
@@ -21,8 +22,11 @@ class TSCheckerModel extends Model implements TSCheckerModelInterface {
     private pidIndex: { [key: number]: string } = {};
     private time: Date | null = null;
 
-    public set(tsPath: string, readableStream: stream.Readable): void {
+    public async set(tsPath: string, readableStream: stream.Readable): Promise<void> {
         this.logPath = this.getLogPath(tsPath);
+
+        // 空ファイル生成
+        await FileUtil.touchFile(this.logPath);
 
         const transformStream = new stream.Transform({
             // tslint:disable-next-line:space-before-function-paren

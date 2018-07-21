@@ -19,6 +19,12 @@ interface FindQuery {
     keyword?: string;
 }
 
+interface CntItem {
+    error: number;
+    drop: number;
+    scrambling: number;
+}
+
 interface RecordedDBInterface extends DBTableBase {
     create(): Promise<void>;
     drop(): Promise<void>;
@@ -34,6 +40,7 @@ interface RecordedDBInterface extends DBTableBase {
     updateTsFilePath(recordedId: number, filePath: string): Promise<void>;
     updateFileSize(recordedId: number): Promise<void>;
     updateAllNullFileSize(): Promise<void>;
+    updateCnt(recordedId: number, item: CntItem): Promise<void>;
     findId(id: number): Promise<DBSchema.RecordedSchema | null>;
     findOld(): Promise<DBSchema.RecordedSchema | null>;
     findCleanupList(): Promise<{ id: number }[]>;
@@ -100,7 +107,7 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
         value.push(program.recording);
         value.push(program.protection);
         value.push(program.filesize);
-        value.push(program.logPath);
+        value.push(program.logPath === null ? null : program.logPath.slice(baseDir.length + path.sep.length));
         value.push(program.errorCnt);
         value.push(program.dropCnt);
         value.push(program.scramblingCnt);
@@ -245,7 +252,7 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
         value.push(program.recording);
         value.push(program.protection);
         value.push(program.filesize);
-        value.push(program.logPath);
+        value.push(program.logPath === null ? null : program.logPath.slice(baseDir.length + path.sep.length));
         value.push(program.errorCnt);
         value.push(program.dropCnt);
         value.push(program.scramblingCnt);
@@ -393,6 +400,15 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
     }
 
     /**
+     * 各種カウントを更新
+     * @param recordedId: number
+     * @param item: CntItem
+     */
+    public async updateCnt(recordedId: number, item: CntItem): Promise<void> {
+        await this.operator.runQuery(`update ${ DBSchema.TableName.Recorded } set errorCnt = ${ item.error }, dropCnt = ${ item.drop }, scramblingCnt = ${ item.scrambling } where id = ${ recordedId }`);
+    }
+
+    /**
      * id 検索
      * @param id: recorded id
      * @return Promise<DBSchema.RecordedSchema | null>
@@ -424,14 +440,19 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
      * @return DBSchema.RecordedSchema
      */
     protected fixResult(baseDir: string, thumbnailDir: string, program: DBSchema.RecordedSchema, isAddBaseDir: boolean): DBSchema.RecordedSchema {
-        if (isAddBaseDir && program.recPath !== null) {
-            // フルパスへ書き換える
-            program.recPath = this.fixRecPath(baseDir, program.recPath);
-        }
+        // フルパスへ書き換える
+        if (isAddBaseDir) {
+            if (program.recPath !== null) {
+                program.recPath = this.fixRecPath(baseDir, program.recPath);
+            }
 
-        if (isAddBaseDir && program.thumbnailPath !== null) {
-            // フルパスへ書き換える
-            program.thumbnailPath = path.join(thumbnailDir, program.thumbnailPath);
+            if (program.logPath !== null) {
+                program.logPath = this.fixRecPath(baseDir, program.logPath);
+            }
+
+            if (program.thumbnailPath !== null) {
+                program.thumbnailPath = path.join(thumbnailDir, program.thumbnailPath);
+            }
         }
 
         return program;
