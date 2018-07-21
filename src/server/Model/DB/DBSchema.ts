@@ -121,6 +121,10 @@ export interface RecordedSchema {
     recording: boolean;
     protection: boolean;
     filesize: number | null;
+    logPath: string | null;
+    errorCnt: number | null;
+    dropCnt: number | null;
+    scramblingCnt: number | null;
 }
 
 export interface EncodedSchema {

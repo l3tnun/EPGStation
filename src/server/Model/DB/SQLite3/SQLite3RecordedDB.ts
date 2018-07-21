@@ -31,7 +31,11 @@ class SQLite3RecordedDB extends RecordedDB {
             + 'thumbnailPath text, '
             + 'recording integer, '
             + 'protection integer default 0, '
-            + 'filesize integer null default null '
+            + 'filesize integer null default null, '
+            + 'logPath text default null, '
+            + 'errorCnt integer null default null, '
+            + 'dropCnt integer null default null, '
+            + 'scramblingCnt integer null default null '
         + ');';
 
         return this.operator.runQuery(query);

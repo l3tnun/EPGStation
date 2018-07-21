@@ -74,12 +74,6 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
      * @param Promise<number> insertId
      */
     public insert(program: DBSchema.RecordedSchema): Promise<number> {
-        const query = `insert into ${ DBSchema.TableName.Recorded } (`
-            + this.createInsertColumnStr(false)
-        + ') VALUES ('
-            + this.operator.createValueStr(1, 23)
-        + `) ${ this.operator.getReturningStr() }`;
-
         const baseDir = Util.getRecordedPath();
 
         const value: any[] = [];
@@ -106,6 +100,17 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
         value.push(program.recording);
         value.push(program.protection);
         value.push(program.filesize);
+        value.push(program.logPath);
+        value.push(program.errorCnt);
+        value.push(program.dropCnt);
+        value.push(program.scramblingCnt);
+
+        const query = `insert into ${ DBSchema.TableName.Recorded } (`
+            + this.createInsertColumnStr(false)
+        + ') VALUES ('
+            + this.operator.createValueStr(1, value.length)
+        + `) ${ this.operator.getReturningStr() }`;
+
 
         return this.operator.runInsert(query, value);
     }
@@ -139,7 +144,11 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
             + 'thumbnailPath, '
             + 'recording, '
             + 'protection, '
-            + 'filesize ';
+            + 'filesize, '
+            + 'logPath, '
+            + 'errorCnt, '
+            + 'dropCnt, '
+            + 'scramblingCnt ';
     }
 
     /**
@@ -149,12 +158,6 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
      * @param hasBaseDir: boolean
      */
     public restore(programs: DBSchema.RecordedSchema[], isDelete: boolean = true, hasBaseDir: boolean = true): Promise<void> {
-        const query = `insert into ${ DBSchema.TableName.Recorded } (`
-            + this.createInsertColumnStr(true)
-        + ') VALUES ('
-            + this.operator.createValueStr(1, 24)
-        + ')';
-
         const baseDir = Util.getRecordedPath();
 
         const values: any[] = [];
@@ -190,8 +193,19 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
             value.push(program.recording);
             value.push(program.protection);
             value.push(program.filesize);
+            value.push(program.logPath);
+            value.push(program.errorCnt);
+            value.push(program.dropCnt);
+            value.push(program.scramblingCnt);
 
-            values.push({ query: query, values: value });
+            values.push({
+                query: `insert into ${ DBSchema.TableName.Recorded } (`
+                    + this.createInsertColumnStr(true)
+                    + ') VALUES ('
+                    + this.operator.createValueStr(1, value.length)
+                    + ')',
+                values: value,
+            });
         }
 
 
@@ -204,40 +218,6 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
      * @param Promise<void>
      */
     public async replace(program: DBSchema.RecordedSchema): Promise<void> {
-        const isReplace = this.operator.getUpsertType() === 'replace';
-        let query = `${ isReplace ? 'replace' : 'insert' } into ${ DBSchema.TableName.Recorded } (`
-            + this.createInsertColumnStr(true)
-        + ') VALUES ('
-            + this.operator.createValueStr(1, 24)
-        + ')';
-
-        if (!isReplace) {
-            query += ' on conflict (id) do update set '
-                + 'programId = excluded.programId, '
-                + 'channelId = excluded.channelId, '
-                + 'channelType = excluded.channelType, '
-                + 'startAt = excluded.startAt, '
-                + 'endAt = excluded.endAt, '
-                + 'duration = excluded.duration, '
-                + 'name = excluded.name, '
-                + 'description = excluded.description, '
-                + 'extended = excluded.extended, '
-                + 'genre1 = excluded.genre1, '
-                + 'genre2 = excluded.genre2, '
-                + 'videoType = excluded.videoType, '
-                + 'videoResolution = excluded.videoResolution, '
-                + 'videoStreamContent = excluded.videoStreamContent, '
-                + 'videoComponentType = excluded.videoComponentType, '
-                + 'audioSamplingRate = excluded.audioSamplingRate, '
-                + 'audioComponentType = excluded.audioComponentType, '
-                + 'recPath = excluded.recPath, '
-                + 'ruleId = excluded.ruleId, '
-                + 'thumbnailPath = excluded.thumbnailPath, '
-                + 'recording = excluded.recording, '
-                + 'protection = excluded.protection, '
-                + 'filesize = excluded.filesize ';
-        }
-
         const baseDir = Util.getRecordedPath();
 
         const value: any[] = [];
@@ -265,6 +245,48 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
         value.push(program.recording);
         value.push(program.protection);
         value.push(program.filesize);
+        value.push(program.logPath);
+        value.push(program.errorCnt);
+        value.push(program.dropCnt);
+        value.push(program.scramblingCnt);
+
+        const isReplace = this.operator.getUpsertType() === 'replace';
+        let query = `${ isReplace ? 'replace' : 'insert' } into ${ DBSchema.TableName.Recorded } (`
+            + this.createInsertColumnStr(true)
+        + ') VALUES ('
+            + this.operator.createValueStr(1, value.length)
+        + ')';
+
+        if (!isReplace) {
+            query += ' on conflict (id) do update set '
+                + 'programId = excluded.programId, '
+                + 'channelId = excluded.channelId, '
+                + 'channelType = excluded.channelType, '
+                + 'startAt = excluded.startAt, '
+                + 'endAt = excluded.endAt, '
+                + 'duration = excluded.duration, '
+                + 'name = excluded.name, '
+                + 'description = excluded.description, '
+                + 'extended = excluded.extended, '
+                + 'genre1 = excluded.genre1, '
+                + 'genre2 = excluded.genre2, '
+                + 'videoType = excluded.videoType, '
+                + 'videoResolution = excluded.videoResolution, '
+                + 'videoStreamContent = excluded.videoStreamContent, '
+                + 'videoComponentType = excluded.videoComponentType, '
+                + 'audioSamplingRate = excluded.audioSamplingRate, '
+                + 'audioComponentType = excluded.audioComponentType, '
+                + 'recPath = excluded.recPath, '
+                + 'ruleId = excluded.ruleId, '
+                + 'thumbnailPath = excluded.thumbnailPath, '
+                + 'recording = excluded.recording, '
+                + 'protection = excluded.protection, '
+                + 'filesize = excluded.filesize, '
+                + 'logPath = excluded.logPath, '
+                + 'errorCnt = excluded.errorCnt, '
+                + 'dropCnt = excluded.dropCnt, '
+                + 'scramblingCnt = excluded.scramblingCnt ';
+        }
 
         await this.operator.runQuery(query, value);
     }

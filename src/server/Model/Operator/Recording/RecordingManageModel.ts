@@ -402,6 +402,10 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
                     recording: true,
                     protection: false,
                     filesize: null,
+                    logPath: null,
+                    errorCnt: null,
+                    dropCnt: null,
+                    scramblingCnt: null,
                 };
 
                 try {
@@ -489,6 +493,10 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
                         recording: false,
                         protection: false,
                         filesize: null,
+                        logPath: null,
+                        errorCnt: null,
+                        dropCnt: null,
+                        scramblingCnt: null,
                     };
                     await this.recordedDB.replace(recorded);
 
@@ -527,6 +535,8 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
                         drop: drop,
                         scrambling: scrambling,
                     });
+
+                    // TODO update DB
                 }
 
                 // 録画完了を通知

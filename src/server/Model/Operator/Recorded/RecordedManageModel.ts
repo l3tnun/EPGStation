@@ -398,6 +398,10 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
             recording: false,
             protection: false,
             filesize: null,
+            logPath: null,
+            errorCnt: null,
+            dropCnt: null,
+            scramblingCnt: null,
         });
 
         this.log.system.info(`create new recorded: ${ recordedId }`);
