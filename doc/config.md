@@ -27,6 +27,7 @@ Config.json
 | recordedFormat | string | %YEAR%年%MONTH%月%DAY%日%HOUR%時%MIN%分%SEC%秒-%TITLE% | no | 録画フォーマット |
 | fileExtension | string | .ts | no | 録画ファイル拡張子 |
 | reservesUpdateIntervalTime | number | 10 | no| 予約情報を更新する時間の間隔 (分) |
+| isEnabledDropCheck | boolean | false | no | ドロップチェックの有効化 |
 | suppressReservesUpdateAllLog | boolean | false | no | 予約定期更新時のログ出力を抑えるか |
 | suppressEPGUpdateLog | boolean | false | no | EPG 更新時のログ出力を抑えるか |
 | thumbnail | string | EPGStation/thumbnail | no | サムネイルファイルの保存先 |
