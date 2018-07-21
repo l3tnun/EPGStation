@@ -432,7 +432,6 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
      * DB に登録されていないファイルの削除
      * @return Promise<void>
      */
-    // TODO log ファイル除外
     public async cleanup(): Promise<void> {
         this.log.system.info('start recorded files clean up');
 
