@@ -56,14 +56,9 @@ class ThumbnailManageModel extends Model implements ThumbnailManageModelInterfac
         this.log.system.info(`push thumbnail: ${ program.id }`);
 
         // 同じ recorded id の program がないかチェックする
-        let conflict = false;
         for (const p of this.queue) {
-            if (p.id === p.id) {
-                conflict = true;
-                break;
-            }
+            if (program.id === p.id) { return; }
         }
-        if (conflict) { return; }
 
         this.queue.push(program);
         this.create();
