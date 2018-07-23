@@ -1,0 +1,68 @@
+Linux / Mac OS用 セットアップマニュアル
+===
+
+## セットアップ
+1. **Node.js, Mirakurun, ffmpeg/ffprobe, Python2.7, GCC**がインストールであることを確認する
+	```bash
+	$ node --version
+	$ curl -o - http://<MirakurunURL>:<Port>/api/version
+	$ ffmpeg -version
+	$ python --version
+	$ gcc --version
+	```
+1. データベースの設定を済ませる（SQLite3を使用する場合は不要）
+	- DBMSをインストールし、データベースとユーザーを作成する
+	```sql
+	/// MySQL 5.xの場合
+	mysql> create database <database_name>;
+	mysql> grant all on <database_name>.* to <username>@localhost identified by '<password>';
+	mysql> quit
+	```
+1. EPGStation のインストール
+	```
+	$ git clone https://github.com/l3tnun/EPGStation.git
+	$ cd EPGStation
+	$ npm install
+	$ npm run build
+	```
+1. 設定ファイルの作成
+	```
+	$ cp config/config.sample.json config/config.json
+	$ cp config/operatorLogConfig.sample.json config/operatorLogConfig.json
+	$ cp config/serviceLogConfig.sample.json config/serviceLogConfig.json
+	```
+1. 設定ファイルの編集
+	- 詳細な設定は [詳細マニュアル](conf-manual.md) を参照
+	- 以下の最低限の動作に必須な項目について編集する（MySQL利用時）
+	```json
+	"serverPort": 8888,
+	"mirakurunPath": "http://localhost:40772",
+	"mysql": {
+		"user": "username",
+		"password": "password",
+		"database": "database_name"
+	}
+	```
+
+## EPGStationの起動/終了
+- 手動で起動する場合
+	```
+	$ npm start
+	```
+- 自動で起動する場合
+	- [pm2](http://pm2.keymetrics.io/)を利用して自動起動設定が可能です
+	- 初回のみ以下の起動設定が必要です
+	```
+	$ sudo npm install pm2 -g
+	$ sudo pm2 startup <OS名>
+	$ pm2 start dist/server/index.js --name "EPGStation"
+	$ pm2 save
+	```
+- 手動で終了する場合
+	```
+	$ npm stop
+	```
+- 自動起動した EPGStation を終了する場合
+	```
+	$ pm2 stop EPGStation
+	```
