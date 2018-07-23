@@ -1,141 +1,124 @@
-Windows でのインストール方法
+Windows 用 セットアップマニュアル
 ===
+本マニュアルでは、Windows 環境におけるセットアップ手順を解説します
 
-## 必要なもの
+なお、Windows 版は現時点で実験的であり、安定動作を保証するものではありません  
+また、今後のアップデート等で非対応となる可能性があります
 
-* [Node.js](https://nodejs.org/ja/) LTS 版がおすすめです
-* [FFmpeg](http://ffmpeg.org/download.html) 最新の安定版
-* [MySQL](https://dev.mysql.com/) or [MariaDB](https://mariadb.org/) (※ SQLite3 で使用する場合は不要です)
+本マニュアル内では、以下のソフトウェアを利用したセットアップを行います
+- [TeraPad](http://www5f.biglobe.ne.jp/~t-susumu/), [VSCode](https://code.visualstudio.com/) など
+    - config.json 等のファイルを編集するため
+    - Windows 標準のメモ帳では正しく改行されません
+- [Git for Windows](https://git-for-windows.github.io/)
+    - EPGStation をアップデートするときに便利です
+- Windows PowerShell もしくは コマンドプロンプト
+---
+## セットアップ
+ここではWindows PowerShellを用いたセットアップを解説します
+1. **Node.js, Mirakurun, windows-build-tools** がインストールであることを確認する
+	```
+	> node --version
+	> Invoke-WebRequest http://<MirakurunIP>:<Port>/api/version
+	> npm info windows-build-tools
+	```
+1. データベースの設定を済ませる（SQLite3を使用する場合は不要）
+	- DBMSをインストールし、データベースとユーザーを作成する
+	```sql
+	/// MySQL 5.xの場合
+	mysql> create database <database_name>;
+	mysql> grant all on <database_name>.* to <username>@localhost identified by '<password>';
+	mysql> quit
+	```
+    - MySQL利用時は、文字コードがutf8になっていることを確認すること
+    ```
+    mysql> show variables like "char%";
+    +--------------------------+---------------------------------------------------------+
+    | Variable_name            | Value                                                   |
+    +--------------------------+---------------------------------------------------------+
+    | character_set_client     | utf8                                                    |
+    | character_set_connection | utf8                                                    |
+    | character_set_database   | utf8                                                    |
+    | character_set_filesystem | binary                                                  |
+    | character_set_results    | utf8                                                    |
+    | character_set_server     | utf8                                                    |
+    | character_set_system     | utf8                                                    |
+    | character_sets_dir       | C:\Program Files\MySQL\MySQL Server 5.7\share\charsets\ |
+    +--------------------------+---------------------------------------------------------+
+    8 rows in set, 1 warning (0.01 sec)
+    ```
+    
+1. EPGStation のインストール
+	```
+	> git clone https://github.com/l3tnun/EPGStation.git
+	> cd EPGStation
+	> npm install
+	> npm run build
+	```
+1. 設定ファイルの作成
+	```
+	> copy .\config\config.sample.json .\config\config.json
+	> copy .\config\operatorLogConfig.sample.json .\config\operatorLogConfig.json
+	> copy .\config\serviceLogConfig.sample.json .\config\serviceLogConfig.json
+	```
+1. 設定ファイルの編集
+	- 詳細な設定は [詳細マニュアル](conf-manual.md) を参照
+	- 以下の最低限の動作に必須な項目について編集する（MySQL利用時）
+	```json
+	"serverPort": 8888,
+	"mirakurunPath": "http://localhost:40772",
+	"mysql": {
+		"user": "username",
+		"password": "password",
+		"database": "database_name"
+    },
+    "ffmpeg": "C:\\ffmpeg\\ffmpeg.exe",
+    "ffprobe": "C:\\ffmpeg\\ffprobe.exe"
+	```
+    - Mirakurun について、名前付きパイプを使用するなら ```\\\\.\\pipe\\mirakurun```  
+        - Windows に Mirakurun をインストールするのが面倒で名前付きパイプでは動作確認していません。  
+        動かなかったら教えていただけると助かります。
 
-## あると便利なもの
+## EPGStationの起動/終了
+- 手動で起動する場合
+	```
+	> npm start
+	```
+- 自動で起動する場合
+	- [winser](https://github.com/jfromaniello/winser) を利用して自動起動設定が可能です
+	- 以下のコマンドを管理者権限で実行するとサービス化できます
+    ```
+    > npm run install-win-service
+    > net start epgstation
+    ```
+- 手動で終了する場合
+	```
+	> npm stop
+	```
+- 自動起動した EPGStation を終了する場合
+	```
+	> net stop epgstation
+	```
+    - サービスから削除する場合は以下のコマンドを管理者権限で実行します
+    ```
+    > npm run uninstall-win-service
+    ```
 
-* [TeraPad](http://www5f.biglobe.ne.jp/~t-susumu/) config.json 等を編集するため
-* [Git for Windows](https://git-for-windows.github.io/) EPGStation をアップデートするときに便利です
+## Tips
 
-## Node.js のインストール
-
-ダウンロードしてきたインストーラを実行してください
-
-## FFmpeg のインストール
-
-ダウンロードした ffmpeg.exe を適当な場所へ配置してくだい
-
-## MySQL のインストール (※ SQLite3 で使用する場合は不要です)
-
-5.7.19 においては [ Visual Studio 2013 の Visual C++ 再頒布可能パッケージ](https://www.microsoft.com/ja-jp/download/details.aspx?id=40784) が必要になるのでダウンロードしてインストールしておくといいと思います
-
-MySQL のインストーラを起動したら、MySQL Server をインストールしてください
-
-ユーザの作成も行えるので、EPGStation で使用するユーザを作成してください
-
-インストール完了後、MySQL の Command Line Client 等を利用して MySQL に入り、文字コードが utf8 か確認してください
-
-```
-mysql> show variables like "char%";
-+--------------------------+---------------------------------------------------------+
-| Variable_name            | Value                                                   |
-+--------------------------+---------------------------------------------------------+
-| character_set_client     | utf8                                                    |
-| character_set_connection | utf8                                                    |
-| character_set_database   | utf8                                                    |
-| character_set_filesystem | binary                                                  |
-| character_set_results    | utf8                                                    |
-| character_set_server     | utf8                                                    |
-| character_set_system     | utf8                                                    |
-| character_sets_dir       | C:\Program Files\MySQL\MySQL Server 5.7\share\charsets\ |
-+--------------------------+---------------------------------------------------------+
-8 rows in set, 1 warning (0.01 sec)
-```
-
-確認ができたら EPGStation で使用するデータベースの作成をしてください
-
-* MySQL 5.x の場合
-
-```
-mysql> create database database_name;
-mysql> grant all on database_name.* to username@localhost identified by 'password';
-mysql> quit
-```
-
-* MySQL 8.x の場合
-
-```
-create database database_name;
-grant all on database_name.* to username@localhost;
-alter user username@localhost identified with mysql_native_password BY 'password';
-```
-
-
-EPGStation 使用中は MySQL のバイナリログが大量に生成されてディスクを圧迫するので、MySQL の設定 (my.ini) を変えることをおすすめします。
-
-```
-expire_logs_days = 1
-```
-
-MySQL の設定をよく調べてから適応してください。
-
-## ビルドツールのインストール
-
-管理者権限で以下のコマンドを実行してください
-
-```
-npm install -g windows-build-tools
-```
-C++ のコンパイラや Python 2.7 がインストールされます
-
-## ファイアウォールの設定
-EPGStation で使用するポートを開放してください
-
-## EPGStation のインストール
-
-git をインストール済みの方は git で、そうでない方は zip で適当な場所へダウンロードしてください
-
-あとは Readme に書いてあるとおりですが、config.json での設定で幾つか注意点があります。
-
-### 改行コード
-
-*.sample.json をメモ帳で開くと改行がなくなって表示されますが、これは改行コードの違いによるものです。
-
-対応したエディタ (TeraPad 等) で開くと正常に表示されます。
+### ファイアウォールの設定
+EPGStation を別のコンピュータから使用する場合はファイアウォールを開放してください
 
 ### パス名区切り文字
 
 unix 系では ```/``` を使用するため *.sample.json では ```/hoge/huga/piyo``` と書かれていますが、windows では ```\\hoge\\huga\\piyo``` このように書いてください
 
 ### config.json
-
-#### mirakurunPath
-
-名前付きパイプを使用するなら ```\\\\.\\pipe\\mirakurun```
-
-http 接続なら ```http://host:port```
-
-※ Windows に Mirakurun をインストールするのが面倒で名前付きパイプでは動作確認していません。動かなかったら教えていただけると助かります。
-
-#### ffmpeg, ffprobe
-
-パスを ```C:\\ffmpeg\\ffmpeg.exe``` のように指定してください
-
 #### encode
 
-enc.sh を起動するようになっていますが、 windows では動かないので ```config/enc.js``` へ書き換えでください
+[enc.sh](../config/enc.sh) を起動するようになっていますが、 Windows では動かないので ```config/enc.js``` へ書き換えでください
 
 ```
 "cmd": "C:\\PROGRA~1\\nodejs\\node.exe %ROOT%\\config\\enc.js main"
 ```
 
 この ```PROGRA~1``` は 8.3 形式の表記方法で、 Program Files を指しています。cmd.exe にて ```dir /x c:\``` と打ち込むと確認できます
-
-## サービス化
-
-[winser](https://github.com/jfromaniello/winser) がインストールされている環境であれば、以下のコマンドを管理者権限で実行するとサービス化できます
-
-```
-npm run install-win-service
-```
-
-サービスから削除する場合は以下のコマンドを管理者権限で実行します
-
-```
-npm run uninstall-win-service
-```
