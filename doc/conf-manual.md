@@ -17,7 +17,7 @@
     - [録画重複時のMirakurun優先度を変更したい](#conflictpriority)
     - [データベースへのアクセス回数を減らしたい](#programinsertmax)
     - [データベースへのアクセス速度を落としたい](#programinsertwait)
-    - [recordedHistoryRetentionPeriodDays](#recordedhistoryretentionperioddays)
+    - [録画重複の判定期間を延ばしたい](#recordedhistoryretentionperioddays)
     - [番組情報の更新頻度を変更したい](#reservesupdateintervaltime)
     - [予約情報更新時のログ出力を抑えたい](#suppressreservesupdatealllog)
     - [番組情報更新時のログ出力を抑えたい](#suppressepgupdatelog)
@@ -25,6 +25,7 @@
     - [特定のチャンネルは除外したい](#excludeservices)
     - [自動起動時のGIDを指定したい](#gid)
     - [自動起動時のUIDを指定したい](#uid)
+    - [録画時にドロップがあるか確認したい](#isenableddropcheck)
     - [リバースプロキシのサブディレクトリとして利用したい](#subdirectory)
 - [ファイル保存先](#ファイル保存先)
     - [録画ファイルの保存先を変更したい](#recorded)
@@ -235,7 +236,7 @@
 "programInsertWait": 0
 ```
 ### recordedHistoryRetentionPeriodDays
-#### ルール予約時の番組名を保存しておく期間
+#### 重複確認用データベースへ番組名を保管する期間
 | 種類 | デフォルト値 | 必須 |
 | --- | ---------- | --- |
 | number | 30 | no |
@@ -299,6 +300,14 @@
 | string \| number | - | no |
 ```json
 "uid": "fuga"
+```
+### isEnabledDropCheck
+#### 録画時のドロップチェックを有効化する
+| 種類 | デフォルト値 | 必須|
+| --- | ---------- | --- |
+| boolean | false | no |
+```json
+"isEnabledDropCheck": true
 ```
 ### subDirectory
 #### リバースプロキシ利用時にサブディレクトリとして動作させる
