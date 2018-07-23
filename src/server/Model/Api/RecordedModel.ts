@@ -38,6 +38,7 @@ interface RecordedModelInterface extends ApiModel {
     getId(recordedId: number): Promise<{}>;
     getDuration(recordedId: number): Promise<number | null>;
     getThumbnailPath(recordedId: number): Promise<string>;
+    getLogPath(recordedId: number): Promise<string>;
     getFilePath(recordedId: number, encodedId: number | undefined): Promise<RecordedFilePathInfo>;
     deleteAllRecorded(recordedId: number): Promise<void>;
     deleteRecordeds(recordedIds: number[]): Promise<number[]>;
@@ -55,6 +56,7 @@ interface RecordedModelInterface extends ApiModel {
 namespace RecordedModelInterface {
     export const NotFoundRecordedIdError = 'NotFoundRecordedId';
     export const NotFoundRecordedThumbnailError = 'NotFoundRecordedThumbnail';
+    export const NotFoundRecordedLogError = 'NotFoundRecordedLogError';
     export const NotFoundRecordedFileError = 'NotFoundRecordedFile';
     export const RecordedIsStreamingNowError = 'RecordedIsStreamingNow';
     export const DeleteFileError = 'DeleteFileError';
@@ -249,6 +251,21 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
         }
 
         return recorded.thumbnailPath;
+    }
+
+    /**
+     * recorded の log ファイルパスを取得
+     * @param recordedId: recorded id
+     * @return Promise<string>
+     */
+    public async getLogPath(recordedId: number): Promise<string> {
+        const recorded = await this.recordedDB.findId(recordedId);
+
+        if (recorded === null || recorded.logPath === null) {
+            throw new Error(RecordedModelInterface.NotFoundRecordedLogError);
+        }
+
+        return recorded.logPath;
     }
 
     /**
