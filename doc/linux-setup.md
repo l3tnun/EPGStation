@@ -1,8 +1,9 @@
-Linux / Mac OS用 セットアップマニュアル
+Linux / Mac OS 用 セットアップマニュアル
 ===
+本マニュアルでは、Linux / Mac OS 環境におけるセットアップ手順を解説します
 
 ## セットアップ
-1. **Node.js, Mirakurun, ffmpeg/ffprobe, Python2.7, GCC**がインストールであることを確認する
+1. **Node.js, Mirakurun, ffmpeg/ffprobe, Python2.7, GCC** がインストールであることを確認する
 	```bash
 	$ node --version
 	$ curl -o - http://<MirakurunURL>:<Port>/api/version
