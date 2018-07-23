@@ -1,163 +1,142 @@
 EPGStation
 ====
+[Mirakurun](https://github.com/Chinachu/Mirakurun) を使用した録画管理ソフトです  
+iOS・Androidでの閲覧に最適化されたモバイルフレンドリーなWebインターフェイスが特徴です  
+PCからの閲覧でもモダンなUIで操作可能です
 
-[Mirakurun](https://github.com/Chinachu/Mirakurun) を使用した録画管理ソフト
+## 機能
+### 地上デジタル放送・BS/CSデジタル放送番組の視聴・録画・管理
+- ブラウザでのWebインターフェイス操作
+	- 番組表の表示
+	- 番組検索
+	- 番組単位の予約
+		- 番組表からの手動予約
+		- ルールによる自動予約
+		- 予約の競合や重複の警告
+	- 番組の視聴
+		- 放送中番組のライブ視聴
+		- 録画済み番組のストリーミング視聴（HTTP Live Streaming）
+		- 録画済み番組のダウンロード
+- WebAPIでのHTTP Request操作
+	- [WebAPI Document](doc/webapi.md)
 
-## これはなに？
+## デモ
 
-[Mirakurun](https://github.com/Chinachu/Mirakurun) を使用した録画管理ソフトです
-
-iOS, Android での操作感を重視しています
-
-## スクリーンショット
-
-|![](https://raw.githubusercontent.com/wiki/l3tnun/EPGStation/images/demo/top.png)|![](https://raw.githubusercontent.com/wiki/l3tnun/EPGStation/images/demo/live.png)|![](https://raw.githubusercontent.com/wiki/l3tnun/EPGStation/images/demo/program.png)|![](https://raw.githubusercontent.com/wiki/l3tnun/EPGStation/images/demo/recorded.png)|![](https://raw.githubusercontent.com/wiki/l3tnun/EPGStation/images/demo/reserves.png)|![](https://raw.githubusercontent.com/wiki/l3tnun/EPGStation/images/demo/rule.png)|![](https://raw.githubusercontent.com/wiki/l3tnun/EPGStation/images/demo/search.png)|
-|---|---|---|---|---|---|---|
+![](https://gist.githubusercontent.com/advancedbear/b68aac0830bda8cddc0da14b2d7aeabc/raw/ceb7eabda91fd37816c143e8d633074f4419b5d6/EPGStation.gif)
 
 ## 動作環境
 
-* [Node.js](http://nodejs.org/) ^6.5.x || ~ 8
-* [Mirakurun](https://github.com/Chinachu/Mirakurun) ^2.5.7
-* Linux, macOS, Windows (実験的)
-* データベース
-	* [MySQL](https://www.mysql.com/jp/) ( [MariaDB](https://mariadb.org/) ) (character-set-server = utf8)
-	* [SQLite](https://www.sqlite.org/)
-	* [PostgreSQL](https://www.postgresql.org/) (version 9.5 以上)
-* [FFmpeg](http://ffmpeg.org/)
-* [Python 2.7](https://www.python.org/) diskusage で使用される node-gyp で必要
-* [GCC](https://gcc.gnu.org/) diskusage で使用される node-gyp で必要
+- Windows / Mac OS / Linux
+- [Node.js](http://nodejs.org/) : ^6.5.x || ~ 8 
+- [Mirakurun](https://github.com/Chinachu/Mirakurun) : ^2.5.7 
+- いずれかのデータベース
+	- [MySQL](https://www.mysql.com/jp/) ( [MariaDB](https://mariadb.org/) )【推奨】
+	- [PostgreSQL](https://www.postgresql.org/) (version 9.5 以上)
+	- [SQLite3](https://www.sqlite.org/)（設定不要だが検索機能に制限あり）  
+		- [SQLite3 使用時の正規表現での検索の有効化について](doc/sqlite3-regexp.md)
+- [FFmpeg](http://ffmpeg.org/)
+- for Windows
+	- [windows-build-tools](https://npmjs.com/package/windows-build-tools)
+- for Mac OS / Linux
+	- [Python 2.7](https://www.python.org/) diskusage で使用される node-gyp で必要
+	- [GCC](https://gcc.gnu.org/) diskusage で使用される node-gyp で必要
 
+### 構築済み推奨環境
 [docker-mirakurun-epgstation](https://github.com/l3tnun/docker-mirakurun-epgstation) で動作を確認しています
 
-Windows については [doc/windows.md](doc/windows.md) を参照してください
+## セットアップ方法
+### [Windows用セットアップマニュアル](doc/windows.md)
 
-## インストール方法
-````
-$ git clone https://github.com/l3tnun/EPGStation.git
-$ cd EPGStation
-$ npm install
-$ npm run build
-````
+### [Linux / Mac OS用セットアップマニュアル](doc/linux-setup.md)
 
 ## アップデート方法
-* 以下のコマンドを実行後に EPGStation を再起動する
+- 以下のコマンドを実行後に EPGStation を再起動する
+	```
+	$ git pull
+	$ npm update
+	$ npm update -D
+	$ npm run build
+	```
 
-```
-$ git pull
-$ npm update
-$ npm update -D
-$ npm run build
-```
+## 動作確認
+- ブラウザから`http://<IPaddress>:<Port>/`にアクセスをする
+- curlやwgetでWebAPIを叩く
+	```
+	$ curl -o - http://<IPaddress>:<Port>/api/config
+	```
 
-## 設定
-#### config.json のコピー
+### ログの確認
+#### EPGStation/logs/Operator
+- 録画管理機能からのログが記録されています
+	- `access.log`
+		- 基本的に空ファイル
+	- `stream.log`
+		- 基本的に空ファイル
+	- `system.log`
+		- Mirakurunへのアクセスログや、コマンドの実行ログ
+#### EPGStation/logs/Service
+- Webインターフェイスからのログ記録されています
+	- `access.log`
+		- Webインターフェイスへのアクセスログ
+	- `stream.log`
+		- WebインターフェイスやAPI経由での配信ログ
+	- `system.log`
+		- Webインターフェイスの動作ログ（起動・終了等）
 
-````
-$ cp config/config.sample.json config/config.json
-````
+## クライアント向け設定
+- EPGStationを利用する端末向けの設定を行うと快適に利用可能です
 
-#### 使用するデータベース
+### URL Scheme
+- EPGStation上の動画再生をOS上のアプリケーションで行うことが出来ます
+	- Mac OS用設定 -> [doc/mac-url-scheme.md](doc/mac-url-scheme.md)
+	- Windows用設定 -> [doc/win-url-scheme.md](doc/win-url-scheme.md)
+	- iOS, Android用設定 -> [config.json内で設定](doc/conf-manual.md#mpegtsviewer)
+- 上記以外の環境での設定は WebUI の設定で各ブラウザごとに設定してください
 
-データベースには MySQL (推奨) or SQLite3 or PostgreSQL が使用可能です。データベースの指定は config.json の ```dbType``` を ```mysql``` or ```sqlite3``` or ```postgresql``` に指定してください。詳細は [doc/config.md](doc/config.md) を参照してください
-
-SQLite3 は [node-sqlite3](https://github.com/mapbox/node-sqlite3) を使用しているためシステム側での SQLite3 のインストールは不要です
-
-SQLite3 使用時の正規表現での検索の有効化については[こちら](doc/sqlite3-regexp.md)
-
-#### config.json の設定
-
-データベースの設定が済んでいれば ```mirakurunPath```, ```ffmpeg```, ```ffprobe``` の設定をすればとりあえず動きます
-
-詳細は [doc/config.md](doc/config.md) を参照してください
-
-
-##### URL Scheme
-
-* mac -> [doc/mac-url-scheme.md](doc/mac-url-scheme.md)
-* windows -> [doc/win-url-scheme.md](doc/win-url-scheme.md)
-* iOS, Android -> config.json を設定
-
-上記以外の環境での設定は WebUI の設定で各ブラウザごとに設定してください
-
-記述方法は [doc/config.md](https://github.com/l3tnun/EPGStation/blob/master/doc/config.md#recordedviewer-recordeddownloader-mpegtsviewer-%E3%81%A7%E7%BD%AE%E6%8F%9B%E3%81%95%E3%82%8C%E3%82%8B%E6%96%87%E5%AD%97%E5%88%97) に準じます
-
-### log の設定
-
-````
-$ cp config/operatorLogConfig.sample.json config/operatorLogConfig.json
-$ cp config/serviceLogConfig.sample.json config/serviceLogConfig.json
-````
-
-## 起動方法
-````
-$ npm start
-````
-
-or
-
-````
-$ node dist/server/index.js
-````
-
-デーモン化は [PM2](http://pm2.keymetrics.io/) で行うといいです
-
-root で動かす必要はないです。お好きなユーザーで起動してください
-
-## スマートフォン側の設定
+### スマートフォン側の設定
 
 config.json で設定したアプリをインストールしてください
 
-## API の確認
-
-````
-http://host:prot/api/debug
-````
-
-上記にアクセスすると Swagger UI で API の確認が可能です
-
 ## データベースのバックアップとレストア
+バックアップデータはデータベースに依存しないので MySQL でバックアップ -> SQLite3 へレストアなども可能です
 
-バックアップ
-
+### バックアップ
+- 以下のコマンドを実行
 ```
 npm run backup FILENAME
 ```
 
-レストア
-
+### レストア
+- config.jsonに新しいデータベース設定を記述後に以下のコマンドを実行
 ```
 npm run restore FILENAME
 ```
 
-データベース接続設定は config.json を参照します。バックアップデータはデータベースに依存しないので MySQL からバックアップ -> SQLite3 へレストアなども可能です
 
-## Kodi との連携
-
-[doc/kodi.md](doc/kodi.md) を参照してください
-
-## Android での番組表の表示高速化
+## Tips
+### Kodi との連携
+総合メディアセンター/プレイヤーアプリケーションのKodiとの連携に対応しています  
+詳細は [doc/kodi.md](doc/kodi.md) を参照してください
+### Android での番組表の表示高速化
 
 性能が低い Android 端末の場合番組表の描画に時間がかかる場合があります
-
-ナビゲーションを開く -> 設定 -> 番組表スクロール修正 を有効化
-
+- ナビゲーションを開く -> 設定 -> 番組表スクロール修正 を有効化
 上記の操作をすると画面外の要素が描画されなくなるため動作が軽くなります
 
-## Android 6.0 以上での注意
+### Android 6.0 以上での注意
 
-Android の設定 -> ユーザー補助 にて "操作の監視" が必要なサービスを ON にしていると、番組表の動作が著しく重くなります
-
+Android の設定 -> ユーザー補助 にて "操作の監視" が必要なサービスを ON にしていると、番組表の動作が著しく重くなります  
 具体的なアプリは LMT Launcher や Pie Control などが挙げられます
 
 該当サービスを OFF にするのが一番良いですが、それができない場合は以下の操作をしてください
 
 設定ページにて
 
-* 番組表スクロール修正 を有効化
-* 番組表描画範囲の最小化 を有効化
+- 番組表スクロール修正 を有効化
+- 番組表描画範囲の最小化 を有効化
 
 さらに動作を軽くしたい場合は番組表時間で表示時間を短くしてください
 
 ## Licence
 
-MIT Licence
+[MIT Licence](LICENSE)
