@@ -319,6 +319,21 @@ class RecordedInfoViewModel extends ViewModel {
     }
 
     /**
+     * drop カウントを取得
+     * @return string
+     */
+    public getDropCnt(): string {
+        if (
+            this.recorded === null
+            || typeof this.recorded.errorCnt === 'undefined'
+            || typeof this.recorded.dropCnt === 'undefined'
+            || typeof this.recorded.scramblingCnt === 'undefined'
+        ) { return ''; }
+
+        return `Drop: ${ this.recorded.dropCnt }, Error: ${ this.recorded.errorCnt}, Scrambling: ${ this.recorded.scramblingCnt }`;
+    }
+
+    /**
      * description の取得
      * @return recorded
      */
