@@ -25,8 +25,13 @@ Windows 用 セットアップマニュアル
 	- DBMSをインストールし、データベースとユーザーを作成する
 	```sql
 	/// MySQL 5.xの場合
-	mysql> create database <database_name>;
-	mysql> grant all on <database_name>.* to <username>@localhost identified by '<password>';
+	mysql> create database database_name;
+	mysql> grant all on database_name.* to username@localhost identified by 'password';
+	mysql> quit
+	// MySQL 8.xの場合
+	mysql> create database database_name;
+	mysql> grant all on database_name.* to username@localhost;
+	mysql> alter user username@localhost identified with mysql_native_password BY 'password';
 	mysql> quit
 	```
     - MySQL利用時は、文字コードがutf8になっていることを確認すること
@@ -74,8 +79,8 @@ Windows 用 セットアップマニュアル
     "ffmpeg": "C:\\ffmpeg\\ffmpeg.exe",
     "ffprobe": "C:\\ffmpeg\\ffprobe.exe"
 	```
-    - Mirakurun について、名前付きパイプを使用するなら ```\\\\.\\pipe\\mirakurun```  
-        - Windows に Mirakurun をインストールするのが面倒で名前付きパイプでは動作確認していません。  
+    - Mirakurun について、名前付きパイプを使用するなら `\\\\.\\pipe\\mirakurun`
+        - 名前付きパイプでは動作確認していません。  
         動かなかったら教えていただけると助かります。
 
 ## EPGStationの起動/終了
@@ -87,6 +92,7 @@ Windows 用 セットアップマニュアル
 	- [winser](https://github.com/jfromaniello/winser) を利用して自動起動設定が可能です
 	- 以下のコマンドを管理者権限で実行するとサービス化できます
     ```
+	> npm install winser -g
     > npm run install-win-service
     > net start epgstation
     ```
@@ -110,15 +116,16 @@ EPGStation を別のコンピュータから使用する場合はファイアウ
 
 ### パス名区切り文字
 
-unix 系では ```/``` を使用するため *.sample.json では ```/hoge/huga/piyo``` と書かれていますが、windows では ```\\hoge\\huga\\piyo``` このように書いてください
+unix 系では `/` を使用するため *.sample.json では `/hoge/huga/piyo` と書かれていますが、windows では `\\hoge\\huga\\piyo` このように書いてください
 
 ### config.json
 #### encode
 
-[enc.sh](../config/enc.sh) を起動するようになっていますが、 Windows では動かないので ```config/enc.js``` へ書き換えでください
+[enc.sh](../config/enc.sh) を起動するようになっていますが、 Windows では動かないので `config/enc.js` へ書き換えでください
 
 ```
 "cmd": "C:\\PROGRA~1\\nodejs\\node.exe %ROOT%\\config\\enc.js main"
 ```
 
-この ```PROGRA~1``` は 8.3 形式の表記方法で、 Program Files を指しています。cmd.exe にて ```dir /x c:\``` と打ち込むと確認できます
+この `PROGRA~1` は 8.3 形式の表記方法で、 Program Files を指しています。  
+cmd.exe にて `dir /x c:\` と打ち込むと確認できます
