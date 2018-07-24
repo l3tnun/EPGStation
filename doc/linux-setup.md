@@ -15,8 +15,13 @@ Linux / Mac OS 用 セットアップマニュアル
 	- DBMSをインストールし、データベースとユーザーを作成する
 	```sql
 	/// MySQL 5.xの場合
-	mysql> create database <database_name>;
-	mysql> grant all on <database_name>.* to <username>@localhost identified by '<password>';
+	mysql> create database database_name;
+	mysql> grant all on database_name.* to username@localhost identified by 'password';
+	mysql> quit
+	// MySQL 8.xの場合
+	mysql> create database database_name;
+	mysql> grant all on database_name.* to username@localhost;
+	mysql> alter user username@localhost identified with mysql_native_password BY 'password';
 	mysql> quit
 	```
 1. EPGStation のインストール
