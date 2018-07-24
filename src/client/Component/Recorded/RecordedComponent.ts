@@ -20,6 +20,7 @@ import TabComponent from '../TabComponent';
 import RecordedCleanupBalloonComponent from './RecordedCleanupBalloonComponent';
 import RecordedDeleteComponent from './RecordedDeleteComponent';
 import RecordedEncodeComponent from './RecordedEncodeComponent';
+import RecordedErrorLogComponent from './RecordedErrorLogComponent';
 import RecordedInfoComponent from './RecordedInfoComponent';
 import RecordedMenuComponent from './RecordedMenuComponent';
 import RecordedMultipleDeleteCompoent from './RecordedMultipleDeleteCompoent';
@@ -141,6 +142,13 @@ class RecordedComponent extends ParentComponent<void> {
                     maxHeight: 480,
                     dialogMaxWidth: RecordedComponent.cardWidth * 2 - 1,
                     forceDialog: Util.uaIsiOS(),
+                }),
+                m(BalloonComponent, {
+                    id: RecordedInfoViewModel.errorLogId,
+                    content: m(RecordedErrorLogComponent),
+                    maxWidth: 900,
+                    forceDialog: true,
+                    forceOverflowXAuto: true,
                 }),
                 m(BalloonComponent, {
                     id: RecordedWatchSelectViewModel.id,

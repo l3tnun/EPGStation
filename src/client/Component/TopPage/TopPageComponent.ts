@@ -22,6 +22,7 @@ import ParentComponent from '../ParentComponent';
 import ProgramInfoComponent from '../Program/ProgramInfoComponent';
 import RecordedDeleteComponent from '../Recorded/RecordedDeleteComponent';
 import RecordedEncodeComponent from '../Recorded/RecordedEncodeComponent';
+import RecordedErrorLogComponent from '../Recorded/RecordedErrorLogComponent';
 import RecordedInfoComponent from '../Recorded/RecordedInfoComponent';
 import RecordedMenuComponent from '../Recorded/RecordedMenuComponent';
 import RecordedPlayerComponent from '../Recorded/RecordedPlayerComponent';
@@ -104,6 +105,13 @@ class TopPageComponent extends ParentComponent<void> {
                     maxHeight: 480,
                     dialogMaxWidth: 600,
                     forceDialog: Util.uaIsiOS(),
+                }),
+                m(BalloonComponent, {
+                    id: RecordedInfoViewModel.errorLogId,
+                    content: m(RecordedErrorLogComponent),
+                    maxWidth: 900,
+                    forceDialog: true,
+                    forceOverflowXAuto: true,
                 }),
                 m(BalloonComponent, {
                     id: RecordedWatchSelectViewModel.id,

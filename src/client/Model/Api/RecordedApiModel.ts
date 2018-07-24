@@ -31,6 +31,7 @@ interface RecordedApiModelInterface extends ApiModel {
     fetchRecorded(recordedId: apid.RecordedId): Promise<void>;
     fetchDuration(recordedId: apid.RecordedId): Promise<void>;
     fetchTags(): Promise<void>;
+    fetchLog(recordedId: apid.RecordedId): Promise<void>;
     createNewRecord(recorded: apid.NewRecorded): Promise<number>;
     uploadFile(query: UploadQueryOption): Promise<void>;
     abortUpload(): void;
@@ -43,6 +44,7 @@ interface RecordedApiModelInterface extends ApiModel {
     getDuration(): number;
     getPage(): number;
     getTags(): apid.RecordedTags;
+    getLog(): string | null;
     addEncode(recordedId: apid.RecordedId, option: EncodeQueryOption): Promise<void>;
     cancelEncode(recordedId: apid.RecordedId): Promise<void>;
     cleanup(): Promise<void>;
@@ -67,6 +69,7 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
         genre: [],
     };
     private uploadXHR: XMLHttpRequest | null = null;
+    private errorLogStr: string | null = null;
     private limit: number = 0;
     private offset: number = 0;
     private option: FindQueryOption = {};
@@ -81,6 +84,7 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
         this.recorded = null;
         this.duration = 0;
         this.uploadXHR = null;
+        this.errorLogStr = null;
     }
 
     /**
@@ -182,6 +186,25 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
             console.error('./api/recorded/tags');
             console.error(err);
             this.openSnackbar('録画タグ情報取得に失敗しました');
+        }
+    }
+
+    /**
+     * log ファイル取得
+     * /api/recorded/{ id }/log
+     */
+    public async fetchLog(recordedId: apid.RecordedId): Promise<void> {
+        try {
+            this.errorLogStr = await <any> this.request({
+                method: 'GET',
+                url: `./api/recorded/${ recordedId }/log`,
+                deserialize: (str) => { return str; },
+            });
+        } catch (err) {
+            this.errorLogStr = null;
+            console.error(`./api/recorded/${ recordedId}/log`);
+            console.error(err);
+            this.openSnackbar('log 取得に失敗しました。');
         }
     }
 
@@ -372,6 +395,14 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
      */
     public getTags(): apid.RecordedTags {
         return this.tags;
+    }
+
+    /**
+     * error log の取得
+     * @return string | null
+     */
+    public getLog(): string | null {
+        return this.errorLogStr;
     }
 
     /**
