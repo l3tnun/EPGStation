@@ -162,7 +162,7 @@ class TSCheckerModel extends Model implements TSCheckerModelInterface {
      * @return string
      */
     private pidToString(pid: number): string {
-        return `0x${ ('000' + pid.toString(16)).slice(-4) }`;
+        return `0x${ ('000' + pid.toString(16)).slice(-4) }`.toUpperCase();
     }
 
     /**
