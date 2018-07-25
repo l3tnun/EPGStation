@@ -61,12 +61,12 @@ class TSCheckerModel extends Model implements TSCheckerModelInterface {
 
         let hasError = false;
         tsPacketAnalyzer.on('packetError', (pid, counter, expected) => {
-            this.appendFile(`error: (pid: ${ this.pidToString(pid) }, counter: ${ counter }, expected: ${ expected }, time: ${ this.getTime() })\n`);
+            this.appendFile(`error: (pid: ${ this.pidToString(pid) }, counter: ${ counter || '-' }, expected: ${ expected || '-' }, time: ${ this.getTime() })\n`);
             hasError = true;
         });
 
         tsPacketAnalyzer.on('packetDrop', (pid, counter, expected) => {
-            this.appendFile(`drop (pid: ${ this.pidToString(pid) }, counter: ${ counter }, expected: ${ expected }, time: ${ this.getTime() })\n`);
+            this.appendFile(`drop (pid: ${ this.pidToString(pid) }, counter: ${ counter || '-' }, expected: ${ expected || '-' }, time: ${ this.getTime() })\n`);
             hasError = true;
         });
 
@@ -87,7 +87,7 @@ class TSCheckerModel extends Model implements TSCheckerModelInterface {
             }
             for (const pid of Object.keys(result)) {
                 const pidNum = parseInt(pid, 10);
-                await this.appendFile(`pid: ${ this.pidToString(pidNum) }, packet: ${ result[pid].packet }, error: ${ result[pid].error }, drop: ${ result[pid].drop }, scrambling: ${ result[pid].drop }, name: ${ this.getPIDName(pidNum) }\n`);
+                await this.appendFile(`pid: ${ this.pidToString(pidNum) }, error: ${ result[pid].error }, drop: ${ result[pid].drop }, scrambling: ${ result[pid].drop }, packet: ${ result[pid].packet }, name: ${ this.getPIDName(pidNum) }\n`);
             }
         });
 
@@ -170,7 +170,7 @@ class TSCheckerModel extends Model implements TSCheckerModelInterface {
      * @return string
      */
     private getTime(): string {
-        return this.time === null ? '' : `${ this.time.getTime() }`;
+        return this.time === null ? '-' : `${ this.time.getTime() }`;
     }
 
     /**
