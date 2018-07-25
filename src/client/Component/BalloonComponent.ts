@@ -25,6 +25,7 @@ interface BalloonArgs {
     forceDialog?: boolean; // dialog mode を強制する
     forceModal?: boolean; // 範囲外をクリックしても閉じないようにする
     foreBalloon?: boolean; // balloon を強制する
+    forceOverflowXAuto?: boolean; // content の overflowX を auto に強制セット
 }
 
 /**
@@ -43,6 +44,7 @@ class BalloonComponent extends Component<BalloonArgs> {
     private forceDialog: boolean;
     private forceModal: boolean;
     private foreBalloon: boolean;
+    private forceOverflowXAuto: boolean;
 
     private viewModel: BalloonViewModel;
     private isOpen: boolean = false;
@@ -79,6 +81,7 @@ class BalloonComponent extends Component<BalloonArgs> {
         this.forceDialog = typeof vnode.attrs.forceDialog === 'undefined' ? false : vnode.attrs.forceDialog;
         this.forceModal = typeof vnode.attrs.forceModal === 'undefined' ? false : vnode.attrs.forceModal;
         this.foreBalloon = typeof vnode.attrs.foreBalloon === 'undefined' ? false : vnode.attrs.foreBalloon;
+        this.forceOverflowXAuto = typeof vnode.attrs.forceOverflowXAuto === 'undefined' ? false : vnode.attrs.forceOverflowXAuto;
         this.viewModel.add(this.id);
     }
 
@@ -223,8 +226,10 @@ class BalloonComponent extends Component<BalloonArgs> {
             setTimeout(() => {
                 // スクロール位置をリセット
                 (<HTMLElement> vnode.dom.children[0].children[0]).scrollTop = 0;
+                (<HTMLElement> vnode.dom.children[0].children[0]).scrollLeft = 0;
                 for (let i = 0; i < vnode.dom.children[0].children.length; i++) {
                     (<HTMLElement> vnode.dom.children[0].children[i]).scrollTop = 0;
+                    (<HTMLElement> vnode.dom.children[0].children[i]).scrollLeft = 0;
                 }
 
                 // アニメーションと共に表示
@@ -565,6 +570,10 @@ class BalloonComponent extends Component<BalloonArgs> {
             content.style.height = contentHeight + 'px';
             content.style.overflowX = 'hidden';
             content.style.overflowY = 'auto';
+        }
+
+        if (this.forceOverflowXAuto) {
+            content.style.overflowX = 'auto';
         }
     }
 

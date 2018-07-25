@@ -20,6 +20,7 @@ class DBRevisionChecker extends Base {
 
         this.migrations.push(<MigrationBase> factory.get('MigrationV1'));
         this.migrations.push(<MigrationBase> factory.get('MigrationV2'));
+        this.migrations.push(<MigrationBase> factory.get('MigrationV3'));
 
         this.infoFilePath = this.config.getConfig().dbInfoPath || path.join(__dirname, '..', '..', 'data', 'dbinfo.json');
         this.readFile();
@@ -66,10 +67,6 @@ class DBRevisionChecker extends Base {
                 // version 0.5.9 以下からのアップグレード
                 this.dbInfo = { revision: 0 };
                 this.log.system.info('upgrade from less than or equal to version 0.5.9');
-            } else if (tableStatus.Services && tableStatus.Programs && tableStatus.Rules && tableStatus.Recorded && tableStatus.Encoded && tableStatus.RecordedHistory) {
-                // version 0.9.7 以上のはずだが dbinfo.json ファイルが欠落している
-                this.log.system.fatal('dbinfo.json is missing.');
-                process.exit(1);
             } else {
                 // DB table が欠損している
                 this.log.system.fatal('DB table is missing.');

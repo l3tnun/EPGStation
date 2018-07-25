@@ -19,6 +19,18 @@ interface FindQuery {
     keyword?: string;
 }
 
+interface CntItem {
+    error: number;
+    drop: number;
+    scrambling: number;
+}
+
+interface RecordedFilesItem {
+    id: number;
+    recPath: string;
+    logPath: string | null;
+}
+
 interface RecordedDBInterface extends DBTableBase {
     create(): Promise<void>;
     drop(): Promise<void>;
@@ -34,6 +46,7 @@ interface RecordedDBInterface extends DBTableBase {
     updateTsFilePath(recordedId: number, filePath: string): Promise<void>;
     updateFileSize(recordedId: number): Promise<void>;
     updateAllNullFileSize(): Promise<void>;
+    updateCnt(recordedId: number, item: CntItem): Promise<void>;
     findId(id: number): Promise<DBSchema.RecordedSchema | null>;
     findOld(): Promise<DBSchema.RecordedSchema | null>;
     findCleanupList(): Promise<{ id: number }[]>;
@@ -42,7 +55,7 @@ interface RecordedDBInterface extends DBTableBase {
     getRuleTag(): Promise<DBSchema.RuleTag[]>;
     getChannelTag(): Promise<DBSchema.ChannelTag[]>;
     getGenreTag(): Promise<DBSchema.GenreTag[]>;
-    getAllFiles(): Promise<{ id: number; recPath: string }[]>;
+    getAllFiles(): Promise<RecordedFilesItem[]>;
 }
 
 abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
@@ -74,12 +87,6 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
      * @param Promise<number> insertId
      */
     public insert(program: DBSchema.RecordedSchema): Promise<number> {
-        const query = `insert into ${ DBSchema.TableName.Recorded } (`
-            + this.createInsertColumnStr(false)
-        + ') VALUES ('
-            + this.operator.createValueStr(1, 23)
-        + `) ${ this.operator.getReturningStr() }`;
-
         const baseDir = Util.getRecordedPath();
 
         const value: any[] = [];
@@ -106,6 +113,17 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
         value.push(program.recording);
         value.push(program.protection);
         value.push(program.filesize);
+        value.push(program.logPath === null ? null : program.logPath.slice(baseDir.length + path.sep.length));
+        value.push(program.errorCnt);
+        value.push(program.dropCnt);
+        value.push(program.scramblingCnt);
+
+        const query = `insert into ${ DBSchema.TableName.Recorded } (`
+            + this.createInsertColumnStr(false)
+        + ') VALUES ('
+            + this.operator.createValueStr(1, value.length)
+        + `) ${ this.operator.getReturningStr() }`;
+
 
         return this.operator.runInsert(query, value);
     }
@@ -139,7 +157,11 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
             + 'thumbnailPath, '
             + 'recording, '
             + 'protection, '
-            + 'filesize ';
+            + 'filesize, '
+            + 'logPath, '
+            + 'errorCnt, '
+            + 'dropCnt, '
+            + 'scramblingCnt ';
     }
 
     /**
@@ -149,12 +171,6 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
      * @param hasBaseDir: boolean
      */
     public restore(programs: DBSchema.RecordedSchema[], isDelete: boolean = true, hasBaseDir: boolean = true): Promise<void> {
-        const query = `insert into ${ DBSchema.TableName.Recorded } (`
-            + this.createInsertColumnStr(true)
-        + ') VALUES ('
-            + this.operator.createValueStr(1, 24)
-        + ')';
-
         const baseDir = Util.getRecordedPath();
 
         const values: any[] = [];
@@ -190,8 +206,19 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
             value.push(program.recording);
             value.push(program.protection);
             value.push(program.filesize);
+            value.push(program.logPath);
+            value.push(program.errorCnt);
+            value.push(program.dropCnt);
+            value.push(program.scramblingCnt);
 
-            values.push({ query: query, values: value });
+            values.push({
+                query: `insert into ${ DBSchema.TableName.Recorded } (`
+                    + this.createInsertColumnStr(true)
+                    + ') VALUES ('
+                    + this.operator.createValueStr(1, value.length)
+                    + ')',
+                values: value,
+            });
         }
 
 
@@ -204,40 +231,6 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
      * @param Promise<void>
      */
     public async replace(program: DBSchema.RecordedSchema): Promise<void> {
-        const isReplace = this.operator.getUpsertType() === 'replace';
-        let query = `${ isReplace ? 'replace' : 'insert' } into ${ DBSchema.TableName.Recorded } (`
-            + this.createInsertColumnStr(true)
-        + ') VALUES ('
-            + this.operator.createValueStr(1, 24)
-        + ')';
-
-        if (!isReplace) {
-            query += ' on conflict (id) do update set '
-                + 'programId = excluded.programId, '
-                + 'channelId = excluded.channelId, '
-                + 'channelType = excluded.channelType, '
-                + 'startAt = excluded.startAt, '
-                + 'endAt = excluded.endAt, '
-                + 'duration = excluded.duration, '
-                + 'name = excluded.name, '
-                + 'description = excluded.description, '
-                + 'extended = excluded.extended, '
-                + 'genre1 = excluded.genre1, '
-                + 'genre2 = excluded.genre2, '
-                + 'videoType = excluded.videoType, '
-                + 'videoResolution = excluded.videoResolution, '
-                + 'videoStreamContent = excluded.videoStreamContent, '
-                + 'videoComponentType = excluded.videoComponentType, '
-                + 'audioSamplingRate = excluded.audioSamplingRate, '
-                + 'audioComponentType = excluded.audioComponentType, '
-                + 'recPath = excluded.recPath, '
-                + 'ruleId = excluded.ruleId, '
-                + 'thumbnailPath = excluded.thumbnailPath, '
-                + 'recording = excluded.recording, '
-                + 'protection = excluded.protection, '
-                + 'filesize = excluded.filesize ';
-        }
-
         const baseDir = Util.getRecordedPath();
 
         const value: any[] = [];
@@ -265,6 +258,48 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
         value.push(program.recording);
         value.push(program.protection);
         value.push(program.filesize);
+        value.push(program.logPath === null ? null : program.logPath.slice(baseDir.length + path.sep.length));
+        value.push(program.errorCnt);
+        value.push(program.dropCnt);
+        value.push(program.scramblingCnt);
+
+        const isReplace = this.operator.getUpsertType() === 'replace';
+        let query = `${ isReplace ? 'replace' : 'insert' } into ${ DBSchema.TableName.Recorded } (`
+            + this.createInsertColumnStr(true)
+        + ') VALUES ('
+            + this.operator.createValueStr(1, value.length)
+        + ')';
+
+        if (!isReplace) {
+            query += ' on conflict (id) do update set '
+                + 'programId = excluded.programId, '
+                + 'channelId = excluded.channelId, '
+                + 'channelType = excluded.channelType, '
+                + 'startAt = excluded.startAt, '
+                + 'endAt = excluded.endAt, '
+                + 'duration = excluded.duration, '
+                + 'name = excluded.name, '
+                + 'description = excluded.description, '
+                + 'extended = excluded.extended, '
+                + 'genre1 = excluded.genre1, '
+                + 'genre2 = excluded.genre2, '
+                + 'videoType = excluded.videoType, '
+                + 'videoResolution = excluded.videoResolution, '
+                + 'videoStreamContent = excluded.videoStreamContent, '
+                + 'videoComponentType = excluded.videoComponentType, '
+                + 'audioSamplingRate = excluded.audioSamplingRate, '
+                + 'audioComponentType = excluded.audioComponentType, '
+                + 'recPath = excluded.recPath, '
+                + 'ruleId = excluded.ruleId, '
+                + 'thumbnailPath = excluded.thumbnailPath, '
+                + 'recording = excluded.recording, '
+                + 'protection = excluded.protection, '
+                + 'filesize = excluded.filesize, '
+                + 'logPath = excluded.logPath, '
+                + 'errorCnt = excluded.errorCnt, '
+                + 'dropCnt = excluded.dropCnt, '
+                + 'scramblingCnt = excluded.scramblingCnt ';
+        }
 
         await this.operator.runQuery(query, value);
     }
@@ -371,6 +406,15 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
     }
 
     /**
+     * 各種カウントを更新
+     * @param recordedId: number
+     * @param item: CntItem
+     */
+    public async updateCnt(recordedId: number, item: CntItem): Promise<void> {
+        await this.operator.runQuery(`update ${ DBSchema.TableName.Recorded } set errorCnt = ${ item.error }, dropCnt = ${ item.drop }, scramblingCnt = ${ item.scrambling } where id = ${ recordedId }`);
+    }
+
+    /**
      * id 検索
      * @param id: recorded id
      * @return Promise<DBSchema.RecordedSchema | null>
@@ -402,14 +446,19 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
      * @return DBSchema.RecordedSchema
      */
     protected fixResult(baseDir: string, thumbnailDir: string, program: DBSchema.RecordedSchema, isAddBaseDir: boolean): DBSchema.RecordedSchema {
-        if (isAddBaseDir && program.recPath !== null) {
-            // フルパスへ書き換える
-            program.recPath = this.fixRecPath(baseDir, program.recPath);
-        }
+        // フルパスへ書き換える
+        if (isAddBaseDir) {
+            if (program.recPath !== null) {
+                program.recPath = this.fixRecPath(baseDir, program.recPath);
+            }
 
-        if (isAddBaseDir && program.thumbnailPath !== null) {
-            // フルパスへ書き換える
-            program.thumbnailPath = path.join(thumbnailDir, program.thumbnailPath);
+            if (program.logPath !== null) {
+                program.logPath = this.fixRecPath(baseDir, program.logPath);
+            }
+
+            if (program.thumbnailPath !== null) {
+                program.thumbnailPath = path.join(thumbnailDir, program.thumbnailPath);
+            }
         }
 
         return program;
@@ -566,17 +615,20 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
 
     /**
      * ファイルパス一覧を取得
-     * @return Promise<{ id: number; recPath: string }[]>
+     * @return Promise<RecordedFilesItem[]>
      */
-    public async getAllFiles(): Promise<{ id: number; recPath: string }[]> {
-        const results = <{ id: number; recPath: string }[]> await this.operator.runQuery(`select id, ${ this.getRecPathColumnStr() } from ${ DBSchema.TableName.Recorded } where recPath is not null order by id`);
+    public async getAllFiles(): Promise<RecordedFilesItem[]> {
+        const results = <{ id: number; recPath: string; logPath: string | null }[]> await this.operator.runQuery(`select id, ${ this.getRecPathColumnStr() }, ${ this.getLogPathColumnStr() } from ${ DBSchema.TableName.Recorded } where recPath is not null order by id`);
 
         const baseDir = Util.getRecordedPath();
 
         return results.map((result) => {
+            const logPath = result.logPath;
+
             return {
                 id: result.id,
                 recPath: this.fixRecPath(baseDir, result.recPath),
+                logPath: logPath === null ? null : this.fixRecPath(baseDir, logPath),
             };
         });
     }
@@ -587,6 +639,14 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
      */
     protected getRecPathColumnStr(): string {
         return 'recPath';
+    }
+
+    /**
+     * get logPath column str
+     * @return string
+     */
+    protected getLogPathColumnStr(): string {
+        return 'logPath';
     }
 }
 

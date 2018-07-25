@@ -30,6 +30,7 @@
     "node": "^6.x.x || ~8"
   },
   "dependencies": {
+    "aribts": "2.1.10",
     "basic-auth": "2.0.0",
     "body-parser": "1.18.3",
     "chart.js": "2.7.2",

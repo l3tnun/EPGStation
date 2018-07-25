@@ -7,6 +7,7 @@ import * as path from 'path';
 import * as apid from '../../../../../node_modules/mirakurun/api';
 import CreateMirakurunClient from '../../../Util/CreateMirakurunClient';
 import DateUtil from '../../../Util/DateUtil';
+import FileUtil from '../../../Util/FileUtil';
 import StrUtil from '../../../Util/StrUtil';
 import Util from '../../../Util/Util';
 import * as DBSchema from '../../DB/DBSchema';
@@ -18,10 +19,12 @@ import Model from '../../Model';
 import { ReservationManageModelInterface } from '../Reservation/ReservationManageModel';
 import { ReserveProgram, RuleReserveProgram } from '../ReserveProgramInterface';
 import { EncodeInterface } from '../RuleInterface';
+import { TSCheckerModelInterface } from './TSCheckerModel';
 
 interface RecordingProgram {
     reserve: ReserveProgram;
     stream?: http.IncomingMessage;
+    checker?: TSCheckerModelInterface;
     recPath?: string;
 }
 
@@ -32,7 +35,7 @@ interface RecordingManageModelInterface extends Model {
     recEndListener(callback: (program: DBSchema.RecordedSchema | null, encodeOption: EncodeInterface | null) => void): void;
     recFailedListener(callback: (program: DBSchema.RecordedSchema) => void): void;
     check(reserves: ReserveProgram[]): void;
-    stop(id: number): void;
+    stop(id: number, isDeletedLog?: boolean): void;
     stopRuleId(ruleId: number): void;
     cleanRecording(): void;
     isRecording(programId: apid.ProgramId): boolean;
@@ -52,6 +55,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
     private programsDB: ProgramsDBInterface;
     private recordedHistoryDB: RecordedHistoryDBInterface;
     private reservationManage: ReservationManageModelInterface;
+    private getTsChecker: () => TSCheckerModelInterface;
 
     constructor(
         recordedDB: RecordedDBInterface,
@@ -59,6 +63,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
         programsDB: ProgramsDBInterface,
         recordedHistoryDB: RecordedHistoryDBInterface,
         reservationManage: ReservationManageModelInterface,
+        getTsChecker: () => TSCheckerModelInterface,
     ) {
         super();
 
@@ -67,6 +72,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
         this.programsDB = programsDB;
         this.recordedHistoryDB = recordedHistoryDB;
         this.reservationManage = reservationManage;
+        this.getTsChecker = getTsChecker;
         this.mirakurun = CreateMirakurunClient.get();
     }
 
@@ -159,13 +165,17 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
     /**
      * 録画停止
      * @param id: programId
+     * @param isDeletedLog: boolean
      */
-    public stop(id: number): void {
+    public stop(id: number, isDeletedLog: boolean = false): void {
         const record = this.recording.find((r) => {
             return r.reserve.program.id === id;
         });
 
         if (record && record.stream) {
+            if (isDeletedLog && typeof record.checker !== 'undefined') {
+                record.checker.setDeleted();
+            }
             record.stream.destroy();
             this.log.system.info(`stop recording: ${ record.reserve.program.id } ${ record.reserve.program.name }`);
         }
@@ -324,22 +334,39 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
         this.log.system.info(`recording stream: ${ recPath }`);
         stream.pipe(recFile);
 
+        // ts checker 追加
+        let logFilePath: string | null = null;
+        if (this.config.getConfig().isEnabledDropCheck || false) {
+            const tsChecker = this.getTsChecker();
+            await tsChecker.set(recPath, stream);
+            logFilePath = tsChecker.getFilePath();
+            recData.checker = tsChecker;
+        }
+
         return new Promise<void>((resolve: () => void, reject: (error: Error) => void) => {
             // set timeout
-            const recordingStartTimer = setTimeout(() => {
+            const recordingStartTimer = setTimeout(async() => {
                 this.log.system.error(`recording failed: ${ recData.reserve.program.id } ${ recData.reserve.program.name }`);
-
-                // delete file
-                fs.unlink(recPath, (err) => {
-                    if (err) {
-                        this.log.system.error(`delete error: ${ recData.reserve.program.id } ${ recData.reserve.program.name }`);
-                        this.log.system.error(String(err));
-                    }
-                });
 
                 // disconnect stream
                 stream.unpipe();
                 stream.destroy();
+
+                // delete file
+                await FileUtil.promiseUnlink(recPath)
+                .catch((err) => {
+                    this.log.system.error(`delete error: ${ recData.reserve.program.id } ${ recData.reserve.program.name }`);
+                    this.log.system.error(<any> err);
+                });
+
+                // delete log file
+                if (logFilePath !== null) {
+                    await FileUtil.promiseUnlink(logFilePath)
+                    .catch((err) => {
+                        this.log.system.error(`delete log file error: ${ recData.reserve.program.id } ${ recData.reserve.program.name }`);
+                        this.log.system.error(<any> err);
+                    });
+                }
 
                 reject(new Error('recordingStartError'));
             }, 1000 * 5);
@@ -376,6 +403,10 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
                     recording: true,
                     protection: false,
                     filesize: null,
+                    logPath: logFilePath,
+                    errorCnt: null,
+                    dropCnt: null,
+                    scramblingCnt: null,
                 };
 
                 try {
@@ -407,7 +438,11 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
      * @param recFile: fs.WriteStream
      * @param recorded: DBSchema.RecordedSchema | null DB 上のデータ
      */
-    private async recEnd(recData: RecordingProgram, recFile: fs.WriteStream, recorded: DBSchema.RecordedSchema | null): Promise<void> {
+    private async recEnd(
+        recData: RecordingProgram,
+        recFile: fs.WriteStream,
+        recorded: DBSchema.RecordedSchema | null,
+    ): Promise<void> {
         if (typeof recData.stream === 'undefined') { return; }
 
         // stream 停止
@@ -459,6 +494,10 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
                         recording: false,
                         protection: false,
                         filesize: null,
+                        logPath: recorded.logPath,
+                        errorCnt: null,
+                        dropCnt: null,
+                        scramblingCnt: null,
                     };
                     await this.recordedDB.replace(recorded);
 
@@ -477,6 +516,34 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
 
                 // update filesize
                 await this.recordedDB.updateFileSize(recorded.id);
+
+                // drop 情報
+                if (typeof recData.checker !== 'undefined') {
+                    const result = await recData.checker.getResult();
+                    let error = 0;
+                    let drop = 0;
+                    let scrambling = 0;
+
+                    for (const pid in result) {
+                        error += result[pid].error;
+                        drop += result[pid].drop;
+                        scrambling += result[pid].scrambling;
+                    }
+
+                    this.log.system.info(<any> {
+                        programId: recData.reserve.program.id,
+                        error: error,
+                        drop: drop,
+                        scrambling: scrambling,
+                    });
+
+                    // update cnt
+                    await this.recordedDB.updateCnt(recorded.id, {
+                        error: error,
+                        drop: drop,
+                        scrambling: scrambling,
+                    });
+                }
 
                 // 録画完了を通知
                 const encodeOption = typeof recData.reserve.encodeOption === 'undefined' ? null : recData.reserve.encodeOption;

@@ -31,7 +31,11 @@ class MySQLRecordedDB extends RecordedDB {
             + 'thumbnailPath text, '
             + 'recording boolean, '
             + 'protection boolean default false, '
-            + 'filesize bigint null default null '
+            + 'filesize bigint null default null, '
+            + 'logPath text default null, '
+            + 'errorCnt bigint null default null, '
+            + 'dropCnt bigint null default null, '
+            + 'scramblingCnt bigint null default null '
         + ') engine=InnoDB;';
 
         return this.operator.runQuery(query);

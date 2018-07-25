@@ -181,6 +181,23 @@ namespace FileUtil {
             });
         });
     };
+
+    /**
+     * touch file
+     * @param file: string
+     * @return Promise<void>
+     */
+    export const touchFile = (file: string): Promise<void> => {
+        return new Promise<void>((resolve: () => void, reject: (error: Error) => void) => {
+            fs.writeFile(file, '', (err) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
+        });
+    };
 }
 
 export default FileUtil;
