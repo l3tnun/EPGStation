@@ -66,7 +66,7 @@ PCからの閲覧でもモダンなUIで操作可能です
 	```
 
 ### ログの確認
-- [ログ出力の詳細設定](doc/log-manual.md)
+#### [ログ出力の詳細設定](doc/log-manual.md)
 #### EPGStation/logs/Operator
 - 録画管理機能からのログが記録されています
 	- `access.log`
@@ -83,15 +83,14 @@ PCからの閲覧でもモダンなUIで操作可能です
 		- WebインターフェイスやAPI経由での配信ログ
 	- `system.log`
 		- Webインターフェイスの動作ログ（起動・終了等）
-
 ## クライアント向け設定
 - EPGStationを利用する端末向けの設定を行うと快適に利用可能です
 
 ### URL Scheme
 - EPGStation上の動画再生をOS上のアプリケーションで行うことが出来ます
-	- Mac OS用設定 -> [doc/mac-url-scheme.md](doc/mac-url-scheme.md)
-	- Windows用設定 -> [doc/win-url-scheme.md](doc/win-url-scheme.md)
-	- iOS, Android用設定 -> [config.json内で設定](doc/conf-manual.md#mpegtsviewer)
+	- [Mac OS 用の URL Scheme 設定方法](doc/mac-url-scheme.md)
+	- [Windows 用の URL Scheme 設定方法](doc/win-url-scheme.md)
+	- [iOS, Android 用の設定は config.json 内で設定](doc/conf-manual.md#mpegtsviewer)
 - 上記以外の環境での設定は WebUI の設定で各ブラウザごとに設定してください
 
 ### スマートフォン側の設定
@@ -99,7 +98,18 @@ PCからの閲覧でもモダンなUIで操作可能です
 config.json で設定したアプリをインストールしてください
 
 ## データベースのバックアップとレストア
-バックアップデータはデータベースに依存しないので MySQL でバックアップ -> SQLite3 へレストアなども可能です
+データベースに含まれる以下の情報はバックアップが可能です  
+- エンコード済み番組情報
+- 番組表情報
+- 録画済み番組情報
+- 録画履歴
+- 録画予約ルール
+- 放送波情報
+
+バックアップデータはデータベースに依存しないので MySQL でバックアップし、SQLite3 へレストアなども可能です
+
+録画ファイルやサムネイル等の出力ファイルやログデータ、設定ファイルなどはバックアップされません  
+手動で別フォルダーへのコピー等を行ってください
 
 ### バックアップ
 - 以下のコマンドを実行
