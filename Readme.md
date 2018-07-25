@@ -66,6 +66,7 @@ PCからの閲覧でもモダンなUIで操作可能です
 	```
 
 ### ログの確認
+- [ログ出力の詳細設定](doc/log-manual.md)
 #### EPGStation/logs/Operator
 - 録画管理機能からのログが記録されています
 	- `access.log`
