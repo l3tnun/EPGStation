@@ -7,11 +7,13 @@ export const get: Operation = async(req, res) => {
     const recordeds = <RecordedModelInterface> factory.get('RecordedModel');
 
     try {
-        const filePath = await recordeds.getLogPath(req.params.id);
+        const filePath = await recordeds.getLogPath(req.params.id, req.query.maxsize);
         res.sendFile(filePath);
     } catch (err) {
         if (err.message === RecordedModelInterface.NotFoundRecordedLogError) {
             api.responseError(res, { code: 404,  message: 'Recorded Log File is not Found' });
+        } else if (err.message === RecordedModelInterface.FileIsTooLarge) {
+            api.responseError(res, { code: 416,  message: 'Recorded Log File is too large' });
         } else {
             api.responseServerError(res, err.message);
         }
@@ -30,6 +32,14 @@ get.apiDoc = {
             required: true,
             type: 'integer',
         },
+        {
+            name: 'maxsize',
+            in: 'query',
+            description: 'ファイル最大サイズ (KByte)',
+            type: 'integer',
+            minimum: 1,
+            default: 512,
+        },
     ],
     produces: [
         'text/plain',
@@ -40,6 +50,9 @@ get.apiDoc = {
         },
         404: {
             description: 'Not found',
+        },
+        416: {
+            description: 'file is too large',
         },
         default: {
             description: '予期しないエラー',

@@ -1,4 +1,5 @@
 import * as path from 'path';
+import FileUtil from '../../Util/FileUtil';
 import Util from '../../Util/Util';
 import { VideoUtil } from '../../Util/VideoUtil';
 import * as DBSchema from '../DB/DBSchema';
@@ -38,7 +39,7 @@ interface RecordedModelInterface extends ApiModel {
     getId(recordedId: number): Promise<{}>;
     getDuration(recordedId: number): Promise<number | null>;
     getThumbnailPath(recordedId: number): Promise<string>;
-    getLogPath(recordedId: number): Promise<string>;
+    getLogPath(recordedId: number, maxsize: number): Promise<string>;
     getFilePath(recordedId: number, encodedId: number | undefined): Promise<RecordedFilePathInfo>;
     deleteAllRecorded(recordedId: number): Promise<void>;
     deleteRecordeds(recordedIds: number[]): Promise<number[]>;
@@ -57,6 +58,7 @@ namespace RecordedModelInterface {
     export const NotFoundRecordedIdError = 'NotFoundRecordedId';
     export const NotFoundRecordedThumbnailError = 'NotFoundRecordedThumbnail';
     export const NotFoundRecordedLogError = 'NotFoundRecordedLogError';
+    export const FileIsTooLarge = 'FileIsTooLarge';
     export const NotFoundRecordedFileError = 'NotFoundRecordedFile';
     export const RecordedIsStreamingNowError = 'RecordedIsStreamingNow';
     export const DeleteFileError = 'DeleteFileError';
@@ -256,13 +258,26 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
     /**
      * recorded の log ファイルパスを取得
      * @param recordedId: recorded id
+     * @param maxsize: ファイルの最大サイズ (KByte)
      * @return Promise<string>
      */
-    public async getLogPath(recordedId: number): Promise<string> {
+    public async getLogPath(recordedId: number, maxsize: number): Promise<string> {
         const recorded = await this.recordedDB.findId(recordedId);
 
         if (recorded === null || recorded.logPath === null) {
             throw new Error(RecordedModelInterface.NotFoundRecordedLogError);
+        }
+
+        let filesize: number;
+        try {
+            filesize = FileUtil.getFileSize(recorded.logPath);
+        } catch (err) {
+            throw new Error(RecordedModelInterface.NotFoundRecordedLogError);
+        }
+
+        // ファイルサイズ超過
+        if (filesize > maxsize * 1024) {
+            throw new Error(RecordedModelInterface.FileIsTooLarge);
         }
 
         return recorded.logPath;
