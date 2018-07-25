@@ -109,7 +109,7 @@ class TopPageComponent extends ParentComponent<void> {
                 m(BalloonComponent, {
                     id: RecordedInfoViewModel.errorLogId,
                     content: m(RecordedErrorLogComponent),
-                    maxWidth: 900,
+                    maxWidth: 580,
                     forceDialog: true,
                     forceOverflowXAuto: true,
                 }),
