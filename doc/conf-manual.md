@@ -56,7 +56,7 @@
     - [ライブ視聴の視聴アプリを変えたい](#mpegtsviewer)
     - [録画番組の視聴アプリを変えたい](#recordedviewer)
     - [録画番組のダウンロードアプリを変えたい](#recordeddownloader)
-    - [HLS 配信時に外部視聴アプリを設定したい](#HLSViewer)
+    - [HLS 配信時に外部視聴アプリを設定したい](#hlsviewer)
     - [同時にライブ視聴できる数を制限したい](#maxstreaming)
     - [ライブ視聴時の Mirakurun の優先度を変更したい](#streamingpriority)
     - [ライブ視聴時のトランスコード設定を変更したい](#mpegtsstreaming)
