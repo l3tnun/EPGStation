@@ -1,6 +1,7 @@
 ログ出力設定のマニュアル
 ===
 本マニュアルでは、EPGStation のログ出力設定ファイルである
+
 - `config/operatorLogConfig.json`
 - `config/serviceLogConfig.json`
 
@@ -10,7 +11,7 @@
 EPGStation ではログ出力に [log4js](https://npmjs.com/package/log4js) を利用しています  
 設定ファイルについても、 log4js の設定に準拠した形式となっています
 
-log4jsのログレベルは以下の6段階となっています
+log4js のログレベルは以下の 6 段階となっています
 
 | レベル | 内容 |
 | --- | --- |
@@ -28,6 +29,7 @@ EPGStation では、デフォルトでは `info` レベルが設定されてい�
 `ffmpeg` のコマンド出力結果などをログに出力したい場合は `debug` 以下の受信設定が必要です
 
 `config/operatorLogConfig.json` あるいは `config/serviceLogConfig.json` 内の以下を変更します
+
 ```json
 "categories": {
     "default": { "appenders": [ "console", "stdout" ], "level": "info" },
@@ -39,20 +41,24 @@ EPGStation では、デフォルトでは `info` レベルが設定されてい�
 
 `"level": "info"` となっている部分を、任意のログレベルに変更することで出力されるログレベルも変更可能です  
 例えば、`ffmpeg` によるストリーミング出力時の変換ログを出力したい場合は
+
 ```json
     "stream" : { "appenders": [ "stream", "stdout" ], "level": "info" }
 ```
+
 行を
+
 ```json
     "stream" : { "appenders": [ "stream", "stdout" ], "level": "debug" }
 ```
+
 と変更することで対応可能です
 
 ## ログファイルを変更する
 コンフィグファイル内の `appenders` 項目を変更することで対応可能です
 
-デフォルトではファイルサイズが1024KBを超過するとログローテーションされます  
-ログファイルは3世代分保存され、古い方から消去されていきます  
+デフォルトではファイルサイズが 1024KB を超過するとログローテーションされます  
+ログファイルは 3 世代分保存され、古い方から消去されていきます  
 ログのファイル名は `system`, `access`, `stream` になっており、ローテーション時にファイル末尾に年月日が付加されます
 
 ```json
