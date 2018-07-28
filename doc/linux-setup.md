@@ -3,7 +3,7 @@ Linux / macOS 用 セットアップマニュアル
 本マニュアルでは、Linux / macOS 環境におけるセットアップ手順を解説します
 
 ## セットアップ
-1. **Node.js, Mirakurun, ffmpeg/ffprobe, Python2.7, GCC** がインストールであることを確認する
+1. **Node.js, Mirakurun, ffmpeg/ffprobe, Python2.7, GCC** がインストール済みであることを確認する
 
 	```bash
 	$ node --version
@@ -13,7 +13,7 @@ Linux / macOS 用 セットアップマニュアル
 	$ gcc --version
 	```
 
-	FFmpeg/FFprobe についてはデフォルトでは ```/usr/local/bin/``` にインストールされていると想定しています  
+	FFmpeg/FFprobe についてデフォルトでは ```/usr/local/bin/``` にインストールされていると想定しています  
 	違う場所にインストールされている場合は ```config.json``` を修正してください
 
 2. データベースの設定を済ませる（SQLite3 を使用する場合は不要）
