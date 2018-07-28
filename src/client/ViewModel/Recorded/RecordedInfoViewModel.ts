@@ -336,7 +336,7 @@ class RecordedInfoViewModel extends ViewModel {
     public getDropCnt(): string {
         if (!this.hasErrorLog()) { return ''; }
 
-        return `Drop: ${ this.recorded!.dropCnt }, Error: ${ this.recorded!.errorCnt }, Scrambling: ${ this.recorded!.scramblingCnt }`;
+        return `Error: ${ this.recorded!.errorCnt }, Drop: ${ this.recorded!.dropCnt }, Scrambling: ${ this.recorded!.scramblingCnt }`;
     }
 
     /**
