@@ -28,7 +28,7 @@ PC からの閲覧でもモダンな UI で操作可能です
 
 ## デモ
 
-![](https://gist.githubusercontent.com/advancedbear/b68aac0830bda8cddc0da14b2d7aeabc/raw/ceb7eabda91fd37816c143e8d633074f4419b5d6/EPGStation.gif)
+![](https://raw.githubusercontent.com/wiki/l3tnun/EPGStation/images/demo/demo.gif)
 
 ## 動作環境
 
