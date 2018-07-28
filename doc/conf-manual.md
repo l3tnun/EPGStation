@@ -589,6 +589,7 @@
 | DESCRIPTION | string \| null | 番組概要 |
 | EXTENDED | string \| null | 番組詳細 |
 | RECPATH | string | 録画ファイルのフルパス |
+| LOGPATH | string\| null | ログファイルのフルパス |
 
 ```json
 "recordedStartCommand": "/bin/node /home/hoge/fuga.js start",
