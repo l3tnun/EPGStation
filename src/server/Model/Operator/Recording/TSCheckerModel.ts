@@ -4,6 +4,7 @@ import * as aribts from 'aribts';
 import * as events from 'events';
 import * as fs from 'fs';
 import * as stream from 'stream';
+import DateUtil from '../../../Util/DateUtil';
 import FileUtil from '../../../Util/FileUtil';
 import Model from '../../Model';
 
@@ -170,7 +171,7 @@ class TSCheckerModel extends Model implements TSCheckerModelInterface {
      * @return string
      */
     private getTime(): string {
-        return this.time === null ? '-' : `${ this.time.getTime() }`;
+        return this.time === null ? '-' : DateUtil.format(this.time, 'yyyy/MM/dd hh:mm:ss');
     }
 
     /**
