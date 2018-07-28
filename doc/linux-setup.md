@@ -3,7 +3,7 @@ Linux / macOS 用 セットアップマニュアル
 本マニュアルでは、Linux / macOS 環境におけるセットアップ手順を解説します
 
 ## セットアップ
-1. **Node.js, Mirakurun, ffmpeg/ffprobe, Python2.7, GCC** がインストール済みであることを確認する
+1. **Node.js, Mirakurun, FFmpeg/FFprobe, Python2.7, GCC** がインストール済みであることを確認する
 
 	```bash
 	$ node --version
@@ -17,7 +17,7 @@ Linux / macOS 用 セットアップマニュアル
 	違う場所にインストールされている場合は ```config.json``` を修正してください
 
 2. データベースの設定を済ませる（SQLite3 を使用する場合は不要）
-	- DBMSをインストールし、データベースとユーザーを作成する (文字コードは utf-8 とする)
+	- DBMSをインストールし、データベースを作成する (文字コードは utf-8 とする)
 
 	```sql
 	/// MySQL 5.xの場合

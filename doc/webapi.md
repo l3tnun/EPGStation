@@ -4,7 +4,7 @@ EPGStation WebAPI マニュアル
 
 ## EPGStation における WebAPI
 EPGStation が提供する WebAPI は [express-openapi](https://www.npmjs.com/package/express-openapi) によって提供される、OpenAPI (Swagger) 準拠の RESTful API です  
-利用可能な全てのAPIは **Swagger UI** 上で確認可能です  
+利用可能な全ての API は **Swagger UI** 上で確認可能です  
 `http://<hostname>:<port>/api/debug`
 
 ### API へのアクセス

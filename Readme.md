@@ -53,7 +53,7 @@ PC からの閲覧でもモダンな UI で操作可能です
 ## セットアップ方法
 ### [Windows用セットアップマニュアル](doc/windows.md)
 
-### [Linux / Mac OS用セットアップマニュアル](doc/linux-setup.md)
+### [Linux / macOS 用セットアップマニュアル](doc/linux-setup.md)
 
 ## アップデート方法
 
@@ -103,8 +103,8 @@ PC からの閲覧でもモダンな UI で操作可能です
 
 ### URL Scheme
 
-- EPGStation上の動画再生をOS上のアプリケーションで行うことが出来ます
-	- [iOS, Android 用の設定は config.json 内で設定](doc/conf-manual.md#mpegtsviewer)
+- EPGStation 上の動画再生を OS 上のアプリケーションで行うことが出来ます
+	- [config.json 内の設定 (iOS, Android, macOS, Windows)](doc/conf-manual.md#mpegtsviewer)
 	- [macOS 用の URL Scheme 設定方法](doc/mac-url-scheme.md)
 	- [Windows 用の URL Scheme 設定方法](doc/win-url-scheme.md)
 
@@ -116,7 +116,7 @@ config.json で設定したアプリをインストールしてください
 
 ## データベースのバックアップとレストア
 
-データベースに含まれる以下の情報はバックアップが可能です  
+データベースに含まれる以下の情報がバックアップ可能です  
 
 - エンコード済み番組情報
 - 録画済み番組情報
