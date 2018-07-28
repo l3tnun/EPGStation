@@ -155,6 +155,9 @@ export interface RecordedProgram {
     recording: boolean;
     protection: boolean;
     filesize?: number;
+    errorCnt?: number;
+    dropCnt?: number;
+    scramblingCnt?: number;
     hasThumbnail: boolean;
     original: boolean;
     filename?: string;

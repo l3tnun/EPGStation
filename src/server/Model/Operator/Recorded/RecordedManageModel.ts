@@ -103,36 +103,42 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
 
         if (recorded.recording) {
             // 録画中なら録画停止
-            this.recordingManage.stop(recorded.programId);
+            this.recordingManage.stop(recorded.programId, true);
         }
 
         if (recorded.recPath !== null) {
             // 録画実データを削除
-            fs.unlink(recorded.recPath, (err) => {
-            if (err) {
-                    this.log.system.error(`delete recorded error: ${ id }`);
-                    this.log.system.error(String(err));
-                }
+            await FileUtil.promiseUnlink(recorded.recPath)
+            .catch((err) => {
+                this.log.system.error(`delete recorded error: ${ id }`);
+                this.log.system.error(String(err));
             });
         }
 
         // エンコード実データを削除
         for (const file of encoded) {
-            fs.unlink(file.path, (err) => {
-                if (err) {
-                    this.log.system.error(`delete encode file error: ${ file.path }`);
-                    this.log.system.error(String(err));
-                }
+            await FileUtil.promiseUnlink(file.path)
+            .catch((err) => {
+                this.log.system.error(`delete encode file error: ${ file.path }`);
+                this.log.system.error(String(err));
             });
         }
 
         // サムネイルを削除
         if (recorded.thumbnailPath !== null) {
-            fs.unlink(recorded.thumbnailPath, (err) => {
-                if (err) {
-                    this.log.system.error(`recorded failed to delete thumbnail ${ id }`);
-                    this.log.system.error(String(err));
-                }
+            await FileUtil.promiseUnlink(recorded.thumbnailPath)
+            .catch((err) => {
+                this.log.system.error(`recorded failed to delete thumbnail ${ id }`);
+                this.log.system.error(<any> err);
+            });
+        }
+
+        // delete log file
+        if (recorded.logPath !== null) {
+            await FileUtil.promiseUnlink(recorded.logPath)
+            .catch((err) => {
+                this.log.system.error(`recorded failed to delete log file ${ id }`);
+                this.log.system.error(<any> err);
             });
         }
     }
@@ -165,9 +171,7 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
         if (recorded === null || recorded.recPath === null) { throw new Error('RecordedTsFileIsNotFound'); }
 
         // ファイル削除
-        fs.unlink(recorded.recPath, (err) => {
-            if (err) { throw err; }
-        });
+        await FileUtil.promiseUnlink(recorded.recPath);
 
         // DB 上から削除
         await this.recordedDB.deleteRecPath(id);
@@ -182,9 +186,7 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
         if (encoded === null) { throw new Error('EncodedFileIsNotFound'); }
 
         // ファイル削除
-        fs.unlink(encoded.path, (err) => {
-            if (err) { throw err; }
-        });
+        await FileUtil.promiseUnlink(encoded.path);
 
         // DB 上から削除
         await this.encodedDB.delete(encodedId);
@@ -397,6 +399,10 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
             recording: false,
             protection: false,
             filesize: null,
+            logPath: null,
+            errorCnt: null,
+            dropCnt: null,
+            scramblingCnt: null,
         });
 
         this.log.system.info(`create new recorded: ${ recordedId }`);
@@ -437,7 +443,7 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
 
         // recorded 上に登録があるが存在しないファイルを削除する
         for (const file of recordedFiles) {
-            if (!await FileUtil.checkFile(file.recPath)) {
+            if (file.recPath !== null && !await FileUtil.checkFile(file.recPath)) {
                 this.log.system.info(`delete recorded: ${ file.id }`);
                 await this.recordedDB.deleteRecPath(file.id)
                 .catch((err) => {
@@ -479,7 +485,14 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
         // DB 上に存在しないファイルを削除する
         // ファイル検索のための索引を作成
         const filesIndex: { [key: string]: boolean } = {};
-        for (const file of recordedFiles) { filesIndex[file.recPath] = true; }
+        for (const file of recordedFiles) {
+            if (file.recPath !== null) {
+                filesIndex[file.recPath] = true;
+            }
+            if (file.logPath !== null) {
+                filesIndex[file.logPath] = true;
+            }
+        }
         for (const file of encodedFiles) { filesIndex[file.path] = true; }
         for (const file of recordingFiles) { filesIndex[file] = true; }
 
@@ -497,7 +510,14 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
 
         // ディレクトリ検索のための索引を作成
         const directoriesIndex: { [key: string]: boolean } = {};
-        for (const file of recordedFiles) { directoriesIndex[path.dirname(file.recPath)] = true; }
+        for (const file of recordedFiles) {
+            if (file.recPath !== null) {
+                directoriesIndex[path.dirname(file.recPath)] = true;
+            }
+            if (file.logPath) {
+                directoriesIndex[path.dirname(file.logPath)] = true;
+            }
+        }
         for (const file of encodedFiles) { directoriesIndex[path.dirname(file.path)] = true; }
         for (const file of recordingFiles) { directoriesIndex[path.dirname(file)] = true; }
 

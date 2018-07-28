@@ -319,6 +319,27 @@ class RecordedInfoViewModel extends ViewModel {
     }
 
     /**
+     * error log が存在するか
+     * @return boolean
+     */
+    private hasErrorLog(): boolean {
+        return this.recorded !== null
+            && typeof this.recorded.errorCnt !== 'undefined'
+            && typeof this.recorded.dropCnt !== 'undefined'
+            && typeof this.recorded.scramblingCnt !== 'undefined';
+    }
+
+    /**
+     * drop カウントを取得
+     * @return string
+     */
+    public getDropCnt(): string {
+        if (!this.hasErrorLog()) { return ''; }
+
+        return `Error: ${ this.recorded!.errorCnt }, Drop: ${ this.recorded!.dropCnt }, Scrambling: ${ this.recorded!.scramblingCnt }`;
+    }
+
+    /**
      * description の取得
      * @return recorded
      */
@@ -419,14 +440,6 @@ class RecordedInfoViewModel extends ViewModel {
     }
 
     /**
-     * 開いているか
-     * @return true: open, false: close
-     */
-    public isOpen(): boolean {
-        return this.balloon.isOpen(RecordedInfoViewModel.id);
-    }
-
-    /**
      * close balloon
      */
     public close(): void {
@@ -439,6 +452,25 @@ class RecordedInfoViewModel extends ViewModel {
     public getTabPosition(): number {
         return this.tab.get(RecordedInfoViewModel.tabId);
     }
+
+    /**
+     * open error log
+     */
+    public async openErrorLog(): Promise<void> {
+        if (!this.hasErrorLog()) { return; }
+
+        this.balloon.close();
+        await this.recordedApiModel.fetchLog(this.recorded!.id);
+        this.balloon.open(RecordedInfoViewModel.errorLogId);
+    }
+
+    /**
+     * get log
+     * @return string | null
+     */
+    public getLogStr(): string | null {
+        return this.recordedApiModel.getLog();
+    }
 }
 
 namespace RecordedInfoViewModel {
@@ -446,6 +478,7 @@ namespace RecordedInfoViewModel {
     export const tabId = 'recorded-info-tab';
     export const contentId = 'recorded-info-content';
     export const fileSizeUnits = ['B', 'KB', 'MB', 'GB'];
+    export const errorLogId = 'recorded-error-log';
 }
 
 export default RecordedInfoViewModel;

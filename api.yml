@@ -533,6 +533,16 @@ definitions:
         description: '自動削除から保護するか'
       filesize:
         type: integer
+        description: 'ファイルサイズ'
+      errorCnt:
+        type: integer
+        description: 'エラーカウント'
+      dropCnt:
+        type: integer
+        description: 'ドロップカウント'
+      scramblingCnt:
+        type: integer
+        description: 'スクランブル解除漏れカウント'
       hasThumbnail:
         type: boolean
         description: 'サムネイルが作成済みか'

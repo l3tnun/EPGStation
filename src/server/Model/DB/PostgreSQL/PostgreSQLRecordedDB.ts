@@ -31,7 +31,11 @@ class PostgreSQLRecordedDB extends RecordedDB {
             + 'thumbnailPath text, '
             + 'recording boolean, '
             + 'protection boolean default false, '
-            + 'filesize bigint null default null '
+            + 'filesize bigint null default null, '
+            + 'logPath text default null, '
+            + 'errorCnt bigint null default null, '
+            + 'dropCnt bigint null default null, '
+            + 'scramblingCnt bigint null default null '
         + ');';
 
         return this.operator.runQuery(query);
@@ -70,7 +74,7 @@ class PostgreSQLRecordedDB extends RecordedDB {
      * @return string
      */
     public getAllColumns(): string {
-        return 'id, programId as "programId", channelId as "channelId", channelType as "channelType", startAt as "startAt", endAt as "endAt", duration, name, description, extended, genre1, genre2, videoType as "videoType", videoResolution as "videoResolution", videoStreamContent as "videoStreamContent", videoComponentType as "videoComponentType", audioSamplingRate as "audioSamplingRate", audioComponentType as "audioComponentType", recPath as "recPath", ruleId as "ruleId", thumbnailPath as "thumbnailPath", recording, protection, filesize';
+        return 'id, programId as "programId", channelId as "channelId", channelType as "channelType", startAt as "startAt", endAt as "endAt", duration, name, description, extended, genre1, genre2, videoType as "videoType", videoResolution as "videoResolution", videoStreamContent as "videoStreamContent", videoComponentType as "videoComponentType", audioSamplingRate as "audioSamplingRate", audioComponentType as "audioComponentType", recPath as "recPath", ruleId as "ruleId", thumbnailPath as "thumbnailPath", recording, protection, filesize, logPath as "logPath", errorCnt as "errorCnt", dropCnt as "dropCnt", scramblingCnt as "scramblingCnt"';
     }
 
     /**
@@ -79,6 +83,14 @@ class PostgreSQLRecordedDB extends RecordedDB {
      */
     protected getRecPathColumnStr(): string {
         return 'recPath as "recPath"';
+    }
+
+    /**
+     * get logPath column str
+     * @return string
+     */
+    protected getLogPathColumnStr(): string {
+        return 'logPath as "logPath"';
     }
 }
 
