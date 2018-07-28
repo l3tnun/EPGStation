@@ -27,7 +27,7 @@ interface CntItem {
 
 interface RecordedFilesItem {
     id: number;
-    recPath: string;
+    recPath: string | null;
     logPath: string | null;
 }
 
@@ -618,7 +618,7 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
      * @return Promise<RecordedFilesItem[]>
      */
     public async getAllFiles(): Promise<RecordedFilesItem[]> {
-        const results = <{ id: number; recPath: string; logPath: string | null }[]> await this.operator.runQuery(`select id, ${ this.getRecPathColumnStr() }, ${ this.getLogPathColumnStr() } from ${ DBSchema.TableName.Recorded } where recPath is not null order by id`);
+        const results = <{ id: number; recPath: string; logPath: string | null }[]> await this.operator.runQuery(`select id, ${ this.getRecPathColumnStr() }, ${ this.getLogPathColumnStr() } from ${ DBSchema.TableName.Recorded } where recPath is not null or logPath is not null order by id`);
 
         const baseDir = Util.getRecordedPath();
 

@@ -443,7 +443,7 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
 
         // recorded 上に登録があるが存在しないファイルを削除する
         for (const file of recordedFiles) {
-            if (!await FileUtil.checkFile(file.recPath)) {
+            if (file.recPath !== null && !await FileUtil.checkFile(file.recPath)) {
                 this.log.system.info(`delete recorded: ${ file.id }`);
                 await this.recordedDB.deleteRecPath(file.id)
                 .catch((err) => {
@@ -486,7 +486,9 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
         // ファイル検索のための索引を作成
         const filesIndex: { [key: string]: boolean } = {};
         for (const file of recordedFiles) {
-            filesIndex[file.recPath] = true;
+            if (file.recPath !== null) {
+                filesIndex[file.recPath] = true;
+            }
             if (file.logPath !== null) {
                 filesIndex[file.logPath] = true;
             }
@@ -508,7 +510,14 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
 
         // ディレクトリ検索のための索引を作成
         const directoriesIndex: { [key: string]: boolean } = {};
-        for (const file of recordedFiles) { directoriesIndex[path.dirname(file.recPath)] = true; }
+        for (const file of recordedFiles) {
+            if (file.recPath !== null) {
+                directoriesIndex[path.dirname(file.recPath)] = true;
+            }
+            if (file.logPath) {
+                directoriesIndex[path.dirname(file.logPath)] = true;
+            }
+        }
         for (const file of encodedFiles) { directoriesIndex[path.dirname(file.path)] = true; }
         for (const file of recordingFiles) { directoriesIndex[path.dirname(file)] = true; }
 
