@@ -56,6 +56,7 @@ class RecordedExternalProcessModel extends QueueProcessBaseModel implements Reco
                         DESCRIPTION: program.description,
                         EXTENDED: program.extended,
                         RECPATH: program.recPath,
+                        LOGPATH: program.logPath,
                     },
                 });
 
