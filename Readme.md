@@ -18,7 +18,7 @@ PC からの閲覧でもモダンな UI で操作可能です
 		- 放送中番組のライブ視聴
 		- 録画済み番組のストリーミング視聴
 		- 録画済み番組のダウンロード
-- WebAPIでのHTTP Request操作
+- API
 	- [WebAPI Document](doc/webapi.md)
 
 ## スクリーンショット
@@ -35,7 +35,7 @@ PC からの閲覧でもモダンな UI で操作可能です
 - Linux / macOS / Window 
 - [Node.js](http://nodejs.org/) : ^6.5.x || ~ 8 
 - [Mirakurun](https://github.com/Chinachu/Mirakurun) : ^2.5.7 
-- いずれかのデータベース
+- いずれかのデータベース (文字コードは  utf-8 とする)
 	- [MySQL](https://www.mysql.com/jp/) ([MariaDB](https://mariadb.org/))【推奨】
 	- [PostgreSQL](https://www.postgresql.org/) (version 9.5 以上)
 	- [SQLite3](https://www.sqlite.org/)（設定不要だが検索機能に制限あり）  
@@ -45,15 +45,16 @@ PC からの閲覧でもモダンな UI で操作可能です
 	- [Python 2.7](https://www.python.org/) node-gyp にて必要
 	- [GCC](https://gcc.gnu.org/) node-gyp にて必要
 - for Windows
-	- [windows-build-tools](https://npmjs.com/package/windows-build-tools)
+	- [windows-build-tools](https://npmjs.com/package/windows-build-tools) node-gyp にて必要
 
 ### 構築済み推奨環境
 [docker-mirakurun-epgstation](https://github.com/l3tnun/docker-mirakurun-epgstation) で動作を確認しています
 
 ## セットアップ方法
-### [Windows用セットアップマニュアル](doc/windows.md)
 
 ### [Linux / macOS 用セットアップマニュアル](doc/linux-setup.md)
+
+### [Windows用セットアップマニュアル](doc/windows.md)
 
 ## アップデート方法
 
@@ -69,7 +70,7 @@ PC からの閲覧でもモダンな UI で操作可能です
 ## 動作確認
 
 - ブラウザから `http://<IPaddress>:<Port>/` にアクセスをする
-- curlやwgetでWebAPIを叩く
+- curl や wget で API を叩く
 
 	```
 	$ curl -o - http://<IPaddress>:<Port>/api/config
