@@ -106,7 +106,7 @@ class RecordedUploadComponent extends ParentComponent<void> {
      * @return m.Child
      */
     private createBroadcaster(): m.Child {
-        return this.createContentFrame('放送局', [
+        return this.createContentFrame('放送局※', [
             // 放送局プルダウン
             m('div', { style: 'display: flex; width: 100%;' }, [
                  m('div', { class: 'pulldown mdl-layout-spacer' }, [
@@ -121,7 +121,7 @@ class RecordedUploadComponent extends ParentComponent<void> {
                     ]),
                 ]),
             ]),
-        ]);
+        ], 'required');
     }
 
     /**
@@ -191,7 +191,7 @@ class RecordedUploadComponent extends ParentComponent<void> {
      * @return m.Child
      */
     private createDate(): m.Child {
-        return this.createContentFrame('日付', [
+        return this.createContentFrame('日付※', [
             m('div', {
                 class: 'mdl-cell--12-col mdl-textfield mdl-js-textfield',
                 style: 'display: flex; width: 50%;',
@@ -214,7 +214,7 @@ class RecordedUploadComponent extends ParentComponent<void> {
                     onchange: m.withAttr('value', (value) => { this.viewModel.time = value; }),
                 }),
             ]),
-        ]);
+        ], 'required');
     }
 
     /**
@@ -222,7 +222,7 @@ class RecordedUploadComponent extends ParentComponent<void> {
      * @return m.Child
      */
     private createDuration(): m.Child {
-        return this.createContentFrame('長さ(分)', [
+        return this.createContentFrame('長さ(分)※', [
             m('div', { class: 'mdl-cell--12-col mdl-textfield mdl-js-textfield' }, [
                 m('input', {
                     class: 'mdl-textfield__input',
@@ -242,7 +242,7 @@ class RecordedUploadComponent extends ParentComponent<void> {
                     },
                 }),
             ]),
-        ]);
+        ], 'required');
     }
 
     /**
@@ -250,7 +250,7 @@ class RecordedUploadComponent extends ParentComponent<void> {
      * @return m.Child
      */
     private createTitle(): m.Child {
-        return this.createContentFrame('タイトル', [
+        return this.createContentFrame('タイトル※', [
             m('div', { class: 'mdl-cell--12-col mdl-textfield mdl-js-textfield' }, [
                 m('input', {
                     class: 'mdl-textfield__input',
@@ -260,7 +260,7 @@ class RecordedUploadComponent extends ParentComponent<void> {
                     onchange: m.withAttr('value', (value) => { this.viewModel.title = value; }),
                 }),
             ]),
-        ]);
+        ], 'required');
     }
 
     /**
@@ -439,10 +439,11 @@ class RecordedUploadComponent extends ParentComponent<void> {
      * create content frame
      * @param name: name
      * @param content: content
+     * @param classStr: style
      * @return m.Child
      */
-    protected createContentFrame(name: string, content: m.Child | m.Child[] | null): m.Child {
-        return m('div', { class: 'mdl-cell mdl-cell--12-col mdl-grid mdl-grid--no-spacing' }, [
+    protected createContentFrame(name: string, content: m.Child | m.Child[] | null, classStr: string = ''): m.Child {
+        return m('div', { class: 'mdl-cell mdl-cell--12-col mdl-grid mdl-grid--no-spacing ' + classStr }, [
             m('div', { class: 'title mdl-cell mdl-cell--3-col mdl-cell--2-col-tablet' }, name),
             m('div', { class: 'mdl-cell mdl-cell--6-col mdl-cell--9-col-desktop mdl-grid mdl-grid--no-spacing' }, content),
         ]);
