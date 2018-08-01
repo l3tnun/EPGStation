@@ -56,13 +56,15 @@ Linux / macOS 用 セットアップマニュアル
 
 	```json
 	"serverPort": 8888,
-	"mirakurunPath": "http://localhost:40772",
+	"mirakurunPath": "http+unix://%2Fvar%2Frun%2Fmirakurun.sock/",
 	"mysql": {
 		"user": "username",
 		"password": "password",
 		"database": "database_name"
 	}
 	```
+
+	Mirakurun が別ホストで動作している場合は `"mirakurunPath": "http://<MirakurunURL>:<Port>"`
 
 ## EPGStationの起動 / 終了
 
