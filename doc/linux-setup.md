@@ -17,7 +17,7 @@ Linux / macOS 用 セットアップマニュアル
 	違う場所にインストールされている場合は ```config.json``` を修正してください
 
 2. データベースの設定を済ませる（SQLite3 を使用する場合は不要）
-	- DBMSをインストールし、データベースを作成する (文字コードは utf-8 とする)
+	- RDBMS をインストールし、データベースを作成する (文字コードは utf-8 とする)
 
 	```sql
 	/// MySQL 5.xの場合
@@ -56,13 +56,15 @@ Linux / macOS 用 セットアップマニュアル
 
 	```json
 	"serverPort": 8888,
-	"mirakurunPath": "http://localhost:40772",
+	"mirakurunPath": "http+unix://%2Fvar%2Frun%2Fmirakurun.sock/",
 	"mysql": {
 		"user": "username",
 		"password": "password",
 		"database": "database_name"
 	}
 	```
+
+	Mirakurun が別ホストで動作している場合は `"mirakurunPath": "http://<MirakurunURL>:<Port>"`
 
 ## EPGStationの起動 / 終了
 
