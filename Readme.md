@@ -180,6 +180,10 @@ Android の設定 -> ユーザー補助 にて "操作の監視" が必要なサ
 
 さらに動作を軽くしたい場合は番組表時間で表示時間を短くしてください
 
+## Contributing
+
+[CONTRIBUTING.md](.github/CONTRIBUTING.md)
+
 ## Licence
 
 [MIT Licence](LICENSE)
