@@ -156,6 +156,7 @@ class ProgramTimeBalloonViewModel extends ViewModel {
 
 namespace ProgramTimeBalloonViewModel {
     export const id = 'program-time-balloon';
+    export const titleId = 'program-title-balloon';
 }
 
 export default ProgramTimeBalloonViewModel;
