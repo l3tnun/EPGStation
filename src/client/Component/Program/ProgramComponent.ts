@@ -76,6 +76,8 @@ class ProgramComponent extends ParentComponent<void> {
                 ],
                 headerStyle: this.viewModel.isFixScroll() ? 'position: fixed;' : '',
                 titleOnClick: (event: Event) => {
+                    if (typeof m.route.param('type') === 'undefined') { return; }
+
                     this.timeBalloon.setNowNum(this.viewModel.getTimeParam().start);
                     this.balloon.open(ProgramTimeBalloonViewModel.titleId, event);
                 },
