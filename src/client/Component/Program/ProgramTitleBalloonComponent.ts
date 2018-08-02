@@ -34,15 +34,14 @@ class ProgramTitleBalloonComponent extends Component<void> {
         if (typeof type === 'undefined') { return null; }
 
         return this.viewModel.getDays().map((data) => {
-            return m('li', { class: 'mdl-list__item' }, [
-                m('span', {
-                    class: 'mdl-list__item-primary-content',
-                    onclick: () => {
-                        this.viewModel.dayValue = data.value;
-                        this.viewModel.close();
-                        this.viewModel.show();
-                    },
-                }, `${ type } ${ data.name }`),
+            return m('li', {
+                class: 'mdl-list__item',
+                onclick: () => {
+                    this.viewModel.dayValue = data.value;
+                    this.viewModel.show();
+                },
+            }, [
+                m('span', { class: 'mdl-list__item-primary-content' }, `${ type } ${ data.name }`),
             ]);
         });
     }
