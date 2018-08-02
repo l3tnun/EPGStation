@@ -81,7 +81,7 @@ class HeaderComponent extends Component<HeaderArgs> {
             m('div', { class: 'mdl-layout__header-row' }, [
                 // title
                 m('span', {
-                    class: `mdl-layout-title title-cnt-${ titleCnt }`,
+                    class: `mdl-layout-title title-cnt-${ titleCnt } ios-no-click-color`,
                     onclick: (e: Event) => { if (typeof vnode.attrs.titleOnClick !== 'undefined') { vnode.attrs.titleOnClick(e); } },
                 }, vnode.attrs.title),
 
