@@ -24,6 +24,7 @@ import ProgramGenreComponent from './ProgramGenreComponent';
 import ProgramInfoActionComponent from './ProgramInfoActionComponent';
 import ProgramInfoComponent from './ProgramInfoComponent';
 import ProgramTimeBalloonComponent from './ProgramTimeBalloonComponent';
+import ProgramTitleBalloonComponent from './ProgramTitleBalloonComponent';
 import ProgressComponent from './ProgressComponent';
 import TimeScaleComponent from './TimeScaleComponent';
 
@@ -74,6 +75,10 @@ class ProgramComponent extends ParentComponent<void> {
                     }, m('i', { class: 'material-icons' }, 'schedule')),
                 ],
                 headerStyle: this.viewModel.isFixScroll() ? 'position: fixed;' : '',
+                titleOnClick: (event: Event) => {
+                    this.timeBalloon.setNowNum(this.viewModel.getTimeParam().start);
+                    this.balloon.open(ProgramTimeBalloonViewModel.titleId, event);
+                },
             },
             menuContent: [
                 {
@@ -208,6 +213,11 @@ class ProgramComponent extends ParentComponent<void> {
                     ]),
                     m(ProgressComponent),
                 ]),
+                m(BalloonComponent, {
+                    id: ProgramTimeBalloonViewModel.titleId,
+                    content: m(ProgramTitleBalloonComponent),
+                    maxWidth: 150,
+                }),
                 m(BalloonComponent, {
                     id: ProgramInfoViewModel.id,
                     content: m(ProgramInfoComponent),
