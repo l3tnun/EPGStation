@@ -45,6 +45,17 @@ class RecordedEncodeComponent extends Component<void> {
                         return m('option', { value: option.value }, option.name);
                     })),
                 ]),
+                m('div', { class: 'directory textfield mdl-textfield mdl-js-textfield' }, [
+                    m('input', {
+                        class: 'mdl-textfield__input',
+                        type: 'text',
+                        placeholder: 'directory',
+                        value: this.viewModel.encodeDirectoryOptionValue,
+                        onchange: m.withAttr('value', (value) => {
+                            this.viewModel.encodeDirectoryOptionValue = value;
+                        }),
+                    }),
+                ]),
                 m('div', { class: 'encode-output-checkbox' }, [
                     m('label', { class: 'mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect' }, [
                         m('input', {
