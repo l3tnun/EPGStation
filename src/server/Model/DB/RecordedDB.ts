@@ -627,7 +627,7 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
 
             return {
                 id: result.id,
-                recPath: this.fixRecPath(baseDir, result.recPath),
+                recPath: result.recPath === null ? null : this.fixRecPath(baseDir, result.recPath),
                 logPath: logPath === null ? null : this.fixRecPath(baseDir, logPath),
             };
         });
