@@ -630,8 +630,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
             .replace(/%TITLE%/, reserve.program.name);
 
         // 使用禁止文字列
-        fileName = fileName.replace(/\//g, '／');
-        fileName = Util.replacePathName(fileName);
+        fileName = Util.replaceFileName(fileName);
 
         if (conflict > 0) { fileName += `(${ conflict })`; }
 
@@ -641,7 +640,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
         // ディレクトリ
         let recDir = Util.getRecordedPath();
         if (typeof option !== 'undefined' && typeof option.directory !== 'undefined') {
-            recDir = path.join(recDir, Util.replacePathName(option.directory));
+            recDir = path.join(recDir, Util.replaceDirName(option.directory));
         }
 
         // ファイルパス
