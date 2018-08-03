@@ -76,14 +76,12 @@ namespace Util {
     };
 
     /**
-     * windows の禁止文字列を置換
+     * windows のディレクトリ名での禁止文字列を置換
      * @param str: 文字列
      * @return string
      */
-    export const replacePathName = (str: string): string => {
+    export const replaceDirName = (str: string): string => {
         return str
-            .replace(/\\/g, '￥')
-            .replace(/\¥/g, '￥')
             .replace(/\:/g, '：')
             .replace(/\*/g, '＊')
             .replace(/\?/g, '？')
@@ -93,6 +91,19 @@ namespace Util {
             .replace(/\|/g, '｜')
             .replace(/\./g, '．');
     };
+
+    /**
+     * windows のファイル名での禁止文字列を置換
+     * @param str: 文字列
+     * @return string
+     */
+    export const replaceFileName = (str: string): string => {
+        return Util.replaceDirName(str)
+            .replace(/\//g, '／')
+            .replace(/\\/g, '￥')
+            .replace(/\¥/g, '￥');
+    };
+
 }
 
 export default Util;

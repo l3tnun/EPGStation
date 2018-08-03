@@ -135,6 +135,7 @@ class TopPageComponent extends ParentComponent<void> {
                     id: RecordedMenuViewModel.encodeId,
                     content: m(RecordedEncodeComponent),
                     maxWidth: 350,
+                    forceDialog: Util.uaIsAndroid(),
                 }),
                 m(BalloonComponent, {
                     id: RecordedPlayerViewModel.id,

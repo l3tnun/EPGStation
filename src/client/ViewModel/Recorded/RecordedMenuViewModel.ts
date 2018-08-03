@@ -3,6 +3,7 @@ import { ConfigApiModelInterface } from '../../Model/Api/ConfigApiModel';
 import { EncodeQueryOption, RecordedApiModelInterface } from '../../Model/Api/RecordedApiModel';
 import { BalloonModelInterface } from '../../Model/Balloon/BallonModel';
 import { SnackbarModelInterface } from '../../Model/Snackbar/SnackbarModel';
+import Util from '../../Util/Util';
 import ViewModel from '../ViewModel';
 
 /**
@@ -23,6 +24,7 @@ class RecordedMenuViewModel extends ViewModel {
     }[] = [];
     public encodeModeOptionValue: number = 0;
     public encodeSourceOptionValue: number = 0;
+    public encodeDirectoryOptionValue: string = '';
     public isOutputTheOriginalDirectory: boolean = false;
 
     constructor(
@@ -36,6 +38,16 @@ class RecordedMenuViewModel extends ViewModel {
         this.recordedApiModel = recordedApiModel;
         this.snackbar = snackbar;
         this.config = config;
+
+        if (Util.uaIsAndroid()) {
+            this.balloon.regDisableCloseAllId(RecordedMenuViewModel.encodeId);
+
+            window.addEventListener('orientationchange', () => {
+                if (document.getElementById(RecordedMenuViewModel.encodeId) === null || !this.balloon.isOpen(RecordedMenuViewModel.encodeId)) { return; }
+
+                this.close();
+            }, false);
+        }
     }
 
     /**
@@ -60,6 +72,7 @@ class RecordedMenuViewModel extends ViewModel {
         this.encodeStatus = config.enableEncode;
         this.encodeSourceOptionValue = 0;
         this.encodeModeOptionValue = 0;
+        this.encodeDirectoryOptionValue = '';
         this.isOutputTheOriginalDirectory = false;
     }
 
@@ -94,6 +107,7 @@ class RecordedMenuViewModel extends ViewModel {
      */
     public close(): void {
         this.balloon.close();
+        this.balloon.close(RecordedMenuViewModel.encodeId);
     }
 
     /**
@@ -196,6 +210,10 @@ class RecordedMenuViewModel extends ViewModel {
         const encodedId = this.recordedFiles[this.encodeSourceOptionValue].encodedId;
         if (encodedId !== null) {
             option.encodedId = encodedId;
+        }
+
+        if (this.encodeDirectoryOptionValue.length > 0) {
+            option.directory = this.encodeDirectoryOptionValue;
         }
 
         try {
