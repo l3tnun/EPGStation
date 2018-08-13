@@ -31,6 +31,11 @@ interface RecordedFilesItem {
     logPath: string | null;
 }
 
+interface RawLogPathItem {
+    id: number;
+    logPath: string;
+}
+
 interface RecordedDBInterface extends DBTableBase {
     create(): Promise<void>;
     drop(): Promise<void>;
@@ -45,6 +50,7 @@ interface RecordedDBInterface extends DBTableBase {
     removeAllRecording(): Promise<void>;
     updateTsFilePath(recordedId: number, filePath: string): Promise<void>;
     updateFileSize(recordedId: number): Promise<void>;
+    updateLogFilePath(recordedId: number, filePath: string): Promise<void>;
     updateAllNullFileSize(): Promise<void>;
     updateCnt(recordedId: number, item: CntItem): Promise<void>;
     findId(id: number): Promise<DBSchema.RecordedSchema | null>;
@@ -56,6 +62,7 @@ interface RecordedDBInterface extends DBTableBase {
     getChannelTag(): Promise<DBSchema.ChannelTag[]>;
     getGenreTag(): Promise<DBSchema.GenreTag[]>;
     getAllFiles(): Promise<RecordedFilesItem[]>;
+    getRawLogPaths(): Promise<RawLogPathItem[]>;
 }
 
 abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
@@ -88,6 +95,7 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
      */
     public insert(program: DBSchema.RecordedSchema): Promise<number> {
         const baseDir = Util.getRecordedPath();
+        const logDir = this.getDropCheckLogDir();
 
         const value: any[] = [];
         value.push(program.programId);
@@ -113,7 +121,7 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
         value.push(program.recording);
         value.push(program.protection);
         value.push(program.filesize);
-        value.push(program.logPath === null ? null : program.logPath.slice(baseDir.length + path.sep.length));
+        value.push(program.logPath === null ? null : program.logPath.slice(logDir.length + path.sep.length));
         value.push(program.errorCnt);
         value.push(program.dropCnt);
         value.push(program.scramblingCnt);
@@ -126,6 +134,14 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
 
 
         return this.operator.runInsert(query, value);
+    }
+
+    /**
+     * get dropCheckLogDir
+     * @return string
+     */
+    private getDropCheckLogDir(): string {
+        return Util.getDropCheckLogDir() || Util.getRecordedPath();
     }
 
     /**
@@ -172,14 +188,21 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
      */
     public restore(programs: DBSchema.RecordedSchema[], isDelete: boolean = true, hasBaseDir: boolean = true): Promise<void> {
         const baseDir = Util.getRecordedPath();
+        const logDir = this.getDropCheckLogDir();
 
         const values: any[] = [];
         for (const program of programs) {
             const value: any[] = [];
 
-            let recPath = program.recPath === null ? null : program.recPath;
-            if (recPath !== null && hasBaseDir) {
-                recPath = recPath.slice(baseDir.length + path.sep.length);
+            let recPath = program.recPath;
+            let logPath = program.logPath;
+            if (hasBaseDir) {
+                if (recPath !== null) {
+                    recPath = recPath.slice(baseDir.length + path.sep.length);
+                }
+                if (logPath !== null) {
+                    logPath = logPath.slice(logDir.length + path.sep.length);
+                }
             }
 
             value.push(program.id);
@@ -206,7 +229,7 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
             value.push(program.recording);
             value.push(program.protection);
             value.push(program.filesize);
-            value.push(program.logPath);
+            value.push(logPath);
             value.push(program.errorCnt);
             value.push(program.dropCnt);
             value.push(program.scramblingCnt);
@@ -232,6 +255,7 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
      */
     public async replace(program: DBSchema.RecordedSchema): Promise<void> {
         const baseDir = Util.getRecordedPath();
+        const logDir = this.getDropCheckLogDir();
 
         const value: any[] = [];
         value.push(program.id);
@@ -258,7 +282,7 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
         value.push(program.recording);
         value.push(program.protection);
         value.push(program.filesize);
-        value.push(program.logPath === null ? null : program.logPath.slice(baseDir.length + path.sep.length));
+        value.push(program.logPath === null ? null : program.logPath.slice(logDir.length + path.sep.length));
         value.push(program.errorCnt);
         value.push(program.dropCnt);
         value.push(program.scramblingCnt);
@@ -388,6 +412,21 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
     }
 
     /**
+     * logPath を更新する
+     * @param recordedId: recorded id
+     * @param filePath: log file path
+     * @return Promise<void>
+     */
+    public async updateLogFilePath(recordedId: number, filePath: string): Promise<void> {
+        const recorded = await this.findId(recordedId);
+        if (recorded === null) { throw new Error('RecordedIsNotFound'); }
+
+        const query = `update ${ DBSchema.TableName.Recorded } set logPath = ${ this.operator.createValueStr(1, 1) } where id = ${ recordedId }`;
+
+        await this.operator.runQuery(query, [filePath.slice(this.getDropCheckLogDir().length + path.sep.length)]);
+    }
+
+    /**
      * ファイルが存在して filesize が null のデータを更新する
      * @return Promise<void>
      */
@@ -431,21 +470,29 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
      */
     protected fixResults(programs: DBSchema.RecordedSchema[], isAddBaseDir: boolean = true): DBSchema.RecordedSchema[] {
         const baseDir = Util.getRecordedPath();
+        const logFileDir = this.getDropCheckLogDir();
         const thumbnailDir = Util.getThumbnailPath();
 
         return programs.map((program) => {
-            return this.fixResult(baseDir, thumbnailDir, program, isAddBaseDir);
+            return this.fixResult(baseDir, logFileDir, thumbnailDir, program, isAddBaseDir);
         });
     }
 
     /**
      * @param baseDir: string
+     * @param logFileDir: string
      * @param thumbnailDir: string
      * @param program: DBSchema.RecordedSchema
      * @param isAddBaseDir: boolean
      * @return DBSchema.RecordedSchema
      */
-    protected fixResult(baseDir: string, thumbnailDir: string, program: DBSchema.RecordedSchema, isAddBaseDir: boolean): DBSchema.RecordedSchema {
+    protected fixResult(
+        baseDir: string,
+        logFileDir: string,
+        thumbnailDir: string,
+        program: DBSchema.RecordedSchema,
+        isAddBaseDir: boolean,
+    ): DBSchema.RecordedSchema {
         // フルパスへ書き換える
         if (isAddBaseDir) {
             if (program.recPath !== null) {
@@ -453,7 +500,7 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
             }
 
             if (program.logPath !== null) {
-                program.logPath = this.fixRecPath(baseDir, program.logPath);
+                program.logPath = this.fixRecPath(logFileDir, program.logPath);
             }
 
             if (program.thumbnailPath !== null) {
@@ -621,6 +668,7 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
         const results = <{ id: number; recPath: string; logPath: string | null }[]> await this.operator.runQuery(`select id, ${ this.getRecPathColumnStr() }, ${ this.getLogPathColumnStr() } from ${ DBSchema.TableName.Recorded } where recPath is not null or logPath is not null order by id`);
 
         const baseDir = Util.getRecordedPath();
+        const logDir = this.getDropCheckLogDir();
 
         return results.map((result) => {
             const logPath = result.logPath;
@@ -628,7 +676,7 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
             return {
                 id: result.id,
                 recPath: result.recPath === null ? null : this.fixRecPath(baseDir, result.recPath),
-                logPath: logPath === null ? null : this.fixRecPath(baseDir, logPath),
+                logPath: logPath === null ? null : this.fixRecPath(logDir, logPath),
             };
         });
     }
@@ -647,6 +695,14 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
      */
     protected getLogPathColumnStr(): string {
         return 'logPath';
+    }
+
+    /**
+     * パス加工していない logPath を取得
+     * @return Promise<RawLogPathItem[]>
+     */
+    public async getRawLogPaths(): Promise<RawLogPathItem[]> {
+        return <RawLogPathItem[]> await this.operator.runQuery(`select id, ${ this.getLogPathColumnStr() } from ${ DBSchema.TableName.Recorded } where logPath is not null order by id`);
     }
 }
 

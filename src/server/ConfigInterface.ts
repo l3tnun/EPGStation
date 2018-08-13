@@ -55,6 +55,7 @@ interface ConfigInterface {
     fileExtension: string;
     reservesUpdateIntervalTime: number;
     isEnabledDropCheck: boolean;
+    dropCheckLogDir: string;
     suppressReservesUpdateAllLog: boolean;
     suppressEPGUpdateLog: boolean;
     thumbnail: string;
