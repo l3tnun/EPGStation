@@ -436,10 +436,17 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
     public async cleanup(): Promise<void> {
         this.log.system.info('start recorded files clean up');
 
-        const fileList = await FileUtil.getFileList(Util.getRecordedPath());
+        const recordedList = await FileUtil.getFileList(Util.getRecordedPath());
         const recordedFiles = await this.recordedDB.getAllFiles();
         const encodedFiles = await this.encodedDB.getAllFiles();
         const recordingFiles = await this.recordingManage.getRecordingPath();
+
+        const fileList = recordedList;
+        const logDir = Util.getDropCheckLogDir();
+        if (logDir !== null) {
+            const logFileList = await FileUtil.getFileList(logDir);
+            Array.prototype.push.apply(fileList.files, logFileList.files);
+        }
 
         // recorded 上に登録があるが存在しないファイルを削除する
         for (const file of recordedFiles) {
