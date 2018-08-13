@@ -43,12 +43,20 @@ class SQLite3RecordedDB extends RecordedDB {
 
     /**
      * @param baseDir: string
+     * @param logFileDir: string
      * @param thumbnailDir: string
      * @param program: DBSchema.RecordedSchema
+     * @param isAddBaseDir: boolean
      * @return DBSchema.RecordedSchema
      */
-    protected fixResult(baseDir: string, thumbnailDir: string, program: DBSchema.RecordedSchema, addBaseDir: boolean = true): DBSchema.RecordedSchema {
-        program = super.fixResult(baseDir, thumbnailDir, program, addBaseDir);
+    protected fixResult(
+        baseDir: string,
+        logFileDir: string,
+        thumbnailDir: string,
+        program: DBSchema.RecordedSchema,
+        isAddBaseDir: boolean,
+    ): DBSchema.RecordedSchema {
+        program = super.fixResult(baseDir, logFileDir, thumbnailDir, program, isAddBaseDir);
         program.recording = Boolean(program.recording);
         program.protection = Boolean(program.protection);
 

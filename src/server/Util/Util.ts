@@ -32,6 +32,16 @@ namespace Util {
     };
 
     /**
+     * config の dropCheckLogDir を返す
+     * @return string | null
+     */
+    export const getDropCheckLogDir = (): string | null => {
+        const dropCheckLogDir = Configuration.getInstance().getConfig().dropCheckLogDir;
+
+        return typeof dropCheckLogDir === 'undefined' ? null : dropCheckLogDir.replace(new RegExp(`\\${ path.sep }$`), '');
+    };
+
+    /**
      * config の thumbnail path を返す
      * @return string
      */

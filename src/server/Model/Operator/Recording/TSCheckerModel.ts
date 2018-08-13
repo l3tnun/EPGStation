@@ -3,9 +3,11 @@
 import * as aribts from 'aribts';
 import * as events from 'events';
 import * as fs from 'fs';
+import * as path from 'path';
 import * as stream from 'stream';
 import DateUtil from '../../../Util/DateUtil';
 import FileUtil from '../../../Util/FileUtil';
+import Util from '../../../Util/Util';
 import Model from '../../Model';
 
 interface TSCheckerModelInterface extends Model {
@@ -17,6 +19,7 @@ interface TSCheckerModelInterface extends Model {
 
 class TSCheckerModel extends Model implements TSCheckerModelInterface {
     private listener: events.EventEmitter = new events.EventEmitter();
+    private logDir: string | null = null;
     private logPath: string | null = null;
     private isDeleted: boolean = false;
     private result: aribts.Result | null = null;
@@ -24,6 +27,7 @@ class TSCheckerModel extends Model implements TSCheckerModelInterface {
     private time: Date | null = null;
 
     public async set(tsPath: string, readableStream: stream.Readable): Promise<void> {
+        this.logDir = Util.getDropCheckLogDir();
         this.logPath = this.getLogPath(tsPath);
 
         // 空ファイル生成
@@ -116,7 +120,7 @@ class TSCheckerModel extends Model implements TSCheckerModelInterface {
      * @return string
      */
     private getLogPath(tsPath: string, conflict: number = 0): string {
-        let filePath = tsPath;
+        let filePath = this.logDir === null ? tsPath : path.join(this.logDir, path.basename(tsPath));
         if (conflict > 0) { filePath += `(${ conflict })`; }
         filePath += '.log';
 
