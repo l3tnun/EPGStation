@@ -36,6 +36,7 @@
     - [サムネイル画像の保存先を変更したい](#thumbnail)
     - [サムネイル画像の解像度を変更したい](#thumbnailsize)
     - [サムネイル画像を生成する再生位置を変更したい](#thumbnailposition)
+    - [ドロップチェック時に生成される .log ファイルの保存先を変更したい](#dropchecklogdir)
     - [ファイルアップロード時の一時フォルダを変更したい](#uploadtempdir)
 - [外部コマンド実行](#外部コマンド実行)
     - [録画予約時に外部コマンドを実行したい](#reservationaddedcommand)
@@ -517,6 +518,20 @@
 
 ```json
 "thumbnailPosition": 30
+```
+
+### dropCheckLogDir
+#### ドロップチェック時に生成される .log ファイルの保存先
+
+| 種類 | デフォルト値 | 必須|
+| --- | ---------- | --- |
+| string | - | no |
+
+- フルパスで指定する
+- dropCheckLogDir を指定する以前の .log ファイルが存在する場合は ```npm run move-log``` を実行すること
+
+```json
+"dropCheckLogDir": "/hoge/fuga",
 ```
 
 ### uploadTempDir
