@@ -70,6 +70,19 @@ export interface Config {
     kodiHosts?: string[];
 }
 
+interface EncodingInfo {
+    encoding?: EncodingProgram;
+    queue: EncodingProgram[];
+}
+
+interface EncodingProgram {
+    id: string;
+    name: string;
+    recordedId: number;
+    encodedId?: number;
+    mode?: number;
+}
+
 export interface ScheduleProgram {
     channel: ScheduleServiceItem;
     programs: ScheduleProgramItem[];
@@ -125,7 +138,7 @@ export interface EncodedProgram {
     filesize?: number;
 }
 
-export interface EncodingInfo {
+export interface RecordedEncodingInfo {
     name: string;
     isEncoding: boolean;
 }
@@ -163,7 +176,7 @@ export interface RecordedProgram {
     filename?: string;
     ruleId?: RuleId;
     encoded: EncodedProgram[];
-    encoding?: EncodingInfo[];
+    encoding?: RecordedEncodingInfo[];
 }
 
 export interface NewRecorded {

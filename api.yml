@@ -312,6 +312,38 @@ definitions:
           description: 'kodi host 名の一覧'
           type: string
 
+  EncodingInfo:
+    description: 'encode 中, encode 待ち情報'
+    type: object
+    required:
+      - queue
+    properties:
+      encoding:
+        $ref: '#/definitions/EncodingProgram'
+      queue:
+        $ref: '#/definitions/EncodingProgram'
+
+  EncodingProgram:
+    description: 'encode info'
+    type: object
+    required:
+      - id
+      - name
+      - recordedId
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+        description: 'encode コマンド名'
+      recordedId:
+        $ref: '#/definitions/RecordedId'
+      encodedId:
+        $ref: '#/definitions/EncodedId'
+      mode:
+        type: integer
+        description: 'encode コマンド番号'
+
   SchedulePrograms:
     description: '番組データ'
     type: array
@@ -463,7 +495,7 @@ definitions:
       filesize:
         type: integer
 
-  EncodingInfo:
+  RecordedEncodingInfo:
     type: object
     required:
       - name
@@ -559,7 +591,7 @@ definitions:
       encoding:
         type: array
         items:
-          $ref: '#/definitions/EncodingInfo'
+          $ref: '#/definitions/RecordedEncodingInfo'
 
   RecordedDurationInfo:
     type: object
