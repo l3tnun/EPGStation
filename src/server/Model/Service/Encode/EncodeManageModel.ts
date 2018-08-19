@@ -20,6 +20,7 @@ interface EncodeProgram {
 }
 
 interface EncodeQueue extends EncodeProgram {
+    id: string;
     name: string;
     cmd: string;
     suffix: string | null;
@@ -27,11 +28,12 @@ interface EncodeQueue extends EncodeProgram {
 }
 
 interface EncodingProgram {
+    id: string;
     name: string;
     recordedId: number;
     encodedId?: number;
     mode?: number;
-    source: string;
+    source?: string;
 }
 
 interface EncodingInfo {
@@ -50,7 +52,7 @@ interface EncodeManageModelInterface extends Model {
     addEncodeDoneListener(callback: (recordedId: number, encodedId: number | null, name: string, output: string | null, delTs: boolean) => void): void;
     addEncodeErrorListener(callback: () => void): void;
     getEncodingId(): number | null;
-    getEncodingInfo(): EncodingInfo;
+    getEncodingInfo(needSource?: boolean): EncodingInfo;
     cancel(recordedId: number): void;
     push(program: EncodeProgram, isCopy?: boolean): void;
 }
@@ -66,7 +68,7 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
     // エンコード中のプロセスとプログラムを格納する
     private encodingData: {
         child: ChildProcess;
-        program: EncodeProgram;
+        program: EncodeQueue;
         name: string;
         source: string;
         output: string | null;
@@ -111,9 +113,10 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
 
     /**
      * エンコード中、待機中の情報を取得
+     * @param needSource: boolean
      * @return
      */
-    public getEncodingInfo(): EncodingInfo {
+    public getEncodingInfo(needSource: boolean = true): EncodingInfo {
         const result: EncodingInfo = {
             encoding: null,
             queue: [],
@@ -121,10 +124,11 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
 
         if (this.encodingData !== null) {
             result.encoding = {
+                id: this.encodingData.program.id,
                 name: this.encodingData.name,
                 recordedId: this.encodingData.program.recordedId,
-                source: this.encodingData.source,
             };
+            if (needSource) { result.encoding.source = this.encodingData.source; }
             if (typeof this.encodingData.program.encodedId !== 'undefined') {
                 result.encoding.encodedId = this.encodingData.program.encodedId;
             }
@@ -135,10 +139,11 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
 
         for (const program of this.queue) {
             const info: EncodingProgram = {
+                id: program.id,
                 name: program.name,
                 recordedId: program.recordedId,
-                source: program.source,
             };
+            if (needSource) { info.source = program.source; }
             if (typeof program.encodedId !== 'undefined') {
                 info.encodedId = program.encodedId;
             }
@@ -217,6 +222,7 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
             return;
         }
 
+        (<EncodeQueue> program).id = new Date().getTime().toString(16) + Math.floor(1000 * Math.random()).toString(16);
         (<EncodeQueue> program).name = config.name;
         (<EncodeQueue> program).cmd = config.cmd;
         (<EncodeQueue> program).suffix = config.suffix;
