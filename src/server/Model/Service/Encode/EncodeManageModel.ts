@@ -53,6 +53,7 @@ interface EncodeManageModelInterface extends Model {
     addEncodeErrorListener(callback: () => void): void;
     getEncodingId(): number | null;
     getEncodingInfo(needSource?: boolean): EncodingInfo;
+    cancel(id: string): void;
     cancelByRecordedId(recordedId: number): void;
     push(program: EncodeProgram, isCopy?: boolean): void;
 }
@@ -167,6 +168,54 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
 
     /**
      * エンコードキャンセル
+     * @param id: string
+     */
+    public async cancel(id: string): Promise<void> {
+        // エンコード中のプロセスが該当 id
+        if (this.encodingData !== null && this.encodingData.program.id === id) {
+            this.log.system.info(`cancel encode: ${ id }`);
+
+            // kill
+            this.encodingData.isStoped = true;
+            await ProcessUtil.kill(this.encodingData.child);
+
+            return;
+        }
+
+        // queue から該当 id の program を探索
+        let recordedId: number | null = null;
+        let position: number | null = null;
+        for (let i = this.queue.length - 1; i >= 0; i--) {
+            if (this.queue[i].id === id) {
+                if (this.queue[i].delTs) {
+                    // delTs を引き継ぐために recordedId を記録
+                    recordedId = this.queue[i].recordedId;
+                }
+
+                // 削除位置を記憶
+                position = i;
+            } else if (recordedId !== null && recordedId === this.queue[i].recordedId) {
+                // delTs 付け替え
+                this.queue[i].delTs = true;
+                recordedId = null;
+                break;
+            }
+        }
+
+        // 該当 id の program を queue から削除
+        if (position !== null) {
+            this.log.system.info(`remove encode: ${ id }`);
+            this.queue.splice(position, 1);
+        }
+
+        // encode 中のプロセスに delTs を付け替える
+        if (recordedId !== null && this.encodingData !== null && this.encodingData.program.recordedId === recordedId) {
+            this.encodingData.program.delTs = true;
+        }
+    }
+
+    /**
+     * エンコードキャンセル (recordedId)
      * @param recordedId: recorded id
      */
     public async cancelByRecordedId(recordedId: number): Promise<void> {

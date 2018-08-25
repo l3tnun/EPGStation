@@ -4,6 +4,7 @@ import ApiUtil from './ApiUtil';
 
 interface EncodeModelInterface extends ApiModel {
     getAll(): {};
+    cancel(id: string): Promise<void>;
 }
 
 class EncodeModel extends ApiModel implements EncodeModelInterface {
@@ -22,6 +23,14 @@ class EncodeModel extends ApiModel implements EncodeModelInterface {
      */
     public getAll(): {} {
         return ApiUtil.deleteNullinHash(this.encodeManage.getEncodingInfo(false));
+    }
+
+    /**
+     * エンコードキャンセル
+     * @param id: string
+     */
+    public async cancel(id: string): Promise<void> {
+        await this.encodeManage.cancel(id);
     }
 }
 
