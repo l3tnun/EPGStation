@@ -339,7 +339,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
             }
         }
 
-        this.encodeManage.cancel(recordedId);
+        this.encodeManage.cancelByRecordedId(recordedId);
         await this.ipc.recordedDelete(recordedId);
     }
 
@@ -624,7 +624,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
      * @param recordedId
      */
     public async cancelEncode(recordedId: number): Promise<void> {
-        await this.encodeManage.cancel(recordedId);
+        await this.encodeManage.cancelByRecordedId(recordedId);
     }
 
     /**

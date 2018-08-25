@@ -53,7 +53,7 @@ interface EncodeManageModelInterface extends Model {
     addEncodeErrorListener(callback: () => void): void;
     getEncodingId(): number | null;
     getEncodingInfo(needSource?: boolean): EncodingInfo;
-    cancel(recordedId: number): void;
+    cancelByRecordedId(recordedId: number): void;
     push(program: EncodeProgram, isCopy?: boolean): void;
 }
 
@@ -169,21 +169,21 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
      * エンコードキャンセル
      * @param recordedId: recorded id
      */
-    public async cancel(recordedId: number): Promise<void> {
+    public async cancelByRecordedId(recordedId: number): Promise<void> {
         // queue から該当する id のプログラムを削除
         const newQueue = this.queue.filter((program) => {
             return !(program.recordedId === recordedId);
         });
 
         if (this.queue.length !== newQueue.length) {
-            this.log.system.info(`remove encode: ${ recordedId }`);
+            this.log.system.info(`remove encode by recordedId: ${ recordedId }`);
         }
 
         this.queue = newQueue;
 
         // 現在エンコード中ならプロセスを kill
         if (this.encodingData !== null && this.encodingData.program.recordedId === recordedId) {
-            this.log.system.info(`cancel encode: ${ recordedId }`);
+            this.log.system.info(`cancel encode by recordedId: ${ recordedId }`);
 
             // kill
             this.encodingData.isStoped = true;
