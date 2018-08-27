@@ -597,7 +597,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
         // ファイル名
         // base file name
         let fileName = typeof option !== 'undefined' && typeof option.recordedFormat !== 'undefined' ?
-            option.recordedFormat : config.recordedFormat || '%YEAR%年%MONTH%月%DAY%日%HOUR%時%MIN%分%SEC%秒-%TITLE%';
+            option.recordedFormat : config.recordedFormat || '%TITLE%';
 
         const jaDate = DateUtil.getJaDate(new Date(reserve.program.startAt));
 
