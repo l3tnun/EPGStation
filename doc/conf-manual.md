@@ -3,7 +3,7 @@
 - [基本設定](#基本設定)
     - [config.json の読み込みを起動時だけにしたい](#readonlyonce)
     - [EPGStation の待ち受けポートを変えたい](#serverport)
-    - [接続 IP を制限したい](#allowedIPs)
+    - [接続 IP を制限したい](#allowedips)
     - [アクセス時にユーザー認証を行いたい](#basicauth)
     - [Mirakurun の設定](#mirakurunpath)
     - [データベースの種類を変えたい](#dbtype)
