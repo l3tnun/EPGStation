@@ -38,24 +38,6 @@ interface KeywordOption {
     extended: boolean;
 }
 
-/**
- * keyword query
- */
-interface KeywordQuery {
-    title: string[];
-    description: string[];
-    extended: string[];
-}
-
-/**
- * keyword values
- */
-interface KeywordValues {
-    title: string[];
-    description: string[];
-    extended: string[];
-}
-
 interface ProgramsDBInterface extends DBTableBase {
     create(): Promise<void>;
     drop(): Promise<void>;
@@ -570,50 +552,19 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
             if (!this.isEnableRegExp()) { keyOption.regExp = false; }
             if (!this.isEnableCS()) { keyOption.cs = false; }
 
-            const titleQuery: string[] = [];
-            const descriptionQuery: string[] = [];
-            const extendedQuery: string[] = [];
-            const titleValues: any[] = [];
-            const descriptionValues: any[] = [];
-            const extendedValues: any[] = [];
-
             // keyword
             if (typeof option.keyword !== 'undefined') {
                 const result = this.createKeyword(option.keyword, keyOption, values.length);
-                Array.prototype.push.apply(titleQuery, result.query.title);
-                Array.prototype.push.apply(titleValues, result.value.title);
-                Array.prototype.push.apply(descriptionQuery, result.query.description);
-                Array.prototype.push.apply(descriptionValues, result.value.description);
-                Array.prototype.push.apply(extendedQuery, result.query.extended);
-                Array.prototype.push.apply(extendedValues, result.value.extended);
+                query.push(result.query);
+                Array.prototype.push.apply(values, result.values);
             }
 
             // ignoreKeyword
             if (typeof option.ignoreKeyword !== 'undefined') {
-                const valuesLength = values.length + titleValues.length + descriptionValues.length + extendedValues.length;
-                const result = this.createIgnoreKeyword(option.ignoreKeyword, keyOption, valuesLength);
-                Array.prototype.push.apply(titleQuery, result.query.title);
-                Array.prototype.push.apply(titleValues, result.value.title);
-                Array.prototype.push.apply(descriptionQuery, result.query.description);
-                Array.prototype.push.apply(descriptionValues, result.value.description);
-                Array.prototype.push.apply(extendedQuery, result.query.extended);
-                Array.prototype.push.apply(extendedValues, result.value.extended);
+                const result = this.createKeyword(option.ignoreKeyword, keyOption, values.length);
+                query.push(`(not ${ result.query })`);
+                Array.prototype.push.apply(values, result.values);
             }
-
-            const or: string[] = [];
-            if (titleQuery.length > 0) {
-                or.push(`(${ this.createAndQuery(titleQuery) })`);
-                Array.prototype.push.apply(values, titleValues);
-            }
-            if (descriptionQuery.length > 0) {
-                or.push(`(${ this.createAndQuery(descriptionQuery) })`);
-                Array.prototype.push.apply(values, descriptionValues);
-            }
-            if (extendedQuery.length > 0) {
-                or.push(`(${ this.createAndQuery(extendedQuery) })`);
-                Array.prototype.push.apply(values, extendedValues);
-            }
-            query.push(`(${ this.createOrQuery(or) })`);
         }
 
         // join query
@@ -744,35 +695,38 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
      * @param keyword: string
      * @param keyOption: KeywordOption
      * @param cnt: number values length
-     * @return { query: KeywordQuery; value: KeywordValues }
+     * @return { query: string[]; values: any[] }
      */
-    protected createKeyword(keyword: string, keyOption: KeywordOption, cnt: number): { query: KeywordQuery; value: KeywordValues } {
-        const titleQuery: string[] = [];
-        const descriptionQuery: string[] = [];
-        const extendedQuery: string[] = [];
-        const titleValues: any[] = [];
-        const descriptionValues: any[] = [];
-        const extendedValues: any[] = [];
+    protected createKeyword(keyword: string, keyOption: KeywordOption, cnt: number): { query: string; values: any[] } {
+        const or: string[] = [];
+        const values: any[] = [];
 
         if (keyOption.regExp) {
             // 正規表現
             const regexpStr = this.createRegexpStr(keyOption.cs);
             if (keyOption.title) {
                 cnt += 1;
-                titleQuery.push(`name ${ regexpStr } ${ this.operator.createValueStr(cnt, cnt) }`);
-                titleValues.push(keyword);
+                or.push(`name ${ regexpStr } ${ this.operator.createValueStr(cnt, cnt) }`);
+                values.push(keyword);
             }
             if (keyOption.description) {
                 cnt += 1;
-                descriptionQuery.push(`description ${ regexpStr } ${ this.operator.createValueStr(cnt, cnt) }`);
-                descriptionValues.push(keyword);
+                or.push(`description is not null and description ${ regexpStr } ${ this.operator.createValueStr(cnt, cnt) }`);
+                values.push(keyword);
             }
             if (keyOption.extended) {
                 cnt += 1;
-                extendedQuery.push(`extended ${ regexpStr } ${ this.operator.createValueStr(cnt, cnt) }`);
-                extendedValues.push(keyword);
+                or.push(`extended is not null and extended ${ regexpStr } ${ this.operator.createValueStr(cnt, cnt) }`);
+                values.push(keyword);
             }
         } else {
+            const titleQuery: string[] = [];
+            const descriptionQuery: string[] = [];
+            const extendedQuery: string[] = [];
+            const titleValues: any[] = [];
+            const descriptionValues: any[] = [];
+            const extendedValues: any[] = [];
+
             // あいまい検索
             const likeStr = this.createLikeStr(keyOption.cs);
             StrUtil.toHalf(keyword).trim().split(' ').forEach((str) => {
@@ -793,69 +747,26 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
                     extendedValues.push(str);
                 }
             });
+
+            if (titleQuery.length > 0) {
+                or.push(`(${ this.createAndQuery(titleQuery) })`);
+                Array.prototype.push.apply(values, titleValues);
+            }
+
+            if (descriptionQuery.length > 0) {
+                or.push(`(${ this.createAndQuery(descriptionQuery) })`);
+                Array.prototype.push.apply(values, descriptionValues);
+            }
+
+            if (extendedQuery.length > 0) {
+                or.push(`(${ this.createAndQuery(extendedQuery) })`);
+                Array.prototype.push.apply(values, extendedValues);
+            }
         }
 
         return {
-            query: {
-                title: titleQuery,
-                description: descriptionQuery,
-                extended: extendedQuery,
-            },
-            value: {
-                title: titleValues,
-                description: descriptionValues,
-                extended: extendedValues,
-            },
-        };
-    }
-
-    /**
-     * create ignore keyword
-     * @param ignoreKeyword: string
-     * @param keyOption: KeywordOption
-     * @param cnt: number
-     * @return { query: KeywordQuery; value: KeywordValues }
-     */
-    protected createIgnoreKeyword(ignoreKeyword: string, keyOption: KeywordOption, cnt: number): { query: KeywordQuery; value: KeywordValues } {
-        const titleQuery: string[] = [];
-        const descriptionQuery: string[] = [];
-        const extendedQuery: string[] = [];
-        const titleValues: any[] = [];
-        const descriptionValues: any[] = [];
-        const extendedValues: any[] = [];
-
-        const likeStr = this.createLikeStr(keyOption.cs);
-        StrUtil.toHalf(ignoreKeyword).trim().split(' ').forEach((str) => {
-            str = `%${ str }%`;
-
-            if (keyOption.title) {
-                cnt += 1;
-                titleQuery.push(`name not ${ likeStr } ${ this.operator.createValueStr(cnt, cnt) }`);
-                titleValues.push(str);
-            }
-            if (keyOption.description) {
-                cnt += 1;
-                descriptionQuery.push(`description not ${ likeStr } ${ this.operator.createValueStr(cnt, cnt) }`);
-                descriptionValues.push(str);
-            }
-            if (keyOption.extended) {
-                cnt += 1;
-                extendedQuery.push(`extended not ${ likeStr } ${ this.operator.createValueStr(cnt, cnt) }`);
-                extendedValues.push(str);
-            }
-        });
-
-        return {
-            query: {
-                title: titleQuery,
-                description: descriptionQuery,
-                extended: extendedQuery,
-            },
-            value: {
-                title: titleValues,
-                description: descriptionValues,
-                extended: extendedValues,
-            },
+            query: `(${ this.createOrQuery(or) })`,
+            values: values,
         };
     }
 
@@ -900,5 +811,5 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
     }
 }
 
-export { ChannelTypeHash, Broadcast, KeywordOption, KeywordQuery, ProgramsDBInterface, ProgramsDB };
+export { ChannelTypeHash, Broadcast, KeywordOption, ProgramsDBInterface, ProgramsDB };
 
