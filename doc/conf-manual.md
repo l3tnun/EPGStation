@@ -3,6 +3,7 @@
 - [基本設定](#基本設定)
     - [config.json の読み込みを起動時だけにしたい](#readonlyonce)
     - [EPGStation の待ち受けポートを変えたい](#serverport)
+    - [接続 IP を制限したい](#allowedIPs)
     - [アクセス時にユーザー認証を行いたい](#basicauth)
     - [Mirakurun の設定](#mirakurunpath)
     - [データベースの種類を変えたい](#dbtype)
@@ -93,6 +94,17 @@
 
 ```json
 "serverPort": 8888
+```
+
+### allowedIPs
+#### Web アクセス可能な IP アドレスを制限する
+
+| 種類 | デフォルト値 | 必須 |
+| --- | ---------- | --- |
+| string[] | - | no |
+
+```json
+"allowedIPs": [ "127.0.0.1", "192.168.1.1/24" ]
 ```
 
 ### basicAuth
