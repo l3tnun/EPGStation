@@ -7,7 +7,7 @@ export const get: Operation = async(req, res) => {
     const recorded = <RecordedModelInterface> factory.get('RecordedModel');
 
     try {
-        const results = await recorded.getAll(req.query.limit, req.query.offset, {
+        const results = await recorded.getAll(req.query.limit, req.query.offset, req.query.reverse, {
             ruleId: req.query.rule === 0 ? null : req.query.rule,
             genre1: req.query.genre1,
             channelId: req.query.channel,
@@ -26,6 +26,7 @@ get.apiDoc = {
     parameters: [
         { $ref: '#/parameters/limit' },
         { $ref: '#/parameters/offset' },
+        { $ref: '#/parameters/reverse' },
         { $ref: '#/parameters/rule' },
         { $ref: '#/parameters/genre1' },
         { $ref: '#/parameters/channel' },

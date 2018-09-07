@@ -25,6 +25,13 @@ parameters:
     minimum: 1
     default: 24
 
+  reverse:
+    description: '逆順にソート'
+    name: reverse
+    in: query
+    type: boolean
+    default: false
+
   scheduleType:
     description: '番組表放送波'
     name: type
