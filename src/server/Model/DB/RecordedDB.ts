@@ -10,6 +10,7 @@ interface FindAllOption {
     offset?: number;
     query?: FindQuery;
     isAddBaseDir?: boolean;
+    reverse?: boolean;
 }
 
 interface FindQuery {
@@ -554,7 +555,8 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
             values = findQuery.values;
         }
 
-        query += ' order by startAt desc, id desc';
+        const order = option.reverse ? 'asc' : 'desc';
+        query += ` order by startAt ${ order }, id ${ order }`;
 
         if (typeof option.limit !== 'undefined') {
             query += ` ${ this.operator.createLimitStr(option.limit, option.offset || 0) }`;

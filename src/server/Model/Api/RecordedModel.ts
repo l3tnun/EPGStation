@@ -35,7 +35,7 @@ interface EncodeAddOption {
 }
 
 interface RecordedModelInterface extends ApiModel {
-    getAll(limit: number, offset: number, option?: FindQuery): Promise<{}[]>;
+    getAll(limit: number, offset: number, reverse: boolean, option?: FindQuery): Promise<{}[]>;
     getId(recordedId: number): Promise<{}>;
     getDuration(recordedId: number): Promise<number | null>;
     getThumbnailPath(recordedId: number): Promise<string>;
@@ -100,12 +100,14 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
      * recorded をすべて取得
      * @param limit: number | undefined
      * @param offset: number
+     * @param reverse: boolean
      * @return Promise<any>
      */
-    public async getAll(limit: number, offset: number, query: FindQuery = {}): Promise<any> {
+    public async getAll(limit: number, offset: number, reverse: boolean, query: FindQuery = {}): Promise<any> {
         const datas = await this.recordedDB.findAll({
             limit: limit,
             offset: offset,
+            reverse: reverse,
             query: query,
         });
         const total = await this.recordedDB.getTotal(query);
