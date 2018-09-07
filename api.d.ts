@@ -81,6 +81,7 @@ interface EncodingProgram {
     recordedId: number;
     encodedId?: number;
     mode?: number;
+    program: RecordedProgram;
 }
 
 export interface ScheduleProgram {

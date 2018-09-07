@@ -330,6 +330,7 @@ definitions:
       - id
       - name
       - recordedId
+      - program
     properties:
       id:
         type: string
@@ -343,6 +344,8 @@ definitions:
       mode:
         type: integer
         description: 'encode コマンド番号'
+      program:
+        $ref: '#/definitions/RecordedProgram'
 
   SchedulePrograms:
     description: '番組データ'

@@ -34,6 +34,7 @@ interface EncodingProgram {
     encodedId?: number;
     mode?: number;
     source?: string;
+    program: DBSchema.RecordedSchema;
 }
 
 interface EncodingInfo {
@@ -128,6 +129,7 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
                 id: this.encodingData.program.id,
                 name: this.encodingData.name,
                 recordedId: this.encodingData.program.recordedId,
+                program: this.encodingData.program.recordedProgram,
             };
             if (needSource) { result.encoding.source = this.encodingData.source; }
             if (typeof this.encodingData.program.encodedId !== 'undefined') {
@@ -143,6 +145,7 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
                 id: program.id,
                 name: program.name,
                 recordedId: program.recordedId,
+                program: program.recordedProgram,
             };
             if (needSource) { info.source = program.source; }
             if (typeof program.encodedId !== 'undefined') {
@@ -555,5 +558,5 @@ namespace EncodeManageModel {
     export const ENCODE_ERROR_EVENT = 'encodeError';
 }
 
-export { EncodeManageModelInterface, EncodeProgram, EncodingInfo, EncodeManageModel };
+export { EncodeManageModelInterface, EncodeProgram, EncodingInfo, EncodingProgram, EncodeManageModel };
 
