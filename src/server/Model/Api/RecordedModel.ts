@@ -116,7 +116,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
             const encodedFiles = await this.encodedDB.findRecordedId(datas[i].id);
             const encodingInfo = infoIndex[datas[i].id];
             if (typeof encodingInfo !== 'undefined') { datas[i]['encoding'] = encodingInfo; }
-            results.push(this.fixResult(datas[i], encodedFiles));
+            results.push(ApiUtil.convertToRecordedProgram(datas[i], encodedFiles));
         }
 
         return {
@@ -182,7 +182,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
         const encodingInfo = infoIndex[recordedId];
         if (typeof encodingInfo !== 'undefined') { recorded['encoding'] = encodingInfo; }
 
-        return this.fixResult(recorded, encodedFiles);
+        return ApiUtil.convertToRecordedProgram(recorded, encodedFiles);
     }
 
     /**
@@ -199,46 +199,6 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
         const info = await VideoUtil.getVideoInfo(recorded.recPath);
 
         return Math.floor(info.duration);
-    }
-
-    /**
-     * DBSchema.RecordedSchema の boolean 値を number から boolean へ正す
-     * @param data: DBSchema.RecordedSchema
-     * @return {};
-     */
-    private fixResult(data: {}, encodedFiles: DBSchema.EncodedSchema[]): {} {
-        delete data['duration'];
-        delete data['logPath'];
-
-        // thumbnaul があるか
-        data['hasThumbnail'] = data['thumbnailPath'] !== null;
-        delete data['thumbnailPath'];
-
-        data['recording'] = data['recording'];
-
-        data['original'] = data['recPath'] !== null;
-
-        if (data['recPath'] !== null) {
-            data['filename'] = encodeURIComponent(path.basename(String(data['recPath'])));
-        }
-        delete data['recPath'];
-
-        // エンコードファイルを追加
-        if (encodedFiles.length > 0) {
-            data['encoded'] = encodedFiles.map((file) => {
-                const encoded = {
-                    encodedId: file.id,
-                    name: file.name,
-                    filename: encodeURIComponent(path.basename(file.path)),
-                };
-
-                if (file.filesize !== null) { encoded['filesize'] = file.filesize; }
-
-                return encoded;
-            });
-        }
-
-        return ApiUtil.deleteNullinHash(data);
     }
 
     /**
