@@ -1,7 +1,7 @@
 import * as apid from '../../../../api';
 import { ViewModelStatus } from '../../Enums';
 import { ChannelsApiModelInterface } from '../../Model/Api/ChannelsApiModel';
-import { EncodeApiModelInterface } from '../../Model/Api/EncodeApiModel';
+import { EncodingApiModelInterface } from '../../Model/Api/EncodingApiModel';
 import DateUtil from '../../Util/DateUtil';
 import Util from '../../Util/Util';
 import ViewModel from '../ViewModel';
@@ -11,17 +11,17 @@ import ViewModel from '../ViewModel';
  * EncodeViewModel
  */
 class EncodeViewModel extends ViewModel {
-    private encodeApiModel: EncodeApiModelInterface;
+    private encodingApiModel: EncodingApiModelInterface;
     private channels: ChannelsApiModelInterface;
     private encodes: apid.EncodingProgram[] = [];
 
     constructor(
-        encodeApiModel: EncodeApiModelInterface,
+        encodingApiModel: EncodingApiModelInterface,
         channels: ChannelsApiModelInterface,
     ) {
         super();
 
-        this.encodeApiModel = encodeApiModel;
+        this.encodingApiModel = encodingApiModel;
         this.channels = channels;
     }
 
@@ -32,7 +32,7 @@ class EncodeViewModel extends ViewModel {
     public async init(status: ViewModelStatus = 'init'): Promise<void> {
         super.init(status);
 
-        this.encodeApiModel.init();
+        this.encodingApiModel.init();
 
         await Util.sleep(100);
         await this.fetchData();
@@ -42,8 +42,8 @@ class EncodeViewModel extends ViewModel {
      * fetchData
      */
     private async fetchData(): Promise<void> {
-        await this.encodeApiModel.fetchInfo();
-        const info = this.encodeApiModel.getInfo();
+        await this.encodingApiModel.fetchInfo();
+        const info = this.encodingApiModel.getInfo();
 
         if (typeof info.encoding === 'undefined') {
             this.encodes = [];

@@ -1,7 +1,7 @@
 import * as apid from '../../../../api';
 import ApiModel from './ApiModel';
 
-interface EncodeApiModelInterface extends ApiModel {
+interface EncodingApiModelInterface extends ApiModel {
     init(): void;
     fetchInfo(): Promise<void>;
     getInfo(): apid.EncodingInfo;
@@ -9,10 +9,10 @@ interface EncodeApiModelInterface extends ApiModel {
 }
 
 /**
- * EncodeApiModel
+ * EncodingApiModel
  * /api/encode
  */
-class EncodeApiModel extends ApiModel implements EncodeApiModelInterface {
+class EncodingApiModel extends ApiModel implements EncodingApiModelInterface {
     private info: apid.EncodingInfo = { queue: [] };
 
     public init(): void {
@@ -62,5 +62,5 @@ class EncodeApiModel extends ApiModel implements EncodeApiModelInterface {
     }
 }
 
-export { EncodeApiModelInterface, EncodeApiModel };
+export { EncodingApiModelInterface, EncodingApiModel };
 

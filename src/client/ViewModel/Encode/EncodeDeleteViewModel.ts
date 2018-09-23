@@ -1,5 +1,5 @@
 import * as apid from '../../../../api';
-import { EncodeApiModelInterface } from '../../Model/Api/EncodeApiModel';
+import { EncodingApiModelInterface } from '../../Model/Api/EncodingApiModel';
 import { BalloonModelInterface } from '../../Model/Balloon/BallonModel';
 import { SnackbarModelInterface } from '../../Model/Snackbar/SnackbarModel';
 import ViewModel from '../ViewModel';
@@ -9,19 +9,19 @@ import ViewModel from '../ViewModel';
  */
 class EncodeDeleteViewModel extends ViewModel {
     private balloon: BalloonModelInterface;
-    private encodeApiModel: EncodeApiModelInterface;
+    private encodingApiModel: EncodingApiModelInterface;
     private snackbar: SnackbarModelInterface;
     private encode: apid.EncodingProgram | null = null;
 
     constructor(
         balloon: BalloonModelInterface,
-        encodeApiModel: EncodeApiModelInterface,
+        encodingApiModel: EncodingApiModelInterface,
         snackbar: SnackbarModelInterface,
     ) {
         super();
 
         this.balloon = balloon;
-        this.encodeApiModel = encodeApiModel;
+        this.encodingApiModel = encodingApiModel;
         this.snackbar = snackbar;
     }
 
@@ -63,7 +63,7 @@ class EncodeDeleteViewModel extends ViewModel {
         if (this.encode === null) { return; }
 
         try {
-            await this.encodeApiModel.stop(this.encode.id);
+            await this.encodingApiModel.stop(this.encode.id);
             this.snackbar.open(`エンコード停止: ${ this.getTitle() }`);
         } catch (err) {
             this.snackbar.open(`エンコード停止失敗: ${ this.getTitle() }`);

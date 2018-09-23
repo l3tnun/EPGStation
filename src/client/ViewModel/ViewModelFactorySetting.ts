@@ -1,6 +1,6 @@
 import { ChannelsApiModel } from '../Model/Api/ChannelsApiModel';
 import { ConfigApiModel } from '../Model/Api/ConfigApiModel';
-import { EncodeApiModel } from '../Model/Api/EncodeApiModel';
+import { EncodingApiModel } from '../Model/Api/EncodingApiModel';
 import { RecordedApiModel } from '../Model/Api/RecordedApiModel';
 import { ReservesApiModel } from '../Model/Api/ReservesApiModel';
 import { RulesApiModel } from '../Model/Api/RulesApiModel';
@@ -73,7 +73,7 @@ namespace ViewModelFactorySetting {
         // model
         const snackbarModel = new SnackbarModel();
         const configModel = new ConfigApiModel(snackbarModel);
-        const encodeApiModel = new EncodeApiModel(snackbarModel);
+        const encodingApiModel = new EncodingApiModel(snackbarModel);
         const scheduleApiModel = new ScheduleApiModel(snackbarModel);
         const reservesApiModel = new ReservesApiModel(snackbarModel);
         const balloonModel = new BalloonModel();
@@ -92,12 +92,12 @@ namespace ViewModelFactorySetting {
 
         // reg
         factory.reg('EncodeViewModel', new EncodeViewModel(
-            encodeApiModel,
+            encodingApiModel,
             channelsApiModel,
         ));
         factory.reg('EncodeDeleteViewModel', new EncodeDeleteViewModel(
             balloonModel,
-            encodeApiModel,
+            encodingApiModel,
             snackbarModel,
         ));
         factory.reg('HeaderViewModel', new HeaderViewModel(
