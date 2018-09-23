@@ -321,7 +321,9 @@ definitions:
       encoding:
         $ref: '#/definitions/EncodingProgram'
       queue:
-        $ref: '#/definitions/EncodingProgram'
+        type: array
+        items:
+            $ref: '#/definitions/EncodingProgram'
 
   EncodingProgram:
     description: 'encode info'
