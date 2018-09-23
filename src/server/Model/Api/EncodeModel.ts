@@ -7,6 +7,7 @@ import ApiUtil from './ApiUtil';
 interface EncodeModelInterface extends ApiModel {
     getAll(): apid.EncodingInfo;
     cancel(id: string): Promise<void>;
+    cancels(ids: string[]): Promise<void>;
 }
 
 class EncodeModel extends ApiModel implements EncodeModelInterface {
@@ -70,6 +71,14 @@ class EncodeModel extends ApiModel implements EncodeModelInterface {
      */
     public async cancel(id: string): Promise<void> {
         await this.encodeManage.cancel(id);
+    }
+
+    /**
+     * エンコード複数キャンセル
+     * @param ids: string[]
+     */
+    public async cancels(ids: string[]): Promise<void> {
+        await this.encodeManage.cancels(ids);
     }
 }
 

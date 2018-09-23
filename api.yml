@@ -98,6 +98,10 @@ definitions:
     description: 'encoded id'
     type: integer
 
+  EncodeId:
+    description: 'encode id'
+    type: string
+
   RecordedId:
     description: 'recorded id'
     type: integer
@@ -335,7 +339,7 @@ definitions:
       - program
     properties:
       id:
-        type: string
+        $ref: '#/definitions/EncodeId'
       name:
         type: string
         description: 'encode コマンド名'
@@ -348,6 +352,16 @@ definitions:
         description: 'encode コマンド番号'
       program:
         $ref: '#/definitions/RecordedProgram'
+
+  EncodingCancels:
+    type: object
+    required:
+      - ids
+    properties:
+      ids:
+        type: array
+        items:
+          $ref: '#/definitions/EncodeId'
 
   SchedulePrograms:
     description: '番組データ'

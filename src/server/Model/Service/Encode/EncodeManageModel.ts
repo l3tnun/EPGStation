@@ -55,7 +55,8 @@ interface EncodeManageModelInterface extends Model {
     addEncodeErrorListener(callback: () => void): void;
     getEncodingId(): number | null;
     getEncodingInfo(needSource?: boolean): EncodingInfo;
-    cancel(id: string): void;
+    cancel(id: string): Promise<void>;
+    cancels(ids: string[]): Promise<void>;
     cancelByRecordedId(recordedId: number): void;
     updateProgram(recordedId: number): Promise<void>;
     push(program: EncodeProgram, isCopy?: boolean): void;
@@ -221,6 +222,28 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
         // encode 中のプロセスに delTs を付け替える
         if (recordedId !== null && this.encodingData !== null && this.encodingData.program.recordedId === recordedId) {
             this.encodingData.program.delTs = true;
+        }
+    }
+
+    /**
+     * encode cancel
+     * @param ids: string[]
+     */
+    public async cancels(ids: string[]): Promise<void> {
+        if (this.encodingData === null) { return; }
+
+        let isStopEncoding = false;
+
+        for (const id of ids) {
+            if (this.encodingData.program.id === id) {
+                isStopEncoding = true;
+            }
+
+            await this.cancel(id);
+        }
+
+        if (isStopEncoding) {
+            await this.cancel(this.encodingData.program.id);
         }
     }
 
