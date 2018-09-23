@@ -46,7 +46,7 @@ m.route(document.body, '/', {
     '/recorded': RecordedComponent,
     '/recorded/:recordedId/watch': RecordedWatchComponent,
     '/recorded/upload': RecordedUploadComponent,
-    '/encode': EncodeComponent,
+    '/encoding': EncodeComponent,
     '/reserves': ReservesComponent,
     '/rules': RulesComponent,
     '/search': SearchComponent,

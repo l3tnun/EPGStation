@@ -59,7 +59,7 @@ class NavigationComponent extends Component<void> {
             m('nav', { class: 'mdl-navigation' }, [
                 this.broadcastLink,
                 this.createLink('録画済み', '/recorded'),
-                this.createLink('エンコード', '/encode'),
+                this.createLink('エンコード', '/encoding'),
                 this.createLink('予約', '/reserves'),
                 this.createLink('競合', '/reserves', { mode: 'conflicts' }),
                 this.createLink('重複', '/reserves', { mode: 'overlaps' }),
