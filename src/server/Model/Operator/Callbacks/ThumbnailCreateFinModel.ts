@@ -34,6 +34,9 @@ class ThumbnailCreateFinModel extends Model implements CallbackBaseModelInterfac
         try {
             await this.recordedManage.addThumbnail(recordedId, thumbnailPath);
 
+            // encoding 番組のサムネイル状態更新依頼
+            this.ipc.updateEncodingProgramgStatus(recordedId);
+
             // socket.io で通知
             this.ipc.notifIo();
         } catch (err) {

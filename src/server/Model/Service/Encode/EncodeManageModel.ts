@@ -6,6 +6,7 @@ import * as path from 'path';
 import ProcessUtil from '../../../Util/ProcessUtil';
 import Util from '../../../Util/Util';
 import * as DBSchema from '../../DB/DBSchema';
+import { RecordedDBInterface } from '../../DB/RecordedDB';
 import Model from '../../Model';
 import { EncodeProcessManageModelInterface } from './EncodeProcessManageModel';
 
@@ -56,6 +57,7 @@ interface EncodeManageModelInterface extends Model {
     getEncodingInfo(needSource?: boolean): EncodingInfo;
     cancel(id: string): void;
     cancelByRecordedId(recordedId: number): void;
+    updateProgram(recordedId: number): Promise<void>;
     push(program: EncodeProgram, isCopy?: boolean): void;
 }
 
@@ -64,6 +66,7 @@ interface EncodeManageModelInterface extends Model {
  */
 class EncodeManageModel extends Model implements EncodeManageModelInterface {
     private encodeProcessManage: EncodeProcessManageModelInterface;
+    private recordedDB: RecordedDBInterface;
     private queue: EncodeQueue[] = [];
     private isRunning: boolean = false;
 
@@ -80,9 +83,13 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
 
     private listener: events.EventEmitter = new events.EventEmitter();
 
-    constructor(encodeProcessManage: EncodeProcessManageModelInterface) {
+    constructor(
+        encodeProcessManage: EncodeProcessManageModelInterface,
+        recordedDB: RecordedDBInterface,
+    ) {
         super();
         this.encodeProcessManage = encodeProcessManage;
+        this.recordedDB = recordedDB;
     }
 
     /**
@@ -240,6 +247,37 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
             // kill
             this.encodingData.isStoped = true;
             await ProcessUtil.kill(this.encodingData.child);
+        }
+    }
+
+    /**
+     * 番組情報更新
+     * @param recordedId: number
+     */
+    public async updateProgram(recordedId: number): Promise<void> {
+        if (this.encodingData === null) { return; }
+
+        let hasProgram = false;
+        let program: DBSchema.RecordedSchema | null = null;
+        const getProgram = async() => {
+            hasProgram = true;
+            program = await this.recordedDB.findId(recordedId);
+        };
+
+        if (this.encodingData.program.recordedId === recordedId) {
+            await getProgram();
+            if (program !== null) {
+                this.encodingData.program.recordedProgram = program;
+            }
+        }
+
+        for (let i = 0; i < this.queue.length; i++) {
+            if (this.queue[i].recordedId === recordedId) {
+                if (!hasProgram) { await getProgram(); }
+                if (program === null) { break; }
+
+                this.queue[i].recordedProgram = program;
+            }
         }
     }
 

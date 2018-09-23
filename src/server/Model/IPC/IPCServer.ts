@@ -23,6 +23,7 @@ interface IPCServerInterface extends Model {
     register(child: ChildProcess): void;
     notifIo(): void;
     setEncode(program: EncodeProgram): void;
+    updateEncodingProgramgStatus(recordedId: number): void;
 }
 
 /**
@@ -88,6 +89,17 @@ class IPCServer extends Model implements IPCServerInterface {
     public setEncode(program: EncodeProgram): void {
         this.child.send({ msg: IPCMessageDefinition.setEncodeToClient, program: program });
     }
+
+    /**
+     * クライアントへ encoding 中の番組情報のサムネイル状態変更を通知する
+     */
+    public updateEncodingProgramgStatus(recordedId: number): void {
+        this.child.send({
+            msg: IPCMessageDefinition.updateEncodingProgramgStatusToClient,
+            recordedId: recordedId,
+        });
+    }
+
 
     /**
      * クライアントにメッセージを送信
