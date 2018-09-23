@@ -2,21 +2,26 @@ import * as m from 'mithril';
 import * as apid from '../../../../api';
 import { ViewModelStatus } from '../../Enums';
 import Util from '../../Util/Util';
+import EncodeDeleteViewModel from '../../ViewModel/Encode/EncodeDeleteViewModel';
 import EncodeViewModel from '../../ViewModel/Encode/EncodeViewModel';
 import factory from '../../ViewModel/ViewModelFactory';
+import { BalloonComponent } from '../BalloonComponent';
 import MainLayoutComponent from '../MainLayoutComponent';
 import ParentComponent from '../ParentComponent';
+import EncodeDeleteComponent from './EncodeDeleteComponent';
 
 /**
  * EncodeComponent
  */
 class EncodeComponent extends ParentComponent<void> {
     private viewModel: EncodeViewModel;
+    private deleteViewModel: EncodeDeleteViewModel;
 
     constructor() {
         super();
 
         this.viewModel = <EncodeViewModel> factory.get('EncodeViewModel');
+        this.deleteViewModel = <EncodeDeleteViewModel> factory.get('EncodeDeleteViewModel');
     }
 
     protected async parentInitViewModel(status: ViewModelStatus): Promise<void> {
@@ -40,6 +45,14 @@ class EncodeComponent extends ParentComponent<void> {
             scrollStoped: (scrollTop: number) => {
                 this.saveHistoryData(scrollTop);
             },
+            notMainContent: [
+                m(BalloonComponent, {
+                    id: EncodeDeleteViewModel.id,
+                    content: m(EncodeDeleteComponent),
+                    maxWidth: 300,
+                    forceDialog: true,
+                }),
+            ],
         });
     }
 
@@ -49,7 +62,7 @@ class EncodeComponent extends ParentComponent<void> {
      */
     private createContent(): m.Child {
         return m('div', {
-            class: 'encode-content',
+            class: 'encoding-content',
             onupdate: () => {
                 this.restoreMainLayoutPosition();
             },
@@ -67,10 +80,14 @@ class EncodeComponent extends ParentComponent<void> {
      */
     private createCard(encode: apid.EncodingProgram): m.Child {
         return m('div', {
-            class: 'encode-card mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col',
+            class: 'encoding-card mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col',
         }, [
             m('button', {
                 class: 'mdl-button mdl-js-button mdl-button--icon',
+                onclick: () => {
+                    this.deleteViewModel.set(encode);
+                    this.deleteViewModel.open();
+                },
             }, [
                 m('i', { class: 'material-icons' }, 'close'),
             ]),

@@ -18,6 +18,7 @@ import { StreamSelectSettingModel } from '../Model/Stream/StreamSelectSettingMod
 import { TabModel } from '../Model/Tab/TabModel';
 
 import BalloonViewModel from './Balloon/BalloonViewModel';
+import EncodeDeleteViewModel from './Encode/EncodeDeleteViewModel';
 import EncodeViewModel from './Encode/EncodeViewModel';
 import HeaderViewModel from './HeaderViewModel';
 import MainLayoutViewModel from './MainLayoutViewModel';
@@ -93,6 +94,11 @@ namespace ViewModelFactorySetting {
         factory.reg('EncodeViewModel', new EncodeViewModel(
             encodeApiModel,
             channelsApiModel,
+        ));
+        factory.reg('EncodeDeleteViewModel', new EncodeDeleteViewModel(
+            balloonModel,
+            encodeApiModel,
+            snackbarModel,
         ));
         factory.reg('HeaderViewModel', new HeaderViewModel(
             configModel,

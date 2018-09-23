@@ -5,6 +5,7 @@ interface EncodeApiModelInterface extends ApiModel {
     init(): void;
     fetchInfo(): Promise<void>;
     getInfo(): apid.EncodingInfo;
+    stop(encodingId: string): Promise<void>;
 }
 
 /**
@@ -47,6 +48,17 @@ class EncodeApiModel extends ApiModel implements EncodeApiModelInterface {
      */
     public getInfo(): apid.EncodingInfo {
         return this.info;
+    }
+
+    /**
+     * encode の停止
+     * @param encodingId: encoding id
+     */
+    public async stop(encodingId: string): Promise<void> {
+        await this.request({
+            method: 'DELETE',
+            url: `./api/encode/${ encodingId }`,
+        });
     }
 }
 
