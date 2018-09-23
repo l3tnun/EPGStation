@@ -72,7 +72,7 @@ class EncodeComponent extends ParentComponent<void> {
             m('button', {
                 class: 'mdl-button mdl-js-button mdl-button--icon',
             }, [
-                m('i', { class: 'material-icons' }, 'more_vert'),
+                m('i', { class: 'material-icons' }, 'close'),
             ]),
             m('div', [
                 m('div', {
@@ -95,6 +95,7 @@ class EncodeComponent extends ParentComponent<void> {
                 m('div', { class: 'text-container' }, [
                     m('div', { class: 'title' }, encode.program.name),
                     m('div', { class: 'channel' }, this.viewModel.getChannelName(encode.program.channelId)),
+                    m('div', { class: 'time' }, this.viewModel.getTimeStr(encode.program)),
                     m('div', { class: 'encode-name' }, encode.name),
                 ]),
             ]),

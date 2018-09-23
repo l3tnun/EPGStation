@@ -2,6 +2,7 @@ import * as apid from '../../../../api';
 import { ViewModelStatus } from '../../Enums';
 import { ChannelsApiModelInterface } from '../../Model/Api/ChannelsApiModel';
 import { EncodeApiModelInterface } from '../../Model/Api/EncodeApiModel';
+import DateUtil from '../../Util/DateUtil';
 import Util from '../../Util/Util';
 import ViewModel from '../ViewModel';
 
@@ -71,6 +72,19 @@ class EncodeViewModel extends ViewModel {
         const channel = this.channels.getChannel(channelId);
 
         return channel === null ? String(channelId) : channel.name;
+    }
+
+    /**
+     * get time str
+     * @param recorded: apid.RecordedProgram
+     * @return string
+     */
+    public getTimeStr(recorded: apid.RecordedProgram): string {
+        const start = DateUtil.getJaDate(new Date(recorded.startAt));
+        const end = DateUtil.getJaDate(new Date(recorded.endAt));
+        const duration = Math.floor((recorded.endAt - recorded.startAt) / 1000 / 60);
+
+        return DateUtil.format(start, 'MM/dd(w) hh:mm:ss') + ' ~ ' + DateUtil.format(end, 'hh:mm:ss') + `(${ duration }分)`;
     }
 }
 
