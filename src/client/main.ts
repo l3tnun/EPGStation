@@ -1,4 +1,5 @@
 import * as m from 'mithril';
+import EncodeComponent from './Component/Encode/EncodeComponent';
 import ProgramDetailComponent from './Component/Program/Detail/ProgramDetailComponent';
 import ProgramComponent from './Component/Program/ProgramComponent';
 import ProgramSettingComponent from './Component/Program/Setting/ProgramSettingComponent';
@@ -45,6 +46,7 @@ m.route(document.body, '/', {
     '/recorded': RecordedComponent,
     '/recorded/:recordedId/watch': RecordedWatchComponent,
     '/recorded/upload': RecordedUploadComponent,
+    '/encode': EncodeComponent,
     '/reserves': ReservesComponent,
     '/rules': RulesComponent,
     '/search': SearchComponent,
