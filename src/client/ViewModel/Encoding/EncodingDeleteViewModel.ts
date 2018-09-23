@@ -5,9 +5,9 @@ import { SnackbarModelInterface } from '../../Model/Snackbar/SnackbarModel';
 import ViewModel from '../ViewModel';
 
 /**
- * EncodeDeleteViewModel
+ * EncodingDeleteViewModel
  */
-class EncodeDeleteViewModel extends ViewModel {
+class EncodingDeleteViewModel extends ViewModel {
     private balloon: BalloonModelInterface;
     private encodingApiModel: EncodingApiModelInterface;
     private snackbar: SnackbarModelInterface;
@@ -45,7 +45,7 @@ class EncodeDeleteViewModel extends ViewModel {
      * open dialog
      */
     public open(): void {
-        this.balloon.open(EncodeDeleteViewModel.id);
+        this.balloon.open(EncodingDeleteViewModel.id);
     }
 
     /**
@@ -53,7 +53,7 @@ class EncodeDeleteViewModel extends ViewModel {
      */
     public close(): void {
         this.balloon.close();
-        this.balloon.close(EncodeDeleteViewModel.id);
+        this.balloon.close(EncodingDeleteViewModel.id);
     }
 
     /**
@@ -72,9 +72,9 @@ class EncodeDeleteViewModel extends ViewModel {
     }
 }
 
-namespace EncodeDeleteViewModel {
+namespace EncodingDeleteViewModel {
     export const id = 'encode-delete-menu';
 }
 
-export default EncodeDeleteViewModel;
+export default EncodingDeleteViewModel;
 

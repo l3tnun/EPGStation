@@ -8,12 +8,12 @@ import ViewModel from '../ViewModel';
 
 
 /**
- * EncodeViewModel
+ * EncodingViewModel
  */
-class EncodeViewModel extends ViewModel {
+class EncodingViewModel extends ViewModel {
     private encodingApiModel: EncodingApiModelInterface;
     private channels: ChannelsApiModelInterface;
-    private encodes: apid.EncodingProgram[] = [];
+    private encoding: apid.EncodingProgram[] = [];
 
     constructor(
         encodingApiModel: EncodingApiModelInterface,
@@ -46,21 +46,21 @@ class EncodeViewModel extends ViewModel {
         const info = this.encodingApiModel.getInfo();
 
         if (typeof info.encoding === 'undefined') {
-            this.encodes = [];
+            this.encoding = [];
 
             return;
         }
 
-        this.encodes = [info.encoding];
-        this.encodes.push(...info.queue);
+        this.encoding = [info.encoding];
+        this.encoding.push(...info.queue);
     }
 
     /**
-     * encode 一覧を返す
+     * encoding 一覧を返す
      * @return apid.EncodingProgram[]
      */
-    public getEncodes(): apid.EncodingProgram[] {
-        return this.encodes;
+    public getEncoding(): apid.EncodingProgram[] {
+        return this.encoding;
     }
 
     /**
@@ -88,5 +88,5 @@ class EncodeViewModel extends ViewModel {
     }
 }
 
-export default EncodeViewModel;
+export default EncodingViewModel;
 

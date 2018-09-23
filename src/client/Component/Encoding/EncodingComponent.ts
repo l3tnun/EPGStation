@@ -2,26 +2,26 @@ import * as m from 'mithril';
 import * as apid from '../../../../api';
 import { ViewModelStatus } from '../../Enums';
 import Util from '../../Util/Util';
-import EncodeDeleteViewModel from '../../ViewModel/Encode/EncodeDeleteViewModel';
-import EncodeViewModel from '../../ViewModel/Encode/EncodeViewModel';
+import EncodingDeleteViewModel from '../../ViewModel/Encoding/EncodingDeleteViewModel';
+import EncodingViewModel from '../../ViewModel/Encoding/EncodingViewModel';
 import factory from '../../ViewModel/ViewModelFactory';
 import { BalloonComponent } from '../BalloonComponent';
 import MainLayoutComponent from '../MainLayoutComponent';
 import ParentComponent from '../ParentComponent';
-import EncodeDeleteComponent from './EncodeDeleteComponent';
+import EncodingDeleteComponent from './EncodingDeleteComponent';
 
 /**
- * EncodeComponent
+ * EncodingComponent
  */
-class EncodeComponent extends ParentComponent<void> {
-    private viewModel: EncodeViewModel;
-    private deleteViewModel: EncodeDeleteViewModel;
+class EncodingComponent extends ParentComponent<void> {
+    private viewModel: EncodingViewModel;
+    private deleteViewModel: EncodingDeleteViewModel;
 
     constructor() {
         super();
 
-        this.viewModel = <EncodeViewModel> factory.get('EncodeViewModel');
-        this.deleteViewModel = <EncodeDeleteViewModel> factory.get('EncodeDeleteViewModel');
+        this.viewModel = <EncodingViewModel> factory.get('EncodingViewModel');
+        this.deleteViewModel = <EncodingDeleteViewModel> factory.get('EncodingDeleteViewModel');
     }
 
     protected async parentInitViewModel(status: ViewModelStatus): Promise<void> {
@@ -31,7 +31,7 @@ class EncodeComponent extends ParentComponent<void> {
     /**
      * page name
      */
-    protected getComponentName(): string { return 'Encode'; }
+    protected getComponentName(): string { return 'Encoding'; }
 
     /**
      * view
@@ -47,8 +47,8 @@ class EncodeComponent extends ParentComponent<void> {
             },
             notMainContent: [
                 m(BalloonComponent, {
-                    id: EncodeDeleteViewModel.id,
-                    content: m(EncodeDeleteComponent),
+                    id: EncodingDeleteViewModel.id,
+                    content: m(EncodingDeleteComponent),
                     maxWidth: 300,
                     forceDialog: true,
                 }),
@@ -67,7 +67,7 @@ class EncodeComponent extends ParentComponent<void> {
                 this.restoreMainLayoutPosition();
             },
         }, [
-            this.viewModel.getEncodes().map((encode) => {
+            this.viewModel.getEncoding().map((encode) => {
                 return this.createCard(encode);
             }),
         ]);
@@ -120,5 +120,5 @@ class EncodeComponent extends ParentComponent<void> {
     }
 }
 
-export default EncodeComponent;
+export default EncodingComponent;
 

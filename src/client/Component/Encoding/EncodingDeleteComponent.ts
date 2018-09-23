@@ -1,18 +1,18 @@
 import * as m from 'mithril';
-import EncodeDeleteViewModel from '../../ViewModel/Encode/EncodeDeleteViewModel';
+import EncodingDeleteViewModel from '../../ViewModel/Encoding/EncodingDeleteViewModel';
 import factory from '../../ViewModel/ViewModelFactory';
 import Component from '../Component';
 
 /**
- * EncodeDeleteComponent
+ * EncodingDeleteComponent
  */
-class EncodeDeleteComponent extends Component<void> {
-    private viewModel: EncodeDeleteViewModel;
+class EncodingDeleteComponent extends Component<void> {
+    private viewModel: EncodingDeleteViewModel;
 
     constructor() {
         super();
 
-        this.viewModel = <EncodeDeleteViewModel> factory.get('EncodeDeleteViewModel');
+        this.viewModel = <EncodingDeleteViewModel> factory.get('EncodingDeleteViewModel');
     }
 
     /**
@@ -39,5 +39,5 @@ class EncodeDeleteComponent extends Component<void> {
     }
 }
 
-export default EncodeDeleteComponent;
+export default EncodingDeleteComponent;
 

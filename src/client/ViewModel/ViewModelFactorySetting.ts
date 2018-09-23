@@ -18,8 +18,8 @@ import { StreamSelectSettingModel } from '../Model/Stream/StreamSelectSettingMod
 import { TabModel } from '../Model/Tab/TabModel';
 
 import BalloonViewModel from './Balloon/BalloonViewModel';
-import EncodeDeleteViewModel from './Encode/EncodeDeleteViewModel';
-import EncodeViewModel from './Encode/EncodeViewModel';
+import EncodingDeleteViewModel from './Encoding/EncodingDeleteViewModel';
+import EncodingViewModel from './Encoding/EncodingViewModel';
 import HeaderViewModel from './HeaderViewModel';
 import MainLayoutViewModel from './MainLayoutViewModel';
 import NavigationViewModel from './NavigationViewModel';
@@ -91,11 +91,11 @@ namespace ViewModelFactorySetting {
         const recordedWatchSelectSettingModel = new RecordedWatchSelectSettingModel(storageModel);
 
         // reg
-        factory.reg('EncodeViewModel', new EncodeViewModel(
+        factory.reg('EncodingViewModel', new EncodingViewModel(
             encodingApiModel,
             channelsApiModel,
         ));
-        factory.reg('EncodeDeleteViewModel', new EncodeDeleteViewModel(
+        factory.reg('EncodingDeleteViewModel', new EncodingDeleteViewModel(
             balloonModel,
             encodingApiModel,
             snackbarModel,
