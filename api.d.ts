@@ -5,6 +5,7 @@ export interface Error {
 }
 
 export type EncodedId = number;
+export type EncodeId = string;
 export type RecordedId = number;
 export type RuleId = number;
 export type ProgramId = number;
@@ -70,6 +71,20 @@ export interface Config {
     kodiHosts?: string[];
 }
 
+interface EncodingInfo {
+    encoding?: EncodingProgram;
+    queue: EncodingProgram[];
+}
+
+interface EncodingProgram {
+    id: string;
+    name: string;
+    recordedId: number;
+    encodedId?: number;
+    mode?: number;
+    program: RecordedProgram;
+}
+
 export interface ScheduleProgram {
     channel: ScheduleServiceItem;
     programs: ScheduleProgramItem[];
@@ -125,7 +140,7 @@ export interface EncodedProgram {
     filesize?: number;
 }
 
-export interface EncodingInfo {
+export interface RecordedEncodingInfo {
     name: string;
     isEncoding: boolean;
 }
@@ -163,7 +178,7 @@ export interface RecordedProgram {
     filename?: string;
     ruleId?: RuleId;
     encoded: EncodedProgram[];
-    encoding?: EncodingInfo[];
+    encoding?: RecordedEncodingInfo[];
 }
 
 export interface NewRecorded {

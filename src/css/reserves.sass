@@ -32,12 +32,6 @@ $card-max-width: 840px;
         width: calc(100% - 16px);
         margin: 16px auto;
 
-        td, th
-            &:last-of-type
-                padding-right: 24px;
-            &:first-of-type
-                padding-left: 24px;
-
         th
             padding-top: 8px;
             padding-right: 10px;
@@ -69,6 +63,15 @@ $card-max-width: 840px;
             .option-container
                 width: 64px;
                 display: flex;
+                .recorded
+                    display: none;
+
+        .option.has-rule
+            width: 94px;
+            .option-container
+                width: 94px;
+                .recorded
+                    display: inline;
 
     .pagination
         max-width: $card-max-width;

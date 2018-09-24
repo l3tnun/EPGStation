@@ -1,6 +1,7 @@
 import * as apid from '../../../api';
 import { ChannelsModel } from './Api/ChannelsModel';
 import { ConfigModel } from './Api/ConfigModel';
+import { EncodeModel } from './Api/EncodeModel';
 import { IPTVModel } from './Api/IPTVModel';
 import { RecordedModel } from './Api/RecordedModel';
 import { ReservesModel } from './Api/ReservesModel';
@@ -100,7 +101,10 @@ namespace ModelFactorySetting {
         }
 
         const encodeProcessManage = new EncodeProcessManageModel();
-        const encodeManage = new EncodeManageModel(encodeProcessManage);
+        const encodeManage = new EncodeManageModel(
+            encodeProcessManage,
+            recordedDB!,
+        );
         const socketIoManage = new SocketIoManageModel();
         const ipc = new IPCClient();
         const streamManage = new StreamManageModel(socketIoManage);
@@ -133,6 +137,7 @@ namespace ModelFactorySetting {
             ipc,
         ); });
         factory.reg('ConfigModel', () => { return new ConfigModel(ipc); });
+        factory.reg('EncodeModel', () => { return new EncodeModel(encodeManage); });
         factory.reg('IPTVModel', () => { return new IPTVModel(
             programsDB,
             servicesDB,

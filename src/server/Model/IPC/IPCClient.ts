@@ -7,7 +7,7 @@ import { AddReserveInterface, ReserveProgram } from '../Operator/ReserveProgramI
 import { RuleInterface } from '../Operator/RuleInterface';
 import { EncodeManageModelInterface } from '../Service/Encode/EncodeManageModel';
 import { SocketIoManageModelInterface } from '../Service/SocketIoManageModel';
-import { IPCClientMessage, IPCMessageDefinition, IPCServerEncodeMessage, IPCServerMessage, IPCServerSocketIoMessage } from './IPCMessageInterface';
+import { IPCClientMessage, IPCMessageDefinition, IPCServerEncodeMessage, IPCServerEncodingProgramgStatusUpdateMessage, IPCServerMessage, IPCServerSocketIoMessage } from './IPCMessageInterface';
 
 interface IPCClientInterface extends Model {
     getTuners(): Promise<apid.TunerDevice[]>;
@@ -59,11 +59,15 @@ class IPCClient extends Model implements IPCClientInterface {
             throw new Error('IPCClientIsNotChildProcess');
         }
 
-        process.on('message', (msg: IPCServerMessage | IPCServerSocketIoMessage | IPCServerEncodeMessage) => {
+        process.on('message', async(msg: IPCServerMessage | IPCServerSocketIoMessage | IPCServerEncodeMessage) => {
             if (typeof (<IPCServerMessage> msg).id === 'undefined') {
                 if ((<IPCServerEncodeMessage> msg).msg === IPCMessageDefinition.setEncodeToClient) {
                     // server からのエンコード依頼
                     this.encodeManage.push((<IPCServerEncodeMessage> msg).program);
+                } else if ((<IPCServerEncodingProgramgStatusUpdateMessage> msg).msg === IPCMessageDefinition.updateEncodingProgramgStatusToClient) {
+                    // server から encoding 番組の状態更新依頼
+                    await this.encodeManage.updateProgram((<IPCServerEncodingProgramgStatusUpdateMessage> msg).recordedId);
+                    this.socketIo.notifyClient();
                 } else {
                     // server からの socket.io message 送信依頼
                     this.socketIo.notifyClient();

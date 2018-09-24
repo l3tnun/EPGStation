@@ -1,6 +1,8 @@
+import * as path from 'path';
 import * as request from 'request';
 import * as url from 'url';
 import * as urljoin from 'url-join';
+import * as apid from '../../../../api';
 import Util from '../../Util/Util';
 import * as DBSchema from '../DB/DBSchema';
 
@@ -16,6 +18,45 @@ namespace ApiUtil {
         delete program.duration;
 
         return ApiUtil.deleteNullinHash(program);
+    };
+
+    /**
+     * DBSchema.RecordedSchema を apid.RecordedProgram へ変換する
+     * @param data: DBSchema.RecordedSchema
+     * @param encodedFiles?: DBSchema.EncodedSchema[]
+     * @return RecordedProgram
+     */
+    export const convertToRecordedProgram = (data: DBSchema.RecordedSchema, encodedFiles: DBSchema.EncodedSchema[] = []): apid.RecordedProgram => {
+        delete data.duration;
+        delete data.logPath;
+
+        // thumbnaul があるか
+        (data as any as apid.RecordedProgram).hasThumbnail = data.thumbnailPath !== null;
+        delete data.thumbnailPath;
+
+        (data as any as apid.RecordedProgram).original = data.recPath !== null;
+
+        if (data.recPath !== null) {
+            (data as any as apid.RecordedProgram).filename = encodeURIComponent(path.basename(String(data.recPath)));
+        }
+        delete data.recPath;
+
+        // エンコードファイルを追加
+        if (encodedFiles.length > 0) {
+            (data as any as apid.RecordedProgram).encoded = encodedFiles.map((file) => {
+                const encoded: apid.EncodedProgram = {
+                    encodedId: file.id,
+                    name: file.name,
+                    filename: encodeURIComponent(path.basename(file.path)),
+                };
+
+                if (file.filesize !== null) { encoded.filesize = file.filesize; }
+
+                return encoded;
+            });
+        }
+
+        return <apid.RecordedProgram> ApiUtil.deleteNullinHash(data);
     };
 
     /**
