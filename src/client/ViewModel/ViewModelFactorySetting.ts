@@ -94,6 +94,7 @@ namespace ViewModelFactorySetting {
         factory.reg('EncodingViewModel', new EncodingViewModel(
             encodingApiModel,
             channelsApiModel,
+            snackbarModel,
         ));
         factory.reg('EncodingDeleteViewModel', new EncodingDeleteViewModel(
             balloonModel,

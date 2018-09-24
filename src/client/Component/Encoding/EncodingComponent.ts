@@ -2,13 +2,16 @@ import * as m from 'mithril';
 import * as apid from '../../../../api';
 import { ViewModelStatus } from '../../Enums';
 import Util from '../../Util/Util';
+import BalloonViewModel from '../../ViewModel/Balloon/BalloonViewModel';
 import EncodingDeleteViewModel from '../../ViewModel/Encoding/EncodingDeleteViewModel';
 import EncodingViewModel from '../../ViewModel/Encoding/EncodingViewModel';
 import factory from '../../ViewModel/ViewModelFactory';
 import { BalloonComponent } from '../BalloonComponent';
+import EditHeaderComponent from '../EditHeaderComponent';
 import MainLayoutComponent from '../MainLayoutComponent';
 import ParentComponent from '../ParentComponent';
 import EncodingDeleteComponent from './EncodingDeleteComponent';
+import EncodingMultipleStopCompoent from './EncodingMultipleStopCompoent';
 
 /**
  * EncodingComponent
@@ -16,12 +19,14 @@ import EncodingDeleteComponent from './EncodingDeleteComponent';
 class EncodingComponent extends ParentComponent<void> {
     private viewModel: EncodingViewModel;
     private deleteViewModel: EncodingDeleteViewModel;
+    private balloon: BalloonViewModel;
 
     constructor() {
         super();
 
         this.viewModel = <EncodingViewModel> factory.get('EncodingViewModel');
         this.deleteViewModel = <EncodingDeleteViewModel> factory.get('EncodingDeleteViewModel');
+        this.balloon = <BalloonViewModel> factory.get('BalloonViewModel');
     }
 
     protected async parentInitViewModel(status: ViewModelStatus): Promise<void> {
@@ -39,6 +44,17 @@ class EncodingComponent extends ParentComponent<void> {
     public view(): m.Child {
         return m(MainLayoutComponent, {
             header: { title: 'エンコード' },
+            menuContent: [
+                {
+                    attrs: {
+                        onclick: () => {
+                            this.balloon.close();
+                            this.viewModel.startEditMode();
+                        },
+                    },
+                    text: '編集',
+                },
+            ],
             content: [
                 this.createContent(),
             ],
@@ -51,6 +67,33 @@ class EncodingComponent extends ParentComponent<void> {
                     content: m(EncodingDeleteComponent),
                     maxWidth: 300,
                     forceDialog: true,
+                }),
+                m(BalloonComponent, {
+                    id: EncodingViewModel.multipleStopId,
+                    content: m(EncodingMultipleStopCompoent),
+                    maxWidth: 300,
+                    forceDialog: true,
+                }),
+                m(EditHeaderComponent, {
+                    title: `${ this.viewModel.getSelectedCnt() } 件選択`,
+                    button: [
+                        {
+                            onclick: () => { this.viewModel.selectAll(); },
+                            name: 'select_all',
+                        },
+                        {
+                            onclick: () => {
+                                if (this.viewModel.getSelectedCnt() > 0) {
+                                    this.balloon.open(EncodingViewModel.multipleStopId);
+                                } else {
+                                    this.viewModel.openSnackbar('番組を選択してください。');
+                                }
+                            },
+                            name: 'delete',
+                        },
+                    ],
+                    isShow: () => { return this.viewModel.isEditing(); },
+                    close: () => { this.viewModel.endEditMode(); },
                 }),
             ],
         });
@@ -81,10 +124,25 @@ class EncodingComponent extends ParentComponent<void> {
     private createCard(encode: apid.EncodingProgram): m.Child {
         return m('div', {
             class: 'encoding-card mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col',
+            onclick: () => {
+                if (!this.viewModel.isEditing()) { return; }
+
+                // 選択
+                this.viewModel.select(encode.id);
+            },
+            onupdate: (vnode: m.VnodeDOM<void, any>) => {
+                if (this.viewModel.isSelecting(encode.id)) {
+                    (<HTMLElement> vnode.dom).classList.add('selected');
+                } else {
+                    (<HTMLElement> vnode.dom).classList.remove('selected');
+                }
+            },
         }, [
             m('button', {
                 class: 'mdl-button mdl-js-button mdl-button--icon',
                 onclick: () => {
+                    if (this.viewModel.isEditing()) { return; }
+
                     this.deleteViewModel.set(encode);
                     this.deleteViewModel.open();
                 },
@@ -95,6 +153,8 @@ class EncodingComponent extends ParentComponent<void> {
                 m('div', {
                     class: 'thumbnail-container',
                     onclick: (e: Event) => {
+                        if (this.viewModel.isEditing()) { return; }
+
                         // firefox にて pointer-events: none; では img が白くなってしまうため
                         if (Util.uaIsFirefox()) {
                             setTimeout(() => {

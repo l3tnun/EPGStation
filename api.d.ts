@@ -5,6 +5,7 @@ export interface Error {
 }
 
 export type EncodedId = number;
+export type EncodeId = string;
 export type RecordedId = number;
 export type RuleId = number;
 export type ProgramId = number;
