@@ -25,6 +25,11 @@ interface IPCServerEncodeMessage {
     program: EncodeProgram;
 }
 
+interface IPCServerEncodingProgramgStatusUpdateMessage {
+    msg: string;
+    recordedId: number;
+}
+
 namespace IPCMessageDefinition {
     export const getTuners = 'getTuners';
     export const getReserveAllId = 'getReserveAllId';
@@ -54,9 +59,10 @@ namespace IPCMessageDefinition {
     export const createNewRecorded = 'createNewRecorded';
     export const updateTsFileSize = 'updateTsFileSize';
     export const updateEncodedFileSize = 'updateEncodedFileSize';
-    export const setEncodeToClient = 'setEncodeToClient';
     export const updateReserves = 'updateReserves';
+    export const setEncodeToClient = 'setEncodeToClient';
+    export const updateEncodingProgramgStatusToClient = 'updateEncodingProgramgStatusToClient';
 }
 
-export { IPCClientMessage, IPCServerMessage, IPCServerSocketIoMessage, IPCServerEncodeMessage, IPCMessageDefinition };
+export { IPCClientMessage, IPCServerMessage, IPCServerSocketIoMessage, IPCServerEncodeMessage, IPCServerEncodingProgramgStatusUpdateMessage, IPCMessageDefinition };
 

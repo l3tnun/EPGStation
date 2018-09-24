@@ -6,6 +6,7 @@ import * as path from 'path';
 import ProcessUtil from '../../../Util/ProcessUtil';
 import Util from '../../../Util/Util';
 import * as DBSchema from '../../DB/DBSchema';
+import { RecordedDBInterface } from '../../DB/RecordedDB';
 import Model from '../../Model';
 import { EncodeProcessManageModelInterface } from './EncodeProcessManageModel';
 
@@ -20,6 +21,7 @@ interface EncodeProgram {
 }
 
 interface EncodeQueue extends EncodeProgram {
+    id: string;
     name: string;
     cmd: string;
     suffix: string | null;
@@ -27,11 +29,13 @@ interface EncodeQueue extends EncodeProgram {
 }
 
 interface EncodingProgram {
+    id: string;
     name: string;
     recordedId: number;
     encodedId?: number;
     mode?: number;
-    source: string;
+    source?: string;
+    program: DBSchema.RecordedSchema;
 }
 
 interface EncodingInfo {
@@ -50,8 +54,11 @@ interface EncodeManageModelInterface extends Model {
     addEncodeDoneListener(callback: (recordedId: number, encodedId: number | null, name: string, output: string | null, delTs: boolean) => void): void;
     addEncodeErrorListener(callback: () => void): void;
     getEncodingId(): number | null;
-    getEncodingInfo(): EncodingInfo;
-    cancel(recordedId: number): void;
+    getEncodingInfo(needSource?: boolean): EncodingInfo;
+    cancel(id: string): Promise<void>;
+    cancels(ids: string[]): Promise<void>;
+    cancelByRecordedId(recordedId: number): void;
+    updateProgram(recordedId: number): Promise<void>;
     push(program: EncodeProgram, isCopy?: boolean): void;
 }
 
@@ -60,13 +67,14 @@ interface EncodeManageModelInterface extends Model {
  */
 class EncodeManageModel extends Model implements EncodeManageModelInterface {
     private encodeProcessManage: EncodeProcessManageModelInterface;
+    private recordedDB: RecordedDBInterface;
     private queue: EncodeQueue[] = [];
     private isRunning: boolean = false;
 
     // エンコード中のプロセスとプログラムを格納する
     private encodingData: {
         child: ChildProcess;
-        program: EncodeProgram;
+        program: EncodeQueue;
         name: string;
         source: string;
         output: string | null;
@@ -76,9 +84,13 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
 
     private listener: events.EventEmitter = new events.EventEmitter();
 
-    constructor(encodeProcessManage: EncodeProcessManageModelInterface) {
+    constructor(
+        encodeProcessManage: EncodeProcessManageModelInterface,
+        recordedDB: RecordedDBInterface,
+    ) {
         super();
         this.encodeProcessManage = encodeProcessManage;
+        this.recordedDB = recordedDB;
     }
 
     /**
@@ -111,9 +123,10 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
 
     /**
      * エンコード中、待機中の情報を取得
+     * @param needSource: boolean
      * @return
      */
-    public getEncodingInfo(): EncodingInfo {
+    public getEncodingInfo(needSource: boolean = true): EncodingInfo {
         const result: EncodingInfo = {
             encoding: null,
             queue: [],
@@ -121,10 +134,12 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
 
         if (this.encodingData !== null) {
             result.encoding = {
+                id: this.encodingData.program.id,
                 name: this.encodingData.name,
                 recordedId: this.encodingData.program.recordedId,
-                source: this.encodingData.source,
+                program: this.encodingData.program.recordedProgram,
             };
+            if (needSource) { result.encoding.source = this.encodingData.source; }
             if (typeof this.encodingData.program.encodedId !== 'undefined') {
                 result.encoding.encodedId = this.encodingData.program.encodedId;
             }
@@ -135,10 +150,12 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
 
         for (const program of this.queue) {
             const info: EncodingProgram = {
+                id: program.id,
                 name: program.name,
                 recordedId: program.recordedId,
-                source: program.source,
+                program: program.recordedProgram,
             };
+            if (needSource) { info.source = program.source; }
             if (typeof program.encodedId !== 'undefined') {
                 info.encodedId = program.encodedId;
             }
@@ -162,27 +179,128 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
 
     /**
      * エンコードキャンセル
+     * @param id: string
+     */
+    public async cancel(id: string): Promise<void> {
+        // エンコード中のプロセスが該当 id
+        if (this.encodingData !== null && this.encodingData.program.id === id) {
+            this.log.system.info(`cancel encode: ${ id }`);
+
+            // kill
+            this.encodingData.isStoped = true;
+            await ProcessUtil.kill(this.encodingData.child);
+
+            return;
+        }
+
+        // queue から該当 id の program を探索
+        let recordedId: number | null = null;
+        let position: number | null = null;
+        for (let i = this.queue.length - 1; i >= 0; i--) {
+            if (this.queue[i].id === id) {
+                if (this.queue[i].delTs) {
+                    // delTs を引き継ぐために recordedId を記録
+                    recordedId = this.queue[i].recordedId;
+                }
+
+                // 削除位置を記憶
+                position = i;
+            } else if (recordedId !== null && recordedId === this.queue[i].recordedId) {
+                // delTs 付け替え
+                this.queue[i].delTs = true;
+                recordedId = null;
+                break;
+            }
+        }
+
+        // 該当 id の program を queue から削除
+        if (position !== null) {
+            this.log.system.info(`remove encode: ${ id }`);
+            this.queue.splice(position, 1);
+        }
+
+        // encode 中のプロセスに delTs を付け替える
+        if (recordedId !== null && this.encodingData !== null && this.encodingData.program.recordedId === recordedId) {
+            this.encodingData.program.delTs = true;
+        }
+    }
+
+    /**
+     * encode cancel
+     * @param ids: string[]
+     */
+    public async cancels(ids: string[]): Promise<void> {
+        if (this.encodingData === null) { return; }
+
+        let isStopEncoding = false;
+
+        for (const id of ids) {
+            if (this.encodingData.program.id === id) {
+                isStopEncoding = true;
+            }
+
+            await this.cancel(id);
+        }
+
+        if (isStopEncoding) {
+            await this.cancel(this.encodingData.program.id);
+        }
+    }
+
+    /**
+     * エンコードキャンセル (recordedId)
      * @param recordedId: recorded id
      */
-    public async cancel(recordedId: number): Promise<void> {
+    public async cancelByRecordedId(recordedId: number): Promise<void> {
         // queue から該当する id のプログラムを削除
         const newQueue = this.queue.filter((program) => {
             return !(program.recordedId === recordedId);
         });
 
         if (this.queue.length !== newQueue.length) {
-            this.log.system.info(`remove encode: ${ recordedId }`);
+            this.log.system.info(`remove encode by recordedId: ${ recordedId }`);
         }
 
         this.queue = newQueue;
 
         // 現在エンコード中ならプロセスを kill
         if (this.encodingData !== null && this.encodingData.program.recordedId === recordedId) {
-            this.log.system.info(`cancel encode: ${ recordedId }`);
+            this.log.system.info(`cancel encode by recordedId: ${ recordedId }`);
 
             // kill
             this.encodingData.isStoped = true;
             await ProcessUtil.kill(this.encodingData.child);
+        }
+    }
+
+    /**
+     * 番組情報更新
+     * @param recordedId: number
+     */
+    public async updateProgram(recordedId: number): Promise<void> {
+        if (this.encodingData === null) { return; }
+
+        let hasProgram = false;
+        let program: DBSchema.RecordedSchema | null = null;
+        const getProgram = async() => {
+            hasProgram = true;
+            program = await this.recordedDB.findId(recordedId);
+        };
+
+        if (this.encodingData.program.recordedId === recordedId) {
+            await getProgram();
+            if (program !== null) {
+                this.encodingData.program.recordedProgram = program;
+            }
+        }
+
+        for (let i = 0; i < this.queue.length; i++) {
+            if (this.queue[i].recordedId === recordedId) {
+                if (!hasProgram) { await getProgram(); }
+                if (program === null) { break; }
+
+                this.queue[i].recordedProgram = program;
+            }
         }
     }
 
@@ -217,6 +335,7 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
             return;
         }
 
+        (<EncodeQueue> program).id = new Date().getTime().toString(16) + Math.floor(1000 * Math.random()).toString(16);
         (<EncodeQueue> program).name = config.name;
         (<EncodeQueue> program).cmd = config.cmd;
         (<EncodeQueue> program).suffix = config.suffix;
@@ -500,5 +619,5 @@ namespace EncodeManageModel {
     export const ENCODE_ERROR_EVENT = 'encodeError';
 }
 
-export { EncodeManageModelInterface, EncodeProgram, EncodingInfo, EncodeManageModel };
+export { EncodeManageModelInterface, EncodeProgram, EncodingInfo, EncodingProgram, EncodeManageModel };
 

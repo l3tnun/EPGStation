@@ -155,7 +155,7 @@ class TopPageComponent extends ParentComponent<void> {
                 m(BalloonComponent, {
                     id: ReservesMenuViewModel.id,
                     content: m(ReservesMenuComponent),
-                    maxWidth: 94,
+                    maxWidth: 108,
                     horizontalOnly: true,
                 }),
                 m(BalloonComponent, {

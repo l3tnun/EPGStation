@@ -1,5 +1,6 @@
 import { ChannelsApiModel } from '../Model/Api/ChannelsApiModel';
 import { ConfigApiModel } from '../Model/Api/ConfigApiModel';
+import { EncodingApiModel } from '../Model/Api/EncodingApiModel';
 import { RecordedApiModel } from '../Model/Api/RecordedApiModel';
 import { ReservesApiModel } from '../Model/Api/ReservesApiModel';
 import { RulesApiModel } from '../Model/Api/RulesApiModel';
@@ -17,6 +18,8 @@ import { StreamSelectSettingModel } from '../Model/Stream/StreamSelectSettingMod
 import { TabModel } from '../Model/Tab/TabModel';
 
 import BalloonViewModel from './Balloon/BalloonViewModel';
+import EncodingDeleteViewModel from './Encoding/EncodingDeleteViewModel';
+import EncodingViewModel from './Encoding/EncodingViewModel';
 import HeaderViewModel from './HeaderViewModel';
 import MainLayoutViewModel from './MainLayoutViewModel';
 import NavigationViewModel from './NavigationViewModel';
@@ -70,6 +73,7 @@ namespace ViewModelFactorySetting {
         // model
         const snackbarModel = new SnackbarModel();
         const configModel = new ConfigApiModel(snackbarModel);
+        const encodingApiModel = new EncodingApiModel(snackbarModel);
         const scheduleApiModel = new ScheduleApiModel(snackbarModel);
         const reservesApiModel = new ReservesApiModel(snackbarModel);
         const balloonModel = new BalloonModel();
@@ -87,6 +91,16 @@ namespace ViewModelFactorySetting {
         const recordedWatchSelectSettingModel = new RecordedWatchSelectSettingModel(storageModel);
 
         // reg
+        factory.reg('EncodingViewModel', new EncodingViewModel(
+            encodingApiModel,
+            channelsApiModel,
+            snackbarModel,
+        ));
+        factory.reg('EncodingDeleteViewModel', new EncodingDeleteViewModel(
+            balloonModel,
+            encodingApiModel,
+            snackbarModel,
+        ));
         factory.reg('HeaderViewModel', new HeaderViewModel(
             configModel,
             balloonModel,

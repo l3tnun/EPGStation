@@ -23,12 +23,18 @@ class ReservesMenuComponent extends Component<void> {
      */
     public view(): m.Child {
         const isOverlap = this.reservesViewModel.getMode() === ReserveMode.overlaps;
+        const ruleId = this.viewModel.getRuleId();
 
         return m('div', { class: 'reserve-menu' }, [
             this.createItem({
+                style: ruleId === null ? 'display: none;' : '',
+                onclick: () => {
+                    Util.move('/recorded', { rule: ruleId });
+                },
+            }, 'list', 'recorded'),
+            this.createItem({
                 onclick: () => {
                     this.viewModel.close();
-                    const ruleId = this.viewModel.getRuleId();
                     setTimeout(() => {
                         if (ruleId === null) {
                             Util.move(`/program/detail/${ this.viewModel.getProgramId() }`, { mode: 'edit' });
@@ -42,7 +48,7 @@ class ReservesMenuComponent extends Component<void> {
                 onclick: () => {
                     this.viewModel.openDelete();
                 },
-            }, isOverlap ? 'lock_open' : 'delete', isOverlap ? '解除' : 'delete'),
+            }, isOverlap ? 'lock_open' : 'delete', isOverlap ? 'unlock' : 'delete'),
         ]);
     }
 

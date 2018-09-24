@@ -349,10 +349,10 @@
 | --- | ---------- | --- |
 | number[] |  | no |
 
-- `http://<MirakurunAddress>/api/services` で確認できるサービス ID を入力
+- `http://<MirakurunAddress:port>/api/services` もしくは `http://<EPGStationAddress:port>/api/channels` で確認できる id を入力
 
 ```json
-"serviceOrder": [1024, 1032, 1040, 1048, 1056, 1064, 1072]
+"serviceOrder": [3273601024, 3273701032, 3273801040, 3273901048, 3274001056, 3274101064, 3274201072]
 ```
 
 ### excludeServices
@@ -362,10 +362,10 @@
 | --- | ---------- | --- |
 | number[] |  | no |
 
-- `http://<MirakurunAddress>/api/services` で確認できるサービス ID を入力
+- `http://<MirakurunAddress:port>/api/services` もしくは `http://<EPGStationAddress:port>/api/channels` で確認できる id を入力
 
 ```json
-"excludeServices": [1088, 23608]
+"excludeServices": [3274401088, 3239123608]
 ```
 
 ### gid
