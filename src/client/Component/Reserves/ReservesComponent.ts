@@ -80,7 +80,7 @@ class ReservesComponent extends ParentComponent<void> {
                 m(BalloonComponent, {
                     id: ReservesMenuViewModel.id,
                     content: m(ReservesMenuComponent),
-                    maxWidth: 94,
+                    maxWidth: 108,
                     horizontalOnly: true,
                 }),
                 m(BalloonComponent, {
@@ -279,8 +279,17 @@ class ReservesComponent extends ParentComponent<void> {
     private createTableOption(reserve: apid.Reserve): m.Child {
         const isOverlaps = this.viewModel.getMode() === ReserveMode.overlaps;
 
-        return m('td', { class: ReservesComponent.nonNumeric + ' option' }, [
+        return m('td', { class: ReservesComponent.nonNumeric + ` option ${ typeof reserve.ruleId === 'undefined' ? '' : 'has-rule'}` }, [
             m('div', { class: 'option-container' }, [
+                // recorded list
+                m('button', {
+                    class: 'mdl-button recorded mdl-js-button mdl-button--icon',
+                    onclick: () => {
+                        Util.move('/search', { recorded: reserve.ruleId });
+                    },
+                },
+                    m('i', { class: 'material-icons' }, 'list'),
+                ),
                 // edit rule
                 m('button', {
                     class: 'mdl-button mdl-js-button mdl-button--icon',
