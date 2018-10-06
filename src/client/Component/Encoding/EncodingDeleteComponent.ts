@@ -20,7 +20,7 @@ class EncodingDeleteComponent extends Component<void> {
      */
     public view(): m.Child {
         return m('div', [
-            m('div', { class: 'encoding-delete' }, this.viewModel.getTitle() + 'を停止しますか。'),
+            m('div', { class: 'balloon-with-action-enclosure-margin' }, this.viewModel.getTitle() + 'を停止しますか。'),
             m('div', { class: 'mdl-dialog__actions' }, [
                 m('button', {
                     class: 'mdl-button mdl-js-button mdl-button--primary',
