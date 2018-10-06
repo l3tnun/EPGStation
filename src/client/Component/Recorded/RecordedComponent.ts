@@ -17,6 +17,7 @@ import MainLayoutComponent from '../MainLayoutComponent';
 import PaginationComponent from '../PaginationComponent';
 import ParentComponent from '../ParentComponent';
 import TabComponent from '../TabComponent';
+import RecordedCheckCleanupCheckBalloonComponent from './RecordedCheckCleanupCheckBalloonComponent';
 import RecordedCleanupBalloonComponent from './RecordedCleanupBalloonComponent';
 import RecordedDeleteComponent from './RecordedDeleteComponent';
 import RecordedEncodeComponent from './RecordedEncodeComponent';
@@ -34,7 +35,6 @@ import RecordedWatchSelectComponent from './RecordedWatchSelectComponent';
  */
 class RecordedComponent extends ParentComponent<void> {
     private viewModel: RecordedViewModel;
-    private cleanupViewModel: RecordedCleanupViewModel;
     private infoViewModel: RecordedInfoViewModel;
     private menuViewModel: RecordedMenuViewModel;
     private searchViewModel: RecordedSearchViewModel;
@@ -45,7 +45,6 @@ class RecordedComponent extends ParentComponent<void> {
     constructor() {
         super();
         this.viewModel = <RecordedViewModel> factory.get('RecordedViewModel');
-        this.cleanupViewModel = <RecordedCleanupViewModel> factory.get('RecordedCleanupViewModel');
         this.infoViewModel = <RecordedInfoViewModel> factory.get('RecordedInfoViewModel');
         this.menuViewModel = <RecordedMenuViewModel> factory.get('RecordedMenuViewModel');
         this.searchViewModel = <RecordedSearchViewModel> factory.get('RecordedSearchViewModel');
@@ -94,11 +93,10 @@ class RecordedComponent extends ParentComponent<void> {
                 },
                 {
                     attrs: {
-                        onclick: () => {
+                        onclick: async() => {
                             this.balloon.close();
-                            this.cleanupViewModel.init();
-                            this.cleanupViewModel.open();
-                            this.cleanupViewModel.cleanup();
+                            await Util.sleep(200);
+                            this.balloon.open(RecordedCleanupViewModel.cleanupCheckId);
                         },
                     },
                     text: 'クリーンアップ',
@@ -122,6 +120,12 @@ class RecordedComponent extends ParentComponent<void> {
                 this.saveHistoryData(scrollTop);
             },
             notMainContent: [
+                m(BalloonComponent, {
+                    id: RecordedCleanupViewModel.cleanupCheckId,
+                    content: m(RecordedCheckCleanupCheckBalloonComponent),
+                    maxWidth: 300,
+                    forceDialog: true,
+                }),
                 m(BalloonComponent, {
                     id: RecordedCleanupViewModel.cleanupId,
                     content: m(RecordedCleanupBalloonComponent),

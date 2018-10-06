@@ -46,31 +46,28 @@ class RecordedCleanupViewModel extends ViewModel {
     /**
      * start cleanup
      */
-    public cleanup(): void {
+    public async cleanup(): Promise<void> {
         this.status = 'CleaningUp';
 
-        Util.sleep(500)
-        .then(() => {
-            return this.recorded.cleanup();
-        })
-        .then(async() => {
+        try {
+            await Util.sleep(500);
+            await this.recorded.cleanup();
             this.status = 'Completed';
-            this.close();
             await Util.sleep(200);
             this.snackbar.open('クリーンアップ完了');
-        })
-        .catch(async(err) => {
+        } catch (err) {
             console.error(`clean up error: ${ err }`);
             this.status = 'Failed';
-            this.close();
             await Util.sleep(200);
             this.snackbar.open('クリーンアップ失敗');
-        });
+        }
+
+        this.balloon.close(RecordedCleanupViewModel.cleanupId);
 
     }
 
     /**
-     * open balloon
+     * cleanup 中であることを表示するダイアログを開く
      */
     public open(): void {
         this.balloon.open(RecordedCleanupViewModel.cleanupId);
@@ -79,12 +76,13 @@ class RecordedCleanupViewModel extends ViewModel {
     /**
      * close balloon
      */
-    private close(): void {
-        this.balloon.close(RecordedCleanupViewModel.cleanupId);
+    public close(): void {
+        this.balloon.close();
     }
 }
 
 namespace RecordedCleanupViewModel {
+    export const cleanupCheckId = 'cleanup-check';
     export const cleanupId = 'cleanup';
 }
 
