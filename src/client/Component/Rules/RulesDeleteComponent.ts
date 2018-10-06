@@ -19,7 +19,7 @@ class RulesDeleteComponent extends Component<void> {
      */
     public view(): m.Child {
         return m('div', [
-            m('div', { class: 'rules-delete' }, this.viewModel.getKeyword() + 'を削除しますか。'),
+            m('div', { class: 'balloon-with-action-enclosure-margin' }, this.viewModel.getKeyword() + 'を削除しますか。'),
             m('div', { class: 'mdl-dialog__actions' }, [
                 m('button', {
                     class: 'mdl-button mdl-js-button mdl-button--primary',

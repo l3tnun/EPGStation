@@ -33,7 +33,7 @@ class RecordedDeleteComponent extends Component<void> {
         }
 
         return m('div', [
-            m('div', { class: 'recorded-delete' }, this.viewModel.getTitle() + 'を削除しますか。'),
+            m('div', { class: 'balloon-with-action-enclosure-margin' }, this.viewModel.getTitle() + 'を削除しますか。'),
             m('div', { class: 'recorded-delete-files' }, files),
             m('div', { class: 'mdl-dialog__actions' }, [
                 m('button', {
