@@ -309,6 +309,11 @@ export interface Rule {
     title?: boolean;
     description?: boolean;
     extended?: boolean;
+    ignoreKeyCS?: boolean
+    ignoreKeyRegExp?: boolean;
+    ignoreTitle?: boolean;
+    ignoreDescription?: boolean;
+    ignoreExtended?: boolean;
     GR?: boolean;
     BS?: boolean;
     CS?: boolean;
@@ -350,6 +355,11 @@ export interface RuleSearch {
     title?: boolean;
     description?: boolean;
     extended?: boolean;
+    ignoreKeyCS?: boolean
+    ignoreKeyRegExp?: boolean;
+    ignoreTitle?: boolean;
+    ignoreDescription?: boolean;
+    ignoreExtended?: boolean;
     GR?: boolean;
     BS?: boolean;
     CS?: boolean;
