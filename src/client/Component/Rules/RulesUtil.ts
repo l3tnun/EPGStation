@@ -37,6 +37,22 @@ namespace RulesUtil {
     };
 
     /**
+     * create ignore option str
+     * @param rule: Rule
+     * @return string
+     */
+    export const createIgnoreOptionStr = (rule: apid.Rule): string => {
+        let str = '';
+        if (Boolean(rule.ignoreKeyCS)) { str += '字'; }
+        if (Boolean(rule.ignoreKeyRegExp)) { str += '正'; }
+        if (Boolean(rule.ignoreTitle)) { str += 'タ'; }
+        if (Boolean(rule.ignoreDescription)) { str += '概'; }
+        if (Boolean(rule.ignoreExtended)) { str += '詳細'; }
+
+        return str;
+    };
+
+    /**
      * create broadcast str
      * @param rule: Rule
      * @return string
