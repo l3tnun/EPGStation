@@ -9,7 +9,7 @@ class PostgreSQLMigrationV4 extends MigrationV4 {
      * @return string
      */
     protected getColumns(): string {
-        return 'id, keyCS as "keyCS", keyRegExp as "keyRegExp", title, description, extended';
+        return 'id, keyword, ignoreKeyword as "ignoreKeyword", keyCS as "keyCS", keyRegExp as "keyRegExp", title, description, extended';
     }
 
 }

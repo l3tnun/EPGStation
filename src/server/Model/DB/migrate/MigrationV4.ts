@@ -3,6 +3,8 @@ import MigrationBase from '../MigrationBase';
 
 interface OldRulesSchema {
     id: number;
+    keyword: string | null;
+    ignoreKeyword: string | null;
     keyCS: boolean | null;
     keyRegExp: boolean | null;
     title: boolean | null;
@@ -74,16 +76,32 @@ abstract class MigrationV4 extends MigrationBase {
      * keyword option を ignore keyword option へコピー
      * @param rule: OldRulesSchema
      */
-    private copyOption(rule: OldRulesSchema): Promise<void> {
-        const query = `update ${ TableName.Rules } set`
-            + ` ignoreKeyCS = ${ rule.keyCS },`
-            + ` ignoreKeyRegExp = ${ rule.keyRegExp },`
-            + ` ignoreTitle = ${ rule.title },`
-            + ` ignoreDescription = ${ rule.description },`
-            + ` ignoreExtended = ${ rule.extended }`
-            + ` where id = ${ rule.id }`;
+    private async copyOption(rule: OldRulesSchema): Promise<void> {
+        // ignoreKeyword が null の場合はコピーしない
+        if (rule.ignoreKeyword === null) { return; }
 
-        return this.operator.runQuery(query);
+        let query: string = `update ${ TableName.Rules } set`;
+        // keyword, ignore keyword 両方あり
+        if (rule.keyword !== null && rule.ignoreKeyword !== null) {
+            query += ` ignoreKeyCS = ${ rule.keyCS },`
+                + ` ignoreKeyRegExp = ${ rule.keyRegExp },`
+                + ` ignoreTitle = ${ rule.title },`
+                + ` ignoreDescription = ${ rule.description },`
+                + ` ignoreExtended = ${ rule.extended }`;
+        }
+
+        // keyword が空
+        if (rule.keyword === null && rule.ignoreKeyword !== null) {
+            query += ' keyCS = null,'
+                + ' keyRegExp = null,'
+                + ' title = null,'
+                + ' description = null,'
+                + ' extended = null';
+        }
+
+        query += ` where id = ${ rule.id }`;
+
+        await this.operator.runQuery(query);
     }
 
     /**
@@ -91,7 +109,7 @@ abstract class MigrationV4 extends MigrationBase {
      * @return string
      */
     protected getColumns(): string {
-        return 'id, keyCS, keyRegExp, title, description, extended';
+        return 'id, keyword, ignoreKeyword, keyCS, keyRegExp, title, description, extended';
     }
 
     /**
