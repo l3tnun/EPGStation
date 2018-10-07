@@ -54,11 +54,42 @@ class SearchOptionComponent extends SearchOptionBaseComponent<void> {
                     },
                 }),
             ]),
+
+            m('div', {
+                class: 'mdl-cell mdl-cell--12-col mdl-grid mdl-grid--no',
+                style: 'padding: 0;',
+            }, [
+                this.createCheckBox(
+                    '大小区別',
+                    () => { return this.viewModel.keyCS; },
+                    (value: boolean) => { this.viewModel.keyCS = value; },
+                ),
+                this.createCheckBox(
+                    '正規表現',
+                    () => { return this.viewModel.keyRegExp; },
+                    (value: boolean) => { this.viewModel.keyRegExp = value; },
+                ),
+                this.createCheckBox(
+                    'タイトル',
+                    () => { return this.viewModel.title; },
+                    (value: boolean) => { this.viewModel.title = value; },
+                ),
+                this.createCheckBox(
+                    '概要',
+                    () => { return this.viewModel.description; },
+                    (value: boolean) => { this.viewModel.description = value; },
+                ),
+                this.createCheckBox(
+                    '詳細',
+                    () => { return this.viewModel.extended; },
+                    (value: boolean) => { this.viewModel.extended = value; },
+                ),
+            ]),
         ]);
     }
 
     /**
-     * 除外キーワード & options
+     * 除外キーワード
      * @return ignore keyword option
      */
     private createIgnoreKeyword(): m.Child {
@@ -89,28 +120,28 @@ class SearchOptionComponent extends SearchOptionBaseComponent<void> {
             }, [
                 this.createCheckBox(
                     '大小区別',
-                    () => { return this.viewModel.keyCS; },
-                    (value: boolean) => { this.viewModel.keyCS = value; },
+                    () => { return this.viewModel.ignoreKeyCS; },
+                    (value: boolean) => { this.viewModel.ignoreKeyCS = value; },
                 ),
                 this.createCheckBox(
                     '正規表現',
-                    () => { return this.viewModel.keyRegExp; },
-                    (value: boolean) => { this.viewModel.keyRegExp = value; },
+                    () => { return this.viewModel.ignoreKeyRegExp; },
+                    (value: boolean) => { this.viewModel.ignoreKeyRegExp = value; },
                 ),
                 this.createCheckBox(
                     'タイトル',
-                    () => { return this.viewModel.title; },
-                    (value: boolean) => { this.viewModel.title = value; },
+                    () => { return this.viewModel.ignoreTitle; },
+                    (value: boolean) => { this.viewModel.ignoreTitle = value; },
                 ),
                 this.createCheckBox(
                     '概要',
-                    () => { return this.viewModel.description; },
-                    (value: boolean) => { this.viewModel.description = value; },
+                    () => { return this.viewModel.ignoreDescription; },
+                    (value: boolean) => { this.viewModel.ignoreDescription = value; },
                 ),
                 this.createCheckBox(
                     '詳細',
-                    () => { return this.viewModel.extended; },
-                    (value: boolean) => { this.viewModel.extended = value; },
+                    () => { return this.viewModel.ignoreExtended; },
+                    (value: boolean) => { this.viewModel.ignoreExtended = value; },
                 ),
             ]),
         ]);
