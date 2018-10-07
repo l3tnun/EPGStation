@@ -1,5 +1,6 @@
 import * as apid from '../../../../node_modules/mirakurun/api';
 import DateUtil from '../../Util/DateUtil';
+import RuleUtil from '../../Util/RuleUtil';
 import StrUtil from '../../Util/StrUtil';
 import { SearchInterface } from '../Operator/RuleInterface';
 import * as DBSchema from './DBSchema';
@@ -25,17 +26,6 @@ interface Broadcast {
     BS: boolean;
     CS: boolean;
     SKY: boolean;
-}
-
-/**
- * keyword option
- */
-interface KeywordOption {
-    cs: boolean;
-    regExp: boolean;
-    title: boolean;
-    description: boolean;
-    extended: boolean;
 }
 
 interface ProgramsDBInterface extends DBTableBase {
@@ -541,27 +531,16 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
 
         // keyword
         if (typeof option.keyword !== 'undefined' || typeof option.ignoreKeyword !== 'undefined') {
-            const keyOption: KeywordOption = {
-                cs: Boolean(option.keyCS),
-                regExp: Boolean(option.keyRegExp),
-                title: Boolean(option.title),
-                description: Boolean(option.description),
-                extended: Boolean(option.extended),
-            };
-
-            if (!this.isEnableRegExp()) { keyOption.regExp = false; }
-            if (!this.isEnableCS()) { keyOption.cs = false; }
-
             // keyword
             if (typeof option.keyword !== 'undefined') {
-                const result = this.createKeyword(option.keyword, keyOption, values.length);
+                const result = this.createKeyword(option.keyword, this.createKeywordOption(option, false), values.length);
                 query.push(result.query);
                 Array.prototype.push.apply(values, result.values);
             }
 
             // ignoreKeyword
             if (typeof option.ignoreKeyword !== 'undefined') {
-                const result = this.createKeyword(option.ignoreKeyword, keyOption, values.length);
+                const result = this.createKeyword(option.ignoreKeyword, this.createKeywordOption(option, true), values.length);
                 query.push(`(not ${ result.query })`);
                 Array.prototype.push.apply(values, result.values);
             }
@@ -574,6 +553,27 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
         }
 
         return { query: queryStr, values: values };
+    }
+
+    /**
+     * create keywordOption
+     * @param option: SearchInterface
+     * @param isIgnoreKeyword: boolean
+     * @return RuleUtil.KeywordOption
+     */
+    private createKeywordOption(option: SearchInterface, isIgnoreKeyword: boolean): RuleUtil.KeywordOption {
+        const keyOption: RuleUtil.KeywordOption = {
+            cs: Boolean(isIgnoreKeyword ? option.ignoreKeyCS : option.keyCS),
+            regExp: Boolean(isIgnoreKeyword ? option.ignoreKeyRegExp : option.keyRegExp),
+            title: Boolean(isIgnoreKeyword ? option.ignoreTitle : option.title),
+            description: Boolean(isIgnoreKeyword ? option.ignoreDescription : option.description),
+            extended: Boolean(isIgnoreKeyword ? option.ignoreExtended : option.extended),
+        };
+
+        if (!this.isEnableRegExp()) { keyOption.regExp = false; }
+        if (!this.isEnableCS()) { keyOption.cs = false; }
+
+        return keyOption;
     }
 
     /**
@@ -693,11 +693,11 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
     /**
      * create keyword
      * @param keyword: string
-     * @param keyOption: KeywordOption
+     * @param keyOption: RuleUtil.KeywordOption
      * @param cnt: number values length
      * @return { query: string[]; values: any[] }
      */
-    protected createKeyword(keyword: string, keyOption: KeywordOption, cnt: number): { query: string; values: any[] } {
+    protected createKeyword(keyword: string, keyOption: RuleUtil.KeywordOption, cnt: number): { query: string; values: any[] } {
         const or: string[] = [];
         const values: any[] = [];
 
@@ -811,5 +811,5 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
     }
 }
 
-export { ChannelTypeHash, Broadcast, KeywordOption, ProgramsDBInterface, ProgramsDB };
+export { ChannelTypeHash, Broadcast, ProgramsDBInterface, ProgramsDB };
 

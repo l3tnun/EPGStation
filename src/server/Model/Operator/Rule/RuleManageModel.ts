@@ -1,6 +1,5 @@
 import * as events from 'events';
-import CheckRule from '../../../Util/CheckRule';
-import * as DBSchema from '../../DB/DBSchema';
+import RuleUtil from '../../../Util/RuleUtil';
 import { RulesDBInterface } from '../../DB/RulesDB';
 import Model from '../../Model';
 import { RuleInterface } from '../RuleInterface';
@@ -56,11 +55,11 @@ class RuleManageModel extends Model implements RuleManageModelInterface {
         this.isRunning = true;
 
         // option のチェック
-        if (new CheckRule().checkRule(rule)) {
+        if (RuleUtil.checkRule(rule)) {
             // rule を DB に追加
             let ruleId: number;
             try {
-                ruleId = await this.rulesDB.insert(this.convertRule(rule));
+                ruleId = await this.rulesDB.insert(RuleUtil.convertRule(rule));
             } catch (err) {
                 this.isRunning = false;
                 throw err;
@@ -97,10 +96,10 @@ class RuleManageModel extends Model implements RuleManageModelInterface {
         }
 
         // option のチェック
-        if (new CheckRule().checkRule(rule)) {
+        if (RuleUtil.checkRule(rule)) {
             // rule 更新
             try {
-                await this.rulesDB.update(ruleId, this.convertRule(rule));
+                await this.rulesDB.update(ruleId, RuleUtil.convertRule(rule));
             } catch (err) {
                 this.log.system.error(`rule update error: ${ ruleId }`);
                 this.log.system.error(<any> err);
@@ -182,61 +181,6 @@ class RuleManageModel extends Model implements RuleManageModelInterface {
         this.log.system.info(`delete Rule: ${ ruleId }`);
         this.eventsNotify(ruleId, 'delete');
         this.isRunning = false;
-    }
-
-    /**
-     * RuleInterface を DBSchema.RulesSchema へ変換する
-     * @param rule: RuleInterface
-     * @return DBSchema.RulesSchema
-     */
-    private convertRule(rule: RuleInterface): DBSchema.RulesSchema {
-        const data: DBSchema.RulesSchema = {
-            id: 0,
-            keyword: typeof rule.search.keyword === 'undefined' ? null : rule.search.keyword,
-            ignoreKeyword: typeof rule.search.ignoreKeyword === 'undefined' ? null : rule.search.ignoreKeyword,
-            keyCS: typeof rule.search.keyCS === 'undefined' ? null : rule.search.keyCS,
-            keyRegExp: typeof rule.search.keyRegExp === 'undefined' ? null : rule.search.keyRegExp,
-            title: typeof rule.search.title === 'undefined' ? null : rule.search.title,
-            description: typeof rule.search.description === 'undefined' ? null : rule.search.description,
-            extended: typeof rule.search.extended === 'undefined' ? null : rule.search.extended,
-            GR: typeof rule.search.GR === 'undefined' ? null : rule.search.GR,
-            BS: typeof rule.search.BS === 'undefined' ? null : rule.search.BS,
-            CS: typeof rule.search.CS === 'undefined' ? null : rule.search.CS,
-            SKY: typeof rule.search.SKY === 'undefined' ? null : rule.search.SKY,
-            station: typeof rule.search.station === 'undefined' ? null : rule.search.station,
-            genrelv1: typeof rule.search.genrelv1 === 'undefined' ? null : rule.search.genrelv1,
-            genrelv2: typeof rule.search.genrelv2 === 'undefined' ? null : rule.search.genrelv2,
-            startTime: typeof rule.search.startTime === 'undefined' ? null : rule.search.startTime,
-            timeRange: typeof rule.search.timeRange === 'undefined' ? null : rule.search.timeRange,
-            week: rule.search.week,
-            isFree: typeof rule.search.isFree === 'undefined' ? null : rule.search.isFree,
-            durationMin: typeof rule.search.durationMin === 'undefined' ? null : rule.search.durationMin,
-            durationMax: typeof rule.search.durationMax === 'undefined' ? null : rule.search.durationMax,
-            avoidDuplicate: typeof rule.search.avoidDuplicate === 'undefined' ? false : rule.search.avoidDuplicate,
-            periodToAvoidDuplicate: typeof rule.search.periodToAvoidDuplicate === 'undefined' ? null : rule.search.periodToAvoidDuplicate,
-            enable: rule.option.enable,
-            directory: typeof rule.option.directory === 'undefined' ? null : rule.option.directory,
-            recordedFormat: typeof rule.option.recordedFormat === 'undefined' ? null : rule.option.recordedFormat,
-            mode1: null,
-            directory1: null,
-            mode2: null,
-            directory2: null,
-            mode3: null,
-            directory3: null,
-            delTs: null,
-        };
-
-        if (typeof rule.encode !== 'undefined') {
-            data.mode1 = typeof rule.encode.mode1 === 'undefined' ? null : rule.encode.mode1;
-            data.directory1 = typeof rule.encode.directory1 === 'undefined' ? null : rule.encode.directory1;
-            data.mode2 = typeof rule.encode.mode2 === 'undefined' ? null : rule.encode.mode2;
-            data.directory2 = typeof rule.encode.directory2 === 'undefined' ? null : rule.encode.directory2;
-            data.mode3 = typeof rule.encode.mode3 === 'undefined' ? null : rule.encode.mode3;
-            data.directory3 = typeof rule.encode.directory3 === 'undefined' ? null : rule.encode.directory3;
-            data.delTs = rule.encode.delTs;
-        }
-
-        return data;
     }
 
     /**

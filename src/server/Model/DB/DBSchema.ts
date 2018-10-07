@@ -69,6 +69,11 @@ export interface RulesSchema {
     title: boolean | null;
     description: boolean | null;
     extended: boolean | null;
+    ignoreKeyCS: boolean | null;
+    ignoreKeyRegExp: boolean | null;
+    ignoreTitle: boolean | null;
+    ignoreDescription: boolean | null;
+    ignoreExtended: boolean | null;
     GR: boolean | null;
     BS: boolean | null;
     CS: boolean | null;
