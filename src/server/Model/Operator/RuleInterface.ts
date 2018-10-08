@@ -10,12 +10,18 @@ export interface RuleInterface {
 export interface SearchInterface {
     keyword?: string;
     ignoreKeyword?: string;
-    // keyworoption
+    // keyword option
     keyCS?: boolean;
     keyRegExp?: boolean;
     title?: boolean;
     description?: boolean;
     extended?: boolean;
+    // ignore keyword option
+    ignoreKeyCS?: boolean;
+    ignoreKeyRegExp?: boolean;
+    ignoreTitle?: boolean;
+    ignoreDescription?: boolean;
+    ignoreExtended?: boolean;
     // broadcast
     GR?: boolean;
     BS?: boolean;

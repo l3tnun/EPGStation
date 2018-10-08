@@ -1,6 +1,6 @@
 import * as apid from '../../../../node_modules/mirakurun/api';
-import CheckRule from '../../Util/CheckRule';
 import DateUtil from '../../Util/DateUtil';
+import RuleUtil from '../../Util/RuleUtil';
 import * as DBSchema from '../DB/DBSchema';
 import { ProgramsDBInterface } from '../DB/ProgramsDB';
 import { ServicesDBInterface } from '../DB/ServicesDB';
@@ -199,7 +199,7 @@ class ScheduleModel extends ApiModel implements ScheduleModelInterface {
      * @return Promise<{}[]>
      */
     public async searchProgram(searchOption: SearchInterface): Promise<{}[]> {
-        if (!(new CheckRule().checkRuleSearch(searchOption))) {
+        if (!(RuleUtil.checkRuleSearch(searchOption))) {
             // searchOption が正しく指定されていない
             throw new Error(ScheduleModelInterface.searchOptionIsIncorrect);
         }

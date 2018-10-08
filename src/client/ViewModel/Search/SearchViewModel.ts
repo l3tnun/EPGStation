@@ -40,6 +40,11 @@ class SearchViewModel extends ViewModel {
     public title: boolean = false;
     public description: boolean = false;
     public extended: boolean = false;
+    public ignoreKeyCS: boolean = false;
+    public ignoreKeyRegExp: boolean = false;
+    public ignoreTitle: boolean = false;
+    public ignoreDescription: boolean = false;
+    public ignoreExtended: boolean = false;
     public GR: boolean = true;
     public BS: boolean = true;
     public CS: boolean = true;
@@ -146,6 +151,11 @@ class SearchViewModel extends ViewModel {
         this.title = false;
         this.description = false;
         this.extended = false;
+        this.ignoreKeyCS = false;
+        this.ignoreKeyRegExp = false;
+        this.ignoreTitle = false;
+        this.ignoreDescription = false;
+        this.ignoreExtended = false;
         this.GR = true;
         this.BS = true;
         this.CS = true;
@@ -170,12 +180,18 @@ class SearchViewModel extends ViewModel {
 
         if (this.rule !== null) {
             if (typeof this.rule.keyword !== 'undefined') { this.keyword = this.rule.keyword; }
-            if (typeof this.rule.ignoreKeyword !== 'undefined') { this.ignoreKeyword = this.rule.ignoreKeyword; }
             if (typeof this.rule.keyCS !== 'undefined') { this.keyCS = this.rule.keyCS; }
             if (typeof this.rule.keyRegExp !== 'undefined') { this.keyRegExp = this.rule.keyRegExp; }
             if (typeof this.rule.title !== 'undefined') { this.title = this.rule.title; }
             if (typeof this.rule.description !== 'undefined') { this.description = this.rule.description; }
             if (typeof this.rule.extended !== 'undefined') { this.extended = this.rule.extended; }
+
+            if (typeof this.rule.ignoreKeyword !== 'undefined') { this.ignoreKeyword = this.rule.ignoreKeyword; }
+            if (typeof this.rule.ignoreKeyCS !== 'undefined') { this.ignoreKeyCS = this.rule.ignoreKeyCS; }
+            if (typeof this.rule.ignoreKeyRegExp !== 'undefined') { this.ignoreKeyRegExp = this.rule.ignoreKeyRegExp; }
+            if (typeof this.rule.ignoreTitle !== 'undefined') { this.ignoreTitle = this.rule.ignoreTitle; }
+            if (typeof this.rule.ignoreDescription !== 'undefined') { this.ignoreDescription = this.rule.ignoreDescription; }
+            if (typeof this.rule.ignoreExtended !== 'undefined') { this.ignoreExtended = this.rule.ignoreExtended; }
 
             this.GR = typeof this.rule.GR === 'undefined' ? false : this.rule.GR;
             this.BS = typeof this.rule.BS === 'undefined' ? false : this.rule.BS;
@@ -418,15 +434,26 @@ class SearchViewModel extends ViewModel {
      * option を検索用に設定する
      */
     private settingOptions(): void {
-        if (this.keyword.length === 0 && this.ignoreKeyword.length === 0) {
+        if (this.keyword.length === 0) {
             this.keyCS = false;
             this.keyRegExp = false;
             this.title = false;
             this.description = false;
             this.extended = false;
-        } else if ((this.keyword.length > 0 || this.ignoreKeyword.length > 0) && (!this.title && !this.description && !this.extended)) {
+        } else if (this.keyword.length > 0 && (!this.title && !this.description && !this.extended)) {
             this.title = true;
             this.description = true;
+        }
+
+        if (this.ignoreKeyword.length === 0) {
+            this.ignoreKeyCS = false;
+            this.ignoreKeyRegExp = false;
+            this.ignoreTitle = false;
+            this.ignoreDescription = false;
+            this.ignoreExtended = false;
+        } else if (this.ignoreKeyword.length > 0 && (!this.ignoreTitle && !this.ignoreDescription && !this.ignoreExtended)) {
+            this.ignoreTitle = true;
+            this.ignoreDescription = true;
         }
 
         if (this.station !== 0) {
@@ -483,6 +510,11 @@ class SearchViewModel extends ViewModel {
         if (this.title) { option.title = this.title; }
         if (this.description) { option.description = this.description; }
         if (this.extended) { option.extended = this.extended; }
+        if (this.ignoreKeyCS) { option.ignoreKeyCS = this.ignoreKeyCS; }
+        if (this.ignoreKeyRegExp) { option.ignoreKeyRegExp = this.ignoreKeyRegExp; }
+        if (this.ignoreTitle) { option.ignoreTitle = this.ignoreTitle; }
+        if (this.ignoreDescription) { option.ignoreDescription = this.ignoreDescription; }
+        if (this.ignoreExtended) { option.ignoreExtended = this.ignoreExtended; }
         if (this.GR) { option.GR = this.GR; }
         if (this.BS) { option.BS = this.BS; }
         if (this.CS) { option.CS = this.CS; }
