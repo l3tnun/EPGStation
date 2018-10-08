@@ -59,7 +59,7 @@ abstract class MigrationV4 extends MigrationBase {
 
             // copy keyword option
             for (const rule of rules) {
-                await this.copyOption(rule);
+                await this.copyOption(rule, exec);
             }
         });
     }
@@ -75,8 +75,9 @@ abstract class MigrationV4 extends MigrationBase {
     /**
      * keyword option を ignore keyword option へコピー
      * @param rule: OldRulesSchema
+     * @param exec: (query: string, values?: any) => Promise<void>
      */
-    private async copyOption(rule: OldRulesSchema): Promise<void> {
+    private async copyOption(rule: OldRulesSchema, exec: (query: string, values?: any) => Promise<void>): Promise<void> {
         // ignoreKeyword が null の場合はコピーしない
         if (rule.ignoreKeyword === null) { return; }
 
@@ -101,7 +102,7 @@ abstract class MigrationV4 extends MigrationBase {
 
         query += ` where id = ${ rule.id }`;
 
-        await this.operator.runQuery(query);
+        await exec(query);
     }
 
     /**
