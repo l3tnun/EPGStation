@@ -59,7 +59,7 @@ interface EncodeManageModelInterface extends Model {
     cancels(ids: string[]): Promise<void>;
     cancelByRecordedId(recordedId: number): void;
     updateProgram(recordedId: number): Promise<void>;
-    push(program: EncodeProgram, isCopy?: boolean): void;
+    push(program: EncodeProgram, isManual?: boolean): void;
 }
 
 /**
@@ -307,17 +307,21 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
     /**
      * キューにプログラムを積む
      * @param program: EncodeProgram
-     * @param isCopy: true: delTs を受け継ぐ, false: 受け継がない
+     * @param isManual: 手動エンコード追加か
      */
-    public push(program: EncodeProgram, isCopy: boolean = false): void {
+    public push(program: EncodeProgram, isManual: boolean = false): void {
         this.log.system.info(`push encode: ${ program.source } ${ typeof program.mode === 'undefined' ? EncodeManageModel.TSModifyName : program.mode }`);
 
-        // ts 削除設定を同じ recordedId の program から受け継ぐ
-        if (isCopy) {
+        // 手動エンコード追加の場合はすでに存在する同じ recordedId のエンコードの delTs を付け替える
+        // ただし encodedId が無い === ソースファイルが TS に限る
+        if (isManual && typeof program.encodedId === 'undefined') {
+            // 現在エンコード中か？
             if (this.encodingData !== null && program.recordedId === this.encodingData.program.recordedId && this.encodingData.program.delTs) {
                 this.encodingData.program.delTs = false;
                 program.delTs = true;
             }
+
+            // エンコード待ち
             for (let i = 0; i < this.queue.length; i++) {
                 if (program.recordedId === this.queue[i].recordedId && this.queue[i].delTs) {
                     this.queue[i].delTs = false;

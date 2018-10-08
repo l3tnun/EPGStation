@@ -2,8 +2,8 @@ import * as events from 'events';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as apid from '../../../../../node_modules/mirakurun/api';
-import CheckRule from '../../../Util/CheckRule';
 import DateUtil from '../../../Util/DateUtil';
+import RuleUtil from '../../../Util/RuleUtil';
 import Util from '../../../Util/Util';
 import * as DBSchema from '../../DB/DBSchema';
 import { ProgramsDBInterface } from '../../DB/ProgramsDB';
@@ -12,7 +12,6 @@ import { IPCServerInterface } from '../../IPC/IPCServer';
 import Model from '../../Model';
 import { RecordingManageModelInterface } from '../Recording/RecordingManageModel';
 import { AddReserveInterface, ManualReserveProgram, ReserveOptionInterface, ReserveProgram, RuleReserveProgram } from '../ReserveProgramInterface';
-import { EncodeInterface, SearchInterface } from '../RuleInterface';
 import Tuner from './Tuner';
 
 interface ExeQueueData {
@@ -434,7 +433,7 @@ class ReservationManageModel extends Model {
      */
     public async addReserve(option: AddReserveInterface): Promise<void> {
         // encode option が正しいかチェック
-        if (typeof option.encode !== 'undefined' && !(new CheckRule().checkEncodeOption(option.encode))) {
+        if (typeof option.encode !== 'undefined' && !(RuleUtil.checkEncodeOption(option.encode))) {
             this.log.system.error('addReserve Failed');
             this.log.system.error('ReservationManageModel is Running');
             throw new Error('ReservationManageModelAddFailed');
@@ -727,7 +726,7 @@ class ReservationManageModel extends Model {
         let programs: DBSchema.ProgramSchemaWithOverlap[] = [];
         if (rule !== null) {
             try {
-                programs = await this.programDB.findRule(this.createSearchOption(rule));
+                programs = await this.programDB.findRule(RuleUtil.createSearchOption(rule));
             } catch (err) {
                 this.log.system.error(`rule id: ${ ruleId } search error`);
                 this.log.system.error(err);
@@ -765,7 +764,7 @@ class ReservationManageModel extends Model {
 
         if (rule !== null) {
             // ruleId の番組情報を追加
-            const encodeOption = this.createEncodeOption(rule);
+            const encodeOption = RuleUtil.createEncodeOption(rule);
             for (const program of programs) {
                 const data: RuleReserveProgram = {
                     program: program,
@@ -828,41 +827,6 @@ class ReservationManageModel extends Model {
     }
 
     /**
-     * RulesSchema から searchInterface を生成する
-     * @param rule: DBSchema.RulesSchema
-     * @return SearchInterface
-     */
-    private createSearchOption(rule: DBSchema.RulesSchema): SearchInterface {
-        const search: SearchInterface = {
-            week: rule.week,
-            avoidDuplicate: rule.avoidDuplicate,
-        };
-
-        if (rule.keyword !== null)                  { search.keyword       = rule.keyword;       }
-        if (rule.ignoreKeyword !== null)            { search.ignoreKeyword = rule.ignoreKeyword; }
-        if (rule.keyCS !== null)                    { search.keyCS         = rule.keyCS;         }
-        if (rule.keyRegExp !== null)                { search.keyRegExp     = rule.keyRegExp;     }
-        if (rule.title !== null)                    { search.title         = rule.title;         }
-        if (rule.description !== null)              { search.description   = rule.description;   }
-        if (rule.extended !== null)                 { search.extended      = rule.extended;      }
-        if (rule.GR !== null)                       { search.GR            = rule.GR;            }
-        if (rule.BS !== null)                       { search.BS            = rule.BS;            }
-        if (rule.CS !== null)                       { search.CS            = rule.CS;            }
-        if (rule.SKY !== null)                      { search.SKY           = rule.SKY;           }
-        if (rule.station !== null)                  { search.station       = rule.station;       }
-        if (rule.genrelv1 !== null)                 { search.genrelv1      = rule.genrelv1;      }
-        if (rule.genrelv2 !== null)                 { search.genrelv2      = rule.genrelv2;      }
-        if (rule.startTime !== null)                { search.startTime     = rule.startTime;     }
-        if (rule.timeRange !== null)                { search.timeRange     = rule.timeRange;     }
-        if (rule.isFree !== null)                   { search.isFree        = rule.isFree;        }
-        if (rule.durationMin !== null)              { search.durationMin   = rule.durationMin;   }
-        if (rule.durationMax !== null)              { search.durationMax   = rule.durationMax;   }
-        if (rule.periodToAvoidDuplicate !== null)   { search.periodToAvoidDuplicate = rule.periodToAvoidDuplicate; }
-
-        return search;
-    }
-
-    /**
      * RulesSchema から OptionInterface を生成する
      * @param rule: DBSchema.RulesSchema
      * @return OptionInterface
@@ -874,28 +838,6 @@ class ReservationManageModel extends Model {
         if (rule.recordedFormat !== null) { option.recordedFormat = rule.recordedFormat; }
 
         return option;
-    }
-
-    /**
-     * RulesSchema から EncodeInterface を生成する
-     * @param rule: DBSchema.RulesSchema
-     * @return OptionInterface | null
-     */
-    public createEncodeOption(rule: DBSchema.RulesSchema): EncodeInterface | null {
-        if (rule.delTs === null) { return null; }
-
-        const encode: EncodeInterface = {
-            delTs: rule.delTs,
-        };
-
-        if (rule.mode1 !== null) { encode.mode1 = rule.mode1; }
-        if (rule.directory1 !== null) { encode.directory1 = rule.directory1; }
-        if (rule.mode2 !== null) { encode.mode2 = rule.mode2; }
-        if (rule.directory2 !== null) { encode.directory2 = rule.directory2; }
-        if (rule.mode3 !== null) { encode.mode3 = rule.mode3; }
-        if (rule.directory3 !== null) { encode.directory3 = rule.directory3; }
-
-        return encode;
     }
 
     /**

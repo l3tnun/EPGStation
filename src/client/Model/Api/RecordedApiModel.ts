@@ -14,6 +14,7 @@ interface EncodeQueryOption {
     encodedId?: number;
     directory?: string;
     isOutputTheOriginalDirectory?: boolean;
+    delTs?: boolean;
 }
 
 interface UploadQueryOption {

@@ -16,6 +16,11 @@ class PostgreSQLRulesDB extends RulesDB {
             + 'title boolean, '
             + 'description boolean, '
             + 'extended boolean, '
+            + 'ignoreKeyCS boolean, '
+            + 'ignoreKeyRegExp boolean, '
+            + 'ignoreTitle boolean, '
+            + 'ignoreDescription boolean, '
+            + 'ignoreExtended boolean, '
             + 'GR boolean, '
             + 'BS boolean, '
             + 'CS boolean, '
@@ -63,7 +68,7 @@ class PostgreSQLRulesDB extends RulesDB {
      * @return string
      */
     public getAllColumns(): string {
-        return 'id, keyword, ignoreKeyword as "ignoreKeyword", keyCS as "keyCS", keyRegExp as "keyRegExp", title, description, extended, GR as "GR", BS as "BS", CS as "CS", SKY as "SKY", station, genrelv1, genrelv2, startTime as "startTime", timeRange as "timeRange", week, isFree as "isFree", durationMin as "durationMin", durationMax as "durationMax", avoidDuplicate as "avoidDuplicate", periodToAvoidDuplicate as "periodToAvoidDuplicate", enable, directory, recordedFormat as "recordedFormat", mode1, directory1, mode2, directory2, mode3, directory3, delTs as "delTs"';
+        return 'id, keyword, ignoreKeyword as "ignoreKeyword", keyCS as "keyCS", keyRegExp as "keyRegExp", title, description, extended, ignoreKeyCS as "ignoreKeyCS", ignoreKeyRegExp as "ignoreKeyRegExp", ignoreTitle as "ignoreTitle", ignoreDescription as "ignoreDescription", ignoreExtended as "ignoreExtended", GR as "GR", BS as "BS", CS as "CS", SKY as "SKY", station, genrelv1, genrelv2, startTime as "startTime", timeRange as "timeRange", week, isFree as "isFree", durationMin as "durationMin", durationMax as "durationMax", avoidDuplicate as "avoidDuplicate", periodToAvoidDuplicate as "periodToAvoidDuplicate", enable, directory, recordedFormat as "recordedFormat", mode1, directory1, mode2, directory2, mode3, directory3, delTs as "delTs"';
     }
 }
 

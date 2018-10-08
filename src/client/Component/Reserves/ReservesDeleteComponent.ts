@@ -24,7 +24,7 @@ class ReservesDeleteComponent extends Component<void> {
         const isOverlap = this.reservesViewModel.getMode() === ReserveMode.overlaps;
 
         return m('div', [
-            m('div', { class: 'recorded-delete' }, `${ this.viewModel.getTitle() }を${ isOverlap ? '重複解除' : '削除' }しますか。`),
+            m('div', { class: 'balloon-with-action-enclosure-margin' }, `${ this.viewModel.getTitle() }を${ isOverlap ? '重複解除' : '削除' }しますか。`),
             m('div', { class: 'mdl-dialog__actions' }, [
                 m('button', {
                     class: 'mdl-button mdl-js-button mdl-button--primary',

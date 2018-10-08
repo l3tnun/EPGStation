@@ -27,6 +27,7 @@ class RulesInfoComponent extends Component<void> {
                 this.createItem('keyword', 'キーワード', RulesUtil.createKeywordStr(rule)),
                 this.createItem('ignore-keyword', '除外キーワード', RulesUtil.createIgnoreKeywordStr(rule)),
                 this.createItem('option', 'オプション', RulesUtil.createOptionStr(rule)),
+                this.createItem('option', '除外オプション', RulesUtil.createIgnoreOptionStr(rule)),
                 this.createItem('broadcast', '放送波', RulesUtil.createBroadcastStr(rule)),
                 this.createItem('channel', '放送局', this.viewModel.getChannelName()),
                 this.createItem('genre1', 'ジャンル', RulesUtil.createGenre1(rule)),

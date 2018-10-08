@@ -16,6 +16,11 @@ class SQLite3RulesDB extends RulesDB {
             + 'title integer, '
             + 'description integer, '
             + 'extended integer, '
+            + 'ignoreKeyCS integer, '
+            + 'ignoreKeyRegExp integer, '
+            + 'ignoreTitle integer, '
+            + 'ignoreDescription integer, '
+            + 'ignoreExtended integer, '
             + 'GR integer, '
             + 'BS integer, '
             + 'CS integer, '
@@ -57,6 +62,11 @@ class SQLite3RulesDB extends RulesDB {
             if (rule.title !== null) { rule.title = Boolean(rule.title); }
             if (rule.description !== null) { rule.description = Boolean(rule.description); }
             if (rule.extended !== null) { rule.extended = Boolean(rule.extended); }
+            if (rule.ignoreKeyCS !== null) { rule.ignoreKeyCS = Boolean(rule.ignoreKeyCS); }
+            if (rule.ignoreKeyRegExp !== null) { rule.ignoreKeyRegExp = Boolean(rule.ignoreKeyRegExp); }
+            if (rule.ignoreTitle !== null) { rule.ignoreTitle = Boolean(rule.ignoreTitle); }
+            if (rule.ignoreDescription !== null) { rule.ignoreDescription = Boolean(rule.ignoreDescription); }
+            if (rule.ignoreExtended !== null) { rule.ignoreExtended = Boolean(rule.ignoreExtended); }
             if (rule.GR !== null) { rule.GR = Boolean(rule.GR); }
             if (rule.BS !== null) { rule.BS = Boolean(rule.BS); }
             if (rule.CS !== null) { rule.CS = Boolean(rule.CS); }

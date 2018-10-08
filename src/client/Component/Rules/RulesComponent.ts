@@ -186,7 +186,10 @@ class RulesComponent extends ParentComponent<void> {
                     m('td', { class: 'toggle' }, m('div', { class: 'toggle-container' }, this.createToggle(rule))),
                     m('td', { class: RulesComponent.nonNumeric + ' keyword' }, RulesUtil.createKeywordStr(rule)),
                     m('td', { class: RulesComponent.nonNumeric + ' ignore-keyword' }, RulesUtil.createIgnoreKeywordStr(rule)),
-                    m('td', { class: RulesComponent.nonNumeric + ' search-option' }, RulesUtil.createOptionStr(rule)),
+                    m('td', { class: RulesComponent.nonNumeric + ' search-option' }, m('div', [
+                        m('div', RulesUtil.createOptionStr(rule)),
+                        m('div', RulesUtil.createIgnoreOptionStr(rule)),
+                    ])),
                     m('td', { class: RulesComponent.nonNumeric + ' channel' }, this.createChannelName(rule)),
                     m('td', { class: RulesComponent.nonNumeric + ' genre1' }, RulesUtil.createGenre1(rule)),
                     m('td', { class: RulesComponent.nonNumeric + ' genre2' }, RulesUtil.createGenre2(rule)),

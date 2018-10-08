@@ -716,6 +716,9 @@ definitions:
       isOutputTheOriginalDirectory:
         description: '入力元と同じディレクトリに出力するか'
         type: boolean
+      delTs:
+        description: 'エンコード完了後に ts を削除するか'
+        type: boolean
 
   NewRecorded:
     type: object
@@ -948,19 +951,34 @@ definitions:
         description: '検索除外文字列'
       keyCS:
         type: boolean
-        description: '大文字小文字を区別する'
+        description: '大文字小文字をキーワードで区別する'
       keyRegExp:
         type: boolean
-        description: '正規表現'
+        description: '正規表現(キーワード)'
       title:
         type: boolean
-        description: 'タイトルを検索範囲に含む'
+        description: 'タイトルをキーワード検索範囲に含む'
       description:
         type: boolean
-        description: '詳細を検索範囲に含む'
+        description: '詳細をキーワード検索範囲に含む'
       extended:
         type: boolean
-        description: '拡張を検索範囲に含む'
+        description: '拡張をキーワード検索範囲に含む'
+      ignoreKeyCS:
+        type: boolean
+        description: '大文字小文字を除外キーワードで区別する'
+      ignoreKeyRegExp:
+        type: boolean
+        description: '正規表現(除外キーワード)'
+      ignoreTitle:
+        type: boolean
+        description: 'タイトルを除外キーワード検索範囲に含む'
+      ignoreDescription:
+        type: boolean
+        description: '詳細を除外キーワード検索範囲に含む'
+      ignoreExtended:
+        type: boolean
+        description: '拡張を除外キーワード検索範囲に含む'
       GR:
         type: boolean
         description: '地上波'
@@ -1057,22 +1075,38 @@ definitions:
         description: '検索文字列 title, description, extended のいずれかを有効化すること'
       ignoreKeyword:
         type: string
-        description: '検索除外文字列 title, description, extended のいずれかを有効化すること'
+        description: '検索除外文字列 ignoreTitle, ignoreDescription, ignoreExtended のいずれかを有効化すること'
       keyCS:
         type: boolean
-        description: '大文字小文字を区別する keyword or ignoreKeyword が空の場合は指定しない'
+        description: 'キーワードで大文字小文字を区別する keyword が空の場合は指定しない'
       keyRegExp:
         type: boolean
-        description: '正規表現 keyword or ignoreKeyword が空の場合は指定しない'
+        description: '正規表現(キーワード) keyword が空の場合は指定しない'
       title:
         type: boolean
-        description: 'タイトルを検索範囲に含む keyword or ignoreKeyword が空の場合は指定しない'
+        description: 'タイトルをキーワード検索範囲に含む keyword が空の場合は指定しない'
       description:
         type: boolean
-        description: '詳細を検索範囲に含む keyword or ignoreKeyword が空の場合は指定しない'
+        description: '詳細をキーワード検索範囲に含む keyword が空の場合は指定しない'
       extended:
         type: boolean
-        description: '拡張を検索範囲に含む keyword or ignoreKeyword が空の場合は指定しない'
+        description: '拡張をキーワード検索範囲に含む keyword が空の場合は指定しない'
+      ignoreKeyCS:
+        type: boolean
+        description: '除外キーワードで大文字小文字を区別する ignoreKeyword が空の場合は指定しない'
+      ignoreKeyRegExp:
+        type: boolean
+        description: '正規表現(除外キーワード) ignoreKeyword が空の場合は指定しない'
+      ignoreTitle:
+        type: boolean
+        description: 'タイトルを除外キーワード検索範囲に含む ignoreKeyword が空の場合は指定しない'
+      ignoreDescription:
+        type: boolean
+        description: '詳細を除外キーワード検索範囲に含む ignoreKeyword が空の場合は指定しない'
+      ignoreExtended:
+        type: boolean
+        description: '拡張を除外キーワード検索範囲に含む ignoreKeyword が空の場合は指定しない'
+
       GR:
         type: boolean
         description: '地上波 stations とは併用不可'

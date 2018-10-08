@@ -51,12 +51,6 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
      * @return Promise<number> insertId
      */
     public insert(rule: DBSchema.RulesSchema): Promise<number> {
-        const query = `insert into ${ DBSchema.TableName.Rules } (`
-            + this.createInsertColumnStr(false)
-        + ') VALUES ('
-            + this.operator.createValueStr(1, 32)
-        + `) ${ this.operator.getReturningStr() }`;
-
         const value: any[] = [];
         value.push(rule.keyword);
         value.push(rule.ignoreKeyword);
@@ -65,6 +59,11 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
         value.push(rule.title);
         value.push(rule.description);
         value.push(rule.extended);
+        value.push(rule.ignoreKeyCS);
+        value.push(rule.ignoreKeyRegExp);
+        value.push(rule.ignoreTitle);
+        value.push(rule.ignoreDescription);
+        value.push(rule.ignoreExtended);
         value.push(rule.GR);
         value.push(rule.BS);
         value.push(rule.CS);
@@ -91,6 +90,12 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
         value.push(rule.directory3);
         value.push(rule.delTs);
 
+        const query = `insert into ${ DBSchema.TableName.Rules } (`
+            + this.createInsertColumnStr(false)
+        + ') VALUES ('
+            + this.operator.createValueStr(1, value.length)
+        + `) ${ this.operator.getReturningStr() }`;
+
         return this.operator.runInsert(query, value);
     }
 
@@ -108,6 +113,11 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
             + 'title, '
             + 'description, '
             + 'extended, '
+            + 'ignoreKeyCS, '
+            + 'ignoreKeyRegExp, '
+            + 'ignoreTitle, '
+            + 'ignoreDescription, '
+            + 'ignoreExtended, '
             + 'GR, '
             + 'BS, '
             + 'CS, '
@@ -141,12 +151,6 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
      * @param isDelete: boolean = true
      */
     public restore(rules: DBSchema.RulesSchema[], isDelete: boolean = true): Promise<void> {
-        const query = `insert into ${ DBSchema.TableName.Rules } (`
-            + this.createInsertColumnStr(true)
-        + ') VALUES ('
-            + this.operator.createValueStr(1, 33)
-        + ')';
-
         const values: any[] = [];
         for (const rule of rules) {
             const value: any[] = [];
@@ -158,6 +162,11 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
             value.push(rule.title);
             value.push(rule.description);
             value.push(rule.extended);
+            value.push(rule.ignoreKeyCS);
+            value.push(rule.ignoreKeyRegExp);
+            value.push(rule.ignoreTitle);
+            value.push(rule.ignoreDescription);
+            value.push(rule.ignoreExtended);
             value.push(rule.GR);
             value.push(rule.BS);
             value.push(rule.CS);
@@ -184,7 +193,13 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
             value.push(rule.directory3);
             value.push(rule.delTs);
 
-            values.push({query: query, values: value });
+            const query = `insert into ${ DBSchema.TableName.Rules } (`
+                + this.createInsertColumnStr(true)
+            + ') VALUES ('
+                + this.operator.createValueStr(1, value.length)
+            + ')';
+
+            values.push({ query: query, values: value });
         }
 
         return this.operator.manyInsert(DBSchema.TableName.Rules, values, isDelete);
@@ -223,6 +238,16 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
         else { querys.push('description = null'); }
         if (rule.extended !== null) { querys.push(`extended = ${ this.operator.convertBoolean(rule.extended) }`); }
         else { querys.push('extended = null'); }
+        if (rule.ignoreKeyCS !== null) { querys.push(`ignoreKeyCS = ${ this.operator.convertBoolean(rule.ignoreKeyCS) }`); }
+        else { querys.push('ignoreKeyCS = null'); }
+        if (rule.ignoreKeyRegExp !== null) { querys.push(`ignoreKeyRegExp = ${ this.operator.convertBoolean(rule.ignoreKeyRegExp) }`); }
+        else { querys.push('ignoreKeyRegExp = null'); }
+        if (rule.ignoreTitle !== null) { querys.push(`ignoreTitle = ${ this.operator.convertBoolean(rule.ignoreTitle) }`); }
+        else { querys.push('ignoreTitle = null'); }
+        if (rule.ignoreDescription !== null) { querys.push(`ignoreDescription = ${ this.operator.convertBoolean(rule.ignoreDescription) }`); }
+        else { querys.push('ignoreDescription = null'); }
+        if (rule.ignoreExtended !== null) { querys.push(`ignoreExtended = ${ this.operator.convertBoolean(rule.ignoreExtended) }`); }
+        else { querys.push('ignoreExtended = null'); }
         if (rule.GR !== null) { querys.push(`GR = ${ this.operator.convertBoolean(rule.GR) }`); }
         else { querys.push('GR = null'); }
         if (rule.BS !== null) { querys.push(`BS = ${ this.operator.convertBoolean(rule.BS) }`); }

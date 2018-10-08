@@ -22,7 +22,7 @@ class RecordedMultipleDeleteComponent extends Component<void> {
      */
     public view(): m.Child {
         return m('div', [
-            m('div', { class: 'recorded-delete' }, `選択した ${ this.viewModel.getSelectedCnt() } 件の録画を削除しますか。`),
+            m('div', { class: 'balloon-with-action-enclosure-margin' }, `選択した ${ this.viewModel.getSelectedCnt() } 件の録画を削除しますか。`),
             m('div', { class: 'mdl-dialog__actions' }, [
                 m('button', {
                     class: 'mdl-button mdl-js-button mdl-button--primary',
