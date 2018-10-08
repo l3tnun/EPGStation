@@ -32,6 +32,7 @@ interface EncodeAddOption {
     encodedId?: number;
     directory?: string;
     isOutputTheOriginalDirectory?: boolean;
+    delTs?: boolean;
 }
 
 interface RecordedModelInterface extends ApiModel {
@@ -560,7 +561,11 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
             delTs: false,
             recordedProgram: recorded,
         };
-        if (typeof option.encodedId !== 'undefined') {
+
+        if (typeof option.encodedId === 'undefined') {
+            // エンコードソースが TS じゃない場合は TS 削除を機能させない
+            encodeProgram.delTs = Boolean(option.delTs);
+        } else {
             encodeProgram.encodedId = option.encodedId;
         }
 
@@ -578,7 +583,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
         }
 
         // エンコードを追加
-        this.encodeManage.push(encodeProgram, typeof option.encodedId === 'undefined');
+        this.encodeManage.push(encodeProgram, true);
     }
 
     /**

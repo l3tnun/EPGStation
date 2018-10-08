@@ -716,6 +716,9 @@ definitions:
       isOutputTheOriginalDirectory:
         description: '入力元と同じディレクトリに出力するか'
         type: boolean
+      delTs:
+        description: 'エンコード完了後に ts を削除するか'
+        type: boolean
 
   NewRecorded:
     type: object
