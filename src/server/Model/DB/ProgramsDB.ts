@@ -729,21 +729,26 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
 
             // あいまい検索
             const likeStr = this.createLikeStr(keyOption.cs);
-            StrUtil.toHalf(keyword).trim().split(' ').forEach((str) => {
+            const keywords = StrUtil.toHalf(keyword).trim().split(' ');
+            const keywordCnt = keywords.length;
+
+            keywords.forEach((str, i) => {
+                i += 1;
                 str = `%${ str }%`;
+
                 if (keyOption.title) {
-                    cnt += 1;
-                    titleQuery.push(`name ${ likeStr } ${ this.operator.createValueStr(cnt, cnt) }`);
+                    const position = cnt + i;
+                    titleQuery.push(`name ${ likeStr } ${ this.operator.createValueStr(position, position) }`);
                     titleValues.push(str);
                 }
                 if (keyOption.description) {
-                    cnt += 1;
-                    descriptionQuery.push(`description ${ likeStr } ${ this.operator.createValueStr(cnt, cnt) }`);
+                    const position = cnt + i + keywordCnt;
+                    descriptionQuery.push(`description ${ likeStr } ${ this.operator.createValueStr(position, position) }`);
                     descriptionValues.push(str);
                 }
                 if (keyOption.extended) {
-                    cnt += 1;
-                    extendedQuery.push(`extended ${ likeStr } ${ this.operator.createValueStr(cnt, cnt) }`);
+                    const position = cnt + i + keywordCnt * 2;
+                    extendedQuery.push(`extended ${ likeStr } ${ this.operator.createValueStr(position, position) }`);
                     extendedValues.push(str);
                 }
             });
