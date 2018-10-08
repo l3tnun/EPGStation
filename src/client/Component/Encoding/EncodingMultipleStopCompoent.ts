@@ -23,7 +23,7 @@ class EncodingMultipleStopCompoent extends Component<void> {
      */
     public view(): m.Child {
         return m('div', [
-            m('div', { class: 'recorded-delete' }, `選択した ${ this.viewModel.getSelectedCnt() } 件のエンコードを停止しますか。`),
+            m('div', { class: 'balloon-with-action-enclosure-margin' }, `選択した ${ this.viewModel.getSelectedCnt() } 件のエンコードを停止しますか。`),
             m('div', { class: 'mdl-dialog__actions' }, [
                 m('button', {
                     class: 'mdl-button mdl-js-button mdl-button--primary',
