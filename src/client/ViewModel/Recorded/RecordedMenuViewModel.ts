@@ -26,6 +26,7 @@ class RecordedMenuViewModel extends ViewModel {
     public encodeSourceOptionValue: number = 0;
     public encodeDirectoryOptionValue: string = '';
     public isOutputTheOriginalDirectory: boolean = false;
+    public delTs: boolean = false;
 
     constructor(
         balloon: BalloonModelInterface,
@@ -74,6 +75,7 @@ class RecordedMenuViewModel extends ViewModel {
         this.encodeModeOptionValue = 0;
         this.encodeDirectoryOptionValue = '';
         this.isOutputTheOriginalDirectory = false;
+        this.delTs = false;
     }
 
     /**
@@ -205,6 +207,7 @@ class RecordedMenuViewModel extends ViewModel {
         const option: EncodeQueryOption = {
             mode: this.encodeModeOptionValue,
             isOutputTheOriginalDirectory: this.isOutputTheOriginalDirectory,
+            delTs: this.delTs,
         };
 
         const encodedId = this.recordedFiles[this.encodeSourceOptionValue].encodedId;
