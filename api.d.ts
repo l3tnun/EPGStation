@@ -283,6 +283,23 @@ export interface AddReserve {
     programId: ProgramId;
     option?: AddReserveOption;
     encode?: RuleEncode;
+    program?: {
+        channelId: ServiceItemId;
+        startAt: UnixtimeMS;
+        endAt: UnixtimeMS;
+        name: string;
+        description?: string;
+        extended?: string;
+        genre1?: ProgramGenreLv1;
+        genre2?: ProgramGenreLv2;
+        channelType: ChannelType;
+        videoType?: ProgramVideoType;
+        videoResolution?: ProgramVideoResolution;
+        videoStreamContent?: number;
+        videoComponentType?: number;
+        audioSamplingRate?: ProgramAudioSamplingRate;
+        audioComponentType?: number;
+    };
 }
 
 export interface AddReserveOption {

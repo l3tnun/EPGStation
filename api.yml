@@ -783,6 +783,48 @@ definitions:
         $ref: '#/definitions/AddReserveOption'
       encode:
         $ref: '#/definitions/RuleEncode'
+      program:
+        type: object
+        required:
+          - channelId
+          - startAt
+          - endAt
+          - name
+          - channelType
+        properties:
+          channelId:
+            $ref: '#/definitions/ServiceItemId'
+          startAt:
+            $ref: '#/definitions/UnixtimeMS'
+          endAt:
+            $ref: '#/definitions/UnixtimeMS'
+          name:
+            type: string
+            description: '番組タイトル'
+          description:
+            type: string
+            description: '番組詳細'
+          extended:
+            type: string
+            description: '番組拡張'
+          genre1:
+            $ref: '#/definitions/ProgramGenreLv1'
+          genre2:
+            $ref: '#/definitions/ProgramGenreLv2'
+          channelType:
+            $ref: '#/definitions/ChannelType'
+          videoType:
+            $ref: '#/definitions/ProgramVideoType'
+          videoResolution:
+            $ref: '#/definitions/ProgramVideoResolution'
+          videoStreamContent:
+            type: integer
+          videoComponentType:
+            type: integer
+          audioSamplingRate:
+            $ref: '#/definitions/ProgramAudioSamplingRate'
+          audioComponentType:
+            type: integer
 
   EditReserve:
     type: object
