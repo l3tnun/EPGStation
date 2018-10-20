@@ -8,6 +8,7 @@ import Util from '../../../Util/Util';
 import * as DBSchema from '../../DB/DBSchema';
 import { ProgramsDBInterface } from '../../DB/ProgramsDB';
 import { RulesDBInterface } from '../../DB/RulesDB';
+import { ServicesDBInterface } from '../../DB/ServicesDB';
 import { IPCServerInterface } from '../../IPC/IPCServer';
 import Model from '../../Model';
 import { RecordingManageModelInterface } from '../Recording/RecordingManageModel';
@@ -76,6 +77,7 @@ class ReservationManageModel extends Model {
 
     private programDB: ProgramsDBInterface;
     private rulesDB: RulesDBInterface;
+    private servicesDB: ServicesDBInterface;
     private ipc: IPCServerInterface;
     private recordingManage: RecordingManageModelInterface;
     private reserves: ReserveProgram[] = []; // 予約
@@ -86,11 +88,13 @@ class ReservationManageModel extends Model {
     constructor(
         programDB: ProgramsDBInterface,
         rulesDB: RulesDBInterface,
+        servicesDB: ServicesDBInterface,
         ipc: IPCServerInterface,
     ) {
         super();
         this.programDB = programDB;
         this.rulesDB = rulesDB;
+        this.servicesDB = servicesDB;
         this.ipc = ipc;
         const config =  this.config.getConfig();
         this.suppressReservesUpdateAllLog = !!config.suppressReservesUpdateAllLog;
@@ -435,22 +439,75 @@ class ReservationManageModel extends Model {
         // encode option が正しいかチェック
         if (typeof option.encode !== 'undefined' && !(RuleUtil.checkEncodeOption(option.encode))) {
             this.log.system.error('addReserve Failed');
-            this.log.system.error('ReservationManageModel is Running');
             throw new Error('ReservationManageModelAddFailed');
         }
 
+        if (typeof option.programId === 'undefined' && typeof option.program === 'undefined') {
+            this.log.system.error('Add time specification reservation Error');
+            throw new Error('ReservationManageModelAddFailed');
+        }
+
+        // TODO check time specification reservation options
+
         const exeId = await this.getExecution(1);
-        this.log.system.info(`addReserve: ${ option.programId }`);
+        const manualId = new Date().getTime();
+
+        if (typeof option.programId === 'undefined') {
+            // 時刻指定予約の場合 programId を manualId * -1 とする
+            this.log.system.info('Add time specification reservation');
+            option.programId = manualId * -1;
+        } else {
+            this.log.system.info(`addReserve: ${ option.programId }`);
+        }
 
         const finalize = () => { this.unLockExecution(exeId); };
 
         // 番組情報を取得
-        let program: DBSchema.ProgramSchema | null;
-        try {
-            program = await this.programDB.findId(option.programId, true);
-        } catch (err) {
-            finalize();
-            throw err;
+        let program: DBSchema.ProgramSchema | null = null;
+        if (typeof option.program === 'undefined') {
+            // 時刻指定予約ではない場合
+            try {
+                program = await this.programDB.findId(option.programId, true);
+            } catch (err) {
+                finalize();
+                throw err;
+            }
+        } else {
+            // 時刻指定予約の場合
+
+            // 該当放送局が存在するかチェック
+            let channel: DBSchema.ServiceSchema | null;
+            try {
+                channel = await this.servicesDB.findId(option.program.channelId);
+            } catch (err) {
+                finalize();
+                throw err;
+            }
+
+            if (channel !== null) {
+                // program 生成
+                program = <any> option.program;
+                if (program !== null) {
+                    program.id = option.programId;
+                    program.eventId = 0;
+                    program.serviceId = channel.serviceId;
+                    program.networkId = channel.networkId;
+                    program.duration = program.endAt - program.startAt;
+                    program.shortName = null;
+                    program.channel = channel.channel;
+                    program.channelType = channel.channelType;
+                    if (typeof program.description === 'undefined') { program.description = null; }
+                    if (typeof program.extended === 'undefined') { program.extended = null; }
+                    if (typeof program.genre1 === 'undefined') { program.genre1 = null; }
+                    if (typeof program.genre2 === 'undefined') { program.genre2 = null; }
+                    if (typeof program.videoType === 'undefined') { program.videoType = null; }
+                    if (typeof program.videoResolution === 'undefined') { program.videoResolution = null; }
+                    if (typeof program.videoStreamContent === 'undefined') { program.videoStreamContent = null; }
+                    if (typeof program.videoComponentType === 'undefined') { program.videoComponentType = null; }
+                    if (typeof program.audioSamplingRate === 'undefined') { program.audioSamplingRate = null; }
+                    if (typeof program.audioComponentType === 'undefined') { program.audioComponentType = null; }
+                }
+            }
         }
 
         // programId に該当する録画データがなかった
@@ -464,7 +521,8 @@ class ReservationManageModel extends Model {
         const addReserve: ManualReserveProgram = {
             program: program,
             isSkip: false,
-            manualId: new Date().getTime(),
+            manualId: manualId,
+            isTimeSpecifited: option.programId < 0, // 時刻指定予約の場合 true
             isConflict: false,
         };
         if (typeof option.option !== 'undefined') {
@@ -479,7 +537,7 @@ class ReservationManageModel extends Model {
         const reserves: ReserveProgram[] = [];
         for (const reserve of this.reserves) {
             if (reserve.program.id === option.programId) {
-                this.log.system.error(`program is reserves: ${ option.programId }`);
+                this.log.system.error(`program is reserved: ${ option.programId }`);
                 finalize();
                 throw new Error('ReservationManageModelAddFailed');
             }
@@ -535,6 +593,10 @@ class ReservationManageModel extends Model {
      * @throws IsRecordingError 編集しようとした予約情報が予約中だった
      */
     public async editReserve(option: AddReserveInterface): Promise<void> {
+        if (typeof option.programId === 'undefined' || option.programId < 0 && typeof option.program === 'undefined') {
+            throw Error('Edit Option Error');
+        }
+
         const exeId = await this.getExecution(1);
         this.log.system.info(`editReserve: ${ option.programId }`);
 
@@ -571,6 +633,15 @@ class ReservationManageModel extends Model {
             delete this.reserves[index].encodeOption;
         } else {
             this.reserves[index].encodeOption = option.encode;
+        }
+
+        // update program option
+        if (typeof option.program === 'undefined') {
+            delete this.reserves[index].program;
+        // } else {
+            // TODO create program
+            // TODO check program
+            // this.reserves[index].program = option.program;
         }
 
         this.unLockExecution(exeId);
@@ -649,6 +720,31 @@ class ReservationManageModel extends Model {
         if (manualMatche === null) {
             finalize();
             this.log.system.warn(`updateManual error: ${ manualId }`);
+
+            return;
+        }
+
+        // 時刻指定予約の場合 channelId の放送局が存在するかチェックするだけ
+        if (manualId < 0) {
+            // 該当放送局を検索
+            let channel: DBSchema.ServiceSchema | null;
+            try {
+                channel = await this.servicesDB.findId(manualMatche.program.channelId);
+            } catch (err) {
+                this.log.system.error(err);
+                finalize();
+
+                return;
+            }
+
+            if (channel === null) {
+                // 該当する放送局が存在しない場合
+                this.log.system.warn(`channelId is not found, manualId: ${ manualId }, channelId: ${ manualMatche.program.channelId }`);
+                this.reserves = newReserves;
+                this.writeReservesFile();
+            }
+
+            finalize();
 
             return;
         }
@@ -958,6 +1054,7 @@ class ReservationManageModel extends Model {
 
     /**
      * ReserveProgram のソート用関数
+     * 時刻指定予約 > 手動予約 > ルール予約
      * manualId が小さい > manualId が大きい > ruleId が小さい > ruleId が大きい の順で判定する
      * @param a: ReserveProgram
      * @param b: ReserveProgram
@@ -967,7 +1064,16 @@ class ReservationManageModel extends Model {
         const aIsManual = typeof (<ManualReserveProgram> a).manualId !== 'undefined';
         const bIsManual = typeof (<ManualReserveProgram> b).manualId !== 'undefined';
 
-        if (aIsManual && bIsManual) { return (<ManualReserveProgram> a).manualId! - (<ManualReserveProgram> b).manualId!; }
+        if (aIsManual && bIsManual) {
+            const aIsTimeSpecifited = !!(<ManualReserveProgram> a).isTimeSpecifited;
+            const bIsTimeSpecifited = !!(<ManualReserveProgram> b).isTimeSpecifited;
+
+            if (aIsTimeSpecifited && bIsTimeSpecifited || !aIsTimeSpecifited && !bIsTimeSpecifited) {
+                return (<ManualReserveProgram> a).manualId! - (<ManualReserveProgram> b).manualId!;
+            } else {
+                return aIsTimeSpecifited && !bIsTimeSpecifited ? -1 : 1;
+            }
+        }
         if (aIsManual && !bIsManual) { return -1; }
         if (!aIsManual && bIsManual) { return 1; }
         if (!aIsManual && !bIsManual) { return (<RuleReserveProgram> a).ruleId! - (<RuleReserveProgram> b).ruleId!; }

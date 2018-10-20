@@ -774,8 +774,7 @@ definitions:
 
   AddReserve:
     type: object
-    required:
-      - programId
+    description: 'program or programId が必須'
     properties:
       programId:
         $ref: '#/definitions/ProgramId'
@@ -790,7 +789,6 @@ definitions:
           - startAt
           - endAt
           - name
-          - channelType
         properties:
           channelId:
             $ref: '#/definitions/ServiceItemId'
@@ -811,8 +809,6 @@ definitions:
             $ref: '#/definitions/ProgramGenreLv1'
           genre2:
             $ref: '#/definitions/ProgramGenreLv2'
-          channelType:
-            $ref: '#/definitions/ChannelType'
           videoType:
             $ref: '#/definitions/ProgramVideoType'
           videoResolution:

@@ -37,7 +37,7 @@ export interface ReserveOptionInterface {
  * 予約追加時データ
  */
 export interface AddReserveInterface {
-    programId: apid.ProgramId;
+    programId?: apid.ProgramId;
     option?: ReserveOptionInterface;
     encode?: EncodeInterface;
     program?: {
@@ -49,7 +49,6 @@ export interface AddReserveInterface {
         extended?: string;
         genre1?: eapid.ProgramGenreLv1;
         genre2?: eapid.ProgramGenreLv2;
-        channelType: apid.ChannelType;
         videoType?: apid.ProgramVideoType;
         videoResolution?: apid.ProgramVideoResolution;
         videoStreamContent?: number;

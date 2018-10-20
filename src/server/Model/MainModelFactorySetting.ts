@@ -140,6 +140,7 @@ namespace ModelFactorySetting {
         const reservationManage = new ReservationManageModel(
             programsDB!,
             rulesDB!,
+            servicesDB!,
             ipc,
         );
         const recordingManage = new RecordingManageModel(

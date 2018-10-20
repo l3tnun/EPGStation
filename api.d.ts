@@ -280,7 +280,7 @@ export interface ReserveProgram {
 }
 
 export interface AddReserve {
-    programId: ProgramId;
+    programId?: ProgramId;
     option?: AddReserveOption;
     encode?: RuleEncode;
     program?: {
@@ -292,7 +292,6 @@ export interface AddReserve {
         extended?: string;
         genre1?: ProgramGenreLv1;
         genre2?: ProgramGenreLv2;
-        channelType: ChannelType;
         videoType?: ProgramVideoType;
         videoResolution?: ProgramVideoResolution;
         videoStreamContent?: number;
