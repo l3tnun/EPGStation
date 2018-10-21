@@ -1,11 +1,9 @@
 import * as events from 'events';
 import * as fs from 'fs';
 import * as http from 'http';
-import Mirakurun from 'mirakurun';
 import * as mkdirp from 'mkdirp';
 import * as path from 'path';
 import * as apid from '../../../../../node_modules/mirakurun/api';
-import CreateMirakurunClient from '../../../Util/CreateMirakurunClient';
 import DateUtil from '../../../Util/DateUtil';
 import FileUtil from '../../../Util/FileUtil';
 import StrUtil from '../../../Util/StrUtil';
@@ -19,6 +17,7 @@ import Model from '../../Model';
 import { ReservationManageModelInterface } from '../Reservation/ReservationManageModel';
 import { ReserveProgram, RuleReserveProgram } from '../ReserveProgramInterface';
 import { EncodeInterface } from '../RuleInterface';
+import { RecordingStreamCreatorInterface } from './RecordingStreamCreator';
 import { TSCheckerModelInterface } from './TSCheckerModel';
 
 interface RecordingProgram {
@@ -49,12 +48,12 @@ interface RecordingManageModelInterface extends Model {
 class RecordingManageModel extends Model implements RecordingManageModelInterface {
     private listener: events.EventEmitter = new events.EventEmitter();
     private recording: RecordingProgram[] = [];
-    private mirakurun: Mirakurun;
     private recordedDB: RecordedDBInterface;
     private servicesDB: ServicesDBInterface;
     private programsDB: ProgramsDBInterface;
     private recordedHistoryDB: RecordedHistoryDBInterface;
     private reservationManage: ReservationManageModelInterface;
+    private streamCreator: RecordingStreamCreatorInterface;
     private getTsChecker: () => TSCheckerModelInterface;
 
     constructor(
@@ -63,6 +62,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
         programsDB: ProgramsDBInterface,
         recordedHistoryDB: RecordedHistoryDBInterface,
         reservationManage: ReservationManageModelInterface,
+        streamCreator: RecordingStreamCreatorInterface,
         getTsChecker: () => TSCheckerModelInterface,
     ) {
         super();
@@ -72,8 +72,8 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
         this.programsDB = programsDB;
         this.recordedHistoryDB = recordedHistoryDB;
         this.reservationManage = reservationManage;
+        this.streamCreator = streamCreator;
         this.getTsChecker = getTsChecker;
-        this.mirakurun = CreateMirakurunClient.get();
     }
 
     /**
@@ -260,9 +260,6 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
     private async prepRecord(reserve: ReserveProgram, retry: number = 0): Promise<void> {
         this.log.system.info(`preprec: ${ reserve.program.id } ${ reserve.program.name }`);
 
-        // 録画優先度を設定
-        this.mirakurun.priority = reserve.isConflict ? (this.config.getConfig().conflictPriority || 1) : (this.config.getConfig().recPriority || 2);
-
         let recData: RecordingProgram | null = null;
         if (retry === 0) {
             // recording へ追加
@@ -283,7 +280,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
 
         // 番組ストリームを取得
         try {
-            const stream = await this.mirakurun.getProgramStream(reserve.program.id, true);
+            const stream = await this.streamCreator.create(reserve);
 
             // 録画予約がストリーム準備中に削除されていないか確認
             if (this.reservationManage.getReserve(reserve.program.id) === null) {
