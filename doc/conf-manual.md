@@ -283,7 +283,7 @@
 | --- | ---------- | --- |
 | number | 1 | no |
 
-### timeSpecifiedStartMargin
+### timeSpecifiedEndMargin
 #### 手動予約時の終了マージン(秒)
 
 | 種類 | デフォルト値 | 必須 |
