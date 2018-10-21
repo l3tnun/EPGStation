@@ -443,11 +443,15 @@ class ReservationManageModel extends Model {
         }
 
         if (typeof option.programId === 'undefined' && typeof option.program === 'undefined') {
-            this.log.system.error('Add time specification reservation Error');
+            this.log.system.error('Add time Specification Reservation Error');
             throw new Error('ReservationManageModelAddFailed');
         }
 
-        // TODO check time specification reservation options
+        // 時刻指定予約の場合にオプションの指定が正しいかチェック
+        if (!this.checkReserveOption(option)) {
+            this.log.system.error('Specification Reservation Program Option Error');
+            throw new Error('ReservationManageModelAddFailed');
+        }
 
         const exeId = await this.getExecution(1);
         const manualId = new Date().getTime();
@@ -557,6 +561,18 @@ class ReservationManageModel extends Model {
     }
 
     /**
+     * 時刻指定予約の program option が正しいか判定する
+     * @param
+     * @return boolean true: 正しい, false: 正しくない
+     */
+    private checkReserveOption(option: AddReserveInterface): boolean {
+        if (typeof option.program === 'undefined') { return true; }
+        const now = new Date().getTime();
+
+        return option.program.startAt < option.program.endAt && option.program.endAt > now;
+    }
+
+    /**
      * 時刻指定予約の番組情報を DBSchema.ProgramSchema へ変換
      * @param option: AddReserveInterface
      * @return DBSchema.ProgramSchema | null
@@ -645,14 +661,19 @@ class ReservationManageModel extends Model {
         // update program option
         if (typeof option.program !== 'undefined' && this.reserves[index].program.id < 0) {
             try {
-                const newProgram = await this.createTimeSpecifitedProgram(option);
-                // TODO check program
-                if (newProgram !== null) {
-                    this.log.system.info(newProgram.name);
-                    this.reserves[index].program = newProgram;
+                if (this.checkReserveOption(option)) {
+                    const newProgram = await this.createTimeSpecifitedProgram(option);
+                    if (newProgram !== null) {
+                        this.log.system.info(newProgram.name);
+                        this.reserves[index].program = newProgram;
+                    }
+                } else {
+                    throw new Error('editReserve Program Error');
                 }
             } catch (err) {
                 this.log.system.error(`update reserve error: ${ option.programId }`);
+                this.unLockExecution(exeId);
+                throw err;
             }
         }
 
