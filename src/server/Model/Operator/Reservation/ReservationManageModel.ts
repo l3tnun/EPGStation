@@ -12,7 +12,7 @@ import { ServicesDBInterface } from '../../DB/ServicesDB';
 import { IPCServerInterface } from '../../IPC/IPCServer';
 import Model from '../../Model';
 import { RecordingManageModelInterface } from '../Recording/RecordingManageModel';
-import { AddReserveInterface, ManualReserveProgram, ReserveOptionInterface, ReserveProgram, RuleReserveProgram } from '../ReserveProgramInterface';
+import { AddReserveInterface, ManualReserveProgram, ReserveProgram, RuleReserveProgram } from '../ReserveProgramInterface';
 import Tuner from './Tuner';
 
 interface ExeQueueData {
@@ -875,7 +875,7 @@ class ReservationManageModel extends Model {
                     data.isOverlap = false;
                 }
 
-                const option = this.createOption(rule);
+                const option = RuleUtil.createOption(rule);
                 if (option !== null) {
                     data.option = option;
                 }
@@ -920,20 +920,6 @@ class ReservationManageModel extends Model {
      */
     private writeConflictLog(reserve: ReserveProgram): void {
         this.log.system.warn(`conflict: ${ reserve.program.id } ${ DateUtil.format(new Date(reserve.program.startAt), 'yyyy-MM-ddThh:mm:ss') } ${ reserve.program.name }`);
-    }
-
-    /**
-     * RulesSchema から OptionInterface を生成する
-     * @param rule: DBSchema.RulesSchema
-     * @return OptionInterface
-     */
-    private createOption(rule: DBSchema.RulesSchema): ReserveOptionInterface | null {
-        const option: ReserveOptionInterface = {};
-
-        if (rule.directory !== null) { option.directory = rule.directory; }
-        if (rule.recordedFormat !== null) { option.recordedFormat = rule.recordedFormat; }
-
-        return option;
     }
 
     /**
