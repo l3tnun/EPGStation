@@ -474,39 +474,11 @@ class ReservationManageModel extends Model {
             }
         } else {
             // 時刻指定予約の場合
-
-            // 該当放送局が存在するかチェック
-            let channel: DBSchema.ServiceSchema | null;
             try {
-                channel = await this.servicesDB.findId(option.program.channelId);
+                program = await this.createTimeSpecifitedProgram(option);
             } catch (err) {
                 finalize();
                 throw err;
-            }
-
-            if (channel !== null) {
-                // program 生成
-                program = <any> option.program;
-                if (program !== null) {
-                    program.id = option.programId;
-                    program.eventId = 0;
-                    program.serviceId = channel.serviceId;
-                    program.networkId = channel.networkId;
-                    program.duration = program.endAt - program.startAt;
-                    program.shortName = null;
-                    program.channel = channel.channel;
-                    program.channelType = channel.channelType;
-                    if (typeof program.description === 'undefined') { program.description = null; }
-                    if (typeof program.extended === 'undefined') { program.extended = null; }
-                    if (typeof program.genre1 === 'undefined') { program.genre1 = null; }
-                    if (typeof program.genre2 === 'undefined') { program.genre2 = null; }
-                    if (typeof program.videoType === 'undefined') { program.videoType = null; }
-                    if (typeof program.videoResolution === 'undefined') { program.videoResolution = null; }
-                    if (typeof program.videoStreamContent === 'undefined') { program.videoStreamContent = null; }
-                    if (typeof program.videoComponentType === 'undefined') { program.videoComponentType = null; }
-                    if (typeof program.audioSamplingRate === 'undefined') { program.audioSamplingRate = null; }
-                    if (typeof program.audioComponentType === 'undefined') { program.audioComponentType = null; }
-                }
             }
         }
 
@@ -585,6 +557,41 @@ class ReservationManageModel extends Model {
     }
 
     /**
+     * 時刻指定予約の番組情報を DBSchema.ProgramSchema へ変換
+     * @param option: AddReserveInterface
+     * @return DBSchema.ProgramSchema | null
+     */
+    private async createTimeSpecifitedProgram(option: AddReserveInterface): Promise<DBSchema.ProgramSchema | null> {
+        if (typeof option.program === 'undefined' || typeof option.programId === 'undefined') { return null; }
+
+        // 該当放送局が存在するかチェック
+        const channel = await this.servicesDB.findId(option.program.channelId);
+        if (channel === null) { return null; }
+
+        const program = <DBSchema.ProgramSchema> option.program;
+        program.id = option.programId;
+        program.eventId = 0;
+        program.serviceId = channel.serviceId;
+        program.networkId = channel.networkId;
+        program.duration = program.endAt - program.startAt;
+        program.shortName = null;
+        program.channel = channel.channel;
+        program.channelType = channel.channelType;
+        if (typeof program.description === 'undefined') { program.description = null; }
+        if (typeof program.extended === 'undefined') { program.extended = null; }
+        if (typeof program.genre1 === 'undefined') { program.genre1 = null; }
+        if (typeof program.genre2 === 'undefined') { program.genre2 = null; }
+        if (typeof program.videoType === 'undefined') { program.videoType = null; }
+        if (typeof program.videoResolution === 'undefined') { program.videoResolution = null; }
+        if (typeof program.videoStreamContent === 'undefined') { program.videoStreamContent = null; }
+        if (typeof program.videoComponentType === 'undefined') { program.videoComponentType = null; }
+        if (typeof program.audioSamplingRate === 'undefined') { program.audioSamplingRate = null; }
+        if (typeof program.audioComponentType === 'undefined') { program.audioComponentType = null; }
+
+        return program;
+    }
+
+    /**
      * 手動予約編集
      * @param option: AddReserveInterface
      * @return Promise<void>
@@ -636,12 +643,17 @@ class ReservationManageModel extends Model {
         }
 
         // update program option
-        if (typeof option.program === 'undefined') {
-            delete this.reserves[index].program;
-        // } else {
-            // TODO create program
-            // TODO check program
-            // this.reserves[index].program = option.program;
+        if (typeof option.program !== 'undefined' && this.reserves[index].program.id < 0) {
+            try {
+                const newProgram = await this.createTimeSpecifitedProgram(option);
+                // TODO check program
+                if (newProgram !== null) {
+                    this.log.system.info(newProgram.name);
+                    this.reserves[index].program = newProgram;
+                }
+            } catch (err) {
+                this.log.system.error(`update reserve error: ${ option.programId }`);
+            }
         }
 
         this.unLockExecution(exeId);

@@ -783,44 +783,7 @@ definitions:
       encode:
         $ref: '#/definitions/RuleEncode'
       program:
-        type: object
-        required:
-          - channelId
-          - startAt
-          - endAt
-          - name
-        properties:
-          channelId:
-            $ref: '#/definitions/ServiceItemId'
-          startAt:
-            $ref: '#/definitions/UnixtimeMS'
-          endAt:
-            $ref: '#/definitions/UnixtimeMS'
-          name:
-            type: string
-            description: '番組タイトル'
-          description:
-            type: string
-            description: '番組詳細'
-          extended:
-            type: string
-            description: '番組拡張'
-          genre1:
-            $ref: '#/definitions/ProgramGenreLv1'
-          genre2:
-            $ref: '#/definitions/ProgramGenreLv2'
-          videoType:
-            $ref: '#/definitions/ProgramVideoType'
-          videoResolution:
-            $ref: '#/definitions/ProgramVideoResolution'
-          videoStreamContent:
-            type: integer
-          videoComponentType:
-            type: integer
-          audioSamplingRate:
-            $ref: '#/definitions/ProgramAudioSamplingRate'
-          audioComponentType:
-            type: integer
+        $ref: '#/definitions/AddReserveProgram'
 
   EditReserve:
     type: object
@@ -829,6 +792,8 @@ definitions:
         $ref: '#/definitions/AddReserveOption'
       encode:
         $ref: '#/definitions/RuleEncode'
+      program:
+        $ref: '#/definitions/AddReserveProgram'
 
   AddReserveOption:
     type: object
@@ -840,6 +805,47 @@ definitions:
       recordedFormat:
         type: string
         description: '録画ファイル名フォーマット'
+
+  AddReserveProgram:
+    type: object
+    description: '時刻指定予約番組情報オプション'
+    required:
+      - channelId
+      - startAt
+      - endAt
+      - name
+    properties:
+      channelId:
+        $ref: '#/definitions/ServiceItemId'
+      startAt:
+        $ref: '#/definitions/UnixtimeMS'
+      endAt:
+        $ref: '#/definitions/UnixtimeMS'
+      name:
+        type: string
+        description: '番組タイトル'
+      description:
+        type: string
+        description: '番組詳細'
+      extended:
+        type: string
+        description: '番組拡張'
+      genre1:
+        $ref: '#/definitions/ProgramGenreLv1'
+      genre2:
+        $ref: '#/definitions/ProgramGenreLv2'
+      videoType:
+        $ref: '#/definitions/ProgramVideoType'
+      videoResolution:
+        $ref: '#/definitions/ProgramVideoResolution'
+      videoStreamContent:
+        type: integer
+      videoComponentType:
+        type: integer
+      audioSamplingRate:
+        $ref: '#/definitions/ProgramAudioSamplingRate'
+      audioComponentType:
+        type: integer
 
   Reserve:
     type: object
