@@ -463,52 +463,54 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
                 // recording 状態を解除
                 await this.recordedDB.removeRecording(recorded.id);
 
-                // 番組情報を最新に更新する
-                const program = await this.programsDB.findId(recorded.programId);
-                if (program !== null) {
-                    recorded = {
-                        id: recorded.id,
-                        programId: recorded.programId,
-                        channelId: program.channelId,
-                        channelType: program.channelType,
-                        startAt: program.startAt,
-                        endAt: program.endAt,
-                        duration: program.duration,
-                        name: program.name,
-                        description: program.description,
-                        extended: program.extended,
-                        genre1: program.genre1,
-                        genre2: program.genre2,
-                        videoType: program.videoType,
-                        videoResolution: program.videoResolution,
-                        videoStreamContent: program.videoStreamContent,
-                        videoComponentType: program.videoComponentType,
-                        audioSamplingRate: program.audioSamplingRate,
-                        audioComponentType: program.audioComponentType,
-                        recPath: recData.recPath!,
-                        ruleId: ruleId,
-                        thumbnailPath: null,
-                        recording: false,
-                        protection: false,
-                        filesize: null,
-                        logPath: recorded.logPath,
-                        errorCnt: null,
-                        dropCnt: null,
-                        scramblingCnt: null,
-                    };
-                    await this.recordedDB.replace(recorded);
+                // programId 予約の場合、番組情報を最新に更新する
+                if (recorded.programId > 0) {
+                    const program = await this.programsDB.findId(recorded.programId);
+                    if (program !== null) {
+                        recorded = {
+                            id: recorded.id,
+                            programId: recorded.programId,
+                            channelId: program.channelId,
+                            channelType: program.channelType,
+                            startAt: program.startAt,
+                            endAt: program.endAt,
+                            duration: program.duration,
+                            name: program.name,
+                            description: program.description,
+                            extended: program.extended,
+                            genre1: program.genre1,
+                            genre2: program.genre2,
+                            videoType: program.videoType,
+                            videoResolution: program.videoResolution,
+                            videoStreamContent: program.videoStreamContent,
+                            videoComponentType: program.videoComponentType,
+                            audioSamplingRate: program.audioSamplingRate,
+                            audioComponentType: program.audioComponentType,
+                            recPath: recData.recPath!,
+                            ruleId: ruleId,
+                            thumbnailPath: null,
+                            recording: false,
+                            protection: false,
+                            filesize: null,
+                            logPath: recorded.logPath,
+                            errorCnt: null,
+                            dropCnt: null,
+                            scramblingCnt: null,
+                        };
+                        await this.recordedDB.replace(recorded);
 
-                    historyProgram = {
-                        id: 0,
-                        name: program.name,
-                        endAt: program.endAt,
-                    };
-                } else {
-                    historyProgram = {
-                        id: 0,
-                        name: recorded.name,
-                        endAt: recorded.endAt,
-                    };
+                        historyProgram = {
+                            id: 0,
+                            name: program.name,
+                            endAt: program.endAt,
+                        };
+                    } else {
+                        historyProgram = {
+                            id: 0,
+                            name: recorded.name,
+                            endAt: recorded.endAt,
+                        };
+                    }
                 }
 
                 // update filesize
