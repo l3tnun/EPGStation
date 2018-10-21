@@ -704,7 +704,7 @@ class ReservationManageModel extends Model {
 
         // 手動予約の情報を更新する
         for (const reserve of this.reserves) {
-            if (typeof (<ManualReserveProgram> reserve).manualId === 'undefined') { continue; }
+            if (typeof (<ManualReserveProgram> reserve).manualId === 'undefined' || !!(<ManualReserveProgram> reserve).isTimeSpecifited) { continue; }
             await Util.sleep(10);
             await this.updateManual((<ManualReserveProgram> reserve).manualId!);
         }
