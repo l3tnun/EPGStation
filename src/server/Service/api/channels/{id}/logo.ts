@@ -24,9 +24,9 @@ export const get: Operation = async(req, res) => {
 };
 
 get.apiDoc = {
-    summary: 'channel log を取得',
+    summary: 'channel logo を取得',
     tags: ['channels'],
-    description: 'channel log を取得する',
+    description: 'channel logo を取得する',
     parameters: [
         {
             name: 'id',
