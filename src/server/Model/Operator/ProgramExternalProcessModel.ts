@@ -55,7 +55,7 @@ class ProgramExternalProcessModel extends QueueProcessBaseModel implements Progr
                         DESCRIPTION: program.description,
                         EXTENDED: program.extended,
                     },
-                });
+                } as any);
 
                 child.on('exit', () => {
                     this.log.system.info(`${ name } process is fin`);

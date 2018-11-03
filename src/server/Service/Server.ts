@@ -10,6 +10,7 @@ import * as yaml from 'js-yaml';
 import * as log4js from 'log4js';
 import * as mkdirp from 'mkdirp';
 import * as multer from 'multer';
+import { OpenAPIV2 } from 'openapi-types';
 import * as path from 'path';
 import * as swaggerUi from 'swagger-ui-express';
 import * as urljoin from 'url-join';
@@ -48,7 +49,7 @@ class Server extends Base {
         const pkg = require(path.join('..', '..', '..', 'package.json'));
 
         // read api.yml
-        const api = <openapi.OpenApi.ApiDefinition> yaml.safeLoad(fs.readFileSync(path.join(__dirname, '..', '..', '..', 'api.yml'), 'utf-8'));
+        const api = <OpenAPIV2.Document> yaml.safeLoad(fs.readFileSync(path.join(__dirname, '..', '..', '..', 'api.yml'), 'utf-8'));
         api.basePath = this.createUrl('/api');
         api.info = {
             title: pkg.name,
@@ -135,7 +136,9 @@ class Server extends Base {
             errorTransformer: (openApi) => {
                 this.log.system.error(<any> openApi);
 
-                return openApi.message;
+                return {
+                    message: (<any> openApi).message,
+                };
             },
             exposeApiDocs: true,
             paths: path.join(__dirname, 'api'),

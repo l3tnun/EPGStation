@@ -16,4 +16,3 @@ data/upload/*
 node_modules
 dist
 !.gitkeep
-package-lock.json
