@@ -48,10 +48,11 @@ interface ReservationManageModelInterface extends Model {
     getConflicts(limit?: number, offset?: number): ReserveLimit;
     getSkips(limit?: number, offset?: number): ReserveLimit;
     getOverlaps(limit?: number, offset?: number): ReserveLimit;
+    getPosition(programId: apid.ProgramId): number | null;
     cancel(id: apid.ProgramId): void;
     removeSkip(id: apid.ProgramId): Promise<void>;
     disableOverlap(id: apid.ProgramId): Promise<void>;
-    addReserve(option: AddReserveInterface): Promise<void>;
+    addReserve(option: AddReserveInterface): Promise<apid.ProgramId>;
     editReserve(option: AddReserveInterface): Promise<void>;
     updateAll(): Promise<void>;
     updateRule(ruleId: number): Promise<void>;
@@ -317,6 +318,18 @@ class ReservationManageModel extends Model {
     }
 
     /**
+     * 指定した programId の予約の位置を返す
+     * @param programId: apid.ProgramId
+     */
+    public getPosition(programId: apid.ProgramId): number | null {
+        const index = this.reserves.findIndex((reserve) => {
+            return reserve.program.id === programId;
+        });
+
+        return index === -1 ? null : index;
+    }
+
+    /**
      * 予約削除(手動予約) or 予約スキップ(ルール予約)
      * @param id: program id
      * @return Promise<void>
@@ -432,10 +445,10 @@ class ReservationManageModel extends Model {
     /**
      * 手動予約追加
      * @param option: AddReserveInterface
-     * @return Promise<void>
+     * @return Promise<apid.ProgramId>
      * @throws ReservationManageModelAddFailed 予約に失敗
      */
-    public async addReserve(option: AddReserveInterface): Promise<void> {
+    public async addReserve(option: AddReserveInterface): Promise<apid.ProgramId> {
         // encode option が正しいかチェック
         if (typeof option.encode !== 'undefined' && !(RuleUtil.checkEncodeOption(option.encode))) {
             this.log.system.error('addReserve Failed');
@@ -558,6 +571,8 @@ class ReservationManageModel extends Model {
         this.addEventsNotify(addReserve.program);
 
         this.log.system.info(`success addReserve: ${ option.programId }`);
+
+        return option.programId;
     }
 
     /**

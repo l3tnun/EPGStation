@@ -11,7 +11,8 @@ interface ReservesModelInterface extends ApiModel {
     getConflicts(limit: number, offset: number): Promise<{}[]>;
     getSkips(limit: number, offset: number): Promise<{}[]>;
     getOverlaps(limit: number, offset: number): Promise<{}[]>;
-    addReserve(option: AddReserveInterface): Promise<void>;
+    getPosition(programId: number): Promise<{}>;
+    addReserve(option: AddReserveInterface): Promise<{}>;
     editReserve(option: AddReserveInterface): Promise<void>;
     cancelReserve(programId: apid.ProgramId): Promise<void>;
     removeReserveSkip(programId: apid.ProgramId): Promise<void>;
@@ -108,6 +109,18 @@ class ReservesModel extends ApiModel implements ReservesModelInterface {
         };
     }
 
+    /**
+     * 指定した programId の予約の位置を取得
+     * @param programId: number
+     * @return { programId: number | null }
+     */
+    public async getPosition(programId: number): Promise<{}> {
+        const result = await this.ipc.getReservePosition(programId);
+
+        return {
+            programId: result,
+        };
+    }
 
     /**
      * ReserveProgram[] の修正
@@ -141,10 +154,14 @@ class ReservesModel extends ApiModel implements ReservesModelInterface {
     /**
      * 予約追加
      * @param option: AddReserveInterface
-     * @return Promise<void>
+     * @return Promise<number> ProgramId
      */
-    public async addReserve(option: AddReserveInterface): Promise<void> {
-        await this.ipc.addReserve(option);
+    public async addReserve(option: AddReserveInterface): Promise<{}> {
+        const programId = await this.ipc.addReserve(option);
+
+        return {
+            programId: programId,
+        };
     }
 
     /**

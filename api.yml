@@ -847,6 +847,14 @@ definitions:
       audioComponentType:
         type: integer
 
+  AddReserveResult:
+    type: object
+    required:
+      - programId
+    properties:
+      programId:
+        $ref: '#/definitions/ProgramId'
+
   Reserve:
     type: object
     required:
