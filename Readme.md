@@ -33,7 +33,7 @@ PC からの閲覧でもモダンな UI で操作可能です
 ## 動作環境
 
 - Linux / macOS / Window 
-- [Node.js](http://nodejs.org/) : ^6.5.x || ~ 8 
+- [Node.js](http://nodejs.org/) : ^6.5.x || ^8.x.x || ^10.13.0
 - [Mirakurun](https://github.com/Chinachu/Mirakurun) : ^2.5.7 
 - いずれかのデータベース (文字コードは  utf-8 とする)
 	- [MySQL](https://www.mysql.com/jp/) ([MariaDB](https://mariadb.org/))【推奨】
