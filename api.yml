@@ -855,6 +855,13 @@ definitions:
       programId:
         $ref: '#/definitions/ProgramId'
 
+  ReservePositionResult:
+    type: object
+    description: '指定した programId 予約の位置'
+    properties:
+      position:
+        type: integer
+
   Reserve:
     type: object
     required:

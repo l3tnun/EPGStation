@@ -117,8 +117,8 @@ class ReservesModel extends ApiModel implements ReservesModelInterface {
     public async getPosition(programId: number): Promise<{}> {
         const result = await this.ipc.getReservePosition(programId);
 
-        return {
-            programId: result,
+        return result === null ? {} : {
+            position: result,
         };
     }
 
