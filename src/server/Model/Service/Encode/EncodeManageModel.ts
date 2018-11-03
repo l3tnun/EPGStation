@@ -454,7 +454,7 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
                     GENRE1: program.recordedProgram.genre1,
                     GENRE2: program.recordedProgram.genre2,
                 },
-            });
+            } as any);
         } catch (err) {
             this.log.system.error('encode process create error');
             this.finalize();

@@ -58,7 +58,7 @@ class RecordedExternalProcessModel extends QueueProcessBaseModel implements Reco
                         RECPATH: program.recPath,
                         LOGPATH: program.logPath,
                     },
-                });
+                } as any);
 
                 child.on('exit', () => {
                     this.log.system.info(`${ name } process is fin`);
