@@ -2,6 +2,7 @@ import * as m from 'mithril';
 import * as apid from '../../../../api';
 import { ViewModelStatus } from '../../Enums';
 import { audioComponentType, audioSamplingRate, videoComponentType } from '../../lib/event';
+import { ChannelsApiModelInterface } from '../../Model/Api/ChannelsApiModel';
 import { ConfigApiModelInterface } from '../../Model/Api/ConfigApiModel';
 import { ReservesApiModelInterface } from '../../Model/Api/ReservesApiModel';
 import { ScheduleApiModelInterface } from '../../Model/Api/ScheduleApiModel';
@@ -17,6 +18,7 @@ import ViewModel from '../ViewModel';
 class ProgramDetailViewModel extends ViewModel {
     private scheduleApiModel: ScheduleApiModelInterface;
     private reserves: ReservesApiModelInterface;
+    private channels: ChannelsApiModelInterface;
     private config: ConfigApiModelInterface;
     private snackbar: SnackbarModelInterface;
 
@@ -39,12 +41,14 @@ class ProgramDetailViewModel extends ViewModel {
     constructor(
         scheduleApiModel: ScheduleApiModelInterface,
         reserves: ReservesApiModelInterface,
+        channels: ChannelsApiModelInterface,
         config: ConfigApiModelInterface,
         snackbar: SnackbarModelInterface,
     ) {
         super();
         this.scheduleApiModel = scheduleApiModel;
         this.reserves = reserves;
+        this.channels = channels;
         this.config = config;
         this.snackbar = snackbar;
     }
@@ -90,7 +94,7 @@ class ProgramDetailViewModel extends ViewModel {
      */
     private getProgramId(): number {
         const programId = parseInt(m.route.param('programId'), 10);
-        if (isNaN(programId)) {
+        if (typeof programId !== 'number') {
             this.openSnackbar('Program Id が不正です。');
             throw new Error('program id is NaN');
         }
@@ -181,6 +185,9 @@ class ProgramDetailViewModel extends ViewModel {
      * 番組データを取得する
      */
     public async updateSchedule(): Promise<void> {
+        const programId = this.getProgramId();
+        if (programId < 0) { return; }
+
         // 番組情報の取得
         await this.scheduleApiModel.fetchScheduleDetail(this.getProgramId());
     }
@@ -255,7 +262,17 @@ class ProgramDetailViewModel extends ViewModel {
     public getSchedule(): apid.ScheduleProgram | null {
         const schedule = this.scheduleApiModel.getSchedule();
 
-        return schedule.length === 0 ? null : schedule[0];
+        if (this.reserve === null) {
+            return schedule.length === 0 ? null : schedule[0];
+        }
+
+        const channel = this.channels.getChannel(this.reserve.program.channelId);
+        if (channel === null) { return null; }
+
+        return {
+            channel: channel,
+            programs: [<any> this.reserve.program],
+        };
     }
 
     /**

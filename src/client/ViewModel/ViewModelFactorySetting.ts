@@ -144,6 +144,7 @@ namespace ViewModelFactorySetting {
         factory.reg('ProgramDetailViewModel', new ProgramDetailViewModel(
             scheduleApiModel,
             reservesApiModel,
+            channelsApiModel,
             configModel,
             snackbarModel,
         ));
