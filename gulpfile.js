@@ -11,6 +11,7 @@ const sourcemaps = require('gulp-sourcemaps');
 const minimist = require('minimist');
 const webpackStream = require('webpack-stream');
 const webpack = require('webpack');
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const sass = require('gulp-sass');
 const concat = require('gulp-concat');
 const cleanCSS = require('gulp-clean-css');
@@ -79,7 +80,11 @@ const webpackConfig = {
     }
 }
 
-if (!isProduction) {
+if (isProduction) {
+    webpackConfig.optimization = {
+        minimizer: [new UglifyJsPlugin()]
+    };
+} else {
     // enable source map
     webpackConfig.devtool = 'source-map';
 }
@@ -99,14 +104,14 @@ gulp.task('tslint-server', () => {
         }));
 });
 
-gulp.task('build-server', ['clean-server', 'tslint-server'],() => {
+gulp.task('build-server', gulp.series('clean-server', 'tslint-server', () => {
     return gulp.src(config.server.src)
         .pipe(plumber())
         .pipe(sourcemaps.init())
         .pipe(typescript(config.server.options))
         .pipe(sourcemaps.write('./'))
         .pipe(gulp.dest(config.server.dst));
-});
+}));
 
 // client
 gulp.task('clean-client', () => {
@@ -123,7 +128,7 @@ gulp.task('tslint-client', () => {
         }));
 });
 
-gulp.task('build-client', ['clean-client', 'tslint-client'], () => {
+gulp.task('build-client', gulp.series('clean-client', 'tslint-client', () => {
     return gulp.src(config.client.src)
         .pipe(plumber())
         .pipe(webpackStream(webpackConfig, webpack))
@@ -131,11 +136,11 @@ gulp.task('build-client', ['clean-client', 'tslint-client'], () => {
         .on('error', (error) => {
             console.error(error);
         });
-});
+}));
 
 gulp.task('clean-client-css', () => {
     return del([config.client.css.dst]);
-})
+});
 
 gulp.task('client-css-build', () => {
     let result = gulp.src(config.client.css.src)
@@ -156,25 +161,26 @@ gulp.task('client-css-build', () => {
 });
 
 // clean
-gulp.task('clean', ['clean-server', 'clean-client', 'clean-client-css']);
+gulp.task('clean', gulp.series('clean-server', 'clean-client', 'clean-client-css'));
 
 // build
-gulp.task('build', ['clean', 'build-server', 'build-client', 'client-css-build']);
+gulp.task('build', gulp.series('clean', 'build-server', 'build-client', 'client-css-build'));
 
-gulp.task('watch', [
-        'clean-server',
-        'tslint-server',
-        'build-server',
-        'clean-client',
-        'tslint-client',
-        'build-client',
-        'clean-client-css',
-        'client-css-build'
-    ], () => {
-    gulp.watch(config.server.src, ['clean-server', 'tslint-server', 'build-server']);
-    gulp.watch(config.client.src, ['clean-client', 'build-client']);
-    gulp.watch(config.client.css.src, ['clean-client-css', 'client-css-build']);
-});
+gulp.task('watch', gulp.series(
+    'clean-server',
+    'tslint-server',
+    'build-server',
+    'clean-client',
+    'tslint-client',
+    'build-client',
+    'clean-client-css',
+    'client-css-build',
+    () => {
+        gulp.watch(config.server.src, gulp.task('build-server'));
+        gulp.watch(config.client.src, gulp.task('build-client'));
+        gulp.watch(config.client.css.src, gulp.task('client-css-build'));
+    })
+);
 
-gulp.task('default', ['watch']);
+gulp.task('default', gulp.series('watch'));
 

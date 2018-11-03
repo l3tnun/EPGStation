@@ -27,7 +27,7 @@ export const get: Operation = async(req, res) => {
                 req.params.id,
                 req.query.mode,
                 req.query.ss,
-                typeof req.headers.range === 'undefined' ? null : req.headers.range,
+                typeof req.headers.range === 'string' ? req.headers.range : null,
             );
 
             res.status(200);
@@ -41,7 +41,7 @@ export const get: Operation = async(req, res) => {
             req.params.id,
             req.query.mode,
             req.query.ss,
-            typeof req.headers.range === 'undefined' ? null : req.headers.range,
+            typeof req.headers.range === 'string' ? req.headers.range : null,
         );
         stream = info.stream;
         const encChild = info.stream.getEncChild();

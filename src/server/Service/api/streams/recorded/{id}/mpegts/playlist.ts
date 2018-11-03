@@ -7,7 +7,7 @@ export const get: Operation = async(req, res) => {
     const streams = <StreamsModelInterface> factory.get('StreamsModel');
 
     try {
-        const list = await streams.getRecordedStreamingM3u8(req.headers.host, req.header('x-forwarded-proto') === 'https', req.params.id, req.query.mode);
+        const list = await streams.getRecordedStreamingM3u8(req.headers.host!, req.header('x-forwarded-proto') === 'https', req.params.id, req.query.mode);
         api.responsePlayList(req, res, list);
     } catch (err) {
         if (err.message === StreamsModelInterface.recordedIsNotFoundError) {
