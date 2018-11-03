@@ -64,7 +64,7 @@ class RecordedStreamingMultiTypeStream extends Stream {
         try {
             // file read stream の生成
             this.fileStream = fs.createReadStream(recorded.recPath, {
-                start: videoInfo.bitRate / 8 * this.startTime,
+                start: Math.floor(videoInfo.bitRate / 8 * this.startTime),
             });
 
             // cmd の生成
