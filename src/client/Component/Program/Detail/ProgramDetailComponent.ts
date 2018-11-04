@@ -47,47 +47,52 @@ class ProgramDetailComponent extends ParentComponent<void> {
      * @return m.Child | null
      */
     public createContent(): m.Child {
-        const schedule = this.viewModel.getSchedule();
-        if (schedule === null) { return null; }
+        const program = this.viewModel.getProgram();
+        const channel = this.viewModel.getChannel();
+        if (program === null || channel === null) { return null; }
 
         return m('div', {
             class: 'program-detail-content',
             onupdate: () => { this.restoreMainLayoutPosition(); },
         }, [
-            this.createProgramCard(schedule),
+            this.createProgramCard(program, channel),
             this.createOptionCard(),
         ]);
     }
 
     /**
      * program card
-     * @param schedule: apid.ScheduleProgram
+     * @param program: apid.ScheduleProgramItem | apid.ReserveProgram,
+     * @param channel: apid.ScheduleServiceItem | apid.ServiceItem,
      * @return m.Child
      */
-    private createProgramCard(schedule: apid.ScheduleProgram): m.Child {
+    private createProgramCard(
+        program: apid.ScheduleProgramItem | apid.ReserveProgram,
+        channel: apid.ScheduleServiceItem | apid.ServiceItem,
+    ): m.Child {
         return m('div', {
             class: 'program-card mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col',
         }, [
             m('div', { class: 'mdl-card__supporting-text' }, [
-                m('div', { class: 'title' }, schedule.programs[0].name),
-                m('div', { class: 'channel' }, schedule.channel.name),
+                m('div', { class: 'title' }, program.name),
+                m('div', { class: 'channel' }, channel.name),
                 m('div', { class: 'time' },
-                    this.viewModel.createTimeStr(schedule.programs[0].startAt, schedule.programs[0].endAt),
+                    this.viewModel.createTimeStr(program.startAt, program.endAt),
                 ),
                 m('div', { class: 'genre' },
-                    this.viewModel.createGenresStr(schedule.programs[0].genre1, schedule.programs[0].genre2),
+                    this.viewModel.createGenresStr(program.genre1, program.genre2),
                 ),
-                m('div', { class: 'description' }, schedule.programs[0].description),
+                m('div', { class: 'description' }, program.description),
                 m('div', { class: 'video' },
-                    '映像: ' + this.viewModel.createVideoInfoStr(schedule.programs[0].videoComponentType),
+                    '映像: ' + this.viewModel.createVideoInfoStr(program.videoComponentType),
                 ),
                 m('div', { class: 'audio-mode' },
-                    '音声: ' + this.viewModel.createAudioModeStr(schedule.programs[0].audioComponentType),
+                    '音声: ' + this.viewModel.createAudioModeStr(program.audioComponentType),
                 ),
                 m('div', { class: 'audio-sampling-rate' },
-                    'サンプリングレート: ' + this.viewModel.createAudioSamplingRateStr(schedule.programs[0].audioSamplingRate),
+                    'サンプリングレート: ' + this.viewModel.createAudioSamplingRateStr(program.audioSamplingRate),
                 ),
-                m('div', { class: 'is-free' }, schedule.programs[0].isFree ? '無料放送' : '有料放送'),
+                m('div', { class: 'is-free' }, program.isFree ? '無料放送' : '有料放送'),
             ]),
         ]);
     }

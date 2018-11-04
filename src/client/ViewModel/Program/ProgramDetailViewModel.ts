@@ -256,23 +256,31 @@ class ProgramDetailViewModel extends ViewModel {
     }
 
     /**
-     * getSchedule
-     * @return apid.ScheduleProgram
+     * get program
+     * @return apid.ScheduleProgramItem | apid.ReserveProgram | null
      */
-    public getSchedule(): apid.ScheduleProgram | null {
-        const schedule = this.scheduleApiModel.getSchedule();
-
+    public getProgram(): apid.ScheduleProgramItem | apid.ReserveProgram | null {
         if (this.reserve === null) {
-            return schedule.length === 0 ? null : schedule[0];
+            const schedule = this.scheduleApiModel.getSchedule();
+
+            return schedule.length === 0 ? null : schedule[0].programs[0];
         }
 
-        const channel = this.channels.getChannel(this.reserve.program.channelId);
-        if (channel === null) { return null; }
+        return this.reserve.program;
+    }
 
-        return {
-            channel: channel,
-            programs: [<any> this.reserve.program],
-        };
+    /**
+     * getChannel
+     * @return ScheduleServiceItem | null
+     */
+    public getChannel(): apid.ScheduleServiceItem | apid.ServiceItem | null {
+        if (this.reserve === null) {
+            const schedule = this.scheduleApiModel.getSchedule();
+
+            return schedule.length === 0 ? null : schedule[0].channel;
+        }
+
+        return this.channels.getChannel(this.reserve.program.channelId);
     }
 
     /**
