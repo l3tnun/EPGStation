@@ -453,6 +453,10 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
                     CHANNELID: program.recordedProgram.channelId,
                     GENRE1: program.recordedProgram.genre1,
                     GENRE2: program.recordedProgram.genre2,
+                    logPath: program.recordedProgram.logPath,
+                    errorCnt: program.recordedProgram.errorCnt,
+                    dropCnt: program.recordedProgram.dropCnt,
+                    scramblingCnt: program.recordedProgram.scramblingCnt,
                 },
             } as any);
         } catch (err) {
