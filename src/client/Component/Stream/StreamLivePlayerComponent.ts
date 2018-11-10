@@ -57,11 +57,6 @@ class StreamLivePlayerComponent extends Component<void> {
         }
 
         return m('video', {
-            preload: 'none',
-            height: '$auto',
-            width: '100%',
-            controls: ' ',
-            playsinline: ' ',
             oncreate: (vnode: m.VnodeDOM<void, this>) => {
                 const src = this.viewModel.getSrc();
                 if (src === null) { return; }

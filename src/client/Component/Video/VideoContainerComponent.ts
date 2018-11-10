@@ -254,6 +254,18 @@ class VideoContainerComponent extends Component<ControlArgs> {
             this.videoElement = <HTMLVideoElement> videos[0];
             this.videoElement.controls = this.disableControl;
 
+            this.videoElement.preload = 'none';
+            this.videoElement.setAttribute('playsinline', 'true');
+            this.videoElement.setAttribute('autoplay', 'true');
+
+            if (this.isFullScreen()) {
+                this.videoElement.setAttribute('height', '100%');
+                this.videoElement.setAttribute('width', '100%');
+            } else {
+                this.videoElement.setAttribute('height', '$auto');
+                this.videoElement.setAttribute('width', '100%');
+            }
+
             // set pip
             this.isEnablePip = (<any> this.videoElement).webkitSupportsPresentationMode
                 && typeof (<any> this.videoElement).webkitSupportsPresentationMode === 'function'
