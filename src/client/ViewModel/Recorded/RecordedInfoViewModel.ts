@@ -222,15 +222,7 @@ class RecordedInfoViewModel extends ViewModel {
      * @return string | null
      */
     private createFileSizeStr(size: number | undefined): string | null {
-        if (typeof size === 'undefined') { return null; }
-
-        let cnt = 0;
-        for (; cnt <= RecordedInfoViewModel.fileSizeUnits.length; cnt++) {
-            if (size < 1000) { break; }
-            size /= 1024;
-        }
-
-        return `${ size.toFixed(1) }${ RecordedInfoViewModel.fileSizeUnits[cnt] }`;
+        return typeof size === 'undefined' ? null : Util.getFileSizeStr(size);
     }
 
     /**
@@ -477,7 +469,6 @@ namespace RecordedInfoViewModel {
     export const id = 'recorded-info';
     export const tabId = 'recorded-info-tab';
     export const contentId = 'recorded-info-content';
-    export const fileSizeUnits = ['B', 'KB', 'MB', 'GB'];
     export const errorLogId = 'recorded-error-log';
 }
 

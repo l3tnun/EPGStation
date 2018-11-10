@@ -1,4 +1,5 @@
 import * as m from 'mithril';
+import Util from '../../Util/Util';
 import RecordedMenuViewModel from '../../ViewModel/Recorded/RecordedMenuViewModel';
 import factory from '../../ViewModel/ViewModelFactory';
 import Component from '../Component';
@@ -20,6 +21,12 @@ class RecordedDeleteComponent extends Component<void> {
     public view(): m.Child {
         const files: m.Child[] = [];
         for (let i = 0; i < this.viewModel.recordedFiles.length; i++) {
+            let name = this.viewModel.recordedFiles[i].name;
+            const size = this.viewModel.recordedFiles[i].size;
+            if (this.viewModel.recordedFiles[i] !== null && size !== null) {
+                name += ` (${ Util.getFileSizeStr(size) })`;
+            }
+
             files.push(m('label', { class: 'mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect' }, [
                 m('input', {
                     type: 'checkbox',
@@ -28,7 +35,7 @@ class RecordedDeleteComponent extends Component<void> {
                     onclick: m.withAttr('checked', (value) => { this.viewModel.recordedFiles[i].checked = value; }),
                     onupdate: (vnode: m.VnodeDOM<void, this>) => { this.checkboxOnUpdate(<HTMLInputElement> (vnode.dom)); },
                 }),
-                m('span', { class: 'mdl-checkbox__label' }, this.viewModel.recordedFiles[i].name),
+                m('span', { class: 'mdl-checkbox__label' }, name),
             ]));
         }
 

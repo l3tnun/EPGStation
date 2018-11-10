@@ -543,6 +543,10 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
                         drop: drop,
                         scrambling: scrambling,
                     });
+
+                    recorded.errorCnt = error;
+                    recorded.dropCnt = drop;
+                    recorded.scramblingCnt = scrambling;
                 }
 
                 // 録画完了を通知

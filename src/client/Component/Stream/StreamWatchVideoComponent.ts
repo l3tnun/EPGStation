@@ -26,11 +26,6 @@ class StreamWatchVideoComponent extends Component<void> {
         if (this.viewModel.isEnable()) {
             return m('video', {
                 id: StreamWatchViewModel.videoId,
-                preload: 'none',
-                height: '$auto',
-                width: '100%',
-                controls: ' ',
-                playsinline: ' ',
                 oncreate: (vnode: m.VnodeDOM<void, this>) => {
                     if (typeof m.route.param('stream') === 'undefined') { return; }
 

@@ -48,11 +48,6 @@ class RecordedPlayerComponent extends Component<void> {
         if (this.viewModel.getSrc() === null) { return m('div', 'dummy'); }
 
         return m('video', {
-            preload: 'none',
-            height: '$auto',
-            width: '100%',
-            controls: ' ',
-            playsinline: ' ',
             oncreate: (vnode: m.VnodeDOM<void, this>) => {
                 const src = this.viewModel.getSrc();
                 if (src === null) { return; }

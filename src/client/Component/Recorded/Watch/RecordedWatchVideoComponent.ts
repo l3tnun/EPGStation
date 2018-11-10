@@ -22,11 +22,6 @@ class RecordedWatchVideoComponent extends Component<void> {
      */
     public view(): m.Child {
         return m('video', {
-            preload: 'none',
-            height: '$auto',
-            width: '100%',
-            controls: ' ',
-            playsinline: ' ',
             oncreate: (vnode: m.VnodeDOM<void, this>) => {
                 const element = <HTMLVideoElement> vnode.dom;
                 this.source = this.viewModel.getSource();

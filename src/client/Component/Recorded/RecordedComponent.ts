@@ -200,7 +200,7 @@ class RecordedComponent extends ParentComponent<void> {
                     forceDialog: true,
                 }),
                 m(EditHeaderComponent, {
-                    title: `${ this.viewModel.getSelectedCnt() } 件選択`,
+                    title: `${ this.viewModel.getSelectedCnt() } 件選択 (${ Util.getFileSizeStr(this.viewModel.getSelectedTotleFileSize()) })`,
                     button: [
                         {
                             onclick: () => { this.viewModel.selectAll(); },
@@ -229,8 +229,10 @@ class RecordedComponent extends ParentComponent<void> {
      * @return m.Child
      */
     private createContent(): m.Child {
+        const isEditing = this.viewModel.isEditing();
+
         return m('div', {
-            class: 'recorded-content' + (this.viewModel.isEditing() ? ' is-editing' : ''),
+            class: 'recorded-content' + (isEditing ? ' is-editing' : ''),
             oncreate: (vnode: m.VnodeDOM<void, this>) => {
                 this.resizeElement = <HTMLElement> (vnode.dom);
                 window.addEventListener('resize', this.resizeListener, false);
@@ -244,7 +246,7 @@ class RecordedComponent extends ParentComponent<void> {
             },
         }, [
             this.viewModel.getRecordeds().recorded.map((recorded) => {
-                return this.createCard(recorded);
+                return this.createCard(recorded, isEditing);
             }),
             m(PaginationComponent, {
                 total: this.viewModel.getRecordeds().total,
@@ -274,9 +276,10 @@ class RecordedComponent extends ParentComponent<void> {
     /**
      * card
      * @param recorded: apid.RecordedProgram
+     * @param isEditing: boolean
      * @return m.Child
      */
-    private createCard(recorded: apid.RecordedProgram): m.Child {
+    private createCard(recorded: apid.RecordedProgram, isEditing: boolean): m.Child {
         return m('div', {
             class: 'recorded-card mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col',
             onclick: () => {
@@ -335,10 +338,24 @@ class RecordedComponent extends ParentComponent<void> {
                     m('div', { class: 'title' }, recorded.name),
                     m('div', { class: 'channel' }, this.viewModel.getChannelName(recorded.channelId)),
                     m('div', { class: 'time' }, this.viewModel.getTimeStr(recorded)),
-                    m('div', { class: 'description' }, recorded.description),
+                    this.getDescription(recorded, isEditing),
                 ]),
             ]),
         ]);
+    }
+
+    /**
+     * 番組概要 編集中はファイルサイズを返す
+     * @param recorded: apid.RecordedProgram
+     * @param isEditing: boolean
+     * @return m.Child
+     */
+    private getDescription(recorded: apid.RecordedProgram, isEditing: boolean): m.Child {
+        if (!isEditing) {
+            return m('div', { class: 'description' }, recorded.description);
+        }
+
+        return m('div', { class: 'file-size' }, Util.getFileSizeStr(this.viewModel.getFileSize(recorded)));
     }
 }
 

@@ -15,7 +15,6 @@ import VideoContainerComponent from '../Video/VideoContainerComponent';
 class VideoWatchComponent extends ParentComponent<void> {
     private viewModel: VideoWatchViewModel;
     private streamInfo: StreamInfoViewModel;
-    private playError: boolean = false;
 
     constructor() {
         super();
@@ -157,19 +156,7 @@ class VideoWatchComponent extends ParentComponent<void> {
      * @return m.Child
      */
     private createVideo(): m.Child | null {
-        if (this.playError) {
-            this.playError = false;
-            setTimeout(() => { m.redraw(); }, 500);
-
-            return null;
-        }
-
         return m('video', {
-            preload: 'none',
-            height: '$auto',
-            width: '100%',
-            controls: ' ',
-            playsinline: ' ',
             oncreate: (vnode: m.VnodeDOM<void, this>) => {
                 // set src
                 const src = this.viewModel.getSrc();
@@ -181,9 +168,6 @@ class VideoWatchComponent extends ParentComponent<void> {
                     (<HTMLVideoElement> vnode.dom).play()
                     .catch((err) => {
                         console.error(err);
-
-                        this.playError = true;
-                        m.redraw();
                     });
                 } catch (err) {
                     console.error(err);

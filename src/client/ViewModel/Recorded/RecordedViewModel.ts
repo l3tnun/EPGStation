@@ -229,6 +229,43 @@ class RecordedViewModel extends ViewModel {
     }
 
     /**
+     * 選択した要素の合計ファイルサイズを返す
+     * @return number
+     */
+    public getSelectedTotleFileSize(): number {
+        if (!this.isEditing()) { return 0; }
+
+        const recorded = this.getRecordeds().recorded;
+
+        let size = 0;
+        for (const r of recorded) {
+            if (this.editSelectIndex[r.id]) {
+                size += this.getFileSize(r);
+            }
+        }
+
+        return size;
+    }
+
+    /**
+     * getFileSize
+     * @param recorded: apid.RecordedProgram
+     * @return number
+     */
+    public getFileSize(recorded: apid.RecordedProgram): number {
+        let size = typeof recorded.filesize === 'undefined' ? 0 : recorded.filesize;
+        if (typeof recorded.encoded !== 'undefined') {
+            for (const enc of recorded.encoded) {
+                if (typeof enc.filesize !== 'undefined') {
+                    size += enc.filesize;
+                }
+            }
+        }
+
+        return size;
+    }
+
+    /**
      * open snack bar
      * @param str: string
      */

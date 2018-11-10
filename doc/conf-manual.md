@@ -47,7 +47,7 @@
     - [録画終了時に外部コマンドを実行したい](#recordedendcommand)
     - [録画失敗時に外部コマンドを実行したい](#recordedfailedcommand)
     - [録画ファイルを自動でエンコードしたい](#encode)
-    - [エンコード (トランスコード) プロセスの実行数を変更したい](#maxencode)
+    - [エンコード (トランスコード) プロセスの最大実行数を変更したい](#maxencode)
     - [エンコード前に外部コマンドを実行したい](#tsmodify)
     - [手動録画のエンコード完了後にデフォルトで元 TS ファイルを削除するようにしたい](#delts)
     - [録画先の空き容量が一定値を下回った時の動作を変えたい](#storagelimitaction)
@@ -665,6 +665,10 @@
 | CHANNELID | number | ChannelId mirakurun:40772/api/services で ID を確認できる |
 | GENRE1 | number | genre1 |
 | GENRE2 | number | genre2 |
+| logPath | string \| null | ドロップ情報ログファイルパス |
+| errorCnt | errorCnt \| null | error count |
+| dropCnt | errorCnt \| null | drop count |
+| scramblingCnt | errorCnt \| null | scrambling count |
 
 ```json
 "encode": [
@@ -683,7 +687,7 @@
 ```
 
 ### maxEncode
-#### 同時に実行されるエンコードプロセスの上限数
+#### エンコードやストリーミングで使用されるプロセスの上限数
 
 | 種類 | デフォルト値 | 必須 |
 | --- | ---------- | --- |
