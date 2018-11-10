@@ -21,6 +21,7 @@ class RecordedMenuViewModel extends ViewModel {
         name: string;
         encodedId: number | null;
         checked: boolean;
+        size: number | null;
     }[] = [];
     public encodeModeOptionValue: number = 0;
     public encodeSourceOptionValue: number = 0;
@@ -60,11 +61,21 @@ class RecordedMenuViewModel extends ViewModel {
 
         this.recordedFiles = [];
         if (this.recorded.original) {
-            this.recordedFiles.push({ name: 'TS', encodedId: null, checked: true });
+            this.recordedFiles.push({
+                name: 'TS',
+                encodedId: null,
+                checked: true,
+                size: typeof recorded.filesize === 'undefined' ? null : recorded.filesize,
+            });
         }
         if (typeof this.recorded.encoded !== 'undefined') {
             for (const encoded of this.recorded.encoded) {
-                this.recordedFiles.push({ name: encoded.name, encodedId: encoded.encodedId, checked: true });
+                this.recordedFiles.push({
+                    name: encoded.name,
+                    encodedId: encoded.encodedId,
+                    checked: true,
+                    size: typeof encoded.filesize === 'undefined' ? null : encoded.filesize,
+                });
             }
         }
 
