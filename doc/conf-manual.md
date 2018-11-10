@@ -665,6 +665,10 @@
 | CHANNELID | number | ChannelId mirakurun:40772/api/services で ID を確認できる |
 | GENRE1 | number | genre1 |
 | GENRE2 | number | genre2 |
+| logPath | string \| null | ドロップ情報ログファイルパス |
+| errorCnt | errorCnt \| null | error count |
+| dropCnt | errorCnt \| null | drop count |
+| scramblingCnt | errorCnt \| null | scrambling count |
 
 ```json
 "encode": [
