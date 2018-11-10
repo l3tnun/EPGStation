@@ -227,6 +227,24 @@ namespace Util {
 
         return elements.length === 0 ? null : <HTMLElement> elements[0];
     };
+
+    // ファイルサイズ単位
+    const fileSizeUnits = ['B', 'KB', 'MB', 'GB'];
+
+    /**
+     * ファイルサイズ取得
+     * @param size: number
+     * @return string
+     */
+    export const getFileSizeStr = (size: number): string => {
+        let cnt = 0;
+        for (; cnt <= fileSizeUnits.length; cnt++) {
+            if (size < 1000) { break; }
+            size /= 1024;
+        }
+
+        return `${ size.toFixed(1) }${ fileSizeUnits[cnt] }`;
+    };
 }
 
 export default Util;
