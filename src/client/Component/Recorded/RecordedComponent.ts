@@ -200,7 +200,7 @@ class RecordedComponent extends ParentComponent<void> {
                     forceDialog: true,
                 }),
                 m(EditHeaderComponent, {
-                    title: `${ this.viewModel.getSelectedCnt() } 件選択`,
+                    title: `${ this.viewModel.getSelectedCnt() } 件選択 (${ Util.getFileSizeStr(this.viewModel.getSelectedTotleFileSize()) })`,
                     button: [
                         {
                             onclick: () => { this.viewModel.selectAll(); },
