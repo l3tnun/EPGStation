@@ -1,6 +1,6 @@
 import * as apid from '../../../../node_modules/mirakurun/api';
 import { IPCClientInterface } from '../IPC/IPCClient';
-import { AddReserveInterface, ReserveProgram, RuleReserveProgram } from '../Operator/ReserveProgramInterface';
+import { AddReserveInterface, ManualReserveProgram, ReserveProgram, RuleReserveProgram } from '../Operator/ReserveProgramInterface';
 import ApiModel from './ApiModel';
 import ApiUtil from './ApiUtil';
 
@@ -144,6 +144,7 @@ class ReservesModel extends ApiModel implements ReservesModelInterface {
         };
 
         if (typeof (<RuleReserveProgram> reserve).ruleId !== 'undefined') { result['ruleId'] = (<RuleReserveProgram> reserve).ruleId; }
+        if (typeof (<ManualReserveProgram> reserve).isTimeSpecifited !== 'undefined') { result['isTimeSpecifited'] = (<ManualReserveProgram> reserve).isTimeSpecifited; }
 
         if (typeof reserve.option !== 'undefined') { result['option'] = reserve.option; }
         if (typeof reserve.encodeOption !== 'undefined') { result['encode'] = reserve.encodeOption; }

@@ -872,6 +872,9 @@ definitions:
         $ref: '#/definitions/ReserveProgram'
       ruleId:
         $ref: '#/definitions/RuleId'
+      isTimeSpecifited:
+        description: '時刻指定予約か'
+        type: boolean
       option:
         $ref: '#/definitions/AddReserveOption'
       encode:
