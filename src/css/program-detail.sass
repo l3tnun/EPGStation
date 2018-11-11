@@ -1,4 +1,8 @@
 .program-detail-content
+    .mdl-card__supporting-text
+        margin-right: auto;
+        margin-left: auto;
+
     .option-content
         padding: 4px 0;
 
@@ -8,11 +12,6 @@
     .option-checkbox
         width: auto;
         margin-left: 12px;
-
-    .option-card
-        .mdl-card__supporting-text
-            margin-right: auto;
-            margin-left: auto;
 
     .option-card, .program-card
          max-width: 840px;
@@ -27,20 +26,35 @@
         min-height: 10px;
         box-sizing: border-box;
 
+        .mdl-card__supporting-text
+            padding-bottom: 0;
+
+        .time-specifited-toggle
+            display: flex;
+            justify-content: flex-end;
+            padding: 0 8px 16px 0px;
+
+            .time-specifited-toggle-name
+                margin-top: auto;
+                margin-bottom: auto;
+                padding-right: 12px;
+
+            .mdl-switch
+                width: 46px;
+
         .title
             font-weight: bold;
             margin-bottom: 6px;
-        .description
-            margin-top: 6px;
-            margin-bottom: 6px;
-        .extended
+
+        .description, .extended
             white-space: pre-wrap;
+            margin-top: 6px;
             margin-bottom: 6px;
 
         .channel, .time, .genre
             font-size: 13px;
 
-        .title, .description
+        .title, .description, .extended
             font-size: 15px;
             color: black;
 

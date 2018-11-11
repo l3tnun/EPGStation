@@ -74,25 +74,79 @@ class ProgramDetailComponent extends ParentComponent<void> {
             class: 'program-card mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col',
         }, [
             m('div', { class: 'mdl-card__supporting-text' }, [
-                m('div', { class: 'title' }, program.name),
-                m('div', { class: 'channel' }, channel.name),
-                m('div', { class: 'time' },
-                    this.viewModel.createTimeStr(program.startAt, program.endAt),
-                ),
-                m('div', { class: 'genre' },
-                    this.viewModel.createGenresStr(program.genre1, program.genre2),
-                ),
-                m('div', { class: 'description' }, program.description),
-                m('div', { class: 'video' },
-                    '映像: ' + this.viewModel.createVideoInfoStr(program.videoComponentType),
-                ),
-                m('div', { class: 'audio-mode' },
-                    '音声: ' + this.viewModel.createAudioModeStr(program.audioComponentType),
-                ),
-                m('div', { class: 'audio-sampling-rate' },
-                    'サンプリングレート: ' + this.viewModel.createAudioSamplingRateStr(program.audioSamplingRate),
-                ),
-                m('div', { class: 'is-free' }, program.isFree ? '無料放送' : '有料放送'),
+                this.viewModel.isTimeSpecifited()
+                    ? this.createTimeSpecifitedProgramContent()
+                    : this.createNormalProgramContent(program, channel),
+            ]),
+            this.createToggle(),
+        ]);
+    }
+
+    /**
+     * 時刻指定予約番組
+     * @return m.Child[]
+     */
+    private createTimeSpecifitedProgramContent(): m.Child[] {
+        return [
+            m('div', 'test'),
+        ];
+    }
+
+    /**
+     * 通常時番組情報
+     * @return m.Child[]
+     */
+    private createNormalProgramContent(
+        program: apid.ScheduleProgramItem | apid.ReserveProgram,
+        channel: apid.ScheduleServiceItem | apid.ServiceItem,
+    ): m.Child[] {
+        return [
+            m('div', { class: 'title' }, program.name),
+            m('div', { class: 'channel' }, channel.name),
+            m('div', { class: 'time' },
+                this.viewModel.createTimeStr(program.startAt, program.endAt),
+            ),
+            m('div', { class: 'genre' },
+                this.viewModel.createGenresStr(program.genre1, program.genre2),
+            ),
+            m('div', { class: 'description' }, program.description),
+            m('div', { class: 'extended' }, program.extended),
+            m('div', { class: 'video' },
+                '映像: ' + this.viewModel.createVideoInfoStr(program.videoComponentType),
+            ),
+            m('div', { class: 'audio-mode' },
+                '音声: ' + this.viewModel.createAudioModeStr(program.audioComponentType),
+            ),
+            m('div', { class: 'audio-sampling-rate' },
+                'サンプリングレート: ' + this.viewModel.createAudioSamplingRateStr(program.audioSamplingRate),
+            ),
+            m('div', { class: 'is-free' }, program.isFree ? '無料放送' : '有料放送'),
+        ];
+    }
+
+    /**
+     * 手動予約と時刻指定予約を入れ替えるトグル
+     * @return m.Child
+     */
+    private createToggle(): m.Child {
+        return m('div', { class: 'time-specifited-toggle' }, [
+            m('span', { class: 'time-specifited-toggle-name' }, '時刻指定予約'),
+            m('label', {
+                class: 'mdl-switch mdl-js-switch mdl-js-ripple-effect',
+                onupdate: (vnode: m.VnodeDOM<void, this>) => {
+                    this.toggleLabelOnUpdate(<HTMLInputElement> vnode.dom, this.viewModel.isTimeSpecifited());
+                },
+            }, [
+                m('input', {
+                    type: 'checkbox',
+                    class: 'mdl-switch__input',
+                    disabled: this.viewModel.isEditMode() ? 'disabled' : '',
+                    checked: this.viewModel.isTimeSpecifited(),
+                    onclick: m.withAttr('checked', (value) => {
+                        this.viewModel.setTimeSpecifited(value);
+                    }),
+                }),
+                m('span', { class: 'mdl-switch__label' }),
             ]),
         ]);
     }

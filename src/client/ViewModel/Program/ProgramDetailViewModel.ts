@@ -23,11 +23,13 @@ class ProgramDetailViewModel extends ViewModel {
     private snackbar: SnackbarModelInterface;
 
     private isEditing: boolean = false;
+    private isTimeSpecifitedProgram: boolean = false;
     private reserve: apid.Reserve | null = null;
 
     private enableEncode: boolean = false;
     private encodeOption: string[] = [];
 
+    public addReserveProgram: apid.AddReserveProgram | null = null;
 
     public directory: string = '';
     public recordedFormat: string = '';
@@ -65,6 +67,10 @@ class ProgramDetailViewModel extends ViewModel {
         // 初期化
         this.reserve = null;
         this.isEditing = isEditing;
+        if (status === 'init' || status === 'update') {
+            this.addReserveProgram = null;
+        }
+
         if (this.isEditing) {
             // 予約情報取得
             await this.reserves.fetchReserve(this.getProgramId())
@@ -73,19 +79,40 @@ class ProgramDetailViewModel extends ViewModel {
                 this.openSnackbar('予約情報取得に失敗しました');
             });
             this.reserve = this.reserves.getReserve();
+            if ((status === 'init' || status === 'update') && this.reserve !== null) {
+                this.isTimeSpecifitedProgram = !!this.reserve.isTimeSpecifited;
+            }
         }
 
         this.initInputOption();
         this.scheduleApiModel.init();
         if (status === 'update') { m.redraw(); }
 
-        return Util.sleep(100)
-        .then(() => {
-            return this.updateSchedule();
-        })
-        .then(() => {
-            return this.setConfig();
-        });
+        await Util.sleep(100);
+        await this.updateSchedule();
+        await this.setConfig();
+
+        // 時刻指定予約時の編集する番組データ初期値設定
+        if (this.addReserveProgram === null) {
+            const program = this.getProgram();
+            const channel = this.getChannel();
+
+            if (program === null || channel === null) {
+                this.openSnackbar('番組情報取得に失敗しました');
+            } else {
+                this.addReserveProgram = {
+                    channelId: channel.id,
+                    startAt: program.startAt,
+                    endAt: program.endAt,
+                    name: program.name,
+                };
+
+                if (typeof program.description !== 'undefined') { this.addReserveProgram.description = program.description; }
+                if (typeof program.extended !== 'undefined') { this.addReserveProgram.extended = program.extended; }
+                if (typeof program.genre1 !== 'undefined') { this.addReserveProgram.genre1 = program.genre1; }
+                if (typeof program.genre2 !== 'undefined') { this.addReserveProgram.genre2 = program.genre2; }
+            }
+        }
     }
 
     /**
@@ -105,7 +132,7 @@ class ProgramDetailViewModel extends ViewModel {
     /**
      * reload 時の更新
      */
-    public async reloadUpdate(): Promise<void> {
+    private async reloadUpdate(): Promise<void> {
         await this.updateSchedule();
     }
 
@@ -184,7 +211,7 @@ class ProgramDetailViewModel extends ViewModel {
     /**
      * 番組データを取得する
      */
-    public async updateSchedule(): Promise<void> {
+    private async updateSchedule(): Promise<void> {
         const programId = this.getProgramId();
         if (programId < 0) { return; }
 
@@ -305,6 +332,25 @@ class ProgramDetailViewModel extends ViewModel {
      */
     public isEditMode(): boolean {
         return this.isEditing;
+    }
+
+    /**
+     * 時刻指定予約か返す
+     * @return boolean
+     */
+    public isTimeSpecifited(): boolean {
+        return this.isTimeSpecifitedProgram;
+    }
+
+    /**
+     * 手動予約と時刻指定予約の状態をセットする
+     * @param value: true: 時刻指定予約, false: 手動予約
+     */
+    public setTimeSpecifited(value: boolean): void {
+        // 編集時は予約の状態が確定しているため return
+        if (this.isEditMode()) { return; }
+
+        this.isTimeSpecifitedProgram = value;
     }
 
     /**
