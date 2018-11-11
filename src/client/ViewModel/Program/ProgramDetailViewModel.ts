@@ -227,7 +227,7 @@ class ProgramDetailViewModel extends ViewModel {
      * @return Promise<void>
      */
     public async add(): Promise<void> {
-        await this.reserves.addReserve(this.createAddReserve());
+        await this.reserves.addReserve(this.createAddReserve(false));
     }
 
     /**
@@ -235,17 +235,28 @@ class ProgramDetailViewModel extends ViewModel {
      * @return Promise<void>
      */
     public async update(): Promise<void> {
-        await this.reserves.updateReserve(this.createAddReserve());
+        await this.reserves.updateReserve(this.createAddReserve(true));
     }
 
     /**
      * create AddReserve
+     * @param isUpdate: boolean
      * @return apid.AddReserve
      */
-    private createAddReserve(): apid.AddReserve {
-        const option: apid.AddReserve = {
-            programId: this.getProgramId(),
-        };
+    private createAddReserve(isUpdate: boolean): apid.AddReserve {
+        const option: apid.AddReserve = {};
+
+        if (this.isTimeSpecifited()) {
+            if (isUpdate) {
+                option.programId = this.getProgramId();
+            }
+
+            if (this.addReserveProgram !== null) {
+                option.program = this.addReserveProgram;
+            }
+        } else {
+            option.programId = this.getProgramId();
+        }
 
         // option
         if (this.directory.length !== 0 || this.recordedFormat.length !== 0) {
