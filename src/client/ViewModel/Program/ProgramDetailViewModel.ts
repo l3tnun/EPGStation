@@ -1,7 +1,7 @@
 import * as m from 'mithril';
 import * as apid from '../../../../api';
 import { ViewModelStatus } from '../../Enums';
-import { audioComponentType, audioSamplingRate, videoComponentType } from '../../lib/event';
+import { audioComponentType, audioSamplingRate, genre1, genre2, videoComponentType } from '../../lib/event';
 import { ChannelsApiModelInterface } from '../../Model/Api/ChannelsApiModel';
 import { ConfigApiModelInterface } from '../../Model/Api/ConfigApiModel';
 import { ReservesApiModelInterface } from '../../Model/Api/ReservesApiModel';
@@ -67,9 +67,6 @@ class ProgramDetailViewModel extends ViewModel {
         // 初期化
         this.reserve = null;
         this.isEditing = isEditing;
-        if (status === 'init' || status === 'update') {
-            this.addReserveProgram = null;
-        }
 
         if (this.isEditing) {
             // 予約情報取得
@@ -79,9 +76,11 @@ class ProgramDetailViewModel extends ViewModel {
                 this.openSnackbar('予約情報取得に失敗しました');
             });
             this.reserve = this.reserves.getReserve();
-            if ((status === 'init' || status === 'update') && this.reserve !== null) {
-                this.isTimeSpecifitedProgram = !!this.reserve.isTimeSpecifited;
-            }
+        }
+
+        if (status === 'init' || status === 'update') {
+            this.addReserveProgram = null;
+            this.isTimeSpecifitedProgram = this.reserve === null ? false : !!this.reserve.isTimeSpecifited;
         }
 
         this.initInputOption();
@@ -94,24 +93,7 @@ class ProgramDetailViewModel extends ViewModel {
 
         // 時刻指定予約時の編集する番組データ初期値設定
         if (this.addReserveProgram === null) {
-            const program = this.getProgram();
-            const channel = this.getChannel();
-
-            if (program === null || channel === null) {
-                this.openSnackbar('番組情報取得に失敗しました');
-            } else {
-                this.addReserveProgram = {
-                    channelId: channel.id,
-                    startAt: program.startAt,
-                    endAt: program.endAt,
-                    name: program.name,
-                };
-
-                if (typeof program.description !== 'undefined') { this.addReserveProgram.description = program.description; }
-                if (typeof program.extended !== 'undefined') { this.addReserveProgram.extended = program.extended; }
-                if (typeof program.genre1 !== 'undefined') { this.addReserveProgram.genre1 = program.genre1; }
-                if (typeof program.genre2 !== 'undefined') { this.addReserveProgram.genre2 = program.genre2; }
-            }
+            this.resetAddReserveProgramOption();
         }
     }
 
@@ -134,6 +116,27 @@ class ProgramDetailViewModel extends ViewModel {
      */
     private async reloadUpdate(): Promise<void> {
         await this.updateSchedule();
+    }
+
+    private resetAddReserveProgramOption(): void {
+        const program = this.getProgram();
+        const channel = this.getChannel();
+
+        if (program === null || channel === null) {
+            this.openSnackbar('番組情報取得に失敗しました');
+        } else {
+            this.addReserveProgram = {
+                channelId: channel.id,
+                startAt: program.startAt,
+                endAt: program.endAt,
+                name: program.name,
+            };
+
+            if (typeof program.description !== 'undefined') { this.addReserveProgram.description = program.description; }
+            if (typeof program.extended !== 'undefined') { this.addReserveProgram.extended = program.extended; }
+            this.addReserveProgram.genre1 = typeof program.genre1 === 'undefined' ? -1 : program.genre1;
+            this.addReserveProgram.genre2 = typeof program.genre2 === 'undefined' ? -1 : program.genre2;
+        }
     }
 
     /**
@@ -311,6 +314,132 @@ class ProgramDetailViewModel extends ViewModel {
     }
 
     /**
+     * get channels
+     * @return channels
+     */
+    public getChannels(): apid.ServiceItem[] {
+        return this.channels.getChannels();
+    }
+
+    /**
+     * get genre1
+     * @return genre1
+     */
+    public getGenre1(): { value: number; name: string }[] {
+        const result: { value: number; name: string }[] = [];
+        for (let i = 0x0; i <= 0xF; i++) {
+            if (genre1[i].length === 0) { continue; }
+            result.push({ value: i, name: genre1[i] });
+        }
+
+        return result;
+    }
+
+    /**
+     * get genre2
+     * @return genre2
+     */
+    public getGenre2(): { value: number; name: string }[] {
+        if (this.addReserveProgram === null || typeof this.addReserveProgram.genre1 === 'undefined') { return []; }
+
+        const result: { value: number; name: string }[] = [];
+        if (typeof genre2[this.addReserveProgram.genre1] === 'undefined') { return []; }
+
+        for (let i = 0x0; i <= 0xF; i++) {
+            if (genre2[this.addReserveProgram.genre1][i].length === 0) { continue; }
+            result.push({ value: i, name: genre2[this.addReserveProgram.genre1][i] });
+        }
+
+        return result;
+    }
+
+    /**
+     * init genre2
+     */
+    public initGenre2(): void {
+        if (this.addReserveProgram === null) { return; }
+
+        this.addReserveProgram.genre2 = -1;
+    }
+
+    /**
+     * 開始 or 終了時刻の yyyy-mm-dd を返す
+     * @param isStart: boolean
+     * @return string
+     */
+    public getDateStr(isStart: boolean): string {
+        if (this.addReserveProgram === null) { return ''; }
+
+        return DateUtil.format(new Date(
+            isStart
+                ? this.addReserveProgram.startAt
+                : this.addReserveProgram.endAt,
+        ), 'yyyy-MM-dd');
+    }
+
+    /**
+     * 開始 or 終了時刻の yyyy/mm/dd をセットする
+     * @param isStart: boolean
+     * @param str: yyyy-mm-dd
+     * @return string
+     */
+    public setDateStr(isStart: boolean, str: string): void {
+        if (this.addReserveProgram === null) { return; }
+
+        const dates = str.split('-');
+        const time = this.getTimeStr(isStart);
+
+        if (isStart) {
+            this.addReserveProgram.startAt = this.createTime(dates, time);
+        } else {
+            this.addReserveProgram.endAt = this.createTime(dates, time);
+        }
+    }
+
+    /**
+     * yyyy-mm-dd hh:mm から UnixtimeMS を生成する
+     * @param dates: yyyy-mm-dd
+     * @param time: hh:mm
+     * @return apid.UnixtimeMS
+     */
+    private createTime(dates: string[], time: string): apid.UnixtimeMS {
+        return new Date(`${ dates[0] }/${ dates[1] }/${ dates[2] } ${ time }:00 +0900`).getTime();
+    }
+
+    /**
+     * 開始 or 終了時刻の hh:mm を返す
+     * @param isStart: boolean
+     * @return string
+     */
+    public getTimeStr(isStart: boolean): string {
+        if (this.addReserveProgram === null) { return ''; }
+
+        return DateUtil.format(new Date(
+            isStart
+                ? this.addReserveProgram.startAt
+                : this.addReserveProgram.endAt,
+        ), 'hh:mm');
+    }
+
+    /**
+     * 開始 or 終了時刻の hh:mm をセットする
+     * @param isStart: boolean
+     * @param str: hh:mm
+     * @return string
+     */
+    public setTimeStr(isStart: boolean, str: string): void {
+        if (this.addReserveProgram === null || str.length !== 5) { return; }
+
+        const dates = this.getDateStr(isStart).split('-');
+
+        if (isStart) {
+            this.addReserveProgram.startAt = this.createTime(dates, str);
+        } else {
+            this.addReserveProgram.endAt = this.createTime(dates, str);
+        }
+    }
+
+    /**
      * get encode option
      * @return encode option
      */
@@ -351,6 +480,11 @@ class ProgramDetailViewModel extends ViewModel {
         if (this.isEditMode()) { return; }
 
         this.isTimeSpecifitedProgram = value;
+
+        if (!value) {
+            // 手動予約に切り替わったときに初期化
+            this.resetAddReserveProgramOption();
+        }
     }
 
     /**
@@ -371,8 +505,8 @@ class ProgramDetailViewModel extends ViewModel {
      * genre1, genre2 をまとめて生成
      * @return genre1 / genre2
      */
-    public createGenresStr(genre1?: apid.ProgramGenreLv1 , genre2?: apid.ProgramGenreLv2): string {
-        return GenreUtil.getGenres(genre1, genre2);
+    public createGenresStr(g1?: apid.ProgramGenreLv1 , g2?: apid.ProgramGenreLv2): string {
+        return GenreUtil.getGenres(g1, g2);
     }
 
     /**

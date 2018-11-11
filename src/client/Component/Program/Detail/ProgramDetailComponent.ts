@@ -84,12 +84,136 @@ class ProgramDetailComponent extends ParentComponent<void> {
 
     /**
      * 時刻指定予約番組
-     * @return m.Child[]
+     * @return m.Child[] | null
      */
-    private createTimeSpecifitedProgramContent(): m.Child[] {
+    private createTimeSpecifitedProgramContent(): m.Child[] | null {
+        const addReserveProgram = this.viewModel.addReserveProgram;
+        if (addReserveProgram === null) { return null; }
+
         return [
-            m('div', 'test'),
+            this.createBroadcaster(addReserveProgram),
+            this.createGenres(addReserveProgram),
+            this.createDate('開始時刻',
+                () => { return this.viewModel.getDateStr(true); },
+                (date: string) => { this.viewModel.setDateStr(true, date); },
+                () => { return this.viewModel.getTimeStr(true); },
+                (time: string) => { this.viewModel.setTimeStr(true, time); },
+            ),
+            this.createDate('終了時刻',
+                () => { return this.viewModel.getDateStr(false); },
+                (date: string) => { this.viewModel.setDateStr(false, date); },
+                () => { return this.viewModel.getTimeStr(false); },
+                (time: string) => { this.viewModel.setTimeStr(false, time); },
+            ),
         ];
+    }
+
+    /**
+     * 放送局プルダウン
+     * @param option: apid.AddReserveProgram
+     * @return m.Child
+     */
+    private createBroadcaster(option: apid.AddReserveProgram): m.Child {
+        return this.createContentFrame('放送局', [
+            // 放送局プルダウン
+            m('div', { style: 'display: flex; width: 100%;' }, [
+                 m('div', { class: 'pulldown mdl-layout-spacer' }, [
+                    m('select', {
+                        value: option.channelId,
+                        onchange: m.withAttr('value', (value) => {
+                            option.channelId = Number(value);
+                        }),
+                    }, [
+                        this.viewModel.getChannels().map((channel) => {
+                            return m('option', { value: channel.id }, channel.name);
+                        }),
+                    ]),
+                ]),
+            ]),
+        ]);
+    }
+
+    /**
+     * ジャンル
+     * @param option: apid.AddReserveProgram
+     * @return m.Child
+     */
+    private createGenres(option: apid.AddReserveProgram): m.Child {
+        return this.createContentFrame('ジャンル', [
+            // ジャンルセレクタ
+            m('div', { style: 'display: flex; width: 50%;' }, [
+                m('div', { class: 'pulldown mdl-layout-spacer' }, [
+                    m('select', {
+                        value: option.genre1,
+                        onchange: m.withAttr('value', (value) => {
+                            option.genre1 = Number(value);
+                            this.viewModel.initGenre2();
+                        }),
+                    },
+                        m('option', { value: '-1' }, '指定なし'),
+                        this.viewModel.getGenre1().map((genre) => {
+                            return m('option', { value: genre.value }, genre.name);
+                        }),
+                    ),
+                ]),
+            ]),
+
+            // サブジャンルセレクタ
+            m('div', { style: 'display: flex; width: 50%;' }, [
+                m('div', { class: 'pulldown mdl-layout-spacer' }, [
+                    m('select', {
+                        value: option.genre2,
+                        onchange: m.withAttr('value', (value) => { option.genre2 = Number(value); }),
+                    },
+                        m('option', { value: '-1' }, '指定なし'),
+                        this.viewModel.getGenre2().map((genre) => {
+                            return m('option', { value: genre.value }, genre.name);
+                        }),
+                    ),
+                ]),
+            ]),
+        ]);
+    }
+
+    /**
+     * 時刻
+     * @param getDate: () => string
+     * @param setDate: (date: string) => void
+     * @param getTime: () => string
+     * @param setTime: (time: string) => void
+     * @return m.Child
+     */
+    private createDate(
+        name: string,
+        getDate: () => string,
+        setDate: (date: string) => void,
+        getTime: () => string,
+        setTime: (time: string) => void,
+    ): m.Child {
+        return this.createContentFrame(name, [
+            m('div', {
+                class: 'mdl-cell--12-col mdl-textfield mdl-js-textfield',
+                style: 'display: flex; width: 50%;',
+            }, [
+                m('input', {
+                    class: 'mdl-textfield__input',
+                    type: 'date',
+                    value: getDate(),
+                    onchange: m.withAttr('value', (value) => { setDate(value); }),
+                }),
+            ]),
+            m('div', {
+                class: 'mdl-cell--12-col mdl-textfield mdl-js-textfield',
+                style: 'display: flex; width: 50%;',
+            }, [
+                m('input', {
+                    class: 'mdl-textfield__input',
+                    type: 'time',
+                    value: getTime(),
+                    onchange: m.withAttr('value', (value) => { setTime(value); }),
+                }),
+            ]),
+        ]);
     }
 
     /**
