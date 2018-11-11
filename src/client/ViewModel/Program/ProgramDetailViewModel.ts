@@ -387,6 +387,8 @@ class ProgramDetailViewModel extends ViewModel {
         if (this.addReserveProgram === null) { return; }
 
         const dates = str.split('-');
+        if (dates.length !== 3) { return; }
+
         const time = this.getTimeStr(isStart);
 
         if (isStart) {

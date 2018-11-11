@@ -87,12 +87,12 @@ class ProgramDetailComponent extends ParentComponent<void> {
      * @return m.Child[] | null
      */
     private createTimeSpecifitedProgramContent(): m.Child[] | null {
-        const addReserveProgram = this.viewModel.addReserveProgram;
-        if (addReserveProgram === null) { return null; }
+        const option = this.viewModel.addReserveProgram;
+        if (option === null) { return null; }
 
         return [
-            this.createBroadcaster(addReserveProgram),
-            this.createGenres(addReserveProgram),
+            this.createBroadcaster(option),
+            this.createGenres(option),
             this.createDate('開始時刻',
                 () => { return this.viewModel.getDateStr(true); },
                 (date: string) => { this.viewModel.setDateStr(true, date); },
@@ -105,6 +105,9 @@ class ProgramDetailComponent extends ParentComponent<void> {
                 () => { return this.viewModel.getTimeStr(false); },
                 (time: string) => { this.viewModel.setTimeStr(false, time); },
             ),
+            this.createTitle(option),
+            this.createDescription(option),
+            this.createExtended(option),
         ];
     }
 
@@ -211,6 +214,67 @@ class ProgramDetailComponent extends ParentComponent<void> {
                     type: 'time',
                     value: getTime(),
                     onchange: m.withAttr('value', (value) => { setTime(value); }),
+                }),
+            ]),
+        ]);
+    }
+
+    /**
+     * 番組タイトル
+     * @param option: apid.AddReserveProgram
+     * @return m.Child
+     */
+    private createTitle(option: apid.AddReserveProgram): m.Child {
+        return this.createContentFrame('タイトル', [
+            m('div', { class: 'mdl-cell--12-col mdl-textfield mdl-js-textfield' }, [
+                m('input', {
+                    class: 'mdl-textfield__input',
+                    type: 'text',
+                    placeholder: 'title',
+                    value: option.name,
+                    onchange: m.withAttr('value', (value) => { option.name = value; }),
+                }),
+            ]),
+        ]);
+    }
+
+    /**
+     * 番組概要
+     * @param option: apid.AddReserveProgram
+     * @return m.Child
+     */
+    private createDescription(option: apid.AddReserveProgram): m.Child {
+        return this.createContentFrame('概要', [
+            m('div', {
+                class: 'mdl-cell--12-col mdl-textfield mdl-js-textfield',
+            }, [
+                m('textarea', {
+                    class: 'mdl-textfield__input',
+                    placeholder: '概要',
+                    value: option.description,
+                    onchange: m.withAttr('value', (value) => { option.description = value; }),
+                    rows: 3,
+                }),
+            ]),
+        ]);
+    }
+
+    /**
+     * 番組詳細
+     * @param option: apid.AddReserveProgram
+     * @return m.Child
+     */
+    private createExtended(option: apid.AddReserveProgram): m.Child {
+        return this.createContentFrame('詳細', [
+            m('div', {
+                class: 'mdl-cell--12-col mdl-textfield mdl-js-textfield',
+            }, [
+                m('textarea', {
+                    class: 'mdl-textfield__input',
+                    placeholder: '詳細',
+                    value: option.extended,
+                    onchange: m.withAttr('value', (value) => { option.extended = value; }),
+                    rows: 3,
                 }),
             ]),
         ]);
