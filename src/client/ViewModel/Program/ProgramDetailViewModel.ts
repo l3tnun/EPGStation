@@ -465,11 +465,15 @@ class ProgramDetailViewModel extends ViewModel {
     /**
      * 開始 or 終了時刻の hh:mm:ss をセットする
      * @param isStart: boolean
-     * @param timeStr: hh:mm:ss
+     * @param timeStr: hh:mm:ss or hh:mm
      * @return string
      */
     public setTimeStr(isStart: boolean, timeStr: string): void {
-        if (this.addReserveProgram === null || timeStr.length === 9) { return; }
+        if (this.addReserveProgram === null || !(timeStr.length === 5 || timeStr.length === 8)) { return; }
+
+        if (timeStr.length === 5) {
+            timeStr += ":00";
+        }
 
         const dates = this.getDateStr(isStart).split('-');
 
