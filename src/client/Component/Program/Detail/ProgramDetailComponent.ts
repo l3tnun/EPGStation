@@ -213,6 +213,7 @@ class ProgramDetailComponent extends ParentComponent<void> {
                     class: 'mdl-textfield__input',
                     type: 'time',
                     value: getTime(),
+                    step: 1,
                     onchange: m.withAttr('value', (value) => { setTime(value); }),
                 }),
             ]),

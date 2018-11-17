@@ -433,17 +433,17 @@ class ProgramDetailViewModel extends ViewModel {
     }
 
     /**
-     * yyyy-mm-dd hh:mm から UnixtimeMS を生成する
+     * yyyy-mm-dd hh:mm:ss から UnixtimeMS を生成する
      * @param dates: yyyy-mm-dd
-     * @param time: hh:mm
+     * @param time: hh:mm:ss
      * @return apid.UnixtimeMS
      */
     private createTime(dates: string[], time: string): apid.UnixtimeMS {
-        return new Date(`${ dates[0] }/${ dates[1] }/${ dates[2] } ${ time }:00 +0900`).getTime();
+        return new Date(`${ dates[0] }/${ dates[1] }/${ dates[2] } ${ time } +0900`).getTime();
     }
 
     /**
-     * 開始 or 終了時刻の hh:mm を返す
+     * 開始 or 終了時刻の hh:mm:ss を返す
      * @param isStart: boolean
      * @return string
      */
@@ -454,24 +454,24 @@ class ProgramDetailViewModel extends ViewModel {
             isStart
                 ? this.addReserveProgram.startAt
                 : this.addReserveProgram.endAt,
-        ), 'hh:mm');
+        ), 'hh:mm:ss');
     }
 
     /**
-     * 開始 or 終了時刻の hh:mm をセットする
+     * 開始 or 終了時刻の hh:mm:ss をセットする
      * @param isStart: boolean
-     * @param str: hh:mm
+     * @param timeStr: hh:mm:ss
      * @return string
      */
-    public setTimeStr(isStart: boolean, str: string): void {
-        if (this.addReserveProgram === null || str.length !== 5) { return; }
+    public setTimeStr(isStart: boolean, timeStr: string): void {
+        if (this.addReserveProgram === null || timeStr.length === 9) { return; }
 
         const dates = this.getDateStr(isStart).split('-');
 
         if (isStart) {
-            this.addReserveProgram.startAt = this.createTime(dates, str);
+            this.addReserveProgram.startAt = this.createTime(dates, timeStr);
         } else {
-            this.addReserveProgram.endAt = this.createTime(dates, str);
+            this.addReserveProgram.endAt = this.createTime(dates, timeStr);
         }
     }
 
