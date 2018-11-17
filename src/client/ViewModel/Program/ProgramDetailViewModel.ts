@@ -472,7 +472,7 @@ class ProgramDetailViewModel extends ViewModel {
         if (this.addReserveProgram === null || !(timeStr.length === 5 || timeStr.length === 8)) { return; }
 
         if (timeStr.length === 5) {
-            timeStr += ":00";
+            timeStr += ':00';
         }
 
         const dates = this.getDateStr(isStart).split('-');
