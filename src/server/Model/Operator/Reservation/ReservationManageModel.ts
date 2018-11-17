@@ -612,12 +612,12 @@ class ReservationManageModel extends Model {
         if (typeof program.extended === 'undefined') { program.extended = null; }
         if (typeof program.genre1 === 'undefined') { program.genre1 = null; }
         if (typeof program.genre2 === 'undefined') { program.genre2 = null; }
-        if (typeof program.videoType === 'undefined') { program.videoType = null; }
-        if (typeof program.videoResolution === 'undefined') { program.videoResolution = null; }
-        if (typeof program.videoStreamContent === 'undefined') { program.videoStreamContent = null; }
-        if (typeof program.videoComponentType === 'undefined') { program.videoComponentType = null; }
-        if (typeof program.audioSamplingRate === 'undefined') { program.audioSamplingRate = null; }
-        if (typeof program.audioComponentType === 'undefined') { program.audioComponentType = null; }
+        program.videoType = null;
+        program.videoResolution = null;
+        program.videoStreamContent = null;
+        program.videoComponentType = null;
+        program.audioSamplingRate = null;
+        program.audioComponentType = null;
 
         return program;
     }

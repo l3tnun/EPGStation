@@ -834,18 +834,6 @@ definitions:
         $ref: '#/definitions/ProgramGenreLv1'
       genre2:
         $ref: '#/definitions/ProgramGenreLv2'
-      videoType:
-        $ref: '#/definitions/ProgramVideoType'
-      videoResolution:
-        $ref: '#/definitions/ProgramVideoResolution'
-      videoStreamContent:
-        type: integer
-      videoComponentType:
-        type: integer
-      audioSamplingRate:
-        $ref: '#/definitions/ProgramAudioSamplingRate'
-      audioComponentType:
-        type: integer
 
   AddReserveResult:
     type: object

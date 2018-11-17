@@ -296,12 +296,6 @@ export interface AddReserveProgram {
     extended?: string;
     genre1?: ProgramGenreLv1;
     genre2?: ProgramGenreLv2;
-    videoType?: ProgramVideoType;
-    videoResolution?: ProgramVideoResolution;
-    videoStreamContent?: number;
-    videoComponentType?: number;
-    audioSamplingRate?: ProgramAudioSamplingRate;
-    audioComponentType?: number;
 }
 
 export interface AddReserveOption {

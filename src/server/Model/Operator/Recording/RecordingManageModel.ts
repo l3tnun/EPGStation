@@ -463,8 +463,8 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
                 // recording 状態を解除
                 await this.recordedDB.removeRecording(recorded.id);
 
-                // programId 予約の場合、番組情報を最新に更新する
                 if (recorded.programId > 0) {
+                    // programId 予約の場合、番組情報を最新に更新する
                     const program = await this.programsDB.findId(recorded.programId);
                     if (program !== null) {
                         recorded = {
@@ -510,6 +510,38 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
                             name: recorded.name,
                             endAt: recorded.endAt,
                         };
+                    }
+                } else {
+                    // 時間指定予約の場合 ビデオやオーディオ情報を更新する
+                    const now = new Date().getTime();
+                    const time = now <= recData.reserve.program.endAt
+                        ? -1000
+                        : -1000 + recData.reserve.program.endAt - now;
+                    const programs = await this.programsDB.findBroadcastingChanel(recData.reserve.program.channelId, time);
+
+                    if (programs.length !== 0) {
+                        // 更新
+                        const recordedId = recorded.id;
+                        const program = programs[0];
+                        await this.recordedDB.updateVideoInfo(recordedId, {
+                            videoType: program.videoType,
+                            videoResolution: program.videoResolution,
+                            videoStreamContent: program.videoStreamContent,
+                            videoComponentType: program.videoComponentType,
+                            audioSamplingRate: program.audioSamplingRate,
+                            audioComponentType: program.audioComponentType,
+                        })
+                        .catch((err) => {
+                            this.log.system.error(`update video info error: ${ recordedId }`);
+                            this.log.system.error(err);
+                        });
+
+                        recorded.videoType = program.videoType;
+                        recorded.videoResolution = program.videoResolution;
+                        recorded.videoStreamContent = program.videoStreamContent;
+                        recorded.videoComponentType = program.videoComponentType;
+                        recorded.audioSamplingRate = program.audioSamplingRate;
+                        recorded.audioComponentType = program.audioComponentType;
                     }
                 }
 

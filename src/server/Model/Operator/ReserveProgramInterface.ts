@@ -49,12 +49,6 @@ export interface AddReserveInterface {
         extended?: string;
         genre1?: eapid.ProgramGenreLv1;
         genre2?: eapid.ProgramGenreLv2;
-        videoType?: apid.ProgramVideoType;
-        videoResolution?: apid.ProgramVideoResolution;
-        videoStreamContent?: number;
-        videoComponentType?: number;
-        audioSamplingRate?: apid.ProgramAudioSamplingRate;
-        audioComponentType?: number;
     };
 }
 
