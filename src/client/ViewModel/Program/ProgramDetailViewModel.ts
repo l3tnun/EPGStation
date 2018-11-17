@@ -6,7 +6,9 @@ import { ChannelsApiModelInterface } from '../../Model/Api/ChannelsApiModel';
 import { ConfigApiModelInterface } from '../../Model/Api/ConfigApiModel';
 import { ReservesApiModelInterface } from '../../Model/Api/ReservesApiModel';
 import { ScheduleApiModelInterface } from '../../Model/Api/ScheduleApiModel';
+import { SettingValue } from '../../Model/Setting/SettingModel';
 import { SnackbarModelInterface } from '../../Model/Snackbar/SnackbarModel';
+import StorageTemplateModel from '../../Model/Storage/StorageTemplateModel';
 import DateUtil from '../../Util/DateUtil';
 import GenreUtil from '../../Util/GenreUtil';
 import Util from '../../Util/Util';
@@ -21,6 +23,7 @@ class ProgramDetailViewModel extends ViewModel {
     private channels: ChannelsApiModelInterface;
     private config: ConfigApiModelInterface;
     private snackbar: SnackbarModelInterface;
+    private setting: StorageTemplateModel<SettingValue>;
 
     private isEditing: boolean = false;
     private isTimeSpecifitedProgram: boolean = false;
@@ -46,6 +49,7 @@ class ProgramDetailViewModel extends ViewModel {
         channels: ChannelsApiModelInterface,
         config: ConfigApiModelInterface,
         snackbar: SnackbarModelInterface,
+        setting: StorageTemplateModel<SettingValue>,
     ) {
         super();
         this.scheduleApiModel = scheduleApiModel;
@@ -53,6 +57,7 @@ class ProgramDetailViewModel extends ViewModel {
         this.channels = channels;
         this.config = config;
         this.snackbar = snackbar;
+        this.setting = setting;
     }
 
     /**
@@ -226,8 +231,8 @@ class ProgramDetailViewModel extends ViewModel {
      * 予約追加
      * @return Promise<void>
      */
-    public async add(): Promise<void> {
-        await this.reserves.addReserve(this.createAddReserve(false));
+    public async add(): Promise<apid.ProgramId> {
+        return await this.reserves.addReserve(this.createAddReserve(false));
     }
 
     /**
@@ -584,6 +589,18 @@ class ProgramDetailViewModel extends ViewModel {
      */
     public openSnackbar(str: string): void {
         this.snackbar.open(str);
+    }
+
+    /**
+     * 指定した programId の予約ページでのページ番号を取得
+     * @param programId: program id
+     * @return Promise<number>
+     */
+    public async getReservePagePosition(programId: apid.ProgramId): Promise<number> {
+        const position = await this.reserves.fetchReservePosition(programId);
+        const reservesLength = this.setting.getValue().reservesLength;
+
+        return Math.ceil(position / reservesLength);
     }
 }
 

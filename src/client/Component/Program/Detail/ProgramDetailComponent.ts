@@ -457,14 +457,24 @@ class ProgramDetailComponent extends ParentComponent<void> {
                 onclick: async() => {
                     // 予約追加 or 更新
                     const isEditMode = this.viewModel.isEditMode();
+                    let programId: apid.ProgramId | null = null;
+
                     try {
                         if (isEditMode) {
                             await this.viewModel.update();
                         } else {
-                            await this.viewModel.add();
+                            programId = await this.viewModel.add();
                         }
                         this.viewModel.openSnackbar(isEditMode ? '予約更新' : '予約追加');
                         await Util.sleep(1000);
+
+                        if (programId !== null && this.viewModel.isTimeSpecifited()) {
+                            // 時刻指定予約の場合該当の予約一覧の該当ページへ飛ぶ
+                            const position = await this.viewModel.getReservePagePosition(programId);
+                            Util.move('/reserves', { page: position });
+
+                            return;
+                        }
                     } catch (err) {
                         this.viewModel.openSnackbar((isEditMode ? '予約更新' : '予約追加') + 'に失敗しました');
 

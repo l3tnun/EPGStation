@@ -147,6 +147,7 @@ namespace ViewModelFactorySetting {
             channelsApiModel,
             configModel,
             snackbarModel,
+            settingModel,
         ));
         factory.reg('RecordedViewModel', new RecordedViewModel(
             recordedApiModel,
