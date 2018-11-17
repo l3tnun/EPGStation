@@ -30,10 +30,10 @@ export interface ProgramSchema {
     networkId: apid.NetworkId;
     startAt: apid.UnixtimeMS;
     endAt: apid.UnixtimeMS;
-    startHour: number;
-    week: number;
+    startHour?: number;
+    week?: number;
     duration: number;
-    isFree: boolean;
+    isFree?: boolean;
 
     name: string;
     shortName: string | null;

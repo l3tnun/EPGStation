@@ -16,6 +16,8 @@
 - [詳細設定](#詳細設定)
     - [録画時の Mirakurun の優先度を変更したい](#recpriority)
     - [録画競合時の Mirakurun の優先度を変更したい](#conflictpriority)
+    - [時刻指定予約時の開始マージンを変更したい](#timespecifiedstartmargin)
+    - [時刻指定予約時の終了マージンを変更したい](#timespecifiedendmargin)
     - [番組情報を DB へ保存する際の負荷を抑えたい](#programinsertmax)
     - [番組情報を DB へ保存する際のスリープ設定を変更したい](#programinsertwait)
     - [録画重複の判定期間を延ばしたい](#recordedhistoryretentionperioddays)
@@ -273,6 +275,20 @@
 ```json
 "conflictPriority": 10
 ```
+
+### timeSpecifiedStartMargin
+#### 手動予約時の開始マージン(秒)
+
+| 種類 | デフォルト値 | 必須 |
+| --- | ---------- | --- |
+| number | 1 | no |
+
+### timeSpecifiedEndMargin
+#### 手動予約時の終了マージン(秒)
+
+| 種類 | デフォルト値 | 必須 |
+| --- | ---------- | --- |
+| number | 1 | no |
 
 ### programInsertMax
 #### DB へ番組情報を挿入するときの 1 回あたりの件数

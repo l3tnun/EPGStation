@@ -1,5 +1,6 @@
 import Configuration from '../Configuration';
 import * as DBSchema from '../Model/DB/DBSchema';
+import { ReserveOptionInterface } from '../Model/Operator/ReserveProgramInterface';
 import { EncodeInterface, OptionInterface, RuleInterface, SearchInterface } from '../Model/Operator/RuleInterface';
 
 /**
@@ -206,6 +207,20 @@ namespace RuleUtil {
         if (rule.directory3 !== null) { encode.directory3 = rule.directory3; }
 
         return encode;
+    };
+
+    /**
+     * RulesSchema から OptionInterface を生成する
+     * @param rule: DBSchema.RulesSchema
+     * @return OptionInterface
+     */
+    export const createOption = (rule: DBSchema.RulesSchema): ReserveOptionInterface | null => {
+        const option: ReserveOptionInterface = {};
+
+        if (rule.directory !== null) { option.directory = rule.directory; }
+        if (rule.recordedFormat !== null) { option.recordedFormat = rule.recordedFormat; }
+
+        return option;
     };
 
     /**

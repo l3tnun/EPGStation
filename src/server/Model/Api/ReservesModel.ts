@@ -1,6 +1,6 @@
 import * as apid from '../../../../node_modules/mirakurun/api';
 import { IPCClientInterface } from '../IPC/IPCClient';
-import { AddReserveInterface, ReserveProgram, RuleReserveProgram } from '../Operator/ReserveProgramInterface';
+import { AddReserveInterface, ManualReserveProgram, ReserveProgram, RuleReserveProgram } from '../Operator/ReserveProgramInterface';
 import ApiModel from './ApiModel';
 import ApiUtil from './ApiUtil';
 
@@ -11,7 +11,8 @@ interface ReservesModelInterface extends ApiModel {
     getConflicts(limit: number, offset: number): Promise<{}[]>;
     getSkips(limit: number, offset: number): Promise<{}[]>;
     getOverlaps(limit: number, offset: number): Promise<{}[]>;
-    addReserve(option: AddReserveInterface): Promise<void>;
+    getPosition(programId: number): Promise<{}>;
+    addReserve(option: AddReserveInterface): Promise<{}>;
     editReserve(option: AddReserveInterface): Promise<void>;
     cancelReserve(programId: apid.ProgramId): Promise<void>;
     removeReserveSkip(programId: apid.ProgramId): Promise<void>;
@@ -108,6 +109,18 @@ class ReservesModel extends ApiModel implements ReservesModelInterface {
         };
     }
 
+    /**
+     * 指定した programId の予約の位置を取得
+     * @param programId: number
+     * @return { programId: number | null }
+     */
+    public async getPosition(programId: number): Promise<{}> {
+        const result = await this.ipc.getReservePosition(programId);
+
+        return result === null ? {} : {
+            position: result,
+        };
+    }
 
     /**
      * ReserveProgram[] の修正
@@ -131,6 +144,7 @@ class ReservesModel extends ApiModel implements ReservesModelInterface {
         };
 
         if (typeof (<RuleReserveProgram> reserve).ruleId !== 'undefined') { result['ruleId'] = (<RuleReserveProgram> reserve).ruleId; }
+        if (typeof (<ManualReserveProgram> reserve).isTimeSpecifited !== 'undefined') { result['isTimeSpecifited'] = (<ManualReserveProgram> reserve).isTimeSpecifited; }
 
         if (typeof reserve.option !== 'undefined') { result['option'] = reserve.option; }
         if (typeof reserve.encodeOption !== 'undefined') { result['encode'] = reserve.encodeOption; }
@@ -141,10 +155,14 @@ class ReservesModel extends ApiModel implements ReservesModelInterface {
     /**
      * 予約追加
      * @param option: AddReserveInterface
-     * @return Promise<void>
+     * @return Promise<number> ProgramId
      */
-    public async addReserve(option: AddReserveInterface): Promise<void> {
-        await this.ipc.addReserve(option);
+    public async addReserve(option: AddReserveInterface): Promise<{}> {
+        const programId = await this.ipc.addReserve(option);
+
+        return {
+            programId: programId,
+        };
     }
 
     /**

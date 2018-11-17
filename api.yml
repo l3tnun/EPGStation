@@ -774,8 +774,7 @@ definitions:
 
   AddReserve:
     type: object
-    required:
-      - programId
+    description: 'program or programId が必須'
     properties:
       programId:
         $ref: '#/definitions/ProgramId'
@@ -783,6 +782,8 @@ definitions:
         $ref: '#/definitions/AddReserveOption'
       encode:
         $ref: '#/definitions/RuleEncode'
+      program:
+        $ref: '#/definitions/AddReserveProgram'
 
   EditReserve:
     type: object
@@ -791,6 +792,8 @@ definitions:
         $ref: '#/definitions/AddReserveOption'
       encode:
         $ref: '#/definitions/RuleEncode'
+      program:
+        $ref: '#/definitions/AddReserveProgram'
 
   AddReserveOption:
     type: object
@@ -803,6 +806,50 @@ definitions:
         type: string
         description: '録画ファイル名フォーマット'
 
+  AddReserveProgram:
+    type: object
+    description: '時刻指定予約番組情報オプション'
+    required:
+      - channelId
+      - startAt
+      - endAt
+      - name
+    properties:
+      channelId:
+        $ref: '#/definitions/ServiceItemId'
+      startAt:
+        $ref: '#/definitions/UnixtimeMS'
+      endAt:
+        $ref: '#/definitions/UnixtimeMS'
+      name:
+        type: string
+        description: '番組タイトル'
+      description:
+        type: string
+        description: '番組詳細'
+      extended:
+        type: string
+        description: '番組拡張'
+      genre1:
+        $ref: '#/definitions/ProgramGenreLv1'
+      genre2:
+        $ref: '#/definitions/ProgramGenreLv2'
+
+  AddReserveResult:
+    type: object
+    required:
+      - programId
+    properties:
+      programId:
+        $ref: '#/definitions/ProgramId'
+
+  ReservePositionResult:
+    type: object
+    description: '指定した programId 予約の位置'
+    properties:
+      position:
+        type: integer
+
   Reserve:
     type: object
     required:
@@ -813,6 +860,9 @@ definitions:
         $ref: '#/definitions/ReserveProgram'
       ruleId:
         $ref: '#/definitions/RuleId'
+      isTimeSpecifited:
+        description: '時刻指定予約か'
+        type: boolean
       option:
         $ref: '#/definitions/AddReserveOption'
       encode:

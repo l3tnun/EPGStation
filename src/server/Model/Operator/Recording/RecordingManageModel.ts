@@ -1,11 +1,9 @@
 import * as events from 'events';
 import * as fs from 'fs';
 import * as http from 'http';
-import Mirakurun from 'mirakurun';
 import * as mkdirp from 'mkdirp';
 import * as path from 'path';
 import * as apid from '../../../../../node_modules/mirakurun/api';
-import CreateMirakurunClient from '../../../Util/CreateMirakurunClient';
 import DateUtil from '../../../Util/DateUtil';
 import FileUtil from '../../../Util/FileUtil';
 import StrUtil from '../../../Util/StrUtil';
@@ -19,6 +17,7 @@ import Model from '../../Model';
 import { ReservationManageModelInterface } from '../Reservation/ReservationManageModel';
 import { ReserveProgram, RuleReserveProgram } from '../ReserveProgramInterface';
 import { EncodeInterface } from '../RuleInterface';
+import { RecordingStreamCreatorInterface } from './RecordingStreamCreator';
 import { TSCheckerModelInterface } from './TSCheckerModel';
 
 interface RecordingProgram {
@@ -49,12 +48,12 @@ interface RecordingManageModelInterface extends Model {
 class RecordingManageModel extends Model implements RecordingManageModelInterface {
     private listener: events.EventEmitter = new events.EventEmitter();
     private recording: RecordingProgram[] = [];
-    private mirakurun: Mirakurun;
     private recordedDB: RecordedDBInterface;
     private servicesDB: ServicesDBInterface;
     private programsDB: ProgramsDBInterface;
     private recordedHistoryDB: RecordedHistoryDBInterface;
     private reservationManage: ReservationManageModelInterface;
+    private streamCreator: RecordingStreamCreatorInterface;
     private getTsChecker: () => TSCheckerModelInterface;
 
     constructor(
@@ -63,6 +62,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
         programsDB: ProgramsDBInterface,
         recordedHistoryDB: RecordedHistoryDBInterface,
         reservationManage: ReservationManageModelInterface,
+        streamCreator: RecordingStreamCreatorInterface,
         getTsChecker: () => TSCheckerModelInterface,
     ) {
         super();
@@ -72,8 +72,8 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
         this.programsDB = programsDB;
         this.recordedHistoryDB = recordedHistoryDB;
         this.reservationManage = reservationManage;
+        this.streamCreator = streamCreator;
         this.getTsChecker = getTsChecker;
-        this.mirakurun = CreateMirakurunClient.get();
     }
 
     /**
@@ -260,9 +260,6 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
     private async prepRecord(reserve: ReserveProgram, retry: number = 0): Promise<void> {
         this.log.system.info(`preprec: ${ reserve.program.id } ${ reserve.program.name }`);
 
-        // 録画優先度を設定
-        this.mirakurun.priority = reserve.isConflict ? (this.config.getConfig().conflictPriority || 1) : (this.config.getConfig().recPriority || 2);
-
         let recData: RecordingProgram | null = null;
         if (retry === 0) {
             // recording へ追加
@@ -283,7 +280,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
 
         // 番組ストリームを取得
         try {
-            const stream = await this.mirakurun.getProgramStream(reserve.program.id, true);
+            const stream = await this.streamCreator.create(reserve);
 
             // 録画予約がストリーム準備中に削除されていないか確認
             if (this.reservationManage.getReserve(reserve.program.id) === null) {
@@ -466,52 +463,86 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
                 // recording 状態を解除
                 await this.recordedDB.removeRecording(recorded.id);
 
-                // 番組情報を最新に更新する
-                const program = await this.programsDB.findId(recorded.programId);
-                if (program !== null) {
-                    recorded = {
-                        id: recorded.id,
-                        programId: recorded.programId,
-                        channelId: program.channelId,
-                        channelType: program.channelType,
-                        startAt: program.startAt,
-                        endAt: program.endAt,
-                        duration: program.duration,
-                        name: program.name,
-                        description: program.description,
-                        extended: program.extended,
-                        genre1: program.genre1,
-                        genre2: program.genre2,
-                        videoType: program.videoType,
-                        videoResolution: program.videoResolution,
-                        videoStreamContent: program.videoStreamContent,
-                        videoComponentType: program.videoComponentType,
-                        audioSamplingRate: program.audioSamplingRate,
-                        audioComponentType: program.audioComponentType,
-                        recPath: recData.recPath!,
-                        ruleId: ruleId,
-                        thumbnailPath: null,
-                        recording: false,
-                        protection: false,
-                        filesize: null,
-                        logPath: recorded.logPath,
-                        errorCnt: null,
-                        dropCnt: null,
-                        scramblingCnt: null,
-                    };
-                    await this.recordedDB.replace(recorded);
+                if (recorded.programId > 0) {
+                    // programId 予約の場合、番組情報を最新に更新する
+                    const program = await this.programsDB.findId(recorded.programId);
+                    if (program !== null) {
+                        recorded = {
+                            id: recorded.id,
+                            programId: recorded.programId,
+                            channelId: program.channelId,
+                            channelType: program.channelType,
+                            startAt: program.startAt,
+                            endAt: program.endAt,
+                            duration: program.duration,
+                            name: program.name,
+                            description: program.description,
+                            extended: program.extended,
+                            genre1: program.genre1,
+                            genre2: program.genre2,
+                            videoType: program.videoType,
+                            videoResolution: program.videoResolution,
+                            videoStreamContent: program.videoStreamContent,
+                            videoComponentType: program.videoComponentType,
+                            audioSamplingRate: program.audioSamplingRate,
+                            audioComponentType: program.audioComponentType,
+                            recPath: recData.recPath!,
+                            ruleId: ruleId,
+                            thumbnailPath: null,
+                            recording: false,
+                            protection: false,
+                            filesize: null,
+                            logPath: recorded.logPath,
+                            errorCnt: null,
+                            dropCnt: null,
+                            scramblingCnt: null,
+                        };
+                        await this.recordedDB.replace(recorded);
 
-                    historyProgram = {
-                        id: 0,
-                        name: program.name,
-                        endAt: program.endAt,
-                    };
+                        historyProgram = {
+                            id: 0,
+                            name: program.name,
+                            endAt: program.endAt,
+                        };
+                    } else {
+                        historyProgram = {
+                            id: 0,
+                            name: recorded.name,
+                            endAt: recorded.endAt,
+                        };
+                    }
                 } else {
-                    historyProgram = {
-                        id: 0,
-                        name: recorded.name,
-                        endAt: recorded.endAt,
-                    };
+                    // 時間指定予約の場合 ビデオやオーディオ情報を更新する
+                    const now = new Date().getTime();
+                    const time = now <= recData.reserve.program.endAt
+                        ? -1000
+                        : -1000 + recData.reserve.program.endAt - now;
+                    const programs = await this.programsDB.findBroadcastingChanel(recData.reserve.program.channelId, time);
+
+                    if (programs.length !== 0) {
+                        // 更新
+                        const recordedId = recorded.id;
+                        const program = programs[0];
+                        await this.recordedDB.updateVideoInfo(recordedId, {
+                            videoType: program.videoType,
+                            videoResolution: program.videoResolution,
+                            videoStreamContent: program.videoStreamContent,
+                            videoComponentType: program.videoComponentType,
+                            audioSamplingRate: program.audioSamplingRate,
+                            audioComponentType: program.audioComponentType,
+                        })
+                        .catch((err) => {
+                            this.log.system.error(`update video info error: ${ recordedId }`);
+                            this.log.system.error(err);
+                        });
+
+                        recorded.videoType = program.videoType;
+                        recorded.videoResolution = program.videoResolution;
+                        recorded.videoStreamContent = program.videoStreamContent;
+                        recorded.videoComponentType = program.videoComponentType;
+                        recorded.audioSamplingRate = program.audioSamplingRate;
+                        recorded.audioComponentType = program.audioComponentType;
+                    }
                 }
 
                 // update filesize
