@@ -353,12 +353,26 @@ class TopPageComponent extends ParentComponent<void> {
                 class: 'mdl-card__supporting-text',
                 onclick: (event: Event) => { this.openProgramInfo(event, reserve); },
             }, [
-                m('div', { class: 'title' }, reserve.program.name),
+                m('div', { class: 'title' }, [
+                    this.getTitleIcon(reserve),
+                    m('span', reserve.program.name),
+                ]),
                 m('div', { class: 'time' }, this.getReservesCardTime(reserve.program)),
                 m('div', { class: 'channel' }, this.reservesViewModel.getChannelName(reserve.program.channelId)),
                 m('div', { class: 'description' }, reserve.program.description),
             ]),
         ]);
+    }
+
+    /**
+     * get title icon
+     * @param reserve: apid.Reserve
+     * @return m.Child
+     */
+    private getTitleIcon(reserve: apid.Reserve): m.Child {
+        const icon = !!reserve.isTimeSpecifited ? 'timer' : typeof reserve.ruleId === 'undefined' ? 'schedule' : 'event';
+
+        return m('span', { class: 'icon' }, m('i', { class: 'material-icons' }, icon));
     }
 
     /**
