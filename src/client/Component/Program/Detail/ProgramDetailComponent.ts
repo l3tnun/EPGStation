@@ -117,7 +117,7 @@ class ProgramDetailComponent extends ParentComponent<void> {
      * @return m.Child
      */
     private createBroadcaster(option: apid.AddReserveProgram): m.Child {
-        return this.createContentFrame('放送局', [
+        return this.createContentFrame('放送局※', [
             // 放送局プルダウン
             m('div', { style: 'display: flex; width: 100%;' }, [
                  m('div', { class: 'pulldown mdl-layout-spacer' }, [
@@ -133,7 +133,7 @@ class ProgramDetailComponent extends ParentComponent<void> {
                     ]),
                 ]),
             ]),
-        ]);
+        ], 'required');
     }
 
     /**
@@ -193,7 +193,7 @@ class ProgramDetailComponent extends ParentComponent<void> {
         getTime: () => string,
         setTime: (time: string) => void,
     ): m.Child {
-        return this.createContentFrame(name, [
+        return this.createContentFrame(name + '※', [
             m('div', {
                 class: 'mdl-cell--12-col mdl-textfield mdl-js-textfield',
                 style: 'display: flex; width: 50%;',
@@ -216,7 +216,7 @@ class ProgramDetailComponent extends ParentComponent<void> {
                     onchange: m.withAttr('value', (value) => { setTime(value); }),
                 }),
             ]),
-        ]);
+        ], 'required');
     }
 
     /**
@@ -225,7 +225,7 @@ class ProgramDetailComponent extends ParentComponent<void> {
      * @return m.Child
      */
     private createTitle(option: apid.AddReserveProgram): m.Child {
-        return this.createContentFrame('タイトル', [
+        return this.createContentFrame('タイトル※', [
             m('div', { class: 'mdl-cell--12-col mdl-textfield mdl-js-textfield' }, [
                 m('input', {
                     class: 'mdl-textfield__input',
@@ -235,7 +235,7 @@ class ProgramDetailComponent extends ParentComponent<void> {
                     onchange: m.withAttr('value', (value) => { option.name = value; }),
                 }),
             ]),
-        ]);
+        ], 'required');
     }
 
     /**
@@ -488,10 +488,11 @@ class ProgramDetailComponent extends ParentComponent<void> {
      * create content frame
      * @param name: name
      * @param content: content
+     * @param classStr: class
      * @return m.Child
      */
-    protected createContentFrame(name: string, content: m.Child | m.Child[] | null): m.Child {
-        return m('div', { class: 'option-content mdl-cell mdl-cell--12-col mdl-grid mdl-grid--no-spacing' }, [
+    protected createContentFrame(name: string, content: m.Child | m.Child[] | null, classStr: string = ''): m.Child {
+        return m('div', { class: 'option-content mdl-cell mdl-cell--12-col mdl-grid mdl-grid--no-spacing ' + classStr }, [
             m('div', { class: 'option-title mdl-cell mdl-cell--3-col mdl-cell--2-col-tablet' }, name),
             m('div', { class: 'mdl-cell mdl-cell--6-col mdl-cell--9-col-desktop mdl-grid mdl-grid--no-spacing' }, content),
         ]);
