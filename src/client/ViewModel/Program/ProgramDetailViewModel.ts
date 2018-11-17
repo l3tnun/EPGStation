@@ -252,7 +252,30 @@ class ProgramDetailViewModel extends ViewModel {
             }
 
             if (this.addReserveProgram !== null) {
-                option.program = this.addReserveProgram;
+                // check time
+                if (this.addReserveProgram.startAt >= this.addReserveProgram.endAt) {
+                    this.openSnackbar('開始時刻が終了時刻を超過しています');
+                    throw new Error('TimeRangeError');
+                } else if (this.addReserveProgram.endAt - this.addReserveProgram.startAt >= 24 * 60 * 60 * 1000) {
+                    this.openSnackbar('録画時間が 24 時間を超えています');
+                    throw new Error('TimeIsTooLongError');
+                }
+
+                // check title
+                if (typeof this.addReserveProgram.name === 'undefined' || this.addReserveProgram.name.length === 0) {
+                    this.openSnackbar('番組名を指定してください');
+                    throw new Error('TitleError');
+                }
+
+                option.program = <apid.AddReserveProgram> JSON.parse(JSON.stringify(this.addReserveProgram));
+
+                // check genre
+                if (option.program.genre1 === -1) {
+                    delete option.program.genre1;
+                    delete option.program.genre2;
+                } else if (option.program.genre2 === -1) {
+                    delete option.program.genre2;
+                }
             }
         } else {
             option.programId = this.getProgramId();
