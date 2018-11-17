@@ -44,6 +44,8 @@ interface ConfigInterface {
     reserves: string;
     recPriority: number;
     conflictPriority: number;
+    timeSpecifiedStartMargin: number;
+    timeSpecifiedEndMargin: number;
     recorded: string;
     reservationAddedCommand: string;
     recordedPreStartCommand: string;

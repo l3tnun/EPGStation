@@ -51,8 +51,8 @@ export const post: Operation = async(req, res) => {
     const reserves = <ReservesModelInterface> factory.get('ReservesModel');
 
     try {
-        await reserves.addReserve(req.body);
-        api.responseJSON(res, 201, { code: 201 });
+        const result = await reserves.addReserve(req.body);
+        api.responseJSON(res, 201, result);
         api.notifyClient();
     } catch (err) {
         api.responseServerError(res, err.message);
@@ -76,6 +76,9 @@ post.apiDoc = {
     responses: {
         201: {
             description: '予約を追加しました',
+            schema: {
+                $ref: '#/definitions/AddReserveResult',
+            },
         },
         default: {
             description: '予期しないエラー',

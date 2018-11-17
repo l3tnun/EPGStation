@@ -58,6 +58,7 @@ import { ProgramExternalProcessModel } from './Operator/ProgramExternalProcessMo
 import { RecordedManageModel } from './Operator/Recorded/RecordedManageModel';
 import { RecordedExternalProcessModel } from './Operator/RecordedExternalProcessModel';
 import { RecordingManageModel } from './Operator/Recording/RecordingManageModel';
+import { RecordingStreamCreator } from './Operator/Recording/RecordingStreamCreator';
 import { TSCheckerModel } from './Operator/Recording/TSCheckerModel';
 import { ReservationManageModel } from './Operator/Reservation/ReservationManageModel';
 import { RuleManageModel } from './Operator/Rule/RuleManageModel';
@@ -140,14 +141,17 @@ namespace ModelFactorySetting {
         const reservationManage = new ReservationManageModel(
             programsDB!,
             rulesDB!,
+            servicesDB!,
             ipc,
         );
+        const recordingStreamCreator = new RecordingStreamCreator();
         const recordingManage = new RecordingManageModel(
             recordedDB!,
             servicesDB!,
             programsDB!,
             recordedHistoryDB!,
             reservationManage,
+            recordingStreamCreator,
             () => { return new TSCheckerModel(); },
         );
         reservationManage.setRecordedManageModel(recordingManage);

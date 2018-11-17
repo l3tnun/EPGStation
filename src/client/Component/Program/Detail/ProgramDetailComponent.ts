@@ -47,47 +47,295 @@ class ProgramDetailComponent extends ParentComponent<void> {
      * @return m.Child | null
      */
     public createContent(): m.Child {
-        const schedule = this.viewModel.getSchedule();
-        if (schedule === null) { return null; }
+        const program = this.viewModel.getProgram();
+        const channel = this.viewModel.getChannel();
+        if (program === null || channel === null) { return null; }
 
         return m('div', {
             class: 'program-detail-content',
             onupdate: () => { this.restoreMainLayoutPosition(); },
         }, [
-            this.createProgramCard(schedule),
+            this.createProgramCard(program, channel),
             this.createOptionCard(),
         ]);
     }
 
     /**
      * program card
-     * @param schedule: apid.ScheduleProgram
+     * @param program: apid.ScheduleProgramItem | apid.ReserveProgram,
+     * @param channel: apid.ScheduleServiceItem | apid.ServiceItem,
      * @return m.Child
      */
-    private createProgramCard(schedule: apid.ScheduleProgram): m.Child {
+    private createProgramCard(
+        program: apid.ScheduleProgramItem | apid.ReserveProgram,
+        channel: apid.ScheduleServiceItem | apid.ServiceItem,
+    ): m.Child {
         return m('div', {
             class: 'program-card mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col',
         }, [
             m('div', { class: 'mdl-card__supporting-text' }, [
-                m('div', { class: 'title' }, schedule.programs[0].name),
-                m('div', { class: 'channel' }, schedule.channel.name),
-                m('div', { class: 'time' },
-                    this.viewModel.createTimeStr(schedule.programs[0].startAt, schedule.programs[0].endAt),
-                ),
-                m('div', { class: 'genre' },
-                    this.viewModel.createGenresStr(schedule.programs[0].genre1, schedule.programs[0].genre2),
-                ),
-                m('div', { class: 'description' }, schedule.programs[0].description),
-                m('div', { class: 'video' },
-                    '映像: ' + this.viewModel.createVideoInfoStr(schedule.programs[0].videoComponentType),
-                ),
-                m('div', { class: 'audio-mode' },
-                    '音声: ' + this.viewModel.createAudioModeStr(schedule.programs[0].audioComponentType),
-                ),
-                m('div', { class: 'audio-sampling-rate' },
-                    'サンプリングレート: ' + this.viewModel.createAudioSamplingRateStr(schedule.programs[0].audioSamplingRate),
-                ),
-                m('div', { class: 'is-free' }, schedule.programs[0].isFree ? '無料放送' : '有料放送'),
+                this.viewModel.isTimeSpecifited()
+                    ? this.createTimeSpecifitedProgramContent()
+                    : this.createNormalProgramContent(program, channel),
+            ]),
+            this.createToggle(),
+        ]);
+    }
+
+    /**
+     * 時刻指定予約番組
+     * @return m.Child[] | null
+     */
+    private createTimeSpecifitedProgramContent(): m.Child[] | null {
+        const option = this.viewModel.addReserveProgram;
+        if (option === null) { return null; }
+
+        return [
+            this.createBroadcaster(option),
+            this.createGenres(option),
+            this.createDate('開始時刻',
+                () => { return this.viewModel.getDateStr(true); },
+                (date: string) => { this.viewModel.setDateStr(true, date); },
+                () => { return this.viewModel.getTimeStr(true); },
+                (time: string) => { this.viewModel.setTimeStr(true, time); },
+            ),
+            this.createDate('終了時刻',
+                () => { return this.viewModel.getDateStr(false); },
+                (date: string) => { this.viewModel.setDateStr(false, date); },
+                () => { return this.viewModel.getTimeStr(false); },
+                (time: string) => { this.viewModel.setTimeStr(false, time); },
+            ),
+            this.createTitle(option),
+            this.createDescription(option),
+            this.createExtended(option),
+        ];
+    }
+
+    /**
+     * 放送局プルダウン
+     * @param option: apid.AddReserveProgram
+     * @return m.Child
+     */
+    private createBroadcaster(option: apid.AddReserveProgram): m.Child {
+        return this.createContentFrame('放送局※', [
+            // 放送局プルダウン
+            m('div', { style: 'display: flex; width: 100%;' }, [
+                 m('div', { class: 'pulldown mdl-layout-spacer' }, [
+                    m('select', {
+                        value: option.channelId,
+                        onchange: m.withAttr('value', (value) => {
+                            option.channelId = Number(value);
+                        }),
+                    }, [
+                        this.viewModel.getChannels().map((channel) => {
+                            return m('option', { value: channel.id }, channel.name);
+                        }),
+                    ]),
+                ]),
+            ]),
+        ], 'required');
+    }
+
+    /**
+     * ジャンル
+     * @param option: apid.AddReserveProgram
+     * @return m.Child
+     */
+    private createGenres(option: apid.AddReserveProgram): m.Child {
+        return this.createContentFrame('ジャンル', [
+            // ジャンルセレクタ
+            m('div', { style: 'display: flex; width: 50%;' }, [
+                m('div', { class: 'pulldown mdl-layout-spacer' }, [
+                    m('select', {
+                        value: option.genre1,
+                        onchange: m.withAttr('value', (value) => {
+                            option.genre1 = Number(value);
+                            this.viewModel.initGenre2();
+                        }),
+                    },
+                        m('option', { value: '-1' }, '指定なし'),
+                        this.viewModel.getGenre1().map((genre) => {
+                            return m('option', { value: genre.value }, genre.name);
+                        }),
+                    ),
+                ]),
+            ]),
+
+            // サブジャンルセレクタ
+            m('div', { style: 'display: flex; width: 50%;' }, [
+                m('div', { class: 'pulldown mdl-layout-spacer' }, [
+                    m('select', {
+                        value: option.genre2,
+                        onchange: m.withAttr('value', (value) => { option.genre2 = Number(value); }),
+                    },
+                        m('option', { value: '-1' }, '指定なし'),
+                        this.viewModel.getGenre2().map((genre) => {
+                            return m('option', { value: genre.value }, genre.name);
+                        }),
+                    ),
+                ]),
+            ]),
+        ]);
+    }
+
+    /**
+     * 時刻
+     * @param getDate: () => string
+     * @param setDate: (date: string) => void
+     * @param getTime: () => string
+     * @param setTime: (time: string) => void
+     * @return m.Child
+     */
+    private createDate(
+        name: string,
+        getDate: () => string,
+        setDate: (date: string) => void,
+        getTime: () => string,
+        setTime: (time: string) => void,
+    ): m.Child {
+        return this.createContentFrame(name + '※', [
+            m('div', {
+                class: 'mdl-cell--12-col mdl-textfield mdl-js-textfield',
+                style: 'display: flex; width: 50%;',
+            }, [
+                m('input', {
+                    class: 'mdl-textfield__input',
+                    type: 'date',
+                    value: getDate(),
+                    onchange: m.withAttr('value', (value) => { setDate(value); }),
+                }),
+            ]),
+            m('div', {
+                class: 'mdl-cell--12-col mdl-textfield mdl-js-textfield',
+                style: 'display: flex; width: 50%;',
+            }, [
+                m('input', {
+                    class: 'mdl-textfield__input',
+                    type: 'time',
+                    value: getTime(),
+                    step: 1,
+                    onchange: m.withAttr('value', (value) => { setTime(value); }),
+                }),
+            ]),
+        ], 'required');
+    }
+
+    /**
+     * 番組タイトル
+     * @param option: apid.AddReserveProgram
+     * @return m.Child
+     */
+    private createTitle(option: apid.AddReserveProgram): m.Child {
+        return this.createContentFrame('タイトル※', [
+            m('div', { class: 'mdl-cell--12-col mdl-textfield mdl-js-textfield' }, [
+                m('input', {
+                    class: 'mdl-textfield__input',
+                    type: 'text',
+                    placeholder: 'title',
+                    value: option.name,
+                    onchange: m.withAttr('value', (value) => { option.name = value; }),
+                }),
+            ]),
+        ], 'required');
+    }
+
+    /**
+     * 番組概要
+     * @param option: apid.AddReserveProgram
+     * @return m.Child
+     */
+    private createDescription(option: apid.AddReserveProgram): m.Child {
+        return this.createContentFrame('概要', [
+            m('div', {
+                class: 'mdl-cell--12-col mdl-textfield mdl-js-textfield',
+            }, [
+                m('textarea', {
+                    class: 'mdl-textfield__input',
+                    placeholder: '概要',
+                    value: option.description,
+                    onchange: m.withAttr('value', (value) => { option.description = value; }),
+                    rows: 3,
+                }),
+            ]),
+        ]);
+    }
+
+    /**
+     * 番組詳細
+     * @param option: apid.AddReserveProgram
+     * @return m.Child
+     */
+    private createExtended(option: apid.AddReserveProgram): m.Child {
+        return this.createContentFrame('詳細', [
+            m('div', {
+                class: 'mdl-cell--12-col mdl-textfield mdl-js-textfield',
+            }, [
+                m('textarea', {
+                    class: 'mdl-textfield__input',
+                    placeholder: '詳細',
+                    value: option.extended,
+                    onchange: m.withAttr('value', (value) => { option.extended = value; }),
+                    rows: 3,
+                }),
+            ]),
+        ]);
+    }
+
+    /**
+     * 通常時番組情報
+     * @return m.Child[]
+     */
+    private createNormalProgramContent(
+        program: apid.ScheduleProgramItem | apid.ReserveProgram,
+        channel: apid.ScheduleServiceItem | apid.ServiceItem,
+    ): m.Child[] {
+        return [
+            m('div', { class: 'title' }, program.name),
+            m('div', { class: 'channel' }, channel.name),
+            m('div', { class: 'time' },
+                this.viewModel.createTimeStr(program.startAt, program.endAt),
+            ),
+            m('div', { class: 'genre' },
+                this.viewModel.createGenresStr(program.genre1, program.genre2),
+            ),
+            m('div', { class: 'description' }, program.description),
+            m('div', { class: 'extended' }, program.extended),
+            m('div', { class: 'video' },
+                '映像: ' + this.viewModel.createVideoInfoStr(program.videoComponentType),
+            ),
+            m('div', { class: 'audio-mode' },
+                '音声: ' + this.viewModel.createAudioModeStr(program.audioComponentType),
+            ),
+            m('div', { class: 'audio-sampling-rate' },
+                'サンプリングレート: ' + this.viewModel.createAudioSamplingRateStr(program.audioSamplingRate),
+            ),
+            m('div', { class: 'is-free' }, program.isFree ? '無料放送' : '有料放送'),
+        ];
+    }
+
+    /**
+     * 手動予約と時刻指定予約を入れ替えるトグル
+     * @return m.Child
+     */
+    private createToggle(): m.Child {
+        return m('div', { class: 'time-specifited-toggle' }, [
+            m('span', { class: 'time-specifited-toggle-name' }, '時刻指定予約'),
+            m('label', {
+                class: 'mdl-switch mdl-js-switch mdl-js-ripple-effect',
+                onupdate: (vnode: m.VnodeDOM<void, this>) => {
+                    this.toggleLabelOnUpdate(<HTMLInputElement> vnode.dom, this.viewModel.isTimeSpecifited());
+                },
+            }, [
+                m('input', {
+                    type: 'checkbox',
+                    class: 'mdl-switch__input',
+                    disabled: this.viewModel.isEditMode() ? 'disabled' : '',
+                    checked: this.viewModel.isTimeSpecifited(),
+                    onclick: m.withAttr('checked', (value) => {
+                        this.viewModel.setTimeSpecifited(value);
+                    }),
+                }),
+                m('span', { class: 'mdl-switch__label' }),
             ]),
         ]);
     }
@@ -209,14 +457,24 @@ class ProgramDetailComponent extends ParentComponent<void> {
                 onclick: async() => {
                     // 予約追加 or 更新
                     const isEditMode = this.viewModel.isEditMode();
+                    let programId: apid.ProgramId | null = null;
+
                     try {
                         if (isEditMode) {
                             await this.viewModel.update();
                         } else {
-                            await this.viewModel.add();
+                            programId = await this.viewModel.add();
                         }
                         this.viewModel.openSnackbar(isEditMode ? '予約更新' : '予約追加');
                         await Util.sleep(1000);
+
+                        if (programId !== null && this.viewModel.isTimeSpecifited()) {
+                            // 時刻指定予約の場合該当の予約一覧の該当ページへ飛ぶ
+                            const position = await this.viewModel.getReservePagePosition(programId);
+                            Util.move('/reserves', { page: position });
+
+                            return;
+                        }
                     } catch (err) {
                         this.viewModel.openSnackbar((isEditMode ? '予約更新' : '予約追加') + 'に失敗しました');
 
@@ -241,10 +499,11 @@ class ProgramDetailComponent extends ParentComponent<void> {
      * create content frame
      * @param name: name
      * @param content: content
+     * @param classStr: class
      * @return m.Child
      */
-    protected createContentFrame(name: string, content: m.Child | m.Child[] | null): m.Child {
-        return m('div', { class: 'option-content mdl-cell mdl-cell--12-col mdl-grid mdl-grid--no-spacing' }, [
+    protected createContentFrame(name: string, content: m.Child | m.Child[] | null, classStr: string = ''): m.Child {
+        return m('div', { class: 'option-content mdl-cell mdl-cell--12-col mdl-grid mdl-grid--no-spacing ' + classStr }, [
             m('div', { class: 'option-title mdl-cell mdl-cell--3-col mdl-cell--2-col-tablet' }, name),
             m('div', { class: 'mdl-cell mdl-cell--6-col mdl-cell--9-col-desktop mdl-grid mdl-grid--no-spacing' }, content),
         ]);

@@ -17,7 +17,8 @@ interface IPCClientInterface extends Model {
     getReserveConflicts(limit: number, offset: number): Promise<ReserveLimit>;
     getReserveSkips(limit: number, offset: number): Promise<ReserveLimit>;
     getReserveOverlaps(limit: number, offset: number): Promise<ReserveLimit>;
-    addReserve(option: AddReserveInterface): Promise<void>;
+    getReservePosition(programId: number): Promise<number | null>;
+    addReserve(option: AddReserveInterface): Promise<number>;
     editReserve(option: AddReserveInterface): Promise<void>;
     cancelReserve(programId: apid.ProgramId): Promise<void>;
     removeReserveSkip(programId: apid.ProgramId): Promise<void>;
@@ -166,13 +167,26 @@ class IPCClient extends Model implements IPCClientInterface {
     }
 
     /**
+     * 指定した programId の予約位置を取得する
+     * @return Promise<number | null>
+     */
+    public async getReservePosition(programId: number): Promise<number | null> {
+        const id = this.send(IPCMessageDefinition.getReservePosition, { programId: programId });
+        const result = await this.receive(id);
+
+        return <number | null> result.value;
+    }
+
+    /**
      * 予約追加
      * @param option: AddReserveInterface
-     * @return Promise<void>
+     * @return Promise<number> ProgramId
      */
-    public async addReserve(option: AddReserveInterface): Promise<void> {
+    public async addReserve(option: AddReserveInterface): Promise<number> {
         const id = this.send(IPCMessageDefinition.addReserve, { option: option });
-        await this.receive(id);
+        const result = await this.receive(id);
+
+        return <number> result.value;
     }
 
     /**

@@ -9,7 +9,7 @@ import Component from '../Component';
 class BoardBarComponent extends Component<void> {
     private viewModel: ProgramViewModel;
     private stopTimer: boolean = false;
-    private timerId: NodeJS.Timer;
+    private timerId: number;
 
     constructor() {
         super();
@@ -18,7 +18,7 @@ class BoardBarComponent extends Component<void> {
 
     public oncreate(): void {
         // 1 分毎に更新
-        this.timerId = setTimeout(() => {
+        this.timerId = window.setTimeout(() => {
             m.redraw();
             if (!this.stopTimer) { this.oncreate(); }
         }, (60 - new Date().getSeconds()) * 1000);

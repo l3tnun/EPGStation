@@ -614,7 +614,7 @@ class SearchViewModel extends ViewModel {
         try {
             await this.rulesApiModel.add(this.createAddRule());
             this.snackbar.open('ルール追加');
-            setTimeout(() => { Util.move('/rules'); }, 1000);
+            window.setTimeout(() => { Util.move('/rules'); }, 1000);
         } catch (err) {
             console.error(err);
             this.snackbar.open('ルール追加失敗');
@@ -635,7 +635,7 @@ class SearchViewModel extends ViewModel {
         try {
             await this.rulesApiModel.update(Number(ruleId), this.createAddRule());
             this.snackbar.open('ルール更新');
-            setTimeout(() => { Util.move('/rules'); }, 1000);
+            window.setTimeout(() => { Util.move('/rules'); }, 1000);
         } catch (err) {
             console.error(err);
             this.snackbar.open('ルール更新失敗');

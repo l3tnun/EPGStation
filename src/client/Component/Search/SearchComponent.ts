@@ -82,7 +82,7 @@ class SearchComponent extends ParentComponent<void> {
                     attrs: {
                         onclick: () => {
                             this.balloon.close();
-                            setTimeout(() => {
+                            window.setTimeout(() => {
                                 this.searchSettingViewModel.setTemp();
                                 this.balloon.open(SearchSettingViewModel.id);
                             }, 200);
@@ -123,7 +123,7 @@ class SearchComponent extends ParentComponent<void> {
                     const start = mainLayout.scrollTop;
                     const end = hit.getBoundingClientRect().top - 70 + mainLayout.scrollTop;
 
-                    setTimeout(() => { Scroll.scrollTo(mainLayout, start, end, 200); }, 100);
+                    window.setTimeout(() => { Scroll.scrollTo(mainLayout, start, end, 200); }, 100);
                 }
             },
         });

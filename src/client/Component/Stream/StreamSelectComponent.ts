@@ -93,7 +93,7 @@ class StreamSelectComponent extends Component<void> {
                     style: this.viewModel.hasJumpStationButton() ? 'left: 8px; position: absolute;' : 'display: none;',
                     onclick: () => {
                         this.viewModel.close();
-                        setTimeout(() => {
+                        window.setTimeout(() => {
                             this.viewModel.moveStationPage();
                         }, 200);
                     },

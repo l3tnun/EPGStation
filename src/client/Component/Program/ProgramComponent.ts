@@ -87,7 +87,7 @@ class ProgramComponent extends ParentComponent<void> {
                     attrs: {
                         onclick: () => {
                             this.balloon.close();
-                            setTimeout(() => {
+                            window.setTimeout(() => {
                                 Util.move('/program/setting');
                             }, 200);
                         },
@@ -98,7 +98,7 @@ class ProgramComponent extends ParentComponent<void> {
                     attrs: {
                         onclick: () => {
                             this.balloon.close();
-                            setTimeout(() => {
+                            window.setTimeout(() => {
                                 this.genre.init();
                                 this.balloon.open(ProgramGenreViewModel.id);
                             }, 200);
@@ -110,7 +110,7 @@ class ProgramComponent extends ParentComponent<void> {
                     attrs: {
                         onclick: () => {
                             this.balloon.close();
-                            setTimeout(() => {
+                            window.setTimeout(() => {
                                 this.viewModel.startUpdateReserves();
                             }, 200);
                         },
@@ -165,7 +165,7 @@ class ProgramComponent extends ParentComponent<void> {
                             obfuscator.style.position = 'fixed';
                         };
                         obfuscator.onclick = () => {
-                            setTimeout(() => {
+                            window.setTimeout(() => {
                                 drawer.style.position = '';
                                 obfuscator.style.position = '';
                             }, 200);

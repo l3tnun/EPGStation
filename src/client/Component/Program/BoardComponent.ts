@@ -112,7 +112,7 @@ class BoardComponent extends Component<BoardArgs> {
 
                     // progress 非表示
                     this.viewModel.draw();
-                    setTimeout(() => { this.viewModel.progressShow = false; m.redraw(); }, 200);
+                    window.setTimeout(() => { this.viewModel.progressShow = false; m.redraw(); }, 200);
                 },
                 onupdate: (vnode: m.VnodeDOM<BoardArgs, this>) => {
                     if (!this.viewModel.reloadUpdateDom) { return; }
@@ -128,7 +128,7 @@ class BoardComponent extends Component<BoardArgs> {
                     }
 
                     this.viewModel.draw();
-                    setTimeout(() => { this.viewModel.reloadUpdateDom = false; this.viewModel.progressShow = false; m.redraw(); }, 200);
+                    window.setTimeout(() => { this.viewModel.reloadUpdateDom = false; this.viewModel.progressShow = false; m.redraw(); }, 200);
                 },
             }, [
                 m(BoardBarComponent),

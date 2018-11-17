@@ -61,7 +61,7 @@ class ReservesMenuViewModel extends ViewModel {
      */
     public openDelete(): void {
         this.close();
-        setTimeout(() => {
+        window.setTimeout(() => {
             this.balloon.open(ReservesMenuViewModel.deleteId);
         }, 200);
     }

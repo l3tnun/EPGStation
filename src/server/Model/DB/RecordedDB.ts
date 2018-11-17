@@ -1,4 +1,5 @@
 import * as path from 'path';
+import * as apid from '../../../../api';
 import FileUtil from '../../Util/FileUtil';
 import StrUtil from '../../Util/StrUtil';
 import Util from '../../Util/Util';
@@ -24,6 +25,15 @@ interface CntItem {
     error: number;
     drop: number;
     scrambling: number;
+}
+
+interface VideoInfo {
+    videoType: apid.ProgramVideoType | null;
+    videoResolution: apid.ProgramVideoResolution | null;
+    videoStreamContent: number | null;
+    videoComponentType: number | null;
+    audioSamplingRate: apid.ProgramAudioSamplingRate | null;
+    audioComponentType: number | null;
 }
 
 interface RecordedFilesItem {
@@ -54,6 +64,7 @@ interface RecordedDBInterface extends DBTableBase {
     updateLogFilePath(recordedId: number, filePath: string): Promise<void>;
     updateAllNullFileSize(): Promise<void>;
     updateCnt(recordedId: number, item: CntItem): Promise<void>;
+    updateVideoInfo(recordedId: number, info: VideoInfo): Promise<void>;
     findId(id: number): Promise<DBSchema.RecordedSchema | null>;
     findOld(): Promise<DBSchema.RecordedSchema | null>;
     findCleanupList(): Promise<{ id: number }[]>;
@@ -452,6 +463,32 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
      */
     public async updateCnt(recordedId: number, item: CntItem): Promise<void> {
         await this.operator.runQuery(`update ${ DBSchema.TableName.Recorded } set errorCnt = ${ item.error }, dropCnt = ${ item.drop }, scramblingCnt = ${ item.scrambling } where id = ${ recordedId }`);
+    }
+
+    /**
+     * video 情報を更新
+     * @param recordedId: number
+     * @param info: VideoInfo
+     */
+    public async updateVideoInfo(recordedId: number, info: VideoInfo): Promise<void> {
+        const values: any[] = [];
+        values.push(info.videoType);
+        values.push(info.videoResolution);
+        values.push(info.videoStreamContent);
+        values.push(info.videoComponentType);
+        values.push(info.audioSamplingRate);
+        values.push(info.audioComponentType);
+
+        await this.operator.runQuery(
+            `update ${ DBSchema.TableName.Recorded } set `
+            + `videoType = "${ info.videoType }", `
+            + `videoResolution = "${ info.videoResolution }", `
+            + `videoStreamContent = ${ info.videoStreamContent }, `
+            + `videoComponentType = ${ info.videoComponentType }, `
+            + `audioSamplingRate = ${ info.audioSamplingRate }, `
+            + `audioComponentType = ${ info.audioComponentType } `
+            + `where id = ${ recordedId }`,
+        );
     }
 
     /**

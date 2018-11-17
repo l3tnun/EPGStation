@@ -26,13 +26,14 @@ interface ReservesApiModelInterface extends ApiModel {
     fetchAllId(): Promise<AllReserves | null>;
     fetchConflictCount(): Promise<number>;
     fetchRuleReservesCountCount(): Promise<RuleReservesCount>;
+    fetchReservePosition(programId: apid.ProgramId): Promise<number>;
     getReserve(): apid.Reserve | null;
     getReserves(): apid.Reserves;
     getPage(): number;
     getConflicts(): apid.Reserves;
     getOverlaps(): apid.Reserves;
     getAllId(): AllReserves | null;
-    addReserve(option: apid.AddReserve): Promise<void>;
+    addReserve(option: apid.AddReserve): Promise<apid.ProgramId>;
     updateReserve(option: apid.AddReserve): Promise<void>;
     deleteReserve(programId: apid.ProgramId): Promise<void>;
     deleteSkip(programId: apid.ProgramId): Promise<void>;
@@ -292,6 +293,28 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
     }
 
     /**
+     * 指定した programId の位置を取得
+     * @param programId program id
+     * @return Promise<number>
+     */
+    public async fetchReservePosition(programId: apid.ProgramId): Promise<number> {
+        try {
+            const result = <any> await this.request({
+                method: 'GET',
+                url: `./api/reserves/${ programId }/position`,
+            });
+
+            return result.position + 1;
+        } catch (err) {
+            console.error('./api/reserves/all');
+            console.error(err);
+            this.openSnackbar('予約番組の位置情報取得に失敗しました。');
+        }
+
+        return 1;
+    }
+
+    /**
      * reserve を取得
      * @return apid.Reserve | null
      */
@@ -342,15 +365,17 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
     /**
      * 予約追加
      * @param option: AddReserve
-     * @return Promise<void>
+     * @return Promise<apid.ProgramId>
      */
-    public async addReserve(option: apid.AddReserve): Promise<void> {
+    public async addReserve(option: apid.AddReserve): Promise<apid.ProgramId> {
         try {
-            await <any> this.request({
+            const result = <any> await this.request({
                 method: 'POST',
                 url: './api/reserves',
                 data: option,
             });
+
+            return result.programId;
 
         } catch (err) {
             console.error('./api/reserves: post');

@@ -37,7 +37,7 @@ class HeaderMenuComponent extends Component<HeaderMenuArgs> {
             onclick: () => {
                 this.viewModel.close();
                 this.storage.init();
-                setTimeout(() => { this.storage.open(); }, 200);
+                window.setTimeout(() => { this.storage.open(); }, 200);
             },
         }, 'ストレージ空き容量'));
 

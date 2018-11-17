@@ -51,7 +51,7 @@ class StreamProgramComponent extends ParentComponent<void> {
                     attrs: {
                         onclick: () => {
                             this.balloon.close();
-                            setTimeout(() => {
+                            window.setTimeout(() => {
                                 this.forcedStop.forcedStopAll();
                             }, 200);
                         },

@@ -116,7 +116,7 @@ class RecordedInfoViewModel extends ViewModel {
             if (data.id === this.recorded.id) {
                 // 更新
                 this.recorded = data;
-                setTimeout(() => { m.redraw(); }, 200);
+                window.setTimeout(() => { m.redraw(); }, 200);
 
                 return;
             }
@@ -400,7 +400,7 @@ class RecordedInfoViewModel extends ViewModel {
         this.close();
 
         // ページ移動
-        setTimeout(() => { Util.move('/stream/watch', { stream: streamNumber }); }, 200);
+        window.setTimeout(() => { Util.move('/stream/watch', { stream: streamNumber }); }, 200);
     }
 
     /**

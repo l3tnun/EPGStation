@@ -18,7 +18,7 @@ class RecordedWatchViewModel extends ViewModel {
     private playBackPosition: number;
     private tentativePlayBackPosition: number = 0;
     private dataGetTime: number;
-    private callChangeTimerId: NodeJS.Timer;
+    private callChangeTimerId: number;
 
     constructor(
         recordedApiModel: RecordedApiModelInterface,
@@ -119,7 +119,7 @@ class RecordedWatchViewModel extends ViewModel {
         this.tentativePlayBackPosition = position;
 
         clearTimeout(this.callChangeTimerId);
-        this.callChangeTimerId = setTimeout(() => {
+        this.callChangeTimerId = window.setTimeout(() => {
             this.playBackPosition = position;
             this.tentativePlayBackPosition = 0;
             m.redraw();

@@ -78,7 +78,7 @@ class RecordedInfoComponent extends Component<void> {
                                     if (Util.uaIsFirefox()) {
                                         const w = window.open(video.path);
                                         if (w !== null) {
-                                            setTimeout(() => { w.close(); }, 200);
+                                            window.setTimeout(() => { w.close(); }, 200);
                                         }
                                     } else {
                                         location.href = video.path;
@@ -96,7 +96,7 @@ class RecordedInfoComponent extends Component<void> {
                             if (Util.uaIsFirefox()) {
                                 const w = window.open(video.path);
                                 if (w !== null) {
-                                    setTimeout(() => { w.close(); }, 200);
+                                    window.setTimeout(() => { w.close(); }, 200);
                                 }
                             } else {
                                 location.href = video.path;

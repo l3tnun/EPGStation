@@ -83,7 +83,7 @@ class TabComponent extends Component<TabArgs> {
         if (Util.uaIsMobile()) { content.style.overflowY = 'hidden'; }
 
         if (isChangeTab) { content.scrollTop = 0; }
-        setTimeout(() => {
+        window.setTimeout(() => {
             content.style.overflowY = overflowY;
             if (!isChangeTab) {
                 Scroll.scrollTo(content, content.scrollTop, 0, 300);

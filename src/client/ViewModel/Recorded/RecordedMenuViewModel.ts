@@ -110,7 +110,7 @@ class RecordedMenuViewModel extends ViewModel {
      */
     public openDelete(): void {
         this.close();
-        setTimeout(() => {
+        window.setTimeout(() => {
             this.balloon.open(RecordedMenuViewModel.deleteId);
         }, 200);
     }
@@ -204,7 +204,7 @@ class RecordedMenuViewModel extends ViewModel {
      */
     public openEncode(): void {
         this.close();
-        setTimeout(() => {
+        window.setTimeout(() => {
             this.balloon.open(RecordedMenuViewModel.encodeId);
         }, 200);
     }

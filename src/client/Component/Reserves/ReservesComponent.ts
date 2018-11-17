@@ -53,7 +53,7 @@ class ReservesComponent extends ParentComponent<void> {
                     attrs: {
                         onclick: () => {
                             this.balloon.close();
-                            setTimeout(() => {
+                            window.setTimeout(() => {
                                 this.viewModel.startUpdateReserves();
                             }, 200);
                         },
@@ -134,13 +134,27 @@ class ReservesComponent extends ParentComponent<void> {
                     class: 'mdl-card__supporting-text',
                     onclick: (event: Event) => { this.openProgramInfo(event, reserve); },
                 }, [
-                    m('div', { class: 'title' }, reserve.program.name),
+                    m('div', { class: 'title' }, [
+                        this.getTitleIcon(reserve),
+                        m('span', reserve.program.name),
+                    ]),
                     m('div', { class: 'time' }, this.getCardTime(reserve.program)),
                     m('div', { class: 'channel' }, this.viewModel.getChannelName(reserve.program.channelId)),
                     m('div', { class: 'description' }, reserve.program.description),
                 ]),
             ]);
         });
+    }
+
+    /**
+     * get title icon
+     * @param reserve: apid.Reserve
+     * @return m.Child
+     */
+    private getTitleIcon(reserve: apid.Reserve): m.Child {
+        const icon = !!reserve.isTimeSpecifited ? 'timer' : typeof reserve.ruleId === 'undefined' ? 'schedule' : 'event';
+
+        return m('span', { class: 'icon' }, m('i', { class: 'material-icons' }, icon));
     }
 
     /**
@@ -217,7 +231,10 @@ class ReservesComponent extends ParentComponent<void> {
                     m('td', {
                         class: ReservesComponent.nonNumeric + ' title',
                         onclick: (event: Event) => { this.openProgramInfo(event, reserve); },
-                    }, reserve.program.name),
+                    }, [
+                        this.getTitleIcon(reserve),
+                        m('span', reserve.program.name),
+                    ]),
                     m('td', {
                         class: ReservesComponent.nonNumeric + ' description',
                         onclick: (event: Event) => { this.openProgramInfo(event, reserve); },
