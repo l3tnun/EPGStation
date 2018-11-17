@@ -35,7 +35,7 @@ class StorageViewModel extends ViewModel {
         }
         this.storage.fetchStorage()
         .then(() => {
-            setTimeout(() => { this.show(); }, 400);
+            window.setTimeout(() => { this.show(); }, 400);
         });
     }
 

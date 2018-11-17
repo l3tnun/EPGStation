@@ -41,7 +41,7 @@ class StreamProgramCardsComponent extends Component<StramCardArgs> {
         this.isDoneInit = false;
         super.initViewModel();
         await this.viewModel.init();
-        setTimeout(() => {
+        window.setTimeout(() => {
             this.isDoneInit = true;
             m.redraw();
         }, 100);

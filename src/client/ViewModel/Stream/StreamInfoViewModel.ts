@@ -18,7 +18,7 @@ class StreamInfoViewModel extends ViewModel {
     private config: ConfigApiModelInterface;
     private setting: StorageTemplateModel<SettingValue>;
     private snackbar: SnackbarModelInterface;
-    private timer: NodeJS.Timer | null = null;
+    private timer: number | null = null;
 
     constructor(
         streamsApiModel: StreamsApiModelInterface,
@@ -57,7 +57,7 @@ class StreamInfoViewModel extends ViewModel {
             await this.streamsApiModel.fetchInfos();
         } catch (err) {
             console.error(err);
-            setTimeout(() => { this.updateInfos(); }, 5000);
+            window.setTimeout(() => { this.updateInfos(); }, 5000);
 
             return;
         }
@@ -74,7 +74,7 @@ class StreamInfoViewModel extends ViewModel {
 
         if (minEndTime < 0) { minEndTime = 0; }
 
-        this.timer = setTimeout(() => {
+        this.timer = window.setTimeout(() => {
             this.updateInfos();
         }, minEndTime);
     }
@@ -131,7 +131,7 @@ class StreamInfoViewModel extends ViewModel {
         } else if (info.type === 'RecordedHLS' || info.type === 'HLSLive') {
             if (Number(m.route.param('stream')) === info.streamNumber) { return; }
 
-            setTimeout(() => { Util.move('/stream/watch', { stream: info.streamNumber }); }, 200);
+            window.setTimeout(() => { Util.move('/stream/watch', { stream: info.streamNumber }); }, 200);
         }
     }
 }

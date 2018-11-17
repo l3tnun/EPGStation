@@ -157,7 +157,7 @@ class EncodingComponent extends ParentComponent<void> {
 
                         // firefox にて pointer-events: none; では img が白くなってしまうため
                         if (Util.uaIsFirefox()) {
-                            setTimeout(() => {
+                            window.setTimeout(() => {
                                 (<HTMLElement> (<HTMLElement> e.target).parentNode).click();
                             }, 10);
                         }

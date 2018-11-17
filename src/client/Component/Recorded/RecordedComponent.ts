@@ -39,7 +39,7 @@ class RecordedComponent extends ParentComponent<void> {
     private menuViewModel: RecordedMenuViewModel;
     private searchViewModel: RecordedSearchViewModel;
     private balloon: BalloonViewModel;
-    private resizeListener = (() => { setTimeout(() => { this.resize(); }, 100); }).bind(this);
+    private resizeListener = (() => { window.setTimeout(() => { this.resize(); }, 100); }).bind(this);
     private resizeElement: HTMLElement | null = null;
 
     constructor() {
@@ -322,7 +322,7 @@ class RecordedComponent extends ParentComponent<void> {
 
                         // firefox にて pointer-events: none; では img が白くなってしまうため
                         if (Util.uaIsFirefox()) {
-                            setTimeout(() => {
+                            window.setTimeout(() => {
                                 (<HTMLElement> (<HTMLElement> e.target).parentNode).click();
                             }, 10);
                         }

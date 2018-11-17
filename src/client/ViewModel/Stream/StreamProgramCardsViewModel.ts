@@ -12,7 +12,7 @@ class StreamProgramCardsViewModel extends ViewModel {
     private scheduleApiModel: ScheduleApiModelInterface;
     private tab: TabModelInterface;
     private configApiModel: ConfigApiModelInterface;
-    private timer: NodeJS.Timer | null = null;
+    private timer: number | null = null;
 
     public additionTime: number = 0;
 
@@ -50,7 +50,7 @@ class StreamProgramCardsViewModel extends ViewModel {
             await this.scheduleApiModel.fetchScheduleBroadcasting(this.additionTime);
         } catch (err) {
             console.error(err);
-            setTimeout(() => { this.updateProgram(); }, 5000);
+            window.setTimeout(() => { this.updateProgram(); }, 5000);
 
             return;
         }
@@ -66,7 +66,7 @@ class StreamProgramCardsViewModel extends ViewModel {
 
         if (minEndTime < 0) { minEndTime = 0; }
 
-        this.timer = setTimeout(() => {
+        this.timer = window.setTimeout(() => {
             this.updateProgram();
         }, minEndTime);
     }

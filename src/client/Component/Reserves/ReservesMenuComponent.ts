@@ -35,7 +35,7 @@ class ReservesMenuComponent extends Component<void> {
             this.createItem({
                 onclick: () => {
                     this.viewModel.close();
-                    setTimeout(() => {
+                    window.setTimeout(() => {
                         if (ruleId === null) {
                             Util.move(`/program/detail/${ this.viewModel.getProgramId() }`, { mode: 'edit' });
                         } else {

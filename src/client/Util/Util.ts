@@ -170,7 +170,7 @@ namespace Util {
      */
     export const sleep = (msec: number): Promise<void> => {
         return new Promise((resolve: () => void) => {
-            setTimeout(() => { resolve(); }, msec);
+            window.setTimeout(() => { resolve(); }, msec);
         });
     };
 

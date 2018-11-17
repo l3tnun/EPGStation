@@ -107,7 +107,7 @@ abstract class ParentComponent<T> extends Component<T> {
     protected async initViewModel(status: ViewModelStatus = 'init'): Promise<any> {
         this._mainLayout.init(status);
 
-        setTimeout(() => {
+        window.setTimeout(() => {
             this._streamInfo.init(status);
 
             // set history
@@ -275,7 +275,7 @@ abstract class ParentComponent<T> extends Component<T> {
             // 再接続時
             ParentComponent.io.on('reconnect', () => {
                 if (ParentComponent.ioStatus[this.getComponentName()].isActive) {
-                    setTimeout(() => { this.initViewModel('reload'); }, 300);
+                    window.setTimeout(() => { this.initViewModel('reload'); }, 300);
                 }
             });
         }
@@ -307,7 +307,7 @@ abstract class ParentComponent<T> extends Component<T> {
         // 再接続時 背景を戻す
         io.on('reconnect', () => {
             this._balloon.close();
-            if (busy !== null) { setTimeout(() => { document.body.removeChild(busy!); busy = null; }, 300);  }
+            if (busy !== null) { window.setTimeout(() => { document.body.removeChild(busy!); busy = null; }, 300);  }
         });
     }
 
@@ -339,9 +339,9 @@ abstract class ParentComponent<T> extends Component<T> {
         // query の変更で initViewModel する場合は state を適宜変更する
         if (this.queryChanged) {
             // close balloon
-            setTimeout(() => { this._balloon.forceToCloseAll(); }, 0);
+            window.setTimeout(() => { this._balloon.forceToCloseAll(); }, 0);
             // init viewModel
-            setTimeout(() => { this.initViewModel('update'); }, 0);
+            window.setTimeout(() => { this.initViewModel('update'); }, 0);
         }
         this.query = this.newQuery;
         this.queryChanged = false;
@@ -349,9 +349,9 @@ abstract class ParentComponent<T> extends Component<T> {
 
     public async onbeforeremove(vnode: m.VnodeDOM<T, any>): Promise<any> {
         // close balloon
-        // setTimeout で遅らせないと次のページで constructor が２度呼ばれてしまう
+        // window.setTimeout で遅らせないと次のページで constructor が２度呼ばれてしまう
         await new Promise<void>((resolve: () => void) => {
-            setTimeout(() => {
+            window.setTimeout(() => {
                 this._balloon.forceToCloseAll();
                 resolve();
             }, 0);

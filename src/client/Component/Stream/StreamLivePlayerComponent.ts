@@ -51,7 +51,7 @@ class StreamLivePlayerComponent extends Component<void> {
 
         if (this.playError) {
             this.playError = false;
-            setTimeout(() => { m.redraw(); }, 500);
+            window.setTimeout(() => { m.redraw(); }, 500);
 
             return null;
         }

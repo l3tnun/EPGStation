@@ -53,7 +53,7 @@ class ReservesComponent extends ParentComponent<void> {
                     attrs: {
                         onclick: () => {
                             this.balloon.close();
-                            setTimeout(() => {
+                            window.setTimeout(() => {
                                 this.viewModel.startUpdateReserves();
                             }, 200);
                         },

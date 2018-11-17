@@ -59,7 +59,7 @@ class RecordedSearchViewModel extends ViewModel {
      */
     public search(): void {
         this.close();
-        setTimeout(() => {
+        window.setTimeout(() => {
             const query = Util.getCopyQuery();
 
             delete query.keyword;

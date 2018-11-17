@@ -34,7 +34,7 @@ class RulesInfoActionComponent extends Component<void> {
                     class: 'mdl-button mdl-js-button mdl-button--primary',
                     onclick: () => {
                         this.viewModel.close();
-                        setTimeout(() => {
+                        window.setTimeout(() => {
                             const rule = this.viewModel.get();
                             if (rule === null) { return; }
                             Util.move('/search', { rule: rule.id });
@@ -48,7 +48,7 @@ class RulesInfoActionComponent extends Component<void> {
                         const rule = this.viewModel.get();
                         this.viewModel.close();
 
-                        setTimeout(() => {
+                        window.setTimeout(() => {
                             if (rule === null) { return; }
                             Util.move('/recorded', { rule: rule.id });
                         }, 200);
@@ -61,7 +61,7 @@ class RulesInfoActionComponent extends Component<void> {
                         const rule = this.viewModel.get();
                         this.viewModel.close();
 
-                        setTimeout(() => {
+                        window.setTimeout(() => {
                             if (rule === null) { return; }
                             this.deleteViewModel.set(rule);
                             this.balloon.open(RulesDeleteViewModel.id, e);

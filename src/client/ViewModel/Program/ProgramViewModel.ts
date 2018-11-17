@@ -88,7 +88,7 @@ class ProgramViewModel extends ViewModel {
             return this.updateReserves();
         })
         .then(() => {
-            setTimeout(() => { m.redraw(); }, 100);
+            window.setTimeout(() => { m.redraw(); }, 100);
         });
     }
 

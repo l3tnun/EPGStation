@@ -31,10 +31,10 @@ class VideoContainerComponent extends Component<ControlArgs> {
     private keyDwonListener = ((e: KeyboardEvent) => { this.onKeyDown(e); }).bind(this);
     private fullScreenListener = (() => { this.fullscreenChange(); }).bind(this);
     private isEnablePip: boolean;
-    private controlHideTimerId: NodeJS.Timer;
+    private controlHideTimerId: number;
     private disableMouseleave = false;
     private doubleClickFlag = false;
-    private doubleClickTimerId: NodeJS.Timer;
+    private doubleClickTimerId: number;
     private isWaiting: boolean = false;
     private isEnabledRotation: boolean = typeof (<any> window.screen).orientation !== 'undefined' && Util.uaIsMobile();
 
@@ -79,12 +79,12 @@ class VideoContainerComponent extends Component<ControlArgs> {
                 document.addEventListener('MSFullscreenChange', this.fullScreenListener, false);
                 document.addEventListener('fullscreenchange', this.fullScreenListener, false);
 
-                let mouseTimer: NodeJS.Timer;
+                let mouseTimer: number;
                 element.addEventListener('mousemove', throttle(() => {
                     clearTimeout(mouseTimer);
                     this.showMouseCursor();
 
-                    mouseTimer = setTimeout(() => { this.hideMouseCursor(); }, 1000);
+                    mouseTimer = window.setTimeout(() => { this.hideMouseCursor(); }, 1000);
                 }, 100), false);
             },
             onupdate: (mainVnode: m.VnodeDOM<void, any>) => {
@@ -118,7 +118,7 @@ class VideoContainerComponent extends Component<ControlArgs> {
                 }
 
                 this.doubleClickFlag = true;
-                this.doubleClickTimerId = setTimeout(() => {
+                this.doubleClickTimerId = window.setTimeout(() => {
                     this.doubleClickFlag = false;
                 }, 200);
 
@@ -184,12 +184,12 @@ class VideoContainerComponent extends Component<ControlArgs> {
         } else {
             this.containerElement.classList.remove('fullscreen');
             this.showMouseCursor();
-            setTimeout(() => { this.balloon.enableClose(); }, 1000);
+            window.setTimeout(() => { this.balloon.enableClose(); }, 1000);
         }
 
         m.redraw();
 
-        setTimeout(() => { this.hideControl(); }, VideoContainerComponent.VideoSeekInterval);
+        window.setTimeout(() => { this.hideControl(); }, VideoContainerComponent.VideoSeekInterval);
     }
 
     /**
@@ -199,7 +199,7 @@ class VideoContainerComponent extends Component<ControlArgs> {
         if (this.controlerElement === null) { return; }
 
         const controlerElement = this.controlerElement;
-        this.controlHideTimerId = setTimeout(() => {
+        this.controlHideTimerId = window.setTimeout(() => {
             controlerElement.classList.add('hide');
         }, time);
     }
@@ -212,7 +212,7 @@ class VideoContainerComponent extends Component<ControlArgs> {
 
         clearTimeout(this.controlHideTimerId);
         const controlerElement = this.controlerElement;
-        setTimeout(() => { controlerElement.classList.remove('hide'); }, 0);
+        window.setTimeout(() => { controlerElement.classList.remove('hide'); }, 0);
     }
 
     /**
@@ -762,7 +762,7 @@ class VideoContainerComponent extends Component<ControlArgs> {
             // 画面回転
             this.switchRotation();
 
-            setTimeout(() => {
+            window.setTimeout(() => {
                 if (!this.isFullScreen() || Util.uaIsiOS()) {
                     this.balloon.enableClose();
                 }

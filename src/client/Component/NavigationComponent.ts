@@ -46,7 +46,7 @@ class NavigationComponent extends Component<void> {
                 Util.upgradeMdl();
                 if (m.route.get() === '/') {
                     if (window.innerWidth <= 1024 && this.viewModel.isAutoOpen()) {
-                        setTimeout(() => { this.open(); }, 200);
+                        window.setTimeout(() => { this.open(); }, 200);
                     }
                 }
             },
@@ -96,7 +96,7 @@ class NavigationComponent extends Component<void> {
                     this.close();
 
                     if (Util.isEqualURL(href, query)) { return; }
-                    setTimeout(() => { Util.move(href, query); resolve(); }, 200);
+                    window.setTimeout(() => { Util.move(href, query); resolve(); }, 200);
                 });
             },
         }, name);

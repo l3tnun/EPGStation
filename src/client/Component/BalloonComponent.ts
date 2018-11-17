@@ -60,7 +60,7 @@ class BalloonComponent extends Component<BalloonArgs> {
 
     public initViewModel(): void {
         super.initViewModel();
-        setTimeout(() => { this.viewModel.init(); }, 0);
+        window.setTimeout(() => { this.viewModel.init(); }, 0);
     }
 
     public onremove(vnode: m.VnodeDOM<BalloonArgs, this>): void {
@@ -126,8 +126,8 @@ class BalloonComponent extends Component<BalloonArgs> {
                         } else {
                             if (this.position === null) {
                                 // 描画位置判定は一度だけ行う
-                                // content が書き換えられるのを待つため setTimeout を挟む
-                                setTimeout(() => { this.position = this.getPosition(vnode, this.opendWindowHeight!); }, 0);
+                                // content が書き換えられるのを待つため window.setTimeout を挟む
+                                window.setTimeout(() => { this.position = this.getPosition(vnode, this.opendWindowHeight!); }, 0);
                             }
                             switch (this.position) {
                                 case contentPosition.top:
@@ -145,8 +145,8 @@ class BalloonComponent extends Component<BalloonArgs> {
                             }
                         }
 
-                        // content が書き換えられるのを待つため setTimeout を挟む
-                        setTimeout(() => { this.setContentHeight(vnode, this.opendWindowHeight); }, 10);
+                        // content が書き換えられるのを待つため window.setTimeout を挟む
+                        window.setTimeout(() => { this.setContentHeight(vnode, this.opendWindowHeight); }, 10);
                     } else {
                         this.position = null;
                         this.opendWindowHeight = null;
@@ -187,7 +187,7 @@ class BalloonComponent extends Component<BalloonArgs> {
     private disableBackgroundScroll(): void {
         if (!Util.uaIsiOS()) { return; }
 
-        setTimeout(() => {
+        window.setTimeout(() => {
             (<HTMLElement> document.body.parentNode!).classList.add('balloon');
             document.body.classList.add('balloon');
             const elements = document.getElementsByClassName('non-scroll');
@@ -223,7 +223,7 @@ class BalloonComponent extends Component<BalloonArgs> {
             this.disableBackgroundScroll();
 
             (<HTMLElement> vnode.dom).style.display = 'block';
-            setTimeout(() => {
+            window.setTimeout(() => {
                 // スクロール位置をリセット
                 (<HTMLElement> vnode.dom.children[0].children[0]).scrollTop = 0;
                 (<HTMLElement> vnode.dom.children[0].children[0]).scrollLeft = 0;
@@ -239,7 +239,7 @@ class BalloonComponent extends Component<BalloonArgs> {
         } else if (!this.viewModel.isOpen(this.id) && this.isOpen) {
             // アニメーションと共に非表示
             (<HTMLElement> vnode.dom).style.opacity = '0';
-            setTimeout(() => {
+            window.setTimeout(() => {
                 // 完全に非表示
                 (<HTMLElement> vnode.dom).style.display = '';
                 this.isOpen = false;

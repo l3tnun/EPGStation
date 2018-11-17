@@ -34,7 +34,7 @@ class ProgramInfoActionComponent extends Component<void> {
                     class: 'mdl-button mdl-js-button mdl-button--primary',
                     onclick: () => {
                         this.viewModel.close();
-                        setTimeout(() => {
+                        window.setTimeout(() => {
                             Util.move('/search', this.createSearchQuery());
                         }, 200);
                     },
@@ -118,14 +118,14 @@ class ProgramInfoActionComponent extends Component<void> {
                 this.viewModel.close();
 
                 if (isRule) {
-                    setTimeout(() => {
+                    window.setTimeout(() => {
                         Util.move('/search', { rule: reserve!.item.ruleId });
                     }, 200);
                 } else {
                     const program = this.viewModel.getProgram();
                     if (program === null) { return; }
 
-                    setTimeout(() => {
+                    window.setTimeout(() => {
                         Util.move(`/program/detail/${ program.id }`, reserve === null ? {} : { mode: 'edit' });
                     }, 200);
                 }
