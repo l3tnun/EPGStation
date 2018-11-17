@@ -12,6 +12,8 @@ import Operator from './Operator/Operator';
 Logger.initialize(path.join(__dirname, '..', '..', 'config', 'operatorLogConfig.json'));
 Configuration.getInstance().initialize(path.join(__dirname, '..', '..', 'config', 'config.json'));
 
+const log = Logger.getLogger();
+
 // set git & uid
 if (process.platform !== 'win32' && process.getuid() === 0) {
     const config = Configuration.getInstance().getConfig();
@@ -36,7 +38,11 @@ const runService = (): void => {
     (<IPCServerInterface> factory.get('IPCServer')).register(child);
 
     // 終了したら再起動
-    child.once('exit', () => { runService(); });
+    child.once('exit', () => {
+        log.system.fatal('service process is down');
+        log.system.fatal('restart service');
+        runService();
+    });
     child.once('error', () => { runService(); });
 };
 
