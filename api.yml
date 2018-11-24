@@ -431,6 +431,14 @@ definitions:
         $ref: '#/definitions/ProgramGenreLv1'
       genre2:
         $ref: '#/definitions/ProgramGenreLv2'
+      genre3:
+        $ref: '#/definitions/ProgramGenreLv1'
+      genre4:
+        $ref: '#/definitions/ProgramGenreLv2'
+      genre5:
+        $ref: '#/definitions/ProgramGenreLv1'
+      genre6:
+        $ref: '#/definitions/ProgramGenreLv2'
       channelType:
         $ref: '#/definitions/ChannelType'
       videoType:
@@ -570,6 +578,14 @@ definitions:
       genre1:
         $ref: '#/definitions/ProgramGenreLv1'
       genre2:
+        $ref: '#/definitions/ProgramGenreLv2'
+      genre3:
+        $ref: '#/definitions/ProgramGenreLv1'
+      genre4:
+        $ref: '#/definitions/ProgramGenreLv2'
+      genre5:
+        $ref: '#/definitions/ProgramGenreLv1'
+      genre6:
         $ref: '#/definitions/ProgramGenreLv2'
       videoType:
         $ref: '#/definitions/ProgramVideoType'
@@ -747,6 +763,14 @@ definitions:
         $ref: '#/definitions/ProgramGenreLv1'
       genre2:
         $ref: '#/definitions/ProgramGenreLv2'
+      genre3:
+        $ref: '#/definitions/ProgramGenreLv1'
+      genre4:
+        $ref: '#/definitions/ProgramGenreLv2'
+      genre5:
+        $ref: '#/definitions/ProgramGenreLv1'
+      genre6:
+        $ref: '#/definitions/ProgramGenreLv2'
       videoType:
         $ref: '#/definitions/ProgramVideoType'
       videoResolution:
@@ -833,6 +857,14 @@ definitions:
       genre1:
         $ref: '#/definitions/ProgramGenreLv1'
       genre2:
+        $ref: '#/definitions/ProgramGenreLv2'
+      genre3:
+        $ref: '#/definitions/ProgramGenreLv1'
+      genre4:
+        $ref: '#/definitions/ProgramGenreLv2'
+      genre5:
+        $ref: '#/definitions/ProgramGenreLv1'
+      genre6:
         $ref: '#/definitions/ProgramGenreLv2'
 
   AddReserveResult:
@@ -950,6 +982,14 @@ definitions:
       genre1:
         $ref: '#/definitions/ProgramGenreLv1'
       genre2:
+        $ref: '#/definitions/ProgramGenreLv2'
+      genre3:
+        $ref: '#/definitions/ProgramGenreLv1'
+      genre4:
+        $ref: '#/definitions/ProgramGenreLv2'
+      genre5:
+        $ref: '#/definitions/ProgramGenreLv1'
+      genre6:
         $ref: '#/definitions/ProgramGenreLv2'
       channelType:
         $ref: '#/definitions/ChannelType'
