@@ -29,6 +29,10 @@ interface NewRecorded {
     extended: string | null;
     genre1: number | null;
     genre2: number | null;
+    genre3: number | null;
+    genre4: number | null;
+    genre5: number | null;
+    genre6: number | null;
     videoType: apid.ProgramVideoType | null;
     videoResolution: apid.ProgramVideoResolution | null;
     videoStreamContent: number | null;
@@ -387,6 +391,10 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
             extended: info.extended,
             genre1: info.genre1,
             genre2: info.genre2,
+            genre3: info.genre3,
+            genre4: info.genre4,
+            genre5: info.genre5,
+            genre6: info.genre6,
             videoType: info.videoType,
             videoResolution: info.videoResolution,
             videoStreamContent: info.videoStreamContent,

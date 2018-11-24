@@ -101,6 +101,10 @@ export interface ScheduleProgramItem {
     extended?: string;
     genre1?: ProgramGenreLv1;
     genre2?: ProgramGenreLv2;
+    genre3?: ProgramGenreLv1;
+    genre4?: ProgramGenreLv2;
+    genre5?: ProgramGenreLv1;
+    genre6?: ProgramGenreLv2;
     channelType: ChannelType;
     videoType?: ProgramVideoType;
     videoResolution?: ProgramVideoResolution;
@@ -159,8 +163,12 @@ export interface RecordedProgram {
     name: string;
     description?: string;
     extended?: string;
-    genre1?: number;
-    genre2?: number;
+    genre1?: ProgramGenreLv1;
+    genre2?: ProgramGenreLv2;
+    genre3?: ProgramGenreLv1;
+    genre4?: ProgramGenreLv2;
+    genre5?: ProgramGenreLv1;
+    genre6?: ProgramGenreLv2;
     videoType?: ProgramVideoType;
     videoResolution?: ProgramVideoResolution;
     videoStreamContent?: number;
@@ -188,8 +196,12 @@ export interface NewRecorded {
     name: string;
     description?: string;
     extended?: string;
-    genre1?: number;
-    genre2?: number;
+    genre1?: ProgramGenreLv1;
+    genre2?: ProgramGenreLv2;
+    genre3?: ProgramGenreLv1;
+    genre4?: ProgramGenreLv2;
+    genre5?: ProgramGenreLv1;
+    genre6?: ProgramGenreLv2;
     videoType?: ProgramVideoType;
     videoResolution?: ProgramVideoResolution;
     videoStreamContent?: number;
@@ -269,6 +281,10 @@ export interface ReserveProgram {
     extended?: string;
     genre1?: ProgramGenreLv1;
     genre2?: ProgramGenreLv2;
+    genre3?: ProgramGenreLv1;
+    genre4?: ProgramGenreLv2;
+    genre5?: ProgramGenreLv1;
+    genre6?: ProgramGenreLv2;
     channelType: ChannelType;
     channel: string;
     videoType?: ProgramVideoType;
@@ -296,6 +312,10 @@ export interface AddReserveProgram {
     extended?: string;
     genre1?: ProgramGenreLv1;
     genre2?: ProgramGenreLv2;
+    genre3?: ProgramGenreLv1;
+    genre4?: ProgramGenreLv2;
+    genre5?: ProgramGenreLv1;
+    genre6?: ProgramGenreLv2;
 }
 
 export interface AddReserveOption {

@@ -5,6 +5,7 @@ import MySQLMigrationV1 from './DB/MySQL/migrate/MySQLMigrationV1';
 import MySQLMigrationV2 from './DB/MySQL/migrate/MySQLMigrationV2';
 import MySQLMigrationV3 from './DB/MySQL/migrate/MySQLMigrationV3';
 import MySQLMigrationV4 from './DB/MySQL/migrate/MySQLMigrationV4';
+import MySQLMigrationV5 from './DB/MySQL/migrate/MySQLMigrationV5';
 import MySQLEncodedDB from './DB/MySQL/MySQLEncodedDB';
 import MySQLOperator from './DB/MySQL/MySQLOperator';
 import MySQLProgramsDB from './DB/MySQL/MySQLProgramsDB';
@@ -16,6 +17,7 @@ import PostgreSQLMigrationV1 from './DB/PostgreSQL/migrate/PostgreSQLMigrationV1
 import PostgreSQLMigrationV2 from './DB/PostgreSQL/migrate/PostgreSQLMigrationV2';
 import PostgreSQLMigrationV3 from './DB/PostgreSQL/migrate/PostgreSQLMigrationV3';
 import PostgreSQLMigrationV4 from './DB/PostgreSQL/migrate/PostgreSQLMigrationV4';
+import PostgreSQLMigrationV5 from './DB/PostgreSQL/migrate/PostgreSQLMigrationV5';
 import PostgreSQLEncodedDB from './DB/PostgreSQL/PostgreSQLEncodedDB';
 import PostgreSQLOperator from './DB/PostgreSQL/PostgreSQLOperator';
 import PostgreSQLProgramsDB from './DB/PostgreSQL/PostgreSQLProgramsDB';
@@ -32,6 +34,7 @@ import SQLite3MigrationV1 from './DB/SQLite3/migrate/SQLite3MigrationV1';
 import SQLite3MigrationV2 from './DB/SQLite3/migrate/SQLite3MigrationV2';
 import SQLite3MigrationV3 from './DB/SQLite3/migrate/SQLite3MigrationV3';
 import SQLite3MigrationV4 from './DB/SQLite3/migrate/SQLite3MigrationV4';
+import SQLite3MigrationV5 from './DB/SQLite3/migrate/SQLite3MigrationV5';
 import SQLite3EncodedDB from './DB/SQLite3/SQLite3EncodedDB';
 import SQLite3Operator from './DB/SQLite3/SQLite3Operator';
 import SQLite3ProgramsDB from './DB/SQLite3/SQLite3ProgramsDB';
@@ -97,6 +100,7 @@ namespace ModelFactorySetting {
                 factory.reg('MigrationV2', () => { return new MySQLMigrationV2(operator); });
                 factory.reg('MigrationV3', () => { return new MySQLMigrationV3(operator); });
                 factory.reg('MigrationV4', () => { return new MySQLMigrationV4(operator); });
+                factory.reg('MigrationV5', () => { return new MySQLMigrationV5(operator); });
                 break;
 
             case 'sqlite3':
@@ -111,6 +115,7 @@ namespace ModelFactorySetting {
                 factory.reg('MigrationV2', () => { return new SQLite3MigrationV2(operator); });
                 factory.reg('MigrationV3', () => { return new SQLite3MigrationV3(operator); });
                 factory.reg('MigrationV4', () => { return new SQLite3MigrationV4(operator); });
+                factory.reg('MigrationV5', () => { return new SQLite3MigrationV5(operator); });
                 break;
 
             case 'postgresql':
@@ -125,6 +130,7 @@ namespace ModelFactorySetting {
                 factory.reg('MigrationV2', () => { return new PostgreSQLMigrationV2(operator); });
                 factory.reg('MigrationV3', () => { return new PostgreSQLMigrationV3(operator); });
                 factory.reg('MigrationV4', () => { return new PostgreSQLMigrationV4(operator); });
+                factory.reg('MigrationV5', () => { return new PostgreSQLMigrationV5(operator); });
                 break;
         }
 

@@ -162,10 +162,15 @@ class ProgramInfoViewModel extends ViewModel {
      * genre1, genre2 をまとめて取得
      * @return genre1 / genre2
      */
-    public getGenres(): string {
-        if (this.program === null || typeof this.program.genre1 === 'undefined') { return ''; }
+    public getGenres(lv: number): string {
+        if (this.program === null || !(lv === 0 || lv === 1 || lv === 2)) { return ''; }
 
-        return GenreUtil.getGenres(this.program.genre1, this.program.genre2);
+        const genre1 = lv === 0 ? this.program.genre1 : lv === 1 ? this.program.genre3 : this.program.genre5;
+        if (typeof genre1 === 'undefined') { return ''; }
+
+        const genre2 = lv === 0 ? this.program.genre2 : lv === 1 ? this.program.genre4 : this.program.genre6;
+
+        return GenreUtil.getGenres(genre1, genre2);
     }
 
     /**

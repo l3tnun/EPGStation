@@ -20,6 +20,10 @@ class PostgreSQLRecordedDB extends RecordedDB {
             + 'extended text null, '
             + 'genre1 integer null, '
             + 'genre2 integer null, '
+            + 'genre3 integer null, '
+            + 'genre4 integer null, '
+            + 'genre5 integer null, '
+            + 'genre6 integer null, '
             + 'videoType text null, '
             + 'videoResolution text null, '
             + 'videoStreamContent integer null, '
@@ -74,7 +78,7 @@ class PostgreSQLRecordedDB extends RecordedDB {
      * @return string
      */
     public getAllColumns(): string {
-        return 'id, programId as "programId", channelId as "channelId", channelType as "channelType", startAt as "startAt", endAt as "endAt", duration, name, description, extended, genre1, genre2, videoType as "videoType", videoResolution as "videoResolution", videoStreamContent as "videoStreamContent", videoComponentType as "videoComponentType", audioSamplingRate as "audioSamplingRate", audioComponentType as "audioComponentType", recPath as "recPath", ruleId as "ruleId", thumbnailPath as "thumbnailPath", recording, protection, filesize, logPath as "logPath", errorCnt as "errorCnt", dropCnt as "dropCnt", scramblingCnt as "scramblingCnt"';
+        return 'id, programId as "programId", channelId as "channelId", channelType as "channelType", startAt as "startAt", endAt as "endAt", duration, name, description, extended, genre1, genre2, genre3, genre4, genre5, genre6, videoType as "videoType", videoResolution as "videoResolution", videoStreamContent as "videoStreamContent", videoComponentType as "videoComponentType", audioSamplingRate as "audioSamplingRate", audioComponentType as "audioComponentType", recPath as "recPath", ruleId as "ruleId", thumbnailPath as "thumbnailPath", recording, protection, filesize, logPath as "logPath", errorCnt as "errorCnt", dropCnt as "dropCnt", scramblingCnt as "scramblingCnt"';
     }
 
     /**

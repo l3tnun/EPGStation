@@ -87,7 +87,7 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
      * @return string
      */
     protected getMinColumns(): string {
-        return 'id, channelId, startAt, endAt, isFree, name, description, extended, genre1, genre2, channelType, videoType, videoResolution, videoStreamContent, videoComponentType, audioSamplingRate, audioComponentType';
+        return 'id, channelId, startAt, endAt, isFree, name, description, extended, genre1, genre2, genre3, genre4, genre5, genre6, channelType, videoType, videoResolution, videoStreamContent, videoComponentType, audioSamplingRate, audioComponentType';
     }
 
     /**
@@ -120,6 +120,10 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
                 + 'extended,'
                 + 'genre1,'
                 + 'genre2,'
+                + 'genre3,'
+                + 'genre4,'
+                + 'genre5,'
+                + 'genre6,'
                 + 'channelType,'
                 + 'channel,'
                 + 'videoType,'
@@ -139,16 +143,25 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
             const date = DateUtil.getJaDate(new Date(program.startAt));
             let genre1: number | null = null;
             let genre2: number | null = null;
-            if (typeof program.genres === 'undefined') {
-                genre1 = null;
-                genre2 = null;
-            } else {
-                for (let i = 0; i < program.genres.length; i++) {
-                    if (program.genres[0].lv1 < 0xE || i + 1 === program.genres.length) {
-                        genre1 = program.genres[i].lv1;
-                        genre2 = typeof program.genres[i].lv2 === 'undefined' ? null : program.genres[i].lv2;
-                        break;
-                    }
+            let genre3: number | null = null;
+            let genre4: number | null = null;
+            let genre5: number | null = null;
+            let genre6: number | null = null;
+            if (typeof program.genres !== 'undefined') {
+                // 最大3つのジャンルを格納する
+                if (program.genres[0].lv1 < 0xE) {
+                    genre1 = program.genres[0].lv1;
+                    genre2 = typeof program.genres[0].lv2 === 'undefined' ? null : program.genres[0].lv2;
+                }
+
+                if (program.genres.length > 1 && program.genres[1].lv1 < 0xE) {
+                    genre3 = program.genres[1].lv1;
+                    genre4 = typeof program.genres[1].lv2 === 'undefined' ? null : program.genres[1].lv2;
+                }
+
+                if (program.genres.length > 2 && program.genres[2].lv1 < 0xE) {
+                    genre5 = program.genres[2].lv1;
+                    genre6 = typeof program.genres[2].lv2 === 'undefined' ? null : program.genres[2].lv2;
                 }
             }
 
@@ -179,6 +192,10 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
                 this.createExtendedStr(program.extended),
                 genre1,
                 genre2,
+                genre3,
+                genre4,
+                genre5,
+                genre6,
                 channelType,
                 channel,
             ];
@@ -209,9 +226,9 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
                 let valueCnt = 0;
                 for (let i = 0; i < cnt; i++) {
                     str += '( '
-                    + this.operator.createValueStr(valueCnt + 1, valueCnt + 25)
+                    + this.operator.createValueStr(valueCnt + 1, valueCnt + tmp.length)
                     + ' ),';
-                    valueCnt += 25;
+                    valueCnt += tmp.length;
                 }
                 str = str.substr(0, str.length - 1);
 
@@ -233,6 +250,10 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
                         + 'extended = excluded.extended, '
                         + 'genre1 = excluded.genre1, '
                         + 'genre2 = excluded.genre2, '
+                        + 'genre3 = excluded.genre3, '
+                        + 'genre4 = excluded.genre4, '
+                        + 'genre5 = excluded.genre5, '
+                        + 'genre6 = excluded.genre6, '
                         + 'channelType = excluded.channelType, '
                         + 'channel = excluded.channel, '
                         + 'videoType = excluded.videoType, '
@@ -653,7 +674,7 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
      * @return string
      */
     protected createShortGenre(genre1: number): string {
-        return `genre1 = ${ genre1 }`;
+        return `(genre1 = ${ genre1 } or genre3 = ${ genre1 } or genre5 = ${ genre1 })`;
     }
 
     /**
@@ -663,7 +684,7 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
      * @return string
      */
     protected createGenre(genre1: number, genre2: number): string {
-        return `${ this.createShortGenre(genre1) } and genre2 = ${ genre2 }`;
+        return `((genre1 = ${ genre1 } and genre2 = ${ genre2 }) or (genre3 = ${ genre1 } and genre4 = ${ genre2 }) or (genre5 = ${ genre1 } and genre6 = ${ genre2 }))`;
     }
 
     /**

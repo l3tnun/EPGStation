@@ -49,6 +49,10 @@ export interface AddReserveInterface {
         extended?: string;
         genre1?: eapid.ProgramGenreLv1;
         genre2?: eapid.ProgramGenreLv2;
+        genre3?: eapid.ProgramGenreLv1;
+        genre4?: eapid.ProgramGenreLv2;
+        genre5?: eapid.ProgramGenreLv1;
+        genre6?: eapid.ProgramGenreLv2;
     };
 }
 
