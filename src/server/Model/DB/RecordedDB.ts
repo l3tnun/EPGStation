@@ -121,6 +121,10 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
         value.push(program.extended);
         value.push(program.genre1);
         value.push(program.genre2);
+        value.push(program.genre3);
+        value.push(program.genre4);
+        value.push(program.genre5);
+        value.push(program.genre6);
         value.push(program.videoType);
         value.push(program.videoResolution);
         value.push(program.videoStreamContent);
@@ -174,6 +178,10 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
             + 'extended, '
             + 'genre1, '
             + 'genre2, '
+            + 'genre3, '
+            + 'genre4, '
+            + 'genre5, '
+            + 'genre6, '
             + 'videoType, '
             + 'videoResolution, '
             + 'videoStreamContent, '
@@ -229,6 +237,10 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
             value.push(program.extended);
             value.push(program.genre1);
             value.push(program.genre2);
+            value.push(program.genre3);
+            value.push(program.genre4);
+            value.push(program.genre5);
+            value.push(program.genre6);
             value.push(program.videoType);
             value.push(program.videoResolution);
             value.push(program.videoStreamContent);
@@ -282,6 +294,10 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
         value.push(program.extended);
         value.push(program.genre1);
         value.push(program.genre2);
+        value.push(program.genre3);
+        value.push(program.genre4);
+        value.push(program.genre5);
+        value.push(program.genre6);
         value.push(program.videoType);
         value.push(program.videoResolution);
         value.push(program.videoStreamContent);
@@ -319,6 +335,10 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
                 + 'extended = excluded.extended, '
                 + 'genre1 = excluded.genre1, '
                 + 'genre2 = excluded.genre2, '
+                + 'genre3 = excluded.genre3, '
+                + 'genre4 = excluded.genre4, '
+                + 'genre5 = excluded.genre5, '
+                + 'genre6 = excluded.genre6, '
                 + 'videoType = excluded.videoType, '
                 + 'videoResolution = excluded.videoResolution, '
                 + 'videoStreamContent = excluded.videoStreamContent, '
@@ -618,7 +638,7 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
         }
 
         if (typeof option.genre1 !== 'undefined') {
-            query.push(`genre1 = ${ option.genre1 }`);
+            query.push(`(genre1 = ${ option.genre1 } or genre3 = ${ option.genre1 } or genre5 = ${ option.genre1 })`);
         }
 
         if (typeof option.channelId !== 'undefined') {

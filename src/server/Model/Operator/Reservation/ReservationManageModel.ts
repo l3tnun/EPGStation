@@ -612,6 +612,10 @@ class ReservationManageModel extends Model {
         if (typeof program.extended === 'undefined') { program.extended = null; }
         if (typeof program.genre1 === 'undefined') { program.genre1 = null; }
         if (typeof program.genre2 === 'undefined') { program.genre2 = null; }
+        if (typeof program.genre3 === 'undefined') { program.genre3 = null; }
+        if (typeof program.genre4 === 'undefined') { program.genre4 = null; }
+        if (typeof program.genre5 === 'undefined') { program.genre5 = null; }
+        if (typeof program.genre6 === 'undefined') { program.genre6 = null; }
         program.videoType = null;
         program.videoResolution = null;
         program.videoStreamContent = null;

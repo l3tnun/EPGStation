@@ -41,6 +41,10 @@ export interface ProgramSchema {
     extended: string | null;
     genre1: number | null;
     genre2: number | null;
+    genre3: number | null;
+    genre4: number | null;
+    genre5: number | null;
+    genre6: number | null;
     channelType: apid.ChannelType;
     channel: string;
 
@@ -114,6 +118,10 @@ export interface RecordedSchema {
     extended: string | null;
     genre1: number | null;
     genre2: number | null;
+    genre3: number | null;
+    genre4: number | null;
+    genre5: number | null;
+    genre6: number | null;
     videoType: apid.ProgramVideoType | null;
     videoResolution: apid.ProgramVideoResolution | null;
     videoStreamContent: number | null;
@@ -157,6 +165,10 @@ export interface ScheduleProgramItem {
     extended: string | null;
     genre1: number | null;
     genre2: number | null;
+    genre3: number | null;
+    genre4: number | null;
+    genre5: number | null;
+    genre6: number | null;
     channelType: apid.ChannelType;
 
     videoType: apid.ProgramVideoType | null;
