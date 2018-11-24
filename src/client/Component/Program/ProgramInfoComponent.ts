@@ -27,7 +27,9 @@ class ProgramInfoComponent extends Component<void> {
                 m('div', { class: 'title' }, this.viewModel.getTitle()),
                 this.createChannel(),
                 this.createTime(),
-                this.createItem('genre', this.viewModel.getGenres()),
+                this.createItem('genre', this.viewModel.getGenres(0)),
+                this.createItem('genre', this.viewModel.getGenres(1)),
+                this.createItem('genre', this.viewModel.getGenres(2)),
                 this.createItem('description', this.viewModel.getDescription()),
                 this.createItem('extended', this.viewModel.getExtended(), (vnode: m.VnodeDOM<void, this>) => {
                     let str = this.viewModel.getExtended();
@@ -35,6 +37,7 @@ class ProgramInfoComponent extends Component<void> {
                     str = str.replace(/(https:\/\/[\x21-\x7e]+)/gi, "<a href='$1' target='_blank'>$1</a>");
                     (<HTMLElement> vnode.dom).innerHTML = str;
                 }),
+                this.createItem('other', 'その他'),
                 this.createItem('video', '映像: ' + this.viewModel.getVideoInfo()),
                 this.createItem('audio-mode', '音声: ' + this.viewModel.getAudioMode()),
                 this.createItem('audio-sampling-rate', 'サンプリングレート: ' + this.viewModel.getAudioSamplingRate()),
