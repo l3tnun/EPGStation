@@ -7,8 +7,8 @@ interface ServicesDBInterface extends DBTableBase {
     drop(): Promise<void>;
     insert(services: apid.Service[], isDelete?: boolean): Promise<void>;
     findId(id: number): Promise<DBSchema.ServiceSchema | null>;
-    findAll(): Promise<DBSchema.ServiceSchema[]>;
-    findChannelType(types: apid.ChannelType[]): Promise<DBSchema.ServiceSchema[]>;
+    findAll(needSort?: boolean): Promise<DBSchema.ServiceSchema[]>;
+    findChannelType(types: apid.ChannelType[], needSort?: boolean): Promise<DBSchema.ServiceSchema[]>;
 }
 
 abstract class ServicesDB extends DBTableBase implements ServicesDBInterface {
@@ -130,25 +130,64 @@ abstract class ServicesDB extends DBTableBase implements ServicesDBInterface {
 
     /**
      * 全件取得
+     * @param needSort: boolean true ソート済みの結果を返す
      * @return Promise<DBSchema.ServiceSchema[]>
      */
-    public async findAll(): Promise<DBSchema.ServiceSchema[]> {
-        return this.fixResults(<DBSchema.ServiceSchema[]> await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Services } order by channelTypeId, remoteControlKeyId, id`));
+    public async findAll(needSort: boolean = false): Promise<DBSchema.ServiceSchema[]> {
+        const channels = this.fixResults(<DBSchema.ServiceSchema[]> await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Services } order by channelTypeId, remoteControlKeyId, id`));
+
+        return needSort ? this.sortChannels(channels) : channels;
+    }
+
+    /**
+     * sort channels
+     * @param channels; DBSchema.ServiceSchema[]
+     * @return DBSchema.ServiceSchema[];
+     */
+    private sortChannels(channels: DBSchema.ServiceSchema[]): DBSchema.ServiceSchema[] {
+        const config = this.config.getConfig();
+        let order: number[] = [];
+        let key = 'id';
+        if (typeof config.serviceOrder !== 'undefined') {
+            order = config.serviceOrder;
+        } else if (typeof config.serviceSidOrder !== 'undefined') {
+            order = config.serviceSidOrder;
+            key = 'serviceId';
+        }
+
+        let cnt = 0;
+        order.forEach((id) => {
+            const i = channels.findIndex((c) => {
+                return c[key] === id;
+            });
+
+            if (i === -1) { return; }
+
+            // tslint:disable-next-line
+            const [channel] = channels.splice(i, 1);
+            channels.splice(cnt, 0, channel);
+            cnt += 1;
+        });
+
+        return channels;
     }
 
     /**
      * 放送波指定取得
      * @param types GR | BS | CS | SKY
+     * @param needSort: boolean true ソート済みの結果を返す
      * @return Promise<DBSchema.ServiceSchema[]>
      */
-    public async findChannelType(types: apid.ChannelType[]): Promise<DBSchema.ServiceSchema[]> {
+    public async findChannelType(types: apid.ChannelType[], needSort: boolean = false): Promise<DBSchema.ServiceSchema[]> {
         let str = '';
         types.forEach((type) => {
             str += `'${ type }',`;
         });
         str = str.slice(0, -1);
 
-        return this.fixResults(<DBSchema.ServiceSchema[]> await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Services } where channelType in (${ str }) order by channelTypeId, remoteControlKeyId, id`));
+        const channels = this.fixResults(<DBSchema.ServiceSchema[]> await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Services } where channelType in (${ str }) order by channelTypeId, remoteControlKeyId, id`));
+
+        return needSort ? this.sortChannels(channels) : channels;
     }
 }
 

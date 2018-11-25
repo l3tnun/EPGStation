@@ -75,30 +75,6 @@ namespace ApiUtil {
     };
 
     /**
-     * id 付き要素を並び替え
-     * @param items: 並び替える要素
-     * @param order: 並び替える順番
-     * @return items
-     */
-    export const sortItems = <T>(items: { id: number }[], order: number[]): T => {
-        let cnt = 0;
-        order.forEach((id) => {
-            const i = items.findIndex((t) => {
-                return t.id === id;
-            });
-
-            if (i === -1) { return; }
-
-            // tslint:disable-next-line
-            const [item] = items.splice(i, 1);
-            items.splice(cnt, 0, item);
-            cnt += 1;
-        });
-
-        return items as any;
-    };
-
-    /**
      * kodi に指定した url を送信する
      * @param source: source url
      * @param host: kodi host url
