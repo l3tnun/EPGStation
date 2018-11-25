@@ -381,6 +381,8 @@
 
 - `http://<MirakurunAddress:port>/api/services` もしくは `http://<EPGStationAddress:port>/api/channels` で確認できる serviceId を入力
 
+**serviceOrder が存在する場合はそちらが優先されるため注意**
+
 ```json
 "serviceOrder": [400141, 400151, 400161]
 ```
