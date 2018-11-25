@@ -384,7 +384,7 @@
 **serviceOrder が存在する場合はそちらが優先されるため注意**
 
 ```json
-"serviceOrder": [400141, 400151, 400161]
+"serviceSidOrder": [400141, 400151, 400161]
 ```
 
 ### excludeServices
