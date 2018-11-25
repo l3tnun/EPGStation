@@ -50,10 +50,7 @@ class ScheduleModel extends ApiModel implements ScheduleModelInterface {
     public async getSchedule(time: number, length: number, type: apid.ChannelType): Promise<{}[]> {
         const times = this.getTime(time, length);
         const programs = await this.programsDB.findSchedule(times.startAt, times.endAt, type);
-        let channels = await this.servicesDB.findChannelType([type]);
-
-        // sort
-        channels = ApiUtil.sortItems(channels, this.config.getConfig().serviceOrder || []);
+        const channels = await this.servicesDB.findChannelType([type], true);
 
         // channelId ごとに programs をまとめる
         const programsIndex: { [key: number]: any[] } = {};
@@ -130,10 +127,7 @@ class ScheduleModel extends ApiModel implements ScheduleModelInterface {
      */
     public async getBroadcasting(addition: number): Promise<{}> {
         const programs = await this.programsDB.findBroadcasting(addition * 1000 * 60);
-        let channels = await this.servicesDB.findAll();
-
-        // sort
-        channels = ApiUtil.sortItems(channels, this.config.getConfig().serviceOrder || []);
+        const channels = await this.servicesDB.findAll(true);
 
         // channelId ごとに programs をまとめる
         const programsIndex: { [key: number]: any[] } = {};

@@ -40,6 +40,7 @@ interface ConfigInterface {
     programInsertMax: number;
     programInsertWait: number;
     serviceOrder: number[];
+    serviceSidOrder: number[];
     excludeServices: number[];
     reserves: string;
     recPriority: number;

@@ -25,6 +25,7 @@
     - [予約情報更新時のログ出力を抑えたい](#suppressreservesupdatealllog)
     - [番組情報更新時のログ出力を抑えたい](#suppressepgupdatelog)
     - [チャンネルの並び順を変更したい](#serviceorder)
+    - [チャンネルの並び順を変更したい(sid)](#servicesidorder)
     - [特定のチャンネルは除外したい](#excludeservices)
     - [自動起動時の GID を指定したい](#gid)
     - [自動起動時の UID を指定したい](#uid)
@@ -369,6 +370,21 @@
 
 ```json
 "serviceOrder": [3273601024, 3273701032, 3273801040, 3273901048, 3274001056, 3274101064, 3274201072]
+```
+
+### serviceSidOrder
+#### sid でチャンネルの並び順を指定
+
+| 種類 | デフォルト値 | 必須 |
+| --- | ---------- | --- |
+| number[] |  | no |
+
+- `http://<MirakurunAddress:port>/api/services` もしくは `http://<EPGStationAddress:port>/api/channels` で確認できる serviceId を入力
+
+**serviceOrder が存在する場合はそちらが優先されるため注意**
+
+```json
+"serviceSidOrder": [400141, 400151, 400161]
 ```
 
 ### excludeServices

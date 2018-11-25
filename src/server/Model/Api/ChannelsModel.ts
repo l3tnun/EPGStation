@@ -1,6 +1,5 @@
 import * as apid from '../../../../node_modules/mirakurun/api';
 import CreateMirakurunClient from '../../Util/CreateMirakurunClient';
-import * as DBSchema from '../DB/DBSchema';
 import { ServicesDBInterface } from '../DB/ServicesDB';
 import ApiModel from './ApiModel';
 import ApiUtil from './ApiUtil';
@@ -28,14 +27,11 @@ class ChannelsModel extends ApiModel implements ChannelsModelInterface {
      * @return Promise<any>
      */
     public async getAll(): Promise<any> {
-        const datas = await this.servicesDB.findAll();
+        const channels = await this.servicesDB.findAll(true);
 
-        const results: any[] = [];
-        datas.forEach((result: DBSchema.ServiceSchema) => {
-            results.push(ApiUtil.deleteNullinHash(result));
+        return channels.map((channel) => {
+            return ApiUtil.deleteNullinHash(channel);
         });
-
-        return ApiUtil.sortItems(results, this.config.getConfig().serviceOrder || []);
     }
 
     /**
