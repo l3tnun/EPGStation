@@ -161,6 +161,10 @@ class EncodeProcessManageModel extends Model implements EncodeProcessManageModel
             this.eventsNotify(createTime);
         });
 
+        // buffer が埋まらないようにする
+        child.stdout.on('data', () => { });
+        child.stderr.on('data', () => { });
+
         return { child: child, priority: priority, createTime: createTime };
     }
 
