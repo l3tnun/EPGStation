@@ -43,6 +43,7 @@ class RecordedExternalProcessModel extends QueueProcessBaseModel implements Reco
 
             return new Promise<void>((resolve: () => void) => {
                 const child = spawn(cmds.bin, cmds.args, {
+                    stdio: 'ignore',
                     env: {
                         RECORDEDID: program.id,
                         PROGRAMID: program.programId,

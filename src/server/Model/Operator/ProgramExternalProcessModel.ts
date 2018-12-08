@@ -43,6 +43,7 @@ class ProgramExternalProcessModel extends QueueProcessBaseModel implements Progr
 
             return new Promise<void>((resolve: () => void) => {
                 const child = spawn(cmds.bin, cmds.args, {
+                    stdio: 'ignore',
                     env: {
                         PROGRAMID: program.id,
                         CHANNELTYPE: program.channelType,
