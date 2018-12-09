@@ -338,7 +338,7 @@ class RecordedComponent extends ParentComponent<void> {
                     m('div', { class: 'title' }, recorded.name),
                     m('div', { class: 'channel' }, this.viewModel.getChannelName(recorded.channelId)),
                     m('div', { class: 'time' }, this.viewModel.getTimeStr(recorded)),
-                    this.getDescription(recorded, isEditing),
+                    m('div', { class: 'description' }, this.getDescription(recorded, isEditing)),
                 ]),
             ]),
         ]);
@@ -348,14 +348,17 @@ class RecordedComponent extends ParentComponent<void> {
      * 番組概要 編集中はファイルサイズを返す
      * @param recorded: apid.RecordedProgram
      * @param isEditing: boolean
-     * @return m.Child
+     * @return string | undefined
      */
-    private getDescription(recorded: apid.RecordedProgram, isEditing: boolean): m.Child {
+    private getDescription(recorded: apid.RecordedProgram, isEditing: boolean): string | undefined {
         if (!isEditing) {
-            return m('div', { class: 'description' }, recorded.description);
+            return recorded.description;
         }
 
-        return m('div', { class: 'file-size' }, Util.getFileSizeStr(this.viewModel.getFileSize(recorded)));
+        return (
+                typeof recorded.dropCnt !== 'undefined'
+                ? `${ recorded.dropCnt }/${ recorded.errorCnt }/${ recorded.scramblingCnt } ` : ''
+            ) + Util.getFileSizeStr(this.viewModel.getFileSize(recorded));
     }
 }
 

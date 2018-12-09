@@ -48,6 +48,13 @@ class SearchSettingComponent extends Component<void> {
                 ),
             ),
             this.createListItem(
+                '録画済み番組を排除',
+                this.createToggle(
+                    () => { return this.viewModel.tmpValue.isEnableAvoidDuplicate; },
+                    (value) => { this.viewModel.tmpValue.isEnableAvoidDuplicate = value; },
+                ),
+            ),
+            this.createListItem(
                 '元ファイルの自動削除',
                 this.createToggle(
                     () => { return this.viewModel.tmpValue.delTs; },
