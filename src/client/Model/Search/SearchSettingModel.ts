@@ -3,6 +3,7 @@ import StorageTemplateModel from '../Storage/StorageTemplateModel';
 interface SearchSettingValue {
     setKeyowordToDirectory: boolean;
     setDefaultEncodeOption: boolean;
+    isEnableAvoidDuplicate: boolean;
     delTs: boolean;
 }
 
@@ -25,6 +26,7 @@ class SearchSettingModel extends StorageTemplateModel<SearchSettingValue> {
         return {
             setKeyowordToDirectory: false,
             setDefaultEncodeOption: false,
+            isEnableAvoidDuplicate: false,
             delTs: false,
         };
     }

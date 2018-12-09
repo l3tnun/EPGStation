@@ -415,6 +415,8 @@ class SearchViewModel extends ViewModel {
                 }
             }
 
+            this.avoidDuplicate = setting.isEnableAvoidDuplicate;
+
             this.delTs = setting.delTs;
         }
 
