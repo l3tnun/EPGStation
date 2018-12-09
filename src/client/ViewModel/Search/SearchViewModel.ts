@@ -65,7 +65,7 @@ class SearchViewModel extends ViewModel {
     public durationMin: number = 0;
     public durationMax: number = 0;
     public avoidDuplicate: boolean = false;
-    public periodToAvoidDuplicate: number = 6;
+    public periodToAvoidDuplicate: number = 0;
     public enable: boolean = true;
     public directory: string = '';
     public recordedFormat: string = '';
@@ -176,7 +176,7 @@ class SearchViewModel extends ViewModel {
         this.durationMin = 0;
         this.durationMax = 0;
         this.avoidDuplicate = false;
-        this.periodToAvoidDuplicate = 6;
+        this.periodToAvoidDuplicate = 0;
 
         if (this.rule !== null) {
             if (typeof this.rule.keyword !== 'undefined') { this.keyword = this.rule.keyword; }
@@ -481,7 +481,7 @@ class SearchViewModel extends ViewModel {
         if (this.durationMax <= this.durationMin) { this.durationMax = 0; }
 
         if (this.periodToAvoidDuplicate < 0) {
-            this.periodToAvoidDuplicate = 6;
+            this.periodToAvoidDuplicate = 0;
         }
     }
 
