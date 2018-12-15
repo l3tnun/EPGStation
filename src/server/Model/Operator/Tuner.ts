@@ -1,6 +1,6 @@
-import * as apid from '../../../../../node_modules/mirakurun/api';
-import Base from '../../../Base';
-import * as DBSchema from '../../DB/DBSchema';
+import * as apid from '../../../../node_modules/mirakurun/api';
+import Base from '../../Base';
+import * as DBSchema from '../DB/DBSchema';
 
 /**
  * Tuner

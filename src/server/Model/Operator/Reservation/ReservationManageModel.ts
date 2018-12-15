@@ -13,7 +13,7 @@ import { IPCServerInterface } from '../../IPC/IPCServer';
 import Model from '../../Model';
 import { RecordingManageModelInterface } from '../Recording/RecordingManageModel';
 import { AddReserveInterface, ManualReserveProgram, ReserveProgram, RuleReserveProgram } from '../ReserveProgramInterface';
-import Tuner from './Tuner';
+import Tuner from '../Tuner';
 
 interface ExeQueueData {
     id: string;
