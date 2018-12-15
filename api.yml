@@ -1250,11 +1250,15 @@ definitions:
     type: object
     required:
       - enable
+      - allowEndLack
     description: 'オプション'
     properties:
       enable:
         type: boolean
         description: '必須項目 ルールの有効化'
+      allowEndLack:
+        type: boolean
+        description: '必須項目 チューナの使用状況によっては末尾が欠けることを許可'
       directory:
         type: string
         description: '録画データの保存場所'

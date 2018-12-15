@@ -412,6 +412,7 @@ export interface RuleSearch {
 
 export interface RuleOption {
     enable: boolean;
+    allowEndLack: boolean;
     directory?: string;
     recordedFormat?: string;
 }
