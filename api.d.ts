@@ -251,6 +251,7 @@ export interface Reserve {
     program: ReserveProgram;
     ruleId?: RuleId;
     isTimeSpecifited?: boolean;
+    allowEndLack: boolean;
     option?: AddReserveOption;
     encode?: RuleEncode;
 }

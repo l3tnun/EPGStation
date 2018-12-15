@@ -891,6 +891,7 @@ definitions:
     type: object
     required:
       - program
+      - allowEndLack
     description: 'program は必須項目'
     properties:
       program:
@@ -899,6 +900,9 @@ definitions:
         $ref: '#/definitions/RuleId'
       isTimeSpecifited:
         description: '時刻指定予約か'
+        type: boolean
+      allowEndLack:
+        description: 'チューナの使用状況によっては末尾が欠けることを許可する'
         type: boolean
       option:
         $ref: '#/definitions/AddReserveOption'
