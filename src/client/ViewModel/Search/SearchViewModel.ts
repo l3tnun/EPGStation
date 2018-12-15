@@ -67,6 +67,7 @@ class SearchViewModel extends ViewModel {
     public avoidDuplicate: boolean = false;
     public periodToAvoidDuplicate: number = 0;
     public enable: boolean = true;
+    public allowEndLack: boolean = true;
     public directory: string = '';
     public recordedFormat: string = '';
     public encodeModes: { mode: number; directory: string }[] = [
@@ -257,6 +258,7 @@ class SearchViewModel extends ViewModel {
      */
     private initAddOption(): void {
         this.enable = true;
+        this.allowEndLack = true;
         this.directory = '';
         this.recordedFormat = '';
         this.encodeModes = [
@@ -268,6 +270,7 @@ class SearchViewModel extends ViewModel {
 
         if (this.rule !== null) {
             this.enable = this.rule.enable;
+            this.enable = this.rule.allowEndLack;
             if (typeof this.rule.directory !== 'undefined') { this.directory = this.rule.directory; }
             if (typeof this.rule.recordedFormat !== 'undefined') { this.recordedFormat = this.rule.recordedFormat; }
             if (typeof this.rule.mode1 !== 'undefined') { this.encodeModes[0].mode = this.rule.mode1; }
@@ -546,7 +549,10 @@ class SearchViewModel extends ViewModel {
      * @return RuleOption
      */
     private createRuleOption(): apid.RuleOption {
-        const option: apid.RuleOption = { enable: this.enable };
+        const option: apid.RuleOption = {
+            enable: this.enable,
+            allowEndLack: this.allowEndLack,
+        };
         if (this.directory.length !== 0) { option.directory = this.directory; }
         if (this.recordedFormat.length !== 0) { option.recordedFormat = this.recordedFormat; }
 

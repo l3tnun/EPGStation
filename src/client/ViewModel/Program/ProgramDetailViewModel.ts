@@ -34,6 +34,7 @@ class ProgramDetailViewModel extends ViewModel {
 
     public addReserveProgram: apid.AddReserveProgram | null = null;
 
+    public allowEndLack: boolean = true;
     public directory: string = '';
     public recordedFormat: string = '';
     public encodeModes: { mode: number; directory: string }[] = [
@@ -159,6 +160,8 @@ class ProgramDetailViewModel extends ViewModel {
 
         // 予約情報から各種オプションを取得する
         if (this.reserve !== null) {
+            this.allowEndLack = this.reserve.allowEndLack;
+
             // option
             if (typeof this.reserve.option !== 'undefined') {
                 if (typeof this.reserve.option.directory !== 'undefined') {
@@ -249,7 +252,9 @@ class ProgramDetailViewModel extends ViewModel {
      * @return apid.AddReserve
      */
     private createAddReserve(isUpdate: boolean): apid.AddReserve {
-        const option: apid.AddReserve = {};
+        const option: apid.AddReserve = {
+            allowEndLack: this.allowEndLack,
+        };
 
         if (this.isTimeSpecifited()) {
             if (isUpdate) {
