@@ -513,6 +513,7 @@ class ReservationManageModel extends Model {
             manualId: manualId,
             isTimeSpecifited: option.programId < 0, // 時刻指定予約の場合 true
             isConflict: false,
+            allowEndLack: option.allowEndLack,
         };
         if (typeof option.option !== 'undefined') {
             addReserve.option = option.option;
@@ -921,6 +922,7 @@ class ReservationManageModel extends Model {
                     isOverlap: Boolean(program.overlap),
                     disableOverlap: !!overlapIndex[program.id],
                     isConflict: false,
+                    allowEndLack: rule.allowEndLack,
                 };
 
                 if (data.disableOverlap) {

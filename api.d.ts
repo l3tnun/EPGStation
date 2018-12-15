@@ -298,6 +298,7 @@ export interface ReserveProgram {
 
 export interface AddReserve {
     programId?: ProgramId;
+    allowEndLack: boolean;
     option?: AddReserveOption;
     encode?: RuleEncode;
     program?: AddReserveProgram;

@@ -8,6 +8,7 @@ export interface ReserveProgram {
     encodeOption?: EncodeInterface;
     isSkip: boolean;
     isConflict: boolean;
+    allowEndLack: boolean;
     option?: ReserveOptionInterface;
 }
 
@@ -38,6 +39,7 @@ export interface ReserveOptionInterface {
  */
 export interface AddReserveInterface {
     programId?: apid.ProgramId;
+    allowEndLack: boolean;
     option?: ReserveOptionInterface;
     encode?: EncodeInterface;
     program?: {

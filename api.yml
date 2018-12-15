@@ -811,7 +811,12 @@ definitions:
 
   EditReserve:
     type: object
+    required:
+      - allowEndLack
     properties:
+      allowEndLack:
+        type: boolean
+        description: 'チューナの使用状況によっては末尾が欠けることを許可'
       option:
         $ref: '#/definitions/AddReserveOption'
       encode:
