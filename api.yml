@@ -1038,6 +1038,7 @@ definitions:
       - id
       - week
       - enable
+      - allowEndLack
     properties:
       id:
         $ref: '#/definitions/RuleId'
@@ -1122,6 +1123,9 @@ definitions:
       enable:
         type: boolean
         description: 'ルールが有効か'
+      allowEndLack:
+        type: boolean
+        description: 'チューナの使用状況によっては末尾が欠けることを許可'
       directory:
         type: string
         description: '録画データの保存場所'

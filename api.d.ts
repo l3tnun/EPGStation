@@ -364,6 +364,7 @@ export interface Rule {
     durationMax?: number;
     avoidDuplicate: boolean;
     periodToAvoidDuplicate?: number;
+    allowEndLack: boolean;
     enable: boolean;
     directory?: string;
     recordedFormat?: string;
