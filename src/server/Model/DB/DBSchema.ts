@@ -94,6 +94,7 @@ export interface RulesSchema {
     avoidDuplicate: boolean;
     periodToAvoidDuplicate: number | null;
     enable: boolean;
+    allowEndLack: boolean;
     directory: string | null;
     recordedFormat: string | null;
     mode1?: number | null;

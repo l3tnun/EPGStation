@@ -80,6 +80,7 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
         value.push(rule.avoidDuplicate);
         value.push(rule.periodToAvoidDuplicate);
         value.push(rule.enable);
+        value.push(rule.allowEndLack);
         value.push(rule.directory);
         value.push(rule.recordedFormat);
         value.push(rule.mode1);
@@ -134,6 +135,7 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
             + 'avoidDuplicate, '
             + 'periodToAvoidDuplicate, '
             + 'enable, '
+            + 'allowEndLack, '
             + 'directory, '
             + 'recordedFormat, '
             + 'mode1, '
@@ -183,6 +185,7 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
             value.push(rule.avoidDuplicate);
             value.push(rule.periodToAvoidDuplicate);
             value.push(rule.enable);
+            value.push(rule.allowEndLack);
             value.push(rule.directory);
             value.push(rule.recordedFormat);
             value.push(rule.mode1);
@@ -277,6 +280,7 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
         if (rule.periodToAvoidDuplicate !== null) { querys.push(`periodToAvoidDuplicate = ${ rule.periodToAvoidDuplicate }`); }
         else { querys.push('periodToAvoidDuplicate = null'); }
         querys.push(`enable = ${ this.operator.convertBoolean(rule.enable) }`);
+        querys.push(`allowEndLack = ${ this.operator.convertBoolean(rule.allowEndLack) }`);
 
         if (rule.directory !== null) {
             querys.push(`directory = ${ this.operator.createValueStr(values.length + 1, values.length + 1) }`);

@@ -37,6 +37,7 @@ class SQLite3RulesDB extends RulesDB {
             + 'avoidDuplicate integer default 0, '
             + 'periodToAvoidDuplicate integer null default null, '
             + 'enable integer, '
+            + 'allowEndLack integer default 1, '
             + 'directory text, '
             + 'recordedFormat text, '
             + 'mode1 integer, '
@@ -74,6 +75,7 @@ class SQLite3RulesDB extends RulesDB {
             if (rule.isFree !== null) { rule.isFree = Boolean(rule.isFree); }
             if (rule.avoidDuplicate !== null) { rule.avoidDuplicate = Boolean(rule.avoidDuplicate); }
             if (rule.enable !== null) { rule.enable = Boolean(rule.enable); }
+            if (rule.allowEndLack !== null) { rule.allowEndLack = Boolean(rule.allowEndLack); }
             if (rule.delTs !== null) { rule.delTs = Boolean(rule.delTs); }
 
             return rule;
