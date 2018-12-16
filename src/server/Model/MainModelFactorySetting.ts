@@ -185,6 +185,7 @@ namespace ModelFactorySetting {
         );
         const epgUpdateFinModel = new EPGUpdateFinModel(
             mirakurunManage,
+            recordingStreamCreator,
             reservationManage,
             recordedHistoryDB!,
         );

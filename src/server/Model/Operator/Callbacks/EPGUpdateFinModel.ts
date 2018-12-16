@@ -2,6 +2,7 @@ import * as apid from '../../../../../node_modules/mirakurun/api';
 import { RecordedHistoryDBInterface } from '../../DB/RecordedHistoryDB';
 import Model from '../../Model';
 import { MirakurunManageModelInterface } from '../../Operator/EPGUpdate/MirakurunManageModel';
+import { RecordingStreamCreatorInterface } from '../../Operator/Recording/RecordingStreamCreator';
 import { ReservationManageModelInterface } from '../../Operator/Reservation/ReservationManageModel';
 import CallbackBaseModelInterface from './CallbackBaseModelInterface';
 
@@ -11,18 +12,21 @@ import CallbackBaseModelInterface from './CallbackBaseModelInterface';
  */
 class EPGUpdateFinModel extends Model implements CallbackBaseModelInterface {
     private mirakurunManage: MirakurunManageModelInterface;
+    private recordingStreamCreator: RecordingStreamCreatorInterface;
     private reservationManage: ReservationManageModelInterface;
     private recordedHistoryDB: RecordedHistoryDBInterface;
     private recordedHistoryRetentionPeriodDays: number;
 
     constructor(
         mirakurunManage: MirakurunManageModelInterface,
+        recordingStreamCreator: RecordingStreamCreatorInterface,
         reservationManage: ReservationManageModelInterface,
         recordedHistoryDB: RecordedHistoryDBInterface,
     ) {
         super();
 
         this.mirakurunManage = mirakurunManage;
+        this.recordingStreamCreator = recordingStreamCreator;
         this.reservationManage = reservationManage;
         this.recordedHistoryDB = recordedHistoryDB;
 
@@ -34,6 +38,7 @@ class EPGUpdateFinModel extends Model implements CallbackBaseModelInterface {
     }
 
     private async callback(tuners: apid.TunerDevice[]): Promise<void> {
+        this.recordingStreamCreator.setTuners(tuners);
         this.reservationManage.setTuners(tuners);
 
         // RecordedHistory の保存期間外のデータを削除
