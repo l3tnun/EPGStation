@@ -47,7 +47,7 @@ class RecordingStreamCreator extends Model implements RecordingStreamCreatorInte
     }
 
     /**
-     * 指定し programId のプログラムを削除する
+     * 指定した programId のプログラムを削除する
      * @param programId: apid.ProgramId
      */
     public deleteProgram(programId: apid.ProgramId): void {
