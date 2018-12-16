@@ -30,6 +30,20 @@ interface RecordingStreamCreatorInterface extends Model {
 class RecordingStreamCreator extends Model implements RecordingStreamCreatorInterface {
     private tuners: TunerStatus[] = [];
 
+    constructor() {
+        super();
+
+        // 念の為 30 分毎ににゴミを削除
+        setInterval(() => {
+            const now = new Date().getTime();
+            for (const tuner of this.tuners) {
+                tuner.programs = tuner.programs.filter((p) => {
+                    return p.reserve.program.endAt >= now;
+                });
+            }
+        }, 30 * 60 * 1000);
+    }
+
     /**
      * チューナ情報をセット
      * @param tuners: TunerDevice[]
