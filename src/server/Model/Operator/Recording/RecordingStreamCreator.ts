@@ -69,7 +69,6 @@ class RecordingStreamCreator extends Model implements RecordingStreamCreatorInte
      * ストリーム生成
      * @param reserve: ReserveProgram
      * @return Promise<http.IncomingMessage>
-     * @throws TunerAssignmentError
      */
     public create(reserve: ReserveProgram): Promise<http.IncomingMessage> {
         if (reserve.isConflict) {
@@ -78,7 +77,11 @@ class RecordingStreamCreator extends Model implements RecordingStreamCreatorInte
 
         const tunerId = this.getTunerId(reserve);
         // tuner が割り当てられなかった
-        if (tunerId === null) { throw new Error('TunerAssignmentError'); }
+        if (tunerId === null) {
+            this.log.system.warn(`TunerAssignmentError programId: ${ reserve.program.id }, ${ reserve.program.name }`);
+
+            return this.getStream(reserve);
+        }
 
         // stream 取得
         const stream = this.getStream(reserve);
