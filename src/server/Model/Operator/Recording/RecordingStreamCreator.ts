@@ -29,9 +29,13 @@ interface RecordingStreamCreatorInterface extends Model {
  */
 class RecordingStreamCreator extends Model implements RecordingStreamCreatorInterface {
     private tuners: TunerStatus[] = [];
+    private allowEndLack: boolean;
 
     constructor() {
         super();
+
+        const config = this.config.getConfig();
+        this.allowEndLack = typeof config.allowEndLack === 'undefined' ? true : config.allowEndLack;
 
         // 念の為 30 分毎ににゴミを削除
         setInterval(() => {
@@ -85,7 +89,7 @@ class RecordingStreamCreator extends Model implements RecordingStreamCreatorInte
      * @return Promise<http.IncomingMessage>
      */
     public async create(reserve: ReserveProgram): Promise<http.IncomingMessage> {
-        if (reserve.isConflict) {
+        if (!this.allowEndLack || reserve.isConflict) {
             return this.getStream(reserve);
         }
 
