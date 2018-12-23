@@ -270,7 +270,7 @@ class SearchViewModel extends ViewModel {
 
         if (this.rule !== null) {
             this.enable = this.rule.enable;
-            this.enable = this.rule.allowEndLack;
+            this.allowEndLack = this.rule.allowEndLack;
             if (typeof this.rule.directory !== 'undefined') { this.directory = this.rule.directory; }
             if (typeof this.rule.recordedFormat !== 'undefined') { this.recordedFormat = this.rule.recordedFormat; }
             if (typeof this.rule.mode1 !== 'undefined') { this.encodeModes[0].mode = this.rule.mode1; }
