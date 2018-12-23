@@ -38,7 +38,7 @@ class RecordingStreamCreator extends Model implements RecordingStreamCreatorInte
             const now = new Date().getTime();
             for (const tuner of this.tuners) {
                 tuner.programs = tuner.programs.filter((p) => {
-                    return p.reserve.program.endAt >= now;
+                    return now - p.reserve.program.endAt < (12 * 60 * 60 * 1000);
                 });
             }
         }, 30 * 60 * 1000);
