@@ -303,7 +303,6 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
             }
         } catch (err) {
             this.log.system.error(`preprec failed: ${ reserve.program.id } ${ reserve.program.name }`);
-            this.log.system.error(err);
 
             // retry
             setTimeout(() => {
