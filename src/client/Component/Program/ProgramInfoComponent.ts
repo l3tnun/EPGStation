@@ -19,6 +19,10 @@ class ProgramInfoComponent extends Component<void> {
      * view
      */
     public view(): m.Child {
+        const option = this.viewModel.getReservesOption();
+        const allowEndLack = option === null || !option.allowEndLack
+            ? null : this.createItem('allow-end-lack', '末尾が欠ける可能性あり');
+
         return m('div', { class: 'program-info' }, [
             m('div', {
                 class: 'content-parent',
@@ -42,6 +46,7 @@ class ProgramInfoComponent extends Component<void> {
                 this.createItem('audio-mode', '音声: ' + this.viewModel.getAudioMode()),
                 this.createItem('audio-sampling-rate', 'サンプリングレート: ' + this.viewModel.getAudioSamplingRate()),
                 this.createItem('is-free', this.viewModel.getIsFree()),
+                allowEndLack,
             ]),
             this.createReserveOption(),
         ]);

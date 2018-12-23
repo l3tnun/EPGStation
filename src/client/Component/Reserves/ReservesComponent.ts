@@ -167,6 +167,7 @@ class ReservesComponent extends ParentComponent<void> {
         if (channel === null) { return; }
 
         const reservesOption = {
+            allowEndLack: reserve.allowEndLack,
             ruleId: reserve.ruleId,
             option: reserve.option,
             encode: reserve.encode,

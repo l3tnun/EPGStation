@@ -9,6 +9,7 @@ import GenreUtil from '../../Util/GenreUtil';
 import ViewModel from '../ViewModel';
 
 interface ReservesOption {
+    allowEndLack: boolean;
     ruleId?: apid.RuleId;
     option?: apid.AddReserveOption;
     encode?: apid.RuleEncode;
