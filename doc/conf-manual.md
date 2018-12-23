@@ -16,6 +16,7 @@
 - [詳細設定](#詳細設定)
     - [録画時の Mirakurun の優先度を変更したい](#recpriority)
     - [録画競合時の Mirakurun の優先度を変更したい](#conflictpriority)
+    - [チューナの使用状況に応じて番組末尾が切れることを許可する](#allowendlack)
     - [時刻指定予約時の開始マージンを変更したい](#timespecifiedstartmargin)
     - [時刻指定予約時の終了マージンを変更したい](#timespecifiedendmargin)
     - [番組情報を DB へ保存する際の負荷を抑えたい](#programinsertmax)
@@ -275,6 +276,20 @@
 
 ```json
 "conflictPriority": 10
+```
+
+### allowEndLack
+#### チューナの使用状況に応じて番組末尾が切れることを許可する
+
+| 種類 | デフォルト値 | 必須 |
+| --- | ---------- | --- |
+| boolean | true | no |
+
+- [#190](https://github.com/l3tnun/EPGStation/issues/190)
+- false にすると番組冒頭の頭切れが発生する
+
+```json
+"allowEndLack": true
 ```
 
 ### timeSpecifiedStartMargin
