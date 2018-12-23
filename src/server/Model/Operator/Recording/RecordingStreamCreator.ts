@@ -5,7 +5,7 @@ import CreateMirakurunClient from '../../../Util/CreateMirakurunClient';
 import Util from '../../../Util/Util';
 import Model from '../../Model';
 import { RecordingManageModelInterface } from '../Recording/RecordingManageModel';
-import { ReserveProgram } from '../ReserveProgramInterface';
+import { ManualReserveProgram, ReserveProgram } from '../ReserveProgramInterface';
 
 interface TunerProgram {
     reserve: ReserveProgram;
@@ -84,12 +84,12 @@ class RecordingStreamCreator extends Model implements RecordingStreamCreatorInte
      * @param reserve: ReserveProgram
      * @return Promise<http.IncomingMessage>
      */
-    public create(reserve: ReserveProgram): Promise<http.IncomingMessage> {
+    public async create(reserve: ReserveProgram): Promise<http.IncomingMessage> {
         if (reserve.isConflict) {
             return this.getStream(reserve);
         }
 
-        const tunerId = this.getTunerId(reserve);
+        const tunerId = await this.getTunerId(reserve);
         // tuner が割り当てられなかった
         if (tunerId === null) {
             this.log.system.warn(`TunerAssignmentError programId: ${ reserve.program.id }, ${ reserve.program.name }`);
@@ -146,9 +146,9 @@ class RecordingStreamCreator extends Model implements RecordingStreamCreatorInte
     /**
      * 割当可能な tunerId を返す
      * @param reserve: ReserveProgram
-     * @return number | null
+     * @return Promise<number | null>
      */
-    private getTunerId(reserve: ReserveProgram): number | null {
+    private async getTunerId(reserve: ReserveProgram): Promise<number | null> {
         // tuner に空きがないかチェック
         for (let i = 0; i < this.tuners.length; i++) {
             // tuner の放送波が一致 && 録画していない or channel が同一
@@ -173,6 +173,27 @@ class RecordingStreamCreator extends Model implements RecordingStreamCreatorInte
                 }
 
                 // 末尾が削れない or 終了時刻が合わない
+                if (!isOk) { continue; }
+
+                // Mirakurun から最新の番組情報を取得して延長がないか確認
+                const mirakurun = CreateMirakurunClient.get();
+                for (const p of this.tuners[i].programs) {
+                    // 時刻指定予約はスキップ
+                    if (!!(<ManualReserveProgram> p.reserve).isTimeSpecifited) { continue; }
+
+                    try {
+                        const newProgram = await mirakurun.getProgram(p.reserve.program.id);
+                        if ((newProgram.startAt + newProgram.duration) - now > RecordingManageModelInterface.prepTime) {
+                            // 延長があった
+                            isOk = false;
+                            break;
+                        }
+                    } catch (err) {
+                        this.log.system.warn(`tuner program get error: ${ p.reserve.program.id }`);
+                    }
+                }
+
+                // 延長があった
                 if (!isOk) { continue; }
 
                 // ストリーム停止
