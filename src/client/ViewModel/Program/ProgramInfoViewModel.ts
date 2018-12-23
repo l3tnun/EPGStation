@@ -9,6 +9,7 @@ import GenreUtil from '../../Util/GenreUtil';
 import ViewModel from '../ViewModel';
 
 interface ReservesOption {
+    allowEndLack: boolean;
     ruleId?: apid.RuleId;
     option?: apid.AddReserveOption;
     encode?: apid.RuleEncode;
@@ -25,6 +26,9 @@ class ProgramInfoViewModel extends ViewModel {
     private program: apid.ScheduleProgramItem | null = null;
     private channel: apid.ScheduleServiceItem | null = null;
     private reservesOption: ReservesOption | null = null;
+
+    // 末尾が欠けることを許可
+    private allowEndLack: boolean = true;
 
     // エンコードオプション
     private encodeStatus: boolean = false; // true: エンコード有効
@@ -306,13 +310,17 @@ class ProgramInfoViewModel extends ViewModel {
             if (this.isEnableEncode() && this.encodeOptionValue !== -1) {
                 await this.reserves.addReserve({
                     programId: this.program.id,
+                    allowEndLack: this.allowEndLack,
                     encode: {
                         mode1: this.encodeOptionValue,
                         delTs: this.delTS,
                     },
                 });
             } else {
-                await this.reserves.addReserve({ programId: this.program.id });
+                await this.reserves.addReserve({
+                    programId: this.program.id,
+                    allowEndLack: this.allowEndLack,
+                });
             }
             this.snackbar.open(`予約: ${ this.program.name }`);
         } catch (err) {

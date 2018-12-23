@@ -811,7 +811,12 @@ definitions:
 
   EditReserve:
     type: object
+    required:
+      - allowEndLack
     properties:
+      allowEndLack:
+        type: boolean
+        description: 'チューナの使用状況によっては末尾が欠けることを許可'
       option:
         $ref: '#/definitions/AddReserveOption'
       encode:
@@ -886,6 +891,7 @@ definitions:
     type: object
     required:
       - program
+      - allowEndLack
     description: 'program は必須項目'
     properties:
       program:
@@ -894,6 +900,9 @@ definitions:
         $ref: '#/definitions/RuleId'
       isTimeSpecifited:
         description: '時刻指定予約か'
+        type: boolean
+      allowEndLack:
+        description: 'チューナの使用状況によっては末尾が欠けることを許可する'
         type: boolean
       option:
         $ref: '#/definitions/AddReserveOption'
@@ -1029,6 +1038,7 @@ definitions:
       - id
       - week
       - enable
+      - allowEndLack
     properties:
       id:
         $ref: '#/definitions/RuleId'
@@ -1113,6 +1123,9 @@ definitions:
       enable:
         type: boolean
         description: 'ルールが有効か'
+      allowEndLack:
+        type: boolean
+        description: 'チューナの使用状況によっては末尾が欠けることを許可'
       directory:
         type: string
         description: '録画データの保存場所'
@@ -1250,11 +1263,15 @@ definitions:
     type: object
     required:
       - enable
+      - allowEndLack
     description: 'オプション'
     properties:
       enable:
         type: boolean
         description: '必須項目 ルールの有効化'
+      allowEndLack:
+        type: boolean
+        description: '必須項目 チューナの使用状況によっては末尾が欠けることを許可'
       directory:
         type: string
         description: '録画データの保存場所'

@@ -36,11 +36,11 @@ class MirakurunUpdater extends Base {
      * mirakurun から EPG データを取得して DB へ保存する
      * @param callback: すべての更新が終わったら呼ばれる
      */
-    public update(): void {
+    public update(): Promise<void> {
         const config = this.config.getConfig();
         const suppressLog = !!config.suppressEPGUpdateLog;
 
-        Promise.resolve()
+        return Promise.resolve()
         .then(() => {
             return this.mirakurun.getServices();
         })

@@ -259,6 +259,7 @@ namespace RuleUtil {
             avoidDuplicate: typeof rule.search.avoidDuplicate === 'undefined' ? false : rule.search.avoidDuplicate,
             periodToAvoidDuplicate: typeof rule.search.periodToAvoidDuplicate === 'undefined' ? null : rule.search.periodToAvoidDuplicate,
             enable: rule.option.enable,
+            allowEndLack: rule.option.allowEndLack,
             directory: typeof rule.option.directory === 'undefined' ? null : rule.option.directory,
             recordedFormat: typeof rule.option.recordedFormat === 'undefined' ? null : rule.option.recordedFormat,
             mode1: null,

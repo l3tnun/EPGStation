@@ -37,6 +37,7 @@ class MySQLRulesDB extends RulesDB {
             + 'avoidDuplicate boolean default false, '
             + 'periodToAvoidDuplicate integer null default null, '
             + 'enable boolean, '
+            + 'allowEndLack boolean default true, '
             + 'directory text, '
             + 'recordedFormat text, '
             + 'mode1 integer, '

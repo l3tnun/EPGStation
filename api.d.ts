@@ -251,6 +251,7 @@ export interface Reserve {
     program: ReserveProgram;
     ruleId?: RuleId;
     isTimeSpecifited?: boolean;
+    allowEndLack: boolean;
     option?: AddReserveOption;
     encode?: RuleEncode;
 }
@@ -298,6 +299,7 @@ export interface ReserveProgram {
 
 export interface AddReserve {
     programId?: ProgramId;
+    allowEndLack: boolean;
     option?: AddReserveOption;
     encode?: RuleEncode;
     program?: AddReserveProgram;
@@ -362,6 +364,7 @@ export interface Rule {
     durationMax?: number;
     avoidDuplicate: boolean;
     periodToAvoidDuplicate?: number;
+    allowEndLack: boolean;
     enable: boolean;
     directory?: string;
     recordedFormat?: string;
@@ -412,6 +415,7 @@ export interface RuleSearch {
 
 export interface RuleOption {
     enable: boolean;
+    allowEndLack: boolean;
     directory?: string;
     recordedFormat?: string;
 }

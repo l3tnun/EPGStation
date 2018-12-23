@@ -43,6 +43,11 @@ class SearchAddComponent extends SearchOptionBaseComponent<void> {
                     () => { return this.viewModel.enable; },
                     (value: boolean) => { this.viewModel.enable = value; },
                 ),
+                this.createCheckBox(
+                    '状況に応じて末尾が欠ける事を許可',
+                    () => { return this.viewModel.allowEndLack; },
+                    (value: boolean) => { this.viewModel.allowEndLack = value; },
+                ),
             ]),
         ]);
     }

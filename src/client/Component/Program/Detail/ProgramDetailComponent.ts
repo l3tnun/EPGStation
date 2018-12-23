@@ -355,11 +355,27 @@ class ProgramDetailComponent extends ParentComponent<void> {
             class: 'option-card mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col',
         }, [
             m('div', { class: 'mdl-card__supporting-text' }, [
+                this.createOptionCheckBox(),
                 this.createSaveDirectory(),
                 this.createFileNameFormat(),
                 this.createEncode(),
             ]),
             this.createActionButons(),
+        ]);
+    }
+
+    /**
+     * オプション部分
+     */
+    private createOptionCheckBox(): m.Child {
+        return this.createContentFrame('オプション', [
+            m('div', { style: 'margin-top: 12px;' } , [
+                this.createCheckBox(
+                    '状況に応じて末尾が欠ける事を許可',
+                    () => { return this.viewModel.allowEndLack; },
+                    (value: boolean) => { this.viewModel.allowEndLack = value; },
+                ),
+            ]),
         ]);
     }
 

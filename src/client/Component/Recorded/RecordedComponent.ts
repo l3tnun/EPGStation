@@ -338,7 +338,7 @@ class RecordedComponent extends ParentComponent<void> {
                     m('div', { class: 'title' }, recorded.name),
                     m('div', { class: 'channel' }, this.viewModel.getChannelName(recorded.channelId)),
                     m('div', { class: 'time' }, this.viewModel.getTimeStr(recorded)),
-                    m('div', { class: 'description' }, this.getDescription(recorded, isEditing)),
+                    this.getDescription(recorded, isEditing),
                 ]),
             ]),
         ]);
@@ -348,17 +348,27 @@ class RecordedComponent extends ParentComponent<void> {
      * 番組概要 編集中はファイルサイズを返す
      * @param recorded: apid.RecordedProgram
      * @param isEditing: boolean
-     * @return string | undefined
+     * @return m.Child
      */
-    private getDescription(recorded: apid.RecordedProgram, isEditing: boolean): string | undefined {
+    private getDescription(recorded: apid.RecordedProgram, isEditing: boolean): m.Child {
+        let child: m.Child[] | string | undefined;
         if (!isEditing) {
-            return recorded.description;
+           child = recorded.description;
+        } else {
+            child = [];
+            if (typeof recorded.dropCnt !== 'undefined') {
+                child.push(m('span', {
+                    class: 'cnt' + (
+                        (recorded.dropCnt !== 0 || recorded.errorCnt !== 0 || recorded.scramblingCnt !== 0)
+                        ? ' cnt-error'
+                        : ''
+                    ),
+                }, `${ recorded.dropCnt }/${ recorded.errorCnt }/${ recorded.scramblingCnt }`));
+            }
+            child.push(m('span', Util.getFileSizeStr(this.viewModel.getFileSize(recorded))));
         }
 
-        return (
-                typeof recorded.dropCnt !== 'undefined'
-                ? `${ recorded.dropCnt }/${ recorded.errorCnt }/${ recorded.scramblingCnt } ` : ''
-            ) + Util.getFileSizeStr(this.viewModel.getFileSize(recorded));
+        return m('div', { class: 'description' }, child);
     }
 }
 

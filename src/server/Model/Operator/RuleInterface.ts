@@ -42,6 +42,7 @@ export interface SearchInterface {
 
 export interface OptionInterface {
     enable: boolean;
+    allowEndLack: boolean;
     directory?: string;
     recordedFormat?: string;
 }

@@ -47,5 +47,14 @@ switch (Util.getDBType()) {
 process.on('unhandledRejection', console.dir);
 
 const updater = new MirakurunUpdater(servicesDB!, programsDB!);
-updater.update();
+
+const timer = setTimeout(() => {
+    console.error('MirakurunUpdater Timeout Error');
+    process.exit(1);
+}, 10 * 60 * 1000);
+
+(async() => {
+    await updater.update();
+    clearTimeout(timer);
+})();
 

@@ -92,14 +92,8 @@ export const put: Operation = async(req, res) => {
     const reserves = <ReservesModelInterface> factory.get('ReservesModel');
 
     try {
-        if (typeof req.body === 'undefined') {
-            await reserves.editReserve({
-                programId: req.params.id,
-            });
-        } else {
-            req.body.programId = req.params.id;
-            await reserves.editReserve(req.body);
-        }
+        req.body.programId = req.params.id;
+        await reserves.editReserve(req.body);
 
         api.responseJSON(res, 201, { code: 201 });
         api.notifyClient();

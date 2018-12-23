@@ -41,6 +41,10 @@ interface RecordingManageModelInterface extends Model {
     getRecordingPath(): string[];
 }
 
+namespace RecordingManageModelInterface {
+    export const prepTime: number = 1000 * 15;
+}
+
 /**
  * 録画を行う
  * @throws RecordingManageModelCreateInstanceError init が呼ばれていない場合
@@ -155,7 +159,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
         reserves.forEach((reserve) => {
             if (reserve.isSkip || (<RuleReserveProgram> reserve).isOverlap || now > reserve.program.endAt) { return; }
 
-            if (reserve.program.startAt - now < RecordingManageModel.prepTime && !this.isRecording(reserve.program.id)) {
+            if (reserve.program.startAt - now <= RecordingManageModelInterface.prepTime && !this.isRecording(reserve.program.id)) {
                 // 録画準備
                 this.prepRecord(reserve);
             }
@@ -168,6 +172,8 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
      * @param isDeletedLog: boolean
      */
     public stop(id: number, isDeletedLog: boolean = false): void {
+        this.streamCreator.deleteProgram(id); // prep rec で止まった場合残ってしまうため
+
         const record = this.recording.find((r) => {
             return r.reserve.program.id === id;
         });
@@ -297,11 +303,10 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
             }
         } catch (err) {
             this.log.system.error(`preprec failed: ${ reserve.program.id } ${ reserve.program.name }`);
-            this.log.system.error(err);
 
             // retry
             setTimeout(() => {
-                if (retry < 2) {
+                if (retry < 3) {
                     this.prepRecord(reserve, retry + 1);
                 } else {
                     // rmove reserves
@@ -606,7 +611,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
 
         // 予約一覧から削除
         let deleted = false;
-        if (recorded === null || recorded.endAt <= new Date().getTime()) {
+        if (recorded === null || recorded.endAt <= new Date().getTime() + RecordingManageModelInterface.prepTime + 1000) {
             this.reservationManage.cancel(recData.reserve.program.id);
             this.reservationManage.clean();
             deleted = true;
@@ -756,7 +761,6 @@ namespace RecordingManageModel {
     export const RECORDING_START_EVENT = 'recordingStart';
     export const RECORDING_FIN_EVENT = 'recordingFin';
     export const RECORDING_FAILED_EVENT = 'recordingFailed';
-    export const prepTime: number = 1000 * 15;
 }
 
 export { RecordingManageModelInterface, RecordingManageModel };

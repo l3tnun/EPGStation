@@ -37,6 +37,7 @@ class PostgreSQLRulesDB extends RulesDB {
             + 'avoidDuplicate boolean default false,'
             + 'periodToAvoidDuplicate integer null default null, '
             + 'enable boolean, '
+            + 'allowEndLack boolean default true, '
             + 'directory text, '
             + 'recordedFormat text, '
             + 'mode1 integer, '
@@ -68,7 +69,7 @@ class PostgreSQLRulesDB extends RulesDB {
      * @return string
      */
     public getAllColumns(): string {
-        return 'id, keyword, ignoreKeyword as "ignoreKeyword", keyCS as "keyCS", keyRegExp as "keyRegExp", title, description, extended, ignoreKeyCS as "ignoreKeyCS", ignoreKeyRegExp as "ignoreKeyRegExp", ignoreTitle as "ignoreTitle", ignoreDescription as "ignoreDescription", ignoreExtended as "ignoreExtended", GR as "GR", BS as "BS", CS as "CS", SKY as "SKY", station, genrelv1, genrelv2, startTime as "startTime", timeRange as "timeRange", week, isFree as "isFree", durationMin as "durationMin", durationMax as "durationMax", avoidDuplicate as "avoidDuplicate", periodToAvoidDuplicate as "periodToAvoidDuplicate", enable, directory, recordedFormat as "recordedFormat", mode1, directory1, mode2, directory2, mode3, directory3, delTs as "delTs"';
+        return 'id, keyword, ignoreKeyword as "ignoreKeyword", keyCS as "keyCS", keyRegExp as "keyRegExp", title, description, extended, ignoreKeyCS as "ignoreKeyCS", ignoreKeyRegExp as "ignoreKeyRegExp", ignoreTitle as "ignoreTitle", ignoreDescription as "ignoreDescription", ignoreExtended as "ignoreExtended", GR as "GR", BS as "BS", CS as "CS", SKY as "SKY", station, genrelv1, genrelv2, startTime as "startTime", timeRange as "timeRange", week, isFree as "isFree", durationMin as "durationMin", durationMax as "durationMax", avoidDuplicate as "avoidDuplicate", periodToAvoidDuplicate as "periodToAvoidDuplicate", enable, allowEndLack as "allowEndLack", directory, recordedFormat as "recordedFormat", mode1, directory1, mode2, directory2, mode3, directory3, delTs as "delTs"';
     }
 }
 

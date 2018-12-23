@@ -43,6 +43,7 @@ interface ConfigInterface {
     serviceSidOrder: number[];
     excludeServices: number[];
     reserves: string;
+    allowEndLack: boolean;
     recPriority: number;
     conflictPriority: number;
     timeSpecifiedStartMargin: number;
