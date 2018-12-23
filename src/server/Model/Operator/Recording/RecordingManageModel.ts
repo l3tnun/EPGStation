@@ -306,7 +306,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
 
             // retry
             setTimeout(() => {
-                if (retry < 2) {
+                if (retry < 3) {
                     this.prepRecord(reserve, retry + 1);
                 } else {
                     // rmove reserves
