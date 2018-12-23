@@ -664,6 +664,9 @@ class ReservationManageModel extends Model {
             throw new Error(ReservationManageModelInterface.IsRecordingError);
         }
 
+        // update allowEndLack
+        this.reserves[index].allowEndLack = option.allowEndLack;
+
         // update option
         if (typeof option.option === 'undefined') {
             delete this.reserves[index].option;
