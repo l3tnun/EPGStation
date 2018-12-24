@@ -156,7 +156,7 @@ class RecordedSearchComponent extends Component<void> {
             m('div', { style: 'margin-top: 10px;' }, 'オプション'),
             m('div', { class: 'mdl-layout-spacer' }, [
                 this.createCheckBox(
-                    'TS を含む',
+                    'TS を必ず含む',
                     () => { return this.viewModel.onlyTs; },
                     (value: boolean) => { this.viewModel.onlyTs = value; },
                 ),
