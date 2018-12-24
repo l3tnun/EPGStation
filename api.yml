@@ -92,9 +92,9 @@ parameters:
     in: query
     type: string
 
-  searchOnlyTs:
-    description: 'TSだけを検索'
-    name: onlyTs
+  searchHasTs:
+    description: 'TSを必ず含む'
+    name: hasTs
     in: query
     type: boolean
 

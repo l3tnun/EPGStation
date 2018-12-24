@@ -12,7 +12,7 @@ export const get: Operation = async(req, res) => {
             genre1: req.query.genre1,
             channelId: req.query.channel,
             keyword: req.query.keyword,
-            onlyTs: req.query.onlyTs,
+            hasTs: req.query.hasTs,
         });
         api.responseJSON(res, 200, results);
     } catch (err) {
@@ -32,7 +32,7 @@ get.apiDoc = {
         { $ref: '#/parameters/genre1' },
         { $ref: '#/parameters/channel' },
         { $ref: '#/parameters/recordedKeyword' },
-        { $ref: '#/parameters/searchOnlyTs' },
+        { $ref: '#/parameters/searchHasTs' },
     ],
     responses: {
         200: {

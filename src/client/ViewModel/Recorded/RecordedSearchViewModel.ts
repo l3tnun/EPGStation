@@ -16,7 +16,7 @@ class RecordedSearchViewModel extends ViewModel {
     public rule: apid.RuleId = -1;
     public channel: apid.ServiceItemId = -1;
     public genre: apid.ProgramGenreLv1 = -1;
-    public onlyTs: boolean = false;
+    public hasTs: boolean = false;
 
     constructor(
         balloon: BalloonModelInterface,
@@ -53,7 +53,7 @@ class RecordedSearchViewModel extends ViewModel {
         this.rule = typeof m.route.param('rule') === 'undefined' ? -1 : Number(m.route.param('rule'));
         this.channel = typeof m.route.param('channel') === 'undefined' ? -1 : Number(m.route.param('channel'));
         this.genre = typeof m.route.param('genre1') === 'undefined' ? -1 : Number(m.route.param('genre1'));
-        this.onlyTs = typeof m.route.param('onlyTs') === 'undefined' ? false : <boolean> <any> m.route.param('onlyTs');
+        this.hasTs = typeof m.route.param('hasTs') === 'undefined' ? false : <boolean> <any> m.route.param('hasTs');
     }
 
     /**
@@ -69,13 +69,13 @@ class RecordedSearchViewModel extends ViewModel {
             delete query.channel;
             delete query.genre1;
             delete query.page;
-            delete query.onlyTs;
+            delete query.hasTs;
 
             if (this.keyword.length > 0) { query.keyword = this.keyword; }
             if (this.rule !== -1) { query.rule = this.rule; }
             if (this.channel !== -1) { query.channel = this.channel; }
             if (this.genre !== -1) { query.genre1 = this.genre; }
-            if (this.onlyTs) { query.onlyTs = this.onlyTs; }
+            if (this.hasTs) { query.hasTs = this.hasTs; }
 
             const route = m.route.get().split('?')[0];
             if (Util.isEqualURL(route, query)) { return; }

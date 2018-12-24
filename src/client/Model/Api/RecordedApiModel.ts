@@ -7,7 +7,7 @@ interface FindQueryOption {
     genre1?: number;
     channel?: number;
     keyword?: string;
-    onlyTs?: boolean;
+    hasTs?: boolean;
 }
 
 interface EncodeQueryOption {
@@ -118,7 +118,7 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
         if (typeof option.genre1 !== 'undefined') { query.genre1 = option.genre1; }
         if (typeof option.channel !== 'undefined') { query.channel = option.channel; }
         if (typeof option.keyword !== 'undefined') { query.keyword = option.keyword; }
-        if (typeof option.onlyTs !== 'undefined') { query.onlyTs = option.onlyTs; }
+        if (typeof option.hasTs !== 'undefined') { query.hasTs = option.hasTs; }
 
         try {
             this.recordeds = await <any> this.request({
