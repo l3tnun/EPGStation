@@ -29,6 +29,7 @@ class RecordedSearchComponent extends Component<void> {
                 this.createRuleSelector(tags.rule), // キーワード
                 this.createChannelSelector(tags.channel), // 放送局
                 this.createCategorySelector(tags.genre), // ジャンル
+                this.createOption(),
             ]),
         ]);
     }
@@ -144,6 +145,42 @@ class RecordedSearchComponent extends Component<void> {
         const str = GenreUtil.getGenre1(genre1);
 
         return str === null ? `ジャンルなし(${ cnt })` : str + `(${ cnt })`;
+    }
+
+    /**
+     * checkbox option
+     * @return m.Child[]
+     */
+    private createOption(): m.Child[] {
+        return [
+            m('div', { style: 'margin-top: 10px;' }, 'オプション'),
+            m('div', { class: 'mdl-layout-spacer' }, [
+                this.createCheckBox(
+                    'TS を必ず含む',
+                    () => { return this.viewModel.hasTs; },
+                    (value: boolean) => { this.viewModel.hasTs = value; },
+                ),
+            ]),
+        ];
+    }
+
+    /**
+     * create checkbox
+     * @param labelName
+     * @param checked: checked
+     * @param onclick: onclick
+     */
+    protected createCheckBox(labelName: string, checked: () => boolean, onclick: (value: boolean) => void): m.Child {
+        return m('label', { class: 'mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect' }, [
+            m('input', {
+                type: 'checkbox',
+                class: 'mdl-checkbox__input',
+                checked: checked(),
+                onclick: m.withAttr('checked', (value) => { onclick(value); }),
+                onupdate: (vnode: m.VnodeDOM<void, this>) => { this.checkboxOnUpdate(<HTMLInputElement> (vnode.dom)); },
+            }),
+            m('span', { class: 'mdl-checkbox__label' }, labelName),
+        ]);
     }
 }
 

@@ -14,6 +14,8 @@ import ViewModel from '../ViewModel';
  * RecordedViewModel
  */
 class RecordedViewModel extends ViewModel {
+    public deleteOption: number = 0;
+
     private recordedApiModel: RecordedApiModelInterface;
     private channels: ChannelsApiModelInterface;
     private setting: StorageTemplateModel<SettingValue>;
@@ -56,6 +58,7 @@ class RecordedViewModel extends ViewModel {
         if (typeof m.route.param('genre1') !== 'undefined') { this.option.genre1 = Number(m.route.param('genre1')); }
         if (typeof m.route.param('channel') !== 'undefined') { this.option.channel = Number(m.route.param('channel')); }
         if (typeof m.route.param('keyword') !== 'undefined') { this.option.keyword = m.route.param('keyword'); }
+        if (typeof m.route.param('hasTs') !== 'undefined' && m.route.param('hasTs')) { this.option.hasTs = true; }
 
         this.recordedApiModel.init();
         if (status === 'update') { m.redraw(); }
@@ -140,6 +143,7 @@ class RecordedViewModel extends ViewModel {
     public startEditMode(): void {
         this.setEditSelectIndex();
         this.isEditMode = true;
+        this.deleteOption = 0;
     }
 
     /**
@@ -148,6 +152,7 @@ class RecordedViewModel extends ViewModel {
     public endEditMode(): void {
         this.editSelectIndex = {};
         this.isEditMode = false;
+        this.deleteOption = 0;
     }
 
     /**
@@ -286,7 +291,8 @@ class RecordedViewModel extends ViewModel {
         }
 
         try {
-            await this.recordedApiModel.deleteMultiple(ids);
+            const option = this.deleteOption === 0 ? null : this.deleteOption === 1 ? 'onlyTs' : 'onlyEncoded';
+            await this.recordedApiModel.deleteMultiple(ids, option);
             this.snackbar.open('選択した録画を削除しました。');
         } catch (err) {
             this.snackbar.open('一部録画が削除されませんでした。');

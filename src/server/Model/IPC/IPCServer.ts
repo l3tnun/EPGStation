@@ -3,7 +3,7 @@ import * as apid from '../../../../node_modules/mirakurun/api';
 import * as events from '../../IoEvents';
 import Model from '../Model';
 import { MirakurunManageModelInterface } from '../Operator/EPGUpdate/MirakurunManageModel';
-import { ExternalFileInfo, NewRecorded, RecordedManageModelInterface } from '../Operator/Recorded/RecordedManageModel';
+import { DeleteOption, ExternalFileInfo, NewRecorded, RecordedManageModelInterface } from '../Operator/Recorded/RecordedManageModel';
 import { RecordingManageModelInterface } from '../Operator/Recording/RecordingManageModel';
 import { ReservationManageModelInterface } from '../Operator/Reservation/ReservationManageModel';
 import { AddReserveInterface } from '../Operator/ReserveProgramInterface';
@@ -226,9 +226,10 @@ class IPCServer extends Model implements IPCServerInterface {
 
         this.functions[IPCMessageDefinition.recordedDeletes] = async(id: number, args: any) => {
             const recordedIds: number[] = args.recordedIds;
+            const option: DeleteOption = args.option;
 
             try {
-                const value = await this.recordedManage.deletes(recordedIds);
+                const value = await this.recordedManage.deletes(recordedIds, option);
                 this.send({ id: id,  value: value });
             } catch (err) {
                  this.send({ id: id, error: err.message });

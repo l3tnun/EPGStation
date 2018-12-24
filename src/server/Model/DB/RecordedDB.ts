@@ -19,6 +19,7 @@ interface FindQuery {
     genre1?: number;
     channelId?: number;
     keyword?: string;
+    hasTs?: boolean;
 }
 
 interface CntItem {
@@ -654,6 +655,11 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
                 values.push(s);
                 query.push(`(name ${ this.createLikeStr() } ${ nameStr } or description ${ this.createLikeStr() } ${ descriptionStr })`);
             });
+        }
+
+        if (!!option.hasTs) {
+            // TS を必ず含む
+            query.push('recPath is not null');
         }
 
         let str = '';
