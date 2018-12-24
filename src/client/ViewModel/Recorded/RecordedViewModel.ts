@@ -56,6 +56,7 @@ class RecordedViewModel extends ViewModel {
         if (typeof m.route.param('genre1') !== 'undefined') { this.option.genre1 = Number(m.route.param('genre1')); }
         if (typeof m.route.param('channel') !== 'undefined') { this.option.channel = Number(m.route.param('channel')); }
         if (typeof m.route.param('keyword') !== 'undefined') { this.option.keyword = m.route.param('keyword'); }
+        if (typeof m.route.param('onlyTs') !== 'undefined' && m.route.param('onlyTs')) { this.option.onlyTs = true; }
 
         this.recordedApiModel.init();
         if (status === 'update') { m.redraw(); }
