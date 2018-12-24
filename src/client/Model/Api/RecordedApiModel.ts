@@ -26,6 +26,8 @@ interface UploadQueryOption {
     file: File;
 }
 
+type DeleteOption = 'onlyTs' | 'onlyEncoded' | null;
+
 interface RecordedApiModelInterface extends ApiModel {
     init(): void;
     update(): Promise<void>;
@@ -39,7 +41,7 @@ interface RecordedApiModelInterface extends ApiModel {
     abortUpload(): void;
     deleteAll(recordedId: apid.RecordedId): Promise<void>;
     delete(recordedId: apid.RecordedId, encodedId: apid.EncodedId | null): Promise<void>;
-    deleteMultiple(recordedIds: apid.RecordedId[]): Promise<void>;
+    deleteMultiple(recordedIds: apid.RecordedId[], option: DeleteOption): Promise<void>;
     sendToKodi(kodi: number, recordedId: number, encodedId: number | null): Promise<void>;
     getRecordeds(): apid.RecordedPrograms;
     getRecorded(): apid.RecordedProgram | null;
@@ -310,17 +312,22 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
      * 複数録画削除
      * /api/recorded/delete post
      * @param recordedIds: recorded ids
+     * @param option: DeleteOption
      * @throws DeleteMultipleError 一部削除に失敗した場合
      */
-    public async deleteMultiple(recordedIds: apid.RecordedId[]): Promise<void> {
-        const option = {
+    public async deleteMultiple(recordedIds: apid.RecordedId[], option: DeleteOption): Promise<void> {
+        const query: any = {
             recordedIds: recordedIds,
         };
+
+        if (option !== null) {
+            query.option = option;
+        }
 
         const result = <apid.RecordedDeleteMultipleResult> await this.request({
             method: 'POST',
             url: './api/recorded/delete',
-            data: option,
+            data: query,
         });
 
         if (result.results.length > 0) {
