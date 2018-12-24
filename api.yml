@@ -98,12 +98,6 @@ parameters:
     in: query
     type: boolean
 
-  searchOnlyEncoded:
-    description: 'エンコード済みだけを検索'
-    name: onlyEncoded
-    in: query
-    type: boolean
-
 definitions:
   total:
     description: '総数'

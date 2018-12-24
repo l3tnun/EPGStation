@@ -13,7 +13,6 @@ export const get: Operation = async(req, res) => {
             channelId: req.query.channel,
             keyword: req.query.keyword,
             onlyTs: req.query.onlyTs,
-            onlyEncoded: req.query.onlyEncoded,
         });
         api.responseJSON(res, 200, results);
     } catch (err) {
@@ -34,7 +33,6 @@ get.apiDoc = {
         { $ref: '#/parameters/channel' },
         { $ref: '#/parameters/recordedKeyword' },
         { $ref: '#/parameters/searchOnlyTs' },
-        { $ref: '#/parameters/searchOnlyEncoded' },
     ],
     responses: {
         200: {

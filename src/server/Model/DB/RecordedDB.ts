@@ -20,7 +20,6 @@ interface FindQuery {
     channelId?: number;
     keyword?: string;
     onlyTs?: boolean;
-    onlyEncoded?: boolean;
 }
 
 interface CntItem {
@@ -661,9 +660,6 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
         if (!!option.onlyTs) {
             // TS だけ
             query.push('recPath is not null');
-        } else if (!!option.onlyEncoded) {
-            // エンコード済みだけ
-            query.push('recPath is null');
         }
 
         let str = '';
