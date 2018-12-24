@@ -42,9 +42,11 @@ interface NewRecorded {
     ruleId: number | null;
 }
 
+type DeleteOption = 'onlyTs' | 'onlyEncoded' | null;
+
 interface RecordedManageModelInterface extends Model {
-    delete(id: number): Promise<void>;
-    deletes(ids: number[]): Promise<number[]>;
+    delete(id: number, option?: DeleteOption): Promise<void>;
+    deletes(ids: number[], option?: DeleteOption): Promise<number[]>;
     deleteFile(id: number): Promise<void>;
     deleteEncodedFile(encodedId: number): Promise<void>;
     deleteRule(id: number): Promise<void>;
@@ -87,7 +89,7 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
      * @throws RecordingManageModelNotFoundRecordedProgram id で指定したプログラムが存在しない場合
      * @return Promise<void>
      */
-    public async delete(id: number): Promise<void> {
+    public async delete(id: number, option: DeleteOption = null): Promise<void> {
         // id で指定された recorded を取得
         const recorded = await this.recordedDB.findId(id);
         if (recorded === null) {
@@ -100,36 +102,57 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
         // エンコードデータを取得
         const encoded = await this.encodedDB.findRecordedId(id);
 
-        // エンコードデータを DB 上から削除
-        await this.encodedDB.deleteRecordedId(id);
-        // 録画データを DB 上から削除
-        await this.recordedDB.delete(id);
+        if (option === null || option === 'onlyEncoded') {
+            // エンコードデータを DB 上から削除
+            await this.encodedDB.deleteRecordedId(id);
+        }
 
-        if (recorded.recording) {
+        let deletedFromDB = false;
+        if (
+            option === null
+            || (option === 'onlyTs' && encoded.length === 0)
+            || (option === 'onlyEncoded' && recorded.recPath === null)
+        ) {
+            // 録画データを DB 上から削除
+            await this.recordedDB.delete(id);
+            deletedFromDB = true;
+        }
+
+        if (recorded.recording && (option === null || option === 'onlyTs')) {
             // 録画中なら録画停止
             this.recordingManage.stop(recorded.programId, true);
         }
 
-        if (recorded.recPath !== null) {
+        if (recorded.recPath !== null && (option === null || option === 'onlyTs')) {
             // 録画実データを削除
-            await FileUtil.promiseUnlink(recorded.recPath)
-            .catch((err) => {
-                this.log.system.error(`delete recorded error: ${ id }`);
-                this.log.system.error(String(err));
-            });
+            if (deletedFromDB) {
+                await FileUtil.promiseUnlink(recorded.recPath)
+                .catch((err) => {
+                    this.log.system.error(`delete recorded error: ${ id }`);
+                    this.log.system.error(String(err));
+                });
+            } else {
+                await this.deleteFile(id)
+                .catch((err) => {
+                    this.log.system.error(`delete recorded ts file error: ${ id }`);
+                    this.log.system.error(String(err));
+                });
+            }
         }
 
         // エンコード実データを削除
-        for (const file of encoded) {
-            await FileUtil.promiseUnlink(file.path)
-            .catch((err) => {
-                this.log.system.error(`delete encode file error: ${ file.path }`);
-                this.log.system.error(String(err));
-            });
+        if (option === null || option === 'onlyEncoded') {
+            for (const file of encoded) {
+                await FileUtil.promiseUnlink(file.path)
+                .catch((err) => {
+                    this.log.system.error(`delete encode file error: ${ file.path }`);
+                    this.log.system.error(String(err));
+                });
+            }
         }
 
         // サムネイルを削除
-        if (recorded.thumbnailPath !== null) {
+        if (recorded.thumbnailPath !== null && deletedFromDB) {
             await FileUtil.promiseUnlink(recorded.thumbnailPath)
             .catch((err) => {
                 this.log.system.error(`recorded failed to delete thumbnail ${ id }`);
@@ -138,7 +161,7 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
         }
 
         // delete log file
-        if (recorded.logPath !== null) {
+        if (recorded.logPath !== null && deletedFromDB) {
             await FileUtil.promiseUnlink(recorded.logPath)
             .catch((err) => {
                 this.log.system.error(`recorded failed to delete log file ${ id }`);
@@ -150,13 +173,14 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
     /**
      * 複数 id 指定削除
      * @param ids: recorded ids
+     * @param option: DeleteOption
      * @return Promise<number[]> 削除時にエラーが発生した recorded id の配列を返す
      */
-    public async deletes(ids: number[]): Promise<number[]> {
+    public async deletes(ids: number[], option: DeleteOption = null): Promise<number[]> {
         const errors: number[] = [];
         for (const id of ids) {
             try {
-                await this.delete(id);
+                await this.delete(id, option);
             } catch (err) {
                 errors.push(id);
             }
@@ -606,5 +630,5 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
     }
 }
 
-export { ExternalFileInfo, NewRecorded, RecordedManageModelInterface, RecordedManageModel };
+export { DeleteOption, ExternalFileInfo, NewRecorded, RecordedManageModelInterface, RecordedManageModel };
 

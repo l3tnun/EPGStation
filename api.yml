@@ -801,6 +801,12 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/RecordedId'
+      option:
+        description: 'onlyTs: TS だけ削除, onlyEncoded: エンコード済みファイル削除のみ削除'
+        type: string
+        enum:
+          - 'onlyTs'
+          - 'onlyEncoded'
 
   AddReserve:
     type: object

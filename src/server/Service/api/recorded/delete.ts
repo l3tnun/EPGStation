@@ -8,7 +8,10 @@ export const post: Operation = async(req, res) => {
 
     try {
         // 削除できなかった要素を results に格納する
-        const results = await recordeds.deleteRecordeds(req.body.recordedIds);
+        const results = await recordeds.deleteRecordeds(
+            req.body.recordedIds,
+            typeof req.body.option === 'undefined' ? null : req.body.option,
+        );
         api.responseJSON(res, 200, { code: 200, results: results });
         api.notifyClient();
     } catch (err) {

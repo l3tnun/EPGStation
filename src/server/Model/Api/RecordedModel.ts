@@ -8,7 +8,7 @@ import { FindQuery, RecordedDBInterface } from '../DB/RecordedDB';
 import { RulesDBInterface } from '../DB/RulesDB';
 import { ServicesDBInterface } from '../DB/ServicesDB';
 import { IPCClientInterface } from '../IPC/IPCClient';
-import { ExternalFileInfo, NewRecorded } from '../Operator/Recorded/RecordedManageModel';
+import { DeleteOption, ExternalFileInfo, NewRecorded } from '../Operator/Recorded/RecordedManageModel';
 import { EncodeManageModelInterface, EncodeProgram } from '../Service/Encode/EncodeManageModel';
 import { RecordedStreamStatusInfo, StreamManageModelInterface } from '../Service/Stream/StreamManageModel';
 import ApiModel from './ApiModel';
@@ -43,7 +43,7 @@ interface RecordedModelInterface extends ApiModel {
     getLogPath(recordedId: number, maxsize: number): Promise<string>;
     getFilePath(recordedId: number, encodedId: number | undefined): Promise<RecordedFilePathInfo>;
     deleteAllRecorded(recordedId: number): Promise<void>;
-    deleteRecordeds(recordedIds: number[]): Promise<number[]>;
+    deleteRecordeds(recordedIds: number[], option: DeleteOption): Promise<number[]>;
     deleteRecorded(recordedId: number, encodedId: number | undefined): Promise<void>;
     getGenreTags(): Promise<{}>;
     getM3u8(host: string, isSecure: boolean, recordedId: number, encodedId: number | undefined): Promise<PlayList>;
@@ -309,9 +309,10 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
     /**
      * 録画を複数削除
      * @param recordedIds: recorded ids
+     * @param option: DeleteOption
      * @return Promise<number[]> 削除できなかった recorded ids を返す
      */
-    public async deleteRecordeds(recordedIds: number[]): Promise<number[]> {
+    public async deleteRecordeds(recordedIds: number[], option: DeleteOption): Promise<number[]> {
         // 配信中の録画の recordedId の索引を作成
         const infos = this.streamManage.getStreamInfos();
         const recordedStreamIndex: { [key: number]: boolean } = {};
@@ -334,7 +335,7 @@ class RecordedModel extends ApiModel implements RecordedModelInterface {
         }
 
         // 削除
-        const errors = await this.ipc.recordedDeletes(ids);
+        const errors = await this.ipc.recordedDeletes(ids, option);
 
         // 削除できなかった ids と配信中で取り除かれた要素を結合
         Array.prototype.push.apply(excludedIds, errors);

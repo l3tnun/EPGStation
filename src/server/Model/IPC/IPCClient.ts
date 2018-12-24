@@ -1,7 +1,7 @@
 import * as events from 'events';
 import * as apid from '../../../../node_modules/mirakurun/api';
 import Model from '../Model';
-import { ExternalFileInfo, NewRecorded } from '../Operator/Recorded/RecordedManageModel';
+import { DeleteOption, ExternalFileInfo, NewRecorded } from '../Operator/Recorded/RecordedManageModel';
 import { ReserveAllId, ReserveLimit } from '../Operator/Reservation/ReservationManageModel';
 import { AddReserveInterface, ReserveProgram } from '../Operator/ReserveProgramInterface';
 import { RuleInterface } from '../Operator/RuleInterface';
@@ -24,7 +24,7 @@ interface IPCClientInterface extends Model {
     removeReserveSkip(programId: apid.ProgramId): Promise<void>;
     disableReserveOverlap(programId: apid.ProgramId): Promise<void>;
     recordedDelete(recordedId: number): Promise<void>;
-    recordedDeletes(recordedId: number[]): Promise<number[]>;
+    recordedDeletes(recordedId: number[], option: DeleteOption): Promise<number[]>;
     recordedDeleteFile(recordedId: number): Promise<void>;
     recordedDeleteEncodeFile(encodedId: number): Promise<void>;
     recordedCleanup(): Promise<void>;
@@ -242,10 +242,14 @@ class IPCClient extends Model implements IPCClientInterface {
     /**
      * 録画を複数削除する
      * @param recordedIds: recorded ids
+     * @param option: DeleteOption
      * @return Promise<number[]> 削除できなかった要素を返す
      */
-    public async recordedDeletes(recordedIds: number[]): Promise<number[]> {
-        const id = this.send(IPCMessageDefinition.recordedDeletes, { recordedIds: recordedIds });
+    public async recordedDeletes(recordedIds: number[], option: DeleteOption): Promise<number[]> {
+        const id = this.send(IPCMessageDefinition.recordedDeletes, {
+            recordedIds: recordedIds,
+            option: option,
+        });
         const result = await this.receive(id);
 
         return <number[]> result.value;
