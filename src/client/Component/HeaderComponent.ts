@@ -122,10 +122,12 @@ class HeaderComponent extends Component<HeaderArgs> {
      * @return m.Child
      */
     private createLink(name: string, href: string, query: any = {}): m.Child {
+        const isActive = Util.isEqualURL(href, query);
+
         return m('a', {
-            class: 'mdl-navigation__link',
+            class: isActive ? 'mdl-navigation__link is-active' : 'mdl-navigation__link',
             onclick: () => {
-                if (Util.isEqualURL(href, query)) { return; }
+                if (isActive) { return; }
 
                 Util.move(href, query);
             },

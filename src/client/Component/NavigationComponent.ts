@@ -89,13 +89,15 @@ class NavigationComponent extends Component<void> {
      * @return m.Child
      */
     private createLink(name: string, href: string, query: any = {}): m.Child {
+        const isActive = Util.isEqualURL(href, query);
+
         return m('a', {
-            class: 'mdl-navigation__link',
+            class: isActive ? 'mdl-navigation__link is-active' : 'mdl-navigation__link',
             onclick: () => {
                 return new Promise<void>((resolve: () => void): void => {
                     this.close();
 
-                    if (Util.isEqualURL(href, query)) { return; }
+                    if (isActive) { return; }
                     window.setTimeout(() => { Util.move(href, query); resolve(); }, 200);
                 });
             },
