@@ -34,6 +34,7 @@ factory.get('SettingViewModel').init();
 factory.get('ProgramSettingViewModel').init();
 factory.get('StreamSelectSettingViewModel').init();
 factory.get('RecordedWatchSelectSettingViewModel').init();
+factory.get('RecordedSettingViewModel').init();
 
 m.route.prefix('#!');
 m.route(document.body, '/', {

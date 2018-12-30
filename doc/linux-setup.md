@@ -16,23 +16,7 @@ Linux / macOS 用 セットアップマニュアル
 	FFmpeg/FFprobe についてデフォルトでは ```/usr/local/bin/``` にインストールされていると想定しています  
 	違う場所にインストールされている場合は ```config.json``` を修正してください
 
-2. データベースの設定を済ませる（SQLite3 を使用する場合は不要）
-	- RDBMS をインストールし、データベースを作成する (文字コードは utf-8 とする)
-
-	```sql
-	/// MySQL 5.xの場合
-	mysql> create database database_name;
-	mysql> grant all on database_name.* to username@localhost identified by 'password';
-	mysql> quit
-
-	// MySQL 8.xの場合
-	mysql> create database database_name;
-	mysql> grant all on database_name.* to username@localhost;
-	mysql> alter user username@localhost identified with mysql_native_password BY 'password';
-	mysql> quit
-	```
-
-3. EPGStation のインストール
+2. EPGStation のインストール
 
 	```
 	$ git clone https://github.com/l3tnun/EPGStation.git
@@ -41,7 +25,7 @@ Linux / macOS 用 セットアップマニュアル
 	$ npm run build
 	```
 
-4. 設定ファイルの作成
+3. 設定ファイルの作成
 
 	```
 	$ cp config/config.sample.json config/config.json
@@ -49,19 +33,13 @@ Linux / macOS 用 セットアップマニュアル
 	$ cp config/serviceLogConfig.sample.json config/serviceLogConfig.json
 	```
 
-5. 設定ファイルの編集
+4. 設定ファイルの編集
 
 	- 詳細な設定は [詳細マニュアル](conf-manual.md) を参照
-	- 以下の最低限の動作に必須な項目について編集する（MySQL利用時）
 
 	```json
 	"serverPort": 8888,
 	"mirakurunPath": "http+unix://%2Fvar%2Frun%2Fmirakurun.sock/",
-	"mysql": {
-		"user": "username",
-		"password": "password",
-		"database": "database_name"
-	}
 	```
 
 	Mirakurun が別ホストで動作している場合は `"mirakurunPath": "http://<MirakurunURL>:<Port>"`
@@ -96,3 +74,11 @@ Linux / macOS 用 セットアップマニュアル
 	```
 	$ pm2 stop epgstation
 	```
+
+## MySQL 使用時の注意
+
+EPGStation 使用中は MySQL のバイナリログが大量に生成されてディスクを圧迫するので、MySQL の設定を変えることを推奨します
+
+```
+expire_logs_days = 1
+```
