@@ -39,8 +39,6 @@ class RecordedComponent extends ParentComponent<void> {
     private menuViewModel: RecordedMenuViewModel;
     private searchViewModel: RecordedSearchViewModel;
     private balloon: BalloonViewModel;
-    private resizeListener = (() => { window.setTimeout(() => { this.resize(); }, 100); }).bind(this);
-    private resizeElement: HTMLElement | null = null;
 
     constructor() {
         super();
@@ -233,16 +231,8 @@ class RecordedComponent extends ParentComponent<void> {
 
         return m('div', {
             class: 'recorded-content' + (isEditing ? ' is-editing' : ''),
-            oncreate: (vnode: m.VnodeDOM<void, this>) => {
-                this.resizeElement = <HTMLElement> (vnode.dom);
-                window.addEventListener('resize', this.resizeListener, false);
-            },
             onupdate: () => {
-                this.resize();
                 this.restoreMainLayoutPosition();
-            },
-            onremove: () => {
-                window.removeEventListener('resize', this.resizeListener, false);
             },
         }, [
             this.viewModel.getRecordeds().recorded.map((recorded) => {
@@ -254,23 +244,6 @@ class RecordedComponent extends ParentComponent<void> {
                 page: this.viewModel.getPage(),
             }),
         ]);
-    }
-
-    /**
-     * resize
-     */
-    private resize(): void {
-        if (this.resizeElement === null) { return; }
-
-        if (window.innerWidth <= RecordedComponent.cardWidth * 2 + RecordedComponent.widthMargin) {
-            this.resizeElement.style.width = '';
-
-            return;
-        }
-
-        const width = Math.floor(window.innerWidth / RecordedComponent.cardWidth) * RecordedComponent.cardWidth || RecordedComponent.cardWidth;
-
-        this.resizeElement.style.width = width + 'px';
     }
 
     /**
