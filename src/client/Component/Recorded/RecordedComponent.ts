@@ -8,6 +8,7 @@ import RecordedInfoViewModel from '../../ViewModel/Recorded/RecordedInfoViewMode
 import RecordedMenuViewModel from '../../ViewModel/Recorded/RecordedMenuViewModel';
 import RecordedPlayerViewModel from '../../ViewModel/Recorded/RecordedPlayerViewModel';
 import RecordedSearchViewModel from '../../ViewModel/Recorded/RecordedSearchViewModel';
+import RecordedSettingViewModel from '../../ViewModel/Recorded/RecordedSettingViewModel';
 import RecordedViewModel from '../../ViewModel/Recorded/RecordedViewModel';
 import RecordedWatchSelectViewModel from '../../ViewModel/Recorded/RecordedWatchSelectViewModel';
 import factory from '../../ViewModel/ViewModelFactory';
@@ -28,6 +29,7 @@ import RecordedMultipleDeleteCompoent from './RecordedMultipleDeleteCompoent';
 import RecordedPlayerComponent from './RecordedPlayerComponent';
 import RecordedSearchActionComponent from './RecordedSearchActionComponent';
 import RecordedSearchComponent from './RecordedSearchComponent';
+import RecordedSettingComponent from './RecordedSettingComponent';
 import RecordedWatchSelectComponent from './RecordedWatchSelectComponent';
 
 /**
@@ -38,6 +40,7 @@ class RecordedComponent extends ParentComponent<void> {
     private infoViewModel: RecordedInfoViewModel;
     private menuViewModel: RecordedMenuViewModel;
     private searchViewModel: RecordedSearchViewModel;
+    private recordedSettingViewModel: RecordedSettingViewModel;
     private balloon: BalloonViewModel;
 
     constructor() {
@@ -46,6 +49,7 @@ class RecordedComponent extends ParentComponent<void> {
         this.infoViewModel = <RecordedInfoViewModel> factory.get('RecordedInfoViewModel');
         this.menuViewModel = <RecordedMenuViewModel> factory.get('RecordedMenuViewModel');
         this.searchViewModel = <RecordedSearchViewModel> factory.get('RecordedSearchViewModel');
+        this.recordedSettingViewModel = <RecordedSettingViewModel> factory.get('RecordedSettingViewModel');
         this.balloon = <BalloonViewModel> factory.get('BalloonViewModel');
     }
 
@@ -109,6 +113,17 @@ class RecordedComponent extends ParentComponent<void> {
                         },
                     },
                     text: 'アップロード',
+                },
+                {
+                    attrs: {
+                        onclick: () => {
+                            this.balloon.close();
+                            window.setTimeout(() => {
+                                this.balloon.open(RecordedSettingViewModel.id);
+                            }, 200);
+                        },
+                    },
+                    text: '設定',
                 },
             ],
             content: [
@@ -197,6 +212,11 @@ class RecordedComponent extends ParentComponent<void> {
                     maxWidth: 300,
                     forceDialog: true,
                 }),
+                m(BalloonComponent, {
+                    id: RecordedSettingViewModel.id,
+                    content: m(RecordedSettingComponent),
+                    maxWidth: 310,
+                }),
                 m(EditHeaderComponent, {
                     title: `${ this.viewModel.getSelectedCnt() } 件選択 (${ Util.getFileSizeStr(this.viewModel.getSelectedTotleFileSize()) })`,
                     button: [
@@ -230,7 +250,12 @@ class RecordedComponent extends ParentComponent<void> {
         const isEditing = this.viewModel.isEditing();
 
         return m('div', {
-            class: 'recorded-content' + (isEditing ? ' is-editing' : ''),
+            class: 'recorded-content'
+                + (isEditing ? ' is-editing' : '')
+                + (this.recordedSettingViewModel.tmpValue.isEnabledListMode ? ' is-list-view' : ''),
+            oncreate: () => {
+                this.recordedSettingViewModel.setTemp();
+            },
             onupdate: () => {
                 this.restoreMainLayoutPosition();
             },

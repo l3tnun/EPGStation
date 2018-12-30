@@ -9,6 +9,7 @@ import { StorageApiModel } from '../Model/Api/StorageApiModel';
 import { StreamsApiModel } from '../Model/Api/StreamsApiModel';
 import { BalloonModel } from '../Model/Balloon/BallonModel';
 import { ProgramSettingModel } from '../Model/Program/ProgramSettingModel';
+import { RecordedSettingModel } from '../Model/Recorded/RecordedSettingModel';
 import { RecordedWatchSelectSettingModel } from '../Model/Recorded/RecordedWatchSelectSettingModel';
 import { SearchSettingModel } from '../Model/Search/SearchSettingModel';
 import { SettingModel } from '../Model/Setting/SettingModel';
@@ -34,6 +35,7 @@ import RecordedInfoViewModel from './Recorded/RecordedInfoViewModel';
 import RecordedMenuViewModel from './Recorded/RecordedMenuViewModel';
 import RecordedPlayerViewModel from './Recorded/RecordedPlayerViewModel';
 import RecordedSearchViewModel from './Recorded/RecordedSearchViewModel';
+import RecordedSettingViewModel from './Recorded/RecordedSettingViewModel';
 import RecordedUploadViewModel from './Recorded/RecordedUploadViewModel';
 import RecordedViewModel from './Recorded/RecordedViewModel';
 import RecordedWatchSelectSettingViewModel from './Recorded/RecordedWatchSelectSettingViewModel';
@@ -86,6 +88,7 @@ namespace ViewModelFactorySetting {
         const streamApiModel = new StreamsApiModel(snackbarModel);
         const streamSelectSettingModel = new StreamSelectSettingModel(storageModel);
         const searchSettingModel = new SearchSettingModel(storageModel);
+        const recordedSettingModel = new RecordedSettingModel(storageModel);
         const settingModel = new SettingModel(storageModel);
         const programSettingModel = new ProgramSettingModel(storageModel);
         const recordedWatchSelectSettingModel = new RecordedWatchSelectSettingModel(storageModel);
@@ -201,6 +204,10 @@ namespace ViewModelFactorySetting {
         factory.reg('RecordedSearchViewModel', new RecordedSearchViewModel(
             balloonModel,
             recordedApiModel,
+        ));
+        factory.reg('RecordedSettingViewModel', new RecordedSettingViewModel(
+            recordedSettingModel,
+            snackbarModel,
         ));
         factory.reg('TabViewModel', new TabViewModel(tabModel));
         factory.reg('ReservesViewModel', new ReservesViewModel(
