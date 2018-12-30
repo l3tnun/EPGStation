@@ -20,7 +20,6 @@ class HeaderComponent extends Component<HeaderArgs> {
     private tab: m.Children | null;
     private viewModel: HeaderViewModel;
     private balloon: BalloonViewModel;
-    private broadcastLink: m.Child[] = [];
 
     constructor() {
         super();
@@ -44,25 +43,23 @@ class HeaderComponent extends Component<HeaderArgs> {
     /**
      * 放送波のリンクを生成する
      */
-    private setBroadcastLink(): void {
-        if (this.broadcastLink.length !== 0) { return; }
-
+    private getBroadcastLink(): m.Child[] {
         const config = this.viewModel.getConfig();
-        this.broadcastLink = [];
+        const broadcastLink: m.Child[] = [];
         if (config !== null) {
-            if (config.broadcast.GR) { this.broadcastLink.push(this.createLink('GR', '/program', { type: 'GR' })); }
-            if (config.broadcast.BS) { this.broadcastLink.push(this.createLink('BS', '/program', { type: 'BS' })); }
-            if (config.broadcast.CS) { this.broadcastLink.push(this.createLink('CS', '/program', { type: 'CS' })); }
-            if (config.broadcast.SKY) { this.broadcastLink.push(this.createLink('SKY', '/program', { type: 'SKY' })); }
+            if (config.broadcast.GR) { broadcastLink.push(this.createLink('GR', '/program', { type: 'GR' }, true)); }
+            if (config.broadcast.BS) { broadcastLink.push(this.createLink('BS', '/program', { type: 'BS' }, true)); }
+            if (config.broadcast.CS) { broadcastLink.push(this.createLink('CS', '/program', { type: 'CS' }, true)); }
+            if (config.broadcast.SKY) { broadcastLink.push(this.createLink('SKY', '/program', { type: 'SKY' }, true)); }
         }
+
+        return broadcastLink;
     }
 
     /**
      * view
      */
     public view(vnode: m.Vnode<HeaderArgs, this>): m.Children {
-        this.setBroadcastLink();
-
         let titleCnt = 0;
         const config = this.viewModel.getConfig();
         if (config !== null) {
@@ -90,11 +87,11 @@ class HeaderComponent extends Component<HeaderArgs> {
 
                 // 右上のナビゲーション
                 m('nav', { class: 'mdl-navigation mdl-layout--large-screen-only' }, [
-                    this.broadcastLink,
+                    this.getBroadcastLink(),
                     this.createLink('録画済み', '/recorded'),
-                    this.createLink('予約', '/reserves'),
-                    this.createLink('競合', '/reserves', { mode: 'conflicts' }),
-                    this.createLink('重複', '/reserves', { mode: 'overlaps' }),
+                    this.createLink('予約', '/reserves', { mode: 'reserves' }, true),
+                    this.createLink('競合', '/reserves', { mode: 'conflicts' }, true),
+                    this.createLink('重複', '/reserves', { mode: 'overlaps' }, true),
                     this.createLink('検索', '/search'),
                     this.createLink('ルール', '/rules'),
                 ]),
@@ -118,20 +115,52 @@ class HeaderComponent extends Component<HeaderArgs> {
      * navigation link を生成する
      * @param name: name
      * @param href: href
-     * @param query: any = {}}
+     * @param query: any = {}
+     * @param needCheckQuery: boolean = false
      * @return m.Child
      */
-    private createLink(name: string, href: string, query: any = {}): m.Child {
-        const isActive = Util.isEqualURL(href, query);
-
+    private createLink(name: string, href: string, query: any = {}, needCheckQuery: boolean = false): m.Child {
         return m('a', {
-            class: isActive ? 'mdl-navigation__link is-active' : 'mdl-navigation__link',
+            class: 'mdl-navigation__link',
+            oncreate: (vnode: m.VnodeDOM<void, any>) => {
+                this.setActive(<HTMLElement> vnode.dom, href, query, needCheckQuery);
+            },
+            onupdate: (vnode: m.VnodeDOM<void, any>) => {
+                this.setActive(<HTMLElement> vnode.dom, href, query, needCheckQuery);
+            },
             onclick: () => {
-                if (isActive) { return; }
+                if (Util.isEqualURL(href, query)) { return; }
 
                 Util.move(href, query);
             },
         }, name);
+    }
+
+    /**
+     * is-active の設定を行う
+     * @param element: HTMLElement
+     * @param href: string
+     * @param query: {}
+     * @param needCheckQuery: boolean
+     */
+    private setActive(element: HTMLElement, href: string, query: any, needCheckQuery: boolean): void {
+        let isActive = m.route.get().split('?')[0] === href;
+        if (needCheckQuery && isActive) {
+            isActive = false;
+            const param = m.route.param();
+            for (const key in query) {
+                if (key !== 'dummy' && param[key] === query[key]) {
+                    isActive = true;
+                    break;
+                }
+            }
+        }
+
+        if (isActive) {
+            element.classList.add('is-active');
+        } else {
+            element.classList.remove('is-active');
+        }
     }
 }
 
