@@ -30,42 +30,7 @@ Windows 用 セットアップマニュアル
 
 	FFmpeg/FFprobe については config.json でファイルの場所を指定するので適切な場所に配置すること
 
-2. データベースの設定を済ませる（SQLite3 を使用する場合は不要）
-	- RDBMS をインストールし、データベースとユーザーを作成する
-
-	```sql
-	/// MySQL 5.xの場合
-	mysql> create database database_name;
-	mysql> grant all on database_name.* to username@localhost identified by 'password';
-	mysql> quit
-
-	// MySQL 8.xの場合
-	mysql> create database database_name;
-	mysql> grant all on database_name.* to username@localhost;
-	mysql> alter user username@localhost identified with mysql_native_password BY 'password';
-	mysql> quit
-	```
-
-    - MySQL 利用時は、文字コードが utf8 になっていることを確認すること
-
-    ```
-    mysql> show variables like "char%";
-    +--------------------------+---------------------------------------------------------+
-    | Variable_name            | Value                                                   |
-    +--------------------------+---------------------------------------------------------+
-    | character_set_client     | utf8                                                    |
-    | character_set_connection | utf8                                                    |
-    | character_set_database   | utf8                                                    |
-    | character_set_filesystem | binary                                                  |
-    | character_set_results    | utf8                                                    |
-    | character_set_server     | utf8                                                    |
-    | character_set_system     | utf8                                                    |
-    | character_sets_dir       | C:\Program Files\MySQL\MySQL Server 5.7\share\charsets\ |
-    +--------------------------+---------------------------------------------------------+
-    8 rows in set, 1 warning (0.01 sec)
-    ```
-    
-3. EPGStation のインストール
+2. EPGStation のインストール
 
 	```
 	> git clone https://github.com/l3tnun/EPGStation.git
@@ -74,7 +39,7 @@ Windows 用 セットアップマニュアル
 	> npm run build
 
 	```
-4. 設定ファイルの作成
+3. 設定ファイルの作成
 
 	```
 	> copy .\config\config.sample.json .\config\config.json
@@ -82,19 +47,13 @@ Windows 用 セットアップマニュアル
 	> copy .\config\serviceLogConfig.sample.json .\config\serviceLogConfig.json
 	```
 
-5. 設定ファイルの編集
+4. 設定ファイルの編集
 	- 詳細な設定は [詳細マニュアル](conf-manual.md) を参照
-	- 以下の最低限の動作に必須な項目について編集する（MySQL 利用時）
+	- 以下の最低限の動作に必須な項目について編集する
 
 	```json
 	"serverPort": 8888,
 	"mirakurunPath": "http://localhost:40772",
-	"dbType": "mysql",
-	"mysql": {
-		"user": "username",
-		"password": "password",
-		"database": "database_name"
-    },
     "ffmpeg": "C:\\ffmpeg\\ffmpeg.exe",
     "ffprobe": "C:\\ffmpeg\\ffprobe.exe"
 	```
@@ -158,12 +117,7 @@ unix 系では `/` を使用するため *.sample.json では `/hoge/huga/piyo` 
 この `PROGRA~1` は 8.3 形式の表記方法で、 Program Files を指しています。  
 cmd.exe にて `dir /x c:\` と打ち込むと確認できます
 
-### 使用するデータベースについて
-
-本マニュアルでは MySQL を使用してセットアップする例を挙げましたが、Windows 環境にて別途 RDBMS を導入するのは手間がかかると思います。そのため、セットアップの簡略化のために SQLite3 を使用して設定することをおすすめしています。  
-```config.json``` の ```dbType``` を ```sqlite3``` と設定すれば ok です。
-
-#### MySQL 使用時の注意
+## MySQL 使用時の注意
 
 EPGStation 使用中は MySQL のバイナリログが大量に生成されてディスクを圧迫するので、MySQL の設定 (my.ini) を変えることを推奨します
 

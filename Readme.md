@@ -36,10 +36,10 @@ PC からの閲覧でもモダンな UI で操作可能です
 - [Node.js](http://nodejs.org/) : ^6.5.x || ^8.x.x || ^10.13.0
 - [Mirakurun](https://github.com/Chinachu/Mirakurun) : ^2.5.7 
 - いずれかのデータベース (文字コードは  utf-8 とする)
-	- [MySQL](https://www.mysql.com/jp/) ([MariaDB](https://mariadb.org/))【推奨】
-	- [PostgreSQL](https://www.postgresql.org/) (version 9.5 以上)
-	- [SQLite3](https://www.sqlite.org/)（設定不要だが検索機能に制限あり）  
+	- [SQLite3](https://www.sqlite.org/)（設定不要だが検索機能に制限あり）[標準]
 		- [SQLite3 使用時の正規表現での検索の有効化について](doc/sqlite3-regexp.md)
+	- [MySQL](https://www.mysql.com/jp/) ([MariaDB](https://mariadb.org/))【推奨(要設定)】
+	- [PostgreSQL](https://www.postgresql.org/) (version 9.5 以上)
 - [FFmpeg](http://ffmpeg.org/)
 - for Linux / macOS
 	- [Python 2.7](https://www.python.org/) node-gyp にて必要
