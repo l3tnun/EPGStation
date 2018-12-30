@@ -126,12 +126,58 @@ $grid-max: 20
 
     // list 表示
     .list
+        table
+            max-width: 1100px;
+            width: calc(100% - 16px);
+            margin-top: 16px;
+
         table, .mdl-card
             margin-left: auto;
             margin-right: auto;
 
+            td, th
+                &:last-of-type
+                    padding-right: 20px;
+                &:first-of-type
+                    padding-left: 20px;
+                padding: 8px;
+
+            td
+                overflow: hidden;
+                vertical-align: middle;
+                white-space: normal;
+
+            .title
+                max-width: 600px;
+
+            .channel, .time
+                max-width: 120px;
+                min-width: 120px;
+
+            .menu
+                max-width: 40px;
+                text-align: center;
+
         .mdl-card
             max-width: 600px;
+
+    @media screen and (max-width: $window-width + $window-width-margin)
+        .list
+            display: none;
+
+// grid, list 表示選択
+@media screen and (min-width: $window-width + $window-width-margin + 1)
+    .recorded-content
+        .card
+            display: flex;
+        .list
+            display: none;
+
+    .recorded-content.is-list-view
+        .card
+            display: none;
+        .list
+            display: inline;
 
 .recorded-content.is-editing
     .pagination
