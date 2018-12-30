@@ -235,6 +235,18 @@ class RecordedComponent extends ParentComponent<void> {
                 this.restoreMainLayoutPosition();
             },
         }, [
+            this.createCardView(isEditing),
+            this.createListView(),
+        ]);
+    }
+
+    /**
+     * card & grid view
+     * @param isEditing: boolean
+     * @return m.Child
+     */
+    private createCardView(isEditing: boolean): m.Child {
+        return m('div', { class: 'card' }, [
             this.viewModel.getRecordeds().recorded.map((recorded) => {
                 return this.createCard(recorded, isEditing);
             }),
@@ -343,11 +355,87 @@ class RecordedComponent extends ParentComponent<void> {
 
         return m('div', { class: 'description' }, child);
     }
+
+    /**
+     * list view
+     * @return m.Child | null
+     */
+    private createListView(): m.Child | null {
+        const recordeds = this.viewModel.getRecordeds().recorded;
+        if (recordeds.length === 0) { return null; }
+
+        return m('div', { class: 'list' }, [
+            m('table', { class: 'mdl-data-table mdl-js-data-table mdl-shadow--2dp' }, [
+                m('thead', m('tr', [
+                    m('th', { class: RecordedComponent.nonNumeric }, 'タイトル'),
+                    m('th', { class: RecordedComponent.nonNumeric }, '放送局'),
+                    m('th', { class: RecordedComponent.nonNumeric }, '時間'),
+                    m('th', { class: RecordedComponent.nonNumeric }, ''), // sub menu button
+                ])),
+
+                m('tbody', recordeds.map((recorded) => {
+                    return this.createList(recorded);
+                })),
+            ]),
+
+            m(PaginationComponent, {
+                total: this.viewModel.getRecordeds().total,
+                length: this.viewModel.getLimit(),
+                page: this.viewModel.getPage(),
+            }),
+        ]);
+    }
+
+
+    /**
+     * list
+     * @param recorded: apid.RecordedProgram
+     * @return m.Child
+     */
+    private createList(recorded: apid.RecordedProgram): m.Child {
+        return m('tr', {
+            onclick: (e: Event) => {
+                if (this.viewModel.isEditing()) {
+                    // 編集モード
+                    this.viewModel.select(recorded.id);
+                } else {
+                    this.infoViewModel.set(recorded);
+                    this.balloon.open(RecordedInfoViewModel.id, e);
+                }
+            },
+            onupdate: (vnode: m.VnodeDOM<void, any>) => {
+                if (this.viewModel.isSelecting(recorded.id)) {
+                    (<HTMLElement> vnode.dom).classList.add('selected');
+                } else {
+                    (<HTMLElement> vnode.dom).classList.remove('selected');
+                }
+            },
+        }, [
+            m('td', { class: RecordedComponent.nonNumeric + ' title' }, recorded.name),
+            m('td', { class: RecordedComponent.nonNumeric + ' channel' }, this.viewModel.getChannelName(recorded.channelId)),
+            m('td', { class: RecordedComponent.nonNumeric + ' time' }, this.viewModel.getTimeStr(recorded, true)),
+            m('td', { class: RecordedComponent.nonNumeric + ' menu' }, [
+                m('button', {
+                    class: 'mdl-button mdl-js-button mdl-button--icon',
+                    onclick: (e: Event) => {
+                        e.stopPropagation();
+                        if (this.viewModel.isEditing()) { return; }
+
+                        this.menuViewModel.set(recorded);
+                        this.balloon.open(RecordedMenuViewModel.id, e);
+                    },
+                }, [
+                    m('i', { class: 'material-icons' }, 'more_vert'),
+                ]),
+            ]),
+        ]);
+    }
 }
 
 namespace RecordedComponent {
     export const cardWidth = 308;
     export const widthMargin = 30;
+    export const nonNumeric = 'mdl-data-table__cell--non-numeric';
 }
 
 export default RecordedComponent;

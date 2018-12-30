@@ -112,14 +112,17 @@ class RecordedViewModel extends ViewModel {
     /**
      * get time str
      * @param recorded: apid.RecordedProgram
+     * @param isShort: boolean
      * @return string
      */
-    public getTimeStr(recorded: apid.RecordedProgram): string {
+    public getTimeStr(recorded: apid.RecordedProgram, isShort: boolean = false): string {
         const start = DateUtil.getJaDate(new Date(recorded.startAt));
         const end = DateUtil.getJaDate(new Date(recorded.endAt));
         const duration = Math.floor((recorded.endAt - recorded.startAt) / 1000 / 60);
 
-        return DateUtil.format(start, 'MM/dd(w) hh:mm:ss') + ' ~ ' + DateUtil.format(end, 'hh:mm:ss') + `(${ duration }分)`;
+        return isShort
+            ? `${ DateUtil.format(start, 'MM/dd(w) hh:mm:ss') } (${ duration }分)`
+            : DateUtil.format(start, 'MM/dd(w) hh:mm:ss') + ' ~ ' + DateUtil.format(end, 'hh:mm:ss') + `(${ duration }分)`;
     }
 
     /**
