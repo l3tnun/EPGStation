@@ -121,7 +121,7 @@ class RecordedViewModel extends ViewModel {
         const duration = Math.floor((recorded.endAt - recorded.startAt) / 1000 / 60);
 
         return isShort
-            ? `${ DateUtil.format(start, 'MM/dd(w) hh:mm:ss') } (${ duration }分)`
+            ? `${ DateUtil.format(start, 'MM/dd(w) hh:mm') } (${ duration }分)`
             : DateUtil.format(start, 'MM/dd(w) hh:mm:ss') + ' ~ ' + DateUtil.format(end, 'hh:mm:ss') + `(${ duration }分)`;
     }
 
