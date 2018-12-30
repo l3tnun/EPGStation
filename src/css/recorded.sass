@@ -3,9 +3,9 @@ $window-width: $card-width * 2
 $window-width-margin: 30px
 $grid-max: 20
 
-/*カード表示*/
-@media screen and (max-width: $window-width + $window-width-margin)
-    .recorded-content
+.recorded-content
+    /*カード表示*/
+    @media screen and (max-width: $window-width + $window-width-margin)
         .pagination
             max-width: 586px;
 
@@ -48,19 +48,16 @@ $grid-max: 20
             .title
                 padding-right: 18px;
 
-/*グリッド表示幅設定*/
-@for $i from 2 through $grid-max
-    @media screen and (min-width: $card-width * $i) and (max-width: ($card-width * ($i +1)) - 1)
-        .recorded-content
-            width: $card-width * $i;
+    /*グリッド表示幅設定*/
+    @for $i from 2 through $grid-max
+        @media screen and (min-width: $card-width * $i) and (max-width: ($card-width * ($i +1)) - 1)
+                width: $card-width * $i;
 
-@media screen and (min-width: $card-width * $grid-max)
-    .recorded-content
+    @media screen and (min-width: $card-width * $grid-max)
         width: $card-width * $grid-max;
 
-/*グリッド表示*/
-@media screen and (min-width: $window-width + $window-width-margin + 1)
-    .recorded-content
+    /*グリッド表示*/
+    @media screen and (min-width: $window-width + $window-width-margin + 1)
         display: flex;
         flex-wrap: wrap;
         margin: 0 auto;
