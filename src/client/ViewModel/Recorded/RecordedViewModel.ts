@@ -3,6 +3,7 @@ import * as apid from '../../../../api';
 import { ViewModelStatus } from '../../Enums';
 import { ChannelsApiModelInterface } from '../../Model/Api/ChannelsApiModel';
 import { FindQueryOption, RecordedApiModelInterface } from '../../Model/Api/RecordedApiModel';
+import { RecordedSettingValue } from '../../Model/Recorded/RecordedSettingModel';
 import { SettingValue } from '../../Model/Setting/SettingModel';
 import { SnackbarModelInterface } from '../../Model/Snackbar/SnackbarModel';
 import StorageTemplateModel from '../../Model/Storage/StorageTemplateModel';
@@ -19,6 +20,7 @@ class RecordedViewModel extends ViewModel {
     private recordedApiModel: RecordedApiModelInterface;
     private channels: ChannelsApiModelInterface;
     private setting: StorageTemplateModel<SettingValue>;
+    private recordedSetting: StorageTemplateModel<RecordedSettingValue>;
     private snackbar: SnackbarModelInterface;
     private limit: number = 0;
     private offset: number = 0;
@@ -31,12 +33,14 @@ class RecordedViewModel extends ViewModel {
         recordedApiModel: RecordedApiModelInterface,
         channels: ChannelsApiModelInterface,
         setting: StorageTemplateModel<SettingValue>,
+        recordedSetting: StorageTemplateModel<RecordedSettingValue>,
         snackbar: SnackbarModelInterface,
     ) {
         super();
         this.recordedApiModel = recordedApiModel;
         this.channels = channels;
         this.setting = setting;
+        this.recordedSetting = recordedSetting;
         this.snackbar = snackbar;
     }
 
@@ -303,6 +307,14 @@ class RecordedViewModel extends ViewModel {
 
         this.endEditMode();
         m.redraw();
+    }
+
+    /**
+     * list モードが有効か
+     * @param boolean
+     */
+    public isEnabledListMode(): boolean {
+        return this.recordedSetting.getValue().isEnabledListMode;
     }
 }
 
