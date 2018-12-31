@@ -119,6 +119,7 @@ class RecordedComponent extends ParentComponent<void> {
                         onclick: () => {
                             this.balloon.close();
                             window.setTimeout(() => {
+                                this.recordedSettingViewModel.setTemp();
                                 this.balloon.open(RecordedSettingViewModel.id);
                             }, 200);
                         },
@@ -252,7 +253,7 @@ class RecordedComponent extends ParentComponent<void> {
         return m('div', {
             class: 'recorded-content'
                 + (isEditing ? ' is-editing' : '')
-                + (this.recordedSettingViewModel.tmpValue.isEnabledListMode ? ' is-list-view' : ''),
+                + (this.viewModel.isEnabledListMode() ? ' is-list-view' : ''),
             oncreate: () => {
                 this.recordedSettingViewModel.setTemp();
             },

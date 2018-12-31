@@ -28,6 +28,7 @@
     - [チャンネルの並び順を変更したい](#serviceorder)
     - [チャンネルの並び順を変更したい(sid)](#servicesidorder)
     - [特定のチャンネルは除外したい](#excludeservices)
+    - [特定のチャンネルは除外したい(sid)](#excludesid)
     - [自動起動時の GID を指定したい](#gid)
     - [自動起動時の UID を指定したい](#uid)
     - [録画時にドロップチェックを有効化したい](#isenableddropcheck)
@@ -379,7 +380,7 @@
 
 | 種類 | デフォルト値 | 必須 |
 | --- | ---------- | --- |
-| number[] |  | no |
+| number[] | - | no |
 
 - `http://<MirakurunAddress:port>/api/services` もしくは `http://<EPGStationAddress:port>/api/channels` で確認できる id を入力
 
@@ -392,7 +393,7 @@
 
 | 種類 | デフォルト値 | 必須 |
 | --- | ---------- | --- |
-| number[] |  | no |
+| number[] | - | no |
 
 - `http://<MirakurunAddress:port>/api/services` もしくは `http://<EPGStationAddress:port>/api/channels` で確認できる serviceId を入力
 
@@ -407,12 +408,25 @@
 
 | 種類 | デフォルト値 | 必須 |
 | --- | ---------- | --- |
-| number[] |  | no |
+| number[] | - | no |
 
 - `http://<MirakurunAddress:port>/api/services` もしくは `http://<EPGStationAddress:port>/api/channels` で確認できる id を入力
 
 ```json
 "excludeServices": [3274401088, 3239123608]
+```
+
+### excludeSid
+#### sid で除外するチャンネルを指定
+
+| 種類 | デフォルト値 | 必須 |
+| --- | ---------- | --- |
+| number[] |  | no |
+
+- `http://<MirakurunAddress:port>/api/services` もしくは `http://<EPGStationAddress:port>/api/channels` で確認できる serviceId を入力
+
+```json
+"excludeSid": [400141, 400151, 400161]
 ```
 
 ### gid
