@@ -435,6 +435,7 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
             errorCnt: null,
             dropCnt: null,
             scramblingCnt: null,
+            isTmp: false, // TODO
         });
 
         this.log.system.info(`create new recorded: ${ recordedId }`);

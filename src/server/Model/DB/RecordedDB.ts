@@ -142,6 +142,7 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
         value.push(program.errorCnt);
         value.push(program.dropCnt);
         value.push(program.scramblingCnt);
+        value.push(program.isTmp);
 
         const query = `insert into ${ DBSchema.TableName.Recorded } (`
             + this.createInsertColumnStr(false)
@@ -198,7 +199,8 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
             + 'logPath, '
             + 'errorCnt, '
             + 'dropCnt, '
-            + 'scramblingCnt ';
+            + 'scramblingCnt, '
+            + 'isTmp ';
     }
 
     /**
@@ -258,6 +260,7 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
             value.push(program.errorCnt);
             value.push(program.dropCnt);
             value.push(program.scramblingCnt);
+            value.push(program.isTmp);
 
             values.push({
                 query: `insert into ${ DBSchema.TableName.Recorded } (`
@@ -315,6 +318,7 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
         value.push(program.errorCnt);
         value.push(program.dropCnt);
         value.push(program.scramblingCnt);
+        value.push(program.isTmp);
 
         const isReplace = this.operator.getUpsertType() === 'replace';
         let query = `${ isReplace ? 'replace' : 'insert' } into ${ DBSchema.TableName.Recorded } (`
@@ -355,7 +359,8 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
                 + 'logPath = excluded.logPath, '
                 + 'errorCnt = excluded.errorCnt, '
                 + 'dropCnt = excluded.dropCnt, '
-                + 'scramblingCnt = excluded.scramblingCnt ';
+                + 'scramblingCnt = excluded.scramblingCnt, '
+                + 'isTmp = excluded.isTmp ';
         }
 
         await this.operator.runQuery(query, value);

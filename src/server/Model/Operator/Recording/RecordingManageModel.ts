@@ -413,6 +413,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
                     errorCnt: null,
                     dropCnt: null,
                     scramblingCnt: null,
+                    isTmp: false, // TODO
                 };
 
                 try {
@@ -509,6 +510,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
                             errorCnt: null,
                             dropCnt: null,
                             scramblingCnt: null,
+                            isTmp: false, // TODO
                         };
                         await this.recordedDB.replace(recorded);
 

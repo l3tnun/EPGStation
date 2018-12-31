@@ -39,7 +39,8 @@ class MySQLRecordedDB extends RecordedDB {
             + 'logPath text default null, '
             + 'errorCnt bigint null default null, '
             + 'dropCnt bigint null default null, '
-            + 'scramblingCnt bigint null default null '
+            + 'scramblingCnt bigint null default null, '
+            + 'isTmp boolean default false '
         + ') engine=InnoDB;';
 
         return this.operator.runQuery(query);
