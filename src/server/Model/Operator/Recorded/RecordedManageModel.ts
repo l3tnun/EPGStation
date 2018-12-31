@@ -343,7 +343,7 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
             }
 
             try {
-                await this.recordedDB.updateTsFilePath(info.recordedId, filePath);
+                await this.recordedDB.updateTsFilePath(info.recordedId, filePath, false);
                 await this.updateTsFileSize(info.recordedId);
                 this.log.system.info(`update ts file: ${ info.recordedId }`);
             } catch (err) {
@@ -435,7 +435,7 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
             errorCnt: null,
             dropCnt: null,
             scramblingCnt: null,
-            isTmp: false, // TODO
+            isTmp: false,
         });
 
         this.log.system.info(`create new recorded: ${ recordedId }`);

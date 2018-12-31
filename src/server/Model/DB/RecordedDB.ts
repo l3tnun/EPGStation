@@ -60,7 +60,7 @@ interface RecordedDBInterface extends DBTableBase {
     addThumbnail(id: number, filePath: string): Promise<void>;
     removeRecording(id: number): Promise<void>;
     removeAllRecording(): Promise<void>;
-    updateTsFilePath(recordedId: number, filePath: string): Promise<void>;
+    updateTsFilePath(recordedId: number, filePath: string, newTmp: boolean): Promise<void>;
     updateFileSize(recordedId: number): Promise<void>;
     updateLogFilePath(recordedId: number, filePath: string): Promise<void>;
     updateAllNullFileSize(): Promise<void>;
@@ -107,7 +107,10 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
      * @param Promise<number> insertId
      */
     public insert(program: DBSchema.RecordedSchema): Promise<number> {
-        const baseDir = Util.getRecordedPath();
+        let baseDir = Util.getRecordedPath();
+        const tmpDir = this.config.getConfig().recordedTmp || null;
+        if (program.isTmp && tmpDir !== null) { baseDir = tmpDir; }
+
         const logDir = this.getDropCheckLogDir();
 
         const value: any[] = [];
@@ -210,11 +213,13 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
      * @param hasBaseDir: boolean
      */
     public restore(programs: DBSchema.RecordedSchema[], isDelete: boolean = true, hasBaseDir: boolean = true): Promise<void> {
-        const baseDir = Util.getRecordedPath();
+        let baseDir = Util.getRecordedPath();
+        const tmpDir = this.config.getConfig().recordedTmp || null;
         const logDir = this.getDropCheckLogDir();
 
         const values: any[] = [];
         for (const program of programs) {
+            if (program.isTmp && tmpDir !== null) { baseDir = tmpDir; }
             const value: any[] = [];
 
             let recPath = program.recPath;
@@ -282,7 +287,10 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
      * @param Promise<void>
      */
     public async replace(program: DBSchema.RecordedSchema): Promise<void> {
-        const baseDir = Util.getRecordedPath();
+        let baseDir = Util.getRecordedPath();
+        const tmpDir = this.config.getConfig().recordedTmp || null;
+        if (program.isTmp && tmpDir !== null) { baseDir = tmpDir; }
+
         const logDir = this.getDropCheckLogDir();
 
         const value: any[] = [];
@@ -426,15 +434,26 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
      * recPath を更新する
      * @param recordedId: recorded id
      * @param filePath: file path
+     * @param newTmp: boolean
      * @return Promise<void>
      */
-    public async updateTsFilePath(recordedId: number, filePath: string): Promise<void> {
+    public async updateTsFilePath(recordedId: number, filePath: string, newTmp: boolean): Promise<void> {
         const recorded = await this.findId(recordedId);
         if (recorded === null) { throw new Error('RecordedIsNotFound'); }
 
-        const query = `update ${ DBSchema.TableName.Recorded } set recPath = ${ this.operator.createValueStr(1, 1) } where id = ${ recordedId }`;
+        let baseDir = Util.getRecordedPath();
+        const tmpDir = this.config.getConfig().recordedTmp || null;
+        if (newTmp && tmpDir !== null) { baseDir = tmpDir; }
 
-        await this.operator.runQuery(query, [filePath.slice(Util.getRecordedPath().length + path.sep.length)]);
+        const query = `update ${ DBSchema.TableName.Recorded } set `
+            + `recPath = ${ this.operator.createValueStr(1, 1) }, `
+            + `isTmp = ${ this.operator.createValueStr(2, 2) } `
+            + `where id = ${ recordedId }`;
+
+        await this.operator.runQuery(query, [
+            filePath.slice(baseDir.length + path.sep.length),
+            this.operator.convertBoolean(newTmp),
+        ]);
     }
 
     /**
@@ -534,16 +553,18 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
      */
     protected fixResults(programs: DBSchema.RecordedSchema[], isAddBaseDir: boolean = true): DBSchema.RecordedSchema[] {
         const baseDir = Util.getRecordedPath();
+        const tmpDir = this.config.getConfig().recordedTmp || null;
         const logFileDir = this.getDropCheckLogDir();
         const thumbnailDir = Util.getThumbnailPath();
 
         return programs.map((program) => {
-            return this.fixResult(baseDir, logFileDir, thumbnailDir, program, isAddBaseDir);
+            return this.fixResult(baseDir, tmpDir, logFileDir, thumbnailDir, program, isAddBaseDir);
         });
     }
 
     /**
      * @param baseDir: string
+     * @param tmpDir: string || null
      * @param logFileDir: string
      * @param thumbnailDir: string
      * @param program: DBSchema.RecordedSchema
@@ -552,6 +573,7 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
      */
     protected fixResult(
         baseDir: string,
+        tmpDir: string | null,
         logFileDir: string,
         thumbnailDir: string,
         program: DBSchema.RecordedSchema,
@@ -560,7 +582,7 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
         // フルパスへ書き換える
         if (isAddBaseDir) {
             if (program.recPath !== null) {
-                program.recPath = this.fixRecPath(baseDir, program.recPath);
+                program.recPath = this.fixRecPath(tmpDir !== null && program.isTmp ? tmpDir : baseDir, program.recPath);
             }
 
             if (program.logPath !== null) {
@@ -735,12 +757,18 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
      * @return Promise<RecordedFilesItem[]>
      */
     public async getAllFiles(): Promise<RecordedFilesItem[]> {
-        const results = <{ id: number; recPath: string; logPath: string | null }[]> await this.operator.runQuery(`select id, ${ this.getRecPathColumnStr() }, ${ this.getLogPathColumnStr() } from ${ DBSchema.TableName.Recorded } where recPath is not null or logPath is not null order by id`);
+        const results = <{ id: number; recPath: string; logPath: string | null; isTmp: boolean }[]> await this.operator.runQuery(
+            `select id, ${ this.getRecPathColumnStr() }, ${ this.getLogPathColumnStr() }, ${ this.getIsTmpColumnStr() } `
+            + `from ${ DBSchema.TableName.Recorded } `
+            + 'where recPath is not null or logPath is not null order by id',
+        );
 
-        const baseDir = Util.getRecordedPath();
+        let baseDir = Util.getRecordedPath();
+        const tmpDir = this.config.getConfig().recordedTmp || null;
         const logDir = this.getDropCheckLogDir();
 
         return results.map((result) => {
+            if (result.isTmp && tmpDir !== null) { baseDir = tmpDir; }
             const logPath = result.logPath;
 
             return {
@@ -765,6 +793,14 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
      */
     protected getLogPathColumnStr(): string {
         return 'logPath';
+    }
+
+    /**
+     * get isTmp column str
+     * @return string
+     */
+    protected getIsTmpColumnStr(): string {
+        return 'isTmp';
     }
 
     /**
