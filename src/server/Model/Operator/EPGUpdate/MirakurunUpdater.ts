@@ -57,6 +57,14 @@ class MirakurunUpdater extends Base {
                 }
             }
 
+            const excludeSid = config.excludeSid || [];
+            for (let i = 0; i < services.length; i++) {
+                if (excludeSid.indexOf(services[i].serviceId) !== -1) {
+                    services.splice(i, 1);
+                    i -= 1;
+                }
+            }
+
             this.services = services;
 
             return this.servicesDB.insert(this.services);

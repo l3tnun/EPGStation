@@ -42,6 +42,7 @@ interface ConfigInterface {
     serviceOrder: number[];
     serviceSidOrder: number[];
     excludeServices: number[];
+    excludeSid: number[];
     reserves: string;
     allowEndLack: boolean;
     recPriority: number;
