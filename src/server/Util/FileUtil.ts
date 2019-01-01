@@ -213,6 +213,24 @@ namespace FileUtil {
             });
         });
     };
+
+    /**
+     * write file
+     * @param file: file path
+     * @param data: string
+     * @return Promise<void>
+     */
+    export const promiseWriteFile = (file: string, data: string): Promise<void> => {
+        return new Promise<void>((resolve: () => void, reject: (error: Error) => void) => {
+            fs.writeFile(file, data, 'utf-8', (err) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
+        });
+    };
 }
 
 export default FileUtil;
