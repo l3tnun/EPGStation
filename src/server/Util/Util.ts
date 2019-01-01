@@ -32,6 +32,16 @@ namespace Util {
     };
 
     /**
+     * config の recordedTmp path を返す
+     * @return string
+     */
+    export const getRecordedTmpPath = (): string | null => {
+        const recordedTmp = Configuration.getInstance().getConfig().recordedTmp;
+
+        return typeof recordedTmp === 'undefined' ? null : recordedTmp.replace(new RegExp(`\\${ path.sep }$`), '');
+    };
+
+    /**
      * config の dropCheckLogDir を返す
      * @return string | null
      */

@@ -35,6 +35,7 @@
     - [アクセス URL の設定をルートではなくサブディレクトリ下に変更したい](#subdirectory)
 - [ファイル保存先](#ファイル保存先)
     - [録画ファイルの保存先を変更したい](#recorded)
+    - [一時録画先を設定したい](#recordedtmp)
     - [録画ファイルのファイル名を変更したい](#recordedformat)
     - [録画ファイルの拡張子を変更したい](#fileextension)
     - [予約情報データの保存先を変更したい](#reserves)
@@ -487,6 +488,22 @@
 
 ```json
 "recorded": "/hoge/fuga"
+```
+
+## 一時録画先
+### recordedTmp
+#### 録画ファイルの一時保存先
+
+録画が完了したら recorded で指定したディレクトリへ移動する
+
+| 種類 | デフォルト値 | 必須 |
+| --- | ---------- | --- |
+| string | - | no |
+
+- フルパスで指定する
+
+```json
+"recordedTmp": "/hoge/fuga"
 ```
 
 ### recordedFormat

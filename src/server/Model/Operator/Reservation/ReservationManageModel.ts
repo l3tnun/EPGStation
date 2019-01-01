@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as apid from '../../../../../node_modules/mirakurun/api';
 import DateUtil from '../../../Util/DateUtil';
+import FileUtil from '../../../Util/FileUtil';
 import RuleUtil from '../../../Util/RuleUtil';
 import Util from '../../../Util/Util';
 import * as DBSchema from '../../DB/DBSchema';
@@ -367,7 +368,7 @@ class ReservationManageModel extends Model {
         }
 
         if (needsUpdate) {
-            setTimeout(() => {
+            setTimeout(async() => {
                 this.log.system.info('start update (cancel)');
 
                 // 予約情報をコピー
@@ -381,7 +382,7 @@ class ReservationManageModel extends Model {
 
                 // 予約情報更新
                 this.reserves = this.createReserves(matches);
-                this.writeReservesFile();
+                await this.writeReservesFile();
 
                 this.unLockExecution(exeId);
 
@@ -561,7 +562,7 @@ class ReservationManageModel extends Model {
         // 保存
         this.reserves.push(addReserve);
         this.reserves.sort((a, b) => { return a.program.startAt - b.program.startAt; });
-        this.writeReservesFile();
+        await this.writeReservesFile();
 
         finalize();
 
@@ -723,7 +724,7 @@ class ReservationManageModel extends Model {
             return !(typeof ruleId !== 'undefined' && typeof ruleIndex[ruleId] === 'undefined');
         });
         this.reserves = newReserves;
-        this.writeReservesFile();
+        await this.writeReservesFile();
 
         // 手動予約の情報を更新する
         for (const reserve of this.reserves) {
@@ -797,7 +798,7 @@ class ReservationManageModel extends Model {
                 // 該当する放送局が存在しない場合
                 this.log.system.warn(`channelId is not found, manualId: ${ manualId }, channelId: ${ manualMatche.program.channelId }`);
                 this.reserves = newReserves;
-                this.writeReservesFile();
+                await this.writeReservesFile();
             }
 
             finalize();
@@ -817,7 +818,7 @@ class ReservationManageModel extends Model {
         // 該当する番組情報がなかった
         if (program === null) {
             this.reserves = newReserves;
-            this.writeReservesFile();
+            await this.writeReservesFile();
             finalize();
 
             return;
@@ -830,7 +831,7 @@ class ReservationManageModel extends Model {
 
         // 予約情報を生成
         this.reserves = this.createReserves(newReserves);
-        this.writeReservesFile();
+        await this.writeReservesFile();
 
         finalize();
 
@@ -946,7 +947,7 @@ class ReservationManageModel extends Model {
 
         // 予約情報を生成
         this.reserves = this.createReserves(matches);
-        this.writeReservesFile();
+        await this.writeReservesFile();
 
         finalize();
 
@@ -1156,12 +1157,8 @@ class ReservationManageModel extends Model {
     /**
      * 予約をファイルへ書き込む
      */
-    private writeReservesFile(): void {
-        fs.writeFileSync(
-            this.reservesPath,
-            JSON.stringify(this.reserves),
-            { encoding: 'utf-8' },
-        );
+    private writeReservesFile(): Promise<void> {
+        return FileUtil.promiseWriteFile(this.reservesPath, JSON.stringify(this.reserves));
     }
 
     /**

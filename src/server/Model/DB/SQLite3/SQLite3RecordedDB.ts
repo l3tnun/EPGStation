@@ -39,7 +39,8 @@ class SQLite3RecordedDB extends RecordedDB {
             + 'logPath text default null, '
             + 'errorCnt integer null default null, '
             + 'dropCnt integer null default null, '
-            + 'scramblingCnt integer null default null '
+            + 'scramblingCnt integer null default null, '
+            + 'isTmp integer default 0 '
         + ');';
 
         return this.operator.runQuery(query);
@@ -47,6 +48,8 @@ class SQLite3RecordedDB extends RecordedDB {
 
     /**
      * @param baseDir: string
+     * @param tmpDir: string || null
+     * @param isTmp: boolean
      * @param logFileDir: string
      * @param thumbnailDir: string
      * @param program: DBSchema.RecordedSchema
@@ -55,14 +58,16 @@ class SQLite3RecordedDB extends RecordedDB {
      */
     protected fixResult(
         baseDir: string,
+        tmpDir: string | null,
         logFileDir: string,
         thumbnailDir: string,
         program: DBSchema.RecordedSchema,
         isAddBaseDir: boolean,
     ): DBSchema.RecordedSchema {
-        program = super.fixResult(baseDir, logFileDir, thumbnailDir, program, isAddBaseDir);
         program.recording = Boolean(program.recording);
         program.protection = Boolean(program.protection);
+        program.isTmp = Boolean(program.isTmp);
+        program = super.fixResult(baseDir, tmpDir, logFileDir, thumbnailDir, program, isAddBaseDir);
 
         return program;
     }

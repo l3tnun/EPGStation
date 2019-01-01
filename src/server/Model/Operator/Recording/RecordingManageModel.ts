@@ -324,8 +324,10 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
      * @param stream: http.IncomingMessage
      */
     private async doRecord(recData: RecordingProgram, stream: http.IncomingMessage): Promise<void> {
+        const config = this.config.getConfig();
+
         // 保存先パス
-        const recPath = await this.getRecPath(recData.reserve);
+        const recPath = await this.getRecPath(recData.reserve, true);
         recData.recPath = recPath;
         recData.stream = stream;
 
@@ -338,9 +340,12 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
 
         // ts checker 追加
         let logFilePath: string | null = null;
-        if (this.config.getConfig().isEnabledDropCheck || false) {
+        if (config.isEnabledDropCheck || false) {
             const tsChecker = this.getTsChecker();
-            await tsChecker.set(recPath, stream);
+            await tsChecker.set(
+                typeof config.recordedTmp === 'undefined' ? recPath : await this.getRecPath(recData.reserve, false),
+                stream,
+            );
             logFilePath = tsChecker.getFilePath();
             recData.checker = tsChecker;
         }
@@ -413,6 +418,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
                     errorCnt: null,
                     dropCnt: null,
                     scramblingCnt: null,
+                    isTmp: typeof config.recordedTmp !== 'undefined',
                 };
 
                 try {
@@ -509,6 +515,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
                             errorCnt: null,
                             dropCnt: null,
                             scramblingCnt: null,
+                            isTmp: recorded.isTmp,
                         };
                         await this.recordedDB.replace(recorded);
 
@@ -593,6 +600,36 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
                     recorded.scramblingCnt = scrambling;
                 }
 
+                if (recorded.isTmp) {
+                    // 一時領域から移動
+                    const newFilePath = await this.getRecPath(recData.reserve, false);
+                    const oldFilePath = recorded.recPath!;
+                    recorded.recPath = newFilePath;
+                    this.log.system.info(`move file: ${ oldFilePath } -> ${ newFilePath }`);
+
+                    let doneMove = false;
+                    try {
+                        // 移動
+                        await FileUtil.promiseRename(oldFilePath, newFilePath)
+                        .catch(async() => {
+                            await FileUtil.promiseMove(oldFilePath, newFilePath);
+                        });
+                        doneMove = true;
+                    } catch (err) {
+                        this.log.system.error(`move file error: ${ oldFilePath } -> ${ newFilePath }`);
+                    }
+
+                    if (doneMove) {
+                        try {
+                            // DB 更新
+                            await this.recordedDB.updateTsFilePath(recorded.id, newFilePath, false);
+                        } catch (err) {
+                            this.log.system.error(`filePath update Error: { id: ${ recorded.id }, path: ${ newFilePath } }`);
+                            this.log.system.error(err);
+                        }
+                    }
+                }
+
                 // 録画完了を通知
                 const encodeOption = typeof recData.reserve.encodeOption === 'undefined' ? null : recData.reserve.encodeOption;
                 this.finEventsNotify(recorded, encodeOption);
@@ -635,10 +672,11 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
     /**
      * 録画先のパスを返す
      * @param reserve: ReserveProgram
+     * @param enableTmp: boolean
      * @param conflict: number 名前がコンフリクトした場合、再帰でカウントされていく
      * @return Promise<string>: path
      */
-    private async getRecPath(reserve: ReserveProgram, conflict: number = 0): Promise<string> {
+    private async getRecPath(reserve: ReserveProgram, enableTmp: boolean, conflict: number = 0): Promise<string> {
         const config = this.config.getConfig();
 
         const option = reserve.option;
@@ -686,7 +724,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
         fileName += config.fileExtension || '.ts';
 
         // ディレクトリ
-        let recDir = Util.getRecordedPath();
+        let recDir = !enableTmp || typeof config.recordedTmp === 'undefined' ? Util.getRecordedPath() : Util.getRecordedTmpPath()!;
         if (typeof option !== 'undefined' && typeof option.directory !== 'undefined') {
             recDir = path.join(recDir, Util.replaceDirName(option.directory));
         }
@@ -707,7 +745,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
         try {
             fs.statSync(recPath);
 
-            return await this.getRecPath(reserve, conflict + 1);
+            return await this.getRecPath(reserve, enableTmp, conflict + 1);
         } catch (e) {
             return recPath;
         }

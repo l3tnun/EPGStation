@@ -139,6 +139,7 @@ export interface RecordedSchema {
     errorCnt: number | null;
     dropCnt: number | null;
     scramblingCnt: number | null;
+    isTmp: boolean;
 }
 
 export interface EncodedSchema {

@@ -50,6 +50,7 @@ interface ConfigInterface {
     timeSpecifiedStartMargin: number;
     timeSpecifiedEndMargin: number;
     recorded: string;
+    recordedTmp: string;
     reservationAddedCommand: string;
     recordedPreStartCommand: string;
     recordedPrepRecFailedCommand: string;

@@ -3,6 +3,7 @@ import factory from '../Model/ModelFactory';
 import CallbackBaseModelInterface from '../Model/Operator/Callbacks/CallbackBaseModelInterface';
 import { DBInitializationModelInterface } from '../Model/Operator/DBInitializationModel';
 import { MirakurunManageModelInterface } from '../Model/Operator/EPGUpdate/MirakurunManageModel';
+import { RecordedManageModelInterface } from '../Model/Operator/Recorded/RecordedManageModel';
 import { RecordingManageModelInterface } from '../Model/Operator/Recording/RecordingManageModel';
 import { ReservationManageModelInterface } from '../Model/Operator/Reservation/ReservationManageModel';
 import { StorageCheckManageModelInterface } from '../Model/Operator/Storage/StorageCheckManageModel';
@@ -13,6 +14,7 @@ import { StorageCheckManageModelInterface } from '../Model/Operator/Storage/Stor
 class Operator extends Base {
     private reservationManage: ReservationManageModelInterface;
     private mirakurunManage: MirakurunManageModelInterface;
+    private recordedManage: RecordedManageModelInterface;
     private recordingManage: RecordingManageModelInterface;
     private storageCheckManage: StorageCheckManageModelInterface;
 
@@ -27,6 +29,7 @@ class Operator extends Base {
 
         this.mirakurunManage = <MirakurunManageModelInterface> factory.get('MirakurunManageModel');
         this.reservationManage = <ReservationManageModelInterface> factory.get('ReservationManageModel');
+        this.recordedManage = <RecordedManageModelInterface> factory.get('RecordedManageModel');
         this.recordingManage = <RecordingManageModelInterface> factory.get('RecordingManageModel');
         this.storageCheckManage = <StorageCheckManageModelInterface> factory.get('StorageCheckManageModel');
     }
@@ -48,6 +51,13 @@ class Operator extends Base {
         (<CallbackBaseModelInterface> factory.get('RecordingFinModel')).set();
         (<CallbackBaseModelInterface> factory.get('RecordingFailedModel')).set();
         (<CallbackBaseModelInterface> factory.get('ThumbnailCreateFinModel')).set();
+
+        // 一時領域に保管されている録画ファイルを移動
+        await this.recordedManage.moveTmp()
+        .catch((err) => {
+            this.log.system.error('move tmp error');
+            this.log.system.error(err);
+        });
     }
 
     /**
