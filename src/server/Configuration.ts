@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import ConfigInterface from './ConfigInterface';
 import { Logger, LoggerInterface } from './Logger';
+import FileUtil from './Util/FileUtil';
 
 /**
  * Configuration
@@ -25,27 +26,33 @@ class Configuration {
     /**
      * 初期化
      * @param configPath config file path
+     * @param neededWatch: boolean ファイルを監視して更新するか
      */
-    public initialize(configPath: string): void {
+    public initialize(configPath: string, neededWatch: boolean = false): void {
         this.configPath = configPath;
-        this.updateConfig();
+        this.readConfig();
+
+        if (this.config === null) { throw new Error('config.json read error'); }
+
+        if (neededWatch && !this.config.readOnlyOnce) {
+            // readOnlyOnce が有効のときは config を update しない
+            fs.watchFile(this.configPath, async() => {
+                this.log.system.info('update config');
+                try {
+                    const newConfig = JSON.parse(await FileUtil.promiseReadFile(this.configPath!));
+                    this.config = newConfig;
+                } catch (err) {
+                    this.log.system.error('update config error');
+                    this.log.system.error(err);
+                }
+            });
+        }
     }
 
     /**
-     * @return config
+     * read config
      */
-    public getConfig(): ConfigInterface {
-        // readOnlyOnce が有効のときは config を update しない
-        if (this.config === null || !this.config.readOnlyOnce) { this.updateConfig(); }
-        if (this.config === null) { throw new Error('config is null'); }
-
-        return this.config;
-    }
-
-    /**
-     * update config
-     */
-    private updateConfig(): void {
+    private readConfig(): void {
         let configFile: string | null = null;
 
         // read configFile
@@ -68,6 +75,15 @@ class Configuration {
             this.log.system.fatal('config.json parse error');
             if (this.config === null) { process.exit(); }
         }
+    }
+
+    /**
+     * @return config
+     */
+    public getConfig(): ConfigInterface {
+        if (this.config === null) { throw new Error('config is null'); }
+
+        return this.config;
     }
 }
 

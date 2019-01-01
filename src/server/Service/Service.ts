@@ -24,7 +24,7 @@ class Service {
      */
     private init(): void {
         Logger.initialize(path.join(__dirname, '..', '..', '..', 'config', 'serviceLogConfig.json'));
-        Configuration.getInstance().initialize(path.join(__dirname, '..', '..', '..', 'config', 'config.json'));
+        Configuration.getInstance().initialize(path.join(__dirname, '..', '..', '..', 'config', 'config.json'), true);
         this.log = Logger.getLogger();
     }
 

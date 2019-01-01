@@ -198,6 +198,21 @@ namespace FileUtil {
             });
         });
     };
+
+    /**
+     * read file
+     * @param file: file path
+     * @return Promise<string>
+     */
+    export const promiseReadFile = (file: string): Promise<string> => {
+        return new Promise<string>((resolve: (result: string) => void, reject: (error: Error) => void) => {
+            fs.readFile(file, 'utf-8', (err, data) => {
+                if (err) { reject(err); }
+
+                resolve(data);
+            });
+        });
+    };
 }
 
 export default FileUtil;
