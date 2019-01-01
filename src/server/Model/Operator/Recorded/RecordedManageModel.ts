@@ -486,6 +486,7 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
         if (typeof config.recordedTmp !== 'undefined') {
             const tmpFileList = await FileUtil.getFileList(config.recordedTmp);
             Array.prototype.push.apply(fileList.files, tmpFileList.files);
+            Array.prototype.push.apply(fileList.directories, tmpFileList.directories);
         }
 
         // recorded 上に登録があるが存在しないファイルを削除する
