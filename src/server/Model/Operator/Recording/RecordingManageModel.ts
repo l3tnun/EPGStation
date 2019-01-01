@@ -724,7 +724,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
         fileName += config.fileExtension || '.ts';
 
         // ディレクトリ
-        let recDir = !enableTmp || typeof config.recordedTmp === 'undefined' ? Util.getRecordedPath() : config.recordedTmp;
+        let recDir = !enableTmp || typeof config.recordedTmp === 'undefined' ? Util.getRecordedPath() : Util.getRecordedTmpPath()!;
         if (typeof option !== 'undefined' && typeof option.directory !== 'undefined') {
             recDir = path.join(recDir, Util.replaceDirName(option.directory));
         }

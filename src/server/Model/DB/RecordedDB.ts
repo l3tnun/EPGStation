@@ -69,6 +69,7 @@ interface RecordedDBInterface extends DBTableBase {
     findId(id: number): Promise<DBSchema.RecordedSchema | null>;
     findOld(): Promise<DBSchema.RecordedSchema | null>;
     findCleanupList(): Promise<{ id: number }[]>;
+    findTmp(): Promise<DBSchema.RecordedSchema[]>;
     findAll(option?: FindAllOption): Promise<DBSchema.RecordedSchema[]>;
     getTotal(option?: FindQuery): Promise<number>;
     getRuleTag(): Promise<DBSchema.RuleTag[]>;
@@ -108,7 +109,7 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
      */
     public insert(program: DBSchema.RecordedSchema): Promise<number> {
         let baseDir = Util.getRecordedPath();
-        const tmpDir = this.config.getConfig().recordedTmp || null;
+        const tmpDir = Util.getRecordedTmpPath();
         if (program.isTmp && tmpDir !== null) { baseDir = tmpDir; }
 
         const logDir = this.getDropCheckLogDir();
@@ -214,7 +215,7 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
      */
     public restore(programs: DBSchema.RecordedSchema[], isDelete: boolean = true, hasBaseDir: boolean = true): Promise<void> {
         let baseDir = Util.getRecordedPath();
-        const tmpDir = this.config.getConfig().recordedTmp || null;
+        const tmpDir = Util.getRecordedTmpPath();
         const logDir = this.getDropCheckLogDir();
 
         const values: any[] = [];
@@ -288,7 +289,7 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
      */
     public async replace(program: DBSchema.RecordedSchema): Promise<void> {
         let baseDir = Util.getRecordedPath();
-        const tmpDir = this.config.getConfig().recordedTmp || null;
+        const tmpDir = Util.getRecordedTmpPath();
         if (program.isTmp && tmpDir !== null) { baseDir = tmpDir; }
 
         const logDir = this.getDropCheckLogDir();
@@ -442,7 +443,7 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
         if (recorded === null) { throw new Error('RecordedIsNotFound'); }
 
         let baseDir = Util.getRecordedPath();
-        const tmpDir = this.config.getConfig().recordedTmp || null;
+        const tmpDir = Util.getRecordedTmpPath();
         if (newTmp && tmpDir !== null) { baseDir = tmpDir; }
 
         const query = `update ${ DBSchema.TableName.Recorded } set `
@@ -553,7 +554,7 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
      */
     protected fixResults(programs: DBSchema.RecordedSchema[], isAddBaseDir: boolean = true): DBSchema.RecordedSchema[] {
         const baseDir = Util.getRecordedPath();
-        const tmpDir = this.config.getConfig().recordedTmp || null;
+        const tmpDir = Util.getRecordedTmpPath();
         const logFileDir = this.getDropCheckLogDir();
         const thumbnailDir = Util.getThumbnailPath();
 
@@ -623,6 +624,20 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
      */
     public async findCleanupList(): Promise<{ id: number }[]> {
         return <{ id: number }[]> await this.operator.runQuery(`select id from ${ DBSchema.TableName.Recorded } where recPath is null and id not in (select recordedId as id from ${ DBSchema.TableName.Encoded })`);
+    }
+
+    /**
+     * 一時領域に保管されているレコードを返す
+     * @return <DBSchema.RecordedSchema[]>
+     */
+    public async findTmp(): Promise<DBSchema.RecordedSchema[]> {
+        const programs = await this.operator.runQuery(
+            `select ${ this.getAllColumns() } from ${ DBSchema.TableName.Recorded } `
+            + `where isTmp = ${ this.operator.convertBoolean(true) } `
+            + 'and recPath is not null',
+        );
+
+        return this.fixResults(<DBSchema.RecordedSchema[]> programs);
     }
 
     /**
@@ -764,7 +779,7 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
         );
 
         let baseDir = Util.getRecordedPath();
-        const tmpDir = this.config.getConfig().recordedTmp || null;
+        const tmpDir = Util.getRecordedTmpPath();
         const logDir = this.getDropCheckLogDir();
 
         return results.map((result) => {

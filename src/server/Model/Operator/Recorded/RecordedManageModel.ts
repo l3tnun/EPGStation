@@ -58,6 +58,7 @@ interface RecordedManageModelInterface extends Model {
     updateEncodedFileSize(encodedId: number): Promise<void>;
     cleanup(): Promise<void>;
     regenerateThumbnail(): Promise<void>;
+    moveTmp(): Promise<void>;
 }
 
 class RecordedManageModel extends Model implements RecordedManageModelInterface {
@@ -634,6 +635,97 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
         }
 
         this.log.system.info('regenerate thumbnail request completed');
+    }
+
+    /**
+     * 一時領域の録画済み番組を移動する
+     * 録画中であろうと問答無用で移動させるので注意
+     */
+    public async moveTmp(): Promise<void> {
+        const recordeds = await this.recordedDB.findTmp();
+
+        for (const recorded of recordeds) {
+            if (recorded.recPath === null) { continue; }
+
+            // 一時領域から移動
+            const newFilePath = this.getMoveTmpPath(recorded.recPath);
+            const oldFilePath = recorded.recPath!;
+            this.log.system.info(`move file: ${ oldFilePath } -> ${ newFilePath }`);
+
+            let doneMove = false;
+            try {
+                // 移動
+                await FileUtil.promiseRename(oldFilePath, newFilePath)
+                .catch(async() => {
+                    await FileUtil.promiseMove(oldFilePath, newFilePath);
+                });
+                doneMove = true;
+            } catch (err) {
+                this.log.system.error(`move file error: ${ oldFilePath } -> ${ newFilePath }`);
+            }
+
+            if (doneMove) {
+                try {
+                    // DB 更新
+                    await this.recordedDB.updateTsFilePath(recorded.id, newFilePath, false);
+                } catch (err) {
+                    this.log.system.error(`filePath update Error: { id: ${ recorded.id }, path: ${ newFilePath } }`);
+                    this.log.system.error(err);
+                }
+            }
+        }
+    }
+
+    /**
+     * 一時領域から移動するファイルの移動先ファイルパスを生成する
+     * @param filePath: string 移動元ファイル
+     * @param conflict: number コンフリクト数
+     * @return string
+     */
+    private getMoveTmpPath(filePath: string, conflict: number = 0): string {
+        const config = this.config.getConfig();
+        const baseDir = Util.getRecordedPath();
+        const tmpDir = config.recordedTmp;
+
+        if (typeof tmpDir === 'undefined') { throw new Error('recordedTmp is undefined'); }
+
+        const fileExtension = path.extname(filePath); // 拡張子取得
+
+        // ファイル名取得
+        let fileName = path.basename(filePath);
+        fileName = fileName.slice(0, fileName.length - fileExtension.length);
+        if (conflict > 0) { fileName += `(${ conflict })`; }
+
+        // ディレクトリパス生成
+        let dirPath = filePath.slice(tmpDir.length + path.sep.length, filePath.length);
+        const basename = path.basename(filePath);
+        if (dirPath.length > basename.length) {
+            dirPath = dirPath.slice(0, dirPath.length - basename.length - path.sep.length);
+            dirPath = path.join(baseDir, dirPath);
+        } else {
+            dirPath = baseDir;
+        }
+
+        // 新しいファイルパス
+        const newFilePath = path.join(dirPath, fileName + fileExtension);
+
+        try {
+            // ディレクトリが存在するか確認
+            fs.statSync(dirPath);
+        } catch (err) {
+            // ディレクトリが存在しなければ作成
+            this.log.system.info(`mkdirp: ${ dirPath }`);
+            mkdirp.sync(dirPath);
+        }
+
+        // 同名ファイルが存在するか確認
+        try {
+            fs.statSync(newFilePath);
+
+            return this.getMoveTmpPath(filePath, conflict + 1);
+        } catch (err) {
+            return newFilePath;
+        }
     }
 }
 
