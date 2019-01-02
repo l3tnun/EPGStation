@@ -1,4 +1,5 @@
 import * as m from 'mithril';
+import DateUtil from '../../Util/DateUtil';
 import ProgramTimeBalloonViewModel from '../../ViewModel/Program/ProgramTimeBalloonViewModel';
 import factory from '../../ViewModel/ViewModelFactory';
 import Component from '../Component';
@@ -33,17 +34,23 @@ class ProgramTitleBalloonComponent extends Component<void> {
         const type = m.route.param('type');
         if (typeof type === 'undefined') { return null; }
 
-        return this.viewModel.getDays().map((data) => {
-            return m('li', {
+        const list: m.Child[] = [];
+        const days = this.viewModel.getDays();
+
+        for (let i = 0; i < days.length; i++) {
+            list.push(m('li', {
                 class: 'mdl-list__item',
                 onclick: () => {
-                    this.viewModel.dayValue = data.value;
+                    this.viewModel.dayValue = days[i].value;
+                    this.viewModel.hourValue = i === 0 ? DateUtil.getJaDate(new Date()).getHours() : 0;
                     this.viewModel.show();
                 },
             }, [
-                m('span', { class: 'mdl-list__item-primary-content' }, `${ type } ${ data.name }`),
-            ]);
-        });
+                m('span', { class: 'mdl-list__item-primary-content' }, `${ type } ${ days[i].name }`),
+            ]));
+        }
+
+        return list;
     }
 }
 

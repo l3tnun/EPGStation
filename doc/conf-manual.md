@@ -386,7 +386,7 @@
 - `http://<MirakurunAddress:port>/api/services` もしくは `http://<EPGStationAddress:port>/api/channels` で確認できる id を入力
 
 ```json
-"serviceOrder": [3273601024, 3273701032, 3273801040, 3273901048, 3274001056, 3274101064, 3274201072]
+"serviceOrder": [3273601024, 3273701032, 3273801040, 3274101064, 3273901048, 3274201072, 3274001056]
 ```
 
 ### serviceSidOrder
@@ -401,7 +401,7 @@
 **serviceOrder が存在する場合はそちらが優先されるため注意**
 
 ```json
-"serviceSidOrder": [400141, 400151, 400161]
+"serviceSidOrder": [1024, 1032, 1040, 1064, 1048, 1072, 1056]
 ```
 
 ### excludeServices
@@ -414,7 +414,7 @@
 - `http://<MirakurunAddress:port>/api/services` もしくは `http://<EPGStationAddress:port>/api/channels` で確認できる id を入力
 
 ```json
-"excludeServices": [3274401088, 3239123608]
+"excludeServices": [3239123608, 400231]
 ```
 
 ### excludeSid
@@ -427,7 +427,7 @@
 - `http://<MirakurunAddress:port>/api/services` もしくは `http://<EPGStationAddress:port>/api/channels` で確認できる serviceId を入力
 
 ```json
-"excludeSid": [400141, 400151, 400161]
+"excludeSid": [23608, 231]
 ```
 
 ### gid
