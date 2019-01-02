@@ -47,13 +47,10 @@ class ReservesViewModel extends ViewModel {
     public init(status: ViewModelStatus = 'init', wait: number = 200): Promise<void> {
         super.init(status);
 
-        if (typeof m.route.param('mode') === 'undefined') {
-            this.mode = ReserveMode.reserves;
-        } else if (m.route.param('mode') === 'conflicts') {
-            this.mode = ReserveMode.conflicts;
-        } else if (m.route.param('mode') === 'overlaps') {
-            this.mode = ReserveMode.overlaps;
-        }
+        const mode = m.route.param('mode');
+        this.mode = mode === 'conflicts'
+            ? ReserveMode.conflicts
+            : mode === 'overlaps' ? ReserveMode.overlaps : ReserveMode.reserves;
 
         if (status === 'reload' || status === 'updateIo') {
             this.reloadInit();

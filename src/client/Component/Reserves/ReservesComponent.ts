@@ -303,7 +303,7 @@ class ReservesComponent extends ParentComponent<void> {
                 m('button', {
                     class: 'mdl-button recorded mdl-js-button mdl-button--icon',
                     onclick: () => {
-                        Util.move('/search', { recorded: reserve.ruleId });
+                        Util.move('/recorded', { rule: reserve.ruleId });
                     },
                 },
                     m('i', { class: 'material-icons' }, 'list'),
