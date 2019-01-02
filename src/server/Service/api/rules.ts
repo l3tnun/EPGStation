@@ -7,7 +7,9 @@ export const get: Operation = async(req, res) => {
     const rules = <RulesModelInterface> factory.get('RulesModel');
 
     try {
-        const results = await rules.getAll(req.query.limit, req.query.offset);
+        const results = await rules.getAll(req.query.limit, req.query.offset, {
+            keyword: req.query.keyword,
+        });
         api.responseJSON(res, 200, results);
     } catch (err) {
         api.responseServerError(res, err.message);
@@ -21,6 +23,7 @@ get.apiDoc = {
     parameters: [
         { $ref: '#/parameters/limit' },
         { $ref: '#/parameters/offset' },
+        { $ref: '#/parameters/ruleKeyword' },
     ],
     responses: {
         200: {

@@ -1,5 +1,16 @@
+import StrUtil from '../../Util/StrUtil';
 import * as DBSchema from './DBSchema';
 import DBTableBase from './DBTableBase';
+
+interface RuleFindAllOption {
+    limit?: number;
+    offset?: number;
+    query?: RuleFindQuery;
+}
+
+interface RuleFindQuery {
+    keyword?: string;
+}
 
 interface RuleList {
     id: number;
@@ -18,7 +29,7 @@ interface RulesDBInterface extends DBTableBase {
     findId(id: number): Promise<DBSchema.RulesSchema | null>;
     findAllId(): Promise<{ id: number }[]>;
     findAllIdAndKeyword(): Promise<{ id: number; keyword: string }[]>;
-    findAll(limit?: number, offset?: number): Promise<DBSchema.RulesSchema[]>;
+    findAll(option?: RuleFindAllOption): Promise<DBSchema.RulesSchema[]>;
     getList(): Promise<RuleList[]>;
     getTotal(): Promise<number>;
 }
@@ -397,15 +408,60 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
 
     /**
      * 全件取得
-     * @param limit: limit
-     * @param offset: offset
+     * @param option: RuleFindAllOption
      * @return Promise<DBSchema.RulesSchema[]>
      */
-    public async findAll(limit?: number, offset: number = 0): Promise<DBSchema.RulesSchema[]> {
-        let query = `select ${ this.getAllColumns() } from ${ DBSchema.TableName.Rules } order by id asc`;
-        if (typeof limit !== 'undefined') { query += ` ${ this.operator.createLimitStr(limit, offset) }`; }
+    public async findAll(option: RuleFindAllOption): Promise<DBSchema.RulesSchema[]> {
+        const values: any[] = [];
+        let query = `select ${ this.getAllColumns() } from ${ DBSchema.TableName.Rules } `;
 
-        return this.fixResults(<DBSchema.RulesSchema[]> await this.operator.runQuery(query));
+        // 検索オプション
+        if (typeof option.query !== 'undefined') {
+            const optionQuery = this.createOptionQuery(option.query);
+            query += optionQuery.str;
+            Array.prototype.push.apply(values, optionQuery.values);
+        }
+
+        query += 'order by id asc';
+        if (typeof option.limit !== 'undefined') { query += ` ${ this.operator.createLimitStr(option.limit, option.offset) }`; }
+
+        return this.fixResults(<DBSchema.RulesSchema[]> await this.operator.runQuery(query, values));
+    }
+
+    /**
+     * 検索時のオプションを生成
+     * @param query: RuleFindQuery
+     * @return { str: string; values: string[] }
+     */
+    public createOptionQuery(query: RuleFindQuery): { str: string; values: string[] } {
+        let queryStr = '';
+        const values: any[] = [];
+
+        if (typeof query.keyword !== 'undefined') {
+            const querys: string[] = [];
+            const likeStr = this.operator.createLikeStr(false);
+            const keywords = StrUtil.toHalf(query.keyword).trim().split(' ');
+
+            keywords.forEach((str, i) => {
+                str = `%${ str }%`;
+                querys.push(`keyword ${ likeStr } ${ this.operator.createValueStr(i + 1, i + 1) }`);
+                values.push(str);
+            });
+
+            // and query 生成
+            querys.forEach((str, i) => {
+                queryStr += i === querys.length - 1 ? `${ str }` : `${ str } and `;
+            });
+        }
+
+        if (queryStr.length > 0) {
+            queryStr = `where ${ queryStr } `;
+        }
+
+        return {
+            str: queryStr,
+            values: values,
+        };
     }
 
     /**
@@ -425,5 +481,5 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
     }
 }
 
-export { RulesDBInterface, RulesDB };
+export { RuleFindQuery, RulesDBInterface, RulesDB };
 

@@ -1,12 +1,12 @@
 import * as DBSchema from '../DB/DBSchema';
-import { RulesDBInterface } from '../DB/RulesDB';
+import { RuleFindQuery, RulesDBInterface } from '../DB/RulesDB';
 import { IPCClientInterface } from '../IPC/IPCClient';
 import { RuleInterface } from '../Operator/RuleInterface';
 import ApiModel from './ApiModel';
 import ApiUtil from './ApiUtil';
 
 interface RulesModelInterface extends ApiModel {
-    getAll(limit: number | undefined, offset: number): Promise<{}[]>;
+    getAll(limit: number | undefined, offset: number, query?: RuleFindQuery): Promise<{}[]>;
     getId(ruleId: number): Promise<{}>;
     getRuleList(): Promise<{}[]>;
     disableRule(ruleId: number): Promise<void>;
@@ -34,10 +34,15 @@ class RulesModel extends ApiModel implements RulesModelInterface {
      * rule をすべて取得
      * @param limit: number | undefined
      * @param offset: number
+     * @param query: RuleFindQuery
      * @return Promise<any>
      */
-    public async getAll(limit: number | undefined, offset: number): Promise<any> {
-        const datas = await this.rulesDB.findAll(limit, offset);
+    public async getAll(limit: number | undefined, offset: number, query: RuleFindQuery = {}): Promise<any> {
+        const datas = await this.rulesDB.findAll({
+            limit: limit,
+            offset: offset,
+            query: query,
+        });
         const total = await this.rulesDB.getTotal();
 
         const results: any[] = [];

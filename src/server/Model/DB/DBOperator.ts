@@ -167,6 +167,14 @@ abstract class DBOperator extends Model {
     public createAddcolumnQueryStr(tableName: string, columnName: string, columnDefine: string): string {
         return `alter table ${ tableName } add ${ columnName } ${ columnDefine }`;
     }
+
+    /**
+     * create like str
+     * @param cs: boolean 大小文字区別
+     */
+    public createLikeStr(cs: boolean): string {
+        return cs ? 'like binary' : 'like';
+    }
 }
 
 export default DBOperator;
