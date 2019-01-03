@@ -11,7 +11,7 @@ interface RulesModelInterface extends ApiModel {
     getRuleList(): Promise<{}[]>;
     disableRule(ruleId: number): Promise<void>;
     enableRule(ruleId: number): Promise<void>;
-    deleteRule(ruleId: number): Promise<void>;
+    deleteRule(ruleId: number, isDeleteFile: boolean): Promise<void>;
     addRule(rule: RuleInterface): Promise<{ id: number }>;
     updateRule(ruleId: number, rule: RuleInterface): Promise<void>;
 }
@@ -104,9 +104,13 @@ class RulesModel extends ApiModel implements RulesModelInterface {
     /**
      * rule を削除
      * @param ruleId: rule id
+     * @param isDeleteFile: 録画ファイルを削除するか
      * @return Promise<void>
      */
-    public async deleteRule(ruleId: number): Promise<void> {
+    public async deleteRule(ruleId: number, isDeleteFile: boolean): Promise<void> {
+        if (isDeleteFile) {
+            await this.ipc.recordedDeleteRule(ruleId);
+        }
         await this.ipc.ruleDelete(ruleId);
     }
 

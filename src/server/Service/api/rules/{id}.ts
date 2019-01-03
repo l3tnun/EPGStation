@@ -103,7 +103,10 @@ export const del: Operation = async(req, res) => {
     const rules = <RulesModelInterface> factory.get('RulesModel');
 
     try {
-        await rules.deleteRule(req.params.id);
+        await rules.deleteRule(
+            req.params.id,
+            typeof req.query.delete === 'undefined' ? false : req.query.delete,
+        );
         api.responseJSON(res, 200, { code: 200 });
     } catch (err) {
         api.responseServerError(res, err.message);
@@ -121,6 +124,13 @@ del.apiDoc = {
             description: 'rule id',
             required: true,
             type: 'integer',
+        },
+        {
+            name: 'delete',
+            description: '録画ファイルを削除するか',
+            in: 'query',
+            type: 'boolean',
+            default: false,
         },
     ],
     responses: {

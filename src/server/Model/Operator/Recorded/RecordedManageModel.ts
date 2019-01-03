@@ -49,6 +49,7 @@ interface RecordedManageModelInterface extends Model {
     deletes(ids: number[], option?: DeleteOption): Promise<number[]>;
     deleteFile(id: number): Promise<void>;
     deleteEncodedFile(encodedId: number): Promise<void>;
+    deleteRule(ruleId: number): Promise<number[]>;
     deleteRuleRelation(id: number): Promise<void>;
     addThumbnail(id: number, thumbnailPath: string): Promise<void>;
     addEncodeFile(recordedId: number, name: string, filePath: string): Promise<number>;
@@ -219,6 +220,19 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
 
         // DB 上から削除
         await this.encodedDB.delete(encodedId);
+    }
+
+    /**
+     * 指定した ruleId を持つ 番組を削除する
+     * @param ruleId: rule id
+     * @return Promise<number[]> 削除時にエラーが発生した recorded id の配列を返す
+     */
+    public async deleteRule(ruleId: number): Promise<number[]> {
+        const list = await this.recordedDB.findRuleIdList(ruleId);
+        const ids: number[] = [];
+        for (const l of list) { ids.push(l.id); }
+
+        return this.deletes(ids);
     }
 
     /**

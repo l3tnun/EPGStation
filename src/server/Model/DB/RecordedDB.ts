@@ -68,6 +68,7 @@ interface RecordedDBInterface extends DBTableBase {
     updateVideoInfo(recordedId: number, info: VideoInfo): Promise<void>;
     findId(id: number): Promise<DBSchema.RecordedSchema | null>;
     findOld(): Promise<DBSchema.RecordedSchema | null>;
+    findRuleIdList(ruleId: number): Promise<{ id: number }[]>;
     findCleanupList(): Promise<{ id: number }[]>;
     findTmp(): Promise<DBSchema.RecordedSchema[]>;
     findAll(option?: FindAllOption): Promise<DBSchema.RecordedSchema[]>;
@@ -616,6 +617,15 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
         const programs = await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Recorded } order by startAt asc, id asc ${ this.operator.createLimitStr(1) }`);
 
         return this.operator.getFirst(await this.fixResults(<DBSchema.RecordedSchema[]> programs));
+    }
+
+    /**
+     * 指定した rule id を持つ id 一覧を返す
+     * @param ruleId: rule id
+     * @return Promise<{ id: number }[]>
+     */
+    public async findRuleIdList(ruleId: number): Promise<{ id: number }[]> {
+        return <{ id: number }[]> await this.operator.runQuery(`select id from ${ DBSchema.TableName.Recorded } where ruleId = ${ ruleId }`);
     }
 
     /**
