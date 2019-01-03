@@ -31,7 +31,7 @@ interface RulesDBInterface extends DBTableBase {
     findAllIdAndKeyword(): Promise<{ id: number; keyword: string }[]>;
     findAll(option?: RuleFindAllOption): Promise<DBSchema.RulesSchema[]>;
     getList(): Promise<RuleList[]>;
-    getTotal(): Promise<number>;
+    getTotal(option?: RuleFindQuery): Promise<number>;
 }
 
 abstract class RulesDB extends DBTableBase implements RulesDBInterface {
@@ -476,8 +476,10 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
      * 件数取得
      * @return Promise<number>
      */
-    public getTotal(): Promise<number> {
-        return this.operator.total(DBSchema.TableName.Rules);
+    public getTotal(option: RuleFindQuery = {}): Promise<number> {
+        const query = this.createOptionQuery(option);
+
+        return this.operator.total(DBSchema.TableName.Rules, query.str, query.values);
     }
 }
 

@@ -43,7 +43,7 @@ class RulesModel extends ApiModel implements RulesModelInterface {
             offset: offset,
             query: query,
         });
-        const total = await this.rulesDB.getTotal();
+        const total = await this.rulesDB.getTotal(query);
 
         const results: any[] = [];
         datas.forEach((result: DBSchema.RulesSchema) => {
