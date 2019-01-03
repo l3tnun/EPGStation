@@ -45,6 +45,7 @@ import ReservesMenuViewModel from './Reserves/ReservesMenuViewModel';
 import { ReservesViewModel } from './Reserves/ReservesViewModel';
 import RulesDeleteViewModel from './Rules/RulesDeleteViewModel';
 import RulesInfoViewModel from './Rules/RulesInfoViewModel';
+import RulesSearchViewModel from './Rules/RulesSearchViewModel';
 import RulesViewModel from './Rules/RulesViewModel';
 import SearchSettingViewModel from './Search/SearchSettingViewModel';
 import SearchViewModel from './Search/SearchViewModel';
@@ -237,6 +238,9 @@ namespace ViewModelFactorySetting {
         factory.reg('RulesInfoViewModel', new RulesInfoViewModel(
             balloonModel,
             channelsApiModel,
+        ));
+        factory.reg('RulesSearchViewModel', new RulesSearchViewModel(
+            balloonModel,
         ));
         factory.reg('SearchSettingViewModel', new SearchSettingViewModel(
             searchSettingModel,

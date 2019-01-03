@@ -5,6 +5,7 @@ import Util from '../../Util/Util';
 import BalloonViewModel from '../../ViewModel/Balloon/BalloonViewModel';
 import RulesDeleteViewModel from '../../ViewModel/Rules/RulesDeleteViewModel';
 import RulesInfoViewModel from '../../ViewModel/Rules/RulesInfoViewModel';
+import RulesSearchViewModel from '../../ViewModel/Rules/RulesSearchViewModel';
 import RulesViewModel from '../../ViewModel/Rules/RulesViewModel';
 import factory from '../../ViewModel/ViewModelFactory';
 import { BalloonComponent } from '../BalloonComponent';
@@ -14,6 +15,8 @@ import ParentComponent from '../ParentComponent';
 import RulesDeleteComponent from './RulesDeleteComponent';
 import RulesInfoActionComponent from './RulesInfoActionComponent';
 import RulesInfoComponent from './RulesInfoComponent';
+import RulesSearchActionComponent from './RulesSearchActionComponent';
+import RulesSearchComponent from './RulesSearchComponent';
 import RulesUtil from './RulesUtil';
 
 /**
@@ -24,6 +27,7 @@ class RulesComponent extends ParentComponent<void> {
     private balloon: BalloonViewModel;
     private deleteViewModel: RulesDeleteViewModel;
     private infoViewModel: RulesInfoViewModel;
+    private searchViewModel: RulesSearchViewModel;
 
     constructor() {
         super();
@@ -31,6 +35,7 @@ class RulesComponent extends ParentComponent<void> {
         this.balloon = <BalloonViewModel> factory.get('BalloonViewModel');
         this.deleteViewModel = <RulesDeleteViewModel> factory.get('RulesDeleteViewModel');
         this.infoViewModel = <RulesInfoViewModel> factory.get('RulesInfoViewModel');
+        this.searchViewModel = <RulesSearchViewModel> factory.get('RulesSearchViewModel');
     }
 
     protected async parentInitViewModel(status: ViewModelStatus): Promise<void> {
@@ -47,7 +52,18 @@ class RulesComponent extends ParentComponent<void> {
      */
     public view(): m.Child {
         return m(MainLayoutComponent, {
-            header: { title: 'ルール' },
+            header: {
+                title: 'ルール',
+                button: [
+                    m('label', {
+                        class: 'header-menu-button mdl-button mdl-js-button mdl-button--icon',
+                        onclick: (e: Event) => {
+                            this.searchViewModel.reset();
+                            this.balloon.open(RulesSearchViewModel.id, e);
+                        },
+                    }, m('i', { class: 'material-icons' }, 'search')),
+                ],
+            },
             content: [
                 this.createContent(),
             ],
@@ -68,6 +84,14 @@ class RulesComponent extends ParentComponent<void> {
                     maxWidth: 400,
                     verticalOnly: true,
                     forceDialog: window.innerHeight < 600,
+                }),
+                m(BalloonComponent, {
+                    id: RulesSearchViewModel.id,
+                    content: m(RulesSearchComponent),
+                    action: m(RulesSearchActionComponent),
+                    maxWidth: 400,
+                    verticalOnly: true,
+                    foreBalloon: true,
                 }),
             ],
         });

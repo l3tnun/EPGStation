@@ -1,10 +1,14 @@
 import * as apid from '../../../../api';
 import ApiModel from './ApiModel';
 
+interface RuleFindQueryOption {
+    keyword?: string;
+}
+
 interface RulesApiModelInterface extends ApiModel {
     init(): void;
     updateRules(): Promise<void>;
-    fetchRules(limit: number, offset: number): Promise<void>;
+    fetchRules(limit: number, offset: number, option: RuleFindQueryOption): Promise<void>;
     fetchRule(ruleId: apid.RuleId): Promise<void>;
     fetchRuleList(): Promise<void>;
     getRules(): apid.Rules;
@@ -28,6 +32,7 @@ class RulesApiModel extends ApiModel implements RulesApiModelInterface {
     private ruleList: apid.RuleList[] = [];
     private limit: number = 0;
     private offset: number = 0;
+    private option: RuleFindQueryOption = {};
     private currentPage: number = 1;
 
     public init(): void {
@@ -39,7 +44,7 @@ class RulesApiModel extends ApiModel implements RulesApiModelInterface {
      * query を現在の状況のまま更新する
      */
     public async updateRules(): Promise<void> {
-        return this.fetchRules(this.limit, this.offset);
+        return this.fetchRules(this.limit, this.offset, this.option);
     }
 
     /**
@@ -47,15 +52,19 @@ class RulesApiModel extends ApiModel implements RulesApiModelInterface {
      * /api/rules
      * @param limit: limit
      * @param offset: offset
+     * @param option: RuleFindQueryOption
      */
-    public async fetchRules(limit: number, offset: number): Promise<void> {
+    public async fetchRules(limit: number, offset: number, option: RuleFindQueryOption): Promise<void> {
         this.limit = limit;
         this.offset = offset;
+        this.option = option;
 
-        const query = {
+        const query: { [key: string]: any } = {
             limit: limit,
             offset: offset,
         };
+
+        if (typeof option.keyword !== 'undefined') { query.keyword = option.keyword; }
 
         try {
             this.rules = await <any> this.request({
@@ -209,5 +218,5 @@ class RulesApiModel extends ApiModel implements RulesApiModelInterface {
     }
 }
 
-export { RulesApiModelInterface, RulesApiModel };
+export { RuleFindQueryOption, RulesApiModelInterface, RulesApiModel };
 

@@ -3,7 +3,7 @@ import * as apid from '../../../../api';
 import { ViewModelStatus } from '../../Enums';
 import { ChannelsApiModelInterface } from '../../Model/Api/ChannelsApiModel';
 import { ReservesApiModelInterface, RuleReservesCount } from '../../Model/Api/ReservesApiModel';
-import { RulesApiModelInterface } from '../../Model/Api/RulesApiModel';
+import { RuleFindQueryOption, RulesApiModelInterface } from '../../Model/Api/RulesApiModel';
 import { SettingValue } from '../../Model/Setting/SettingModel';
 import { SnackbarModelInterface } from '../../Model/Snackbar/SnackbarModel';
 import StorageTemplateModel from '../../Model/Storage/StorageTemplateModel';
@@ -21,6 +21,7 @@ class RulesViewModel extends ViewModel {
     private setting: StorageTemplateModel<SettingValue>;
     private limit: number = 0;
     private offset: number = 0;
+    private option: RuleFindQueryOption = {};
     private ruleReservesCount: RuleReservesCount = {};
 
     constructor(
@@ -50,6 +51,9 @@ class RulesViewModel extends ViewModel {
         this.limit = typeof m.route.param('length') === 'undefined' ? this.setting.getValue().ruleLength : Number(m.route.param('length'));
         this.offset = typeof m.route.param('page') === 'undefined' ? 0 : (Number(m.route.param('page')) - 1) * this.limit;
 
+        this.option = {};
+        if (typeof m.route.param('keyword') !== 'undefined') { this.option.keyword = m.route.param('keyword'); }
+
         this.rulesApiModel.init();
         this.reservesApiModel.init();
         if (status === 'update') { m.redraw(); }
@@ -70,7 +74,7 @@ class RulesViewModel extends ViewModel {
      * fetchData
      */
     private async fetchData(): Promise<void> {
-        await this.rulesApiModel.fetchRules(this.limit, this.offset);
+        await this.rulesApiModel.fetchRules(this.limit, this.offset, this.option);
         this.ruleReservesCount = await this.reservesApiModel.fetchRuleReservesCountCount();
     }
 
