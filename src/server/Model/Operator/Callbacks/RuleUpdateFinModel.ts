@@ -50,7 +50,7 @@ class RuleUpdateFinModel extends Model implements CallbackBaseModelInterface {
             // SQLite3 使用時に正しく動作しないので sleep
             await Util.sleep(100);
             try {
-                await this.recordedManage.deleteRule(ruleId);
+                await this.recordedManage.deleteRuleRelation(ruleId);
             } catch (err) {
                 this.log.system.error(err);
             }

@@ -49,7 +49,7 @@ interface RecordedManageModelInterface extends Model {
     deletes(ids: number[], option?: DeleteOption): Promise<number[]>;
     deleteFile(id: number): Promise<void>;
     deleteEncodedFile(encodedId: number): Promise<void>;
-    deleteRule(id: number): Promise<void>;
+    deleteRuleRelation(id: number): Promise<void>;
     addThumbnail(id: number, thumbnailPath: string): Promise<void>;
     addEncodeFile(recordedId: number, name: string, filePath: string): Promise<number>;
     addRecordedExternalFile(info: ExternalFileInfo): Promise<void>;
@@ -226,7 +226,7 @@ class RecordedManageModel extends Model implements RecordedManageModelInterface 
      * rule が削除されたときに呼ぶ
      * @param id: rule id
      */
-    public deleteRule(id: number): Promise<void> {
+    public deleteRuleRelation(id: number): Promise<void> {
 
         this.log.system.info(`delete recorded program ruleId ${ id }`);
 
