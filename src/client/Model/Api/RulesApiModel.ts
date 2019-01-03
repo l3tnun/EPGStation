@@ -17,7 +17,7 @@ interface RulesApiModelInterface extends ApiModel {
     getRuleList(): apid.RuleList[];
     enable(ruleId: apid.RuleId): Promise<void>;
     disable(ruleId: apid.RuleId): Promise<void>;
-    delete(ruleId: apid.RuleId): Promise<void>;
+    delete(ruleId: apid.RuleId, isDeleteRecorded: boolean): Promise<void>;
     add(rule: apid.AddRule): Promise<void>;
     update(ruleId: apid.RuleId, rule: apid.AddRule): Promise<void>;
 }
@@ -180,12 +180,13 @@ class RulesApiModel extends ApiModel implements RulesApiModelInterface {
     /**
      * delete rule
      * @param ruleId: RuleId
+     * @param isDeleteRecorded: boolean
      * @return Promise<void>
      */
-    public async delete(ruleId: apid.RuleId): Promise<void> {
+    public async delete(ruleId: apid.RuleId, isDeleteRecorded: boolean): Promise<void> {
         await this.request({
             method: 'DELETE',
-            url: `./api/rules/${ ruleId }`,
+            url: `./api/rules/${ ruleId }?delete=${ isDeleteRecorded }`,
         });
         await this.updateRules();
     }
