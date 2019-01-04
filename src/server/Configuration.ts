@@ -83,7 +83,7 @@ class Configuration {
     public getConfig(): ConfigInterface {
         if (this.config === null) { throw new Error('config is null'); }
 
-        return this.config;
+        return <ConfigInterface> JSON.parse(JSON.stringify(this.config));
     }
 }
 
