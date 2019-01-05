@@ -269,6 +269,17 @@ class IPCServer extends Model implements IPCServerInterface {
             }
         };
 
+        this.functions[IPCMessageDefinition.recordedDeleteRules] = async(id: number, args: any) => {
+            const ruleIds: number[] = args.ruleIds;
+
+            try {
+                const value = await this.recordedManage.deleteRules(ruleIds);
+                this.send({ id: id,  value: value });
+            } catch (err) {
+                 this.send({ id: id, error: err.message });
+            }
+        };
+
         this.functions[IPCMessageDefinition.recordedClenaup] = async(id: number) => {
             try {
                 await this.recordedManage.cleanup();
@@ -318,6 +329,17 @@ class IPCServer extends Model implements IPCServerInterface {
                 this.send({ id: id });
             } catch (err) {
                 this.send({ id: id, error: err.message });
+            }
+        };
+
+        this.functions[IPCMessageDefinition.ruleDeletes] = async(id: number, args: any) => {
+            const ruleIds: number[] = args.ruleIds;
+
+            try {
+                const value = await this.ruleManage.deletes(ruleIds);
+                this.send({ id: id,  value: value });
+            } catch (err) {
+                 this.send({ id: id, error: err.message });
             }
         };
 

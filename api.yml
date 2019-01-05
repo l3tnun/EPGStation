@@ -1326,6 +1326,20 @@ definitions:
         type: boolean
         description: 'エンコード後にオリジナルファイルを削除する'
 
+  RuleDeletes:
+    type: object
+    required:
+      - ruleIds
+      - delete
+    properties:
+      ruleIds:
+        type: array
+        items:
+          $ref: '#/definitions/RuleId'
+      delete:
+        description: '録画ファイルを削除するか'
+        type: boolean
+
   StorageInfo:
     type: object
     required:

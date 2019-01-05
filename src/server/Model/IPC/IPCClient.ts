@@ -28,11 +28,13 @@ interface IPCClientInterface extends Model {
     recordedDeleteFile(recordedId: number): Promise<void>;
     recordedDeleteEncodeFile(encodedId: number): Promise<void>;
     recordedDeleteRule(ruleId: number): Promise<number[]>;
+    recordedDeleteRules(ruleIds: number[]): Promise<number[]>;
     recordedCleanup(): Promise<void>;
     recordedRegenerateThumbnail(): Promise<void>;
     ruleDisable(ruleId: number): Promise<void>;
     ruleEnable(ruleId: number): Promise<void>;
     ruleDelete(ruleId: number): Promise<void>;
+    ruleDeletes(ruleIds: number[]): Promise<number[]>;
     ruleAdd(rule: RuleInterface): Promise<number>;
     ruleUpdate(ruleId: number, rule: RuleInterface): Promise<void>;
     addEncodeFile(recordedId: number, name: string, filePath: string): Promise<number>;
@@ -289,6 +291,18 @@ class IPCClient extends Model implements IPCClientInterface {
     }
 
     /**
+     * 指定した ruleId(複数) の録画を削除する
+     * @param ruleIds: rule ids
+     * @return Promise<number[]> 削除できなかった要素を返す
+     */
+    public async recordedDeleteRules(ruleIds: number[]): Promise<number[]> {
+        const id = this.send(IPCMessageDefinition.recordedDeleteRules, { ruleIds: ruleIds });
+        const result = await this.receive(id);
+
+        return <number[]> result.value;
+    }
+
+    /**
      * 録画 cleanup
      * @return Promise<void>
      */
@@ -334,6 +348,20 @@ class IPCClient extends Model implements IPCClientInterface {
     public async ruleDelete(ruleId: number): Promise<void> {
         const id = this.send(IPCMessageDefinition.ruleDelete, { ruleId: ruleId });
         await this.receive(id);
+    }
+
+    /**
+     * 指定した複数の rule を削除する
+     * @param ruleIds: rule ids
+     * @return Promise<number[]> 削除できなかった要素を返す
+     */
+    public async ruleDeletes(ruleIds: number[]): Promise<number[]> {
+        const id = this.send(IPCMessageDefinition.ruleDeletes, {
+            ruleIds: ruleIds,
+        });
+        const result = await this.receive(id);
+
+        return <number[]> result.value;
     }
 
     /**
