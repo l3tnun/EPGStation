@@ -7,7 +7,6 @@ import Model from '../Model';
 
 interface SocketIoManageModelInterface extends Model {
     initialize(server: http.Server): void;
-    getSockets(): SocketIO.Namespace;
     notifyClient(): void;
 }
 
@@ -17,6 +16,7 @@ interface SocketIoManageModelInterface extends Model {
  */
 class SocketIoManageModel extends Model implements SocketIoManageModelInterface {
     private io: SocketIO.Server | null = null;
+    private callTimer: NodeJS.Timer | null = null;
 
     /**
      * http.Server セット
@@ -35,7 +35,7 @@ class SocketIoManageModel extends Model implements SocketIoManageModelInterface 
      * socket を返す
      * @return SocketIO.Namespace
      */
-    public getSockets(): SocketIO.Namespace {
+    private getSockets(): SocketIO.Namespace {
         if (this.io === null) {
             throw new Error('must call SocketIoManageModel initialize');
         }
@@ -47,7 +47,12 @@ class SocketIoManageModel extends Model implements SocketIoManageModelInterface 
      * client へ状態の更新を通知する
      */
     public notifyClient(): void {
-        this.getSockets().emit(events.updateStatus);
+        if (this.callTimer === null) {
+            this.callTimer = setTimeout(() => {
+                this.callTimer = null;
+                this.getSockets().emit(events.updateStatus);
+            }, 200);
+        }
     }
 }
 
