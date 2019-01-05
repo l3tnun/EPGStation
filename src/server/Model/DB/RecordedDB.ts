@@ -37,6 +37,21 @@ interface VideoInfo {
     audioComponentType: number | null;
 }
 
+interface ProgramInfo extends VideoInfo {
+    startAt: apid.UnixtimeMS;
+    endAt: apid.UnixtimeMS;
+    duration: number;
+    name: string;
+    description: string | null;
+    extended: string | null;
+    genre1: number | null;
+    genre2: number | null;
+    genre3: number | null;
+    genre4: number | null;
+    genre5: number | null;
+    genre6: number | null;
+}
+
 interface RecordedFilesItem {
     id: number;
     recPath: string | null;
@@ -65,6 +80,7 @@ interface RecordedDBInterface extends DBTableBase {
     updateLogFilePath(recordedId: number, filePath: string): Promise<void>;
     updateAllNullFileSize(): Promise<void>;
     updateCnt(recordedId: number, item: CntItem): Promise<void>;
+    updateProgramInfo(recordedId: number, info: ProgramInfo): Promise<void>;
     updateVideoInfo(recordedId: number, info: VideoInfo): Promise<void>;
     findId(id: number): Promise<DBSchema.RecordedSchema | null>;
     findOld(): Promise<DBSchema.RecordedSchema | null>;
@@ -513,6 +529,56 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
     }
 
     /**
+     * 番組情報を更新
+     * @param recordedId: number
+     * @param info: ProgramInfo
+     */
+    public async updateProgramInfo(recordedId: number, info: ProgramInfo): Promise<void> {
+        const values: any[] = [];
+        values.push(info.startAt);
+        values.push(info.endAt);
+        values.push(info.duration);
+        values.push(info.name);
+        values.push(info.description);
+        values.push(info.extended);
+        values.push(info.genre1);
+        values.push(info.genre2);
+        values.push(info.genre3);
+        values.push(info.genre4);
+        values.push(info.genre5);
+        values.push(info.genre6);
+        values.push(info.videoType);
+        values.push(info.videoResolution);
+        values.push(info.videoStreamContent);
+        values.push(info.videoComponentType);
+        values.push(info.audioSamplingRate);
+        values.push(info.audioComponentType);
+
+        await this.operator.runQuery(
+            `update ${ DBSchema.TableName.Recorded } set `
+            + `startAt = ${ this.operator.createValueStr(1, 1) }, `
+            + `endAt = ${ this.operator.createValueStr(2, 2) }, `
+            + `duration = ${ this.operator.createValueStr(3, 3) }, `
+            + `name = ${ this.operator.createValueStr(4, 4) }, `
+            + `description = ${ this.operator.createValueStr(5, 5) }, `
+            + `extended = ${ this.operator.createValueStr(6, 6) }, `
+            + `genre1 = ${ this.operator.createValueStr(7, 7) }, `
+            + `genre2 = ${ this.operator.createValueStr(8, 8) }, `
+            + `genre3 = ${ this.operator.createValueStr(9, 9) }, `
+            + `genre4 = ${ this.operator.createValueStr(10, 10) }, `
+            + `genre5 = ${ this.operator.createValueStr(11, 11) }, `
+            + `genre6 = ${ this.operator.createValueStr(12, 12) }, `
+            + `videoType = ${ this.operator.createValueStr(13, 13) }, `
+            + `videoResolution = ${ this.operator.createValueStr(14, 14) }, `
+            + `videoStreamContent = ${ this.operator.createValueStr(15, 15) }, `
+            + `videoComponentType = ${ this.operator.createValueStr(16, 16) }, `
+            + `audioSamplingRate = ${ this.operator.createValueStr(17, 17) }, `
+            + `audioComponentType = ${ this.operator.createValueStr(18, 18) } `
+            + `where id = ${ recordedId }`,
+        values);
+    }
+
+    /**
      * video 情報を更新
      * @param recordedId: number
      * @param info: VideoInfo
@@ -528,14 +594,14 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
 
         await this.operator.runQuery(
             `update ${ DBSchema.TableName.Recorded } set `
-            + `videoType = "${ info.videoType }", `
-            + `videoResolution = "${ info.videoResolution }", `
-            + `videoStreamContent = ${ info.videoStreamContent }, `
-            + `videoComponentType = ${ info.videoComponentType }, `
-            + `audioSamplingRate = ${ info.audioSamplingRate }, `
-            + `audioComponentType = ${ info.audioComponentType } `
+            + `videoType = ${ this.operator.createValueStr(1, 1) }, `
+            + `videoResolution = ${ this.operator.createValueStr(2, 2) }, `
+            + `videoStreamContent = ${ this.operator.createValueStr(3, 3) }, `
+            + `videoComponentType = ${ this.operator.createValueStr(4, 4) }, `
+            + `audioSamplingRate = ${ this.operator.createValueStr(5, 5) }, `
+            + `audioComponentType = ${ this.operator.createValueStr(6, 6) } `
             + `where id = ${ recordedId }`,
-        );
+        values);
     }
 
     /**
