@@ -1,6 +1,7 @@
 import StorageTemplateModel from '../Storage/StorageTemplateModel';
 
 interface SearchSettingValue {
+    isGoBackPreviousPage: boolean;
     setKeyowordToDirectory: boolean;
     setDefaultEncodeOption: boolean;
     isEnableAvoidDuplicate: boolean;
@@ -24,6 +25,7 @@ class SearchSettingModel extends StorageTemplateModel<SearchSettingValue> {
      */
     public getDefaultValue(): SearchSettingValue {
         return {
+            isGoBackPreviousPage: false,
             setKeyowordToDirectory: false,
             setDefaultEncodeOption: false,
             isEnableAvoidDuplicate: false,
