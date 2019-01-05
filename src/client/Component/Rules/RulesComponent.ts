@@ -9,12 +9,14 @@ import RulesSearchViewModel from '../../ViewModel/Rules/RulesSearchViewModel';
 import RulesViewModel from '../../ViewModel/Rules/RulesViewModel';
 import factory from '../../ViewModel/ViewModelFactory';
 import { BalloonComponent } from '../BalloonComponent';
+import EditHeaderComponent from '../EditHeaderComponent';
 import MainLayoutComponent from '../MainLayoutComponent';
 import PaginationComponent from '../PaginationComponent';
 import ParentComponent from '../ParentComponent';
 import RulesDeleteComponent from './RulesDeleteComponent';
 import RulesInfoActionComponent from './RulesInfoActionComponent';
 import RulesInfoComponent from './RulesInfoComponent';
+import RulesMultipleDeleteCompoent from './RulesMultipleDeleteCompoent';
 import RulesSearchActionComponent from './RulesSearchActionComponent';
 import RulesSearchComponent from './RulesSearchComponent';
 import RulesUtil from './RulesUtil';
@@ -64,6 +66,17 @@ class RulesComponent extends ParentComponent<void> {
                     }, m('i', { class: 'material-icons' }, 'search')),
                 ],
             },
+            menuContent: [
+                {
+                    attrs: {
+                        onclick: () => {
+                            this.balloon.close();
+                            this.viewModel.startEditMode();
+                        },
+                    },
+                    text: '編集',
+                },
+            ],
             content: [
                 this.createContent(),
             ],
@@ -74,7 +87,7 @@ class RulesComponent extends ParentComponent<void> {
                 m(BalloonComponent, {
                     id: RulesDeleteViewModel.id,
                     content: m(RulesDeleteComponent),
-                    maxWidth: 300,
+                    maxWidth: 340,
                     forceDialog: true,
                 }),
                 m(BalloonComponent, {
@@ -93,6 +106,33 @@ class RulesComponent extends ParentComponent<void> {
                     verticalOnly: true,
                     foreBalloon: true,
                 }),
+                m(BalloonComponent, {
+                    id: RulesViewModel.multipleDeleteId,
+                    content: m(RulesMultipleDeleteCompoent),
+                    maxWidth: 340,
+                    forceDialog: true,
+                }),
+                m(EditHeaderComponent, {
+                    title: `${ this.viewModel.getSelectedCnt() } 件選択`,
+                    button: [
+                        {
+                            onclick: () => { this.viewModel.selectAll(); },
+                            name: 'select_all',
+                        },
+                        {
+                            onclick: () => {
+                                if (this.viewModel.getSelectedCnt() > 0) {
+                                    this.balloon.open(RulesViewModel.multipleDeleteId);
+                                } else {
+                                    this.viewModel.openSnackbar('番組を選択してください。');
+                                }
+                            },
+                            name: 'delete',
+                        },
+                    ],
+                    isShow: () => { return this.viewModel.isEditing(); },
+                    close: () => { this.viewModel.endEditMode(); },
+                }),
             ],
         });
     }
@@ -103,7 +143,8 @@ class RulesComponent extends ParentComponent<void> {
      */
     private createContent(): m.Child {
         return m('div', {
-            class: 'rules-content',
+            class: 'rules-content'
+                + (this.viewModel.isEditing() ? ' is-editing' : ''),
             onupdate: () => { this.restoreMainLayoutPosition(); },
         }, [
             this.createCardView(),
@@ -122,10 +163,27 @@ class RulesComponent extends ParentComponent<void> {
      */
     private createCardView(): m.Child[] {
         return this.viewModel.getRules().rules.map((rule) => {
-            return m('div', { class: 'rule-card mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col' }, [
+            return m('div', {
+                class: 'rule-card mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col',
+                onclick: () => {
+                    if (!this.viewModel.isEditing()) { return; }
+
+                    // editing
+                    this.viewModel.select(rule.id);
+                },
+                onupdate: (vnode: m.VnodeDOM<void, any>) => {
+                    if (this.viewModel.isSelecting(rule.id)) {
+                        (<HTMLElement> vnode.dom).classList.add('selected');
+                    } else {
+                        (<HTMLElement> vnode.dom).classList.remove('selected');
+                    }
+                },
+            }, [
                 m('div', {
                     class: 'mdl-card__supporting-text',
                     onclick: (e: Event) => {
+                        if (this.viewModel.isEditing()) { return; }
+
                         // toggle
                         if ((<HTMLElement> e.target).className.indexOf('mdl-card__supporting-text') === -1) { return; }
 
@@ -159,6 +217,8 @@ class RulesComponent extends ParentComponent<void> {
                 class: 'mdl-switch__input',
                 checked: rule.enable,
                 onclick: m.withAttr('checked', (value) => {
+                    if (this.viewModel.isEditing()) { return; }
+
                     if (value) {
                         this.viewModel.enable(rule);
                     } else {
@@ -206,7 +266,21 @@ class RulesComponent extends ParentComponent<void> {
             ])),
 
             m('tbody', this.viewModel.getRules().rules.map((rule) => {
-                return m('tr', [
+                return m('tr', {
+                    onclick: () => {
+                        if (!this.viewModel.isEditing()) { return; }
+
+                        // editing
+                        this.viewModel.select(rule.id);
+                    },
+                    onupdate: (vnode: m.VnodeDOM<void, any>) => {
+                        if (this.viewModel.isSelecting(rule.id)) {
+                            (<HTMLElement> vnode.dom).classList.add('selected');
+                        } else {
+                            (<HTMLElement> vnode.dom).classList.remove('selected');
+                        }
+                    },
+                }, [
                     m('td', { class: 'toggle' }, m('div', { class: 'toggle-container' }, this.createToggle(rule))),
                     m('td', { class: RulesComponent.nonNumeric + ' keyword' }, RulesUtil.createKeywordStr(rule)),
                     m('td', { class: RulesComponent.nonNumeric + ' ignore-keyword' }, RulesUtil.createIgnoreKeywordStr(rule)),
@@ -238,6 +312,8 @@ class RulesComponent extends ParentComponent<void> {
                 m('button', {
                     class: 'mdl-button mdl-js-button mdl-button--icon',
                     onclick: () => {
+                        if (this.viewModel.isEditing()) { return; }
+
                         Util.move('/recorded', { rule: rule.id });
                     },
                 },
@@ -247,6 +323,8 @@ class RulesComponent extends ParentComponent<void> {
                 m('button', {
                     class: 'mdl-button mdl-js-button mdl-button--icon',
                     onclick: () => {
+                        if (this.viewModel.isEditing()) { return; }
+
                         Util.move('/search', { rule: rule.id });
                     },
                 },
@@ -256,6 +334,8 @@ class RulesComponent extends ParentComponent<void> {
                 m('button', {
                     class: 'mdl-button mdl-js-button mdl-button--icon',
                     onclick: (e: Event) => {
+                        if (this.viewModel.isEditing()) { return; }
+
                         this.deleteViewModel.set(rule);
                         this.balloon.open(RulesDeleteViewModel.id, e);
                     },

@@ -18,6 +18,7 @@ interface RulesApiModelInterface extends ApiModel {
     enable(ruleId: apid.RuleId): Promise<void>;
     disable(ruleId: apid.RuleId): Promise<void>;
     delete(ruleId: apid.RuleId, isDeleteRecorded: boolean): Promise<void>;
+    deleteMultiple(ruleIds: apid.RuleId[], isDeleteRecorded: boolean): Promise<void>;
     add(rule: apid.AddRule): Promise<void>;
     update(ruleId: apid.RuleId, rule: apid.AddRule): Promise<void>;
 }
@@ -187,6 +188,24 @@ class RulesApiModel extends ApiModel implements RulesApiModelInterface {
         await this.request({
             method: 'DELETE',
             url: `./api/rules/${ ruleId }?delete=${ isDeleteRecorded }`,
+        });
+        await this.updateRules();
+    }
+
+    /**
+     * delete rules
+     * @param ruleIds: RuleIds
+     * @param isDeleteRecorded: boolean
+     * @return Promise<void>
+     */
+    public async deleteMultiple(ruleIds: apid.RuleId[], isDeleteRecorded: boolean): Promise<void> {
+        await <apid.RecordedDeleteMultipleResult> await this.request({
+            method: 'POST',
+            url: './api/rules/delete',
+            data: {
+                ruleIds: ruleIds,
+                delete: isDeleteRecorded,
+            },
         });
         await this.updateRules();
     }
