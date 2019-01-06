@@ -3,6 +3,19 @@
  */
 namespace StrUtil {
     /**
+     * 文字列をデータベース用文字列に変換する．
+     * convertTwoByteToOneByteがtrueの場合は全角英数記号を半角へ変換する
+     * @param str: string
+     * @param convertTwoByteToOneByte: boolean
+     * @return string
+     */
+    export const toDBStr = (str: string, convertTwoByteToOneByte: boolean): string => {
+      const ret = convertTwoByteToOneByte ? toHalf(str) : str;
+
+      return ret.replace(/\x00/g, ''); // PostgreSQL 非対応文字
+    };
+
+    /**
      * 全角英数記号を半角へ変換する
      * @param str: string
      * @return string
@@ -18,8 +31,7 @@ namespace StrUtil {
             .replace(/￥/g, '\\')
             // tslint:disable-next-line:no-irregular-whitespace
             .replace(/　/g, ' ')
-            .replace(/〜/g, '~')
-            .replace(/\x00/g, ''); // PostgreSQL 非対応文字
+            .replace(/〜/g, '~');
     };
 
     /**

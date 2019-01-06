@@ -175,7 +175,7 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
             const channelType = channelTypes[program.networkId][program.serviceId].type;
             const channel = channelTypes[program.networkId][program.serviceId].channel;
 
-            const name = config.convertTwoByteToOneByte ? StrUtil.toHalf(program.name) : program.name;
+            const name = StrUtil.toDBStr(program.name, config.convertTwoByteToOneByte);
             const tmp = [
                 program.id,
                 parseInt(program.networkId + (program.serviceId / 100000).toFixed(5).slice(2), 10),
@@ -190,7 +190,7 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
                 program.isFree,
                 name,
                 StrUtil.deleteBrackets(name),
-                typeof program.description === 'undefined' || program.description === '' ? null : config.convertTwoByteToOneByte ? StrUtil.toHalf(program.description) : program.description,
+                typeof program.description === 'undefined' || program.description === '' ? null : StrUtil.toDBStr(program.description, config.convertTwoByteToOneByte),
                 this.createExtendedStr(program.extended, config.convertTwoByteToOneByte),
                 genre1,
                 genre2,
@@ -292,7 +292,7 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
             }
         }
 
-        const ret = convertTwoByteToOneByte ? StrUtil.toHalf(str).trim() : str.trim();
+        const ret = StrUtil.toDBStr(str, convertTwoByteToOneByte).trim();
 
         return ret;
     }
@@ -754,7 +754,7 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
 
             // あいまい検索
             const likeStr = this.createLikeStr(keyOption.cs);
-            const keywords = StrUtil.toHalf(keyword).trim().split(' ');
+            const keywords = StrUtil.toDBStr(keyword, this.config.getConfig().convertTwoByteToOneByte).trim().split(' ');
             const keywordCnt = keywords.length;
 
             keywords.forEach((str, i) => {
