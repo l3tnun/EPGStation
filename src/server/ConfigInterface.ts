@@ -72,6 +72,7 @@ interface ConfigInterface {
     ffmpeg: string;
     ffprobe: string;
     maxEncode: number;
+    convertTwoByteToOneByte: boolean;
     encode: {
         name: string;
         cmd: string;
