@@ -12,6 +12,7 @@ import DBTableBase from './DBTableBase';
 interface ChannelTypeHash {
     [key: number]: { // NetworkId
         [key: number]: { // ServiceId
+
             type: apid.ChannelType;
             channel: string;
         };
@@ -71,7 +72,7 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
     /**
      * insert 時の config を取得
      */
-    private getInsertConfig(): { insertMax: number; insertWait: number } {
+    private getInsertConfig(): { insertMax: number; insertWait: number; convertTwoByteToOneByte: boolean } {
         const config = this.config.getConfig();
         let insertMax = config.programInsertMax || 10;
         if (insertMax > 10) { insertMax = 10; }
@@ -79,6 +80,7 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
         return {
             insertMax: insertMax,
             insertWait: config.programInsertWait || 0,
+            convertTwoByteToOneByte: config.convertTwoByteToOneByte,
         };
     }
 
@@ -173,7 +175,7 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
             const channelType = channelTypes[program.networkId][program.serviceId].type;
             const channel = channelTypes[program.networkId][program.serviceId].channel;
 
-            const name = StrUtil.toHalf(program.name);
+            const name = config.convertTwoByteToOneByte ? StrUtil.toHalf(program.name) : program.name;
             const tmp = [
                 program.id,
                 parseInt(program.networkId + (program.serviceId / 100000).toFixed(5).slice(2), 10),
@@ -188,8 +190,8 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
                 program.isFree,
                 name,
                 StrUtil.deleteBrackets(name),
-                typeof program.description === 'undefined' || program.description === '' ? null : StrUtil.toHalf(program.description),
-                this.createExtendedStr(program.extended),
+                typeof program.description === 'undefined' || program.description === '' ? null : config.convertTwoByteToOneByte ? StrUtil.toHalf(program.description) : program.description,
+                this.createExtendedStr(program.extended, config.convertTwoByteToOneByte),
                 genre1,
                 genre2,
                 genre3,
@@ -278,7 +280,7 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
      * @param extended extended
      * @return string
      */
-    private createExtendedStr(extended: { [description: string]: string } | undefined): string | null {
+    private createExtendedStr(extended: { [description: string]: string } | undefined, convertTwoByteToOneByte: boolean): string | null {
         if (typeof extended === 'undefined') { return null; }
 
         let str = '';
@@ -290,7 +292,9 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
             }
         }
 
-        return StrUtil.toHalf(str).trim();
+        const ret = convertTwoByteToOneByte ? StrUtil.toHalf(str).trim() : str.trim();
+
+        return ret;
     }
 
     /**
