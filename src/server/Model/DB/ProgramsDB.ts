@@ -754,7 +754,8 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
 
             // あいまい検索
             const likeStr = this.createLikeStr(keyOption.cs);
-            const keywords = StrUtil.toDBStr(keyword, this.config.getConfig().convertTwoByteToOneByte).trim().split(' ');
+            // tslint:disable-next-line:no-irregular-whitespace
+            const keywords = StrUtil.toDBStr(keyword, this.config.getConfig().convertTwoByteToOneByte).trim().split(/ |　/);
             const keywordCnt = keywords.length;
 
             keywords.forEach((str, i) => {
