@@ -706,7 +706,7 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
         }
 
         if (typeof option.recording !== 'undefined') {
-            query.push(`recording = ${ option.recording ? 1 : 0 }`);
+            query.push(`recording = ${ this.operator.convertBoolean(option.recording) }`);
         }
 
         let str = '';
