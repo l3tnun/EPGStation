@@ -99,7 +99,7 @@ class LogFileMoveTools extends Base {
 }
 
 Logger.initialize();
-Configuration.getInstance().initialize(path.join(__dirname, '..', '..', 'config', 'config.json'));
+Configuration.getInstance().initialize(path.join(__dirname, '..', '..', 'config', 'config.json'), false);
 
 (async() => {
     await new LogFileMoveTools().run();

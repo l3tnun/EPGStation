@@ -28,7 +28,7 @@ class Configuration {
      * @param configPath config file path
      * @param neededWatch: boolean ファイルを監視して更新するか
      */
-    public initialize(configPath: string, neededWatch: boolean = false): void {
+    public initialize(configPath: string, neededWatch: boolean): void {
         this.configPath = configPath;
         this.readConfig();
 
