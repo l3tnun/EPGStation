@@ -72,7 +72,7 @@ interface ConfigInterface {
     ffmpeg: string;
     ffprobe: string;
     maxEncode: number;
-    convertTwoByteToOneByte: boolean;
+    convertDBStr: 'oneByte' | 'twoByte' | 'no';
     encode: {
         name: string;
         cmd: string;
