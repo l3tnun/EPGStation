@@ -280,7 +280,7 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
      * @param extended extended
      * @return string
      */
-    private createExtendedStr(extended: { [description: string]: string } | undefined, convertDBStr: boolean): string | null {
+    private createExtendedStr(extended: { [description: string]: string } | undefined, convertDBStr: string): string | null {
         if (typeof extended === 'undefined') { return null; }
 
         let str = '';
