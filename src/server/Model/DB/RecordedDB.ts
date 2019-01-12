@@ -690,7 +690,7 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
         }
 
         if (typeof option.keyword !== 'undefined') {
-            const keyword = StrUtil.toDBStr(option.keyword, this.config.getConfig().convertTwoByteToOneByte);
+            const keyword = StrUtil.toDBStr(option.keyword, this.config.getConfig().convertDBStr);
             // tslint:disable-next-line:no-irregular-whitespace
             keyword.trim().split(/ |　/).forEach((s) => {
                 s = `%${ s }%`;
