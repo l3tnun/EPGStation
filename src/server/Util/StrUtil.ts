@@ -36,6 +36,24 @@ namespace StrUtil {
     };
 
     /**
+     * 半角英数記号を全角へ変換する
+     * @param str: string
+     * @return string
+     */
+    export const toDouble = (str: string): string => {
+        const tmp = str.replace(/\\/g, '￥').replace(/[!-~]/g, (s) => {
+            return String.fromCharCode(s.charCodeAt(0) + 0xFEE0);
+        });
+
+        return tmp.replace(/"/g, '”')
+            .replace(/\'/g, '’')
+            .replace(/`/g, '‘')
+            // tslint:disable-next-line:no-irregular-whitespace
+            .replace(/ /g, '　')
+            .replace(/~/g, '〜');
+    };
+
+    /**
      * [] を中身ごと削除し 先頭と末尾のスペースを削除する
      * @param str: string
      * @return string
