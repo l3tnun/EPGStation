@@ -6,7 +6,6 @@
     "ffmpeg": "/usr/local/bin/ffmpeg",
     "ffprobe": "/usr/local/bin/ffprobe",
     "maxEncode": 2,
-    "convertTwoByteToOneByte": true,
     "encode": [
         {
             "name": "H264",
