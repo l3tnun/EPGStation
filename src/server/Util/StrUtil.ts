@@ -4,14 +4,17 @@
 namespace StrUtil {
     /**
      * 文字列をデータベース用文字列に変換する．
-     * convertTwoByteToOneByteがundefinedあるいはtrueの場合は全角英数記号を半角へ変換する
+     * 
+     * convertDBStrの値によって以下のように文字列の変換を行う
+     *    - "no": PostgreSQL非対応文字の削除
+     *    - "twoByte": PostgreSQL非対応文字の削除，半角英数記号を全角に変換
+     *    - else: PostgreSQL非対応文字の削除，全角英数記号を半角に変換
      * @param str: string
-     * @param convertTwoByteToOneByte: boolean
+     * @param convertDBStr: string 
      * @return string
      */
-    export const toDBStr = (str: string, convertTwoByteToOneByte: boolean | undefined): string => {
-      const convertCond = convertTwoByteToOneByte === undefined ? true : convertTwoByteToOneByte;
-      const ret = convertCond ? toHalf(str) : str;
+    export const toDBStr = (str: string, convertDBStr: string): string => {
+      const ret = convertDBStr === "no" ? str : convertDBStr === "twoByte" ? toDouble(str) : toHalf(str);
 
       return ret.replace(/\x00/g, ''); // PostgreSQL 非対応文字
     };
