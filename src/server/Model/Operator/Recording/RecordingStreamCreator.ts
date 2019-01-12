@@ -36,16 +36,6 @@ class RecordingStreamCreator extends Model implements RecordingStreamCreatorInte
 
         const config = this.config.getConfig();
         this.allowEndLack = typeof config.allowEndLack === 'undefined' ? true : config.allowEndLack;
-
-        // 念の為 30 分毎ににゴミを削除
-        setInterval(() => {
-            const now = new Date().getTime();
-            for (const tuner of this.tuners) {
-                tuner.programs = tuner.programs.filter((p) => {
-                    return now - p.reserve.program.endAt < (12 * 60 * 60 * 1000);
-                });
-            }
-        }, 30 * 60 * 1000);
     }
 
     /**
@@ -62,6 +52,16 @@ class RecordingStreamCreator extends Model implements RecordingStreamCreatorInte
                 programs: [],
             };
         });
+
+        // 念の為 30 分毎ににゴミを削除
+        setInterval(() => {
+            const now = new Date().getTime();
+            for (const tuner of this.tuners) {
+                tuner.programs = tuner.programs.filter((p) => {
+                    return now - p.reserve.program.endAt < (12 * 60 * 60 * 1000);
+                });
+            }
+        }, 30 * 60 * 1000);
     }
 
     /**
