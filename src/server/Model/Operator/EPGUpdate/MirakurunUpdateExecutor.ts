@@ -19,7 +19,7 @@ import MirakurunUpdater from './MirakurunUpdater';
 
 // Base クラスで必須
 Logger.initialize();
-Configuration.getInstance().initialize(path.join(__dirname, '..', '..', '..', '..', '..', 'config', 'config.json'));
+Configuration.getInstance().initialize(path.join(__dirname, '..', '..', '..', '..', '..', 'config', 'config.json'), false);
 
 let operator: DBOperator;
 let servicesDB: ServicesDBInterface;

@@ -20,6 +20,7 @@ interface FindQuery {
     channelId?: number;
     keyword?: string;
     hasTs?: boolean;
+    recording?: boolean;
 }
 
 interface CntItem {
@@ -704,6 +705,10 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
         if (!!option.hasTs) {
             // TS を必ず含む
             query.push('recPath is not null');
+        }
+
+        if (typeof option.recording !== 'undefined') {
+            query.push(`recording = ${ this.operator.convertBoolean(option.recording) }`);
         }
 
         let str = '';
