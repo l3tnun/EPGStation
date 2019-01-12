@@ -98,6 +98,12 @@ parameters:
     in: query
     type: boolean
 
+  recording:
+    description: '録画中か'
+    name: recording
+    in: query
+    type: boolean
+
 definitions:
   total:
     description: '総数'

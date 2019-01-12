@@ -226,7 +226,7 @@ class DBTools {
 }
 
 Logger.initialize();
-Configuration.getInstance().initialize(path.join(__dirname, '..', '..', 'config', 'config.json'));
+Configuration.getInstance().initialize(path.join(__dirname, '..', '..', 'config', 'config.json'), false);
 
 new DBTools().run();
 
