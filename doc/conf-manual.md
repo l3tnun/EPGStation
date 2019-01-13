@@ -11,6 +11,7 @@
     - [PostgreSQL の設定を変更したい](#postgresql)
     - [SQLite3 の設定を変更したい](#sqlite3)
     - [SQLite3 のデータベース保存先を変更したい](#dbpath)
+    - [番組名や概要に含まれる英数字記号を半角や全角に変換したい](#convertdbstr)
     - [利用する FFmpeg を明示的に指定したい](#ffmpeg)
     - [利用する FFprobe を明示的に指定したい](#ffprobe)
 - [詳細設定](#詳細設定)
@@ -232,6 +233,22 @@
 ```json
 "dbPath": "/hoge/database.db"
 ```
+
+### convertDBStr
+#### 番組名や概要などに含まれる英数字記号の変換方式
+
+| 種類 | デフォルト値 | 必須 |
+| --- | ---------- | --- |
+| string | - | no |
+
+- "no": 英数字記号を変換しない
+- "twoByte": 英数字記号を全角に変換
+- その他（未定義の場合も同様）: 英数字記号を半角に変換
+
+```json
+"convertDBStr": true
+```
+
 
 ### ffmpeg
 #### EPGStation が利用する FFmpeg のパス
