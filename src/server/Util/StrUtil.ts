@@ -1,3 +1,5 @@
+import * as Enums from '../Enums';
+
 /**
  * 文字周りの Util
  */
@@ -13,7 +15,7 @@ namespace StrUtil {
      * @param convertDBStr: string
      * @return string
      */
-    export const toDBStr = (str: string, convertDBStr: string): string => {
+    export const toDBStr = (str: string, convertDBStr: Enums.ConvertStrType): string => {
       const ret = convertDBStr === 'no' ? str : convertDBStr === 'twoByte' ? toDouble(str) : toHalf(str);
 
       return ret.replace(/\x00/g, ''); // PostgreSQL 非対応文字

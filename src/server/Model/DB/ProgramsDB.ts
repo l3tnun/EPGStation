@@ -1,4 +1,5 @@
 import * as apid from '../../../../node_modules/mirakurun/api';
+import * as Enums from '../../Enums';
 import DateUtil from '../../Util/DateUtil';
 import RuleUtil from '../../Util/RuleUtil';
 import StrUtil from '../../Util/StrUtil';
@@ -72,7 +73,7 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
     /**
      * insert 時の config を取得
      */
-    private getInsertConfig(): { insertMax: number; insertWait: number; convertDBStr: string } {
+    private getInsertConfig(): { insertMax: number; insertWait: number; convertDBStr: Enums.ConvertStrType } {
         const config = this.config.getConfig();
         let insertMax = config.programInsertMax || 10;
         if (insertMax > 10) { insertMax = 10; }
@@ -80,7 +81,7 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
         return {
             insertMax: insertMax,
             insertWait: config.programInsertWait || 0,
-            convertDBStr: config.convertDBStr,
+            convertDBStr: config.convertDBStr || 'oneByte',
         };
     }
 
@@ -280,7 +281,7 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
      * @param extended extended
      * @return string
      */
-    private createExtendedStr(extended: { [description: string]: string } | undefined, convertDBStr: string): string | null {
+    private createExtendedStr(extended: { [description: string]: string } | undefined, convertDBStr: Enums.ConvertStrType): string | null {
         if (typeof extended === 'undefined') { return null; }
 
         let str = '';

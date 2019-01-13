@@ -1,3 +1,5 @@
+import * as Enums from './Enums';
+
 /**
  * config.json の定義
  */
@@ -7,7 +9,7 @@ interface ConfigInterface {
     allowedIPs: string[];
     subDirectory: string;
     mirakurunPath: string;
-    dbType: 'mysql' | 'sqlite3' | 'postgresql';
+    dbType: Enums.DBType;
     dbPath: string;
     dbInfoPath: string;
     mysql: {
@@ -72,7 +74,7 @@ interface ConfigInterface {
     ffmpeg: string;
     ffprobe: string;
     maxEncode: number;
-    convertDBStr: 'oneByte' | 'twoByte' | 'no';
+    convertDBStr: Enums.ConvertStrType;
     encode: {
         name: string;
         cmd: string;
@@ -87,7 +89,7 @@ interface ConfigInterface {
     };
     storageLimitCheckIntervalTime: number;
     storageLimitThreshold: number;
-    storageLimitAction: 'remove' | 'none';
+    storageLimitAction: Enums.StorageLimitCmdType;
     storageLimitCmd: string;
     recordedViewer: {
         ios: string;
