@@ -55,7 +55,9 @@ namespace StrUtil {
             .replace(/`/g, '‘')
             // tslint:disable-next-line:no-irregular-whitespace
             .replace(/ /g, '　')
-            .replace(/~/g, '〜');
+            .replace(/~/g, '〜')
+            .replace(/［/g, '[')
+            .replace(/］/g, ']');
     };
 
     /**
