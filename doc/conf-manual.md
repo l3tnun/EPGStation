@@ -246,7 +246,7 @@
 - その他（未定義の場合も同様）: 英数字記号を半角に変換
 
 ```json
-"convertDBStr": true
+"convertDBStr": "twoByte"
 ```
 
 
