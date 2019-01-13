@@ -440,7 +440,8 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
         if (typeof query.keyword !== 'undefined') {
             const querys: string[] = [];
             const likeStr = this.operator.createLikeStr(false);
-            const keywords = StrUtil.toHalf(query.keyword).trim().split(' ');
+            // tslint:disable-next-line:no-irregular-whitespace
+            const keywords = StrUtil.toDBStr(query.keyword, this.config.getConfig().convertDBStr).trim().split(/ |　/);
 
             keywords.forEach((str, i) => {
                 str = `%${ str }%`;
