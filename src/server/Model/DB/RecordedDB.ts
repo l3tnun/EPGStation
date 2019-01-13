@@ -20,6 +20,7 @@ interface FindQuery {
     channelId?: number;
     keyword?: string;
     hasTs?: boolean;
+    recording?: boolean;
 }
 
 interface CntItem {
@@ -765,7 +766,9 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
         }
 
         if (typeof option.keyword !== 'undefined') {
-            StrUtil.toHalf(option.keyword).trim().split(' ').forEach((s) => {
+            const keyword = StrUtil.toDBStr(option.keyword, this.config.getConfig().convertDBStr);
+            // tslint:disable-next-line:no-irregular-whitespace
+            keyword.trim().split(/ |　/).forEach((s) => {
                 s = `%${ s }%`;
                 const nameStr = `${ this.operator.createValueStr(values.length + 1, values.length + 1) }`;
                 values.push(s);
@@ -778,6 +781,10 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
         if (!!option.hasTs) {
             // TS を必ず含む
             query.push('recPath is not null');
+        }
+
+        if (typeof option.recording !== 'undefined') {
+            query.push(`recording = ${ this.operator.convertBoolean(option.recording) }`);
         }
 
         let str = '';

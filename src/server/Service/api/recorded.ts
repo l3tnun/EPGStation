@@ -13,6 +13,7 @@ export const get: Operation = async(req, res) => {
             channelId: req.query.channel,
             keyword: req.query.keyword,
             hasTs: req.query.hasTs,
+            recording: req.query.recording,
         });
         api.responseJSON(res, 200, results);
     } catch (err) {
@@ -33,6 +34,7 @@ get.apiDoc = {
         { $ref: '#/parameters/channel' },
         { $ref: '#/parameters/recordedKeyword' },
         { $ref: '#/parameters/searchHasTs' },
+        { $ref: '#/parameters/recording' },
     ],
     responses: {
         200: {

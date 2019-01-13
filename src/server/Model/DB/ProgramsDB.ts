@@ -1,4 +1,5 @@
 import * as apid from '../../../../node_modules/mirakurun/api';
+import * as Enums from '../../Enums';
 import DateUtil from '../../Util/DateUtil';
 import RuleUtil from '../../Util/RuleUtil';
 import StrUtil from '../../Util/StrUtil';
@@ -12,6 +13,7 @@ import DBTableBase from './DBTableBase';
 interface ChannelTypeHash {
     [key: number]: { // NetworkId
         [key: number]: { // ServiceId
+
             type: apid.ChannelType;
             channel: string;
         };
@@ -71,7 +73,7 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
     /**
      * insert 時の config を取得
      */
-    private getInsertConfig(): { insertMax: number; insertWait: number } {
+    private getInsertConfig(): { insertMax: number; insertWait: number; convertDBStr: Enums.ConvertStrType } {
         const config = this.config.getConfig();
         let insertMax = config.programInsertMax || 10;
         if (insertMax > 10) { insertMax = 10; }
@@ -79,6 +81,7 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
         return {
             insertMax: insertMax,
             insertWait: config.programInsertWait || 0,
+            convertDBStr: config.convertDBStr || 'oneByte',
         };
     }
 
@@ -173,7 +176,7 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
             const channelType = channelTypes[program.networkId][program.serviceId].type;
             const channel = channelTypes[program.networkId][program.serviceId].channel;
 
-            const name = StrUtil.toHalf(program.name);
+            const name = StrUtil.toDBStr(program.name, config.convertDBStr);
             const tmp = [
                 program.id,
                 parseInt(program.networkId + (program.serviceId / 100000).toFixed(5).slice(2), 10),
@@ -188,8 +191,8 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
                 program.isFree,
                 name,
                 StrUtil.deleteBrackets(name),
-                typeof program.description === 'undefined' || program.description === '' ? null : StrUtil.toHalf(program.description),
-                this.createExtendedStr(program.extended),
+                typeof program.description === 'undefined' || program.description === '' ? null : StrUtil.toDBStr(program.description, config.convertDBStr),
+                this.createExtendedStr(program.extended, config.convertDBStr),
                 genre1,
                 genre2,
                 genre3,
@@ -278,7 +281,7 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
      * @param extended extended
      * @return string
      */
-    private createExtendedStr(extended: { [description: string]: string } | undefined): string | null {
+    private createExtendedStr(extended: { [description: string]: string } | undefined, convertDBStr: Enums.ConvertStrType): string | null {
         if (typeof extended === 'undefined') { return null; }
 
         let str = '';
@@ -290,7 +293,9 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
             }
         }
 
-        return StrUtil.toHalf(str).trim();
+        const ret = StrUtil.toDBStr(str, convertDBStr).trim();
+
+        return ret;
     }
 
     /**
@@ -742,7 +747,8 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
 
             // あいまい検索
             const likeStr = this.operator.createLikeStr(keyOption.cs);
-            const keywords = StrUtil.toHalf(keyword).trim().split(' ');
+            // tslint:disable-next-line:no-irregular-whitespace
+            const keywords = StrUtil.toDBStr(keyword, this.config.getConfig().convertDBStr).trim().split(/ |　/);
             const keywordCnt = keywords.length;
 
             keywords.forEach((str, i) => {
