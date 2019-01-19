@@ -1,7 +1,10 @@
 import * as DBSchema from '../DB/DBSchema';
+import { RecordedDBInterface } from '../DB/RecordedDB';
 import { RuleFindQuery, RulesDBInterface } from '../DB/RulesDB';
 import { IPCClientInterface } from '../IPC/IPCClient';
 import { RuleInterface } from '../Operator/RuleInterface';
+import { EncodeManageModelInterface } from '../Service/Encode/EncodeManageModel';
+import { RecordedStreamStatusInfo, StreamManageModelInterface } from '../Service/Stream/StreamManageModel';
 import ApiModel from './ApiModel';
 import ApiUtil from './ApiUtil';
 
@@ -23,12 +26,24 @@ namespace RulesModelInterface {
 
 class RulesModel extends ApiModel implements RulesModelInterface {
     private ipc: IPCClientInterface;
+    private recordedDB: RecordedDBInterface;
     private rulesDB: RulesDBInterface;
+    private encodeManage: EncodeManageModelInterface;
+    private streamManage: StreamManageModelInterface;
 
-    constructor(ipc: IPCClientInterface, rulesDB: RulesDBInterface) {
+    constructor(
+        ipc: IPCClientInterface,
+        recordedDB: RecordedDBInterface,
+        rulesDB: RulesDBInterface,
+        encodeManage: EncodeManageModelInterface,
+        streamManage: StreamManageModelInterface,
+    ) {
         super();
         this.ipc = ipc;
+        this.recordedDB = recordedDB;
         this.rulesDB = rulesDB;
+        this.encodeManage = encodeManage;
+        this.streamManage = streamManage;
     }
 
     /**
@@ -110,9 +125,54 @@ class RulesModel extends ApiModel implements RulesModelInterface {
      */
     public async deleteRule(ruleId: number, isDeleteFile: boolean): Promise<void> {
         if (isDeleteFile) {
-            await this.ipc.recordedDeleteRule(ruleId);
+            // 削除する recordedIds を取得
+            const list = await this.recordedDB.findRuleIdList(ruleId);
+            const recordedIds: number[] = [];
+            for (const l of list) { recordedIds.push(l.id); }
+
+            // 削除
+            await this.deleteRecordeds(recordedIds);
         }
+
         await this.ipc.ruleDelete(ruleId);
+    }
+
+    /**
+     * 指定した recordedId の録画を削除する
+     * @param recordedIds: recorded ids
+     * @return Promise<number[]> 削除に失敗した recordedId を返す
+     */
+    private async deleteRecordeds(recordedIds: number[]): Promise<number[]> {
+        // 配信中の録画の recordedId の索引を作成
+        const infos = this.streamManage.getStreamInfos();
+        const recordedStreamIndex: { [key: number]: boolean } = {};
+        for (const info of infos) {
+            if (typeof (<RecordedStreamStatusInfo> info).recordedId !== 'undefined') {
+                recordedStreamIndex[(<RecordedStreamStatusInfo> info).recordedId!] = true;
+            }
+        }
+
+        // 配信中の要素を取り除く
+        const ids: number[] = [];
+        const excludedIds: number[] = [];
+        for (const recordedId of recordedIds) {
+            // 配信中でないか?
+            if (typeof recordedStreamIndex[recordedId] === 'undefined') {
+                // cancel encode
+                this.encodeManage.cancelByRecordedId(recordedId);
+                ids.push(recordedId);
+            } else {
+                excludedIds.push(recordedId);
+            }
+        }
+
+        // 録画削除
+        const errors = await this.ipc.recordedDeletes(ids, null);
+
+        // 削除できなかった ids と配信中で取り除かれた要素を結合
+        Array.prototype.push.apply(excludedIds, errors);
+
+        return excludedIds;
     }
 
     /**
@@ -123,8 +183,17 @@ class RulesModel extends ApiModel implements RulesModelInterface {
      */
     public async deleteRules(ruleIds: number[], isDeleteFile: boolean): Promise<void> {
         if (isDeleteFile) {
-            await this.ipc.recordedDeleteRules(ruleIds);
+            // 削除する recordedIds を取得
+            const recordedIds: number[] = [];
+            for (const ruleId of ruleIds) {
+                const list = await this.recordedDB.findRuleIdList(ruleId);
+                for (const l of list) { recordedIds.push(l.id); }
+            }
+
+            // 削除
+            await this.deleteRecordeds(recordedIds);
         }
+
         await this.ipc.ruleDeletes(ruleIds);
     }
 

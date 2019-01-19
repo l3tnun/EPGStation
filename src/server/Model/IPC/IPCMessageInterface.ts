@@ -48,8 +48,6 @@ namespace IPCMessageDefinition {
     export const recordedDeletes = 'recordedDeletes';
     export const recordedFileDelete = 'recordedFileDelete';
     export const recordedEncodeFileDelete = 'recordedEncodeFileDelete';
-    export const recordedDeleteRule = 'recordedDeleteRule';
-    export const recordedDeleteRules = 'recordedDeleteRules';
     export const recordedClenaup = 'recordedClenaup';
     export const recordedRegenerateThumbnail = 'recordedRegenerateThumbnail';
     export const ruleDisable = 'ruleDisable';
