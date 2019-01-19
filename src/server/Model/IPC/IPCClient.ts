@@ -251,7 +251,7 @@ class IPCClient extends Model implements IPCClientInterface {
             recordedIds: recordedIds,
             option: option,
         });
-        const result = await this.receive(id);
+        const result = await this.receive(id, null);
 
         return <number[]> result.value;
     }
@@ -333,7 +333,7 @@ class IPCClient extends Model implements IPCClientInterface {
         const id = this.send(IPCMessageDefinition.ruleDeletes, {
             ruleIds: ruleIds,
         });
-        const result = await this.receive(id);
+        const result = await this.receive(id, null);
 
         return <number[]> result.value;
     }
