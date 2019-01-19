@@ -10,7 +10,9 @@ class MySQLRulesDB extends RulesDB {
         const query = `CREATE TABLE IF NOT EXISTS ${ DBSchema.TableName.Rules } (`
             + 'id int primary key auto_increment, '
             + 'keyword text, '
+            + 'halfKeyword text, '
             + 'ignoreKeyword text, '
+            + 'halfIgnoreKeyword text, '
             + 'keyCS boolean, '
             + 'keyRegExp boolean, '
             + 'title boolean, '

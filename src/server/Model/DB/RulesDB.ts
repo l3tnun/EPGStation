@@ -64,7 +64,9 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
     public insert(rule: DBSchema.RulesSchema): Promise<number> {
         const value: any[] = [];
         value.push(rule.keyword);
+        value.push(rule.halfKeyword);
         value.push(rule.ignoreKeyword);
+        value.push(rule.halfIgnoreKeyword);
         value.push(rule.keyCS);
         value.push(rule.keyRegExp);
         value.push(rule.title);
@@ -119,7 +121,9 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
     private createInsertColumnStr(hasId: boolean): string {
         return (hasId ? 'id, ' : '')
             + 'keyword, '
+            + 'halfKeyword, '
             + 'ignoreKeyword, '
+            + 'halfIgnoreKeyword, '
             + 'keyCS, '
             + 'keyRegExp, '
             + 'title, '
@@ -169,7 +173,9 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
             const value: any[] = [];
             value.push(rule.id);
             value.push(rule.keyword);
+            value.push(rule.halfKeyword);
             value.push(rule.ignoreKeyword);
+            value.push(rule.halfIgnoreKeyword);
             value.push(rule.keyCS);
             value.push(rule.keyRegExp);
             value.push(rule.title);
@@ -229,18 +235,14 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
         const querys: string[] = [];
         const values: any[] = [];
 
-        if (rule.keyword !== null) {
-            querys.push(`keyword = ${ this.operator.createValueStr(values.length + 1, values.length + 1) }`);
-            values.push(rule.keyword);
-        } else {
-            querys.push('keyword = null');
-        }
-        if (rule.ignoreKeyword !== null) {
-            querys.push(`ignoreKeyword = ${ this.operator.createValueStr(values.length + 1, values.length + 1) }`);
-            values.push(rule.ignoreKeyword);
-        } else {
-            querys.push('ignoreKeyword = null');
-        }
+        querys.push(`keyword = ${ this.operator.createValueStr(values.length + 1, values.length + 1) }`);
+        values.push(rule.halfKeyword);
+        querys.push(`halfKeyword = ${ this.operator.createValueStr(values.length + 1, values.length + 1) }`);
+        values.push(rule.keyword === null ? null : StrUtil.toHalf(rule.keyword));
+        querys.push(`ignoreKeyword = ${ this.operator.createValueStr(values.length + 1, values.length + 1) }`);
+        values.push(rule.ignoreKeyword);
+        querys.push(`halfIgnoreKeyword = ${ this.operator.createValueStr(values.length + 1, values.length + 1) }`);
+        values.push(rule.ignoreKeyword === null ? null : StrUtil.toHalf(rule.ignoreKeyword));
 
         if (rule.keyCS !== null) { querys.push(`keyCS = ${ this.operator.convertBoolean(rule.keyCS) }`); }
         else { querys.push('keyCS = null'); }
@@ -440,12 +442,11 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
         if (typeof query.keyword !== 'undefined') {
             const querys: string[] = [];
             const likeStr = this.operator.createLikeStr(false);
-            // tslint:disable-next-line:no-irregular-whitespace
-            const keywords = StrUtil.toDBStr(query.keyword, this.config.getConfig().convertDBStr).trim().split(/ |　/);
+            const keywords = StrUtil.toHalf(query.keyword).trim().split(' ');
 
             keywords.forEach((str, i) => {
                 str = `%${ str }%`;
-                querys.push(`keyword ${ likeStr } ${ this.operator.createValueStr(i + 1, i + 1) }`);
+                querys.push(`halfKeyword ${ likeStr } ${ this.operator.createValueStr(i + 1, i + 1) }`);
                 values.push(str);
             });
 

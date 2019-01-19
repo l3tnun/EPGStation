@@ -2,6 +2,7 @@ import Configuration from '../Configuration';
 import * as DBSchema from '../Model/DB/DBSchema';
 import { ReserveOptionInterface } from '../Model/Operator/ReserveProgramInterface';
 import { EncodeInterface, OptionInterface, RuleInterface, SearchInterface } from '../Model/Operator/RuleInterface';
+import StrUtil from './StrUtil';
 
 /**
  * Rule Util
@@ -229,10 +230,14 @@ namespace RuleUtil {
      * @return DBSchema.RulesSchema
      */
     export const convertRule = (rule: RuleInterface): DBSchema.RulesSchema => {
+        const keyword = typeof rule.search.keyword === 'undefined' ? null : rule.search.keyword;
+        const ignoreKeyword = typeof rule.search.ignoreKeyword === 'undefined' ? null : rule.search.ignoreKeyword;
         const data: DBSchema.RulesSchema = {
             id: 0,
-            keyword: typeof rule.search.keyword === 'undefined' ? null : rule.search.keyword,
-            ignoreKeyword: typeof rule.search.ignoreKeyword === 'undefined' ? null : rule.search.ignoreKeyword,
+            keyword: keyword,
+            halfKeyword: keyword === null ? null : StrUtil.toHalf(keyword),
+            ignoreKeyword: ignoreKeyword,
+            halfIgnoreKeyword: ignoreKeyword === null ? null : StrUtil.toHalf(ignoreKeyword),
             keyCS: typeof rule.search.keyCS === 'undefined' ? null : rule.search.keyCS,
             keyRegExp: typeof rule.search.keyRegExp === 'undefined' ? null : rule.search.keyRegExp,
             title: typeof rule.search.title === 'undefined' ? null : rule.search.title,

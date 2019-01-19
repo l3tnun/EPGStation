@@ -10,7 +10,9 @@ class PostgreSQLRulesDB extends RulesDB {
         const query = `create table if not exists ${ DBSchema.TableName.Rules } (`
             + 'id serial primary key, '
             + 'keyword text, '
+            + 'halfKeyword text, '
             + 'ignoreKeyword text, '
+            + 'halfIgnoreKeyword text, '
             + 'keyCS boolean, '
             + 'keyRegExp boolean, '
             + 'title boolean, '
@@ -69,7 +71,7 @@ class PostgreSQLRulesDB extends RulesDB {
      * @return string
      */
     public getAllColumns(): string {
-        return 'id, keyword, ignoreKeyword as "ignoreKeyword", keyCS as "keyCS", keyRegExp as "keyRegExp", title, description, extended, ignoreKeyCS as "ignoreKeyCS", ignoreKeyRegExp as "ignoreKeyRegExp", ignoreTitle as "ignoreTitle", ignoreDescription as "ignoreDescription", ignoreExtended as "ignoreExtended", GR as "GR", BS as "BS", CS as "CS", SKY as "SKY", station, genrelv1, genrelv2, startTime as "startTime", timeRange as "timeRange", week, isFree as "isFree", durationMin as "durationMin", durationMax as "durationMax", avoidDuplicate as "avoidDuplicate", periodToAvoidDuplicate as "periodToAvoidDuplicate", enable, allowEndLack as "allowEndLack", directory, recordedFormat as "recordedFormat", mode1, directory1, mode2, directory2, mode3, directory3, delTs as "delTs"';
+        return 'id, keyword, halfKeyword as "halfKeyword", ignoreKeyword as "ignoreKeyword", halfIgnoreKeyword as "halfIgnoreKeyword", keyCS as "keyCS", keyRegExp as "keyRegExp", title, description, extended, ignoreKeyCS as "ignoreKeyCS", ignoreKeyRegExp as "ignoreKeyRegExp", ignoreTitle as "ignoreTitle", ignoreDescription as "ignoreDescription", ignoreExtended as "ignoreExtended", GR as "GR", BS as "BS", CS as "CS", SKY as "SKY", station, genrelv1, genrelv2, startTime as "startTime", timeRange as "timeRange", week, isFree as "isFree", durationMin as "durationMin", durationMax as "durationMax", avoidDuplicate as "avoidDuplicate", periodToAvoidDuplicate as "periodToAvoidDuplicate", enable, allowEndLack as "allowEndLack", directory, recordedFormat as "recordedFormat", mode1, directory1, mode2, directory2, mode3, directory3, delTs as "delTs"';
     }
 }
 
