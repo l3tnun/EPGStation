@@ -53,6 +53,12 @@ interface ProgramInfo extends VideoInfo {
     genre6: number | null;
 }
 
+interface ProgramStrInfo {
+    name: string;
+    description: string | null;
+    extended: string | null;
+}
+
 interface RecordedFilesItem {
     id: number;
     recPath: string | null;
@@ -81,6 +87,7 @@ interface RecordedDBInterface extends DBTableBase {
     updateLogFilePath(recordedId: number, filePath: string): Promise<void>;
     updateAllNullFileSize(): Promise<void>;
     updateCnt(recordedId: number, item: CntItem): Promise<void>;
+    updateProgramStrInfo(recordedId: number, info: ProgramStrInfo): Promise<void>;
     updateProgramInfo(recordedId: number, info: ProgramInfo): Promise<void>;
     updateVideoInfo(recordedId: number, info: VideoInfo): Promise<void>;
     findId(id: number): Promise<DBSchema.RecordedSchema | null>;
@@ -527,6 +534,26 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
      */
     public async updateCnt(recordedId: number, item: CntItem): Promise<void> {
         await this.operator.runQuery(`update ${ DBSchema.TableName.Recorded } set errorCnt = ${ item.error }, dropCnt = ${ item.drop }, scramblingCnt = ${ item.scrambling } where id = ${ recordedId }`);
+    }
+
+    /**
+     * 番組情報 name, description, extended を更新
+     * @param recordedId: recorded id
+     * @param info: ProgramStrInfo
+     */
+    public async updateProgramStrInfo(recordedId: number, info: ProgramStrInfo): Promise<void> {
+        const values: any[] = [];
+        values.push(info.name);
+        values.push(info.description);
+        values.push(info.extended);
+
+        await this.operator.runQuery(
+            `update ${ DBSchema.TableName.Recorded } set `
+            + `name = ${ this.operator.createValueStr(1, 1) }, `
+            + `description = ${ this.operator.createValueStr(2, 2) }, `
+            + `extended = ${ this.operator.createValueStr(3, 3) } `
+            + `where id = ${ recordedId }`,
+        values);
     }
 
     /**

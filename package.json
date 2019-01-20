@@ -15,7 +15,8 @@
     "uninstall-win-service": "winser -r -x",
     "backup": "node dist/server/DBTools.js -m backup -o",
     "restore": "node dist/server/DBTools.js -m restore -o",
-    "move-log": "node dist/server/LogFileMoveTools.js"
+    "move-log": "node dist/server/LogFileMoveTools.js",
+    "convert-str": "node dist/server/ConvertDBStrTools.js"
   },
   "repository": {
     "type": "git",
