@@ -119,7 +119,13 @@ namespace ModelFactorySetting {
         ipc.setModels(encodeManage, socketIoManage);
 
         factory.reg('SocketIoManageModel', () => { return socketIoManage; });
-        factory.reg('RulesModel', () => { return new RulesModel(ipc, rulesDB); });
+        factory.reg('RulesModel', () => { return new RulesModel(
+            ipc,
+            recordedDB,
+            rulesDB,
+            encodeManage,
+            streamManage,
+        ); });
         factory.reg('RecordedModel', () => { return new RecordedModel(
             ipc,
             recordedDB,

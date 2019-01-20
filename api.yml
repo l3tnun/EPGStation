@@ -98,6 +98,12 @@ parameters:
     in: query
     type: boolean
 
+  ruleKeyword:
+    description: 'rule search keyword'
+    name: keyword
+    in: query
+    type: string
+
   recording:
     description: '録画中か'
     name: recording
@@ -1325,6 +1331,20 @@ definitions:
       delTs:
         type: boolean
         description: 'エンコード後にオリジナルファイルを削除する'
+
+  RuleDeletes:
+    type: object
+    required:
+      - ruleIds
+      - delete
+    properties:
+      ruleIds:
+        type: array
+        items:
+          $ref: '#/definitions/RuleId'
+      delete:
+        description: '録画ファイルを削除するか'
+        type: boolean
 
   StorageInfo:
     type: object

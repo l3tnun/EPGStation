@@ -13,6 +13,8 @@ class RulesDeleteViewModel extends ViewModel {
     private snackbar: SnackbarModelInterface;
     private rule: apid.Rule | null = null;
 
+    public isDeleteRecorded: boolean = false;
+
     constructor(
         rulesApiModel: RulesApiModelInterface,
         balloon: BalloonModelInterface,
@@ -56,7 +58,7 @@ class RulesDeleteViewModel extends ViewModel {
 
         const keyword = typeof this.rule.keyword === 'undefined' ? '-' : this.rule.keyword;
         try {
-            await this.rulesApiModel.delete(this.rule.id);
+            await this.rulesApiModel.delete(this.rule.id, this.isDeleteRecorded);
             this.snackbar.open(`削除: ${ keyword }`);
         } catch (err) {
             console.error(err);

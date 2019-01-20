@@ -67,7 +67,9 @@ export interface ProgramSchemaWithOverlap extends ProgramSchema {
 export interface RulesSchema {
     id: number;
     keyword: string | null;
+    halfKeyword: string | null;
     ignoreKeyword: string | null;
+    halfIgnoreKeyword: string | null;
     keyCS: boolean | null;
     keyRegExp: boolean | null;
     title: boolean | null;

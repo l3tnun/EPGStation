@@ -1,5 +1,16 @@
+import StrUtil from '../../Util/StrUtil';
 import * as DBSchema from './DBSchema';
 import DBTableBase from './DBTableBase';
+
+interface RuleFindAllOption {
+    limit?: number;
+    offset?: number;
+    query?: RuleFindQuery;
+}
+
+interface RuleFindQuery {
+    keyword?: string;
+}
 
 interface RuleList {
     id: number;
@@ -18,9 +29,9 @@ interface RulesDBInterface extends DBTableBase {
     findId(id: number): Promise<DBSchema.RulesSchema | null>;
     findAllId(): Promise<{ id: number }[]>;
     findAllIdAndKeyword(): Promise<{ id: number; keyword: string }[]>;
-    findAll(limit?: number, offset?: number): Promise<DBSchema.RulesSchema[]>;
+    findAll(option?: RuleFindAllOption): Promise<DBSchema.RulesSchema[]>;
     getList(): Promise<RuleList[]>;
-    getTotal(): Promise<number>;
+    getTotal(option?: RuleFindQuery): Promise<number>;
 }
 
 abstract class RulesDB extends DBTableBase implements RulesDBInterface {
@@ -53,7 +64,9 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
     public insert(rule: DBSchema.RulesSchema): Promise<number> {
         const value: any[] = [];
         value.push(rule.keyword);
+        value.push(rule.halfKeyword);
         value.push(rule.ignoreKeyword);
+        value.push(rule.halfIgnoreKeyword);
         value.push(rule.keyCS);
         value.push(rule.keyRegExp);
         value.push(rule.title);
@@ -108,7 +121,9 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
     private createInsertColumnStr(hasId: boolean): string {
         return (hasId ? 'id, ' : '')
             + 'keyword, '
+            + 'halfKeyword, '
             + 'ignoreKeyword, '
+            + 'halfIgnoreKeyword, '
             + 'keyCS, '
             + 'keyRegExp, '
             + 'title, '
@@ -158,7 +173,9 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
             const value: any[] = [];
             value.push(rule.id);
             value.push(rule.keyword);
+            value.push(rule.halfKeyword);
             value.push(rule.ignoreKeyword);
+            value.push(rule.halfIgnoreKeyword);
             value.push(rule.keyCS);
             value.push(rule.keyRegExp);
             value.push(rule.title);
@@ -218,18 +235,14 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
         const querys: string[] = [];
         const values: any[] = [];
 
-        if (rule.keyword !== null) {
-            querys.push(`keyword = ${ this.operator.createValueStr(values.length + 1, values.length + 1) }`);
-            values.push(rule.keyword);
-        } else {
-            querys.push('keyword = null');
-        }
-        if (rule.ignoreKeyword !== null) {
-            querys.push(`ignoreKeyword = ${ this.operator.createValueStr(values.length + 1, values.length + 1) }`);
-            values.push(rule.ignoreKeyword);
-        } else {
-            querys.push('ignoreKeyword = null');
-        }
+        querys.push(`keyword = ${ this.operator.createValueStr(values.length + 1, values.length + 1) }`);
+        values.push(rule.halfKeyword);
+        querys.push(`halfKeyword = ${ this.operator.createValueStr(values.length + 1, values.length + 1) }`);
+        values.push(rule.keyword === null ? null : StrUtil.toHalf(rule.keyword));
+        querys.push(`ignoreKeyword = ${ this.operator.createValueStr(values.length + 1, values.length + 1) }`);
+        values.push(rule.ignoreKeyword);
+        querys.push(`halfIgnoreKeyword = ${ this.operator.createValueStr(values.length + 1, values.length + 1) }`);
+        values.push(rule.ignoreKeyword === null ? null : StrUtil.toHalf(rule.ignoreKeyword));
 
         if (rule.keyCS !== null) { querys.push(`keyCS = ${ this.operator.convertBoolean(rule.keyCS) }`); }
         else { querys.push('keyCS = null'); }
@@ -397,15 +410,60 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
 
     /**
      * 全件取得
-     * @param limit: limit
-     * @param offset: offset
+     * @param option: RuleFindAllOption
      * @return Promise<DBSchema.RulesSchema[]>
      */
-    public async findAll(limit?: number, offset: number = 0): Promise<DBSchema.RulesSchema[]> {
-        let query = `select ${ this.getAllColumns() } from ${ DBSchema.TableName.Rules } order by id asc`;
-        if (typeof limit !== 'undefined') { query += ` ${ this.operator.createLimitStr(limit, offset) }`; }
+    public async findAll(option: RuleFindAllOption): Promise<DBSchema.RulesSchema[]> {
+        const values: any[] = [];
+        let query = `select ${ this.getAllColumns() } from ${ DBSchema.TableName.Rules } `;
 
-        return this.fixResults(<DBSchema.RulesSchema[]> await this.operator.runQuery(query));
+        // 検索オプション
+        if (typeof option.query !== 'undefined') {
+            const optionQuery = this.createOptionQuery(option.query);
+            query += optionQuery.str;
+            Array.prototype.push.apply(values, optionQuery.values);
+        }
+
+        query += 'order by id asc';
+        if (typeof option.limit !== 'undefined') { query += ` ${ this.operator.createLimitStr(option.limit, option.offset) }`; }
+
+        return this.fixResults(<DBSchema.RulesSchema[]> await this.operator.runQuery(query, values));
+    }
+
+    /**
+     * 検索時のオプションを生成
+     * @param query: RuleFindQuery
+     * @return { str: string; values: string[] }
+     */
+    public createOptionQuery(query: RuleFindQuery): { str: string; values: string[] } {
+        let queryStr = '';
+        const values: any[] = [];
+
+        if (typeof query.keyword !== 'undefined') {
+            const querys: string[] = [];
+            const likeStr = this.operator.createLikeStr(false);
+            const keywords = StrUtil.toHalf(query.keyword).trim().split(' ');
+
+            keywords.forEach((str, i) => {
+                str = `%${ str }%`;
+                querys.push(`halfKeyword ${ likeStr } ${ this.operator.createValueStr(i + 1, i + 1) }`);
+                values.push(str);
+            });
+
+            // and query 生成
+            querys.forEach((str, i) => {
+                queryStr += i === querys.length - 1 ? `${ str }` : `${ str } and `;
+            });
+        }
+
+        if (queryStr.length > 0) {
+            queryStr = `where ${ queryStr } `;
+        }
+
+        return {
+            str: queryStr,
+            values: values,
+        };
     }
 
     /**
@@ -420,10 +478,12 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
      * 件数取得
      * @return Promise<number>
      */
-    public getTotal(): Promise<number> {
-        return this.operator.total(DBSchema.TableName.Rules);
+    public getTotal(option: RuleFindQuery = {}): Promise<number> {
+        const query = this.createOptionQuery(option);
+
+        return this.operator.total(DBSchema.TableName.Rules, query.str, query.values);
     }
 }
 
-export { RulesDBInterface, RulesDB };
+export { RuleFindQuery, RulesDBInterface, RulesDB };
 

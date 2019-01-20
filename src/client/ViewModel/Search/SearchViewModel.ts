@@ -622,10 +622,22 @@ class SearchViewModel extends ViewModel {
         try {
             await this.rulesApiModel.add(this.createAddRule());
             this.snackbar.open('ルール追加');
-            window.setTimeout(() => { Util.move('/rules'); }, 1000);
+            await this.goBackPage();
         } catch (err) {
             console.error(err);
             this.snackbar.open('ルール追加失敗');
+        }
+    }
+
+    /**
+     * ルール更新後に戻るページを設定する
+     */
+    private async goBackPage(): Promise<void> {
+        await Util.sleep(1000);
+        if (this.searchSettingModel.getValue().isGoBackPreviousPage) {
+            history.back();
+        } else {
+            Util.move('/rules');
         }
     }
 
@@ -643,7 +655,7 @@ class SearchViewModel extends ViewModel {
         try {
             await this.rulesApiModel.update(Number(ruleId), this.createAddRule());
             this.snackbar.open('ルール更新');
-            window.setTimeout(() => { Util.move('/rules'); }, 1000);
+            await this.goBackPage();
         } catch (err) {
             console.error(err);
             this.snackbar.open('ルール更新失敗');

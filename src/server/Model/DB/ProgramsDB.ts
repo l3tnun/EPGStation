@@ -494,14 +494,6 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
     }
 
     /**
-     * create like str
-     * @param cs: boolean 大小文字区別
-     */
-    public createLikeStr(cs: boolean): string {
-        return cs ? 'like binary' : 'like';
-    }
-
-    /**
      * ルール検索用の where 以下の条件を生成する
      * @param option: SearchInterface
      * @return { query: string; values: any[] }
@@ -754,7 +746,7 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
             const extendedValues: any[] = [];
 
             // あいまい検索
-            const likeStr = this.createLikeStr(keyOption.cs);
+            const likeStr = this.operator.createLikeStr(keyOption.cs);
             // tslint:disable-next-line:no-irregular-whitespace
             const keywords = StrUtil.toDBStr(keyword, this.config.getConfig().convertDBStr).trim().split(/ |　/);
             const keywordCnt = keywords.length;

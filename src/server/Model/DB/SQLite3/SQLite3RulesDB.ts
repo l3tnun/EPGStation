@@ -10,7 +10,9 @@ class SQLite3RulesDB extends RulesDB {
         const query = `create table if not exists ${ DBSchema.TableName.Rules } (`
             + 'id integer primary key autoincrement, '
             + 'keyword text, '
+            + 'halfKeyword text, '
             + 'ignoreKeyword text, '
+            + 'halfIgnoreKeyword text, '
             + 'keyCS integer, '
             + 'keyRegExp integer, '
             + 'title integer, '

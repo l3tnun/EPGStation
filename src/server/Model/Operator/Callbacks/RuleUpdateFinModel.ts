@@ -1,4 +1,3 @@
-import Util from '../../../Util/Util';
 import Model from '../../Model';
 import { RecordedManageModelInterface } from '../../Operator/Recorded/RecordedManageModel';
 import { RecordingManageModelInterface } from '../../Operator/Recording/RecordingManageModel';
@@ -47,10 +46,8 @@ class RuleUpdateFinModel extends Model implements CallbackBaseModelInterface {
 
         // ルールが削除されたとき recorded の整合性をとる
         if (!isRetry && status === 'delete') {
-            // SQLite3 使用時に正しく動作しないので sleep
-            await Util.sleep(100);
             try {
-                await this.recordedManage.deleteRule(ruleId);
+                await this.recordedManage.deleteRuleRelation(ruleId);
             } catch (err) {
                 this.log.system.error(err);
             }

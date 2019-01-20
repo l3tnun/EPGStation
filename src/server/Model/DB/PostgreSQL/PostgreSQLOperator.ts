@@ -241,6 +241,15 @@ class PostgreSQLOperator extends DBOperator {
 
         return result.length !== 0;
     }
+
+    /**
+     * create like str
+     * @param cs: boolean 大小文字区別
+     */
+    public createLikeStr(cs: boolean): string {
+        return cs ? 'like' : 'ilike';
+    }
+
 }
 
 export default PostgreSQLOperator;

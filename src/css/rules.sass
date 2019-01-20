@@ -80,3 +80,26 @@ $switching-width: 980px;
     .rules-content
         .rule-card
             display: none;
+
+// is editing
+.rules-content.is-editing
+    // selected
+    .rule-card.selected
+        background-color: #4285f4;
+
+        .mdl-card__supporting-text
+            color: white;
+
+    tr.selected
+        background-color: #4285f4;
+
+        td
+            color: white;
+
+    .rule-card, td.toggle
+        .mdl-switch
+            pointer-events: none;
+
+    .pagination
+        opacity: 0;
+

@@ -259,6 +259,13 @@ class SQLite3Operator extends DBOperator {
     public createAddcolumnQueryStr(tableName: string, columnName: string, columnDefine: string): string {
         return `alter table ${ tableName } add column ${ columnName } ${ columnDefine }`;
     }
+
+    /**
+     * create like str
+     */
+    public createLikeStr(): string {
+        return 'like';
+    }
 }
 
 export default SQLite3Operator;

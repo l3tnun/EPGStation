@@ -53,6 +53,7 @@ namespace IPCMessageDefinition {
     export const ruleDisable = 'ruleDisable';
     export const ruleEnable = 'ruleEnable';
     export const ruleDelete = 'ruleDelete';
+    export const ruleDeletes = 'ruleDeletes';
     export const ruleAdd = 'ruleAdd';
     export const ruleUpdate = 'ruleUpdate';
     export const addEncodeFile = 'addEncodeFile';

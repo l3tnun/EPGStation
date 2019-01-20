@@ -34,6 +34,13 @@ class SearchSettingComponent extends Component<void> {
 
         return [
             this.createListItem(
+                'ルール追加/更新時に前のページに戻る',
+                this.createToggle(
+                    () => { return this.viewModel.tmpValue.isGoBackPreviousPage; },
+                    (value) => { this.viewModel.tmpValue.isGoBackPreviousPage = value; },
+                ),
+            ),
+            this.createListItem(
                 '検索時にキーワードをコピー',
                 this.createToggle(
                     () => { return this.viewModel.tmpValue.setKeyowordToDirectory; },

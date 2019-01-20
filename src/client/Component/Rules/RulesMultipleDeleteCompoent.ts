@@ -1,17 +1,20 @@
 import * as m from 'mithril';
-import RulesDeleteViewModel from '../../ViewModel/Rules/RulesDeleteViewModel';
+import BalloonViewModel from '../../ViewModel/Balloon/BalloonViewModel';
+import RulesViewModel from '../../ViewModel/Rules/RulesViewModel';
 import factory from '../../ViewModel/ViewModelFactory';
 import Component from '../Component';
 
 /**
- * RulesDeleteComponent
+ * RulesMultipleDeleteComponent
  */
-class RulesDeleteComponent extends Component<void> {
-    private viewModel: RulesDeleteViewModel;
+class RulesMultipleDeleteComponent extends Component<void> {
+    private viewModel: RulesViewModel;
+    private balloon: BalloonViewModel;
 
     constructor() {
         super();
-        this.viewModel = <RulesDeleteViewModel> factory.get('RulesDeleteViewModel');
+        this.viewModel = <RulesViewModel> factory.get('RulesViewModel');
+        this.balloon = <BalloonViewModel> factory.get('BalloonViewModel');
     }
 
     /**
@@ -20,7 +23,7 @@ class RulesDeleteComponent extends Component<void> {
     public view(): m.Child {
         return m('div', [
             m('div', { class: 'rule-delete-content balloon-with-action-enclosure-margin' }, [
-                m('div', { class: 'title' }, this.viewModel.getKeyword() + 'を削除しますか。'),
+                m('div', { class: 'title' }, `選択した ${ this.viewModel.getSelectedCnt() } 件のルールを削除しますか。`),
                 m('div', { class: 'checkbox' }, [
                     m('label', { class: 'mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect' }, [
                         m('input', {
@@ -38,19 +41,19 @@ class RulesDeleteComponent extends Component<void> {
                 m('button', {
                     class: 'mdl-button mdl-js-button mdl-button--primary',
                     onclick: () => {
-                        // delete rule
-                        this.viewModel.delete();
-                        this.viewModel.close();
+                        // delete video
+                        this.viewModel.deleteSelectedRules();
+                        this.balloon.close();
                     },
                 }, '削除'),
                 m('button', {
                     class: 'mdl-button mdl-js-button mdl-button--accent',
-                    onclick: () => { this.viewModel.close(); },
+                    onclick: () => { this.balloon.close(); },
                 }, 'キャンセル'),
             ]),
         ]);
     }
 }
 
-export default RulesDeleteComponent;
+export default RulesMultipleDeleteComponent;
 

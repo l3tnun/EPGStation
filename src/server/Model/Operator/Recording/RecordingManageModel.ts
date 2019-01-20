@@ -482,11 +482,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
                     // programId 予約の場合、番組情報を最新に更新する
                     const program = await this.programsDB.findId(recorded.programId);
                     if (program !== null) {
-                        recorded = {
-                            id: recorded.id,
-                            programId: recorded.programId,
-                            channelId: program.channelId,
-                            channelType: program.channelType,
+                        await this.recordedDB.updateProgramInfo(recorded.id, {
                             startAt: program.startAt,
                             endAt: program.endAt,
                             duration: program.duration,
@@ -505,19 +501,29 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
                             videoComponentType: program.videoComponentType,
                             audioSamplingRate: program.audioSamplingRate,
                             audioComponentType: program.audioComponentType,
-                            recPath: recData.recPath!,
-                            ruleId: ruleId,
-                            thumbnailPath: null,
-                            recording: false,
-                            protection: false,
-                            filesize: null,
-                            logPath: recorded.logPath,
-                            errorCnt: null,
-                            dropCnt: null,
-                            scramblingCnt: null,
-                            isTmp: recorded.isTmp,
-                        };
-                        await this.recordedDB.replace(recorded);
+                        })
+                        .catch(() => {
+                            this.log.system.warn(`recorded program info update error: ${ recorded!.id }`);
+                        });
+
+                        recorded.startAt = program.startAt;
+                        recorded.endAt = program.endAt;
+                        recorded.duration = program.duration;
+                        recorded.name = program.name;
+                        recorded.description = program.description;
+                        recorded.extended = program.extended;
+                        recorded.genre1 = program.genre1;
+                        recorded.genre2 = program.genre2;
+                        recorded.genre3 = program.genre3;
+                        recorded.genre4 = program.genre4;
+                        recorded.genre5 = program.genre5;
+                        recorded.genre6 = program.genre6;
+                        recorded.videoType = program.videoType;
+                        recorded.videoResolution = program.videoResolution;
+                        recorded.videoStreamContent = program.videoStreamContent;
+                        recorded.videoComponentType = program.videoComponentType;
+                        recorded.audioSamplingRate = program.audioSamplingRate;
+                        recorded.audioComponentType = program.audioComponentType;
 
                         historyProgram = {
                             id: 0,

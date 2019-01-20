@@ -11,6 +11,7 @@ interface RuleManageModelInterface extends Model {
     enable(ruleId: number): Promise<void>;
     disable(ruleId: number): Promise<void>;
     delete(ruleId: number): Promise<void>;
+    deletes(ruleIds: number[]): Promise<number[]>;
 }
 
 type RuleEventStatus = 'add' | 'update' | 'enable' | 'disable' | 'delete';
@@ -181,6 +182,27 @@ class RuleManageModel extends Model implements RuleManageModelInterface {
         this.log.system.info(`delete Rule: ${ ruleId }`);
         this.eventsNotify(ruleId, 'delete');
         this.isRunning = false;
+    }
+
+    /**
+     * @param ruleIds: rule ids
+     * @return Promise<number[]> 削除できなかった ruleId を返す
+     */
+    public async deletes(ruleIds: number[]): Promise<number[]> {
+        const ids: number[] = [];
+
+        if (ruleIds.length > 0) { this.log.system.info(`delete rules: ${ ruleIds.length }`); }
+
+        for (const id of ruleIds) {
+            try {
+                await this.delete(id);
+            } catch (err) {
+                this.log.system.error(`delete rule error: ${ id }`);
+                ids.push(id);
+            }
+        }
+
+        return ids;
     }
 
     /**

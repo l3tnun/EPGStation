@@ -32,6 +32,7 @@ interface IPCClientInterface extends Model {
     ruleDisable(ruleId: number): Promise<void>;
     ruleEnable(ruleId: number): Promise<void>;
     ruleDelete(ruleId: number): Promise<void>;
+    ruleDeletes(ruleIds: number[]): Promise<number[]>;
     ruleAdd(rule: RuleInterface): Promise<number>;
     ruleUpdate(ruleId: number, rule: RuleInterface): Promise<void>;
     addEncodeFile(recordedId: number, name: string, filePath: string): Promise<number>;
@@ -250,7 +251,7 @@ class IPCClient extends Model implements IPCClientInterface {
             recordedIds: recordedIds,
             option: option,
         });
-        const result = await this.receive(id);
+        const result = await this.receive(id, null);
 
         return <number[]> result.value;
     }
@@ -321,6 +322,20 @@ class IPCClient extends Model implements IPCClientInterface {
     public async ruleDelete(ruleId: number): Promise<void> {
         const id = this.send(IPCMessageDefinition.ruleDelete, { ruleId: ruleId });
         await this.receive(id);
+    }
+
+    /**
+     * 指定した複数の rule を削除する
+     * @param ruleIds: rule ids
+     * @return Promise<number[]> 削除できなかった要素を返す
+     */
+    public async ruleDeletes(ruleIds: number[]): Promise<number[]> {
+        const id = this.send(IPCMessageDefinition.ruleDeletes, {
+            ruleIds: ruleIds,
+        });
+        const result = await this.receive(id, null);
+
+        return <number[]> result.value;
     }
 
     /**
