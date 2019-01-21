@@ -1,4 +1,5 @@
 import * as apid from '../../../../node_modules/mirakurun/api';
+import StrUtil from '../../Util/StrUtil';
 import * as DBSchema from './DBSchema';
 import DBTableBase from './DBTableBase';
 
@@ -117,7 +118,9 @@ abstract class ServicesDB extends DBTableBase implements ServicesDBInterface {
      * @return Promise<DBSchema.ServiceSchema | null>
      */
     public async findId(id: number): Promise<DBSchema.ServiceSchema | null> {
-        return this.operator.getFirst(this.fixResults(<DBSchema.ServiceSchema[]> await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Services } where id = ${ id }`)));
+        const channel = this.operator.getFirst(this.fixResults(<DBSchema.ServiceSchema[]> await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Services } where id = ${ id }`)));
+
+        return channel ? this.toHalfNameChannels([channel])[0] : null;
     }
 
     /**
@@ -134,7 +137,7 @@ abstract class ServicesDB extends DBTableBase implements ServicesDBInterface {
      * @return Promise<DBSchema.ServiceSchema[]>
      */
     public async findAll(needSort: boolean = false): Promise<DBSchema.ServiceSchema[]> {
-        const channels = this.fixResults(<DBSchema.ServiceSchema[]> await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Services } order by channelTypeId, remoteControlKeyId, id`));
+        const channels = this.toHalfNameChannels(this.fixResults(<DBSchema.ServiceSchema[]> await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Services } order by channelTypeId, remoteControlKeyId, id`)));
 
         return needSort ? this.sortChannels(channels) : channels;
     }
@@ -173,6 +176,25 @@ abstract class ServicesDB extends DBTableBase implements ServicesDBInterface {
     }
 
     /**
+     * チャンネル一覧からチャンネル名を半角に変換
+     * @param channels; DBSchema.ServiceSchema[]
+     * @return DBSchema.ServiceSchema[];
+     */
+    private toHalfNameChannels(channels: DBSchema.ServiceSchema[]): DBSchema.ServiceSchema[] {
+        const config = this.config.getConfig();
+        if (config.convertDBStr !== 'oneByteWithCH') {
+            // 変換しない
+            return channels;
+        }
+
+        return channels.map(channel => {
+            channel.name = StrUtil.toHalf(channel.name);
+
+            return channel;
+        });
+    }
+
+    /**
      * 放送波指定取得
      * @param types GR | BS | CS | SKY
      * @param needSort: boolean true ソート済みの結果を返す
@@ -185,7 +207,7 @@ abstract class ServicesDB extends DBTableBase implements ServicesDBInterface {
         });
         str = str.slice(0, -1);
 
-        const channels = this.fixResults(<DBSchema.ServiceSchema[]> await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Services } where channelType in (${ str }) order by channelTypeId, remoteControlKeyId, id`));
+        const channels = this.toHalfNameChannels(this.fixResults(<DBSchema.ServiceSchema[]> await this.operator.runQuery(`select ${ this.getAllColumns() } from ${ DBSchema.TableName.Services } where channelType in (${ str }) order by channelTypeId, remoteControlKeyId, id`)));
 
         return needSort ? this.sortChannels(channels) : channels;
     }
