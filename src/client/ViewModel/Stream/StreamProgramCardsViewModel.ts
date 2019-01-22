@@ -1,6 +1,7 @@
 import * as apid from '../../../../api';
 import { ViewModelStatus } from '../../Enums';
 import { ConfigApiModelInterface } from '../../Model/Api/ConfigApiModel';
+import { AllReserves, ReservesApiModelInterface } from '../../Model/Api/ReservesApiModel';
 import { ScheduleApiModelInterface } from '../../Model/Api/ScheduleApiModel';
 import { TabModelInterface } from '../../Model/Tab/TabModel';
 import ViewModel from '../ViewModel';
@@ -10,19 +11,23 @@ import ViewModel from '../ViewModel';
  */
 class StreamProgramCardsViewModel extends ViewModel {
     private scheduleApiModel: ScheduleApiModelInterface;
+    private reservesApiModel: ReservesApiModelInterface;
     private tab: TabModelInterface;
     private configApiModel: ConfigApiModelInterface;
     private timer: number | null = null;
+    private reserves: AllReserves | null = null;
 
     public additionTime: number = 0;
 
     constructor(
         scheduleApiModel: ScheduleApiModelInterface,
+        reservesApiModel: ReservesApiModelInterface,
         tab: TabModelInterface,
         configApiModel: ConfigApiModelInterface,
     ) {
         super();
         this.scheduleApiModel = scheduleApiModel;
+        this.reservesApiModel = reservesApiModel;
         this.tab = tab;
         this.configApiModel = configApiModel;
     }
@@ -35,10 +40,12 @@ class StreamProgramCardsViewModel extends ViewModel {
 
         if (status === 'init') {
             this.additionTime = 0;
+            this.reservesApiModel.init();
             this.scheduleApiModel.init();
         }
 
         await this.updateProgram();
+        await this.updateReserves();
     }
 
     /**
@@ -69,6 +76,13 @@ class StreamProgramCardsViewModel extends ViewModel {
         this.timer = window.setTimeout(() => {
             this.updateProgram();
         }, minEndTime);
+    }
+
+    /**
+     * 予約された program id を取得する
+     */
+    private async updateReserves(): Promise<void> {
+        this.reserves = await this.reservesApiModel.fetchAllId();
     }
 
     /**
@@ -145,6 +159,14 @@ class StreamProgramCardsViewModel extends ViewModel {
     public async resetTime(): Promise<void> {
         this.additionTime = 0;
         await this.updateProgram();
+    }
+
+    /**
+     * getReserves
+     * @return AllReserves
+     */
+    public getReserves(): AllReserves | null {
+        return this.reserves;
     }
 }
 

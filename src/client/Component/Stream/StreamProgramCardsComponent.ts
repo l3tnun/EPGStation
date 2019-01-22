@@ -1,6 +1,7 @@
 import { throttle } from 'lodash';
 import * as m from 'mithril';
 import * as apid from '../../../../api';
+import { AllReserves } from '../../Model/Api/ReservesApiModel';
 import DateUtil from '../../Util/DateUtil';
 import Util from '../../Util/Util';
 import BalloonViewModel from '../../ViewModel/Balloon/BalloonViewModel';
@@ -29,6 +30,7 @@ class StreamProgramCardsComponent extends Component<StramCardArgs> {
     private infoViewModel: ProgramInfoViewModel;
     private balloon: BalloonViewModel;
     private contentElement: HTMLElement;
+    private allReserves: AllReserves | null;
     private isDoneInit: boolean = false;
 
     constructor() {
@@ -61,6 +63,9 @@ class StreamProgramCardsComponent extends Component<StramCardArgs> {
      */
     public view(mainVnode: m.Vnode<StramCardArgs, this>): m.Child {
         const broadcasts = this.viewModel.getBroadcastList();
+
+        // 予約情報を取得
+        this.allReserves = this.viewModel.getReserves();
 
         return m('div', {
             class: 'stream-programs-cards main-layout-animation',
@@ -102,7 +107,12 @@ class StreamProgramCardsComponent extends Component<StramCardArgs> {
                 },
             }, [
                 this.viewModel.getPrograms(broadcasts[this.viewModel.getTabPosition()]).map((item) => {
-                    return m('div', { class: 'mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col' },
+                    let baseClass = 'mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col';
+                    if (this.allReserves && this.allReserves[item.programs[0].id]) {
+                        baseClass += ' mdl-card__is-recording';
+                    }
+
+                    return m('div', { class: baseClass },
                         this.createContent(item),
                     );
                 }),
