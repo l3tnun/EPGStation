@@ -5,6 +5,7 @@ import DateUtil from '../../Util/DateUtil';
 import Util from '../../Util/Util';
 import BalloonViewModel from '../../ViewModel/Balloon/BalloonViewModel';
 import MainLayoutViewModel from '../../ViewModel/MainLayoutViewModel';
+import ProgramInfoViewModel from '../../ViewModel/Program/ProgramInfoViewModel';
 import StreamProgramCardsViewModel from '../../ViewModel/Stream/StreamProgramCardsViewModel';
 import StreamSelectViewModel from '../../ViewModel/Stream/StreamSelectViewModel';
 import factory from '../../ViewModel/ViewModelFactory';
@@ -25,6 +26,7 @@ class StreamProgramCardsComponent extends Component<StramCardArgs> {
     private viewModel: StreamProgramCardsViewModel;
     private mainLayoutViewModel: MainLayoutViewModel;
     private selectorViewModel: StreamSelectViewModel;
+    private infoViewModel: ProgramInfoViewModel;
     private balloon: BalloonViewModel;
     private contentElement: HTMLElement;
     private isDoneInit: boolean = false;
@@ -34,6 +36,7 @@ class StreamProgramCardsComponent extends Component<StramCardArgs> {
         this.viewModel = <StreamProgramCardsViewModel> factory.get('StreamProgramCardsViewModel');
         this.mainLayoutViewModel = <MainLayoutViewModel> factory.get('MainLayoutViewModel');
         this.selectorViewModel = <StreamSelectViewModel> factory.get('StreamSelectViewModel');
+        this.infoViewModel = <ProgramInfoViewModel> factory.get('ProgramInfoViewModel');
         this.balloon = <BalloonViewModel> factory.get('BalloonViewModel');
     }
 
@@ -117,11 +120,18 @@ class StreamProgramCardsComponent extends Component<StramCardArgs> {
         return m('div', {
             class: 'mdl-card__supporting-text',
             onclick: (e: Event) => {
-                this.selectorViewModel.set(item.channel);
-                this.balloon.open(StreamSelectViewModel.id, e);
+                this.infoViewModel.set(item.programs[0], item.channel);
+                this.balloon.open(ProgramInfoViewModel.id, e);
             },
         }, [
-            m('div', { class: 'name' }, item.channel.name),
+            m('div', {
+                class: 'name',
+                onclick: (e: Event) => {
+                    e.stopPropagation();
+                    this.selectorViewModel.set(item.channel);
+                    this.balloon.open(StreamSelectViewModel.id, e);
+                },
+            }, item.channel.name),
             m('div', { class: 'time' }, this.createTimeStr(item.programs[0])),
             m('div', { class: 'title' }, item.programs[0].name),
             m('div', { class: 'description' }, item.programs[0].description),
