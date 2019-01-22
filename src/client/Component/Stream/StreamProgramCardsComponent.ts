@@ -128,16 +128,16 @@ class StreamProgramCardsComponent extends Component<StramCardArgs> {
         return m('div', {
             class: 'mdl-card__supporting-text',
             onclick: (e: Event) => {
-                this.infoViewModel.set(item.programs[0], item.channel);
-                this.balloon.open(ProgramInfoViewModel.id, e);
+                this.selectorViewModel.set(item.channel);
+                this.balloon.open(StreamSelectViewModel.id, e);
             },
         }, [
             m('div', {
                 class: 'name',
                 onclick: (e: Event) => {
                     e.stopPropagation();
-                    this.selectorViewModel.set(item.channel);
-                    this.balloon.open(StreamSelectViewModel.id, e);
+                    this.infoViewModel.set(item.programs[0], item.channel);
+                    this.balloon.open(ProgramInfoViewModel.id, e);
                 },
             }, item.channel.name),
             m('div', { class: 'time' }, this.createTimeStr(item.programs[0])),
