@@ -1,4 +1,5 @@
 import * as apid from '../../../../node_modules/mirakurun/api';
+import StrUtil from '../../Util/StrUtil';
 import * as DBSchema from './DBSchema';
 import DBTableBase from './DBTableBase';
 
@@ -40,6 +41,7 @@ abstract class ServicesDB extends DBTableBase implements ServicesDBInterface {
      * @return Promise<void>
      */
     public insert(services: apid.Service[], isDelete: boolean = true): Promise<void> {
+        const config = this.config.getConfig();
         const isReplace = this.operator.getUpsertType() === 'replace';
         let queryStr = `${ isReplace ? 'replace' : 'insert' } into ${ DBSchema.TableName.Services } (`
             + 'id, '
@@ -77,7 +79,7 @@ abstract class ServicesDB extends DBTableBase implements ServicesDBInterface {
                 service.id,
                 service.serviceId,
                 service.networkId,
-                service.name.replace(/\x00/g, ''), // PostgreSQL 非対応文字
+                StrUtil.toDBStr(service.name, config.convertDBStr === 'oneByteWithCH' ? 'oneByte' : 'no'),
                 typeof service.remoteControlKeyId === 'undefined' ? null : service.remoteControlKeyId,
                 Boolean(service.hasLogoData),
                 service.channel.type,
