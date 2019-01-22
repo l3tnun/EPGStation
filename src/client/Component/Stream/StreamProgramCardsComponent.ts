@@ -1,7 +1,6 @@
 import { throttle } from 'lodash';
 import * as m from 'mithril';
 import * as apid from '../../../../api';
-import { AllReserves } from '../../Model/Api/ReservesApiModel';
 import DateUtil from '../../Util/DateUtil';
 import Util from '../../Util/Util';
 import BalloonViewModel from '../../ViewModel/Balloon/BalloonViewModel';
@@ -30,7 +29,6 @@ class StreamProgramCardsComponent extends Component<StramCardArgs> {
     private infoViewModel: ProgramInfoViewModel;
     private balloon: BalloonViewModel;
     private contentElement: HTMLElement;
-    private allReserves: AllReserves | null;
     private isDoneInit: boolean = false;
 
     constructor() {
@@ -65,7 +63,7 @@ class StreamProgramCardsComponent extends Component<StramCardArgs> {
         const broadcasts = this.viewModel.getBroadcastList();
 
         // 予約情報を取得
-        this.allReserves = this.viewModel.getReserves();
+        const reserves = this.viewModel.getReserves();
 
         return m('div', {
             class: 'stream-programs-cards main-layout-animation',
@@ -108,7 +106,7 @@ class StreamProgramCardsComponent extends Component<StramCardArgs> {
             }, [
                 this.viewModel.getPrograms(broadcasts[this.viewModel.getTabPosition()]).map((item) => {
                     let baseClass = 'mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col';
-                    if (this.allReserves && this.allReserves[item.programs[0].id]) {
+                    if (reserves !== null && typeof reserves[item.programs[0].id] !== 'undefined') {
                         baseClass += ' mdl-card__is-recording';
                     }
 

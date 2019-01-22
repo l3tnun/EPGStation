@@ -15,7 +15,6 @@ class StreamProgramCardsViewModel extends ViewModel {
     private tab: TabModelInterface;
     private configApiModel: ConfigApiModelInterface;
     private timer: number | null = null;
-    private reserves: AllReserves | null = null;
 
     public additionTime: number = 0;
 
@@ -82,7 +81,7 @@ class StreamProgramCardsViewModel extends ViewModel {
      * 予約された program id を取得する
      */
     private async updateReserves(): Promise<void> {
-        this.reserves = await this.reservesApiModel.fetchAllId();
+        await this.reservesApiModel.fetchAllId();
     }
 
     /**
@@ -100,6 +99,14 @@ class StreamProgramCardsViewModel extends ViewModel {
         });
 
         return results;
+    }
+
+    /**
+     * getReserves
+     * @return AllReserves
+     */
+    public getReserves(): AllReserves | null {
+        return this.reservesApiModel.getAllId();
     }
 
     /**
@@ -159,14 +166,6 @@ class StreamProgramCardsViewModel extends ViewModel {
     public async resetTime(): Promise<void> {
         this.additionTime = 0;
         await this.updateProgram();
-    }
-
-    /**
-     * getReserves
-     * @return AllReserves
-     */
-    public getReserves(): AllReserves | null {
-        return this.reserves;
     }
 }
 
