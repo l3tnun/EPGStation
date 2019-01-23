@@ -5,6 +5,7 @@ import DateUtil from '../../Util/DateUtil';
 import Util from '../../Util/Util';
 import BalloonViewModel from '../../ViewModel/Balloon/BalloonViewModel';
 import MainLayoutViewModel from '../../ViewModel/MainLayoutViewModel';
+import ProgramInfoViewModel from '../../ViewModel/Program/ProgramInfoViewModel';
 import StreamProgramCardsViewModel from '../../ViewModel/Stream/StreamProgramCardsViewModel';
 import StreamSelectViewModel from '../../ViewModel/Stream/StreamSelectViewModel';
 import factory from '../../ViewModel/ViewModelFactory';
@@ -25,6 +26,7 @@ class StreamProgramCardsComponent extends Component<StramCardArgs> {
     private viewModel: StreamProgramCardsViewModel;
     private mainLayoutViewModel: MainLayoutViewModel;
     private selectorViewModel: StreamSelectViewModel;
+    private infoViewModel: ProgramInfoViewModel;
     private balloon: BalloonViewModel;
     private contentElement: HTMLElement;
     private isDoneInit: boolean = false;
@@ -34,6 +36,7 @@ class StreamProgramCardsComponent extends Component<StramCardArgs> {
         this.viewModel = <StreamProgramCardsViewModel> factory.get('StreamProgramCardsViewModel');
         this.mainLayoutViewModel = <MainLayoutViewModel> factory.get('MainLayoutViewModel');
         this.selectorViewModel = <StreamSelectViewModel> factory.get('StreamSelectViewModel');
+        this.infoViewModel = <ProgramInfoViewModel> factory.get('ProgramInfoViewModel');
         this.balloon = <BalloonViewModel> factory.get('BalloonViewModel');
     }
 
@@ -58,6 +61,9 @@ class StreamProgramCardsComponent extends Component<StramCardArgs> {
      */
     public view(mainVnode: m.Vnode<StramCardArgs, this>): m.Child {
         const broadcasts = this.viewModel.getBroadcastList();
+
+        // 予約情報を取得
+        const reserves = this.viewModel.getReserves();
 
         return m('div', {
             class: 'stream-programs-cards main-layout-animation',
@@ -99,7 +105,12 @@ class StreamProgramCardsComponent extends Component<StramCardArgs> {
                 },
             }, [
                 this.viewModel.getPrograms(broadcasts[this.viewModel.getTabPosition()]).map((item) => {
-                    return m('div', { class: 'mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col' },
+                    let baseClass = 'mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col';
+                    if (reserves !== null && typeof reserves[item.programs[0].id] !== 'undefined') {
+                        baseClass += ' mdl-card__is-recording';
+                    }
+
+                    return m('div', { class: baseClass },
                         this.createContent(item),
                     );
                 }),
@@ -121,7 +132,14 @@ class StreamProgramCardsComponent extends Component<StramCardArgs> {
                 this.balloon.open(StreamSelectViewModel.id, e);
             },
         }, [
-            m('div', { class: 'name' }, item.channel.name),
+            m('div', {
+                class: 'name',
+                onclick: (e: Event) => {
+                    e.stopPropagation();
+                    this.infoViewModel.set(item.programs[0], item.channel);
+                    this.balloon.open(ProgramInfoViewModel.id, e);
+                },
+            }, item.channel.name),
             m('div', { class: 'time' }, this.createTimeStr(item.programs[0])),
             m('div', { class: 'title' }, item.programs[0].name),
             m('div', { class: 'description' }, item.programs[0].description),

@@ -1,6 +1,7 @@
 import * as m from 'mithril';
 import { ViewModelStatus } from '../../Enums';
 import BalloonViewModel from '../../ViewModel/Balloon/BalloonViewModel';
+import ProgramInfoViewModel from '../../ViewModel/Program/ProgramInfoViewModel';
 import StreamForcedStopViewModel from '../../ViewModel/Stream/StreamForcedStopViewModel';
 import StreamLivePlayerViewModel from '../../ViewModel/Stream/StreamLivePlayerViewModel';
 import StreamProgramCardsViewModel from '../../ViewModel/Stream/StreamProgramCardsViewModel';
@@ -9,6 +10,8 @@ import factory from '../../ViewModel/ViewModelFactory';
 import { BalloonComponent } from '../BalloonComponent';
 import MainLayoutComponent from '../MainLayoutComponent';
 import ParentComponent from '../ParentComponent';
+import ProgramInfoActionComponent from '../Program/ProgramInfoActionComponent';
+import ProgramInfoComponent from '../Program/ProgramInfoComponent';
 import StreamLivePlayerComponent from './StreamLivePlayerComponent';
 import StreamProgramCardsComponent from './StreamProgramCardsComponent';
 import StreamProgramTimeComponent from './StreamProgramTimeComponent';
@@ -79,6 +82,14 @@ class StreamProgramComponent extends ParentComponent<void> {
                     content: m(StreamSelectComponent),
                     maxWidth: 400,
                     forceDialog: window.innerHeight < 480,
+                }),
+                m(BalloonComponent, {
+                    id: ProgramInfoViewModel.id,
+                    content: m(ProgramInfoComponent),
+                    action: m(ProgramInfoActionComponent),
+                    maxWidth: 500,
+                    maxHeight: 450,
+                    dialogMaxWidth: 600,
                 }),
                 m(BalloonComponent, {
                     id: StreamLivePlayerViewModel.id,
