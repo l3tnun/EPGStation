@@ -413,7 +413,7 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
      * @param option: RuleFindAllOption
      * @return Promise<DBSchema.RulesSchema[]>
      */
-    public async findAll(option: RuleFindAllOption): Promise<DBSchema.RulesSchema[]> {
+    public async findAll(option: RuleFindAllOption = {}): Promise<DBSchema.RulesSchema[]> {
         const values: any[] = [];
         let query = `select ${ this.getAllColumns() } from ${ DBSchema.TableName.Rules } `;
 
