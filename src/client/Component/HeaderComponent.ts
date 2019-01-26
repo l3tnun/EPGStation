@@ -47,6 +47,7 @@ class HeaderComponent extends Component<HeaderArgs> {
         const config = this.viewModel.getConfig();
         const broadcastLink: m.Child[] = [];
         if (config !== null) {
+            if (typeof config.mpegTsStreaming !== 'undefined') { broadcastLink.push(this.createLink('ライブ', '/stream/program')); }
             if (config.broadcast.GR) { broadcastLink.push(this.createLink('GR', '/program', { type: 'GR' }, true)); }
             if (config.broadcast.BS) { broadcastLink.push(this.createLink('BS', '/program', { type: 'BS' }, true)); }
             if (config.broadcast.CS) { broadcastLink.push(this.createLink('CS', '/program', { type: 'CS' }, true)); }
@@ -91,7 +92,6 @@ class HeaderComponent extends Component<HeaderArgs> {
                     this.createLink('録画済み', '/recorded'),
                     this.createLink('予約', '/reserves', { mode: 'reserves' }, true),
                     this.createLink('競合', '/reserves', { mode: 'conflicts' }, true),
-                    this.createLink('重複', '/reserves', { mode: 'overlaps' }, true),
                     this.createLink('検索', '/search'),
                     this.createLink('ルール', '/rules'),
                 ]),
