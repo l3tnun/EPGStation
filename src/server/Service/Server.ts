@@ -13,7 +13,8 @@ import * as multer from 'multer';
 import { OpenAPIV2 } from 'openapi-types';
 import * as path from 'path';
 import * as swaggerUi from 'swagger-ui-express';
-import * as urljoin from 'url-join';
+// tslint:disable-next-line:no-require-imports
+import urljoin = require('url-join');
 import Base from '../Base';
 import factory from '../Model/ModelFactory';
 import { EncodeFinModelInterface } from '../Model/Service/Encode/EncodeFinModel';
