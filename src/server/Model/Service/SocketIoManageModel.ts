@@ -1,6 +1,7 @@
 import * as http from 'http';
 import * as SocketIO from 'socket.io';
-import * as urljoin from 'url-join';
+// tslint:disable-next-line:no-require-imports
+import urljoin = require('url-join');
 import * as events from '../../IoEvents';
 import Util from '../../Util/Util';
 import Model from '../Model';

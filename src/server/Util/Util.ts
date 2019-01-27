@@ -1,5 +1,6 @@
 import * as path from 'path';
-import * as urljoin from 'url-join';
+// tslint:disable-next-line:no-require-imports
+import urljoin = require('url-join');
 import Configuration from '../Configuration';
 
 namespace Util {

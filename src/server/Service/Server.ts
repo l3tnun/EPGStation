@@ -12,8 +12,8 @@ import * as mkdirp from 'mkdirp';
 import * as multer from 'multer';
 import { OpenAPIV2 } from 'openapi-types';
 import * as path from 'path';
-import * as swaggerUi from 'swagger-ui-express';
-import * as urljoin from 'url-join';
+// tslint:disable-next-line:no-require-imports
+import urljoin = require('url-join');
 import Base from '../Base';
 import factory from '../Model/ModelFactory';
 import { EncodeFinModelInterface } from '../Model/Service/Encode/EncodeFinModel';
@@ -46,7 +46,7 @@ class Server extends Base {
         }
 
         // read pkg
-        const pkg = require(path.join('..', '..', '..', 'package.json'));
+        const pkg = require(path.join(__dirname, '..', '..', '..', 'package.json'));
 
         // read api.yml
         const api = <OpenAPIV2.Document> yaml.safeLoad(fs.readFileSync(path.join(__dirname, '..', '..', '..', 'api.yml'), 'utf-8'));
@@ -57,8 +57,10 @@ class Server extends Base {
         };
 
         // swagger ui
-        this.app.use(this.createUrl('/api-docs'), swaggerUi.serve, swaggerUi.setup(api));
-        this.app.get(this.createUrl('/api/debug'), (_req, res) => { return res.redirect(this.createUrl('/api-docs/?url=' + this.createUrl('/api/docs'))); });
+        if (fs.existsSync(path.join(__dirname, '..', '..', '..', 'node_modules', 'swagger-ui-dist')) === true) {
+            this.app.use(this.createUrl('/api-docs'), express.static(path.join(__dirname, '..', '..', '..', 'node_modules', 'swagger-ui-dist')));
+            this.app.get(this.createUrl('/api/debug'), (_req, res) => { return res.redirect(this.createUrl('/api-docs/?url=' + this.createUrl('/api/docs'))); });
+        }
 
         // uploader dir
         const uploadTempDir = config.uploadTempDir || './data/upload';

@@ -1,7 +1,8 @@
 import * as path from 'path';
 import * as request from 'request';
 import * as url from 'url';
-import * as urljoin from 'url-join';
+// tslint:disable-next-line:no-require-imports
+import urljoin = require('url-join');
 import * as apid from '../../../../api';
 import Util from '../../Util/Util';
 import * as DBSchema from '../DB/DBSchema';

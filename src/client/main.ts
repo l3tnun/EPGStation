@@ -15,7 +15,6 @@ import StreamWatchComponent from './Component/Stream/StreamWatchComponent';
 import TopPageComponent from './Component/TopPage/TopPageComponent';
 import VideoWatchComponent from './Component/VideoWatch/VideoWatchComponent';
 import Util from './Util/Util';
-import factory from './ViewModel/ViewModelFactory';
 import ViewModelFactorySetting from './ViewModel/ViewModelFactorySetting';
 
 ViewModelFactorySetting.init();
@@ -27,14 +26,6 @@ if (Util.uaIsAndroid()) {
     meta.setAttribute('content', 'yes');
     document.getElementsByTagName('head')[0].appendChild(meta);
 }
-
-// 設定情報の初期化
-factory.get('SearchSettingViewModel').init();
-factory.get('SettingViewModel').init();
-factory.get('ProgramSettingViewModel').init();
-factory.get('StreamSelectSettingViewModel').init();
-factory.get('RecordedWatchSelectSettingViewModel').init();
-factory.get('RecordedSettingViewModel').init();
 
 m.route.prefix('#!');
 m.route(document.body, '/', {
