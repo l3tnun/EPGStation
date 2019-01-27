@@ -13,6 +13,8 @@ abstract class StorageTemplateModel<T> extends Model {
     constructor(storageModel: StorageModelInterface) {
         super();
         this.storageModel = storageModel;
+
+        this.init();
     }
 
     /**
