@@ -164,17 +164,10 @@ gulp.task('client-css-build', () => {
 gulp.task('clean', gulp.series('clean-server', 'clean-client', 'clean-client-css'));
 
 // build
-gulp.task('build', gulp.series('clean', 'build-server', 'build-client', 'client-css-build'));
+gulp.task('build', gulp.series('build-server', 'build-client', 'client-css-build'));
 
 gulp.task('watch', gulp.series(
-    'clean-server',
-    'tslint-server',
-    'build-server',
-    'clean-client',
-    'tslint-client',
-    'build-client',
-    'clean-client-css',
-    'client-css-build',
+    'build',
     () => {
         gulp.watch(config.server.src, gulp.task('build-server'));
         gulp.watch(config.client.src, gulp.task('build-client'));
