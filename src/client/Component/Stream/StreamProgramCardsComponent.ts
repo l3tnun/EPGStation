@@ -155,7 +155,7 @@ class StreamProgramCardsComponent extends Component<StramCardArgs> {
         const start = DateUtil.getJaDate(new Date(program.startAt));
         const end = DateUtil.getJaDate(new Date(program.endAt));
 
-        return DateUtil.format(start, 'hh:mm:ss') + ' ~ ' + DateUtil.format(end, 'hh:mm:ss');
+        return DateUtil.format(start, 'hh:mm') + ' ~ ' + DateUtil.format(end, 'hh:mm');
     }
 }
 

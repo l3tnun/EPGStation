@@ -126,7 +126,7 @@ class RecordedViewModel extends ViewModel {
 
         return isShort
             ? `${ DateUtil.format(start, 'MM/dd(w) hh:mm') } (${ duration }分)`
-            : DateUtil.format(start, 'MM/dd(w) hh:mm:ss') + ' ~ ' + DateUtil.format(end, 'hh:mm:ss') + `(${ duration }分)`;
+            : DateUtil.format(start, 'MM/dd(w) hh:mm') + ' ~ ' + DateUtil.format(end, 'hh:mm') + `(${ duration }分)`;
     }
 
     /**

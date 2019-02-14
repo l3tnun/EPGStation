@@ -329,7 +329,7 @@ class BoardComponent extends Component<BoardArgs> {
 
         const child: HTMLElement[] = [];
         child.push(this.createTextElement('div', { class: 'title' }, program.name));
-        child.push(this.createTextElement('div', { class: 'time' }, DateUtil.format(DateUtil.getJaDate(new Date(program.startAt)), 'hh:mm:ss')));
+        child.push(this.createTextElement('div', { class: 'time' }, DateUtil.format(DateUtil.getJaDate(new Date(program.startAt)), 'hh:mm')));
         if (typeof program.description !== 'undefined') {
             child.push(this.createTextElement('div', { class: 'description' }, program.description));
         }
