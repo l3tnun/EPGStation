@@ -195,7 +195,7 @@ class ReservesComponent extends ParentComponent<void> {
         const end = DateUtil.getJaDate(new Date(program.endAt));
         const duration = Math.floor((program.endAt - program.startAt) / 1000 / 60);
 
-        return DateUtil.format(start, 'MM/dd(w) hh:mm:ss') + '~' + DateUtil.format(end, 'hh:mm:ss') + `(${ duration }分)`;
+        return DateUtil.format(start, 'MM/dd(w) hh:mm') + '~' + DateUtil.format(end, 'hh:mm') + `(${ duration }分)`;
     }
 
     /**
@@ -288,8 +288,8 @@ class ReservesComponent extends ParentComponent<void> {
         const duration = Math.floor((program.endAt - program.startAt) / 1000 / 60);
 
         return {
-            start: DateUtil.format(start, 'hh:mm:ss'),
-            end: DateUtil.format(end, 'hh:mm:ss'),
+            start: DateUtil.format(start, 'hh:mm'),
+            end: DateUtil.format(end, 'hh:mm'),
             duration: `(${ duration }分)`,
         };
     }
