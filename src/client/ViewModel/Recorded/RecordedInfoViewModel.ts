@@ -297,7 +297,7 @@ class RecordedInfoViewModel extends ViewModel {
         const end = DateUtil.getJaDate(new Date(this.recorded.endAt));
         const duration = Math.floor((this.recorded.endAt - this.recorded.startAt) / 1000 / 60);
 
-        return DateUtil.format(start, 'MM/dd(w) hh:mm:ss') + ' ~ ' + DateUtil.format(end, 'hh:mm:ss') + `(${ duration }分)`;
+        return DateUtil.format(start, 'MM/dd(w) hh:mm') + ' ~ ' + DateUtil.format(end, 'hh:mm') + `(${ duration }分)`;
     }
 
     /**

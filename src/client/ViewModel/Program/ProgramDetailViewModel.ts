@@ -445,7 +445,7 @@ class ProgramDetailViewModel extends ViewModel {
     /**
      * yyyy-mm-dd hh:mm:ss から UnixtimeMS を生成する
      * @param dates: yyyy-mm-dd
-     * @param time: hh:mm:ss
+     * @param time: hh:mm
      * @return apid.UnixtimeMS
      */
     private createTime(dates: string[], time: string): apid.UnixtimeMS {
@@ -453,7 +453,7 @@ class ProgramDetailViewModel extends ViewModel {
     }
 
     /**
-     * 開始 or 終了時刻の hh:mm:ss を返す
+     * 開始 or 終了時刻の hh:mm を返す
      * @param isStart: boolean
      * @return string
      */
@@ -464,11 +464,11 @@ class ProgramDetailViewModel extends ViewModel {
             isStart
                 ? this.addReserveProgram.startAt
                 : this.addReserveProgram.endAt,
-        ), 'hh:mm:ss');
+        ), 'hh:mm');
     }
 
     /**
-     * 開始 or 終了時刻の hh:mm:ss をセットする
+     * 開始 or 終了時刻の hh:mm をセットする
      * @param isStart: boolean
      * @param timeStr: hh:mm:ss or hh:mm
      * @return string
@@ -548,7 +548,7 @@ class ProgramDetailViewModel extends ViewModel {
         const end = DateUtil.getJaDate(new Date(endAt));
         const duration = Math.floor((endAt - startAt) / 1000 / 60);
 
-        return DateUtil.format(start, 'MM/dd(w) hh:mm:ss') + ' ~ ' + DateUtil.format(end, 'hh:mm:ss') + ` (${ duration }分)`;
+        return DateUtil.format(start, 'MM/dd(w) hh:mm') + ' ~ ' + DateUtil.format(end, 'hh:mm') + ` (${ duration }分)`;
     }
 
     /**

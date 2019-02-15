@@ -150,7 +150,7 @@ class StreamWatchComponent extends ParentComponent<void> {
         const end = DateUtil.getJaDate(new Date(info.endAt));
         const duration = Math.floor((info.endAt - info.startAt) / 1000 / 60);
 
-        return DateUtil.format(start, 'MM/dd(w) hh:mm:ss') + ' ~ ' + DateUtil.format(end, 'hh:mm:ss') + ` (${ duration }分)`;
+        return DateUtil.format(start, 'MM/dd(w) hh:mm') + ' ~ ' + DateUtil.format(end, 'hh:mm') + ` (${ duration }分)`;
     }
 }
 
