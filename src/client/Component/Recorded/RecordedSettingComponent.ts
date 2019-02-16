@@ -20,7 +20,7 @@ class RecordedSettingComponent extends Component<void> {
      */
     public view(): m.Child {
         return m('div', [
-            m('div', { class: 'recorded-setting' },
+            m('div', { class: 'small-setting' },
                 this.createContent(),
             ),
         ]);
