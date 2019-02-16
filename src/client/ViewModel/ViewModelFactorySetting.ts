@@ -15,6 +15,7 @@ import { SearchSettingModel } from '../Model/Search/SearchSettingModel';
 import { SettingModel } from '../Model/Setting/SettingModel';
 import { SnackbarModel } from '../Model/Snackbar/SnackbarModel';
 import { StorageModel } from '../Model/Storage/StorageModel';
+import { StreamProgramCardsSettingModel } from '../Model/Stream/StreamProgramCardsSettingModel';
 import { StreamSelectSettingModel } from '../Model/Stream/StreamSelectSettingModel';
 import { TabModel } from '../Model/Tab/TabModel';
 
@@ -55,6 +56,7 @@ import StorageViewModel from './Storage/StorageViewModel';
 import StreamForcedStopViewModel from './Stream/StreamForcedStopViewModel';
 import StreamInfoViewModel from './Stream/StreamInfoViewModel';
 import StreamLivePlayerViewModel from './Stream/StreamLivePlayerViewModel';
+import StreamProgramCardsSettingViewModel from './Stream/StreamProgramCardsSettingViewModel';
 import StreamProgramCardsViewModel from './Stream/StreamProgramCardsViewModel';
 import StreamSelectSettingViewModel from './Stream/StreamSelectSettingViewModel';
 import StreamSelectViewModel from './Stream/StreamSelectViewModel';
@@ -87,6 +89,7 @@ namespace ViewModelFactorySetting {
         const storageApiModel = new StorageApiModel(snackbarModel);
         const storageModel = new StorageModel();
         const streamApiModel = new StreamsApiModel(snackbarModel);
+        const streamProgramCardsSettingModel = new StreamProgramCardsSettingModel(storageModel);
         const streamSelectSettingModel = new StreamSelectSettingModel(storageModel);
         const searchSettingModel = new SearchSettingModel(storageModel);
         const recordedSettingModel = new RecordedSettingModel(storageModel);
@@ -264,6 +267,10 @@ namespace ViewModelFactorySetting {
             reservesApiModel,
             tabModel,
             configModel,
+        ));
+        factory.reg('StreamProgramCardsSettingViewModel', new StreamProgramCardsSettingViewModel(
+            streamProgramCardsSettingModel,
+            snackbarModel,
         ));
         factory.reg('StreamSelectSettingViewModel', new StreamSelectSettingViewModel(
             streamSelectSettingModel,
