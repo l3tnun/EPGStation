@@ -34,7 +34,7 @@ class RecordedSettingComponent extends Component<void> {
 
         return [
             this.createListItem(
-                'list 表示を有効化する',
+                'リスト表示を有効化する',
                 this.createToggle(
                     () => { return this.viewModel.tmpValue.isEnabledListMode; },
                     (value) => {
