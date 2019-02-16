@@ -37,6 +37,21 @@
                 .description
                     font-size: 13px;
 
-        .mdl-card__is-recording
-            border: 3px solid red;
+            &.reserve
+                border: 4px solid red;
+            &.hide
+                background-color: #f8f8f8;
+                color: #888;
+            &.conflict
+                background-color: #fffd6b;
+                border: 4px solid red;
+                border-style: dashed;
+                color: black;
+            &.skip
+                background-color: #aaa;
+                color: black;
+            &.overlap
+                text-decoration: line-through;
+                background-color: #aaa;
+                color: black;
 

@@ -107,7 +107,7 @@ class StreamProgramCardsComponent extends Component<StramCardArgs> {
                 this.viewModel.getPrograms(broadcasts[this.viewModel.getTabPosition()]).map((item) => {
                     let baseClass = 'mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col';
                     if (reserves !== null && typeof reserves[item.programs[0].id] !== 'undefined') {
-                        baseClass += ' mdl-card__is-recording';
+                        baseClass += ` ${ reserves[item.programs[0].id].status }`;
                     }
 
                     return m('div', { class: baseClass },
