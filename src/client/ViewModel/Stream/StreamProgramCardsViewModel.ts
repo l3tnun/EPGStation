@@ -3,6 +3,8 @@ import { ViewModelStatus } from '../../Enums';
 import { ConfigApiModelInterface } from '../../Model/Api/ConfigApiModel';
 import { AllReserves, ReservesApiModelInterface } from '../../Model/Api/ReservesApiModel';
 import { ScheduleApiModelInterface } from '../../Model/Api/ScheduleApiModel';
+import StorageTemplateModel from '../../Model/Storage/StorageTemplateModel';
+import { StreamProgramCardsSettingValue } from '../../Model/Stream/StreamProgramCardsSettingModel';
 import { TabModelInterface } from '../../Model/Tab/TabModel';
 import ViewModel from '../ViewModel';
 
@@ -12,6 +14,7 @@ import ViewModel from '../ViewModel';
 class StreamProgramCardsViewModel extends ViewModel {
     private scheduleApiModel: ScheduleApiModelInterface;
     private reservesApiModel: ReservesApiModelInterface;
+    private cardSetting: StorageTemplateModel<StreamProgramCardsSettingValue>;
     private tab: TabModelInterface;
     private configApiModel: ConfigApiModelInterface;
     private timer: number | null = null;
@@ -21,12 +24,14 @@ class StreamProgramCardsViewModel extends ViewModel {
     constructor(
         scheduleApiModel: ScheduleApiModelInterface,
         reservesApiModel: ReservesApiModelInterface,
+        cardSetting: StorageTemplateModel<StreamProgramCardsSettingValue>,
         tab: TabModelInterface,
         configApiModel: ConfigApiModelInterface,
     ) {
         super();
         this.scheduleApiModel = scheduleApiModel;
         this.reservesApiModel = reservesApiModel;
+        this.cardSetting = cardSetting;
         this.tab = tab;
         this.configApiModel = configApiModel;
     }
@@ -166,6 +171,14 @@ class StreamProgramCardsViewModel extends ViewModel {
     public async resetTime(): Promise<void> {
         this.additionTime = 0;
         await this.updateProgram();
+    }
+
+    /**
+     * list モードが有効か
+     * @param boolean
+     */
+    public isEnabledListMode(): boolean {
+        return this.cardSetting.getValue().isEnabledListMode;
     }
 }
 

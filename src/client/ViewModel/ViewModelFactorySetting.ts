@@ -265,6 +265,7 @@ namespace ViewModelFactorySetting {
         factory.reg('StreamProgramCardsViewModel', new StreamProgramCardsViewModel(
             scheduleApiModel,
             reservesApiModel,
+            streamProgramCardsSettingModel,
             tabModel,
             configModel,
         ));
