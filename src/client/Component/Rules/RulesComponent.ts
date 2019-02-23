@@ -84,6 +84,7 @@ class RulesComponent extends ParentComponent<void> {
                 this.saveHistoryData(scrollTop);
             },
             notMainContent: [
+                this.createAddButton(),
                 m(BalloonComponent, {
                     id: RulesDeleteViewModel.id,
                     content: m(RulesDeleteComponent),
@@ -154,7 +155,6 @@ class RulesComponent extends ParentComponent<void> {
                 length: this.viewModel.getLimit(),
                 page: this.viewModel.getPage(),
             }),
-            this.createAddButton(),
         ]);
     }
 
