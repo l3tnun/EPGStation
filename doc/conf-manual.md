@@ -37,6 +37,8 @@
 - [ファイル保存先](#ファイル保存先)
     - [録画ファイルの保存先を変更したい](#recorded)
     - [一時録画先を設定したい](#recordedtmp)
+    - [簡易手動予約時のデフォルトディレクトリを設定したい](#recordedtsdefaultdirectory)
+    - [簡易手動予約時のエンコードファイルのデフォルトディレクトリを設定したい](#recordedencodedefaultdirectory)
     - [録画ファイルのファイル名を変更したい](#recordedformat)
     - [録画ファイルの拡張子を変更したい](#fileextension)
     - [予約情報データの保存先を変更したい](#reserves)
@@ -526,6 +528,34 @@
 
 ```json
 "recordedTmp": "/hoge/fuga"
+```
+
+## 簡易手動予約時のデフォルトディレクトリ
+### recordedTSDefaultDirectory
+### 簡易手動予約時のデフォルトディレクトリ設定
+
+WebUIでの簡易予約時に設定される TS ファイルのディレクトリ設定
+
+| 種類 | デフォルト値 | 必須 |
+| --- | ---------- | --- |
+| string | - | no |
+
+```json
+"recordedTSDefaultDirectory": "hoge"
+```
+
+## 簡易手動予約時のエンコードファイルのデフォルトディレクトリ
+### recordedEncodeDefaultDirectory
+### 簡易手動予約時のエンコードファイルのデフォルトディレクトリ設定
+
+WebUIでの簡易予約時に設定されるエンコードファイルのディレクトリ設定
+
+| 種類 | デフォルト値 | 必須 |
+| --- | ---------- | --- |
+| string | - | no |
+
+```json
+"recordedEncodeDefaultDirectory": "hoge"
 ```
 
 ### recordedFormat
