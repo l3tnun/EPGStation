@@ -53,6 +53,8 @@ interface ConfigInterface {
     timeSpecifiedEndMargin: number;
     recorded: string;
     recordedTmp: string;
+    recordedTSDefaultDirectory: string;
+    recordedEncodeDefaultDirectory: string;
     reservationAddedCommand: string;
     recordedPreStartCommand: string;
     recordedPrepRecFailedCommand: string;

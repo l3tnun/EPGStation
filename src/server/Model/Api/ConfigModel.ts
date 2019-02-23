@@ -51,6 +51,10 @@ class ConfigModel extends ApiModel implements ConfigModelInterface {
             }
         }
 
+        if (typeof config.recordedTSDefaultDirectory !== 'undefined') {
+            results['recordedTSDefaultDirectory'] = config.recordedTSDefaultDirectory;
+        }
+
         if (typeof config.encode === 'undefined') {
             results['enableEncode'] = false;
         } else {
@@ -64,6 +68,10 @@ class ConfigModel extends ApiModel implements ConfigModelInterface {
             });
 
             results['delTs'] = typeof config.delts === 'undefined' ? false : config.delts;
+
+            if (typeof config.recordedEncodeDefaultDirectory !== 'undefined') {
+                results['recordedEncodeDefaultDirectory'] = config.recordedEncodeDefaultDirectory;
+            }
         }
 
         results['enableLiveStreaming'] = typeof config.mpegTsStreaming !== 'undefined' || typeof config.liveHLS !== 'undefined' || typeof config.liveWebM !== 'undefined' || typeof config.liveMP4 !== 'undefined';

@@ -218,6 +218,12 @@ definitions:
       enableLiveStreaming:
         description: 'ライブ視聴が有効か'
         type: boolean
+      recordedTSDefaultDirectory:
+        type: string
+        description: '手動予約時のTSファイルデフォルト保存場所'
+      recordedEncodeDefaultDirectory:
+        type: string
+        description: '手動予約時のエンコードファイルデフォルト保存場所'
       encodeOption:
         type: array
         items:
