@@ -34,7 +34,7 @@ class StreamProgramCardsSettingComponent extends Component<void> {
 
         return [
             this.createListItem(
-                'リスト表示を有効化する',
+                'タブを非表示にする',
                 this.createToggle(
                     () => { return this.viewModel.tmpValue.isHideTabMode; },
                     (value) => {
