@@ -86,10 +86,11 @@ class StreamProgramCardsComponent extends Component<StramCardArgs> {
                 }
             },
         }, [
-            isHideTab ? null : m(TabComponent, {
+            m(TabComponent, {
                 id: StreamProgramCardsViewModel.tabId,
                 tabs: broadcasts,
                 contentId: StreamProgramCardsViewModel.contentId,
+                isHide: isHideTab,
             }),
             m('div', {
                 id: StreamProgramCardsViewModel.contentId,

@@ -9,6 +9,7 @@ interface TabArgs {
     id: string;
     tabs: string[];
     contentId: string;
+    isHide?: boolean;
 }
 
 /**
@@ -40,6 +41,7 @@ class TabComponent extends Component<TabArgs> {
         return m('div', {
             id: this.id,
             class: 'mdl-tabs mdl-js-tabs mdl-js-ripple-effect',
+            style: !!vnode.attrs.isHide ? 'display: none;' : '',
         }, [
             m('div', { class: 'tabs-bar' }, [
                 vnode.attrs.tabs.map((tab, i) => {
