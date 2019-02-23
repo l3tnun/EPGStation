@@ -2,6 +2,7 @@ import { throttle } from 'lodash';
 import * as m from 'mithril';
 import * as apid from '../../../../api';
 import DateUtil from '../../Util/DateUtil';
+import Scroll from '../../Util/Scroll';
 import Util from '../../Util/Util';
 import BalloonViewModel from '../../ViewModel/Balloon/BalloonViewModel';
 import MainLayoutViewModel from '../../ViewModel/MainLayoutViewModel';
@@ -116,6 +117,14 @@ class StreamProgramCardsComponent extends Component<StramCardArgs> {
                 }),
                 m('div', { style: 'height: 36px; visibility: hidden;' }, 'dummy'),
             ]),
+            isHideTab
+                ? m('button', {
+                    class: 'fab-right-bottom mdl-shadow--8dp mdl-button mdl-js-button mdl-button--fab mdl-button--colored',
+                    onclick: () => {
+                        Scroll.scrollTo(this.contentElement, this.contentElement.scrollTop, 0, 300);
+                    },
+                }, m('i', { class: 'material-icons' }, 'arrow_upward'))
+                : null,
         ]);
     }
 
