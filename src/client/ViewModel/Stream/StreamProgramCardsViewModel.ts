@@ -91,10 +91,12 @@ class StreamProgramCardsViewModel extends ViewModel {
 
     /**
      * ChannelType を指定して番組情報を取得
-     * @param channelType: apid.ChannelType
+     * @param channelType: apid.ChannelType | null null ならすべての番組情報を返す
      * @return apid.ScheduleProgram[]
      */
-    public getPrograms(channelType: apid.ChannelType): apid.ScheduleProgram[] {
+    public getPrograms(channelType: apid.ChannelType | null): apid.ScheduleProgram[] {
+        if (channelType === null) { return this.scheduleApiModel.getSchedule(); }
+
         const results: apid.ScheduleProgram[] = [];
 
         this.scheduleApiModel.getSchedule().forEach((program) => {
@@ -174,10 +176,10 @@ class StreamProgramCardsViewModel extends ViewModel {
     }
 
     /**
-     * list モードが有効か
+     * タブ部非表示か
      * @param boolean
      */
-    public isEnabledListMode(): boolean {
+    public isHideTabMode(): boolean {
         return this.cardSetting.getValue().isEnabledListMode;
     }
 }

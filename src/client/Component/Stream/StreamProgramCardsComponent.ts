@@ -60,9 +60,8 @@ class StreamProgramCardsComponent extends Component<StramCardArgs> {
      * view
      */
     public view(mainVnode: m.Vnode<StramCardArgs, this>): m.Child {
+        const isHideTab = this.viewModel.isHideTabMode();
         const broadcasts = this.viewModel.getBroadcastList();
-
-        // 予約情報を取得
         const reserves = this.viewModel.getReserves();
 
         return m('div', {
@@ -87,14 +86,14 @@ class StreamProgramCardsComponent extends Component<StramCardArgs> {
                 }
             },
         }, [
-            m(TabComponent, {
+            isHideTab ? null : m(TabComponent, {
                 id: StreamProgramCardsViewModel.tabId,
                 tabs: broadcasts,
                 contentId: StreamProgramCardsViewModel.contentId,
             }),
             m('div', {
                 id: StreamProgramCardsViewModel.contentId,
-                class: 'non-scroll',
+                class: 'non-scroll' + (isHideTab ? ' hide-tab' : ''),
                 oncreate: (vnode: m.VnodeDOM<any, this>) => {
                     // save scroll position && tab position
                     const element = <HTMLElement> vnode.dom;
@@ -104,7 +103,7 @@ class StreamProgramCardsComponent extends Component<StramCardArgs> {
                     }, 50), false);
                 },
             }, [
-                this.viewModel.getPrograms(broadcasts[this.viewModel.getTabPosition()]).map((item) => {
+                this.viewModel.getPrograms(isHideTab ? null : broadcasts[this.viewModel.getTabPosition()]).map((item) => {
                     let baseClass = 'mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col';
                     if (reserves !== null && typeof reserves[item.programs[0].id] !== 'undefined') {
                         baseClass += ` ${ reserves[item.programs[0].id].status }`;
