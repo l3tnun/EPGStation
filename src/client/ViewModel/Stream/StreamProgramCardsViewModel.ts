@@ -180,7 +180,7 @@ class StreamProgramCardsViewModel extends ViewModel {
      * @param boolean
      */
     public isHideTabMode(): boolean {
-        return this.cardSetting.getValue().isEnabledListMode;
+        return this.cardSetting.getValue().isHideTabMode;
     }
 }
 

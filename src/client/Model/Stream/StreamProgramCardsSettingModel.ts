@@ -1,7 +1,7 @@
 import StorageTemplateModel from '../Storage/StorageTemplateModel';
 
 interface StreamProgramCardsSettingValue {
-    isEnabledListMode: boolean;
+    isHideTabMode: boolean;
 }
 
 /**
@@ -21,7 +21,7 @@ class StreamProgramCardsSettingModel extends StorageTemplateModel<StreamProgramC
      */
     public getDefaultValue(): StreamProgramCardsSettingValue {
         return {
-            isEnabledListMode: false,
+            isHideTabMode: false,
         };
     }
 }
