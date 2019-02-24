@@ -108,7 +108,7 @@ unix 系では `/` を使用するため *.sample.json では `/hoge/huga/piyo` 
 ### config.json
 #### encode
 
-[enc.sh](../config/enc.sh) を起動するようになっていますが、 Windows では動作しないため `config/enc.js` へ書き換えでください
+[enc.sh](../config/enc.sh) を起動するようになっていますが、 Windows では動作しないため `config/enc.js` へ書き換えてください
 
 ```
 "cmd": "C:\\PROGRA~1\\nodejs\\node.exe %ROOT%\\config\\enc.js main"

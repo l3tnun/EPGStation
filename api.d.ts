@@ -25,6 +25,8 @@ export type ProgramAudioSamplingRate = 16000 | 22050 | 24000 | 32000 | 44100 | 4
 export interface Config {
     enableEncode: boolean;
     enableLiveStreaming: boolean;
+    recordedTSDefaultDirectory: string;
+    recordedEncodeDefaultDirectory: string;
     encodeOption?: string[];
     defaultEncode?: number;
     delTs?: boolean;

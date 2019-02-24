@@ -2,6 +2,7 @@ import { throttle } from 'lodash';
 import * as m from 'mithril';
 import * as apid from '../../../../api';
 import DateUtil from '../../Util/DateUtil';
+import Scroll from '../../Util/Scroll';
 import Util from '../../Util/Util';
 import BalloonViewModel from '../../ViewModel/Balloon/BalloonViewModel';
 import MainLayoutViewModel from '../../ViewModel/MainLayoutViewModel';
@@ -60,9 +61,8 @@ class StreamProgramCardsComponent extends Component<StramCardArgs> {
      * view
      */
     public view(mainVnode: m.Vnode<StramCardArgs, this>): m.Child {
+        const isHideTab = this.viewModel.isHideTabMode();
         const broadcasts = this.viewModel.getBroadcastList();
-
-        // 予約情報を取得
         const reserves = this.viewModel.getReserves();
 
         return m('div', {
@@ -91,10 +91,11 @@ class StreamProgramCardsComponent extends Component<StramCardArgs> {
                 id: StreamProgramCardsViewModel.tabId,
                 tabs: broadcasts,
                 contentId: StreamProgramCardsViewModel.contentId,
+                isHide: isHideTab,
             }),
             m('div', {
                 id: StreamProgramCardsViewModel.contentId,
-                class: 'non-scroll',
+                class: 'non-scroll' + (isHideTab ? ' hide-tab' : ''),
                 oncreate: (vnode: m.VnodeDOM<any, this>) => {
                     // save scroll position && tab position
                     const element = <HTMLElement> vnode.dom;
@@ -104,10 +105,10 @@ class StreamProgramCardsComponent extends Component<StramCardArgs> {
                     }, 50), false);
                 },
             }, [
-                this.viewModel.getPrograms(broadcasts[this.viewModel.getTabPosition()]).map((item) => {
+                this.viewModel.getPrograms(isHideTab ? null : broadcasts[this.viewModel.getTabPosition()]).map((item) => {
                     let baseClass = 'mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col';
                     if (reserves !== null && typeof reserves[item.programs[0].id] !== 'undefined') {
-                        baseClass += ' mdl-card__is-recording';
+                        baseClass += ` ${ reserves[item.programs[0].id].status }`;
                     }
 
                     return m('div', { class: baseClass },
@@ -116,6 +117,14 @@ class StreamProgramCardsComponent extends Component<StramCardArgs> {
                 }),
                 m('div', { style: 'height: 36px; visibility: hidden;' }, 'dummy'),
             ]),
+            isHideTab
+                ? m('button', {
+                    class: 'fab-right-bottom mdl-shadow--8dp mdl-button mdl-js-button mdl-button--fab mdl-button--colored',
+                    onclick: () => {
+                        Scroll.scrollTo(this.contentElement, this.contentElement.scrollTop, 0, 300);
+                    },
+                }, m('i', { class: 'material-icons' }, 'arrow_upward'))
+                : null,
         ]);
     }
 

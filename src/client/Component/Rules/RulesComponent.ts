@@ -84,6 +84,7 @@ class RulesComponent extends ParentComponent<void> {
                 this.saveHistoryData(scrollTop);
             },
             notMainContent: [
+                this.createAddButton(),
                 m(BalloonComponent, {
                     id: RulesDeleteViewModel.id,
                     content: m(RulesDeleteComponent),
@@ -154,6 +155,20 @@ class RulesComponent extends ParentComponent<void> {
                 length: this.viewModel.getLimit(),
                 page: this.viewModel.getPage(),
             }),
+        ]);
+    }
+
+    /**
+     * ルール追加ボタン
+     */
+    private createAddButton(): m.Child {
+        return m('button', {
+            class: 'fab-right-bottom mdl-shadow--8dp mdl-button mdl-js-button mdl-button--fab mdl-button--colored',
+            onclick: () => {
+                Util.move('/search');
+            },
+        }, [
+            m('i', { class: 'material-icons' }, 'playlist_add'),
         ]);
     }
 

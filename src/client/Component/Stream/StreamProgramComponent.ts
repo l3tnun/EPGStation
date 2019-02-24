@@ -4,6 +4,7 @@ import BalloonViewModel from '../../ViewModel/Balloon/BalloonViewModel';
 import ProgramInfoViewModel from '../../ViewModel/Program/ProgramInfoViewModel';
 import StreamForcedStopViewModel from '../../ViewModel/Stream/StreamForcedStopViewModel';
 import StreamLivePlayerViewModel from '../../ViewModel/Stream/StreamLivePlayerViewModel';
+import StreamProgramCardsSettingViewModel from '../../ViewModel/Stream/StreamProgramCardsSettingViewModel';
 import StreamProgramCardsViewModel from '../../ViewModel/Stream/StreamProgramCardsViewModel';
 import StreamSelectViewModel from '../../ViewModel/Stream/StreamSelectViewModel';
 import factory from '../../ViewModel/ViewModelFactory';
@@ -14,6 +15,7 @@ import ProgramInfoActionComponent from '../Program/ProgramInfoActionComponent';
 import ProgramInfoComponent from '../Program/ProgramInfoComponent';
 import StreamLivePlayerComponent from './StreamLivePlayerComponent';
 import StreamProgramCardsComponent from './StreamProgramCardsComponent';
+import StreamProgramCardsSettingComponent from './StreamProgramCardsSettingComponent';
 import StreamProgramTimeComponent from './StreamProgramTimeComponent';
 import StreamSelectComponent from './StreamSelectComponent';
 
@@ -23,12 +25,14 @@ import StreamSelectComponent from './StreamSelectComponent';
 class StreamProgramComponent extends ParentComponent<void> {
     private cardsViewModel: StreamProgramCardsViewModel;
     private forcedStop: StreamForcedStopViewModel;
+    private cardSettingViewModel: StreamProgramCardsSettingViewModel;
     private balloon: BalloonViewModel;
 
     constructor() {
         super();
         this.cardsViewModel = <StreamProgramCardsViewModel> factory.get('StreamProgramCardsViewModel');
         this.forcedStop = <StreamForcedStopViewModel> factory.get('StreamForcedStopViewModel');
+        this.cardSettingViewModel = <StreamProgramCardsSettingViewModel> factory.get('StreamProgramCardsSettingViewModel');
         this.balloon = <BalloonViewModel> factory.get('BalloonViewModel');
     }
 
@@ -60,6 +64,18 @@ class StreamProgramComponent extends ParentComponent<void> {
                         },
                     },
                     text: '全ての配信を停止',
+                },
+                {
+                    attrs: {
+                        onclick: () => {
+                            this.balloon.close();
+                            window.setTimeout(() => {
+                                this.cardSettingViewModel.setTemp();
+                                this.balloon.open(StreamProgramCardsSettingViewModel.id);
+                            }, 200);
+                        },
+                    },
+                    text: '設定',
                 },
             ],
             notMainContent: [
@@ -97,6 +113,11 @@ class StreamProgramComponent extends ParentComponent<void> {
                     maxWidth: StreamLivePlayerViewModel.maxWidth,
                     dialogMargin: 0,
                     forceDialog: true,
+                }),
+                m(BalloonComponent, {
+                    id: StreamProgramCardsSettingViewModel.id,
+                    content: m(StreamProgramCardsSettingComponent),
+                    maxWidth: 310,
                 }),
                 m(StreamProgramTimeComponent),
             ],

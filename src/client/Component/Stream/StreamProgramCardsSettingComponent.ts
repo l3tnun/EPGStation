@@ -1,18 +1,18 @@
 import * as m from 'mithril';
-import SearchSettingViewModel from '../../ViewModel/Search/SearchSettingViewModel';
+import StreamProgramCardsSettingViewModel from '../../ViewModel/Stream/StreamProgramCardsSettingViewModel';
 import factory from '../../ViewModel/ViewModelFactory';
 import Component from '../Component';
 
 /**
- * SearchSettingComponent
+ * StreamProgramCardsSettingComponent
  */
-class SearchSettingComponent extends Component<void> {
-    private viewModel: SearchSettingViewModel;
+class StreamProgramCardsSettingComponent extends Component<void> {
+    private viewModel: StreamProgramCardsSettingViewModel;
 
     constructor() {
         super();
 
-        this.viewModel = <SearchSettingViewModel> factory.get('SearchSettingViewModel');
+        this.viewModel = <StreamProgramCardsSettingViewModel> factory.get('StreamProgramCardsSettingViewModel');
     }
 
     /**
@@ -34,38 +34,13 @@ class SearchSettingComponent extends Component<void> {
 
         return [
             this.createListItem(
-                'ルール追加/更新時に前のページに戻る',
+                'タブを非表示にする',
                 this.createToggle(
-                    () => { return this.viewModel.tmpValue.isGoBackPreviousPage; },
-                    (value) => { this.viewModel.tmpValue.isGoBackPreviousPage = value; },
-                ),
-            ),
-            this.createListItem(
-                '検索時にキーワードをコピー',
-                this.createToggle(
-                    () => { return this.viewModel.tmpValue.setKeyowordToDirectory; },
-                    (value) => { this.viewModel.tmpValue.setKeyowordToDirectory = value; },
-                ),
-            ),
-            this.createListItem(
-                'デフォルトエンコード設定',
-                this.createToggle(
-                    () => { return this.viewModel.tmpValue.setDefaultEncodeOption; },
-                    (value) => { this.viewModel.tmpValue.setDefaultEncodeOption = value; },
-                ),
-            ),
-            this.createListItem(
-                '録画済み番組を排除',
-                this.createToggle(
-                    () => { return this.viewModel.tmpValue.isEnableAvoidDuplicate; },
-                    (value) => { this.viewModel.tmpValue.isEnableAvoidDuplicate = value; },
-                ),
-            ),
-            this.createListItem(
-                '元ファイルの自動削除',
-                this.createToggle(
-                    () => { return this.viewModel.tmpValue.delTs; },
-                    (value) => { this.viewModel.tmpValue.delTs = value; },
+                    () => { return this.viewModel.tmpValue.isHideTabMode; },
+                    (value) => {
+                        this.viewModel.tmpValue.isHideTabMode = value;
+                        this.viewModel.save();
+                    },
                 ),
             ),
         ];
@@ -110,5 +85,5 @@ class SearchSettingComponent extends Component<void> {
     }
 }
 
-export default SearchSettingComponent;
+export default StreamProgramCardsSettingComponent;
 

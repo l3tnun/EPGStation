@@ -304,18 +304,31 @@ class ProgramInfoViewModel extends ViewModel {
      * @return Promise<void>
      */
     public async addReserve(): Promise<void> {
-        if (this.program === null) { return; }
+        const config = this.config.getConfig();
+        if (this.program === null || config === null) { return; }
 
         try {
             if (this.isEnableEncode() && this.encodeOptionValue !== -1) {
-                await this.reserves.addReserve({
+                const reserveOption: apid.AddReserve = {
                     programId: this.program.id,
                     allowEndLack: this.allowEndLack,
                     encode: {
                         mode1: this.encodeOptionValue,
                         delTs: this.delTS,
                     },
-                });
+                };
+
+                if (typeof config.recordedTSDefaultDirectory !== 'undefined') {
+                    reserveOption.option = {
+                        directory: config.recordedTSDefaultDirectory,
+                    };
+                }
+
+                if (typeof config.recordedEncodeDefaultDirectory !== 'undefined' && typeof config.defaultEncode !== 'undefined') {
+                    reserveOption.encode!.directory1 = config.recordedEncodeDefaultDirectory;
+                }
+
+                await this.reserves.addReserve(reserveOption);
             } else {
                 await this.reserves.addReserve({
                     programId: this.program.id,
