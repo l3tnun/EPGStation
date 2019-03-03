@@ -10,6 +10,7 @@ import { ProgramViewInfo, ProgramViewModel  } from '../../ViewModel/Program/Prog
 import factory from '../../ViewModel/ViewModelFactory';
 import Component from '../Component';
 import BoardBarComponent from './BoardBarComponent';
+import BoardScroller from './BoardScroller';
 
 interface BoardArgs {
     scrollStoped(top: number, left: number): void;
@@ -29,6 +30,8 @@ class BoardComponent extends Component<BoardArgs> {
     private balloon: BalloonViewModel;
     private allReserves: AllReserves;
     private storedGenre: { [key: number]: boolean } = {};
+
+    private scroller: BoardScroller = new BoardScroller();
 
     constructor() {
         super();
@@ -59,15 +62,14 @@ class BoardComponent extends Component<BoardArgs> {
             oncreate: (vnode: m.VnodeDOM<BoardArgs, this>) => {
                 if (this.viewModel.isFixScroll()) { return; }
 
-                const element = <HTMLElement> vnode.dom;
-
                 // scroll
+                const element = <HTMLElement> vnode.dom;
                 const channel = <HTMLElement> document.getElementsByClassName(ProgramViewModel.channlesName)[0];
                 const time = <HTMLElement> document.getElementsByClassName(ProgramViewModel.timescaleName)[0];
-                element.addEventListener('scroll', () => {
-                    channel.scrollLeft = element.scrollLeft;
-                    time.scrollTop = element.scrollTop;
-                }, false);
+                this.scroller.set(element, channel, time,
+                    () => { this.viewModel.disableShowDetail(); },
+                    () => { this.viewModel.enableShowDetail(); },
+                );
 
                 // scroll position
                 let url = location.href;
@@ -96,6 +98,11 @@ class BoardComponent extends Component<BoardArgs> {
                 const element = <HTMLElement> vnode.dom;
                 element.scrollTop = position.top;
                 element.scrollLeft = position.left;
+            },
+            onremove: () => {
+                if (this.viewModel.isFixScroll()) { return; }
+
+                this.scroller.remove();
             },
         }, [
             m('div', {
@@ -340,6 +347,8 @@ class BoardComponent extends Component<BoardArgs> {
                 + (isEnableDraw ? 'display: none;' : '')
                 + this.createLeftStyle(column),
             onclick: (event: Event) => {
+                if (!this.viewModel.isEnableShowDetail()) { return; }
+
                 this.infoViewModel.set(program, channel);
                 this.balloon.open(ProgramInfoViewModel.id, event);
             },

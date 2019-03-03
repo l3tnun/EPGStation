@@ -33,6 +33,7 @@ class ProgramViewModel extends ViewModel {
     private lengthParam: number;
     private reserves: AllReserves | null = null;
     private domCache: { [key: number]: Element[] } = {};
+    private showDetailStatus: boolean = true; // true で 番組詳細表示 ok
 
     // progress status
     public progressShow: boolean = true;
@@ -387,6 +388,18 @@ class ProgramViewModel extends ViewModel {
         element.style.setProperty('--timescale-mobile-width', `${ value.mobile.timescaleWidth }px`);
         element.style.setProperty('--timescale-mobile-fontsize', `${ value.mobile.timescaleFontsize }px`);
         element.style.setProperty('--board-mobile-fontsize', `${ value.mobile.boardFontsize }pt`);
+    }
+
+    public disableShowDetail(): void {
+        this.showDetailStatus = false;
+    }
+
+    public enableShowDetail(): void {
+        this.showDetailStatus = true;
+    }
+
+    public isEnableShowDetail(): boolean {
+        return this.showDetailStatus;
     }
 }
 
