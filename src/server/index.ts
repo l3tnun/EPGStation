@@ -44,6 +44,10 @@ const runService = (): void => {
         runService();
     });
     child.once('error', () => { runService(); });
+
+    // buffer が埋まらないようにする
+    child.stdout.on('data', () => { });
+    child.stderr.on('data', () => { });
 };
 
 // set models
