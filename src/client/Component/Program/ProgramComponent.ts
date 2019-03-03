@@ -18,6 +18,7 @@ import ParentComponent from '../ParentComponent';
 import StreamLivePlayerComponent from '../Stream/StreamLivePlayerComponent';
 import StreamSelectComponent from '../Stream/StreamSelectComponent';
 import BoardComponent from './BoardComponent';
+import BoardScroller from './BoardScroller';
 import ChannelComponent from './ChannelComponent';
 import ProgramGenreActionComponent from './ProgramGenreActionComponent';
 import ProgramGenreComponent from './ProgramGenreComponent';
@@ -37,6 +38,8 @@ class ProgramComponent extends ParentComponent<void> {
     private genre: ProgramGenreViewModel;
     private timeBalloon: ProgramTimeBalloonViewModel;
     private balloon: BalloonViewModel;
+
+    private scroller: BoardScroller = new BoardScroller();
 
     private resizeListener = throttle(() => { this.viewModel.draw(); }, 50);
 
@@ -130,16 +133,15 @@ class ProgramComponent extends ParentComponent<void> {
 
                         if (!this.viewModel.isFixScroll()) { return; }
 
+                        // scroll
                         const element = Util.getMDLLayout();
                         if (element === null) { return; }
-
-                        // scroll
                         const channel = <HTMLElement> document.getElementsByClassName(ProgramViewModel.channlesName)[0];
                         const time = <HTMLElement> document.getElementsByClassName(ProgramViewModel.timescaleName)[0];
-                        element.addEventListener('scroll', () => {
-                            channel.scrollLeft = element.scrollLeft;
-                            time.scrollTop = element.scrollTop;
-                        }, false);
+                        this.scroller.set(element, channel, time,
+                            () => { this.viewModel.disableShowDetail(); },
+                            () => { this.viewModel.enableShowDetail(); },
+                        );
 
                         // scroll position
                         let url = location.href;
@@ -186,6 +188,8 @@ class ProgramComponent extends ParentComponent<void> {
                     onremove: () => {
                         // 表示範囲 resize
                         if (this.viewModel.isEnableDraw()) { window.removeEventListener('resize', this.resizeListener, false); }
+
+                        if (this.viewModel.isFixScroll()) { this.scroller.remove(); }
                     },
                 }, [
                     m('div', {
