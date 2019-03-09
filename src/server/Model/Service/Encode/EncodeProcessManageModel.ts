@@ -67,11 +67,15 @@ class EncodeProcessManageModel extends Model implements EncodeProcessManageModel
                             this.removeListener(createChild);
 
                             // プロセス生成 & 登録
-                            const child = this.buildProcess(input, output, cmd, priority, spawnOption);
-                            this.childs.unshift(child);
-                            resolve(child.child);
-                            clearInterval(timeoutId);
-                            this.log.system.info(`kill & create new encode child: ${ child.createTime }`);
+                            try {
+                                const child = this.buildProcess(input, output, cmd, priority, spawnOption);
+                                this.childs.unshift(child);
+                                resolve(child.child);
+                                clearInterval(timeoutId);
+                                this.log.system.info(`kill & create new encode child: ${ child.createTime }`);
+                            } catch (err) {
+                                reject(err);
+                            }
                         };
 
                         // timeout 設定
@@ -96,10 +100,14 @@ class EncodeProcessManageModel extends Model implements EncodeProcessManageModel
                 }
             } else {
                 // プロセス生成 & 登録
-                const child = this.buildProcess(input, output, cmd, priority, spawnOption);
-                this.childs.unshift(child);
-                resolve(child.child);
-                this.log.system.info(`create new encode child: ${ child.createTime }`);
+                try {
+                    const child = this.buildProcess(input, output, cmd, priority, spawnOption);
+                    this.childs.unshift(child);
+                    resolve(child.child);
+                    this.log.system.info(`create new encode child: ${ child.createTime }`);
+                } catch (err) {
+                    reject(err);
+                }
             }
         });
     }
@@ -135,7 +143,13 @@ class EncodeProcessManageModel extends Model implements EncodeProcessManageModel
         priority: number;
         createTime: number;
     } {
-        const cmds = ProcessUtil.parseCmdStr(cmd);
+        let cmds: ProcessUtil.Cmds;
+        try {
+            cmds = ProcessUtil.parseCmdStr(cmd);
+        } catch (err) {
+            this.log.system.error(`build process error: ${ cmd }`);
+            throw err;
+        }
 
         // input, output を置換
         for (let i = 0; i < cmds.args.length; i++) {
