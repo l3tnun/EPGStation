@@ -9,14 +9,9 @@
     "encode": [
         {
             "name": "H264",
-            "cmd": "/bin/bash %ROOT%/config/enc.sh main",
+            "cmd": "%NODE% %ROOT%/config/enc.js",
             "suffix": ".mp4",
             "default": true
-        },
-        {
-            "name": "H264-sub",
-            "cmd": "/bin/bash %ROOT%/config/enc.sh sub",
-            "suffix": "-sub.mp4"
         }
     ],
 
