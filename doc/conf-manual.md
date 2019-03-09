@@ -770,6 +770,7 @@ WebUIでの簡易予約時に設定されるエンコードファイルのディ
 
 | 変数名 | 説明 |
 | -------- | --- |
+| %NODE% | nodeのファイルパス |
 | %INPUT% | 入力ファイルパス |
 | %OUTPUT% | 出力ファイルパス |
 | %ROOT% | EPGStation の root パス |
@@ -808,7 +809,7 @@ WebUIでの簡易予約時に設定されるエンコードファイルのディ
 "encode": [
         {
             "name": "H264",
-            "cmd": "node %ROOT%/config/enc.js main",
+            "cmd": "%NODE% %ROOT%/config/enc.js main",
             "suffix": ".mp4",
             "rate": 10.0
         },
