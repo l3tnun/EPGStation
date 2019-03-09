@@ -108,14 +108,11 @@ unix 系では `/` を使用するため *.sample.json では `/hoge/huga/piyo` 
 ### config.json
 #### encode
 
-[enc.sh](../config/enc.sh) を起動するようになっていますが、 Windows では動作しないため `config/enc.js` へ書き換えてください
+enc.js へのファイルパスを修正してください。
 
 ```
-"cmd": "C:\\PROGRA~1\\nodejs\\node.exe %ROOT%\\config\\enc.js main"
+"cmd": "%NODE% %ROOT%\\config\\enc.js"
 ```
-
-この `PROGRA~1` は 8.3 形式の表記方法で、 Program Files を指しています。  
-cmd.exe にて `dir /x c:\` と打ち込むと確認できます
 
 ## MySQL 使用時の注意
 
