@@ -120,9 +120,7 @@ class StreamWatchVideoComponent extends Component<void> {
      * create B24 subtitle renderer
      */
     private createB24Renderer(element: HTMLVideoElement, hls: Hls): void {
-        if (!Hls.isSupported()) {
-            return;
-        }
+        if (hls === null) { return; }
 
         this.b24Renderer = new b24js.WebVTTRenderer();
         this.b24Renderer.init().then(() => {
