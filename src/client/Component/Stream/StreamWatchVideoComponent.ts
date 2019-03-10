@@ -101,7 +101,8 @@ class StreamWatchVideoComponent extends Component<void> {
      * create hls
      */
     private createHls(element: HTMLVideoElement): void {
-        if (!Hls.isSupported() || Util.uaIsiOS() || Util.uaIsSafari()) { return; }
+        // macOS Safari 10+ において hls.js にする
+        if (!Hls.isSupported() || (Util.uaIsSafari() && !Util.uaIsSafari10OrLater()) || Util.uaIsiOS()) { return; }
 
         this.hls = new Hls();
         this.hls.loadSource(this.videoSrc);
