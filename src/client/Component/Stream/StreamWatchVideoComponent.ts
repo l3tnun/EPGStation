@@ -1,4 +1,5 @@
-import * as Hls from 'hls.js';
+import * as b24js from 'b24.js';
+import * as Hls from 'hls-b24.js';
 import * as m from 'mithril';
 import Util from '../../Util/Util';
 import StreamWatchViewModel from '../../ViewModel/Stream/StreamWatchViewModel';
@@ -11,6 +12,7 @@ import Component from '../Component';
 class StreamWatchVideoComponent extends Component<void> {
     private viewModel: StreamWatchViewModel;
     private hls: Hls | null = null;
+    private b24Renderer: b24js.WebVTTRenderer | null = null;
     private videoSrc: string;
 
     constructor() {
@@ -35,7 +37,11 @@ class StreamWatchVideoComponent extends Component<void> {
 
                     // hls.js
                     this.createHls(<HTMLVideoElement> vnode.dom);
+                    // b24js WebVTTRenderer
+                    this.createB24Renderer(<HTMLVideoElement> vnode.dom, this.hls!);
+
                     if (this.hls !== null) { return; }
+
 
                     // 再生
                     try {
@@ -63,7 +69,9 @@ class StreamWatchVideoComponent extends Component<void> {
                                 (<HTMLVideoElement> vnode.dom).play();
                             } else {
                                 this.destoryHls();
+                                this.destroyB24Renderer();
                                 this.createHls(<HTMLVideoElement> vnode.dom);
+                                this.createB24Renderer(<HTMLVideoElement> vnode.dom, this.hls);
                             }
                         } catch (err) {
                             console.error(err);
@@ -80,6 +88,7 @@ class StreamWatchVideoComponent extends Component<void> {
                     }
 
                     this.destoryHls();
+                    this.destroyB24Renderer();
                 },
             });
         } else {
@@ -107,6 +116,31 @@ class StreamWatchVideoComponent extends Component<void> {
     }
 
     /**
+     * create B24 subtitle renderer
+     */
+    private createB24Renderer(element: HTMLVideoElement, hls: Hls): void {
+        if (!Hls.isSupported()) {
+            return;
+        }
+
+        this.b24Renderer = new b24js.WebVTTRenderer();
+        this.b24Renderer.init().then(() => {
+            if (this.b24Renderer) {
+                this.b24Renderer.attachMedia(element);
+                this.b24Renderer.show();
+            }
+        });
+        hls.on(Hls.Events.FRAG_PARSING_PRIVATE_DATA, (_event: string, data: any) => {
+            if (this.b24Renderer === null) {
+                return;
+            }
+            for (const sample of data.samples) {
+                this.b24Renderer.pushData(sample.pid, sample.data, sample.pts);
+            }
+        });
+    }
+
+    /**
      * destory hls
      */
     private destoryHls(): void {
@@ -114,6 +148,17 @@ class StreamWatchVideoComponent extends Component<void> {
         this.hls.destroy();
         this.hls = null;
     }
+
+    /**
+     * destroy B24 subtitle renderer
+     */
+    private destroyB24Renderer(): void {
+        if (this.b24Renderer === null) { return; }
+        this.b24Renderer.detachMedia();
+        this.b24Renderer.dispose();
+        this.b24Renderer = null;
+    }
+
 }
 
 export default StreamWatchVideoComponent;
