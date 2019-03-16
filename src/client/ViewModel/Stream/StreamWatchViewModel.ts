@@ -1,3 +1,4 @@
+import * as b24js from 'b24.js';
 import * as m from 'mithril';
 import * as apid from '../../../../api';
 import { ViewModelStatus } from '../../Enums';
@@ -19,6 +20,8 @@ class StreamWatchViewModel extends ViewModel {
     private setting: StorageTemplateModel<SettingValue>;
     private snackbar: SnackbarModelInterface;
     private viewerURL: string | null = null;
+    private subtitleStatus = false;
+    private b24RendererGetter: (() => b24js.WebVTTRenderer | null) | null = null; // b24 レンダラーインスタンスを取得する
 
     constructor(
         streamApiModel: StreamsApiModelInterface,
@@ -46,6 +49,14 @@ class StreamWatchViewModel extends ViewModel {
 
         await this.streamApiModel.fetchInfos();
         await this.setUrlScheme();
+    }
+
+    /**
+     * b24 レンダラー取得関数のセット
+     * @param callback
+     */
+    public setB24RendererGetter(callback: (() => b24js.WebVTTRenderer | null) | null): void {
+        this.b24RendererGetter = callback;
     }
 
     /**
@@ -143,6 +154,41 @@ class StreamWatchViewModel extends ViewModel {
      */
     public openSnackbar(msg: string): void {
         this.snackbar.open(msg);
+    }
+
+    /**
+     * 字幕表示状態を返す
+     * @return true で表示
+     */
+    public isEnabledSubtitle(): boolean {
+        return this.subtitleStatus;
+    }
+
+    /**
+     * 字幕表示
+     */
+    public showSubtitle(): void {
+        if (this.b24RendererGetter === null) { return; }
+
+        const render = this.b24RendererGetter();
+        if (render !== null) {
+            render.show();
+            this.subtitleStatus = true;
+        }
+    }
+
+    /**
+     * 字幕非表示
+     */
+    public hideSubtitle(): void {
+        if (this.b24RendererGetter === null) { return; }
+
+        const render = this.b24RendererGetter();
+        if (render !== null) {
+            render.hide();
+            render.cleanupScreens();
+            this.subtitleStatus = false;
+        }
     }
 }
 

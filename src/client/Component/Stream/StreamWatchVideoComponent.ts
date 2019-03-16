@@ -19,6 +19,7 @@ class StreamWatchVideoComponent extends Component<void> {
         super();
 
         this.viewModel = <StreamWatchViewModel> factory.get('StreamWatchViewModel');
+        this.viewModel.setB24RendererGetter(() => { return this.b24Renderer; });
     }
 
     /**
@@ -126,7 +127,9 @@ class StreamWatchVideoComponent extends Component<void> {
         this.b24Renderer.init().then(() => {
             if (this.b24Renderer) {
                 this.b24Renderer.attachMedia(element);
-                this.b24Renderer.show();
+                if (this.viewModel.isEnabledSubtitle()) {
+                    this.viewModel.showSubtitle();
+                }
             }
         });
         hls.on(Hls.Events.FRAG_PARSING_PRIVATE_DATA, (_event: string, data: any) => {
