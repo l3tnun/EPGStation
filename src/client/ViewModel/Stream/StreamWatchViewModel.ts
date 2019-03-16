@@ -7,6 +7,7 @@ import { StreamsApiModelInterface } from '../../Model/Api/StreamsApiModel';
 import { SettingValue } from '../../Model/Setting/SettingModel';
 import { SnackbarModelInterface } from '../../Model/Snackbar/SnackbarModel';
 import StorageTemplateModel from '../../Model/Storage/StorageTemplateModel';
+import { StreamWatchVideoSettingValue } from '../../Model/Stream/StreamWatchVideoSettingModel';
 import Util from '../../Util/Util';
 import ViewModel from '../ViewModel';
 
@@ -18,21 +19,23 @@ class StreamWatchViewModel extends ViewModel {
     private streamNumber: number | null = null;
     private config: ConfigApiModelInterface;
     private setting: StorageTemplateModel<SettingValue>;
+    private subtitleSetting: StorageTemplateModel<StreamWatchVideoSettingValue>;
     private snackbar: SnackbarModelInterface;
     private viewerURL: string | null = null;
-    private subtitleStatus = false;
     private b24RendererGetter: (() => b24js.WebVTTRenderer | null) | null = null; // b24 レンダラーインスタンスを取得する
 
     constructor(
         streamApiModel: StreamsApiModelInterface,
         config: ConfigApiModelInterface,
         setting: StorageTemplateModel<SettingValue>,
+        subtitleSetting: StorageTemplateModel<StreamWatchVideoSettingValue>,
         snackbar: SnackbarModelInterface,
     ) {
         super();
         this.streamApiModel = streamApiModel;
         this.config = config;
         this.setting = setting;
+        this.subtitleSetting = subtitleSetting;
         this.snackbar = snackbar;
     }
 
@@ -161,7 +164,7 @@ class StreamWatchViewModel extends ViewModel {
      * @return true で表示
      */
     public isEnabledSubtitle(): boolean {
-        return this.subtitleStatus;
+        return this.subtitleSetting.getValue().isEnabledSubtitle;
     }
 
     /**
@@ -173,7 +176,7 @@ class StreamWatchViewModel extends ViewModel {
         const render = this.b24RendererGetter();
         if (render !== null) {
             render.show();
-            this.subtitleStatus = true;
+            this.subtitleSetting.setValue({ isEnabledSubtitle: true });
         }
     }
 
@@ -186,8 +189,7 @@ class StreamWatchViewModel extends ViewModel {
         const render = this.b24RendererGetter();
         if (render !== null) {
             render.hide();
-            render.cleanupScreens();
-            this.subtitleStatus = false;
+            this.subtitleSetting.setValue({ isEnabledSubtitle: false });
         }
     }
 }
