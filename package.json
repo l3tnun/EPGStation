@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "aribts": "^2.1.12",
-    "b24.js": "1.0.2",
+    "b24.js": "1.0.3",
     "basic-auth": "2.0.1",
     "body-parser": "1.18.3",
     "chart.js": "2.7.3",
