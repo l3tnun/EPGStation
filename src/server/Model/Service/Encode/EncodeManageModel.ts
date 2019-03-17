@@ -489,7 +489,9 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
         };
 
         // debug 用
-        child.stderr.on('data', (data) => { this.log.system.debug(String(data)); });
+        if (child.stderr !== null) {
+            child.stderr.on('data', (data) => { this.log.system.debug(String(data)); });
+        }
 
         child.on('exit', async(code, signal) => {
             // exit code
