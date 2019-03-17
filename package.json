@@ -39,7 +39,6 @@
     "chart.js": "2.7.3",
     "diskusage": "1.0.0",
     "express": "4.16.4",
-    "express-ipfilter": "0.3.1",
     "express-openapi": "4.1.2",
     "fs-extra": "7.0.1",
     "hls-b24.js": "0.12.3",

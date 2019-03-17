@@ -1,9 +1,7 @@
 /// <reference path="./swaggerUiExpress.d.ts" />
-/// <reference path="./expressIpfilter.d.ts" />
 
 import * as bodyParser from 'body-parser';
 import * as express from 'express';
-import * as ipfilter from 'express-ipfilter';
 import * as openapi from 'express-openapi';
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
@@ -93,23 +91,6 @@ class Server extends Base {
             },
         });
         const upload = multer({ storage: storage });
-
-        // ipfilter
-        if (typeof config.allowedIPs !== 'undefined') {
-            this.app.use(ipfilter.IpFilter(config.allowedIPs, { mode: 'allow' }));
-
-            this.app.use((err: Error, req: any, res: any, next: (err: Error) => void) => {
-                if (err instanceof ipfilter.IpDeniedError) {
-                    this.log.access.error(`blocked: ${ req.ip }`);
-                    res.status(403).send({
-                        message: 'You shall not pass',
-                        error: err,
-                    });
-                } else {
-                    next(err);
-                }
-            });
-        }
 
         // init express-openapi
         openapi.initialize({
