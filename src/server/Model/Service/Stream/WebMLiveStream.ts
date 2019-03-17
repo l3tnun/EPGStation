@@ -54,12 +54,16 @@ class WebMLiveStream extends Stream {
             this.enc = await this.process.create('', '', cmd, Stream.priority);
 
             // mirakurun のストリームをエンコードプロセスへパイプする
-            this.stream.pipe(this.enc.stdin);
+            if (this.enc.stdin !== null) {
+                this.stream.pipe(this.enc.stdin);
+            }
 
             this.enc.on('exit', () => { this.ChildExit(streamNumber); });
             this.enc.on('error', () => { this.ChildExit(streamNumber); });
 
-            this.enc.stderr.on('data', (data) => { this.log.stream.debug(String(data)); });
+            if (this.enc.stderr !== null) {
+                this.enc.stderr.on('data', (data) => { this.log.stream.debug(String(data)); });
+            }
         } catch (err) {
             await this.stop();
             throw err;

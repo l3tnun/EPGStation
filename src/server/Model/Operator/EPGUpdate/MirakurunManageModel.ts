@@ -47,13 +47,17 @@ class MirakurunManageModel extends Model implements MirakurunManageModelInterfac
         const updater = child_process.fork(path.join(__dirname, 'MirakurunUpdateExecutor.js'), [], { silent: true });
         this.log.system.info(`start Updater pid: ${ updater.pid }`);
 
-        updater.stdout.on('data', (data: string) => {
-            this.log.system.info(String(data).slice(0, -1));
-        });
+        if (updater.stdout !== null) {
+            updater.stdout.on('data', (data: string) => {
+                this.log.system.info(String(data).slice(0, -1));
+            });
+        }
 
-        updater.stderr.on('data', (data: string) => {
-            this.log.system.error(String(data).slice(0, -1));
-        });
+        if (updater.stderr !== null) {
+            updater.stderr.on('data', (data: string) => {
+                this.log.system.error(String(data).slice(0, -1));
+            });
+        }
 
         updater.once('exit', (code) => {
             if (code === 0) {

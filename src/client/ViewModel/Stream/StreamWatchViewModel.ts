@@ -1,3 +1,4 @@
+import * as b24js from 'b24.js';
 import * as m from 'mithril';
 import * as apid from '../../../../api';
 import { ViewModelStatus } from '../../Enums';
@@ -6,6 +7,7 @@ import { StreamsApiModelInterface } from '../../Model/Api/StreamsApiModel';
 import { SettingValue } from '../../Model/Setting/SettingModel';
 import { SnackbarModelInterface } from '../../Model/Snackbar/SnackbarModel';
 import StorageTemplateModel from '../../Model/Storage/StorageTemplateModel';
+import { StreamWatchVideoSettingValue } from '../../Model/Stream/StreamWatchVideoSettingModel';
 import Util from '../../Util/Util';
 import ViewModel from '../ViewModel';
 
@@ -17,19 +19,23 @@ class StreamWatchViewModel extends ViewModel {
     private streamNumber: number | null = null;
     private config: ConfigApiModelInterface;
     private setting: StorageTemplateModel<SettingValue>;
+    private subtitleSetting: StorageTemplateModel<StreamWatchVideoSettingValue>;
     private snackbar: SnackbarModelInterface;
     private viewerURL: string | null = null;
+    private b24RendererGetter: (() => b24js.WebVTTRenderer | null) | null = null; // b24 レンダラーインスタンスを取得する
 
     constructor(
         streamApiModel: StreamsApiModelInterface,
         config: ConfigApiModelInterface,
         setting: StorageTemplateModel<SettingValue>,
+        subtitleSetting: StorageTemplateModel<StreamWatchVideoSettingValue>,
         snackbar: SnackbarModelInterface,
     ) {
         super();
         this.streamApiModel = streamApiModel;
         this.config = config;
         this.setting = setting;
+        this.subtitleSetting = subtitleSetting;
         this.snackbar = snackbar;
     }
 
@@ -46,6 +52,14 @@ class StreamWatchViewModel extends ViewModel {
 
         await this.streamApiModel.fetchInfos();
         await this.setUrlScheme();
+    }
+
+    /**
+     * b24 レンダラー取得関数のセット
+     * @param callback
+     */
+    public setB24RendererGetter(callback: (() => b24js.WebVTTRenderer | null) | null): void {
+        this.b24RendererGetter = callback;
     }
 
     /**
@@ -143,6 +157,40 @@ class StreamWatchViewModel extends ViewModel {
      */
     public openSnackbar(msg: string): void {
         this.snackbar.open(msg);
+    }
+
+    /**
+     * 字幕表示状態を返す
+     * @return true で表示
+     */
+    public isEnabledSubtitle(): boolean {
+        return this.subtitleSetting.getValue().isEnabledSubtitle;
+    }
+
+    /**
+     * 字幕表示
+     */
+    public showSubtitle(): void {
+        if (this.b24RendererGetter === null) { return; }
+
+        const render = this.b24RendererGetter();
+        if (render !== null) {
+            render.show();
+            this.subtitleSetting.setValue({ isEnabledSubtitle: true });
+        }
+    }
+
+    /**
+     * 字幕非表示
+     */
+    public hideSubtitle(): void {
+        if (this.b24RendererGetter === null) { return; }
+
+        const render = this.b24RendererGetter();
+        if (render !== null) {
+            render.hide();
+            this.subtitleSetting.setValue({ isEnabledSubtitle: false });
+        }
     }
 }
 

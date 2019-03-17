@@ -40,7 +40,7 @@ export const get: Operation = async(req, res) => {
         res.status(200);
 
         if (encChild !== null) {
-            encChild.stdout.pipe(res);
+            if (encChild.stdout !== null) { encChild.stdout.pipe(res); }
 
             // enc コマンド終了時
             encChild.on('exit', async() => {

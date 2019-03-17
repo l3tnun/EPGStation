@@ -13,6 +13,11 @@ interface ControlArgs {
     closeButtonCallback?(): void;
     video: m.Child | null;
     height?: number;
+    subtitleCallbacks?: {
+        isEnabled(): boolean;
+        enable(): void;
+        disable(): void;
+    };
 }
 
 /**
@@ -491,6 +496,7 @@ class VideoContainerComponent extends Component<ControlArgs> {
             ]),
             m('div', { class: 'buttons-parent' }, [
                 m('div', { class: 'volume-buttons' }, [
+                    this.createSubtitle(vnode),
                     m('i', {
                         class: 'mute material-icons',
                         onclick: () => {
@@ -714,6 +720,25 @@ class VideoContainerComponent extends Component<ControlArgs> {
      */
     private zeroPadding(num: number): string {
         return (`0${num}`).slice(-2);
+    }
+
+    /**
+     * 字幕ボタン生成
+     */
+    private createSubtitle(vnode: m.Vnode<ControlArgs, this>): m.Child | null {
+        if (typeof vnode.attrs.subtitleCallbacks === 'undefined') { return null; }
+        const callbacks = vnode.attrs.subtitleCallbacks;
+
+        return m('i', {
+            class: 'subtitle material-icons ' + (callbacks.isEnabled() ? '' : ' disable'),
+            onclick: () => {
+                if (callbacks.isEnabled()) {
+                    callbacks.disable();
+                } else {
+                    callbacks.enable();
+                }
+            },
+        }, 'subtitles');
     }
 
     /**

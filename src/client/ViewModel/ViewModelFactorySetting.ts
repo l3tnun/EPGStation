@@ -17,6 +17,7 @@ import { SnackbarModel } from '../Model/Snackbar/SnackbarModel';
 import { StorageModel } from '../Model/Storage/StorageModel';
 import { StreamProgramCardsSettingModel } from '../Model/Stream/StreamProgramCardsSettingModel';
 import { StreamSelectSettingModel } from '../Model/Stream/StreamSelectSettingModel';
+import { StreamWatchVideoSettingModel } from '../Model/Stream/StreamWatchVideoSettingModel';
 import { TabModel } from '../Model/Tab/TabModel';
 
 import BalloonViewModel from './Balloon/BalloonViewModel';
@@ -91,6 +92,7 @@ namespace ViewModelFactorySetting {
         const streamApiModel = new StreamsApiModel(snackbarModel);
         const streamProgramCardsSettingModel = new StreamProgramCardsSettingModel(storageModel);
         const streamSelectSettingModel = new StreamSelectSettingModel(storageModel);
+        const streamWatchVideoSettingModel = new StreamWatchVideoSettingModel(storageModel);
         const searchSettingModel = new SearchSettingModel(storageModel);
         const recordedSettingModel = new RecordedSettingModel(storageModel);
         const settingModel = new SettingModel(storageModel);
@@ -301,6 +303,7 @@ namespace ViewModelFactorySetting {
             streamApiModel,
             configModel,
             settingModel,
+            streamWatchVideoSettingModel,
             snackbarModel,
         ));
         factory.reg('SettingViewModel', new SettingViewModel(
