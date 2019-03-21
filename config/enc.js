@@ -10,11 +10,13 @@ const input = process.env.INPUT;
 const output = process.env.OUTPUT;
 const videoHeight = parseInt(process.env.VIDEORESOLUTION, 10);
 
+const maxMuxingQueueSize = 1024;
+
 let args;
 if(videoHeight > 720) {
-    args = ['-y', '-dual_mono_mode', mode, '-i', input, '-map', '0', '-ignore_unknown', '-vf', 'yadif', '-preset', 'veryfast', '-aspect', '16:9', '-c:v', 'libx264', '-crf', '23', '-f', 'mp4', '-s', '1280x720', '-c:a', 'aac', '-ar', '48000', '-ab', '192k', '-ac', '2', output];
+    args = ['-y', '-dual_mono_mode', mode, '-i', input, '-map', '0', '-ignore_unknown', '-max_muxing_queue_size', maxMuxingQueueSize, '-vf', 'yadif', '-preset', 'veryfast', '-aspect', '16:9', '-c:v', 'libx264', '-crf', '23', '-f', 'mp4', '-s', '1280x720', '-c:a', 'aac', '-ar', '48000', '-ab', '192k', '-ac', '2', output];
 } else {
-    args = ['-y', '-dual_mono_mode', mode, '-i', input, '-map', '0', '-ignore_unknown', '-vf', 'yadif', '-preset', 'veryfast', '-aspect', '16:9', '-c:v', 'libx264', '-crf', '23', '-f', 'mp4', '-c:a', 'aac', '-ar', '48000', '-ab', '192k', '-ac', '2', output];
+    args = ['-y', '-dual_mono_mode', mode, '-i', input, '-map', '0', '-ignore_unknown', '-max_muxing_queue_size', maxMuxingQueueSize, '-vf', 'yadif', '-preset', 'veryfast', '-aspect', '16:9', '-c:v', 'libx264', '-crf', '23', '-f', 'mp4', '-c:a', 'aac', '-ar', '48000', '-ab', '192k', '-ac', '2', output];
 }
 
 console.error(args);
