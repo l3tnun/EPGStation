@@ -73,6 +73,17 @@ class SettingComponent extends ParentComponent<void> {
             );
         }
 
+        let hlsVideoPlayer: m.Child | null = null;
+        if (Util.uaIsSafari()) {
+            hlsVideoPlayer = this.createListItem(
+                'HLS 視聴時にブラウザ内臓のプレーヤを使用する',
+                this.createToggle(
+                    () => { return this.viewModel.tmpValue.isEnableNativeHLSVideoPlayer; },
+                    (value) => { this.viewModel.tmpValue.isEnableNativeHLSVideoPlayer = value; },
+                ),
+            );
+        }
+
         return m('div', {
             class : 'setting-content mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col',
             onupdate: () => { this.restoreMainLayoutPosition(); },
@@ -228,6 +239,7 @@ class SettingComponent extends ParentComponent<void> {
                         (value) => { this.viewModel.tmpValue.isEnableHLSViewerURLScheme = value; },
                     ),
                 ),
+                hlsVideoPlayer,
                 this.createTextBox(
                     () => {
                         const value = this.viewModel.tmpValue.customHLSViewerURLScheme;

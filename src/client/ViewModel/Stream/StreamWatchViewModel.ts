@@ -192,6 +192,14 @@ class StreamWatchViewModel extends ViewModel {
             this.subtitleSetting.setValue({ isEnabledSubtitle: false });
         }
     }
+
+    /**
+     * ブラウザ内蔵のプレーヤを使用するか
+     * @return true: 内蔵のプレーヤを使用する
+     */
+    public isNativePlayer(): boolean {
+        return this.setting.getValue().isEnableNativeHLSVideoPlayer;
+    }
 }
 
 namespace StreamWatchViewModel {
