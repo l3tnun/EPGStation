@@ -81,8 +81,14 @@ class StreamWatchComponent extends ParentComponent<void> {
                 }, [
                     this.createStopButton(),
                     m(VideoContainerComponent, {
+                        disableControl: this.viewModel.isNativePlayer(),
                         isLiveStreaming: this.isLive,
                         video: m(StreamWatchVideoComponent),
+                        subtitleCallbacks: {
+                            isEnabled: () => { return this.viewModel.isEnabledSubtitle(); },
+                            enable: () => { this.viewModel.showSubtitle(); },
+                            disable: () => { this.viewModel.hideSubtitle(); },
+                        },
                     }),
                     this.createStreamInfo(),
                 ]),

@@ -176,8 +176,8 @@ class EncodeProcessManageModel extends Model implements EncodeProcessManageModel
         });
 
         // buffer が埋まらないようにする
-        child.stdout.on('data', () => { });
-        child.stderr.on('data', () => { });
+        if (child.stdout !== null) { child.stdout.on('data', () => { }); }
+        if (child.stderr !== null) { child.stderr.on('data', () => { }); }
 
         return { child: child, priority: priority, createTime: createTime };
     }

@@ -135,8 +135,8 @@ class ThumbnailManageModel extends Model implements ThumbnailManageModelInterfac
         const child = spawn(ffmpeg, cmd);
 
         // debug 用
-        child.stderr.on('data', (data) => { this.log.system.debug(String(data)); });
-        child.stdout.on('data', () => { });
+        if (child.stderr !== null) { child.stderr.on('data', (data) => { this.log.system.debug(String(data)); }); }
+        if (child.stdout !== null) { child.stdout.on('data', () => { }); }
 
         child.on('exit', (code) => {
             if (typeof program === 'undefined') {

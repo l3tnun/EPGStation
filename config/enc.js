@@ -5,6 +5,7 @@ const input = process.env.INPUT;
 const output = process.env.OUTPUT;
 const analyzedurationSize = '10M'; // Mirakurun の設定に応じて変更すること
 const probesizeSize = '32M'; // Mirakurun の設定に応じて変更すること
+const maxMuxingQueueSize = 1024;
 const dualMonoMode = 'main';
 const videoHeight = parseInt(process.env.VIDEORESOLUTION, 10);
 const isDualMono = parseInt(process.env.AUDIOCOMPONENTTYPE, 10) == 2;
@@ -22,6 +23,9 @@ if (isDualMono) {
 
 // input 設定
 Array.prototype.push.apply(args,['-i', input]);
+
+// 字幕データを含めたストリームをすべてマップ
+Array.prototype.push.apply(args, ['-map', '0', '-ignore_unknown', '-max_muxing_queue_size', maxMuxingQueueSize,]);
 
 // video filter 設定
 let videoFilter = 'yadif';

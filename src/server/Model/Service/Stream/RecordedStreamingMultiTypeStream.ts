@@ -80,12 +80,16 @@ class RecordedStreamingMultiTypeStream extends Stream {
             this.enc = await this.process.create('pipe:0', '', cmd, Stream.priority);
 
             // pipe
-            this.fileStream.pipe(this.enc.stdin);
+            if (this.enc.stdin !== null) {
+                this.fileStream.pipe(this.enc.stdin);
+            }
 
             this.enc.on('exit', () => { this.ChildExit(streamNumber); });
             this.enc.on('error', () => { this.ChildExit(streamNumber); });
 
-            this.enc.stderr.on('data', (data) => { this.log.stream.debug(String(data)); });
+            if (this.enc.stderr !== null) {
+                this.enc.stderr.on('data', (data) => { this.log.stream.debug(String(data)); });
+            }
         } catch (err) {
             await this.stop();
             throw err;

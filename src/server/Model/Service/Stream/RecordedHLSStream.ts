@@ -98,7 +98,9 @@ class RecordedHLSStream extends Stream {
             this.enc.on('exit', (code: number) => { if (code !== 0) { this.ChildExit(streamNumber); } });
             this.enc.on('error', () => { this.ChildExit(streamNumber); });
 
-            this.enc.stderr.on('data', (data) => { this.log.stream.debug(String(data)); });
+            if (this.enc.stderr !== null) {
+                this.enc.stderr.on('data', (data) => { this.log.stream.debug(String(data)); });
+            }
         } catch (err) {
             await this.stop();
             throw err;

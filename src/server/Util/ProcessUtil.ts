@@ -10,13 +10,17 @@ namespace ProcessUtil {
     export const kill = (child: ChildProcess, wait = 500): Promise<void> => {
         return new Promise<void>((resolve: () => void, reject: (err: Error) => void) => {
             try {
-                child.stdin.end();
-                child.stdout.unpipe();
-                child.stderr.unpipe();
-                child.stdout.destroy();
-                child.stderr.destroy();
-                child.stdout.removeAllListeners('data');
-                child.stderr.removeAllListeners('data');
+                if (child.stdin !== null) { child.stdin.end(); }
+                if (child.stdout !== null) {
+                    child.stdout.unpipe();
+                    child.stdout.destroy();
+                    child.stdout.removeAllListeners('data');
+                }
+                if (child.stderr !== null) {
+                    child.stderr.unpipe();
+                    child.stderr.destroy();
+                    child.stderr.removeAllListeners('data');
+                }
 
                 setTimeout(() => {
                     child.kill('SIGINT');
