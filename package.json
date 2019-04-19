@@ -7,7 +7,7 @@
     "start": "node dist/server/index.js",
     "dev-start": "node dist/server/index.js --env development",
     "clean": "gulp clean",
-    "build": "gulp build --max_old_space_size=768 --env production",
+    "build": "gulp build --max_old_space_size=512 --env production",
     "dev-build": "gulp build --max_old_space_size=512 --env development",
     "test": "echo \"Error: no test specified\" && exit 1",
     "task": "gulp --max_old_space_size=512",
