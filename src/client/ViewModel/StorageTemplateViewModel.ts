@@ -18,20 +18,8 @@ abstract class StorageTemplateViewModel<T> extends ViewModel {
         super();
         this.storageModel = storageModel;
         this.snackbar = snackbar;
-    }
 
-    /**
-     * init
-     * main で一度だけ初期化する
-     */
-    public init(): void {
         this.storageModel.init();
-    }
-
-    /**
-     * 一時領域のセット
-     */
-    public setTemp(): void {
         this.tmpValue = this.storageModel.getValue();
     }
 
@@ -59,6 +47,14 @@ abstract class StorageTemplateViewModel<T> extends ViewModel {
         if (message !== null) {
             this.snackbar.open(message);
         }
+    }
+
+    /**
+     * get value
+     * @return T
+     */
+    public getValue(): T {
+        return this.storageModel.getValue();
     }
 
     /**

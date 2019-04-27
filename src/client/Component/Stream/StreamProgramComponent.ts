@@ -25,14 +25,12 @@ import StreamSelectComponent from './StreamSelectComponent';
 class StreamProgramComponent extends ParentComponent<void> {
     private cardsViewModel: StreamProgramCardsViewModel;
     private forcedStop: StreamForcedStopViewModel;
-    private cardSettingViewModel: StreamProgramCardsSettingViewModel;
     private balloon: BalloonViewModel;
 
     constructor() {
         super();
         this.cardsViewModel = <StreamProgramCardsViewModel> factory.get('StreamProgramCardsViewModel');
         this.forcedStop = <StreamForcedStopViewModel> factory.get('StreamForcedStopViewModel');
-        this.cardSettingViewModel = <StreamProgramCardsSettingViewModel> factory.get('StreamProgramCardsSettingViewModel');
         this.balloon = <BalloonViewModel> factory.get('BalloonViewModel');
     }
 
@@ -70,7 +68,6 @@ class StreamProgramComponent extends ParentComponent<void> {
                         onclick: () => {
                             this.balloon.close();
                             window.setTimeout(() => {
-                                this.cardSettingViewModel.setTemp();
                                 this.balloon.open(StreamProgramCardsSettingViewModel.id);
                             }, 200);
                         },

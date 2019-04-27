@@ -40,7 +40,6 @@ class RecordedComponent extends ParentComponent<void> {
     private infoViewModel: RecordedInfoViewModel;
     private menuViewModel: RecordedMenuViewModel;
     private searchViewModel: RecordedSearchViewModel;
-    private recordedSettingViewModel: RecordedSettingViewModel;
     private balloon: BalloonViewModel;
 
     constructor() {
@@ -49,7 +48,6 @@ class RecordedComponent extends ParentComponent<void> {
         this.infoViewModel = <RecordedInfoViewModel> factory.get('RecordedInfoViewModel');
         this.menuViewModel = <RecordedMenuViewModel> factory.get('RecordedMenuViewModel');
         this.searchViewModel = <RecordedSearchViewModel> factory.get('RecordedSearchViewModel');
-        this.recordedSettingViewModel = <RecordedSettingViewModel> factory.get('RecordedSettingViewModel');
         this.balloon = <BalloonViewModel> factory.get('BalloonViewModel');
     }
 
@@ -119,7 +117,6 @@ class RecordedComponent extends ParentComponent<void> {
                         onclick: () => {
                             this.balloon.close();
                             window.setTimeout(() => {
-                                this.recordedSettingViewModel.setTemp();
                                 this.balloon.open(RecordedSettingViewModel.id);
                             }, 200);
                         },
@@ -254,9 +251,6 @@ class RecordedComponent extends ParentComponent<void> {
             class: 'recorded-content'
                 + (isEditing ? ' is-editing' : '')
                 + (this.viewModel.isEnabledListMode() ? ' is-list-view' : ''),
-            oncreate: () => {
-                this.recordedSettingViewModel.setTemp();
-            },
             onupdate: () => {
                 this.restoreMainLayoutPosition();
             },

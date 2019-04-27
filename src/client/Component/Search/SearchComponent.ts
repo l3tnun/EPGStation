@@ -25,7 +25,6 @@ import SearchSettingComponent from './SearchSettingComponent';
 class SearchComponent extends ParentComponent<void> {
     private viewModel: SearchViewModel;
     private mainLayoutViewModel: MainLayoutViewModel;
-    private searchSettingViewModel: SearchSettingViewModel;
     private balloon: BalloonViewModel;
 
     constructor() {
@@ -33,7 +32,6 @@ class SearchComponent extends ParentComponent<void> {
         this.viewModel = <SearchViewModel> factory.get('SearchViewModel');
         this.mainLayoutViewModel = <MainLayoutViewModel> factory.get('MainLayoutViewModel');
         this.balloon = <BalloonViewModel> factory.get('BalloonViewModel');
-        this.searchSettingViewModel = <SearchSettingViewModel> factory.get('SearchSettingViewModel');
     }
 
     protected async parentInitViewModel(status: ViewModelStatus): Promise<void> {
@@ -83,7 +81,6 @@ class SearchComponent extends ParentComponent<void> {
                         onclick: () => {
                             this.balloon.close();
                             window.setTimeout(() => {
-                                this.searchSettingViewModel.setTemp();
                                 this.balloon.open(SearchSettingViewModel.id);
                             }, 200);
                         },

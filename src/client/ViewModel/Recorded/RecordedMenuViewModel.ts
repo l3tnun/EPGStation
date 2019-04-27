@@ -23,7 +23,6 @@ class RecordedMenuViewModel extends ViewModel {
         checked: boolean;
         size: number | null;
     }[] = [];
-    public encodeModeOptionValue: number = 0;
     public encodeSourceOptionValue: number = 0;
     public encodeDirectoryOptionValue: string = '';
     public isOutputTheOriginalDirectory: boolean = false;
@@ -83,10 +82,7 @@ class RecordedMenuViewModel extends ViewModel {
         if (config === null) { return; }
         this.encodeStatus = config.enableEncode;
         this.encodeSourceOptionValue = 0;
-        this.encodeModeOptionValue = 0;
         this.encodeDirectoryOptionValue = '';
-        this.isOutputTheOriginalDirectory = false;
-        this.delTs = false;
     }
 
     /**
@@ -212,14 +208,8 @@ class RecordedMenuViewModel extends ViewModel {
     /**
      * encode 追加
      */
-    public async addEncode(): Promise<void> {
+    public async addEncode(option: EncodeQueryOption): Promise<void> {
         if (this.recorded === null) { return; }
-
-        const option: EncodeQueryOption = {
-            mode: this.encodeModeOptionValue,
-            isOutputTheOriginalDirectory: this.isOutputTheOriginalDirectory,
-            delTs: this.delTs,
-        };
 
         const encodedId = this.recordedFiles[this.encodeSourceOptionValue].encodedId;
         if (encodedId !== null) {
