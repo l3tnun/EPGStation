@@ -62,7 +62,7 @@ class ProgramInfoActionComponent extends Component<void> {
             name = '予約';
             onclick = () => { return this.viewModel.addReserve(); };
         } else if (reserve.status === 'reserve' || reserve.status === 'conflict') {
-            name = '削除';
+            name = typeof reserve.item.ruleId === 'undefined' ? '削除' : '除外';
             onclick = () => { return this.viewModel.deleteReserve(); };
         } else if (reserve.status === 'skip') {
             name = '除外解除';
