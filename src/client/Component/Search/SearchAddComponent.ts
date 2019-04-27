@@ -21,7 +21,10 @@ class SearchAddComponent extends SearchOptionBaseComponent<void> {
             class: 'option-card mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col',
             style: 'margin: 38px auto;',
         }, [
-            m('div', { class: 'add-card mdl-card__supporting-text' }, [
+            m('div', {
+                id: SearchViewModel.addCardId,
+                class: 'add-card mdl-card__supporting-text',
+            }, [
                 this.createOptionCheckBox(),
                 this.createAvoidDuplicate(),
                 this.createSaveDirectory(),

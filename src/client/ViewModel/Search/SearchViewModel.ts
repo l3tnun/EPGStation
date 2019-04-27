@@ -665,6 +665,7 @@ class SearchViewModel extends ViewModel {
 
 namespace SearchViewModel {
     export const hitId = 'search-hit-id';
+    export const addCardId = 'search-add-card-id';
 }
 
 export default SearchViewModel;
