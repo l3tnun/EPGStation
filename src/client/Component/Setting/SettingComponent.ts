@@ -1,4 +1,5 @@
 import * as m from 'mithril';
+import { ViewModelStatus } from '../../Enums';
 import Util from '../../Util/Util';
 import SettingViewModel from '../../ViewModel/Setting/SettingViewModel';
 import factory from '../../ViewModel/ViewModelFactory';
@@ -16,7 +17,10 @@ class SettingComponent extends ParentComponent<void> {
         this.viewModel = <SettingViewModel> factory.get('SettingViewModel');
     }
 
-    protected async parentInitViewModel(): Promise<void> {
+    protected async parentInitViewModel(status: ViewModelStatus): Promise<void> {
+        if (status === 'init') {
+            this.viewModel.resetTmp();
+        }
         await Util.sleep(100);
     }
 

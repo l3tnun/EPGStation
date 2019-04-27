@@ -20,6 +20,13 @@ abstract class StorageTemplateViewModel<T> extends ViewModel {
         this.snackbar = snackbar;
 
         this.storageModel.init();
+        this.resetTmp();
+    }
+
+    /**
+     * 一時領域のセット
+     */
+    public resetTmp(): void {
         this.tmpValue = this.storageModel.getValue();
     }
 
