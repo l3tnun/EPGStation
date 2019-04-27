@@ -24,6 +24,9 @@ if (isDualMono) {
 // input 設定
 Array.prototype.push.apply(args,['-i', input]);
 
+// メタ情報を先頭に置く
+Array.prototype.push.apply(args,['-movflags', 'faststart']);
+
 // 字幕データを含めたストリームをすべてマップ
 Array.prototype.push.apply(args, ['-map', '0', '-ignore_unknown', '-max_muxing_queue_size', maxMuxingQueueSize,]);
 
