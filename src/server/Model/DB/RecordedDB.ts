@@ -473,12 +473,11 @@ abstract class RecordedDB extends DBTableBase implements RecordedDBInterface {
 
         const query = `update ${ DBSchema.TableName.Recorded } set `
             + `recPath = ${ this.operator.createValueStr(1, 1) }, `
-            + `isTmp = ${ this.operator.createValueStr(2, 2) } `
+            + `isTmp = ${ this.operator.convertBoolean(newTmp) } `
             + `where id = ${ recordedId }`;
 
         await this.operator.runQuery(query, [
             filePath.slice(baseDir.length + path.sep.length),
-            this.operator.convertBoolean(newTmp),
         ]);
     }
 
