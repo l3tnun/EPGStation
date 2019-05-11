@@ -418,7 +418,7 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
         }
 
         // dir の存在確認
-        const dir = path.join(Util.getRecordedPath(), Util.replaceDirName(program.directory || ''));
+        const dir = typeof program.directory === 'undefined' ? Util.getRecordedPath() : path.join(Util.getRecordedPath(), Util.replaceDirName(program.directory));
         if (program.suffix !== null) {
             // program.suffix が null でない = output がある場合はディレクトリをチェック
             try {
