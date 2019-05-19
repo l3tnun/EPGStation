@@ -51,8 +51,6 @@ class RecordedInfoComponent extends Component<void> {
      * info tab
      */
     private createInfo(): m.Child[] {
-        let extended = this.viewModel.getExtended();
-
         return <m.Child[]> [
             m('div', { class: 'title' }, this.viewModel.getTitle()),
             m('div', { class: 'channel' }, this.viewModel.getChannelName()),
@@ -137,17 +135,33 @@ class RecordedInfoComponent extends Component<void> {
 
             this.createThumnbail(),
             m('div', { class: 'description' }, this.viewModel.getDescription()),
-            m('div', {
-                class: 'extended',
-                style: extended.length === 0 ? 'display: none;' : '',
-                onupdate: (vnode: m.VnodeDOM<void, this>) => {
-                    if (extended.length === 0) { return; }
-                    extended = extended.replace(/(http:\/\/[\x21-\x7e]+)/gi, "<a href='$1' target='_blank'>$1</a>");
-                    extended = extended.replace(/(https:\/\/[\x21-\x7e]+)/gi, "<a href='$1' target='_blank'>$1</a>");
-                    (<HTMLElement> vnode.dom).innerHTML = extended;
-                },
-            }, this.viewModel.getExtended()),
+            this.createExtended(),
         ];
+    }
+
+    /**
+     * exntended 生成
+     */
+    private createExtended(): m.Child | null {
+        const extended = this.viewModel.getExtended();
+        if (extended === '') { return null; }
+
+        const str = this.viewModel.getExtended()
+            .split(RecordedInfoComponent.linkReplacementCondition);
+
+        const content: m.Child[] = [];
+        for (const s of str) {
+            if (typeof s === 'undefined') { continue; }
+
+            if (s.match(RecordedInfoComponent.linkReplacementCondition)) {
+                content.push(m('a', { href: s, target: '_blank' }, s));
+                continue;
+            }
+
+            content.push(s);
+        }
+
+        return m('div', { class: 'extended' }, content);
     }
 
     /**
@@ -297,6 +311,7 @@ class RecordedInfoComponent extends Component<void> {
 namespace RecordedInfoComponent {
     export const downloadPanel = 'recorded-donwload-panel';
     export const watchPanel = 'recorded-watch-panel';
+    export const linkReplacementCondition = /(http:\/\/[\x21-\x7e]+)|(https:\/\/[\x21-\x7e]+)/;
 }
 
 export default RecordedInfoComponent;

@@ -35,12 +35,7 @@ class ProgramInfoComponent extends Component<void> {
                 this.createItem('genre', this.viewModel.getGenres(1)),
                 this.createItem('genre', this.viewModel.getGenres(2)),
                 this.createItem('description', this.viewModel.getDescription()),
-                this.createItem('extended', this.viewModel.getExtended(), (vnode: m.VnodeDOM<void, this>) => {
-                    let str = this.viewModel.getExtended();
-                    str = str.replace(/(http:\/\/[\x21-\x7e]+)/gi, "<a href='$1' target='_blank'>$1</a>");
-                    str = str.replace(/(https:\/\/[\x21-\x7e]+)/gi, "<a href='$1' target='_blank'>$1</a>");
-                    (<HTMLElement> vnode.dom).innerHTML = str;
-                }),
+                this.createExtended(),
                 this.createItem('other', 'その他'),
                 this.createItem('video', '映像: ' + this.viewModel.getVideoInfo()),
                 this.createItem('audio-mode', '音声: ' + this.viewModel.getAudioMode()),
@@ -189,6 +184,35 @@ class ProgramInfoComponent extends Component<void> {
 
         return m('div', attrs, text);
     }
+
+    /**
+     * exntended 生成
+     */
+    private createExtended(): m.Child | null {
+        const extended = this.viewModel.getExtended();
+        if (extended === '') { return null; }
+
+        const str = this.viewModel.getExtended()
+            .split(ProgramInfoComponent.linkReplacementCondition);
+
+        const content: m.Child[] = [];
+        for (const s of str) {
+            if (typeof s === 'undefined') { continue; }
+
+            if (s.match(ProgramInfoComponent.linkReplacementCondition)) {
+                content.push(m('a', { href: s, target: '_blank' }, s));
+                continue;
+            }
+
+            content.push(s);
+        }
+
+        return m('div', { class: 'extended' }, content);
+    }
+}
+
+namespace ProgramInfoComponent {
+    export const linkReplacementCondition = /(http:\/\/[\x21-\x7e]+)|(https:\/\/[\x21-\x7e]+)/;
 }
 
 export default ProgramInfoComponent;
