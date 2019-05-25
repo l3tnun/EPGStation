@@ -159,6 +159,21 @@ class EncodeProcessManageModel extends Model implements EncodeProcessManageModel
             }
         }
 
+        // 環境変数に PATH を追加
+        if (typeof spawnOption === 'undefined') {
+            spawnOption = {
+                env: {
+                    PATH: process.env['PATH'],
+                },
+            };
+        } else if (typeof spawnOption.env === 'undefined') {
+            spawnOption.env = {
+                PATH: process.env['PATH'],
+            };
+        } else if (typeof spawnOption.env.PATH === 'undefined') {
+            spawnOption.env.PATH = process.env['PATH'];
+        }
+
         const child = spawn(cmds.bin, cmds.args, spawnOption);
         const createTime = new Date().getTime();
 

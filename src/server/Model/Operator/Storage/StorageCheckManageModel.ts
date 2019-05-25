@@ -87,6 +87,9 @@ class StorageCheckManageModel extends Model implements StorageCheckManageModelIn
                 const cmds = ProcessUtil.parseCmdStr(this.cmd);
                 spawn(cmds.bin, cmds.args, {
                     stdio: 'ignore',
+                    env: {
+                        PATH: process.env['PATH'],
+                    },
                 });
             } catch (err) {
                 this.log.system.error(<any> err);
