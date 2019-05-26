@@ -263,6 +263,14 @@ class ProgramInfoViewModel extends ViewModel {
     }
 
     /**
+     * balloon が開いているか
+     * @return boolean true: 開いている
+     */
+    public isOpend(): boolean {
+        return this.balloon.isOpen(ProgramInfoViewModel.id);
+    }
+
+    /**
      * エンコードオプションが有効か
      * @return true: 有効, false: 無効
      */

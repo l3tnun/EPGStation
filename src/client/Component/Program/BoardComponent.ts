@@ -73,6 +73,7 @@ class BoardComponent extends Component<BoardArgs> {
                 this.scroller.set(element, channel, time,
                     () => { this.viewModel.disableShowDetail(); },
                     () => { this.viewModel.enableShowDetail(); },
+                    () => { return !this.infoViewModel.isOpend(); },
                 );
 
                 // scroll position

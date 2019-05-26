@@ -37,6 +37,7 @@ class ProgramComponent extends ParentComponent<void> {
     private mainLayoutViewModel: MainLayoutViewModel;
     private genre: ProgramGenreViewModel;
     private timeBalloon: ProgramTimeBalloonViewModel;
+    private infoViewModel: ProgramInfoViewModel;
     private balloon: BalloonViewModel;
 
     private scroller: BoardScroller = new BoardScroller();
@@ -49,6 +50,7 @@ class ProgramComponent extends ParentComponent<void> {
         this.mainLayoutViewModel = <MainLayoutViewModel> factory.get('MainLayoutViewModel');
         this.genre = <ProgramGenreViewModel> factory.get('ProgramGenreViewModel');
         this.timeBalloon = <ProgramTimeBalloonViewModel> factory.get('ProgramTimeBalloonViewModel');
+        this.infoViewModel = <ProgramInfoViewModel> factory.get('ProgramInfoViewModel');
         this.balloon = <BalloonViewModel> factory.get('BalloonViewModel');
     }
 
@@ -141,6 +143,7 @@ class ProgramComponent extends ParentComponent<void> {
                         this.scroller.set(element, channel, time,
                             () => { this.viewModel.disableShowDetail(); },
                             () => { this.viewModel.enableShowDetail(); },
+                            () => { return !this.infoViewModel.isOpend(); },
                         );
 
                         // scroll position
