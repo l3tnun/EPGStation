@@ -146,8 +146,8 @@ class ProgramInfoViewModel extends ViewModel {
      * description を取得
      * @return description
      */
-    public getDescription(): string {
-        if (this.program === null || typeof this.program.description === 'undefined') { return ''; }
+    public getDescription(): string | null {
+        if (this.program === null || this.program.description === null || typeof this.program.description === 'undefined') { return null; }
 
         return this.program.description;
     }
@@ -156,8 +156,8 @@ class ProgramInfoViewModel extends ViewModel {
      * extended を取得
      * @return extended
      */
-    public getExtended(): string {
-        if (this.program === null || typeof this.program.extended === 'undefined') { return ''; }
+    public getExtended(): string | null {
+        if (this.program === null || this.program.extended === null || typeof this.program.extended === 'undefined') { return null; }
 
         return this.program.extended;
     }

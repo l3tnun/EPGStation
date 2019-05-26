@@ -169,7 +169,7 @@ class ProgramInfoComponent extends Component<void> {
      */
     private createItem(
         className: string,
-        text: string,
+        text: string | null,
         onupdate: ((vnode: m.VnodeDOM<void, this>) => void) | null = null,
     ): m.Child | null {
         if (text === null || text.length === 0) { return null; }
@@ -190,9 +190,9 @@ class ProgramInfoComponent extends Component<void> {
      */
     private createExtended(): m.Child | null {
         const extended = this.viewModel.getExtended();
-        if (extended === '') { return null; }
+        if (extended === null) { return null; }
 
-        const str = this.viewModel.getExtended()
+        const str = extended
             .split(ProgramInfoComponent.linkReplacementCondition);
 
         const content: m.Child[] = [];
