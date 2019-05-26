@@ -436,6 +436,7 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
         try {
             child = await this.encodeProcessManage.create(program.source, output, program.cmd, EncodeManageModel.priority, {
                 env: {
+                    PATH: process.env['PATH'],
                     RECORDEDID: program.recordedId,
                     INPUT: program.source,
                     OUTPUT: output === null ? '' : output,

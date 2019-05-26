@@ -85,11 +85,9 @@ class StorageCheckManageModel extends Model implements StorageCheckManageModelIn
             try {
                 this.log.system.info(`run: ${ this.cmd }`);
                 const cmds = ProcessUtil.parseCmdStr(this.cmd);
+                // 互換性のためここでは全ての環境変数を渡すため env は未指定
                 spawn(cmds.bin, cmds.args, {
                     stdio: 'ignore',
-                    env: {
-                        PATH: process.env['PATH'],
-                    },
                 });
             } catch (err) {
                 this.log.system.error(<any> err);
