@@ -28,7 +28,8 @@ Array.prototype.push.apply(args,['-i', input]);
 Array.prototype.push.apply(args,['-movflags', 'faststart']);
 
 // 字幕データを含めたストリームをすべてマップ
-Array.prototype.push.apply(args, ['-map', '0', '-ignore_unknown', '-max_muxing_queue_size', maxMuxingQueueSize,]);
+// エンコード失敗報告が多いためコメントアウト
+// Array.prototype.push.apply(args, ['-map', '0', '-ignore_unknown', '-max_muxing_queue_size', maxMuxingQueueSize,]);
 
 // video filter 設定
 let videoFilter = 'yadif';
