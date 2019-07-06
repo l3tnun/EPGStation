@@ -32,7 +32,13 @@ if (process.platform !== 'win32' && process.getuid() === 0) {
 }
 
 const runService = (): void => {
-    const child = child_process.fork(path.join(__dirname, 'Service', 'ServiceExecutor.js'), [], { silent: true });
+    const child = child_process.spawn(
+        process.argv[0],
+        [path.join(__dirname, 'Service', 'ServiceExecutor.js')],
+        {
+            stdio: ['ignore', 'ignore', 'ignore', 'ipc'],
+        },
+    );
 
     // Operator と Service 間通信の設定
     (<IPCServerInterface> factory.get('IPCServer')).register(child);
