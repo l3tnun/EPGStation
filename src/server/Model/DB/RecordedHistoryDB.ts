@@ -7,6 +7,7 @@ interface RecordedHistoryDBInterface extends DBTableBase {
     insert(program: DBSchema.RecordedHistorySchema): Promise<number>;
     restore(programs: DBSchema.RecordedHistorySchema[], isDelete?: boolean): Promise<void>;
     delete(time: number): Promise<void>;
+    deleteAll(): Promise<void>;
     findAll(): Promise<DBSchema.RecordedHistorySchema[]>;
 }
 
@@ -101,6 +102,13 @@ abstract class RecordedHistoryDB extends DBTableBase implements RecordedHistoryD
      */
     public delete(time: number): Promise<void> {
         return this.operator.runQuery(`delete from ${ DBSchema.TableName.RecordedHistory } where endAt <= ${ time }`);
+    }
+
+    /**
+     * 全ての履歴を削除
+     */
+    public deleteAll(): Promise<void> {
+        return this.operator.runQuery(`delete from ${ DBSchema.TableName.RecordedHistory }`);
     }
 
     /**
