@@ -433,7 +433,8 @@ abstract class ProgramsDB extends DBTableBase implements ProgramsDBInterface {
                 + '('
                 + `select P.id from ${ DBSchema.TableName.Programs } as P, ${ DBSchema.TableName.RecordedHistory } as R`
                 + ' where P.shortName = R.name'
-                + ` and R.endAt <= ${ now }`;
+                + ` and R.endAt <= ${ now }`
+                + ' and (P.channelId = R.channelId or R.channelId is null)';
             if (option.periodToAvoidDuplicate > 0) {
                 column += ` and R.endAt >= ${ now - period } and R.endAt <= ${ now }`
                     + ` and P.endAt <= (R.endAt + ${ period })`;

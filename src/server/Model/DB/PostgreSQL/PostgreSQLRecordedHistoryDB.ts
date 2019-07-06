@@ -13,6 +13,7 @@ class PostgreSQLRecordedHistoryDB extends RecordedHistoryDB {
         const query = `create table if not exists ${ DBSchema.TableName.RecordedHistory } (`
             + 'id serial primary key, '
             + 'name text not null, '
+            + 'channelId bigint null default null, '
             + 'endAt bigint not null '
             + ');';
 
@@ -36,7 +37,7 @@ class PostgreSQLRecordedHistoryDB extends RecordedHistoryDB {
      * @return string
      */
     public getAllColumns(): string {
-        return 'id, name, endAt as "endAt"';
+        return 'id, name, channelId as "channelId", endAt as "endAt"';
     }
 }
 

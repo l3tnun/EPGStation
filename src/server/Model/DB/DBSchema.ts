@@ -155,6 +155,7 @@ export interface EncodedSchema {
 export interface RecordedHistorySchema {
     id: number;
     name: string;
+    channelId: number;
     endAt: apid.UnixtimeMS;
 }
 
