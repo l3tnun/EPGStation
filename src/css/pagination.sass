@@ -1,31 +1,30 @@
 .pagination
-    min-height: 48px;
-    background: white;
-    top: 14px;
-    margin-left: auto;
-    margin-right: auto;
-    margin-bottom: 32px;
-
-    // for chrome
-    @media all and (-webkit-min-device-pixel-ratio:0) and (min-resolution: .001dpcm)
-        margin-bottom: 16px;
-
-        @-moz-document url-prefix()
-            margin-bottom: 32px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding: 12px 0;
 
     .container
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
         display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        user-select: none;
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        -ms-user-select: none;
 
         .button
-            font-size: 20px;
-            line-height: 20px;
-            text-decoration: none;
-            color: #616161 !important;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 34px;
+            width: 34px;
+            border-radius: 4px;
+            margin: 0 4px;
+            background-color: white;
 
-        .text
-            padding: 1px 10px 0 10px;
+        .primary
+            color: white;
+            background-color: #1867c0;
 

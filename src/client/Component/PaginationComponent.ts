@@ -16,43 +16,63 @@ class PaginationComponent extends Component<PaginationArgs> {
      * view
      */
     public view(vnode: m.Vnode<PaginationArgs, this>): m.Child | null {
-        if (vnode.attrs.total === 0 || vnode.attrs.page <= 1 && vnode.attrs.total <= vnode.attrs.length * vnode.attrs.page) {
+        const maxPage = Math.ceil(vnode.attrs.total / vnode.attrs.length);
+        if (maxPage === 1 || vnode.attrs.page > maxPage) {
             return null;
         }
 
-        return m('div', { class: 'pagination mdl-card mdl-shadow--2dp mdl-cell mdl-cell mdl-cell--12-col' }, [
+        // ページ番号生成
+        let startPage = (vnode.attrs.page <= PaginationComponent.PAGINATION_CENTER - 1)
+            ? 1
+            : (maxPage - vnode.attrs.page >= PaginationComponent.PAGINATION_CENTER - 1)
+                ? vnode.attrs.page - (PaginationComponent.PAGINATION_CENTER - 1)
+                : maxPage - PaginationComponent.PAGINATION_MAX_SIZE + 1;
+        if (startPage <= 0) {
+            startPage = 1;
+        }
+
+        const pages = [];
+        for (let i = 0; i < PaginationComponent.PAGINATION_MAX_SIZE; i++) {
+            if (i + startPage > maxPage) { break; }
+            pages.push(i + startPage);
+        }
+
+        return m('div', { class: 'pagination' }, [
             m('div', { class: 'container' }, [
-                // 戻る
-                m('a', {
-                    class: 'button hover material-icons',
-                    style: vnode.attrs.page <= 1 ? 'visibility: hidden;' : '',
-                    onclick: () => { this.createHref(vnode.attrs.page, -1); },
+                m('div', {
+                    class: 'button navigation material-icons mdl-shadow--2dp mdl-cell mdl-cell mdl-cell--12-col',
+                    style: vnode.attrs.page === 1 ? 'display: none;' : '',
+                    onclick: () => { this.createHref(1); },
                 }, 'navigate_before'),
 
-                // text
-                m('div', { class: 'text' }, vnode.attrs.page <= 1 ? '次のページ' : `ページ${ vnode.attrs.page }`),
+                pages.map((p) => {
+                    return m('div', {
+                        class: 'button mdl-shadow--2dp mdl-cell mdl-cell mdl-cell--12-col '
+                            + (p === vnode.attrs.page ? 'primary' : ''),
+                        onclick: () => { this.createHref(p); },
+                    }, p);
+                }),
 
-                // 進む
-                m('a', {
-                    class: 'button hover material-icons',
-                    style: vnode.attrs.total <= vnode.attrs.length * vnode.attrs.page ? 'visibility: hidden;' : '',
-                    onclick: () => { this.createHref(vnode.attrs.page, 1); },
+                m('div', {
+                    class: 'button navigation material-icons mdl-shadow--2dp mdl-cell mdl-cell mdl-cell--12-col',
+                    style: vnode.attrs.page === maxPage ? 'display: none;' : '',
+                    onclick: () => { this.createHref(maxPage); },
                 }, 'navigate_next'),
             ]),
         ]);
     }
 
-    private createHref(page: number, add: number): void {
+    private createHref(page: number): void {
         const query = Util.getCopyQuery();
-        page += add;
-        if (page > 1) {
-            query.page = page;
-        } else {
-            delete query.page;
-        }
+        query.page = page;
 
         Util.move(m.route.get().split('?')[0], query);
     }
+}
+
+namespace PaginationComponent {
+    export const PAGINATION_MAX_SIZE = 5;
+    export const PAGINATION_CENTER = Math.ceil(PAGINATION_MAX_SIZE / 2);
 }
 
 export default PaginationComponent;
