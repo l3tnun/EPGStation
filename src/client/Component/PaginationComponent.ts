@@ -64,7 +64,11 @@ class PaginationComponent extends Component<PaginationArgs> {
 
     private createHref(page: number): void {
         const query = Util.getCopyQuery();
-        query.page = page;
+        if (page > 1) {
+            query.page = page;
+        } else {
+            delete query.page;
+        }
 
         Util.move(m.route.get().split('?')[0], query);
     }
