@@ -287,7 +287,7 @@ class SettingComponent extends ParentComponent<void> {
      * @param maxValue: number
      * @return m.Child[]
      */
-    private createLengthOption(maxValue: number = 50): m.Child[] {
+    private createLengthOption(maxValue: number = 100): m.Child[] {
         const results: m.Child[] = [];
 
         for (let i = 1; i <= maxValue; i++) {
