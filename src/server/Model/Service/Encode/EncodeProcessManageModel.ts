@@ -160,7 +160,7 @@ class EncodeProcessManageModel extends Model implements EncodeProcessManageModel
             }
         }
 
-        const child = spawn(cmds.bin, cmds.args, spawnOption);
+        const child = typeof spawnOption === 'undefined' ? spawn(cmds.bin, cmds.args) : spawn(cmds.bin, cmds.args, spawnOption);
         const createTime = new Date().getTime();
 
         // this.childs から削除

@@ -53,6 +53,8 @@ class StorageCheckManageModel extends Model implements StorageCheckManageModelIn
                 diskusage.check(this.dir, (err, result) => {
                     if (err) {
                         reject(err);
+                    } else if (typeof result === 'undefined') {
+                        reject(new Error('DiskuageResultError'));
                     } else {
                         resolve(result.available / 1024 / 1024);
                     }
