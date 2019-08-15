@@ -11,7 +11,7 @@ namespace Util {
     export const getSubDirectory = (): string | null => {
         const sub = Configuration.getInstance().getConfig().subDirectory || null;
 
-        return sub === null ? null : urljoin('/', sub);
+        return sub === null ? null : urljoin('/', sub).replace(new RegExp(`\\${ path.sep }$`), '');
     };
 
     /**
