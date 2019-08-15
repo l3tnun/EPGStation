@@ -152,11 +152,17 @@ npm run backup FILENAME
 npm run restore FILENAME
 ```
 
+## 使用するポートについて
+
+以下のポートを使用します (v 1.5.5 から)
+
+* Web アクセス: ```config.json``` の ```serverPort``` で指定されたポート
+* Socket.IO: Web アクセスポート + 1
 
 ## Tips
 ### Kodi との連携
 
-[Kodi](https://kodi.tv/) との連携に対応しています  
+[Kodi](https://kodi.tv/) との連携に対応しています
 詳細は [doc/kodi.md](doc/kodi.md) を参照してください
 
 ### Android での番組表の表示高速化
