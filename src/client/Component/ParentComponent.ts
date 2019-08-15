@@ -253,10 +253,7 @@ abstract class ParentComponent<T> extends Component<T> {
 
         // 一度だけ socket.io の接続を行う
         if (ParentComponent.io === null) {
-            const subDirectory = Util.getSubDirectory();
-            ParentComponent.io = socketIo.connect({
-                path: subDirectory.length === 0 ? '/socket.io' : `${ subDirectory }/socket.io`,
-            });
+            ParentComponent.io = socketIo.connect(this.getSocketIoPath());
             // socket.io 切断時の設定
             this.disconnectIo(ParentComponent.io);
         }
@@ -279,6 +276,18 @@ abstract class ParentComponent<T> extends Component<T> {
                 }
             });
         }
+    }
+
+    /**
+     * socket io path
+     * @return string
+     */
+    private getSocketIoPath(): string {
+        const port = parseInt(location.port, 10);
+        const base = `${ location.protocol }//${ location.hostname }:${ isNaN(port) ? 81 : port + 1 }`;
+        const subDirectory = Util.getSubDirectory();
+
+        return base + (subDirectory.length === 0 ? '/socket.io' : `${ subDirectory }/socket.io`);
     }
 
     /**
