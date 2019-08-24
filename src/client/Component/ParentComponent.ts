@@ -287,7 +287,7 @@ abstract class ParentComponent<T> extends Component<T> {
         const base = `${ location.protocol }//${ location.hostname }:${ isNaN(port) ? 81 : port + 1 }`;
         const subDirectory = Util.getSubDirectory();
 
-        return base + (subDirectory.length === 0 ? '/socket.io' : `${ subDirectory }/socket.io`);
+        return base + (subDirectory.length === 0 ? '/' : `${ subDirectory }/`);
     }
 
     /**
