@@ -66,7 +66,7 @@ class RecordedInfoComponent extends Component<void> {
                 return m('a', {
                     class: 'recorded-link mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect',
                     onclick: async() => {
-                        if (this.selectViewModel.isEnabledStreaming() && typeof video.encodedId === 'undefined' && !Util.uaIsiOS()) {
+                        if (this.selectViewModel.isEnabledStreaming() && typeof video.encodedId === 'undefined' && !Util.uaIsiOS() && !Util.uaIsiPadOS()) {
                             // TS ストリーミング再生
                             const recorded = this.viewModel.getRecorded();
                             if (recorded === null) { return; }
