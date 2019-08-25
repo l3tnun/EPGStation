@@ -185,7 +185,7 @@ class BalloonComponent extends Component<BalloonArgs> {
      * balloon 背後のスクロールを無効化
      */
     private disableBackgroundScroll(): void {
-        if (!Util.uaIsiOS()) { return; }
+        if (!Util.uaIsiOS() && !Util.uaIsiPadOS()) { return; }
 
         window.setTimeout(() => {
             (<HTMLElement> document.body.parentNode!).classList.add('balloon');
@@ -201,7 +201,7 @@ class BalloonComponent extends Component<BalloonArgs> {
      * balloon 背後のスクロールを有効化
      */
     private enableBackgroundScroll(): void {
-        if (!Util.uaIsiOS()) { return; }
+        if (!Util.uaIsiOS() && !Util.uaIsiPadOS()) { return; }
 
         (<HTMLElement> document.body.parentNode!).classList.remove('balloon');
         document.body.classList.remove('balloon');
