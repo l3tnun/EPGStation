@@ -6,6 +6,16 @@ import * as m from 'mithril';
  */
 namespace Util {
     /**
+     * iPad スクリーン解像度定義
+     */
+    const IPAD_SCREENS = {
+        2048: 1536,
+        2224: 1668,
+        2388: 1668,
+        2732: 2048,
+    };
+
+    /**
      * Material Desgin Lite の DOM をアップグレードする
      */
     export const upgradeMdl = (): void => {
@@ -79,7 +89,28 @@ namespace Util {
      * UA が iPhone か判定
      */
     export const uaIsiPhone = (): boolean => {
-        return /iPhone/.test(navigator.userAgent);
+        return /iPhone|iphone/.test(navigator.userAgent);
+    };
+
+    /**
+     * UA が iPadOS か判定
+     */
+    export const uaIsiPadOS = (): boolean => {
+        if (uaIsMac() === false) {
+            return false;
+        }
+
+        let width = 0;
+        let height = 0;
+        if (window.screen.width < window.screen.height) {
+            width = window.screen.width;
+            height = window.screen.height;
+        } else {
+            width = window.screen.height;
+            height = window.screen.width;
+        }
+
+        return IPAD_SCREENS[height] === width;
     };
 
     /**
