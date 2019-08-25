@@ -50,7 +50,7 @@ class SettingModel extends StorageTemplateModel<SettingValue> {
             isEnableMegTsStreamingURLScheme: true,
             customMegTsStreamingURLScheme: null,
             isEnableRecordedViewerURLScheme: true,
-            prioritizeWebPlayerOverURLScheme: !Util.uaIsiOS() && !Util.uaIsAndroid(),
+            prioritizeWebPlayerOverURLScheme: !Util.uaIsiOS() && !Util.uaIsiPadOS() && !Util.uaIsAndroid(),
             customRecordedViewerURLScheme: null,
             isEnableRecordedDownloaderURLScheme: true,
             customRecordedDownloaderURLScheme: null,
