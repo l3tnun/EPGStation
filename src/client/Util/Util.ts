@@ -100,7 +100,7 @@ namespace Util {
      * UA が iPadOS か判定
      */
     export const uaIsiPadOS = (): boolean => {
-        if (uaIsMac() === false) {
+        if (/Macintosh|macintosh/.test(navigator.userAgent) === false) {
             return false;
         }
 
@@ -186,7 +186,7 @@ namespace Util {
      * @return boolean
      */
     export const uaIsMac = (): boolean => {
-        return /Macintosh|macintosh/.test(navigator.userAgent);
+        return /Macintosh|macintosh/.test(navigator.userAgent) && uaIsiPadOS() === false;
     };
 
     /**
