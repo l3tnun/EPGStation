@@ -64,7 +64,7 @@ class RecordedInfoComponent extends Component<void> {
             m('div', { class: 'video-title' }, 'ビデオファイル'),
             this.viewModel.getVideoSrc().map((video) => {
                 return m('a', {
-                    class: 'recorded-link mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect',
+                    class: 'recorded-link mdl-button mdl-button--raised mdl-button--colored ripple',
                     onclick: async() => {
                         if (this.selectViewModel.isEnabledStreaming() && typeof video.encodedId === 'undefined' && !Util.uaIsiOS() && !Util.uaIsiPadOS()) {
                             // TS ストリーミング再生
@@ -128,7 +128,7 @@ class RecordedInfoComponent extends Component<void> {
 
             this.viewModel.getEncoding().map((video) => {
                 return m('a', {
-                    class: 'recorded-link mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect',
+                    class: 'recorded-link mdl-button mdl-button--raised mdl-button--colored ripple',
                     disabled: ' ',
                 }, video.name);
             }),
@@ -176,7 +176,7 @@ class RecordedInfoComponent extends Component<void> {
                 if (video.filesize !== null) { str += ` (${ video.filesize })`; }
 
                 return m('a', {
-                    class: 'recorded-link mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect',
+                    class: 'recorded-link mdl-button mdl-button--raised mdl-button--colored ripple',
                     href: video.path,
                     onclick: () => { if (Util.uaIsiOS()) { this.viewModel.close(); } },
                 }, str);
@@ -184,7 +184,7 @@ class RecordedInfoComponent extends Component<void> {
 
             this.viewModel.getEncoding().map((video) => {
                 return m('a', {
-                    class: 'recorded-link mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect',
+                    class: 'recorded-link mdl-button mdl-button--raised mdl-button--colored ripple',
                     disabled: ' ',
                 }, video.name);
             }),
@@ -197,7 +197,7 @@ class RecordedInfoComponent extends Component<void> {
                 if (Util.uaIsAndroid() || Util.uaIsiOS()) { return null; }
 
                 return m('a', {
-                    class: 'recorded-link mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect',
+                    class: 'recorded-link mdl-button mdl-button--raised mdl-button--colored ripple',
                     href: video.path,
                 }, video.name);
             }),
@@ -206,7 +206,7 @@ class RecordedInfoComponent extends Component<void> {
                 if (Util.uaIsMobile()) { return null; }
 
                 return m('a', {
-                    class: 'recorded-link mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect',
+                    class: 'recorded-link mdl-button mdl-button--raised mdl-button--colored ripple',
                     disabled: ' ',
                 }, video.name);
             }),
@@ -235,7 +235,7 @@ class RecordedInfoComponent extends Component<void> {
 
                 this.viewModel.getVideoInfo().map((video) => {
                     return m('a', {
-                        class: 'recorded-link mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect',
+                        class: 'recorded-link mdl-button mdl-button--raised mdl-button--colored ripple',
                         onclick: () => {
                             this.viewModel.startHLSStreaming(typeof video.encodedId === 'undefined' ? null : video.encodedId);
                         },
@@ -260,7 +260,7 @@ class RecordedInfoComponent extends Component<void> {
 
                 this.viewModel.getVideoInfo().map((video) => {
                     return m('a', {
-                        class: 'recorded-link mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect',
+                        class: 'recorded-link mdl-button mdl-button--raised mdl-button--colored ripple',
                         onclick: () => {
                             this.viewModel.sendToKodi(typeof video.encodedId === 'undefined' ? null : video.encodedId);
                         },
