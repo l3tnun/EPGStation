@@ -147,6 +147,7 @@ class Server extends Base {
         this.app.use(this.createUrl('/'), express.static(path.join(__dirname, '..', '..', '..', 'html')));
         this.app.use(this.createUrl('/material-design-icons'), express.static(path.join(__dirname, '..', '..', '..', 'node_modules', 'material-design-icons')));
         this.app.use(this.createUrl('/material-design-lite'), express.static(path.join(__dirname, '..', '..', '..', 'node_modules', 'material-design-lite')));
+        this.app.use(this.createUrl('/css-ripple-effect'), express.static(path.join(__dirname, '..', '..', '..', 'node_modules', 'css-ripple-effect', 'dist')));
         this.app.use(this.createUrl('/js'), express.static(path.join(__dirname, '..', '..', '..', 'dist', 'client')));
         this.app.use(this.createUrl('/css'), express.static(path.join(__dirname, '..', '..', '..', 'dist', 'css')));
         this.app.use(this.createUrl('/img'), express.static(path.join(__dirname, '..', '..', '..', 'img')));
