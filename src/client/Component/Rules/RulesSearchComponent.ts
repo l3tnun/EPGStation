@@ -37,9 +37,9 @@ class RulesSearchComponent extends Component<void> {
                 type: 'text',
                 placeholder: 'keyword',
                 value: this.viewModel.keyword,
-                onchange: m.withAttr('value', (value) => {
-                    this.viewModel.keyword = value;
-                }),
+                onchange: (e: Event) => {
+                    this.viewModel.keyword = (<HTMLInputElement> e.target!).value;
+                },
                 oncreate: (vnode: m.VnodeDOM<void, this>) => {
                     // enter key で検索
                     (<HTMLInputElement> vnode.dom).onkeydown = (e) => {

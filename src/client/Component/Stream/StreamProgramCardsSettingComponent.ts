@@ -74,9 +74,9 @@ class StreamProgramCardsSettingComponent extends Component<void> {
                 type: 'checkbox',
                 class: 'mdl-switch__input',
                 checked: getValue(),
-                onclick: m.withAttr('checked', (value) => {
-                    setValue(value);
-                }),
+                onclick: (e: Event) => {
+                    setValue((<HTMLInputElement> e.target!).checked);
+                },
             }),
             m('span', { class: 'mdl-switch__label' }),
         ]);

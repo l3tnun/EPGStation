@@ -28,7 +28,7 @@ class RecordedEncodeComponent extends Component<void> {
                 m('div', { class: 'pulldown mdl-layout-spacer' }, [
                     m('select', {
                         class: 'mdl-textfield__input program-dialog-label',
-                        onchange: m.withAttr('value', (value) => { this.viewModel.encodeSourceOptionValue = Number(value); }),
+                        onchange: (e: Event) => { this.viewModel.encodeSourceOptionValue = parseInt((<HTMLInputElement> e.target!).value, 10); },
                         onupdate: (vnode: m.VnodeDOM<void, this>) => {
                             this.selectOnUpdate(<HTMLInputElement> (vnode.dom), this.viewModel.encodeSourceOptionValue);
                         },
@@ -40,7 +40,7 @@ class RecordedEncodeComponent extends Component<void> {
                 m('div', { class: 'pulldown mdl-layout-spacer' }, [
                     m('select', {
                         class: 'mdl-textfield__input program-dialog-label',
-                        onchange: m.withAttr('value', (value) => { this.settingViewModel.tmpValue.encodeOption.mode = Number(value); }),
+                        onchange: (e: Event) => { this.settingViewModel.tmpValue.encodeOption.mode = parseInt((<HTMLInputElement> e.target!).value, 10); },
                         onupdate: (vnode: m.VnodeDOM<void, this>) => {
                             this.selectOnUpdate(<HTMLInputElement> (vnode.dom), this.settingViewModel.tmpValue.encodeOption.mode);
                             this.settingViewModel.save();
@@ -55,9 +55,9 @@ class RecordedEncodeComponent extends Component<void> {
                         type: 'text',
                         placeholder: 'directory',
                         value: this.viewModel.encodeDirectoryOptionValue,
-                        onchange: m.withAttr('value', (value) => {
-                            this.viewModel.encodeDirectoryOptionValue = value;
-                        }),
+                        onchange: (e: Event) => {
+                            this.viewModel.encodeDirectoryOptionValue = (<HTMLInputElement> e.target!).value;
+                        },
                     }),
                 ]),
                 m('div', { class: 'encode-output-checkbox' }, [
@@ -66,10 +66,10 @@ class RecordedEncodeComponent extends Component<void> {
                             type: 'checkbox',
                             class: 'mdl-checkbox__input',
                             checked: this.settingViewModel.tmpValue.encodeOption.isOutputTheOriginalDirectory,
-                            onclick: m.withAttr('checked', (value) => {
-                                this.settingViewModel.tmpValue.encodeOption.isOutputTheOriginalDirectory = value;
+                            onclick: (e: Event) => {
+                                this.settingViewModel.tmpValue.encodeOption.isOutputTheOriginalDirectory = (<HTMLInputElement> e.target!).checked;
                                 this.settingViewModel.save();
-                            }),
+                            },
                             onupdate: (vnode: m.VnodeDOM<void, this>) => { this.checkboxOnUpdate(<HTMLInputElement> (vnode.dom)); },
                         }),
                         m('span', { class: 'mdl-checkbox__label' }, '元ファイルと同じ場所に保存する'),
@@ -81,10 +81,10 @@ class RecordedEncodeComponent extends Component<void> {
                             type: 'checkbox',
                             class: 'mdl-checkbox__input',
                             checked: this.settingViewModel.tmpValue.encodeOption.delTs,
-                            onclick: m.withAttr('checked', (value) => {
-                                this.settingViewModel.tmpValue.encodeOption.delTs = value;
+                            onclick: (e: Event) => {
+                                this.settingViewModel.tmpValue.encodeOption.delTs = (<HTMLInputElement> e.target!).checked;
                                 this.settingViewModel.save();
-                            }),
+                            },
                             onupdate: (vnode: m.VnodeDOM<void, this>) => { this.checkboxOnUpdate(<HTMLInputElement> (vnode.dom)); },
                         }),
                         m('span', { class: 'mdl-checkbox__label' }, 'TS 削除 (ソースが TS の場合に限る)'),

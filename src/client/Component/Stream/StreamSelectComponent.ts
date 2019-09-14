@@ -32,13 +32,14 @@ class StreamSelectComponent extends Component<void> {
                     m('div', { class: 'type pulldown mdl-layout-spacer' }, [
                         m('select', {
                             class: 'mdl-textfield__input program-dialog-label',
-                            onchange: m.withAttr('value', (value) => {
+                            onchange: (e: Event) => {
+                                const value = (<HTMLInputElement> e.target!).value;
                                 if (value === this.viewModel.streamTypeValue) { return; }
-                                this.viewModel.streamTypeValue = value;
+                                this.viewModel.streamTypeValue = <any> value;
                                 this.viewModel.streamOptionValue = 0;
 
                                 this.viewModel.saveValues();
-                            }),
+                            },
                             onupdate: (vnode: m.VnodeDOM<void, this>) => {
                                 this.selectOnUpdate(<HTMLInputElement> (vnode.dom), this.viewModel.streamTypeValue);
                             },
@@ -47,11 +48,11 @@ class StreamSelectComponent extends Component<void> {
                     m('div', { class: 'mode pulldown mdl-layout-spacer' }, [
                         m('select', {
                             class: 'mdl-textfield__input program-dialog-label',
-                            onchange: m.withAttr('value', (value) => {
-                                this.viewModel.streamOptionValue = Number(value);
+                            onchange: (e: Event) => {
+                                this.viewModel.streamOptionValue = parseInt((<HTMLInputElement> e.target!).value, 10);
 
                                 this.viewModel.saveValues();
-                            }),
+                            },
                             onupdate: (vnode: m.VnodeDOM<void, this>) => {
                                 this.selectOnUpdate(<HTMLInputElement> (vnode.dom), this.viewModel.streamOptionValue);
                             },

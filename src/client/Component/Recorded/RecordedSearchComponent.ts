@@ -45,9 +45,9 @@ class RecordedSearchComponent extends Component<void> {
                 type: 'text',
                 placeholder: 'keyword',
                 value: this.viewModel.keyword,
-                onchange: m.withAttr('value', (value) => {
-                    this.viewModel.keyword = value;
-                }),
+                onchange: (e: Event) => {
+                    this.viewModel.keyword = (<HTMLInputElement> e.target!).value;
+                },
                 oncreate: (vnode: m.VnodeDOM<void, this>) => {
                     // enter key で検索
                     (<HTMLInputElement> vnode.dom).onkeydown = (e) => {
@@ -71,9 +71,9 @@ class RecordedSearchComponent extends Component<void> {
             m('div', { class: 'pulldown mdl-layout-spacer' }, [
                 m('select', {
                     value: this.viewModel.rule,
-                    onchange: m.withAttr('value', (value) => {
-                        this.viewModel.rule = Number(value);
-                    }),
+                    onchange: (e: Event) => {
+                        this.viewModel.rule = parseInt((<HTMLInputElement> e.target!).value, 10);
+                    },
                     onupdate: (vnode: m.VnodeDOM<void, this>) => {
                         this.selectOnUpdate(<HTMLInputElement> vnode.dom, this.viewModel.rule);
                     },
@@ -96,9 +96,9 @@ class RecordedSearchComponent extends Component<void> {
             m('div', { class: 'pulldown mdl-layout-spacer' }, [
                 m('select', {
                     value: this.viewModel.channel,
-                    onchange: m.withAttr('value', (value) => {
-                        this.viewModel.channel = Number(value);
-                    }),
+                    onchange: (e: Event) => {
+                        this.viewModel.channel = parseInt((<HTMLInputElement> e.target!).value, 10);
+                    },
                     onupdate: (vnode: m.VnodeDOM<void, this>) => {
                         this.selectOnUpdate(<HTMLInputElement> vnode.dom, this.viewModel.channel);
                     },
@@ -121,9 +121,9 @@ class RecordedSearchComponent extends Component<void> {
             m('div', { class: 'pulldown mdl-layout-spacer' }, [
                 m('select', {
                     value: this.viewModel.genre,
-                    onchange: m.withAttr('value', (value) => {
-                        this.viewModel.genre = Number(value);
-                    }),
+                    onchange: (e: Event) => {
+                        this.viewModel.genre = parseInt((<HTMLInputElement> e.target!).value, 10);
+                    },
                     onupdate: (vnode: m.VnodeDOM<void, this>) => {
                         this.selectOnUpdate(<HTMLInputElement> vnode.dom, this.viewModel.genre);
                     },
@@ -176,7 +176,7 @@ class RecordedSearchComponent extends Component<void> {
                 type: 'checkbox',
                 class: 'mdl-checkbox__input',
                 checked: checked(),
-                onclick: m.withAttr('checked', (value) => { onclick(value); }),
+                onclick: (e: Event) => { onclick((<HTMLInputElement> e.target!).checked); },
                 onupdate: (vnode: m.VnodeDOM<void, this>) => { this.checkboxOnUpdate(<HTMLInputElement> (vnode.dom)); },
             }),
             m('span', { class: 'mdl-checkbox__label' }, labelName),

@@ -41,7 +41,7 @@ class SearchOptionComponent extends SearchOptionBaseComponent<void> {
                     type: 'text',
                     placeholder: 'keyword',
                     value: this.viewModel.keyword,
-                    onchange: m.withAttr('value', (value) => { this.viewModel.keyword = value; }),
+                    onchange: (e: Event) => { this.viewModel.keyword = (<HTMLInputElement> e.target!).value; },
                     onupdate: (vnode: m.VnodeDOM<void, this>) => {
                         // enter key で検索
                         (<HTMLInputElement> vnode.dom).onkeydown = (e) => {
@@ -100,7 +100,7 @@ class SearchOptionComponent extends SearchOptionBaseComponent<void> {
                     type: 'text',
                     placeholder: 'ignore keyword',
                     value: this.viewModel.ignoreKeyword,
-                    onchange: m.withAttr('value', (value) => { this.viewModel.ignoreKeyword = value; }),
+                    onchange: (e: Event) => { this.viewModel.ignoreKeyword = (<HTMLInputElement> e.target!).value; },
                     onupdate: (vnode: m.VnodeDOM<void, this>) => {
                          // enter key で検索
                         (<HTMLInputElement> vnode.dom).onkeydown = (e) => {
@@ -157,7 +157,7 @@ class SearchOptionComponent extends SearchOptionBaseComponent<void> {
                  m('div', { class: 'pulldown mdl-layout-spacer' }, [
                     m('select', {
                         value: this.viewModel.station,
-                        onchange: m.withAttr('value', (value) => { this.viewModel.station = Number(value); }),
+                        onchange: (e: Event) => { this.viewModel.station = parseInt((<HTMLInputElement> e.target!).value, 10); },
                     }, [
                         m('option', { value: '0' }, 'すべて'),
                         this.viewModel.getChannels().map((channel) => {
@@ -217,10 +217,10 @@ class SearchOptionComponent extends SearchOptionBaseComponent<void> {
                 m('div', { class: 'pulldown mdl-layout-spacer' }, [
                     m('select', {
                         value: this.viewModel.genrelv1,
-                        onchange: m.withAttr('value', (value) => {
-                            this.viewModel.genrelv1 = Number(value);
+                        onchange: (e: Event) => {
+                            this.viewModel.genrelv1 = parseInt((<HTMLInputElement> e.target!).value, 10);
                             this.viewModel.initGenre2();
-                        }),
+                        },
                     },
                         m('option', { value: '-1' }, 'すべて'),
                         this.viewModel.getGenre1().map((genre) => {
@@ -235,7 +235,7 @@ class SearchOptionComponent extends SearchOptionBaseComponent<void> {
                 m('div', { class: 'pulldown mdl-layout-spacer' }, [
                     m('select', {
                         value: this.viewModel.genrelv2,
-                        onchange: m.withAttr('value', (value) => { this.viewModel.genrelv2 = Number(value); }),
+                        onchange: (e: Event) => { this.viewModel.genrelv2 = parseInt((<HTMLInputElement> e.target!).value, 10); },
                     },
                         m('option', { value: '-1' }, 'すべて'),
                         this.viewModel.getGenre2().map((genre) => {
@@ -257,9 +257,9 @@ class SearchOptionComponent extends SearchOptionBaseComponent<void> {
                 m('div', { class: 'pulldown mdl-layout-spacer' }, [
                     m('select', {
                         value: this.viewModel.startTime,
-                        onchange: m.withAttr('value', (value) => {
-                            this.viewModel.startTime = Number(value);
-                        }),
+                        onchange: (e: Event) => {
+                            this.viewModel.startTime = parseInt((<HTMLInputElement> e.target!).value, 10);
+                        },
                     }, this.createStartTimeOption()),
                 ]),
             ]),
@@ -273,7 +273,7 @@ class SearchOptionComponent extends SearchOptionBaseComponent<void> {
                 m('div', { class: 'pulldown mdl-layout-spacer' }, [
                     m('select', {
                         value: this.viewModel.timeRange,
-                        onchange: m.withAttr('value', (value) => { this.viewModel.timeRange = Number(value); }),
+                        onchange: (e: Event) => { this.viewModel.timeRange = parseInt((<HTMLInputElement> e.target!).value, 10); },
                     }, this.createTimeRangeOption()),
                 ]),
             ]),
@@ -358,11 +358,11 @@ class SearchOptionComponent extends SearchOptionBaseComponent<void> {
                             if (this.viewModel.durationMin === 0) { return; }
                             else { return this.viewModel.durationMin; }
                         })(),
-                        onchange: m.withAttr('value', (value) => {
-                            let num = Number(value);
+                        onchange: (e: Event) => {
+                            let num = parseInt((<HTMLInputElement> e.target!).value, 10);
                             if (isNaN(num)) { num = 0; }
                             this.viewModel.durationMin = num;
-                        }),
+                        },
                         onupdate: (vnode: m.VnodeDOM<void, this>) => {
                             this.inputNumberOnUpdate(<HTMLInputElement> vnode.dom, this.viewModel.durationMin);
                         },
@@ -381,11 +381,11 @@ class SearchOptionComponent extends SearchOptionBaseComponent<void> {
                             if (this.viewModel.durationMax === 0) { return; }
                             else { return this.viewModel.durationMax; }
                         })(),
-                        onchange: m.withAttr('value', (value) => {
-                            let num = Number(value);
+                        onchange: (e: Event) => {
+                            let num = parseInt((<HTMLInputElement> e.target!).value, 10);
                             if (isNaN(num)) { num = 0; }
                             this.viewModel.durationMax = num;
-                        }),
+                        },
                         onupdate: (vnode: m.VnodeDOM<void, this>) => {
                             this.inputNumberOnUpdate(<HTMLInputElement> vnode.dom, this.viewModel.durationMax);
                         },

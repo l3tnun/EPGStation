@@ -30,7 +30,7 @@ abstract class SearchOptionBaseComponent<T> extends Component<T> {
                 type: 'checkbox',
                 class: 'mdl-checkbox__input',
                 checked: checked(),
-                onclick: m.withAttr('checked', (value) => { onclick(value); }),
+                onclick: (e: Event) => { onclick((<HTMLInputElement> e.target!).checked); },
                 onupdate: (vnode: m.VnodeDOM<T, this>) => { this.checkboxOnUpdate(<HTMLInputElement> (vnode.dom)); },
             }),
             m('span', { class: 'mdl-checkbox__label' }, labelName),

@@ -231,15 +231,15 @@ class RulesComponent extends ParentComponent<void> {
                 type: 'checkbox',
                 class: 'mdl-switch__input',
                 checked: rule.enable,
-                onclick: m.withAttr('checked', (value) => {
+                onclick: (e: Event) => {
                     if (this.viewModel.isEditing()) { return; }
 
-                    if (value) {
+                    if ((<HTMLInputElement> e.target!).checked) {
                         this.viewModel.enable(rule);
                     } else {
                         this.viewModel.disable(rule);
                     }
-                }),
+                },
             }),
             m('span', { class: 'mdl-switch__label' }),
         ]);

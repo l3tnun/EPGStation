@@ -27,7 +27,7 @@ if (Util.uaIsAndroid()) {
     document.getElementsByTagName('head')[0].appendChild(meta);
 }
 
-m.route.prefix('#!');
+m.route.prefix = '#!';
 m.route(document.body, '/', {
     '/': TopPageComponent,
     '/stream/program': StreamProgramComponent,

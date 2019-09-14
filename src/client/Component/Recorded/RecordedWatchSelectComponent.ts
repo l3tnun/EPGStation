@@ -26,12 +26,13 @@ class RecordedWatchSelectComponent extends Component<void> {
                     m('div', { class: 'type pulldown mdl-layout-spacer' }, [
                         m('select', {
                             class: 'mdl-textfield__input',
-                            onchange: m.withAttr('value', (value) => {
+                            onchange: (e: Event) => {
+                                const value = (<HTMLInputElement> e.target!).value;
                                 if (value === this.viewModel.streamingTypeValue) { return; }
-                                this.viewModel.streamingTypeValue = value;
+                                this.viewModel.streamingTypeValue = <any> value;
                                 this.viewModel.streamingModeValue = 0;
                                 this.viewModel.saveValues();
-                            }),
+                            },
                             onupdate: (vnode: m.VnodeDOM<void, this>) => {
                                 this.selectOnUpdate(<HTMLInputElement> (vnode.dom), this.viewModel.streamingTypeValue);
                             },
@@ -40,10 +41,10 @@ class RecordedWatchSelectComponent extends Component<void> {
                     m('div', { class: 'mode pulldown mdl-layout-spacer' }, [
                         m('select', {
                             class: 'mdl-textfield__input',
-                            onchange: m.withAttr('value', (value) => {
-                                this.viewModel.streamingModeValue = Number(value);
+                            onchange: (e: Event) => {
+                                this.viewModel.streamingModeValue = parseInt((<HTMLInputElement> e.target!).value, 10);
                                 this.viewModel.saveValues();
-                            }),
+                            },
                             onupdate: (vnode: m.VnodeDOM<void, this>) => {
                                 this.selectOnUpdate(<HTMLInputElement> (vnode.dom), this.viewModel.streamingModeValue);
                             },

@@ -226,7 +226,7 @@ class RecordedInfoComponent extends Component<void> {
                 m('div', { class: 'pulldown mdl-layout-spacer' }, [
                     m('select', {
                         class: 'mdl-textfield__input program-dialog-label',
-                        onchange: m.withAttr('value', (value) => { this.viewModel.hlsOptionValue = Number(value); }),
+                        onchange: (e: Event) => { this.viewModel.hlsOptionValue = parseInt((<HTMLInputElement> e.target!).value, 10); },
                         onupdate: (vnode: m.VnodeDOM<void, this>) => {
                             this.selectOnUpdate(<HTMLInputElement> (vnode.dom), this.viewModel.hlsOptionValue);
                         },
@@ -251,7 +251,7 @@ class RecordedInfoComponent extends Component<void> {
                 m('div', { class: 'pulldown mdl-layout-spacer' }, [
                     m('select', {
                         class: 'mdl-textfield__input program-dialog-label',
-                        onchange: m.withAttr('value', (value) => { this.viewModel.kodiOptionValue = Number(value); }),
+                        onchange: (e: Event) => { this.viewModel.kodiOptionValue = parseInt((<HTMLInputElement> e.target!).value, 10); },
                         onupdate: (vnode: m.VnodeDOM<void, this>) => {
                             this.selectOnUpdate(<HTMLInputElement> (vnode.dom), this.viewModel.kodiOptionValue);
                         },

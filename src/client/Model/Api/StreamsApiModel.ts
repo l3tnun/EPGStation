@@ -59,7 +59,7 @@ class StreamsApiModel extends ApiModel implements StreamsApiModelInterface {
             const stream: apid.HLSStream = await <any> this.request({
                 method: 'GET',
                 url: `./api/streams/live/${ channelId }/hls`,
-                data: { mode: mode },
+                params: { mode: mode },
             });
 
             return stream.streamNumber;
@@ -87,7 +87,7 @@ class StreamsApiModel extends ApiModel implements StreamsApiModelInterface {
             const stream: apid.HLSStream = await <any> this.request({
                 method: 'GET',
                 url: `./api/streams/recorded/${ recordedId }/hls`,
-                data: query,
+                params: query,
             });
 
             return stream.streamNumber;

@@ -75,7 +75,7 @@ class ProgramTimeBalloonComponent extends Component<void> {
             m('select', {
                 class: 'mdl-textfield__input program-dialog-label',
                 style: Util.uaIsAndroid() ? 'padding-top: 4px;' : '',
-                onchange: m.withAttr('value', (value) => { onchange(value); }),
+                onchange: (e: Event) => { onchange((<HTMLInputElement> e.target!).value); },
                 onupdate: (vnode: m.VnodeDOM<void, this>) => { onupdate(vnode); },
             },
                 values.map((v) => {

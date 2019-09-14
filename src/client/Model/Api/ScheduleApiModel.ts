@@ -45,7 +45,7 @@ class ScheduleApiModel extends ApiModel implements ScheduleApiModelInterface {
             this.schedulePrograms = await <any> this.request({
                 method: 'GET',
                 url: './api/schedule',
-                data: query,
+                params: query,
             });
         } catch (err) {
             this.schedulePrograms = [];
@@ -69,7 +69,7 @@ class ScheduleApiModel extends ApiModel implements ScheduleApiModelInterface {
             this.schedulePrograms = await <any> this.request({
                 method: 'GET',
                 url: `./api/schedule/${ channelId }`,
-                data: query,
+                params: query,
             });
         } catch (err) {
             this.schedulePrograms = [];
@@ -143,7 +143,7 @@ class ScheduleApiModel extends ApiModel implements ScheduleApiModelInterface {
         return await <any> this.request({
             method: 'POST',
             url: './api/schedule/search',
-            data: option,
+            body: option,
         });
     }
 

@@ -75,11 +75,11 @@ class SearchAddComponent extends SearchOptionBaseComponent<void> {
                         value: (() => {
                             return this.viewModel.periodToAvoidDuplicate;
                         })(),
-                        onchange: m.withAttr('value', (value) => {
-                            let num = Number(value);
-                            if (value.length === 0 || isNaN(num)) { num = 6; }
+                        onchange: (e: Event) => {
+                            let num = parseInt((<HTMLInputElement> e.target!).value, 10);
+                            if (isNaN(num)) { num = 6; }
                             this.viewModel.periodToAvoidDuplicate = num;
-                        }),
+                        },
                         onupdate: (vnode: m.VnodeDOM<void, this>) => {
                             this.inputNumberOnUpdate(<HTMLInputElement> vnode.dom, this.viewModel.periodToAvoidDuplicate);
                         },
@@ -102,7 +102,7 @@ class SearchAddComponent extends SearchOptionBaseComponent<void> {
                     type: 'text',
                     placeholder: 'directory',
                     value: this.viewModel.directory,
-                    onchange: m.withAttr('value', (value) => { this.viewModel.directory = value; }),
+                    onchange: (e: Event) => { this.viewModel.directory = (<HTMLInputElement> e.target!).value; },
                 }),
             ]),
         ]);
@@ -119,7 +119,7 @@ class SearchAddComponent extends SearchOptionBaseComponent<void> {
                     type: 'text',
                     placeholder: 'file format',
                     value: this.viewModel.recordedFormat,
-                    onchange: m.withAttr('value', (value) => { this.viewModel.recordedFormat = value; }),
+                    onchange: (e: Event) => { this.viewModel.recordedFormat = (<HTMLInputElement> e.target!).value; },
                 }),
             ]),
         ]);
@@ -154,9 +154,9 @@ class SearchAddComponent extends SearchOptionBaseComponent<void> {
                 m('div', { class: 'pulldown mdl-layout-spacer' }, [
                     m('select', {
                         value: this.viewModel.encodeModes[num].mode,
-                        onchange: m.withAttr('value', (value) => {
-                            this.viewModel.encodeModes[num].mode = Number(value);
-                        }),
+                        onchange: (e: Event) => {
+                            this.viewModel.encodeModes[num].mode = parseInt((<HTMLInputElement> e.target!).value, 10);
+                        },
                     }, [
                         m('option', { value: '-1' }, '未指定'),
                         this.viewModel.getEncodeOption().map((name, i) => {
@@ -173,9 +173,9 @@ class SearchAddComponent extends SearchOptionBaseComponent<void> {
                     type: 'text',
                     placeholder: 'directory',
                     value: this.viewModel.encodeModes[num].directory,
-                    onchange: m.withAttr('value', (value) => {
-                        this.viewModel.encodeModes[num].directory = value;
-                    }),
+                    onchange: (e: Event) => {
+                        this.viewModel.encodeModes[num].directory = (<HTMLInputElement> e.target!).value;
+                    },
                 }),
             ]),
         ]);

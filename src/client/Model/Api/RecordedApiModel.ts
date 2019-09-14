@@ -124,7 +124,7 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
             this.recordeds = await <any> this.request({
                 method: 'GET',
                 url: './api/recorded',
-                data: query,
+                params: query,
             });
 
             this.currentPage = this.offset / this.limit + 1;
@@ -223,7 +223,7 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
         const result = <{ id: number }> await this.request({
             method: 'POST',
             url: './api/recorded',
-            data: recorded,
+            body: recorded,
         });
 
         return result.id;
@@ -247,7 +247,7 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
             await m.request({
                 method: 'POST',
                 url: `./api/recorded/${ query.id }/upload`,
-                data: data,
+                body: data,
                 config: (xhr: XMLHttpRequest) => { this.uploadXHR = xhr; },
             });
             this.uploadXHR = null;
@@ -327,7 +327,7 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
         const result = <apid.RecordedDeleteMultipleResult> await this.request({
             method: 'POST',
             url: './api/recorded/delete',
-            data: query,
+            body: query,
         });
 
         if (result.results.length > 0) {
@@ -356,7 +356,7 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
             await this.request({
                 method: 'POST',
                 url: `./api/recorded/${ recordedId }/kodi`,
-                data: query,
+                body: query,
             });
 
             this.openSnackbar('kodi へ送信しました');
@@ -426,7 +426,7 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
         await this.request({
             method: 'POST',
             url: `./api/recorded/${ recordedId }/encode`,
-            data: option,
+            body: option,
         });
     }
 
