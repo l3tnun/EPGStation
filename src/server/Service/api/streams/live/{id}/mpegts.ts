@@ -22,7 +22,7 @@ export const get: Operation = async(req, res) => {
     let info: StreamModelInfo | null = null;
     try {
         // stream 取得
-        info = await streams.getLiveMpegTs(req.params.id, req.query.mode);
+        info = await streams.getLiveMpegTs(parseInt(req.params.id, 10), req.query.mode);
         const encChild = info.stream.getEncChild();
         const mirakurunStream = info.stream.getMirakurunStream();
 

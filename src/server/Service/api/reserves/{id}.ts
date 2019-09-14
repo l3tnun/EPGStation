@@ -8,7 +8,7 @@ export const get: Operation = async(req, res) => {
     const reserves = <ReservesModelInterface> factory.get('ReservesModel');
 
     try {
-        const result = await reserves.getReserve(req.params.id);
+        const result = await reserves.getReserve(parseInt(req.params.id, 10));
         if (result !== null) {
             api.responseJSON(res, 200, result);
         } else {
@@ -55,7 +55,7 @@ export const del: Operation = async(req, res) => {
     const reserves = <ReservesModelInterface> factory.get('ReservesModel');
 
     try {
-        await reserves.cancelReserve(req.params.id);
+        await reserves.cancelReserve(parseInt(req.params.id, 10));
         api.responseJSON(res, 200, { code: 200 });
     } catch (err) {
         api.responseServerError(res, err.message);

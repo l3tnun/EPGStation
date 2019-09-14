@@ -7,7 +7,7 @@ export const del: Operation = async(req, res) => {
     const reserves = <ReservesModelInterface> factory.get('ReservesModel');
 
     try {
-        await reserves.removeReserveSkip(req.params.id);
+        await reserves.removeReserveSkip(parseInt(req.params.id, 10));
         api.responseJSON(res, 200, { code: 200 });
     } catch (err) {
         api.responseServerError(res, err.message);

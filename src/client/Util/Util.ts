@@ -58,8 +58,8 @@ namespace Util {
             elmX = (<MouseEvent> event).offsetX;
             elmY = (<MouseEvent> event).offsetY;
         } else {
-            elmX = (<MouseEvent> event).layerX;
-            elmY = (<MouseEvent> event).layerY;
+            elmX = (<any> event).layerX;
+            elmY = (<any> event).layerY;
         }
 
         const rect = (<HTMLElement> event.target).getBoundingClientRect();

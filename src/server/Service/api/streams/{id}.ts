@@ -7,7 +7,7 @@ export const del: Operation = async(req, res) => {
     const streams = <StreamsModelInterface> factory.get('StreamsModel');
 
     try {
-        await streams.stop(req.params.id);
+        await streams.stop(parseInt(req.params.id, 10));
         api.responseJSON(res, 200, { code: 200 });
     } catch (err) {
         api.responseServerError(res, err.message);

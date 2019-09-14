@@ -23,7 +23,7 @@ export const get: Operation = async(req, res) => {
 
     try {
         // stream 取得
-        const info = await streams.getMP4Live(req.params.id, req.query.mode);
+        const info = await streams.getMP4Live(parseInt(req.params.id, 10), req.query.mode);
         stream = info.stream;
         const encChild = info.stream.getEncChild();
 

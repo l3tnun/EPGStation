@@ -296,9 +296,9 @@ abstract class ParentComponent<T> extends Component<T> {
     private disconnectIo(io: SocketIOClient.Socket): void {
         let movePage = false;
         window.onunload = () => {};
-        window.onpageshow = (event) => { if (event.persisted) { window.location.reload(); } };
+        window.onpageshow = (event: PageTransitionEvent) => { if (event.persisted) { window.location.reload(); } };
 
-        window.onbeforeunload = (event) => {
+        window.onbeforeunload = (event: PageTransitionEvent) => {
             event = event || window.event;
             movePage = true;
         };

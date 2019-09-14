@@ -7,7 +7,7 @@ export const put: Operation = async(req, res) => {
     const rules = <RulesModelInterface> factory.get('RulesModel');
 
     try {
-        await rules.enableRule(req.params.id);
+        await rules.enableRule(parseInt(req.params.id, 10));
         api.responseJSON(res, 200, { code: 200 });
     } catch (err) {
         api.responseServerError(res, err.message);

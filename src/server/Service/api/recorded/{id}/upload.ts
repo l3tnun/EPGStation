@@ -10,7 +10,7 @@ export const post: Operation = async(req, res) => {
         if (typeof req.body.file === 'undefined') { throw new Error('FileIsNotFound'); }
 
         await recordeds.addExternalFile({
-            recordedId: req.params.id,
+            recordedId: parseInt(req.params.id, 10),
             isEncoded: typeof req.body.encoded === 'undefined' ? false : req.body.encoded,
             viewName: typeof req.body.name === 'undefined' ? 'TS' : req.body.name,
             fileName: req.body.file.originalname,

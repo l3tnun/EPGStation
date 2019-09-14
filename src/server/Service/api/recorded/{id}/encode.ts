@@ -7,7 +7,7 @@ export const del: Operation = async(req, res) => {
     const recordeds = <RecordedModelInterface> factory.get('RecordedModel');
 
     try {
-        await recordeds.cancelEncode(req.params.id);
+        await recordeds.cancelEncode(parseInt(req.params.id, 10));
         api.responseJSON(res, 200, { code: 200 });
         api.notifyClient();
     } catch (err) {
@@ -46,7 +46,7 @@ export const post: Operation = async(req, res) => {
     const recordeds = <RecordedModelInterface> factory.get('RecordedModel');
 
     try {
-        await recordeds.addEncode(req.params.id, req.body);
+        await recordeds.addEncode(parseInt(req.params.id, 10), req.body);
         api.responseJSON(res, 200, { code: 200, result: 'ok' });
         api.notifyClient();
     } catch (err) {

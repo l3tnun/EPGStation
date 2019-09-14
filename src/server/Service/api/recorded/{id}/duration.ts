@@ -7,7 +7,7 @@ export const get: Operation = async(req, res) => {
     const recordeds = <RecordedModelInterface> factory.get('RecordedModel');
 
     try {
-        const result = await recordeds.getDuration(req.params.id);
+        const result = await recordeds.getDuration(parseInt(req.params.id, 10));
         api.responseJSON(res, 200, { duration: result });
     } catch (err) {
         if (err.message === RecordedModelInterface.NotFoundRecordedIdError) {
