@@ -200,10 +200,10 @@ class RecordedApiModel extends ApiModel implements RecordedApiModelInterface {
      */
     public async fetchLog(recordedId: apid.RecordedId): Promise<void> {
         try {
-            this.errorLogStr = await <any> this.request({
+            this.errorLogStr = await <any> this.request(<any> {
                 method: 'GET',
                 url: `./api/recorded/${ recordedId }/log`,
-                deserialize: (str) => { return str; },
+                responseType: 'text',
             });
         } catch (err) {
             this.errorLogStr = null;
