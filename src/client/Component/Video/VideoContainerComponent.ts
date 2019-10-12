@@ -513,7 +513,7 @@ class VideoContainerComponent extends Component<ControlArgs> {
                         oninput: (e: Event) => {
                             if (this.videoElement === null) { return; }
 
-                            this.videoElement.volume = parseInt((<HTMLInputElement> e.target!).value, 10);
+                            this.videoElement.volume = parseFloat((<HTMLInputElement> e.target!).value);
                         },
                     }),
                 ]),
@@ -540,7 +540,7 @@ class VideoContainerComponent extends Component<ControlArgs> {
                                 this.disableMouseleave = true;
                             },
                             onchange: (e: Event) => {
-                                this.speed = parseInt((<HTMLInputElement> e.target!).value, 10);
+                                this.speed = parseFloat((<HTMLInputElement> e.target!).value);
                                 this.disableMouseleave = false;
 
                                 if (this.videoElement === null) { return; }
