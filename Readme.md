@@ -42,7 +42,7 @@ PC からの閲覧でもモダンな UI で操作可能です
 	- [PostgreSQL](https://www.postgresql.org/) (version 9.5 以上)
 - [FFmpeg](http://ffmpeg.org/)
 - for Linux / macOS
-	- [Python 2.7](https://www.python.org/) node-gyp にて必要
+	- [Python 2.7, v3.5, v3.6, or v3.7](https://www.python.org/) node-gyp にて必要
 	- [GCC](https://gcc.gnu.org/) node-gyp にて必要
 - for Windows
 	- [windows-build-tools](https://npmjs.com/package/windows-build-tools) node-gyp にて必要
