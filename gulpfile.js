@@ -11,8 +11,8 @@ const sourcemaps = require('gulp-sourcemaps');
 const minimist = require('minimist');
 const webpackStream = require('webpack-stream');
 const webpack = require('webpack');
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
-const sass = require('gulp-sass');
+const TerserPlugin = require('terser-webpack-plugin');
+const sass = require('gulp-dart-sass');
 const concat = require('gulp-concat');
 const cleanCSS = require('gulp-clean-css');
 
@@ -82,7 +82,7 @@ const webpackConfig = {
 
 if (isProduction) {
     webpackConfig.optimization = {
-        minimizer: [new UglifyJsPlugin()]
+        minimizer: [new TerserPlugin()]
     };
 } else {
     // enable source map

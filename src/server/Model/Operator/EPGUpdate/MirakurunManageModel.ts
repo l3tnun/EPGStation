@@ -79,8 +79,8 @@ class MirakurunManageModel extends Model implements MirakurunManageModelInterfac
         updater.once('error', () => { this.isRunning = false; });
 
         updater.on('message', (msg) => {
-            if (msg.msg === 'tuner') {
-                this.tuners = msg.tuners;
+            if ((<any> msg).msg === 'tuner') {
+                this.tuners = (<any> msg).tuners;
                 this.isRunning = false;
             }
         });
