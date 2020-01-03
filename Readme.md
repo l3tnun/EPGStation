@@ -32,7 +32,7 @@ PC からの閲覧でもモダンな UI で操作可能です
 
 ## 動作環境
 
-- Linux / macOS / Window 
+- Linux / macOS / Windows 
 - [Node.js](http://nodejs.org/) : ^8.x.x || ^10.13.0 || ^12.14.0
 - [Mirakurun](https://github.com/Chinachu/Mirakurun) : ^2.5.7 
 - いずれかのデータベース (文字コードは  utf-8 とする)
