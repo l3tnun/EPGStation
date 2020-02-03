@@ -1,3 +1,4 @@
+import * as fs from 'fs';
 import * as path from 'path';
 // tslint:disable-next-line:no-require-imports
 import urljoin = require('url-join');
@@ -83,7 +84,12 @@ namespace Util {
      * @return string
      */
     export const getStreamFilePath = (): string => {
-       return Configuration.getInstance().getConfig().streamFilePath || path.join(__dirname, '..', '..', '..', 'data', 'streamfiles');
+        const streamFilePath = Configuration.getInstance().getConfig().streamFilePath || path.join(__dirname, '..', '..', '..', 'data', 'streamfiles');
+        if (!fs.existsSync(streamFilePath)) {
+            fs.mkdirSync(streamFilePath);
+        }
+
+        return streamFilePath;
     };
 
     /**
