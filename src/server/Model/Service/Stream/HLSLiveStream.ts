@@ -45,6 +45,7 @@ class HLSLiveStream extends Stream {
 
     public async start(streamNumber: number): Promise<void> {
         await super.start(streamNumber);
+        super.checkHLSStreamFileDir();
 
         // config の取得
         const config = this.config.getConfig().liveHLS;
