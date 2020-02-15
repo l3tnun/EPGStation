@@ -38,6 +38,7 @@ interface ConfigInterface {
     };
     gid: string | number;
     uid: string | number;
+    searchLimit: number;
     programInsertMax: number;
     programInsertWait: number;
     serviceOrder: number[];
