@@ -285,9 +285,9 @@ abstract class ParentComponent<T> extends Component<T> {
      * @return string
      */
     private getSocketIoPath(): string {
-        const port = parseInt(location.port, 10);
+        const port = this._mainLayout.getConfig()!.socketioPort;
 
-        return `${ location.protocol }//${ location.hostname }:${ isNaN(port) ? location.protocol === 'http:' ? 81 : 444 : port + 1 }`;
+        return `${ location.protocol }//${ location.hostname }:${ port }`;
     }
 
     /**

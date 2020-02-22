@@ -116,7 +116,7 @@ namespace ViewModelFactorySetting {
             balloonModel,
             channelsApiModel,
         ));
-        factory.reg('MainLayoutViewModel', new MainLayoutViewModel(settingModel));
+        factory.reg('MainLayoutViewModel', new MainLayoutViewModel(configModel, settingModel));
         factory.reg('MainViewModel', new MainViewModel(configModel));
         factory.reg('NavigationViewModel', new NavigationViewModel(
             configModel,

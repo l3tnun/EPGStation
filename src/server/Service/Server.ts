@@ -168,19 +168,27 @@ class Server extends Base {
      * 開始
      */
     public start(): void {
-        const port = parseInt(<any> this.config.getConfig().serverPort, 10) || 8888;
-        this.app.listen(port, () => {
+        const conf = this.config.getConfig();
+        const port = parseInt(<any> conf.serverPort, 10) || 8888;
+        const socketioPort = typeof conf.socketioPort === 'undefined' ? port + 1 : parseInt(<any> conf.socketioPort, 10);
+
+        const server = this.app.listen(port, () => {
             this.log.system.info(`server listening on ${ port }`);
         });
 
-        // socket.io 用
-        const socketIoServer = http.createServer();
-        socketIoServer.listen(port + 1, () => {
-            this.log.system.info(`SocketIo listening on ${ port + 1}`);
-        });
+        // setting socket.io
+        const socketio = (<SocketIoManageModelInterface> factory.get('SocketIoManageModel'));
+        if (port === socketioPort) {
+            socketio.initialize(server);
+        } else {
+            const socketIoServer = http.createServer();
+            socketIoServer.listen(socketioPort, () => {
+                this.log.system.info(`SocketIo listening on ${ socketioPort }`);
+            });
 
-        // socket.io
-        (<SocketIoManageModelInterface> factory.get('SocketIoManageModel')).initialize(socketIoServer);
+            // socket.io
+            socketio.initialize(socketIoServer);
+        }
 
         // encode 終了後
         (<EncodeFinModelInterface> factory.get('EncodeFinModel')).set();

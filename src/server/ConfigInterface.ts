@@ -6,6 +6,8 @@ import * as Enums from './Enums';
 interface ConfigInterface {
     readOnlyOnce: boolean;
     serverPort: number;
+    socketioPort: number;
+    clientSocketioPort: number;
     subDirectory: string;
     mirakurunPath: string;
     dbType: Enums.DBType;

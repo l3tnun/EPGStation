@@ -3,6 +3,8 @@
 - [基本設定](#基本設定)
     - [config.json の読み込みを起動時だけにしたい](#readonlyonce)
     - [EPGStation の待ち受けポートを変えたい](#serverport)
+    - [EPGStation の Socket.IO 待ち受けポートを変えたい](#socketioport)
+    - [クライアントが接続に使用する Socket.IO ポートを変えたい](#clientsocketioport)
     - [アクセス時にユーザー認証を行いたい](#basicauth)
     - [Mirakurun の設定](#mirakurunpath)
     - [データベースの種類を変えたい](#dbtype)
@@ -103,6 +105,32 @@
 
 ```json
 "serverPort": 8888
+```
+
+### socketioPort
+#### EPGStation が Socket.IO アクセスを待ち受けるポート番号
+
+serverPort と同じポート番号を設定しても良い
+
+| 種類 | デフォルト値 | 必須 |
+| --- | ---------- | --- |
+| number | serverPort + 1 | no |
+
+```json
+"socketioPort": 8889
+```
+
+### clientSocketioPort
+### EPGStation の Web クライアントが接続する Socket.IO のポート番号
+
+リバースプロキシを使用している場合は必須となる
+
+| 種類 | デフォルト値 | 必須 |
+| --- | ---------- | --- |
+| number | serverPort + 1 | no |
+
+```json
+"clientSocketioPort": 8889
 ```
 
 ### basicAuth

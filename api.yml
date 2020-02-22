@@ -208,10 +208,14 @@ definitions:
     description: 'config'
     type: object
     required:
+      - socketioPort
       - enableEncode
       - enableLiveStreaming
       - boradcast
     properties:
+      socketioPort:
+        description: 'Socket.IO で使用するポート'
+        type: number
       enableEncode:
         description: 'エンコードが有効か'
         type: boolean
