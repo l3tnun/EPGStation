@@ -197,8 +197,8 @@ class ScheduleModel extends ApiModel implements ScheduleModelInterface {
             // searchOption が正しく指定されていない
             throw new Error(ScheduleModelInterface.searchOptionIsIncorrect);
         }
-
-        const programs = await this.programsDB.findRule(searchOption, true, 300);
+        const searchLimit = this.config.getConfig().searchLimit || 300;
+        const programs = await this.programsDB.findRule(searchOption, true, searchLimit);
 
         return programs.map((program) => {
             return ApiUtil.deleteNullinHash(program);
