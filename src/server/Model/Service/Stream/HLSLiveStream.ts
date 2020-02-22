@@ -67,7 +67,7 @@ class HLSLiveStream extends Stream {
 
         try {
             // 放送波受信
-            this.stream = await mirakurun.getServiceStream(this.channelId);
+            this.stream = await mirakurun.getServiceStream(this.channelId, true, this.getPriority());
 
             // エンコードプロセス生成
             this.enc = await this.process.create(
