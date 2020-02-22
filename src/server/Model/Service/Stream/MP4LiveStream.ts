@@ -44,7 +44,7 @@ class MP4LiveStream extends Stream {
 
         try {
             // 放送波受信
-            this.stream = await mirakurun.getServiceStream(this.channelId);
+            this.stream = await mirakurun.getServiceStream(this.channelId, true, this.getPriority());
 
             // エンコードプロセス生成
             const config = this.config.getConfig().liveMP4;
