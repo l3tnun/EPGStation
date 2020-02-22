@@ -28,7 +28,6 @@ class HeaderViewModel extends ViewModel {
      */
     public init(): void {
         super.init();
-        this.configApiModel.update();
         this.channels.fetchChannel();
     }
 
