@@ -810,7 +810,8 @@ class VideoContainerComponent extends Component<ControlArgs> {
      */
     private requestFullscreen(e: HTMLElement): boolean {
         /* tslint:disable:newline-before-return */
-        if (e.requestFullscreen) { e.requestFullscreen(); return true; }
+        if (Util.uaIsAndroid()) { e.requestFullscreen({ navigationUI: 'hide'});  }
+        else if (e.requestFullscreen) { e.requestFullscreen(); return true; }
         else if ((<any> e).mozRequestFullScreen) { (<any> e).mozRequestFullScreen(); return true; }
         else if ((<any> e).webkitRequestFullScreen) { (<any> e).webkitRequestFullScreen(); return true; }
         else if ((<any> e).webkitEnterFullscreen) { (<any> e).webkitEnterFullscreen(); return true; }
