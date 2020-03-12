@@ -95,13 +95,13 @@
         "webm": [
             {
                 "name": "720p",
-                "cmd": "%FFMPEG% -dual_mono_mode main -i pipe:0 -sn -threads 0 -c:a libvorbis -ar 48000 -ac 2 -c:v vp8 -vf yadif,scale=-2:720 %VB% %VBUFFER% %AB% %ABUFFER% -deadline realtime -speed 4 -cpu-used -8 -y -f webm pipe:1",
+                "cmd": "%FFMPEG% -dual_mono_mode main %RE% -i pipe:0 -sn -threads 0 -c:a libvorbis -ar 48000 -ac 2 -c:v vp8 -vf yadif,scale=-2:720 %VB% %VBUFFER% %AB% %ABUFFER% -deadline realtime -speed 4 -cpu-used -8 -y -f webm pipe:1",
                 "vb": "3000k",
                 "ab": "192k"
             },
             {
                 "name": "360p",
-                "cmd": "%FFMPEG% -dual_mono_mode main -i pipe:0 -sn -threads 0 -c:a libvorbis -ar 48000 -ac 2 -c:v vp8 -vf yadif,scale=-2:360 %VB% %VBUFFER% %AB% %ABUFFER% -deadline realtime -speed 4 -cpu-used -8 -y -f webm pipe:1",
+                "cmd": "%FFMPEG% -dual_mono_mode main %RE% -i pipe:0 -sn -threads 0 -c:a libvorbis -ar 48000 -ac 2 -c:v vp8 -vf yadif,scale=-2:360 %VB% %VBUFFER% %AB% %ABUFFER% -deadline realtime -speed 4 -cpu-used -8 -y -f webm pipe:1",
                 "vb": "1500k",
                 "ab": "128k"
             }
@@ -109,13 +109,13 @@
         "mp4": [
             {
                 "name": "720p",
-                "cmd": "%FFMPEG% -dual_mono_mode main -i pipe:0 -sn -threads 0 -c:a aac -ar 48000 -ac 2 -c:v libx264 -vf yadif,scale=-2:720 %VB% %VBUFFER% %AB% %ABUFFER% -profile:v baseline -preset veryfast -tune fastdecode,zerolatency -movflags frag_keyframe+empty_moov+faststart+default_base_moof -y -f mp4 pipe:1",
+                "cmd": "%FFMPEG% -dual_mono_mode main %RE% -i pipe:0 -sn -threads 0 -c:a aac -ar 48000 -ac 2 -c:v libx264 -vf yadif,scale=-2:720 %VB% %VBUFFER% %AB% %ABUFFER% -profile:v baseline -preset veryfast -tune fastdecode,zerolatency -movflags frag_keyframe+empty_moov+faststart+default_base_moof -y -f mp4 pipe:1",
                 "vb": "3000k",
                 "ab": "192k"
             },
             {
                 "name": "360p",
-                "cmd": "%FFMPEG% -dual_mono_mode main -i pipe:0 -sn -threads 0 -c:a aac -ar 48000 -ac 2 -c:v libx264 -vf yadif,scale=-2:360 %VB% %VBUFFER% %AB% %ABUFFER% -profile:v baseline -preset veryfast -tune fastdecode,zerolatency -movflags frag_keyframe+empty_moov+faststart+default_base_moof -y -f mp4 pipe:1",
+                "cmd": "%FFMPEG% -dual_mono_mode main %RE% -i pipe:0 -sn -threads 0 -c:a aac -ar 48000 -ac 2 -c:v libx264 -vf yadif,scale=-2:360 %VB% %VBUFFER% %AB% %ABUFFER% -profile:v baseline -preset veryfast -tune fastdecode,zerolatency -movflags frag_keyframe+empty_moov+faststart+default_base_moof -y -f mp4 pipe:1",
                 "vb": "1500k",
                 "ab": "128k"
             }
@@ -123,13 +123,13 @@
         "mpegTs": [
             {
                 "name": "720p (H.264)",
-                "cmd": "%FFMPEG% -dual_mono_mode main -i pipe:0 -sn -threads 0 -c:a aac -ar 48000 -ac 2 -c:v libx264 -vf yadif,scale=-2:720 %VB% %VBUFFER% %AB% %ABUFFER% -profile:v baseline -preset veryfast -tune fastdecode,zerolatency -y -f mpegts pipe:1",
+                "cmd": "%FFMPEG% -dual_mono_mode main %RE% -i pipe:0 -sn -threads 0 -c:a aac -ar 48000 -ac 2 -c:v libx264 -vf yadif,scale=-2:720 %VB% %VBUFFER% %AB% %ABUFFER% -profile:v baseline -preset veryfast -tune fastdecode,zerolatency -y -f mpegts pipe:1",
                 "vb": "3000k",
                 "ab": "192k"
             },
             {
                 "name": "360p (H.264)",
-                "cmd": "%FFMPEG% -dual_mono_mode main -i pipe:0 -sn -threads 0 -c:a aac -ar 48000 -ac 2 -c:v libx264 -vf yadif,scale=-2:360 %VB% %VBUFFER% %AB% %ABUFFER% -profile:v baseline -preset veryfast -tune fastdecode,zerolatency -y -f mpegts pipe:1",
+                "cmd": "%FFMPEG% -dual_mono_mode main %RE% -i pipe:0 -sn -threads 0 -c:a aac -ar 48000 -ac 2 -c:v libx264 -vf yadif,scale=-2:360 %VB% %VBUFFER% %AB% %ABUFFER% -profile:v baseline -preset veryfast -tune fastdecode,zerolatency -y -f mpegts pipe:1",
                 "vb": "1500k",
                 "ab": "128k"
             }
