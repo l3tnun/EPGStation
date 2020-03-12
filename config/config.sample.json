@@ -73,21 +73,21 @@
     "liveWebM": [
         {
             "name": "720p",
-            "cmd": "%FFMPEG% -re -dual_mono_mode main -i pipe:0 -sn -threads 0 -c:a libvorbis -ar 48000 -ac 2 -b:a 192k -c:v vp8 -vf yadif,scale=-2:720 -b:v 3000k -deadline realtime -speed 4 -cpu-used -8 -y -f webm pipe:1"
+            "cmd": "%FFMPEG% -re -dual_mono_mode main -i pipe:0 -sn -threads 0 -c:a libvorbis -ar 48000 -b:a 192k -ac 2 -c:v vp8 -vf yadif,scale=-2:720 -b:v 3000k -deadline realtime -speed 4 -cpu-used -8 -y -f webm pipe:1"
         },
         {
             "name": "480p",
-            "cmd": "%FFMPEG% -re -dual_mono_mode main -i pipe:0 -sn -threads 0 -c:a libvorbis -ar 48000 -ac 2 -b:a 128k -c:v vp8 -vf yadif,scale=-2:480 -b:v 1500k -deadline realtime -speed 4 -cpu-used -8 -y -f webm pipe:1"
+            "cmd": "%FFMPEG% -re -dual_mono_mode main -i pipe:0 -sn -threads 0 -c:a libvorbis -ar 48000 -b:a 128k -ac 2 -c:v vp8 -vf yadif,scale=-2:480 -b:v 1500k -deadline realtime -speed 4 -cpu-used -8 -y -f webm pipe:1"
         }
     ],
     "liveMP4": [
         {
             "name": "720p",
-            "cmd": "%FFMPEG% -re -dual_mono_mode main -i pipe:0 -sn -threads 0 -c:a aac -ar 48000 -ac 2 -ab 192k -c:v libx264 -vf yadif,scale=-2:720 -vb 3000k -profile:v baseline -preset veryfast -tune fastdecode,zerolatency -movflags frag_keyframe+empty_moov+faststart+default_base_moof -y -f mp4 pipe:1"
+            "cmd": "%FFMPEG% -re -dual_mono_mode main -i pipe:0 -sn -threads 0 -c:a aac -ar 48000 -ab 192k -ac 2 -c:v libx264 -vf yadif,scale=-2:720 -vb 3000k -profile:v baseline -preset veryfast -tune fastdecode,zerolatency -movflags frag_keyframe+empty_moov+faststart+default_base_moof -y -f mp4 pipe:1"
         },
         {
             "name": "480p",
-            "cmd": "%FFMPEG% -re -dual_mono_mode main -i pipe:0 -sn -threads 0 -c:a aac -ar 48000 -ac 2 -ab 128k -c:v libx264 -vf yadif,scale=-2:480 -vb 1500k -profile:v baseline -preset veryfast -tune fastdecode,zerolatency -movflags frag_keyframe+empty_moov+faststart+default_base_moof -y -f mp4 pipe:1"
+            "cmd": "%FFMPEG% -re -dual_mono_mode main -i pipe:0 -sn -threads 0 -c:a aac -ar 48000 -ab 128k -ac 2 -c:v libx264 -vf yadif,scale=-2:480 -vb 1500k -profile:v baseline -preset veryfast -tune fastdecode,zerolatency -movflags frag_keyframe+empty_moov+faststart+default_base_moof -y -f mp4 pipe:1"
         }
     ],
 
