@@ -28,11 +28,11 @@
     "mpegTsStreaming": [
         {
             "name": "720p",
-            "cmd": "%FFMPEG% -re -dual_mono_mode main -i pipe:0 -sn -c:a aac -ar 48000 -ab 192k -ac 2 -c:v libx264 -vf yadif,scale=-2:720 -preset veryfast -vb 3000k -f mpegts pipe:1"
+            "cmd": "%FFMPEG% -re -dual_mono_mode main -i pipe:0 -sn -c:a aac -ar 48000 -ab 192k -ac 2 -c:v libx264 -vf yadif,scale=-2:720 -preset veryfast -vb 3000k -y -f mpegts pipe:1"
         },
         {
             "name": "480p",
-            "cmd": "%FFMPEG% -re -dual_mono_mode main -i pipe:0 -sn -c:a aac -ar 48000 -ab 128k -ac 2 -c:v libx264 -vf yadif,scale=-2:480 -preset veryfast -vb 1500k -f mpegts pipe:1"
+            "cmd": "%FFMPEG% -re -dual_mono_mode main -i pipe:0 -sn -c:a aac -ar 48000 -ab 128k -ac 2 -c:v libx264 -vf yadif,scale=-2:480 -preset veryfast -vb 1500k -y -f mpegts pipe:1"
         },
         {
             "name": "無変換"
