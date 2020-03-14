@@ -43,7 +43,7 @@ serverPort と同じポート番号を設定しても良い
 下記の通り、リバースプロキシの設定を行います。  
 ※`localhost`は適宜変更してください。
 
-```json
+```
 map $http_upgrade $connection_upgrade {
     default upgrade;
     ''      close;
