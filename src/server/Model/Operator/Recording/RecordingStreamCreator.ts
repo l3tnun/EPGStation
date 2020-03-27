@@ -226,14 +226,15 @@ class RecordingStreamCreator extends Model implements RecordingStreamCreatorInte
     private getStream(reserve: ReserveProgram): Promise<http.IncomingMessage> {
         const mirakurun = CreateMirakurunClient.get();
         const config = this.config.getConfig();
-        mirakurun.priority = reserve.isConflict ? (config.conflictPriority || 1) : (config.recPriority || 2);
+        const priority = reserve.isConflict ? (config.conflictPriority || 1) : (config.recPriority || 2);
+        mirakurun.priority = priority;
 
         if (reserve.program.id >= 0) {
             // programId 指定予約
-            return mirakurun.getProgramStream(reserve.program.id, true);
+            return mirakurun.getProgramStream(reserve.program.id, true, priority);
         } else {
             // 時刻指定予約
-            return this.getTimeSpecifiedStream(reserve, mirakurun);
+            return this.getTimeSpecifiedStream(reserve, mirakurun, priority);
         }
     }
 
@@ -241,9 +242,10 @@ class RecordingStreamCreator extends Model implements RecordingStreamCreatorInte
      * 時刻指定予約用の stream を返す
      * @param reserve: ReserveProgram
      * @param mirakurun: Mirakurun
+     * @param priority: number
      * @return http.IncomingMessage
      */
-    private async getTimeSpecifiedStream(reserve: ReserveProgram, mirakurun: Mirakurun): Promise<http.IncomingMessage> {
+    private async getTimeSpecifiedStream(reserve: ReserveProgram, mirakurun: Mirakurun, priority: number): Promise<http.IncomingMessage> {
         const config = this.config.getConfig();
         const startMargin = config.timeSpecifiedStartMargin || 1;
         const endMargin = config.timeSpecifiedEndMargin || 1;
@@ -255,7 +257,7 @@ class RecordingStreamCreator extends Model implements RecordingStreamCreatorInte
         }
 
         // mirakurun から channel stream を受け取る
-        const channelStream = await mirakurun.getServiceStream(reserve.program.channelId);
+        const channelStream = await mirakurun.getServiceStream(reserve.program.channelId, true, priority);
 
         // 予約終了時刻を過ぎたら stream を停止する
         const endTimer = setTimeout(() => {

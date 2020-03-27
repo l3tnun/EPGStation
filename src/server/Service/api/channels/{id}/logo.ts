@@ -8,7 +8,7 @@ export const get: Operation = async(req, res) => {
     const channels = <ChannelsModelInterface> factory.get('ChannelsModel');
 
     try {
-        const results = await channels.getLogo(req.params.id);
+        const results = await channels.getLogo(parseInt(req.params.id, 10));
         res.setHeader('Content-Type', 'image/png');
         res.status(200);
         res.end(results);

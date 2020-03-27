@@ -32,8 +32,8 @@ PC からの閲覧でもモダンな UI で操作可能です
 
 ## 動作環境
 
-- Linux / macOS / Window 
-- [Node.js](http://nodejs.org/) : ^6.5.x || ^8.x.x || ^10.13.0
+- Linux / macOS / Windows 
+- [Node.js](http://nodejs.org/) : ^8.x.x || ^10.13.0 || ^12.14.0
 - [Mirakurun](https://github.com/Chinachu/Mirakurun) : ^2.5.7 
 - いずれかのデータベース (文字コードは  utf-8 とする)
 	- [SQLite3](https://www.sqlite.org/)（設定不要だが検索機能に制限あり）[標準]
@@ -42,7 +42,7 @@ PC からの閲覧でもモダンな UI で操作可能です
 	- [PostgreSQL](https://www.postgresql.org/) (version 9.5 以上)
 - [FFmpeg](http://ffmpeg.org/)
 - for Linux / macOS
-	- [Python 2.7](https://www.python.org/) node-gyp にて必要
+	- [Python 2.7, v3.5, v3.6, or v3.7](https://www.python.org/) node-gyp にて必要
 	- [GCC](https://gcc.gnu.org/) node-gyp にて必要
 - for Windows
 	- [windows-build-tools](https://npmjs.com/package/windows-build-tools) node-gyp にて必要
@@ -152,11 +152,17 @@ npm run backup FILENAME
 npm run restore FILENAME
 ```
 
+## 使用するポートについて
+
+以下のポートを使用します (v 1.5.5 から)
+
+* Web アクセス: ```config.json``` の ```serverPort``` で指定されたポート
+* Socket.IO: Web アクセスポート + 1
 
 ## Tips
 ### Kodi との連携
 
-[Kodi](https://kodi.tv/) との連携に対応しています  
+[Kodi](https://kodi.tv/) との連携に対応しています
 詳細は [doc/kodi.md](doc/kodi.md) を参照してください
 
 ### Android での番組表の表示高速化

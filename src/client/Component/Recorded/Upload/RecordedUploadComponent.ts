@@ -112,7 +112,7 @@ class RecordedUploadComponent extends ParentComponent<void> {
                  m('div', { class: 'pulldown mdl-layout-spacer' }, [
                     m('select', {
                         value: this.viewModel.station,
-                        onchange: m.withAttr('value', (value) => { this.viewModel.station = Number(value); }),
+                        onchange: (e: Event) => { this.viewModel.station = parseInt((<HTMLInputElement> e.target!).value, 10); },
                     }, [
                         m('option', { value: '0' }, '指定なし'),
                         this.viewModel.getChannels().map((channel) => {
@@ -135,10 +135,10 @@ class RecordedUploadComponent extends ParentComponent<void> {
                 m('div', { class: 'pulldown mdl-layout-spacer' }, [
                     m('select', {
                         value: this.viewModel.genrelv1,
-                        onchange: m.withAttr('value', (value) => {
-                            this.viewModel.genrelv1 = Number(value);
+                        onchange: (e: Event) => {
+                            this.viewModel.genrelv1 = parseInt((<HTMLInputElement> e.target!).value, 10);
                             this.viewModel.initGenre2();
-                        }),
+                        },
                     },
                         m('option', { value: '-1' }, '指定なし'),
                         this.viewModel.getGenre1().map((genre) => {
@@ -153,7 +153,7 @@ class RecordedUploadComponent extends ParentComponent<void> {
                 m('div', { class: 'pulldown mdl-layout-spacer' }, [
                     m('select', {
                         value: this.viewModel.genrelv2,
-                        onchange: m.withAttr('value', (value) => { this.viewModel.genrelv2 = Number(value); }),
+                        onchange: (e: Event) => { this.viewModel.genrelv2 = parseInt((<HTMLInputElement> e.target!).value, 10); },
                     },
                         m('option', { value: '-1' }, '指定なし'),
                         this.viewModel.getGenre2().map((genre) => {
@@ -174,7 +174,7 @@ class RecordedUploadComponent extends ParentComponent<void> {
                  m('div', { class: 'pulldown mdl-layout-spacer' }, [
                     m('select', {
                         value: this.viewModel.ruleId,
-                        onchange: m.withAttr('value', (value) => { this.viewModel.ruleId = Number(value); }),
+                        onchange: (e: Event) => { this.viewModel.ruleId = parseInt((<HTMLInputElement> e.target!).value, 10); },
                     }, [
                         m('option', { value: '0' }, '指定なし'),
                         this.viewModel.getRuleList().map((rule) => {
@@ -200,7 +200,7 @@ class RecordedUploadComponent extends ParentComponent<void> {
                     class: 'mdl-textfield__input',
                     type: 'date',
                     value: this.viewModel.date,
-                    onchange: m.withAttr('value', (value) => { this.viewModel.date = value; }),
+                    onchange: (e: Event) => { this.viewModel.date = (<HTMLInputElement> e.target!).value; },
                 }),
             ]),
             m('div', {
@@ -211,7 +211,7 @@ class RecordedUploadComponent extends ParentComponent<void> {
                     class: 'mdl-textfield__input',
                     type: 'time',
                     value: this.viewModel.time,
-                    onchange: m.withAttr('value', (value) => { this.viewModel.time = value; }),
+                    onchange: (e: Event) => { this.viewModel.time = (<HTMLInputElement> e.target!).value; },
                 }),
             ]),
         ], 'required');
@@ -232,11 +232,11 @@ class RecordedUploadComponent extends ParentComponent<void> {
                         if (this.viewModel.duration === 0) { return; }
                         else { return this.viewModel.duration; }
                     })(),
-                    onchange: m.withAttr('value', (value) => {
-                        let num = Number(value);
+                    onchange: (e: Event) => {
+                        let num = parseInt((<HTMLInputElement> e.target!).value, 10);
                         if (isNaN(num)) { num = 0; }
                         this.viewModel.duration = num;
-                    }),
+                    },
                     onupdate: (vnode: m.VnodeDOM<void, this>) => {
                         this.inputNumberOnUpdate(<HTMLInputElement> vnode.dom, this.viewModel.duration);
                     },
@@ -257,7 +257,7 @@ class RecordedUploadComponent extends ParentComponent<void> {
                     type: 'text',
                     placeholder: 'title',
                     value: this.viewModel.title,
-                    onchange: m.withAttr('value', (value) => { this.viewModel.title = value; }),
+                    onchange: (e: Event) => { this.viewModel.title = (<HTMLInputElement> e.target!).value; },
                 }),
             ]),
         ], 'required');
@@ -276,7 +276,7 @@ class RecordedUploadComponent extends ParentComponent<void> {
                     class: 'mdl-textfield__input',
                     placeholder: '概要',
                     value: this.viewModel.description,
-                    onchange: m.withAttr('value', (value) => { this.viewModel.description = value; }),
+                    onchange: (e: Event) => { this.viewModel.description = (<HTMLInputElement> e.target!).value; },
                     rows: 3,
                 }),
             ]),
@@ -296,7 +296,7 @@ class RecordedUploadComponent extends ParentComponent<void> {
                     class: 'mdl-textfield__input',
                     placeholder: '詳細',
                     value: this.viewModel.extended,
-                    onchange: m.withAttr('value', (value) => { this.viewModel.extended = value; }),
+                    onchange: (e: Event) => { this.viewModel.extended = (<HTMLInputElement> e.target!).value; },
                     rows: 3,
                 }),
             ]),
@@ -315,7 +315,7 @@ class RecordedUploadComponent extends ParentComponent<void> {
                     type: 'text',
                     placeholder: 'directory',
                     value: this.viewModel.directory,
-                    onchange: m.withAttr('value', (value) => { this.viewModel.directory = value; }),
+                    onchange: (e: Event) => { this.viewModel.directory = (<HTMLInputElement> e.target!).value; },
                 }),
             ]),
         ]);
@@ -389,7 +389,7 @@ class RecordedUploadComponent extends ParentComponent<void> {
                     type: 'text',
                     placeholder: 'name',
                     value: getName(),
-                    onchange: m.withAttr('value', (value) => { getDir(value); }),
+                    onchange: (e: Event) => { getDir((<HTMLInputElement> e.target!).value); },
                 }),
             ]),
         ]);

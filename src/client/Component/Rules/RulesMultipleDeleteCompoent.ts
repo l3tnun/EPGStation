@@ -30,7 +30,7 @@ class RulesMultipleDeleteComponent extends Component<void> {
                             type: 'checkbox',
                             class: 'mdl-checkbox__input',
                             checked: this.viewModel.isDeleteRecorded,
-                            onclick: m.withAttr('checked', (value) => { this.viewModel.isDeleteRecorded = value; }),
+                            onclick: (e: Event) => { this.viewModel.isDeleteRecorded = (<HTMLInputElement> e.target!).checked; },
                             onupdate: (vnode: m.VnodeDOM<void, this>) => { this.checkboxOnUpdate(<HTMLInputElement> (vnode.dom)); },
                         }),
                         m('span', { class: 'mdl-checkbox__label' }, '録画も一緒に削除する'),

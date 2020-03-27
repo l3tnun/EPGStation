@@ -44,10 +44,13 @@ namespace ProcessUtil {
      */
     export const parseCmdStr = (cmd: string): ProcessUtil.Cmds => {
         const args = cmd.split(' ');
-        const bin = args.shift();
+        let bin = args.shift();
         if (typeof bin === 'undefined') {
             throw new Error('CmdParseError');
         }
+
+        // %NODE% の replace
+        bin = bin.replace(/%NODE%/g, process.argv[0]);
 
         // bin の存在確認
         try {

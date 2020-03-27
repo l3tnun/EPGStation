@@ -1,5 +1,7 @@
 import * as m from 'mithril';
+import * as apid from '../../../api';
 import { ViewModelStatus } from '../Enums';
+import { ConfigApiModelInterface } from '../Model/Api/ConfigApiModel';
 import { SettingValue } from '../Model/Setting/SettingModel';
 import StorageTemplateModel from '../Model/Storage/StorageTemplateModel';
 import ViewModel from './ViewModel';
@@ -8,11 +10,16 @@ import ViewModel from './ViewModel';
  * MainLayoutViewModel
  */
 class MainLayoutViewModel extends ViewModel {
+    private configApiModel: ConfigApiModelInterface;
     private setting: StorageTemplateModel<SettingValue>;
     private hasViewData: boolean = false;
 
-    constructor(setting: StorageTemplateModel<SettingValue>) {
+    constructor(
+        configApiModel: ConfigApiModelInterface,
+        setting: StorageTemplateModel<SettingValue>,
+    ) {
         super();
+        this.configApiModel = configApiModel;
         this.setting = setting;
     }
 
@@ -41,6 +48,14 @@ class MainLayoutViewModel extends ViewModel {
      */
     public isShow(): boolean {
         return this.hasViewData;
+    }
+
+    /**
+     * getConfig
+     * @return apid.Config | null
+     */
+    public getConfig(): apid.Config | null {
+        return this.configApiModel.getConfig();
     }
 }
 

@@ -1,7 +1,10 @@
 import { ChildProcess } from 'child_process';
+import * as fs from 'fs';
 import * as http from 'http';
+import * as mkdirp from 'mkdirp';
 import * as apid from '../../../../../api';
 import Base from '../../../Base';
+import Util from '../../../Util/Util';
 import { EncodeProcessManageModelInterface } from '../Encode/EncodeProcessManageModel';
 import { SocketIoManageModelInterface } from '../SocketIoManageModel';
 import { StreamManageModelInterface } from './StreamManageModel';
@@ -45,6 +48,22 @@ abstract class Stream extends Base {
 
     public async start(streamNumber: number): Promise<void> {
         this.streamNumber = streamNumber;
+    }
+
+    /**
+     * HLS 配信で使用するディレクトリが存在するかチェックし
+     * ディレクトリがなければ作成する
+     */
+    protected checkHLSStreamFileDir(): void {
+        const dir = Util.getStreamFilePath();
+
+        try {
+            fs.statSync(dir);
+        } catch (err) {
+            // ディレクトリが存在しなければ作成
+            this.log.system.info(`mkdirp: ${ dir }`);
+            mkdirp.sync(dir);
+        }
     }
 
     public async stop(): Promise<void> {

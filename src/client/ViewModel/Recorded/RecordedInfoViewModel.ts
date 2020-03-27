@@ -155,7 +155,7 @@ class RecordedInfoViewModel extends ViewModel {
         if (urlScheme === null && isEnabledUrlScheme) {
             const app: { ios: string; android: string; mac: string; win: string } | undefined = download ? config.recordedDownloader : config.recordedViewer;
             if (typeof app !== 'undefined') {
-                if (Util.uaIsiOS() && typeof app.ios !== 'undefined') {
+                if ((Util.uaIsiOS() || Util.uaIsiPadOS()) && typeof app.ios !== 'undefined') {
                     urlScheme = app.ios;
                 } else if (Util.uaIsAndroid() && typeof app.android !== 'undefined') {
                     urlScheme = app.android;

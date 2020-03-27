@@ -91,7 +91,7 @@ abstract class DBOperator extends Model {
      * @return Promise<number>
      */
     public async total(tableName: string, option: string = '', values: any[] = []): Promise<number> {
-        const result = await this.runQuery(`select count(id) as total from ${ tableName } ${ option }`, values);
+        const result = await this.runQuery<{ total: number }[]>(`select count(id) as total from ${ tableName } ${ option }`, values);
 
         return result[0].total;
     }

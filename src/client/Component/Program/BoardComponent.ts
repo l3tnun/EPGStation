@@ -55,7 +55,11 @@ class BoardComponent extends Component<BoardArgs> {
         this.storedGenre = genre === null ? {} : genre;
 
         const schedules = this.viewModel.getSchedule();
-        if (schedules.length === 0) { return null; }
+        if (schedules.length === 0) {
+            this.viewModel.progressShow = false;
+
+            return null;
+        }
 
         return m('div', {
             class: `${ ProgramViewModel.boardName } non-scroll`,
@@ -69,6 +73,7 @@ class BoardComponent extends Component<BoardArgs> {
                 this.scroller.set(element, channel, time,
                     () => { this.viewModel.disableShowDetail(); },
                     () => { this.viewModel.enableShowDetail(); },
+                    () => { return !this.infoViewModel.isOpend(); },
                 );
 
                 // scroll position

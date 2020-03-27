@@ -28,9 +28,9 @@ class RecordedMultipleDeleteComponent extends Component<void> {
                 m('div', { class: 'pulldown mdl-layout-spacer', style: 'width: 100%;' }, [
                     m('select', {
                         value: this.viewModel.deleteOption,
-                        onchange: m.withAttr('value', (value) => {
-                            this.viewModel.deleteOption = Number(value);
-                        }),
+                        onchange: (e: Event) => {
+                            this.viewModel.deleteOption = parseInt((<HTMLInputElement> e.target!).value, 10);
+                        },
                         onupdate: (vnode: m.VnodeDOM<void, this>) => {
                             this.selectOnUpdate(<HTMLInputElement> vnode.dom, this.viewModel.deleteOption);
                         },

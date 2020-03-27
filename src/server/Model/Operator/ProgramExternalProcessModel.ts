@@ -45,6 +45,7 @@ class ProgramExternalProcessModel extends QueueProcessBaseModel implements Progr
                 const child = spawn(cmds.bin, cmds.args, {
                     stdio: 'ignore',
                     env: {
+                        PATH: process.env['PATH'],
                         PROGRAMID: program.id,
                         CHANNELTYPE: program.channelType,
                         CHANNELID: program.channelId,

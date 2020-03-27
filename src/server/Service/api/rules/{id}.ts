@@ -7,7 +7,7 @@ export const get: Operation = async(req, res) => {
     const rules = <RulesModelInterface> factory.get('RulesModel');
 
     try {
-        const result = await rules.getId(req.params.id);
+        const result = await rules.getId(parseInt(req.params.id, 10));
         api.responseJSON(res, 200, result);
     } catch (err) {
         if (err.message === RulesModelInterface.NotFoundRuleIdError) {
@@ -54,7 +54,7 @@ export const put: Operation = async(req, res) => {
     const rules = <RulesModelInterface> factory.get('RulesModel');
 
     try {
-        await rules.updateRule(req.params.id, req.body);
+        await rules.updateRule(parseInt(req.params.id, 10), req.body);
         api.responseJSON(res, 200, { code: 200 });
     } catch (err) {
         api.responseServerError(res, err.message);
@@ -104,7 +104,7 @@ export const del: Operation = async(req, res) => {
 
     try {
         await rules.deleteRule(
-            req.params.id,
+            parseInt(req.params.id, 10),
             typeof req.query.delete === 'undefined' ? false : req.query.delete,
         );
         api.responseJSON(res, 200, { code: 200 });

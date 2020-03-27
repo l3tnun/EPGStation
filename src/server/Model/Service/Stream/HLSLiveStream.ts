@@ -45,6 +45,7 @@ class HLSLiveStream extends Stream {
 
     public async start(streamNumber: number): Promise<void> {
         await super.start(streamNumber);
+        super.checkHLSStreamFileDir();
 
         // config の取得
         const config = this.config.getConfig().liveHLS;
@@ -66,7 +67,7 @@ class HLSLiveStream extends Stream {
 
         try {
             // 放送波受信
-            this.stream = await mirakurun.getServiceStream(this.channelId);
+            this.stream = await mirakurun.getServiceStream(this.channelId, true, this.getPriority());
 
             // エンコードプロセス生成
             this.enc = await this.process.create(

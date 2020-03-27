@@ -23,6 +23,7 @@ class BoardScroller {
 
     private startScroll: (() => void);
     private doneScroll: (() => void);
+    private isEnabledScroll: (() => boolean);
 
     /**
      * scroll 設定をする
@@ -31,6 +32,7 @@ class BoardScroller {
      * @param timeElement 時間要素
      * @param startCallback: ドラッグ開始コールバック
      * @param doneCallback: ドラッグ完了コールバック
+     * @param isEnabledScroll: scroll が有効か確認するコールバック
      */
     public set(
         boardElement: HTMLElement,
@@ -38,6 +40,7 @@ class BoardScroller {
         timeElement: HTMLElement,
         startCallback: (() => void),
         doneCallback: (() => void),
+        isEnabledScroll: (() => boolean),
     ): void {
         this.boardElement = boardElement;
         this.channelElement = channelElement;
@@ -48,6 +51,7 @@ class BoardScroller {
         if (Util.uaIsMobile()) { return; }
         this.startScroll = startCallback;
         this.doneScroll = doneCallback;
+        this.isEnabledScroll = isEnabledScroll;
 
         document.addEventListener('mousedown', this.mouseDownListener, false);
         document.addEventListener('mouseup', this.mouseUpListener, false);
@@ -97,7 +101,7 @@ class BoardScroller {
      * @param e: MouseEvent
      */
     private onMouseMove(e: MouseEvent): void {
-        if (!this.isPushed) { return; }
+        if (!this.isPushed || this.isEnabledScroll() === false) { return; }
 
         this.boardElement.scrollLeft += this.baseClientX - e.clientX;
         this.boardElement.scrollTop += this.baseClientY - e.clientY;

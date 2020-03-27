@@ -71,7 +71,7 @@ class EncodingApiModel extends ApiModel implements EncodingApiModelInterface {
         await this.request({
             method: 'POST',
             url: './api/encode/cancel',
-            data: {
+            body: {
                 ids: ids,
             },
         });

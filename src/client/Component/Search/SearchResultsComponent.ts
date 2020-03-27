@@ -2,11 +2,13 @@ import * as m from 'mithril';
 import * as apid from '../../../../api';
 import DateUtil from '../../Util/DateUtil';
 import GenreUtil from '../../Util/GenreUtil';
+import Scroll from '../../Util/Scroll';
 import BalloonViewModel from '../../ViewModel/Balloon/BalloonViewModel';
 import ProgramInfoViewModel from '../../ViewModel/Program/ProgramInfoViewModel';
 import SearchViewModel from '../../ViewModel/Search/SearchViewModel';
 import factory from '../../ViewModel/ViewModelFactory';
 import Component from '../Component';
+import MainLayoutComponent from '../MainLayoutComponent';
 
 /**
  * SearchResultsComponent
@@ -32,7 +34,21 @@ class SearchResultsComponent extends Component<void> {
             m('div', {
                 id: SearchViewModel.hitId,
                 class: 'hit-num',
-            }, results.length + '件ヒットしました。'),
+            }, [
+                m('div', results.length + '件ヒットしました。'),
+                m('i', {
+                    class: 'material-icons',
+                    onclick: () => {
+                        const mainLayout = <HTMLElement> document.getElementById(MainLayoutComponent.id);
+                        const addCard = <HTMLElement> document.getElementById(SearchViewModel.addCardId);
+
+                        const start = mainLayout.scrollTop;
+                        const end = start + addCard.getBoundingClientRect().top - 70;
+
+                        Scroll.scrollTo(mainLayout, start, end, 300);
+                    },
+                }, 'link'),
+            ]),
 
             // 検索結果
             results.map((program) => {

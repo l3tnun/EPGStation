@@ -418,7 +418,7 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
         }
 
         // dir の存在確認
-        const dir = path.join(Util.getRecordedPath(), Util.replaceDirName(program.directory || ''));
+        const dir = typeof program.directory === 'undefined' ? Util.getRecordedPath() : path.join(Util.getRecordedPath(), Util.replaceDirName(program.directory));
         if (program.suffix !== null) {
             // program.suffix が null でない = output がある場合はディレクトリをチェック
             try {
@@ -436,6 +436,7 @@ class EncodeManageModel extends Model implements EncodeManageModelInterface {
         try {
             child = await this.encodeProcessManage.create(program.source, output, program.cmd, EncodeManageModel.priority, {
                 env: {
+                    PATH: process.env['PATH'],
                     RECORDEDID: program.recordedId,
                     INPUT: program.source,
                     OUTPUT: output === null ? '' : output,

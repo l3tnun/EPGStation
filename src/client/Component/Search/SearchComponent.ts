@@ -83,7 +83,7 @@ class SearchComponent extends ParentComponent<void> {
                         onclick: () => {
                             this.balloon.close();
                             window.setTimeout(() => {
-                                this.searchSettingViewModel.setTemp();
+                                this.searchSettingViewModel.resetTmp();
                                 this.balloon.open(SearchSettingViewModel.id);
                             }, 200);
                         },

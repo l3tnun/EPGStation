@@ -71,7 +71,7 @@ class RulesApiModel extends ApiModel implements RulesApiModelInterface {
             this.rules = await <any> this.request({
                 method: 'GET',
                 url: './api/rules',
-                data: query,
+                params: query,
             });
 
             this.currentPage = this.offset / this.limit + 1;
@@ -202,7 +202,7 @@ class RulesApiModel extends ApiModel implements RulesApiModelInterface {
         await <apid.RecordedDeleteMultipleResult> await this.request({
             method: 'POST',
             url: './api/rules/delete',
-            data: {
+            body: {
                 ruleIds: ruleIds,
                 delete: isDeleteRecorded,
             },
@@ -219,7 +219,7 @@ class RulesApiModel extends ApiModel implements RulesApiModelInterface {
         await this.request({
             method: 'POST',
             url: './api/rules',
-            data: rule,
+            body: rule,
         });
     }
 
@@ -233,7 +233,7 @@ class RulesApiModel extends ApiModel implements RulesApiModelInterface {
         await this.request({
             method: 'PUT',
             url: `./api/rules/${ ruleId }`,
-            data: rule,
+            body: rule,
         });
     }
 }

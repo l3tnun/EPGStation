@@ -23,6 +23,7 @@ export type ProgramVideoResolution = '240p' | '480i' | '480p' | '720p' | '1080i'
 export type ProgramAudioSamplingRate = 16000 | 22050 | 24000 | 32000 | 44100 | 48000;
 
 export interface Config {
+    socketioPort: number;
     enableEncode: boolean;
     enableLiveStreaming: boolean;
     recordedTSDefaultDirectory: string;

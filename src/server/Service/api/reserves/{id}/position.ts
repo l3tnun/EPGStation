@@ -7,7 +7,7 @@ export const get: Operation = async(req, res) => {
     const reserves = <ReservesModelInterface> factory.get('ReservesModel');
 
     try {
-        const result = await reserves.getPosition(req.params.id);
+        const result = await reserves.getPosition(parseInt(req.params.id, 10));
         api.responseJSON(res, 200, result);
     } catch (err) {
         api.responseServerError(res, err.message);

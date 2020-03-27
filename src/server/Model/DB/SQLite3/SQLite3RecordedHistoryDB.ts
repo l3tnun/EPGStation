@@ -13,6 +13,7 @@ class SQLite3RecordedHistoryDB extends RecordedHistoryDB {
         const query = `create table if not exists ${ DBSchema.TableName.RecordedHistory } (`
             + 'id integer primary key autoincrement, '
             + 'name text not null, '
+            + 'channelId integer null default null, '
             + 'endAt integer not null '
             + ');';
 

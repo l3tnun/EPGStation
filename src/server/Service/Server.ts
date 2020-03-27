@@ -4,6 +4,7 @@ import * as bodyParser from 'body-parser';
 import * as express from 'express';
 import * as openapi from 'express-openapi';
 import * as fs from 'fs';
+import * as http from 'http';
 import * as yaml from 'js-yaml';
 import * as log4js from 'log4js';
 import * as mkdirp from 'mkdirp';
@@ -146,6 +147,7 @@ class Server extends Base {
         this.app.use(this.createUrl('/'), express.static(path.join(__dirname, '..', '..', '..', 'html')));
         this.app.use(this.createUrl('/material-design-icons'), express.static(path.join(__dirname, '..', '..', '..', 'node_modules', 'material-design-icons')));
         this.app.use(this.createUrl('/material-design-lite'), express.static(path.join(__dirname, '..', '..', '..', 'node_modules', 'material-design-lite')));
+        this.app.use(this.createUrl('/css-ripple-effect'), express.static(path.join(__dirname, '..', '..', '..', 'node_modules', 'css-ripple-effect', 'dist')));
         this.app.use(this.createUrl('/js'), express.static(path.join(__dirname, '..', '..', '..', 'dist', 'client')));
         this.app.use(this.createUrl('/css'), express.static(path.join(__dirname, '..', '..', '..', 'dist', 'css')));
         this.app.use(this.createUrl('/img'), express.static(path.join(__dirname, '..', '..', '..', 'img')));
@@ -166,13 +168,27 @@ class Server extends Base {
      * 開始
      */
     public start(): void {
-        const port = this.config.getConfig().serverPort || 8888;
+        const conf = this.config.getConfig();
+        const port = parseInt(<any> conf.serverPort, 10) || 8888;
+        const socketioPort = typeof conf.socketioPort === 'undefined' ? port + 1 : parseInt(<any> conf.socketioPort, 10);
+
         const server = this.app.listen(port, () => {
-            this.log.system.info(`listening on ${ port }`);
+            this.log.system.info(`server listening on ${ port }`);
         });
 
-        // socket.io
-        (<SocketIoManageModelInterface> factory.get('SocketIoManageModel')).initialize(server);
+        // setting socket.io
+        const socketio = (<SocketIoManageModelInterface> factory.get('SocketIoManageModel'));
+        if (port === socketioPort) {
+            socketio.initialize(server);
+        } else {
+            const socketIoServer = http.createServer();
+            socketIoServer.listen(socketioPort, () => {
+                this.log.system.info(`SocketIo listening on ${ socketioPort }`);
+            });
+
+            // socket.io
+            socketio.initialize(socketIoServer);
+        }
 
         // encode 終了後
         (<EncodeFinModelInterface> factory.get('EncodeFinModel')).set();

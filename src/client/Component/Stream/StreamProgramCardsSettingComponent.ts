@@ -29,9 +29,7 @@ class StreamProgramCardsSettingComponent extends Component<void> {
     /**
      * create content
      */
-    private createContent(): m.Child[] | null {
-        if (typeof this.viewModel.tmpValue === 'undefined') { return null; }
-
+    private createContent(): m.Child[] {
         return [
             this.createListItem(
                 'タブを非表示にする',
@@ -76,9 +74,9 @@ class StreamProgramCardsSettingComponent extends Component<void> {
                 type: 'checkbox',
                 class: 'mdl-switch__input',
                 checked: getValue(),
-                onclick: m.withAttr('checked', (value) => {
-                    setValue(value);
-                }),
+                onclick: (e: Event) => {
+                    setValue((<HTMLInputElement> e.target!).checked);
+                },
             }),
             m('span', { class: 'mdl-switch__label' }),
         ]);

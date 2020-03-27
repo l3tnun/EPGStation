@@ -253,9 +253,8 @@ abstract class ParentComponent<T> extends Component<T> {
 
         // 一度だけ socket.io の接続を行う
         if (ParentComponent.io === null) {
-            const subDirectory = Util.getSubDirectory();
-            ParentComponent.io = socketIo.connect({
-                path: subDirectory.length === 0 ? '/socket.io' : `${ subDirectory }/socket.io`,
+            ParentComponent.io = socketIo.connect(this.getSocketIoPath(), {
+                path: `${Util.getSubDirectory()}/socket.io`,
             });
             // socket.io 切断時の設定
             this.disconnectIo(ParentComponent.io);
@@ -282,14 +281,24 @@ abstract class ParentComponent<T> extends Component<T> {
     }
 
     /**
+     * socket io path
+     * @return string
+     */
+    private getSocketIoPath(): string {
+        const port = this._mainLayout.getConfig()!.socketioPort;
+
+        return `${ location.protocol }//${ location.hostname }:${ port }`;
+    }
+
+    /**
      * socket.io 切断時の設定
      */
     private disconnectIo(io: SocketIOClient.Socket): void {
         let movePage = false;
         window.onunload = () => {};
-        window.onpageshow = (event) => { if (event.persisted) { window.location.reload(); } };
+        window.onpageshow = (event: PageTransitionEvent) => { if (event.persisted) { window.location.reload(); } };
 
-        window.onbeforeunload = (event) => {
+        window.onbeforeunload = (event: PageTransitionEvent) => {
             event = event || window.event;
             movePage = true;
         };

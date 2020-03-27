@@ -19,7 +19,7 @@ class ProgramSettingComponent extends ParentComponent<void> {
 
     protected async parentInitViewModel(status: ViewModelStatus): Promise<void> {
         if (status === 'init') {
-            this.viewModel.setTemp();
+            this.viewModel.resetTmp();
         }
 
         await Util.sleep(100);
@@ -132,11 +132,11 @@ class ProgramSettingComponent extends ParentComponent<void> {
                     step: '0.01',
                     min: '1',
                     value: getValue(),
-                    onchange: m.withAttr('value', (value) => {
-                        const num = parseFloat(value);
-                        if (isNaN(num) || typeof num !== 'number' || num < 0.01) { return; }
+                    onchange: (e: Event) => {
+                        const num = parseFloat((<HTMLInputElement> e.target!).value);
+                        if (isNaN(num) || num < 0.01) { return; }
                         setValue(num);
-                    }),
+                    },
                     onupdate: (vnode: m.VnodeDOM<void, this>) => {
                         this.inputNumberOnUpdate(<HTMLInputElement> vnode.dom, getValue());
                     },

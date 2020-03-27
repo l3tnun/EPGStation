@@ -25,7 +25,7 @@ namespace CreateStreamLink {
                 if (typeof config.mpegTsViewer === 'undefined') { throw new Error('NotFoundViewerConfig'); }
 
                 // connfig の設定を使用する
-                if (Util.uaIsiOS() && typeof config.mpegTsViewer.ios !== 'undefined') {
+                if ((Util.uaIsiOS() || Util.uaIsiPadOS()) && typeof config.mpegTsViewer.ios !== 'undefined') {
                     baseUrl = config.mpegTsViewer.ios;
                 } else if (Util.uaIsAndroid() && typeof config.mpegTsViewer.android !== 'undefined') {
                     baseUrl = config.mpegTsViewer.android;
@@ -40,7 +40,7 @@ namespace CreateStreamLink {
             }
 
             // ios or android で viewer の設定がなかった場合
-            if (baseUrl === null && (Util.uaIsiOS() || Util.uaIsAndroid())) { throw new Error('NotFoundViewerApp'); }
+            if (baseUrl === null && (Util.uaIsiOS() || Util.uaIsiPadOS() || Util.uaIsAndroid())) { throw new Error('NotFoundViewerApp'); }
         }
 
         if (baseUrl === null) {

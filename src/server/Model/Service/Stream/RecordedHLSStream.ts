@@ -53,6 +53,7 @@ class RecordedHLSStream extends Stream {
 
     public async start(streamNumber: number): Promise<void> {
         await super.start(streamNumber);
+        super.checkHLSStreamFileDir();
 
         // file path を取得
         const recorded = await this.recordedDB.findId(this.recordedId);

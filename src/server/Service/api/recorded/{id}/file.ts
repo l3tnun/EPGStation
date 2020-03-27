@@ -7,7 +7,7 @@ export const get: Operation = async(req, res) => {
     const recordeds = <RecordedModelInterface> factory.get('RecordedModel');
 
     try {
-        const file = await recordeds.getFilePath(req.params.id, req.query.encodedId);
+        const file = await recordeds.getFilePath(parseInt(req.params.id, 10), req.query.encodedId);
         api.responseFile(req, res, file.path, file.mime, req.query.mode === 'download');
     } catch (err) {
         if (err.message === RecordedModelInterface.NotFoundRecordedFileError) {
@@ -70,7 +70,7 @@ export const del: Operation = async(req, res) => {
     const recordeds = <RecordedModelInterface> factory.get('RecordedModel');
 
     try {
-        await recordeds.deleteRecorded(req.params.id, req.query.encodedId);
+        await recordeds.deleteRecorded(parseInt(req.params.id, 10), req.query.encodedId);
         api.responseJSON(res, 200, { code: 200 });
         api.notifyClient();
     } catch (err) {

@@ -70,7 +70,7 @@ class StreamProgramComponent extends ParentComponent<void> {
                         onclick: () => {
                             this.balloon.close();
                             window.setTimeout(() => {
-                                this.cardSettingViewModel.setTemp();
+                                this.cardSettingViewModel.resetTmp();
                                 this.balloon.open(StreamProgramCardsSettingViewModel.id);
                             }, 200);
                         },

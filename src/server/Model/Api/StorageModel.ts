@@ -15,6 +15,8 @@ class StorageModel extends ApiModel implements StorageModelInterface {
             diskusage.check(dir, (err, result) => {
                 if (err) {
                     reject(err);
+                } else if (typeof result === 'undefined') {
+                    reject(new Error('DiskuageResultError'));
                 } else {
                     resolve({
                         free: result.available,

@@ -19,7 +19,7 @@ class SettingComponent extends ParentComponent<void> {
 
     protected async parentInitViewModel(status: ViewModelStatus): Promise<void> {
         if (status === 'init') {
-            this.viewModel.setTemp();
+            this.viewModel.resetTmp();
         }
         await Util.sleep(100);
     }
@@ -113,9 +113,9 @@ class SettingComponent extends ParentComponent<void> {
                     m('div', { class: 'pulldown mdl-layout-spacer' }, [
                         m('select', {
                             class: 'mdl-textfield__input program-dialog-label',
-                            onchange: m.withAttr('value', (value) => {
-                                this.viewModel.tmpValue.programLength = Number(value);
-                            }),
+                            onchange: (e: Event) => {
+                                this.viewModel.tmpValue.programLength = parseInt((<HTMLInputElement> e.target!).value, 10);
+                            },
                             onupdate: (vnode: m.VnodeDOM<void, this>) => {
                                 this.selectOnUpdate(<HTMLInputElement> (vnode.dom), this.viewModel.tmpValue.programLength);
                             },
@@ -128,9 +128,9 @@ class SettingComponent extends ParentComponent<void> {
                     m('div', { class: 'pulldown mdl-layout-spacer' }, [
                         m('select', {
                             class: 'mdl-textfield__input program-dialog-label',
-                            onchange: m.withAttr('value', (value) => {
-                                this.viewModel.tmpValue.recordedLength = Number(value);
-                            }),
+                            onchange: (e: Event) => {
+                                this.viewModel.tmpValue.recordedLength = parseInt((<HTMLInputElement> e.target!).value, 10);
+                            },
                             onupdate: (vnode: m.VnodeDOM<void, this>) => {
                                 this.selectOnUpdate(<HTMLInputElement> (vnode.dom), this.viewModel.tmpValue.recordedLength);
                             },
@@ -143,9 +143,9 @@ class SettingComponent extends ParentComponent<void> {
                     m('div', { class: 'pulldown mdl-layout-spacer' }, [
                         m('select', {
                             class: 'mdl-textfield__input program-dialog-label',
-                            onchange: m.withAttr('value', (value) => {
-                                this.viewModel.tmpValue.reservesLength = Number(value);
-                            }),
+                            onchange: (e: Event) => {
+                                this.viewModel.tmpValue.reservesLength = parseInt((<HTMLInputElement> e.target!).value, 10);
+                            },
                             onupdate: (vnode: m.VnodeDOM<void, this>) => {
                                 this.selectOnUpdate(<HTMLInputElement> (vnode.dom), this.viewModel.tmpValue.reservesLength);
                             },
@@ -158,9 +158,9 @@ class SettingComponent extends ParentComponent<void> {
                     m('div', { class: 'pulldown mdl-layout-spacer' }, [
                         m('select', {
                             class: 'mdl-textfield__input program-dialog-label',
-                            onchange: m.withAttr('value', (value) => {
-                                this.viewModel.tmpValue.ruleLength = Number(value);
-                            }),
+                            onchange: (e: Event) => {
+                                this.viewModel.tmpValue.ruleLength = parseInt((<HTMLInputElement> e.target!).value, 10);
+                            },
                             onupdate: (vnode: m.VnodeDOM<void, this>) => {
                                 this.selectOnUpdate(<HTMLInputElement> (vnode.dom), this.viewModel.tmpValue.ruleLength);
                             },
@@ -287,7 +287,7 @@ class SettingComponent extends ParentComponent<void> {
      * @param maxValue: number
      * @return m.Child[]
      */
-    private createLengthOption(maxValue: number = 50): m.Child[] {
+    private createLengthOption(maxValue: number = 100): m.Child[] {
         const results: m.Child[] = [];
 
         for (let i = 1; i <= maxValue; i++) {
@@ -314,9 +314,9 @@ class SettingComponent extends ParentComponent<void> {
                 type: 'checkbox',
                 class: 'mdl-switch__input',
                 checked: getValue(),
-                onclick: m.withAttr('checked', (value) => {
-                    setValue(value);
-                }),
+                onclick: (e: Event) => {
+                    setValue((<HTMLInputElement> e.target!).checked);
+                },
             }),
             m('span', { class: 'mdl-switch__label' }),
         ]);
@@ -337,7 +337,7 @@ class SettingComponent extends ParentComponent<void> {
                     type: 'text',
                     placeholder: placeholder,
                     value: getValue(),
-                    onchange: m.withAttr('value', (value) => { setValue(value); }),
+                    onchange: (e: Event) => { setValue((<HTMLInputElement> e.target!).value); },
                 }),
             ]),
         ]);

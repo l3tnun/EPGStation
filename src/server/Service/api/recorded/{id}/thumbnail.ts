@@ -7,7 +7,7 @@ export const get: Operation = async(req, res) => {
     const recordeds = <RecordedModelInterface> factory.get('RecordedModel');
 
     try {
-        const filePath = await recordeds.getThumbnailPath(req.params.id);
+        const filePath = await recordeds.getThumbnailPath(parseInt(req.params.id, 10));
         res.sendFile(filePath);
     } catch (err) {
         if (err.message === RecordedModelInterface.NotFoundRecordedThumbnailError) {

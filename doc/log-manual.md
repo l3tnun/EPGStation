@@ -76,3 +76,18 @@ EPGStation では、デフォルトでは `info` レベルが設定されてい�
 `maxLogSize` を大きくすることでログローテーションの頻度を変更したり、`backups` の数を増やして管理世代数を増やすことが出来ます  
 `filename` や `pattern` を編集することで、出力されるログファイル名を変更することも出来ます
 `type` に `dateFile` を指定すると、容量ではなく日付でファイルが切り替わるようになります  
+
+## Service プロセスの標準出力について
+
+`config/serviceLogConfig.json` では下記のように access を除く各出力を stdout に出力するようになっていますが、基本的にファイルにしか出力されません。
+
+これは ```Operator``` プロセスとは別プロセスかつ、stdout 及び stderr を共有しないようになっているためです。
+
+```json
+    "categories": {
+        "default": { "appenders": [ "console", "stdout" ], "level": "info" },
+        "system": { "appenders": [ "system", "stdout" ], "level": "info" },
+        "access": { "appenders": [ "access" ], "level": "info" },
+        "stream": { "appenders": [ "stream", "stdout" ], "level": "info" }
+    }
+```

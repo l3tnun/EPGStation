@@ -32,7 +32,7 @@ class RecordedDeleteComponent extends Component<void> {
                     type: 'checkbox',
                     class: 'mdl-checkbox__input',
                     checked: this.viewModel.recordedFiles[i].checked,
-                    onclick: m.withAttr('checked', (value) => { this.viewModel.recordedFiles[i].checked = value; }),
+                    onclick: (e: Event) => { this.viewModel.recordedFiles[i].checked = (<HTMLInputElement> e.target!).checked; },
                     onupdate: (vnode: m.VnodeDOM<void, this>) => { this.checkboxOnUpdate(<HTMLInputElement> (vnode.dom)); },
                 }),
                 m('span', { class: 'mdl-checkbox__label' }, name),

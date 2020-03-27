@@ -26,6 +26,7 @@ class SocketIoManageModel extends Model implements SocketIoManageModelInterface 
     public initialize(server: http.Server): void {
         const subDirectory = Util.getSubDirectory();
         this.io = SocketIO(server, {
+            origins: '*:*',
             path: subDirectory === null ? '/socket.io' : urljoin(subDirectory, '/socket.io'),
         });
 

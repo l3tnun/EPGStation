@@ -38,7 +38,7 @@ export const get: Operation = async(req, res) => {
 
     try {
         const info = await streams.getRecordedStreamingMultiType(
-            req.params.id,
+            parseInt(req.params.id, 10),
             req.query.mode,
             req.query.ss,
             'mp4',

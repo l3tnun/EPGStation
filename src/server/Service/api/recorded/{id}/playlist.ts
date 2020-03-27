@@ -7,7 +7,7 @@ export const get: Operation = async(req, res) => {
     const recordeds = <RecordedModelInterface> factory.get('RecordedModel');
 
     try {
-        const list = await recordeds.getM3u8(req.headers.host!, req.header('x-forwarded-proto') === 'https', req.params.id, req.query.encodedId);
+        const list = await recordeds.getM3u8(req.headers.host!, req.header('x-forwarded-proto') === 'https', parseInt(req.params.id, 10), req.query.encodedId);
         api.responsePlayList(req, res, list);
     } catch (err) {
         if (err.message === RecordedModelInterface.NotFoundRecordedFileError) {

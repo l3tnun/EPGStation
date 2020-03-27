@@ -123,9 +123,9 @@ class ProgramDetailComponent extends ParentComponent<void> {
                  m('div', { class: 'pulldown mdl-layout-spacer' }, [
                     m('select', {
                         value: option.channelId,
-                        onchange: m.withAttr('value', (value) => {
-                            option.channelId = Number(value);
-                        }),
+                        onchange: (e: Event) => {
+                            option.channelId = parseInt((<HTMLInputElement> e.target!).value, 10);
+                        },
                     }, [
                         this.viewModel.getChannels().map((channel) => {
                             return m('option', { value: channel.id }, channel.name);
@@ -148,10 +148,10 @@ class ProgramDetailComponent extends ParentComponent<void> {
                 m('div', { class: 'pulldown mdl-layout-spacer' }, [
                     m('select', {
                         value: option.genre1,
-                        onchange: m.withAttr('value', (value) => {
-                            option.genre1 = Number(value);
+                        onchange: (e: Event) => {
+                            option.genre1 = parseInt((<HTMLInputElement> e.target!).value, 10);
                             this.viewModel.initGenre2();
-                        }),
+                        },
                     },
                         m('option', { value: '-1' }, '指定なし'),
                         this.viewModel.getGenre1().map((genre) => {
@@ -166,7 +166,7 @@ class ProgramDetailComponent extends ParentComponent<void> {
                 m('div', { class: 'pulldown mdl-layout-spacer' }, [
                     m('select', {
                         value: option.genre2,
-                        onchange: m.withAttr('value', (value) => { option.genre2 = Number(value); }),
+                        onchange: (e: Event) => { option.genre2 = parseInt((<HTMLInputElement> e.target!).value, 10); },
                     },
                         m('option', { value: '-1' }, '指定なし'),
                         this.viewModel.getGenre2().map((genre) => {
@@ -202,7 +202,7 @@ class ProgramDetailComponent extends ParentComponent<void> {
                     class: 'mdl-textfield__input',
                     type: 'date',
                     value: getDate(),
-                    onchange: m.withAttr('value', (value) => { setDate(value); }),
+                    onchange: (e: Event) => { setDate((<HTMLInputElement> e.target!).value); },
                 }),
             ]),
             m('div', {
@@ -214,7 +214,7 @@ class ProgramDetailComponent extends ParentComponent<void> {
                     type: 'time',
                     value: getTime(),
                     step: 1,
-                    onchange: m.withAttr('value', (value) => { setTime(value); }),
+                    onchange: (e: Event) => { setTime((<HTMLInputElement> e.target!).value); },
                 }),
             ]),
         ], 'required');
@@ -233,7 +233,7 @@ class ProgramDetailComponent extends ParentComponent<void> {
                     type: 'text',
                     placeholder: 'title',
                     value: option.name,
-                    onchange: m.withAttr('value', (value) => { option.name = value; }),
+                    onchange: (e: Event) => { option.name = (<HTMLInputElement> e.target!).value; },
                 }),
             ]),
         ], 'required');
@@ -253,7 +253,7 @@ class ProgramDetailComponent extends ParentComponent<void> {
                     class: 'mdl-textfield__input',
                     placeholder: '概要',
                     value: option.description,
-                    onchange: m.withAttr('value', (value) => { option.description = value; }),
+                    onchange: (e: Event) => { option.description = (<HTMLInputElement> e.target!).value; },
                     rows: 3,
                 }),
             ]),
@@ -274,7 +274,7 @@ class ProgramDetailComponent extends ParentComponent<void> {
                     class: 'mdl-textfield__input',
                     placeholder: '詳細',
                     value: option.extended,
-                    onchange: m.withAttr('value', (value) => { option.extended = value; }),
+                    onchange: (e: Event) => { option.extended = (<HTMLInputElement> e.target!).value; },
                     rows: 3,
                 }),
             ]),
@@ -337,9 +337,9 @@ class ProgramDetailComponent extends ParentComponent<void> {
                     class: 'mdl-switch__input',
                     disabled: this.viewModel.isEditMode() ? 'disabled' : '',
                     checked: this.viewModel.isTimeSpecifited(),
-                    onclick: m.withAttr('checked', (value) => {
-                        this.viewModel.setTimeSpecifited(value);
-                    }),
+                    onclick: (e: Event) => {
+                        this.viewModel.setTimeSpecifited((<HTMLInputElement> e.target!).checked);
+                    },
                 }),
                 m('span', { class: 'mdl-switch__label' }),
             ]),
@@ -390,7 +390,7 @@ class ProgramDetailComponent extends ParentComponent<void> {
                     type: 'text',
                     placeholder: 'directory',
                     value: this.viewModel.directory,
-                    onchange: m.withAttr('value', (value) => { this.viewModel.directory = value; }),
+                    onchange: (e: Event) => { this.viewModel.directory = (<HTMLInputElement> e.target!).value; },
                 }),
             ]),
         ]);
@@ -407,7 +407,7 @@ class ProgramDetailComponent extends ParentComponent<void> {
                     type: 'text',
                     placeholder: 'file format',
                     value: this.viewModel.recordedFormat,
-                    onchange: m.withAttr('value', (value) => { this.viewModel.recordedFormat = value; }),
+                    onchange: (e: Event) => { this.viewModel.recordedFormat = (<HTMLInputElement> e.target!).value; },
                 }),
             ]),
         ]);
@@ -442,9 +442,9 @@ class ProgramDetailComponent extends ParentComponent<void> {
                 m('div', { class: 'pulldown mdl-layout-spacer' }, [
                     m('select', {
                         value: this.viewModel.encodeModes[num].mode,
-                        onchange: m.withAttr('value', (value) => {
-                            this.viewModel.encodeModes[num].mode = Number(value);
-                        }),
+                        onchange: (e: Event) => {
+                            this.viewModel.encodeModes[num].mode = parseInt((<HTMLInputElement> e.target!).value, 10);
+                        },
                     }, [
                         m('option', { value: '-1' }, '未指定'),
                         this.viewModel.getEncodeOption().map((name, i) => {
@@ -461,9 +461,9 @@ class ProgramDetailComponent extends ParentComponent<void> {
                     type: 'text',
                     placeholder: 'directory',
                     value: this.viewModel.encodeModes[num].directory,
-                    onchange: m.withAttr('value', (value) => {
-                        this.viewModel.encodeModes[num].directory = value;
-                    }),
+                    onchange: (e: Event) => {
+                        this.viewModel.encodeModes[num].directory = (<HTMLInputElement> e.target!).value;
+                    },
                 }),
             ]),
         ]);
@@ -543,7 +543,7 @@ class ProgramDetailComponent extends ParentComponent<void> {
                 type: 'checkbox',
                 class: 'mdl-checkbox__input',
                 checked: checked(),
-                onclick: m.withAttr('checked', (value) => { onclick(value); }),
+                onclick: (e: Event) => { onclick((<HTMLInputElement> e.target!).checked); },
                 onupdate: (vnode: m.VnodeDOM<void, this>) => { this.checkboxOnUpdate(<HTMLInputElement> (vnode.dom)); },
             }),
             m('span', { class: 'mdl-checkbox__label' }, labelName),

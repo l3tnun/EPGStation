@@ -7,7 +7,7 @@ export const get: Operation = async(req, res) => {
     const recordeds = <RecordedModelInterface> factory.get('RecordedModel');
 
     try {
-        const result = await recordeds.getId(req.params.id);
+        const result = await recordeds.getId(parseInt(req.params.id, 10));
         api.responseJSON(res, 200, result);
     } catch (err) {
         if (err.message === RecordedModelInterface.NotFoundRecordedIdError) {
@@ -54,7 +54,7 @@ export const del: Operation = async(req, res) => {
     const recordeds = <RecordedModelInterface> factory.get('RecordedModel');
 
     try {
-        await recordeds.deleteAllRecorded(req.params.id);
+        await recordeds.deleteAllRecorded(parseInt(req.params.id, 10));
         api.responseJSON(res, 200, { code: 200 });
         api.notifyClient();
     } catch (err) {

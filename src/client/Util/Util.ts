@@ -6,6 +6,22 @@ import * as m from 'mithril';
  */
 namespace Util {
     /**
+     * iPad スクリーン解像度定義
+     */
+    const IPAD_SCREENS = {
+        1024: 768,
+        1080: 810,
+        1112: 834,
+        1194: 834,
+        1366: 1024,
+        2048: 1536,
+        2160: 1620,
+        2224: 1668,
+        2388: 1668,
+        2732: 2048,
+    };
+
+    /**
      * Material Desgin Lite の DOM をアップグレードする
      */
     export const upgradeMdl = (): void => {
@@ -42,8 +58,8 @@ namespace Util {
             elmX = (<MouseEvent> event).offsetX;
             elmY = (<MouseEvent> event).offsetY;
         } else {
-            elmX = (<MouseEvent> event).layerX;
-            elmY = (<MouseEvent> event).layerY;
+            elmX = (<any> event).layerX;
+            elmY = (<any> event).layerY;
         }
 
         const rect = (<HTMLElement> event.target).getBoundingClientRect();
@@ -79,7 +95,28 @@ namespace Util {
      * UA が iPhone か判定
      */
     export const uaIsiPhone = (): boolean => {
-        return /iPhone/.test(navigator.userAgent);
+        return /iPhone|iphone/.test(navigator.userAgent);
+    };
+
+    /**
+     * UA が iPadOS か判定
+     */
+    export const uaIsiPadOS = (): boolean => {
+        if (/Macintosh|macintosh/.test(navigator.userAgent) === false) {
+            return false;
+        }
+
+        let width = 0;
+        let height = 0;
+        if (window.screen.width < window.screen.height) {
+            width = window.screen.width;
+            height = window.screen.height;
+        } else {
+            width = window.screen.height;
+            height = window.screen.width;
+        }
+
+        return IPAD_SCREENS[height] === width;
     };
 
     /**
@@ -151,7 +188,7 @@ namespace Util {
      * @return boolean
      */
     export const uaIsMac = (): boolean => {
-        return /Macintosh|macintosh/.test(navigator.userAgent);
+        return /Macintosh|macintosh/.test(navigator.userAgent) && uaIsiPadOS() === false;
     };
 
     /**

@@ -20,11 +20,11 @@ class StreamProgramTimeComponent extends Component<void> {
     public view(): m.Child {
         return m('div', { class: 'stream-time-content' }, [
             m('button', {
-                class: 'stream-reset-time-button mdl-shadow--8dp mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent',
+                class: 'stream-reset-time-button mdl-shadow--8dp mdl-button mdl-button--raised ripple mdl-button--accent',
                 onclick: () => { this.viewModel.resetTime(); },
             }, 'NOW'),
             m('button', {
-                class: 'mdl-shadow--8dp mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent',
+                class: 'mdl-shadow--8dp mdl-button mdl-button--raised mdl-button--accent',
                 onclick: () => { this.viewModel.addTime(); },
             }, '+10分'),
         ]);

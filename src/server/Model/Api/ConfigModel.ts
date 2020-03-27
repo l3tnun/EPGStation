@@ -51,6 +51,11 @@ class ConfigModel extends ApiModel implements ConfigModelInterface {
             }
         }
 
+        const socketIoPort = typeof config.clientSocketioPort !== 'undefined'
+            ? config.clientSocketioPort
+            : typeof config.socketioPort === 'undefined' ? config.serverPort + 1 : config.socketioPort;
+        results['socketioPort'] = socketIoPort;
+
         if (typeof config.recordedTSDefaultDirectory !== 'undefined') {
             results['recordedTSDefaultDirectory'] = config.recordedTSDefaultDirectory;
         }

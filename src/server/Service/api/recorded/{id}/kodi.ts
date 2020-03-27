@@ -7,7 +7,7 @@ export const post: Operation = async(req, res) => {
     const recordeds = <RecordedModelInterface> factory.get('RecordedModel');
 
     try {
-        await recordeds.sendToKodi(req.headers.host!, req.header('x-forwarded-proto') === 'https', req.body.kodi, req.params.id, req.body.encodedId);
+        await recordeds.sendToKodi(req.headers.host!, req.header('x-forwarded-proto') === 'https', req.body.kodi, parseInt(req.params.id, 10), req.body.encodedId);
         api.responseJSON(res, 200, { code: 200, result: 'ok' });
     } catch (err) {
         if (err.message === RecordedModelInterface.NotFoundRecordedFileError) {

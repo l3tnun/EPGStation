@@ -51,8 +51,6 @@ class RecordedInfoComponent extends Component<void> {
      * info tab
      */
     private createInfo(): m.Child[] {
-        let extended = this.viewModel.getExtended();
-
         return <m.Child[]> [
             m('div', { class: 'title' }, this.viewModel.getTitle()),
             m('div', { class: 'channel' }, this.viewModel.getChannelName()),
@@ -66,9 +64,9 @@ class RecordedInfoComponent extends Component<void> {
             m('div', { class: 'video-title' }, 'ビデオファイル'),
             this.viewModel.getVideoSrc().map((video) => {
                 return m('a', {
-                    class: 'recorded-link mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect',
+                    class: 'recorded-link mdl-button mdl-button--raised mdl-button--colored ripple',
                     onclick: async() => {
-                        if (this.selectViewModel.isEnabledStreaming() && typeof video.encodedId === 'undefined' && !Util.uaIsiOS()) {
+                        if (this.selectViewModel.isEnabledStreaming() && typeof video.encodedId === 'undefined' && !Util.uaIsiOS() && !Util.uaIsiPadOS()) {
                             // TS ストリーミング再生
                             const recorded = this.viewModel.getRecorded();
                             if (recorded === null) { return; }
@@ -130,24 +128,40 @@ class RecordedInfoComponent extends Component<void> {
 
             this.viewModel.getEncoding().map((video) => {
                 return m('a', {
-                    class: 'recorded-link mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect',
+                    class: 'recorded-link mdl-button mdl-button--raised mdl-button--colored ripple',
                     disabled: ' ',
                 }, video.name);
             }),
 
             this.createThumnbail(),
             m('div', { class: 'description' }, this.viewModel.getDescription()),
-            m('div', {
-                class: 'extended',
-                style: extended.length === 0 ? 'display: none;' : '',
-                onupdate: (vnode: m.VnodeDOM<void, this>) => {
-                    if (extended.length === 0) { return; }
-                    extended = extended.replace(/(http:\/\/[\x21-\x7e]+)/gi, "<a href='$1' target='_blank'>$1</a>");
-                    extended = extended.replace(/(https:\/\/[\x21-\x7e]+)/gi, "<a href='$1' target='_blank'>$1</a>");
-                    (<HTMLElement> vnode.dom).innerHTML = extended;
-                },
-            }, this.viewModel.getExtended()),
+            this.createExtended(),
         ];
+    }
+
+    /**
+     * exntended 生成
+     */
+    private createExtended(): m.Child | null {
+        const extended = this.viewModel.getExtended();
+        if (extended === '') { return null; }
+
+        const str = this.viewModel.getExtended()
+            .split(RecordedInfoComponent.linkReplacementCondition);
+
+        const content: m.Child[] = [];
+        for (const s of str) {
+            if (typeof s === 'undefined') { continue; }
+
+            if (s.match(RecordedInfoComponent.linkReplacementCondition)) {
+                content.push(m('a', { href: s, target: '_blank' }, s));
+                continue;
+            }
+
+            content.push(s);
+        }
+
+        return m('div', { class: 'extended' }, content);
     }
 
     /**
@@ -162,7 +176,7 @@ class RecordedInfoComponent extends Component<void> {
                 if (video.filesize !== null) { str += ` (${ video.filesize })`; }
 
                 return m('a', {
-                    class: 'recorded-link mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect',
+                    class: 'recorded-link mdl-button mdl-button--raised mdl-button--colored ripple',
                     href: video.path,
                     onclick: () => { if (Util.uaIsiOS()) { this.viewModel.close(); } },
                 }, str);
@@ -170,7 +184,7 @@ class RecordedInfoComponent extends Component<void> {
 
             this.viewModel.getEncoding().map((video) => {
                 return m('a', {
-                    class: 'recorded-link mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect',
+                    class: 'recorded-link mdl-button mdl-button--raised mdl-button--colored ripple',
                     disabled: ' ',
                 }, video.name);
             }),
@@ -183,7 +197,7 @@ class RecordedInfoComponent extends Component<void> {
                 if (Util.uaIsAndroid() || Util.uaIsiOS()) { return null; }
 
                 return m('a', {
-                    class: 'recorded-link mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect',
+                    class: 'recorded-link mdl-button mdl-button--raised mdl-button--colored ripple',
                     href: video.path,
                 }, video.name);
             }),
@@ -192,7 +206,7 @@ class RecordedInfoComponent extends Component<void> {
                 if (Util.uaIsMobile()) { return null; }
 
                 return m('a', {
-                    class: 'recorded-link mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect',
+                    class: 'recorded-link mdl-button mdl-button--raised mdl-button--colored ripple',
                     disabled: ' ',
                 }, video.name);
             }),
@@ -212,7 +226,7 @@ class RecordedInfoComponent extends Component<void> {
                 m('div', { class: 'pulldown mdl-layout-spacer' }, [
                     m('select', {
                         class: 'mdl-textfield__input program-dialog-label',
-                        onchange: m.withAttr('value', (value) => { this.viewModel.hlsOptionValue = Number(value); }),
+                        onchange: (e: Event) => { this.viewModel.hlsOptionValue = parseInt((<HTMLInputElement> e.target!).value, 10); },
                         onupdate: (vnode: m.VnodeDOM<void, this>) => {
                             this.selectOnUpdate(<HTMLInputElement> (vnode.dom), this.viewModel.hlsOptionValue);
                         },
@@ -221,7 +235,7 @@ class RecordedInfoComponent extends Component<void> {
 
                 this.viewModel.getVideoInfo().map((video) => {
                     return m('a', {
-                        class: 'recorded-link mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect',
+                        class: 'recorded-link mdl-button mdl-button--raised mdl-button--colored ripple',
                         onclick: () => {
                             this.viewModel.startHLSStreaming(typeof video.encodedId === 'undefined' ? null : video.encodedId);
                         },
@@ -237,7 +251,7 @@ class RecordedInfoComponent extends Component<void> {
                 m('div', { class: 'pulldown mdl-layout-spacer' }, [
                     m('select', {
                         class: 'mdl-textfield__input program-dialog-label',
-                        onchange: m.withAttr('value', (value) => { this.viewModel.kodiOptionValue = Number(value); }),
+                        onchange: (e: Event) => { this.viewModel.kodiOptionValue = parseInt((<HTMLInputElement> e.target!).value, 10); },
                         onupdate: (vnode: m.VnodeDOM<void, this>) => {
                             this.selectOnUpdate(<HTMLInputElement> (vnode.dom), this.viewModel.kodiOptionValue);
                         },
@@ -246,7 +260,7 @@ class RecordedInfoComponent extends Component<void> {
 
                 this.viewModel.getVideoInfo().map((video) => {
                     return m('a', {
-                        class: 'recorded-link mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect',
+                        class: 'recorded-link mdl-button mdl-button--raised mdl-button--colored ripple',
                         onclick: () => {
                             this.viewModel.sendToKodi(typeof video.encodedId === 'undefined' ? null : video.encodedId);
                         },
@@ -297,6 +311,7 @@ class RecordedInfoComponent extends Component<void> {
 namespace RecordedInfoComponent {
     export const downloadPanel = 'recorded-donwload-panel';
     export const watchPanel = 'recorded-watch-panel';
+    export const linkReplacementCondition = /(http:\/\/[\x21-\x7e]+)|(https:\/\/[\x21-\x7e]+)/;
 }
 
 export default RecordedInfoComponent;

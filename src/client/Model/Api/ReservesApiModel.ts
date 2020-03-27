@@ -126,7 +126,7 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
             this.reserves = await <any> this.request({
                 method: 'GET',
                 url: './api/reserves',
-                data: query,
+                params: query,
             });
 
             this.currentPage = this.offset / this.limit + 1;
@@ -157,7 +157,7 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
             this.conflicts = await <any> this.request({
                 method: 'GET',
                 url: './api/reserves/conflicts',
-                data: query,
+                params: query,
             });
 
             this.currentPage = this.offset / this.limit + 1;
@@ -188,7 +188,7 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
             this.overlaps = await <any> this.request({
                 method: 'GET',
                 url: './api/reserves/overlaps',
-                data: query,
+                params: query,
             });
 
             this.currentPage = this.offset / this.limit + 1;
@@ -372,7 +372,7 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
             const result = <any> await this.request({
                 method: 'POST',
                 url: './api/reserves',
-                data: option,
+                body: option,
             });
 
             return result.programId;
@@ -396,7 +396,7 @@ class ReservesApiModel extends ApiModel implements ReservesApiModelInterface {
             await <any> this.request({
                 method: 'PUT',
                 url: `./api/reserves/${ programId }`,
-                data: option,
+                body: option,
             });
 
         } catch (err) {

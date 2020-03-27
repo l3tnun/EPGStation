@@ -57,10 +57,10 @@ class ProgramGenreComponent extends Component<void> {
                             type: 'checkbox',
                             class: 'mdl-switch__input',
                             checked: this.viewModel.tmpGenre === null ? false : this.viewModel.tmpGenre[i],
-                            onclick: m.withAttr('checked', (value) => {
+                            onclick: (e: Event) => {
                                 if (this.viewModel.tmpGenre === null) { return; }
-                                this.viewModel.tmpGenre[i] = value;
-                            }),
+                                this.viewModel.tmpGenre[i] = (<HTMLInputElement> e.target!).checked;
+                            },
                         }),
                     ]),
                 ]),

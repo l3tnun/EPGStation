@@ -7,7 +7,7 @@ export const get: Operation = async(req, res) => {
     const schedules = <ScheduleModelInterface> factory.get('ScheduleModel');
 
     try {
-        const results = await schedules.getScheduleDetail(req.params.id);
+        const results = await schedules.getScheduleDetail(parseInt(req.params.id, 10));
         api.responseJSON(res, 200, results);
     } catch (err) {
         if (err.message === ScheduleModelInterface.channelIdIsNotFoundError) {

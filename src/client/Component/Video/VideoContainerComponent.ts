@@ -478,19 +478,19 @@ class VideoContainerComponent extends Component<ControlArgs> {
                     onupdate: (v: m.VnodeDOM<void, any>) => {
                         v.dom.classList.remove('is-lowest-value');
                     },
-                    onchange: m.withAttr('value', (value) => {
+                    onchange: (e: Event) => {
                         // seekbar 移動完了時
                         this.stopTimeUpdate = false;
                         if (this.videoElement === null) { return; }
 
-                        this.seekBar = value;
+                        this.seekBar = parseInt((<HTMLInputElement> e.target!).value, 10);
                         this.updateVideoCurrentTime(this.getSeekCurrentTime());
-                    }),
-                    oninput: m.withAttr('value', (value) => {
+                    },
+                    oninput: (e: Event) => {
                         // seekbar 移動中
                         this.stopTimeUpdate = true;
-                        this.seekBar = value;
-                    }),
+                        this.seekBar = parseInt((<HTMLInputElement> e.target!).value, 10);
+                    },
                 }),
                 m('span', { class: 'duration' }, timeStr.duration),
             ]),
@@ -510,11 +510,11 @@ class VideoContainerComponent extends Component<ControlArgs> {
                         max: '1',
                         step: '0.1',
                         value: this.videoElement.volume,
-                        oninput: m.withAttr('value', (value) => {
+                        oninput: (e: Event) => {
                             if (this.videoElement === null) { return; }
 
-                            this.videoElement.volume = value;
-                        }),
+                            this.videoElement.volume = parseFloat((<HTMLInputElement> e.target!).value);
+                        },
                     }),
                 ]),
 
@@ -539,13 +539,13 @@ class VideoContainerComponent extends Component<ControlArgs> {
                             onfocus: () => {
                                 this.disableMouseleave = true;
                             },
-                            onchange: m.withAttr('value', (value) => {
-                                this.speed = Number(value);
+                            onchange: (e: Event) => {
+                                this.speed = parseFloat((<HTMLInputElement> e.target!).value);
                                 this.disableMouseleave = false;
 
                                 if (this.videoElement === null) { return; }
                                 this.videoElement.playbackRate = this.speed;
-                            }),
+                            },
                             onupdate: (v: m.VnodeDOM<void, any>) => {
                                 this.selectOnUpdate(<HTMLInputElement> v.dom, this.speed);
 
@@ -810,7 +810,8 @@ class VideoContainerComponent extends Component<ControlArgs> {
      */
     private requestFullscreen(e: HTMLElement): boolean {
         /* tslint:disable:newline-before-return */
-        if (e.requestFullscreen) { e.requestFullscreen(); return true; }
+        if (Util.uaIsAndroid()) { e.requestFullscreen({ navigationUI: 'hide'});  }
+        else if (e.requestFullscreen) { e.requestFullscreen(); return true; }
         else if ((<any> e).mozRequestFullScreen) { (<any> e).mozRequestFullScreen(); return true; }
         else if ((<any> e).webkitRequestFullScreen) { (<any> e).webkitRequestFullScreen(); return true; }
         else if ((<any> e).webkitEnterFullscreen) { (<any> e).webkitEnterFullscreen(); return true; }

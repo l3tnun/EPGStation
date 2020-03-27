@@ -25,6 +25,7 @@ import EncodingDeleteViewModel from './Encoding/EncodingDeleteViewModel';
 import EncodingViewModel from './Encoding/EncodingViewModel';
 import HeaderViewModel from './HeaderViewModel';
 import MainLayoutViewModel from './MainLayoutViewModel';
+import MainViewModel from './MainViewModel';
 import NavigationViewModel from './NavigationViewModel';
 import ProgramDetailViewModel from './Program/ProgramDetailViewModel';
 import ProgramGenreViewModel from './Program/ProgramGenreViewModel';
@@ -115,7 +116,8 @@ namespace ViewModelFactorySetting {
             balloonModel,
             channelsApiModel,
         ));
-        factory.reg('MainLayoutViewModel', new MainLayoutViewModel(settingModel));
+        factory.reg('MainLayoutViewModel', new MainLayoutViewModel(configModel, settingModel));
+        factory.reg('MainViewModel', new MainViewModel(configModel));
         factory.reg('NavigationViewModel', new NavigationViewModel(
             configModel,
             settingModel,

@@ -45,6 +45,7 @@ class RecordedExternalProcessModel extends QueueProcessBaseModel implements Reco
                 const child = spawn(cmds.bin, cmds.args, {
                     stdio: 'ignore',
                     env: {
+                        PATH: process.env['PATH'],
                         RECORDEDID: program.id,
                         PROGRAMID: program.programId,
                         CHANNELTYPE: program.channelType,

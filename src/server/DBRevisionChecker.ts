@@ -26,6 +26,7 @@ class DBRevisionChecker extends Base {
         this.migrations.push(<MigrationBase> factory.get('MigrationV6'));
         this.migrations.push(<MigrationBase> factory.get('MigrationV7'));
         this.migrations.push(<MigrationBase> factory.get('MigrationV8'));
+        this.migrations.push(<MigrationBase> factory.get('MigrationV9'));
 
         this.infoFilePath = this.config.getConfig().dbInfoPath || path.join(__dirname, '..', '..', 'data', 'dbinfo.json');
         this.readFile();

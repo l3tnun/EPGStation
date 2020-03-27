@@ -62,7 +62,7 @@ class ProgramInfoActionComponent extends Component<void> {
             name = '予約';
             onclick = () => { return this.viewModel.addReserve(); };
         } else if (reserve.status === 'reserve' || reserve.status === 'conflict') {
-            name = '削除';
+            name = typeof reserve.item.ruleId === 'undefined' ? '削除' : '除外';
             onclick = () => { return this.viewModel.deleteReserve(); };
         } else if (reserve.status === 'skip') {
             name = '除外解除';
@@ -190,7 +190,7 @@ class ProgramInfoActionComponent extends Component<void> {
                         type: 'checkbox',
                         class: 'mdl-checkbox__input',
                         checked: this.viewModel.delTS,
-                        onclick: m.withAttr('checked', (value) => { this.viewModel.delTS = value; }),
+                        onclick: (e: Event) => { this.viewModel.delTS = (<HTMLInputElement> e.target!).checked; },
                         onupdate: (vnode: m.VnodeDOM<void, this>) => { this.checkboxOnUpdate(<HTMLInputElement> (vnode.dom)); },
                     }),
                     m('span', { class: 'mdl-checkbox__label' }, 'TS削除'),
@@ -198,7 +198,7 @@ class ProgramInfoActionComponent extends Component<void> {
                 m('div', { class: 'pulldown mdl-layout-spacer' }, [
                     m('select', {
                         class: 'mdl-textfield__input program-dialog-label',
-                        onchange: m.withAttr('value', (value) => { this.viewModel.encodeOptionValue = Number(value); }),
+                        onchange: (e: Event) => { this.viewModel.encodeOptionValue = parseInt((<HTMLInputElement> e.target!).value, 10); },
                         onupdate: (vnode: m.VnodeDOM<void, this>) => {
                             this.selectOnUpdate(<HTMLInputElement> (vnode.dom), this.viewModel.encodeOptionValue);
                         },

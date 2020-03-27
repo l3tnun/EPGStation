@@ -84,6 +84,7 @@ namespace ApiUtil {
      * @param Promise<void>
      */
     export const sendToKodi = (source: string, host: string, user?: string, pass?: string): Promise<void> => {
+
         const option: request.OptionsWithUri = {
             uri: url.resolve(host, '/jsonrpc'),
             headers: {
@@ -148,7 +149,7 @@ namespace ApiUtil {
     export const getHost = (baseHost: string): string => {
         const subDirectory = Util.getSubDirectory();
 
-        return subDirectory === null ? baseHost : urljoin(baseHost, subDirectory);
+        return subDirectory === null ? baseHost : path.join(baseHost, subDirectory);
     };
 }
 

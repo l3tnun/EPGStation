@@ -53,6 +53,8 @@ class StorageCheckManageModel extends Model implements StorageCheckManageModelIn
                 diskusage.check(this.dir, (err, result) => {
                     if (err) {
                         reject(err);
+                    } else if (typeof result === 'undefined') {
+                        reject(new Error('DiskuageResultError'));
                     } else {
                         resolve(result.available / 1024 / 1024);
                     }
@@ -85,6 +87,7 @@ class StorageCheckManageModel extends Model implements StorageCheckManageModelIn
             try {
                 this.log.system.info(`run: ${ this.cmd }`);
                 const cmds = ProcessUtil.parseCmdStr(this.cmd);
+                // 互換性のためここでは全ての環境変数を渡すため env は未指定
                 spawn(cmds.bin, cmds.args, {
                     stdio: 'ignore',
                 });

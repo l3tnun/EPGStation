@@ -7,7 +7,7 @@ export const get: Operation = async(req, res) => {
     const recordeds = <RecordedModelInterface> factory.get('RecordedModel');
 
     try {
-        const filePath = await recordeds.getLogPath(req.params.id, req.query.maxsize);
+        const filePath = await recordeds.getLogPath(parseInt(req.params.id, 10), req.query.maxsize);
         res.sendFile(filePath);
     } catch (err) {
         if (err.message === RecordedModelInterface.NotFoundRecordedLogError) {

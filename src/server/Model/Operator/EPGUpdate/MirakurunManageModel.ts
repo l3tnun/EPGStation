@@ -44,7 +44,13 @@ class MirakurunManageModel extends Model implements MirakurunManageModelInterfac
 
         this.isRunning = true;
 
-        const updater = child_process.fork(path.join(__dirname, 'MirakurunUpdateExecutor.js'), [], { silent: true });
+        const updater = child_process.spawn(
+            process.argv[0],
+            [path.join(__dirname, 'MirakurunUpdateExecutor.js')],
+            {
+                stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
+            },
+        );
         this.log.system.info(`start Updater pid: ${ updater.pid }`);
 
         if (updater.stdout !== null) {
@@ -73,8 +79,8 @@ class MirakurunManageModel extends Model implements MirakurunManageModelInterfac
         updater.once('error', () => { this.isRunning = false; });
 
         updater.on('message', (msg) => {
-            if (msg.msg === 'tuner') {
-                this.tuners = msg.tuners;
+            if ((<any> msg).msg === 'tuner') {
+                this.tuners = (<any> msg).tuners;
                 this.isRunning = false;
             }
         });

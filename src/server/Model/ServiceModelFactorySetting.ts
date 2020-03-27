@@ -3,6 +3,7 @@ import { ChannelsModel } from './Api/ChannelsModel';
 import { ConfigModel } from './Api/ConfigModel';
 import { EncodeModel } from './Api/EncodeModel';
 import { IPTVModel } from './Api/IPTVModel';
+import { RecordedHistoryModel } from './Api/RecordedHistoryModel';
 import { RecordedModel } from './Api/RecordedModel';
 import { ReservesModel } from './Api/ReservesModel';
 import { RulesModel } from './Api/RulesModel';
@@ -16,6 +17,7 @@ import DBOperator from './DB/DBOperator';
 import { EncodedDBInterface } from './DB/EncodedDB';
 import { ProgramsDBInterface } from './DB/ProgramsDB';
 import { RecordedDBInterface } from './DB/RecordedDB';
+import { RecordedHistoryDBInterface } from './DB/RecordedHistoryDB';
 import { RulesDBInterface } from './DB/RulesDB';
 import { ServicesDBInterface } from './DB/ServicesDB';
 
@@ -23,6 +25,7 @@ import MySQLEncodedDB from './DB/MySQL/MySQLEncodedDB';
 import MySQLOperator from './DB/MySQL/MySQLOperator';
 import MySQLProgramsDB from './DB/MySQL/MySQLProgramsDB';
 import MySQLRecordedDB from './DB/MySQL/MySQLRecordedDB';
+import MySQLRecordedHistoryDB from './DB/MySQL/MySQLRecordedHistoryDB';
 import MySQLRulesDB from './DB/MySQL/MySQLRulesDB';
 import MySQLServicesDB from './DB/MySQL/MySQLServicesDB';
 
@@ -30,6 +33,7 @@ import PostgreSQLEncodedDB from './DB/PostgreSQL/PostgreSQLEncodedDB';
 import PostgreSQLOperator from './DB/PostgreSQL/PostgreSQLOperator';
 import PostgreSQLProgramsDB from './DB/PostgreSQL/PostgreSQLProgramsDB';
 import PostgreSQLRecordedDB from './DB/PostgreSQL/PostgreSQLRecordedDB';
+import PostgreSQLRecordedHistoryDB from './DB/PostgreSQL/PostgreSQLRecordedHistoryDB';
 import PostgreSQLRulesDB from './DB/PostgreSQL/PostgreSQLRulesDB';
 import PostgreSQLServicesDB from './DB/PostgreSQL/PostgreSQLServicesDB';
 
@@ -37,6 +41,7 @@ import SQLite3EncodedDB from './DB/SQLite3/SQLite3EncodedDB';
 import SQLite3Operator from './DB/SQLite3/SQLite3Operator';
 import SQLite3ProgramsDB from './DB/SQLite3/SQLite3ProgramsDB';
 import SQLite3RecordedDB from './DB/SQLite3/SQLite3RecordedDB';
+import SQLite3RecordedHistoryDB from './DB/SQLite3/SQLite3RecordedHistoryDB';
 import SQLite3RulesDB from './DB/SQLite3/SQLite3RulesDB';
 import SQLite3ServicesDB from './DB/SQLite3/SQLite3ServicesDB';
 
@@ -70,6 +75,7 @@ namespace ModelFactorySetting {
         let rulesDB: RulesDBInterface;
         let recordedDB: RecordedDBInterface;
         let encodedDB: EncodedDBInterface;
+        let recordedHistoryDB: RecordedHistoryDBInterface;
 
         switch (Util.getDBType()) {
             case 'mysql':
@@ -79,6 +85,7 @@ namespace ModelFactorySetting {
                 rulesDB = new MySQLRulesDB(operator);
                 recordedDB = new MySQLRecordedDB(operator);
                 encodedDB = new MySQLEncodedDB(operator);
+                recordedHistoryDB = new MySQLRecordedHistoryDB(operator);
                 break;
 
             case 'sqlite3':
@@ -88,6 +95,7 @@ namespace ModelFactorySetting {
                 rulesDB = new SQLite3RulesDB(operator);
                 recordedDB = new SQLite3RecordedDB(operator);
                 encodedDB = new SQLite3EncodedDB(operator);
+                recordedHistoryDB = new SQLite3RecordedHistoryDB(operator);
                 break;
 
             case 'postgresql':
@@ -97,6 +105,7 @@ namespace ModelFactorySetting {
                 rulesDB = new PostgreSQLRulesDB(operator);
                 recordedDB = new PostgreSQLRecordedDB(operator);
                 encodedDB = new PostgreSQLEncodedDB(operator);
+                recordedHistoryDB = new PostgreSQLRecordedHistoryDB(operator);
                 break;
         }
 
@@ -126,6 +135,7 @@ namespace ModelFactorySetting {
             encodeManage,
             streamManage,
         ); });
+        factory.reg('RecordedHistoryModel', () => { return new RecordedHistoryModel(recordedHistoryDB); });
         factory.reg('RecordedModel', () => { return new RecordedModel(
             ipc,
             recordedDB,
