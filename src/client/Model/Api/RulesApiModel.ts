@@ -3,6 +3,7 @@ import ApiModel from './ApiModel';
 
 interface RuleFindQueryOption {
     keyword?: string;
+    enableonly?: boolean;
 }
 
 interface RulesApiModelInterface extends ApiModel {
@@ -65,7 +66,13 @@ class RulesApiModel extends ApiModel implements RulesApiModelInterface {
             offset: offset,
         };
 
-        if (typeof option.keyword !== 'undefined') { query.keyword = option.keyword; }
+        if (typeof option.keyword !== 'undefined' ) {
+            query.keyword = option.keyword;
+        }
+
+        if (typeof option.enableonly !== 'undefined') {
+            query.enableonly = option.enableonly;
+        }
 
         try {
             this.rules = await <any> this.request({
