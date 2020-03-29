@@ -459,7 +459,7 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
         if (typeof query.enableonly !== 'undefined' && query.enableonly) {
             if (typeof query.keyword !== 'undefined') queryStr += 'and ';
             queryStr += 'enable = ?';
-            values.push('1');
+            values.push(this.operator.convertBoolean(true));
         }
 
         if (queryStr.length > 0) {
