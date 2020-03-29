@@ -9,6 +9,7 @@ export const get: Operation = async(req, res) => {
     try {
         const results = await rules.getAll(req.query.limit, req.query.offset, {
             keyword: req.query.keyword,
+            enableonly: req.query.enableonly,
         });
         api.responseJSON(res, 200, results);
     } catch (err) {
@@ -24,6 +25,7 @@ get.apiDoc = {
         { $ref: '#/parameters/limit' },
         { $ref: '#/parameters/offset' },
         { $ref: '#/parameters/ruleKeyword' },
+        { $ref: '#/parameters/enableonly' },
     ],
     responses: {
         200: {

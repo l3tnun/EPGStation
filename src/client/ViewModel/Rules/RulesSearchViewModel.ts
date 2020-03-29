@@ -10,6 +10,7 @@ class RulesSearchViewModel extends ViewModel {
     private balloon: BalloonModelInterface;
 
     public keyword: string = '';
+    public enableonly: boolean = false;
 
     constructor(
         balloon: BalloonModelInterface,
@@ -33,6 +34,7 @@ class RulesSearchViewModel extends ViewModel {
      */
     public reset(): void {
         this.keyword = typeof m.route.param('keyword') === 'undefined' ? '' : m.route.param('keyword');
+        this.enableonly = typeof m.route.param('enableonly') === 'undefined' ? false : <boolean> <any> m.route.param('enableonly');
     }
 
     /**
@@ -44,9 +46,11 @@ class RulesSearchViewModel extends ViewModel {
             const query = Util.getCopyQuery();
 
             delete query.keyword;
+            delete query.enableonly;
             delete query.page;
 
             if (this.keyword.length > 0) { query.keyword = this.keyword; }
+            query.enableonly = this.enableonly;
 
             const route = m.route.get().split('?')[0];
             if (Util.isEqualURL(route, query)) { return; }

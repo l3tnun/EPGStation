@@ -10,6 +10,7 @@ interface RuleFindAllOption {
 
 interface RuleFindQuery {
     keyword?: string;
+    enableonly?: boolean;
 }
 
 interface RuleList {
@@ -454,6 +455,11 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
             querys.forEach((str, i) => {
                 queryStr += i === querys.length - 1 ? `${ str }` : `${ str } and `;
             });
+        }
+        if (typeof query.enableonly !== 'undefined' && query.enableonly) {
+            if (typeof query.keyword !== 'undefined') queryStr += 'and ';
+            queryStr += 'enable = ?';
+            values.push(this.operator.convertBoolean(true));
         }
 
         if (queryStr.length > 0) {
