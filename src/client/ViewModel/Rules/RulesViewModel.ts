@@ -58,6 +58,7 @@ class RulesViewModel extends ViewModel {
 
         this.option = {};
         if (typeof m.route.param('keyword') !== 'undefined') { this.option.keyword = m.route.param('keyword'); }
+        if (typeof m.route.param('enableonly') !== 'undefined') { this.option.enableonly = <boolean> <any> m.route.param('enableonly'); }
 
         this.rulesApiModel.init();
         this.reservesApiModel.init();
