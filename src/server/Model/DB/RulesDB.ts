@@ -427,8 +427,6 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
 
         query += 'order by id asc';
         if (typeof option.limit !== 'undefined') { query += ` ${ this.operator.createLimitStr(option.limit, option.offset) }`; }
-        console.log(query);
-        console.log(values);
 
         return this.fixResults(<DBSchema.RulesSchema[]> await this.operator.runQuery(query, values));
     }
@@ -453,9 +451,6 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
                 values.push(str);
             });
 
-            console.log(`querys: ${ querys }`);
-            console.log(`values: ${ values }`);
-
             // and query 生成
             querys.forEach((str, i) => {
                 queryStr += i === querys.length - 1 ? `${ str }` : `${ str } and `;
@@ -470,8 +465,6 @@ abstract class RulesDB extends DBTableBase implements RulesDBInterface {
         if (queryStr.length > 0) {
             queryStr = `where ${ queryStr } `;
         }
-
-        console.log(`queryStr: ${ queryStr }`);
 
         return {
             str: queryStr,
