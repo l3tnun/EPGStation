@@ -70,12 +70,12 @@ abstract class DBOperator extends Model {
     ): Promise<void>;
 
     /**
-     * boolean を文字列に変換
+     * boolean を各 DB に合わせた形式へ変換
      * @param value: boolean
-     * @return string
+     * @return boolean | number
      */
-    public convertBoolean(value: boolean): string {
-        return `${ value }`;
+    public convertBoolean(value: boolean): boolean | number {
+        return value;
     }
 
     /**

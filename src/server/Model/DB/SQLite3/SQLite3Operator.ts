@@ -234,8 +234,8 @@ class SQLite3Operator extends DBOperator {
      * @param value: boolean
      * @return string
      */
-    public convertBoolean(value: boolean): string {
-        return `${ Number(value) }`;
+    public convertBoolean(value: boolean): number {
+        return value ? 1 : 0;
     }
 
     /**
