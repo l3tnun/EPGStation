@@ -7,14 +7,19 @@ export const get: Operation = async(req, res) => {
     const recorded = <RecordedModelInterface> factory.get('RecordedModel');
 
     try {
-        const results = await recorded.getAll(req.query.limit, req.query.offset, req.query.reverse, {
-            ruleId: req.query.rule === 0 ? null : req.query.rule,
-            genre1: req.query.genre1,
-            channelId: req.query.channel,
-            keyword: req.query.keyword,
-            hasTs: req.query.hasTs,
-            recording: req.query.recording,
-        });
+        const results = await recorded.getAll(
+            req.query.limit as any as number,
+            req.query.offset as any as number,
+            req.query.reverse as any as boolean,
+            {
+                ruleId: req.query.rule as any as number === 0 ? null : req.query.rule as any as number,
+                genre1: req.query.genre1 as any as number,
+                channelId: req.query.channel as any as number,
+                keyword: req.query.keyword as string,
+                hasTs: req.query.hasTs as any as boolean,
+                recording: req.query.recording as any as boolean,
+            },
+        );
         api.responseJSON(res, 200, results);
     } catch (err) {
         api.responseServerError(res, err.message);

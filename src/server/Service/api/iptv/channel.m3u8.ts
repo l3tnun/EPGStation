@@ -7,7 +7,11 @@ export const get: Operation = async(req, res) => {
     const iptv = <IPTVModelInterface> factory.get('IPTVModel');
 
     try {
-        const result = await iptv.getChannelList(req.headers.host!, req.header('x-forwarded-proto') === 'https', req.query.mode);
+        const result = await iptv.getChannelList(
+            req.headers.host!,
+            req.header('x-forwarded-proto') === 'https',
+            req.query.mode as any as number,
+        );
         res.setHeader('Content-Type', 'application/x-mpegURL; charset="UTF-8"');
         res.status(200);
         res.end(result);

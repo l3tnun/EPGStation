@@ -25,8 +25,8 @@ export const get: Operation = async(req, res) => {
         if (req.method === 'HEAD') {
             const header = await streams.getRecordedStreamingMpegTsHEADInfo(
                 parseInt(req.params.id, 10),
-                req.query.mode,
-                req.query.ss,
+                req.query.mode as any as number,
+                req.query.ss as any as number,
                 typeof req.headers.range === 'string' ? req.headers.range : null,
             );
 
@@ -39,8 +39,8 @@ export const get: Operation = async(req, res) => {
 
         const info = await streams.getRecordedStreamingMpegTs(
             parseInt(req.params.id, 10),
-            req.query.mode,
-            req.query.ss,
+            req.query.mode as any as number,
+            req.query.ss as any as number,
             typeof req.headers.range === 'string' ? req.headers.range : null,
         );
         stream = info.stream;

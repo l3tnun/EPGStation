@@ -7,7 +7,10 @@ export const get: Operation = async(req, res) => {
     const reserves = <ReservesModelInterface> factory.get('ReservesModel');
 
     try {
-        const results = await reserves.getConflicts(req.query.limit, req.query.offset);
+        const results = await reserves.getConflicts(
+            req.query.limit as any as number,
+            req.query.offset as any as number,
+        );
         api.responseJSON(res, 200, results);
     } catch (err) {
         api.responseServerError(res, err.message);

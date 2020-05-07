@@ -105,7 +105,7 @@ export const del: Operation = async(req, res) => {
     try {
         await rules.deleteRule(
             parseInt(req.params.id, 10),
-            typeof req.query.delete === 'undefined' ? false : req.query.delete,
+            typeof req.query.delete === 'undefined' ? false : req.query.delete as any as boolean,
         );
         api.responseJSON(res, 200, { code: 200 });
     } catch (err) {

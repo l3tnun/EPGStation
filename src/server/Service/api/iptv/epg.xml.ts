@@ -7,7 +7,7 @@ export const get: Operation = async(req, res) => {
     const iptv = <IPTVModelInterface> factory.get('IPTVModel');
 
     try {
-        const result = await iptv.getEpg(req.query.days);
+        const result = await iptv.getEpg(req.query.days as any as number);
         res.setHeader('Content-Type', 'application/xml; charset="UTF-8"');
         res.status(200);
         res.end(result);

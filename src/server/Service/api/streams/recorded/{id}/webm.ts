@@ -39,8 +39,8 @@ export const get: Operation = async(req, res) => {
     try {
         const info = await streams.getRecordedStreamingMultiType(
             parseInt(req.params.id, 10),
-            req.query.mode,
-            req.query.ss,
+            req.query.mode as any as number,
+            req.query.ss as any as number,
             'webm',
         );
         stream = info.stream;

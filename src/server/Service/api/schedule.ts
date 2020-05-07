@@ -7,7 +7,11 @@ export const get: Operation = async(req, res) => {
     const schedules = <ScheduleModelInterface> factory.get('ScheduleModel');
 
     try {
-        const results = await schedules.getSchedule(req.query.time, req.query.length, req.query.type);
+        const results = await schedules.getSchedule(
+            req.query.time as any as number,
+            req.query.length as any as number,
+            req.query.type as any,
+        );
         api.responseJSON(res, 200, results);
     } catch (err) {
         api.responseServerError(res, err.message);
