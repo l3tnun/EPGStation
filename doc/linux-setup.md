@@ -21,7 +21,7 @@ Linux / macOS 用 セットアップマニュアル
 	```
 	$ git clone https://github.com/l3tnun/EPGStation.git
 	$ cd EPGStation
-	$ npm install
+	$ npm install --no-save
 	$ npm run build
 	```
 

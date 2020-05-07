@@ -62,8 +62,7 @@ PC からの閲覧でもモダンな UI で操作可能です
 
 	```
 	$ git pull
-	$ npm update
-	$ npm update -D
+	$ npm install --no-save
 	$ npm run build
 	```
 
