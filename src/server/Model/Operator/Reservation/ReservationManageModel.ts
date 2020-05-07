@@ -1149,7 +1149,14 @@ class ReservationManageModel extends Model {
             } else {
                 this.log.system.fatal(e);
                 this.log.system.fatal('reserves.json parse error');
-                process.exit();
+                this.log.system.error('delete reserves.json');
+                try {
+                    fs.unlinkSync(this.reservesPath);
+                } catch (err) {
+                    this.log.system.fatal('delete reserves.json error');
+                    process.exit();
+                }
+                this.reserves = [];
             }
         }
     }
