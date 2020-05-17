@@ -1,6 +1,10 @@
 <template>
     <v-content>
-        <TitleBar :title="guideState.getTitle($route.query.type)"></TitleBar>
+        <TitleBar :title="guideState.getTitle($route.query.type)">
+            <template v-slot:menu>
+                <GuideTimeSelector v-if="isLoading === false"></GuideTimeSelector>
+            </template>
+        </TitleBar>
         <div class="app-content guide">
             <transition name="page">
                 <div v-if="guideState.getChannelsLength() > 0" class="overflow-hidden d-flex flex-column">
@@ -33,6 +37,7 @@
 
 <script lang="ts">
 import Channel from '@/components/guide/Channel.vue';
+import GuideTimeSelector from '@/components/guide/GuideTimeSelector.vue';
 import Loading from '@/components/guide/Loading.vue';
 import ProgramDialog from '@/components/guide/ProgramDialog.vue';
 import TimeLine from '@/components/guide/TimeLine.vue';
@@ -56,6 +61,7 @@ Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
 @Component({
     components: {
         TitleBar,
+        GuideTimeSelector,
         Loading,
         Channel,
         TimeScale,
