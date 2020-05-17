@@ -1,0 +1,50 @@
+appenders: 
+  system: 
+    type: file
+    maxLogSize: 1048576
+    backups: 3
+    filename: "%OperatorSystem%"
+    pattern: "-yyyy-MM-dd"
+  access: 
+    type: file
+    maxLogSize: 1048576
+    backups: 3
+    filename: "%OperatorAccess%"
+    pattern: "-yyyy-MM-dd"
+  stream: 
+    type: file
+    maxLogSize: 1048576
+    backups: 3
+    filename: "%OperatorStream%"
+    pattern: "-yyyy-MM-dd"
+  encode: 
+    type: file
+    maxLogSize: 1048576
+    backups: 3
+    filename: "%OperatorEncode%"
+    pattern: "-yyyy-MM-dd"
+  console: 
+    type: console
+  stdout: 
+    type: stdout
+categories: 
+  default: 
+    appenders: 
+      - console
+      - stdout
+    level: info
+  system: 
+    appenders: 
+      - system
+      - stdout
+    level: info
+  access: 
+    appenders: 
+      - access
+      - stdout
+    level: info
+  stream: 
+    appenders: 
+      - stream
+      - stdout
+    level: info

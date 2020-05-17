@@ -1,3 +1,51 @@
+## **<span style="color: red;">注意: このブランチは開発用ブランチです</span>**
+
+**<span style="color: red;">Readme や各種ドキュメント類は整備されておらず、v1 のままです</span>**
+
+**<span style="color: red;">本番環境での利用はしないでください</span>**
+
+**<span style="color: red;">v1 との互換性が一切無いので注意してください</span>**
+
+---
+
+### 動作環境
+
+v1 に準じる ※ただし Windows 環境にて正常動作するかは未検証
+
+### install 手順
+
+```
+git clone https://github.com/l3tnun/EPGStation.git
+cd EPGStation
+git checkout v2
+npm install --no-save
+npm install-client
+npm run build
+```
+
+### 開発に必要なもの
+
+* Node.js
+* [Visual Studioo Code](https://azure.microsoft.com/ja-jp/products/visual-studio-code/)
+* Visual Studio Code の以下のプラグイン
+    * [OpenAPI (Swagger) Editor](https://marketplace.visualstudio.com/items?itemName=42Crunch.vscode-openapi)
+    * [Prettier - Code formatter](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
+    * [Sass](https://marketplace.visualstudio.com/items?itemName=Syler.sass-indented)
+    * [TSLint](https://marketplace.visualstudio.com/items?itemName=ms-vscode.vscode-typescript-tslint-plugin)
+    * [TSLint Vue](https://marketplace.visualstudio.com/items?itemName=prograhammer.tslint-vue)
+    * [Vetur](https://marketplace.visualstudio.com/items?itemName=octref.vetur)
+    * [YAML](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml)
+
+
+### 対応 DB
+
+* SQLite3
+
+
+以下 v1 の Readme
+
+---
+
 EPGStation
 ====
 [Mirakurun](https://github.com/Chinachu/Mirakurun) を使用した録画管理ソフトです  

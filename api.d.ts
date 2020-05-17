@@ -1,463 +1,504 @@
-export interface Error {
-    code: number;
-    message: string;
-    errors?: string;
-}
+export type UnixtimeMS = number;
 
-export type EncodedId = number;
-export type EncodeId = string;
-export type RecordedId = number;
-export type RuleId = number;
-export type ProgramId = number;
-export type EventId = number;
+export type ChannelId = number;
 export type ServiceId = number;
 export type NetworkId = number;
-export type ServiceItemId = number;
-export type UnixtimeMS = number;
+export type ProgramId = number;
+export type RuleId = number;
+export type ReserveId = number;
+export type RecordedId = number;
+export type RecordedHistoryId = number;
+export type VideoFileId = number;
+export type VideoFileType = 'ts' | 'encoded';
+export type ThumbnailId = number;
+export type RecordedTagId = number;
+export type EncodeId = number;
 export type ChannelType = 'GR' | 'BS' | 'CS' | 'SKY';
-export type remoteControlKeyId = number;
 export type ProgramGenreLv1 = number;
 export type ProgramGenreLv2 = number;
 export type ProgramVideoType = 'mpeg2' | 'h.264' | 'h.265';
 export type ProgramVideoResolution = '240p' | '480i' | '480p' | '720p' | '1080i' | '2160p' | '4320p';
 export type ProgramAudioSamplingRate = 16000 | 22050 | 24000 | 32000 | 44100 | 48000;
 
-export interface Config {
-    socketioPort: number;
-    enableEncode: boolean;
-    enableLiveStreaming: boolean;
-    recordedTSDefaultDirectory: string;
-    recordedEncodeDefaultDirectory: string;
-    encodeOption?: string[];
-    defaultEncode?: number;
-    delTs?: boolean;
-    broadcast: {
-        GR: boolean;
-        BS: boolean;
-        CS: boolean;
-        SKY: boolean;
-    };
-    recordedViewer?: {
-        ios: string;
-        android: string;
-        mac: string;
-        win: string;
-    };
-    recordedDownloader?: {
-        ios: string;
-        android: string;
-        mac: string;
-        win: string;
-    };
-    mpegTsStreaming?: string[];
-    mpegTsViewer?: {
-        ios: string;
-        android: string;
-        mac: string;
-        win: string;
-    };
-    recordedStreaming?: {
-        mpegTs: string[];
-        webm: string[];
-        mp4: string[];
-    };
-    recordedHLS?: string[];
-    liveHLS?: string[];
-    HLSViewer?: {
-        ios: string;
-        android: string;
-        mac: string;
-        win: string;
-    };
-    liveWebM?: string[];
-    liveMP4?: string[];
-    kodiHosts?: string[];
-}
-
-interface EncodingInfo {
-    encoding?: EncodingProgram;
-    queue: EncodingProgram[];
-}
-
-interface EncodingProgram {
-    id: string;
-    name: string;
-    recordedId: number;
-    encodedId?: number;
-    mode?: number;
-    program: RecordedProgram;
-}
-
-export interface ScheduleProgram {
-    channel: ScheduleServiceItem;
-    programs: ScheduleProgramItem[];
-}
-
-export interface ScheduleProgramItem {
-    id: ProgramId;
-    channelId: ServiceItemId;
-    startAt: UnixtimeMS;
-    endAt: UnixtimeMS;
-    isFree: boolean;
-    name: string;
-    description?: string;
-    extended?: string;
-    genre1?: ProgramGenreLv1;
-    genre2?: ProgramGenreLv2;
-    genre3?: ProgramGenreLv1;
-    genre4?: ProgramGenreLv2;
-    genre5?: ProgramGenreLv1;
-    genre6?: ProgramGenreLv2;
-    channelType: ChannelType;
-    videoType?: ProgramVideoType;
-    videoResolution?: ProgramVideoResolution;
-    videoStreamContent?: number;
-    videoComponentType?: number;
-    audioSamplingRate?: ProgramAudioSamplingRate;
-    audioComponentType?: number;
-    overlap?: boolean;
-}
-
-export interface ScheduleServiceItem {
-    id: ServiceItemId;
+/**
+ * チャンネル情報
+ */
+export interface ChannelItem {
+    id: ChannelId;
     serviceId: ServiceId;
     networkId: NetworkId;
     name: string;
-    remoteControlKeyId?: remoteControlKeyId;
-    hasLogoData: boolean;
-    channelType:ChannelType
-}
-
-export interface ServiceItem {
-    id: ServiceItemId;
-    serviceId: ServiceId;
-    networkId: NetworkId;
-    name: string;
-    remoteControlKeyId?: remoteControlKeyId;
+    halfWidthName: string;
+    remoteControlKeyId?: number;
     hasLogoData: boolean;
     channelType: ChannelType;
     channel: string;
-    type?: number;
 }
 
-export interface EncodedProgram {
-    encodedId: EncodedId;
-    name: string;
-    filename: string;
-    filesize?: number;
+/**
+ * 手動予約編集オプション
+ */
+export interface EditManualReserveOption {
+    allowEndLack: boolean; // 末尾切れを許すか
+    saveOption?: ReserveSaveOption;
+    encodeOption?: ReserveEncodedOption;
 }
 
-export interface RecordedEncodingInfo {
-    name: string;
-    isEncoding: boolean;
+/**
+ * 手動予約オプション
+ */
+export interface ManualReserveOption extends EditManualReserveOption {
+    programId?: ProgramId; // program ID undefined の場合は時刻指定予約
+    timeSpecifitedOption?: {
+        name: string;
+        channelId: ChannelId;
+        startAt: UnixtimeMS;
+        endAt: UnixtimeMS;
+    };
 }
 
-export interface RecordedPrograms {
-    recorded: RecordedProgram[];
-    total: number;
-}
+/**
+ * 予約情報取得タイプ
+ */
+export type GetReserveType = 'all' | 'normal' | 'conflict' | 'skip' | 'overlap';
 
-export interface RecordedProgram {
-    id: RecordedId;
-    channelId: ServiceItemId;
-    channelType: ChannelType;
-    startAt: UnixtimeMS;
-    endAt: UnixtimeMS;
-    name: string;
-    description?: string;
-    extended?: string;
-    genre1?: ProgramGenreLv1;
-    genre2?: ProgramGenreLv2;
-    genre3?: ProgramGenreLv1;
-    genre4?: ProgramGenreLv2;
-    genre5?: ProgramGenreLv1;
-    genre6?: ProgramGenreLv2;
-    videoType?: ProgramVideoType;
-    videoResolution?: ProgramVideoResolution;
-    videoStreamContent?: number;
-    videoComponentType?: number;
-    audioSamplingRate?: ProgramAudioSamplingRate;
-    audioComponentType?: number;
-    recording: boolean;
-    protection: boolean;
-    filesize?: number;
-    errorCnt?: number;
-    dropCnt?: number;
-    scramblingCnt?: number;
-    hasThumbnail: boolean;
-    original: boolean;
-    filename?: string;
+/**
+ * 予約情報取得オプション
+ */
+export interface GetReserveOption {
+    type?: GetReserveType;
+    isHalfWidth: boolean;
     ruleId?: RuleId;
-    encoded: EncodedProgram[];
-    encoding?: RecordedEncodingInfo[];
+    offset?: number;
+    limit?: number;
 }
 
-export interface NewRecorded {
-    channelId: ServiceItemId;
-    startAt: UnixtimeMS;
-    endAt: UnixtimeMS;
-    name: string;
-    description?: string;
-    extended?: string;
-    genre1?: ProgramGenreLv1;
-    genre2?: ProgramGenreLv2;
-    genre3?: ProgramGenreLv1;
-    genre4?: ProgramGenreLv2;
-    genre5?: ProgramGenreLv1;
-    genre6?: ProgramGenreLv2;
-    videoType?: ProgramVideoType;
-    videoResolution?: ProgramVideoResolution;
-    videoStreamContent?: number;
-    videoComponentType?: number;
-    audioSamplingRate?: ProgramAudioSamplingRate;
-    audioComponentType?: number;
-    ruleId?: RuleId;
-}
-
-export interface RecordedDurationInfo {
-    duration: number;
-}
-
-export interface RecordedTags {
-    rule: RecordedRuleTag[];
-    channel: RecordedChannelTag[];
-    genre: RecordedGenreTag[];
-}
-
-export interface RecordedRuleTag {
-    cnt: number;
-    ruleId: number | null;
-    name: string;
-}
-
-export interface RecordedChannelTag {
-    cnt: number;
-    channelId: number;
-    name: string;
-}
-
-export interface RecordedGenreTag {
-    cnt: number;
-    genre1: number | null;
-}
-
-export interface RecordedDeleteMultipleResult {
-    results: number[];
-}
-
+/**
+ * 予約情報
+ */
 export interface Reserves {
-    reserves: Reserve[];
+    reserves: ReserveItem[];
     total: number;
 }
 
-export interface Reserve {
-    program: ReserveProgram;
+/**
+ * 予約番組情報
+ */
+export interface ReserveItem {
+    /**
+     * 予約情報
+     */
+    id: ReserveId;
     ruleId?: RuleId;
-    isTimeSpecifited?: boolean;
+    isSkip: boolean;
+    isConflict: boolean;
+    isOverlap: boolean;
     allowEndLack: boolean;
-    option?: AddReserveOption;
-    encode?: RuleEncode;
-}
-
-export interface ReserveAllId {
-    reserves: ReserveAllItem[];
-    conflicts: ReserveAllItem[];
-    skips: ReserveAllItem[];
-    overlaps: ReserveAllItem[];
-}
-
-export interface ReserveAllItem {
-    programId: ProgramId;
-    ruleId?: RuleId;
-}
-
-export interface ReserveProgram {
-    id: ProgramId;
-    channelId: ServiceItemId;
-    eventId: EventId;
-    serviceId: ServiceId;
-    networkId: NetworkId;
-    startAt: UnixtimeMS;
-    endAt: UnixtimeMS;
-    isFree: boolean;
-    name: string;
-    description?: string;
-    extended?: string;
-    genre1?: ProgramGenreLv1;
-    genre2?: ProgramGenreLv2;
-    genre3?: ProgramGenreLv1;
-    genre4?: ProgramGenreLv2;
-    genre5?: ProgramGenreLv1;
-    genre6?: ProgramGenreLv2;
-    channelType: ChannelType;
-    channel: string;
-    videoType?: ProgramVideoType;
-    videoResolution?: ProgramVideoResolution;
-    videoStreamContent?: number;
-    videoComponentType?: number;
-    audioSamplingRate?: ProgramAudioSamplingRate;
-    audioComponentType?: number;
-    overlap?: boolean;
-}
-
-export interface AddReserve {
-    programId?: ProgramId;
-    allowEndLack: boolean;
-    option?: AddReserveOption;
-    encode?: RuleEncode;
-    program?: AddReserveProgram;
-}
-
-export interface AddReserveProgram {
-    channelId: ServiceItemId;
-    startAt: UnixtimeMS;
-    endAt: UnixtimeMS;
-    name: string;
-    description?: string;
-    extended?: string;
-    genre1?: ProgramGenreLv1;
-    genre2?: ProgramGenreLv2;
-    genre3?: ProgramGenreLv1;
-    genre4?: ProgramGenreLv2;
-    genre5?: ProgramGenreLv1;
-    genre6?: ProgramGenreLv2;
-}
-
-export interface AddReserveOption {
+    isTimeSpecifited: boolean;
+    /**
+     * 保存オプション
+     */
+    parentDirectoryName?: string;
     directory?: string;
     recordedFormat?: string;
+    /**
+     * エンコード情報
+     */
+    encodeMode1?: string;
+    encodeParentDirectoryName1?: string;
+    encodeDirectory1?: string;
+    encodeMode2?: string;
+    encodeParentDirectoryName2?: string;
+    encodeDirectory2?: string;
+    encodeMode3?: string;
+    encodeParentDirectoryName3?: string;
+    encodeDirectory3?: string;
+    encodeDelTs: boolean;
+    /**
+     * 番組情報
+     */
+    programId?: ProgramId;
+    channelId: ChannelId;
+    startAt: UnixtimeMS;
+    endAt: UnixtimeMS;
+    name: string;
+    description?: string;
+    extended?: string;
+    genre1?: ProgramGenreLv1;
+    subGenre1?: ProgramGenreLv2;
+    genre2?: ProgramGenreLv1;
+    subGenre2?: ProgramGenreLv2;
+    genre3?: ProgramGenreLv1;
+    subGenre3?: ProgramGenreLv2;
+    videoType?: ProgramVideoType;
+    videoResolution?: ProgramVideoResolution;
+    videoStreamContent?: number;
+    videoComponentType?: number;
+    audioSamplingRate?: ProgramAudioSamplingRate;
+    audioComponentType?: number;
 }
 
+/**
+ * 予約情報のリスト取得オプション
+ */
+export interface GetReserveListsOption {
+    startAt: UnixtimeMS;
+    endAt: UnixtimeMS;
+}
+
+/**
+ * 予約情報のリスト
+ * 予約, 除外, 重複, 競合の reserveId リスト
+ */
+export interface ReserveLists {
+    normal: ReserveListItem[];
+    conflicts: ReserveListItem[];
+    skips: ReserveListItem[];
+    overlaps: ReserveListItem[];
+}
+
+/**
+ * 予約リストitem
+ */
+export interface ReserveListItem {
+    reserveId: ReserveId;
+    programId?: ProgramId;
+    ruleId?: RuleId;
+}
+
+/**
+ * 放送波の状態
+ * true のもが有効
+ */
+export interface BroadcastStatus {
+    GR: boolean;
+    BS: boolean;
+    CS: boolean;
+    SKY: boolean;
+}
+
+/**
+ * Rule
+ */
+export interface Rule extends AddRuleOption {
+    id: RuleId;
+    reservesCnt?: number;
+}
+
+/**
+ * Rule 追加オプション
+ */
+export interface AddRuleOption {
+    isTimeSpecification: boolean;
+    searchOption: RuleSearchOption;
+    reserveOption: RuleReserveOption;
+    saveOption?: ReserveSaveOption;
+    encodeOption?: ReserveEncodedOption;
+}
+
+/**
+ * ジャンル
+ */
+export interface Genre {
+    genre: ProgramGenreLv1;
+    subGenre?: ProgramGenreLv2;
+}
+
+/**
+ * 時刻指定
+ * program id 予約の場合は動画の長さ
+ * 時刻指定予約の場合は時刻範囲 (0 ~  60 * 24)
+ */
+export interface SearchTime {
+    // program id 予約の場合は 0 ~ 23 時の開始時刻を指定する
+    // 時刻予約の場合は 0 時を 0 とした 0 ~ (60 * 50 * 24) - 1 秒までの開始時刻を指定する
+    start: number;
+    // program id 予約の場合は 1 ~ 23 時間の長さを指定する
+    // 時刻予約の場合は秒で時間の長さを指定する 1 ~ 60 * 50 * 24 秒
+    range: number;
+}
+
+/**
+ * 検索期間指定
+ */
+export interface SearchPeriod {
+    startAt: UnixtimeMS;
+    endAt: UnixtimeMS;
+}
+
+/**
+ * Rule 検索オプション
+ */
+export interface RuleSearchOption {
+    keyword?: string; // 検索キーワード
+    ignoreKeyword?: string; // 除外検索キーワード
+    keyCS?: boolean; // 大文字小文字区別有効化 (検索キーワード)
+    keyRegExp?: boolean; // 正規表現 (検索キーワード)
+    name?: boolean; // 番組名 (検索キーワード)
+    description?: boolean; // 概要 (検索キーワード)
+    extended?: boolean; // 詳細 (検索キーワード)
+    ignoreKeyCS?: boolean; // 大文字小文字区別有効化 (除外検索キーワード)
+    ignoreKeyRegExp?: boolean; // 正規表現 (除外検索キーワード)
+    ignoreName?: boolean; // 番組名 (除外検索キーワード)
+    ignoreDescription?: boolean; // 概要 (除外検索キーワード)
+    ignoreExtended?: boolean; // 詳細 (除外検索キーワード)
+    GR?: boolean; // GR
+    BS?: boolean; // BS
+    CS?: boolean; // CS
+    SKY?: boolean; // SKY
+    channelIds?: ChannelId[]; // channels ids
+    genres?: Genre[];
+    times?: SearchTime[]; // 開始時間からの有効時間
+    week?: number; // 曜日
+    isFree?: boolean; // 無料放送か
+    durationMin?: number; // 番組最小時間
+    durationMax?: number; // 番組最大時間
+    searchPeriods?: SearchPeriod[]; // 検索対象期間
+}
+
+/**
+ * ルール予約オプション
+ */
+export interface RuleReserveOption {
+    enable: boolean; // ルールが有効か
+    allowEndLack: boolean; // 末尾切れを許可するか
+    avoidDuplicate: boolean; // 録画済みの重複番組を排除するか
+    periodToAvoidDuplicate?: number; // 重複を避ける期間
+}
+
+/**
+ * 保存オプション
+ */
+export interface ReserveSaveOption {
+    parentDirectoryName?: string; // 親保存ディレクトリ
+    directory?: string; // 保存ディレクトリ
+    recordedFormat?: string; // ファイル名フォーマット
+}
+
+/**
+ * エンコードオプション
+ */
+export interface ReserveEncodedOption {
+    mode1?: string; // エンコードモード
+    encodeParentDirectoryName1?: string; // 親保存ディレクトリ
+    directory1?: string; // 保存先ディレクトリ
+    mode2?: string;
+    encodeParentDirectoryName2?: string;
+    directory2?: string;
+    mode3?: string;
+    encodeParentDirectoryName3?: string;
+    directory3?: string;
+    delTs: boolean;
+}
+
+/**
+ * ルール情報
+ */
 export interface Rules {
     rules: Rule[];
     total: number;
 }
 
-export interface RuleList {
-    id: RuleId;
-    keyword?: string;
+/**
+ * ルール情報取得オプション
+ */
+export interface GetRuleOption {
+    offset?: number;
+    limit?: number;
+    type?: GetReserveType;
 }
 
-export interface Rule {
-    id: RuleId;
-    keyword?: string;
-    ignoreKeyword?: string;
-    keyCS?: boolean
-    keyRegExp?: boolean;
-    title?: boolean;
-    description?: boolean;
-    extended?: boolean;
-    ignoreKeyCS?: boolean
-    ignoreKeyRegExp?: boolean;
-    ignoreTitle?: boolean;
-    ignoreDescription?: boolean;
-    ignoreExtended?: boolean;
-    GR?: boolean;
-    BS?: boolean;
-    CS?: boolean;
-    SKY?: boolean;
-    station?: ServiceItemId;
-    genrelv1?: ProgramGenreLv1;
-    genrelv2?: ProgramGenreLv2;
-    startTime?: number;
-    timeRange?: number;
-    week: number;
-    isFree?: boolean;
-    durationMin?: number;
-    durationMax?: number;
-    avoidDuplicate: boolean;
-    periodToAvoidDuplicate?: number;
-    allowEndLack: boolean;
-    enable: boolean;
-    directory?: string;
-    recordedFormat?: string;
-    mode1?: number;
-    directory1?: string;
-    mode2?: number;
-    directory2?: string;
-    mode3?: number;
-    directory3?: string;
-    delTs?: boolean;
-}
-
-export interface AddRule {
-    search: RuleSearch;
-    option: RuleOption;
-    encode?: RuleEncode;
-}
-
-export interface RuleSearch {
-    keyword?: string;
-    ignoreKeyword?: string;
-    keyCS?: boolean
-    keyRegExp?: boolean;
-    title?: boolean;
-    description?: boolean;
-    extended?: boolean;
-    ignoreKeyCS?: boolean
-    ignoreKeyRegExp?: boolean;
-    ignoreTitle?: boolean;
-    ignoreDescription?: boolean;
-    ignoreExtended?: boolean;
-    GR?: boolean;
-    BS?: boolean;
-    CS?: boolean;
-    SKY?: boolean;
-    station?: ServiceItemId;
-    genrelv1?: ProgramGenreLv1;
-    genrelv2?: ProgramGenreLv2;
-    startTime?: number;
-    timeRange?: number;
-    week: number;
-    isFree?: boolean;
-    durationMin?: number;
-    durationMax?: number;
-    avoidDuplicate?: boolean;
-    periodToAvoidDuplicate?: number;
-}
-
-export interface RuleOption {
-    enable: boolean;
-    allowEndLack: boolean;
-    directory?: string;
-    recordedFormat?: string;
-}
-
-export interface RuleEncode {
-    mode1: number;
-    directory1?: string;
-    mode2?: number;
-    directory2?: string;
-    mode3?: number;
-    directory3?: string;
-    delTs: boolean;
-}
-
-interface DiskStatus {
-    free: number;
-    used: number;
+/**
+ * 録画一覧情報
+ */
+export interface Records {
+    records: RecordedItem[];
     total: number;
 }
 
-interface HLSStream {
-    streamNumber: number;
-}
-
-interface StreamInfo {
-    streamNumber: number;
-    isEnable: boolean;
-    viewCnt: number;
-    type?: 'MpegTsLive' | 'RecordedHLS' | 'HLSLive' | 'WebMLive' | 'MP4Live' | 'MpegTsRecordedStreaming' | 'MultiTypeRecordedStreaming';
-    channelId?: ServiceItemId;
-    recordedId?: RecordedId;
-    encodedId?: EncodedId;
-    mode?: number;
-    channelName?: string;
-    title?: string;
-    startAt?: UnixtimeMS;
-    endAt?: UnixtimeMS;
-    channelType?: ChannelType;
+/**
+ * Recorded
+ */
+export interface RecordedItem {
+    id: RecordedId;
+    ruleId?: RuleId;
+    programId?: ProgramId;
+    channelId: ChannelId;
+    startAt: UnixtimeMS;
+    endAt: UnixtimeMS;
+    name: string;
     description?: string;
     extended?: string;
+    genre1?: ProgramGenreLv1;
+    subGenre1?: ProgramGenreLv2;
+    genre2?: ProgramGenreLv1;
+    subGenre2?: ProgramGenreLv2;
+    genre3?: ProgramGenreLv1;
+    subGenre3?: ProgramGenreLv2;
+    videoType?: ProgramVideoType;
+    videoResolution?: ProgramVideoResolution;
+    videoStreamContent?: number;
+    videoComponentType?: number;
+    audioSamplingRate?: ProgramAudioSamplingRate;
+    audioComponentType?: number;
+    isRecording: boolean;
+    thumbnails?: ThumbnailId[];
+    videoFiles?: VideoFile[];
+    tags?: RecordedTag[];
+    isEncoding: boolean;
 }
 
+/**
+ * VideoFile
+ */
+export interface VideoFile {
+    id: VideoFileId;
+    name: string;
+    type: VideoFileType;
+    size: number;
+}
+
+/**
+ * Recorded tag
+ */
+export interface RecordedTag {
+    id: RecordedTagId;
+    name: string;
+}
+
+/**
+ * recorded 取得オプション
+ */
+export interface GetRecordedOption {
+    isHalfWidth: boolean;
+    offset?: number;
+    limit: number;
+}
+
+/**
+ * tag 取得オプション
+ */
+export interface GetRecordedTagOption {
+    offset?: number;
+    limit?: number;
+}
+
+/**
+ * URL Scheme 情報
+ */
+export interface URLSchemeInfo {
+    ios?: string;
+    android?: string;
+    mac?: string;
+    win?: string;
+}
+
+/**
+ * クライアントが受け取る設定情報
+ */
+export interface Config {
+    socketIOPort: number;
+    broadcast: BroadcastStatus;
+    recorded: string[];
+    encode: string[];
+    urlscheme: {
+        m2ts: URLSchemeInfo;
+        video: URLSchemeInfo;
+        download: URLSchemeInfo;
+    };
+}
+
+/**
+ * 放送波指定の番組表情報取得オプション
+ */
+export interface ScheduleOption {
+    startAt: UnixtimeMS;
+    endAt: UnixtimeMS;
+    isHalfWidth: boolean;
+    GR: boolean;
+    BS: boolean;
+    CS: boolean;
+    SKY: boolean;
+}
+
+/**
+ * 番組表の放送局データ
+ */
+export interface ScheduleChannleItem {
+    id: ChannelId;
+    serviceId: ServiceId;
+    networkId: NetworkId;
+    name: string;
+    remoteControlKeyId?: number;
+    hasLogoData: boolean;
+    channelType: ChannelType;
+}
+
+/**
+ * 番組表の番組データ
+ */
+export interface ScheduleProgramItem {
+    id: ProgramId;
+    channelId: ChannelId;
+    startAt: UnixtimeMS;
+    endAt: UnixtimeMS;
+    isFree: boolean;
+    name: string;
+    description?: string;
+    extended?: string;
+    genre1?: ProgramGenreLv1;
+    subGenre1?: ProgramGenreLv2;
+    genre2?: ProgramGenreLv1;
+    subGenre2?: ProgramGenreLv2;
+    genre3?: ProgramGenreLv1;
+    subGenre3?: ProgramGenreLv2;
+    videoType?: ProgramVideoType;
+    videoResolution?: ProgramVideoResolution;
+    videoStreamContent?: number;
+    videoComponentType?: number;
+    audioSamplingRate?: ProgramAudioSamplingRate;
+    audioComponentType?: number;
+}
+
+/**
+ * 番組表データ
+ */
+export interface Schedule {
+    channel: ScheduleChannleItem;
+    programs: ScheduleProgramItem[];
+}
+
+/**
+ * 番組検索オプション
+ */
+export interface ScheduleSearchOption {
+    option: RuleSearchOption;
+    isHalfWidth: boolean;
+    limit?: number;
+}
+
+/**
+ * Encode
+ */
+
+/**
+ * エンコード追加オプション
+ */
+export interface AddEncodeProgramOption {
+    recordedId: RecordedId;
+    sourceVideoFileId: VideoFileId;
+    parentDir: string; // 親ディレクトリ config recorded の name
+    directory?: string; // 親ディレクトリ以下のディレクトリ設定
+    mode: string; // config encode の name
+    removeOriginal: boolean;
+}
+
+export interface AddManualEncodeProgramOption {
+    recordedId: RecordedId;
+    sourceVideoFileId: VideoFileId;
+    parentDir?: string; // isSaveSameDirectory が false の場合は必須
+    directory?: string;
+    isSaveSameDirectory?: boolean; // ソースビデオファイルと同じ場所に保存する
+    mode: string; // config encode の name
+    removeOriginal: boolean;
+}

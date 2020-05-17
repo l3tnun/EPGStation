@@ -1,0 +1,10 @@
+{
+    "editor.detectIndentation": false,
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "editor.formatOnSave": true,
+    "yaml.schemas": {
+        "http://json.schemastore.org/swagger-2.0": ["api.yml"]
+    },
+    "vetur.format.defaultFormatter.html": "prettier"
+}

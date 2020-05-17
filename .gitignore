@@ -8,11 +8,13 @@ thumbnail/*.jpg
 data/streamfiles/*
 .DS_Store
 config/*.json
-!config.sample.json
-!operatorLogConfig.sample.json
-!serviceLogConfig.sample.json
+config/*.yml
+!config.sample.yml
+!operatorLogConfig.sample.yml
+!serviceLogConfig.sample.yml
 data/*.json
 data/upload/*
 node_modules
 dist
 !.gitkeep
+.cache

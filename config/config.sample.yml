@@ -1,0 +1,43 @@
+port: 8888
+mirakurunPath: http+unix://%2Fvar%2Frun%2Fmirakurun.sock/
+
+dbtype: sqlite
+# sqlite:
+#   extensions:
+#     - '/hoge/regexp.dylib'
+#   regexp: true
+
+epgUpdateIntervalTime: 10
+
+conflictPriority: 1
+recPriority: 2
+
+recordedFormat: '%YEAR%年%MONTH%月%DAY%日%HOUR%時%MIN%分%SEC%秒-%TITLE%'
+recordedFileExtension: .ts
+recorded:
+    - name: recorded
+      path: '%ROOT%/recorded'
+
+thumbnail: '%ROOT%/thumbnail'
+thumbnailSize: 480x270
+thumbnailPosition: 5
+
+ffmpeg: /home/masato/bin/ffmpeg
+
+encodeProcessNum: 4
+concurrentEncodeNum: 2
+encode:
+    - name: H.264
+      cmd: '%NODE% %ROOT%/config/enc.js'
+      suffix: .mp4
+      rete: 4.0
+
+urlscheme:
+    m2ts:
+        ios: vlc-x-callback://x-callback-url/stream?url=http://ADDRESS"
+        android: intent://ADDRESS#Intent;package=org.videolan.vlc;type=video;scheme=http;end
+    video:
+        ios: infuse://x-callback-url/play?url=http://ADDRESS
+        android: intent://ADDRESS#Intent;package=com.mxtech.videoplayer.pro;type=video;scheme=http;end
+    download:
+        ios: vlc-x-callback://x-callback-url/stream?url=http://ADDRESS
