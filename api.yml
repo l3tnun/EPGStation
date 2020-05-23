@@ -1029,6 +1029,14 @@ components:
             schema:
                 $ref: '#/components/schemas/UnixtimeMS'
 
+        Days:
+            description: 取得日数
+            in: query
+            name: days
+            required: true
+            schema:
+                type: integer
+
         IsHalfWidth:
             description: 半角文字で取得するか
             in: query
@@ -1093,6 +1101,14 @@ components:
             name: isDownload
             schema:
                 type: boolean
+
+        PathChannelId:
+            description: 放送局 id
+            in: path
+            name: channelId
+            required: true
+            schema:
+                $ref: '#/components/schemas/ChannelId'
 
         PathReserveId:
             description: 予約id

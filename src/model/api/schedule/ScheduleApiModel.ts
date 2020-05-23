@@ -75,6 +75,45 @@ export default class ScheduleApiModel implements IScheduleApiModel {
     }
 
     /**
+     * チャンネル指定時の番組表データ取得
+     * @param option: id.ChannelScheduleOption
+     * @return Promise<apid.Schedule[]>
+     */
+    public async getChannelSchedule(option: apid.ChannelScheduleOption): Promise<apid.Schedule[]> {
+        const channel = await this.channelDB.findId(option.channelId);
+        if (channel === null) {
+            throw new Error('ChannelIsNotFound');
+        }
+
+        const programs: Program[][] = [];
+        let baseTime = option.startAt;
+        for (let i = 0; i < option.days; i++) {
+            const p = await this.programDB.findSchedule({
+                startAt: baseTime,
+                endAt: baseTime + 60 * 60 * 24 * 1000,
+                isHalfWidth: option.isHalfWidth,
+                channelId: option.channelId,
+            });
+            programs.push(p);
+            baseTime += 60 * 60 * 24 * 1000;
+        }
+
+        const channelItem = this.toScheduleChannleItem(channel, option.isHalfWidth);
+        const result: apid.Schedule[] = [];
+
+        for (const program of programs) {
+            result.push({
+                channel: channelItem,
+                programs: program.map(p => {
+                    return this.toScheduleProgramItem(p, option.isHalfWidth);
+                }),
+            });
+        }
+
+        return result;
+    }
+
+    /**
      * 番組検索
      * @param option: RuleSearchOption
      * @param isHalfWidth: boolean true 半角文字で返す, false: オリジナルのまま

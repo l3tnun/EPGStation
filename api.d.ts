@@ -422,6 +422,16 @@ export interface ScheduleOption {
 }
 
 /**
+ * チャンネル指定の番組情報取得オプション
+ */
+export interface ChannelScheduleOption {
+    startAt: UnixtimeMS;
+    days: number; // 取得日数
+    isHalfWidth: boolean;
+    channelId: ChannelId;
+}
+
+/**
  * 番組表の放送局データ
  */
 export interface ScheduleChannleItem {
