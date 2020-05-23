@@ -45,4 +45,5 @@ export default interface IGuideState {
     getTimesLength(): number;
     getProgramDoms(): ProgramDomItem[];
     getTitle(type?: string): string;
+    getSingleStationTitle(): string;
 }

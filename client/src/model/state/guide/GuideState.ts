@@ -526,6 +526,14 @@ class GuideState implements IGuideState {
 
         return title;
     }
+
+    /**
+     * 単局表示時の title を返す
+     * @return string
+     */
+    public getSingleStationTitle(): string {
+        return this.schedules.length === 0 ? '番組表' : this.schedules[0].channel.name;
+    }
 }
 
 namespace GuideState {

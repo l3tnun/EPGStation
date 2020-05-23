@@ -1,6 +1,12 @@
 <template>
     <v-content>
-        <TitleBar :title="guideState.getTitle($route.query.type)">
+        <TitleBar
+            :title="
+                typeof $route.query.channelId === 'undefined'
+                    ? guideState.getTitle($route.query.type)
+                    : guideState.getSingleStationTitle()
+            "
+        >
             <template v-slot:menu>
                 <GuideTimeSelector v-if="isLoading === false"></GuideTimeSelector>
             </template>
