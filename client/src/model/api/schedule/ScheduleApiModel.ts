@@ -25,6 +25,23 @@ export default class ScheduleApiModel implements IScheduleApiModel {
     }
 
     /**
+     * 放送局を指定した番組表データの取得
+     * @param option: apid.ChannelScheduleOption
+     * @return Promise<apid.Schedule[]>
+     */
+    public async getChannelSchedule(option: apid.ChannelScheduleOption): Promise<apid.Schedule[]> {
+        const result = await this.repository.get(`/schedules/${option.channelId}`, {
+            params: {
+                startAt: option.startAt,
+                days: option.days,
+                isHalfWidth: option.isHalfWidth,
+            },
+        });
+
+        return <any>result.data;
+    }
+
+    /**
      * 番組検索結果の取得
      * @param option: apid.ScheduleSearchOption
      * @return Promise<apid.ScheduleProgramItem[]>

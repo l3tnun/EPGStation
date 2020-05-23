@@ -2,6 +2,7 @@ import * as apid from '../../../../../api';
 
 export interface FetchGuideOption {
     type?: apid.ChannelType;
+    channelId?: apid.ChannelId;
     time?: string; // YYMMddhh
     length: number;
     isHalfWidth: boolean;
@@ -34,11 +35,12 @@ export default interface IGuideState {
     clearDate(): void;
     setDisplayRange(baseSize: DisplayRange): void;
     fetchGuide(option: FetchGuideOption): Promise<void>;
-    createProgramDoms(): void;
+    createProgramDoms(isSingleStation: boolean): void;
     updateVisible(): void;
     updateReserves(): void;
     getChannels(): apid.ScheduleChannleItem[];
     getChannelsLength(): number;
+    getStartAt(): apid.UnixtimeMS;
     getTimes(): number[];
     getTimesLength(): number;
     getProgramDoms(): ProgramDomItem[];

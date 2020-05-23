@@ -1,11 +1,9 @@
 <template>
     <div class="channels d-flex" v-bind:class="{ isDark: $vuetify.theme.dark === true }">
         <div class="item dummy">dummy</div>
-        <div
-            class="white--text item"
-            v-for="channel in guideState.getChannels()"
-            v-bind:key="channel.id"
-        >{{ channel.name }}</div>
+        <div class="white--text item" v-for="channel in channelItems" v-bind:key="channel.index">
+            {{ channel.name }}
+        </div>
         <div class="item scrollbar">dummy</div>
     </div>
 </template>
@@ -15,10 +13,42 @@ import container from '@/model/ModelContainer';
 import IGuideState from '@/model/state/guide/IGuideState';
 import { Component, Vue } from 'vue-property-decorator';
 import * as apid from '../../../../api';
+import DateUtil from '../../util/DateUtil';
+
+interface DisplayChannelItem {
+    name: string;
+    id: apid.ChannelId;
+    index: number | string;
+}
 
 @Component({})
 export default class Channel extends Vue {
     public guideState: IGuideState = container.get<IGuideState>('IGuideState');
+
+    get channelItems(): DisplayChannelItem[] {
+        if (typeof this.$route.query.channelId === 'undefined') {
+            return this.guideState.getChannels().map(c => {
+                return {
+                    name: c.name,
+                    id: c.id,
+                    index: c.id,
+                };
+            });
+        } else {
+            let baseTime = this.guideState.getStartAt();
+
+            return this.guideState.getChannels().map(c => {
+                const name = DateUtil.format(DateUtil.getJaDate(new Date(baseTime)), 'MM/dd(w)');
+                baseTime += 60 * 60 * 24 * 1000;
+
+                return {
+                    name: name,
+                    id: c.id,
+                    index: name,
+                };
+            });
+        }
+    }
 }
 </script>
 
@@ -61,5 +91,4 @@ $board-line-dark: 1px solid #888888
             background: #393e46
             border-left: $board-line-dark
             border-right: $board-line-dark
-
 </style>

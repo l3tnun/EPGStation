@@ -85,32 +85,50 @@ class GuideState implements IGuideState {
                 ? option.time
                 : DateUtil.format(DateUtil.getJaDate(new Date()), 'YYMMddhh');
         const startAt = this.getStartTime(this.startTime);
-        const endAt = startAt + option.length * 60 * 60 * 1000;
+        let endAt: number;
 
-        const scheduleOption: apid.ScheduleOption = {
-            startAt,
-            endAt,
-            isHalfWidth: option.isHalfWidth,
-            GR: false,
-            BS: false,
-            CS: false,
-            SKY: false,
-        };
+        if (typeof option.channelId === 'undefined') {
+            // 放送局指定ではない
+            endAt = startAt + option.length * 60 * 60 * 1000;
 
-        // 放送波設定
-        if (typeof option.type === 'undefined') {
-            scheduleOption.GR = true;
-            scheduleOption.BS = true;
-            scheduleOption.CS = true;
-            scheduleOption.SKY = true;
+            // 表示時刻長を記録
+            this.timeLength = option.length;
+
+            const scheduleOption: apid.ScheduleOption = {
+                startAt,
+                endAt,
+                isHalfWidth: option.isHalfWidth,
+                GR: false,
+                BS: false,
+                CS: false,
+                SKY: false,
+            };
+
+            // 放送波設定
+            if (typeof option.type === 'undefined') {
+                scheduleOption.GR = true;
+                scheduleOption.BS = true;
+                scheduleOption.CS = true;
+                scheduleOption.SKY = true;
+            } else {
+                scheduleOption[option.type] = true;
+            }
+
+            this.schedules = await this.scheduleApiModel.getSchedule(scheduleOption);
         } else {
-            scheduleOption[option.type] = true;
+            // 放送局指定
+            this.timeLength = GuideState.SINGLE_STATION_LENGTH;
+            endAt = startAt + 60 * 60 * GuideState.SINGLE_STATION_LENGTH * 1000 * GuideState.SINGLE_STATION_GET_DAYS;
+
+            const scheduleOption: apid.ChannelScheduleOption = {
+                startAt: startAt,
+                days: GuideState.SINGLE_STATION_GET_DAYS,
+                isHalfWidth: option.isHalfWidth,
+                channelId: option.channelId,
+            };
+
+            this.schedules = await this.scheduleApiModel.getChannelSchedule(scheduleOption);
         }
-
-        // 表示時刻長を記録
-        this.timeLength = option.length;
-
-        this.schedules = await this.scheduleApiModel.getSchedule(scheduleOption);
 
         this.startAt = startAt;
         this.endAt = endAt;
@@ -124,8 +142,9 @@ class GuideState implements IGuideState {
 
     /**
      * 番組情報の要素を生成する
+     * @param isSingleStation: boolean 単局表示か
      */
-    public createProgramDoms(): void {
+    public createProgramDoms(isSingleStation: boolean): void {
         if (this.displayRange === null) {
             throw new Error('CreateProgramDomsError');
         }
@@ -134,14 +153,17 @@ class GuideState implements IGuideState {
 
         this.programDoms = [];
         this.programDomIndex = {};
+        let baseStartAt = this.startAt;
+        let baseEndAt =
+            isSingleStation === true ? baseStartAt + 60 * 60 * GuideState.SINGLE_STATION_LENGTH * 1000 : this.endAt;
         for (let i = 0; i < this.schedules.length; i++) {
             for (const program of this.schedules[i].programs) {
-                const programStartAt = this.startAt > program.startAt ? this.startAt : program.startAt;
+                const programStartAt = baseStartAt > program.startAt ? baseStartAt : program.startAt;
 
                 // プログラム高さ位置
-                const top = this.getTop(this.startAt, programStartAt);
+                const top = this.getTop(baseStartAt, programStartAt);
                 // 番組高さ
-                const height = this.getDiffMin(programStartAt, this.endAt < program.endAt ? this.endAt : program.endAt);
+                const height = this.getDiffMin(programStartAt, baseEndAt < program.endAt ? baseEndAt : program.endAt);
                 if (height <= 0) {
                     continue;
                 }
@@ -170,6 +192,11 @@ class GuideState implements IGuideState {
                     this.programDomIndex[program.id] = [];
                 }
                 this.programDomIndex[program.id].push(element);
+            }
+
+            if (isSingleStation === true) {
+                baseStartAt += 60 * 60 * GuideState.SINGLE_STATION_LENGTH * 1000;
+                baseEndAt = baseStartAt + 60 * 60 * GuideState.SINGLE_STATION_LENGTH * 1000;
             }
         }
     }
@@ -437,6 +464,13 @@ class GuideState implements IGuideState {
     }
 
     /**
+     * 番組取得の開始時刻を返す
+     */
+    public getStartAt(): apid.UnixtimeMS {
+        return this.startAt;
+    }
+
+    /**
      * 時刻表示用の数字配列を返す
      * @return number[]
      */
@@ -496,6 +530,8 @@ class GuideState implements IGuideState {
 
 namespace GuideState {
     export const DisplayMargin = 0.5;
+    export const SINGLE_STATION_GET_DAYS = 8;
+    export const SINGLE_STATION_LENGTH = 24;
 }
 
 export default GuideState;

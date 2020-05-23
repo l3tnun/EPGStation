@@ -235,7 +235,7 @@ export default class Guide extends Vue {
 
             if (typeof this.$refs.programs !== 'undefined') {
                 this.setDisplayRange();
-                this.guideState.createProgramDoms();
+                this.guideState.createProgramDoms(typeof this.$route.query.channelId !== 'undefined');
 
                 if (typeof this.$refs.content !== 'undefined') {
                     // スクロール位置復元
@@ -332,6 +332,10 @@ export default class Guide extends Vue {
 
         if (typeof this.$route.query.time !== 'undefined') {
             result.time = <any>this.$route.query.time;
+        }
+
+        if (typeof this.$route.query.channelId !== 'undefined') {
+            result.channelId = parseInt(<any>this.$route.query.channelId, 10);
         }
 
         return result;
