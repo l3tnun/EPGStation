@@ -1,7 +1,12 @@
 <template>
     <div class="channels d-flex" v-bind:class="{ isDark: $vuetify.theme.dark === true }">
         <div class="item dummy">dummy</div>
-        <div class="white--text item" v-for="channel in channelItems" v-bind:key="channel.index">
+        <div
+            class="white--text item"
+            v-for="channel in channelItems"
+            v-bind:key="channel.index"
+            v-on:click="onClick(channel.item)"
+        >
             {{ channel.name }}
         </div>
         <div class="item scrollbar">dummy</div>
@@ -11,14 +16,16 @@
 <script lang="ts">
 import container from '@/model/ModelContainer';
 import IGuideState from '@/model/state/guide/IGuideState';
+import DateUtil from '@/util/DateUtil';
+import Util from '@/util/Util';
 import { Component, Vue } from 'vue-property-decorator';
 import * as apid from '../../../../api';
-import DateUtil from '../../util/DateUtil';
 
 interface DisplayChannelItem {
     name: string;
     id: apid.ChannelId;
     index: number | string;
+    item: apid.ScheduleChannleItem;
 }
 
 @Component({})
@@ -32,6 +39,7 @@ export default class Channel extends Vue {
                     name: c.name,
                     id: c.id,
                     index: c.id,
+                    item: c,
                 };
             });
         } else {
@@ -45,9 +53,29 @@ export default class Channel extends Vue {
                     name: name,
                     id: c.id,
                     index: name,
+                    item: c,
                 };
             });
         }
+    }
+
+    public async onClick(item: apid.ScheduleChannleItem): Promise<void> {
+        // 単局表示の場合は何もしない
+        if (typeof this.$route.query.channelId !== 'undefined') {
+            return;
+        }
+
+        // 単局表示ページに飛ぶ
+        const query: any = {
+            channelId: item.id,
+        };
+        if (typeof this.$route.query.time !== 'undefined') {
+            query.time = this.$route.query.time;
+        }
+        await Util.move(this.$router, {
+            path: '/guide',
+            query: query,
+        });
     }
 }
 </script>
