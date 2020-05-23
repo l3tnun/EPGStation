@@ -99,6 +99,9 @@ export default class GuideTimeSelector extends Vue {
         if (typeof this.broadcastValue !== 'undefined') {
             query.type = this.broadcastValue;
         }
+        if (typeof this.$route.query.channelId !== 'undefined') {
+            query.channelId = this.$route.query.channelId;
+        }
 
         await Util.move(this.$router, {
             path: '/guide',
