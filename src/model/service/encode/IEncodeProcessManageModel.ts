@@ -1,7 +1,7 @@
 import { ChildProcess, SpawnOptions } from 'child_process';
 
 export interface CreateProcessOption {
-    input: string;
+    input: string | null;
     output: string | null;
     cmd: string; // %INPUT% と %OUTPUT% を input と output で置換する
     priority: number; // 数値が大きいほど優先度が高くなる

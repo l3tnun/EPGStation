@@ -124,6 +124,19 @@ components:
                 - 44100 # 110
                 - 48000 # 111
 
+        StreamId:
+            description: ストリーム id
+            type: integer
+
+        StreamType:
+            description: ストリームの種類
+            type: string
+            enum:
+                - LiveStream
+                - LiveHLS
+                - RecordedStream
+                - RecordedHLS
+
         URLSchemeInfo:
             description: URL Scheme
             type: object
@@ -976,6 +989,19 @@ components:
                 reserveId:
                     $ref: '#/components/schemas/EncodeId'
 
+        StreamInfo:
+            description: ストリーム情報
+            type: object
+            required:
+                - type
+            properties:
+                type:
+                    $ref: '#/components/schemas/StreamType'
+                channelId:
+                    $ref: '#/components/schemas/ChannelId'
+                videoFileId:
+                    $ref: '#/components/schemas/VideoFileId'
+
         Error:
             type: object
             readOnly: true
@@ -1149,3 +1175,11 @@ components:
             required: true
             schema:
                 type: integer
+
+        StreamName:
+            description: ストリーミング設定
+            in: query
+            name: name
+            required: true
+            schema:
+                type: string

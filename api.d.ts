@@ -19,6 +19,8 @@ export type ProgramGenreLv2 = number;
 export type ProgramVideoType = 'mpeg2' | 'h.264' | 'h.265';
 export type ProgramVideoResolution = '240p' | '480i' | '480p' | '720p' | '1080i' | '2160p' | '4320p';
 export type ProgramAudioSamplingRate = 16000 | 22050 | 24000 | 32000 | 44100 | 48000;
+export type StreamId = number;
+export type StreamType = 'LiveStream' | 'LiveHLS' | 'RecordedStream' | 'RecordedHLS';
 
 /**
  * チャンネル情報
@@ -511,4 +513,33 @@ export interface AddManualEncodeProgramOption {
     isSaveSameDirectory?: boolean; // ソースビデオファイルと同じ場所に保存する
     mode: string; // config encode の name
     removeOriginal: boolean;
+}
+
+/**
+ * ストリーム情報ベース
+ */
+export interface BaseStreamInfo {
+    type: StreamType;
+}
+
+/**
+ * ライブストリーム情報
+ */
+export interface LiveStreamInfo extends BaseStreamInfo {
+    channelId: ChannelId;
+}
+
+/**
+ * 録画ファイルストリーム情報
+ */
+export interface RecordedStreamInfo extends BaseStreamInfo {
+    videoFileId: VideoFileId;
+}
+
+/**
+ * ライブストリームオプション
+ */
+export interface LiveStreamOption {
+    name: string;
+    channelId: ChannelId;
 }

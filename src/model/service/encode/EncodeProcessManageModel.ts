@@ -202,7 +202,10 @@ class EncodeProcessManageModel implements IEncodeProcessManageModel {
 
         // input, output を置換
         for (let i = 0; i < cmds.args.length; i++) {
-            cmds.args[i] = cmds.args[i].replace(/%INPUT%/g, option.input);
+            if (option.input !== null) {
+                cmds.args[i] = cmds.args[i].replace(/%INPUT%/g, option.input);
+            }
+
             if (option.output !== null) {
                 cmds.args[i] = cmds.args[i].replace(/%OUTPUT%/g, option.output);
             }

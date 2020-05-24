@@ -122,6 +122,7 @@ namespace Configuration {
         epgUpdateIntervalTime: 10,
         conflictPriority: 1,
         recPriority: 2,
+        streamingPriority: 0,
         timeSpecifiedStartMargin: 1,
         timeSpecifiedEndMargin: 1,
         recordedFormat: '%YEAR%年%MONTH%月%DAY%日%HOUR%時%MIN%分%SEC%秒-%TITLE%',

@@ -41,3 +41,61 @@ urlscheme:
         android: intent://ADDRESS#Intent;package=com.mxtech.videoplayer.pro;type=video;scheme=http;end
     download:
         ios: vlc-x-callback://x-callback-url/stream?url=http://ADDRESS
+
+stream:
+    live:
+        m2ts:
+            - name: 720p
+              cmd:
+                  '%FFMPEG% -re -dual_mono_mode main -i pipe:0 -sn -threads 0 -c:a aac -ar 48000 -b:a 192k -ac 2 -c:v
+                  libx264 -vf yadif,scale=-2:720 -b:v 3000k -preset veryfast -y -f mpegts pipe:1'
+            - name: 480p
+              cmd:
+                  '%FFMPEG% -re -dual_mono_mode main -i pipe:0 -sn -threads 0 -c:a aac -ar 48000 -b:a 128k -ac 2 -c:v
+                  libx264 -vf yadif,scale=-2:480 -b:v 1500k -preset veryfast -y -f mpegts pipe:1'
+            - name: 無変換
+
+        webm:
+            - name: 720p
+              cmd:
+                  '%FFMPEG% -re -dual_mono_mode main -i pipe:0 -sn -threads 3 -c:a libvorbis -ar 48000 -b:a 192k -ac 2
+                  -c:v libvpx-vp9 -vf yadif,scale=-2:720 -b:v 3000k -deadline realtime -speed 4 -cpu-used -8 -y -f webm
+                  pipe:1'
+            - name: 480p
+              cmd:
+                  '%FFMPEG% -re -dual_mono_mode main -i pipe:0 -sn -threads 2 -c:a libvorbis -ar 48000 -b:a 128k -ac 2
+                  -c:v libvpx-vp9 -vf yadif,scale=-2:480 -b:v 1500k -deadline realtime -speed 4 -cpu-used -8 -y -f webm
+                  pipe:1'
+
+        mp4:
+            - name: 720p
+              cmd:
+                  '%FFMPEG% -re -dual_mono_mode main -i pipe:0 -sn -threads 0 -c:a aac -ar 48000 -b:a 192k -ac 2 -c:v
+                  libx264 -vf yadif,scale=-2:720 -b:v 3000k -profile:v baseline -preset veryfast -tune
+                  fastdecode,zerolatency -movflags frag_keyframe+empty_moov+faststart+default_base_moof -y -f mp4 pipe:1'
+            - name: 480p
+              cmd:
+                  '%FFMPEG% -re -dual_mono_mode main -i pipe:0 -sn -threads 0 -c:a aac -ar 48000 -b:a 128k -ac 2 -c:v
+                  libx264 -vf yadif,scale=-2:480 -b:v 1500k -profile:v baseline -preset veryfast -tune
+                  fastdecode,zerolatency -movflags frag_keyframe+empty_moov+faststart+default_base_moof -y -f mp4 pipe:1'
+
+        hls:
+            - name: 720p
+              cmd:
+                  '%FFMPEG% -re -dual_mono_mode main -i pipe:0 -sn -threads 0 -map 0 -ignore_unknown
+                  -max_muxing_queue_size 1024 -f hls -hls_time 3 -hls_list_size 17 -hls_allow_cache 1
+                  -hls_segment_filename %streamFileDir%/stream%streamNum%-%09d.ts -c:a aac -ar 48000 -b:a 192k -ac 2
+                  -c:v libx264 -vf yadif,scale=-2:720 -b:v 3000k -preset veryfast -flags +loop-global_header %OUTPUT%'
+            - name: 480p
+              cmd:
+                  '%FFMPEG% -re -dual_mono_mode main -i pipe:0 -sn -threads 0 -map 0 -ignore_unknown
+                  -max_muxing_queue_size 1024 -f hls -hls_time 3 -hls_list_size 17 -hls_allow_cache 1
+                  -hls_segment_filename %streamFileDir%/stream%streamNum%-%09d.ts -c:a aac -ar 48000 -b:a 128k -ac 2
+                  -c:v libx264 -vf yadif,scale=-2:480 -b:v 1500k -preset veryfast -flags +loop-global_header %OUTPUT%'
+            - name: 180p
+              cmd:
+                  '%FFMPEG% -re -dual_mono_mode main -i pipe:0 -sn -threads 0 -map 0 -ignore_unknown
+                  -max_muxing_queue_size 1024 -f hls -hls_time 3 -hls_list_size 17 -hls_allow_cache 1
+                  -hls_segment_filename %streamFileDir%/stream%streamNum%-%09d.ts -c:a aac -ar 48000 -b:a 48k -ac 2 -c:v
+                  libx264 -vf yadif,scale=-2:180 -b:v 100k -preset veryfast -maxrate 110k -bufsize 1000k -flags
+                  +loop-global_header %OUTPUT%'

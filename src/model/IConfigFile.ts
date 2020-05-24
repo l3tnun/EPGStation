@@ -12,6 +12,11 @@ export interface URLSchemeInfo {
     win?: string;
 }
 
+export interface StreamingCmd {
+    name: string;
+    cmd?: string;
+}
+
 /**
  * config ファイル形式
  */
@@ -49,6 +54,7 @@ export default interface IConfigFile {
     // priority 設定
     recPriority: number;
     conflictPriority: number;
+    streamingPriority: number;
 
     // 時刻指定予約マージン
     timeSpecifiedStartMargin: number;
@@ -85,5 +91,26 @@ export default interface IConfigFile {
         m2ts: URLSchemeInfo;
         video: URLSchemeInfo;
         download: URLSchemeInfo;
+    };
+
+    stream?: {
+        live?: {
+            m2ts?: StreamingCmd[];
+            webm?: StreamingCmd[];
+            mp4?: StreamingCmd[];
+            hls?: StreamingCmd[];
+        };
+        recorded?: {
+            ts?: {
+                webm?: StreamingCmd[];
+                mp4?: StreamingCmd[];
+                hls?: StreamingCmd[];
+            };
+            encoded?: {
+                webm?: StreamingCmd[];
+                mp4?: StreamingCmd[];
+                hls?: StreamingCmd[];
+            };
+        };
     };
 }

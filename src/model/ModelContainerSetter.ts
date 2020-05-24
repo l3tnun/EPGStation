@@ -16,6 +16,8 @@ import IRuleApiModel from './api/rule/IRuleApiModel';
 import RuleApiModel from './api/rule/RuleApiModel';
 import IScheduleApiModel from './api/schedule/IScheduleApiModel';
 import ScheduleApiModel from './api/schedule/ScheduleApiModel';
+import IStreamApiModel from './api/stream/IStreamApiModel';
+import StreamApiModel from './api/stream/StreamApiModel';
 import IThumbnailApiModel from './api/thumbnail/IThumbnailApiModel';
 import ThumbnailApiModel from './api/thumbnail/ThumbnailApiModel';
 import IVideoApiModel from './api/video/IVideoApiModel';
@@ -104,6 +106,10 @@ import IServiceServer from './service/IServiceServer';
 import ServiceServer from './service/ServiceServer';
 import ISocketIOManageModel from './service/socketio/ISocketIOManageModel';
 import SocketIOManageModel from './service/socketio/SocketIOManageModel';
+import ILiveStreamBaseModel, { LiveStreamModelProvider } from './service/stream/ILiveStreamBaseModel';
+import IStreamManageModel from './service/stream/IStreamManageModel';
+import LiveStreamModel from './service/stream/LiveStreamModel';
+import StreamManageModel from './service/stream/StreamManageModel';
 
 /**
  * container に 各 Model を登録する
@@ -233,4 +239,23 @@ export const set = (container: Container): void => {
     container.bind<IEncodeManageModel>('IEncodeManageModel').to(EncodeManageModel).inSingletonScope();
 
     container.bind<IEncodeFinishModel>('IEncodeFinishModel').to(EncodeFinishModel).inSingletonScope();
+
+    container.bind<ILiveStreamBaseModel>('LiveStreamModel').to(LiveStreamModel);
+
+    container.bind<LiveStreamModelProvider>('LiveStreamModelProvider').toProvider(context => {
+        return () => {
+            return new Promise<ILiveStreamBaseModel>((resolve, reject) => {
+                try {
+                    const streamModel = context.container.get<ILiveStreamBaseModel>('LiveStreamModel');
+                    resolve(streamModel);
+                } catch (err) {
+                    reject(err);
+                }
+            });
+        };
+    });
+
+    container.bind<IStreamManageModel>('IStreamManageModel').to(StreamManageModel).inSingletonScope();
+
+    container.bind<IStreamApiModel>('IStreamApiModel').to(StreamApiModel).inSingletonScope();
 };
