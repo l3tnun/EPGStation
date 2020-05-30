@@ -15,7 +15,7 @@ export default class MainModel extends ViewModel {
     }
 
     public async updateConfig(): Promise<void> {
-        this.configApiModel.update();
+        await this.configApiModel.update();
     }
 }
 
