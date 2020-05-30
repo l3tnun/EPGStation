@@ -80,21 +80,6 @@ export default class LiveStreamModel extends LiveStreamBaseModel implements ILiv
         }
     }
 
-    /**
-     * ストリーム情報を返す
-     * @return apid.LiveStreamInfo
-     */
-    public getInfo(): apid.LiveStreamInfo {
-        if (this.processOption === null) {
-            throw new Error('ProcessOptionIsNull');
-        }
-
-        return {
-            type: 'LiveStream',
-            channelId: this.processOption.channelId,
-        };
-    }
-
     protected getStreamType(): apid.StreamType {
         return 'LiveStream';
     }
