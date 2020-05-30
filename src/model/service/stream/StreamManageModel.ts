@@ -23,15 +23,16 @@ export default class StreamManageModel implements IStreamManageModel {
     public async start(stream: IStreamBase<any>): Promise<apid.StreamId> {
         // ストリーム開始
         this.log.stream.info('start stream');
-        await stream.start().catch(err => {
-            this.log.stream.error('start stream error');
-            this.log.stream.error(err);
-            throw err;
-        });
 
         // stream id 割当
         const streamId = this.getEmptyStreamId();
         this.streams[streamId] = stream;
+
+        await stream.start(streamId).catch(err => {
+            this.log.stream.error('start stream error');
+            this.log.stream.error(err);
+            throw err;
+        });
 
         // stream 停止時に停止させる
         stream.setExitStream(() => {
