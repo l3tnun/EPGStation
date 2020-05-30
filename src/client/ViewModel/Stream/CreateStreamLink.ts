@@ -17,8 +17,8 @@ namespace CreateStreamLink {
 
         let baseUrl: string | null = null;
 
-        // Mac Safari ではなくて Web 設定にて url scheme が有効
-        if (!(Util.uaIsMac() && Util.uaIsSafari()) && setting.isEnableURLScheme) {
+        // Web 設定にて url scheme が有効
+        if (setting.isEnableURLScheme) {
             // Web 設定に url scheme の設定があるか
             if (setting.customURLScheme === null) {
                 // config に Viewer の設定がない
