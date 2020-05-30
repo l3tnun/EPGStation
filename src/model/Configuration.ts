@@ -80,6 +80,9 @@ class Configuration implements IConfiguration {
         // thumbnail のパス整形
         newConfig.thumbnail = this.directoryFormatting(newConfig.thumbnail);
 
+        // streamfiles のパス整形
+        newConfig.streamFilePath = this.directoryFormatting(newConfig.streamFilePath);
+
         return newConfig;
     }
 
@@ -153,6 +156,7 @@ namespace Configuration {
                 ios: 'vlc-x-callback://x-callback-url/stream?url=http://ADDRESS',
             },
         },
+        streamFilePath: path.join(__dirname, '..', '..', 'data', 'streamfiles'),
     };
 }
 

@@ -93,6 +93,7 @@ export default interface IConfigFile {
         download: URLSchemeInfo;
     };
 
+    streamFilePath: string;
     stream?: {
         live?: {
             m2ts?: StreamingCmd[];
