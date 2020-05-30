@@ -8,6 +8,7 @@ export interface StreamResponse {
 
 export default interface IStreamApiModel {
     startM2TsStream(option: apid.LiveStreamOption): Promise<StreamResponse>;
+    startWebmStream(option: apid.LiveStreamOption): Promise<StreamResponse>;
     stop(streamId: apid.StreamId): Promise<void>;
     stopAll(): Promise<void>;
 }
