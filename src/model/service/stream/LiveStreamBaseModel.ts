@@ -50,7 +50,7 @@ abstract class LiveStreamBaseModel implements ILiveStreamBaseModel {
      * stream プロセス生成に必要な情報を生成する
      * @return CreateProcessOption | null プロセス生成する必要がない場合は null を返す
      */
-    public createProcessOption(): CreateProcessOption | null {
+    protected createProcessOption(): CreateProcessOption | null {
         if (this.processOption === null) {
             throw new Error('ProcessOptionIsNull');
         }
