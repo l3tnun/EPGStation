@@ -73,6 +73,23 @@ namespace FileUtil {
             throw new Error('FileIsNotFound');
         }
     };
+
+    /**
+     * 指定されたディレクトのファイル一覧を返す
+     * @param dirPath: string ディレクトパス
+     * @return Promise<string[]> ファイル一覧
+     */
+    export const readDir = async (dirPath: string): Promise<string[]> => {
+        return new Promise((resolve, reject) => {
+            fs.readdir(dirPath, (err, files) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(files);
+                }
+            });
+        });
+    };
 }
 
 export default FileUtil;

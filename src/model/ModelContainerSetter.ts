@@ -106,6 +106,8 @@ import IServiceServer from './service/IServiceServer';
 import ServiceServer from './service/ServiceServer';
 import ISocketIOManageModel from './service/socketio/ISocketIOManageModel';
 import SocketIOManageModel from './service/socketio/SocketIOManageModel';
+import HLSFileDeleterModel from './service/stream/HLSFileDeleterModel';
+import IHLSFileDeleterModel from './service/stream/IHLSFileDeleterModel';
 import ILiveStreamBaseModel, { LiveStreamModelProvider } from './service/stream/ILiveStreamBaseModel';
 import IStreamManageModel from './service/stream/IStreamManageModel';
 import LiveStreamModel from './service/stream/LiveStreamModel';
@@ -254,6 +256,8 @@ export const set = (container: Container): void => {
             });
         };
     });
+
+    container.bind<IHLSFileDeleterModel>('IHLSFileDeleterModel').to(HLSFileDeleterModel);
 
     container.bind<IStreamManageModel>('IStreamManageModel').to(StreamManageModel).inSingletonScope();
 
