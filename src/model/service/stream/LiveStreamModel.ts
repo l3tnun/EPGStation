@@ -15,18 +15,12 @@ export default class LiveStreamModel extends LiveStreamBaseModel implements ILiv
         }
 
         const config = this.configure.getConfig();
-        const mirakurun = this.mirakurunClientModel.getClient();
-        mirakurun.priority = config.streamingPriority;
 
         // 放送波受信
-        this.log.stream.info(`ger mirakurun service stream: ${this.processOption.channelId}`);
-        this.stream = await mirakurun
-            .getServiceStream(this.processOption.channelId, true, config.streamingPriority)
-            .catch(err => {
-                this.stream = null;
-                this.log.system.error(`get mirakurun service stream failed: ${this.processOption!.channelId}`);
-                throw err;
-            });
+        await this.setMirakurunStream(config);
+        if (this.stream === null) {
+            throw new Error('SetStreamError');
+        }
 
         // エンコードプロセスの生成が必要かチェック
         const poption = this.createProcessOption();

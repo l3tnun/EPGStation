@@ -5,6 +5,7 @@ import { inject, injectable } from 'inversify';
 import internal from 'stream';
 import * as apid from '../../../../api';
 import ProcessUtil from '../../../util/ProcessUtil';
+import IConfigFile from '../../IConfigFile';
 import IConfiguration from '../../IConfiguration';
 import ILogger from '../../ILogger';
 import ILoggerModel from '../../ILoggerModel';
@@ -78,6 +79,29 @@ abstract class LiveStreamBaseModel implements ILiveStreamBaseModel {
      * @return Promise<void>
      */
     public abstract start(streamId: apid.StreamId): Promise<void>;
+
+    /**
+     * 放送波受信
+     * @param config: IConfigFile
+     * @return Promise<void>
+     */
+    protected async setMirakurunStream(config: IConfigFile): Promise<void> {
+        if (this.processOption === null) {
+            throw new Error('ProcessOptionIsNull');
+        }
+
+        const mirakurun = this.mirakurunClientModel.getClient();
+        mirakurun.priority = config.streamingPriority;
+
+        this.log.stream.info(`ger mirakurun service stream: ${this.processOption.channelId}`);
+        this.stream = await mirakurun
+            .getServiceStream(this.processOption.channelId, true, config.streamingPriority)
+            .catch(err => {
+                this.stream = null;
+                this.log.system.error(`get mirakurun service stream failed: ${this.processOption!.channelId}`);
+                throw err;
+            });
+    }
 
     /**
      * ストリーム停止
