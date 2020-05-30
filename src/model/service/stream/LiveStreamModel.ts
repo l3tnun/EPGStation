@@ -26,7 +26,7 @@ export default class LiveStreamModel extends LiveStreamBaseModel implements ILiv
         const poption = this.createProcessOption();
         if (poption !== null) {
             // エンコードプロセス生成
-            this.log.system.info(`create encode process: ${poption.cmd}`);
+            this.log.stream.info(`create encode process: ${poption.cmd}`);
             this.streamProcess = await this.processManager.create(poption).catch(err => {
                 if (this.stream !== null) {
                     this.stream.unpipe();
