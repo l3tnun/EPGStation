@@ -108,8 +108,12 @@ import ISocketIOManageModel from './service/socketio/ISocketIOManageModel';
 import SocketIOManageModel from './service/socketio/SocketIOManageModel';
 import HLSFileDeleterModel from './service/stream/HLSFileDeleterModel';
 import IHLSFileDeleterModel from './service/stream/IHLSFileDeleterModel';
-import ILiveStreamBaseModel, { LiveStreamModelProvider } from './service/stream/ILiveStreamBaseModel';
+import ILiveStreamBaseModel, {
+    LiveHLSStreamModelProvider,
+    LiveStreamModelProvider,
+} from './service/stream/ILiveStreamBaseModel';
 import IStreamManageModel from './service/stream/IStreamManageModel';
+import LiveHLSStreamModel from './service/stream/LiveHLSStreamModel';
 import LiveStreamModel from './service/stream/LiveStreamModel';
 import StreamManageModel from './service/stream/StreamManageModel';
 
@@ -258,6 +262,21 @@ export const set = (container: Container): void => {
     });
 
     container.bind<IHLSFileDeleterModel>('IHLSFileDeleterModel').to(HLSFileDeleterModel);
+
+    container.bind<ILiveStreamBaseModel>('LiveHLSStreamModel').to(LiveHLSStreamModel);
+
+    container.bind<LiveHLSStreamModelProvider>('LiveHLSStreamModelProvider').toProvider(context => {
+        return () => {
+            return new Promise<ILiveStreamBaseModel>((resolve, reject) => {
+                try {
+                    const streamModel = context.container.get<ILiveStreamBaseModel>('LiveHLSStreamModel');
+                    resolve(streamModel);
+                } catch (err) {
+                    reject(err);
+                }
+            });
+        };
+    });
 
     container.bind<IStreamManageModel>('IStreamManageModel').to(StreamManageModel).inSingletonScope();
 
