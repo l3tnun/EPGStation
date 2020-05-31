@@ -12,6 +12,7 @@ import ILoggerModel from '../../ILoggerModel';
 import IMirakurunClientModel from '../../IMirakurunClientModel';
 import IEncodeProcessManageModel, { CreateProcessOption } from '../encode/IEncodeProcessManageModel';
 import ILiveStreamBaseModel, { LiveStreamOption } from './ILiveStreamBaseModel';
+import { LiveStreamInfo } from './IStreamBaseModel';
 
 @injectable()
 abstract class LiveStreamBaseModel implements ILiveStreamBaseModel {
@@ -136,7 +137,7 @@ abstract class LiveStreamBaseModel implements ILiveStreamBaseModel {
      * ストリーム情報を返す
      * @return apid.LiveStreamInfo
      */
-    public getInfo(): apid.LiveStreamInfo {
+    public getInfo(): LiveStreamInfo {
         if (this.processOption === null) {
             throw new Error('ProcessOptionIsNull');
         }

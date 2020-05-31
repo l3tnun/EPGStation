@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import * as apid from '../../../../api';
 import ILogger from '../../ILogger';
 import ILoggerModel from '../../ILoggerModel';
-import { IStreamBase } from './IStreamBaseModel';
+import { IStreamBase, LiveStreamInfo, RecordedStreamInfo } from './IStreamBaseModel';
 import IStreamManageModel from './IStreamManageModel';
 
 @injectable()
@@ -88,9 +88,9 @@ export default class StreamManageModel implements IStreamManageModel {
     /**
      * ストリーム情報を返す
      * @param streamId: apid.StreamId
-     * @return apid.LiveStreamInfo | apid.RecordedStreamInfo
+     * @return LiveStreamInfo | RecordedStreamInfo
      */
-    public getStreamInfo(streamId: apid.StreamId): apid.LiveStreamInfo | apid.RecordedStreamInfo {
+    public getStreamInfo(streamId: apid.StreamId): LiveStreamInfo | RecordedStreamInfo {
         if (typeof this.streams[streamId] === 'undefined') {
             throw new Error('StreamIsNotFound');
         }
@@ -100,10 +100,10 @@ export default class StreamManageModel implements IStreamManageModel {
 
     /**
      * すべてのストリーム情報を返す
-     * @return (apid.LiveStreamInfo | apid.RecordedStreamInfo)[]
+     * @return (LiveStreamInfo | RecordedStreamInfo)[]
      */
-    public getStreamInfos(): (apid.LiveStreamInfo | apid.RecordedStreamInfo)[] {
-        const result: (apid.LiveStreamInfo | apid.RecordedStreamInfo)[] = [];
+    public getStreamInfos(): (LiveStreamInfo | RecordedStreamInfo)[] {
+        const result: (LiveStreamInfo | RecordedStreamInfo)[] = [];
         for (const streamId in this.streams) {
             result.push(this.streams[streamId].getInfo());
         }

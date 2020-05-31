@@ -516,27 +516,6 @@ export interface AddManualEncodeProgramOption {
 }
 
 /**
- * ストリーム情報ベース
- */
-export interface BaseStreamInfo {
-    type: StreamType;
-}
-
-/**
- * ライブストリーム情報
- */
-export interface LiveStreamInfo extends BaseStreamInfo {
-    channelId: ChannelId;
-}
-
-/**
- * 録画ファイルストリーム情報
- */
-export interface RecordedStreamInfo extends BaseStreamInfo {
-    videoFileId: VideoFileId;
-}
-
-/**
  * ライブストリームオプション
  */
 export interface LiveStreamOption {
