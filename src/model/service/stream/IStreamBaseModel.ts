@@ -12,6 +12,7 @@ export interface BaseStreamInfo {
  * ライブストリーム情報
  */
 export interface LiveStreamInfo extends BaseStreamInfo {
+    type: 'LiveStream' | 'LiveHLS';
     channelId: apid.ChannelId;
 }
 
@@ -19,6 +20,7 @@ export interface LiveStreamInfo extends BaseStreamInfo {
  * 録画ファイルストリーム情報
  */
 export interface RecordedStreamInfo extends BaseStreamInfo {
+    type: 'RecordedStream' | 'RecordedHLS';
     videoFileId: apid.VideoFileId;
 }
 

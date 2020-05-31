@@ -128,7 +128,7 @@ export default class LiveHLSStreamModel extends LiveStreamBaseModel implements I
         return option;
     }
 
-    protected getStreamType(): apid.StreamType {
+    protected getStreamType(): 'LiveHLS' {
         return 'LiveHLS';
     }
 

@@ -522,3 +522,32 @@ export interface LiveStreamOption {
     name: string;
     channelId: ChannelId;
 }
+
+/**
+ * ライブストリーム情報
+ */
+export interface LiveStreamInfoItem {
+    streamId: StreamId;
+    type: StreamType;
+    channelId: ChannelId;
+    name: string;
+    startAt: UnixtimeMS;
+    endAt: UnixtimeMS;
+    description?: string;
+    extended?: string;
+}
+
+/**
+ * ビデオファイルストリーム情報
+ */
+export interface VideoFileStreamInfoItem extends LiveStreamInfoItem {
+    viodeFileId: VideoFileId;
+    recordedId: RecordedId;
+}
+
+/**
+ * ストリーム情報
+ */
+export interface StreamInfo {
+    items: (LiveStreamInfoItem | VideoFileStreamInfoItem)[];
+}

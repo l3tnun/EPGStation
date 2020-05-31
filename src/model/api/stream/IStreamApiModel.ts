@@ -13,4 +13,5 @@ export default interface IStreamApiModel {
     startHLSStream(option: apid.LiveStreamOption): Promise<apid.StreamId>;
     stop(streamId: apid.StreamId): Promise<void>;
     stopAll(): Promise<void>;
+    getStreamInfos(): Promise<apid.StreamInfo>;
 }

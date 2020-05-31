@@ -3,7 +3,7 @@ import * as apid from '../../../../api';
 import ILogger from '../../ILogger';
 import ILoggerModel from '../../ILoggerModel';
 import IStreamBaseModel, { LiveStreamInfo, RecordedStreamInfo } from './IStreamBaseModel';
-import IStreamManageModel from './IStreamManageModel';
+import IStreamManageModel, { StreamInfoWithStreamId } from './IStreamManageModel';
 
 @injectable()
 export default class StreamManageModel implements IStreamManageModel {
@@ -100,12 +100,15 @@ export default class StreamManageModel implements IStreamManageModel {
 
     /**
      * すべてのストリーム情報を返す
-     * @return (LiveStreamInfo | RecordedStreamInfo)[]
+     * @return StreamInfoWithStreamId[]
      */
-    public getStreamInfos(): (LiveStreamInfo | RecordedStreamInfo)[] {
-        const result: (LiveStreamInfo | RecordedStreamInfo)[] = [];
+    public getStreamInfos(): StreamInfoWithStreamId[] {
+        const result: StreamInfoWithStreamId[] = [];
         for (const streamId in this.streams) {
-            result.push(this.streams[streamId].getInfo());
+            result.push({
+                streamId: parseInt(streamId, 10),
+                info: this.streams[streamId].getInfo(),
+            });
         }
 
         return result;

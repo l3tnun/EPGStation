@@ -1,5 +1,4 @@
 import { injectable } from 'inversify';
-import * as apid from '../../../../api';
 import ILiveStreamBaseModel from './ILiveStreamBaseModel';
 import LiveStreamBaseModel from './LiveStreamBaseModel';
 
@@ -74,7 +73,7 @@ export default class LiveStreamModel extends LiveStreamBaseModel implements ILiv
         }
     }
 
-    protected getStreamType(): apid.StreamType {
+    protected getStreamType(): 'LiveStream' {
         return 'LiveStream';
     }
 }

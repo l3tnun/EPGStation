@@ -148,7 +148,7 @@ abstract class LiveStreamBaseModel implements ILiveStreamBaseModel {
         };
     }
 
-    protected abstract getStreamType(): apid.StreamType;
+    protected abstract getStreamType(): 'LiveStream' | 'LiveHLS';
 
     /**
      * ストリーム終了イベントへ登録

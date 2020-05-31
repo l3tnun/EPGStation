@@ -3,6 +3,45 @@ import IStreamApiModel from '../../api/stream/IStreamApiModel';
 import container from '../../ModelContainer';
 import * as api from '../api';
 
+export const get: Operation = async (_req, res) => {
+    const streamApiModel = container.get<IStreamApiModel>('IStreamApiModel');
+
+    try {
+        const infos = await streamApiModel.getStreamInfos();
+        api.responseJSON(res, 200, infos);
+    } catch (err) {
+        api.responseServerError(res, err.message);
+    }
+};
+
+get.apiDoc = {
+    summary: 'ストリーム情報を取得',
+    tags: ['streams'],
+    description: 'ストリーム情報を取得する',
+    responses: {
+        200: {
+            description: 'ストリーム情報を取得しました',
+            content: {
+                'application/json': {
+                    schema: {
+                        $ref: '#/components/schemas/StreamInfo',
+                    },
+                },
+            },
+        },
+        default: {
+            description: '予期しないエラー',
+            content: {
+                'application/json': {
+                    schema: {
+                        $ref: '#/components/schemas/Error',
+                    },
+                },
+            },
+        },
+    },
+};
+
 export const del: Operation = async (_req, res) => {
     const streamApiModel = container.get<IStreamApiModel>('IStreamApiModel');
 

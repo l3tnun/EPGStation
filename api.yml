@@ -989,18 +989,50 @@ components:
                 reserveId:
                     $ref: '#/components/schemas/EncodeId'
 
-        StreamInfo:
+        StreamInfoItem:
             description: ストリーム情報
             type: object
             required:
+                - streamId
                 - type
+                - channelId
+                - name
+                - startAt
+                - endAt
             properties:
+                streamId:
+                    $ref: '#/components/schemas/StreamId'
                 type:
                     $ref: '#/components/schemas/StreamType'
                 channelId:
                     $ref: '#/components/schemas/ChannelId'
                 videoFileId:
                     $ref: '#/components/schemas/VideoFileId'
+                recordedId:
+                    $ref: '#/components/schemas/RecordedId'
+                name:
+                    description: ストリーミング番組名
+                    type: string
+                startAt:
+                    $ref: '#/components/schemas/UnixtimeMS'
+                endAt:
+                    $ref: '#/components/schemas/UnixtimeMS'
+                description:
+                    description: ストリーミング番組詳細
+                    type: string
+                extended:
+                    description: ストリーミング番組拡張
+                    type: string
+
+        StreamInfo:
+            type: object
+            required:
+                - items
+            properties:
+                items:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/StreamInfoItem'
 
         StartStreamInfo:
             description: ストリーム開始情報

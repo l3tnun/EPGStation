@@ -1,5 +1,8 @@
 import { inject, injectable } from 'inversify';
 import * as apid from '../../../../api';
+import IProgramDB from '../../db/IProgramDB';
+import IRecordedDB from '../../db/IRecordedDB';
+import IVideoFileDB from '../../db/IVideoFileDB';
 import IConfiguration from '../../IConfiguration';
 import { LiveHLSStreamModelProvider, LiveStreamModelProvider } from '../../service/stream/ILiveStreamBaseModel';
 import IStreamManageModel from '../../service/stream/IStreamManageModel';
@@ -11,17 +14,26 @@ export default class StreamApiModel implements IStreamApiModel {
     private liveStreamProvider: LiveStreamModelProvider;
     private liveHLSStreamProvider: LiveHLSStreamModelProvider;
     private streamManageModel: IStreamManageModel;
+    private programDB: IProgramDB;
+    private videoFileDB: IVideoFileDB;
+    private recordedDB: IRecordedDB;
 
     constructor(
         @inject('IConfiguration') configure: IConfiguration,
         @inject('LiveStreamModelProvider') liveStreamProvider: LiveStreamModelProvider,
         @inject('LiveHLSStreamModelProvider') liveHLSStreamProvider: LiveHLSStreamModelProvider,
         @inject('IStreamManageModel') streamManageModel: IStreamManageModel,
+        @inject('IProgramDB') programDB: IProgramDB,
+        @inject('IVideoFileDB') videoFileDB: IVideoFileDB,
+        @inject('IRecordedDB') recordedDB: IRecordedDB,
     ) {
         this.configure = configure;
         this.liveStreamProvider = liveStreamProvider;
         this.liveHLSStreamProvider = liveHLSStreamProvider;
         this.streamManageModel = streamManageModel;
+        this.programDB = programDB;
+        this.videoFileDB = videoFileDB;
+        this.recordedDB = recordedDB;
     }
 
     /**
@@ -193,5 +205,81 @@ export default class StreamApiModel implements IStreamApiModel {
      */
     public async stopAll(): Promise<void> {
         await this.streamManageModel.stopAll();
+    }
+
+    /**
+     * ストリーム情報を返す
+     * @return apid.StreamInfo
+     */
+    public async getStreamInfos(): Promise<apid.StreamInfo> {
+        const infos = this.streamManageModel.getStreamInfos();
+
+        const items: (apid.LiveStreamInfoItem | apid.VideoFileStreamInfoItem)[] = [];
+        const now = new Date().getTime();
+        for (const info of infos) {
+            if (info.info.type === 'LiveStream' || info.info.type === 'LiveHLS') {
+                // ライブストリーミング
+                const item: apid.LiveStreamInfoItem = {
+                    streamId: info.streamId,
+                    type: info.info.type,
+                    channelId: info.info.channelId,
+                    name: '',
+                    startAt: 0,
+                    endAt: 0,
+                };
+                const program = await this.programDB.findChannelIdAndTime(info.info.channelId, now);
+                if (program !== null) {
+                    item.name = program.name;
+                    item.startAt = program.startAt;
+                    item.endAt = program.endAt;
+                    if (program.description !== null) {
+                        item.description = program.description;
+                    }
+                    if (program.extended !== null) {
+                        item.extended = program.extended;
+                    }
+                }
+
+                items.push(item);
+            } else if (info.info.type === 'RecordedStream' || info.info.type === 'RecordedHLS') {
+                // ビデオストリーミング
+                const item: apid.VideoFileStreamInfoItem = {
+                    streamId: info.streamId,
+                    type: info.info.type,
+                    channelId: 0,
+                    name: '',
+                    startAt: 0,
+                    endAt: 0,
+                    viodeFileId: info.info.videoFileId,
+                    recordedId: 0,
+                };
+
+                const videoFile = await this.videoFileDB.findId(info.info.videoFileId);
+                if (videoFile !== null) {
+                    item.recordedId = videoFile.recordedId;
+                    const recorded = await this.recordedDB.findId(videoFile.id);
+                    if (recorded !== null) {
+                        item.channelId = recorded.channelId;
+                        item.name = recorded.name;
+                        item.startAt = recorded.startAt;
+                        item.endAt = recorded.endAt;
+                        if (recorded.description !== null) {
+                            item.description = recorded.description;
+                        }
+                        if (recorded.extended !== null) {
+                            item.extended = recorded.extended;
+                        }
+                    }
+                }
+
+                items.push(item);
+            } else {
+                throw new Error('StreamInfoTypeError');
+            }
+        }
+
+        return {
+            items: items,
+        };
     }
 }
