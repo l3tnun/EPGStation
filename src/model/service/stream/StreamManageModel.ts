@@ -2,13 +2,13 @@ import { inject, injectable } from 'inversify';
 import * as apid from '../../../../api';
 import ILogger from '../../ILogger';
 import ILoggerModel from '../../ILoggerModel';
-import { IStreamBase, LiveStreamInfo, RecordedStreamInfo } from './IStreamBaseModel';
+import IStreamBaseModel, { LiveStreamInfo, RecordedStreamInfo } from './IStreamBaseModel';
 import IStreamManageModel from './IStreamManageModel';
 
 @injectable()
 export default class StreamManageModel implements IStreamManageModel {
     private log: ILogger;
-    private streams: { [streamId: number]: IStreamBase<any> } = {};
+    private streams: { [streamId: number]: IStreamBaseModel<any> } = {};
 
     constructor(@inject('ILoggerModel') logger: ILoggerModel) {
         this.log = logger.getLogger();
@@ -19,7 +19,7 @@ export default class StreamManageModel implements IStreamManageModel {
      * @param stream: IStreamBase<any> setOption() した状態で渡す
      * @return Promise<apid.StreamId>
      */
-    public async start(stream: IStreamBase<any>): Promise<apid.StreamId> {
+    public async start(stream: IStreamBaseModel<any>): Promise<apid.StreamId> {
         // ストリーム開始
         this.log.stream.info('start stream');
 

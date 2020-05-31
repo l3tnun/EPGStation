@@ -22,7 +22,7 @@ export interface RecordedStreamInfo extends BaseStreamInfo {
     videoFileId: apid.VideoFileId;
 }
 
-export interface IStreamBase<T> {
+export default interface IStreamBaseModel<T> {
     setOption(option: T): void;
     start(streamId: apid.StreamId): Promise<void>;
     stop(): Promise<void>;

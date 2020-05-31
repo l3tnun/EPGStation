@@ -1,5 +1,5 @@
 import * as apid from '../../../../api';
-import { IStreamBase } from './IStreamBaseModel';
+import IStreamBaseModel from './IStreamBaseModel';
 
 export type LiveStreamModelProvider = () => Promise<ILiveStreamBaseModel>;
 export type LiveHLSStreamModelProvider = () => Promise<ILiveStreamBaseModel>;
@@ -9,6 +9,6 @@ export interface LiveStreamOption {
     cmd?: string;
 }
 
-export default interface ILiveStreamBaseModel extends IStreamBase<LiveStreamOption> {
+export default interface ILiveStreamBaseModel extends IStreamBaseModel<LiveStreamOption> {
     setOption(option: LiveStreamOption): void;
 }
