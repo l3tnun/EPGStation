@@ -24,17 +24,13 @@ Safari での挙動についてはこちらの [issue](https://github.com/l3tnun
 
 ```
 on open location url_scheme
-    (*デリミタで文字列抽出*)
-    set AppleScript's text item delimiters to {"cvlc://"}
-    set txt_items to text items of url_scheme
-    set AppleScript's text item delimiters to {""}
-    set scheme_txt to txt_items as Unicode text
-
-    tell application "VLC"
-        OpenURL "http://" & scheme_txt
-        activate
-        set zoomed of window 1 to true
-    end tell
+	(*デリミタで文字列抽出*)
+	set AppleScript's text item delimiters to {"cvlc://"}
+	set txt_items to text items of url_scheme
+	set AppleScript's text item delimiters to {""}
+	set scheme_txt to txt_items as Unicode text
+	
+	do shell script ({"/Applications/VLC.app/Contents/MacOS/VLC ", "https://" & scheme_txt} as string)
 end open location
 ```
 
