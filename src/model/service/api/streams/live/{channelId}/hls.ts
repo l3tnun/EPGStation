@@ -1,7 +1,7 @@
 import { Operation } from 'express-openapi';
-import IStreamApiModel from '../../../../api/stream/IStreamApiModel';
-import container from '../../../../ModelContainer';
-import * as api from '../../../api';
+import IStreamApiModel from '../../../../../api/stream/IStreamApiModel';
+import container from '../../../../../ModelContainer';
+import * as api from '../../../../api';
 
 export const get: Operation = async (req, res) => {
     const streamApiModel = container.get<IStreamApiModel>('IStreamApiModel');

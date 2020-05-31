@@ -1,7 +1,7 @@
 import { Operation } from 'express-openapi';
-import IStreamApiModel, { StreamResponse } from '../../../../api/stream/IStreamApiModel';
-import container from '../../../../ModelContainer';
-import * as api from '../../../api';
+import IStreamApiModel, { StreamResponse } from '../../../../../api/stream/IStreamApiModel';
+import container from '../../../../../ModelContainer';
+import * as api from '../../../../api';
 
 export const get: Operation = async (req, res) => {
     const streamApiModel = container.get<IStreamApiModel>('IStreamApiModel');
@@ -23,7 +23,7 @@ export const get: Operation = async (req, res) => {
     });
 
     try {
-        result = await streamApiModel.startM2TsStream({
+        result = await streamApiModel.startMp4Stream({
             channelId: parseInt(req.params.channelId, 10),
             name: req.query.name as string,
         });
@@ -37,7 +37,7 @@ export const get: Operation = async (req, res) => {
         return;
     }
 
-    res.setHeader('Content-Type', 'video/mp2t');
+    res.setHeader('Content-Type', 'video/mp4');
     res.status(200);
 
     result.stream.on('close', () => {
@@ -54,9 +54,9 @@ export const get: Operation = async (req, res) => {
 };
 
 get.apiDoc = {
-    summary: 'ライブ M2TS ストリーム',
+    summary: 'ライブ mp4 ストリーム',
     tags: ['streams'],
-    description: 'ライブ M2TS ストリームを取得する',
+    description: 'ライブ mp4 ストリームを取得する',
     parameters: [
         {
             $ref: '#/components/parameters/PathChannelId',
@@ -67,9 +67,9 @@ get.apiDoc = {
     ],
     responses: {
         200: {
-            description: 'ライブ M2TS ストリーム',
+            description: 'ライブ mp4 ストリーム',
             content: {
-                'video/mp2t': {},
+                'video/mp4': {},
             },
         },
         default: {
