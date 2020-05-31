@@ -93,7 +93,7 @@ abstract class LiveStreamBaseModel implements ILiveStreamBaseModel {
         const mirakurun = this.mirakurunClientModel.getClient();
         mirakurun.priority = config.streamingPriority;
 
-        this.log.stream.info(`ger mirakurun service stream: ${this.processOption.channelId}`);
+        this.log.stream.info(`get mirakurun service stream: ${this.processOption.channelId}`);
         this.stream = await mirakurun
             .getServiceStream(this.processOption.channelId, true, config.streamingPriority)
             .catch(err => {

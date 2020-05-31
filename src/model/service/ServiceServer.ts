@@ -140,6 +140,9 @@ class ServiceServer implements IServiceServer {
         // thumbnail
         this.app.use(this.createUrl('/thumbnail'), express.static(this.config.thumbnail));
 
+        // streamFile
+        this.app.use(this.createUrl('/streamfiles'), express.static(this.config.streamFilePath));
+
         // client
         this.app.use(this.createUrl('/'), express.static(ServiceServer.CLIENT_DIR));
     }

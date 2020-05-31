@@ -123,6 +123,8 @@ export default class LiveHLSStreamModel extends LiveStreamBaseModel implements I
             .replace(/%streamFileDir%/g, config.streamFilePath)
             .replace(/%streamNum%/g, streamId.toString(10));
 
+        option.output = `${config.streamFilePath}\/stream${streamId}.m3u8`;
+
         return option;
     }
 

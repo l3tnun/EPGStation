@@ -1002,6 +1002,15 @@ components:
                 videoFileId:
                     $ref: '#/components/schemas/VideoFileId'
 
+        StartStreamInfo:
+            description: ストリーム開始情報
+            type: object
+            required:
+                - streamId
+            properties:
+                streamId:
+                    $ref: '#/components/schemas/StreamId'
+
         Error:
             type: object
             readOnly: true

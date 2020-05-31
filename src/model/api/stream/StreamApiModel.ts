@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify';
 import * as apid from '../../../../api';
 import IConfiguration from '../../IConfiguration';
-import { LiveStreamModelProvider } from '../../service/stream/ILiveStreamBaseModel';
+import { LiveHLSStreamModelProvider, LiveStreamModelProvider } from '../../service/stream/ILiveStreamBaseModel';
 import IStreamManageModel from '../../service/stream/IStreamManageModel';
 import IStreamApiModel, { StreamResponse } from './IStreamApiModel';
 
@@ -9,15 +9,18 @@ import IStreamApiModel, { StreamResponse } from './IStreamApiModel';
 export default class StreamApiModel implements IStreamApiModel {
     private configure: IConfiguration;
     private liveStreamProvider: LiveStreamModelProvider;
+    private liveHLSStreamProvider: LiveHLSStreamModelProvider;
     private streamManageModel: IStreamManageModel;
 
     constructor(
         @inject('IConfiguration') configure: IConfiguration,
         @inject('LiveStreamModelProvider') liveStreamProvider: LiveStreamModelProvider,
+        @inject('LiveHLSStreamModelProvider') liveHLSStreamProvider: LiveHLSStreamModelProvider,
         @inject('IStreamManageModel') streamManageModel: IStreamManageModel,
     ) {
         this.configure = configure;
         this.liveStreamProvider = liveStreamProvider;
+        this.liveHLSStreamProvider = liveHLSStreamProvider;
         this.streamManageModel = streamManageModel;
     }
 
@@ -102,7 +105,7 @@ export default class StreamApiModel implements IStreamApiModel {
     }
 
     /**
-     * mpr 形式の live streaming を開始する
+     * mp4 形式の live streaming を開始する
      * @param option: apid.LiveStreamOption
      * @return Promise<StreamResponse>
      */
@@ -139,6 +142,40 @@ export default class StreamApiModel implements IStreamApiModel {
             streamId: streamId,
             stream: stream.getStream(),
         };
+    }
+
+    /**
+     * HLS 形式の live streaming を開始する
+     * @param option: apid.LiveStreamOption
+     * @return Promise<apid.StreamId>
+     */
+    public async startHLSStream(option: apid.LiveStreamOption): Promise<apid.StreamId> {
+        // config が存在するか確認する
+        const config = this.configure.getConfig();
+        if (
+            typeof config.stream === 'undefined' ||
+            typeof config.stream.live === 'undefined' ||
+            typeof config.stream.live.hls === 'undefined'
+        ) {
+            throw new Error('ConfigIsUndefined');
+        }
+        // config に指定された設定が存在するか確認する
+        const streamConfig = config.stream.live.hls.find(con => {
+            return con.name === option.name;
+        });
+        if (typeof streamConfig === 'undefined') {
+            throw new Error('ConfigIsNotFound');
+        }
+
+        // stream 生成
+        const stream = await this.liveHLSStreamProvider();
+        stream.setOption({
+            channelId: option.channelId,
+            cmd: streamConfig.cmd,
+        });
+
+        // manager に登録
+        return await this.streamManageModel.start(stream);
     }
 
     /**
