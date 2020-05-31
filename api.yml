@@ -1104,6 +1104,14 @@ components:
             schema:
                 type: integer
 
+        AddtionTime:
+            description: 追加時間 (ms)
+            in: query
+            name: time
+            required: false
+            schema:
+                $ref: '#/components/schemas/UnixtimeMS'
+
         IsHalfWidth:
             description: 半角文字で取得するか
             in: query

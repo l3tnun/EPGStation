@@ -433,6 +433,11 @@ export interface ChannelScheduleOption {
     channelId: ChannelId;
 }
 
+export interface BroadcastingScheduleOption {
+    time?: UnixtimeMS; // 追加時間 (ms)
+    isHalfWidth: boolean;
+}
+
 /**
  * 番組表の放送局データ
  */

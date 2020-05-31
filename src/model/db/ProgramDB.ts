@@ -887,4 +887,28 @@ export default class ProgramDB implements IProgramDB {
             },
         });
     }
+
+    /**
+     * 放映中の番組データを取得
+     * @param option: apid.BroadcastingScheduleOption 加算時間 (ms)
+     * @return Promise<Program[]>
+     */
+    public async findBroadcasting(option: apid.BroadcastingScheduleOption): Promise<Program[]> {
+        let time = new Date().getTime();
+        if (typeof option.time !== 'undefined') {
+            time += option.time;
+        }
+
+        const connection = await this.op.getConnection();
+
+        return connection.getRepository(Program).find({
+            where: {
+                startAt: LessThanOrEqual(time),
+                endAt: MoreThanOrEqual(time),
+            },
+            order: {
+                startAt: 'ASC',
+            },
+        });
+    }
 }

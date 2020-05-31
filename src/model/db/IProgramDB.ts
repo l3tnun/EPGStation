@@ -54,4 +54,5 @@ export default interface IProgramDB {
     findChannelIdAndTime(channelId: apid.ChannelId, startAt: apid.UnixtimeMS): Promise<Program | null>;
     findAll(): Promise<Program[]>;
     findSchedule(option: FindScheduleOption | FindScheduleIdOption): Promise<Program[]>;
+    findBroadcasting(option: apid.BroadcastingScheduleOption): Promise<Program[]>;
 }

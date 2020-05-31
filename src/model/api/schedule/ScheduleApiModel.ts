@@ -48,6 +48,16 @@ export default class ScheduleApiModel implements IScheduleApiModel {
             types: types,
         });
 
+        return this.createSchedule(channels, programs, option.isHalfWidth);
+    }
+
+    /**
+     * Channel[] と Program[] から apid.Schedule[] を生成する
+     * @param channels: Channel[]
+     * @param programs: Program[]
+     * @return apid.Schedule[]
+     */
+    private createSchedule(channels: Channel[], programs: Program[], isHalfWidth: boolean): apid.Schedule[] {
         // channelId ごとに programs をまとめる
         const programsIndex: { [key: number]: apid.ScheduleProgramItem[] } = {};
         for (const program of programs) {
@@ -55,7 +65,7 @@ export default class ScheduleApiModel implements IScheduleApiModel {
                 programsIndex[program.channelId] = [];
             }
 
-            programsIndex[program.channelId].push(this.toScheduleProgramItem(program, option.isHalfWidth));
+            programsIndex[program.channelId].push(this.toScheduleProgramItem(program, isHalfWidth));
         }
 
         // 結果を格納する
@@ -66,7 +76,7 @@ export default class ScheduleApiModel implements IScheduleApiModel {
             }
 
             result.push({
-                channel: this.toScheduleChannleItem(channel, option.isHalfWidth),
+                channel: this.toScheduleChannleItem(channel, isHalfWidth),
                 programs: programsIndex[channel.id],
             });
         }
@@ -111,6 +121,24 @@ export default class ScheduleApiModel implements IScheduleApiModel {
         }
 
         return result;
+    }
+
+    /**
+     * 放映中の番組情報を取得
+     * @param option: apid.BroadcastingScheduleOption
+     * @return Promise<apid.Schedule[]>
+     */
+    public async getBroadcastingSchedule(option: apid.BroadcastingScheduleOption): Promise<apid.Schedule[]> {
+        const channels = await this.channelDB.findAll();
+        const programs = await this.programDB.findBroadcasting(option);
+
+        return this.createSchedule(channels, programs, option.isHalfWidth).map(s => {
+            if (s.programs.length > 1) {
+                s.programs = [s.programs[0]];
+            }
+
+            return s;
+        });
     }
 
     /**
