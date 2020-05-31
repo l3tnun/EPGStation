@@ -1,5 +1,4 @@
 import { inject, injectable } from 'inversify';
-import internal from 'stream';
 import * as apid from '../../../../api';
 import ILogger from '../../ILogger';
 import ILoggerModel from '../../ILoggerModel';
@@ -110,18 +109,5 @@ export default class StreamManageModel implements IStreamManageModel {
         }
 
         return result;
-    }
-
-    /**
-     * 生成されたストリームを返す
-     * @param streamId: apid.StreamId
-     * @return internal.Readable | null
-     */
-    public getStream(streamId: apid.StreamId): internal.Readable | null {
-        if (typeof this.streams[streamId] === 'undefined') {
-            throw new Error('StreamIsNotFound');
-        }
-
-        return this.streams[streamId].getStream();
     }
 }
