@@ -1185,6 +1185,14 @@ components:
             schema:
                 type: integer
 
+        PathStreamId:
+            description: ストリーム id
+            in: path
+            name: streamId
+            required: true
+            schema:
+                $ref: '#/components/schemas/StreamId'
+
         StreamName:
             description: ストリーミング設定
             in: query
