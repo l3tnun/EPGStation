@@ -75,6 +75,7 @@ export default interface IConfigFile {
     thumbnailPosition: number;
 
     ffmpeg: string;
+    ffprobe: string;
 
     // エンコード設定
     encodeProcessNum: number; // エンコード、ストリーミング最大プロセス数

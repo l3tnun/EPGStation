@@ -3,8 +3,10 @@ import * as apid from '../../../../api';
 import IProgramDB from '../../db/IProgramDB';
 import IRecordedDB from '../../db/IRecordedDB';
 import IVideoFileDB from '../../db/IVideoFileDB';
+import { StreamingCmd } from '../../IConfigFile';
 import IConfiguration from '../../IConfiguration';
 import { LiveHLSStreamModelProvider, LiveStreamModelProvider } from '../../service/stream/ILiveStreamBaseModel';
+import { RecordedStreamModelProvider } from '../../service/stream/IRecordedStreamBaseModel';
 import IStreamManageModel from '../../service/stream/IStreamManageModel';
 import IStreamApiModel, { StreamResponse } from './IStreamApiModel';
 
@@ -13,6 +15,7 @@ export default class StreamApiModel implements IStreamApiModel {
     private configure: IConfiguration;
     private liveStreamProvider: LiveStreamModelProvider;
     private liveHLSStreamProvider: LiveHLSStreamModelProvider;
+    private recordedStreamProvider: RecordedStreamModelProvider;
     private streamManageModel: IStreamManageModel;
     private programDB: IProgramDB;
     private videoFileDB: IVideoFileDB;
@@ -22,6 +25,7 @@ export default class StreamApiModel implements IStreamApiModel {
         @inject('IConfiguration') configure: IConfiguration,
         @inject('LiveStreamModelProvider') liveStreamProvider: LiveStreamModelProvider,
         @inject('LiveHLSStreamModelProvider') liveHLSStreamProvider: LiveHLSStreamModelProvider,
+        @inject('RecordedStreamModelProvider') recordedStreamProvider: RecordedStreamModelProvider,
         @inject('IStreamManageModel') streamManageModel: IStreamManageModel,
         @inject('IProgramDB') programDB: IProgramDB,
         @inject('IVideoFileDB') videoFileDB: IVideoFileDB,
@@ -30,6 +34,7 @@ export default class StreamApiModel implements IStreamApiModel {
         this.configure = configure;
         this.liveStreamProvider = liveStreamProvider;
         this.liveHLSStreamProvider = liveHLSStreamProvider;
+        this.recordedStreamProvider = recordedStreamProvider;
         this.streamManageModel = streamManageModel;
         this.programDB = programDB;
         this.videoFileDB = videoFileDB;
@@ -188,6 +193,95 @@ export default class StreamApiModel implements IStreamApiModel {
 
         // manager に登録
         return await this.streamManageModel.start(stream);
+    }
+
+    /**
+     * WebM 形式の Recorded streaming を開始する
+     * @param option: apid.LiveStreamOption
+     * @return Promise<apid.StreamId>
+     */
+    public async startRecordedWebMStream(option: apid.RecordedStreanOption): Promise<StreamResponse> {
+        const cmd = await this.getRecordedVideoConfig('webm', option);
+
+        // stream 生成
+        const stream = await this.recordedStreamProvider();
+        stream.setOption({
+            videoFileId: option.videoFileId,
+            playPosition: option.playPosition,
+            cmd: cmd,
+        });
+
+        // manager に登録
+        const streamId = await this.streamManageModel.start(stream);
+
+        return {
+            streamId: streamId,
+            stream: stream.getStream(),
+        };
+    }
+
+    /**
+     * config から指定した stream コマンドを取り出す
+     * @param type: 'webm' | 'mp4' | 'hls'
+     * @param option apid.RecordedStreanOption
+     * @return Promise<string>
+     */
+    private async getRecordedVideoConfig(
+        type: 'webm' | 'mp4' | 'hls',
+        option: apid.RecordedStreanOption,
+    ): Promise<string> {
+        const isEncodedVideo = await this.isEncodedVideo(option.videoFileId);
+
+        // config が存在するか
+        const config = this.configure.getConfig();
+        if (typeof config.stream === 'undefined' || typeof config.stream.recorded === 'undefined') {
+            throw new Error('ConfigIsUndefined');
+        }
+
+        let cmd: StreamingCmd | undefined;
+        if (isEncodedVideo === true) {
+            if (
+                typeof config.stream.recorded.encoded === 'undefined' ||
+                typeof config.stream.recorded.encoded[type] === 'undefined'
+            ) {
+                throw new Error('ConfigIsUndefined');
+            }
+
+            cmd = config.stream.recorded.encoded[type]!.find(con => {
+                return con.name === option.name;
+            });
+        } else {
+            if (
+                typeof config.stream.recorded.ts === 'undefined' ||
+                typeof config.stream.recorded.ts[type] === 'undefined'
+            ) {
+                throw new Error('ConfigIsUndefined');
+            }
+
+            cmd = config.stream.recorded.ts[type]!.find(con => {
+                return con.name === option.name;
+            });
+        }
+
+        if (typeof cmd?.cmd === 'undefined') {
+            throw new Error('CmdIsUndefined');
+        }
+
+        return cmd.cmd;
+    }
+
+    /**
+     * 指定された video file が エンコードされたものなのか返す
+     * @param videoFileId: apid.VideoFileId
+     * @return Promise<boolean>
+     */
+    private async isEncodedVideo(videoFileId: apid.VideoFileId): Promise<boolean> {
+        const video = await this.videoFileDB.findId(videoFileId);
+        if (video === null) {
+            throw new Error('VideoFileIsNotFound');
+        }
+
+        return video.isTs === false;
     }
 
     /**

@@ -112,9 +112,11 @@ import ILiveStreamBaseModel, {
     LiveHLSStreamModelProvider,
     LiveStreamModelProvider,
 } from './service/stream/ILiveStreamBaseModel';
+import IRecordedStreamBaseModel, { RecordedStreamModelProvider } from './service/stream/IRecordedStreamBaseModel';
 import IStreamManageModel from './service/stream/IStreamManageModel';
 import LiveHLSStreamModel from './service/stream/LiveHLSStreamModel';
 import LiveStreamModel from './service/stream/LiveStreamModel';
+import RecordedStreamModel from './service/stream/RecordedStreamModel';
 import StreamManageModel from './service/stream/StreamManageModel';
 
 /**
@@ -270,6 +272,21 @@ export const set = (container: Container): void => {
             return new Promise<ILiveStreamBaseModel>((resolve, reject) => {
                 try {
                     const streamModel = context.container.get<ILiveStreamBaseModel>('LiveHLSStreamModel');
+                    resolve(streamModel);
+                } catch (err) {
+                    reject(err);
+                }
+            });
+        };
+    });
+
+    container.bind<IRecordedStreamBaseModel>('RecordedStreamBaseModel').to(RecordedStreamModel);
+
+    container.bind<RecordedStreamModelProvider>('RecordedStreamModelProvider').toProvider(context => {
+        return () => {
+            return new Promise<IRecordedStreamBaseModel>((resolve, reject) => {
+                try {
+                    const streamModel = context.container.get<IRecordedStreamBaseModel>('RecordedStreamBaseModel');
                     resolve(streamModel);
                 } catch (err) {
                     reject(err);

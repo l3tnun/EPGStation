@@ -22,7 +22,8 @@ thumbnail: '%ROOT%/thumbnail'
 thumbnailSize: 480x270
 thumbnailPosition: 5
 
-ffmpeg: /home/masato/bin/ffmpeg
+ffmpeg: /usr/local/bin/ffmpeg
+ffprobe: /usr/local/bin/ffprobe
 
 encodeProcessNum: 4
 concurrentEncodeNum: 2

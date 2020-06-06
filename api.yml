@@ -1240,3 +1240,11 @@ components:
             required: true
             schema:
                 type: string
+
+        StreamPlayPosition:
+            description: 再生位置
+            in: query
+            name: ss
+            required: true
+            schema:
+                type: integer

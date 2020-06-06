@@ -524,10 +524,15 @@ export interface AddManualEncodeProgramOption {
  * ライブストリームオプション
  */
 export interface LiveStreamOption {
-    name: string;
+    name: string; // config 設定
     channelId: ChannelId;
 }
 
+export interface RecordedStreanOption {
+    name: string; // config 設定
+    videoFileId: VideoFileId;
+    playPosition: number; // 再生位置 (秒)
+}
 /**
  * ライブストリーム情報
  */

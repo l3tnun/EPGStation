@@ -140,6 +140,7 @@ namespace Configuration {
         thumbnailSize: '480x270',
         thumbnailPosition: 5,
         ffmpeg: '/usr/local/bin/ffmpeg',
+        ffprobe: '/usr/local/bin/ffprobe',
         encodeProcessNum: 0,
         concurrentEncodeNum: 0,
         encode: [],
