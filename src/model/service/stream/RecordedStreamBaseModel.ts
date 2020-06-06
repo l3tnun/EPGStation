@@ -60,7 +60,7 @@ abstract class RecordedStreamBaseModel implements IRecordedStreamBaseModel {
      * video file 情報を格納する
      * @return Promise<void>
      */
-    protected async setVideFileInfo(): Promise<void> {
+    private async setVideFileInfo(): Promise<void> {
         if (this.processOption === null) {
             throw new Error('ProcessOptionIsNull');
         }
@@ -118,11 +118,16 @@ abstract class RecordedStreamBaseModel implements IRecordedStreamBaseModel {
 
     /**
      * stream プロセス生成に必要な情報を生成する
-     * @return CreateProcessOption
+     * @return Promise<CreateProcessOption>
      */
-    protected createProcessOption(): CreateProcessOption {
+    protected async createProcessOption(): Promise<CreateProcessOption> {
         if (this.processOption === null) {
             throw new Error('ProcessOptionIsNull');
+        }
+
+        await this.setVideFileInfo();
+        if (this.videoFilePath === null || this.videoFileInfo === null) {
+            throw new Error('SetVideoFileInfoError');
         }
 
         const cmd = this.processOption.cmd
@@ -130,12 +135,14 @@ abstract class RecordedStreamBaseModel implements IRecordedStreamBaseModel {
             .replace(/%RE%/g, this.isRecording === true ? '-re' : '')
             .replace(/%SS%/g, this.isTs === true ? '' : this.processOption.playPosition.toString(10));
 
-        return {
-            input: null,
+        const option: CreateProcessOption = {
+            input: this.isRecording === true ? null : this.videoFilePath,
             output: null,
             cmd: cmd,
             priority: RecordedStreamBaseModel.ENCODE_PROCESS_PRIORITY,
         };
+
+        return option;
     }
 
     /**

@@ -13,11 +13,10 @@ export default class RecordedStreamModel extends RecordedStreamBaseModel impleme
             throw new Error('ProcessOptionIsNull');
         }
 
-        await this.setVideFileInfo();
+        await this.createProcessOption();
         if (this.videoFilePath === null || this.videoFileInfo === null) {
             throw new Error('SetVideoFileInfoError');
         }
-        await this.createProcessOption();
 
         // 開始時刻が動画の長さを超えている
         if (this.processOption.playPosition > this.videoFileInfo.duration) {
@@ -35,7 +34,7 @@ export default class RecordedStreamModel extends RecordedStreamBaseModel impleme
         }
 
         // エンコードプロセス生成
-        const poption = this.createProcessOption();
+        const poption = await this.createProcessOption();
         this.log.stream.info(`create encode process: ${poption.cmd}`);
         try {
             this.streamProcess = await this.processManager.create(poption);
