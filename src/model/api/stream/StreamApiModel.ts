@@ -221,6 +221,31 @@ export default class StreamApiModel implements IStreamApiModel {
     }
 
     /**
+     * WebM 形式の Recorded streaming を開始する
+     * @param option: apid.LiveStreamOption
+     * @return Promise<apid.StreamId>
+     */
+    public async startRecordedMp4Stream(option: apid.RecordedStreanOption): Promise<StreamResponse> {
+        const cmd = await this.getRecordedVideoConfig('mp4', option);
+
+        // stream 生成
+        const stream = await this.recordedStreamProvider();
+        stream.setOption({
+            videoFileId: option.videoFileId,
+            playPosition: option.playPosition,
+            cmd: cmd,
+        });
+
+        // manager に登録
+        const streamId = await this.streamManageModel.start(stream);
+
+        return {
+            streamId: streamId,
+            stream: stream.getStream(),
+        };
+    }
+
+    /**
      * config から指定した stream コマンドを取り出す
      * @param type: 'webm' | 'mp4' | 'hls'
      * @param option apid.RecordedStreanOption
