@@ -376,7 +376,7 @@ export default class StreamApiModel implements IStreamApiModel {
                 const videoFile = await this.videoFileDB.findId(info.info.videoFileId);
                 if (videoFile !== null) {
                     item.recordedId = videoFile.recordedId;
-                    const recorded = await this.recordedDB.findId(videoFile.id);
+                    const recorded = await this.recordedDB.findId(videoFile.recordedId);
                     if (recorded !== null) {
                         item.channelId = recorded.channelId;
                         item.name = recorded.name;
