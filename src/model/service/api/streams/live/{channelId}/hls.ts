@@ -7,7 +7,7 @@ export const get: Operation = async (req, res) => {
     const streamApiModel = container.get<IStreamApiModel>('IStreamApiModel');
 
     try {
-        const streamId = await streamApiModel.startHLSStream({
+        const streamId = await streamApiModel.startLiveHLSStream({
             channelId: parseInt(req.params.channelId, 10),
             name: req.query.name as string,
         });

@@ -41,7 +41,7 @@ export default class StreamApiModel implements IStreamApiModel {
      * @param option: apid.LiveStreamOption
      * @return Promise<StreamResponse>
      */
-    public async startM2TsStream(option: apid.LiveStreamOption): Promise<StreamResponse> {
+    public async startLiveM2TsStream(option: apid.LiveStreamOption): Promise<StreamResponse> {
         // config が存在するか確認する
         const config = this.configure.getConfig();
         if (
@@ -81,7 +81,7 @@ export default class StreamApiModel implements IStreamApiModel {
      * @param option: apid.LiveStreamOption
      * @return Promise<StreamResponse>
      */
-    public async startWebmStream(option: apid.LiveStreamOption): Promise<StreamResponse> {
+    public async startLiveWebmStream(option: apid.LiveStreamOption): Promise<StreamResponse> {
         // config が存在するか確認する
         const config = this.configure.getConfig();
         if (
@@ -161,7 +161,7 @@ export default class StreamApiModel implements IStreamApiModel {
      * @param option: apid.LiveStreamOption
      * @return Promise<apid.StreamId>
      */
-    public async startHLSStream(option: apid.LiveStreamOption): Promise<apid.StreamId> {
+    public async startLiveHLSStream(option: apid.LiveStreamOption): Promise<apid.StreamId> {
         // config が存在するか確認する
         const config = this.configure.getConfig();
         if (

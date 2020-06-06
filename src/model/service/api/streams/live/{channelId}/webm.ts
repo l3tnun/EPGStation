@@ -23,7 +23,7 @@ export const get: Operation = async (req, res) => {
     });
 
     try {
-        result = await streamApiModel.startWebmStream({
+        result = await streamApiModel.startLiveWebmStream({
             channelId: parseInt(req.params.channelId, 10),
             name: req.query.name as string,
         });

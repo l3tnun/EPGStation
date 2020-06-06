@@ -23,7 +23,7 @@ export const get: Operation = async (req, res) => {
     });
 
     try {
-        result = await streamApiModel.startM2TsStream({
+        result = await streamApiModel.startLiveM2TsStream({
             channelId: parseInt(req.params.channelId, 10),
             name: req.query.name as string,
         });
