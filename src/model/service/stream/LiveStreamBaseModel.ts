@@ -64,7 +64,7 @@ abstract class LiveStreamBaseModel implements ILiveStreamBaseModel {
         }
 
         const config = this.configure.getConfig();
-        const cmd = this.processOption.cmd.replace('%FFMPEG%', config.ffmpeg);
+        const cmd = this.processOption.cmd.replace(/%FFMPEG%/g, config.ffmpeg);
 
         return {
             input: null,
@@ -121,7 +121,7 @@ abstract class LiveStreamBaseModel implements ILiveStreamBaseModel {
 
     /**
      * 生成したストリームを返す
-     * @return internal.Readable | null
+     * @return internal.Readable
      */
     public getStream(): internal.Readable {
         if (this.streamProcess !== null && this.streamProcess.stdout !== null) {
@@ -135,7 +135,7 @@ abstract class LiveStreamBaseModel implements ILiveStreamBaseModel {
 
     /**
      * ストリーム情報を返す
-     * @return apid.LiveStreamInfo
+     * @return LiveStreamInfo
      */
     public getInfo(): LiveStreamInfo {
         if (this.processOption === null) {
