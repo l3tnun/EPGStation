@@ -112,10 +112,14 @@ import ILiveStreamBaseModel, {
     LiveHLSStreamModelProvider,
     LiveStreamModelProvider,
 } from './service/stream/ILiveStreamBaseModel';
-import IRecordedStreamBaseModel, { RecordedStreamModelProvider } from './service/stream/IRecordedStreamBaseModel';
+import IRecordedStreamBaseModel, {
+    RecordedHLSStreamModelProvider,
+    RecordedStreamModelProvider,
+} from './service/stream/IRecordedStreamBaseModel';
 import IStreamManageModel from './service/stream/IStreamManageModel';
 import LiveHLSStreamModel from './service/stream/LiveHLSStreamModel';
 import LiveStreamModel from './service/stream/LiveStreamModel';
+import RecordedHLSStreamModel from './service/stream/RecordedHLSStreamModel';
 import RecordedStreamModel from './service/stream/RecordedStreamModel';
 import StreamManageModel from './service/stream/StreamManageModel';
 
@@ -280,13 +284,27 @@ export const set = (container: Container): void => {
         };
     });
 
-    container.bind<IRecordedStreamBaseModel>('RecordedStreamBaseModel').to(RecordedStreamModel);
+    container.bind<IRecordedStreamBaseModel>('RecordedStreamModel').to(RecordedStreamModel);
 
     container.bind<RecordedStreamModelProvider>('RecordedStreamModelProvider').toProvider(context => {
         return () => {
             return new Promise<IRecordedStreamBaseModel>((resolve, reject) => {
                 try {
-                    const streamModel = context.container.get<IRecordedStreamBaseModel>('RecordedStreamBaseModel');
+                    const streamModel = context.container.get<IRecordedStreamBaseModel>('RecordedStreamModel');
+                    resolve(streamModel);
+                } catch (err) {
+                    reject(err);
+                }
+            });
+        };
+    });
+
+    container.bind<IRecordedStreamBaseModel>('RecordedHLSStreamModel').to(RecordedHLSStreamModel);
+    container.bind<RecordedHLSStreamModelProvider>('RecordedHLSStreamModelProvider').toProvider(context => {
+        return () => {
+            return new Promise<IRecordedStreamBaseModel>((resolve, reject) => {
+                try {
+                    const streamModel = context.container.get<IRecordedStreamBaseModel>('RecordedHLSStreamModel');
                     resolve(streamModel);
                 } catch (err) {
                     reject(err);

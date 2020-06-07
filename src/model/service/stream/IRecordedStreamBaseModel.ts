@@ -2,6 +2,7 @@ import * as apid from '../../../../api';
 import IStreamBaseModel from './IStreamBaseModel';
 
 export type RecordedStreamModelProvider = () => Promise<IRecordedStreamBaseModel>;
+export type RecordedHLSStreamModelProvider = () => Promise<IRecordedStreamBaseModel>;
 
 export interface RecordedStreamOption {
     videoFileId: apid.VideoFileId;

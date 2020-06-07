@@ -14,6 +14,7 @@ import IConfiguration from '../../IConfiguration';
 import ILogger from '../../ILogger';
 import ILoggerModel from '../../ILoggerModel';
 import IEncodeProcessManageModel, { CreateProcessOption } from '../encode/IEncodeProcessManageModel';
+import IHLSFileDeleterModel from './IHLSFileDeleterModel';
 import IRecordedStreamBaseModel, { RecordedStreamOption, VideoFileInfo } from './IRecordedStreamBaseModel';
 import { RecordedStreamInfo } from './IStreamBaseModel';
 
@@ -21,19 +22,21 @@ import { RecordedStreamInfo } from './IStreamBaseModel';
 abstract class RecordedStreamBaseModel implements IRecordedStreamBaseModel {
     protected config: IConfigFile;
     protected log: ILogger;
-    protected processManager: IEncodeProcessManageModel;
+    private processManager: IEncodeProcessManageModel;
     private videoFileDB: IVideoFileDB;
     private recordedDB: IRecordedDB;
+    private fileDeleter: IHLSFileDeleterModel;
 
     private emitter: events.EventEmitter = new events.EventEmitter();
+    private streamId: apid.StreamId | null = null;
 
-    protected processOption: RecordedStreamOption | null = null;
-    protected fileStream: Readable | null = null;
-    protected streamProcess: ChildProcess | null = null;
-    protected videoFilePath: string | null = null;
-    protected videoFileInfo: VideoFileInfo | null = null;
-    protected isTs: boolean = false;
-    protected isRecording: boolean = false;
+    private processOption: RecordedStreamOption | null = null;
+    private fileStream: Readable | null = null;
+    private streamProcess: ChildProcess | null = null;
+    private videoFilePath: string | null = null;
+    private videoFileInfo: VideoFileInfo | null = null;
+    private isTs: boolean = false;
+    private isRecording: boolean = false;
 
     constructor(
         @inject('IConfiguration') configure: IConfiguration,
@@ -41,12 +44,14 @@ abstract class RecordedStreamBaseModel implements IRecordedStreamBaseModel {
         @inject('IEncodeProcessManageModel') processManager: IEncodeProcessManageModel,
         @inject('IVideoFileDB') videoFileDB: IVideoFileDB,
         @inject('IRecordedDB') recordedDB: IRecordedDB,
+        @inject('IHLSFileDeleterModel') fileDeleter: IHLSFileDeleterModel,
     ) {
         this.config = configure.getConfig();
         this.log = logger.getLogger();
         this.processManager = processManager;
         this.videoFileDB = videoFileDB;
         this.recordedDB = recordedDB;
+        this.fileDeleter = fileDeleter;
     }
 
     /**
@@ -55,6 +60,84 @@ abstract class RecordedStreamBaseModel implements IRecordedStreamBaseModel {
      */
     public setOption(option: RecordedStreamOption): void {
         this.processOption = option;
+    }
+
+    /**
+     * ストリーム開始
+     * @param streamId: apid.StreamId
+     * @return Promise<void>
+     */
+    /**
+     * ストリーム開始
+     * @return Promise<void>
+     */
+    public async start(streamId: apid.StreamId): Promise<void> {
+        this.streamId = streamId;
+        // hls ファイル削除設定
+        if (this.getStreamType() === 'RecordedHLS') {
+            this.fileDeleter.setOption({
+                streamId: streamId,
+                streamFilePath: this.config.streamFilePath,
+            });
+            await this.fileDeleter.deleteAllFiles();
+        }
+
+        if (this.processOption === null) {
+            throw new Error('ProcessOptionIsNull');
+        }
+
+        await this.createProcessOption();
+        if (this.videoFilePath === null || this.videoFileInfo === null) {
+            throw new Error('SetVideoFileInfoError');
+        }
+
+        // 開始時刻が動画の長さを超えている
+        if (this.processOption.playPosition > this.videoFileInfo.duration) {
+            throw new Error('OutOfRange');
+        }
+
+        // file read stream の生成
+        try {
+            this.setFileStream();
+        } catch (err) {
+            this.log.stream.error('create file stream error');
+            this.log.stream.error(err);
+            await this.stop();
+            throw new Error('FileStreamSetError');
+        }
+
+        // エンコードプロセス生成
+        const poption = await this.createProcessOption();
+        this.log.stream.info(`create encode process: ${poption.cmd}`);
+        try {
+            this.streamProcess = await this.processManager.create(poption);
+        } catch (err) {
+            this.log.stream.error(`create encode process failed: ${poption.cmd}`);
+            await this.stop();
+        }
+        if (this.streamProcess === null) {
+            throw new Error('CreateStreamProcessError');
+        }
+
+        // process 終了時にイベントを発行する
+        this.streamProcess.on('exit', () => {
+            this.emitExitStream();
+        });
+        this.streamProcess.on('error', () => {
+            this.emitExitStream();
+        });
+
+        // ffmpeg debug 用ログ出力
+        if (this.streamProcess.stderr !== null) {
+            this.streamProcess.stderr.on('data', data => {
+                this.log.stream.debug(String(data));
+            });
+        }
+
+        // パイプ処理
+        if (this.streamProcess.stdin !== null && this.fileStream !== null) {
+            this.fileStream.pipe(this.streamProcess.stdin);
+        }
     }
 
     /**
@@ -121,7 +204,11 @@ abstract class RecordedStreamBaseModel implements IRecordedStreamBaseModel {
      * stream プロセス生成に必要な情報を生成する
      * @return Promise<CreateProcessOption>
      */
-    protected async createProcessOption(): Promise<CreateProcessOption> {
+    private async createProcessOption(): Promise<CreateProcessOption> {
+        if (this.streamId === null) {
+            throw new Error('StreamIdIsNull');
+        }
+
         if (this.processOption === null) {
             throw new Error('ProcessOptionIsNull');
         }
@@ -131,13 +218,22 @@ abstract class RecordedStreamBaseModel implements IRecordedStreamBaseModel {
             throw new Error('SetVideoFileInfoError');
         }
 
-        const cmd = this.processOption.cmd
+        let cmd = this.processOption.cmd
             .replace(/%FFMPEG%/g, this.config.ffmpeg)
             .replace(/%SS%/g, this.isTs === true ? '' : this.processOption.playPosition.toString(10));
 
+        if (this.getStreamType() === 'RecordedHLS') {
+            cmd = cmd
+                .replace(/%streamFileDir%/g, this.config.streamFilePath)
+                .replace(/%streamNum%/g, this.streamId.toString(10));
+        }
+
         const option: CreateProcessOption = {
             input: this.isRecording === true ? null : this.videoFilePath,
-            output: null,
+            output:
+                this.getStreamType() === 'RecordedHLS'
+                    ? `${this.config.streamFilePath}\/stream${this.streamId.toString(10)}.m3u8`
+                    : null,
             cmd: cmd,
             priority: RecordedStreamBaseModel.ENCODE_PROCESS_PRIORITY,
         };
@@ -148,7 +244,7 @@ abstract class RecordedStreamBaseModel implements IRecordedStreamBaseModel {
     /**
      * fileStream をセットする
      */
-    protected setFileStream(): void {
+    private setFileStream(): void {
         if (this.processOption === null || this.videoFilePath === null || this.videoFileInfo === null) {
             throw new Error('VideoFileError');
         }
@@ -160,7 +256,6 @@ abstract class RecordedStreamBaseModel implements IRecordedStreamBaseModel {
 
         this.log.stream.info(`create file stream: ${this.videoFilePath}`);
         const start = Math.floor((this.videoFileInfo.bitRate / 8) * this.processOption.playPosition);
-        this.log.stream.error(`this.isRecording: ${this.isRecording}`);
         if (this.isRecording === true) {
             this.fileStream = fst.createReadStream(this.videoFilePath, {
                 start: start,
@@ -171,13 +266,6 @@ abstract class RecordedStreamBaseModel implements IRecordedStreamBaseModel {
             });
         }
     }
-
-    /**
-     * ストリーム開始
-     * @param streamId: apid.StreamId
-     * @return Promise<void>
-     */
-    public abstract start(streamId: apid.StreamId): Promise<void>;
 
     /**
      * ストリームを停止
@@ -191,6 +279,10 @@ abstract class RecordedStreamBaseModel implements IRecordedStreamBaseModel {
 
         if (this.streamProcess !== null) {
             await ProcessUtil.kill(this.streamProcess);
+        }
+
+        if (this.streamId !== null && this.getStreamType() === 'RecordedHLS') {
+            await this.fileDeleter.deleteAllFiles();
         }
     }
 
@@ -241,7 +333,7 @@ abstract class RecordedStreamBaseModel implements IRecordedStreamBaseModel {
     /**
      * ストリーム終了イベント発行
      */
-    protected emitExitStream(): void {
+    private emitExitStream(): void {
         this.emitter.emit(RecordedStreamBaseModel.EXIT_EVENT);
     }
 }

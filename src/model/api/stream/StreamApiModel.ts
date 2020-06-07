@@ -6,7 +6,10 @@ import IVideoFileDB from '../../db/IVideoFileDB';
 import { StreamingCmd } from '../../IConfigFile';
 import IConfiguration from '../../IConfiguration';
 import { LiveHLSStreamModelProvider, LiveStreamModelProvider } from '../../service/stream/ILiveStreamBaseModel';
-import { RecordedStreamModelProvider } from '../../service/stream/IRecordedStreamBaseModel';
+import {
+    RecordedHLSStreamModelProvider,
+    RecordedStreamModelProvider,
+} from '../../service/stream/IRecordedStreamBaseModel';
 import IStreamManageModel from '../../service/stream/IStreamManageModel';
 import IStreamApiModel, { StreamResponse } from './IStreamApiModel';
 
@@ -16,6 +19,7 @@ export default class StreamApiModel implements IStreamApiModel {
     private liveStreamProvider: LiveStreamModelProvider;
     private liveHLSStreamProvider: LiveHLSStreamModelProvider;
     private recordedStreamProvider: RecordedStreamModelProvider;
+    private recordedHLSStreamProvider: RecordedHLSStreamModelProvider;
     private streamManageModel: IStreamManageModel;
     private programDB: IProgramDB;
     private videoFileDB: IVideoFileDB;
@@ -26,6 +30,7 @@ export default class StreamApiModel implements IStreamApiModel {
         @inject('LiveStreamModelProvider') liveStreamProvider: LiveStreamModelProvider,
         @inject('LiveHLSStreamModelProvider') liveHLSStreamProvider: LiveHLSStreamModelProvider,
         @inject('RecordedStreamModelProvider') recordedStreamProvider: RecordedStreamModelProvider,
+        @inject('RecordedHLSStreamModelProvider') recordedHLSStreamProvider: RecordedHLSStreamModelProvider,
         @inject('IStreamManageModel') streamManageModel: IStreamManageModel,
         @inject('IProgramDB') programDB: IProgramDB,
         @inject('IVideoFileDB') videoFileDB: IVideoFileDB,
@@ -35,6 +40,7 @@ export default class StreamApiModel implements IStreamApiModel {
         this.liveStreamProvider = liveStreamProvider;
         this.liveHLSStreamProvider = liveHLSStreamProvider;
         this.recordedStreamProvider = recordedStreamProvider;
+        this.recordedHLSStreamProvider = recordedHLSStreamProvider;
         this.streamManageModel = streamManageModel;
         this.programDB = programDB;
         this.videoFileDB = videoFileDB;
@@ -198,7 +204,7 @@ export default class StreamApiModel implements IStreamApiModel {
     /**
      * WebM 形式の Recorded streaming を開始する
      * @param option: apid.LiveStreamOption
-     * @return Promise<apid.StreamId>
+     * @return Promise<StreamResponse>
      */
     public async startRecordedWebMStream(option: apid.RecordedStreanOption): Promise<StreamResponse> {
         const cmd = await this.getRecordedVideoConfig('webm', option);
@@ -223,7 +229,7 @@ export default class StreamApiModel implements IStreamApiModel {
     /**
      * WebM 形式の Recorded streaming を開始する
      * @param option: apid.LiveStreamOption
-     * @return Promise<apid.StreamId>
+     * @return Promise<StreamResponse>
      */
     public async startRecordedMp4Stream(option: apid.RecordedStreanOption): Promise<StreamResponse> {
         const cmd = await this.getRecordedVideoConfig('mp4', option);
@@ -243,6 +249,26 @@ export default class StreamApiModel implements IStreamApiModel {
             streamId: streamId,
             stream: stream.getStream(),
         };
+    }
+
+    /**
+     * HLS 形式の Recorded streaming を開始する
+     * @param option: apid.LiveStreamOption
+     * @return Promise<apid.StreamId>
+     */
+    public async startRecordedHLSStream(option: apid.RecordedStreanOption): Promise<apid.StreamId> {
+        const cmd = await this.getRecordedVideoConfig('hls', option);
+
+        // stream 生成
+        const stream = await this.recordedHLSStreamProvider();
+        stream.setOption({
+            videoFileId: option.videoFileId,
+            playPosition: option.playPosition,
+            cmd: cmd,
+        });
+
+        // manager に登録
+        return await this.streamManageModel.start(stream);
     }
 
     /**

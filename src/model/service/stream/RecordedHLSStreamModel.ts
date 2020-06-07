@@ -3,8 +3,8 @@ import IRecordedStreamBaseModel from './IRecordedStreamBaseModel';
 import RecordedStreamBaseModel from './RecordedStreamBaseModel';
 
 @injectable()
-export default class RecordedStreamModel extends RecordedStreamBaseModel implements IRecordedStreamBaseModel {
-    protected getStreamType(): 'RecordedStream' {
-        return 'RecordedStream';
+export default class RecordedHLSStreamModel extends RecordedStreamBaseModel implements IRecordedStreamBaseModel {
+    protected getStreamType(): 'RecordedHLS' {
+        return 'RecordedHLS';
     }
 }
