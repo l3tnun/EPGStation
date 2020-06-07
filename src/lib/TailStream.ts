@@ -221,7 +221,7 @@ class TailStream extends Readable {
             this.log.stream.error(str);
             this.log.stream.error(err);
         } else {
-            this.log.stream.debug(str);
+            // this.log.stream.debug(str);
         }
     }
 }
