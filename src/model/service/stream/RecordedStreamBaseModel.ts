@@ -120,12 +120,14 @@ abstract class RecordedStreamBaseModel implements IRecordedStreamBaseModel {
         }
 
         // process 終了時にイベントを発行する
-        this.streamProcess.on('exit', () => {
-            this.emitExitStream();
-        });
-        this.streamProcess.on('error', () => {
-            this.emitExitStream();
-        });
+        if (this.getStreamType() !== 'RecordedHLS') {
+            this.streamProcess.on('exit', () => {
+                this.emitExitStream();
+            });
+            this.streamProcess.on('error', () => {
+                this.emitExitStream();
+            });
+        }
 
         // ffmpeg debug 用ログ出力
         if (this.streamProcess.stderr !== null) {
