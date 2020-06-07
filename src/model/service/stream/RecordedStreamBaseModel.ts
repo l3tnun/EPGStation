@@ -133,7 +133,6 @@ abstract class RecordedStreamBaseModel implements IRecordedStreamBaseModel {
 
         const cmd = this.processOption.cmd
             .replace(/%FFMPEG%/g, this.config.ffmpeg)
-            .replace(/%RE%/g, this.isRecording === true ? '-re' : '')
             .replace(/%SS%/g, this.isTs === true ? '' : this.processOption.playPosition.toString(10));
 
         const option: CreateProcessOption = {
