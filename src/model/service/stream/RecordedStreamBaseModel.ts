@@ -3,8 +3,9 @@ import * as events from 'events';
 import * as fs from 'fs';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import internal from 'stream';
+import internal, { Readable } from 'stream';
 import * as apid from '../../../../api';
+import * as fst from '../../../lib/TailStream';
 import ProcessUtil from '../../../util/ProcessUtil';
 import IRecordedDB from '../../db/IRecordedDB';
 import IVideoFileDB from '../../db/IVideoFileDB';
@@ -27,7 +28,7 @@ abstract class RecordedStreamBaseModel implements IRecordedStreamBaseModel {
     private emitter: events.EventEmitter = new events.EventEmitter();
 
     protected processOption: RecordedStreamOption | null = null;
-    protected fileStream: fs.ReadStream | null = null;
+    protected fileStream: Readable | null = null;
     protected streamProcess: ChildProcess | null = null;
     protected videoFilePath: string | null = null;
     protected videoFileInfo: VideoFileInfo | null = null;
@@ -159,9 +160,17 @@ abstract class RecordedStreamBaseModel implements IRecordedStreamBaseModel {
         }
 
         this.log.stream.info(`create file stream: ${this.videoFilePath}`);
-        this.fileStream = fs.createReadStream(this.videoFilePath, {
-            start: Math.floor((this.videoFileInfo.bitRate / 8) * this.processOption.playPosition),
-        });
+        const start = Math.floor((this.videoFileInfo.bitRate / 8) * this.processOption.playPosition);
+        this.log.stream.error(`this.isRecording: ${this.isRecording}`);
+        if (this.isRecording === true) {
+            this.fileStream = fst.createReadStream(this.videoFilePath, {
+                start: start,
+            });
+        } else {
+            this.fileStream = fs.createReadStream(this.videoFilePath, {
+                start: start,
+            });
+        }
     }
 
     /**
