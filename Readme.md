@@ -18,8 +18,7 @@ v1 に準じる ※ただし Windows 環境にて正常動作するかは未検�
 git clone https://github.com/l3tnun/EPGStation.git
 cd EPGStation
 git checkout v2
-npm install --no-save
-npm install-client
+npm run all-install
 npm run build
 ```
 
