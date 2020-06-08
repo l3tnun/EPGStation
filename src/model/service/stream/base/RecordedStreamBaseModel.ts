@@ -55,13 +55,9 @@ export default abstract class RecordedStreamBaseModel extends StreamBaseModel<Re
      * @return Promise<void>
      */
     public async start(streamId: apid.StreamId): Promise<void> {
-        // hls ファイル削除設定
+        // HLS stream ディレクトリ使用準備
         if (this.getStreamType() === 'RecordedHLS') {
-            this.fileDeleter.setOption({
-                streamId: streamId,
-                streamFilePath: this.config.streamFilePath,
-            });
-            await this.fileDeleter.deleteAllFiles();
+            await this.prepStreamDir(streamId);
         }
 
         if (this.processOption === null) {

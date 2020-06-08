@@ -1,4 +1,5 @@
 import * as events from 'events';
+import * as fs from 'fs';
 import { inject, injectable } from 'inversify';
 import internal from 'stream';
 import * as apid from '../../../../../api';
@@ -34,6 +35,44 @@ abstract class StreamBaseModel<T> implements IStreamBaseModel<T> {
     }
 
     public abstract start(streamId: apid.StreamId): Promise<void>;
+
+    /**
+     * HLS Stream に使用するディレクトリの使用準備をする
+     * @return Promise<void>
+     */
+    protected async prepStreamDir(streamId: apid.StreamId): Promise<void> {
+        await this.checkStreamDir();
+
+        // ゴミファイルを削除
+        this.fileDeleter.setOption({
+            streamId: streamId,
+            streamFilePath: this.config.streamFilePath,
+        });
+        await this.fileDeleter.deleteAllFiles();
+    }
+
+    /**
+     * HLS Stream に使用するディレクトリのチェックをする
+     * ディレクトリが存在しなければ生成する
+     * @return Promise<void>
+     */
+    private async checkStreamDir(): Promise<void> {
+        // streamFilePath の存在チェック
+        try {
+            await FileUtil.access(this.config.streamFilePath, fs.constants.R_OK | fs.constants.W_OK);
+        } catch (err) {
+            if (typeof err.code !== 'undefined' && err.code === 'ENOENT') {
+                // ディレクトリが存在しないので作成する
+                this.log.stream.info(`mkdirp: ${this.config.streamFilePath}`);
+                await FileUtil.mkdir(this.config.streamFilePath);
+            } else {
+                // アクセス権に Read or Write が無い
+                this.log.stream.fatal(`dir permission error: ${this.config.streamFilePath}`);
+                this.log.stream.fatal(err);
+                throw err;
+            }
+        }
+    }
 
     /**
      * ストリームを停止

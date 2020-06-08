@@ -1,10 +1,8 @@
 import { ChildProcess } from 'child_process';
-import * as fs from 'fs';
 import * as http from 'http';
 import { inject, injectable } from 'inversify';
 import internal from 'stream';
 import * as apid from '../../../../../api';
-import FileUtil from '../../../../util/FileUtil';
 import ProcessUtil from '../../../../util/ProcessUtil';
 import IConfigFile from '../../../IConfigFile';
 import IConfiguration from '../../../IConfiguration';
@@ -79,29 +77,9 @@ export default abstract class LiveStreamBaseModel extends StreamBaseModel<LiveSt
             throw new Error('ProcessOptionIsNull');
         }
 
+        // HLS stream ディレクトリ使用準備
         if (this.getStreamType() === 'LiveHLS') {
-            // streamFilePath の存在チェック
-            try {
-                await FileUtil.access(this.config.streamFilePath, fs.constants.R_OK | fs.constants.W_OK);
-            } catch (err) {
-                if (typeof err.code !== 'undefined' && err.code === 'ENOENT') {
-                    // ディレクトリが存在しないので作成する
-                    this.log.stream.info(`mkdirp: ${this.config.streamFilePath}`);
-                    await FileUtil.mkdir(this.config.streamFilePath);
-                } else {
-                    // アクセス権に Read or Write が無い
-                    this.log.stream.fatal(`dir permission error: ${this.config.streamFilePath}`);
-                    this.log.stream.fatal(err);
-                    throw err;
-                }
-            }
-
-            // ゴミファイルを削除
-            await this.fileDeleter.setOption({
-                streamId: streamId,
-                streamFilePath: this.config.streamFilePath,
-            });
-            await this.fileDeleter.deleteAllFiles();
+            await this.prepStreamDir(streamId);
         }
 
         // 放送波受信
