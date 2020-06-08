@@ -2,16 +2,22 @@ import { inject, injectable } from 'inversify';
 import * as apid from '../../../../../api';
 import ILogger from '../../../ILogger';
 import ILoggerModel from '../../../ILoggerModel';
+import ISocketIOManageModel from '../../socketio/ISocketIOManageModel';
 import IStreamBaseModel, { LiveStreamInfo, RecordedStreamInfo } from '../base/IStreamBaseModel';
 import IStreamManageModel, { StreamInfoWithStreamId } from './IStreamManageModel';
 
 @injectable()
 export default class StreamManageModel implements IStreamManageModel {
     private log: ILogger;
+    private socketIO: ISocketIOManageModel;
     private streams: { [streamId: number]: IStreamBaseModel<any> } = {};
 
-    constructor(@inject('ILoggerModel') logger: ILoggerModel) {
+    constructor(
+        @inject('ILoggerModel') logger: ILoggerModel,
+        @inject('ISocketIOManageModel') socketIO: ISocketIOManageModel,
+    ) {
         this.log = logger.getLogger();
+        this.socketIO = socketIO;
     }
 
     /**
@@ -36,6 +42,8 @@ export default class StreamManageModel implements IStreamManageModel {
         stream.setExitStream(async () => {
             await this.stop(streamId);
         });
+
+        this.socketIO.notifyClient();
 
         return streamId;
     }
@@ -70,6 +78,8 @@ export default class StreamManageModel implements IStreamManageModel {
             throw err;
         });
         delete this.streams[streamId];
+
+        this.socketIO.notifyClient();
 
         this.log.stream.info(`stop stream ${streamId}`);
     }
