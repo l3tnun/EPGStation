@@ -26,6 +26,20 @@ abstract class StreamBaseModel<T> implements IStreamBaseModel<T> {
     private isEnableStream: boolean = false;
     private streamCheckTimer: NodeJS.Timeout | null = null;
 
+    constructor(
+        @inject('IConfiguration') configure: IConfiguration,
+        @inject('ILoggerModel') logger: ILoggerModel,
+        @inject('IEncodeProcessManageModel') processManager: IEncodeProcessManageModel,
+        @inject('IHLSFileDeleterModel') fileDeleter: IHLSFileDeleterModel,
+        @inject('ISocketIOManageModel') socketIO: ISocketIOManageModel,
+    ) {
+        this.config = configure.getConfig();
+        this.log = logger.getLogger();
+        this.processManager = processManager;
+        this.fileDeleter = fileDeleter;
+        this.socketIO = socketIO;
+    }
+
     /**
      * stream 生成に必要な情報を渡す
      * @param option: LiveStreamOption
@@ -87,20 +101,6 @@ abstract class StreamBaseModel<T> implements IStreamBaseModel<T> {
     public abstract getStream(): internal.Readable;
     public abstract getInfo(): LiveStreamInfo | RecordedStreamInfo;
     protected abstract getStreamType(): apid.StreamType;
-
-    constructor(
-        @inject('IConfiguration') configure: IConfiguration,
-        @inject('ILoggerModel') logger: ILoggerModel,
-        @inject('IEncodeProcessManageModel') processManager: IEncodeProcessManageModel,
-        @inject('IHLSFileDeleterModel') fileDeleter: IHLSFileDeleterModel,
-        @inject('ISocketIOManageModel') socketIO: ISocketIOManageModel,
-    ) {
-        this.config = configure.getConfig();
-        this.log = logger.getLogger();
-        this.processManager = processManager;
-        this.fileDeleter = fileDeleter;
-        this.socketIO = socketIO;
-    }
 
     /**
      * ストリーム終了イベントへ登録
