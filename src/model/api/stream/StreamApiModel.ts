@@ -1,5 +1,6 @@
 import { inject, injectable } from 'inversify';
 import * as apid from '../../../../api';
+import IChannelDB from '../../db/IChannelDB';
 import IProgramDB from '../../db/IProgramDB';
 import IRecordedDB from '../../db/IRecordedDB';
 import IVideoFileDB from '../../db/IVideoFileDB';
@@ -11,6 +12,8 @@ import {
     RecordedStreamModelProvider,
 } from '../../service/stream/base/IRecordedStreamBaseModel';
 import IStreamManageModel from '../../service/stream/manager/IStreamManageModel';
+import IApiUtil from '../IApiUtil';
+import IPlayList from '../IPlayList';
 import IStreamApiModel, { StreamResponse } from './IStreamApiModel';
 
 @injectable()
@@ -24,6 +27,8 @@ export default class StreamApiModel implements IStreamApiModel {
     private programDB: IProgramDB;
     private videoFileDB: IVideoFileDB;
     private recordedDB: IRecordedDB;
+    private channelDB: IChannelDB;
+    private apiUtil: IApiUtil;
 
     constructor(
         @inject('IConfiguration') configure: IConfiguration,
@@ -35,6 +40,8 @@ export default class StreamApiModel implements IStreamApiModel {
         @inject('IProgramDB') programDB: IProgramDB,
         @inject('IVideoFileDB') videoFileDB: IVideoFileDB,
         @inject('IRecordedDB') recordedDB: IRecordedDB,
+        @inject('IChannelDB') channelDB: IChannelDB,
+        @inject('IApiUtil') apiUtil: IApiUtil,
     ) {
         this.configure = configure;
         this.liveStreamProvider = liveStreamProvider;
@@ -45,6 +52,8 @@ export default class StreamApiModel implements IStreamApiModel {
         this.programDB = programDB;
         this.videoFileDB = videoFileDB;
         this.recordedDB = recordedDB;
+        this.channelDB = channelDB;
+        this.apiUtil = apiUtil;
     }
 
     /**
@@ -333,6 +342,35 @@ export default class StreamApiModel implements IStreamApiModel {
         }
 
         return video.isTs === false;
+    }
+
+    /**
+     * 指定した m2ts 形式のライブストリーミングの m3u8 形式のプレイリスト文字列を取得する
+     * @param host: string host
+     * @param isSecure boolean https 通信か
+     * @param option: apid.LiveStreamOption
+     * @return Promise<IPlayList | null>
+     */
+    public async getLiveM2TsStreamM3u8(
+        host: string,
+        isSecure: boolean,
+        option: apid.LiveStreamOption,
+    ): Promise<IPlayList | null> {
+        const channel = await this.channelDB.findId(option.channelId);
+        if (channel === null) {
+            return null;
+        }
+
+        return {
+            name: encodeURIComponent(channel.name + '.m3u8'),
+            playList: this.apiUtil.createM3U8PlayListStr({
+                host: host,
+                isSecure: isSecure,
+                name: channel.name,
+                duration: 0,
+                baseUrl: `/api/streams/live/${option.channelId.toString(10)}/m2ts?name=${option.name}`,
+            }),
+        };
     }
 
     /**

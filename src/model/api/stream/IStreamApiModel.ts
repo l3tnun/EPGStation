@@ -1,5 +1,6 @@
 import internal from 'stream';
 import * as apid from '../../../../api';
+import IPlayList from '../IPlayList';
 
 export interface StreamResponse {
     streamId: apid.StreamId;
@@ -14,6 +15,7 @@ export default interface IStreamApiModel {
     startRecordedWebMStream(option: apid.RecordedStreanOption): Promise<StreamResponse>;
     startRecordedMp4Stream(option: apid.RecordedStreanOption): Promise<StreamResponse>;
     startRecordedHLSStream(option: apid.RecordedStreanOption): Promise<apid.StreamId>;
+    getLiveM2TsStreamM3u8(host: string, isSecure: boolean, option: apid.LiveStreamOption): Promise<IPlayList | null>;
     stop(streamId: apid.StreamId): Promise<void>;
     stopAll(): Promise<void>;
     getStreamInfos(): Promise<apid.StreamInfo>;
