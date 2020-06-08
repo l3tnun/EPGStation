@@ -1,5 +1,4 @@
 import { ChildProcess, exec } from 'child_process';
-import * as events from 'events';
 import * as fs from 'fs';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
@@ -9,25 +8,21 @@ import * as fst from '../../../lib/TailStream';
 import ProcessUtil from '../../../util/ProcessUtil';
 import IRecordedDB from '../../db/IRecordedDB';
 import IVideoFileDB from '../../db/IVideoFileDB';
-import IConfigFile from '../../IConfigFile';
 import IConfiguration from '../../IConfiguration';
-import ILogger from '../../ILogger';
 import ILoggerModel from '../../ILoggerModel';
 import IEncodeProcessManageModel, { CreateProcessOption } from '../encode/IEncodeProcessManageModel';
 import IHLSFileDeleterModel from './IHLSFileDeleterModel';
 import IRecordedStreamBaseModel, { RecordedStreamOption, VideoFileInfo } from './IRecordedStreamBaseModel';
 import { RecordedStreamInfo } from './IStreamBaseModel';
+import StreamBaseModel from './StreamBaseModel';
 
 @injectable()
-abstract class RecordedStreamBaseModel implements IRecordedStreamBaseModel {
-    protected config: IConfigFile;
-    protected log: ILogger;
-    private processManager: IEncodeProcessManageModel;
+export default abstract class RecordedStreamBaseModel extends StreamBaseModel<RecordedStreamOption>
+    implements IRecordedStreamBaseModel {
     private videoFileDB: IVideoFileDB;
     private recordedDB: IRecordedDB;
     private fileDeleter: IHLSFileDeleterModel;
 
-    private emitter: events.EventEmitter = new events.EventEmitter();
     private streamId: apid.StreamId | null = null;
 
     private processOption: RecordedStreamOption | null = null;
@@ -46,9 +41,8 @@ abstract class RecordedStreamBaseModel implements IRecordedStreamBaseModel {
         @inject('IRecordedDB') recordedDB: IRecordedDB,
         @inject('IHLSFileDeleterModel') fileDeleter: IHLSFileDeleterModel,
     ) {
-        this.config = configure.getConfig();
-        this.log = logger.getLogger();
-        this.processManager = processManager;
+        super(configure, logger, processManager);
+
         this.videoFileDB = videoFileDB;
         this.recordedDB = recordedDB;
         this.fileDeleter = fileDeleter;
@@ -312,37 +306,9 @@ abstract class RecordedStreamBaseModel implements IRecordedStreamBaseModel {
         return {
             type: this.getStreamType(),
             videoFileId: this.processOption.videoFileId,
+            isEnable: false, // TODO 実装
         };
     }
 
     protected abstract getStreamType(): 'RecordedStream' | 'RecordedHLS';
-
-    /**
-     * ストリーム終了イベントへ登録
-     * @param callback: () => void
-     */
-    public setExitStream(callback: () => void): void {
-        this.emitter.on(RecordedStreamBaseModel.EXIT_EVENT, async () => {
-            try {
-                callback();
-            } catch (err) {
-                this.log.stream.error('exit stream callback error');
-                this.log.stream.error(err);
-            }
-        });
-    }
-
-    /**
-     * ストリーム終了イベント発行
-     */
-    private emitExitStream(): void {
-        this.emitter.emit(RecordedStreamBaseModel.EXIT_EVENT);
-    }
 }
-
-namespace RecordedStreamBaseModel {
-    export const ENCODE_PROCESS_PRIORITY = 1;
-    export const EXIT_EVENT = 'exitEvent';
-}
-
-export default RecordedStreamBaseModel;

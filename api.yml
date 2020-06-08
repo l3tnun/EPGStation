@@ -995,6 +995,7 @@ components:
             required:
                 - streamId
                 - type
+                - isEnable
                 - channelId
                 - name
                 - startAt
@@ -1004,6 +1005,9 @@ components:
                     $ref: '#/components/schemas/StreamId'
                 type:
                     $ref: '#/components/schemas/StreamType'
+                isEnable:
+                    description: 放送波が有効か (HLS 形式の場合有効)
+                    type: boolean
                 channelId:
                     $ref: '#/components/schemas/ChannelId'
                 videoFileId:

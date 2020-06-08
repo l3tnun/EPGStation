@@ -13,10 +13,8 @@ export default class LiveStreamModel extends LiveStreamBaseModel implements ILiv
             throw new Error('ProcessOptionIsNull');
         }
 
-        const config = this.configure.getConfig();
-
         // 放送波受信
-        await this.setMirakurunStream(config);
+        await this.setMirakurunStream(this.config);
         if (this.stream === null) {
             throw new Error('SetStreamError');
         }

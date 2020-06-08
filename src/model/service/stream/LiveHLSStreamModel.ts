@@ -36,19 +36,17 @@ export default class LiveHLSStreamModel extends LiveStreamBaseModel implements I
             throw new Error('ProcessOptionIsNull');
         }
 
-        const config = this.configure.getConfig();
-
         // streamFilePath の存在チェック
         try {
-            await FileUtil.access(config.streamFilePath, fs.constants.R_OK | fs.constants.W_OK);
+            await FileUtil.access(this.config.streamFilePath, fs.constants.R_OK | fs.constants.W_OK);
         } catch (err) {
             if (typeof err.code !== 'undefined' && err.code === 'ENOENT') {
                 // ディレクトリが存在しないので作成する
-                this.log.stream.info(`mkdirp: ${config.streamFilePath}`);
-                await FileUtil.mkdir(config.streamFilePath);
+                this.log.stream.info(`mkdirp: ${this.config.streamFilePath}`);
+                await FileUtil.mkdir(this.config.streamFilePath);
             } else {
                 // アクセス権に Read or Write が無い
-                this.log.stream.fatal(`dir permission error: ${config.streamFilePath}`);
+                this.log.stream.fatal(`dir permission error: ${this.config.streamFilePath}`);
                 this.log.stream.fatal(err);
                 throw err;
             }
@@ -57,12 +55,12 @@ export default class LiveHLSStreamModel extends LiveStreamBaseModel implements I
         // ゴミファイルを削除
         await this.fileDeleter.setOption({
             streamId: streamId,
-            streamFilePath: config.streamFilePath,
+            streamFilePath: this.config.streamFilePath,
         });
         await this.fileDeleter.deleteAllFiles();
 
         // 放送波受信
-        await this.setMirakurunStream(config);
+        await this.setMirakurunStream(this.config);
         if (this.stream === null) {
             throw new Error('SetStreamError');
         }
@@ -118,12 +116,11 @@ export default class LiveHLSStreamModel extends LiveStreamBaseModel implements I
             throw new Error('CreateProcessOptionError');
         }
 
-        const config = this.configure.getConfig();
         option.cmd = option.cmd
-            .replace(/%streamFileDir%/g, config.streamFilePath)
+            .replace(/%streamFileDir%/g, this.config.streamFilePath)
             .replace(/%streamNum%/g, streamId.toString(10));
 
-        option.output = `${config.streamFilePath}\/stream${streamId}.m3u8`;
+        option.output = `${this.config.streamFilePath}\/stream${streamId}.m3u8`;
 
         return option;
     }

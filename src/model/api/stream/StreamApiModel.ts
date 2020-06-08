@@ -367,6 +367,7 @@ export default class StreamApiModel implements IStreamApiModel {
                 const item: apid.LiveStreamInfoItem = {
                     streamId: info.streamId,
                     type: info.info.type,
+                    isEnable: info.info.isEnable,
                     channelId: info.info.channelId,
                     name: '',
                     startAt: 0,
@@ -391,6 +392,7 @@ export default class StreamApiModel implements IStreamApiModel {
                 const item: apid.VideoFileStreamInfoItem = {
                     streamId: info.streamId,
                     type: info.info.type,
+                    isEnable: info.info.isEnable,
                     channelId: 0,
                     name: '',
                     startAt: 0,

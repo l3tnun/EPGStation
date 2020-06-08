@@ -1,5 +1,4 @@
 import { ChildProcess } from 'child_process';
-import * as events from 'events';
 import * as http from 'http';
 import { inject, injectable } from 'inversify';
 import internal from 'stream';
@@ -7,21 +6,17 @@ import * as apid from '../../../../api';
 import ProcessUtil from '../../../util/ProcessUtil';
 import IConfigFile from '../../IConfigFile';
 import IConfiguration from '../../IConfiguration';
-import ILogger from '../../ILogger';
 import ILoggerModel from '../../ILoggerModel';
 import IMirakurunClientModel from '../../IMirakurunClientModel';
 import IEncodeProcessManageModel, { CreateProcessOption } from '../encode/IEncodeProcessManageModel';
 import ILiveStreamBaseModel, { LiveStreamOption } from './ILiveStreamBaseModel';
 import { LiveStreamInfo } from './IStreamBaseModel';
+import StreamBaseModel from './StreamBaseModel';
 
 @injectable()
-abstract class LiveStreamBaseModel implements ILiveStreamBaseModel {
-    protected configure: IConfiguration;
-    protected log: ILogger;
-    protected processManager: IEncodeProcessManageModel;
+export default abstract class LiveStreamBaseModel extends StreamBaseModel<LiveStreamOption>
+    implements ILiveStreamBaseModel {
     protected mirakurunClientModel: IMirakurunClientModel;
-
-    private emitter: events.EventEmitter = new events.EventEmitter();
 
     protected processOption: LiveStreamOption | null = null;
     protected stream: http.IncomingMessage | null = null;
@@ -33,9 +28,8 @@ abstract class LiveStreamBaseModel implements ILiveStreamBaseModel {
         @inject('IEncodeProcessManageModel') processManager: IEncodeProcessManageModel,
         @inject('IMirakurunClientModel') mirakurunClientModel: IMirakurunClientModel,
     ) {
-        this.configure = configure;
-        this.log = logger.getLogger();
-        this.processManager = processManager;
+        super(configure, logger, processManager);
+
         this.mirakurunClientModel = mirakurunClientModel;
     }
 
@@ -63,8 +57,7 @@ abstract class LiveStreamBaseModel implements ILiveStreamBaseModel {
             return null;
         }
 
-        const config = this.configure.getConfig();
-        const cmd = this.processOption.cmd.replace(/%FFMPEG%/g, config.ffmpeg);
+        const cmd = this.processOption.cmd.replace(/%FFMPEG%/g, this.config.ffmpeg);
 
         return {
             input: null,
@@ -145,37 +138,9 @@ abstract class LiveStreamBaseModel implements ILiveStreamBaseModel {
         return {
             type: this.getStreamType(),
             channelId: this.processOption.channelId,
+            isEnable: false, // TODO 実装
         };
     }
 
     protected abstract getStreamType(): 'LiveStream' | 'LiveHLS';
-
-    /**
-     * ストリーム終了イベントへ登録
-     * @param callback: () => void
-     */
-    public setExitStream(callback: () => void): void {
-        this.emitter.on(LiveStreamBaseModel.EXIT_EVENT, async () => {
-            try {
-                callback();
-            } catch (err) {
-                this.log.stream.error('exit stream callback error');
-                this.log.stream.error(err);
-            }
-        });
-    }
-
-    /**
-     * ストリーム終了イベント発行
-     */
-    protected emitExitStream(): void {
-        this.emitter.emit(LiveStreamBaseModel.EXIT_EVENT);
-    }
 }
-
-namespace LiveStreamBaseModel {
-    export const ENCODE_PROCESS_PRIORITY = 1;
-    export const EXIT_EVENT = 'exitEvent';
-}
-
-export default LiveStreamBaseModel;

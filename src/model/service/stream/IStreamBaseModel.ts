@@ -6,6 +6,7 @@ import * as apid from '../../../../api';
  */
 export interface BaseStreamInfo {
     type: apid.StreamType;
+    isEnable: boolean;
 }
 
 /**
