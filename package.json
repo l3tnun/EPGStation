@@ -4,7 +4,7 @@
     "description": "DTV Software in Japan.",
     "main": "dist/server/index.js",
     "scripts": {
-        "install-client": "cd client && npm install --no-save",
+        "all-install": "npm i --no-save && cd client && npm i --no-save",
         "start": "node dist/index.js",
         "build": "gulp build && cd client && npm run build",
         "build-server": "gulp build",
