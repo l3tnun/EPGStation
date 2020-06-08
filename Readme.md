@@ -22,6 +22,15 @@ npm run all-install
 npm run build
 ```
 
+### config ファイルのコピー
+
+```bash
+cp config/config.sample.yml config/config.yml
+cp config/operatorLogConfig.sample.yml config/operatorLogConfig.yml
+cp config/operatorLogConfig.sample.yml config/operatorLogConfig.yml
+cp config/epgUpdaterLogConfig.sample.yml config/epgUpdaterLogConfig.yml
+```
+
 ### 開発環境立ち上げ手順
 
 ```bash
