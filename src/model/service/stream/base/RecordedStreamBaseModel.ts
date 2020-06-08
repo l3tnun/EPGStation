@@ -23,8 +23,6 @@ export default abstract class RecordedStreamBaseModel extends StreamBaseModel<Re
     private recordedDB: IRecordedDB;
     private fileDeleter: IHLSFileDeleterModel;
 
-    private streamId: apid.StreamId | null = null;
-
     private processOption: RecordedStreamOption | null = null;
     private fileStream: Readable | null = null;
     private streamProcess: ChildProcess | null = null;
@@ -66,7 +64,6 @@ export default abstract class RecordedStreamBaseModel extends StreamBaseModel<Re
      * @return Promise<void>
      */
     public async start(streamId: apid.StreamId): Promise<void> {
-        this.streamId = streamId;
         // hls ファイル削除設定
         if (this.getStreamType() === 'RecordedHLS') {
             this.fileDeleter.setOption({
@@ -80,7 +77,7 @@ export default abstract class RecordedStreamBaseModel extends StreamBaseModel<Re
             throw new Error('ProcessOptionIsNull');
         }
 
-        await this.createProcessOption();
+        await this.setVideFileInfo();
         if (this.videoFilePath === null || this.videoFileInfo === null) {
             throw new Error('SetVideoFileInfoError');
         }
@@ -101,7 +98,7 @@ export default abstract class RecordedStreamBaseModel extends StreamBaseModel<Re
         }
 
         // エンコードプロセス生成
-        const poption = await this.createProcessOption();
+        const poption = await this.createProcessOption(streamId);
         this.log.stream.info(`create encode process: ${poption.cmd}`);
         try {
             this.streamProcess = await this.processManager.create(poption);
@@ -200,16 +197,11 @@ export default abstract class RecordedStreamBaseModel extends StreamBaseModel<Re
      * stream プロセス生成に必要な情報を生成する
      * @return Promise<CreateProcessOption>
      */
-    private async createProcessOption(): Promise<CreateProcessOption> {
-        if (this.streamId === null) {
-            throw new Error('StreamIdIsNull');
-        }
-
+    private async createProcessOption(streamId: apid.StreamId): Promise<CreateProcessOption> {
         if (this.processOption === null) {
             throw new Error('ProcessOptionIsNull');
         }
 
-        await this.setVideFileInfo();
         if (this.videoFilePath === null || this.videoFileInfo === null) {
             throw new Error('SetVideoFileInfoError');
         }
@@ -221,14 +213,14 @@ export default abstract class RecordedStreamBaseModel extends StreamBaseModel<Re
         if (this.getStreamType() === 'RecordedHLS') {
             cmd = cmd
                 .replace(/%streamFileDir%/g, this.config.streamFilePath)
-                .replace(/%streamNum%/g, this.streamId.toString(10));
+                .replace(/%streamNum%/g, streamId.toString(10));
         }
 
         const option: CreateProcessOption = {
             input: this.isRecording === true ? null : this.videoFilePath,
             output:
                 this.getStreamType() === 'RecordedHLS'
-                    ? `${this.config.streamFilePath}\/stream${this.streamId.toString(10)}.m3u8`
+                    ? `${this.config.streamFilePath}\/stream${streamId.toString(10)}.m3u8`
                     : null,
             cmd: cmd,
             priority: RecordedStreamBaseModel.ENCODE_PROCESS_PRIORITY,
@@ -277,7 +269,7 @@ export default abstract class RecordedStreamBaseModel extends StreamBaseModel<Re
             await ProcessUtil.kill(this.streamProcess);
         }
 
-        if (this.streamId !== null && this.getStreamType() === 'RecordedHLS') {
+        if (this.getStreamType() === 'RecordedHLS') {
             await this.fileDeleter.deleteAllFiles();
         }
     }
