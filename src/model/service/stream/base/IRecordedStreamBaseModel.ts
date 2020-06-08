@@ -1,4 +1,4 @@
-import * as apid from '../../../../api';
+import * as apid from '../../../../../api';
 import IStreamBaseModel from './IStreamBaseModel';
 
 export type RecordedStreamModelProvider = () => Promise<IRecordedStreamBaseModel>;

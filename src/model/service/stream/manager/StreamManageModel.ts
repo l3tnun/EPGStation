@@ -1,8 +1,8 @@
 import { inject, injectable } from 'inversify';
-import * as apid from '../../../../api';
-import ILogger from '../../ILogger';
-import ILoggerModel from '../../ILoggerModel';
-import IStreamBaseModel, { LiveStreamInfo, RecordedStreamInfo } from './IStreamBaseModel';
+import * as apid from '../../../../../api';
+import ILogger from '../../../ILogger';
+import ILoggerModel from '../../../ILoggerModel';
+import IStreamBaseModel, { LiveStreamInfo, RecordedStreamInfo } from '../base/IStreamBaseModel';
 import IStreamManageModel, { StreamInfoWithStreamId } from './IStreamManageModel';
 
 @injectable()

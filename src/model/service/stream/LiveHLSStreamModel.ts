@@ -6,9 +6,9 @@ import IConfiguration from '../../IConfiguration';
 import ILoggerModel from '../../ILoggerModel';
 import IMirakurunClientModel from '../../IMirakurunClientModel';
 import IEncodeProcessManageModel, { CreateProcessOption } from '../encode/IEncodeProcessManageModel';
-import IHLSFileDeleterModel from './IHLSFileDeleterModel';
-import ILiveStreamBaseModel from './ILiveStreamBaseModel';
-import LiveStreamBaseModel from './LiveStreamBaseModel';
+import ILiveStreamBaseModel from './base/ILiveStreamBaseModel';
+import LiveStreamBaseModel from './base/LiveStreamBaseModel';
+import IHLSFileDeleterModel from './util/IHLSFileDeleterModel';
 
 @injectable()
 export default class LiveHLSStreamModel extends LiveStreamBaseModel implements ILiveStreamBaseModel {

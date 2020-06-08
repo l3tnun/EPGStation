@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify';
-import FileUtil from '../../../util/FileUtil';
-import ILogger from '../../ILogger';
-import ILoggerModel from '../../ILoggerModel';
+import FileUtil from '../../../../util/FileUtil';
+import ILogger from '../../../ILogger';
+import ILoggerModel from '../../../ILoggerModel';
 import IHLSFileDeleterModel, { HLSFileDeleterOption } from './IHLSFileDeleterModel';
 
 @injectable()

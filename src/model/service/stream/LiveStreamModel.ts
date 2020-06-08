@@ -1,6 +1,6 @@
 import { injectable } from 'inversify';
-import ILiveStreamBaseModel from './ILiveStreamBaseModel';
-import LiveStreamBaseModel from './LiveStreamBaseModel';
+import ILiveStreamBaseModel from './base/ILiveStreamBaseModel';
+import LiveStreamBaseModel from './base/LiveStreamBaseModel';
 
 @injectable()
 export default class LiveStreamModel extends LiveStreamBaseModel implements ILiveStreamBaseModel {

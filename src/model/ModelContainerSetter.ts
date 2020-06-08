@@ -106,22 +106,22 @@ import IServiceServer from './service/IServiceServer';
 import ServiceServer from './service/ServiceServer';
 import ISocketIOManageModel from './service/socketio/ISocketIOManageModel';
 import SocketIOManageModel from './service/socketio/SocketIOManageModel';
-import HLSFileDeleterModel from './service/stream/HLSFileDeleterModel';
-import IHLSFileDeleterModel from './service/stream/IHLSFileDeleterModel';
 import ILiveStreamBaseModel, {
     LiveHLSStreamModelProvider,
     LiveStreamModelProvider,
-} from './service/stream/ILiveStreamBaseModel';
+} from './service/stream/base/ILiveStreamBaseModel';
 import IRecordedStreamBaseModel, {
     RecordedHLSStreamModelProvider,
     RecordedStreamModelProvider,
-} from './service/stream/IRecordedStreamBaseModel';
-import IStreamManageModel from './service/stream/IStreamManageModel';
+} from './service/stream/base/IRecordedStreamBaseModel';
 import LiveHLSStreamModel from './service/stream/LiveHLSStreamModel';
 import LiveStreamModel from './service/stream/LiveStreamModel';
+import IStreamManageModel from './service/stream/manager/IStreamManageModel';
+import StreamManageModel from './service/stream/manager/StreamManageModel';
 import RecordedHLSStreamModel from './service/stream/RecordedHLSStreamModel';
 import RecordedStreamModel from './service/stream/RecordedStreamModel';
-import StreamManageModel from './service/stream/StreamManageModel';
+import HLSFileDeleterModel from './service/stream/util/HLSFileDeleterModel';
+import IHLSFileDeleterModel from './service/stream/util/IHLSFileDeleterModel';
 
 /**
  * container に 各 Model を登録する

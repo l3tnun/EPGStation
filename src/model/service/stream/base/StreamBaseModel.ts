@@ -1,12 +1,12 @@
 import * as events from 'events';
 import { inject, injectable } from 'inversify';
 import internal from 'stream';
-import * as apid from '../../../../api';
-import IConfigFile from '../../IConfigFile';
-import IConfiguration from '../../IConfiguration';
-import ILogger from '../../ILogger';
-import ILoggerModel from '../../ILoggerModel';
-import IEncodeProcessManageModel from '../encode/IEncodeProcessManageModel';
+import * as apid from '../../../../../api';
+import IConfigFile from '../../../IConfigFile';
+import IConfiguration from '../../../IConfiguration';
+import ILogger from '../../../ILogger';
+import ILoggerModel from '../../../ILoggerModel';
+import IEncodeProcessManageModel from '../../encode/IEncodeProcessManageModel';
 import IStreamBaseModel, { LiveStreamInfo, RecordedStreamInfo } from './IStreamBaseModel';
 
 @injectable()

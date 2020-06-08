@@ -1,4 +1,4 @@
-import * as apid from '../../../../api';
+import * as apid from '../../../../../api';
 
 export interface HLSFileDeleterOption {
     streamId: apid.StreamId;

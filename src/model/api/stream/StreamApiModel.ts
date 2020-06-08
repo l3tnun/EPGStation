@@ -5,12 +5,12 @@ import IRecordedDB from '../../db/IRecordedDB';
 import IVideoFileDB from '../../db/IVideoFileDB';
 import { StreamingCmd } from '../../IConfigFile';
 import IConfiguration from '../../IConfiguration';
-import { LiveHLSStreamModelProvider, LiveStreamModelProvider } from '../../service/stream/ILiveStreamBaseModel';
+import { LiveHLSStreamModelProvider, LiveStreamModelProvider } from '../../service/stream/base/ILiveStreamBaseModel';
 import {
     RecordedHLSStreamModelProvider,
     RecordedStreamModelProvider,
-} from '../../service/stream/IRecordedStreamBaseModel';
-import IStreamManageModel from '../../service/stream/IStreamManageModel';
+} from '../../service/stream/base/IRecordedStreamBaseModel';
+import IStreamManageModel from '../../service/stream/manager/IStreamManageModel';
 import IStreamApiModel, { StreamResponse } from './IStreamApiModel';
 
 @injectable()

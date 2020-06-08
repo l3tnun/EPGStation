@@ -1,6 +1,6 @@
 import { injectable } from 'inversify';
-import IRecordedStreamBaseModel from './IRecordedStreamBaseModel';
-import RecordedStreamBaseModel from './RecordedStreamBaseModel';
+import IRecordedStreamBaseModel from './base/IRecordedStreamBaseModel';
+import RecordedStreamBaseModel from './base/RecordedStreamBaseModel';
 
 @injectable()
 export default class RecordedStreamModel extends RecordedStreamBaseModel implements IRecordedStreamBaseModel {

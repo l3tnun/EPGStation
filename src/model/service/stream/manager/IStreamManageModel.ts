@@ -1,5 +1,5 @@
-import * as apid from '../../../../api';
-import IStreamBaseModel, { LiveStreamInfo, RecordedStreamInfo } from './IStreamBaseModel';
+import * as apid from '../../../../../api';
+import IStreamBaseModel, { LiveStreamInfo, RecordedStreamInfo } from '../base/IStreamBaseModel';
 
 export interface StreamInfoWithStreamId {
     streamId: apid.StreamId;

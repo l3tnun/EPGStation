@@ -1,5 +1,5 @@
 import internal from 'stream';
-import * as apid from '../../../../api';
+import * as apid from '../../../../../api';
 
 /**
  * ストリーム情報ベース
