@@ -19,12 +19,11 @@ import StreamBaseModel from './StreamBaseModel';
 @injectable()
 export default abstract class LiveStreamBaseModel extends StreamBaseModel<LiveStreamOption>
     implements ILiveStreamBaseModel {
-    protected mirakurunClientModel: IMirakurunClientModel;
+    private processOption: LiveStreamOption | null = null;
+    private stream: http.IncomingMessage | null = null;
+    private streamProcess: ChildProcess | null = null;
+    private mirakurunClientModel: IMirakurunClientModel;
     private fileDeleter: IHLSFileDeleterModel;
-
-    protected processOption: LiveStreamOption | null = null;
-    protected stream: http.IncomingMessage | null = null;
-    protected streamProcess: ChildProcess | null = null;
 
     constructor(
         @inject('IConfiguration') configure: IConfiguration,
@@ -182,7 +181,7 @@ export default abstract class LiveStreamBaseModel extends StreamBaseModel<LiveSt
      * @param config: IConfigFile
      * @return Promise<void>
      */
-    protected async setMirakurunStream(config: IConfigFile): Promise<void> {
+    private async setMirakurunStream(config: IConfigFile): Promise<void> {
         if (this.processOption === null) {
             throw new Error('ProcessOptionIsNull');
         }
