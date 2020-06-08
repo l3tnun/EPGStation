@@ -14,12 +14,18 @@ v1 に準じる ※ただし Windows 環境にて正常動作するかは未検�
 
 ### install 手順
 
-```
+```bash
 git clone https://github.com/l3tnun/EPGStation.git
 cd EPGStation
 git checkout v2
 npm run all-install
 npm run build
+```
+
+### 開発環境立ち上げ手順
+
+```bash
+cd client && npm run serve
 ```
 
 ### 開発に必要なもの
