@@ -11,6 +11,7 @@ import IVideoFileDB from '../../../db/IVideoFileDB';
 import IConfiguration from '../../../IConfiguration';
 import ILoggerModel from '../../../ILoggerModel';
 import IEncodeProcessManageModel, { CreateProcessOption } from '../../encode/IEncodeProcessManageModel';
+import ISocketIOManageModel from '../../socketio/ISocketIOManageModel';
 import IHLSFileDeleterModel from '../util/IHLSFileDeleterModel';
 import IRecordedStreamBaseModel, { RecordedStreamOption, VideoFileInfo } from './IRecordedStreamBaseModel';
 import { RecordedStreamInfo } from './IStreamBaseModel';
@@ -34,10 +35,11 @@ export default abstract class RecordedStreamBaseModel extends StreamBaseModel<Re
         @inject('ILoggerModel') logger: ILoggerModel,
         @inject('IEncodeProcessManageModel') processManager: IEncodeProcessManageModel,
         @inject('IHLSFileDeleterModel') fileDeleter: IHLSFileDeleterModel,
+        @inject('ISocketIOManageModel') socketIO: ISocketIOManageModel,
         @inject('IVideoFileDB') videoFileDB: IVideoFileDB,
         @inject('IRecordedDB') recordedDB: IRecordedDB,
     ) {
-        super(configure, logger, processManager, fileDeleter);
+        super(configure, logger, processManager, fileDeleter, socketIO);
 
         this.videoFileDB = videoFileDB;
         this.recordedDB = recordedDB;
@@ -107,6 +109,9 @@ export default abstract class RecordedStreamBaseModel extends StreamBaseModel<Re
             this.streamProcess.on('error', () => {
                 this.emitExitStream();
             });
+        } else {
+            // stream 有効チェク開始
+            this.startCheckStreamEnable(streamId);
         }
 
         // ffmpeg debug 用ログ出力
@@ -249,6 +254,8 @@ export default abstract class RecordedStreamBaseModel extends StreamBaseModel<Re
      * @return Promise<void>
      */
     public async stop(): Promise<void> {
+        await super.stop();
+
         if (this.fileStream !== null) {
             this.fileStream.unpipe();
             this.fileStream.destroy();
@@ -287,7 +294,7 @@ export default abstract class RecordedStreamBaseModel extends StreamBaseModel<Re
         return {
             type: this.getStreamType(),
             videoFileId: this.processOption.videoFileId,
-            isEnable: false, // TODO 実装
+            isEnable: this.isEnable(),
         };
     }
 

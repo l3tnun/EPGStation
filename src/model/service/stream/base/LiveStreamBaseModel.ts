@@ -11,6 +11,7 @@ import IConfiguration from '../../../IConfiguration';
 import ILoggerModel from '../../../ILoggerModel';
 import IMirakurunClientModel from '../../../IMirakurunClientModel';
 import IEncodeProcessManageModel, { CreateProcessOption } from '../../encode/IEncodeProcessManageModel';
+import ISocketIOManageModel from '../../socketio/ISocketIOManageModel';
 import IHLSFileDeleterModel from '../util/IHLSFileDeleterModel';
 import ILiveStreamBaseModel, { LiveStreamOption } from './ILiveStreamBaseModel';
 import { LiveStreamInfo } from './IStreamBaseModel';
@@ -29,8 +30,9 @@ export default abstract class LiveStreamBaseModel extends StreamBaseModel<LiveSt
         @inject('IEncodeProcessManageModel') processManager: IEncodeProcessManageModel,
         @inject('IHLSFileDeleterModel') fileDeleter: IHLSFileDeleterModel,
         @inject('IMirakurunClientModel') mirakurunClientModel: IMirakurunClientModel,
+        @inject('ISocketIOManageModel') socketIO: ISocketIOManageModel,
     ) {
-        super(configure, logger, processManager, fileDeleter);
+        super(configure, logger, processManager, fileDeleter, socketIO);
 
         this.mirakurunClientModel = mirakurunClientModel;
     }
@@ -150,6 +152,9 @@ export default abstract class LiveStreamBaseModel extends StreamBaseModel<LiveSt
             if (this.getStreamType() === 'LiveHLS') {
                 // ファイル自動削除開始
                 this.fileDeleter.start();
+
+                // stream 有効チェク開始
+                this.startCheckStreamEnable(streamId);
             }
         } else {
             // stream 停止処理時にイベントを発行する
@@ -193,6 +198,8 @@ export default abstract class LiveStreamBaseModel extends StreamBaseModel<LiveSt
      * @return Promise<void>
      */
     public async stop(): Promise<void> {
+        await super.stop();
+
         if (this.stream !== null) {
             this.stream.unpipe();
             this.stream.destroy();
@@ -234,7 +241,7 @@ export default abstract class LiveStreamBaseModel extends StreamBaseModel<LiveSt
         return {
             type: this.getStreamType(),
             channelId: this.processOption.channelId,
-            isEnable: false, // TODO 実装
+            isEnable: this.isEnable(),
         };
     }
 
