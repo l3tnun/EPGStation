@@ -21,9 +21,7 @@ export default abstract class RecordedStreamBaseModel extends StreamBaseModel<Re
     implements IRecordedStreamBaseModel {
     private videoFileDB: IVideoFileDB;
     private recordedDB: IRecordedDB;
-    private fileDeleter: IHLSFileDeleterModel;
 
-    private processOption: RecordedStreamOption | null = null;
     private fileStream: Readable | null = null;
     private streamProcess: ChildProcess | null = null;
     private videoFilePath: string | null = null;
@@ -35,23 +33,14 @@ export default abstract class RecordedStreamBaseModel extends StreamBaseModel<Re
         @inject('IConfiguration') configure: IConfiguration,
         @inject('ILoggerModel') logger: ILoggerModel,
         @inject('IEncodeProcessManageModel') processManager: IEncodeProcessManageModel,
+        @inject('IHLSFileDeleterModel') fileDeleter: IHLSFileDeleterModel,
         @inject('IVideoFileDB') videoFileDB: IVideoFileDB,
         @inject('IRecordedDB') recordedDB: IRecordedDB,
-        @inject('IHLSFileDeleterModel') fileDeleter: IHLSFileDeleterModel,
     ) {
-        super(configure, logger, processManager);
+        super(configure, logger, processManager, fileDeleter);
 
         this.videoFileDB = videoFileDB;
         this.recordedDB = recordedDB;
-        this.fileDeleter = fileDeleter;
-    }
-
-    /**
-     * Stream 生成に必要な情報を渡す
-     * @param option: RecordedStreamOption
-     */
-    public setOption(option: RecordedStreamOption): void {
-        this.processOption = option;
     }
 
     /**

@@ -19,31 +19,20 @@ import StreamBaseModel from './StreamBaseModel';
 @injectable()
 export default abstract class LiveStreamBaseModel extends StreamBaseModel<LiveStreamOption>
     implements ILiveStreamBaseModel {
-    private processOption: LiveStreamOption | null = null;
     private stream: http.IncomingMessage | null = null;
     private streamProcess: ChildProcess | null = null;
     private mirakurunClientModel: IMirakurunClientModel;
-    private fileDeleter: IHLSFileDeleterModel;
 
     constructor(
         @inject('IConfiguration') configure: IConfiguration,
         @inject('ILoggerModel') logger: ILoggerModel,
         @inject('IEncodeProcessManageModel') processManager: IEncodeProcessManageModel,
-        @inject('IMirakurunClientModel') mirakurunClientModel: IMirakurunClientModel,
         @inject('IHLSFileDeleterModel') fileDeleter: IHLSFileDeleterModel,
+        @inject('IMirakurunClientModel') mirakurunClientModel: IMirakurunClientModel,
     ) {
-        super(configure, logger, processManager);
+        super(configure, logger, processManager, fileDeleter);
 
         this.mirakurunClientModel = mirakurunClientModel;
-        this.fileDeleter = fileDeleter;
-    }
-
-    /**
-     * stream 生成に必要な情報を渡す
-     * @param option: LiveStreamOption
-     */
-    public setOption(option: LiveStreamOption): void {
-        this.processOption = option;
     }
 
     /**
