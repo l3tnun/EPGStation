@@ -76,7 +76,7 @@ class SettingComponent extends ParentComponent<void> {
         let hlsVideoPlayer: m.Child | null = null;
         if (Util.uaIsSafari()) {
             hlsVideoPlayer = this.createListItem(
-                'HLS 視聴時にブラウザ内臓のプレーヤを使用する',
+                'HLS 視聴時にブラウザ内蔵のプレーヤを使用する',
                 this.createToggle(
                     () => { return this.viewModel.tmpValue.isEnableNativeHLSVideoPlayer; },
                     (value) => { this.viewModel.tmpValue.isEnableNativeHLSVideoPlayer = value; },
