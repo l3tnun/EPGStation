@@ -12,7 +12,9 @@ export interface OnAirDisplayData {
 }
 
 export default interface IOnAirState {
+    selectedTab: apid.ChannelType | undefined;
     clearData(): void;
     fetchData(option: apid.BroadcastingScheduleOption): Promise<void>;
     getSchedules(): OnAirDisplayData[];
+    getTabs(): apid.ChannelType[];
 }

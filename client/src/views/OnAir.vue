@@ -1,8 +1,21 @@
 <template>
     <v-content>
-        <TitleBar title="放映中"></TitleBar>
+        <TitleBar title="放映中">
+            <template v-slot:extension>
+                <v-tabs v-if="isTabView === true" v-model="onAirState.selectedTab" centered>
+                    <v-tab v-for="item in onAirState.getTabs()" :key="item" :href="`#${item}`">{{ item }}</v-tab>
+                </v-tabs>
+            </template>
+        </TitleBar>
         <transition name="page">
-            <div>on air</div>
+            <v-tabs-items v-if="isTabView === true" v-model="onAirState.selectedTab">
+                <v-tab-item v-for="item in onAirState.getTabs()" :key="item" :value="`${item}`">
+                    <v-card>
+                        <v-card-text>on air</v-card-text>
+                    </v-card>
+                </v-tab-item>
+            </v-tabs-items>
+            <div v-else>on air</div>
         </transition>
     </v-content>
 </template>
@@ -29,7 +42,8 @@ Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
     },
 })
 export default class OnAir extends Vue {
-    private onAirState: IOnAirState = container.get<IOnAirState>('IOnAirState');
+    public onAirState: IOnAirState = container.get<IOnAirState>('IOnAirState');
+
     private settingValue: ISettingValue = container.get<ISettingStorageModel>('ISettingStorageModel').getSavedValue();
     private scrollState: IScrollPositionState = container.get<IScrollPositionState>('IScrollPositionState');
     private snackbarState: ISnackbarState = container.get<ISnackbarState>('ISnackbarState');
@@ -37,6 +51,10 @@ export default class OnAir extends Vue {
     private onUpdateStatusCallback = (async () => {
         await this.fetchData();
     }).bind(this);
+
+    get isTabView(): boolean {
+        return this.settingValue.isOnAirTabListView;
+    }
 
     public created(): void {
         // socket.io イベント

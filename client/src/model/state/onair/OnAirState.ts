@@ -1,3 +1,4 @@
+import IServerConfigModel from '@/model/serverConfig/IServerConfigModel';
 import DateUtil from '@/util/DateUtil';
 import { inject, injectable } from 'inversify';
 import * as apid from '../../../../../api';
@@ -6,12 +7,34 @@ import IOnAirState, { OnAirDisplayData } from './IOnAirState';
 
 @injectable()
 export default class OnAirState implements IOnAirState {
+    public selectedTab: apid.ChannelType | undefined;
+
     private scheduleApiModel: IScheduleApiModel;
-
     private schedules: OnAirDisplayData[] = [];
+    private tabs: apid.ChannelType[] = [];
 
-    constructor(@inject('IScheduleApiModel') scheduleApiModel: IScheduleApiModel) {
+    constructor(
+        @inject('IServerConfigModel') serverConfigModel: IServerConfigModel,
+        @inject('IScheduleApiModel') scheduleApiModel: IScheduleApiModel,
+    ) {
         this.scheduleApiModel = scheduleApiModel;
+
+        // tab 設定
+        const config = serverConfigModel.getConfig();
+        if (config !== null) {
+            if (config.broadcast.GR === true) {
+                this.tabs.push('GR');
+            }
+            if (config.broadcast.BS === true) {
+                this.tabs.push('BS');
+            }
+            if (config.broadcast.CS === true) {
+                this.tabs.push('CS');
+            }
+            if (config.broadcast.SKY === true) {
+                this.tabs.push('SKY');
+            }
+        }
     }
 
     /**
@@ -58,5 +81,13 @@ export default class OnAirState implements IOnAirState {
      */
     public getSchedules(): OnAirDisplayData[] {
         return this.schedules;
+    }
+
+    /**
+     * 放送波名の配列を返す
+     * @return string[]
+     */
+    public getTabs(): apid.ChannelType[] {
+        return this.tabs;
     }
 }
