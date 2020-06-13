@@ -15,6 +15,6 @@ export default interface IOnAirState {
     selectedTab: apid.ChannelType | undefined;
     clearData(): void;
     fetchData(option: apid.BroadcastingScheduleOption): Promise<void>;
-    getSchedules(): OnAirDisplayData[];
+    getSchedules(type?: apid.ChannelType): OnAirDisplayData[];
     getTabs(): apid.ChannelType[];
 }

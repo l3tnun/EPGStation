@@ -79,8 +79,12 @@ export default class OnAirState implements IOnAirState {
      * 取得した番組情報を返す
      * @return OnAirDisplayData[]
      */
-    public getSchedules(): OnAirDisplayData[] {
-        return this.schedules;
+    public getSchedules(type?: apid.ChannelType): OnAirDisplayData[] {
+        return typeof type === 'undefined'
+            ? this.schedules
+            : this.schedules.filter(s => {
+                  return s.schedule.channel.channelType === type;
+              });
     }
 
     /**
