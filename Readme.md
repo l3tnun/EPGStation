@@ -31,12 +31,6 @@ cp config/operatorLogConfig.sample.yml config/operatorLogConfig.yml
 cp config/epgUpdaterLogConfig.sample.yml config/epgUpdaterLogConfig.yml
 ```
 
-### 開発環境立ち上げ手順
-
-```bash
-cd client && npm run serve
-```
-
 ### 開発に必要なもの
 
 * Node.js
