@@ -34,6 +34,8 @@ import IGuideState from './state/guide/IGuideState';
 import IScrollPositionState from './state/IScrollPositionState';
 import INavigationState from './state/navigation/INavigationState';
 import NavigationState from './state/navigation/NavigationState';
+import IOnAirState from './state/onair/IOnAirState';
+import OnAirState from './state/onair/OnAirState';
 import IRecordedDetailState from './state/recorded/detail/IRecordedDetailState';
 import RecordedDetailState from './state/recorded/detail/RecordedDetailState';
 import IRecordedState from './state/recorded/IRecordedState';
@@ -107,6 +109,8 @@ export default (container: Container) => {
     container.bind<INavigationState>('INavigationState').to(NavigationState).inSingletonScope();
 
     container.bind<ISnackbarState>('ISnackbarState').to(SnackbarState).inSingletonScope();
+
+    container.bind<IOnAirState>('IOnAirState').to(OnAirState).inSingletonScope();
 
     container.bind<IGuideReserveUtil>('IGuideReserveUtil').to(GuideReserveUtil).inSingletonScope();
 
