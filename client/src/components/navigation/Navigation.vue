@@ -14,13 +14,14 @@
         </v-list-item>
 
         <v-list dense>
-            <v-list-item-group v-model="selected">
+            <v-list-item-group multiple :max="0">
                 <v-list-item
-                    v-for="item in items"
-                    :key="item.title"
+                    v-for="(item, index) in navigationState.items"
+                    :key="item.id"
                     link
                     :disabled="item.herf === null"
                     v-on:click="route(item)"
+                    v-bind:class="getNavigationItemClass(index)"
                 >
                     <v-list-item-icon>
                         <v-icon>{{ item.icon }}</v-icon>
@@ -54,17 +55,20 @@ interface NavigationItem {
 @Component({})
 export default class Navigation extends Vue {
     public navigationState: INavigationState = container.get<INavigationState>('INavigationState');
-    public selected: number = -1;
 
     private serverConfig: IServerConfigModel = container.get<IServerConfigModel>('IServerConfigModel');
     private setting: ISettingStorageModel = container.get<ISettingStorageModel>('ISettingStorageModel');
 
-    get items(): NavigationItem[] {
-        return this.navigationState.getItems();
+    public created(): void {
+        this.navigationState.updateItems(this.$route);
     }
 
-    public created(): void {
-        this.navigationState.updateItems();
+    public getNavigationItemClass(index: number): any {
+        return this.navigationState.navigationPosition === index
+            ? {
+                  selected: true,
+              }
+            : {};
     }
 
     /**
@@ -97,7 +101,7 @@ export default class Navigation extends Vue {
      */
     private updateSelected(): void {
         this.$nextTick(() => {
-            this.selected = this.navigationState.getSelectedPosition(this.$route);
+            this.navigationState.updateNavigationPosition(this.$route);
         });
     }
 }
@@ -106,6 +110,11 @@ export default class Navigation extends Vue {
 <style lang="sass" scoped>
 .list-dummy
     margin-bottom: 16px
+
+.v-item-group
+    .selected
+        &:before
+            opacity: 0.12
 
 // iOS デバイスで一番下までスクロールできないため
 .v-navigation-drawer

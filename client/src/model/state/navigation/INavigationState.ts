@@ -12,8 +12,10 @@ export default interface INavigationState {
     openState: boolean | null;
     isClipped: boolean;
     type: NavigationType;
-    updateItems(): void;
+    items: NavigationItem[];
+    navigationPosition: number;
+    updateItems(currentRoute: Route): void;
+    updateNavigationPosition(currentRoute: Route): void;
     toggle(): void;
     getItems(): NavigationItem[];
-    getSelectedPosition(currentRoute: Route): number;
 }

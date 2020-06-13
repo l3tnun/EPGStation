@@ -10,6 +10,7 @@ export default class NavigationState implements INavigationState {
     public isClipped: boolean = false;
     public type: NavigationType = 'default';
     public items: NavigationItem[] = [];
+    public navigationPosition: number = -1;
 
     private serverConfig: IServerConfigModel;
     private setting: ISettingStorageModel;
@@ -24,8 +25,9 @@ export default class NavigationState implements INavigationState {
 
     /**
      * ナビゲーションの表示内容を更新
+     * @param currentRoute: Route
      */
-    public updateItems(): void {
+    public updateItems(currentRoute: Route): void {
         const newItems: NavigationItem[] = [];
         newItems.push({
             icon: 'mdi-view-dashboard',
@@ -149,21 +151,7 @@ export default class NavigationState implements INavigationState {
         });
 
         this.items = newItems;
-    }
-
-    /**
-     * ナビゲーションの開閉状態を切り替える
-     */
-    public toggle(): void {
-        this.openState = !this.openState;
-    }
-
-    /**
-     * ナビゲーションの表示項目を返す
-     * @return NavigationItem[]
-     */
-    public getItems(): NavigationItem[] {
-        return this.items;
+        this.updateNavigationPosition(currentRoute);
     }
 
     /**
@@ -171,8 +159,8 @@ export default class NavigationState implements INavigationState {
      * @param currentRoute: Route
      * @return number 選択位置がない場合は -1 を返す
      */
-    public getSelectedPosition(currentRoute: Route): number {
-        return this.items.findIndex(item => {
+    public updateNavigationPosition(currentRoute: Route): void {
+        this.navigationPosition = this.items.findIndex(item => {
             if (item.herf === null || item.herf.path !== currentRoute.path) {
                 return false;
             }
@@ -191,5 +179,20 @@ export default class NavigationState implements INavigationState {
 
             return true;
         });
+    }
+
+    /**
+     * ナビゲーションの開閉状態を切り替える
+     */
+    public toggle(): void {
+        this.openState = !this.openState;
+    }
+
+    /**
+     * ナビゲーションの表示項目を返す
+     * @return NavigationItem[]
+     */
+    public getItems(): NavigationItem[] {
+        return this.items;
     }
 }

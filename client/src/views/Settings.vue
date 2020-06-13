@@ -409,7 +409,7 @@ export default class Settings extends Vue {
      */
     public save(): void {
         this.storageModel.save();
-        this.navigationState.updateItems();
+        this.navigationState.updateItems(this.$route);
 
         this.snackbarState.open({
             text: '保存されました',
