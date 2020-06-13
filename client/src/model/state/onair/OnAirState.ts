@@ -40,7 +40,9 @@ export default class OnAirState implements IOnAirState {
     /**
      * 取得した番組情報をクリア
      */
-    public clearData(): void {}
+    public clearData(): void {
+        this.schedules = [];
+    }
 
     /**
      * 番組情報を取得する
@@ -65,6 +67,7 @@ export default class OnAirState implements IOnAirState {
 
         return {
             display: {
+                channelId: schedule.channel.id,
                 channelName: schedule.channel.name,
                 time: `${DateUtil.format(startAt, 'hh:mm')} ~ ${DateUtil.format(endAt, 'hh:mm')}`,
                 name: schedule.programs[0].name,

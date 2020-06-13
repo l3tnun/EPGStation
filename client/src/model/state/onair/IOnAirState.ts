@@ -2,6 +2,7 @@ import * as apid from '../../../../../api';
 
 export interface OnAirDisplayData {
     display: {
+        channelId: apid.ChannelId;
         channelName: string;
         time: string;
         name: string;

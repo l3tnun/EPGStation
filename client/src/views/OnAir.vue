@@ -2,25 +2,33 @@
     <v-content>
         <TitleBar title="放映中">
             <template v-slot:extension>
-                <v-tabs v-if="isTabView === true" v-model="onAirState.selectedTab" centered>
+                <v-tabs
+                    v-if="isTabView === true && onAirState.getSchedules().length > 0"
+                    v-model="onAirState.selectedTab"
+                    centered
+                >
                     <v-tab v-for="item in onAirState.getTabs()" :key="item" :href="`#${item}`">{{ item }}</v-tab>
                 </v-tabs>
             </template>
         </TitleBar>
         <transition name="page">
-            <v-tabs-items v-if="isTabView === true" v-model="onAirState.selectedTab">
-                <v-tab-item v-for="item in onAirState.getTabs()" :key="item" :value="`${item}`">
-                    <v-card>
-                        <v-card-text>on air</v-card-text>
-                    </v-card>
-                </v-tab-item>
-            </v-tabs-items>
-            <div v-else>on air</div>
+            <div v-if="onAirState.getSchedules().length > 0">
+                <v-tabs-items v-if="isTabView === true" v-model="onAirState.selectedTab">
+                    <v-tab-item v-for="item in onAirState.getTabs()" :key="item" :value="`${item}`">
+                        <OnAirCard :items="onAirState.getSchedules(item)"></OnAirCard>
+                    </v-tab-item>
+                </v-tabs-items>
+                <div v-else>
+                    <OnAirCard :items="onAirState.getSchedules()"></OnAirCard>
+                </div>
+            </div>
         </transition>
+        <div style="visibility: hidden;">dummy</div>
     </v-content>
 </template>
 
 <script lang="ts">
+import OnAirCard from '@/components/onair/OnAirCard.vue';
 import Snackbar from '@/components/snackbar/Snackbar.vue';
 import TitleBar from '@/components/titleBar/TitleBar.vue';
 import container from '@/model/ModelContainer';
@@ -39,6 +47,7 @@ Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
     components: {
         TitleBar,
         Snackbar,
+        OnAirCard,
     },
 })
 export default class OnAir extends Vue {
