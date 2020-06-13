@@ -54,6 +54,85 @@ export default class ConfigApiModel implements IConfigApiModel {
         };
 
         result.broadcast = await this.ipc.reserveation.getBroadcastStatus();
+        result.isEnableLiveStream = false;
+        result.isEnableTSRecordedStream = false;
+        result.isEnableEncodedRecordedStream = false;
+
+        if (typeof config.stream !== 'undefined') {
+            result.streamConfig = {};
+
+            // live stream
+            if (typeof config.stream.live !== 'undefined') {
+                result.isEnableLiveStream = true;
+                result.streamConfig.live = {};
+                if (typeof config.stream.live.m2ts !== 'undefined') {
+                    result.streamConfig.live.m2ts = config.stream.live.m2ts.map(c => {
+                        return c.name;
+                    });
+                }
+                if (typeof config.stream.live.webm !== 'undefined') {
+                    result.streamConfig.live.webm = config.stream.live.webm.map(c => {
+                        return c.name;
+                    });
+                }
+                if (typeof config.stream.live.mp4 !== 'undefined') {
+                    result.streamConfig.live.mp4 = config.stream.live.mp4.map(c => {
+                        return c.name;
+                    });
+                }
+                if (typeof config.stream.live.hls !== 'undefined') {
+                    result.streamConfig.live.hls = config.stream.live.hls.map(c => {
+                        return c.name;
+                    });
+                }
+            }
+
+            // recorded stream
+            if (typeof config.stream.recorded !== 'undefined') {
+                result.streamConfig.recorded = {};
+                // ts
+                if (typeof config.stream.recorded.ts !== 'undefined') {
+                    result.streamConfig.recorded.ts = {};
+                    result.isEnableTSRecordedStream = true;
+                    if (typeof config.stream.recorded.ts.webm !== 'undefined') {
+                        result.streamConfig.recorded.ts.webm = config.stream.recorded.ts.webm.map(c => {
+                            return c.name;
+                        });
+                    }
+                    if (typeof config.stream.recorded.ts.mp4 !== 'undefined') {
+                        result.streamConfig.recorded.ts.mp4 = config.stream.recorded.ts.mp4.map(c => {
+                            return c.name;
+                        });
+                    }
+                    if (typeof config.stream.recorded.ts.hls !== 'undefined') {
+                        result.streamConfig.recorded.ts.hls = config.stream.recorded.ts.hls.map(c => {
+                            return c.name;
+                        });
+                    }
+                }
+
+                // encoded
+                if (typeof config.stream.recorded.encoded !== 'undefined') {
+                    result.streamConfig.recorded.encoded = {};
+                    result.isEnableEncodedRecordedStream = true;
+                    if (typeof config.stream.recorded.encoded.webm !== 'undefined') {
+                        result.streamConfig.recorded.encoded.webm = config.stream.recorded.encoded.webm.map(c => {
+                            return c.name;
+                        });
+                    }
+                    if (typeof config.stream.recorded.encoded.mp4 !== 'undefined') {
+                        result.streamConfig.recorded.encoded.mp4 = config.stream.recorded.encoded.mp4.map(c => {
+                            return c.name;
+                        });
+                    }
+                    if (typeof config.stream.recorded.encoded.hls !== 'undefined') {
+                        result.streamConfig.recorded.encoded.hls = config.stream.recorded.encoded.hls.map(c => {
+                            return c.name;
+                        });
+                    }
+                }
+            }
+        }
 
         return result;
     }

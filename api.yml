@@ -159,6 +159,9 @@ components:
                 - recorded
                 - encode
                 - urlscheme
+                - isEnableLiveStream
+                - isEnableTSRecordedStream
+                - isEnableEncodedRecordedStream
             properties:
                 socketIOPort:
                     description: socket.io 通信で使用するポート
@@ -204,6 +207,85 @@ components:
                             $ref: '#/components/schemas/URLSchemeInfo'
                         download:
                             $ref: '#/components/schemas/URLSchemeInfo'
+                isEnableLiveStream:
+                    description: ライブ視聴が有効か
+                    type: boolean
+                isEnableTSRecordedStream:
+                    description: 録画済みの TS ファイルのストリーミングが有効か
+                    type: boolean
+                isEnableEncodedRecordedStream:
+                    description: 録画済みのエンコード済みファイルのストリーミングが有効か
+                    type: boolean
+                streamConfig:
+                    description: ストリーミング設定
+                    type: object
+                    properties:
+                        live:
+                            description: ライブストリーミング設定
+                            type: object
+                            properties:
+                                m2ts:
+                                    description: ライブ M2TS ストリーミング設定
+                                    type: array
+                                    items:
+                                        type: string
+                                webm:
+                                    description: ライブ WebM ストリーミング設定
+                                    type: array
+                                    items:
+                                        type: string
+                                mp4:
+                                    description: ライブ MP4 ストリーミング設定
+                                    type: array
+                                    items:
+                                        type: string
+                                hls:
+                                    description: ライブ HLS ストリーミング設定
+                                    type: array
+                                    items:
+                                        type: string
+                        recorded:
+                            description: 録画済みストリーミング設定
+                            type: object
+                            properties:
+                                ts:
+                                    description: 録画済み TS ファイルのストリーミング設定
+                                    type: object
+                                    properties:
+                                        webm:
+                                            description: 録画済み TS ファイルの WebM ストリーミング設定
+                                            type: array
+                                            items:
+                                                type: string
+                                        mp4:
+                                            description: 録画済み TS ファイルの MP4 ストリーミング設定
+                                            type: array
+                                            items:
+                                                type: string
+                                        hls:
+                                            description: 録画済み TS ファイルの HLS ストリーミング設定
+                                            type: array
+                                            items:
+                                                type: string
+                                encoded:
+                                    description: 録画エンコード済みファイルのストリーミング設定
+                                    type: object
+                                    properties:
+                                        webm:
+                                            description: 録画エンコード済みファイルの WebM ストリーミング設定
+                                            type: array
+                                            items:
+                                                type: string
+                                        mp4:
+                                            description: 録画エンコード済みファイルの MP4 ストリーミング設定
+                                            type: array
+                                            items:
+                                                type: string
+                                        hls:
+                                            description: 録画エンコード済みファイルの HLS ストリーミング設定
+                                            type: array
+                                            items:
+                                                type: string
 
         ChannelItems:
             type: array

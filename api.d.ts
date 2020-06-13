@@ -408,6 +408,29 @@ export interface Config {
         video: URLSchemeInfo;
         download: URLSchemeInfo;
     };
+    isEnableLiveStream: boolean;
+    isEnableTSRecordedStream: boolean;
+    isEnableEncodedRecordedStream: boolean;
+    streamConfig?: {
+        live?: {
+            m2ts?: string[];
+            webm?: string[];
+            mp4?: string[];
+            hls?: string[];
+        };
+        recorded?: {
+            ts?: {
+                webm?: string[];
+                mp4?: string[];
+                hls?: string[];
+            };
+            encoded?: {
+                webm?: string[];
+                mp4?: string[];
+                hls?: string[];
+            };
+        };
+    };
 }
 
 /**
