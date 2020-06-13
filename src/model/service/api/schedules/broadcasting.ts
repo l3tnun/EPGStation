@@ -7,6 +7,10 @@ export const get: Operation = async (req, res) => {
     const scheduleApiModel = container.get<IScheduleApiModel>('IScheduleApiModel');
 
     try {
+        if (typeof (<any>req.query).time !== 'undefined') {
+            (<any>req.query).time = parseInt((<any>req.query).time, 10);
+        }
+
         api.responseJSON(res, 200, await scheduleApiModel.getBroadcastingSchedule(req.query as any));
     } catch (err) {
         api.responseServerError(res, err.message);
