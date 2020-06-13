@@ -51,4 +51,17 @@ export default class ScheduleApiModel implements IScheduleApiModel {
 
         return <any>result.data;
     }
+
+    /**
+     * 放映中番組情報の取得
+     * @param option: apid.BroadcastingScheduleOption
+     * @return Promise<apid.Schedule[]>
+     */
+    public async getScheduleOnAir(option: apid.BroadcastingScheduleOption): Promise<apid.Schedule[]> {
+        const result = await this.repository.get('/schedules/schedules/broadcasting', {
+            params: option,
+        });
+
+        return <any>result.data;
+    }
 }
