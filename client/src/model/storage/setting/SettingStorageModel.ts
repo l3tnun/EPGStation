@@ -13,6 +13,8 @@ export default class SettingStorageModel extends AbstractStorageBaseModel<ISetti
     public getDefaultValue(): ISettingValue {
         return {
             isForceDarkTheme: false,
+            isOnAirTabListView: true,
+            isOnAirHalfWidthDisplayed: true,
             guideMode: 'sequential',
             guideLength: 24,
             isGuideHalfWidthDisplayed: true,

@@ -4,6 +4,8 @@ export type GuideViewMode = 'sequential' | 'minimum' | 'all';
 
 export interface ISettingValue {
     isForceDarkTheme: boolean;
+    isOnAirTabListView: boolean;
+    isOnAirHalfWidthDisplayed: boolean;
     guideMode: GuideViewMode;
     guideLength: number;
     isGuideHalfWidthDisplayed: boolean;

@@ -23,6 +23,30 @@
 
                         <v-list-item three-line>
                             <v-list-item-content>
+                                <div class="title">放映中</div>
+                                <div class="my-2 d-flex flex-row align-center">
+                                    <div>
+                                        <v-list-item-title class="subtitle-1">放送波種別表示</v-list-item-title>
+                                        <v-list-item-subtitle>放送波毎にタブで分ける</v-list-item-subtitle>
+                                    </div>
+                                    <v-spacer></v-spacer>
+                                    <v-switch v-model="storageModel.tmp.isOnAirTabListView" value></v-switch>
+                                </div>
+                                <div class="my-2 d-flex flex-row align-center">
+                                    <div>
+                                        <v-list-item-title class="subtitle-1">半角表示</v-list-item-title>
+                                        <v-list-item-subtitle>強制的に半角表示にする</v-list-item-subtitle>
+                                    </div>
+                                    <v-spacer></v-spacer>
+                                    <v-switch v-model="storageModel.tmp.isOnAirHalfWidthDisplayed" value></v-switch>
+                                </div>
+                            </v-list-item-content>
+                        </v-list-item>
+
+                        <v-divider></v-divider>
+
+                        <v-list-item three-line>
+                            <v-list-item-content>
                                 <div class="title">番組表</div>
                                 <div class="my-2 d-flex flex-row align-center">
                                     <div>
