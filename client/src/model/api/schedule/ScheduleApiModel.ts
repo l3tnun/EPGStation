@@ -58,7 +58,7 @@ export default class ScheduleApiModel implements IScheduleApiModel {
      * @return Promise<apid.Schedule[]>
      */
     public async getScheduleOnAir(option: apid.BroadcastingScheduleOption): Promise<apid.Schedule[]> {
-        const result = await this.repository.get('/schedules/schedules/broadcasting', {
+        const result = await this.repository.get('/schedules/broadcasting', {
             params: option,
         });
 
