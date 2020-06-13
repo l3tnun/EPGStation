@@ -38,8 +38,10 @@ export default class NavigationState implements INavigationState {
         });
         newItems.push({
             icon: 'mdi-television-play',
-            title: 'ライブ',
-            herf: null,
+            title: '放映中',
+            herf: {
+                path: '/onair',
+            },
         });
 
         const config = this.serverConfig.getConfig();

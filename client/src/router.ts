@@ -4,6 +4,7 @@ import container from './model/ModelContainer';
 import IScrollPositionState from './model/state/IScrollPositionState';
 import Guide from './views/Guide.vue';
 import Main from './views/Main.vue';
+import OnAir from './views/OnAir.vue';
 import Recorded from './views/Recorded.vue';
 import RecordedDetail from './views/RecordedDetail.vue';
 import Reserves from './views/Reserves.vue';
@@ -19,6 +20,11 @@ export default new Router({
             path: '/',
             name: 'top',
             component: Main,
+        },
+        {
+            path: '/onair',
+            name: 'onair',
+            component: OnAir,
         },
         {
             path: '/guide',
