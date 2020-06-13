@@ -1,14 +1,12 @@
 <template>
-    <v-app-bar
-        app
-        :dark="$vuetify.theme.dark === false"
-        :color="appBarColor"
-        :clipped-left="navigationState.isClipped"
-    >
+    <v-app-bar app :dark="$vuetify.theme.dark === false" :color="appBarColor" :clipped-left="navigationState.isClipped">
         <v-app-bar-nav-icon @click.stop="navigationState.toggle"></v-app-bar-nav-icon>
         <v-toolbar-title>{{ title }}</v-toolbar-title>
         <v-spacer></v-spacer>
         <slot name="menu"></slot>
+        <template v-if="this.$slots.extension" v-slot:extension>
+            <slot name="extension"></slot>
+        </template>
     </v-app-bar>
 </template>
 
