@@ -36,15 +36,18 @@ export default class NavigationState implements INavigationState {
                 path: '/',
             },
         });
-        newItems.push({
-            icon: 'mdi-television-play',
-            title: '放映中',
-            herf: {
-                path: '/onair',
-            },
-        });
 
         const config = this.serverConfig.getConfig();
+
+        if (config !== null && config.isEnableLiveStream === true) {
+            newItems.push({
+                icon: 'mdi-television-play',
+                title: '放映中',
+                herf: {
+                    path: '/onair',
+                },
+            });
+        }
 
         if (this.setting.getSavedValue().isEnableDisplayForEachBroadcastWave === true && config !== null) {
             const types: string[] = [];
