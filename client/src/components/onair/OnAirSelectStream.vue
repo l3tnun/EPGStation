@@ -2,7 +2,7 @@
     <div class="on-ari-select-stream">
         <v-dialog v-if="isRemove === false" v-model="dialogState.isOpen" max-width="400" scrollable>
             <v-card v-if="dialogState.getChannelItem() !== null">
-                <div class="pa-4">
+                <div class="pa-4 pb-0">
                     <div>{{ dialogState.getChannelItem().name }}</div>
                     <div class="d-flex">
                         <v-select
