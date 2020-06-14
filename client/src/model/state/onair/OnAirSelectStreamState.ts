@@ -6,6 +6,9 @@ import IOnAirSelectStreamState, { LiveStreamType } from './IOnAirSelectStreamSta
 @injectable()
 export default class OnAirSelectStreamState implements IOnAirSelectStreamState {
     public isOpen: boolean = false;
+    public streamConfigItems: string[] = [];
+    public selectedStreamType: LiveStreamType | undefined;
+    public selectedStreamConfig: string | undefined;
 
     private serverConfig: IServerConfigModel;
     private channelItem: apid.ScheduleChannleItem | null = null;
@@ -50,6 +53,12 @@ export default class OnAirSelectStreamState implements IOnAirSelectStreamState {
                 this.streamConfig['HLS'] = config.streamConfig.live.hls;
             }
         }
+
+        if (typeof this.selectedStreamType === 'undefined') {
+            this.selectedStreamType = this.getStreamTypes()[0];
+        }
+
+        this.updateStreamConfig();
     }
 
     /**
@@ -77,11 +86,30 @@ export default class OnAirSelectStreamState implements IOnAirSelectStreamState {
     }
 
     /**
+     * ストリーム設定の更新
+     */
+    public updateStreamConfig(): void {
+        this.streamConfigItems = this.getStreamConfig();
+
+        if (typeof this.selectedStreamConfig === 'undefined') {
+            this.selectedStreamConfig = this.streamConfigItems[0];
+        } else {
+            if (
+                this.streamConfigItems.findIndex(c => {
+                    return c === this.selectedStreamConfig;
+                }) === -1
+            ) {
+                this.selectedStreamConfig = this.streamConfigItems[0];
+            }
+        }
+    }
+
+    /**
      * 指定された形式の視聴設定を返す
      * @param type: LiveStreamType
      * @return string[]
      */
-    public getStreamConfig(type: LiveStreamType): string[] {
-        return typeof this.streamConfig[type] === 'undefined' ? [] : this.streamConfig[type];
+    private getStreamConfig(): string[] {
+        return typeof this.selectedStreamType === 'undefined' ? [] : this.streamConfig[this.selectedStreamType];
     }
 }
