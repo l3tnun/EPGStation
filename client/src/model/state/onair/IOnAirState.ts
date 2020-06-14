@@ -18,4 +18,5 @@ export default interface IOnAirState {
     fetchData(option: apid.BroadcastingScheduleOption): Promise<void>;
     getSchedules(type?: apid.ChannelType): OnAirDisplayData[];
     getTabs(): apid.ChannelType[];
+    getUpdateTime(): number;
 }

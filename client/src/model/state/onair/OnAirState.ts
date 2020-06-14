@@ -97,4 +97,28 @@ export default class OnAirState implements IOnAirState {
     public getTabs(): apid.ChannelType[] {
         return this.tabs;
     }
+
+    /**
+     * 次の更新までの待ち時間を返す (ms)
+     * @return number
+     */
+    public getUpdateTime(): number {
+        if (this.schedules.length === 0) {
+            return 1000;
+        }
+
+        let min = 6048000000;
+        const now = new Date().getTime();
+        for (const s of this.schedules) {
+            const endTime = s.schedule.programs[0].endAt - now;
+            if (min > endTime) {
+                min = endTime;
+            }
+        }
+        if (min < 0) {
+            min = 0;
+        }
+
+        return min;
+    }
 }

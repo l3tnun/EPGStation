@@ -60,6 +60,7 @@ export default class OnAir extends Vue {
     private onUpdateStatusCallback = (async () => {
         await this.fetchData();
     }).bind(this);
+    private updateTimer: number | null = null;
 
     get isTabView(): boolean {
         return this.settingValue.isOnAirTabListView;
@@ -68,6 +69,15 @@ export default class OnAir extends Vue {
     public created(): void {
         // socket.io イベント
         this.socketIoModel.onUpdateState(this.onUpdateStatusCallback);
+    }
+
+    public beforeDestroy(): void {
+        // socket.io イベント
+        this.socketIoModel.offUpdateState(this.onUpdateStatusCallback);
+
+        if (this.updateTimer !== null) {
+            clearTimeout(this.updateTimer);
+        }
     }
 
     @Watch('$route', { immediate: true, deep: true })
@@ -86,6 +96,10 @@ export default class OnAir extends Vue {
      * @return Promise<void>
      */
     private async fetchData(): Promise<void> {
+        if (this.updateTimer !== null) {
+            clearTimeout(this.updateTimer);
+        }
+
         await this.onAirState
             .fetchData({
                 isHalfWidth: this.settingValue.isOnAirHalfWidthDisplayed,
@@ -98,6 +112,10 @@ export default class OnAir extends Vue {
 
                 throw err;
             });
+
+        this.updateTimer = setTimeout(() => {
+            this.fetchData();
+        }, this.onAirState.getUpdateTime());
     }
 }
 </script>
