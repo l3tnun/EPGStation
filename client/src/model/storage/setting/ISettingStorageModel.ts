@@ -6,6 +6,7 @@ export interface ISettingValue {
     isForceDarkTheme: boolean;
     isOnAirTabListView: boolean;
     isOnAirHalfWidthDisplayed: boolean;
+    onAirM2TSViewURLScheme: string | null;
     guideMode: GuideViewMode;
     guideLength: number;
     isGuideHalfWidthDisplayed: boolean;

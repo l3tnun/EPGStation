@@ -40,6 +40,21 @@
                                     <v-spacer></v-spacer>
                                     <v-switch v-model="storageModel.tmp.isOnAirHalfWidthDisplayed" value></v-switch>
                                 </div>
+                                <div class="my-2 d-flex flex-column">
+                                    <div class="d-flex">
+                                        <div>
+                                            <v-list-item-title class="subtitle-1">
+                                                視聴 URL Scheme
+                                            </v-list-item-title>
+                                        </div>
+                                        <v-spacer></v-spacer>
+                                    </div>
+                                    <v-text-field
+                                        v-model="storageModel.tmp.onAirM2TSViewURLScheme"
+                                        label="URL"
+                                        clearable
+                                    ></v-text-field>
+                                </div>
                             </v-list-item-content>
                         </v-list-item>
 
