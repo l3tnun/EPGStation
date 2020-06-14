@@ -35,7 +35,7 @@ encode:
 
 urlscheme:
     m2ts:
-        ios: vlc-x-callback://x-callback-url/stream?url=http://ADDRESS"
+        ios: vlc-x-callback://x-callback-url/stream?url=http://ADDRESS
         android: intent://ADDRESS#Intent;package=org.videolan.vlc;type=video;scheme=http;end
     video:
         ios: infuse://x-callback-url/play?url=http://ADDRESS
