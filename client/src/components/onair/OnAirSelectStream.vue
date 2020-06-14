@@ -62,7 +62,15 @@ export default class OnAirSelectStream extends Vue {
     /**
      * 視聴する
      */
-    public view(): void {}
+    public view(): void {
+        const url = this.dialogState.getM2TSURL();
+
+        if (url === null) {
+            // TODO download play list
+        } else {
+            location.href = url;
+        }
+    }
 
     /**
      * dialog の表示状態が変更されたときに呼ばれる

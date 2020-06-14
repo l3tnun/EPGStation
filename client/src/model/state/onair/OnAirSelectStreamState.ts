@@ -1,6 +1,9 @@
 import { inject, injectable } from 'inversify';
 import * as apid from '../../../../../api';
+import UaUtil from '../../../util/UaUtil';
+import Util from '../../../util/Util';
 import IServerConfigModel from '../../serverConfig/IServerConfigModel';
+import ISettingStorageModel from '../../storage/setting/ISettingStorageModel';
 import IOnAirSelectStreamState, { LiveStreamType } from './IOnAirSelectStreamState';
 
 @injectable()
@@ -11,12 +14,17 @@ export default class OnAirSelectStreamState implements IOnAirSelectStreamState {
     public selectedStreamConfig: string | undefined;
 
     private serverConfig: IServerConfigModel;
+    private settingModel: ISettingStorageModel;
     private channelItem: apid.ScheduleChannleItem | null = null;
     private streamTypes: LiveStreamType[] = [];
     private streamConfig: { [type: string]: string[] } = {};
 
-    constructor(@inject('IServerConfigModel') serverConfig: IServerConfigModel) {
+    constructor(
+        @inject('IServerConfigModel') serverConfig: IServerConfigModel,
+        @inject('ISettingStorageModel') settingModel: ISettingStorageModel,
+    ) {
         this.serverConfig = serverConfig;
+        this.settingModel = settingModel;
     }
 
     /**
@@ -111,5 +119,50 @@ export default class OnAirSelectStreamState implements IOnAirSelectStreamState {
      */
     private getStreamConfig(): string[] {
         return typeof this.selectedStreamType === 'undefined' ? [] : this.streamConfig[this.selectedStreamType];
+    }
+
+    /**
+     * m2ts 形式のライブ視聴 URL 生成
+     * @return string | null URL Scheme の設定が見つからない場合は null を返す
+     */
+    public getM2TSURL(): string | null {
+        const channel = this.getChannelItem();
+        if (typeof this.selectedStreamConfig === 'undefined' || channel === null) {
+            return null;
+        }
+
+        const config = this.serverConfig.getConfig();
+        let urlScheme: string | null = null;
+        const settingURLScheme = this.settingModel.getSavedValue().onAirM2TSViewURLScheme;
+
+        if (settingURLScheme !== null && settingURLScheme.length > 0) {
+            urlScheme = settingURLScheme;
+        } else if (config !== null) {
+            if (UaUtil.isiOS() === true && typeof config.urlscheme.m2ts.ios !== 'undefined') {
+                urlScheme = config.urlscheme.m2ts.ios;
+            } else if (UaUtil.isAndroid() === true && typeof config.urlscheme.m2ts.android !== 'undefined') {
+                urlScheme = config.urlscheme.m2ts.android;
+            } else if (UaUtil.isMac() === true && typeof config.urlscheme.m2ts.mac !== 'undefined') {
+                urlScheme = config.urlscheme.m2ts.mac;
+            } else if (UaUtil.isWindows() === true && typeof config.urlscheme.m2ts.win !== 'undefined') {
+                urlScheme = config.urlscheme.m2ts.win;
+            }
+        }
+
+        if (urlScheme === null) {
+            // URL Schema 設定が見つからないので通常の URL を返す
+            return null;
+        }
+
+        // URL Schemeの準備
+        let viewURL =
+            location.host +
+            Util.getSubDirectory() +
+            `/api/streams/live/${channel.id.toString(10)}/m2ts?name=${this.selectedStreamConfig}`;
+        if (urlScheme.match(/vlc-x-callback/)) {
+            viewURL = encodeURIComponent(viewURL);
+        }
+
+        return urlScheme.replace(/ADDRESS/g, viewURL);
     }
 }

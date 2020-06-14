@@ -12,4 +12,5 @@ export default interface IOnAirSelectStreamState {
     getChannelItem(): apid.ScheduleChannleItem | null;
     getStreamTypes(): LiveStreamType[];
     updateStreamConfig(): void;
+    getM2TSURL(): string | null;
 }
