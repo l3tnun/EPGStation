@@ -24,11 +24,13 @@
             </div>
         </transition>
         <div style="visibility: hidden;">dummy</div>
+        <OnAirSelectStream></OnAirSelectStream>
     </v-content>
 </template>
 
 <script lang="ts">
 import OnAirCard from '@/components/onair/OnAirCard.vue';
+import OnAirSelectStream from '@/components/onair/OnAirSelectStream.vue';
 import Snackbar from '@/components/snackbar/Snackbar.vue';
 import TitleBar from '@/components/titleBar/TitleBar.vue';
 import container from '@/model/ModelContainer';
@@ -48,11 +50,11 @@ Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
         TitleBar,
         Snackbar,
         OnAirCard,
+        OnAirSelectStream,
     },
 })
 export default class OnAir extends Vue {
     public onAirState: IOnAirState = container.get<IOnAirState>('IOnAirState');
-
     private settingValue: ISettingValue = container.get<ISettingStorageModel>('ISettingStorageModel').getSavedValue();
     private scrollState: IScrollPositionState = container.get<IScrollPositionState>('IScrollPositionState');
     private snackbarState: ISnackbarState = container.get<ISnackbarState>('ISnackbarState');
