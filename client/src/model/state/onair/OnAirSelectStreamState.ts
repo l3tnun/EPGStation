@@ -4,14 +4,14 @@ import UaUtil from '../../../util/UaUtil';
 import Util from '../../../util/Util';
 import IServerConfigModel from '../../serverConfig/IServerConfigModel';
 import ISettingStorageModel from '../../storage/setting/ISettingStorageModel';
-import IOnAirSelectStreamState, { LiveStreamType } from './IOnAirSelectStreamState';
+import IOnAirSelectStreamState, { LiveStreamType, StreamConfigItem } from './IOnAirSelectStreamState';
 
 @injectable()
 export default class OnAirSelectStreamState implements IOnAirSelectStreamState {
     public isOpen: boolean = false;
-    public streamConfigItems: string[] = [];
+    public streamConfigItems: StreamConfigItem[] = [];
     public selectedStreamType: LiveStreamType | undefined;
-    public selectedStreamConfig: string | undefined;
+    public selectedStreamConfig: number | undefined;
 
     private serverConfig: IServerConfigModel;
     private settingModel: ISettingStorageModel;
@@ -97,17 +97,18 @@ export default class OnAirSelectStreamState implements IOnAirSelectStreamState {
      * ストリーム設定の更新
      */
     public updateStreamConfig(): void {
-        this.streamConfigItems = this.getStreamConfig();
+        this.streamConfigItems = this.getStreamConfig().map((c, i) => {
+            return {
+                text: c,
+                value: i,
+            };
+        });
 
         if (typeof this.selectedStreamConfig === 'undefined') {
-            this.selectedStreamConfig = this.streamConfigItems[0];
+            this.selectedStreamConfig = 0;
         } else {
-            if (
-                this.streamConfigItems.findIndex(c => {
-                    return c === this.selectedStreamConfig;
-                }) === -1
-            ) {
-                this.selectedStreamConfig = this.streamConfigItems[0];
+            if (typeof this.streamConfigItems[this.selectedStreamConfig] === 'undefined') {
+                this.selectedStreamConfig = 0;
             }
         }
     }
@@ -158,7 +159,7 @@ export default class OnAirSelectStreamState implements IOnAirSelectStreamState {
         let viewURL =
             location.host +
             Util.getSubDirectory() +
-            `/api/streams/live/${channel.id.toString(10)}/m2ts?name=${this.selectedStreamConfig}`;
+            `/api/streams/live/${channel.id.toString(10)}/m2ts?mode=${this.selectedStreamConfig}`;
         if (urlScheme.match(/vlc-x-callback/)) {
             viewURL = encodeURIComponent(viewURL);
         }

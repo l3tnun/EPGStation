@@ -2,11 +2,16 @@ import * as apid from '../../../../../api';
 
 export type LiveStreamType = 'M2TS' | 'WebM' | 'MP4' | 'HLS';
 
+export interface StreamConfigItem {
+    text: string;
+    value: number;
+}
+
 export default interface IOnAirSelectStreamState {
     isOpen: boolean;
-    streamConfigItems: string[];
+    streamConfigItems: StreamConfigItem[];
     selectedStreamType: LiveStreamType | undefined;
-    selectedStreamConfig: string | undefined;
+    selectedStreamConfig: number | undefined;
     open(channelItem: apid.ScheduleChannleItem): void;
     close(): void;
     getChannelItem(): apid.ScheduleChannleItem | null;
