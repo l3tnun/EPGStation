@@ -25,7 +25,7 @@ export const get: Operation = async (req, res) => {
     try {
         result = await streamApiModel.startLiveWebmStream({
             channelId: parseInt(req.params.channelId, 10),
-            name: req.query.name as string,
+            mode: parseInt(req.query.mode as string, 10),
         });
     } catch (err) {
         api.responseServerError(res, err.message);
@@ -62,7 +62,7 @@ get.apiDoc = {
             $ref: '#/components/parameters/PathChannelId',
         },
         {
-            $ref: '#/components/parameters/StreamName',
+            $ref: '#/components/parameters/StreamMode',
         },
     ],
     responses: {

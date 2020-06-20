@@ -9,8 +9,8 @@ export const get: Operation = async (req, res) => {
     try {
         const streamId = await streamApiModel.startRecordedHLSStream({
             videoFileId: parseInt(req.params.videoFileId, 10),
-            name: req.query.name as string,
             playPosition: parseInt(req.query.ss as string, 10),
+            mode: parseInt(req.query.mode as string, 10),
         });
         api.responseJSON(res, 200, {
             streamId: streamId,
@@ -29,10 +29,10 @@ get.apiDoc = {
             $ref: '#/components/parameters/PathVideoFileId',
         },
         {
-            $ref: '#/components/parameters/StreamName',
+            $ref: '#/components/parameters/StreamPlayPosition',
         },
         {
-            $ref: '#/components/parameters/StreamPlayPosition',
+            $ref: '#/components/parameters/StreamMode',
         },
     ],
     responses: {

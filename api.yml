@@ -1319,13 +1319,13 @@ components:
             schema:
                 $ref: '#/components/schemas/StreamId'
 
-        StreamName:
+        StreamMode:
             description: ストリーミング設定
             in: query
-            name: name
+            name: mode
             required: true
             schema:
-                type: string
+                type: integer
 
         StreamPlayPosition:
             description: 再生位置

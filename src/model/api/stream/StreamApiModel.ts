@@ -4,7 +4,6 @@ import IChannelDB from '../../db/IChannelDB';
 import IProgramDB from '../../db/IProgramDB';
 import IRecordedDB from '../../db/IRecordedDB';
 import IVideoFileDB from '../../db/IVideoFileDB';
-import { StreamingCmd } from '../../IConfigFile';
 import IConfiguration from '../../IConfiguration';
 import { LiveHLSStreamModelProvider, LiveStreamModelProvider } from '../../service/stream/base/ILiveStreamBaseModel';
 import {
@@ -62,29 +61,13 @@ export default class StreamApiModel implements IStreamApiModel {
      * @return Promise<StreamResponse>
      */
     public async startLiveM2TsStream(option: apid.LiveStreamOption): Promise<StreamResponse> {
-        // config が存在するか確認する
-        const config = this.configure.getConfig();
-        if (
-            typeof config.stream === 'undefined' ||
-            typeof config.stream.live === 'undefined' ||
-            typeof config.stream.live.m2ts === 'undefined'
-        ) {
-            throw new Error('ConfigIsUndefined');
-        }
-
-        // config に指定された設定が存在するか確認する
-        const streamConfig = config.stream.live.m2ts.find(con => {
-            return con.name === option.name;
-        });
-        if (typeof streamConfig === 'undefined') {
-            throw new Error('ConfigIsNotFound');
-        }
+        const cmd = this.getLiveConfig('m2ts', option.mode);
 
         // stream 生成
         const stream = await this.liveStreamProvider();
         stream.setOption({
             channelId: option.channelId,
-            cmd: streamConfig.cmd,
+            cmd: cmd,
         });
 
         // manager に登録
@@ -102,29 +85,13 @@ export default class StreamApiModel implements IStreamApiModel {
      * @return Promise<StreamResponse>
      */
     public async startLiveWebmStream(option: apid.LiveStreamOption): Promise<StreamResponse> {
-        // config が存在するか確認する
-        const config = this.configure.getConfig();
-        if (
-            typeof config.stream === 'undefined' ||
-            typeof config.stream.live === 'undefined' ||
-            typeof config.stream.live.webm === 'undefined'
-        ) {
-            throw new Error('ConfigIsUndefined');
-        }
-
-        // config に指定された設定が存在するか確認する
-        const streamConfig = config.stream.live.webm.find(con => {
-            return con.name === option.name;
-        });
-        if (typeof streamConfig === 'undefined') {
-            throw new Error('ConfigIsNotFound');
-        }
+        const cmd = this.getLiveConfig('webm', option.mode);
 
         // stream 生成
         const stream = await this.liveStreamProvider();
         stream.setOption({
             channelId: option.channelId,
-            cmd: streamConfig.cmd,
+            cmd: cmd,
         });
 
         // manager に登録
@@ -142,29 +109,13 @@ export default class StreamApiModel implements IStreamApiModel {
      * @return Promise<StreamResponse>
      */
     public async startMp4Stream(option: apid.LiveStreamOption): Promise<StreamResponse> {
-        // config が存在するか確認する
-        const config = this.configure.getConfig();
-        if (
-            typeof config.stream === 'undefined' ||
-            typeof config.stream.live === 'undefined' ||
-            typeof config.stream.live.mp4 === 'undefined'
-        ) {
-            throw new Error('ConfigIsUndefined');
-        }
-
-        // config に指定された設定が存在するか確認する
-        const streamConfig = config.stream.live.mp4.find(con => {
-            return con.name === option.name;
-        });
-        if (typeof streamConfig === 'undefined') {
-            throw new Error('ConfigIsNotFound');
-        }
+        const cmd = this.getLiveConfig('mp4', option.mode);
 
         // stream 生成
         const stream = await this.liveStreamProvider();
         stream.setOption({
             channelId: option.channelId,
-            cmd: streamConfig.cmd,
+            cmd: cmd,
         });
 
         // manager に登録
@@ -182,32 +133,37 @@ export default class StreamApiModel implements IStreamApiModel {
      * @return Promise<apid.StreamId>
      */
     public async startLiveHLSStream(option: apid.LiveStreamOption): Promise<apid.StreamId> {
-        // config が存在するか確認する
-        const config = this.configure.getConfig();
-        if (
-            typeof config.stream === 'undefined' ||
-            typeof config.stream.live === 'undefined' ||
-            typeof config.stream.live.hls === 'undefined'
-        ) {
-            throw new Error('ConfigIsUndefined');
-        }
-        // config に指定された設定が存在するか確認する
-        const streamConfig = config.stream.live.hls.find(con => {
-            return con.name === option.name;
-        });
-        if (typeof streamConfig === 'undefined') {
-            throw new Error('ConfigIsNotFound');
-        }
+        const cmd = this.getLiveConfig('hls', option.mode);
 
         // stream 生成
         const stream = await this.liveHLSStreamProvider();
         stream.setOption({
             channelId: option.channelId,
-            cmd: streamConfig.cmd,
+            cmd: cmd,
         });
 
         // manager に登録
         return await this.streamManageModel.start(stream);
+    }
+
+    /**
+     * config から指定した live stream コマンドを取り出す
+     * @param type: 'm2ts' | 'webm' | 'mp4' | 'hls'
+     * @param mode: number config stream index 番号
+     * @return Promise<string>
+     */
+    private getLiveConfig(type: 'm2ts' | 'webm' | 'mp4' | 'hls', mode: number): string | undefined {
+        const config = this.configure.getConfig();
+        if (
+            typeof config.stream === 'undefined' ||
+            typeof config.stream.live === 'undefined' ||
+            typeof config.stream.live[type] === 'undefined' ||
+            typeof config.stream.live[type]![mode] === 'undefined'
+        ) {
+            throw new Error('ConfigIsUndefined');
+        }
+
+        return config.stream.live[type]![mode].cmd;
     }
 
     /**
@@ -298,36 +254,34 @@ export default class StreamApiModel implements IStreamApiModel {
             throw new Error('ConfigIsUndefined');
         }
 
-        let cmd: StreamingCmd | undefined;
+        let cmd: string | undefined;
         if (isEncodedVideo === true) {
             if (
                 typeof config.stream.recorded.encoded === 'undefined' ||
-                typeof config.stream.recorded.encoded[type] === 'undefined'
+                typeof config.stream.recorded.encoded[type] === 'undefined' ||
+                typeof config.stream.recorded.encoded[type]![option.mode] === 'undefined'
             ) {
                 throw new Error('ConfigIsUndefined');
             }
 
-            cmd = config.stream.recorded.encoded[type]!.find(con => {
-                return con.name === option.name;
-            });
+            cmd = config.stream.recorded.encoded[type]![option.mode].cmd;
         } else {
             if (
                 typeof config.stream.recorded.ts === 'undefined' ||
-                typeof config.stream.recorded.ts[type] === 'undefined'
+                typeof config.stream.recorded.ts[type] === 'undefined' ||
+                typeof config.stream.recorded.ts[type]![option.mode] === 'undefined'
             ) {
                 throw new Error('ConfigIsUndefined');
             }
 
-            cmd = config.stream.recorded.ts[type]!.find(con => {
-                return con.name === option.name;
-            });
+            cmd = config.stream.recorded.ts[type]![option.mode].cmd;
         }
 
-        if (typeof cmd?.cmd === 'undefined') {
+        if (typeof cmd === 'undefined') {
             throw new Error('CmdIsUndefined');
         }
 
-        return cmd.cmd;
+        return cmd;
     }
 
     /**
@@ -368,7 +322,7 @@ export default class StreamApiModel implements IStreamApiModel {
                 isSecure: isSecure,
                 name: channel.name,
                 duration: 0,
-                baseUrl: `/api/streams/live/${option.channelId.toString(10)}/m2ts?name=${option.name}`,
+                baseUrl: `/api/streams/live/${option.channelId.toString(10)}/m2ts?mode=${option.mode}`,
             }),
         };
     }

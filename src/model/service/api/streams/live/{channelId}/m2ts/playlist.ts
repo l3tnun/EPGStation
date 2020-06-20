@@ -12,7 +12,7 @@ export const get: Operation = async (req, res) => {
             req.header('x-forwarded-proto') === 'https',
             {
                 channelId: parseInt(req.params.channelId, 10),
-                name: req.query.name as string,
+                mode: parseInt(req.query.mode as string, 10),
             },
         );
 
@@ -38,7 +38,7 @@ get.apiDoc = {
             $ref: '#/components/parameters/PathChannelId',
         },
         {
-            $ref: '#/components/parameters/StreamName',
+            $ref: '#/components/parameters/StreamMode',
         },
     ],
     responses: {

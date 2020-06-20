@@ -25,8 +25,8 @@ export const get: Operation = async (req, res) => {
     try {
         result = await streamApiModel.startRecordedMp4Stream({
             videoFileId: parseInt(req.params.videoFileId, 10),
-            name: req.query.name as string,
             playPosition: parseInt(req.query.ss as string, 10),
+            mode: parseInt(req.query.mode as string, 10),
         });
     } catch (err) {
         api.responseServerError(res, err.message);
@@ -63,10 +63,10 @@ get.apiDoc = {
             $ref: '#/components/parameters/PathVideoFileId',
         },
         {
-            $ref: '#/components/parameters/StreamName',
+            $ref: '#/components/parameters/StreamPlayPosition',
         },
         {
-            $ref: '#/components/parameters/StreamPlayPosition',
+            $ref: '#/components/parameters/StreamMode',
         },
     ],
     responses: {

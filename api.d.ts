@@ -547,14 +547,14 @@ export interface AddManualEncodeProgramOption {
  * ライブストリームオプション
  */
 export interface LiveStreamOption {
-    name: string; // config 設定
     channelId: ChannelId;
+    mode: number; // config 設定
 }
 
 export interface RecordedStreanOption {
-    name: string; // config 設定
     videoFileId: VideoFileId;
     playPosition: number; // 再生位置 (秒)
+    mode: number; // config 設定
 }
 /**
  * ライブストリーム情報

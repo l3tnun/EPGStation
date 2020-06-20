@@ -9,7 +9,7 @@ export const get: Operation = async (req, res) => {
     try {
         const streamId = await streamApiModel.startLiveHLSStream({
             channelId: parseInt(req.params.channelId, 10),
-            name: req.query.name as string,
+            mode: parseInt(req.query.mode as string, 10),
         });
         api.responseJSON(res, 200, {
             streamId: streamId,
@@ -28,7 +28,7 @@ get.apiDoc = {
             $ref: '#/components/parameters/PathChannelId',
         },
         {
-            $ref: '#/components/parameters/StreamName',
+            $ref: '#/components/parameters/StreamMode',
         },
     ],
     responses: {
