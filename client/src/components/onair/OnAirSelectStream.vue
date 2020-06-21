@@ -76,7 +76,6 @@ export default class OnAirSelectStream extends Vue {
                     text: '視聴 URL 生成に失敗',
                 });
             } else {
-                console.log(playList);
                 location.href = playList;
             }
         } else {
