@@ -25,6 +25,7 @@
         </transition>
         <div style="visibility: hidden;">dummy</div>
         <OnAirSelectStream></OnAirSelectStream>
+        <Snackbar></Snackbar>
     </v-content>
 </template>
 
