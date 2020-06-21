@@ -65,21 +65,41 @@ export default class OnAirSelectStream extends Vue {
     /**
      * 視聴する
      */
-    public view(): void {
-        const url = this.dialogState.getM2TSURL();
+    public async view(): Promise<void> {
+        if (this.dialogState.selectedStreamType === 'M2TS') {
+            const url = this.dialogState.getM2TSURL();
 
-        if (url === null) {
-            const playList = this.dialogState.getM2TPlayListURL();
-            if (playList === null) {
+            if (url === null) {
+                const playList = this.dialogState.getM2TPlayListURL();
+                if (playList === null) {
+                    this.snackbarState.open({
+                        color: 'error',
+                        text: '視聴 URL 生成に失敗',
+                    });
+                } else {
+                    location.href = playList;
+                }
+            } else {
+                location.href = url;
+            }
+        } else if (
+            typeof this.dialogState.selectedStreamType !== 'undefined' &&
+            typeof this.dialogState.selectedStreamConfig !== 'undefined'
+        ) {
+            this.dialogState.isOpen = false;
+            await Util.sleep(200);
+            await Util.move(this.$router, {
+                path: '/onair/watch',
+                query: {
+                    type: this.dialogState.selectedStreamType.toLowerCase(),
+                    mode: this.dialogState.selectedStreamConfig.toString(10),
+                },
+            }).catch(err => {
                 this.snackbarState.open({
                     color: 'error',
-                    text: '視聴 URL 生成に失敗',
+                    text: '視聴ページへの移動に失敗',
                 });
-            } else {
-                location.href = playList;
-            }
-        } else {
-            location.href = url;
+            });
         }
     }
 
