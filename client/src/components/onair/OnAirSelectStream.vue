@@ -82,24 +82,29 @@ export default class OnAirSelectStream extends Vue {
             } else {
                 location.href = url;
             }
-        } else if (
-            typeof this.dialogState.selectedStreamType !== 'undefined' &&
-            typeof this.dialogState.selectedStreamConfig !== 'undefined'
-        ) {
-            this.dialogState.isOpen = false;
-            await Util.sleep(200);
-            await Util.move(this.$router, {
-                path: '/onair/watch',
-                query: {
-                    type: this.dialogState.selectedStreamType.toLowerCase(),
-                    mode: this.dialogState.selectedStreamConfig.toString(10),
-                },
-            }).catch(err => {
-                this.snackbarState.open({
-                    color: 'error',
-                    text: '視聴ページへの移動に失敗',
+        } else {
+            const channel = this.dialogState.getChannelItem();
+            if (
+                channel !== null &&
+                typeof this.dialogState.selectedStreamType !== 'undefined' &&
+                typeof this.dialogState.selectedStreamConfig !== 'undefined'
+            ) {
+                this.dialogState.isOpen = false;
+                await Util.sleep(200);
+                await Util.move(this.$router, {
+                    path: '/onair/watch',
+                    query: {
+                        type: this.dialogState.selectedStreamType.toLowerCase(),
+                        channel: channel.id.toString(10),
+                        mode: this.dialogState.selectedStreamConfig.toString(10),
+                    },
+                }).catch(err => {
+                    this.snackbarState.open({
+                        color: 'error',
+                        text: '視聴ページへの移動に失敗',
+                    });
                 });
-            });
+            }
         }
     }
 
