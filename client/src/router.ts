@@ -11,6 +11,7 @@ import Reserves from './views/Reserves.vue';
 import Rule from './views/Rule.vue';
 import Search from './views/Search.vue';
 import Settings from './views/Settings.vue';
+import WatchOnAir from './views/WatchOnAir.vue';
 
 Vue.use(Router);
 
@@ -25,6 +26,11 @@ export default new Router({
             path: '/onair',
             name: 'onair',
             component: OnAir,
+        },
+        {
+            path: '/onair/watch',
+            name: 'watch-onair',
+            component: WatchOnAir,
         },
         {
             path: '/guide',
