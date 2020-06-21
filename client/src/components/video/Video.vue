@@ -1,0 +1,84 @@
+<template>
+    <video ref="video" :src="videoSrc" autoplay playsinline></video>
+</template>
+
+<script lang="ts">
+import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
+
+@Component({})
+export default class Video extends Vue {
+    @Prop({ required: true })
+    public videoSrc!: string;
+
+    private video: HTMLVideoElement | null = null;
+
+    public mounted(): void {
+        this.video = <HTMLVideoElement>this.$refs.video;
+
+        // 時刻更新
+        this.video.addEventListener('timeupdate', () => {
+            this.$emit('timeupdate');
+        });
+
+        // 読み込み中
+        this.video.addEventListener('waiting', () => {
+            this.$emit('waiting');
+        });
+
+        // 読み込み完了
+        this.video.addEventListener('loadeddata', () => {
+            this.$emit('loadeddata');
+        });
+
+        // 再生可能
+        this.video.addEventListener('canplay', () => {
+            this.$emit('canplay');
+        });
+
+        // 終了
+        this.video.addEventListener('ended', () => {
+            this.$emit('ended');
+        });
+
+        // 再生
+        this.video.addEventListener('play', () => {
+            this.$emit('play');
+        });
+
+        // 停止
+        this.video.addEventListener('pause', () => {
+            this.$emit('pause');
+        });
+    }
+
+    public beforeDestroy(): void {
+        if (this.video !== null) {
+            this.video.pause();
+            this.video.removeAttribute('src');
+            this.video.load();
+        }
+    }
+
+    /**
+     * 動画再生
+     */
+    public play(): void {
+        if (this.video === null || this.video.paused === false) {
+            return;
+        }
+
+        this.video.play();
+    }
+
+    /**
+     * 動画停止
+     */
+    public pause(): void {
+        if (this.video === null || this.video.paused === true) {
+            return;
+        }
+
+        this.video.pause();
+    }
+}
+</script>

@@ -2,7 +2,7 @@
     <v-content>
         <TitleBar title="視聴"></TitleBar>
         <transition name="page">
-            <div>watch on air</div>
+            <VideoContainer v-bind:videoSrc="videoSrc"></VideoContainer>
         </transition>
         <Snackbar></Snackbar>
     </v-content>
@@ -11,6 +11,7 @@
 <script lang="ts">
 import Snackbar from '@/components/snackbar/Snackbar.vue';
 import TitleBar from '@/components/titleBar/TitleBar.vue';
+import VideoContainer from '@/components/video/VideoContainer.vue';
 import container from '@/model/ModelContainer';
 import ISocketIOModel from '@/model/socketio/ISocketIOModel';
 import IScrollPositionState from '@/model/state/IScrollPositionState';
@@ -28,10 +29,13 @@ interface WatchParam {
 @Component({
     components: {
         TitleBar,
+        VideoContainer,
         Snackbar,
     },
 })
 export default class WatchOnAir extends Vue {
+    public videoSrc: string | null = null;
+
     private scrollState: IScrollPositionState = container.get<IScrollPositionState>('IScrollPositionState');
     private snackbarState: ISnackbarState = container.get<ISnackbarState>('ISnackbarState');
 
@@ -66,6 +70,10 @@ export default class WatchOnAir extends Vue {
                   };
 
         this.$nextTick(async () => {
+            if (this.watchParam !== null) {
+                this.videoSrc = `/api/streams/live/${this.watchParam.channel}/${this.watchParam.type}?mode=${this.watchParam.mode}`;
+            }
+
             // データ取得完了を通知
             await this.scrollState.emitDoneGetData();
         });
