@@ -18,4 +18,5 @@ export default interface IOnAirSelectStreamState {
     getStreamTypes(): LiveStreamType[];
     updateStreamConfig(): void;
     getM2TSURL(): string | null;
+    getM2TPlayListURL(): string | null;
 }

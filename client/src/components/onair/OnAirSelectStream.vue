@@ -34,6 +34,7 @@
 
 <script lang="ts">
 import container from '@/model/ModelContainer';
+import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
 import IOnAirSelectStreamState from '../../model/state/onair/IOnAirSelectStreamState';
 import Util from '../../util/Util';
@@ -44,6 +45,8 @@ export default class OnAirSelectStream extends Vue {
     public isRemove: boolean = false;
     // ストリーム設定セレクタ再描画用
     public isHiddenStreamConfig: boolean = false;
+
+    private snackbarState: ISnackbarState = container.get<ISnackbarState>('ISnackbarState');
 
     public beforeDestroy(): void {
         this.dialogState.close();
@@ -66,7 +69,16 @@ export default class OnAirSelectStream extends Vue {
         const url = this.dialogState.getM2TSURL();
 
         if (url === null) {
-            // TODO download play list
+            const playList = this.dialogState.getM2TPlayListURL();
+            if (playList === null) {
+                this.snackbarState.open({
+                    color: 'error',
+                    text: '視聴 URL 生成に失敗',
+                });
+            } else {
+                console.log(playList);
+                location.href = playList;
+            }
         } else {
             location.href = url;
         }

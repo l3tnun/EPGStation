@@ -166,4 +166,17 @@ export default class OnAirSelectStreamState implements IOnAirSelectStreamState {
 
         return urlScheme.replace(/ADDRESS/g, viewURL);
     }
+
+    /**
+     * m2ts 形式のプレイリストダウンロード URL 生成
+     * @return string | null URL Scheme の設定が見つからない場合は null を返す
+     */
+    public getM2TPlayListURL(): string | null {
+        const channel = this.getChannelItem();
+        if (typeof this.selectedStreamConfig === 'undefined' || channel === null) {
+            return null;
+        }
+
+        return `/api/streams/live/${channel.id.toString(10)}/m2ts/playlist?mode=${this.selectedStreamConfig}`;
+    }
 }
