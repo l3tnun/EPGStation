@@ -6,13 +6,27 @@
             </div>
             <div class="video-control-wrap" v-on:click="toggleControl">
                 <transition name="fade">
-                    <div>
-                        <v-btn v-if="isShowControl === true" class="play-button mx-2" fab large v-on:click="togglePlay">
-                            <v-icon v-if="isPause === true">mdi-play</v-icon>
-                            <v-icon v-else>mdi-pause</v-icon>
-                        </v-btn>
-                        <div v-if="isShowControl === true" class="video-control">
-                            <div class="content" v-on:click="clickController">
+                    <div v-if="isShowControl === true">
+                        <div class="d-flex center-buttons" v-on:click="stopPropagation">
+                            <v-btn class="rewind mx-4" icon dark>
+                                <v-icon dark>mdi-rewind-30</v-icon>
+                            </v-btn>
+                            <v-btn class="rewind mx-4" icon dark>
+                                <v-icon dark>mdi-rewind-10</v-icon>
+                            </v-btn>
+                            <v-btn class="play-button mx-4" icon dark v-on:click="togglePlay">
+                                <v-icon v-if="isPause === true" dark>mdi-play</v-icon>
+                                <v-icon v-else dark>mdi-pause</v-icon>
+                            </v-btn>
+                            <v-btn class="forward mx-4" icon dark>
+                                <v-icon dark>mdi-fast-forward-10</v-icon>
+                            </v-btn>
+                            <v-btn class="forward mx-4" icon dark>
+                                <v-icon dark>mdi-fast-forward-30</v-icon>
+                            </v-btn>
+                        </div>
+                        <div class="video-control">
+                            <div class="content" v-on:click="stopPropagation">
                                 <v-slider
                                     class="slider"
                                     value="30"
@@ -150,7 +164,7 @@ export default class VideoContainer extends Vue {
         }
     }
 
-    public clickController(e: Event): void {
+    public stopPropagation(e: Event): void {
         e.stopPropagation();
     }
 }
@@ -196,7 +210,7 @@ export default class VideoContainer extends Vue {
         height: 100%
         width: 100%
 
-        .play-button
+        .center-buttons
             position: absolute
             top: 50%
             left: 50%
@@ -236,6 +250,12 @@ export default class VideoContainer extends Vue {
 
 <style lang="sass">
 .video-container
+    .play-button, .rewind
+        .v-icon
+            text-shadow: 0px 0px 10px black
+    .play-button
+        .v-icon
+            font-size: 60px
     .slider
         .v-slider
             min-height: 10px
