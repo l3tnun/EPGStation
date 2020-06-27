@@ -78,7 +78,8 @@
                                         <v-icon>mdi-picture-in-picture-bottom-right</v-icon>
                                     </v-btn>
                                     <v-btn icon dark v-on:click="switchFullScreen">
-                                        <v-icon>mdi-fullscreen</v-icon>
+                                        <v-icon v-if="isFullscreen === false">mdi-fullscreen</v-icon>
+                                        <v-icon v-else>mdi-fullscreen-exit</v-icon>
                                     </v-btn>
                                 </div>
                             </div>
@@ -133,8 +134,12 @@ export default class VideoContainer extends Vue {
     public isPause: boolean = true;
     public isShowControl: boolean = false;
     public isEnabledPip: boolean;
+    public isFullscreen: boolean = this.checkFullscreen();
 
     private isEnabledRotation: boolean = typeof (<any>window.screen).orientation !== 'undefined' && UaUtil.isMobile();
+    private fullScreenListener = (() => {
+        this.fullscreenChange();
+    }).bind(this);
 
     constructor() {
         super();
@@ -148,6 +153,40 @@ export default class VideoContainer extends Vue {
                 value: value,
             });
         }
+    }
+
+    public created(): void {
+        document.addEventListener('webkitfullscreenchange', this.fullScreenListener, false);
+        document.addEventListener('mozfullscreenchange', this.fullScreenListener, false);
+        document.addEventListener('MSFullscreenChange', this.fullScreenListener, false);
+        document.addEventListener('fullscreenchange', this.fullScreenListener, false);
+    }
+
+    public beforeDestroy(): void {
+        document.removeEventListener('webkitfullscreenchange', this.fullScreenListener, false);
+        document.removeEventListener('mozfullscreenchange', this.fullScreenListener, false);
+        document.removeEventListener('MSFullscreenChange', this.fullScreenListener, false);
+        document.removeEventListener('fullscreenchange', this.fullScreenListener, false);
+    }
+
+    /**
+     * fullscreen の状態が変化したときに呼ばれる
+     */
+    private fullscreenChange(): void {
+        this.isFullscreen = this.checkFullscreen();
+    }
+
+    private checkFullscreen(): boolean {
+        return (
+            !!(
+                (<any>document).fullScreen ||
+                (<any>document).webkitIsFullScreen ||
+                (<any>document).mozFullScreen ||
+                (<any>document).msFullscreenElement ||
+                (<any>document).fullscreenElement
+            ) ||
+            (typeof this.$refs.video !== 'undefined' && !!(<any>this.$refs.video).webkitDisplayingFullscreen)
+        );
     }
 
     // 読み込み中
@@ -233,7 +272,7 @@ export default class VideoContainer extends Vue {
             return;
         }
 
-        if (this.isFullScreen() === true) {
+        if (this.isFullscreen === true) {
             // フルスクリーン終了
             if (document.exitFullscreen) {
                 document.exitFullscreen();
@@ -258,23 +297,6 @@ export default class VideoContainer extends Vue {
                 await this.switchRotation();
             }
         }
-    }
-
-    /**
-     * フルスクリーンか返す
-     * @return boolean true でフルスクリーン状態
-     */
-    private isFullScreen(): boolean {
-        return (
-            !!(
-                (<any>document).fullScreen ||
-                (<any>document).webkitIsFullScreen ||
-                (<any>document).mozFullScreen ||
-                (<any>document).msFullscreenElement ||
-                (<any>document).fullscreenElement
-            ) ||
-            (typeof this.$refs.video !== 'undefined' && (<any>this.$refs.video).webkitDisplayingFullscreen)
-        );
     }
 
     /**
