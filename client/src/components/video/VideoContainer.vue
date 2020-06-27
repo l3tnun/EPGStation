@@ -8,20 +8,20 @@
                 <transition name="fade">
                     <div v-if="isShowControl === true">
                         <div class="d-flex center-buttons" v-on:click="stopPropagation">
-                            <v-btn class="rewind mx-4" icon dark>
+                            <v-btn v-if="isEnabledRewindForwardButtons === true" class="rewind mx-4" icon dark>
                                 <v-icon dark>mdi-rewind-30</v-icon>
                             </v-btn>
-                            <v-btn class="rewind mx-4" icon dark>
+                            <v-btn v-if="isEnabledRewindForwardButtons === true" class="rewind mx-4" icon dark>
                                 <v-icon dark>mdi-rewind-10</v-icon>
                             </v-btn>
                             <v-btn class="play-button mx-4" icon dark v-on:click="togglePlay">
                                 <v-icon v-if="isPause === true" dark>mdi-play</v-icon>
                                 <v-icon v-else dark>mdi-pause</v-icon>
                             </v-btn>
-                            <v-btn class="forward mx-4" icon dark>
+                            <v-btn v-if="isEnabledRewindForwardButtons === true" class="forward mx-4" icon dark>
                                 <v-icon dark>mdi-fast-forward-10</v-icon>
                             </v-btn>
-                            <v-btn class="forward mx-4" icon dark>
+                            <v-btn v-if="isEnabledRewindForwardButtons === true" class="forward mx-4" icon dark>
                                 <v-icon dark>mdi-fast-forward-30</v-icon>
                             </v-btn>
                         </div>
@@ -121,6 +121,9 @@ interface SpeedItem {
 export default class VideoContainer extends Vue {
     @Prop({ required: true })
     public videoSrc!: string | null;
+
+    @Prop()
+    public isEnabledRewindForwardButtons: boolean | undefined; // 戻る、進むボタンが有効か
 
     @Prop()
     public isEnabledSubtitles: boolean | undefined; // 字幕が有効か
