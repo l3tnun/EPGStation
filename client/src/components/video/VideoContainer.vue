@@ -4,12 +4,55 @@
             <div v-if="isLoading === true || videoSrc === null" class="loading">
                 <v-progress-circular :size="50" color="primary" indeterminate></v-progress-circular>
             </div>
-            <div class="video-control" v-on:click="toggleControl">
+            <div class="video-control-wrap" v-on:click="toggleControl">
                 <transition name="fade">
-                    <v-btn v-if="isShowControl === true" class="play-button mx-2" fab large v-on:click="togglePlay">
-                        <v-icon v-if="isPause === true" dark>mdi-play</v-icon>
-                        <v-icon v-else dark>mdi-pause</v-icon>
-                    </v-btn>
+                    <div>
+                        <v-btn v-if="isShowControl === true" class="play-button mx-2" fab large v-on:click="togglePlay">
+                            <v-icon v-if="isPause === true">mdi-play</v-icon>
+                            <v-icon v-else>mdi-pause</v-icon>
+                        </v-btn>
+                        <div v-if="isShowControl === true" class="video-control">
+                            <div class="content" v-on:click="clickController">
+                                <v-slider
+                                    class="slider"
+                                    value="30"
+                                    max="100"
+                                    color="white"
+                                    track-color="grey"
+                                ></v-slider>
+                                <div class="d-flex align-center mx-2">
+                                    <v-btn icon dark v-on:click="togglePlay">
+                                        <v-icon v-if="isPause === true">mdi-play</v-icon>
+                                        <v-icon v-else>mdi-pause</v-icon>
+                                    </v-btn>
+                                    <div class="d-flex align-center volume-content">
+                                        <v-btn icon dark>
+                                            <v-icon>mdi-volume-high</v-icon>
+                                        </v-btn>
+                                        <v-slider
+                                            class="slider"
+                                            value="100"
+                                            max="100"
+                                            color="white"
+                                            track-color="grey"
+                                        ></v-slider>
+                                    </div>
+                                    <div class="time Caption mx-2">
+                                        <span>00:00</span>
+                                        <span class="mx-1">/</span>
+                                        <span>00:00</span>
+                                    </div>
+                                    <v-spacer></v-spacer>
+                                    <v-btn icon dark>
+                                        <v-icon>mdi-picture-in-picture-bottom-right</v-icon>
+                                    </v-btn>
+                                    <v-btn icon dark>
+                                        <v-icon>mdi-fullscreen</v-icon>
+                                    </v-btn>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </transition>
             </div>
             <Video
@@ -59,9 +102,16 @@ export default class VideoContainer extends Vue {
     // 再生可能
     public onCanplay(): void {
         this.isLoading = false;
+
         if (this.isPause === true) {
             this.isShowControl = true;
         }
+
+        setTimeout(() => {
+            if (this.isPause === false) {
+                this.isShowControl = false;
+            }
+        }, 300);
     }
 
     // 終了
@@ -70,10 +120,8 @@ export default class VideoContainer extends Vue {
     }
 
     // 再生
-    public async onPlay(): Promise<void> {
+    public onPlay(): void {
         this.isPause = false;
-        await Util.sleep(200);
-        this.isShowControl = false;
     }
 
     // 停止
@@ -100,6 +148,10 @@ export default class VideoContainer extends Vue {
         } else {
             (<Video>this.$refs.video).pause();
         }
+    }
+
+    public clickController(e: Event): void {
+        e.stopPropagation();
     }
 }
 </script>
@@ -138,16 +190,38 @@ export default class VideoContainer extends Vue {
         justify-content: center
         align-items: center
 
-    .video-control
+    .video-control-wrap
         z-index: 2
         position: relative
         height: 100%
         width: 100%
+
         .play-button
             position: absolute
             top: 50%
             left: 50%
             transform: translateY(-50%) translateX(-50%)
+            opacity: 0.8
+
+        .video-control
+            height: 60px
+            position: absolute
+            bottom: 0
+            width: 100%
+            background: linear-gradient(to top, #000000d9, #0000)
+            .content
+                position: absolute
+                width: 100%
+                bottom: 0
+                opacity: 0.8
+                .volume-content
+                    width: 100px
+                .time
+                    height: 36px
+                    line-height: 36px
+                    color: white
+                    font-size: 12px
+                    user-select: none
 
     video
         z-index: 1
@@ -158,4 +232,15 @@ export default class VideoContainer extends Vue {
         left: 0
         margin: auto
         width: 100%
+</style>
+
+<style lang="sass">
+.video-container
+    .slider
+        .v-slider
+            min-height: 10px
+        .v-input__slot
+            margin: 0
+        .v-messages
+            display: none
 </style>
