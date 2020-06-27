@@ -74,7 +74,7 @@
                                     <v-btn v-if="isEnabledSubtitles === true" icon dark>
                                         <v-icon>mdi-subtitles</v-icon>
                                     </v-btn>
-                                    <v-btn v-if="this.isEnabledPip === true" icon dark>
+                                    <v-btn v-if="this.isEnabledPip === true" icon dark v-on:click="switchPip">
                                         <v-icon>mdi-picture-in-picture-bottom-right</v-icon>
                                     </v-btn>
                                     <v-btn icon dark v-on:click="switchFullScreen">
@@ -207,6 +207,23 @@ export default class VideoContainer extends Vue {
             (<Video>this.$refs.video).play();
         } else {
             (<Video>this.$refs.video).pause();
+        }
+    }
+
+    // pip 切り替え
+    public switchPip(): void {
+        if (typeof this.$refs.video === 'undefined') {
+            return;
+        }
+
+        try {
+            if ((<any>document).pictureInPictureElement === null) {
+                (<Video>this.$refs.video).requestPictureInPicture();
+            } else {
+                (<any>document).exitPictureInPicture();
+            }
+        } catch (error) {
+            console.error(error);
         }
     }
 

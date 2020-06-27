@@ -80,5 +80,24 @@ export default class Video extends Vue {
 
         this.video.pause();
     }
+
+    /**
+     * pip 切り替え
+     */
+    public requestPictureInPicture(): void {
+        if (this.video === null || typeof (<any>this.video).requestPictureInPicture !== 'function') {
+            return;
+        }
+
+        try {
+            if (!(<any>document).pictureInPictureElement) {
+                (<any>this.$refs.video).requestPictureInPicture();
+            } else {
+                (<any>this.video).requestPictureInPicture();
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
 }
 </script>
