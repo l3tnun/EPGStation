@@ -1,5 +1,5 @@
 <template>
-    <div class="video-container">
+    <div class="video-container" ref="container">
         <div class="video-content">
             <div v-if="isLoading === true || videoSrc === null" class="loading">
                 <v-progress-circular :size="50" color="primary" indeterminate></v-progress-circular>
@@ -73,7 +73,7 @@
                                     <v-btn icon dark>
                                         <v-icon>mdi-picture-in-picture-bottom-right</v-icon>
                                     </v-btn>
-                                    <v-btn icon dark>
+                                    <v-btn icon dark v-on:click="switchFullScreen">
                                         <v-icon>mdi-fullscreen</v-icon>
                                     </v-btn>
                                 </div>
@@ -99,8 +99,9 @@
 
 <script lang="ts">
 import Video from '@/components/video/Video.vue';
+import UaUtil from '@/util/UaUtil';
+import Util from '@/util/Util';
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
-import Util from '../../util/Util';
 
 interface SpeedItem {
     text: string;
@@ -121,6 +122,8 @@ export default class VideoContainer extends Vue {
     public isLoading: boolean = true;
     public isPause: boolean = true;
     public isShowControl: boolean = false;
+
+    private isEnabledRotation: boolean = typeof (<any>window.screen).orientation !== 'undefined' && UaUtil.isMobile();
 
     constructor() {
         super();
@@ -177,7 +180,6 @@ export default class VideoContainer extends Vue {
 
     // video control 表示切り替え
     public toggleControl(): void {
-        console.log('on toggle control');
         this.isShowControl = !this.isShowControl;
     }
 
@@ -194,6 +196,114 @@ export default class VideoContainer extends Vue {
         } else {
             (<Video>this.$refs.video).pause();
         }
+    }
+
+    // fullscreen 切り替え
+    public switchFullScreen(): void {
+        if (typeof this.$refs.container === 'undefined') {
+            return;
+        }
+
+        if (this.isFullScreen() === true) {
+            // フルスクリーン終了
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if ((<any>document).mozCancelFullScreen) {
+                (<any>document).mozCancelFullScreen();
+            } else if ((<any>document).webkitCancelFullScreen) {
+                (<any>document).webkitCancelFullScreen();
+            } else if ((<any>document).msExitFullscreen) {
+                (<any>document).msExitFullscreen();
+            }
+        } else {
+            // フルスクリーンへ切り替え
+            if (
+                this.requestFullscreen(<HTMLElement>this.$refs.container) === false &&
+                typeof this.$refs.video !== 'undefined'
+            ) {
+                this.requestFullscreen(<HTMLElement>this.$refs.video);
+            }
+
+            // 画面回転
+            if (this.isLandscape() === false) {
+                this.switchRotation();
+            }
+        }
+    }
+
+    /**
+     * フルスクリーンか返す
+     * @return boolean true でフルスクリーン状態
+     */
+    private isFullScreen(): boolean {
+        return (
+            !!(
+                (<any>document).fullScreen ||
+                (<any>document).webkitIsFullScreen ||
+                (<any>document).mozFullScreen ||
+                (<any>document).msFullscreenElement ||
+                (<any>document).fullscreenElement
+            ) ||
+            (typeof this.$refs.video !== 'undefined' && (<any>this.$refs.video).webkitDisplayingFullscreen)
+        );
+    }
+
+    /**
+     * full screen element
+     * @param e: HTMLElement
+     * @return boolean true: 成功, false: 失敗
+     */
+    private requestFullscreen(e: HTMLElement): boolean {
+        /* tslint:disable:newline-before-return */
+        if (UaUtil.isAndroid()) {
+            e.requestFullscreen({ navigationUI: 'hide' });
+            return true;
+        } else if (e.requestFullscreen) {
+            e.requestFullscreen();
+            return true;
+        } else if ((<any>e).mozRequestFullScreen) {
+            (<any>e).mozRequestFullScreen();
+            return true;
+        } else if ((<any>e).webkitRequestFullScreen) {
+            (<any>e).webkitRequestFullScreen();
+            return true;
+        } else if ((<any>e).webkitEnterFullscreen) {
+            (<any>e).webkitEnterFullscreen();
+            return true;
+        } else if ((<any>e).msRequestFullscreen) {
+            (<any>e).msRequestFullscreen();
+            return true;
+        }
+        /* tslint:enable:newline-before-return */
+
+        return false;
+    }
+
+    /**
+     * full screen 時の画面回転状態を変更
+     */
+    private async switchRotation(): Promise<void> {
+        if (this.isEnabledRotation === false) {
+            return;
+        }
+
+        try {
+            if (this.isLandscape()) {
+                await (<any>window.screen).orientation.lock('natural');
+            } else {
+                await (<any>window.screen).orientation.lock('landscape');
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    /**
+     * 回転状態か？
+     * @return boolean true で回転状態
+     */
+    private isLandscape(): boolean {
+        return !this.isEnabledRotation || (<any>window.screen).orientation.angle !== 0;
     }
 
     public stopPropagation(e: Event): void {
