@@ -4,7 +4,7 @@
             <div v-if="isLoading === true || videoSrc === null" class="loading">
                 <v-progress-circular :size="50" color="primary" indeterminate></v-progress-circular>
             </div>
-            <div class="video-control-wrap" v-on:click="toggleControl">
+            <div class="video-control-wrap overflow-hidden" v-on:click="toggleControl">
                 <transition name="fade">
                     <div v-if="isShowControl === true">
                         <div class="d-flex center-buttons" v-on:click="stopPropagation">
