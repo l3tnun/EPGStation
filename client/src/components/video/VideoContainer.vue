@@ -4,11 +4,14 @@
             <div v-if="isLoading === true || videoSrc === null" class="loading">
                 <v-progress-circular :size="50" color="primary" indeterminate></v-progress-circular>
             </div>
-            <transition name="page">
-                <v-btn v-if="isShowFirstPlayButton === true" class="play-button mx-2" fab large v-on:click="startPlay">
-                    <v-icon dark>mdi-play</v-icon>
-                </v-btn>
-            </transition>
+            <div class="video-control" v-on:click="toggleControl">
+                <transition name="fade">
+                    <v-btn v-if="isShowControl === true" class="play-button mx-2" fab large v-on:click="togglePlay">
+                        <v-icon v-if="isPause === true" dark>mdi-play</v-icon>
+                        <v-icon v-else dark>mdi-pause</v-icon>
+                    </v-btn>
+                </transition>
+            </div>
             <Video
                 v-if="videoSrc !== null"
                 ref="video"
@@ -27,6 +30,7 @@
 <script lang="ts">
 import Video from '@/components/video/Video.vue';
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
+import Util from '../../util/Util';
 
 @Component({
     components: {
@@ -40,8 +44,7 @@ export default class VideoContainer extends Vue {
     public isLoading: boolean = true;
     public isPause: boolean = true;
 
-    public isFirstPlay: boolean = true;
-    public isShowFirstPlayButton: boolean = false;
+    public isShowControl: boolean = false;
 
     // 読み込み中
     public onWaiting(): void {
@@ -56,8 +59,8 @@ export default class VideoContainer extends Vue {
     // 再生可能
     public onCanplay(): void {
         this.isLoading = false;
-        if (this.isPause === true && this.isFirstPlay === true) {
-            this.isShowFirstPlayButton = true;
+        if (this.isPause === true) {
+            this.isShowControl = true;
         }
     }
 
@@ -67,10 +70,10 @@ export default class VideoContainer extends Vue {
     }
 
     // 再生
-    public onPlay(): void {
+    public async onPlay(): Promise<void> {
         this.isPause = false;
-        this.isFirstPlay = false;
-        this.isShowFirstPlayButton = false;
+        await Util.sleep(200);
+        this.isShowControl = false;
     }
 
     // 停止
@@ -78,20 +81,36 @@ export default class VideoContainer extends Vue {
         this.isPause = true;
     }
 
-    // 再生開始
-    public startPlay(): void {
+    // video control 表示切り替え
+    public toggleControl(): void {
+        console.log('on toggle control');
+        this.isShowControl = !this.isShowControl;
+    }
+
+    // 再生状態切り替え
+    public togglePlay(e: Event): void {
+        e.stopPropagation();
+
         if (typeof this.$refs.video === 'undefined') {
             return;
         }
 
-        (<Video>this.$refs.video).play();
-        this.isFirstPlay = true;
-        this.isShowFirstPlayButton = false;
+        if (this.isPause === true) {
+            (<Video>this.$refs.video).play();
+        } else {
+            (<Video>this.$refs.video).pause();
+        }
     }
 }
 </script>
 
 <style lang="sass" scoped>
+.fade-enter-active, .fade-leave-active
+    transition: opacity .2s
+
+.fade-enter, .fade-leave-to
+    opacity: 0
+
 .video-container
     position: relative
     max-width: 100%
@@ -119,12 +138,16 @@ export default class VideoContainer extends Vue {
         justify-content: center
         align-items: center
 
-    .play-button
+    .video-control
         z-index: 2
-        position: absolute
-        top: 50%
-        left: 50%
-        transform: translateY(-50%) translateX(-50%)
+        position: relative
+        height: 100%
+        width: 100%
+        .play-button
+            position: absolute
+            top: 50%
+            left: 50%
+            transform: translateY(-50%) translateX(-50%)
 
     video
         z-index: 1
