@@ -290,7 +290,7 @@ export default class VideoContainer extends Vue {
 
 <style lang="sass">
 .video-container
-    .play-button, .rewind
+    .play-button, .rewind, .forward
         .v-icon
             text-shadow: 0px 0px 10px black
     .play-button
