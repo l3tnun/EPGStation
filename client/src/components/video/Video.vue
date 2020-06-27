@@ -49,6 +49,11 @@ export default class Video extends Vue {
         this.video.addEventListener('pause', () => {
             this.$emit('pause');
         });
+
+        // 音量変化
+        this.video.addEventListener('volumechange', () => {
+            this.$emit('volumechange');
+        });
     }
 
     public beforeDestroy(): void {
@@ -79,6 +84,36 @@ export default class Video extends Vue {
         }
 
         this.video.pause();
+    }
+
+    /**
+     * 音量を返す
+     * @return number
+     */
+    public getVolume(): number {
+        return this.video === null || this.video.muted ? 0 : this.video.volume;
+    }
+
+    /**
+     * mute 切り替え
+     */
+    public switchMute(): void {
+        if (this.video === null || this.video.paused === true) {
+            return;
+        }
+
+        this.video.muted = !this.video.muted;
+    }
+
+    /**
+     * 音量設定
+     */
+    public setVolume(volume: number): void {
+        if (this.video === null) {
+            return;
+        }
+
+        this.video.volume = volume;
     }
 
     /**

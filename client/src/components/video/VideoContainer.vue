@@ -40,15 +40,20 @@
                                         <v-icon v-else>mdi-pause</v-icon>
                                     </v-btn>
                                     <div class="d-flex align-center volume-content">
-                                        <v-btn icon dark>
-                                            <v-icon>mdi-volume-high</v-icon>
+                                        <v-btn icon dark v-on:click="switchMute">
+                                            <v-icon v-if="volume > 0.4">mdi-volume-high</v-icon>
+                                            <v-icon v-else-if="volume > 0.0">mdi-volume-medium</v-icon>
+                                            <v-icon v-else>mdi-volume-off</v-icon>
                                         </v-btn>
                                         <v-slider
                                             class="slider"
-                                            value="100"
-                                            max="100"
+                                            v-model="volume"
+                                            min="0.0"
+                                            max="1.0"
+                                            step="0.1"
                                             color="white"
                                             track-color="grey"
+                                            v-on:input="changeVolume"
                                         ></v-slider>
                                     </div>
                                     <div class="time Caption mx-2">
@@ -97,6 +102,7 @@
                 v-on:ended="onEnded"
                 v-on:play="onPlay"
                 v-on:pause="onPause"
+                v-on:volumechange="onVolumechange"
             ></Video>
         </div>
     </div>
@@ -132,6 +138,7 @@ export default class VideoContainer extends Vue {
     public isEnabledSpeedControl: boolean | undefined; // 速度調整が有効か
 
     public speedItems: SpeedItem[] = [];
+    public volume: number = 1.0;
     public speed: number = 1.0;
     public isLoading: boolean = true;
     public isPause: boolean = true;
@@ -232,6 +239,15 @@ export default class VideoContainer extends Vue {
         this.isPause = true;
     }
 
+    // 音量変更
+    public onVolumechange(): void {
+        if (typeof this.$refs.video === 'undefined') {
+            return;
+        }
+
+        this.volume = (<Video>this.$refs.video).getVolume();
+    }
+
     // video control 表示切り替え
     public toggleControl(): void {
         this.isShowControl = !this.isShowControl;
@@ -250,6 +266,28 @@ export default class VideoContainer extends Vue {
         } else {
             (<Video>this.$refs.video).pause();
         }
+    }
+
+    /**
+     * mute 切り替え
+     */
+    public switchMute(): void {
+        if (typeof this.$refs.video === 'undefined') {
+            return;
+        }
+
+        (<Video>this.$refs.video).switchMute();
+    }
+
+    /**
+     * 音量変更
+     */
+    public changeVolume(volume: number): void {
+        if (typeof this.$refs.video === 'undefined') {
+            return;
+        }
+
+        (<Video>this.$refs.video).setVolume(volume);
     }
 
     // pip 切り替え
