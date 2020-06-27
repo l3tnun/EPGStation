@@ -57,7 +57,11 @@
                                         <span>00:00</span>
                                     </div>
                                     <v-spacer></v-spacer>
-                                    <v-menu offset-y :close-on-content-click="false">
+                                    <v-menu
+                                        v-if="isEnabledSpeedControl === true"
+                                        offset-y
+                                        :close-on-content-click="false"
+                                    >
                                         <template v-slot:activator="{ on, attrs }">
                                             <v-btn icon dark v-bind="attrs" v-on="on">
                                                 <v-icon>mdi-play-speed</v-icon>
@@ -67,10 +71,10 @@
                                             <v-select v-model="speed" :items="speedItems" label="speed"></v-select>
                                         </v-card>
                                     </v-menu>
-                                    <v-btn icon dark>
+                                    <v-btn v-if="isEnabledSubtitles === true" icon dark>
                                         <v-icon>mdi-subtitles</v-icon>
                                     </v-btn>
-                                    <v-btn icon dark>
+                                    <v-btn v-if="this.isEnabledPip === true" icon dark>
                                         <v-icon>mdi-picture-in-picture-bottom-right</v-icon>
                                     </v-btn>
                                     <v-btn icon dark v-on:click="switchFullScreen">
@@ -117,17 +121,25 @@ export default class VideoContainer extends Vue {
     @Prop({ required: true })
     public videoSrc!: string | null;
 
+    @Prop()
+    public isEnabledSubtitles: boolean | undefined; // 字幕が有効か
+
+    @Prop()
+    public isEnabledSpeedControl: boolean | undefined; // 速度調整が有効か
+
     public speedItems: SpeedItem[] = [];
     public speed: number = 1.0;
     public isLoading: boolean = true;
     public isPause: boolean = true;
     public isShowControl: boolean = false;
+    public isEnabledPip: boolean;
 
     private isEnabledRotation: boolean = typeof (<any>window.screen).orientation !== 'undefined' && UaUtil.isMobile();
 
     constructor() {
         super();
 
+        this.isEnabledPip = !!(<any>document).pictureInPictureEnabled;
         for (let i = 5; i <= 20; i++) {
             const value = i / 10;
 
