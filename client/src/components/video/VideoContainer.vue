@@ -232,7 +232,8 @@ export default class VideoContainer extends Vue {
                 bottom: 0
                 opacity: 0.8
                 .volume-content
-                    width: 100px
+                    .slider
+                        width: 64px
                 .time
                     height: 36px
                     line-height: 36px
