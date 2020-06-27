@@ -58,6 +58,9 @@
                                     </div>
                                     <v-spacer></v-spacer>
                                     <v-btn icon dark>
+                                        <v-icon>mdi-subtitles</v-icon>
+                                    </v-btn>
+                                    <v-btn icon dark>
                                         <v-icon>mdi-picture-in-picture-bottom-right</v-icon>
                                     </v-btn>
                                     <v-btn icon dark>
