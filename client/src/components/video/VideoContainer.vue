@@ -199,7 +199,7 @@ export default class VideoContainer extends Vue {
     }
 
     // fullscreen 切り替え
-    public switchFullScreen(): void {
+    public async switchFullScreen(): Promise<void> {
         if (typeof this.$refs.container === 'undefined') {
             return;
         }
@@ -226,7 +226,7 @@ export default class VideoContainer extends Vue {
 
             // 画面回転
             if (this.isLandscape() === false) {
-                this.switchRotation();
+                await this.switchRotation();
             }
         }
     }
