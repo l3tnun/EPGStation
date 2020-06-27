@@ -396,6 +396,7 @@ export default class VideoContainer extends Vue {
         left: 0
         margin: auto
         width: 100%
+        height: 100%
 </style>
 
 <style lang="sass">
