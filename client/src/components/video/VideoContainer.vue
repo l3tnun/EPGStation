@@ -34,7 +34,7 @@
                                     color="white"
                                     track-color="grey"
                                 ></v-slider>
-                                <div class="d-flex align-center mx-2">
+                                <div class="d-flex align-center overflow-hidden mx-2">
                                     <v-btn icon dark v-on:click="togglePlay">
                                         <v-icon v-if="isPause === true">mdi-play</v-icon>
                                         <v-icon v-else>mdi-pause</v-icon>
@@ -57,6 +57,16 @@
                                         <span>00:00</span>
                                     </div>
                                     <v-spacer></v-spacer>
+                                    <v-menu offset-y :close-on-content-click="false">
+                                        <template v-slot:activator="{ on, attrs }">
+                                            <v-btn icon dark v-bind="attrs" v-on="on">
+                                                <v-icon>mdi-play-speed</v-icon>
+                                            </v-btn>
+                                        </template>
+                                        <v-card class="video-menu pa-2">
+                                            <v-select v-model="speed" :items="speedItems" label="speed"></v-select>
+                                        </v-card>
+                                    </v-menu>
                                     <v-btn icon dark>
                                         <v-icon>mdi-subtitles</v-icon>
                                     </v-btn>
@@ -92,6 +102,11 @@ import Video from '@/components/video/Video.vue';
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
 import Util from '../../util/Util';
 
+interface SpeedItem {
+    text: string;
+    value: number;
+}
+
 @Component({
     components: {
         Video,
@@ -101,10 +116,24 @@ export default class VideoContainer extends Vue {
     @Prop({ required: true })
     public videoSrc!: string | null;
 
+    public speedItems: SpeedItem[] = [];
+    public speed: number = 1.0;
     public isLoading: boolean = true;
     public isPause: boolean = true;
-
     public isShowControl: boolean = false;
+
+    constructor() {
+        super();
+
+        for (let i = 5; i <= 20; i++) {
+            const value = i / 10;
+
+            this.speedItems.push({
+                text: `x${value.toFixed(1)}`,
+                value: value,
+            });
+        }
+    }
 
     // 読み込み中
     public onWaiting(): void {
@@ -267,4 +296,8 @@ export default class VideoContainer extends Vue {
             margin: 0
         .v-messages
             display: none
+
+.video-menu
+    .v-text-field__details
+        display: none
 </style>
