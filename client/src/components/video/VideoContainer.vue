@@ -35,7 +35,7 @@
                                     track-color="grey"
                                 ></v-slider>
                                 <div class="d-flex align-center overflow-hidden mx-2">
-                                    <v-btn icon dark v-on:click="togglePlay">
+                                    <v-btn class="play" icon dark v-on:click="togglePlay">
                                         <v-icon v-if="isPause === true">mdi-play</v-icon>
                                         <v-icon v-else>mdi-pause</v-icon>
                                     </v-btn>
@@ -269,6 +269,13 @@ export default class VideoContainer extends Vue {
                     color: white
                     font-size: 12px
                     user-select: none
+
+            @media screen and (max-width: 400px)
+                .volume-content
+                    .slider
+                        display: none
+                .play
+                    display: none
 
     video
         z-index: 1
