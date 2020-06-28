@@ -29,8 +29,8 @@
                             <div class="content" v-on:click="stopPropagation">
                                 <v-slider
                                     class="slider"
-                                    value="30"
-                                    max="100"
+                                    v-model="currentTime"
+                                    :max="endTime"
                                     color="white"
                                     track-color="grey"
                                 ></v-slider>
@@ -96,6 +96,7 @@
                 v-if="videoSrc !== null"
                 ref="video"
                 v-bind:videoSrc.sync="videoSrc"
+                v-on:timeupdate="onTimeupdate"
                 v-on:waiting="onWaiting"
                 v-on:loadeddata="onLoadeddata"
                 v-on:canplay="onCanplay"
@@ -124,7 +125,7 @@ interface SpeedItem {
         Video,
     },
 })
-export default class VideoContainer extends Vue {
+class VideoContainer extends Vue {
     @Prop({ required: true })
     public videoSrc!: string | null;
 
@@ -138,6 +139,8 @@ export default class VideoContainer extends Vue {
     public isEnabledSpeedControl: boolean | undefined; // 速度調整が有効か
 
     public speedItems: SpeedItem[] = [];
+    public currentTime: number = 0; // 動画再生位置 (秒)
+    public endTime: number = 0; // 動画終了長さ (秒)
     public volume: number = 1.0;
     public speed: number = 1.0;
     public isLoading: boolean = true;
@@ -199,6 +202,13 @@ export default class VideoContainer extends Vue {
         );
     }
 
+    // 時刻更新
+    public onTimeupdate(): void {
+        const duration = this.getVideoDuration();
+        this.endTime = duration;
+        this.currentTime = (VideoContainer.VideoSeekInterval / duration) * this.getVideoCurrentTime();
+    }
+
     // 読み込み中
     public onWaiting(): void {
         this.isLoading = true;
@@ -222,6 +232,9 @@ export default class VideoContainer extends Vue {
                 this.isShowControl = false;
             }
         }, 300);
+
+        // set endTime
+        this.endTime = this.getVideoDuration();
     }
 
     // 終了
@@ -266,6 +279,34 @@ export default class VideoContainer extends Vue {
         } else {
             (<Video>this.$refs.video).pause();
         }
+    }
+
+    /**
+     * seekbar から動画再生位置を取得
+     * @return number
+     */
+    private getSeekCurrentTime(): number {
+        if (typeof this.$refs.video === 'undefined') {
+            return 0;
+        }
+
+        return Math.floor(this.getVideoDuration()) * (this.currentTime / VideoContainer.VideoSeekInterval);
+    }
+
+    /**
+     * 動画の長さを返す (秒)
+     * @return number
+     */
+    private getVideoDuration(): number {
+        return typeof this.$refs.video === 'undefined' ? 0 : (<Video>this.$refs.video).getDuration();
+    }
+
+    /**
+     * 動画の現在再生位置を返す (秒)
+     * @return number
+     */
+    private getVideoCurrentTime(): number {
+        return typeof this.$refs.video === 'undefined' ? 0 : (<Video>this.$refs.video).getCurrentTime();
     }
 
     /**
@@ -402,6 +443,12 @@ export default class VideoContainer extends Vue {
         e.stopPropagation();
     }
 }
+
+namespace VideoContainer {
+    export const VideoSeekInterval = 1000;
+}
+
+export default VideoContainer;
 </script>
 
 <style lang="sass" scoped>

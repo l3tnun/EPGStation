@@ -87,6 +87,45 @@ export default class Video extends Vue {
     }
 
     /**
+     * 停止中か
+     */
+    public paused(): boolean {
+        return this.video === null ? true : this.video.paused;
+    }
+
+    /**
+     * 動画の長さを返す (秒)
+     * @return number
+     */
+    public getDuration(): number {
+        return this.video === null || this.video.duration === Infinity || isNaN(this.video.duration)
+            ? 0
+            : this.video.duration;
+    }
+
+    /**
+     * 動画の現在再生位置を返す (秒)
+     * @return number
+     */
+    public getCurrentTime(): number {
+        return this.video === null || this.video.currentTime === Infinity || isNaN(this.video.currentTime)
+            ? 0
+            : this.video.currentTime;
+    }
+
+    /**
+     * 再生位置設定
+     * @param time: number (秒)
+     */
+    public setCurrentTime(time: number): void {
+        if (this.video === null) {
+            return;
+        }
+
+        this.video.currentTime = time;
+    }
+
+    /**
      * 音量を返す
      * @return number
      */
@@ -107,6 +146,7 @@ export default class Video extends Vue {
 
     /**
      * 音量設定
+     * @param volume: number 0.0 ~ 1.0
      */
     public setVolume(volume: number): void {
         if (this.video === null) {
