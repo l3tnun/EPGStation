@@ -648,8 +648,6 @@ export default class VideoContainer extends Vue {
         .v-icon
             font-size: 60px
     .slider
-        .v-slider
-            min-height: 10px
         .v-input__slot
             margin: 0
         .v-messages
