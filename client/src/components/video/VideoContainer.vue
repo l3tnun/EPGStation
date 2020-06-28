@@ -57,6 +57,7 @@
                                             color="white"
                                             track-color="grey"
                                             v-on:input="changeVolume"
+                                            v-on:change="updateLastSeekTime"
                                         ></v-slider>
                                     </div>
                                     <div class="time Caption mx-2">
@@ -162,6 +163,7 @@ export default class VideoContainer extends Vue {
 
     // seek 時に使用する一時変数
     private needsReplay: boolean | null = null;
+    private lastSeekedTime: number = 0; // 最後に slider を seek した時刻
 
     constructor() {
         super();
@@ -341,6 +343,7 @@ export default class VideoContainer extends Vue {
             return;
         }
 
+        this.updateLastSeekTime();
         (<Video>this.$refs.video).setCurrentTime(time);
 
         // シーク前に再生中であれば再開
@@ -366,6 +369,11 @@ export default class VideoContainer extends Vue {
 
     // video control 表示切り替え
     public toggleControl(): void {
+        // 最後に slider を seek させてから 50ms 以上経過していない場合は無視する
+        if (new Date().getTime() - this.lastSeekedTime < 50) {
+            return;
+        }
+
         this.isShowControl = !this.isShowControl;
     }
 
@@ -420,6 +428,13 @@ export default class VideoContainer extends Vue {
         }
 
         (<Video>this.$refs.video).setVolume(volume);
+    }
+
+    /**
+     * seek 時刻を更新する
+     */
+    public updateLastSeekTime(): void {
+        this.lastSeekedTime = new Date().getTime();
     }
 
     // pip 切り替え
