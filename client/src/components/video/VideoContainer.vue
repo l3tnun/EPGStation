@@ -30,7 +30,7 @@
                                 <v-slider
                                     class="slider"
                                     v-model="currentTime"
-                                    :max="endTime"
+                                    :max="duration"
                                     color="white"
                                     track-color="grey"
                                     v-on:start="startChangeCurrentPosition"
@@ -144,7 +144,7 @@ export default class VideoContainer extends Vue {
 
     public speedItems: SpeedItem[] = [];
     public currentTime: number = 0; // 動画再生位置 (秒)
-    public endTime: number = 0; // 動画終了長さ (秒)
+    public duration: number = 0; // 動画終了長さ (秒)
     public volume: number = 1.0;
     public speed: number = 1.0;
     public isLoading: boolean = true;
@@ -221,7 +221,7 @@ export default class VideoContainer extends Vue {
     // 時刻更新
     public onTimeupdate(): void {
         const duration = this.getVideoDuration();
-        this.endTime = duration;
+        this.duration = duration;
         this.currentTime = this.getVideoCurrentTime();
     }
 
@@ -230,7 +230,7 @@ export default class VideoContainer extends Vue {
      */
     private updateTimeStr(): void {
         const c = this.getTimeData(this.currentTime);
-        const d = this.getTimeData(this.endTime);
+        const d = this.getTimeData(this.duration);
 
         if (d.h > 0) {
             this.currentTimeStr = `${this.zeroPadding(c.h)}:${this.zeroPadding(c.m)}:${this.zeroPadding(c.s)}`;
@@ -301,8 +301,8 @@ export default class VideoContainer extends Vue {
             this.isFirstPlay = false;
         }, 300);
 
-        // set endTime
-        this.endTime = this.getVideoDuration();
+        // set duration
+        this.duration = this.getVideoDuration();
 
         // update time str
         this.updateTimeStr();
