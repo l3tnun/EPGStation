@@ -35,6 +35,7 @@
                                     track-color="grey"
                                     v-on:start="startChangeCurrentPosition"
                                     v-on:change="endChangeCurrentPosition"
+                                    v-on:input="updateCurrentPosition"
                                 ></v-slider>
                                 <div class="d-flex align-center overflow-hidden mx-2">
                                     <v-btn class="play" icon dark v-on:click="togglePlay">
@@ -59,9 +60,9 @@
                                         ></v-slider>
                                     </div>
                                     <div class="time Caption mx-2">
-                                        <span>00:00</span>
+                                        <span>{{ currentTimeStr }}</span>
                                         <span class="mx-1">/</span>
-                                        <span>00:00</span>
+                                        <span>{{ durationStr }}</span>
                                     </div>
                                     <v-spacer></v-spacer>
                                     <v-menu
@@ -150,6 +151,8 @@ export default class VideoContainer extends Vue {
     public isShowControl: boolean = false;
     public isEnabledPip: boolean;
     public isFullscreen: boolean = this.checkFullscreen();
+    public currentTimeStr: string = '--:--';
+    public durationStr: string = '--:--';
 
     private isFirstPlay: boolean = true;
     private isEnabledRotation: boolean = typeof (<any>window.screen).orientation !== 'undefined' && UaUtil.isMobile();
@@ -220,6 +223,53 @@ export default class VideoContainer extends Vue {
         this.currentTime = this.getVideoCurrentTime();
     }
 
+    /**
+     * this.currentTimeStr, this.durationStr を更新する
+     */
+    private updateTimeStr(): void {
+        const c = this.getTimeData(this.currentTime);
+        const d = this.getTimeData(this.endTime);
+
+        if (d.h > 0) {
+            this.currentTimeStr = `${this.zeroPadding(c.h)}:${this.zeroPadding(c.m)}:${this.zeroPadding(c.s)}`;
+            this.durationStr = `${this.zeroPadding(d.h)}:${this.zeroPadding(d.m)}:${this.zeroPadding(d.s)}`;
+        } else {
+            this.currentTimeStr = `${this.zeroPadding(c.m)}:${this.zeroPadding(c.s)}`;
+            this.durationStr = `${this.zeroPadding(d.m)}:${this.zeroPadding(d.s)}`;
+        }
+    }
+
+    /**
+     * @param time: number
+     * @return { h: number; m: number; s: number }
+     */
+    private getTimeData(time: number): { h: number; m: number; s: number } {
+        if (time === Infinity || isNaN(time)) {
+            return {
+                h: 0,
+                m: 0,
+                s: 0,
+            };
+        }
+
+        time = Math.floor(time);
+
+        return {
+            h: (time / 3600) | 0,
+            m: ((time % 3600) / 60) | 0,
+            s: time % 60,
+        };
+    }
+
+    /**
+     * 0 埋め
+     * @param num: number
+     * @return string
+     */
+    private zeroPadding(num: number): string {
+        return `0${num.toString(10)}`.slice(-2);
+    }
+
     // 読み込み中
     public onWaiting(): void {
         this.isLoading = true;
@@ -251,6 +301,9 @@ export default class VideoContainer extends Vue {
 
         // set endTime
         this.endTime = this.getVideoDuration();
+
+        // update time str
+        this.updateTimeStr();
     }
 
     // 終了
@@ -295,6 +348,11 @@ export default class VideoContainer extends Vue {
             (<Video>this.$refs.video).play();
         }
         this.needsReplay = null;
+    }
+
+    // 再生位置更新時に呼ばれる
+    public updateCurrentPosition(): void {
+        this.updateTimeStr();
     }
 
     // 音量変更
