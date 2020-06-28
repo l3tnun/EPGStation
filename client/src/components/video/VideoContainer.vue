@@ -33,6 +33,8 @@
                                     :max="endTime"
                                     color="white"
                                     track-color="grey"
+                                    v-on:start="startChangeCurrentPosition"
+                                    v-on:change="endChangeCurrentPosition"
                                 ></v-slider>
                                 <div class="d-flex align-center overflow-hidden mx-2">
                                     <v-btn class="play" icon dark v-on:click="togglePlay">
@@ -125,7 +127,7 @@ interface SpeedItem {
         Video,
     },
 })
-class VideoContainer extends Vue {
+export default class VideoContainer extends Vue {
     @Prop({ required: true })
     public videoSrc!: string | null;
 
@@ -144,15 +146,19 @@ class VideoContainer extends Vue {
     public volume: number = 1.0;
     public speed: number = 1.0;
     public isLoading: boolean = true;
-    public isPause: boolean = true;
+    public isPause: boolean = true; // play ボタン用
     public isShowControl: boolean = false;
     public isEnabledPip: boolean;
     public isFullscreen: boolean = this.checkFullscreen();
 
+    private isFirstPlay: boolean = true;
     private isEnabledRotation: boolean = typeof (<any>window.screen).orientation !== 'undefined' && UaUtil.isMobile();
     private fullScreenListener = (() => {
         this.fullscreenChange();
     }).bind(this);
+
+    // seek 時に使用する一時変数
+    private needsReplay: boolean | null = null;
 
     constructor() {
         super();
@@ -182,6 +188,11 @@ class VideoContainer extends Vue {
         document.removeEventListener('fullscreenchange', this.fullScreenListener, false);
     }
 
+    @Watch('$route', { immediate: true, deep: true })
+    public onUrlChange(): void {
+        this.isFirstPlay = true;
+    }
+
     /**
      * fullscreen の状態が変化したときに呼ばれる
      */
@@ -206,7 +217,7 @@ class VideoContainer extends Vue {
     public onTimeupdate(): void {
         const duration = this.getVideoDuration();
         this.endTime = duration;
-        this.currentTime = (VideoContainer.VideoSeekInterval / duration) * this.getVideoCurrentTime();
+        this.currentTime = this.getVideoCurrentTime();
     }
 
     // 読み込み中
@@ -223,14 +234,19 @@ class VideoContainer extends Vue {
     public onCanplay(): void {
         this.isLoading = false;
 
-        if (this.isPause === true) {
+        if (typeof this.$refs.video !== 'undefined' && (<Video>this.$refs.video).paused() === true) {
             this.isShowControl = true;
         }
 
         setTimeout(() => {
-            if (this.isPause === false) {
+            if (
+                this.isFirstPlay === true &&
+                typeof this.$refs.video !== 'undefined' &&
+                (<Video>this.$refs.video).paused() === false
+            ) {
                 this.isShowControl = false;
             }
+            this.isFirstPlay = false;
         }, 300);
 
         // set endTime
@@ -250,6 +266,35 @@ class VideoContainer extends Vue {
     // 停止
     public onPause(): void {
         this.isPause = true;
+    }
+
+    // 再生位置変更開始
+    public startChangeCurrentPosition(): void {
+        if (typeof this.$refs.video === 'undefined') {
+            return;
+        }
+
+        // 後で再生状態を戻すために保存
+        if ((<Video>this.$refs.video).paused() === false) {
+            // 再生中なら再生停止
+            (<Video>this.$refs.video).pause();
+            this.needsReplay = true;
+        }
+    }
+
+    // 再生位置変更終了
+    public endChangeCurrentPosition(time: number): void {
+        if (typeof this.$refs.video === 'undefined') {
+            return;
+        }
+
+        (<Video>this.$refs.video).setCurrentTime(time);
+
+        // シーク前に再生中であれば再開
+        if (this.needsReplay === true) {
+            (<Video>this.$refs.video).play();
+        }
+        this.needsReplay = null;
     }
 
     // 音量変更
@@ -274,23 +319,11 @@ class VideoContainer extends Vue {
             return;
         }
 
-        if (this.isPause === true) {
+        if ((<Video>this.$refs.video).paused() === true) {
             (<Video>this.$refs.video).play();
         } else {
             (<Video>this.$refs.video).pause();
         }
-    }
-
-    /**
-     * seekbar から動画再生位置を取得
-     * @return number
-     */
-    private getSeekCurrentTime(): number {
-        if (typeof this.$refs.video === 'undefined') {
-            return 0;
-        }
-
-        return Math.floor(this.getVideoDuration()) * (this.currentTime / VideoContainer.VideoSeekInterval);
     }
 
     /**
@@ -443,12 +476,6 @@ class VideoContainer extends Vue {
         e.stopPropagation();
     }
 }
-
-namespace VideoContainer {
-    export const VideoSeekInterval = 1000;
-}
-
-export default VideoContainer;
 </script>
 
 <style lang="sass" scoped>
