@@ -8,20 +8,20 @@
                 <transition name="fade">
                     <div v-if="isShowControl === true">
                         <div class="d-flex center-buttons" v-on:click="stopPropagation">
-                            <v-btn v-if="duration > 0" class="rewind mx-4" icon dark>
+                            <v-btn v-if="duration > 0" class="rewind mx-4" icon dark v-on:click="rewindTime(30)">
                                 <v-icon dark>mdi-rewind-30</v-icon>
                             </v-btn>
-                            <v-btn v-if="duration > 0" class="rewind mx-4" icon dark>
+                            <v-btn v-if="duration > 0" class="rewind mx-4" icon dark v-on:click="rewindTime(10)">
                                 <v-icon dark>mdi-rewind-10</v-icon>
                             </v-btn>
                             <v-btn class="play-button mx-4" icon dark v-on:click="togglePlay">
                                 <v-icon v-if="isPause === true" dark>mdi-play</v-icon>
                                 <v-icon v-else dark>mdi-pause</v-icon>
                             </v-btn>
-                            <v-btn v-if="duration > 0" class="forward mx-4" icon dark>
+                            <v-btn v-if="duration > 0" class="forward mx-4" icon dark v-on:click="forwardTime(10)">
                                 <v-icon dark>mdi-fast-forward-10</v-icon>
                             </v-btn>
-                            <v-btn v-if="duration > 0" class="forward mx-4" icon dark>
+                            <v-btn v-if="duration > 0" class="forward mx-4" icon dark v-on:click="forwardTime(30)">
                                 <v-icon dark>mdi-fast-forward-30</v-icon>
                             </v-btn>
                         </div>
@@ -388,6 +388,32 @@ export default class VideoContainer extends Vue {
         } else {
             (<Video>this.$refs.video).pause();
         }
+    }
+
+    /**
+     * 指定した時間だけ currentTime を戻す
+     * @param time: number 戻す時間 (秒)
+     */
+    public rewindTime(time: number): void {
+        if (time < 0 || typeof this.$refs.video === 'undefined') {
+            return;
+        }
+
+        const newCurrentTime = this.currentTime - time;
+        (<Video>this.$refs.video).setCurrentTime(newCurrentTime < 0 ? 0 : newCurrentTime);
+    }
+
+    /**
+     * 指定した時間だけ currentTime を進める
+     * @param time: number 進める時間 (秒)
+     */
+    public forwardTime(time: number): void {
+        if (time < 0 || typeof this.$refs.video === 'undefined') {
+            return;
+        }
+
+        const newCurrentTime = this.currentTime + time;
+        (<Video>this.$refs.video).setCurrentTime(newCurrentTime > this.duration ? this.duration : newCurrentTime);
     }
 
     /**
