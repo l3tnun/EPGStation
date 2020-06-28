@@ -33,6 +33,7 @@
                                     :max="duration"
                                     color="white"
                                     track-color="grey"
+                                    :disabled="duration === 0"
                                     v-on:start="startChangeCurrentPosition"
                                     v-on:change="endChangeCurrentPosition"
                                     v-on:input="updateCurrentPosition"
