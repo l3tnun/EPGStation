@@ -501,7 +501,7 @@ export default class VideoContainer extends Vue {
                 this.requestFullscreen(<HTMLElement>this.$refs.container) === false &&
                 typeof this.$refs.video !== 'undefined'
             ) {
-                this.requestFullscreen(<HTMLElement>this.$refs.video);
+                (<Video>this.$refs.video).requestFullscreen();
             }
 
             // 画面回転

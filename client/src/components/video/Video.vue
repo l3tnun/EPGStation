@@ -3,6 +3,7 @@
 </template>
 
 <script lang="ts">
+import UaUtil from '@/util/UaUtil';
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
 
 @Component({})
@@ -154,6 +155,39 @@ export default class Video extends Vue {
         }
 
         this.video.volume = volume;
+    }
+
+    /**
+     * video 要素にフルスクリーンリクエスト
+     */
+    public requestFullscreen(): boolean {
+        if (this.video === null) {
+            return false;
+        }
+
+        /* tslint:disable:newline-before-return */
+        if (UaUtil.isAndroid()) {
+            this.video.requestFullscreen({ navigationUI: 'hide' });
+            return true;
+        } else if (typeof this.video.requestFullscreen === 'function') {
+            this.video.requestFullscreen();
+            return true;
+        } else if ((<any>this.video).mozRequestFullScreen) {
+            (<any>this.video).mozRequestFullScreen();
+            return true;
+        } else if ((<any>this.video).webkitRequestFullScreen) {
+            (<any>this.video).webkitRequestFullScreen();
+            return true;
+        } else if ((<any>this.video).webkitEnterFullscreen) {
+            (<any>this.video).webkitEnterFullscreen();
+            return true;
+        } else if ((<any>this.video).msRequestFullscreen) {
+            (<any>this.video).msRequestFullscreen();
+            return true;
+        }
+        /* tslint:enable:newline-before-return */
+
+        return false;
     }
 
     /**
