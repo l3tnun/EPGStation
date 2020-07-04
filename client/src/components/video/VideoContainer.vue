@@ -587,6 +587,10 @@ export default class VideoContainer extends Vue {
     max-width: 100%
     background: black
 
+    &:fullscreen
+        width: 100%
+        height: 100%
+
     &::before
         content: ""
         display: block
