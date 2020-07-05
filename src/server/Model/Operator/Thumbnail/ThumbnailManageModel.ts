@@ -127,7 +127,7 @@ class ThumbnailManageModel extends Model implements ThumbnailManageModelInterfac
         }
 
         // create thumbnail
-        const cmd = (`-y -i %INPUT% -ss ${ thumbnailPosition } -vframes 1 -f image2 -s ${ thumbnailSize } ${ thumbnailPath }`).split(' ');
+        const cmd = (`-ss ${ thumbnailPosition } -y -i %INPUT% -vframes 1 -f image2 -s ${ thumbnailSize } ${ thumbnailPath }`).split(' ');
         for (let i = 0; i < cmd.length; i++) {
             cmd[i] = cmd[i].replace(/%INPUT%/, filePath);
         }
