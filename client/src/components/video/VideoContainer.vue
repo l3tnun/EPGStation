@@ -237,6 +237,11 @@ export default class VideoContainer extends Vue {
             this.switchMute();
         }
 
+        // switch fullscreen
+        if (event.key === 'f') {
+            this.switchFullScreen();
+        }
+
         if (this.duration > 0) {
             // -10 seek
             if (event.key === 'ArrowLeft') {
