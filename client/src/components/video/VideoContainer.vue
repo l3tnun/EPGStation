@@ -4,7 +4,13 @@
             <div v-if="isLoading === true || videoSrc === null" class="loading">
                 <v-progress-circular :size="50" color="primary" indeterminate></v-progress-circular>
             </div>
-            <div class="video-control-wrap overflow-hidden" v-on:click="toggleControl">
+            <div
+                ref="videoControlWrap"
+                class="video-control-wrap overflow-hidden"
+                v-on:click="toggleControl"
+                v-on:mousemove="mousemove"
+                v-on:mouseleave="mouseleave"
+            >
                 <transition name="fade">
                     <div v-if="isShowControl === true">
                         <div class="d-flex center-buttons" v-on:click="stopPropagation">
@@ -30,15 +36,15 @@
                             class="d-flex flex-column align-center left-buttons"
                             v-on:click="stopPropagation"
                         >
-                            <v-btb class="add-shadow" icon dark v-on:click="speedUp">
+                            <v-btn class="add-shadow" icon dark v-on:click="speedUp">
                                 <v-icon dark>mdi-plus-circle</v-icon>
-                            </v-btb>
+                            </v-btn>
                             <v-btn class="add-shadow my-2" text dark v-on:click="resetSpeed">
                                 x{{ playbackRate.toFixed(1) }}
                             </v-btn>
-                            <v-btb class="add-shadow" icon dark v-on:click="speedDown">
+                            <v-btn class="add-shadow" icon dark v-on:click="speedDown">
                                 <v-icon dark>mdi-minus-circle</v-icon>
-                            </v-btb>
+                            </v-btn>
                         </div>
                         <div class="video-control">
                             <div class="content" v-on:click="stopPropagation">
@@ -160,6 +166,7 @@ export default class VideoContainer extends Vue {
     private fullScreenListener = (() => {
         this.fullscreenChange();
     }).bind(this);
+    private hideControlTimer: number | undefined;
 
     // seek 時に使用する一時変数
     private needsReplay: boolean | null = null;
@@ -202,6 +209,37 @@ export default class VideoContainer extends Vue {
             ) ||
             (typeof this.$refs.video !== 'undefined' && !!(<any>this.$refs.video).webkitDisplayingFullscreen)
         );
+    }
+
+    /**
+     * mousemove 処理
+     */
+    public mousemove(e: MouseEvent): void {
+        if (typeof this.$refs.video === 'undefined' || (<Video>this.$refs.video).paused() === true) {
+            return;
+        }
+
+        this.isShowControl = true;
+
+        clearTimeout(this.hideControlTimer);
+        if (e.target === this.$refs.videoControlWrap) {
+            // video control 外
+            console.log('setTimer');
+            this.hideControlTimer = setTimeout(() => {
+                this.isShowControl = false;
+            }, 3000);
+        }
+    }
+
+    /**
+     * mouseleave 処理
+     */
+    private mouseleave(): void {
+        if (typeof this.$refs.video === 'undefined' || (<Video>this.$refs.video).paused() === true) {
+            return;
+        }
+
+        this.isShowControl = false;
     }
 
     // 時刻更新
@@ -369,6 +407,9 @@ export default class VideoContainer extends Vue {
             return;
         }
 
+        if (this.isShowControl === false) {
+            clearTimeout(this.hideControlTimer);
+        }
         this.isShowControl = !this.isShowControl;
     }
 
