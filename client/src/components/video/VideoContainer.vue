@@ -7,6 +7,7 @@
             <div
                 ref="videoControlWrap"
                 class="video-control-wrap overflow-hidden"
+                v-bind:class="{ 'hide-cursor': isHideCursor }"
                 v-on:click="toggleControl"
                 v-on:mousemove="mousemove"
                 v-on:mouseleave="mouseleave"
@@ -148,6 +149,7 @@ export default class VideoContainer extends Vue {
     @Prop()
     public isEnabledSpeedControl: boolean | undefined; // 速度調整が有効か
 
+    public isHideCursor: boolean = false;
     public currentTime: number = 0; // 動画再生位置 (秒)
     public duration: number = 0; // 動画終了長さ (秒)
     public volume: number = 1.0;
@@ -220,13 +222,14 @@ export default class VideoContainer extends Vue {
         }
 
         this.isShowControl = true;
+        this.isHideCursor = false;
 
         clearTimeout(this.hideControlTimer);
         if (e.target === this.$refs.videoControlWrap) {
             // video control 外
-            console.log('setTimer');
             this.hideControlTimer = setTimeout(() => {
                 this.isShowControl = false;
+                this.isHideCursor = true;
             }, 3000);
         }
     }
@@ -235,11 +238,17 @@ export default class VideoContainer extends Vue {
      * mouseleave 処理
      */
     private mouseleave(): void {
-        if (typeof this.$refs.video === 'undefined' || (<Video>this.$refs.video).paused() === true) {
+        //  再生中でない or 最後に slider を seek させてから 50ms 以上経過していない場合は無視する
+        if (
+            typeof this.$refs.video === 'undefined' ||
+            (<Video>this.$refs.video).paused() === true ||
+            new Date().getTime() - this.lastSeekedTime < 50
+        ) {
             return;
         }
 
         this.isShowControl = false;
+        this.isHideCursor = false;
     }
 
     // 時刻更新
@@ -409,6 +418,9 @@ export default class VideoContainer extends Vue {
 
         if (this.isShowControl === false) {
             clearTimeout(this.hideControlTimer);
+            this.isHideCursor = false;
+        } else if (typeof this.$refs.video !== 'undefined' && (<Video>this.$refs.video).paused() === false) {
+            this.isHideCursor = true;
         }
         this.isShowControl = !this.isShowControl;
     }
@@ -688,6 +700,9 @@ export default class VideoContainer extends Vue {
         position: relative
         height: 100%
         width: 100%
+
+        &.hide-cursor
+            cursor: none
 
         .center-buttons
             position: absolute
