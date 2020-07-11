@@ -115,7 +115,7 @@
                     </div>
                 </transition>
             </div>
-            <Video
+            <NormalVideo
                 v-if="videoSrc !== null"
                 ref="video"
                 v-bind:videoSrc.sync="videoSrc"
@@ -128,13 +128,14 @@
                 v-on:pause="onPause"
                 v-on:ratechange="onChangePlaybackRate"
                 v-on:volumechange="onVolumechange"
-            ></Video>
+            ></NormalVideo>
         </div>
     </div>
 </template>
 
 <script lang="ts">
-import Video from '@/components/video/Video.vue';
+import BaseVideo from '@/components/video/BaseVideo';
+import NormalVideo from '@/components/video/NormalVideo.vue';
 import UaUtil from '@/util/UaUtil';
 import Util from '@/util/Util';
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
@@ -146,7 +147,7 @@ interface SpeedItem {
 
 @Component({
     components: {
-        Video,
+        NormalVideo,
     },
 })
 export default class VideoContainer extends Vue {
@@ -219,7 +220,7 @@ export default class VideoContainer extends Vue {
             this.togglePlay(event);
 
             if (typeof this.$refs.video !== 'undefined') {
-                if ((<Video>this.$refs.video).paused() === true) {
+                if ((<BaseVideo>this.$refs.video).paused() === true) {
                     this.isShowControl = true;
                     this.isHideCursor = false;
                 } else {
@@ -276,7 +277,7 @@ export default class VideoContainer extends Vue {
         if (
             UaUtil.isAndroid() === true ||
             typeof this.$refs.video === 'undefined' ||
-            (<Video>this.$refs.video).paused() === true
+            (<BaseVideo>this.$refs.video).paused() === true
         ) {
             return;
         }
@@ -302,7 +303,7 @@ export default class VideoContainer extends Vue {
         if (
             UaUtil.isAndroid() === true ||
             typeof this.$refs.video === 'undefined' ||
-            (<Video>this.$refs.video).paused() === true ||
+            (<BaseVideo>this.$refs.video).paused() === true ||
             new Date().getTime() - this.lastSeekedTime < 50
         ) {
             return;
@@ -380,7 +381,7 @@ export default class VideoContainer extends Vue {
     public onCanplay(): void {
         this.isLoading = false;
 
-        if (typeof this.$refs.video !== 'undefined' && (<Video>this.$refs.video).paused() === true) {
+        if (typeof this.$refs.video !== 'undefined' && (<BaseVideo>this.$refs.video).paused() === true) {
             this.isShowControl = true;
         }
 
@@ -388,7 +389,7 @@ export default class VideoContainer extends Vue {
             if (
                 this.isFirstPlay === true &&
                 typeof this.$refs.video !== 'undefined' &&
-                (<Video>this.$refs.video).paused() === false
+                (<BaseVideo>this.$refs.video).paused() === false
             ) {
                 this.isShowControl = false;
             }
@@ -424,9 +425,9 @@ export default class VideoContainer extends Vue {
         }
 
         // 後で再生状態を戻すために保存
-        if ((<Video>this.$refs.video).paused() === false) {
+        if ((<BaseVideo>this.$refs.video).paused() === false) {
             // 再生中なら再生停止
-            (<Video>this.$refs.video).pause();
+            (<BaseVideo>this.$refs.video).pause();
             this.needsReplay = true;
         }
     }
@@ -438,11 +439,11 @@ export default class VideoContainer extends Vue {
         }
 
         this.updateLastSeekTime();
-        (<Video>this.$refs.video).setCurrentTime(time);
+        (<BaseVideo>this.$refs.video).setCurrentTime(time);
 
         // シーク前に再生中であれば再開
         if (this.needsReplay === true) {
-            (<Video>this.$refs.video).play();
+            (<BaseVideo>this.$refs.video).play();
         }
         this.needsReplay = null;
     }
@@ -458,7 +459,7 @@ export default class VideoContainer extends Vue {
             return;
         }
 
-        this.playbackRate = (<Video>this.$refs.video).getPlaybackRate();
+        this.playbackRate = (<BaseVideo>this.$refs.video).getPlaybackRate();
     }
 
     // 音量変更
@@ -467,7 +468,7 @@ export default class VideoContainer extends Vue {
             return;
         }
 
-        this.volume = (<Video>this.$refs.video).getVolume();
+        this.volume = (<BaseVideo>this.$refs.video).getVolume();
     }
 
     // video control 表示切り替え
@@ -480,7 +481,7 @@ export default class VideoContainer extends Vue {
         if (this.isShowControl === false) {
             clearTimeout(this.hideControlTimer);
             this.isHideCursor = false;
-        } else if (typeof this.$refs.video !== 'undefined' && (<Video>this.$refs.video).paused() === false) {
+        } else if (typeof this.$refs.video !== 'undefined' && (<BaseVideo>this.$refs.video).paused() === false) {
             this.isHideCursor = true;
         }
         this.isShowControl = !this.isShowControl;
@@ -494,10 +495,10 @@ export default class VideoContainer extends Vue {
             return;
         }
 
-        if ((<Video>this.$refs.video).paused() === true) {
-            (<Video>this.$refs.video).play();
+        if ((<BaseVideo>this.$refs.video).paused() === true) {
+            (<BaseVideo>this.$refs.video).play();
         } else {
-            (<Video>this.$refs.video).pause();
+            (<BaseVideo>this.$refs.video).pause();
         }
     }
 
@@ -511,7 +512,8 @@ export default class VideoContainer extends Vue {
         }
 
         const newCurrentTime = this.currentTime - time;
-        (<Video>this.$refs.video).setCurrentTime(newCurrentTime < 0 ? 0 : newCurrentTime);
+        (<BaseVideo>this.$refs.video).setCurrentTime(newCurrentTime < 0 ? 0 : newCurrentTime);
+        this.updateLastSeekTime();
     }
 
     /**
@@ -524,7 +526,8 @@ export default class VideoContainer extends Vue {
         }
 
         const newCurrentTime = this.currentTime + time;
-        (<Video>this.$refs.video).setCurrentTime(newCurrentTime > this.duration ? this.duration : newCurrentTime);
+        (<BaseVideo>this.$refs.video).setCurrentTime(newCurrentTime > this.duration ? this.duration : newCurrentTime);
+        this.updateLastSeekTime();
     }
 
     /**
@@ -553,7 +556,7 @@ export default class VideoContainer extends Vue {
             return;
         }
 
-        (<Video>this.$refs.video).setPlaybackRate(rate);
+        (<BaseVideo>this.$refs.video).setPlaybackRate(rate);
     }
 
     /**
@@ -561,7 +564,7 @@ export default class VideoContainer extends Vue {
      * @return number
      */
     private getVideoDuration(): number {
-        return typeof this.$refs.video === 'undefined' ? 0 : (<Video>this.$refs.video).getDuration();
+        return typeof this.$refs.video === 'undefined' ? 0 : (<BaseVideo>this.$refs.video).getDuration();
     }
 
     /**
@@ -569,7 +572,7 @@ export default class VideoContainer extends Vue {
      * @return number
      */
     private getVideoCurrentTime(): number {
-        return typeof this.$refs.video === 'undefined' ? 0 : (<Video>this.$refs.video).getCurrentTime();
+        return typeof this.$refs.video === 'undefined' ? 0 : (<BaseVideo>this.$refs.video).getCurrentTime();
     }
 
     /**
@@ -580,7 +583,7 @@ export default class VideoContainer extends Vue {
             return;
         }
 
-        (<Video>this.$refs.video).switchMute();
+        (<BaseVideo>this.$refs.video).switchMute();
     }
 
     /**
@@ -591,7 +594,7 @@ export default class VideoContainer extends Vue {
             return;
         }
 
-        (<Video>this.$refs.video).setVolume(volume);
+        (<BaseVideo>this.$refs.video).setVolume(volume);
     }
 
     /**
@@ -609,7 +612,7 @@ export default class VideoContainer extends Vue {
 
         try {
             if ((<any>document).pictureInPictureElement === null) {
-                (<Video>this.$refs.video).requestPictureInPicture();
+                (<BaseVideo>this.$refs.video).requestPictureInPicture();
             } else {
                 (<any>document).exitPictureInPicture();
             }
@@ -641,7 +644,7 @@ export default class VideoContainer extends Vue {
                 this.requestFullscreen(<HTMLElement>this.$refs.container) === false &&
                 typeof this.$refs.video !== 'undefined'
             ) {
-                (<Video>this.$refs.video).requestFullscreen();
+                (<BaseVideo>this.$refs.video).requestFullscreen();
             }
 
             // 画面回転

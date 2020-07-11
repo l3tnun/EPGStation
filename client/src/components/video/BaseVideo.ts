@@ -1,65 +1,130 @@
-<template>
-    <video ref="video" :src="videoSrc" autoplay playsinline></video>
-</template>
-
-<script lang="ts">
 import UaUtil from '@/util/UaUtil';
-import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
+import { Component, Vue } from 'vue-property-decorator';
 
-@Component({})
-export default class Video extends Vue {
-    @Prop({ required: true })
-    public videoSrc!: string;
-
-    private video: HTMLVideoElement | null = null;
+export default abstract class BaseVide extends Vue {
+    protected video: HTMLVideoElement | null = null;
 
     public mounted(): void {
         this.video = <HTMLVideoElement>this.$refs.video;
 
         // 時刻更新
-        this.video.addEventListener('timeupdate', () => {
-            this.$emit('timeupdate');
-        });
+        this.video.addEventListener('timeupdate', this.onTimeupdate.bind(this));
 
         // 読み込み中
-        this.video.addEventListener('waiting', () => {
-            this.$emit('waiting');
-        });
+        this.video.addEventListener('waiting', this.onWaiting.bind(this));
 
         // 読み込み完了
-        this.video.addEventListener('loadeddata', () => {
-            this.$emit('loadeddata');
-        });
+        this.video.addEventListener('loadeddata', this.onLoadeddata.bind(this));
 
         // 再生可能
-        this.video.addEventListener('canplay', () => {
-            this.$emit('canplay');
-        });
+        this.video.addEventListener('canplay', this.onCanplay.bind(this));
 
         // 終了
-        this.video.addEventListener('ended', () => {
-            this.$emit('ended');
-        });
+        this.video.addEventListener('ended', this.onEnded.bind(this));
 
         // 再生
-        this.video.addEventListener('play', () => {
-            this.$emit('play');
-        });
+        this.video.addEventListener('play', this.onPlay.bind(this));
 
         // 停止
-        this.video.addEventListener('pause', () => {
-            this.$emit('pause');
-        });
+        this.video.addEventListener('pause', this.onPause.bind(this));
 
         // 再生速度変化
-        this.video.addEventListener('ratechange', () => {
-            this.$emit('ratechange');
-        });
+        this.video.addEventListener('ratechange', this.onRatechange.bind(this));
 
         // 音量変化
-        this.video.addEventListener('volumechange', () => {
-            this.$emit('volumechange');
-        });
+        this.video.addEventListener('volumechange', this.onVolumechange.bind(this));
+
+        this.initVideoSetting();
+    }
+
+    /**
+     * video 再生初期設定
+     */
+    protected abstract initVideoSetting(): void;
+
+    /**
+     * video ソース設定
+     */
+    protected setSrc(src: string): void {
+        if (this.video === null) {
+            return;
+        }
+
+        this.video.src = src;
+    }
+
+    /**
+     * video の 読み込み
+     */
+    protected load(): void {
+        if (this.video === null) {
+            return;
+        }
+
+        this.video.load();
+    }
+
+    /**
+     * 時刻更新
+     */
+    protected onTimeupdate(): void {
+        this.$emit('timeupdate');
+    }
+
+    /**
+     * 読み込み中
+     */
+    protected onWaiting(): void {
+        this.$emit('waiting');
+    }
+
+    /**
+     * 読み込み完了
+     */
+    protected onLoadeddata(): void {
+        this.$emit('loadeddata');
+    }
+
+    /**
+     * 再生可能
+     */
+    protected onCanplay(): void {
+        this.$emit('canplay');
+    }
+
+    /**
+     * 終了
+     */
+    protected onEnded(): void {
+        this.$emit('ended');
+    }
+
+    /**
+     * 再生
+     */
+    protected onPlay(): void {
+        this.$emit('play');
+    }
+
+    /**
+     * 停止
+     */
+    protected onPause(): void {
+        this.$emit('pause');
+    }
+
+    /**
+     * 再生速度変化
+     */
+    protected onRatechange(): void {
+        this.$emit('ratechange');
+    }
+
+    /**
+     * 音量変化
+     */
+    protected onVolumechange(): void {
+        this.$emit('volumechange');
     }
 
     public beforeDestroy(): void {
@@ -232,4 +297,3 @@ export default class Video extends Vue {
         }
     }
 }
-</script>
