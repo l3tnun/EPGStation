@@ -51,6 +51,11 @@ export default class Video extends Vue {
             this.$emit('pause');
         });
 
+        // 再生速度変化
+        this.video.addEventListener('ratechange', () => {
+            this.$emit('ratechange');
+        });
+
         // 音量変化
         this.video.addEventListener('volumechange', () => {
             this.$emit('volumechange');
@@ -92,6 +97,24 @@ export default class Video extends Vue {
      */
     public paused(): boolean {
         return this.video === null ? true : this.video.paused;
+    }
+
+    /**
+     * 再生速度を返す
+     */
+    public getPlaybackRate(): number {
+        return this.video === null ? 1.0 : this.video.playbackRate;
+    }
+
+    /**
+     * 再生速度を設定する
+     */
+    public setPlaybackRate(rate: number): void {
+        if (this.video === null) {
+            return;
+        }
+
+        this.video.playbackRate = rate;
     }
 
     /**

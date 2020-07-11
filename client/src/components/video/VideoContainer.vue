@@ -8,22 +8,37 @@
                 <transition name="fade">
                     <div v-if="isShowControl === true">
                         <div class="d-flex center-buttons" v-on:click="stopPropagation">
-                            <v-btn v-if="duration > 0" class="rewind mx-4" icon dark v-on:click="rewindTime(30)">
+                            <v-btn v-if="duration > 0" class="add-shadow mx-4" icon dark v-on:click="rewindTime(30)">
                                 <v-icon dark>mdi-rewind-30</v-icon>
                             </v-btn>
-                            <v-btn v-if="duration > 0" class="rewind mx-4" icon dark v-on:click="rewindTime(10)">
+                            <v-btn v-if="duration > 0" class="add-shadow mx-4" icon dark v-on:click="rewindTime(10)">
                                 <v-icon dark>mdi-rewind-10</v-icon>
                             </v-btn>
-                            <v-btn class="play-button mx-4" icon dark v-on:click="togglePlay">
+                            <v-btn class="play-button add-shadow mx-4" icon dark v-on:click="togglePlay">
                                 <v-icon v-if="isPause === true" dark>mdi-play</v-icon>
                                 <v-icon v-else dark>mdi-pause</v-icon>
                             </v-btn>
-                            <v-btn v-if="duration > 0" class="forward mx-4" icon dark v-on:click="forwardTime(10)">
+                            <v-btn v-if="duration > 0" class="add-shadow mx-4" icon dark v-on:click="forwardTime(10)">
                                 <v-icon dark>mdi-fast-forward-10</v-icon>
                             </v-btn>
-                            <v-btn v-if="duration > 0" class="forward mx-4" icon dark v-on:click="forwardTime(30)">
+                            <v-btn v-if="duration > 0" class="add-shadow mx-4" icon dark v-on:click="forwardTime(30)">
                                 <v-icon dark>mdi-fast-forward-30</v-icon>
                             </v-btn>
+                        </div>
+                        <div
+                            v-if="duration > 0"
+                            class="d-flex flex-column align-center left-buttons"
+                            v-on:click="stopPropagation"
+                        >
+                            <v-btb class="add-shadow" icon dark v-on:click="speedUp">
+                                <v-icon dark>mdi-plus-circle</v-icon>
+                            </v-btb>
+                            <v-btn class="add-shadow my-2" text dark v-on:click="resetSpeed">
+                                x{{ playbackRate.toFixed(1) }}
+                            </v-btn>
+                            <v-btb class="add-shadow" icon dark v-on:click="speedDown">
+                                <v-icon dark>mdi-minus-circle</v-icon>
+                            </v-btb>
                         </div>
                         <div class="video-control">
                             <div class="content" v-on:click="stopPropagation">
@@ -67,20 +82,6 @@
                                         <span>{{ durationStr }}</span>
                                     </div>
                                     <v-spacer></v-spacer>
-                                    <v-menu
-                                        v-if="isEnabledSpeedControl === true"
-                                        offset-y
-                                        :close-on-content-click="false"
-                                    >
-                                        <template v-slot:activator="{ on, attrs }">
-                                            <v-btn icon dark v-bind="attrs" v-on="on">
-                                                <v-icon>mdi-play-speed</v-icon>
-                                            </v-btn>
-                                        </template>
-                                        <v-card class="video-menu pa-2">
-                                            <v-select v-model="speed" :items="speedItems" label="speed"></v-select>
-                                        </v-card>
-                                    </v-menu>
                                     <v-btn v-if="isEnabledSubtitles === true" icon dark>
                                         <v-icon>mdi-subtitles</v-icon>
                                     </v-btn>
@@ -108,6 +109,7 @@
                 v-on:ended="onEnded"
                 v-on:play="onPlay"
                 v-on:pause="onPause"
+                v-on:ratechange="onChangePlaybackRate"
                 v-on:volumechange="onVolumechange"
             ></Video>
         </div>
@@ -140,7 +142,6 @@ export default class VideoContainer extends Vue {
     @Prop()
     public isEnabledSpeedControl: boolean | undefined; // 速度調整が有効か
 
-    public speedItems: SpeedItem[] = [];
     public currentTime: number = 0; // 動画再生位置 (秒)
     public duration: number = 0; // 動画終了長さ (秒)
     public volume: number = 1.0;
@@ -148,10 +149,11 @@ export default class VideoContainer extends Vue {
     public isLoading: boolean = true;
     public isPause: boolean = true; // play ボタン用
     public isShowControl: boolean = false;
-    public isEnabledPip: boolean;
+    public isEnabledPip: boolean = !!(<any>document).pictureInPictureEnabled;
     public isFullscreen: boolean = this.checkFullscreen();
     public currentTimeStr: string = '--:--';
     public durationStr: string = '--:--';
+    public playbackRate: number = 1.0;
 
     private isFirstPlay: boolean = true;
     private isEnabledRotation: boolean = typeof (<any>window.screen).orientation !== 'undefined' && UaUtil.isMobile();
@@ -162,20 +164,6 @@ export default class VideoContainer extends Vue {
     // seek 時に使用する一時変数
     private needsReplay: boolean | null = null;
     private lastSeekedTime: number = 0; // 最後に slider を seek した時刻
-
-    constructor() {
-        super();
-
-        this.isEnabledPip = !!(<any>document).pictureInPictureEnabled;
-        for (let i = 5; i <= 20; i++) {
-            const value = i / 10;
-
-            this.speedItems.push({
-                text: `x${value.toFixed(1)}`,
-                value: value,
-            });
-        }
-    }
 
     public created(): void {
         document.addEventListener('webkitfullscreenchange', this.fullScreenListener, false);
@@ -356,6 +344,15 @@ export default class VideoContainer extends Vue {
         this.updateTimeStr();
     }
 
+    // 再生速度変更
+    public onChangePlaybackRate(): void {
+        if (typeof this.$refs.video === 'undefined') {
+            return;
+        }
+
+        this.playbackRate = (<Video>this.$refs.video).getPlaybackRate();
+    }
+
     // 音量変更
     public onVolumechange(): void {
         if (typeof this.$refs.video === 'undefined') {
@@ -414,6 +411,35 @@ export default class VideoContainer extends Vue {
 
         const newCurrentTime = this.currentTime + time;
         (<Video>this.$refs.video).setCurrentTime(newCurrentTime > this.duration ? this.duration : newCurrentTime);
+    }
+
+    /**
+     * 再生速度 up
+     */
+    public speedUp(): void {
+        this.changePlaybackRate(Math.floor(this.playbackRate * 10 + 1) / 10);
+    }
+
+    /**
+     * 再生速度を元に戻す
+     */
+    public resetSpeed(): void {
+        this.changePlaybackRate(1.0);
+    }
+
+    /**
+     * 再生速度 down
+     */
+    public speedDown(): void {
+        this.changePlaybackRate(Math.floor(this.playbackRate * 10 - 1) / 10);
+    }
+
+    private changePlaybackRate(rate: number): void {
+        if (typeof this.$refs.video === 'undefined' || rate < 0.1) {
+            return;
+        }
+
+        (<Video>this.$refs.video).setPlaybackRate(rate);
     }
 
     /**
@@ -596,6 +622,9 @@ export default class VideoContainer extends Vue {
         display: block
         padding-top: 56.25%
 
+    .add-shadow
+        text-shadow: 0px 0px 10px black
+
     .video-content
         position: absolute
         top: 0
@@ -626,6 +655,13 @@ export default class VideoContainer extends Vue {
             transform: translateY(-50%) translateX(-50%)
             opacity: 0.8
 
+        .left-buttons
+            position: absolute
+            right: 6px
+            top: 50%
+            transform: translateY(-50%)
+            opacity: 0.8
+
         .video-control
             height: 60px
             position: absolute
@@ -647,7 +683,11 @@ export default class VideoContainer extends Vue {
                     font-size: 12px
                     user-select: none
 
-            @media screen and (max-width: 400px)
+        @media screen and (max-width: 420px)
+            .left-buttons
+                display: none !important
+
+            .video-control
                 .volume-content
                     .slider
                         display: none
@@ -668,9 +708,6 @@ export default class VideoContainer extends Vue {
 
 <style lang="sass">
 .video-container
-    .play-button, .rewind, .forward
-        .v-icon
-            text-shadow: 0px 0px 10px black
     .play-button
         .v-icon
             font-size: 60px
