@@ -161,7 +161,7 @@ export default class Video extends Vue {
      * mute 切り替え
      */
     public switchMute(): void {
-        if (this.video === null || this.video.paused === true) {
+        if (this.video === null) {
             return;
         }
 
