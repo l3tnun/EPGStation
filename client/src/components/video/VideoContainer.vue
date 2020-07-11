@@ -176,6 +176,9 @@ export default class VideoContainer extends Vue {
 
     private isFirstPlay: boolean = true;
     private isEnabledRotation: boolean = typeof window.screen.orientation !== 'undefined' && UaUtil.isMobile();
+    private keyDwonListener = ((e: KeyboardEvent) => {
+        this.onKeyDown(e);
+    }).bind(this);
     private fullScreenListener = (() => {
         this.fullscreenChange();
     }).bind(this);
@@ -186,6 +189,7 @@ export default class VideoContainer extends Vue {
     private lastSeekedTime: number = 0; // 最後に slider を seek した時刻
 
     public created(): void {
+        document.addEventListener('keydown', this.keyDwonListener, false);
         document.addEventListener('webkitfullscreenchange', this.fullScreenListener, false);
         document.addEventListener('mozfullscreenchange', this.fullScreenListener, false);
         document.addEventListener('MSFullscreenChange', this.fullScreenListener, false);
@@ -193,6 +197,7 @@ export default class VideoContainer extends Vue {
     }
 
     public beforeDestroy(): void {
+        document.removeEventListener('keydown', this.keyDwonListener, false);
         document.removeEventListener('webkitfullscreenchange', this.fullScreenListener, false);
         document.removeEventListener('mozfullscreenchange', this.fullScreenListener, false);
         document.removeEventListener('MSFullscreenChange', this.fullScreenListener, false);
@@ -202,6 +207,46 @@ export default class VideoContainer extends Vue {
     @Watch('$route', { immediate: true, deep: true })
     public onUrlChange(): void {
         this.isFirstPlay = true;
+    }
+
+    /**
+     * on keydown
+     * @param event: KeyboardEvent
+     */
+    private async onKeyDown(event: KeyboardEvent): Promise<void> {
+        // space key 入力時に再生状態の反転
+        if (event.keyCode === 32) {
+            this.togglePlay(event);
+
+            if (typeof this.$refs.video !== 'undefined') {
+                if ((<Video>this.$refs.video).paused() === true) {
+                    this.isShowControl = true;
+                    this.isHideCursor = false;
+                } else {
+                    await Util.sleep(100);
+                    this.isShowControl = false;
+                    this.isHideCursor = true;
+                    clearTimeout(this.hideControlTimer);
+                }
+            }
+        }
+
+        // switch mute
+        if (event.keyCode === 77) {
+            this.switchMute();
+        }
+
+        if (this.duration > 0) {
+            // -10 seek
+            if (event.keyCode === 37) {
+                this.rewindTime(10);
+            }
+
+            // +10 seek
+            if (event.keyCode === 39) {
+                this.forwardTime(10);
+            }
+        }
     }
 
     /**
