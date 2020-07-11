@@ -73,6 +73,7 @@
                                         </v-btn>
                                         <v-slider
                                             class="slider"
+                                            v-if="isHideAudioVolume === false"
                                             v-model="volume"
                                             min="0.0"
                                             max="1.0"
@@ -157,6 +158,7 @@ export default class VideoContainer extends Vue {
     public isLoading: boolean = true;
     public isPause: boolean = true; // play ボタン用
     public isShowControl: boolean = false;
+    public isHideAudioVolume: boolean = UaUtil.isMobile() || UaUtil.isiPadOS();
     public isEnabledPip: boolean = !!(<any>document).pictureInPictureEnabled;
     public isFullscreen: boolean = this.checkFullscreen();
     public currentTimeStr: string = '--:--';
