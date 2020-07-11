@@ -216,7 +216,7 @@ export default class VideoContainer extends Vue {
      */
     private async onKeyDown(event: KeyboardEvent): Promise<void> {
         // space key 入力時に再生状態の反転
-        if (event.keyCode === 32) {
+        if (event.key === ' ') {
             this.togglePlay(event);
 
             if (typeof this.$refs.video !== 'undefined') {
@@ -233,18 +233,18 @@ export default class VideoContainer extends Vue {
         }
 
         // switch mute
-        if (event.keyCode === 77) {
+        if (event.key === 'm') {
             this.switchMute();
         }
 
         if (this.duration > 0) {
             // -10 seek
-            if (event.keyCode === 37) {
+            if (event.key === 'ArrowLeft') {
                 this.rewindTime(10);
             }
 
             // +10 seek
-            if (event.keyCode === 39) {
+            if (event.key === 'ArrowRight') {
                 this.forwardTime(10);
             }
         }
