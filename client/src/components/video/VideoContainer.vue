@@ -32,6 +32,15 @@
                                 <v-icon dark>mdi-fast-forward-30</v-icon>
                             </v-btn>
                         </div>
+                        <v-btn
+                            v-if="isEnabledRotation === true && isFullscreen === true"
+                            class="rotation-button"
+                            icon
+                            dark
+                            v-on:click="clickRotationButton"
+                        >
+                            <v-icon dark>mdi-screen-rotation</v-icon>
+                        </v-btn>
                         <div
                             v-if="duration > 0"
                             class="d-flex flex-column align-center left-buttons"
@@ -166,7 +175,7 @@ export default class VideoContainer extends Vue {
     public playbackRate: number = 1.0;
 
     private isFirstPlay: boolean = true;
-    private isEnabledRotation: boolean = typeof (<any>window.screen).orientation !== 'undefined' && UaUtil.isMobile();
+    private isEnabledRotation: boolean = typeof window.screen.orientation !== 'undefined' && UaUtil.isMobile();
     private fullScreenListener = (() => {
         this.fullscreenChange();
     }).bind(this);
@@ -655,6 +664,15 @@ export default class VideoContainer extends Vue {
         return !this.isEnabledRotation || (<any>window.screen).orientation.angle !== 0;
     }
 
+    /**
+     * 回転ボタンクリック時の動作
+     * @param e: Event
+     */
+    public clickRotationButton(e: Event): void {
+        e.stopPropagation();
+        this.switchRotation();
+    }
+
     public stopPropagation(e: Event): void {
         e.stopPropagation();
     }
@@ -717,6 +735,11 @@ export default class VideoContainer extends Vue {
             left: 50%
             transform: translateY(-50%) translateX(-50%)
             opacity: 0.8
+
+        .rotation-button
+            position: absolute
+            top: 8px
+            right: 16px
 
         .left-buttons
             position: absolute
