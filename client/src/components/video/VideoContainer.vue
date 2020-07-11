@@ -217,7 +217,11 @@ export default class VideoContainer extends Vue {
      * mousemove 処理
      */
     public mousemove(e: MouseEvent): void {
-        if (typeof this.$refs.video === 'undefined' || (<Video>this.$refs.video).paused() === true) {
+        if (
+            UaUtil.isAndroid() === true ||
+            typeof this.$refs.video === 'undefined' ||
+            (<Video>this.$refs.video).paused() === true
+        ) {
             return;
         }
 
@@ -240,6 +244,7 @@ export default class VideoContainer extends Vue {
     private mouseleave(): void {
         //  再生中でない or 最後に slider を seek させてから 50ms 以上経過していない場合は無視する
         if (
+            UaUtil.isAndroid() === true ||
             typeof this.$refs.video === 'undefined' ||
             (<Video>this.$refs.video).paused() === true ||
             new Date().getTime() - this.lastSeekedTime < 50
