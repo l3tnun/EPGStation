@@ -65,10 +65,13 @@ export default class StreamApiModel implements IStreamApiModel {
 
         // stream 生成
         const stream = await this.liveStreamProvider();
-        stream.setOption({
-            channelId: option.channelId,
-            cmd: cmd,
-        });
+        stream.setOption(
+            {
+                channelId: option.channelId,
+                cmd: cmd,
+            },
+            option.mode,
+        );
 
         // manager に登録
         const streamId = await this.streamManageModel.start(stream);
@@ -89,10 +92,13 @@ export default class StreamApiModel implements IStreamApiModel {
 
         // stream 生成
         const stream = await this.liveStreamProvider();
-        stream.setOption({
-            channelId: option.channelId,
-            cmd: cmd,
-        });
+        stream.setOption(
+            {
+                channelId: option.channelId,
+                cmd: cmd,
+            },
+            option.mode,
+        );
 
         // manager に登録
         const streamId = await this.streamManageModel.start(stream);
@@ -113,10 +119,13 @@ export default class StreamApiModel implements IStreamApiModel {
 
         // stream 生成
         const stream = await this.liveStreamProvider();
-        stream.setOption({
-            channelId: option.channelId,
-            cmd: cmd,
-        });
+        stream.setOption(
+            {
+                channelId: option.channelId,
+                cmd: cmd,
+            },
+            option.mode,
+        );
 
         // manager に登録
         const streamId = await this.streamManageModel.start(stream);
@@ -137,10 +146,13 @@ export default class StreamApiModel implements IStreamApiModel {
 
         // stream 生成
         const stream = await this.liveHLSStreamProvider();
-        stream.setOption({
-            channelId: option.channelId,
-            cmd: cmd,
-        });
+        stream.setOption(
+            {
+                channelId: option.channelId,
+                cmd: cmd,
+            },
+            option.mode,
+        );
 
         // manager に登録
         return await this.streamManageModel.start(stream);
@@ -176,11 +188,14 @@ export default class StreamApiModel implements IStreamApiModel {
 
         // stream 生成
         const stream = await this.recordedStreamProvider();
-        stream.setOption({
-            videoFileId: option.videoFileId,
-            playPosition: option.playPosition,
-            cmd: cmd,
-        });
+        stream.setOption(
+            {
+                videoFileId: option.videoFileId,
+                playPosition: option.playPosition,
+                cmd: cmd,
+            },
+            option.mode,
+        );
 
         // manager に登録
         const streamId = await this.streamManageModel.start(stream);
@@ -201,11 +216,14 @@ export default class StreamApiModel implements IStreamApiModel {
 
         // stream 生成
         const stream = await this.recordedStreamProvider();
-        stream.setOption({
-            videoFileId: option.videoFileId,
-            playPosition: option.playPosition,
-            cmd: cmd,
-        });
+        stream.setOption(
+            {
+                videoFileId: option.videoFileId,
+                playPosition: option.playPosition,
+                cmd: cmd,
+            },
+            option.mode,
+        );
 
         // manager に登録
         const streamId = await this.streamManageModel.start(stream);
@@ -226,11 +244,14 @@ export default class StreamApiModel implements IStreamApiModel {
 
         // stream 生成
         const stream = await this.recordedHLSStreamProvider();
-        stream.setOption({
-            videoFileId: option.videoFileId,
-            playPosition: option.playPosition,
-            cmd: cmd,
-        });
+        stream.setOption(
+            {
+                videoFileId: option.videoFileId,
+                playPosition: option.playPosition,
+                cmd: cmd,
+            },
+            option.mode,
+        );
 
         // manager に登録
         return await this.streamManageModel.start(stream);
@@ -367,6 +388,7 @@ export default class StreamApiModel implements IStreamApiModel {
                 const item: apid.LiveStreamInfoItem = {
                     streamId: info.streamId,
                     type: info.info.type,
+                    mode: info.info.mode,
                     isEnable: info.info.isEnable,
                     channelId: info.info.channelId,
                     name: '',
@@ -392,6 +414,7 @@ export default class StreamApiModel implements IStreamApiModel {
                 const item: apid.VideoFileStreamInfoItem = {
                     streamId: info.streamId,
                     type: info.info.type,
+                    mode: info.info.mode,
                     isEnable: info.info.isEnable,
                     channelId: 0,
                     name: '',

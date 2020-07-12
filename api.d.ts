@@ -562,6 +562,7 @@ export interface RecordedStreanOption {
 export interface LiveStreamInfoItem {
     streamId: StreamId;
     type: StreamType;
+    mode: number;
     isEnable: boolean;
     channelId: ChannelId;
     name: string;

@@ -1077,6 +1077,7 @@ components:
             required:
                 - streamId
                 - type
+                - mode
                 - isEnable
                 - channelId
                 - name
@@ -1087,6 +1088,9 @@ components:
                     $ref: '#/components/schemas/StreamId'
                 type:
                     $ref: '#/components/schemas/StreamType'
+                mode:
+                    description: ストリーミング設定
+                    type: number
                 isEnable:
                     description: 放送波が有効か (HLS 形式の場合有効)
                     type: boolean

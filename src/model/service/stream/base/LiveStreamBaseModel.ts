@@ -219,8 +219,13 @@ export default abstract class LiveStreamBaseModel extends StreamBaseModel<LiveSt
             throw new Error('ProcessOptionIsNull');
         }
 
+        if (this.configMode === null) {
+            throw new Error('ConfigModeIsNull');
+        }
+
         return {
             type: this.getStreamType(),
+            mode: this.configMode,
             channelId: this.processOption.channelId,
             isEnable: this.isEnable(),
         };

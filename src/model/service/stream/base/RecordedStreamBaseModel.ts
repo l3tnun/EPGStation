@@ -289,8 +289,13 @@ export default abstract class RecordedStreamBaseModel extends StreamBaseModel<Re
             throw new Error('ProcessOptionIsNull');
         }
 
+        if (this.configMode === null) {
+            throw new Error('ConfigModeIsNull');
+        }
+
         return {
             type: this.getStreamType(),
+            mode: this.configMode,
             videoFileId: this.processOption.videoFileId,
             isEnable: this.isEnable(),
         };
