@@ -15,6 +15,8 @@ import IRuleApiModel from './api/rule/IRuleApiModel';
 import RuleApiModel from './api/rule/RuleApiModel';
 import IScheduleApiModel from './api/schedule/IScheduleApiModel';
 import ScheduleApiModel from './api/schedule/ScheduleApiModel';
+import IStreamApiModel from './api/streams/IStreamApiModel';
+import StreamApiModel from './api/streams/StreamApiModel';
 import IVideoApiModel from './api/video/IVideoApiModel';
 import VideoApiModel from './api/video/VideoApiModel';
 import ChannelModel from './channels/ChannelModel';
@@ -34,8 +36,10 @@ import IGuideState from './state/guide/IGuideState';
 import IScrollPositionState from './state/IScrollPositionState';
 import INavigationState from './state/navigation/INavigationState';
 import NavigationState from './state/navigation/NavigationState';
+import ILiveHLSVideoState from './state/onair/ILiveHLSVideoState';
 import IOnAirSelectStreamState from './state/onair/IOnAirSelectStreamState';
 import IOnAirState from './state/onair/IOnAirState';
+import LiveHLSVideoState from './state/onair/LiveHLSVideoState';
 import OnAirSelectStreamState from './state/onair/OnAirSelectStreamState';
 import OnAirState from './state/onair/OnAirState';
 import IRecordedDetailState from './state/recorded/detail/IRecordedDetailState';
@@ -78,6 +82,8 @@ export default (container: Container) => {
 
     container.bind<IScheduleApiModel>('IScheduleApiModel').to(ScheduleApiModel).inSingletonScope();
 
+    container.bind<IStreamApiModel>('IStreamApiModel').to(StreamApiModel).inSingletonScope();
+
     container.bind<IRecordedApiModel>('IRecordedApiModel').to(RecordedApiModel).inSingletonScope();
 
     container.bind<IRuleApiModel>('IRuleApiModel').to(RuleApiModel).inSingletonScope();
@@ -115,6 +121,8 @@ export default (container: Container) => {
     container.bind<IOnAirState>('IOnAirState').to(OnAirState).inSingletonScope();
 
     container.bind<IOnAirSelectStreamState>('IOnAirSelectStreamState').to(OnAirSelectStreamState).inSingletonScope();
+
+    container.bind<ILiveHLSVideoState>('ILiveHLSVideoState').to(LiveHLSVideoState);
 
     container.bind<IGuideReserveUtil>('IGuideReserveUtil').to(GuideReserveUtil).inSingletonScope();
 
