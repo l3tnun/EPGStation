@@ -25,6 +25,7 @@ abstract class StreamBaseModel<T> implements IStreamBaseModel<T> {
     private emitter: events.EventEmitter = new events.EventEmitter();
     private isEnableStream: boolean = false;
     private streamCheckTimer: NodeJS.Timeout | null = null;
+    private streamStopTimer: NodeJS.Timeout | null = null;
 
     constructor(
         @inject('IConfiguration') configure: IConfiguration,
@@ -95,6 +96,10 @@ abstract class StreamBaseModel<T> implements IStreamBaseModel<T> {
     public async stop(): Promise<void> {
         if (this.streamCheckTimer !== null) {
             this.streamCheckTimer = null;
+        }
+
+        if (this.streamStopTimer !== null) {
+            clearTimeout(this.streamStopTimer);
         }
     }
 
@@ -177,6 +182,33 @@ abstract class StreamBaseModel<T> implements IStreamBaseModel<T> {
      */
     protected isEnable(): boolean {
         return this.isEnableStream;
+    }
+
+    /**
+     * 一定時間内に stream 保持要求が来なかったら停止するようにタイマーをセットする
+     */
+    protected setStopTimer(): void {
+        if (this.streamStopTimer !== null) {
+            clearTimeout(this.streamStopTimer);
+        }
+
+        this.streamStopTimer = setTimeout(async () => {
+            await this.stop().catch(err => {
+                this.log.stream.error('stop stream error');
+                this.log.stream.error(err);
+            });
+        }, 15 * 1000);
+    }
+
+    /**
+     * stream 保持要求
+     */
+    public keep(): void {
+        // HLS ではないときは無視する
+        if (this.getStreamType().includes('HLS') === false) {
+            return;
+        }
+        this.setStopTimer();
     }
 }
 

@@ -108,6 +108,8 @@ export default abstract class RecordedStreamBaseModel extends StreamBaseModel<Re
         } else {
             // stream 有効チェク開始
             this.startCheckStreamEnable(streamId);
+            // stream 停止タイマーセット
+            this.setStopTimer();
         }
 
         // ffmpeg debug 用ログ出力

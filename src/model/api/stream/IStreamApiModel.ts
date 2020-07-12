@@ -18,5 +18,6 @@ export default interface IStreamApiModel {
     getLiveM2TsStreamM3u8(host: string, isSecure: boolean, option: apid.LiveStreamOption): Promise<IPlayList | null>;
     stop(streamId: apid.StreamId): Promise<void>;
     stopAll(): Promise<void>;
+    keep(streamId: apid.StreamId): void;
     getStreamInfos(): Promise<apid.StreamInfo>;
 }

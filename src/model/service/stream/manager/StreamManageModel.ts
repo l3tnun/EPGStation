@@ -96,6 +96,18 @@ export default class StreamManageModel implements IStreamManageModel {
     }
 
     /**
+     * 指定したストリームを停止しないように停止タイマー情報を更新させる
+     * @param streamId: apid.StreamId
+     */
+    public keep(streamId: apid.StreamId): void {
+        if (typeof this.streams[streamId] === 'undefined') {
+            throw new Error('StreamIsUndefined');
+        }
+
+        this.streams[streamId].keep();
+    }
+
+    /**
      * ストリーム情報を返す
      * @param streamId: apid.StreamId
      * @return LiveStreamInfo | RecordedStreamInfo

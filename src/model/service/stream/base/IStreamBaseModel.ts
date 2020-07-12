@@ -32,4 +32,5 @@ export default interface IStreamBaseModel<T> {
     getStream(): internal.Readable;
     getInfo(): LiveStreamInfo | RecordedStreamInfo;
     setExitStream(callback: () => void): void;
+    keep(): void;
 }

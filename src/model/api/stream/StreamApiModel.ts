@@ -345,6 +345,14 @@ export default class StreamApiModel implements IStreamApiModel {
     }
 
     /**
+     * 指定したストリームを停止しないように停止タイマー情報を更新させる
+     * @param streamId: apid.StreamId
+     */
+    public keep(streamId: apid.StreamId): void {
+        this.streamManageModel.keep(streamId);
+    }
+
+    /**
      * ストリーム情報を返す
      * @return apid.StreamInfo
      */
