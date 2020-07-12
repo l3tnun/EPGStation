@@ -11,6 +11,7 @@
     "@mdi/font": "5.2.45",
     "axios": "0.19.2",
     "eventemitter2": "6.4.0",
+    "hls.js": "0.14.0",
     "inversify": "5.0.1",
     "json-stable-stringify": "1.0.1",
     "lodash": "4.17.15",
@@ -28,6 +29,7 @@
     "vuetify-datetime-picker": "2.1.1"
   },
   "devDependencies": {
+    "@types/hls.js": "0.13.0",
     "@types/json-stable-stringify": "1.0.32",
     "@types/lodash": "4.14.151",
     "@types/smoothscroll-polyfill": "0.3.1",
