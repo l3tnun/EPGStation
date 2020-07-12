@@ -47,6 +47,30 @@ class LiveHLSVideoState implements ILiveHLSVideoState {
             this.streamId = null;
         }
     }
+
+    /**
+     * streamId を返す
+     * @return apid.StreamId | null
+     */
+    public getStreamId(): apid.StreamId | null {
+        return this.streamId;
+    }
+
+    /**
+     * ストリームが有効になったか
+     * @return Promise<boolean> true で有効
+     */
+    public async isEnabled(): Promise<boolean> {
+        const info = await this.streamApiModel.getStreamInfo();
+
+        for (const item of info.items) {
+            if (item.streamId === this.streamId && item.isEnable === true) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
 
 namespace LiveHLSVideoState {

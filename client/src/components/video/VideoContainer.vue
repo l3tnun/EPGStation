@@ -129,12 +129,28 @@
                 v-on:ratechange="onChangePlaybackRate"
                 v-on:volumechange="onVolumechange"
             ></NormalVideo>
+            <LiveHLSVideo
+                v-if="videoParam.type == 'LiveHLS'"
+                ref="video"
+                v-bind:channelId="videoParam.channelId"
+                v-bind:mode="videoParam.mode"
+                v-on:timeupdate="onTimeupdate"
+                v-on:waiting="onWaiting"
+                v-on:loadeddata="onLoadeddata"
+                v-on:canplay="onCanplay"
+                v-on:ended="onEnded"
+                v-on:play="onPlay"
+                v-on:pause="onPause"
+                v-on:ratechange="onChangePlaybackRate"
+                v-on:volumechange="onVolumechange"
+            ></LiveHLSVideo>
         </div>
     </div>
 </template>
 
 <script lang="ts">
 import BaseVideo from '@/components/video/BaseVideo';
+import LiveHLSVideo from '@/components/video/LiveHLSVideo.vue';
 import NormalVideo from '@/components/video/NormalVideo.vue';
 import * as VideoParam from '@/components/video/ViedoParam';
 import UaUtil from '@/util/UaUtil';
@@ -149,6 +165,7 @@ interface SpeedItem {
 @Component({
     components: {
         NormalVideo,
+        LiveHLSVideo,
     },
 })
 export default class VideoContainer extends Vue {
