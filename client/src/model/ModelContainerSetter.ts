@@ -42,6 +42,8 @@ import IOnAirState from './state/onair/IOnAirState';
 import LiveHLSVideoState from './state/onair/LiveHLSVideoState';
 import OnAirSelectStreamState from './state/onair/OnAirSelectStreamState';
 import OnAirState from './state/onair/OnAirState';
+import IWatchOnAirInfoState from './state/onair/watch/IWatchOnAirInfoState';
+import WatchOnAirInfoState from './state/onair/watch/WatchOnAirInfoState';
 import IRecordedDetailState from './state/recorded/detail/IRecordedDetailState';
 import RecordedDetailState from './state/recorded/detail/RecordedDetailState';
 import IRecordedState from './state/recorded/IRecordedState';
@@ -121,6 +123,8 @@ export default (container: Container) => {
     container.bind<IOnAirState>('IOnAirState').to(OnAirState).inSingletonScope();
 
     container.bind<IOnAirSelectStreamState>('IOnAirSelectStreamState').to(OnAirSelectStreamState).inSingletonScope();
+
+    container.bind<IWatchOnAirInfoState>('IWatchOnAirInfoState').to(WatchOnAirInfoState).inSingletonScope();
 
     container.bind<ILiveHLSVideoState>('ILiveHLSVideoState').to(LiveHLSVideoState);
 

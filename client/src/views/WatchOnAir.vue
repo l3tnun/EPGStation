@@ -2,13 +2,21 @@
     <v-content>
         <TitleBar title="視聴"></TitleBar>
         <transition name="page">
-            <VideoContainer v-if="videoParam !== null" v-bind:videoParam="videoParam"></VideoContainer>
+            <div class="video-container-wrap mx-auto">
+                <VideoContainer v-if="videoParam !== null" v-bind:videoParam="videoParam"></VideoContainer>
+                <WatchOnAirInfoCard
+                    v-if="watchParam !== null"
+                    v-bind:channel="watchParam.channel"
+                    v-bind:mode="watchParam.mode"
+                ></WatchOnAirInfoCard>
+            </div>
         </transition>
         <Snackbar></Snackbar>
     </v-content>
 </template>
 
 <script lang="ts">
+import WatchOnAirInfoCard from '@/components/onair/watch/WatchOnAirInfoCard.vue';
 import Snackbar from '@/components/snackbar/Snackbar.vue';
 import TitleBar from '@/components/titleBar/TitleBar.vue';
 import VideoContainer from '@/components/video/VideoContainer.vue';
@@ -18,19 +26,21 @@ import ISocketIOModel from '@/model/socketio/ISocketIOModel';
 import IScrollPositionState from '@/model/state/IScrollPositionState';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
 import { Component, Vue, Watch } from 'vue-property-decorator';
+import * as apid from '../../../api';
 
 Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
 
 interface WatchParam {
     type: string;
-    channel: string;
-    mode: string;
+    channel: apid.ChannelId;
+    mode: number;
 }
 
 @Component({
     components: {
         TitleBar,
         VideoContainer,
+        WatchOnAirInfoCard,
         Snackbar,
     },
 })
@@ -52,8 +62,8 @@ export default class WatchOnAir extends Vue {
                 ? null
                 : {
                       type: this.$route.query.type,
-                      channel: this.$route.query.channel,
-                      mode: this.$route.query.mode,
+                      channel: parseInt(this.$route.query.channel, 10),
+                      mode: parseInt(this.$route.query.mode, 10),
                   };
 
         this.$nextTick(async () => {
@@ -61,8 +71,8 @@ export default class WatchOnAir extends Vue {
                 if (this.watchParam.type === 'hls') {
                     (<VideoParam.LiveHLSParam>this.videoParam) = {
                         type: 'LiveHLS',
-                        channelId: parseInt(this.watchParam.channel, 10),
-                        mode: parseInt(this.watchParam.mode, 10),
+                        channelId: this.watchParam.channel,
+                        mode: this.watchParam.mode,
                     };
                 } else {
                     (<VideoParam.NormalVideoParam>this.videoParam) = {
@@ -78,3 +88,8 @@ export default class WatchOnAir extends Vue {
     }
 }
 </script>
+
+<style lang="sass" scoped>
+.video-container-wrap
+    max-width: 1200px
+</style>
