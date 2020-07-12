@@ -1,7 +1,7 @@
 <template>
     <div class="video-container" ref="container">
         <div class="video-content">
-            <div v-if="isLoading === true || videoSrc === null" class="loading">
+            <div v-if="isLoading === true" class="loading">
                 <v-progress-circular :size="50" color="primary" indeterminate></v-progress-circular>
             </div>
             <div
@@ -116,9 +116,9 @@
                 </transition>
             </div>
             <NormalVideo
-                v-if="videoSrc !== null"
+                v-if="videoParam.type == 'Normal'"
                 ref="video"
-                v-bind:videoSrc.sync="videoSrc"
+                v-bind:videoSrc.sync="videoParam.src"
                 v-on:timeupdate="onTimeupdate"
                 v-on:waiting="onWaiting"
                 v-on:loadeddata="onLoadeddata"
@@ -136,6 +136,7 @@
 <script lang="ts">
 import BaseVideo from '@/components/video/BaseVideo';
 import NormalVideo from '@/components/video/NormalVideo.vue';
+import * as VideoParam from '@/components/video/ViedoParam';
 import UaUtil from '@/util/UaUtil';
 import Util from '@/util/Util';
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
@@ -152,7 +153,7 @@ interface SpeedItem {
 })
 export default class VideoContainer extends Vue {
     @Prop({ required: true })
-    public videoSrc!: string | null;
+    public videoParam!: VideoParam.BaseVideoParam;
 
     @Prop()
     public isEnabledSubtitles: boolean | undefined; // 字幕が有効か

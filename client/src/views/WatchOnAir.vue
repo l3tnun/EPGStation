@@ -2,7 +2,7 @@
     <v-content>
         <TitleBar title="視聴"></TitleBar>
         <transition name="page">
-            <VideoContainer v-bind:videoSrc="videoSrc"></VideoContainer>
+            <VideoContainer v-if="videoParam !== null" v-bind:videoParam="videoParam"></VideoContainer>
         </transition>
         <Snackbar></Snackbar>
     </v-content>
@@ -12,6 +12,7 @@
 import Snackbar from '@/components/snackbar/Snackbar.vue';
 import TitleBar from '@/components/titleBar/TitleBar.vue';
 import VideoContainer from '@/components/video/VideoContainer.vue';
+import * as VideoParam from '@/components/video/ViedoParam';
 import container from '@/model/ModelContainer';
 import ISocketIOModel from '@/model/socketio/ISocketIOModel';
 import IScrollPositionState from '@/model/state/IScrollPositionState';
@@ -34,7 +35,7 @@ interface WatchParam {
     },
 })
 export default class WatchOnAir extends Vue {
-    public videoSrc: string | null = null;
+    public videoParam: VideoParam.BaseVideoParam | null = null;
 
     private scrollState: IScrollPositionState = container.get<IScrollPositionState>('IScrollPositionState');
     private snackbarState: ISnackbarState = container.get<ISnackbarState>('ISnackbarState');
@@ -43,20 +44,6 @@ export default class WatchOnAir extends Vue {
 
     @Watch('$route', { immediate: true, deep: true })
     public onUrlChange(): void {
-        // TODO HLS への対応はまだ
-        if (this.$route.query.type === 'hls') {
-            this.snackbarState.open({
-                color: 'error',
-                text: 'HLS 視聴未対応',
-            });
-            this.watchParam = null;
-            this.$nextTick(async () => {
-                await this.scrollState.emitDoneGetData();
-            });
-
-            return;
-        }
-
         // 視聴パラメータセット
         this.watchParam =
             typeof this.$route.query.type !== 'string' ||
@@ -71,7 +58,18 @@ export default class WatchOnAir extends Vue {
 
         this.$nextTick(async () => {
             if (this.watchParam !== null) {
-                this.videoSrc = `/api/streams/live/${this.watchParam.channel}/${this.watchParam.type}?mode=${this.watchParam.mode}`;
+                if (this.watchParam.type === 'hls') {
+                    (<VideoParam.LiveHLSParam>this.videoParam) = {
+                        type: 'LiveHLS',
+                        channelId: parseInt(this.watchParam.channel, 10),
+                        mode: parseInt(this.watchParam.mode, 10),
+                    };
+                } else {
+                    (<VideoParam.NormalVideoParam>this.videoParam) = {
+                        type: 'Normal',
+                        src: `/api/streams/live/${this.watchParam.channel}/${this.watchParam.type}?mode=${this.watchParam.mode}`,
+                    };
+                }
             }
 
             // データ取得完了を通知
