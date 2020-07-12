@@ -60,6 +60,6 @@ export default class StreamApiModel implements IStreamApiModel {
      * @return Promise<void>
      */
     public async keep(streamId: apid.StreamId): Promise<void> {
-        await this.repository.put(`/streams/${streamId}`);
+        await this.repository.put(`/streams/${streamId}/keep`);
     }
 }

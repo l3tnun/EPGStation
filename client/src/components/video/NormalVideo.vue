@@ -16,6 +16,10 @@ export default class NormalVideo extends BaseVideo {
         super.mounted();
     }
 
+    public async beforeDestroy(): Promise<void> {
+        super.beforeDestroy();
+    }
+
     /**
      * video 再生初期設定
      */
