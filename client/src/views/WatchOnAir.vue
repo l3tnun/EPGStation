@@ -9,6 +9,7 @@
                     v-bind:channel="watchParam.channel"
                     v-bind:mode="watchParam.mode"
                 ></WatchOnAirInfoCard>
+                <div style="visibility: hidden;">dummy</div>
             </div>
         </transition>
         <Snackbar></Snackbar>
