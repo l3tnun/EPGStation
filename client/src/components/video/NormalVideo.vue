@@ -8,7 +8,7 @@ import UaUtil from '@/util/UaUtil';
 import { Component, Prop, Watch } from 'vue-property-decorator';
 
 @Component({})
-export default class Video extends BaseVideo {
+export default class NormalVideo extends BaseVideo {
     @Prop({ required: true })
     public videoSrc!: string;
 
