@@ -75,7 +75,7 @@ class ProgramDetailComponent extends ParentComponent<void> {
         }, [
             m('div', { class: 'mdl-card__supporting-text' }, [
                 this.viewModel.isTimeSpecified()
-                    ? this.createTimeSpecifitedProgramContent()
+                    ? this.createTimeSpecifiedProgramContent()
                     : this.createNormalProgramContent(program, channel),
             ]),
             this.createToggle(),
@@ -86,7 +86,7 @@ class ProgramDetailComponent extends ParentComponent<void> {
      * 時刻指定予約番組
      * @return m.Child[] | null
      */
-    private createTimeSpecifitedProgramContent(): m.Child[] | null {
+    private createTimeSpecifiedProgramContent(): m.Child[] | null {
         const option = this.viewModel.addReserveProgram;
         if (option === null) { return null; }
 
