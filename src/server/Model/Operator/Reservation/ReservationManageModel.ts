@@ -493,7 +493,7 @@ class ReservationManageModel extends Model {
         } else {
             // 時刻指定予約の場合
             try {
-                program = await this.createTimeSpecifitedProgram(option);
+                program = await this.createTimeSpecifiedProgram(option);
             } catch (err) {
                 finalize();
                 throw err;
@@ -594,7 +594,7 @@ class ReservationManageModel extends Model {
      * @param option: AddReserveInterface
      * @return DBSchema.ProgramSchema | null
      */
-    private async createTimeSpecifitedProgram(option: AddReserveInterface): Promise<DBSchema.ProgramSchema | null> {
+    private async createTimeSpecifiedProgram(option: AddReserveInterface): Promise<DBSchema.ProgramSchema | null> {
         if (typeof option.program === 'undefined' || typeof option.programId === 'undefined') { return null; }
 
         // 該当放送局が存在するかチェック
@@ -686,7 +686,7 @@ class ReservationManageModel extends Model {
         if (typeof option.program !== 'undefined' && this.reserves[index].program.id < 0) {
             try {
                 if (this.checkReserveOption(option)) {
-                    const newProgram = await this.createTimeSpecifitedProgram(option);
+                    const newProgram = await this.createTimeSpecifiedProgram(option);
                     if (newProgram !== null) {
                         this.log.system.info(newProgram.name);
                         this.reserves[index].program = newProgram;
