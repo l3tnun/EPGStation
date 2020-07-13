@@ -525,7 +525,7 @@ class ProgramDetailViewModel extends ViewModel {
      * 手動予約と時刻指定予約の状態をセットする
      * @param value: true: 時刻指定予約, false: 手動予約
      */
-    public setTimeSpecifited(value: boolean): void {
+    public setTimeSpecified(value: boolean): void {
         // 編集時は予約の状態が確定しているため return
         if (this.isEditMode()) { return; }
 

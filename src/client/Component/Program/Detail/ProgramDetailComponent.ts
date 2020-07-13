@@ -338,7 +338,7 @@ class ProgramDetailComponent extends ParentComponent<void> {
                     disabled: this.viewModel.isEditMode() ? 'disabled' : '',
                     checked: this.viewModel.isTimeSpecified(),
                     onclick: (e: Event) => {
-                        this.viewModel.setTimeSpecifited((<HTMLInputElement> e.target!).checked);
+                        this.viewModel.setTimeSpecified((<HTMLInputElement> e.target!).checked);
                     },
                 }),
                 m('span', { class: 'mdl-switch__label' }),
