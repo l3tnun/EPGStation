@@ -324,8 +324,8 @@ class ProgramDetailComponent extends ParentComponent<void> {
      * @return m.Child
      */
     private createToggle(): m.Child {
-        return m('div', { class: 'time-specifited-toggle' }, [
-            m('span', { class: 'time-specifited-toggle-name' }, '時刻指定予約'),
+        return m('div', { class: 'time-specified-toggle' }, [
+            m('span', { class: 'time-specified-toggle-name' }, '時刻指定予約'),
             m('label', {
                 class: 'mdl-switch mdl-js-switch mdl-js-ripple-effect',
                 onupdate: (vnode: m.VnodeDOM<void, this>) => {
