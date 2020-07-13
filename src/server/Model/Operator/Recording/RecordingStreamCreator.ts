@@ -183,7 +183,7 @@ class RecordingStreamCreator extends Model implements RecordingStreamCreatorInte
                 const mirakurun = CreateMirakurunClient.get();
                 for (const p of this.tuners[i].programs) {
                     // 時刻指定予約はスキップ
-                    if (!!(<ManualReserveProgram> p.reserve).isTimeSpecifited) { continue; }
+                    if (!!(<ManualReserveProgram> p.reserve).isTimeSpecified) { continue; }
 
                     try {
                         const newProgram = await mirakurun.getProgram(p.reserve.program.id);

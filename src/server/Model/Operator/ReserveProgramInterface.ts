@@ -26,7 +26,7 @@ export interface RuleReserveProgram extends ReserveProgram {
  */
 export interface ManualReserveProgram extends ReserveProgram {
     manualId: number;
-    isTimeSpecifited?: boolean;
+    isTimeSpecified?: boolean;
 }
 
 export interface ReserveOptionInterface {

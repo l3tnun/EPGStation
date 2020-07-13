@@ -26,7 +26,7 @@ class ProgramDetailViewModel extends ViewModel {
     private setting: StorageTemplateModel<SettingValue>;
 
     private isEditing: boolean = false;
-    private isTimeSpecifitedProgram: boolean = false;
+    private isTimeSpecifiedProgram: boolean = false;
     private reserve: apid.Reserve | null = null;
 
     private enableEncode: boolean = false;
@@ -86,7 +86,7 @@ class ProgramDetailViewModel extends ViewModel {
 
         if (status === 'init' || status === 'update') {
             this.addReserveProgram = null;
-            this.isTimeSpecifitedProgram = this.reserve === null ? false : !!this.reserve.isTimeSpecifited;
+            this.isTimeSpecifiedProgram = this.reserve === null ? false : !!this.reserve.isTimeSpecified;
         }
 
         this.initInputOption();
@@ -256,7 +256,7 @@ class ProgramDetailViewModel extends ViewModel {
             allowEndLack: this.allowEndLack,
         };
 
-        if (this.isTimeSpecifited()) {
+        if (this.isTimeSpecified()) {
             if (isUpdate) {
                 option.programId = this.getProgramId();
             }
@@ -517,8 +517,8 @@ class ProgramDetailViewModel extends ViewModel {
      * 時刻指定予約か返す
      * @return boolean
      */
-    public isTimeSpecifited(): boolean {
-        return this.isTimeSpecifitedProgram;
+    public isTimeSpecified(): boolean {
+        return this.isTimeSpecifiedProgram;
     }
 
     /**
@@ -529,7 +529,7 @@ class ProgramDetailViewModel extends ViewModel {
         // 編集時は予約の状態が確定しているため return
         if (this.isEditMode()) { return; }
 
-        this.isTimeSpecifitedProgram = value;
+        this.isTimeSpecifiedProgram = value;
 
         if (!value) {
             // 手動予約に切り替わったときに初期化

@@ -512,7 +512,7 @@ class ReservationManageModel extends Model {
             program: program,
             isSkip: false,
             manualId: manualId,
-            isTimeSpecifited: option.programId < 0, // 時刻指定予約の場合 true
+            isTimeSpecified: option.programId < 0, // 時刻指定予約の場合 true
             isConflict: false,
             allowEndLack: option.allowEndLack,
         };
@@ -728,7 +728,7 @@ class ReservationManageModel extends Model {
 
         // 手動予約の情報を更新する
         for (const reserve of this.reserves) {
-            if (typeof (<ManualReserveProgram> reserve).manualId === 'undefined' || !!(<ManualReserveProgram> reserve).isTimeSpecifited) { continue; }
+            if (typeof (<ManualReserveProgram> reserve).manualId === 'undefined' || !!(<ManualReserveProgram> reserve).isTimeSpecified) { continue; }
             await Util.sleep(10);
             await this.updateManual((<ManualReserveProgram> reserve).manualId!);
         }
@@ -1109,13 +1109,13 @@ class ReservationManageModel extends Model {
         const bIsManual = typeof (<ManualReserveProgram> b).manualId !== 'undefined';
 
         if (aIsManual && bIsManual) {
-            const aIsTimeSpecifited = !!(<ManualReserveProgram> a).isTimeSpecifited;
-            const bIsTimeSpecifited = !!(<ManualReserveProgram> b).isTimeSpecifited;
+            const aIsTimeSpecified = !!(<ManualReserveProgram> a).isTimeSpecified;
+            const bIsTimeSpecified = !!(<ManualReserveProgram> b).isTimeSpecified;
 
-            if (aIsTimeSpecifited && bIsTimeSpecifited || !aIsTimeSpecifited && !bIsTimeSpecifited) {
+            if (aIsTimeSpecified && bIsTimeSpecified || !aIsTimeSpecified && !bIsTimeSpecified) {
                 return (<ManualReserveProgram> a).manualId! - (<ManualReserveProgram> b).manualId!;
             } else {
-                return aIsTimeSpecifited && !bIsTimeSpecifited ? -1 : 1;
+                return aIsTimeSpecified && !bIsTimeSpecified ? -1 : 1;
             }
         }
         if (aIsManual && !bIsManual) { return -1; }
