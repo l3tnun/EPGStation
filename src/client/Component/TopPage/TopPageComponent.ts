@@ -370,7 +370,7 @@ class TopPageComponent extends ParentComponent<void> {
      * @return m.Child
      */
     private getTitleIcon(reserve: apid.Reserve): m.Child {
-        const icon = !!reserve.isTimeSpecifited ? 'timer' : typeof reserve.ruleId === 'undefined' ? 'schedule' : 'event';
+        const icon = !!reserve.isTimeSpecified ? 'timer' : typeof reserve.ruleId === 'undefined' ? 'schedule' : 'event';
 
         return m('span', { class: 'icon' }, m('i', { class: 'material-icons' }, icon));
     }

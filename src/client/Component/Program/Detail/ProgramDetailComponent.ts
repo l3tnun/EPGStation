@@ -74,8 +74,8 @@ class ProgramDetailComponent extends ParentComponent<void> {
             class: 'program-card mdl-card mdl-shadow--2dp mdl-cell mdl-cell--12-col',
         }, [
             m('div', { class: 'mdl-card__supporting-text' }, [
-                this.viewModel.isTimeSpecifited()
-                    ? this.createTimeSpecifitedProgramContent()
+                this.viewModel.isTimeSpecified()
+                    ? this.createTimeSpecifiedProgramContent()
                     : this.createNormalProgramContent(program, channel),
             ]),
             this.createToggle(),
@@ -86,7 +86,7 @@ class ProgramDetailComponent extends ParentComponent<void> {
      * 時刻指定予約番組
      * @return m.Child[] | null
      */
-    private createTimeSpecifitedProgramContent(): m.Child[] | null {
+    private createTimeSpecifiedProgramContent(): m.Child[] | null {
         const option = this.viewModel.addReserveProgram;
         if (option === null) { return null; }
 
@@ -324,21 +324,21 @@ class ProgramDetailComponent extends ParentComponent<void> {
      * @return m.Child
      */
     private createToggle(): m.Child {
-        return m('div', { class: 'time-specifited-toggle' }, [
-            m('span', { class: 'time-specifited-toggle-name' }, '時刻指定予約'),
+        return m('div', { class: 'time-specified-toggle' }, [
+            m('span', { class: 'time-specified-toggle-name' }, '時刻指定予約'),
             m('label', {
                 class: 'mdl-switch mdl-js-switch mdl-js-ripple-effect',
                 onupdate: (vnode: m.VnodeDOM<void, this>) => {
-                    this.toggleLabelOnUpdate(<HTMLInputElement> vnode.dom, this.viewModel.isTimeSpecifited());
+                    this.toggleLabelOnUpdate(<HTMLInputElement> vnode.dom, this.viewModel.isTimeSpecified());
                 },
             }, [
                 m('input', {
                     type: 'checkbox',
                     class: 'mdl-switch__input',
                     disabled: this.viewModel.isEditMode() ? 'disabled' : '',
-                    checked: this.viewModel.isTimeSpecifited(),
+                    checked: this.viewModel.isTimeSpecified(),
                     onclick: (e: Event) => {
-                        this.viewModel.setTimeSpecifited((<HTMLInputElement> e.target!).checked);
+                        this.viewModel.setTimeSpecified((<HTMLInputElement> e.target!).checked);
                     },
                 }),
                 m('span', { class: 'mdl-switch__label' }),
@@ -490,7 +490,7 @@ class ProgramDetailComponent extends ParentComponent<void> {
                         this.viewModel.openSnackbar(isEditMode ? '予約更新' : '予約追加');
                         await Util.sleep(1000);
 
-                        if (programId !== null && this.viewModel.isTimeSpecifited()) {
+                        if (programId !== null && this.viewModel.isTimeSpecified()) {
                             // 時刻指定予約の場合該当の予約一覧の該当ページへ飛ぶ
                             const position = await this.viewModel.getReservePagePosition(programId);
                             Util.move('/reserves', { page: position });

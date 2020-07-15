@@ -938,7 +938,7 @@ definitions:
         $ref: '#/definitions/ReserveProgram'
       ruleId:
         $ref: '#/definitions/RuleId'
-      isTimeSpecifited:
+      isTimeSpecified:
         description: '時刻指定予約か'
         type: boolean
       allowEndLack:
