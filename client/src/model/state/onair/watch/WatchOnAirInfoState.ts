@@ -10,6 +10,7 @@ export default class WatchOnAirInfoState implements IWatchOnAirInfoState {
     private streamApiModel: IStreamApiModel;
     private channelModel: IChannelModel;
     private displayInfo: DsiplayWatchInfo | null = null;
+    private endAt: number = new Date().getTime();
 
     constructor(
         @inject('IStreamApiModel') streamApiModel: IStreamApiModel,
@@ -46,6 +47,7 @@ export default class WatchOnAirInfoState implements IWatchOnAirInfoState {
                     name: item.name,
                     description: item.description,
                 };
+                this.endAt = item.endAt;
             }
         }
     }
@@ -56,5 +58,15 @@ export default class WatchOnAirInfoState implements IWatchOnAirInfoState {
      */
     public getInfo(): DsiplayWatchInfo | null {
         return this.displayInfo;
+    }
+
+    /**
+     * 次の更新までの待ち時間を返す (ms)
+     * @return number
+     */
+    public getUpdateTime(): number {
+        const diff = this.endAt - new Date().getTime();
+
+        return diff <= 0 ? 1000 : diff;
     }
 }

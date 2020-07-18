@@ -39,6 +39,7 @@ export default class WatchOnAirInfoCard extends Vue {
     private onUpdateStatusCallback = (async () => {
         await this.update();
     }).bind(this);
+    private updateTimer: number | null = null;
 
     public created(): void {
         // socket.io イベント
@@ -48,6 +49,10 @@ export default class WatchOnAirInfoCard extends Vue {
     public beforeDestroy(): void {
         // socket.io イベント
         this.socketIoModel.offUpdateState(this.onUpdateStatusCallback);
+
+        if (this.updateTimer !== null) {
+            clearTimeout(this.updateTimer);
+        }
     }
 
     @Watch('$route', { immediate: true, deep: true })
@@ -69,6 +74,13 @@ export default class WatchOnAirInfoCard extends Vue {
         });
 
         this.displayInfo = this.infoState.getInfo();
+
+        if (this.updateTimer !== null) {
+            clearTimeout(this.updateTimer);
+        }
+        this.updateTimer = setTimeout(() => {
+            this.update();
+        }, this.infoState.getUpdateTime());
     }
 }
 </script>

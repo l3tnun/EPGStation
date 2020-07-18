@@ -11,4 +11,5 @@ export default interface IWatchOnAirInfoState {
     clear(): void;
     update(channelId: apid.ChannelId, mode: number): Promise<void>;
     getInfo(): DsiplayWatchInfo | null;
+    getUpdateTime(): number;
 }
