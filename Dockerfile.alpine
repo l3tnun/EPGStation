@@ -7,7 +7,7 @@ RUN apk add --no-cache g++ make pkgconf python
 RUN mkdir -p /app
 WORKDIR /app
 COPY . .
-RUN npm install
+RUN npm run all-install
 RUN npm run build
 
 
