@@ -54,7 +54,7 @@ export default class ReserveApiModel implements IReserveApiModel {
             isConflict: reserve.isConflict,
             isOverlap: reserve.isOverlap,
             allowEndLack: reserve.allowEndLack,
-            isTimeSpecifited: reserve.isTimeSpecifited,
+            isTimeSpecified: reserve.isTimeSpecified,
             encodeDelTs: reserve.encodeDelTs,
             channelId: reserve.channelId,
             startAt: reserve.startAt,

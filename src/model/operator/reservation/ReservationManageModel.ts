@@ -122,13 +122,13 @@ class ReservationManageModel implements IReservationManageModel {
             // 時刻指定予約の場合
 
             // 時刻チェック
-            if (option.timeSpecifitedOption!.endAt <= new Date().getTime()) {
-                this.log.system.error('timeSpecifitedOption error');
-                throw new Error('TimeSpecifitedOptionError');
+            if (option.timeSpecifiedOption!.endAt <= new Date().getTime()) {
+                this.log.system.error('timeSpecifiedOption error');
+                throw new Error('TimeSpecifiedOptionError');
             }
 
             // すでに同じ条件で予約済みでないかチェック
-            const oldReserve = await this.reserveDB.findTimeSpecification(option.timeSpecifitedOption!).catch(err => {
+            const oldReserve = await this.reserveDB.findTimeSpecification(option.timeSpecifiedOption!).catch(err => {
                 finalize();
                 this.log.system.error('get old reservation error');
                 throw err;
@@ -140,22 +140,22 @@ class ReservationManageModel implements IReservationManageModel {
             }
 
             // channel 情報取得
-            const channel = await this.channelDB.findId(option.timeSpecifitedOption!.channelId).catch(err => {
+            const channel = await this.channelDB.findId(option.timeSpecifiedOption!.channelId).catch(err => {
                 finalize();
-                this.log.system.error(`channelId find error: ${option.timeSpecifitedOption!.channelId}`);
+                this.log.system.error(`channelId find error: ${option.timeSpecifiedOption!.channelId}`);
                 this.log.system.error(err);
                 throw new Error('ReservationManageModelFindChannelError');
             });
             if (channel === null) {
                 finalize();
-                this.log.stream.error(`channelId is not found: ${option.timeSpecifitedOption!.channelId}`);
+                this.log.stream.error(`channelId is not found: ${option.timeSpecifiedOption!.channelId}`);
                 throw new Error('eservationManageModelFindChannelIsNotFound');
             }
-            newReserve.isTimeSpecifited = true;
-            newReserve.name = StrUtil.toDBStr(option.timeSpecifitedOption!.name);
+            newReserve.isTimeSpecified = true;
+            newReserve.name = StrUtil.toDBStr(option.timeSpecifiedOption!.name);
             newReserve.halfWidthName = StrUtil.toHalf(newReserve.name);
-            newReserve.startAt = option.timeSpecifitedOption!.startAt;
-            newReserve.endAt = option.timeSpecifitedOption!.endAt;
+            newReserve.startAt = option.timeSpecifiedOption!.startAt;
+            newReserve.endAt = option.timeSpecifiedOption!.endAt;
             newReserve.channelId = channel.id;
             newReserve.channel = channel.channel;
             newReserve.channelType = channel.channelType;
@@ -278,9 +278,9 @@ class ReservationManageModel implements IReservationManageModel {
             typeof option.encodeOption !== 'undefined' &&
             this.optionChecker.checkEncodeOption(option.encodeOption) === false;
 
-        // 時刻指定予約なのに timeSpecifitedOption が設定されていない
+        // 時刻指定予約なのに timeSpecifiedOption が設定されていない
         if (isEdit === false) {
-            isFail = typeof option.programId === 'undefined' && typeof option.timeSpecifitedOption === 'undefined';
+            isFail = typeof option.programId === 'undefined' && typeof option.timeSpecifiedOption === 'undefined';
         }
 
         return !isFail;
@@ -614,7 +614,7 @@ class ReservationManageModel implements IReservationManageModel {
                     for (const time of times) {
                         // 予約情報セット
                         const newReserve = new Reserve();
-                        newReserve.isTimeSpecifited = true;
+                        newReserve.isTimeSpecified = true;
                         newReserve.name = StrUtil.toDBStr(rule.searchOption.keyword);
                         newReserve.halfWidthName = StrUtil.toHalf(newReserve.name);
                         newReserve.updateTime = updateTime;
@@ -1487,10 +1487,10 @@ class ReservationManageModel implements IReservationManageModel {
         const bIsManual = b.ruleId === null;
 
         if (aIsManual && bIsManual) {
-            if (a.isTimeSpecifited === b.isTimeSpecifited) {
+            if (a.isTimeSpecified === b.isTimeSpecified) {
                 return a.updateTime - b.updateTime;
             } else {
-                return a.isTimeSpecifited && !b.isTimeSpecifited ? -1 : 1;
+                return a.isTimeSpecified && !b.isTimeSpecified ? -1 : 1;
             }
         }
         if (aIsManual && !bIsManual) {

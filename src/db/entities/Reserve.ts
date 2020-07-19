@@ -55,7 +55,7 @@ export default class Reserve extends BaseEntity {
     @Column({
         default: false,
     })
-    public isTimeSpecifited: boolean = false; // 時刻指定予約か
+    public isTimeSpecified: boolean = false; // 時刻指定予約か
 
     /**
      * 保存オプション

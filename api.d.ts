@@ -51,7 +51,7 @@ export interface EditManualReserveOption {
  */
 export interface ManualReserveOption extends EditManualReserveOption {
     programId?: ProgramId; // program ID undefined の場合は時刻指定予約
-    timeSpecifitedOption?: {
+    timeSpecifiedOption?: {
         name: string;
         channelId: ChannelId;
         startAt: UnixtimeMS;
@@ -96,7 +96,7 @@ export interface ReserveItem {
     isConflict: boolean;
     isOverlap: boolean;
     allowEndLack: boolean;
-    isTimeSpecifited: boolean;
+    isTimeSpecified: boolean;
     /**
      * 保存オプション
      */

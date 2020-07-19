@@ -711,7 +711,7 @@ components:
                     $ref: '#/components/schemas/ReserveEncodedOption'
                 programId:
                     $ref: '#/components/schemas/ProgramId'
-                timeSpecifitedOption:
+                timeSpecifiedOption:
                     type: object
                     description: 時刻指定オプション
                     required:
@@ -744,7 +744,7 @@ components:
                 - isConflict
                 - isOverlap
                 - allowEndLack
-                - isTimeSpecifited
+                - isTimeSpecified
                 - encodeDelTs
                 - channelId
                 - startAt
@@ -763,7 +763,7 @@ components:
                     type: boolean
                 allowEndLack:
                     type: boolean
-                isTimeSpecifited:
+                isTimeSpecified:
                     type: boolean
                 parentDirectoryName:
                     type: string

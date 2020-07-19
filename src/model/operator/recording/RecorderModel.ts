@@ -361,7 +361,7 @@ class RecorderModel implements IRecorderModel {
         recorded.endAt = this.reserve.endAt;
         recorded.duration = this.reserve.endAt - this.reserve.startAt;
 
-        if (this.reserve.isTimeSpecifited === true) {
+        if (this.reserve.isTimeSpecified === true) {
             // 時刻指定予約なので channelId と startAt を元に番組情報を取得する
             const program = await this.programDB.findChannelIdAndTime(this.reserve.channelId, this.reserve.startAt);
             if (program === null) {
@@ -462,7 +462,7 @@ class RecorderModel implements IRecorderModel {
             const recorded = await this.recordedDB.findId(this.recordedId);
 
             // Recorded history 追加
-            if (this.reserve.isTimeSpecifited === false && this.reserve.ruleId !== null && this.isStopRec === false) {
+            if (this.reserve.isTimeSpecified === false && this.reserve.ruleId !== null && this.isStopRec === false) {
                 // ルール(Program Id 予約)の場合のみ記録する
                 try {
                     if (recorded !== null) {
@@ -531,7 +531,7 @@ class RecorderModel implements IRecorderModel {
 
         // 時刻指定予約時の番組名取得
         let programName = this.reserve.name;
-        if (reserve.isTimeSpecifited === true) {
+        if (reserve.isTimeSpecified === true) {
             // 時刻指定予約なので番組情報を取得する
             const program = await this.programDB.findChannelIdAndTime(this.reserve.channelId, this.reserve.startAt);
             programName = program === null ? '番組名なし' : program.name;
