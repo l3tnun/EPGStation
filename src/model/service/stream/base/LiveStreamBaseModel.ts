@@ -133,9 +133,6 @@ export default abstract class LiveStreamBaseModel extends StreamBaseModel<LiveSt
 
                 // stream 有効チェク開始
                 this.startCheckStreamEnable(streamId);
-
-                // stream 停止タイマーセット
-                this.setStopTimer();
             }
         } else {
             // stream 停止処理時にイベントを発行する
@@ -149,6 +146,9 @@ export default abstract class LiveStreamBaseModel extends StreamBaseModel<LiveSt
                 this.emitExitStream();
             });
         }
+
+        // stream 停止タイマーセット
+        this.setStopTimer();
     }
 
     /**

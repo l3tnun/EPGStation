@@ -206,10 +206,6 @@ abstract class StreamBaseModel<T> implements IStreamBaseModel<T> {
      * stream 保持要求
      */
     public keep(): void {
-        // HLS ではないときは無視する
-        if (this.getStreamType().includes('HLS') === false) {
-            return;
-        }
         this.setStopTimer();
     }
 }

@@ -8,13 +8,16 @@ export const get: Operation = async (req, res) => {
 
     let isClosed: boolean = false;
     let result: StreamResponse;
+    let keepTimer: NodeJS.Timer;
 
     const stop = async () => {
+        clearInterval(keepTimer);
+
         if (typeof result === 'undefined') {
             return;
         }
 
-        streamApiModel.stop(result.streamId);
+        await streamApiModel.stop(result.streamId);
     };
 
     req.on('close', async () => {
@@ -27,6 +30,9 @@ export const get: Operation = async (req, res) => {
             channelId: parseInt(req.params.channelId, 10),
             mode: parseInt(req.query.mode as string, 10),
         });
+        keepTimer = setInterval(() => {
+            streamApiModel.keep(result.streamId);
+        }, 10 * 1000);
     } catch (err) {
         api.responseServerError(res, err.message);
 
@@ -34,6 +40,8 @@ export const get: Operation = async (req, res) => {
     }
 
     if (isClosed !== false) {
+        await stop();
+
         return;
     }
 
