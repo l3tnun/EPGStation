@@ -375,9 +375,10 @@ export default class StreamApiModel implements IStreamApiModel {
 
     /**
      * ストリーム情報を返す
+     * @param isHalfWidth: boolean 半角文字で取得するか true なら半角文字
      * @return apid.StreamInfo
      */
-    public async getStreamInfos(): Promise<apid.StreamInfo> {
+    public async getStreamInfos(isHalfWidth: boolean): Promise<apid.StreamInfo> {
         const infos = this.streamManageModel.getStreamInfos();
 
         const items: (apid.LiveStreamInfoItem | apid.VideoFileStreamInfoItem)[] = [];
@@ -397,14 +398,14 @@ export default class StreamApiModel implements IStreamApiModel {
                 };
                 const program = await this.programDB.findChannelIdAndTime(info.info.channelId, now);
                 if (program !== null) {
-                    item.name = program.name;
+                    item.name = isHalfWidth === true ? program.halfWidthName : program.name;
                     item.startAt = program.startAt;
                     item.endAt = program.endAt;
-                    if (program.description !== null) {
-                        item.description = program.description;
+                    if (program.description !== null && program.halfWidthDescription !== null) {
+                        item.description = isHalfWidth === true ? program.halfWidthDescription : program.description;
                     }
-                    if (program.extended !== null) {
-                        item.extended = program.extended;
+                    if (program.extended !== null && program.halfWidthExtended !== null) {
+                        item.extended = isHalfWidth === true ? program.halfWidthExtended : program.extended;
                     }
                 }
 

@@ -19,5 +19,5 @@ export default interface IStreamApiModel {
     stop(streamId: apid.StreamId): Promise<void>;
     stopAll(): Promise<void>;
     keep(streamId: apid.StreamId): void;
-    getStreamInfos(): Promise<apid.StreamInfo>;
+    getStreamInfos(isHalfWidth: boolean): Promise<apid.StreamInfo>;
 }
