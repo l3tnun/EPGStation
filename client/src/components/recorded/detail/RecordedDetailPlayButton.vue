@@ -1,10 +1,6 @@
 <template>
     <div>
-        <v-btn v-if="videoFiles.length === 1" color="primary" v-on:click="play(videoFiles[0])" class="ma-1">
-            <v-icon left dark>mdi-play</v-icon>
-            play
-        </v-btn>
-        <v-menu v-else v-model="isOpened" offset-y>
+        <v-menu v-model="isOpened" offset-y :close-on-content-click="false">
             <template v-slot:activator="{ on }">
                 <v-btn color="primary" v-on="on" class="ma-1">
                     <v-icon left dark>mdi-play</v-icon>
