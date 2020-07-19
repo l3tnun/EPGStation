@@ -21,11 +21,11 @@ recordedViewer, recordedDownloader, mpegTsViewer に
 
 以下のコードを `C:\DTV\open-vlc.bat` に保存してください
 
-```C:\Program Files (x86)\VideoLAN\VLC\vlc.exe``` で渡された URL を開くようになっています
+```C:\Program Files\VideoLAN\VLC\vlc.exe``` で渡された URL を開くようになっています
 
 ```
 set vlcdata=%1
-start "" "C:\Program Files (x86)\VideoLAN\VLC\vlc.exe" "%vlcdata:~8%"
+start "" "C:\Program Files\VideoLAN\VLC\vlc.exe" "%vlcdata:~8%"
 ```
 
 ### 2. レジストリへの登録
