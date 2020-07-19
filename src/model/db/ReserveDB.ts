@@ -179,9 +179,7 @@ export default class ReserveDB implements IReserveDB {
     public async findLists(option: apid.GetReserveListsOption): Promise<Reserve[]> {
         const connection = await this.op.getConnection();
 
-        return await connection.getRepository(Reserve).find({
-            where: this.createFindListOption(option),
-        });
+        return await connection.getRepository(Reserve).find(this.createFindListOption(option));
     }
 
     private createFindListOption(option: apid.GetReserveListsOption): FindManyOptions<Reserve> {

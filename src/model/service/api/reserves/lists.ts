@@ -7,7 +7,14 @@ export const get: Operation = async (req, res) => {
     const reserveApiModel = container.get<IReserveApiModel>('IReserveApiModel');
 
     try {
-        api.responseJSON(res, 200, await reserveApiModel.getLists(req.query as any));
+        api.responseJSON(
+            res,
+            200,
+            await reserveApiModel.getLists({
+                startAt: parseInt(req.query.startAt as string, 10),
+                endAt: parseInt(req.query.endAt as string, 10),
+            }),
+        );
     } catch (err) {
         api.responseServerError(res, err.message);
     }
