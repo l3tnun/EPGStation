@@ -46,13 +46,20 @@
                                         v-if="
                                             typeof recordedDetailState.getRecorded().display.videoFiles !== 'undefined'
                                         "
+                                        title="play"
+                                        button="mdi-play"
                                         :videoFiles="recordedDetailState.getRecorded().display.videoFiles"
                                         v-on:play="play"
                                     ></RecordedDetailPlayButton>
-                                    <v-btn color="primary" class="ma-1">
-                                        <v-icon left dark>mdi-play-circle</v-icon>
-                                        streaming
-                                    </v-btn>
+                                    <RecordedDetailPlayButton
+                                        v-if="
+                                            typeof recordedDetailState.getRecorded().display.videoFiles !== 'undefined'
+                                        "
+                                        title="streaming"
+                                        button="mdi-play-circle"
+                                        :videoFiles="recordedDetailState.getRecorded().display.videoFiles"
+                                        v-on:play="streaming"
+                                    ></RecordedDetailPlayButton>
                                 </div>
                                 <div class="d-flex flex-wrap">
                                     <RecordedDetailEncodeButton
@@ -152,6 +159,10 @@ export default class RecordedDetail extends Vue {
         const url = this.recordedDetailState.getVideoURL(video);
 
         location.href = url !== null ? url : this.recordedDetailState.getVideoPlayListURL(video);
+    }
+
+    public streaming(video: apid.VideoFile): void {
+        console.log(video);
     }
 
     public downloadVideo(video: apid.VideoFile): void {
