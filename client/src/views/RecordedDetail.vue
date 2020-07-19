@@ -82,6 +82,7 @@
                             {{ recordedDetailState.getRecorded().display.extended }}
                         </div>
                     </div>
+                    <RecordedDetailSelectStreamDialog></RecordedDetailSelectStreamDialog>
                     <Snackbar></Snackbar>
                 </div>
             </transition>
@@ -93,12 +94,14 @@
 import RecordedDetailEncodeButton from '@/components/recorded/detail/RecordedDetailEncodeButton.vue';
 import RecordedDetailMoreButton from '@/components/recorded/detail/RecordedDetailMoreButton.vue';
 import RecordedDetailPlayButton from '@/components/recorded/detail/RecordedDetailPlayButton.vue';
+import RecordedDetailSelectStreamDialog from '@/components/recorded/detail/RecordedDetailSelectStreamDialog.vue';
 import RecordedDetailStopEncodeButton from '@/components/recorded/detail/RecordedDetailStopEncodeButton.vue';
 import Snackbar from '@/components/snackbar/Snackbar.vue';
 import TitleBar from '@/components/titleBar/TitleBar.vue';
 import container from '@/model/ModelContainer';
 import ISocketIOModel from '@/model/socketio/ISocketIOModel';
 import IScrollPositionState from '@/model/state/IScrollPositionState';
+import IRecordedDetailSelectStreamState from '@/model/state/recorded/detail/IRecordedDetailSelectStreamState';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
 import ISettingStorageModel, { ISettingValue } from '@/model/storage/setting/ISettingStorageModel';
 import Util from '@/util/Util';
@@ -116,6 +119,7 @@ Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
         RecordedDetailEncodeButton,
         RecordedDetailStopEncodeButton,
         RecordedDetailMoreButton,
+        RecordedDetailSelectStreamDialog,
     },
 })
 export default class RecordedDetail extends Vue {
@@ -130,6 +134,9 @@ export default class RecordedDetail extends Vue {
     private onUpdateStatusCallback = (async () => {
         await this.fetchData();
     }).bind(this);
+    public streamSelectDialogState: IRecordedDetailSelectStreamState = container.get<IRecordedDetailSelectStreamState>(
+        'IRecordedDetailSelectStreamState',
+    );
 
     public created(): void {
         this.settingValue = this.setting.getSavedValue();
@@ -162,7 +169,7 @@ export default class RecordedDetail extends Vue {
     }
 
     public streaming(video: apid.VideoFile): void {
-        console.log(video);
+        this.streamSelectDialogState.open(video);
     }
 
     public downloadVideo(video: apid.VideoFile): void {

@@ -44,7 +44,9 @@ import OnAirSelectStreamState from './state/onair/OnAirSelectStreamState';
 import OnAirState from './state/onair/OnAirState';
 import IWatchOnAirInfoState from './state/onair/watch/IWatchOnAirInfoState';
 import WatchOnAirInfoState from './state/onair/watch/WatchOnAirInfoState';
+import IRecordedDetailSelectStreamState from './state/recorded/detail/IRecordedDetailSelectStreamState';
 import IRecordedDetailState from './state/recorded/detail/IRecordedDetailState';
+import RecordedDetailSelectStreamState from './state/recorded/detail/RecordedDetailSelectStreamState';
 import RecordedDetailState from './state/recorded/detail/RecordedDetailState';
 import IRecordedState from './state/recorded/IRecordedState';
 import IRecordedUtil from './state/recorded/IRecordedUtil';
@@ -152,6 +154,11 @@ export default (container: Container) => {
     container.bind<IRecordedState>('IRecordedState').to(RecordedState).inSingletonScope();
 
     container.bind<IRecordedDetailState>('IRecordedDetailState').to(RecordedDetailState).inSingletonScope();
+
+    container
+        .bind<IRecordedDetailSelectStreamState>('IRecordedDetailSelectStreamState')
+        .to(RecordedDetailSelectStreamState)
+        .inSingletonScope();
 
     container.bind<IWatchRecordedInfoState>('IWatchRecordedInfoState').to(WatchRecordedInfoState).inSingletonScope();
 
