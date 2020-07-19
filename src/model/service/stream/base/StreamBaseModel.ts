@@ -103,6 +103,8 @@ abstract class StreamBaseModel<T> implements IStreamBaseModel<T> {
         if (this.streamStopTimer !== null) {
             clearTimeout(this.streamStopTimer);
         }
+
+        this.emitter.removeAllListeners(StreamBaseModel.EXIT_EVENT);
     }
 
     public abstract getStream(): internal.Readable;
@@ -114,7 +116,7 @@ abstract class StreamBaseModel<T> implements IStreamBaseModel<T> {
      * @param callback: () => void
      */
     public setExitStream(callback: () => void): void {
-        this.emitter.on(StreamBaseModel.EXIT_EVENT, async () => {
+        this.emitter.once(StreamBaseModel.EXIT_EVENT, async () => {
             try {
                 callback();
             } catch (err) {
