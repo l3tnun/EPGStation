@@ -3,6 +3,7 @@ import * as apid from '../../../../../api';
 import UaUtil from '../../../util/UaUtil';
 import Util from '../../../util/Util';
 import IServerConfigModel from '../../serverConfig/IServerConfigModel';
+import IOnAirSelectStreamSettingStorageModel from '../../storage/onair/IOnAirSelectStreamSettingStorageModel';
 import ISettingStorageModel from '../../storage/setting/ISettingStorageModel';
 import IOnAirSelectStreamState, { LiveStreamType, StreamConfigItem } from './IOnAirSelectStreamState';
 
@@ -15,6 +16,7 @@ export default class OnAirSelectStreamState implements IOnAirSelectStreamState {
 
     private serverConfig: IServerConfigModel;
     private settingModel: ISettingStorageModel;
+    private streamSelectSetting: IOnAirSelectStreamSettingStorageModel;
     private channelItem: apid.ScheduleChannleItem | null = null;
     private streamTypes: LiveStreamType[] = [];
     private streamConfig: { [type: string]: string[] } = {};
@@ -22,9 +24,11 @@ export default class OnAirSelectStreamState implements IOnAirSelectStreamState {
     constructor(
         @inject('IServerConfigModel') serverConfig: IServerConfigModel,
         @inject('ISettingStorageModel') settingModel: ISettingStorageModel,
+        @inject('IOnAirSelectStreamSettingStorageModel') streamSelectSetting: IOnAirSelectStreamSettingStorageModel,
     ) {
         this.serverConfig = serverConfig;
         this.settingModel = settingModel;
+        this.streamSelectSetting = streamSelectSetting;
     }
 
     /**
@@ -63,10 +67,15 @@ export default class OnAirSelectStreamState implements IOnAirSelectStreamState {
         }
 
         if (typeof this.selectedStreamType === 'undefined') {
-            this.selectedStreamType = this.getStreamTypes()[0];
+            const savedType = this.streamSelectSetting.getSavedValue().type;
+            const newSelectedStreamType = this.getStreamTypes().find(type => {
+                return type === savedType;
+            });
+            this.selectedStreamType =
+                typeof newSelectedStreamType === 'undefined' ? this.getStreamTypes()[0] : newSelectedStreamType;
         }
 
-        this.updateStreamConfig();
+        this.updateStreamConfig(true);
     }
 
     /**
@@ -75,6 +84,12 @@ export default class OnAirSelectStreamState implements IOnAirSelectStreamState {
     public close(): void {
         this.isOpen = false;
         this.channelItem = null;
+
+        // ストリームの選択情報を保存
+        this.streamSelectSetting.tmp.type = this.selectedStreamType as string;
+        this.streamSelectSetting.tmp.mode =
+            typeof this.selectedStreamConfig === 'undefined' ? 0 : this.selectedStreamConfig;
+        this.streamSelectSetting.save();
     }
 
     /**
@@ -96,13 +111,17 @@ export default class OnAirSelectStreamState implements IOnAirSelectStreamState {
     /**
      * ストリーム設定の更新
      */
-    public updateStreamConfig(): void {
+    public updateStreamConfig(isInit: boolean = false): void {
         this.streamConfigItems = this.getStreamConfig().map((c, i) => {
             return {
                 text: c,
                 value: i,
             };
         });
+
+        if (isInit === true) {
+            this.selectedStreamConfig = this.streamSelectSetting.getSavedValue().mode;
+        }
 
         if (typeof this.selectedStreamConfig === 'undefined') {
             this.selectedStreamConfig = 0;

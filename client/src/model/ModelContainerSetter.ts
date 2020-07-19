@@ -66,6 +66,8 @@ import IAddEncodeSettingStorageModel from './storage/encode/IAddEncodeSettingSto
 import GuideProgramDialogSettingStorageModel from './storage/guide/GuideProgramDialogSettingStorageModel';
 import IGuideProgramDialogSettingStorageModel from './storage/guide/IGuideProgramDialogSettingStorageModel';
 import IStorageOperationModel from './storage/IStorageOperationModel';
+import IOnAirSelectStreamSettingStorageModel from './storage/onair/IOnAirSelectStreamSettingStorageModel';
+import OnAirSelectStreamSettingStorageModel from './storage/onair/OnAirSelectStreamSettingStorageModel';
 import ISettingStorageModel from './storage/setting/ISettingStorageModel';
 import SettingStorageModel from './storage/setting/SettingStorageModel';
 import StorageOperationModel from './storage/StorageOperationModel';
@@ -106,6 +108,11 @@ export default (container: Container) => {
     container
         .bind<IAddEncodeSettingStorageModel>('IAddEncodeSettingStorageModel')
         .to(AddEncodeSettingStorageModel)
+        .inSingletonScope();
+
+    container
+        .bind<IOnAirSelectStreamSettingStorageModel>('IOnAirSelectStreamSettingStorageModel')
+        .to(OnAirSelectStreamSettingStorageModel)
         .inSingletonScope();
 
     container.bind<IServerConfigModel>('IServerConfigModel').to(ServerConfigModel).inSingletonScope();
