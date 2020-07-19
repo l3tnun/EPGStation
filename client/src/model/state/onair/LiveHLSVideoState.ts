@@ -61,7 +61,7 @@ class LiveHLSVideoState implements ILiveHLSVideoState {
      * @return Promise<boolean> true で有効
      */
     public async isEnabled(): Promise<boolean> {
-        const info = await this.streamApiModel.getStreamInfo();
+        const info = await this.streamApiModel.getStreamInfo(true);
 
         for (const item of info.items) {
             if (item.streamId === this.streamId && item.isEnable === true) {

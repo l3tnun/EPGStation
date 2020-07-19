@@ -3,6 +3,7 @@ import * as apid from '../../../../../../api';
 import DateUtil from '../../../../util/DateUtil';
 import IChannelModel from '../../..//channels/IChannelModel';
 import IStreamApiModel from '../../../api/streams/IStreamApiModel';
+import ISettingStorageModel from '../../../storage/setting/ISettingStorageModel';
 import IWatchOnAirInfoState, { DsiplayWatchInfo } from './IWatchOnAirInfoState';
 
 @injectable()
@@ -11,13 +12,16 @@ export default class WatchOnAirInfoState implements IWatchOnAirInfoState {
     private channelModel: IChannelModel;
     private displayInfo: DsiplayWatchInfo | null = null;
     private endAt: number = new Date().getTime();
+    private settingModel: ISettingStorageModel;
 
     constructor(
         @inject('IStreamApiModel') streamApiModel: IStreamApiModel,
         @inject('IChannelModel') channelModel: IChannelModel,
+        @inject('ISettingStorageModel') settingModel: ISettingStorageModel,
     ) {
         this.streamApiModel = streamApiModel;
         this.channelModel = channelModel;
+        this.settingModel = settingModel;
     }
 
     /**
@@ -34,10 +38,11 @@ export default class WatchOnAirInfoState implements IWatchOnAirInfoState {
      * @return Promise<void>
      */
     public async update(channelId: apid.ChannelId, mode: number): Promise<void> {
-        const streamInfo = await this.streamApiModel.getStreamInfo();
+        const isHalfWidth = this.settingModel.getSavedValue().isOnAirHalfWidthDisplayed;
+        const streamInfo = await this.streamApiModel.getStreamInfo(isHalfWidth);
 
         for (const item of streamInfo.items) {
-            const channel = this.channelModel.findChannel(channelId, true); // TODO isHalf
+            const channel = this.channelModel.findChannel(channelId, isHalfWidth);
             const startAt = DateUtil.getJaDate(new Date(item.startAt));
             const endAt = DateUtil.getJaDate(new Date(item.endAt));
             if (item.channelId === channelId && item.mode === mode) {

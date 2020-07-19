@@ -13,10 +13,15 @@ export default class StreamApiModel implements IStreamApiModel {
 
     /**
      * ストリーム情報を取得する
+     * @param isHalfWidth: boolean 半角で取得するか
      * @return Promise<apid.StreamInfo>
      */
-    public async getStreamInfo(): Promise<apid.StreamInfo> {
-        const result = await this.repository.get('/streams');
+    public async getStreamInfo(isHalfWidth: boolean): Promise<apid.StreamInfo> {
+        const result = await this.repository.get('/streams', {
+            params: {
+                isHalfWidth: isHalfWidth,
+            },
+        });
 
         return <any>result.data;
     }

@@ -1,7 +1,7 @@
 import * as apid from '../../../../../api';
 
 export default interface IStreamApiModel {
-    getStreamInfo(): Promise<apid.StreamInfo>;
+    getStreamInfo(isHalfWidth: boolean): Promise<apid.StreamInfo>;
     startLiveHLS(channelId: apid.ChannelId, mode: number): Promise<apid.StreamId>;
     stop(streamId: apid.StreamId): Promise<void>;
     stopAll(): Promise<void>;
