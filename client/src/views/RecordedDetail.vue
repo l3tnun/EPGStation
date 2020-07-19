@@ -137,6 +137,17 @@ export default class RecordedDetail extends Vue {
     }
 
     public play(video: apid.VideoFile): void {
+        if (video.type === 'encoded' && this.setting.getSavedValue().isPreferredPlayingOnWeb === true) {
+            Util.move(this.$router, {
+                path: '/recorded/watch',
+                query: {
+                    videoId: video.id.toString(10),
+                },
+            });
+
+            return;
+        }
+
         const url = this.recordedDetailState.getVideoURL(video);
 
         location.href = url !== null ? url : this.recordedDetailState.getVideoPlayListURL(video);

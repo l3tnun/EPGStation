@@ -12,6 +12,7 @@ import Rule from './views/Rule.vue';
 import Search from './views/Search.vue';
 import Settings from './views/Settings.vue';
 import WatchOnAir from './views/WatchOnAir.vue';
+import WatchRecorded from './views/WatchRecorded.vue';
 
 Vue.use(Router);
 
@@ -46,6 +47,11 @@ export default new Router({
             path: '/recorded',
             name: 'recorded',
             component: Recorded,
+        },
+        {
+            path: '/recorded/watch',
+            name: 'recorded-watch',
+            component: WatchRecorded,
         },
         {
             path: '/recorded/detail/:id',
