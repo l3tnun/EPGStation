@@ -15,6 +15,7 @@ export interface ISettingValue {
     isReservesHalfWidthDisplayed: boolean;
     recordedLength: number;
     isRecordedHalfWidthDisplayed: boolean;
+    isPreferredPlayingOnWeb: boolean;
     shouldUseRecordedViewURLScheme: boolean;
     recordedViewURLScheme: string | null;
     shouldUseRecordedDownloadURLScheme: boolean;

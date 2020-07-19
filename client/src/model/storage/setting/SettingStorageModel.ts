@@ -1,4 +1,5 @@
 import { inject, injectable } from 'inversify';
+import UaUtil from '../../../util/UaUtil';
 import AbstractStorageBaseModel from '../AbstractStorageBaseModel';
 import IStorageOperationModel from '../IStorageOperationModel';
 import ISettingStorageModel, { ISettingValue } from './ISettingStorageModel';
@@ -23,6 +24,7 @@ export default class SettingStorageModel extends AbstractStorageBaseModel<ISetti
             reservesLength: 24,
             isReservesHalfWidthDisplayed: true,
             recordedLength: 24,
+            isPreferredPlayingOnWeb: UaUtil.isAndroid() !== true && UaUtil.isiOS() !== true,
             isRecordedHalfWidthDisplayed: true,
             shouldUseRecordedViewURLScheme: true,
             recordedViewURLScheme: null,
