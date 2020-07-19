@@ -50,6 +50,8 @@ import IRecordedState from './state/recorded/IRecordedState';
 import IRecordedUtil from './state/recorded/IRecordedUtil';
 import RecordedState from './state/recorded/RecordedState';
 import RecordedUtil from './state/recorded/RecordedUtil';
+import IWatchRecordedInfoState from './state/recorded/watch/IWatchRecordedInfoState';
+import WatchRecordedInfoState from './state/recorded/watch/WatchRecordedInfoState';
 import IReservesState from './state/reserve/IReservesState';
 import IReserveStateUtil from './state/reserve/IReserveStateUtil';
 import ReservesState from './state/reserve/ReservesState';
@@ -150,6 +152,8 @@ export default (container: Container) => {
     container.bind<IRecordedState>('IRecordedState').to(RecordedState).inSingletonScope();
 
     container.bind<IRecordedDetailState>('IRecordedDetailState').to(RecordedDetailState).inSingletonScope();
+
+    container.bind<IWatchRecordedInfoState>('IWatchRecordedInfoState').to(WatchRecordedInfoState).inSingletonScope();
 
     container.bind<ISearchState>('ISearchState').to(SearchState).inSingletonScope();
 

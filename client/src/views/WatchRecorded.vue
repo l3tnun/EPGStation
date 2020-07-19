@@ -4,6 +4,10 @@
         <transition name="page">
             <div class="video-container-wrap mx-auto">
                 <VideoContainer v-if="videoParam !== null" v-bind:videoParam="videoParam"></VideoContainer>
+                <WatchOnRecordedInfoCard
+                    v-if="recordedId !== null"
+                    v-bind:recordedId="recordedId"
+                ></WatchOnRecordedInfoCard>
                 <div style="visibility: hidden;">dummy</div>
             </div>
         </transition>
@@ -12,14 +16,13 @@
 </template>
 
 <script lang="ts">
+import WatchOnRecordedInfoCard from '@/components/recorded/watch/WatchRecordedInfoCard.vue';
 import Snackbar from '@/components/snackbar/Snackbar.vue';
 import TitleBar from '@/components/titleBar/TitleBar.vue';
 import VideoContainer from '@/components/video/VideoContainer.vue';
 import * as VideoParam from '@/components/video/ViedoParam';
 import container from '@/model/ModelContainer';
-import ISocketIOModel from '@/model/socketio/ISocketIOModel';
 import IScrollPositionState from '@/model/state/IScrollPositionState';
-import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
 import { Component, Vue, Watch } from 'vue-property-decorator';
 import * as apid from '../../../api';
 
@@ -29,19 +32,22 @@ Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
     components: {
         TitleBar,
         VideoContainer,
+        WatchOnRecordedInfoCard,
         Snackbar,
     },
 })
 export default class WatchRecorded extends Vue {
     public videoParam: VideoParam.BaseVideoParam | null = null;
+    public recordedId: apid.RecordedId | null = null;
 
     private scrollState: IScrollPositionState = container.get<IScrollPositionState>('IScrollPositionState');
-    private snackbarState: ISnackbarState = container.get<ISnackbarState>('ISnackbarState');
 
     @Watch('$route', { immediate: true, deep: true })
     public onUrlChange(): void {
         // 視聴パラメータセット
         const videoId = typeof this.$route.query.videoId !== 'string' ? null : parseInt(this.$route.query.videoId, 10);
+        this.recordedId =
+            typeof this.$route.query.recordedId !== 'string' ? null : parseInt(this.$route.query.recordedId, 10);
 
         this.$nextTick(async () => {
             if (videoId !== null) {

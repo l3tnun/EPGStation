@@ -142,6 +142,7 @@ export default class RecordedDetail extends Vue {
                 path: '/recorded/watch',
                 query: {
                     videoId: video.id.toString(10),
+                    recordedId: this.$route.params.id,
                 },
             });
 
