@@ -6,7 +6,7 @@
                     <div>{{ dialogState.getChannelItem().name }}</div>
                     <div class="d-flex">
                         <v-select
-                            :items="dialogState.getStreamTypes()"
+                            :items="dialogState.streamTypes"
                             v-model="dialogState.selectedStreamType"
                             v-on:change="updateStreamConfig"
                             class="guide-time"

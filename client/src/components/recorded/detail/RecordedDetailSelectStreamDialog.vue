@@ -13,6 +13,7 @@
                             :menu-props="{ auto: true }"
                         ></v-select>
                         <v-select
+                            v-if="isHiddenStreamMode === false"
                             :items="dialogState.streamModeItems"
                             v-model="dialogState.selectedStreamMode"
                             :menu-props="{ auto: true }"
@@ -43,6 +44,8 @@ export default class RecordedDetailSelectStreamDialog extends Vue {
         'IRecordedDetailSelectStreamState',
     );
     public isRemove: boolean = false;
+    // ストリーム視聴設定セレクタ再描画用
+    public isHiddenStreamMode: boolean = false;
 
     private snackbarState: ISnackbarState = container.get<ISnackbarState>('ISnackbarState');
 
@@ -52,6 +55,12 @@ export default class RecordedDetailSelectStreamDialog extends Vue {
 
     public updateModeItems(): void {
         this.dialogState.updateModeItems();
+
+        // 再描画
+        this.isHiddenStreamMode = true;
+        this.$nextTick(() => {
+            this.isHiddenStreamMode = false;
+        });
     }
 
     public cancel(): void {

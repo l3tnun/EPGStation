@@ -10,6 +10,7 @@ import IOnAirSelectStreamState, { LiveStreamType, StreamConfigItem } from './IOn
 @injectable()
 export default class OnAirSelectStreamState implements IOnAirSelectStreamState {
     public isOpen: boolean = false;
+    public streamTypes: LiveStreamType[] = [];
     public streamConfigItems: StreamConfigItem[] = [];
     public selectedStreamType: LiveStreamType | undefined;
     public selectedStreamConfig: number | undefined;
@@ -18,7 +19,6 @@ export default class OnAirSelectStreamState implements IOnAirSelectStreamState {
     private settingModel: ISettingStorageModel;
     private streamSelectSetting: IOnAirSelectStreamSettingStorageModel;
     private channelItem: apid.ScheduleChannleItem | null = null;
-    private streamTypes: LiveStreamType[] = [];
     private streamConfig: { [type: string]: string[] } = {};
 
     constructor(
@@ -68,11 +68,11 @@ export default class OnAirSelectStreamState implements IOnAirSelectStreamState {
 
         if (typeof this.selectedStreamType === 'undefined') {
             const savedType = this.streamSelectSetting.getSavedValue().type;
-            const newSelectedStreamType = this.getStreamTypes().find(type => {
+            const newSelectedStreamType = this.streamTypes.find(type => {
                 return type === savedType;
             });
             this.selectedStreamType =
-                typeof newSelectedStreamType === 'undefined' ? this.getStreamTypes()[0] : newSelectedStreamType;
+                typeof newSelectedStreamType === 'undefined' ? this.streamTypes[0] : newSelectedStreamType;
         }
 
         this.updateStreamConfig(true);
@@ -101,14 +101,6 @@ export default class OnAirSelectStreamState implements IOnAirSelectStreamState {
     }
 
     /**
-     * ストリームタイプを返す
-     * @return string
-     */
-    public getStreamTypes(): LiveStreamType[] {
-        return this.streamTypes;
-    }
-
-    /**
      * ストリーム設定の更新
      */
     public updateStreamConfig(isInit: boolean = false): void {
@@ -123,12 +115,11 @@ export default class OnAirSelectStreamState implements IOnAirSelectStreamState {
             this.selectedStreamConfig = this.streamSelectSetting.getSavedValue().mode;
         }
 
-        if (typeof this.selectedStreamConfig === 'undefined') {
+        if (
+            typeof this.selectedStreamConfig === 'undefined' ||
+            typeof this.streamConfigItems[this.selectedStreamConfig] === 'undefined'
+        ) {
             this.selectedStreamConfig = 0;
-        } else {
-            if (typeof this.streamConfigItems[this.selectedStreamConfig] === 'undefined') {
-                this.selectedStreamConfig = 0;
-            }
         }
     }
 
