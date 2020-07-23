@@ -1,10 +1,11 @@
+import { execFile } from 'child_process';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import * as apid from '../../../../api';
 import IVideoFileDB from '../../db/IVideoFileDB';
 import IConfigFile from '../../IConfigFile';
 import IConfiguration from '../../IConfiguration';
-import IVideoUtil from './IVideoUtil';
+import IVideoUtil, { VideoInfo } from './IVideoUtil';
 
 @injectable()
 export default class VideoUtil implements IVideoUtil {
@@ -38,5 +39,28 @@ export default class VideoUtil implements IVideoUtil {
         }
 
         return null;
+    }
+
+    public getInfo(filePath: string): Promise<VideoInfo> {
+        return new Promise<VideoInfo>((resolve, reject) => {
+            execFile(this.config.ffprobe, ['-v', '0', '-show_format', '-of', 'json', filePath], (err, stdout) => {
+                if (err) {
+                    reject(err);
+
+                    return;
+                }
+
+                try {
+                    const result = <any>JSON.parse(stdout);
+                    resolve({
+                        duration: parseFloat(result.format.duration),
+                        size: parseInt(result.format.size, 10),
+                        bitRate: parseFloat(result.format.bit_rate),
+                    });
+                } catch (err) {
+                    reject(err);
+                }
+            });
+        });
     }
 }

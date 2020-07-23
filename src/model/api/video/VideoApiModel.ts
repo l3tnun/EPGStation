@@ -107,4 +107,20 @@ export default class VideoApiModel implements IVideoApiModel {
         console.log(videoFileId);
         await this.ipc.recorded.deleteVideoFile(videoFileId);
     }
+
+    /**
+     * 指定した video file id のファイルの動画長を取得する
+     * @param videoFileId: apid.VideoFileId
+     * @return Promise<number> 秒
+     */
+    public async getDuration(videoFileId: apid.VideoFileId): Promise<number> {
+        const filePath = await this.videoUtil.getFullFilePath(videoFileId);
+        if (filePath === null) {
+            throw new Error('VideoFileIsUndefined');
+        }
+
+        const videoInfo = await this.videoUtil.getInfo(filePath);
+
+        return videoInfo.duration;
+    }
 }
