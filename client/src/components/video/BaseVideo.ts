@@ -65,6 +65,19 @@ export default abstract class BaseVide extends Vue {
     }
 
     /**
+     * 読み込んだ video の破棄
+     */
+    protected unload(): void {
+        if (this.video === null) {
+            return;
+        }
+
+        this.video.pause();
+        this.video.removeAttribute('src');
+        this.video.load();
+    }
+
+    /**
      * 時刻更新
      */
     protected onTimeupdate(): void {
@@ -128,11 +141,7 @@ export default abstract class BaseVide extends Vue {
     }
 
     public beforeDestroy(): void {
-        if (this.video !== null) {
-            this.video.pause();
-            this.video.removeAttribute('src');
-            this.video.load();
-        }
+        this.unload();
     }
 
     /**
