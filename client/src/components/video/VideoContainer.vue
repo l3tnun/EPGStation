@@ -360,6 +360,7 @@ export default class VideoContainer extends Vue {
         const duration = this.getVideoDuration();
         this.duration = duration;
         this.currentTime = this.getVideoCurrentTime();
+        this.updateTimeStr();
     }
 
     /**
@@ -475,7 +476,7 @@ export default class VideoContainer extends Vue {
     }
 
     // 再生位置変更終了
-    public endChangeCurrentPosition(time: number): void {
+    public async endChangeCurrentPosition(time: number): Promise<void> {
         if (typeof this.$refs.video === 'undefined') {
             return;
         }
@@ -484,6 +485,7 @@ export default class VideoContainer extends Vue {
         (<BaseVideo>this.$refs.video).setCurrentTime(time);
 
         // シーク前に再生中であれば再開
+        await Util.sleep(200);
         if (this.needsReplay === true) {
             (<BaseVideo>this.$refs.video).play();
         }

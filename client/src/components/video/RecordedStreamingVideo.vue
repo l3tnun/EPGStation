@@ -38,7 +38,10 @@ export default class RecordedStreamingVideo extends BaseVideo {
         await this.updateVideoInfo();
     }).bind(this);
     private basePlayPosition: number = 0;
-    private updateDurationTimerId: number | undefined;
+    private dummyPlayPosition: number | null = null; // setCurrentTime が呼ばれている間に再生位置として返すダミー値
+    private pauseStateBeforeCurrentTime: boolean | null = null; // setCurrentTime が処理終了時に再生状態を復元するための値
+    private updateDurationTimerId: number | undefined; // 録画中の番組の動画長を更新するためのタイマー
+    private setCurrentTimeTimerId: number | undefined; // setCurrentTime を大量に呼び出さないようにするためのタイマー
 
     public created(): void {
         // socket.io イベント
@@ -117,6 +120,10 @@ export default class RecordedStreamingVideo extends BaseVideo {
      * @return number
      */
     public getCurrentTime(): number {
+        if (this.dummyPlayPosition !== null) {
+            return this.dummyPlayPosition;
+        }
+
         return this.video === null ? 0 : this.basePlayPosition + super.getCurrentTime();
     }
 
@@ -147,27 +154,42 @@ export default class RecordedStreamingVideo extends BaseVideo {
             }
         }
 
-        const isPaused = this.paused();
-        const playbackRate = this.video.playbackRate;
-
-        this.unload();
-        this.basePlayPosition = time;
-        this.onWaiting();
-        this.onPause();
-        this.setSrc(
-            this.createVideoSrc({
-                videoFileId: this.videoFileId,
-                streamingType: this.streamingType,
-                mode: this.mode,
-                playPosition: this.basePlayPosition,
-            }),
-        );
-        this.load();
-
-        if (isPaused === true) {
-            this.pause();
+        if (this.dummyPlayPosition === null) {
+            this.pauseStateBeforeCurrentTime = this.paused();
         }
-        this.video.playbackRate = playbackRate;
+        this.dummyPlayPosition = time;
+        this.onTimeupdate();
+        this.pause();
+
+        clearTimeout(this.setCurrentTimeTimerId);
+        this.setCurrentTimeTimerId = setTimeout(() => {
+            if (this.video === null) {
+                return;
+            }
+
+            this.dummyPlayPosition = null;
+            const playbackRate = this.video.playbackRate;
+
+            this.unload();
+            this.basePlayPosition = time;
+            this.onWaiting();
+            this.onPause();
+            this.setSrc(
+                this.createVideoSrc({
+                    videoFileId: this.videoFileId,
+                    streamingType: this.streamingType,
+                    mode: this.mode,
+                    playPosition: this.basePlayPosition,
+                }),
+            );
+            this.load();
+
+            if (this.pauseStateBeforeCurrentTime === true) {
+                this.pause();
+            }
+            this.pauseStateBeforeCurrentTime = null;
+            this.video.playbackRate = playbackRate;
+        }, 200);
     }
 }
 </script>
