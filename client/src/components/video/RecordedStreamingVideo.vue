@@ -1,5 +1,5 @@
 <template>
-    <video v-if="isShow === true" ref="video" autoplay playsinline></video>
+    <video ref="video" autoplay playsinline></video>
 </template>
 
 <script lang="ts">
@@ -31,8 +31,6 @@ export default class RecordedStreamingVideo extends BaseVideo {
 
     @Prop({ required: true })
     public streamingType!: string;
-
-    public isShow: boolean = true;
 
     private videoState = container.get<IRecordedStreamingVideoState>('IRecordedStreamingVideoState');
     private socketIoModel: ISocketIOModel = container.get<ISocketIOModel>('ISocketIOModel');
