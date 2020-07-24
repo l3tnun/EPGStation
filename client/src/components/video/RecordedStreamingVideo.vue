@@ -39,7 +39,8 @@ export default class RecordedStreamingVideo extends BaseVideo {
     }).bind(this);
     private basePlayPosition: number = 0;
     private dummyPlayPosition: number | null = null; // setCurrentTime が呼ばれている間に再生位置として返すダミー値
-    private pauseStateBeforeCurrentTime: boolean | null = null; // setCurrentTime が処理終了時に再生状態を復元するための値
+    private pauseStateBeforeCurrentTime: boolean = false; // setCurrentTime が処理終了時に再生状態を復元するための値
+    private lastUpdatePauseState: number = 0; // 最後に pauseStateBeforeCurrentTime を更新した時間
     private updateDurationTimerId: number | undefined; // 録画中の番組の動画長を更新するためのタイマー
     private setCurrentTimeTimerId: number | undefined; // setCurrentTime を大量に呼び出さないようにするためのタイマー
 
@@ -154,12 +155,13 @@ export default class RecordedStreamingVideo extends BaseVideo {
             }
         }
 
-        if (this.dummyPlayPosition === null) {
+        const now = new Date().getTime();
+        if (this.dummyPlayPosition === null && now - this.lastUpdatePauseState > 1000) {
             this.pauseStateBeforeCurrentTime = this.paused();
+            this.lastUpdatePauseState = now;
         }
         this.dummyPlayPosition = time;
         this.onTimeupdate();
-        this.pause();
 
         clearTimeout(this.setCurrentTimeTimerId);
         this.setCurrentTimeTimerId = setTimeout(async () => {
@@ -191,7 +193,6 @@ export default class RecordedStreamingVideo extends BaseVideo {
                     // console.error(err);
                 });
             }
-            this.pauseStateBeforeCurrentTime = null;
             this.dummyPlayPosition = null;
         }, 200);
     }
