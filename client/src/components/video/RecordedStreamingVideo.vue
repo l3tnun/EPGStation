@@ -6,9 +6,9 @@
 import BaseVideo from '@/components/video/BaseVideo';
 import container from '@/model/ModelContainer';
 import ISocketIOModel from '@/model/socketio/ISocketIOModel';
+import IRecordedStreamingVideoState from '@/model/state/recorded/streaming/IRecordedStreamingVideoState';
 import { Component, Prop, Watch } from 'vue-property-decorator';
 import * as apid from '../../../../api';
-import IRecordedStreamingVideoState from '../../model/state/recorded/streaming/IRecordedStreamingVideoState';
 
 interface VideoSrcInfo {
     videoFileId: apid.VideoFileId;

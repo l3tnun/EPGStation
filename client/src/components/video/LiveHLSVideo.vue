@@ -5,12 +5,12 @@
 <script lang="ts">
 import BaseVideo from '@/components/video/BaseVideo';
 import container from '@/model/ModelContainer';
+import ILiveHLSVideoState from '@/model/state/onair/ILiveHLSVideoState';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
 import UaUtil from '@/util/UaUtil';
 import Hls from 'hls.js';
 import { Component, Prop, Watch } from 'vue-property-decorator';
 import * as apid from '../../../../api';
-import ILiveHLSVideoState from '../../model/state/onair/ILiveHLSVideoState';
 
 @Component({})
 export default class LiveHLSVideo extends BaseVideo {
