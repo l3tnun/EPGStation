@@ -254,7 +254,7 @@ export default class VideoContainer extends Vue {
     private async onKeyDown(event: KeyboardEvent): Promise<void> {
         // space key 入力時に再生状態の反転
         if (event.key === ' ') {
-            this.togglePlay();
+            await this.togglePlay();
 
             if (typeof this.$refs.video !== 'undefined') {
                 if ((<BaseVideo>this.$refs.video).paused() === true) {
@@ -493,7 +493,9 @@ export default class VideoContainer extends Vue {
         // シーク前に再生中であれば再開
         await Util.sleep(200);
         if (this.needsReplay === true) {
-            (<BaseVideo>this.$refs.video).play();
+            await (<BaseVideo>this.$refs.video).play().catch(err => {
+                console.error(err);
+            });
         }
         this.needsReplay = null;
     }
@@ -538,13 +540,15 @@ export default class VideoContainer extends Vue {
     }
 
     // 再生状態切り替え
-    public togglePlay(): void {
+    public async togglePlay(): Promise<void> {
         if (typeof this.$refs.video === 'undefined') {
             return;
         }
 
         if ((<BaseVideo>this.$refs.video).paused() === true) {
-            (<BaseVideo>this.$refs.video).play();
+            await (<BaseVideo>this.$refs.video).play().catch(err => {
+                console.error(err);
+            });
         } else {
             (<BaseVideo>this.$refs.video).pause();
         }

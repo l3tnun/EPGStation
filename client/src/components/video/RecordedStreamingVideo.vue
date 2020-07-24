@@ -162,12 +162,11 @@ export default class RecordedStreamingVideo extends BaseVideo {
         this.pause();
 
         clearTimeout(this.setCurrentTimeTimerId);
-        this.setCurrentTimeTimerId = setTimeout(() => {
+        this.setCurrentTimeTimerId = setTimeout(async () => {
             if (this.video === null) {
                 return;
             }
 
-            this.dummyPlayPosition = null;
             const playbackRate = this.video.playbackRate;
 
             this.unload();
@@ -184,11 +183,16 @@ export default class RecordedStreamingVideo extends BaseVideo {
             );
             this.load();
 
+            this.video.playbackRate = playbackRate;
             if (this.pauseStateBeforeCurrentTime === true) {
                 this.pause();
+            } else {
+                await this.play().catch(err => {
+                    // console.error(err);
+                });
             }
             this.pauseStateBeforeCurrentTime = null;
-            this.video.playbackRate = playbackRate;
+            this.dummyPlayPosition = null;
         }, 200);
     }
 }

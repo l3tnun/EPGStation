@@ -147,12 +147,12 @@ export default abstract class BaseVide extends Vue {
     /**
      * 動画再生
      */
-    public play(): void {
+    public async play(): Promise<void> {
         if (this.video === null) {
             return;
         }
 
-        this.video.play();
+        await this.video.play();
     }
 
     /**
