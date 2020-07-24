@@ -424,8 +424,13 @@ export default class VideoContainer extends Vue {
     public onCanplay(): void {
         this.isLoading = false;
 
-        if (typeof this.$refs.video !== 'undefined' && (<BaseVideo>this.$refs.video).paused() === true) {
+        if (
+            typeof this.$refs.video !== 'undefined' &&
+            (<BaseVideo>this.$refs.video).paused() === true &&
+            new Date().getTime() - this.lastSeekedTime > 1000
+        ) {
             this.isShowControl = true;
+            this.isHideCursor = false;
         }
 
         setTimeout(() => {
@@ -435,6 +440,7 @@ export default class VideoContainer extends Vue {
                 (<BaseVideo>this.$refs.video).paused() === false
             ) {
                 this.isShowControl = false;
+                this.isHideCursor = true;
             }
             this.isFirstPlay = false;
         }, 300);
