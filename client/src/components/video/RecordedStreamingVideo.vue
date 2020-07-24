@@ -6,7 +6,6 @@
 import BaseVideo from '@/components/video/BaseVideo';
 import container from '@/model/ModelContainer';
 import ISocketIOModel from '@/model/socketio/ISocketIOModel';
-import UaUtil from '@/util/UaUtil';
 import { Component, Prop, Watch } from 'vue-property-decorator';
 import * as apid from '../../../../api';
 import IRecordedStreamingVideoState from '../../model/state/recorded/streaming/IRecordedStreamingVideoState';
