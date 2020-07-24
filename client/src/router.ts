@@ -13,6 +13,7 @@ import Search from './views/Search.vue';
 import Settings from './views/Settings.vue';
 import WatchOnAir from './views/WatchOnAir.vue';
 import WatchRecorded from './views/WatchRecorded.vue';
+import WatchRecordedStreaming from './views/WatchRecordedStreaming.vue';
 
 Vue.use(Router);
 
@@ -57,6 +58,11 @@ export default new Router({
             path: '/recorded/detail/:id',
             name: 'recorded-detail',
             component: RecordedDetail,
+        },
+        {
+            path: '/recorded/streaming/:id',
+            name: 'recorded-streaming',
+            component: WatchRecordedStreaming,
         },
         {
             path: '/search',

@@ -148,7 +148,7 @@ export default abstract class BaseVide extends Vue {
      * 動画再生
      */
     public play(): void {
-        if (this.video === null || this.video.paused === false) {
+        if (this.video === null) {
             return;
         }
 
@@ -159,7 +159,7 @@ export default abstract class BaseVide extends Vue {
      * 動画停止
      */
     public pause(): void {
-        if (this.video === null || this.video.paused === true) {
+        if (this.video === null) {
             return;
         }
 

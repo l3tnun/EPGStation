@@ -13,7 +13,9 @@ export interface NormalVideoParam extends BaseVideoParam {
 
 export interface RecordedStreamingParam extends BaseVideoParam {
     type: 'RecordedStreaming';
+    recordedId: apid.RecordedId;
     videoFileId: apid.VideoFileId;
+    streamingType: string;
     mode: number;
 }
 
@@ -25,6 +27,7 @@ export interface LiveHLSParam extends BaseVideoParam {
 
 export interface RecordedHLSParam extends BaseVideoParam {
     type: 'RecordedHLS';
+    recordedId: apid.RecordedId;
     videoFileId: apid.VideoFileId;
     mode: number;
 }

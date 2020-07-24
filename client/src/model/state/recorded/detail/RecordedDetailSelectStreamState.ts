@@ -18,16 +18,18 @@ export default class RecordedDetailSelectStreamState implements IRecordedDetailS
     private serverConfig: IServerConfigModel;
     private streamConfig: { [type: string]: string[] } = {};
     private videoFileId: apid.VideoFileId | null = null;
+    private recordedId: apid.RecordedId | null = null;
 
     constructor(@inject('IServerConfigModel') serverConfig: IServerConfigModel) {
         this.serverConfig = serverConfig;
     }
 
-    public open(videoFile: apid.VideoFile): void {
+    public open(videoFile: apid.VideoFile, recordedId: apid.RecordedId): void {
         this.isOpen = true;
 
         this.title = videoFile.name;
         this.videoFileId = videoFile.id;
+        this.recordedId = recordedId;
         this.streamModeItems = [];
         this.streamConfig = {};
         const config = this.serverConfig.getConfig();
@@ -136,5 +138,13 @@ export default class RecordedDetailSelectStreamState implements IRecordedDetailS
      */
     public getVideoFileId(): apid.VideoFileId | null {
         return this.videoFileId;
+    }
+
+    /**
+     * Recorded id を返す
+     * @return apid.RecordedId | null
+     */
+    public getRecordedId(): apid.RecordedId | null {
+        return this.recordedId;
     }
 }

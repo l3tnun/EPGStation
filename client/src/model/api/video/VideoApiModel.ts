@@ -19,4 +19,15 @@ export default class VideoApiModel implements IVideoApiModel {
     public async delete(videoFileId: apid.VideoFileId): Promise<void> {
         await this.repository.delete(`/videos/${videoFileId}`);
     }
+
+    /**
+     * 指定したビデオファイルの長さを取得する
+     * @param videoFileId: apid.VideoFileId
+     * @return Promise<number> 動画の長さ(秒)
+     */
+    public async getDuration(videoFileId: apid.VideoFileId): Promise<number> {
+        const result = await this.repository.get(`/videos/${videoFileId}/duration`);
+
+        return (<any>result.data).duration;
+    }
 }
