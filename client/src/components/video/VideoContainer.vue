@@ -799,7 +799,7 @@ export default class VideoContainer extends Vue {
         height: 100%
 
     .loading
-        z-index: 3
+        z-index: 2
         position: absolute
         height: 100%
         width: 100%
@@ -809,7 +809,7 @@ export default class VideoContainer extends Vue {
         align-items: center
 
     .video-control-wrap
-        z-index: 2
+        z-index: 3
         position: relative
         height: 100%
         width: 100%
