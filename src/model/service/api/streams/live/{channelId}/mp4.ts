@@ -17,7 +17,7 @@ export const get: Operation = async (req, res) => {
             return;
         }
 
-        await streamApiModel.stop(result.streamId);
+        await streamApiModel.stop(result.streamId, true);
     };
 
     req.on('close', async () => {

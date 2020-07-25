@@ -351,10 +351,11 @@ export default class StreamApiModel implements IStreamApiModel {
     /**
      * 指定した stream id のストリームを停止
      * @param streamId: apid.StreamId
+     * @param isForce?: boolean 強制的に停止させるか
      * @return Promise<void>
      */
-    public async stop(streamId: apid.StreamId): Promise<void> {
-        await this.streamManageModel.stop(streamId);
+    public async stop(streamId: apid.StreamId, isForce: boolean = false): Promise<void> {
+        await this.streamManageModel.stop(streamId, isForce);
     }
 
     /**

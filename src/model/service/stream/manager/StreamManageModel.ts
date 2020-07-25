@@ -78,11 +78,14 @@ class StreamManageModel implements IStreamManageModel {
     /**
      * ストリームを停止する
      * @param streamId: apid.StreamId
+     * @param isForce?: boolean 強制的に停止させるか
      * @return Promise<void>
      */
-    public async stop(streamId: apid.StreamId): Promise<void> {
+    public async stop(streamId: apid.StreamId, isForce: boolean = false): Promise<void> {
         // 実行権取得
-        const exeId = await this.executeManagementModel.getExecution(StreamManageModel.START_STREAM_PRIORITY);
+        const exeId = await this.executeManagementModel.getExecution(
+            isForce ? StreamManageModel.FOURCE_STOP_STREAM_PRIORITY : StreamManageModel.STOP_STREAM_PRIORITY,
+        );
         const finalize = () => {
             this.executeManagementModel.unLockExecution(exeId);
         };
@@ -111,7 +114,7 @@ class StreamManageModel implements IStreamManageModel {
      */
     public async stopAll(): Promise<void> {
         for (const streamId in this.streams) {
-            await this.stop(parseInt(streamId, 10)).catch(err => {
+            await this.stop(parseInt(streamId, 10), true).catch(err => {
                 this.log.system.error(err);
             });
         }
@@ -162,6 +165,7 @@ class StreamManageModel implements IStreamManageModel {
 namespace StreamManageModel {
     export const START_STREAM_PRIORITY = 1;
     export const STOP_STREAM_PRIORITY = 1;
+    export const FOURCE_STOP_STREAM_PRIORITY = 10;
 }
 
 export default StreamManageModel;
