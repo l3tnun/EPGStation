@@ -1,4 +1,3 @@
-import * as events from 'events';
 import { inject, injectable } from 'inversify';
 import * as apid from '../../../../api';
 import * as mapid from '../../../../node_modules/mirakurun/api';
@@ -13,16 +12,12 @@ import IProgramDB, { ProgramWithOverlap } from '../../db/IProgramDB';
 import IReserveDB, { IFindTimeRangesOption, IReserveTimeOption } from '../../db/IReserveDB';
 import IRuleDB, { RuleWithCnt } from '../../db/IRuleDB';
 import IReserveEvent, { IReserveUpdateValues } from '../../event/IReserveEvent';
+import IExecutionManagementModel from '../../IExecutionManagementModel';
 import ILogger from '../../ILogger';
 import ILoggerModel from '../../ILoggerModel';
 import IReserveOptionChecker from '../IReserveOptionChecker';
 import IReservationManageModel from './IReservationManageModel';
 import Tuner from './Tuner';
-
-interface ExeQueueData {
-    id: string;
-    priority: number;
-}
 
 interface ReserveDiffData {
     reserve: Reserve;
@@ -31,11 +26,8 @@ interface ReserveDiffData {
 
 @injectable()
 class ReservationManageModel implements IReservationManageModel {
-    private lockId: string | null = null;
-    private exeQueue: ExeQueueData[] = [];
-    private exeEventEmitter: events.EventEmitter = new events.EventEmitter();
-
     private log: ILogger;
+    private executeManagementModel: IExecutionManagementModel;
     private optionChecker: IReserveOptionChecker;
     private reserveDB: IReserveDB;
     private channelDB: IChannelDB;
@@ -52,6 +44,7 @@ class ReservationManageModel implements IReservationManageModel {
 
     constructor(
         @inject('ILoggerModel') logger: ILoggerModel,
+        @inject('IExecutionManagementModel') executeManagementModel: IExecutionManagementModel,
         @inject('IReserveOptionChecker') optionChecker: IReserveOptionChecker,
         @inject('IReserveDB') reserveDB: IReserveDB,
         @inject('IChannelDB') channelDB: IChannelDB,
@@ -60,6 +53,7 @@ class ReservationManageModel implements IReservationManageModel {
         @inject('IReserveEvent') reserveEvent: IReserveEvent,
     ) {
         this.log = logger.getLogger();
+        this.executeManagementModel = executeManagementModel;
         this.optionChecker = optionChecker;
         this.reserveDB = reserveDB;
         this.channelDB = channelDB;
@@ -108,9 +102,9 @@ class ReservationManageModel implements IReservationManageModel {
         }
 
         // 実行権取得
-        const exeId = await this.getExecution(ReservationManageModel.ADD_RESERVE_PRIORITY);
+        const exeId = await this.executeManagementModel.getExecution(ReservationManageModel.ADD_RESERVE_PRIORITY);
         const finalize = () => {
-            this.unLockExecution(exeId);
+            this.executeManagementModel.unLockExecution(exeId);
         };
 
         // 予約情報生成
@@ -391,9 +385,9 @@ class ReservationManageModel implements IReservationManageModel {
      */
     public async update(reserveId: apid.ReserveId): Promise<void> {
         // 実行権取得
-        const exeId = await this.getExecution(ReservationManageModel.UPDATE_RESERVE_PRIORITY);
+        const exeId = await this.executeManagementModel.getExecution(ReservationManageModel.UPDATE_RESERVE_PRIORITY);
         const finalize = () => {
-            this.unLockExecution(exeId);
+            this.executeManagementModel.unLockExecution(exeId);
         };
 
         this.log.system.info(`update reservation: ${reserveId}`);
@@ -487,9 +481,11 @@ class ReservationManageModel implements IReservationManageModel {
      */
     public async updateRule(ruleId: apid.RuleId): Promise<void> {
         // 実行権取得
-        const exeId = await this.getExecution(ReservationManageModel.RULE_UPDATE_RESERVE_PRIORITY);
+        const exeId = await this.executeManagementModel.getExecution(
+            ReservationManageModel.RULE_UPDATE_RESERVE_PRIORITY,
+        );
         const finalize = () => {
-            this.unLockExecution(exeId);
+            this.executeManagementModel.unLockExecution(exeId);
         };
 
         this.log.system.info(`update rule reservation: ${ruleId}`);
@@ -950,9 +946,9 @@ class ReservationManageModel implements IReservationManageModel {
      */
     public async cancel(reserveId: apid.ReserveId): Promise<void> {
         // 実行権取得
-        const exeId = await this.getExecution(ReservationManageModel.CANCEL_RESERVE_PRIORITY);
+        const exeId = await this.executeManagementModel.getExecution(ReservationManageModel.CANCEL_RESERVE_PRIORITY);
         const finalize = () => {
-            this.unLockExecution(exeId);
+            this.executeManagementModel.unLockExecution(exeId);
         };
 
         this.log.system.info(`cancel reservation: ${reserveId}`);
@@ -1027,9 +1023,11 @@ class ReservationManageModel implements IReservationManageModel {
      */
     public async removeSkip(reserveId: apid.ReserveId): Promise<void> {
         // 実行権取得
-        const exeId = await this.getExecution(ReservationManageModel.REMOVE_SKIP_RESERVE_PRIORITY);
+        const exeId = await this.executeManagementModel.getExecution(
+            ReservationManageModel.REMOVE_SKIP_RESERVE_PRIORITY,
+        );
         const finalize = () => {
-            this.unLockExecution(exeId);
+            this.executeManagementModel.unLockExecution(exeId);
         };
 
         this.log.system.info(`remove skip reservation: ${reserveId}`);
@@ -1102,9 +1100,11 @@ class ReservationManageModel implements IReservationManageModel {
      */
     public async removeOverlap(reserveId: apid.ReserveId): Promise<void> {
         // 実行権取得
-        const exeId = await this.getExecution(ReservationManageModel.REMOVE_OVERLAP_RESERVE_PRIORITY);
+        const exeId = await this.executeManagementModel.getExecution(
+            ReservationManageModel.REMOVE_OVERLAP_RESERVE_PRIORITY,
+        );
         const finalize = () => {
-            this.unLockExecution(exeId);
+            this.executeManagementModel.unLockExecution(exeId);
         };
 
         this.log.system.info(`remove overlap reservation: ${reserveId}`);
@@ -1179,9 +1179,9 @@ class ReservationManageModel implements IReservationManageModel {
      */
     public async edit(reserveId: apid.ReserveId, option: apid.EditManualReserveOption): Promise<void> {
         // 実行権取得
-        const exeId = await this.getExecution(ReservationManageModel.EDIT_RESERVE_PRIORITY);
+        const exeId = await this.executeManagementModel.getExecution(ReservationManageModel.EDIT_RESERVE_PRIORITY);
         const finalize = () => {
-            this.unLockExecution(exeId);
+            this.executeManagementModel.unLockExecution(exeId);
         };
 
         this.log.system.info(`edit reservation: ${reserveId}`);
@@ -1232,9 +1232,9 @@ class ReservationManageModel implements IReservationManageModel {
      */
     public async clean(): Promise<void> {
         // 実行権取得
-        const exeId = await this.getExecution(ReservationManageModel.EDIT_RESERVE_PRIORITY);
+        const exeId = await this.executeManagementModel.getExecution(ReservationManageModel.EDIT_RESERVE_PRIORITY);
         const finalize = () => {
-            this.unLockExecution(exeId);
+            this.executeManagementModel.unLockExecution(exeId);
         };
 
         this.log.system.info('start clean');
@@ -1266,86 +1266,6 @@ class ReservationManageModel implements IReservationManageModel {
         this.reserveEvent.emitUpdated({
             delete: deleteReserves,
         });
-    }
-
-    /**
-     * 実行権を取得
-     * @param priority 優先度
-     *      大きいほど優先度が上がる
-     * @param Promise<string> 実行 id を返す
-     */
-    private getExecution(priority: number): Promise<string> {
-        const exeQueueData: ExeQueueData = {
-            id: new Date().getTime().toString(16) + Math.floor(1000 * Math.random()).toString(16),
-            priority: priority,
-        };
-
-        // queue に挿入
-        let position = 0;
-        const len = this.exeQueue.length;
-        for (; position < len; position++) {
-            const q = this.exeQueue[position];
-            if (q.priority < exeQueueData.priority) {
-                break;
-            }
-        }
-        this.exeQueue.splice(position, 0, exeQueueData);
-
-        return new Promise<string>((resolve: (value: string) => void, reject: (err: Error) => void) => {
-            // タイムアウト設定
-            const timerId = setTimeout(() => {
-                this.log.system.error(`get execution error: ${priority}`);
-                // listener から削除
-                this.exeEventEmitter.removeListener(ReservationManageModel.UNLOCK_EVENT, onDone);
-
-                reject(new Error('GetExecutionTimeoutError'));
-            }, ReservationManageModel.UNLOCK_TIMEOUT);
-
-            const onDone = (id: string) => {
-                if (id !== exeQueueData.id) {
-                    return;
-                }
-
-                // タイマー停止
-                clearTimeout(timerId);
-
-                // 実行権が取得できた
-                resolve(exeQueueData.id);
-
-                // listener から削除
-                this.exeEventEmitter.removeListener(ReservationManageModel.UNLOCK_EVENT, onDone);
-            };
-
-            // unlock されるたびに発行される
-            this.exeEventEmitter.on(ReservationManageModel.UNLOCK_EVENT, onDone);
-
-            /**
-             * UNLOCK_EVENT を発行させる
-             * はじめての実行の場合 queue に積んだ自分の id で UNLOCK_EVENT が呼ばれ
-             * 実行権が取得できる
-             */
-            this.unLockExecution(exeQueueData.id);
-        });
-    }
-
-    /**
-     * 実行権をアンロック
-     * @param id: number
-     */
-    private unLockExecution(id: string): void {
-        if (this.lockId === id) {
-            // アンロック
-            this.lockId = null;
-        }
-
-        if (this.lockId === null) {
-            // 次の操作に実行権を渡す
-            const q = this.exeQueue.shift();
-            if (typeof q !== 'undefined') {
-                this.lockId = q.id;
-                this.exeEventEmitter.emit(ReservationManageModel.UNLOCK_EVENT, q.id);
-            }
-        }
     }
 
     /**
@@ -1508,8 +1428,6 @@ class ReservationManageModel implements IReservationManageModel {
 }
 
 namespace ReservationManageModel {
-    export const UNLOCK_EVENT = 'ExeUnlock';
-    export const UNLOCK_TIMEOUT = 1000 * 60;
     export const ADD_RESERVE_PRIORITY = 1;
     export const UPDATE_RESERVE_PRIORITY = 1;
     export const RULE_UPDATE_RESERVE_PRIORITY = 1;

@@ -1,5 +1,6 @@
 import { inject, injectable } from 'inversify';
 import * as apid from '../../../../../api';
+import IExecutionManagementModel from '../../../IExecutionManagementModel';
 import ILogger from '../../../ILogger';
 import ILoggerModel from '../../../ILoggerModel';
 import ISocketIOManageModel from '../../socketio/ISocketIOManageModel';
@@ -7,16 +8,19 @@ import IStreamBaseModel, { LiveStreamInfo, RecordedStreamInfo } from '../base/IS
 import IStreamManageModel, { StreamInfoWithStreamId } from './IStreamManageModel';
 
 @injectable()
-export default class StreamManageModel implements IStreamManageModel {
+class StreamManageModel implements IStreamManageModel {
     private log: ILogger;
+    private executeManagementModel: IExecutionManagementModel;
     private socketIO: ISocketIOManageModel;
     private streams: { [streamId: number]: IStreamBaseModel<any> } = {};
 
     constructor(
         @inject('ILoggerModel') logger: ILoggerModel,
+        @inject('IExecutionManagementModel') executeManagementModel: IExecutionManagementModel,
         @inject('ISocketIOManageModel') socketIO: ISocketIOManageModel,
     ) {
         this.log = logger.getLogger();
+        this.executeManagementModel = executeManagementModel;
         this.socketIO = socketIO;
     }
 
@@ -26,6 +30,12 @@ export default class StreamManageModel implements IStreamManageModel {
      * @return Promise<apid.StreamId>
      */
     public async start(stream: IStreamBaseModel<any>): Promise<apid.StreamId> {
+        // 実行権取得
+        const exeId = await this.executeManagementModel.getExecution(StreamManageModel.START_STREAM_PRIORITY);
+        const finalize = () => {
+            this.executeManagementModel.unLockExecution(exeId);
+        };
+
         // stream id 割当
         const streamId = this.getEmptyStreamId();
         this.streams[streamId] = stream;
@@ -35,14 +45,16 @@ export default class StreamManageModel implements IStreamManageModel {
             this.log.stream.error('start stream error');
             this.log.stream.error(err);
             await this.stop(streamId);
+            finalize();
             throw err;
         });
 
         // stream 停止時に停止させる
         stream.setExitStream(async () => {
-            await this.stop(streamId);
+            await this.stop(streamId).catch(() => {});
         });
 
+        finalize();
         this.socketIO.notifyClient();
 
         return streamId;
@@ -69,16 +81,26 @@ export default class StreamManageModel implements IStreamManageModel {
      * @return Promise<void>
      */
     public async stop(streamId: apid.StreamId): Promise<void> {
+        // 実行権取得
+        const exeId = await this.executeManagementModel.getExecution(StreamManageModel.START_STREAM_PRIORITY);
+        const finalize = () => {
+            this.executeManagementModel.unLockExecution(exeId);
+        };
+
         if (typeof this.streams[streamId] === 'undefined') {
+            finalize();
+
             return;
         }
 
         await this.streams[streamId].stop().catch(err => {
             this.log.stream.error(`stop stream error ${streamId}`);
+            finalize();
             throw err;
         });
         delete this.streams[streamId];
 
+        finalize();
         this.socketIO.notifyClient();
 
         this.log.stream.info(`stop stream ${streamId}`);
@@ -136,3 +158,10 @@ export default class StreamManageModel implements IStreamManageModel {
         return result;
     }
 }
+
+namespace StreamManageModel {
+    export const START_STREAM_PRIORITY = 1;
+    export const STOP_STREAM_PRIORITY = 1;
+}
+
+export default StreamManageModel;

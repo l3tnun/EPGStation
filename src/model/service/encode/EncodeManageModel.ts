@@ -12,15 +12,11 @@ import IRecordedDB from '../../db/IRecordedDB';
 import IVideoFileDB from '../../db/IVideoFileDB';
 import IEncodeEvent from '../../event/IEncodeEvent';
 import IConfiguration from '../../IConfiguration';
+import IExecutionManagementModel from '../../IExecutionManagementModel';
 import ILogger from '../../ILogger';
 import ILoggerModel from '../../ILoggerModel';
 import IEncodeManageModel, { EncodeRecordedIdIndex } from './IEncodeManageModel';
 import IEncodeProcessManageModel from './IEncodeProcessManageModel';
-
-interface ExeQueueData {
-    id: string;
-    priority: number;
-}
 
 interface EncodeQueueItem extends apid.AddEncodeProgramOption {
     encodeId: apid.EncodeId;
@@ -35,12 +31,9 @@ interface RunningQueueItem {
 
 @injectable()
 class EncodeManageModel implements IEncodeManageModel {
-    private lockId: string | null = null;
-    private exeQueue: ExeQueueData[] = [];
-    private exeEventEmitter: events.EventEmitter = new events.EventEmitter();
-
     private log: ILogger;
     private configure: IConfiguration;
+    private executeManagementModel: IExecutionManagementModel;
     private processManager: IEncodeProcessManageModel;
     private videoFileDB: IVideoFileDB;
     private recordedDB: IRecordedDB;
@@ -56,6 +49,7 @@ class EncodeManageModel implements IEncodeManageModel {
     constructor(
         @inject('ILoggerModel') logger: ILoggerModel,
         @inject('IConfiguration') configure: IConfiguration,
+        @inject('IExecutionManagementModel') executeManagementModel: IExecutionManagementModel,
         @inject('IEncodeProcessManageModel') processManager: IEncodeProcessManageModel,
         @inject('IVideoFileDB') videoFileDB: IVideoFileDB,
         @inject('IRecordedDB') recordedDB: IRecordedDB,
@@ -64,6 +58,7 @@ class EncodeManageModel implements IEncodeManageModel {
     ) {
         this.log = logger.getLogger();
         this.configure = configure;
+        this.executeManagementModel = executeManagementModel;
         this.concurrentEncodeNum = configure.getConfig().concurrentEncodeNum;
         this.processManager = processManager;
         this.videoFileDB = videoFileDB;
@@ -72,86 +67,6 @@ class EncodeManageModel implements IEncodeManageModel {
         this.encodeEvent = encodeEvent;
 
         this.listener.on(EncodeManageModel.NEEDS_CHECK_QUEUE_EVENT, this.checkQueue.bind(this));
-    }
-
-    /**
-     * 実行権を取得
-     * @param priority 優先度
-     *      大きいほど優先度が上がる
-     * @param Promise<string> 実行 id を返す
-     */
-    private getExecution(priority: number): Promise<string> {
-        const exeQueueData: ExeQueueData = {
-            id: new Date().getTime().toString(16) + Math.floor(1000 * Math.random()).toString(16),
-            priority: priority,
-        };
-
-        // queue に挿入
-        let position = 0;
-        const len = this.exeQueue.length;
-        for (; position < len; position++) {
-            const q = this.exeQueue[position];
-            if (q.priority < exeQueueData.priority) {
-                break;
-            }
-        }
-        this.exeQueue.splice(position, 0, exeQueueData);
-
-        return new Promise<string>((resolve: (value: string) => void, reject: (err: Error) => void) => {
-            // タイムアウト設定
-            const timerId = setTimeout(() => {
-                this.log.system.error(`get execution error: ${priority}`);
-                // listener から削除
-                this.exeEventEmitter.removeListener(EncodeManageModel.UNLOCK_EVENT, onDone);
-
-                reject(new Error('GetExecutionTimeoutError'));
-            }, EncodeManageModel.UNLOCK_TIMEOUT);
-
-            const onDone = (id: string) => {
-                if (id !== exeQueueData.id) {
-                    return;
-                }
-
-                // タイマー停止
-                clearTimeout(timerId);
-
-                // 実行権が取得できた
-                resolve(exeQueueData.id);
-
-                // listener から削除
-                this.exeEventEmitter.removeListener(EncodeManageModel.UNLOCK_EVENT, onDone);
-            };
-
-            // unlock されるたびに発行される
-            this.exeEventEmitter.on(EncodeManageModel.UNLOCK_EVENT, onDone);
-
-            /**
-             * UNLOCK_EVENT を発行させる
-             * はじめての実行の場合 queue に積んだ自分の id で UNLOCK_EVENT が呼ばれ
-             * 実行権が取得できる
-             */
-            this.unLockExecution(exeQueueData.id);
-        });
-    }
-
-    /**
-     * 実行権をアンロック
-     * @param id: number
-     */
-    private unLockExecution(id: string): void {
-        if (this.lockId === id) {
-            // アンロック
-            this.lockId = null;
-        }
-
-        if (this.lockId === null) {
-            // 次の操作に実行権を渡す
-            const q = this.exeQueue.shift();
-            if (typeof q !== 'undefined') {
-                this.lockId = q.id;
-                this.exeEventEmitter.emit(EncodeManageModel.UNLOCK_EVENT, q.id);
-            }
-        }
     }
 
     /**
@@ -165,7 +80,7 @@ class EncodeManageModel implements IEncodeManageModel {
         }
 
         // 実行権取得
-        const exeId = await this.getExecution(EncodeManageModel.ADD_ENCODE_PRIPORITY);
+        const exeId = await this.executeManagementModel.getExecution(EncodeManageModel.ADD_ENCODE_PRIPORITY);
 
         // queue に積む item を生成する
         const queueItem: EncodeQueueItem = cloneDeep(addOption) as any;
@@ -185,7 +100,7 @@ class EncodeManageModel implements IEncodeManageModel {
         this.log.system.info(`add new encode: ${encodeId}`);
 
         // 実行権開放
-        this.unLockExecution(exeId);
+        this.executeManagementModel.unLockExecution(exeId);
 
         // イベント発行
         this.encodeEvent.emitAddEncode(encodeId);
@@ -211,7 +126,9 @@ class EncodeManageModel implements IEncodeManageModel {
         }
 
         // 実行権取得
-        const exeId = await this.getExecution(EncodeManageModel.CREATE_ENCODING_PROCESS_PRIPORITY);
+        const exeId = await this.executeManagementModel.getExecution(
+            EncodeManageModel.CREATE_ENCODING_PROCESS_PRIPORITY,
+        );
 
         // waitQueue から取り出す
         let needsFinalize = false;
@@ -232,7 +149,7 @@ class EncodeManageModel implements IEncodeManageModel {
         }
 
         // 実行権開放
-        this.unLockExecution(exeId);
+        this.executeManagementModel.unLockExecution(exeId);
 
         if (needsFinalize === true && typeof encodeProgram !== 'undefined') {
             this.finalize(encodeProgram.encodeId);
@@ -526,7 +443,7 @@ class EncodeManageModel implements IEncodeManageModel {
      */
     private async finalize(encodeId: apid.EncodeId): Promise<void> {
         // 実行権取得
-        const exeId = await this.getExecution(EncodeManageModel.CLEAR_QUEUE_PRIPORITY);
+        const exeId = await this.executeManagementModel.getExecution(EncodeManageModel.CLEAR_QUEUE_PRIPORITY);
 
         const queueItem = this.getRunnginQueueItem(encodeId);
         if (typeof queueItem !== 'undefined') {
@@ -540,7 +457,7 @@ class EncodeManageModel implements IEncodeManageModel {
         });
 
         // 実行権開放
-        this.unLockExecution(exeId);
+        this.executeManagementModel.unLockExecution(exeId);
 
         process.nextTick(() => {
             this.emitNeedsCheckQueue();
@@ -553,7 +470,7 @@ class EncodeManageModel implements IEncodeManageModel {
      */
     public async cancel(encodeId: apid.EncodeId): Promise<void> {
         // 実行権取得
-        const exeId = await this.getExecution(EncodeManageModel.CANCEL_ENCODE_PRIPORITY);
+        const exeId = await this.executeManagementModel.getExecution(EncodeManageModel.CANCEL_ENCODE_PRIPORITY);
 
         this.log.system.info(`cancel encode: ${encodeId}`);
 
@@ -576,7 +493,7 @@ class EncodeManageModel implements IEncodeManageModel {
             });
         }
 
-        this.unLockExecution(exeId);
+        this.executeManagementModel.unLockExecution(exeId);
     }
 
     /**

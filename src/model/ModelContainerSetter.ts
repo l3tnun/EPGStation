@@ -67,7 +67,9 @@ import RecordingEvent from './event/RecordingEvent';
 import ReserveEvent from './event/ReserveEvent';
 import RuleEvent from './event/RuleEvent';
 import ThumbnailEvent from './event/ThumbnailEvent';
+import ExecutionManagementModel from './ExecutionManagementModel';
 import IConfiguration from './IConfiguration';
+import IExecutionManagementModel from './IExecutionManagementModel';
 import ILoggerModel from './ILoggerModel';
 import IMirakurunClientModel from './IMirakurunClientModel';
 import IIPCClient from './ipc/IIPCClient';
@@ -132,6 +134,8 @@ export const set = (container: Container): void => {
     container.bind<IConfiguration>('IConfiguration').to(Configuration).inSingletonScope();
 
     container.bind<IPromiseQueue>('IPromiseQueue').to(PromiseQueue);
+
+    container.bind<IExecutionManagementModel>('IExecutionManagementModel').to(ExecutionManagementModel);
 
     container.bind<IIPCClient>('IIPCClient').to(IPCClient).inSingletonScope();
 

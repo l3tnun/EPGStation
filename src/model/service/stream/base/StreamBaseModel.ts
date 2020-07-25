@@ -97,6 +97,7 @@ abstract class StreamBaseModel<T> implements IStreamBaseModel<T> {
      */
     public async stop(): Promise<void> {
         if (this.streamCheckTimer !== null) {
+            clearInterval(this.streamCheckTimer);
             this.streamCheckTimer = null;
         }
 
