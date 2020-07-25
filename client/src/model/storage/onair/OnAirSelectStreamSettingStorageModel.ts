@@ -21,6 +21,6 @@ export default class OnAirSelectStreamSettingStorageModel
     }
 
     public getStorageKey(): string {
-        return 'GuideProgramDetailSetting';
+        return 'OnAirSelectStreamSetting';
     }
 }
