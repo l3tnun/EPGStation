@@ -105,6 +105,7 @@ abstract class StreamBaseModel<T> implements IStreamBaseModel<T> {
             clearTimeout(this.streamStopTimer);
         }
 
+        this.emitExitStream();
         this.emitter.removeAllListeners(StreamBaseModel.EXIT_EVENT);
     }
 
