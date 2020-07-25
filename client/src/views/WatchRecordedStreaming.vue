@@ -4,6 +4,10 @@
         <transition name="page">
             <div class="video-container-wrap mx-auto">
                 <VideoContainer v-if="videoParam !== null" v-bind:videoParam="videoParam"></VideoContainer>
+                <WatchOnRecordedInfoCard
+                    v-if="videoParam !== null"
+                    v-bind:recordedId="videoParam.recordedId"
+                ></WatchOnRecordedInfoCard>
                 <div style="visibility: hidden;">dummy</div>
             </div>
         </transition>
@@ -12,6 +16,7 @@
 </template>
 
 <script lang="ts">
+import WatchOnRecordedInfoCard from '@/components/recorded/watch/WatchRecordedInfoCard.vue';
 import Snackbar from '@/components/snackbar/Snackbar.vue';
 import TitleBar from '@/components/titleBar/TitleBar.vue';
 import VideoContainer from '@/components/video/VideoContainer.vue';
@@ -27,6 +32,7 @@ Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
     components: {
         TitleBar,
         VideoContainer,
+        WatchOnRecordedInfoCard,
         Snackbar,
     },
 })
