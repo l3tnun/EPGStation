@@ -136,23 +136,12 @@ export default class RecordedStreamingVideo extends BaseVideo {
             return;
         }
 
-        // バッファー済みの範囲か
-        if (time >= this.basePlayPosition) {
-            const bufferd = this.video.buffered;
-            if (bufferd.length > 0) {
-                for (let i = 0; i < bufferd.length; i++) {
-                    if (
-                        time >= this.basePlayPosition + bufferd.start(i) &&
-                        time <= this.basePlayPosition + bufferd.end(i)
-                    ) {
-                        // バッファー済みの範囲ならた だシークする
-                        super.setCurrentTime(time - this.basePlayPosition);
-                        this.onTimeupdate();
+        // エンコード済み範囲か
+        if (time >= this.basePlayPosition && time <= this.basePlayPosition + super.getDuration()) {
+            super.setCurrentTime(time - this.basePlayPosition);
+            this.onTimeupdate();
 
-                        return;
-                    }
-                }
-            }
+            return;
         }
 
         const now = new Date().getTime();
