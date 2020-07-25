@@ -1,5 +1,6 @@
 import { inject, injectable } from 'inversify';
 import * as apid from '../../../../api';
+import UaUtil from '../..//util/UaUtil';
 import IConfigApiModel from '../api/config/IConfigApiModel';
 import IServerConfigModel from './IServerConfigModel';
 
@@ -18,6 +19,73 @@ export default class ServerConfigModel implements IServerConfigModel {
      */
     public async fetchConfig(): Promise<void> {
         this.config = await this.configApiModel.getConfig();
+
+        this.setStreamingSettingForiOS();
+    }
+
+    /**
+     * iOS で再生できないストリーミングの設定を削除する
+     */
+    private setStreamingSettingForiOS(): void {
+        if (UaUtil.isiOS() === false || this.config === null || typeof this.config.streamConfig === 'undefined') {
+            return;
+        }
+
+        if (typeof this.config.streamConfig.live !== 'undefined') {
+            // ライブ視聴の webm, mp4 を削除
+            delete this.config.streamConfig.live.webm;
+            delete this.config.streamConfig.live.mp4;
+
+            // ライブ視聴で再生可能な設定が残っているか
+            if (
+                typeof this.config.streamConfig.live.m2ts === 'undefined' &&
+                typeof this.config.streamConfig.live.hls === 'undefined'
+            ) {
+                delete this.config.streamConfig.live;
+                this.config.isEnableLiveStream = false;
+            }
+        }
+
+        if (typeof this.config.streamConfig.recorded !== 'undefined') {
+            if (typeof this.config.streamConfig.recorded.ts !== 'undefined') {
+                // 録画済み番組の ts ストリーミングの webm. mp4 を削除
+                delete this.config.streamConfig.recorded.ts.webm;
+                delete this.config.streamConfig.recorded.ts.mp4;
+
+                // 録画済み番組の ts ストリーミングの再生可能な設定が残っているか
+                if (typeof this.config.streamConfig.recorded.ts.hls === 'undefined') {
+                    delete this.config.streamConfig.recorded.ts;
+                    this.config.isEnableTSRecordedStream = false;
+                }
+            }
+            if (typeof this.config.streamConfig.recorded.encoded !== 'undefined') {
+                // 録画済み番組のエンコード済みストリーミングの webm. mp4 を削除
+                delete this.config.streamConfig.recorded.encoded.webm;
+                delete this.config.streamConfig.recorded.encoded.mp4;
+
+                // 録画済み番組のエンコード済みストリーミングの再生可能な設定が残っているか
+                if (typeof this.config.streamConfig.recorded.encoded.hls === 'undefined') {
+                    delete this.config.streamConfig.recorded.encoded;
+                    this.config.isEnableEncodedRecordedStream = false;
+                }
+            }
+
+            // 録画済み番組のストリーミングの再生可能な設定が残っているか
+            if (
+                typeof this.config.streamConfig.recorded.ts === 'undefined' &&
+                typeof this.config.streamConfig.recorded.encoded === 'undefined'
+            ) {
+                delete this.config.streamConfig.recorded;
+            }
+        }
+
+        // ストリーミング設定が残っているか
+        if (
+            typeof this.config.streamConfig.live === 'undefined' &&
+            typeof this.config.streamConfig.recorded === 'undefined'
+        ) {
+            delete this.config.streamConfig;
+        }
     }
 
     /**
