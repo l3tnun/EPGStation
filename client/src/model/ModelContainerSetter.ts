@@ -52,7 +52,9 @@ import IRecordedState from './state/recorded/IRecordedState';
 import IRecordedUtil from './state/recorded/IRecordedUtil';
 import RecordedState from './state/recorded/RecordedState';
 import RecordedUtil from './state/recorded/RecordedUtil';
+import IRecordedHLSStreamingVideoState from './state/recorded/streaming/IRecordedHLSStreamingVideoState';
 import IRecordedStreamingVideoState from './state/recorded/streaming/IRecordedStreamingVideoState';
+import RecordedHLSStreamingVideoState from './state/recorded/streaming/RecordedHLSStreamingVideoState';
 import RecordedStreamingVideoState from './state/recorded/streaming/RecordedStreamingVideoState';
 import IWatchRecordedInfoState from './state/recorded/watch/IWatchRecordedInfoState';
 import WatchRecordedInfoState from './state/recorded/watch/WatchRecordedInfoState';
@@ -165,6 +167,11 @@ export default (container: Container) => {
     container
         .bind<IRecordedStreamingVideoState>('IRecordedStreamingVideoState')
         .to(RecordedStreamingVideoState)
+        .inSingletonScope();
+
+    container
+        .bind<IRecordedHLSStreamingVideoState>('IRecordedHLSStreamingVideoState')
+        .to(RecordedHLSStreamingVideoState)
         .inSingletonScope();
 
     container.bind<IWatchRecordedInfoState>('IWatchRecordedInfoState').to(WatchRecordedInfoState).inSingletonScope();

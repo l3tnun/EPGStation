@@ -161,6 +161,22 @@
                 v-on:ratechange="onChangePlaybackRate"
                 v-on:volumechange="onVolumechange"
             ></RecordedStreamingVideo>
+            <RecordedHLSStreamingVideo
+                v-if="videoParam.type == 'RecordedHLS'"
+                ref="video"
+                v-bind:recordedId="videoParam.recordedId"
+                v-bind:videoFileId="videoParam.videoFileId"
+                v-bind:mode="videoParam.mode"
+                v-on:timeupdate="onTimeupdate"
+                v-on:waiting="onWaiting"
+                v-on:loadeddata="onLoadeddata"
+                v-on:canplay="onCanplay"
+                v-on:ended="onEnded"
+                v-on:play="onPlay"
+                v-on:pause="onPause"
+                v-on:ratechange="onChangePlaybackRate"
+                v-on:volumechange="onVolumechange"
+            ></RecordedHLSStreamingVideo>
         </div>
     </div>
 </template>
@@ -169,6 +185,7 @@
 import BaseVideo from '@/components/video/BaseVideo';
 import LiveHLSVideo from '@/components/video/LiveHLSVideo.vue';
 import NormalVideo from '@/components/video/NormalVideo.vue';
+import RecordedHLSStreamingVideo from '@/components/video/RecordedHLSStreamingVideo.vue';
 import RecordedStreamingVideo from '@/components/video/RecordedStreamingVideo.vue';
 import * as VideoParam from '@/components/video/ViedoParam';
 import UaUtil from '@/util/UaUtil';
@@ -185,6 +202,7 @@ interface SpeedItem {
         NormalVideo,
         LiveHLSVideo,
         RecordedStreamingVideo,
+        RecordedHLSStreamingVideo,
     },
 })
 export default class VideoContainer extends Vue {

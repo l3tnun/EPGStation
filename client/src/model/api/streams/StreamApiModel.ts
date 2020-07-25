@@ -43,6 +43,24 @@ export default class StreamApiModel implements IStreamApiModel {
     }
 
     /**
+     * 録画 HLS ストリームを開始する
+     * @param videoFileId: apid.VideoFileId
+     * @param ss: number 再生位置
+     * @param mode: ストリーミング設定
+     * @return Promise<apid.StreamId>
+     */
+    public async startRecordedHLS(videoFileId: apid.VideoFileId, ss: number, mode: number): Promise<apid.StreamId> {
+        const result = await this.repository.get(`/streams/recorded/${videoFileId}/hls`, {
+            params: {
+                ss: ss,
+                mode: mode,
+            },
+        });
+
+        return (<any>result.data).streamId;
+    }
+
+    /**
      * 指定したストリームを停止
      * @param streamId: apid.StreamId
      * @return Promise<void>

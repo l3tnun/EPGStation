@@ -80,34 +80,24 @@ export default class RecordedDetailSelectStreamDialog extends Vue {
             return;
         }
 
-        if (this.dialogState.selectedStreamType === 'HLS') {
-            // TODO HLS はまだ非対応
+        const recordedId = this.dialogState.getRecordedId();
+        if (recordedId === null) {
             this.snackbarState.open({
                 color: 'error',
-                text: '非対応の配信形式です',
+                text: '番組 ID が不正です',
             });
 
             return;
-        } else {
-            const recordedId = this.dialogState.getRecordedId();
-            if (recordedId === null) {
-                this.snackbarState.open({
-                    color: 'error',
-                    text: '番組 ID が不正です',
-                });
-
-                return;
-            }
-
-            await Util.move(this.$router, {
-                path: `/recorded/streaming/${this.dialogState.getVideoFileId()}`,
-                query: {
-                    recordedId: recordedId.toString(),
-                    streamingType: this.dialogState.selectedStreamType.toLowerCase(),
-                    mode: this.dialogState.selectedStreamMode.toString(10),
-                },
-            });
         }
+
+        await Util.move(this.$router, {
+            path: `/recorded/streaming/${this.dialogState.getVideoFileId()}`,
+            query: {
+                recordedId: recordedId.toString(),
+                streamingType: this.dialogState.selectedStreamType.toLowerCase(),
+                mode: this.dialogState.selectedStreamMode.toString(10),
+            },
+        });
     }
 
     /**

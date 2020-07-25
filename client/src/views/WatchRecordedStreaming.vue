@@ -31,7 +31,7 @@ Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
     },
 })
 export default class WatchRecordedStreaming extends Vue {
-    public videoParam: VideoParam.RecordedStreamingParam | null = null;
+    public videoParam: VideoParam.RecordedStreamingParam | VideoParam.RecordedHLSParam | null = null;
     private scrollState: IScrollPositionState = container.get<IScrollPositionState>('IScrollPositionState');
 
     @Watch('$route', { immediate: true, deep: true })
@@ -46,13 +46,22 @@ export default class WatchRecordedStreaming extends Vue {
 
         this.$nextTick(async () => {
             if (videoFileId !== null && recordedId !== null && streamingType !== null && mode !== null) {
-                this.videoParam = {
-                    type: 'RecordedStreaming',
-                    recordedId: recordedId,
-                    videoFileId: videoFileId,
-                    streamingType: streamingType,
-                    mode: mode,
-                };
+                if (streamingType === 'hls') {
+                    this.videoParam = {
+                        type: 'RecordedHLS',
+                        recordedId: recordedId,
+                        videoFileId: videoFileId,
+                        mode: mode,
+                    };
+                } else {
+                    this.videoParam = {
+                        type: 'RecordedStreaming',
+                        recordedId: recordedId,
+                        videoFileId: videoFileId,
+                        streamingType: streamingType,
+                        mode: mode,
+                    };
+                }
             }
 
             // データ取得完了を通知
