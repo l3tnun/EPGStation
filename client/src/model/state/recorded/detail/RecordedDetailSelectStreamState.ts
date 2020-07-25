@@ -1,3 +1,4 @@
+import IRecordedSelectStreamSettingStorageModel from '@/model/storage/recorded/IRecordedSelectStreamSettingStorageModel';
 import { inject, injectable } from 'inversify';
 import * as apid from '../../../../../../api';
 import IServerConfigModel from '../../../serverConfig/IServerConfigModel';
@@ -16,12 +17,18 @@ export default class RecordedDetailSelectStreamState implements IRecordedDetailS
     public selectedStreamMode: number | undefined;
 
     private serverConfig: IServerConfigModel;
+    private streamSelectSetting: IRecordedSelectStreamSettingStorageModel;
     private streamConfig: { [type: string]: string[] } = {};
     private videoFileId: apid.VideoFileId | null = null;
     private recordedId: apid.RecordedId | null = null;
 
-    constructor(@inject('IServerConfigModel') serverConfig: IServerConfigModel) {
+    constructor(
+        @inject('IServerConfigModel') serverConfig: IServerConfigModel,
+        @inject('IRecordedSelectStreamSettingStorageModel')
+        streamSelectSetting: IRecordedSelectStreamSettingStorageModel,
+    ) {
         this.serverConfig = serverConfig;
+        this.streamSelectSetting = streamSelectSetting;
     }
 
     public open(videoFile: apid.VideoFile, recordedId: apid.RecordedId): void {
@@ -88,12 +95,16 @@ export default class RecordedDetailSelectStreamState implements IRecordedDetailS
             }
 
             if (typeof this.selectedStreamType === 'undefined') {
-                // TODO set saved value
-                this.selectedStreamType = this.streamTypeItems[0];
+                const savedType = this.streamSelectSetting.getSavedValue().type;
+                const newSelectedStreamType = this.streamTypeItems.find(type => {
+                    return type === savedType;
+                });
+                this.selectedStreamType =
+                    typeof newSelectedStreamType === 'undefined' ? this.streamTypeItems[0] : newSelectedStreamType;
             }
         }
 
-        this.updateModeItems();
+        this.updateModeItems(true);
     }
 
     /**
@@ -101,12 +112,18 @@ export default class RecordedDetailSelectStreamState implements IRecordedDetailS
      */
     public close(): void {
         this.isOpen = false;
+
+        // ストリームの選択情報を保存
+        this.streamSelectSetting.tmp.type = this.selectedStreamType as string;
+        this.streamSelectSetting.tmp.mode =
+            typeof this.selectedStreamMode === 'undefined' ? 0 : this.selectedStreamMode;
+        this.streamSelectSetting.save();
     }
 
     /**
      * 視聴設定の更新
      */
-    public updateModeItems(): void {
+    public updateModeItems(isInit: boolean = false): void {
         this.streamModeItems = this.getModeItems().map((text, i) => {
             return {
                 text: text,
@@ -114,7 +131,9 @@ export default class RecordedDetailSelectStreamState implements IRecordedDetailS
             };
         });
 
-        // TODO selected saved value
+        if (isInit === true) {
+            this.selectedStreamMode = this.streamSelectSetting.getSavedValue().mode;
+        }
 
         if (
             typeof this.selectedStreamMode === 'undefined' ||

@@ -76,6 +76,8 @@ import IGuideProgramDialogSettingStorageModel from './storage/guide/IGuideProgra
 import IStorageOperationModel from './storage/IStorageOperationModel';
 import IOnAirSelectStreamSettingStorageModel from './storage/onair/IOnAirSelectStreamSettingStorageModel';
 import OnAirSelectStreamSettingStorageModel from './storage/onair/OnAirSelectStreamSettingStorageModel';
+import IRecordedSelectStreamSettingStorageModel from './storage/recorded/IRecordedSelectStreamSettingStorageModel';
+import RecordedSelectStreamSettingStorageModel from './storage/recorded/RecordedSelectStreamSettingStorageModel';
 import ISettingStorageModel from './storage/setting/ISettingStorageModel';
 import SettingStorageModel from './storage/setting/SettingStorageModel';
 import StorageOperationModel from './storage/StorageOperationModel';
@@ -121,6 +123,11 @@ export default (container: Container) => {
     container
         .bind<IOnAirSelectStreamSettingStorageModel>('IOnAirSelectStreamSettingStorageModel')
         .to(OnAirSelectStreamSettingStorageModel)
+        .inSingletonScope();
+
+    container
+        .bind<IRecordedSelectStreamSettingStorageModel>('IRecordedSelectStreamSettingStorageModel')
+        .to(RecordedSelectStreamSettingStorageModel)
         .inSingletonScope();
 
     container.bind<IServerConfigModel>('IServerConfigModel').to(ServerConfigModel).inSingletonScope();
