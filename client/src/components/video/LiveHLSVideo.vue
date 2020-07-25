@@ -27,7 +27,7 @@ export default class LiveHLSVideo extends BaseVideo {
 
     public async mounted(): Promise<void> {
         // HLS stream 開始
-        this.videoState.start(this.channelId, this.mode).catch(err => {
+        await this.videoState.start(this.channelId, this.mode).catch(err => {
             this.snackbarState.open({
                 color: 'error',
                 text: 'ストリーム開始に失敗',
@@ -85,9 +85,9 @@ export default class LiveHLSVideo extends BaseVideo {
             this.hls = new Hls();
             this.hls.loadSource(videoSrc);
             this.hls.attachMedia(this.video);
-            this.hls.on(Hls.Events.MANIFEST_PARSED, () => {
+            this.hls.on(Hls.Events.MANIFEST_PARSED, async () => {
                 if (this.video !== null) {
-                    this.video.play();
+                    await this.video.play().catch(err => {});
                 }
             });
         }
