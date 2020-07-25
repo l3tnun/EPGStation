@@ -147,6 +147,7 @@ export default class RecordedStreamingVideo extends BaseVideo {
                     ) {
                         // バッファー済みの範囲ならた だシークする
                         super.setCurrentTime(time - this.basePlayPosition);
+                        this.onTimeupdate();
 
                         return;
                     }
