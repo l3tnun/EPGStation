@@ -3,13 +3,19 @@ import * as apid from '../../../../../api';
 import DateUtil from '../../../util/DateUtil';
 import GenreUtil from '../../../util/GenreUtil';
 import IChannelModel from '../../channels/IChannelModel';
+import IServerConfigModel from '../../serverConfig/IServerConfigModel';
 import IRecordedUtil, { RecordedDisplayData } from './IRecordedUtil';
 
 @injectable()
 export default class RecordedUtil implements IRecordedUtil {
+    private serverConfigModel: IServerConfigModel;
     private channelModel: IChannelModel;
 
-    constructor(@inject('IChannelModel') channelModel: IChannelModel) {
+    constructor(
+        @inject('IServerConfigModel') serverConfigModel: IServerConfigModel,
+        @inject('IChannelModel') channelModel: IChannelModel,
+    ) {
+        this.serverConfigModel = serverConfigModel;
         this.channelModel = channelModel;
     }
 
@@ -35,6 +41,21 @@ export default class RecordedUtil implements IRecordedUtil {
             },
             recordedItem: item,
         };
+
+        // ストリーミング可能な videoFile を列挙する
+        const config = this.serverConfigModel.getConfig();
+        if (typeof result.display.videoFiles !== 'undefined' && config !== null) {
+            result.display.canStremingVideoFiles = result.display.videoFiles.filter(v => {
+                return (
+                    (v.type === 'ts' && config.isEnableTSRecordedStream === true) ||
+                    (v.type === 'encoded' && config.isEnableEncodedRecordedStream === true)
+                );
+            });
+
+            if (result.display.canStremingVideoFiles.length === 0) {
+                delete result.display.canStremingVideoFiles;
+            }
+        }
 
         let genres: string | null = null;
         if (typeof item.genre1 !== 'undefined') {

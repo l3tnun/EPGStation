@@ -3,8 +3,8 @@
         <TitleBar title="録画詳細">
             <template v-slot:menu>
                 <RecordedDetailMoreButton
-                    v-if="recordedDetailState.getRecorded() !== null"
-                    :recordedItem="recordedDetailState.getRecorded().recordedItem"
+                    v-if="recorded !== null"
+                    :recordedItem="recorded.recordedItem"
                     v-on:download="downloadVideo"
                     v-on:downloadPlayList="downloadPlayList"
                 ></RecordedDetailMoreButton>
@@ -12,62 +12,56 @@
         </TitleBar>
         <v-container>
             <transition name="page">
-                <div v-if="recordedDetailState.getRecorded() !== null" ref="appContent" class="app-content mx-auto">
+                <div v-if="recorded !== null" ref="appContent" class="app-content mx-auto">
                     <div class="content-0 mx-auto">
                         <div class="thumbnail">
                             <v-img
                                 aspect-ratio="1.7778"
                                 width="100%"
                                 max-height="400"
-                                :src="recordedDetailState.getRecorded().display.topThumbnailPath"
+                                :src="recorded.display.topThumbnailPath"
                                 v-on:error="this.src = './img/noimg.png'"
                                 :eager="true"
                             ></v-img>
                         </div>
                         <div class="content-description">
                             <div class="title font-weight-bold">
-                                {{ recordedDetailState.getRecorded().display.name }}
+                                {{ recorded.display.name }}
                             </div>
                             <div class="subtitle-1 mt-2 font-weight-light">
-                                {{ recordedDetailState.getRecorded().display.channelName }}
+                                {{ recorded.display.channelName }}
                             </div>
                             <div class="subtitle-2 font-weight-light">
-                                {{ recordedDetailState.getRecorded().display.genre }}
+                                {{ recorded.display.genre }}
                             </div>
                             <div class="subtitle-2 my-2 font-weight-light">
-                                {{ recordedDetailState.getRecorded().display.time }} ({{
-                                    recordedDetailState.getRecorded().display.duration
-                                }}
+                                {{ recorded.display.time }} ({{ recorded.display.duration }}
                                 m)
                             </div>
                             <div class="button-wrap d-flex flex-wrap">
                                 <div class="d-flex flex-wrap">
                                     <RecordedDetailPlayButton
-                                        v-if="
-                                            typeof recordedDetailState.getRecorded().display.videoFiles !== 'undefined'
-                                        "
+                                        v-if="typeof recorded.display.videoFiles !== 'undefined'"
                                         title="play"
                                         button="mdi-play"
-                                        :videoFiles="recordedDetailState.getRecorded().display.videoFiles"
+                                        :videoFiles="recorded.display.videoFiles"
                                         v-on:play="play"
                                     ></RecordedDetailPlayButton>
                                     <RecordedDetailPlayButton
-                                        v-if="
-                                            typeof recordedDetailState.getRecorded().display.videoFiles !== 'undefined'
-                                        "
+                                        v-if="typeof recorded.display.canStremingVideoFiles !== 'undefined'"
                                         title="streaming"
                                         button="mdi-play-circle"
-                                        :videoFiles="recordedDetailState.getRecorded().display.videoFiles"
+                                        :videoFiles="recorded.display.canStremingVideoFiles"
                                         v-on:play="streaming"
                                     ></RecordedDetailPlayButton>
                                 </div>
                                 <div class="d-flex flex-wrap">
                                     <RecordedDetailEncodeButton
-                                        :recordedItem="recordedDetailState.getRecorded().recordedItem"
-                                        :videoFiles="recordedDetailState.getRecorded().display.videoFiles"
+                                        :recordedItem="recorded.recordedItem"
+                                        :videoFiles="recorded.display.videoFiles"
                                     ></RecordedDetailEncodeButton>
                                     <RecordedDetailStopEncodeButton
-                                        :recordedItem="recordedDetailState.getRecorded().recordedItem"
+                                        :recordedItem="recorded.recordedItem"
                                         v-on:stopEncode="stopEncode"
                                     ></RecordedDetailStopEncodeButton>
                                 </div>
@@ -76,10 +70,10 @@
                     </div>
                     <div class="content-1 mt-6">
                         <div class="body-2 description">
-                            {{ recordedDetailState.getRecorded().display.description }}
+                            {{ recorded.display.description }}
                         </div>
                         <div v-if="isHideExtend === false" ref="extend" class="mt-2 body-2 extended">
-                            {{ recordedDetailState.getRecorded().display.extended }}
+                            {{ recorded.display.extended }}
                         </div>
                     </div>
                     <RecordedDetailSelectStreamDialog></RecordedDetailSelectStreamDialog>
@@ -102,6 +96,7 @@ import container from '@/model/ModelContainer';
 import ISocketIOModel from '@/model/socketio/ISocketIOModel';
 import IScrollPositionState from '@/model/state/IScrollPositionState';
 import IRecordedDetailSelectStreamState from '@/model/state/recorded/detail/IRecordedDetailSelectStreamState';
+import { RecordedDisplayData } from '@/model/state/recorded/IRecordedUtil';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
 import ISettingStorageModel, { ISettingValue } from '@/model/storage/setting/ISettingStorageModel';
 import Util from '@/util/Util';
@@ -137,6 +132,10 @@ export default class RecordedDetail extends Vue {
     public streamSelectDialogState: IRecordedDetailSelectStreamState = container.get<IRecordedDetailSelectStreamState>(
         'IRecordedDetailSelectStreamState',
     );
+
+    get recorded(): RecordedDisplayData | null {
+        return this.recordedDetailState.getRecorded();
+    }
 
     public created(): void {
         this.settingValue = this.setting.getSavedValue();
