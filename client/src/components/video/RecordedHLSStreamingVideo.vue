@@ -200,7 +200,7 @@ export default class RecordedHLSStreamingVideo extends BaseVideo {
     }
 
     private isSupportedHLSjs(): boolean {
-        return Hls.isSupported() === false || UaUtil.isiOS() === true;
+        return Hls.isSupported() === false || (UaUtil.isiOS() === true && UaUtil.isiPadOS() === false);
     }
 
     /**

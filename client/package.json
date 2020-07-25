@@ -11,7 +11,7 @@
     "@mdi/font": "5.3.45",
     "axios": "0.19.2",
     "eventemitter2": "6.4.3",
-    "hls.js": "0.14.3",
+    "hls.js": "0.14.5",
     "inversify": "5.0.1",
     "json-stable-stringify": "1.0.1",
     "lodash": "4.17.19",
