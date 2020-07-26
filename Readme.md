@@ -33,7 +33,7 @@ PC からの閲覧でもモダンな UI で操作可能です
 ## 動作環境
 
 - Linux / macOS / Windows 
-- [Node.js](http://nodejs.org/) : ^10.13.0 || ^12.14.0
+- [Node.js](http://nodejs.org/) : ^10.13.0 || ^12.14.0 || ^14.6.0
 - [Mirakurun](https://github.com/Chinachu/Mirakurun) : ^2.5.7 
 - いずれかのデータベース (文字コードは  utf-8 とする)
 	- [SQLite3](https://www.sqlite.org/)（設定不要だが検索機能に制限あり）[標準]

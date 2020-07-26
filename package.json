@@ -29,7 +29,7 @@
   },
   "homepage": "https://github.com/l3tnun/EPGStation#readme",
   "engines": {
-    "node": "^10.x.x < 11 || ^12.14.0 < 13"
+    "node": "^10.x.x < 11 || ^12.14.0 < 13 || ^14.6.0 < 15"
   },
   "dependencies": {
     "aribts": "^2.1.12",
