@@ -101,7 +101,7 @@ class Server extends Base {
                 'application/json': bodyParser.json(),
                 'text/text': bodyParser.text(),
                 'multipart/form-data': (req, res, next) => {
-                    upload.single('file')(req, res, (err) => {
+                    upload.single('file')(req, res, (err: any) => {
                         if (err) { return next(err.message); }
 
                         if (typeof req.file !== 'undefined' && typeof req.file.fieldname !== 'undefined') {
