@@ -424,7 +424,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
                 try {
                     recorded.id = await this.recordedDB.insert(recorded);
                     // 録画終了時処理
-                    stream.once('end', () => { this.recEnd(recData, recFile, recorded); });
+                    stream.once('close', () => { this.recEnd(recData, recFile, recorded); });
 
                     // 録画開始を通知
                     this.startEventsNotify(recorded);
