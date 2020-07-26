@@ -137,7 +137,7 @@ export default class RecordingStreamCreator implements IRecordingStreamCreator {
             tunerProgram.stream = s;
 
             // stream 停止時に programs から削除する
-            tunerProgram.stream.once('end', () => {
+            tunerProgram.stream.once('close', () => {
                 this.deleteReserve(reserve.id);
             });
             tunerProgram.stream.once('error', () => {
@@ -273,7 +273,7 @@ export default class RecordingStreamCreator implements IRecordingStreamCreator {
         });
 
         // 終了時に timer をリセット
-        channelStream.once('end', () => {
+        channelStream.once('close', () => {
             clearTimeout(this.timerIndex[reserve.id]);
             delete this.timerIndex[reserve.id];
         });
