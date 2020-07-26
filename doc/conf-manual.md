@@ -46,6 +46,7 @@
     - [予約情報データの保存先を変更したい](#reserves)
     - [データベースリビジョン情報の保存先を変更したい](#dbinfopath)
     - [サムネイル画像の保存先を変更したい](#thumbnail)
+    - [サムネイル生成コマンドを変更したい](#thumbnailcmd)
     - [サムネイル画像の解像度を変更したい](#thumbnailsize)
     - [サムネイル画像を生成する再生位置を変更したい](#thumbnailposition)
     - [ドロップチェック時に生成される .log ファイルの保存先を変更したい](#dropchecklogdir)
@@ -661,6 +662,29 @@ WebUIでの簡易予約時に設定されるエンコードファイルのディ
 | 種類 | デフォルト値 | 必須 |
 | --- | ---------- | --- |
 | string | thumbnail | no |
+
+```json
+"thumbnail": "/hoge/thumbs"
+```
+
+### thumbnailCmd
+#### サムネイル生成コマンド設定
+
+
+| 種類 | デフォルト値 | 必須 |
+| --- | ---------- | --- |
+| string | %FFMPEG% -ss %THUMBNAIL\_POSITION% -y -i %INPUT% -vframes 1 -f image2 -s %THUMBNAIL\_SIZE% %OUTPUT% | no |
+
+
+- 置換される変数は以下の通り
+
+| 変数名 | 説明 |
+| -------- | --- |
+| %FFMPEG% | ffmpegのファイルパス |
+| %INPUT% | 入力ファイルパス |
+| %OUTPUT% | 出力ファイルパス |
+| %THUMBNAIL\_POSITION% | サムネイル生成位置(秒) |
+| %THUMBNAIL\_SIZE% | サムネイルサイズ |
 
 ```json
 "thumbnail": "/hoge/thumbs"
