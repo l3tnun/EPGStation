@@ -687,7 +687,7 @@ WebUIでの簡易予約時に設定されるエンコードファイルのディ
 | %THUMBNAIL\_SIZE% | サムネイルサイズ |
 
 ```json
-"thumbnail": "/hoge/thumbs"
+"thumbnailCmd": "%FFMPEG% -ss %THUMBNAIL_POSITION% -y -i %INPUT% -vframes 1 -f image2 -s %THUMBNAIL_SIZE% %OUTPUT%"
 ```
 
 ### thumbnailSize
