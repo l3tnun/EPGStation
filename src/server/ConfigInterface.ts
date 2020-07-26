@@ -72,6 +72,7 @@ interface ConfigInterface {
     suppressReservesUpdateAllLog: boolean;
     suppressEPGUpdateLog: boolean;
     thumbnail: string;
+    thumbnailCmd: string;
     thumbnailSize: string;
     thumbnailPosition: number;
     uploadTempDir: string;

@@ -3,6 +3,7 @@ import * as events from 'events';
 import * as fs from 'fs';
 import * as mkdirp from 'mkdirp';
 import * as path from 'path';
+import ProcessUtil from '../../../Util/ProcessUtil';
 import Util from '../../../Util/Util';
 import * as DBSchema from '../../DB/DBSchema';
 import { EncodedDBInterface } from '../../DB/EncodedDB';
@@ -83,9 +84,9 @@ class ThumbnailManageModel extends Model implements ThumbnailManageModelInterfac
         const config = this.config.getConfig();
         const thumbnailDir = Util.getThumbnailPath();
         const thumbnailPath = path.join(thumbnailDir, `${ program.id }.jpg`);
-        const thumbnailSize = config.thumbnailSize || '480x270';
-        const thumbnailPosition = config.thumbnailPosition || 5;
-        const ffmpeg = Util.getFFmpegPath();
+        const cmdStr = (config.thumbnailCmd || '%FFMPEG% -ss %THUMBNAIL_POSITION% -y -i %INPUT% -vframes 1 -f image2 -s %THUMBNAIL_SIZE% %OUTPUT%');
+        const cmds = ProcessUtil.parseCmdStr(cmdStr);
+        cmds.bin.replace('%FFMPEG%', Util.getFFmpegPath());
 
         // thumbnailDir の存在確認
         try {
@@ -96,11 +97,11 @@ class ThumbnailManageModel extends Model implements ThumbnailManageModelInterfac
             mkdirp.sync(thumbnailDir);
         }
 
-        // ffmpeg の存在確認
+        // コマンドの存在確認
         try {
-            fs.statSync(ffmpeg);
+            fs.statSync(cmds.bin);
         } catch (err) {
-            this.log.system.error(`ffmpeg is not found: ${ ffmpeg }`);
+            this.log.system.error(`ffmpeg is not found: ${ cmds.bin }`);
             this.isRunning = false;
 
             return;
@@ -126,13 +127,17 @@ class ThumbnailManageModel extends Model implements ThumbnailManageModelInterfac
             return;
         }
 
-        // create thumbnail
-        const cmd = (`-ss ${ thumbnailPosition } -y -i %INPUT% -vframes 1 -f image2 -s ${ thumbnailSize } ${ thumbnailPath }`).split(' ');
-        for (let i = 0; i < cmd.length; i++) {
-            cmd[i] = cmd[i].replace(/%INPUT%/, filePath);
+        // コマンドの引数準備
+        for (let i = 0; i < cmds.args.length; i++) {
+            cmds.args[i] = cmds.args[i]
+                            .replace(/%INPUT%/, filePath)
+                            .replace(/%OUTPUT%/, thumbnailPath)
+                            .replace(/%THUMBNAIL_POSITION%/, `${ config.thumbnailPosition || 5 }`)
+                            .replace(/%THUMBNAIL_SIZE%/, config.thumbnailSize || '480x270');
         }
 
-        const child = spawn(ffmpeg, cmd);
+        // create thumbnail
+        const child = spawn(cmds.bin, cmds.args);
 
         // debug 用
         if (child.stderr !== null) { child.stderr.on('data', (data) => { this.log.system.debug(String(data)); }); }

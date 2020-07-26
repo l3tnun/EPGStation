@@ -1,5 +1,6 @@
 import { ChildProcess } from 'child_process';
 import * as fs from 'fs';
+import Util from './Util';
 
 namespace ProcessUtil {
     /**
@@ -50,7 +51,7 @@ namespace ProcessUtil {
         }
 
         // %NODE% の replace
-        bin = bin.replace(/%NODE%/g, process.argv[0]);
+        bin = bin.replace(/%NODE%/g, process.argv[0]).replace(/%FFMPEG%/g, Util.getFFmpegPath());
 
         // bin の存在確認
         try {
