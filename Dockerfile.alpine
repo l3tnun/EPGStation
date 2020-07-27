@@ -1,6 +1,6 @@
 ARG arch=amd64
 
-FROM ${arch}/node:12-alpine AS builder
+FROM ${arch}/node:14-alpine AS builder
 
 RUN apk add --no-cache g++ make pkgconf python
 
@@ -11,7 +11,7 @@ RUN npm run all-install
 RUN npm run build
 
 
-FROM ${arch}/node:12-alpine
+FROM ${arch}/node:14-alpine
 
 COPY --from=builder /app /app/
 
