@@ -208,6 +208,7 @@ class EPGUpdateManageModel implements IEPGUpdateManageModel {
      */
     private stopStream(stream: IncomingMessage): void {
         stream.destroy();
+        stream.push(null); // eof 通知
         stream.removeAllListeners();
         this.programQueue = [];
         this.serviceQueue = [];

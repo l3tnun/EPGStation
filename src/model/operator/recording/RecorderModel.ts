@@ -205,6 +205,7 @@ class RecorderModel implements IRecorderModel {
                 this.stream.unpipe();
             }
             this.stream.destroy();
+            this.stream.push(null); // eof 通知
             this.stream.removeAllListeners('data');
             this.stream = null;
         } catch (err) {
@@ -651,6 +652,7 @@ class RecorderModel implements IRecorderModel {
             // 録画中
             if (this.stream !== null) {
                 this.stream.destroy();
+                this.stream.push(null); // eof 通知
             }
             this.isStopRec = true;
         }

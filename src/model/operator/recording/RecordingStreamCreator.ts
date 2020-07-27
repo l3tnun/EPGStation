@@ -90,6 +90,7 @@ export default class RecordingStreamCreator implements IRecordingStreamCreator {
                 if (tuner.programs[i].reserve.id === reserveId) {
                     if (tuner.programs[i].stream !== null) {
                         tuner.programs[i].stream!.destroy();
+                        tuner.programs[i].stream!.push(null); // eof 通知
                     }
                     tuner.programs.splice(i, 1);
                     this.log.system.debug(`delete stream: ${reserveId}`);
@@ -213,6 +214,7 @@ export default class RecordingStreamCreator implements IRecordingStreamCreator {
                 for (const p of this.tuners[i].programs) {
                     if (p.stream !== null) {
                         p.stream.destroy();
+                        p.stream.push(null); // eof 通知
                     }
                 }
 
@@ -307,6 +309,7 @@ export default class RecordingStreamCreator implements IRecordingStreamCreator {
 
         if (stream !== null) {
             stream.destroy();
+            stream.push(null); // eof 通知
         }
     }
 
