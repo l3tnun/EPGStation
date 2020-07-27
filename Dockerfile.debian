@@ -1,6 +1,6 @@
 ARG arch=amd64
 
-FROM ${arch}/node:12-buster AS builder
+FROM ${arch}/node:14-buster AS builder
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -14,7 +14,7 @@ RUN npm install --no-save
 RUN npm run build
 
 
-FROM ${arch}/node:12-buster-slim
+FROM ${arch}/node:14-buster-slim
 
 COPY --from=builder /app /app/
 
