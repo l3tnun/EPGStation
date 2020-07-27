@@ -266,7 +266,7 @@ export default class RecordingStreamCreator implements IRecordingStreamCreator {
         }, reserve.endAt - now + 1000 * this.config.timeSpecifiedEndMargin);
 
         // mirakurun から channel stream を受け取る
-        const channelStream = await mirakurun.getServiceStream(reserve.channelId).catch(err => {
+        const channelStream = await mirakurun.getServiceStream(reserve.channelId, true).catch(err => {
             this.log.system.error(`stream get error ${reserve.channelId}`);
             this.log.system.error(err);
             clearTimeout(this.timerIndex[reserve.id]);
