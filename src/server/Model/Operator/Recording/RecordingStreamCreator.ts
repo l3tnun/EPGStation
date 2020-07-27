@@ -74,6 +74,7 @@ class RecordingStreamCreator extends Model implements RecordingStreamCreatorInte
                 if (tuner.programs[i].reserve.program.id === programId) {
                     if (tuner.programs[i].stream !== null) {
                         tuner.programs[i].stream!.destroy();
+                        tuner.programs[i].stream!.push(null); // eof 通知
                     }
                     tuner.programs.splice(i, 1);
 
@@ -133,7 +134,7 @@ class RecordingStreamCreator extends Model implements RecordingStreamCreatorInte
                 this.tuners[tunerId].programs[programPosition].stream = s;
 
                 // stream 停止時に programs から削除する
-                s.once('close', () => {
+                s.once('end', () => {
                     const position = findProgram();
                     if (position === -1) { return; }
 
@@ -204,6 +205,7 @@ class RecordingStreamCreator extends Model implements RecordingStreamCreatorInte
                 for (const p of this.tuners[i].programs) {
                     if (p.stream !== null) {
                         p.stream.destroy();
+                        p.stream.push(null); // eof 通知
                     }
                 }
 
@@ -263,11 +265,12 @@ class RecordingStreamCreator extends Model implements RecordingStreamCreatorInte
         const endTimer = setTimeout(() => {
             if (channelStream !== null) {
                 channelStream.destroy();
+                channelStream.push(null); // eof 通知
             }
         }, reserve.program.endAt - now + (1000 * endMargin));
 
         // 終了時に timer をリセット
-        channelStream.once('close', () => { clearTimeout(endTimer); });
+        channelStream.once('end', () => { clearTimeout(endTimer); });
 
         // 予約時間まで待つ
         if (now < reserve.program.startAt) {

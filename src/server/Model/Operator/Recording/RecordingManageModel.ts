@@ -183,6 +183,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
                 record.checker.setDeleted();
             }
             record.stream.destroy();
+            record.stream.push(null); // eof 通知
             this.log.system.info(`stop recording: ${ record.reserve.program.id } ${ record.reserve.program.name }`);
         }
     }
@@ -424,8 +425,7 @@ class RecordingManageModel extends Model implements RecordingManageModelInterfac
                 try {
                     recorded.id = await this.recordedDB.insert(recorded);
                     // 録画終了時処理
-                    stream.once('close', () => {
-                        stream.emit('end'); // for node v14 node-aribts が stream 終了を検知できないため
+                    stream.once('end', () => {
                         this.recEnd(recData, recFile, recorded);
                     });
 
