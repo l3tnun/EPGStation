@@ -311,7 +311,7 @@ class RecorderModel implements IRecorderModel {
 
                 // 録画終了処理
                 if (this.stream !== null) {
-                    this.stream.once('close', async () => {
+                    this.stream.once('end', async () => {
                         await this.recEnd(recFile)
                             .catch(err => {
                                 this.log.system.error(`failed recording end: ${this.reserve.id}`);
