@@ -117,6 +117,7 @@ class ReservationManageModel implements IReservationManageModel {
 
             // 時刻チェック
             if (option.timeSpecifiedOption!.endAt <= new Date().getTime()) {
+                finalize();
                 this.log.system.error('timeSpecifiedOption error');
                 throw new Error('TimeSpecifiedOptionError');
             }
