@@ -99,8 +99,17 @@
                                         <span>{{ durationStr }}</span>
                                     </div>
                                     <v-spacer></v-spacer>
-                                    <v-btn v-if="isEnabledSubtitles === true" icon dark>
-                                        <v-icon>mdi-subtitles</v-icon>
+                                    <v-btn
+                                        v-if="isEnabledSubtitles === true"
+                                        icon
+                                        dark
+                                        class="subtitle-icon"
+                                        v-bind:class="{ disabled: isShowingSubtitle === false }"
+                                        v-on:click="switchSubtitle"
+                                    >
+                                        <v-icon>
+                                            mdi-subtitles
+                                        </v-icon>
                                     </v-btn>
                                     <v-btn v-if="this.isEnabledPip === true" icon dark v-on:click="switchPip">
                                         <v-icon>mdi-picture-in-picture-bottom-right</v-icon>
@@ -210,9 +219,6 @@ export default class VideoContainer extends Vue {
     public videoParam!: VideoParam.BaseVideoParam;
 
     @Prop()
-    public isEnabledSubtitles: boolean | undefined; // 字幕が有効か
-
-    @Prop()
     public isEnabledSpeedControl: boolean | undefined; // 速度調整が有効か
 
     public isHideCursor: boolean = false;
@@ -229,6 +235,10 @@ export default class VideoContainer extends Vue {
     public currentTimeStr: string = '--:--';
     public durationStr: string = '--:--';
     public playbackRate: number = 1.0;
+
+    // 字幕状態
+    public isEnabledSubtitles: boolean = false;
+    public isShowingSubtitle: boolean = false;
 
     private isFirstPlay: boolean = true;
     private isEnabledRotation: boolean = typeof window.screen.orientation !== 'undefined' && UaUtil.isMobile();
@@ -379,6 +389,7 @@ export default class VideoContainer extends Vue {
         this.duration = duration;
         this.currentTime = this.getVideoCurrentTime();
         this.updateTimeStr();
+        this.updateSubtitleState();
     }
 
     /**
@@ -428,6 +439,20 @@ export default class VideoContainer extends Vue {
         return `0${num.toString(10)}`.slice(-2);
     }
 
+    /**
+     * 字幕の状態を更新する
+     */
+    protected updateSubtitleState(): void {
+        if (typeof this.$refs.video !== 'undefined') {
+            (<BaseVideo>this.$refs.video).fixSubtitleState();
+        }
+
+        this.isEnabledSubtitles =
+            typeof this.$refs.video !== 'undefined' && (<BaseVideo>this.$refs.video).isEnabledSubtitles();
+        this.isShowingSubtitle =
+            typeof this.$refs.video !== 'undefined' && (<BaseVideo>this.$refs.video).isShowingSubtitle();
+    }
+
     // 読み込み中
     public onWaiting(): void {
         this.isLoading = true;
@@ -436,6 +461,7 @@ export default class VideoContainer extends Vue {
     // 読み込み完了
     public onLoadeddata(): void {
         this.isLoading = false;
+        this.updateSubtitleState();
     }
 
     // 再生可能
@@ -468,6 +494,8 @@ export default class VideoContainer extends Vue {
 
         // update time str
         this.updateTimeStr();
+
+        this.updateSubtitleState();
     }
 
     // 終了
@@ -478,6 +506,7 @@ export default class VideoContainer extends Vue {
     // 再生
     public onPlay(): void {
         this.isPause = false;
+        this.updateSubtitleState();
     }
 
     // 停止
@@ -691,6 +720,25 @@ export default class VideoContainer extends Vue {
         }
     }
 
+    /**
+     * 字幕表示切り替え
+     */
+    public switchSubtitle(): void {
+        if (typeof this.$refs.video === 'undefined') {
+            return;
+        }
+
+        if ((<BaseVideo>this.$refs.video).isShowingSubtitle() === true) {
+            // 非表示
+            (<BaseVideo>this.$refs.video).disabledSubtitle();
+        } else {
+            // 表示
+            (<BaseVideo>this.$refs.video).showSubtitle();
+        }
+
+        this.updateSubtitleState();
+    }
+
     // fullscreen 切り替え
     public async switchFullScreen(): Promise<void> {
         if (typeof this.$refs.container === 'undefined') {
@@ -886,6 +934,9 @@ export default class VideoContainer extends Vue {
                     color: white
                     font-size: 12px
                     user-select: none
+
+                .subtitle-icon.disabled
+                    opacity: 0.3
 
         @media screen and (max-width: 420px)
             .left-buttons

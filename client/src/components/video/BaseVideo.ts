@@ -3,6 +3,7 @@ import { Component, Vue } from 'vue-property-decorator';
 
 export default abstract class BaseVide extends Vue {
     protected video: HTMLVideoElement | null = null;
+    protected lastSubtitleState: TextTrackMode = 'disabled';
 
     public mounted(): void {
         this.video = <HTMLVideoElement>this.$refs.video;
@@ -303,6 +304,59 @@ export default abstract class BaseVide extends Vue {
             }
         } catch (err) {
             console.error(err);
+        }
+    }
+
+    /**
+     * 字幕が有効か
+     * @return boolean true で有効
+     */
+    public isEnabledSubtitles(): boolean {
+        return this.video !== null && this.video.textTracks.length > 0;
+    }
+
+    /**
+     * 字幕が表示されているか
+     * @return boolean true で表示されている
+     */
+    public isShowingSubtitle(): boolean {
+        return this.video !== null && this.video.textTracks.length > 0 && this.video.textTracks[0].mode === 'showing';
+    }
+
+    /**
+     * 字幕を表示させる
+     */
+    public showSubtitle(): void {
+        if (this.video === null || this.video.textTracks.length === 0) {
+            return;
+        }
+
+        this.video.textTracks[0].mode = 'showing';
+        this.lastSubtitleState = this.video.textTracks[0].mode;
+    }
+
+    /**
+     * 字幕を非表示にする
+     */
+    public disabledSubtitle(): void {
+        if (this.video === null || this.video.textTracks.length === 0) {
+            return;
+        }
+
+        this.video.textTracks[0].mode = 'disabled';
+        this.lastSubtitleState = this.video.textTracks[0].mode;
+    }
+
+    /**
+     * ユーザが最後に指定した字幕の表示状態と実際の状態がずれている場合に修正する
+     */
+    public fixSubtitleState(): void {
+        if (this.video === null || this.video.textTracks.length === 0) {
+            return;
+        }
+
+        if (this.video.textTracks[0].mode !== this.lastSubtitleState) {
+            this.video.textTracks[0].mode = this.lastSubtitleState;
         }
     }
 }
