@@ -271,7 +271,7 @@
                                             録画済み番組を排除
                                         </v-list-item-title>
                                         <v-list-item-subtitle>
-                                            ルール作成時に録画済み番組を排除をチャックする
+                                            ルール作成時に録画済み番組を排除をチェックする
                                         </v-list-item-subtitle>
                                     </div>
                                     <v-spacer></v-spacer>
