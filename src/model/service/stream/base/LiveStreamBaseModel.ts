@@ -128,9 +128,6 @@ export default abstract class LiveStreamBaseModel extends StreamBaseModel<LiveSt
             }
 
             if (this.getStreamType() === 'LiveHLS') {
-                // ファイル自動削除開始
-                this.fileDeleter.start();
-
                 // stream 有効チェク開始
                 this.startCheckStreamEnable(streamId);
             }
@@ -191,7 +188,6 @@ export default abstract class LiveStreamBaseModel extends StreamBaseModel<LiveSt
         }
 
         if (this.getStreamType() === 'LiveHLS') {
-            this.fileDeleter.stop();
             await this.fileDeleter.deleteAllFiles();
         }
     }

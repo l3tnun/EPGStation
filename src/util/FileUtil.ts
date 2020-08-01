@@ -90,6 +90,41 @@ namespace FileUtil {
             });
         });
     };
+
+    /**
+     * 指定したファイルを一括で読み取る
+     * @param filePath: string
+     * @return Promise<string>
+     */
+    export const readFile = async (filePath: string): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            fs.readFile(filePath, 'utf-8', (err, data) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(data);
+                }
+            });
+        });
+    };
+
+    /**
+     * 指定したファイルに書き込む (新規作成 or 上書き)
+     * @param filePath: string
+     * @param data: string
+     * @return Promise<void>
+     */
+    export const writeFile = async (filePath: string, data: string): Promise<void> => {
+        return new Promise((resolve, reject) => {
+            fs.writeFile(filePath, data, err => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
+        });
+    };
 }
 
 export default FileUtil;

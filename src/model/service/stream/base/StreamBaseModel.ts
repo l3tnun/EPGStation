@@ -1,6 +1,7 @@
 import * as events from 'events';
 import * as fs from 'fs';
 import { inject, injectable } from 'inversify';
+import * as path from 'path';
 import internal from 'stream';
 import * as apid from '../../../../../api';
 import FileUtil from '../../../../util/FileUtil';
@@ -159,19 +160,39 @@ abstract class StreamBaseModel<T> implements IStreamBaseModel<T> {
                 return;
             }
 
+            const parentPlayListName = `stream${streamId}.m3u8`;
+            const childPlayListName = `stream${streamId}-child.m3u8`;
+            const subtitlePlayListName = `stream${streamId}-child_vtt.m3u8`;
+
+            let hasParentPlayList = false;
+            let hasChildPlayList = false;
+            let hasSubtitlePlayList = false;
             let fileCnt = 0;
-            let hasPlayList = false;
             for (const f of fileList) {
                 if (f.match(`stream${streamId}`)) {
                     if (f.match(/.m3u8/)) {
-                        hasPlayList = true;
-                    } else {
+                        if (f === parentPlayListName) {
+                            hasParentPlayList = true;
+                        } else if (f === childPlayListName) {
+                            hasChildPlayList = true;
+                        } else if (f === subtitlePlayListName) {
+                            hasSubtitlePlayList = true;
+                        }
+                    } else if (!!f.match(/.vtt/) === false) {
                         fileCnt += 1;
                     }
                 }
             }
 
-            if (hasPlayList === true && fileCnt >= 3) {
+            if (hasParentPlayList === true && fileCnt >= 2) {
+                if (hasChildPlayList === true && hasSubtitlePlayList) {
+                    // parentPlayList に字幕用のプレイリスト情報を追加する
+                    await this.addSubtitleInfoToParentPlaylist(parentPlayListName, subtitlePlayListName).catch(err => {
+                        this.log.stream.error('failed to add subtitle info');
+                        this.log.stream.error(err);
+                    });
+                }
+
                 if (this.streamCheckTimer !== null) {
                     clearInterval(this.streamCheckTimer);
                     this.streamCheckTimer = null;
@@ -181,6 +202,33 @@ abstract class StreamBaseModel<T> implements IStreamBaseModel<T> {
                 this.socketIO.notifyClient();
             }
         }, 100);
+    }
+
+    /**
+     * parentPlayList に字幕用のプレイリスト情報を追加する
+     * @param parentPlayListName: string 親プレイリスト名
+     * @param subtitlePlayListName: string 字幕プレイリスト名
+     */
+    private async addSubtitleInfoToParentPlaylist(
+        parentPlayListName: string,
+        subtitlePlayListName: string,
+    ): Promise<void> {
+        const parentPlayListPath = path.join(this.config.streamFilePath, parentPlayListName);
+        const file = await FileUtil.readFile(parentPlayListPath);
+        const lines = file.split(/\n/);
+
+        // 字幕プレイリスト情報挿入
+        const subtitleInfo = `#EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID="subtitle",NAME="Japanese",DEFAULT=YES,LANGUAGE="jp",URI="${subtitlePlayListName}"`;
+        for (let i = 0; i < lines.length; i++) {
+            if (lines[i].includes('#EXT-X-STREAM-INF') === true) {
+                lines[i] += ',SUBTITLES="subtitle"';
+                lines.splice(i, 0, subtitleInfo);
+                break;
+            }
+        }
+
+        // 親プレイリストへ書き込み
+        await FileUtil.writeFile(parentPlayListPath, lines.join('\n'));
     }
 
     /**

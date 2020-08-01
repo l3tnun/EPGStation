@@ -8,7 +8,6 @@ import IHLSFileDeleterModel, { HLSFileDeleterOption } from './IHLSFileDeleterMod
 export default class HLSFileDeleterModel implements IHLSFileDeleterModel {
     private log: ILogger;
     private option: HLSFileDeleterOption | null = null;
-    private timerId: NodeJS.Timer | null = null;
 
     constructor(@inject('ILoggerModel') logger: ILoggerModel) {
         this.log = logger.getLogger();
@@ -32,36 +31,6 @@ export default class HLSFileDeleterModel implements IHLSFileDeleterModel {
 
         this.log.stream.info(`delete all hls files: ${this.option.streamId}`);
         await this.deleteFile(0);
-    }
-
-    /**
-     * ファイル削除開始
-     * @param time: ファイルの削除時間間隔 (ミリ秒) defaut: 10 * 1000ms
-     */
-    public start(time: number = 10 * 1000): void {
-        if (this.option === null) {
-            throw new Error('HLSFileDeleterOptionIsNull');
-        }
-
-        this.log.stream.info(`start delete hls files: ${this.option.streamId}`);
-        this.timerId = setInterval(() => {
-            this.deleteFile(20);
-        }, time);
-    }
-
-    /**
-     * ファイル削除停止
-     */
-    public stop(): void {
-        if (this.option === null) {
-            throw new Error('HLSFileDeleterOptionIsNull');
-        }
-        if (this.timerId === null) {
-            return;
-        }
-
-        this.log.stream.info(`stop delete hls file: ${this.option.streamId}`);
-        clearInterval(this.timerId);
     }
 
     /**

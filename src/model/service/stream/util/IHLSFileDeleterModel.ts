@@ -8,6 +8,4 @@ export interface HLSFileDeleterOption {
 export default interface IHLSFileDeleterModel {
     setOption(option: HLSFileDeleterOption): void;
     deleteAllFiles(): Promise<void>;
-    start(time?: number): void;
-    stop(): void;
 }
