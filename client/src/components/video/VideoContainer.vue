@@ -1,6 +1,6 @@
 <template>
     <div class="video-container" ref="container">
-        <div class="video-content">
+        <div class="video-content" v-bind:class="{ 'is-ipad': isiPad === true }">
             <div v-if="isLoading === true" class="loading">
                 <v-progress-circular :size="50" color="primary" indeterminate></v-progress-circular>
             </div>
@@ -239,6 +239,7 @@ export default class VideoContainer extends Vue {
     // 字幕状態
     public isEnabledSubtitles: boolean = false;
     public isShowingSubtitle: boolean = false;
+    public isiPad: boolean = UaUtil.isiPadOS();
 
     private isFirstPlay: boolean = true;
     private isEnabledRotation: boolean = typeof window.screen.orientation !== 'undefined' && UaUtil.isMobile();
@@ -959,6 +960,15 @@ export default class VideoContainer extends Vue {
         margin: auto
         width: 100%
         height: 100%
+
+        &::cue
+            color: white
+            background-color: rgba(0, 0, 0, 0.6)
+
+    .video-content
+        &.is-ipad
+            video::cue
+                font-size: 26px
 </style>
 
 <style lang="sass">
