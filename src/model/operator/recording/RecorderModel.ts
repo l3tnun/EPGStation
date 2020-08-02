@@ -663,8 +663,14 @@ class RecorderModel implements IRecorderModel {
      * @param newReserve: 新しい予約情報
      */
     public async update(newReserve: Reserve): Promise<void> {
-        // 時刻に変更がないか確認
-        if (this.reserve.startAt !== newReserve.startAt || this.reserve.endAt !== newReserve.endAt) {
+        if (newReserve.isSkip === true) {
+            // skip されたかチェック
+            await this.cancel(false).catch(err => {
+                this.log.system.error(`cancel recording error: ${newReserve.id}`);
+                this.log.system.error(err);
+            });
+        } else if (this.reserve.startAt !== newReserve.startAt || this.reserve.endAt !== newReserve.endAt) {
+            // 時刻に変更がないか確認
             // 録画処理が実行されていない場合
             if (this.isPrepRecording === false && this.isRecording === false) {
                 this.setTimer(newReserve);
@@ -672,7 +678,10 @@ class RecorderModel implements IRecorderModel {
                 // 録画準備中 or 録画中
                 if (this.reserve.startAt > newReserve.startAt) {
                     // 開始時間が遅くなった
-                    this.cancel(false);
+                    await this.cancel(false).catch(err => {
+                        this.log.system.error(`cancel recording error: ${newReserve.id}`);
+                        this.log.system.error(err);
+                    });
                     this.setTimer(newReserve); // タイマー再セット
                 } else if (this.reserve.endAt !== newReserve.endAt && this.reserve.programId === null) {
                     // 時間指定予約で終了時刻に変更があった
