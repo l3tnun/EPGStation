@@ -29,6 +29,7 @@ export default class RecordedUtil implements IRecordedUtil {
                 channelName: channel === null ? item.channelId.toString(10) : channel.name,
                 name: item.name,
                 time: DateUtil.format(startAt, 'MM/dd(w) hh:mm ~ ') + DateUtil.format(endAt, 'hh:mm'),
+                shortTime: DateUtil.format(startAt, 'MM/dd(w) hh:mm'),
                 duration: Math.floor((item.endAt - item.startAt) / 1000 / 60),
                 description: item.description,
                 extended: item.extended,

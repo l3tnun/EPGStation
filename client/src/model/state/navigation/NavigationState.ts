@@ -89,7 +89,9 @@ export default class NavigationState implements INavigationState {
         newItems.push({
             icon: 'mdi-radiobox-marked',
             title: '録画中',
-            herf: null,
+            herf: {
+                path: '/recording',
+            },
         });
         newItems.push({
             icon: 'mdi-filmstrip-box-multiple',

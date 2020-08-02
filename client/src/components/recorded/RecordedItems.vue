@@ -1,6 +1,10 @@
 <template>
     <div ref="wrap" class="recorded-wrap">
-        <div v-if="cardNum > 1" v-bind:style="contentStyle" class="recorded-content d-flex flex-wrap mx-auto">
+        <div
+            v-if="cardNum > 1 && !!isTableMode === false"
+            v-bind:style="contentStyle"
+            class="recorded-content d-flex flex-wrap mx-auto"
+        >
             <div v-for="r in recorded" v-bind:key="r.recordedItem.id">
                 <RecordedLargeCard
                     :width="largeCardWidth"
@@ -10,9 +14,22 @@
                 ></RecordedLargeCard>
             </div>
         </div>
+        <div v-if="cardNum > 1 && !!isTableMode === true">
+            <RecordedTableItems
+                :items="recorded"
+                v-on:detail="gotoDetail"
+                v-on:stopEncode="stopEncode"
+            ></RecordedTableItems>
+            <div v-for="r in recorded" v-bind:key="r.recordedItem.id"></div>
+        </div>
         <div v-else>
             <div v-for="r in recorded" v-bind:key="r.recordedItem.id">
-                <RecordedsmallCard :item="r" v-on:detail="gotoDetail" v-on:stopEncode="stopEncode"></RecordedsmallCard>
+                <RecordedsmallCard
+                    :item="r"
+                    v-on:detail="gotoDetail"
+                    v-on:stopEncode="stopEncode"
+                    :noThumbnail="!!isRecording === true"
+                ></RecordedsmallCard>
             </div>
         </div>
     </div>
@@ -21,6 +38,7 @@
 <script lang="ts">
 import RecordedLargeCard from '@/components/recorded/RecordedLargeCard.vue';
 import RecordedsmallCard from '@/components/recorded/RecordedSmallCard.vue';
+import RecordedTableItems from '@/components/recorded/RecordedTableItems.vue';
 import { RecordedDisplayData } from '@/model/state/recorded/IRecordedUtil';
 import ResizeObserver from 'resize-observer-polyfill';
 import { Component, Prop, Vue } from 'vue-property-decorator';
@@ -30,11 +48,18 @@ import * as apid from '../../../../api';
     components: {
         RecordedsmallCard,
         RecordedLargeCard,
+        RecordedTableItems,
     },
 })
 class RecordedItems extends Vue {
     @Prop({ required: true })
     public recorded!: RecordedDisplayData[];
+
+    @Prop()
+    public isTableMode: boolean | undefined;
+
+    @Prop()
+    public isRecording: boolean | undefined;
 
     get contentStyle(): any {
         return {

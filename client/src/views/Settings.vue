@@ -140,6 +140,33 @@
                         </v-list-item>
 
                         <v-divider></v-divider>
+                        <v-list-item three-line>
+                            <v-list-item-content>
+                                <div class="title">録画中</div>
+                                <div class="my-2 d-flex flex-row align-center">
+                                    <div>
+                                        <v-list-item-title class="subtitle-1">表示件数</v-list-item-title>
+                                    </div>
+                                    <v-spacer></v-spacer>
+                                    <v-select
+                                        :items="recordingLengthItems"
+                                        v-model="storageModel.tmp.recordingLength"
+                                        class="guide-time"
+                                        :menu-props="{ auto: true }"
+                                    ></v-select>
+                                </div>
+                                <div class="my-2 d-flex flex-row align-center">
+                                    <div>
+                                        <v-list-item-title class="subtitle-1">半角表示</v-list-item-title>
+                                        <v-list-item-subtitle>強制的に半角表示にする</v-list-item-subtitle>
+                                    </div>
+                                    <v-spacer></v-spacer>
+                                    <v-switch v-model="storageModel.tmp.isRecordingHalfWidthDisplayed" value></v-switch>
+                                </div>
+                            </v-list-item-content>
+                        </v-list-item>
+
+                        <v-divider></v-divider>
 
                         <v-list-item three-line>
                             <v-list-item-content>
@@ -163,6 +190,13 @@
                                     </div>
                                     <v-spacer></v-spacer>
                                     <v-switch v-model="storageModel.tmp.isRecordedHalfWidthDisplayed" value></v-switch>
+                                </div>
+                                <div class="my-2 d-flex flex-row align-center">
+                                    <div>
+                                        <v-list-item-title class="subtitle-1">テーブル表示</v-list-item-title>
+                                    </div>
+                                    <v-spacer></v-spacer>
+                                    <v-switch v-model="storageModel.tmp.isShowTableMode" value></v-switch>
                                 </div>
                                 <div class="my-2 d-flex flex-row align-center">
                                     <div>
@@ -393,6 +427,7 @@ export default class Settings extends Vue {
 
     public guideLengthItems: SelectItem[] = [];
     public reservesLengthItems: SelectItem[] = [];
+    public recordingLengthItems: SelectItem[] = [];
     public recordedLengthItems: SelectItem[] = [];
     public searchLengthItems: SelectItem[] = [];
     public rulesLengthItems: SelectItem[] = [];
@@ -422,6 +457,7 @@ export default class Settings extends Vue {
                 value: i,
             };
             this.reservesLengthItems.push(item);
+            this.recordingLengthItems.push(item);
             this.recordedLengthItems.push(item);
             this.rulesLengthItems.push(item);
         }

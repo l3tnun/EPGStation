@@ -8,6 +8,8 @@ import IEncodeApiModel from './api/encode/IEncodeApiModel';
 import IRepositoryModel from './api/IRepositoryModel';
 import IRecordedApiModel from './api/recorded/IRecordedApiModel';
 import RecordedApiModel from './api/recorded/RecordedApiModel';
+import IRecordingApiModel from './api/recording/IRecordingApiModel';
+import RecordingApiModel from './api/recording/RecordingApiModel';
 import RepositoryModel from './api/RepositoryModel';
 import IReservesApiModel from './api/reserves/IReservesApiModel';
 import ReservesApiModel from './api/reserves/ReservesApiModel';
@@ -58,6 +60,8 @@ import RecordedHLSStreamingVideoState from './state/recorded/streaming/RecordedH
 import RecordedStreamingVideoState from './state/recorded/streaming/RecordedStreamingVideoState';
 import IWatchRecordedInfoState from './state/recorded/watch/IWatchRecordedInfoState';
 import WatchRecordedInfoState from './state/recorded/watch/WatchRecordedInfoState';
+import IRecordingState from './state/recording/IRecordingState';
+import RecordingState from './state/recording/RecordingState';
 import IReservesState from './state/reserve/IReservesState';
 import IReserveStateUtil from './state/reserve/IReserveStateUtil';
 import ReservesState from './state/reserve/ReservesState';
@@ -99,6 +103,8 @@ export default (container: Container) => {
     container.bind<IStreamApiModel>('IStreamApiModel').to(StreamApiModel).inSingletonScope();
 
     container.bind<IRecordedApiModel>('IRecordedApiModel').to(RecordedApiModel).inSingletonScope();
+
+    container.bind<IRecordingApiModel>('IRecordingApiModel').to(RecordingApiModel).inSingletonScope();
 
     container.bind<IRuleApiModel>('IRuleApiModel').to(RuleApiModel).inSingletonScope();
 
@@ -182,6 +188,8 @@ export default (container: Container) => {
         .inSingletonScope();
 
     container.bind<IWatchRecordedInfoState>('IWatchRecordedInfoState').to(WatchRecordedInfoState).inSingletonScope();
+
+    container.bind<IRecordingState>('IRecordingState').to(RecordingState).inSingletonScope();
 
     container.bind<ISearchState>('ISearchState').to(SearchState).inSingletonScope();
 

@@ -7,6 +7,7 @@ import Main from './views/Main.vue';
 import OnAir from './views/OnAir.vue';
 import Recorded from './views/Recorded.vue';
 import RecordedDetail from './views/RecordedDetail.vue';
+import Recording from './views/Recording.vue';
 import Reserves from './views/Reserves.vue';
 import Rule from './views/Rule.vue';
 import Search from './views/Search.vue';
@@ -43,6 +44,11 @@ export default new Router({
             path: '/reserves',
             name: 'reserves',
             component: Reserves,
+        },
+        {
+            path: '/recording',
+            name: 'recording',
+            component: Recording,
         },
         {
             path: '/recorded',

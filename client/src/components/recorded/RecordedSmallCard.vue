@@ -1,6 +1,7 @@
 <template>
     <v-card :ripple="false" class="d-flex ma-1 recorded-small-card">
         <v-img
+            v-if="noThumbnail === false"
             aspect-ratio="1.7778"
             :src="item.display.topThumbnailPath"
             v-on:error="this.src = './img/noimg.png'"
@@ -45,6 +46,9 @@ import * as apid from '../../../../api';
 export default class RecordedSmallCard extends Vue {
     @Prop({ required: true })
     public item!: RecordedDisplayData;
+
+    @Prop()
+    public noThumbnail: boolean | undefined;
 
     public gotoDetail(): void {
         this.$emit('detail', this.item.recordedItem.id);

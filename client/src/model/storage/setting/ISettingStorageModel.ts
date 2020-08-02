@@ -13,8 +13,11 @@ export interface ISettingValue {
     isEnableDisplayForEachBroadcastWave: boolean;
     reservesLength: number;
     isReservesHalfWidthDisplayed: boolean;
+    recordingLength: number;
+    isRecordingHalfWidthDisplayed: boolean;
     recordedLength: number;
     isRecordedHalfWidthDisplayed: boolean;
+    isShowTableMode: boolean;
     isPreferredPlayingOnWeb: boolean;
     shouldUseRecordedViewURLScheme: boolean;
     recordedViewURLScheme: string | null;
