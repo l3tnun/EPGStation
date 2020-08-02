@@ -8,6 +8,7 @@
                         :recorded="recordedState.getRecorded()"
                         v-on:detail="gotoDetail"
                         v-on:stopEncode="stopEncode"
+                        :isTableMode="settingValue.isShowTableMode === true"
                     ></RecordedItems>
                     <Pagination :total="recordedState.getTotal()" :pageSize="settingValue.recordedLength"></Pagination>
                     <div style="visibility: hidden;">dummy</div>

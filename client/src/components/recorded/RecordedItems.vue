@@ -14,7 +14,7 @@
                 ></RecordedLargeCard>
             </div>
         </div>
-        <div v-if="cardNum > 1 && !!isTableMode === true">
+        <div v-else-if="cardNum > 1 && !!isTableMode === true">
             <RecordedTableItems
                 :items="recorded"
                 v-on:detail="gotoDetail"
