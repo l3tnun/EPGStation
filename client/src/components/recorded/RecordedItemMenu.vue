@@ -23,7 +23,10 @@
                         <v-list-item-title>search</v-list-item-title>
                     </v-list-item-content>
                 </v-list-item>
-                <v-list-item v-if="serverConfig.isEnableEncode() === true" v-on:click="openEncodeDialog">
+                <v-list-item
+                    v-if="recordedItem.isRecording === false && serverConfig.isEnableEncode() === true"
+                    v-on:click="openEncodeDialog"
+                >
                     <v-list-item-icon class="mr-3">
                         <v-icon>mdi-plus-circle-outline</v-icon>
                     </v-list-item-icon>
