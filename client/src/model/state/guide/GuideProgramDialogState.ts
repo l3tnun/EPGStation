@@ -235,11 +235,10 @@ export default class GuideProgramDialogState implements IGuideProgramDialogState
             allowEndLack: true,
         };
 
-        const savedValue = this.setting.getSavedValue();
-        if (savedValue.encode !== NONE_ENCODE_OPTION) {
+        if (this.setting.tmp.encode !== NONE_ENCODE_OPTION) {
             option.encodeOption = {
-                mode1: savedValue.encode,
-                isDeleteOriginalAfterEncode: savedValue.isDeleteOriginalAfterEncode,
+                mode1: this.setting.tmp.encode,
+                isDeleteOriginalAfterEncode: this.setting.tmp.isDeleteOriginalAfterEncode,
             };
         }
 
