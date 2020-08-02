@@ -115,7 +115,7 @@ export interface ReserveItem {
     encodeMode3?: string;
     encodeParentDirectoryName3?: string;
     encodeDirectory3?: string;
-    encodeDelTs: boolean;
+    isDeleteOriginalAfterEncode: boolean;
     /**
      * 番組情報
      */
@@ -290,7 +290,7 @@ export interface ReserveEncodedOption {
     mode3?: string;
     encodeParentDirectoryName3?: string;
     directory3?: string;
-    delTs: boolean;
+    isDeleteOriginalAfterEncode: boolean;
 }
 
 /**

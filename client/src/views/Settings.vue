@@ -298,7 +298,10 @@
                                         </v-list-item-subtitle>
                                     </div>
                                     <v-spacer></v-spacer>
-                                    <v-switch v-model="storageModel.tmp.isCheckDelTs" value></v-switch>
+                                    <v-switch
+                                        v-model="storageModel.tmp.isCheckDeleteOriginalAfterEncode"
+                                        value
+                                    ></v-switch>
                                 </div>
                             </v-list-item-content>
                         </v-list-item>

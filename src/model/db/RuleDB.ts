@@ -201,7 +201,7 @@ export default class RuleDB implements IRuleDB {
             mode3: null,
             parentDirectoryName3: null,
             directory3: null,
-            delTs: false,
+            isDeleteOriginalAfterEncode: false,
         };
 
         if (typeof (<apid.Rule>rule).id !== 'undefined') {
@@ -239,7 +239,7 @@ export default class RuleDB implements IRuleDB {
                     : rule.encodeOption.encodeParentDirectoryName3;
             convertedRule.directory3 =
                 typeof rule.encodeOption.directory3 === 'undefined' ? null : rule.encodeOption.directory3;
-            convertedRule.delTs = rule.encodeOption.delTs;
+            convertedRule.isDeleteOriginalAfterEncode = rule.encodeOption.isDeleteOriginalAfterEncode;
         }
 
         return convertedRule;
@@ -367,7 +367,7 @@ export default class RuleDB implements IRuleDB {
             encodeOption.directory3 = rule.directory3;
         }
         if (Object.keys(encodeOption).length > 0) {
-            encodeOption.delTs = rule.delTs;
+            encodeOption.isDeleteOriginalAfterEncode = rule.isDeleteOriginalAfterEncode;
             convertedRule.encodeOption = encodeOption;
         }
 

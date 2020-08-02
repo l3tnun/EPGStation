@@ -26,7 +26,7 @@ export interface ISettingValue {
     isEnableCopyKeywordToDirectory: boolean;
     isCheckAvoidDuplicate: boolean;
     isEnableEncodingSettingWhenCreateRule: boolean;
-    isCheckDelTs: boolean;
+    isCheckDeleteOriginalAfterEncode: boolean;
     rulesLength: number;
 }
 

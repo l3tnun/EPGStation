@@ -309,7 +309,7 @@ export default class SearchState implements ISearchState {
             mode3: null,
             encodeParentDirectoryName3: null,
             directory3: null,
-            delTs: this.settingModel.getSavedValue().isCheckDelTs,
+            isDeleteOriginalAfterEncode: this.settingModel.getSavedValue().isCheckDeleteOriginalAfterEncode,
         };
     }
 
@@ -552,7 +552,7 @@ export default class SearchState implements ISearchState {
             }
         }
 
-        this.encodeOption.delTs = encodeOption.delTs;
+        this.encodeOption.isDeleteOriginalAfterEncode = encodeOption.isDeleteOriginalAfterEncode;
     }
 
     /**
@@ -1370,7 +1370,7 @@ export default class SearchState implements ISearchState {
      */
     private createReserveEncodedOption(option: EncodedOption): apid.ReserveEncodedOption | undefined {
         const encodeOption: apid.ReserveEncodedOption = {
-            delTs: option.delTs,
+            isDeleteOriginalAfterEncode: option.isDeleteOriginalAfterEncode,
         };
 
         if (option.mode1 === null && option.mode2 === null && option.mode3 === null) {

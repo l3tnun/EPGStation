@@ -141,7 +141,7 @@ export interface EncodedOption {
     mode3: string | null;
     encodeParentDirectoryName3: string | null;
     directory3: string | null;
-    delTs: boolean; // エンコード後に元ファイルを自動削除するか
+    isDeleteOriginalAfterEncode: boolean; // エンコード後に元ファイルを自動削除するか
 }
 
 export interface QuerySearchOption {

@@ -175,7 +175,7 @@
                             <SearchOptionRow>
                                 <v-checkbox
                                     class="mx-1 my-0"
-                                    v-model="searchState.encodeOption.delTs"
+                                    v-model="searchState.encodeOption.isDeleteOriginalAfterEncode"
                                     label="元ファイルの自動削除"
                                 ></v-checkbox>
                             </SearchOptionRow>

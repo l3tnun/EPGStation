@@ -36,7 +36,7 @@ export default class SettingStorageModel extends AbstractStorageBaseModel<ISetti
             isEnableCopyKeywordToDirectory: false,
             isCheckAvoidDuplicate: false,
             isEnableEncodingSettingWhenCreateRule: false,
-            isCheckDelTs: false,
+            isCheckDeleteOriginalAfterEncode: false,
             rulesLength: 24,
         };
     }

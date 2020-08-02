@@ -261,5 +261,5 @@ export default class Rule extends BaseEntity {
     @Column({
         default: false,
     })
-    public delTs: boolean = false;
+    public isDeleteOriginalAfterEncode: boolean = false;
 }

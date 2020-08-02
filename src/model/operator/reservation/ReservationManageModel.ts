@@ -352,7 +352,7 @@ class ReservationManageModel implements IReservationManageModel {
             reserve.encodeDirectory1 = null;
             reserve.encodeDirectory2 = null;
             reserve.encodeDirectory3 = null;
-            reserve.encodeDelTs = false;
+            reserve.isDeleteOriginalAfterEncode = false;
 
             return;
         }
@@ -378,7 +378,7 @@ class ReservationManageModel implements IReservationManageModel {
         reserve.encodeDirectory2 = typeof encodeOption.directory2 === 'undefined' ? null : encodeOption.directory2;
         reserve.encodeDirectory3 = typeof encodeOption.directory3 === 'undefined' ? null : encodeOption.directory3;
 
-        reserve.encodeDelTs = encodeOption.delTs;
+        reserve.isDeleteOriginalAfterEncode = encodeOption.isDeleteOriginalAfterEncode;
     }
 
     /**

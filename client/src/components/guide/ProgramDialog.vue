@@ -36,7 +36,11 @@
                 <div class="pa-2 encode-action">
                     <div v-if="dialogState.reserve === null" class="overflow-x-hidden">
                         <div class="d-flex align-center justify-end">
-                            <v-checkbox class="mx-1 my-0 pr-2" label="TS削除" v-model="setting.tmp.delTs"></v-checkbox>
+                            <v-checkbox
+                                class="mx-1 my-0 pr-2"
+                                label="TS削除"
+                                v-model="setting.tmp.isDeleteOriginalAfterEncode"
+                            ></v-checkbox>
                             <v-select
                                 :items="dialogState.getEncodeList()"
                                 v-model="setting.tmp.encode"

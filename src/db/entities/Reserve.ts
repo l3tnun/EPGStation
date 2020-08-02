@@ -138,7 +138,7 @@ export default class Reserve extends BaseEntity {
     @Column({
         default: false,
     })
-    public encodeDelTs: boolean = false;
+    public isDeleteOriginalAfterEncode: boolean = false;
 
     /**
      * 番組情報

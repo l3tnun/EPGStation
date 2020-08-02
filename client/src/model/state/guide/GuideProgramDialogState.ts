@@ -239,7 +239,7 @@ export default class GuideProgramDialogState implements IGuideProgramDialogState
         if (savedValue.encode !== NONE_ENCODE_OPTION) {
             option.encodeOption = {
                 mode1: savedValue.encode,
-                delTs: savedValue.delTs,
+                isDeleteOriginalAfterEncode: savedValue.isDeleteOriginalAfterEncode,
             };
         }
 

@@ -654,7 +654,7 @@ components:
         ReserveEncodedOption:
             description: 予約エンコードオプション
             required:
-                - delTs
+                - isDeleteOriginalAfterEncode
             properties:
                 mode1:
                     description: エンコードモード1
@@ -683,7 +683,7 @@ components:
                 directory3:
                     description: エンコードモード3ディレクトリ
                     type: string
-                delTs:
+                isDeleteOriginalAfterEncode:
                     description: エンコード後に ts を削除するか
                     type: boolean
 
@@ -745,7 +745,7 @@ components:
                 - isOverlap
                 - allowEndLack
                 - isTimeSpecified
-                - encodeDelTs
+                - isDeleteOriginalAfterEncode
                 - channelId
                 - startAt
                 - endAt
@@ -789,7 +789,7 @@ components:
                     type: string
                 encodeDirectory3:
                     type: integer
-                encodeDelTs:
+                isDeleteOriginalAfterEncode:
                     type: boolean
                 programId:
                     $ref: '#/components/schemas/ProgramId'

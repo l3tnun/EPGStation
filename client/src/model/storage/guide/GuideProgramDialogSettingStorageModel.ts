@@ -17,7 +17,7 @@ export default class GuideProgramDialogSettingStorageModel
     public getDefaultValue(): IGuideProgramDialogSettingValue {
         return {
             encode: NONE_ENCODE_OPTION,
-            delTs: false,
+            isDeleteOriginalAfterEncode: false,
         };
     }
 
