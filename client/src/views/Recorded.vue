@@ -125,7 +125,7 @@ export default class Recorded extends Vue {
     }
 
     /**
-     * 予約データ取得時のオプションを生成する
+     * 録画データ取得時のオプションを生成する
      * @return GetReserveOption
      */
     private createFetchDataOption(): apid.GetRecordedOption {
