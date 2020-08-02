@@ -97,10 +97,12 @@ export default interface IConfigFile {
     streamFilePath: string;
     stream?: {
         live?: {
-            m2ts?: StreamingCmd[];
-            webm?: StreamingCmd[];
-            mp4?: StreamingCmd[];
-            hls?: StreamingCmd[];
+            ts?: {
+                m2ts?: StreamingCmd[];
+                webm?: StreamingCmd[];
+                mp4?: StreamingCmd[];
+                hls?: StreamingCmd[];
+            };
         };
         recorded?: {
             ts?: {

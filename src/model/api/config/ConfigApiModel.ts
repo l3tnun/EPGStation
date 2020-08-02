@@ -54,7 +54,7 @@ export default class ConfigApiModel implements IConfigApiModel {
         };
 
         result.broadcast = await this.ipc.reserveation.getBroadcastStatus();
-        result.isEnableLiveStream = false;
+        result.isEnableTSLiveStream = false;
         result.isEnableTSRecordedStream = false;
         result.isEnableEncodedRecordedStream = false;
 
@@ -63,27 +63,31 @@ export default class ConfigApiModel implements IConfigApiModel {
 
             // live stream
             if (typeof config.stream.live !== 'undefined') {
-                result.isEnableLiveStream = true;
                 result.streamConfig.live = {};
-                if (typeof config.stream.live.m2ts !== 'undefined') {
-                    result.streamConfig.live.m2ts = config.stream.live.m2ts.map(c => {
-                        return c.name;
-                    });
-                }
-                if (typeof config.stream.live.webm !== 'undefined') {
-                    result.streamConfig.live.webm = config.stream.live.webm.map(c => {
-                        return c.name;
-                    });
-                }
-                if (typeof config.stream.live.mp4 !== 'undefined') {
-                    result.streamConfig.live.mp4 = config.stream.live.mp4.map(c => {
-                        return c.name;
-                    });
-                }
-                if (typeof config.stream.live.hls !== 'undefined') {
-                    result.streamConfig.live.hls = config.stream.live.hls.map(c => {
-                        return c.name;
-                    });
+                if (typeof config.stream.live.ts !== 'undefined') {
+                    result.isEnableTSLiveStream = true;
+                    result.streamConfig.live.ts = {};
+
+                    if (typeof config.stream.live.ts.m2ts !== 'undefined') {
+                        result.streamConfig.live.ts.m2ts = config.stream.live.ts.m2ts.map(c => {
+                            return c.name;
+                        });
+                    }
+                    if (typeof config.stream.live.ts.webm !== 'undefined') {
+                        result.streamConfig.live.ts.webm = config.stream.live.ts.webm.map(c => {
+                            return c.name;
+                        });
+                    }
+                    if (typeof config.stream.live.ts.mp4 !== 'undefined') {
+                        result.streamConfig.live.ts.mp4 = config.stream.live.ts.mp4.map(c => {
+                            return c.name;
+                        });
+                    }
+                    if (typeof config.stream.live.ts.hls !== 'undefined') {
+                        result.streamConfig.live.ts.hls = config.stream.live.ts.hls.map(c => {
+                            return c.name;
+                        });
+                    }
                 }
             }
 

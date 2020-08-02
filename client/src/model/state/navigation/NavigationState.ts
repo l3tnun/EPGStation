@@ -39,7 +39,7 @@ export default class NavigationState implements INavigationState {
 
         const config = this.serverConfig.getConfig();
 
-        if (config !== null && config.isEnableLiveStream === true) {
+        if (config !== null && config.isEnableTSLiveStream === true) {
             newItems.push({
                 icon: 'mdi-television-play',
                 title: '放映中',

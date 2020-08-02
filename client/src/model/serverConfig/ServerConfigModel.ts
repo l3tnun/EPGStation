@@ -32,17 +32,24 @@ export default class ServerConfigModel implements IServerConfigModel {
         }
 
         if (typeof this.config.streamConfig.live !== 'undefined') {
-            // ライブ視聴の webm, mp4 を削除
-            delete this.config.streamConfig.live.webm;
-            delete this.config.streamConfig.live.mp4;
+            if (typeof this.config.streamConfig.live.ts !== 'undefined') {
+                // ライブ視聴の webm, mp4 を削除
+                delete this.config.streamConfig.live.ts.webm;
+                delete this.config.streamConfig.live.ts.mp4;
 
-            // ライブ視聴で再生可能な設定が残っているか
-            if (
-                typeof this.config.streamConfig.live.m2ts === 'undefined' &&
-                typeof this.config.streamConfig.live.hls === 'undefined'
-            ) {
+                // ライブ視聴で再生可能な設定が残っているか
+                if (
+                    typeof this.config.streamConfig.live.ts.m2ts === 'undefined' &&
+                    typeof this.config.streamConfig.live.ts.hls === 'undefined'
+                ) {
+                    delete this.config.streamConfig.live.ts;
+                    this.config.isEnableTSLiveStream = false;
+                }
+            }
+
+            // live ストリーミングの設定が残っているか
+            if (typeof this.config.streamConfig.live.ts === 'undefined') {
                 delete this.config.streamConfig.live;
-                this.config.isEnableLiveStream = false;
             }
         }
 

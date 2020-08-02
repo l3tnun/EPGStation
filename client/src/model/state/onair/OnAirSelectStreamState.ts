@@ -44,25 +44,32 @@ export default class OnAirSelectStreamState implements IOnAirSelectStreamState {
         const config = this.serverConfig.getConfig();
         if (
             config !== null &&
-            config.isEnableLiveStream === true &&
+            config.isEnableTSLiveStream === true &&
             typeof config.streamConfig !== 'undefined' &&
-            typeof config.streamConfig.live !== 'undefined'
+            typeof config.streamConfig.live !== 'undefined' &&
+            typeof config.streamConfig.live.ts !== 'undefined'
         ) {
-            if (typeof config.streamConfig.live.m2ts !== 'undefined' && config.streamConfig.live.m2ts.length > 0) {
+            if (
+                typeof config.streamConfig.live.ts.m2ts !== 'undefined' &&
+                config.streamConfig.live.ts.m2ts.length > 0
+            ) {
                 this.streamTypes.push('M2TS');
-                this.streamConfig['M2TS'] = config.streamConfig.live.m2ts;
+                this.streamConfig['M2TS'] = config.streamConfig.live.ts.m2ts;
             }
-            if (typeof config.streamConfig.live.webm !== 'undefined' && config.streamConfig.live.webm.length > 0) {
+            if (
+                typeof config.streamConfig.live.ts.webm !== 'undefined' &&
+                config.streamConfig.live.ts.webm.length > 0
+            ) {
                 this.streamTypes.push('WebM');
-                this.streamConfig['WebM'] = config.streamConfig.live.webm;
+                this.streamConfig['WebM'] = config.streamConfig.live.ts.webm;
             }
-            if (typeof config.streamConfig.live.mp4 !== 'undefined' && config.streamConfig.live.mp4.length > 0) {
+            if (typeof config.streamConfig.live.ts.mp4 !== 'undefined' && config.streamConfig.live.ts.mp4.length > 0) {
                 this.streamTypes.push('MP4');
-                this.streamConfig['MP4'] = config.streamConfig.live.mp4;
+                this.streamConfig['MP4'] = config.streamConfig.live.ts.mp4;
             }
-            if (typeof config.streamConfig.live.hls !== 'undefined' && config.streamConfig.live.hls.length > 0) {
+            if (typeof config.streamConfig.live.ts.hls !== 'undefined' && config.streamConfig.live.ts.hls.length > 0) {
                 this.streamTypes.push('HLS');
-                this.streamConfig['HLS'] = config.streamConfig.live.hls;
+                this.streamConfig['HLS'] = config.streamConfig.live.ts.hls;
             }
         }
 

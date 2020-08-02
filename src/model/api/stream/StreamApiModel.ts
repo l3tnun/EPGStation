@@ -61,7 +61,7 @@ export default class StreamApiModel implements IStreamApiModel {
      * @return Promise<StreamResponse>
      */
     public async startLiveM2TsStream(option: apid.LiveStreamOption): Promise<StreamResponse> {
-        const cmd = this.getLiveConfig('m2ts', option.mode);
+        const cmd = this.getTsLiveConfig('m2ts', option.mode);
 
         // stream 生成
         const stream = await this.liveStreamProvider();
@@ -88,7 +88,7 @@ export default class StreamApiModel implements IStreamApiModel {
      * @return Promise<StreamResponse>
      */
     public async startLiveWebmStream(option: apid.LiveStreamOption): Promise<StreamResponse> {
-        const cmd = this.getLiveConfig('webm', option.mode);
+        const cmd = this.getTsLiveConfig('webm', option.mode);
 
         // stream 生成
         const stream = await this.liveStreamProvider();
@@ -115,7 +115,7 @@ export default class StreamApiModel implements IStreamApiModel {
      * @return Promise<StreamResponse>
      */
     public async startMp4Stream(option: apid.LiveStreamOption): Promise<StreamResponse> {
-        const cmd = this.getLiveConfig('mp4', option.mode);
+        const cmd = this.getTsLiveConfig('mp4', option.mode);
 
         // stream 生成
         const stream = await this.liveStreamProvider();
@@ -142,7 +142,7 @@ export default class StreamApiModel implements IStreamApiModel {
      * @return Promise<apid.StreamId>
      */
     public async startLiveHLSStream(option: apid.LiveStreamOption): Promise<apid.StreamId> {
-        const cmd = this.getLiveConfig('hls', option.mode);
+        const cmd = this.getTsLiveConfig('hls', option.mode);
 
         // stream 生成
         const stream = await this.liveHLSStreamProvider();
@@ -164,18 +164,19 @@ export default class StreamApiModel implements IStreamApiModel {
      * @param mode: number config stream index 番号
      * @return Promise<string>
      */
-    private getLiveConfig(type: 'm2ts' | 'webm' | 'mp4' | 'hls', mode: number): string | undefined {
+    private getTsLiveConfig(type: 'm2ts' | 'webm' | 'mp4' | 'hls', mode: number): string | undefined {
         const config = this.configure.getConfig();
         if (
             typeof config.stream === 'undefined' ||
             typeof config.stream.live === 'undefined' ||
-            typeof config.stream.live[type] === 'undefined' ||
-            typeof config.stream.live[type]![mode] === 'undefined'
+            typeof config.stream.live.ts === 'undefined' ||
+            typeof config.stream.live.ts[type] === 'undefined' ||
+            typeof config.stream.live.ts[type]![mode] === 'undefined'
         ) {
             throw new Error('ConfigIsUndefined');
         }
 
-        return config.stream.live[type]![mode].cmd;
+        return config.stream.live.ts[type]![mode].cmd;
     }
 
     /**
