@@ -140,7 +140,7 @@ export default class RecordedApiModel implements IRecordedApiModel {
                 return {
                     id: v.id,
                     name: v.name,
-                    type: v.isTs === true ? 'ts' : 'encoded',
+                    type: v.type as apid.VideoFileType,
                     size: v.size,
                 };
             });

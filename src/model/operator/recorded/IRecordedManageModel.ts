@@ -4,7 +4,7 @@ export interface AddVideoFileOption {
     recordedId: apid.RecordedId;
     parentDirectoryName: string; // 親ディレクトリ名 (config.yaml)
     filePath: string; // 親ディレクトリから下のファイルパス
-    isTs: boolean;
+    type: apid.VideoFileType;
     name: string;
 }
 

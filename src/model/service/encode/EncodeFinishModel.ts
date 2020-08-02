@@ -55,7 +55,7 @@ export default class EncodeFinishModel implements IEncodeFinishModel {
                     recordedId: info.recordedId,
                     parentDirectoryName: info.parentDirName,
                     filePath: info.filePath,
-                    isTs: false,
+                    type: 'encoded',
                     name: info.mode,
                 });
             }

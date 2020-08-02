@@ -317,7 +317,7 @@ export default class StreamApiModel implements IStreamApiModel {
             throw new Error('VideoFileIsNotFound');
         }
 
-        return video.isTs === false;
+        return video.type === 'encoded';
     }
 
     /**

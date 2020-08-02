@@ -172,7 +172,7 @@ export default class RecordedManageModel implements IRecordedManageModel {
         const videoFile = new VideoFile();
         videoFile.parentDirectoryName = option.parentDirectoryName;
         videoFile.filePath = option.filePath;
-        videoFile.isTs = option.isTs;
+        videoFile.type = option.type;
         videoFile.name = option.name;
         videoFile.size = fileSize;
         videoFile.recordedId = option.recordedId;

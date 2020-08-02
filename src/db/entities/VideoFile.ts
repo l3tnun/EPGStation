@@ -17,7 +17,7 @@ export default class VideoFile extends BaseEntity {
     public filePath!: string;
 
     @Column()
-    public isTs!: boolean;
+    public type!: string; // apid.VideoFileType
 
     @Column()
     public name!: string;

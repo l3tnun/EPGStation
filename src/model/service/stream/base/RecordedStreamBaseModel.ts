@@ -27,7 +27,7 @@ export default abstract class RecordedStreamBaseModel extends StreamBaseModel<Re
     private streamProcess: ChildProcess | null = null;
     private videoFilePath: string | null = null;
     private videoFileInfo: VideoFileInfo | null = null;
-    private isTs: boolean = false;
+    private videoFileType: apid.VideoFileType = 'encoded';
     private isRecording: boolean = false;
 
     constructor(
@@ -158,7 +158,7 @@ export default abstract class RecordedStreamBaseModel extends StreamBaseModel<Re
         // videoFileInfo セット
         this.videoFileInfo = await this.getVideoInfo(this.videoFilePath);
 
-        this.isTs = video.isTs;
+        this.videoFileType = video.type as apid.VideoFileType;
     }
 
     /**
@@ -200,7 +200,7 @@ export default abstract class RecordedStreamBaseModel extends StreamBaseModel<Re
 
         let cmd = this.processOption.cmd
             .replace(/%FFMPEG%/g, this.config.ffmpeg)
-            .replace(/%SS%/g, this.isTs === true ? '' : this.processOption.playPosition.toString(10));
+            .replace(/%SS%/g, this.videoFileType === 'ts' ? '' : this.processOption.playPosition.toString(10));
 
         if (this.getStreamType() === 'RecordedHLS') {
             cmd = cmd
@@ -229,8 +229,8 @@ export default abstract class RecordedStreamBaseModel extends StreamBaseModel<Re
             throw new Error('VideoFileError');
         }
 
-        // TS ファイルでなければ何もしない
-        if (this.isTs === false) {
+        // エンコードファイルなら何もしない
+        if (this.videoFileType === 'encoded') {
             return;
         }
 

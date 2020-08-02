@@ -291,7 +291,7 @@ class RecorderModel implements IRecorderModel {
                     const videoFile = new VideoFile();
                     videoFile.parentDirectoryName = recPath.parendDir.name;
                     videoFile.filePath = path.join(recPath.subDir, recPath.fileName);
-                    videoFile.isTs = true;
+                    videoFile.type = 'ts';
                     videoFile.name = 'TS';
                     videoFile.recordedId = this.recordedId;
                     this.log.system.info(`add video file: ${videoFile.filePath}`);
