@@ -308,9 +308,15 @@ class EncodeManageModel implements IEncodeManageModel {
 
                 // 終了通知 DB に登録を依頼
                 const fileName = outputFilePath === null ? null : path.basename(outputFilePath);
+                this.log.system.info(
+                    `rmOrg: ${queueItem.removeOriginal}, hasSam: ${this.hasSamVideoFileIdItem(
+                        queueItem.sourceVideoFileId,
+                        queueItem.encodeId,
+                    )}`,
+                );
                 if (
                     queueItem.removeOriginal === true &&
-                    this.hasSamVideoFileIdItem(queueItem.sourceVideoFileId) === true
+                    this.hasSamVideoFileIdItem(queueItem.sourceVideoFileId, queueItem.encodeId) === true
                 ) {
                     // queue に削除予定の videofile が存在するので、削除しないように false にする
                     queueItem.removeOriginal = false;
@@ -417,18 +423,19 @@ class EncodeManageModel implements IEncodeManageModel {
     /**
      * videoFileId で指定した video file id を持つ queue item が存在するか調べる
      * @param videoFileId: apid.VideoFileId
+     * @param excludeEncodeId: apid.EncodeId 除外する encode id
      * @return boolean 存在するなら true を返す
      */
-    private hasSamVideoFileIdItem(videoFileId: apid.VideoFileId): boolean {
+    private hasSamVideoFileIdItem(videoFileId: apid.VideoFileId, excludeEncodeId: apid.EncodeId): boolean {
         const runningItem = this.runningQueue.find(q => {
-            return q.encodeProgram.sourceVideoFileId === videoFileId;
+            return q.encodeProgram.sourceVideoFileId === videoFileId && q.encodeProgram.encodeId !== excludeEncodeId;
         });
         if (typeof runningItem !== 'undefined') {
             return true;
         }
 
         const waitItem = this.waitQueue.find(q => {
-            return q.sourceVideoFileId === videoFileId;
+            return q.sourceVideoFileId === videoFileId && q.encodeId !== excludeEncodeId;
         });
         if (typeof waitItem !== 'undefined') {
             return true;

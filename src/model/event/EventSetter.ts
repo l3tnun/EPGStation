@@ -157,7 +157,7 @@ export default class EventSetter implements IEventSetter {
                                 : reserve.encodeParentDirectoryName1,
                         directory: reserve.encodeDirectory1 === null ? undefined : reserve.encodeDirectory1,
                         mode: reserve.encodeMode1,
-                        removeOriginal: false,
+                        removeOriginal: reserve.isDeleteOriginalAfterEncode,
                     });
                 }
 
@@ -172,7 +172,7 @@ export default class EventSetter implements IEventSetter {
                                 : reserve.encodeParentDirectoryName2,
                         directory: reserve.encodeDirectory2 === null ? undefined : reserve.encodeDirectory2,
                         mode: reserve.encodeMode2,
-                        removeOriginal: false,
+                        removeOriginal: reserve.isDeleteOriginalAfterEncode,
                     });
                 }
 
@@ -187,7 +187,7 @@ export default class EventSetter implements IEventSetter {
                                 : reserve.encodeParentDirectoryName3,
                         directory: reserve.encodeDirectory3 === null ? undefined : reserve.encodeDirectory3,
                         mode: reserve.encodeMode3,
-                        removeOriginal: false,
+                        removeOriginal: reserve.isDeleteOriginalAfterEncode,
                     });
                 }
             }
