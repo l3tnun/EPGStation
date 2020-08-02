@@ -38,7 +38,7 @@
                         <div class="d-flex align-center justify-end">
                             <v-checkbox
                                 class="mx-1 my-0 pr-2"
-                                label="TS削除"
+                                label="元ファイル削除"
                                 v-model="setting.tmp.isDeleteOriginalAfterEncode"
                             ></v-checkbox>
                             <v-select
