@@ -7,11 +7,15 @@ export interface RecordedColumnOption {
     isNeedTags: boolean;
 }
 
+export interface FindAllOption extends apid.GetRecordedOption {
+    isRecording?: boolean;
+}
+
 export default interface IRecordedDB {
     insertOnce(recorded: Recorded): Promise<apid.RecordedId>;
     updateOnce(recorded: Recorded): Promise<void>;
     removeRecording(recordedId: apid.RecordedId): Promise<void>;
     deleteOnce(recordedId: apid.RecordedId): Promise<void>;
     findId(recordedId: apid.RecordedId): Promise<Recorded | null>;
-    findAll(option: apid.GetRecordedOption, columnOption: RecordedColumnOption): Promise<[Recorded[], number]>;
+    findAll(option: FindAllOption, columnOption: RecordedColumnOption): Promise<[Recorded[], number]>;
 }

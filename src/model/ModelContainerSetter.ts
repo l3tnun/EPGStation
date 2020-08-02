@@ -8,8 +8,12 @@ import IConfigApiModel from './api/config/IConfigApiModel';
 import EncodeApiModel from './api/encode/EncodeApiModel';
 import IEncodeApiModel from './api/encode/IEncodeApiModel';
 import IApiUtil from './api/IApiUtil';
+import IRecordedItemUtil from './api/IRecordedItemUtil';
 import IRecordedApiModel from './api/recorded/IRecordedApiModel';
 import RecordedApiModel from './api/recorded/RecordedApiModel';
+import RecordedItemUtil from './api/RecordedItemUtil';
+import IRecordingApiModel from './api/recording/IRecordingApiModel';
+import RecordingApiModel from './api/recording/RecordingApiModel';
 import IReserveApiModel from './api/reserve/IReserveApiModel';
 import ReserveApiModel from './api/reserve/ReserveApiModel';
 import IRuleApiModel from './api/rule/IRuleApiModel';
@@ -225,6 +229,8 @@ export const set = (container: Container): void => {
 
     container.bind<IApiUtil>('IApiUtil').to(ApiUtil).inSingletonScope();
 
+    container.bind<IRecordedItemUtil>('IRecordedItemUtil').to(RecordedItemUtil).inSingletonScope();
+
     container.bind<IConfigApiModel>('IConfigApiModel').to(ConfigApiModel).inSingletonScope();
 
     container.bind<IChannelApiModel>('IChannelApiModel').to(ChannelApiModel).inSingletonScope();
@@ -234,6 +240,8 @@ export const set = (container: Container): void => {
     container.bind<IReserveApiModel>('IReserveApiModel').to(ReserveApiModel).inSingletonScope();
 
     container.bind<IRecordedApiModel>('IRecordedApiModel').to(RecordedApiModel).inSingletonScope();
+
+    container.bind<IRecordingApiModel>('IRecordingApiModel').to(RecordingApiModel).inSingletonScope();
 
     container.bind<IRuleApiModel>('IRuleApiModel').to(RuleApiModel).inSingletonScope();
 

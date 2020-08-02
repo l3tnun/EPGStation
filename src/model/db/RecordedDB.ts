@@ -3,7 +3,7 @@ import { FindManyOptions } from 'typeorm';
 import * as apid from '../../../api';
 import Recorded from '../../db/entities/Recorded';
 import IDBOperator from './IDBOperator';
-import IRecordedDB, { RecordedColumnOption } from './IRecordedDB';
+import IRecordedDB, { FindAllOption, RecordedColumnOption } from './IRecordedDB';
 
 @injectable()
 export default class RecordedDB implements IRecordedDB {
@@ -100,22 +100,17 @@ export default class RecordedDB implements IRecordedDB {
 
     /**
      * 全件取得
-     * @param option: GetRecordedOption
+     * @param option: FindAllOption
+     * @param columnOption: RecordedColumnOption
      * @return Promise<[Recorded[], number]>
      */
-    public async findAll(
-        option: apid.GetRecordedOption,
-        columnOption: RecordedColumnOption,
-    ): Promise<[Recorded[], number]> {
+    public async findAll(option: FindAllOption, columnOption: RecordedColumnOption): Promise<[Recorded[], number]> {
         const connection = await this.op.getConnection();
 
         return await connection.getRepository(Recorded).findAndCount(this.createFindOption(option, columnOption));
     }
 
-    private createFindOption(
-        option: apid.GetRecordedTagOption,
-        columnOption: RecordedColumnOption,
-    ): FindManyOptions<Recorded> {
+    private createFindOption(option: FindAllOption, columnOption: RecordedColumnOption): FindManyOptions<Recorded> {
         const findOption: FindManyOptions<Recorded> = {};
 
         if (typeof option.offset !== 'undefined') {
@@ -124,6 +119,12 @@ export default class RecordedDB implements IRecordedDB {
 
         if (typeof option.limit !== 'undefined') {
             findOption.take = option.limit;
+        }
+
+        if (!!option.isRecording === true) {
+            findOption.where = {
+                isRecording: true,
+            };
         }
 
         findOption.order = {
