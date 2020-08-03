@@ -1,7 +1,7 @@
 <template>
     <div>
         <v-btn
-            v-if="serverConfig.isEnableEncode() === true"
+            v-if="recordedItem.isRecording === false && serverConfig.isEnableEncode() === true"
             color="teal white--text"
             v-on:click="openEncodeDialog"
             class="ma-1"
