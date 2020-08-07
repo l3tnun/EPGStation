@@ -1016,6 +1016,38 @@ components:
                 version:
                     type: string
 
+        EncodeProgramItem:
+            description: エンコードプログラム情報
+            type: object
+            required:
+                - id
+                - mode
+                - recorded
+            properties:
+                id:
+                    $ref: '#/components/schemas/EncodeId'
+                mode:
+                    description: エンコード名
+                    type: string
+                recorded:
+                    $ref: '#/components/schemas/RecordedItem'
+
+        EncodeInfo:
+            description: エンコード情報
+            type: object
+            required:
+                - runningItems
+                - waitItems
+            properties:
+                runningItems:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/EncodeProgramItem'
+                waitItems:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/EncodeProgramItem'
+
         AddEncodeProgramOption:
             description: エンコード追加時のオプション
             type: object
@@ -1078,7 +1110,7 @@ components:
             required:
                 - encodeId
             properties:
-                reserveId:
+                encodeId:
                     $ref: '#/components/schemas/EncodeId'
 
         StreamInfoItem:

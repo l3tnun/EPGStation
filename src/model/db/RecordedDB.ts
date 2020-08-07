@@ -1,5 +1,5 @@
 import { inject, injectable } from 'inversify';
-import { FindManyOptions } from 'typeorm';
+import { FindManyOptions, In } from 'typeorm';
 import * as apid from '../../../api';
 import Recorded from '../../db/entities/Recorded';
 import IDBOperator from './IDBOperator';
@@ -96,6 +96,29 @@ export default class RecordedDB implements IRecordedDB {
             .getMany();
 
         return result.length === 0 ? null : result[0];
+    }
+
+    /**
+     * id を複数指定して番組情報を取得する
+     * @param recordedIds: apid.RecordedId[]
+     * @return Promise<Recorded[]>
+     */
+    public async findIds(recordedIds: apid.RecordedId[]): Promise<Recorded[]> {
+        if (recordedIds.length === 0) {
+            return [];
+        }
+
+        const connection = await this.op.getConnection();
+
+        const result = await connection
+            .getRepository(Recorded)
+            .createQueryBuilder('recorded')
+            .where({ id: In(recordedIds) })
+            .leftJoinAndSelect('recorded.videoFiles', 'videoFiles')
+            .leftJoinAndSelect('recorded.thumbnails', 'thumbnails')
+            .getMany();
+
+        return result;
     }
 
     /**

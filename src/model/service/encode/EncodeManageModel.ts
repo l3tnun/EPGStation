@@ -15,7 +15,7 @@ import IConfiguration from '../../IConfiguration';
 import IExecutionManagementModel from '../../IExecutionManagementModel';
 import ILogger from '../../ILogger';
 import ILoggerModel from '../../ILoggerModel';
-import IEncodeManageModel, { EncodeRecordedIdIndex } from './IEncodeManageModel';
+import IEncodeManageModel, { EncodeQueueInfo, EncodeRecordedIdIndex } from './IEncodeManageModel';
 import IEncodeProcessManageModel from './IEncodeProcessManageModel';
 
 interface EncodeQueueItem extends apid.AddEncodeProgramOption {
@@ -566,6 +566,39 @@ class EncodeManageModel implements IEncodeManageModel {
         if (isError !== false) {
             throw new Error('StopEncodeError');
         }
+    }
+
+    /**
+     * queue に積まれているエンコード情報を返す
+     * @return EncodeQueueInfo
+     */
+    public getEncodeInfo(): EncodeQueueInfo {
+        const queueInfo: EncodeQueueInfo = {
+            runningQueue: [],
+            waitQueue: [],
+        };
+
+        if (this.runningQueue.length > 0) {
+            queueInfo.runningQueue = this.runningQueue.map(i => {
+                return {
+                    id: i.encodeProgram.encodeId,
+                    mode: i.encodeProgram.mode,
+                    recordedId: i.encodeProgram.recordedId,
+                };
+            });
+        }
+
+        if (this.waitQueue.length > 0) {
+            queueInfo.waitQueue = this.waitQueue.map(i => {
+                return {
+                    id: i.encodeId,
+                    mode: i.mode,
+                    recordedId: i.recordedId,
+                };
+            });
+        }
+
+        return queueInfo;
     }
 }
 

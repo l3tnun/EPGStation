@@ -17,5 +17,6 @@ export default interface IRecordedDB {
     removeRecording(recordedId: apid.RecordedId): Promise<void>;
     deleteOnce(recordedId: apid.RecordedId): Promise<void>;
     findId(recordedId: apid.RecordedId): Promise<Recorded | null>;
+    findIds(recordedIds: apid.RecordedId[]): Promise<Recorded[]>;
     findAll(option: FindAllOption, columnOption: RecordedColumnOption): Promise<[Recorded[], number]>;
 }

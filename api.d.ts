@@ -524,6 +524,20 @@ export interface ScheduleSearchOption {
  */
 
 /**
+ * エンコード情報
+ */
+export interface EncodeInfo {
+    runningItems: EncodeProgramItem[]; // エンコード中
+    waitItems: EncodeProgramItem[]; // エンコード待ち
+}
+
+export interface EncodeProgramItem {
+    id: EncodeId;
+    mode: string;
+    recorded: RecordedItem;
+}
+
+/**
  * エンコード追加オプション
  */
 export interface AddEncodeProgramOption {
