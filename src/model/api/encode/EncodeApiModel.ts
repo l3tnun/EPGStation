@@ -142,4 +142,13 @@ export default class EncodeApiModel implements IEncodeApiModel {
 
         return await this.encodeManage.push(option);
     }
+
+    /**
+     * 指定した id のエンコードをキャンセルする
+     * @param encodeId: apid.EncodeId
+     * @return Promise<void>
+     */
+    public async cancel(encodeId: apid.EncodeId): Promise<void> {
+        await this.encodeManage.cancel(encodeId);
+    }
 }

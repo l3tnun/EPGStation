@@ -1357,6 +1357,14 @@ components:
             schema:
                 type: integer
 
+        PathEncodeId:
+            description: エンコード id
+            in: path
+            name: encodeId
+            required: true
+            schema:
+                type: integer
+
         PathStreamId:
             description: ストリーム id
             in: path
