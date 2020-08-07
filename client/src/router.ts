@@ -2,6 +2,7 @@ import Vue from 'vue';
 import Router from 'vue-router';
 import container from './model/ModelContainer';
 import IScrollPositionState from './model/state/IScrollPositionState';
+import Encode from './views/Encode.vue';
 import Guide from './views/Guide.vue';
 import Main from './views/Main.vue';
 import OnAir from './views/OnAir.vue';
@@ -69,6 +70,11 @@ export default new Router({
             path: '/recorded/streaming/:id',
             name: 'recorded-streaming',
             component: WatchRecordedStreaming,
+        },
+        {
+            path: '/encode',
+            name: 'encode',
+            component: Encode,
         },
         {
             path: '/search',

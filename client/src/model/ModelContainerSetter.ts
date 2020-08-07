@@ -28,7 +28,9 @@ import ServerConfigModel from './serverConfig/ServerConfigModel';
 import ISocketIOModel from './socketio/ISocketIOModel';
 import SocketIOModel from './socketio/SocketIOModel';
 import AddEncodeState from './state/encode/AddEncodeState';
+import EncodeState from './state/encode/EncodeState';
 import IAddEncodeState from './state/encode/IAddEncodeState';
+import IEncodeState from './state/encode/IEncodeState';
 import GuideProgramDialogState from './state/guide/GuideProgramDialogState';
 import GuideReserveUtil from './state/guide/GuideReserveUtil';
 import GuideState from './state/guide/GuideState';
@@ -190,6 +192,8 @@ export default (container: Container) => {
     container.bind<IWatchRecordedInfoState>('IWatchRecordedInfoState').to(WatchRecordedInfoState).inSingletonScope();
 
     container.bind<IRecordingState>('IRecordingState').to(RecordingState).inSingletonScope();
+
+    container.bind<IEncodeState>('IEncodeState').to(EncodeState).inSingletonScope();
 
     container.bind<ISearchState>('ISearchState').to(SearchState).inSingletonScope();
 

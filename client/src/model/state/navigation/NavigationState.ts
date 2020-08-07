@@ -103,7 +103,9 @@ export default class NavigationState implements INavigationState {
         newItems.push({
             icon: 'mdi-sync',
             title: 'エンコード',
-            herf: null,
+            herf: {
+                path: '/encode',
+            },
         });
         newItems.push({
             icon: 'mdi-clock-outline',
