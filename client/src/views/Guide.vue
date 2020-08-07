@@ -95,7 +95,7 @@ export default class Guide extends Vue {
     private scrollCallback = throttle(() => {
         this.setDisplayRange();
         this.guideState.updateVisible();
-    }, 50);
+    }, 10);
 
     private windowResizeCallback = debounce(() => {
         this.setDisplayRange();

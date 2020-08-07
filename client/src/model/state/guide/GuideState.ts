@@ -323,12 +323,9 @@ class GuideState implements IGuideState {
             return;
         }
 
-        const topStart =
-            (this.displayRange.offsetHeight - this.displayRange.maxHeight * GuideState.DisplayMargin) /
-            (this.displayRange.baseHeight / 60);
-        const topEnd =
-            (this.displayRange.offsetHeight + this.displayRange.maxHeight * (1 + this.displayRange.maxHeight)) /
-            (this.displayRange.baseHeight / 60);
+        const baseHeight = this.displayRange.baseHeight / 60;
+        const topStart = this.displayRange.offsetHeight;
+        const topEnd = this.displayRange.offsetHeight + this.displayRange.maxHeight;
         for (const dom of this.programDoms) {
             if (guideMode === 'sequential' && dom.isVisible === true) {
                 continue;
@@ -338,15 +335,14 @@ class GuideState implements IGuideState {
             // 幅方向
             if (
                 (dom.left + 1) * this.displayRange.baseWidth <=
-                    this.displayRange.offsetWidth - this.displayRange.maxWidth * GuideState.DisplayMargin ||
-                dom.left * this.displayRange.baseWidth >=
-                    this.displayRange.maxWidth * (1 + GuideState.DisplayMargin) + this.displayRange.offsetWidth
+                    this.displayRange.offsetWidth - this.displayRange.maxWidth ||
+                dom.left * this.displayRange.baseWidth >= this.displayRange.maxWidth + this.displayRange.offsetWidth
             ) {
                 isVisible = false;
             }
 
             // 高さ方向
-            if (dom.top >= topEnd || dom.top + dom.height <= topStart) {
+            if (dom.top * baseHeight >= topEnd || (dom.top + dom.height) * baseHeight <= topStart) {
                 isVisible = false;
             }
 
@@ -537,7 +533,6 @@ class GuideState implements IGuideState {
 }
 
 namespace GuideState {
-    export const DisplayMargin = 0.5;
     export const SINGLE_STATION_GET_DAYS = 8;
     export const SINGLE_STATION_LENGTH = 24;
 }
