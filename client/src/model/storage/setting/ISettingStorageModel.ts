@@ -23,6 +23,7 @@ export interface ISettingValue {
     recordedViewURLScheme: string | null;
     shouldUseRecordedDownloadURLScheme: boolean;
     recordedDownloadURLScheme: string | null;
+    isEncodeHalfWidthDisplayed: boolean;
     searchLength: number;
     isSearchHalfWidthDisplayed: boolean;
     isEnableAutoScrollWhenEditingRule: boolean;

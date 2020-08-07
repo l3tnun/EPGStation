@@ -33,6 +33,7 @@ export default class SettingStorageModel extends AbstractStorageBaseModel<ISetti
             recordedViewURLScheme: null,
             shouldUseRecordedDownloadURLScheme: true,
             recordedDownloadURLScheme: null,
+            isEncodeHalfWidthDisplayed: true,
             searchLength: 300,
             isSearchHalfWidthDisplayed: true,
             isEnableAutoScrollWhenEditingRule: true,

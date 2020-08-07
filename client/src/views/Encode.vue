@@ -38,7 +38,7 @@ export default class Encode extends Vue {
     private snackbarState: ISnackbarState = container.get<ISnackbarState>('ISnackbarState');
     private socketIoModel: ISocketIOModel = container.get<ISocketIOModel>('ISocketIOModel');
     private onUpdateStatusCallback = (async () => {
-        await this.encodeState.fetchData(true); // TODO use setting value
+        await this.encodeState.fetchData(this.isHalfWidth());
     }).bind(this);
 
     public created(): void {
@@ -80,8 +80,7 @@ export default class Encode extends Vue {
         this.encodeState.clearData();
 
         this.$nextTick(async () => {
-            // TODO use setting value
-            await this.encodeState.fetchData(true).catch(err => {
+            await this.encodeState.fetchData(this.isHalfWidth()).catch(err => {
                 this.snackbarState.open({
                     color: 'error',
                     text: 'エンコード情報取得に失敗',
@@ -93,6 +92,14 @@ export default class Encode extends Vue {
             // データ取得完了を通知
             await this.scrollState.emitDoneGetData();
         });
+    }
+
+    /**
+     * 半角で取得するか
+     * @return boolean
+     */
+    private isHalfWidth(): boolean {
+        return this.settingValue === null ? true : this.settingValue.isEncodeHalfWidthDisplayed;
     }
 }
 </script>
