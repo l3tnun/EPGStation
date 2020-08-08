@@ -77,6 +77,11 @@ class Configuration implements IConfiguration {
             newConfig.recorded[i].path = this.directoryFormatting(newConfig.recorded[i].path);
         }
 
+        // recorded の中に tmp があったら削除する
+        newConfig.recorded = newConfig.recorded.filter(r => {
+            return r.name !== 'tmp';
+        });
+
         // thumbnail のパス整形
         newConfig.thumbnail = this.directoryFormatting(newConfig.thumbnail);
 

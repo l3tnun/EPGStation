@@ -68,6 +68,8 @@ export default interface IConfigFile {
 
     // 録画ディレクトリ
     recorded: RecordedDirInfo[];
+    // 録画一時ディレクトリ
+    recordedTmp?: string;
 
     // サムネイル
     thumbnail: string;
