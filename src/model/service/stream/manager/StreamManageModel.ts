@@ -41,13 +41,15 @@ class StreamManageModel implements IStreamManageModel {
         this.streams[streamId] = stream;
         this.log.stream.info(`start stream: ${streamId.toString(10)}`);
 
-        await stream.start(streamId).catch(async err => {
+        try {
+            await stream.start(streamId);
+        } catch (err) {
             this.log.stream.error('start stream error');
             this.log.stream.error(err);
-            await this.stop(streamId);
             finalize();
+            await this.stop(streamId);
             throw err;
-        });
+        }
 
         // stream 停止時に停止させる
         stream.setExitStream(async () => {
