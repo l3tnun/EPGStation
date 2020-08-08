@@ -12,9 +12,11 @@ export interface FinishEncodeInfo {
 
 export default interface IEncodeEvent {
     emitAddEncode(encodeId: apid.EncodeId): void;
+    emitCancelEncode(encodeId: apid.EncodeId): void;
     emitFinishEncode(info: FinishEncodeInfo): void;
     emitErrorEncode(): void;
     setAddEncode(callback: (encodeId: apid.EncodeId) => void): void;
+    setCancelEncode(callback: (encodeId: apid.EncodeId) => void): void;
     setFinishEncode(callback: (info: FinishEncodeInfo) => void): void;
     setErrorEncode(callback: () => void): void;
 }

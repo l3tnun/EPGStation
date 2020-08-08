@@ -23,6 +23,14 @@ class EncodeEvent implements IEncodeEvent {
     }
 
     /**
+     * エンコードキャンセルイベント発行
+     * @param encodeId: apid.EncodeId
+     */
+    public emitCancelEncode(encodeId: apid.EncodeId): void {
+        this.emitter.emit(EncodeEvent.CANCEL_ENCODE_EVENT, encodeId);
+    }
+
+    /**
      * エンコード完了イベント発行
      * @param info: FinishEncodeInfo
      */
@@ -43,6 +51,20 @@ class EncodeEvent implements IEncodeEvent {
      */
     public setAddEncode(callback: (encodeId: apid.EncodeId) => void): void {
         this.emitter.on(EncodeEvent.ADD_ENCODE_EVENT, async (encodeId: apid.EncodeId) => {
+            try {
+                await callback(encodeId);
+            } catch (err) {
+                this.log.system.error(err);
+            }
+        });
+    }
+
+    /**
+     * エンコードキャンセルイベント登録
+     * @param callback: (encodeId: apid.EncodeId) => void
+     */
+    public setCancelEncode(callback: (encodeId: apid.EncodeId) => void): void {
+        this.emitter.on(EncodeEvent.CANCEL_ENCODE_EVENT, async (encodeId: apid.EncodeId) => {
             try {
                 await callback(encodeId);
             } catch (err) {
@@ -82,6 +104,7 @@ class EncodeEvent implements IEncodeEvent {
 
 namespace EncodeEvent {
     export const ADD_ENCODE_EVENT = 'addEncodeEvent';
+    export const CANCEL_ENCODE_EVENT = 'cancelEncodeEvent';
     export const FINISH_ENCODE_EVENT = 'finishEncodeEvent';
     export const ERROR_ENCODE_EVENT = 'errorEncodeEvent';
 }

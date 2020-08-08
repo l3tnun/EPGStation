@@ -28,6 +28,7 @@ export default class EncodeFinishModel implements IEncodeFinishModel {
 
     public set(): void {
         this.encodeEvent.setAddEncode(this.addEncode.bind(this));
+        this.encodeEvent.setCancelEncode(this.cancelEncode.bind(this));
         this.encodeEvent.setFinishEncode(this.finishEncode.bind(this));
         this.encodeEvent.setErrorEncode(this.errorEncode.bind(this));
     }
@@ -37,6 +38,14 @@ export default class EncodeFinishModel implements IEncodeFinishModel {
      * @param encodeId
      */
     private addEncode(_encodeId: apid.EncodeId): void {
+        this.socket.notifyClient();
+    }
+
+    /**
+     * エンコードキャンセル処理
+     * @param encodeId
+     */
+    private cancelEncode(_encodeId: apid.EncodeId): void {
         this.socket.notifyClient();
     }
 

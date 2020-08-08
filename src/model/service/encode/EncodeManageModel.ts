@@ -501,6 +501,9 @@ class EncodeManageModel implements IEncodeManageModel {
         }
 
         this.executeManagementModel.unLockExecution(exeId);
+
+        // イベント発行
+        this.encodeEvent.emitCancelEncode(encodeId);
     }
 
     /**
