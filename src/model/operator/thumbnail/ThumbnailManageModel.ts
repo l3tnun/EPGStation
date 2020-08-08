@@ -5,6 +5,7 @@ import * as path from 'path';
 import * as apid from '../../../../api';
 import Thumbnail from '../../../db/entities/Thumbnail';
 import FileUtil from '../../../util/FileUtil';
+import ProcessUtil from '../../../util/ProcessUtil';
 import IVideoUtil from '../../api/video/IVideoUtil';
 import IThumbnailDB from '../../db/IThumbnailDB';
 import IVideoFileDB from '../../db/IVideoFileDB';
@@ -88,29 +89,21 @@ export default class ThumbnailManageModel implements IThumbnailManageModel {
         }
 
         const fileName = await this.getSaveFileName(videoFile.recordedId);
-        const filePath = path.join(this.config.thumbnail, fileName);
+        const output = path.join(this.config.thumbnail, fileName);
+        const cmdStr = this.config.thumbnailCmd.replace(/%FFMPEG%/g, this.config.ffmpeg);
+        const cmds = ProcessUtil.parseCmdStr(cmdStr);
 
-        // ffmpeg の実行権限をチェック
-        await FileUtil.access(this.config.ffmpeg, fs.constants.X_OK);
-
-        // ffmpeg args
-        const args = [
-            '-y',
-            '-i',
-            videoFilePath,
-            '-ss',
-            this.config.thumbnailPosition.toString(10),
-            '-vframes',
-            '1',
-            '-f',
-            'image2',
-            '-s',
-            this.config.thumbnailSize,
-            filePath,
-        ];
+        // コマンドの引数準備
+        for (let i = 0; i < cmds.args.length; i++) {
+            cmds.args[i] = cmds.args[i]
+                .replace(/%INPUT%/, videoFilePath)
+                .replace(/%OUTPUT%/, output)
+                .replace(/%THUMBNAIL_POSITION%/, `${this.config.thumbnailPosition.toString(10)}`)
+                .replace(/%THUMBNAIL_SIZE%/, this.config.thumbnailSize);
+        }
 
         // run ffmpeg
-        const child = spawn(this.config.ffmpeg, args);
+        const child = spawn(cmds.bin, cmds.args);
 
         // debug 用
         if (child.stderr !== null) {
@@ -127,7 +120,7 @@ export default class ThumbnailManageModel implements IThumbnailManageModel {
                 if (code !== 0) {
                     reject(new Error('CreateThumbnailExitError'));
                 }
-                this.log.system.info(`create thumbnail: ${videoFileId}, ${filePath}`);
+                this.log.system.info(`create thumbnail: ${videoFileId}, ${output}`);
 
                 // add DB
                 const thumbnail = new Thumbnail();
@@ -140,8 +133,8 @@ export default class ThumbnailManageModel implements IThumbnailManageModel {
                     this.log.system.error(err);
 
                     // delete thumbnail file
-                    await FileUtil.unlink(filePath).catch(err => {
-                        this.log.system.error(`thumbnail delete error: ${videoFileId}, ${filePath}`);
+                    await FileUtil.unlink(output).catch(err => {
+                        this.log.system.error(`thumbnail delete error: ${videoFileId}, ${output}`);
                         this.log.system.error(err);
                     });
 

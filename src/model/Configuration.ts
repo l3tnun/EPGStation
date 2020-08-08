@@ -147,6 +147,8 @@ namespace Configuration {
             },
         ],
         thumbnail: path.join(__dirname, '..', '..', 'thumbnail'),
+        thumbnailCmd:
+            '%FFMPEG% -ss %THUMBNAIL_POSITION% -y -i %INPUT% -vframes 1 -f image2 -s %THUMBNAIL_SIZE% %OUTPUT%',
         thumbnailSize: '480x270',
         thumbnailPosition: 5,
         ffmpeg: '/usr/local/bin/ffmpeg',

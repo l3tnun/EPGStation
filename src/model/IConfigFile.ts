@@ -73,6 +73,7 @@ export default interface IConfigFile {
 
     // サムネイル
     thumbnail: string;
+    thumbnailCmd: string;
     thumbnailSize: string;
     thumbnailPosition: number;
 
