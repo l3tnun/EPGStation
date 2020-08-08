@@ -68,6 +68,10 @@ export default class EncodeState implements IEncodeState {
                 name: item.recorded.name,
                 time: DateUtil.format(startAt, 'MM/dd(w) hh:mm ~ ') + DateUtil.format(endAt, 'hh:mm'),
                 duration: Math.floor((item.recorded.endAt - item.recorded.startAt) / 1000 / 60),
+                topThumbnailPath:
+                    typeof item.recorded.thumbnails === 'undefined' || item.recorded.thumbnails.length === 0
+                        ? './img/noimg.png'
+                        : `./api/thumbnails/${item.recorded.thumbnails[0]}`,
                 mode: item.mode,
             },
             encodeItem: item,
@@ -85,14 +89,5 @@ export default class EncodeState implements IEncodeState {
                   waitItems: [],
               }
             : this.encodeInfo;
-    }
-
-    /**
-     * 指定した id のエンコードをキャンセルする
-     * @param encodeId: apid.EncodeId
-     * @return Promise<void>
-     */
-    public async cancel(encodeId: apid.EncodeId): Promise<void> {
-        await this.encodeApiModel.cancel(encodeId);
     }
 }

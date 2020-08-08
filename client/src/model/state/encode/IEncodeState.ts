@@ -6,6 +6,7 @@ export interface EncodeInfoDisplayItem {
         name: string;
         time: string;
         duration: number;
+        topThumbnailPath: string;
         mode: string;
     };
     encodeItem: apid.EncodeProgramItem;
@@ -20,5 +21,4 @@ export default interface IEncodeState {
     clearData(): void;
     fetchData(isHalfWidth: boolean): Promise<void>;
     getEncodeInfo(): EncodeInfoDisplayData;
-    cancel(encodeId: apid.EncodeId): Promise<void>;
 }

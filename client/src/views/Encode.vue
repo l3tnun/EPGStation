@@ -2,15 +2,24 @@
     <v-content>
         <TitleBar title="エンコード"></TitleBar>
         <transition name="page">
-            <div ref="appContent" class="app-content pa-2">
-                <div>encode info page</div>
+            <div ref="appContent" class="mx-auto app-content pa-2">
+                <div v-if="encodeState.getEncodeInfo().runningItems.length > 0">
+                    <div class="title">エンコード中</div>
+                    <EncodeItems :items="encodeState.getEncodeInfo().runningItems"></EncodeItems>
+                </div>
+                <div v-if="encodeState.getEncodeInfo().waitItems.length > 0">
+                    <div class="title pt-2">待機中</div>
+                    <EncodeItems :items="encodeState.getEncodeInfo().waitItems"></EncodeItems>
+                </div>
                 <div style="visibility: hidden;">dummy</div>
             </div>
         </transition>
+        <Snackbar></Snackbar>
     </v-content>
 </template>
 
 <script lang="ts">
+import EncodeItems from '@/components/encode/EncodeItems.vue';
 import Snackbar from '@/components/snackbar/Snackbar.vue';
 import TitleBar from '@/components/titleBar/TitleBar.vue';
 import container from '@/model/ModelContainer';
@@ -27,6 +36,7 @@ Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
 @Component({
     components: {
         TitleBar,
+        EncodeItems,
         Snackbar,
     },
 })
@@ -51,28 +61,6 @@ export default class Encode extends Vue {
     public beforeDestroy(): void {
         // socket.io イベント
         this.socketIoModel.offUpdateState(this.onUpdateStatusCallback);
-    }
-
-    /**
-     * 指定した id のエンコードをキャンセルする
-     * @param encodeId: apid.EncodeId
-     * @return Promise<void>
-     */
-    public async cancel(encodeId: apid.EncodeId): Promise<void> {
-        try {
-            await this.encodeState.cancel(encodeId);
-            this.snackbarState.open({
-                color: 'success',
-                text: 'エンコードをキャンセルしました',
-            });
-        } catch (err) {
-            this.snackbarState.open({
-                color: 'error',
-                text: 'エンコードのキャンセルに失敗しました',
-            });
-
-            console.error(err);
-        }
     }
 
     @Watch('$route', { immediate: true, deep: true })
@@ -103,3 +91,8 @@ export default class Encode extends Vue {
     }
 }
 </script>
+
+<style lang="sass" scoped>
+.app-content
+    max-width: 800px
+</style>
