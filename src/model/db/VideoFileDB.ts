@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import * as apid from '../../../api';
 import VideoFile from '../../db/entities/VideoFile';
 import IDBOperator from './IDBOperator';
-import IVideoFileDB from './IVideoFileDB';
+import IVideoFileDB, { UpdateFilePathOption } from './IVideoFileDB';
 
 @injectable()
 export default class VideoFileDB implements IVideoFileDB {
@@ -27,6 +27,29 @@ export default class VideoFileDB implements IVideoFileDB {
             .execute();
 
         return insertedResult.identifiers[0].id;
+    }
+
+    /**
+     * ファイルパス変更
+     * @param option: UpdateFilePathOption
+     * @return Promise<void>
+     */
+    public async updateFilePath(option: UpdateFilePathOption): Promise<void> {
+        const videoFile = await this.findId(option.videoFileId);
+        if (videoFile === null) {
+            throw new Error('VideoFileIsNull');
+        }
+
+        const connection = await this.op.getConnection();
+        await connection
+            .createQueryBuilder()
+            .update(VideoFile)
+            .set({
+                parentDirectoryName: option.parentDirectoryName,
+                filePath: option.filePath,
+            })
+            .where({ id: option.videoFileId })
+            .execute();
     }
 
     /**

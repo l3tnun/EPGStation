@@ -85,9 +85,7 @@ import LoggerModel from './LoggerModel';
 import MirakurunClientModel from './MirakurunClientModel';
 import IReserveOptionChecker from './operator/IReserveOptionChecker';
 import IRecordedManageModel from './operator/recorded/IRecordedManageModel';
-import IRecordedUtilModel from './operator/recorded/IRecordedUtilModel';
 import RecordedManageModel from './operator/recorded/RecordedManageModel';
-import RecordedUtilModel from './operator/recorded/RecordedUtilModel';
 import IRecorderModel, { RecorderModelProvider } from './operator/recording/IRecorderModel';
 import IRecordingManageModel from './operator/recording/IRecordingManageModel';
 import IRecordingStreamCreator from './operator/recording/IRecordingStreamCreator';
@@ -216,8 +214,6 @@ export const set = (container: Container): void => {
     container.bind<IRecordedManageModel>('IRecordedManageModel').to(RecordedManageModel).inSingletonScope();
 
     container.bind<IRecordingManageModel>('IRecordingManageModel').to(RecordingManageModel).inSingletonScope();
-
-    container.bind<IRecordedUtilModel>('IRecordedUtilModel').to(RecordedUtilModel).inSingletonScope();
 
     container.bind<IThumbnailManageModel>('IThumbnailManageModel').to(ThumbnailManageModel).inSingletonScope();
 

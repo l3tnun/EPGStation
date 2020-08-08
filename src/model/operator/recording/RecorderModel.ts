@@ -238,7 +238,7 @@ class RecorderModel implements IRecorderModel {
         this.eventEmitter.emit(RecorderModel.START_RECORDING_EVENT);
 
         // 保存先を取得
-        const recPath = await this.getRecPath(this.reserve);
+        const recPath = await this.getRecPath(this.reserve, true);
 
         this.log.system.info(`recording: ${this.reserve.id} ${recPath.fullPath}`);
 
@@ -447,6 +447,12 @@ class RecorderModel implements IRecorderModel {
             this.isRecording = false;
             // TODO Recorded に drop 情報追加
 
+            // tmp に録画していた場合は移動する
+            await this.movingFromTmp().catch(err => {
+                this.log.system.fatal(`movingFromTmp error: ${this.recordedId}`);
+                this.log.system.fatal(err);
+            });
+
             // update video file size
             if (this.videoFileId !== null && this.videoFileFulPath !== null) {
                 this.log.system.info(`update file size: ${this.videoFileId}`);
@@ -485,37 +491,104 @@ class RecorderModel implements IRecorderModel {
             }
         }
 
-        this.log.system.info(`recording finish: ${this.reserve.id} ${recFile.path}`);
+        this.log.system.info(`recording finish: ${this.reserve.id} ${this.videoFileFulPath}`);
+    }
+
+    /**
+     * recordedTmp にされている録画を本来の保存場所へ移動する
+     * recordedTmp の指定が無い場合は何もしない
+     * @return Promise<void>
+     */
+    private async movingFromTmp(): Promise<void> {
+        if (
+            typeof this.config.recordedTmp === 'undefined' ||
+            this.videoFileId === null ||
+            this.videoFileFulPath === null
+        ) {
+            return;
+        }
+
+        // 本来の保存先を取得
+        const newRecPath = await this.getRecPath(this.reserve, false);
+
+        // recordedTmp から本来の保存先へコピー
+        try {
+            this.log.system.info(`move file: ${this.videoFileFulPath} -> ${newRecPath.fullPath}`);
+            await FileUtil.copyFile(this.videoFileFulPath, newRecPath.fullPath);
+        } catch (err) {
+            this.log.system.error(`move file error: ${this.videoFileFulPath} -> ${newRecPath.fullPath}`);
+
+            return;
+        }
+
+        // VideoFile DB 更新
+        try {
+            await this.videoFileDB.updateFilePath({
+                videoFileId: this.videoFileId,
+                parentDirectoryName: newRecPath.parendDir.name,
+                filePath: path.join(newRecPath.subDir, newRecPath.fileName),
+            });
+        } catch (err) {
+            this.log.system.error(`update VideoFileDB path error: ${this.recordedId}`);
+            this.log.system.error(err);
+
+            await FileUtil.unlink(newRecPath.fullPath).catch(err => {
+                this.log.system.error(`delete new file error: ${newRecPath.fullPath}`);
+                this.log.system.error(err);
+            });
+
+            return;
+        }
+
+        const oldVideoFilePath = this.videoFileFulPath;
+        this.videoFileFulPath = newRecPath.fullPath;
+
+        // recordedTmp にある古いファイルを削除する
+        await FileUtil.unlink(oldVideoFilePath).catch(err => {
+            this.log.system.error(`delete old file error: ${newRecPath.fullPath}`);
+            this.log.system.error(err);
+        });
     }
 
     /**
      * 保存先ディレクトリを取得する
-     * @param _reserve: Reserve
+     * @param reserve: Reserve
+     * @param isEnableTmp: 一時保存ディレクトリを使用するか
      * @return Promise<RecFilePathInfo> 保存先ファイルパス
      */
-    private async getRecPath(reserve: Reserve): Promise<RecFilePathInfo> {
+    private async getRecPath(reserve: Reserve, isEnableTmp: boolean): Promise<RecFilePathInfo> {
         // 親ディレクトリ
         let parentDir: RecordedDirInfo | null = null;
-        if (reserve.parentDirectoryName === null) {
-            // 設定がない場合は recorded の戦闘に定義されている保存先を使用する
-            parentDir = this.config.recorded[0];
+        let subDir = ''; // サブディレクトリ
+
+        if (isEnableTmp === true && typeof this.config.recordedTmp !== 'undefined') {
+            // 一時ディレクトリに保存する
+            parentDir = {
+                name: 'tmp',
+                path: this.config.recordedTmp,
+            };
         } else {
-            for (const d of this.config.recorded) {
-                // parentDirectoryName に一致する親ディレクトリ設定を探す
-                if (d.name === reserve.parentDirectoryName) {
-                    parentDir = d;
-                    break;
+            if (reserve.parentDirectoryName === null) {
+                // 設定がない場合は recorded の戦闘に定義されている保存先を使用する
+                parentDir = this.config.recorded[0];
+            } else {
+                for (const d of this.config.recorded) {
+                    // parentDirectoryName に一致する親ディレクトリ設定を探す
+                    if (d.name === reserve.parentDirectoryName) {
+                        parentDir = d;
+                        break;
+                    }
                 }
             }
-        }
 
-        if (parentDir === null) {
-            // 親ディレクトリが見つからなかった
-            parentDir = this.config.recorded[0];
-        }
+            if (parentDir === null) {
+                // 親ディレクトリが見つからなかった
+                parentDir = this.config.recorded[0];
+            }
 
-        // サブディレクトリ
-        const subDir = reserve.directory === null ? '' : reserve.directory;
+            // サブディレクトリ
+            subDir = reserve.directory === null ? '' : reserve.directory;
+        }
 
         // 局名
         let channelName = reserve.channelId.toString(10); // 局名が取れなかったときのために id で一旦セットする

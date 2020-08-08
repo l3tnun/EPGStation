@@ -15,7 +15,6 @@ import ILogger from '../../ILogger';
 import ILoggerModel from '../../ILoggerModel';
 import IRecordingManageModel from '../recording/IRecordingManageModel';
 import IRecordedManageModel, { AddVideoFileOption } from './IRecordedManageModel';
-import IRecordedUtilModel from './IRecordedUtilModel';
 
 @injectable()
 export default class RecordedManageModel implements IRecordedManageModel {
@@ -24,7 +23,6 @@ export default class RecordedManageModel implements IRecordedManageModel {
     private recordedDB: IRecordedDB;
     private videoFileDB: IVideoFileDB;
     private thumbnailDB: IThumbnailDB;
-    private recordedUtil: IRecordedUtilModel;
     private recordingManageModel: IRecordingManageModel;
     private recordedEvent: IRecordedEvent;
     private videoUtil: IVideoUtil;
@@ -35,7 +33,6 @@ export default class RecordedManageModel implements IRecordedManageModel {
         @inject('IRecordedDB') recordedDB: IRecordedDB,
         @inject('IVideoFileDB') videoFileDB: IVideoFileDB,
         @inject('IThumbnailDB') thumbnailDB: IThumbnailDB,
-        @inject('IRecordedUtilModel') recordedUtil: IRecordedUtilModel,
         @inject('IRecordingManageModel')
         recordingManageModel: IRecordingManageModel,
         @inject('IRecordedEvent') recordedEvent: IRecordedEvent,
@@ -46,7 +43,6 @@ export default class RecordedManageModel implements IRecordedManageModel {
         this.recordedDB = recordedDB;
         this.videoFileDB = videoFileDB;
         this.thumbnailDB = thumbnailDB;
-        this.recordedUtil = recordedUtil;
         this.recordingManageModel = recordingManageModel;
         this.recordedEvent = recordedEvent;
         this.videoUtil = videoUtil;
@@ -77,19 +73,6 @@ export default class RecordedManageModel implements IRecordedManageModel {
         const hasThumbnails = typeof recorded.thumbnails !== 'undefined' && recorded.thumbnails.length > 0;
         const hasVideoFiles = typeof recorded.videoFiles !== 'undefined' && recorded.videoFiles.length > 0;
 
-        // DB からサムネイル情報削除
-        if (hasThumbnails === true) {
-            this.thumbnailDB.deleteRecordedId(recordedId);
-        }
-
-        // DB から録画ファイル情報削除
-        if (hasVideoFiles === true) {
-            await this.videoFileDB.deleteRecordedId(recordedId);
-        }
-
-        // DB から録画情報削除
-        await this.recordedDB.deleteOnce(recordedId);
-
         // サムネイル実ファイル削除
         if (hasThumbnails === true) {
             for (const t of recorded.thumbnails!) {
@@ -105,8 +88,19 @@ export default class RecordedManageModel implements IRecordedManageModel {
         // 録画ファイル実ファイル削除
         if (hasVideoFiles === true) {
             for (const v of recorded.videoFiles!) {
-                // TODO 録画ファイル削除
-                const filePath = this.recordedUtil.getVideoFilePath(v);
+                let filePath: string | null;
+                try {
+                    filePath = await this.videoUtil.getFullFilePath(v.id);
+                    if (filePath === null) {
+                        throw new Error('GetVideoFilePathError');
+                    }
+                } catch (err) {
+                    this.log.system.error(`get video file path error: ${v.id}`);
+                    this.log.system.error(err);
+                    this.log.system.error(v);
+                    continue;
+                }
+
                 this.log.system.info(`delete: ${filePath}`);
                 await FileUtil.unlink(filePath).catch(err => {
                     this.log.system.error(`failed to delete ${filePath}`);
@@ -116,6 +110,19 @@ export default class RecordedManageModel implements IRecordedManageModel {
         }
 
         // TODO ドロップログファイル削除処理
+
+        // DB からサムネイル情報削除
+        if (hasThumbnails === true) {
+            this.thumbnailDB.deleteRecordedId(recordedId);
+        }
+
+        // DB から録画ファイル情報削除
+        if (hasVideoFiles === true) {
+            await this.videoFileDB.deleteRecordedId(recordedId);
+        }
+
+        // DB から録画情報削除
+        await this.recordedDB.deleteOnce(recordedId);
 
         this.log.system.info(`successful delete recorded: ${recordedId}`);
 

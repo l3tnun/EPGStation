@@ -32,6 +32,10 @@ export default class VideoUtil implements IVideoUtil {
     }
 
     public getParentDirPath(name: string): string | null {
+        if (name === 'tmp' && typeof this.config.recordedTmp !== 'undefined') {
+            return this.config.recordedTmp;
+        }
+
         for (const r of this.config.recorded) {
             if (r.name === name) {
                 return r.path;

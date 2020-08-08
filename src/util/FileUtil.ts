@@ -125,6 +125,63 @@ namespace FileUtil {
             });
         });
     };
+
+    /**
+     * Promise file rename
+     * @param src: source file path
+     * @param dest: dest file path
+     * @return Promise<void>
+     */
+    export const rename = (src: string, dest: string): Promise<void> => {
+        return new Promise<void>((reslove, reject) => {
+            fs.rename(src, dest, async err => {
+                if (err) {
+                    await FileUtil.unlink(dest).catch(() => {});
+
+                    reject(err);
+                } else {
+                    reslove();
+                }
+            });
+        });
+    };
+
+    /**
+     * Promise file copy
+     * @param src: source file path
+     * @param dest: dest file path
+     * @return Promise<void>
+     */
+    export const copyFile = (src: string, dest: string): Promise<void> => {
+        return new Promise<void>((resolve, reject) => {
+            fs.copyFile(src, dest, err => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
+        });
+    };
+
+    /**
+     * Promise file copy and delete
+     * @param src: source file path
+     * @param dest: dest file path
+     * @return Promise<void>
+     */
+    export const move = async (src: string, dest: string): Promise<void> => {
+        try {
+            await FileUtil.copyFile(src, dest);
+        } catch (err) {
+            await FileUtil.unlink(dest).catch(() => {});
+
+            throw err;
+        }
+
+        // delete old file
+        await FileUtil.unlink(src);
+    };
 }
 
 export default FileUtil;

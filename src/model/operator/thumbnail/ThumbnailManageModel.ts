@@ -5,6 +5,7 @@ import * as path from 'path';
 import * as apid from '../../../../api';
 import Thumbnail from '../../../db/entities/Thumbnail';
 import FileUtil from '../../../util/FileUtil';
+import IVideoUtil from '../../api/video/IVideoUtil';
 import IThumbnailDB from '../../db/IThumbnailDB';
 import IVideoFileDB from '../../db/IVideoFileDB';
 import IThumbnailEvent from '../../event/IThumbnailEvent';
@@ -13,7 +14,6 @@ import IConfiguration from '../../IConfiguration';
 import ILogger from '../../ILogger';
 import ILoggerModel from '../../ILoggerModel';
 import { IPromiseQueue } from '../../IPromiseQueue';
-import IRecordedUtilModel from '../recorded/IRecordedUtilModel';
 import IThumbnailManageModel from './IThumbnailManageModel';
 
 @injectable()
@@ -21,27 +21,27 @@ export default class ThumbnailManageModel implements IThumbnailManageModel {
     private log: ILogger;
     private config: IConfigFile;
     private queue: IPromiseQueue;
-    private recordedUtil: IRecordedUtilModel;
     private videoFileDB: IVideoFileDB;
     private thumbnailDB: IThumbnailDB;
     private thumbnailEvent: IThumbnailEvent;
+    private videoUtil: IVideoUtil;
 
     constructor(
         @inject('ILoggerModel') logger: ILoggerModel,
         @inject('IConfiguration') configuration: IConfiguration,
         @inject('IPromiseQueue') queue: IPromiseQueue,
-        @inject('IRecordedUtilModel') recordedUtil: IRecordedUtilModel,
         @inject('IVideoFileDB') videoFileDB: IVideoFileDB,
         @inject('IThumbnailDB') thumbnailDB: IThumbnailDB,
         @inject('IThumbnailEvent') thumbnailEvent: IThumbnailEvent,
+        @inject('IVideoUtil') videoUtil: IVideoUtil,
     ) {
         this.log = logger.getLogger();
         this.config = configuration.getConfig();
         this.queue = queue;
-        this.recordedUtil = recordedUtil;
         this.videoFileDB = videoFileDB;
         this.thumbnailDB = thumbnailDB;
         this.thumbnailEvent = thumbnailEvent;
+        this.videoUtil = videoUtil;
     }
 
     /**
@@ -65,11 +65,11 @@ export default class ThumbnailManageModel implements IThumbnailManageModel {
      */
     private async create(videoFileId: apid.VideoFileId): Promise<void> {
         const videoFile = await this.videoFileDB.findId(videoFileId);
-        if (videoFile === null) {
+        const videoFilePath = await this.videoUtil.getFullFilePath(videoFileId);
+        if (videoFile === null || videoFilePath === null) {
             this.log.system.error(`video file is not found: ${videoFileId}`);
             throw new Error('VideoFileIsNotFound');
         }
-        const videoFilePath = this.recordedUtil.getVideoFilePath(videoFile);
 
         // check thumbnail dir
         try {

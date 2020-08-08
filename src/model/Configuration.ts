@@ -82,6 +82,11 @@ class Configuration implements IConfiguration {
             return r.name !== 'tmp';
         });
 
+        // recordedTmp のパス整形
+        if (typeof newConfig.recordedTmp !== 'undefined') {
+            newConfig.recordedTmp = this.directoryFormatting(newConfig.recordedTmp);
+        }
+
         // thumbnail のパス整形
         newConfig.thumbnail = this.directoryFormatting(newConfig.thumbnail);
 

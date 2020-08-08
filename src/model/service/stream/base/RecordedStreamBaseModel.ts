@@ -1,11 +1,11 @@
 import { ChildProcess, exec } from 'child_process';
 import * as fs from 'fs';
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
 import internal, { Readable } from 'stream';
 import * as apid from '../../../../../api';
 import * as fst from '../../../../lib/TailStream';
 import ProcessUtil from '../../../../util/ProcessUtil';
+import IVideoUtil from '../../../api/video/IVideoUtil';
 import IRecordedDB from '../../../db/IRecordedDB';
 import IVideoFileDB from '../../../db/IVideoFileDB';
 import IConfiguration from '../../../IConfiguration';
@@ -22,6 +22,7 @@ export default abstract class RecordedStreamBaseModel extends StreamBaseModel<Re
     implements IRecordedStreamBaseModel {
     private videoFileDB: IVideoFileDB;
     private recordedDB: IRecordedDB;
+    private videoUtil: IVideoUtil;
 
     private fileStream: Readable | null = null;
     private streamProcess: ChildProcess | null = null;
@@ -38,11 +39,13 @@ export default abstract class RecordedStreamBaseModel extends StreamBaseModel<Re
         @inject('ISocketIOManageModel') socketIO: ISocketIOManageModel,
         @inject('IVideoFileDB') videoFileDB: IVideoFileDB,
         @inject('IRecordedDB') recordedDB: IRecordedDB,
+        @inject('IVideoUtil') videoUtil: IVideoUtil,
     ) {
         super(configure, logger, processManager, fileDeleter, socketIO);
 
         this.videoFileDB = videoFileDB;
         this.recordedDB = recordedDB;
+        this.videoUtil = videoUtil;
     }
 
     /**
@@ -147,13 +150,10 @@ export default abstract class RecordedStreamBaseModel extends StreamBaseModel<Re
         this.isRecording = recorded.isRecording;
 
         // videoFilePath セット
-        const parentDir = this.config.recorded.find(d => {
-            return d.name === video.parentDirectoryName;
-        });
-        if (typeof parentDir === 'undefined') {
-            throw new Error('VideoFileParentDirectoryPathError');
+        this.videoFilePath = await this.videoUtil.getFullFilePath(video.id);
+        if (this.videoFilePath === null) {
+            throw new Error('GetVideoFilePathError');
         }
-        this.videoFilePath = path.join(parentDir.path, video.filePath);
 
         // videoFileInfo セット
         this.videoFileInfo = await this.getVideoInfo(this.videoFilePath);
