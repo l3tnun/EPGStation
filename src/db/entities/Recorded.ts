@@ -170,7 +170,7 @@ export default class Recorded extends BaseEntity {
     @OneToMany(() => Thumbnail, thumbnail => thumbnail.recorded)
     public thumbnails?: Thumbnail[];
 
-    @OneToOne(() => DropLogFile, dropLogFile => dropLogFile.id, { cascade: true, onDelete: 'CASCADE' })
+    @OneToOne(() => DropLogFile, dropLogFile => dropLogFile.id)
     @JoinColumn()
     public dropLogFile?: DropLogFile | null;
 

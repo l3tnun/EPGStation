@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class Init1596950962459 implements MigrationInterface {
-    public name = 'Init1596950962459';
+export class Init1596953150168 implements MigrationInterface {
+    public name = 'Init1596953150168';
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(
@@ -60,7 +60,7 @@ export class Init1596950962459 implements MigrationInterface {
         await queryRunner.query('DROP TABLE "video_file"');
         await queryRunner.query('ALTER TABLE "temporary_video_file" RENAME TO "video_file"');
         await queryRunner.query(
-            'CREATE TABLE "temporary_recorded" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "reserveId" integer, "ruleId" integer, "programId" bigint, "channelId" bigint NOT NULL, "startAt" bigint NOT NULL, "endAt" bigint NOT NULL, "duration" integer NOT NULL, "name" varchar NOT NULL, "halfWidthName" varchar NOT NULL, "description" text, "halfWidthDescription" text, "extended" text, "halfWidthExtended" text, "genre1" integer, "subGenre1" integer, "genre2" integer, "subGenre2" integer, "genre3" integer, "subGenre3" integer, "videoType" text, "videoResolution" text, "videoStreamContent" integer, "videoComponentType" integer, "audioSamplingRate" integer, "audioComponentType" integer, "isRecording" boolean NOT NULL, "dropLogFileId" integer, CONSTRAINT "REL_e0bc5373673ea0f120445830f4" UNIQUE ("dropLogFileId"), CONSTRAINT "FK_e0bc5373673ea0f120445830f4d" FOREIGN KEY ("dropLogFileId") REFERENCES "drop_log_file" ("id") ON DELETE CASCADE ON UPDATE NO ACTION)',
+            'CREATE TABLE "temporary_recorded" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "reserveId" integer, "ruleId" integer, "programId" bigint, "channelId" bigint NOT NULL, "startAt" bigint NOT NULL, "endAt" bigint NOT NULL, "duration" integer NOT NULL, "name" varchar NOT NULL, "halfWidthName" varchar NOT NULL, "description" text, "halfWidthDescription" text, "extended" text, "halfWidthExtended" text, "genre1" integer, "subGenre1" integer, "genre2" integer, "subGenre2" integer, "genre3" integer, "subGenre3" integer, "videoType" text, "videoResolution" text, "videoStreamContent" integer, "videoComponentType" integer, "audioSamplingRate" integer, "audioComponentType" integer, "isRecording" boolean NOT NULL, "dropLogFileId" integer, CONSTRAINT "REL_e0bc5373673ea0f120445830f4" UNIQUE ("dropLogFileId"), CONSTRAINT "FK_e0bc5373673ea0f120445830f4d" FOREIGN KEY ("dropLogFileId") REFERENCES "drop_log_file" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION)',
         );
         await queryRunner.query(
             'INSERT INTO "temporary_recorded"("id", "reserveId", "ruleId", "programId", "channelId", "startAt", "endAt", "duration", "name", "halfWidthName", "description", "halfWidthDescription", "extended", "halfWidthExtended", "genre1", "subGenre1", "genre2", "subGenre2", "genre3", "subGenre3", "videoType", "videoResolution", "videoStreamContent", "videoComponentType", "audioSamplingRate", "audioComponentType", "isRecording", "dropLogFileId") SELECT "id", "reserveId", "ruleId", "programId", "channelId", "startAt", "endAt", "duration", "name", "halfWidthName", "description", "halfWidthDescription", "extended", "halfWidthExtended", "genre1", "subGenre1", "genre2", "subGenre2", "genre3", "subGenre3", "videoType", "videoResolution", "videoStreamContent", "videoComponentType", "audioSamplingRate", "audioComponentType", "isRecording", "dropLogFileId" FROM "recorded"',
