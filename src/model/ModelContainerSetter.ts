@@ -5,6 +5,8 @@ import ChannelApiModel from './api/channel/ChannelApiModel';
 import IChannelApiModel from './api/channel/IChannelApiModel';
 import ConfigApiModel from './api/config/ConfigApiModel';
 import IConfigApiModel from './api/config/IConfigApiModel';
+import DropLogApiModel from './api/dropLog/DropLogApiModel';
+import IDropLogApiModel from './api/dropLog/IDropLogApiModel';
 import EncodeApiModel from './api/encode/EncodeApiModel';
 import IEncodeApiModel from './api/encode/IEncodeApiModel';
 import IApiUtil from './api/IApiUtil';
@@ -250,6 +252,8 @@ export const set = (container: Container): void => {
     container.bind<IRuleApiModel>('IRuleApiModel').to(RuleApiModel).inSingletonScope();
 
     container.bind<IThumbnailApiModel>('IThumbnailApiModel').to(ThumbnailApiModel).inSingletonScope();
+
+    container.bind<IDropLogApiModel>('IDropLogApiModel').to(DropLogApiModel).inSingletonScope();
 
     container.bind<IVideoUtil>('IVideoUtil').to(VideoUtil).inSingletonScope();
 

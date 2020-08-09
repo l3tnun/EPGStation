@@ -1384,6 +1384,14 @@ components:
             schema:
                 type: integer
 
+        PathDropLogFileId:
+            description: drop log file id
+            in: path
+            name: dropLogFileId
+            required: true
+            schema:
+                type: integer
+
         PathEncodeId:
             description: エンコード id
             in: path
