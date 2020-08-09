@@ -11,6 +11,7 @@ export type RecordedHistoryId = number;
 export type VideoFileId = number;
 export type VideoFileType = 'ts' | 'encoded';
 export type ThumbnailId = number;
+export type DropLogFileId = number;
 export type RecordedTagId = number;
 export type EncodeId = number;
 export type ChannelType = 'GR' | 'BS' | 'CS' | 'SKY';
@@ -346,6 +347,7 @@ export interface RecordedItem {
     isRecording: boolean;
     thumbnails?: ThumbnailId[];
     videoFiles?: VideoFile[];
+    dropLogFile?: DropLogFile;
     tags?: RecordedTag[];
     isEncoding: boolean;
 }
@@ -358,6 +360,13 @@ export interface VideoFile {
     name: string;
     type: VideoFileType;
     size: number;
+}
+
+export interface DropLogFile {
+    id: DropLogFileId;
+    errorCnt: number;
+    dropCnt: number;
+    scramblingCnt: number;
 }
 
 /**

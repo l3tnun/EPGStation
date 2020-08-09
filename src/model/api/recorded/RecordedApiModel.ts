@@ -35,6 +35,7 @@ export default class RecordedApiModel implements IRecordedApiModel {
         const [records, total] = await this.recordedDB.findAll(option, {
             isNeedVideoFiles: true,
             isNeedThumbnails: true,
+            isNeedsDropLog: true,
             isNeedTags: false,
         });
 

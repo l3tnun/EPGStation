@@ -67,6 +67,10 @@ components:
             description: サムネイル id
             type: integer
 
+        DropLogFileId:
+            description: ドロップログファイル id
+            type: integer
+
         RecordedTagId:
             description: 録画 tag id
             type: integer
@@ -956,6 +960,8 @@ components:
                     type: array
                     items:
                         $ref: '#/components/schemas/VideoFile'
+                dropLog:
+                    $ref: '#/components/schemas/DropLogFile'
                 tags:
                     type: array
                     items:
@@ -993,6 +999,27 @@ components:
                 duration:
                     description: 動画長(秒)
                     type: number
+
+        DropLogFile:
+            description: ドロップログファイル情報
+            type: object
+            required:
+                - id
+                - errorCnt
+                - dropCnt
+                - scramblingCnt
+            properties:
+                id:
+                    $ref: '#/components/schemas/DropLogFileId'
+                errorCnt:
+                    description: エラーカウント
+                    type: integer
+                dropCnt:
+                    description: ドロップカウント
+                    type: integer
+                scramblingCnt:
+                    description: スクランブルカウント
+                    type: integer
 
         RecordedTag:
             description: 録画タグ情報

@@ -93,6 +93,8 @@ export default class RecordedDB implements IRecordedDB {
             .where({ id: recordedId })
             .leftJoinAndSelect('recorded.videoFiles', 'videoFiles')
             .leftJoinAndSelect('recorded.thumbnails', 'thumbnails')
+            .leftJoinAndSelect('recorded.dropLogFile', 'dropLogFile')
+            .leftJoinAndSelect('recorded.tags', 'tags')
             .getMany();
 
         return result.length === 0 ? null : result[0];
@@ -170,6 +172,10 @@ export default class RecordedDB implements IRecordedDB {
 
             if (columnOption.isNeedThumbnails === true) {
                 findOption.join.leftJoinAndSelect!.thumbnails = 'recorded.thumbnails';
+            }
+
+            if (columnOption.isNeedsDropLog === true) {
+                findOption.join.leftJoinAndSelect!.dropLogFile = 'recorded.dropLogFile';
             }
 
             if (columnOption.isNeedTags === true) {

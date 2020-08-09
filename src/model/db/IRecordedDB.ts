@@ -4,6 +4,7 @@ import Recorded from '../../db/entities/Recorded';
 export interface RecordedColumnOption {
     isNeedVideoFiles: boolean;
     isNeedThumbnails: boolean;
+    isNeedsDropLog: boolean;
     isNeedTags: boolean;
 }
 

@@ -77,6 +77,9 @@ export default interface IConfigFile {
     thumbnailSize: string;
     thumbnailPosition: number;
 
+    // drop log
+    dropLog: string;
+
     ffmpeg: string;
     ffprobe: string;
 

@@ -107,6 +107,15 @@ export default class RecordedItemUtil implements IRecordedItemUtil {
             });
         }
 
+        if (typeof recorded.dropLogFile !== 'undefined' && recorded.dropLogFile !== null) {
+            item.dropLogFile = {
+                id: recorded.dropLogFile.id,
+                errorCnt: recorded.dropLogFile.errorCnt,
+                dropCnt: recorded.dropLogFile.dropCnt,
+                scramblingCnt: recorded.dropLogFile.scramblingCnt,
+            };
+        }
+
         if (typeof recorded.tags !== 'undefined') {
             item.tags = recorded.tags.map(t => {
                 return {

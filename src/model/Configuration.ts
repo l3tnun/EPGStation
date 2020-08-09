@@ -151,6 +151,7 @@ namespace Configuration {
             '%FFMPEG% -ss %THUMBNAIL_POSITION% -y -i %INPUT% -vframes 1 -f image2 -s %THUMBNAIL_SIZE% %OUTPUT%',
         thumbnailSize: '480x270',
         thumbnailPosition: 5,
+        dropLog: path.join(__dirname, '..', '..', 'drop'),
         ffmpeg: '/usr/local/bin/ffmpeg',
         ffprobe: '/usr/local/bin/ffprobe',
         encodeProcessNum: 0,

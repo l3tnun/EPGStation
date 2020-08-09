@@ -1,4 +1,15 @@
-import { BaseEntity, Column, Entity, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+    BaseEntity,
+    Column,
+    Entity,
+    JoinColumn,
+    JoinTable,
+    ManyToMany,
+    OneToMany,
+    OneToOne,
+    PrimaryGeneratedColumn,
+} from 'typeorm';
+import DropLogFile from './DropLogFile';
 import RecordedTag from './RecordedTag';
 import Thumbnail from './Thumbnail';
 import VideoFile from './VideoFile';
@@ -158,6 +169,10 @@ export default class Recorded extends BaseEntity {
 
     @OneToMany(() => Thumbnail, thumbnail => thumbnail.recorded)
     public thumbnails?: Thumbnail[];
+
+    @OneToOne(() => DropLogFile, dropLogFile => dropLogFile.id, { cascade: true, onDelete: 'CASCADE' })
+    @JoinColumn()
+    public dropLogFile?: DropLogFile | null;
 
     @ManyToMany(() => RecordedTag)
     @JoinTable()
