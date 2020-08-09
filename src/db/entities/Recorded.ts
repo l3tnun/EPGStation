@@ -170,8 +170,17 @@ export default class Recorded extends BaseEntity {
     @OneToMany(() => Thumbnail, thumbnail => thumbnail.recorded)
     public thumbnails?: Thumbnail[];
 
+    @Column({
+        type: 'integer',
+        nullable: true,
+    })
+    public dropLogFileId!: number | null;
+
     @OneToOne(() => DropLogFile, dropLogFile => dropLogFile.id)
-    @JoinColumn()
+    @JoinColumn({
+        name: 'dropLogFileId',
+        referencedColumnName: 'id',
+    })
     public dropLogFile?: DropLogFile | null;
 
     @ManyToMany(() => RecordedTag)

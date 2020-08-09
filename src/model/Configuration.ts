@@ -152,6 +152,7 @@ namespace Configuration {
         thumbnailSize: '480x270',
         thumbnailPosition: 5,
         dropLog: path.join(__dirname, '..', '..', 'drop'),
+        isEnabledDropCheck: false,
         ffmpeg: '/usr/local/bin/ffmpeg',
         ffprobe: '/usr/local/bin/ffprobe',
         encodeProcessNum: 0,

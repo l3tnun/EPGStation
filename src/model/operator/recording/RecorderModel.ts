@@ -4,6 +4,7 @@ import * as http from 'http';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import * as apid from '../../../../api';
+import DropLogFile from '../../../db/entities/DropLogFile';
 import Recorded from '../../../db/entities/Recorded';
 import RecordedHistory from '../../../db/entities/RecordedHistory';
 import Reserve from '../../../db/entities/Reserve';
@@ -12,6 +13,7 @@ import DateUtil from '../../../util/DateUtil';
 import FileUtil from '../../../util/FileUtil';
 import StrUtil from '../../../util/StrUtil';
 import IChannelDB from '../../db/IChannelDB';
+import IDropLogFileDB from '../../db/IDropLogFileDB';
 import IProgramDB from '../../db/IProgramDB';
 import IRecordedDB from '../../db/IRecordedDB';
 import IRecordedHistoryDB from '../../db/IRecordedHistoryDB';
@@ -22,6 +24,7 @@ import IConfigFile, { RecordedDirInfo } from '../../IConfigFile';
 import IConfiguration from '../../IConfiguration';
 import ILogger from '../../ILogger';
 import ILoggerModel from '../../ILoggerModel';
+import IDropCheckerModel from './IDropCheckerModel';
 import IRecorderModel from './IRecorderModel';
 import IRecordingStreamCreator from './IRecordingStreamCreator';
 
@@ -45,7 +48,11 @@ class RecorderModel implements IRecorderModel {
     private recordedDB: IRecordedDB;
     private recordedHistoryDB: IRecordedHistoryDB;
     private videoFileDB: IVideoFileDB;
+    private dropLogFileDB: IDropLogFileDB;
     private streamCreator: IRecordingStreamCreator;
+    private dropChecker: IDropCheckerModel;
+    private recordingEvent: IRecordingEvent;
+
     private reserve!: Reserve;
     private recordedId: apid.RecordedId | null = null;
     private videoFileId: apid.VideoFileId | null = null;
@@ -58,7 +65,8 @@ class RecorderModel implements IRecorderModel {
     private isRecording: boolean = false;
     private isPlanToDelete: boolean = false;
     private eventEmitter = new events.EventEmitter();
-    private recordingEvent: IRecordingEvent;
+
+    private dropLogFileId: apid.DropLogFileId | null = null;
 
     constructor(
         @inject('ILoggerModel') logger: ILoggerModel,
@@ -69,8 +77,10 @@ class RecorderModel implements IRecorderModel {
         @inject('IRecordedDB') recordedDB: IRecordedDB,
         @inject('IRecordedHistoryDB') recordedHistoryDB: IRecordedHistoryDB,
         @inject('IVideoFileDB') videoFileDB: IVideoFileDB,
+        @inject('IDropLogFileDB') dropLogFileDB: IDropLogFileDB,
         @inject('IRecordingStreamCreator')
         streamCreator: IRecordingStreamCreator,
+        @inject('IDropCheckerModel') dropChecker: IDropCheckerModel,
         @inject('IRecordingEvent') recordingEvent: IRecordingEvent,
     ) {
         this.log = logger.getLogger();
@@ -81,7 +91,9 @@ class RecorderModel implements IRecorderModel {
         this.recordedDB = recordedDB;
         this.recordedHistoryDB = recordedHistoryDB;
         this.videoFileDB = videoFileDB;
+        this.dropLogFileDB = dropLogFileDB;
         this.streamCreator = streamCreator;
+        this.dropChecker = dropChecker;
         this.recordingEvent = recordingEvent;
     }
 
@@ -254,7 +266,35 @@ class RecorderModel implements IRecorderModel {
             });
         };
 
-        // TODO drop checker
+        // drop checker
+        if (this.config.isEnabledDropCheck === true) {
+            let dropFilePath: string | null = null;
+            try {
+                await this.dropChecker.start(this.config.dropLog, recPath.fullPath, this.stream);
+                dropFilePath = this.dropChecker.getFilePath();
+            } catch (err) {
+                this.log.system.error(`drop check error: ${recPath.fullPath}`);
+                this.log.system.error(err);
+                dropFilePath = null;
+            }
+
+            // drop 情報を DB へ反映
+            if (dropFilePath !== null) {
+                const dropLogFile = new DropLogFile();
+                dropLogFile.errorCnt = 0;
+                dropLogFile.dropCnt = 0;
+                dropLogFile.scramblingCnt = 0;
+                dropLogFile.filePath = path.basename(dropFilePath);
+                this.log.system.info(`add drop log file: ${dropFilePath}`);
+                try {
+                    this.dropLogFileId = await this.dropLogFileDB.insertOnce(dropLogFile);
+                } catch (err) {
+                    this.dropLogFileId = null;
+                    this.log.system.error(`add drop log file error: ${dropFilePath}`);
+                    this.log.system.error(err);
+                }
+            }
+        }
 
         return new Promise<void>((resolve: () => void, reject: (error: Error) => void) => {
             if (this.stream === null) {
@@ -416,6 +456,10 @@ class RecorderModel implements IRecorderModel {
             throw new Error('CreateRecordedError');
         }
 
+        if (this.dropLogFileId !== null) {
+            recorded.dropLogFileId = this.dropLogFileId;
+        }
+
         return recorded;
     }
 
@@ -438,6 +482,13 @@ class RecorderModel implements IRecorderModel {
         if (this.isPlanToDelete === true) {
             this.log.system.info(`plan to delete: ${this.reserve.id}`);
 
+            if (this.dropLogFileId !== null) {
+                await this.dropChecker.stop().catch(err => {
+                    this.log.system.error(`stop drop checker error: ${this.dropLogFileId}`);
+                    this.log.system.error(err);
+                });
+            }
+
             return;
         }
 
@@ -445,7 +496,6 @@ class RecorderModel implements IRecorderModel {
             // remove recording flag
             await this.recordedDB.removeRecording(this.recordedId);
             this.isRecording = false;
-            // TODO Recorded に drop 情報追加
 
             // tmp に録画していた場合は移動する
             await this.movingFromTmp().catch(err => {
@@ -464,6 +514,12 @@ class RecorderModel implements IRecorderModel {
                     this.log.system.error(err);
                 }
             }
+
+            // drop 情報更新
+            await this.updateDropFileLog().catch(err => {
+                this.log.system.fatal(`updateDropFileLog error: ${this.dropLogFileId}`);
+                this.log.stream.fatal(err);
+            });
 
             // recorded 情報取得
             const recorded = await this.recordedDB.findId(this.recordedId);
@@ -548,6 +604,56 @@ class RecorderModel implements IRecorderModel {
             this.log.system.error(`delete old file error: ${newRecPath.fullPath}`);
             this.log.system.error(err);
         });
+    }
+
+    /**
+     * drop log file 情報を更新する
+     * @return Promise<void>
+     */
+    private async updateDropFileLog(): Promise<void> {
+        if (this.dropLogFileId === null) {
+            return;
+        }
+
+        // ドロップ情報カウント
+        let error = 0;
+        let drop = 0;
+        let scrambling = 0;
+        try {
+            const dropResult = await this.dropChecker.getResult();
+            for (const pid in dropResult) {
+                error += dropResult[pid].error;
+                drop += dropResult[pid].drop;
+                scrambling += dropResult[pid].scrambling;
+            }
+        } catch (err) {
+            this.log.system.error(`get drop result error: ${this.dropLogFileId}`);
+            this.log.system.error(err);
+            await this.dropChecker.stop();
+
+            return;
+        }
+
+        // ドロップ数をログに残す
+        this.log.system.info({
+            recordedId: this.recordedId,
+            error: error,
+            drop: drop,
+            scrambling: scrambling,
+        });
+
+        // DB へ反映
+        await this.dropLogFileDB
+            .updateCnt({
+                id: this.dropLogFileId,
+                errorCnt: error,
+                dropCnt: drop,
+                scramblingCnt: scrambling,
+            })
+            .catch(err => {
+                this.log.system.error(`update drop cnt error: ${this.dropLogFileId}`);
+                this.log.system.error(err);
+            });
     }
 
     /**

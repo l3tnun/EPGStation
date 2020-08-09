@@ -1,10 +1,12 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import * as apid from '../../../../api';
+import DropLogFile from '../../../db/entities/DropLogFile';
 import Thumbnail from '../../../db/entities/Thumbnail';
 import VideoFile from '../../../db/entities/VideoFile';
 import FileUtil from '../../../util/FileUtil';
 import IVideoUtil from '../../api/video/IVideoUtil';
+import IDropLogFileDB from '../../db/IDropLogFileDB';
 import IRecordedDB from '../../db/IRecordedDB';
 import IThumbnailDB from '../../db/IThumbnailDB';
 import IVideoFileDB from '../../db/IVideoFileDB';
@@ -23,6 +25,7 @@ export default class RecordedManageModel implements IRecordedManageModel {
     private recordedDB: IRecordedDB;
     private videoFileDB: IVideoFileDB;
     private thumbnailDB: IThumbnailDB;
+    private dropLogFileDB: IDropLogFileDB;
     private recordingManageModel: IRecordingManageModel;
     private recordedEvent: IRecordedEvent;
     private videoUtil: IVideoUtil;
@@ -33,6 +36,7 @@ export default class RecordedManageModel implements IRecordedManageModel {
         @inject('IRecordedDB') recordedDB: IRecordedDB,
         @inject('IVideoFileDB') videoFileDB: IVideoFileDB,
         @inject('IThumbnailDB') thumbnailDB: IThumbnailDB,
+        @inject('IDropLogFileDB') dropLogFileDB: IDropLogFileDB,
         @inject('IRecordingManageModel')
         recordingManageModel: IRecordingManageModel,
         @inject('IRecordedEvent') recordedEvent: IRecordedEvent,
@@ -43,6 +47,7 @@ export default class RecordedManageModel implements IRecordedManageModel {
         this.recordedDB = recordedDB;
         this.videoFileDB = videoFileDB;
         this.thumbnailDB = thumbnailDB;
+        this.dropLogFileDB = dropLogFileDB;
         this.recordingManageModel = recordingManageModel;
         this.recordedEvent = recordedEvent;
         this.videoUtil = videoUtil;
@@ -109,20 +114,45 @@ export default class RecordedManageModel implements IRecordedManageModel {
             }
         }
 
-        // TODO ドロップログファイル削除処理
+        // ドロップログファイル削除処理
+        if (typeof recorded.dropLogFile !== 'undefined' && recorded.dropLogFile !== null) {
+            const filePath = this.getDropLogFilePath(recorded.dropLogFile);
+            this.log.system.info(`delete: ${filePath}`);
+            await FileUtil.unlink(filePath).catch(err => {
+                this.log.system.error(`failed to delete ${filePath}`);
+                this.log.system.error(err);
+            });
+        }
 
         // DB からサムネイル情報削除
         if (hasThumbnails === true) {
-            this.thumbnailDB.deleteRecordedId(recordedId);
+            this.thumbnailDB.deleteRecordedId(recordedId).catch(err => {
+                this.log.system.error(`falied to delete thumbnail data: ${recordedId}`);
+                this.log.system.error(err);
+            });
         }
 
         // DB から録画ファイル情報削除
         if (hasVideoFiles === true) {
-            await this.videoFileDB.deleteRecordedId(recordedId);
+            await this.videoFileDB.deleteRecordedId(recordedId).catch(err => {
+                this.log.system.error(`falied to delete video data: ${recordedId}`);
+                this.log.system.error(err);
+            });
         }
 
         // DB から録画情報削除
-        await this.recordedDB.deleteOnce(recordedId);
+        await this.recordedDB.deleteOnce(recordedId).catch(err => {
+            this.log.system.error(`falied to delete recorded data: ${recordedId}`);
+            this.log.system.error(err);
+        });
+
+        // DB からドロップログファイル情報削除
+        if (typeof recorded.dropLogFile !== 'undefined' && recorded.dropLogFile !== null) {
+            await this.dropLogFileDB.deleteOnce(recorded.dropLogFile.id).catch(err => {
+                this.log.system.error(`failed to delete drop log data: ${recorded.dropLogFile?.id}`);
+                this.log.system.error(err);
+            });
+        }
 
         this.log.system.info(`successful delete recorded: ${recordedId}`);
 
@@ -137,6 +167,15 @@ export default class RecordedManageModel implements IRecordedManageModel {
      */
     private getThumbnailPath(thumbnail: Thumbnail): string {
         return path.join(this.config.thumbnail, thumbnail.filePath);
+    }
+
+    /**
+     * ドロップログファイルパス取得
+     * @param dropLogFile: DropLogFile
+     * @return string
+     */
+    private getDropLogFilePath(dropLogFile: DropLogFile): string {
+        return path.join(this.config.dropLog, dropLogFile.filePath);
     }
 
     /**

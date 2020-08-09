@@ -31,8 +31,10 @@ import VideoUtil from './api/video/VideoUtil';
 import Configuration from './Configuration';
 import ChannelDB from './db/ChannelDB';
 import DBOperator from './db/DBOperator';
+import DropLogFileDB from './db/DropLogFileDB';
 import IChannelDB from './db/IChannelDB';
 import IDBOperator from './db/IDBOperator';
+import IDropLogFileDB from './db/IDropLogFileDB';
 import IProgramDB from './db/IProgramDB';
 import IRecordedDB from './db/IRecordedDB';
 import IRecordedHistoryDB from './db/IRecordedHistoryDB';
@@ -86,6 +88,8 @@ import MirakurunClientModel from './MirakurunClientModel';
 import IReserveOptionChecker from './operator/IReserveOptionChecker';
 import IRecordedManageModel from './operator/recorded/IRecordedManageModel';
 import RecordedManageModel from './operator/recorded/RecordedManageModel';
+import DropCheckerModel from './operator/recording/DropCheckerModel';
+import IDropCheckerModel from './operator/recording/IDropCheckerModel';
 import IRecorderModel, { RecorderModelProvider } from './operator/recording/IRecorderModel';
 import IRecordingManageModel from './operator/recording/IRecordingManageModel';
 import IRecordingStreamCreator from './operator/recording/IRecordingStreamCreator';
@@ -161,7 +165,9 @@ export const set = (container: Container): void => {
 
     container.bind<IThumbnailDB>('IThumbnailDB').to(ThumbnailDB).inSingletonScope();
 
-    container.bind<IVideoFileDB>('IVideoFileDB').to(VideoFileDB).inRequestScope();
+    container.bind<IVideoFileDB>('IVideoFileDB').to(VideoFileDB).inSingletonScope();
+
+    container.bind<IDropLogFileDB>('IDropLogFileDB').to(DropLogFileDB).inSingletonScope();
 
     container.bind<IRuleEvent>('IRuleEvent').to(RuleEvent).inSingletonScope();
 
@@ -193,6 +199,8 @@ export const set = (container: Container): void => {
     container.bind<IRuleManageModel>('IRuleManageModel').to(RuleManageModel).inSingletonScope();
 
     container.bind<IRecordingStreamCreator>('IRecordingStreamCreator').to(RecordingStreamCreator).inSingletonScope();
+
+    container.bind<IDropCheckerModel>('IDropCheckerModel').to(DropCheckerModel);
 
     container.bind<IRecorderModel>('IRecorderModel').to(RecorderModel);
 

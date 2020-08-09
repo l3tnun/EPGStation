@@ -79,6 +79,7 @@ export default interface IConfigFile {
 
     // drop log
     dropLog: string;
+    isEnabledDropCheck: boolean; // drop check を有効にするか
 
     ffmpeg: string;
     ffprobe: string;

@@ -182,6 +182,41 @@ namespace FileUtil {
         // delete old file
         await FileUtil.unlink(src);
     };
+
+    /**
+     * touch file
+     * @param file: string
+     * @return Promise<void>
+     */
+    export const touchFile = (file: string): Promise<void> => {
+        return new Promise<void>((resolve: () => void, reject: (error: Error) => void) => {
+            fs.writeFile(file, '', err => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
+        });
+    };
+
+    /**
+     * 指定したファイルに追加
+     * @param file: string file path
+     * @param str: string 追記内容
+     * @return Promise<void>
+     */
+    export const appendFile = (file: string, str: string): Promise<void> => {
+        return new Promise<void>((resolve, reject) => {
+            fs.appendFile(file, str, err => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
+        });
+    };
 }
 
 export default FileUtil;
