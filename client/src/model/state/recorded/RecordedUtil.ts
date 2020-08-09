@@ -39,6 +39,7 @@ export default class RecordedUtil implements IRecordedUtil {
                         : `./api/thumbnails/${item.thumbnails[0]}`,
                 thumbnails: item.thumbnails,
                 videoFiles: item.videoFiles,
+                hasDrop: false,
             },
             recordedItem: item,
         };
@@ -68,6 +69,13 @@ export default class RecordedUtil implements IRecordedUtil {
         }
         if (genres !== null) {
             result.display.genre = genres;
+        }
+
+        if (item.isRecording !== true && typeof item.dropLogFile !== 'undefined') {
+            result.display.drop = `drop: ${item.dropLogFile.dropCnt}, error: ${item.dropLogFile.errorCnt}, scrambling: ${item.dropLogFile.scramblingCnt}`;
+
+            result.display.hasDrop =
+                item.dropLogFile.dropCnt > 0 || item.dropLogFile.errorCnt > 0 || item.dropLogFile.scramblingCnt > 0;
         }
 
         return result;

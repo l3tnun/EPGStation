@@ -14,7 +14,8 @@ export interface RecordedDisplayData {
         thumbnails?: apid.ThumbnailId[];
         videoFiles?: apid.VideoFile[];
         canStremingVideoFiles?: apid.VideoFile[];
-        dropCnt?: string;
+        drop?: string;
+        hasDrop: boolean;
     };
     recordedItem: apid.RecordedItem;
 }

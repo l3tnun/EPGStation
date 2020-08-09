@@ -28,17 +28,24 @@
                             <div class="title font-weight-bold">
                                 {{ recorded.display.name }}
                             </div>
-                            <div class="subtitle-1 mt-2 font-weight-light">
+                            <div class="subtitle-1 my-1">
                                 {{ recorded.display.channelName }}
                             </div>
                             <div class="subtitle-2 font-weight-light">
                                 {{ recorded.display.genre }}
                             </div>
-                            <div class="subtitle-2 my-2 font-weight-light">
+                            <div class="subtitle-2 font-weight-light">
                                 {{ recorded.display.time }} ({{ recorded.display.duration }}
                                 m)
                             </div>
-                            <div class="button-wrap d-flex flex-wrap">
+                            <div
+                                class="body-2 mt-2 font-weight-light drop"
+                                v-bind:class="{ droped: recorded.display.hasDrop === true }"
+                                v-on:click="showDropLog"
+                            >
+                                {{ recorded.display.drop }}
+                            </div>
+                            <div class="button-wrap mt-2 d-flex flex-wrap">
                                 <div class="d-flex flex-wrap">
                                     <RecordedDetailPlayButton
                                         v-if="typeof recorded.display.videoFiles !== 'undefined'"
@@ -149,6 +156,15 @@ export default class RecordedDetail extends Vue {
         this.socketIoModel.offUpdateState(this.onUpdateStatusCallback);
     }
 
+    public showDropLog(): void {
+        const recorded = this.recordedDetailState.getRecorded();
+        if (recorded === null || typeof recorded.recordedItem.dropLogFile === 'undefined') {
+            return;
+        }
+
+        console.log(recorded.recordedItem.dropLogFile.id);
+    }
+
     public play(video: apid.VideoFile): void {
         if (video.type === 'encoded' && this.setting.getSavedValue().isPreferredPlayingOnWeb === true) {
             Util.move(this.$router, {
@@ -257,6 +273,14 @@ $switch-display-width: 800px
 
 .content-description
     margin-top: 8px
+
+.drop
+    cursor: pointer
+.droped
+    display: inline-block
+    color: red
+    background-color: pink
+    font-weight: bold !important
 
 .description, .extended
     white-space: pre-wrap
