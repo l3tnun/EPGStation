@@ -1,10 +1,11 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import * as apid from '../../../../api';
+import FileUtil from '../../../util/FileUtil';
 import IDropLogFileDB from '../../db/IDropLogFileDB';
 import IConfigFile from '../../IConfigFile';
 import IConfiguration from '../../IConfiguration';
-import IDropLogApiModel from './IDropLogApiModel';
+import IDropLogApiModel, { DropLogApiErrors } from './IDropLogApiModel';
 
 @injectable()
 export default class DropLogApiModel implements IDropLogApiModel {
@@ -22,14 +23,22 @@ export default class DropLogApiModel implements IDropLogApiModel {
     /**
      * 指定した id のドロップログのファイルパスを返す
      * @param dropLogFileId: apid.DropLogFileId
+     * @param maxSize: number ファイルの最大サイズ (kByte)
      * @return Promise<string | null>
      */
-    public async getIdFilePath(dropLogFileId: apid.DropLogFileId): Promise<string | null> {
+    public async getIdFilePath(dropLogFileId: apid.DropLogFileId, maxSize: number): Promise<string | null> {
         const dropLogFile = await this.dropLogFileDB.findId(dropLogFileId);
         if (dropLogFile === null) {
             return null;
         }
 
-        return path.join(this.config.dropLog, dropLogFile.filePath);
+        const filePath = path.join(this.config.dropLog, dropLogFile.filePath);
+        const fileSize = await FileUtil.getFileSize(filePath);
+
+        if (fileSize > maxSize * 1024) {
+            throw new Error(DropLogApiErrors.FILE_IS_TOO_LARGE);
+        }
+
+        return filePath;
     }
 }
