@@ -1,20 +1,31 @@
 <template>
-    <v-pagination
-        v-if="total > pageSize"
-        v-model="page"
-        :circle="false"
-        :length="totalPages"
-        :total-visible="10"
-        v-on:input="onMovePage"
-    ></v-pagination>
+    <div>
+        <v-pagination
+            v-if="total > pageSize"
+            v-model="page"
+            :circle="false"
+            :length="totalPages"
+            :total-visible="12"
+            v-on:input="onMovePage"
+            class="normal px-1"
+        ></v-pagination>
+        <div class="mobile">
+            <MobilePagination :pageSize="pageSize" :total="total"></MobilePagination>
+        </div>
+    </div>
 </template>
 
 <script lang="ts">
+import MobilePagination from '@/components/pagination/MobilePagination.vue';
 import Util from '@/util/Util';
 import { cloneDeep } from 'lodash';
 import { Component, Prop, Vue } from 'vue-property-decorator';
 
-@Component({})
+@Component({
+    components: {
+        MobilePagination,
+    },
+})
 export default class Pagination extends Vue {
     // 1 ページごとの最大表示件数
     @Prop({
@@ -62,3 +73,18 @@ export default class Pagination extends Vue {
     }
 }
 </script>
+
+<style lang="sass" scoped>
+$change-width: 500px
+
+.normal
+    display: inline
+.mobile
+    display: none
+
+@media screen and (max-width: $change-width)
+    .normal
+        display: none
+    .mobile
+        display: inline
+</style>
