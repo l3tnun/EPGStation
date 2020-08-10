@@ -78,7 +78,7 @@ export default class Pagination extends Vue {
 $change-width: 500px
 
 .normal
-    display: inline
+    display: block
 .mobile
     display: none
 
@@ -86,5 +86,5 @@ $change-width: 500px
     .normal
         display: none
     .mobile
-        display: inline
+        display: block
 </style>
