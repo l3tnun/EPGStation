@@ -3,6 +3,8 @@ import ChannelsApiModel from './api/channels/ChannelsApiModel';
 import IChannelsApiModel from './api/channels/IChannelsApiModel';
 import ConfigApiModel from './api/config/ConfigApiModel';
 import IConfigApiModel from './api/config/IConfigApiModel';
+import DropLogApiModel from './api/dropLog/DropLogApiModel';
+import IDropLogApiModel from './api/dropLog/IDropLogApiModel';
 import EncodeApiModel from './api/encode/EncodeApiModel';
 import IEncodeApiModel from './api/encode/IEncodeApiModel';
 import IRepositoryModel from './api/IRepositoryModel';
@@ -27,6 +29,8 @@ import IServerConfigModel from './serverConfig/IServerConfigModel';
 import ServerConfigModel from './serverConfig/ServerConfigModel';
 import ISocketIOModel from './socketio/ISocketIOModel';
 import SocketIOModel from './socketio/SocketIOModel';
+import DropLogDialogState from './state/dropLog/DropLogDialogState';
+import IDropLogDialogState from './state/dropLog/IDropLogDialogState';
 import AddEncodeState from './state/encode/AddEncodeState';
 import EncodeState from './state/encode/EncodeState';
 import IAddEncodeState from './state/encode/IAddEncodeState';
@@ -114,6 +118,8 @@ export default (container: Container) => {
 
     container.bind<IVideoApiModel>('IVideoApiModel').to(VideoApiModel).inSingletonScope();
 
+    container.bind<IDropLogApiModel>('IDropLogApiModel').to(DropLogApiModel).inSingletonScope();
+
     container.bind<IStorageOperationModel>('IStorageOperationModel').to(StorageOperationModel).inSingletonScope();
 
     container.bind<ISettingStorageModel>('ISettingStorageModel').to(SettingStorageModel).inSingletonScope();
@@ -200,4 +206,6 @@ export default (container: Container) => {
     container.bind<IRuleState>('IRuleState').to(RuleState).inSingletonScope();
 
     container.bind<IAddEncodeState>('IAddEncodeState').to(AddEncodeState).inSingletonScope();
+
+    container.bind<IDropLogDialogState>('IDropLogDialogState').to(DropLogDialogState).inSingletonScope();
 };

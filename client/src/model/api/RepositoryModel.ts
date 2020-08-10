@@ -10,17 +10,26 @@ type MethodType = 'GET' | 'DELETE' | 'POST' | 'PUT';
  * axios のラッパー
  */
 @injectable()
-export default class RepositoryModel implements IRepositoryModel {
+class RepositoryModel implements IRepositoryModel {
     private repo: AxiosInstance;
+    private textRepo: AxiosInstance;
     private cancelSourceIndex: { [key: string]: CancelTokenSource } = {};
 
     constructor() {
         this.repo = axios.create({
-            baseURL: './api',
+            baseURL: RepositoryModel.BASE_API,
             headers: {
                 'Content-Type': 'application/json',
             },
             responseType: 'json',
+        });
+
+        this.textRepo = axios.create({
+            baseURL: RepositoryModel.BASE_API,
+            headers: {
+                'Content-Type': 'text/plain',
+            },
+            responseType: 'text',
         });
     }
 
@@ -34,6 +43,21 @@ export default class RepositoryModel implements IRepositoryModel {
     public get(url: string, config?: AxiosRequestConfig | undefined): Promise<AxiosResponse<any>> {
         const key = this.setToken('GET', url, config);
         const result = this.repo.get(url, config);
+        delete this.cancelSourceIndex[key];
+
+        return result;
+    }
+
+    /**
+     * get リクエスト (テキスト)
+     * @param type: MethodType
+     * @param url: string
+     * @param config?: AxiosRequestConfig | undefined
+     * @return Promise<AxiosResponse<any>>
+     */
+    public getText(url: string, config?: AxiosRequestConfig | undefined): Promise<AxiosResponse<any>> {
+        const key = this.setToken('GET', url, config);
+        const result = this.textRepo.get(url, config);
         delete this.cancelSourceIndex[key];
 
         return result;
@@ -130,3 +154,9 @@ export default class RepositoryModel implements IRepositoryModel {
         return key;
     }
 }
+
+namespace RepositoryModel {
+    export const BASE_API = './api';
+}
+
+export default RepositoryModel;

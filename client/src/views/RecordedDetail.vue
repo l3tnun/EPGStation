@@ -84,6 +84,7 @@
                         </div>
                     </div>
                     <RecordedDetailSelectStreamDialog></RecordedDetailSelectStreamDialog>
+                    <DropLogDialog :isOpen.sync="isOpenDropLogDialog"></DropLogDialog>
                     <Snackbar></Snackbar>
                 </div>
             </transition>
@@ -92,6 +93,7 @@
 </template>
 
 <script lang="ts">
+import DropLogDialog from '@/components/dropLog/DropLogDialog.vue';
 import RecordedDetailEncodeButton from '@/components/recorded/detail/RecordedDetailEncodeButton.vue';
 import RecordedDetailMoreButton from '@/components/recorded/detail/RecordedDetailMoreButton.vue';
 import RecordedDetailPlayButton from '@/components/recorded/detail/RecordedDetailPlayButton.vue';
@@ -101,6 +103,7 @@ import Snackbar from '@/components/snackbar/Snackbar.vue';
 import TitleBar from '@/components/titleBar/TitleBar.vue';
 import container from '@/model/ModelContainer';
 import ISocketIOModel from '@/model/socketio/ISocketIOModel';
+import IDropLogDialogState from '@/model/state/dropLog/IDropLogDialogState';
 import IScrollPositionState from '@/model/state/IScrollPositionState';
 import IRecordedDetailSelectStreamState from '@/model/state/recorded/detail/IRecordedDetailSelectStreamState';
 import { RecordedDisplayData } from '@/model/state/recorded/IRecordedUtil';
@@ -122,12 +125,15 @@ Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
         RecordedDetailStopEncodeButton,
         RecordedDetailMoreButton,
         RecordedDetailSelectStreamDialog,
+        DropLogDialog,
     },
 })
 export default class RecordedDetail extends Vue {
     public isHideExtend = false;
+    public isOpenDropLogDialog = false;
 
     public recordedDetailState: IRecordedDetailState = container.get<IRecordedDetailState>('IRecordedDetailState');
+    private dropLogState: IDropLogDialogState = container.get<IDropLogDialogState>('IDropLogDialogState');
     private setting: ISettingStorageModel = container.get<ISettingStorageModel>('ISettingStorageModel');
     private settingValue: ISettingValue | null = null;
     private scrollState: IScrollPositionState = container.get<IScrollPositionState>('IScrollPositionState');
@@ -156,13 +162,22 @@ export default class RecordedDetail extends Vue {
         this.socketIoModel.offUpdateState(this.onUpdateStatusCallback);
     }
 
-    public showDropLog(): void {
+    public async showDropLog(): Promise<void> {
         const recorded = this.recordedDetailState.getRecorded();
         if (recorded === null || typeof recorded.recordedItem.dropLogFile === 'undefined') {
             return;
         }
 
-        console.log(recorded.recordedItem.dropLogFile.id);
+        this.dropLogState.setName(recorded.display.name);
+        try {
+            await this.dropLogState.fetchData(recorded.recordedItem.dropLogFile.id);
+            this.isOpenDropLogDialog = true;
+        } catch (err) {
+            this.snackbarState.open({
+                color: 'error',
+                text: 'ログファイル取得に失敗しました',
+            });
+        }
     }
 
     public play(video: apid.VideoFile): void {
