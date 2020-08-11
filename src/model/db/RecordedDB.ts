@@ -214,6 +214,16 @@ export default class RecordedDB implements IRecordedDB {
             });
         }
 
+        // オリジナルファイルだけを抽出する
+        if (columnOption.isNeedVideoFiles === true && !!option.isOnlyOriginalFile === true) {
+            querys.push({
+                query: 'videoFiles.type <> :type',
+                values: {
+                    type: 'encoded',
+                },
+            });
+        }
+
         // where セット
         for (const q of querys) {
             queryBuilder = queryBuilder.andWhere(q.query, q.values);
@@ -234,22 +244,22 @@ export default class RecordedDB implements IRecordedDB {
 
         // videoFiles
         if (columnOption.isNeedVideoFiles === true) {
-            queryBuilder.leftJoinAndSelect('recorded.videoFiles', 'videoFiles');
+            queryBuilder = queryBuilder.leftJoinAndSelect('recorded.videoFiles', 'videoFiles');
         }
 
         // thumbnails
         if (columnOption.isNeedThumbnails === true) {
-            queryBuilder.leftJoinAndSelect('recorded.thumbnails', 'thumbnails');
+            queryBuilder = queryBuilder.leftJoinAndSelect('recorded.thumbnails', 'thumbnails');
         }
 
         // dropLogFile
         if (columnOption.isNeedsDropLog === true) {
-            queryBuilder.leftJoinAndSelect('recorded.dropLogFile', 'dropLogFile');
+            queryBuilder = queryBuilder.leftJoinAndSelect('recorded.dropLogFile', 'dropLogFile');
         }
 
         // tags
         if (columnOption.isNeedTags === true) {
-            queryBuilder.leftJoinAndSelect('recorded.tags', 'tags');
+            queryBuilder = queryBuilder.leftJoinAndSelect('recorded.tags', 'tags');
         }
 
         return await queryBuilder.getManyAndCount();

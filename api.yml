@@ -1307,6 +1307,13 @@ components:
             schema:
                 type: string
 
+        QueryIsOnlyOriginalFile:
+            description: オリジナルファイルだけを取得するか
+            name: isOnlyOriginalFile
+            in: query
+            schema:
+                type: boolean
+
         requiredGR:
             description: GR
             in: query

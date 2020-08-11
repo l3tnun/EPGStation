@@ -14,7 +14,7 @@ namespace DBUtil {
             str += i === strs.length - 1 ? `(${strs[i]})` : `(${strs[i]}) and `;
         }
 
-        return str;
+        return `(${str})`;
     };
 
     /**
@@ -28,7 +28,7 @@ namespace DBUtil {
             str += i === strs.length - 1 ? `(${strs[i]})` : `(${strs[i]}) or`;
         }
 
-        return str;
+        return `(${str})`;
     };
 }
 
