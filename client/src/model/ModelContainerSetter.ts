@@ -60,6 +60,8 @@ import IRecordedState from './state/recorded/IRecordedState';
 import IRecordedUtil from './state/recorded/IRecordedUtil';
 import RecordedState from './state/recorded/RecordedState';
 import RecordedUtil from './state/recorded/RecordedUtil';
+import IRecordedSearchState from './state/recorded/search/IRecordedSearchState';
+import RecordedSearchState from './state/recorded/search/RecordedSearchState';
 import IRecordedHLSStreamingVideoState from './state/recorded/streaming/IRecordedHLSStreamingVideoState';
 import IRecordedStreamingVideoState from './state/recorded/streaming/IRecordedStreamingVideoState';
 import RecordedHLSStreamingVideoState from './state/recorded/streaming/RecordedHLSStreamingVideoState';
@@ -177,6 +179,8 @@ export default (container: Container) => {
     container.bind<IRecordedUtil>('IRecordedUtil').to(RecordedUtil).inSingletonScope();
 
     container.bind<IRecordedState>('IRecordedState').to(RecordedState).inSingletonScope();
+
+    container.bind<IRecordedSearchState>('IRecordedSearchState').to(RecordedSearchState).inSingletonScope();
 
     container.bind<IRecordedDetailState>('IRecordedDetailState').to(RecordedDetailState).inSingletonScope();
 

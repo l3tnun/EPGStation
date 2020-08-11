@@ -1,6 +1,10 @@
 <template>
     <v-content>
-        <TitleBar title="録画済み"></TitleBar>
+        <TitleBar title="録画済み">
+            <template v-slot:menu>
+                <RecordedSearchMenu></RecordedSearchMenu>
+            </template>
+        </TitleBar>
         <transition name="page">
             <div v-if="recordedState.getRecorded().length > 0" ref="appContent" class="app-content pa-1">
                 <div v-bind:style="contentWrapStyle">
@@ -22,6 +26,7 @@
 <script lang="ts">
 import Pagination from '@/components/pagination/Pagination.vue';
 import RecordedItems from '@/components/recorded/RecordedItems.vue';
+import RecordedSearchMenu from '@/components/recorded/RecordedSearchMenu.vue';
 import Snackbar from '@/components/snackbar/Snackbar.vue';
 import TitleBar from '@/components/titleBar/TitleBar.vue';
 import container from '@/model/ModelContainer';
@@ -40,6 +45,7 @@ Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
 @Component({
     components: {
         TitleBar,
+        RecordedSearchMenu,
         RecordedItems,
         Pagination,
         Snackbar,

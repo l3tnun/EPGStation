@@ -41,6 +41,16 @@ export default class RecordedApiModel implements IRecordedApiModel {
     }
 
     /**
+     * recorded の検索オプションリストを取得する
+     * @return Promise<apid.RecordedSearchOptionList>
+     */
+    public async getSearchOptionList(): Promise<apid.RecordedSearchOptions> {
+        const result = await this.repository.get('/recorded/options');
+
+        return <any>result.data;
+    }
+
+    /**
      * 録画番組の削除
      * @param recordedId: RecordedId
      * @return Promise<void>
