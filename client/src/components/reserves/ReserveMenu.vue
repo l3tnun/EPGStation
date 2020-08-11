@@ -111,7 +111,16 @@ export default class ReserveMenu extends Vue {
     }
 
     public goToRecorded(): void {
-        // TODO goto recorded page
+        if (typeof this.reserveItem.ruleId === 'undefined') {
+            return;
+        }
+
+        Util.move(this.$router, {
+            path: '/recorded',
+            query: {
+                ruleId: this.reserveItem.ruleId.toString(10),
+            },
+        });
     }
 
     public goToEdit(): void {
