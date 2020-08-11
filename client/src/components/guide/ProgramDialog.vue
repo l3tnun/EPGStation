@@ -113,6 +113,7 @@ import container from '@/model/ModelContainer';
 import IGuideProgramDialogState from '@/model/state/guide/IGuideProgramDialogState';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
 import IGuideProgramDialogSettingStorageModel from '@/model/storage/guide/IGuideProgramDialogSettingStorageModel';
+import StrUtil from '@/util/StrUtil';
 import Util from '@/util/Util';
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
 
@@ -159,7 +160,7 @@ export default class ProgramDialog extends Vue {
             return;
         }
 
-        query.keyword = this.createKeywordStr(program.name);
+        query.keyword = StrUtil.createSearchKeyword(program.name);
         query.channelId = program.channelId.toString(10);
         if (typeof program.genre1 !== 'undefined') {
             query.genre = program.genre1.toString(10);
@@ -182,34 +183,6 @@ export default class ProgramDialog extends Vue {
             path: '/search',
             query: query,
         });
-    }
-
-    /**
-     * 検索 query の keyword 文字列を生成する
-     * @param title: title
-     * @return keyword
-     */
-    private createKeywordStr(title: string): string {
-        const outTitle = title
-            .replace(/\[.+?\]/g, ' ')
-            .replace(/\【.+?\】/g, ' ')
-            .replace(/\(.\)/g, ' ')
-            .replace(/ +/g, ' ')
-            .trim();
-        let delimiter = ' #';
-        if (outTitle.indexOf(' #') === -1) {
-            delimiter = outTitle.indexOf('「') === -1 ? '' : '「';
-        }
-
-        let keyword: string[] = [];
-        if (delimiter.length > 0) {
-            keyword = outTitle.split(delimiter);
-        }
-        if (typeof keyword[0] === 'undefined' || keyword[0].length === 0 || keyword[0] === '') {
-            keyword[0] = outTitle;
-        }
-
-        return keyword[0];
     }
 
     /**

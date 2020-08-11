@@ -63,6 +63,7 @@ import AddEncodeDialog from '@/components/encode/AddEncodeDialog.vue';
 import RecordedDeleteDialog from '@/components/recorded/RecordedDeleteDialog.vue';
 import container from '@/model/ModelContainer';
 import IServerConfigModel from '@/model/serverConfig/IServerConfigModel';
+import StrUtil from '@/util/StrUtil';
 import Util from '@/util/Util';
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import * as apid from '../../../../api';
@@ -102,7 +103,22 @@ export default class RecordedItemMenu extends Vue {
     public async search(): Promise<void> {
         await Util.sleep(300);
 
-        // TODO recorded 絞り込み
+        if (typeof this.recordedItem.ruleId !== 'undefined') {
+            Util.move(this.$router, {
+                path: '/recorded',
+                query: {
+                    ruleId: this.recordedItem.ruleId.toString(10),
+                },
+            });
+        }
+
+        // recorded 絞り込み
+        Util.move(this.$router, {
+            path: '/recorded',
+            query: {
+                keyword: StrUtil.createSearchKeyword(this.recordedItem.name),
+            },
+        });
     }
 
     public async stopEncode(): Promise<void> {
