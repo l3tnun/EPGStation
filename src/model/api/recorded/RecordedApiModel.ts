@@ -66,6 +66,22 @@ export default class RecordedApiModel implements IRecordedApiModel {
     }
 
     /**
+     * recorded の検索オプションリストを取得する
+     * @return Promise<apid.RecordedSearchOptionList>
+     */
+    public async getSearchOptionList(): Promise<apid.RecordedSearchOptions> {
+        const rules = await this.recordedDB.findRuleList();
+        const channels = await this.recordedDB.findChannelList();
+        const genres = await this.recordedDB.findGenreList();
+
+        return {
+            rules: rules,
+            channels: channels,
+            genres: genres,
+        };
+    }
+
+    /**
      *
      * @param recordedId: ReserveId
      * @return Promise<void>

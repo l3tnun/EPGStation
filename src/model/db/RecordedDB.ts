@@ -1,7 +1,8 @@
 import { inject, injectable } from 'inversify';
-import { In } from 'typeorm';
+import { In, IsNull, Not } from 'typeorm';
 import * as apid from '../../../api';
 import Recorded from '../../db/entities/Recorded';
+import Rule from '../../db/entities/Rule';
 import StrUtil from '../../util/StrUtil';
 import DBUtil from './DBUtil';
 import IDBOperator from './IDBOperator';
@@ -263,5 +264,59 @@ export default class RecordedDB implements IRecordedDB {
         }
 
         return await queryBuilder.getManyAndCount();
+    }
+
+    /**
+     * RuleIdのリストを返す
+     * @return Promise<apid.RecordedRuleListItem[]>
+     */
+    public async findRuleList(): Promise<apid.RecordedRuleListItem[]> {
+        const connection = await this.op.getConnection();
+
+        const result = await connection
+            .getRepository(Recorded)
+            .createQueryBuilder('recorded')
+            .select('count(*) as cnt, ruleId, keyword')
+            .where({ ruleId: Not(IsNull()) })
+            .innerJoin(Rule, 'rule', 'rule.id = recorded.ruleId')
+            .groupBy('ruleId')
+            .getRawMany();
+
+        return result;
+    }
+
+    /**
+     * channelIdのリストを返す
+     * @return Promise<apid.RecordedChannelListItem[]>
+     */
+    public async findChannelList(): Promise<apid.RecordedChannelListItem[]> {
+        const connection = await this.op.getConnection();
+
+        const result = await connection
+            .getRepository(Recorded)
+            .createQueryBuilder('recorded')
+            .select('count(*) as cnt, channelId')
+            .groupBy('channelId')
+            .getRawMany();
+
+        return result;
+    }
+
+    /**
+     * genreのリストを返す
+     * @return Promise<apid.RecordedGenreListItem[]>
+     */
+    public async findGenreList(): Promise<apid.RecordedGenreListItem[]> {
+        const connection = await this.op.getConnection();
+
+        const result = await connection
+            .getRepository(Recorded)
+            .createQueryBuilder('recorded')
+            .select('count(*) as cnt, genre1 as genre')
+            .where({ genre1: Not(IsNull()) })
+            .groupBy('genre')
+            .getRawMany();
+
+        return result;
     }
 }

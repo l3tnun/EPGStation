@@ -393,6 +393,40 @@ export interface GetRecordedOption {
 }
 
 /**
+ * recorded が持つ rule のリスト
+ */
+export interface RecordedRuleListItem {
+    cnt: number; // 個数
+    ruleId: RuleId; // ルール id
+    keyword: string; // キーワード
+}
+
+/**
+ * recorded が持つ channelId のリスト
+ */
+export interface RecordedChannelListItem {
+    cnt: number; // 個数
+    channelId: ChannelId; // 放送局 id
+}
+
+/**
+ * recorded が持つ genre のリスト
+ */
+export interface RecordedGenreListItem {
+    cnt: number; // 個数
+    genre: ProgramGenreLv1; // ジャンル
+}
+
+/**
+ * recorded が持つ検索オプションリスト
+ */
+export interface RecordedSearchOptions {
+    rules: RecordedRuleListItem[];
+    channels: RecordedChannelListItem[];
+    genres: RecordedGenreListItem[];
+}
+
+/**
  * tag 取得オプション
  */
 export interface GetRecordedTagOption {

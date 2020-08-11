@@ -20,4 +20,7 @@ export default interface IRecordedDB {
     findId(recordedId: apid.RecordedId): Promise<Recorded | null>;
     findIds(recordedIds: apid.RecordedId[]): Promise<Recorded[]>;
     findAll(option: FindAllOption, columnOption: RecordedColumnOption): Promise<[Recorded[], number]>;
+    findRuleList(): Promise<apid.RecordedRuleListItem[]>;
+    findChannelList(): Promise<apid.RecordedChannelListItem[]>;
+    findGenreList(): Promise<apid.RecordedGenreListItem[]>;
 }

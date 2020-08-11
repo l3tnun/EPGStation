@@ -1034,6 +1034,64 @@ components:
                     description: タグ名
                     type: string
 
+        RecordedRuleListItem:
+            description: recorded が持つ rule のリスト
+            type: object
+            required:
+                - cnt
+                - ruleId
+                - keyword
+            properties:
+                cnt:
+                    description: 録画数
+                    type: integer
+                ruleId:
+                    $ref: '#/components/schemas/RuleId'
+                keyword:
+                    description: キーワード
+                    type: string
+
+        RecordedChannelListItem:
+            description: recorded が持つ channelId のリスト
+            type: object
+            required:
+                - cnt
+                - channelId
+            properties:
+                cnt:
+                    description: 録画数
+                    type: integer
+                channelId:
+                    $ref: '#/components/schemas/ChannelId'
+
+        RecordedGenreListItem:
+            description: recorded が持つ genre のリスト
+            type: object
+            required:
+                - cnt
+                - genre
+            properties:
+                cnt:
+                    description: 録画数
+                    type: integer
+                channelId:
+                    $ref: '#/components/schemas/ProgramGenreLv1'
+
+        RecordedSearchOptions:
+            description: recorded が持つ検索オプション情報
+            type: object
+            required:
+                - rules
+                - channels
+                - genres
+            properties:
+                rules:
+                    $ref: '#/components/schemas/RecordedRuleListItem'
+                channels:
+                    $ref: '#/components/schemas/RecordedRuleListItem'
+                genres:
+                    $ref: '#/components/schemas/RecordedGenreListItem'
+
         Version:
             description: バージョン情報
             type: object
