@@ -1,7 +1,9 @@
 import { inject, injectable } from 'inversify';
-import { FindManyOptions, In } from 'typeorm';
+import { In } from 'typeorm';
 import * as apid from '../../../api';
 import Recorded from '../../db/entities/Recorded';
+import StrUtil from '../../util/StrUtil';
+import DBUtil from './DBUtil';
 import IDBOperator from './IDBOperator';
 import IRecordedDB, { FindAllOption, RecordedColumnOption } from './IRecordedDB';
 
@@ -132,57 +134,124 @@ export default class RecordedDB implements IRecordedDB {
     public async findAll(option: FindAllOption, columnOption: RecordedColumnOption): Promise<[Recorded[], number]> {
         const connection = await this.op.getConnection();
 
-        return await connection.getRepository(Recorded).findAndCount(this.createFindOption(option, columnOption));
-    }
+        let queryBuilder = connection.getRepository(Recorded).createQueryBuilder('recorded');
 
-    private createFindOption(option: FindAllOption, columnOption: RecordedColumnOption): FindManyOptions<Recorded> {
-        const findOption: FindManyOptions<Recorded> = {};
+        const querys: { query: string; values: any }[] = [];
 
+        // is recording
+        if (typeof option.isRecording !== 'undefined') {
+            querys.push({
+                query: 'recorded.isRecording = :isRecording',
+                values: {
+                    isRecording: option.isRecording,
+                },
+            });
+        }
+
+        // rule id
+        if (typeof option.ruleId !== 'undefined') {
+            querys.push({
+                query: 'recorded.ruleId = :ruleId',
+                values: {
+                    ruleId: option.ruleId,
+                },
+            });
+        }
+
+        // channel id
+        if (typeof option.channelId !== 'undefined') {
+            querys.push({
+                query: 'recorded.channelId = :channelId',
+                values: {
+                    channelId: option.channelId,
+                },
+            });
+        }
+
+        // genre
+        if (typeof option.genre !== 'undefined') {
+            querys.push({
+                query: '(genre1 = :genre or genre2 = :genre or genre3 = :genre)',
+                values: {
+                    genre: option.genre,
+                },
+            });
+        }
+
+        // keyword
+        if (typeof option.keyword !== 'undefined') {
+            const keywords = StrUtil.toHalf(option.keyword).split(/ /);
+            const like = this.op.getLikeStr(false);
+            const valueBaseName = 'keyword';
+
+            const nameAnd: string[] = [];
+            const descriptionAnd: string[] = [];
+            const values: any = {};
+            keywords.forEach((str, i) => {
+                str = `%${str}%`;
+
+                // value
+                const valueName = `${valueBaseName}Name${i}`;
+                values[valueName] = str;
+
+                // name
+                nameAnd.push(`halfWidthName ${like} :${valueName}`);
+                // description
+                descriptionAnd.push(`halfWidthDescription ${like} :${valueName}`);
+            });
+
+            const or: string[] = [];
+            if (nameAnd.length > 0) {
+                or.push(`(${DBUtil.createAndQuery(nameAnd)})`);
+            }
+            if (descriptionAnd.length > 0) {
+                or.push(`(${DBUtil.createAndQuery(descriptionAnd)})`);
+            }
+
+            querys.push({
+                query: DBUtil.createOrQuery(or),
+                values: values,
+            });
+        }
+
+        // where セット
+        for (const q of querys) {
+            queryBuilder = queryBuilder.andWhere(q.query, q.values);
+        }
+
+        // offset
         if (typeof option.offset !== 'undefined') {
-            findOption.skip = option.offset;
+            queryBuilder.skip(option.offset);
         }
 
+        // limit
         if (typeof option.limit !== 'undefined') {
-            findOption.take = option.limit;
+            queryBuilder.take(option.limit);
         }
 
-        if (!!option.isRecording === true) {
-            findOption.where = {
-                isRecording: true,
-            };
+        // order by
+        queryBuilder = queryBuilder.orderBy('recorded.startAt', !!option.isReverse ? 'ASC' : 'DESC');
+
+        // videoFiles
+        if (columnOption.isNeedVideoFiles === true) {
+            queryBuilder.leftJoinAndSelect('recorded.videoFiles', 'videoFiles');
         }
 
-        findOption.order = {
-            startAt: 'DESC',
-        };
-
-        if (
-            columnOption.isNeedVideoFiles === true ||
-            columnOption.isNeedThumbnails === true ||
-            columnOption.isNeedTags === true
-        ) {
-            findOption.join = {
-                alias: 'recorded',
-                leftJoinAndSelect: {},
-            };
-
-            if (columnOption.isNeedVideoFiles === true) {
-                findOption.join.leftJoinAndSelect!.videoFiles = 'recorded.videoFiles';
-            }
-
-            if (columnOption.isNeedThumbnails === true) {
-                findOption.join.leftJoinAndSelect!.thumbnails = 'recorded.thumbnails';
-            }
-
-            if (columnOption.isNeedsDropLog === true) {
-                findOption.join.leftJoinAndSelect!.dropLogFile = 'recorded.dropLogFile';
-            }
-
-            if (columnOption.isNeedTags === true) {
-                findOption.join.leftJoinAndSelect!.tags = 'recorded.tags';
-            }
+        // thumbnails
+        if (columnOption.isNeedThumbnails === true) {
+            queryBuilder.leftJoinAndSelect('recorded.thumbnails', 'thumbnails');
         }
 
-        return findOption;
+        // dropLogFile
+        if (columnOption.isNeedsDropLog === true) {
+            queryBuilder.leftJoinAndSelect('recorded.dropLogFile', 'dropLogFile');
+        }
+
+        // tags
+        if (columnOption.isNeedTags === true) {
+            queryBuilder.leftJoinAndSelect('recorded.tags', 'tags');
+        }
+
+        return await queryBuilder.getManyAndCount();
     }
 }

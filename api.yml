@@ -1279,12 +1279,33 @@ components:
             schema:
                 type: boolean
 
+        QueryChannelId:
+            description: 放送局 id
+            name: channelId
+            in: query
+            schema:
+                $ref: '#/components/schemas/ChannelId'
+
         QueryRuleId:
             description: ルールid
             name: ruleId
             in: query
             schema:
                 $ref: '#/components/schemas/RuleId'
+
+        QueryProgramGenre:
+            description: ジャンル
+            name: genre
+            in: query
+            schema:
+                $ref: '#/components/schemas/ProgramGenreLv1'
+
+        QueryKeyword:
+            description: キーワード
+            name: keyword
+            in: query
+            schema:
+                type: string
 
         requiredGR:
             description: GR
@@ -1333,6 +1354,13 @@ components:
             description: ファイルをダウンロードするか
             in: query
             name: isDownload
+            schema:
+                type: boolean
+
+        IsReverse:
+            description: 逆順で取得するか
+            in: query
+            name: isReverse
             schema:
                 type: boolean
 

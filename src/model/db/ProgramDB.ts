@@ -9,6 +9,7 @@ import DateUtil from '../../util/DateUtil';
 import StrUtil from '../../util/StrUtil';
 import ILogger from '../ILogger';
 import ILoggerModel from '../ILoggerModel';
+import DBUtil from './DBUtil';
 import IChannelTypeIndex from './IChannelTypeHash';
 import IDBOperator from './IDBOperator';
 import IProgramDB, {
@@ -485,19 +486,19 @@ export default class ProgramDB implements IProgramDB {
             });
 
             if (nameAnd.length > 0) {
-                or.push(`(${this.createAndQuery(nameAnd)})`);
+                or.push(`(${DBUtil.createAndQuery(nameAnd)})`);
             }
 
             if (descriptionAnd.length > 0) {
-                or.push(`(${this.createAndQuery(descriptionAnd)})`);
+                or.push(`(${DBUtil.createAndQuery(descriptionAnd)})`);
             }
 
             if (extendedAnd.length > 0) {
-                or.push(`(${this.createAndQuery(extendedAnd)})`);
+                or.push(`(${DBUtil.createAndQuery(extendedAnd)})`);
             }
         }
 
-        const orStr = this.createOrQuery(or);
+        const orStr = DBUtil.createOrQuery(or);
         query.strs.push(isIgnore ? `(not (${orStr}))` : orStr);
     }
 
@@ -599,7 +600,7 @@ export default class ProgramDB implements IProgramDB {
             }
         }
 
-        query.strs.push(this.createOrQuery(strs));
+        query.strs.push(DBUtil.createOrQuery(strs));
     }
 
     /**
@@ -630,7 +631,7 @@ export default class ProgramDB implements IProgramDB {
             query.param[baseColumnName] = times;
         }
 
-        query.strs.push(this.createOrQuery(strs));
+        query.strs.push(DBUtil.createOrQuery(strs));
     }
 
     /**
@@ -738,7 +739,7 @@ export default class ProgramDB implements IProgramDB {
             or.push(`(startAt >= :${startAtColumn} and startAt <= :${endAtColumn})`);
         }
 
-        query.strs.push(this.createOrQuery(or));
+        query.strs.push(DBUtil.createOrQuery(or));
     }
 
     /**
@@ -754,38 +755,6 @@ export default class ProgramDB implements IProgramDB {
 
         query.strs.push(`${column} in (:...${column})`);
         query.param[column] = values;
-    }
-
-    /**
-     * or query 作成
-     * @param strs: string[]
-     * @return string
-     */
-    private createOrQuery(strs: string[]): string {
-        let str = '';
-        for (let i = 0; i < strs.length; i++) {
-            str += i === strs.length - 1 ? `(${strs[i]})` : `(${strs[i]}) or`;
-        }
-
-        return str;
-    }
-
-    /**
-     * and query 作成
-     * @param strs: string[]
-     * @return string
-     */
-    private createAndQuery(strs: string[]): string {
-        if (strs.length === 0) {
-            return '';
-        }
-
-        let str = '';
-        for (let i = 0; i < strs.length; i++) {
-            str += i === strs.length - 1 ? `(${strs[i]})` : `(${strs[i]}) and `;
-        }
-
-        return str;
     }
 
     /**

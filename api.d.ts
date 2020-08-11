@@ -383,7 +383,12 @@ export interface RecordedTag {
 export interface GetRecordedOption {
     isHalfWidth: boolean;
     offset?: number;
-    limit: number;
+    limit?: number;
+    isReverse?: boolean;
+    ruleId?: RuleId;
+    channelId?: ChannelId;
+    genre?: ProgramGenreLv1;
+    keyword?: string;
 }
 
 /**
