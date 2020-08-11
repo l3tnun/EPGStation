@@ -140,13 +140,32 @@ export default class Recorded extends Vue {
             throw new Error('SettingValueIsNull');
         }
 
-        const type = this.$route.query.type;
-
-        return {
+        const option: apid.GetRecordedOption = {
             isHalfWidth: this.settingValue.isRecordedHalfWidthDisplayed,
             offset: (Util.getPageNum(this.$route) - 1) * this.settingValue.recordedLength,
             limit: this.settingValue.recordedLength,
         };
+
+        // query から読み取り
+        if (typeof this.$route.query.keyword === 'string') {
+            option.keyword = this.$route.query.keyword;
+        }
+        if (typeof this.$route.query.ruleId !== 'undefined') {
+            option.ruleId = parseInt(this.$route.query.ruleId as string, 10);
+        }
+        if (typeof this.$route.query.channelId !== 'undefined') {
+            option.channelId = parseInt(this.$route.query.channelId as string, 10);
+        }
+        if (typeof this.$route.query.genre !== 'undefined') {
+            option.genre = parseInt(this.$route.query.genre as string, 10);
+        }
+        if (typeof this.$route.query.isOnlyOriginalFile !== 'undefined') {
+            option.isOnlyOriginalFile =
+                (this.$route.query.isOnlyOriginalFile as any) === true ||
+                this.$route.query.isOnlyOriginalFile === 'true';
+        }
+
+        return option;
     }
 }
 </script>
