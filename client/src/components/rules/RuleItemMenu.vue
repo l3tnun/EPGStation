@@ -55,7 +55,12 @@ export default class RuleItemMenu extends Vue {
     public isOpenDeleteDialog: boolean = false;
 
     public onRecorded(): void {
-        // TODO 録画一覧ページへ飛ぶ
+        Util.move(this.$router, {
+            path: '/recorded',
+            query: {
+                ruleId: this.ruleItem.id.toString(10),
+            },
+        });
     }
 
     public onEdit(): void {
