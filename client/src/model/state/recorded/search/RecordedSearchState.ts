@@ -9,6 +9,7 @@ import IRecordedSearchState, { SelectorItem } from './IRecordedSearchState';
 @injectable()
 export default class RecordedSearchState implements IRecordedSearchState {
     public keyword: string | undefined;
+    public isOnlyOriginalFile: boolean = false;
     public ruleId: apid.RuleId | undefined;
     public channelId: apid.ChannelId | undefined;
     public genre: apid.ProgramGenreLv1 | undefined;
@@ -46,6 +47,7 @@ export default class RecordedSearchState implements IRecordedSearchState {
     public initValues(): void {
         this.setItems();
         this.keyword = undefined;
+        this.isOnlyOriginalFile = false;
         this.ruleId = undefined;
         this.channelId = undefined;
         this.genre = undefined;

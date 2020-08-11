@@ -6,8 +6,42 @@
                     <v-icon>mdi-magnify</v-icon>
                 </v-btn>
             </template>
-            <v-card>
-                <div>search content</div>
+            <v-card width="400">
+                <div class="recorded-search pa-4">
+                    <v-text-field
+                        v-model="searchState.keyword"
+                        label="キーワード"
+                        clearable
+                        v-on:keydown.enter="onSearch()"
+                    ></v-text-field>
+                    <v-select
+                        v-model="searchState.ruleId"
+                        :items="searchState.ruleItems"
+                        label="ルール"
+                        clearable
+                        :menu-props="{ auto: true }"
+                    ></v-select>
+                    <v-select
+                        v-model="searchState.channelId"
+                        :items="searchState.channelItems"
+                        label="放送局"
+                        clearable
+                        :menu-props="{ auto: true }"
+                    ></v-select>
+                    <v-select
+                        v-model="searchState.genre"
+                        :items="searchState.genreItems"
+                        label="ジャンル"
+                        clearable
+                        :menu-props="{ auto: true }"
+                    ></v-select>
+                    <v-checkbox
+                        v-model="searchState.isOnlyOriginalFile"
+                        label="元ファイルを含む"
+                        class="mt-2"
+                    ></v-checkbox>
+                </div>
+                <v-divider></v-divider>
                 <v-card-actions>
                     <v-spacer></v-spacer>
                     <v-btn v-on:click="onCancel" text color="error">閉じる</v-btn>
@@ -101,4 +135,13 @@ export default class RecordedSearchMenu extends Vue {
     width: 100%
     height: 100vh
     z-index: 7 // vuetify アップデート毎に確認が必要
+</style>
+
+<style lang="sass">
+.recorded-search
+    .v-input__control
+        .v-input__slot
+            margin: 0 !important
+        .v-messages
+            display: none
 </style>
