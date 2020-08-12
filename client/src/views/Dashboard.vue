@@ -232,7 +232,7 @@ export default class Main extends Vue {
             this.reservesState.clearDate();
 
             this.$nextTick(async () => {
-                await this.recordingState.fetchData(this.createFetchRecordedDataOption()).catch(err => {
+                await this.recordingState.fetchData(this.createFetchRecordingDataOption()).catch(err => {
                     this.snackbarState.open({
                         color: 'error',
                         text: '録画中データ取得に失敗',
@@ -290,8 +290,6 @@ export default class Main extends Vue {
         if (this.settingValue === null) {
             throw new Error('SettingValueIsNull');
         }
-
-        const type = this.$route.query.type;
 
         return {
             isHalfWidth: this.settingValue.isRecordingHalfWidthDisplayed,

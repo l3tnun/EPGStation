@@ -98,8 +98,6 @@ export default class Recording extends Vue {
             throw new Error('SettingValueIsNull');
         }
 
-        const type = this.$route.query.type;
-
         return {
             isHalfWidth: this.settingValue.isRecordingHalfWidthDisplayed,
             offset: (Util.getPageNum(this.$route) - 1) * this.settingValue.recordingLength,
