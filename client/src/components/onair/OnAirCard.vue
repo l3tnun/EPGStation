@@ -1,8 +1,8 @@
 <template>
     <div class="on-air pa-2">
-        <v-card class="mx-auto" max-width="800">
+        <v-card v-if="items.length > 0" class="mx-auto" max-width="800">
             <div
-                v-for="item in items"
+                v-for="(item, i) in items"
                 v-bind:key="item.display.channelId"
                 v-on:click="openStreamSelector(item.schedule.channel)"
             >
@@ -10,13 +10,13 @@
                     <v-list-item-content>
                         <div class="subtitle-1 font-weight-black">{{ item.display.channelName }}</div>
                         <div class="caption font-weight-light">{{ item.display.time }}</div>
-                        <div class="subtitle-2 grey--text text--darken-2 font-weight-bold">
+                        <div class="subtitle-2">
                             {{ item.display.name }}
                         </div>
-                        <div class="body-2 grey--text text--darken-2">{{ item.display.description }}</div>
+                        <div class="body-2 font-weight-light">{{ item.display.description }}</div>
                     </v-list-item-content>
                 </v-list-item>
-                <v-divider></v-divider>
+                <v-divider v-if="i < items.length - 1"></v-divider>
             </div>
         </v-card>
     </div>

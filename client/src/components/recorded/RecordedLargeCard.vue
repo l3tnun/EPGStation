@@ -1,5 +1,5 @@
 <template>
-    <v-card :max-width="width" class="ma-1 recorded-large-card">
+    <v-card :max-width="width" flat class="ma-1 recorded-large-card">
         <v-img
             aspect-ratio="1.7778"
             :min-width="width"

@@ -1,9 +1,7 @@
 <template>
     <div>
         <div v-for="item in items" v-bind:key="item.encodeItem.id">
-            <EncodeSmallCard :item="item">
-                <EncodeSmallCard :item="item"></EncodeSmallCard>
-            </EncodeSmallCard>
+            <EncodeSmallCard :item="item"></EncodeSmallCard>
         </div>
     </div>
 </template>

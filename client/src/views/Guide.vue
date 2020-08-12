@@ -11,7 +11,7 @@
                 <GuideTimeSelector v-if="isLoading === false"></GuideTimeSelector>
             </template>
         </TitleBar>
-        <div class="app-content guide">
+        <div class="app-content guide" v-bind:class="{ 'is-dark': $vuetify.theme.dark === true }">
             <transition name="page">
                 <div v-if="guideState.getChannelsLength() > 0" class="overflow-hidden d-flex flex-column">
                     <Loading v-if="isLoading === true"></Loading>
@@ -25,7 +25,7 @@
                         <div class="program-wrap overflow-auto" v-on:scroll="onProgramScroll" ref="programs">
                             <div
                                 class="programs"
-                                v-bind:class="{ isDark: $vuetify.theme.dark === true }"
+                                v-bind:class="{ 'is-dark': $vuetify.theme.dark === true }"
                                 v-bind:style="programsStyle"
                                 ref="content"
                             >
@@ -364,6 +364,9 @@ export default class Guide extends Vue {
 .app-content
     position: relative
     height: 100%
+    &.is-dark
+        background-color: #1E1E1E
+
     .channel-wrap
         width: 100%
 
@@ -484,10 +487,10 @@ html.guide
             .description
                 white-space: pre-wrap
 
-        &.isDark
+        &.is-dark
             .item
                 border: 1px solid #443737
-                color: white
+                color: #f3f3f3
                 &.hide
                     background-color: #272121
                     color: #888
@@ -539,7 +542,7 @@ html.guide
 /**
  * ジャンル別色 (ダークテーマ)
  */
-.isDark
+.is-dark
     .ctg-0
         background-color: #40b6bd // NEWS
     .ctg-1

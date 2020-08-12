@@ -2,16 +2,13 @@
     <v-content>
         <TitleBar :title="title"></TitleBar>
         <transition name="page">
-            <div v-if="reservesState.getReserves().length > 0" ref="appContent" class="app-content pa-1">
-                <v-container>
-                    <div v-bind:style="contentWrapStyle">
-                        <ReservesCard :reserves="reservesState.getReserves()"></ReservesCard>
-                        <Pagination
-                            :total="reservesState.getTotal()"
-                            :pageSize="settingValue.reservesLength"
-                        ></Pagination>
-                    </div>
-                </v-container>
+            <div v-if="reservesState.getReserves().length > 0" ref="appContent" class="app-content pa-2">
+                <div v-bind:style="contentWrapStyle">
+                    <v-card class="mx-auto" max-width="800">
+                        <ReservesCard :reserves="reservesState.getReserves()" :flat="true"></ReservesCard>
+                    </v-card>
+                </div>
+                <Pagination :total="reservesState.getTotal()" :pageSize="settingValue.reservesLength"></Pagination>
             </div>
         </transition>
         <Snackbar></Snackbar>

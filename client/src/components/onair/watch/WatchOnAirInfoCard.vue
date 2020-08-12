@@ -5,10 +5,10 @@
                 <v-list-item-content>
                     <div class="subtitle-1 font-weight-black">{{ displayInfo.channelName }}</div>
                     <div class="caption font-weight-light">{{ displayInfo.time }}</div>
-                    <div class="subtitle-2 grey--text text--darken-2 font-weight-bold">
+                    <div class="subtitle-2">
                         {{ displayInfo.name }}
                     </div>
-                    <div class="body-2 grey--text text--darken-2">{{ displayInfo.description }}</div>
+                    <div class="body-2 font-weight-light">{{ displayInfo.description }}</div>
                 </v-list-item-content>
             </v-list-item>
         </v-card>

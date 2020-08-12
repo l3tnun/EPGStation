@@ -382,6 +382,7 @@
                             <v-btn text color="primary" v-on:click="save">保存</v-btn>
                         </v-card-actions>
                     </v-card>
+                    <div style="visibility: hidden;">dummy</div>
                 </v-container>
                 <Snackbar></Snackbar>
             </div>

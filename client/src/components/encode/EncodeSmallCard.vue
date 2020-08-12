@@ -1,6 +1,6 @@
 <template>
     <div>
-        <v-card :ripple="false" class="d-flex ma-1 recorded-small-card">
+        <v-card :ripple="false" class="d-flex my-1 recorded-small-card">
             <v-img
                 aspect-ratio="1.7778"
                 :src="item.display.topThumbnailPath"
