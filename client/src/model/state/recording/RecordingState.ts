@@ -9,8 +9,8 @@ export default class RecordingState implements IRecordingState {
     private recordingApiModel: IRecordingApiModel;
     private recordedUtil: IRecordedUtil;
 
-    private recorded: apid.Records | null = null;
-    private isHalfWidth: boolean = false;
+    private recorded: RecordedDisplayData[] | null = null;
+    private total: number = 0;
 
     constructor(
         @inject('IRecordingApiModel') recordingApiModel: IRecordingApiModel,
@@ -25,6 +25,7 @@ export default class RecordingState implements IRecordingState {
      */
     public clearData(): void {
         this.recorded = null;
+        this.total = 0;
     }
 
     /**
@@ -33,8 +34,11 @@ export default class RecordingState implements IRecordingState {
      * @return Promise<void>
      */
     public async fetchData(option: apid.GetRecordedOption): Promise<void> {
-        this.isHalfWidth = option.isHalfWidth;
-        this.recorded = await this.recordingApiModel.gets(option);
+        const recrods = await this.recordingApiModel.gets(option);
+        this.total = recrods.total;
+        this.recorded = recrods.records.map(r => {
+            return this.recordedUtil.convertRecordedItemToDisplayData(r, option.isHalfWidth);
+        });
     }
 
     /**
@@ -42,11 +46,7 @@ export default class RecordingState implements IRecordingState {
      * @return RecordedStateData[]
      */
     public getRecorded(): RecordedDisplayData[] {
-        return this.recorded === null
-            ? []
-            : this.recorded.records.map(r => {
-                  return this.recordedUtil.convertRecordedItemToDisplayData(r, this.isHalfWidth);
-              });
+        return this.recorded === null ? [] : this.recorded;
     }
 
     /**
@@ -54,6 +54,6 @@ export default class RecordingState implements IRecordingState {
      * @return number
      */
     public getTotal(): number {
-        return this.recorded === null ? 0 : this.recorded.total;
+        return this.total;
     }
 }

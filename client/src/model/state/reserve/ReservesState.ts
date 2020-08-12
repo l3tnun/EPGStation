@@ -10,8 +10,8 @@ export default class ReservesState implements IReservesState {
     private reserveApiModel: IReservesApiModel;
     private reserveStateUtil: IReserveStateUtil;
 
-    private reserves: apid.Reserves | null = null;
-    private isHalfWidth: boolean = false;
+    private reserves: ReserveStateData[] | null = null;
+    private total: number = 0;
 
     constructor(
         @inject('IReservesApiModel') reserveApiModel: IReservesApiModel,
@@ -26,6 +26,7 @@ export default class ReservesState implements IReservesState {
      */
     public clearDate(): void {
         this.reserves = null;
+        this.total = 0;
     }
 
     /**
@@ -33,18 +34,17 @@ export default class ReservesState implements IReservesState {
      * @param option: apid.GetReserveOption
      */
     public async fetchData(option: apid.GetReserveOption): Promise<void> {
-        this.isHalfWidth = option.isHalfWidth;
-        this.reserves = await this.reserveApiModel.get(option);
+        const reserves = await this.reserveApiModel.get(option);
+        this.total = reserves.total;
+        this.reserves = this.reserveStateUtil.convertReserveItemsToStateDatas(reserves.reserves, option.isHalfWidth);
     }
 
     /**
      * 取得した予約情報を返す
-     * @return ReserveStateData[][]
+     * @return ReserveStateData[]
      */
     public getReserves(): ReserveStateData[] {
-        return this.reserves === null
-            ? []
-            : this.reserveStateUtil.convertReserveItemsToStateDatas(this.reserves.reserves, this.isHalfWidth);
+        return this.reserves === null ? [] : this.reserves;
     }
 
     /**
@@ -52,6 +52,6 @@ export default class ReservesState implements IReservesState {
      * @return number
      */
     public getTotal(): number {
-        return this.reserves === null ? 0 : this.reserves.total;
+        return this.total;
     }
 }
