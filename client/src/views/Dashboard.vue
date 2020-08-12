@@ -4,7 +4,7 @@
         <div class="app-content d-flex flex-column mx-auto">
             <transition name="page">
                 <div v-if="isShow" class="dashboard">
-                    <DashboardItem ref="recordingItem" title="録画中" v-on:scroll="onRecordingScroll">
+                    <DashboardItem ref="recordingItem" :title="recordingTitle" v-on:scroll="onRecordingScroll">
                         <template v-slot:items>
                             <div class="px-2">
                                 <div v-for="r in recordingState.getRecorded()" v-bind:key="r.recordedItem.id">
@@ -18,7 +18,7 @@
                             </div>
                         </template>
                     </DashboardItem>
-                    <DashboardItem ref="recordedItem" title="録画済み" v-on:scroll="onRecordedScroll">
+                    <DashboardItem ref="recordedItem" :title="recordedTitle" v-on:scroll="onRecordedScroll">
                         <template v-slot:items>
                             <div class="px-2">
                                 <div v-for="r in recordedState.getRecorded()" v-bind:key="r.recordedItem.id">
@@ -31,7 +31,7 @@
                             </div>
                         </template>
                     </DashboardItem>
-                    <DashboardItem ref="reserveItem" title="予約" v-on:scroll="onReserveScroll">
+                    <DashboardItem ref="reserveItem" :title="reserveTitle" v-on:scroll="onReserveScroll">
                         <template v-slot:items>
                             <div>
                                 <ReservesCard :reserves="reservesState.getReserves()" :flat="true"></ReservesCard>
@@ -101,6 +101,18 @@ export default class Main extends Vue {
     private recordingScroll: number = 0;
     private recordedScroll: number = 0;
     private reserveScroll: number = 0;
+
+    get recordingTitle(): string {
+        return `録画中 ${this.recordingState.getRecorded().length}/${this.recordingState.getTotal()}`;
+    }
+
+    get recordedTitle(): string {
+        return `録画済み ${this.recordedState.getRecorded().length}/${this.recordedState.getTotal()}`;
+    }
+
+    get reserveTitle(): string {
+        return `予約 ${this.reservesState.getReserves().length}/${this.reservesState.getTotal()}`;
+    }
 
     public created(): void {
         if (UaUtil.isiOS() === true) {
