@@ -47,3 +47,21 @@ html
     > .v-btn__content, > .v-icon
         pointer-events: none
 </style>
+
+<style lang="sass">
+/**
+ * iOS でスクロール時に表示が崩れるため
+ * アドレスバーを常時最大サイズで表示させる
+ */
+html.fix-address-bar
+    height: 100%
+    overflow: hidden !important
+
+    body, #app
+        height: 100%
+
+    #app
+        .v-application--wrap
+            height: 100%
+            min-height: 100%
+</style>

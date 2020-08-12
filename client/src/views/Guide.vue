@@ -131,7 +131,7 @@ export default class Guide extends Vue {
         if (UaUtil.isiOS() === true) {
             // html の class に guide を追加
             const element = document.getElementsByTagName('html')[0];
-            element.classList.add('guide');
+            element.classList.add('fix-address-bar');
         }
     }
 
@@ -145,7 +145,7 @@ export default class Guide extends Vue {
         if (UaUtil.isiOS() === true) {
             // html の class から guide を削除
             const element = document.getElementsByTagName('html')[0];
-            element.classList.remove('guide');
+            element.classList.remove('fix-address-bar');
         }
     }
 
@@ -383,22 +383,6 @@ export default class Guide extends Vue {
 
 <style lang="sass">
 $window-width: 600px
-
-/**
- * iOS でスクロール時に表示が崩れるため
- * アドレスバーを常時最大サイズで表示させる
- */
-html.guide
-    height: 100%
-    overflow: hidden !important
-
-    body, #app
-        height: 100%
-
-    #app
-        .v-application--wrap
-            height: 100%
-            min-height: 100%
 
 .app-content.guide
     /**
