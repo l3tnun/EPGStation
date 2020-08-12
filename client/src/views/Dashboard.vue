@@ -15,6 +15,14 @@
                                         :noThumbnail="true"
                                     ></RecordedsmallCard>
                                 </div>
+                                <div
+                                    v-if="recordingState.getTotal() > recordingState.getRecorded().length"
+                                    class="my-2"
+                                >
+                                    <v-btn text block color="primary mx-auto" v-on:click="gotoNextPage('/recording')">
+                                        more
+                                    </v-btn>
+                                </div>
                             </div>
                         </template>
                     </DashboardItem>
@@ -28,6 +36,11 @@
                                         v-on:stopEncode="stopEncode"
                                     ></RecordedsmallCard>
                                 </div>
+                                <div v-if="recordedState.getTotal() > recordedState.getRecorded().length" class="my-2">
+                                    <v-btn text block color="primary mx-auto" v-on:click="gotoNextPage('/recorded')">
+                                        more
+                                    </v-btn>
+                                </div>
                             </div>
                         </template>
                     </DashboardItem>
@@ -35,6 +48,14 @@
                         <template v-slot:items>
                             <div>
                                 <ReservesCard :reserves="reservesState.getReserves()" :flat="true"></ReservesCard>
+                                <div
+                                    v-if="reservesState.getTotal() > reservesState.getReserves().length"
+                                    class="px-2 pb-2"
+                                >
+                                    <v-btn text block color="primary mx-auto" v-on:click="gotoNextPage('/reserves')">
+                                        more
+                                    </v-btn>
+                                </div>
                             </div>
                         </template>
                     </DashboardItem>
@@ -169,6 +190,18 @@ export default class Main extends Vue {
      */
     public gotoRecordedDetail(recordedId: apid.RecordedId): void {
         Util.move(this.$router, { path: `/recorded/detail/${recordedId.toString(10)}` });
+    }
+
+    /**
+     * 指定したパスの次ページへ飛ぶ
+     */
+    public gotoNextPage(path: string): void {
+        Util.move(this.$router, {
+            path: path,
+            query: {
+                page: '2',
+            },
+        });
     }
 
     /**
