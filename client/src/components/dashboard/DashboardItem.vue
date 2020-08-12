@@ -1,7 +1,7 @@
 <template>
     <div class="dash-board-item pa-1">
         <v-card class="item-content d-flex flex-column">
-            <div class="subtitle-1 px-4 py-2">{{ title }}</div>
+            <div class="subtitle-1 pa-4">{{ title }}</div>
             <div class="content overflow-auto" ref="content" v-on:scroll="onScroll">
                 <slot name="items"></slot>
             </div>

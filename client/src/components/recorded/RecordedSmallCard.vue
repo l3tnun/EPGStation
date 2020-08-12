@@ -1,7 +1,7 @@
 <template>
     <v-card :ripple="false" flat tile class="d-flex my-1 recorded-small-card">
         <v-img
-            v-if="noThumbnail === false"
+            v-if="!!noThumbnail === false"
             aspect-ratio="1.7778"
             :src="item.display.topThumbnailPath"
             v-on:error="this.src = './img/noimg.png'"
@@ -62,7 +62,7 @@ export default class RecordedSmallCard extends Vue {
 
 <style lang="sass" scoped>
 .recorded-small-card
-    max-width: 100%
+    width: 100%
     height: 100px
     cursor: pointer
 

@@ -2,9 +2,9 @@ import Vue from 'vue';
 import Router from 'vue-router';
 import container from './model/ModelContainer';
 import IScrollPositionState from './model/state/IScrollPositionState';
+import Dashboard from './views/Dashboard.vue';
 import Encode from './views/Encode.vue';
 import Guide from './views/Guide.vue';
-import Main from './views/Main.vue';
 import OnAir from './views/OnAir.vue';
 import Recorded from './views/Recorded.vue';
 import RecordedDetail from './views/RecordedDetail.vue';
@@ -23,8 +23,8 @@ export default new Router({
     routes: [
         {
             path: '/',
-            name: 'top',
-            component: Main,
+            name: 'dashboard',
+            component: Dashboard,
         },
         {
             path: '/onair',

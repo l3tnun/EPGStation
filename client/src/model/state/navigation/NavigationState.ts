@@ -31,7 +31,7 @@ export default class NavigationState implements INavigationState {
         const newItems: NavigationItem[] = [];
         newItems.push({
             icon: 'mdi-view-dashboard',
-            title: 'トップ',
+            title: 'ダッシュボード',
             herf: {
                 path: '/',
             },
