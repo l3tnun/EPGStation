@@ -11,29 +11,29 @@ export const get: Operation = async (req, res) => {
         const option: GetRecordedOption = {
             isHalfWidth: (req.query.isHalfWidth as any) as boolean,
         };
-        if (typeof req.query.offset === 'string') {
-            option.offset = parseInt(req.query.offset, 10);
+        if (typeof req.query.offset !== 'undefined') {
+            option.offset = parseInt(req.query.offset as any, 10);
         }
-        if (typeof req.query.limit === 'string') {
-            option.limit = parseInt(req.query.limit, 10);
+        if (typeof req.query.limit !== 'undefined') {
+            option.limit = parseInt(req.query.limit as any, 10);
         }
-        if (typeof req.query.isReverse === 'boolean') {
-            option.isReverse = req.query.isReverse;
+        if (typeof req.query.isReverse !== 'undefined') {
+            option.isReverse = req.query.isReverse as any;
         }
-        if (typeof req.query.ruleId === 'string') {
-            option.ruleId = parseInt(req.query.ruleId, 10);
+        if (typeof req.query.ruleId !== 'undefined') {
+            option.ruleId = parseInt(req.query.ruleId as any, 10);
         }
-        if (typeof req.query.channelId === 'string') {
-            option.channelId = parseInt(req.query.channelId, 10);
+        if (typeof req.query.channelId !== 'undefined') {
+            option.channelId = parseInt(req.query.channelId as any, 10);
         }
-        if (typeof req.query.genre === 'string') {
-            option.genre = parseInt(req.query.genre, 10);
+        if (typeof req.query.genre !== 'undefined') {
+            option.genre = parseInt(req.query.genre as any, 10);
         }
         if (typeof req.query.keyword === 'string') {
             option.keyword = req.query.keyword;
         }
-        if (typeof req.query.isOnlyOriginalFile === 'boolean') {
-            option.isOnlyOriginalFile = req.query.isOnlyOriginalFile;
+        if (typeof req.query.isOnlyOriginalFile !== 'undefined') {
+            option.isOnlyOriginalFile = req.query.isOnlyOriginalFile as any;
         }
 
         api.responseJSON(res, 200, await recordedApiModel.gets(option));
