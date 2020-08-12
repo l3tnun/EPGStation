@@ -395,8 +395,11 @@ export default class Main extends Vue {
 </script>
 
 <style lang="sass" scoped>
+.app-content
+    max-width: 600px
+
 // 横並び用設定
-@media screen and (min-width: 800px)
+@media screen and (min-width: 1023px)
     .app-content
         position: relative
         height: 100%
