@@ -1,4 +1,5 @@
 import { Operation } from 'express-openapi';
+import * as apid from '../../../../api';
 import IRuleApiModel from '../../api/rule/IRuleApiModel';
 import container from '../../ModelContainer';
 import * as api from '../api';
@@ -7,7 +8,18 @@ export const get: Operation = async (req, res) => {
     const ruleApiModel = container.get<IRuleApiModel>('IRuleApiModel');
 
     try {
-        api.responseJSON(res, 200, await ruleApiModel.gets(req.query));
+        const option: apid.GetRuleOption = {};
+        if (typeof req.query.offset !== 'undefined') {
+            option.offset = parseInt(req.query.offset as any, 10);
+        }
+        if (typeof req.query.limit !== 'undefined') {
+            option.limit = parseInt(req.query.limit as any, 10);
+        }
+        if (typeof req.query.type !== 'undefined') {
+            option.type = req.query.type as any;
+        }
+
+        api.responseJSON(res, 200, await ruleApiModel.gets(option));
     } catch (err) {
         api.responseServerError(res, err.message);
     }

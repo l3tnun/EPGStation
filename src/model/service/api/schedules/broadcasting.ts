@@ -1,4 +1,5 @@
 import { Operation } from 'express-openapi';
+import * as apid from '../../../../../api';
 import IScheduleApiModel from '../../../api/schedule/IScheduleApiModel';
 import container from '../../../ModelContainer';
 import * as api from '../../api';
@@ -7,11 +8,14 @@ export const get: Operation = async (req, res) => {
     const scheduleApiModel = container.get<IScheduleApiModel>('IScheduleApiModel');
 
     try {
-        if (typeof (<any>req.query).time !== 'undefined') {
-            (<any>req.query).time = parseInt((<any>req.query).time, 10);
+        const option: apid.BroadcastingScheduleOption = {
+            isHalfWidth: req.query.isHalfWidth as any,
+        };
+        if (typeof req.query.time !== 'undefined') {
+            option.time = parseInt(req.query.time as any, 10);
         }
 
-        api.responseJSON(res, 200, await scheduleApiModel.getBroadcastingSchedule(req.query as any));
+        api.responseJSON(res, 200, await scheduleApiModel.getBroadcastingSchedule(option));
     } catch (err) {
         api.responseServerError(res, err.message);
     }

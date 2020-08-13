@@ -1,4 +1,5 @@
 import { Operation } from 'express-openapi';
+import * as apid from '../../../../../api';
 import IScheduleApiModel from '../../../api/schedule/IScheduleApiModel';
 import container from '../../../ModelContainer';
 import * as api from '../../api';
@@ -6,10 +7,14 @@ import * as api from '../../api';
 export const get: Operation = async (req, res) => {
     const scheduleApiModel = container.get<IScheduleApiModel>('IScheduleApiModel');
 
-    (<any>req.query).channelId = parseInt(req.params.channelId, 10);
-    (<any>req.query).startAt = parseInt((<any>req.query).startAt, 10);
     try {
-        api.responseJSON(res, 200, await scheduleApiModel.getChannelSchedule(req.query as any));
+        const option: apid.ChannelScheduleOption = {
+            startAt: parseInt(req.query.startAt as any, 10),
+            days: parseInt(req.query.days as any, 10),
+            isHalfWidth: req.query.isHalfWidth as any,
+            channelId: parseInt(req.params.channelId, 10),
+        };
+        api.responseJSON(res, 200, await scheduleApiModel.getChannelSchedule(option));
     } catch (err) {
         api.responseServerError(res, err.message);
     }
