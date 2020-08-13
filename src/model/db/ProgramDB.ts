@@ -373,11 +373,7 @@ export default class ProgramDB implements IProgramDB {
         }
 
         let select = await connection.createQueryBuilder().select('program');
-        if (
-            typeof option.reserveOption !== 'undefined' &&
-            option.reserveOption.avoidDuplicate === true &&
-            typeof option.reserveOption.periodToAvoidDuplicate !== 'undefined'
-        ) {
+        if (typeof option.reserveOption !== 'undefined' && option.reserveOption.avoidDuplicate === true) {
             select = select.addSelect(
                 this.createOverlapQueryStr(option.reserveOption.periodToAvoidDuplicate),
                 'overlap',
@@ -772,14 +768,16 @@ export default class ProgramDB implements IProgramDB {
             '(' +
             'select P.id from program as P, recorded_history as R ' +
             'where P.shortName = R.name ' +
-            'and P.channelId = R.channelId ' +
-            `and R.endAt <= ${now} ` +
-            ') then 1 else 0 end';
+            'and P.channelId = R.channelId ';
 
+        // 重複検索日数
         if (period > 0) {
-            // 重複検索日数
-            str += `and R.endAt >= ${now - period} and R.endAt <= ${now} ` + `and P.endAt <= (R.endAt + ${period}) `;
+            str += `and R.endAt >= ${now - period} and R.endAt <= ${now} and P.endAt <= (R.endAt + ${period}) `;
+        } else {
+            str += `and R.endAt <= ${now} `;
         }
+
+        str += ') then 1 else 0 end';
 
         return str;
     }

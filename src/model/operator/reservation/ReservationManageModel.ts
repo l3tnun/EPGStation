@@ -645,7 +645,7 @@ class ReservationManageModel implements IReservationManageModel {
                     if (typeof oldReserve !== 'undefined') {
                         newReserve.isSkip = oldReserve.isSkip;
                         newReserve.isIgnoreOverlap = oldReserve.isIgnoreOverlap;
-                        newReserve.isOverlap = oldReserve.isOverlap;
+                        newReserve.isOverlap = program.overlap;
                     }
                     newRuleReserves.push(newReserve);
 
