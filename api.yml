@@ -457,7 +457,9 @@ components:
                 - total
             properties:
                 rules:
-                    $ref: '#/components/schemas/Rule'
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Rule'
                 total:
                     description: ルール総件数
                     type: integer
@@ -888,7 +890,9 @@ components:
                 - total
             properties:
                 records:
-                    $ref: '#/components/schemas/RecordedItem'
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/RecordedItem'
                 total:
                     description: 録画総件数
                     type: integer
@@ -1022,7 +1026,7 @@ components:
                     type: integer
 
         RecordedTag:
-            description: 録画タグ情報
+            description: タグ情報
             type: object
             required:
                 - id
@@ -1033,6 +1037,49 @@ components:
                 name:
                     description: タグ名
                     type: string
+
+        RecordedTags:
+            description: 録画タグ情報
+            type: object
+            required:
+                - tags
+                - total
+            properties:
+                tags:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/RecordedTag'
+                total:
+                    description: 予約総件数
+                    type: integer
+
+        AddRecordedTagOption:
+            description: 録画タグ追加プション
+            type: object
+            required:
+                - name
+            properties:
+                name:
+                    description: タグ名
+                    type: string
+
+        RelateRecordedTagOption:
+            description: 録画番組とタグの関連付けオプション
+            type: object
+            required:
+                - recordedId
+            properties:
+                recordedId:
+                    $ref: '#/components/schemas/RecordedId'
+
+        AddedRecordedTag:
+            description: タグ追加成功応答データ
+            type: object
+            required:
+                - tagId
+            properties:
+                tagId:
+                    $ref: '#/components/schemas/RecordedTagId'
 
         RecordedRuleListItem:
             description: recorded が持つ rule のリスト
@@ -1344,6 +1391,13 @@ components:
             schema:
                 $ref: '#/components/schemas/ChannelId'
 
+        QueryRecordedId:
+            description: recorded id
+            name: recordedId
+            in: query
+            schema:
+                $ref: '#/components/schemas/RecordedId'
+
         QueryRuleId:
             description: ルールid
             name: ruleId
@@ -1474,6 +1528,14 @@ components:
             description: recorded id
             in: path
             name: recordedId
+            required: true
+            schema:
+                type: integer
+
+        PathRecordedTagId:
+            description: recorded tag id
+            in: path
+            name: tagId
             required: true
             schema:
                 type: integer

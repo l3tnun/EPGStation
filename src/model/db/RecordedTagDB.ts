@@ -27,6 +27,29 @@ export default class RecordedTagDB implements IRecordedTagDB {
     }
 
     /**
+     * tag 名更新
+     * @param tagId: apid.RecordedTagId
+     * @param name: name: string
+     * @return Promise<void>
+     */
+    public async updateName(tagId: apid.RecordedTagId, name: string): Promise<void> {
+        const tag = await this.findId(tagId);
+        if (tag === null) {
+            throw new Error('TagIsNull');
+        }
+
+        const connection = await this.op.getConnection();
+        await connection
+            .createQueryBuilder()
+            .update(RecordedTag)
+            .set({
+                name: name,
+            })
+            .where({ id: tagId })
+            .execute();
+    }
+
+    /**
      * recorded と tag の関連付け設定
      * @param tagId: apid.RecordedTagId
      * @param recordedId: apid.RecordedId
@@ -138,7 +161,7 @@ export default class RecordedTagDB implements IRecordedTagDB {
         const findOption: FindManyOptions<RecordedTag> = {};
 
         if (typeof option.offset !== 'undefined') {
-            findOption.skip = option.limit;
+            findOption.skip = option.offset;
         }
 
         if (typeof option.limit !== 'undefined') {

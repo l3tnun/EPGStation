@@ -377,6 +377,11 @@ export interface RecordedTag {
     name: string;
 }
 
+export interface RecordedTags {
+    tags: RecordedTag[];
+    total: number;
+}
+
 /**
  * recorded 取得オプション
  */

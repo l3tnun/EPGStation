@@ -14,6 +14,8 @@ import IRecordedItemUtil from './api/IRecordedItemUtil';
 import IRecordedApiModel from './api/recorded/IRecordedApiModel';
 import RecordedApiModel from './api/recorded/RecordedApiModel';
 import RecordedItemUtil from './api/RecordedItemUtil';
+import IRecordedTagApiModel from './api/recordedTag/IRecordedTagApiModel';
+import RecordedTagApiModel from './api/recordedTag/RecordedTagApiModel';
 import IRecordingApiModel from './api/recording/IRecordingApiModel';
 import RecordingApiModel from './api/recording/RecordingApiModel';
 import IReserveApiModel from './api/reserve/IReserveApiModel';
@@ -92,6 +94,8 @@ import MirakurunClientModel from './MirakurunClientModel';
 import IReserveOptionChecker from './operator/IReserveOptionChecker';
 import IRecordedManageModel from './operator/recorded/IRecordedManageModel';
 import RecordedManageModel from './operator/recorded/RecordedManageModel';
+import IRecordedTagManadeModel from './operator/recordedTag/IRecordedTagManadeModel';
+import RecordedTagManadeModel from './operator/recordedTag/RecordedTagManadeModel';
 import DropCheckerModel from './operator/recording/DropCheckerModel';
 import IDropCheckerModel from './operator/recording/IDropCheckerModel';
 import IRecorderModel, { RecorderModelProvider } from './operator/recording/IRecorderModel';
@@ -229,6 +233,8 @@ export const set = (container: Container): void => {
 
     container.bind<IRecordingManageModel>('IRecordingManageModel').to(RecordingManageModel).inSingletonScope();
 
+    container.bind<IRecordedTagManadeModel>('IRecordedTagManadeModel').to(RecordedTagManadeModel).inSingletonScope();
+
     container.bind<IThumbnailManageModel>('IThumbnailManageModel').to(ThumbnailManageModel).inSingletonScope();
 
     container.bind<IEventSetter>('IEventSetter').to(EventSetter).inSingletonScope();
@@ -252,6 +258,8 @@ export const set = (container: Container): void => {
     container.bind<IRecordedApiModel>('IRecordedApiModel').to(RecordedApiModel).inSingletonScope();
 
     container.bind<IRecordingApiModel>('IRecordingApiModel').to(RecordingApiModel).inSingletonScope();
+
+    container.bind<IRecordedTagApiModel>('IRecordedTagApiModel').to(RecordedTagApiModel).inSingletonScope();
 
     container.bind<IRuleApiModel>('IRuleApiModel').to(RuleApiModel).inSingletonScope();
 

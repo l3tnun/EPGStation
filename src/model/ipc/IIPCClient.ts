@@ -21,6 +21,14 @@ export interface IPCRecordedManageModel {
     deleteVideoFile(videoFileId: apid.VideoFileId): Promise<void>;
 }
 
+export interface IPCRecordedTagManageModel {
+    create(name: string): Promise<apid.RecordedTagId>;
+    updateName(tagId: apid.RecordedTagId, name: string): Promise<void>;
+    setRelation(tagId: apid.RecordedTagId, recordedId: apid.RecordedId): Promise<void>;
+    delete(tagId: apid.RecordedTagId): Promise<void>;
+    deleteRelation(tagId: apid.RecordedTagId, recordedId: apid.RecordedId): Promise<void>;
+}
+
 export interface IPCRuleManageModel {
     add(rule: apid.AddRuleOption): Promise<apid.RuleId>;
     update(rule: apid.Rule): Promise<void>;
@@ -33,5 +41,6 @@ export interface IPCRuleManageModel {
 export default interface IIPCClient {
     reserveation: IPCReservationManageModel;
     recorded: IPCRecordedManageModel;
+    recordedTag: IPCRecordedTagManageModel;
     rule: IPCRuleManageModel;
 }

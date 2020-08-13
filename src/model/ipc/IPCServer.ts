@@ -2,6 +2,7 @@ import { ChildProcess } from 'child_process';
 import { inject, injectable } from 'inversify';
 import * as apid from '../../../api';
 import IRecordedManageModel, { AddVideoFileOption } from '../operator/recorded/IRecordedManageModel';
+import IRecordedTagManadeModel from '../operator/recordedTag/IRecordedTagManadeModel';
 import IReservationManageModel from '../operator/reservation/IReservationManageModel';
 import IRuleManageModel from '../operator/rule/IRuleManageModel';
 import IIPCServer from './IIPCServer';
@@ -10,6 +11,7 @@ import {
     NotifyClientMessage,
     PushEncodeMessage,
     RecordedFunctions,
+    RecordedTagFunctions,
     ReplayMessage,
     ReserveationFunctions,
     RuleFuntions,
@@ -24,6 +26,7 @@ interface IFunctionIndex {
 export default class IPCServer implements IIPCServer {
     private reservationManage: IReservationManageModel;
     private recordedManage: IRecordedManageModel;
+    private recordedTagManage: IRecordedTagManadeModel;
     private ruleManage: IRuleManageModel;
     private child: ChildProcess | null = null;
     private functions: {
@@ -34,10 +37,12 @@ export default class IPCServer implements IIPCServer {
         @inject('IReservationManageModel')
         reservationManage: IReservationManageModel,
         @inject('IRecordedManageModel') recordedManage: IRecordedManageModel,
+        @inject('IRecordedTagManadeModel') recordedTagManage: IRecordedTagManadeModel,
         @inject('IRuleManageModel') ruleManage: IRuleManageModel,
     ) {
         this.reservationManage = reservationManage;
         this.recordedManage = recordedManage;
+        this.recordedTagManage = recordedTagManage;
         this.ruleManage = ruleManage;
 
         this.init();
@@ -121,6 +126,7 @@ export default class IPCServer implements IIPCServer {
     private init(): void {
         this.functions[ModelName.reserveation] = this.getReserveationFunctions();
         this.functions[ModelName.recorded] = this.getRecordedFunctions();
+        this.functions[ModelName.recordedTag] = this.getRecordedTagFunctions();
         this.functions[ModelName.rule] = this.getRuleFunctions();
     }
 
@@ -219,6 +225,48 @@ export default class IPCServer implements IIPCServer {
             const videoFileId = this.getArgsValue<apid.VideoFileId>(msg, 'videoFileId');
 
             await this.recordedManage.deleteVideoFile(videoFileId);
+        };
+
+        return index;
+    }
+
+    /**
+     * set recordedTag functions
+     */
+    private getRecordedTagFunctions(): IFunctionIndex {
+        const index: IFunctionIndex = {};
+
+        index[RecordedTagFunctions.create] = async msg => {
+            const name = this.getArgsValue<string>(msg, 'name');
+
+            return await this.recordedTagManage.create(name);
+        };
+
+        index[RecordedTagFunctions.updateName] = async msg => {
+            const tagId = this.getArgsValue<apid.RecordedTagId>(msg, 'tagId');
+            const name = this.getArgsValue<string>(msg, 'name');
+
+            await this.recordedTagManage.updateName(tagId, name);
+        };
+
+        index[RecordedTagFunctions.setRelation] = async msg => {
+            const tagId = this.getArgsValue<apid.RecordedTagId>(msg, 'tagId');
+            const recordedId = this.getArgsValue<apid.RecordedId>(msg, 'recordedId');
+
+            await this.recordedTagManage.setRelation(tagId, recordedId);
+        };
+
+        index[RecordedTagFunctions.delete] = async msg => {
+            const tagId = this.getArgsValue<apid.RecordedTagId>(msg, 'tagId');
+
+            await this.recordedTagManage.delete(tagId);
+        };
+
+        index[RecordedTagFunctions.deleteRelation] = async msg => {
+            const tagId = this.getArgsValue<apid.RecordedTagId>(msg, 'tagId');
+            const recordedId = this.getArgsValue<apid.RecordedId>(msg, 'recordedId');
+
+            await this.recordedTagManage.deleteRelation(tagId, recordedId);
         };
 
         return index;

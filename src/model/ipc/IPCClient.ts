@@ -6,13 +6,19 @@ import ILoggerModel from '../ILoggerModel';
 import { AddVideoFileOption } from '../operator/recorded/IRecordedManageModel';
 import IEncodeManageModel from '../service/encode/IEncodeManageModel';
 import ISocketIOManageModel from '../service/socketio/ISocketIOManageModel';
-import IIPCClient, { IPCRecordedManageModel, IPCReservationManageModel, IPCRuleManageModel } from './IIPCClient';
+import IIPCClient, {
+    IPCRecordedManageModel,
+    IPCRecordedTagManageModel,
+    IPCReservationManageModel,
+    IPCRuleManageModel,
+} from './IIPCClient';
 import {
     ClientMessageOption,
     ModelName,
     ParentMessage,
     PushEncodeMessage,
     RecordedFunctions,
+    RecordedTagFunctions,
     ReplayMessage,
     ReserveationFunctions,
     RuleFuntions,
@@ -25,6 +31,7 @@ export default class IPCClient implements IIPCClient {
     private encodeManage: IEncodeManageModel;
     public reserveation!: IPCReservationManageModel;
     public recorded!: IPCRecordedManageModel;
+    public recordedTag!: IPCRecordedTagManageModel;
     public rule!: IPCRuleManageModel;
 
     private log: ILogger;
@@ -46,6 +53,7 @@ export default class IPCClient implements IIPCClient {
         this.ipcInit();
         this.setReserveation();
         this.setRecorded();
+        this.setRecordedTag();
         this.setRule();
     }
 
@@ -236,6 +244,62 @@ export default class IPCClient implements IIPCClient {
                     func: RecordedFunctions.deleteVideoFile,
                     args: {
                         videoFileId: videoFileId,
+                    },
+                });
+            },
+        };
+    }
+
+    /**
+     * set recordedTag
+     */
+    private setRecordedTag(): void {
+        this.recordedTag = {
+            create: (name: string) => {
+                return this.send({
+                    model: ModelName.recordedTag,
+                    func: RecordedTagFunctions.create,
+                    args: {
+                        name: name,
+                    },
+                });
+            },
+            updateName: (tagId: apid.RecordedTagId, name: string) => {
+                return this.send({
+                    model: ModelName.recordedTag,
+                    func: RecordedTagFunctions.updateName,
+                    args: {
+                        tagId: tagId,
+                        name: name,
+                    },
+                });
+            },
+            setRelation: (tagId: apid.RecordedTagId, recordedId: apid.RecordedId) => {
+                return this.send({
+                    model: ModelName.recordedTag,
+                    func: RecordedTagFunctions.setRelation,
+                    args: {
+                        tagId: tagId,
+                        recordedId: recordedId,
+                    },
+                });
+            },
+            delete: (tagId: apid.RecordedTagId) => {
+                return this.send({
+                    model: ModelName.recordedTag,
+                    func: RecordedTagFunctions.delete,
+                    args: {
+                        tagId: tagId,
+                    },
+                });
+            },
+            deleteRelation: (tagId: apid.RecordedTagId, recordedId: apid.RecordedId) => {
+                return this.send({
+                    model: ModelName.recordedTag,
+                    func: RecordedTagFunctions.deleteRelation,
+                    args: {
+                        tagId: tagId,
+                        recordedId: recordedId,
                     },
                 });
             },

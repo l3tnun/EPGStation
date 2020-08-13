@@ -53,6 +53,7 @@ export interface ReplayMessage {
 export enum ModelName {
     recorded = 'recorded',
     recording = 'recording',
+    recordedTag = 'recordedTag',
     reserveation = 'reserveation',
     rule = 'rule',
     thumbnail = 'thumbnail',
@@ -82,6 +83,17 @@ export enum RecordedFunctions {
     updateVideoFileSize = 'updateVideoFileSize',
     addVideoFile = 'addVideoFile',
     deleteVideoFile = 'deleteVideoFile',
+}
+
+/**
+ * recordedTag の関数定義
+ */
+export enum RecordedTagFunctions {
+    create = 'create',
+    updateName = 'update',
+    setRelation = 'setRelation',
+    delete = 'delete',
+    deleteRelation = 'deleteRelation',
 }
 
 export enum RuleFuntions {
