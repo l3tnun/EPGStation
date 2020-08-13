@@ -33,6 +33,20 @@ class EPGUpdateEvent implements IEPGUpdateEvent {
             }
         });
     }
+
+    /**
+     * EPG 更新完了イベント登録 (一度だけ実行)
+     * @param callback: () => void
+     */
+    public setUpdatedOnce(callback: () => void): void {
+        this.emitter.once(EPGUpdateEvent.UPDATED_EVENT, async () => {
+            try {
+                await callback();
+            } catch (err) {
+                this.log.system.error(err);
+            }
+        });
+    }
 }
 
 namespace EPGUpdateEvent {

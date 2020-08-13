@@ -4,6 +4,7 @@ import * as path from 'path';
 import 'reflect-metadata';
 import { install } from 'source-map-support';
 import IEPGUpdateExecutorManageModel from './model/epgUpdater/IEPGUpdateExecutorManageModel';
+import IEPGUpdateEvent from './model/event/IEPGUpdateEvent';
 import IEventSetter from './model/event/IEventSetter';
 import ILoggerModel from './model/ILoggerModel';
 import IMirakurunClientModel from './model/IMirakurunClientModel';
@@ -111,5 +112,9 @@ const runService = async () => {
 
     await runEPGUpdater();
 
-    await runService();
+    // await runService();
+    const epgUpdateEvent = container.get<IEPGUpdateEvent>('IEPGUpdateEvent');
+    epgUpdateEvent.setUpdatedOnce(async () => {
+        await runService();
+    });
 })();
