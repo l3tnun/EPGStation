@@ -1336,7 +1336,7 @@ export default class SearchState implements ISearchState {
         };
 
         if (option.periodToAvoidDuplicate !== null) {
-            reserveOption.periodToAvoidDuplicate = option.periodToAvoidDuplicate;
+            reserveOption.periodToAvoidDuplicate = parseInt(option.periodToAvoidDuplicate as any, 10);
         }
 
         return reserveOption;
