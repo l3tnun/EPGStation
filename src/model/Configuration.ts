@@ -67,6 +67,11 @@ class Configuration implements IConfiguration {
     private formatConfig(newConfig: IConfigFile): IConfigFile {
         this.setDefaultValues(newConfig);
 
+        // set apiServes
+        if (newConfig.apiServes.length === 0) {
+            newConfig.apiServes.push(`http://localhost:${newConfig.port}`);
+        }
+
         // subDirectory のパス整形
         if (typeof newConfig.subDirectory !== 'undefined') {
             newConfig.subDirectory = urljoin('/', newConfig.subDirectory).replace(/\/$/, '');
@@ -131,6 +136,7 @@ namespace Configuration {
     export const DEFAULT_VALUE: IConfigFile = {
         port: 8888,
         mirakurunPath: 'http+unix://%2Fvar%2Frun%2Fmirakurun.sock/',
+        apiServes: [],
         dbtype: 'sqlite',
         epgUpdateIntervalTime: 10,
         conflictPriority: 1,

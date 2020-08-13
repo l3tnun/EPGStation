@@ -63,12 +63,12 @@ class ServiceServer implements IServiceServer {
     private getApiDocument(ymlPath: string): OpenAPIV3.Document {
         const api = <OpenAPIV3.Document>yaml.safeLoad(fs.readFileSync(ymlPath, 'utf-8'));
 
-        // TODO host 設定
-        api.servers = [
-            {
-                url: urljoin(`http://localhost:${this.config.port}`, this.createUrl('/api')),
-            },
-        ];
+        // host 設定
+        api.servers = this.config.apiServes.map(url => {
+            return {
+                url: urljoin(url, this.createUrl('/api')),
+            };
+        });
 
         // set title and version
         const pkg = <any>JSON.parse(fs.readFileSync(ServiceServer.PACKAGE_JSON, 'utf-8'));

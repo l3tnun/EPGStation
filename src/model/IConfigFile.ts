@@ -31,6 +31,8 @@ export default interface IConfigFile {
     uid?: number | string; // uid
     gid?: number | string; // gid
 
+    apiServes: string[];
+
     dbtype: Enums.DBType;
     sqlite?: {
         extensions: string[];
