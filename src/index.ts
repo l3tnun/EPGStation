@@ -7,6 +7,7 @@ import IEPGUpdateExecutorManageModel from './model/epgUpdater/IEPGUpdateExecutor
 import IEPGUpdateEvent from './model/event/IEPGUpdateEvent';
 import IEventSetter from './model/event/IEventSetter';
 import IConfiguration from './model/IConfiguration';
+import IConnectionCheckModel from './model/IConnectionCheckModel';
 import ILoggerModel from './model/ILoggerModel';
 import IMirakurunClientModel from './model/IMirakurunClientModel';
 import IIPCServer from './model/ipc/IIPCServer';
@@ -50,8 +51,13 @@ const init = async () => {
         }
     }
 
-    // TODO ping DB
-    // TODO ping mirakurun
+    // 接続確認
+    const connectionChecker = container.get<IConnectionCheckModel>('IConnectionCheckModel');
+    // wait mirakurun
+    await connectionChecker.checkMirakurun();
+
+    // wait DB
+    await connectionChecker.checkDB();
 };
 
 /**
@@ -120,7 +126,13 @@ const runService = async () => {
 };
 
 (async () => {
-    await init();
+    try {
+        await init();
+    } catch (err) {
+        console.error('initialize error');
+        console.error(err);
+        process.exit(1);
+    }
 
     await runOperator();
 

@@ -31,6 +31,7 @@ import IVideoUtil from './api/video/IVideoUtil';
 import VideoApiModel from './api/video/VideoApiModel';
 import VideoUtil from './api/video/VideoUtil';
 import Configuration from './Configuration';
+import ConnectionCheckModel from './ConnectionCheckModel';
 import ChannelDB from './db/ChannelDB';
 import DBOperator from './db/DBOperator';
 import DropLogFileDB from './db/DropLogFileDB';
@@ -77,6 +78,7 @@ import RuleEvent from './event/RuleEvent';
 import ThumbnailEvent from './event/ThumbnailEvent';
 import ExecutionManagementModel from './ExecutionManagementModel';
 import IConfiguration from './IConfiguration';
+import IConnectionCheckModel from './IConnectionCheckModel';
 import IExecutionManagementModel from './IExecutionManagementModel';
 import ILoggerModel from './ILoggerModel';
 import IMirakurunClientModel from './IMirakurunClientModel';
@@ -140,6 +142,8 @@ export const set = (container: Container): void => {
     container.bind<ILoggerModel>('ILoggerModel').to(LoggerModel).inSingletonScope();
 
     container.bind<IConfiguration>('IConfiguration').to(Configuration).inSingletonScope();
+
+    container.bind<IConnectionCheckModel>('IConnectionCheckModel').to(ConnectionCheckModel).inSingletonScope();
 
     container.bind<IPromiseQueue>('IPromiseQueue').to(PromiseQueue);
 
