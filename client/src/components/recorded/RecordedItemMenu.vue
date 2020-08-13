@@ -110,6 +110,8 @@ export default class RecordedItemMenu extends Vue {
                     ruleId: this.recordedItem.ruleId.toString(10),
                 },
             });
+
+            return;
         }
 
         // recorded 絞り込み
