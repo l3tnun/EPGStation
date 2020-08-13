@@ -377,15 +377,8 @@ export default class Main extends Vue {
             throw new Error('SettingValueIsNull');
         }
 
-        const type = this.$route.query.type;
-
         return {
-            type:
-                typeof type === 'undefined'
-                    ? 'all'
-                    : type === 'normal' || type === 'conflict' || type === 'overlap' || type === 'skip'
-                    ? type
-                    : 'normal',
+            type: 'normal',
             isHalfWidth: this.settingValue.isReservesHalfWidthDisplayed,
             offset: (Util.getPageNum(this.$route) - 1) * this.settingValue.reservesLength,
             limit: this.settingValue.reservesLength,
