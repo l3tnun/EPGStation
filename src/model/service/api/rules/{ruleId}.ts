@@ -131,15 +131,8 @@ put.apiDoc = {
         required: true,
     },
     responses: {
-        201: {
+        200: {
             description: 'ルールの更新に成功した',
-            content: {
-                'application/json': {
-                    schema: {
-                        $ref: '#/components/schemas/AddedRule',
-                    },
-                },
-            },
         },
         default: {
             description: '予期しないエラー',
