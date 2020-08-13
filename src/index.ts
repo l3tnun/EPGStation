@@ -6,6 +6,7 @@ import { install } from 'source-map-support';
 import IEPGUpdateExecutorManageModel from './model/epgUpdater/IEPGUpdateExecutorManageModel';
 import IEPGUpdateEvent from './model/event/IEPGUpdateEvent';
 import IEventSetter from './model/event/IEventSetter';
+import IConfiguration from './model/IConfiguration';
 import ILoggerModel from './model/ILoggerModel';
 import IMirakurunClientModel from './model/IMirakurunClientModel';
 import IIPCServer from './model/ipc/IIPCServer';
@@ -35,7 +36,20 @@ const init = async () => {
         log.system.fatal(err);
     });
 
-    // TODO set gid & uid
+    const config = container.get<IConfiguration>('IConfiguration').getConfig();
+
+    // set uid & gid
+    if (process.platform !== 'win32' && process.getuid() === 0) {
+        if (typeof config.uid === 'string' || typeof config.uid === 'number') {
+            process.setgid(config.uid);
+        }
+        if (typeof config.gid === 'string' || typeof config.gid === 'number') {
+            process.setgid(config.gid);
+        } else {
+            process.setgid('video');
+        }
+    }
+
     // TODO ping DB
     // TODO ping mirakurun
 };

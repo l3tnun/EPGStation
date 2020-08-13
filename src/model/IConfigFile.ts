@@ -28,6 +28,9 @@ export default interface IConfigFile {
 
     subDirectory?: string;
 
+    uid?: number | string; // uid
+    gid?: number | string; // gid
+
     dbtype: Enums.DBType;
     sqlite?: {
         extensions: string[];
