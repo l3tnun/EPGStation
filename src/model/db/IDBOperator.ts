@@ -2,6 +2,7 @@ import { Connection } from 'typeorm';
 
 export default interface IDBOperator {
     getConnection(): Promise<Connection>;
+    checkConnection(): Promise<void>;
     isEnabledRegexp(): boolean;
     convertBoolean(value: boolean): boolean | number;
     isEnableCS(): boolean;

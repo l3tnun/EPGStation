@@ -28,10 +28,20 @@ export default class DBOperator implements IDBOperator {
     }
 
     /**
+     * 接続確認
+     * @return Promise<void>
+     */
+    public async checkConnection(): Promise<void> {
+        const connection = await this.getConnection();
+        await connection.manager.query('select 1');
+    }
+
+    /**
      * sqlite の外部拡張読み込み
      */
     private async setSQLiteExtensions(): Promise<void> {
         if (
+            this.config.dbtype !== 'sqlite' ||
             typeof this.config.sqlite === 'undefined' ||
             typeof this.config.sqlite.extensions === 'undefined' ||
             this.connection === null
