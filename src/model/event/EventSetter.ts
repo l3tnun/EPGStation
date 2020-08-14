@@ -1,7 +1,11 @@
 import { inject, injectable } from 'inversify';
+import * as apid from '../../../api';
 import IConfigFile from '../IConfigFile';
 import IConfiguration from '../IConfiguration';
+import ILogger from '../ILogger';
+import ILoggerModel from '../ILoggerModel';
 import IIPCServer from '../ipc/IIPCServer';
+import IRecordedTagManadeModel from '../operator/recordedTag/IRecordedTagManadeModel';
 import IRecordingManageModel from '../operator/recording/IRecordingManageModel';
 import IReservationManageModel from '../operator/reservation/IReservationManageModel';
 import IThumbnailManageModel from '../operator/thumbnail/IThumbnailManageModel';
@@ -15,6 +19,7 @@ import IThumbnailEvent from './IThumbnailEvent';
 
 @injectable()
 export default class EventSetter implements IEventSetter {
+    private log: ILogger;
     private epgUpdateEvent: IEPGUpdateEvent;
     private ruleEvent: IRuleEvent;
     private reserveEvent: IReserveEvent;
@@ -23,11 +28,13 @@ export default class EventSetter implements IEventSetter {
     private thumbnailEvent: IThumbnailEvent;
     private reservationManage: IReservationManageModel;
     private recordingManage: IRecordingManageModel;
+    private recordedTagManage: IRecordedTagManadeModel;
     private thumbnailManage: IThumbnailManageModel;
     private ipc: IIPCServer;
     private config: IConfigFile;
 
     constructor(
+        @inject('ILoggerModel') logger: ILoggerModel,
         @inject('IEPGUpdateEvent') epgUpdateEvent: IEPGUpdateEvent,
         @inject('IRuleEvent') ruleEvent: IRuleEvent,
         @inject('IReserveEvent') reserveEvent: IReserveEvent,
@@ -37,10 +44,12 @@ export default class EventSetter implements IEventSetter {
         @inject('IReservationManageModel')
         reservationManage: IReservationManageModel,
         @inject('IRecordingManageModel') recordingManage: IRecordingManageModel,
+        @inject('IRecordedTagManadeModel') recordedTagManage: IRecordedTagManadeModel,
         @inject('IThumbnailManageModel') thumbnailManage: IThumbnailManageModel,
         @inject('IIPCServer') ipc: IIPCServer,
         @inject('IConfiguration') configure: IConfiguration,
     ) {
+        this.log = logger.getLogger();
         this.epgUpdateEvent = epgUpdateEvent;
         this.ruleEvent = ruleEvent;
         this.reserveEvent = reserveEvent;
@@ -49,6 +58,7 @@ export default class EventSetter implements IEventSetter {
         this.thumbnailEvent = thumbnailEvent;
         this.reservationManage = reservationManage;
         this.recordingManage = recordingManage;
+        this.recordedTagManage = recordedTagManage;
         this.thumbnailManage = thumbnailManage;
         this.ipc = ipc;
         this.config = configure.getConfig();
@@ -119,7 +129,15 @@ export default class EventSetter implements IEventSetter {
         });
 
         // 録画開始イベント
-        this.recordingEvent.setStartRecording(_reserve => {
+        this.recordingEvent.setStartRecording(async (reserve, recorded) => {
+            // tag の追加
+            if (reserve.tags !== null) {
+                await this.setTag(recorded.id, reserve.tags).catch(err => {
+                    this.log.system.fatal('setTag error');
+                    this.log.system.fatal(err);
+                });
+            }
+
             this.ipc.notifyClient();
             // TODO run cmd
         });
@@ -132,7 +150,7 @@ export default class EventSetter implements IEventSetter {
         });
 
         // 録画完了
-        this.recordingEvent.setFinishRecording((reserve, recorded, isStopRec) => {
+        this.recordingEvent.setFinishRecording(async (reserve, recorded, isStopRec) => {
             if (isStopRec === false) {
                 if (reserve.ruleId === null) {
                     this.reservationManage.cancel(reserve.id); // 予約から削除
@@ -192,6 +210,14 @@ export default class EventSetter implements IEventSetter {
                 }
             }
 
+            // tag の追加
+            if (reserve.tags !== null) {
+                await this.setTag(recorded.id, reserve.tags).catch(err => {
+                    this.log.system.fatal('setTag error');
+                    this.log.system.fatal(err);
+                });
+            }
+
             this.ipc.notifyClient();
         });
 
@@ -226,5 +252,31 @@ export default class EventSetter implements IEventSetter {
         this.recordedEvent.setDeleteVideoFile(() => {
             this.ipc.notifyClient();
         });
+    }
+
+    /**
+     * 指定した recordedId に tag 情報を関連付けさせる
+     * @param recordedId: apid.RecordedId
+     * @param tagsStr: string
+     * @return Promise<void>
+     */
+    private async setTag(recordedId: apid.RecordedId, tagsStr: string): Promise<void> {
+        let tags: apid.RecordedTagId[] = [];
+        try {
+            tags = JSON.parse(tagsStr);
+        } catch (err) {
+            this.log.system.error(`reserve tags parese error: ${tagsStr}`);
+            this.log.system.error(err);
+
+            return;
+        }
+
+        if (tags.length > 0) {
+            for (const tagId of tags) {
+                await this.recordedTagManage.setRelation(tagId, recordedId).catch(err => {
+                    this.log.system.error(err);
+                });
+            }
+        }
     }
 }

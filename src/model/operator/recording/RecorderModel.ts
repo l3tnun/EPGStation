@@ -322,8 +322,9 @@ class RecorderModel implements IRecorderModel {
                 clearTimeout(recordingTimeoutId);
 
                 this.log.system.info(`add recorded: ${this.reserve.id} ${recPath.fullPath}`);
+                let recorded: Recorded;
                 try {
-                    const recorded = await this.createRecorded();
+                    recorded = await this.createRecorded();
                     this.recordedId = await this.recordedDB.insertOnce(recorded);
                     recorded.id = this.recordedId;
 
@@ -371,7 +372,7 @@ class RecorderModel implements IRecorderModel {
                 }
 
                 // 録画開始を通知
-                this.recordingEvent.emitStartRecording(this.reserve);
+                this.recordingEvent.emitStartRecording(this.reserve, recorded);
 
                 resolve();
             });

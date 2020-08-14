@@ -43,8 +43,8 @@ class RecordingEvent implements IRecordingEvent {
      * 録画開始イベント発行
      * @param reserve: Reserve
      */
-    public emitStartRecording(reserve: Reserve): void {
-        this.emitter.emit(RecordingEvent.START_RECORDING_EVENT, reserve);
+    public emitStartRecording(reserve: Reserve, recorded: Recorded): void {
+        this.emitter.emit(RecordingEvent.START_RECORDING_EVENT, reserve, recorded);
     }
 
     /**
@@ -109,12 +109,12 @@ class RecordingEvent implements IRecordingEvent {
 
     /**
      * 録画開始イベント登録
-     * @param callback: (reserve: Reserve) => void
+     * @param callback: (reserve: Reserve, recorded: Recorded) => void
      */
-    public setStartRecording(callback: (reserve: Reserve) => void): void {
-        this.emitter.on(RecordingEvent.START_RECORDING_EVENT, async (reserve: Reserve) => {
+    public setStartRecording(callback: (reserve: Reserve, recorded: Recorded) => void): void {
+        this.emitter.on(RecordingEvent.START_RECORDING_EVENT, async (reserve: Reserve, recorded: Recorded) => {
             try {
-                await callback(reserve);
+                await callback(reserve, recorded);
             } catch (err) {
                 this.log.system.error(err);
             }
