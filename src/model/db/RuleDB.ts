@@ -196,6 +196,7 @@ export default class RuleDB implements IRuleDB {
                     ? null
                     : rule.reserveOption.periodToAvoidDuplicate,
             allowEndLack: rule.reserveOption.allowEndLack,
+            tags: typeof rule.reserveOption.tags === 'undefined' ? null : JSON.stringify(rule.reserveOption.tags),
             parentDirectoryName: null,
             directory: null,
             recordedFormat: null,
@@ -322,6 +323,9 @@ export default class RuleDB implements IRuleDB {
          */
         if (rule.periodToAvoidDuplicate !== null) {
             convertedRule.reserveOption.periodToAvoidDuplicate = rule.periodToAvoidDuplicate;
+        }
+        if (rule.tags !== null) {
+            convertedRule.reserveOption.tags = JSON.parse(rule.tags);
         }
 
         /**

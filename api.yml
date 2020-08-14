@@ -642,6 +642,10 @@ components:
                 periodToAvoidDuplicate:
                     description: 重複を避ける期間
                     type: integer
+                tags:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/RecordedTagId'
 
         ReserveSaveOption:
             description: 予約保存オプション

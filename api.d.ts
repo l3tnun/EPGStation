@@ -267,6 +267,7 @@ export interface RuleReserveOption {
     allowEndLack: boolean; // 末尾切れを許可するか
     avoidDuplicate: boolean; // 録画済みの重複番組を排除するか
     periodToAvoidDuplicate?: number; // 重複を避ける期間
+    tags?: RecordedTagId[]; // 録画完了後に付与する tag 設定
 }
 
 /**

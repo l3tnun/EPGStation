@@ -192,6 +192,12 @@ export default class Rule extends BaseEntity {
     })
     public allowEndLack: boolean = true; // 末尾切れを許可するか
 
+    @Column({
+        type: 'text',
+        nullable: true,
+    })
+    public tags: string | null = null;
+
     /**
      * 保存設定
      */
