@@ -194,6 +194,9 @@ class ReservationManageModel implements IReservationManageModel {
 
         // option から必要な情報をセットする
         newReserve.allowEndLack = option.allowEndLack;
+        if (typeof option.tags !== 'undefined') {
+            newReserve.tags = JSON.stringify(option.tags);
+        }
         if (typeof option.saveOption !== 'undefined') {
             this.setSaveOptionToReserve(newReserve, option.saveOption);
         }
@@ -704,6 +707,10 @@ class ReservationManageModel implements IReservationManageModel {
         reserve.ruleUpdateCnt = rule.updateCnt;
         reserve.updateTime = updateTime;
         reserve.allowEndLack = rule.reserveOption.allowEndLack;
+
+        if (typeof rule.reserveOption.tags !== 'undefined') {
+            reserve.tags = JSON.stringify(rule.reserveOption.tags);
+        }
 
         if (program !== null) {
             reserve.isOverlap = program.overlap;

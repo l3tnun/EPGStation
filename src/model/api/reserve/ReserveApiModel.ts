@@ -65,6 +65,9 @@ export default class ReserveApiModel implements IReserveApiModel {
         if (reserve.ruleId !== null) {
             item.ruleId = reserve.ruleId;
         }
+        if (reserve.tags !== null) {
+            item.tags = JSON.parse(reserve.tags);
+        }
         if (reserve.parentDirectoryName !== null) {
             item.parentDirectoryName = reserve.parentDirectoryName;
         }

@@ -43,6 +43,12 @@ export default class Reserve extends BaseEntity {
     public allowEndLack: boolean = false; // 末尾切れを許すか
 
     @Column({
+        type: 'text',
+        nullable: true,
+    })
+    public tags: string | null = null;
+
+    @Column({
         default: false,
     })
     public isOverlap: boolean = false; // 重複しているか (rule予約だけ有効)

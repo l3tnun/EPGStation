@@ -43,6 +43,7 @@ export interface ChannelItem {
  */
 export interface EditManualReserveOption {
     allowEndLack: boolean; // 末尾切れを許すか
+    tags?: RecordedTagId[];
     saveOption?: ReserveSaveOption;
     encodeOption?: ReserveEncodedOption;
 }
@@ -98,6 +99,7 @@ export interface ReserveItem {
     isOverlap: boolean;
     allowEndLack: boolean;
     isTimeSpecified: boolean;
+    tags?: RecordedTagId[];
     /**
      * 保存オプション
      */

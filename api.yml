@@ -715,6 +715,10 @@ components:
                 allowEndLack:
                     description: 末尾切れを許すか
                     type: boolean
+                tags:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/RecordedTagId'
                 saveOption:
                     $ref: '#/components/schemas/ReserveSaveOption'
                 encodeOption:
