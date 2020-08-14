@@ -309,6 +309,7 @@ export interface GetRuleOption {
     offset?: number;
     limit?: number;
     type?: GetReserveType;
+    keyword?: string;
 }
 
 /**

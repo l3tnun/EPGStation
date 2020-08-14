@@ -18,6 +18,9 @@ export const get: Operation = async (req, res) => {
         if (typeof req.query.type !== 'undefined') {
             option.type = req.query.type as any;
         }
+        if (typeof req.query.keyword === 'string') {
+            option.keyword = req.query.keyword;
+        }
 
         api.responseJSON(res, 200, await ruleApiModel.gets(option));
     } catch (err) {
@@ -38,6 +41,9 @@ get.apiDoc = {
         },
         {
             $ref: '#/components/parameters/GetReserveType',
+        },
+        {
+            $ref: '#/components/parameters/QueryKeyword',
         },
     ],
     responses: {

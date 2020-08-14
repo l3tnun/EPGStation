@@ -1,8 +1,8 @@
 import { inject, injectable } from 'inversify';
-import { FindManyOptions } from 'typeorm';
 import * as apid from '../../../api';
 import Rule from '../../db/entities/Rule';
 import StrUtil from '../../util/StrUtil';
+import DBUtil from './DBUtil';
 import IDBOperator from './IDBOperator';
 import IRuleDB, { RuleWithCnt } from './IRuleDB';
 
@@ -389,8 +389,49 @@ export default class RuleDB implements IRuleDB {
     public async findAll(option: apid.GetRuleOption): Promise<[apid.Rule[], number]> {
         const connection = await this.op.getConnection();
 
+        let queryBuilder = connection.getRepository(Rule).createQueryBuilder('rule');
+
+        // keyword
+        if (typeof option.keyword !== 'undefined') {
+            const names = StrUtil.toHalf(option.keyword).split(/ /);
+            const like = this.op.getLikeStr(false);
+
+            const keywordAnd: string[] = [];
+            const values: any = {};
+            names.forEach((str, i) => {
+                str = `%${str}%`;
+
+                // value
+                const valueName = `keyword${i}`;
+                values[valueName] = str;
+
+                // keyword
+                keywordAnd.push(`halfWidthKeyword ${like} :${valueName}`);
+            });
+
+            const or: string[] = [];
+            if (keywordAnd.length > 0) {
+                or.push(`(${DBUtil.createAndQuery(keywordAnd)})`);
+            }
+
+            queryBuilder = queryBuilder.andWhere(DBUtil.createOrQuery(or), values);
+        }
+
+        // offset
+        if (typeof option.offset !== 'undefined') {
+            queryBuilder = queryBuilder.skip(option.offset);
+        }
+
+        // limit
+        if (typeof option.limit !== 'undefined') {
+            queryBuilder = queryBuilder.take(option.limit);
+        }
+
+        // order by
+        queryBuilder = queryBuilder.orderBy('rule.id', 'ASC');
+
         // tslint:disable-next-line: typedef
-        const [rules, total] = await connection.getRepository(Rule).findAndCount(this.createFindOption(option));
+        const [rules, total] = await queryBuilder.getManyAndCount();
 
         return [
             rules.map(rule => {
@@ -401,29 +442,6 @@ export default class RuleDB implements IRuleDB {
             }),
             total,
         ];
-    }
-
-    /**
-     * 検索オプション生成
-     * @param option: apid.GetRuleOption
-     * @return FindManyOptions<Rule>
-     */
-    private createFindOption(option: apid.GetRuleOption): FindManyOptions<Rule> {
-        const findOption: FindManyOptions<Rule> = {};
-
-        if (typeof option.offset !== 'undefined') {
-            findOption.skip = option.offset;
-        }
-
-        if (typeof option.limit !== 'undefined') {
-            findOption.take = option.limit;
-        }
-
-        findOption.order = {
-            id: 'ASC',
-        };
-
-        return findOption;
     }
 
     /**
