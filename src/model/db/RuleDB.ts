@@ -2,6 +2,7 @@ import { inject, injectable } from 'inversify';
 import { FindManyOptions } from 'typeorm';
 import * as apid from '../../../api';
 import Rule from '../../db/entities/Rule';
+import StrUtil from '../../util/StrUtil';
 import IDBOperator from './IDBOperator';
 import IRuleDB, { RuleWithCnt } from './IRuleDB';
 
@@ -152,8 +153,14 @@ export default class RuleDB implements IRuleDB {
             updateCnt: typeof rule === 'undefined' ? 0 : (<RuleWithCnt>rule).updateCnt,
             isTimeSpecification: rule.isTimeSpecification,
             keyword: typeof rule.searchOption.keyword === 'undefined' ? null : rule.searchOption.keyword,
+            halfWidthKeyword:
+                typeof rule.searchOption.keyword === 'undefined' ? null : StrUtil.toHalf(rule.searchOption.keyword),
             ignoreKeyword:
                 typeof rule.searchOption.ignoreKeyword === 'undefined' ? null : rule.searchOption.ignoreKeyword,
+            halfWidthIgnoreKeyword:
+                typeof rule.searchOption.ignoreKeyword === 'undefined'
+                    ? null
+                    : StrUtil.toHalf(rule.searchOption.ignoreKeyword),
             keyCS: !!rule.searchOption.keyCS,
             keyRegExp: !!rule.searchOption.keyRegExp,
             name: !!rule.searchOption.name,

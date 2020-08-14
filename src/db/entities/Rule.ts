@@ -37,7 +37,19 @@ export default class Rule extends BaseEntity {
         type: 'text',
         nullable: true,
     })
+    public halfWidthKeyword: string | null = null; // 検索キーワード (検索用)
+
+    @Column({
+        type: 'text',
+        nullable: true,
+    })
     public ignoreKeyword: string | null = null; // 除外検索キーワード
+
+    @Column({
+        type: 'text',
+        nullable: true,
+    })
+    public halfWidthIgnoreKeyword: string | null = null; // 除外検索キーワード (検索用)
 
     @Column({
         default: false,
