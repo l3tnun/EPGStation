@@ -1,9 +1,9 @@
 import { inject, injectable } from 'inversify';
-import { FindManyOptions } from 'typeorm';
 import * as apid from '../../../api';
 import Recorded from '../../db/entities/Recorded';
 import RecordedTag from '../../db/entities/RecordedTag';
 import StrUtil from '../../util/StrUtil';
+import DBUtil from './DBUtil';
 import IDBOperator from './IDBOperator';
 import IRecordedTagDB from './IRecordedTagDB';
 
@@ -158,20 +158,63 @@ export default class RecordedTagDB implements IRecordedTagDB {
     public async findAll(option: apid.GetRecordedTagOption): Promise<[RecordedTag[], number]> {
         const connection = await this.op.getConnection();
 
-        return await connection.getRepository(RecordedTag).findAndCount(this.createFindOption(option));
-    }
+        let queryBuilder = connection.getRepository(RecordedTag).createQueryBuilder('recorded');
+        const querys: { query: string; values: any }[] = [];
 
-    private createFindOption(option: apid.GetRecordedTagOption): FindManyOptions<RecordedTag> {
-        const findOption: FindManyOptions<RecordedTag> = {};
+        // excludeTagId
+        if (typeof option.excludeTagId !== 'undefined') {
+            querys.push({
+                query: 'id not in (:...id)',
+                values: {
+                    id: option.excludeTagId,
+                },
+            });
+        }
 
+        // name
+        if (typeof option.name !== 'undefined') {
+            const names = StrUtil.toHalf(option.name).split(/ /);
+            const like = this.op.getLikeStr(false);
+
+            const nameAnd: string[] = [];
+            const values: any = {};
+            names.forEach((str, i) => {
+                str = `%${str}%`;
+
+                // value
+                const valueName = `$name${i}`;
+                values[valueName] = str;
+
+                // name
+                nameAnd.push(`halfWidthName ${like} :${valueName}`);
+            });
+
+            const or: string[] = [];
+            if (nameAnd.length > 0) {
+                or.push(`(${DBUtil.createAndQuery(nameAnd)})`);
+            }
+
+            querys.push({
+                query: DBUtil.createOrQuery(or),
+                values: values,
+            });
+        }
+
+        // where セット
+        for (const q of querys) {
+            queryBuilder = queryBuilder.andWhere(q.query, q.values);
+        }
+
+        // offset
         if (typeof option.offset !== 'undefined') {
-            findOption.skip = option.offset;
+            queryBuilder = queryBuilder.skip(option.offset);
         }
 
+        // limit
         if (typeof option.limit !== 'undefined') {
-            findOption.take = option.limit;
+            queryBuilder = queryBuilder.take(option.limit);
         }
 
-        return findOption;
+        return await queryBuilder.getManyAndCount();
     }
 }

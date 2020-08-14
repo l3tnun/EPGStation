@@ -15,6 +15,14 @@ export const get: Operation = async (req, res) => {
         if (typeof req.query.limit !== 'undefined') {
             option.limit = parseInt(req.query.limit as any, 10);
         }
+        if (typeof req.query.name === 'string') {
+            option.name = req.query.name;
+        }
+        if (typeof req.query.excludeTagId !== 'undefined') {
+            option.excludeTagId = (req.query.excludeTagId as string[]).map(s => {
+                return parseInt(s, 10);
+            });
+        }
         api.responseJSON(res, 200, await recordedTagApiModel.gets(option));
     } catch (err) {
         api.responseServerError(res, err.message);
@@ -31,6 +39,12 @@ get.apiDoc = {
         },
         {
             $ref: '#/components/parameters/Limit',
+        },
+        {
+            $ref: '#/components/parameters/QueryName',
+        },
+        {
+            $ref: '#/components/parameters/QueryExcludeRecordedTagId',
         },
     ],
     responses: {

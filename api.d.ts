@@ -438,6 +438,8 @@ export interface RecordedSearchOptions {
 export interface GetRecordedTagOption {
     offset?: number;
     limit?: number;
+    name?: string;
+    excludeTagId?: RecordedTagId[];
 }
 
 /**

@@ -1434,6 +1434,22 @@ components:
             schema:
                 type: boolean
 
+        QueryName:
+            description: name
+            name: name
+            in: query
+            schema:
+                type: string
+
+        QueryExcludeRecordedTagId:
+            description: 除外する RecordedTagId
+            name: excludeTagId
+            in: query
+            schema:
+                type: array
+                items:
+                    type: string
+
         requiredGR:
             description: GR
             in: query
