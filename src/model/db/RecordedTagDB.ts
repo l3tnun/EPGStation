@@ -182,7 +182,7 @@ export default class RecordedTagDB implements IRecordedTagDB {
                 str = `%${str}%`;
 
                 // value
-                const valueName = `$name${i}`;
+                const valueName = `name${i}`;
                 values[valueName] = str;
 
                 // name
