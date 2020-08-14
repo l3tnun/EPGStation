@@ -779,6 +779,10 @@ components:
                     type: boolean
                 isTimeSpecified:
                     type: boolean
+                tags:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/RecordedTagId'
                 parentDirectoryName:
                     type: string
                 directory:
