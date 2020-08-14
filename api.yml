@@ -1031,11 +1031,15 @@ components:
             required:
                 - id
                 - name
+                - color
             properties:
                 id:
                     $ref: '#/components/schemas/RecordedTagId'
                 name:
                     description: タグ名
+                    type: string
+                color:
+                    description: 色
                     type: string
 
         RecordedTags:
@@ -1058,9 +1062,13 @@ components:
             type: object
             required:
                 - name
+                - color
             properties:
                 name:
                     description: タグ名
+                    type: string
+                color:
+                    description: 色
                     type: string
 
         RelateRecordedTagOption:

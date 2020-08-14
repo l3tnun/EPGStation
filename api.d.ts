@@ -375,6 +375,7 @@ export interface DropLogFile {
 export interface RecordedTag {
     id: RecordedTagId;
     name: string;
+    color: string;
 }
 
 export interface RecordedTags {

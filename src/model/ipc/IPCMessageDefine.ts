@@ -90,7 +90,7 @@ export enum RecordedFunctions {
  */
 export enum RecordedTagFunctions {
     create = 'create',
-    updateName = 'update',
+    update = 'update',
     setRelation = 'setRelation',
     delete = 'delete',
     deleteRelation = 'deleteRelation',

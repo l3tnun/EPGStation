@@ -238,15 +238,17 @@ export default class IPCServer implements IIPCServer {
 
         index[RecordedTagFunctions.create] = async msg => {
             const name = this.getArgsValue<string>(msg, 'name');
+            const color = this.getArgsValue<string>(msg, 'color');
 
-            return await this.recordedTagManage.create(name);
+            return await this.recordedTagManage.create(name, color);
         };
 
-        index[RecordedTagFunctions.updateName] = async msg => {
+        index[RecordedTagFunctions.update] = async msg => {
             const tagId = this.getArgsValue<apid.RecordedTagId>(msg, 'tagId');
             const name = this.getArgsValue<string>(msg, 'name');
+            const color = this.getArgsValue<string>(msg, 'color');
 
-            await this.recordedTagManage.updateName(tagId, name);
+            await this.recordedTagManage.update(tagId, name, color);
         };
 
         index[RecordedTagFunctions.setRelation] = async msg => {

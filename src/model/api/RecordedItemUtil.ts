@@ -121,6 +121,7 @@ export default class RecordedItemUtil implements IRecordedItemUtil {
                 return {
                     id: t.id,
                     name: t.name,
+                    color: t.color,
                 };
             });
         }

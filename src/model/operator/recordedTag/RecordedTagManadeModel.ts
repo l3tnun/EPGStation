@@ -1,6 +1,7 @@
 import { inject, injectable } from 'inversify';
 import * as apid from '../../../../api';
 import RecordedTag from '../../../db/entities/RecordedTag';
+import StrUtil from '../../../util/StrUtil';
 import IRecordedTagDB from '../../db/IRecordedTagDB';
 import ILogger from '../../ILogger';
 import ILoggerModel from '../../ILoggerModel';
@@ -19,11 +20,14 @@ export default class RecordedTagManadeModel implements IRecordedTagManadeModel {
     /**
      * 新しい tag の作成
      * @param name: tag 名
+     * @param color: string
      * @return Promise<apid.RecordedTagId>
      */
-    public async create(name: string): Promise<apid.RecordedTagId> {
+    public async create(name: string, color: string): Promise<apid.RecordedTagId> {
         const newTag = new RecordedTag();
         newTag.name = name;
+        newTag.color = color;
+        newTag.halfWidthName = StrUtil.toHalf(name);
         const tagId = await this.recordedTagDB.insertOnce(newTag).catch(err => {
             this.log.system.error(`create tag error: ${name}`);
             throw err;
@@ -37,10 +41,11 @@ export default class RecordedTagManadeModel implements IRecordedTagManadeModel {
      * tag 名更新
      * @param tagId: apid.RecordedTagId
      * @param name: name: string
+     * @param color: string
      * @return Promise<void>
      */
-    public async updateName(tagId: apid.RecordedTagId, name: string): Promise<void> {
-        await this.recordedTagDB.updateName(tagId, name);
+    public async update(tagId: apid.RecordedTagId, name: string, color: string): Promise<void> {
+        await this.recordedTagDB.updateOnce(tagId, name, color);
         this.log.system.info(`update tag name tagId: ${tagId}, name: ${name}`);
     }
 

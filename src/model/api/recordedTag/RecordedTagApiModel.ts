@@ -17,10 +17,11 @@ export default class RecordedTagApiModel implements IRecordedTagApiModel {
     /**
      * 新しい tag の作成
      * @param name: tag 名
+     * @param color: string
      * @return Promise<apid.RecordedTagId>
      */
-    public async create(name: string): Promise<apid.RecordedTagId> {
-        const tagId = await this.ipc.recordedTag.create(name);
+    public async create(name: string, color: string): Promise<apid.RecordedTagId> {
+        const tagId = await this.ipc.recordedTag.create(name, color);
 
         return tagId;
     }
@@ -28,11 +29,12 @@ export default class RecordedTagApiModel implements IRecordedTagApiModel {
     /**
      * tag 名更新
      * @param tagId: apid.RecordedTagId
-     * @param name: name: string
+     * @param name: string
+     * @param color: string
      * @return Promise<void>
      */
-    public async updateName(tagId: apid.RecordedTagId, name: string): Promise<void> {
-        await this.ipc.recordedTag.updateName(tagId, name);
+    public async update(tagId: apid.RecordedTagId, name: string, color: string): Promise<void> {
+        await this.ipc.recordedTag.update(tagId, name, color);
     }
 
     /**
@@ -77,6 +79,7 @@ export default class RecordedTagApiModel implements IRecordedTagApiModel {
                 return {
                     id: t.id,
                     name: t.name,
+                    color: t.color,
                 };
             }),
             total: total,

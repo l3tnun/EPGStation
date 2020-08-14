@@ -48,7 +48,8 @@ export const put: Operation = async (req, res) => {
     try {
         const tagId: apid.RecordedTagId = parseInt(req.params.tagId, 10);
         const name: string = req.body.name;
-        await recordedTagApiModel.updateName(tagId, name);
+        const color: string = req.body.color;
+        await recordedTagApiModel.update(tagId, name, color);
         api.responseJSON(res, 200, {
             code: 200,
         });

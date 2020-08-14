@@ -62,7 +62,8 @@ export const post: Operation = async (req, res) => {
 
     try {
         const name: string = req.body.name;
-        const tagId = await recordedTagApiModel.create(name);
+        const color: string = req.body.color;
+        const tagId = await recordedTagApiModel.create(name, color);
         api.responseJSON(res, 201, {
             tagId: tagId,
         });

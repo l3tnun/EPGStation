@@ -255,22 +255,24 @@ export default class IPCClient implements IIPCClient {
      */
     private setRecordedTag(): void {
         this.recordedTag = {
-            create: (name: string) => {
+            create: (name: string, color: string) => {
                 return this.send({
                     model: ModelName.recordedTag,
                     func: RecordedTagFunctions.create,
                     args: {
                         name: name,
+                        color: color,
                     },
                 });
             },
-            updateName: (tagId: apid.RecordedTagId, name: string) => {
+            update: (tagId: apid.RecordedTagId, name: string, color: string) => {
                 return this.send({
                     model: ModelName.recordedTag,
-                    func: RecordedTagFunctions.updateName,
+                    func: RecordedTagFunctions.update,
                     args: {
                         tagId: tagId,
                         name: name,
+                        color: color,
                     },
                 });
             },

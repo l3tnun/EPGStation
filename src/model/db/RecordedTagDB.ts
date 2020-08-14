@@ -3,6 +3,7 @@ import { FindManyOptions } from 'typeorm';
 import * as apid from '../../../api';
 import Recorded from '../../db/entities/Recorded';
 import RecordedTag from '../../db/entities/RecordedTag';
+import StrUtil from '../../util/StrUtil';
 import IDBOperator from './IDBOperator';
 import IRecordedTagDB from './IRecordedTagDB';
 
@@ -27,12 +28,13 @@ export default class RecordedTagDB implements IRecordedTagDB {
     }
 
     /**
-     * tag 名更新
+     * tag 更新
      * @param tagId: apid.RecordedTagId
-     * @param name: name: string
+     * @param name: string
+     * @param color: string
      * @return Promise<void>
      */
-    public async updateName(tagId: apid.RecordedTagId, name: string): Promise<void> {
+    public async updateOnce(tagId: apid.RecordedTagId, name: string, color: string): Promise<void> {
         const tag = await this.findId(tagId);
         if (tag === null) {
             throw new Error('TagIsNull');
@@ -44,6 +46,8 @@ export default class RecordedTagDB implements IRecordedTagDB {
             .update(RecordedTag)
             .set({
                 name: name,
+                color: color,
+                halfWidthName: StrUtil.toHalf(name),
             })
             .where({ id: tagId })
             .execute();
