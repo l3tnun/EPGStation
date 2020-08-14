@@ -12,6 +12,7 @@ import IThumbnailManageModel from '../operator/thumbnail/IThumbnailManageModel';
 import IEPGUpdateEvent from './IEPGUpdateEvent';
 import IEventSetter from './IEventSetter';
 import IRecordedEvent from './IRecordedEvent';
+import IRecordedTagEvent from './IRecordedTagEvent';
 import IRecordingEvent from './IRecordingEvent';
 import IReserveEvent from './IReserveEvent';
 import IRuleEvent from './IRuleEvent';
@@ -25,6 +26,7 @@ export default class EventSetter implements IEventSetter {
     private reserveEvent: IReserveEvent;
     private recordedEvent: IRecordedEvent;
     private recordingEvent: IRecordingEvent;
+    private recordedTagEvent: IRecordedTagEvent;
     private thumbnailEvent: IThumbnailEvent;
     private reservationManage: IReservationManageModel;
     private recordingManage: IRecordingManageModel;
@@ -39,6 +41,7 @@ export default class EventSetter implements IEventSetter {
         @inject('IRuleEvent') ruleEvent: IRuleEvent,
         @inject('IReserveEvent') reserveEvent: IReserveEvent,
         @inject('IRecordingEvent') recordingEvent: IRecordingEvent,
+        @inject('IRecordedTagEvent') recordedTagEvent: IRecordedTagEvent,
         @inject('IRecordedEvent') recordedEvent: IRecordedEvent,
         @inject('IThumbnailEvent') thumbnailEvent: IThumbnailEvent,
         @inject('IReservationManageModel')
@@ -55,6 +58,7 @@ export default class EventSetter implements IEventSetter {
         this.reserveEvent = reserveEvent;
         this.recordedEvent = recordedEvent;
         this.recordingEvent = recordingEvent;
+        this.recordedTagEvent = recordedTagEvent;
         this.thumbnailEvent = thumbnailEvent;
         this.reservationManage = reservationManage;
         this.recordingManage = recordingManage;
@@ -250,6 +254,31 @@ export default class EventSetter implements IEventSetter {
 
         // video file 削除
         this.recordedEvent.setDeleteVideoFile(() => {
+            this.ipc.notifyClient();
+        });
+
+        // タグ作成
+        this.recordedTagEvent.setCreated(_tag => {
+            this.ipc.notifyClient();
+        });
+
+        // タグ更新
+        this.recordedTagEvent.setUpdated(_tagId => {
+            this.ipc.notifyClient();
+        });
+
+        // タグ関連付け
+        this.recordedTagEvent.setRelated((_tagId, _recordedId) => {
+            this.ipc.notifyClient();
+        });
+
+        // タグ削除
+        this.recordedTagEvent.setDeleted(_tagId => {
+            this.ipc.notifyClient();
+        });
+
+        // タグ関連付け削除
+        this.recordedTagEvent.setDeletedRelation((_tagId, _recordedId) => {
             this.ipc.notifyClient();
         });
     }

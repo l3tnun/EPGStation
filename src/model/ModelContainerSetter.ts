@@ -69,11 +69,13 @@ import IEncodeEvent from './event/IEncodeEvent';
 import IEPGUpdateEvent from './event/IEPGUpdateEvent';
 import IEventSetter from './event/IEventSetter';
 import IRecordedEvent from './event/IRecordedEvent';
+import IRecordedTagEvent from './event/IRecordedTagEvent';
 import IRecordingEvent from './event/IRecordingEvent';
 import IReserveEvent from './event/IReserveEvent';
 import IRuleEvent from './event/IRuleEvent';
 import IThumbnailEvent from './event/IThumbnailEvent';
 import RecordedEvent from './event/RecordedEvent';
+import RecordedTagEvent from './event/RecordedTagEvent';
 import RecordingEvent from './event/RecordingEvent';
 import ReserveEvent from './event/ReserveEvent';
 import RuleEvent from './event/RuleEvent';
@@ -186,6 +188,8 @@ export const set = (container: Container): void => {
     container.bind<IRecordedEvent>('IRecordedEvent').to(RecordedEvent).inSingletonScope();
 
     container.bind<IRecordingEvent>('IRecordingEvent').to(RecordingEvent).inSingletonScope();
+
+    container.bind<IRecordedTagEvent>('IRecordedTagEvent').to(RecordedTagEvent).inSingletonScope();
 
     container.bind<IReserveEvent>('IReserveEvent').to(ReserveEvent).inSingletonScope();
 

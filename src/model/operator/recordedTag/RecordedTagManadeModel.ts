@@ -3,6 +3,7 @@ import * as apid from '../../../../api';
 import RecordedTag from '../../../db/entities/RecordedTag';
 import StrUtil from '../../../util/StrUtil';
 import IRecordedTagDB from '../../db/IRecordedTagDB';
+import IRecordedTagEvent from '../../event/IRecordedTagEvent';
 import ILogger from '../../ILogger';
 import ILoggerModel from '../../ILoggerModel';
 import IRecordedTagManadeModel from './IRecordedTagManadeModel';
@@ -11,10 +12,16 @@ import IRecordedTagManadeModel from './IRecordedTagManadeModel';
 export default class RecordedTagManadeModel implements IRecordedTagManadeModel {
     private log: ILogger;
     private recordedTagDB: IRecordedTagDB;
+    private recordedTagEvent: IRecordedTagEvent;
 
-    constructor(@inject('ILoggerModel') logger: ILoggerModel, @inject('IRecordedTagDB') recordedTagDB: IRecordedTagDB) {
+    constructor(
+        @inject('ILoggerModel') logger: ILoggerModel,
+        @inject('IRecordedTagDB') recordedTagDB: IRecordedTagDB,
+        @inject('IRecordedTagEvent') recordedTagEvent: IRecordedTagEvent,
+    ) {
         this.log = logger.getLogger();
         this.recordedTagDB = recordedTagDB;
+        this.recordedTagEvent = recordedTagEvent;
     }
 
     /**
@@ -32,7 +39,11 @@ export default class RecordedTagManadeModel implements IRecordedTagManadeModel {
             this.log.system.error(`create tag error: ${name}`);
             throw err;
         });
+        newTag.id = tagId;
         this.log.system.info(`create tag name: ${name} id: ${tagId}`);
+
+        // notify
+        this.recordedTagEvent.emitCreated(newTag);
 
         return tagId;
     }
@@ -47,6 +58,9 @@ export default class RecordedTagManadeModel implements IRecordedTagManadeModel {
     public async update(tagId: apid.RecordedTagId, name: string, color: string): Promise<void> {
         await this.recordedTagDB.updateOnce(tagId, name, color);
         this.log.system.info(`update tag name tagId: ${tagId}, name: ${name}`);
+
+        // notify
+        this.recordedTagEvent.emitUpdated(tagId);
     }
 
     /**
@@ -61,6 +75,9 @@ export default class RecordedTagManadeModel implements IRecordedTagManadeModel {
             throw err;
         });
         this.log.system.info(`set tag relation tagId: ${tagId} recordedId: ${recordedId}`);
+
+        // notify
+        this.recordedTagEvent.emitRelated(tagId, recordedId);
     }
 
     /**
@@ -74,6 +91,9 @@ export default class RecordedTagManadeModel implements IRecordedTagManadeModel {
             throw err;
         });
         this.log.system.info(`delete tag id: ${tagId}`);
+
+        // notify
+        this.recordedTagEvent.emitDeleted(tagId);
     }
 
     /**
@@ -88,5 +108,8 @@ export default class RecordedTagManadeModel implements IRecordedTagManadeModel {
             throw err;
         });
         this.log.system.info(`delete tag relation tagId: ${tagId} recordedId: ${recordedId}`);
+
+        // notify
+        this.recordedTagEvent.emitDeletedRelation(tagId, recordedId);
     }
 }
