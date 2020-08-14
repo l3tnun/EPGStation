@@ -1214,6 +1214,9 @@ class ReservationManageModel implements IReservationManageModel {
 
         // option から必要な情報をセットする
         newReserve.allowEndLack = option.allowEndLack;
+        if (typeof option.tags !== 'undefined') {
+            newReserve.tags = JSON.stringify(option.tags);
+        }
         this.setSaveOptionToReserve(newReserve, option.saveOption);
         this.setEncodeOptionToReserve(newReserve, option.encodeOption);
 
