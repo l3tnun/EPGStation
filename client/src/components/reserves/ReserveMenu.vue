@@ -1,6 +1,6 @@
 <template>
     <div>
-        <v-menu bottom left>
+        <v-menu v-model="isOpened" bottom left>
             <template v-slot:activator="{ on }">
                 <v-btn icon class="menu-button" v-on="on">
                     <v-icon>mdi-dots-vertical</v-icon>
@@ -33,6 +33,7 @@
                 </v-list-item>
             </v-list>
         </v-menu>
+        <div v-if="isOpened === true" class="menu-background" v-on:click="onClickMenuBackground"></div>
         <ReserveDeleteDialog :isOpen.sync="isOpenDeleteDialog" :reserveItem="reserveItem"></ReserveDeleteDialog>
     </div>
 </template>
@@ -60,6 +61,7 @@ export default class ReserveMenu extends Vue {
     @Prop({})
     public disableEdit: boolean | undefined;
 
+    public isOpened: boolean = false;
     public isOpenDeleteDialog: boolean = false;
 
     private reserveApiModel: IReservesApiModel = container.get<IReservesApiModel>('IReservesApiModel');
@@ -135,5 +137,21 @@ export default class ReserveMenu extends Vue {
             },
         });
     }
+
+    public onClickMenuBackground(e: Event): boolean {
+        e.stopPropagation();
+
+        return false;
+    }
 }
 </script>
+
+<style lang="sass" scoped>
+.menu-background
+    position: fixed
+    top: 0
+    left: 0
+    width: 100%
+    height: 100%
+    z-index: 7 // vuetify アップデート毎に確認が必要
+</style>
