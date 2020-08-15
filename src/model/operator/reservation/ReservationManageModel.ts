@@ -1241,14 +1241,14 @@ class ReservationManageModel implements IReservationManageModel {
     /**
      * 現在時刻より古い予約を削除する
      */
-    public async clean(): Promise<void> {
+    public async cleanup(): Promise<void> {
         // 実行権取得
         const exeId = await this.executeManagementModel.getExecution(ReservationManageModel.EDIT_RESERVE_PRIORITY);
         const finalize = () => {
             this.executeManagementModel.unLockExecution(exeId);
         };
 
-        this.log.system.info('start clean');
+        this.log.system.info('start reserves cleanup');
 
         // 古い予約を取得する
         const deleteReserves = await this.reserveDB.findOldTime(new Date().getTime()).catch(err => {
@@ -1271,7 +1271,7 @@ class ReservationManageModel implements IReservationManageModel {
         // 完了したのでロック解除
         finalize();
 
-        this.log.system.info('clean finish');
+        this.log.system.info('finish reserves cleanup');
 
         // イベント発行
         this.reserveEvent.emitUpdated({

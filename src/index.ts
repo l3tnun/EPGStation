@@ -4,7 +4,6 @@ import * as path from 'path';
 import 'reflect-metadata';
 import { install } from 'source-map-support';
 import IEPGUpdateExecutorManageModel from './model/epgUpdater/IEPGUpdateExecutorManageModel';
-import IEPGUpdateEvent from './model/event/IEPGUpdateEvent';
 import IEventSetter from './model/event/IEventSetter';
 import IConfiguration from './model/IConfiguration';
 import IConnectionCheckModel from './model/IConnectionCheckModel';
@@ -75,17 +74,6 @@ const runOperator = async () => {
     const tuners = await client.getTuners();
     reservationManageModel.setTuners(tuners);
     recordingManager.setTuner(tuners);
-
-    // 古い予約情報を削除する
-    await reservationManageModel.clean();
-};
-
-/**
- * EPGUpdater 起動処理
- */
-const runEPGUpdater = async () => {
-    const epgUpdateExecutorManageModel = container.get<IEPGUpdateExecutorManageModel>('IEPGUpdateExecutorManageModel');
-    epgUpdateExecutorManageModel.execute();
 };
 
 /**
@@ -128,6 +116,25 @@ const runService = async () => {
     // TODO ping pong
 };
 
+/**
+ * クリーンアップ処理
+ */
+const cleanup = async () => {
+    const reservationManageModel = container.get<IReservationManageModel>('IReservationManageModel');
+    const recordingManager = container.get<IRecordingManageModel>('IRecordingManageModel');
+
+    await recordingManager.cleanup();
+    await reservationManageModel.cleanup();
+};
+
+/**
+ * EPGUpdater 起動処理
+ */
+const runEPGUpdater = async () => {
+    const epgUpdateExecutorManageModel = container.get<IEPGUpdateExecutorManageModel>('IEPGUpdateExecutorManageModel');
+    epgUpdateExecutorManageModel.execute();
+};
+
 (async () => {
     try {
         await init();
@@ -139,11 +146,9 @@ const runService = async () => {
 
     await runOperator();
 
-    await runEPGUpdater();
+    await runService();
 
-    // await runService();
-    const epgUpdateEvent = container.get<IEPGUpdateEvent>('IEPGUpdateEvent');
-    epgUpdateEvent.setUpdatedOnce(async () => {
-        await runService();
-    });
+    await cleanup();
+
+    await runEPGUpdater();
 })();

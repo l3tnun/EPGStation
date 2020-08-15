@@ -2,6 +2,8 @@ import { inject, injectable } from 'inversify';
 import * as apid from '../../../../api';
 import * as mapid from '../../../../node_modules/mirakurun/api';
 import Reserve from '../../../db/entities/Reserve';
+import IRecordedDB from '../../db/IRecordedDB';
+import IReserveDB from '../../db/IReserveDB';
 import IRecordingEvent from '../../event/IRecordingEvent';
 import { IReserveUpdateValues } from '../../event/IReserveEvent';
 import ILogger from '../../ILogger';
@@ -19,6 +21,8 @@ class RecordingManageModel implements IRecordingManageModel {
     private log: ILogger;
     private provider: RecorderModelProvider;
     private streamCreator: IRecordingStreamCreator;
+    private recordedDB: IRecordedDB;
+    private reserveDB: IReserveDB;
     private recordingEvent: IRecordingEvent;
     private recordingIndex: RecordingIndex = {};
 
@@ -28,11 +32,15 @@ class RecordingManageModel implements IRecordingManageModel {
         @inject('IRecordingEvent') recordingEvent: IRecordingEvent,
         @inject('IRecordingStreamCreator')
         streamCreator: IRecordingStreamCreator,
+        @inject('IRecordedDB') recordedDB: IRecordedDB,
+        @inject('IReserveDB') reserveDB: IReserveDB,
     ) {
         this.log = logger.getLogger();
         this.provider = provider;
         this.recordingEvent = recordingEvent;
         this.streamCreator = streamCreator;
+        this.recordedDB = recordedDB;
+        this.reserveDB = reserveDB;
 
         this.setEvents(); // イベント設定
     }
@@ -73,6 +81,65 @@ class RecordingManageModel implements IRecordingManageModel {
      */
     public setTuner(tuners: mapid.TunerDevice[]): void {
         this.streamCreator.setTuner(tuners);
+    }
+
+    /**
+     * 起動時に録画中に停止してしまった録画情報を録画中から録画済みに移行させる
+     * @return Promise<void>
+     */
+    public async cleanup(): Promise<void> {
+        this.log.system.info('start recordings cleanup ');
+
+        // 録画中になっている番組を取り出す
+        // tslint:disable-next-line: typedef
+        const [records] = await this.recordedDB.findAll(
+            {
+                isHalfWidth: false,
+                isRecording: true,
+            },
+            {
+                isNeedVideoFiles: true,
+                isNeedThumbnails: false,
+                isNeedsDropLog: false,
+                isNeedTags: false,
+            },
+        );
+
+        for (const r of records) {
+            // 録画中から録画済みへ変更
+            try {
+                await this.recordedDB.removeRecording(r.id);
+            } catch (err) {
+                this.log.system.error(`failed to remove recording: ${r.id}`);
+                this.log.system.error(err);
+                continue;
+            }
+
+            // reserveId がなかった
+            if (r.reserveId === null) {
+                this.log.system.warn(`reserveId is null: ${r.reserveId}`);
+                continue;
+            }
+
+            // 予約情報取得
+            const reserve = await this.reserveDB.findId(r.reserveId).catch(err => {
+                this.log.system.error(`get reserve error: ${r.reserveId}`);
+                this.log.system.error(err);
+            });
+
+            // 予約情報が取れなかった
+            if (typeof reserve === 'undefined' || reserve === null) {
+                this.log.system.warn(`reserveId is not found: ${r.reserveId}`);
+                continue;
+            }
+
+            // TODO recordedTmp が有効な場合は正規の場所に移動させる
+
+            // 終了処理
+            this.recordingEvent.emitFinishRecording(reserve, r, true);
+        }
+
+        this.log.system.info('finish recordings cleanup ');
     }
 
     /**
