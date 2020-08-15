@@ -162,7 +162,10 @@ class RecordingManageModel implements IRecordingManageModel {
             }
 
             // 終了処理
-            this.recordingEvent.emitFinishRecording(reserve, r, true);
+            const newRecorded = await this.recordedDB.findId(r.id);
+            if (newRecorded !== null) {
+                this.recordingEvent.emitFinishRecording(reserve, newRecorded, true);
+            }
         }
 
         this.log.system.info('finish recordings cleanup ');
