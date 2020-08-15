@@ -42,6 +42,7 @@ class EncodeManageModel implements IEncodeManageModel {
     private concurrentEncodeNum: number;
     private waitQueue: EncodeQueueItem[] = [];
     private runningQueue: RunningQueueItem[] = [];
+    private usedFileNameIndex: { [name: string]: boolean } = {}; // 使用済みファイル名
     private idCnt: number = 1;
 
     private listener: events.EventEmitter = new events.EventEmitter();
@@ -215,6 +216,11 @@ class EncodeManageModel implements IEncodeManageModel {
                 ? null
                 : await this.getFilePath(outputDirPath, inputFilePath, encodeCmd.suffix);
 
+        // 出力ファイルパスを使用済みファイル名として登録する
+        if (outputFilePath !== null) {
+            this.usedFileNameIndex[outputFilePath] = true;
+        }
+
         // エンコード開始
         this.log.system.info(
             `encode start. mode: ${queueItem.mode} name: ${recorded.name} file: ${inputFilePath} -> ${outputFilePath}`,
@@ -289,6 +295,11 @@ class EncodeManageModel implements IEncodeManageModel {
         childProcess.on('exit', async (code, signal) => {
             // exit code
             this.log.system.info(`exit code: ${code}, signal: ${signal}`);
+
+            // 使用済みファイル名から削除
+            if (outputFilePath !== null) {
+                delete this.usedFileNameIndex[outputFilePath];
+            }
 
             let isError = true;
             const encodingQueueItem = this.getRunnginQueueItem(queueItem.encodeId);
@@ -394,10 +405,18 @@ class EncodeManageModel implements IEncodeManageModel {
 
             result = path.join(outputDirPath, fileName);
 
+            // 使用済みファイル名に一致するか
+            if (typeof this.usedFileNameIndex[result] !== 'undefined') {
+                conflict++;
+                continue;
+            }
+
+            // 同名ファイルがすでに存在するか
             try {
                 await FileUtil.stat(result);
                 conflict++;
             } catch (e) {
+                // 同名ファイルがすでに存在しなかった
                 break;
             }
         }
