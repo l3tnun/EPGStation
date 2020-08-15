@@ -21,7 +21,6 @@ export default class PromiseRetry implements IPromiseRetry {
                 error = err;
 
                 await Util.sleep(option.waitTime || 1000);
-                console.log('retry');
 
                 continue;
             }
