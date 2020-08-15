@@ -20,7 +20,7 @@
                         {{ reserve.display.day }}({{ reserve.display.dow }}) {{ reserve.display.startTime }} ~
                         {{ reserve.display.endTime }} ({{ reserve.display.duration }}分)
                     </div>
-                    <div class="body-2 grey--text text--darken-2">{{ reserve.display.description }}</div>
+                    <div class="body-2 font-weight-light">{{ reserve.display.description }}</div>
                 </v-list-item-content>
             </v-list-item>
         </v-card>
