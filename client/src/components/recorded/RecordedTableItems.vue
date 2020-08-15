@@ -4,10 +4,10 @@
             <template v-slot:default>
                 <thead>
                     <tr>
-                        <td>タイトル</td>
-                        <td class="channel">放送局</td>
-                        <td class="time">時間</td>
-                        <td class="menu"></td>
+                        <th>タイトル</th>
+                        <th class="channel">放送局</th>
+                        <th class="time">時間</th>
+                        <th class="menu"></th>
                     </tr>
                 </thead>
                 <tbody>
