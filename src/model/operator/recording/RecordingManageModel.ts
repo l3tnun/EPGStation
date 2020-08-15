@@ -6,11 +6,14 @@ import IRecordedDB from '../../db/IRecordedDB';
 import IReserveDB from '../../db/IReserveDB';
 import IRecordingEvent from '../../event/IRecordingEvent';
 import { IReserveUpdateValues } from '../../event/IReserveEvent';
+import IConfigFile from '../../IConfigFile';
+import IConfiguration from '../../IConfiguration';
 import ILogger from '../../ILogger';
 import ILoggerModel from '../../ILoggerModel';
 import IRecorderModel, { RecorderModelProvider } from './IRecorderModel';
 import IRecordingManageModel from './IRecordingManageModel';
 import IRecordingStreamCreator from './IRecordingStreamCreator';
+import IRecordingUtilModel from './IRecordingUtilModel';
 
 interface RecordingIndex {
     [key: number]: IRecorderModel;
@@ -19,28 +22,34 @@ interface RecordingIndex {
 @injectable()
 class RecordingManageModel implements IRecordingManageModel {
     private log: ILogger;
+    private config: IConfigFile;
     private provider: RecorderModelProvider;
     private streamCreator: IRecordingStreamCreator;
     private recordedDB: IRecordedDB;
     private reserveDB: IReserveDB;
+    private recordingUtil: IRecordingUtilModel;
     private recordingEvent: IRecordingEvent;
     private recordingIndex: RecordingIndex = {};
 
     constructor(
         @inject('ILoggerModel') logger: ILoggerModel,
+        @inject('IConfiguration') configuration: IConfiguration,
         @inject('RecorderModelProvider') provider: RecorderModelProvider,
         @inject('IRecordingEvent') recordingEvent: IRecordingEvent,
         @inject('IRecordingStreamCreator')
         streamCreator: IRecordingStreamCreator,
         @inject('IRecordedDB') recordedDB: IRecordedDB,
         @inject('IReserveDB') reserveDB: IReserveDB,
+        @inject('IRecordingUtilModel') recordingUtil: IRecordingUtilModel,
     ) {
         this.log = logger.getLogger();
+        this.config = configuration.getConfig();
         this.provider = provider;
         this.recordingEvent = recordingEvent;
         this.streamCreator = streamCreator;
         this.recordedDB = recordedDB;
         this.reserveDB = reserveDB;
+        this.recordingUtil = recordingUtil;
 
         this.setEvents(); // イベント設定
     }
@@ -133,7 +142,24 @@ class RecordingManageModel implements IRecordingManageModel {
                 continue;
             }
 
-            // TODO recordedTmp が有効な場合は正規の場所に移動させる
+            // video file 処理
+            if (typeof r.videoFiles !== 'undefined') {
+                for (const videoFile of r.videoFiles) {
+                    // recordedTmp が有効な場合は正規の場所に移動させる
+                    if (videoFile.parentDirectoryName === 'tmp' && typeof this.config.recordedTmp !== 'undefined') {
+                        await this.recordingUtil.movingFromTmp(reserve, videoFile.id).catch(err => {
+                            this.log.system.fatal(`movingFromTmp error: ${videoFile.id}`);
+                            this.log.system.fatal(err);
+                        });
+                    }
+
+                    // update file size
+                    await this.recordingUtil.updateVideoFileSize(videoFile.id).catch(err => {
+                        this.log.system.error(`update file size error: ${videoFile.id}`);
+                        this.log.system.error(err);
+                    });
+                }
+            }
 
             // 終了処理
             this.recordingEvent.emitFinishRecording(reserve, r, true);

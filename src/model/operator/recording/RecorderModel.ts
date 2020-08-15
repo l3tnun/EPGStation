@@ -9,10 +9,8 @@ import Recorded from '../../../db/entities/Recorded';
 import RecordedHistory from '../../../db/entities/RecordedHistory';
 import Reserve from '../../../db/entities/Reserve';
 import VideoFile from '../../../db/entities/VideoFile';
-import DateUtil from '../../../util/DateUtil';
 import FileUtil from '../../../util/FileUtil';
 import StrUtil from '../../../util/StrUtil';
-import IChannelDB from '../../db/IChannelDB';
 import IDropLogFileDB from '../../db/IDropLogFileDB';
 import IProgramDB from '../../db/IProgramDB';
 import IRecordedDB from '../../db/IRecordedDB';
@@ -20,20 +18,14 @@ import IRecordedHistoryDB from '../../db/IRecordedHistoryDB';
 import IReserveDB from '../../db/IReserveDB';
 import IVideoFileDB from '../../db/IVideoFileDB';
 import IRecordingEvent from '../../event/IRecordingEvent';
-import IConfigFile, { RecordedDirInfo } from '../../IConfigFile';
+import IConfigFile from '../../IConfigFile';
 import IConfiguration from '../../IConfiguration';
 import ILogger from '../../ILogger';
 import ILoggerModel from '../../ILoggerModel';
 import IDropCheckerModel from './IDropCheckerModel';
 import IRecorderModel from './IRecorderModel';
 import IRecordingStreamCreator from './IRecordingStreamCreator';
-
-interface RecFilePathInfo {
-    parendDir: RecordedDirInfo; // 親ディレクトリ情報
-    subDir: string; // サブディレクトリ
-    fileName: string; // ファイル名 (拡張子付き)
-    fullPath: string;
-}
+import IRecordingUtilModel from './IRecordingUtilModel';
 
 /**
  * Recorder
@@ -42,7 +34,6 @@ interface RecFilePathInfo {
 class RecorderModel implements IRecorderModel {
     private log: ILogger;
     private config: IConfigFile;
-    private channelDB: IChannelDB;
     private programDB: IProgramDB;
     private reserveDB: IReserveDB;
     private recordedDB: IRecordedDB;
@@ -51,6 +42,7 @@ class RecorderModel implements IRecorderModel {
     private dropLogFileDB: IDropLogFileDB;
     private streamCreator: IRecordingStreamCreator;
     private dropChecker: IDropCheckerModel;
+    private recordingUtil: IRecordingUtilModel;
     private recordingEvent: IRecordingEvent;
 
     private reserve!: Reserve;
@@ -71,7 +63,6 @@ class RecorderModel implements IRecorderModel {
     constructor(
         @inject('ILoggerModel') logger: ILoggerModel,
         @inject('IConfiguration') configuration: IConfiguration,
-        @inject('IChannelDB') channelDB: IChannelDB,
         @inject('IProgramDB') programDB: IProgramDB,
         @inject('IReserveDB') reserveDB: IReserveDB,
         @inject('IRecordedDB') recordedDB: IRecordedDB,
@@ -81,11 +72,11 @@ class RecorderModel implements IRecorderModel {
         @inject('IRecordingStreamCreator')
         streamCreator: IRecordingStreamCreator,
         @inject('IDropCheckerModel') dropChecker: IDropCheckerModel,
+        @inject('IRecordingUtilModel') recordingUtil: IRecordingUtilModel,
         @inject('IRecordingEvent') recordingEvent: IRecordingEvent,
     ) {
         this.log = logger.getLogger();
         this.config = configuration.getConfig();
-        this.channelDB = channelDB;
         this.programDB = programDB;
         this.reserveDB = reserveDB;
         this.recordedDB = recordedDB;
@@ -94,6 +85,7 @@ class RecorderModel implements IRecorderModel {
         this.dropLogFileDB = dropLogFileDB;
         this.streamCreator = streamCreator;
         this.dropChecker = dropChecker;
+        this.recordingUtil = recordingUtil;
         this.recordingEvent = recordingEvent;
     }
 
@@ -250,7 +242,7 @@ class RecorderModel implements IRecorderModel {
         this.eventEmitter.emit(RecorderModel.START_RECORDING_EVENT);
 
         // 保存先を取得
-        const recPath = await this.getRecPath(this.reserve, true);
+        const recPath = await this.recordingUtil.getRecPath(this.reserve, true);
 
         this.log.system.info(`recording: ${this.reserve.id} ${recPath.fullPath}`);
 
@@ -499,21 +491,22 @@ class RecorderModel implements IRecorderModel {
             this.isRecording = false;
 
             // tmp に録画していた場合は移動する
-            await this.movingFromTmp().catch(err => {
-                this.log.system.fatal(`movingFromTmp error: ${this.recordedId}`);
-                this.log.system.fatal(err);
-            });
+            if (this.videoFileId !== null) {
+                try {
+                    const newVdeoFileFulPath = await this.recordingUtil.movingFromTmp(this.reserve, this.videoFileId);
+                    this.videoFileFulPath = newVdeoFileFulPath;
+                } catch (err) {
+                    this.log.system.fatal(`movingFromTmp error: ${this.videoFileId}`);
+                    this.log.system.fatal(err);
+                }
+            }
 
             // update video file size
             if (this.videoFileId !== null && this.videoFileFulPath !== null) {
-                this.log.system.info(`update file size: ${this.videoFileId}`);
-                try {
-                    const fileSize = await FileUtil.getFileSize(this.videoFileFulPath);
-                    await this.videoFileDB.updateSize(this.videoFileId, fileSize);
-                } catch (err) {
+                this.recordingUtil.updateVideoFileSize(this.videoFileId).catch(err => {
                     this.log.system.error(`update file size error: ${this.videoFileId}`);
                     this.log.system.error(err);
-                }
+                });
             }
 
             // drop 情報更新
@@ -549,62 +542,6 @@ class RecorderModel implements IRecorderModel {
         }
 
         this.log.system.info(`recording finish: ${this.reserve.id} ${this.videoFileFulPath}`);
-    }
-
-    /**
-     * recordedTmp にされている録画を本来の保存場所へ移動する
-     * recordedTmp の指定が無い場合は何もしない
-     * @return Promise<void>
-     */
-    private async movingFromTmp(): Promise<void> {
-        if (
-            typeof this.config.recordedTmp === 'undefined' ||
-            this.videoFileId === null ||
-            this.videoFileFulPath === null
-        ) {
-            return;
-        }
-
-        // 本来の保存先を取得
-        const newRecPath = await this.getRecPath(this.reserve, false);
-
-        // recordedTmp から本来の保存先へコピー
-        try {
-            this.log.system.info(`move file: ${this.videoFileFulPath} -> ${newRecPath.fullPath}`);
-            await FileUtil.copyFile(this.videoFileFulPath, newRecPath.fullPath);
-        } catch (err) {
-            this.log.system.error(`move file error: ${this.videoFileFulPath} -> ${newRecPath.fullPath}`);
-
-            return;
-        }
-
-        // VideoFile DB 更新
-        try {
-            await this.videoFileDB.updateFilePath({
-                videoFileId: this.videoFileId,
-                parentDirectoryName: newRecPath.parendDir.name,
-                filePath: path.join(newRecPath.subDir, newRecPath.fileName),
-            });
-        } catch (err) {
-            this.log.system.error(`update VideoFileDB path error: ${this.recordedId}`);
-            this.log.system.error(err);
-
-            await FileUtil.unlink(newRecPath.fullPath).catch(err => {
-                this.log.system.error(`delete new file error: ${newRecPath.fullPath}`);
-                this.log.system.error(err);
-            });
-
-            return;
-        }
-
-        const oldVideoFilePath = this.videoFileFulPath;
-        this.videoFileFulPath = newRecPath.fullPath;
-
-        // recordedTmp にある古いファイルを削除する
-        await FileUtil.unlink(oldVideoFilePath).catch(err => {
-            this.log.system.error(`delete old file error: ${newRecPath.fullPath}`);
-            this.log.system.error(err);
-        });
     }
 
     /**
@@ -655,147 +592,6 @@ class RecorderModel implements IRecorderModel {
                 this.log.system.error(`update drop cnt error: ${this.dropLogFileId}`);
                 this.log.system.error(err);
             });
-    }
-
-    /**
-     * 保存先ディレクトリを取得する
-     * @param reserve: Reserve
-     * @param isEnableTmp: 一時保存ディレクトリを使用するか
-     * @return Promise<RecFilePathInfo> 保存先ファイルパス
-     */
-    private async getRecPath(reserve: Reserve, isEnableTmp: boolean): Promise<RecFilePathInfo> {
-        // 親ディレクトリ
-        let parentDir: RecordedDirInfo | null = null;
-        let subDir = ''; // サブディレクトリ
-
-        if (isEnableTmp === true && typeof this.config.recordedTmp !== 'undefined') {
-            // 一時ディレクトリに保存する
-            parentDir = {
-                name: 'tmp',
-                path: this.config.recordedTmp,
-            };
-        } else {
-            if (reserve.parentDirectoryName === null) {
-                // 設定がない場合は recorded の戦闘に定義されている保存先を使用する
-                parentDir = this.config.recorded[0];
-            } else {
-                for (const d of this.config.recorded) {
-                    // parentDirectoryName に一致する親ディレクトリ設定を探す
-                    if (d.name === reserve.parentDirectoryName) {
-                        parentDir = d;
-                        break;
-                    }
-                }
-            }
-
-            if (parentDir === null) {
-                // 親ディレクトリが見つからなかった
-                parentDir = this.config.recorded[0];
-            }
-
-            // サブディレクトリ
-            subDir = reserve.directory === null ? '' : reserve.directory;
-        }
-
-        // 局名
-        let channelName = reserve.channelId.toString(10); // 局名が取れなかったときのために id で一旦セットする
-        let sid = 'NULL';
-        try {
-            const channel = await this.channelDB.findId(reserve.channelId);
-            if (channel !== null) {
-                channelName = channel.name;
-                sid = channel.serviceId.toString(10);
-            }
-        } catch (err) {
-            this.log.system.warn(`channel name get error: ${reserve.channelId}`);
-        }
-
-        // 時刻指定予約時の番組名取得
-        let programName = this.reserve.name;
-        if (reserve.isTimeSpecified === true) {
-            // 時刻指定予約なので番組情報を取得する
-            const program = await this.programDB.findChannelIdAndTime(this.reserve.channelId, this.reserve.startAt);
-            programName = program === null ? '番組名なし' : program.name;
-        }
-
-        // ファイル名
-        let fileName = reserve.recordedFormat === null ? this.config.recordedFormat : reserve.recordedFormat;
-        const jaDate = DateUtil.getJaDate(new Date(reserve.startAt));
-        fileName = fileName
-            .replace(/%YEAR%/, DateUtil.format(jaDate, 'yyyy'))
-            .replace(/%SHORTYEAR%/, DateUtil.format(jaDate, 'YY'))
-            .replace(/%MONTH%/, DateUtil.format(jaDate, 'MM'))
-            .replace(/%DAY%/, DateUtil.format(jaDate, 'dd'))
-            .replace(/%HOUR%/, DateUtil.format(jaDate, 'hh'))
-            .replace(/%MIN%/, DateUtil.format(jaDate, 'mm'))
-            .replace(/%SEC%/, DateUtil.format(jaDate, 'ss'))
-            .replace(/%DOW%/, DateUtil.format(jaDate, 'w'))
-            .replace(/%TYPE%/, reserve.channelType)
-            .replace(/%CHID%/, reserve.channelId.toString(10))
-            .replace(/%CHNAME%/, channelName)
-            .replace(/%CH%/, reserve.channel)
-            .replace(/%SID%/, sid)
-            .replace(/%ID%/, reserve.id.toString())
-            .replace(/%TITLE%/, programName === null ? 'NULL' : programName);
-
-        // 使用禁止文字列置き換え
-        fileName = StrUtil.replaceFileName(fileName);
-
-        // ディレクトリ
-        const dir = path.join(parentDir.path, subDir);
-
-        // ディレクトリが存在するか確認
-        try {
-            await FileUtil.access(dir, fs.constants.R_OK | fs.constants.W_OK);
-        } catch (err) {
-            if (typeof err.code !== 'undefined' && err.code === 'ENOENT') {
-                // ディレクトリが存在しないので作成する
-                this.log.system.info(`mkdirp: ${dir}`);
-                await FileUtil.mkdir(dir);
-            } else {
-                // アクセス権に Read or Write が無い
-                this.log.system.fatal(`dir permission error: ${dir}`);
-                this.log.system.fatal(err);
-                throw err;
-            }
-        }
-
-        const newFileName = await this.getFileName(parentDir.path, subDir, fileName, this.config.recordedFileExtension);
-
-        return {
-            parendDir: parentDir,
-            subDir: subDir,
-            fileName: newFileName,
-            fullPath: path.join(parentDir.path, subDir, newFileName),
-        };
-    }
-
-    /**
-     * 録画ファイルの重複していないファイル名(拡張子付き)を取得
-     * @param parentDir: dir path
-     * @param subDir: dub dir
-     * @param fileName: file name
-     * @param extension: ファイル拡張子
-     * @param conflict: 重複回数
-     */
-    private async getFileName(
-        parentDir: string,
-        subDir: string,
-        fileName: string,
-        extension: string,
-        conflict: number = 0,
-    ): Promise<string> {
-        const conflictStr = conflict === 0 ? '' : `(${conflict})`;
-        const newFileName = `${fileName}${conflictStr}${extension}`;
-        const fileFullPath = path.join(parentDir, subDir, newFileName);
-
-        try {
-            await FileUtil.stat(fileFullPath);
-
-            return this.getFileName(parentDir, subDir, fileName, extension, conflict + 1);
-        } catch (err) {
-            return newFileName;
-        }
     }
 
     /**

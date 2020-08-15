@@ -103,9 +103,11 @@ import IDropCheckerModel from './operator/recording/IDropCheckerModel';
 import IRecorderModel, { RecorderModelProvider } from './operator/recording/IRecorderModel';
 import IRecordingManageModel from './operator/recording/IRecordingManageModel';
 import IRecordingStreamCreator from './operator/recording/IRecordingStreamCreator';
+import IRecordingUtilModel from './operator/recording/IRecordingUtilModel';
 import RecorderModel from './operator/recording/RecorderModel';
 import RecordingManageModel from './operator/recording/RecordingManageModel';
 import RecordingStreamCreator from './operator/recording/RecordingStreamCreator';
+import RecordingUtilModel from './operator/recording/RecordingUtilModel';
 import IReservationManageModel from './operator/reservation/IReservationManageModel';
 import ReservationManageModel from './operator/reservation/ReservationManageModel';
 import ReserveOptionChecker from './operator/ReserveOptionChecker';
@@ -213,6 +215,8 @@ export const set = (container: Container): void => {
     container.bind<IRuleManageModel>('IRuleManageModel').to(RuleManageModel).inSingletonScope();
 
     container.bind<IRecordingStreamCreator>('IRecordingStreamCreator').to(RecordingStreamCreator).inSingletonScope();
+
+    container.bind<IRecordingUtilModel>('IRecordingUtilModel').to(RecordingUtilModel).inSingletonScope();
 
     container.bind<IDropCheckerModel>('IDropCheckerModel').to(DropCheckerModel);
 
