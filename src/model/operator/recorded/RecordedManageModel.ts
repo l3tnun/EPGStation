@@ -223,7 +223,11 @@ export default class RecordedManageModel implements IRecordedManageModel {
         videoFile.size = fileSize;
         videoFile.recordedId = option.recordedId;
 
-        const newVideoFileId = await this.videoFileDB.insertOnce(videoFile);
+        const newVideoFileId = await this.videoFileDB.insertOnce(videoFile).catch(err => {
+            this.log.system.error(`failed to add video: ${option.parentDirectoryName}/${option.filePath}`);
+            this.log.system.error(err);
+            throw err;
+        });
 
         this.recordedEvent.emitAddVideoFile(newVideoFileId);
 
