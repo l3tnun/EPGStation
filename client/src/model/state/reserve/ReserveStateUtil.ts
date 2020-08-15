@@ -1,6 +1,7 @@
 import { inject, injectable } from 'inversify';
 import * as apid from '../../../../../api';
 import DateUtil from '../../../util/DateUtil';
+import GenreUtil from '../../../util/GenreUtil';
 import IChannelModel from '../../channels/IChannelModel';
 import IReserveStateUtil, { ReserveStateData } from './IReserveStateUtil';
 
@@ -33,11 +34,42 @@ export default class ReserveStateUtil implements IReserveStateUtil {
                     startTime: DateUtil.format(startAt, 'hh:mm'),
                     endTime: DateUtil.format(endAt, 'hh:mm'),
                     duration: Math.floor((r.endAt - r.startAt) / 1000 / 60),
+                    genres: this.createGenres(r),
                     description: r.description,
                     extended: r.extended,
                 },
                 reserveItem: r,
             };
         });
+    }
+
+    /**
+     * ジャンル情報
+     * @param reserve: apid.ReserveItem
+     * @return string[]
+     */
+    private createGenres(reserve: apid.ReserveItem): string[] {
+        const genres: string[] = [];
+
+        if (typeof reserve.genre1 !== 'undefined') {
+            const genre = GenreUtil.getGenres(reserve.genre1, reserve.subGenre1);
+            if (genre !== null) {
+                genres.push(genre);
+            }
+        }
+        if (typeof reserve.genre2 !== 'undefined') {
+            const genre = GenreUtil.getGenres(reserve.genre2, reserve.subGenre2);
+            if (genre !== null) {
+                genres.push(genre);
+            }
+        }
+        if (typeof reserve.genre3 !== 'undefined') {
+            const genre = GenreUtil.getGenres(reserve.genre3, reserve.subGenre3);
+            if (genre !== null) {
+                genres.push(genre);
+            }
+        }
+
+        return genres;
     }
 }

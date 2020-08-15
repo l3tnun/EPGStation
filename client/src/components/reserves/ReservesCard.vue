@@ -9,7 +9,7 @@
             style="cursor: pointer;"
         >
             <v-list-item class="px-3" three-line>
-                <div v-on:click="clickItem">
+                <div v-on:click="clickItem(reserve)">
                     <v-list-item-content>
                         <div class="d-flex">
                             <div class="subtitle-1 font-weight-black">{{ reserve.display.name }}</div>
@@ -26,10 +26,12 @@
                 </div>
             </v-list-item>
         </v-card>
+        <ReserveDialog :isOpen.sync="isOpenDialog" :reserve="dialogReserve"></ReserveDialog>
     </div>
 </template>
 
 <script lang="ts">
+import ReserveDialog from '@/components/reserves/ReserveDialog.vue';
 import ReserveMenu from '@/components/reserves/ReserveMenu.vue';
 import { ReserveStateData } from '@/model/state/reserve/IReserveStateUtil';
 import { Component, Prop, Vue } from 'vue-property-decorator';
@@ -37,6 +39,7 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 @Component({
     components: {
         ReserveMenu,
+        ReserveDialog,
     },
 })
 export default class ReservesCard extends Vue {
@@ -53,6 +56,9 @@ export default class ReservesCard extends Vue {
 
     @Prop({})
     public flat: boolean | undefined;
+
+    public isOpenDialog: boolean = false;
+    public dialogReserve: ReserveStateData | null = null;
 
     public getClass(reserve: ReserveStateData): any {
         const result: any = {};
@@ -74,8 +80,9 @@ export default class ReservesCard extends Vue {
         return result;
     }
 
-    public clickItem(): void {
-        console.log('click item');
+    public clickItem(reserve: ReserveStateData): void {
+        this.dialogReserve = reserve;
+        this.isOpenDialog = true;
     }
 }
 </script>

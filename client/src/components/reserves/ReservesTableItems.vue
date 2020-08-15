@@ -1,38 +1,46 @@
 <template>
-    <v-card class="mx-auto reserves-table" max-width="1600px">
-        <v-simple-table>
-            <template v-slot:default>
-                <thead>
-                    <tr>
-                        <th class="channel">放送局</th>
-                        <th class="day">日付</th>
-                        <th class="time">時間</th>
-                        <th>番組名</th>
-                        <th>内容</th>
-                        <th class="menu"></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="reserve in reserves" v-bind:key="reserve.reserveItem.id" v-on:click="clickItem">
-                        <td>{{ reserve.display.channelName }}</td>
-                        <td>{{ reserve.display.day }}({{ reserve.display.dow }})</td>
-                        <td>
-                            {{ reserve.display.startTime }}~{{ reserve.display.endTime }}
-                            <div>({{ reserve.display.duration }}m)</div>
-                        </td>
-                        <td>{{ reserve.display.name }}</td>
-                        <td>{{ reserve.display.description }}</td>
-                        <td>
-                            <ReserveMenu :reserveItem="reserve.reserveItem" :disableEdit="false"></ReserveMenu>
-                        </td>
-                    </tr>
-                </tbody>
-            </template>
-        </v-simple-table>
-    </v-card>
+    <div>
+        <v-card class="mx-auto reserves-table" max-width="1600px">
+            <v-simple-table>
+                <template v-slot:default>
+                    <thead>
+                        <tr>
+                            <th class="channel">放送局</th>
+                            <th class="day">日付</th>
+                            <th class="time">時間</th>
+                            <th>番組名</th>
+                            <th>内容</th>
+                            <th class="menu"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr
+                            v-for="reserve in reserves"
+                            v-bind:key="reserve.reserveItem.id"
+                            v-on:click="clickItem(reserve)"
+                        >
+                            <td>{{ reserve.display.channelName }}</td>
+                            <td>{{ reserve.display.day }}({{ reserve.display.dow }})</td>
+                            <td>
+                                {{ reserve.display.startTime }}~{{ reserve.display.endTime }}
+                                <div>({{ reserve.display.duration }}m)</div>
+                            </td>
+                            <td>{{ reserve.display.name }}</td>
+                            <td>{{ reserve.display.description }}</td>
+                            <td>
+                                <ReserveMenu :reserveItem="reserve.reserveItem" :disableEdit="false"></ReserveMenu>
+                            </td>
+                        </tr>
+                    </tbody>
+                </template>
+            </v-simple-table>
+        </v-card>
+        <ReserveDialog :isOpen.sync="isOpenDialog" :reserve="dialogReserve"></ReserveDialog>
+    </div>
 </template>
 
 <script lang="ts">
+import ReserveDialog from '@/components/reserves/ReserveDialog.vue';
 import ReserveMenu from '@/components/reserves/ReserveMenu.vue';
 import { ReserveStateData } from '@/model/state/reserve/IReserveStateUtil';
 import { Component, Prop, Vue } from 'vue-property-decorator';
@@ -40,6 +48,7 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 @Component({
     components: {
         ReserveMenu,
+        ReserveDialog,
     },
 })
 export default class ReservesTableItems extends Vue {
@@ -48,8 +57,12 @@ export default class ReservesTableItems extends Vue {
     })
     public reserves!: ReserveStateData[];
 
-    public clickItem(): void {
-        console.log('click item');
+    public isOpenDialog: boolean = false;
+    public dialogReserve: ReserveStateData | null = null;
+
+    public clickItem(reserve: ReserveStateData): void {
+        this.dialogReserve = reserve;
+        this.isOpenDialog = true;
     }
 }
 </script>

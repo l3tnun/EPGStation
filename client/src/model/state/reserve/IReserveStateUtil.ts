@@ -9,6 +9,7 @@ export interface ReserveStateData {
         startTime: string;
         endTime: string;
         duration: number;
+        genres: string[];
         description?: string;
         extended?: string;
     };
