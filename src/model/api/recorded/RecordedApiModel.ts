@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import * as apid from '../../../../api';
-import IRecordedDB from '../../db/IRecordedDB';
+import IRecordedDB, { FindAllOption } from '../../db/IRecordedDB';
 import IIPCClient from '../../ipc/IIPCClient';
 import IEncodeManageModel from '../../service/encode/IEncodeManageModel';
 import IRecordedItemUtil from '../IRecordedItemUtil';
@@ -31,6 +31,7 @@ export default class RecordedApiModel implements IRecordedApiModel {
      * @return Promise<apid.Records>
      */
     public async gets(option: apid.GetRecordedOption): Promise<apid.Records> {
+        (<FindAllOption>option).isRecording = false;
         // tslint:disable-next-line: typedef
         const [records, total] = await this.recordedDB.findAll(option, {
             isNeedVideoFiles: true,
