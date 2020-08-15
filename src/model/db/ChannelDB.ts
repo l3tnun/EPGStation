@@ -8,6 +8,7 @@ import Channel from '../../db/entities/Channel';
 import StrUtil from '../../util/StrUtil';
 import ILogger from '../ILogger';
 import ILoggerModel from '../ILoggerModel';
+import IPromiseRetry from '../IPromiseRetry';
 import IChannelDB, { ChannelUpdateValues } from './IChannelDB';
 import IDBOperator from './IDBOperator';
 
@@ -15,10 +16,16 @@ import IDBOperator from './IDBOperator';
 export default class ChannelDB implements IChannelDB {
     private log: ILogger;
     private op: IDBOperator;
+    private promieRetry: IPromiseRetry;
 
-    constructor(@inject('ILoggerModel') logger: ILoggerModel, @inject('IDBOperator') op: IDBOperator) {
+    constructor(
+        @inject('ILoggerModel') logger: ILoggerModel,
+        @inject('IDBOperator') op: IDBOperator,
+        @inject('IPromiseRetry') promieRetry: IPromiseRetry,
+    ) {
         this.log = logger.getLogger();
         this.op = op;
+        this.promieRetry = promieRetry;
     }
 
     /**
@@ -109,8 +116,11 @@ export default class ChannelDB implements IChannelDB {
     public async findId(channelId: apid.ChannelId): Promise<Channel | null> {
         const connection = await this.op.getConnection();
 
-        const result = await connection.getRepository(Channel).findOne({
-            where: [{ id: channelId }],
+        const repository = connection.getRepository(Channel);
+        const result = await this.promieRetry.run(() => {
+            return repository.findOne({
+                where: [{ id: channelId }],
+            });
         });
 
         return typeof result === 'undefined' ? null : result;
@@ -131,8 +141,12 @@ export default class ChannelDB implements IChannelDB {
             });
         }
 
-        return await connection.getRepository(Channel).find({
-            where: queryOption,
+        const repository = connection.getRepository(Channel);
+
+        return await this.promieRetry.run(() => {
+            return repository.find({
+                where: queryOption,
+            });
         });
     }
 
@@ -143,6 +157,10 @@ export default class ChannelDB implements IChannelDB {
     public async findAll(): Promise<Channel[]> {
         const connection = await this.op.getConnection();
 
-        return await connection.getRepository(Channel).find();
+        const repository = connection.getRepository(Channel);
+
+        return await this.promieRetry.run(() => {
+            return repository.find();
+        });
     }
 }

@@ -12,7 +12,8 @@ export default class PromiseRetry implements IPromiseRetry {
     public async run<T>(job: () => Promise<T>, option: RetryOption): Promise<T> {
         let error: Error | null = null;
 
-        for (let i = 0; i < option.cnt; i++) {
+        const cnt = typeof option === 'undefined' || typeof option.cnt === 'undefined' ? 5 : option.cnt;
+        for (let i = 0; i < cnt; i++) {
             try {
                 const result: T = await job();
 

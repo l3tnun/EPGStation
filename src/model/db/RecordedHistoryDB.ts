@@ -1,15 +1,18 @@
 import { inject, injectable } from 'inversify';
 import * as apid from '../../../api';
 import RecordedHistory from '../../db/entities/RecordedHistory';
+import IPromiseRetry from '../IPromiseRetry';
 import IDBOperator from './IDBOperator';
 import IRecordedHistoryDB from './IRecordedHistoryDB';
 
 @injectable()
 export default class RecordedHistoryDB implements IRecordedHistoryDB {
     private op: IDBOperator;
+    private promieRetry: IPromiseRetry;
 
-    constructor(@inject('IDBOperator') op: IDBOperator) {
+    constructor(@inject('IDBOperator') op: IDBOperator, @inject('IPromiseRetry') promieRetry: IPromiseRetry) {
         this.op = op;
+        this.promieRetry = promieRetry;
     }
 
     /**
@@ -19,12 +22,11 @@ export default class RecordedHistoryDB implements IRecordedHistoryDB {
      */
     public async insertOnce(program: RecordedHistory): Promise<apid.RecordedHistoryId> {
         const connection = await this.op.getConnection();
-        const insertedResult = await connection
-            .createQueryBuilder()
-            .insert()
-            .into(RecordedHistory)
-            .values(program)
-            .execute();
+        const queryBuilder = connection.createQueryBuilder().insert().into(RecordedHistory).values(program);
+
+        const insertedResult = await this.promieRetry.run(() => {
+            return queryBuilder.execute();
+        });
 
         return insertedResult.identifiers[0].id;
     }
@@ -35,11 +37,14 @@ export default class RecordedHistoryDB implements IRecordedHistoryDB {
      */
     public async delete(time: apid.UnixtimeMS): Promise<void> {
         const connection = await this.op.getConnection();
-        await connection
+        const queryBuilder = connection
             .createQueryBuilder()
             .delete()
             .from(RecordedHistory)
-            .where('endAt <= :time', { time: time })
-            .execute();
+            .where('endAt <= :time', { time: time });
+
+        await this.promieRetry.run(() => {
+            return queryBuilder.execute();
+        });
     }
 }

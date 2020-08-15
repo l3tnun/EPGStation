@@ -9,6 +9,7 @@ import DateUtil from '../../util/DateUtil';
 import StrUtil from '../../util/StrUtil';
 import ILogger from '../ILogger';
 import ILoggerModel from '../ILoggerModel';
+import IPromiseRetry from '../IPromiseRetry';
 import DBUtil from './DBUtil';
 import IChannelTypeIndex from './IChannelTypeHash';
 import IDBOperator from './IDBOperator';
@@ -37,10 +38,16 @@ interface KeywordOption {
 export default class ProgramDB implements IProgramDB {
     private log: ILogger;
     private op: IDBOperator;
+    private promieRetry: IPromiseRetry;
 
-    constructor(@inject('ILoggerModel') logger: ILoggerModel, @inject('IDBOperator') op: IDBOperator) {
+    constructor(
+        @inject('ILoggerModel') logger: ILoggerModel,
+        @inject('IDBOperator') op: IDBOperator,
+        @inject('IPromiseRetry') promieRetry: IPromiseRetry,
+    ) {
         this.log = logger.getLogger();
         this.op = op;
+        this.promieRetry = promieRetry;
     }
 
     /**
@@ -309,9 +316,12 @@ export default class ProgramDB implements IProgramDB {
      */
     public async deleteOld(time: apid.UnixtimeMS): Promise<void> {
         const connection = await this.op.getConnection();
+        const repository = connection.getRepository(Program);
 
-        await connection.getRepository(Program).delete({
-            endAt: LessThan(time),
+        await this.promieRetry.run(() => {
+            return repository.delete({
+                endAt: LessThan(time),
+            });
         });
     }
 
@@ -323,8 +333,11 @@ export default class ProgramDB implements IProgramDB {
     public async findId(programId: apid.ProgramId): Promise<Program | null> {
         const connection = await this.op.getConnection();
 
-        const result = await connection.getRepository(Program).findOne({
-            where: [{ id: programId }],
+        const repository = connection.getRepository(Program);
+        const result = await this.promieRetry.run(() => {
+            return repository.findOne({
+                where: [{ id: programId }],
+            });
         });
 
         return typeof result === 'undefined' ? null : result;
@@ -379,13 +392,16 @@ export default class ProgramDB implements IProgramDB {
                 'overlap',
             );
         }
-        const result = await select
+        const queryBuilder = select
             .from(Program, 'program')
             .where(str, query.param)
             .andWhere(`${new Date().getTime()} <= program.endAt`)
             .orderBy('program.startAt', 'ASC')
-            .limit(option.limit)
-            .getRawAndEntities();
+            .limit(option.limit);
+
+        const result = await this.promieRetry.run(() => {
+            return queryBuilder.getRawAndEntities();
+        });
 
         // overlap を追加
         return result.entities.map((entity, i) => {
@@ -790,12 +806,14 @@ export default class ProgramDB implements IProgramDB {
      */
     public async findChannelIdAndTime(channelId: apid.ChannelId, startAt: apid.UnixtimeMS): Promise<Program | null> {
         const connection = await this.op.getConnection();
-
-        const result = await connection.getRepository(Program).find({
-            channelId: channelId,
-            // startAt <= time && endAt >= time
-            startAt: LessThanOrEqual(startAt),
-            endAt: MoreThanOrEqual(startAt),
+        const repository = connection.getRepository(Program);
+        const result = await this.promieRetry.run(() => {
+            return repository.find({
+                channelId: channelId,
+                // startAt <= time && endAt >= time
+                startAt: LessThanOrEqual(startAt),
+                endAt: MoreThanOrEqual(startAt),
+            });
         });
 
         return result.length === 0 ? null : result[0];
@@ -807,11 +825,14 @@ export default class ProgramDB implements IProgramDB {
      */
     public async findAll(): Promise<Program[]> {
         const connection = await this.op.getConnection();
+        const repository = connection.getRepository(Program);
 
-        return await connection.getRepository(Program).find({
-            order: {
-                startAt: 'ASC',
-            },
+        return await this.promieRetry.run(() => {
+            return repository.find({
+                order: {
+                    startAt: 'ASC',
+                },
+            });
         });
     }
 
@@ -847,11 +868,15 @@ export default class ProgramDB implements IProgramDB {
             throw new Error('FindScheduleOptionError');
         }
 
-        return await connection.getRepository(Program).find({
-            where: queryOption,
-            order: {
-                startAt: 'ASC',
-            },
+        const repository = connection.getRepository(Program);
+
+        return await this.promieRetry.run(() => {
+            return repository.find({
+                where: queryOption,
+                order: {
+                    startAt: 'ASC',
+                },
+            });
         });
     }
 
@@ -867,15 +892,18 @@ export default class ProgramDB implements IProgramDB {
         }
 
         const connection = await this.op.getConnection();
+        const repository = connection.getRepository(Program);
 
-        return connection.getRepository(Program).find({
-            where: {
-                startAt: LessThanOrEqual(time),
-                endAt: MoreThanOrEqual(time),
-            },
-            order: {
-                startAt: 'ASC',
-            },
+        return await this.promieRetry.run(() => {
+            return repository.find({
+                where: {
+                    startAt: LessThanOrEqual(time),
+                    endAt: MoreThanOrEqual(time),
+                },
+                order: {
+                    startAt: 'ASC',
+                },
+            });
         });
     }
 }

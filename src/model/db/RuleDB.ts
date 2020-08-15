@@ -2,6 +2,7 @@ import { inject, injectable } from 'inversify';
 import * as apid from '../../../api';
 import Rule from '../../db/entities/Rule';
 import StrUtil from '../../util/StrUtil';
+import IPromiseRetry from '../IPromiseRetry';
 import DBUtil from './DBUtil';
 import IDBOperator from './IDBOperator';
 import IRuleDB, { RuleWithCnt } from './IRuleDB';
@@ -9,9 +10,11 @@ import IRuleDB, { RuleWithCnt } from './IRuleDB';
 @injectable()
 export default class RuleDB implements IRuleDB {
     private op: IDBOperator;
+    private promieRetry: IPromiseRetry;
 
-    constructor(@inject('IDBOperator') op: IDBOperator) {
+    constructor(@inject('IDBOperator') op: IDBOperator, @inject('IPromiseRetry') promieRetry: IPromiseRetry) {
         this.op = op;
+        this.promieRetry = promieRetry;
     }
 
     /**
@@ -21,12 +24,11 @@ export default class RuleDB implements IRuleDB {
      */
     public async insertOnce(rule: apid.Rule | apid.AddRuleOption): Promise<apid.RuleId> {
         const connection = await this.op.getConnection();
-        const insertedResult = await connection
-            .createQueryBuilder()
-            .insert()
-            .into(Rule)
-            .values(this.convertRuleToDBRule(rule))
-            .execute();
+        const queryBuilder = connection.createQueryBuilder().insert().into(Rule).values(this.convertRuleToDBRule(rule));
+
+        const insertedResult = await this.promieRetry.run(() => {
+            return queryBuilder.execute();
+        });
 
         return insertedResult.identifiers[0].id;
     }
@@ -47,12 +49,15 @@ export default class RuleDB implements IRuleDB {
         convertedRule.updateCnt = oldRule.updateCnt + 1;
 
         const connection = await this.op.getConnection();
-        await connection
+        const queryBuilder = connection
             .createQueryBuilder()
             .update(Rule)
             .set(convertedRule)
-            .where('id = :id', { id: newRule.id })
-            .execute();
+            .where('id = :id', { id: newRule.id });
+
+        await this.promieRetry.run(() => {
+            return queryBuilder.execute();
+        });
     }
 
     /**
@@ -71,15 +76,18 @@ export default class RuleDB implements IRuleDB {
         }
 
         const connection = await this.op.getConnection();
-        await connection
+        const queryBuilder = connection
             .createQueryBuilder()
             .update(Rule)
             .set({
                 enable: true,
                 updateCnt: rule.updateCnt + 1,
             })
-            .where('id = :id', { id: ruleId })
-            .execute();
+            .where('id = :id', { id: ruleId });
+
+        await this.promieRetry.run(() => {
+            return queryBuilder.execute();
+        });
     }
 
     /**
@@ -98,15 +106,18 @@ export default class RuleDB implements IRuleDB {
         }
 
         const connection = await this.op.getConnection();
-        await connection
+        const queryBuilder = connection
             .createQueryBuilder()
             .update(Rule)
             .set({
                 enable: false,
                 updateCnt: rule.updateCnt + 1,
             })
-            .where('id = :id', { id: ruleId })
-            .execute();
+            .where('id = :id', { id: ruleId });
+
+        await this.promieRetry.run(() => {
+            return queryBuilder.execute();
+        });
     }
 
     /**
@@ -115,7 +126,11 @@ export default class RuleDB implements IRuleDB {
      */
     public async deleteOnce(ruleId: apid.RuleId): Promise<void> {
         const connection = await this.op.getConnection();
-        await connection.createQueryBuilder().delete().from(Rule).where('id = :id', { id: ruleId }).execute();
+        const queryBuilder = connection.createQueryBuilder().delete().from(Rule).where('id = :id', { id: ruleId });
+
+        await this.promieRetry.run(() => {
+            return queryBuilder.execute();
+        });
     }
 
     /**
@@ -127,8 +142,12 @@ export default class RuleDB implements IRuleDB {
     public async findId(ruleId: apid.RuleId, isNeedCnt: boolean = false): Promise<apid.Rule | RuleWithCnt | null> {
         const connection = await this.op.getConnection();
 
-        const result = await connection.getRepository(Rule).findOne({
-            where: { id: ruleId },
+        const queryBuilder = connection.getRepository(Rule);
+
+        const result = await this.promieRetry.run(() => {
+            return queryBuilder.findOne({
+                where: { id: ruleId },
+            });
         });
 
         if (typeof result === 'undefined') {
@@ -435,7 +454,9 @@ export default class RuleDB implements IRuleDB {
         queryBuilder = queryBuilder.orderBy('rule.id', 'ASC');
 
         // tslint:disable-next-line: typedef
-        const [rules, total] = await queryBuilder.getManyAndCount();
+        const [rules, total] = await this.promieRetry.run(() => {
+            return queryBuilder.getManyAndCount();
+        });
 
         return [
             rules.map(rule => {
@@ -455,14 +476,17 @@ export default class RuleDB implements IRuleDB {
     public async getIds(): Promise<apid.RuleId[]> {
         const connection = await this.op.getConnection();
 
-        return (
-            await connection
-                .createQueryBuilder()
-                .select('rule.id')
-                .from(Rule, 'rule')
-                .orderBy('rule.id', 'ASC')
-                .getMany()
-        ).map(r => {
+        const queryBuilder = connection
+            .createQueryBuilder()
+            .select('rule.id')
+            .from(Rule, 'rule')
+            .orderBy('rule.id', 'ASC');
+
+        const result = await this.promieRetry.run(() => {
+            return queryBuilder.getMany();
+        });
+
+        return result.map(r => {
             return r.id;
         });
     }

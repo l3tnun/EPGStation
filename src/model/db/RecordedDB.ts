@@ -4,6 +4,7 @@ import * as apid from '../../../api';
 import Recorded from '../../db/entities/Recorded';
 import Rule from '../../db/entities/Rule';
 import StrUtil from '../../util/StrUtil';
+import IPromiseRetry from '../IPromiseRetry';
 import DBUtil from './DBUtil';
 import IDBOperator from './IDBOperator';
 import IRecordedDB, { FindAllOption, RecordedColumnOption } from './IRecordedDB';
@@ -11,9 +12,11 @@ import IRecordedDB, { FindAllOption, RecordedColumnOption } from './IRecordedDB'
 @injectable()
 export default class RecordedDB implements IRecordedDB {
     private op: IDBOperator;
+    private promieRetry: IPromiseRetry;
 
-    constructor(@inject('IDBOperator') op: IDBOperator) {
+    constructor(@inject('IDBOperator') op: IDBOperator, @inject('IPromiseRetry') promieRetry: IPromiseRetry) {
         this.op = op;
+        this.promieRetry = promieRetry;
     }
 
     /**
@@ -23,7 +26,10 @@ export default class RecordedDB implements IRecordedDB {
      */
     public async insertOnce(recorded: Recorded): Promise<apid.RecordedId> {
         const connection = await this.op.getConnection();
-        const insertedResult = await connection.createQueryBuilder().insert().into(Recorded).values(recorded).execute();
+        const queryBuilder = connection.createQueryBuilder().insert().into(Recorded).values(recorded);
+        const insertedResult = await this.promieRetry.run(() => {
+            return queryBuilder.execute();
+        });
 
         return insertedResult.identifiers[0].id;
     }
@@ -35,7 +41,10 @@ export default class RecordedDB implements IRecordedDB {
      */
     public async updateOnce(recorded: Recorded): Promise<void> {
         const connection = await this.op.getConnection();
-        await connection.createQueryBuilder().update(Recorded).set(recorded).where({ id: recorded.id }).execute();
+        const queryBuilder = connection.createQueryBuilder().update(Recorded).set(recorded).where({ id: recorded.id });
+        await this.promieRetry.run(() => {
+            return queryBuilder.execute();
+        });
     }
 
     /**
@@ -55,14 +64,16 @@ export default class RecordedDB implements IRecordedDB {
         }
 
         const connection = await this.op.getConnection();
-        await connection
+        const queryBuilder = connection
             .createQueryBuilder()
             .update(Recorded)
             .set({
                 isRecording: false,
             })
-            .where({ id: recordedId })
-            .execute();
+            .where({ id: recordedId });
+        await this.promieRetry.run(() => {
+            return queryBuilder.execute();
+        });
     }
 
     /**
@@ -72,14 +83,12 @@ export default class RecordedDB implements IRecordedDB {
      */
     public async deleteOnce(recordedId: apid.RecordedId): Promise<void> {
         const connection = await this.op.getConnection();
-        await connection
-            .createQueryBuilder()
-            .delete()
-            .from(Recorded)
-            .where({
-                id: recordedId,
-            })
-            .execute();
+        const queryBuilder = connection.createQueryBuilder().delete().from(Recorded).where({
+            id: recordedId,
+        });
+        await this.promieRetry.run(() => {
+            return queryBuilder.execute();
+        });
     }
 
     /**
@@ -90,15 +99,17 @@ export default class RecordedDB implements IRecordedDB {
     public async findId(recordedId: apid.RecordedId): Promise<Recorded | null> {
         const connection = await this.op.getConnection();
 
-        const result = await connection
+        const queryBuilder = connection
             .getRepository(Recorded)
             .createQueryBuilder('recorded')
             .where({ id: recordedId })
             .leftJoinAndSelect('recorded.videoFiles', 'videoFiles')
             .leftJoinAndSelect('recorded.thumbnails', 'thumbnails')
             .leftJoinAndSelect('recorded.dropLogFile', 'dropLogFile')
-            .leftJoinAndSelect('recorded.tags', 'tags')
-            .getMany();
+            .leftJoinAndSelect('recorded.tags', 'tags');
+        const result = await this.promieRetry.run(() => {
+            return queryBuilder.getMany();
+        });
 
         return result.length === 0 ? null : result[0];
     }
@@ -115,13 +126,15 @@ export default class RecordedDB implements IRecordedDB {
 
         const connection = await this.op.getConnection();
 
-        const result = await connection
+        const queryBuilder = await connection
             .getRepository(Recorded)
             .createQueryBuilder('recorded')
             .where({ id: In(recordedIds) })
             .leftJoinAndSelect('recorded.videoFiles', 'videoFiles')
-            .leftJoinAndSelect('recorded.thumbnails', 'thumbnails')
-            .getMany();
+            .leftJoinAndSelect('recorded.thumbnails', 'thumbnails');
+        const result = await this.promieRetry.run(() => {
+            return queryBuilder.getMany();
+        });
 
         return result;
     }
@@ -263,7 +276,9 @@ export default class RecordedDB implements IRecordedDB {
             queryBuilder = queryBuilder.leftJoinAndSelect('recorded.tags', 'tags');
         }
 
-        return await queryBuilder.getManyAndCount();
+        return await this.promieRetry.run(() => {
+            return queryBuilder.getManyAndCount();
+        });
     }
 
     /**
@@ -273,16 +288,17 @@ export default class RecordedDB implements IRecordedDB {
     public async findRuleList(): Promise<apid.RecordedRuleListItem[]> {
         const connection = await this.op.getConnection();
 
-        const result = await connection
+        const queryBuilder = connection
             .getRepository(Recorded)
             .createQueryBuilder('recorded')
             .select('count(*) as cnt, ruleId, keyword')
             .where({ ruleId: Not(IsNull()) })
             .innerJoin(Rule, 'rule', 'rule.id = recorded.ruleId')
-            .groupBy('ruleId')
-            .getRawMany();
+            .groupBy('ruleId');
 
-        return result;
+        return await this.promieRetry.run(() => {
+            return queryBuilder.getRawMany();
+        });
     }
 
     /**
@@ -292,14 +308,15 @@ export default class RecordedDB implements IRecordedDB {
     public async findChannelList(): Promise<apid.RecordedChannelListItem[]> {
         const connection = await this.op.getConnection();
 
-        const result = await connection
+        const queryBuilder = await connection
             .getRepository(Recorded)
             .createQueryBuilder('recorded')
             .select('count(*) as cnt, channelId')
-            .groupBy('channelId')
-            .getRawMany();
+            .groupBy('channelId');
 
-        return result;
+        return await this.promieRetry.run(() => {
+            return queryBuilder.getRawMany();
+        });
     }
 
     /**
@@ -309,14 +326,15 @@ export default class RecordedDB implements IRecordedDB {
     public async findGenreList(): Promise<apid.RecordedGenreListItem[]> {
         const connection = await this.op.getConnection();
 
-        const result = await connection
+        const queryBuilder = await connection
             .getRepository(Recorded)
             .createQueryBuilder('recorded')
             .select('count(*) as cnt, genre1 as genre')
             .where({ genre1: Not(IsNull()) })
-            .groupBy('genre')
-            .getRawMany();
+            .groupBy('genre');
 
-        return result;
+        return await this.promieRetry.run(() => {
+            return queryBuilder.getRawMany();
+        });
     }
 }

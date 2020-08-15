@@ -1,15 +1,18 @@
 import { inject, injectable } from 'inversify';
 import * as apid from '../../../api';
 import DropLogFile from '../../db/entities/DropLogFile';
+import IPromiseRetry from '../IPromiseRetry';
 import IDBOperator from './IDBOperator';
 import IDropLogFileDB, { UpdateCntOption } from './IDropLogFileDB';
 
 @injectable()
 export default class DropLogFileDB implements IDropLogFileDB {
     private op: IDBOperator;
+    private promieRetry: IPromiseRetry;
 
-    constructor(@inject('IDBOperator') op: IDBOperator) {
+    constructor(@inject('IDBOperator') op: IDBOperator, @inject('IPromiseRetry') promieRetry: IPromiseRetry) {
         this.op = op;
+        this.promieRetry = promieRetry;
     }
 
     /**
@@ -19,12 +22,11 @@ export default class DropLogFileDB implements IDropLogFileDB {
      */
     public async insertOnce(dropLogFile: DropLogFile): Promise<apid.DropLogFileId> {
         const connection = await this.op.getConnection();
-        const insertedResult = await connection
-            .createQueryBuilder()
-            .insert()
-            .into(DropLogFile)
-            .values(dropLogFile)
-            .execute();
+        const queryBuilder = connection.createQueryBuilder().insert().into(DropLogFile).values(dropLogFile);
+
+        const insertedResult = await this.promieRetry.run(() => {
+            return queryBuilder.execute();
+        });
 
         return insertedResult.identifiers[0].id;
     }
@@ -36,7 +38,7 @@ export default class DropLogFileDB implements IDropLogFileDB {
      */
     public async updateCnt(updateOption: UpdateCntOption): Promise<void> {
         const connection = await this.op.getConnection();
-        await connection
+        const queryBuilder = connection
             .createQueryBuilder()
             .update(DropLogFile)
             .set({
@@ -44,8 +46,11 @@ export default class DropLogFileDB implements IDropLogFileDB {
                 dropCnt: updateOption.dropCnt,
                 scramblingCnt: updateOption.scramblingCnt,
             })
-            .where({ id: updateOption.id })
-            .execute();
+            .where({ id: updateOption.id });
+
+        await this.promieRetry.run(() => {
+            return queryBuilder.execute();
+        });
     }
 
     /**
@@ -55,14 +60,13 @@ export default class DropLogFileDB implements IDropLogFileDB {
      */
     public async deleteOnce(dropLogFileId: apid.DropLogFileId): Promise<void> {
         const connection = await this.op.getConnection();
-        await connection
-            .createQueryBuilder()
-            .delete()
-            .from(DropLogFile)
-            .where({
-                id: dropLogFileId,
-            })
-            .execute();
+        const queryBuilder = connection.createQueryBuilder().delete().from(DropLogFile).where({
+            id: dropLogFileId,
+        });
+
+        await this.promieRetry.run(() => {
+            return queryBuilder.execute();
+        });
     }
 
     /**
@@ -72,13 +76,12 @@ export default class DropLogFileDB implements IDropLogFileDB {
      */
     public async findId(dropLogFileId: apid.DropLogFileId): Promise<DropLogFile | null> {
         const connection = await this.op.getConnection();
-        const result = await connection
-            .getRepository(DropLogFile)
-            .createQueryBuilder()
-            .where({
-                id: dropLogFileId,
-            })
-            .getOne();
+        const queryBuilder = connection.getRepository(DropLogFile).createQueryBuilder().where({
+            id: dropLogFileId,
+        });
+        const result = await this.promieRetry.run(() => {
+            return queryBuilder.getOne();
+        });
 
         return typeof result === 'undefined' ? null : result;
     }

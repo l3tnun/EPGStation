@@ -3,6 +3,7 @@ import { FindConditions, FindManyOptions, In, IsNull, LessThan, LessThanOrEqual,
 import * as apid from '../../../api';
 import Reserve from '../../db/entities/Reserve';
 import { IReserveUpdateValues } from '../event/IReserveEvent';
+import IPromiseRetry from '../IPromiseRetry';
 import IDBOperator from './IDBOperator';
 import IReserveDB, {
     IFindRuleOption,
@@ -15,9 +16,11 @@ import IReserveDB, {
 @injectable()
 export default class ReserveDB implements IReserveDB {
     private op: IDBOperator;
+    private promieRetry: IPromiseRetry;
 
-    constructor(@inject('IDBOperator') op: IDBOperator) {
+    constructor(@inject('IDBOperator') op: IDBOperator, @inject('IPromiseRetry') promieRetry: IPromiseRetry) {
         this.op = op;
+        this.promieRetry = promieRetry;
     }
 
     /**
@@ -27,7 +30,10 @@ export default class ReserveDB implements IReserveDB {
      */
     public async insertOnce(reserve: Reserve): Promise<apid.ReserveId> {
         const connection = await this.op.getConnection();
-        const insertedResult = await connection.createQueryBuilder().insert().into(Reserve).values(reserve).execute();
+        const queryBuilder = connection.createQueryBuilder().insert().into(Reserve).values(reserve);
+        const insertedResult = await this.promieRetry.run(() => {
+            return queryBuilder.execute();
+        });
 
         return insertedResult.identifiers[0].id;
     }
@@ -38,12 +44,14 @@ export default class ReserveDB implements IReserveDB {
      */
     public async updateOnce(reserve: Reserve): Promise<void> {
         const connection = await this.op.getConnection();
-        await connection
+        const queryBuilder = connection
             .createQueryBuilder()
             .update(Reserve)
             .set(reserve)
-            .where('id = :id', { id: reserve.id })
-            .execute();
+            .where('id = :id', { id: reserve.id });
+        await this.promieRetry.run(() => {
+            return queryBuilder.execute();
+        });
     }
 
     /**
@@ -106,8 +114,12 @@ export default class ReserveDB implements IReserveDB {
     public async findId(reserveId: apid.ReserveId): Promise<Reserve | null> {
         const connection = await this.op.getConnection();
 
-        const result = await connection.getRepository(Reserve).findOne({
-            where: { id: reserveId },
+        const queryBuilder = await connection.getRepository(Reserve);
+
+        const result = await this.promieRetry.run(() => {
+            return queryBuilder.findOne({
+                where: { id: reserveId },
+            });
         });
 
         return typeof result === 'undefined' ? null : result;
@@ -121,7 +133,11 @@ export default class ReserveDB implements IReserveDB {
     public async findAll(option: apid.GetReserveOption): Promise<[Reserve[], number]> {
         const connection = await this.op.getConnection();
 
-        return await connection.getRepository(Reserve).findAndCount(this.createFindOption(option));
+        const queryBuilder = await connection.getRepository(Reserve);
+
+        return await this.promieRetry.run(() => {
+            return queryBuilder.findAndCount(this.createFindOption(option));
+        });
     }
 
     private createFindOption(option: apid.GetReserveOption): FindManyOptions<Reserve> {
@@ -178,8 +194,11 @@ export default class ReserveDB implements IReserveDB {
      */
     public async findLists(option: apid.GetReserveListsOption): Promise<Reserve[]> {
         const connection = await this.op.getConnection();
+        const queryBuilder = connection.getRepository(Reserve);
 
-        return await connection.getRepository(Reserve).find(this.createFindListOption(option));
+        return await this.promieRetry.run(() => {
+            return queryBuilder.find(this.createFindListOption(option));
+        });
     }
 
     private createFindListOption(option: apid.GetReserveListsOption): FindManyOptions<Reserve> {
@@ -198,9 +217,12 @@ export default class ReserveDB implements IReserveDB {
      */
     public async findProgramId(programId: apid.ProgramId): Promise<Reserve[]> {
         const connection = await this.op.getConnection();
+        const queryBuilder = connection.getRepository(Reserve);
 
-        return await connection.getRepository(Reserve).find({
-            where: { programId: programId },
+        return await this.promieRetry.run(() => {
+            return queryBuilder.find({
+                where: { programId: programId },
+            });
         });
     }
 
@@ -273,7 +295,11 @@ export default class ReserveDB implements IReserveDB {
             });
         }
 
-        return await queryBuilder.orderBy('reserve.startAt', 'ASC').getMany();
+        queryBuilder = queryBuilder.orderBy('reserve.startAt', 'ASC');
+
+        return await this.promieRetry.run(() => {
+            return queryBuilder.getMany();
+        });
     }
 
     /**
@@ -294,11 +320,15 @@ export default class ReserveDB implements IReserveDB {
             whereOption.push({ isOverlap: false });
         }
 
-        return await connection.getRepository(Reserve).find({
-            where: whereOption,
-            order: {
-                startAt: 'ASC',
-            },
+        const queryBuilder = connection.getRepository(Reserve);
+
+        return await this.promieRetry.run(() => {
+            return queryBuilder.find({
+                where: whereOption,
+                order: {
+                    startAt: 'ASC',
+                },
+            });
         });
     }
 
@@ -309,9 +339,12 @@ export default class ReserveDB implements IReserveDB {
      */
     public async findOldTime(baseTime: apid.UnixtimeMS): Promise<Reserve[]> {
         const connection = await this.op.getConnection();
+        const queryBuilder = connection.getRepository(Reserve);
 
-        return await connection.getRepository(Reserve).find({
-            endAt: LessThan(baseTime),
+        return await this.promieRetry.run(() => {
+            return queryBuilder.find({
+                endAt: LessThan(baseTime),
+            });
         });
     }
 
@@ -323,13 +356,16 @@ export default class ReserveDB implements IReserveDB {
     public async findTimeSpecification(option: IFindTimeSpecificationOption): Promise<Reserve | null> {
         const connection = await this.op.getConnection();
 
-        const result = await connection.getRepository(Reserve).findOne({
-            where: {
-                channelId: option.channelId,
-                startAt: option.startAt,
-                endAt: option.endAt,
-                ruleId: IsNull(),
-            },
+        const queryBuilder = connection.getRepository(Reserve);
+        const result = await this.promieRetry.run(() => {
+            return queryBuilder.findOne({
+                where: {
+                    channelId: option.channelId,
+                    startAt: option.startAt,
+                    endAt: option.endAt,
+                    ruleId: IsNull(),
+                },
+            });
         });
 
         return typeof result === 'undefined' ? null : result;
@@ -352,7 +388,12 @@ export default class ReserveDB implements IReserveDB {
             queryBuilder = queryBuilder.andWhere('reserve.programId is not null');
         }
 
-        return (await queryBuilder.orderBy('reserve.id', 'ASC').getMany()).map(r => {
+        queryBuilder = queryBuilder.orderBy('reserve.id', 'ASC');
+        const result = await this.promieRetry.run(() => {
+            return queryBuilder.getMany();
+        });
+
+        return result.map(r => {
             return r.id;
         });
     }
@@ -371,14 +412,15 @@ export default class ReserveDB implements IReserveDB {
         };
         this.setReserveTypeOption(type, whereOption);
 
-        const result = await await connection
+        const queryBuilder = connection
             .getRepository(Reserve)
             .createQueryBuilder('reserve')
             .select(['ruleId, count(ruleId) as ruleIdCnt'])
             .where(whereOption)
-            .groupBy('ruleId')
-            .getRawMany();
+            .groupBy('ruleId');
 
-        return result;
+        return await this.promieRetry.run(() => {
+            return queryBuilder.getRawMany();
+        });
     }
 }

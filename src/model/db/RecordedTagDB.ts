@@ -3,6 +3,7 @@ import * as apid from '../../../api';
 import Recorded from '../../db/entities/Recorded';
 import RecordedTag from '../../db/entities/RecordedTag';
 import StrUtil from '../../util/StrUtil';
+import IPromiseRetry from '../IPromiseRetry';
 import DBUtil from './DBUtil';
 import IDBOperator from './IDBOperator';
 import IRecordedTagDB from './IRecordedTagDB';
@@ -10,9 +11,11 @@ import IRecordedTagDB from './IRecordedTagDB';
 @injectable()
 export default class RecordedTagDB implements IRecordedTagDB {
     private op: IDBOperator;
+    private promieRetry: IPromiseRetry;
 
-    constructor(@inject('IDBOperator') op: IDBOperator) {
+    constructor(@inject('IDBOperator') op: IDBOperator, @inject('IPromiseRetry') promieRetry: IPromiseRetry) {
         this.op = op;
+        this.promieRetry = promieRetry;
     }
 
     /**
@@ -22,7 +25,10 @@ export default class RecordedTagDB implements IRecordedTagDB {
      */
     public async insertOnce(tag: RecordedTag): Promise<apid.RecordedTagId> {
         const connection = await this.op.getConnection();
-        const insertedResult = await connection.createQueryBuilder().insert().into(RecordedTag).values(tag).execute();
+        const queryBuilder = connection.createQueryBuilder().insert().into(RecordedTag).values(tag);
+        const insertedResult = await this.promieRetry.run(() => {
+            return queryBuilder.execute();
+        });
 
         return insertedResult.identifiers[0].id;
     }
@@ -41,7 +47,7 @@ export default class RecordedTagDB implements IRecordedTagDB {
         }
 
         const connection = await this.op.getConnection();
-        await connection
+        const queryBuilder = connection
             .createQueryBuilder()
             .update(RecordedTag)
             .set({
@@ -49,8 +55,10 @@ export default class RecordedTagDB implements IRecordedTagDB {
                 color: color,
                 halfWidthName: StrUtil.toHalf(name),
             })
-            .where({ id: tagId })
-            .execute();
+            .where({ id: tagId });
+        await this.promieRetry.run(() => {
+            return queryBuilder.execute();
+        });
     }
 
     /**
@@ -69,17 +77,21 @@ export default class RecordedTagDB implements IRecordedTagDB {
         }
 
         recorded.tags.push(tag);
-        await recorded.save();
+        await this.promieRetry.run(() => {
+            return recorded.save();
+        });
     }
 
     private async findRecorded(recordedId: apid.RecordedId): Promise<Recorded> {
         const connection = await this.op.getConnection();
-        const recorded = await connection
+        const queryBuilder = await connection
             .getRepository(Recorded)
             .createQueryBuilder('recorded')
             .where({ id: recordedId })
-            .leftJoinAndSelect('recorded.tags', 'recorded_tag')
-            .getOne();
+            .leftJoinAndSelect('recorded.tags', 'recorded_tag');
+        const recorded = await this.promieRetry.run(() => {
+            return queryBuilder.getOne();
+        });
 
         if (typeof recorded === 'undefined') {
             throw new Error('RecordedIsUndefined');
@@ -101,7 +113,9 @@ export default class RecordedTagDB implements IRecordedTagDB {
             return tag.id !== tagId;
         });
 
-        await recorded.save();
+        await this.promieRetry.run(() => {
+            return recorded.save();
+        });
     }
 
     /**
@@ -114,7 +128,9 @@ export default class RecordedTagDB implements IRecordedTagDB {
 
         recorded.tags = [];
 
-        await recorded.save();
+        await this.promieRetry.run(() => {
+            return recorded.save();
+        });
     }
 
     /**
@@ -124,14 +140,12 @@ export default class RecordedTagDB implements IRecordedTagDB {
      */
     public async deleteOnce(tagId: apid.RecordedTagId): Promise<void> {
         const connection = await this.op.getConnection();
-        await connection
-            .createQueryBuilder()
-            .delete()
-            .from(RecordedTag)
-            .where({
-                id: tagId,
-            })
-            .execute();
+        const queryBuilder = connection.createQueryBuilder().delete().from(RecordedTag).where({
+            id: tagId,
+        });
+        await this.promieRetry.run(() => {
+            return queryBuilder.execute();
+        });
     }
 
     /**
@@ -141,11 +155,13 @@ export default class RecordedTagDB implements IRecordedTagDB {
      */
     public async findId(tagId: apid.RecordedTagId): Promise<RecordedTag | null> {
         const connection = await this.op.getConnection();
-        const result = await connection
+        const queryBuilder = connection
             .getRepository(RecordedTag)
             .createQueryBuilder('recorded_tag')
-            .where({ id: tagId })
-            .getOne();
+            .where({ id: tagId });
+        const result = await this.promieRetry.run(() => {
+            return queryBuilder.getOne();
+        });
 
         return typeof result === 'undefined' ? null : result;
     }
@@ -215,6 +231,8 @@ export default class RecordedTagDB implements IRecordedTagDB {
             queryBuilder = queryBuilder.take(option.limit);
         }
 
-        return await queryBuilder.getManyAndCount();
+        return await this.promieRetry.run(() => {
+            return queryBuilder.getManyAndCount();
+        });
     }
 }

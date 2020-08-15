@@ -1,15 +1,18 @@
 import { inject, injectable } from 'inversify';
 import * as apid from '../../../api';
 import VideoFile from '../../db/entities/VideoFile';
+import IPromiseRetry from '../IPromiseRetry';
 import IDBOperator from './IDBOperator';
 import IVideoFileDB, { UpdateFilePathOption } from './IVideoFileDB';
 
 @injectable()
 export default class VideoFileDB implements IVideoFileDB {
     private op: IDBOperator;
+    private promieRetry: IPromiseRetry;
 
-    constructor(@inject('IDBOperator') op: IDBOperator) {
+    constructor(@inject('IDBOperator') op: IDBOperator, @inject('IPromiseRetry') promieRetry: IPromiseRetry) {
         this.op = op;
+        this.promieRetry = promieRetry;
     }
 
     /**
@@ -19,12 +22,11 @@ export default class VideoFileDB implements IVideoFileDB {
      */
     public async insertOnce(videoFile: VideoFile): Promise<apid.VideoFileId> {
         const connection = await this.op.getConnection();
-        const insertedResult = await connection
-            .createQueryBuilder()
-            .insert()
-            .into(VideoFile)
-            .values(videoFile)
-            .execute();
+        const queryBuilder = connection.createQueryBuilder().insert().into(VideoFile).values(videoFile);
+
+        const insertedResult = await this.promieRetry.run(() => {
+            return queryBuilder.execute();
+        });
 
         return insertedResult.identifiers[0].id;
     }
@@ -41,15 +43,18 @@ export default class VideoFileDB implements IVideoFileDB {
         }
 
         const connection = await this.op.getConnection();
-        await connection
+        const queryBuilder = connection
             .createQueryBuilder()
             .update(VideoFile)
             .set({
                 parentDirectoryName: option.parentDirectoryName,
                 filePath: option.filePath,
             })
-            .where({ id: option.videoFileId })
-            .execute();
+            .where({ id: option.videoFileId });
+
+        await this.promieRetry.run(() => {
+            return queryBuilder.execute();
+        });
     }
 
     /**
@@ -65,14 +70,17 @@ export default class VideoFileDB implements IVideoFileDB {
         }
 
         const connection = await this.op.getConnection();
-        await connection
+        const queryBuilder = connection
             .createQueryBuilder()
             .update(VideoFile)
             .set({
                 size: size,
             })
-            .where({ id: videoFileId })
-            .execute();
+            .where({ id: videoFileId });
+
+        await this.promieRetry.run(() => {
+            return queryBuilder.execute();
+        });
     }
 
     /**
@@ -82,14 +90,13 @@ export default class VideoFileDB implements IVideoFileDB {
      */
     public async deleteOnce(VideoFileId: apid.VideoFileId): Promise<void> {
         const connection = await this.op.getConnection();
-        await connection
-            .createQueryBuilder()
-            .delete()
-            .from(VideoFile)
-            .where({
-                id: VideoFileId,
-            })
-            .execute();
+        const queryBuilder = connection.createQueryBuilder().delete().from(VideoFile).where({
+            id: VideoFileId,
+        });
+
+        await this.promieRetry.run(() => {
+            return queryBuilder.execute();
+        });
     }
 
     /**
@@ -99,14 +106,13 @@ export default class VideoFileDB implements IVideoFileDB {
      */
     public async deleteRecordedId(recordedId: apid.RecordedId): Promise<void> {
         const connection = await this.op.getConnection();
-        await connection
-            .createQueryBuilder()
-            .delete()
-            .from(VideoFile)
-            .where({
-                recordedId: recordedId,
-            })
-            .execute();
+        const queryBuilder = connection.createQueryBuilder().delete().from(VideoFile).where({
+            recordedId: recordedId,
+        });
+
+        await this.promieRetry.run(() => {
+            return queryBuilder.execute();
+        });
     }
 
     /**
@@ -117,11 +123,11 @@ export default class VideoFileDB implements IVideoFileDB {
     public async findId(videoFileId: apid.VideoFileId): Promise<VideoFile | null> {
         const connection = await this.op.getConnection();
 
-        const result = await connection
-            .getRepository(VideoFile)
-            .createQueryBuilder()
-            .where({ id: videoFileId })
-            .getOne();
+        const queryBuilder = connection.getRepository(VideoFile).createQueryBuilder().where({ id: videoFileId });
+
+        const result = await this.promieRetry.run(() => {
+            return queryBuilder.getOne();
+        });
 
         return typeof result === 'undefined' ? null : result;
     }
