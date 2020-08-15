@@ -4,9 +4,7 @@
         <transition name="page">
             <div v-if="reservesState.getReserves().length > 0" ref="appContent" class="app-content pa-2">
                 <div v-bind:style="contentWrapStyle">
-                    <v-card class="mx-auto" max-width="800">
-                        <ReservesCard :reserves="reservesState.getReserves()" :flat="true"></ReservesCard>
-                    </v-card>
+                    <ReserveItems :reserves="reservesState.getReserves()"></ReserveItems>
                 </div>
                 <Pagination :total="reservesState.getTotal()" :pageSize="settingValue.reservesLength"></Pagination>
             </div>
@@ -18,7 +16,7 @@
 
 <script lang="ts">
 import Pagination from '@/components/pagination/Pagination.vue';
-import ReservesCard from '@/components/reserves/ReservesCard.vue';
+import ReserveItems from '@/components/reserves/ReserveItems.vue';
 import Snackbar from '@/components/snackbar/Snackbar.vue';
 import TitleBar from '@/components/titleBar/TitleBar.vue';
 import container from '@/model/ModelContainer';
@@ -37,7 +35,7 @@ Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
 @Component({
     components: {
         TitleBar,
-        ReservesCard,
+        ReserveItems,
         Pagination,
         Snackbar,
     },
