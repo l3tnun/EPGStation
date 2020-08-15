@@ -327,7 +327,7 @@ class RecorderModel implements IRecorderModel {
                     videoFile.type = 'ts';
                     videoFile.name = 'TS';
                     videoFile.recordedId = this.recordedId;
-                    this.log.system.info(`add video file: ${videoFile.filePath}`);
+                    this.log.system.info(`create video file: ${videoFile.filePath}`);
                     this.videoFileId = await this.videoFileDB.insertOnce(videoFile);
                     this.videoFileFulPath = recPath.fullPath;
                 } catch (err) {
