@@ -6,6 +6,7 @@
             v-bind:class="getClass(reserve)"
             class="mx-auto"
             :flat="!!flat"
+            style="cursor: pointer;"
         >
             <v-list-item class="px-3" three-line>
                 <div v-on:click="clickItem">
