@@ -9,7 +9,7 @@
             style="cursor: pointer;"
         >
             <v-list-item class="px-3" three-line>
-                <div v-on:click="clickItem(reserve)">
+                <div style="width: 100%;" v-on:click="clickItem(reserve)">
                     <v-list-item-content>
                         <div class="d-flex">
                             <div class="subtitle-1 font-weight-black">{{ reserve.display.name }}</div>
