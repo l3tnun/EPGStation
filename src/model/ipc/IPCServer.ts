@@ -83,7 +83,7 @@ export default class IPCServer implements IIPCServer {
      */
     public notifyClient(): void {
         if (this.child === null) {
-            throw new Error('ChildIsNull');
+            return;
         }
 
         // tslint:disable-next-line: no-object-literal-type-assertion

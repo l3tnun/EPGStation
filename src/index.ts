@@ -75,6 +75,9 @@ const runOperator = async () => {
     const tuners = await client.getTuners();
     reservationManageModel.setTuners(tuners);
     recordingManager.setTuner(tuners);
+
+    // 古い予約情報を削除する
+    await reservationManageModel.clean();
 };
 
 /**
