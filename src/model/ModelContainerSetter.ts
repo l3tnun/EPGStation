@@ -91,6 +91,7 @@ import IIPCServer from './ipc/IIPCServer';
 import IPCClient from './ipc/IPCClient';
 import IPCServer from './ipc/IPCServer';
 import { IPromiseQueue } from './IPromiseQueue';
+import IPromiseRetry from './IPromiseRetry';
 import LoggerModel from './LoggerModel';
 import MirakurunClientModel from './MirakurunClientModel';
 import IReserveOptionChecker from './operator/IReserveOptionChecker';
@@ -116,6 +117,7 @@ import RuleManageModel from './operator/rule/RuleManageModel';
 import IThumbnailManageModel from './operator/thumbnail/IThumbnailManageModel';
 import ThumbnailManageModel from './operator/thumbnail/ThumbnailManageModel';
 import PromiseQueue from './PromiseQueue';
+import PromiseRetry from './PromiseRetry';
 import EncodeFinishModel from './service/encode/EncodeFinishModel';
 import EncodeManageModel from './service/encode/EncodeManageModel';
 import EncodeProcessManageModel from './service/encode/EncodeProcessManageModel';
@@ -154,6 +156,8 @@ export const set = (container: Container): void => {
     container.bind<IConnectionCheckModel>('IConnectionCheckModel').to(ConnectionCheckModel).inSingletonScope();
 
     container.bind<IPromiseQueue>('IPromiseQueue').to(PromiseQueue);
+
+    container.bind<IPromiseRetry>('IPromiseRetry').to(PromiseRetry);
 
     container.bind<IExecutionManagementModel>('IExecutionManagementModel').to(ExecutionManagementModel);
 
