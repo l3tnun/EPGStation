@@ -76,6 +76,9 @@ export default interface IConfigFile {
     // 録画一時ディレクトリ
     recordedTmp?: string;
 
+    // 録画履歴保存期間
+    recordedHistoryRetentionPeriodDays: number;
+
     // サムネイル
     thumbnail: string;
     thumbnailCmd: string;

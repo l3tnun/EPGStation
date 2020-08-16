@@ -152,6 +152,7 @@ namespace Configuration {
                 path: path.join(__dirname, '..', '..', 'recorded'),
             },
         ],
+        recordedHistoryRetentionPeriodDays: 90,
         thumbnail: path.join(__dirname, '..', '..', 'thumbnail'),
         thumbnailCmd:
             '%FFMPEG% -ss %THUMBNAIL_POSITION% -y -i %INPUT% -vframes 1 -f image2 -s %THUMBNAIL_SIZE% %OUTPUT%',

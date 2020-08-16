@@ -8,6 +8,7 @@ import FileUtil from '../../../util/FileUtil';
 import IVideoUtil from '../../api/video/IVideoUtil';
 import IDropLogFileDB from '../../db/IDropLogFileDB';
 import IRecordedDB from '../../db/IRecordedDB';
+import IRecordedHistoryDB from '../../db/IRecordedHistoryDB';
 import IThumbnailDB from '../../db/IThumbnailDB';
 import IVideoFileDB from '../../db/IVideoFileDB';
 import IRecordedEvent from '../../event/IRecordedEvent';
@@ -26,6 +27,7 @@ export default class RecordedManageModel implements IRecordedManageModel {
     private videoFileDB: IVideoFileDB;
     private thumbnailDB: IThumbnailDB;
     private dropLogFileDB: IDropLogFileDB;
+    private recordedHistoryDB: IRecordedHistoryDB;
     private recordingManageModel: IRecordingManageModel;
     private recordedEvent: IRecordedEvent;
     private videoUtil: IVideoUtil;
@@ -37,6 +39,7 @@ export default class RecordedManageModel implements IRecordedManageModel {
         @inject('IVideoFileDB') videoFileDB: IVideoFileDB,
         @inject('IThumbnailDB') thumbnailDB: IThumbnailDB,
         @inject('IDropLogFileDB') dropLogFileDB: IDropLogFileDB,
+        @inject('IRecordedHistoryDB') recordedHistoryDB: IRecordedHistoryDB,
         @inject('IRecordingManageModel')
         recordingManageModel: IRecordingManageModel,
         @inject('IRecordedEvent') recordedEvent: IRecordedEvent,
@@ -48,6 +51,7 @@ export default class RecordedManageModel implements IRecordedManageModel {
         this.videoFileDB = videoFileDB;
         this.thumbnailDB = thumbnailDB;
         this.dropLogFileDB = dropLogFileDB;
+        this.recordedHistoryDB = recordedHistoryDB;
         this.recordingManageModel = recordingManageModel;
         this.recordedEvent = recordedEvent;
         this.videoUtil = videoUtil;
@@ -270,5 +274,17 @@ export default class RecordedManageModel implements IRecordedManageModel {
         } else {
             this.recordedEvent.emitDeleteVideoFile(videoFileid);
         }
+    }
+
+    /**
+     * RecordedHistory の保存期間外のデータを削除する
+     * @return Promise<void>
+     */
+    public async historyCleanup(): Promise<void> {
+        const date = new Date().getTime() - this.config.recordedHistoryRetentionPeriodDays * 24 * 60 * 60 * 1000;
+        await this.recordedHistoryDB.delete(date).catch(err => {
+            this.log.system.error('failed to historyCleanup');
+            this.log.system.error(err);
+        });
     }
 }

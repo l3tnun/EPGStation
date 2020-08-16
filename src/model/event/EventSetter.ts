@@ -5,6 +5,7 @@ import IConfiguration from '../IConfiguration';
 import ILogger from '../ILogger';
 import ILoggerModel from '../ILoggerModel';
 import IIPCServer from '../ipc/IIPCServer';
+import IRecordedManageModel from '../operator/recorded/IRecordedManageModel';
 import IRecordedTagManadeModel from '../operator/recordedTag/IRecordedTagManadeModel';
 import IRecordingManageModel from '../operator/recording/IRecordingManageModel';
 import IReservationManageModel from '../operator/reservation/IReservationManageModel';
@@ -30,6 +31,7 @@ export default class EventSetter implements IEventSetter {
     private thumbnailEvent: IThumbnailEvent;
     private reservationManage: IReservationManageModel;
     private recordingManage: IRecordingManageModel;
+    private recordedManage: IRecordedManageModel;
     private recordedTagManage: IRecordedTagManadeModel;
     private thumbnailManage: IThumbnailManageModel;
     private ipc: IIPCServer;
@@ -47,6 +49,7 @@ export default class EventSetter implements IEventSetter {
         @inject('IReservationManageModel')
         reservationManage: IReservationManageModel,
         @inject('IRecordingManageModel') recordingManage: IRecordingManageModel,
+        @inject('IRecordedManageModel') recordedManage: IRecordedManageModel,
         @inject('IRecordedTagManadeModel') recordedTagManage: IRecordedTagManadeModel,
         @inject('IThumbnailManageModel') thumbnailManage: IThumbnailManageModel,
         @inject('IIPCServer') ipc: IIPCServer,
@@ -62,6 +65,7 @@ export default class EventSetter implements IEventSetter {
         this.thumbnailEvent = thumbnailEvent;
         this.reservationManage = reservationManage;
         this.recordingManage = recordingManage;
+        this.recordedManage = recordedManage;
         this.recordedTagManage = recordedTagManage;
         this.thumbnailManage = thumbnailManage;
         this.ipc = ipc;
@@ -73,8 +77,10 @@ export default class EventSetter implements IEventSetter {
      */
     public set(): void {
         // EPG 更新完了イベント
-        this.epgUpdateEvent.setUpdated(() => {
-            this.reservationManage.updateAll();
+        this.epgUpdateEvent.setUpdated(async () => {
+            await this.recordedManage.historyCleanup().catch(() => {});
+
+            await this.reservationManage.updateAll();
         });
 
         // ルール追加イベント
