@@ -147,7 +147,6 @@ export default class Search extends Vue {
                 color: 'error',
                 text: 'スクロールに失敗',
             });
-            console.log('search result element is undefined');
 
             return;
         }

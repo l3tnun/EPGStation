@@ -228,7 +228,6 @@ export default class Main extends Vue {
      * ページ更新時に呼ばれる
      */
     public beforeRouteUpdate(to: Route, from: Route, next: () => void): void {
-        console.log('call beforeRouteUpdate');
         this.saveScrollPosition();
         next();
     }
@@ -237,7 +236,6 @@ export default class Main extends Vue {
      * ページ離脱時に呼ばれる
      */
     public beforeRouteLeave(to: Route, from: Route, next: () => void): void {
-        console.log('call beforeRouteLeave');
         this.saveScrollPosition();
         next();
     }

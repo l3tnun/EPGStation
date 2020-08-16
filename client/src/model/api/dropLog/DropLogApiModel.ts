@@ -24,8 +24,6 @@ export default class DropLogApiModel implements IDropLogApiModel {
             },
         });
 
-        console.log(result);
-
         return <any>result.data;
     }
 }
