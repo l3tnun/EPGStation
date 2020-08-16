@@ -164,12 +164,19 @@ export default class RecordedDB implements IRecordedDB {
 
         // rule id
         if (typeof option.ruleId !== 'undefined') {
-            querys.push({
-                query: 'recorded.ruleId = :ruleId',
-                values: {
-                    ruleId: option.ruleId,
-                },
-            });
+            if (option.ruleId === 0) {
+                querys.push({
+                    query: 'recorded.ruleId is null',
+                    values: {},
+                });
+            } else {
+                querys.push({
+                    query: 'recorded.ruleId = :ruleId',
+                    values: {
+                        ruleId: option.ruleId,
+                    },
+                });
+            }
         }
 
         // channel id
@@ -292,13 +299,32 @@ export default class RecordedDB implements IRecordedDB {
             .getRepository(Recorded)
             .createQueryBuilder('recorded')
             .select('count(*) as cnt, ruleId, keyword')
-            .where({ ruleId: Not(IsNull()) })
             .innerJoin(Rule, 'rule', 'rule.id = recorded.ruleId')
             .groupBy('ruleId');
 
-        return await this.promieRetry.run(() => {
+        const queryBuilder2 = connection
+            .getRepository(Recorded)
+            .createQueryBuilder('recorded')
+            .select('count(*) as cnt')
+            .where({ ruleId: IsNull() });
+
+        const noRule = await this.promieRetry.run(() => {
+            return queryBuilder2.getRawOne();
+        });
+
+        const rules = await this.promieRetry.run(() => {
             return queryBuilder.getRawMany();
         });
+
+        if (noRule.cnt > 1) {
+            rules.unshift({
+                cnt: noRule.cnt,
+                ruleId: 0,
+                keyword: null,
+            });
+        }
+
+        return rules;
     }
 
     /**

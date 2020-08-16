@@ -75,6 +75,13 @@ export default class RecordedApiModel implements IRecordedApiModel {
         const channels = await this.recordedDB.findChannelList();
         const genres = await this.recordedDB.findGenreList();
 
+        for (const rule of rules) {
+            if (rule.keyword === null) {
+                rule.ruleId = 0;
+                rule.keyword = 'キーワード無し';
+            }
+        }
+
         return {
             rules: rules,
             channels: channels,
