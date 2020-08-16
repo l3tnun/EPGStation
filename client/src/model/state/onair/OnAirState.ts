@@ -51,17 +51,19 @@ export default class OnAirState implements IOnAirState {
     public async fetchData(option: apid.BroadcastingScheduleOption): Promise<void> {
         const datas = await this.scheduleApiModel.getScheduleOnAir(option);
 
+        const now = new Date().getTime();
         this.schedules = datas.map(d => {
-            return this.createDisplayData(d);
+            return this.createDisplayData(now, d);
         });
     }
 
     /**
      * apid.Schedule から OnAirDisplayData を生成する
+     * @param baseTime: apid.UnixtimeMS
      * @param schedule: apid.Schedule
      * @return OnAirDisplayData
      */
-    private createDisplayData(schedule: apid.Schedule): OnAirDisplayData {
+    private createDisplayData(baseTime: apid.UnixtimeMS, schedule: apid.Schedule): OnAirDisplayData {
         const startAt = DateUtil.getJaDate(new Date(schedule.programs[0].startAt));
         const endAt = DateUtil.getJaDate(new Date(schedule.programs[0].endAt));
 
@@ -73,6 +75,11 @@ export default class OnAirState implements IOnAirState {
                 name: schedule.programs[0].name,
                 description: schedule.programs[0].description,
                 extended: schedule.programs[0].extended,
+                digestibility: this.getDigestibility(
+                    baseTime,
+                    schedule.programs[0].startAt,
+                    schedule.programs[0].endAt,
+                ),
             },
             schedule: schedule,
         };
@@ -82,6 +89,35 @@ export default class OnAirState implements IOnAirState {
         }
 
         return result;
+    }
+
+    /**
+     * 番組終了までの割合を返す 0 ~ 100
+     * @param baseTime: apid.UnixtimeMS
+     * @param startAt: apid.UnixtimeMS
+     * @param endAt: apid.UnixtimeMS
+     * @return number
+     */
+    private getDigestibility(baseTime: apid.UnixtimeMS, startAt: apid.UnixtimeMS, endAt: apid.UnixtimeMS): number {
+        if (baseTime <= startAt) {
+            return 0;
+        }
+
+        return ((baseTime - startAt) / (endAt - startAt)) * 100;
+    }
+
+    /**
+     * digestibility を更新する
+     */
+    public updateDigestibility(): void {
+        const now = new Date().getTime();
+
+        for (const s of this.schedules) {
+            s.display.digestibility =
+                s.schedule.programs.length === 0
+                    ? 0
+                    : this.getDigestibility(now, s.schedule.programs[0].startAt, s.schedule.programs[0].endAt);
+        }
     }
 
     /**

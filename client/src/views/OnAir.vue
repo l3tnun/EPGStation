@@ -64,6 +64,7 @@ export default class OnAir extends Vue {
         await this.fetchData();
     }).bind(this);
     private updateTimer: number | null = null;
+    private updateDigestibilityTimer: number | null = null;
 
     get isTabView(): boolean {
         return this.settingValue.isOnAirTabListView;
@@ -80,6 +81,9 @@ export default class OnAir extends Vue {
 
         if (this.updateTimer !== null) {
             clearTimeout(this.updateTimer);
+        }
+        if (this.updateDigestibilityTimer !== null) {
+            clearInterval(this.updateDigestibilityTimer);
         }
     }
 
@@ -116,9 +120,19 @@ export default class OnAir extends Vue {
                 throw err;
             });
 
+        if (this.updateTimer !== null) {
+            clearTimeout(this.updateTimer);
+        }
         this.updateTimer = setTimeout(() => {
             this.fetchData();
         }, this.onAirState.getUpdateTime());
+
+        if (this.updateDigestibilityTimer !== null) {
+            clearInterval(this.updateDigestibilityTimer);
+        }
+        this.updateDigestibilityTimer = setInterval(() => {
+            this.onAirState.updateDigestibility();
+        }, 10 * 1000);
     }
 }
 </script>
