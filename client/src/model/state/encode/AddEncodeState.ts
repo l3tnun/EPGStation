@@ -33,8 +33,15 @@ export default class AddEncodeState implements IAddEncodeState {
      * init
      * @param recordedId: apid.RecordedId
      * @param videoFiles: apid.VideoFile[]
+     * @param encodeMode: string | null エンコードモード名
+     * @param parentDirectory: string | null 親ディレクトリ名
      */
-    public init(recordedId: apid.RecordedId, videoFiles: apid.VideoFile[]): void {
+    public init(
+        recordedId: apid.RecordedId,
+        videoFiles: apid.VideoFile[],
+        encodeMode: string | null,
+        parentDirectory: string | null,
+    ): void {
         this.recordedId = recordedId;
         this.videoFileId = null;
         this.directory = null;
@@ -45,16 +52,30 @@ export default class AddEncodeState implements IAddEncodeState {
             this.videoFileId = this.videoFiles[0].id;
         }
 
-        if (this.encodeMode === null) {
-            const encodeList = this.getEncodeList();
-            if (encodeList.length > 0) {
+        const encodeList = this.getEncodeList();
+        if (encodeList.length > 0) {
+            this.encodeMode = null;
+            for (const e of encodeList) {
+                if (e === encodeMode) {
+                    this.encodeMode = e;
+                    break;
+                }
+            }
+            if (this.encodeMode === null) {
                 this.encodeMode = encodeList[0];
             }
         }
 
-        if (this.parentDirectory === null) {
-            const parendDirList = this.getParentDirectoryList();
-            if (parendDirList.length > 0) {
+        const parendDirList = this.getParentDirectoryList();
+        if (parendDirList.length > 0) {
+            this.parentDirectory = null;
+            for (const d of parendDirList) {
+                if (d === parentDirectory) {
+                    this.parentDirectory = d;
+                    break;
+                }
+            }
+            if (this.parentDirectory === null) {
                 this.parentDirectory = parendDirList[0];
             }
         }

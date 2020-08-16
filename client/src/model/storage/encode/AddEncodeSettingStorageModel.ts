@@ -12,6 +12,8 @@ export default class AddEncodeSettingStorageModel extends AbstractStorageBaseMod
 
     public getDefaultValue(): IAddEncodeSettingValue {
         return {
+            encodeMode: null,
+            parentDirectory: null,
             isSaveSameDirectory: false,
             removeOriginal: false,
         };

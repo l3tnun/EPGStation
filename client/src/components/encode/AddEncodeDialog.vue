@@ -119,12 +119,17 @@ export default class AddEncodeDialog extends Vue {
     @Watch('isOpen', { immediate: true })
     public onChangeState(newState: boolean, oldState: boolean): void {
         if (newState === true && !!oldState === false) {
+            const settingValue = this.setting.getSavedValue();
             this.addEncodeState.init(
                 this.recordedItem.id,
                 typeof this.recordedItem.videoFiles === 'undefined' ? [] : this.recordedItem.videoFiles,
+                settingValue.encodeMode,
+                settingValue.parentDirectory,
             );
         } else if (newState === false && oldState === true) {
             // close
+            this.setting.tmp.encodeMode = this.addEncodeState.encodeMode;
+            this.setting.tmp.parentDirectory = this.addEncodeState.parentDirectory;
             this.setting.save();
 
             this.$nextTick(async () => {
