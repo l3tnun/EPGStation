@@ -65,7 +65,7 @@ export default class OnAirState implements IOnAirState {
         const startAt = DateUtil.getJaDate(new Date(schedule.programs[0].startAt));
         const endAt = DateUtil.getJaDate(new Date(schedule.programs[0].endAt));
 
-        return {
+        const result: OnAirDisplayData = {
             display: {
                 channelId: schedule.channel.id,
                 channelName: schedule.channel.name,
@@ -76,6 +76,12 @@ export default class OnAirState implements IOnAirState {
             },
             schedule: schedule,
         };
+
+        if (schedule.channel.hasLogoData === true) {
+            result.display.logoSrc = `./api/channels/${schedule.channel.id.toString(10)}/logo`;
+        }
+
+        return result;
     }
 
     /**

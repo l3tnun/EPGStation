@@ -8,7 +8,11 @@
             >
                 <v-list-item three-line style="cursor: pointer;">
                     <v-list-item-content>
-                        <div class="subtitle-1 font-weight-black">{{ item.display.channelName }}</div>
+                        <div v-if="typeof item.display.logoSrc !== 'undefined'" class="d-flex align-center">
+                            <img :src="item.display.logoSrc" height="24" class="pr-2" />
+                            <div class="pt-1 subtitle-1 font-weight-black">{{ item.display.channelName }}</div>
+                        </div>
+                        <div v-else class="subtitle-1 font-weight-black">{{ item.display.channelName }}</div>
                         <div class="caption font-weight-light">{{ item.display.time }}</div>
                         <div class="subtitle-2">
                             {{ item.display.name }}

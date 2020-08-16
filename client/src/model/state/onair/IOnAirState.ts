@@ -4,6 +4,7 @@ export interface OnAirDisplayData {
     display: {
         channelId: apid.ChannelId;
         channelName: string;
+        logoSrc?: string;
         time: string;
         name: string;
         description?: string;
