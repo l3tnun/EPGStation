@@ -6,13 +6,13 @@
                 <div class="body-1 mt-2">video files</div>
                 <div class="d-flex">
                     <v-btn
-                        v-for="video in recordedItem.videoFiles"
-                        v-on:click="downloadVideo(video)"
-                        v-bind:key="video.id"
+                        v-for="v in videoFiles"
+                        v-on:click="downloadVideo(v.video)"
+                        v-bind:key="v.video.id"
                         color="primary"
                         class="ma-1"
                     >
-                        {{ video.name }}
+                        {{ v.name }}
                     </v-btn>
                 </div>
                 <div class="body-1 mt-2">play lists</div>
@@ -37,6 +37,11 @@ import Util from '@/util/Util';
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
 import * as apid from '../../../../api';
 
+interface DwonloadVideoFileInfo {
+    video: apid.VideoFile;
+    name: string; // ビデオ名 + サイズ
+}
+
 @Component({})
 export default class RecordedDownloadDialog extends Vue {
     @Prop({ required: true })
@@ -48,6 +53,17 @@ export default class RecordedDownloadDialog extends Vue {
     public isRemove: boolean = false;
 
     private recordedUtil: IRecordedUtil = container.get<IRecordedUtil>('IRecordedUtil');
+
+    get videoFiles(): DwonloadVideoFileInfo[] {
+        return typeof this.recordedItem.videoFiles === 'undefined'
+            ? []
+            : this.recordedItem.videoFiles.map(v => {
+                  return {
+                      video: v,
+                      name: `${v.name} (${Util.getFileSizeStr(v.size)})`,
+                  };
+              });
+    }
 
     /**
      * Prop で受け取った isOpen を直接は書き換えられないので
