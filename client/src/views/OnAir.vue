@@ -22,7 +22,10 @@
                     </v-tab-item>
                 </v-tabs-items>
                 <div v-else>
-                    <OnAirCard :items="onAirState.getSchedules()"></OnAirCard>
+                    <OnAirCard
+                        :items="onAirState.getSchedules()"
+                        :reserveIndex="onAirState.getReserveIndex()"
+                    ></OnAirCard>
                 </div>
             </div>
         </transition>
