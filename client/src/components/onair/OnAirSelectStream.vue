@@ -23,6 +23,9 @@
                     </div>
                 </div>
                 <v-card-actions>
+                    <v-btn v-if="!!needsGotoGuideButton === true" color="primary" text v-on:click="gotoGuide">
+                        番組表
+                    </v-btn>
                     <v-spacer></v-spacer>
                     <v-btn color="primary" text v-on:click="dialogState.isOpen = false">キャンセル</v-btn>
                     <v-btn color="primary" text v-on:click="view">視聴</v-btn>
@@ -41,6 +44,9 @@ import Util from '../../util/Util';
 
 @Component({})
 export default class OnAirSelectStream extends Vue {
+    @Prop()
+    public needsGotoGuideButton: boolean | undefined;
+
     public dialogState: IOnAirSelectStreamState = container.get<IOnAirSelectStreamState>('IOnAirSelectStreamState');
     public isRemove: boolean = false;
     // ストリーム設定セレクタ再描画用
@@ -59,6 +65,30 @@ export default class OnAirSelectStream extends Vue {
         this.isHiddenStreamConfig = true;
         this.$nextTick(() => {
             this.isHiddenStreamConfig = false;
+        });
+    }
+
+    /**
+     * 単局表示
+     */
+    public async gotoGuide(): Promise<void> {
+        const channel = this.dialogState.getChannelItem();
+        if (channel === null) {
+            return;
+        }
+
+        const query: any = {
+            channelId: channel.id,
+        };
+        if (typeof this.$route.query.time !== 'undefined') {
+            query.time = this.$route.query.time;
+        }
+
+        this.dialogState.isOpen = false;
+        await Util.sleep(300);
+        await Util.move(this.$router, {
+            path: '/guide',
+            query: query,
         });
     }
 

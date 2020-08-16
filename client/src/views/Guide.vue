@@ -37,6 +37,7 @@
             </transition>
         </div>
         <ProgramDialog></ProgramDialog>
+        <OnAirSelectStream :needsGotoGuideButton="true"></OnAirSelectStream>
         <Snackbar></Snackbar>
     </v-content>
 </template>
@@ -48,6 +49,7 @@ import Loading from '@/components/guide/Loading.vue';
 import ProgramDialog from '@/components/guide/ProgramDialog.vue';
 import TimeLine from '@/components/guide/TimeLine.vue';
 import TimeScale from '@/components/guide/TimeScale.vue';
+import OnAirSelectStream from '@/components/onair/OnAirSelectStream.vue';
 import Snackbar from '@/components/snackbar/Snackbar.vue';
 import TitleBar from '@/components/titleBar/TitleBar.vue';
 import container from '@/model/ModelContainer';
@@ -73,6 +75,7 @@ Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
         TimeScale,
         TimeLine,
         ProgramDialog,
+        OnAirSelectStream,
         Snackbar,
     },
 })

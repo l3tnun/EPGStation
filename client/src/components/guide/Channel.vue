@@ -16,6 +16,7 @@
 <script lang="ts">
 import container from '@/model/ModelContainer';
 import IGuideState from '@/model/state/guide/IGuideState';
+import IOnAirSelectStreamState from '@/model/state/onair/IOnAirSelectStreamState';
 import DateUtil from '@/util/DateUtil';
 import Util from '@/util/Util';
 import { Component, Vue } from 'vue-property-decorator';
@@ -31,6 +32,10 @@ interface DisplayChannelItem {
 @Component({})
 export default class Channel extends Vue {
     public guideState: IGuideState = container.get<IGuideState>('IGuideState');
+
+    private streamSelectDialog: IOnAirSelectStreamState = container.get<IOnAirSelectStreamState>(
+        'IOnAirSelectStreamState',
+    );
 
     get channelItems(): DisplayChannelItem[] {
         if (typeof this.$route.query.channelId === 'undefined') {
@@ -65,17 +70,7 @@ export default class Channel extends Vue {
             return;
         }
 
-        // 単局表示ページに飛ぶ
-        const query: any = {
-            channelId: item.id,
-        };
-        if (typeof this.$route.query.time !== 'undefined') {
-            query.time = this.$route.query.time;
-        }
-        await Util.move(this.$router, {
-            path: '/guide',
-            query: query,
-        });
+        this.streamSelectDialog.open(item);
     }
 }
 </script>
