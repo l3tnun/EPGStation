@@ -39,7 +39,8 @@
 
 <script lang="ts">
 import container from '@/model/ModelContainer';
-import IGuideProgramDialogState from '@/model/state/guide/IGuideProgramDialogState';
+import IGuideProgramDialogState, { ProgramDialogOpenOption } from '@/model/state/guide/IGuideProgramDialogState';
+import { ReserveStateItemIndex } from '@/model/state/guide/IGuideReserveUtil';
 import IOnAirSelectStreamState from '@/model/state/onair/IOnAirSelectStreamState';
 import { OnAirDisplayData } from '@/model/state/onair/IOnAirState';
 import { Component, Prop, Vue } from 'vue-property-decorator';
@@ -50,6 +51,9 @@ export default class OnAirCard extends Vue {
     @Prop({ required: true })
     public items!: OnAirDisplayData[];
 
+    @Prop({ required: true })
+    public reserveIndex!: ReserveStateItemIndex;
+
     private streamSelectDialog: IOnAirSelectStreamState = container.get<IOnAirSelectStreamState>(
         'IOnAirSelectStreamState',
     );
@@ -58,11 +62,19 @@ export default class OnAirCard extends Vue {
     public openGuideProgramDialog(schedule: apid.Schedule, e: Event): void {
         e.stopPropagation();
 
-        // TODO 予約状態
-        this.dialogState.open({
+        const option: ProgramDialogOpenOption = {
             channel: schedule.channel,
             program: schedule.programs[0],
-        });
+        };
+        if (typeof this.reserveIndex[schedule.programs[0].id] !== 'undefined') {
+            option.reserve = {
+                type: this.reserveIndex[schedule.programs[0].id].type,
+                reserveId: this.reserveIndex[schedule.programs[0].id].item.reserveId,
+                ruleId: this.reserveIndex[schedule.programs[0].id].item.ruleId,
+            };
+        }
+
+        this.dialogState.open(option);
     }
 
     /**

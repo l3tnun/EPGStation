@@ -1,4 +1,5 @@
 import * as apid from '../../../../../api';
+import { ReserveStateItemIndex } from '../guide/IGuideReserveUtil';
 
 export interface OnAirDisplayData {
     display: {
@@ -20,6 +21,7 @@ export default interface IOnAirState {
     fetchData(option: apid.BroadcastingScheduleOption): Promise<void>;
     updateDigestibility(): void;
     getSchedules(type?: apid.ChannelType): OnAirDisplayData[];
+    getReserveIndex(): ReserveStateItemIndex;
     getTabs(): apid.ChannelType[];
     getUpdateTime(): number;
 }

@@ -3,6 +3,7 @@ import DateUtil from '@/util/DateUtil';
 import { inject, injectable } from 'inversify';
 import * as apid from '../../../../../api';
 import IScheduleApiModel from '../../api/schedule/IScheduleApiModel';
+import IGuideReserveUtil, { ReserveStateItemIndex } from '../guide/IGuideReserveUtil';
 import IOnAirState, { OnAirDisplayData } from './IOnAirState';
 
 @injectable()
@@ -10,14 +11,18 @@ export default class OnAirState implements IOnAirState {
     public selectedTab: apid.ChannelType | undefined;
 
     private scheduleApiModel: IScheduleApiModel;
+    private reserveUtil: IGuideReserveUtil;
     private schedules: OnAirDisplayData[] = [];
+    private reserveIndex: ReserveStateItemIndex = {};
     private tabs: apid.ChannelType[] = [];
 
     constructor(
         @inject('IServerConfigModel') serverConfigModel: IServerConfigModel,
         @inject('IScheduleApiModel') scheduleApiModel: IScheduleApiModel,
+        @inject('IGuideReserveUtil') reserveUtil: IGuideReserveUtil,
     ) {
         this.scheduleApiModel = scheduleApiModel;
+        this.reserveUtil = reserveUtil;
 
         // tab 設定
         const config = serverConfigModel.getConfig();
@@ -42,6 +47,7 @@ export default class OnAirState implements IOnAirState {
      */
     public clearData(): void {
         this.schedules = [];
+        this.reserveIndex = {};
     }
 
     /**
@@ -49,9 +55,13 @@ export default class OnAirState implements IOnAirState {
      * @param option: apid.BroadcastingScheduleOption
      */
     public async fetchData(option: apid.BroadcastingScheduleOption): Promise<void> {
+        const now = new Date().getTime();
+        this.reserveIndex = await this.reserveUtil.getReserveIndex({
+            startAt: now,
+            endAt: now + 3600 * 1000,
+        });
         const datas = await this.scheduleApiModel.getScheduleOnAir(option);
 
-        const now = new Date().getTime();
         this.schedules = datas.map(d => {
             return this.createDisplayData(now, d);
         });
@@ -130,6 +140,14 @@ export default class OnAirState implements IOnAirState {
             : this.schedules.filter(s => {
                   return s.schedule.channel.channelType === type;
               });
+    }
+
+    /**
+     * 予約情報の索引を返す
+     * @return ReserveStateItemIndex
+     */
+    public getReserveIndex(): ReserveStateItemIndex {
+        return this.reserveIndex;
     }
 
     /**
