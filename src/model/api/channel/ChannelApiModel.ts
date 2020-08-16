@@ -1,14 +1,21 @@
 import { inject, injectable } from 'inversify';
+import mirakurun from 'mirakurun';
 import * as apid from '../../../../api';
 import IChannelDB from '../../db/IChannelDB';
-import IChannelApiModel from './IChannelApiModel';
+import IMirakurunClientModel from '../../IMirakurunClientModel';
+import IChannelApiModel, { IChannelApiModelError } from './IChannelApiModel';
 
 @injectable()
-export default class ChannelApiModel implements IChannelApiModel {
+class ChannelApiModel implements IChannelApiModel {
     private channelDB: IChannelDB;
+    private mirakurunClient: mirakurun;
 
-    constructor(@inject('IChannelDB') channelDB: IChannelDB) {
+    constructor(
+        @inject('IChannelDB') channelDB: IChannelDB,
+        @inject('IMirakurunClientModel') mirakurunClientModel: IMirakurunClientModel,
+    ) {
         this.channelDB = channelDB;
+        this.mirakurunClient = mirakurunClientModel.getClient();
     }
 
     /**
@@ -37,4 +44,21 @@ export default class ChannelApiModel implements IChannelApiModel {
             return result;
         });
     }
+
+    /**
+     * logo 取得
+     * @param channelId: apid.ChannelId
+     * @return Promise<Buffer>
+     */
+    public async getLogo(channelId: apid.ChannelId): Promise<Buffer> {
+        const channel = await this.channelDB.findId(channelId);
+
+        if (channel === null || channel.hasLogoData === false) {
+            throw new Error(IChannelApiModelError.NOT_FOUND);
+        }
+
+        return this.mirakurunClient.getLogoImage(channelId);
+    }
 }
+
+export default ChannelApiModel;
