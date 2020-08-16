@@ -13,7 +13,11 @@
         </TitleBar>
         <div class="app-content guide" v-bind:class="{ 'is-dark': $vuetify.theme.dark === true }">
             <transition name="page">
-                <div v-if="guideState.getChannelsLength() > 0" class="overflow-hidden d-flex flex-column">
+                <div
+                    v-if="guideState.getChannelsLength() > 0"
+                    class="overflow-hidden d-flex flex-column"
+                    style="height: 100%;"
+                >
                     <Loading v-if="isLoading === true"></Loading>
                     <div class="channel-wrap overflow-hidden" ref="channels">
                         <Channel></Channel>
