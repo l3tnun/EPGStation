@@ -25,11 +25,13 @@
         </transition>
         <div style="visibility: hidden;">dummy</div>
         <OnAirSelectStream></OnAirSelectStream>
+        <ProgramDialog></ProgramDialog>
         <Snackbar></Snackbar>
     </v-content>
 </template>
 
 <script lang="ts">
+import ProgramDialog from '@/components/guide/ProgramDialog.vue';
 import OnAirCard from '@/components/onair/OnAirCard.vue';
 import OnAirSelectStream from '@/components/onair/OnAirSelectStream.vue';
 import Snackbar from '@/components/snackbar/Snackbar.vue';
@@ -52,6 +54,7 @@ Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
         Snackbar,
         OnAirCard,
         OnAirSelectStream,
+        ProgramDialog,
     },
 })
 export default class OnAir extends Vue {
