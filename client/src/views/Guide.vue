@@ -456,6 +456,9 @@ $window-width: 600px
             border: 1px solid #ccc
             color: black
 
+            &.hidden
+                display: none
+
             .name
                 font-weight: bold
             > div

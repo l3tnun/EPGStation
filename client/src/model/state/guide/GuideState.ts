@@ -240,6 +240,10 @@ class GuideState implements IGuideState {
             classStr += ` ${reserve.type}`;
         }
 
+        if (isHidden === true) {
+            classStr += ' hidden';
+        }
+
         const element = this.createParentElement(
             'div',
             {
@@ -247,8 +251,7 @@ class GuideState implements IGuideState {
                 style:
                     `height: calc(${option.height} * (var(--timescale-height) / 60));` +
                     `top: calc(${option.top} * (var(--timescale-height) / 60)); ` +
-                    `left: calc(${option.left} * (var(--channel-width)));` +
-                    (isHidden === true ? 'display: none;' : ''),
+                    `left: calc(${option.left} * (var(--channel-width)));`,
                 onclick: (e: Event) => {
                     const dialogOption: ProgramDialogOpenOption = {
                         channel: option.channel,
@@ -349,7 +352,11 @@ class GuideState implements IGuideState {
             // 現在の表示と違っていれば更新
             if (dom.isVisible !== isVisible) {
                 dom.isVisible = isVisible;
-                dom.element.style.display = isVisible ? '' : 'none';
+                if (isVisible) {
+                    dom.element.classList.remove('hidden');
+                } else {
+                    dom.element.classList.add('hidden');
+                }
             }
         }
     }
