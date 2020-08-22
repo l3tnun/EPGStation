@@ -10,6 +10,7 @@ import setter from './model/ModelContainerSetter';
 import IServerConfigModel from './model/serverConfig/IServerConfigModel';
 import vuetify from './plugins/vuetify';
 import router from './router';
+import UaUtil from './util/UaUtil';
 
 setter(container);
 
@@ -22,6 +23,15 @@ smoothscroll.polyfill();
         console.error('get server config error');
         console.error(err);
     });
+
+    // Web app 設定
+    if (UaUtil.isiOS() === true && UaUtil.isiPadOS() === false) {
+        const meta = document.createElement('meta');
+        meta.setAttribute('name', 'apple-mobile-web-app-capable');
+        meta.setAttribute('content', 'black');
+        document.getElementsByTagName('head')[0].appendChild(meta);
+    }
+    console.log(document.getElementsByTagName('head'));
 
     // 放送局情報の取得
     const channelModel = container.get<IChannelModel>('IChannelModel');
