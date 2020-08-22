@@ -1,17 +1,12 @@
-export type colorType = 'undefined' | 'success' | 'info' | 'error' | string;
-
-export type SnackbarPosition = 'right' | 'left' | 'top' | 'bottom';
+export type colorType = 'normal' | 'success' | 'info' | 'error';
 
 export interface SnackbarDipslayOption {
-    color: colorType;
-    position: SnackbarPosition;
+    color: string;
     timeout: number;
 }
 
 export interface SnackBarTextOption {
     text: string;
-    buttonText?: string;
-    position?: SnackbarPosition;
     color?: colorType;
     timeout?: number;
 }
