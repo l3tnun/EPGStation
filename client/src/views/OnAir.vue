@@ -32,7 +32,6 @@
         <div style="visibility: hidden;">dummy</div>
         <OnAirSelectStream></OnAirSelectStream>
         <ProgramDialog></ProgramDialog>
-        <Snackbar></Snackbar>
     </v-content>
 </template>
 
@@ -40,7 +39,6 @@
 import ProgramDialog from '@/components/guide/ProgramDialog.vue';
 import OnAirCard from '@/components/onair/OnAirCard.vue';
 import OnAirSelectStream from '@/components/onair/OnAirSelectStream.vue';
-import Snackbar from '@/components/snackbar/Snackbar.vue';
 import TitleBar from '@/components/titleBar/TitleBar.vue';
 import container from '@/model/ModelContainer';
 import ISocketIOModel from '@/model/socketio/ISocketIOModel';
@@ -57,7 +55,6 @@ Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
 @Component({
     components: {
         TitleBar,
-        Snackbar,
         OnAirCard,
         OnAirSelectStream,
         ProgramDialog,

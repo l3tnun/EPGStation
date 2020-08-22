@@ -14,13 +14,11 @@
                 <div style="visibility: hidden;">dummy</div>
             </div>
         </transition>
-        <Snackbar></Snackbar>
     </v-content>
 </template>
 
 <script lang="ts">
 import EncodeItems from '@/components/encode/EncodeItems.vue';
-import Snackbar from '@/components/snackbar/Snackbar.vue';
 import TitleBar from '@/components/titleBar/TitleBar.vue';
 import container from '@/model/ModelContainer';
 import ISocketIOModel from '@/model/socketio/ISocketIOModel';
@@ -37,7 +35,6 @@ Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
     components: {
         TitleBar,
         EncodeItems,
-        Snackbar,
     },
 })
 export default class Encode extends Vue {

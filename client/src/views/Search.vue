@@ -29,7 +29,6 @@
                 </v-btn>
                 <div class="fab-space"></div>
                 <ProgramDialog></ProgramDialog>
-                <Snackbar></Snackbar>
             </div>
         </transition>
     </v-content>
@@ -41,7 +40,6 @@ import SearchOptionComponent from '@/components/search/SearchOption.vue';
 import SearchReserves from '@/components/search/SearchReserves.vue';
 import SearchResult from '@/components/search/SearchResult.vue';
 import SearchRuleOption from '@/components/search/SearchRuleOption.vue';
-import Snackbar from '@/components/snackbar/Snackbar.vue';
 import TitleBar from '@/components/titleBar/TitleBar.vue';
 import container from '@/model/ModelContainer';
 import ISocketIOModel from '@/model/socketio/ISocketIOModel';
@@ -83,7 +81,6 @@ Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
         SearchReserves,
         SearchRuleOption,
         ProgramDialog,
-        Snackbar,
     },
 })
 export default class Search extends Vue {

@@ -3,11 +3,13 @@
         <div v-if="isDisconnected === true" class="disconnected"></div>
         <Navigation></Navigation>
         <router-view></router-view>
+        <Snackbar></Snackbar>
     </v-app>
 </template>
 
 <script lang="ts">
 import Navigation from '@/components/navigation/Navigation.vue';
+import Snackbar from '@/components/snackbar/Snackbar.vue';
 import container from '@/model/ModelContainer';
 import IScrollPositionState from '@/model/state/IScrollPositionState';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
@@ -19,6 +21,7 @@ import ISocketIOModel from '../model/socketio/ISocketIOModel';
 @Component({
     components: {
         Navigation,
+        Snackbar,
     },
 })
 export default class AppContent extends Vue {

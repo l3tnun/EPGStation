@@ -13,14 +13,12 @@
                 <div style="visibility: hidden;">dummy</div>
             </div>
         </transition>
-        <Snackbar></Snackbar>
     </v-content>
 </template>
 
 <script lang="ts">
 import Pagination from '@/components/pagination/Pagination.vue';
 import RecordedItems from '@/components/recorded/RecordedItems.vue';
-import Snackbar from '@/components/snackbar/Snackbar.vue';
 import TitleBar from '@/components/titleBar/TitleBar.vue';
 import container from '@/model/ModelContainer';
 import ISocketIOModel from '@/model/socketio/ISocketIOModel';
@@ -41,7 +39,6 @@ Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
         TitleBar,
         RecordedItems,
         Pagination,
-        Snackbar,
     },
 })
 export default class Recording extends Vue {

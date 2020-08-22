@@ -384,14 +384,12 @@
                     </v-card>
                     <div style="visibility: hidden;">dummy</div>
                 </v-container>
-                <Snackbar></Snackbar>
             </div>
         </transition>
     </v-content>
 </template>
 
 <script lang="ts">
-import Snackbar from '@/components/snackbar/Snackbar.vue';
 import TitleBar from '@/components/titleBar/TitleBar.vue';
 import container from '@/model/ModelContainer';
 import IScrollPositionState from '@/model/state/IScrollPositionState';
@@ -416,7 +414,6 @@ interface SelectItem {
 @Component({
     components: {
         TitleBar,
-        Snackbar,
     },
 })
 export default class Settings extends Vue {

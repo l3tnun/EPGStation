@@ -11,13 +11,11 @@
                 <div style="visibility: hidden;">dummy</div>
             </div>
         </transition>
-        <Snackbar></Snackbar>
     </v-content>
 </template>
 
 <script lang="ts">
 import WatchOnRecordedInfoCard from '@/components/recorded/watch/WatchRecordedInfoCard.vue';
-import Snackbar from '@/components/snackbar/Snackbar.vue';
 import TitleBar from '@/components/titleBar/TitleBar.vue';
 import VideoContainer from '@/components/video/VideoContainer.vue';
 import * as VideoParam from '@/components/video/ViedoParam';
@@ -33,7 +31,6 @@ Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
         TitleBar,
         VideoContainer,
         WatchOnRecordedInfoCard,
-        Snackbar,
     },
 })
 export default class WatchRecorded extends Vue {

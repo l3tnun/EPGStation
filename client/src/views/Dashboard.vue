@@ -62,7 +62,6 @@
                 </div>
             </transition>
         </div>
-        <Snackbar></Snackbar>
     </v-content>
 </template>
 
@@ -70,7 +69,6 @@
 import DashboardItem from '@/components/dashboard/DashboardItem.vue';
 import RecordedsmallCard from '@/components/recorded/RecordedSmallCard.vue';
 import ReservesCard from '@/components/reserves/ReservesCard.vue';
-import Snackbar from '@/components/snackbar/Snackbar.vue';
 import TitleBar from '@/components/titleBar/TitleBar.vue';
 import container from '@/model/ModelContainer';
 import ISocketIOModel from '@/model/socketio/ISocketIOModel';
@@ -100,7 +98,6 @@ Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
         DashboardItem,
         ReservesCard,
         RecordedsmallCard,
-        Snackbar,
     },
 })
 export default class Main extends Vue {

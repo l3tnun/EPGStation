@@ -9,7 +9,6 @@
                 <Pagination :total="reservesState.getTotal()" :pageSize="settingValue.reservesLength"></Pagination>
             </div>
         </transition>
-        <Snackbar></Snackbar>
         <div style="visibility: hidden;">dummy</div>
     </v-content>
 </template>
@@ -37,7 +36,6 @@ Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
         TitleBar,
         ReserveItems,
         Pagination,
-        Snackbar,
     },
 })
 export default class Reserves extends Vue {

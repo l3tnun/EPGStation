@@ -85,7 +85,6 @@
                     </div>
                     <RecordedDetailSelectStreamDialog></RecordedDetailSelectStreamDialog>
                     <DropLogDialog :isOpen.sync="isOpenDropLogDialog"></DropLogDialog>
-                    <Snackbar></Snackbar>
                 </div>
             </transition>
         </v-container>
@@ -99,7 +98,6 @@ import RecordedDetailMoreButton from '@/components/recorded/detail/RecordedDetai
 import RecordedDetailPlayButton from '@/components/recorded/detail/RecordedDetailPlayButton.vue';
 import RecordedDetailSelectStreamDialog from '@/components/recorded/detail/RecordedDetailSelectStreamDialog.vue';
 import RecordedDetailStopEncodeButton from '@/components/recorded/detail/RecordedDetailStopEncodeButton.vue';
-import Snackbar from '@/components/snackbar/Snackbar.vue';
 import TitleBar from '@/components/titleBar/TitleBar.vue';
 import container from '@/model/ModelContainer';
 import ISocketIOModel from '@/model/socketio/ISocketIOModel';
@@ -119,7 +117,6 @@ Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
 @Component({
     components: {
         TitleBar,
-        Snackbar,
         RecordedDetailPlayButton,
         RecordedDetailEncodeButton,
         RecordedDetailStopEncodeButton,

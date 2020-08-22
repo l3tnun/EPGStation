@@ -19,7 +19,6 @@
                 </div>
             </div>
         </transition>
-        <Snackbar></Snackbar>
     </v-content>
 </template>
 
@@ -27,7 +26,6 @@
 import Pagination from '@/components/pagination/Pagination.vue';
 import RecordedItems from '@/components/recorded/RecordedItems.vue';
 import RecordedSearchMenu from '@/components/recorded/RecordedSearchMenu.vue';
-import Snackbar from '@/components/snackbar/Snackbar.vue';
 import TitleBar from '@/components/titleBar/TitleBar.vue';
 import container from '@/model/ModelContainer';
 import ISocketIOModel from '@/model/socketio/ISocketIOModel';
@@ -48,7 +46,6 @@ Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
         RecordedSearchMenu,
         RecordedItems,
         Pagination,
-        Snackbar,
     },
 })
 export default class Recorded extends Vue {

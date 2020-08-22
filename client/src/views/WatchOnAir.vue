@@ -12,13 +12,11 @@
                 <div style="visibility: hidden;">dummy</div>
             </div>
         </transition>
-        <Snackbar></Snackbar>
     </v-content>
 </template>
 
 <script lang="ts">
 import WatchOnAirInfoCard from '@/components/onair/watch/WatchOnAirInfoCard.vue';
-import Snackbar from '@/components/snackbar/Snackbar.vue';
 import TitleBar from '@/components/titleBar/TitleBar.vue';
 import VideoContainer from '@/components/video/VideoContainer.vue';
 import * as VideoParam from '@/components/video/ViedoParam';
@@ -42,7 +40,6 @@ interface WatchParam {
         TitleBar,
         VideoContainer,
         WatchOnAirInfoCard,
-        Snackbar,
     },
 })
 export default class WatchOnAir extends Vue {
