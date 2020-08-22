@@ -36,7 +36,7 @@ export default class WatchRecordedInfoState implements IWatchRecordedInfoState {
      * @return Promise<void>
      */
     public async update(recordedId: apid.RecordedId): Promise<void> {
-        const isHalfWidth = this.settingModel.getSavedValue().isRecordedHalfWidthDisplayed;
+        const isHalfWidth = this.settingModel.getSavedValue().isHalfWidthDisplayed;
 
         const recordedInfo = await this.recordedApiModel.get(recordedId, isHalfWidth);
         const channel = this.channelModel.findChannel(recordedInfo.channelId, isHalfWidth);

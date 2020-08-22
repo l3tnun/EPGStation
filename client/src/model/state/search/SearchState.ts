@@ -598,7 +598,7 @@ export default class SearchState implements ISearchState {
      * @return SelectorItem[]
      */
     public getChannelItems(): SelectorItem[] {
-        return this.channelModel.getChannels(this.settingModel.getSavedValue().isSearchHalfWidthDisplayed).map(c => {
+        return this.channelModel.getChannels(this.settingModel.getSavedValue().isHalfWidthDisplayed).map(c => {
             return {
                 text: c.name,
                 value: c.id,
@@ -869,7 +869,7 @@ export default class SearchState implements ISearchState {
             const endAt = DateUtil.getJaDate(new Date(p.endAt));
             const channel = this.channelModel.findChannel(
                 p.channelId,
-                this.settingModel.getSavedValue().isSearchHalfWidthDisplayed,
+                this.settingModel.getSavedValue().isHalfWidthDisplayed,
             );
             const reserveType = typeof reserveIndex[p.id] === 'undefined' ? 'none' : reserveIndex[p.id].type;
 
@@ -953,7 +953,7 @@ export default class SearchState implements ISearchState {
     private createScheduleSearchOption(option: SearchOption): apid.ScheduleSearchOption {
         return {
             option: this.createRuleSearchOption(option),
-            isHalfWidth: this.settingModel.getSavedValue().isSearchHalfWidthDisplayed,
+            isHalfWidth: this.settingModel.getSavedValue().isHalfWidthDisplayed,
             limit: this.settingModel.getSavedValue().searchLength,
         };
     }
@@ -1157,7 +1157,7 @@ export default class SearchState implements ISearchState {
 
         const result = await this.reservesApiModel.get({
             type: 'all',
-            isHalfWidth: this.settingModel.getSavedValue().isSearchHalfWidthDisplayed,
+            isHalfWidth: this.settingModel.getSavedValue().isHalfWidthDisplayed,
             ruleId: this.ruleId,
         });
 
@@ -1173,7 +1173,7 @@ export default class SearchState implements ISearchState {
             ? []
             : this.reserveStateUtil.convertReserveItemsToStateDatas(
                   this.reservesResult,
-                  this.settingModel.getSavedValue().isSearchHalfWidthDisplayed,
+                  this.settingModel.getSavedValue().isHalfWidthDisplayed,
               );
     }
 

@@ -247,7 +247,7 @@ export default class RecordedDetail extends Vue {
     private async fetchData(): Promise<void> {
         await this.recordedDetailState.fetchData(
             parseInt(this.$route.params.id, 10),
-            this.settingValue === null ? true : this.settingValue.isRecordedHalfWidthDisplayed,
+            this.settingValue === null ? true : this.settingValue.isHalfWidthDisplayed,
         );
 
         // 番組詳細 URL 処理

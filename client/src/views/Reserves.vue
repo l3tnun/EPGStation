@@ -139,7 +139,7 @@ export default class Reserves extends Vue {
                     : type === 'normal' || type === 'conflict' || type === 'overlap' || type === 'skip'
                     ? type
                     : 'normal',
-            isHalfWidth: this.settingValue.isReservesHalfWidthDisplayed,
+            isHalfWidth: this.settingValue.isHalfWidthDisplayed,
             offset: (Util.getPageNum(this.$route) - 1) * this.settingValue.reservesLength,
             limit: this.settingValue.reservesLength,
         };

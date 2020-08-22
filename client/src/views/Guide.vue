@@ -364,7 +364,7 @@ export default class Guide extends Vue {
 
         const result: FetchGuideOption = {
             length: this.settingValue.guideLength,
-            isHalfWidth: this.settingValue.isGuideHalfWidthDisplayed,
+            isHalfWidth: this.settingValue.isHalfWidthDisplayed,
         };
 
         if (typeof this.$route.query.type !== 'undefined') {

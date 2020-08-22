@@ -115,7 +115,7 @@ export default class OnAir extends Vue {
 
         await this.onAirState
             .fetchData({
-                isHalfWidth: this.settingValue.isOnAirHalfWidthDisplayed,
+                isHalfWidth: this.settingValue.isHalfWidthDisplayed,
             })
             .catch(err => {
                 this.snackbarState.open({

@@ -7,7 +7,7 @@
                     <v-card class="mx-auto" max-width="800">
                         <v-list-item three-line>
                             <v-list-item-content>
-                                <div class="title">テーマ</div>
+                                <div class="title">全般</div>
                                 <div class="my-2 d-flex flex-row align-center">
                                     <div>
                                         <v-list-item-title class="subtitle-1">ダークテーマ</v-list-item-title>
@@ -15,6 +15,14 @@
                                     </div>
                                     <v-spacer></v-spacer>
                                     <v-switch v-model="isForceDarkTheme" value></v-switch>
+                                </div>
+                                <div class="my-2 d-flex flex-row align-center">
+                                    <div>
+                                        <v-list-item-title class="subtitle-1">半角表示</v-list-item-title>
+                                        <v-list-item-subtitle>強制的に半角表示にする</v-list-item-subtitle>
+                                    </div>
+                                    <v-spacer></v-spacer>
+                                    <v-switch v-model="storageModel.tmp.isHalfWidthDisplayed" value></v-switch>
                                 </div>
                             </v-list-item-content>
                         </v-list-item>
@@ -31,14 +39,6 @@
                                     </div>
                                     <v-spacer></v-spacer>
                                     <v-switch v-model="storageModel.tmp.isOnAirTabListView" value></v-switch>
-                                </div>
-                                <div class="my-2 d-flex flex-row align-center">
-                                    <div>
-                                        <v-list-item-title class="subtitle-1">半角表示</v-list-item-title>
-                                        <v-list-item-subtitle>強制的に半角表示にする</v-list-item-subtitle>
-                                    </div>
-                                    <v-spacer></v-spacer>
-                                    <v-switch v-model="storageModel.tmp.isOnAirHalfWidthDisplayed" value></v-switch>
                                 </div>
                                 <div class="my-2 d-flex flex-column">
                                     <div class="d-flex">
@@ -89,14 +89,6 @@
                                 </div>
                                 <div class="my-2 d-flex flex-row align-center">
                                     <div>
-                                        <v-list-item-title class="subtitle-1">半角表示</v-list-item-title>
-                                        <v-list-item-subtitle>強制的に半角表示にする</v-list-item-subtitle>
-                                    </div>
-                                    <v-spacer></v-spacer>
-                                    <v-switch v-model="storageModel.tmp.isGuideHalfWidthDisplayed" value></v-switch>
-                                </div>
-                                <div class="my-2 d-flex flex-row align-center">
-                                    <div>
                                         <v-list-item-title class="subtitle-1">放送波種別表示</v-list-item-title>
                                         <v-list-item-subtitle>
                                             ナビゲーションの表示を放送波別に分ける
@@ -128,14 +120,6 @@
                                         :menu-props="{ auto: true }"
                                     ></v-select>
                                 </div>
-                                <div class="my-2 d-flex flex-row align-center">
-                                    <div>
-                                        <v-list-item-title class="subtitle-1">半角表示</v-list-item-title>
-                                        <v-list-item-subtitle>強制的に半角表示にする</v-list-item-subtitle>
-                                    </div>
-                                    <v-spacer></v-spacer>
-                                    <v-switch v-model="storageModel.tmp.isReservesHalfWidthDisplayed" value></v-switch>
-                                </div>
                             </v-list-item-content>
                         </v-list-item>
 
@@ -154,14 +138,6 @@
                                         class="guide-time"
                                         :menu-props="{ auto: true }"
                                     ></v-select>
-                                </div>
-                                <div class="my-2 d-flex flex-row align-center">
-                                    <div>
-                                        <v-list-item-title class="subtitle-1">半角表示</v-list-item-title>
-                                        <v-list-item-subtitle>強制的に半角表示にする</v-list-item-subtitle>
-                                    </div>
-                                    <v-spacer></v-spacer>
-                                    <v-switch v-model="storageModel.tmp.isRecordingHalfWidthDisplayed" value></v-switch>
                                 </div>
                             </v-list-item-content>
                         </v-list-item>
@@ -182,14 +158,6 @@
                                         class="guide-time"
                                         :menu-props="{ auto: true }"
                                     ></v-select>
-                                </div>
-                                <div class="my-2 d-flex flex-row align-center">
-                                    <div>
-                                        <v-list-item-title class="subtitle-1">半角表示</v-list-item-title>
-                                        <v-list-item-subtitle>強制的に半角表示にする</v-list-item-subtitle>
-                                    </div>
-                                    <v-spacer></v-spacer>
-                                    <v-switch v-model="storageModel.tmp.isRecordedHalfWidthDisplayed" value></v-switch>
                                 </div>
                                 <div class="my-2 d-flex flex-row align-center">
                                     <div>
@@ -248,22 +216,6 @@
 
                         <v-list-item three-line>
                             <v-list-item-content>
-                                <div class="title">エンコード</div>
-                                <div class="my-2 d-flex flex-row align-center">
-                                    <div>
-                                        <v-list-item-title class="subtitle-1">半角表示</v-list-item-title>
-                                        <v-list-item-subtitle>強制的に半角表示にする</v-list-item-subtitle>
-                                    </div>
-                                    <v-spacer></v-spacer>
-                                    <v-switch v-model="storageModel.tmp.isEncodeHalfWidthDisplayed" value></v-switch>
-                                </div>
-                            </v-list-item-content>
-                        </v-list-item>
-
-                        <v-divider></v-divider>
-
-                        <v-list-item three-line>
-                            <v-list-item-content>
                                 <div class="title">検索</div>
                                 <div class="my-2 d-flex flex-row align-center">
                                     <div>
@@ -276,14 +228,6 @@
                                         class="guide-time"
                                         :menu-props="{ auto: true }"
                                     ></v-select>
-                                </div>
-                                <div class="my-2 d-flex flex-row align-center">
-                                    <div>
-                                        <v-list-item-title class="subtitle-1">半角表示</v-list-item-title>
-                                        <v-list-item-subtitle>強制的に半角表示にする</v-list-item-subtitle>
-                                    </div>
-                                    <v-spacer></v-spacer>
-                                    <v-switch v-model="storageModel.tmp.isSearchHalfWidthDisplayed" value></v-switch>
                                 </div>
                                 <div class="my-2 d-flex flex-row align-center">
                                     <div>

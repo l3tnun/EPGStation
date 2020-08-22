@@ -84,7 +84,7 @@ export default class Encode extends Vue {
      * @return boolean
      */
     private isHalfWidth(): boolean {
-        return this.settingValue === null ? true : this.settingValue.isEncodeHalfWidthDisplayed;
+        return this.settingValue === null ? true : this.settingValue.isHalfWidthDisplayed;
     }
 }
 </script>

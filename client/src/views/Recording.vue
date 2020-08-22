@@ -96,7 +96,7 @@ export default class Recording extends Vue {
         }
 
         return {
-            isHalfWidth: this.settingValue.isRecordingHalfWidthDisplayed,
+            isHalfWidth: this.settingValue.isHalfWidthDisplayed,
             offset: (Util.getPageNum(this.$route) - 1) * this.settingValue.recordingLength,
             limit: this.settingValue.recordingLength,
         };

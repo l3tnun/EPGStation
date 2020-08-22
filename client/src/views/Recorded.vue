@@ -138,7 +138,7 @@ export default class Recorded extends Vue {
         }
 
         const option: apid.GetRecordedOption = {
-            isHalfWidth: this.settingValue.isRecordedHalfWidthDisplayed,
+            isHalfWidth: this.settingValue.isHalfWidthDisplayed,
             offset: (Util.getPageNum(this.$route) - 1) * this.settingValue.recordedLength,
             limit: this.settingValue.recordedLength,
         };

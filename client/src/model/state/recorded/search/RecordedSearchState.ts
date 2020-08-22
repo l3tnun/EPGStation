@@ -66,7 +66,7 @@ export default class RecordedSearchState implements IRecordedSearchState {
             return;
         }
 
-        const isHalfWidth = this.setting.getSavedValue().isRecordedHalfWidthDisplayed;
+        const isHalfWidth = this.setting.getSavedValue().isHalfWidthDisplayed;
 
         for (const rule of this.searchOptions.rules) {
             this.ruleItems.push({

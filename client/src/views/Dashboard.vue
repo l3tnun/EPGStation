@@ -320,7 +320,7 @@ export default class Main extends Vue {
         }
 
         return {
-            isHalfWidth: this.settingValue.isRecordingHalfWidthDisplayed,
+            isHalfWidth: this.settingValue.isHalfWidthDisplayed,
             offset: (Util.getPageNum(this.$route) - 1) * this.settingValue.recordingLength,
             limit: this.settingValue.recordingLength,
         };
@@ -336,7 +336,7 @@ export default class Main extends Vue {
         }
 
         const option: apid.GetRecordedOption = {
-            isHalfWidth: this.settingValue.isRecordedHalfWidthDisplayed,
+            isHalfWidth: this.settingValue.isHalfWidthDisplayed,
             offset: (Util.getPageNum(this.$route) - 1) * this.settingValue.recordedLength,
             limit: this.settingValue.recordedLength,
         };
@@ -374,7 +374,7 @@ export default class Main extends Vue {
 
         return {
             type: 'normal',
-            isHalfWidth: this.settingValue.isReservesHalfWidthDisplayed,
+            isHalfWidth: this.settingValue.isHalfWidthDisplayed,
             offset: (Util.getPageNum(this.$route) - 1) * this.settingValue.reservesLength,
             limit: this.settingValue.reservesLength,
         };

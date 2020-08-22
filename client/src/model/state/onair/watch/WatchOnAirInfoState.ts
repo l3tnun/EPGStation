@@ -38,7 +38,7 @@ export default class WatchOnAirInfoState implements IWatchOnAirInfoState {
      * @return Promise<void>
      */
     public async update(channelId: apid.ChannelId, mode: number): Promise<void> {
-        const isHalfWidth = this.settingModel.getSavedValue().isOnAirHalfWidthDisplayed;
+        const isHalfWidth = this.settingModel.getSavedValue().isHalfWidthDisplayed;
         const streamInfo = await this.streamApiModel.getStreamInfo(isHalfWidth);
 
         for (const item of streamInfo.items) {
