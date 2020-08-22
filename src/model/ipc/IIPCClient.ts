@@ -6,7 +6,7 @@ export interface IPCReservationManageModel {
     add(option: apid.ManualReserveOption): Promise<apid.ReserveId>;
     update(reserveId: apid.ReserveId): Promise<void>;
     updateRule(ruleId: apid.RuleId): Promise<void>;
-    updateAll(): Promise<void>;
+    updateAll(isUntilComplete: boolean): Promise<void>;
     cancel(reserveId: apid.ReserveId): Promise<void>;
     removeSkip(reserveId: apid.ReserveId): Promise<void>;
     removeOverlap(reserveId: apid.ReserveId): Promise<void>;

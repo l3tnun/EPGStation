@@ -154,10 +154,13 @@ export default class IPCClient implements IIPCClient {
                     },
                 });
             },
-            updateAll: () => {
+            updateAll: (isUntilComplete: boolean) => {
                 return this.send({
                     model: ModelName.reserveation,
                     func: ReserveationFunctions.updateAll,
+                    args: {
+                        isUntilComplete: isUntilComplete,
+                    },
                 });
             },
             cancel: (reserveId: apid.ReserveId) => {

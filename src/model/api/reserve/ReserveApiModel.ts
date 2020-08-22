@@ -228,4 +228,12 @@ export default class ReserveApiModel implements IReserveApiModel {
     public removeOverlap(reserveId: apid.ReserveId): Promise<void> {
         return this.ipc.reserveation.removeOverlap(reserveId);
     }
+
+    /**
+     * 全ての予約情報の更新
+     * @return Promise<void>
+     */
+    public updateAll(): Promise<void> {
+        return this.ipc.reserveation.updateAll(false);
+    }
 }

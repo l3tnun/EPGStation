@@ -161,8 +161,14 @@ export default class IPCServer implements IIPCServer {
         };
 
         // updateAll
-        index[ReserveationFunctions.updateAll] = async () => {
-            await this.reservationManage.updateAll();
+        index[ReserveationFunctions.updateAll] = async msg => {
+            const isUntilComplete = this.getArgsValue<boolean>(msg, 'isUntilComplete');
+
+            if (isUntilComplete === true) {
+                await this.reservationManage.updateAll();
+            } else {
+                this.reservationManage.updateAll();
+            }
         };
 
         // cancel
