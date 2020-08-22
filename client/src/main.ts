@@ -31,7 +31,6 @@ smoothscroll.polyfill();
         meta.setAttribute('content', 'black');
         document.getElementsByTagName('head')[0].appendChild(meta);
     }
-    console.log(document.getElementsByTagName('head'));
 
     // 放送局情報の取得
     const channelModel = container.get<IChannelModel>('IChannelModel');
