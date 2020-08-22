@@ -6,6 +6,8 @@
                     ? guideState.getTitle($route.query.type)
                     : guideState.getSingleStationTitle()
             "
+            :needsTitleClickEvent="true"
+            v-on:click="onTitle"
         >
             <template v-slot:menu>
                 <GuideTimeSelector v-if="isLoading === false"></GuideTimeSelector>
@@ -43,11 +45,13 @@
         </div>
         <ProgramDialog></ProgramDialog>
         <OnAirSelectStream :needsGotoGuideButton="true"></OnAirSelectStream>
+        <GuideDaySelectDialog :isOpen.sync="isOpenDaySelectDialog"></GuideDaySelectDialog>
     </v-content>
 </template>
 
 <script lang="ts">
 import Channel from '@/components/guide/Channel.vue';
+import GuideDaySelectDialog from '@/components/guide/GuideDaySelectDialog.vue';
 import GuideMainMenu from '@/components/guide/GuideMainMenu.vue';
 import GuideTimeSelector from '@/components/guide/GuideTimeSelector.vue';
 import Loading from '@/components/guide/Loading.vue';
@@ -81,11 +85,13 @@ Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
         TimeLine,
         ProgramDialog,
         OnAirSelectStream,
+        GuideDaySelectDialog,
     },
 })
 export default class Guide extends Vue {
     public isLoading: boolean = true;
     public guideState: IGuideState = container.get<IGuideState>('IGuideState');
+    public isOpenDaySelectDialog: boolean = false;
 
     private scrollState: IScrollPositionState = container.get<IScrollPositionState>('IScrollPositionState');
     private setting: ISettingStorageModel = container.get<ISettingStorageModel>('ISettingStorageModel');
@@ -154,6 +160,13 @@ export default class Guide extends Vue {
             const element = document.getElementsByTagName('html')[0];
             element.classList.remove('fix-address-bar');
         }
+    }
+
+    /**
+     * タイトルクリック
+     */
+    public onTitle(): void {
+        this.isOpenDaySelectDialog = true;
     }
 
     /**
