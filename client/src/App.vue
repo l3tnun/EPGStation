@@ -65,3 +65,16 @@ html.fix-address-bar
             height: 100%
             min-height: 100%
 </style>
+
+<style lang="sass">
+/**
+  * メニュー背景
+  */
+.menu-background
+    position: fixed
+    top: 0
+    left: 0
+    width: 100%
+    height: 100vh
+    z-index: 7 // vuetify アップデート毎に確認が必要
+</style>

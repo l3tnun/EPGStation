@@ -173,16 +173,6 @@ export default class RecordedSearchMenu extends Vue {
 }
 </script>
 
-<style lang="sass" scoped>
-.menu-background
-    position: fixed
-    top: 0
-    left: 0
-    width: 100%
-    height: 100vh
-    z-index: 7 // vuetify アップデート毎に確認が必要
-</style>
-
 <style lang="sass">
 .recorded-search
     .v-input__control
