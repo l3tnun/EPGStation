@@ -29,6 +29,7 @@ export interface ProgramDomItem {
     left: number;
     height: number;
     isVisible: boolean;
+    genreLv1?: apid.ProgramGenreLv1;
 }
 
 export default interface IGuideState {
@@ -37,6 +38,7 @@ export default interface IGuideState {
     fetchGuide(option: FetchGuideOption): Promise<void>;
     createProgramDoms(isSingleStation: boolean): void;
     updateVisible(): void;
+    updateGenre(): void;
     updateReserves(): void;
     getChannels(): apid.ScheduleChannleItem[];
     getChannelsLength(): number;

@@ -5,6 +5,9 @@ import { Genre, SubGenre } from '../lib/event';
  * Genre Util
  */
 namespace GenreUtil {
+    // ジャンル最大値
+    export const GENRE_MAX_NUM = 15;
+
     /**
      * genre を取得
      * @return Genre str

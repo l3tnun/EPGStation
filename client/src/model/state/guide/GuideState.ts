@@ -1,7 +1,9 @@
+import IGuideGenreSettingStorageModel, {
+    IGuideGenreSettingValue,
+} from '@/model/storage/guide/IGuideGenreSettingStorageModel';
 import { inject, injectable } from 'inversify';
 import * as apid from '../../../../../api';
 import DateUtil from '../../../util/DateUtil';
-import IReservesApiModel from '../..//api/reserves/IReservesApiModel';
 import IScheduleApiModel from '../../api/schedule/IScheduleApiModel';
 import ISettingStorageModel from '../../storage/setting/ISettingStorageModel';
 import IGuideProgramDialogState, { ProgramDialogOpenOption } from './IGuideProgramDialogState';
@@ -14,15 +16,16 @@ interface CreateProgramDomOption {
     height: number;
     channel: apid.ScheduleChannleItem;
     program: apid.ScheduleProgramItem;
+    isHidden: boolean;
 }
 
 @injectable()
 class GuideState implements IGuideState {
     private scheduleApiModel: IScheduleApiModel;
-    private reservesApiModel: IReservesApiModel;
     private settingModel: ISettingStorageModel;
     private programDialogState: IGuideProgramDialogState;
     private reserveUtil: IGuideReserveUtil;
+    private genreSetting: IGuideGenreSettingStorageModel;
 
     private displayRange: DisplayRange | null = null;
     private startAt: apid.UnixtimeMS = 0;
@@ -38,16 +41,16 @@ class GuideState implements IGuideState {
 
     constructor(
         @inject('IScheduleApiModel') scheduleApiModel: IScheduleApiModel,
-        @inject('IReservesApiModel') reservesApiModel: IReservesApiModel,
         @inject('ISettingStorageModel') settingModel: ISettingStorageModel,
         @inject('IGuideProgramDialogState') programDialogState: IGuideProgramDialogState,
         @inject('IGuideReserveUtil') reserveUtil: IGuideReserveUtil,
+        @inject('IGuideGenreSettingStorageModel') genreSetting: IGuideGenreSettingStorageModel,
     ) {
         this.scheduleApiModel = scheduleApiModel;
-        this.reservesApiModel = reservesApiModel;
         this.settingModel = settingModel;
         this.programDialogState = programDialogState;
         this.reserveUtil = reserveUtil;
+        this.genreSetting = genreSetting;
     }
 
     /**
@@ -150,6 +153,7 @@ class GuideState implements IGuideState {
         }
 
         const isHidden = this.settingModel.getSavedValue().guideMode !== 'all';
+        const genreSettings = this.genreSetting.getSavedValue();
 
         this.programDoms = [];
         this.programDomIndex = {};
@@ -175,8 +179,9 @@ class GuideState implements IGuideState {
                         height: height,
                         channel: this.schedules[i].channel,
                         program: program,
+                        isHidden: isHidden,
                     },
-                    isHidden,
+                    genreSettings,
                 );
 
                 this.programDoms.push({
@@ -185,6 +190,12 @@ class GuideState implements IGuideState {
                     left: i,
                     height,
                     isVisible: false,
+                    genreLv1:
+                        typeof program.genre1 !== 'undefined'
+                            ? program.genre1
+                            : typeof program.genre2 !== 'undefined'
+                            ? program.genre2
+                            : program.genre3,
                 });
 
                 // dom 索引作成
@@ -207,7 +218,7 @@ class GuideState implements IGuideState {
      * @param isHidden: boolean
      * @return HTMLElement
      */
-    private createProgramDom(option: CreateProgramDomOption, isHidden: boolean): HTMLElement {
+    private createProgramDom(option: CreateProgramDomOption, genreSettings: IGuideGenreSettingValue): HTMLElement {
         // create child
         const child: HTMLElement[] = [];
         child.push(this.createTextElement('div', { class: 'name' }, option.program.name));
@@ -223,15 +234,27 @@ class GuideState implements IGuideState {
         }
 
         // class
+        let genreLv1: apid.ProgramGenreLv1 | null = null;
         let classStr = 'item';
         if (typeof option.program.genre1 !== 'undefined') {
+            genreLv1 = option.program.genre1;
             classStr += ` ctg-${option.program.genre1.toString(10)}`;
         } else if (typeof option.program.genre2 !== 'undefined') {
+            genreLv1 = option.program.genre2;
             classStr += ` ctg-${option.program.genre2.toString(10)}`;
         } else if (typeof option.program.genre3 !== 'undefined') {
+            genreLv1 = option.program.genre3;
             classStr += ` ctg-${option.program.genre3.toString(10)}`;
         } else {
             classStr += ' ctg-empty';
+        }
+
+        if (
+            genreLv1 !== null &&
+            typeof (genreSettings as any)[genreLv1] !== 'undefined' &&
+            (genreSettings as any)[genreLv1] === false
+        ) {
+            classStr += ' hide';
         }
 
         // 予約情報追加
@@ -240,7 +263,7 @@ class GuideState implements IGuideState {
             classStr += ` ${reserve.type}`;
         }
 
-        if (isHidden === true) {
+        if (option.isHidden === true) {
             classStr += ' hidden';
         }
 
@@ -357,6 +380,27 @@ class GuideState implements IGuideState {
                 } else {
                     dom.element.classList.add('hidden');
                 }
+            }
+        }
+    }
+
+    /**
+     * ジャンル情報を更新する
+     */
+    public updateGenre(): void {
+        const genreSettings = this.genreSetting.getSavedValue();
+
+        for (const dom of this.programDoms) {
+            if (typeof dom.genreLv1 === 'undefined') {
+                continue;
+            }
+
+            dom.element.classList.remove('hide');
+            if (
+                typeof (genreSettings as any)[dom.genreLv1] !== 'undefined' &&
+                (genreSettings as any)[dom.genreLv1] === false
+            ) {
+                dom.element.classList.add('hide');
             }
         }
     }

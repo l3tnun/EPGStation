@@ -11,7 +11,7 @@
         >
             <template v-slot:menu>
                 <GuideTimeSelector v-if="isLoading === false"></GuideTimeSelector>
-                <GuideMainMenu></GuideMainMenu>
+                <GuideMainMenu v-on:updatedgenre="onUpdateGenre"></GuideMainMenu>
             </template>
         </TitleBar>
         <div class="app-content guide" v-bind:class="{ 'is-dark': $vuetify.theme.dark === true }">
@@ -171,6 +171,17 @@ export default class Guide extends Vue {
      */
     public onTitle(): void {
         this.isOpenDaySelectDialog = true;
+    }
+
+    /**
+     * ジャンル情報の更新
+     */
+    public onUpdateGenre(): void {
+        this.isLoading = true;
+        this.$nextTick(() => {
+            this.guideState.updateGenre();
+            this.isLoading = false;
+        });
     }
 
     /**

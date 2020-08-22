@@ -83,7 +83,9 @@ import ISnackbarState from './state/snackbar/ISnackbarState';
 import SnackbarState from './state/snackbar/SnackbarState';
 import AddEncodeSettingStorageModel from './storage/encode/AddEncodeSettingStorageModel';
 import IAddEncodeSettingStorageModel from './storage/encode/IAddEncodeSettingStorageModel';
+import GuideGenreSettingStorageModel from './storage/guide/GuideGenreSettingStorageModel';
 import GuideProgramDialogSettingStorageModel from './storage/guide/GuideProgramDialogSettingStorageModel';
+import IGuideGenreSettingStorageModel from './storage/guide/IGuideGenreSettingStorageModel';
 import IGuideProgramDialogSettingStorageModel from './storage/guide/IGuideProgramDialogSettingStorageModel';
 import IStorageOperationModel from './storage/IStorageOperationModel';
 import IOnAirSelectStreamSettingStorageModel from './storage/onair/IOnAirSelectStreamSettingStorageModel';
@@ -129,6 +131,11 @@ export default (container: Container) => {
     container
         .bind<IGuideProgramDialogSettingStorageModel>('IGuideProgramDialogSettingStorageModel')
         .to(GuideProgramDialogSettingStorageModel)
+        .inSingletonScope();
+
+    container
+        .bind<IGuideGenreSettingStorageModel>('IGuideGenreSettingStorageModel')
+        .to(GuideGenreSettingStorageModel)
         .inSingletonScope();
 
     container
