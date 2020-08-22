@@ -9,6 +9,7 @@
         >
             <template v-slot:menu>
                 <GuideTimeSelector v-if="isLoading === false"></GuideTimeSelector>
+                <GuideMainMenu></GuideMainMenu>
             </template>
         </TitleBar>
         <div class="app-content guide" v-bind:class="{ 'is-dark': $vuetify.theme.dark === true }">
@@ -47,6 +48,7 @@
 
 <script lang="ts">
 import Channel from '@/components/guide/Channel.vue';
+import GuideMainMenu from '@/components/guide/GuideMainMenu.vue';
 import GuideTimeSelector from '@/components/guide/GuideTimeSelector.vue';
 import Loading from '@/components/guide/Loading.vue';
 import ProgramDialog from '@/components/guide/ProgramDialog.vue';
@@ -71,6 +73,7 @@ Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
 @Component({
     components: {
         TitleBar,
+        GuideMainMenu,
         GuideTimeSelector,
         Loading,
         Channel,
