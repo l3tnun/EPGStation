@@ -1,6 +1,10 @@
 <template>
     <v-content>
-        <TitleBar :title="title"></TitleBar>
+        <TitleBar :title="title">
+            <template v-slot:menu>
+                <ReservesMainMenu></ReservesMainMenu>
+            </template>
+        </TitleBar>
         <transition name="page">
             <div v-if="reservesState.getReserves().length > 0" ref="appContent" class="app-content pa-2">
                 <div v-bind:style="contentWrapStyle">
@@ -16,6 +20,7 @@
 <script lang="ts">
 import Pagination from '@/components/pagination/Pagination.vue';
 import ReserveItems from '@/components/reserves/ReserveItems.vue';
+import ReservesMainMenu from '@/components/reserves/ReservesMainMenu.vue';
 import Snackbar from '@/components/snackbar/Snackbar.vue';
 import TitleBar from '@/components/titleBar/TitleBar.vue';
 import container from '@/model/ModelContainer';
@@ -34,6 +39,7 @@ Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
 @Component({
     components: {
         TitleBar,
+        ReservesMainMenu,
         ReserveItems,
         Pagination,
     },

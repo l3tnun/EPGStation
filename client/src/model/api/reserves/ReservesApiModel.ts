@@ -74,4 +74,12 @@ export default class ReservesApiModel implements IReservesApiModel {
     public async removeOverlap(reserveId: apid.ReserveId): Promise<void> {
         await this.repository.delete(`/reserves/${reserveId}/overlap`);
     }
+
+    /**
+     * 予約情報の更新を開始する
+     * @return Promise<void>
+     */
+    public async updateAll(): Promise<void> {
+        await this.repository.post('/reserves/update');
+    }
 }
