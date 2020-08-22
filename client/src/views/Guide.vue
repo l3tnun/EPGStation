@@ -29,16 +29,18 @@
                         <div class="time-scale-wrap overflow-hidden" ref="times">
                             <TimeScale></TimeScale>
                         </div>
-                        <div class="program-wrap overflow-auto" v-on:scroll="onProgramScroll" ref="programs">
-                            <div
-                                class="programs"
-                                v-bind:class="{ 'is-dark': $vuetify.theme.dark === true }"
-                                v-bind:style="programsStyle"
-                                ref="content"
-                            >
-                                <TimeLine></TimeLine>
-                            </div>
-                        </div>
+                        <GuideScroller class="program-wrap overflow-auto" v-on:scroll="onProgramScroll" ref="programs">
+                            <template v-slot:content>
+                                <div
+                                    class="programs"
+                                    v-bind:class="{ 'is-dark': $vuetify.theme.dark === true }"
+                                    v-bind:style="programsStyle"
+                                    ref="content"
+                                >
+                                    <TimeLine></TimeLine>
+                                </div>
+                            </template>
+                        </GuideScroller>
                     </div>
                 </div>
             </transition>
@@ -53,6 +55,7 @@
 import Channel from '@/components/guide/Channel.vue';
 import GuideDaySelectDialog from '@/components/guide/GuideDaySelectDialog.vue';
 import GuideMainMenu from '@/components/guide/GuideMainMenu.vue';
+import GuideScroller from '@/components/guide/GuideScroller.vue';
 import GuideTimeSelector from '@/components/guide/GuideTimeSelector.vue';
 import Loading from '@/components/guide/Loading.vue';
 import ProgramDialog from '@/components/guide/ProgramDialog.vue';
@@ -82,6 +85,7 @@ Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
         Loading,
         Channel,
         TimeScale,
+        GuideScroller,
         TimeLine,
         ProgramDialog,
         OnAirSelectStream,
@@ -225,8 +229,8 @@ export default class Guide extends Vue {
 
         try {
             this.scrollState.saveScrollData({
-                x: (<HTMLElement>this.$refs.programs).scrollLeft,
-                y: (<HTMLElement>this.$refs.programs).scrollTop,
+                x: (<GuideScroller>this.$refs.programs).$el.scrollLeft,
+                y: (<GuideScroller>this.$refs.programs).$el.scrollTop,
             });
         } catch (err) {
             console.error(err);
@@ -268,14 +272,14 @@ export default class Guide extends Vue {
                     if (this.scrollState.isNeedRestoreHistory === true) {
                         const position = this.scrollState.getScrollData<{ x: number; y: number }>();
                         if (position !== null) {
-                            (<HTMLElement>this.$refs.programs).scrollLeft = position.x;
-                            (<HTMLElement>this.$refs.programs).scrollTop = position.y;
+                            (<GuideScroller>this.$refs.programs).$el.scrollLeft = position.x;
+                            (<GuideScroller>this.$refs.programs).$el.scrollTop = position.y;
                         }
                         this.scrollState.isNeedRestoreHistory = false;
                     } else {
                         // スクロール位置初期化
-                        (<HTMLElement>this.$refs.programs).scrollLeft = 0;
-                        (<HTMLElement>this.$refs.programs).scrollTop = 0;
+                        (<GuideScroller>this.$refs.programs).$el.scrollLeft = 0;
+                        (<GuideScroller>this.$refs.programs).$el.scrollTop = 0;
                         if (typeof this.$refs.channels !== 'undefined' && typeof this.$refs.times !== 'undefined') {
                             (<HTMLElement>this.$refs.channels).scrollLeft = 0;
                             (<HTMLElement>this.$refs.times).scrollTop = 0;
@@ -371,10 +375,10 @@ export default class Guide extends Vue {
         this.guideState.setDisplayRange({
             baseWidth: this.programBaseWidth,
             baseHeight: this.programBaseHeight,
-            maxWidth: (<HTMLElement>this.$refs.programs).offsetWidth,
-            maxHeight: (<HTMLElement>this.$refs.programs).offsetHeight,
-            offsetWidth: (<HTMLElement>this.$refs.programs).scrollLeft,
-            offsetHeight: (<HTMLElement>this.$refs.programs).scrollTop,
+            maxWidth: (<HTMLElement>(<GuideScroller>this.$refs.programs).$el).offsetWidth,
+            maxHeight: (<HTMLElement>(<GuideScroller>this.$refs.programs).$el).offsetHeight,
+            offsetWidth: (<GuideScroller>this.$refs.programs).$el.scrollLeft,
+            offsetHeight: (<GuideScroller>this.$refs.programs).$el.scrollTop,
         });
     }
 }
