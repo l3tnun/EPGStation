@@ -6,4 +6,9 @@ export default interface IRecordingState {
     fetchData(option: apid.GetRecordedOption): Promise<void>;
     getRecorded(): RecordedDisplayData[];
     getTotal(): number;
+    getSelectedCnt(): number;
+    select(recordedId: apid.RecordedId): void;
+    selectAll(): void;
+    clearSelect(): void;
+    multiplueDeletion(): Promise<void>;
 }

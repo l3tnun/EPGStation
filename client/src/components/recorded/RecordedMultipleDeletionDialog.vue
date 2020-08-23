@@ -3,7 +3,7 @@
         <v-card class="recorded-multiple-deletion-dialog">
             <v-card-text class="pa-4 pb-0">
                 <div>選択した {{ total }} 件の番組を削除しますか。</div>
-                <div>
+                <div v-if="!!disableOption === false">
                     <v-select :items="optionItems" v-model="deleteOption" :menu-props="{ auto: true }"></v-select>
                 </div>
             </v-card-text>
@@ -35,6 +35,9 @@ export default class RecordedMultipleDeletionDialog extends Vue {
 
     @Prop({ required: true })
     public total!: number;
+
+    @Prop({})
+    public disableOption: boolean | undefined;
 
     public isRemove: boolean = false;
 
