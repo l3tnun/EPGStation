@@ -399,7 +399,7 @@ export interface GetRecordedOption {
     channelId?: ChannelId;
     genre?: ProgramGenreLv1;
     keyword?: string;
-    isOnlyOriginalFile?: boolean;
+    hasOriginalFile?: boolean;
 }
 
 /**

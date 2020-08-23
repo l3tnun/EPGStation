@@ -119,19 +119,48 @@ export default class RecordedDB implements IRecordedDB {
      * @param recordedIds: apid.RecordedId[]
      * @return Promise<Recorded[]>
      */
-    public async findIds(recordedIds: apid.RecordedId[]): Promise<Recorded[]> {
+    public async findIds(
+        recordedIds: apid.RecordedId[],
+        columnOption?: RecordedColumnOption,
+        isReverse?: boolean,
+    ): Promise<Recorded[]> {
         if (recordedIds.length === 0) {
             return [];
         }
 
         const connection = await this.op.getConnection();
 
-        const queryBuilder = await connection
+        let queryBuilder = connection
             .getRepository(Recorded)
             .createQueryBuilder('recorded')
-            .where({ id: In(recordedIds) })
-            .leftJoinAndSelect('recorded.videoFiles', 'videoFiles')
-            .leftJoinAndSelect('recorded.thumbnails', 'thumbnails');
+            .where({ id: In(recordedIds) });
+
+        if (typeof columnOption === 'undefined') {
+            queryBuilder = queryBuilder
+                .leftJoinAndSelect('recorded.videoFiles', 'videoFiles')
+                .leftJoinAndSelect('recorded.thumbnails', 'thumbnails');
+        } else {
+            // videoFile
+            if (columnOption.isNeedVideoFiles === true) {
+                queryBuilder = queryBuilder.leftJoinAndSelect('recorded.videoFiles', 'videoFiles');
+            }
+            // thumbnail
+            if (columnOption.isNeedThumbnails === true) {
+                queryBuilder = queryBuilder.leftJoinAndSelect('recorded.thumbnails', 'thumbnails');
+            }
+            // dropLogFile
+            if (columnOption.isNeedsDropLog === true) {
+                queryBuilder = queryBuilder.leftJoinAndSelect('recorded.dropLogFile', 'dropLogFile');
+            }
+
+            // tags
+            if (columnOption.isNeedTags === true) {
+                queryBuilder = queryBuilder.leftJoinAndSelect('recorded.tags', 'tags');
+            }
+        }
+
+        queryBuilder = queryBuilder.orderBy('recorded.startAt', !!isReverse ? 'ASC' : 'DESC');
+
         const result = await this.promieRetry.run(() => {
             return queryBuilder.getMany();
         });
@@ -236,7 +265,7 @@ export default class RecordedDB implements IRecordedDB {
         }
 
         // オリジナルファイルだけを抽出する
-        if (columnOption.isNeedVideoFiles === true && !!option.isOnlyOriginalFile === true) {
+        if (columnOption.isNeedVideoFiles === true && !!option.hasOriginalFile === true) {
             querys.push({
                 query: 'videoFiles.type <> :type',
                 values: {
@@ -268,24 +297,42 @@ export default class RecordedDB implements IRecordedDB {
             queryBuilder = queryBuilder.leftJoinAndSelect('recorded.videoFiles', 'videoFiles');
         }
 
-        // thumbnails
-        if (columnOption.isNeedThumbnails === true) {
-            queryBuilder = queryBuilder.leftJoinAndSelect('recorded.thumbnails', 'thumbnails');
-        }
+        if (!!option.hasOriginalFile === false) {
+            // thumbnails
+            if (columnOption.isNeedThumbnails === true) {
+                queryBuilder = queryBuilder.leftJoinAndSelect('recorded.thumbnails', 'thumbnails');
+            }
 
-        // dropLogFile
-        if (columnOption.isNeedsDropLog === true) {
-            queryBuilder = queryBuilder.leftJoinAndSelect('recorded.dropLogFile', 'dropLogFile');
-        }
+            // dropLogFile
+            if (columnOption.isNeedsDropLog === true) {
+                queryBuilder = queryBuilder.leftJoinAndSelect('recorded.dropLogFile', 'dropLogFile');
+            }
 
-        // tags
-        if (columnOption.isNeedTags === true) {
-            queryBuilder = queryBuilder.leftJoinAndSelect('recorded.tags', 'tags');
-        }
+            // tags
+            if (columnOption.isNeedTags === true) {
+                queryBuilder = queryBuilder.leftJoinAndSelect('recorded.tags', 'tags');
+            }
 
-        return await this.promieRetry.run(() => {
-            return queryBuilder.getManyAndCount();
-        });
+            return await this.promieRetry.run(() => {
+                return queryBuilder.getManyAndCount();
+            });
+        } else {
+            // option.hasOriginalFile が有効な場合は エンコード済みビデオを取得できないので id を指定して再取得する
+            // tslint:disable-next-line: typedef
+            const [records, total] = await this.promieRetry.run(() => {
+                return queryBuilder.getManyAndCount();
+            });
+
+            const recordedIds = records.map(r => {
+                return r.id;
+            });
+
+            const result = await this.promieRetry.run(() => {
+                return this.findIds(recordedIds, columnOption, option.isReverse);
+            });
+
+            return [result, total];
+        }
     }
 
     /**

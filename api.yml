@@ -1439,9 +1439,9 @@ components:
             schema:
                 type: string
 
-        QueryIsOnlyOriginalFile:
-            description: オリジナルファイルだけを取得するか
-            name: isOnlyOriginalFile
+        QueryHasOriginalFile:
+            description: オリジナルファイルを含むか
+            name: hasOriginalFile
             in: query
             schema:
                 type: boolean

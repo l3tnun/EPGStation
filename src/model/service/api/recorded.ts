@@ -32,8 +32,8 @@ export const get: Operation = async (req, res) => {
         if (typeof req.query.keyword === 'string') {
             option.keyword = req.query.keyword;
         }
-        if (typeof req.query.isOnlyOriginalFile !== 'undefined') {
-            option.isOnlyOriginalFile = req.query.isOnlyOriginalFile as any;
+        if (typeof req.query.hasOriginalFile !== 'undefined') {
+            option.hasOriginalFile = req.query.hasOriginalFile as any;
         }
 
         api.responseJSON(res, 200, await recordedApiModel.gets(option));
@@ -72,7 +72,7 @@ get.apiDoc = {
             $ref: '#/components/parameters/QueryKeyword',
         },
         {
-            $ref: '#/components/parameters/QueryIsOnlyOriginalFile',
+            $ref: '#/components/parameters/QueryHasOriginalFile',
         },
     ],
     responses: {

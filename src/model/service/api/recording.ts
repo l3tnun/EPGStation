@@ -32,9 +32,6 @@ export const get: Operation = async (req, res) => {
         if (typeof req.query.keyword === 'string') {
             option.keyword = req.query.keyword;
         }
-        if (typeof req.query.isOnlyOriginalFile !== 'undefined') {
-            option.isOnlyOriginalFile = req.query.isOnlyOriginalFile as any;
-        }
         api.responseJSON(res, 200, await recordingApiModel.gets(option));
     } catch (err) {
         api.responseServerError(res, err.message);
