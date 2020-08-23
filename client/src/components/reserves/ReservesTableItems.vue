@@ -17,6 +17,7 @@
                         <tr
                             v-for="reserve in reserves"
                             v-bind:key="reserve.reserveItem.id"
+                            v-bind:class="{ 'selected-color': reserve.isSelected === true }"
                             v-on:click="clickItem(reserve)"
                         >
                             <td>{{ reserve.display.channelName }}</td>
@@ -34,7 +35,11 @@
                             </td>
                             <td>{{ reserve.display.description }}</td>
                             <td>
-                                <ReserveMenu :reserveItem="reserve.reserveItem" :disableEdit="false"></ReserveMenu>
+                                <ReserveMenu
+                                    v-if="isEditMode === false"
+                                    :reserveItem="reserve.reserveItem"
+                                    :disableEdit="false"
+                                ></ReserveMenu>
                             </td>
                         </tr>
                     </tbody>
@@ -63,10 +68,19 @@ export default class ReservesTableItems extends Vue {
     })
     public reserves!: ReserveStateData[];
 
+    @Prop({ required: true })
+    public isEditMode!: boolean;
+
     public isOpenDialog: boolean = false;
     public dialogReserve: ReserveStateData | null = null;
 
     public clickItem(reserve: ReserveStateData): void {
+        if (this.isEditMode === true) {
+            this.$emit('selected', reserve.reserveItem.id);
+
+            return;
+        }
+
         this.dialogReserve = reserve;
         this.isOpenDialog = true;
     }

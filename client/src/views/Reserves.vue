@@ -1,27 +1,46 @@
 <template>
     <v-content>
-        <TitleBar :title="title">
+        <EditTitleBar
+            v-if="isEditMode === true"
+            :title="selectedTitle"
+            :isEditMode.sync="isEditMode"
+            v-on:exit="onFinishEdit"
+            v-on:selectall="onSelectAll"
+            v-on:delete="onMultiplueDeletion"
+        ></EditTitleBar>
+        <TitleBar v-else :title="title">
             <template v-slot:menu>
-                <ReservesMainMenu></ReservesMainMenu>
+                <ReservesMainMenu v-on:edit="onEdit"></ReservesMainMenu>
             </template>
         </TitleBar>
         <transition name="page">
             <div v-if="reservesState.getReserves().length > 0" ref="appContent" class="app-content pa-2">
                 <div v-bind:style="contentWrapStyle">
-                    <ReserveItems :reserves="reservesState.getReserves()"></ReserveItems>
+                    <ReserveItems
+                        :reserves="reservesState.getReserves()"
+                        :isEditMode.sync="isEditMode"
+                        v-on:selected="selectItem"
+                    ></ReserveItems>
                 </div>
                 <Pagination :total="reservesState.getTotal()" :pageSize="settingValue.reservesLength"></Pagination>
             </div>
         </transition>
         <div style="visibility: hidden;">dummy</div>
+        <ReserveMultipleDeletionDialog
+            :isOpen.sync="isOpenMultiplueDeletionDialog"
+            :total="reservesState.getSelectedCnt()"
+            v-on:delete="onExecuteMultiplueDeletion"
+        ></ReserveMultipleDeletionDialog>
     </v-content>
 </template>
 
 <script lang="ts">
 import Pagination from '@/components/pagination/Pagination.vue';
 import ReserveItems from '@/components/reserves/ReserveItems.vue';
+import ReserveMultipleDeletionDialog from '@/components/reserves/ReserveMultipleDeletionDialog.vue';
 import ReservesMainMenu from '@/components/reserves/ReservesMainMenu.vue';
 import Snackbar from '@/components/snackbar/Snackbar.vue';
+import EditTitleBar from '@/components/titleBar/EditTitleBar.vue';
 import TitleBar from '@/components/titleBar/TitleBar.vue';
 import container from '@/model/ModelContainer';
 import ISocketIOModel from '@/model/socketio/ISocketIOModel';
@@ -38,13 +57,18 @@ Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
 
 @Component({
     components: {
+        EditTitleBar,
         TitleBar,
         ReservesMainMenu,
         ReserveItems,
         Pagination,
+        ReserveMultipleDeletionDialog,
     },
 })
 export default class Reserves extends Vue {
+    public isEditMode: boolean = false;
+    public isOpenMultiplueDeletionDialog: boolean = false;
+
     private isVisibilityHidden: boolean = false;
     private reservesState: IReservesState = container.get<IReservesState>('IReservesState');
     private setting: ISettingStorageModel = container.get<ISettingStorageModel>('ISettingStorageModel');
@@ -55,6 +79,10 @@ export default class Reserves extends Vue {
     private onUpdateStatusCallback = (async () => {
         await this.reservesState.fetchData(this.createFetchDataOption());
     }).bind(this);
+
+    get selectedTitle(): string {
+        return `${this.reservesState.getSelectedCnt()} 件選択`;
+    }
 
     /**
      * title
@@ -100,6 +128,43 @@ export default class Reserves extends Vue {
         this.$nextTick(() => {
             next();
         });
+    }
+
+    public onEdit(): void {
+        this.isEditMode = true;
+    }
+
+    public onFinishEdit(): void {
+        this.reservesState.clearSelect();
+    }
+
+    public onSelectAll(): void {
+        this.reservesState.selectAll();
+    }
+
+    public selectItem(reserveId: apid.ReserveId): void {
+        this.reservesState.select(reserveId);
+    }
+
+    public onMultiplueDeletion(): void {
+        this.isOpenMultiplueDeletionDialog = true;
+    }
+
+    public async onExecuteMultiplueDeletion(): Promise<void> {
+        this.isOpenMultiplueDeletionDialog = false;
+        this.isEditMode = false;
+        try {
+            await this.reservesState.multiplueDeletion();
+            this.snackbarState.open({
+                color: 'success',
+                text: '選択した番組の予約をキャンセルしました。',
+            });
+        } catch (err) {
+            this.snackbarState.open({
+                color: 'error',
+                text: '一部番組のキャンセルに失敗しました。',
+            });
+        }
     }
 
     @Watch('$route', { immediate: true, deep: true })

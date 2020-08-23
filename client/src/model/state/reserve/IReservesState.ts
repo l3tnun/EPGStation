@@ -6,4 +6,9 @@ export default interface IReservesState {
     fetchData(option: apid.GetReserveOption): Promise<void>;
     getReserves(): ReserveStateData[];
     getTotal(): number;
+    getSelectedCnt(): number;
+    select(recordedId: apid.RecordedId): void;
+    selectAll(): void;
+    clearSelect(): void;
+    multiplueDeletion(): Promise<void>;
 }

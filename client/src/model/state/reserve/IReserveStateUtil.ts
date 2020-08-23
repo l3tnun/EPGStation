@@ -1,5 +1,9 @@
 import * as apid from '../../../../../api';
 
+export interface SelectedIndex {
+    [reserveId: number]: boolean;
+}
+
 export interface ReserveStateData {
     display: {
         channelName: string;
@@ -15,8 +19,13 @@ export interface ReserveStateData {
         extended?: string;
     };
     reserveItem: apid.ReserveItem;
+    isSelected: boolean;
 }
 
 export default interface IReserveStateUtil {
-    convertReserveItemsToStateDatas(reserves: apid.ReserveItem[], isHalfWidth: boolean): ReserveStateData[];
+    convertReserveItemsToStateDatas(
+        reserves: apid.ReserveItem[],
+        isHalfWidth: boolean,
+        isSelectedIndex?: SelectedIndex,
+    ): ReserveStateData[];
 }

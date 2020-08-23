@@ -49,7 +49,11 @@
                     <DashboardItem ref="reserveItem" :title="reserveTitle" v-on:scroll="onReserveScroll">
                         <template v-slot:items>
                             <div>
-                                <ReservesCard :reserves="reservesState.getReserves()" :flat="true"></ReservesCard>
+                                <ReservesCard
+                                    :reserves="reservesState.getReserves()"
+                                    :flat="true"
+                                    :isEditMode="false"
+                                ></ReservesCard>
                                 <div
                                     v-if="reservesState.getTotal() > reservesState.getReserves().length"
                                     class="px-2 pb-2"

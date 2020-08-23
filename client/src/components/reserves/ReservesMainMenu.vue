@@ -7,6 +7,15 @@
                 </v-btn>
             </template>
             <v-list>
+                <v-list-item v-on:click="edit">
+                    <v-list-item-icon class="mr-3">
+                        <v-icon>mdi-pencil</v-icon>
+                    </v-list-item-icon>
+                    <v-list-item-content>
+                        <v-list-item-title>編集</v-list-item-title>
+                    </v-list-item-content>
+                </v-list-item>
+
                 <v-list-item v-on:click="updateReserves">
                     <v-list-item-icon class="mr-3">
                         <v-icon>mdi-update</v-icon>
@@ -33,6 +42,10 @@ export default class ReservesMainMenu extends Vue {
 
     private reservesApiModel: IReservesApiModel = container.get<IReservesApiModel>('IReservesApiModel');
     private snackbarState: ISnackbarState = container.get<ISnackbarState>('ISnackbarState');
+
+    public edit(): void {
+        this.$emit('edit');
+    }
 
     public async updateReserves(): Promise<void> {
         this.isOpened = false;

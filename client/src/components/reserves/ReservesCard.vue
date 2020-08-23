@@ -4,7 +4,7 @@
             v-for="reserve in reserves"
             v-bind:key="reserve.id"
             v-bind:class="getClass(reserve)"
-            class="mx-auto"
+            class="reserve-card mx-auto"
             :flat="!!flat"
             style="cursor: pointer;"
         >
@@ -20,7 +20,11 @@
                                 <span class="pt-1 pl-1">{{ reserve.display.name }}</span>
                             </div>
                             <v-spacer></v-spacer>
-                            <ReserveMenu :reserveItem="reserve.reserveItem" :disableEdit="disableEdit"></ReserveMenu>
+                            <ReserveMenu
+                                v-if="isEditMode === false"
+                                :reserveItem="reserve.reserveItem"
+                                :disableEdit="disableEdit"
+                            ></ReserveMenu>
                         </div>
                         <div class="subtitle-2 font-weight-light">{{ reserve.display.channelName }}</div>
                         <div class="caption font-weight-light mb-2">
@@ -54,6 +58,9 @@ export default class ReservesCard extends Vue {
     })
     public reserves!: ReserveStateData[];
 
+    @Prop({ required: true })
+    public isEditMode!: boolean;
+
     @Prop({})
     public needsDecoration: boolean | undefined;
 
@@ -83,10 +90,20 @@ export default class ReservesCard extends Vue {
             result.reserve = true;
         }
 
+        if (reserve.isSelected === true) {
+            result['selected-color'] = true;
+        }
+
         return result;
     }
 
     public clickItem(reserve: ReserveStateData): void {
+        if (this.isEditMode === true) {
+            this.$emit('selected', reserve.reserveItem.id);
+
+            return;
+        }
+
         this.dialogReserve = reserve;
         this.isOpenDialog = true;
     }
@@ -94,6 +111,10 @@ export default class ReservesCard extends Vue {
 </script>
 
 <style lang="sass" scoped>
+.reserve-card
+    &.selected-color
+        > .v-list-item
+            color: white !important
 .needs-decoration
     .reserve
         border: 4px solid red

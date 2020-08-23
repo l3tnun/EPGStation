@@ -3,7 +3,7 @@ import * as apid from '../../../../../api';
 import DateUtil from '../../../util/DateUtil';
 import GenreUtil from '../../../util/GenreUtil';
 import IChannelModel from '../../channels/IChannelModel';
-import IReserveStateUtil, { ReserveStateData } from './IReserveStateUtil';
+import IReserveStateUtil, { ReserveStateData, SelectedIndex } from './IReserveStateUtil';
 
 @injectable()
 export default class ReserveStateUtil implements IReserveStateUtil {
@@ -19,7 +19,11 @@ export default class ReserveStateUtil implements IReserveStateUtil {
      * @param isHalfWidth: 半角データを返すか
      * @return ReserveStateData[]
      */
-    public convertReserveItemsToStateDatas(reserves: apid.ReserveItem[], isHalfWidth: boolean): ReserveStateData[] {
+    public convertReserveItemsToStateDatas(
+        reserves: apid.ReserveItem[],
+        isHalfWidth: boolean,
+        isSelectedIndex: SelectedIndex = {},
+    ): ReserveStateData[] {
         return reserves.map(r => {
             const startAt = DateUtil.getJaDate(new Date(r.startAt));
             const endAt = DateUtil.getJaDate(new Date(r.endAt));
@@ -40,6 +44,7 @@ export default class ReserveStateUtil implements IReserveStateUtil {
                     extended: r.extended,
                 },
                 reserveItem: r,
+                isSelected: typeof isSelectedIndex[r.id] === 'undefined' ? false : isSelectedIndex[r.id],
             };
         });
     }
