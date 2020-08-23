@@ -68,6 +68,7 @@ import ISocketIOModel from '@/model/socketio/ISocketIOModel';
 import IGuideState, { FetchGuideOption } from '@/model/state/guide/IGuideState';
 import IScrollPositionState from '@/model/state/IScrollPositionState';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
+import IGuideSizeSettingStorageModel from '@/model/storage/guide/IGuideSizeSettingStorageModel';
 import ISettingStorageModel, { ISettingValue } from '@/model/storage/setting/ISettingStorageModel';
 import UaUtil from '@/util/UaUtil';
 import Util from '@/util/Util';
@@ -100,6 +101,7 @@ export default class Guide extends Vue {
     private scrollState: IScrollPositionState = container.get<IScrollPositionState>('IScrollPositionState');
     private setting: ISettingStorageModel = container.get<ISettingStorageModel>('ISettingStorageModel');
     private settingValue: ISettingValue | null = null;
+    private sizeSetting = container.get<IGuideSizeSettingStorageModel>('IGuideSizeSettingStorageModel');
     private snackbarState: ISnackbarState = container.get<ISnackbarState>('ISnackbarState');
     private socketIoModel: ISocketIOModel = container.get<ISocketIOModel>('ISocketIOModel');
     private onUpdateStatusCallback = (() => {
@@ -115,6 +117,7 @@ export default class Guide extends Vue {
     }, 10);
 
     private windowResizeCallback = debounce(() => {
+        this.updateBaseSize();
         this.setDisplayRange();
         this.guideState.updateVisible();
     }, 100);
@@ -253,6 +256,7 @@ export default class Guide extends Vue {
         this.isLoading = true;
         this.guideState.clearDate();
         this.$nextTick(async () => {
+            this.setSizeSetting();
             this.updateBaseSize();
             // 番組表データ取得
             try {
@@ -326,6 +330,41 @@ export default class Guide extends Vue {
                 this.isLoading = false;
             });
         });
+    }
+
+    /**
+     * 各種サイズ設定を行う
+     */
+    private setSizeSetting(): void {
+        const sizeValue = this.sizeSetting.getSavedValue();
+        this.setCssVariable('--channel-tablet-height', `${sizeValue.tablet.channelHeight}px`);
+        this.setCssVariable('--channel-tablet-width', `${sizeValue.tablet.channelWidth}px`);
+        this.setCssVariable('--channel-tablet-fontsize', `${sizeValue.tablet.channelFontsize}px`);
+        this.setCssVariable('--timescale-tablet-height', `${sizeValue.tablet.timescaleHeight}px`);
+        this.setCssVariable('--timescale-tablet-width', `${sizeValue.tablet.timescaleWidth}px`);
+        this.setCssVariable('--timescale-tablet-fontsize', `${sizeValue.tablet.timescaleFontsize}px`);
+        this.setCssVariable('--program-tablet-fontsize', `${sizeValue.tablet.programFontSize}pt`);
+
+        this.setCssVariable('--channel-mobile-height', `${sizeValue.mobile.channelHeight}px`);
+        this.setCssVariable('--channel-mobile-width', `${sizeValue.mobile.channelWidth}px`);
+        this.setCssVariable('--channel-mobile-fontsize', `${sizeValue.mobile.channelFontsize}px`);
+        this.setCssVariable('--timescale-mobile-height', `${sizeValue.mobile.timescaleHeight}px`);
+        this.setCssVariable('--timescale-mobile-width', `${sizeValue.mobile.timescaleWidth}px`);
+        this.setCssVariable('--timescale-mobile-fontsize', `${sizeValue.mobile.timescaleFontsize}px`);
+        this.setCssVariable('--program-mobile-fontsize', `${sizeValue.mobile.programFontSize}pt`);
+    }
+
+    /**
+     * set css variables
+     * @param name
+     * @param value
+     */
+    private setCssVariable(name: string, value: string): void {
+        const element = document.querySelector('.app-content.guide');
+        if (element === null) {
+            return;
+        }
+        (<HTMLElement>element).style.setProperty(name, value);
     }
 
     /**

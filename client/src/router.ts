@@ -5,6 +5,7 @@ import IScrollPositionState from './model/state/IScrollPositionState';
 import Dashboard from './views/Dashboard.vue';
 import Encode from './views/Encode.vue';
 import Guide from './views/Guide.vue';
+import GuideSizeSetting from './views/GuideSizeSetting.vue';
 import OnAir from './views/OnAir.vue';
 import Recorded from './views/Recorded.vue';
 import RecordedDetail from './views/RecordedDetail.vue';
@@ -40,6 +41,11 @@ export default new Router({
             path: '/guide',
             name: 'guide',
             component: Guide,
+        },
+        {
+            path: '/guide/setting',
+            name: 'guide-setting',
+            component: GuideSizeSetting,
         },
         {
             path: '/reserves',

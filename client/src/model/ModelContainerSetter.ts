@@ -85,8 +85,10 @@ import AddEncodeSettingStorageModel from './storage/encode/AddEncodeSettingStora
 import IAddEncodeSettingStorageModel from './storage/encode/IAddEncodeSettingStorageModel';
 import GuideGenreSettingStorageModel from './storage/guide/GuideGenreSettingStorageModel';
 import GuideProgramDialogSettingStorageModel from './storage/guide/GuideProgramDialogSettingStorageModel';
+import GuideSizeSettingStorageModel from './storage/guide/GuideSizeSettingStorageModel';
 import IGuideGenreSettingStorageModel from './storage/guide/IGuideGenreSettingStorageModel';
 import IGuideProgramDialogSettingStorageModel from './storage/guide/IGuideProgramDialogSettingStorageModel';
+import IGuideSizeSettingStorageModel from './storage/guide/IGuideSizeSettingStorageModel';
 import IStorageOperationModel from './storage/IStorageOperationModel';
 import IOnAirSelectStreamSettingStorageModel from './storage/onair/IOnAirSelectStreamSettingStorageModel';
 import OnAirSelectStreamSettingStorageModel from './storage/onair/OnAirSelectStreamSettingStorageModel';
@@ -136,6 +138,11 @@ export default (container: Container) => {
     container
         .bind<IGuideGenreSettingStorageModel>('IGuideGenreSettingStorageModel')
         .to(GuideGenreSettingStorageModel)
+        .inSingletonScope();
+
+    container
+        .bind<IGuideSizeSettingStorageModel>('IGuideSizeSettingStorageModel')
+        .to(GuideSizeSettingStorageModel)
         .inSingletonScope();
 
     container

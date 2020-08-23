@@ -23,6 +23,15 @@
                         <v-list-item-title>表示ジャンル</v-list-item-title>
                     </v-list-item-content>
                 </v-list-item>
+
+                <v-list-item v-on:click="gotoSetting">
+                    <v-list-item-icon class="mr-3">
+                        <v-icon>mdi-cog</v-icon>
+                    </v-list-item-icon>
+                    <v-list-item-content>
+                        <v-list-item-title>表示設定</v-list-item-title>
+                    </v-list-item-content>
+                </v-list-item>
             </v-list>
         </v-menu>
         <GuideGenreSettingDialog
@@ -77,6 +86,12 @@ export default class GuideMainMenu extends Vue {
 
     public onUpdateGenreSetting(): void {
         this.$emit('updatedgenre');
+    }
+
+    public async gotoSetting(): Promise<void> {
+        await Util.move(this.$router, {
+            path: '/guide/setting',
+        });
     }
 
     public onClickMenuBackground(e: Event): boolean {
