@@ -84,7 +84,8 @@ export default class RecordedState implements IRecordedState {
     }
 
     /**
-     * 選択時のタイトルを返す
+     * 選択した番組数を返す
+     * @return number
      */
     public getSelectedCnt(): number {
         if (this.recorded === null) {
