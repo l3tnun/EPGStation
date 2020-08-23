@@ -5,7 +5,7 @@
                 <v-card-text class="pa-4 pb-2">
                     <div class="subtitle-1 font-weight-black mb-1">{{ reserve.display.name }}</div>
                     <div class="sub-text">{{ reserve.display.channelName }}</div>
-                    <div class="sub-text">
+                    <div class="sub-text" style="cursor: pointer;" v-on:click="gotoGuide">
                         {{ reserve.display.day }}({{ reserve.display.dow }}) {{ reserve.display.startTime }} ~
                         {{ reserve.display.endTime }} ({{ reserve.display.duration }}m)
                     </div>
@@ -32,7 +32,11 @@
 </template>
 
 <script lang="ts">
+import IChannelModel from '@/model/channels/IChannelModel';
+import container from '@/model/ModelContainer';
 import { ReserveStateData } from '@/model/state/reserve/IReserveStateUtil';
+import ISettingStorageModel from '@/model/storage/setting/ISettingStorageModel';
+import DateUtil from '@/util/DateUtil';
 import Util from '@/util/Util';
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
 
@@ -48,6 +52,9 @@ export default class ReserveDialog extends Vue {
 
     public isRemove: boolean = false;
 
+    private settingModel: ISettingStorageModel = container.get<ISettingStorageModel>('ISettingStorageModel');
+    private channelModel: IChannelModel = container.get<IChannelModel>('IChannelModel');
+
     /**
      * Prop で受け取った isOpen を直接は書き換えられないので
      * getter, setter を用意する
@@ -57,6 +64,37 @@ export default class ReserveDialog extends Vue {
     }
     set dialogModel(value: boolean) {
         this.$emit('update:isOpen', value);
+    }
+
+    /**
+     * 番組の開始時間の番組表へ飛ぶ
+     * @return Promise<void>
+     */
+    public async gotoGuide(): Promise<void> {
+        if (this.reserve === null) {
+            return;
+        }
+
+        this.dialogModel = false;
+        await Util.sleep(300);
+
+        const startAt = DateUtil.getJaDate(new Date(this.reserve.reserveItem.startAt));
+        const query: any = {
+            time: DateUtil.format(startAt, 'YYMMddhh'),
+        };
+
+        const setting = this.settingModel.getSavedValue();
+        if (setting.isEnableDisplayForEachBroadcastWave === true) {
+            const channel = this.channelModel.findChannel(this.reserve.reserveItem.channelId, true);
+            if (channel !== null) {
+                query.type = channel.channelType;
+            }
+        }
+
+        await Util.move(this.$router, {
+            path: '/guide',
+            query: query,
+        });
     }
 
     /**
