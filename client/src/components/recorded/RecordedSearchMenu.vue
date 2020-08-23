@@ -36,7 +36,7 @@
                         :menu-props="{ auto: true }"
                     ></v-select>
                     <v-checkbox
-                        v-model="searchState.isOnlyOriginalFile"
+                        v-model="searchState.hasOriginalFile"
                         label="元ファイルを含む"
                         class="mt-2"
                     ></v-checkbox>
@@ -112,8 +112,8 @@ export default class RecordedSearchMenu extends Vue {
             if (typeof this.searchState.genre !== 'undefined') {
                 searchQuery.genre = this.searchState.genre;
             }
-            if (this.searchState.isOnlyOriginalFile === true) {
-                searchQuery.isOnlyOriginalFile = true;
+            if (this.searchState.hasOriginalFile === true) {
+                searchQuery.hasOriginalFile = true;
             }
 
             await Util.move(this.$router, {
@@ -163,10 +163,9 @@ export default class RecordedSearchMenu extends Vue {
             if (typeof this.$route.query.genre !== 'undefined') {
                 this.searchState.genre = parseInt(this.$route.query.genre as string, 10);
             }
-            if (typeof this.$route.query.isOnlyOriginalFile !== 'undefined') {
-                this.searchState.isOnlyOriginalFile =
-                    (this.$route.query.isOnlyOriginalFile as any) === true ||
-                    this.$route.query.isOnlyOriginalFile === 'true';
+            if (typeof this.$route.query.hasOriginalFile !== 'undefined') {
+                this.searchState.hasOriginalFile =
+                    (this.$route.query.hasOriginalFile as any) === true || this.$route.query.hasOriginalFile === 'true';
             }
         }
     }

@@ -196,10 +196,9 @@ export default class Recorded extends Vue {
         if (typeof this.$route.query.genre !== 'undefined') {
             option.genre = parseInt(this.$route.query.genre as string, 10);
         }
-        if (typeof this.$route.query.isOnlyOriginalFile !== 'undefined') {
-            option.isOnlyOriginalFile =
-                (this.$route.query.isOnlyOriginalFile as any) === true ||
-                this.$route.query.isOnlyOriginalFile === 'true';
+        if (typeof this.$route.query.hasOriginalFile !== 'undefined') {
+            option.hasOriginalFile =
+                (this.$route.query.hasOriginalFile as any) === true || this.$route.query.hasOriginalFile === 'true';
         }
 
         return option;
