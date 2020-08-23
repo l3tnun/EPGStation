@@ -6,6 +6,7 @@
             :isEditMode.sync="isEditMode"
             v-on:exit="onFinishEdit"
             v-on:selectall="onSelectAll"
+            v-on:delete="onMultiplueDeletion"
         ></EditTitleBar>
         <TitleBar v-else title="録画済み">
             <template v-slot:menu>
@@ -35,19 +36,26 @@
                 </div>
             </div>
         </transition>
+        <RecordedMultipleDeletionDialog
+            v-if="isEditMode === true"
+            :isOpen.sync="isOpenMultiplueDeletionDialog"
+            :total="recordedState.getSelectedCnt()"
+            v-on:delete="onExecuteMultiplueDeletion"
+        ></RecordedMultipleDeletionDialog>
     </v-content>
 </template>
 
 <script lang="ts">
 import Pagination from '@/components/pagination/Pagination.vue';
 import RecordedItems from '@/components/recorded/RecordedItems.vue';
+import RecordedMultipleDeletionDialog from '@/components/recorded/RecordedMultipleDeletionDialog.vue';
 import RecordedSearchMenu from '@/components/recorded/RecordedSearchMenu.vue';
 import EditTitleBar from '@/components/titleBar/EditTitleBar.vue';
 import TitleBar from '@/components/titleBar/TitleBar.vue';
 import container from '@/model/ModelContainer';
 import ISocketIOModel from '@/model/socketio/ISocketIOModel';
 import IScrollPositionState from '@/model/state/IScrollPositionState';
-import IRecordedState from '@/model/state/recorded/IRecordedState';
+import IRecordedState, { MultipleDeletionOption } from '@/model/state/recorded/IRecordedState';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
 import ISettingStorageModel, { ISettingValue } from '@/model/storage/setting/ISettingStorageModel';
 import Util from '@/util/Util';
@@ -64,10 +72,12 @@ Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
         RecordedSearchMenu,
         RecordedItems,
         Pagination,
+        RecordedMultipleDeletionDialog,
     },
 })
 export default class Recorded extends Vue {
     public isEditMode: boolean = false;
+    public isOpenMultiplueDeletionDialog: boolean = false;
 
     private isVisibilityHidden: boolean = false;
     private recordedState: IRecordedState = container.get<IRecordedState>('IRecordedState');
@@ -147,6 +157,27 @@ export default class Recorded extends Vue {
 
     public selectItem(recordedId: apid.RecordedId): void {
         this.recordedState.select(recordedId);
+    }
+
+    public onMultiplueDeletion(): void {
+        this.isOpenMultiplueDeletionDialog = true;
+    }
+
+    public async onExecuteMultiplueDeletion(option: MultipleDeletionOption): Promise<void> {
+        this.isOpenMultiplueDeletionDialog = false;
+        this.isEditMode = false;
+        try {
+            await this.recordedState.multiplueDeletion(option);
+            this.snackbarState.open({
+                color: 'success',
+                text: '選択した番組を削除しました。',
+            });
+        } catch (err) {
+            this.snackbarState.open({
+                color: 'error',
+                text: '一部番組の削除に失敗しました。',
+            });
+        }
     }
 
     @Watch('$route', { immediate: true, deep: true })

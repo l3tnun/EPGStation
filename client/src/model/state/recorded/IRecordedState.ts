@@ -1,6 +1,8 @@
 import * as apid from '../../../../../api';
 import { RecordedDisplayData } from './IRecordedUtil';
 
+export type MultipleDeletionOption = 'All' | 'OnlyOriginalFile' | 'OnlyEncodedFile';
+
 export default interface IRecordedState {
     clearData(): void;
     fetchData(option: apid.GetRecordedOption): Promise<void>;
@@ -11,4 +13,5 @@ export default interface IRecordedState {
     select(recordedId: apid.RecordedId): void;
     selectAll(): void;
     clearSelect(): void;
+    multiplueDeletion(option: MultipleDeletionOption): Promise<void>;
 }

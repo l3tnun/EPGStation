@@ -1,13 +1,15 @@
 import { inject, injectable } from 'inversify';
 import * as apid from '../../../../../api';
+import IVideoApiModel from '../..//api/video/IVideoApiModel';
 import IRecordedApiModel from '../../api/recorded/IRecordedApiModel';
-import IRecordedState from './IRecordedState';
+import IRecordedState, { MultipleDeletionOption } from './IRecordedState';
 import IRecordedUtil, { RecordedDisplayData } from './IRecordedUtil';
 
 @injectable()
 export default class RecordedState implements IRecordedState {
     private recordedApiModel: IRecordedApiModel;
     private recordedUtil: IRecordedUtil;
+    private videoApiModel: IVideoApiModel;
 
     private recorded: RecordedDisplayData[] | null = null;
     private total: number = 0;
@@ -15,9 +17,11 @@ export default class RecordedState implements IRecordedState {
     constructor(
         @inject('IRecordedApiModel') recordedApiModel: IRecordedApiModel,
         @inject('IRecordedUtil') recordedUtil: IRecordedUtil,
+        @inject('IVideoApiModel') videoApiModel: IVideoApiModel,
     ) {
         this.recordedApiModel = recordedApiModel;
         this.recordedUtil = recordedUtil;
+        this.videoApiModel = videoApiModel;
     }
 
     /**
@@ -149,6 +153,52 @@ export default class RecordedState implements IRecordedState {
 
         for (const r of this.recorded) {
             r.isSelected = false;
+        }
+    }
+
+    /**
+     * 選択した番組を削除する
+     * @param option: MultipleDeletionOption
+     */
+    public async multiplueDeletion(option: MultipleDeletionOption): Promise<void> {
+        if (this.recorded === null) {
+            return;
+        }
+
+        // 削除する video file を列挙する
+        const videoFileIds: apid.VideoFileId[] = [];
+        for (const r of this.recorded) {
+            if (typeof r.recordedItem.videoFiles === 'undefined') {
+                continue;
+            }
+
+            for (const v of r.recordedItem.videoFiles) {
+                if (
+                    option === 'All' ||
+                    (option === 'OnlyOriginalFile' && v.type === 'ts') ||
+                    (option === 'OnlyEncodedFile' && v.type === 'encoded')
+                ) {
+                    videoFileIds.push(v.id);
+                }
+            }
+        }
+
+        // 選択状態を元に戻す
+        this.clearSelect();
+
+        // 列挙したビデオファイルを削除する
+        let hasError = false;
+        for (const v of videoFileIds) {
+            try {
+                await this.videoApiModel.delete(v);
+            } catch (err) {
+                console.error(err);
+                hasError = true;
+            }
+        }
+
+        if (hasError === true) {
+            throw new Error();
         }
     }
 }
