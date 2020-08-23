@@ -1,5 +1,11 @@
 <template>
-    <v-card :ripple="false" flat tile class="d-flex my-1 recorded-small-card">
+    <v-card
+        :ripple="false"
+        flat
+        tile
+        class="d-flex my-1 recorded-small-card"
+        v-bind:class="{ 'selected-color': item.isSelected === true }"
+    >
         <v-img
             v-if="!!noThumbnail === false"
             aspect-ratio="1.7778"
@@ -12,7 +18,7 @@
         <div v-on:click="gotoDetail" class="content pa-2 my-auto">
             <div class="d-flex align-center">
                 <div class="text mt-1 subtitle-2 font-weight-bold">{{ item.display.name }}</div>
-                <div class="menu-wrap">
+                <div v-if="isEditMode === false" class="menu-wrap">
                     <RecordedItemMenu :recordedItem="item.recordedItem" v-on:stopEncode="stopEncode"></RecordedItemMenu>
                 </div>
             </div>
@@ -50,7 +56,15 @@ export default class RecordedSmallCard extends Vue {
     @Prop()
     public noThumbnail: boolean | undefined;
 
+    @Prop({ required: true })
+    public isEditMode!: boolean;
+
     public gotoDetail(): void {
+        if (this.isEditMode === true) {
+            this.$emit('selected', this.item.recordedItem.id);
+
+            return;
+        }
         this.$emit('detail', this.item.recordedItem.id);
     }
 

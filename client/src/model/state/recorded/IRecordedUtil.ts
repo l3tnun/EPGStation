@@ -18,6 +18,7 @@ export interface RecordedDisplayData {
         hasDrop: boolean;
     };
     recordedItem: apid.RecordedItem;
+    isSelected: boolean;
 }
 
 export default interface IRecordedUtil {

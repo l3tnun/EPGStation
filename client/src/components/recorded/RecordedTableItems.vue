@@ -11,12 +11,18 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="item in items" v-bind:key="item.id" v-on:click="gotoDetail(item)">
+                    <tr
+                        v-for="item in items"
+                        v-bind:key="item.id"
+                        v-on:click="gotoDetail(item)"
+                        v-bind:class="{ 'selected-color': item.isSelected === true }"
+                    >
                         <td>{{ item.display.name }}</td>
                         <td>{{ item.display.channelName }}</td>
                         <td>{{ item.display.shortTime }} ({{ item.display.duration }} m)</td>
                         <td class="menu">
                             <RecordedItemMenu
+                                v-if="isEditMode === false"
                                 :recordedItem="item.recordedItem"
                                 v-on:stopEncode="stopEncode"
                             ></RecordedItemMenu>
@@ -43,7 +49,15 @@ export default class RecordedTableItems extends Vue {
     @Prop({ required: true })
     public items!: RecordedDisplayData[];
 
+    @Prop({ required: true })
+    public isEditMode!: boolean;
+
     public gotoDetail(item: RecordedDisplayData): void {
+        if (this.isEditMode === true) {
+            this.$emit('selected', item.recordedItem.id);
+
+            return;
+        }
         this.$emit('detail', item.recordedItem.id);
     }
 

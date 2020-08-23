@@ -78,3 +78,12 @@ html.fix-address-bar
     height: 100vh
     z-index: 7 // vuetify アップデート毎に確認が必要
 </style>
+
+<style lang="sass">
+/**
+ * 複数選択時の色
+ */
+.selected-color
+    color: white !important
+    background-color: #4285f4 !important
+</style>

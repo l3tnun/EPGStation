@@ -7,4 +7,8 @@ export default interface IRecordedState {
     getRecorded(): RecordedDisplayData[];
     getTotal(): number;
     stopEncode(recordedId: apid.RecordedId): Promise<void>;
+    getSelectedCnt(): number;
+    select(recordedId: apid.RecordedId): void;
+    selectAll(): void;
+    clearSelect(): void;
 }

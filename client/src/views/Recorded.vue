@@ -1,8 +1,18 @@
 <template>
     <v-content>
-        <TitleBar title="録画済み">
+        <EditTitleBar
+            v-if="isEditMode === true"
+            :title="selectedTitle"
+            :isEditMode.sync="isEditMode"
+            v-on:exit="onFinishEdit"
+            v-on:selectall="onSelectAll"
+        ></EditTitleBar>
+        <TitleBar v-else title="録画済み">
             <template v-slot:menu>
                 <RecordedSearchMenu></RecordedSearchMenu>
+                <v-btn icon v-on:click="onEdit">
+                    <v-icon>mdi-pencil</v-icon>
+                </v-btn>
             </template>
         </TitleBar>
         <transition name="page">
@@ -12,9 +22,15 @@
                         :recorded="recordedState.getRecorded()"
                         v-on:detail="gotoDetail"
                         v-on:stopEncode="stopEncode"
+                        v-on:selected="selectItem"
                         :isTableMode="settingValue.isShowTableMode === true"
+                        :isEditMode.sync="isEditMode"
                     ></RecordedItems>
-                    <Pagination :total="recordedState.getTotal()" :pageSize="settingValue.recordedLength"></Pagination>
+                    <Pagination
+                        v-if="isEditMode === false"
+                        :total="recordedState.getTotal()"
+                        :pageSize="settingValue.recordedLength"
+                    ></Pagination>
                     <div style="visibility: hidden;">dummy</div>
                 </div>
             </div>
@@ -26,6 +42,7 @@
 import Pagination from '@/components/pagination/Pagination.vue';
 import RecordedItems from '@/components/recorded/RecordedItems.vue';
 import RecordedSearchMenu from '@/components/recorded/RecordedSearchMenu.vue';
+import EditTitleBar from '@/components/titleBar/EditTitleBar.vue';
 import TitleBar from '@/components/titleBar/TitleBar.vue';
 import container from '@/model/ModelContainer';
 import ISocketIOModel from '@/model/socketio/ISocketIOModel';
@@ -43,12 +60,15 @@ Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
 @Component({
     components: {
         TitleBar,
+        EditTitleBar,
         RecordedSearchMenu,
         RecordedItems,
         Pagination,
     },
 })
 export default class Recorded extends Vue {
+    public isEditMode: boolean = false;
+
     private isVisibilityHidden: boolean = false;
     private recordedState: IRecordedState = container.get<IRecordedState>('IRecordedState');
     private setting: ISettingStorageModel = container.get<ISettingStorageModel>('ISettingStorageModel');
@@ -59,6 +79,10 @@ export default class Recorded extends Vue {
     private onUpdateStatusCallback = (async () => {
         await this.recordedState.fetchData(this.createFetchDataOption());
     }).bind(this);
+
+    get selectedTitle(): string {
+        return `${this.recordedState.getSelectedCnt()} 件選択`;
+    }
 
     get contentWrapStyle(): any {
         return this.isVisibilityHidden === false
@@ -107,6 +131,22 @@ export default class Recorded extends Vue {
                 text: 'エンコード停止に失敗',
             });
         }
+    }
+
+    public onEdit(): void {
+        this.isEditMode = true;
+    }
+
+    public onFinishEdit(): void {
+        this.recordedState.clearSelect();
+    }
+
+    public onSelectAll(): void {
+        this.recordedState.selectAll();
+    }
+
+    public selectItem(recordedId: apid.RecordedId): void {
+        this.recordedState.select(recordedId);
     }
 
     @Watch('$route', { immediate: true, deep: true })

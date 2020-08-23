@@ -7,6 +7,7 @@
                     :recorded="recordingState.getRecorded()"
                     :isRecording="true"
                     :isTableMode="true"
+                    :isEditMode="false"
                     v-on:detail="gotoDetail"
                 ></RecordedItems>
                 <Pagination :total="recordingState.getTotal()" :pageSize="settingValue.recordingLength"></Pagination>

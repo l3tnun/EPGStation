@@ -1,5 +1,10 @@
 <template>
-    <v-card :max-width="width" flat class="ma-1 recorded-large-card">
+    <v-card
+        :max-width="width"
+        flat
+        class="ma-1 recorded-large-card"
+        v-bind:class="{ 'selected-color': item.isSelected === true }"
+    >
         <v-img
             aspect-ratio="1.7778"
             :min-width="width"
@@ -12,7 +17,11 @@
             <div class="d-flex align-center">
                 <div class="text subtitle-2 font-weight-bold">{{ item.display.name }}</div>
                 <v-spacer></v-spacer>
-                <RecordedItemMenu :recordedItem="item.recordedItem" v-on:stopEncode="stopEncode"></RecordedItemMenu>
+                <RecordedItemMenu
+                    v-if="isEditMode === false"
+                    :recordedItem="item.recordedItem"
+                    v-on:stopEncode="stopEncode"
+                ></RecordedItemMenu>
             </div>
             <div class="text caption font-weight-light">{{ item.display.channelName }}</div>
             <div class="text caption font-weight-light">{{ item.display.time }} ({{ item.display.duration }} m)</div>
@@ -48,7 +57,15 @@ export default class RecordedLargeCard extends Vue {
     @Prop({ required: true })
     public item!: RecordedDisplayData;
 
+    @Prop({ required: true })
+    public isEditMode!: boolean;
+
     public gotoDetail(): void {
+        if (this.isEditMode === true) {
+            this.$emit('selected', this.item.recordedItem.id);
+
+            return;
+        }
         this.$emit('detail', this.item.recordedItem.id);
     }
 

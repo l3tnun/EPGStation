@@ -36,8 +36,21 @@ export default class RecordedState implements IRecordedState {
     public async fetchData(option: apid.GetRecordedOption): Promise<void> {
         const recrods = await this.recordedApiModel.gets(option);
         this.total = recrods.total;
+
+        const oldSelectedIndex: { [recordedId: number]: boolean } = {};
+        if (this.recorded !== null) {
+            for (const r of this.recorded) {
+                oldSelectedIndex[r.recordedItem.id] = r.isSelected;
+            }
+        }
+
         this.recorded = recrods.records.map(r => {
-            return this.recordedUtil.convertRecordedItemToDisplayData(r, option.isHalfWidth);
+            const result = this.recordedUtil.convertRecordedItemToDisplayData(r, option.isHalfWidth);
+            if (typeof oldSelectedIndex[result.recordedItem.id] !== 'undefined') {
+                result.isSelected = oldSelectedIndex[result.recordedItem.id];
+            }
+
+            return result;
         });
     }
 
@@ -64,5 +77,78 @@ export default class RecordedState implements IRecordedState {
      */
     public async stopEncode(recordedId: apid.RecordedId): Promise<void> {
         await this.recordedApiModel.stopEncode(recordedId);
+    }
+
+    /**
+     * 選択時のタイトルを返す
+     */
+    public getSelectedCnt(): number {
+        if (this.recorded === null) {
+            return 0;
+        }
+
+        let selectedCnt = 0;
+        for (const r of this.recorded) {
+            if (r.isSelected === true) {
+                selectedCnt++;
+            }
+        }
+
+        return selectedCnt;
+    }
+
+    /**
+     * 選択 (削除時の複数選択)
+     * @param recordedId: apid.RecordedId
+     */
+    public select(recordedId: apid.RecordedId): void {
+        if (this.recorded === null) {
+            return;
+        }
+
+        for (const r of this.recorded) {
+            if (r.recordedItem.id === recordedId) {
+                r.isSelected = !r.isSelected;
+
+                return;
+            }
+        }
+    }
+
+    /**
+     * 全て選択 (削除時の複数選択)
+     */
+    public selectAll(): void {
+        if (this.recorded === null) {
+            return;
+        }
+
+        let isUnselectAll = true;
+        for (const r of this.recorded) {
+            if (r.isSelected === false) {
+                isUnselectAll = false;
+            }
+            r.isSelected = true;
+        }
+
+        // 全て選択済みであれば選択を解除する
+        if (isUnselectAll === true) {
+            for (const r of this.recorded) {
+                r.isSelected = false;
+            }
+        }
+    }
+
+    /**
+     * 全ての選択解除 (削除時の複数選択)
+     */
+    public clearSelect(): void {
+        if (this.recorded === null) {
+            return;
+        }
+
+        for (const r of this.recorded) {
+            r.isSelected = false;
+        }
     }
 }

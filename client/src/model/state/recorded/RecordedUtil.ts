@@ -42,6 +42,7 @@ export default class RecordedUtil implements IRecordedUtil {
                 hasDrop: false,
             },
             recordedItem: item,
+            isSelected: false,
         };
 
         // ストリーミング可能な videoFile を列挙する

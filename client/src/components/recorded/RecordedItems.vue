@@ -9,16 +9,20 @@
                 <RecordedLargeCard
                     :width="largeCardWidth"
                     :item="r"
+                    :isEditMode="isEditMode"
                     v-on:detail="gotoDetail"
                     v-on:stopEncode="stopEncode"
+                    v-on:selected="selected"
                 ></RecordedLargeCard>
             </div>
         </div>
         <div v-else-if="cardNum > 1 && !!isTableMode === true">
             <RecordedTableItems
                 :items="recorded"
+                :isEditMode="isEditMode"
                 v-on:detail="gotoDetail"
                 v-on:stopEncode="stopEncode"
+                v-on:selected="selected"
             ></RecordedTableItems>
             <div v-for="r in recorded" v-bind:key="r.recordedItem.id"></div>
         </div>
@@ -26,8 +30,10 @@
             <div v-for="r in recorded" v-bind:key="r.recordedItem.id">
                 <RecordedsmallCard
                     :item="r"
+                    :isEditMode="isEditMode"
                     v-on:detail="gotoDetail"
                     v-on:stopEncode="stopEncode"
+                    v-on:selected="selected"
                     :noThumbnail="!!isRecording === true"
                 ></RecordedsmallCard>
             </div>
@@ -60,6 +66,9 @@ class RecordedItems extends Vue {
 
     @Prop()
     public isRecording: boolean | undefined;
+
+    @Prop({ required: true })
+    public isEditMode!: boolean;
 
     get contentStyle(): any {
         return {
@@ -95,6 +104,10 @@ class RecordedItems extends Vue {
 
     public stopEncode(recordedId: apid.RecordedId): void {
         this.$emit('stopEncode', recordedId);
+    }
+
+    public selected(recordedId: apid.RecordedId): void {
+        this.$emit('selected', recordedId);
     }
 }
 

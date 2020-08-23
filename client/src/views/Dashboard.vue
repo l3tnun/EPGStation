@@ -10,6 +10,7 @@
                                 <div v-for="r in recordingState.getRecorded()" v-bind:key="r.recordedItem.id">
                                     <RecordedsmallCard
                                         :item="r"
+                                        :isEditMode="false"
                                         v-on:detail="gotoRecordedDetail"
                                         v-on:stopEncode="stopEncode"
                                         :noThumbnail="true"
@@ -32,6 +33,7 @@
                                 <div v-for="r in recordedState.getRecorded()" v-bind:key="r.recordedItem.id">
                                     <RecordedsmallCard
                                         :item="r"
+                                        :isEditMode="false"
                                         v-on:detail="gotoRecordedDetail"
                                         v-on:stopEncode="stopEncode"
                                     ></RecordedsmallCard>
