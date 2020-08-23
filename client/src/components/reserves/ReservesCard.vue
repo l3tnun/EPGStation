@@ -12,7 +12,13 @@
                 <div style="width: 100%;" v-on:click="clickItem(reserve)">
                     <v-list-item-content>
                         <div class="d-flex">
-                            <div class="subtitle-1 font-weight-black">{{ reserve.display.name }}</div>
+                            <div class="subtitle-1 font-weight-black">
+                                <v-icon v-if="reserve.display.isRule === true" class="reserve-icon">
+                                    mdi-calendar
+                                </v-icon>
+                                <v-icon v-else class="reserve-icon">mdi-timer-outline</v-icon>
+                                <span class="pt-1 pl-1">{{ reserve.display.name }}</span>
+                            </div>
                             <v-spacer></v-spacer>
                             <ReserveMenu :reserveItem="reserve.reserveItem" :disableEdit="disableEdit"></ReserveMenu>
                         </div>
@@ -101,4 +107,8 @@ export default class ReservesCard extends Vue {
         text-decoration: line-through
         background-color: #aaa
         color: black
+
+.reserve-icon
+    font-size: 20px !important
+    padding-bottom: 2px
 </style>

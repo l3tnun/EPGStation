@@ -25,7 +25,13 @@
                                 {{ reserve.display.startTime }}~{{ reserve.display.endTime }}
                                 <div>({{ reserve.display.duration }}m)</div>
                             </td>
-                            <td>{{ reserve.display.name }}</td>
+                            <td>
+                                <v-icon v-if="reserve.display.isRule === true" class="reserve-icon">
+                                    mdi-calendar
+                                </v-icon>
+                                <v-icon v-else class="reserve-icon">mdi-timer-outline</v-icon>
+                                {{ reserve.display.name }}
+                            </td>
                             <td>{{ reserve.display.description }}</td>
                             <td>
                                 <ReserveMenu :reserveItem="reserve.reserveItem" :disableEdit="false"></ReserveMenu>
@@ -78,4 +84,12 @@ export default class ReservesTableItems extends Vue {
         min-width: 110px
     .menu
         width: 68px
+
+    tbody > tr > td
+        padding-top: 8px !important
+        padding-bottom: 8px !important
+
+    .reserve-icon
+        font-size: 20px !important
+        padding-bottom: 2px
 </style>

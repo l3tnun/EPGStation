@@ -28,6 +28,7 @@ export default class ReserveStateUtil implements IReserveStateUtil {
             return {
                 display: {
                     channelName: channel === null ? r.channelId.toString(10) : channel.name,
+                    isRule: typeof r.ruleId !== 'undefined',
                     name: r.name,
                     day: DateUtil.format(startAt, 'MM/dd'),
                     dow: DateUtil.format(startAt, 'w'),
