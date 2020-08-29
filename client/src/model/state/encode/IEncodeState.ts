@@ -10,6 +10,7 @@ export interface EncodeInfoDisplayItem {
         mode: string;
     };
     encodeItem: apid.EncodeProgramItem;
+    isSelected: boolean;
 }
 
 export interface EncodeInfoDisplayData {
@@ -21,4 +22,9 @@ export default interface IEncodeState {
     clearData(): void;
     fetchData(isHalfWidth: boolean): Promise<void>;
     getEncodeInfo(): EncodeInfoDisplayData;
+    getSelectedCnt(): number;
+    select(encodeId: apid.EncodeId): void;
+    selectAll(): void;
+    clearSelect(): void;
+    multiplueDeletion(): Promise<void>;
 }
