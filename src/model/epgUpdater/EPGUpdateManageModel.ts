@@ -5,6 +5,7 @@ import * as mapid from '../../../node_modules/mirakurun/api';
 import IChannelDB from '../db/IChannelDB';
 import IChannelTypeIndex from '../db/IChannelTypeHash';
 import IProgramDB from '../db/IProgramDB';
+import IConfiguration from '../IConfiguration';
 import ILogger from '../ILogger';
 import ILoggerModel from '../ILoggerModel';
 import IMirakurunClientModel from '../IMirakurunClientModel';
@@ -28,8 +29,13 @@ class EPGUpdateManageModel implements IEPGUpdateManageModel {
     // 放送局索引情報
     private channelIndex: IChannelTypeIndex = {};
 
+    // 除外放送局索引情報
+    private excludeChannelIndex: { [channelId: number]: boolean } = {};
+    private excludeSidIndex: { [serviceId: number]: boolean } = {};
+
     constructor(
         @inject('ILoggerModel') loggerModel: ILoggerModel,
+        @inject('IConfiguration') configuration: IConfiguration,
         @inject('IMirakurunClientModel')
         mirakurunClientModel: IMirakurunClientModel,
         @inject('IChannelDB') channelDB: IChannelDB,
@@ -39,6 +45,19 @@ class EPGUpdateManageModel implements IEPGUpdateManageModel {
         this.mirakurunClient = mirakurunClientModel.getClient();
         this.channelDB = channelDB;
         this.programDB = programDB;
+
+        // 除外放送局索引情報のセット
+        const config = configuration.getConfig();
+        if (typeof config.excludeChannels !== 'undefined') {
+            for (const c of config.excludeChannels) {
+                this.excludeChannelIndex[c] = true;
+            }
+        }
+        if (typeof config.excludeSids !== 'undefined') {
+            for (const c of config.excludeSids) {
+                this.excludeSidIndex[c] = true;
+            }
+        }
     }
 
     /**
@@ -80,10 +99,18 @@ class EPGUpdateManageModel implements IEPGUpdateManageModel {
      */
     public async updateChannels(): Promise<void> {
         this.log.system.info('get service');
-        const services = await this.mirakurunClient.getServices().catch(err => {
+        let services = await this.mirakurunClient.getServices().catch(err => {
             this.log.system.error('get service error');
             this.log.system.error(err);
             throw err;
+        });
+
+        // 除外索引に含まれる放送局を削除
+        services = services.filter(s => {
+            return (
+                typeof this.excludeChannelIndex[s.id] === 'undefined' &&
+                typeof this.excludeSidIndex[s.serviceId] === 'undefined'
+            );
         });
 
         this.log.system.info('start update channel');
@@ -312,6 +339,13 @@ class EPGUpdateManageModel implements IEPGUpdateManageModel {
         this.log.system.info('start save service');
 
         for (const service of services) {
+            if (
+                typeof this.excludeChannelIndex[service.data.id] !== 'undefined' ||
+                typeof this.excludeSidIndex[service.data.serviceId] !== 'undefined'
+            ) {
+                // 除外索引に含まれる放送局を削除
+                continue;
+            }
             switch (service.type) {
                 case 'create':
                     if (typeof service.data.name !== 'undefined') {

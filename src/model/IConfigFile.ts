@@ -1,3 +1,4 @@
+import * as apid from '../../api';
 import * as Enums from '../Enums';
 
 export interface RecordedDirInfo {
@@ -55,6 +56,10 @@ export default interface IConfigFile {
 
     // epg 更新時間間隔 (分)
     epgUpdateIntervalTime: number;
+
+    // 放送局除外設定
+    excludeChannels?: apid.ChannelId[];
+    excludeSids?: apid.ServiceId[];
 
     // priority 設定
     recPriority: number;
