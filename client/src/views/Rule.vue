@@ -10,6 +10,7 @@
         ></EditTitleBar>
         <TitleBar v-else title="ルール">
             <template v-slot:menu>
+                <RuleSearchMenu></RuleSearchMenu>
                 <v-btn icon v-on:click="onEdit">
                     <v-icon>mdi-pencil</v-icon>
                 </v-btn>
@@ -45,6 +46,7 @@
 import Pagination from '@/components/pagination/Pagination.vue';
 import RuleItems from '@/components/rules/RuleItems.vue';
 import RuleMultipleDeletionDialog from '@/components/rules/RuleMultipleDeletionDialog.vue';
+import RuleSearchMenu from '@/components/rules/RuleSearchMenu.vue';
 import EditTitleBar from '@/components/titleBar/EditTitleBar.vue';
 import TitleBar from '@/components/titleBar/TitleBar.vue';
 import container from '@/model/ModelContainer';
@@ -64,6 +66,7 @@ Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
     components: {
         EditTitleBar,
         TitleBar,
+        RuleSearchMenu,
         RuleItems,
         Pagination,
         RuleMultipleDeletionDialog,
@@ -190,12 +193,18 @@ export default class Reserves extends Vue {
 
         const type = this.$route.query.type;
 
-        return {
+        const option: RuleFetchOption = {
             offset: (Util.getPageNum(this.$route) - 1) * this.settingValue.rulesLength,
             limit: this.settingValue.rulesLength,
             type: 'normal',
             isHalfWidth: this.settingValue.isHalfWidthDisplayed,
         };
+
+        if (typeof this.$route.query.keyword === 'string') {
+            option.keyword = this.$route.query.keyword;
+        }
+
+        return option;
     }
 }
 </script>
