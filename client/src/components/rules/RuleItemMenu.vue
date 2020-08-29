@@ -39,7 +39,7 @@
 
 <script lang="ts">
 import RuleDeleteDialog from '@/components/rules/RuleDeleteDialog.vue';
-import { RuleStateDisplayData } from '@/model/state/rule/IRuleState';
+import { RuleStateData } from '@/model/state/rule/IRuleState';
 import Util from '@/util/Util';
 import { Component, Prop, Vue } from 'vue-property-decorator';
 
@@ -50,7 +50,7 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 })
 export default class RuleItemMenu extends Vue {
     @Prop({ required: true })
-    public ruleItem!: RuleStateDisplayData;
+    public ruleItem!: RuleStateData;
 
     public isOpenDeleteDialog: boolean = false;
 
@@ -58,7 +58,7 @@ export default class RuleItemMenu extends Vue {
         Util.move(this.$router, {
             path: '/recorded',
             query: {
-                ruleId: this.ruleItem.id.toString(10),
+                ruleId: this.ruleItem.display.id.toString(10),
             },
         });
     }
@@ -67,7 +67,7 @@ export default class RuleItemMenu extends Vue {
         Util.move(this.$router, {
             path: '/search',
             query: {
-                rule: this.ruleItem.id.toString(10),
+                rule: this.ruleItem.display.id.toString(10),
             },
         });
     }

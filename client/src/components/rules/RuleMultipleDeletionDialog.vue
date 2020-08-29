@@ -1,38 +1,34 @@
 <template>
     <v-dialog v-if="isRemove === false" v-model="dialogModel" max-width="300" scrollable>
-        <v-card>
-            <v-card-text class="pa-4">
-                <div class="text--primary">{{ ruleItem.display.keyword }} を削除しますか?</div>
+        <v-card class="recorded-multiple-deletion-dialog">
+            <v-card-text class="pa-4 pb-0">
+                <div>選択した {{ total }} 件の番組を削除しますか。</div>
             </v-card-text>
             <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn color="primary" text v-on:click="dialogModel = false">キャンセル</v-btn>
-                <v-btn color="primary" text v-on:click="deleteRule">削除</v-btn>
+                <v-btn color="primary" text v-on:click="deleteReserve">削除</v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>
 </template>
 
 <script lang="ts">
-import IRuleApiModel from '@/model/api/rule/IRuleApiModel';
 import container from '@/model/ModelContainer';
-import { RuleStateData } from '@/model/state/rule/IRuleState';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
 import Util from '@/util/Util';
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
-import * as apid from '../../../../api';
 
 @Component({})
-export default class RuleDeleteDialog extends Vue {
-    @Prop({ required: true })
-    public ruleItem!: RuleStateData;
-
+export default class RuleMultipleDeletionDialog extends Vue {
     @Prop({ required: true })
     public isOpen!: boolean;
 
+    @Prop({ required: true })
+    public total!: number;
+
     public isRemove: boolean = false;
 
-    private ruleApiModel = container.get<IRuleApiModel>('IRuleApiModel');
     private snackbarState = container.get<ISnackbarState>('ISnackbarState');
 
     /**
@@ -46,9 +42,21 @@ export default class RuleDeleteDialog extends Vue {
         this.$emit('update:isOpen', value);
     }
 
+    public deleteReserve(): void {
+        this.$emit('delete');
+    }
+
     @Watch('isOpen', { immediate: true })
     public onChangeState(newState: boolean, oldState: boolean): void {
-        if (newState === false && oldState === true) {
+        if (newState === true && !!oldState === false) {
+            if (this.total === 0) {
+                this.dialogModel = false;
+                this.snackbarState.open({
+                    color: 'error',
+                    text: 'ルールを選択してください。',
+                });
+            }
+        } else if (newState === false && oldState === true) {
             // close
             this.$nextTick(async () => {
                 await Util.sleep(100);
@@ -60,26 +68,17 @@ export default class RuleDeleteDialog extends Vue {
             });
         }
     }
-
-    /**
-     * 録画削除
-     */
-    public async deleteRule(): Promise<void> {
-        this.dialogModel = false;
-
-        try {
-            await this.ruleApiModel.delete(this.ruleItem.display.id);
-            this.snackbarState.open({
-                color: 'success',
-                text: `${this.ruleItem.display.keyword} を削除`,
-            });
-        } catch (err) {
-            this.snackbarState.open({
-                color: 'error',
-                text: `${this.ruleItem.display.keyword} を削除に失敗`,
-            });
-            console.error(err);
-        }
-    }
 }
 </script>
+
+<style lang="sass">
+.recorded-multiple-deletion-dialog
+    .v-input--switch
+        margin-right: 4px
+        margin-top: 0 !important
+        padding-top: 0 !important
+    .v-input__slot
+        margin-bottom: 0 !important
+    .v-messages
+        display: none
+</style>

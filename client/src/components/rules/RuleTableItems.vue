@@ -14,22 +14,30 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="item in items" v-bind:key="item.id">
+                    <tr
+                        v-for="item in items"
+                        v-bind:key="item.display.id"
+                        v-bind:class="{ 'selected-color': item.isSelected === true }"
+                        v-on:click="selectItem(item)"
+                    >
                         <td class="toggle">
                             <v-switch
-                                v-model="item.isEnable"
+                                v-if="isEditMode === false"
+                                v-model="item.display.isEnable"
                                 hide-details
                                 dense
                                 value
                                 v-on:change="changeState(item)"
                             ></v-switch>
                         </td>
-                        <td>{{ item.keyword }}</td>
-                        <td>{{ item.ignoreKeyword }}</td>
-                        <td>{{ item.channels }}</td>
-                        <td>{{ item.genres }}</td>
-                        <td class="reserve-cnt reserve-cnt-body">{{ item.reservationsCnt }}</td>
-                        <td class="menu"><RuleItemMenu :ruleItem="item"></RuleItemMenu></td>
+                        <td>{{ item.display.keyword }}</td>
+                        <td>{{ item.display.ignoreKeyword }}</td>
+                        <td>{{ item.display.channels }}</td>
+                        <td>{{ item.display.genres }}</td>
+                        <td class="reserve-cnt reserve-cnt-body">{{ item.display.reservationsCnt }}</td>
+                        <td class="menu">
+                            <RuleItemMenu v-if="isEditMode === false" :ruleItem="item"></RuleItemMenu>
+                        </td>
                     </tr>
                 </tbody>
             </template>
@@ -39,7 +47,7 @@
 
 <script lang="ts">
 import RuleItemMenu from '@/components/rules/RuleItemMenu.vue';
-import { RuleStateDisplayData } from '@/model/state/rule/IRuleState';
+import { RuleStateData, RuleStateDisplayData } from '@/model/state/rule/IRuleState';
 import { Component, Prop, Vue } from 'vue-property-decorator';
 
 @Component({
@@ -49,13 +57,27 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 })
 export default class RuleTableItem extends Vue {
     @Prop({ required: true })
-    public items!: RuleStateDisplayData[];
+    public items!: RuleStateData[];
+
+    @Prop({ required: true })
+    public isEditMode!: boolean;
 
     /**
      * ルールの有効、無効を変える
      */
-    public changeState(item: RuleStateDisplayData): void {
+    public changeState(item: RuleStateData): void {
         this.$emit('changeState', item);
+    }
+
+    /**
+     * item 選択
+     */
+    public selectItem(item: RuleStateData): void {
+        if (this.isEditMode === false) {
+            return;
+        }
+
+        this.$emit('selected', item.display.id);
     }
 }
 </script>
@@ -69,6 +91,10 @@ export default class RuleTableItem extends Vue {
     width: 80px
 .reserve-cnt-body
     text-align: center
+
+tbody
+    tr
+        cursor: default
 </style>
 
 <style lang="sass">
