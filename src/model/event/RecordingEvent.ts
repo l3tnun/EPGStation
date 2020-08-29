@@ -50,15 +50,16 @@ class RecordingEvent implements IRecordingEvent {
     /**
      * 録画失敗イベント発行
      * @param reserve: Reserve
+     * @param recorded: Recorded
      */
-    public emitRecordingFailed(reserve: Reserve): void {
-        this.emitter.emit(RecordingEvent.RECORDING_FAILED_EVENT, reserve);
+    public emitRecordingFailed(reserve: Reserve, recorded: Recorded): void {
+        this.emitter.emit(RecordingEvent.RECORDING_FAILED_EVENT, reserve, recorded);
     }
 
     /**
      * 録画完了イベント発行
      * @param reserve: Reserve
-     * @param recordedId: recorded Id
+     * @param recorded: Recorded
      * @param isStopRec: boolean true で録画中断を表す
      */
     public emitFinishRecording(reserve: Reserve, recorded: Recorded, isStopRec: boolean): void {
@@ -123,12 +124,12 @@ class RecordingEvent implements IRecordingEvent {
 
     /**
      * 録画失敗イベント登録
-     * @param callback: (reserve: Reserve) => void
+     * @param callback: (reserve: Reserve, recorded: Recorded) => void
      */
-    public setRecordingFailed(callback: (reserve: Reserve) => void): void {
-        this.emitter.on(RecordingEvent.RECORDING_FAILED_EVENT, async (reserve: Reserve) => {
+    public setRecordingFailed(callback: (reserve: Reserve, recorded: Recorded) => void): void {
+        this.emitter.on(RecordingEvent.RECORDING_FAILED_EVENT, async (reserve: Reserve, recorded: Recorded) => {
             try {
-                await callback(reserve);
+                await callback(reserve, recorded);
             } catch (err) {
                 this.log.system.error(err);
             }

@@ -94,6 +94,8 @@ import { IPromiseQueue } from './IPromiseQueue';
 import IPromiseRetry from './IPromiseRetry';
 import LoggerModel from './LoggerModel';
 import MirakurunClientModel from './MirakurunClientModel';
+import ExternalCommandManageModel from './operator/externalCommand/ExternalCommandManageModel';
+import IExternalCommandManageModel from './operator/externalCommand/IExternalCommandManageModel';
 import IReserveOptionChecker from './operator/IReserveOptionChecker';
 import IRecordedManageModel from './operator/recorded/IRecordedManageModel';
 import RecordedManageModel from './operator/recorded/RecordedManageModel';
@@ -252,6 +254,11 @@ export const set = (container: Container): void => {
     container.bind<IEventSetter>('IEventSetter').to(EventSetter).inSingletonScope();
 
     container.bind<ISocketIOManageModel>('ISocketIOManageModel').to(SocketIOManageModel).inSingletonScope();
+
+    container
+        .bind<IExternalCommandManageModel>('IExternalCommandManageModel')
+        .to(ExternalCommandManageModel)
+        .inSingletonScope();
 
     container.bind<IServiceServer>('IServiceServer').to(ServiceServer).inSingletonScope();
 

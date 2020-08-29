@@ -330,6 +330,8 @@ class RecorderModel implements IRecorderModel {
                     this.log.system.info(`create video file: ${videoFile.filePath}`);
                     this.videoFileId = await this.videoFileDB.insertOnce(videoFile);
                     this.videoFileFulPath = recPath.fullPath;
+
+                    recorded.videoFiles = [videoFile];
                 } catch (err) {
                     // DB 登録エラー
                     this.log.system.error('add recorded DB error');
@@ -358,7 +360,7 @@ class RecorderModel implements IRecorderModel {
                                 this.log.system.error(err);
 
                                 // 録画終了処理失敗を通知
-                                this.recordingEvent.emitRecordingFailed(this.reserve);
+                                this.recordingEvent.emitRecordingFailed(this.reserve, recorded);
                             });
                     });
                 }
@@ -372,7 +374,7 @@ class RecorderModel implements IRecorderModel {
             // 予想外の録画失敗エラー
             this.destoryStream();
             // 録画失敗を通知
-            this.recordingEvent.emitRecordingFailed(this.reserve);
+            this.recordingEvent.emitPrepRecordingFailed(this.reserve);
             throw err;
         });
     }

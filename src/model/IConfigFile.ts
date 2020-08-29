@@ -102,6 +102,16 @@ export default interface IConfigFile {
         rate?: number;
     }[];
 
+    // 各種フックコマンド
+    reserveNewAddtionCommand?: string; // 予約新規追加
+    reserveUpdateCommand?: string; // 予約情報更新
+    reservedeletedCommand?: string; // 予約削除
+    recordingPreStartCommand?: string; // 録画準備開始
+    recordingPrepRecFailedCommand?: string; // 録画準備失敗
+    recordingStartCommand?: string; // 録画開始
+    recordingFinishCommand?: string; // 録画終了
+    recordingFailedCommand?: string; // 録画中のエラー
+
     // 視聴 URL Scheme 設定
     urlscheme: {
         m2ts: URLSchemeInfo;

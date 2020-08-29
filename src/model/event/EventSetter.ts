@@ -5,6 +5,7 @@ import IConfiguration from '../IConfiguration';
 import ILogger from '../ILogger';
 import ILoggerModel from '../ILoggerModel';
 import IIPCServer from '../ipc/IIPCServer';
+import IExternalCommandManageModel from '../operator/externalCommand/IExternalCommandManageModel';
 import IRecordedManageModel from '../operator/recorded/IRecordedManageModel';
 import IRecordedTagManadeModel from '../operator/recordedTag/IRecordedTagManadeModel';
 import IRecordingManageModel from '../operator/recording/IRecordingManageModel';
@@ -34,6 +35,7 @@ export default class EventSetter implements IEventSetter {
     private recordedManage: IRecordedManageModel;
     private recordedTagManage: IRecordedTagManadeModel;
     private thumbnailManage: IThumbnailManageModel;
+    private externalCommandManage: IExternalCommandManageModel;
     private ipc: IIPCServer;
     private config: IConfigFile;
 
@@ -52,6 +54,7 @@ export default class EventSetter implements IEventSetter {
         @inject('IRecordedManageModel') recordedManage: IRecordedManageModel,
         @inject('IRecordedTagManadeModel') recordedTagManage: IRecordedTagManadeModel,
         @inject('IThumbnailManageModel') thumbnailManage: IThumbnailManageModel,
+        @inject('IExternalCommandManageModel') externalCommandManage: IExternalCommandManageModel,
         @inject('IIPCServer') ipc: IIPCServer,
         @inject('IConfiguration') configure: IConfiguration,
     ) {
@@ -68,6 +71,7 @@ export default class EventSetter implements IEventSetter {
         this.recordedManage = recordedManage;
         this.recordedTagManage = recordedTagManage;
         this.thumbnailManage = thumbnailManage;
+        this.externalCommandManage = externalCommandManage;
         this.ipc = ipc;
         this.config = configure.getConfig();
     }
@@ -117,25 +121,28 @@ export default class EventSetter implements IEventSetter {
         this.reserveEvent.setUpdated(diff => {
             this.ipc.notifyClient();
             this.recordingManage.update(diff);
+
+            // コマンド実行
+            this.externalCommandManage.addUpdateReseves(diff);
         });
 
-        // 録画開始イベント
-        this.recordingEvent.setStartPrepRecording(_reseve => {
+        // 録画準備開始イベント
+        this.recordingEvent.setStartPrepRecording(reserve => {
             this.ipc.notifyClient();
-            // TODO run cmd
+            this.externalCommandManage.addRecordingPrepStartCmd(reserve);
         });
 
         // 録画準備キャンセルイベント
-        this.recordingEvent.setCancelPrepRecording(_reserve => {
+        this.recordingEvent.setCancelPrepRecording(reserve => {
             this.ipc.notifyClient();
-            // TODO run cmd
+            this.externalCommandManage.addRecordingPrepRecFailedCmd(reserve);
         });
 
         // 録画準備失敗イベント
         this.recordingEvent.setPrepRecordingFailed(reserve => {
             this.ipc.notifyClient();
             this.reservationManage.cancel(reserve.id); // 予約から削除
-            // TODO run cmd
+            this.externalCommandManage.addRecordingPrepRecFailedCmd(reserve);
         });
 
         // 録画開始イベント
@@ -149,14 +156,14 @@ export default class EventSetter implements IEventSetter {
             }
 
             this.ipc.notifyClient();
-            // TODO run cmd
+            this.externalCommandManage.addRecordingStartCmd(recorded);
         });
 
         // 録画失敗イベント
-        this.recordingEvent.setRecordingFailed(reserve => {
+        this.recordingEvent.setRecordingFailed((reserve, recorded) => {
             this.ipc.notifyClient();
             this.reservationManage.cancel(reserve.id); // 予約から削除
-            // TODO run cmd
+            this.externalCommandManage.addRecordingFailedCmd(recorded);
         });
 
         // 録画完了
@@ -228,6 +235,9 @@ export default class EventSetter implements IEventSetter {
                 });
             }
 
+            // コマンド実行
+            this.externalCommandManage.addRecordingFinishCmd(recorded);
+
             this.ipc.notifyClient();
         });
 
@@ -244,8 +254,6 @@ export default class EventSetter implements IEventSetter {
             if (recorded.isRecording === true && recorded.reserveId !== null) {
                 this.reservationManage.cancel(recorded.reserveId);
             }
-
-            // TODO run cmd
         });
 
         // video file サイズ更新
