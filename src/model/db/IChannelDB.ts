@@ -11,6 +11,6 @@ export default interface IChannelDB {
     insert(channels: mapid.Service[]): Promise<void>;
     update(values: ChannelUpdateValues): Promise<void>;
     findId(channelId: apid.ChannelId): Promise<Channel | null>;
-    findChannleTypes(types: apid.ChannelType[]): Promise<Channel[]>;
-    findAll(): Promise<Channel[]>;
+    findChannleTypes(types: apid.ChannelType[], needSort?: boolean): Promise<Channel[]>;
+    findAll(needSort?: boolean): Promise<Channel[]>;
 }

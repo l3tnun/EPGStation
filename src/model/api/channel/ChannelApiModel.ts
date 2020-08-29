@@ -23,7 +23,7 @@ class ChannelApiModel implements IChannelApiModel {
      * @return Promise<ChannelItem[]>
      */
     public async getChannels(): Promise<apid.ChannelItem[]> {
-        const channels = await this.channelDB.findAll();
+        const channels = await this.channelDB.findAll(true);
 
         return channels.map(c => {
             const result: apid.ChannelItem = {

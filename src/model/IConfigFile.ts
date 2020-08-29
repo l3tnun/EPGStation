@@ -57,6 +57,10 @@ export default interface IConfigFile {
     // epg 更新時間間隔 (分)
     epgUpdateIntervalTime: number;
 
+    // 放送局並び順
+    channelOrder?: apid.ChannelId[];
+    sidOrder?: apid.ServiceId[];
+
     // 放送局除外設定
     excludeChannels?: apid.ChannelId[];
     excludeSids?: apid.ServiceId[];

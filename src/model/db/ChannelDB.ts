@@ -6,6 +6,7 @@ import * as apid from '../../../api';
 import * as mapid from '../../../node_modules/mirakurun/api';
 import Channel from '../../db/entities/Channel';
 import StrUtil from '../../util/StrUtil';
+import IConfiguration from '../IConfiguration';
 import ILogger from '../ILogger';
 import ILoggerModel from '../ILoggerModel';
 import IPromiseRetry from '../IPromiseRetry';
@@ -15,15 +16,18 @@ import IDBOperator from './IDBOperator';
 @injectable()
 export default class ChannelDB implements IChannelDB {
     private log: ILogger;
+    private configuration: IConfiguration;
     private op: IDBOperator;
     private promieRetry: IPromiseRetry;
 
     constructor(
         @inject('ILoggerModel') logger: ILoggerModel,
+        @inject('IConfiguration') configuration: IConfiguration,
         @inject('IDBOperator') op: IDBOperator,
         @inject('IPromiseRetry') promieRetry: IPromiseRetry,
     ) {
         this.log = logger.getLogger();
+        this.configuration = configuration;
         this.op = op;
         this.promieRetry = promieRetry;
     }
@@ -129,9 +133,10 @@ export default class ChannelDB implements IChannelDB {
     /**
      * channelType を指定して検索
      * @param types: apid.ChannelType[]
+     * @param needSort: boolean ソートが必要か default: false
      * @return Promise<Channel[]>
      */
-    public async findChannleTypes(types: apid.ChannelType[]): Promise<Channel[]> {
+    public async findChannleTypes(types: apid.ChannelType[], needSort: boolean = false): Promise<Channel[]> {
         const connection = await this.op.getConnection();
 
         const queryOption: FindConditions<Channel>[] = [];
@@ -143,24 +148,67 @@ export default class ChannelDB implements IChannelDB {
 
         const repository = connection.getRepository(Channel);
 
-        return await this.promieRetry.run(() => {
+        const result = await this.promieRetry.run(() => {
             return repository.find({
                 where: queryOption,
             });
         });
+
+        return needSort === true ? this.sortChannels(result) : result;
     }
 
     /**
      * 全件取得
+     * @param needSort: boolean ソートが必要か default: false
      * @return Promise<Channel[]>
      */
-    public async findAll(): Promise<Channel[]> {
+    public async findAll(needSort: boolean = false): Promise<Channel[]> {
         const connection = await this.op.getConnection();
 
         const repository = connection.getRepository(Channel);
 
-        return await this.promieRetry.run(() => {
+        const result = await this.promieRetry.run(() => {
             return repository.find();
         });
+
+        return needSort === true ? this.sortChannels(result) : result;
+    }
+
+    /**
+     * Channel[] を config.yml に従ってソートして返す
+     * @return Channel[]
+     */
+    private sortChannels(channels: Channel[]): Channel[] {
+        const config = this.configuration.getConfig();
+
+        let order: number[] = [];
+        let key: string;
+        if (typeof config.channelOrder !== 'undefined') {
+            order = config.channelOrder;
+            key = 'id';
+        } else if (typeof config.sidOrder !== 'undefined') {
+            order = config.sidOrder;
+            key = 'serviceId';
+        } else {
+            return channels;
+        }
+
+        let cnt = 0;
+        order.forEach(id => {
+            const i = channels.findIndex(c => {
+                return (c as any)[key] === id;
+            });
+
+            if (i === -1) {
+                return;
+            }
+
+            // tslint:disable-next-line
+            const [channel] = channels.splice(i, 1);
+            channels.splice(cnt, 0, channel);
+            cnt += 1;
+        });
+
+        return channels;
     }
 }

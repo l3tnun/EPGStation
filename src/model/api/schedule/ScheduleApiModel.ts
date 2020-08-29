@@ -40,7 +40,7 @@ export default class ScheduleApiModel implements IScheduleApiModel {
             throw new Error('GetScheduleTypesError');
         }
 
-        const channels = await this.channelDB.findChannleTypes(types);
+        const channels = await this.channelDB.findChannleTypes(types, true);
         const programs = await this.programDB.findSchedule({
             startAt: option.startAt,
             endAt: option.endAt,
@@ -129,7 +129,7 @@ export default class ScheduleApiModel implements IScheduleApiModel {
      * @return Promise<apid.Schedule[]>
      */
     public async getBroadcastingSchedule(option: apid.BroadcastingScheduleOption): Promise<apid.Schedule[]> {
-        const channels = await this.channelDB.findAll();
+        const channels = await this.channelDB.findAll(true);
         const programs = await this.programDB.findBroadcasting(option);
 
         return this.createSchedule(channels, programs, option.isHalfWidth).map(s => {
