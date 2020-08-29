@@ -212,7 +212,15 @@
                             :timePickerProps="{
                                 'ampm-in-title': true,
                             }"
-                        ></v-datetime-picker>
+                            :textFieldProps="{
+                                color: 'success',
+                            }"
+                        >
+                            <template slot="actions" slot-scope="{ parent }">
+                                <v-btn text color="primary" @click.native="parent.clearHandler">クリア</v-btn>
+                                <v-btn text color="primary" @click="parent.okHandler">設定</v-btn>
+                            </template>
+                        </v-datetime-picker>
                         <span class="px-1"></span>
                         <v-datetime-picker
                             v-if="searchState.isShowPeriod === true"
@@ -228,7 +236,12 @@
                             :timePickerProps="{
                                 'ampm-in-title': true,
                             }"
-                        ></v-datetime-picker>
+                        >
+                            <template slot="actions" slot-scope="{ parent }">
+                                <v-btn text color="primary" @click.native="parent.clearHandler">クリア</v-btn>
+                                <v-btn text color="primary" @click="parent.okHandler">設定</v-btn>
+                            </template>
+                        </v-datetime-picker>
                     </div>
                 </SearchOptionRow>
                 <SearchOptionRow title="その他">
