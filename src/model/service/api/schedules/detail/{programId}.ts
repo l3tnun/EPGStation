@@ -7,11 +7,18 @@ export const get: Operation = async (req, res) => {
     const scheduleApiModel = container.get<IScheduleApiModel>('IScheduleApiModel');
 
     try {
-        api.responseJSON(
-            res,
-            200,
-            await scheduleApiModel.getSchedule(parseInt(req.params.programId, 10), req.query.isHalfWidth as any),
+        const program = await scheduleApiModel.getSchedule(
+            parseInt(req.params.programId, 10),
+            req.query.isHalfWidth as any,
         );
+        if (program === null) {
+            api.responseError(res, {
+                code: 404,
+                message: 'program is not found',
+            });
+        } else {
+            api.responseJSON(res, 200, program);
+        }
     } catch (err) {
         api.responseServerError(res, err.message);
     }
@@ -39,6 +46,9 @@ get.apiDoc = {
                     },
                 },
             },
+        },
+        404: {
+            description: 'Not Found',
         },
         default: {
             description: '予期しないエラー',
