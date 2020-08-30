@@ -1536,6 +1536,14 @@ components:
             schema:
                 $ref: '#/components/schemas/ChannelId'
 
+        PathProgramId:
+            description: program id
+            in: path
+            name: programId
+            required: true
+            schema:
+                $ref: '#/components/schemas/ProgramId'
+
         PathReserveId:
             description: 予約id
             in: path

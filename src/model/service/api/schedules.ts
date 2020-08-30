@@ -17,7 +17,7 @@ export const get: Operation = async (req, res) => {
             CS: req.query.CS as any,
             SKY: req.query.SKY as any,
         };
-        api.responseJSON(res, 200, await scheduleApiModel.getSchedule(option));
+        api.responseJSON(res, 200, await scheduleApiModel.getSchedules(option));
     } catch (err) {
         api.responseServerError(res, err.message);
     }
