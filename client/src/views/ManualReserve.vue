@@ -57,6 +57,7 @@ export default class ManualReserve extends Vue {
     }).bind(this);
 
     private programId: apid.ProgramId | null = null;
+    private reserveId: apid.ReserveId | null = null;
 
     public created(): void {
         // socket.io イベント
@@ -102,8 +103,12 @@ export default class ManualReserve extends Vue {
      * 更新
      */
     public async update(): Promise<void> {
+        if (this.reserveId === null) {
+            return;
+        }
+
         try {
-            await this.manualReserveState.updateReserve();
+            await this.manualReserveState.updateReserve(this.reserveId);
             this.snackbarState.open({
                 color: 'success',
                 text: '予約を更新しました。',
@@ -146,6 +151,8 @@ export default class ManualReserve extends Vue {
 
     @Watch('$route', { immediate: true, deep: true })
     public onUrlChange(): void {
+        this.programId = null;
+        this.reserveId = null;
         this.manualReserveState.init();
 
         const finnalize = async () => {
@@ -157,11 +164,12 @@ export default class ManualReserve extends Vue {
             // fetch data
             if (typeof this.$route.query.reserveId === 'string') {
                 this.isEditMode = true;
+                this.reserveId = parseInt(this.$route.query.reserveId, 10);
 
                 let reserveItem: apid.ReserveItem;
                 try {
                     reserveItem = await this.manualReserveState.getReserveItem(
-                        parseInt(this.$route.query.reserveId, 10),
+                        this.reserveId,
                         this.settingValue.isHalfWidthDisplayed,
                     );
                 } catch (err) {

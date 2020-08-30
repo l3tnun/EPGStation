@@ -67,5 +67,5 @@ export default interface IManualReserveState {
     getEncodeModeItems(): string[];
     isEnableEncodeMode(): boolean;
     addReserve(): Promise<void>;
-    updateReserve(): Promise<void>;
+    updateReserve(reserveId: apid.ReserveId): Promise<void>;
 }

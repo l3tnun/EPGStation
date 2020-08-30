@@ -338,9 +338,12 @@ export default class ManualReserveState implements IManualReserveState {
 
     /**
      * 予約更新
+     * @param reserveId: apid.ReserveId
      */
-    public async updateReserve(): Promise<void> {
-        // TODO 実装
+    public async updateReserve(reserveId: apid.ReserveId): Promise<void> {
+        const option = this.createEditManualReserveOption();
+
+        await this.reservesApiModel.edit(reserveId, option);
     }
 
     /**
@@ -348,7 +351,7 @@ export default class ManualReserveState implements IManualReserveState {
      * @return apid.ManualReserveOption
      */
     private createManualReserveOption(): apid.ManualReserveOption {
-        const reserve: apid.ManualReserveOption = {
+        const result: apid.ManualReserveOption = {
             allowEndLack: this.reserveOption.allowEndLack,
         };
         if (this.isTimeSpecification === true) {
@@ -359,10 +362,57 @@ export default class ManualReserveState implements IManualReserveState {
                 throw new Error('ProgramIdIsNull');
             }
             // program id 予約
-            reserve.programId = this.programInfo.programItem.id;
+            result.programId = this.programInfo.programItem.id;
         }
 
         // 保存オプション
+        const saveOption = this.getSaveOption();
+        if (saveOption !== null) {
+            result.saveOption = saveOption;
+        }
+
+        // エンコードオプション
+        const encodeOption = this.getEncodeOption();
+        if (encodeOption !== null) {
+            result.encodeOption = encodeOption;
+        }
+
+        // TODO tag
+
+        return result;
+    }
+
+    /**
+     * 予約編集オプションを組み立てる
+     * @return apid.EditManualReserveOption
+     */
+    private createEditManualReserveOption(): apid.EditManualReserveOption {
+        const result: apid.EditManualReserveOption = {
+            allowEndLack: this.reserveOption.allowEndLack,
+        };
+
+        // 保存オプション
+        const saveOption = this.getSaveOption();
+        if (saveOption !== null) {
+            result.saveOption = saveOption;
+        }
+
+        // エンコードオプション
+        const encodeOption = this.getEncodeOption();
+        if (encodeOption !== null) {
+            result.encodeOption = encodeOption;
+        }
+
+        // TODO tag
+
+        return result;
+    }
+
+    /**
+     * apid.ReserveSaveOption を生成する
+     * @return apid.ReserveSaveOption | null
+     */
+    private getSaveOption(): apid.ReserveSaveOption | null {
         const saveOption: apid.ReserveSaveOption = {};
         if (this.saveOption.parentDirectoryName !== null) {
             saveOption.parentDirectoryName = this.saveOption.parentDirectoryName;
@@ -373,11 +423,15 @@ export default class ManualReserveState implements IManualReserveState {
         if (this.saveOption.recordedFormat !== null) {
             saveOption.recordedFormat = this.saveOption.recordedFormat;
         }
-        if (Object.keys(saveOption).length > 0) {
-            reserve.saveOption = saveOption;
-        }
 
-        // エンコードオプション
+        return Object.keys(saveOption).length > 0 ? saveOption : null;
+    }
+
+    /**
+     * apid.ReserveEncodedOption を生成する
+     * @return apid.ReserveEncodedOption | null
+     */
+    private getEncodeOption(): apid.ReserveEncodedOption | null {
         const encodeOption: apid.ReserveEncodedOption = {
             isDeleteOriginalAfterEncode: this.encodeOption.isDeleteOriginalAfterEncode,
         };
@@ -408,12 +462,7 @@ export default class ManualReserveState implements IManualReserveState {
                 encodeOption.directory3 = this.encodeOption.directory3;
             }
         }
-        if (Object.keys(encodeOption).length > 1) {
-            reserve.encodeOption = encodeOption;
-        }
 
-        // TODO tag
-
-        return reserve;
+        return Object.keys(encodeOption).length > 1 ? encodeOption : null;
     }
 }

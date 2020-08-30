@@ -156,8 +156,8 @@
         <v-card-actions>
             <v-spacer></v-spacer>
             <v-btn text color="error" v-on:click="cancel">キャンセル</v-btn>
-            <v-btn v-if="isEditMode === true" text color="primary" v-on:click="add">追加</v-btn>
-            <v-btn v-if="isEditMode === true" text color="primary" v-on:click="update">更新</v-btn>
+            <v-btn v-if="isEditMode === false" text color="primary" v-on:click="add">追加</v-btn>
+            <v-btn v-else text color="primary" v-on:click="update">更新</v-btn>
         </v-card-actions>
     </v-card>
 </template>

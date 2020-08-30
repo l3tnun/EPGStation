@@ -23,6 +23,18 @@ export default class ReservesApiModel implements IReservesApiModel {
     }
 
     /**
+     * 手動予約の更新
+     * @param reserveId: apid.ReserveId
+     * @param option: apid.EditManualReserveOption
+     * @return Promise<void>
+     */
+    public async edit(reserveId: apid.ReserveId, option: apid.EditManualReserveOption): Promise<void> {
+        const result = await this.repository.put(`/reserves/${reserveId}`, option);
+
+        return <any>result.data;
+    }
+
+    /**
      * 指定した予約情報の取得
      * @param reserveId: apid.ReserveId
      * @param isHalfWidth: boolean
