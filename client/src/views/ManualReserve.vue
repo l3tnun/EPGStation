@@ -5,7 +5,12 @@
             <div ref="appContent" class="app-content manual-reserve pa-3 mx-auto">
                 <ManualReserveProgramInfo :program="manualReserveState.getProgramInfo()"></ManualReserveProgramInfo>
                 <div class="pt-2"></div>
-                <ManualReserveOption v-on:cancel="cancel" v-on:add="add"></ManualReserveOption>
+                <ManualReserveOption
+                    :isEditMode="isEditMode"
+                    v-on:cancel="cancel"
+                    v-on:add="add"
+                    v-on:update="update"
+                ></ManualReserveOption>
             </div>
         </transition>
     </v-content>
@@ -36,12 +41,22 @@ Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
     },
 })
 export default class ManualReserve extends Vue {
+    public isEditMode: boolean = false;
+
     private manualReserveState: IManualReserveState = container.get<IManualReserveState>('IManualReserveState');
     private scrollState: IScrollPositionState = container.get<IScrollPositionState>('IScrollPositionState');
     private snackbarState: ISnackbarState = container.get<ISnackbarState>('ISnackbarState');
     private settingValue: ISettingValue = container.get<ISettingStorageModel>('ISettingStorageModel').getSavedValue();
     private socketIoModel: ISocketIOModel = container.get<ISocketIOModel>('ISocketIOModel');
-    private onUpdateStatusCallback = (() => {}).bind(this);
+    private onUpdateStatusCallback = (async () => {
+        if (this.manualReserveState.isTimeSpecification === true) {
+            // TODO 時刻指定予約
+        } else {
+            await this.fetchProgramInfo().catch(err => {});
+        }
+    }).bind(this);
+
+    private programId: apid.ProgramId | null = null;
 
     public created(): void {
         // socket.io イベント
@@ -73,7 +88,30 @@ export default class ManualReserve extends Vue {
         } catch (err) {
             this.snackbarState.open({
                 color: 'error',
-                text: '予約追加に失敗しました。',
+                text: '予約の追加に失敗しました。',
+            });
+
+            return;
+        }
+
+        await Util.sleep(800);
+        this.$router.back();
+    }
+
+    /**
+     * 更新
+     */
+    public async update(): Promise<void> {
+        try {
+            await this.manualReserveState.updateReserve();
+            this.snackbarState.open({
+                color: 'success',
+                text: '予約を更新しました。',
+            });
+        } catch (err) {
+            this.snackbarState.open({
+                color: 'error',
+                text: '予約の更新に失敗しました。',
             });
 
             return;
@@ -110,22 +148,72 @@ export default class ManualReserve extends Vue {
     public onUrlChange(): void {
         this.manualReserveState.init();
 
-        this.$nextTick(async () => {
-            // fetch data
-            if (typeof this.$route.query.programId === 'string') {
-                await this.manualReserveState
-                    .fetchProgramInfo(parseInt(this.$route.query.programId, 10), this.settingValue.isHalfWidthDisplayed)
-                    .catch(err => {
-                        this.snackbarState.open({
-                            color: 'error',
-                            text: '番組情報取得に失敗',
-                        });
-                    });
-            }
-
+        const finnalize = async () => {
             // データ取得完了を通知
             await this.scrollState.emitDoneGetData();
+        };
+
+        this.$nextTick(async () => {
+            // fetch data
+            if (typeof this.$route.query.reserveId === 'string') {
+                this.isEditMode = true;
+
+                let reserveItem: apid.ReserveItem;
+                try {
+                    reserveItem = await this.manualReserveState.getReserveItem(
+                        parseInt(this.$route.query.reserveId, 10),
+                        this.settingValue.isHalfWidthDisplayed,
+                    );
+                } catch (err) {
+                    this.snackbarState.open({
+                        color: 'error',
+                        text: '予約情報取得に失敗',
+                    });
+                    console.error(err);
+                    await finnalize();
+
+                    return;
+                }
+
+                // 予約情報を入力に反映
+                this.manualReserveState.setOptions(reserveItem);
+
+                // 予約情報取得
+                if (typeof reserveItem.programId !== 'undefined') {
+                    this.programId = reserveItem.programId;
+                    await this.fetchProgramInfo().catch(err => {});
+                } else {
+                    // TODO 時刻指定予約
+                }
+            } else if (typeof this.$route.query.programId === 'string') {
+                this.isEditMode = false;
+
+                // 予約情報取得
+                this.programId = parseInt(this.$route.query.programId, 10);
+                await this.fetchProgramInfo().catch(err => {});
+            }
+
+            await finnalize();
         });
+    }
+
+    /**
+     * program id から番組情報を更新する
+     */
+    private async fetchProgramInfo(): Promise<void> {
+        if (this.programId === null) {
+            return;
+        }
+        await this.manualReserveState
+            .fetchProgramInfo(this.programId, this.settingValue.isHalfWidthDisplayed)
+            .catch(err => {
+                this.snackbarState.open({
+                    color: 'error',
+                    text: '番組情報取得に失敗',
+                });
+                console.error(err);
+                throw err;
+            });
     }
 }
 </script>

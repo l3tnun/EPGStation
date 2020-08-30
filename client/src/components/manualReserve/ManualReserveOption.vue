@@ -156,7 +156,8 @@
         <v-card-actions>
             <v-spacer></v-spacer>
             <v-btn text color="error" v-on:click="cancel">キャンセル</v-btn>
-            <v-btn text color="primary" v-on:click="add">追加</v-btn>
+            <v-btn v-if="isEditMode === true" text color="primary" v-on:click="add">追加</v-btn>
+            <v-btn v-if="isEditMode === true" text color="primary" v-on:click="update">更新</v-btn>
         </v-card-actions>
     </v-card>
 </template>
@@ -173,6 +174,9 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
     },
 })
 export default class ManualReserveOption extends Vue {
+    @Prop({ required: true })
+    public isEditMode!: boolean;
+
     private manualReserveState: IManualReserveState = container.get<IManualReserveState>('IManualReserveState');
 
     public cancel(): void {
@@ -181,6 +185,10 @@ export default class ManualReserveOption extends Vue {
 
     public add(): void {
         this.$emit('add');
+    }
+
+    public update(): void {
+        this.$emit('update');
     }
 }
 </script>

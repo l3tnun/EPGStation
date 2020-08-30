@@ -59,10 +59,13 @@ export default interface IManualReserveState {
     encodeOption: EncodedOption;
     optionPanel: number[];
     init(): void;
+    setOptions(reserveItem: apid.ReserveItem): void;
     fetchProgramInfo(programId: apid.ProgramId, isHalfWidth: boolean): Promise<void>;
+    getReserveItem(reserveId: apid.ReserveId, isHalfWidth: boolean): Promise<apid.ReserveItem>;
     getProgramInfo(): ProgramStateData | null;
     getPrentDirectoryItems(): string[];
     getEncodeModeItems(): string[];
     isEnableEncodeMode(): boolean;
     addReserve(): Promise<void>;
+    updateReserve(): Promise<void>;
 }

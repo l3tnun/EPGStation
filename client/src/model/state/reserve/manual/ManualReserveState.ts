@@ -63,6 +63,8 @@ export default class ManualReserveState implements IManualReserveState {
      * 各種オプションの初期化
      */
     public init(): void {
+        this.isTimeSpecification = false;
+
         this.reserveOption = {
             allowEndLack: true,
         };
@@ -90,6 +92,65 @@ export default class ManualReserveState implements IManualReserveState {
     }
 
     /**
+     * apid.ReserveItem の内容を反映させる
+     * @param reserveItem: apid.ReserveItem
+     */
+    public setOptions(reserveItem: apid.ReserveItem): void {
+        this.isTimeSpecification = reserveItem.isTimeSpecified;
+
+        this.reserveOption.allowEndLack = reserveItem.allowEndLack;
+        if (typeof reserveItem.parentDirectoryName !== 'undefined') {
+            this.saveOption.parentDirectoryName = reserveItem.parentDirectoryName;
+        }
+        if (typeof reserveItem.directory !== 'undefined') {
+            this.saveOption.directory = reserveItem.directory;
+        }
+        if (typeof reserveItem.recordedFormat !== 'undefined') {
+            this.saveOption.recordedFormat = reserveItem.recordedFormat;
+        }
+
+        if (typeof reserveItem.encodeMode1 !== 'undefined') {
+            this.encodeOption.mode1 = reserveItem.encodeMode1;
+        }
+        if (typeof reserveItem.encodeParentDirectoryName1 !== 'undefined') {
+            this.encodeOption.encodeParentDirectoryName1 = reserveItem.encodeParentDirectoryName1;
+        }
+        if (typeof reserveItem.encodeDirectory1 !== 'undefined') {
+            this.encodeOption.directory1 = reserveItem.encodeDirectory1;
+        }
+
+        if (typeof reserveItem.encodeMode2 !== 'undefined') {
+            this.encodeOption.mode2 = reserveItem.encodeMode2;
+            this.optionPanel.push(4);
+        }
+        if (typeof reserveItem.encodeParentDirectoryName2 !== 'undefined') {
+            this.encodeOption.encodeParentDirectoryName2 = reserveItem.encodeParentDirectoryName2;
+        }
+        if (typeof reserveItem.encodeDirectory2 !== 'undefined') {
+            this.encodeOption.directory2 = reserveItem.encodeDirectory2;
+        }
+
+        if (typeof reserveItem.encodeMode3 !== 'undefined') {
+            this.encodeOption.mode3 = reserveItem.encodeMode3;
+            this.optionPanel.push(5);
+        }
+        if (typeof reserveItem.encodeParentDirectoryName3 !== 'undefined') {
+            this.encodeOption.encodeParentDirectoryName3 = reserveItem.encodeParentDirectoryName3;
+        }
+        if (typeof reserveItem.encodeDirectory3 !== 'undefined') {
+            this.encodeOption.directory3 = reserveItem.encodeDirectory3;
+        }
+        if (typeof reserveItem.encodeMode1 !== 'undefined') {
+            this.encodeOption.mode1 = reserveItem.encodeMode1;
+        }
+        if (typeof reserveItem.encodeParentDirectoryName1 !== 'undefined') {
+            this.encodeOption.encodeParentDirectoryName1 = reserveItem.encodeParentDirectoryName1;
+        }
+
+        this.encodeOption.isDeleteOriginalAfterEncode = reserveItem.isDeleteOriginalAfterEncode;
+    }
+
+    /**
      * 番組情報を取得する
      * @param programId: apid.ProgramId
      * @param isHalfWidth: boolean 半角で取得するか
@@ -99,6 +160,16 @@ export default class ManualReserveState implements IManualReserveState {
         const program = await this.scheduleApiModel.getSchedule(programId, isHalfWidth);
 
         this.programInfo = this.convertScheduleProgramItemToStateData(program, isHalfWidth);
+    }
+
+    /**
+     * 予約情報の取得
+     * @param reserveId: apid.ReserveId
+     * @param isHalfWidth: boolean 半角で取得するか
+     * @return Promise<apid.ReserveItem>
+     */
+    public async getReserveItem(reserveId: apid.ReserveId, isHalfWidth: boolean): Promise<apid.ReserveItem> {
+        return await this.reservesApiModel.get(reserveId, isHalfWidth);
     }
 
     /**
@@ -263,6 +334,13 @@ export default class ManualReserveState implements IManualReserveState {
         const option = this.createManualReserveOption();
 
         await this.reservesApiModel.add(option);
+    }
+
+    /**
+     * 予約更新
+     */
+    public async updateReserve(): Promise<void> {
+        // TODO 実装
     }
 
     /**

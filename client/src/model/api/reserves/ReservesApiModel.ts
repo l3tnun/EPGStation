@@ -14,7 +14,7 @@ export default class ReservesApiModel implements IReservesApiModel {
     /**
      * 手動予約の追加
      * @param option: ManualReserveOption
-     * @return Promise<ReserveId>
+     * @return Promise<apid/ReserveId>
      */
     public async add(option: apid.ManualReserveOption): Promise<apid.ReserveId> {
         const result = await this.repository.post('/reserves', option);
@@ -23,9 +23,25 @@ export default class ReservesApiModel implements IReservesApiModel {
     }
 
     /**
+     * 指定した予約情報の取得
+     * @param reserveId: apid.ReserveId
+     * @param isHalfWidth: boolean
+     * @return Promise<apid.ReserveItem>
+     */
+    public async get(reserveId: apid.ReserveId, isHalfWidth: boolean): Promise<apid.ReserveItem> {
+        const result = await this.repository.get(`/reserves/${reserveId}`, {
+            params: {
+                isHalfWidth: isHalfWidth,
+            },
+        });
+
+        return <any>result.data;
+    }
+
+    /**
      * 予約情報の取得
      * @param option: GetReserveOption
-     * @return Promise<Reserves>
+     * @return Promise<apid.Reserves>
      */
     public async gets(option: apid.GetReserveOption): Promise<apid.Reserves> {
         const result = await this.repository.get('/reserves', {
@@ -38,7 +54,7 @@ export default class ReservesApiModel implements IReservesApiModel {
     /**
      * 予約リスト情報の取得
      * @param option: GetReserveListsOption
-     * @return Promise<ReserveLists>
+     * @return Promise<apid.ReserveLists>
      */
     public async getLists(option: apid.GetReserveListsOption): Promise<apid.ReserveLists> {
         const result = await this.repository.get('/reserves/lists', {

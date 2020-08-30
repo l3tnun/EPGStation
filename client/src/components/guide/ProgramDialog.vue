@@ -70,7 +70,7 @@
                             >
                                 ルール
                             </v-btn>
-                            <v-btn v-else color="blue darken-1" text>編集</v-btn>
+                            <v-btn v-else color="blue darken-1" text v-on:click="editManualReserve">編集</v-btn>
                             <!-- 検索 -->
                             <v-btn color="blue darken-1" text v-on:click="search">検索</v-btn>
                             <!-- 予約 or 削除 or 除外 or 除外解除 or 重複解除 -->
@@ -153,6 +153,27 @@ export default class ProgramDialog extends Vue {
     }
 
     /**
+     * 手動予約編集
+     */
+    public async editManualReserve(): Promise<void> {
+        if (this.dialogState.reserve === null) {
+            return;
+        }
+
+        const reserveId = this.dialogState.reserve.reserveId;
+
+        this.dialogState.isOpen = false;
+        await Util.sleep(300);
+
+        await Util.move(this.$router, {
+            path: '/reserves/manual',
+            query: {
+                reserveId: reserveId.toString(10),
+            },
+        });
+    }
+
+    /**
      * ルール編集
      */
     public async editRule(): Promise<void> {
@@ -165,7 +186,7 @@ export default class ProgramDialog extends Vue {
         this.dialogState.isOpen = false;
         await Util.sleep(300);
 
-        Util.move(this.$router, {
+        await Util.move(this.$router, {
             path: '/search',
             query: {
                 rule: ruleId.toString(10),
@@ -206,7 +227,7 @@ export default class ProgramDialog extends Vue {
             }
         }
 
-        Util.move(this.$router, {
+        await Util.move(this.$router, {
             path: '/search',
             query: query,
         });
