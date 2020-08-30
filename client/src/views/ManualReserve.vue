@@ -5,7 +5,7 @@
             <div ref="appContent" class="app-content manual-reserve pa-3 mx-auto">
                 <ManualReserveProgramInfo :program="manualReserveState.getProgramInfo()"></ManualReserveProgramInfo>
                 <div class="pt-2"></div>
-                <ManualReserveOption></ManualReserveOption>
+                <ManualReserveOption v-on:cancel="cancel" v-on:add="add"></ManualReserveOption>
             </div>
         </transition>
     </v-content>
@@ -21,6 +21,7 @@ import IScrollPositionState from '@/model/state/IScrollPositionState';
 import IManualReserveState from '@/model/state/reserve/manual/IManualReserveState';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
 import ISettingStorageModel, { ISettingValue } from '@/model/storage/setting/ISettingStorageModel';
+import Util from '@/util/Util';
 import { Component, Vue, Watch } from 'vue-property-decorator';
 import { Route } from 'vue-router';
 import * as apid from '../../../api';
@@ -50,6 +51,36 @@ export default class ManualReserve extends Vue {
     public beforeDestroy(): void {
         // socket.io イベント
         this.socketIoModel.offUpdateState(this.onUpdateStatusCallback);
+    }
+
+    /**
+     * キャンセル
+     */
+    public cancel(): void {
+        this.$router.back();
+    }
+
+    /**
+     * 追加
+     */
+    public async add(): Promise<void> {
+        try {
+            await this.manualReserveState.addReserve();
+            this.snackbarState.open({
+                color: 'success',
+                text: '予約を追加しました。',
+            });
+        } catch (err) {
+            this.snackbarState.open({
+                color: 'error',
+                text: '予約追加に失敗しました。',
+            });
+
+            return;
+        }
+
+        await Util.sleep(800);
+        this.$router.back();
     }
 
     /**

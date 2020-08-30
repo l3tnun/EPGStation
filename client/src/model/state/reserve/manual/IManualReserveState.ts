@@ -64,4 +64,5 @@ export default interface IManualReserveState {
     getPrentDirectoryItems(): string[];
     getEncodeModeItems(): string[];
     isEnableEncodeMode(): boolean;
+    addReserve(): Promise<void>;
 }

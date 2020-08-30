@@ -155,8 +155,8 @@
         <v-divider></v-divider>
         <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn text color="error">キャンセル</v-btn>
-            <v-btn text color="primary">追加</v-btn>
+            <v-btn text color="error" v-on:click="cancel">キャンセル</v-btn>
+            <v-btn text color="primary" v-on:click="add">追加</v-btn>
         </v-card-actions>
     </v-card>
 </template>
@@ -174,6 +174,14 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 })
 export default class ManualReserveOption extends Vue {
     private manualReserveState: IManualReserveState = container.get<IManualReserveState>('IManualReserveState');
+
+    public cancel(): void {
+        this.$emit('cancel');
+    }
+
+    public add(): void {
+        this.$emit('add');
+    }
 }
 </script>
 

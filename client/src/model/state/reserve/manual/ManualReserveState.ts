@@ -1,9 +1,10 @@
-import IScheduleApiModel from '@/model/api/schedule/IScheduleApiModel';
 import { inject, injectable } from 'inversify';
 import * as apid from '../../../../../../api';
 import GenreUtil from '../../../..//util/GenreUtil';
 import { AudioComponentType, AudioSamplingRate, VideoComponentType } from '../../../../lib/event';
 import DateUtil from '../../../../util/DateUtil';
+import IReservesApiModel from '../../../api/reserves/IReservesApiModel';
+import IScheduleApiModel from '../../../api/schedule/IScheduleApiModel';
 import IChannelModel from '../../../channels/IChannelModel';
 import IServerConfigModel from '../../../serverConfig/IServerConfigModel';
 import IManualReserveState, {
@@ -41,16 +42,19 @@ export default class ManualReserveState implements IManualReserveState {
     public optionPanel: number[] = [];
 
     private scheduleApiModel: IScheduleApiModel;
+    private reservesApiModel: IReservesApiModel;
     private channelModel: IChannelModel;
     private serverConfig: IServerConfigModel;
     private programInfo: ProgramStateData | null = null;
 
     constructor(
         @inject('IScheduleApiModel') scheduleApiModel: IScheduleApiModel,
+        @inject('IReservesApiModel') reservesApiModel: IReservesApiModel,
         @inject('IChannelModel') channelModel: IChannelModel,
         @inject('IServerConfigModel') serverConfig: IServerConfigModel,
     ) {
         this.scheduleApiModel = scheduleApiModel;
+        this.reservesApiModel = reservesApiModel;
         this.channelModel = channelModel;
         this.serverConfig = serverConfig;
     }
@@ -249,5 +253,89 @@ export default class ManualReserveState implements IManualReserveState {
      */
     public isEnableEncodeMode(): boolean {
         return this.getEncodeModeItems().length > 0;
+    }
+
+    /**
+     * 予約追加
+     */
+    public async addReserve(): Promise<void> {
+        // 予約オプション組み立て
+        const option = this.createManualReserveOption();
+
+        await this.reservesApiModel.add(option);
+    }
+
+    /**
+     * 予約設定を組み立てる
+     * @return apid.ManualReserveOption
+     */
+    private createManualReserveOption(): apid.ManualReserveOption {
+        const reserve: apid.ManualReserveOption = {
+            allowEndLack: this.reserveOption.allowEndLack,
+        };
+        if (this.isTimeSpecification === true) {
+            // 時刻予約
+            // TODO 実装
+        } else {
+            if (this.programInfo === null) {
+                throw new Error('ProgramIdIsNull');
+            }
+            // program id 予約
+            reserve.programId = this.programInfo.programItem.id;
+        }
+
+        // 保存オプション
+        const saveOption: apid.ReserveSaveOption = {};
+        if (this.saveOption.parentDirectoryName !== null) {
+            saveOption.parentDirectoryName = this.saveOption.parentDirectoryName;
+        }
+        if (this.saveOption.directory !== null) {
+            saveOption.directory = this.saveOption.directory;
+        }
+        if (this.saveOption.recordedFormat !== null) {
+            saveOption.recordedFormat = this.saveOption.recordedFormat;
+        }
+        if (Object.keys(saveOption).length > 0) {
+            reserve.saveOption = saveOption;
+        }
+
+        // エンコードオプション
+        const encodeOption: apid.ReserveEncodedOption = {
+            isDeleteOriginalAfterEncode: this.encodeOption.isDeleteOriginalAfterEncode,
+        };
+        if (this.encodeOption.mode1 !== null) {
+            encodeOption.mode1 = this.encodeOption.mode1;
+            if (this.encodeOption.encodeParentDirectoryName1 !== null) {
+                encodeOption.encodeParentDirectoryName1 = this.encodeOption.encodeParentDirectoryName1;
+            }
+            if (this.encodeOption.directory1 !== null) {
+                encodeOption.directory1 = this.encodeOption.directory1;
+            }
+        }
+        if (this.encodeOption.mode2 !== null) {
+            encodeOption.mode2 = this.encodeOption.mode2;
+            if (this.encodeOption.encodeParentDirectoryName2 !== null) {
+                encodeOption.encodeParentDirectoryName2 = this.encodeOption.encodeParentDirectoryName2;
+            }
+            if (this.encodeOption.directory2 !== null) {
+                encodeOption.directory2 = this.encodeOption.directory2;
+            }
+        }
+        if (this.encodeOption.mode3 !== null) {
+            encodeOption.mode3 = this.encodeOption.mode3;
+            if (this.encodeOption.encodeParentDirectoryName3 !== null) {
+                encodeOption.encodeParentDirectoryName3 = this.encodeOption.encodeParentDirectoryName3;
+            }
+            if (this.encodeOption.directory3 !== null) {
+                encodeOption.directory3 = this.encodeOption.directory3;
+            }
+        }
+        if (Object.keys(encodeOption).length > 1) {
+            reserve.encodeOption = encodeOption;
+        }
+
+        // TODO tag
+
+        return reserve;
     }
 }
