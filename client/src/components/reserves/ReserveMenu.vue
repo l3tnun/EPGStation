@@ -125,17 +125,22 @@ export default class ReserveMenu extends Vue {
         });
     }
 
-    public goToEdit(): void {
+    public async goToEdit(): Promise<void> {
         if (typeof this.reserveItem.ruleId === 'undefined') {
-            return;
+            await Util.move(this.$router, {
+                path: '/reserves/manual',
+                query: {
+                    reserveId: this.reserveItem.id.toString(10),
+                },
+            });
+        } else {
+            await Util.move(this.$router, {
+                path: '/search',
+                query: {
+                    rule: this.reserveItem.ruleId.toString(10),
+                },
+            });
         }
-
-        Util.move(this.$router, {
-            path: '/search',
-            query: {
-                rule: this.reserveItem.ruleId.toString(10),
-            },
-        });
     }
 
     public onClickMenuBackground(e: Event): boolean {
