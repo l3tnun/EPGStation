@@ -706,8 +706,8 @@ components:
                 ruleId:
                     $ref: '#/components/schemas/RuleId'
 
-        ManualReserveOption:
-            description: 手動予約オプション
+        EditManualReserveOption:
+            description: 手動予約編集オプション
             type: object
             required:
                 - allowEndLack
@@ -723,6 +723,13 @@ components:
                     $ref: '#/components/schemas/ReserveSaveOption'
                 encodeOption:
                     $ref: '#/components/schemas/ReserveEncodedOption'
+
+        ManualReserveOption:
+            description: 手動予約オプション
+            type: object
+            allOf:
+                - $ref: '#/components/schemas/EditManualReserveOption'
+            properties:
                 programId:
                     $ref: '#/components/schemas/ProgramId'
                 timeSpecifiedOption:

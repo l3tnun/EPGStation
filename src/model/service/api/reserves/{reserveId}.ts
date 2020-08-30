@@ -95,3 +95,53 @@ del.apiDoc = {
         },
     },
 };
+
+export const put: Operation = async (req, res) => {
+    const reserveApiModel = container.get<IReserveApiModel>('IReserveApiModel');
+
+    try {
+        await reserveApiModel.edit(parseInt(req.params.reserveId, 10), req.body as any);
+        api.responseJSON(res, 201, {
+            code: 201,
+            message: 'ok',
+        });
+    } catch (err) {
+        api.responseServerError(res, err.message);
+    }
+};
+
+put.apiDoc = {
+    summary: '手動予約更新',
+    tags: ['reserves'],
+    description: '手動予約を更新する',
+    parameters: [
+        {
+            $ref: '#/components/parameters/PathReserveId',
+        },
+    ],
+    requestBody: {
+        content: {
+            'application/json': {
+                schema: {
+                    $ref: '#/components/schemas/EditManualReserveOption',
+                },
+            },
+        },
+        required: true,
+    },
+    responses: {
+        201: {
+            description: '手動予約の更新に成功した',
+        },
+        default: {
+            description: '予期しないエラー',
+            content: {
+                'application/json': {
+                    schema: {
+                        $ref: '#/components/schemas/Error',
+                    },
+                },
+            },
+        },
+    },
+};
