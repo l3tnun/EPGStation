@@ -29,7 +29,7 @@ export default class ReserveApiModel implements IReserveApiModel {
      * @param option: GetReserveOption
      * @return Promise<apid.Reserves>
      */
-    public async get(option: apid.GetReserveOption): Promise<apid.Reserves> {
+    public async gets(option: apid.GetReserveOption): Promise<apid.Reserves> {
         // tslint:disable-next-line: typedef
         const [reserves, total] = await this.reserveDB.findAll(option);
 

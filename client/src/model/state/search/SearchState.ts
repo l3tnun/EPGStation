@@ -1155,7 +1155,7 @@ export default class SearchState implements ISearchState {
             throw new Error('RuleIdIsNull');
         }
 
-        const result = await this.reservesApiModel.get({
+        const result = await this.reservesApiModel.gets({
             type: 'all',
             isHalfWidth: this.settingModel.getSavedValue().isHalfWidthDisplayed,
             ruleId: this.ruleId,

@@ -24,7 +24,7 @@ export const get: Operation = async (req, res) => {
             option.limit = parseInt(req.query.limit as any, 10);
         }
 
-        api.responseJSON(res, 200, await reserveApiModel.get(option));
+        api.responseJSON(res, 200, await reserveApiModel.gets(option));
     } catch (err) {
         api.responseServerError(res, err.message);
     }

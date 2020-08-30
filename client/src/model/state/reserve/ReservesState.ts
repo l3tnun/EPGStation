@@ -34,7 +34,7 @@ export default class ReservesState implements IReservesState {
      * @param option: apid.GetReserveOption
      */
     public async fetchData(option: apid.GetReserveOption): Promise<void> {
-        const reserves = await this.reserveApiModel.get(option);
+        const reserves = await this.reserveApiModel.gets(option);
         this.total = reserves.total;
 
         const oldSelectedIndex: SelectedIndex = {};
