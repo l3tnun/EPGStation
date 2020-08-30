@@ -3,6 +3,63 @@ import IReserveApiModel from '../../../api/reserve/IReserveApiModel';
 import container from '../../../ModelContainer';
 import * as api from '../../api';
 
+export const get: Operation = async (req, res) => {
+    const reserveApiModel = container.get<IReserveApiModel>('IReserveApiModel');
+
+    try {
+        const reserve = await reserveApiModel.get(parseInt(req.params.reserveId, 10), req.query.isHalfWidth as any);
+        if (reserve === null) {
+            api.responseError(res, {
+                code: 404,
+                message: 'reserve is not found',
+            });
+        } else {
+            api.responseJSON(res, 200, reserve);
+        }
+    } catch (err) {
+        api.responseServerError(res, err.message);
+    }
+};
+
+get.apiDoc = {
+    summary: '指定された予約情報の取得',
+    tags: ['reserves'],
+    description: '指定された予約情報を取得する',
+    parameters: [
+        {
+            $ref: '#/components/parameters/PathReserveId',
+        },
+        {
+            $ref: '#/components/parameters/IsHalfWidth',
+        },
+    ],
+    responses: {
+        200: {
+            description: '指定された予約情報を取得しました',
+            content: {
+                'application/json': {
+                    schema: {
+                        $ref: '#/components/schemas/ReserveItem',
+                    },
+                },
+            },
+        },
+        404: {
+            description: 'Not Found',
+        },
+        default: {
+            description: '予期しないエラー',
+            content: {
+                'application/json': {
+                    schema: {
+                        $ref: '#/components/schemas/Error',
+                    },
+                },
+            },
+        },
+    },
+};
+
 export const del: Operation = async (req, res) => {
     const reserveApiModel = container.get<IReserveApiModel>('IReserveApiModel');
 

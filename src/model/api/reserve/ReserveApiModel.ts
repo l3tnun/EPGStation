@@ -25,6 +25,18 @@ export default class ReserveApiModel implements IReserveApiModel {
     }
 
     /**
+     * 指定した予約情報の取得
+     * @param reserveId: apid.ReserveId
+     * @param isHalfWidth: boolean 半角で取得するか
+     * @return Promise<apid.ReserveItem | null>
+     */
+    public async get(reserveId: apid.ReserveId, isHalfWidth: boolean): Promise<apid.ReserveItem | null> {
+        const reserve = await this.reserveDB.findId(reserveId);
+
+        return reserve === null ? null : this.toReserveItem(reserve, isHalfWidth);
+    }
+
+    /**
      * 予約情報の取得
      * @param option: GetReserveOption
      * @return Promise<apid.Reserves>
