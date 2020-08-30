@@ -72,6 +72,8 @@ import IRecordingState from './state/recording/IRecordingState';
 import RecordingState from './state/recording/RecordingState';
 import IReservesState from './state/reserve/IReservesState';
 import IReserveStateUtil from './state/reserve/IReserveStateUtil';
+import IManualReserveState from './state/reserve/manual/IManualReserveState';
+import ManualReserveState from './state/reserve/manual/ManualReserveState';
 import ReservesState from './state/reserve/ReservesState';
 import ReserveStateUtil from './state/reserve/ReserveStateUtil';
 import IRuleState from './state/rule/IRuleState';
@@ -226,4 +228,6 @@ export default (container: Container) => {
     container.bind<IAddEncodeState>('IAddEncodeState').to(AddEncodeState).inSingletonScope();
 
     container.bind<IDropLogDialogState>('IDropLogDialogState').to(DropLogDialogState).inSingletonScope();
+
+    container.bind<IManualReserveState>('IManualReserveState').to(ManualReserveState).inSingletonScope();
 };

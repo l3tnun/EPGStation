@@ -6,6 +6,7 @@ import Dashboard from './views/Dashboard.vue';
 import Encode from './views/Encode.vue';
 import Guide from './views/Guide.vue';
 import GuideSizeSetting from './views/GuideSizeSetting.vue';
+import ManualReserve from './views/ManualReserve.vue';
 import OnAir from './views/OnAir.vue';
 import Recorded from './views/Recorded.vue';
 import RecordedDetail from './views/RecordedDetail.vue';
@@ -51,6 +52,11 @@ export default new Router({
             path: '/reserves',
             name: 'reserves',
             component: Reserves,
+        },
+        {
+            path: '/reserves/manual',
+            name: 'manual-reserve',
+            component: ManualReserve,
         },
         {
             path: '/recording',

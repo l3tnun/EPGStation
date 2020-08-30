@@ -12,11 +12,27 @@ export default class ScheduleApiModel implements IScheduleApiModel {
     }
 
     /**
+     * 指定した program id の番組情報を取得する
+     * @param programId: apid.ProgramId
+     * @param isHalfWidth: boolean 半角で取得するか
+     * @return Promise<apid.ScheduleProgramItem>
+     */
+    public async getSchedule(programId: apid.ProgramId, isHalfWidth: boolean): Promise<apid.ScheduleProgramItem> {
+        const result = await this.repository.get(`/schedules/detail/${programId.toString(10)}`, {
+            params: {
+                isHalfWidth: isHalfWidth,
+            },
+        });
+
+        return <any>result.data;
+    }
+
+    /**
      * 番組表データの取得
      * @param option: ScheduleOption
      * @return Promise<apid.Schedule[]>
      */
-    public async getSchedule(option: apid.ScheduleOption): Promise<apid.Schedule[]> {
+    public async getSchedules(option: apid.ScheduleOption): Promise<apid.Schedule[]> {
         const result = await this.repository.get('/schedules', {
             params: option,
         });

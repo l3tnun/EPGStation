@@ -117,7 +117,7 @@ class GuideState implements IGuideState {
                 scheduleOption[option.type] = true;
             }
 
-            this.schedules = await this.scheduleApiModel.getSchedule(scheduleOption);
+            this.schedules = await this.scheduleApiModel.getSchedules(scheduleOption);
         } else {
             // 放送局指定
             this.timeLength = GuideState.SINGLE_STATION_LENGTH;

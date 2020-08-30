@@ -54,7 +54,14 @@
                             <!-- 閉じる -->
                             <v-btn color="blue darken-1" text v-on:click="dialogState.isOpen = false">閉じる</v-btn>
                             <!-- 詳細予約 or 手動予約編集 or ルール編集 -->
-                            <v-btn v-if="dialogState.reserve === null" color="blue darken-1" text>詳細</v-btn>
+                            <v-btn
+                                v-if="dialogState.reserve === null"
+                                color="blue darken-1"
+                                text
+                                v-on:click="manualReserve"
+                            >
+                                詳細
+                            </v-btn>
                             <v-btn
                                 v-else-if="typeof dialogState.reserve.ruleId !== 'undefined'"
                                 color="blue darken-1"
@@ -124,6 +131,26 @@ export default class ProgramDialog extends Vue {
     public isRemove: boolean = false;
 
     private snackbarState = container.get<ISnackbarState>('ISnackbarState');
+
+    /**
+     * 手動予約
+     */
+    public async manualReserve(): Promise<void> {
+        const program = this.dialogState.getProgram();
+        if (program === null) {
+            return;
+        }
+
+        this.dialogState.isOpen = false;
+        await Util.sleep(300);
+
+        await Util.move(this.$router, {
+            path: '/reserves/manual',
+            query: {
+                programId: program.id.toString(10),
+            },
+        });
+    }
 
     /**
      * ルール編集
