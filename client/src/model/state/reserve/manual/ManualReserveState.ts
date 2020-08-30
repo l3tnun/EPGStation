@@ -5,22 +5,84 @@ import GenreUtil from '../../../..//util/GenreUtil';
 import { AudioComponentType, AudioSamplingRate, VideoComponentType } from '../../../../lib/event';
 import DateUtil from '../../../../util/DateUtil';
 import IChannelModel from '../../../channels/IChannelModel';
-import IManualReserveState, { ProgramStateData } from './IManualReserveState';
+import IServerConfigModel from '../../../serverConfig/IServerConfigModel';
+import IManualReserveState, {
+    EncodedOption,
+    ManualReserveOption,
+    ManualSaveOption,
+    ProgramStateData,
+} from './IManualReserveState';
 
 @injectable()
 export default class ManualReserveState implements IManualReserveState {
     public isTimeSpecification: boolean = false;
+    public reserveOption: ManualReserveOption = {
+        allowEndLack: true,
+    };
+    public saveOption: ManualSaveOption = {
+        parentDirectoryName: null,
+        directory: null,
+        recordedFormat: null,
+    };
+    public encodeOption: EncodedOption = {
+        mode1: null,
+        encodeParentDirectoryName1: null,
+        directory1: null,
+        mode2: null,
+        encodeParentDirectoryName2: null,
+        directory2: null,
+        mode3: null,
+        encodeParentDirectoryName3: null,
+        directory3: null,
+        isDeleteOriginalAfterEncode: false,
+    };
+
+    // ルールオプションのアコーディオンの開閉を行う
+    public optionPanel: number[] = [];
 
     private scheduleApiModel: IScheduleApiModel;
     private channelModel: IChannelModel;
+    private serverConfig: IServerConfigModel;
     private programInfo: ProgramStateData | null = null;
 
     constructor(
         @inject('IScheduleApiModel') scheduleApiModel: IScheduleApiModel,
         @inject('IChannelModel') channelModel: IChannelModel,
+        @inject('IServerConfigModel') serverConfig: IServerConfigModel,
     ) {
         this.scheduleApiModel = scheduleApiModel;
         this.channelModel = channelModel;
+        this.serverConfig = serverConfig;
+    }
+
+    /**
+     * 各種オプションの初期化
+     */
+    public init(): void {
+        this.reserveOption = {
+            allowEndLack: true,
+        };
+
+        this.saveOption = {
+            parentDirectoryName: null,
+            directory: null,
+            recordedFormat: null,
+        };
+
+        this.encodeOption = {
+            mode1: null,
+            encodeParentDirectoryName1: null,
+            directory1: null,
+            mode2: null,
+            encodeParentDirectoryName2: null,
+            directory2: null,
+            mode3: null,
+            encodeParentDirectoryName3: null,
+            directory3: null,
+            isDeleteOriginalAfterEncode: false,
+        };
+
+        this.optionPanel = [0, 1, 2, 3, 6];
     }
 
     /**
@@ -160,5 +222,32 @@ export default class ManualReserveState implements IManualReserveState {
      */
     public getProgramInfo(): ProgramStateData | null {
         return this.programInfo;
+    }
+
+    /**
+     * 録画先ディレクトリの一覧を返す
+     * @return string[]
+     */
+    public getPrentDirectoryItems(): string[] {
+        const config = this.serverConfig.getConfig();
+
+        return config === null ? [] : config.recorded;
+    }
+
+    /**
+     * エンコードモード一覧を返す
+     * @return string
+     */
+    public getEncodeModeItems(): string[] {
+        const config = this.serverConfig.getConfig();
+
+        return config === null ? [] : config.encode;
+    }
+
+    /**
+     * エンコードに対応しているか
+     */
+    public isEnableEncodeMode(): boolean {
+        return this.getEncodeModeItems().length > 0;
     }
 }

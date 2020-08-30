@@ -4,12 +4,15 @@
         <transition name="page">
             <div ref="appContent" class="app-content manual-reserve pa-3 mx-auto">
                 <ManualReserveProgramInfo :program="manualReserveState.getProgramInfo()"></ManualReserveProgramInfo>
+                <div class="pt-2"></div>
+                <ManualReserveOption></ManualReserveOption>
             </div>
         </transition>
     </v-content>
 </template>
 
 <script lang="ts">
+import ManualReserveOption from '@/components/manualReserve/ManualReserveOption.vue';
 import ManualReserveProgramInfo from '@/components/manualReserve/ManualReserveProgramInfo.vue';
 import TitleBar from '@/components/titleBar/TitleBar.vue';
 import container from '@/model/ModelContainer';
@@ -28,6 +31,7 @@ Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
     components: {
         TitleBar,
         ManualReserveProgramInfo,
+        ManualReserveOption,
     },
 })
 export default class ManualReserve extends Vue {
@@ -73,6 +77,8 @@ export default class ManualReserve extends Vue {
 
     @Watch('$route', { immediate: true, deep: true })
     public onUrlChange(): void {
+        this.manualReserveState.init();
+
         this.$nextTick(async () => {
             // fetch data
             if (typeof this.$route.query.programId === 'string') {
