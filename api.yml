@@ -565,11 +565,6 @@ components:
                     type: array
                     items:
                         $ref: '#/components/schemas/SearchTime'
-                week:
-                    description:
-                        曜日指定 0x01, 0x02, 0x04, 0x08, 0x10, 0x20 ,0x40 が日〜土に対応するので and
-                        演算で曜日を指定する
-                    type: integer
                 isFree:
                     description: 無料放送か
                     type: boolean
@@ -600,14 +595,21 @@ components:
             description: 時刻範囲指定オプション
             type: object
             required:
-                - start
-                - range
+                - week
             properties:
                 start:
-                    description: 開始時刻 1 - 23
+                    description:
+                        開始時刻 1 - 23, 時刻予約の場合は 0 時を 0 とした 0 ~ (60 * 50 * 24) - 1
+                        秒までの開始時刻を指定する
                     type: integer
                 range:
-                    description: 開始時刻からの時刻範囲(時) 1 - 23
+                    description:
+                        開始時刻からの時刻範囲(時) 1 - 23, 時刻予約の場合は秒で時間の長さを指定する 1 ~ 60 * 50 * 24 秒
+                    type: integer
+                week:
+                    description:
+                        曜日指定 0x01, 0x02, 0x04, 0x08, 0x10, 0x20 ,0x40 が日〜土に対応するので and
+                        演算で曜日を指定する
                     type: integer
 
         SearchPeriod:

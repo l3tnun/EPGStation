@@ -362,7 +362,6 @@ export default class ProgramDB implements IProgramDB {
         this.setChannelQuery(option.searchOption, query);
         this.setGenresQuery(option.searchOption, query);
         this.setTimesQuery(option.searchOption, query);
-        this.setWeekQuery(option.searchOption, query);
         this.setFreeQuery(option.searchOption, query);
         this.setDurationMinQuery(option.searchOption, query);
         this.setDurationMaxQuery(option.searchOption, query);
@@ -616,7 +615,7 @@ export default class ProgramDB implements IProgramDB {
     }
 
     /**
-     * 時刻レンジの検索オプションをセットする
+     * 曜日と時刻レンジの検索オプションをセットする
      * @param searchOption: apid.RuleSearchOption
      * @param query: FindQuery
      */
@@ -627,63 +626,63 @@ export default class ProgramDB implements IProgramDB {
 
         const strs: string[] = [];
         for (let i = 0; i < option.times.length; i++) {
-            const baseColumnName = `time${i}`;
-            const endTime = option.times[i].start + option.times[i].range - 1;
-            if (option.times[i].start === endTime) {
-                strs.push(`startHour = :${baseColumnName}`);
-                query.param[baseColumnName] = option.times[i].start;
+            // 曜日
+            const weeks: number[] = [];
+            if ((option.times[i].week & 0x01) !== 0) {
+                weeks.push(0); // 日
+            }
+            if ((option.times[i].week & 0x02) !== 0) {
+                weeks.push(1); // 月
+            }
+            if ((option.times[i].week & 0x04) !== 0) {
+                weeks.push(2); // 火
+            }
+            if ((option.times[i].week & 0x08) !== 0) {
+                weeks.push(3); // 水
+            }
+            if ((option.times[i].week & 0x10) !== 0) {
+                weeks.push(4); // 木
+            }
+            if ((option.times[i].week & 0x20) !== 0) {
+                weeks.push(5); // 金
+            }
+            if ((option.times[i].week & 0x40) !== 0) {
+                weeks.push(6); // 土
+            }
+
+            // 曜日情報がなければ無視
+            if (weeks.length === 0) {
                 continue;
             }
 
-            const times: number[] = [];
-            for (let j = option.times[i].start; j <= endTime; j++) {
-                times.push(i % 24);
+            // 曜日情報を query に追加
+            const weekBaseColumnName = `week${i}`;
+            let queryStr = `week in (:...${weekBaseColumnName})`;
+            query.param[weekBaseColumnName] = weeks;
+
+            // 時刻レンジを query に追加
+            const start = option.times[i].start;
+            const range = option.times[i].range;
+            if (typeof start !== 'undefined' && typeof range !== 'undefined') {
+                const startHourBaseColumnName = `time${i}`;
+                const endTime = start + range - 1;
+                if (start === endTime) {
+                    queryStr += ` and startHour = :${startHourBaseColumnName}`;
+                    query.param[startHourBaseColumnName] = start;
+                } else {
+                    const times: number[] = [];
+                    for (let j = start; j <= endTime; j++) {
+                        times.push(j % 24);
+                    }
+                    queryStr += `and startHour in (:...${startHourBaseColumnName})`;
+                    query.param[startHourBaseColumnName] = times;
+                }
             }
-            strs.push(`startHour in (:...${baseColumnName})`);
-            query.param[baseColumnName] = times;
+
+            strs.push(`(${queryStr})`);
         }
 
         query.strs.push(DBUtil.createOrQuery(strs));
-    }
-
-    /**
-     * 曜日の検索オプションをセットする
-     * @param searchOption: apid.RuleSearchOption
-     * @param query: FindQuery
-     */
-    private setWeekQuery(option: apid.RuleSearchOption, query: FindQuery): void {
-        if (typeof option.week === 'undefined') {
-            return;
-        }
-
-        const weeks: number[] = [];
-        if ((option.week & 0x01) !== 0) {
-            weeks.push(0); // 日
-        }
-        if ((option.week & 0x02) !== 0) {
-            weeks.push(1); // 月
-        }
-        if ((option.week & 0x04) !== 0) {
-            weeks.push(2); // 火
-        }
-        if ((option.week & 0x08) !== 0) {
-            weeks.push(3); // 水
-        }
-        if ((option.week & 0x10) !== 0) {
-            weeks.push(4); // 木
-        }
-        if ((option.week & 0x20) !== 0) {
-            weeks.push(5); // 金
-        }
-        if ((option.week & 0x40) !== 0) {
-            weeks.push(6); // 土
-        }
-
-        if (weeks.length === 0) {
-            return;
-        }
-
-        this.createInQuery(query, 'week', weeks);
     }
 
     /**

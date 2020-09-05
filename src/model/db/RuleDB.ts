@@ -200,7 +200,6 @@ export default class RuleDB implements IRuleDB {
                     : JSON.stringify(rule.searchOption.channelIds),
             genres: typeof rule.searchOption.genres === 'undefined' ? null : JSON.stringify(rule.searchOption.genres),
             times: typeof rule.searchOption.times === 'undefined' ? null : JSON.stringify(rule.searchOption.times),
-            week: typeof rule.searchOption.week === 'undefined' ? null : rule.searchOption.week,
             isFree: !!rule.searchOption.isFree,
             durationMin: typeof rule.searchOption.durationMin === 'undefined' ? null : rule.searchOption.durationMin,
             durationMax: typeof rule.searchOption.durationMax === 'undefined' ? null : rule.searchOption.durationMax,
@@ -323,9 +322,6 @@ export default class RuleDB implements IRuleDB {
         }
         if (rule.times !== null) {
             convertedRule.searchOption.times = JSON.parse(rule.times);
-        }
-        if (rule.week !== null) {
-            convertedRule.searchOption.week = rule.week;
         }
         if (rule.durationMin !== null) {
             convertedRule.searchOption.durationMin = rule.durationMin;

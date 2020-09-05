@@ -217,10 +217,12 @@ export interface Genre {
 export interface SearchTime {
     // program id 予約の場合は 0 ~ 23 時の開始時刻を指定する
     // 時刻予約の場合は 0 時を 0 とした 0 ~ (60 * 50 * 24) - 1 秒までの開始時刻を指定する
-    start: number;
+    start?: number;
     // program id 予約の場合は 1 ~ 23 時間の長さを指定する
     // 時刻予約の場合は秒で時間の長さを指定する 1 ~ 60 * 50 * 24 秒
-    range: number;
+    range?: number;
+    // 曜日指定 0x01, 0x02, 0x04, 0x08, 0x10, 0x20 ,0x40 が日〜土に対応するので and 演算で曜日を指定する
+    week: number;
 }
 
 /**
@@ -254,7 +256,6 @@ export interface RuleSearchOption {
     channelIds?: ChannelId[]; // channels ids
     genres?: Genre[];
     times?: SearchTime[]; // 開始時間からの有効時間
-    week?: number; // 曜日
     isFree?: boolean; // 無料放送か
     durationMin?: number; // 番組最小時間
     durationMax?: number; // 番組最大時間

@@ -372,16 +372,18 @@ export default class SearchState implements ISearchState {
             throw new Error('timesIsUndefined');
         }
 
-        if (typeof searchOption.week === 'undefined') {
-            throw new Error('WeekIsUndefined');
+        for (const time of searchOption.times) {
+            if (typeof time.start === 'undefined' || typeof time.range === 'undefined') {
+                throw new Error('TimeOptionError');
+            }
         }
 
         this.timeReserveOption = {
             keyword: searchOption.keyword,
             channel: searchOption.channelIds[0],
-            startTime: this.convertNumToTimepickerStr(searchOption.times[0].start),
-            endTime: this.convertNumToTimepickerStr(searchOption.times[0].start + searchOption.times[0].range),
-            week: this.convertRuleWeekToWeek(searchOption.week),
+            startTime: this.convertNumToTimepickerStr(searchOption.times[0].start!),
+            endTime: this.convertNumToTimepickerStr(searchOption.times[0].start! + searchOption.times[0].range!),
+            week: this.convertRuleWeekToWeek(searchOption.times[0].week),
         };
     }
 
@@ -445,11 +447,7 @@ export default class SearchState implements ISearchState {
         if (typeof searchOption.times !== 'undefined' && searchOption.times.length > 0) {
             this.searchOption.startTime = searchOption.times[0].start;
             this.searchOption.rangeTime = searchOption.times[0].range;
-        }
-
-        // 時間 (week)
-        if (typeof searchOption.week !== 'undefined') {
-            this.searchOption.week = this.convertRuleWeekToWeek(searchOption.week);
+            this.searchOption.week = this.convertRuleWeekToWeek(searchOption.times[0].week);
         }
 
         // 長さ
@@ -1027,17 +1025,15 @@ export default class SearchState implements ISearchState {
         }
 
         // time
+        ruleOption.times = [
+            {
+                week: this.convertWeekToRuleWeek(option.week),
+            },
+        ];
         if (typeof option.startTime !== 'undefined' && typeof option.rangeTime !== 'undefined') {
-            ruleOption.times = [
-                {
-                    start: option.startTime,
-                    range: option.rangeTime,
-                },
-            ];
+            ruleOption.times[0].start = option.startTime;
+            ruleOption.times[0].range = option.rangeTime;
         }
-
-        // week
-        ruleOption.week = this.convertWeekToRuleWeek(option.week);
 
         // isFree
         if (option.isFree === true) {
@@ -1290,9 +1286,9 @@ export default class SearchState implements ISearchState {
                 {
                     start: start,
                     range: start <= end ? end - start : 24 * 60 * 60 - (start - end),
+                    week: this.convertWeekToRuleWeek(option.week),
                 },
             ],
-            week: this.convertWeekToRuleWeek(option.week),
         };
     }
 

@@ -556,28 +556,31 @@ class ReservationManageModel implements IReservationManageModel {
                 if (
                     typeof rule.searchOption.keyword === 'undefined' ||
                     typeof rule.searchOption.channelIds === 'undefined' ||
-                    typeof rule.searchOption.times === 'undefined' ||
-                    typeof rule.searchOption.week === 'undefined'
+                    typeof rule.searchOption.times === 'undefined'
                 ) {
                     finalize();
                     this.log.system.error(`rule search option error: ${ruleId}`);
                     throw new Error('RuleSearchOptionError');
                 }
 
-                // 曜日情報
-                const weeks: boolean[] = [
-                    (rule.searchOption.week & 0x01) !== 0, // 日
-                    (rule.searchOption.week & 0x02) !== 0, // 月
-                    (rule.searchOption.week & 0x04) !== 0, // 火
-                    (rule.searchOption.week & 0x08) !== 0, // 水
-                    (rule.searchOption.week & 0x10) !== 0, // 木
-                    (rule.searchOption.week & 0x20) !== 0, // 金
-                    (rule.searchOption.week & 0x40) !== 0, // 土
-                ];
-                const baseTime = new Date(DateUtil.format(new Date(), 'yyyy/MM/dd 00:00:00 +0900')).getTime();
-
                 // times 準備
+                const baseTime = new Date(DateUtil.format(new Date(), 'yyyy/MM/dd 00:00:00 +0900')).getTime();
                 for (const time of rule.searchOption.times) {
+                    if (typeof time.start === 'undefined' || typeof time.range === 'undefined') {
+                        throw new Error('RuleSearchTimesOptionError');
+                    }
+
+                    // 曜日情報
+                    const weeks: boolean[] = [
+                        (time.week & 0x01) !== 0, // 日
+                        (time.week & 0x02) !== 0, // 月
+                        (time.week & 0x04) !== 0, // 火
+                        (time.week & 0x08) !== 0, // 水
+                        (time.week & 0x10) !== 0, // 木
+                        (time.week & 0x20) !== 0, // 金
+                        (time.week & 0x40) !== 0, // 土
+                    ];
+
                     for (let i = 0; i < 8; i++) {
                         // 1 週間分の予約情報を作成する
                         const startAt = baseTime + 1000 * 60 * 60 * 24 * i + time.start * 1000;

@@ -137,13 +137,7 @@ export default class Rule extends BaseEntity {
         type: 'text',
         nullable: true,
     })
-    public times: string | null = null; // 時刻範囲 { start: number, range: number } の array を JSON.stringify したもの
-
-    @Column({
-        type: 'integer',
-        nullable: true,
-    })
-    public week: number | null = null; // 曜日
+    public times: string | null = null; // 時刻範囲 { start: number, range: number, week: number } の array を JSON.stringify したもの
 
     @Column({
         default: false,
