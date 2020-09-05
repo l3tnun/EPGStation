@@ -15,32 +15,46 @@
                 ></ManualReserveProgramInfo>
                 <ManualTimeReserveOption v-else :isEditMode="isEditMode"></ManualTimeReserveOption>
                 <div class="pt-2"></div>
-                <ManualReserveOption
+                <ManualReserveOptionComponent
                     :isEditMode="isEditMode"
                     v-on:cancel="cancel"
                     v-on:add="add"
                     v-on:update="update"
-                ></ManualReserveOption>
+                ></ManualReserveOptionComponent>
             </div>
         </transition>
     </v-content>
 </template>
 
 <script lang="ts">
-import ManualReserveOption from '@/components/manualReserve/ManualReserveOption.vue';
+import ManualReserveOptionComponent from '@/components/manualReserve/ManualReserveOption.vue';
 import ManualReserveProgramInfo from '@/components/manualReserve/ManualReserveProgramInfo.vue';
 import ManualTimeReserveOption from '@/components/manualReserve/ManualTimeReserveOption.vue';
 import TitleBar from '@/components/titleBar/TitleBar.vue';
 import container from '@/model/ModelContainer';
 import ISocketIOModel from '@/model/socketio/ISocketIOModel';
 import IScrollPositionState from '@/model/state/IScrollPositionState';
-import IManualReserveState from '@/model/state/reserve/manual/IManualReserveState';
+import IManualReserveState, {
+    EncodedOption,
+    ManualReserveOption,
+    ManualSaveOption,
+    TimeSpecifiedOption,
+} from '@/model/state/reserve/manual/IManualReserveState';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
 import ISettingStorageModel, { ISettingValue } from '@/model/storage/setting/ISettingStorageModel';
 import Util from '@/util/Util';
+import { cloneDeep } from 'lodash';
 import { Component, Vue, Watch } from 'vue-property-decorator';
 import { Route } from 'vue-router';
 import * as apid from '../../../api';
+
+interface PageInfo {
+    isTimeSpecification: boolean;
+    timeSpecifiedOption: TimeSpecifiedOption;
+    reserveOption: ManualReserveOption;
+    saveOption: ManualSaveOption;
+    encodeOption: EncodedOption;
+}
 
 Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
 
@@ -49,7 +63,7 @@ Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
         TitleBar,
         ManualReserveProgramInfo,
         ManualTimeReserveOption,
-        ManualReserveOption,
+        ManualReserveOptionComponent,
     },
 })
 export default class ManualReserve extends Vue {
@@ -158,7 +172,23 @@ export default class ManualReserve extends Vue {
      * ページ情報を保存する
      */
     private savePageInfo(): void {
-        // TODO 実装
+        // 編集の場合は何もしない
+        if (this.isEditMode === true) {
+            return;
+        }
+
+        try {
+            const pageInfo: PageInfo = {
+                isTimeSpecification: this.manualReserveState.isTimeSpecification,
+                timeSpecifiedOption: cloneDeep(this.manualReserveState.timeSpecifiedOption),
+                reserveOption: cloneDeep(this.manualReserveState.reserveOption),
+                saveOption: cloneDeep(this.manualReserveState.saveOption),
+                encodeOption: cloneDeep(this.manualReserveState.encodeOption),
+            };
+            this.scrollState.saveScrollData(pageInfo);
+        } catch (err) {
+            console.error(err);
+        }
     }
 
     @Watch('$route', { immediate: true, deep: true })
@@ -211,6 +241,18 @@ export default class ManualReserve extends Vue {
                 // 予約情報取得
                 this.programId = parseInt(this.$route.query.programId, 10);
                 await this.fetchProgramInfo().catch(err => {});
+
+                if (this.scrollState.isNeedRestoreHistory === true) {
+                    // ページ情報復元
+                    const pageInfo = this.scrollState.getScrollData<PageInfo>();
+                    if (pageInfo !== null) {
+                        this.manualReserveState.isTimeSpecification = pageInfo.isTimeSpecification;
+                        this.manualReserveState.timeSpecifiedOption = cloneDeep(pageInfo.timeSpecifiedOption);
+                        this.manualReserveState.reserveOption = cloneDeep(pageInfo.reserveOption);
+                        this.manualReserveState.saveOption = cloneDeep(pageInfo.saveOption);
+                        this.manualReserveState.encodeOption = cloneDeep(pageInfo.encodeOption);
+                    }
+                }
             }
 
             await finnalize();
