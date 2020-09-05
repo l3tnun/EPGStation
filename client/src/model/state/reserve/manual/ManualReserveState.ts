@@ -7,16 +7,25 @@ import IReservesApiModel from '../../../api/reserves/IReservesApiModel';
 import IScheduleApiModel from '../../../api/schedule/IScheduleApiModel';
 import IChannelModel from '../../../channels/IChannelModel';
 import IServerConfigModel from '../../../serverConfig/IServerConfigModel';
+import ISettingStorageModel from '../../../storage/setting/ISettingStorageModel';
 import IManualReserveState, {
     EncodedOption,
     ManualReserveOption,
     ManualSaveOption,
     ProgramStateData,
+    SelectorItem,
+    TimeSpecifiedOption,
 } from './IManualReserveState';
 
 @injectable()
 export default class ManualReserveState implements IManualReserveState {
     public isTimeSpecification: boolean = false;
+    public timeSpecifiedOption: TimeSpecifiedOption = {
+        name: null,
+        channelId: null,
+        startAt: null,
+        endAt: null,
+    };
     public reserveOption: ManualReserveOption = {
         allowEndLack: true,
     };
@@ -45,6 +54,7 @@ export default class ManualReserveState implements IManualReserveState {
     private reservesApiModel: IReservesApiModel;
     private channelModel: IChannelModel;
     private serverConfig: IServerConfigModel;
+    private settingModel: ISettingStorageModel;
     private programInfo: ProgramStateData | null = null;
 
     constructor(
@@ -52,11 +62,13 @@ export default class ManualReserveState implements IManualReserveState {
         @inject('IReservesApiModel') reservesApiModel: IReservesApiModel,
         @inject('IChannelModel') channelModel: IChannelModel,
         @inject('IServerConfigModel') serverConfig: IServerConfigModel,
+        @inject('ISettingStorageModel') settingModel: ISettingStorageModel,
     ) {
         this.scheduleApiModel = scheduleApiModel;
         this.reservesApiModel = reservesApiModel;
         this.channelModel = channelModel;
         this.serverConfig = serverConfig;
+        this.settingModel = settingModel;
     }
 
     /**
@@ -64,6 +76,13 @@ export default class ManualReserveState implements IManualReserveState {
      */
     public init(): void {
         this.isTimeSpecification = false;
+
+        this.timeSpecifiedOption = {
+            name: null,
+            channelId: null,
+            startAt: null,
+            endAt: null,
+        };
 
         this.reserveOption = {
             allowEndLack: true,
@@ -92,11 +111,35 @@ export default class ManualReserveState implements IManualReserveState {
     }
 
     /**
+     * programInfo から手動時刻オプションを設定する
+     * programInfo が null の場合はエラーとなる
+     */
+    public setTimeSpecifiedOption(): void {
+        if (this.programInfo === null) {
+            throw new Error('ProgramInfoIsNull');
+        }
+
+        this.timeSpecifiedOption.name = this.programInfo.programItem.name;
+        this.timeSpecifiedOption.channelId = this.programInfo.programItem.channelId;
+        this.timeSpecifiedOption.startAt = new Date(this.programInfo.programItem.startAt);
+        this.timeSpecifiedOption.endAt = new Date(this.programInfo.programItem.endAt);
+    }
+
+    /**
      * apid.ReserveItem の内容を反映させる
      * @param reserveItem: apid.ReserveItem
      */
     public setOptions(reserveItem: apid.ReserveItem): void {
         this.isTimeSpecification = reserveItem.isTimeSpecified;
+
+        if (reserveItem.isTimeSpecified === true) {
+            this.timeSpecifiedOption = {
+                name: reserveItem.name,
+                channelId: reserveItem.channelId,
+                startAt: new Date(reserveItem.startAt),
+                endAt: new Date(reserveItem.endAt),
+            };
+        }
 
         this.reserveOption.allowEndLack = reserveItem.allowEndLack;
         if (typeof reserveItem.parentDirectoryName !== 'undefined') {
@@ -292,6 +335,19 @@ export default class ManualReserveState implements IManualReserveState {
     }
 
     /**
+     * 放送局 item を返す
+     * @return SelectorItem[]
+     */
+    public getChannelItems(): SelectorItem[] {
+        return this.channelModel.getChannels(this.settingModel.getSavedValue().isHalfWidthDisplayed).map(c => {
+            return {
+                text: c.name,
+                value: c.id,
+            };
+        });
+    }
+
+    /**
      * 取得した番組情報を返す
      * @return ProgramStateData
      */
@@ -356,7 +412,22 @@ export default class ManualReserveState implements IManualReserveState {
         };
         if (this.isTimeSpecification === true) {
             // 時刻予約
-            // TODO 実装
+            if (this.timeSpecifiedOption.name === null || this.timeSpecifiedOption.name.length === 0) {
+                throw new Error('TimeSpecifiedOptionNameError');
+            }
+            if (this.timeSpecifiedOption.channelId === null) {
+                throw new Error('TimeSpecifiedOptionChannelIdError');
+            }
+            if (this.timeSpecifiedOption.startAt === null || this.timeSpecifiedOption.endAt === null) {
+                throw new Error('TimeSpecifiedOptionTimeError');
+            }
+
+            result.timeSpecifiedOption = {
+                name: this.timeSpecifiedOption.name,
+                channelId: this.timeSpecifiedOption.channelId,
+                startAt: this.timeSpecifiedOption.startAt.getTime(),
+                endAt: this.timeSpecifiedOption.endAt.getTime(),
+            };
         } else {
             if (this.programInfo === null) {
                 throw new Error('ProgramIdIsNull');

@@ -20,6 +20,21 @@ export interface ProgramStateData {
     programItem: apid.ScheduleProgramItem;
 }
 
+export interface SelectorItem {
+    text: string;
+    value: number;
+}
+
+/**
+ * 手動時刻予約オプション
+ */
+export interface TimeSpecifiedOption {
+    name: string | null;
+    channelId: apid.ChannelId | null;
+    startAt: Date | null;
+    endAt: Date | null;
+}
+
 /**
  * 予約オプション
  */
@@ -54,15 +69,18 @@ export interface EncodedOption {
 
 export default interface IManualReserveState {
     isTimeSpecification: boolean;
+    timeSpecifiedOption: TimeSpecifiedOption;
     reserveOption: ManualReserveOption;
     saveOption: ManualSaveOption;
     encodeOption: EncodedOption;
     optionPanel: number[];
     init(): void;
+    setTimeSpecifiedOption(): void;
     setOptions(reserveItem: apid.ReserveItem): void;
     fetchProgramInfo(programId: apid.ProgramId, isHalfWidth: boolean): Promise<void>;
     getReserveItem(reserveId: apid.ReserveId, isHalfWidth: boolean): Promise<apid.ReserveItem>;
     getProgramInfo(): ProgramStateData | null;
+    getChannelItems(): SelectorItem[];
     getPrentDirectoryItems(): string[];
     getEncodeModeItems(): string[];
     isEnableEncodeMode(): boolean;

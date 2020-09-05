@@ -3,7 +3,17 @@
         <TitleBar ref="title" title="番組詳細予約"></TitleBar>
         <transition name="page">
             <div ref="appContent" class="app-content manual-reserve pa-3 mx-auto">
-                <ManualReserveProgramInfo :program="manualReserveState.getProgramInfo()"></ManualReserveProgramInfo>
+                <v-switch
+                    v-model="manualReserveState.isTimeSpecification"
+                    :disabled="isEditMode === true"
+                    label="時刻指定"
+                    class="my-3"
+                ></v-switch>
+                <ManualReserveProgramInfo
+                    v-if="manualReserveState.isTimeSpecification === false"
+                    :program="manualReserveState.getProgramInfo()"
+                ></ManualReserveProgramInfo>
+                <ManualTimeReserveOption v-else :isEditMode="isEditMode"></ManualTimeReserveOption>
                 <div class="pt-2"></div>
                 <ManualReserveOption
                     :isEditMode="isEditMode"
@@ -19,6 +29,7 @@
 <script lang="ts">
 import ManualReserveOption from '@/components/manualReserve/ManualReserveOption.vue';
 import ManualReserveProgramInfo from '@/components/manualReserve/ManualReserveProgramInfo.vue';
+import ManualTimeReserveOption from '@/components/manualReserve/ManualTimeReserveOption.vue';
 import TitleBar from '@/components/titleBar/TitleBar.vue';
 import container from '@/model/ModelContainer';
 import ISocketIOModel from '@/model/socketio/ISocketIOModel';
@@ -37,6 +48,7 @@ Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
     components: {
         TitleBar,
         ManualReserveProgramInfo,
+        ManualTimeReserveOption,
         ManualReserveOption,
     },
 })
@@ -222,6 +234,8 @@ export default class ManualReserve extends Vue {
                 console.error(err);
                 throw err;
             });
+
+        this.manualReserveState.setTimeSpecifiedOption();
     }
 }
 </script>
