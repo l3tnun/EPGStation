@@ -4,6 +4,9 @@ import * as Enums from '../Enums';
 export interface RecordedDirInfo {
     name: string;
     path: string;
+    limitThreshold?: number; // 空き容量限界閾値 (MB)
+    action?: 'remove' | 'none'; // 空き容量限界値を超えたときの動作
+    limitCmd?: string; // 空き容量限界値を超えたときに実行するコマンド
 }
 
 export interface URLSchemeInfo {
@@ -87,6 +90,9 @@ export default interface IConfigFile {
 
     // 録画履歴保存期間
     recordedHistoryRetentionPeriodDays: number;
+
+    // ストレージ空き容量チェック間隔 (秒)
+    storageLimitCheckIntervalTime: number;
 
     // サムネイル
     thumbnail: string;

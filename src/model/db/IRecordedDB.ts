@@ -23,4 +23,5 @@ export default interface IRecordedDB {
     findRuleList(): Promise<apid.RecordedRuleListItem[]>;
     findChannelList(): Promise<apid.RecordedChannelListItem[]>;
     findGenreList(): Promise<apid.RecordedGenreListItem[]>;
+    findOld(): Promise<Recorded | null>;
 }

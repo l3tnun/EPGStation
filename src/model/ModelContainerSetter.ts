@@ -118,6 +118,8 @@ import ReservationManageModel from './operator/reservation/ReservationManageMode
 import ReserveOptionChecker from './operator/ReserveOptionChecker';
 import IRuleManageModel from './operator/rule/IRuleManageModel';
 import RuleManageModel from './operator/rule/RuleManageModel';
+import IStorageManageModel from './operator/storage/IStorageManageModel';
+import StorageManageModel from './operator/storage/StorageManageModel';
 import IThumbnailManageModel from './operator/thumbnail/IThumbnailManageModel';
 import ThumbnailManageModel from './operator/thumbnail/ThumbnailManageModel';
 import PromiseQueue from './PromiseQueue';
@@ -252,6 +254,8 @@ export const set = (container: Container): void => {
     container.bind<IRecordedTagManadeModel>('IRecordedTagManadeModel').to(RecordedTagManadeModel).inSingletonScope();
 
     container.bind<IThumbnailManageModel>('IThumbnailManageModel').to(ThumbnailManageModel).inSingletonScope();
+
+    container.bind<IStorageManageModel>('IStorageManageModel').to(StorageManageModel).inSingletonScope();
 
     container.bind<IEventSetter>('IEventSetter').to(EventSetter).inSingletonScope();
 

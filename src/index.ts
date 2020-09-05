@@ -14,6 +14,7 @@ import container from './model/ModelContainer';
 import * as containerSetter from './model/ModelContainerSetter';
 import IRecordingManageModel from './model/operator/recording/IRecordingManageModel';
 import IReservationManageModel from './model/operator/reservation/IReservationManageModel';
+import IStorageManageModel from './model/operator/storage/IStorageManageModel';
 install();
 
 containerSetter.set(container);
@@ -74,6 +75,9 @@ const runOperator = async () => {
     const tuners = await client.getTuners();
     reservationManageModel.setTuners(tuners);
     recordingManager.setTuner(tuners);
+
+    const storageManageModel = container.get<IStorageManageModel>('IStorageManageModel');
+    storageManageModel.start();
 };
 
 /**

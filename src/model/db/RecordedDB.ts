@@ -410,4 +410,27 @@ export default class RecordedDB implements IRecordedDB {
             return queryBuilder.getRawMany();
         });
     }
+
+    /**
+     * 一番古い番組を返す
+     * @return Promise<Recorded | null>
+     */
+    public async findOld(): Promise<Recorded | null> {
+        const connection = await this.op.getConnection();
+
+        const queryBuilder = connection
+            .getRepository(Recorded)
+            .createQueryBuilder('recorded')
+            .orderBy('recorded.startAt', 'ASC')
+            .orderBy('recorded.id', 'ASC')
+            .leftJoinAndSelect('recorded.videoFiles', 'videoFiles')
+            .leftJoinAndSelect('recorded.thumbnails', 'thumbnails')
+            .leftJoinAndSelect('recorded.dropLogFile', 'dropLogFile')
+            .leftJoinAndSelect('recorded.tags', 'tags');
+        const result = await this.promieRetry.run(() => {
+            return queryBuilder.getOne();
+        });
+
+        return typeof result === 'undefined' ? null : result;
+    }
 }

@@ -153,6 +153,7 @@ namespace Configuration {
             },
         ],
         recordedHistoryRetentionPeriodDays: 90,
+        storageLimitCheckIntervalTime: 60,
         thumbnail: path.join(__dirname, '..', '..', 'thumbnail'),
         thumbnailCmd:
             '%FFMPEG% -ss %THUMBNAIL_POSITION% -y -i %INPUT% -vframes 1 -f image2 -s %THUMBNAIL_SIZE% %OUTPUT%',
