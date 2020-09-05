@@ -24,6 +24,8 @@ import IRuleApiModel from './api/rule/IRuleApiModel';
 import RuleApiModel from './api/rule/RuleApiModel';
 import IScheduleApiModel from './api/schedule/IScheduleApiModel';
 import ScheduleApiModel from './api/schedule/ScheduleApiModel';
+import IStorageApiModel from './api/storage/IStorageApiModel';
+import StorageApiModel from './api/storage/StorageApiModel';
 import IStreamApiModel from './api/stream/IStreamApiModel';
 import StreamApiModel from './api/stream/StreamApiModel';
 import IThumbnailApiModel from './api/thumbnail/IThumbnailApiModel';
@@ -367,4 +369,6 @@ export const set = (container: Container): void => {
     container.bind<IStreamManageModel>('IStreamManageModel').to(StreamManageModel).inSingletonScope();
 
     container.bind<IStreamApiModel>('IStreamApiModel').to(StreamApiModel).inSingletonScope();
+
+    container.bind<IStorageApiModel>('IStorageApiModel').to(StorageApiModel).inSingletonScope();
 };

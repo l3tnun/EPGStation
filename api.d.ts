@@ -664,3 +664,26 @@ export interface VideoFileStreamInfoItem extends LiveStreamInfoItem {
 export interface StreamInfo {
     items: (LiveStreamInfoItem | VideoFileStreamInfoItem)[];
 }
+
+/**
+ * ディスク使用情報
+ */
+export interface DiskUsage {
+    available: number;
+    used: number;
+    total: number;
+}
+
+/**
+ * ディスク使用状況 + 名称
+ */
+export interface StorageItem extends DiskUsage {
+    name: string;
+}
+
+/**
+ * ディスク情報
+ */
+export interface StorageInfo {
+    items: StorageItem[];
+}

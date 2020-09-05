@@ -1336,6 +1336,39 @@ components:
                 streamId:
                     $ref: '#/components/schemas/StreamId'
 
+        StorageItem:
+            description: ストレージ使用状況
+            type: object
+            required:
+                - name
+                - available
+                - used
+                - total
+            properties:
+                name:
+                    description: ディスク名
+                    type: string
+                available:
+                    description: 空き容量 (byte)
+                    type: integer
+                used:
+                    description: 使用量 (byte)
+                    type: integer
+                total:
+                    description: 総容量 (byte)
+                    type: integer
+
+        StorageInfo:
+            description: ストレージ情報
+            type: object
+            required:
+                - items
+            properties:
+                items:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/StorageItem'
+
         Error:
             type: object
             readOnly: true
