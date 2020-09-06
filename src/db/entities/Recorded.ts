@@ -45,6 +45,11 @@ export default class Recorded extends BaseEntity {
     public channelId!: number;
 
     @Column({
+        default: false,
+    })
+    public isProtected!: boolean;
+
+    @Column({
         type: 'bigint',
     })
     public startAt!: number;
