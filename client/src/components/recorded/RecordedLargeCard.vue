@@ -26,7 +26,14 @@
             <div class="text caption font-weight-light">{{ item.display.channelName }}</div>
             <div class="text caption font-weight-light">{{ item.display.time }} ({{ item.display.duration }} m)</div>
             <div
-                v-if="
+                v-if="isShowDropInfo === true && typeof item.display.drop !== 'undefined'"
+                class="text caption font-weight-light"
+                v-bind:class="{ droped: item.display.hasDrop === true }"
+            >
+                {{ item.display.drop }}
+            </div>
+            <div
+                v-else-if="
                     typeof item.display.description === 'undefined' ||
                     item.display.description.replace(/\s+/g, '').length === 0
                 "
@@ -60,6 +67,9 @@ export default class RecordedLargeCard extends Vue {
     @Prop({ required: true })
     public isEditMode!: boolean;
 
+    @Prop({ required: true })
+    public isShowDropInfo!: boolean;
+
     public gotoDetail(): void {
         if (this.isEditMode === true) {
             this.$emit('selected', this.item.recordedItem.id);
@@ -82,6 +92,10 @@ export default class RecordedLargeCard extends Vue {
         overflow: hidden
         text-overflow: ellipsis
         white-space: nowrap
+
+    .droped
+        color: red
+        font-weight: bold !important
 
     .dummy
         visibility: hidden

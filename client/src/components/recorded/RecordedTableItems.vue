@@ -52,6 +52,9 @@ export default class RecordedTableItems extends Vue {
     @Prop({ required: true })
     public isEditMode!: boolean;
 
+    @Prop({ required: true })
+    public isShowDropInfo!: boolean;
+
     public gotoDetail(item: RecordedDisplayData): void {
         if (this.isEditMode === true) {
             this.$emit('selected', item.recordedItem.id);

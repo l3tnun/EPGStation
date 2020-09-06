@@ -17,6 +17,7 @@ export interface ISettingValue {
     recordedLength: number;
     isShowTableMode: boolean;
     isPreferredPlayingOnWeb: boolean;
+    isShowDropInfoInsteadOfDescription: boolean;
     shouldUseRecordedViewURLScheme: boolean;
     recordedViewURLScheme: string | null;
     shouldUseRecordedDownloadURLScheme: boolean;

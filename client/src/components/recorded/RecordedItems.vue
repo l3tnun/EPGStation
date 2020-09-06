@@ -10,6 +10,7 @@
                     :width="largeCardWidth"
                     :item="r"
                     :isEditMode="isEditMode"
+                    :isShowDropInfo="isShowDropInfo"
                     v-on:detail="gotoDetail"
                     v-on:stopEncode="stopEncode"
                     v-on:selected="selected"
@@ -20,6 +21,7 @@
             <RecordedTableItems
                 :items="recorded"
                 :isEditMode="isEditMode"
+                :isShowDropInfo="isShowDropInfo"
                 v-on:detail="gotoDetail"
                 v-on:stopEncode="stopEncode"
                 v-on:selected="selected"
@@ -31,6 +33,7 @@
                 <RecordedsmallCard
                     :item="r"
                     :isEditMode="isEditMode"
+                    :isShowDropInfo="isShowDropInfo"
                     v-on:detail="gotoDetail"
                     v-on:stopEncode="stopEncode"
                     v-on:selected="selected"
@@ -61,14 +64,17 @@ class RecordedItems extends Vue {
     @Prop({ required: true })
     public recorded!: RecordedDisplayData[];
 
-    @Prop()
+    @Prop({ required: false })
     public isTableMode: boolean | undefined;
 
-    @Prop()
+    @Prop({ required: false })
     public isRecording: boolean | undefined;
 
     @Prop({ required: true })
     public isEditMode!: boolean;
+
+    @Prop({ required: true })
+    public isShowDropInfo!: boolean;
 
     get contentStyle(): any {
         return {

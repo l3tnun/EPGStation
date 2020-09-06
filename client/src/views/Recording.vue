@@ -22,6 +22,7 @@
                     :isRecording="true"
                     :isTableMode="true"
                     :isEditMode.sync="isEditMode"
+                    :isShowDropInfo="false"
                     v-on:detail="gotoDetail"
                     v-on:selected="selectItem"
                 ></RecordedItems>

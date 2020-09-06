@@ -29,11 +29,12 @@
                     </DashboardItem>
                     <DashboardItem ref="recordedItem" :title="recordedTitle" v-on:scroll="onRecordedScroll">
                         <template v-slot:items>
-                            <div class="px-2">
+                            <div class="px-2" v-if="settingValue !== null">
                                 <div v-for="r in recordedState.getRecorded()" v-bind:key="r.recordedItem.id">
                                     <RecordedsmallCard
                                         :item="r"
                                         :isEditMode="false"
+                                        :isShowDropInfo="settingValue.isShowDropInfoInsteadOfDescription"
                                         v-on:detail="gotoRecordedDetail"
                                         v-on:stopEncode="stopEncode"
                                     ></RecordedsmallCard>

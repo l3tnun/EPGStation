@@ -17,7 +17,11 @@
             </template>
         </TitleBar>
         <transition name="page">
-            <div v-if="recordedState.getRecorded().length > 0" ref="appContent" class="app-content pa-1">
+            <div
+                v-if="settingValue !== null && recordedState.getRecorded().length > 0"
+                ref="appContent"
+                class="app-content pa-1"
+            >
                 <div v-bind:style="contentWrapStyle">
                     <RecordedItems
                         :recorded="recordedState.getRecorded()"
@@ -26,6 +30,7 @@
                         v-on:selected="selectItem"
                         :isTableMode="settingValue.isShowTableMode === true"
                         :isEditMode.sync="isEditMode"
+                        :isShowDropInfo="settingValue.isShowDropInfoInsteadOfDescription"
                     ></RecordedItems>
                     <Pagination
                         v-if="isEditMode === false"

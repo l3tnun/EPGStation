@@ -189,6 +189,18 @@
                                 </div>
                                 <div class="my-2 d-flex flex-row align-center">
                                     <div>
+                                        <v-list-item-title class="subtitle-1">
+                                            概要の代わりにドロップ情報を表示する
+                                        </v-list-item-title>
+                                    </div>
+                                    <v-spacer></v-spacer>
+                                    <v-switch
+                                        v-model="storageModel.tmp.isShowDropInfoInsteadOfDescription"
+                                        value
+                                    ></v-switch>
+                                </div>
+                                <div class="my-2 d-flex flex-row align-center">
+                                    <div>
                                         <v-list-item-title class="subtitle-1">web での再生を優先する</v-list-item-title>
                                     </div>
                                     <v-spacer></v-spacer>

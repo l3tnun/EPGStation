@@ -45,7 +45,7 @@ export default class RecordedDeleteDialog extends Vue {
     @Prop({ required: true })
     public isOpen!: boolean;
 
-    @Prop()
+    @Prop({ required: false })
     public isDelaySnackbarViewNum: number | undefined;
 
     public isRemove: boolean = false;
