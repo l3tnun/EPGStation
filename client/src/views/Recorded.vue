@@ -91,7 +91,9 @@ export default class Recorded extends Vue {
     }).bind(this);
 
     get selectedTitle(): string {
-        return `${this.recordedState.getSelectedCnt()} 件選択`;
+        const info = this.recordedState.getSelectedCnt();
+
+        return `${info.cnt} 件選択 (${Util.getFileSizeStr(info.size)})`;
     }
 
     get contentWrapStyle(): any {

@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import * as apid from '../../../../../api';
 import IVideoApiModel from '../..//api/video/IVideoApiModel';
 import IRecordedApiModel from '../../api/recorded/IRecordedApiModel';
-import IRecordedState, { MultipleDeletionOption } from './IRecordedState';
+import IRecordedState, { MultipleDeletionOption, SelectedInfo } from './IRecordedState';
 import IRecordedUtil, { RecordedDisplayData } from './IRecordedUtil';
 
 @injectable()
@@ -85,21 +85,33 @@ export default class RecordedState implements IRecordedState {
 
     /**
      * 選択した番組数を返す
-     * @return number
+     * @return SelectedInfo
      */
-    public getSelectedCnt(): number {
+    public getSelectedCnt(): SelectedInfo {
         if (this.recorded === null) {
-            return 0;
+            return {
+                cnt: 0,
+                size: 0,
+            };
         }
 
         let selectedCnt = 0;
+        let selectedSize = 0;
         for (const r of this.recorded) {
             if (r.isSelected === true) {
                 selectedCnt++;
+                if (typeof r.recordedItem.videoFiles !== 'undefined') {
+                    for (const v of r.recordedItem.videoFiles) {
+                        selectedSize += v.size;
+                    }
+                }
             }
         }
 
-        return selectedCnt;
+        return {
+            cnt: selectedCnt,
+            size: selectedSize,
+        };
     }
 
     /**
