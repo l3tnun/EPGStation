@@ -11,6 +11,7 @@ import IIPCClient, {
     IPCRecordedTagManageModel,
     IPCReservationManageModel,
     IPCRuleManageModel,
+    IPCThumbnailManageModel,
 } from './IIPCClient';
 import {
     ClientMessageOption,
@@ -23,6 +24,7 @@ import {
     ReserveationFunctions,
     RuleFuntions,
     SendMessage,
+    ThumbnailFunctions,
 } from './IPCMessageDefine';
 
 @injectable()
@@ -33,6 +35,7 @@ export default class IPCClient implements IIPCClient {
     public recorded!: IPCRecordedManageModel;
     public recordedTag!: IPCRecordedTagManageModel;
     public rule!: IPCRuleManageModel;
+    public thumbnail!: IPCThumbnailManageModel;
 
     private log: ILogger;
     private listener: events.EventEmitter = new events.EventEmitter();
@@ -55,6 +58,7 @@ export default class IPCClient implements IIPCClient {
         this.setRecorded();
         this.setRecordedTag();
         this.setRule();
+        this.setThumbnail();
     }
 
     /**
@@ -368,6 +372,20 @@ export default class IPCClient implements IIPCClient {
                     args: {
                         ruleIds: ruleIds,
                     },
+                });
+            },
+        };
+    }
+
+    /**
+     * set thumbnail
+     */
+    private setThumbnail(): void {
+        this.thumbnail = {
+            regenerate: () => {
+                return this.send({
+                    model: ModelName.thumbnail,
+                    func: ThumbnailFunctions.regenerate,
                 });
             },
         };

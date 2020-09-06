@@ -96,6 +96,9 @@ export enum RecordedTagFunctions {
     deleteRelation = 'deleteRelation',
 }
 
+/**
+ * Rule の関数定義
+ */
 export enum RuleFuntions {
     add = 'add',
     update = 'update',
@@ -103,4 +106,11 @@ export enum RuleFuntions {
     disable = 'disable',
     delete = 'delete',
     deletes = 'deletes',
+}
+
+/**
+ * Thumbnail の関数定義
+ */
+export enum ThumbnailFunctions {
+    regenerate = 'regenerate',
 }

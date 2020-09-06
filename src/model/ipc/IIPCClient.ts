@@ -38,9 +38,14 @@ export interface IPCRuleManageModel {
     deletes(ruleIds: apid.RuleId[]): Promise<apid.RuleId[]>;
 }
 
+export interface IPCThumbnailManageModel {
+    regenerate(): Promise<void>;
+}
+
 export default interface IIPCClient {
     reserveation: IPCReservationManageModel;
     recorded: IPCRecordedManageModel;
     recordedTag: IPCRecordedTagManageModel;
     rule: IPCRuleManageModel;
+    thumbnail: IPCThumbnailManageModel;
 }

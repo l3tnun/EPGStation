@@ -104,7 +104,6 @@ export default class VideoApiModel implements IVideoApiModel {
      * @return Promise<void>
      */
     public async deleteVideoFile(videoFileId: apid.VideoFileId): Promise<void> {
-        console.log(videoFileId);
         await this.ipc.recorded.deleteVideoFile(videoFileId);
     }
 

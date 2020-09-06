@@ -5,6 +5,7 @@ import IRecordedManageModel, { AddVideoFileOption } from '../operator/recorded/I
 import IRecordedTagManadeModel from '../operator/recordedTag/IRecordedTagManadeModel';
 import IReservationManageModel from '../operator/reservation/IReservationManageModel';
 import IRuleManageModel from '../operator/rule/IRuleManageModel';
+import IThumbnailManageModel from '../operator/thumbnail/IThumbnailManageModel';
 import IIPCServer from './IIPCServer';
 import {
     ModelName,
@@ -16,6 +17,7 @@ import {
     ReserveationFunctions,
     RuleFuntions,
     SendMessage,
+    ThumbnailFunctions,
 } from './IPCMessageDefine';
 
 interface IFunctionIndex {
@@ -28,6 +30,7 @@ export default class IPCServer implements IIPCServer {
     private recordedManage: IRecordedManageModel;
     private recordedTagManage: IRecordedTagManadeModel;
     private ruleManage: IRuleManageModel;
+    private thumbnailManage: IThumbnailManageModel;
     private child: ChildProcess | null = null;
     private functions: {
         [modelName: string]: IFunctionIndex;
@@ -39,11 +42,13 @@ export default class IPCServer implements IIPCServer {
         @inject('IRecordedManageModel') recordedManage: IRecordedManageModel,
         @inject('IRecordedTagManadeModel') recordedTagManage: IRecordedTagManadeModel,
         @inject('IRuleManageModel') ruleManage: IRuleManageModel,
+        @inject('IThumbnailManageModel') thumbnailManage: IThumbnailManageModel,
     ) {
         this.reservationManage = reservationManage;
         this.recordedManage = recordedManage;
         this.recordedTagManage = recordedTagManage;
         this.ruleManage = ruleManage;
+        this.thumbnailManage = thumbnailManage;
 
         this.init();
     }
@@ -128,6 +133,7 @@ export default class IPCServer implements IIPCServer {
         this.functions[ModelName.recorded] = this.getRecordedFunctions();
         this.functions[ModelName.recordedTag] = this.getRecordedTagFunctions();
         this.functions[ModelName.rule] = this.getRuleFunctions();
+        this.functions[ModelName.thumbnail] = this.getThumbnailFunctions();
     }
 
     /**
@@ -326,6 +332,20 @@ export default class IPCServer implements IIPCServer {
             const ruleIds = this.getArgsValue<apid.RuleId[]>(msg, 'ruleIds');
 
             await this.ruleManage.deletes(ruleIds);
+        };
+
+        return index;
+    }
+
+    /**
+     * set thumbnail functions
+     */
+    private getThumbnailFunctions(): IFunctionIndex {
+        const index: IFunctionIndex = {};
+
+        // regenerate
+        index[ThumbnailFunctions.regenerate] = async () => {
+            await this.thumbnailManage.regenerate();
         };
 
         return index;

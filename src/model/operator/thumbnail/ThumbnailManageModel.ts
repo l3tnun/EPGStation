@@ -7,6 +7,7 @@ import Thumbnail from '../../../db/entities/Thumbnail';
 import FileUtil from '../../../util/FileUtil';
 import ProcessUtil from '../../../util/ProcessUtil';
 import IVideoUtil from '../../api/video/IVideoUtil';
+import IRecordedDB from '../../db/IRecordedDB';
 import IThumbnailDB from '../../db/IThumbnailDB';
 import IVideoFileDB from '../../db/IVideoFileDB';
 import IThumbnailEvent from '../../event/IThumbnailEvent';
@@ -22,6 +23,7 @@ export default class ThumbnailManageModel implements IThumbnailManageModel {
     private log: ILogger;
     private config: IConfigFile;
     private queue: IPromiseQueue;
+    private recordedDB: IRecordedDB;
     private videoFileDB: IVideoFileDB;
     private thumbnailDB: IThumbnailDB;
     private thumbnailEvent: IThumbnailEvent;
@@ -31,6 +33,7 @@ export default class ThumbnailManageModel implements IThumbnailManageModel {
         @inject('ILoggerModel') logger: ILoggerModel,
         @inject('IConfiguration') configuration: IConfiguration,
         @inject('IPromiseQueue') queue: IPromiseQueue,
+        @inject('IRecordedDB') recordedDB: IRecordedDB,
         @inject('IVideoFileDB') videoFileDB: IVideoFileDB,
         @inject('IThumbnailDB') thumbnailDB: IThumbnailDB,
         @inject('IThumbnailEvent') thumbnailEvent: IThumbnailEvent,
@@ -39,6 +42,7 @@ export default class ThumbnailManageModel implements IThumbnailManageModel {
         this.log = logger.getLogger();
         this.config = configuration.getConfig();
         this.queue = queue;
+        this.recordedDB = recordedDB;
         this.videoFileDB = videoFileDB;
         this.thumbnailDB = thumbnailDB;
         this.thumbnailEvent = thumbnailEvent;
@@ -173,6 +177,76 @@ export default class ThumbnailManageModel implements IThumbnailManageModel {
             return this.getSaveFileName(recordedId, conflict + 1);
         } catch (err) {
             return fileName;
+        }
+    }
+
+    /**
+     * サムネイル再生性
+     * @return Promise<void>
+     */
+    public async regenerate(): Promise<void> {
+        this.log.system.info('start regenerate thumbnail');
+
+        // tslint:disable-next-line: typedef
+        const [recordeds] = await this.recordedDB.findAll(
+            {
+                isHalfWidth: false,
+            },
+            {
+                isNeedVideoFiles: true,
+                isNeedThumbnails: true,
+                isNeedsDropLog: false,
+                isNeedTags: false,
+            },
+        );
+
+        const videoFileIds: apid.VideoFileId[] = []; // サムネイル再生成リスト
+        for (const recorded of recordeds) {
+            if (typeof recorded.videoFiles === 'undefined' || recorded.videoFiles.length === 0) {
+                continue;
+            }
+
+            if (typeof recorded.thumbnails === 'undefined' || recorded.thumbnails.length === 0) {
+                // サムネイルが存在しないので生成リストに追加
+                videoFileIds.push(recorded.videoFiles[0].id);
+                continue;
+            }
+
+            // ファイルが存在しないサムネイルデータを列挙する
+            const nonExistingThumbnailIds: apid.ThumbnailId[] = [];
+            let existingThumbnailCnt = 0;
+
+            // サムネイルファイルが存在するか確認
+            for (const thumbnail of recorded.thumbnails) {
+                const thumbnailPath = path.join(this.config.thumbnail, thumbnail.filePath);
+                try {
+                    await FileUtil.stat(thumbnailPath);
+                    // ファイルが存在するので無視
+                    existingThumbnailCnt++;
+                    continue;
+                } catch (err) {
+                    // ファイルが存在しない
+                    nonExistingThumbnailIds.push(thumbnail.id);
+                }
+            }
+
+            // 存在しないサムネイルデータを削除する
+            for (const thumbnailId of nonExistingThumbnailIds) {
+                await this.thumbnailDB.deleteOnce(thumbnailId).catch(err => {
+                    this.log.system.error(`failed to delete non-existing thumbnail data: ${thumbnailId}`);
+                    this.log.system.error(err);
+                });
+            }
+
+            // サムネイル情報が存在しなくなったので生成リストに追加
+            if (existingThumbnailCnt === 0) {
+                videoFileIds.push(recorded.videoFiles[0].id);
+            }
+        }
+
+        // 再生成リストにある videoFileId からサムネイルを再生成させる
+        for (const videoFileId of videoFileIds) {
+            this.add(videoFileId);
         }
     }
 }
