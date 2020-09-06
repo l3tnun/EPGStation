@@ -36,7 +36,7 @@ export default class RecordedMultipleDeletionDialog extends Vue {
     @Prop({ required: true })
     public total!: number;
 
-    @Prop({})
+    @Prop({ required: false })
     public disableOption: boolean | undefined;
 
     public isRemove: boolean = false;

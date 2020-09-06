@@ -53,7 +53,7 @@ export default class RecordedSmallCard extends Vue {
     @Prop({ required: true })
     public item!: RecordedDisplayData;
 
-    @Prop()
+    @Prop({ required: false })
     public noThumbnail: boolean | undefined;
 
     @Prop({ required: true })

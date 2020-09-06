@@ -44,7 +44,7 @@ import Util from '../../util/Util';
 
 @Component({})
 export default class OnAirSelectStream extends Vue {
-    @Prop()
+    @Prop({ required: false })
     public needsGotoGuideButton: boolean | undefined;
 
     public dialogState: IOnAirSelectStreamState = container.get<IOnAirSelectStreamState>('IOnAirSelectStreamState');

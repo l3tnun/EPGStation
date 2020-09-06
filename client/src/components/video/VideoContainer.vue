@@ -218,7 +218,7 @@ export default class VideoContainer extends Vue {
     @Prop({ required: true })
     public videoParam!: VideoParam.BaseVideoParam;
 
-    @Prop()
+    @Prop({ required: false })
     public isEnabledSpeedControl: boolean | undefined; // 速度調整が有効か
 
     public isHideCursor: boolean = false;

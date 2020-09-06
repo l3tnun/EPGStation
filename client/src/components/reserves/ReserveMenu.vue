@@ -58,7 +58,7 @@ export default class ReserveMenu extends Vue {
     })
     public reserveItem!: apid.ReserveItem;
 
-    @Prop({})
+    @Prop({ required: false })
     public disableEdit: boolean | undefined;
 
     public isOpened: boolean = false;

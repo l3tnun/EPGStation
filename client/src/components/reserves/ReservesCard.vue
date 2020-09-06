@@ -61,13 +61,13 @@ export default class ReservesCard extends Vue {
     @Prop({ required: true })
     public isEditMode!: boolean;
 
-    @Prop({})
+    @Prop({ required: false })
     public needsDecoration: boolean | undefined;
 
-    @Prop({})
+    @Prop({ required: false })
     public disableEdit: boolean | undefined;
 
-    @Prop({})
+    @Prop({ required: false })
     public flat: boolean | undefined;
 
     public isOpenDialog: boolean = false;

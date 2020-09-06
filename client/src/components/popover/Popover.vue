@@ -51,10 +51,10 @@ class Popover extends Vue {
     @Prop({ required: true })
     public maxHeight!: number;
 
-    @Prop({})
+    @Prop({ required: false })
     public isVertical?: boolean; // 垂直方向のみ展開する
 
-    @Prop({})
+    @Prop({ required: false })
     public isHorizontal?: boolean; // 水平方向のみ展開する
 
     public isShow: boolean = false; // アニメーションを表示させるため isOpen から遅延させて動かす

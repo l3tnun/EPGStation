@@ -26,7 +26,7 @@ export default class TitleBar extends Vue {
     @Prop({ required: true })
     public title!: string;
 
-    @Prop({})
+    @Prop({ required: false })
     public needsTitleClickEvent: boolean | undefined;
 
     public navigationState: INavigationState = container.get<INavigationState>('INavigationState');
