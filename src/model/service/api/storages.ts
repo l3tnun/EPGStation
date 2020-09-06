@@ -16,7 +16,7 @@ export const get: Operation = async (_req, res) => {
 
 get.apiDoc = {
     summary: 'ストレージ情報取得',
-    tags: ['storage'],
+    tags: ['storages'],
     description: 'ストレージ情報を取得する',
     responses: {
         200: {
