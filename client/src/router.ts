@@ -15,6 +15,7 @@ import Reserves from './views/Reserves.vue';
 import Rule from './views/Rule.vue';
 import Search from './views/Search.vue';
 import Settings from './views/Settings.vue';
+import Storages from './views/Storages.vue';
 import WatchOnAir from './views/WatchOnAir.vue';
 import WatchRecorded from './views/WatchRecorded.vue';
 import WatchRecordedStreaming from './views/WatchRecordedStreaming.vue';
@@ -102,6 +103,11 @@ export default new Router({
             path: '/settings',
             name: 'settings',
             component: Settings,
+        },
+        {
+            path: '/storages',
+            name: 'storages',
+            component: Storages,
         },
     ],
     scrollBehavior: async (_to, _from, savedPosition) => {

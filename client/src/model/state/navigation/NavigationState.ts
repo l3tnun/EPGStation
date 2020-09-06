@@ -152,6 +152,13 @@ export default class NavigationState implements INavigationState {
             },
         });
         newItems.push({
+            icon: 'mdi-sd',
+            title: 'ストレージ',
+            herf: {
+                path: '/storages',
+            },
+        });
+        newItems.push({
             icon: 'settings',
             title: '設定',
             herf: {

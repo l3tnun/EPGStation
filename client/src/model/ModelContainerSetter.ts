@@ -19,6 +19,8 @@ import IRuleApiModel from './api/rule/IRuleApiModel';
 import RuleApiModel from './api/rule/RuleApiModel';
 import IScheduleApiModel from './api/schedule/IScheduleApiModel';
 import ScheduleApiModel from './api/schedule/ScheduleApiModel';
+import IStorageApiModel from './api/storage/IStorageApiModel';
+import StorageApiModel from './api/storage/StorageApiModel';
 import IStreamApiModel from './api/streams/IStreamApiModel';
 import StreamApiModel from './api/streams/StreamApiModel';
 import IVideoApiModel from './api/video/IVideoApiModel';
@@ -83,6 +85,8 @@ import ISearchState from './state/search/ISearchState';
 import SearchState from './state/search/SearchState';
 import ISnackbarState from './state/snackbar/ISnackbarState';
 import SnackbarState from './state/snackbar/SnackbarState';
+import IStorageState from './state/storage/IStorageState';
+import StorageState from './state/storage/StorageState';
 import AddEncodeSettingStorageModel from './storage/encode/AddEncodeSettingStorageModel';
 import IAddEncodeSettingStorageModel from './storage/encode/IAddEncodeSettingStorageModel';
 import GuideGenreSettingStorageModel from './storage/guide/GuideGenreSettingStorageModel';
@@ -127,6 +131,8 @@ export default (container: Container) => {
     container.bind<IVideoApiModel>('IVideoApiModel').to(VideoApiModel).inSingletonScope();
 
     container.bind<IDropLogApiModel>('IDropLogApiModel').to(DropLogApiModel).inSingletonScope();
+
+    container.bind<IStorageApiModel>('IStorageApiModel').to(StorageApiModel).inSingletonScope();
 
     container.bind<IStorageOperationModel>('IStorageOperationModel').to(StorageOperationModel).inSingletonScope();
 
@@ -230,4 +236,6 @@ export default (container: Container) => {
     container.bind<IDropLogDialogState>('IDropLogDialogState').to(DropLogDialogState).inSingletonScope();
 
     container.bind<IManualReserveState>('IManualReserveState').to(ManualReserveState).inSingletonScope();
+
+    container.bind<IStorageState>('IStorageState').to(StorageState).inSingletonScope();
 };
