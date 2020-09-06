@@ -3,6 +3,7 @@ import { inject, injectable } from 'inversify';
 import * as apid from '../../../api';
 import IRecordedManageModel, { AddVideoFileOption } from '../operator/recorded/IRecordedManageModel';
 import IRecordedTagManadeModel from '../operator/recordedTag/IRecordedTagManadeModel';
+import IRecordingManageModel from '../operator/recording/IRecordingManageModel';
 import IReservationManageModel from '../operator/reservation/IReservationManageModel';
 import IRuleManageModel from '../operator/rule/IRuleManageModel';
 import IThumbnailManageModel from '../operator/thumbnail/IThumbnailManageModel';
@@ -13,6 +14,7 @@ import {
     PushEncodeMessage,
     RecordedFunctions,
     RecordedTagFunctions,
+    RecordingFunctions,
     ReplayMessage,
     ReserveationFunctions,
     RuleFuntions,
@@ -29,6 +31,7 @@ export default class IPCServer implements IIPCServer {
     private reservationManage: IReservationManageModel;
     private recordedManage: IRecordedManageModel;
     private recordedTagManage: IRecordedTagManadeModel;
+    private recordingManage: IRecordingManageModel;
     private ruleManage: IRuleManageModel;
     private thumbnailManage: IThumbnailManageModel;
     private child: ChildProcess | null = null;
@@ -41,12 +44,14 @@ export default class IPCServer implements IIPCServer {
         reservationManage: IReservationManageModel,
         @inject('IRecordedManageModel') recordedManage: IRecordedManageModel,
         @inject('IRecordedTagManadeModel') recordedTagManage: IRecordedTagManadeModel,
+        @inject('IRecordingManageModel') recordingManage: IRecordingManageModel,
         @inject('IRuleManageModel') ruleManage: IRuleManageModel,
         @inject('IThumbnailManageModel') thumbnailManage: IThumbnailManageModel,
     ) {
         this.reservationManage = reservationManage;
         this.recordedManage = recordedManage;
         this.recordedTagManage = recordedTagManage;
+        this.recordingManage = recordingManage;
         this.ruleManage = ruleManage;
         this.thumbnailManage = thumbnailManage;
 
@@ -132,6 +137,7 @@ export default class IPCServer implements IIPCServer {
         this.functions[ModelName.reserveation] = this.getReserveationFunctions();
         this.functions[ModelName.recorded] = this.getRecordedFunctions();
         this.functions[ModelName.recordedTag] = this.getRecordedTagFunctions();
+        this.functions[ModelName.recording] = this.getRecordingFunctions();
         this.functions[ModelName.rule] = this.getRuleFunctions();
         this.functions[ModelName.thumbnail] = this.getThumbnailFunctions();
     }
@@ -281,6 +287,20 @@ export default class IPCServer implements IIPCServer {
             const recordedId = this.getArgsValue<apid.RecordedId>(msg, 'recordedId');
 
             await this.recordedTagManage.deleteRelation(tagId, recordedId);
+        };
+
+        return index;
+    }
+
+    /**
+     * set recording functions
+     */
+    private getRecordingFunctions(): IFunctionIndex {
+        const index: IFunctionIndex = {};
+
+        // resetTimer
+        index[RecordingFunctions.resetTimer] = async () => {
+            this.recordingManage.resetTimer();
         };
 
         return index;

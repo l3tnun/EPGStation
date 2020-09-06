@@ -702,6 +702,19 @@ class RecorderModel implements IRecorderModel {
             this.recordedDB.updateOnce(recorded);
         }
     }
+
+    /**
+     * タイマーを再設定する
+     * @return boolean セットに成功したら true を返す
+     */
+    public resetTimer(): boolean {
+        // 録画中なら無視
+        if (this.isRecording === true) {
+            return true;
+        }
+
+        return this.setTimer(this.reserve);
+    }
 }
 
 namespace RecorderModel {

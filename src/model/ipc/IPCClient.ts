@@ -9,6 +9,7 @@ import ISocketIOManageModel from '../service/socketio/ISocketIOManageModel';
 import IIPCClient, {
     IPCRecordedManageModel,
     IPCRecordedTagManageModel,
+    IPCRecordingManageModel,
     IPCReservationManageModel,
     IPCRuleManageModel,
     IPCThumbnailManageModel,
@@ -20,6 +21,7 @@ import {
     PushEncodeMessage,
     RecordedFunctions,
     RecordedTagFunctions,
+    RecordingFunctions,
     ReplayMessage,
     ReserveationFunctions,
     RuleFuntions,
@@ -34,6 +36,7 @@ export default class IPCClient implements IIPCClient {
     public reserveation!: IPCReservationManageModel;
     public recorded!: IPCRecordedManageModel;
     public recordedTag!: IPCRecordedTagManageModel;
+    public recording!: IPCRecordingManageModel;
     public rule!: IPCRuleManageModel;
     public thumbnail!: IPCThumbnailManageModel;
 
@@ -57,6 +60,7 @@ export default class IPCClient implements IIPCClient {
         this.setReserveation();
         this.setRecorded();
         this.setRecordedTag();
+        this.setRecording();
         this.setRule();
         this.setThumbnail();
     }
@@ -310,6 +314,20 @@ export default class IPCClient implements IIPCClient {
                         tagId: tagId,
                         recordedId: recordedId,
                     },
+                });
+            },
+        };
+    }
+
+    /**
+     * set recording
+     */
+    private setRecording(): void {
+        this.recording = {
+            resetTimer: () => {
+                return this.send({
+                    model: ModelName.recording,
+                    func: RecordingFunctions.resetTimer,
                 });
             },
         };

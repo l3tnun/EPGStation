@@ -248,6 +248,17 @@ class RecordingManageModel implements IRecordingManageModel {
 
         return this.recordingIndex[reserveId].cancel(isPlanToDelete);
     }
+
+    /**
+     * タイマーを再設定する
+     */
+    public resetTimer(): void {
+        this.log.system.info('reset timer');
+
+        for (const key in this.recordingIndex) {
+            this.recordingIndex[key].resetTimer();
+        }
+    }
 }
 
 export default RecordingManageModel;

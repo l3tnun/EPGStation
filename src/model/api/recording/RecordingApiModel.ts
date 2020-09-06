@@ -1,18 +1,22 @@
 import { inject, injectable } from 'inversify';
 import * as apid from '../../../../api';
 import IRecordedDB, { FindAllOption } from '../../db/IRecordedDB';
+import IIPCClient from '../../ipc/IIPCClient';
 import IRecordedItemUtil from '../IRecordedItemUtil';
 import IRecordingApiModel from './IRecordingApiModel';
 
 @injectable()
 export default class RecordingApiModel implements IRecordingApiModel {
+    private ipc: IIPCClient;
     private recordedDB: IRecordedDB;
     private recordedItemUtil: IRecordedItemUtil;
 
     constructor(
+        @inject('IIPCClient') ipc: IIPCClient,
         @inject('IRecordedDB') recordedDB: IRecordedDB,
         @inject('IRecordedItemUtil') recordedItemUtil: IRecordedItemUtil,
     ) {
+        this.ipc = ipc;
         this.recordedDB = recordedDB;
         this.recordedItemUtil = recordedItemUtil;
     }
@@ -38,5 +42,13 @@ export default class RecordingApiModel implements IRecordingApiModel {
             }),
             total,
         };
+    }
+
+    /**
+     * タイマーを再設定する
+     * @return Promise<void>
+     */
+    public async resetTimer(): Promise<void> {
+        await this.ipc.recording.resetTimer();
     }
 }

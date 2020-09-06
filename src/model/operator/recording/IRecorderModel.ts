@@ -6,4 +6,5 @@ export default interface IRecorderModel {
     setTimer(reserve: Reserve): boolean;
     cancel(isPlanToDelete: boolean): Promise<void>;
     update(newReserve: Reserve): Promise<void>;
+    resetTimer(): boolean;
 }

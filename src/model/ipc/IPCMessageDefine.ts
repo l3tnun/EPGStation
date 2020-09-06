@@ -97,6 +97,13 @@ export enum RecordedTagFunctions {
 }
 
 /**
+ * Recording の関数定義
+ */
+export enum RecordingFunctions {
+    resetTimer = 'resetTimer',
+}
+
+/**
  * Rule の関数定義
  */
 export enum RuleFuntions {

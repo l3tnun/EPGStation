@@ -29,6 +29,10 @@ export interface IPCRecordedTagManageModel {
     deleteRelation(tagId: apid.RecordedTagId, recordedId: apid.RecordedId): Promise<void>;
 }
 
+export interface IPCRecordingManageModel {
+    resetTimer(): void;
+}
+
 export interface IPCRuleManageModel {
     add(rule: apid.AddRuleOption): Promise<apid.RuleId>;
     update(rule: apid.Rule): Promise<void>;
@@ -46,6 +50,7 @@ export default interface IIPCClient {
     reserveation: IPCReservationManageModel;
     recorded: IPCRecordedManageModel;
     recordedTag: IPCRecordedTagManageModel;
+    recording: IPCRecordingManageModel;
     rule: IPCRuleManageModel;
     thumbnail: IPCThumbnailManageModel;
 }
