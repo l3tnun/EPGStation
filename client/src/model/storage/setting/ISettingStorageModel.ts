@@ -10,6 +10,8 @@ export interface ISettingValue {
     guideMode: GuideViewMode;
     guideLength: number;
     isEnableDisplayForEachBroadcastWave: boolean;
+    isIncludeChannelIdWhenSearching: boolean;
+    isIncludeGenreWhenSearching: boolean;
     reservesLength: number;
     recordingLength: number;
     recordedLength: number;

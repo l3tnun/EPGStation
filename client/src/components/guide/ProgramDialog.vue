@@ -39,11 +39,11 @@
                             <v-checkbox
                                 class="mx-1 my-0 pr-2"
                                 label="元ファイル削除"
-                                v-model="setting.tmp.isDeleteOriginalAfterEncode"
+                                v-model="dialogSetting.tmp.isDeleteOriginalAfterEncode"
                             ></v-checkbox>
                             <v-select
                                 :items="dialogState.getEncodeList()"
-                                v-model="setting.tmp.encode"
+                                v-model="dialogSetting.tmp.encode"
                                 :menu-props="{ auto: true }"
                                 class="encode-selector"
                             ></v-select>
@@ -120,6 +120,7 @@ import container from '@/model/ModelContainer';
 import IGuideProgramDialogState from '@/model/state/guide/IGuideProgramDialogState';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
 import IGuideProgramDialogSettingStorageModel from '@/model/storage/guide/IGuideProgramDialogSettingStorageModel';
+import ISettingStorageModel from '@/model/storage/setting/ISettingStorageModel';
 import StrUtil from '@/util/StrUtil';
 import Util from '@/util/Util';
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
@@ -127,7 +128,10 @@ import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
 @Component({})
 export default class ProgramDialog extends Vue {
     public dialogState: IGuideProgramDialogState = container.get<IGuideProgramDialogState>('IGuideProgramDialogState');
-    private setting = container.get<IGuideProgramDialogSettingStorageModel>('IGuideProgramDialogSettingStorageModel');
+    private setting: ISettingStorageModel = container.get<ISettingStorageModel>('ISettingStorageModel');
+    private dialogSetting = container.get<IGuideProgramDialogSettingStorageModel>(
+        'IGuideProgramDialogSettingStorageModel',
+    );
     public isRemove: boolean = false;
 
     private snackbarState = container.get<ISnackbarState>('ISnackbarState');
@@ -208,22 +212,29 @@ export default class ProgramDialog extends Vue {
             return;
         }
 
+        const settingValue = this.setting.getSavedValue();
+
         query.keyword = StrUtil.createSearchKeyword(program.name);
-        query.channelId = program.channelId.toString(10);
-        if (typeof program.genre1 !== 'undefined') {
-            query.genre = program.genre1.toString(10);
-            if (typeof program.subGenre1 !== 'undefined') {
-                query.subGenre = program.subGenre1.toString(10);
-            }
-        } else if (typeof program.genre2 !== 'undefined') {
-            query.genre = program.genre2.toString(10);
-            if (typeof program.subGenre2 !== 'undefined') {
-                query.subGenre = program.subGenre2.toString(10);
-            }
-        } else if (typeof program.genre3 !== 'undefined') {
-            query.genre = program.genre3.toString(10);
-            if (typeof program.subGenre3 !== 'undefined') {
-                query.subGenre = program.subGenre3.toString(10);
+        if (settingValue.isIncludeChannelIdWhenSearching === true) {
+            query.channelId = program.channelId.toString(10);
+        }
+
+        if (settingValue.isIncludeGenreWhenSearching === true) {
+            if (typeof program.genre1 !== 'undefined') {
+                query.genre = program.genre1.toString(10);
+                if (typeof program.subGenre1 !== 'undefined') {
+                    query.subGenre = program.subGenre1.toString(10);
+                }
+            } else if (typeof program.genre2 !== 'undefined') {
+                query.genre = program.genre2.toString(10);
+                if (typeof program.subGenre2 !== 'undefined') {
+                    query.subGenre = program.subGenre2.toString(10);
+                }
+            } else if (typeof program.genre3 !== 'undefined') {
+                query.genre = program.genre3.toString(10);
+                if (typeof program.subGenre3 !== 'undefined') {
+                    query.subGenre = program.subGenre3.toString(10);
+                }
             }
         }
 
@@ -317,7 +328,7 @@ export default class ProgramDialog extends Vue {
          */
         if (newState === false && oldState === true) {
             // close
-            this.setting.save();
+            this.dialogSetting.save();
 
             this.$nextTick(async () => {
                 await Util.sleep(100);

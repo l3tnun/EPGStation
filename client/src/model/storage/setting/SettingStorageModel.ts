@@ -20,6 +20,8 @@ export default class SettingStorageModel extends AbstractStorageBaseModel<ISetti
             guideMode: UaUtil.isiOS() === true ? 'all' : 'sequential',
             guideLength: 24,
             isEnableDisplayForEachBroadcastWave: false,
+            isIncludeChannelIdWhenSearching: true,
+            isIncludeGenreWhenSearching: true,
             reservesLength: 24,
             recordingLength: 24,
             recordedLength: 24,
