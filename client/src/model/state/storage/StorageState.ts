@@ -26,11 +26,6 @@ export default class StorageState implements IStorageState {
     public async fetchData(): Promise<void> {
         const storages = await this.storageApiModel.getInfo();
 
-        storages.items.push(JSON.parse(JSON.stringify(storages.items[0])));
-        storages.items[1].name = 'recorded2';
-        storages.items[1].used = storages.items[1].used / 2;
-        storages.items[1].available = storages.items[1].available * 2;
-
         this.infos = storages.items.map(s => {
             return {
                 name: s.name,
