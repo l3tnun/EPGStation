@@ -385,8 +385,14 @@ export default class RecordedManageModel implements IRecordedManageModel {
                 // ファイルが存在するなら索引に追加
                 fileIndex[filePath] = true;
             } else {
+                this.log.system.warn(`frop file is not exist: ${filePath}`);
                 // ファイルが存在しないなら削除
-                await await this.dropLogFileDB.deleteOnce(dropLog.id).catch(() => {});
+                try {
+                    await this.recordedDB.removeDropLogFileId(dropLog.id);
+                    await this.dropLogFileDB.deleteOnce(dropLog.id);
+                } catch (err) {
+                    this.log.system.error(err);
+                }
             }
         }
 
