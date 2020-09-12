@@ -385,7 +385,7 @@ export default class RecordedManageModel implements IRecordedManageModel {
                 // ファイルが存在するなら索引に追加
                 fileIndex[filePath] = true;
             } else {
-                this.log.system.warn(`frop file is not exist: ${filePath}`);
+                this.log.system.warn(`drop file is not exist: ${filePath}`);
                 // ファイルが存在しないなら削除
                 try {
                     await this.recordedDB.removeDropLogFileId(dropLog.id);
