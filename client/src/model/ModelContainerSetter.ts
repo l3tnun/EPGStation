@@ -23,6 +23,8 @@ import IStorageApiModel from './api/storage/IStorageApiModel';
 import StorageApiModel from './api/storage/StorageApiModel';
 import IStreamApiModel from './api/streams/IStreamApiModel';
 import StreamApiModel from './api/streams/StreamApiModel';
+import IThumbnailApiModel from './api/thumbnail/IThumbnailApiModel';
+import ThumbnailApiModel from './api/thumbnail/ThumbnailApiModel';
 import IVideoApiModel from './api/video/IVideoApiModel';
 import VideoApiModel from './api/video/VideoApiModel';
 import ChannelModel from './channels/ChannelModel';
@@ -133,6 +135,8 @@ export default (container: Container) => {
     container.bind<IDropLogApiModel>('IDropLogApiModel').to(DropLogApiModel).inSingletonScope();
 
     container.bind<IStorageApiModel>('IStorageApiModel').to(StorageApiModel).inSingletonScope();
+
+    container.bind<IThumbnailApiModel>('IThumbnailApiModel').to(ThumbnailApiModel).inSingletonScope();
 
     container.bind<IStorageOperationModel>('IStorageOperationModel').to(StorageOperationModel).inSingletonScope();
 

@@ -67,4 +67,12 @@ export default class RecordedApiModel implements IRecordedApiModel {
     public async stopEncode(recordedId: apid.RecordedId): Promise<void> {
         await this.repository.delete(`/recorded/${recordedId}/encode`);
     }
+
+    /**
+     * 録画のクリーンアップ
+     * @return Promise<void>
+     */
+    public async cleanup(): Promise<void> {
+        await this.repository.post('/recorded/cleanup');
+    }
 }

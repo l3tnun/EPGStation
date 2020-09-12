@@ -11,9 +11,7 @@
         <TitleBar v-else title="録画済み">
             <template v-slot:menu>
                 <RecordedSearchMenu></RecordedSearchMenu>
-                <v-btn icon v-on:click="onEdit">
-                    <v-icon>mdi-pencil</v-icon>
-                </v-btn>
+                <RecordedMainMenu v-on:edit="onEdit" v-on:cleanup="onCleanup"></RecordedMainMenu>
             </template>
         </TitleBar>
         <transition name="page">
@@ -47,12 +45,15 @@
             :total="recordedState.getSelectedCnt()"
             v-on:delete="onExecuteMultiplueDeletion"
         ></RecordedMultipleDeletionDialog>
+        <RecordedCleanupDialog :isOpen.sync="isOpenCleanupDialog"></RecordedCleanupDialog>
     </v-content>
 </template>
 
 <script lang="ts">
 import Pagination from '@/components/pagination/Pagination.vue';
+import RecordedCleanupDialog from '@/components/recorded/RecordedCleanupDialog.vue';
 import RecordedItems from '@/components/recorded/RecordedItems.vue';
+import RecordedMainMenu from '@/components/recorded/RecordedMainMenu.vue';
 import RecordedMultipleDeletionDialog from '@/components/recorded/RecordedMultipleDeletionDialog.vue';
 import RecordedSearchMenu from '@/components/recorded/RecordedSearchMenu.vue';
 import EditTitleBar from '@/components/titleBar/EditTitleBar.vue';
@@ -75,14 +76,17 @@ Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
         TitleBar,
         EditTitleBar,
         RecordedSearchMenu,
+        RecordedMainMenu,
         RecordedItems,
         Pagination,
         RecordedMultipleDeletionDialog,
+        RecordedCleanupDialog,
     },
 })
 export default class Recorded extends Vue {
     public isEditMode: boolean = false;
     public isOpenMultiplueDeletionDialog: boolean = false;
+    public isOpenCleanupDialog: boolean = false;
 
     private isVisibilityHidden: boolean = false;
     private recordedState: IRecordedState = container.get<IRecordedState>('IRecordedState');
@@ -185,6 +189,10 @@ export default class Recorded extends Vue {
                 text: '一部番組の削除に失敗しました。',
             });
         }
+    }
+
+    public onCleanup(): void {
+        this.isOpenCleanupDialog = true;
     }
 
     @Watch('$route', { immediate: true, deep: true })
