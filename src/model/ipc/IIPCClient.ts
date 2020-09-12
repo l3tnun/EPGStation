@@ -46,6 +46,7 @@ export interface IPCRuleManageModel {
 
 export interface IPCThumbnailManageModel {
     regenerate(): Promise<void>;
+    fileCleanup(): Promise<void>;
 }
 
 export default interface IIPCClient {

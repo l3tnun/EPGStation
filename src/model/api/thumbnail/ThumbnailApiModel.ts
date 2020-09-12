@@ -44,4 +44,11 @@ export default class ThumbnailApiModel implements IThumbnailApiModel {
     public regenerate(): Promise<void> {
         return this.ipc.thumbnail.regenerate();
     }
+
+    /**
+     * ファイルのクリーンアップ
+     */
+    public async fileCleanup(): Promise<void> {
+        await this.ipc.thumbnail.fileCleanup();
+    }
 }

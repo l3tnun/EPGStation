@@ -378,6 +378,11 @@ export default class IPCServer implements IIPCServer {
             await this.thumbnailManage.regenerate();
         };
 
+        // fileCleanup
+        index[ThumbnailFunctions.fileCleanup] = async () => {
+            await this.thumbnailManage.fileCleanup();
+        };
+
         return index;
     }
 

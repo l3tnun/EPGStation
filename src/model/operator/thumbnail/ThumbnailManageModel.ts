@@ -249,4 +249,60 @@ export default class ThumbnailManageModel implements IThumbnailManageModel {
             this.add(videoFileId);
         }
     }
+
+    /**
+     * DB に登録されていないログファイル削除 &  DB に登録されているが存在しないログ情報の削除
+     */
+    public async fileCleanup(): Promise<void> {
+        this.log.system.info('start thumbnail files cleanup');
+        const thumbnails = await this.thumbnailDB.findAll();
+
+        // ファイル, ディレクトリ索引生成と DB 上に存在するが実ファイルが存在しないデータを削除する
+        const fileIndex: { [filePath: string]: boolean } = {}; // ファイル索引
+        for (const thumbnail of thumbnails) {
+            const filePath = path.join(this.config.thumbnail, thumbnail.filePath);
+
+            if ((await this.checkFileExistence(filePath)) === true) {
+                // ファイルが存在するなら索引に追加
+                fileIndex[filePath] = true;
+            } else {
+                this.log.system.warn(`thumbnail file is not exist: ${filePath}`);
+                // ファイルが存在しないなら削除
+                await this.thumbnailDB.deleteOnce(thumbnail.id).catch(err => {
+                    this.log.system.error(err);
+                });
+            }
+        }
+
+        // ファイル索引上に存在しないファイルを削除する
+        const list = await FileUtil.getFileList(this.config.thumbnail);
+        for (const file of list.files) {
+            if (typeof fileIndex[file] !== 'undefined') {
+                continue;
+            }
+
+            this.log.system.info(`delete thumbnail file: ${file}`);
+            await FileUtil.unlink(file).catch(err => {
+                this.log.system.error(`failed to thumbnail file: ${file}`);
+                this.log.system.error(err);
+            });
+        }
+
+        this.log.system.info('start thumbnail files cleanup completed');
+    }
+
+    /**
+     * 指定したファイルパスにファイルが存在するか
+     * @param filePath: string ファイルパス
+     * @return Promise<boolean> ファイルが存在するなら true を返す
+     */
+    private async checkFileExistence(filePath: string): Promise<boolean> {
+        try {
+            await FileUtil.stat(filePath);
+
+            return true;
+        } catch (err) {
+            return false;
+        }
+    }
 }

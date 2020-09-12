@@ -79,4 +79,18 @@ export default class ThumbnailDB implements IThumbnailDB {
 
         return typeof result === 'undefined' ? null : result;
     }
+
+    /**
+     * 全てのサムネイル情報を取得
+     * @return Promise<Thumbnail[]>
+     */
+    public async findAll(): Promise<Thumbnail[]> {
+        const connection = await this.op.getConnection();
+
+        const queryBuilder = connection.getRepository(Thumbnail).createQueryBuilder();
+
+        return await this.promieRetry.run(() => {
+            return queryBuilder.getMany();
+        });
+    }
 }
