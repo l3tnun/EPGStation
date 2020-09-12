@@ -6,4 +6,5 @@ export default interface IRecordedApiModel {
     getSearchOptionList(): Promise<apid.RecordedSearchOptions>;
     delete(recordedId: apid.RecordedId): Promise<void>;
     stopEncode(recordedId: apid.RecordedId): Promise<void>;
+    fileCleanup(): Promise<void>;
 }

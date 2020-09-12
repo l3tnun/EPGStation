@@ -245,6 +245,11 @@ export default class IPCServer implements IIPCServer {
             await this.recordedManage.deleteVideoFile(videoFileId);
         };
 
+        // videoFileCleanup
+        index[RecordedFunctions.videoFileCleanup] = async () => {
+            await this.recordedManage.videoFileCleanup();
+        };
+
         return index;
     }
 

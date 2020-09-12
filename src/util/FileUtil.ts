@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import mkdirp from 'mkdirp';
+import * as path from 'path';
 
 namespace FileUtil {
     /**
@@ -209,6 +210,90 @@ namespace FileUtil {
     export const appendFile = (file: string, str: string): Promise<void> => {
         return new Promise<void>((resolve, reject) => {
             fs.appendFile(file, str, err => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
+        });
+    };
+
+    /**
+     * FileList 定義
+     */
+    export interface FileList {
+        files: string[];
+        directories: string[];
+    }
+
+    /**
+     * 指定したディレクトリ以下の file と directory 一覧を返す
+     * @return Promise<FileUtil.FileList>
+     */
+    export const getFileList = (fileDir: string): Promise<FileUtil.FileList> => {
+        return new Promise<FileUtil.FileList>((resolve: (result: FileList) => void, reject: (err: Error) => void) => {
+            fs.readdir(fileDir, async (err, files) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    const results: FileList = {
+                        files: [],
+                        directories: [],
+                    };
+                    for (const file of files) {
+                        // 隠しディレクトリはスキップ
+                        if (file.slice(0, 1) === '.') {
+                            continue;
+                        }
+
+                        // get full path
+                        const filePath = path.join(fileDir, file);
+
+                        if (fs.statSync(filePath).isDirectory()) {
+                            results.directories.push(filePath);
+                            try {
+                                // sub directory 探索
+                                const subFiles = await FileUtil.getFileList(filePath);
+                                Array.prototype.push.apply(results.files, subFiles.files);
+                                Array.prototype.push.apply(results.directories, subFiles.directories);
+                            } catch (err) {}
+                        } else {
+                            results.files.push(filePath);
+                        }
+                    }
+
+                    resolve(results);
+                }
+            });
+        });
+    };
+
+    /**
+     * directory が空か
+     * @param dir: string
+     * @return Promise<boolean>
+     */
+    export const isEmptyDirectory = (dir: string): Promise<boolean> => {
+        return new Promise<boolean>((resolve, reject) => {
+            fs.readdir(dir, (err, files) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(files.length === 0);
+                }
+            });
+        });
+    };
+
+    /**
+     * ディレクトリを削除
+     * @param dir: string
+     * @return Promise<void>
+     */
+    export const rmdir = (dir: string): Promise<void> => {
+        return new Promise<void>((resolve, reject) => {
+            fs.rmdir(dir, err => {
                 if (err) {
                     reject(err);
                 } else {

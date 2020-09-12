@@ -108,4 +108,11 @@ export default class RecordedApiModel implements IRecordedApiModel {
     public stopEncode(recordedId: apid.RecordedId): Promise<void> {
         return this.encodeManage.cancelEncodeByRecordedId(recordedId);
     }
+
+    /**
+     * ファイルのクリーンアップ
+     */
+    public async fileCleanup(): Promise<void> {
+        await this.ipc.recorded.videoFileCleanup();
+    }
 }

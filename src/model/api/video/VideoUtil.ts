@@ -2,6 +2,7 @@ import { execFile } from 'child_process';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import * as apid from '../../../../api';
+import VideoFile from '../../../db/entities/VideoFile';
 import IVideoFileDB from '../../db/IVideoFileDB';
 import IConfigFile from '../../IConfigFile';
 import IConfiguration from '../../IConfiguration';
@@ -29,6 +30,12 @@ export default class VideoUtil implements IVideoUtil {
         const parentDir = this.getParentDirPath(video.parentDirectoryName);
 
         return parentDir === null ? null : path.join(parentDir, video.filePath);
+    }
+
+    public getFullFilePathFromVideoFile(videoFile: VideoFile): string | null {
+        const parentDir = this.getParentDirPath(videoFile.parentDirectoryName);
+
+        return parentDir === null ? null : path.join(parentDir, videoFile.filePath);
     }
 
     public getParentDirPath(name: string): string | null {

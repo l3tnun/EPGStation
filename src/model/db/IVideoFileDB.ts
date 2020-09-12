@@ -14,4 +14,5 @@ export default interface IVideoFileDB {
     deleteOnce(VideoFileId: apid.VideoFileId): Promise<void>;
     deleteRecordedId(recordedId: apid.RecordedId): Promise<void>;
     findId(videoFileId: apid.VideoFileId): Promise<VideoFile | null>;
+    findAll(): Promise<VideoFile[]>;
 }

@@ -287,4 +287,100 @@ export default class RecordedManageModel implements IRecordedManageModel {
             this.log.system.error(err);
         });
     }
+
+    /**
+     * DB に登録されていない recorded 下のファイル削除 &  DB に登録されているが存在しない番組情報の削除
+     * @return Promise<void>
+     */
+    public async videoFileCleanup(): Promise<void> {
+        this.log.system.info('start video files cleanup');
+
+        const videoFiles = await this.videoFileDB.findAll();
+
+        // ファイル, ディレクトリ索引生成と DB 上に存在するが実ファイルが存在しないデータを削除する
+        const fileIndex: { [filePath: string]: boolean } = {}; // ファイル索引
+        const dirIndex: { [dirPath: string]: boolean } = {}; // ディレクトリ索引
+        for (const video of videoFiles) {
+            const videoFilePath = this.videoUtil.getFullFilePathFromVideoFile(video);
+            if (videoFilePath === null) {
+                continue;
+            }
+
+            if ((await this.checkFileExistence(videoFilePath)) === true) {
+                // ファイルが存在するなら索引に追加
+                fileIndex[videoFilePath] = true;
+                const parentDir = path.dirname(videoFilePath).replace(new RegExp(`\\${path.sep}$`), '');
+                dirIndex[parentDir] = true;
+            } else {
+                // ファイルが存在しないなら削除
+                await this.deleteVideoFile(video.id).catch(() => {});
+            }
+        }
+
+        // 実ファイルリストを取得する
+        const list: FileUtil.FileList = {
+            files: [],
+            directories: [],
+        };
+        for (const r of this.config.recorded) {
+            const l = await FileUtil.getFileList(r.path);
+            Array.prototype.push.apply(list.files, l.files);
+            Array.prototype.push.apply(list.directories, l.directories);
+            dirIndex[r.path] = true; // 親ディレクトリを索引に追加
+        }
+        // ディレクトリ削除時にネストが深いディレクトリから削除するためにソート
+        list.directories.sort((dir1, dir2) => {
+            return dir2.length - dir1.length;
+        });
+
+        // ファイル索引上に存在しないファイルを削除する
+        for (const file of list.files) {
+            if (typeof fileIndex[file] !== 'undefined') {
+                continue;
+            }
+
+            this.log.system.info(`delete file: ${file}`);
+            await FileUtil.unlink(file).catch(err => {
+                this.log.system.error(`failed to delete file: ${file}`);
+                this.log.system.error(err);
+            });
+        }
+
+        // ディレクトリ索引上に存在しないディレクトリを削除する
+        for (const dir of list.directories) {
+            if (typeof dirIndex[dir] !== 'undefined') {
+                continue;
+            }
+
+            this.log.system.info(`delete directory: ${dir}`);
+            try {
+                // ディレクトリが空かチェック
+                if ((await FileUtil.isEmptyDirectory(dir)) === true) {
+                    await FileUtil.rmdir(dir);
+                } else {
+                    this.log.system.warn(`directory is not empty: ${dir}`);
+                }
+            } catch (err) {
+                this.log.system.error(`failed to delete directory: ${dir}`);
+                this.log.system.error(err);
+            }
+        }
+
+        this.log.system.info('start video files cleanup completed');
+    }
+
+    /**
+     * 指定したファイルパスにファイルが存在するか
+     * @param filePath: string ファイルパス
+     * @return Promise<boolean> ファイルが存在するなら true を返す
+     */
+    private async checkFileExistence(filePath: string): Promise<boolean> {
+        try {
+            await FileUtil.stat(filePath);
+
+            return true;
+        } catch (err) {
+            return false;
+        }
+    }
 }

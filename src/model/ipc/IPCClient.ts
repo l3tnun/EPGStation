@@ -258,6 +258,15 @@ export default class IPCClient implements IIPCClient {
                     },
                 });
             },
+            videoFileCleanup: () => {
+                return this.send(
+                    {
+                        model: ModelName.recorded,
+                        func: RecordedFunctions.videoFileCleanup,
+                    },
+                    0, // タイムアウトなし
+                );
+            },
         };
     }
 

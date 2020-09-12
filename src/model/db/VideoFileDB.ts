@@ -131,4 +131,17 @@ export default class VideoFileDB implements IVideoFileDB {
 
         return typeof result === 'undefined' ? null : result;
     }
+
+    /**
+     * 全てのビデオファイルを取得する
+     */
+    public async findAll(): Promise<VideoFile[]> {
+        const connection = await this.op.getConnection();
+
+        const queryBuilder = connection.getRepository(VideoFile).createQueryBuilder();
+
+        return await this.promieRetry.run(() => {
+            return queryBuilder.getMany();
+        });
+    }
 }
