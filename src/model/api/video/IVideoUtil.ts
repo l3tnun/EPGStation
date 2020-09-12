@@ -6,7 +6,7 @@ export interface VideoInfo {
 }
 
 export default interface IVideoUtil {
-    getFullFilePath(videoFileId: apid.VideoFileId): Promise<string | null>;
+    getFullFilePathFromId(videoFileId: apid.VideoFileId): Promise<string | null>;
     getParentDirPath(name: string): string | null;
     getInfo(filePath: string): Promise<VideoInfo>;
 }

@@ -235,7 +235,7 @@ export default class ExternalCommandManageModel implements IExternalCommandManag
                     RECPATH:
                         typeof recorded.videoFiles === 'undefined' || recorded.videoFiles.length < 0
                             ? null
-                            : this.videoUtil.getFullFilePath(recorded.videoFiles[0].id),
+                            : this.videoUtil.getFullFilePathFromId(recorded.videoFiles[0].id),
                     LOGPATH:
                         typeof recorded.dropLogFile === 'undefined' || recorded.dropLogFile === null
                             ? null

@@ -99,7 +99,7 @@ export default class RecordedManageModel implements IRecordedManageModel {
             for (const v of recorded.videoFiles!) {
                 let filePath: string | null;
                 try {
-                    filePath = await this.videoUtil.getFullFilePath(v.id);
+                    filePath = await this.videoUtil.getFullFilePathFromId(v.id);
                     if (filePath === null) {
                         throw new Error('GetVideoFilePathError');
                     }
@@ -190,7 +190,7 @@ export default class RecordedManageModel implements IRecordedManageModel {
     public async updateVideoFileSize(videoFileId: apid.VideoFileId): Promise<void> {
         this.log.system.info(`update video file size: ${videoFileId}`);
 
-        const filePath = await this.videoUtil.getFullFilePath(videoFileId);
+        const filePath = await this.videoUtil.getFullFilePathFromId(videoFileId);
         if (filePath === null) {
             this.log.system.error(`video file is not found: ${videoFileId}`);
             throw new Error('VideoFileIsNotFound');
@@ -253,7 +253,7 @@ export default class RecordedManageModel implements IRecordedManageModel {
         }
 
         // 実ファイル削除
-        const filePath = await this.videoUtil.getFullFilePath(videoFileid);
+        const filePath = await this.videoUtil.getFullFilePathFromId(videoFileid);
         if (filePath !== null) {
             this.log.system.info(`delete: ${filePath}`);
             await FileUtil.unlink(filePath).catch(err => {

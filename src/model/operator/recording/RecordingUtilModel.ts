@@ -189,7 +189,7 @@ export default class RecordingUtilModel implements IRecordingUtilModel {
      * @return Promise<string> 移動先のファイルパスを返す
      */
     public async movingFromTmp(reserve: Reserve, videoFileId: apid.VideoFileId): Promise<string> {
-        let videoFileFulPath = await this.videoUtil.getFullFilePath(videoFileId);
+        let videoFileFulPath = await this.videoUtil.getFullFilePathFromId(videoFileId);
 
         if (videoFileFulPath === null) {
             throw new Error('VideoFilePathIsNull');
@@ -254,7 +254,7 @@ export default class RecordingUtilModel implements IRecordingUtilModel {
     public async updateVideoFileSize(videoFileId: apid.VideoFileId): Promise<void> {
         this.log.system.info(`update file size: ${videoFileId}`);
 
-        const videoFileFulPath = await this.videoUtil.getFullFilePath(videoFileId);
+        const videoFileFulPath = await this.videoUtil.getFullFilePathFromId(videoFileId);
         if (videoFileFulPath === null) {
             throw new Error('VideoFilePathIsNull');
         }

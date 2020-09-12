@@ -150,7 +150,7 @@ export default abstract class RecordedStreamBaseModel extends StreamBaseModel<Re
         this.isRecording = recorded.isRecording;
 
         // videoFilePath セット
-        this.videoFilePath = await this.videoUtil.getFullFilePath(video.id);
+        this.videoFilePath = await this.videoUtil.getFullFilePathFromId(video.id);
         if (this.videoFilePath === null) {
             throw new Error('GetVideoFilePathError');
         }

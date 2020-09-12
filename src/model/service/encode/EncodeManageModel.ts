@@ -175,7 +175,7 @@ class EncodeManageModel implements IEncodeManageModel {
         }
 
         // ソースビデオファイルのファイルパスを生成する
-        const inputFilePath = await this.videoUtil.getFullFilePath(queueItem.sourceVideoFileId);
+        const inputFilePath = await this.videoUtil.getFullFilePathFromId(queueItem.sourceVideoFileId);
         if (inputFilePath === null) {
             throw new Error('VideoPathIsNotFound');
         }

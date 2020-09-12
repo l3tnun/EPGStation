@@ -38,7 +38,7 @@ export default class VideoApiModel implements IVideoApiModel {
      * @return Promise<VideoFilePathInfo | null>
      */
     public async getFullFilePath(videoFileId: apid.VideoFileId): Promise<VideoFilePathInfo | null> {
-        const fullPath = await this.videoUtil.getFullFilePath(videoFileId);
+        const fullPath = await this.videoUtil.getFullFilePathFromId(videoFileId);
 
         return fullPath === null
             ? null
@@ -113,7 +113,7 @@ export default class VideoApiModel implements IVideoApiModel {
      * @return Promise<number> 秒
      */
     public async getDuration(videoFileId: apid.VideoFileId): Promise<number> {
-        const filePath = await this.videoUtil.getFullFilePath(videoFileId);
+        const filePath = await this.videoUtil.getFullFilePathFromId(videoFileId);
         if (filePath === null) {
             throw new Error('VideoFileIsUndefined');
         }

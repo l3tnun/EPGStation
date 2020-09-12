@@ -20,7 +20,7 @@ export default class VideoUtil implements IVideoUtil {
         this.videoFileDB = videoFileDB;
     }
 
-    public async getFullFilePath(videoFileId: apid.VideoFileId): Promise<string | null> {
+    public async getFullFilePathFromId(videoFileId: apid.VideoFileId): Promise<string | null> {
         const video = await this.videoFileDB.findId(videoFileId);
         if (video === null) {
             return null;

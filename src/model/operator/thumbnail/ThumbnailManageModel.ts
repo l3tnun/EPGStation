@@ -70,7 +70,7 @@ export default class ThumbnailManageModel implements IThumbnailManageModel {
      */
     private async create(videoFileId: apid.VideoFileId): Promise<void> {
         const videoFile = await this.videoFileDB.findId(videoFileId);
-        const videoFilePath = await this.videoUtil.getFullFilePath(videoFileId);
+        const videoFilePath = await this.videoUtil.getFullFilePathFromId(videoFileId);
         if (videoFile === null || videoFilePath === null) {
             this.log.system.error(`video file is not found: ${videoFileId}`);
             throw new Error('VideoFileIsNotFound');
