@@ -21,7 +21,9 @@ export default class PromiseRetry implements IPromiseRetry {
             } catch (err) {
                 error = err;
 
-                await Util.sleep(option.waitTime || 1000);
+                await Util.sleep(
+                    typeof option === 'undefined' || typeof option.waitTime === 'undefined' ? 1000 : option.waitTime,
+                );
 
                 continue;
             }
