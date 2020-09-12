@@ -85,4 +85,18 @@ export default class DropLogFileDB implements IDropLogFileDB {
 
         return typeof result === 'undefined' ? null : result;
     }
+
+    /**
+     * 全てのドロップログファイル情報を取得
+     * @return Promise<DropLogFile[]>
+     */
+    public async findAll(): Promise<DropLogFile[]> {
+        const connection = await this.op.getConnection();
+
+        const queryBuilder = connection.getRepository(DropLogFile).createQueryBuilder();
+
+        return await this.promieRetry.run(() => {
+            return queryBuilder.getMany();
+        });
+    }
 }

@@ -250,6 +250,11 @@ export default class IPCServer implements IIPCServer {
             await this.recordedManage.videoFileCleanup();
         };
 
+        // dropLogFileCleanup
+        index[RecordedFunctions.dropLogFileCleanup] = async () => {
+            await this.recordedManage.dropLogFileCleanup();
+        };
+
         return index;
     }
 

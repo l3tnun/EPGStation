@@ -20,6 +20,7 @@ export interface IPCRecordedManageModel {
     addVideoFile(option: AddVideoFileOption): Promise<apid.VideoFileId>;
     deleteVideoFile(videoFileId: apid.VideoFileId): Promise<void>;
     videoFileCleanup(): Promise<void>;
+    dropLogFileCleanup(): Promise<void>;
 }
 
 export interface IPCRecordedTagManageModel {

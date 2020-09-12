@@ -114,5 +114,6 @@ export default class RecordedApiModel implements IRecordedApiModel {
      */
     public async fileCleanup(): Promise<void> {
         await this.ipc.recorded.videoFileCleanup();
+        await this.ipc.recorded.dropLogFileCleanup();
     }
 }

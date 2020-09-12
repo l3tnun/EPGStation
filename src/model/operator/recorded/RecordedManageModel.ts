@@ -370,6 +370,44 @@ export default class RecordedManageModel implements IRecordedManageModel {
     }
 
     /**
+     * DB に登録されていないログファイル削除 &  DB に登録されているが存在しないログ情報の削除
+     */
+    public async dropLogFileCleanup(): Promise<void> {
+        this.log.system.info('start drop log files cleanup');
+        const dropLogs = await this.dropLogFileDB.findAll();
+
+        // ファイル, ディレクトリ索引生成と DB 上に存在するが実ファイルが存在しないデータを削除する
+        const fileIndex: { [filePath: string]: boolean } = {}; // ファイル索引
+        for (const dropLog of dropLogs) {
+            const filePath = this.getDropLogFilePath(dropLog);
+
+            if ((await this.checkFileExistence(filePath)) === true) {
+                // ファイルが存在するなら索引に追加
+                fileIndex[filePath] = true;
+            } else {
+                // ファイルが存在しないなら削除
+                await await this.dropLogFileDB.deleteOnce(dropLog.id).catch(() => {});
+            }
+        }
+
+        // ファイル索引上に存在しないファイルを削除する
+        const list = await FileUtil.getFileList(this.config.dropLog);
+        for (const file of list.files) {
+            if (typeof fileIndex[file] !== 'undefined') {
+                continue;
+            }
+
+            this.log.system.info(`delete drop log file: ${file}`);
+            await FileUtil.unlink(file).catch(err => {
+                this.log.system.error(`failed to drop log file: ${file}`);
+                this.log.system.error(err);
+            });
+        }
+
+        this.log.system.info('start drop log files cleanup completed');
+    }
+
+    /**
      * 指定したファイルパスにファイルが存在するか
      * @param filePath: string ファイルパス
      * @return Promise<boolean> ファイルが存在するなら true を返す

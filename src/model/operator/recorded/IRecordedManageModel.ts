@@ -15,4 +15,5 @@ export default interface IRecordedManageModel {
     deleteVideoFile(videoFileid: apid.VideoFileId): Promise<void>;
     historyCleanup(): Promise<void>;
     videoFileCleanup(): Promise<void>;
+    dropLogFileCleanup(): Promise<void>;
 }

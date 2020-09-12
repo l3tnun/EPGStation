@@ -267,6 +267,15 @@ export default class IPCClient implements IIPCClient {
                     0, // タイムアウトなし
                 );
             },
+            dropLogFileCleanup: () => {
+                return this.send(
+                    {
+                        model: ModelName.recorded,
+                        func: RecordedFunctions.dropLogFileCleanup,
+                    },
+                    0, // タイムアウトなし
+                );
+            },
         };
     }
 

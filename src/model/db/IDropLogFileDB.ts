@@ -13,4 +13,5 @@ export default interface IDropLogFileDB {
     updateCnt(updateOption: UpdateCntOption): Promise<void>;
     deleteOnce(dropLogFileId: apid.DropLogFileId): Promise<void>;
     findId(dropLogFileId: apid.DropLogFileId): Promise<DropLogFile | null>;
+    findAll(): Promise<DropLogFile[]>;
 }
