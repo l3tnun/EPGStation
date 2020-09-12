@@ -77,6 +77,25 @@ export default class RecordedDB implements IRecordedDB {
     }
 
     /**
+     * 指定した drop log file id を削除する
+     * @param dropLogFileId: apid,DropLogFileId
+     * @return Promise<void>
+     */
+    public async removeDropLogFileId(dropLogFileId: apid.DropLogFileId): Promise<void> {
+        const connection = await this.op.getConnection();
+        const queryBuilder = connection
+            .createQueryBuilder()
+            .update(Recorded)
+            .set({
+                dropLogFileId: null,
+            })
+            .where({ dropLogFileId: dropLogFileId });
+        await this.promieRetry.run(() => {
+            return queryBuilder.execute();
+        });
+    }
+
+    /**
      * 指定した録画番組情報を 1 件削除
      * @param recordedId: apid.RecordedId
      * @return Promise<void>
