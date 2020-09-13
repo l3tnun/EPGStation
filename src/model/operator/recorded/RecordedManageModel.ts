@@ -285,7 +285,8 @@ export default class RecordedManageModel implements IRecordedManageModel {
     public async changeProtect(recordedId: apid.RecordedId, isProtect: boolean): Promise<void> {
         this.log.system.info((isProtect === true ? 'set protect' : 'remove protect') + `: ${recordedId}`);
 
-        return this.recordedDB.changeProtect(recordedId, isProtect);
+        await this.recordedDB.changeProtect(recordedId, isProtect);
+        this.recordedEvent.emitChangeProtect(recordedId, isProtect);
     }
 
     /**

@@ -48,6 +48,15 @@ class RecordedEvent implements IRecordedEvent {
     }
 
     /**
+     * 保護状態を変更イベント発行
+     * @param recordedId: apid.RecordedId
+     * @param isProtected: boolean
+     */
+    public emitChangeProtect(recordedId: apid.RecordedId, isProtected: boolean): void {
+        this.emitter.emit(RecordedEvent.CHANGE_PROTECT, recordedId, isProtected);
+    }
+
+    /**
      * 録画削除イベント登録
      * @param callback: (recorded: Recorded) => void
      */
@@ -102,6 +111,20 @@ class RecordedEvent implements IRecordedEvent {
             }
         });
     }
+
+    /**
+     * 保護状態を変更イベント登録
+     * @param callback: (recordedId: apid.RecordedId, isProtected: boolean) => void
+     */
+    public setChangeProtect(callback: (recordedId: apid.RecordedId, isProtected: boolean) => void): void {
+        this.emitter.on(RecordedEvent.CHANGE_PROTECT, async (recordedId: apid.RecordedId, isProtected: boolean) => {
+            try {
+                await callback(recordedId, isProtected);
+            } catch (err) {
+                this.log.system.error(err);
+            }
+        });
+    }
 }
 
 namespace RecordedEvent {
@@ -109,6 +132,7 @@ namespace RecordedEvent {
     export const UPDATE_VIDEO_FILE_SIZE = 'UpdateVideoFileSize';
     export const ADD_VIDEO_FILE = 'AddVideoFile';
     export const DLETE_VIDEO_FILE = 'DeleteVideoFile';
+    export const CHANGE_PROTECT = 'ChangeProtect';
 }
 
 export default RecordedEvent;

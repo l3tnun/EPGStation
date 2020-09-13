@@ -295,6 +295,11 @@ export default class EventSetter implements IEventSetter {
         this.recordedTagEvent.setDeletedRelation((_tagId, _recordedId) => {
             this.ipc.notifyClient();
         });
+
+        // 保護状態変更
+        this.recordedEvent.setChangeProtect(() => {
+            this.ipc.notifyClient();
+        });
     }
 
     /**
