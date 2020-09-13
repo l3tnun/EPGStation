@@ -417,15 +417,6 @@ export interface GetRecordedOption {
 }
 
 /**
- * recorded が持つ rule のリスト
- */
-export interface RecordedRuleListItem {
-    cnt: number; // 個数
-    ruleId: RuleId; // ルール id
-    keyword: string; // キーワード
-}
-
-/**
  * recorded が持つ channelId のリスト
  */
 export interface RecordedChannelListItem {
@@ -445,7 +436,6 @@ export interface RecordedGenreListItem {
  * recorded が持つ検索オプションリスト
  */
 export interface RecordedSearchOptions {
-    rules: RecordedRuleListItem[];
     channels: RecordedChannelListItem[];
     genres: RecordedGenreListItem[];
 }

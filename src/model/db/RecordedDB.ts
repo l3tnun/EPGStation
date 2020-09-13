@@ -2,7 +2,6 @@ import { inject, injectable } from 'inversify';
 import { In, IsNull, Not } from 'typeorm';
 import * as apid from '../../../api';
 import Recorded from '../../db/entities/Recorded';
-import Rule from '../../db/entities/Rule';
 import StrUtil from '../../util/StrUtil';
 import IPromiseRetry from '../IPromiseRetry';
 import DBUtil from './DBUtil';
@@ -382,45 +381,6 @@ export default class RecordedDB implements IRecordedDB {
 
             return [result, total];
         }
-    }
-
-    /**
-     * RuleIdのリストを返す
-     * @return Promise<apid.RecordedRuleListItem[]>
-     */
-    public async findRuleList(): Promise<apid.RecordedRuleListItem[]> {
-        const connection = await this.op.getConnection();
-
-        const queryBuilder = connection
-            .getRepository(Recorded)
-            .createQueryBuilder('recorded')
-            .select('count(*) as cnt, ruleId, keyword')
-            .innerJoin(Rule, 'rule', 'rule.id = recorded.ruleId')
-            .groupBy('ruleId');
-
-        const queryBuilder2 = connection
-            .getRepository(Recorded)
-            .createQueryBuilder('recorded')
-            .select('count(*) as cnt')
-            .where({ ruleId: IsNull() });
-
-        const noRule = await this.promieRetry.run(() => {
-            return queryBuilder2.getRawOne();
-        });
-
-        const rules = await this.promieRetry.run(() => {
-            return queryBuilder.getRawMany();
-        });
-
-        if (noRule.cnt > 1) {
-            rules.unshift({
-                cnt: noRule.cnt,
-                ruleId: 0,
-                keyword: null,
-            });
-        }
-
-        return rules;
     }
 
     /**

@@ -71,19 +71,10 @@ export default class RecordedApiModel implements IRecordedApiModel {
      * @return Promise<apid.RecordedSearchOptionList>
      */
     public async getSearchOptionList(): Promise<apid.RecordedSearchOptions> {
-        const rules = await this.recordedDB.findRuleList();
         const channels = await this.recordedDB.findChannelList();
         const genres = await this.recordedDB.findGenreList();
 
-        for (const rule of rules) {
-            if (rule.keyword === null) {
-                rule.ruleId = 0;
-                rule.keyword = 'キーワード無し';
-            }
-        }
-
         return {
-            rules: rules,
             channels: channels,
             genres: genres,
         };

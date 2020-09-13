@@ -1136,23 +1136,6 @@ components:
                 tagId:
                     $ref: '#/components/schemas/RecordedTagId'
 
-        RecordedRuleListItem:
-            description: recorded が持つ rule のリスト
-            type: object
-            required:
-                - cnt
-                - ruleId
-                - keyword
-            properties:
-                cnt:
-                    description: 録画数
-                    type: integer
-                ruleId:
-                    $ref: '#/components/schemas/RuleId'
-                keyword:
-                    description: キーワード
-                    type: string
-
         RecordedChannelListItem:
             description: recorded が持つ channelId のリスト
             type: object
@@ -1183,14 +1166,11 @@ components:
             description: recorded が持つ検索オプション情報
             type: object
             required:
-                - rules
                 - channels
                 - genres
             properties:
-                rules:
-                    $ref: '#/components/schemas/RecordedRuleListItem'
                 channels:
-                    $ref: '#/components/schemas/RecordedRuleListItem'
+                    $ref: '#/components/schemas/RecordedChannelListItem'
                 genres:
                     $ref: '#/components/schemas/RecordedGenreListItem'
 
