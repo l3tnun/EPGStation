@@ -277,6 +277,18 @@ export default class RecordedManageModel implements IRecordedManageModel {
     }
 
     /**
+     * 保護状態を変更する
+     * @param recordedId: apid.RecordedId
+     * @param isProtect: boolean
+     * @return Promise<void>
+     */
+    public async changeProtect(recordedId: apid.RecordedId, isProtect: boolean): Promise<void> {
+        this.log.system.info((isProtect === true ? 'set protect' : 'remove protect') + `: ${recordedId}`);
+
+        return this.recordedDB.changeProtect(recordedId, isProtect);
+    }
+
+    /**
      * RecordedHistory の保存期間外のデータを削除する
      * @return Promise<void>
      */

@@ -245,6 +245,14 @@ export default class IPCServer implements IIPCServer {
             await this.recordedManage.deleteVideoFile(videoFileId);
         };
 
+        // changeProtect
+        index[RecordedFunctions.changeProtect] = async msg => {
+            const recordedId = this.getArgsValue<apid.RecordedId>(msg, 'recordedId');
+            const isProtect = this.getArgsValue<boolean>(msg, 'isProtect');
+
+            await this.recordedManage.changeProtect(recordedId, isProtect);
+        };
+
         // videoFileCleanup
         index[RecordedFunctions.videoFileCleanup] = async () => {
             await this.recordedManage.videoFileCleanup();

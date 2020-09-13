@@ -258,6 +258,16 @@ export default class IPCClient implements IIPCClient {
                     },
                 });
             },
+            changeProtect: (recordedId: apid.RecordedId, isProtect: boolean) => {
+                return this.send({
+                    model: ModelName.recorded,
+                    func: RecordedFunctions.changeProtect,
+                    args: {
+                        recordedId: recordedId,
+                        isProtect: isProtect,
+                    },
+                });
+            },
             videoFileCleanup: () => {
                 return this.send(
                     {

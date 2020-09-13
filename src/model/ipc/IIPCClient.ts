@@ -19,6 +19,7 @@ export interface IPCRecordedManageModel {
     updateVideoFileSize(videoFileId: apid.VideoFileId): Promise<void>;
     addVideoFile(option: AddVideoFileOption): Promise<apid.VideoFileId>;
     deleteVideoFile(videoFileId: apid.VideoFileId): Promise<void>;
+    changeProtect(recordedId: apid.RecordedId, isProtect: boolean): Promise<void>;
     videoFileCleanup(): Promise<void>;
     dropLogFileCleanup(): Promise<void>;
 }

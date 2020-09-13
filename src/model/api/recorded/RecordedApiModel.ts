@@ -110,6 +110,16 @@ export default class RecordedApiModel implements IRecordedApiModel {
     }
 
     /**
+     * 保護状態を変更する
+     * @param recordedId: apid.RecordedId
+     * @param isProtect: boolean
+     * @return Promise<void>
+     */
+    public changeProtect(recordedId: apid.RecordedId, isProtect: boolean): Promise<void> {
+        return this.ipc.recorded.changeProtect(recordedId, isProtect);
+    }
+
+    /**
      * ファイルのクリーンアップ
      */
     public async fileCleanup(): Promise<void> {
