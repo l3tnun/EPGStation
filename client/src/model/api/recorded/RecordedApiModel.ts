@@ -69,6 +69,24 @@ export default class RecordedApiModel implements IRecordedApiModel {
     }
 
     /**
+     * 自動削除対象から除外
+     * @param recordedId: apid.RecordedId
+     * @return Promise<void>
+     */
+    public async protect(recordedId: apid.RecordedId): Promise<void> {
+        await this.repository.put(`/recorded/${recordedId}/protect`);
+    }
+
+    /**
+     * 自動削除対象に戻す
+     * @param recordedId: apid.RecordedId
+     * @return Promise<void>
+     */
+    public async unprotect(recordedId: apid.RecordedId): Promise<void> {
+        await this.repository.put(`/recorded/${recordedId}/unprotect`);
+    }
+
+    /**
      * 録画のクリーンアップ
      * @return Promise<void>
      */

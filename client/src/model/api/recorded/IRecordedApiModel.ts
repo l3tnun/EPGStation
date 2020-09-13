@@ -6,5 +6,7 @@ export default interface IRecordedApiModel {
     getSearchOptionList(): Promise<apid.RecordedSearchOptions>;
     delete(recordedId: apid.RecordedId): Promise<void>;
     stopEncode(recordedId: apid.RecordedId): Promise<void>;
+    protect(recordedId: apid.RecordedId): Promise<void>;
+    unprotect(recordedId: apid.RecordedId): Promise<void>;
     cleanup(): Promise<void>;
 }

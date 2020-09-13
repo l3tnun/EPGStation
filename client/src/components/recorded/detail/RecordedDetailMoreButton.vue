@@ -31,6 +31,22 @@
                         <v-list-item-title>search</v-list-item-title>
                     </v-list-item-content>
                 </v-list-item>
+                <v-list-item v-if="recordedItem.isProtected === true" v-on:click="unprotect">
+                    <v-list-item-icon class="mr-3">
+                        <v-icon>mdi-lock-open</v-icon>
+                    </v-list-item-icon>
+                    <v-list-item-content>
+                        <v-list-item-title>unprotect</v-list-item-title>
+                    </v-list-item-content>
+                </v-list-item>
+                <v-list-item v-else v-on:click="protect">
+                    <v-list-item-icon class="mr-3">
+                        <v-icon>mdi-lock</v-icon>
+                    </v-list-item-icon>
+                    <v-list-item-content>
+                        <v-list-item-title>protect</v-list-item-title>
+                    </v-list-item-content>
+                </v-list-item>
                 <v-list-item v-on:click="openDeleteDialog">
                     <v-list-item-icon class="mr-3">
                         <v-icon>mdi-delete</v-icon>
@@ -60,6 +76,9 @@
 <script lang="ts">
 import RecordedDeleteDialog from '@/components/recorded/RecordedDeleteDialog.vue';
 import RecordedDownloadDialog from '@/components/recorded/RecordedDownloadDialog.vue';
+import IRecordedApiModel from '@/model/api/recorded/IRecordedApiModel';
+import container from '@/model/ModelContainer';
+import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
 import StrUtil from '@/util/StrUtil';
 import Util from '@/util/Util';
 import { Component, Prop, Vue } from 'vue-property-decorator';
@@ -80,6 +99,9 @@ export default class RecordedDetailMoreButton extends Vue {
     public isOpenDeleteDialog: boolean = false;
     public isOpenDownloadDialog: boolean = false;
 
+    public recordedApiModel = container.get<IRecordedApiModel>('IRecordedApiModel');
+    private snackbarState: ISnackbarState = container.get<ISnackbarState>('ISnackbarState');
+
     public async openDownloadDialog(): Promise<void> {
         await Util.sleep(300);
         this.isOpenDownloadDialog = true;
@@ -97,6 +119,36 @@ export default class RecordedDetailMoreButton extends Vue {
                 rule: this.recordedItem.ruleId.toString(10),
             },
         });
+    }
+
+    public async unprotect(): Promise<void> {
+        try {
+            await this.recordedApiModel.unprotect(this.recordedItem.id);
+            this.snackbarState.open({
+                color: 'success',
+                text: '保護解除に成功',
+            });
+        } catch (err) {
+            this.snackbarState.open({
+                color: 'error',
+                text: '保護解除に失敗',
+            });
+        }
+    }
+
+    public async protect(): Promise<void> {
+        try {
+            await this.recordedApiModel.protect(this.recordedItem.id);
+            this.snackbarState.open({
+                color: 'success',
+                text: '保護に成功',
+            });
+        } catch (err) {
+            this.snackbarState.open({
+                color: 'error',
+                text: '保護に失敗',
+            });
+        }
     }
 
     public async search(): Promise<void> {
