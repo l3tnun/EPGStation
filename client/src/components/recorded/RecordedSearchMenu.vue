@@ -14,13 +14,21 @@
                         clearable
                         v-on:keydown.enter="onSearch()"
                     ></v-text-field>
-                    <v-select
+                    <v-autocomplete
                         v-model="searchState.ruleId"
+                        :loading="loading"
                         :items="searchState.ruleItems"
-                        label="ルール"
+                        :search-input.sync="search"
+                        item-text="keyword"
+                        item-value="id"
+                        cache-items
+                        flat
+                        hide-no-data
+                        hide-details
                         clearable
-                        :menu-props="{ auto: true }"
-                    ></v-select>
+                        label="ルール"
+                        class="pb-2"
+                    ></v-autocomplete>
                     <v-select
                         v-model="searchState.channelId"
                         :items="searchState.channelItems"
@@ -55,7 +63,6 @@
 
 <script lang="ts">
 import container from '@/model/ModelContainer';
-import ISocketIOModel from '@/model/socketio/ISocketIOModel';
 import IRecordedSearchState from '@/model/state/recorded/search/IRecordedSearchState';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
 import Util from '@/util/Util';
@@ -64,30 +71,23 @@ import * as apid from '../../../../api';
 
 @Component({})
 export default class RecordedSearchMenu extends Vue {
+    public loading: boolean = false;
+    public search: string | null = null;
+
+    @Watch('search', { immediate: true })
+    public async onChangeSearch(newKeyword: string): Promise<void> {
+        if (newKeyword === null || newKeyword === this.searchState.ruleKeyword) {
+            return;
+        }
+
+        this.searchState.ruleKeyword = newKeyword;
+        await this.searchState.updateRuleItems();
+    }
+
     public isOpen: boolean = false;
     public searchState: IRecordedSearchState = container.get<IRecordedSearchState>('IRecordedSearchState');
 
     private snackbarState: ISnackbarState = container.get<ISnackbarState>('ISnackbarState');
-    private socketIoModel: ISocketIOModel = container.get<ISocketIOModel>('ISocketIOModel');
-    private onUpdateStatusCallback = (async () => {
-        await this.searchState.update().catch(err => {
-            console.error(err);
-            this.snackbarState.open({
-                color: 'error',
-                text: '録画検索オプションの取得に失敗',
-            });
-        });
-    }).bind(this);
-
-    public created(): void {
-        // socket.io イベント
-        this.socketIoModel.onUpdateState(this.onUpdateStatusCallback);
-    }
-
-    public beforeDestroy(): void {
-        // socket.io イベント
-        this.socketIoModel.offUpdateState(this.onUpdateStatusCallback);
-    }
 
     public onCancel(): void {
         this.isOpen = false;
@@ -136,6 +136,7 @@ export default class RecordedSearchMenu extends Vue {
     public onUrlChange(): void {
         this.isOpen = false;
 
+        this.setRuleId();
         this.searchState.fetchData().catch(err => {
             console.error(err);
             this.snackbarState.open({
@@ -145,17 +146,20 @@ export default class RecordedSearchMenu extends Vue {
         });
     }
 
+    private setRuleId(): void {
+        this.searchState.ruleId =
+            typeof this.$route.query.ruleId === 'undefined' ? null : parseInt(this.$route.query.ruleId as string, 10);
+    }
+
     @Watch('isOpen', { immediate: true })
     public onChangeState(newState: boolean, oldState: boolean): void {
         if (newState === true && oldState === false) {
             this.searchState.initValues();
 
             // query から値をセット
+            this.setRuleId();
             if (typeof this.$route.query.keyword === 'string') {
                 this.searchState.keyword = this.$route.query.keyword;
-            }
-            if (typeof this.$route.query.ruleId !== 'undefined') {
-                this.searchState.ruleId = parseInt(this.$route.query.ruleId as string, 10);
             }
             if (typeof this.$route.query.channelId !== 'undefined') {
                 this.searchState.channelId = parseInt(this.$route.query.channelId as string, 10);

@@ -36,6 +36,19 @@ export default class RuleApiModel implements IRuleApiModel {
     }
 
     /**
+     * ルールのキーワード検索
+     * @param option: apid.GetRuleOption
+     * @return Promise<apid.RuleKeywordItem[]>
+     */
+    public async searchKeyword(option: apid.GetRuleOption): Promise<apid.RuleKeywordItem[]> {
+        const result = await this.repository.get('/rules/keyword', {
+            params: option,
+        });
+
+        return <any>result.data.items;
+    }
+
+    /**
      * ルールの追加
      * @param rule: apid.AddRuleOption
      * @return Promise<apid.RuleId>
