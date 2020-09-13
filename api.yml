@@ -478,6 +478,28 @@ components:
             allOf:
                 - $ref: '#/components/schemas/AddRuleOption'
 
+        RuleKeywordItem:
+            type: object
+            required:
+                - id
+                - keyword
+            properties:
+                id:
+                    $ref: '#/components/schemas/RuleId'
+                keyword:
+                    type: string
+
+        RuleKeywordInfo:
+            description: ルールキーワード検索結果
+            type: object
+            required:
+                - items
+            properties:
+                items:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/RuleKeywordItem'
+
         AddRuleOption:
             description: ルール追加プション
             type: object

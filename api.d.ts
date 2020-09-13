@@ -190,6 +190,18 @@ export interface Rule extends AddRuleOption {
     reservesCnt?: number;
 }
 
+export interface RuleKeywordItem {
+    id: RuleId;
+    keyword: string;
+}
+
+/**
+ * ルールのキーワード検索結果
+ */
+export interface RuleKeywordInfo {
+    items: RuleKeywordItem[];
+}
+
 /**
  * Rule 追加オプション
  */

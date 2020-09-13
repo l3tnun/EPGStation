@@ -466,6 +466,68 @@ export default class RuleDB implements IRuleDB {
     }
 
     /**
+     * キーワード検索
+     * @param option: apid.GetRuleOption
+     * @return Promise<apid.RuleKeywordItem[]>
+     */
+    public async findKeyword(option: apid.GetRuleOption): Promise<apid.RuleKeywordItem[]> {
+        const connection = await this.op.getConnection();
+
+        let queryBuilder = connection
+            .createQueryBuilder()
+            .select('rule.id, rule.keyword')
+            .from(Rule, 'rule')
+            .orderBy('rule.id', 'ASC');
+
+        // keyword
+        if (typeof option.keyword !== 'undefined') {
+            const names = StrUtil.toHalf(option.keyword).split(/ /);
+            const like = this.op.getLikeStr(false);
+
+            const keywordAnd: string[] = [];
+            const values: any = {};
+            names.forEach((str, i) => {
+                str = `%${str}%`;
+
+                // value
+                const valueName = `keyword${i}`;
+                values[valueName] = str;
+
+                // keyword
+                keywordAnd.push(`halfWidthKeyword ${like} :${valueName}`);
+            });
+
+            const or: string[] = [];
+            if (keywordAnd.length > 0) {
+                or.push(`(${DBUtil.createAndQuery(keywordAnd)})`);
+            }
+
+            queryBuilder = queryBuilder.andWhere(DBUtil.createOrQuery(or), values);
+        }
+
+        // offset
+        if (typeof option.offset !== 'undefined') {
+            queryBuilder = queryBuilder.skip(option.offset);
+        }
+
+        // limit
+        if (typeof option.limit !== 'undefined') {
+            queryBuilder = queryBuilder.take(option.limit);
+        }
+
+        const result = await this.promieRetry.run(() => {
+            return queryBuilder.getRawMany();
+        });
+
+        return result.map(r => {
+            return {
+                id: r.id,
+                keyword: r.keyword === null ? '' : r.keyword,
+            };
+        });
+    }
+
+    /**
      * rule id を全て取得する
      * @return Promise<apid.RuleId[]>
      */

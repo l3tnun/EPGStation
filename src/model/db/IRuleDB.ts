@@ -12,5 +12,6 @@ export default interface IRuleDB {
     deleteOnce(ruleId: apid.RuleId): Promise<void>;
     findId(ruleId: apid.RuleId, isNeedCnt?: boolean): Promise<apid.Rule | RuleWithCnt | null>;
     findAll(option: apid.GetRuleOption): Promise<[apid.Rule[], number]>;
+    findKeyword(option: apid.GetRuleOption): Promise<apid.RuleKeywordItem[]>;
     getIds(): Promise<apid.RuleId[]>;
 }

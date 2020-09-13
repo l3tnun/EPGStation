@@ -77,6 +77,15 @@ export default class RuleApiModel implements IRuleApiModel {
     }
 
     /**
+     * キーワード検索
+     * @param option: apid.GetRuleOption
+     * @return Promise<apid.RuleKeywordItem[]>
+     */
+    public async searchKeyword(option: apid.GetRuleOption): Promise<apid.RuleKeywordItem[]> {
+        return this.ruleDB.findKeyword(option);
+    }
+
+    /**
      * ルールの更新
      * @param rule: apid.Rule
      */
