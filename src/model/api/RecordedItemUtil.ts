@@ -24,6 +24,7 @@ export default class RecordedItemUtil implements IRecordedItemUtil {
             name: isHalfWidth === true ? recorded.halfWidthName : recorded.name,
             isRecording: recorded.isRecording,
             isEncoding: typeof encodeIndex[recorded.id] !== 'undefined',
+            isProtected: recorded.isProtected,
         };
 
         if (recorded.ruleId !== null) {

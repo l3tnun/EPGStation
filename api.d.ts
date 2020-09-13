@@ -367,6 +367,7 @@ export interface RecordedItem {
     dropLogFile?: DropLogFile;
     tags?: RecordedTag[];
     isEncoding: boolean;
+    isProtected: boolean;
 }
 
 /**

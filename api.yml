@@ -950,6 +950,7 @@ components:
                 - name
                 - isRecording
                 - isEncoding
+                - isProtected
             properties:
                 id:
                     $ref: '#/components/schemas/RecordedId'
@@ -1015,6 +1016,9 @@ components:
                         $ref: '#/components/schemas/RecordedTag'
                 isEncoding:
                     description: エンコード中か
+                    type: boolean
+                isProtected:
+                    description: 自動録画削除対象外か
                     type: boolean
 
         VideoFile:
