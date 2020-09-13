@@ -440,6 +440,9 @@ export default class RecordedDB implements IRecordedDB {
         const queryBuilder = connection
             .getRepository(Recorded)
             .createQueryBuilder('recorded')
+            .where({
+                isProtected: false,
+            })
             .orderBy('recorded.startAt', 'ASC')
             .orderBy('recorded.id', 'ASC')
             .leftJoinAndSelect('recorded.videoFiles', 'videoFiles')
