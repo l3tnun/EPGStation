@@ -21,6 +21,13 @@ export interface StreamingCmd {
     cmd?: string;
 }
 
+export interface KodiInfo {
+    name: string;
+    host: string;
+    user?: string;
+    password?: string;
+}
+
 /**
  * config ファイル形式
  */
@@ -157,4 +164,7 @@ export default interface IConfigFile {
             };
         };
     };
+
+    // 配信先 kodi 設定
+    kodiHosts?: KodiInfo[];
 }
