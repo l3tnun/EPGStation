@@ -103,7 +103,9 @@ import IStorageOperationModel from './storage/IStorageOperationModel';
 import IOnAirSelectStreamSettingStorageModel from './storage/onair/IOnAirSelectStreamSettingStorageModel';
 import OnAirSelectStreamSettingStorageModel from './storage/onair/OnAirSelectStreamSettingStorageModel';
 import IRecordedSelectStreamSettingStorageModel from './storage/recorded/IRecordedSelectStreamSettingStorageModel';
+import ISendVideoFileSelectHostSettingStorageModel from './storage/recorded/ISendVideoFileSelectHostSettingStorageModel';
 import RecordedSelectStreamSettingStorageModel from './storage/recorded/RecordedSelectStreamSettingStorageModel';
+import SendVideoFileSelectHostSettingStorageModel from './storage/recorded/SendVideoFileSelectHostSettingStorageModel';
 import ISettingStorageModel from './storage/setting/ISettingStorageModel';
 import SettingStorageModel from './storage/setting/SettingStorageModel';
 import StorageOperationModel from './storage/StorageOperationModel';
@@ -172,6 +174,11 @@ export default (container: Container) => {
     container
         .bind<IRecordedSelectStreamSettingStorageModel>('IRecordedSelectStreamSettingStorageModel')
         .to(RecordedSelectStreamSettingStorageModel)
+        .inSingletonScope();
+
+    container
+        .bind<ISendVideoFileSelectHostSettingStorageModel>('ISendVideoFileSelectHostSettingStorageModel')
+        .to(SendVideoFileSelectHostSettingStorageModel)
         .inSingletonScope();
 
     container.bind<IServerConfigModel>('IServerConfigModel').to(ServerConfigModel).inSingletonScope();

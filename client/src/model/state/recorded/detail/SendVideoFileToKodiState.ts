@@ -22,13 +22,17 @@ export default class SendVideoFileToKodiState implements ISendVideoFileToKodiSta
     /**
      * 初期化
      */
-    public init(): void {
-        // TODO Storageから前回値を復元する
-        // hostName の初期設定
-        const hosts = this.getHosts();
+    public init(hostName: string | null): void {
+        // Storageから前回値を復元する
+        this.hostName = hostName;
 
-        if (hosts.length > 0) {
-            this.hostName = hosts[0];
+        // hostName の初期設定
+        if (this.hostName === null) {
+            const hosts = this.getHosts();
+
+            if (hosts.length > 0) {
+                this.hostName = hosts[0];
+            }
         }
     }
 

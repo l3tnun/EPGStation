@@ -36,6 +36,7 @@
 import container from '@/model/ModelContainer';
 import ISendVideoFileToKodiState from '@/model/state/recorded/detail/ISendVideoFileToKodiState';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
+import ISendVideoFileSelectHostSettingStorageModel from '@/model/storage/recorded/ISendVideoFileSelectHostSettingStorageModel';
 import Util from '@/util/Util';
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
 import * as apid from '../../../../../api';
@@ -52,9 +53,12 @@ export default class SendVideoFileToKodiDialog extends Vue {
     public isOpen!: boolean;
 
     public dialogState = container.get<ISendVideoFileToKodiState>('ISendVideoFileToKodiState');
-    private snackbarState: ISnackbarState = container.get<ISnackbarState>('ISnackbarState');
-
     public isRemove: boolean = false;
+
+    private snackbarState: ISnackbarState = container.get<ISnackbarState>('ISnackbarState');
+    private setting = container.get<ISendVideoFileSelectHostSettingStorageModel>(
+        'ISendVideoFileSelectHostSettingStorageModel',
+    );
 
     /**
      * Prop で受け取った isOpen を直接は書き換えられないので
@@ -89,11 +93,12 @@ export default class SendVideoFileToKodiDialog extends Vue {
     @Watch('isOpen', { immediate: true })
     public onChangeState(newState: boolean, oldState: boolean): void {
         if (newState === true && !!oldState === false) {
-            // TODO storage から前回値読み取り
-            this.dialogState.init();
+            const settingValue = this.setting.getSavedValue();
+            this.dialogState.init(settingValue.hostName);
         } else if (newState === false && oldState === true) {
             // close
-            // TODO storage に値保存
+            this.setting.tmp.hostName = this.dialogState.hostName;
+            this.setting.save();
 
             this.$nextTick(async () => {
                 await Util.sleep(100);
