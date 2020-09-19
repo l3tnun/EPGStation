@@ -58,8 +58,10 @@ import IWatchOnAirInfoState from './state/onair/watch/IWatchOnAirInfoState';
 import WatchOnAirInfoState from './state/onair/watch/WatchOnAirInfoState';
 import IRecordedDetailSelectStreamState from './state/recorded/detail/IRecordedDetailSelectStreamState';
 import IRecordedDetailState from './state/recorded/detail/IRecordedDetailState';
+import ISendVideoFileToKodiState from './state/recorded/detail/ISendVideoFileToKodiState';
 import RecordedDetailSelectStreamState from './state/recorded/detail/RecordedDetailSelectStreamState';
 import RecordedDetailState from './state/recorded/detail/RecordedDetailState';
+import SendVideoFileToKodiState from './state/recorded/detail/SendVideoFileToKodiState';
 import IRecordedState from './state/recorded/IRecordedState';
 import IRecordedUtil from './state/recorded/IRecordedUtil';
 import RecordedState from './state/recorded/RecordedState';
@@ -223,6 +225,11 @@ export default (container: Container) => {
     container
         .bind<IRecordedHLSStreamingVideoState>('IRecordedHLSStreamingVideoState')
         .to(RecordedHLSStreamingVideoState)
+        .inSingletonScope();
+
+    container
+        .bind<ISendVideoFileToKodiState>('ISendVideoFileToKodiState')
+        .to(SendVideoFileToKodiState)
         .inSingletonScope();
 
     container.bind<IWatchRecordedInfoState>('IWatchRecordedInfoState').to(WatchRecordedInfoState).inSingletonScope();

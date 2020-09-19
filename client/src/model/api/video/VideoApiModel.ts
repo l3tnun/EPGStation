@@ -30,4 +30,16 @@ export default class VideoApiModel implements IVideoApiModel {
 
         return (<any>result.data).duration;
     }
+
+    /**
+     * kodi にビデオリンクを送信する
+     * @param hostName: kodi host name
+     * @param videoFileId: apid.VideoFileId)
+     * @return Promise<void>
+     */
+    public async sendToKodi(hostName: string, videoFileId: apid.VideoFileId): Promise<void> {
+        await this.repository.post(`/videos/${videoFileId}/kodi`, {
+            kodiName: hostName,
+        });
+    }
 }

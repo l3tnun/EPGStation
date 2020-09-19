@@ -72,6 +72,10 @@
                                         v-on:stopEncode="stopEncode"
                                     ></RecordedDetailStopEncodeButton>
                                 </div>
+                                <RecordedDetailKodiButton
+                                    :recordedItem="recorded.recordedItem"
+                                    :videoFiles="recorded.display.videoFiles"
+                                ></RecordedDetailKodiButton>
                             </div>
                         </div>
                     </div>
@@ -94,6 +98,7 @@
 <script lang="ts">
 import DropLogDialog from '@/components/dropLog/DropLogDialog.vue';
 import RecordedDetailEncodeButton from '@/components/recorded/detail/RecordedDetailEncodeButton.vue';
+import RecordedDetailKodiButton from '@/components/recorded/detail/RecordedDetailKodiButton.vue';
 import RecordedDetailMoreButton from '@/components/recorded/detail/RecordedDetailMoreButton.vue';
 import RecordedDetailPlayButton from '@/components/recorded/detail/RecordedDetailPlayButton.vue';
 import RecordedDetailSelectStreamDialog from '@/components/recorded/detail/RecordedDetailSelectStreamDialog.vue';
@@ -122,6 +127,7 @@ Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
         RecordedDetailStopEncodeButton,
         RecordedDetailMoreButton,
         RecordedDetailSelectStreamDialog,
+        RecordedDetailKodiButton,
         DropLogDialog,
     },
 })

@@ -110,4 +110,12 @@ export default class ServerConfigModel implements IServerConfigModel {
     public isEnableEncode(): boolean {
         return this.config !== null && this.config.encode.length > 0;
     }
+
+    /**
+     * kodi への viode file link 送信が有効か
+     * @return boolean true で有効
+     */
+    public isEnableSendVideoFileLinkToKodi(): boolean {
+        return this.config !== null && typeof this.config.kodiHosts !== 'undefined' && this.config.kodiHosts.length > 0;
+    }
 }
