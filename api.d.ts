@@ -498,6 +498,7 @@ export interface Config {
             };
         };
     };
+    kodiHosts?: string[];
 }
 
 /**

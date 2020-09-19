@@ -290,6 +290,11 @@ components:
                                             type: array
                                             items:
                                                 type: string
+                kodiHosts:
+                    description: kodi hosts
+                    type: array
+                    items:
+                        type: string
 
         ChannelItems:
             type: array

@@ -138,6 +138,12 @@ export default class ConfigApiModel implements IConfigApiModel {
             }
         }
 
+        if (typeof config.kodiHosts !== 'undefined') {
+            result.kodiHosts = config.kodiHosts.map(k => {
+                return k.name;
+            });
+        }
+
         return result;
     }
 }
