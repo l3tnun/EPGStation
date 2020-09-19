@@ -11,4 +11,5 @@ export default interface IVideoApiModel {
     getM3u8(host: string, isSecure: boolean, videoFileId: apid.VideoFileId): Promise<IPlayList | null>;
     deleteVideoFile(videoFileId: apid.VideoFileId): Promise<void>;
     getDuration(videoFileId: apid.VideoFileId): Promise<number>;
+    sendToKodi(host: string, isSecure: boolean, kodiName: string, videoFileId: apid.VideoFileId): Promise<void>;
 }

@@ -1174,6 +1174,16 @@ components:
                 genres:
                     $ref: '#/components/schemas/RecordedGenreListItem'
 
+        SendVideoLinkToKodiOption:
+            description: kodiへビデオリンクを送信するときのオプション
+            type: object
+            required:
+                - kodiName
+            properties:
+                kodiName:
+                    description: config の kodi の name
+                    type: string
+
         Version:
             description: バージョン情報
             type: object

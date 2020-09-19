@@ -4,6 +4,7 @@ import * as path from 'path';
 import * as apid from '../../../../api';
 import IRecordedDB from '../../db/IRecordedDB';
 import IVideoFileDB from '../../db/IVideoFileDB';
+import IConfiguration from '../../IConfiguration';
 import IIPCClient from '../../ipc/IIPCClient';
 import IApiUtil from '../IApiUtil';
 import IPlayList from '../IPlayList';
@@ -12,6 +13,7 @@ import IVideoUtil from './IVideoUtil';
 
 @injectable()
 export default class VideoApiModel implements IVideoApiModel {
+    private configuration: IConfiguration;
     private videoFileDB: IVideoFileDB;
     private recordedDB: IRecordedDB;
     private apiUtil: IApiUtil;
@@ -19,12 +21,14 @@ export default class VideoApiModel implements IVideoApiModel {
     private ipc: IIPCClient;
 
     constructor(
+        @inject('IConfiguration') configuration: IConfiguration,
         @inject('IVideoFileDB') videoFileDB: IVideoFileDB,
         @inject('IRecordedDB') recordedDB: IRecordedDB,
         @inject('IApiUtil') apiUtil: IApiUtil,
         @inject('IVideoUtil') videoUtil: IVideoUtil,
         @inject('IIPCClient') ipc: IIPCClient,
     ) {
+        this.configuration = configuration;
         this.videoFileDB = videoFileDB;
         this.recordedDB = recordedDB;
         this.apiUtil = apiUtil;
@@ -121,5 +125,36 @@ export default class VideoApiModel implements IVideoApiModel {
         const videoInfo = await this.videoUtil.getInfo(filePath);
 
         return videoInfo.duration;
+    }
+
+    public async sendToKodi(
+        host: string,
+        isSecure: boolean,
+        kodiName: string,
+        videoFileId: apid.VideoFileId,
+    ): Promise<void> {
+        host = this.apiUtil.getHost(host);
+
+        // kodiName で指定された kodi host を config から探す
+        const config = this.configuration.getConfig();
+        if (typeof config.kodiHosts === 'undefined') {
+            throw new Error('KodiHostsIsUndefined');
+        }
+        const kodi = config.kodiHosts.find(k => {
+            return k.name === kodiName;
+        });
+        if (typeof kodi === 'undefined') {
+            throw new Error('KodiHostIsUndefined');
+        }
+
+        const videoFile = await this.videoFileDB.findId(videoFileId);
+        if (videoFile === null) {
+            throw new Error('VideoFileIsUndefined');
+        }
+
+        // TODO basic auth
+        const source = `${isSecure ? 'https' : 'http'}://${host}/api/videos/${videoFileId}`;
+
+        return this.apiUtil.sendToKodi(source, kodi);
     }
 }

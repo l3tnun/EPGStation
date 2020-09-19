@@ -1,3 +1,5 @@
+import { KodiInfo } from '../IConfigFile';
+
 export interface CreateM3U8Option {
     host: string;
     isSecure: boolean;
@@ -8,4 +10,6 @@ export interface CreateM3U8Option {
 
 export default interface IApiUtil {
     createM3U8PlayListStr(option: CreateM3U8Option): string;
+    getHost(baseHost: string): string;
+    sendToKodi(source: string, kodiInfo: KodiInfo): Promise<void>;
 }
