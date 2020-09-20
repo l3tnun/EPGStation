@@ -34,21 +34,7 @@ namespace UaUtil {
      * UA が iPadOS か判定
      */
     export const isiPadOS = (): boolean => {
-        if (/Macintosh|macintosh/.test(navigator.userAgent) === false) {
-            return false;
-        }
-
-        let width = 0;
-        let height = 0;
-        if (window.screen.width < window.screen.height) {
-            width = window.screen.width;
-            height = window.screen.height;
-        } else {
-            width = window.screen.height;
-            height = window.screen.width;
-        }
-
-        return (<any>IPAD_SCREENS)[height] === width;
+        return /Macintosh|macintosh/.test(navigator.userAgent) === true && 'ontouchend' in document;
     };
 
     /**
