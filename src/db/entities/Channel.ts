@@ -40,4 +40,10 @@ export default class Channel extends BaseEntity {
 
     @Column()
     public channel!: string;
+
+    @Column({
+        nullable: true,
+        type: 'integer',
+    })
+    public type!: number;
 }

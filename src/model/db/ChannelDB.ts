@@ -59,6 +59,7 @@ export default class ChannelDB implements IChannelDB {
                 hasLogoData: !!channel.hasLogoData,
                 channelType: channel.channel.type,
                 channel: channel.channel.channel,
+                type: typeof (channel as any)['type'] !== 'number' ? null : (channel as any)['type'],
             });
         }
 
