@@ -10,6 +10,8 @@ import IDropLogApiModel from './api/dropLog/IDropLogApiModel';
 import EncodeApiModel from './api/encode/EncodeApiModel';
 import IEncodeApiModel from './api/encode/IEncodeApiModel';
 import IApiUtil from './api/IApiUtil';
+import IIPTVApiModel from './api/iptv/IIPTVApiModel';
+import IPTVApiModel from './api/iptv/IPTVApiModel';
 import IRecordedItemUtil from './api/IRecordedItemUtil';
 import IRecordedApiModel from './api/recorded/IRecordedApiModel';
 import RecordedApiModel from './api/recorded/RecordedApiModel';
@@ -297,6 +299,8 @@ export const set = (container: Container): void => {
     container.bind<IVideoApiModel>('IVideoApiModel').to(VideoApiModel).inSingletonScope();
 
     container.bind<IEncodeApiModel>('IEncodeApiModel').to(EncodeApiModel).inSingletonScope();
+
+    container.bind<IIPTVApiModel>('IIPTVApiModel').to(IPTVApiModel).inSingletonScope();
 
     container.bind<IEncodeEvent>('IEncodeEvent').to(EncodeEvent).inSingletonScope();
 

@@ -1694,3 +1694,21 @@ components:
             required: true
             schema:
                 type: integer
+
+        IPTVIsHalfWidth:
+            description: 半角文字で取得するか
+            in: query
+            name: isHalfWidth
+            required: false
+            schema:
+                type: boolean
+                default: true
+
+        IPTVDays:
+            description: 取得日数
+            in: query
+            name: days
+            required: false
+            schema:
+                type: integer
+                default: 3
