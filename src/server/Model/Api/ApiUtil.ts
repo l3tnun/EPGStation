@@ -14,9 +14,9 @@ namespace ApiUtil {
      * @return any[]
      */
     export const fixReserveProgram = (program: DBSchema.ProgramSchema): {} => {
-        delete program.startHour;
-        delete program.week;
-        delete program.duration;
+        delete (program as any).startHour;
+        delete (program as any).week;
+        delete (program as any).duration;
 
         return ApiUtil.deleteNullinHash(program);
     };
@@ -28,19 +28,19 @@ namespace ApiUtil {
      * @return RecordedProgram
      */
     export const convertToRecordedProgram = (data: DBSchema.RecordedSchema, encodedFiles: DBSchema.EncodedSchema[] = []): apid.RecordedProgram => {
-        delete data.duration;
-        delete data.logPath;
+        delete (data as any).duration;
+        delete (data as any).logPath;
 
         // thumbnaul があるか
         (data as any as apid.RecordedProgram).hasThumbnail = data.thumbnailPath !== null;
-        delete data.thumbnailPath;
+        delete (data as any).thumbnailPath;
 
         (data as any as apid.RecordedProgram).original = data.recPath !== null;
 
         if (data.recPath !== null) {
             (data as any as apid.RecordedProgram).filename = encodeURIComponent(path.basename(String(data.recPath)));
         }
-        delete data.recPath;
+        delete (data as any).recPath;
 
         // エンコードファイルを追加
         if (encodedFiles.length > 0) {
