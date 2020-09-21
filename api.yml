@@ -1189,6 +1189,33 @@ components:
                     description: config の kodi の name
                     type: string
 
+        UploadVideoFileOption:
+            description: ビデオファイルをアップロード
+            type: object
+            required:
+                - recordedId
+                - parentDirectoryName
+                - viewName
+                - fileType
+                - file
+            properties:
+                recordedId:
+                    $ref: '#/components/schemas/RecordedId'
+                parentDirectoryName:
+                    description: 親保存ディレクトリ
+                    type: string
+                subDirectory:
+                    description: 保存ディレクトリ
+                    type: string
+                viewName:
+                    description: 表示名
+                    type: string
+                fileType:
+                    $ref: '#/components/schemas/VideoFileType'
+                file:
+                    type: string
+                    format: binary
+
         Version:
             description: バージョン情報
             type: object

@@ -40,6 +40,15 @@ class RecordedEvent implements IRecordedEvent {
     }
 
     /**
+     * アップロードビデオファイル追加イベント発行
+     * @param newVideoFileId: apid.VideoFileId
+     * @param needsCreateThumbnail: boolean サムネイル生成が必要か
+     */
+    public emitAddUploadedVideoFile(newVideoFileId: apid.VideoFileId, needsCreateThumbnail: boolean): void {
+        this.emitter.emit(RecordedEvent.ADD_UPLOADED_VIDEO_FILE, newVideoFileId, needsCreateThumbnail);
+    }
+
+    /**
      * video file 削除イベント発行
      * @param videoFileId: apid.VideoFileId
      */
@@ -99,6 +108,25 @@ class RecordedEvent implements IRecordedEvent {
     }
 
     /**
+     * アップロードビデオファイル追加イベント登録
+     * @param callback: (newVideoFileId: apid.VideoFileId, needsCreateThumbnail: boolean) => void
+     */
+    public setAddUploadedVideoFile(
+        callback: (newVideoFileId: apid.VideoFileId, needsCreateThumbnail: boolean) => void,
+    ): void {
+        this.emitter.on(
+            RecordedEvent.ADD_UPLOADED_VIDEO_FILE,
+            async (newVideoFileId: apid.VideoFileId, needsCreateThumbnail: boolean) => {
+                try {
+                    await callback(newVideoFileId, needsCreateThumbnail);
+                } catch (err) {
+                    this.log.system.error(err);
+                }
+            },
+        );
+    }
+
+    /**
      * video file 削除イベント登録
      * @param callback: (videoFileId: apid.VideoFileId) => void
      */
@@ -131,6 +159,7 @@ namespace RecordedEvent {
     export const DELETE_RECORDED_EVENT = 'DeleteRecorded';
     export const UPDATE_VIDEO_FILE_SIZE = 'UpdateVideoFileSize';
     export const ADD_VIDEO_FILE = 'AddVideoFile';
+    export const ADD_UPLOADED_VIDEO_FILE = 'addUploadedVideoFile';
     export const DLETE_VIDEO_FILE = 'DeleteVideoFile';
     export const CHANGE_PROTECT = 'ChangeProtect';
 }

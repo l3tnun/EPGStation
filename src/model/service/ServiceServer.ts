@@ -100,8 +100,12 @@ class ServiceServer implements IServiceServer {
                             return next(err.message);
                         }
 
+                        if (typeof req.body.recordedId === 'string') {
+                            req.body.recordedId = parseInt(req.body.recordedId, 10);
+                        }
+
                         if (typeof req.file !== 'undefined' && typeof req.file.fieldname !== 'undefined') {
-                            req.body[req.file.fieldname] = req.file;
+                            req.body.file = req.file.filename;
                         }
 
                         return next();

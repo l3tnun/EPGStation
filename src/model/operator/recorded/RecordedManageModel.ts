@@ -1,4 +1,5 @@
 import { inject, injectable } from 'inversify';
+import mkdirp from 'mkdirp';
 import * as path from 'path';
 import * as apid from '../../../../api';
 import DropLogFile from '../../../db/entities/DropLogFile';
@@ -236,6 +237,109 @@ export default class RecordedManageModel implements IRecordedManageModel {
         this.recordedEvent.emitAddVideoFile(newVideoFileId);
 
         return newVideoFileId;
+    }
+
+    /**
+     * option で指定されたビデオファイルを追加する
+     * @param option: apid.UploadedVideoFileInfo
+     * @return Promise<void>
+     */
+    public async addUploadedVideoFile(option: apid.UploadedVideoFileInfo): Promise<void> {
+        this.log.system.info(`add uploaded file: ${option.recordedId}`);
+
+        // 指定された番組情報を取得
+        const recorded = await this.recordedDB.findId(option.recordedId);
+        if (recorded === null) {
+            await FileUtil.unlink(option.filePath).catch(() => {});
+            throw new Error('RecordedIdIsNull');
+        }
+
+        // 親ディレクトリ
+        const parentDirPath = this.videoUtil.getParentDirPath(option.parentDirectoryName);
+        if (parentDirPath === null) {
+            this.log.system.error(`parent directory is null: ${option.parentDirectoryName}`);
+            await FileUtil.unlink(option.filePath).catch(() => {});
+            throw new Error('ParentDirectoryIsNull');
+        }
+
+        // サブディレクトリ
+        let dirPath = parentDirPath;
+        if (typeof option.subDirectory !== 'undefined') {
+            dirPath = path.join(dirPath, option.subDirectory);
+
+            // check dir
+            try {
+                await FileUtil.stat(dirPath);
+            } catch (err) {
+                // mkdirp directory
+                this.log.system.info(`mkdirp: ${dirPath}`);
+                await mkdirp(dirPath);
+            }
+        }
+
+        // コピー先のファイルパスを生成する
+        const filePath = await this.getUploadedVideoFilePath(dirPath, option.fileName);
+
+        // アップロードされたファイルを保存先へ移動する
+        try {
+            this.log.system.info(`move file ${option.filePath} -> ${filePath}`);
+            await FileUtil.rename(option.filePath, filePath);
+        } catch (err) {
+            // move を試す
+            try {
+                await FileUtil.move(option.filePath, filePath);
+            } catch (e) {
+                this.log.system.error('move file error');
+                this.log.system.error(e);
+                await FileUtil.unlink(option.filePath).catch(() => {});
+
+                throw new Error('FileMoveError');
+            }
+        }
+
+        // DB に反映
+        try {
+            const fileName = path.basename(filePath);
+            const videoFileId = await this.addVideoFile({
+                recordedId: option.recordedId,
+                parentDirectoryName: option.parentDirectoryName,
+                filePath:
+                    typeof option.subDirectory === 'undefined' ? fileName : path.join(option.subDirectory, fileName),
+                type: option.fileType,
+                name: option.viewName,
+            });
+
+            // 通知
+            const needsCreateThumbnail = typeof recorded.thumbnails === 'undefined' || recorded.thumbnails.length === 0;
+            this.recordedEvent.emitAddUploadedVideoFile(videoFileId, needsCreateThumbnail);
+        } catch (err) {
+            await FileUtil.unlink(filePath).catch(() => {});
+            throw err;
+        }
+    }
+
+    /**
+     * アップロードファイルの file path を取得する
+     * @param dir: directory
+     * @param fileName: file name
+     * @param conflict: 同名ファイルがあった場合カウントされる
+     * @return string
+     */
+    private async getUploadedVideoFilePath(dir: string, fileName: string, conflict: number = 0): Promise<string> {
+        const extname = path.extname(fileName);
+        const name = fileName.slice(0, fileName.length - extname.length);
+        const count = conflict > 0 ? `(${conflict})` : '';
+
+        const filePath = path.join(dir, `${name}${count}${extname}`);
+
+        try {
+            // 同盟のファイルが存在するか確認
+            await FileUtil.stat(filePath);
+
+            return this.getUploadedVideoFilePath(dir, fileName, conflict + 1);
+        } catch (err) {
+            return filePath;
+        }
     }
 
     /**

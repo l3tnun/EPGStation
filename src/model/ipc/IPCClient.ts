@@ -249,6 +249,15 @@ export default class IPCClient implements IIPCClient {
                     },
                 });
             },
+            addUploadedVideoFile: (option: apid.UploadedVideoFileInfo) => {
+                return this.send({
+                    model: ModelName.recorded,
+                    func: RecordedFunctions.addUploadedVideoFile,
+                    args: {
+                        option: option,
+                    },
+                });
+            },
             deleteVideoFile: (videoFileId: apid.VideoFileId) => {
                 return this.send({
                     model: ModelName.recorded,

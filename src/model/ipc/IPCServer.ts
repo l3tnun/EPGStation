@@ -238,6 +238,13 @@ export default class IPCServer implements IIPCServer {
             await this.recordedManage.addVideoFile(option);
         };
 
+        // addUploadedVideoFile
+        index[RecordedFunctions.addUploadedVideoFile] = async msg => {
+            const option = this.getArgsValue<apid.UploadedVideoFileInfo>(msg, 'option');
+
+            await this.recordedManage.addUploadedVideoFile(option);
+        };
+
         // deleteVideoFile
         index[RecordedFunctions.deleteVideoFile] = async msg => {
             const videoFileId = this.getArgsValue<apid.VideoFileId>(msg, 'videoFileId');

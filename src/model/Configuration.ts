@@ -160,7 +160,7 @@ namespace Configuration {
         thumbnailSize: '480x270',
         thumbnailPosition: 5,
         dropLog: path.join(__dirname, '..', '..', 'drop'),
-        uploadTempDir: path.join(__dirname, '..', '..', 'data', 'streamfiles'),
+        uploadTempDir: path.join(__dirname, '..', '..', 'data', 'upload'),
         isEnabledDropCheck: false,
         ffmpeg: '/usr/local/bin/ffmpeg',
         ffprobe: '/usr/local/bin/ffprobe',

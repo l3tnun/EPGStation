@@ -117,4 +117,13 @@ export default class RecordedApiModel implements IRecordedApiModel {
         await this.ipc.recorded.videoFileCleanup();
         await this.ipc.recorded.dropLogFileCleanup();
     }
+
+    /**
+     * upload されたビデオファイルを追加する
+     * @param option: apid.UploadedVideoFileInfo
+     * @return Promise<void>
+     */
+    public async addUploadedVideoFile(option: apid.UploadedVideoFileInfo): Promise<void> {
+        await this.ipc.recorded.addUploadedVideoFile(option);
+    }
 }
