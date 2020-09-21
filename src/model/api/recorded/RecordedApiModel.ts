@@ -126,4 +126,13 @@ export default class RecordedApiModel implements IRecordedApiModel {
     public async addUploadedVideoFile(option: apid.UploadedVideoFileInfo): Promise<void> {
         await this.ipc.recorded.addUploadedVideoFile(option);
     }
+
+    /**
+     * 録画番組情報を新規作成
+     * @param option: apid.CreateNewRecordedOption
+     * @return Promise<apid.RecordedId>
+     */
+    public async createNewRecorded(option: apid.CreateNewRecordedOption): Promise<apid.RecordedId> {
+        return await this.ipc.recorded.createNewRecorded(option);
+    }
 }

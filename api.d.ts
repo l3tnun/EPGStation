@@ -676,6 +676,25 @@ export interface UploadedVideoFileInfo {
 }
 
 /**
+ * 新規追加する録画番組情報
+ */
+export interface CreateNewRecordedOption {
+    ruleId?: RuleId;
+    channelId: ChannelId;
+    startAt: UnixtimeMS;
+    endAt: UnixtimeMS;
+    name: string;
+    description?: string;
+    extended?: string;
+    genre1?: ProgramGenreLv1;
+    subGenre1?: ProgramGenreLv2;
+    genre2?: ProgramGenreLv1;
+    subGenre2?: ProgramGenreLv2;
+    genre3?: ProgramGenreLv1;
+    subGenre3?: ProgramGenreLv2;
+}
+
+/**
  * ストリーム情報
  */
 export interface StreamInfo {

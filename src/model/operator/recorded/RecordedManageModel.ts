@@ -3,9 +3,11 @@ import mkdirp from 'mkdirp';
 import * as path from 'path';
 import * as apid from '../../../../api';
 import DropLogFile from '../../../db/entities/DropLogFile';
+import Recorded from '../../../db/entities/Recorded';
 import Thumbnail from '../../../db/entities/Thumbnail';
 import VideoFile from '../../../db/entities/VideoFile';
 import FileUtil from '../../../util/FileUtil';
+import StrUtil from '../../../util/StrUtil';
 import IVideoUtil from '../../api/video/IVideoUtil';
 import IDropLogFileDB from '../../db/IDropLogFileDB';
 import IRecordedDB from '../../db/IRecordedDB';
@@ -340,6 +342,68 @@ export default class RecordedManageModel implements IRecordedManageModel {
         } catch (err) {
             return filePath;
         }
+    }
+
+    /**
+     * 録画番組情報を新規作成
+     * @param option: apid.CreateNewRecordedOption
+     * @return Promise<apid.RecordedId>
+     */
+    public async createNewRecorded(option: apid.CreateNewRecordedOption): Promise<apid.RecordedId> {
+        this.log.system.info('create new recorded');
+
+        const recorded = new Recorded();
+        recorded.isRecording = false;
+        recorded.isProtected = false;
+        if (typeof option.ruleId !== 'undefined') {
+            recorded.ruleId = option.ruleId;
+        }
+        recorded.channelId = option.channelId;
+        recorded.startAt = option.startAt;
+        recorded.endAt = option.endAt;
+        if (option.startAt - option.endAt >= 0) {
+            throw new Error('TimeRangeError');
+        }
+        recorded.duration = option.startAt - option.endAt;
+        recorded.name = StrUtil.toDBStr(option.name);
+        recorded.halfWidthName = StrUtil.toHalf(option.name);
+        if (typeof option.description !== 'undefined') {
+            recorded.description = StrUtil.toDBStr(option.description);
+            recorded.halfWidthDescription = StrUtil.toHalf(recorded.description);
+        }
+        if (typeof option.extended !== 'undefined') {
+            recorded.extended = StrUtil.toDBStr(option.extended);
+            recorded.halfWidthExtended = StrUtil.toHalf(recorded.extended);
+        }
+        if (typeof option.genre1 !== 'undefined') {
+            recorded.genre1 = option.genre1;
+        }
+        if (typeof option.subGenre1 !== 'undefined') {
+            recorded.subGenre1 = option.subGenre1;
+        }
+        if (typeof option.genre2 !== 'undefined') {
+            recorded.genre2 = option.genre2;
+        }
+        if (typeof option.subGenre2 !== 'undefined') {
+            recorded.subGenre2 = option.subGenre2;
+        }
+        if (typeof option.genre3 !== 'undefined') {
+            recorded.genre3 = option.genre3;
+        }
+        if (typeof option.subGenre3 !== 'undefined') {
+            recorded.subGenre3 = option.subGenre3;
+        }
+
+        const recordedId = await this.recordedDB.insertOnce(recorded).catch(err => {
+            this.log.system.error(err);
+            throw err;
+        });
+
+        this.log.system.info(`created new recorded: ${recordedId}`);
+
+        this.recordedEvent.emitCreateNewRecorded(recordedId);
+
+        return recordedId;
     }
 
     /**

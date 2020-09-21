@@ -98,3 +98,53 @@ get.apiDoc = {
         },
     },
 };
+
+export const post: Operation = async (req, res) => {
+    const recordedApiModel = container.get<IRecordedApiModel>('IRecordedApiModel');
+
+    try {
+        api.responseJSON(res, 201, {
+            recordedId: await recordedApiModel.createNewRecorded(req.body),
+        });
+    } catch (err) {
+        api.responseServerError(res, err.message);
+    }
+};
+
+post.apiDoc = {
+    summary: '録画番組情報の新規作成',
+    tags: ['recorded'],
+    description: '録画番組情報を新規作成する',
+    requestBody: {
+        content: {
+            'application/json': {
+                schema: {
+                    $ref: '#/components/schemas/CreateNewRecordedOption',
+                },
+            },
+        },
+        required: true,
+    },
+    responses: {
+        201: {
+            description: '録画番組情報の新規作成に成功した',
+            content: {
+                'application/json': {
+                    schema: {
+                        $ref: '#/components/schemas/CreatedNewRecorded',
+                    },
+                },
+            },
+        },
+        default: {
+            description: '予期しないエラー',
+            content: {
+                'application/json': {
+                    schema: {
+                        $ref: '#/components/schemas/Error',
+                    },
+                },
+            },
+        },
+    },
+};

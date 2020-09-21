@@ -1026,6 +1026,54 @@ components:
                     description: 自動録画削除対象外か
                     type: boolean
 
+        CreateNewRecordedOption:
+            description: 新規追加する録画番組情報
+            type: object
+            required:
+                - channelId
+                - startAt
+                - endAt
+                - name
+            properties:
+                ruleId:
+                    $ref: '#/components/schemas/RuleId'
+                channelId:
+                    $ref: '#/components/schemas/ChannelId'
+                startAt:
+                    $ref: '#/components/schemas/UnixtimeMS'
+                endAt:
+                    $ref: '#/components/schemas/UnixtimeMS'
+                name:
+                    description: 番組名
+                    type: string
+                description:
+                    description: 番組詳細
+                    type: string
+                extended:
+                    description: 番組拡張
+                    type: string
+                genre1:
+                    $ref: '#/components/schemas/ProgramGenreLv1'
+                subGenre1:
+                    $ref: '#/components/schemas/ProgramGenreLv2'
+                genre2:
+                    $ref: '#/components/schemas/ProgramGenreLv1'
+                subGenre2:
+                    $ref: '#/components/schemas/ProgramGenreLv2'
+                genre3:
+                    $ref: '#/components/schemas/ProgramGenreLv1'
+                subGenre3:
+                    $ref: '#/components/schemas/ProgramGenreLv2'
+
+        CreatedNewRecorded:
+            description: 録画番組情報の新規作成成功応答データ
+            type: object
+            required:
+                - recordedId
+            properties:
+                recordedId:
+                    $ref: '#/components/schemas/RecordedId'
+
         VideoFile:
             description: ビデオファイル情報
             type: object

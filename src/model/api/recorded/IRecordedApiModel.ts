@@ -9,4 +9,5 @@ export default interface IRecordedApiModel {
     changeProtect(recordedId: apid.RecordedId, isProtect: boolean): Promise<void>;
     fileCleanup(): Promise<void>;
     addUploadedVideoFile(option: apid.UploadedVideoFileInfo): Promise<void>;
+    createNewRecorded(option: apid.CreateNewRecordedOption): Promise<apid.RecordedId>;
 }

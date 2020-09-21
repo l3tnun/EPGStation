@@ -266,6 +266,11 @@ export default class EventSetter implements IEventSetter {
             this.ipc.notifyClient();
         });
 
+        // 録画済み番組新規追加
+        this.recordedEvent.setCreateNewRecorded(() => {
+            this.ipc.notifyClient();
+        });
+
         // upload video file
         this.recordedEvent.setAddUploadedVideoFile((videoFileId, needsCreateThumbnail) => {
             this.ipc.notifyClient();

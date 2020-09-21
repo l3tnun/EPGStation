@@ -32,6 +32,14 @@ class RecordedEvent implements IRecordedEvent {
     }
 
     /**
+     * 録画済み番組新規追加イベント発行
+     * @param recordedId: apid.RecordedId
+     */
+    public emitCreateNewRecorded(recordedId: apid.RecordedId): void {
+        this.emitter.emit(RecordedEvent.CREATE_NEW_RECORDED, recordedId);
+    }
+
+    /**
      * video file 追加イベント発行
      * @param newVideoFileId: apid.VideoFileId
      */
@@ -73,6 +81,20 @@ class RecordedEvent implements IRecordedEvent {
         this.emitter.on(RecordedEvent.DELETE_RECORDED_EVENT, async (recorded: Recorded) => {
             try {
                 await callback(recorded);
+            } catch (err) {
+                this.log.system.error(err);
+            }
+        });
+    }
+
+    /**
+     * 録画済み番組新規追加イベント登録
+     * @param callback: (recordedId: apid.RecordedId) => void
+     */
+    public setCreateNewRecorded(callback: (recordedId: apid.RecordedId) => void): void {
+        this.emitter.on(RecordedEvent.CREATE_NEW_RECORDED, async (recordedId: apid.RecordedId) => {
+            try {
+                await callback(recordedId);
             } catch (err) {
                 this.log.system.error(err);
             }
@@ -158,6 +180,7 @@ class RecordedEvent implements IRecordedEvent {
 namespace RecordedEvent {
     export const DELETE_RECORDED_EVENT = 'DeleteRecorded';
     export const UPDATE_VIDEO_FILE_SIZE = 'UpdateVideoFileSize';
+    export const CREATE_NEW_RECORDED = 'createNewRecorded';
     export const ADD_VIDEO_FILE = 'AddVideoFile';
     export const ADD_UPLOADED_VIDEO_FILE = 'addUploadedVideoFile';
     export const DLETE_VIDEO_FILE = 'DeleteVideoFile';
