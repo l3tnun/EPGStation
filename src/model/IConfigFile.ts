@@ -111,6 +111,9 @@ export default interface IConfigFile {
     dropLog: string;
     isEnabledDropCheck: boolean; // drop check を有効にするか
 
+    // upload
+    uploadTempDir: string;
+
     ffmpeg: string;
     ffprobe: string;
 

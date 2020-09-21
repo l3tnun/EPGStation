@@ -6,9 +6,12 @@ import * as http from 'http';
 import { inject, injectable } from 'inversify';
 import * as yaml from 'js-yaml';
 import * as log4js from 'log4js';
+import mkdirp from 'mkdirp';
+import multer from 'multer';
 import { OpenAPIV3 } from 'openapi-types';
 import * as path from 'path';
 import urljoin from 'url-join';
+import FileUtil from '../../util/FileUtil';
 import IConfigFile from '../IConfigFile';
 import IConfiguration from '../IConfiguration';
 import ILogger from '../ILogger';
@@ -43,6 +46,7 @@ class ServiceServer implements IServiceServer {
         this.setLog();
         const api = this.getApiDocument(ServiceServer.API_YML);
         this.setSwaggerUI();
+        this.createUploadDir();
         this.initOpenApi(api);
         this.setMime();
         this.setStaticFiles();
@@ -90,6 +94,19 @@ class ServiceServer implements IServiceServer {
             consumesMiddleware: {
                 'application/json': bodyParser.json(),
                 'text/text': bodyParser.text(),
+                'multipart/form-data': (req, res, next) => {
+                    this.getUploader().single('file')(req, res, (err: any) => {
+                        if (err) {
+                            return next(err.message);
+                        }
+
+                        if (typeof req.file !== 'undefined' && typeof req.file.fieldname !== 'undefined') {
+                            req.body[req.file.fieldname] = req.file;
+                        }
+
+                        return next();
+                    });
+                },
             },
             errorMiddleware: (err, _req, res, _next) => {
                 this.log.system.error(err);
@@ -150,7 +167,7 @@ class ServiceServer implements IServiceServer {
     /**
      * SwaggerUI の設定
      */
-    public setSwaggerUI(): void {
+    private setSwaggerUI(): void {
         if (fs.existsSync(ServiceServer.SWAGGER_UI_DIST) === false) {
             return;
         }
@@ -162,6 +179,51 @@ class ServiceServer implements IServiceServer {
         this.app.get(this.createUrl('/api/debug'), (_req, res) => {
             return res.redirect(this.createUrl('/api-docs/?url=' + this.createUrl('/api/docs')));
         });
+    }
+
+    /**
+     * upload 用のディレクトリを生成する
+     */
+    private createUploadDir(): void {
+        // upload dir
+        try {
+            fs.statSync(this.config.uploadTempDir);
+        } catch (e) {
+            this.log.system.info(`mkdirp: ${this.config.uploadTempDir}`);
+            mkdirp.sync(this.config.uploadTempDir);
+        }
+    }
+
+    /**
+     * multer.Multer を生成する
+     */
+    private getUploader(): multer.Multer {
+        // uploader
+        const storage = multer.diskStorage({
+            destination: this.config.uploadTempDir,
+            filename: (req, file, cb) => {
+                const fileName =
+                    file.fieldname +
+                    '-' +
+                    new Date().getTime().toString(16) +
+                    Math.floor(100000 * Math.random()).toString(16);
+                cb(null, fileName);
+
+                // 切断時はファイルを削除
+                (<any>req).on('close', async () => {
+                    const filePath = path.join(this.config.uploadTempDir, fileName);
+                    try {
+                        await FileUtil.unlink(filePath);
+                        this.log.access.info(`delete upload file: ${filePath}`);
+                    } catch (err) {
+                        this.log.access.error(`upload file delete error: ${filePath}`);
+                        this.log.access.error(err.message);
+                    }
+                });
+            },
+        });
+
+        return multer({ storage: storage });
     }
 
     /**
