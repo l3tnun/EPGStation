@@ -2,6 +2,7 @@ import { inject, injectable } from 'inversify';
 import * as apid from '../../../../api';
 import IRecordedDB, { FindAllOption } from '../../db/IRecordedDB';
 import IIPCClient from '../../ipc/IIPCClient';
+import { UploadedVideoFileOption } from '../../operator/recorded/IRecordedManageModel';
 import IEncodeManageModel from '../../service/encode/IEncodeManageModel';
 import IRecordedItemUtil from '../IRecordedItemUtil';
 import IRecordedApiModel from './IRecordedApiModel';
@@ -120,10 +121,10 @@ export default class RecordedApiModel implements IRecordedApiModel {
 
     /**
      * upload されたビデオファイルを追加する
-     * @param option: apid.UploadedVideoFileInfo
+     * @param option: UploadedVideoFileInfo
      * @return Promise<void>
      */
-    public async addUploadedVideoFile(option: apid.UploadedVideoFileInfo): Promise<void> {
+    public async addUploadedVideoFile(option: UploadedVideoFileOption): Promise<void> {
         await this.ipc.recorded.addUploadedVideoFile(option);
     }
 

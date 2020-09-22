@@ -20,7 +20,7 @@ import IConfiguration from '../../IConfiguration';
 import ILogger from '../../ILogger';
 import ILoggerModel from '../../ILoggerModel';
 import IRecordingManageModel from '../recording/IRecordingManageModel';
-import IRecordedManageModel, { AddVideoFileOption } from './IRecordedManageModel';
+import IRecordedManageModel, { AddVideoFileOption, UploadedVideoFileOption } from './IRecordedManageModel';
 
 @injectable()
 export default class RecordedManageModel implements IRecordedManageModel {
@@ -243,10 +243,10 @@ export default class RecordedManageModel implements IRecordedManageModel {
 
     /**
      * option で指定されたビデオファイルを追加する
-     * @param option: apid.UploadedVideoFileInfo
+     * @param option: UploadedVideoFileInfo
      * @return Promise<void>
      */
-    public async addUploadedVideoFile(option: apid.UploadedVideoFileInfo): Promise<void> {
+    public async addUploadedVideoFile(option: UploadedVideoFileOption): Promise<void> {
         this.log.system.info(`add uploaded file: ${option.recordedId}`);
 
         // 指定された番組情報を取得

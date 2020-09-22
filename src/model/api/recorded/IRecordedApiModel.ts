@@ -1,4 +1,5 @@
 import * as apid from '../../../../api';
+import { UploadedVideoFileOption } from '../../operator/recorded/IRecordedManageModel';
 
 export default interface IRecordedApiModel {
     gets(option: apid.GetRecordedOption): Promise<apid.Records>;
@@ -8,6 +9,6 @@ export default interface IRecordedApiModel {
     stopEncode(recordedId: apid.RecordedId): Promise<void>;
     changeProtect(recordedId: apid.RecordedId, isProtect: boolean): Promise<void>;
     fileCleanup(): Promise<void>;
-    addUploadedVideoFile(option: apid.UploadedVideoFileInfo): Promise<void>;
+    addUploadedVideoFile(option: UploadedVideoFileOption): Promise<void>;
     createNewRecorded(option: apid.CreateNewRecordedOption): Promise<apid.RecordedId>;
 }

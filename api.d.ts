@@ -663,16 +663,15 @@ export interface VideoFileStreamInfoItem extends LiveStreamInfoItem {
 }
 
 /**
- * アップロードされたビデオファイル情報
+ * アップロードするビデオ情報
  */
-export interface UploadedVideoFileInfo {
+export interface UploadVideoFileOption {
     recordedId: RecordedId; // 紐付ける recorded id
     parentDirectoryName: string; // 保存先ディレクトリ名
     subDirectory?: string; // 保存先サブディレクトリ
     viewName: string; // UI 上での表示名
     fileType: VideoFileType; // ファイルタイプ
-    fileName: string; // ファイル名
-    filePath: string; // ファイルパス (アップロード先)
+    file: File; // ファイル
 }
 
 /**

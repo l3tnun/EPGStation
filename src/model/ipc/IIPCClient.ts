@@ -1,5 +1,5 @@
 import * as apid from '../../../api';
-import { AddVideoFileOption } from '../operator/recorded/IRecordedManageModel';
+import { AddVideoFileOption, UploadedVideoFileOption } from '../operator/recorded/IRecordedManageModel';
 
 export interface IPCReservationManageModel {
     getBroadcastStatus(): Promise<apid.BroadcastStatus>;
@@ -18,7 +18,7 @@ export interface IPCRecordedManageModel {
     delete(recordedId: apid.RecordedId): Promise<void>;
     updateVideoFileSize(videoFileId: apid.VideoFileId): Promise<void>;
     addVideoFile(option: AddVideoFileOption): Promise<apid.VideoFileId>;
-    addUploadedVideoFile(option: apid.UploadedVideoFileInfo): Promise<void>;
+    addUploadedVideoFile(option: UploadedVideoFileOption): Promise<void>;
     createNewRecorded(option: apid.CreateNewRecordedOption): Promise<apid.RecordedId>;
     deleteVideoFile(videoFileId: apid.VideoFileId): Promise<void>;
     changeProtect(recordedId: apid.RecordedId, isProtect: boolean): Promise<void>;

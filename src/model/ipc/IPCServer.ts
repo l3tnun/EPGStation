@@ -1,7 +1,10 @@
 import { ChildProcess } from 'child_process';
 import { inject, injectable } from 'inversify';
 import * as apid from '../../../api';
-import IRecordedManageModel, { AddVideoFileOption } from '../operator/recorded/IRecordedManageModel';
+import IRecordedManageModel, {
+    AddVideoFileOption,
+    UploadedVideoFileOption,
+} from '../operator/recorded/IRecordedManageModel';
 import IRecordedTagManadeModel from '../operator/recordedTag/IRecordedTagManadeModel';
 import IRecordingManageModel from '../operator/recording/IRecordingManageModel';
 import IReservationManageModel from '../operator/reservation/IReservationManageModel';
@@ -240,7 +243,7 @@ export default class IPCServer implements IIPCServer {
 
         // addUploadedVideoFile
         index[RecordedFunctions.addUploadedVideoFile] = async msg => {
-            const option = this.getArgsValue<apid.UploadedVideoFileInfo>(msg, 'option');
+            const option = this.getArgsValue<UploadedVideoFileOption>(msg, 'option');
 
             await this.recordedManage.addUploadedVideoFile(option);
         };

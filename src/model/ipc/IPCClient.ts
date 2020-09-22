@@ -3,7 +3,7 @@ import { inject, injectable } from 'inversify';
 import * as apid from '../../../api';
 import ILogger from '../ILogger';
 import ILoggerModel from '../ILoggerModel';
-import { AddVideoFileOption } from '../operator/recorded/IRecordedManageModel';
+import { AddVideoFileOption, UploadedVideoFileOption } from '../operator/recorded/IRecordedManageModel';
 import IEncodeManageModel from '../service/encode/IEncodeManageModel';
 import ISocketIOManageModel from '../service/socketio/ISocketIOManageModel';
 import IIPCClient, {
@@ -249,7 +249,7 @@ export default class IPCClient implements IIPCClient {
                     },
                 });
             },
-            addUploadedVideoFile: (option: apid.UploadedVideoFileInfo) => {
+            addUploadedVideoFile: (option: UploadedVideoFileOption) => {
                 return this.send({
                     model: ModelName.recorded,
                     func: RecordedFunctions.addUploadedVideoFile,
