@@ -105,7 +105,7 @@ export default class DBOperator implements IDBOperator {
         switch (this.config.dbtype) {
             case 'mysql':
                 return cs ? 'regexp binary' : 'regexp';
-            case 'postgresql':
+            case 'postgres':
                 return cs ? '~' : '~*';
             case 'sqlite':
             default:
@@ -121,7 +121,7 @@ export default class DBOperator implements IDBOperator {
         switch (this.config.dbtype) {
             case 'mysql':
                 return cs ? 'like binary' : 'like';
-            case 'postgresql':
+            case 'postgres':
                 return cs ? 'like' : 'ilike';
             case 'sqlite':
             default:

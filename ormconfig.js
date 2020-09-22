@@ -45,13 +45,13 @@ switch (config.dbtype) {
         ormConfig.database = config.mysql.database;
         break;
 
-    case 'postgresql':
-        ormConfig.type = 'postgresql';
-        ormConfig.host = config.postgresql.host;
-        ormConfig.port = config.postgresql.port;
-        ormConfig.username = config.postgresql.user;
-        ormConfig.password = config.postgresql.password;
-        ormConfig.database = config.postgresql.database;
+    case 'postgres':
+        ormConfig.type = 'postgres';
+        ormConfig.host = config.postgres.host;
+        ormConfig.port = config.postgres.port;
+        ormConfig.username = config.postgres.user;
+        ormConfig.password = config.postgres.password;
+        ormConfig.database = config.postgres.database;
         break;
 
     default:
@@ -59,13 +59,7 @@ switch (config.dbtype) {
 }
 
 // database の種類に応じた migration ファイルパスの設定
-ormConfig.migrations = [
-    path.join(distDBBasePath, 'migrations', config.dbtype, '**', '*.js'),
-];
-ormConfig.cli.migrationsDir = path.join(
-    srcDBBasePath,
-    'migrations',
-    config.dbtype,
-);
+ormConfig.migrations = [path.join(distDBBasePath, 'migrations', config.dbtype, '**', '*.js')];
+ormConfig.cli.migrationsDir = path.join(srcDBBasePath, 'migrations', config.dbtype);
 
 module.exports = ormConfig;
