@@ -5,23 +5,26 @@ import GenreUtil from '../../../../util/GenreUtil';
 import IChannelModel from '../../../channels/IChannelModel';
 import IServerConfigModel from '../../../serverConfig/IServerConfigModel';
 import ISettingStorageModel from '../../../storage/setting/ISettingStorageModel';
-import { IRecordedUploadState, SelectorItem, VideoFileItem } from './IRecordedUploadState';
+import IRecordedUploadState, { SelectorItem, UploadProgramOption, VideoFileItem } from './IRecordedUploadState';
 
 @injectable()
 class RecordedUploadState implements IRecordedUploadState {
-    public ruleId: apid.RuleId | null | undefined = null;
-    public channelId: apid.ChannelId | undefined;
-    public startAt: Date | null = null;
-    public duration: number | null = null;
-    public name: string | null = null;
-    public description: string | null = null;
-    public extended: string | null = null;
-    public genre1: apid.ProgramGenreLv1 | undefined;
-    public subGenre1: apid.ProgramGenreLv2 | undefined;
+    public programOption: UploadProgramOption = {
+        ruleId: null,
+        channelId: undefined,
+        startAt: null,
+        duration: null,
+        name: null,
+        description: null,
+        extended: null,
+        genre1: undefined,
+        subGenre1: undefined,
+    };
     public videoFileItems: VideoFileItem[] = [];
 
     public ruleKeyword: string | null = null;
     public ruleItems: apid.RuleKeywordItem[] = [];
+    public isShowPeriod: boolean = true;
 
     private settingModel: ISettingStorageModel;
     private channelModel: IChannelModel;
@@ -53,15 +56,18 @@ class RecordedUploadState implements IRecordedUploadState {
      * 各種変数初期化
      */
     public init(): void {
-        this.ruleId = null;
-        this.channelId = undefined;
-        this.startAt = null;
-        this.duration = null;
-        this.name = null;
-        this.description = null;
-        this.extended = null;
-        this.genre1 = undefined;
-        this.subGenre1 = undefined;
+        this.programOption = {
+            ruleId: null,
+            channelId: undefined,
+            startAt: null,
+            duration: null,
+            name: null,
+            description: null,
+            extended: null,
+            genre1: undefined,
+            subGenre1: undefined,
+        };
+
         this.videoFileItems.splice(this.videoFileItems.length);
         this.addEmptyVideoFileItem();
 
@@ -150,9 +156,11 @@ class RecordedUploadState implements IRecordedUploadState {
      * @return SelectorItem[]
      */
     public getSubGenreItems(): SelectorItem[] {
-        return typeof this.genre1 === 'undefined' || this.genre1 < 0 || this.genre1 > GenreUtil.GENRE_MAX_NUM
+        return typeof this.programOption.genre1 === 'undefined' ||
+            this.programOption.genre1 < 0 ||
+            this.programOption.genre1 > GenreUtil.GENRE_MAX_NUM
             ? []
-            : this.subGemreItems[this.genre1];
+            : this.subGemreItems[this.programOption.genre1];
     }
 
     /**

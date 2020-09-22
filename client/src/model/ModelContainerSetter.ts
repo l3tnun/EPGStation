@@ -72,7 +72,7 @@ import IRecordedHLSStreamingVideoState from './state/recorded/streaming/IRecorde
 import IRecordedStreamingVideoState from './state/recorded/streaming/IRecordedStreamingVideoState';
 import RecordedHLSStreamingVideoState from './state/recorded/streaming/RecordedHLSStreamingVideoState';
 import RecordedStreamingVideoState from './state/recorded/streaming/RecordedStreamingVideoState';
-import { IRecordedUploadState } from './state/recorded/upload/IRecordedUploadState';
+import IRecordedUploadState from './state/recorded/upload/IRecordedUploadState';
 import RecordedUploadState from './state/recorded/upload/RecordedUploadState';
 import IWatchRecordedInfoState from './state/recorded/watch/IWatchRecordedInfoState';
 import WatchRecordedInfoState from './state/recorded/watch/WatchRecordedInfoState';

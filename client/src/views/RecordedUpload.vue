@@ -2,16 +2,19 @@
     <v-content>
         <TitleBar title="アップロード"></TitleBar>
         <transition name="page">
-            <v-card></v-card>
+            <v-container>
+                <RecordedUploadForm v-on:reset="reset" v-on:upload="upload"></RecordedUploadForm>
+            </v-container>
         </transition>
     </v-content>
 </template>
 
 <script lang="ts">
+import RecordedUploadForm from '@/components/recorded/upload/RecordedUploadFrom.vue';
 import TitleBar from '@/components/titleBar/TitleBar.vue';
 import container from '@/model/ModelContainer';
 import IScrollPositionState from '@/model/state/IScrollPositionState';
-import { IRecordedUploadState } from '@/model/state/recorded/upload/IRecordedUploadState';
+import IRecordedUploadState from '@/model/state/recorded/upload/IRecordedUploadState';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
 import { Component, Vue, Watch } from 'vue-property-decorator';
 import { Route } from 'vue-router';
@@ -21,6 +24,7 @@ Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
 @Component({
     components: {
         TitleBar,
+        RecordedUploadForm,
     },
 })
 export default class RecordedUpload extends Vue {
@@ -28,7 +32,16 @@ export default class RecordedUpload extends Vue {
     private scrollState: IScrollPositionState = container.get<IScrollPositionState>('IScrollPositionState');
     private snackbarState: ISnackbarState = container.get<ISnackbarState>('ISnackbarState');
 
-    public created(): void {}
+    public reset(): void {
+        this.uploadState.init();
+
+        this.uploadState.isShowPeriod = false;
+        this.$nextTick(() => {
+            this.uploadState.isShowPeriod = true;
+        });
+    }
+
+    public upload(): void {}
 
     @Watch('$route', { immediate: true, deep: true })
     public onUrlChange(): void {

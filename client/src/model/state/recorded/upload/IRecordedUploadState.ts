@@ -13,7 +13,7 @@ export interface VideoFileItem {
     file: File | null;
 }
 
-export interface IRecordedUploadState {
+export interface UploadProgramOption {
     ruleId: apid.RuleId | null | undefined;
     channelId: apid.ChannelId | undefined;
     startAt: Date | null;
@@ -23,7 +23,14 @@ export interface IRecordedUploadState {
     extended: string | null;
     genre1: apid.ProgramGenreLv1 | undefined;
     subGenre1: apid.ProgramGenreLv2 | undefined;
+}
+
+export default interface IRecordedUploadState {
+    programOption: UploadProgramOption;
     videoFileItems: VideoFileItem[];
+    ruleKeyword: string | null;
+    ruleItems: apid.RuleKeywordItem[];
+    isShowPeriod: boolean;
     init(): void;
     fetchData(): Promise<void>;
     updateRuleItems(): Promise<void>;
