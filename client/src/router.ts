@@ -10,6 +10,7 @@ import ManualReserve from './views/ManualReserve.vue';
 import OnAir from './views/OnAir.vue';
 import Recorded from './views/Recorded.vue';
 import RecordedDetail from './views/RecordedDetail.vue';
+import RecordedUpload from './views/RecordedUpload.vue';
 import Recording from './views/Recording.vue';
 import Reserves from './views/Reserves.vue';
 import Rule from './views/Rule.vue';
@@ -68,6 +69,11 @@ export default new Router({
             path: '/recorded',
             name: 'recorded',
             component: Recorded,
+        },
+        {
+            path: '/recorded/upload',
+            name: 'recorded-upload',
+            component: RecordedUpload,
         },
         {
             path: '/recorded/watch',

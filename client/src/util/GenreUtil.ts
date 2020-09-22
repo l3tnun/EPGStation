@@ -8,6 +8,56 @@ namespace GenreUtil {
     // ジャンル最大値
     export const GENRE_MAX_NUM = 15;
 
+    export interface GenreListItem {
+        text: string;
+        value: apid.ProgramGenreLv1;
+    }
+
+    export interface SubGenreListItem {
+        text: string;
+        value: apid.ProgramGenreLv2;
+    }
+
+    /**
+     * ジャンル一覧を返す
+     * @return GenreListItem[]
+     */
+    export const getGenreListItems = (): GenreListItem[] => {
+        const items: GenreListItem[] = [];
+
+        for (let i = 0; i <= GENRE_MAX_NUM; i++) {
+            items.push({
+                text: (Genre as any)[i],
+                value: i,
+            });
+        }
+
+        return items;
+    };
+
+    /**
+     * サブジャンル一覧を返す
+     * @param lv1: apid.ProgramGenreLv1
+     * @return SubGenreListItem[];
+     */
+    export const getSubGenreListItems = (lv1: apid.ProgramGenreLv1): SubGenreListItem[] => {
+        const items: SubGenreListItem[] = [];
+
+        for (let i = 0; i <= GENRE_MAX_NUM; i++) {
+            const text = (SubGenre as any)[lv1][i];
+            if (text.length === 0) {
+                continue;
+            }
+
+            items.push({
+                text: text,
+                value: i,
+            });
+        }
+
+        return items;
+    };
+
     /**
      * genre を取得
      * @return Genre str

@@ -24,6 +24,15 @@
                         <v-list-item-title>クリーンアップ</v-list-item-title>
                     </v-list-item-content>
                 </v-list-item>
+
+                <v-list-item v-on:click="upload">
+                    <v-list-item-icon class="mr-3">
+                        <v-icon>mdi-upload</v-icon>
+                    </v-list-item-icon>
+                    <v-list-item-content>
+                        <v-list-item-title>アップロード</v-list-item-title>
+                    </v-list-item-content>
+                </v-list-item>
             </v-list>
         </v-menu>
         <div v-if="isOpened === true" class="menu-background" v-on:click="onClickMenuBackground"></div>
@@ -31,6 +40,7 @@
 </template>
 
 <script lang="ts">
+import Util from '@/util/Util';
 import { Component, Vue } from 'vue-property-decorator';
 
 @Component({})
@@ -43,6 +53,13 @@ export default class RecordedMainMenu extends Vue {
 
     public cleanup(): void {
         this.$emit('cleanup');
+    }
+
+    public async upload(): Promise<void> {
+        await Util.sleep(200);
+        await Util.move(this.$router, {
+            path: '/recorded/upload',
+        });
     }
 
     public onClickMenuBackground(e: Event): boolean {

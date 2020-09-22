@@ -8,5 +8,7 @@ export default interface IRecordedApiModel {
     stopEncode(recordedId: apid.RecordedId): Promise<void>;
     protect(recordedId: apid.RecordedId): Promise<void>;
     unprotect(recordedId: apid.RecordedId): Promise<void>;
+    createNewRecorded(option: apid.CreateNewRecordedOption): Promise<apid.RecordedId>;
+    uploadedVideoFile(option: apid.UploadVideoFileOption): Promise<void>;
     cleanup(): Promise<void>;
 }
