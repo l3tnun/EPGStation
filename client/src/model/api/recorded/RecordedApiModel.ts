@@ -98,29 +98,6 @@ export default class RecordedApiModel implements IRecordedApiModel {
     }
 
     /**
-     * ビデオファイルををアップロードする
-     * @param option: apid.UploadVideoFileOption
-     * @return Promise<void>
-     */
-    public async uploadedVideoFile(option: apid.UploadVideoFileOption): Promise<void> {
-        const formData = new FormData();
-        formData.append('recordedId', option.recordedId.toString(10));
-        formData.append('parentDirectoryName', option.parentDirectoryName);
-        if (typeof option.subDirectory !== 'undefined') {
-            formData.append('subDirectory', option.subDirectory);
-        }
-        formData.append('viewName', option.viewName);
-        formData.append('fileType', option.fileType);
-        formData.append('file', option.file);
-
-        await this.repository.post('/videos/upload', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            },
-        });
-    }
-
-    /**
      * 録画のクリーンアップ
      * @return Promise<void>
      */

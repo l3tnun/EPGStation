@@ -2,6 +2,8 @@ import { inject, injectable } from 'inversify';
 import * as apid from '../../../../../../api';
 import IRuleApiModel from '../../../..//model/api/rule/IRuleApiModel';
 import GenreUtil from '../../../../util/GenreUtil';
+import IVideoApiModel from '../../..//api/video/IVideoApiModel';
+import IRecordedApiModel from '../../../api/recorded/IRecordedApiModel';
 import IChannelModel from '../../../channels/IChannelModel';
 import IServerConfigModel from '../../../serverConfig/IServerConfigModel';
 import ISettingStorageModel from '../../../storage/setting/ISettingStorageModel';
@@ -30,6 +32,8 @@ class RecordedUploadState implements IRecordedUploadState {
     private channelModel: IChannelModel;
     private serverConfig: IServerConfigModel;
     private ruleApiModel: IRuleApiModel;
+    private recordedApiModel: IRecordedApiModel;
+    private videoApiModel: IVideoApiModel;
 
     private channelItems: SelectorItem[] = [];
     private genreItems: SelectorItem[] = [];
@@ -41,11 +45,15 @@ class RecordedUploadState implements IRecordedUploadState {
         @inject('ISettingStorageModel') settingModel: ISettingStorageModel,
         @inject('IChannelModel') channelModel: IChannelModel,
         @inject('IRuleApiModel') ruleApiModel: IRuleApiModel,
+        @inject('IRecordedApiModel') recordedApiModel: IRecordedApiModel,
+        @inject('IVideoApiModel') videoApiModel: IVideoApiModel,
     ) {
         this.serverConfig = serverConfig;
         this.settingModel = settingModel;
         this.channelModel = channelModel;
         this.ruleApiModel = ruleApiModel;
+        this.recordedApiModel = recordedApiModel;
+        this.videoApiModel = videoApiModel;
 
         this.genreItems = GenreUtil.getGenreListItems();
         for (let i = 0; i < GenreUtil.GENRE_MAX_NUM; i++) {
@@ -239,7 +247,92 @@ class RecordedUploadState implements IRecordedUploadState {
      * @return Promise<void>
      */
     public async upload(): Promise<void> {
-        // TODO 実装
+        if (this.checkInput() === false) {
+            throw new Error('InputError');
+        }
+
+        const recordedId = await this.recordedApiModel.createNewRecorded(this.createProgramOption());
+
+        for (const video of this.videoFileItems) {
+            if (
+                typeof video.parentDirectoryName !== 'string' ||
+                typeof video.viewName !== 'string' ||
+                video.viewName.length === 0 ||
+                typeof video.fileType !== 'string' ||
+                typeof video.file === 'undefined' ||
+                video.file === null
+            ) {
+                continue;
+            }
+
+            const uploadVideoOption: apid.UploadVideoFileOption = {
+                recordedId: recordedId,
+                parentDirectoryName: video.parentDirectoryName,
+                viewName: video.viewName,
+                fileType: video.fileType as apid.VideoFileType,
+                file: video.file,
+            };
+            if (typeof video.subDirectory === 'string' && video.subDirectory.length > 0) {
+                uploadVideoOption.subDirectory = video.subDirectory;
+            }
+
+            try {
+                await this.videoApiModel.uploadedVideoFile(uploadVideoOption);
+            } catch (err) {
+                // アップロードに失敗したら番組情報を削除する
+                await this.recordedApiModel.delete(recordedId).catch(e => {
+                    console.error(e);
+                });
+
+                throw err;
+            }
+        }
+    }
+
+    /**
+     * アップロードするビデオファイルの番組情報を生成する
+     * @return apid.CreateNewRecordedOption
+     */
+    private createProgramOption(): apid.CreateNewRecordedOption {
+        if (
+            typeof this.programOption.channelId === 'undefined' ||
+            this.programOption.startAt === null ||
+            typeof this.programOption.duration !== 'number' ||
+            typeof this.programOption.name !== 'string'
+        ) {
+            throw new Error('ProgramError');
+        }
+
+        const startAt = this.programOption.startAt.getTime();
+
+        const option: apid.CreateNewRecordedOption = {
+            channelId: this.programOption.channelId,
+            startAt: startAt,
+            endAt: startAt + this.programOption.duration * 60 * 1000,
+            name: this.programOption.name,
+        };
+
+        if (typeof this.programOption.ruleId === 'number') {
+            option.ruleId = this.programOption.ruleId;
+        }
+
+        if (typeof this.programOption.description === 'string') {
+            option.description = this.programOption.description;
+        }
+
+        if (typeof this.programOption.extended === 'string') {
+            option.extended = this.programOption.extended;
+        }
+
+        if (typeof this.programOption.genre1 === 'number') {
+            option.genre1 = this.programOption.genre1;
+        }
+
+        if (typeof this.programOption.subGenre1 === 'number') {
+            option.subGenre1 = this.programOption.subGenre1;
+        }
+
+        return option;
     }
 }
 
