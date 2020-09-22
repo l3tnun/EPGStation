@@ -90,6 +90,28 @@
             <SearchOptionRow title="詳細">
                 <v-textarea label="extended" v-model="uploadState.programOption.extended"></v-textarea>
             </SearchOptionRow>
+            <div v-for="video in uploadState.videoFileItems" v-bind:key="video.key">
+                <SearchOptionRow :title="`ビデオファイル${video.key + 1}`">
+                    <v-text-field v-model="video.viewName" label="name" clearable class="view-name"></v-text-field>
+                    <v-select
+                        class="file-type"
+                        v-model="video.fileType"
+                        :items="uploadState.getFileTypeItems()"
+                        label="file type"
+                        :menu-props="{ auto: true }"
+                    ></v-select>
+
+                    <v-select
+                        class="directory"
+                        v-model="video.parentDirectoryName"
+                        :items="uploadState.getPrentDirectoryItems()"
+                        label="directory"
+                        :menu-props="{ auto: true }"
+                    ></v-select>
+                    <v-text-field v-model="video.subDirectory" label="sub directory" clearable></v-text-field>
+                    <v-file-input v-model="video.file" label="video file"></v-file-input>
+                </SearchOptionRow>
+            </div>
         </div>
         <v-divider></v-divider>
         <v-card-actions>
@@ -135,3 +157,8 @@ export default class RecordedUploadForm extends Vue {
     }
 }
 </script>
+
+<style lang="sass" scoped>
+.view-name, .file-type, .directory
+    max-width: 150px
+</style>

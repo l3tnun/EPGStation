@@ -6,6 +6,7 @@ export interface SelectorItem {
 }
 
 export interface VideoFileItem {
+    key: number;
     parentDirectoryName: string | undefined;
     subDirectory: string | null;
     viewName: string | null;
@@ -40,5 +41,6 @@ export default interface IRecordedUploadState {
     getGenreItems(): SelectorItem[];
     getSubGenreItems(): SelectorItem[];
     addEmptyVideoFileItem(): void;
+    checkInput(): boolean;
     upload(): Promise<void>;
 }

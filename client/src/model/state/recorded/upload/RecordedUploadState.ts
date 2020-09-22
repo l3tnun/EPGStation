@@ -34,6 +34,7 @@ class RecordedUploadState implements IRecordedUploadState {
     private channelItems: SelectorItem[] = [];
     private genreItems: SelectorItem[] = [];
     private subGemreItems: SelectorItem[][] = [];
+    private videoItemCnt: number = 0;
 
     constructor(
         @inject('IServerConfigModel') serverConfig: IServerConfigModel,
@@ -68,7 +69,8 @@ class RecordedUploadState implements IRecordedUploadState {
             subGenre1: undefined,
         };
 
-        this.videoFileItems.splice(this.videoFileItems.length);
+        this.videoItemCnt = 0;
+        this.videoFileItems = [];
         this.addEmptyVideoFileItem();
 
         if (this.channelItems.length === 0) {
@@ -168,12 +170,25 @@ class RecordedUploadState implements IRecordedUploadState {
      */
     public addEmptyVideoFileItem(): void {
         this.videoFileItems.push({
-            parentDirectoryName: undefined,
+            key: this.videoItemCnt,
+            parentDirectoryName: this.getPrentDirectoryItems()[0],
             subDirectory: null,
             viewName: null,
             fileType: undefined,
             file: null,
         });
+
+        this.videoItemCnt++;
+    }
+
+    /**
+     * 入力値のチェック
+     * @return true // 入力値に問題なければ OK を返す
+     */
+    public checkInput(): boolean {
+        // TODO 実装
+
+        return true;
     }
 
     /**
