@@ -75,7 +75,7 @@
             <SearchOptionRow title="長さ※" :required="true">
                 <v-text-field
                     v-model.number="uploadState.programOption.duration"
-                    min="0"
+                    min="1"
                     label="長さ(分)"
                     type="number"
                     clearable

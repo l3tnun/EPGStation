@@ -11,7 +11,7 @@ export interface VideoFileItem {
     subDirectory: string | null;
     viewName: string | null;
     fileType: string | undefined;
-    file: File | null;
+    file: File | null | undefined;
 }
 
 export interface UploadProgramOption {

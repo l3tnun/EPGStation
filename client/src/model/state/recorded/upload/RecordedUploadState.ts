@@ -183,10 +183,53 @@ class RecordedUploadState implements IRecordedUploadState {
 
     /**
      * 入力値のチェック
-     * @return true // 入力値に問題なければ OK を返す
+     * @return true 入力値に問題なければ true を返す
      */
     public checkInput(): boolean {
-        // TODO 実装
+        if (typeof this.programOption.channelId !== 'number') {
+            return false;
+        }
+
+        if (this.programOption.startAt === null) {
+            return false;
+        }
+
+        if (typeof this.programOption.duration !== 'number' || this.programOption.duration <= 0) {
+            return false;
+        }
+
+        if (typeof this.programOption.name !== 'string') {
+            return false;
+        }
+
+        if (this.videoFileItems.length === 0 || this.checkVideoFileItemInput(this.videoFileItems[0]) === false) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * ビデオファイル入力チェック
+     * @param item: VideoFileItem
+     * @return boolean
+     */
+    private checkVideoFileItemInput(item: VideoFileItem): boolean {
+        if (typeof item.viewName !== 'string') {
+            return false;
+        }
+
+        if (typeof item.fileType !== 'string') {
+            return false;
+        }
+
+        if (typeof item.parentDirectoryName !== 'string') {
+            return false;
+        }
+
+        if (typeof item.file === 'undefined' || item.file === null) {
+            return false;
+        }
 
         return true;
     }
