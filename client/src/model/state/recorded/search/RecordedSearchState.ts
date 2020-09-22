@@ -46,7 +46,7 @@ class RecordedSearchState implements IRecordedSearchState {
         this.searchOptions = searchOption;
 
         const keywordItems = await this.ruleApiModel.searchKeyword(this.createSearchKeywordOption());
-        this.ruleItems.splice(-this.channelItems.length);
+        this.ruleItems.splice(-this.ruleItems.length);
         for (const k of keywordItems) {
             this.ruleItems.push(k);
         }
