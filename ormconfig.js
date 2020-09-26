@@ -43,6 +43,7 @@ switch (config.dbtype) {
         ormConfig.username = config.mysql.user;
         ormConfig.password = config.mysql.password;
         ormConfig.database = config.mysql.database;
+        ormConfig.bigNumberStrings = false;
         break;
 
     case 'postgres':
