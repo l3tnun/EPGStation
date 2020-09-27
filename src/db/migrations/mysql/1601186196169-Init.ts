@@ -1,11 +1,11 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class Init1601180313438 implements MigrationInterface {
-    public name = 'Init1601180313438';
+export class Init1601186196169 implements MigrationInterface {
+    public name = 'Init1601186196169';
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(
-            'CREATE TABLE `channel` (`id` bigint NOT NULL, `serviceId` int NOT NULL, `networkId` int NOT NULL, `name` text NOT NULL, `halfWidthName` text NOT NULL, `remoteControlKeyId` int NULL, `hasLogoData` tinyint NOT NULL DEFAULT 0, `channelType` varchar(255) NOT NULL, `channel` varchar(255) NOT NULL, `type` int NULL, PRIMARY KEY (`id`)) ENGINE=InnoDB',
+            'CREATE TABLE `channel` (`id` bigint NOT NULL, `serviceId` int NOT NULL, `networkId` int NOT NULL, `name` text NOT NULL, `halfWidthName` text NOT NULL, `remoteControlKeyId` int NULL, `hasLogoData` tinyint NOT NULL DEFAULT 0, `channelTypeId` int NOT NULL, `channelType` varchar(255) NOT NULL, `channel` varchar(255) NOT NULL, `type` int NULL, PRIMARY KEY (`id`)) ENGINE=InnoDB',
         );
         await queryRunner.query(
             'CREATE TABLE `drop_log_file` (`id` int NOT NULL AUTO_INCREMENT, `errorCnt` bigint NOT NULL, `dropCnt` bigint NOT NULL, `scramblingCnt` bigint NOT NULL, `filePath` text NOT NULL, PRIMARY KEY (`id`)) ENGINE=InnoDB',

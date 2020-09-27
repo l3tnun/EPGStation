@@ -1,11 +1,11 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class Init1601183462377 implements MigrationInterface {
-    public name = 'Init1601183462377';
+export class Init1601185891878 implements MigrationInterface {
+    public name = 'Init1601185891878';
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(
-            'CREATE TABLE "channel" ("id" bigint PRIMARY KEY NOT NULL, "serviceId" integer NOT NULL, "networkId" integer NOT NULL, "name" text NOT NULL, "halfWidthName" text NOT NULL, "remoteControlKeyId" integer, "hasLogoData" boolean NOT NULL DEFAULT (0), "channelType" varchar NOT NULL, "channel" varchar NOT NULL, "type" integer)',
+            'CREATE TABLE "channel" ("id" bigint PRIMARY KEY NOT NULL, "serviceId" integer NOT NULL, "networkId" integer NOT NULL, "name" text NOT NULL, "halfWidthName" text NOT NULL, "remoteControlKeyId" integer, "hasLogoData" boolean NOT NULL DEFAULT (0), "channelTypeId" integer NOT NULL, "channelType" varchar NOT NULL, "channel" varchar NOT NULL, "type" integer)',
         );
         await queryRunner.query(
             'CREATE TABLE "drop_log_file" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "errorCnt" bigint NOT NULL, "dropCnt" bigint NOT NULL, "scramblingCnt" bigint NOT NULL, "filePath" text NOT NULL)',

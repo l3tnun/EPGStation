@@ -39,6 +39,12 @@ export default class Channel extends BaseEntity {
     })
     public hasLogoData!: boolean;
 
+    @Column({
+        type: 'integer',
+        nullable: false,
+    })
+    public channelTypeId!: number;
+
     @Column()
     public channelType!: string; // GR BS CS SKY
 

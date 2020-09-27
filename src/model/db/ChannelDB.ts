@@ -57,6 +57,7 @@ export default class ChannelDB implements IChannelDB {
                 remoteControlKeyId:
                     typeof channel.remoteControlKeyId === 'undefined' ? null : channel.remoteControlKeyId,
                 hasLogoData: !!channel.hasLogoData,
+                channelTypeId: this.getChannelTypeId(channel.channel.type),
                 channelType: channel.channel.type,
                 channel: channel.channel.channel,
                 type: typeof (channel as any)['type'] !== 'number' ? null : (channel as any)['type'],
@@ -97,6 +98,25 @@ export default class ChannelDB implements IChannelDB {
 
         if (hasError) {
             throw new Error('insert error');
+        }
+    }
+
+    /**
+     * ChannelTypeId を取得する
+     * @paramChannelTypeId
+     */
+    private getChannelTypeId(type: mapid.ChannelType): number {
+        switch (type) {
+            case 'GR':
+                return 0;
+            case 'BS':
+                return 1;
+            case 'CS':
+                return 2;
+            case 'SKY':
+                return 3;
+            default:
+                return 4;
         }
     }
 
@@ -147,12 +167,14 @@ export default class ChannelDB implements IChannelDB {
             });
         }
 
-        const repository = connection.getRepository(Channel);
+        const repository = connection
+            .getRepository(Channel)
+            .createQueryBuilder('channel')
+            .where(queryOption)
+            .orderBy('channel.channelTypeId, channel.remoteControlKeyId, channel.id', 'ASC');
 
         const result = await this.promieRetry.run(() => {
-            return repository.find({
-                where: queryOption,
-            });
+            return repository.getMany();
         });
 
         return needSort === true ? this.sortChannels(result) : result;
@@ -166,10 +188,13 @@ export default class ChannelDB implements IChannelDB {
     public async findAll(needSort: boolean = false): Promise<Channel[]> {
         const connection = await this.op.getConnection();
 
-        const repository = connection.getRepository(Channel);
+        const queryBuilder = connection
+            .getRepository(Channel)
+            .createQueryBuilder('channel')
+            .orderBy('channel.channelTypeId, channel.remoteControlKeyId, channel.id', 'ASC');
 
         const result = await this.promieRetry.run(() => {
-            return repository.find();
+            return queryBuilder.getMany();
         });
 
         return needSort === true ? this.sortChannels(result) : result;
