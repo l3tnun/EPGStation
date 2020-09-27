@@ -42,7 +42,7 @@
         <RecordedMultipleDeletionDialog
             v-if="isEditMode === true"
             :isOpen.sync="isOpenMultiplueDeletionDialog"
-            :total="recordedState.getSelectedCnt()"
+            :total="recordedState.getSelectedCnt().cnt"
             v-on:delete="onExecuteMultiplueDeletion"
         ></RecordedMultipleDeletionDialog>
         <RecordedCleanupDialog :isOpen.sync="isOpenCleanupDialog"></RecordedCleanupDialog>
