@@ -49,7 +49,7 @@ export default class RuleApiModel implements IRuleApiModel {
         const [rules, total] = await this.ruleDB.findAll(option);
 
         if (typeof option.type !== 'undefined') {
-            const ruleIds: apid.RuleId[] = rules.map(r => {
+            const ruleIds: apid.RuleId[] = (rules as apid.Rule[]).map(r => {
                 return r.id;
             });
 

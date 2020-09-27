@@ -12,6 +12,8 @@
         "watch": "gulp watch",
         "clean": "gulp clean",
         "orm-gen": "typeorm migration:generate -n ",
+        "backup": "node dist/DBTools.js -m backup -o",
+        "restore": "node dist/DBTools.js -m restore -o",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "repository": {
@@ -36,6 +38,7 @@
         "js-yaml": "3.14.0",
         "lodash": "4.17.19",
         "log4js": "6.3.0",
+        "minimist": "1.2.5",
         "mirakurun": "3.2.0",
         "mkdirp": "1.0.4",
         "multer": "1.4.2",
@@ -56,6 +59,7 @@
         "@types/file-type": "10.9.1",
         "@types/js-yaml": "3.12.5",
         "@types/lodash": "4.14.157",
+        "@types/minimist": "1.2.0",
         "@types/mkdirp": "1.0.1",
         "@types/mongodb": "3.5.25",
         "@types/multer": "1.4.4",
@@ -71,7 +75,6 @@
         "gulp-tslint": "8.1.4",
         "gulp-typescript": "5.0.1",
         "i": "0.3.6",
-        "minimist": "1.2.5",
         "prettier": "2.0.5",
         "ts-loader": "8.0.1",
         "ts-node": "8.10.2",

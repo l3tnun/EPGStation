@@ -9,6 +9,7 @@ export interface UpdateCntOption {
 }
 
 export default interface IDropLogFileDB {
+    restore(items: DropLogFile[]): Promise<void>;
     insertOnce(dropLogFile: DropLogFile): Promise<apid.DropLogFileId>;
     updateCnt(updateOption: UpdateCntOption): Promise<void>;
     deleteOnce(dropLogFileId: apid.DropLogFileId): Promise<void>;

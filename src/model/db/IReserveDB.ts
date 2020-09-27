@@ -39,6 +39,7 @@ export interface RuleIdCountResult {
 }
 
 export default interface IReserveDB {
+    restore(items: Reserve[]): Promise<void>;
     insertOnce(reserve: Reserve): Promise<apid.ReserveId>;
     updateOnce(reserve: Reserve): Promise<void>;
     updateMany(values: IReserveUpdateValues): Promise<void>;

@@ -13,6 +13,7 @@ export interface FindAllOption extends apid.GetRecordedOption {
 }
 
 export default interface IRecordedDB {
+    restore(items: Recorded[]): Promise<void>;
     insertOnce(recorded: Recorded): Promise<apid.RecordedId>;
     updateOnce(recorded: Recorded): Promise<void>;
     removeRecording(recordedId: apid.RecordedId): Promise<void>;

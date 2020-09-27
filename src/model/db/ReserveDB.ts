@@ -24,6 +24,42 @@ export default class ReserveDB implements IReserveDB {
     }
 
     /**
+     * バックアップから復元
+     * @param items: Reserve[]
+     * @return Promise<void>
+     */
+    public async restore(items: Reserve[]): Promise<void> {
+        // get queryRunner
+        const connection = await this.op.getConnection();
+        const queryRunner = connection.createQueryRunner();
+
+        // start transaction
+        await queryRunner.startTransaction();
+
+        let hasError = false;
+        try {
+            // 削除
+            await queryRunner.manager.delete(Reserve, {});
+
+            // 挿入処理
+            for (const item of items) {
+                await queryRunner.manager.insert(Reserve, item);
+            }
+            await queryRunner.commitTransaction();
+        } catch (err) {
+            console.error(err);
+            hasError = err;
+            await queryRunner.rollbackTransaction();
+        } finally {
+            await queryRunner.release();
+        }
+
+        if (hasError) {
+            throw new Error('restore error');
+        }
+    }
+
+    /**
      * 1つだけ挿入
      * @param reserve: Reserve
      * @return inserted id

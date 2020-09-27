@@ -16,6 +16,42 @@ export default class VideoFileDB implements IVideoFileDB {
     }
 
     /**
+     * バックアップから復元
+     * @param items: VideoFile[]
+     * @return Promise<void>
+     */
+    public async restore(items: VideoFile[]): Promise<void> {
+        // get queryRunner
+        const connection = await this.op.getConnection();
+        const queryRunner = connection.createQueryRunner();
+
+        // start transaction
+        await queryRunner.startTransaction();
+
+        let hasError = false;
+        try {
+            // 削除
+            await queryRunner.manager.delete(VideoFile, {});
+
+            // 挿入処理
+            for (const item of items) {
+                await queryRunner.manager.insert(VideoFile, item);
+            }
+            await queryRunner.commitTransaction();
+        } catch (err) {
+            console.error(err);
+            hasError = err;
+            await queryRunner.rollbackTransaction();
+        } finally {
+            await queryRunner.release();
+        }
+
+        if (hasError) {
+            throw new Error('restore error');
+        }
+    }
+
+    /**
      * ビデオファイル情報を 1 件挿入
      * @param videoFile: VideoFile
      * @return inserted id

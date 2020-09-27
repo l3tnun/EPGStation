@@ -2,6 +2,8 @@ import { inject, injectable } from 'inversify';
 import { In, IsNull, Not } from 'typeorm';
 import * as apid from '../../../api';
 import Recorded from '../../db/entities/Recorded';
+import Thumbnail from '../../db/entities/Thumbnail';
+import VideoFile from '../../db/entities/VideoFile';
 import StrUtil from '../../util/StrUtil';
 import IPromiseRetry from '../IPromiseRetry';
 import DBUtil from './DBUtil';
@@ -16,6 +18,44 @@ export default class RecordedDB implements IRecordedDB {
     constructor(@inject('IDBOperator') op: IDBOperator, @inject('IPromiseRetry') promieRetry: IPromiseRetry) {
         this.op = op;
         this.promieRetry = promieRetry;
+    }
+
+    /**
+     * バックアップから復元
+     * @param items: Recorded[]
+     * @return Promise<void>
+     */
+    public async restore(items: Recorded[]): Promise<void> {
+        // get queryRunner
+        const connection = await this.op.getConnection();
+        const queryRunner = connection.createQueryRunner();
+
+        // start transaction
+        await queryRunner.startTransaction();
+
+        let hasError = false;
+        try {
+            // 削除
+            await queryRunner.manager.delete(Thumbnail, {});
+            await queryRunner.manager.delete(VideoFile, {});
+            await queryRunner.manager.delete(Recorded, {});
+
+            // 挿入処理
+            for (const item of items) {
+                await queryRunner.manager.insert(Recorded, item);
+            }
+            await queryRunner.commitTransaction();
+        } catch (err) {
+            console.error(err);
+            hasError = err;
+            await queryRunner.rollbackTransaction();
+        } finally {
+            await queryRunner.release();
+        }
+
+        if (hasError) {
+            throw new Error('restore error');
+        }
     }
 
     /**

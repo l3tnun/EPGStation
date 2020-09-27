@@ -37,6 +37,18 @@ export default class DBOperator implements IDBOperator {
     }
 
     /**
+     * DB との接続を切断する
+     * @return Promise<void>
+     */
+    public async closeConnection(): Promise<void> {
+        if (this.connection === null) {
+            return;
+        }
+
+        await this.connection.close();
+    }
+
+    /**
      * sqlite の外部拡張読み込み
      */
     private async setSQLiteExtensions(): Promise<void> {

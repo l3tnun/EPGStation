@@ -16,6 +16,42 @@ export default class ThumbnailDB implements IThumbnailDB {
     }
 
     /**
+     * バックアップから復元
+     * @param items: Thumbnail[]
+     * @return Promise<void>
+     */
+    public async restore(items: Thumbnail[]): Promise<void> {
+        // get queryRunner
+        const connection = await this.op.getConnection();
+        const queryRunner = connection.createQueryRunner();
+
+        // start transaction
+        await queryRunner.startTransaction();
+
+        let hasError = false;
+        try {
+            // 削除
+            await queryRunner.manager.delete(Thumbnail, {});
+
+            // 挿入処理
+            for (const item of items) {
+                await queryRunner.manager.insert(Thumbnail, item);
+            }
+            await queryRunner.commitTransaction();
+        } catch (err) {
+            console.error(err);
+            hasError = err;
+            await queryRunner.rollbackTransaction();
+        } finally {
+            await queryRunner.release();
+        }
+
+        if (hasError) {
+            throw new Error('restore error');
+        }
+    }
+
+    /**
      * サムネイル情報 1 件挿入
      * @param thumbnail: Thumbnail
      * @return inserted id

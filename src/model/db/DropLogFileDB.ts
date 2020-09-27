@@ -1,6 +1,9 @@
 import { inject, injectable } from 'inversify';
 import * as apid from '../../../api';
 import DropLogFile from '../../db/entities/DropLogFile';
+import Recorded from '../../db/entities/Recorded';
+import Thumbnail from '../../db/entities/Thumbnail';
+import VideoFile from '../../db/entities/VideoFile';
 import IPromiseRetry from '../IPromiseRetry';
 import IDBOperator from './IDBOperator';
 import IDropLogFileDB, { UpdateCntOption } from './IDropLogFileDB';
@@ -13,6 +16,45 @@ export default class DropLogFileDB implements IDropLogFileDB {
     constructor(@inject('IDBOperator') op: IDBOperator, @inject('IPromiseRetry') promieRetry: IPromiseRetry) {
         this.op = op;
         this.promieRetry = promieRetry;
+    }
+
+    /**
+     * バックアップから復元
+     * @param items: DropLogFile[]
+     * @return Promise<void>
+     */
+    public async restore(items: DropLogFile[]): Promise<void> {
+        // get queryRunner
+        const connection = await this.op.getConnection();
+        const queryRunner = connection.createQueryRunner();
+
+        // start transaction
+        await queryRunner.startTransaction();
+
+        let hasError = false;
+        try {
+            // 削除
+            await queryRunner.manager.delete(Thumbnail, {});
+            await queryRunner.manager.delete(VideoFile, {});
+            await queryRunner.manager.delete(Recorded, {});
+            await queryRunner.manager.delete(DropLogFile, {});
+
+            // 挿入処理
+            for (const item of items) {
+                await queryRunner.manager.insert(DropLogFile, item);
+            }
+            await queryRunner.commitTransaction();
+        } catch (err) {
+            console.error(err);
+            hasError = err;
+            await queryRunner.rollbackTransaction();
+        } finally {
+            await queryRunner.release();
+        }
+
+        if (hasError) {
+            throw new Error('restore error');
+        }
     }
 
     /**

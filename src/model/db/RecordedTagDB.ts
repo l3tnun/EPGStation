@@ -19,6 +19,42 @@ export default class RecordedTagDB implements IRecordedTagDB {
     }
 
     /**
+     * バックアップから復元
+     * @param items: RecordedTag[]
+     * @return Promise<void>
+     */
+    public async restore(items: RecordedTag[]): Promise<void> {
+        // get queryRunner
+        const connection = await this.op.getConnection();
+        const queryRunner = connection.createQueryRunner();
+
+        // start transaction
+        await queryRunner.startTransaction();
+
+        let hasError = false;
+        try {
+            // 削除
+            await queryRunner.manager.delete(RecordedTag, {});
+
+            // 挿入処理
+            for (const item of items) {
+                await queryRunner.manager.insert(RecordedTag, item);
+            }
+            await queryRunner.commitTransaction();
+        } catch (err) {
+            console.error(err);
+            hasError = err;
+            await queryRunner.rollbackTransaction();
+        } finally {
+            await queryRunner.release();
+        }
+
+        if (hasError) {
+            throw new Error('restore error');
+        }
+    }
+
+    /**
      * tag 情報を 1 件挿入
      * @param tag: RecordedTag
      * @return Promise<apid.RecordedTagId> inserted id

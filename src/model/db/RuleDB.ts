@@ -18,6 +18,42 @@ export default class RuleDB implements IRuleDB {
     }
 
     /**
+     * バックアップから復元
+     * @param items: RuleWithCnt[]
+     * @return Promise<void>
+     */
+    public async restore(items: RuleWithCnt[]): Promise<void> {
+        // get queryRunner
+        const connection = await this.op.getConnection();
+        const queryRunner = connection.createQueryRunner();
+
+        // start transaction
+        await queryRunner.startTransaction();
+
+        let hasError = false;
+        try {
+            // 削除
+            await queryRunner.manager.delete(Rule, {});
+
+            // 挿入処理
+            for (const item of items) {
+                await queryRunner.manager.insert(Rule, this.convertRuleToDBRule(item));
+            }
+            await queryRunner.commitTransaction();
+        } catch (err) {
+            console.error(err);
+            hasError = err;
+            await queryRunner.rollbackTransaction();
+        } finally {
+            await queryRunner.release();
+        }
+
+        if (hasError) {
+            throw new Error('restore error');
+        }
+    }
+
+    /**
      * ルールを1件挿入
      * @param rule apid.Rule | apid.AddRuleOption
      * @return inserted id
@@ -405,7 +441,7 @@ export default class RuleDB implements IRuleDB {
      * @param option: apid.GetRuleOption
      * @return Promise<[apid.Rule[], number]>
      */
-    public async findAll(option: apid.GetRuleOption): Promise<[apid.Rule[], number]> {
+    public async findAll(option: apid.GetRuleOption, isNeedCnt: boolean = false): Promise<[apid.Rule[], number]> {
         const connection = await this.op.getConnection();
 
         let queryBuilder = connection.getRepository(Rule).createQueryBuilder('rule');
@@ -457,7 +493,9 @@ export default class RuleDB implements IRuleDB {
         return [
             rules.map(rule => {
                 const result = this.convertDBRuleToRule(rule);
-                delete result.updateCnt;
+                if (isNeedCnt === false) {
+                    delete result.updateCnt;
+                }
 
                 return result;
             }),
