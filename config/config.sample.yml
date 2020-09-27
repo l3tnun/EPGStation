@@ -7,6 +7,14 @@ dbtype: sqlite
 #     - '/hoge/regexp.dylib'
 #   regexp: true
 
+# dbtype: mysql
+# mysql:
+#     host: 192.168.xx.xx
+#     port: 3306
+#     user: epgstation
+#     password: epgstation
+#     database: epgstation
+
 epgUpdateIntervalTime: 10
 
 conflictPriority: 1
