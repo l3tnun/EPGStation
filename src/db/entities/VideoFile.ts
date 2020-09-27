@@ -9,17 +9,23 @@ export default class VideoFile extends BaseEntity {
     public id!: number;
 
     @Column({
-        type: 'integer',
+        type: 'text',
     })
     public parentDirectoryName!: string;
 
-    @Column()
+    @Column({
+        type: 'text',
+    })
     public filePath!: string;
 
-    @Column()
+    @Column({
+        type: 'text',
+    })
     public type!: string; // apid.VideoFileType
 
-    @Column()
+    @Column({
+        type: 'text',
+    })
     public name!: string;
 
     @Column({

@@ -64,10 +64,14 @@ export default class Recorded extends BaseEntity {
     })
     public duration!: number;
 
-    @Column()
+    @Column({
+        type: 'text',
+    })
     public name!: string; // 番組名 (表示用)
 
-    @Column()
+    @Column({
+        type: 'text',
+    })
     public halfWidthName!: string; // 番組名 (検索用)
 
     @Column({

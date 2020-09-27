@@ -63,13 +63,19 @@ export default class Program extends BaseEntity {
     @Column()
     public isFree!: boolean;
 
-    @Column()
+    @Column({
+        type: 'text',
+    })
     public name!: string; // 番組名 (表示用)
 
-    @Column()
+    @Column({
+        type: 'text',
+    })
     public halfWidthName!: string; // 番組名 (検索用)
 
-    @Column()
+    @Column({
+        type: 'text',
+    })
     public shortName!: string; // 番組名 (重複チェック用)
 
     @Column({

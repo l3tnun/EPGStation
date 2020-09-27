@@ -22,6 +22,8 @@ export default class DropLogFile extends BaseEntity {
     })
     public scramblingCnt!: number;
 
-    @Column()
+    @Column({
+        type: 'text',
+    })
     public filePath!: string;
 }

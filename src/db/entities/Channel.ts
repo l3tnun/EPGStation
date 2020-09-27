@@ -18,10 +18,14 @@ export default class Channel extends BaseEntity {
     })
     public networkId!: number;
 
-    @Column()
+    @Column({
+        type: 'text',
+    })
     public name!: string;
 
-    @Column()
+    @Column({
+        type: 'text',
+    })
     public halfWidthName!: string;
 
     @Column({

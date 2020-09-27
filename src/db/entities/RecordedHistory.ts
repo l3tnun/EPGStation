@@ -7,7 +7,9 @@ export default class RecordedHistory extends BaseEntity {
     })
     public id!: number;
 
-    @Column()
+    @Column({
+        type: 'text',
+    })
     public name!: string; // 番組名 Program.shortName と比較する
 
     @Column({

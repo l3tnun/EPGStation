@@ -7,10 +7,14 @@ export default class RecordedTag extends BaseEntity {
     })
     public id!: number;
 
-    @Column()
+    @Column({
+        type: 'text',
+    })
     public name!: string; // タグ名
 
-    @Column()
+    @Column({
+        type: 'text',
+    })
     public halfWidthName!: string; // 検索用の name を半角化したもの
 
     @Column()

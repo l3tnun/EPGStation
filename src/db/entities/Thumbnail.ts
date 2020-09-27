@@ -8,7 +8,9 @@ export default class Thumbnail extends BaseEntity {
     })
     public id!: number;
 
-    @Column()
+    @Column({
+        type: 'text',
+    })
     public filePath!: string;
 
     @Column()
