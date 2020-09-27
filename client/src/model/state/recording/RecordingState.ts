@@ -160,7 +160,7 @@ export default class RecordingState implements IRecordingState {
         // 削除する video file を列挙する
         const videoFileIds: apid.VideoFileId[] = [];
         for (const r of this.recorded) {
-            if (typeof r.recordedItem.videoFiles === 'undefined') {
+            if (r.isSelected === false || typeof r.recordedItem.videoFiles === 'undefined') {
                 continue;
             }
 

@@ -258,12 +258,13 @@ export default class IPCClient implements IIPCClient {
                     },
                 });
             },
-            createNewRecorded: (option: apid.CreateNewRecordedOption) => {
+            createNewRecorded: (option: apid.CreateNewRecordedOption, isIgnoreProtection?: boolean) => {
                 return this.send<apid.RecordedId>({
                     model: ModelName.recorded,
                     func: RecordedFunctions.createNewRecorded,
                     args: {
                         option: option,
+                        isIgnoreProtection: isIgnoreProtection,
                     },
                 });
             },

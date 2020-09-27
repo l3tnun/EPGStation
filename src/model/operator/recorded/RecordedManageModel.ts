@@ -63,9 +63,10 @@ export default class RecordedManageModel implements IRecordedManageModel {
     /**
      * 指定した録画情報と各種ファイルを削除する
      * @param recordedId: RecordedId
+     * @param isIgnoreProtection: boolean
      * @return Promise<void>
      */
-    public async delete(recordedId: apid.RecordedId): Promise<void> {
+    public async delete(recordedId: apid.RecordedId, isIgnoreProtection: boolean = false): Promise<void> {
         this.log.system.info(`delete recorded: ${recordedId}`);
         const recorded = await this.recordedDB.findId(recordedId);
         if (recorded === null) {
@@ -73,8 +74,15 @@ export default class RecordedManageModel implements IRecordedManageModel {
             throw new Error('RecordedIdIsNotFound');
         }
 
+        // プロテクトチェック
+        if (recorded.isProtected === true) {
+            this.log.system.warn(`${recordedId} is protected`);
+            throw new Error('RecordedIsProtected');
+        }
+
         // 録画中なら停止
         if (
+            isIgnoreProtection === false &&
             recorded.isRecording === true &&
             recorded.reserveId !== null &&
             this.recordingManageModel.hasReserve(recorded.reserveId) === true
@@ -409,15 +417,28 @@ export default class RecordedManageModel implements IRecordedManageModel {
     /**
      * 指定された video file id のファイルを削除する
      * @param videoFileid: apid.VideoFileId
+     * @param isIgnoreProtection: boolean
      * @return Promise<void>
      */
-    public async deleteVideoFile(videoFileid: apid.VideoFileId): Promise<void> {
+    public async deleteVideoFile(videoFileid: apid.VideoFileId, isIgnoreProtection: boolean = false): Promise<void> {
         this.log.system.info(`delete video file: ${videoFileid}`);
 
         const video = await this.videoFileDB.findId(videoFileid);
         if (video === null) {
             this.log.system.info(`video file is not found: ${videoFileid}`);
             throw new Error('VideoFileIsNotFound');
+        }
+
+        // プロテクトがかかっているか確認
+        let recorded = await this.recordedDB.findId(video.recordedId);
+        if (isIgnoreProtection === false && recorded !== null && recorded.isProtected === true) {
+            this.log.system.warn(`${videoFileid} is protected`);
+            throw new Error('RecordedIsProtected');
+        }
+
+        // 録画中の場合は録画情報ごと削除
+        if (recorded?.isRecording === true) {
+            return await this.delete(video.recordedId, false);
         }
 
         // 実ファイル削除
@@ -434,11 +455,11 @@ export default class RecordedManageModel implements IRecordedManageModel {
         await this.videoFileDB.deleteOnce(videoFileid);
 
         // video に紐付けられていた recorded が空かチェック
-        const recorded = await this.recordedDB.findId(video.recordedId);
+        recorded = await this.recordedDB.findId(video.recordedId);
         if (recorded !== null && typeof recorded.videoFiles !== 'undefined' && recorded.videoFiles.length === 0) {
             // 空だったので recorded も削除
             this.log.system.info(`empty video files: ${video.recordedId}`);
-            await this.delete(video.recordedId);
+            await this.delete(video.recordedId, false);
         } else {
             this.recordedEvent.emitDeleteVideoFile(videoFileid);
         }

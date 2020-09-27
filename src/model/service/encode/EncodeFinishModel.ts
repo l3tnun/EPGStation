@@ -75,7 +75,7 @@ export default class EncodeFinishModel implements IEncodeFinishModel {
 
         if (info.removeOriginal === true) {
             // delete source video file
-            await this.ipc.recorded.deleteVideoFile(info.videoFileId);
+            await this.ipc.recorded.deleteVideoFile(info.videoFileId, true);
         }
 
         this.socket.notifyClient();
