@@ -3,7 +3,7 @@
         <TitleBar title="EPGStation"></TitleBar>
         <div class="app-content d-flex flex-column mx-auto">
             <transition name="page">
-                <div v-if="isShow" class="dashboard">
+                <div v-if="isShow" class="dashboard" v-bind:class="dashboardClass">
                     <DashboardItem ref="recordingItem" :title="recordingTitle" v-on:scroll="onRecordingScroll">
                         <template v-slot:items>
                             <div class="px-2">
@@ -137,6 +137,12 @@ export default class Main extends Vue {
 
     get reserveTitle(): string {
         return `予約 ${this.reservesState.getReserves().length}/${this.reservesState.getTotal()}`;
+    }
+
+    get dashboardClass(): any {
+        return {
+            'pb-4': UaUtil.isiOS(),
+        };
     }
 
     public created(): void {
