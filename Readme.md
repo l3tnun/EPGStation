@@ -43,8 +43,8 @@ npm run build
 ```bash
 cp config/config.sample.yml config/config.yml
 cp config/operatorLogConfig.sample.yml config/operatorLogConfig.yml
-cp config/operatorLogConfig.sample.yml config/operatorLogConfig.yml
 cp config/epgUpdaterLogConfig.sample.yml config/epgUpdaterLogConfig.yml
+cp config/serviceLogConfig.sample.yml config/serviceLogConfig.yml
 ```
 
 ### config ファイルの詳細
