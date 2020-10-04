@@ -118,7 +118,7 @@ namespace Util {
     };
 
     // ファイルサイズ単位
-    const fileSizeUnits = ['B', 'KB', 'MB', 'GB'];
+    const fileSizeUnits = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
 
     /**
      * ファイルサイズ取得
