@@ -149,7 +149,8 @@ export default class Main extends Vue {
         if (UaUtil.isiOS() === true) {
             // html の class に guide を追加
             const element = document.getElementsByTagName('html')[0];
-            element.classList.add('fix-address-bar');
+            element.classList.add('fix-address-bar2');
+            element.style.overflow = 'auto';
         }
 
         this.settingValue = this.setting.getSavedValue();
@@ -167,7 +168,8 @@ export default class Main extends Vue {
         if (UaUtil.isiOS() === true) {
             // html の class から guide を削除
             const element = document.getElementsByTagName('html')[0];
-            element.classList.remove('fix-address-bar');
+            element.classList.remove('fix-address-bar2');
+            element.style.overflow = '';
         }
     }
 

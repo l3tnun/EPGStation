@@ -55,8 +55,13 @@ html
  */
 html.fix-address-bar
     height: 100%
+    overflow: hidden !important
+
+html.fix-address-bar2
+    height: 100%
     overflow: auto !important
 
+html.fix-address-bar, html.fix-address-bar2
     body, #app
         height: 100%
 
