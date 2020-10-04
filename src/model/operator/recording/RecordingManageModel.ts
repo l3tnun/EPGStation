@@ -179,6 +179,11 @@ class RecordingManageModel implements IRecordingManageModel {
         // 新規追加
         if (typeof diff.insert !== 'undefined') {
             for (const reserve of diff.insert) {
+                // 除外, 重複しているものはタイマーをセットしない
+                if (reserve.isSkip === true || reserve.isOverlap === true) {
+                    continue;
+                }
+
                 const recorder = await this.provider();
                 if (recorder.setTimer(reserve) === true) {
                     this.log.system.debug(`add recording: ${reserve.id}`);

@@ -97,6 +97,11 @@ class RecorderModel implements IRecorderModel {
     public setTimer(reserve: Reserve): boolean {
         this.reserve = reserve;
 
+        // 除外, 重複しているものはタイマーをセットしない
+        if (this.reserve.isSkip === true || this.reserve.isOverlap === true) {
+            return false;
+        }
+
         const now = new Date().getTime();
         if (now >= this.reserve.endAt) {
             return false;
@@ -641,7 +646,7 @@ class RecorderModel implements IRecorderModel {
      * @param newReserve: 新しい予約情報
      */
     public async update(newReserve: Reserve): Promise<void> {
-        if (newReserve.isSkip === true) {
+        if (newReserve.isSkip === true || newReserve.isOverlap === true) {
             // skip されたかチェック
             await this.cancel(false).catch(err => {
                 this.log.system.error(`cancel recording error: ${newReserve.id}`);
