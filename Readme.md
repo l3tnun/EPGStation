@@ -55,19 +55,6 @@ cp config/epgUpdaterLogConfig.sample.yml config/epgUpdaterLogConfig.yml
 
 [doc/v1migrate.md](doc/v1migrate.md) を参照
 
-### 開発に必要なもの
-
-* Node.js
-* [Visual Studioo Code](https://azure.microsoft.com/ja-jp/products/visual-studio-code/)
-* Visual Studio Code の以下のプラグイン
-    * [OpenAPI (Swagger) Editor](https://marketplace.visualstudio.com/items?itemName=42Crunch.vscode-openapi)
-    * [Prettier - Code formatter](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
-    * [Sass](https://marketplace.visualstudio.com/items?itemName=Syler.sass-indented)
-    * [TSLint](https://marketplace.visualstudio.com/items?itemName=ms-vscode.vscode-typescript-tslint-plugin)
-    * [TSLint Vue](https://marketplace.visualstudio.com/items?itemName=prograhammer.tslint-vue)
-    * [Vetur](https://marketplace.visualstudio.com/items?itemName=octref.vetur)
-    * [YAML](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml)
-
 
 以下 v1 の Readme
 
