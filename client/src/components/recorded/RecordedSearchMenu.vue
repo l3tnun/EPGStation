@@ -147,8 +147,9 @@ export default class RecordedSearchMenu extends Vue {
     }
 
     private setRuleId(): void {
-        this.searchState.ruleId =
+        const ruleId =
             typeof this.$route.query.ruleId === 'undefined' ? null : parseInt(this.$route.query.ruleId as string, 10);
+        this.searchState.ruleId = ruleId === null || isNaN(ruleId) === false ? ruleId : null;
     }
 
     @Watch('isOpen', { immediate: true })
