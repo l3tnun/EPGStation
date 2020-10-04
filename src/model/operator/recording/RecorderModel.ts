@@ -92,9 +92,10 @@ class RecorderModel implements IRecorderModel {
     /**
      * タイマーをセットする
      * @param reserve: Reserve 予約情報
+     * @param isSuppressLog: boolean ログ出力を抑えるか
      * @return boolean セットに成功したら true を返す
      */
-    public setTimer(reserve: Reserve): boolean {
+    public setTimer(reserve: Reserve, isSuppressLog: boolean): boolean {
         this.reserve = reserve;
 
         // 除外, 重複しているものはタイマーをセットしない
@@ -118,7 +119,9 @@ class RecorderModel implements IRecorderModel {
             clearTimeout(this.timerId);
         }
 
-        this.log.system.info(`set timer: ${this.reserve.id}, ${time}`);
+        if (isSuppressLog === false) {
+            this.log.system.info(`set timer: ${this.reserve.id}, ${time}`);
+        }
         this.timerId = setTimeout(async () => {
             try {
                 this.prepRecord();
@@ -644,8 +647,9 @@ class RecorderModel implements IRecorderModel {
     /**
      * 予約情報を更新する
      * @param newReserve: 新しい予約情報
+     * @param isSuppressLog: boolean ログ出力を抑えるか
      */
-    public async update(newReserve: Reserve): Promise<void> {
+    public async update(newReserve: Reserve, isSuppressLog: boolean): Promise<void> {
         if (newReserve.isSkip === true || newReserve.isOverlap === true) {
             // skip されたかチェック
             await this.cancel(false).catch(err => {
@@ -656,7 +660,7 @@ class RecorderModel implements IRecorderModel {
             // 時刻に変更がないか確認
             // 録画処理が実行されていない場合
             if (this.isPrepRecording === false && this.isRecording === false) {
-                this.setTimer(newReserve);
+                this.setTimer(newReserve, isSuppressLog);
             } else {
                 // 録画準備中 or 録画中
                 if (this.reserve.startAt > newReserve.startAt) {
@@ -665,7 +669,7 @@ class RecorderModel implements IRecorderModel {
                         this.log.system.error(`cancel recording error: ${newReserve.id}`);
                         this.log.system.error(err);
                     });
-                    this.setTimer(newReserve); // タイマー再セット
+                    this.setTimer(newReserve, isSuppressLog); // タイマー再セット
                 } else if (this.reserve.endAt !== newReserve.endAt && this.reserve.programId === null) {
                     // 時間指定予約で終了時刻に変更があった
                     this.log.system.debug(`change recording endAt: ${newReserve.id}`);
@@ -718,7 +722,7 @@ class RecorderModel implements IRecorderModel {
             return true;
         }
 
-        return this.setTimer(this.reserve);
+        return this.setTimer(this.reserve, false);
     }
 }
 

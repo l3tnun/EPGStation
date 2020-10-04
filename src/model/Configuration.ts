@@ -167,6 +167,7 @@ namespace Configuration {
         encodeProcessNum: 0,
         concurrentEncodeNum: 0,
         encode: [],
+        isSuppressReservesUpdateAllLog: false,
         urlscheme: {
             m2ts: {
                 ios: 'vlc-x-callback://x-callback-url/stream?url=http://ADDRESS"',

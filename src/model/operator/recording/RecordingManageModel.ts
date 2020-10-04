@@ -185,7 +185,7 @@ class RecordingManageModel implements IRecordingManageModel {
                 }
 
                 const recorder = await this.provider();
-                if (recorder.setTimer(reserve) === true) {
+                if (recorder.setTimer(reserve, diff.isSuppressLog) === true) {
                     this.log.system.debug(`add recording: ${reserve.id}`);
                     this.recordingIndex[reserve.id] = recorder;
                 } else {
@@ -202,12 +202,12 @@ class RecordingManageModel implements IRecordingManageModel {
                     // recorder がなかった
                     this.log.system.debug(`create new recorder: ${reserve.id}`);
                     const newRecorder = await this.provider();
-                    if (newRecorder.setTimer(reserve) === true) {
+                    if (newRecorder.setTimer(reserve, diff.isSuppressLog) === true) {
                         this.recordingIndex[reserve.id] = newRecorder;
                     }
                 } else {
                     this.log.system.debug(`update recording: ${reserve.id}`);
-                    await recorder.update(reserve).catch(err => {
+                    await recorder.update(reserve, diff.isSuppressLog).catch(err => {
                         this.log.system.error(`update recording error: ${reserve.id}`);
                         this.log.system.error(err);
                     });

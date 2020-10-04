@@ -4,6 +4,7 @@ export interface IReserveUpdateValues {
     insert?: Reserve[];
     update?: Reserve[];
     delete?: Reserve[];
+    isSuppressLog: boolean;
 }
 
 export default interface IReserveEvent {

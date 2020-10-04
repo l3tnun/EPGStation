@@ -127,6 +127,9 @@ export default interface IConfigFile {
         rate?: number;
     }[];
 
+    // 予約定期更新時のログ出力を抑えるか
+    isSuppressReservesUpdateAllLog: boolean;
+
     // 各種フックコマンド
     reserveNewAddtionCommand?: string; // 予約新規追加
     reserveUpdateCommand?: string; // 予約情報更新

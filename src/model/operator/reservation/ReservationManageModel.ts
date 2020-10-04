@@ -12,6 +12,8 @@ import IProgramDB, { ProgramWithOverlap } from '../../db/IProgramDB';
 import IReserveDB, { IFindTimeRangesOption, IReserveTimeOption } from '../../db/IReserveDB';
 import IRuleDB, { RuleWithCnt } from '../../db/IRuleDB';
 import IReserveEvent, { IReserveUpdateValues } from '../../event/IReserveEvent';
+import IConfigFile from '../../IConfigFile';
+import IConfiguration from '../../IConfiguration';
 import IExecutionManagementModel from '../../IExecutionManagementModel';
 import ILogger from '../../ILogger';
 import ILoggerModel from '../../ILoggerModel';
@@ -27,6 +29,7 @@ interface ReserveDiffData {
 @injectable()
 class ReservationManageModel implements IReservationManageModel {
     private log: ILogger;
+    private config: IConfigFile;
     private executeManagementModel: IExecutionManagementModel;
     private optionChecker: IReserveOptionChecker;
     private reserveDB: IReserveDB;
@@ -44,6 +47,7 @@ class ReservationManageModel implements IReservationManageModel {
 
     constructor(
         @inject('ILoggerModel') logger: ILoggerModel,
+        @inject('IConfiguration') configuration: IConfiguration,
         @inject('IExecutionManagementModel') executeManagementModel: IExecutionManagementModel,
         @inject('IReserveOptionChecker') optionChecker: IReserveOptionChecker,
         @inject('IReserveDB') reserveDB: IReserveDB,
@@ -53,6 +57,7 @@ class ReservationManageModel implements IReservationManageModel {
         @inject('IReserveEvent') reserveEvent: IReserveEvent,
     ) {
         this.log = logger.getLogger();
+        this.config = configuration.getConfig();
         this.executeManagementModel = executeManagementModel;
         this.optionChecker = optionChecker;
         this.reserveDB = reserveDB;
@@ -258,6 +263,7 @@ class ReservationManageModel implements IReservationManageModel {
         // イベント発行
         this.reserveEvent.emitUpdated({
             insert: [newReserve],
+            isSuppressLog: false,
         });
 
         return insertedId;
@@ -387,14 +393,16 @@ class ReservationManageModel implements IReservationManageModel {
     /**
      * 手動予約の更新
      */
-    public async update(reserveId: apid.ReserveId): Promise<void> {
+    public async update(reserveId: apid.ReserveId, isSuppressLog: boolean = false): Promise<void> {
         // 実行権取得
         const exeId = await this.executeManagementModel.getExecution(ReservationManageModel.UPDATE_RESERVE_PRIORITY);
         const finalize = () => {
             this.executeManagementModel.unLockExecution(exeId);
         };
 
-        this.log.system.info(`update reservation: ${reserveId}`);
+        if (isSuppressLog === false) {
+            this.log.system.info(`update reservation: ${reserveId}`);
+        }
 
         // 予約情報を取得する
         const oldReserve = await this.reserveDB.findId(reserveId).catch(err => {
@@ -434,7 +442,9 @@ class ReservationManageModel implements IReservationManageModel {
         // 番組情報に更新があったか確認する
         if (oldReserve.programUpdateTime === newProgram.updateTime) {
             finalize();
-            this.log.system.info(`no update reservation: ${reserveId}`);
+            if (isSuppressLog === false) {
+                this.log.system.info(`no update reservation: ${reserveId}`);
+            }
 
             return;
         }
@@ -466,6 +476,7 @@ class ReservationManageModel implements IReservationManageModel {
             },
             [newReserve],
             [oldReserve],
+            isSuppressLog,
         ).catch(err => {
             finalize();
             throw err;
@@ -473,7 +484,9 @@ class ReservationManageModel implements IReservationManageModel {
 
         finalize();
 
-        this.log.system.info(`successful update reservation: ${reserveId}`);
+        if (isSuppressLog === false) {
+            this.log.system.info(`successful update reservation: ${reserveId}`);
+        }
 
         // イベント発行
         this.reserveEvent.emitUpdated(diff);
@@ -482,8 +495,9 @@ class ReservationManageModel implements IReservationManageModel {
     /**
      * ルール変更
      * @param ruleId: rule id
+     * @param isSuppressLog ログ出力を抑えるか
      */
-    public async updateRule(ruleId: apid.RuleId): Promise<void> {
+    public async updateRule(ruleId: apid.RuleId, isSuppressLog: boolean = false): Promise<void> {
         // 実行権取得
         const exeId = await this.executeManagementModel.getExecution(
             ReservationManageModel.RULE_UPDATE_RESERVE_PRIORITY,
@@ -492,7 +506,9 @@ class ReservationManageModel implements IReservationManageModel {
             this.executeManagementModel.unLockExecution(exeId);
         };
 
-        this.log.system.info(`update rule reservation: ${ruleId}`);
+        if (isSuppressLog === false) {
+            this.log.system.info(`update rule reservation: ${ruleId}`);
+        }
 
         // ルールを取得
         const rule = await this.ruleDB.findId(ruleId, true).catch(err => {
@@ -680,6 +696,7 @@ class ReservationManageModel implements IReservationManageModel {
             },
             newRuleReserves,
             oldRuleReserves,
+            isSuppressLog,
         ).catch(err => {
             finalize();
             throw err;
@@ -687,7 +704,9 @@ class ReservationManageModel implements IReservationManageModel {
 
         finalize();
 
-        this.log.system.info(`successful update rule reservation: ${ruleId}`);
+        if (isSuppressLog === false) {
+            this.log.system.info(`successful update rule reservation: ${ruleId}`);
+        }
 
         // イベント発行
         this.reserveEvent.emitUpdated(diff);
@@ -734,12 +753,14 @@ class ReservationManageModel implements IReservationManageModel {
      * @param findOption :IFindTimeRangesOption
      * @param addNewReserves: 新規追加する予約
      * @param addOldReserves: 旧のみに含まれる予約
+     * @param isSuppressLog: ログ出力を抑えるか
      * @return IReserveUpdateValues
      */
     private async createDiff(
         findOption: IFindTimeRangesOption,
         addNewReserves: Reserve[],
         addOldReserves: Reserve[],
+        isSuppressLog: boolean,
     ): Promise<IReserveUpdateValues> {
         // 影響を受ける可能性のある予約を取り出す
         const baseReserves = await this.reserveDB.findTimeRanges(findOption).catch(err => {
@@ -758,13 +779,15 @@ class ReservationManageModel implements IReservationManageModel {
         Array.prototype.push.apply(oldReserves, baseReserves);
 
         // oldReserves と newReserves の差分を列挙
-        const diff = this.createReservesDiff(oldReserves, newReserves);
+        const diff = this.createReservesDiff(oldReserves, newReserves, isSuppressLog);
 
-        this.log.system.info({
-            insert: diff.insert!.length,
-            update: diff.update!.length,
-            delete: diff.delete!.length,
-        });
+        if (isSuppressLog === false) {
+            this.log.system.info({
+                insert: diff.insert!.length,
+                update: diff.update!.length,
+                delete: diff.delete!.length,
+            });
+        }
 
         // 列挙した予約情報を DB へ反映させる
         await this.reserveDB.updateMany(diff).catch(err => {
@@ -796,13 +819,19 @@ class ReservationManageModel implements IReservationManageModel {
      * 手動時刻指定予約の差分はチェックしないので注意
      * @param oldReserves: Reserve[]
      * @param newReserves: Reserve[]
+     * @param isSuppressLog: boolean ログ出力を抑えるか
      * @return IReserveUpdateValues
      */
-    private createReservesDiff(oldReserves: Reserve[], newReserves: Reserve[]): IReserveUpdateValues {
+    private createReservesDiff(
+        oldReserves: Reserve[],
+        newReserves: Reserve[],
+        isSuppressLog: boolean,
+    ): IReserveUpdateValues {
         const diff: IReserveUpdateValues = {
             insert: [],
             update: [],
             delete: [],
+            isSuppressLog: isSuppressLog,
         };
 
         // 検索用のインデックスを作成
@@ -918,6 +947,8 @@ class ReservationManageModel implements IReservationManageModel {
     public async updateAll(): Promise<void> {
         this.log.system.info('all reservation update start');
 
+        const isSuppressLog = this.config.isSuppressReservesUpdateAllLog;
+
         // 手動予約 (program id) の id を取得
         const manualIds = await this.reserveDB.getManualIds({ hasTimeReserve: false }).catch(err => {
             this.log.system.error('get manual reservation ids error');
@@ -932,7 +963,7 @@ class ReservationManageModel implements IReservationManageModel {
 
         // 手動予約更新
         for (const manualId of manualIds) {
-            await this.update(manualId).catch(err => {
+            await this.update(manualId, isSuppressLog).catch(err => {
                 this.log.system.error(err);
             });
             await Util.sleep(10);
@@ -940,7 +971,7 @@ class ReservationManageModel implements IReservationManageModel {
 
         // ルール予約更新
         for (const ruleId of ruleIds) {
-            await this.updateRule(ruleId).catch(err => {
+            await this.updateRule(ruleId, isSuppressLog).catch(err => {
                 this.log.system.error(err);
             });
             await Util.sleep(10);
@@ -1015,6 +1046,7 @@ class ReservationManageModel implements IReservationManageModel {
             },
             newReserves,
             oldReserves,
+            false,
         ).catch(err => {
             finalize();
             throw err;
@@ -1091,6 +1123,7 @@ class ReservationManageModel implements IReservationManageModel {
             },
             [newReserves],
             [oldReserve],
+            false,
         ).catch(err => {
             finalize();
             throw err;
@@ -1169,6 +1202,7 @@ class ReservationManageModel implements IReservationManageModel {
             },
             [newReserves],
             [oldReserve],
+            false,
         ).catch(err => {
             finalize();
             throw err;
@@ -1238,6 +1272,7 @@ class ReservationManageModel implements IReservationManageModel {
         // イベント発行
         this.reserveEvent.emitUpdated({
             update: [newReserve],
+            isSuppressLog: false,
         });
     }
 
@@ -1264,6 +1299,7 @@ class ReservationManageModel implements IReservationManageModel {
         await this.reserveDB
             .updateMany({
                 delete: deleteReserves,
+                isSuppressLog: false,
             })
             .catch(err => {
                 finalize();
@@ -1279,6 +1315,7 @@ class ReservationManageModel implements IReservationManageModel {
         // イベント発行
         this.reserveEvent.emitUpdated({
             delete: deleteReserves,
+            isSuppressLog: false,
         });
     }
 
