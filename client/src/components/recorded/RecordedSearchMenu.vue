@@ -103,7 +103,7 @@ export default class RecordedSearchMenu extends Vue {
             if (typeof this.searchState.keyword !== 'undefined') {
                 searchQuery.keyword = this.searchState.keyword;
             }
-            if (typeof this.searchState.ruleId !== 'undefined') {
+            if (typeof this.searchState.ruleId !== 'undefined' && this.searchState.ruleId !== null) {
                 searchQuery.ruleId = this.searchState.ruleId;
             }
             if (typeof this.searchState.channelId !== 'undefined') {
