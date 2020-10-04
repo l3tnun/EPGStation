@@ -14,6 +14,7 @@
         "orm-gen": "typeorm migration:generate -n ",
         "backup": "node dist/DBTools.js -m backup -o",
         "restore": "node dist/DBTools.js -m restore -o",
+        "v1migrate": "node dist/V1MigrationTool.js -i",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "repository": {

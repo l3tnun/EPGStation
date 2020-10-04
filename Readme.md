@@ -10,7 +10,23 @@
 
 ### 動作環境
 
-v1 に準じる ※ただし Windows 環境にて正常動作するかは未検証
+- Linux / macOS / Windows(※未検証)
+- [Node.js](http://nodejs.org/) : ^14.6.0
+- [Mirakurun](https://github.com/Chinachu/Mirakurun) : ^3.2.0
+- いずれかのデータベース (文字コードは  utf-8 とする)
+	- [SQLite3](https://www.sqlite.org/)（設定不要だが検索機能に制限あり）[標準]
+		- [SQLite3 使用時の正規表現での検索の有効化について](doc/sqlite3-regexp.md)
+	- [MySQL](https://www.mysql.com/jp/) ([MariaDB](https://mariadb.org/))【推奨(要設定)】
+	- ~~[PostgreSQL](https://www.postgresql.org/) (version 9.5 以上)~~
+- [FFmpeg](http://ffmpeg.org/)
+
+sqlite3 パッケージのインストール時にバイナリが存在しなかった場合は次の環境も必要
+
+- for Linux / macOS
+	- [Python 2.7, v3.5, v3.6, or v3.7](https://www.python.org/) node-gyp にて必要
+	- [GCC](https://gcc.gnu.org/) node-gyp にて必要
+- for Windows
+	- [windows-build-tools](https://npmjs.com/package/windows-build-tools) node-gyp にて必要
 
 ### install 手順
 
@@ -31,6 +47,14 @@ cp config/operatorLogConfig.sample.yml config/operatorLogConfig.yml
 cp config/epgUpdaterLogConfig.sample.yml config/epgUpdaterLogConfig.yml
 ```
 
+### config ファイルの詳細
+
+ドキュメント化ができていないので [src/model/IConfigFile.ts](src/model/IConfigFile.ts) のコメントを直接参照してください
+
+### v1 からの移行について
+
+[doc/v1migrate.md](doc/v1migrate.md) を参照
+
 ### 開発に必要なもの
 
 * Node.js
@@ -43,11 +67,6 @@ cp config/epgUpdaterLogConfig.sample.yml config/epgUpdaterLogConfig.yml
     * [TSLint Vue](https://marketplace.visualstudio.com/items?itemName=prograhammer.tslint-vue)
     * [Vetur](https://marketplace.visualstudio.com/items?itemName=octref.vetur)
     * [YAML](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml)
-
-
-### 対応 DB
-
-* SQLite3
 
 
 以下 v1 の Readme
