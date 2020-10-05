@@ -3,7 +3,7 @@ FROM node:14-alpine AS builder
 WORKDIR /app
 RUN apk add --no-cache g++ make pkgconf python
 COPY package*.json .
-RUN npm i
+RUN npm ci
 COPY . .
 RUN npm run build
 
