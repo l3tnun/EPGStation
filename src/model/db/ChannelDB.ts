@@ -1,6 +1,5 @@
 import { inject, injectable } from 'inversify';
 import { FindConditions } from 'typeorm';
-// tslint:disable-next-line:no-submodule-imports
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import * as apid from '../../../api';
 import * as mapid from '../../../node_modules/mirakurun/api';
@@ -229,7 +228,6 @@ export default class ChannelDB implements IChannelDB {
                 return;
             }
 
-            // tslint:disable-next-line
             const [channel] = channels.splice(i, 1);
             channels.splice(cnt, 0, channel);
             cnt += 1;

@@ -33,7 +33,6 @@ export default class RecordedApiModel implements IRecordedApiModel {
      */
     public async gets(option: apid.GetRecordedOption): Promise<apid.Records> {
         (<FindAllOption>option).isRecording = false;
-        // tslint:disable-next-line: typedef
         const [records, total] = await this.recordedDB.findAll(option, {
             isNeedVideoFiles: true,
             isNeedThumbnails: true,

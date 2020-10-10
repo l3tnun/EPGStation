@@ -187,7 +187,6 @@ export default class ThumbnailManageModel implements IThumbnailManageModel {
     public async regenerate(): Promise<void> {
         this.log.system.info('start regenerate thumbnail');
 
-        // tslint:disable-next-line: typedef
         const [recordeds] = await this.recordedDB.findAll(
             {
                 isHalfWidth: false,

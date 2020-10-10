@@ -99,7 +99,6 @@ export default class IPCServer implements IIPCServer {
             return;
         }
 
-        // tslint:disable-next-line: no-object-literal-type-assertion
         this.child.send(<any>(<NotifyClientMessage>{
             type: 'notifyClient',
         }));
@@ -114,7 +113,6 @@ export default class IPCServer implements IIPCServer {
             throw new Error('ChildIsNull');
         }
 
-        // tslint:disable-next-line: no-object-literal-type-assertion
         this.child.send(<any>(<PushEncodeMessage>{
             type: 'pushEncode',
             value: addOption,

@@ -71,7 +71,6 @@ export default class RecordedTagApiModel implements IRecordedTagApiModel {
      * @return Promise<apid.RecordedTags>
      */
     public async gets(option: apid.GetRecordedTagOption): Promise<apid.RecordedTags> {
-        // tslint:disable-next-line: typedef
         const [tags, total] = await this.recordedTagDB.findAll(option);
 
         return {

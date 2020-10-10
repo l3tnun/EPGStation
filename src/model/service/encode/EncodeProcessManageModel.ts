@@ -84,7 +84,7 @@ class EncodeProcessManageModel implements IEncodeProcessManageModel {
      */
     private killAndCreateProcess(planToKillProcessId: number, option: CreateProcessOption): Promise<ChildProcess> {
         return new Promise<ChildProcess>(async (resolve, reject) => {
-            let timeoutId: NodeJS.Timer;
+            let timeoutId: NodeJS.Timer | null = null;
 
             /**
              * プロセスを生成
@@ -104,7 +104,9 @@ class EncodeProcessManageModel implements IEncodeProcessManageModel {
                     const child = this.buildProcess(option);
                     this.childs.unshift(child);
                     resolve(child.child);
-                    clearInterval(timeoutId); // timeout クリア
+                    if (timeoutId !== null) {
+                        clearInterval(timeoutId); // timeout クリア
+                    }
                     this.log.system.info(`kill & create new encode process: ${child.processId}`);
                 } catch (err) {
                     this.log.system.error('kill & create new encode process failed');

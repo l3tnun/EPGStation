@@ -1,6 +1,5 @@
 import { inject, injectable } from 'inversify';
 import { FindConditions, LessThan, LessThanOrEqual, MoreThanOrEqual, ObjectLiteral } from 'typeorm';
-// tslint:disable-next-line:no-submodule-imports
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import * as apid from '../../../api';
 import * as mapid from '../../../node_modules/mirakurun/api';
@@ -404,6 +403,7 @@ export default class ProgramDB implements IProgramDB {
 
         // overlap を追加
         return result.entities.map((entity, i) => {
+            // eslint-disable-next-line no-extra-boolean-cast
             (<any>entity).overlap = Boolean(!!result.raw[i].overlap);
 
             return <any>entity;

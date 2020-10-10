@@ -1,8 +1,6 @@
 /**
  * 超手抜き aribts 定義
  */
-
-/* tslint:disable:max-classes-per-file*/
 declare module 'aribts' {
     import { EventEmitter } from 'eventemitter3';
     import * as stream from 'stream';
@@ -49,6 +47,7 @@ declare module 'aribts' {
     export class TsSectionAnalyzer extends TsBase {}
     export class TsSectionUpdater extends TsBase {}
     export class TsPacketSelector extends TsBase {
+        // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
         constructor(option: any);
         public onPmt(tsSection: TsSectionProgramMap): void;
     }

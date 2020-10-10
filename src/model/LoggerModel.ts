@@ -65,7 +65,7 @@ export default class LoggerModel implements ILoggerModel {
             process.exit(1);
         }
 
-        return this.logger!;
+        return this.logger;
     }
 
     /**

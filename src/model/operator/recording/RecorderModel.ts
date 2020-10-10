@@ -171,8 +171,7 @@ class RecorderModel implements IRecorderModel {
             }
         } catch (err) {
             this.log.system.error(`preprec failed: ${this.reserve.id}`);
-            // @ts-ignore
-            if (this.isStopPrepRec === true) {
+            if ((this.isStopPrepRec as any) === true) {
                 this.emitCancelEvent();
 
                 return;

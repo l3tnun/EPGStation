@@ -7,8 +7,12 @@ export const get: Operation = async (req, res) => {
     const videoFileApiModel = container.get<IVideoApiModel>('IVideoApiModel');
 
     try {
+        if (typeof req.headers.host === 'undefined') {
+            throw new Error('HostIsUndefined');
+        }
+
         const playlist = await videoFileApiModel.getM3u8(
-            req.headers.host!,
+            req.headers.host,
             req.header('x-forwarded-proto') === 'https',
             parseInt(req.params.videoFileId, 10),
         );

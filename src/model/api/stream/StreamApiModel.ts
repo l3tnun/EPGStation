@@ -166,17 +166,18 @@ export default class StreamApiModel implements IStreamApiModel {
      */
     private getTsLiveConfig(type: 'm2ts' | 'webm' | 'mp4' | 'hls', mode: number): string | undefined {
         const config = this.configure.getConfig();
+
         if (
             typeof config.stream === 'undefined' ||
             typeof config.stream.live === 'undefined' ||
             typeof config.stream.live.ts === 'undefined' ||
             typeof config.stream.live.ts[type] === 'undefined' ||
-            typeof config.stream.live.ts[type]![mode] === 'undefined'
+            typeof (config.stream.live.ts[type] as any)[mode] === 'undefined'
         ) {
             throw new Error('ConfigIsUndefined');
         }
 
-        return config.stream.live.ts[type]![mode].cmd;
+        return (config.stream.live.ts[type] as any)[mode].cmd;
     }
 
     /**
@@ -281,22 +282,22 @@ export default class StreamApiModel implements IStreamApiModel {
             if (
                 typeof config.stream.recorded.encoded === 'undefined' ||
                 typeof config.stream.recorded.encoded[type] === 'undefined' ||
-                typeof config.stream.recorded.encoded[type]![option.mode] === 'undefined'
+                typeof (config.stream.recorded.encoded[type] as any)[option.mode] === 'undefined'
             ) {
                 throw new Error('ConfigIsUndefined');
             }
 
-            cmd = config.stream.recorded.encoded[type]![option.mode].cmd;
+            cmd = (config.stream.recorded.encoded[type] as any)[option.mode].cmd;
         } else {
             if (
                 typeof config.stream.recorded.ts === 'undefined' ||
                 typeof config.stream.recorded.ts[type] === 'undefined' ||
-                typeof config.stream.recorded.ts[type]![option.mode] === 'undefined'
+                typeof (config.stream.recorded.ts[type] as any)[option.mode] === 'undefined'
             ) {
                 throw new Error('ConfigIsUndefined');
             }
 
-            cmd = config.stream.recorded.ts[type]![option.mode].cmd;
+            cmd = (config.stream.recorded.ts[type] as any)[option.mode].cmd;
         }
 
         if (typeof cmd === 'undefined') {

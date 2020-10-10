@@ -1,3 +1,4 @@
+/* eslint-disable no-case-declarations */
 import { IncomingMessage } from 'http';
 import { inject, injectable } from 'inversify';
 import mirakurun from 'mirakurun';

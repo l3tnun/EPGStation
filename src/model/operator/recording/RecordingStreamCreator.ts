@@ -43,9 +43,6 @@ export default class RecordingStreamCreator implements IRecordingStreamCreator {
         this.log = logger.getLogger();
         this.config = configuration.getConfig();
         this.mirakurunClientModel = mirakurunClientModel;
-
-        this.config.timeSpecifiedStartMargin = this.config.timeSpecifiedStartMargin;
-        this.config.timeSpecifiedEndMargin = this.config.timeSpecifiedEndMargin;
     }
 
     /**
@@ -88,9 +85,10 @@ export default class RecordingStreamCreator implements IRecordingStreamCreator {
         for (const tuner of this.tuners) {
             for (let i = 0; i < tuner.programs.length; i++) {
                 if (tuner.programs[i].reserve.id === reserveId) {
-                    if (tuner.programs[i].stream !== null) {
-                        tuner.programs[i].stream!.destroy();
-                        tuner.programs[i].stream!.push(null); // eof 通知
+                    const programStream = tuner.programs[i].stream;
+                    if (programStream !== null) {
+                        programStream.destroy();
+                        programStream.push(null); // eof 通知
                     }
                     tuner.programs.splice(i, 1);
                     this.log.system.debug(`delete stream: ${reserveId}`);

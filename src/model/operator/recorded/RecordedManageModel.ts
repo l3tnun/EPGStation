@@ -94,8 +94,8 @@ export default class RecordedManageModel implements IRecordedManageModel {
         const hasVideoFiles = typeof recorded.videoFiles !== 'undefined' && recorded.videoFiles.length > 0;
 
         // サムネイル実ファイル削除
-        if (hasThumbnails === true) {
-            for (const t of recorded.thumbnails!) {
+        if (hasThumbnails === true && typeof recorded.thumbnails !== 'undefined') {
+            for (const t of recorded.thumbnails) {
                 const filePath = this.getThumbnailPath(t);
                 this.log.system.info(`delete: ${filePath}`);
                 await FileUtil.unlink(filePath).catch(err => {
@@ -106,8 +106,8 @@ export default class RecordedManageModel implements IRecordedManageModel {
         }
 
         // 録画ファイル実ファイル削除
-        if (hasVideoFiles === true) {
-            for (const v of recorded.videoFiles!) {
+        if (hasVideoFiles === true && typeof recorded.videoFiles !== 'undefined') {
+            for (const v of recorded.videoFiles) {
                 let filePath: string | null;
                 try {
                     filePath = await this.videoUtil.getFullFilePathFromId(v.id);

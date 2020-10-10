@@ -7,8 +7,12 @@ export const get: Operation = async (req, res) => {
     const streamApiModel = container.get<IStreamApiModel>('IStreamApiModel');
 
     try {
+        if (typeof req.headers.host === 'undefined') {
+            throw new Error('HostIsUndefined');
+        }
+
         const playlist = await streamApiModel.getLiveM2TsStreamM3u8(
-            req.headers.host!,
+            req.headers.host,
             req.header('x-forwarded-proto') === 'https',
             {
                 channelId: parseInt(req.params.channelId, 10),

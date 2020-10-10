@@ -7,8 +7,12 @@ export const post: Operation = async (req, res) => {
     const videoApiModel = container.get<IVideoApiModel>('IVideoApiModel');
 
     try {
+        if (typeof req.headers.host === 'undefined') {
+            throw new Error('HostIsUndefined');
+        }
+
         await videoApiModel.sendToKodi(
-            req.headers.host!,
+            req.headers.host,
             req.header('x-forwarded-proto') === 'https',
             req.body.kodiName,
             parseInt(req.params.videoFileId, 10),

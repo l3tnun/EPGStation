@@ -47,11 +47,9 @@ class DropCheckerModel implements IDropCheckerModel {
 
         this.transformStream = new stream.Transform({
             transform: function (chunk: any, _encoding: string, done: () => void): void {
-                // tslint:disable-next-line: no-invalid-this
                 this.push(chunk);
                 done();
             },
-            // tslint:disable-next-line:space-before-function-paren only-arrow-functions
             flush: function (done: () => void): void {
                 done();
             },
@@ -318,6 +316,7 @@ class DropCheckerModel implements IDropCheckerModel {
                 name = 'NULL';
                 break;
             default:
+                // eslint-disable-next-line no-case-declarations
                 const n = this.pidIndex[pid];
                 name = typeof n === 'undefined' ? '-' : n;
                 break;

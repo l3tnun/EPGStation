@@ -11,6 +11,7 @@ namespace StrUtil {
      * @return string
      */
     export const toDBStr = (str: string): string => {
+        // eslint-disable-next-line no-control-regex
         return str.replace(/\x00/g, ''); // PostgreSQL 非対応文字
     };
 
@@ -30,7 +31,7 @@ namespace StrUtil {
                 .replace(/’/g, "'")
                 .replace(/‘/g, '`')
                 .replace(/￥/g, '\\')
-                // tslint:disable-next-line:no-irregular-whitespace
+                // eslint-disable-next-line no-irregular-whitespace
                 .replace(/　/g, ' ')
                 .replace(/〜/g, '~')
         );
@@ -46,17 +47,14 @@ namespace StrUtil {
             return String.fromCharCode(s.charCodeAt(0) + 0xfee0);
         });
 
-        return (
-            tmp
-                .replace(/"/g, '”')
-                .replace(/\'/g, '’')
-                .replace(/`/g, '‘')
-                // tslint:disable-next-line:no-irregular-whitespace
-                .replace(/ /g, '　')
-                .replace(/~/g, '〜')
-                .replace(/［/g, '[')
-                .replace(/］/g, ']')
-        );
+        return tmp
+            .replace(/"/g, '”')
+            .replace(/\'/g, '’')
+            .replace(/`/g, '‘')
+            .replace(/ /g, '　')
+            .replace(/~/g, '〜')
+            .replace(/［/g, '[')
+            .replace(/］/g, ']');
     };
 
     /**

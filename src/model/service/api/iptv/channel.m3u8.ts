@@ -7,8 +7,12 @@ export const get: Operation = async (req, res) => {
     const iptvApiModel = container.get<IIPTVApiModel>('IIPTVApiModel');
 
     try {
+        if (typeof req.headers.host === 'undefined') {
+            throw new Error('HostIsUndefined');
+        }
+
         const result = await iptvApiModel.getChannelList(
-            req.headers.host!,
+            req.headers.host,
             req.header('x-forwarded-proto') === 'https',
             parseInt(req.query.mode as any, 10),
             req.query.isHalfWidth as any,

@@ -1,3 +1,4 @@
+/* eslint-disable no-irregular-whitespace */
 import { inject, injectable } from 'inversify';
 import * as apid from '../../../../api';
 import Program from '../../../db/entities/Program';
@@ -49,7 +50,6 @@ class IPTVApiModel implements IIPTVApiModel {
             if (channel.hasLogoData) {
                 logo = `tvg-logo="${isSecure ? 'https' : 'http'}://${host}/api/channels/${channel.id}/logo"`;
             }
-            // tslint:disable-next-line:no-irregular-whitespace
             str += `#EXTINF:-1 tvg-id="${channel.id}" ${logo} group-title="${channel.channelType}",${channelName}　\n`;
             str += `${isSecure ? 'https' : 'http'}://${host}/api/streams/live/${channel.id}/m2ts?mode=${mode}\n`;
         }
@@ -127,7 +127,6 @@ class IPTVApiModel implements IIPTVApiModel {
      * @return string
      */
     private replaceStr(str: string): string {
-        // tslint:disable-next-line:no-irregular-whitespace
         return str.replace(/</g, '＜').replace(/>/g, '＞').replace(/&/g, '＆').replace(/"/g, '”').replace(/'/g, '’');
     }
 

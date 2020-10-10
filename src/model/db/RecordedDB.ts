@@ -247,7 +247,7 @@ export default class RecordedDB implements IRecordedDB {
             }
         }
 
-        queryBuilder = queryBuilder.orderBy('recorded.startAt', !!isReverse ? 'ASC' : 'DESC');
+        queryBuilder = queryBuilder.orderBy('recorded.startAt', isReverse ? 'ASC' : 'DESC');
 
         const result = await this.promieRetry.run(() => {
             return queryBuilder.getMany();
@@ -378,7 +378,7 @@ export default class RecordedDB implements IRecordedDB {
         }
 
         // order by
-        queryBuilder = queryBuilder.orderBy('recorded.startAt', !!option.isReverse ? 'ASC' : 'DESC');
+        queryBuilder = queryBuilder.orderBy('recorded.startAt', option.isReverse ? 'ASC' : 'DESC');
 
         // videoFiles
         if (columnOption.isNeedVideoFiles === true) {
@@ -406,7 +406,6 @@ export default class RecordedDB implements IRecordedDB {
             });
         } else {
             // option.hasOriginalFile が有効な場合は エンコード済みビデオを取得できないので id を指定して再取得する
-            // tslint:disable-next-line: typedef
             const [records, total] = await this.promieRetry.run(() => {
                 return queryBuilder.getManyAndCount();
             });

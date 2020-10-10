@@ -485,7 +485,6 @@ export default class RuleDB implements IRuleDB {
         // order by
         queryBuilder = queryBuilder.orderBy('rule.id', 'ASC');
 
-        // tslint:disable-next-line: typedef
         const [rules, total] = await this.promieRetry.run(() => {
             return queryBuilder.getManyAndCount();
         });

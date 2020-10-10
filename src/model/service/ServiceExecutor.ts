@@ -1,5 +1,4 @@
 import * as path from 'path';
-// tslint:disable-next-line:no-import-side-effect
 import 'reflect-metadata';
 import { install } from 'source-map-support';
 import ILoggerModel from '../ILoggerModel';

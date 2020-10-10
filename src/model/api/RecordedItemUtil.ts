@@ -36,11 +36,23 @@ export default class RecordedItemUtil implements IRecordedItemUtil {
         }
 
         if (recorded.description !== null) {
-            item.description = isHalfWidth === true ? recorded.halfWidthDescription! : recorded.description;
+            if (isHalfWidth === true) {
+                if (typeof recorded.halfWidthDescription === 'string') {
+                    item.description = recorded.halfWidthDescription;
+                }
+            } else {
+                item.description = recorded.description;
+            }
         }
 
         if (recorded.extended !== null) {
-            item.extended = isHalfWidth === true ? recorded.halfWidthExtended! : recorded.extended;
+            if (isHalfWidth === true) {
+                if (typeof recorded.halfWidthExtended === 'string') {
+                    item.extended = recorded.halfWidthExtended;
+                }
+            } else {
+                item.extended = recorded.extended;
+            }
         }
 
         if (recorded.genre1 !== null) {

@@ -226,6 +226,6 @@ class TailStream extends Readable {
     }
 }
 
-export const createReadStream = (path: string, option: TailStreamOption) => {
+export const createReadStream = (path: string, option: TailStreamOption): TailStream => {
     return new TailStream(path, option);
 };

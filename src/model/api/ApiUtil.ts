@@ -2,7 +2,6 @@ import axios, { AxiosRequestConfig } from 'axios';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import * as url from 'url';
-// tslint:disable-next-line:no-require-imports
 import urljoin = require('url-join');
 import { KodiInfo } from '../IConfigFile';
 import IConfiguration from '../IConfiguration';

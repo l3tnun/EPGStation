@@ -43,10 +43,12 @@ export default class HLSFileDeleterModel implements IHLSFileDeleterModel {
             throw new Error('HLSFileDeleterOptionIsNull');
         }
 
+        const option: HLSFileDeleterOption = this.option;
+
         let targetFiles = (await FileUtil.readDir(this.option.streamFilePath)).filter(file => {
             return (
-                (fileNum === 0 && file.match('.m3u8') && file.match(`stream${this.option!.streamId}`)) ||
-                file.match(`stream${this.option!.streamId}`)
+                (fileNum === 0 && file.match('.m3u8') && file.match(`stream${option.streamId}`)) ||
+                file.match(`stream${option.streamId}`)
             );
         });
 
@@ -54,7 +56,7 @@ export default class HLSFileDeleterModel implements IHLSFileDeleterModel {
 
         for (let i = 0; i < targetFiles.length - fileNum; i++) {
             if (typeof targetFiles[i] !== 'undefined' && targetFiles[i] !== '.gitkeep') {
-                await FileUtil.unlink(`${this.option.streamFilePath}/${targetFiles[i]}`).catch(() => {});
+                await FileUtil.unlink(`${this.option.streamFilePath}/${targetFiles[i]}`).catch();
                 this.log.stream.info(`deleted ${targetFiles[i]}`);
             }
         }

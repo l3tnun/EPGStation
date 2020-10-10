@@ -100,7 +100,6 @@ class RecordingManageModel implements IRecordingManageModel {
         this.log.system.info('start recordings cleanup ');
 
         // 録画中になっている番組を取り出す
-        // tslint:disable-next-line: typedef
         const [records] = await this.recordedDB.findAll(
             {
                 isHalfWidth: false,

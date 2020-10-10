@@ -257,7 +257,9 @@ namespace FileUtil {
                                 const subFiles = await FileUtil.getFileList(filePath);
                                 Array.prototype.push.apply(results.files, subFiles.files);
                                 Array.prototype.push.apply(results.directories, subFiles.directories);
-                            } catch (err) {}
+                            } catch (err) {
+                                // error
+                            }
                         } else {
                             results.files.push(filePath);
                         }

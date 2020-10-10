@@ -1,6 +1,5 @@
 import * as fs from 'fs';
 import minimist from 'minimist';
-// tslint:disable-next-line:no-import-side-effect
 import 'reflect-metadata';
 import { install } from 'source-map-support';
 import DropLogFile from './db/entities/DropLogFile';
@@ -127,18 +126,15 @@ class DBTools {
         this.log.system.info('--- start backup ---');
 
         this.log.system.info('rule');
-        // tslint:disable-next-line: typedef
         const [ruleItems] = await this.ruleDB.findAll({}, true);
 
         this.log.system.info('reserve');
-        // tslint:disable-next-line: typedef
         const [reserveItems] = await this.reserveDB.findAll({ isHalfWidth: false });
 
         this.log.system.info('drop log file');
         const dropLogFileItems = await this.dropLogFileDB.findAll();
 
         this.log.system.info('recorded');
-        // tslint:disable-next-line: typedef
         const [recordedItems] = await this.recordedDB.findAll(
             {
                 isHalfWidth: false,
@@ -168,7 +164,6 @@ class DBTools {
         const recordedHistoryItems = await this.recordedHistoryDB.findAll();
 
         this.log.system.info('recorded tag');
-        // tslint:disable-next-line: typedef
         const [recordedTagItems] = await this.recordedTagDB.findAll({});
 
         const backup: BackupData = {

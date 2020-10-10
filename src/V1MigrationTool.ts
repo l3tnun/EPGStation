@@ -1,6 +1,5 @@
 import * as fs from 'fs';
 import minimist from 'minimist';
-// tslint:disable-next-line:no-import-side-effect
 import 'reflect-metadata';
 import { install } from 'source-map-support';
 import * as apid from '../api';
@@ -440,8 +439,9 @@ class V1MigrationTool {
     ): NewRecordedData {
         const newRecorded = new Recorded();
         newRecorded.reserveId = null;
-        if (typeof oldRecorded.ruleId !== null) {
-            const ruleId = ruleIndex[oldRecorded.ruleId!];
+        const oldRecordedRuleId = oldRecorded.ruleId;
+        if (oldRecordedRuleId !== null) {
+            const ruleId = ruleIndex[oldRecordedRuleId];
             if (typeof ruleId !== 'undefined') {
                 newRecorded.ruleId = ruleId;
             }

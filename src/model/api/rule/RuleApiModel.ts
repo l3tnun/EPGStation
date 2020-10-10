@@ -45,7 +45,6 @@ export default class RuleApiModel implements IRuleApiModel {
      * @return Promise<apid.Rules>
      */
     public async gets(option: apid.GetRuleOption): Promise<apid.Rules> {
-        // tslint:disable-next-line: typedef
         const [rules, total] = await this.ruleDB.findAll(option);
 
         if (typeof option.type !== 'undefined') {

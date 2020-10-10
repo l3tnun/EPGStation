@@ -119,16 +119,21 @@ class ReservationManageModel implements IReservationManageModel {
         // 番組情報をセットする
         if (typeof option.programId === 'undefined') {
             // 時刻指定予約の場合
+            if (typeof option.timeSpecifiedOption === 'undefined') {
+                this.log.system.error('time specified option error');
+                finalize();
+                throw new Error('TimeSpecifiedOptionIsUndefined');
+            }
 
             // 時刻チェック
-            if (option.timeSpecifiedOption!.endAt <= new Date().getTime()) {
+            if (option.timeSpecifiedOption.endAt <= new Date().getTime()) {
                 finalize();
                 this.log.system.error('timeSpecifiedOption error');
                 throw new Error('TimeSpecifiedOptionError');
             }
 
             // すでに同じ条件で予約済みでないかチェック
-            const oldReserve = await this.reserveDB.findTimeSpecification(option.timeSpecifiedOption!).catch(err => {
+            const oldReserve = await this.reserveDB.findTimeSpecification(option.timeSpecifiedOption).catch(err => {
                 finalize();
                 this.log.system.error('get old reservation error');
                 throw err;
@@ -140,22 +145,24 @@ class ReservationManageModel implements IReservationManageModel {
             }
 
             // channel 情報取得
-            const channel = await this.channelDB.findId(option.timeSpecifiedOption!.channelId).catch(err => {
+            const channel = await this.channelDB.findId(option.timeSpecifiedOption.channelId).catch(err => {
                 finalize();
-                this.log.system.error(`channelId find error: ${option.timeSpecifiedOption!.channelId}`);
+                if (typeof option.timeSpecifiedOption !== 'undefined') {
+                    this.log.system.error(`channelId find error: ${option.timeSpecifiedOption.channelId}`);
+                }
                 this.log.system.error(err);
                 throw new Error('ReservationManageModelFindChannelError');
             });
             if (channel === null) {
                 finalize();
-                this.log.stream.error(`channelId is not found: ${option.timeSpecifiedOption!.channelId}`);
+                this.log.stream.error(`channelId is not found: ${option.timeSpecifiedOption.channelId}`);
                 throw new Error('eservationManageModelFindChannelIsNotFound');
             }
             newReserve.isTimeSpecified = true;
-            newReserve.name = StrUtil.toDBStr(option.timeSpecifiedOption!.name);
+            newReserve.name = StrUtil.toDBStr(option.timeSpecifiedOption.name);
             newReserve.halfWidthName = StrUtil.toHalf(newReserve.name);
-            newReserve.startAt = option.timeSpecifiedOption!.startAt;
-            newReserve.endAt = option.timeSpecifiedOption!.endAt;
+            newReserve.startAt = option.timeSpecifiedOption.startAt;
+            newReserve.endAt = option.timeSpecifiedOption.endAt;
             newReserve.channelId = channel.id;
             newReserve.channel = channel.channel;
             newReserve.channelType = channel.channelType;
@@ -450,7 +457,6 @@ class ReservationManageModel implements IReservationManageModel {
         }
 
         // 予約情報生成
-        // tslint:disable-next-line: prefer-object-spread
         const newReserve = Object.assign({}, oldReserve);
         this.setProgramToReserve(newReserve, newProgram);
         newReserve.updateTime = oldReserve.updateTime;
@@ -783,9 +789,9 @@ class ReservationManageModel implements IReservationManageModel {
 
         if (isSuppressLog === false) {
             this.log.system.info({
-                insert: diff.insert!.length,
-                update: diff.update!.length,
-                delete: diff.delete!.length,
+                insert: typeof diff.insert === 'undefined' ? 0 : diff.insert.length,
+                update: typeof diff.update === 'undefined' ? 0 : diff.update.length,
+                delete: typeof diff.delete === 'undefined' ? 0 : diff.delete.length,
             });
         }
 
@@ -807,7 +813,6 @@ class ReservationManageModel implements IReservationManageModel {
         const newReserves: Reserve[] = [];
 
         for (const reserve of src) {
-            // tslint:disable-next-line: prefer-object-spread
             newReserves.push(Object.assign({}, reserve));
         }
 
@@ -828,11 +833,12 @@ class ReservationManageModel implements IReservationManageModel {
         isSuppressLog: boolean,
     ): IReserveUpdateValues {
         const diff: IReserveUpdateValues = {
-            insert: [],
-            update: [],
-            delete: [],
             isSuppressLog: isSuppressLog,
         };
+
+        diff.insert = [];
+        diff.update = [];
+        diff.delete = [];
 
         // 検索用のインデックスを作成
         const idIndex: { [key: string]: ReserveDiffData } = {}; // program id
@@ -861,7 +867,7 @@ class ReservationManageModel implements IReservationManageModel {
                 if (this.checkProgramIdReserveDiff(oldReserve, newReserve)) {
                     // update のために reserve id をコピーする
                     newReserve.id = oldReserve.id;
-                    diff.update!.push(newReserve);
+                    diff.update.push(newReserve);
                 }
             } else if (typeof timeIndex[key] !== 'undefined') {
                 timeIndex[key].isChecked = true;
@@ -870,23 +876,23 @@ class ReservationManageModel implements IReservationManageModel {
                 if (this.checkTimeRuleReserveDiff(oldReserve, newReserve)) {
                     // update のために reserve id をコピーする
                     newReserve.id = oldReserve.id;
-                    diff.update!.push(newReserve);
+                    diff.update.push(newReserve);
                 }
             } else {
                 // 新規追加予約情報
-                diff.insert!.push(newReserve);
+                diff.insert.push(newReserve);
             }
         }
 
         // 削除する予約を追加
         for (const key in idIndex) {
             if (idIndex[key].isChecked === false) {
-                diff.delete!.push(idIndex[key].reserve);
+                diff.delete.push(idIndex[key].reserve);
             }
         }
         for (const key in timeIndex) {
             if (timeIndex[key].isChecked === false) {
-                diff.delete!.push(timeIndex[key].reserve);
+                diff.delete.push(timeIndex[key].reserve);
             }
         }
 
@@ -1008,7 +1014,6 @@ class ReservationManageModel implements IReservationManageModel {
             throw new Error('ReservationIsNotFound');
         }
 
-        // tslint:disable-next-line: prefer-object-spread
         const oldReserves: Reserve[] = [Object.assign({}, cancelReserve)];
 
         // 比較のために新しい予約情報を生成
@@ -1104,7 +1109,6 @@ class ReservationManageModel implements IReservationManageModel {
         }
 
         // skip を解除した予約を作成
-        // tslint:disable-next-line: prefer-object-spread
         const newReserves: Reserve = Object.assign({}, oldReserve);
         newReserves.isSkip = false;
 
@@ -1182,7 +1186,6 @@ class ReservationManageModel implements IReservationManageModel {
         }
 
         // overlap を解除した予約を作成
-        // tslint:disable-next-line: prefer-object-spread
         const newReserves: Reserve = Object.assign({}, oldReserve);
         newReserves.isIgnoreOverlap = true;
         newReserves.isOverlap = false;
@@ -1340,10 +1343,11 @@ class ReservationManageModel implements IReservationManageModel {
 
         // list を生成
         for (let i = 0; i < matches.length; i++) {
-            if (matches[i].programId !== null) {
+            const marchProgramId = matches[i].programId;
+            if (marchProgramId !== null) {
                 // programId がすでに存在する場合は list に追加しない
-                if (typeof programIdIndex[matches[i].programId!] === 'undefined') {
-                    programIdIndex[matches[i].programId!] = true;
+                if (typeof programIdIndex[marchProgramId] === 'undefined') {
+                    programIdIndex[marchProgramId] = true;
                 } else {
                     continue;
                 }
@@ -1470,8 +1474,8 @@ class ReservationManageModel implements IReservationManageModel {
         if (!aIsManual && bIsManual) {
             return 1; // // 手動予約を優先
         }
-        if (!aIsManual && !bIsManual) {
-            return a.ruleId! - b.ruleId!;
+        if (!aIsManual && !bIsManual && a.ruleId !== null && b.ruleId !== null) {
+            return a.ruleId - b.ruleId;
         }
 
         return 0;

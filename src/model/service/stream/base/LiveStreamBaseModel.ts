@@ -166,7 +166,9 @@ export default abstract class LiveStreamBaseModel extends StreamBaseModel<LiveSt
             .getServiceStream(this.processOption.channelId, true, config.streamingPriority)
             .catch(err => {
                 this.stream = null;
-                this.log.system.error(`get mirakurun service stream failed: ${this.processOption!.channelId}`);
+                if (this.processOption !== null) {
+                    this.log.system.error(`get mirakurun service stream failed: ${this.processOption.channelId}`);
+                }
                 throw err;
             });
     }

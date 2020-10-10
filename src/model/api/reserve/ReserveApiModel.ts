@@ -52,7 +52,6 @@ export default class ReserveApiModel implements IReserveApiModel {
      * @return Promise<apid.Reserves>
      */
     public async gets(option: apid.GetReserveOption): Promise<apid.Reserves> {
-        // tslint:disable-next-line: typedef
         const [reserves, total] = await this.reserveDB.findAll(option);
 
         return {
@@ -81,7 +80,7 @@ export default class ReserveApiModel implements IReserveApiModel {
             channelId: reserve.channelId,
             startAt: reserve.startAt,
             endAt: reserve.endAt,
-            name: isHalfWidth ? reserve.halfWidthName! : reserve.name,
+            name: isHalfWidth ? reserve.halfWidthName : reserve.name,
         };
 
         if (reserve.ruleId !== null) {
@@ -130,10 +129,22 @@ export default class ReserveApiModel implements IReserveApiModel {
             item.programId = reserve.programId;
         }
         if (reserve.description !== null) {
-            item.description = isHalfWidth ? reserve.halfWidthDescription! : reserve.description;
+            if (isHalfWidth === true) {
+                if (reserve.halfWidthDescription !== null) {
+                    item.description = reserve.halfWidthDescription;
+                }
+            } else {
+                item.description = reserve.description;
+            }
         }
         if (reserve.extended !== null) {
-            item.extended = isHalfWidth ? reserve.halfWidthExtended! : reserve.extended;
+            if (isHalfWidth === true) {
+                if (reserve.halfWidthExtended !== null) {
+                    item.extended = reserve.halfWidthExtended;
+                }
+            } else {
+                item.extended = reserve.extended;
+            }
         }
         if (reserve.genre1 !== null) {
             item.genre1 = reserve.genre1;
