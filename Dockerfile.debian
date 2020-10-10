@@ -11,7 +11,6 @@ RUN mkdir -p /app
 WORKDIR /app
 COPY . .
 RUN npm run all-install
-RUN npm run build
 
 
 FROM ${arch}/node:14-buster-slim
