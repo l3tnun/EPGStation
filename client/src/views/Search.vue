@@ -2,27 +2,10 @@
     <v-content>
         <TitleBar ref="title" :title="this.searchState.isEditingRule() === true ? 'ルール編集' : '検索'"></TitleBar>
         <transition name="page">
-            <div
-                ref="appContent"
-                class="app-content pa-3"
-                v-bind:style="{ visibility: isVisible === true ? 'visible' : 'hidden' }"
-                v-if="isShow === true"
-            >
-                <SearchOptionComponent
-                    ref="searchOption"
-                    v-if="searchState.searchOption !== null"
-                    v-on:search="search"
-                    v-on:clear="clear"
-                ></SearchOptionComponent>
-                <SearchReserves
-                    v-if="searchState.isTimeSpecification === true"
-                    :reserves="searchState.getRuleReservesResult()"
-                ></SearchReserves>
-                <SearchResult
-                    ref="searchResult"
-                    v-if="searchState.isTimeSpecification === false"
-                    v-on:ruleOption="scrollToRuleOption"
-                ></SearchResult>
+            <div ref="appContent" class="app-content pa-3" v-bind:style="{ visibility: isVisible === true ? 'visible' : 'hidden' }" v-if="isShow === true">
+                <SearchOptionComponent ref="searchOption" v-if="searchState.searchOption !== null" v-on:search="search" v-on:clear="clear"></SearchOptionComponent>
+                <SearchReserves v-if="searchState.isTimeSpecification === true" :reserves="searchState.getRuleReservesResult()"></SearchReserves>
+                <SearchResult ref="searchResult" v-if="searchState.isTimeSpecification === false" v-on:ruleOption="scrollToRuleOption"></SearchResult>
                 <SearchRuleOption ref="ruleOption" v-on:add="add" v-on:update="update"></SearchRuleOption>
                 <v-btn v-on:click="scrollToTop" dark fixed bottom fab color="pink">
                     <v-icon>mdi-chevron-up</v-icon>
@@ -44,14 +27,7 @@ import TitleBar from '@/components/titleBar/TitleBar.vue';
 import container from '@/model/ModelContainer';
 import ISocketIOModel from '@/model/socketio/ISocketIOModel';
 import IScrollPositionState from '@/model/state/IScrollPositionState';
-import ISearchState, {
-    EncodedOption,
-    QuerySearchOption,
-    ReserveOption,
-    SaveOption,
-    SearchOption,
-    TimeReserveOption,
-} from '@/model/state/search/ISearchState';
+import ISearchState, { EncodedOption, QuerySearchOption, ReserveOption, SaveOption, SearchOption, TimeReserveOption } from '@/model/state/search/ISearchState';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
 import { ISettingStorageModel, ISettingValue } from '@/model/storage/setting/ISettingStorageModel';
 import Util from '@/util/Util';
@@ -283,8 +259,7 @@ export default class Search extends Vue {
                 reserveOption: cloneDeep(this.searchState.reserveOption),
                 saveOption: cloneDeep(this.searchState.saveOption),
                 encodeOption: cloneDeep(this.searchState.encodeOption),
-                isSearched:
-                    this.searchState.isTimeSpecification !== true && this.searchState.getSearchResult() !== null,
+                isSearched: this.searchState.isTimeSpecification !== true && this.searchState.getSearchResult() !== null,
                 genreSelect: this.searchState.genreSelect,
             };
             this.scrollState.saveScrollData(pageInfo);
@@ -409,10 +384,7 @@ export default class Search extends Vue {
 
             // Genre の表示が更新されないので cloneDeep で描画を更新させる
             this.$nextTick(() => {
-                if (
-                    this.searchState.searchOption === null ||
-                    typeof this.searchState.searchOption.genres === 'undefined'
-                ) {
+                if (this.searchState.searchOption === null || typeof this.searchState.searchOption.genres === 'undefined') {
                     return;
                 }
 

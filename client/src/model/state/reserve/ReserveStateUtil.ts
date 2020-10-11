@@ -19,11 +19,7 @@ export default class ReserveStateUtil implements IReserveStateUtil {
      * @param isHalfWidth: 半角データを返すか
      * @return ReserveStateData[]
      */
-    public convertReserveItemsToStateDatas(
-        reserves: apid.ReserveItem[],
-        isHalfWidth: boolean,
-        isSelectedIndex: SelectedIndex = {},
-    ): ReserveStateData[] {
+    public convertReserveItemsToStateDatas(reserves: apid.ReserveItem[], isHalfWidth: boolean, isSelectedIndex: SelectedIndex = {}): ReserveStateData[] {
         return reserves.map(r => {
             const startAt = DateUtil.getJaDate(new Date(r.startAt));
             const endAt = DateUtil.getJaDate(new Date(r.endAt));

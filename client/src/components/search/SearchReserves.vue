@@ -1,14 +1,9 @@
 <template>
     <div v-if="reserves.length > 0" class="rule-reserves mx-auto my-5">
         <div class="result-text pb-2">予約数 {{ reserves.length }} 件</div>
-        <ReservesCard
-            :reserves="reserves"
-            :isEditMode="false"
-            :needsDecoration="true"
-            :disableEdit="true"
-        ></ReservesCard>
+        <ReservesCard :reserves="reserves" :isEditMode="false" :needsDecoration="true" :disableEdit="true"></ReservesCard>
     </div>
-    <div v-else style="visibility: hidden;">dummy</div>
+    <div v-else style="visibility: hidden">dummy</div>
 </template>
 
 <script lang="ts">

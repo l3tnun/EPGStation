@@ -14,21 +14,9 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr
-                        v-for="item in items"
-                        v-bind:key="item.display.id"
-                        v-bind:class="{ 'selected-color': item.isSelected === true }"
-                        v-on:click="selectItem(item)"
-                    >
+                    <tr v-for="item in items" v-bind:key="item.display.id" v-bind:class="{ 'selected-color': item.isSelected === true }" v-on:click="selectItem(item)">
                         <td class="toggle">
-                            <v-switch
-                                v-if="isEditMode === false"
-                                v-model="item.display.isEnable"
-                                hide-details
-                                dense
-                                value
-                                v-on:change="changeState(item)"
-                            ></v-switch>
+                            <v-switch v-if="isEditMode === false" v-model="item.display.isEnable" hide-details dense value v-on:change="changeState(item)"></v-switch>
                         </td>
                         <td>{{ item.display.keyword }}</td>
                         <td>{{ item.display.ignoreKeyword }}</td>

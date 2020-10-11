@@ -10,7 +10,7 @@
                             v-model="dialogState.selectedStreamType"
                             v-on:change="updateStreamConfig"
                             class="guide-time"
-                            style="max-width: 120px;"
+                            style="max-width: 120px"
                             :menu-props="{ auto: true }"
                         ></v-select>
                         <v-select
@@ -23,9 +23,7 @@
                     </div>
                 </div>
                 <v-card-actions>
-                    <v-btn v-if="!!needsGotoGuideButton === true" color="primary" text v-on:click="gotoGuide">
-                        番組表
-                    </v-btn>
+                    <v-btn v-if="!!needsGotoGuideButton === true" color="primary" text v-on:click="gotoGuide">番組表</v-btn>
                     <v-spacer></v-spacer>
                     <v-btn color="primary" text v-on:click="dialogState.isOpen = false">キャンセル</v-btn>
                     <v-btn color="primary" text v-on:click="view">視聴</v-btn>
@@ -114,11 +112,7 @@ export default class OnAirSelectStream extends Vue {
             }
         } else {
             const channel = this.dialogState.getChannelItem();
-            if (
-                channel !== null &&
-                typeof this.dialogState.selectedStreamType !== 'undefined' &&
-                typeof this.dialogState.selectedStreamConfig !== 'undefined'
-            ) {
+            if (channel !== null && typeof this.dialogState.selectedStreamType !== 'undefined' && typeof this.dialogState.selectedStreamConfig !== 'undefined') {
                 this.dialogState.isOpen = false;
                 await Util.sleep(200);
                 await Util.move(this.$router, {

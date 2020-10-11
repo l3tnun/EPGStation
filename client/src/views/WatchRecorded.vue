@@ -4,11 +4,8 @@
         <transition name="page">
             <div class="video-container-wrap mx-auto">
                 <VideoContainer v-if="videoParam !== null" v-bind:videoParam="videoParam"></VideoContainer>
-                <WatchOnRecordedInfoCard
-                    v-if="recordedId !== null"
-                    v-bind:recordedId="recordedId"
-                ></WatchOnRecordedInfoCard>
-                <div style="visibility: hidden;">dummy</div>
+                <WatchOnRecordedInfoCard v-if="recordedId !== null" v-bind:recordedId="recordedId"></WatchOnRecordedInfoCard>
+                <div style="visibility: hidden">dummy</div>
             </div>
         </transition>
     </v-content>
@@ -43,8 +40,7 @@ export default class WatchRecorded extends Vue {
     public onUrlChange(): void {
         // 視聴パラメータセット
         const videoId = typeof this.$route.query.videoId !== 'string' ? null : parseInt(this.$route.query.videoId, 10);
-        this.recordedId =
-            typeof this.$route.query.recordedId !== 'string' ? null : parseInt(this.$route.query.recordedId, 10);
+        this.recordedId = typeof this.$route.query.recordedId !== 'string' ? null : parseInt(this.$route.query.recordedId, 10);
 
         this.$nextTick(async () => {
             if (videoId !== null) {

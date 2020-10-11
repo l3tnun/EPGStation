@@ -1,25 +1,13 @@
 <template>
     <div class="on-air pa-2">
         <v-card v-if="items.length > 0" class="mx-auto pa-4" max-width="800">
-            <div
-                v-for="item in items"
-                v-bind:key="item.display.channelId"
-                v-on:click="openStreamSelector(item.schedule.channel)"
-            >
-                <div class="py-2" style="cursor: pointer;">
-                    <div
-                        v-if="typeof item.display.logoSrc !== 'undefined'"
-                        v-on:click="openGuideProgramDialog(item.schedule, $event)"
-                        class="d-flex align-center mb-1"
-                    >
+            <div v-for="item in items" v-bind:key="item.display.channelId" v-on:click="openStreamSelector(item.schedule.channel)">
+                <div class="py-2" style="cursor: pointer">
+                    <div v-if="typeof item.display.logoSrc !== 'undefined'" v-on:click="openGuideProgramDialog(item.schedule, $event)" class="d-flex align-center mb-1">
                         <img :src="item.display.logoSrc" height="24" class="pr-2" />
                         <div class="pt-1 subtitle-1 font-weight-black">{{ item.display.channelName }}</div>
                     </div>
-                    <div
-                        v-else
-                        v-on:click="openGuideProgramDialog(item.schedule, $event)"
-                        class="mb-1 subtitle-1 font-weight-black"
-                    >
+                    <div v-else v-on:click="openGuideProgramDialog(item.schedule, $event)" class="mb-1 subtitle-1 font-weight-black">
                         {{ item.display.channelName }}
                     </div>
                     <div class="caption font-weight-light">{{ item.display.time }}</div>
@@ -54,9 +42,7 @@ export default class OnAirCard extends Vue {
     @Prop({ required: true })
     public reserveIndex!: ReserveStateItemIndex;
 
-    private streamSelectDialog: IOnAirSelectStreamState = container.get<IOnAirSelectStreamState>(
-        'IOnAirSelectStreamState',
-    );
+    private streamSelectDialog: IOnAirSelectStreamState = container.get<IOnAirSelectStreamState>('IOnAirSelectStreamState');
     private dialogState: IGuideProgramDialogState = container.get<IGuideProgramDialogState>('IGuideProgramDialogState');
 
     public openGuideProgramDialog(schedule: apid.Schedule, e: Event): void {

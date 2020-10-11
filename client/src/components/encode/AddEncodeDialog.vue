@@ -4,20 +4,8 @@
             <div class="pa-3 pt-4 pb-0 add-encode">
                 <div class="subtitle-1">{{ recordedItem.name }}</div>
                 <div class="d-flex">
-                    <v-select
-                        :items="addEncodeState.getVideoFiles()"
-                        v-model="addEncodeState.videoFileId"
-                        label="source"
-                        :menu-props="{ auto: true }"
-                        class="source"
-                    ></v-select>
-                    <v-select
-                        :items="addEncodeState.getEncodeList()"
-                        v-model="addEncodeState.encodeMode"
-                        label="preset"
-                        :menu-props="{ auto: true }"
-                        class="preset"
-                    ></v-select>
+                    <v-select :items="addEncodeState.getVideoFiles()" v-model="addEncodeState.videoFileId" label="source" :menu-props="{ auto: true }" class="source"></v-select>
+                    <v-select :items="addEncodeState.getEncodeList()" v-model="addEncodeState.encodeMode" label="preset" :menu-props="{ auto: true }" class="preset"></v-select>
                 </div>
 
                 <div class="directory">
@@ -38,16 +26,8 @@
                     ></v-text-field>
                 </div>
 
-                <v-checkbox
-                    v-model="setting.tmp.isSaveSameDirectory"
-                    class="mx-1 my-0"
-                    label="元ファイルをと同じ場所に保存する"
-                ></v-checkbox>
-                <v-checkbox
-                    v-model="setting.tmp.removeOriginal"
-                    class="mx-1 my-0"
-                    label="元ファイルを削除する"
-                ></v-checkbox>
+                <v-checkbox v-model="setting.tmp.isSaveSameDirectory" class="mx-1 my-0" label="元ファイルをと同じ場所に保存する"></v-checkbox>
+                <v-checkbox v-model="setting.tmp.removeOriginal" class="mx-1 my-0" label="元ファイルを削除する"></v-checkbox>
             </div>
             <v-card-actions>
                 <v-spacer></v-spacer>
@@ -76,9 +56,7 @@ export default class AddEncodeDialog extends Vue {
     public isOpen!: boolean;
 
     public addEncodeState = container.get<IAddEncodeState>('IAddEncodeState');
-    public setting: IAddEncodeSettingStorageModel = container.get<IAddEncodeSettingStorageModel>(
-        'IAddEncodeSettingStorageModel',
-    );
+    public setting: IAddEncodeSettingStorageModel = container.get<IAddEncodeSettingStorageModel>('IAddEncodeSettingStorageModel');
     private snackbarState: ISnackbarState = container.get<ISnackbarState>('ISnackbarState');
 
     public isRemove: boolean = false;

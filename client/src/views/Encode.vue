@@ -19,21 +19,13 @@
             <div ref="appContent" class="mx-auto app-content pa-2">
                 <div v-if="encodeState.getEncodeInfo().runningItems.length > 0">
                     <div class="title">エンコード中</div>
-                    <EncodeItems
-                        :items="encodeState.getEncodeInfo().runningItems"
-                        :isEditMode.sync="isEditMode"
-                        v-on:selected="selectItem"
-                    ></EncodeItems>
+                    <EncodeItems :items="encodeState.getEncodeInfo().runningItems" :isEditMode.sync="isEditMode" v-on:selected="selectItem"></EncodeItems>
                 </div>
                 <div v-if="encodeState.getEncodeInfo().waitItems.length > 0">
                     <div class="title pt-2">待機中</div>
-                    <EncodeItems
-                        :items="encodeState.getEncodeInfo().waitItems"
-                        :isEditMode.sync="isEditMode"
-                        v-on:selected="selectItem"
-                    ></EncodeItems>
+                    <EncodeItems :items="encodeState.getEncodeInfo().waitItems" :isEditMode.sync="isEditMode" v-on:selected="selectItem"></EncodeItems>
                 </div>
-                <div style="visibility: hidden;">dummy</div>
+                <div style="visibility: hidden">dummy</div>
             </div>
         </transition>
         <EncodeMultipleDeletionDialog

@@ -15,10 +15,7 @@ export default class EncodeState implements IEncodeState {
 
     private encodeInfo: EncodeInfoDisplayData | null = null;
 
-    constructor(
-        @inject('IEncodeApiModel') encodeApiModel: IEncodeApiModel,
-        @inject('IChannelModel') channelModel: IChannelModel,
-    ) {
+    constructor(@inject('IEncodeApiModel') encodeApiModel: IEncodeApiModel, @inject('IChannelModel') channelModel: IChannelModel) {
         this.encodeApiModel = encodeApiModel;
         this.channelModel = channelModel;
     }
@@ -65,11 +62,7 @@ export default class EncodeState implements IEncodeState {
      * @param isSelectedIndex?: SelectedIndex
      * @return EncodeInfoDisplayItem
      */
-    private convertEncodeProgramItemToDiplayData(
-        item: apid.EncodeProgramItem,
-        isHalfWidth: boolean,
-        isSelectedIndex: SelectedIndex,
-    ): EncodeInfoDisplayItem {
+    private convertEncodeProgramItemToDiplayData(item: apid.EncodeProgramItem, isHalfWidth: boolean, isSelectedIndex: SelectedIndex): EncodeInfoDisplayItem {
         const startAt = DateUtil.getJaDate(new Date(item.recorded.startAt));
         const endAt = DateUtil.getJaDate(new Date(item.recorded.endAt));
         const channel = this.channelModel.findChannel(item.recorded.channelId, isHalfWidth);

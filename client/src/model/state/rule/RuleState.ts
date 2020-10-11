@@ -17,10 +17,7 @@ export default class RuleState implements IRuleState {
     private rules: RuleStateData[] | null = null;
     private total: number = 0;
 
-    constructor(
-        @inject('IChannelModel') channelModel: IChannelModel,
-        @inject('IRuleApiModel') ruleApiModel: IRuleApiModel,
-    ) {
+    constructor(@inject('IChannelModel') channelModel: IChannelModel, @inject('IRuleApiModel') ruleApiModel: IRuleApiModel) {
         this.channelModel = channelModel;
         this.ruleApiModel = ruleApiModel;
     }
@@ -60,11 +57,7 @@ export default class RuleState implements IRuleState {
      * @param isSelectedIndex: SelectedIndex
      * @return RuleStateData
      */
-    private convertRuleItemToStateData(
-        r: apid.Rule,
-        isHalfWidth: boolean,
-        isSelectedIndex: SelectedIndex,
-    ): RuleStateData {
+    private convertRuleItemToStateData(r: apid.Rule, isHalfWidth: boolean, isSelectedIndex: SelectedIndex): RuleStateData {
         let channelStr = '';
         if (typeof r.searchOption.channelIds === 'undefined' || r.searchOption.channelIds.length === 0) {
             channelStr = '-';

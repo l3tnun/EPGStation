@@ -38,11 +38,7 @@
                                 {{ recorded.display.time }} ({{ recorded.display.duration }}
                                 m)
                             </div>
-                            <div
-                                class="body-2 mt-2 font-weight-light drop"
-                                v-bind:class="{ droped: recorded.display.hasDrop === true }"
-                                v-on:click="showDropLog"
-                            >
+                            <div class="body-2 mt-2 font-weight-light drop" v-bind:class="{ droped: recorded.display.hasDrop === true }" v-on:click="showDropLog">
                                 {{ recorded.display.drop }}
                             </div>
                             <div class="button-wrap mt-2 d-flex flex-wrap">
@@ -63,19 +59,10 @@
                                     ></RecordedDetailPlayButton>
                                 </div>
                                 <div class="d-flex flex-wrap">
-                                    <RecordedDetailEncodeButton
-                                        :recordedItem="recorded.recordedItem"
-                                        :videoFiles="recorded.display.videoFiles"
-                                    ></RecordedDetailEncodeButton>
-                                    <RecordedDetailStopEncodeButton
-                                        :recordedItem="recorded.recordedItem"
-                                        v-on:stopEncode="stopEncode"
-                                    ></RecordedDetailStopEncodeButton>
+                                    <RecordedDetailEncodeButton :recordedItem="recorded.recordedItem" :videoFiles="recorded.display.videoFiles"></RecordedDetailEncodeButton>
+                                    <RecordedDetailStopEncodeButton :recordedItem="recorded.recordedItem" v-on:stopEncode="stopEncode"></RecordedDetailStopEncodeButton>
                                 </div>
-                                <RecordedDetailKodiButton
-                                    :recordedItem="recorded.recordedItem"
-                                    :videoFiles="recorded.display.videoFiles"
-                                ></RecordedDetailKodiButton>
+                                <RecordedDetailKodiButton :recordedItem="recorded.recordedItem" :videoFiles="recorded.display.videoFiles"></RecordedDetailKodiButton>
                             </div>
                         </div>
                     </div>
@@ -145,9 +132,7 @@ export default class RecordedDetail extends Vue {
     private onUpdateStatusCallback = (async (): Promise<void> => {
         await this.fetchData();
     }).bind(this);
-    public streamSelectDialogState: IRecordedDetailSelectStreamState = container.get<IRecordedDetailSelectStreamState>(
-        'IRecordedDetailSelectStreamState',
-    );
+    public streamSelectDialogState: IRecordedDetailSelectStreamState = container.get<IRecordedDetailSelectStreamState>('IRecordedDetailSelectStreamState');
 
     get recorded(): RecordedDisplayData | null {
         return this.recordedDetailState.getRecorded();
@@ -251,10 +236,7 @@ export default class RecordedDetail extends Vue {
      * データ取得
      */
     private async fetchData(): Promise<void> {
-        await this.recordedDetailState.fetchData(
-            parseInt(this.$route.params.id, 10),
-            this.settingValue === null ? true : this.settingValue.isHalfWidthDisplayed,
-        );
+        await this.recordedDetailState.fetchData(parseInt(this.$route.params.id, 10), this.settingValue === null ? true : this.settingValue.isHalfWidthDisplayed);
 
         // 番組詳細 URL 処理
         this.$nextTick(() => {

@@ -4,13 +4,7 @@
             <div class="pa-4 pb-0">
                 <div class="text--primary">{{ recordedItem.name }} を削除しますか?</div>
                 <div class="checkboxs py-2">
-                    <v-checkbox
-                        v-for="v in videoFiles"
-                        v-bind:key="v.id"
-                        v-model="v.isDelete"
-                        :label="v.name"
-                        class="my-0"
-                    ></v-checkbox>
+                    <v-checkbox v-for="v in videoFiles" v-bind:key="v.id" v-model="v.isDelete" :label="v.name" class="my-0"></v-checkbox>
                 </div>
             </div>
             <v-card-actions>

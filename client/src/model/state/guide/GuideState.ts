@@ -1,7 +1,4 @@
-import {
-    IGuideGenreSettingStorageModel,
-    IGuideGenreSettingValue,
-} from '@/model/storage/guide/IGuideGenreSettingStorageModel';
+import { IGuideGenreSettingStorageModel, IGuideGenreSettingValue } from '@/model/storage/guide/IGuideGenreSettingStorageModel';
 import { inject, injectable } from 'inversify';
 import * as apid from '../../../../../api';
 import DateUtil from '../../../util/DateUtil';
@@ -84,10 +81,7 @@ class GuideState implements IGuideState {
      */
     public async fetchGuide(option: FetchGuideOption): Promise<void> {
         // 開始時刻設定
-        this.startTime =
-            typeof option.time !== 'undefined'
-                ? option.time
-                : DateUtil.format(DateUtil.getJaDate(new Date()), 'YYMMddhh');
+        this.startTime = typeof option.time !== 'undefined' ? option.time : DateUtil.format(DateUtil.getJaDate(new Date()), 'YYMMddhh');
         const startAt = this.getStartTime(this.startTime);
         let endAt: number;
 
@@ -159,8 +153,7 @@ class GuideState implements IGuideState {
         this.programDoms = [];
         this.programDomIndex = {};
         let baseStartAt = this.startAt;
-        let baseEndAt =
-            isSingleStation === true ? baseStartAt + 60 * 60 * GuideState.SINGLE_STATION_LENGTH * 1000 : this.endAt;
+        let baseEndAt = isSingleStation === true ? baseStartAt + 60 * 60 * GuideState.SINGLE_STATION_LENGTH * 1000 : this.endAt;
         for (let i = 0; i < this.schedules.length; i++) {
             for (const program of this.schedules[i].programs) {
                 const programStartAt = baseStartAt > program.startAt ? baseStartAt : program.startAt;
@@ -191,12 +184,7 @@ class GuideState implements IGuideState {
                     left: i,
                     height,
                     isVisible: false,
-                    genreLv1:
-                        typeof program.genre1 !== 'undefined'
-                            ? program.genre1
-                            : typeof program.genre2 !== 'undefined'
-                            ? program.genre2
-                            : program.genre3,
+                    genreLv1: typeof program.genre1 !== 'undefined' ? program.genre1 : typeof program.genre2 !== 'undefined' ? program.genre2 : program.genre3,
                 });
 
                 // dom 索引作成
@@ -223,13 +211,7 @@ class GuideState implements IGuideState {
         // create child
         const child: HTMLElement[] = [];
         child.push(this.createTextElement('div', { class: 'name' }, option.program.name));
-        child.push(
-            this.createTextElement(
-                'div',
-                { class: 'time' },
-                DateUtil.format(DateUtil.getJaDate(new Date(option.program.startAt)), 'hh:mm'),
-            ),
-        );
+        child.push(this.createTextElement('div', { class: 'time' }, DateUtil.format(DateUtil.getJaDate(new Date(option.program.startAt)), 'hh:mm')));
         if (typeof option.program.description !== 'undefined') {
             child.push(this.createTextElement('div', { class: 'description' }, option.program.description));
         }
@@ -250,11 +232,7 @@ class GuideState implements IGuideState {
             classStr += ' ctg-empty';
         }
 
-        if (
-            genreLv1 !== null &&
-            typeof (genreSettings as any)[genreLv1] !== 'undefined' &&
-            (genreSettings as any)[genreLv1] === false
-        ) {
+        if (genreLv1 !== null && typeof (genreSettings as any)[genreLv1] !== 'undefined' && (genreSettings as any)[genreLv1] === false) {
             classStr += ' hide';
         }
 
@@ -361,8 +339,7 @@ class GuideState implements IGuideState {
 
             // 幅方向
             if (
-                (dom.left + 1) * this.displayRange.baseWidth <=
-                    this.displayRange.offsetWidth - this.displayRange.maxWidth ||
+                (dom.left + 1) * this.displayRange.baseWidth <= this.displayRange.offsetWidth - this.displayRange.maxWidth ||
                 dom.left * this.displayRange.baseWidth >= this.displayRange.maxWidth + this.displayRange.offsetWidth
             ) {
                 isVisible = false;
@@ -397,10 +374,7 @@ class GuideState implements IGuideState {
             }
 
             dom.element.classList.remove('hide');
-            if (
-                typeof (genreSettings as any)[dom.genreLv1] !== 'undefined' &&
-                (genreSettings as any)[dom.genreLv1] === false
-            ) {
+            if (typeof (genreSettings as any)[dom.genreLv1] !== 'undefined' && (genreSettings as any)[dom.genreLv1] === false) {
                 dom.element.classList.add('hide');
             }
         }
@@ -487,10 +461,7 @@ class GuideState implements IGuideState {
             throw new Error('StartTimeOptionIsNull');
         }
 
-        return new Date(
-            `20${timeStr.substr(0, 2)}/${timeStr.substr(2, 2)}/` +
-                `${timeStr.substr(4, 2)} ${timeStr.substr(6, 2)}:00:00 +0900`,
-        ).getTime();
+        return new Date(`20${timeStr.substr(0, 2)}/${timeStr.substr(2, 2)}/` + `${timeStr.substr(4, 2)} ${timeStr.substr(6, 2)}:00:00 +0900`).getTime();
     }
 
     /**

@@ -9,25 +9,9 @@
             <v-card>
                 <div class="guide-time-selector pa-2">
                     <div class="d-flex">
-                        <v-select
-                            v-if="broadcastItems.length > 0"
-                            :items="broadcastItems"
-                            v-model="broadcastValue"
-                            :menu-props="{ auto: true }"
-                            class="broadcast"
-                        ></v-select>
-                        <v-select
-                            :items="dayItems"
-                            v-model="dayValue"
-                            :menu-props="{ auto: true }"
-                            class="day"
-                        ></v-select>
-                        <v-select
-                            :items="hourItems"
-                            v-model="hourValue"
-                            :menu-props="{ auto: true }"
-                            class="hour"
-                        ></v-select>
+                        <v-select v-if="broadcastItems.length > 0" :items="broadcastItems" v-model="broadcastValue" :menu-props="{ auto: true }" class="broadcast"></v-select>
+                        <v-select :items="dayItems" v-model="dayValue" :menu-props="{ auto: true }" class="day"></v-select>
+                        <v-select :items="hourItems" v-model="hourValue" :menu-props="{ auto: true }" class="hour"></v-select>
                     </div>
                 </div>
                 <v-card-actions>
@@ -179,21 +163,13 @@ export default class GuideTimeSelector extends Vue {
      * selector value 初期化
      */
     private initValue(): void {
-        if (
-            this.settingValue !== null &&
-            this.settingValue.isEnableDisplayForEachBroadcastWave === true &&
-            typeof this.$route.query.type === 'string'
-        ) {
+        if (this.settingValue !== null && this.settingValue.isEnableDisplayForEachBroadcastWave === true && typeof this.$route.query.type === 'string') {
             this.broadcastValue = this.$route.query.type;
         }
 
-        this.dayValue =
-            typeof this.$route.query.time === 'string' ? this.$route.query.time.substr(0, 6) : this.dayItems[0].value;
+        this.dayValue = typeof this.$route.query.time === 'string' ? this.$route.query.time.substr(0, 6) : this.dayItems[0].value;
 
-        this.hourValue =
-            typeof this.$route.query.time === 'string'
-                ? this.$route.query.time.substr(6, 2)
-                : DateUtil.format(DateUtil.getJaDate(new Date()), 'hh');
+        this.hourValue = typeof this.$route.query.time === 'string' ? this.$route.query.time.substr(6, 2) : DateUtil.format(DateUtil.getJaDate(new Date()), 'hh');
     }
 }
 </script>

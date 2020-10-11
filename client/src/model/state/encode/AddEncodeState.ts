@@ -36,12 +36,7 @@ export default class AddEncodeState implements IAddEncodeState {
      * @param encodeMode: string | null エンコードモード名
      * @param parentDirectory: string | null 親ディレクトリ名
      */
-    public init(
-        recordedId: apid.RecordedId,
-        videoFiles: apid.VideoFile[],
-        encodeMode: string | null,
-        parentDirectory: string | null,
-    ): void {
+    public init(recordedId: apid.RecordedId, videoFiles: apid.VideoFile[], encodeMode: string | null, parentDirectory: string | null): void {
         this.recordedId = recordedId;
         this.videoFileId = null;
         this.directory = null;

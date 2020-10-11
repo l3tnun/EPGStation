@@ -3,7 +3,7 @@
         <v-dialog v-if="isRemove === false" v-model="dialogModel" max-width="500" scrollable>
             <v-card>
                 <v-card-text class="pa-4">
-                    <div v-for="item in genreItems" :key="item.id" class="d-flex align-center" style="height: 48px;">
+                    <div v-for="item in genreItems" :key="item.id" class="d-flex align-center" style="height: 48px">
                         <div class="body-1">{{ item.text }}</div>
                         <v-spacer></v-spacer>
                         <v-switch v-model="item.value"></v-switch>

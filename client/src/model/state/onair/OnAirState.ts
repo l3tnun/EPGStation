@@ -85,11 +85,7 @@ export default class OnAirState implements IOnAirState {
                 name: schedule.programs[0].name,
                 description: schedule.programs[0].description,
                 extended: schedule.programs[0].extended,
-                digestibility: this.getDigestibility(
-                    baseTime,
-                    schedule.programs[0].startAt,
-                    schedule.programs[0].endAt,
-                ),
+                digestibility: this.getDigestibility(baseTime, schedule.programs[0].startAt, schedule.programs[0].endAt),
             },
             schedule: schedule,
         };
@@ -123,10 +119,7 @@ export default class OnAirState implements IOnAirState {
         const now = new Date().getTime();
 
         for (const s of this.schedules) {
-            s.display.digestibility =
-                s.schedule.programs.length === 0
-                    ? 0
-                    : this.getDigestibility(now, s.schedule.programs[0].startAt, s.schedule.programs[0].endAt);
+            s.display.digestibility = s.schedule.programs.length === 0 ? 0 : this.getDigestibility(now, s.schedule.programs[0].startAt, s.schedule.programs[0].endAt);
         }
     }
 

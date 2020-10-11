@@ -11,10 +11,7 @@ export default class RecordedUtil implements IRecordedUtil {
     private serverConfigModel: IServerConfigModel;
     private channelModel: IChannelModel;
 
-    constructor(
-        @inject('IServerConfigModel') serverConfigModel: IServerConfigModel,
-        @inject('IChannelModel') channelModel: IChannelModel,
-    ) {
+    constructor(@inject('IServerConfigModel') serverConfigModel: IServerConfigModel, @inject('IChannelModel') channelModel: IChannelModel) {
         this.serverConfigModel = serverConfigModel;
         this.channelModel = channelModel;
     }
@@ -33,10 +30,7 @@ export default class RecordedUtil implements IRecordedUtil {
                 duration: Math.floor((item.endAt - item.startAt) / 1000 / 60),
                 description: item.description,
                 extended: item.extended,
-                topThumbnailPath:
-                    typeof item.thumbnails === 'undefined' || item.thumbnails.length === 0
-                        ? './img/noimg.png'
-                        : `./api/thumbnails/${item.thumbnails[0]}`,
+                topThumbnailPath: typeof item.thumbnails === 'undefined' || item.thumbnails.length === 0 ? './img/noimg.png' : `./api/thumbnails/${item.thumbnails[0]}`,
                 thumbnails: item.thumbnails,
                 videoFiles: item.videoFiles,
                 hasDrop: false,
@@ -49,10 +43,7 @@ export default class RecordedUtil implements IRecordedUtil {
         const config = this.serverConfigModel.getConfig();
         if (typeof result.display.videoFiles !== 'undefined' && config !== null) {
             result.display.canStremingVideoFiles = result.display.videoFiles.filter(v => {
-                return (
-                    (v.type === 'ts' && config.isEnableTSRecordedStream === true) ||
-                    (v.type === 'encoded' && config.isEnableEncodedRecordedStream === true)
-                );
+                return (v.type === 'ts' && config.isEnableTSRecordedStream === true) || (v.type === 'encoded' && config.isEnableEncodedRecordedStream === true);
             });
 
             if (result.display.canStremingVideoFiles.length === 0) {
@@ -75,8 +66,7 @@ export default class RecordedUtil implements IRecordedUtil {
         if (item.isRecording !== true && typeof item.dropLogFile !== 'undefined') {
             result.display.drop = `drop: ${item.dropLogFile.dropCnt}, error: ${item.dropLogFile.errorCnt}, scrambling: ${item.dropLogFile.scramblingCnt}`;
 
-            result.display.hasDrop =
-                item.dropLogFile.dropCnt > 0 || item.dropLogFile.errorCnt > 0 || item.dropLogFile.scramblingCnt > 0;
+            result.display.hasDrop = item.dropLogFile.dropCnt > 0 || item.dropLogFile.errorCnt > 0 || item.dropLogFile.scramblingCnt > 0;
         }
 
         return result;

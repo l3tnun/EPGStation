@@ -1,35 +1,21 @@
 <template>
     <div v-bind:class="{ 'needs-decoration': !!needsDecoration }">
-        <v-card
-            v-for="reserve in reserves"
-            v-bind:key="reserve.id"
-            v-bind:class="getClass(reserve)"
-            class="reserve-card mx-auto"
-            :flat="!!flat"
-            style="cursor: pointer;"
-        >
+        <v-card v-for="reserve in reserves" v-bind:key="reserve.id" v-bind:class="getClass(reserve)" class="reserve-card mx-auto" :flat="!!flat" style="cursor: pointer">
             <v-list-item class="px-3" three-line>
-                <div style="width: 100%;" v-on:click="clickItem(reserve)">
+                <div style="width: 100%" v-on:click="clickItem(reserve)">
                     <v-list-item-content>
                         <div class="d-flex">
                             <div class="subtitle-1 font-weight-black">
-                                <v-icon v-if="reserve.display.isRule === true" class="reserve-icon">
-                                    mdi-calendar
-                                </v-icon>
+                                <v-icon v-if="reserve.display.isRule === true" class="reserve-icon">mdi-calendar</v-icon>
                                 <v-icon v-else class="reserve-icon">mdi-timer-outline</v-icon>
                                 <span class="pt-1 pl-1">{{ reserve.display.name }}</span>
                             </div>
                             <v-spacer></v-spacer>
-                            <ReserveMenu
-                                v-if="isEditMode === false"
-                                :reserveItem="reserve.reserveItem"
-                                :disableEdit="disableEdit"
-                            ></ReserveMenu>
+                            <ReserveMenu v-if="isEditMode === false" :reserveItem="reserve.reserveItem" :disableEdit="disableEdit"></ReserveMenu>
                         </div>
                         <div class="subtitle-2 font-weight-light">{{ reserve.display.channelName }}</div>
                         <div class="caption font-weight-light mb-2">
-                            {{ reserve.display.day }}({{ reserve.display.dow }}) {{ reserve.display.startTime }} ~
-                            {{ reserve.display.endTime }} ({{ reserve.display.duration }}分)
+                            {{ reserve.display.day }}({{ reserve.display.dow }}) {{ reserve.display.startTime }} ~ {{ reserve.display.endTime }} ({{ reserve.display.duration }}分)
                         </div>
                         <div class="body-2 font-weight-light">{{ reserve.display.description }}</div>
                     </v-list-item-content>

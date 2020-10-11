@@ -1,81 +1,26 @@
 <template>
     <div class="search-option mx-auto">
-        <v-switch
-            v-model="searchState.isTimeSpecification"
-            :disabled="searchState.isEditingRule() === true"
-            label="時刻指定"
-            class="my-3"
-        ></v-switch>
+        <v-switch v-model="searchState.isTimeSpecification" :disabled="searchState.isEditingRule() === true" label="時刻指定" class="my-3"></v-switch>
         <v-card v-if="searchState.isTimeSpecification === false">
             <div class="pa-4">
                 <SearchOptionRow title="キーワード">
-                    <v-text-field
-                        v-model="searchState.searchOption.keyword"
-                        label="keyword"
-                        clearable
-                        v-on:keydown.enter="onKeywordEnter"
-                    ></v-text-field>
+                    <v-text-field v-model="searchState.searchOption.keyword" label="keyword" clearable v-on:keydown.enter="onKeywordEnter"></v-text-field>
                     <div class="d-flex flex-wrap">
-                        <v-checkbox
-                            v-model="searchState.searchOption.keywordOption.keyCS"
-                            class="mx-1 my-0"
-                            label="大小区別"
-                        ></v-checkbox>
-                        <v-checkbox
-                            v-model="searchState.searchOption.keywordOption.keyRegExp"
-                            class="mx-1 my-0"
-                            label="正規表現"
-                        ></v-checkbox>
-                        <v-checkbox
-                            v-model="searchState.searchOption.keywordOption.name"
-                            class="mx-1 my-0"
-                            label="名前"
-                        ></v-checkbox>
-                        <v-checkbox
-                            v-model="searchState.searchOption.keywordOption.description"
-                            class="mx-1 my-0"
-                            label="概要"
-                        ></v-checkbox>
-                        <v-checkbox
-                            v-model="searchState.searchOption.keywordOption.extended"
-                            class="mx-1 my-0"
-                            label="詳細"
-                        ></v-checkbox>
+                        <v-checkbox v-model="searchState.searchOption.keywordOption.keyCS" class="mx-1 my-0" label="大小区別"></v-checkbox>
+                        <v-checkbox v-model="searchState.searchOption.keywordOption.keyRegExp" class="mx-1 my-0" label="正規表現"></v-checkbox>
+                        <v-checkbox v-model="searchState.searchOption.keywordOption.name" class="mx-1 my-0" label="名前"></v-checkbox>
+                        <v-checkbox v-model="searchState.searchOption.keywordOption.description" class="mx-1 my-0" label="概要"></v-checkbox>
+                        <v-checkbox v-model="searchState.searchOption.keywordOption.extended" class="mx-1 my-0" label="詳細"></v-checkbox>
                     </div>
                 </SearchOptionRow>
                 <SearchOptionRow title="除外キーワード">
-                    <v-text-field
-                        v-model="searchState.searchOption.ignoreKeyword"
-                        label="ignore keyword"
-                        clearable
-                        v-on:keydown.enter="onKeywordEnter"
-                    ></v-text-field>
+                    <v-text-field v-model="searchState.searchOption.ignoreKeyword" label="ignore keyword" clearable v-on:keydown.enter="onKeywordEnter"></v-text-field>
                     <div class="d-flex flex-wrap">
-                        <v-checkbox
-                            v-model="searchState.searchOption.ignoreKeywordOption.keyCS"
-                            class="mx-1 my-0"
-                            label="大小区別"
-                        ></v-checkbox>
-                        <v-checkbox
-                            v-model="searchState.searchOption.ignoreKeywordOption.keyRegExp"
-                            class="mx-1 my-0"
-                            label="正規表現"
-                        ></v-checkbox>
-                        <v-checkbox
-                            v-model="searchState.searchOption.ignoreKeywordOption.name"
-                            class="mx-1 my-0"
-                            label="名前"
-                        ></v-checkbox>
-                        <v-checkbox
-                            v-model="searchState.searchOption.ignoreKeywordOption.description"
-                            class="mx-1 my-0"
-                            label="概要"
-                        ></v-checkbox>
-                        <v-checkbox
-                            v-model="searchState.searchOption.ignoreKeywordOption.extended"
-                            class="mx-1 my-0"
-                            label="詳細"
-                        ></v-checkbox>
+                        <v-checkbox v-model="searchState.searchOption.ignoreKeywordOption.keyCS" class="mx-1 my-0" label="大小区別"></v-checkbox>
+                        <v-checkbox v-model="searchState.searchOption.ignoreKeywordOption.keyRegExp" class="mx-1 my-0" label="正規表現"></v-checkbox>
+                        <v-checkbox v-model="searchState.searchOption.ignoreKeywordOption.name" class="mx-1 my-0" label="名前"></v-checkbox>
+                        <v-checkbox v-model="searchState.searchOption.ignoreKeywordOption.description" class="mx-1 my-0" label="概要"></v-checkbox>
+                        <v-checkbox v-model="searchState.searchOption.ignoreKeywordOption.extended" class="mx-1 my-0" label="詳細"></v-checkbox>
                     </div>
                 </SearchOptionRow>
                 <SearchOptionRow title="放送局">
@@ -138,62 +83,20 @@
                         ></v-select>
                     </div>
                     <div class="d-flex flex-wrap">
-                        <v-checkbox
-                            v-model="searchState.searchOption.week.mon"
-                            class="mx-1 my-0"
-                            label="月"
-                        ></v-checkbox>
-                        <v-checkbox
-                            v-model="searchState.searchOption.week.tue"
-                            class="mx-1 my-0"
-                            label="火"
-                        ></v-checkbox>
-                        <v-checkbox
-                            v-model="searchState.searchOption.week.wed"
-                            class="mx-1 my-0"
-                            label="水"
-                        ></v-checkbox>
-                        <v-checkbox
-                            v-model="searchState.searchOption.week.thu"
-                            class="mx-1 my-0"
-                            label="木"
-                        ></v-checkbox>
-                        <v-checkbox
-                            v-model="searchState.searchOption.week.fri"
-                            class="mx-1 my-0"
-                            label="金"
-                        ></v-checkbox>
-                        <v-checkbox
-                            v-model="searchState.searchOption.week.sat"
-                            class="mx-1 my-0"
-                            label="土"
-                        ></v-checkbox>
-                        <v-checkbox
-                            v-model="searchState.searchOption.week.sun"
-                            class="mx-1 my-0"
-                            label="日"
-                        ></v-checkbox>
+                        <v-checkbox v-model="searchState.searchOption.week.mon" class="mx-1 my-0" label="月"></v-checkbox>
+                        <v-checkbox v-model="searchState.searchOption.week.tue" class="mx-1 my-0" label="火"></v-checkbox>
+                        <v-checkbox v-model="searchState.searchOption.week.wed" class="mx-1 my-0" label="水"></v-checkbox>
+                        <v-checkbox v-model="searchState.searchOption.week.thu" class="mx-1 my-0" label="木"></v-checkbox>
+                        <v-checkbox v-model="searchState.searchOption.week.fri" class="mx-1 my-0" label="金"></v-checkbox>
+                        <v-checkbox v-model="searchState.searchOption.week.sat" class="mx-1 my-0" label="土"></v-checkbox>
+                        <v-checkbox v-model="searchState.searchOption.week.sun" class="mx-1 my-0" label="日"></v-checkbox>
                     </div>
                 </SearchOptionRow>
                 <SearchOptionRow title="長さ">
                     <div class="d-flex flex-wrap">
-                        <v-text-field
-                            v-model.number="searchState.searchOption.durationMin"
-                            min="0"
-                            class="duration"
-                            label="最小(分)"
-                            type="number"
-                            clearable
-                        ></v-text-field>
+                        <v-text-field v-model.number="searchState.searchOption.durationMin" min="0" class="duration" label="最小(分)" type="number" clearable></v-text-field>
                         <span class="px-1"></span>
-                        <v-text-field
-                            v-model.number="searchState.searchOption.durationMax"
-                            min="0"
-                            class="duration"
-                            label="最大(分)"
-                            type="number"
-                            clearable
-                        ></v-text-field>
+                        <v-text-field v-model.number="searchState.searchOption.durationMax" min="0" class="duration" label="最大(分)" type="number" clearable></v-text-field>
                     </div>
                 </SearchOptionRow>
                 <SearchOptionRow title="期間">
@@ -246,11 +149,7 @@
                 </SearchOptionRow>
                 <SearchOptionRow title="その他">
                     <div class="d-flex flex-wrap">
-                        <v-checkbox
-                            v-model="searchState.searchOption.isFree"
-                            class="mx-1 my-0"
-                            label="無料放送"
-                        ></v-checkbox>
+                        <v-checkbox v-model="searchState.searchOption.isFree" class="mx-1 my-0" label="無料放送"></v-checkbox>
                     </div>
                 </SearchOptionRow>
             </div>
@@ -264,11 +163,7 @@
         <v-card v-else>
             <div class="pa-4 pb-7">
                 <SearchOptionRow title="番組名">
-                    <v-text-field
-                        v-model="searchState.timeReserveOption.keyword"
-                        label="keyword"
-                        clearable
-                    ></v-text-field>
+                    <v-text-field v-model="searchState.timeReserveOption.keyword" label="keyword" clearable></v-text-field>
                 </SearchOptionRow>
                 <SearchOptionRow title="放送局">
                     <v-select
@@ -281,13 +176,7 @@
                 </SearchOptionRow>
                 <SearchOptionRow title="時刻">
                     <div class="d-flex align-center">
-                        <v-dialog
-                            ref="dialog0"
-                            v-model="isOpenStartTimepicker"
-                            :return-value.sync="searchState.timeReserveOption.startTime"
-                            persistent
-                            width="300px"
-                        >
+                        <v-dialog ref="dialog0" v-model="isOpenStartTimepicker" :return-value.sync="searchState.timeReserveOption.startTime" persistent width="300px">
                             <template v-slot:activator="{ on }">
                                 <v-text-field
                                     class="time-select"
@@ -298,31 +187,14 @@
                                     v-on="on"
                                 ></v-text-field>
                             </template>
-                            <v-time-picker
-                                v-if="isOpenStartTimepicker"
-                                v-model="searchState.timeReserveOption.startTime"
-                                format="24hr"
-                                full-width
-                            >
+                            <v-time-picker v-if="isOpenStartTimepicker" v-model="searchState.timeReserveOption.startTime" format="24hr" full-width>
                                 <v-spacer></v-spacer>
                                 <v-btn text color="primary" @click="isOpenStartTimepicker = false">Cancel</v-btn>
-                                <v-btn
-                                    text
-                                    color="primary"
-                                    @click="$refs.dialog0.save(searchState.timeReserveOption.startTime)"
-                                >
-                                    OK
-                                </v-btn>
+                                <v-btn text color="primary" @click="$refs.dialog0.save(searchState.timeReserveOption.startTime)">OK</v-btn>
                             </v-time-picker>
                         </v-dialog>
                         <span class="px-2">~</span>
-                        <v-dialog
-                            ref="dialog1"
-                            v-model="isOpenEndTimepicker"
-                            :return-value.sync="searchState.timeReserveOption.endTime"
-                            persistent
-                            width="300px"
-                        >
+                        <v-dialog ref="dialog1" v-model="isOpenEndTimepicker" :return-value.sync="searchState.timeReserveOption.endTime" persistent width="300px">
                             <template v-slot:activator="{ on }">
                                 <v-text-field
                                     class="time-select"
@@ -333,60 +205,21 @@
                                     v-on="on"
                                 ></v-text-field>
                             </template>
-                            <v-time-picker
-                                v-if="isOpenEndTimepicker"
-                                v-model="searchState.timeReserveOption.endTime"
-                                format="24hr"
-                                full-width
-                            >
+                            <v-time-picker v-if="isOpenEndTimepicker" v-model="searchState.timeReserveOption.endTime" format="24hr" full-width>
                                 <v-spacer></v-spacer>
                                 <v-btn text color="primary" @click="isOpenEndTimepicker = false">Cancel</v-btn>
-                                <v-btn
-                                    text
-                                    color="primary"
-                                    @click="$refs.dialog1.save(searchState.timeReserveOption.endTime)"
-                                >
-                                    OK
-                                </v-btn>
+                                <v-btn text color="primary" @click="$refs.dialog1.save(searchState.timeReserveOption.endTime)">OK</v-btn>
                             </v-time-picker>
                         </v-dialog>
                     </div>
                     <div class="d-flex flex-wrap">
-                        <v-checkbox
-                            v-model="searchState.timeReserveOption.week.mon"
-                            class="mx-1 my-0"
-                            label="月"
-                        ></v-checkbox>
-                        <v-checkbox
-                            v-model="searchState.timeReserveOption.week.tue"
-                            class="mx-1 my-0"
-                            label="火"
-                        ></v-checkbox>
-                        <v-checkbox
-                            v-model="searchState.timeReserveOption.week.wed"
-                            class="mx-1 my-0"
-                            label="水"
-                        ></v-checkbox>
-                        <v-checkbox
-                            v-model="searchState.timeReserveOption.week.thu"
-                            class="mx-1 my-0"
-                            label="木"
-                        ></v-checkbox>
-                        <v-checkbox
-                            v-model="searchState.timeReserveOption.week.fri"
-                            class="mx-1 my-0"
-                            label="金"
-                        ></v-checkbox>
-                        <v-checkbox
-                            v-model="searchState.timeReserveOption.week.sat"
-                            class="mx-1 my-0"
-                            label="土"
-                        ></v-checkbox>
-                        <v-checkbox
-                            v-model="searchState.timeReserveOption.week.sun"
-                            class="mx-1 my-0"
-                            label="日"
-                        ></v-checkbox>
+                        <v-checkbox v-model="searchState.timeReserveOption.week.mon" class="mx-1 my-0" label="月"></v-checkbox>
+                        <v-checkbox v-model="searchState.timeReserveOption.week.tue" class="mx-1 my-0" label="火"></v-checkbox>
+                        <v-checkbox v-model="searchState.timeReserveOption.week.wed" class="mx-1 my-0" label="水"></v-checkbox>
+                        <v-checkbox v-model="searchState.timeReserveOption.week.thu" class="mx-1 my-0" label="木"></v-checkbox>
+                        <v-checkbox v-model="searchState.timeReserveOption.week.fri" class="mx-1 my-0" label="金"></v-checkbox>
+                        <v-checkbox v-model="searchState.timeReserveOption.week.sat" class="mx-1 my-0" label="土"></v-checkbox>
+                        <v-checkbox v-model="searchState.timeReserveOption.week.sun" class="mx-1 my-0" label="日"></v-checkbox>
                     </div>
                 </SearchOptionRow>
             </div>

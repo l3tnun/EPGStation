@@ -1,18 +1,8 @@
 <template>
     <div>
-        <ReservesTableItems
-            v-if="isTable === true"
-            :reserves="reserves"
-            :isEditMode.sync="isEditMode"
-            v-on:selected="selected"
-        ></ReservesTableItems>
+        <ReservesTableItems v-if="isTable === true" :reserves="reserves" :isEditMode.sync="isEditMode" v-on:selected="selected"></ReservesTableItems>
         <v-card v-else class="mx-auto">
-            <ReservesCard
-                :reserves="reserves"
-                :flat="true"
-                :isEditMode.sync="isEditMode"
-                v-on:selected="selected"
-            ></ReservesCard>
+            <ReservesCard :reserves="reserves" :flat="true" :isEditMode.sync="isEditMode" v-on:selected="selected"></ReservesCard>
         </v-card>
     </div>
 </template>

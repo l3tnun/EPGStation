@@ -11,10 +11,7 @@ export default class SendVideoFileToKodiState implements ISendVideoFileToKodiSta
     private serverConfig: IServerConfigModel;
     private videoApiModel: IVideoApiModel;
 
-    constructor(
-        @inject('IServerConfigModel') serverConfig: IServerConfigModel,
-        @inject('IVideoApiModel') videoApiModel: IVideoApiModel,
-    ) {
+    constructor(@inject('IServerConfigModel') serverConfig: IServerConfigModel, @inject('IVideoApiModel') videoApiModel: IVideoApiModel) {
         this.serverConfig = serverConfig;
         this.videoApiModel = videoApiModel;
     }

@@ -2,14 +2,9 @@
     <div class="guide-day-select-dialog">
         <v-dialog v-if="isRemove === false" v-model="dialogModel" max-width="150" scrollable>
             <v-card class="py-2">
-                <v-list-item
-                    v-for="item in dayItems"
-                    :key="item.value"
-                    v-on:click="goto(item.value)"
-                    :disabled="item.disabled"
-                >
+                <v-list-item v-for="item in dayItems" :key="item.value" v-on:click="goto(item.value)" :disabled="item.disabled">
                     <v-list-item-content>
-                        <v-list-item-title v-text="item.text" style="text-align: center;"></v-list-item-title>
+                        <v-list-item-title v-text="item.text" style="text-align: center"></v-list-item-title>
                     </v-list-item-content>
                 </v-list-item>
             </v-card>
@@ -77,8 +72,7 @@ export default class GuideDaySelectDialog extends Vue {
         const hourStr = DateUtil.format(now, 'hh');
         let baseTime = new Date(DateUtil.format(now, 'yyyy/MM/dd 00:00:00 +0900')).getTime();
 
-        const currentTime =
-            typeof this.$route.query.time === 'string' ? this.$route.query.time : DateUtil.format(now, 'YYMMddhh');
+        const currentTime = typeof this.$route.query.time === 'string' ? this.$route.query.time : DateUtil.format(now, 'YYMMddhh');
 
         for (let i = 0; i < 8; i++) {
             const date = new Date(baseTime);

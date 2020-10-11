@@ -27,7 +27,7 @@
                     v-on:selected="selectItem"
                 ></RecordedItems>
                 <Pagination :total="recordingState.getTotal()" :pageSize="settingValue.recordingLength"></Pagination>
-                <div style="visibility: hidden;">dummy</div>
+                <div style="visibility: hidden">dummy</div>
             </div>
         </transition>
         <RecordedMultipleDeletionDialog

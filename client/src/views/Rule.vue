@@ -20,11 +20,7 @@
             <div v-if="ruleState.getRules().length > 0" ref="appContent" class="app-content">
                 <v-container>
                     <div v-bind:style="contentWrapStyle">
-                        <RuleItems
-                            :rules="ruleState.getRules()"
-                            :isEditMode.sync="isEditMode"
-                            v-on:selected="selectItem"
-                        ></RuleItems>
+                        <RuleItems :rules="ruleState.getRules()" :isEditMode.sync="isEditMode" v-on:selected="selectItem"></RuleItems>
                         <Pagination :total="ruleState.getTotal()" :pageSize="settingValue.rulesLength"></Pagination>
                     </div>
                     <v-btn v-on:click="addRule" fab dark fixed bottom right color="pink">

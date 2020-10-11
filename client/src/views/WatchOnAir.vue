@@ -4,12 +4,8 @@
         <transition name="page">
             <div class="video-container-wrap mx-auto">
                 <VideoContainer v-if="videoParam !== null" v-bind:videoParam="videoParam"></VideoContainer>
-                <WatchOnAirInfoCard
-                    v-if="watchParam !== null"
-                    v-bind:channel="watchParam.channel"
-                    v-bind:mode="watchParam.mode"
-                ></WatchOnAirInfoCard>
-                <div style="visibility: hidden;">dummy</div>
+                <WatchOnAirInfoCard v-if="watchParam !== null" v-bind:channel="watchParam.channel" v-bind:mode="watchParam.mode"></WatchOnAirInfoCard>
+                <div style="visibility: hidden">dummy</div>
             </div>
         </transition>
     </v-content>
@@ -54,9 +50,7 @@ export default class WatchOnAir extends Vue {
     public onUrlChange(): void {
         // 視聴パラメータセット
         this.watchParam =
-            typeof this.$route.query.type !== 'string' ||
-            typeof this.$route.query.channel !== 'string' ||
-            typeof this.$route.query.mode !== 'string'
+            typeof this.$route.query.type !== 'string' || typeof this.$route.query.channel !== 'string' || typeof this.$route.query.mode !== 'string'
                 ? null
                 : {
                       type: this.$route.query.type,

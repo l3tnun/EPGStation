@@ -112,10 +112,7 @@ export default class RecordedDetailState implements IRecordedDetailState {
             } else if (this.config !== null) {
                 if (UaUtil.isiOS() === true && typeof this.config.urlscheme.download.ios !== 'undefined') {
                     urlScheme = this.config.urlscheme.download.ios;
-                } else if (
-                    UaUtil.isAndroid() === true &&
-                    typeof this.config.urlscheme.download.android !== 'undefined'
-                ) {
+                } else if (UaUtil.isAndroid() === true && typeof this.config.urlscheme.download.android !== 'undefined') {
                     urlScheme = this.config.urlscheme.download.android;
                 } else if (UaUtil.isMac() === true && typeof this.config.urlscheme.download.mac !== 'undefined') {
                     urlScheme = this.config.urlscheme.download.mac;

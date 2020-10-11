@@ -1,14 +1,6 @@
 <template>
     <div>
-        <v-pagination
-            v-if="total > pageSize"
-            v-model="page"
-            :circle="false"
-            :length="totalPages"
-            :total-visible="12"
-            v-on:input="onMovePage"
-            class="normal px-1"
-        ></v-pagination>
+        <v-pagination v-if="total > pageSize" v-model="page" :circle="false" :length="totalPages" :total-visible="12" v-on:input="onMovePage" class="normal px-1"></v-pagination>
         <div class="mobile">
             <MobilePagination :pageSize="pageSize" :total="total"></MobilePagination>
         </div>

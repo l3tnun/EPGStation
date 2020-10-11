@@ -15,11 +15,7 @@
             </template>
         </TitleBar>
         <transition name="page">
-            <div
-                v-if="settingValue !== null && recordedState.getRecorded().length > 0"
-                ref="appContent"
-                class="app-content pa-1"
-            >
+            <div v-if="settingValue !== null && recordedState.getRecorded().length > 0" ref="appContent" class="app-content pa-1">
                 <div v-bind:style="contentWrapStyle">
                     <RecordedItems
                         :recorded="recordedState.getRecorded()"
@@ -30,12 +26,8 @@
                         :isEditMode.sync="isEditMode"
                         :isShowDropInfo="settingValue.isShowDropInfoInsteadOfDescription"
                     ></RecordedItems>
-                    <Pagination
-                        v-if="isEditMode === false"
-                        :total="recordedState.getTotal()"
-                        :pageSize="settingValue.recordedLength"
-                    ></Pagination>
-                    <div style="visibility: hidden;">dummy</div>
+                    <Pagination v-if="isEditMode === false" :total="recordedState.getTotal()" :pageSize="settingValue.recordedLength"></Pagination>
+                    <div style="visibility: hidden">dummy</div>
                 </div>
             </div>
         </transition>
@@ -243,8 +235,7 @@ export default class Recorded extends Vue {
             option.genre = parseInt(this.$route.query.genre as string, 10);
         }
         if (typeof this.$route.query.hasOriginalFile !== 'undefined') {
-            option.hasOriginalFile =
-                (this.$route.query.hasOriginalFile as any) === true || this.$route.query.hasOriginalFile === 'true';
+            option.hasOriginalFile = (this.$route.query.hasOriginalFile as any) === true || this.$route.query.hasOriginalFile === 'true';
         }
 
         return option;

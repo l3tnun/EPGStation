@@ -15,10 +15,7 @@ export default class NavigationState implements INavigationState {
     private serverConfig: IServerConfigModel;
     private setting: ISettingStorageModel;
 
-    constructor(
-        @inject('IServerConfigModel') serverConfig: IServerConfigModel,
-        @inject('ISettingStorageModel') setting: ISettingStorageModel,
-    ) {
+    constructor(@inject('IServerConfigModel') serverConfig: IServerConfigModel, @inject('ISettingStorageModel') setting: ISettingStorageModel) {
         this.serverConfig = serverConfig;
         this.setting = setting;
     }

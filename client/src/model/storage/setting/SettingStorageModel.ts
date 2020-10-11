@@ -5,8 +5,7 @@ import IStorageOperationModel from '../IStorageOperationModel';
 import { ISettingStorageModel, ISettingValue } from './ISettingStorageModel';
 
 @injectable()
-export default class SettingStorageModel extends AbstractStorageBaseModel<ISettingValue>
-    implements ISettingStorageModel {
+export default class SettingStorageModel extends AbstractStorageBaseModel<ISettingValue> implements ISettingStorageModel {
     constructor(@inject('IStorageOperationModel') op: IStorageOperationModel) {
         super(op);
     }

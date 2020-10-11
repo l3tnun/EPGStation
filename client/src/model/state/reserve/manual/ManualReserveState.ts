@@ -8,14 +8,7 @@ import IScheduleApiModel from '../../../api/schedule/IScheduleApiModel';
 import IChannelModel from '../../../channels/IChannelModel';
 import IServerConfigModel from '../../../serverConfig/IServerConfigModel';
 import { ISettingStorageModel } from '../../../storage/setting/ISettingStorageModel';
-import IManualReserveState, {
-    EncodedOption,
-    ManualReserveOption,
-    ManualSaveOption,
-    ProgramStateData,
-    SelectorItem,
-    TimeSpecifiedOption,
-} from './IManualReserveState';
+import IManualReserveState, { EncodedOption, ManualReserveOption, ManualSaveOption, ProgramStateData, SelectorItem, TimeSpecifiedOption } from './IManualReserveState';
 
 @injectable()
 export default class ManualReserveState implements IManualReserveState {
@@ -221,10 +214,7 @@ export default class ManualReserveState implements IManualReserveState {
      * @param isHalfWidth: boolean
      * @return ProgramStateData
      */
-    private convertScheduleProgramItemToStateData(
-        program: apid.ScheduleProgramItem,
-        isHalfWidth: boolean,
-    ): ProgramStateData {
+    private convertScheduleProgramItemToStateData(program: apid.ScheduleProgramItem, isHalfWidth: boolean): ProgramStateData {
         const startAt = DateUtil.getJaDate(new Date(program.startAt));
         const endAt = DateUtil.getJaDate(new Date(program.endAt));
         const channel = this.channelModel.findChannel(program.channelId, isHalfWidth);

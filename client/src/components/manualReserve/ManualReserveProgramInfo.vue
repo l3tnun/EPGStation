@@ -5,23 +5,15 @@
                 <div class="subtitle-1 font-weight-black mb-1">{{ program.display.name }}</div>
                 <div class="body-2 font-weight-light">{{ program.display.channelName }}</div>
                 <div class="body-2 font-weight-light">
-                    {{ program.display.day }}({{ program.display.dow }}) {{ program.display.startTime }} ~
-                    {{ program.display.endTime }} ({{ program.display.duration }}m)
+                    {{ program.display.day }}({{ program.display.dow }}) {{ program.display.startTime }} ~ {{ program.display.endTime }} ({{ program.display.duration }}m)
                 </div>
                 <div class="genres body-2 font-weight-light my-1">
                     <div v-for="genre in program.display.genres" v-bind:key="genre">{{ genre }}</div>
                 </div>
-                <div
-                    v-if="typeof program.display.description !== 'undefined'"
-                    class="description body-1 font-weight-regular my-2"
-                >
+                <div v-if="typeof program.display.description !== 'undefined'" class="description body-1 font-weight-regular my-2">
                     {{ program.display.description }}
                 </div>
-                <div
-                    v-if="typeof program.display.extended !== 'undefined'"
-                    class="extended body-1 font-weight-regular my-2"
-                    ref="extended"
-                >
+                <div v-if="typeof program.display.extended !== 'undefined'" class="extended body-1 font-weight-regular my-2" ref="extended">
                     {{ program.display.extended }}
                 </div>
                 <div class="typs body-2 font-weight-light my-1">

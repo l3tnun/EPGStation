@@ -3,24 +3,11 @@
         <TitleBar ref="title" title="番組詳細予約"></TitleBar>
         <transition name="page">
             <div ref="appContent" class="app-content manual-reserve pa-3 mx-auto">
-                <v-switch
-                    v-model="manualReserveState.isTimeSpecification"
-                    :disabled="isEditMode === true"
-                    label="時刻指定"
-                    class="my-3"
-                ></v-switch>
-                <ManualReserveProgramInfo
-                    v-if="manualReserveState.isTimeSpecification === false"
-                    :program="manualReserveState.getProgramInfo()"
-                ></ManualReserveProgramInfo>
+                <v-switch v-model="manualReserveState.isTimeSpecification" :disabled="isEditMode === true" label="時刻指定" class="my-3"></v-switch>
+                <ManualReserveProgramInfo v-if="manualReserveState.isTimeSpecification === false" :program="manualReserveState.getProgramInfo()"></ManualReserveProgramInfo>
                 <ManualTimeReserveOption v-else :isEditMode="isEditMode"></ManualTimeReserveOption>
                 <div class="pt-2"></div>
-                <ManualReserveOptionComponent
-                    :isEditMode="isEditMode"
-                    v-on:cancel="cancel"
-                    v-on:add="add"
-                    v-on:update="update"
-                ></ManualReserveOptionComponent>
+                <ManualReserveOptionComponent :isEditMode="isEditMode" v-on:cancel="cancel" v-on:add="add" v-on:update="update"></ManualReserveOptionComponent>
             </div>
         </transition>
     </v-content>
@@ -34,12 +21,7 @@ import TitleBar from '@/components/titleBar/TitleBar.vue';
 import container from '@/model/ModelContainer';
 import ISocketIOModel from '@/model/socketio/ISocketIOModel';
 import IScrollPositionState from '@/model/state/IScrollPositionState';
-import IManualReserveState, {
-    EncodedOption,
-    ManualReserveOption,
-    ManualSaveOption,
-    TimeSpecifiedOption,
-} from '@/model/state/reserve/manual/IManualReserveState';
+import IManualReserveState, { EncodedOption, ManualReserveOption, ManualSaveOption, TimeSpecifiedOption } from '@/model/state/reserve/manual/IManualReserveState';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
 import { ISettingStorageModel, ISettingValue } from '@/model/storage/setting/ISettingStorageModel';
 import Util from '@/util/Util';
@@ -210,10 +192,7 @@ export default class ManualReserve extends Vue {
 
                 let reserveItem: apid.ReserveItem;
                 try {
-                    reserveItem = await this.manualReserveState.getReserveItem(
-                        this.reserveId,
-                        this.settingValue.isHalfWidthDisplayed,
-                    );
+                    reserveItem = await this.manualReserveState.getReserveItem(this.reserveId, this.settingValue.isHalfWidthDisplayed);
                 } catch (err) {
                     this.snackbarState.open({
                         color: 'error',
@@ -266,16 +245,14 @@ export default class ManualReserve extends Vue {
         if (this.programId === null) {
             return;
         }
-        await this.manualReserveState
-            .fetchProgramInfo(this.programId, this.settingValue.isHalfWidthDisplayed)
-            .catch(err => {
-                this.snackbarState.open({
-                    color: 'error',
-                    text: '番組情報取得に失敗',
-                });
-                console.error(err);
-                throw err;
+        await this.manualReserveState.fetchProgramInfo(this.programId, this.settingValue.isHalfWidthDisplayed).catch(err => {
+            this.snackbarState.open({
+                color: 'error',
+                text: '番組情報取得に失敗',
             });
+            console.error(err);
+            throw err;
+        });
 
         this.manualReserveState.setTimeSpecifiedOption();
     }

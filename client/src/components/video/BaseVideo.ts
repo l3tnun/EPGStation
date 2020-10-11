@@ -197,9 +197,7 @@ export default abstract class BaseVide extends Vue {
      * @return number
      */
     public getDuration(): number {
-        return this.video === null || this.video.duration === Infinity || isNaN(this.video.duration)
-            ? 0
-            : this.video.duration;
+        return this.video === null || this.video.duration === Infinity || isNaN(this.video.duration) ? 0 : this.video.duration;
     }
 
     /**
@@ -207,9 +205,7 @@ export default abstract class BaseVide extends Vue {
      * @return number
      */
     public getCurrentTime(): number {
-        return this.video === null || this.video.currentTime === Infinity || isNaN(this.video.currentTime)
-            ? 0
-            : this.video.currentTime;
+        return this.video === null || this.video.currentTime === Infinity || isNaN(this.video.currentTime) ? 0 : this.video.currentTime;
     }
 
     /**

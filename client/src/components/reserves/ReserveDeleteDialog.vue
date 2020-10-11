@@ -47,9 +47,7 @@ export default class ReserveDeleteDialog extends Vue {
 
     // 番組名
     get name(): string {
-        return typeof this.reserveItem.name === 'undefined'
-            ? `予約id: ${this.reserveItem.id.toString(10)}`
-            : this.reserveItem.name;
+        return typeof this.reserveItem.name === 'undefined' ? `予約id: ${this.reserveItem.id.toString(10)}` : this.reserveItem.name;
     }
 
     @Watch('isOpen', { immediate: true })

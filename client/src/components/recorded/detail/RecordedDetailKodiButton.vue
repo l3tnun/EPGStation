@@ -9,11 +9,7 @@
             <v-icon left dark>mdi-cast</v-icon>
             kodi
         </v-btn>
-        <SendVideoFileToKodiDialog
-            :isOpen.sync="isOpenKodiDialog"
-            :recordedItem="recordedItem"
-            :videoFiles="videoFiles"
-        ></SendVideoFileToKodiDialog>
+        <SendVideoFileToKodiDialog :isOpen.sync="isOpenKodiDialog" :recordedItem="recordedItem" :videoFiles="videoFiles"></SendVideoFileToKodiDialog>
     </div>
 </template>
 

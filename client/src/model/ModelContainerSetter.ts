@@ -148,40 +148,19 @@ export default (container: Container): void => {
 
     container.bind<ISettingStorageModel>('ISettingStorageModel').to(SettingStorageModel).inSingletonScope();
 
-    container
-        .bind<IGuideProgramDialogSettingStorageModel>('IGuideProgramDialogSettingStorageModel')
-        .to(GuideProgramDialogSettingStorageModel)
-        .inSingletonScope();
+    container.bind<IGuideProgramDialogSettingStorageModel>('IGuideProgramDialogSettingStorageModel').to(GuideProgramDialogSettingStorageModel).inSingletonScope();
 
-    container
-        .bind<IGuideGenreSettingStorageModel>('IGuideGenreSettingStorageModel')
-        .to(GuideGenreSettingStorageModel)
-        .inSingletonScope();
+    container.bind<IGuideGenreSettingStorageModel>('IGuideGenreSettingStorageModel').to(GuideGenreSettingStorageModel).inSingletonScope();
 
-    container
-        .bind<IGuideSizeSettingStorageModel>('IGuideSizeSettingStorageModel')
-        .to(GuideSizeSettingStorageModel)
-        .inSingletonScope();
+    container.bind<IGuideSizeSettingStorageModel>('IGuideSizeSettingStorageModel').to(GuideSizeSettingStorageModel).inSingletonScope();
 
-    container
-        .bind<IAddEncodeSettingStorageModel>('IAddEncodeSettingStorageModel')
-        .to(AddEncodeSettingStorageModel)
-        .inSingletonScope();
+    container.bind<IAddEncodeSettingStorageModel>('IAddEncodeSettingStorageModel').to(AddEncodeSettingStorageModel).inSingletonScope();
 
-    container
-        .bind<IOnAirSelectStreamSettingStorageModel>('IOnAirSelectStreamSettingStorageModel')
-        .to(OnAirSelectStreamSettingStorageModel)
-        .inSingletonScope();
+    container.bind<IOnAirSelectStreamSettingStorageModel>('IOnAirSelectStreamSettingStorageModel').to(OnAirSelectStreamSettingStorageModel).inSingletonScope();
 
-    container
-        .bind<IRecordedSelectStreamSettingStorageModel>('IRecordedSelectStreamSettingStorageModel')
-        .to(RecordedSelectStreamSettingStorageModel)
-        .inSingletonScope();
+    container.bind<IRecordedSelectStreamSettingStorageModel>('IRecordedSelectStreamSettingStorageModel').to(RecordedSelectStreamSettingStorageModel).inSingletonScope();
 
-    container
-        .bind<ISendVideoFileSelectHostSettingStorageModel>('ISendVideoFileSelectHostSettingStorageModel')
-        .to(SendVideoFileSelectHostSettingStorageModel)
-        .inSingletonScope();
+    container.bind<ISendVideoFileSelectHostSettingStorageModel>('ISendVideoFileSelectHostSettingStorageModel').to(SendVideoFileSelectHostSettingStorageModel).inSingletonScope();
 
     container.bind<IServerConfigModel>('IServerConfigModel').to(ServerConfigModel).inSingletonScope();
 
@@ -223,25 +202,13 @@ export default (container: Container): void => {
 
     container.bind<IRecordedUploadState>('IRecordedUploadState').to(RecordedUploadState).inSingletonScope();
 
-    container
-        .bind<IRecordedDetailSelectStreamState>('IRecordedDetailSelectStreamState')
-        .to(RecordedDetailSelectStreamState)
-        .inSingletonScope();
+    container.bind<IRecordedDetailSelectStreamState>('IRecordedDetailSelectStreamState').to(RecordedDetailSelectStreamState).inSingletonScope();
 
-    container
-        .bind<IRecordedStreamingVideoState>('IRecordedStreamingVideoState')
-        .to(RecordedStreamingVideoState)
-        .inSingletonScope();
+    container.bind<IRecordedStreamingVideoState>('IRecordedStreamingVideoState').to(RecordedStreamingVideoState).inSingletonScope();
 
-    container
-        .bind<IRecordedHLSStreamingVideoState>('IRecordedHLSStreamingVideoState')
-        .to(RecordedHLSStreamingVideoState)
-        .inSingletonScope();
+    container.bind<IRecordedHLSStreamingVideoState>('IRecordedHLSStreamingVideoState').to(RecordedHLSStreamingVideoState).inSingletonScope();
 
-    container
-        .bind<ISendVideoFileToKodiState>('ISendVideoFileToKodiState')
-        .to(SendVideoFileToKodiState)
-        .inSingletonScope();
+    container.bind<ISendVideoFileToKodiState>('ISendVideoFileToKodiState').to(SendVideoFileToKodiState).inSingletonScope();
 
     container.bind<IWatchRecordedInfoState>('IWatchRecordedInfoState').to(WatchRecordedInfoState).inSingletonScope();
 

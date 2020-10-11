@@ -27,19 +27,13 @@
                                 <div>({{ reserve.display.duration }}m)</div>
                             </td>
                             <td>
-                                <v-icon v-if="reserve.display.isRule === true" class="reserve-icon">
-                                    mdi-calendar
-                                </v-icon>
+                                <v-icon v-if="reserve.display.isRule === true" class="reserve-icon">mdi-calendar</v-icon>
                                 <v-icon v-else class="reserve-icon">mdi-timer-outline</v-icon>
                                 {{ reserve.display.name }}
                             </td>
                             <td>{{ reserve.display.description }}</td>
                             <td>
-                                <ReserveMenu
-                                    v-if="isEditMode === false"
-                                    :reserveItem="reserve.reserveItem"
-                                    :disableEdit="false"
-                                ></ReserveMenu>
+                                <ReserveMenu v-if="isEditMode === false" :reserveItem="reserve.reserveItem" :disableEdit="false"></ReserveMenu>
                             </td>
                         </tr>
                     </tbody>

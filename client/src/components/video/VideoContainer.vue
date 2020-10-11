@@ -32,26 +32,14 @@
                                 <v-icon dark>mdi-fast-forward-30</v-icon>
                             </v-btn>
                         </div>
-                        <v-btn
-                            v-if="isEnabledRotation === true && isFullscreen === true"
-                            class="rotation-button"
-                            icon
-                            dark
-                            v-on:click="clickRotationButton"
-                        >
+                        <v-btn v-if="isEnabledRotation === true && isFullscreen === true" class="rotation-button" icon dark v-on:click="clickRotationButton">
                             <v-icon dark>mdi-screen-rotation</v-icon>
                         </v-btn>
-                        <div
-                            v-if="duration > 0"
-                            class="d-flex flex-column align-center left-buttons"
-                            v-on:click="stopPropagation"
-                        >
+                        <div v-if="duration > 0" class="d-flex flex-column align-center left-buttons" v-on:click="stopPropagation">
                             <v-btn class="add-shadow" icon dark v-on:click="speedUp">
                                 <v-icon dark>mdi-plus-circle</v-icon>
                             </v-btn>
-                            <v-btn class="add-shadow my-2" text dark v-on:click="resetSpeed">
-                                x{{ playbackRate.toFixed(1) }}
-                            </v-btn>
+                            <v-btn class="add-shadow my-2" text dark v-on:click="resetSpeed">x{{ playbackRate.toFixed(1) }}</v-btn>
                             <v-btn class="add-shadow" icon dark v-on:click="speedDown">
                                 <v-icon dark>mdi-minus-circle</v-icon>
                             </v-btn>
@@ -107,9 +95,7 @@
                                         v-bind:class="{ disabled: isShowingSubtitle === false }"
                                         v-on:click="switchSubtitle"
                                     >
-                                        <v-icon>
-                                            mdi-subtitles
-                                        </v-icon>
+                                        <v-icon>mdi-subtitles</v-icon>
                                     </v-btn>
                                     <v-btn v-if="this.isEnabledPip === true" icon dark v-on:click="switchPip">
                                         <v-icon>mdi-picture-in-picture-bottom-right</v-icon>
@@ -345,11 +331,7 @@ export default class VideoContainer extends Vue {
      * mousemove 処理
      */
     public mousemove(e: MouseEvent): void {
-        if (
-            UaUtil.isAndroid() === true ||
-            typeof this.$refs.video === 'undefined' ||
-            (this.$refs.video as BaseVideo).paused() === true
-        ) {
+        if (UaUtil.isAndroid() === true || typeof this.$refs.video === 'undefined' || (this.$refs.video as BaseVideo).paused() === true) {
             return;
         }
 
@@ -448,10 +430,8 @@ export default class VideoContainer extends Vue {
             (this.$refs.video as BaseVideo).fixSubtitleState();
         }
 
-        this.isEnabledSubtitles =
-            typeof this.$refs.video !== 'undefined' && (this.$refs.video as BaseVideo).isEnabledSubtitles();
-        this.isShowingSubtitle =
-            typeof this.$refs.video !== 'undefined' && (this.$refs.video as BaseVideo).isShowingSubtitle();
+        this.isEnabledSubtitles = typeof this.$refs.video !== 'undefined' && (this.$refs.video as BaseVideo).isEnabledSubtitles();
+        this.isShowingSubtitle = typeof this.$refs.video !== 'undefined' && (this.$refs.video as BaseVideo).isShowingSubtitle();
     }
 
     // 読み込み中
@@ -469,21 +449,13 @@ export default class VideoContainer extends Vue {
     public onCanplay(): void {
         this.isLoading = false;
 
-        if (
-            typeof this.$refs.video !== 'undefined' &&
-            (this.$refs.video as BaseVideo).paused() === true &&
-            new Date().getTime() - this.lastSeekedTime > 1000
-        ) {
+        if (typeof this.$refs.video !== 'undefined' && (this.$refs.video as BaseVideo).paused() === true && new Date().getTime() - this.lastSeekedTime > 1000) {
             this.isShowControl = true;
             this.isHideCursor = false;
         }
 
         setTimeout(() => {
-            if (
-                this.isFirstPlay === true &&
-                typeof this.$refs.video !== 'undefined' &&
-                (this.$refs.video as BaseVideo).paused() === false
-            ) {
+            if (this.isFirstPlay === true && typeof this.$refs.video !== 'undefined' && (this.$refs.video as BaseVideo).paused() === false) {
                 this.isShowControl = false;
                 this.isHideCursor = true;
             }
@@ -759,10 +731,7 @@ export default class VideoContainer extends Vue {
             }
         } else {
             // フルスクリーンへ切り替え
-            if (
-                this.requestFullscreen(this.$refs.container as HTMLElement) === false &&
-                typeof this.$refs.video !== 'undefined'
-            ) {
+            if (this.requestFullscreen(this.$refs.container as HTMLElement) === false && typeof this.$refs.video !== 'undefined') {
                 (this.$refs.video as BaseVideo).requestFullscreen();
             }
 

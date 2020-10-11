@@ -13,10 +13,7 @@ export default class ReservesState implements IReservesState {
     private reserves: ReserveStateData[] | null = null;
     private total: number = 0;
 
-    constructor(
-        @inject('IReservesApiModel') reserveApiModel: IReservesApiModel,
-        @inject('IReserveStateUtil') reserveStateUtil: IReserveStateUtil,
-    ) {
+    constructor(@inject('IReservesApiModel') reserveApiModel: IReservesApiModel, @inject('IReserveStateUtil') reserveStateUtil: IReserveStateUtil) {
         this.reserveApiModel = reserveApiModel;
         this.reserveStateUtil = reserveStateUtil;
     }
@@ -43,11 +40,7 @@ export default class ReservesState implements IReservesState {
                 oldSelectedIndex[r.reserveItem.id] = r.isSelected;
             }
         }
-        this.reserves = this.reserveStateUtil.convertReserveItemsToStateDatas(
-            reserves.reserves,
-            option.isHalfWidth,
-            oldSelectedIndex,
-        );
+        this.reserves = this.reserveStateUtil.convertReserveItemsToStateDatas(reserves.reserves, option.isHalfWidth, oldSelectedIndex);
     }
 
     /**

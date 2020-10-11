@@ -9,11 +9,7 @@
         ></v-select>
         <v-card ref="card" class="overflow-auto pa-1 mt-4" width="100%" max-height="180px" overflow-scroll outlined>
             <div v-for="genre in genreItems" v-bind:key="genre.value">
-                <div
-                    class="item"
-                    v-bind:class="{ selected: searchState.searchOption.genres[genre.value].isEnable === true }"
-                    v-on:click="onClickGenre(genre.value)"
-                >
+                <div class="item" v-bind:class="{ selected: searchState.searchOption.genres[genre.value].isEnable === true }" v-on:click="onClickGenre(genre.value)">
                     {{ genre.name }}
                 </div>
                 <div v-if="searchState.searchOption.isShowSubgenres === true">
@@ -22,8 +18,7 @@
                         v-bind:key="subGenre.value"
                         class="sub-genre item"
                         v-bind:class="{
-                            selected:
-                                searchState.searchOption.genres[genre.value].subGenreIndex[subGenre.value] === true,
+                            selected: searchState.searchOption.genres[genre.value].subGenreIndex[subGenre.value] === true,
                         }"
                         v-on:click="onClickSubGenre(genre.value, subGenre.value)"
                     >
@@ -33,12 +28,7 @@
             </div>
         </v-card>
         <div class="d-flex mt-2">
-            <v-checkbox
-                class="mx-1 my-1"
-                label="サブジャンル表示"
-                v-model="searchState.searchOption.isShowSubgenres"
-                :disabled="searchState.genreSelect !== -1"
-            ></v-checkbox>
+            <v-checkbox class="mx-1 my-1" label="サブジャンル表示" v-model="searchState.searchOption.isShowSubgenres" :disabled="searchState.genreSelect !== -1"></v-checkbox>
             <v-btn v-on:click="cleatGenres" class="mx-1" color="primary">クリア</v-btn>
         </div>
     </div>

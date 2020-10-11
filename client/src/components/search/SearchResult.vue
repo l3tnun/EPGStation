@@ -6,11 +6,7 @@
             </v-btn>
             <div class="ml-1">{{ searchState.getSearchResult().length }} 件ヒット</div>
         </div>
-        <SearchResultCard
-            v-for="program in searchState.getSearchResult()"
-            v-bind:key="program.id"
-            :program="program"
-        ></SearchResultCard>
+        <SearchResultCard v-for="program in searchState.getSearchResult()" v-bind:key="program.id" :program="program"></SearchResultCard>
     </div>
 </template>
 

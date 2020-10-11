@@ -16,16 +16,12 @@
         <transition name="page">
             <div v-if="reservesState.getReserves().length > 0" ref="appContent" class="app-content pa-2">
                 <div v-bind:style="contentWrapStyle">
-                    <ReserveItems
-                        :reserves="reservesState.getReserves()"
-                        :isEditMode.sync="isEditMode"
-                        v-on:selected="selectItem"
-                    ></ReserveItems>
+                    <ReserveItems :reserves="reservesState.getReserves()" :isEditMode.sync="isEditMode" v-on:selected="selectItem"></ReserveItems>
                 </div>
                 <Pagination :total="reservesState.getTotal()" :pageSize="settingValue.reservesLength"></Pagination>
             </div>
         </transition>
-        <div style="visibility: hidden;">dummy</div>
+        <div style="visibility: hidden">dummy</div>
         <ReserveMultipleDeletionDialog
             :isOpen.sync="isOpenMultiplueDeletionDialog"
             :total="reservesState.getSelectedCnt()"
@@ -198,12 +194,7 @@ export default class Reserves extends Vue {
         const type = this.$route.query.type;
 
         return {
-            type:
-                typeof type === 'undefined'
-                    ? 'all'
-                    : type === 'normal' || type === 'conflict' || type === 'overlap' || type === 'skip'
-                    ? type
-                    : 'normal',
+            type: typeof type === 'undefined' ? 'all' : type === 'normal' || type === 'conflict' || type === 'overlap' || type === 'skip' ? type : 'normal',
             isHalfWidth: this.settingValue.isHalfWidthDisplayed,
             offset: (Util.getPageNum(this.$route) - 1) * this.settingValue.reservesLength,
             limit: this.settingValue.reservesLength,

@@ -9,7 +9,7 @@
                             :items="dialogState.streamTypeItems"
                             v-model="dialogState.selectedStreamType"
                             v-on:change="updateModeItems"
-                            style="max-width: 120px;"
+                            style="max-width: 120px"
                             :menu-props="{ auto: true }"
                         ></v-select>
                         <v-select
@@ -40,9 +40,7 @@ import * as apid from '../../../../../api';
 
 @Component({})
 export default class RecordedDetailSelectStreamDialog extends Vue {
-    public dialogState: IRecordedDetailSelectStreamState = container.get<IRecordedDetailSelectStreamState>(
-        'IRecordedDetailSelectStreamState',
-    );
+    public dialogState: IRecordedDetailSelectStreamState = container.get<IRecordedDetailSelectStreamState>('IRecordedDetailSelectStreamState');
     public isRemove: boolean = false;
     // ストリーム視聴設定セレクタ再描画用
     public isHiddenStreamMode: boolean = false;
@@ -68,10 +66,7 @@ export default class RecordedDetailSelectStreamDialog extends Vue {
     }
 
     public async view(): Promise<void> {
-        if (
-            typeof this.dialogState.selectedStreamType === 'undefined' ||
-            typeof this.dialogState.selectedStreamMode === 'undefined'
-        ) {
+        if (typeof this.dialogState.selectedStreamType === 'undefined' || typeof this.dialogState.selectedStreamMode === 'undefined') {
             this.snackbarState.open({
                 color: 'error',
                 text: '配信設定が正しく入力されていません',

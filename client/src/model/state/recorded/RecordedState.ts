@@ -186,11 +186,7 @@ export default class RecordedState implements IRecordedState {
             }
 
             for (const v of r.recordedItem.videoFiles) {
-                if (
-                    option === 'All' ||
-                    (option === 'OnlyOriginalFile' && v.type === 'ts') ||
-                    (option === 'OnlyEncodedFile' && v.type === 'encoded')
-                ) {
+                if (option === 'All' || (option === 'OnlyOriginalFile' && v.type === 'ts') || (option === 'OnlyEncodedFile' && v.type === 'encoded')) {
                     videoFileIds.push(v.id);
                 }
             }

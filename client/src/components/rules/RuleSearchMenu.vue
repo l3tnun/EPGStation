@@ -8,12 +8,7 @@
             </template>
             <v-card width="400">
                 <div class="rule-search pa-4">
-                    <v-text-field
-                        v-model="keyword"
-                        label="キーワード"
-                        clearable
-                        v-on:keydown.enter="onSearch()"
-                    ></v-text-field>
+                    <v-text-field v-model="keyword" label="キーワード" clearable v-on:keydown.enter="onSearch()"></v-text-field>
                 </div>
                 <v-divider></v-divider>
                 <v-card-actions>

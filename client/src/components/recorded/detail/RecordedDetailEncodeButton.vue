@@ -1,11 +1,6 @@
 <template>
     <div>
-        <v-btn
-            v-if="recordedItem.isRecording === false && serverConfig.isEnableEncode() === true"
-            color="teal white--text"
-            v-on:click="openEncodeDialog"
-            class="ma-1"
-        >
+        <v-btn v-if="recordedItem.isRecording === false && serverConfig.isEnableEncode() === true" color="teal white--text" v-on:click="openEncodeDialog" class="ma-1">
             <v-icon left dark>mdi-plus-circle-outline</v-icon>
             encode
         </v-btn>

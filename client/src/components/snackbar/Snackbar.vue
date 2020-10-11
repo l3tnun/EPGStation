@@ -2,7 +2,7 @@
     <div>
         <transition name="snackbar">
             <div v-if="snackbarState.isOpen === true" class="snackbar-wrap">
-                <div class="d-flex justify-center" style="position: relative;">
+                <div class="d-flex justify-center" style="position: relative">
                     <div class="d-flex align-center snackbar" v-bind:class="snackbarClass">
                         <div class="text">{{ snackbarState.mainText }}</div>
                         <div class="ma-0 mr-2">

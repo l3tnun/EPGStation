@@ -49,17 +49,11 @@ export default class OnAirSelectStreamState implements IOnAirSelectStreamState {
             typeof config.streamConfig.live !== 'undefined' &&
             typeof config.streamConfig.live.ts !== 'undefined'
         ) {
-            if (
-                typeof config.streamConfig.live.ts.m2ts !== 'undefined' &&
-                config.streamConfig.live.ts.m2ts.length > 0
-            ) {
+            if (typeof config.streamConfig.live.ts.m2ts !== 'undefined' && config.streamConfig.live.ts.m2ts.length > 0) {
                 this.streamTypes.push('M2TS');
                 this.streamConfig['M2TS'] = config.streamConfig.live.ts.m2ts;
             }
-            if (
-                typeof config.streamConfig.live.ts.webm !== 'undefined' &&
-                config.streamConfig.live.ts.webm.length > 0
-            ) {
+            if (typeof config.streamConfig.live.ts.webm !== 'undefined' && config.streamConfig.live.ts.webm.length > 0) {
                 this.streamTypes.push('WebM');
                 this.streamConfig['WebM'] = config.streamConfig.live.ts.webm;
             }
@@ -78,8 +72,7 @@ export default class OnAirSelectStreamState implements IOnAirSelectStreamState {
             const newSelectedStreamType = this.streamTypes.find(type => {
                 return type === savedType;
             });
-            this.selectedStreamType =
-                typeof newSelectedStreamType === 'undefined' ? this.streamTypes[0] : newSelectedStreamType;
+            this.selectedStreamType = typeof newSelectedStreamType === 'undefined' ? this.streamTypes[0] : newSelectedStreamType;
         }
 
         this.updateStreamConfig(true);
@@ -94,8 +87,7 @@ export default class OnAirSelectStreamState implements IOnAirSelectStreamState {
 
         // ストリームの選択情報を保存
         this.streamSelectSetting.tmp.type = this.selectedStreamType as string;
-        this.streamSelectSetting.tmp.mode =
-            typeof this.selectedStreamConfig === 'undefined' ? 0 : this.selectedStreamConfig;
+        this.streamSelectSetting.tmp.mode = typeof this.selectedStreamConfig === 'undefined' ? 0 : this.selectedStreamConfig;
         this.streamSelectSetting.save();
     }
 
@@ -122,10 +114,7 @@ export default class OnAirSelectStreamState implements IOnAirSelectStreamState {
             this.selectedStreamConfig = this.streamSelectSetting.getSavedValue().mode;
         }
 
-        if (
-            typeof this.selectedStreamConfig === 'undefined' ||
-            typeof this.streamConfigItems[this.selectedStreamConfig] === 'undefined'
-        ) {
+        if (typeof this.selectedStreamConfig === 'undefined' || typeof this.streamConfigItems[this.selectedStreamConfig] === 'undefined') {
             this.selectedStreamConfig = 0;
         }
     }
@@ -173,10 +162,7 @@ export default class OnAirSelectStreamState implements IOnAirSelectStreamState {
         }
 
         // URL Schemeの準備
-        let viewURL =
-            location.host +
-            Util.getSubDirectory() +
-            `/api/streams/live/${channel.id.toString(10)}/m2ts?mode=${this.selectedStreamConfig}`;
+        let viewURL = location.host + Util.getSubDirectory() + `/api/streams/live/${channel.id.toString(10)}/m2ts?mode=${this.selectedStreamConfig}`;
         if (urlScheme.match(/vlc-x-callback/)) {
             viewURL = encodeURIComponent(viewURL);
         }

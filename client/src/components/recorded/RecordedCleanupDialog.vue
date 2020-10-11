@@ -2,9 +2,7 @@
     <v-dialog v-if="isRemove === false" v-model="dialogModel" :persistent="isClearing" max-width="300" scrollable>
         <v-card v-if="isClearing === false">
             <v-card-text class="pa-4">
-                <div class="text--primary">
-                    データベースに登録されていないファイルおよびディレクトリを削除します。実行しますか?
-                </div>
+                <div class="text--primary">データベースに登録されていないファイルおよびディレクトリを削除します。実行しますか?</div>
             </v-card-text>
             <v-card-actions>
                 <v-spacer></v-spacer>

@@ -1,7 +1,4 @@
-import {
-    IGuideProgramDialogSettingStorageModel,
-    NONE_ENCODE_OPTION,
-} from '@/model/storage/guide/IGuideProgramDialogSettingStorageModel';
+import { IGuideProgramDialogSettingStorageModel, NONE_ENCODE_OPTION } from '@/model/storage/guide/IGuideProgramDialogSettingStorageModel';
 import { inject, injectable } from 'inversify';
 import * as apid from '../../../../../api';
 import { AudioComponentType, AudioSamplingRate, VideoComponentType } from '../../../lib/event';
@@ -9,11 +6,7 @@ import DateUtil from '../../../util/DateUtil';
 import GenreUtil from '../../../util/GenreUtil';
 import IReservesApiModel from '../../api/reserves/IReservesApiModel';
 import IServerConfigModel from '../../serverConfig/IServerConfigModel';
-import IGuideProgramDialogState, {
-    DisplayProgramData,
-    ProgramDialogOpenOption,
-    ProgramDialogReseveItem,
-} from './IGuideProgramDialogState';
+import IGuideProgramDialogState, { DisplayProgramData, ProgramDialogOpenOption, ProgramDialogReseveItem } from './IGuideProgramDialogState';
 
 @injectable()
 export default class GuideProgramDialogState implements IGuideProgramDialogState {
@@ -68,8 +61,7 @@ export default class GuideProgramDialogState implements IGuideProgramDialogState
         const duration = Math.floor((endAt - startAt) / 1000 / 60);
 
         const result: DisplayProgramData = {
-            channelName:
-                dialogData.channel === null ? dialogData.program.channelId.toString(10) : dialogData.channel.name,
+            channelName: dialogData.channel === null ? dialogData.program.channelId.toString(10) : dialogData.channel.name,
             programName: dialogData.program.name,
             time:
                 DateUtil.format(DateUtil.getJaDate(new Date(startAt)), 'MM/dd hh:mm ~ ') +

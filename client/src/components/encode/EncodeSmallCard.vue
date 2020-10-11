@@ -2,13 +2,7 @@
     <div>
         <v-card :ripple="false" v-bind:class="{ 'selected-color': item.isSelected === true }">
             <div class="d-flex my-1 recorded-small-card" v-on:click="clickItem">
-                <v-img
-                    aspect-ratio="1.7778"
-                    :src="item.display.topThumbnailPath"
-                    v-on:error="this.src = './img/noimg.png'"
-                    eager
-                    class="thumbnail"
-                ></v-img>
+                <v-img aspect-ratio="1.7778" :src="item.display.topThumbnailPath" v-on:error="this.src = './img/noimg.png'" eager class="thumbnail"></v-img>
                 <div class="content pa-2 my-auto">
                     <div class="d-flex align-center">
                         <div class="text mt-1 subtitle-2 font-weight-bold">{{ item.display.name }}</div>
@@ -19,9 +13,7 @@
                         </div>
                     </div>
                     <div class="text caption font-weight-light">{{ item.display.channelName }}</div>
-                    <div class="text caption font-weight-light">
-                        {{ item.display.time }} ({{ item.display.duration }} m)
-                    </div>
+                    <div class="text caption font-weight-light">{{ item.display.time }} ({{ item.display.duration }} m)</div>
                     <div class="text caption font-regular">{{ item.display.mode }}</div>
                 </div>
             </div>

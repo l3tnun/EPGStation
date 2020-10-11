@@ -2,13 +2,7 @@
     <v-card class="mx-auto" max-width="800">
         <div class="pa-4">
             <SearchOptionRow title="放送局※" :required="true">
-                <v-select
-                    label="channel"
-                    :items="uploadState.getChannelItems()"
-                    v-model="uploadState.programOption.channelId"
-                    clearable
-                    :menu-props="{ auto: true }"
-                ></v-select>
+                <v-select label="channel" :items="uploadState.getChannelItems()" v-model="uploadState.programOption.channelId" clearable :menu-props="{ auto: true }"></v-select>
             </SearchOptionRow>
             <SearchOptionRow title="ジャンル">
                 <div class="d-flex">
@@ -18,7 +12,7 @@
                         v-model="uploadState.programOption.genre1"
                         clearable
                         :menu-props="{ auto: true }"
-                        style="width: 50%;"
+                        style="width: 50%"
                     ></v-select>
                     <v-select
                         label="sub genre"
@@ -26,7 +20,7 @@
                         v-model="uploadState.programOption.subGenre1"
                         clearable
                         :menu-props="{ auto: true }"
-                        style="width: 50%;"
+                        style="width: 50%"
                     ></v-select>
                 </div>
             </SearchOptionRow>
@@ -73,13 +67,7 @@
                 </v-datetime-picker>
             </SearchOptionRow>
             <SearchOptionRow title="長さ※" :required="true">
-                <v-text-field
-                    v-model.number="uploadState.programOption.duration"
-                    min="1"
-                    label="長さ(分)"
-                    type="number"
-                    clearable
-                ></v-text-field>
+                <v-text-field v-model.number="uploadState.programOption.duration" min="1" label="長さ(分)" type="number" clearable></v-text-field>
             </SearchOptionRow>
             <SearchOptionRow title="番組名※" :required="true">
                 <v-text-field v-model="uploadState.programOption.name" label="name" clearable></v-text-field>
@@ -93,13 +81,7 @@
             <div v-for="video in uploadState.videoFileItems" v-bind:key="video.key">
                 <SearchOptionRow :title="`ビデオファイル${video.key + 1}`">
                     <v-text-field v-model="video.viewName" label="name" clearable class="view-name"></v-text-field>
-                    <v-select
-                        class="file-type"
-                        v-model="video.fileType"
-                        :items="uploadState.getFileTypeItems()"
-                        label="file type"
-                        :menu-props="{ auto: true }"
-                    ></v-select>
+                    <v-select class="file-type" v-model="video.fileType" :items="uploadState.getFileTypeItems()" label="file type" :menu-props="{ auto: true }"></v-select>
 
                     <v-select
                         class="directory"

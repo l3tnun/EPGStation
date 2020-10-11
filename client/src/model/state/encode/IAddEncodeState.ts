@@ -5,12 +5,7 @@ export default interface IAddEncodeState {
     encodeMode: string | null;
     parentDirectory: string | null;
     directory: string | null;
-    init(
-        recordedId: apid.RecordedId,
-        videoFiles: apid.VideoFile[],
-        encodeMode: string | null,
-        parentDirectory: string | null,
-    ): void;
+    init(recordedId: apid.RecordedId, videoFiles: apid.VideoFile[], encodeMode: string | null, parentDirectory: string | null): void;
     getVideoFiles(): {
         text: string;
         value: apid.VideoFileId;

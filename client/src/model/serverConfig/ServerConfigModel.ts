@@ -38,10 +38,7 @@ export default class ServerConfigModel implements IServerConfigModel {
                 delete this.config.streamConfig.live.ts.mp4;
 
                 // ライブ視聴で再生可能な設定が残っているか
-                if (
-                    typeof this.config.streamConfig.live.ts.m2ts === 'undefined' &&
-                    typeof this.config.streamConfig.live.ts.hls === 'undefined'
-                ) {
+                if (typeof this.config.streamConfig.live.ts.m2ts === 'undefined' && typeof this.config.streamConfig.live.ts.hls === 'undefined') {
                     delete this.config.streamConfig.live.ts;
                     this.config.isEnableTSLiveStream = false;
                 }
@@ -78,19 +75,13 @@ export default class ServerConfigModel implements IServerConfigModel {
             }
 
             // 録画済み番組のストリーミングの再生可能な設定が残っているか
-            if (
-                typeof this.config.streamConfig.recorded.ts === 'undefined' &&
-                typeof this.config.streamConfig.recorded.encoded === 'undefined'
-            ) {
+            if (typeof this.config.streamConfig.recorded.ts === 'undefined' && typeof this.config.streamConfig.recorded.encoded === 'undefined') {
                 delete this.config.streamConfig.recorded;
             }
         }
 
         // ストリーミング設定が残っているか
-        if (
-            typeof this.config.streamConfig.live === 'undefined' &&
-            typeof this.config.streamConfig.recorded === 'undefined'
-        ) {
+        if (typeof this.config.streamConfig.live === 'undefined' && typeof this.config.streamConfig.recorded === 'undefined') {
             delete this.config.streamConfig;
         }
     }

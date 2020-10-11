@@ -1,10 +1,6 @@
 <template>
     <div ref="wrap" class="recorded-wrap">
-        <div
-            v-if="cardNum > 1 && !!isTableMode === false"
-            v-bind:style="contentStyle"
-            class="recorded-content d-flex flex-wrap mx-auto"
-        >
+        <div v-if="cardNum > 1 && !!isTableMode === false" v-bind:style="contentStyle" class="recorded-content d-flex flex-wrap mx-auto">
             <div v-for="r in recorded" v-bind:key="r.recordedItem.id">
                 <RecordedLargeCard
                     :width="largeCardWidth"

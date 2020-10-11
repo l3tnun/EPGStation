@@ -9,14 +9,7 @@
             </template>
             <v-card max-width="200">
                 <div class="pa-2 d-flex flex-wrap">
-                    <v-btn
-                        v-for="video in videoFiles"
-                        v-bind:key="video.id"
-                        color="success"
-                        dark
-                        class="ma-1"
-                        v-on:click="play(video)"
-                    >
+                    <v-btn v-for="video in videoFiles" v-bind:key="video.id" color="success" dark class="ma-1" v-on:click="play(video)">
                         {{ video.name }}
                     </v-btn>
                 </div>

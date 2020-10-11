@@ -5,24 +5,12 @@
                 <div class="subtitle-1">{{ recordedItem.name }}</div>
                 <div class="body-1 mt-2">video files</div>
                 <div class="d-flex">
-                    <v-btn
-                        v-for="v in videoFiles"
-                        v-on:click="downloadVideo(v.video)"
-                        v-bind:key="v.video.id"
-                        color="primary"
-                        class="ma-1"
-                    >
+                    <v-btn v-for="v in videoFiles" v-on:click="downloadVideo(v.video)" v-bind:key="v.video.id" color="primary" class="ma-1">
                         {{ v.name }}
                     </v-btn>
                 </div>
                 <div class="body-1 mt-2">play lists</div>
-                <v-btn
-                    v-for="video in recordedItem.videoFiles"
-                    v-bind:key="video.id"
-                    v-on:click="downloadPlayList(video)"
-                    color="primary"
-                    class="ma-1"
-                >
+                <v-btn v-for="video in recordedItem.videoFiles" v-bind:key="video.id" v-on:click="downloadPlayList(video)" color="primary" class="ma-1">
                     {{ video.name }}
                 </v-btn>
             </div>

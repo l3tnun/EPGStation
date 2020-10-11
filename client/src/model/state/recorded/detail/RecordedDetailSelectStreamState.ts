@@ -2,10 +2,7 @@ import { IRecordedSelectStreamSettingStorageModel } from '@/model/storage/record
 import { inject, injectable } from 'inversify';
 import * as apid from '../../../../../../api';
 import IServerConfigModel from '../../../serverConfig/IServerConfigModel';
-import IRecordedDetailSelectStreamState, {
-    RecordedStreamType,
-    StreamConfigItem,
-} from './IRecordedDetailSelectStreamState';
+import IRecordedDetailSelectStreamState, { RecordedStreamType, StreamConfigItem } from './IRecordedDetailSelectStreamState';
 
 @injectable()
 export default class RecordedDetailSelectStreamState implements IRecordedDetailSelectStreamState {
@@ -41,11 +38,7 @@ export default class RecordedDetailSelectStreamState implements IRecordedDetailS
         this.streamConfig = {};
         const config = this.serverConfig.getConfig();
 
-        if (
-            config !== null &&
-            typeof config.streamConfig !== 'undefined' &&
-            typeof config.streamConfig.recorded !== 'undefined'
-        ) {
+        if (config !== null && typeof config.streamConfig !== 'undefined' && typeof config.streamConfig.recorded !== 'undefined') {
             // set streamTypeItems
             const ts = config.streamConfig.recorded.ts;
             const encoded = config.streamConfig.recorded.encoded;
@@ -67,11 +60,7 @@ export default class RecordedDetailSelectStreamState implements IRecordedDetailS
                     this.streamTypeItems.push('HLS');
                     this.streamConfig['HLS'] = ts.hls;
                 }
-            } else if (
-                videoFile.type === 'encoded' &&
-                config.isEnableEncodedRecordedStream === true &&
-                typeof encoded !== 'undefined'
-            ) {
+            } else if (videoFile.type === 'encoded' && config.isEnableEncodedRecordedStream === true && typeof encoded !== 'undefined') {
                 // webm
                 if (typeof encoded.webm !== 'undefined' && encoded.webm.length > 0) {
                     this.streamTypeItems.push('WebM');
@@ -99,8 +88,7 @@ export default class RecordedDetailSelectStreamState implements IRecordedDetailS
                 const newSelectedStreamType = this.streamTypeItems.find(type => {
                     return type === savedType;
                 });
-                this.selectedStreamType =
-                    typeof newSelectedStreamType === 'undefined' ? this.streamTypeItems[0] : newSelectedStreamType;
+                this.selectedStreamType = typeof newSelectedStreamType === 'undefined' ? this.streamTypeItems[0] : newSelectedStreamType;
             }
         }
 
@@ -115,8 +103,7 @@ export default class RecordedDetailSelectStreamState implements IRecordedDetailS
 
         // ストリームの選択情報を保存
         this.streamSelectSetting.tmp.type = this.selectedStreamType as string;
-        this.streamSelectSetting.tmp.mode =
-            typeof this.selectedStreamMode === 'undefined' ? 0 : this.selectedStreamMode;
+        this.streamSelectSetting.tmp.mode = typeof this.selectedStreamMode === 'undefined' ? 0 : this.selectedStreamMode;
         this.streamSelectSetting.save();
     }
 
@@ -135,10 +122,7 @@ export default class RecordedDetailSelectStreamState implements IRecordedDetailS
             this.selectedStreamMode = this.streamSelectSetting.getSavedValue().mode;
         }
 
-        if (
-            typeof this.selectedStreamMode === 'undefined' ||
-            typeof this.streamModeItems[this.selectedStreamMode] === 'undefined'
-        ) {
+        if (typeof this.selectedStreamMode === 'undefined' || typeof this.streamModeItems[this.selectedStreamMode] === 'undefined') {
             this.selectedStreamMode = 0;
         }
     }

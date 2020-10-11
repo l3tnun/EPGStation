@@ -43,17 +43,11 @@
                                 <div class="my-2 d-flex flex-column">
                                     <div class="d-flex">
                                         <div>
-                                            <v-list-item-title class="subtitle-1">
-                                                視聴 URL Scheme
-                                            </v-list-item-title>
+                                            <v-list-item-title class="subtitle-1">視聴 URL Scheme</v-list-item-title>
                                         </div>
                                         <v-spacer></v-spacer>
                                     </div>
-                                    <v-text-field
-                                        v-model="storageModel.tmp.onAirM2TSViewURLScheme"
-                                        label="URL"
-                                        clearable
-                                    ></v-text-field>
+                                    <v-text-field v-model="storageModel.tmp.onAirM2TSViewURLScheme" label="URL" clearable></v-text-field>
                                 </div>
                             </v-list-item-content>
                         </v-list-item>
@@ -68,55 +62,33 @@
                                         <v-list-item-title class="subtitle-1">描画設定</v-list-item-title>
                                     </div>
                                     <v-spacer></v-spacer>
-                                    <v-select
-                                        :items="guideModeItems"
-                                        v-model="storageModel.tmp.guideMode"
-                                        class="guide-mode"
-                                        :menu-props="{ auto: true }"
-                                    ></v-select>
+                                    <v-select :items="guideModeItems" v-model="storageModel.tmp.guideMode" class="guide-mode" :menu-props="{ auto: true }"></v-select>
                                 </div>
                                 <div class="my-2 d-flex flex-row align-center">
                                     <div>
                                         <v-list-item-title class="subtitle-1">表示時間</v-list-item-title>
                                     </div>
                                     <v-spacer></v-spacer>
-                                    <v-select
-                                        :items="guideLengthItems"
-                                        v-model="storageModel.tmp.guideLength"
-                                        class="guide-time"
-                                        :menu-props="{ auto: true }"
-                                    ></v-select>
+                                    <v-select :items="guideLengthItems" v-model="storageModel.tmp.guideLength" class="guide-time" :menu-props="{ auto: true }"></v-select>
                                 </div>
                                 <div class="my-2 d-flex flex-row align-center">
                                     <div>
                                         <v-list-item-title class="subtitle-1">放送波種別表示</v-list-item-title>
-                                        <v-list-item-subtitle>
-                                            ナビゲーションの表示を放送波別に分ける
-                                        </v-list-item-subtitle>
+                                        <v-list-item-subtitle>ナビゲーションの表示を放送波別に分ける</v-list-item-subtitle>
                                     </div>
                                     <v-spacer></v-spacer>
-                                    <v-switch
-                                        v-model="storageModel.tmp.isEnableDisplayForEachBroadcastWave"
-                                        value
-                                    ></v-switch>
+                                    <v-switch v-model="storageModel.tmp.isEnableDisplayForEachBroadcastWave" value></v-switch>
                                 </div>
                                 <div class="my-2 d-flex flex-row align-center">
                                     <div>
-                                        <v-list-item-title class="subtitle-1">
-                                            検索時に放送局情報を含むか
-                                        </v-list-item-title>
+                                        <v-list-item-title class="subtitle-1">検索時に放送局情報を含むか</v-list-item-title>
                                     </div>
                                     <v-spacer></v-spacer>
-                                    <v-switch
-                                        v-model="storageModel.tmp.isIncludeChannelIdWhenSearching"
-                                        value
-                                    ></v-switch>
+                                    <v-switch v-model="storageModel.tmp.isIncludeChannelIdWhenSearching" value></v-switch>
                                 </div>
                                 <div class="my-2 d-flex flex-row align-center">
                                     <div>
-                                        <v-list-item-title class="subtitle-1">
-                                            検索時にジャンル情報を含むか
-                                        </v-list-item-title>
+                                        <v-list-item-title class="subtitle-1">検索時にジャンル情報を含むか</v-list-item-title>
                                     </div>
                                     <v-spacer></v-spacer>
                                     <v-switch v-model="storageModel.tmp.isIncludeGenreWhenSearching" value></v-switch>
@@ -134,12 +106,7 @@
                                         <v-list-item-title class="subtitle-1">表示件数</v-list-item-title>
                                     </div>
                                     <v-spacer></v-spacer>
-                                    <v-select
-                                        :items="reservesLengthItems"
-                                        v-model="storageModel.tmp.reservesLength"
-                                        class="guide-time"
-                                        :menu-props="{ auto: true }"
-                                    ></v-select>
+                                    <v-select :items="reservesLengthItems" v-model="storageModel.tmp.reservesLength" class="guide-time" :menu-props="{ auto: true }"></v-select>
                                 </div>
                             </v-list-item-content>
                         </v-list-item>
@@ -153,12 +120,7 @@
                                         <v-list-item-title class="subtitle-1">表示件数</v-list-item-title>
                                     </div>
                                     <v-spacer></v-spacer>
-                                    <v-select
-                                        :items="recordingLengthItems"
-                                        v-model="storageModel.tmp.recordingLength"
-                                        class="guide-time"
-                                        :menu-props="{ auto: true }"
-                                    ></v-select>
+                                    <v-select :items="recordingLengthItems" v-model="storageModel.tmp.recordingLength" class="guide-time" :menu-props="{ auto: true }"></v-select>
                                 </div>
                             </v-list-item-content>
                         </v-list-item>
@@ -173,12 +135,7 @@
                                         <v-list-item-title class="subtitle-1">表示件数</v-list-item-title>
                                     </div>
                                     <v-spacer></v-spacer>
-                                    <v-select
-                                        :items="recordedLengthItems"
-                                        v-model="storageModel.tmp.recordedLength"
-                                        class="guide-time"
-                                        :menu-props="{ auto: true }"
-                                    ></v-select>
+                                    <v-select :items="recordedLengthItems" v-model="storageModel.tmp.recordedLength" class="guide-time" :menu-props="{ auto: true }"></v-select>
                                 </div>
                                 <div class="my-2 d-flex flex-row align-center">
                                     <div>
@@ -189,15 +146,10 @@
                                 </div>
                                 <div class="my-2 d-flex flex-row align-center">
                                     <div>
-                                        <v-list-item-title class="subtitle-1">
-                                            概要の代わりにドロップ情報を表示する
-                                        </v-list-item-title>
+                                        <v-list-item-title class="subtitle-1">概要の代わりにドロップ情報を表示する</v-list-item-title>
                                     </div>
                                     <v-spacer></v-spacer>
-                                    <v-switch
-                                        v-model="storageModel.tmp.isShowDropInfoInsteadOfDescription"
-                                        value
-                                    ></v-switch>
+                                    <v-switch v-model="storageModel.tmp.isShowDropInfoInsteadOfDescription" value></v-switch>
                                 </div>
                                 <div class="my-2 d-flex flex-row align-center">
                                     <div>
@@ -212,35 +164,19 @@
                                             <v-list-item-title class="subtitle-1">視聴 URL Scheme</v-list-item-title>
                                         </div>
                                         <v-spacer></v-spacer>
-                                        <v-switch
-                                            v-model="storageModel.tmp.shouldUseRecordedViewURLScheme"
-                                            value
-                                        ></v-switch>
+                                        <v-switch v-model="storageModel.tmp.shouldUseRecordedViewURLScheme" value></v-switch>
                                     </div>
-                                    <v-text-field
-                                        v-model="storageModel.tmp.recordedViewURLScheme"
-                                        label="URL"
-                                        clearable
-                                    ></v-text-field>
+                                    <v-text-field v-model="storageModel.tmp.recordedViewURLScheme" label="URL" clearable></v-text-field>
                                 </div>
                                 <div class="my-2 d-flex flex-column">
                                     <div class="d-flex">
                                         <div>
-                                            <v-list-item-title class="subtitle-1">
-                                                ダウンロード URL Scheme
-                                            </v-list-item-title>
+                                            <v-list-item-title class="subtitle-1">ダウンロード URL Scheme</v-list-item-title>
                                         </div>
                                         <v-spacer></v-spacer>
-                                        <v-switch
-                                            v-model="storageModel.tmp.shouldUseRecordedDownloadURLScheme"
-                                            value
-                                        ></v-switch>
+                                        <v-switch v-model="storageModel.tmp.shouldUseRecordedDownloadURLScheme" value></v-switch>
                                     </div>
-                                    <v-text-field
-                                        v-model="storageModel.tmp.recordedDownloadURLScheme"
-                                        label="URL"
-                                        clearable
-                                    ></v-text-field>
+                                    <v-text-field v-model="storageModel.tmp.recordedDownloadURLScheme" label="URL" clearable></v-text-field>
                                 </div>
                             </v-list-item-content>
                         </v-list-item>
@@ -255,51 +191,28 @@
                                         <v-list-item-title class="subtitle-1">最大表示件数</v-list-item-title>
                                     </div>
                                     <v-spacer></v-spacer>
-                                    <v-select
-                                        :items="searchLengthItems"
-                                        v-model="storageModel.tmp.searchLength"
-                                        class="guide-time"
-                                        :menu-props="{ auto: true }"
-                                    ></v-select>
+                                    <v-select :items="searchLengthItems" v-model="storageModel.tmp.searchLength" class="guide-time" :menu-props="{ auto: true }"></v-select>
                                 </div>
                                 <div class="my-2 d-flex flex-row align-center">
                                     <div>
-                                        <v-list-item-title class="subtitle-1">
-                                            自動スクロール
-                                        </v-list-item-title>
-                                        <v-list-item-subtitle>
-                                            ルール編集時に検索結果へ自動スクロールする
-                                        </v-list-item-subtitle>
+                                        <v-list-item-title class="subtitle-1">自動スクロール</v-list-item-title>
+                                        <v-list-item-subtitle>ルール編集時に検索結果へ自動スクロールする</v-list-item-subtitle>
                                     </div>
                                     <v-spacer></v-spacer>
-                                    <v-switch
-                                        v-model="storageModel.tmp.isEnableAutoScrollWhenEditingRule"
-                                        value
-                                    ></v-switch>
+                                    <v-switch v-model="storageModel.tmp.isEnableAutoScrollWhenEditingRule" value></v-switch>
                                 </div>
                                 <div class="my-2 d-flex flex-row align-center">
                                     <div>
-                                        <v-list-item-title class="subtitle-1">
-                                            自動サブディレクトリ設定
-                                        </v-list-item-title>
-                                        <v-list-item-subtitle>
-                                            ルール作成時にキーワードをサブディレクトリにコピーする
-                                        </v-list-item-subtitle>
+                                        <v-list-item-title class="subtitle-1">自動サブディレクトリ設定</v-list-item-title>
+                                        <v-list-item-subtitle>ルール作成時にキーワードをサブディレクトリにコピーする</v-list-item-subtitle>
                                     </div>
                                     <v-spacer></v-spacer>
-                                    <v-switch
-                                        v-model="storageModel.tmp.isEnableCopyKeywordToDirectory"
-                                        value
-                                    ></v-switch>
+                                    <v-switch v-model="storageModel.tmp.isEnableCopyKeywordToDirectory" value></v-switch>
                                 </div>
                                 <div class="my-2 d-flex flex-row align-center">
                                     <div>
-                                        <v-list-item-title class="subtitle-1">
-                                            録画済み番組を排除
-                                        </v-list-item-title>
-                                        <v-list-item-subtitle>
-                                            ルール作成時に録画済み番組を排除をチェックする
-                                        </v-list-item-subtitle>
+                                        <v-list-item-title class="subtitle-1">録画済み番組を排除</v-list-item-title>
+                                        <v-list-item-subtitle>ルール作成時に録画済み番組を排除をチェックする</v-list-item-subtitle>
                                     </div>
                                     <v-spacer></v-spacer>
                                     <v-switch v-model="storageModel.tmp.isCheckAvoidDuplicate" value></v-switch>
@@ -307,28 +220,18 @@
                                 <div class="my-2 d-flex flex-row align-center">
                                     <div>
                                         <v-list-item-title class="subtitle-1">エンコードの自動設定</v-list-item-title>
-                                        <v-list-item-subtitle>
-                                            ルール作成時にエンコード設定を自動で行う
-                                        </v-list-item-subtitle>
+                                        <v-list-item-subtitle>ルール作成時にエンコード設定を自動で行う</v-list-item-subtitle>
                                     </div>
                                     <v-spacer></v-spacer>
-                                    <v-switch
-                                        v-model="storageModel.tmp.isEnableEncodingSettingWhenCreateRule"
-                                        value
-                                    ></v-switch>
+                                    <v-switch v-model="storageModel.tmp.isEnableEncodingSettingWhenCreateRule" value></v-switch>
                                 </div>
                                 <div class="my-2 d-flex flex-row align-center">
                                     <div>
                                         <v-list-item-title class="subtitle-1">元ファイルの自動削除</v-list-item-title>
-                                        <v-list-item-subtitle>
-                                            ルール作成時に元ファイルの自動削除をチェックする
-                                        </v-list-item-subtitle>
+                                        <v-list-item-subtitle>ルール作成時に元ファイルの自動削除をチェックする</v-list-item-subtitle>
                                     </div>
                                     <v-spacer></v-spacer>
-                                    <v-switch
-                                        v-model="storageModel.tmp.isCheckDeleteOriginalAfterEncode"
-                                        value
-                                    ></v-switch>
+                                    <v-switch v-model="storageModel.tmp.isCheckDeleteOriginalAfterEncode" value></v-switch>
                                 </div>
                             </v-list-item-content>
                         </v-list-item>
@@ -343,12 +246,7 @@
                                         <v-list-item-title class="subtitle-1">表示件数</v-list-item-title>
                                     </div>
                                     <v-spacer></v-spacer>
-                                    <v-select
-                                        :items="rulesLengthItems"
-                                        v-model="storageModel.tmp.rulesLength"
-                                        class="guide-time"
-                                        :menu-props="{ auto: true }"
-                                    ></v-select>
+                                    <v-select :items="rulesLengthItems" v-model="storageModel.tmp.rulesLength" class="guide-time" :menu-props="{ auto: true }"></v-select>
                                 </div>
                             </v-list-item-content>
                         </v-list-item>
@@ -359,7 +257,7 @@
                             <v-btn text color="primary" v-on:click="save">保存</v-btn>
                         </v-card-actions>
                     </v-card>
-                    <div style="visibility: hidden;">dummy</div>
+                    <div style="visibility: hidden">dummy</div>
                 </v-container>
             </div>
         </transition>

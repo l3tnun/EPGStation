@@ -1,7 +1,7 @@
 <template>
     <div v-if="displayInfo !== null" class="watch-on-air-info-card pa-2">
         <v-card class="mx-auto" max-width="800">
-            <v-list-item three-line style="cursor: pointer;">
+            <v-list-item three-line style="cursor: pointer">
                 <v-list-item-content>
                     <div class="subtitle-1 font-weight-black">{{ displayInfo.channelName }}</div>
                     <div class="caption font-weight-light">{{ displayInfo.time }}</div>

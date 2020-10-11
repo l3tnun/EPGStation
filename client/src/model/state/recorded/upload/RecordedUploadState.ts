@@ -166,9 +166,7 @@ class RecordedUploadState implements IRecordedUploadState {
      * @return SelectorItem[]
      */
     public getSubGenreItems(): SelectorItem[] {
-        return typeof this.programOption.genre1 === 'undefined' ||
-            this.programOption.genre1 < 0 ||
-            this.programOption.genre1 > GenreUtil.GENRE_MAX_NUM
+        return typeof this.programOption.genre1 === 'undefined' || this.programOption.genre1 < 0 || this.programOption.genre1 > GenreUtil.GENRE_MAX_NUM
             ? []
             : this.subGemreItems[this.programOption.genre1];
     }

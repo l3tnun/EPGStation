@@ -385,10 +385,7 @@ export default class SearchState implements ISearchState {
             keyword: searchOption.keyword,
             channel: searchOption.channelIds[0],
             startTime: typeof start === 'undefined' ? null : this.convertNumToTimepickerStr(start),
-            endTime:
-                typeof start === 'undefined' || typeof range === 'undefined'
-                    ? null
-                    : this.convertNumToTimepickerStr(start + range),
+            endTime: typeof start === 'undefined' || typeof range === 'undefined' ? null : this.convertNumToTimepickerStr(start + range),
             week: this.convertRuleWeekToWeek(searchOption.times[0].week),
         };
     }
@@ -694,12 +691,9 @@ export default class SearchState implements ISearchState {
             return;
         }
 
-        this.searchOption.genres[genre].subGenreIndex[subGenre] = !this.searchOption.genres[genre].subGenreIndex[
-            subGenre
-        ];
+        this.searchOption.genres[genre].subGenreIndex[subGenre] = !this.searchOption.genres[genre].subGenreIndex[subGenre];
 
-        this.searchOption.genres[genre].isEnable =
-            this.getEnabledSubGenreCnt(genre) >= Object.keys(this.searchOption.genres[genre].subGenreIndex).length;
+        this.searchOption.genres[genre].isEnable = this.getEnabledSubGenreCnt(genre) >= Object.keys(this.searchOption.genres[genre].subGenreIndex).length;
     }
 
     /**
@@ -738,10 +732,7 @@ export default class SearchState implements ISearchState {
         }
 
         // エンコード設定
-        if (
-            this.settingModel.getSavedValue().isEnableEncodingSettingWhenCreateRule === true &&
-            this.encodeOption !== null
-        ) {
+        if (this.settingModel.getSavedValue().isEnableEncodingSettingWhenCreateRule === true && this.encodeOption !== null) {
             const items = this.getEncodeModeItems();
             if (items.length > 0) {
                 this.encodeOption.mode1 = items[0];
@@ -871,10 +862,7 @@ export default class SearchState implements ISearchState {
         this.searchResult = newResult.map(p => {
             const startAt = DateUtil.getJaDate(new Date(p.startAt));
             const endAt = DateUtil.getJaDate(new Date(p.endAt));
-            const channel = this.channelModel.findChannel(
-                p.channelId,
-                this.settingModel.getSavedValue().isHalfWidthDisplayed,
-            );
+            const channel = this.channelModel.findChannel(p.channelId, this.settingModel.getSavedValue().isHalfWidthDisplayed);
             const reserveType = typeof reserveIndex[p.id] === 'undefined' ? 'none' : reserveIndex[p.id].type;
 
             const result: SearchResultItem = {
@@ -1173,10 +1161,7 @@ export default class SearchState implements ISearchState {
     public getRuleReservesResult(): ReserveStateData[] {
         return this.reservesResult === null
             ? []
-            : this.reserveStateUtil.convertReserveItemsToStateDatas(
-                  this.reservesResult,
-                  this.settingModel.getSavedValue().isHalfWidthDisplayed,
-              );
+            : this.reserveStateUtil.convertReserveItemsToStateDatas(this.reservesResult, this.settingModel.getSavedValue().isHalfWidthDisplayed);
     }
 
     /**
@@ -1273,12 +1258,7 @@ export default class SearchState implements ISearchState {
      * @return apid.RuleSearchOption
      */
     private createTimeSpecificationRuleSearchOption(option: TimeReserveOption): apid.RuleSearchOption {
-        if (
-            option.keyword === null ||
-            typeof option.channel === 'undefined' ||
-            option.startTime === null ||
-            option.endTime === null
-        ) {
+        if (option.keyword === null || typeof option.channel === 'undefined' || option.startTime === null || option.endTime === null) {
             throw new Error('TimeReserveOptionIsInvalidValue');
         }
 

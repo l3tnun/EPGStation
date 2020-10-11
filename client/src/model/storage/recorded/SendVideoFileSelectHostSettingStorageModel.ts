@@ -1,10 +1,7 @@
 import { inject, injectable } from 'inversify';
 import AbstractStorageBaseModel from '../AbstractStorageBaseModel';
 import IStorageOperationModel from '../IStorageOperationModel';
-import {
-    ISendVideoFileSelectHostSettingStorageModel,
-    ISendVideoFileSelectHostSettingValue,
-} from './ISendVideoFileSelectHostSettingStorageModel';
+import { ISendVideoFileSelectHostSettingStorageModel, ISendVideoFileSelectHostSettingValue } from './ISendVideoFileSelectHostSettingStorageModel';
 
 @injectable()
 export default class SendVideoFileSelectHostSettingStorageModel

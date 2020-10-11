@@ -12,11 +12,7 @@
                     <div v-if="typeof dialogState.displayData.description !== 'undefined'" class="description my-2">
                         {{ dialogState.displayData.description }}
                     </div>
-                    <div
-                        v-if="typeof dialogState.displayData.extended !== 'undefined'"
-                        class="extended my-2"
-                        id="program-extended"
-                    >
+                    <div v-if="typeof dialogState.displayData.extended !== 'undefined'" class="extended my-2" id="program-extended">
                         {{ dialogState.displayData.extended }}
                     </div>
                     <div class="typs sub-text my-1">
@@ -36,17 +32,8 @@
                 <div class="pa-2 encode-action">
                     <div v-if="dialogState.reserve === null" class="overflow-x-hidden">
                         <div class="d-flex align-center justify-end">
-                            <v-checkbox
-                                class="mx-1 my-0 pr-2"
-                                label="元ファイル削除"
-                                v-model="dialogSetting.tmp.isDeleteOriginalAfterEncode"
-                            ></v-checkbox>
-                            <v-select
-                                :items="dialogState.getEncodeList()"
-                                v-model="dialogSetting.tmp.encode"
-                                :menu-props="{ auto: true }"
-                                class="encode-selector"
-                            ></v-select>
+                            <v-checkbox class="mx-1 my-0 pr-2" label="元ファイル削除" v-model="dialogSetting.tmp.isDeleteOriginalAfterEncode"></v-checkbox>
+                            <v-select :items="dialogState.getEncodeList()" v-model="dialogSetting.tmp.encode" :menu-props="{ auto: true }" class="encode-selector"></v-select>
                         </div>
                     </div>
                     <div>
@@ -54,58 +41,16 @@
                             <!-- 閉じる -->
                             <v-btn color="blue darken-1" text v-on:click="dialogState.isOpen = false">閉じる</v-btn>
                             <!-- 詳細予約 or 手動予約編集 or ルール編集 -->
-                            <v-btn
-                                v-if="dialogState.reserve === null"
-                                color="blue darken-1"
-                                text
-                                v-on:click="manualReserve"
-                            >
-                                詳細
-                            </v-btn>
-                            <v-btn
-                                v-else-if="typeof dialogState.reserve.ruleId !== 'undefined'"
-                                color="blue darken-1"
-                                text
-                                v-on:click="editRule"
-                            >
-                                ルール
-                            </v-btn>
+                            <v-btn v-if="dialogState.reserve === null" color="blue darken-1" text v-on:click="manualReserve">詳細</v-btn>
+                            <v-btn v-else-if="typeof dialogState.reserve.ruleId !== 'undefined'" color="blue darken-1" text v-on:click="editRule">ルール</v-btn>
                             <v-btn v-else color="blue darken-1" text v-on:click="editManualReserve">編集</v-btn>
                             <!-- 検索 -->
                             <v-btn color="blue darken-1" text v-on:click="search">検索</v-btn>
                             <!-- 予約 or 削除 or 除外 or 除外解除 or 重複解除 -->
-                            <v-btn
-                                v-if="dialogState.reserve === null"
-                                v-on:click="addReserve"
-                                color="blue darken-1"
-                                text
-                            >
-                                予約
-                            </v-btn>
-                            <v-btn
-                                v-else-if="typeof dialogState.reserve.ruleId === 'undefined'"
-                                v-on:click="cancelReserve"
-                                color="blue darken-1"
-                                text
-                            >
-                                削除
-                            </v-btn>
-                            <v-btn
-                                v-else-if="dialogState.reserve.type === 'skip'"
-                                v-on:click="removeReserveSkip"
-                                color="blue darken-1"
-                                text
-                            >
-                                除外解除
-                            </v-btn>
-                            <v-btn
-                                v-else-if="dialogState.reserve.type === 'overlap'"
-                                v-on:click="removeReserveOverlap"
-                                color="blue darken-1"
-                                text
-                            >
-                                重複解除
-                            </v-btn>
+                            <v-btn v-if="dialogState.reserve === null" v-on:click="addReserve" color="blue darken-1" text>予約</v-btn>
+                            <v-btn v-else-if="typeof dialogState.reserve.ruleId === 'undefined'" v-on:click="cancelReserve" color="blue darken-1" text>削除</v-btn>
+                            <v-btn v-else-if="dialogState.reserve.type === 'skip'" v-on:click="removeReserveSkip" color="blue darken-1" text>除外解除</v-btn>
+                            <v-btn v-else-if="dialogState.reserve.type === 'overlap'" v-on:click="removeReserveOverlap" color="blue darken-1" text>重複解除</v-btn>
                             <v-btn v-else color="blue darken-1" text v-on:click="cancelReserve">除外</v-btn>
                         </div>
                     </div>
@@ -129,9 +74,7 @@ import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
 export default class ProgramDialog extends Vue {
     public dialogState: IGuideProgramDialogState = container.get<IGuideProgramDialogState>('IGuideProgramDialogState');
     private setting: ISettingStorageModel = container.get<ISettingStorageModel>('ISettingStorageModel');
-    private dialogSetting = container.get<IGuideProgramDialogSettingStorageModel>(
-        'IGuideProgramDialogSettingStorageModel',
-    );
+    private dialogSetting = container.get<IGuideProgramDialogSettingStorageModel>('IGuideProgramDialogSettingStorageModel');
     public isRemove: boolean = false;
 
     private snackbarState = container.get<ISnackbarState>('ISnackbarState');

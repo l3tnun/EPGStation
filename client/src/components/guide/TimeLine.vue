@@ -12,10 +12,7 @@ import { Component, Vue, Watch } from 'vue-property-decorator';
 export default class TimeScale extends Vue {
     get style(): any {
         return {
-            top:
-                this.position <= 0
-                    ? '-100px'
-                    : `calc((${this.position} * (var(--timescale-height) / 60)) - ${this.position === 0 ? 0 : 1}px)`,
+            top: this.position <= 0 ? '-100px' : `calc((${this.position} * (var(--timescale-height) / 60)) - ${this.position === 0 ? 0 : 1}px)`,
         };
     }
 
@@ -57,17 +54,9 @@ export default class TimeScale extends Vue {
      * query から番組表開始時刻を取得する
      */
     private getStartAt(): number {
-        const timeStr =
-            typeof this.$route.query.time !== 'undefined'
-                ? (this.$route.query.time as string)
-                : DateUtil.format(DateUtil.getJaDate(new Date()), 'YYMMddhh');
+        const timeStr = typeof this.$route.query.time !== 'undefined' ? (this.$route.query.time as string) : DateUtil.format(DateUtil.getJaDate(new Date()), 'YYMMddhh');
 
-        return new Date(
-            `20${timeStr.substr(0, 2)}/${timeStr.substr(2, 2)}/${timeStr.substr(4, 2)} ${timeStr.substr(
-                6,
-                2,
-            )}:00:00 +0900`,
-        ).getTime();
+        return new Date(`20${timeStr.substr(0, 2)}/${timeStr.substr(2, 2)}/${timeStr.substr(4, 2)} ${timeStr.substr(6, 2)}:00:00 +0900`).getTime();
     }
 
     @Watch('$route', { immediate: true, deep: true })

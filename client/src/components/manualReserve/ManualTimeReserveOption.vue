@@ -3,12 +3,7 @@
         <v-card>
             <div class="pa-4">
                 <SearchOptionRow title="番組名">
-                    <v-text-field
-                        v-model="manualReserveState.timeSpecifiedOption.name"
-                        :disabled="isEditMode"
-                        label="sub directory"
-                        clearable
-                    ></v-text-field>
+                    <v-text-field v-model="manualReserveState.timeSpecifiedOption.name" :disabled="isEditMode" label="sub directory" clearable></v-text-field>
                 </SearchOptionRow>
                 <SearchOptionRow title="放送局">
                     <div class="d-flex flex-wrap">

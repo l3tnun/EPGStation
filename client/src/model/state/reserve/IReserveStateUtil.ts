@@ -23,9 +23,5 @@ export interface ReserveStateData {
 }
 
 export default interface IReserveStateUtil {
-    convertReserveItemsToStateDatas(
-        reserves: apid.ReserveItem[],
-        isHalfWidth: boolean,
-        isSelectedIndex?: SelectedIndex,
-    ): ReserveStateData[];
+    convertReserveItemsToStateDatas(reserves: apid.ReserveItem[], isHalfWidth: boolean, isSelectedIndex?: SelectedIndex): ReserveStateData[];
 }

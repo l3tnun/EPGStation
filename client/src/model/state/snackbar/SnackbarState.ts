@@ -31,10 +31,7 @@ class SnackbarState implements ISnackbarState {
      */
     public open(option: SnackBarTextOption): void {
         this.mainText = option.text;
-        this.displayOption.color =
-            typeof option.color === 'undefined' || option.color === 'normal'
-                ? SnackbarState.NROMAL_COLOR
-                : option.color;
+        this.displayOption.color = typeof option.color === 'undefined' || option.color === 'normal' ? SnackbarState.NROMAL_COLOR : option.color;
         this.displayOption.timeout = typeof option.timeout === 'undefined' ? 1500 : option.timeout;
         this.isOpen = true;
 

@@ -8,12 +8,7 @@
             </template>
             <v-card width="400">
                 <div class="recorded-search pa-4">
-                    <v-text-field
-                        v-model="searchState.keyword"
-                        label="キーワード"
-                        clearable
-                        v-on:keydown.enter="onSearch()"
-                    ></v-text-field>
+                    <v-text-field v-model="searchState.keyword" label="キーワード" clearable v-on:keydown.enter="onSearch()"></v-text-field>
                     <v-autocomplete
                         v-model="searchState.ruleId"
                         :loading="loading"
@@ -29,25 +24,9 @@
                         label="ルール"
                         class="pb-2"
                     ></v-autocomplete>
-                    <v-select
-                        v-model="searchState.channelId"
-                        :items="searchState.channelItems"
-                        label="放送局"
-                        clearable
-                        :menu-props="{ auto: true }"
-                    ></v-select>
-                    <v-select
-                        v-model="searchState.genre"
-                        :items="searchState.genreItems"
-                        label="ジャンル"
-                        clearable
-                        :menu-props="{ auto: true }"
-                    ></v-select>
-                    <v-checkbox
-                        v-model="searchState.hasOriginalFile"
-                        label="元ファイルを含む"
-                        class="mt-2"
-                    ></v-checkbox>
+                    <v-select v-model="searchState.channelId" :items="searchState.channelItems" label="放送局" clearable :menu-props="{ auto: true }"></v-select>
+                    <v-select v-model="searchState.genre" :items="searchState.genreItems" label="ジャンル" clearable :menu-props="{ auto: true }"></v-select>
+                    <v-checkbox v-model="searchState.hasOriginalFile" label="元ファイルを含む" class="mt-2"></v-checkbox>
                 </div>
                 <v-divider></v-divider>
                 <v-card-actions>
@@ -147,8 +126,7 @@ export default class RecordedSearchMenu extends Vue {
     }
 
     private setRuleId(): void {
-        const ruleId =
-            typeof this.$route.query.ruleId === 'undefined' ? null : parseInt(this.$route.query.ruleId as string, 10);
+        const ruleId = typeof this.$route.query.ruleId === 'undefined' ? null : parseInt(this.$route.query.ruleId as string, 10);
         this.searchState.ruleId = ruleId === null || isNaN(ruleId) === false ? ruleId : null;
     }
 
@@ -169,8 +147,7 @@ export default class RecordedSearchMenu extends Vue {
                 this.searchState.genre = parseInt(this.$route.query.genre as string, 10);
             }
             if (typeof this.$route.query.hasOriginalFile !== 'undefined') {
-                this.searchState.hasOriginalFile =
-                    (this.$route.query.hasOriginalFile as any) === true || this.$route.query.hasOriginalFile === 'true';
+                this.searchState.hasOriginalFile = (this.$route.query.hasOriginalFile as any) === true || this.$route.query.hasOriginalFile === 'true';
             }
         }
     }

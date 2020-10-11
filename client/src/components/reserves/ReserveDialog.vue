@@ -5,19 +5,14 @@
                 <v-card-text class="pa-4 pb-2">
                     <div class="subtitle-1 font-weight-black mb-1">{{ reserve.display.name }}</div>
                     <div class="sub-text">{{ reserve.display.channelName }}</div>
-                    <div class="sub-text" style="cursor: pointer;" v-on:click="gotoGuide">
-                        {{ reserve.display.day }}({{ reserve.display.dow }}) {{ reserve.display.startTime }} ~
-                        {{ reserve.display.endTime }} ({{ reserve.display.duration }}m)
+                    <div class="sub-text" style="cursor: pointer" v-on:click="gotoGuide">
+                        {{ reserve.display.day }}({{ reserve.display.dow }}) {{ reserve.display.startTime }} ~ {{ reserve.display.endTime }} ({{ reserve.display.duration }}m)
                     </div>
                     <div class="genres sub-text my-1">
                         <div v-for="genre in reserve.display.genres" v-bind:key="genre">{{ genre }}</div>
                     </div>
                     <div class="description my-2">{{ reserve.display.description }}</div>
-                    <div
-                        v-if="typeof reserve.display.extended !== 'undefined'"
-                        class="extended my-2"
-                        id="reserve-extended"
-                    >
+                    <div v-if="typeof reserve.display.extended !== 'undefined'" class="extended my-2" id="reserve-extended">
                         {{ reserve.display.extended }}
                     </div>
                 </v-card-text>

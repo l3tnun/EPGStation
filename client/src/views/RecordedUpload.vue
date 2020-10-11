@@ -7,7 +7,7 @@
                 <v-btn v-on:click="addVideoFile" dark fixed bottom fab right color="pink">
                     <v-icon>mdi-plus</v-icon>
                 </v-btn>
-                <div style="visibility: hidden;">dummy</div>
+                <div style="visibility: hidden">dummy</div>
             </v-container>
         </transition>
         <RecordedUploadingDialog :isOpen.sync="isUploading"></RecordedUploadingDialog>

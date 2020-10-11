@@ -75,11 +75,7 @@ namespace GenreUtil {
      * @return SubGenre str
      */
     export const getSubGenre = (lv1: apid.ProgramGenreLv1, lv2?: apid.ProgramGenreLv2): string | null => {
-        if (
-            typeof (Genre as any)[lv1] === 'undefined' ||
-            typeof lv2 === 'undefined' ||
-            typeof (SubGenre as any)[lv1][lv2] === 'undefined'
-        ) {
+        if (typeof (Genre as any)[lv1] === 'undefined' || typeof lv2 === 'undefined' || typeof (SubGenre as any)[lv1][lv2] === 'undefined') {
             return null;
         }
 

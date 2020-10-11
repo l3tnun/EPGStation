@@ -5,8 +5,7 @@
                 <div class="subtitle-1 font-weight-black">{{ program.display.name }}</div>
                 <div class="subtitle-2 font-weight-light">{{ program.display.channelName }}</div>
                 <div class="caption font-weight-light mb-2">
-                    {{ program.display.day }}({{ program.display.dow }}) {{ program.display.startTime }} ~
-                    {{ program.display.endTime }} ({{ program.display.duration }}分)
+                    {{ program.display.day }}({{ program.display.dow }}) {{ program.display.startTime }} ~ {{ program.display.endTime }} ({{ program.display.duration }}分)
                 </div>
                 <div class="body-2 grey--text text--darken-2">{{ program.display.description }}</div>
             </v-list-item-content>

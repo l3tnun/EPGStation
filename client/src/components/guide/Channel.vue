@@ -1,12 +1,7 @@
 <template>
     <div class="channels d-flex" v-bind:class="{ isDark: $vuetify.theme.dark === true }">
         <div class="item dummy">dummy</div>
-        <div
-            class="white--text item"
-            v-for="channel in channelItems"
-            v-bind:key="channel.index"
-            v-on:click="onClick(channel.item)"
-        >
+        <div class="white--text item" v-for="channel in channelItems" v-bind:key="channel.index" v-on:click="onClick(channel.item)">
             {{ channel.name }}
         </div>
         <div class="item scrollbar">dummy</div>
@@ -33,9 +28,7 @@ interface DisplayChannelItem {
 export default class Channel extends Vue {
     public guideState: IGuideState = container.get<IGuideState>('IGuideState');
 
-    private streamSelectDialog: IOnAirSelectStreamState = container.get<IOnAirSelectStreamState>(
-        'IOnAirSelectStreamState',
-    );
+    private streamSelectDialog: IOnAirSelectStreamState = container.get<IOnAirSelectStreamState>('IOnAirSelectStreamState');
 
     get channelItems(): DisplayChannelItem[] {
         if (typeof this.$route.query.channelId === 'undefined') {

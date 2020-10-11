@@ -4,8 +4,7 @@ import IStorageOperationModel from '../IStorageOperationModel';
 import { IGuideSizeSettingStorageModel, IGuideSizeSettingValue } from './IGuideSizeSettingStorageModel';
 
 @injectable()
-export default class GuideSizeSettingStorageModel extends AbstractStorageBaseModel<IGuideSizeSettingValue>
-    implements IGuideSizeSettingStorageModel {
+export default class GuideSizeSettingStorageModel extends AbstractStorageBaseModel<IGuideSizeSettingValue> implements IGuideSizeSettingStorageModel {
     constructor(@inject('IStorageOperationModel') op: IStorageOperationModel) {
         super(op);
     }

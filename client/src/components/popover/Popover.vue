@@ -1,11 +1,5 @@
 <template>
-    <div
-        v-if="isShow === true"
-        class="popover-wrap"
-        ref="popoverWrap"
-        v-bind:class="popoverWrapClass"
-        v-on:click="onClose"
-    >
+    <div v-if="isShow === true" class="popover-wrap" ref="popoverWrap" v-bind:class="popoverWrapClass" v-on:click="onClose">
         <div class="popover" ref="popover" v-bind:style="popoverStyle">
             <div class="title-wrap">
                 <slot name="title"></slot>
@@ -169,10 +163,7 @@ class Popover extends Vue {
         let y = 0;
 
         // top
-        x =
-            window.innerWidth - Popover.offset * 2 < contentWidth
-                ? window.innerWidth - Popover.offset * 2
-                : contentWidth;
+        x = window.innerWidth - Popover.offset * 2 < contentWidth ? window.innerWidth - Popover.offset * 2 : contentWidth;
         y = position.y - (contentHeight + Popover.offset) < 0 ? position.y - Popover.offset : contentHeight;
         let topArea = x * y;
         if (topArea < 0) {
@@ -191,10 +182,7 @@ class Popover extends Vue {
 
         // left
         x = position.x - (contentWidth + Popover.offset) < 0 ? position.x - Popover.offset : contentWidth;
-        y =
-            window.innerHeight - Popover.offset * 2 < contentHeight
-                ? window.innerHeight - Popover.offset * 2
-                : contentHeight;
+        y = window.innerHeight - Popover.offset * 2 < contentHeight ? window.innerHeight - Popover.offset * 2 : contentHeight;
         let leftArea = x * y;
         if (leftArea < 0) {
             leftArea = 0;
@@ -330,8 +318,7 @@ class Popover extends Vue {
         this.popoverStyle.left = left + 'px';
 
         // 矢印
-        const clickWidth =
-            position.x + position.width > window.innerWidth ? window.innerWidth - position.x : position.width;
+        const clickWidth = position.x + position.width > window.innerWidth ? window.innerWidth - position.x : position.width;
         let x = position.x + clickWidth / 2 - Popover.offset;
         if (left + contentWidth - Popover.offset * 2 < x) {
             x = left + contentWidth - Popover.offset * 2;
@@ -356,8 +343,7 @@ class Popover extends Vue {
 
         if (top + contentHeight > window.innerHeight - Popover.offset) {
             // 下がはみ出ているので content の高さを縮める
-            this.popoverStyle.maxHeight =
-                contentHeight - (top + contentHeight - (window.innerHeight - Popover.offset)) + 'px';
+            this.popoverStyle.maxHeight = contentHeight - (top + contentHeight - (window.innerHeight - Popover.offset)) + 'px';
             this.popoverStyle.height = this.popoverStyle.maxHeight;
         }
 
@@ -376,8 +362,7 @@ class Popover extends Vue {
         this.popoverStyle.left = left + 'px';
 
         // 矢印
-        const clickWidth =
-            position.x + position.width > window.innerWidth ? window.innerWidth - position.x : position.width;
+        const clickWidth = position.x + position.width > window.innerWidth ? window.innerWidth - position.x : position.width;
         let x = position.x + clickWidth / 2 - Popover.offset;
         if (left + contentWidth - Popover.offset * 2 < x) {
             x = left + contentWidth - Popover.offset * 2;
@@ -475,8 +460,7 @@ class Popover extends Vue {
 
         if (left + contentWidth > window.innerHeight - Popover.offset) {
             // 右側がはみ出ているので content の幅を縮める
-            this.popoverStyle.width =
-                contentWidth - (left + contentWidth - (window.innerHeight - Popover.offset)) + 'px';
+            this.popoverStyle.width = contentWidth - (left + contentWidth - (window.innerHeight - Popover.offset)) + 'px';
         }
 
         this.popoverStyle.top = top + 'px';

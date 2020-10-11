@@ -12,10 +12,7 @@ export default class RecordedStreamingVideoState implements IRecordedStreamingVi
     private duration: number = 0;
     private fetchDateTime: number = 0;
 
-    constructor(
-        @inject('IVideoApiModel') videoApiModel: IVideoApiModel,
-        @inject('IRecordedApiModel') recordedApiModel: IRecordedApiModel,
-    ) {
+    constructor(@inject('IVideoApiModel') videoApiModel: IVideoApiModel, @inject('IRecordedApiModel') recordedApiModel: IRecordedApiModel) {
         this.videoApiModel = videoApiModel;
         this.recordedApiModel = recordedApiModel;
     }

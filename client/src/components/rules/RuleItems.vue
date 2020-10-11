@@ -1,19 +1,7 @@
 <template>
     <div class="rules-wrap mb-1">
-        <RuleTableItems
-            v-if="elementWidth >= 780 - 24"
-            :items="rules"
-            :isEditMode.sync="isEditMode"
-            v-on:changeState="changeState"
-            v-on:selected="selected"
-        ></RuleTableItems>
-        <RuleListItens
-            v-else
-            :items="rules"
-            :isEditMode.sync="isEditMode"
-            v-on:changeState="changeState"
-            v-on:selected="selected"
-        ></RuleListItens>
+        <RuleTableItems v-if="elementWidth >= 780 - 24" :items="rules" :isEditMode.sync="isEditMode" v-on:changeState="changeState" v-on:selected="selected"></RuleTableItems>
+        <RuleListItens v-else :items="rules" :isEditMode.sync="isEditMode" v-on:changeState="changeState" v-on:selected="selected"></RuleListItens>
     </div>
 </template>
 

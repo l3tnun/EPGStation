@@ -1,22 +1,10 @@
 <template>
     <v-card class="mx-auto" max-width="800">
         <v-list>
-            <v-list-item
-                v-for="item in items"
-                v-bind:key="item.display.id"
-                v-bind:class="{ 'selected-color': item.isSelected === true }"
-            >
+            <v-list-item v-for="item in items" v-bind:key="item.display.id" v-bind:class="{ 'selected-color': item.isSelected === true }">
                 <v-list-item-content>
                     <div class="pl-2 d-flex flex-row flex-wrap align-center" v-on:click="selectItem(item)">
-                        <v-switch
-                            v-if="isEditMode === false"
-                            v-model="item.display.isEnable"
-                            hide-details
-                            dense
-                            value
-                            v-on:change="changeState(item)"
-                            class="toggle"
-                        ></v-switch>
+                        <v-switch v-if="isEditMode === false" v-model="item.display.isEnable" hide-details dense value v-on:change="changeState(item)" class="toggle"></v-switch>
                         <div class="keyword">
                             <!--
                             {{ item.keyword }}

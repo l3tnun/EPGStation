@@ -1,11 +1,7 @@
 <template>
     <v-content>
         <TitleBar
-            :title="
-                typeof $route.query.channelId === 'undefined'
-                    ? guideState.getTitle($route.query.type)
-                    : guideState.getSingleStationTitle()
-            "
+            :title="typeof $route.query.channelId === 'undefined' ? guideState.getTitle($route.query.type) : guideState.getSingleStationTitle()"
             :needsTitleClickEvent="true"
             v-on:click="onTitle"
         >
@@ -16,11 +12,7 @@
         </TitleBar>
         <div class="app-content guide" v-bind:class="{ 'is-dark': $vuetify.theme.dark === true }">
             <transition name="page">
-                <div
-                    v-if="guideState.getChannelsLength() > 0"
-                    class="overflow-hidden d-flex flex-column"
-                    style="height: 100%;"
-                >
+                <div v-if="guideState.getChannelsLength() > 0" class="overflow-hidden d-flex flex-column" style="height: 100%">
                     <Loading v-if="isLoading === true"></Loading>
                     <div class="channel-wrap overflow-hidden" ref="channels">
                         <Channel></Channel>
@@ -31,12 +23,7 @@
                         </div>
                         <GuideScroller class="program-wrap overflow-auto" v-on:scroll="onProgramScroll" ref="programs">
                             <template v-slot:content>
-                                <div
-                                    class="programs"
-                                    v-bind:class="{ 'is-dark': $vuetify.theme.dark === true }"
-                                    v-bind:style="programsStyle"
-                                    ref="content"
-                                >
+                                <div class="programs" v-bind:class="{ 'is-dark': $vuetify.theme.dark === true }" v-bind:style="programsStyle" ref="content">
                                     <TimeLine></TimeLine>
                                 </div>
                             </template>
@@ -208,10 +195,8 @@ export default class Guide extends Vue {
             this.isiOS === false ||
             (element.scrollLeft >= 0 &&
                 element.scrollTop >= 0 &&
-                element.scrollLeft <=
-                    this.programBaseWidth * this.guideState.getChannelsLength() - element.offsetWidth + scrollBarLeft &&
-                element.scrollTop <=
-                    this.programBaseHeight * this.guideState.getTimesLength() - element.offsetHeight + scrollBarTop)
+                element.scrollLeft <= this.programBaseWidth * this.guideState.getChannelsLength() - element.offsetWidth + scrollBarLeft &&
+                element.scrollTop <= this.programBaseHeight * this.guideState.getTimesLength() - element.offsetHeight + scrollBarTop)
         ) {
             this.scrollCallback();
         }

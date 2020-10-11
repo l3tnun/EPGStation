@@ -1,11 +1,5 @@
 <template>
-    <v-card
-        :ripple="false"
-        flat
-        tile
-        class="d-flex my-1 recorded-small-card"
-        v-bind:class="{ 'selected-color': item.isSelected === true }"
-    >
+    <v-card :ripple="false" flat tile class="d-flex my-1 recorded-small-card" v-bind:class="{ 'selected-color': item.isSelected === true }">
         <v-img
             v-if="!!noThumbnail === false"
             aspect-ratio="1.7778"
@@ -34,10 +28,7 @@
             </div>
 
             <div
-                v-else-if="
-                    typeof item.display.description === 'undefined' ||
-                    item.display.description.replace(/\s+/g, '').length === 0
-                "
+                v-else-if="typeof item.display.description === 'undefined' || item.display.description.replace(/\s+/g, '').length === 0"
                 class="text caption font-weight-light dummy"
             >
                 dummy

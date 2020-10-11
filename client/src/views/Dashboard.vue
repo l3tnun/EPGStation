@@ -16,13 +16,8 @@
                                         :noThumbnail="true"
                                     ></RecordedsmallCard>
                                 </div>
-                                <div
-                                    v-if="recordingState.getTotal() > recordingState.getRecorded().length"
-                                    class="my-2"
-                                >
-                                    <v-btn text block color="primary mx-auto" v-on:click="gotoNextPage('/recording')">
-                                        more
-                                    </v-btn>
+                                <div v-if="recordingState.getTotal() > recordingState.getRecorded().length" class="my-2">
+                                    <v-btn text block color="primary mx-auto" v-on:click="gotoNextPage('/recording')">more</v-btn>
                                 </div>
                             </div>
                         </template>
@@ -40,9 +35,7 @@
                                     ></RecordedsmallCard>
                                 </div>
                                 <div v-if="recordedState.getTotal() > recordedState.getRecorded().length" class="my-2">
-                                    <v-btn text block color="primary mx-auto" v-on:click="gotoNextPage('/recorded')">
-                                        more
-                                    </v-btn>
+                                    <v-btn text block color="primary mx-auto" v-on:click="gotoNextPage('/recorded')">more</v-btn>
                                 </div>
                             </div>
                         </template>
@@ -50,18 +43,9 @@
                     <DashboardItem ref="reserveItem" :title="reserveTitle" v-on:scroll="onReserveScroll">
                         <template v-slot:items>
                             <div>
-                                <ReservesCard
-                                    :reserves="reservesState.getReserves()"
-                                    :flat="true"
-                                    :isEditMode="false"
-                                ></ReservesCard>
-                                <div
-                                    v-if="reservesState.getTotal() > reservesState.getReserves().length"
-                                    class="px-2 pb-2"
-                                >
-                                    <v-btn text block color="primary mx-auto" v-on:click="gotoNextPage('/reserves')">
-                                        more
-                                    </v-btn>
+                                <ReservesCard :reserves="reservesState.getReserves()" :flat="true" :isEditMode="false"></ReservesCard>
+                                <div v-if="reservesState.getTotal() > reservesState.getReserves().length" class="px-2 pb-2">
+                                    <v-btn text block color="primary mx-auto" v-on:click="gotoNextPage('/reserves')">more</v-btn>
                                 </div>
                             </div>
                         </template>
@@ -370,8 +354,7 @@ export default class Main extends Vue {
             option.genre = parseInt(this.$route.query.genre as string, 10);
         }
         if (typeof this.$route.query.hasOriginalFile !== 'undefined') {
-            option.hasOriginalFile =
-                (this.$route.query.hasOriginalFile as any) === true || this.$route.query.hasOriginalFile === 'true';
+            option.hasOriginalFile = (this.$route.query.hasOriginalFile as any) === true || this.$route.query.hasOriginalFile === 'true';
         }
 
         return option;
