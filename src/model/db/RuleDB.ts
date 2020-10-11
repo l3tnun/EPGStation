@@ -192,7 +192,7 @@ export default class RuleDB implements IRuleDB {
             return this.convertDBRuleToRule(result);
         } else {
             const rule = this.convertDBRuleToRule(result);
-            delete rule.updateCnt;
+            delete (rule as any).updateCnt;
 
             return rule;
         }
@@ -493,7 +493,7 @@ export default class RuleDB implements IRuleDB {
             rules.map(rule => {
                 const result = this.convertDBRuleToRule(rule);
                 if (isNeedCnt === false) {
-                    delete result.updateCnt;
+                    delete (result as any).updateCnt;
                 }
 
                 return result;

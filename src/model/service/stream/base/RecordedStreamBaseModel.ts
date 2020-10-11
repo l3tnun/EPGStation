@@ -18,7 +18,8 @@ import { RecordedStreamInfo } from './IStreamBaseModel';
 import StreamBaseModel from './StreamBaseModel';
 
 @injectable()
-export default abstract class RecordedStreamBaseModel extends StreamBaseModel<RecordedStreamOption>
+export default abstract class RecordedStreamBaseModel
+    extends StreamBaseModel<RecordedStreamOption>
     implements IRecordedStreamBaseModel {
     private videoFileDB: IVideoFileDB;
     private recordedDB: IRecordedDB;

@@ -19,6 +19,15 @@
         "@typescript-eslint/no-namespace": "off",
         "no-constant-condition": "off",
         "no-useless-escape": "off",
-        "no-async-promise-executor": "off"
+        "no-async-promise-executor": "off",
+        "max-len": ["error", {
+            "code": 180,
+            "tabWidth": 4,
+            "ignoreComments": true,
+            "ignoreTrailingComments": true,
+            "ignoreUrls": true,
+            "ignoreStrings": true,
+            "ignoreRegExpLiterals": true
+        }]
     }
 }
