@@ -102,10 +102,10 @@ class Popover extends Vue {
                 return;
             }
 
-            const position = this.getPosition(<HTMLElement>this.$refs.popover, this.event);
+            const position = this.getPosition(this.$refs.popover as HTMLElement, this.event);
             this.setContent(position, this.event);
 
-            this.$nextTick(() => {
+            this.$nextTick((): void => {
                 // 要素のリサイズによる表示ずれを修正
                 if (this.event !== null) {
                     this.setContent(position, this.event);
@@ -115,7 +115,7 @@ class Popover extends Vue {
                 this.$set(this.popoverWrapClass, 'is-showing', true);
 
                 if (UaUtil.isiOS() === true) {
-                    const html = <HTMLElement>document.getElementsByTagName('HTML')[0];
+                    const html = document.getElementsByTagName('HTML')[0];
                     html.classList.add('freeze');
                 }
             });
@@ -138,7 +138,7 @@ class Popover extends Vue {
         this.$emit('update:isOpen', false);
 
         if (UaUtil.isiOS() === true) {
-            const html = <HTMLElement>document.getElementsByTagName('HTML')[0];
+            const html = document.getElementsByTagName('HTML')[0];
             html.classList.remove('freeze');
         }
 
@@ -238,26 +238,26 @@ class Popover extends Vue {
         let elmX = 0;
         let elmY = 0;
 
-        if ((<TouchEvent>event).targetTouches) {
+        if ((event as TouchEvent).targetTouches) {
             // is mobile
-            elmX = (<TouchEvent>event).targetTouches[0].pageX - (<HTMLElement>event.target).offsetLeft;
-            elmY = (<TouchEvent>event).targetTouches[0].pageY - (<HTMLElement>event.target).offsetTop;
+            elmX = (event as TouchEvent).targetTouches[0].pageX - (event.target as HTMLElement).offsetLeft;
+            elmY = (event as TouchEvent).targetTouches[0].pageY - (event.target as HTMLElement).offsetTop;
         } else if ((document.all || 'all' in document) && !UaUtil.isFirefox()) {
-            elmX = (<MouseEvent>event).offsetX;
-            elmY = (<MouseEvent>event).offsetY;
+            elmX = (event as MouseEvent).offsetX;
+            elmY = (event as MouseEvent).offsetY;
         } else {
-            elmX = (<any>event).layerX;
-            elmY = (<any>event).layerY;
+            elmX = (event as any).layerX;
+            elmY = (event as any).layerY;
         }
 
-        const rect = (<HTMLElement>event.target).getBoundingClientRect();
-        let x = (<MouseEvent>event).x - elmX;
+        const rect = (event.target as HTMLElement).getBoundingClientRect();
+        let x = (event as MouseEvent).x - elmX;
         if (x === 0) {
             // firefox で起こる
             x = rect.left;
         }
 
-        let y = (<MouseEvent>event).y - elmY;
+        let y = (event as MouseEvent).y - elmY;
         if (y === 0) {
             // firefox で起こる
             y = rect.top;
@@ -266,8 +266,8 @@ class Popover extends Vue {
         return {
             x: x,
             y: y,
-            width: (<HTMLElement>event.target).offsetWidth,
-            height: (<HTMLElement>event.target).offsetHeight,
+            width: (event.target as HTMLElement).offsetWidth,
+            height: (event.target as HTMLElement).offsetHeight,
         };
     }
 
@@ -279,16 +279,16 @@ class Popover extends Vue {
     private setContent(position: DisplayPosition, event: Event): void {
         switch (position) {
             case 'top':
-                this.setContentTop(event, <HTMLElement>this.$refs.popover);
+                this.setContentTop(event, this.$refs.popover as HTMLElement);
                 break;
             case 'bottom':
-                this.setContentBottom(event, <HTMLElement>this.$refs.popover);
+                this.setContentBottom(event, this.$refs.popover as HTMLElement);
                 break;
             case 'left':
-                this.setContentLeft(event, <HTMLElement>this.$refs.popover);
+                this.setContentLeft(event, this.$refs.popover as HTMLElement);
                 break;
             case 'right':
-                this.setContentRight(event, <HTMLElement>this.$refs.popover);
+                this.setContentRight(event, this.$refs.popover as HTMLElement);
                 break;
         }
 

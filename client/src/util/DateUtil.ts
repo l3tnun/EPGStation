@@ -37,7 +37,7 @@ namespace DateUtil {
      */
     export const format = (date: Date, formatStr: string): string => {
         for (const key in fmt) {
-            formatStr = formatStr.replace(key, (<any>fmt)[key](date));
+            formatStr = formatStr.replace(key, (fmt as any)[key](date));
         }
 
         return formatStr;

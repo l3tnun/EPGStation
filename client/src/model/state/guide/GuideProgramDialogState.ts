@@ -1,4 +1,5 @@
-import IGuideProgramDialogSettingStorageModel, {
+import {
+    IGuideProgramDialogSettingStorageModel,
     NONE_ENCODE_OPTION,
 } from '@/model/storage/guide/IGuideProgramDialogSettingStorageModel';
 import { inject, injectable } from 'inversify';
@@ -153,7 +154,7 @@ export default class GuideProgramDialogState implements IGuideProgramDialogState
      * @return videoComponentType | null
      */
     private getVideoType(videoComponentType: number): string | null {
-        const str = (<any>VideoComponentType)[videoComponentType];
+        const str = (VideoComponentType as any)[videoComponentType];
 
         return typeof str === 'undefined' ? null : str;
     }
@@ -164,7 +165,7 @@ export default class GuideProgramDialogState implements IGuideProgramDialogState
      * @return audio type | null
      */
     private getAudioMode(audioComponentType: number): string | null {
-        const str = (<any>AudioComponentType)[audioComponentType];
+        const str = (AudioComponentType as any)[audioComponentType];
 
         return typeof str === 'undefined' ? null : str;
     }

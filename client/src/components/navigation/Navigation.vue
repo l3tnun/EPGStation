@@ -41,7 +41,7 @@
 import container from '@/model/ModelContainer';
 import IServerConfigModel from '@/model/serverConfig/IServerConfigModel';
 import INavigationState from '@/model/state/navigation/INavigationState';
-import ISettingStorageModel, { ISettingValue } from '@/model/storage/setting/ISettingStorageModel';
+import { ISettingStorageModel, ISettingValue } from '@/model/storage/setting/ISettingStorageModel';
 import { Component, Vue, Watch } from 'vue-property-decorator';
 import { Location } from 'vue-router';
 import Util from '../../util/Util';

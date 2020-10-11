@@ -45,7 +45,7 @@
 import container from '@/model/ModelContainer';
 import IServerConfigModel from '@/model/serverConfig/IServerConfigModel';
 import IGuideState from '@/model/state/guide/IGuideState';
-import ISettingStorageModel, { ISettingValue } from '@/model/storage/setting/ISettingStorageModel';
+import { ISettingStorageModel, ISettingValue } from '@/model/storage/setting/ISettingStorageModel';
 import DateUtil from '@/util/DateUtil';
 import Util from '@/util/Util';
 import { Component, Vue, Watch } from 'vue-property-decorator';

@@ -36,7 +36,7 @@
 import container from '@/model/ModelContainer';
 import ISendVideoFileToKodiState from '@/model/state/recorded/detail/ISendVideoFileToKodiState';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
-import ISendVideoFileSelectHostSettingStorageModel from '@/model/storage/recorded/ISendVideoFileSelectHostSettingStorageModel';
+import { ISendVideoFileSelectHostSettingStorageModel } from '@/model/storage/recorded/ISendVideoFileSelectHostSettingStorageModel';
 import Util from '@/util/Util';
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
 import * as apid from '../../../../../api';

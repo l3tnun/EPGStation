@@ -15,4 +15,4 @@ export interface IGuideSizeSettingValue {
     mobile: SizeValue;
 }
 
-export default interface IGuideSizeSettingStorageModel extends IStorageBaseModel<IGuideSizeSettingValue> {}
+export type IGuideSizeSettingStorageModel = IStorageBaseModel<IGuideSizeSettingValue>;

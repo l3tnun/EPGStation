@@ -1,11 +1,12 @@
-import IGuideGenreSettingStorageModel, {
+import {
+    IGuideGenreSettingStorageModel,
     IGuideGenreSettingValue,
 } from '@/model/storage/guide/IGuideGenreSettingStorageModel';
 import { inject, injectable } from 'inversify';
 import * as apid from '../../../../../api';
 import DateUtil from '../../../util/DateUtil';
 import IScheduleApiModel from '../../api/schedule/IScheduleApiModel';
-import ISettingStorageModel from '../../storage/setting/ISettingStorageModel';
+import { ISettingStorageModel } from '../../storage/setting/ISettingStorageModel';
 import IGuideProgramDialogState, { ProgramDialogOpenOption } from './IGuideProgramDialogState';
 import IGuideReserveUtil, { ReserveStateItemIndex } from './IGuideReserveUtil';
 import IGuideState, { DisplayRange, FetchGuideOption, ProgramDomItem } from './IGuideState';

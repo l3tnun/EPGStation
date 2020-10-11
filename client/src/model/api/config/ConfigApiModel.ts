@@ -14,6 +14,6 @@ export default class ConfigApiModel implements IConfigApiModel {
     public async getConfig(): Promise<apid.Config> {
         const result = await this.repository.get('/config');
 
-        return <any>result.data;
+        return result.data;
     }
 }

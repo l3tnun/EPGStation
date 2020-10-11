@@ -24,7 +24,7 @@ export default class ScheduleApiModel implements IScheduleApiModel {
             },
         });
 
-        return <any>result.data;
+        return result.data;
     }
 
     /**
@@ -37,7 +37,7 @@ export default class ScheduleApiModel implements IScheduleApiModel {
             params: option,
         });
 
-        return <any>result.data;
+        return result.data;
     }
 
     /**
@@ -54,7 +54,7 @@ export default class ScheduleApiModel implements IScheduleApiModel {
             },
         });
 
-        return <any>result.data;
+        return result.data;
     }
 
     /**
@@ -65,7 +65,7 @@ export default class ScheduleApiModel implements IScheduleApiModel {
     public async getScheduleSearch(option: apid.ScheduleSearchOption): Promise<apid.ScheduleProgramItem[]> {
         const result = await this.repository.post('/schedules/search', option);
 
-        return <any>result.data;
+        return result.data;
     }
 
     /**
@@ -78,6 +78,6 @@ export default class ScheduleApiModel implements IScheduleApiModel {
             params: option,
         });
 
-        return <any>result.data;
+        return result.data;
     }
 }

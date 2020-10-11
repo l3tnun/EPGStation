@@ -88,7 +88,7 @@ export default class SearchGenreOption extends Vue {
         if (typeof this.$refs.card === 'undefined') {
             return;
         }
-        (<Vue>this.$refs.card).$el.scrollTop = 0;
+        (this.$refs.card as any).$el.scrollTop = 0;
     }
 
     /**

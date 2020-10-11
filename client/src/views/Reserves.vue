@@ -47,7 +47,7 @@ import ISocketIOModel from '@/model/socketio/ISocketIOModel';
 import IScrollPositionState from '@/model/state/IScrollPositionState';
 import IReservesState from '@/model/state/reserve/IReservesState';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
-import ISettingStorageModel, { ISettingValue } from '@/model/storage/setting/ISettingStorageModel';
+import { ISettingStorageModel, ISettingValue } from '@/model/storage/setting/ISettingStorageModel';
 import Util from '@/util/Util';
 import { Component, Vue, Watch } from 'vue-property-decorator';
 import { Route } from 'vue-router';
@@ -76,7 +76,7 @@ export default class Reserves extends Vue {
     private scrollState: IScrollPositionState = container.get<IScrollPositionState>('IScrollPositionState');
     private snackbarState: ISnackbarState = container.get<ISnackbarState>('ISnackbarState');
     private socketIoModel: ISocketIOModel = container.get<ISocketIOModel>('ISocketIOModel');
-    private onUpdateStatusCallback = (async () => {
+    private onUpdateStatusCallback = (async (): Promise<void> => {
         await this.reservesState.fetchData(this.createFetchDataOption());
     }).bind(this);
 

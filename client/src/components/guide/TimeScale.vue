@@ -5,7 +5,9 @@
             v-bind:class="getItemClass(time)"
             v-for="time in guideState.getTimes()"
             v-bind:key="time"
-        >{{ time }}</div>
+        >
+            {{ time }}
+        </div>
         <div class="item dummy">dummy</div>
     </div>
 </template>

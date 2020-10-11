@@ -5,5 +5,4 @@ export interface IOnAirSelectStreamSettingValue {
     mode: number;
 }
 
-export default interface IOnAirSelectStreamSettingStorageModel
-    extends IStorageBaseModel<IOnAirSelectStreamSettingValue> {}
+export type IOnAirSelectStreamSettingStorageModel = IStorageBaseModel<IOnAirSelectStreamSettingValue>;

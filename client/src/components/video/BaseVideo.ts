@@ -6,7 +6,7 @@ export default abstract class BaseVide extends Vue {
     protected lastSubtitleState: TextTrackMode = 'disabled';
 
     public mounted(): void {
-        this.video = <HTMLVideoElement>this.$refs.video;
+        this.video = this.$refs.video as HTMLVideoElement;
 
         // 時刻更新
         this.video.addEventListener('timeupdate', this.onTimeupdate.bind(this));
@@ -270,17 +270,17 @@ export default abstract class BaseVide extends Vue {
         } else if (typeof this.video.requestFullscreen === 'function') {
             this.video.requestFullscreen();
             return true;
-        } else if ((<any>this.video).mozRequestFullScreen) {
-            (<any>this.video).mozRequestFullScreen();
+        } else if ((this.video as any).mozRequestFullScreen) {
+            (this.video as any).mozRequestFullScreen();
             return true;
-        } else if ((<any>this.video).webkitRequestFullScreen) {
-            (<any>this.video).webkitRequestFullScreen();
+        } else if ((this.video as any).webkitRequestFullScreen) {
+            (this.video as any).webkitRequestFullScreen();
             return true;
-        } else if ((<any>this.video).webkitEnterFullscreen) {
-            (<any>this.video).webkitEnterFullscreen();
+        } else if ((this.video as any).webkitEnterFullscreen) {
+            (this.video as any).webkitEnterFullscreen();
             return true;
-        } else if ((<any>this.video).msRequestFullscreen) {
-            (<any>this.video).msRequestFullscreen();
+        } else if ((this.video as any).msRequestFullscreen) {
+            (this.video as any).msRequestFullscreen();
             return true;
         }
         /* tslint:enable:newline-before-return */
@@ -292,15 +292,15 @@ export default abstract class BaseVide extends Vue {
      * pip 切り替え
      */
     public requestPictureInPicture(): void {
-        if (this.video === null || typeof (<any>this.video).requestPictureInPicture !== 'function') {
+        if (this.video === null || typeof (this.video as any).requestPictureInPicture !== 'function') {
             return;
         }
 
         try {
-            if (!(<any>document).pictureInPictureElement) {
-                (<any>this.$refs.video).requestPictureInPicture();
+            if (!(document as any).pictureInPictureElement) {
+                (this.$refs.video as any).requestPictureInPicture();
             } else {
-                (<any>this.video).requestPictureInPicture();
+                (this.video as any).requestPictureInPicture();
             }
         } catch (err) {
             console.error(err);

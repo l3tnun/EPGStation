@@ -94,28 +94,28 @@ import SnackbarState from './state/snackbar/SnackbarState';
 import IStorageState from './state/storage/IStorageState';
 import StorageState from './state/storage/StorageState';
 import AddEncodeSettingStorageModel from './storage/encode/AddEncodeSettingStorageModel';
-import IAddEncodeSettingStorageModel from './storage/encode/IAddEncodeSettingStorageModel';
+import { IAddEncodeSettingStorageModel } from './storage/encode/IAddEncodeSettingStorageModel';
 import GuideGenreSettingStorageModel from './storage/guide/GuideGenreSettingStorageModel';
 import GuideProgramDialogSettingStorageModel from './storage/guide/GuideProgramDialogSettingStorageModel';
 import GuideSizeSettingStorageModel from './storage/guide/GuideSizeSettingStorageModel';
-import IGuideGenreSettingStorageModel from './storage/guide/IGuideGenreSettingStorageModel';
-import IGuideProgramDialogSettingStorageModel from './storage/guide/IGuideProgramDialogSettingStorageModel';
-import IGuideSizeSettingStorageModel from './storage/guide/IGuideSizeSettingStorageModel';
+import { IGuideGenreSettingStorageModel } from './storage/guide/IGuideGenreSettingStorageModel';
+import { IGuideProgramDialogSettingStorageModel } from './storage/guide/IGuideProgramDialogSettingStorageModel';
+import { IGuideSizeSettingStorageModel } from './storage/guide/IGuideSizeSettingStorageModel';
 import IStorageOperationModel from './storage/IStorageOperationModel';
-import IOnAirSelectStreamSettingStorageModel from './storage/onair/IOnAirSelectStreamSettingStorageModel';
+import { IOnAirSelectStreamSettingStorageModel } from './storage/onair/IOnAirSelectStreamSettingStorageModel';
 import OnAirSelectStreamSettingStorageModel from './storage/onair/OnAirSelectStreamSettingStorageModel';
-import IRecordedSelectStreamSettingStorageModel from './storage/recorded/IRecordedSelectStreamSettingStorageModel';
-import ISendVideoFileSelectHostSettingStorageModel from './storage/recorded/ISendVideoFileSelectHostSettingStorageModel';
+import { IRecordedSelectStreamSettingStorageModel } from './storage/recorded/IRecordedSelectStreamSettingStorageModel';
+import { ISendVideoFileSelectHostSettingStorageModel } from './storage/recorded/ISendVideoFileSelectHostSettingStorageModel';
 import RecordedSelectStreamSettingStorageModel from './storage/recorded/RecordedSelectStreamSettingStorageModel';
 import SendVideoFileSelectHostSettingStorageModel from './storage/recorded/SendVideoFileSelectHostSettingStorageModel';
-import ISettingStorageModel from './storage/setting/ISettingStorageModel';
+import { ISettingStorageModel } from './storage/setting/ISettingStorageModel';
 import SettingStorageModel from './storage/setting/SettingStorageModel';
 import StorageOperationModel from './storage/StorageOperationModel';
 
 /**
  * container に各 Model を登録する
  */
-export default (container: Container) => {
+export default (container: Container): void => {
     container.bind<IRepositoryModel>('IRepositoryModel').to(RepositoryModel).inSingletonScope();
 
     container.bind<IConfigApiModel>('IConfigApiModel').to(ConfigApiModel).inSingletonScope();

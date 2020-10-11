@@ -35,7 +35,7 @@
 import IChannelModel from '@/model/channels/IChannelModel';
 import container from '@/model/ModelContainer';
 import { ReserveStateData } from '@/model/state/reserve/IReserveStateUtil';
-import ISettingStorageModel from '@/model/storage/setting/ISettingStorageModel';
+import { ISettingStorageModel } from '@/model/storage/setting/ISettingStorageModel';
 import DateUtil from '@/util/DateUtil';
 import Util from '@/util/Util';
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator';

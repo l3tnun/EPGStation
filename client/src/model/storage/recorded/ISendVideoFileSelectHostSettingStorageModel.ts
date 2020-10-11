@@ -4,5 +4,4 @@ export interface ISendVideoFileSelectHostSettingValue {
     hostName: string | null;
 }
 
-export default interface ISendVideoFileSelectHostSettingStorageModel
-    extends IStorageBaseModel<ISendVideoFileSelectHostSettingValue> {}
+export type ISendVideoFileSelectHostSettingStorageModel = IStorageBaseModel<ISendVideoFileSelectHostSettingValue>;

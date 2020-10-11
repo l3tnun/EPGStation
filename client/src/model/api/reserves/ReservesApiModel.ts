@@ -19,7 +19,7 @@ export default class ReservesApiModel implements IReservesApiModel {
     public async add(option: apid.ManualReserveOption): Promise<apid.ReserveId> {
         const result = await this.repository.post('/reserves', option);
 
-        return <any>result.data;
+        return result.data;
     }
 
     /**
@@ -31,7 +31,7 @@ export default class ReservesApiModel implements IReservesApiModel {
     public async edit(reserveId: apid.ReserveId, option: apid.EditManualReserveOption): Promise<void> {
         const result = await this.repository.put(`/reserves/${reserveId}`, option);
 
-        return <any>result.data;
+        return result.data;
     }
 
     /**
@@ -47,7 +47,7 @@ export default class ReservesApiModel implements IReservesApiModel {
             },
         });
 
-        return <any>result.data;
+        return result.data;
     }
 
     /**
@@ -60,7 +60,7 @@ export default class ReservesApiModel implements IReservesApiModel {
             params: option,
         });
 
-        return <any>result.data;
+        return result.data;
     }
 
     /**
@@ -73,7 +73,7 @@ export default class ReservesApiModel implements IReservesApiModel {
             params: option,
         });
 
-        return <any>result.data;
+        return result.data;
     }
 
     /**

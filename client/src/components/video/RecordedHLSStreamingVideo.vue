@@ -34,7 +34,7 @@ export default class RecordedHLSStreamingVideo extends BaseVideo {
     protected videoState = container.get<IRecordedHLSStreamingVideoState>('IRecordedHLSStreamingVideoState');
     private snackbarState: ISnackbarState = container.get<ISnackbarState>('ISnackbarState');
     private socketIoModel: ISocketIOModel = container.get<ISocketIOModel>('ISocketIOModel');
-    private onUpdateStatusCallback = (async () => {
+    private onUpdateStatusCallback = (async (): Promise<void> => {
         await this.updateVideoInfo();
     }).bind(this);
     private hls: Hls | null = null;

@@ -111,7 +111,7 @@ import IScrollPositionState from '@/model/state/IScrollPositionState';
 import IRecordedDetailSelectStreamState from '@/model/state/recorded/detail/IRecordedDetailSelectStreamState';
 import { RecordedDisplayData } from '@/model/state/recorded/IRecordedUtil';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
-import ISettingStorageModel, { ISettingValue } from '@/model/storage/setting/ISettingStorageModel';
+import { ISettingStorageModel, ISettingValue } from '@/model/storage/setting/ISettingStorageModel';
 import Util from '@/util/Util';
 import { Component, Vue, Watch } from 'vue-property-decorator';
 import * as apid from '../../../api';
@@ -142,7 +142,7 @@ export default class RecordedDetail extends Vue {
     private scrollState: IScrollPositionState = container.get<IScrollPositionState>('IScrollPositionState');
     private snackbarState: ISnackbarState = container.get<ISnackbarState>('ISnackbarState');
     private socketIoModel: ISocketIOModel = container.get<ISocketIOModel>('ISocketIOModel');
-    private onUpdateStatusCallback = (async () => {
+    private onUpdateStatusCallback = (async (): Promise<void> => {
         await this.fetchData();
     }).bind(this);
     public streamSelectDialogState: IRecordedDetailSelectStreamState = container.get<IRecordedDetailSelectStreamState>(
@@ -263,10 +263,10 @@ export default class RecordedDetail extends Vue {
                 this.isHideExtend = false;
                 this.$nextTick(() => {
                     if (typeof this.$refs.extend !== 'undefined') {
-                        let str = (<Element>this.$refs.extend).innerHTML;
+                        let str = (this.$refs.extend as Element).innerHTML;
                         str = str.replace(/(http:\/\/[\x21-\x7e]+)/gi, "<a href='$1' target='_blank'>$1</a>");
                         str = str.replace(/(https:\/\/[\x21-\x7e]+)/gi, "<a href='$1' target='_blank'>$1</a>");
-                        (<Element>this.$refs.extend).innerHTML = str;
+                        (this.$refs.extend as Element).innerHTML = str;
                     }
                 });
             });

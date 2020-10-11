@@ -21,7 +21,7 @@ export default class RecordedApiModel implements IRecordedApiModel {
             params: option,
         });
 
-        return <any>result.data;
+        return result.data;
     }
 
     /**
@@ -37,7 +37,7 @@ export default class RecordedApiModel implements IRecordedApiModel {
             },
         });
 
-        return <any>result.data;
+        return result.data;
     }
 
     /**
@@ -47,7 +47,7 @@ export default class RecordedApiModel implements IRecordedApiModel {
     public async getSearchOptionList(): Promise<apid.RecordedSearchOptions> {
         const result = await this.repository.get('/recorded/options');
 
-        return <any>result.data;
+        return result.data;
     }
 
     /**
@@ -94,7 +94,7 @@ export default class RecordedApiModel implements IRecordedApiModel {
     public async createNewRecorded(option: apid.CreateNewRecordedOption): Promise<apid.RecordedId> {
         const result = await this.repository.post('recorded', option);
 
-        return <any>result.data.recordedId;
+        return result.data.recordedId;
     }
 
     /**

@@ -7,7 +7,7 @@ import IReservesApiModel from '../../../api/reserves/IReservesApiModel';
 import IScheduleApiModel from '../../../api/schedule/IScheduleApiModel';
 import IChannelModel from '../../../channels/IChannelModel';
 import IServerConfigModel from '../../../serverConfig/IServerConfigModel';
-import ISettingStorageModel from '../../../storage/setting/ISettingStorageModel';
+import { ISettingStorageModel } from '../../../storage/setting/ISettingStorageModel';
 import IManualReserveState, {
     EncodedOption,
     ManualReserveOption,
@@ -308,7 +308,7 @@ export default class ManualReserveState implements IManualReserveState {
      * @return videoComponentType | null
      */
     private getVideoType(videoComponentType: number): string | null {
-        const str = (<any>VideoComponentType)[videoComponentType];
+        const str = (VideoComponentType as any)[videoComponentType];
 
         return typeof str === 'undefined' ? null : str;
     }
@@ -319,7 +319,7 @@ export default class ManualReserveState implements IManualReserveState {
      * @return audio type | null
      */
     private getAudioMode(audioComponentType: number): string | null {
-        const str = (<any>AudioComponentType)[audioComponentType];
+        const str = (AudioComponentType as any)[audioComponentType];
 
         return typeof str === 'undefined' ? null : str;
     }

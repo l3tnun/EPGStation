@@ -19,7 +19,7 @@ export default class RuleApiModel implements IRuleApiModel {
     public async get(ruleId: apid.RuleId): Promise<apid.Rule> {
         const result = await this.repository.get(`/rules/${ruleId}`);
 
-        return <any>result.data;
+        return result.data;
     }
 
     /**
@@ -32,7 +32,7 @@ export default class RuleApiModel implements IRuleApiModel {
             params: option,
         });
 
-        return <any>result.data;
+        return result.data;
     }
 
     /**
@@ -45,7 +45,7 @@ export default class RuleApiModel implements IRuleApiModel {
             params: option,
         });
 
-        return <any>result.data.items;
+        return result.data.items;
     }
 
     /**
@@ -56,7 +56,7 @@ export default class RuleApiModel implements IRuleApiModel {
     public async add(rule: apid.AddRuleOption): Promise<apid.RuleId> {
         const result = await this.repository.post('/rules', rule);
 
-        return <any>result.data;
+        return result.data;
     }
 
     /**

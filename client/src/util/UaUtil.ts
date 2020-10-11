@@ -1,18 +1,9 @@
 namespace UaUtil {
     /**
-     * iPad スクリーン解像度定義
+     * UA が iPadOS か判定
      */
-    const IPAD_SCREENS = {
-        1024: 768,
-        1080: 810,
-        1112: 834,
-        1194: 834,
-        1366: 1024,
-        2048: 1536,
-        2160: 1620,
-        2224: 1668,
-        2388: 1668,
-        2732: 2048,
+    export const isiPadOS = (): boolean => {
+        return /Macintosh|macintosh/.test(navigator.userAgent) === true && 'ontouchend' in document;
     };
 
     /**
@@ -28,13 +19,6 @@ namespace UaUtil {
      */
     export const isiPhone = (): boolean => {
         return /iPhone|iphone/.test(navigator.userAgent);
-    };
-
-    /**
-     * UA が iPadOS か判定
-     */
-    export const isiPadOS = (): boolean => {
-        return /Macintosh|macintosh/.test(navigator.userAgent) === true && 'ontouchend' in document;
     };
 
     /**

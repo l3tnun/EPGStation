@@ -52,7 +52,9 @@ export default class RuleItems extends Vue {
         this.resizeObserver = new ResizeObserver(() => {
             this.elementWidth = this.$el.clientWidth;
         });
-        this.resizeObserver!.observe(this.$el);
+        if (this.resizeObserver !== null) {
+            this.resizeObserver.observe(this.$el);
+        }
 
         this.$nextTick(() => {
             this.elementWidth = this.$el.clientWidth;

@@ -22,7 +22,7 @@
 
 <script lang="ts">
 import container from '@/model/ModelContainer';
-import IGuideGenreSettingStorageModel from '@/model/storage/guide/IGuideGenreSettingStorageModel';
+import { IGuideGenreSettingStorageModel } from '@/model/storage/guide/IGuideGenreSettingStorageModel';
 import GenreUtil from '@/util/GenreUtil';
 import Util from '@/util/Util';
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator';

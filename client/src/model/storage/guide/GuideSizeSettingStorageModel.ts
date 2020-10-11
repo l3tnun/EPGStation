@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify';
 import AbstractStorageBaseModel from '../AbstractStorageBaseModel';
 import IStorageOperationModel from '../IStorageOperationModel';
-import IGuideSizeSettingStorageModel, { IGuideSizeSettingValue } from './IGuideSizeSettingStorageModel';
+import { IGuideSizeSettingStorageModel, IGuideSizeSettingValue } from './IGuideSizeSettingStorageModel';
 
 @injectable()
 export default class GuideSizeSettingStorageModel extends AbstractStorageBaseModel<IGuideSizeSettingValue>

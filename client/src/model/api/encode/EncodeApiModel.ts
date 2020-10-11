@@ -23,7 +23,7 @@ export default class EncodeApiModel implements IEncodeApiModel {
             },
         });
 
-        return <any>result.data;
+        return result.data;
     }
 
     /**
@@ -34,7 +34,7 @@ export default class EncodeApiModel implements IEncodeApiModel {
     public async addEncode(option: apid.AddManualEncodeProgramOption): Promise<apid.EncodeId> {
         const result = await this.repository.post('/encode', option);
 
-        return (<any>result.data).encodeId;
+        return result.data.encodeId;
     }
 
     /**

@@ -14,6 +14,6 @@ export default class ChannelsApiModel implements IChannelsApiModel {
     public async getChannels(): Promise<apid.ChannelItem[]> {
         const result = await this.repository.get('/channels');
 
-        return <any>result.data;
+        return result.data;
     }
 }

@@ -43,7 +43,7 @@ export default class Storages extends Vue {
     private scrollState: IScrollPositionState = container.get<IScrollPositionState>('IScrollPositionState');
     private snackbarState: ISnackbarState = container.get<ISnackbarState>('ISnackbarState');
     private socketIoModel: ISocketIOModel = container.get<ISocketIOModel>('ISocketIOModel');
-    private onUpdateStatusCallback = (async () => {
+    private onUpdateStatusCallback = (async (): Promise<void> => {
         await this.storageState.fetchData();
     }).bind(this);
 

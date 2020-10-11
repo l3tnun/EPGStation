@@ -67,13 +67,13 @@ export default class WatchOnAir extends Vue {
         this.$nextTick(async () => {
             if (this.watchParam !== null) {
                 if (this.watchParam.type === 'hls') {
-                    (<VideoParam.LiveHLSParam>this.videoParam) = {
+                    (this.videoParam as VideoParam.LiveHLSParam) = {
                         type: 'LiveHLS',
                         channelId: this.watchParam.channel,
                         mode: this.watchParam.mode,
                     };
                 } else {
-                    (<VideoParam.NormalVideoParam>this.videoParam) = {
+                    (this.videoParam as VideoParam.NormalVideoParam) = {
                         type: 'Normal',
                         src: `/api/streams/live/${this.watchParam.channel}/${this.watchParam.type}?mode=${this.watchParam.mode}`,
                     };

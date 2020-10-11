@@ -57,7 +57,7 @@ class ScrollPositionState implements IScrollPositionState {
             throw new Error('HistoryIsNull');
         }
 
-        return <T>this.history[this.currentPosition].data;
+        return this.history[this.currentPosition].data as T;
     }
 
     /**
@@ -69,21 +69,26 @@ class ScrollPositionState implements IScrollPositionState {
             this.isNeedRestoreHistory = true;
         }
 
+        if (this.history === null) {
+            console.error('history is null');
+            return;
+        }
+
         // 前回値クリア
         this.isNeedRestoreHistory = false;
 
         const id = this.getTimestampQuery();
-        const newPosition = this.history!.findIndex(h => {
+        const newPosition = this.history.findIndex(h => {
             return h.id === id;
         });
 
         if (newPosition === -1) {
             this.currentPosition += 1;
-            if (typeof this.history![this.currentPosition] !== 'undefined') {
-                this.history = this.history!.splice(0, this.currentPosition);
+            if (typeof this.history[this.currentPosition] !== 'undefined') {
+                this.history = this.history.splice(0, this.currentPosition);
             }
 
-            this.history!.push({
+            this.history.push({
                 id: this.getTimestampQuery(),
                 url: location.href,
                 data: null,
@@ -108,7 +113,7 @@ class ScrollPositionState implements IScrollPositionState {
             return;
         }
 
-        const data = <any>JSON.parse(str);
+        const data = JSON.parse(str) as any;
         this.history = data.history;
         this.currentPosition = data.position;
     }

@@ -28,7 +28,7 @@ export default class VideoApiModel implements IVideoApiModel {
     public async getDuration(videoFileId: apid.VideoFileId): Promise<number> {
         const result = await this.repository.get(`/videos/${videoFileId}/duration`);
 
-        return (<any>result.data).duration;
+        return result.data.duration;
     }
 
     /**

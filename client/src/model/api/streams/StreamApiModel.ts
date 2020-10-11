@@ -23,7 +23,7 @@ export default class StreamApiModel implements IStreamApiModel {
             },
         });
 
-        return <any>result.data;
+        return result.data;
     }
 
     /**
@@ -39,7 +39,7 @@ export default class StreamApiModel implements IStreamApiModel {
             },
         });
 
-        return (<any>result.data).streamId;
+        return result.data.streamId;
     }
 
     /**
@@ -57,7 +57,7 @@ export default class StreamApiModel implements IStreamApiModel {
             },
         });
 
-        return (<any>result.data).streamId;
+        return result.data.streamId;
     }
 
     /**

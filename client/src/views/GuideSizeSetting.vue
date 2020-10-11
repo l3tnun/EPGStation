@@ -203,8 +203,8 @@ import TitleBar from '@/components/titleBar/TitleBar.vue';
 import container from '@/model/ModelContainer';
 import IScrollPositionState from '@/model/state/IScrollPositionState';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
-import IGuideSizeSettingStorageModel from '@/model/storage/guide/IGuideSizeSettingStorageModel';
-import ISettingStorageModel, { GuideViewMode } from '@/model/storage/setting/ISettingStorageModel';
+import { IGuideSizeSettingStorageModel } from '@/model/storage/guide/IGuideSizeSettingStorageModel';
+import { ISettingStorageModel, GuideViewMode } from '@/model/storage/setting/ISettingStorageModel';
 import { Component, Vue, Watch } from 'vue-property-decorator';
 import { Route } from 'vue-router';
 

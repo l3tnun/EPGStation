@@ -16,7 +16,7 @@ setter(container);
 
 smoothscroll.polyfill();
 
-(async () => {
+(async (): Promise<void> => {
     // server config の取得
     const serverConfiModel = container.get<IServerConfigModel>('IServerConfigModel');
     await serverConfiModel.fetchConfig().catch(err => {
@@ -46,6 +46,7 @@ smoothscroll.polyfill();
     new Vue({
         router,
         vuetify,
+        // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
         render: h => h(App),
     }).$mount('#app');
 })();

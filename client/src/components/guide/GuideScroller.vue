@@ -17,13 +17,13 @@ export default class GuideScroller extends Vue {
     private clickTimer: number | undefined;
 
     // 各種イベントリスナー
-    private mousedownListener = ((e: MouseEvent) => {
+    private mousedownListener = ((e: MouseEvent): void => {
         this.onMousedown(e);
     }).bind(this);
-    private mouseupListener = (() => {
+    private mouseupListener = ((): void => {
         this.onMouseup();
     }).bind(this);
-    private mousemoveListener = ((e: MouseEvent) => {
+    private mousemoveListener = ((e: MouseEvent): void => {
         this.onMousemove(e);
     }).bind(this);
 

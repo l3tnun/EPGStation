@@ -54,7 +54,7 @@ import ISocketIOModel from '@/model/socketio/ISocketIOModel';
 import IEncodeState from '@/model/state/encode/IEncodeState';
 import IScrollPositionState from '@/model/state/IScrollPositionState';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
-import ISettingStorageModel, { ISettingValue } from '@/model/storage/setting/ISettingStorageModel';
+import { ISettingStorageModel, ISettingValue } from '@/model/storage/setting/ISettingStorageModel';
 import { Component, Vue, Watch } from 'vue-property-decorator';
 import * as apid from '../../../api';
 
@@ -78,7 +78,7 @@ export default class Encode extends Vue {
     private scrollState: IScrollPositionState = container.get<IScrollPositionState>('IScrollPositionState');
     private snackbarState: ISnackbarState = container.get<ISnackbarState>('ISnackbarState');
     private socketIoModel: ISocketIOModel = container.get<ISocketIOModel>('ISocketIOModel');
-    private onUpdateStatusCallback = (async () => {
+    private onUpdateStatusCallback = (async (): Promise<void> => {
         await this.encodeState.fetchData(this.isHalfWidth());
     }).bind(this);
 

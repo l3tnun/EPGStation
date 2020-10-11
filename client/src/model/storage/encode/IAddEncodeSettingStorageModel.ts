@@ -7,4 +7,4 @@ export interface IAddEncodeSettingValue {
     removeOriginal: boolean;
 }
 
-export default interface IAddEncodeSettingStorageModel extends IStorageBaseModel<IAddEncodeSettingValue> {}
+export type IAddEncodeSettingStorageModel = IStorageBaseModel<IAddEncodeSettingValue>;

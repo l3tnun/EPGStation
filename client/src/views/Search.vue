@@ -53,7 +53,7 @@ import ISearchState, {
     TimeReserveOption,
 } from '@/model/state/search/ISearchState';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
-import ISettingStorageModel, { ISettingValue } from '@/model/storage/setting/ISettingStorageModel';
+import { ISettingStorageModel, ISettingValue } from '@/model/storage/setting/ISettingStorageModel';
 import Util from '@/util/Util';
 import { cloneDeep } from 'lodash';
 import { Component, Vue, Watch } from 'vue-property-decorator';
@@ -92,7 +92,7 @@ export default class Search extends Vue {
     private snackbarState: ISnackbarState = container.get<ISnackbarState>('ISnackbarState');
     private setting: ISettingStorageModel = container.get<ISettingStorageModel>('ISettingStorageModel');
     private socketIoModel: ISocketIOModel = container.get<ISocketIOModel>('ISocketIOModel');
-    private onUpdateStatusCallback = (() => {
+    private onUpdateStatusCallback = ((): void => {
         this.updateSocketIoState();
     }).bind(this);
 
@@ -128,7 +128,7 @@ export default class Search extends Vue {
         // 検索後にスクロール
         if (needsScroll === true) {
             this.$nextTick(() => {
-                this.scrollToElementHead(<Vue>this.$refs.searchResult);
+                this.scrollToElementHead(this.$refs.searchResult as Vue);
             });
         }
     }
@@ -162,7 +162,7 @@ export default class Search extends Vue {
             throw new Error('TitleElementIsUndefined');
         }
 
-        return (<HTMLElement>(<Vue>this.$refs.title).$el).clientHeight;
+        return ((this.$refs.title as Vue).$el as HTMLElement).clientHeight;
     }
 
     private clearPeriodState(): void {
@@ -216,14 +216,14 @@ export default class Search extends Vue {
     }
 
     public scrollToTop(): void {
-        (<any>window).scrollTo({
+        (window as any).scrollTo({
             top,
             behavior: 'smooth',
         });
     }
 
     public scrollToRuleOption(): void {
-        this.scrollToElementHead(<Vue>this.$refs.ruleOption, 4);
+        this.scrollToElementHead(this.$refs.ruleOption as Vue, 4);
     }
 
     /**

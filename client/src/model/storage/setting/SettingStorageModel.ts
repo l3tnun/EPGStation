@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import UaUtil from '../../../util/UaUtil';
 import AbstractStorageBaseModel from '../AbstractStorageBaseModel';
 import IStorageOperationModel from '../IStorageOperationModel';
-import ISettingStorageModel, { ISettingValue } from './ISettingStorageModel';
+import { ISettingStorageModel, ISettingValue } from './ISettingStorageModel';
 
 @injectable()
 export default class SettingStorageModel extends AbstractStorageBaseModel<ISettingValue>

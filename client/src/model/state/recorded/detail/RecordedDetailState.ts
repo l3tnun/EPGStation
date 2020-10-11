@@ -4,7 +4,7 @@ import UaUtil from '../../../../util/UaUtil';
 import Util from '../../../../util/Util';
 import IRecordedApiModel from '../../../api/recorded/IRecordedApiModel';
 import IServerConfigModel from '../../../serverConfig/IServerConfigModel';
-import ISettingStorageModel from '../../../storage/setting/ISettingStorageModel';
+import { ISettingStorageModel } from '../../../storage/setting/ISettingStorageModel';
 import IRecordedUtil, { RecordedDisplayData } from '../IRecordedUtil';
 import IRecordedDetailState, { URLInfo } from './IRecordedDetailState';
 

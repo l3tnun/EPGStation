@@ -33,7 +33,7 @@ export default class RecordedStreamingVideo extends BaseVideo {
 
     private videoState = container.get<IRecordedStreamingVideoState>('IRecordedStreamingVideoState');
     private socketIoModel: ISocketIOModel = container.get<ISocketIOModel>('ISocketIOModel');
-    private onUpdateStatusCallback = (async () => {
+    private onUpdateStatusCallback = (async (): Promise<void> => {
         await this.updateVideoInfo();
     }).bind(this);
     private basePlayPosition: number = 0;

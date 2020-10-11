@@ -3,8 +3,8 @@ import * as apid from '../../../../../api';
 import UaUtil from '../../../util/UaUtil';
 import Util from '../../../util/Util';
 import IServerConfigModel from '../../serverConfig/IServerConfigModel';
-import IOnAirSelectStreamSettingStorageModel from '../../storage/onair/IOnAirSelectStreamSettingStorageModel';
-import ISettingStorageModel from '../../storage/setting/ISettingStorageModel';
+import { IOnAirSelectStreamSettingStorageModel } from '../../storage/onair/IOnAirSelectStreamSettingStorageModel';
+import { ISettingStorageModel } from '../../storage/setting/ISettingStorageModel';
 import IOnAirSelectStreamState, { LiveStreamType, StreamConfigItem } from './IOnAirSelectStreamState';
 
 @injectable()

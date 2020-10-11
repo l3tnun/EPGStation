@@ -94,7 +94,9 @@ class RecordedItems extends Vue {
         this.resizeObserver = new ResizeObserver(() => {
             this.cardNum = Math.floor(this.$el.clientWidth / (RecordedItems.CARD_WIDTH + RecordedItems.CARD_MARGIN));
         });
-        this.resizeObserver!.observe(this.$el);
+        if (this.resizeObserver !== null) {
+            this.resizeObserver.observe(this.$el);
+        }
     }
 
     public beforeDestroy(): void {

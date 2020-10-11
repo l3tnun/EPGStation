@@ -63,11 +63,11 @@ namespace GenreUtil {
      * @return Genre str
      */
     export const getGenre = (lv1: apid.ProgramGenreLv1): string | null => {
-        if (typeof (<any>Genre)[lv1] === 'undefined') {
+        if (typeof (Genre as any)[lv1] === 'undefined') {
             return null;
         }
 
-        return (<any>Genre)[lv1];
+        return (Genre as any)[lv1];
     };
 
     /**
@@ -76,14 +76,14 @@ namespace GenreUtil {
      */
     export const getSubGenre = (lv1: apid.ProgramGenreLv1, lv2?: apid.ProgramGenreLv2): string | null => {
         if (
-            typeof (<any>Genre)[lv1] === 'undefined' ||
+            typeof (Genre as any)[lv1] === 'undefined' ||
             typeof lv2 === 'undefined' ||
-            typeof (<any>SubGenre)[lv1][lv2] === 'undefined'
+            typeof (SubGenre as any)[lv1][lv2] === 'undefined'
         ) {
             return null;
         }
 
-        return (<any>SubGenre)[lv1][lv2];
+        return (SubGenre as any)[lv1][lv2];
     };
 
     /**

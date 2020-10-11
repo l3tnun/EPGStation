@@ -31,4 +31,4 @@ export interface ISettingValue {
     rulesLength: number;
 }
 
-export default interface ISettingStorageModel extends IStorageBaseModel<ISettingValue> {}
+export type ISettingStorageModel = IStorageBaseModel<ISettingValue>;

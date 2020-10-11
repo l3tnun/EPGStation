@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import * as apid from '../../../../../api';
 import IEncodeApiModel from '../../api/encode/IEncodeApiModel';
 import IServerConfigModel from '../../serverConfig/IServerConfigModel';
-import IAddEncodeSettingStorageModel from '../../storage/encode/IAddEncodeSettingStorageModel';
+import { IAddEncodeSettingStorageModel } from '../../storage/encode/IAddEncodeSettingStorageModel';
 import IAddEncodeState from './IAddEncodeState';
 
 @injectable()

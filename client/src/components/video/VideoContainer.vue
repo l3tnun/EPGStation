@@ -230,7 +230,7 @@ export default class VideoContainer extends Vue {
     public isPause: boolean = true; // play ボタン用
     public isShowControl: boolean = false;
     public isHideAudioVolume: boolean = UaUtil.isMobile() || UaUtil.isiPadOS();
-    public isEnabledPip: boolean = !!(<any>document).pictureInPictureEnabled;
+    public isEnabledPip: boolean = !!(document as any).pictureInPictureEnabled;
     public isFullscreen: boolean = this.checkFullscreen();
     public currentTimeStr: string = '--:--';
     public durationStr: string = '--:--';
@@ -243,10 +243,10 @@ export default class VideoContainer extends Vue {
 
     private isFirstPlay: boolean = true;
     private isEnabledRotation: boolean = typeof window.screen.orientation !== 'undefined' && UaUtil.isMobile();
-    private keyDwonListener = ((e: KeyboardEvent) => {
+    private keyDwonListener = ((e: KeyboardEvent): void => {
         this.onKeyDown(e);
     }).bind(this);
-    private fullScreenListener = (() => {
+    private fullScreenListener = ((): void => {
         this.fullscreenChange();
     }).bind(this);
     private hideControlTimer: number | undefined;
@@ -286,7 +286,7 @@ export default class VideoContainer extends Vue {
             await this.togglePlay();
 
             if (typeof this.$refs.video !== 'undefined') {
-                if ((<BaseVideo>this.$refs.video).paused() === true) {
+                if ((this.$refs.video as BaseVideo).paused() === true) {
                     this.isShowControl = true;
                     this.isHideCursor = false;
                 } else {
@@ -331,13 +331,13 @@ export default class VideoContainer extends Vue {
     private checkFullscreen(): boolean {
         return (
             !!(
-                (<any>document).fullScreen ||
-                (<any>document).webkitIsFullScreen ||
-                (<any>document).mozFullScreen ||
-                (<any>document).msFullscreenElement ||
-                (<any>document).fullscreenElement
+                (document as any).fullScreen ||
+                (document as any).webkitIsFullScreen ||
+                (document as any).mozFullScreen ||
+                (document as any).msFullscreenElement ||
+                (document as any).fullscreenElement
             ) ||
-            (typeof this.$refs.video !== 'undefined' && !!(<any>this.$refs.video).webkitDisplayingFullscreen)
+            (typeof this.$refs.video !== 'undefined' && !!(this.$refs.video as any).webkitDisplayingFullscreen)
         );
     }
 
@@ -348,7 +348,7 @@ export default class VideoContainer extends Vue {
         if (
             UaUtil.isAndroid() === true ||
             typeof this.$refs.video === 'undefined' ||
-            (<BaseVideo>this.$refs.video).paused() === true
+            (this.$refs.video as BaseVideo).paused() === true
         ) {
             return;
         }
@@ -374,7 +374,7 @@ export default class VideoContainer extends Vue {
         if (
             UaUtil.isAndroid() === true ||
             typeof this.$refs.video === 'undefined' ||
-            (<BaseVideo>this.$refs.video).paused() === true ||
+            (this.$refs.video as BaseVideo).paused() === true ||
             new Date().getTime() - this.lastSeekedTime < 50
         ) {
             return;
@@ -445,13 +445,13 @@ export default class VideoContainer extends Vue {
      */
     protected updateSubtitleState(): void {
         if (typeof this.$refs.video !== 'undefined') {
-            (<BaseVideo>this.$refs.video).fixSubtitleState();
+            (this.$refs.video as BaseVideo).fixSubtitleState();
         }
 
         this.isEnabledSubtitles =
-            typeof this.$refs.video !== 'undefined' && (<BaseVideo>this.$refs.video).isEnabledSubtitles();
+            typeof this.$refs.video !== 'undefined' && (this.$refs.video as BaseVideo).isEnabledSubtitles();
         this.isShowingSubtitle =
-            typeof this.$refs.video !== 'undefined' && (<BaseVideo>this.$refs.video).isShowingSubtitle();
+            typeof this.$refs.video !== 'undefined' && (this.$refs.video as BaseVideo).isShowingSubtitle();
     }
 
     // 読み込み中
@@ -471,7 +471,7 @@ export default class VideoContainer extends Vue {
 
         if (
             typeof this.$refs.video !== 'undefined' &&
-            (<BaseVideo>this.$refs.video).paused() === true &&
+            (this.$refs.video as BaseVideo).paused() === true &&
             new Date().getTime() - this.lastSeekedTime > 1000
         ) {
             this.isShowControl = true;
@@ -482,7 +482,7 @@ export default class VideoContainer extends Vue {
             if (
                 this.isFirstPlay === true &&
                 typeof this.$refs.video !== 'undefined' &&
-                (<BaseVideo>this.$refs.video).paused() === false
+                (this.$refs.video as BaseVideo).paused() === false
             ) {
                 this.isShowControl = false;
                 this.isHideCursor = true;
@@ -522,9 +522,9 @@ export default class VideoContainer extends Vue {
         }
 
         // 後で再生状態を戻すために保存
-        if ((<BaseVideo>this.$refs.video).paused() === false) {
+        if ((this.$refs.video as BaseVideo).paused() === false) {
             // 再生中なら再生停止
-            (<BaseVideo>this.$refs.video).pause();
+            (this.$refs.video as BaseVideo).pause();
             this.needsReplay = true;
         }
     }
@@ -536,12 +536,12 @@ export default class VideoContainer extends Vue {
         }
 
         this.updateLastSeekTime();
-        (<BaseVideo>this.$refs.video).setCurrentTime(time);
+        (this.$refs.video as BaseVideo).setCurrentTime(time);
 
         // シーク前に再生中であれば再開
         await Util.sleep(200);
         if (this.needsReplay === true) {
-            await (<BaseVideo>this.$refs.video).play().catch(err => {
+            await (this.$refs.video as BaseVideo).play().catch(err => {
                 console.error(err);
             });
         }
@@ -559,7 +559,7 @@ export default class VideoContainer extends Vue {
             return;
         }
 
-        this.playbackRate = (<BaseVideo>this.$refs.video).getPlaybackRate();
+        this.playbackRate = (this.$refs.video as BaseVideo).getPlaybackRate();
     }
 
     // 音量変更
@@ -568,7 +568,7 @@ export default class VideoContainer extends Vue {
             return;
         }
 
-        this.volume = (<BaseVideo>this.$refs.video).getVolume();
+        this.volume = (this.$refs.video as BaseVideo).getVolume();
     }
 
     // video control 表示切り替え
@@ -581,7 +581,7 @@ export default class VideoContainer extends Vue {
         if (this.isShowControl === false) {
             clearTimeout(this.hideControlTimer);
             this.isHideCursor = false;
-        } else if (typeof this.$refs.video !== 'undefined' && (<BaseVideo>this.$refs.video).paused() === false) {
+        } else if (typeof this.$refs.video !== 'undefined' && (this.$refs.video as BaseVideo).paused() === false) {
             this.isHideCursor = true;
         }
         this.isShowControl = !this.isShowControl;
@@ -593,12 +593,12 @@ export default class VideoContainer extends Vue {
             return;
         }
 
-        if ((<BaseVideo>this.$refs.video).paused() === true) {
-            await (<BaseVideo>this.$refs.video).play().catch(err => {
+        if ((this.$refs.video as BaseVideo).paused() === true) {
+            await (this.$refs.video as BaseVideo).play().catch(err => {
                 console.error(err);
             });
         } else {
-            (<BaseVideo>this.$refs.video).pause();
+            (this.$refs.video as BaseVideo).pause();
         }
     }
 
@@ -612,7 +612,7 @@ export default class VideoContainer extends Vue {
         }
 
         const newCurrentTime = this.currentTime - time;
-        (<BaseVideo>this.$refs.video).setCurrentTime(newCurrentTime < 0 ? 0 : newCurrentTime);
+        (this.$refs.video as BaseVideo).setCurrentTime(newCurrentTime < 0 ? 0 : newCurrentTime);
         this.updateLastSeekTime();
     }
 
@@ -626,7 +626,7 @@ export default class VideoContainer extends Vue {
         }
 
         const newCurrentTime = this.currentTime + time;
-        (<BaseVideo>this.$refs.video).setCurrentTime(newCurrentTime > this.duration ? this.duration : newCurrentTime);
+        (this.$refs.video as BaseVideo).setCurrentTime(newCurrentTime > this.duration ? this.duration : newCurrentTime);
         this.updateLastSeekTime();
     }
 
@@ -656,7 +656,7 @@ export default class VideoContainer extends Vue {
             return;
         }
 
-        (<BaseVideo>this.$refs.video).setPlaybackRate(rate);
+        (this.$refs.video as BaseVideo).setPlaybackRate(rate);
     }
 
     /**
@@ -664,7 +664,7 @@ export default class VideoContainer extends Vue {
      * @return number
      */
     private getVideoDuration(): number {
-        return typeof this.$refs.video === 'undefined' ? 0 : (<BaseVideo>this.$refs.video).getDuration();
+        return typeof this.$refs.video === 'undefined' ? 0 : (this.$refs.video as BaseVideo).getDuration();
     }
 
     /**
@@ -672,7 +672,7 @@ export default class VideoContainer extends Vue {
      * @return number
      */
     private getVideoCurrentTime(): number {
-        return typeof this.$refs.video === 'undefined' ? 0 : (<BaseVideo>this.$refs.video).getCurrentTime();
+        return typeof this.$refs.video === 'undefined' ? 0 : (this.$refs.video as BaseVideo).getCurrentTime();
     }
 
     /**
@@ -683,7 +683,7 @@ export default class VideoContainer extends Vue {
             return;
         }
 
-        (<BaseVideo>this.$refs.video).switchMute();
+        (this.$refs.video as BaseVideo).switchMute();
     }
 
     /**
@@ -694,7 +694,7 @@ export default class VideoContainer extends Vue {
             return;
         }
 
-        (<BaseVideo>this.$refs.video).setVolume(volume);
+        (this.$refs.video as BaseVideo).setVolume(volume);
     }
 
     /**
@@ -711,10 +711,10 @@ export default class VideoContainer extends Vue {
         }
 
         try {
-            if ((<any>document).pictureInPictureElement === null) {
-                (<BaseVideo>this.$refs.video).requestPictureInPicture();
+            if ((document as any).pictureInPictureElement === null) {
+                (this.$refs.video as BaseVideo).requestPictureInPicture();
             } else {
-                (<any>document).exitPictureInPicture();
+                (document as any).exitPictureInPicture();
             }
         } catch (error) {
             console.error(error);
@@ -729,12 +729,12 @@ export default class VideoContainer extends Vue {
             return;
         }
 
-        if ((<BaseVideo>this.$refs.video).isShowingSubtitle() === true) {
+        if ((this.$refs.video as BaseVideo).isShowingSubtitle() === true) {
             // 非表示
-            (<BaseVideo>this.$refs.video).disabledSubtitle();
+            (this.$refs.video as BaseVideo).disabledSubtitle();
         } else {
             // 表示
-            (<BaseVideo>this.$refs.video).showSubtitle();
+            (this.$refs.video as BaseVideo).showSubtitle();
         }
 
         this.updateSubtitleState();
@@ -750,20 +750,20 @@ export default class VideoContainer extends Vue {
             // フルスクリーン終了
             if (document.exitFullscreen) {
                 document.exitFullscreen();
-            } else if ((<any>document).mozCancelFullScreen) {
-                (<any>document).mozCancelFullScreen();
-            } else if ((<any>document).webkitCancelFullScreen) {
-                (<any>document).webkitCancelFullScreen();
-            } else if ((<any>document).msExitFullscreen) {
-                (<any>document).msExitFullscreen();
+            } else if ((document as any).mozCancelFullScreen) {
+                (document as any).mozCancelFullScreen();
+            } else if ((document as any).webkitCancelFullScreen) {
+                (document as any).webkitCancelFullScreen();
+            } else if ((document as any).msExitFullscreen) {
+                (document as any).msExitFullscreen();
             }
         } else {
             // フルスクリーンへ切り替え
             if (
-                this.requestFullscreen(<HTMLElement>this.$refs.container) === false &&
+                this.requestFullscreen(this.$refs.container as HTMLElement) === false &&
                 typeof this.$refs.video !== 'undefined'
             ) {
-                (<BaseVideo>this.$refs.video).requestFullscreen();
+                (this.$refs.video as BaseVideo).requestFullscreen();
             }
 
             // 画面回転
@@ -786,17 +786,17 @@ export default class VideoContainer extends Vue {
         } else if (e.requestFullscreen) {
             e.requestFullscreen();
             return true;
-        } else if ((<any>e).mozRequestFullScreen) {
-            (<any>e).mozRequestFullScreen();
+        } else if ((e as any).mozRequestFullScreen) {
+            (e as any).mozRequestFullScreen();
             return true;
-        } else if ((<any>e).webkitRequestFullScreen) {
-            (<any>e).webkitRequestFullScreen();
+        } else if ((e as any).webkitRequestFullScreen) {
+            (e as any).webkitRequestFullScreen();
             return true;
-        } else if ((<any>e).webkitEnterFullscreen) {
-            (<any>e).webkitEnterFullscreen();
+        } else if ((e as any).webkitEnterFullscreen) {
+            (e as any).webkitEnterFullscreen();
             return true;
-        } else if ((<any>e).msRequestFullscreen) {
-            (<any>e).msRequestFullscreen();
+        } else if ((e as any).msRequestFullscreen) {
+            (e as any).msRequestFullscreen();
             return true;
         }
         /* tslint:enable:newline-before-return */
@@ -814,9 +814,9 @@ export default class VideoContainer extends Vue {
 
         try {
             if (this.isLandscape()) {
-                await (<any>window.screen).orientation.lock('natural');
+                await (window.screen as any).orientation.lock('natural');
             } else {
-                await (<any>window.screen).orientation.lock('landscape');
+                await (window.screen as any).orientation.lock('landscape');
             }
         } catch (err) {
             console.error(err);
@@ -828,7 +828,7 @@ export default class VideoContainer extends Vue {
      * @return boolean true で回転状態
      */
     private isLandscape(): boolean {
-        return !this.isEnabledRotation || (<any>window.screen).orientation.angle !== 0;
+        return !this.isEnabledRotation || (window.screen as any).orientation.angle !== 0;
     }
 
     /**

@@ -25,7 +25,7 @@ export default class TimeScale extends Vue {
 
     public mounted(): void {
         // 次のタイマーをセット
-        const loop = () => {
+        const loop = (): void => {
             this.timerId = setTimeout(() => {
                 this.updatePosition();
                 loop();
@@ -59,12 +59,14 @@ export default class TimeScale extends Vue {
     private getStartAt(): number {
         const timeStr =
             typeof this.$route.query.time !== 'undefined'
-                ? <string>this.$route.query.time
+                ? (this.$route.query.time as string)
                 : DateUtil.format(DateUtil.getJaDate(new Date()), 'YYMMddhh');
 
         return new Date(
-            `20${timeStr.substr(0, 2)}/${timeStr.substr(2, 2)}/` +
-                `${timeStr.substr(4, 2)} ${timeStr.substr(6, 2)}:00:00 +0900`,
+            `20${timeStr.substr(0, 2)}/${timeStr.substr(2, 2)}/${timeStr.substr(4, 2)} ${timeStr.substr(
+                6,
+                2,
+            )}:00:00 +0900`,
         ).getTime();
     }
 

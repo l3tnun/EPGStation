@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify';
 import { Route } from 'vue-router';
 import IServerConfigModel from '../../serverConfig/IServerConfigModel';
-import ISettingStorageModel from '../../storage/setting/ISettingStorageModel';
+import { ISettingStorageModel } from '../../storage/setting/ISettingStorageModel';
 import INavigationState, { NavigationItem, NavigationType } from './INavigationState';
 
 @injectable()

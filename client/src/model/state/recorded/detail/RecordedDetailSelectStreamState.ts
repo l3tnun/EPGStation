@@ -1,4 +1,4 @@
-import IRecordedSelectStreamSettingStorageModel from '@/model/storage/recorded/IRecordedSelectStreamSettingStorageModel';
+import { IRecordedSelectStreamSettingStorageModel } from '@/model/storage/recorded/IRecordedSelectStreamSettingStorageModel';
 import { inject, injectable } from 'inversify';
 import * as apid from '../../../../../../api';
 import IServerConfigModel from '../../../serverConfig/IServerConfigModel';

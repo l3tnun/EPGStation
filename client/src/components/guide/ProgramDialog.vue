@@ -119,8 +119,8 @@
 import container from '@/model/ModelContainer';
 import IGuideProgramDialogState from '@/model/state/guide/IGuideProgramDialogState';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
-import IGuideProgramDialogSettingStorageModel from '@/model/storage/guide/IGuideProgramDialogSettingStorageModel';
-import ISettingStorageModel from '@/model/storage/setting/ISettingStorageModel';
+import { IGuideProgramDialogSettingStorageModel } from '@/model/storage/guide/IGuideProgramDialogSettingStorageModel';
+import { ISettingStorageModel } from '@/model/storage/setting/ISettingStorageModel';
 import StrUtil from '@/util/StrUtil';
 import Util from '@/util/Util';
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
@@ -250,14 +250,18 @@ export default class ProgramDialog extends Vue {
     public async addReserve(): Promise<void> {
         try {
             await this.dialogState.addReserve();
-            this.snackbarState.open({
-                text: `${this.dialogState.displayData!.programName} 予約`,
-            });
+            if (this.dialogState.displayData !== null) {
+                this.snackbarState.open({
+                    text: `${this.dialogState.displayData.programName} 予約`,
+                });
+            }
         } catch (err) {
-            this.snackbarState.open({
-                color: 'error',
-                text: `${this.dialogState.displayData!.programName} 予約失敗`,
-            });
+            if (this.dialogState.displayData !== null) {
+                this.snackbarState.open({
+                    color: 'error',
+                    text: `${this.dialogState.displayData.programName} 予約失敗`,
+                });
+            }
         }
         this.dialogState.isOpen = false;
     }
@@ -268,14 +272,18 @@ export default class ProgramDialog extends Vue {
     public async cancelReserve(): Promise<void> {
         try {
             await this.dialogState.cancelReserve();
-            this.snackbarState.open({
-                text: `${this.dialogState.displayData!.programName} キャンセル`,
-            });
+            if (this.dialogState.displayData !== null) {
+                this.snackbarState.open({
+                    text: `${this.dialogState.displayData.programName} キャンセル`,
+                });
+            }
         } catch (err) {
-            this.snackbarState.open({
-                color: 'error',
-                text: `${this.dialogState.displayData!.programName} キャンセル失敗`,
-            });
+            if (this.dialogState.displayData !== null) {
+                this.snackbarState.open({
+                    color: 'error',
+                    text: `${this.dialogState.displayData.programName} キャンセル失敗`,
+                });
+            }
         }
         this.dialogState.isOpen = false;
     }
@@ -286,14 +294,18 @@ export default class ProgramDialog extends Vue {
     public async removeReserveSkip(): Promise<void> {
         try {
             await this.dialogState.removeReserveSkip();
-            this.snackbarState.open({
-                text: `${this.dialogState.displayData!.programName} 除外解除`,
-            });
+            if (this.dialogState.displayData !== null) {
+                this.snackbarState.open({
+                    text: `${this.dialogState.displayData.programName} 除外解除`,
+                });
+            }
         } catch (err) {
-            this.snackbarState.open({
-                color: 'error',
-                text: `${this.dialogState.displayData!.programName} 除外解除失敗`,
-            });
+            if (this.dialogState.displayData !== null) {
+                this.snackbarState.open({
+                    color: 'error',
+                    text: `${this.dialogState.displayData.programName} 除外解除失敗`,
+                });
+            }
         }
         this.dialogState.isOpen = false;
     }
@@ -303,15 +315,19 @@ export default class ProgramDialog extends Vue {
      */
     public async removeReserveOverlap(): Promise<void> {
         try {
-            await this.dialogState.removeReserveOverlap();
-            this.snackbarState.open({
-                text: `${this.dialogState.displayData!.programName} 重複解除`,
-            });
+            if (this.dialogState.displayData !== null) {
+                await this.dialogState.removeReserveOverlap();
+                this.snackbarState.open({
+                    text: `${this.dialogState.displayData.programName} 重複解除`,
+                });
+            }
         } catch (err) {
-            this.snackbarState.open({
-                color: 'error',
-                text: `${this.dialogState.displayData!.programName} 重複解除失敗`,
-            });
+            if (this.dialogState.displayData !== null) {
+                this.snackbarState.open({
+                    color: 'error',
+                    text: `${this.dialogState.displayData.programName} 重複解除失敗`,
+                });
+            }
         }
         this.dialogState.isOpen = false;
     }

@@ -21,6 +21,6 @@ export default class RecordingApiModel implements IRecordingApiModel {
             params: option,
         });
 
-        return <any>result.data;
+        return result.data;
     }
 }

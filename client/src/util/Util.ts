@@ -47,7 +47,7 @@ namespace Util {
     export const getQueryParam = (url: string, key: string): string | null => {
         const value = Util.getQuery(url)[key];
 
-        return typeof value === 'undefined' ? null : decodeURIComponent(<any>value);
+        return typeof value === 'undefined' ? null : decodeURIComponent(value);
     };
 
     /**
@@ -89,7 +89,7 @@ namespace Util {
             }
         }
 
-        (<any>location.query)['timestamp'] = new Date().getTime();
+        (location.query as any)['timestamp'] = new Date().getTime();
 
         return router.push(location);
     };

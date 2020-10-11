@@ -13,7 +13,7 @@ import Snackbar from '@/components/snackbar/Snackbar.vue';
 import container from '@/model/ModelContainer';
 import IScrollPositionState from '@/model/state/IScrollPositionState';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
-import ISettingStorageModel from '@/model/storage/setting/ISettingStorageModel';
+import { ISettingStorageModel } from '@/model/storage/setting/ISettingStorageModel';
 import { Container } from 'inversify';
 import { Component, Vue, Watch } from 'vue-property-decorator';
 import ISocketIOModel from '../model/socketio/ISocketIOModel';

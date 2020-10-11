@@ -68,8 +68,8 @@ import ISocketIOModel from '@/model/socketio/ISocketIOModel';
 import IGuideState, { FetchGuideOption } from '@/model/state/guide/IGuideState';
 import IScrollPositionState from '@/model/state/IScrollPositionState';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
-import IGuideSizeSettingStorageModel from '@/model/storage/guide/IGuideSizeSettingStorageModel';
-import ISettingStorageModel, { ISettingValue } from '@/model/storage/setting/ISettingStorageModel';
+import { IGuideSizeSettingStorageModel } from '@/model/storage/guide/IGuideSizeSettingStorageModel';
+import { ISettingStorageModel, ISettingValue } from '@/model/storage/setting/ISettingStorageModel';
 import UaUtil from '@/util/UaUtil';
 import Util from '@/util/Util';
 import { debounce, throttle } from 'lodash';
@@ -104,7 +104,7 @@ export default class Guide extends Vue {
     private sizeSetting = container.get<IGuideSizeSettingStorageModel>('IGuideSizeSettingStorageModel');
     private snackbarState: ISnackbarState = container.get<ISnackbarState>('ISnackbarState');
     private socketIoModel: ISocketIOModel = container.get<ISocketIOModel>('ISocketIOModel');
-    private onUpdateStatusCallback = (() => {
+    private onUpdateStatusCallback = ((): void => {
         this.guideState.updateReserves();
     }).bind(this);
 
@@ -195,9 +195,9 @@ export default class Guide extends Vue {
             return;
         }
 
-        const element = <HTMLElement>e.target;
-        (<HTMLElement>this.$refs.channels).scrollLeft = element.scrollLeft;
-        (<HTMLElement>this.$refs.times).scrollTop = element.scrollTop;
+        const element = e.target as HTMLElement;
+        (this.$refs.channels as HTMLElement).scrollLeft = element.scrollLeft;
+        (this.$refs.times as HTMLElement).scrollTop = element.scrollTop;
 
         // スクロールバーサイズ
         const scrollBarLeft = element.offsetWidth - element.clientWidth;
@@ -243,8 +243,8 @@ export default class Guide extends Vue {
 
         try {
             this.scrollState.saveScrollData({
-                x: (<GuideScroller>this.$refs.programs).$el.scrollLeft,
-                y: (<GuideScroller>this.$refs.programs).$el.scrollTop,
+                x: (this.$refs.programs as GuideScroller).$el.scrollLeft,
+                y: (this.$refs.programs as GuideScroller).$el.scrollTop,
             });
         } catch (err) {
             console.error(err);
@@ -287,36 +287,39 @@ export default class Guide extends Vue {
                     if (this.scrollState.isNeedRestoreHistory === true) {
                         const position = this.scrollState.getScrollData<{ x: number; y: number }>();
                         if (position !== null) {
-                            (<GuideScroller>this.$refs.programs).$el.scrollLeft = position.x;
-                            (<GuideScroller>this.$refs.programs).$el.scrollTop = position.y;
+                            (this.$refs.programs as GuideScroller).$el.scrollLeft = position.x;
+                            (this.$refs.programs as GuideScroller).$el.scrollTop = position.y;
                         }
                         this.scrollState.isNeedRestoreHistory = false;
                     } else {
                         // スクロール位置初期化
-                        (<GuideScroller>this.$refs.programs).$el.scrollLeft = 0;
-                        (<GuideScroller>this.$refs.programs).$el.scrollTop = 0;
+                        (this.$refs.programs as GuideScroller).$el.scrollLeft = 0;
+                        (this.$refs.programs as GuideScroller).$el.scrollTop = 0;
                         if (typeof this.$refs.channels !== 'undefined' && typeof this.$refs.times !== 'undefined') {
-                            (<HTMLElement>this.$refs.channels).scrollLeft = 0;
-                            (<HTMLElement>this.$refs.times).scrollTop = 0;
+                            (this.$refs.channels as HTMLElement).scrollLeft = 0;
+                            (this.$refs.times as HTMLElement).scrollTop = 0;
                         }
                     }
 
                     // 時刻線要素を退避
-                    const timeline = (<HTMLElement>this.$refs.content).getElementsByClassName('time-line')[0];
+                    const timeline = (this.$refs.content as HTMLElement).getElementsByClassName('time-line')[0];
 
                     // 追加する前に前回の子要素を削除
-                    while ((<HTMLElement>this.$refs.content).firstChild) {
-                        (<HTMLElement>this.$refs.content).removeChild((<HTMLElement>this.$refs.content).firstChild!);
+                    while ((this.$refs.content as HTMLElement).firstChild) {
+                        const firstChild = (this.$refs.content as HTMLElement).firstChild;
+                        if (firstChild !== null) {
+                            (this.$refs.content as HTMLElement).removeChild(firstChild);
+                        }
                     }
 
                     // 時刻線要素を元に戻す
-                    (<HTMLElement>this.$refs.content).appendChild(timeline);
+                    (this.$refs.content as HTMLElement).appendChild(timeline);
 
                     await Util.sleep(100);
                     const programDoms = this.guideState.getProgramDoms();
                     const domsLength = programDoms.length;
                     for (let i = 0; i < domsLength; i++) {
-                        (<HTMLElement>this.$refs.content).appendChild(programDoms[i].element);
+                        (this.$refs.content as HTMLElement).appendChild(programDoms[i].element);
                         if (i % 500 === 0) {
                             await Util.sleep(1);
                         }
@@ -364,7 +367,7 @@ export default class Guide extends Vue {
         if (element === null) {
             return;
         }
-        (<HTMLElement>element).style.setProperty(name, value);
+        (element as HTMLElement).style.setProperty(name, value);
     }
 
     /**
@@ -407,15 +410,15 @@ export default class Guide extends Vue {
         };
 
         if (typeof this.$route.query.type !== 'undefined') {
-            result.type = <any>this.$route.query.type;
+            result.type = this.$route.query.type as any;
         }
 
         if (typeof this.$route.query.time !== 'undefined') {
-            result.time = <any>this.$route.query.time;
+            result.time = this.$route.query.time as any;
         }
 
         if (typeof this.$route.query.channelId !== 'undefined') {
-            result.channelId = parseInt(<any>this.$route.query.channelId, 10);
+            result.channelId = parseInt(this.$route.query.channelId as any, 10);
         }
 
         return result;
@@ -425,10 +428,10 @@ export default class Guide extends Vue {
         this.guideState.setDisplayRange({
             baseWidth: this.programBaseWidth,
             baseHeight: this.programBaseHeight,
-            maxWidth: (<HTMLElement>(<GuideScroller>this.$refs.programs).$el).offsetWidth,
-            maxHeight: (<HTMLElement>(<GuideScroller>this.$refs.programs).$el).offsetHeight,
-            offsetWidth: (<GuideScroller>this.$refs.programs).$el.scrollLeft,
-            offsetHeight: (<GuideScroller>this.$refs.programs).$el.scrollTop,
+            maxWidth: ((this.$refs.programs as GuideScroller).$el as HTMLElement).offsetWidth,
+            maxHeight: ((this.$refs.programs as GuideScroller).$el as HTMLElement).offsetHeight,
+            offsetWidth: (this.$refs.programs as GuideScroller).$el.scrollLeft,
+            offsetHeight: (this.$refs.programs as GuideScroller).$el.scrollTop,
         });
     }
 }

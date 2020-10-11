@@ -3,7 +3,7 @@ import * as apid from '../../../../../../api';
 import DateUtil from '../../../../util/DateUtil';
 import IChannelModel from '../../..//channels/IChannelModel';
 import IStreamApiModel from '../../../api/streams/IStreamApiModel';
-import ISettingStorageModel from '../../../storage/setting/ISettingStorageModel';
+import { ISettingStorageModel } from '../../../storage/setting/ISettingStorageModel';
 import IWatchOnAirInfoState, { DsiplayWatchInfo } from './IWatchOnAirInfoState';
 
 @injectable()

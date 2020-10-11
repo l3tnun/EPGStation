@@ -8,7 +8,7 @@ import DateUtil from '../../../util/DateUtil';
 import IScheduleApiModel from '../../api/schedule/IScheduleApiModel';
 import IChannelModel from '../../channels/IChannelModel';
 import IServerConfigModel from '../../serverConfig/IServerConfigModel';
-import ISettingStorageModel from '../../storage/setting/ISettingStorageModel';
+import { ISettingStorageModel } from '../../storage/setting/ISettingStorageModel';
 import IGuideProgramDialogState from '../guide/IGuideProgramDialogState';
 import IGuideReserveUtil, { ReserveStateItemIndex } from '../guide/IGuideReserveUtil';
 import IReserveStateUtil, { ReserveStateData } from '../reserve/IReserveStateUtil';
@@ -87,7 +87,7 @@ export default class SearchState implements ISearchState {
 
         // set genres
         for (const genre in event.Genre) {
-            const subgenres = (<any>event.SubGenre)[genre];
+            const subgenres = (event.SubGenre as any)[genre];
             if (typeof subgenres === 'undefined') {
                 continue;
             }
@@ -103,7 +103,7 @@ export default class SearchState implements ISearchState {
                 });
             }
             this.genreItems.push({
-                name: (<any>event.Genre)[genre],
+                name: (event.Genre as any)[genre],
                 value: parseInt(genre, 10),
                 subGenres: subGenres,
             });
@@ -378,11 +378,17 @@ export default class SearchState implements ISearchState {
             }
         }
 
+        const start = searchOption.times[0].start;
+        const range = searchOption.times[0].range;
+
         this.timeReserveOption = {
             keyword: searchOption.keyword,
             channel: searchOption.channelIds[0],
-            startTime: this.convertNumToTimepickerStr(searchOption.times[0].start!),
-            endTime: this.convertNumToTimepickerStr(searchOption.times[0].start! + searchOption.times[0].range!),
+            startTime: typeof start === 'undefined' ? null : this.convertNumToTimepickerStr(start),
+            endTime:
+                typeof start === 'undefined' || typeof range === 'undefined'
+                    ? null
+                    : this.convertNumToTimepickerStr(start + range),
             week: this.convertRuleWeekToWeek(searchOption.times[0].week),
         };
     }

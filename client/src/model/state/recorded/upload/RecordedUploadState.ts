@@ -6,7 +6,7 @@ import IVideoApiModel from '../../..//api/video/IVideoApiModel';
 import IRecordedApiModel from '../../../api/recorded/IRecordedApiModel';
 import IChannelModel from '../../../channels/IChannelModel';
 import IServerConfigModel from '../../../serverConfig/IServerConfigModel';
-import ISettingStorageModel from '../../../storage/setting/ISettingStorageModel';
+import { ISettingStorageModel } from '../../../storage/setting/ISettingStorageModel';
 import IRecordedUploadState, { SelectorItem, UploadProgramOption, VideoFileItem } from './IRecordedUploadState';
 
 @injectable()

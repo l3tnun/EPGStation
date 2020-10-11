@@ -84,7 +84,7 @@ import IRecordedState from '@/model/state/recorded/IRecordedState';
 import IRecordingState from '@/model/state/recording/IRecordingState';
 import IReservesState from '@/model/state/reserve/IReservesState';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
-import ISettingStorageModel, { ISettingValue } from '@/model/storage/setting/ISettingStorageModel';
+import { ISettingStorageModel, ISettingValue } from '@/model/storage/setting/ISettingStorageModel';
 import UaUtil from '@/util/UaUtil';
 import Util from '@/util/Util';
 import { Component, Vue, Watch } from 'vue-property-decorator';
@@ -118,7 +118,7 @@ export default class Main extends Vue {
     private scrollState: IScrollPositionState = container.get<IScrollPositionState>('IScrollPositionState');
     private snackbarState: ISnackbarState = container.get<ISnackbarState>('ISnackbarState');
     private socketIoModel: ISocketIOModel = container.get<ISocketIOModel>('ISocketIOModel');
-    private onUpdateStatusCallback = (async () => {
+    private onUpdateStatusCallback = (async (): Promise<void> => {
         await this.recordingState.fetchData(this.createFetchRecordingDataOption());
         await this.recordedState.fetchData(this.createFetchRecordedDataOption());
         await this.reservesState.fetchData(this.createFetchReserveDataOption());
@@ -178,7 +178,7 @@ export default class Main extends Vue {
      * @param e: Event
      */
     public onRecordingScroll(e: Event): void {
-        this.recordingScroll = (<HTMLElement>e.target).scrollTop;
+        this.recordingScroll = (e.target as HTMLElement).scrollTop;
     }
 
     /**
@@ -186,7 +186,7 @@ export default class Main extends Vue {
      * @param e: Event
      */
     public onRecordedScroll(e: Event): void {
-        this.recordedScroll = (<HTMLElement>e.target).scrollTop;
+        this.recordedScroll = (e.target as HTMLElement).scrollTop;
     }
 
     /**
@@ -194,7 +194,7 @@ export default class Main extends Vue {
      * @param e: Event
      */
     public onReserveScroll(e: Event): void {
-        this.reserveScroll = (<HTMLElement>e.target).scrollTop;
+        this.reserveScroll = (e.target as HTMLElement).scrollTop;
     }
 
     /**
@@ -308,13 +308,13 @@ export default class Main extends Vue {
                         const position = this.scrollState.getScrollData<ScrollData>();
                         if (position !== null) {
                             if (typeof this.$refs.recordingItem !== 'undefined') {
-                                (<DashboardItem>this.$refs.recordingItem).setScrollTop(position.recordingScroll);
+                                (this.$refs.recordingItem as DashboardItem).setScrollTop(position.recordingScroll);
                             }
                             if (typeof this.$refs.recordedItem !== 'undefined') {
-                                (<DashboardItem>this.$refs.recordedItem).setScrollTop(position.recordedScroll);
+                                (this.$refs.recordedItem as DashboardItem).setScrollTop(position.recordedScroll);
                             }
                             if (typeof this.$refs.reserveItem !== 'undefined') {
-                                (<DashboardItem>this.$refs.reserveItem).setScrollTop(position.reserveScroll);
+                                (this.$refs.reserveItem as DashboardItem).setScrollTop(position.reserveScroll);
                             }
                         }
 

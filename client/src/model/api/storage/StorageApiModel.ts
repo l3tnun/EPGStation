@@ -18,6 +18,6 @@ export default class StorageApiModel implements IStorageApiModel {
     public async getInfo(): Promise<apid.StorageInfo> {
         const result = await this.repository.get('/storages');
 
-        return <any>result.data;
+        return result.data;
     }
 }

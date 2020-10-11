@@ -41,7 +41,7 @@ import IManualReserveState, {
     TimeSpecifiedOption,
 } from '@/model/state/reserve/manual/IManualReserveState';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
-import ISettingStorageModel, { ISettingValue } from '@/model/storage/setting/ISettingStorageModel';
+import { ISettingStorageModel, ISettingValue } from '@/model/storage/setting/ISettingStorageModel';
 import Util from '@/util/Util';
 import { cloneDeep } from 'lodash';
 import { Component, Vue, Watch } from 'vue-property-decorator';
@@ -74,7 +74,7 @@ export default class ManualReserve extends Vue {
     private snackbarState: ISnackbarState = container.get<ISnackbarState>('ISnackbarState');
     private settingValue: ISettingValue = container.get<ISettingStorageModel>('ISettingStorageModel').getSavedValue();
     private socketIoModel: ISocketIOModel = container.get<ISocketIOModel>('ISocketIOModel');
-    private onUpdateStatusCallback = (async () => {
+    private onUpdateStatusCallback = (async (): Promise<void> => {
         if (this.manualReserveState.isTimeSpecification === true) {
             // TODO 時刻指定予約
         } else {
@@ -197,7 +197,7 @@ export default class ManualReserve extends Vue {
         this.reserveId = null;
         this.manualReserveState.init();
 
-        const finnalize = async () => {
+        const finnalize = async (): Promise<void> => {
             // データ取得完了を通知
             await this.scrollState.emitDoneGetData();
         };

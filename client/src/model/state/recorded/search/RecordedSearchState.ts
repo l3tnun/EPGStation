@@ -4,7 +4,7 @@ import * as apid from '../../../../../../api';
 import GenreUtil from '../../../../util/GenreUtil';
 import IRecordedApiModel from '../../../api/recorded/IRecordedApiModel';
 import IChannelModel from '../../../channels/IChannelModel';
-import ISettingStorageModel from '../../../storage/setting/ISettingStorageModel';
+import { ISettingStorageModel } from '../../../storage/setting/ISettingStorageModel';
 import IRecordedSearchState, { SelectorItem } from './IRecordedSearchState';
 
 @injectable()

@@ -1,5 +1,6 @@
 import Vue from 'vue';
 import Router from 'vue-router';
+import { Position, Route } from 'vue-router/types/router';
 import container from './model/ModelContainer';
 import IScrollPositionState from './model/state/IScrollPositionState';
 import Dashboard from './views/Dashboard.vue';
@@ -116,7 +117,7 @@ export default new Router({
             component: Storages,
         },
     ],
-    scrollBehavior: async (_to, _from, savedPosition) => {
+    scrollBehavior: async (_to: Route, _from: Route, savedPosition: Position | void): Promise<Position> => {
         // ページデータが取得されるまで待つ
         const scrollState: IScrollPositionState = container.get<IScrollPositionState>('IScrollPositionState');
         await scrollState.onDoneGetData();

@@ -48,7 +48,7 @@ export default class WatchRecorded extends Vue {
 
         this.$nextTick(async () => {
             if (videoId !== null) {
-                (<VideoParam.NormalVideoParam>this.videoParam) = {
+                (this.videoParam as VideoParam.NormalVideoParam) = {
                     type: 'Normal',
                     src: `/api/videos/${videoId}`,
                 };

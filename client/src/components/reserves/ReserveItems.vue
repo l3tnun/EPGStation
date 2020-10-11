@@ -47,7 +47,9 @@ export default class ReserveItems extends Vue {
         this.resizeObserver = new ResizeObserver(() => {
             this.isTable = this.$el.clientWidth >= 900;
         });
-        this.resizeObserver!.observe(this.$el);
+        if (this.resizeObserver !== null) {
+            this.resizeObserver.observe(this.$el);
+        }
     }
 
     public beforeDestroy(): void {

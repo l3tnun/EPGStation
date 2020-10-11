@@ -62,7 +62,7 @@
 import container from '@/model/ModelContainer';
 import IAddEncodeState from '@/model/state/encode/IAddEncodeState';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
-import IAddEncodeSettingStorageModel from '@/model/storage/encode/IAddEncodeSettingStorageModel';
+import { IAddEncodeSettingStorageModel } from '@/model/storage/encode/IAddEncodeSettingStorageModel';
 import Util from '@/util/Util';
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
 import * as apid from '../../../../api';

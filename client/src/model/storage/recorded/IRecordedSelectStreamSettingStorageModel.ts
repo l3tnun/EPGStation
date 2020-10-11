@@ -5,5 +5,4 @@ export interface IRecordedSelectStreamSettingValue {
     mode: number;
 }
 
-export default interface IRecordedSelectStreamSettingStorageModel
-    extends IStorageBaseModel<IRecordedSelectStreamSettingValue> {}
+export type IRecordedSelectStreamSettingStorageModel = IStorageBaseModel<IRecordedSelectStreamSettingValue>;

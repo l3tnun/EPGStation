@@ -18,4 +18,4 @@ export interface IGuideGenreSettingValue {
     14: boolean;
     15: boolean;
 }
-export default interface IGuideGenreSettingStorageModel extends IStorageBaseModel<IGuideGenreSettingValue> {}
+export type IGuideGenreSettingStorageModel = IStorageBaseModel<IGuideGenreSettingValue>;
