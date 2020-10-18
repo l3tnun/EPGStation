@@ -455,10 +455,10 @@ export default class SearchState implements ISearchState {
 
         // 長さ
         if (typeof searchOption.durationMin !== 'undefined') {
-            this.searchOption.durationMin = searchOption.durationMin;
+            this.searchOption.durationMin = searchOption.durationMin * 60;
         }
         if (typeof searchOption.durationMax !== 'undefined') {
-            this.searchOption.durationMax = searchOption.durationMax;
+            this.searchOption.durationMax = searchOption.durationMax * 60;
         }
 
         // 期間
@@ -1036,10 +1036,10 @@ export default class SearchState implements ISearchState {
 
         // duration
         if (option.durationMin !== null) {
-            ruleOption.durationMin = option.durationMin;
+            ruleOption.durationMin = option.durationMin * 60;
         }
         if (option.durationMax !== null) {
-            ruleOption.durationMax = option.durationMax;
+            ruleOption.durationMax = option.durationMax * 60;
         }
 
         // periiod
