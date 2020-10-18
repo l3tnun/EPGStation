@@ -5,14 +5,13 @@
     - [EPGStation の待ち受けポートを変えたい](#serverport)
     - [EPGStation の Socket.IO 待ち受けポートを変えたい](#socketioport)
     - [クライアントが接続に使用する Socket.IO ポートを変えたい](#clientsocketioport)
-    - [アクセス時にユーザー認証を行いたい](#basicauth)
+    - [アクセス時にユーザー認証を行いたい (廃止)](#basicauth)
     - [Mirakurun の設定](#mirakurunpath)
     - [データベースの種類を変えたい](#dbtype)
     - [MySQL の設定を変更したい](#mysql)
     - [PostgreSQL の設定を変更したい](#postgresql)
     - [SQLite3 の設定を変更したい](#sqlite3)
     - [SQLite3 のデータベース保存先を変更したい](#dbpath)
-    - [番組名や概要に含まれる英数字記号を半角や全角に変換したい](#convertdbstr)
     - [利用する FFmpeg を明示的に指定したい](#ffmpeg)
     - [利用する FFprobe を明示的に指定したい](#ffprobe)
 - [詳細設定](#詳細設定)
@@ -134,25 +133,8 @@ serverPort と同じポート番号を設定しても良い
 ```
 
 ### basicAuth
-#### BASIC 認証の設定
 
-| 種類 | デフォルト値 | 必須 |
-| --- | ---------- | --- |
-| {} | - | no |
-
-- 子プロパティは以下の通り
-
-| 子プロパティ名 | 種類 | 必須 | 説明 |
-| --- | --- | ---------- | --- |
-| user | string | yes | BASIC 認証ログイン時のユーザー名 |
-| password | string | yes | BASIC 認証ログイン時のパスワード |
-
-```json
-"basicAuth": {
-    "user": "username",
-    "password": "password"
-}
-```
+これをつけただけでインターネットに公開する方が出たので廃止しました。
 
 ### mirakurunPath
 #### 利用する Mirakurun のパスもしくはURL
@@ -252,27 +234,6 @@ serverPort と同じポート番号を設定しても良い
 ```json
 "dbPath": "/hoge/database.db"
 ```
-
-### convertDBStr
-#### 番組名や概要などに含まれる英数字記号の変換方式
-
-| 種類 | デフォルト値 | 必須 |
-| --- | ---------- | --- |
-| string | - | no |
-
-- "no": 英数字記号を変換しない **(非推奨設定)**
-- "twoByte": 英数字記号を全角に変換
-- "oneByte" or その他（未定義の場合も同様）: 英数字記号を半角に変換
-- "oneByteWithCH": チャンネル名も含めて英数字記号を半角に変換
-
-**変更後は ```npm run convert-str``` を実行して録画済み一覧を検索可能にすること。**
-
-**"no" を設定した場合はエラーとなるので注意**
-
-```json
-"convertDBStr": "twoByte"
-```
-
 
 ### ffmpeg
 #### EPGStation が利用する FFmpeg のパス
@@ -716,11 +677,15 @@ WebUIでの簡易予約時に設定されるエンコードファイルのディ
 ```
 
 ## 外部コマンド実行
-### reservationAddedCommand
+### reserveNewAddtionCommand
 #### 録画予約の新規追加時に実行されるコマンド
-### recordedPreStartCommand
+### reserveUpdateCommand
+#### 録画情報の更新時に実行されるコマンド
+### reservedeletedCommand
+#### 録画予約の削除時に実行されるコマンド
+### recordingPreStartCommand
 #### 録画準備の開始時に実行されるコマンド
-### recordedPrepRecFailedCommand
+### recordingPrepRecFailedCommand
 #### 録画準備の失敗時に実行されるコマンド
 
 | 種類 | デフォルト値 | 必須 |
@@ -747,11 +712,11 @@ WebUIでの簡易予約時に設定されるエンコードファイルのディ
 "recordedPreStartCommand": "/bin/bash /home/hoge/foo.sh prestart",
 "recordedPrepRecFailedCommand": "/usr/bin/logger prepfailed"
 ```
-### recordedStartCommand
+### recordingStartCommand
 #### 録画開始時に実行するコマンド
-### recordedEndCommand
+### recordingFinishCommand
 #### 録画終了時に実行するコマンド
-### recordedFailedCommand
+### recordingFailedCommand
 #### 録画中のエラー発生時に実行するコマンド
 
 | 種類 | デフォルト値 | 必須 |
