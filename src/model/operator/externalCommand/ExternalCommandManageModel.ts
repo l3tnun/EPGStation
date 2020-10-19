@@ -113,11 +113,11 @@ export default class ExternalCommandManageModel implements IExternalCommandManag
      * @param recorded: Recorded
      */
     public addRecordingFinishCmd(recorded: Recorded): void {
-        if (typeof this.config.recordingFailedCommand === 'undefined') {
+        if (typeof this.config.recordingFinishCommand === 'undefined') {
             return;
         }
 
-        this.addRecorded(this.config.recordingFailedCommand, recorded);
+        this.addRecorded(this.config.recordingFinishCommand, recorded);
     }
 
     /**
