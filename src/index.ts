@@ -40,15 +40,21 @@ const init = async () => {
 
     // set uid & gid
     if (process.platform !== 'win32' && process.getuid() === 0) {
-        if (typeof config.uid === 'string' || typeof config.uid === 'number') {
-            process.setgid(config.uid);
-        }
+        // gid
         if (typeof config.gid === 'string' || typeof config.gid === 'number') {
             process.setgid(config.gid);
         } else {
             process.setgid('video');
         }
+
+        // uid
+        if (typeof config.uid === 'string' || typeof config.uid === 'number') {
+            process.setuid(config.uid);
+        }
     }
+
+    // uid, gid が設定されてから再度 log 再設定
+    logger.initialize(path.join(__dirname, '..', 'config', 'operatorLogConfig.yml'));
 
     // 接続確認
     const connectionChecker = container.get<IConnectionCheckModel>('IConnectionCheckModel');
