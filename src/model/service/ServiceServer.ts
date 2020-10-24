@@ -68,7 +68,7 @@ class ServiceServer implements IServiceServer {
         const api = <OpenAPIV3.Document>yaml.safeLoad(fs.readFileSync(ymlPath, 'utf-8'));
 
         // host 設定
-        api.servers = this.config.apiServes.map(url => {
+        api.servers = this.config.apiServers.map(url => {
             return {
                 url: urljoin(url, this.createUrl('/api')),
             };
