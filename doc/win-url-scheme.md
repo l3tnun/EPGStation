@@ -1,12 +1,19 @@
-Windows でのカスタム URL Protocol の設定
-===
+# Windows でのカスタム URL Protocol の設定
 
-## config.json の設定
+## config.yml の設定
 
-recordedViewer, recordedDownloader, mpegTsViewer に
+urlscheme の各プロパティを下記のように `win` プロパティを追加してください
 
-```
-"win" : "cvlc://http://ADDRESS"
+```yaml
+urlscheme:
+    m2ts:
+        ios: 'vlc-x-callback://x-callback-url/stream?url=http://ADDRESS"'
+        android: 'intent://ADDRESS#Intent;package=org.videolan.vlc;type=video;scheme=http;end'
+        win: 'cvcvlc://http://ADDRESS'
+    video:
+        ios: 'infuse://x-callback-url/play?url=http://ADDRESS'
+        android: 'intent://ADDRESS#Intent;package=com.mxtech.videoplayer.ad;type=video;scheme=http;end'
+        win: 'cvcvlc://http://ADDRESS'
 ```
 
 のように設定してください
@@ -21,7 +28,7 @@ recordedViewer, recordedDownloader, mpegTsViewer に
 
 以下のコードを `C:\DTV\open-vlc.bat` に保存してください
 
-```C:\Program Files\VideoLAN\VLC\vlc.exe``` で渡された URL を開くようになっています
+`C:\Program Files\VideoLAN\VLC\vlc.exe` で渡された URL を開くようになっています
 
 ```
 set vlcdata=%1
@@ -32,21 +39,21 @@ start "" "C:\Program Files\VideoLAN\VLC\vlc.exe" "%vlcdata:~8%"
 
 先程保存した open-vlc.bat を URL Protocol で呼び出せるようにレジストリを設定します
 
-以下のコードを ```reg``` ファイルで保存して実行してください
+以下のコードを `reg` ファイルで保存して実行してください
 
 ```
 Windows Registry Editor Version 5.00
- 
+
 [HKEY_CLASSES_ROOT\cvlc]
 @="URL:VLC Protocol"
 "URL Protocol"=""
- 
+
 [HKEY_CLASSES_ROOT\cvlc\DefaultIcon]
- 
+
 [HKEY_CLASSES_ROOT\cvlc\shell]
- 
+
 [HKEY_CLASSES_ROOT\cvlc\shell\open]
- 
+
 [HKEY_CLASSES_ROOT\cvlc\shell\open\command]
 @="\"C:\\DTV\\open-vlc.bat\" \"%1"
 ```
@@ -55,7 +62,7 @@ Windows Registry Editor Version 5.00
 
 ```
 Windows Registry Editor Version 5.00
- 
+
 [-HKEY_CLASSES_ROOT\cvlc]
 ```
 
