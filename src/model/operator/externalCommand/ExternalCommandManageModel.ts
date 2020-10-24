@@ -113,11 +113,11 @@ export default class ExternalCommandManageModel implements IExternalCommandManag
      * @param recorded: Recorded
      */
     public addRecordingFinishCmd(recorded: Recorded): void {
-        if (typeof this.config.recordingFailedCommand === 'undefined') {
+        if (typeof this.config.recordingFinishCommand === 'undefined') {
             return;
         }
 
-        this.addRecorded(this.config.recordingFailedCommand, recorded);
+        this.addRecorded(this.config.recordingFinishCommand, recorded);
     }
 
     /**
@@ -244,12 +244,12 @@ export default class ExternalCommandManageModel implements IExternalCommandManag
             } as any);
 
             child.on('exit', () => {
-                this.log.system.info(`${name} process is fin`);
+                this.log.system.info(`${cmd} process is fin`);
                 resolve();
             });
 
             child.on('error', err => {
-                this.log.system.error(`${name} process is error`);
+                this.log.system.error(`${cmd} process is error`);
                 this.log.system.error(String(err));
                 resolve();
             });
