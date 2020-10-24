@@ -1,45 +1,51 @@
-# nginxを利用したリバースプロキシの動作設定
-nginxを利用したリバースプロキシにてEPGstationを動かす場合の設定について解説します。
+# nginx を利用したリバースプロキシの動作設定
 
-## config.json
-### serverPort
+nginx を利用したリバースプロキシにて EPGstation を動かす場合の設定について解説します。
+
+## config.yml
+
+### port
+
 #### EPGStation が Web アクセスを待ち受けるポート番号
 
-| 種類 | デフォルト値 | 必須 |
-| --- | ---------- | --- |
-| number | 8888 | yes |
+| 種類   | デフォルト値 | 必須 |
+| ------ | ------------ | ---- |
+| number | 8888         | yes  |
 
-```json
-"serverPort": 8888
+```yaml
+port: 8888
 ```
 
 ### socketioPort
+
 #### EPGStation が Socket.IO アクセスを待ち受けるポート番号
 
-serverPort と同じポート番号を設定しても良い
+port と同じポート番号を設定しても良い
 
-| 種類 | デフォルト値 | 必須 |
-| --- | ---------- | --- |
-| number | serverPort + 1 | no |
+| 種類   | デフォルト値 | 必須 |
+| ------ | ------------ | ---- |
+| number | port と同じ  | no   |
 
-```json
-"socketioPort": 8888
+```yaml
+socketioPort: 8889
 ```
 
 ### clientSocketioPort
+
 ### EPGStation の Web クライアントが接続する Socket.IO のポート番号
 
-リバースプロキシを使用している場合は必須となる(リバースプロキシの受信ポートと同じにする事)
+リバースプロキシを使用している場合は必須となる
 
-| 種類 | デフォルト値 | 必須 |
-| --- | ---------- | --- |
-| number | serverPort + 1 | no |
+| 種類   | デフォルト値        | 必須 |
+| ------ | ------------------- | ---- |
+| number | socketioPort と同じ | no   |
 
-```json
-"clientSocketioPort": 80
+```yaml
+clientSocketioPort: 8889
 ```
 
-## nginx設定
+## nginx 設定
+
 下記の通り、リバースプロキシの設定を行います。  
 ※`localhost`は適宜変更してください。
 
