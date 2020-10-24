@@ -823,7 +823,7 @@ streamingPriority: 1
 | video          | 孫プロパティ | no   | 録画ビデオ視聴時の URL Scheme 設定           |
 | download       | 孫プロパティ | no   | m 録画ビデオダウンロード時の URL Scheme 設定 |
 
-| 子プロパティ名 | 種類   | 必須 | 説明                       |
+| 孫プロパティ名 | 種類   | 必須 | 説明                       |
 | -------------- | ------ | ---- | -------------------------- |
 | ios            | string | no   | iOS の URL Scheme 設定     |
 | android        | string | no   | Android の URL Scheme 設定 |
