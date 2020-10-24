@@ -1,7 +1,8 @@
-SQLite3 使用時の正規表現での検索の有効化について
-===
+# SQLite3 使用時の正規表現での検索の有効化について
 
-[SQLite](https://www.sqlite.org/) は標準で REGEXP 関数をサポートしておらず正規表現での検索ができません。ただし、[Run-Time Loadable Extensions - SQLite](https://sqlite.org/loadext.html) にあるように実行時に自作の SQL 関数を読み込むことができます
+[SQLite](https://www.sqlite.org/) は標準で REGEXP 関数をサポートしておらず正規表現での検索ができません。ただし
+、[Run-Time Loadable Extensions - SQLite](https://sqlite.org/loadext.html) にあるように実行時に自作の SQL 関数を読み込む
+ことができます
 
 この機能を使用して EPGStation で SQLite3 使用時でも正規表現を使えるようにする手順を紹介します
 
@@ -9,31 +10,33 @@ SQLite3 使用時の正規表現での検索の有効化について
 
 ### 1. ソースコードのダウンロード
 
-[SQLite Download Page](https://www.sqlite.org/download.html) から ```sqlite-amalgamation-*.zip``` と ```sqlite-src-*.zip``` をダウンロードし、適当な場所に解凍する
+[SQLite Download Page](https://www.sqlite.org/download.html) から `sqlite-amalgamation-*.zip` と `sqlite-src-*.zip` をダ
+ウンロードし、適当な場所に解凍する
 
 ### 2. ソースコードの配置
 
-```sqlite-src-*/ext/misc/regexp.c``` を ```sqlite-amalgamation-*``` へコピーする
+`sqlite-src-*/ext/misc/regexp.c` を `sqlite-amalgamation-*` へコピーする
 
 ### 3. ビルド
 
-```sqlite-amalgamation-*``` へ移動し以下のコマンドを実行する
+`sqlite-amalgamation-*` へ移動し以下のコマンドを実行する
 
-* Linux の場合
+-   Linux の場合
 
 ```
 gcc -g -fPIC -shared regexp.c -o regexp.so
 ```
 
-* macOS の場合
+-   macOS の場合
 
 ```
 gcc -g -fPIC -dynamiclib regexp.c -o regexp.dylib
 ```
 
-* Windows (64bit) の場合
+-   Windows (64bit) の場合
 
-スタートメニュー -> Visual C++ Build Tools -> Visual C++ 2015 x64 Native Build Tools Command Prompt を開き ```sqlite-amalgamation-*``` へ移動し以下のコマンドを実行する
+スタートメニュー -> Visual C++ Build Tools -> Visual C++ 2015 x64 Native Build Tools Command Prompt を開き
+`sqlite-amalgamation-*` へ移動し以下のコマンドを実行する
 
 ```
 cl regexp.c -link -dll -out:regexp.dll
@@ -45,15 +48,13 @@ cl regexp.c -link -dll -out:regexp.dll
 
 ## EPGStation の修正
 
-config.json に以下の項目を追加します。
+config.yml に以下の項目を追加します。
 
-```
-    "sqlite3": {
-        "extensions": [
-            "/hoge/regexp.so"
-        ],
-        "regexp": true
-    },
+```yaml
+sqlite:
+    extensions:
+        - '/hoge/regexp.so'
+    regexp: true
 ```
 
 Windows でのファイルパス指定は
