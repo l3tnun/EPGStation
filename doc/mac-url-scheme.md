@@ -1,20 +1,28 @@
-# Mac でのカスタム URL Sceheme の設定
+# macOS でのカスタム URL Sceheme の設定
 
-## config.json の設定
+## config.yaml の設定
 
-recordedViewer, recordedDownloader, mpegTsViewer に
+urlscheme の各プロパティを下記のように `mac` プロパティを追加してください
 
+```yaml
+urlscheme:
+    m2ts:
+        ios: 'vlc-x-callback://x-callback-url/stream?url=http://ADDRESS"'
+        android: 'intent://ADDRESS#Intent;package=org.videolan.vlc;type=video;scheme=http;end'
+        mac: 'cvlc://ADDRESS'
+    video:
+        ios: 'infuse://x-callback-url/play?url=http://ADDRESS'
+        android: 'intent://ADDRESS#Intent;package=com.mxtech.videoplayer.ad;type=video;scheme=http;end'
+        mac: 'cvlc://ADDRESS'
 ```
-"mac" : "cvlc://ADDRESS"
-```
-
-のように設定してください
 
 ## AppleScript でのカスタム URL Scheme アプリの作成
 
-[Quiita: AppleScript でカスタム URL スキーム](http://qiita.com/CorecaraBiz/items/9a1fc60aada31858d582) を参考にしています。詳しい解説はそちらを見てください
+[Quiita: AppleScript でカスタム URL スキーム](http://qiita.com/CorecaraBiz/items/9a1fc60aada31858d582) を参考にしていま
+す。詳しい解説はそちらを見てください
 
-Safari での挙動についてはこちらの [issue](https://github.com/l3tnun/EPGStation/issues/324#issuecomment-633255822) を参照してください
+Safari での挙動についてはこちらの [issue](https://github.com/l3tnun/EPGStation/issues/324#issuecomment-633255822) を参照
+してください
 
 ### 1. アプレットの作成
 
@@ -29,7 +37,7 @@ on open location url_scheme
 	set txt_items to text items of url_scheme
 	set AppleScript's text item delimiters to {""}
 	set scheme_txt to txt_items as Unicode text
-	
+
 	do shell script ({"/Applications/VLC.app/Contents/MacOS/VLC ", "https://" & scheme_txt} as string)
 end open location
 ```
