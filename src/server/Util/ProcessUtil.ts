@@ -44,7 +44,7 @@ namespace ProcessUtil {
      * @return ProcessUtil.Cmds
      */
     export const parseCmdStr = (cmd: string): ProcessUtil.Cmds => {
-        const args = cmd.split(' ');
+        let args = cmd.split(' ');
         let bin = args.shift();
         if (typeof bin === 'undefined') {
             throw new Error('CmdParseError');
@@ -59,6 +59,11 @@ namespace ProcessUtil {
         } catch (e) {
             throw new Error('CmdBinIsNotFound');
         }
+
+        // 引数内の %SPACE% を半角スペースに置換
+        args = args.map(arg => {
+            return arg.replace(/%SPACE%/g, ' ');
+        });
 
         return {
             bin: bin,

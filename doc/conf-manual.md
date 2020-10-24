@@ -685,6 +685,7 @@ WebUIでの簡易予約時に設定されるエンコードファイルのディ
 | %OUTPUT% | 出力ファイルパス |
 | %THUMBNAIL\_POSITION% | サムネイル生成位置(秒) |
 | %THUMBNAIL\_SIZE% | サムネイルサイズ |
+| %SPACE% | 半角スペース |
 
 ```json
 "thumbnailCmd": "%FFMPEG% -ss %THUMBNAIL_POSITION% -y -i %INPUT% -vframes 1 -f image2 -s %THUMBNAIL_SIZE% %OUTPUT%"
@@ -1043,6 +1044,7 @@ WebUIでの簡易予約時に設定されるエンコードファイルのディ
 | 変数名 | 説明 |
 | -------- | --- |
 | %FFMPEG% | EPGStationが利用しているffmpegのパス |
+| %SPACE% | 半角スペース |
 
 ```json
 "mpegTsStreaming": [
@@ -1084,6 +1086,7 @@ WebUIでの簡易予約時に設定されるエンコードファイルのディ
 | %VBUFFER% | 映像バッファオプション |
 | %AB% | 音声の目標ビットレート |
 | %ABUFFER% | 音声バッファオプション |
+| %SPACE% | 半角スペース |
 
 ```json
 "recordedStreaming": {
@@ -1144,6 +1147,7 @@ WebUIでの簡易予約時に設定されるエンコードファイルのディ
 | %FFMPEG% | EPGStationが利用している ffmpeg のパス |
 | %streamFileDir% | `streamFilePath` で指定したパス名 |
 | %streamNum% | 一時ファイルのストリーム番号 |
+| %SPACE% | 半角スペース |
 
 ```json
 "recordedHLS": [
