@@ -83,11 +83,13 @@ export default class RecordingUtilModel implements IRecordingUtilModel {
 
         // 局名
         let channelName = reserve.channelId.toString(10); // 局名が取れなかったときのために id で一旦セットする
+        let halfWidthChannelName = channelName;
         let sid = 'NULL';
         try {
             const channel = await this.channelDB.findId(reserve.channelId);
             if (channel !== null) {
                 channelName = channel.name;
+                halfWidthChannelName = channel.halfWidthName;
                 sid = channel.serviceId.toString(10);
             }
         } catch (err) {
@@ -106,21 +108,23 @@ export default class RecordingUtilModel implements IRecordingUtilModel {
         let fileName = reserve.recordedFormat === null ? this.config.recordedFormat : reserve.recordedFormat;
         const jaDate = DateUtil.getJaDate(new Date(reserve.startAt));
         fileName = fileName
-            .replace(/%YEAR%/, DateUtil.format(jaDate, 'yyyy'))
-            .replace(/%SHORTYEAR%/, DateUtil.format(jaDate, 'YY'))
-            .replace(/%MONTH%/, DateUtil.format(jaDate, 'MM'))
-            .replace(/%DAY%/, DateUtil.format(jaDate, 'dd'))
-            .replace(/%HOUR%/, DateUtil.format(jaDate, 'hh'))
-            .replace(/%MIN%/, DateUtil.format(jaDate, 'mm'))
-            .replace(/%SEC%/, DateUtil.format(jaDate, 'ss'))
-            .replace(/%DOW%/, DateUtil.format(jaDate, 'w'))
-            .replace(/%TYPE%/, reserve.channelType)
-            .replace(/%CHID%/, reserve.channelId.toString(10))
-            .replace(/%CHNAME%/, channelName)
-            .replace(/%CH%/, reserve.channel)
-            .replace(/%SID%/, sid)
-            .replace(/%ID%/, reserve.id.toString())
-            .replace(/%TITLE%/, programName === null ? 'NULL' : programName);
+            .replace(/%YEAR%/g, DateUtil.format(jaDate, 'yyyy'))
+            .replace(/%SHORTYEAR%/g, DateUtil.format(jaDate, 'YY'))
+            .replace(/%MONTH%/g, DateUtil.format(jaDate, 'MM'))
+            .replace(/%DAY%/g, DateUtil.format(jaDate, 'dd'))
+            .replace(/%HOUR%/g, DateUtil.format(jaDate, 'hh'))
+            .replace(/%MIN%/g, DateUtil.format(jaDate, 'mm'))
+            .replace(/%SEC%/g, DateUtil.format(jaDate, 'ss'))
+            .replace(/%DOW%/g, DateUtil.format(jaDate, 'w'))
+            .replace(/%TYPE%/g, reserve.channelType)
+            .replace(/%CHID%/g, reserve.channelId.toString(10))
+            .replace(/%CHNAME%/g, channelName)
+            .replace(/%HALF_WIDTH_CHNAME%/g, halfWidthChannelName)
+            .replace(/%CH%/g, reserve.channel)
+            .replace(/%SID%/g, sid)
+            .replace(/%ID%/g, reserve.id.toString())
+            .replace(/%TITLE%/g, programName === null ? 'NULL' : programName)
+            .replace(/%HALF_WIDTH_TITLE%/g, reserve.halfWidthName === null ? 'NULL' : reserve.halfWidthName);
 
         // 使用禁止文字列置き換え
         fileName = StrUtil.replaceFileName(fileName);
