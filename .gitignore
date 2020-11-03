@@ -20,3 +20,4 @@ dist
 !.gitkeep
 .cache
 data/upload/*
+data/key/*

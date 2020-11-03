@@ -11,14 +11,10 @@ export const get: Operation = async (req, res) => {
             throw new Error('HostIsUndefined');
         }
 
-        const playlist = await streamApiModel.getLiveM2TsStreamM3u8(
-            req.headers.host,
-            req.header('x-forwarded-proto') === 'https',
-            {
-                channelId: parseInt(req.params.channelId, 10),
-                mode: parseInt(req.query.mode as string, 10),
-            },
-        );
+        const playlist = await streamApiModel.getLiveM2TsStreamM3u8(req.headers.host, api.isSecureProtocol(req), {
+            channelId: parseInt(req.params.channelId, 10),
+            mode: parseInt(req.query.mode as string, 10),
+        });
 
         if (playlist === null) {
             api.responseError(res, {

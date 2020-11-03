@@ -13,7 +13,7 @@ export const get: Operation = async (req, res) => {
 
         const result = await iptvApiModel.getChannelList(
             req.headers.host,
-            req.header('x-forwarded-proto') === 'https',
+            api.isSecureProtocol(req),
             parseInt(req.query.mode as any, 10),
             req.query.isHalfWidth as any,
         );

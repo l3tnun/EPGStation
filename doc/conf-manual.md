@@ -66,11 +66,11 @@
 
 ### port
 
-#### EPGStation が Web アクセスを待ち受けるポート番号
+#### EPGStation が http で Web アクセスを待ち受けるポート番号
 
-| 種類   | デフォルト値 | 必須 |
-| ------ | ------------ | ---- |
-| number | 8888         | yes  |
+| 種類   | デフォルト値 | 必須                               |
+| ------ | ------------ | ---------------------------------- |
+| number | -            | no (※https の設定が無い場合は必須) |
 
 ```yaml
 port: 8888
@@ -78,7 +78,7 @@ port: 8888
 
 ### socketioPort
 
-#### EPGStation が Socket.IO アクセスを待ち受けるポート番号
+#### EPGStation が http で Socket.IO アクセスを待ち受けるポート番号
 
 port と同じポート番号を設定しても良い
 
@@ -102,6 +102,31 @@ socketioPort: 8889
 
 ```yaml
 clientSocketioPort: 8889
+```
+
+### https
+
+#### EPGStation が https で Web アクセスを待ち受ける設定
+
+clientSocketioPort とは併用できないので注意
+
+リバースプロキシを使用する場合は使用しないこと
+
+| 子プロパティ名 | 種類   | 必須 | 説明                                                                       |
+| -------------- | ------ | ---- | -------------------------------------------------------------------------- |
+| port           | number | yes  | 待ち受けポート番号                                                         |
+| key            | string | yes  | 秘密鍵のファイルのフルパス                                                 |
+| cert           | string | yes  | 証明書のファイルのフルパス                                                 |
+| ca             | string | no   | クライアント秘密鍵のファイルのフルパス (※クライアント認証をする場合は必要) |
+| socketioPort   | number | no   | Socket.IO アクセスを待ち受けるポート番号                                   |
+
+```yaml
+https:
+    port: 8443
+    key: /hoge/huga/server.key
+    cert: /hoge/huga/server.crt
+    ca: /hoge/huga/client.crt
+    socketioPort: 8444
 ```
 
 ### mirakurunPath

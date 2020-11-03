@@ -13,7 +13,7 @@ export const get: Operation = async (req, res) => {
 
         const playlist = await videoFileApiModel.getM3u8(
             req.headers.host,
-            req.header('x-forwarded-proto') === 'https',
+            api.isSecureProtocol(req),
             parseInt(req.params.videoFileId, 10),
         );
 

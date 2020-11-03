@@ -3,11 +3,11 @@ import IConfigApiModel from '../../api/config/IConfigApiModel';
 import container from '../../ModelContainer';
 import * as api from '../api';
 
-export const get: Operation = async (_req, res) => {
+export const get: Operation = async (req, res) => {
     const configApiModel = container.get<IConfigApiModel>('IConfigApiModel');
 
     try {
-        api.responseJSON(res, 200, await configApiModel.getConfig());
+        api.responseJSON(res, 200, await configApiModel.getConfig(api.isSecureProtocol(req)));
     } catch (err) {
         api.responseServerError(res, err.message);
     }

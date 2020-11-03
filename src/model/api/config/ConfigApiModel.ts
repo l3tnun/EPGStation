@@ -14,16 +14,35 @@ export default class ConfigApiModel implements IConfigApiModel {
         this.ipc = ipc;
     }
 
-    public async getConfig(): Promise<apid.Config> {
+    /**
+     * コンフィグ設定を返す
+     * @param isSecure: boolean https アクセスか?
+     */
+    public async getConfig(isSecure: boolean): Promise<apid.Config> {
         const config = this.configuration.getConfig();
 
         const result: apid.Config = <any>{};
-        result.socketIOPort =
-            typeof config.clientSocketioPort !== 'undefined'
-                ? config.clientSocketioPort
-                : typeof config.socketioPort !== 'undefined'
-                ? config.socketioPort
-                : config.port;
+
+        // socket.io ポート設定
+        if (typeof config.clientSocketioPort !== 'undefined') {
+            result.socketIOPort = config.clientSocketioPort;
+        } else if (isSecure === true) {
+            // https
+            if (typeof config.https === 'undefined') {
+                throw new Error('httpsConfigError');
+            }
+
+            result.socketIOPort =
+                typeof config.https.socketioPort === 'undefined' ? config.https.port : config.https.socketioPort;
+        } else {
+            // http
+            if (typeof config.port === 'undefined') {
+                throw new Error('httpConfigError');
+            }
+
+            result.socketIOPort = typeof config.socketioPort === 'undefined' ? config.port : config.socketioPort;
+        }
+
         result.recorded = config.recorded.map(r => {
             return r.name;
         });

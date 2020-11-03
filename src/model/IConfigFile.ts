@@ -1,6 +1,14 @@
 import * as apid from '../../api';
 import * as Enums from '../Enums';
 
+export interface HttpsConfig {
+    port: number;
+    key: string; // 秘密鍵
+    cert: string; // 証明書
+    ca?: string; // クライアント認証用秘密鍵
+    socketioPort?: number;
+}
+
 export interface RecordedDirInfo {
     name: string;
     path: string;
@@ -32,9 +40,10 @@ export interface KodiInfo {
  * config ファイル形式
  */
 export default interface IConfigFile {
-    port: number;
+    port?: number;
     socketioPort?: number;
     clientSocketioPort?: number;
+    https?: HttpsConfig;
     mirakurunPath: string;
 
     subDirectory?: string;

@@ -169,3 +169,7 @@ const sendResponse = (
         });
     }
 };
+
+export const isSecureProtocol = (req: express.Request): boolean => {
+    return req.header('x-forwarded-proto') === 'https' || req.protocol === 'https';
+};

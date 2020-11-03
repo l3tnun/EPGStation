@@ -12,7 +12,7 @@ import ISocketIOManageModel from './ISocketIOManageModel';
 export default class SocketIOManageModel implements ISocketIOManageModel {
     private log: ILogger;
     private config: IConfigFile;
-    private io: SocketIO.Server | null = null;
+    private ios: SocketIO.Server[] = [];
     private callTimer: NodeJS.Timer | null = null;
 
     constructor(@inject('ILoggerModel') logger: ILoggerModel, @inject('IConfiguration') configuration: IConfiguration) {
@@ -22,15 +22,19 @@ export default class SocketIOManageModel implements ISocketIOManageModel {
 
     /**
      * socket.io 初期化
-     * @param server: http.Server
+     * @param servers: http.Server[]
      */
-    public initialize(server: http.Server): void {
-        this.io = SocketIO.default(server, {
-            path:
-                typeof this.config.subDirectory === 'undefined'
-                    ? '/socket.io'
-                    : urljoin(this.config.subDirectory, '/socket.io'),
-        });
+    public initialize(servers: http.Server[]): void {
+        for (const s of servers) {
+            this.ios.push(
+                SocketIO.default(s, {
+                    path:
+                        typeof this.config.subDirectory === 'undefined'
+                            ? '/socket.io'
+                            : urljoin(this.config.subDirectory, '/socket.io'),
+                }),
+            );
+        }
 
         this.log.system.info('SocketIO Server has started.');
     }
@@ -42,20 +46,15 @@ export default class SocketIOManageModel implements ISocketIOManageModel {
         if (this.callTimer === null) {
             this.callTimer = setTimeout(() => {
                 this.callTimer = null;
-                this.getSockets().emit('updateStatus');
+
+                if (this.ios.length === 0) {
+                    throw new Error('must call SocketIoManageModel initialize');
+                }
+
+                for (const io of this.ios) {
+                    io.sockets.emit('updateStatus');
+                }
             }, 200);
         }
-    }
-
-    /**
-     * socket を返す
-     * @return SocketIO.Namespace
-     */
-    private getSockets(): SocketIO.Namespace {
-        if (this.io === null) {
-            throw new Error('must call SocketIoManageModel initialize');
-        }
-
-        return this.io.sockets;
     }
 }

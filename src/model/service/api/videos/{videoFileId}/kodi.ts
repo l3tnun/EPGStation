@@ -13,7 +13,7 @@ export const post: Operation = async (req, res) => {
 
         await videoApiModel.sendToKodi(
             req.headers.host,
-            req.header('x-forwarded-proto') === 'https',
+            api.isSecureProtocol(req),
             req.body.kodiName,
             parseInt(req.params.videoFileId, 10),
         );

@@ -67,6 +67,18 @@ class Configuration implements IConfiguration {
     private formatConfig(newConfig: IConfigFile): IConfigFile {
         this.setDefaultValues(newConfig);
 
+        // http or https の設定が存在するかチェック
+        if (
+            typeof newConfig.port === 'undefined' &&
+            (typeof newConfig.https === 'undefined' ||
+                typeof newConfig.https.port === 'undefined' ||
+                typeof newConfig.https.key === 'undefined' ||
+                typeof newConfig.https.cert === 'undefined')
+        ) {
+            this.log.system.fatal('port setting error');
+            throw new Error('PortSettingError');
+        }
+
         // set apiServes
         if (newConfig.apiServers.length === 0) {
             newConfig.apiServers.push(`http://localhost:${newConfig.port}`);
@@ -134,7 +146,6 @@ namespace Configuration {
     export const ROOT_PATH = path.join(__dirname, '..', '..').replace(new RegExp(`\\${path.sep}$`), '');
 
     export const DEFAULT_VALUE: IConfigFile = {
-        port: 8888,
         mirakurunPath: 'http+unix://%2Fvar%2Frun%2Fmirakurun.sock/',
         apiServers: [],
         dbtype: 'sqlite',

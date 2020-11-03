@@ -3,6 +3,7 @@ import express from 'express';
 import * as openapi from 'express-openapi';
 import * as fs from 'fs';
 import * as http from 'http';
+import * as https from 'https';
 import { inject, injectable } from 'inversify';
 import * as yaml from 'js-yaml';
 import * as log4js from 'log4js';
@@ -242,24 +243,62 @@ class ServiceServer implements IServiceServer {
      * http server 起動
      */
     public start(): void {
-        const socketioPort =
-            typeof this.config.socketioPort !== 'undefined' ? this.config.socketioPort : this.config.port;
+        const sokcetioServers: http.Server[] = [];
 
-        const server = this.app.listen(this.config.port, () => {
-            this.log.system.info(`server listening on ${this.config.port}`);
-        });
+        // http
+        if (typeof this.config.port !== 'undefined') {
+            const socketioPort =
+                typeof this.config.socketioPort !== 'undefined' ? this.config.socketioPort : this.config.port;
 
-        // socket.io
-        if (socketioPort === this.config.port) {
-            this.socketIoManageModel.initialize(server);
-        } else {
-            const socketIOServer = http.createServer();
-            socketIOServer.listen(this.config.socketioPort, () => {
-                this.log.system.info(`SocketIO listening on ${this.config.socketioPort}`);
+            const server = this.app.listen(this.config.port, () => {
+                this.log.system.info(`http server listening on ${this.config.port}`);
             });
 
-            this.socketIoManageModel.initialize(socketIOServer);
+            // socket.io
+            if (socketioPort === this.config.port) {
+                sokcetioServers.push(server);
+            } else {
+                const socketIOServer = http.createServer();
+                socketIOServer.listen(this.config.socketioPort, () => {
+                    this.log.system.info(`http SocketIO listening on ${this.config.socketioPort}`);
+                });
+
+                sokcetioServers.push(socketIOServer);
+            }
         }
+
+        // https
+        if (typeof this.config.https !== 'undefined') {
+            const option: https.ServerOptions = {
+                key: fs.readFileSync(this.config.https.key),
+                cert: fs.readFileSync(this.config.https.cert),
+            };
+            if (typeof this.config.https.ca !== 'undefined') {
+                option.ca = fs.readFileSync(this.config.https.ca);
+                option.requestCert = true;
+                option.rejectUnauthorized = true;
+            }
+
+            const httpsServer = https.createServer(option, this.app);
+            httpsServer.listen(this.config.https.port, () => {
+                if (typeof this.config.https !== 'undefined') {
+                    this.log.system.info(`https server listening on ${this.config.https.port}`);
+                }
+            });
+
+            // socket.io
+            if (typeof this.config.https.socketioPort === 'undefined') {
+                sokcetioServers.push(httpsServer);
+            } else {
+                const socketIOServer = https.createServer(option);
+                sokcetioServers.push(socketIOServer);
+                socketIOServer.listen(this.config.https.socketioPort, () => {
+                    this.log.system.info(`https SocketIO listening on ${this.config.socketioPort}`);
+                });
+            }
+        }
+
+        this.socketIoManageModel.initialize(sokcetioServers);
     }
 }
 
