@@ -112,20 +112,18 @@ clientSocketioPort とは併用できないので注意
 
 リバースプロキシを使用する場合は使用しないこと
 
-| 子プロパティ名 | 種類   | 必須 | 説明                                                                       |
-| -------------- | ------ | ---- | -------------------------------------------------------------------------- |
-| port           | number | yes  | 待ち受けポート番号                                                         |
-| key            | string | yes  | 秘密鍵のファイルのフルパス                                                 |
-| cert           | string | yes  | 証明書のファイルのフルパス                                                 |
-| ca             | string | no   | クライアント秘密鍵のファイルのフルパス (※クライアント認証をする場合は必要) |
-| socketioPort   | number | no   | Socket.IO アクセスを待ち受けるポート番号                                   |
+| 子プロパティ名 | 種類   | 必須 | 説明                                     |
+| -------------- | ------ | ---- | ---------------------------------------- |
+| port           | number | yes  | 待ち受けポート番号                       |
+| key            | string | yes  | 秘密鍵のファイルのフルパス               |
+| cert           | string | yes  | 証明書のファイルのフルパス               |
+| socketioPort   | number | no   | Socket.IO アクセスを待ち受けるポート番号 |
 
 ```yaml
 https:
     port: 8443
     key: /hoge/huga/server.key
     cert: /hoge/huga/server.crt
-    ca: /hoge/huga/client.crt
     socketioPort: 8444
 ```
 
