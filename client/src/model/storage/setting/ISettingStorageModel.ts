@@ -3,6 +3,7 @@ import IStorageBaseModel from '../IStorageBaseModel';
 export type GuideViewMode = 'sequential' | 'minimum' | 'all';
 
 export interface ISettingValue {
+    isEnablePWA: boolean;
     isForceDarkTheme: boolean;
     isHalfWidthDisplayed: boolean;
     isOnAirTabListView: boolean;

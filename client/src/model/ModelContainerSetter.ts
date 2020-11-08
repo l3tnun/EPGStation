@@ -29,6 +29,8 @@ import IVideoApiModel from './api/video/IVideoApiModel';
 import VideoApiModel from './api/video/VideoApiModel';
 import ChannelModel from './channels/ChannelModel';
 import IChannelModel from './channels/IChannelModel';
+import IPWAConfigModel from './pwa/IPWAConfigModel';
+import PWAConfigModel from './pwa/PWAConfigModel';
 import IServerConfigModel from './serverConfig/IServerConfigModel';
 import ServerConfigModel from './serverConfig/ServerConfigModel';
 import ISocketIOModel from './socketio/ISocketIOModel';
@@ -116,6 +118,8 @@ import StorageOperationModel from './storage/StorageOperationModel';
  * container に各 Model を登録する
  */
 export default (container: Container): void => {
+    container.bind<IPWAConfigModel>('IPWAConfigModel').to(PWAConfigModel).inSingletonScope();
+
     container.bind<IRepositoryModel>('IRepositoryModel').to(RepositoryModel).inSingletonScope();
 
     container.bind<IConfigApiModel>('IConfigApiModel').to(ConfigApiModel).inSingletonScope();

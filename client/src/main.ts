@@ -7,10 +7,10 @@ import App from './App.vue';
 import IChannelModel from './model/channels/IChannelModel';
 import container from './model/ModelContainer';
 import setter from './model/ModelContainerSetter';
+import IPWAConfigModel from './model/pwa/IPWAConfigModel';
 import IServerConfigModel from './model/serverConfig/IServerConfigModel';
 import vuetify from './plugins/vuetify';
 import router from './router';
-import UaUtil from './util/UaUtil';
 
 setter(container);
 
@@ -25,12 +25,7 @@ smoothscroll.polyfill();
     });
 
     // Web app 設定
-    if (UaUtil.isiOS() === true && UaUtil.isiPadOS() === false) {
-        const meta = document.createElement('meta');
-        meta.setAttribute('name', 'apple-mobile-web-app-capable');
-        meta.setAttribute('content', 'black');
-        document.getElementsByTagName('head')[0].appendChild(meta);
-    }
+    container.get<IPWAConfigModel>('IPWAConfigModel').setting();
 
     // 放送局情報の取得
     const channelModel = container.get<IChannelModel>('IChannelModel');

@@ -10,6 +10,14 @@
                                 <div class="title">全般</div>
                                 <div class="my-2 d-flex flex-row align-center">
                                     <div>
+                                        <v-list-item-title class="subtitle-1">PWA</v-list-item-title>
+                                        <v-list-item-subtitle>PWAを有効化する(※再読込後有効になります)</v-list-item-subtitle>
+                                    </div>
+                                    <v-spacer></v-spacer>
+                                    <v-switch v-model="storageModel.tmp.isEnablePWA" value></v-switch>
+                                </div>
+                                <div class="my-2 d-flex flex-row align-center">
+                                    <div>
                                         <v-list-item-title class="subtitle-1">ダークテーマ</v-list-item-title>
                                         <v-list-item-subtitle>ダークテーマを有効化する</v-list-item-subtitle>
                                     </div>
