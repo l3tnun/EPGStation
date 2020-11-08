@@ -274,7 +274,13 @@ class ServiceServer implements IServiceServer {
                 cert: fs.readFileSync(this.config.https.cert),
             };
             if (typeof this.config.https.ca !== 'undefined') {
-                option.ca = fs.readFileSync(this.config.https.ca);
+                if (typeof this.config.https.ca === 'string') {
+                    option.ca = fs.readFileSync(this.config.https.ca);
+                } else {
+                    option.ca = this.config.https.ca.map(f => {
+                        return fs.readFileSync(f);
+                    });
+                }
                 option.requestCert = true;
                 option.rejectUnauthorized = true;
             }

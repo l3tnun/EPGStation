@@ -5,7 +5,7 @@ export interface HttpsConfig {
     port: number;
     key: string; // 秘密鍵
     cert: string; // 証明書
-    ca?: string; // クライアント認証用秘密鍵
+    ca?: string | string[]; // クライアント認証用秘密鍵
     socketioPort?: number;
 }
 
