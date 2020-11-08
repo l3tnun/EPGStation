@@ -167,7 +167,7 @@ export default class OnAirSelectStreamState implements IOnAirSelectStreamState {
             viewURL = encodeURIComponent(viewURL);
         }
 
-        return urlScheme.replace(/ADDRESS/g, viewURL);
+        return urlScheme.replace(/PROTOCOL/g, location.protocol.replace(':', '')).replace(/ADDRESS/g, viewURL);
     }
 
     /**

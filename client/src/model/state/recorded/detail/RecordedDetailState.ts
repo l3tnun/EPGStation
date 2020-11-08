@@ -86,7 +86,10 @@ export default class RecordedDetailState implements IRecordedDetailState {
             fullVideoURL = encodeURIComponent(fullVideoURL);
         }
 
-        return urlScheme.replace(/ADDRESS/g, fullVideoURL).replace(/FILENAME/g, video.name);
+        return urlScheme
+            .replace(/PROTOCOL/g, location.protocol.replace(':', ''))
+            .replace(/ADDRESS/g, fullVideoURL)
+            .replace(/FILENAME/g, video.name);
     }
 
     /**
@@ -133,7 +136,10 @@ export default class RecordedDetailState implements IRecordedDetailState {
             fullVideoURL = encodeURIComponent(fullVideoURL);
         }
 
-        return urlScheme.replace(/ADDRESS/g, fullVideoURL).replace(/FILENAME/g, video.name);
+        return urlScheme
+            .replace(/PROTOCOL/g, location.protocol.replace(':', ''))
+            .replace(/ADDRESS/g, fullVideoURL)
+            .replace(/FILENAME/g, video.name);
     }
 
     /**

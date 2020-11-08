@@ -181,15 +181,15 @@ namespace Configuration {
         isSuppressReservesUpdateAllLog: false,
         urlscheme: {
             m2ts: {
-                ios: 'vlc-x-callback://x-callback-url/stream?url=http://ADDRESS"',
-                android: 'intent://ADDRESS#Intent;package=org.videolan.vlc;type=video;scheme=http;end',
+                ios: 'vlc-x-callback://x-callback-url/stream?url=PROTOCOL://ADDRESS"',
+                android: 'intent://ADDRESS#Intent;package=org.videolan.vlc;type=video;scheme=PROTOCOL;end',
             },
             video: {
-                ios: 'infuse://x-callback-url/play?url=http://ADDRESS',
-                android: 'intent://ADDRESS#Intent;package=com.mxtech.videoplayer.ad;type=video;scheme=http;end',
+                ios: 'infuse://x-callback-url/play?url=PROTOCOL://ADDRESS',
+                android: 'intent://ADDRESS#Intent;package=com.mxtech.videoplayer.ad;type=video;scheme=PROTOCOL;end',
             },
             download: {
-                ios: 'vlc-x-callback://x-callback-url/stream?url=http://ADDRESS',
+                ios: 'vlc-x-callback://x-callback-url/stream?url=PROTOCOL://ADDRESS',
             },
         },
         streamFilePath: path.join(__dirname, '..', '..', 'data', 'streamfiles'),

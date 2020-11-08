@@ -7,12 +7,12 @@ urlscheme の各プロパティを下記のように `mac` プロパティを追
 ```yaml
 urlscheme:
     m2ts:
-        ios: 'vlc-x-callback://x-callback-url/stream?url=http://ADDRESS"'
-        android: 'intent://ADDRESS#Intent;package=org.videolan.vlc;type=video;scheme=http;end'
+        ios: 'vlc-x-callback://x-callback-url/stream?url=PROTOCOL://ADDRESS"'
+        android: 'intent://ADDRESS#Intent;package=org.videolan.vlc;type=video;scheme=PROTOCOL;end'
         mac: 'cvlc://ADDRESS'
     video:
-        ios: 'infuse://x-callback-url/play?url=http://ADDRESS'
-        android: 'intent://ADDRESS#Intent;package=com.mxtech.videoplayer.ad;type=video;scheme=http;end'
+        ios: 'infuse://x-callback-url/play?url=PROTOCOL://ADDRESS'
+        android: 'intent://ADDRESS#Intent;package=com.mxtech.videoplayer.ad;type=video;scheme=PROTOCOL;end'
         mac: 'cvlc://ADDRESS'
 ```
 
