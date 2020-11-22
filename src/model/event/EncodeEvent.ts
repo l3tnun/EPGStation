@@ -107,6 +107,20 @@ class EncodeEvent implements IEncodeEvent {
             }
         });
     }
+    
+     /**
+     * エンコード更新イベント登録
+     * @param callback: callback: () => void
+     */
+    public setUpdateEncode(callback: () => void): void {
+        this.emitter.on(EncodeEvent.UPDATE_ENCODE_EVENT, async () => {
+            try {
+                await callback();
+            } catch (err) {
+                this.log.system.error(err);
+            }
+        });
+    }
 }
 
 namespace EncodeEvent {
