@@ -27,6 +27,8 @@ interface RunningQueueItem {
     encodeProgram: EncodeQueueItem;
     isCanceld: boolean; // cancel して停止されたか
     timerId: NodeJS.Timer; // エンコードタイムアウト
+    percent: number;
+    log: string;
 }
 
 @injectable()
@@ -286,8 +288,61 @@ class EncodeManageModel implements IEncodeManageModel {
          */
         // debug 用
         if (childProcess.stderr !== null) {
+            let duration = 0;
+            let current = 0;
             childProcess.stderr.on('data', data => {
-                this.log.system.debug(String(data));
+                const logs = String(data).split('\n');
+                for (let j = 0; j < logs.length; j++) {
+                    if (logs[j] != '') {
+                        const log = JSON.parse(String(logs[j]));
+                        this.log.system.info(log);
+                        if (log.type == 'progress') {
+                            current = 0;
+                            const times = log.data.time.split(':');
+                            for (let i = 0; i < times.length; i++) {
+                                if (i == 0) {
+                                    current += parseFloat(times[i]) * 3600;
+                                } else if (i == 1) {
+                                    current += parseFloat(times[i]) * 60;
+                                } else if (i == 2) {
+                                    current += parseFloat(times[i]);
+                                }
+                            }
+                            this.log.system.info(String(current));
+                            const encodingQueueItem = this.getRunnginQueueItem(queueItem.encodeId);
+                            if (encodingQueueItem != null) {
+                                encodingQueueItem.percent = current / duration;
+                                encodingQueueItem.log =
+                                    'frame= ' +
+                                    log.data.frame +
+                                    ' fps=' +
+                                    log.data.fps +
+                                    ' size=' +
+                                    log.data.size +
+                                    ' time=' +
+                                    log.data.time +
+                                    ' bitrate=' +
+                                    log.data.bitrate +
+                                    ' speed=' +
+                                    log.data.speed;
+                                this.encodeEvent.emitErrorEncode();
+                            }
+                        } else if (log.type == 'inputinfo') {
+                            // 00:01:35.71
+                            const times = log.data.split('Duration: ')[1].split(',')[0].split(':');
+                            this.log.system.info(log.data.split('Duration: ')[1].split(',')[0]);
+                            for (let i = 0; i < times.length; i++) {
+                                if (i == 0) {
+                                    duration += parseFloat(times[i]) * 3600;
+                                } else if (i == 1) {
+                                    duration += parseFloat(times[i]) * 60;
+                                } else if (i == 2) {
+                                    duration += parseFloat(times[i]);
+                                }
+                            }
+                        }
+                    }
+                }
             });
         }
 
@@ -606,6 +661,8 @@ class EncodeManageModel implements IEncodeManageModel {
                     id: i.encodeProgram.encodeId,
                     mode: i.encodeProgram.mode,
                     recordedId: i.encodeProgram.recordedId,
+                    percent: i.percent,
+                    log: i.log,
                 };
             });
         }
@@ -616,6 +673,8 @@ class EncodeManageModel implements IEncodeManageModel {
                     id: i.encodeId,
                     mode: i.mode,
                     recordedId: i.recordedId,
+                    percent: 0,
+                    log: '',
                 };
             });
         }
