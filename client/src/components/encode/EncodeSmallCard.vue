@@ -15,7 +15,7 @@
                     <div class="text caption font-weight-light">{{ item.display.channelName }}</div>
                     <div class="text caption font-weight-light">{{ item.display.time }} ({{ item.display.duration }} m)</div>
                     <div class="text caption font-regular">{{ item.display.mode }}</div>
-                    <div class="text caption font-regular">{{ Math.floor(item.display.percent) + "% " + item.display.log }}</div>
+                    <div class="text caption font-regular">{{ Math.floor(item.display.percent) + '% ' + item.display.log }}</div>
                     <v-progress-linear buffer-value="100" :value="item.display.percent"></v-progress-linear>
                 </div>
             </div>
