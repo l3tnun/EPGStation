@@ -601,8 +601,8 @@ export interface EncodeProgramItem {
     id: EncodeId;
     mode: string;
     recorded: RecordedItem;
-    percent: number;
-    log: string;
+    percent?: number;
+    log?: string;
 }
 
 /**

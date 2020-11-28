@@ -1280,8 +1280,6 @@ components:
                 - id
                 - mode
                 - recorded
-                - percent
-                - log
             properties:
                 id:
                     $ref: '#/components/schemas/EncodeId'

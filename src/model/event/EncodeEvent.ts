@@ -44,14 +44,14 @@ class EncodeEvent implements IEncodeEvent {
     public emitErrorEncode(): void {
         this.emitter.emit(EncodeEvent.ERROR_ENCODE_EVENT);
     }
-    
+
     /**
      * エンコード更新イベント発行
      */
     public emitupdateEncode(): void {
         this.emitter.emit(EncodeEvent.UPDATE_ENCODE_EVENT);
     }
-    
+
     /**
      * エンコード追加イベント登録
      * @param callback: (encodeId: apid.EncodeId) => void
@@ -107,8 +107,8 @@ class EncodeEvent implements IEncodeEvent {
             }
         });
     }
-    
-     /**
+
+    /**
      * エンコード更新イベント登録
      * @param callback: callback: () => void
      */

@@ -27,8 +27,8 @@ interface RunningQueueItem {
     encodeProgram: EncodeQueueItem;
     isCanceld: boolean; // cancel して停止されたか
     timerId: NodeJS.Timer; // エンコードタイムアウト
-    percent: number;
-    log: string;
+    percent?: number;
+    log?: string;
 }
 
 @injectable()
