@@ -78,6 +78,8 @@ export default class EncodeState implements IEncodeState {
                         ? './img/noimg.png'
                         : `./api/thumbnails/${item.recorded.thumbnails[0]}`,
                 mode: item.mode,
+                percent: item.percent * 100,
+                log: item.log,
             },
             encodeItem: item,
             isSelected: typeof isSelectedIndex[item.id] === 'undefined' ? false : isSelectedIndex[item.id],

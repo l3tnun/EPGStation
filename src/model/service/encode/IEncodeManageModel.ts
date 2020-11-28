@@ -16,6 +16,8 @@ export interface EncodeInfoItem {
     id: apid.EncodeId;
     mode: string;
     recordedId: apid.RecordedId;
+    percent: number;
+    log: string;
 }
 
 export default interface IEncodeManageModel {

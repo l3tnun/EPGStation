@@ -1280,6 +1280,8 @@ components:
                 - id
                 - mode
                 - recorded
+                - percent
+                - log
             properties:
                 id:
                     $ref: '#/components/schemas/EncodeId'
@@ -1288,6 +1290,12 @@ components:
                     type: string
                 recorded:
                     $ref: '#/components/schemas/RecordedItem'
+                percent:
+                    description: 進捗
+                    type: number
+                log:
+                    description: ログ
+                    type: string
 
         EncodeInfo:
             description: エンコード情報
