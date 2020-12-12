@@ -244,6 +244,7 @@ class EncodeManageModel implements IEncodeManageModel {
                     OUTPUT: outputFilePath === null ? '' : outputFilePath,
                     DIR: outputDirPath || '',
                     FFMPEG: config.ffmpeg,
+                    FFPROBE: config.ffprobe,
                     NAME: recorded.name,
                     DESCRIPTION: recorded.description || '',
                     EXTENDED: recorded.extended || '',
@@ -304,9 +305,8 @@ class EncodeManageModel implements IEncodeManageModel {
                 this.log.system.error(err);
             }
             if (videoInfo !== null) {
-                const duration = videoInfo.duration;
                 childProcess.stdout.on('data', data => {
-                    this.updateEncodingProgressInfo(data, queueItem.encodeId, duration);
+                    this.updateEncodingProgressInfo(data, queueItem.encodeId);
                 });
             }
         }
@@ -393,43 +393,18 @@ class EncodeManageModel implements IEncodeManageModel {
      * エンコード進捗情報更新
      * @param data: エンコードプロセスの標準出力
      * @param encodeId: apid.EncodeId
-     * @param duration: number 入力ファイルの長さ (秒)
      */
-    private updateEncodingProgressInfo(data: any, encodeId: apid.EncodeId, duration: number): void {
+    private updateEncodingProgressInfo(data: any, encodeId: apid.EncodeId): void {
         const logs = String(data).split('\n');
         for (let j = 0; j < logs.length; j++) {
             if (logs[j] != '') {
                 const log = JSON.parse(String(logs[j]));
                 this.log.system.info(log);
                 if (log.type == 'progress') {
-                    let current = 0;
-                    const times = log.data.time.split(':');
-                    for (let i = 0; i < times.length; i++) {
-                        if (i == 0) {
-                            current += parseFloat(times[i]) * 3600;
-                        } else if (i == 1) {
-                            current += parseFloat(times[i]) * 60;
-                        } else if (i == 2) {
-                            current += parseFloat(times[i]);
-                        }
-                    }
-                    this.log.system.info(String(current));
                     const encodingQueueItem = this.getRunnginQueueItem(encodeId);
                     if (encodingQueueItem != null) {
-                        encodingQueueItem.percent = current / duration;
-                        encodingQueueItem.log =
-                            'frame= ' +
-                            log.data.frame +
-                            ' fps=' +
-                            log.data.fps +
-                            ' size=' +
-                            log.data.size +
-                            ' time=' +
-                            log.data.time +
-                            ' bitrate=' +
-                            log.data.bitrate +
-                            ' speed=' +
-                            log.data.speed;
+                        encodingQueueItem.percent = log.percent;
+                        encodingQueueItem.log = log.log;
 
                         // TODO エンコード進捗変更通知イベントに変更
                         this.encodeEvent.emitErrorEncode();
