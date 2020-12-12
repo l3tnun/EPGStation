@@ -406,8 +406,8 @@ class EncodeManageModel implements IEncodeManageModel {
                         encodingQueueItem.percent = log.percent;
                         encodingQueueItem.log = log.log;
 
-                        // TODO エンコード進捗変更通知イベントに変更
-                        this.encodeEvent.emitErrorEncode();
+                        // エンコード進捗変更通知
+                        this.encodeEvent.emitUpdateEncodeProgress();
                     }
                 }
             }

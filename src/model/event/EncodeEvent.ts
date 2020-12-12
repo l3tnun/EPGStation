@@ -46,6 +46,13 @@ class EncodeEvent implements IEncodeEvent {
     }
 
     /**
+     * エンコード進捗情報更新イベント発行
+     */
+    public emitUpdateEncodeProgress(): void {
+        this.emitter.emit(EncodeEvent.UPDATE_ENCODE_PROGRESS_EVENT);
+    }
+
+    /**
      * エンコード更新イベント発行
      */
     public emitupdateEncode(): void {
@@ -121,6 +128,20 @@ class EncodeEvent implements IEncodeEvent {
             }
         });
     }
+
+    /**
+     * エンコード進捗更新イベント登録
+     * @param callback: callback: () => void
+     */
+    public setUpdateEncodeProgress(callback: () => void): void {
+        this.emitter.on(EncodeEvent.UPDATE_ENCODE_PROGRESS_EVENT, async () => {
+            try {
+                await callback();
+            } catch (err) {
+                this.log.system.error(err);
+            }
+        });
+    }
 }
 
 namespace EncodeEvent {
@@ -129,6 +150,7 @@ namespace EncodeEvent {
     export const FINISH_ENCODE_EVENT = 'finishEncodeEvent';
     export const ERROR_ENCODE_EVENT = 'errorEncodeEvent';
     export const UPDATE_ENCODE_EVENT = 'updateEncodeEvent';
+    export const UPDATE_ENCODE_PROGRESS_EVENT = 'updateENcodeProgressEvent';
 }
 
 export default EncodeEvent;

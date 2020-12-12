@@ -31,6 +31,7 @@ export default class EncodeFinishModel implements IEncodeFinishModel {
         this.encodeEvent.setCancelEncode(this.cancelEncode.bind(this));
         this.encodeEvent.setFinishEncode(this.finishEncode.bind(this));
         this.encodeEvent.setErrorEncode(this.errorEncode.bind(this));
+        this.encodeEvent.setUpdateEncodeProgress(this.updateEncodeProgress.bind(this));
     }
 
     /**
@@ -85,6 +86,13 @@ export default class EncodeFinishModel implements IEncodeFinishModel {
      * エンコード失敗処理
      */
     private errorEncode(): void {
+        this.socket.notifyClient();
+    }
+
+    /**
+     * エンコード進捗情報更新
+     */
+    private updateEncodeProgress(): void {
         this.socket.notifyClient();
     }
 }

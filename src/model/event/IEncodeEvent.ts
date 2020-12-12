@@ -15,8 +15,10 @@ export default interface IEncodeEvent {
     emitCancelEncode(encodeId: apid.EncodeId): void;
     emitFinishEncode(info: FinishEncodeInfo): void;
     emitErrorEncode(): void;
+    emitUpdateEncodeProgress(): void;
     setAddEncode(callback: (encodeId: apid.EncodeId) => void): void;
     setCancelEncode(callback: (encodeId: apid.EncodeId) => void): void;
     setFinishEncode(callback: (info: FinishEncodeInfo) => void): void;
     setErrorEncode(callback: () => void): void;
+    setUpdateEncodeProgress(callback: () => void): void;
 }
