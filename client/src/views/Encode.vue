@@ -83,11 +83,13 @@ export default class Encode extends Vue {
 
         // socket.io イベント
         this.socketIoModel.onUpdateState(this.onUpdateStatusCallback);
+        this.socketIoModel.onUpdateEncodeState(this.onUpdateStatusCallback);
     }
 
     public beforeDestroy(): void {
         // socket.io イベント
         this.socketIoModel.offUpdateState(this.onUpdateStatusCallback);
+        this.socketIoModel.offUpdateEncodeState(this.onUpdateStatusCallback);
     }
 
     public onEdit(): void {

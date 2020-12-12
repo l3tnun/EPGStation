@@ -93,6 +93,6 @@ export default class EncodeFinishModel implements IEncodeFinishModel {
      * エンコード進捗情報更新
      */
     private updateEncodeProgress(): void {
-        this.socket.notifyClient();
+        this.socket.notifyUpdateEncodeProgress();
     }
 }

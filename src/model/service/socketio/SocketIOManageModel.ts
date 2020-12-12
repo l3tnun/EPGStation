@@ -14,6 +14,7 @@ export default class SocketIOManageModel implements ISocketIOManageModel {
     private config: IConfigFile;
     private ios: SocketIO.Server[] = [];
     private callTimer: NodeJS.Timer | null = null;
+    private encodeProgressCallTimer: NodeJS.Timer | null = null;
 
     constructor(@inject('ILoggerModel') logger: ILoggerModel, @inject('IConfiguration') configuration: IConfiguration) {
         this.log = logger.getLogger();
@@ -53,6 +54,25 @@ export default class SocketIOManageModel implements ISocketIOManageModel {
 
                 for (const io of this.ios) {
                     io.sockets.emit('updateStatus');
+                }
+            }, 200);
+        }
+    }
+
+    /**
+     * エンコードの進捗情報更新を通知
+     */
+    public notifyUpdateEncodeProgress(): void {
+        if (this.encodeProgressCallTimer === null) {
+            this.encodeProgressCallTimer = setTimeout(() => {
+                this.encodeProgressCallTimer = null;
+
+                if (this.ios.length === 0) {
+                    throw new Error('must call SocketIoManageModel initialize');
+                }
+
+                for (const io of this.ios) {
+                    io.sockets.emit('updateEncode');
                 }
             }, 200);
         }

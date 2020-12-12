@@ -7,4 +7,6 @@ export default interface ISocketIOModel {
     getIO(): SocketIOClient.Socket | null;
     onUpdateState(callback: () => void): void;
     offUpdateState(callback: () => void): void;
+    onUpdateEncodeState(callback: () => void): void;
+    offUpdateEncodeState(callback: () => void): void;
 }

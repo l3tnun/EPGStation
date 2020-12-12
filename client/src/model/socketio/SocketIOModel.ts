@@ -57,10 +57,35 @@ class SocketIOModel implements ISocketIOModel {
 
         this.io.off(SocketIOModel.UPDATE_STATUS_EVENT, callback);
     }
+
+    /**
+     * update encode status イベントへのコールバック追加
+     * @param callback: () => void
+     */
+    public onUpdateEncodeState(callback: () => void): void {
+        if (this.io === null) {
+            throw new Error('IOIsNull');
+        }
+
+        this.io.on(SocketIOModel.UPDATE_ENCODE_STATUS_EVENT, callback);
+    }
+
+    /**
+     * update encode status イベントへのコールバック削除
+     * @param callback: () => void
+     */
+    public offUpdateEncodeState(callback: () => void): void {
+        if (this.io === null) {
+            throw new Error('IOIsNull');
+        }
+
+        this.io.off(SocketIOModel.UPDATE_ENCODE_STATUS_EVENT, callback);
+    }
 }
 
 namespace SocketIOModel {
     export const UPDATE_STATUS_EVENT = 'updateStatus';
+    export const UPDATE_ENCODE_STATUS_EVENT = 'updateEncode';
 }
 
 export default SocketIOModel;
