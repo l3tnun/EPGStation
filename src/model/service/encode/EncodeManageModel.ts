@@ -294,7 +294,6 @@ class EncodeManageModel implements IEncodeManageModel {
             });
         }
 
-        // TODO encode の config から進捗更新が有効か判定する
         // 進捗情報更新用
         if (childProcess.stdout !== null) {
             let videoInfo: VideoInfo | null = null;
@@ -306,7 +305,11 @@ class EncodeManageModel implements IEncodeManageModel {
             }
             if (videoInfo !== null) {
                 childProcess.stdout.on('data', data => {
-                    this.updateEncodingProgressInfo(data, queueItem.encodeId);
+                    try {
+                        this.updateEncodingProgressInfo(data, queueItem.encodeId);
+                    } catch (err) {
+                        // error
+                    }
                 });
             }
         }
