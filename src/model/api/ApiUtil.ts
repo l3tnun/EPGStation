@@ -21,12 +21,6 @@ export default class ApiUtil implements IApiUtil {
      * @return string
      */
     public createM3U8PlayListStr(option: CreateM3U8Option): string {
-        // TODO basic 認証対応
-        /*
-        const auth =
-            typeof config.basicAuth === 'undefined' ? '' : `${option.basicAuth.user}:${option.basicAuth.password}@`;
-        */
-
         const fullUrl = urljoin(`${option.isSecure ? 'https' : 'http'}://${this.getHost(option.host)}`, option.baseUrl);
 
         return '#EXTM3U\n' + `#EXTINF: ${option.duration}, ${option.name}\n` + fullUrl;

@@ -152,7 +152,6 @@ export default class VideoApiModel implements IVideoApiModel {
             throw new Error('VideoFileIsUndefined');
         }
 
-        // TODO basic auth
         const source = `${isSecure ? 'https' : 'http'}://${host}/api/videos/${videoFileId}`;
 
         return this.apiUtil.sendToKodi(source, kodi);
