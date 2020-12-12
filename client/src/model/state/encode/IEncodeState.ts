@@ -8,8 +8,8 @@ export interface EncodeInfoDisplayItem {
         duration: number;
         topThumbnailPath: string;
         mode: string;
-        percent: number;
-        log: string;
+        percent?: number;
+        encodeInfo?: string;
     };
     encodeItem: apid.EncodeProgramItem;
     isSelected: boolean;

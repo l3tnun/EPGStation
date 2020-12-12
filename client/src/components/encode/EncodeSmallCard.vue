@@ -15,8 +15,8 @@
                     <div class="text caption font-weight-light">{{ item.display.channelName }}</div>
                     <div class="text caption font-weight-light">{{ item.display.time }} ({{ item.display.duration }} m)</div>
                     <div class="text caption font-regular">{{ item.display.mode }}</div>
-                    <div class="text caption font-regular">{{ Math.floor(item.display.percent) + '% ' + item.display.log }}</div>
-                    <v-progress-linear buffer-value="100" :value="item.display.percent"></v-progress-linear>
+                    <div class="text caption font-regular">{{ item.display.encodeInfo }}</div>
+                    <v-progress-linear v-if="typeof item.display.percent !== 'undefined'" buffer-value="100" :value="item.display.percent"></v-progress-linear>
                 </div>
             </div>
         </v-card>
@@ -61,7 +61,6 @@ export default class EncodeSmallCard extends Vue {
 <style lang="sass" scoped>
 .recorded-small-card
     max-width: 100%
-    height: 130px
     cursor: default
 
     .thumbnail

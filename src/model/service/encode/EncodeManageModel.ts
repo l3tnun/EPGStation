@@ -7,7 +7,7 @@ import * as apid from '../../../../api';
 import FileUtil from '../../../util/FileUtil';
 import ProcessUtil from '../../../util/ProcessUtil';
 import Util from '../../../util/Util';
-import IVideoUtil from '../../api/video/IVideoUtil';
+import IVideoUtil, { VideoInfo } from '../../api/video/IVideoUtil';
 import IRecordedDB from '../../db/IRecordedDB';
 import IVideoFileDB from '../../db/IVideoFileDB';
 import IEncodeEvent from '../../event/IEncodeEvent';
@@ -288,62 +288,27 @@ class EncodeManageModel implements IEncodeManageModel {
          */
         // debug 用
         if (childProcess.stderr !== null) {
-            let duration = 0;
-            let current = 0;
             childProcess.stderr.on('data', data => {
-                const logs = String(data).split('\n');
-                for (let j = 0; j < logs.length; j++) {
-                    if (logs[j] != '') {
-                        const log = JSON.parse(String(logs[j]));
-                        this.log.system.info(log);
-                        if (log.type == 'progress') {
-                            current = 0;
-                            const times = log.data.time.split(':');
-                            for (let i = 0; i < times.length; i++) {
-                                if (i == 0) {
-                                    current += parseFloat(times[i]) * 3600;
-                                } else if (i == 1) {
-                                    current += parseFloat(times[i]) * 60;
-                                } else if (i == 2) {
-                                    current += parseFloat(times[i]);
-                                }
-                            }
-                            this.log.system.info(String(current));
-                            const encodingQueueItem = this.getRunnginQueueItem(queueItem.encodeId);
-                            if (encodingQueueItem != null) {
-                                encodingQueueItem.percent = current / duration;
-                                encodingQueueItem.log =
-                                    'frame= ' +
-                                    log.data.frame +
-                                    ' fps=' +
-                                    log.data.fps +
-                                    ' size=' +
-                                    log.data.size +
-                                    ' time=' +
-                                    log.data.time +
-                                    ' bitrate=' +
-                                    log.data.bitrate +
-                                    ' speed=' +
-                                    log.data.speed;
-                                this.encodeEvent.emitErrorEncode();
-                            }
-                        } else if (log.type == 'inputinfo') {
-                            // 00:01:35.71
-                            const times = log.data.split('Duration: ')[1].split(',')[0].split(':');
-                            this.log.system.info(log.data.split('Duration: ')[1].split(',')[0]);
-                            for (let i = 0; i < times.length; i++) {
-                                if (i == 0) {
-                                    duration += parseFloat(times[i]) * 3600;
-                                } else if (i == 1) {
-                                    duration += parseFloat(times[i]) * 60;
-                                } else if (i == 2) {
-                                    duration += parseFloat(times[i]);
-                                }
-                            }
-                        }
-                    }
-                }
+                this.log.system.debug(String(data));
             });
+        }
+
+        // TODO encode の config から進捗更新が有効か判定する
+        // 進捗情報更新用
+        if (childProcess.stdout !== null) {
+            let videoInfo: VideoInfo | null = null;
+            try {
+                videoInfo = await this.videoUtil.getInfo(inputFilePath);
+            } catch (err) {
+                this.log.system.error(`get encode vidoe file info: ${inputFilePath}`);
+                this.log.system.error(err);
+            }
+            if (videoInfo !== null) {
+                const duration = videoInfo.duration;
+                childProcess.stdout.on('data', data => {
+                    this.updateEncodingProgressInfo(data, queueItem.encodeId, duration);
+                });
+            }
         }
 
         // プロセス終了時に runningQueue からの削除 & emitNeedsCheckQueue() を実行する
@@ -422,6 +387,56 @@ class EncodeManageModel implements IEncodeManageModel {
 
             this.finalize(queueItem.encodeId);
         });
+    }
+
+    /**
+     * エンコード進捗情報更新
+     * @param data: エンコードプロセスの標準出力
+     * @param encodeId: apid.EncodeId
+     * @param duration: number 入力ファイルの長さ (秒)
+     */
+    private updateEncodingProgressInfo(data: any, encodeId: apid.EncodeId, duration: number): void {
+        const logs = String(data).split('\n');
+        for (let j = 0; j < logs.length; j++) {
+            if (logs[j] != '') {
+                const log = JSON.parse(String(logs[j]));
+                this.log.system.info(log);
+                if (log.type == 'progress') {
+                    let current = 0;
+                    const times = log.data.time.split(':');
+                    for (let i = 0; i < times.length; i++) {
+                        if (i == 0) {
+                            current += parseFloat(times[i]) * 3600;
+                        } else if (i == 1) {
+                            current += parseFloat(times[i]) * 60;
+                        } else if (i == 2) {
+                            current += parseFloat(times[i]);
+                        }
+                    }
+                    this.log.system.info(String(current));
+                    const encodingQueueItem = this.getRunnginQueueItem(encodeId);
+                    if (encodingQueueItem != null) {
+                        encodingQueueItem.percent = current / duration;
+                        encodingQueueItem.log =
+                            'frame= ' +
+                            log.data.frame +
+                            ' fps=' +
+                            log.data.fps +
+                            ' size=' +
+                            log.data.size +
+                            ' time=' +
+                            log.data.time +
+                            ' bitrate=' +
+                            log.data.bitrate +
+                            ' speed=' +
+                            log.data.speed;
+
+                        // TODO エンコード進捗変更通知イベントに変更
+                        this.encodeEvent.emitErrorEncode();
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -673,8 +688,6 @@ class EncodeManageModel implements IEncodeManageModel {
                     id: i.encodeId,
                     mode: i.mode,
                     recordedId: i.recordedId,
-                    percent: 0,
-                    log: '',
                 };
             });
         }

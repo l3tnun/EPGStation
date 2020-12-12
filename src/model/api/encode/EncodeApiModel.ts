@@ -72,11 +72,16 @@ export default class EncodeApiModel implements IEncodeApiModel {
                 continue;
             }
 
-            result.runningItems.push({
+            const info: apid.EncodeProgramItem = {
                 id: i.id,
                 mode: i.mode,
                 recorded: this.recordedItemUtil.convertRecordedToRecordedItem(recordedItem, isHalfWidth, {}),
-            });
+            };
+            if (typeof i.percent !== 'undefined' && typeof i.log !== 'undefined') {
+                info.percent = i.percent;
+                info.log = i.log;
+            }
+            result.runningItems.push(info);
         }
 
         // エンコード待ち

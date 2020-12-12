@@ -67,7 +67,7 @@ export default class EncodeState implements IEncodeState {
         const endAt = DateUtil.getJaDate(new Date(item.recorded.endAt));
         const channel = this.channelModel.findChannel(item.recorded.channelId, isHalfWidth);
 
-        return {
+        const result: EncodeInfoDisplayItem = {
             display: {
                 channelName: channel === null ? item.recorded.channelId.toString(10) : channel.name,
                 name: item.recorded.name,
@@ -78,12 +78,17 @@ export default class EncodeState implements IEncodeState {
                         ? './img/noimg.png'
                         : `./api/thumbnails/${item.recorded.thumbnails[0]}`,
                 mode: item.mode,
-                percent: item.percent * 100,
-                log: item.log,
             },
             encodeItem: item,
             isSelected: typeof isSelectedIndex[item.id] === 'undefined' ? false : isSelectedIndex[item.id],
         };
+
+        if (typeof item.percent !== 'undefined' && typeof item.log !== 'undefined') {
+            result.display.encodeInfo = `${Math.floor(item.percent * 100)}% ${item.log}`;
+            result.display.percent = item.percent * 100;
+        }
+
+        return result;
     }
 
     /**
