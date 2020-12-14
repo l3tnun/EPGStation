@@ -63,7 +63,7 @@
     ```
     $ sudo npm install pm2 -g
     $ sudo pm2 startup <OS名>
-    $ pm2 start dist/server/index.js --name "epgstation"
+    $ pm2 start dist/index.js --name "epgstation"
     $ pm2 save
     ```
 
