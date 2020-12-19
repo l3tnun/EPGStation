@@ -77,6 +77,16 @@ export default class ReservesApiModel implements IReservesApiModel {
     }
 
     /**
+     * 予約数の取得
+     * @return Promise<apid.ReserveCnts>
+     */
+    public async getCnts(): Promise<apid.ReserveCnts> {
+        const result = await this.repository.get('/reserves/cnts');
+
+        return result.data;
+    }
+
+    /**
      * 予約のキャンセル
      * @param reserveId: ReserveId
      * @return Promise<void>

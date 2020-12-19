@@ -35,6 +35,8 @@ import IServerConfigModel from './serverConfig/IServerConfigModel';
 import ServerConfigModel from './serverConfig/ServerConfigModel';
 import ISocketIOModel from './socketio/ISocketIOModel';
 import SocketIOModel from './socketio/SocketIOModel';
+import DashboardState from './state/dashboard/DashboardState';
+import IDashboardState from './state/dashboard/IDashboardState';
 import DropLogDialogState from './state/dropLog/DropLogDialogState';
 import IDropLogDialogState from './state/dropLog/IDropLogDialogState';
 import AddEncodeState from './state/encode/AddEncodeState';
@@ -177,6 +179,8 @@ export default (container: Container): void => {
     container.bind<INavigationState>('INavigationState').to(NavigationState).inSingletonScope();
 
     container.bind<ISnackbarState>('ISnackbarState').to(SnackbarState).inSingletonScope();
+
+    container.bind<IDashboardState>('IDashboardState').to(DashboardState).inSingletonScope();
 
     container.bind<IOnAirState>('IOnAirState').to(OnAirState).inSingletonScope();
 

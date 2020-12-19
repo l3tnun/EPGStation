@@ -49,6 +49,9 @@
                                 </div>
                             </div>
                         </template>
+                        <template v-if="reserveConflictCnt > 0" v-slot:decoration>
+                            <v-badge bordered color="pink" :content="reserveConflictCnt" class="pl-1"></v-badge>
+                        </template>
                     </DashboardItem>
                 </div>
             </transition>
@@ -63,6 +66,7 @@ import ReservesCard from '@/components/reserves/ReservesCard.vue';
 import TitleBar from '@/components/titleBar/TitleBar.vue';
 import container from '@/model/ModelContainer';
 import ISocketIOModel from '@/model/socketio/ISocketIOModel';
+import IDashboardState from '@/model/state/dashboard/IDashboardState';
 import IScrollPositionState from '@/model/state/IScrollPositionState';
 import IRecordedState from '@/model/state/recorded/IRecordedState';
 import IRecordingState from '@/model/state/recording/IRecordingState';
@@ -93,6 +97,7 @@ Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
 })
 export default class Main extends Vue {
     public isShow: boolean = false;
+    public dashboardState: IDashboardState = container.get<IDashboardState>('IDashboardState');
     public recordedState: IRecordedState = container.get<IRecordedState>('IRecordedState');
     public recordingState: IRecordingState = container.get<IRecordingState>('IRecordingState');
     public reservesState: IReservesState = container.get<IReservesState>('IReservesState');
@@ -103,6 +108,7 @@ export default class Main extends Vue {
     private snackbarState: ISnackbarState = container.get<ISnackbarState>('ISnackbarState');
     private socketIoModel: ISocketIOModel = container.get<ISocketIOModel>('ISocketIOModel');
     private onUpdateStatusCallback = (async (): Promise<void> => {
+        await this.dashboardState.fetchData();
         await this.recordingState.fetchData(this.createFetchRecordingDataOption());
         await this.recordedState.fetchData(this.createFetchRecordedDataOption());
         await this.reservesState.fetchData(this.createFetchReserveDataOption());
@@ -121,6 +127,10 @@ export default class Main extends Vue {
 
     get reserveTitle(): string {
         return `予約 ${this.reservesState.getReserves().length}/${this.reservesState.getTotal()}`;
+    }
+
+    get reserveConflictCnt(): number {
+        return this.dashboardState.getConflictCnt();
     }
 
     get dashboardClass(): any {
@@ -254,11 +264,19 @@ export default class Main extends Vue {
     @Watch('$route', { immediate: true, deep: true })
     public onUrlChange(): void {
         this.$nextTick(() => {
+            this.dashboardState.clearDate();
             this.recordingState.clearData();
             this.recordedState.clearData();
             this.reservesState.clearDate();
 
             this.$nextTick(async () => {
+                await this.dashboardState.fetchData().catch(err => {
+                    this.snackbarState.open({
+                        color: 'error',
+                        text: '予約情報取得に失敗',
+                    });
+                    console.error(err);
+                });
                 await this.recordingState.fetchData(this.createFetchRecordingDataOption()).catch(err => {
                     this.snackbarState.open({
                         color: 'error',
