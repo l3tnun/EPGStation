@@ -15,6 +15,8 @@
         "backup": "node dist/DBTools.js -m backup -o",
         "restore": "node dist/DBTools.js -m restore -o",
         "v1migrate": "node dist/V1MigrationTool.js -i",
+        "install-win-service": "winser -i -a",
+        "uninstall-win-service": "winser -r -x",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "repository": {
