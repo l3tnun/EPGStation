@@ -171,6 +171,13 @@ export interface ReserveListItem {
     ruleId?: RuleId;
 }
 
+export interface ReserveCnts {
+    normal: number;
+    conflicts: number;
+    skips: number;
+    overlaps: number;
+}
+
 /**
  * 放送波の状態
  * true のもが有効

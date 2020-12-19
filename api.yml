@@ -930,6 +930,28 @@ components:
                 overlaps:
                     $ref: '#/components/schemas/ReserveListItem'
 
+        ReserveCnts:
+            description: 予約カウント
+            type: object
+            required:
+                - normal
+                - conflicts
+                - skips
+                - overlaps
+            properties:
+                normal:
+                    description: 通常予約数
+                    type: integer
+                conflicts:
+                    description: 競合予約数
+                    type: integer
+                skips:
+                    description: 競合予約数
+                    type: integer
+                overlaps:
+                    description: 重複予約数
+                    type: integer
+
         Records:
             description: 録画情報
             type: object

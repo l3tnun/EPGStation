@@ -45,7 +45,7 @@ export default interface IReserveDB {
     updateMany(values: IReserveUpdateValues): Promise<void>;
     findId(reserveId: apid.ReserveId): Promise<Reserve | null>;
     findAll(option: apid.GetReserveOption): Promise<[Reserve[], number]>;
-    findLists(option: apid.GetReserveListsOption): Promise<Reserve[]>;
+    findLists(option?: apid.GetReserveListsOption): Promise<Reserve[]>;
     findProgramId(programId: apid.ProgramId): Promise<Reserve[]>;
     findTimeRanges(option: IFindTimeRangesOption): Promise<Reserve[]>;
     findRuleId(option: IFindRuleOption): Promise<Reserve[]>;

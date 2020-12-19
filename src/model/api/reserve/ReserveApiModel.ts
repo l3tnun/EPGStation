@@ -216,6 +216,35 @@ export default class ReserveApiModel implements IReserveApiModel {
     }
 
     /**
+     * 予約数を返す
+     * @return Promise<apid.ReserveCnts>
+     */
+    public async getCnts(): Promise<apid.ReserveCnts> {
+        const reserves = await this.reserveDB.findLists();
+
+        const result: apid.ReserveCnts = {
+            normal: 0,
+            conflicts: 0,
+            skips: 0,
+            overlaps: 0,
+        };
+
+        for (const reserve of reserves) {
+            if (reserve.isConflict === true) {
+                result.conflicts++;
+            } else if (reserve.isSkip === true) {
+                result.skips++;
+            } else if (reserve.isOverlap === true) {
+                result.overlaps++;
+            } else {
+                result.normal++;
+            }
+        }
+
+        return result;
+    }
+
+    /**
      * Reserve を ReserveListItem へ変換する
      * @param reserve: Reserve
      * @return ReserveListItem
