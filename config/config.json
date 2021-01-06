@@ -1,4 +1,4 @@
-
+{
     "readOnlyOnce": false,
     "serverPort": 8888,
     "mirakurunPath": "http://localhost:40772",
@@ -6,9 +6,9 @@
     	"mysql": {
  	   "host": "localhost",
 	    "port": 3306,
-	    "user": "neso",
-	    "password": "",
-	    "database": "EPGStation",
+	    "user": "epg",
+	    "password": "epg",
+	    "database": "epg",
 	    "connectTimeout": 20000,
 	    "connectionLimit": 10
 	}, 
