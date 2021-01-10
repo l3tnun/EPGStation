@@ -26,6 +26,7 @@ import IDropCheckerModel from './IDropCheckerModel';
 import IRecorderModel from './IRecorderModel';
 import IRecordingStreamCreator from './IRecordingStreamCreator';
 import IRecordingUtilModel from './IRecordingUtilModel';
+import IReservationManageModel from '../reservation/IReservationManageModel';
 
 /**
  * Recorder
@@ -44,6 +45,7 @@ class RecorderModel implements IRecorderModel {
     private dropChecker: IDropCheckerModel;
     private recordingUtil: IRecordingUtilModel;
     private recordingEvent: IRecordingEvent;
+    private reservationManageModel: IReservationManageModel;
 
     private reserve!: Reserve;
     private recordedId: apid.RecordedId | null = null;
@@ -74,6 +76,7 @@ class RecorderModel implements IRecorderModel {
         @inject('IDropCheckerModel') dropChecker: IDropCheckerModel,
         @inject('IRecordingUtilModel') recordingUtil: IRecordingUtilModel,
         @inject('IRecordingEvent') recordingEvent: IRecordingEvent,
+        @inject('IReservationManageModel') reservationManageModel: IReservationManageModel,
     ) {
         this.log = logger.getLogger();
         this.config = configuration.getConfig();
@@ -87,6 +90,7 @@ class RecorderModel implements IRecorderModel {
         this.dropChecker = dropChecker;
         this.recordingUtil = recordingUtil;
         this.recordingEvent = recordingEvent;
+        this.reservationManageModel = reservationManageModel;
     }
 
     /**
@@ -547,6 +551,14 @@ class RecorderModel implements IRecorderModel {
             // 録画完了の通知
             if (recorded !== null) {
                 this.recordingEvent.emitFinishRecording(this.reserve, recorded, this.isStopRec);
+            }
+
+            // 予約一覧から削除
+            if (
+                recorded === null ||
+                recorded.endAt <= new Date().getTime() + IRecordingStreamCreator.PREP_TIME + 1000
+            ) {
+                this.reservationManageModel.cleanup();
             }
         }
 
