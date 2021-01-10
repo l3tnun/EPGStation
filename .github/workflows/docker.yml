@@ -63,7 +63,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Set VERSION
         run: |-
-          echo ::set-env name=VERSION::${GITHUB_REF#refs/*/}
+          echo "VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
       - name: Checkout a specific src
         uses: actions/checkout@v2
         with:
@@ -71,7 +71,7 @@ jobs:
         if: github.event_name == 'repository_dispatch'
       - name: Override VERSION
         run: |-
-          echo ::set-env name=VERSION::${{ github.event.client_payload.ref }}
+          echo "VERSION=${{ github.event.client_payload.ref }}" >> $GITHUB_ENV
         if: github.event_name == 'repository_dispatch'
       - name: Setup QEMU user-mode emulation
         run: |-
@@ -115,10 +115,10 @@ jobs:
     steps:
       - name: Set VERSION
         run: |-
-          echo ::set-env name=VERSION::${GITHUB_REF#refs/*/}
+          echo "VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
       - name: Override VERSION
         run: |-
-          echo ::set-env name=VERSION::${{ github.event.client_payload.ref }}
+          echo "VERSION=${{ github.event.client_payload.ref }}" >> $GITHUB_ENV
         if: github.event_name == 'repository_dispatch'
       - name: Login to DockerHub
         run: |-
