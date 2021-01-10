@@ -24,15 +24,14 @@ PC からの閲覧でもモダンな UI で操作可能です
 
 ## スクリーンショット
 
-| ![](https://raw.githubusercontent.com/wiki/l3tnun/EPGStation/images/demo/top.png) | ![](https://raw.githubusercontent.com/wiki/l3tnun/EPGStation/images/demo/live.png) | ![](https://raw.githubusercontent.com/wiki/l3tnun/EPGStation/images/demo/program.png) | ![](https://raw.githubusercontent.com/wiki/l3tnun/EPGStation/images/demo/recorded.png) | ![](https://raw.githubusercontent.com/wiki/l3tnun/EPGStation/images/demo/reserves.png) | ![](https://raw.githubusercontent.com/wiki/l3tnun/EPGStation/images/demo/rule.png) | ![](https://raw.githubusercontent.com/wiki/l3tnun/EPGStation/images/demo/search.png) |
-| --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-
+| ![](https://raw.githubusercontent.com/wiki/l3tnun/EPGStation/images/v2/dashboard.png) | ![](https://raw.githubusercontent.com/wiki/l3tnun/EPGStation/images/v2/live.png) | ![](https://raw.githubusercontent.com/wiki/l3tnun/EPGStation/images/v2/program.png) | ![](https://raw.githubusercontent.com/wiki/l3tnun/EPGStation/images/v2/recording.png) | ![](https://raw.githubusercontent.com/wiki/l3tnun/EPGStation/images/v2/recorded.png) | ![](https://raw.githubusercontent.com/wiki/l3tnun/EPGStation/images/v2/reserves.png) | ![](https://raw.githubusercontent.com/wiki/l3tnun/EPGStation/images/v2/rule.png) | ![](https://raw.githubusercontent.com/wiki/l3tnun/EPGStation/images/v2/search.png) |
+| ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
 
 ---
 
 ## デモ
 
-![](https://raw.githubusercontent.com/wiki/l3tnun/EPGStation/images/demo/demo.gif)
+![](https://raw.githubusercontent.com/wiki/l3tnun/EPGStation/images/v2/demo.gif)
 
 ## 動作環境
 
