@@ -19,7 +19,7 @@
 
 ```shell
  $ git pull
- $ git checkout v1.7.5
+ $ git checkout v1
  $ npm install --no-save
  $ npm run build
 ```
