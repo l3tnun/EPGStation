@@ -69,7 +69,7 @@ export default class WatchOnAir extends Vue {
                 } else {
                     (this.videoParam as VideoParam.NormalVideoParam) = {
                         type: 'Normal',
-                        src: `/api/streams/live/${this.watchParam.channel}/${this.watchParam.type}?mode=${this.watchParam.mode}`,
+                        src: `./api/streams/live/${this.watchParam.channel}/${this.watchParam.type}?mode=${this.watchParam.mode}`,
                     };
                 }
             }
