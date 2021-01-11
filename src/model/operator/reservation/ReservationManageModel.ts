@@ -698,7 +698,7 @@ class ReservationManageModel implements IReservationManageModel {
                 hasSkip: false,
                 hasConflict: true,
                 hasOverlap: false,
-                excludeRuleId: rule?.reserveOption.enable === true ? undefined : ruleId, // ruleId 指定で古いルール予約は除外する
+                excludeRuleId: ruleId, // ruleId 指定で古いルール予約は除外する
             },
             newRuleReserves,
             oldRuleReserves,
