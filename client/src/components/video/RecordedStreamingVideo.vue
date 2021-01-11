@@ -104,7 +104,7 @@ export default class RecordedStreamingVideo extends BaseVideo {
      * video src を生成する
      */
     private createVideoSrc(info: VideoSrcInfo): string {
-        return `/api/streams/recorded/${info.videoFileId}/${info.streamingType}?mode=${info.mode}&ss=${info.playPosition}`;
+        return `./api/streams/recorded/${info.videoFileId}/${info.streamingType}?mode=${info.mode}&ss=${info.playPosition}`;
     }
 
     /**

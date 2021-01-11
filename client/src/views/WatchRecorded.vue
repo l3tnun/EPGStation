@@ -46,7 +46,7 @@ export default class WatchRecorded extends Vue {
             if (videoId !== null) {
                 (this.videoParam as VideoParam.NormalVideoParam) = {
                     type: 'Normal',
-                    src: `/api/videos/${videoId}`,
+                    src: `./api/videos/${videoId}`,
                 };
             }
 
