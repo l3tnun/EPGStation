@@ -22,7 +22,6 @@
     ```bash
     $ git clone https://github.com/l3tnun/EPGStation.git
     $ cd EPGStation
-    $ git checkout v2
     $ npm run all-install
     $ npm run build
     ```
