@@ -43,7 +43,7 @@
     ```
     > copy .\config\config.sample.yml .\config\config.yml
     > copy .\config\operatorLogConfig.sample.yml .\config\operatorLogConfig.yml
-    > copy .\config\operatorLogConfig.sample.yml .\config\operatorLogConfig.yml
+    > copy .\config\epgUpdaterLogConfig.sample.yml .\config\epgUpdaterLogConfig.yml
     > copy .\config\serviceLogConfig.sample.yml .\config\serviceLogConfig.yml
     ```
 
