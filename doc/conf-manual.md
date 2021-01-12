@@ -797,6 +797,7 @@ concurrentEncodeNum: 1
 | FFPROBE            | string         | ffprobe パス                                                                  |
 | DIR                | string         | 予約時に設定した directory 文字列                                             |
 | NAME               | string         | 番組名                                                                        |
+| HALF_WIDTH_NAME    | string         | 番組名(半角)                                                                  |
 | DESCRIPTION        | string \| null | 番組概要                                                                      |
 | EXTENDED           | string \| null | 番組詳細                                                                      |
 | VIDEOTYPE          | string \| null | "mpeg2" \| "h.264" \| "h.265"                                                 |

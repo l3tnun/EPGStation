@@ -246,6 +246,7 @@ class EncodeManageModel implements IEncodeManageModel {
                     FFMPEG: config.ffmpeg,
                     FFPROBE: config.ffprobe,
                     NAME: recorded.name,
+                    HALF_WIDTH_NAME: recorded.halfWidthName,
                     DESCRIPTION: recorded.description || '',
                     EXTENDED: recorded.extended || '',
                     VIDEOTYPE: recorded.videoType || '',
