@@ -2,44 +2,75 @@ name: Docker
 
 on:
   push:
+    branches:
+      - master
     tags:
       - '*'
+
+env:
+  MAIN_DISTRO: debian
 
 jobs:
   build:
     strategy:
       matrix:
-        target:
+        distro:
           - alpine
           - debian
         include:
-          - target: alpine
-            platforms: 'linux/386,linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8'
-            tag-latest: false
-            tag-semver: |
-              v{{version}}-alpine
-            tag-custom: alpine
-            tag-custom-only: false
-          - target: debian
-            platforms: 'linux/386,linux/amd64,linux/arm/v7,linux/arm64/v8'
-            tag-latest: true
-            tag-semver: |
-              v{{version}}-debian
-              v{{version}}
-            tag-custom: debian
-            tag-custom-only: false
+          - distro: alpine
+            platforms: >-
+              linux/386,
+              linux/amd64,
+              linux/arm/v6,
+              linux/arm/v7,
+              linux/arm64/v8,
+          - distro: debian
+            # docker/setup-*-action has not supported linux/arm/v5.
+            platforms: >-
+              linux/386,
+              linux/amd64,
+              linux/arm/v7,
+              linux/arm64/v8,
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Docker metadata
-        id: docker_meta
-        uses: crazy-max/ghaction-docker-meta@v1
-        with:
-          images: ${{ secrets.DOCKERHUB_IMAGE }}
-          tag-latest: ${{ matrix.tag-latest }}
-          tag-semver: ${{ matrix.tag-semver }}
-          tag-custom: ${{ matrix.tag-custom }}
-          tag-custom-only: ${{ matrix.tag-custom-only }}
+      - name: Docker tags
+        id: docker-tags
+        run: |
+          IMAGE="${{ secrets.DOCKERHUB_IMAGE }}"
+          if echo "$GITHUB_REF" | grep -e '^refs/heads/' >/dev/null 2>&1; then
+            GIT_BRANCH=$(echo "$GITHUB_REF" | sed -e 's|^refs/heads/||')
+            MAIN_TAG="$IMAGE:$GIT_BRANCH-${{ matrix.distro }}"
+            TAGS="$MAIN_TAG"
+            if [ "$MAIN_DISTRO" = "${{ matrix.distro }}" ]; then
+              TAGS="$TAGS,$IMAGE:$GIT_BRANCH"
+            fi
+          else
+            GIT_TAG=$(echo "$GITHUB_REF" | sed -e 's|^refs/tags/||')
+            MAIN_TAG="$IMAGE:$GIT_TAG-${{ matrix.distro }}"
+            TAGS="$MAIN_TAG"
+            if [ "$MAIN_DISTRO" = "${{ matrix.distro }}" ]; then
+              TAGS="$TAGS,$IMAGE:$GIT_TAG"
+            fi
+            # Always update latest image tags when a new git tag is created.
+            #
+            # You need to change the condition like below if you want to update latest image tags
+            # only when a v2 git tag is created:
+            #
+            #   if npx semver -r '">1"' "$GIT_TAG" >/dev/null 2>&1; then
+            #     # update latest image tags
+            #   fi
+            #
+            TAGS="$TAGS,$IMAGE:${{ matrix.distro }}"
+            if [ "$MAIN_DISTRO" = "${{ matrix.distro }}" ]; then
+              TAGS="$TAGS,$IMAGE:latest"
+            fi
+          fi
+          echo "Main tag: $MAIN_TAG"
+          echo "Tags: $TAGS"
+          echo "::set-output name=main-tag::$MAIN_TAG"
+          echo "::set-output name=tags::$TAGS"
       - name: Setup QEMU user-mode emulation
         uses: docker/setup-qemu-action@v1
       - name: Setup Docker Buildx
@@ -48,9 +79,9 @@ jobs:
         uses: actions/cache@v2
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ matrix.target }}-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.os }}-buildx-${{ matrix.distro }}-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
-            ${{ runner.os }}-buildx-${{ matrix.target }}-
+            ${{ runner.os }}-buildx-${{ matrix.distro }}-
       - name: Login to Docker Hub
         uses: docker/login-action@v1
         with:
@@ -60,10 +91,9 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: Dockerfile.${{ matrix.target }}
+          file: Dockerfile.${{ matrix.distro }}
           platforms: ${{ matrix.platforms }}
-          tags: ${{ steps.docker_meta.outputs.tags }}
-          labels: ${{ steps.docker_meta.outputs.labels }}
+          tags: ${{ steps.docker-tags.outputs.tags }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
           push: true
