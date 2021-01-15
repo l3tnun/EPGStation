@@ -315,7 +315,7 @@ isSuppressReservesUpdateAllLog: true
 -   `http://<MirakurunAddress:port>/api/services` もしくは `http://<EPGStationAddress:port>/api/channels` で確認できる
     id を入力
 
-```json
+```yaml
 channelOrder:
     - 3273601024
     - 3273701032
@@ -444,7 +444,7 @@ dropLog: '/hoge/fuga',
 
 -   `http://<IPaddress>:<Port>/<subDirectory>`として動作する
 
-```json
+```yaml
 subDirectory: subdir
 ```
 
@@ -461,6 +461,7 @@ apiServers:
     - http://localhost:8888
     - http://xxx.xxx.xxx.xxx:8888
 ```
+[WebAPI Document](./webapi.md)
 
 ---
 
@@ -614,6 +615,10 @@ thumbnail: '/hoge/thumbs'
 | %THUMBNAIL_POSITION% | サムネイル再生位置 (秒)                 |
 | %THUMBNAIL_SIZE%     | サムネイルの画像のサイズ                |
 
+```yaml
+thumbnailCmd: '%FFMPEG% -ss %THUMBNAIL_POSITION% -y -i %INPUT% -vframes 1 -f image2 -s %THUMBNAIL_SIZE% %OUTPUT%'
+```
+
 ### thumbnailSize
 
 #### サムネイル画像の解像度
@@ -697,8 +702,10 @@ uploadTempDir: '/hoge/tmp/upload'
 
 ```yaml
 reservationAddedCommand: '/bin/node /home/hoge/fuga.js reserve'
-recordedPreStartCommand: '/bin/bash /home/hoge/foo.sh prestart'
-recordedPrepRecFailedCommand: '/usr/bin/logger prepfailed'
+reserveUpdateCommand: '/bin/node /home/hoge/piyo.js update'
+reservedeletedCommand: '/bin/bash /home/hoge/bar.sh deleted'
+recordingPreStartCommand: '/bin/bash /home/hoge/foo.sh prestart'
+recordingPrepRecFailedCommand: '/usr/bin/logger prepfailed'
 ```
 
 ### recordingStartCommand
@@ -846,14 +853,14 @@ streamingPriority: 1
 | -------------- | ------------ | ---- | -------------------------------------------- |
 | m2ts           | 孫プロパティ | no   | m2ts 形式視聴時の URL Scheme 設定            |
 | video          | 孫プロパティ | no   | 録画ビデオ視聴時の URL Scheme 設定           |
-| download       | 孫プロパティ | no   | m 録画ビデオダウンロード時の URL Scheme 設定 |
+| download       | 孫プロパティ | no   | 録画ビデオダウンロード時の URL Scheme 設定 |
 
 | 孫プロパティ名 | 種類   | 必須 | 説明                       |
 | -------------- | ------ | ---- | -------------------------- |
 | ios            | string | no   | iOS の URL Scheme 設定     |
 | android        | string | no   | Android の URL Scheme 設定 |
-| mac            | string | no   | Mac の URL Scheme 設定     |
-| win            | string | no   | Windows の URL Scheme 設定 |
+| mac            | string | no   | [Mac の URL Scheme 設定](./mac-url-scheme.md)     |
+| win            | string | no   | [Windows の URL Scheme 設定](./win-url-scheme.md) |
 
 -   設定内で置換される変数は以下の通り
 
@@ -883,7 +890,7 @@ urlscheme:
 | ------ | -------------------------------------------------------------------------------------------- | ---- |
 | string | hoge/EPGStation/data/streamfiles (EPGStation 直下の data/streamfiles ディレクトリのフルパス) | no   |
 
-```json
+```yaml
 "streamFilePath": "/tmp/hlsfile"
 ```
 
@@ -1007,3 +1014,4 @@ kodiHosts:
       user: kodi
       password: pas
 ```
+[kodi.md](./kodi.md)
