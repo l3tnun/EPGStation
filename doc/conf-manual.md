@@ -860,7 +860,7 @@ streamingPriority: 1
 | ios            | string | no   | iOS の URL Scheme 設定     |
 | android        | string | no   | Android の URL Scheme 設定 |
 | mac            | string | no   | [Mac の URL Scheme 設定](./mac-url-scheme.md)     |
-| win            | string | no   | [Windows の URL Scheme 設定](./win-url-scheme.md) |
+| win            | string | no   | [Windows の URL Scheme 設定](./windows-url-scheme.md) |
 
 -   設定内で置換される変数は以下の通り
 

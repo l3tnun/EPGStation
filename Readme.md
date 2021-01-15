@@ -63,7 +63,7 @@ sqlite3 パッケージのインストール時にバイナリが存在しなか
 
 ### [Linux / macOS 用セットアップマニュアル](doc/linux-setup.md)
 
-### [Windows 用セットアップマニュアル](doc/windows.md)
+### [Windows 用セットアップマニュアル](doc/windows-setup.md)
 
 ---
 
@@ -140,7 +140,7 @@ sqlite3 パッケージのインストール時にバイナリが存在しなか
 
     -   [config.yml 内の設定 (iOS, Android, macOS, Windows)](doc/conf-manual.md#urlscheme)
     -   [macOS 用の URL Scheme 設定方法](doc/mac-url-scheme.md)
-    -   [Windows 用の URL Scheme 設定方法](doc/win-url-scheme.md)
+    -   [Windows 用の URL Scheme 設定方法](doc/windows-url-scheme.md)
 
 -   上記以外の環境での設定は WebUI の設定で各ブラウザごとに設定してください
 
