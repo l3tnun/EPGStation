@@ -817,6 +817,8 @@ concurrentEncodeNum: 1
 | AUDIOSAMPLINGRATE  | number \| null | 16000 \| 22050 \| 24000 \| 32000 \| 44100 \| 48000                            |
 | AUDIOCOMPONENTTYPE | number \| null | audio componentType                                                           |
 | CHANNELID          | number         | ChannelId mirakurun:40772/api/services で ID を確認できる                     |
+| CHNNELNAME             | string         | チャンネル名                                                                  |
+| HALF_WIDTH_CHANNELNAME | string         | チャンネル名 (半角)                                                           |
 | GENRE1             | number         | genre1                                                                        |
 | GENRE2             | number         | genre2                                                                        |
 | GENRE3             | number         | genre3                                                                        |
