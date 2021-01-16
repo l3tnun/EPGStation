@@ -675,7 +675,7 @@ class RecorderModel implements IRecorderModel {
 
                     if (this.isPrepRecording === true) {
                         // 録画準備中なら録画中になるまで待つ
-                        await new Promise((resolve: () => void, reject: (err: Error) => void) => {
+                        await new Promise<void>((resolve: () => void, reject: (err: Error) => void) => {
                             this.log.system.debug(`wait change endAt: ${newReserve.id}`);
                             // タイムアウト設定
                             const timeoutId = setTimeout(() => {
