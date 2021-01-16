@@ -248,7 +248,9 @@ class EncodeManageModel implements IEncodeManageModel {
                     NAME: recorded.name,
                     HALF_WIDTH_NAME: recorded.halfWidthName,
                     DESCRIPTION: recorded.description || '',
+                    HALF_WIDTH_DESCRIPTION: recorded.halfWidthDescription || '',
                     EXTENDED: recorded.extended || '',
+                    HALF_WIDTH_EXTENDED: recorded.halfWidthExtended || '',
                     VIDEOTYPE: recorded.videoType || '',
                     VIDEORESOLUTION: recorded.videoResolution || '',
                     VIDEOSTREAMCONTENT:

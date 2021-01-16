@@ -807,7 +807,9 @@ concurrentEncodeNum: 1
 | NAME               | string         | 番組名                                                                        |
 | HALF_WIDTH_NAME    | string         | 番組名(半角)                                                                  |
 | DESCRIPTION        | string \| null | 番組概要                                                                      |
+| HALF_WIDTH_DESCRIPTION | string \| null | 番組概要(半角)                                                                |
 | EXTENDED           | string \| null | 番組詳細                                                                      |
+| HALF_WIDTH_EXTENDED    | string \| null | 番組詳細(半角)                                                                |
 | VIDEOTYPE          | string \| null | "mpeg2" \| "h.264" \| "h.265"                                                 |
 | VIDEORESOLUTION    | string \| null | "240p" \| "480i" \| "480p" \| "720p" \| "1080i" \| "2160p" \| "4320p" \| null |
 | VIDEOSTREAMCONTENT | number \| null | video streamType                                                              |
