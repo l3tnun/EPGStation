@@ -403,7 +403,7 @@ class EncodeManageModel implements IEncodeManageModel {
         for (let j = 0; j < logs.length; j++) {
             if (logs[j] != '') {
                 const log = JSON.parse(String(logs[j]));
-                this.log.system.info(log);
+                this.log.system.debug(log);
                 if (log.type == 'progress') {
                     const encodingQueueItem = this.getRunnginQueueItem(encodeId);
                     if (encodingQueueItem != null) {
