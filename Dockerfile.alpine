@@ -1,20 +1,14 @@
-ARG arch=amd64
-FROM ${arch}/node:14-alpine AS builder
-
-WORKDIR /app
+FROM node:14-alpine AS builder
 RUN apk add --no-cache g++ make pkgconf python
-COPY package*.json .
+WORKDIR /app
 COPY . .
 RUN npm run all-install
 RUN npm run build
 
-
-FROM ${arch}/node:14-alpine
-
-WORKDIR /app
-COPY --from=builder /app .
-
+FROM node:14-alpine
+LABEL maintainer="l3tnun"
+COPY --from=builder /app /app/
 EXPOSE 8888
-
+WORKDIR /app
 ENTRYPOINT ["npm"]
 CMD ["start"]
