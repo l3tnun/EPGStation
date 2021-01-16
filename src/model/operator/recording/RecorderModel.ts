@@ -355,6 +355,7 @@ class RecorderModel implements IRecorderModel {
                 // 録画終了処理
                 if (this.stream !== null) {
                     this.stream.once('end', async () => {
+                        this.log.system.info(`finish stream: ${this.recordedId}`);
                         await this.recEnd(recFile)
                             .catch(err => {
                                 this.log.system.error(`failed recording end: ${this.reserve.id}`);
@@ -474,6 +475,8 @@ class RecorderModel implements IRecorderModel {
             return;
         }
 
+        this.log.system.info(`stop recording: ${this.recordedId}`);
+
         // stream 停止
         this.destoryStream();
 
@@ -496,6 +499,7 @@ class RecorderModel implements IRecorderModel {
 
         if (this.recordedId !== null) {
             // remove recording flag
+            this.log.system.info(`remove recording flag: ${this.recordedId}`);
             await this.recordedDB.removeRecording(this.recordedId);
             this.isRecording = false;
 
@@ -532,6 +536,7 @@ class RecorderModel implements IRecorderModel {
                 // ルール(Program Id 予約)の場合のみ記録する
                 try {
                     if (recorded !== null) {
+                        this.log.system.info(`add recorded history: ${this.recordedId}`);
                         const history = new RecordedHistory();
                         history.name = StrUtil.deleteBrackets(recorded.halfWidthName);
                         history.channelId = recorded.channelId;
@@ -539,7 +544,7 @@ class RecorderModel implements IRecorderModel {
                         await this.recordedHistoryDB.insertOnce(history);
                     }
                 } catch (err) {
-                    this.log.system.error(`Add Recorded History Error: ${this.recordedId}`);
+                    this.log.system.error(`add recorded history error: ${this.recordedId}`);
                     this.log.system.error(err);
                 }
             }
@@ -548,6 +553,8 @@ class RecorderModel implements IRecorderModel {
             if (recorded !== null) {
                 this.recordingEvent.emitFinishRecording(this.reserve, recorded, this.isStopRec);
             }
+        } else {
+            this.log.system.info('failed to recording: recorded id is null');
         }
 
         this.log.system.info(`recording finish: ${this.reserve.id} ${this.videoFileFulPath}`);
