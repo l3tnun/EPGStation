@@ -461,6 +461,7 @@ apiServers:
     - http://localhost:8888
     - http://xxx.xxx.xxx.xxx:8888
 ```
+
 [WebAPI Document](./webapi.md)
 
 ---
@@ -820,6 +821,13 @@ concurrentEncodeNum: 1
 | SUBGENRE1          | number         | sub genre1                                                                    |
 | SUBGENRE2          | number         | sub genre2                                                                    |
 | SUBGENRE3          | number         | sub genre3                                                                    |
+| START_AT           | number         | 番組開始時刻                                                                  |
+| END_AT             | number         | 番組終了時刻                                                                  |
+| DROPLOG_ID         | number \| null | ドロップログ id                                                               |
+| DROPLOG_PATH       | string \| null | ドロップログファイルパス                                                      |
+| ERROR_CNT          | number \| null | エラーカウント                                                                |
+| DROP_CNT           | number \| null | ドロップカウント                                                              |
+| SCRAMBLING_CNT     | number \| null | スクランブルカウント                                                          |
 
 ```yaml
 encode:
@@ -849,17 +857,17 @@ streamingPriority: 1
 
 #### 視聴 URL Scheme 設定
 
-| 子プロパティ名 | 種類         | 必須 | 説明                                         |
-| -------------- | ------------ | ---- | -------------------------------------------- |
-| m2ts           | 孫プロパティ | no   | m2ts 形式視聴時の URL Scheme 設定            |
-| video          | 孫プロパティ | no   | 録画ビデオ視聴時の URL Scheme 設定           |
+| 子プロパティ名 | 種類         | 必須 | 説明                                       |
+| -------------- | ------------ | ---- | ------------------------------------------ |
+| m2ts           | 孫プロパティ | no   | m2ts 形式視聴時の URL Scheme 設定          |
+| video          | 孫プロパティ | no   | 録画ビデオ視聴時の URL Scheme 設定         |
 | download       | 孫プロパティ | no   | 録画ビデオダウンロード時の URL Scheme 設定 |
 
-| 孫プロパティ名 | 種類   | 必須 | 説明                       |
-| -------------- | ------ | ---- | -------------------------- |
-| ios            | string | no   | iOS の URL Scheme 設定     |
-| android        | string | no   | Android の URL Scheme 設定 |
-| mac            | string | no   | [Mac の URL Scheme 設定](./mac-url-scheme.md)     |
+| 孫プロパティ名 | 種類   | 必須 | 説明                                                  |
+| -------------- | ------ | ---- | ----------------------------------------------------- |
+| ios            | string | no   | iOS の URL Scheme 設定                                |
+| android        | string | no   | Android の URL Scheme 設定                            |
+| mac            | string | no   | [Mac の URL Scheme 設定](./mac-url-scheme.md)         |
 | win            | string | no   | [Windows の URL Scheme 設定](./windows-url-scheme.md) |
 
 -   設定内で置換される変数は以下の通り
@@ -891,7 +899,7 @@ urlscheme:
 | string | hoge/EPGStation/data/streamfiles (EPGStation 直下の data/streamfiles ディレクトリのフルパス) | no   |
 
 ```yaml
-"streamFilePath": "/tmp/hlsfile"
+'streamFilePath': '/tmp/hlsfile'
 ```
 
 ### stream
@@ -1014,4 +1022,5 @@ kodiHosts:
       user: kodi
       password: pas
 ```
+
 [kodi.md](./kodi.md)
