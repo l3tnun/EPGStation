@@ -18,7 +18,7 @@ EPGStation が提供する WebAPI は [express-openapi](https://www.npmjs.com/pa
 curl -o - -X {method} -H 'Content-type:{content-type}' http://<hostname>:<port>/api/{api-path}
 ```
 
-#### Servers び設定
+#### Servers 設定
 
 localhost 以外からアクセスする場合は `config.yml` の `apiServers` の設定が必要です。
 

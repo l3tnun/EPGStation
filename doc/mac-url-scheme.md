@@ -1,6 +1,6 @@
 # macOS でのカスタム URL Sceheme の設定
 
-## config.yaml の設定
+## config.yml の設定
 
 urlscheme の各プロパティを下記のように `mac` プロパティを追加してください
 

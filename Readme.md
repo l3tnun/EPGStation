@@ -63,7 +63,7 @@ sqlite3 パッケージのインストール時にバイナリが存在しなか
 
 ### [Linux / macOS 用セットアップマニュアル](doc/linux-setup.md)
 
-### [Windows 用セットアップマニュアル](doc/windows.md)
+### [Windows 用セットアップマニュアル](doc/windows-setup.md)
 
 ---
 
@@ -138,15 +138,15 @@ sqlite3 パッケージのインストール時にバイナリが存在しなか
 
 -   EPGStation 上の動画再生を OS 上のアプリケーションで行うことが出来ます
 
-    -   [config.json 内の設定 (iOS, Android, macOS, Windows)](doc/conf-manual.md#mpegtsviewer)
+    -   [config.yml 内の設定 (iOS, Android, macOS, Windows)](doc/conf-manual.md#urlscheme)
     -   [macOS 用の URL Scheme 設定方法](doc/mac-url-scheme.md)
-    -   [Windows 用の URL Scheme 設定方法](doc/win-url-scheme.md)
+    -   [Windows 用の URL Scheme 設定方法](doc/windows-url-scheme.md)
 
 -   上記以外の環境での設定は WebUI の設定で各ブラウザごとに設定してください
 
 ### スマートフォン側の設定
 
-config.json で設定したアプリをインストールしてください
+config.yml で設定したアプリをインストールしてください
 
 ---
 
@@ -182,7 +182,7 @@ npm run backup FILENAME
 
 ### レストア
 
--   config.json に新しいデータベース設定を記述後に以下のコマンドを実行
+-   config.yml に新しいデータベース設定を記述後に以下のコマンドを実行
 
 ```
 npm run restore FILENAME

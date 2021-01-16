@@ -40,8 +40,8 @@
     - 詳細な設定は [詳細マニュアル](conf-manual.md) を参照
 
     ```yaml
-    port: 8888,
-    mirakurunPath: 'http+unix://%2Fvar%2Frun%2Fmirakurun.sock/',
+    port: 8888
+    mirakurunPath: 'http+unix://%2Fvar%2Frun%2Fmirakurun.sock/'
     ```
 
     Mirakurun が別ホストで動作している場合は `mirakurunPath: 'http://<MirakurunURL>:<Port>'`
