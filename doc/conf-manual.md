@@ -702,7 +702,7 @@ uploadTempDir: '/hoge/tmp/upload'
 | EXTENDED    | string \| null | 番組詳細                      |
 
 ```yaml
-reservationAddedCommand: '/bin/node /home/hoge/fuga.js reserve'
+reserveNewAddtionCommand: '/bin/node /home/hoge/fuga.js reserve'
 reserveUpdateCommand: '/bin/node /home/hoge/piyo.js update'
 reservedeletedCommand: '/bin/bash /home/hoge/bar.sh deleted'
 recordingPreStartCommand: '/bin/bash /home/hoge/foo.sh prestart'
@@ -744,9 +744,9 @@ recordingPrepRecFailedCommand: '/usr/bin/logger prepfailed'
 | LOGPATH     | string\| null  | ログファイルのフルパス        |
 
 ```yaml
-recordedStartCommand: '/bin/node /home/hoge/fuga.js start'
-recordedEndCommand: '/bin/bash /home/hoge/foo.sh end'
-recordedFailedCommand: '/usr/bin/logger recfailed'
+recordingStartCommand: '/bin/node /home/hoge/fuga.js start'
+recordingFinishCommand: '/bin/bash /home/hoge/foo.sh end'
+recordingFailedCommand: '/usr/bin/logger recfailed'
 ```
 
 ### encodeProcessNum
