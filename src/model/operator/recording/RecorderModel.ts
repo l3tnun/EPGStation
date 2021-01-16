@@ -500,7 +500,7 @@ class RecorderModel implements IRecorderModel {
             this.isRecording = false;
 
             // tmp に録画していた場合は移動する
-            if (this.videoFileId !== null) {
+            if (typeof this.config.recordedTmp !== 'undefined' && this.videoFileId !== null) {
                 try {
                     const newVdeoFileFulPath = await this.recordingUtil.movingFromTmp(this.reserve, this.videoFileId);
                     this.videoFileFulPath = newVdeoFileFulPath;
