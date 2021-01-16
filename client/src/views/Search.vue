@@ -6,7 +6,7 @@
                 <SearchOptionComponent ref="searchOption" v-if="searchState.searchOption !== null" v-on:search="search" v-on:clear="clear"></SearchOptionComponent>
                 <SearchReserves v-if="searchState.isTimeSpecification === true" :reserves="searchState.getRuleReservesResult()"></SearchReserves>
                 <SearchResult ref="searchResult" v-if="searchState.isTimeSpecification === false" v-on:ruleOption="scrollToRuleOption"></SearchResult>
-                <SearchRuleOption ref="ruleOption" v-on:add="add" v-on:update="update"></SearchRuleOption>
+                <SearchRuleOption ref="ruleOption" v-on:cancel="cancel" v-on:add="add" v-on:update="update"></SearchRuleOption>
                 <v-btn v-on:click="scrollToTop" dark fixed bottom fab color="pink">
                     <v-icon>mdi-chevron-up</v-icon>
                 </v-btn>
@@ -151,6 +151,10 @@ export default class Search extends Vue {
     public clear(): void {
         this.searchState.clear();
         this.clearPeriodState();
+    }
+
+    public cancel() {
+        this.$router.back();
     }
 
     public async add(): Promise<void> {
