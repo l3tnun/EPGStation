@@ -688,21 +688,21 @@ uploadTempDir: '/hoge/tmp/upload'
 
 -   実行時に渡される環境変数は以下の通り
 
-| 変数名      | 種類           | 説明                          |
-| ----------- | -------------- | ----------------------------- |
-| PROGRAMID   | number         | Program ID                    |
-| CHANNELTYPE | string         | 'GR' \| 'BS' \| 'CS' \| 'SKY' |
-| CHANNELID   | number         | Channel ID                    |
-| CHANNELNAME | string \| null | 放送局名                      |
+| 変数名                 | 種類           | 説明                          |
+| ---------------------- | -------------- | ----------------------------- |
+| PROGRAMID              | number         | Program ID                    |
+| CHANNELTYPE            | string         | 'GR' \| 'BS' \| 'CS' \| 'SKY' |
+| CHANNELID              | number         | Channel ID                    |
+| CHANNELNAME            | string \| null | 放送局名                      |
 | HALF_WIDTH_CHANNELNAME | string \| null | 放送局名(半角)                |
-| STARTAT     | number         | 開始時刻 (UNIX time)          |
-| ENDAT       | number         | 終了時刻 (UNIX time)          |
-| DURATION    | number         | 長さ (ms)                     |
-| NAME        | string         | 番組名                        |
+| STARTAT                | number         | 開始時刻 (UNIX time)          |
+| ENDAT                  | number         | 終了時刻 (UNIX time)          |
+| DURATION               | number         | 長さ (ms)                     |
+| NAME                   | string         | 番組名                        |
 | HALF_WIDTH_NAME        | string         | 番組名(半角)                  |
-| DESCRIPTION | string \| null | 番組概要                      |
+| DESCRIPTION            | string \| null | 番組概要                      |
 | HALF_WIDTH_DESCRIPTION | string \| null | 番組概要(半角)                |
-| EXTENDED    | string \| null | 番組詳細                      |
+| EXTENDED               | string \| null | 番組詳細                      |
 | HALF_WIDTH_EXTENDED    | string \| null | 番組詳細(半角)                |
 
 ```yaml
@@ -731,25 +731,25 @@ recordingPrepRecFailedCommand: '/usr/bin/logger prepfailed'
 
 -   実行時に渡される環境変数は以下の通り
 
-| 変数名      | 種類           | 説明                          |
-| ----------- | -------------- | ----------------------------- |
-| RECORDEDID  | number         | recorded id                   |
-| PROGRAMID   | number         | program id                    |
-| CHANNELTYPE | string         | 'GR' \| 'BS' \| 'CS' \| 'SKY' |
-| CHANNELID   | number         | channel id                    |
-| CHANNELNAME | string \| null | 放送局名                      |
+| 変数名                 | 種類           | 説明                          |
+| ---------------------- | -------------- | ----------------------------- |
+| RECORDEDID             | number         | recorded id                   |
+| PROGRAMID              | number         | program id                    |
+| CHANNELTYPE            | string         | 'GR' \| 'BS' \| 'CS' \| 'SKY' |
+| CHANNELID              | number         | channel id                    |
+| CHANNELNAME            | string \| null | 放送局名                      |
 | HALF_WIDTH_CHANNELNAME | string \| null | 放送局名(半角)                |
-| STARTAT     | number         | 開始時刻 (UNIX time)          |
-| ENDAT       | number         | 終了時刻 (UNIX time)          |
-| DURATION    | number         | 長さ (ms)                     |
-| NAME        | string         | 番組名                        |
+| STARTAT                | number         | 開始時刻 (UNIX time)          |
+| ENDAT                  | number         | 終了時刻 (UNIX time)          |
+| DURATION               | number         | 長さ (ms)                     |
+| NAME                   | string         | 番組名                        |
 | HALF_WIDTH_NAME        | string         | 番組名(半角)                  |
-| DESCRIPTION | string \| null | 番組概要                      |
+| DESCRIPTION            | string \| null | 番組概要                      |
 | HALF_WIDTH_DESCRIPTION | string \| null | 番組概要(半角)                |
-| EXTENDED    | string \| null | 番組詳細                      |
+| EXTENDED               | string \| null | 番組詳細                      |
 | HALF_WIDTH_EXTENDED    | string \| null | 番組詳細(半角)                |
-| RECPATH     | string         | 録画ファイルのフルパス        |
-| LOGPATH     | string\| null  | ログファイルのフルパス        |
+| RECPATH                | string         | 録画ファイルのフルパス        |
+| LOGPATH                | string\| null  | ログファイルのフルパス        |
 
 ```yaml
 recordedStartCommand: '/bin/node /home/hoge/fuga.js start'
@@ -804,42 +804,42 @@ concurrentEncodeNum: 1
 
 -   実行時に渡される環境変数は以下の通り
 
-| 変数名             | 種類           | 説明                                                                          |
-| ------------------ | -------------- | ----------------------------------------------------------------------------- |
-| RECORDEDID         | number         | recorded id                                                                   |
-| INPUT              | string         | 入力ファイルパス                                                              |
-| OUTPUT             | string         | 出力ファイルパス                                                              |
-| FFMPEG             | string         | ffmpeg パス                                                                   |
-| FFPROBE            | string         | ffprobe パス                                                                  |
-| DIR                | string         | 予約時に設定した directory 文字列                                             |
-| NAME               | string         | 番組名                                                                        |
-| HALF_WIDTH_NAME    | string         | 番組名(半角)                                                                  |
-| DESCRIPTION        | string \| null | 番組概要                                                                      |
+| 変数名                 | 種類           | 説明                                                                          |
+| ---------------------- | -------------- | ----------------------------------------------------------------------------- |
+| RECORDEDID             | number         | recorded id                                                                   |
+| INPUT                  | string         | 入力ファイルパス                                                              |
+| OUTPUT                 | string         | 出力ファイルパス                                                              |
+| FFMPEG                 | string         | ffmpeg パス                                                                   |
+| FFPROBE                | string         | ffprobe パス                                                                  |
+| DIR                    | string         | 予約時に設定した directory 文字列                                             |
+| NAME                   | string         | 番組名                                                                        |
+| HALF_WIDTH_NAME        | string         | 番組名(半角)                                                                  |
+| DESCRIPTION            | string \| null | 番組概要                                                                      |
 | HALF_WIDTH_DESCRIPTION | string \| null | 番組概要(半角)                                                                |
-| EXTENDED           | string \| null | 番組詳細                                                                      |
+| EXTENDED               | string \| null | 番組詳細                                                                      |
 | HALF_WIDTH_EXTENDED    | string \| null | 番組詳細(半角)                                                                |
-| VIDEOTYPE          | string \| null | "mpeg2" \| "h.264" \| "h.265"                                                 |
-| VIDEORESOLUTION    | string \| null | "240p" \| "480i" \| "480p" \| "720p" \| "1080i" \| "2160p" \| "4320p" \| null |
-| VIDEOSTREAMCONTENT | number \| null | video streamType                                                              |
-| VIDEOCOMPONENTTYPE | number \| null | video componentType                                                           |
-| AUDIOSAMPLINGRATE  | number \| null | 16000 \| 22050 \| 24000 \| 32000 \| 44100 \| 48000                            |
-| AUDIOCOMPONENTTYPE | number \| null | audio componentType                                                           |
-| CHANNELID          | number         | ChannelId mirakurun:40772/api/services で ID を確認できる                     |
+| VIDEOTYPE              | string \| null | "mpeg2" \| "h.264" \| "h.265"                                                 |
+| VIDEORESOLUTION        | string \| null | "240p" \| "480i" \| "480p" \| "720p" \| "1080i" \| "2160p" \| "4320p" \| null |
+| VIDEOSTREAMCONTENT     | number \| null | video streamType                                                              |
+| VIDEOCOMPONENTTYPE     | number \| null | video componentType                                                           |
+| AUDIOSAMPLINGRATE      | number \| null | 16000 \| 22050 \| 24000 \| 32000 \| 44100 \| 48000                            |
+| AUDIOCOMPONENTTYPE     | number \| null | audio componentType                                                           |
+| CHANNELID              | number         | ChannelId mirakurun:40772/api/services で ID を確認できる                     |
 | CHNNELNAME             | string         | チャンネル名                                                                  |
 | HALF_WIDTH_CHANNELNAME | string         | チャンネル名 (半角)                                                           |
-| GENRE1             | number         | genre1                                                                        |
-| GENRE2             | number         | genre2                                                                        |
-| GENRE3             | number         | genre3                                                                        |
-| SUBGENRE1          | number         | sub genre1                                                                    |
-| SUBGENRE2          | number         | sub genre2                                                                    |
-| SUBGENRE3          | number         | sub genre3                                                                    |
-| START_AT           | number         | 番組開始時刻                                                                  |
-| END_AT             | number         | 番組終了時刻                                                                  |
-| DROPLOG_ID         | number \| null | ドロップログ id                                                               |
-| DROPLOG_PATH       | string \| null | ドロップログファイルパス                                                      |
-| ERROR_CNT          | number \| null | エラーカウント                                                                |
-| DROP_CNT           | number \| null | ドロップカウント                                                              |
-| SCRAMBLING_CNT     | number \| null | スクランブルカウント                                                          |
+| GENRE1                 | number         | genre1                                                                        |
+| GENRE2                 | number         | genre2                                                                        |
+| GENRE3                 | number         | genre3                                                                        |
+| SUBGENRE1              | number         | sub genre1                                                                    |
+| SUBGENRE2              | number         | sub genre2                                                                    |
+| SUBGENRE3              | number         | sub genre3                                                                    |
+| START_AT               | number         | 番組開始時刻                                                                  |
+| END_AT                 | number         | 番組終了時刻                                                                  |
+| DROPLOG_ID             | number \| null | ドロップログ id                                                               |
+| DROPLOG_PATH           | string \| null | ドロップログファイルパス                                                      |
+| ERROR_CNT              | number \| null | エラーカウント                                                                |
+| DROP_CNT               | number \| null | ドロップカウント                                                              |
+| SCRAMBLING_CNT         | number \| null | スクランブルカウント                                                          |
 
 ```yaml
 encode:
