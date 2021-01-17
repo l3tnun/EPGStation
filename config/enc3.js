@@ -40,13 +40,13 @@ if (isDualMono) {
     Array.prototype.push.apply(args, [
         '-filter_complex',
         'channelsplit[FL][FR]',
-        '-map 0:v',
-        '-map [FL]',
-        '-map [FR]',
-        '-metadata:s:a:0 language=jpn',
-        '-metadata:s:a:1 language=eng',
+        '-map', '0:v',
+        '-map', '[FL]',
+        '-map', '[FR]',
+        '-metadata:s:a:0', 'language=jpn',
+        '-metadata:s:a:1', 'language=eng',
     ]);
-    Array.prototype.push.apply(args, ['-c:a ac3', '-ar 48000', '-ab 256k']);
+    Array.prototype.push.apply(args, ['-c:a', 'ac3', '-ar', '48000', '-ab', '256k']);
 } else {
     // audio dataをコピー
     Array.prototype.push.apply(args, ['-c:a', 'aac']);
