@@ -8,6 +8,7 @@ import FileUtil from '../../../util/FileUtil';
 import ProcessUtil from '../../../util/ProcessUtil';
 import Util from '../../../util/Util';
 import IVideoUtil, { VideoInfo } from '../../api/video/IVideoUtil';
+import IChannelDB from '../../db/IChannelDB';
 import IRecordedDB from '../../db/IRecordedDB';
 import IVideoFileDB from '../../db/IVideoFileDB';
 import IEncodeEvent from '../../event/IEncodeEvent';
@@ -56,6 +57,7 @@ class EncodeManageModel implements IEncodeManageModel {
         @inject('IEncodeProcessManageModel') processManager: IEncodeProcessManageModel,
         @inject('IVideoFileDB') videoFileDB: IVideoFileDB,
         @inject('IRecordedDB') recordedDB: IRecordedDB,
+        @inject('IChannelDB') channelDB: IChannelDB,
         @inject('IVideoUtil') videoUtil: IVideoUtil,
         @inject('IEncodeEvent') encodeEvent: IEncodeEvent,
     ) {
@@ -66,6 +68,7 @@ class EncodeManageModel implements IEncodeManageModel {
         this.processManager = processManager;
         this.videoFileDB = videoFileDB;
         this.recordedDB = recordedDB;
+        this.channelDB = channelDB;
         this.videoUtil = videoUtil;
         this.encodeEvent = encodeEvent;
 
@@ -176,6 +179,12 @@ class EncodeManageModel implements IEncodeManageModel {
             throw new Error('RecordedIsNotFound');
         }
 
+        // 局を取得する
+        const channel = await this.channelDB.findId(recorded.channelId);
+        if (channel === null) {
+            throw new Error('CannelIsNotFound');
+        }
+
         // ソースビデオファイルのファイルパスを生成する
         const inputFilePath = await this.videoUtil.getFullFilePathFromId(queueItem.sourceVideoFileId);
         if (inputFilePath === null) {
@@ -248,7 +257,9 @@ class EncodeManageModel implements IEncodeManageModel {
                     NAME: recorded.name,
                     HALF_WIDTH_NAME: recorded.halfWidthName,
                     DESCRIPTION: recorded.description || '',
+                    HALF_WIDTH_DESCRIPTION: recorded.halfWidthDescription || '',
                     EXTENDED: recorded.extended || '',
+                    HALF_WIDTH_EXTENDED: recorded.halfWidthExtended || '',
                     VIDEOTYPE: recorded.videoType || '',
                     VIDEORESOLUTION: recorded.videoResolution || '',
                     VIDEOSTREAMCONTENT:
@@ -260,6 +271,8 @@ class EncodeManageModel implements IEncodeManageModel {
                     AUDIOCOMPONENTTYPE:
                         typeof recorded.audioComponentType === 'number' ? recorded.audioComponentType.toString(10) : '',
                     CHANNELID: typeof recorded.channelId === 'number' ? recorded.channelId.toString(10) : '',
+                    CHANNELNAME: typeof channel.name === 'string' ? channel.name : '',
+                    HALF_WIDTH_CHANNELNAME: typeof channel.halfWidthName === 'string' ? channel.halfWidthName : '',
                     GENRE1: typeof recorded.genre1 === 'number' ? recorded.genre1.toString(10) : '',
                     SUBGENRE1: typeof recorded.subGenre1 === 'number' ? recorded.subGenre1.toString(10) : '',
                     GENRE2: typeof recorded.genre2 === 'number' ? recorded.genre2.toString(10) : '',

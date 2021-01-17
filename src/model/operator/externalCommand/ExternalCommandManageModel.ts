@@ -182,12 +182,16 @@ export default class ExternalCommandManageModel implements IExternalCommandManag
                     CHANNELTYPE: reserve.channelType,
                     CHANNELID: reserve.channelId,
                     CHANNELNAME: channel === null ? null : channel.name,
+                    HALF_WIDTH_CHANNELNAME: channel === null ? null : channel.halfWidthName,
                     STARTAT: reserve.startAt,
                     ENDAT: reserve.endAt,
                     DURATION: reserve.endAt - reserve.startAt,
                     NAME: reserve.name,
+                    HALF_WIDTH_NAME: reserve.halfWidthName,
                     DESCRIPTION: reserve.description,
+                    HALF_WIDTH_DESCRIPTION: reserve.halfWidthDescription,
                     EXTENDED: reserve.extended,
+                    HALF_WIDTH_EXTENDED: reserve.halfWidthExtended,
                 },
             } as any);
 
@@ -226,12 +230,16 @@ export default class ExternalCommandManageModel implements IExternalCommandManag
                     CHANNELTYPE: channel === null ? null : channel.channelType,
                     CHANNELID: recorded.channelId,
                     CHANNELNAME: channel === null ? null : channel.name,
+                    HALF_WIDTH_CHANNELNAME: channel === null ? null : channel.halfWidthName,
                     STARTAT: recorded.startAt,
                     ENDAT: recorded.endAt,
                     DURATION: recorded.endAt - recorded.startAt,
                     NAME: recorded.name,
+                    HALF_WIDTH_NAME: recorded.halfWidthName,
                     DESCRIPTION: recorded.description,
+                    HALF_WIDTH_DESCRIPTION: recorded.halfWidthDescription,
                     EXTENDED: recorded.extended,
+                    HALF_WIDTH_EXTENDED: recorded.halfWidthExtended,
                     RECPATH:
                         typeof recorded.videoFiles === 'undefined' || recorded.videoFiles.length < 0
                             ? null
