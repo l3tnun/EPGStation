@@ -45,6 +45,7 @@ export default interface IConfigFile {
     clientSocketioPort?: number;
     https?: HttpsConfig;
     mirakurunPath: string;
+    mirakurunEventEndTimeout: number; // mirakurun eventEndTimeout
 
     subDirectory?: string;
 

@@ -7,6 +7,7 @@
     -   [EPGStation の Socket.IO 待ち受けポートを変えたい](#socketioport)
     -   [クライアントが接続に使用する Socket.IO ポートを変えたい](#clientsocketioport)
     -   [Mirakurun の設定](#mirakurunpath)
+    -   [Mirakurun の eventEndTimeout 設定](#mirakuruneventendtimeout)
     -   [データベースの種類を変えたい](#dbtype)
     -   [MySQL の設定を変更したい](#mysql)
     -   [SQLite3 の設定を変更したい](#sqlite)
@@ -137,6 +138,18 @@ https:
 
 ```yaml
 mirakurunPath: 'http://localhost:40772'
+```
+
+### mirakurunEventEndTimeout
+
+#### Mirakurun の eventEndTimeout と合わせる
+
+| 種類   | デフォルト値 | 必須 |
+| ------ | ------------ | ---- |
+| number | 1000         | no   |
+
+```yaml
+mirakurunEventEndTimeout: 1000
 ```
 
 ### dbtype

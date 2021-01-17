@@ -147,6 +147,7 @@ namespace Configuration {
 
     export const DEFAULT_VALUE: IConfigFile = {
         mirakurunPath: 'http+unix://%2Fvar%2Frun%2Fmirakurun.sock/',
+        mirakurunEventEndTimeout: 1000,
         apiServers: [],
         dbtype: 'sqlite',
         epgUpdateIntervalTime: 10,

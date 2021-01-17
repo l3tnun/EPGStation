@@ -640,12 +640,55 @@ class RecorderModel implements IRecorderModel {
             });
         } else if (this.isRecording === true) {
             this.isPlanToDelete = isPlanToDelete;
-            this.log.system.info(`stop recording: ${this.reserve.id}`);
+            this.log.system.info(`stop recording: reserveId: ${this.reserve.id}, recordedId: ${this.recordedId}`);
             // 録画中
             if (this.stream !== null) {
-                this.stream.destroy();
-                this.stream.push(null); // eof 通知
+                const now = new Date().getTime();
+                if (
+                    isPlanToDelete === false &&
+                    this.reserve.isTimeSpecified === false &&
+                    now >= this.reserve.endAt &&
+                    now <= this.reserve.endAt + this.config.mirakurunEventEndTimeout + 1000
+                ) {
+                    // もうすぐ mirakurun によるストリーム切断が行われるので切断を待つ
+                    this.log.system.info(
+                        `wait close stream by mirakurun: reserveId: ${this.reserve.id}, recordedId: ${this.recordedId}`,
+                    );
+
+                    // mirakurun によるストリーム切断がタイムアウトした場合の処理
+                    const timeoutId = setTimeout(() => {
+                        if (this.stream === null) {
+                            return;
+                        }
+                        this.log.system.warn(
+                            `close stream timeout: reserveId: ${this.reserve.id}, recordedId: ${this.recordedId}`,
+                        );
+                        this.stream.destroy();
+                        this.stream.push(null); // eof 通知
+                    }, this.reserve.endAt + this.config.mirakurunEventEndTimeout - now + 1000);
+
+                    // ストリームの end イベントが発行されたらタイムアウト処理キャンセル
+                    this.stream.removeListener('end', () => {
+                        // clear timeout
+                        clearTimeout(timeoutId);
+                    });
+
+                    return;
+                } else {
+                    // 通常キャンセル
+                    this.log.system.info(
+                        `destory stream: reserveId: ${this.reserve.id}, recordedId: ${this.recordedId}`,
+                    );
+                    this.stream.destroy();
+                    this.stream.push(null); // eof 通知
+                }
+            } else {
+                // 録画中にあるべき stream が存在しない
+                this.log.system.error(
+                    `stop recording error. stream is null: reserveId: ${this.reserve.id}, recordedId: ${this.recordedId}`,
+                );
             }
+
             this.isStopRec = true;
         }
     }
