@@ -40,6 +40,7 @@ class EncodeManageModel implements IEncodeManageModel {
     private processManager: IEncodeProcessManageModel;
     private videoFileDB: IVideoFileDB;
     private recordedDB: IRecordedDB;
+    private channelDB: IChannelDB;
     private videoUtil: IVideoUtil;
     private encodeEvent: IEncodeEvent;
     private concurrentEncodeNum: number;
