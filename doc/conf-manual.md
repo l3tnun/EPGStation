@@ -846,7 +846,7 @@ encode:
     - name: H.264
       cmd: '%NODE% %ROOT%/config/enc.js'
       suffix: .mp4
-      rete: 4.0
+      rate: 4.0
 ```
 
 ---
