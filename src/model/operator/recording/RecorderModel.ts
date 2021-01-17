@@ -475,7 +475,7 @@ class RecorderModel implements IRecorderModel {
             return;
         }
 
-        this.log.system.info(`stop recording: ${this.recordedId}`);
+        this.log.system.info(`start recEnd: ${this.recordedId}`);
 
         // stream 停止
         this.destoryStream();
