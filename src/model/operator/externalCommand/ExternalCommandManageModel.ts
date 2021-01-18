@@ -220,7 +220,7 @@ export default class ExternalCommandManageModel implements IExternalCommandManag
 
         const channel = await this.channelDB.findId(recorded.channelId);
 
-        return new Promise<void>(resolve => {
+        return new Promise<void>(async resolve => {
             const child = spawn(cmds.bin, cmds.args, {
                 stdio: 'ignore',
                 env: {
@@ -243,7 +243,7 @@ export default class ExternalCommandManageModel implements IExternalCommandManag
                     RECPATH:
                         typeof recorded.videoFiles === 'undefined' || recorded.videoFiles.length < 0
                             ? null
-                            : this.videoUtil.getFullFilePathFromId(recorded.videoFiles[0].id),
+                            : await this.videoUtil.getFullFilePathFromId(recorded.videoFiles[0].id),
                     LOGPATH:
                         typeof recorded.dropLogFile === 'undefined' || recorded.dropLogFile === null
                             ? null
