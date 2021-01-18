@@ -24,7 +24,7 @@ class Configuration implements IConfiguration {
         this.log.system.info('config.yml read success');
 
         fs.watchFile(Configuration.CONFIG_FILE_PATH, async () => {
-            this.log.system.info('updeted config file');
+            this.log.system.info('updated config file');
             try {
                 const newConfig = <any>(
                     yaml.safeLoad(await fs.promises.readFile(Configuration.CONFIG_FILE_PATH, 'utf-8'))
