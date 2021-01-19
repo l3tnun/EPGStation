@@ -27,21 +27,22 @@ port と同じポート番号を設定しても良い
 | number | port と同じ  | no   |
 
 ```yaml
-socketioPort: 8889
+socketioPort: 8888
 ```
 
 ### clientSocketioPort
 
-### EPGStation の Web クライアントが接続する Socket.IO のポート番号
+#### EPGStation の Web クライアントが接続する Socket.IO のポート番号
 
-リバースプロキシを使用している場合は必須となる
+リバースプロキシを使用している場合は必須となる。
+リバースプロキシの待受ポートと同じポート番号を設定する事。
 
 | 種類   | デフォルト値        | 必須 |
 | ------ | ------------------- | ---- |
 | number | socketioPort と同じ | no   |
 
 ```yaml
-clientSocketioPort: 8889
+clientSocketioPort: 80
 ```
 
 ## nginx 設定
