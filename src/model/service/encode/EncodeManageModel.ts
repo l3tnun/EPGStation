@@ -104,7 +104,7 @@ class EncodeManageModel implements IEncodeManageModel {
         this.waitQueue.push(queueItem);
         this.emitNeedsCheckQueue();
 
-        this.log.system.info(`add new encode: ${encodeId}`);
+        this.log.encode.info(`add new encode: ${encodeId}`);
 
         // 実行権開放
         this.executeManagementModel.unLockExecution(exeId);
@@ -145,8 +145,8 @@ class EncodeManageModel implements IEncodeManageModel {
             try {
                 await this.addQueue(encodeProgram);
             } catch (err) {
-                this.log.system.error(`create encode process error: ${encodeProgram.encodeId}`);
-                this.log.system.error(err);
+                this.log.encode.error(`create encode process error: ${encodeProgram.encodeId}`);
+                this.log.encode.error(err);
 
                 needsFinalize = true;
 
@@ -196,7 +196,7 @@ class EncodeManageModel implements IEncodeManageModel {
         try {
             await FileUtil.stat(inputFilePath);
         } catch (err) {
-            this.log.system.error(`video file is not found: ${inputFilePath}`);
+            this.log.encode.error(`video file is not found: ${inputFilePath}`);
             throw err;
         }
 
@@ -217,7 +217,7 @@ class EncodeManageModel implements IEncodeManageModel {
                 await FileUtil.stat(outputDirPath);
             } catch (e) {
                 // ディレクトリが存在しなければ作成する
-                this.log.system.info(`mkdirp: ${outputDirPath}`);
+                this.log.encode.info(`mkdirp: ${outputDirPath}`);
                 await FileUtil.mkdir(outputDirPath);
             }
         }
@@ -234,7 +234,7 @@ class EncodeManageModel implements IEncodeManageModel {
         }
 
         // エンコード開始
-        this.log.system.info(
+        this.log.encode.info(
             `encode start. mode: ${queueItem.mode} name: ${recorded.name} file: ${inputFilePath} -> ${outputFilePath}`,
         );
 
@@ -297,7 +297,7 @@ class EncodeManageModel implements IEncodeManageModel {
             encodeProgram: queueItem,
             isCanceld: false,
             timerId: setTimeout(async () => {
-                this.log.system.error(`encode process is time out: ${queueItem.encodeId} ${outputFilePath}`);
+                this.log.encode.error(`encode process is time out: ${queueItem.encodeId} ${outputFilePath}`);
                 await this.cancel(queueItem.encodeId);
             }, recorded.duration * (typeof encodeCmd.rate === 'undefined' ? EncodeManageModel.DEFAULT_TIMEOUT_RATE : encodeCmd.rate)),
         });
@@ -308,7 +308,7 @@ class EncodeManageModel implements IEncodeManageModel {
         // debug 用
         if (childProcess.stderr !== null) {
             childProcess.stderr.on('data', data => {
-                this.log.system.debug(String(data));
+                this.log.encode.debug(String(data));
             });
         }
 
@@ -318,8 +318,8 @@ class EncodeManageModel implements IEncodeManageModel {
             try {
                 videoInfo = await this.videoUtil.getInfo(inputFilePath);
             } catch (err) {
-                this.log.system.error(`get encode vidoe file info: ${inputFilePath}`);
-                this.log.system.error(err);
+                this.log.encode.error(`get encode vidoe file info: ${inputFilePath}`);
+                this.log.encode.error(err);
             }
             if (videoInfo !== null) {
                 childProcess.stdout.on('data', data => {
@@ -335,7 +335,7 @@ class EncodeManageModel implements IEncodeManageModel {
         // プロセス終了時に runningQueue からの削除 & emitNeedsCheckQueue() を実行する
         childProcess.on('exit', async (code, signal) => {
             // exit code
-            this.log.system.info(`exit code: ${code}, signal: ${signal}`);
+            this.log.encode.info(`exit code: ${code}, signal: ${signal}`);
 
             // 使用済みファイル名から削除
             if (outputFilePath !== null) {
@@ -345,22 +345,22 @@ class EncodeManageModel implements IEncodeManageModel {
             let isError = true;
             const encodingQueueItem = this.getRunnginQueueItem(queueItem.encodeId);
             if (typeof encodingQueueItem === 'undefined') {
-                this.log.system.fatal(`encode item is removed: ${queueItem.recordedId}`);
+                this.log.encode.fatal(`encode item is removed: ${queueItem.recordedId}`);
             } else if (encodingQueueItem.isCanceld === true) {
                 // キャンセルされた
-                this.log.system.info(`canceld encode: ${queueItem.encodeId}`);
+                this.log.encode.info(`canceld encode: ${queueItem.encodeId}`);
             } else if (code !== 0) {
                 // エンコードが正常終了しなかった
-                this.log.system.error(`encode failed: ${queueItem.encodeId} ${outputFilePath}`);
+                this.log.encode.error(`encode failed: ${queueItem.encodeId} ${outputFilePath}`);
             } else {
                 // エンコード正常終了
-                this.log.system.info(`Successfully encod: ${queueItem.encodeId} ${outputFilePath}`);
+                this.log.encode.info(`Successfully encod: ${queueItem.encodeId} ${outputFilePath}`);
 
                 isError = false;
 
                 // 終了通知 DB に登録を依頼
                 const fileName = outputFilePath === null ? null : path.basename(outputFilePath);
-                this.log.system.info(
+                this.log.encode.info(
                     `rmOrg: ${queueItem.removeOriginal}, hasSam: ${this.hasSamVideoFileIdItem(
                         queueItem.sourceVideoFileId,
                         queueItem.encodeId,
@@ -393,12 +393,12 @@ class EncodeManageModel implements IEncodeManageModel {
             if (isError === true) {
                 // 出力ファイルを削除
                 if (outputFilePath !== null) {
-                    this.log.system.info(`delete encode output file: ${outputFilePath}`);
+                    this.log.encode.info(`delete encode output file: ${outputFilePath}`);
                     await Util.sleep(1000);
 
                     await FileUtil.unlink(outputFilePath).catch(err => {
-                        this.log.system.error(`delete encode output file failed: ${outputFilePath}`);
-                        this.log.system.error(err);
+                        this.log.encode.error(`delete encode output file failed: ${outputFilePath}`);
+                        this.log.encode.error(err);
                     });
                 }
 
@@ -420,7 +420,7 @@ class EncodeManageModel implements IEncodeManageModel {
         for (let j = 0; j < logs.length; j++) {
             if (logs[j] != '') {
                 const log = JSON.parse(String(logs[j]));
-                this.log.system.debug(log);
+                this.log.encode.debug(log);
                 if (log.type == 'progress') {
                     const encodingQueueItem = this.getRunnginQueueItem(encodeId);
                     if (encodingQueueItem != null) {
@@ -443,7 +443,7 @@ class EncodeManageModel implements IEncodeManageModel {
     private getDirPath(queueItem: EncodeQueueItem): string {
         const parentDir = this.videoUtil.getParentDirPath(queueItem.parentDir);
         if (parentDir === null) {
-            this.log.system.error(`parent dir config is not found: ${queueItem.parentDir}`);
+            this.log.encode.error(`parent dir config is not found: ${queueItem.parentDir}`);
             throw new Error('parentDirIsNotFound');
         }
 
@@ -564,15 +564,15 @@ class EncodeManageModel implements IEncodeManageModel {
         // 実行権取得
         const exeId = await this.executeManagementModel.getExecution(EncodeManageModel.CANCEL_ENCODE_PRIPORITY);
 
-        this.log.system.info(`cancel encode: ${encodeId}`);
+        this.log.encode.info(`cancel encode: ${encodeId}`);
 
         // runningQueue にあるので プロセスを殺す
         const runningQueueItem = this.getRunnginQueueItem(encodeId);
         if (typeof runningQueueItem !== 'undefined') {
             runningQueueItem.isCanceld = true;
             await ProcessUtil.kill(runningQueueItem.process).catch(err => {
-                this.log.system.error(`kill encode process failed: ${encodeId}`);
-                this.log.system.error(err);
+                this.log.encode.error(`kill encode process failed: ${encodeId}`);
+                this.log.encode.error(err);
             });
         } else {
             // waitQueue から削除
@@ -645,8 +645,8 @@ class EncodeManageModel implements IEncodeManageModel {
         for (const encodeId of encodeIds) {
             await this.cancel(encodeId).catch(err => {
                 isError = true;
-                this.log.system.error(`cancel encode failed: ${encodeId}`);
-                this.log.system.error(err);
+                this.log.encode.error(`cancel encode failed: ${encodeId}`);
+                this.log.encode.error(err);
             });
         }
 

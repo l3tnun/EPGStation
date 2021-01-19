@@ -70,8 +70,8 @@ export default class EncodeFinishModel implements IEncodeFinishModel {
                 });
             }
         } catch (err) {
-            this.log.system.error('finish encode error');
-            this.log.system.error(err);
+            this.log.encode.error('finish encode error');
+            this.log.encode.error(err);
         }
 
         if (info.removeOriginal === true) {
