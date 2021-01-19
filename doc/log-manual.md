@@ -55,6 +55,11 @@ categories:
             - stream
             - stdout
         level: info
+    encode:
+        appenders:
+            - encode
+            - stdout
+        level: info
 ```
 
 `"level": "info"` となっている部分を、任意のログレベルに変更することで出力されるログレベルも変更可能です  
@@ -77,6 +82,8 @@ stream:
         - stdout
     level: debug
 ```
+
+エンコードの標準エラー出力を表示したい場合は同じ様に `encode` の `level` を `debug` へ変更してください。
 
 ## ログファイルを変更する
 
