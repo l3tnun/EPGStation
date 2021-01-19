@@ -161,7 +161,7 @@ export default class RecordedHLSStreamingVideo extends BaseVideo {
             throw new Error('StreamIdIsNull');
         }
 
-        const videoSrc = `/streamfiles/stream${streamId}.m3u8`;
+        const videoSrc = `./streamfiles/stream${streamId}.m3u8`;
         if (this.isSupportedHLSjs() === true) {
             // hls.js 非対応
             this.setSrc(videoSrc);

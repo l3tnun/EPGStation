@@ -75,7 +75,7 @@ export default class LiveHLSVideo extends BaseVideo {
             throw new Error('StreamIdIsNull');
         }
 
-        const videoSrc = `/streamfiles/stream${streamId}.m3u8`;
+        const videoSrc = `./streamfiles/stream${streamId}.m3u8`;
         if (Hls.isSupported() === false || (UaUtil.isiOS() === true && UaUtil.isiPadOS() === false)) {
             // hls.js 非対応
             this.setSrc(videoSrc);
