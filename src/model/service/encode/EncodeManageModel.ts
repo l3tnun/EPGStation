@@ -240,6 +240,18 @@ class EncodeManageModel implements IEncodeManageModel {
 
         const config = this.configure.getConfig();
 
+        // DIR
+        let dir: string = '';
+        if (typeof encodeCmd.suffix === 'undefined' && typeof queueItem.directory !== 'undefined') {
+            dir = queueItem.directory;
+        } else if (outputFilePath !== null) {
+            dir = outputFilePath;
+        }
+
+        this.log.encode.info(`encodeCmd.suffix: ${encodeCmd.suffix}`);
+        this.log.encode.info(`queueItem.directory: ${queueItem.directory}`);
+        this.log.encode.info(`outputFilePath: ${outputFilePath}`);
+
         // プロセスの生成
         const childProcess = await this.processManager.create({
             input: inputFilePath,
@@ -252,7 +264,7 @@ class EncodeManageModel implements IEncodeManageModel {
                     RECORDEDID: recorded.id.toString(10),
                     INPUT: inputFilePath,
                     OUTPUT: outputFilePath === null ? '' : outputFilePath,
-                    DIR: outputDirPath || '',
+                    DIR: dir,
                     FFMPEG: config.ffmpeg,
                     FFPROBE: config.ffprobe,
                     NAME: recorded.name,
