@@ -66,10 +66,10 @@ class EncodeProcessManageModel implements IEncodeProcessManageModel {
                     const child = this.buildProcess(option);
                     this.childs.unshift(child);
                     resolve(child.child);
-                    this.log.system.info(`create new encode process: ${child.processId}`);
+                    this.log.encode.info(`create new encode process: ${child.processId}`);
                 } catch (err) {
-                    this.log.system.error('create encode process failed');
-                    this.log.system.error(err);
+                    this.log.encode.error('create encode process failed');
+                    this.log.encode.error(err);
                     reject(err);
                 }
             }
@@ -107,10 +107,10 @@ class EncodeProcessManageModel implements IEncodeProcessManageModel {
                     if (timeoutId !== null) {
                         clearInterval(timeoutId); // timeout クリア
                     }
-                    this.log.system.info(`kill & create new encode process: ${child.processId}`);
+                    this.log.encode.info(`kill & create new encode process: ${child.processId}`);
                 } catch (err) {
-                    this.log.system.error('kill & create new encode process failed');
-                    this.log.system.error(err);
+                    this.log.encode.error('kill & create new encode process failed');
+                    this.log.encode.error(err);
                     reject(err);
                 }
             };
@@ -121,7 +121,7 @@ class EncodeProcessManageModel implements IEncodeProcessManageModel {
              */
             timeoutId = setTimeout(() => {
                 this.removeListener(createChild);
-                this.log.system.error(`EncodeProcessManageModel timeout error: ${planToKillProcessId}`);
+                this.log.encode.error(`EncodeProcessManageModel timeout error: ${planToKillProcessId}`);
                 reject(new Error('EncodeProcessManageModelTimeoutError'));
             }, 3 * 1000);
 
@@ -132,8 +132,8 @@ class EncodeProcessManageModel implements IEncodeProcessManageModel {
             try {
                 await this.killChild(planToKillProcessId);
             } catch (err) {
-                this.log.system.error(`kill process failed: ${planToKillProcessId}`);
-                this.log.system.error(err);
+                this.log.encode.error(`kill process failed: ${planToKillProcessId}`);
+                this.log.encode.error(err);
                 this.removeListener(createChild);
                 reject(err);
             }
@@ -171,11 +171,11 @@ class EncodeProcessManageModel implements IEncodeProcessManageModel {
                 isError = false;
                 try {
                     if (isRemoveOnly === false) {
-                        this.log.system.info(`kill child: ${processId}`);
+                        this.log.encode.info(`kill child: ${processId}`);
                         await ProcessUtil.kill(this.childs[i].child);
                     }
                 } catch (err) {
-                    this.log.system.error(err);
+                    this.log.encode.error(err);
                 }
 
                 this.childs.splice(i, 1);
@@ -198,7 +198,7 @@ class EncodeProcessManageModel implements IEncodeProcessManageModel {
         try {
             cmds = ProcessUtil.parseCmdStr(option.cmd);
         } catch (err) {
-            this.log.system.error(`build process error: ${option.cmd}`);
+            this.log.encode.error(`build process error: ${option.cmd}`);
             throw err;
         }
 
@@ -223,13 +223,13 @@ class EncodeProcessManageModel implements IEncodeProcessManageModel {
         // エラー発生時にプロセスを停止して this.childs から削除する
         child.on('error', async () => {
             await this.killChild(processId, true).catch(err => {
-                this.log.system.error(err);
+                this.log.encode.error(err);
             });
             this.eventsNotify(processId);
         });
         child.on('exit', async () => {
             await this.killChild(processId, true).catch(err => {
-                this.log.system.error(err);
+                this.log.encode.error(err);
             });
             this.eventsNotify(processId);
         });
