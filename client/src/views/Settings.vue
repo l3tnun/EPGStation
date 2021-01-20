@@ -359,7 +359,7 @@ export default class Settings extends Vue {
             this.rulesLengthItems.push(item);
         }
 
-        for (let i = 50; i <= 300; i += 50) {
+        for (let i = 50; i <= 600; i += 50) {
             const item: SelectItem = {
                 text: i.toString(10),
                 value: i,
