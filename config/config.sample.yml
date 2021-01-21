@@ -21,7 +21,7 @@ conflictPriority: 1
 recPriority: 2
 
 recordedFormat: '%YEAR%年%MONTH%月%DAY%日%HOUR%時%MIN%分%SEC%秒-%TITLE%'
-recordedFileExtension: .ts
+recordedFileExtension: .m2ts
 recorded:
     - name: recorded
       path: '%ROOT%/recorded'
