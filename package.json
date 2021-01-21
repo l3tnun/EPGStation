@@ -48,7 +48,7 @@
         "mysql": "2.18.1",
         "openapi-types": "7.0.1",
         "reflect-metadata": "0.1.13",
-        "socket.io": "2.3.0",
+        "socket.io": "2.4.0",
         "source-map-support": "0.5.19",
         "sqlite3": "5.0.0",
         "swagger-ui-dist": "3.35.1",
