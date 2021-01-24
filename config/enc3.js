@@ -87,7 +87,7 @@ for (let i of args) {
                 // 想定log
                 // frame= 5159 fps= 11 q=29.0 size=  122624kB time=00:02:51.84 bitrate=5845.8kbits/s dup=19 drop=0 speed=0.372x
                 const progress = {};
-                const ffmpeg_reg = /frame=\s*(\d+)\sfps=\s*(\d+(?:\.\d+)?)\sq=\s*([+-]?\d+(?:\.\d+)?)\ssize=\s*(\d+(?:\.\d+)?)\kB\stime=\s*(\d+[:\.\d+]*)\sbitrate=\s*(\d+(?:\.\d+)?)kbits\/s\sdup=\s*(\d+)\sdrop=\s*(\d+)\sspeed=\s*(\d+(?:\.\d+)?)x/
+                const ffmpeg_reg = /frame=\s*(?<frame>\d+)\sfps=\s*(?<fps>\d+(?:\.\d+)?)\sq=\s*(?<q>[+-]?\d+(?:\.\d+)?)\sL?size=\s*(?<size>\d+(?:\.\d+)?)kB\stime=\s*(?<time>\d+[:\.\d+]*)\sbitrate=\s*(?<bitrate>\d+(?:\.\d+)?)kbits\/s(?:\sdup=\s*(?<dup>\d+))?(?:\sdrop=\s*(?<drop>\d+))?\sspeed=\s*(?<speed>\d+(?:\.\d+)?)x/;
                 let ffmatch =str.match(ffmpeg_reg);
                 /**
                  * match結果
@@ -104,22 +104,32 @@ for (let i of args) {
                  *   '0.372',
                  *   index: 0,
                  *   input: 'frame= 5159 fps= 11 q=29.0 size=  122624kB time=00:02:51.84 bitrate=5845.8kbits/s dup=19 drop=0 speed=0.372x    \r',
-                 *   groups: undefined
+                 *   groups: [Object: null prototype] {
+                 *     frame: '5159',
+                 *     fps: '11',
+                 *     q: '29.0',
+                 *     size: '122624',
+                 *     time: '00:02:51.84',
+                 *     bitrate: '5845.8',
+                 *     dup: '19',
+                 *     drop: '0',
+                 *     speed: '0.372'
+                 *   }
                  * ]
                  */
 
                 // console.log(ffmatch);
                 if (ffmatch === null) continue;
 
-                progress['frame'] = parseInt(ffmatch[1]);
-                progress['fps'] = parseFloat(ffmatch[2]);
-                progress['q'] = parseFloat(ffmatch[3]);
-                progress['size'] = parseInt(ffmatch[4]);
-                progress['time'] = ffmatch[5];
-                progress['bitrate'] = parseFloat(ffmatch[6]);
-                progress['dup'] = parseInt(ffmatch[7]);
-                progress['drop'] = parseInt(ffmatch[8]);
-                progress['speed'] = parseFloat(ffmatch[9]);
+                progress['frame'] = parseInt(ffmatch.groups.frame);
+                progress['fps'] = parseFloat(ffmatch.groups.fps);
+                progress['q'] = parseFloat(ffmatch.groups.q);
+                progress['size'] = parseInt(ffmatch.groups.size);
+                progress['time'] = ffmatch.groups.time;
+                progress['bitrate'] = parseFloat(ffmatch.groups.bitrate);
+                progress['dup'] = ffmatch.groups.dup == null ? 0 : parseInt(ffmatch.groups.dup);
+                progress['drop'] = ffmatch.groups.drop == null ? 0 : parseInt(ffmatch.groups.drop);
+                progress['speed'] = parseFloat(ffmatch.groups.speed);
 
                 let current = 0;
                 const times = progress.time.split(':');
