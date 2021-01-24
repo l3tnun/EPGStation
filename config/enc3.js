@@ -87,7 +87,7 @@ for (let i of args) {
                 // 想定log
                 // frame= 5159 fps= 11 q=29.0 size=  122624kB time=00:02:51.84 bitrate=5845.8kbits/s dup=19 drop=0 speed=0.372x
                 const progress = {};
-                const ffmpeg_reg = /frame=\s*(\d+)\sfps=\s*(\d+(?:\.\d+)?)\sq=\s*([+-]?\d+(?:\.\d+)?)\ssize=\s*(\d+(?:\.\d+)?)\kB\stime=\s*(\d+[:\:\.\d+]*)\sbitrate=\s*(\d+(?:\.\d+)?)kbits\/s\sdup=\s*(\d+)\sdrop=\s*(\d+)\sspeed=\s*(\d+(?:\.\d+)?)x/
+                const ffmpeg_reg = /frame=\s*(\d+)\sfps=\s*(\d+(?:\.\d+)?)\sq=\s*([+-]?\d+(?:\.\d+)?)\ssize=\s*(\d+(?:\.\d+)?)\kB\stime=\s*(\d+[:\.\d+]*)\sbitrate=\s*(\d+(?:\.\d+)?)kbits\/s\sdup=\s*(\d+)\sdrop=\s*(\d+)\sspeed=\s*(\d+(?:\.\d+)?)x/
                 let ffmatch =str.match(ffmpeg_reg);
                 /**
                  * match結果
@@ -108,7 +108,7 @@ for (let i of args) {
                  * ]
                  */
 
-                //console.log(ffmatch);
+                // console.log(ffmatch);
                 if (ffmatch === null) continue;
 
                 progress['frame'] = parseInt(ffmatch[1]);
