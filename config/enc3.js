@@ -81,19 +81,45 @@ for (let i of args) {
     child.stderr.on('data', data => {
         let strbyline = String(data).split('\n');
         for (let i = 0; i < strbyline.length; i++) {
-            let str = strbyline[i].replace(/ \(\[.+?\)/, '');
+            let str = strbyline[i];
             // console.log(strbyline[i]);
             if (str.startsWith('frame')) {
-                // frame= 2847 fps=0.0 q=-1.0 Lsize=  216432kB time=00:01:35.64 bitrate=18537.1kbits/s speed= 222x
+                // 想定log
+                // frame= 5159 fps= 11 q=29.0 size=  122624kB time=00:02:51.84 bitrate=5845.8kbits/s dup=19 drop=0 speed=0.372x
                 const progress = {};
-                let tmp = (str + ' ').match(/[A-z]*=[A-z,0-9,\s,.,\/,:,-]* /g);
-                if (tmp === null) continue;
-                for (let j = 0; j < tmp.length; j++) {
-                    progress[tmp[j].split('=')[0]] = tmp[j].split('=')[1].replace(/\r/g, '').trim();
-                }
-                progress['frame'] = parseInt(progress['frame']);
-                progress['fps'] = parseFloat(progress['fps']);
-                progress['q'] = parseFloat(progress['q']);
+                const ffmpeg_reg = /frame=\s*(\d+)\sfps=\s*(\d+(?:\.\d+)?)\sq=\s*([+-]?\d+(?:\.\d+)?)\ssize=\s*(\d+(?:\.\d+)?)\kB\stime=\s*(\d+[:\:\.\d+]*)\sbitrate=\s*(\d+(?:\.\d+)?)kbits\/s\sdup=\s*(\d+)\sdrop=\s*(\d+)\sspeed=\s*(\d+(?:\.\d+)?)x/
+                let ffmatch =str.match(ffmpeg_reg);
+                /**
+                 * match結果
+                 * [
+                 *   'frame= 5159 fps= 11 q=29.0 size=  122624kB time=00:02:51.84 bitrate=5845.8kbits/s dup=19 drop=0 speed=0.372x',
+                 *   '5159',
+                 *   '11',
+                 *   '29.0',
+                 *   '122624',
+                 *   '00:02:51.84',
+                 *   '5845.8',
+                 *   '19',
+                 *   '0',
+                 *   '0.372',
+                 *   index: 0,
+                 *   input: 'frame= 5159 fps= 11 q=29.0 size=  122624kB time=00:02:51.84 bitrate=5845.8kbits/s dup=19 drop=0 speed=0.372x    \r',
+                 *   groups: undefined
+                 * ]
+                 */
+
+                //console.log(ffmatch);
+                if (ffmatch === null) continue;
+
+                progress['frame'] = parseInt(ffmatch[1]);
+                progress['fps'] = parseFloat(ffmatch[2]);
+                progress['q'] = parseFloat(ffmatch[3]);
+                progress['size'] = parseInt(ffmatch[4]);
+                progress['time'] = ffmatch[5];
+                progress['bitrate'] = parseFloat(ffmatch[6]);
+                progress['dup'] = parseInt(ffmatch[7]);
+                progress['drop'] = parseInt(ffmatch[8]);
+                progress['speed'] = parseFloat(ffmatch[9]);
 
                 let current = 0;
                 const times = progress.time.split(':');
@@ -120,6 +146,8 @@ for (let i of args) {
                     progress.time +
                     ' bitrate=' +
                     progress.bitrate +
+                    ' drop=' +
+                    progress.drop +
                     ' speed=' +
                     progress.speed;
 
