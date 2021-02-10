@@ -2,7 +2,7 @@
     "name": "epgstation",
     "version": "2.0.8",
     "description": "DTV Software in Japan.",
-    "main": "dist/server/index.js",
+    "main": "dist/index.js",
     "scripts": {
         "all-install": "npm i --no-save && cd client && npm i --no-save",
         "start": "node dist/index.js",
