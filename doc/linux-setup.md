@@ -78,6 +78,12 @@
     $ pm2 stop epgstation
     ```
 
+-   自動起動登録した EPGStation を削除する場合
+
+    ```
+    $ pm2 delete epgstation
+    ```
+
 ## MySQL 使用時の注意
 
 EPGStation 使用中は MySQL のバイナリログが大量に生成されてディスクを圧迫するので、MySQL の設定を変えることを推奨します
