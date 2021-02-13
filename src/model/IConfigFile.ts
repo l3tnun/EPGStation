@@ -55,8 +55,8 @@ export default interface IConfigFile {
 
     dbtype: Enums.DBType;
     sqlite?: {
-        extensions: string[];
-        regexp: boolean;
+        extensions?: string[];
+        regexp?: boolean;
     };
     mysql?: {
         host: string;

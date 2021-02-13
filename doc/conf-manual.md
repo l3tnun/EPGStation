@@ -176,12 +176,12 @@ mysql:
 
 ### sqlite
 
-#### SQLite3 の接続設定（SQLite3 使用時は必須）
+#### SQLite3 の接続設定
 
 | 子プロパティ名 | 種類     | 必須 | 説明                           |
 | -------------- | -------- | ---- | ------------------------------ |
-| extensions     | string[] | yes  | 読み込む拡張機能のパス         |
-| regexp         | boolean  | yes  | 正規表現検索の有効化 or 無効化 |
+| extensions     | string[] | no   | 読み込む拡張機能のパス         |
+| regexp         | boolean  | no   | 正規表現検索の有効化 or 無効化 |
 
 ```yaml
 sqlite:

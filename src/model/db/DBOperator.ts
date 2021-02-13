@@ -86,7 +86,7 @@ export default class DBOperator implements IDBOperator {
             return true;
         }
 
-        return typeof this.config.sqlite === 'undefined' ? false : this.config.sqlite.regexp;
+        return typeof this.config.sqlite === 'undefined' ? false : !!this.config.sqlite.regexp;
     }
 
     /**
