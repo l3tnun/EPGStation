@@ -150,6 +150,7 @@ namespace Configuration {
         apiServers: [],
         dbtype: 'sqlite',
         epgUpdateIntervalTime: 10,
+        recordingEndTimeout: 3000,
         conflictPriority: 1,
         recPriority: 2,
         streamingPriority: 0,

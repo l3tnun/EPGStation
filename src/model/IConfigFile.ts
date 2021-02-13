@@ -76,6 +76,9 @@ export default interface IConfigFile {
     // epg 更新時間間隔 (分)
     epgUpdateIntervalTime: number;
 
+    // 録画時の終了処理の呼び出しタイムアウト設定 (ms) #382 参照
+    recordingEndTimeout: number;
+
     // 放送局並び順
     channelOrder?: apid.ChannelId[];
     sidOrder?: apid.ServiceId[];

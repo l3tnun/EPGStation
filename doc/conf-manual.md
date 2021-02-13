@@ -15,6 +15,7 @@
 -   [詳細設定](#詳細設定)
     -   [録画時の Mirakurun の優先度を変更したい](#recpriority)
     -   [録画競合時の Mirakurun の優先度を変更したい](#conflictpriority)
+    -   [録画終了処理が呼び出す際に強制定期に終了処理を呼び出すまでのタイムアウト時間を変更したい](#recordingendtimeout)
     -   [時刻指定予約時の開始マージンを変更したい](#timespecifiedstartmargin)
     -   [時刻指定予約時の終了マージンを変更したい](#timespecifiedendmargin)
     -   [録画重複の判定期間を延ばしたい](#recordedhistoryretentionperioddays)
@@ -242,6 +243,20 @@ recPriority: 20
 
 ```yaml
 conflictPriority: 10
+```
+
+### recordingEndTimeout
+
+#### 録画終了処理が呼び出す際に強制定期に終了処理を呼び出すまでのタイムアウト時間(ms)
+
+| 種類   | デフォルト値 | 必須 |
+| ------ | ------------ | ---- |
+| number | 3000         | no   |
+
+-   詳細は [#382](https://github.com/l3tnun/EPGStation/issues/382) を参照
+
+```yaml
+recordingEndTimeout: 5000
 ```
 
 ### timeSpecifiedStartMargin

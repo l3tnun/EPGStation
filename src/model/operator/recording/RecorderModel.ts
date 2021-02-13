@@ -60,6 +60,11 @@ class RecorderModel implements IRecorderModel {
 
     private dropLogFileId: apid.DropLogFileId | null = null;
 
+    // stream 終了時に recEnd が呼ばれない問題の対処
+    // 詳細は #382 を参照
+    private callRecEndTimerId: NodeJS.Timeout | null = null;
+    private recordingFileStream: fs.WriteStream | null = null;
+
     constructor(
         @inject('ILoggerModel') logger: ILoggerModel,
         @inject('IConfiguration') configuration: IConfiguration,
@@ -254,8 +259,8 @@ class RecorderModel implements IRecorderModel {
         this.log.system.info(`recording: ${this.reserve.id} ${recPath.fullPath}`);
 
         // save stream
-        const recFile = fs.createWriteStream(recPath.fullPath, { flags: 'a' });
-        this.stream.pipe(recFile);
+        this.recordingFileStream = fs.createWriteStream(recPath.fullPath, { flags: 'a' });
+        this.stream.pipe(this.recordingFileStream);
 
         // delete file callback
         const deleteRecFile = async () => {
@@ -356,7 +361,7 @@ class RecorderModel implements IRecorderModel {
                 if (this.stream !== null) {
                     this.stream.once('end', async () => {
                         this.log.system.info(`finish stream: ${this.recordedId}`);
-                        await this.recEnd(recFile)
+                        await this.recEnd()
                             .catch(err => {
                                 this.log.system.error(`failed recording end: ${this.reserve.id}`);
                                 this.log.system.error(err);
@@ -468,20 +473,26 @@ class RecorderModel implements IRecorderModel {
 
     /**
      * 録画終了処理
-     * @param recFile: fs.WriteStream
      */
-    private async recEnd(recFile: fs.WriteStream): Promise<void> {
-        if (this.stream === null) {
-            return;
-        }
-
+    private async recEnd(): Promise<void> {
         this.log.system.info(`start recEnd: ${this.recordedId}`);
 
         // stream 停止
         this.destoryStream();
 
+        if (this.callRecEndTimerId !== null) {
+            clearTimeout(this.callRecEndTimerId);
+        }
+
         // stop save file
-        recFile.end();
+        if (this.recordingFileStream !== null) {
+            this.log.system.info(`stop recording file stream: ${this.recordedId}`);
+            this.recordingFileStream.end();
+            this.recordingFileStream = null;
+        } else {
+            this.log.system.error(`recording file stream is null: ${this.recordedId}`);
+            return;
+        }
 
         // 削除予定か?
         if (this.isPlanToDelete === true) {
@@ -645,6 +656,15 @@ class RecorderModel implements IRecorderModel {
             if (this.stream !== null) {
                 this.stream.destroy();
                 this.stream.push(null); // eof 通知
+
+                // this.stream の end イベントが呼ばれないことがあるため一定時間経過したら recEnd を呼び出す
+                // 詳細は #382 を参照
+                this.callRecEndTimerId = setTimeout(() => {
+                    this.log.system.warn(
+                        `called recEndTimer recordedId: ${this.recordedId}, reserveId: ${this.reserve.id}`,
+                    );
+                    this.recEnd();
+                }, this.config.recordingEndTimeout);
             }
             this.isStopRec = true;
         }
