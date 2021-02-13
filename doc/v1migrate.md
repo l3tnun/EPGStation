@@ -18,10 +18,10 @@
 以下コマンドで v1 の最新バージョンに更新する
 
 ```shell
- $ git pull
- $ git checkout v1
- $ npm install --no-save
- $ npm run build
+$ git pull
+$ git checkout v1
+$ npm install --no-save
+$ npm run build
 ```
 
 一度起動して DB を最新状態にする。起動が完了したら終了させる。
@@ -34,7 +34,7 @@ $ npm start # (起動完了後 Ctrl + C で終了)
 
 ## 2. v1 環境のバックアップを取る
 
-v2 環境並行する際に使用するバックアップファイルを生成する
+v2 環境へ移行する際に使用するバックアップファイルを生成する
 
 ```shell
 $ npm run backup FILENAME
@@ -42,7 +42,15 @@ $ npm run backup FILENAME
 
 ---
 
-## 3. 移行先の v2 の設定ファイルを移行元の v1 の設定ファイルと合わせる
+## 3. v2 環境を構築する
+
+`master`ブランチへ移動した上で、それぞれの環境のセットアップ方法に従い v2 環境を構築する
+
+- [Linux / macOS 用セットアップマニュアル](linux-setup.md)
+- [Windows 用セットアップマニュアル](windows-setup.md)
+
+
+## 4. 移行先の v2 の設定ファイルを移行元の v1 の設定ファイルと合わせる
 
 ### recorded
 
@@ -100,8 +108,28 @@ encode:
 
 ---
 
-### 4. v2 環境に v1 環境のデータを反映させる
+### 5. v1 環境の後片付け
+
+以下コマンドで v1 環境のDBや設定などのデータを削除する。  
+削除するのが心配な場合には、基本的にはそのままで問題ないが、sqlliteを使用している場合、DB接続がうまく行かない場合がある。[^1]
+
+```shell
+$ rm -rf data
+$ git checkout data
+$ rm -f config/*.json
+```
+
+### 6. v2 環境に v1 環境のデータを反映させる
 
 ```shell
 $ npm run v1migrate FILENAME
 ```
+
+### 7. (Optional) 自動起動するように設定していた場合
+
+スクリプトのパスが変わっているため、それぞれの環境でサービスの削除と再登録が必要になります。
+
+- [Linux / macOS 用セットアップマニュアル](linux-setup.md#epgstation-の起動--終了)
+- [Windows 用セットアップマニュアル](windows-setup.md#epgstation-の起動終了)
+
+[^1]: `check db`を表示され続け`v1migrate`が終了しない
