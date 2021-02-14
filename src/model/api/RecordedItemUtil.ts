@@ -1,3 +1,4 @@
+import * as path from 'path';
 import { injectable } from 'inversify';
 import * as apid from '../../../api';
 import Recorded from '../../db/entities/Recorded';
@@ -114,6 +115,7 @@ export default class RecordedItemUtil implements IRecordedItemUtil {
                 return {
                     id: v.id,
                     name: v.name,
+                    filename: path.basename(v.filePath),
                     type: v.type as apid.VideoFileType,
                     size: v.size,
                 };

@@ -1108,7 +1108,10 @@ components:
                 id:
                     $ref: '#/components/schemas/VideoFileId'
                 name:
-                    description: ビデオ名
+                    description: ビデオ名 (Web上の表示名)
+                    type: string
+                filename:
+                    description: ビデオファイル名
                     type: string
                 type:
                     $ref: '#/components/schemas/VideoFileType'

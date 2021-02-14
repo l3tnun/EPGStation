@@ -89,7 +89,7 @@ export default class RecordedDetailState implements IRecordedDetailState {
         return urlScheme
             .replace(/PROTOCOL/g, location.protocol.replace(':', ''))
             .replace(/ADDRESS/g, fullVideoURL)
-            .replace(/FILENAME/g, video.name);
+            .replace(/FILENAME/g, video.filename);
     }
 
     /**
@@ -139,7 +139,7 @@ export default class RecordedDetailState implements IRecordedDetailState {
         return urlScheme
             .replace(/PROTOCOL/g, location.protocol.replace(':', ''))
             .replace(/ADDRESS/g, fullVideoURL)
-            .replace(/FILENAME/g, video.name);
+            .replace(/FILENAME/g, video.filename);
     }
 
     /**

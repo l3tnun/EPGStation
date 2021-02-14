@@ -49,7 +49,7 @@ urlscheme:
         ios: infuse://x-callback-url/play?url=PROTOCOL://ADDRESS
         android: intent://ADDRESS#Intent;package=com.mxtech.videoplayer.pro;type=video;scheme=PROTOCOL;end
     download:
-        ios: vlc-x-callback://x-callback-url/stream?url=PROTOCOL://ADDRESS
+        ios: vlc-x-callback://x-callback-url/download?url=PROTOCOL://ADDRESS&filename=FILENAME
 
 stream:
     live:
