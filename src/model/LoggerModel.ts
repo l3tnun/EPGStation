@@ -38,7 +38,7 @@ export default class LoggerModel implements ILoggerModel {
         } else {
             try {
                 const str = this.readLogFile(filePath);
-                const config: log4js.Configuration = yaml.safeLoad(str) as any;
+                const config: log4js.Configuration = yaml.load(str) as any;
                 log4js.configure(config);
             } catch (err) {
                 console.error('log file parse error');

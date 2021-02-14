@@ -26,9 +26,7 @@ class Configuration implements IConfiguration {
         fs.watchFile(Configuration.CONFIG_FILE_PATH, async () => {
             this.log.system.info('updated config file');
             try {
-                const newConfig = <any>(
-                    yaml.safeLoad(await fs.promises.readFile(Configuration.CONFIG_FILE_PATH, 'utf-8'))
-                );
+                const newConfig = <any>yaml.load(await fs.promises.readFile(Configuration.CONFIG_FILE_PATH, 'utf-8'));
                 this.config = this.formatConfig(newConfig);
             } catch (err) {
                 this.log.system.error('read config error');
@@ -54,7 +52,7 @@ class Configuration implements IConfiguration {
         }
 
         // parse configFile
-        const newConfig: IConfigFile = <any>yaml.safeLoad(str);
+        const newConfig: IConfigFile = <any>yaml.load(str);
 
         this.config = this.formatConfig(newConfig);
     }

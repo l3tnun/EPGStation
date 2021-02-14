@@ -4,7 +4,7 @@ const yaml = require('js-yaml');
 
 // config.yml 読み込み
 const configFilePath = path.join('config', 'config.yml');
-const config = yaml.safeLoad(fs.readFileSync(configFilePath, 'utf-8'));
+const config = yaml.load(fs.readFileSync(configFilePath, 'utf-8'));
 
 // dist 下のディレクトリ設定
 const distDBBasePath = path.join('dist', 'db');

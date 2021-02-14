@@ -66,7 +66,7 @@ class ServiceServer implements IServiceServer {
      * @return OpenAPIV3.Document
      */
     private getApiDocument(ymlPath: string): OpenAPIV3.Document {
-        const api = <OpenAPIV3.Document>yaml.safeLoad(fs.readFileSync(ymlPath, 'utf-8'));
+        const api = <OpenAPIV3.Document>yaml.load(fs.readFileSync(ymlPath, 'utf-8'));
 
         // host 設定
         api.servers = this.config.apiServers.map(url => {
