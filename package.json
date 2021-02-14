@@ -50,7 +50,7 @@
         "reflect-metadata": "0.1.13",
         "socket.io": "2.4.1",
         "source-map-support": "0.5.19",
-        "sqlite3": "5.0.1",
+        "sqlite3": "5.0.0",
         "swagger-ui-dist": "3.43.0",
         "typeorm": "0.2.31",
         "url-join": "4.0.1"
