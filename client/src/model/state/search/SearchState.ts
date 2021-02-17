@@ -455,10 +455,10 @@ export default class SearchState implements ISearchState {
 
         // 長さ
         if (typeof searchOption.durationMin !== 'undefined') {
-            this.searchOption.durationMin = searchOption.durationMin * 60;
+            this.searchOption.durationMin = Math.floor(searchOption.durationMin / 60);
         }
         if (typeof searchOption.durationMax !== 'undefined') {
-            this.searchOption.durationMax = searchOption.durationMax * 60;
+            this.searchOption.durationMax = Math.floor(searchOption.durationMax / 60);
         }
 
         // 期間
