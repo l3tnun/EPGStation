@@ -313,7 +313,7 @@ export default class Guide extends Vue {
                     this.guideState.updateVisible();
 
                     // 番組表を矢印キーで操作できるようにフォーカスする
-                    if (typeof this.$refs.programs !== 'undefined') {
+                    if (UaUtil.isAndroid() === false && typeof this.$refs.programs !== 'undefined') {
                         const el = (this.$refs.programs as GuideScroller).$el as HTMLElement;
                         el.tabIndex = -1; //tabIndex を設定することで forcus() が効くようにする
                         el.focus();
