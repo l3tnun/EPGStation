@@ -415,7 +415,7 @@ export default class SearchState implements ISearchState {
         if (typeof searchOption.ignoreKeyword !== 'undefined') {
             this.searchOption.ignoreKeyword = searchOption.ignoreKeyword;
             this.searchOption.ignoreKeywordOption = {
-                keyCS: !!searchOption.ignoreKeyRegExp,
+                keyCS: !!searchOption.ignoreKeyCS,
                 keyRegExp: !!searchOption.ignoreKeyRegExp,
                 name: !!searchOption.ignoreName,
                 description: !!searchOption.ignoreDescription,
