@@ -459,14 +459,26 @@ export default class ProgramDB implements IProgramDB {
             const regexp = this.op.getRegexpStr(option.cs);
             const valueName = `${valueBaseName}Regexp`;
             query.param[valueName] = keyword;
-            if (option.name === true) {
-                or.push(`halfWidthName ${regexp} :${valueName}`);
-            }
-            if (option.description === true) {
-                or.push(`halfWidthDescription ${regexp} :${valueName}`);
-            }
-            if (option.extended === true) {
-                or.push(`halfWidthExtended ${regexp} :${valueName}`);
+            if (option.cs === true) {
+                if (option.name === true) {
+                    or.push(`CAST(halfWidthName AS BINARY) ${regexp} :${valueName}`);
+                }
+                if (option.description === true) {
+                    or.push(`CAST(halfWidthDescription AS BINARY) ${regexp} :${valueName}`);
+                }
+                if (option.extended === true) {
+                    or.push(`CAST(halfWidthExtended AS BINARY) ${regexp} :${valueName}`);
+                }
+            } else {
+                if (option.name === true) {
+                    or.push(`halfWidthName ${regexp} :${valueName}`);
+                }
+                if (option.description === true) {
+                    or.push(`halfWidthDescription ${regexp} :${valueName}`);
+                }
+                if (option.extended === true) {
+                    or.push(`halfWidthExtended ${regexp} :${valueName}`);
+                }
             }
         } else {
             // あいまい検索
