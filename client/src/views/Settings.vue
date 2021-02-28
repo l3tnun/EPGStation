@@ -259,9 +259,9 @@
                             </v-list-item-content>
                         </v-list-item>
 
-                        <v-divider></v-divider>
+                        <v-divider v-if="isShoweB24Render"></v-divider>
 
-                        <v-list-item three-line>
+                        <v-list-item v-if="isShoweB24Render" three-line>
                             <v-list-item-content>
                                 <div class="title">ビデオプレーヤ</div>
                                 <div class="my-2 d-flex flex-row align-center">
@@ -294,8 +294,9 @@ import IScrollPositionState from '@/model/state/IScrollPositionState';
 import INavigationState from '@/model/state/navigation/INavigationState';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
 import { ISettingStorageModel, GuideViewMode } from '@/model/storage/setting/ISettingStorageModel';
+import UaUtil from '@/util/UaUtil';
 import { Component, Vue, Watch } from 'vue-property-decorator';
-import { Route } from 'vue-router';
+import Hls from 'hls-b24.js';
 
 Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
 
@@ -351,6 +352,10 @@ export default class Settings extends Vue {
     set isForceDarkTheme(value: boolean) {
         this.storageModel.tmp.isForceDarkTheme = value;
         this.$vuetify.theme.dark = value;
+    }
+
+    get isShoweB24Render(): boolean {
+        return Hls.isSupported() === true;
     }
 
     constructor() {
