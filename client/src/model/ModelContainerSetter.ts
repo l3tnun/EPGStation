@@ -72,6 +72,8 @@ import RecordedState from './state/recorded/RecordedState';
 import RecordedUtil from './state/recorded/RecordedUtil';
 import IRecordedSearchState from './state/recorded/search/IRecordedSearchState';
 import RecordedSearchState from './state/recorded/search/RecordedSearchState';
+import B24RenderState from './state/recorded/streaming/B24RenderState';
+import IB24RenderState from './state/recorded/streaming/IB24RenderState';
 import IRecordedHLSStreamingVideoState from './state/recorded/streaming/IRecordedHLSStreamingVideoState';
 import IRecordedStreamingVideoState from './state/recorded/streaming/IRecordedStreamingVideoState';
 import RecordedHLSStreamingVideoState from './state/recorded/streaming/RecordedHLSStreamingVideoState';
@@ -213,6 +215,8 @@ export default (container: Container): void => {
     container.bind<IRecordedUploadState>('IRecordedUploadState').to(RecordedUploadState).inSingletonScope();
 
     container.bind<IRecordedDetailSelectStreamState>('IRecordedDetailSelectStreamState').to(RecordedDetailSelectStreamState).inSingletonScope();
+
+    container.bind<IB24RenderState>('IB24RenderState').to(B24RenderState);
 
     container.bind<IRecordedStreamingVideoState>('IRecordedStreamingVideoState').to(RecordedStreamingVideoState).inSingletonScope();
 

@@ -6,11 +6,12 @@
 import BaseVideo from '@/components/video/BaseVideo';
 import container from '@/model/ModelContainer';
 import ISocketIOModel from '@/model/socketio/ISocketIOModel';
+import IB24RenderState from '@/model/state/recorded/streaming/IB24RenderState';
 import IRecordedHLSStreamingVideoState from '@/model/state/recorded/streaming/IRecordedHLSStreamingVideoState';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
 import UaUtil from '@/util/UaUtil';
 import Util from '@/util/Util';
-import Hls from 'hls.js';
+import Hls from 'hls-b24.js';
 import { Component, Prop, Watch } from 'vue-property-decorator';
 import * as apid from '../../../../api';
 
@@ -38,6 +39,7 @@ export default class RecordedHLSStreamingVideo extends BaseVideo {
         await this.updateVideoInfo();
     }).bind(this);
     private hls: Hls | null = null;
+    private b24RenderState: IB24RenderState = container.get<IB24RenderState>('IB24RenderState');
     private basePlayPosition: number = 0;
     private dummyPlayPosition: number | null = null; // setCurrentTime が呼ばれている間に再生位置として返すダミー値
     private pauseStateBeforeCurrentTime: boolean = false; // setCurrentTime が処理終了時に再生状態を復元するための値
@@ -135,13 +137,14 @@ export default class RecordedHLSStreamingVideo extends BaseVideo {
      * destory hls
      */
     private destoryHls(): void {
-        if (this.hls === null) {
-            return;
+        if (this.hls !== null) {
+            this.hls.stopLoad();
+            this.hls.detachMedia();
+            this.hls.destroy();
+            this.hls = null;
         }
-        this.hls.stopLoad();
-        this.hls.detachMedia();
-        this.hls.destroy();
-        this.hls = null;
+
+        this.b24RenderState.destroy();
     }
 
     /**
@@ -196,6 +199,8 @@ export default class RecordedHLSStreamingVideo extends BaseVideo {
                     }, 100);
                 }
             });
+
+            this.b24RenderState.init(this.video, this.hls);
         }
     }
 
@@ -256,6 +261,8 @@ export default class RecordedHLSStreamingVideo extends BaseVideo {
 
             const playbackRate = this.video.playbackRate;
 
+            const needsShowSubtitle = this.isShowingSubtitle();
+            this.disabledSubtitle();
             this.unload();
             this.destoryHls();
             this.basePlayPosition = time;
@@ -282,6 +289,9 @@ export default class RecordedHLSStreamingVideo extends BaseVideo {
                     return;
                 }
                 this.initVideoSetting();
+                if (needsShowSubtitle === true) {
+                    this.showSubtitle();
+                }
             } catch (err) {
                 console.error(err);
                 await this.videoState.stop();
@@ -297,6 +307,30 @@ export default class RecordedHLSStreamingVideo extends BaseVideo {
             this.video.playbackRate = playbackRate;
             this.dummyPlayPosition = null;
         }, 200);
+    }
+
+    /**
+     * 字幕が有効か
+     * @return boolean true で有効
+     */
+    public isEnabledSubtitles(): boolean {
+        return this.b24RenderState.isInited() !== true ? true : super.isEnabledSubtitles();
+    }
+
+    /**
+     * 字幕を表示させる
+     */
+    public showSubtitle(): void {
+        super.showSubtitle();
+        this.b24RenderState.showSubtitle();
+    }
+
+    /**
+     * 字幕を非表示にする
+     */
+    public disabledSubtitle(): void {
+        super.disabledSubtitle();
+        this.b24RenderState.disabledSubtitle();
     }
 }
 </script>

@@ -1,6 +1,6 @@
 {
   "name": "epgstation-client",
-  "version": "2.0.13",
+  "version": "2.1.0",
   "private": true,
   "scripts": {
     "build": "vue-cli-service build",
@@ -9,9 +9,11 @@
   },
   "dependencies": {
     "@mdi/font": "5.9.55",
+    "aribb24.js": "0.0.36",
     "axios": "0.21.1",
+    "b24.js": "1.0.3",
     "eventemitter2": "6.4.3",
-    "hls.js": "0.14.17",
+    "hls-b24.js": "1.0.0-beta.4.0.canary.6766",
     "inversify": "5.0.5",
     "json-stable-stringify": "1.0.1",
     "lodash": "4.17.20",

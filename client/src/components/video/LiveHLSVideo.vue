@@ -6,9 +6,10 @@
 import BaseVideo from '@/components/video/BaseVideo';
 import container from '@/model/ModelContainer';
 import ILiveHLSVideoState from '@/model/state/onair/ILiveHLSVideoState';
+import IB24RenderState from '@/model/state/recorded/streaming/IB24RenderState';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
 import UaUtil from '@/util/UaUtil';
-import Hls from 'hls.js';
+import Hls from 'hls-b24.js';
 import { Component, Prop, Watch } from 'vue-property-decorator';
 import * as apid from '../../../../api';
 
@@ -24,6 +25,7 @@ export default class LiveHLSVideo extends BaseVideo {
     private snackbarState: ISnackbarState = container.get<ISnackbarState>('ISnackbarState');
     private checkEnabledTimerId: number | undefined;
     private hls: Hls | null = null;
+    private b24RenderState: IB24RenderState = container.get<IB24RenderState>('IB24RenderState');
 
     public async mounted(): Promise<void> {
         // HLS stream 開始
@@ -90,6 +92,8 @@ export default class LiveHLSVideo extends BaseVideo {
                     await this.video.play().catch(err => {});
                 }
             });
+
+            this.b24RenderState.init(this.video, this.hls);
         }
     }
 
@@ -97,11 +101,38 @@ export default class LiveHLSVideo extends BaseVideo {
      * destory hls
      */
     private destoryHls(): void {
-        if (this.hls === null) {
-            return;
+        if (this.hls !== null) {
+            this.hls.stopLoad();
+            this.hls.detachMedia();
+            this.hls.destroy();
+            this.hls = null;
         }
-        this.hls.destroy();
-        this.hls = null;
+
+        this.b24RenderState.destroy();
+    }
+
+    /**
+     * 字幕が有効か
+     * @return boolean true で有効
+     */
+    public isEnabledSubtitles(): boolean {
+        return this.b24RenderState.isInited() !== true ? true : super.isEnabledSubtitles();
+    }
+
+    /**
+     * 字幕を表示させる
+     */
+    public showSubtitle(): void {
+        super.showSubtitle();
+        this.b24RenderState.showSubtitle();
+    }
+
+    /**
+     * 字幕を非表示にする
+     */
+    public disabledSubtitle(): void {
+        super.disabledSubtitle();
+        this.b24RenderState.disabledSubtitle();
     }
 }
 </script>
