@@ -8,7 +8,7 @@ import container from '@/model/ModelContainer';
 import ILiveHLSVideoState from '@/model/state/onair/ILiveHLSVideoState';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
 import UaUtil from '@/util/UaUtil';
-import Hls from 'hls.js';
+import Hls from 'hls-b24.js';
 import { Component, Prop, Watch } from 'vue-property-decorator';
 import * as apid from '../../../../api';
 
