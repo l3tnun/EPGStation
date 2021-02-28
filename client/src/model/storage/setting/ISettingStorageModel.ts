@@ -30,6 +30,7 @@ export interface ISettingValue {
     isEnableEncodingSettingWhenCreateRule: boolean;
     isCheckDeleteOriginalAfterEncode: boolean;
     rulesLength: number;
+    useB24Render: boolean;
 }
 
 export type ISettingStorageModel = IStorageBaseModel<ISettingValue>;

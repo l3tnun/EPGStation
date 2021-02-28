@@ -259,6 +259,21 @@
                             </v-list-item-content>
                         </v-list-item>
 
+                        <v-divider></v-divider>
+
+                        <v-list-item three-line>
+                            <v-list-item-content>
+                                <div class="title">ビデオプレーヤ</div>
+                                <div class="my-2 d-flex flex-row align-center">
+                                    <div>
+                                        <v-list-item-title class="subtitle-1">HLS 配信時の字幕表示に aribb24.js を使用する</v-list-item-title>
+                                    </div>
+                                    <v-spacer></v-spacer>
+                                    <v-switch v-model="storageModel.tmp.useB24Render" value></v-switch>
+                                </div>
+                            </v-list-item-content>
+                        </v-list-item>
+
                         <v-card-actions right>
                             <v-spacer></v-spacer>
                             <v-btn text v-on:click="reset">リセット</v-btn>
