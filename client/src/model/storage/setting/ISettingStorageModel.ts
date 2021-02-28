@@ -4,6 +4,7 @@ export type GuideViewMode = 'sequential' | 'minimum' | 'all';
 
 export interface ISettingValue {
     isEnablePWA: boolean;
+    shouldUseOSColorTheme: boolean;
     isForceDarkTheme: boolean;
     isHalfWidthDisplayed: boolean;
     isOnAirTabListView: boolean;

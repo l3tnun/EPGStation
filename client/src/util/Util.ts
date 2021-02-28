@@ -136,6 +136,10 @@ namespace Util {
 
         return `${size.toFixed(1)}${fileSizeUnits[cnt]}`;
     };
+
+    export const getOSDarkTheme = (): boolean => {
+        return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    };
 }
 
 export default Util;
