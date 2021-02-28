@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@mdi/font": "5.9.55",
+    "aribb24.js": "0.0.36",
     "axios": "0.21.1",
     "eventemitter2": "6.4.3",
     "hls-b24.js": "1.0.0-beta.4.0.canary.6766",
