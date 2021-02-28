@@ -261,6 +261,8 @@ export default class RecordedHLSStreamingVideo extends BaseVideo {
 
             const playbackRate = this.video.playbackRate;
 
+            const needsShowSubtitle = this.isShowingSubtitle();
+            this.disabledSubtitle();
             this.unload();
             this.destoryHls();
             this.basePlayPosition = time;
@@ -287,6 +289,9 @@ export default class RecordedHLSStreamingVideo extends BaseVideo {
                     return;
                 }
                 this.initVideoSetting();
+                if (needsShowSubtitle === true) {
+                    this.showSubtitle();
+                }
             } catch (err) {
                 console.error(err);
                 await this.videoState.stop();

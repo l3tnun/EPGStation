@@ -266,10 +266,10 @@
                                 <div class="title">ビデオプレーヤ</div>
                                 <div class="my-2 d-flex flex-row align-center">
                                     <div>
-                                        <v-list-item-title class="subtitle-1">HLS 配信時の字幕表示に aribb24.js を使用する</v-list-item-title>
+                                        <v-list-item-title class="subtitle-1">HLS 配信時の字幕表示方法</v-list-item-title>
                                     </div>
                                     <v-spacer></v-spacer>
-                                    <v-switch v-model="storageModel.tmp.useB24Render" value></v-switch>
+                                    <v-select :items="b24RenderTypeItens" v-model="storageModel.tmp.b24RenderType" class="b24-render-type" :menu-props="{ auto: true }"></v-select>
                                 </div>
                             </v-list-item-content>
                         </v-list-item>
@@ -293,7 +293,7 @@ import container from '@/model/ModelContainer';
 import IScrollPositionState from '@/model/state/IScrollPositionState';
 import INavigationState from '@/model/state/navigation/INavigationState';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
-import { ISettingStorageModel, GuideViewMode } from '@/model/storage/setting/ISettingStorageModel';
+import { ISettingStorageModel, GuideViewMode, B24RenderType } from '@/model/storage/setting/ISettingStorageModel';
 import UaUtil from '@/util/UaUtil';
 import { Component, Vue, Watch } from 'vue-property-decorator';
 import Hls from 'hls-b24.js';
@@ -303,6 +303,11 @@ Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
 interface GuideModeItem {
     text: string;
     value: GuideViewMode;
+}
+
+interface B24RenderTypeItem {
+    text: string;
+    value: B24RenderType;
 }
 
 interface SelectItem {
@@ -335,6 +340,21 @@ export default class Settings extends Vue {
         {
             text: 'すべて',
             value: 'all',
+        },
+    ];
+
+    public readonly b24RenderTypeItens: B24RenderTypeItem[] = [
+        {
+            text: 'デフォルト',
+            value: 'default',
+        },
+        {
+            text: 'aribb24.js',
+            value: 'aribb24.js',
+        },
+        {
+            text: 'b24.js',
+            value: 'b24.js',
         },
     ];
 
@@ -438,6 +458,8 @@ export default class Settings extends Vue {
     max-width: 100px
 .guide-time
     max-width: 70px
+.b24-render-type
+    max-width: 120px
 </style>
 
 <style lang="sass">
