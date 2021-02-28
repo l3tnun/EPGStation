@@ -117,6 +117,8 @@ import SendVideoFileSelectHostSettingStorageModel from './storage/recorded/SendV
 import { ISettingStorageModel } from './storage/setting/ISettingStorageModel';
 import SettingStorageModel from './storage/setting/SettingStorageModel';
 import StorageOperationModel from './storage/StorageOperationModel';
+import IColorThemeState from '@/model/state/IColorThemeState';
+import ColorThemeState from '@/model/state/ColorThemeState';
 
 /**
  * container に各 Model を登録する
@@ -239,4 +241,6 @@ export default (container: Container): void => {
     container.bind<IManualReserveState>('IManualReserveState').to(ManualReserveState).inSingletonScope();
 
     container.bind<IStorageState>('IStorageState').to(StorageState).inSingletonScope();
+
+    container.bind<IColorThemeState>('IColorThemeState').to(ColorThemeState).inSingletonScope();
 };

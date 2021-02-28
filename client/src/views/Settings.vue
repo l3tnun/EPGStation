@@ -18,11 +18,19 @@
                                 </div>
                                 <div class="my-2 d-flex flex-row align-center">
                                     <div>
+                                        <v-list-item-title class="subtitle-1">OSカラーテーマ</v-list-item-title>
+                                        <v-list-item-subtitle>OSのカラーテーマに連動させる</v-list-item-subtitle>
+                                    </div>
+                                    <v-spacer></v-spacer>
+                                    <v-switch v-model="shouldUseOSColorTheme" value></v-switch>
+                                </div>
+                                <div class="my-2 d-flex flex-row align-center">
+                                    <div>
                                         <v-list-item-title class="subtitle-1">ダークテーマ</v-list-item-title>
                                         <v-list-item-subtitle>ダークテーマを有効化する</v-list-item-subtitle>
                                     </div>
                                     <v-spacer></v-spacer>
-                                    <v-switch v-model="isForceDarkTheme" value></v-switch>
+                                    <v-switch v-model="isForceDarkTheme" :disabled="shouldUseOSColorTheme" value></v-switch>
                                 </div>
                                 <div class="my-2 d-flex flex-row align-center">
                                     <div>
@@ -297,6 +305,8 @@ import { ISettingStorageModel, GuideViewMode, B24RenderType } from '@/model/stor
 import UaUtil from '@/util/UaUtil';
 import { Component, Vue, Watch } from 'vue-property-decorator';
 import Hls from 'hls-b24.js';
+import IColorThemeState from '@/model/state/IColorThemeState';
+import Util from '@/util/Util';
 
 Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
 
@@ -327,6 +337,7 @@ export default class Settings extends Vue {
     private navigationState: INavigationState = container.get<INavigationState>('INavigationState');
     private scrollState: IScrollPositionState = container.get<IScrollPositionState>('IScrollPositionState');
     private snackbarState: ISnackbarState = container.get<ISnackbarState>('ISnackbarState');
+    private colorThemeState: IColorThemeState = container.get<IColorThemeState>('IColorThemeState');
 
     public readonly guideModeItems: GuideModeItem[] = [
         {
@@ -365,6 +376,17 @@ export default class Settings extends Vue {
     public searchLengthItems: SelectItem[] = [];
     public rulesLengthItems: SelectItem[] = [];
 
+    get shouldUseOSColorTheme(): boolean {
+        return this.storageModel.tmp.shouldUseOSColorTheme;
+    }
+
+    set shouldUseOSColorTheme(value: boolean) {
+        this.storageModel.tmp.shouldUseOSColorTheme = value;
+        if (value) {
+            this.isForceDarkTheme = this.colorThemeState.isTmpDarkTheme();
+        }
+    }
+
     get isForceDarkTheme(): boolean {
         return this.storageModel.tmp.isForceDarkTheme;
     }
@@ -380,6 +402,8 @@ export default class Settings extends Vue {
 
     constructor() {
         super();
+
+        this.isForceDarkTheme = this.colorThemeState.isTmpDarkTheme();
 
         for (let i = 1; i <= 24; i++) {
             this.guideLengthItems.push({
@@ -415,7 +439,7 @@ export default class Settings extends Vue {
     public destroyed(): void {
         // ページから移動するときに tmp をリセット
         this.storageModel.resetTmpValue();
-        this.$vuetify.theme.dark = this.storageModel.tmp.isForceDarkTheme;
+        this.$vuetify.theme.dark = this.colorThemeState.isDarkTheme();
     }
 
     /**
@@ -423,7 +447,7 @@ export default class Settings extends Vue {
      */
     public reset(): void {
         this.storageModel.tmp = this.storageModel.getDefaultValue();
-        this.$vuetify.theme.dark = this.storageModel.tmp.isForceDarkTheme;
+        this.$vuetify.theme.dark = this.colorThemeState.isDarkTheme();
     }
 
     /**

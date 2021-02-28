@@ -5,6 +5,7 @@ export type B24RenderType = 'default' | 'aribb24.js' | 'b24.js';
 
 export interface ISettingValue {
     isEnablePWA: boolean;
+    shouldUseOSColorTheme: boolean;
     isForceDarkTheme: boolean;
     isHalfWidthDisplayed: boolean;
     isOnAirTabListView: boolean;

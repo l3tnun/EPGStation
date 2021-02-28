@@ -13,10 +13,10 @@ import Snackbar from '@/components/snackbar/Snackbar.vue';
 import container from '@/model/ModelContainer';
 import IScrollPositionState from '@/model/state/IScrollPositionState';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
-import { ISettingStorageModel } from '@/model/storage/setting/ISettingStorageModel';
 import { Container } from 'inversify';
 import { Component, Vue, Watch } from 'vue-property-decorator';
 import ISocketIOModel from '../model/socketio/ISocketIOModel';
+import IColorThemeState from '@/model/state/IColorThemeState';
 
 @Component({
     components: {
@@ -27,14 +27,14 @@ import ISocketIOModel from '../model/socketio/ISocketIOModel';
 export default class AppContent extends Vue {
     public isDisconnected: boolean = false;
 
-    private storageModel: ISettingStorageModel = container.get<ISettingStorageModel>('ISettingStorageModel');
     private socketIoModel: ISocketIOModel = container.get<ISocketIOModel>('ISocketIOModel');
     private scrollState: IScrollPositionState = container.get<IScrollPositionState>('IScrollPositionState');
     private snackbarState: ISnackbarState = container.get<ISnackbarState>('ISnackbarState');
+    private colorThemeState: IColorThemeState = container.get<IColorThemeState>('IColorThemeState');
 
     public async created(): Promise<void> {
         // theme 設定を反映
-        this.$vuetify.theme.dark = this.storageModel.getSavedValue().isForceDarkTheme;
+        this.$vuetify.theme.dark = this.colorThemeState.isDarkTheme();
 
         // socket.io 設定
         try {
