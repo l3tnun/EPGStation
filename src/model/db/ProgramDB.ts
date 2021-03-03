@@ -464,20 +464,20 @@ export default class ProgramDB implements IProgramDB {
                     or.push(`CAST(halfWidthName AS BINARY) ${regexp} :${valueName}`);
                 }
                 if (option.description === true) {
-                    or.push(`CAST(halfWidthDescription AS BINARY) ${regexp} :${valueName}`);
+                    or.push(`CAST(COALESCE(halfWidthDescription,'') AS BINARY) ${regexp} :${valueName}`);
                 }
                 if (option.extended === true) {
-                    or.push(`CAST(halfWidthExtended AS BINARY) ${regexp} :${valueName}`);
+                    or.push(`CAST(COALESCE(halfWidthExtended,'') AS BINARY) ${regexp} :${valueName}`);
                 }
             } else {
                 if (option.name === true) {
                     or.push(`halfWidthName ${regexp} :${valueName}`);
                 }
                 if (option.description === true) {
-                    or.push(`halfWidthDescription ${regexp} :${valueName}`);
+                    or.push(`COALESCE(halfWidthDescription,'') ${regexp} :${valueName}`);
                 }
                 if (option.extended === true) {
-                    or.push(`halfWidthExtended ${regexp} :${valueName}`);
+                    or.push(`COALESCE(halfWidthExtended,'') ${regexp} :${valueName}`);
                 }
             }
         } else {
@@ -498,12 +498,12 @@ export default class ProgramDB implements IProgramDB {
                 }
                 if (option.description === true) {
                     const valueName = `${valueBaseName}Description${i}`;
-                    descriptionAnd.push(`halfWidthDescription ${like} :${valueName}`);
+                    descriptionAnd.push(`COALESCE(halfWidthDescription,'') ${like} :${valueName}`);
                     query.param[valueName] = str;
                 }
                 if (option.extended === true) {
                     const valueName = `${valueBaseName}Extended${i}`;
-                    extendedAnd.push(`halfWidthExtended ${like} :${valueName}`);
+                    extendedAnd.push(`COALESCE(halfWidthExtended,'') ${like} :${valueName}`);
                     query.param[valueName] = str;
                 }
             });
