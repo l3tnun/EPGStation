@@ -110,68 +110,70 @@
                     </div>
                 </transition>
             </div>
-            <NormalVideo
-                v-if="videoParam.type == 'Normal'"
-                ref="video"
-                v-bind:videoSrc.sync="videoParam.src"
-                v-on:timeupdate="onTimeupdate"
-                v-on:waiting="onWaiting"
-                v-on:loadeddata="onLoadeddata"
-                v-on:canplay="onCanplay"
-                v-on:ended="onEnded"
-                v-on:play="onPlay"
-                v-on:pause="onPause"
-                v-on:ratechange="onChangePlaybackRate"
-                v-on:volumechange="onVolumechange"
-            ></NormalVideo>
-            <LiveHLSVideo
-                v-if="videoParam.type == 'LiveHLS'"
-                ref="video"
-                v-bind:channelId="videoParam.channelId"
-                v-bind:mode="videoParam.mode"
-                v-on:timeupdate="onTimeupdate"
-                v-on:waiting="onWaiting"
-                v-on:loadeddata="onLoadeddata"
-                v-on:canplay="onCanplay"
-                v-on:ended="onEnded"
-                v-on:play="onPlay"
-                v-on:pause="onPause"
-                v-on:ratechange="onChangePlaybackRate"
-                v-on:volumechange="onVolumechange"
-            ></LiveHLSVideo>
-            <RecordedStreamingVideo
-                v-if="videoParam.type == 'RecordedStreaming'"
-                ref="video"
-                v-bind:recordedId="videoParam.recordedId"
-                v-bind:videoFileId="videoParam.videoFileId"
-                v-bind:streamingType="videoParam.streamingType"
-                v-bind:mode="videoParam.mode"
-                v-on:timeupdate="onTimeupdate"
-                v-on:waiting="onWaiting"
-                v-on:loadeddata="onLoadeddata"
-                v-on:canplay="onCanplay"
-                v-on:ended="onEnded"
-                v-on:play="onPlay"
-                v-on:pause="onPause"
-                v-on:ratechange="onChangePlaybackRate"
-                v-on:volumechange="onVolumechange"
-            ></RecordedStreamingVideo>
-            <RecordedHLSStreamingVideo
-                v-if="videoParam.type == 'RecordedHLS'"
-                ref="video"
-                v-bind:recordedId="videoParam.recordedId"
-                v-bind:videoFileId="videoParam.videoFileId"
-                v-bind:mode="videoParam.mode"
-                v-on:timeupdate="onTimeupdate"
-                v-on:waiting="onWaiting"
-                v-on:loadeddata="onLoadeddata"
-                v-on:canplay="onCanplay"
-                v-on:ended="onEnded"
-                v-on:play="onPlay"
-                v-on:pause="onPause"
-                v-on:ratechange="onChangePlaybackRate"
-                v-on:volumechange="onVolumechange"
-            ></RecordedHLSStreamingVideo>
+            <div class="video-wrap">
+                <NormalVideo
+                    v-if="videoParam.type == 'Normal'"
+                    ref="video"
+                    v-bind:videoSrc.sync="videoParam.src"
+                    v-on:timeupdate="onTimeupdate"
+                    v-on:waiting="onWaiting"
+                    v-on:loadeddata="onLoadeddata"
+                    v-on:canplay="onCanplay"
+                    v-on:ended="onEnded"
+                    v-on:play="onPlay"
+                    v-on:pause="onPause"
+                    v-on:ratechange="onChangePlaybackRate"
+                    v-on:volumechange="onVolumechange"
+                ></NormalVideo>
+                <LiveHLSVideo
+                    v-if="videoParam.type == 'LiveHLS'"
+                    ref="video"
+                    v-bind:channelId="videoParam.channelId"
+                    v-bind:mode="videoParam.mode"
+                    v-on:timeupdate="onTimeupdate"
+                    v-on:waiting="onWaiting"
+                    v-on:loadeddata="onLoadeddata"
+                    v-on:canplay="onCanplay"
+                    v-on:ended="onEnded"
+                    v-on:play="onPlay"
+                    v-on:pause="onPause"
+                    v-on:ratechange="onChangePlaybackRate"
+                    v-on:volumechange="onVolumechange"
+                ></LiveHLSVideo>
+                <RecordedStreamingVideo
+                    v-if="videoParam.type == 'RecordedStreaming'"
+                    ref="video"
+                    v-bind:recordedId="videoParam.recordedId"
+                    v-bind:videoFileId="videoParam.videoFileId"
+                    v-bind:streamingType="videoParam.streamingType"
+                    v-bind:mode="videoParam.mode"
+                    v-on:timeupdate="onTimeupdate"
+                    v-on:waiting="onWaiting"
+                    v-on:loadeddata="onLoadeddata"
+                    v-on:canplay="onCanplay"
+                    v-on:ended="onEnded"
+                    v-on:play="onPlay"
+                    v-on:pause="onPause"
+                    v-on:ratechange="onChangePlaybackRate"
+                    v-on:volumechange="onVolumechange"
+                ></RecordedStreamingVideo>
+                <RecordedHLSStreamingVideo
+                    v-if="videoParam.type == 'RecordedHLS'"
+                    ref="video"
+                    v-bind:recordedId="videoParam.recordedId"
+                    v-bind:videoFileId="videoParam.videoFileId"
+                    v-bind:mode="videoParam.mode"
+                    v-on:timeupdate="onTimeupdate"
+                    v-on:waiting="onWaiting"
+                    v-on:loadeddata="onLoadeddata"
+                    v-on:canplay="onCanplay"
+                    v-on:ended="onEnded"
+                    v-on:play="onPlay"
+                    v-on:pause="onPause"
+                    v-on:ratechange="onChangePlaybackRate"
+                    v-on:volumechange="onVolumechange"
+                ></RecordedHLSStreamingVideo>
+            </div>
         </div>
     </div>
 </template>
@@ -919,7 +921,7 @@ export default class VideoContainer extends Vue {
                 .play
                     display: none
 
-    video
+    .video-wrap
         z-index: 1
         position: absolute
         top: 0
@@ -930,14 +932,32 @@ export default class VideoContainer extends Vue {
         width: 100%
         height: 100%
 
-        &::cue
-            color: white
-            background-color: rgba(0, 0, 0, 0.6)
+        video
+            width: 100%
+            height: 100%
+            &::cue
+                color: white
+                background-color: rgba(0, 0, 0, 0.6)
 
     .video-content
         &.is-ipad
             video::cue
                 font-size: 26px
+
+// aribb24.js 用に フルスクリーン時に video 要素を 16:9 に固定する
+@media (aspect-ratio: 16/9), (min-aspect-ratio: 16/9)
+    .video-container
+        &:fullscreen
+            .video-wrap
+                height: 100%
+                max-width: 177.7vh
+
+@media (max-aspect-ratio: 16/9)
+    .video-container
+        &:fullscreen
+            .video-wrap
+                width: 100%
+                max-height: 56.18vw
 </style>
 
 <style lang="sass">
