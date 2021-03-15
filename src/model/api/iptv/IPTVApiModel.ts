@@ -1,3 +1,4 @@
+/* eslint-disable no-control-regex */
 /* eslint-disable no-irregular-whitespace */
 import { inject, injectable } from 'inversify';
 import * as apid from '../../../../api';
@@ -127,7 +128,13 @@ class IPTVApiModel implements IIPTVApiModel {
      * @return string
      */
     private replaceStr(str: string): string {
-        return str.replace(/</g, '＜').replace(/>/g, '＞').replace(/&/g, '＆').replace(/"/g, '”').replace(/'/g, '’').replace(/\x1a/g, '');
+        return str
+            .replace(/</g, '＜')
+            .replace(/>/g, '＞')
+            .replace(/&/g, '＆')
+            .replace(/"/g, '”')
+            .replace(/'/g, '’')
+            .replace(/\x1a/g, '');
     }
 
     /**
