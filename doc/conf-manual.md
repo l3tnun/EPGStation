@@ -490,7 +490,7 @@ recorded:
 | --------------- | ------------------ | ---- | ----------------------------------------------------------------------------- |
 | name            | string             | yes  | Web インターフェイス上で表示される名前                                        |
 | path            | string             | yes  | 保存先ディレクトリパス (フルパスで指定すること)                               |
-| limitThreshold? | number             | no   | 空き容量限界閾値 (単位 MB)。これを超えると action, limit で指定した動作を行う |
+| limitThreshold  | number             | no   | 空き容量限界閾値 (単位 MB)。これを超えると action, limit で指定した動作を行う |
 | action          | 'remove' \| 'none' | no   | 下記の limitThreshold 説明を参照                                              |
 | limitCmd        | string             | no   | limitThreshold を超えた時に実行するコマンド                                   |
 
