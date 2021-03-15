@@ -127,7 +127,7 @@ class IPTVApiModel implements IIPTVApiModel {
      * @return string
      */
     private replaceStr(str: string): string {
-        return str.replace(/</g, '＜').replace(/>/g, '＞').replace(/&/g, '＆').replace(/"/g, '”').replace(/'/g, '’');
+        return str.replace(/</g, '＜').replace(/>/g, '＞').replace(/&/g, '＆').replace(/"/g, '”').replace(/'/g, '’').replace(/\x1a/g, '');
     }
 
     /**
