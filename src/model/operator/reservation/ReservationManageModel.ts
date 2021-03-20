@@ -608,8 +608,8 @@ class ReservationManageModel implements IReservationManageModel {
                         const startAt = baseTime + 1000 * 60 * 60 * 24 * i + time.start * 1000;
                         const endAt = baseTime + 1000 * 60 * 60 * 24 * i + (time.start + time.range) * 1000;
 
-                        if (startAt < updateTime || weeks[new Date(startAt).getDay()] === false) {
-                            // 現在時刻より古い or 有効な曜日ではない
+                        if (endAt < updateTime || weeks[new Date(startAt).getDay()] === false) {
+                            // 終了時刻が現在時刻より古い or 有効な曜日ではない
                             continue;
                         }
 
