@@ -193,9 +193,9 @@ export default class RecordingUtilModel implements IRecordingUtilModel {
      * @return Promise<string> 移動先のファイルパスを返す
      */
     public async movingFromTmp(reserve: Reserve, videoFileId: apid.VideoFileId): Promise<string> {
-        let videoFileFulPath = await this.videoUtil.getFullFilePathFromId(videoFileId);
+        const oldVideoFilePath = await this.videoUtil.getFullFilePathFromId(videoFileId);
 
-        if (videoFileFulPath === null) {
+        if (oldVideoFilePath === null) {
             throw new Error('VideoFilePathIsNull');
         }
 
@@ -206,14 +206,26 @@ export default class RecordingUtilModel implements IRecordingUtilModel {
         // 本来の保存先を取得
         const newRecPath = await this.getRecPath(reserve, false);
 
-        // recordedTmp から本来の保存先へコピー
+        // rename で移動可能か試す
+        let isSuccessRenameFile = false;
+        this.log.system.info(`move file: ${oldVideoFilePath} -> ${newRecPath.fullPath}`);
         try {
-            this.log.system.info(`move file: ${videoFileFulPath} -> ${newRecPath.fullPath}`);
-            await FileUtil.copyFile(videoFileFulPath, newRecPath.fullPath);
+            await FileUtil.rename(oldVideoFilePath, newRecPath.fullPath);
+            isSuccessRenameFile = true;
         } catch (err) {
-            this.log.system.error(`move file error: ${videoFileFulPath} -> ${newRecPath.fullPath}`);
+            this.log.system.debug(`rename file error: ${oldVideoFilePath} -> ${newRecPath.fullPath}`);
+            this.log.system.debug(err);
+        }
 
-            throw err;
+        // rename で移動できなかった場合はコピーrecordedTmp から本来の保存先へコピー
+        if (isSuccessRenameFile === false) {
+            try {
+                await FileUtil.copyFile(oldVideoFilePath, newRecPath.fullPath);
+            } catch (err) {
+                this.log.system.error(`copy file error: ${oldVideoFilePath} -> ${newRecPath.fullPath}`);
+
+                throw err;
+            }
         }
 
         // VideoFile DB 更新
@@ -224,30 +236,45 @@ export default class RecordingUtilModel implements IRecordingUtilModel {
                 filePath: path.join(newRecPath.subDir, newRecPath.fileName),
             });
         } catch (err) {
+            // DB 更新失敗
             this.log.system.error(`update VideoFileDB path error: ${videoFileId}`);
             this.log.system.error(err);
 
+            if (isSuccessRenameFile === true) {
+                // rename したファイルを元に戻す
+                this.log.system.info(`rollback renamed file: ${newRecPath.fullPath} -> ${oldVideoFilePath}`);
+                try {
+                    await FileUtil.rename(newRecPath.fullPath, oldVideoFilePath);
+                } catch (e) {
+                    this.log.system.error(`rollback renamed file error: ${newRecPath.fullPath} -> ${oldVideoFilePath}`);
+                    this.log.system.error(e);
+                    throw err;
+                }
+            } else {
+                // コピーしたファイルを削除する
+                this.log.system.info(`delete copied file: ${newRecPath.fullPath}`);
+                try {
+                    await FileUtil.unlink(newRecPath.fullPath);
+                } catch (e) {
+                    this.log.system.error(`delete copied file error: ${newRecPath.fullPath}`);
+                    this.log.system.error(e);
+                    throw err;
+                }
+            }
+        }
+
+        // rename で移動できなかった場合は recordedTmp にある古いファイルを削除する
+        if (isSuccessRenameFile === false) {
+            this.log.system.info(`delete old file: ${oldVideoFilePath}`);
             try {
-                await FileUtil.unlink(newRecPath.fullPath);
-            } catch (e) {
-                this.log.system.error(`delete new file error: ${newRecPath.fullPath}`);
-                this.log.system.error(e);
+                await FileUtil.unlink(oldVideoFilePath);
+            } catch (err) {
+                this.log.system.error(`delete old file error: ${oldVideoFilePath}`);
                 throw err;
             }
         }
 
-        const oldVideoFilePath = videoFileFulPath;
-        videoFileFulPath = newRecPath.fullPath;
-
-        // recordedTmp にある古いファイルを削除する
-        try {
-            await FileUtil.unlink(oldVideoFilePath);
-        } catch (err) {
-            this.log.system.error(`delete old file error: ${newRecPath.fullPath}`);
-            throw err;
-        }
-
-        return videoFileFulPath;
+        return newRecPath.fullPath;
     }
 
     /**
