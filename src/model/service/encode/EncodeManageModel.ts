@@ -260,7 +260,7 @@ class EncodeManageModel implements IEncodeManageModel {
             priority: EncodeManageModel.ENCODE_PRIPORITY,
             spawnOption: {
                 env: {
-                    PATH: process.env['PATH'],
+                    ...process.env,
                     RECORDEDID: recorded.id.toString(10),
                     INPUT: inputFilePath,
                     OUTPUT: outputFilePath === null ? '' : outputFilePath,
