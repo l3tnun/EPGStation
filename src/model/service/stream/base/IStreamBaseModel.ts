@@ -27,7 +27,7 @@ export interface RecordedStreamInfo extends BaseStreamInfo {
 }
 
 export default interface IStreamBaseModel<T> {
-    setOption(option: T, mode: number): void;
+    setOption(option: T, mode: number, useSubtitleUStreamingCmd: boolean): void;
     start(streamId: apid.StreamId): Promise<void>;
     stop(): Promise<void>;
     getStream(): internal.Readable;

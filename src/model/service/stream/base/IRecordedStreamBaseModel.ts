@@ -17,5 +17,5 @@ export interface VideoFileInfo {
 }
 
 export default interface IRecordedStreamBaseModel extends IStreamBaseModel<RecordedStreamOption> {
-    setOption(option: RecordedStreamOption, mode: number): void;
+    setOption(option: RecordedStreamOption, mode: number, useSubtitleUStreamingCmd: boolean): void;
 }
