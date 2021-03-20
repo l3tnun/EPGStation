@@ -15,6 +15,16 @@ import IApiUtil from '../IApiUtil';
 import IPlayList from '../IPlayList';
 import IStreamApiModel, { StreamResponse } from './IStreamApiModel';
 
+interface StreamConfig {
+    cmd?: string;
+    useSubtitleUStreamingCmd: boolean;
+}
+
+interface RecordedStreamConfig {
+    cmd: string;
+    useSubtitleUStreamingCmd: boolean;
+}
+
 @injectable()
 export default class StreamApiModel implements IStreamApiModel {
     private configure: IConfiguration;
@@ -61,16 +71,17 @@ export default class StreamApiModel implements IStreamApiModel {
      * @return Promise<StreamResponse>
      */
     public async startLiveM2TsStream(option: apid.LiveStreamOption): Promise<StreamResponse> {
-        const cmd = this.getTsLiveConfig('m2ts', option.mode);
+        const conf = this.getTsLiveConfig('m2ts', option.mode);
 
         // stream 生成
         const stream = await this.liveStreamProvider();
         stream.setOption(
             {
                 channelId: option.channelId,
-                cmd: cmd,
+                cmd: conf.cmd,
             },
             option.mode,
+            conf.useSubtitleUStreamingCmd,
         );
 
         // manager に登録
@@ -88,16 +99,17 @@ export default class StreamApiModel implements IStreamApiModel {
      * @return Promise<StreamResponse>
      */
     public async startLiveWebmStream(option: apid.LiveStreamOption): Promise<StreamResponse> {
-        const cmd = this.getTsLiveConfig('webm', option.mode);
+        const conf = this.getTsLiveConfig('webm', option.mode);
 
         // stream 生成
         const stream = await this.liveStreamProvider();
         stream.setOption(
             {
                 channelId: option.channelId,
-                cmd: cmd,
+                cmd: conf.cmd,
             },
             option.mode,
+            conf.useSubtitleUStreamingCmd,
         );
 
         // manager に登録
@@ -115,16 +127,17 @@ export default class StreamApiModel implements IStreamApiModel {
      * @return Promise<StreamResponse>
      */
     public async startMp4Stream(option: apid.LiveStreamOption): Promise<StreamResponse> {
-        const cmd = this.getTsLiveConfig('mp4', option.mode);
+        const conf = this.getTsLiveConfig('mp4', option.mode);
 
         // stream 生成
         const stream = await this.liveStreamProvider();
         stream.setOption(
             {
                 channelId: option.channelId,
-                cmd: cmd,
+                cmd: conf.cmd,
             },
             option.mode,
+            conf.useSubtitleUStreamingCmd,
         );
 
         // manager に登録
@@ -142,16 +155,17 @@ export default class StreamApiModel implements IStreamApiModel {
      * @return Promise<apid.StreamId>
      */
     public async startLiveHLSStream(option: apid.LiveStreamOption): Promise<apid.StreamId> {
-        const cmd = this.getTsLiveConfig('hls', option.mode);
+        const conf = this.getTsLiveConfig('hls', option.mode);
 
         // stream 生成
         const stream = await this.liveHLSStreamProvider();
         stream.setOption(
             {
                 channelId: option.channelId,
-                cmd: cmd,
+                cmd: conf.cmd,
             },
             option.mode,
+            conf.useSubtitleUStreamingCmd,
         );
 
         // manager に登録
@@ -162,9 +176,9 @@ export default class StreamApiModel implements IStreamApiModel {
      * config から指定した live stream コマンドを取り出す
      * @param type: 'm2ts' | 'webm' | 'mp4' | 'hls'
      * @param mode: number config stream index 番号
-     * @return Promise<string>
+     * @return Promise<StreamConfig>
      */
-    private getTsLiveConfig(type: 'm2ts' | 'webm' | 'mp4' | 'hls', mode: number): string | undefined {
+    private getTsLiveConfig(type: 'm2ts' | 'webm' | 'mp4' | 'hls', mode: number): StreamConfig {
         const config = this.configure.getConfig();
 
         if (
@@ -177,7 +191,10 @@ export default class StreamApiModel implements IStreamApiModel {
             throw new Error('ConfigIsUndefined');
         }
 
-        return (config.stream.live.ts[type] as any)[mode].cmd;
+        return {
+            cmd: (config.stream.live.ts[type] as any)[mode].cmd,
+            useSubtitleUStreamingCmd: !!(config.stream.live.ts[type] as any)[mode].useSubtitleUStreamingCmd,
+        };
     }
 
     /**
@@ -186,7 +203,7 @@ export default class StreamApiModel implements IStreamApiModel {
      * @return Promise<StreamResponse>
      */
     public async startRecordedWebMStream(option: apid.RecordedStreanOption): Promise<StreamResponse> {
-        const cmd = await this.getRecordedVideoConfig('webm', option);
+        const conf = await this.getRecordedVideoConfig('webm', option);
 
         // stream 生成
         const stream = await this.recordedStreamProvider();
@@ -194,9 +211,10 @@ export default class StreamApiModel implements IStreamApiModel {
             {
                 videoFileId: option.videoFileId,
                 playPosition: option.playPosition,
-                cmd: cmd,
+                cmd: conf.cmd,
             },
             option.mode,
+            conf.useSubtitleUStreamingCmd,
         );
 
         // manager に登録
@@ -214,7 +232,7 @@ export default class StreamApiModel implements IStreamApiModel {
      * @return Promise<StreamResponse>
      */
     public async startRecordedMp4Stream(option: apid.RecordedStreanOption): Promise<StreamResponse> {
-        const cmd = await this.getRecordedVideoConfig('mp4', option);
+        const conf = await this.getRecordedVideoConfig('mp4', option);
 
         // stream 生成
         const stream = await this.recordedStreamProvider();
@@ -222,9 +240,10 @@ export default class StreamApiModel implements IStreamApiModel {
             {
                 videoFileId: option.videoFileId,
                 playPosition: option.playPosition,
-                cmd: cmd,
+                cmd: conf.cmd,
             },
             option.mode,
+            conf.useSubtitleUStreamingCmd,
         );
 
         // manager に登録
@@ -242,7 +261,7 @@ export default class StreamApiModel implements IStreamApiModel {
      * @return Promise<apid.StreamId>
      */
     public async startRecordedHLSStream(option: apid.RecordedStreanOption): Promise<apid.StreamId> {
-        const cmd = await this.getRecordedVideoConfig('hls', option);
+        const conf = await this.getRecordedVideoConfig('hls', option);
 
         // stream 生成
         const stream = await this.recordedHLSStreamProvider();
@@ -250,9 +269,10 @@ export default class StreamApiModel implements IStreamApiModel {
             {
                 videoFileId: option.videoFileId,
                 playPosition: option.playPosition,
-                cmd: cmd,
+                cmd: conf.cmd,
             },
             option.mode,
+            conf.useSubtitleUStreamingCmd,
         );
 
         // manager に登録
@@ -263,12 +283,12 @@ export default class StreamApiModel implements IStreamApiModel {
      * config から指定した stream コマンドを取り出す
      * @param type: 'webm' | 'mp4' | 'hls'
      * @param option apid.RecordedStreanOption
-     * @return Promise<string>
+     * @return Promise<StreamConfig>
      */
     private async getRecordedVideoConfig(
         type: 'webm' | 'mp4' | 'hls',
         option: apid.RecordedStreanOption,
-    ): Promise<string> {
+    ): Promise<RecordedStreamConfig> {
         const isEncodedVideo = await this.isEncodedVideo(option.videoFileId);
 
         // config が存在するか
@@ -277,7 +297,8 @@ export default class StreamApiModel implements IStreamApiModel {
             throw new Error('ConfigIsUndefined');
         }
 
-        let cmd: string | undefined;
+        let cmd: string;
+        let useSubtitleUStreamingCmd = false;
         if (isEncodedVideo === true) {
             if (
                 typeof config.stream.recorded.encoded === 'undefined' ||
@@ -298,13 +319,17 @@ export default class StreamApiModel implements IStreamApiModel {
             }
 
             cmd = (config.stream.recorded.ts[type] as any)[option.mode].cmd;
+            useSubtitleUStreamingCmd = !!(config.stream.recorded.ts[type] as any)[option.mode].useSubtitleUStreamingCmd;
         }
 
         if (typeof cmd === 'undefined') {
             throw new Error('CmdIsUndefined');
         }
 
-        return cmd;
+        return {
+            cmd: cmd,
+            useSubtitleUStreamingCmd: useSubtitleUStreamingCmd,
+        };
     }
 
     /**

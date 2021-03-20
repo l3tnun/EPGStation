@@ -27,6 +27,7 @@ export interface URLSchemeInfo {
 export interface StreamingCmd {
     name: string;
     cmd?: string;
+    useSubtitleUStreamingCmd?: boolean;
 }
 
 export interface KodiInfo {
