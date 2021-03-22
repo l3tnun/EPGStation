@@ -2,6 +2,7 @@ import { ChildProcess } from 'child_process';
 import * as http from 'http';
 import { inject, injectable } from 'inversify';
 import internal from 'stream';
+import UnrecognizeTransform from 'arib-subtitle-unrecognizer';
 import * as apid from '../../../../../api';
 import ProcessUtil from '../../../../util/ProcessUtil';
 import IConfigFile from '../../../IConfigFile';
@@ -22,6 +23,7 @@ export default abstract class LiveStreamBaseModel
     private stream: http.IncomingMessage | null = null;
     private streamProcess: ChildProcess | null = null;
     private mirakurunClientModel: IMirakurunClientModel;
+    private unrecognizeTransform: UnrecognizeTransform | null = null;
 
     constructor(
         @inject('IConfiguration') configure: IConfiguration,
@@ -121,7 +123,13 @@ export default abstract class LiveStreamBaseModel
 
             // パイプ処理
             if (this.streamProcess.stdin !== null) {
-                this.stream.pipe(this.streamProcess.stdin);
+                if (this.useSubtitleUStreamingCmd === true) {
+                    this.unrecognizeTransform = new UnrecognizeTransform();
+                    this.stream.pipe(this.unrecognizeTransform);
+                    this.unrecognizeTransform.pipe(this.streamProcess.stdin);
+                } else {
+                    this.stream.pipe(this.streamProcess.stdin);
+                }
             } else {
                 await this.stop();
 
@@ -184,6 +192,11 @@ export default abstract class LiveStreamBaseModel
         if (this.stream !== null) {
             this.stream.unpipe();
             this.stream.destroy();
+        }
+
+        if (this.unrecognizeTransform !== null) {
+            this.unrecognizeTransform.unpipe();
+            this.unrecognizeTransform.destroy();
         }
 
         if (this.streamProcess !== null) {

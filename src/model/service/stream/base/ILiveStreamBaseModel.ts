@@ -10,5 +10,5 @@ export interface LiveStreamOption {
 }
 
 export default interface ILiveStreamBaseModel extends IStreamBaseModel<LiveStreamOption> {
-    setOption(option: LiveStreamOption, mode: number): void;
+    setOption(option: LiveStreamOption, mode: number, useSubtitleUStreamingCmd: boolean): void;
 }

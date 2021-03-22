@@ -22,6 +22,7 @@ abstract class StreamBaseModel<T> implements IStreamBaseModel<T> {
     protected fileDeleter: IHLSFileDeleterModel;
     protected processOption: T | null = null;
     protected configMode: number | null = null;
+    protected useSubtitleUStreamingCmd: boolean = false;
 
     private socketIO: ISocketIOManageModel;
     private emitter: events.EventEmitter = new events.EventEmitter();
@@ -46,10 +47,12 @@ abstract class StreamBaseModel<T> implements IStreamBaseModel<T> {
     /**
      * stream 生成に必要な情報を渡す
      * @param option: LiveStreamOption
+     * @param useSubtitleUStreamingCmd: rib-subtitle-unrecognizer を使用するか?
      */
-    public setOption(option: T, mode: number): void {
+    public setOption(option: T, mode: number, useSubtitleUStreamingCmd: boolean): void {
         this.processOption = option;
         this.configMode = mode;
+        this.useSubtitleUStreamingCmd = useSubtitleUStreamingCmd;
     }
 
     public abstract start(streamId: apid.StreamId): Promise<void>;

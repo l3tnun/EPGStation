@@ -2,6 +2,7 @@ import { ChildProcess, exec } from 'child_process';
 import * as fs from 'fs';
 import { inject, injectable } from 'inversify';
 import internal, { Readable } from 'stream';
+import UnrecognizeTransform from 'arib-subtitle-unrecognizer';
 import * as apid from '../../../../../api';
 import * as fst from '../../../../lib/TailStream';
 import ProcessUtil from '../../../../util/ProcessUtil';
@@ -26,6 +27,7 @@ export default abstract class RecordedStreamBaseModel
     private videoUtil: IVideoUtil;
 
     private fileStream: Readable | null = null;
+    private unrecognizeTransform: UnrecognizeTransform | null = null;
     private streamProcess: ChildProcess | null = null;
     private videoFilePath: string | null = null;
     private videoFileInfo: VideoFileInfo | null = null;
@@ -125,7 +127,13 @@ export default abstract class RecordedStreamBaseModel
 
         // パイプ処理
         if (this.streamProcess.stdin !== null && this.fileStream !== null) {
-            this.fileStream.pipe(this.streamProcess.stdin);
+            if (this.useSubtitleUStreamingCmd === true) {
+                this.unrecognizeTransform = new UnrecognizeTransform();
+                this.fileStream.pipe(this.unrecognizeTransform);
+                this.unrecognizeTransform.pipe(this.streamProcess.stdin);
+            } else {
+                this.fileStream.pipe(this.streamProcess.stdin);
+            }
         }
     }
 
@@ -258,6 +266,11 @@ export default abstract class RecordedStreamBaseModel
         if (this.fileStream !== null) {
             this.fileStream.unpipe();
             this.fileStream.destroy();
+        }
+
+        if (this.unrecognizeTransform !== null) {
+            this.unrecognizeTransform.unpipe();
+            this.unrecognizeTransform.destroy();
         }
 
         if (this.streamProcess !== null) {
