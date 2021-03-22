@@ -959,7 +959,7 @@ urlscheme:
 | ------------------------------ | ------- | ---- | -------------------------------------------------------------------------------- |
 | name                           | string  | yes  | Web インターフェース上で表示される名前                                           |
 | cmd                            | string  | no   | 変換コマンド                                                                     |
-| useSubtitleUStreamingCmd       | boolean | no   | arib-subtitle-unrecognizer を使用するか (HLS 配信かつソースが TS の場合のみ有効) |
+| useSubtitleUnrecognizerCmd     | boolean | no   | arib-subtitle-unrecognizer を使用するか (HLS 配信かつソースが TS の場合のみ有効) |
 
 -   `cmd` が指定されない場合は無変換配信
 -   `cmd` で置換される変数は以下の通り

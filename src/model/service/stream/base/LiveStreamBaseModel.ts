@@ -123,7 +123,7 @@ export default abstract class LiveStreamBaseModel
 
             // パイプ処理
             if (this.streamProcess.stdin !== null) {
-                if (this.useSubtitleUStreamingCmd === true) {
+                if (this.useSubtitleUnrecognizerCmd === true) {
                     this.unrecognizeTransform = new UnrecognizeTransform();
                     this.stream.pipe(this.unrecognizeTransform);
                     this.unrecognizeTransform.pipe(this.streamProcess.stdin);

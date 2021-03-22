@@ -122,6 +122,7 @@ stream:
                 #       -hls_segment_filename %streamFileDir%/stream%streamNum%-%09d.ts -hls_flags delete_segments -c:a
                 #       aac -ar 48000 -b:a 192k -ac 2 -c:v libx264 -vf yadif,scale=-2:720 -b:v 3000k -preset veryfast
                 #       -flags +loop-global_header %OUTPUT%'
+                #   useSubtitleUnrecognizerCmd: true # ffmpeg 4.1.x 以下は false にすること
 
     recorded:
         ts:
@@ -179,6 +180,7 @@ stream:
                 #       -hls_segment_filename %streamFileDir%/stream%streamNum%-%09d.ts -hls_flags delete_segments -c:a
                 #       aac -ar 48000 -b:a 192k -ac 2 -c:v libx264 -vf yadif,scale=-2:720 -b:v 3000k -preset veryfast
                 #       -flags +loop-global_header %OUTPUT%'
+                #   useSubtitleUnrecognizerCmd: true # ffmpeg 4.1.x 以下は false にすること
 
         encoded:
             webm:

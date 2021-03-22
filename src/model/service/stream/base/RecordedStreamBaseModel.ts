@@ -127,7 +127,7 @@ export default abstract class RecordedStreamBaseModel
 
         // パイプ処理
         if (this.streamProcess.stdin !== null && this.fileStream !== null) {
-            if (this.useSubtitleUStreamingCmd === true) {
+            if (this.useSubtitleUnrecognizerCmd === true) {
                 this.unrecognizeTransform = new UnrecognizeTransform();
                 this.fileStream.pipe(this.unrecognizeTransform);
                 this.unrecognizeTransform.pipe(this.streamProcess.stdin);
