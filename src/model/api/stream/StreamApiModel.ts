@@ -319,7 +319,8 @@ export default class StreamApiModel implements IStreamApiModel {
             }
 
             cmd = (config.stream.recorded.ts[type] as any)[option.mode].cmd;
-            useSubtitleUnrecognizerCmd = !!(config.stream.recorded.ts[type] as any)[option.mode].useSubtitleUnrecognizerCmd;
+            useSubtitleUnrecognizerCmd = !!(config.stream.recorded.ts[type] as any)[option.mode]
+                .useSubtitleUnrecognizerCmd;
         }
 
         if (typeof cmd === 'undefined') {
