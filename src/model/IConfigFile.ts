@@ -65,6 +65,7 @@ export default interface IConfigFile {
         port: number;
         password: string;
         database: string;
+        charset?: string;
     };
     postgres?: {
         host: string;

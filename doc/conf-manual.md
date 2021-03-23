@@ -164,6 +164,7 @@ dbType: mysql
 | user           | string | yes  | DB 接続用のユーザー名        |
 | password       | string | yes  | DB 接続用のパスワード        |
 | database       | string | yes  | 使用するデータベース名       |
+| charset        | string | no   | 使用する文字コード           |
 
 ```yaml
 mysql:
