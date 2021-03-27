@@ -33,12 +33,6 @@ class EncodeProcessManageModel implements IEncodeProcessManageModel {
      * @return Promise<ChildProcess>
      */
     public create(option: CreateProcessOption): Promise<ChildProcess> {
-        // replace %ROOT%
-        option.cmd =
-            process.platform === 'win32'
-                ? option.cmd.replace('%ROOT%', EncodeProcessManageModel.ROOT_PATH.replace(/\\/g, '\\\\'))
-                : option.cmd.replace('%ROOT%', EncodeProcessManageModel.ROOT_PATH);
-
         return new Promise<ChildProcess>(async (resolve, reject) => {
             if (this.childs.length >= this.maxEncode) {
                 // プロセス数が上限に達しているとき
@@ -259,7 +253,6 @@ class EncodeProcessManageModel implements IEncodeProcessManageModel {
 }
 
 namespace EncodeProcessManageModel {
-    export const ROOT_PATH = path.join(__dirname, '..', '..', '..', '..');
     export const KILL_CHILD_EVENT = 'killChild';
 }
 
