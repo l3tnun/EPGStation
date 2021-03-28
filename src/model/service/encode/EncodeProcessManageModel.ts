@@ -1,7 +1,6 @@
 import { ChildProcess, spawn } from 'child_process';
 import * as events from 'events';
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
 import ProcessUtil from '../../../util/ProcessUtil';
 import IConfiguration from '../../IConfiguration';
 import ILogger from '../../ILogger';
