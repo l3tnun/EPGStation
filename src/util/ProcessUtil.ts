@@ -1,5 +1,6 @@
 import { ChildProcess } from 'child_process';
 import * as fs from 'fs';
+import * as path from 'path';
 
 namespace ProcessUtil {
     /**
@@ -39,6 +40,8 @@ namespace ProcessUtil {
         args: string[];
     }
 
+    export const ROOT_PATH = path.join(__dirname, '..', '..').replace(new RegExp(`\\${path.sep}$`), '');
+
     /**
      * 渡された cmd 文字列を bin と args に分離する
      * @param cmd: string
@@ -61,10 +64,15 @@ namespace ProcessUtil {
             throw new Error('CmdBinIsNotFound');
         }
 
-        // 引数内の %SPACE% を半角スペースに置換
-        args = args.map(arg => {
-            return arg.replace(/%SPACE%/g, ' ');
-        });
+        args = args
+            .map(arg => {
+                // 引数内の %ROOT% を置換
+                return arg.replace(/%ROOT%/g, ROOT_PATH);
+            })
+            .map(arg => {
+                // 引数内の %SPACE% を半角スペースに置換
+                return arg.replace(/%SPACE%/g, ' ');
+            });
 
         return {
             bin: bin,
