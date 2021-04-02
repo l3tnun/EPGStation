@@ -813,6 +813,7 @@ concurrentEncodeNum: 1
 | FFMPEG                 | string         | ffmpeg パス                                                                   |
 | FFPROBE                | string         | ffprobe パス                                                                  |
 | DIR                    | string         | 予約時に設定した directory 文字列                                             |
+| SUBDIR                 | string \| null | サブディレクトリ文字列                                                        |
 | NAME                   | string         | 番組名                                                                        |
 | HALF_WIDTH_NAME        | string         | 番組名(半角)                                                                  |
 | DESCRIPTION            | string \| null | 番組概要                                                                      |
