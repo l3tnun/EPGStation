@@ -265,6 +265,7 @@ class EncodeManageModel implements IEncodeManageModel {
                     INPUT: inputFilePath,
                     OUTPUT: outputFilePath === null ? '' : outputFilePath,
                     DIR: dir,
+                    SUBDIR: queueItem.directory || '',
                     FFMPEG: config.ffmpeg,
                     FFPROBE: config.ffprobe,
                     NAME: recorded.name,
