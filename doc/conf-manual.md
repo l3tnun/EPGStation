@@ -172,7 +172,7 @@ mysql:
     port: 3306
     user: username
     password: password
-    database": databaseName
+    database: databaseName
 ```
 
 ### sqlite
