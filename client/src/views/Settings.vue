@@ -56,6 +56,13 @@
                                     <v-spacer></v-spacer>
                                     <v-switch v-model="storageModel.tmp.isOnAirTabListView" value></v-switch>
                                 </div>
+                                <div v-if="isSupportedMpegts" class="my-2 d-flex flex-row align-center">
+                                    <div>
+                                        <v-list-item-title class="subtitle-1">web での再生を優先する</v-list-item-title>
+                                    </div>
+                                    <v-spacer></v-spacer>
+                                    <v-switch v-model="storageModel.tmp.isPreferredPlayingLiveM2TSOnWeb" value></v-switch>
+                                </div>
                                 <div class="my-2 d-flex flex-column">
                                     <div class="d-flex">
                                         <div>
@@ -302,11 +309,10 @@ import IScrollPositionState from '@/model/state/IScrollPositionState';
 import INavigationState from '@/model/state/navigation/INavigationState';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
 import { ISettingStorageModel, GuideViewMode, B24RenderType } from '@/model/storage/setting/ISettingStorageModel';
-import UaUtil from '@/util/UaUtil';
 import { Component, Vue, Watch } from 'vue-property-decorator';
 import Hls from 'hls-b24.js';
 import IColorThemeState from '@/model/state/IColorThemeState';
-import Util from '@/util/Util';
+import Mpegts from 'mpegts.js';
 
 Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
 
@@ -394,6 +400,10 @@ export default class Settings extends Vue {
     set isForceDarkTheme(value: boolean) {
         this.storageModel.tmp.isForceDarkTheme = value;
         this.$vuetify.theme.dark = value;
+    }
+
+    get isSupportedMpegts(): boolean {
+        return Mpegts.isSupported();
     }
 
     get isShoweB24Render(): boolean {

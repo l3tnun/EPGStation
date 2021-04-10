@@ -9,6 +9,7 @@ export interface ISettingValue {
     isForceDarkTheme: boolean;
     isHalfWidthDisplayed: boolean;
     isOnAirTabListView: boolean;
+    isPreferredPlayingLiveM2TSOnWeb: boolean;
     onAirM2TSViewURLScheme: string | null;
     guideMode: GuideViewMode;
     guideLength: number;
