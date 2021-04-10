@@ -6,7 +6,6 @@
 import BaseVideo from '@/components/video/BaseVideo';
 import container from '@/model/ModelContainer';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
-import UaUtil from '@/util/UaUtil';
 import { Component, Prop, Watch } from 'vue-property-decorator';
 import Mpegts from 'mpegts.js';
 
@@ -38,7 +37,7 @@ export default class LiveMpegTsVideo extends BaseVideo {
      */
     protected initVideoSetting(): void {
         // 対応しているか確認
-        if (UaUtil.isiOS() === true) {
+        if (Mpegts.isSupported() === false) {
             this.snackbarState.open({
                 color: 'error',
                 text: '非対応ブラウザーです。',
