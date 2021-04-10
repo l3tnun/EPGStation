@@ -468,6 +468,11 @@ export interface URLSchemeInfo {
     win?: string;
 }
 
+export interface M2TSStreamParam {
+    name: string;
+    isUnconverted: boolean; // 無変換か
+}
+
 /**
  * クライアントが受け取る設定情報
  */
@@ -487,7 +492,7 @@ export interface Config {
     streamConfig?: {
         live?: {
             ts?: {
-                m2ts?: string[];
+                m2ts?: M2TSStreamParam[];
                 webm?: string[];
                 mp4?: string[];
                 hls?: string[];

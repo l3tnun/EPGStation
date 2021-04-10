@@ -154,6 +154,20 @@ components:
                 win:
                     type: string
 
+        M2TSStreamParam:
+            description: M2TS形式ストリーミングパラメータ
+            type: object
+            required:
+                - name
+                - isUnconverted
+            properties:
+                name:
+                    description: 表示名
+                    type: string
+                isUnconverted:
+                    description: 無変換か
+                    type: boolean
+
         Config:
             description: コンフィグ
             type: object
@@ -232,7 +246,7 @@ components:
                                     description: ライブ M2TS ストリーミング設定
                                     type: array
                                     items:
-                                        type: string
+                                        $ref: '#/components/schemas/M2TSStreamParam'
                                 webm:
                                     description: ライブ WebM ストリーミング設定
                                     type: array
