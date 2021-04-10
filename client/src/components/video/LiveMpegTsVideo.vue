@@ -59,6 +59,21 @@ export default class LiveMpegTsVideo extends BaseVideo {
             isLive: true,
             url: this.videoSrc,
         });
+
+        // 再生エラー
+        if (Mpegts.getFeatureList().msePlayback === false) {
+            this.mepgtsPlayer.unload();
+            this.mepgtsPlayer.destroy();
+            this.mepgtsPlayer = null;
+
+            this.snackbarState.open({
+                color: 'error',
+                text: '再生に失敗しました',
+            });
+
+            throw new Error('msePlaybackError');
+        }
+
         this.mepgtsPlayer.attachMediaElement(this.video);
         this.mepgtsPlayer.load();
         this.mepgtsPlayer.play();
