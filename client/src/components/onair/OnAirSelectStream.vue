@@ -37,6 +37,7 @@
 import container from '@/model/ModelContainer';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
+import Mpegts from 'mpegts.js';
 import IOnAirSelectStreamState from '../../model/state/onair/IOnAirSelectStreamState';
 import Util from '../../util/Util';
 
@@ -97,7 +98,7 @@ export default class OnAirSelectStream extends Vue {
         if (this.dialogState.selectedStreamType === 'M2TS') {
             const url = this.dialogState.getM2TSURL();
 
-            if (this.dialogState.isM2TSUnconvertedMode() === true) {
+            if (Mpegts.isSupported() === false || this.dialogState.isM2TSUnconvertedMode() === true) {
                 // URL Scheme による再生
                 this.m2tsViewOnURLScheme();
             } else {
