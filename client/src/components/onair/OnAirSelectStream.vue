@@ -97,18 +97,17 @@ export default class OnAirSelectStream extends Vue {
         if (this.dialogState.selectedStreamType === 'M2TS') {
             const url = this.dialogState.getM2TSURL();
 
-            if (url === null) {
-                const playList = this.dialogState.getM2TPlayListURL();
-                if (playList === null) {
+            if (this.dialogState.isM2TSUnconvertedMode() === true) {
+                // URL Scheme による再生
+                this.m2tsViewOnURLScheme();
+            } else {
+                // web での再生
+                await this.m2tsViewOnWeb().catch(err => {
                     this.snackbarState.open({
                         color: 'error',
-                        text: '視聴 URL 生成に失敗',
+                        text: '視聴ページへの移動に失敗',
                     });
-                } else {
-                    location.href = playList;
-                }
-            } else {
-                location.href = url;
+                });
             }
         } else {
             const channel = this.dialogState.getChannelItem();
@@ -129,6 +128,51 @@ export default class OnAirSelectStream extends Vue {
                     });
                 });
             }
+        }
+    }
+
+    /**
+     * URL Scheme による m2ts 形式の再生
+     */
+    private m2tsViewOnURLScheme(): void {
+        const url = this.dialogState.getM2TSURL();
+
+        if (url === null) {
+            const playList = this.dialogState.getM2TPlayListURL();
+            if (playList === null) {
+                this.snackbarState.open({
+                    color: 'error',
+                    text: '視聴 URL 生成に失敗',
+                });
+            } else {
+                location.href = playList;
+            }
+        } else {
+            location.href = url;
+        }
+    }
+
+    /**
+     * web での m2ts 形式の再生
+     */
+    private async m2tsViewOnWeb(): Promise<void> {
+        const channel = this.dialogState.getChannelItem();
+        if (channel !== null && typeof this.dialogState.selectedStreamType !== 'undefined' && typeof this.dialogState.selectedStreamConfig !== 'undefined') {
+            this.dialogState.isOpen = false;
+            await Util.sleep(200);
+            await Util.move(this.$router, {
+                path: '/onair/watch',
+                query: {
+                    type: 'm2ts',
+                    channel: channel.id.toString(10),
+                    mode: this.dialogState.selectedStreamConfig.toString(10),
+                },
+            }).catch(err => {
+                this.snackbarState.open({
+                    color: 'error',
+                    text: '視聴ページへの移動に失敗',
+                });
+            });
         }
     }
 

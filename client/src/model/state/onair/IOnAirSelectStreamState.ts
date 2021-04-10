@@ -19,4 +19,5 @@ export default interface IOnAirSelectStreamState {
     updateStreamConfig(): void;
     getM2TSURL(): string | null;
     getM2TPlayListURL(): string | null;
+    isM2TSUnconvertedMode(): boolean;
 }
