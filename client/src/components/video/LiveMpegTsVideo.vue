@@ -37,7 +37,7 @@ export default class LiveMpegTsVideo extends BaseVideo {
      */
     protected initVideoSetting(): void {
         // 対応しているか確認
-        if (Mpegts.isSupported() === false) {
+        if (Mpegts.isSupported() === false || Mpegts.getFeatureList().msePlayback === false) {
             this.snackbarState.open({
                 color: 'error',
                 text: '非対応ブラウザーです。',
@@ -59,20 +59,6 @@ export default class LiveMpegTsVideo extends BaseVideo {
             isLive: true,
             url: this.videoSrc,
         });
-
-        // 再生エラー
-        if (Mpegts.getFeatureList().msePlayback === false) {
-            this.mepgtsPlayer.unload();
-            this.mepgtsPlayer.destroy();
-            this.mepgtsPlayer = null;
-
-            this.snackbarState.open({
-                color: 'error',
-                text: '再生に失敗しました',
-            });
-
-            throw new Error('msePlaybackError');
-        }
 
         this.mepgtsPlayer.attachMediaElement(this.video);
         this.mepgtsPlayer.load();

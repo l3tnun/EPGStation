@@ -103,6 +103,7 @@ export default class OnAirSelectStream extends Vue {
             if (
                 this.storageModel.getSavedValue().isPreferredPlayingLiveM2TSOnWeb === false ||
                 Mpegts.isSupported() === false ||
+                Mpegts.getFeatureList().msePlayback === false ||
                 this.dialogState.isM2TSUnconvertedMode() === true
             ) {
                 // URL Scheme による再生
