@@ -66,6 +66,11 @@ export default class WatchOnAir extends Vue {
                         channelId: this.watchParam.channel,
                         mode: this.watchParam.mode,
                     };
+                } else if (this.watchParam.type === 'm2ts') {
+                    (this.videoParam as VideoParam.LiveMpegTsVideoParam) = {
+                        type: 'LiveMpegTs',
+                        src: `./api/streams/live/${this.watchParam.channel}/m2ts?mode=${this.watchParam.mode}`,
+                    };
                 } else {
                     (this.videoParam as VideoParam.NormalVideoParam) = {
                         type: 'Normal',

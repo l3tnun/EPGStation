@@ -1,6 +1,7 @@
 import * as apid from '../../../../api';
+import BaseVide from './BaseVideo';
 
-export type VideoType = 'Normal' | 'RecordedStreaming' | 'LiveHLS' | 'RecordedHLS';
+export type VideoType = 'Normal' | 'RecordedStreaming' | 'LiveHLS' | 'RecordedHLS' | 'LiveMpegTs';
 
 export interface BaseVideoParam {
     type: VideoType;
@@ -30,4 +31,9 @@ export interface RecordedHLSParam extends BaseVideoParam {
     recordedId: apid.RecordedId;
     videoFileId: apid.VideoFileId;
     mode: number;
+}
+
+export interface LiveMpegTsVideoParam extends BaseVideoParam {
+    type: 'LiveMpegTs';
+    src: string;
 }
