@@ -284,6 +284,19 @@ export default class ReserveDB implements IReserveDB {
             return option.times.indexOf(time) === i;
         });
 
+        // option.times の連続した時間を一つにまとめる
+        option.times = option.times.reduce((acc, cur, index) => {
+            if (index == 0) {
+                return acc;
+            }
+            if (acc[acc.length - 1].endAt == cur.startAt) {
+                acc[acc.length - 1].endAt = cur.endAt;
+            } else {
+                acc.push(cur);
+            }
+            return acc;
+        }, option.times.slice(0, 1));
+
         // times
         let timesQuery = '';
         const timesValues: any = {};
