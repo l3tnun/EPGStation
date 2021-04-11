@@ -37,7 +37,7 @@ export default class LiveMpegTsVideo extends BaseVideo {
      */
     protected initVideoSetting(): void {
         // 対応しているか確認
-        if (Mpegts.isSupported() === false || Mpegts.getFeatureList().msePlayback === false) {
+        if (Mpegts.isSupported() === false || Mpegts.getFeatureList().mseLivePlayback === false) {
             this.snackbarState.open({
                 color: 'error',
                 text: '非対応ブラウザーです。',
