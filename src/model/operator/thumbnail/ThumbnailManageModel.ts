@@ -119,44 +119,61 @@ export default class ThumbnailManageModel implements IThumbnailManageModel {
             child.stdout.on('data', () => {});
         }
 
-        return new Promise<void>((resolve: () => void, reject: (err: Error) => void) => {
+        // プロセス終了処理
+        const endProcessing = async (code: number | null): Promise<boolean> => {
+            if (code !== 0) {
+                this.log.system.error(`create thumbnail cmd error: ${code}`);
+                return false;
+            }
+            this.log.system.info(`create thumbnail: ${videoFileId}, ${output}`);
+
+            // add DB
+            const thumbnail = new Thumbnail();
+            thumbnail.filePath = fileName;
+            thumbnail.recordedId = videoFile.recordedId;
+            try {
+                await this.thumbnailDB.insertOnce(thumbnail);
+            } catch (err) {
+                this.log.system.error(`thumbnail add DB error: ${videoFileId}`);
+                this.log.system.error(err);
+
+                // delete thumbnail file
+                await FileUtil.unlink(output).catch(err => {
+                    this.log.system.error(`thumbnail delete error: ${videoFileId}, ${output}`);
+                    this.log.system.error(err);
+                });
+                return false;
+            }
+
+            // event emit
+            this.thumbnailEvent.emitAdded(videoFileId, videoFile.recordedId);
+
+            return true;
+        };
+
+        return new Promise<void>(async (resolve: () => void, reject: (err: Error) => void) => {
             child.on('exit', async code => {
-                if (code !== 0) {
+                if ((await endProcessing(code)) === true) {
+                    resolve();
+                } else {
                     reject(new Error('CreateThumbnailExitError'));
                 }
-                this.log.system.info(`create thumbnail: ${videoFileId}, ${output}`);
-
-                // add DB
-                const thumbnail = new Thumbnail();
-                thumbnail.filePath = fileName;
-                thumbnail.recordedId = videoFile.recordedId;
-                try {
-                    await this.thumbnailDB.insertOnce(thumbnail);
-                } catch (err) {
-                    this.log.system.error(`thumbnail add DB error: ${videoFileId}`);
-                    this.log.system.error(err);
-
-                    // delete thumbnail file
-                    await FileUtil.unlink(output).catch(err => {
-                        this.log.system.error(`thumbnail delete error: ${videoFileId}, ${output}`);
-                        this.log.system.error(err);
-                    });
-
-                    reject(new Error('FailedToAdThumbnailToDB'));
-
-                    return;
-                }
-
-                resolve();
-
-                // event emit
-                this.thumbnailEvent.emitAdded(videoFileId, videoFile.recordedId);
             });
 
             child.on('error', err => {
                 this.log.system.error(`create thumbnail failed: ${videoFileId}`);
                 reject(err);
             });
+
+            // プロセスの即時終了対応
+            if (ProcessUtil.isExited(child) === true) {
+                child.removeAllListeners();
+                if ((await endProcessing(child.exitCode)) === true) {
+                    resolve();
+                } else {
+                    reject(new Error('CreateThumbnailExitError'));
+                }
+            }
         });
     }
 

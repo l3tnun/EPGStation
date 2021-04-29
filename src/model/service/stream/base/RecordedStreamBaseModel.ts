@@ -135,6 +135,12 @@ export default abstract class RecordedStreamBaseModel
                 this.fileStream.pipe(this.streamProcess.stdin);
             }
         }
+
+        // プロセスが即時終了していた場合
+        if (ProcessUtil.isExited(this.streamProcess) === true) {
+            this.streamProcess.removeAllListeners();
+            this.emitExitStream();
+        }
     }
 
     /**

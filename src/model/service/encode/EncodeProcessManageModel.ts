@@ -235,6 +235,17 @@ class EncodeProcessManageModel implements IEncodeProcessManageModel {
             child.stderr.on('data', () => {});
         }
 
+        // プロセスが即時終了していた場合の対処
+        if (ProcessUtil.isExited(child) === true) {
+            setTimeout(async () => {
+                await this.killChild(processId, true).catch(err => {
+                    this.log.encode.error(err);
+                });
+                this.eventsNotify(processId);
+                child.removeAllListeners();
+            }, 50);
+        }
+
         return {
             child: child,
             priority: option.priority,

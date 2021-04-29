@@ -140,6 +140,12 @@ export default abstract class LiveStreamBaseModel
                 // stream 有効チェク開始
                 this.startCheckStreamEnable(streamId);
             }
+
+            // プロセスが即時終了していた場合
+            if (ProcessUtil.isExited(this.streamProcess) === true) {
+                this.streamProcess.removeAllListeners();
+                this.emitExitStream();
+            }
         } else {
             // stream 停止処理時にイベントを発行する
             this.stream.on('close', () => {

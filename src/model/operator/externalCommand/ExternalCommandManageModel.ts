@@ -201,10 +201,21 @@ export default class ExternalCommandManageModel implements IExternalCommandManag
             });
 
             child.on('error', err => {
-                this.log.system.info(`failed: ${cmd}`);
+                this.log.system.error(`failed: ${cmd}`);
                 this.log.system.error(err);
                 resolve();
             });
+
+            // プロセスの即時終了対応
+            if (ProcessUtil.isExited(child) === true) {
+                child.removeAllListeners();
+                if (child.exitCode === 0) {
+                    this.log.system.info(`finish: ${cmd}`);
+                } else {
+                    this.log.system.error(`failed: ${cmd}`);
+                }
+                resolve();
+            }
         });
     }
 
@@ -261,6 +272,17 @@ export default class ExternalCommandManageModel implements IExternalCommandManag
                 this.log.system.error(String(err));
                 resolve();
             });
+
+            // プロセスの即時終了対応
+            if (ProcessUtil.isExited(child) === true) {
+                child.removeAllListeners();
+                if (child.exitCode === 0) {
+                    this.log.system.info(`finish: ${cmd}`);
+                } else {
+                    this.log.system.error(`failed: ${cmd}`);
+                }
+                resolve();
+            }
         });
     }
 }

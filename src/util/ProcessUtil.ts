@@ -81,6 +81,15 @@ namespace ProcessUtil {
             }),
         };
     };
+
+    /**
+     * プロセスが終了しているか
+     * @param child ChildProcess
+     * @return boolean 終了していれば true を返す
+     */
+    export const isExited = (child: ChildProcess): boolean => {
+        return child.exitCode !== null;
+    };
 }
 
 export default ProcessUtil;

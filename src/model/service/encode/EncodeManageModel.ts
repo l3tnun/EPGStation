@@ -347,80 +347,102 @@ class EncodeManageModel implements IEncodeManageModel {
 
         // プロセス終了時に runningQueue からの削除 & emitNeedsCheckQueue() を実行する
         childProcess.on('exit', async (code, signal) => {
-            // exit code
-            this.log.encode.info(`exit code: ${code}, signal: ${signal}`);
+            this.childEndProcessing(code, signal, outputFilePath, queueItem);
+        });
 
-            // 使用済みファイル名から削除
-            if (outputFilePath !== null) {
-                delete this.usedFileNameIndex[outputFilePath];
+        // プロセスの即時終了対応
+        if (ProcessUtil.isExited(childProcess) === true) {
+            this.childEndProcessing(childProcess.exitCode, childProcess.signalCode, outputFilePath, queueItem);
+            childProcess.removeAllListeners();
+        }
+    }
+
+    /**
+     * エンコードプロセス終了処理
+     * @param code number | null
+     * @param signal NodeJS.Signals | null
+     * @param outputFilePath 出力先をファイルパス
+     * @param queueItem EncodeQueueItem
+     */
+    private async childEndProcessing(
+        code: number | null,
+        signal: NodeJS.Signals | null,
+        outputFilePath: string | null,
+        queueItem: EncodeQueueItem,
+    ): Promise<void> {
+        // exit code
+        this.log.encode.info(`exit code: ${code}, signal: ${signal}`);
+
+        // 使用済みファイル名から削除
+        if (outputFilePath !== null) {
+            delete this.usedFileNameIndex[outputFilePath];
+        }
+
+        let isError = true;
+        const encodingQueueItem = this.getRunnginQueueItem(queueItem.encodeId);
+        if (typeof encodingQueueItem === 'undefined') {
+            this.log.encode.fatal(`encode item is removed: ${queueItem.recordedId}`);
+        } else if (encodingQueueItem.isCanceld === true) {
+            // キャンセルされた
+            this.log.encode.info(`canceld encode: ${queueItem.encodeId}`);
+        } else if (code !== 0) {
+            // エンコードが正常終了しなかった
+            this.log.encode.error(`encode failed: ${queueItem.encodeId} ${outputFilePath}`);
+        } else {
+            // エンコード正常終了
+            this.log.encode.info(`Successfully encod: ${queueItem.encodeId} ${outputFilePath}`);
+
+            isError = false;
+
+            // 終了通知 DB に登録を依頼
+            const fileName = outputFilePath === null ? null : path.basename(outputFilePath);
+            this.log.encode.info(
+                `rmOrg: ${queueItem.removeOriginal}, hasSam: ${this.hasSamVideoFileIdItem(
+                    queueItem.sourceVideoFileId,
+                    queueItem.encodeId,
+                )}`,
+            );
+            if (
+                queueItem.removeOriginal === true &&
+                this.hasSamVideoFileIdItem(queueItem.sourceVideoFileId, queueItem.encodeId) === true
+            ) {
+                // queue に削除予定の videofile が存在するので、削除しないように false にする
+                queueItem.removeOriginal = false;
             }
 
-            let isError = true;
-            const encodingQueueItem = this.getRunnginQueueItem(queueItem.encodeId);
-            if (typeof encodingQueueItem === 'undefined') {
-                this.log.encode.fatal(`encode item is removed: ${queueItem.recordedId}`);
-            } else if (encodingQueueItem.isCanceld === true) {
-                // キャンセルされた
-                this.log.encode.info(`canceld encode: ${queueItem.encodeId}`);
-            } else if (code !== 0) {
-                // エンコードが正常終了しなかった
-                this.log.encode.error(`encode failed: ${queueItem.encodeId} ${outputFilePath}`);
-            } else {
-                // エンコード正常終了
-                this.log.encode.info(`Successfully encod: ${queueItem.encodeId} ${outputFilePath}`);
+            this.encodeEvent.emitFinishEncode({
+                recordedId: queueItem.recordedId,
+                videoFileId: queueItem.sourceVideoFileId,
+                parentDirName: queueItem.parentDir,
+                filePath:
+                    outputFilePath === null || fileName === null
+                        ? null
+                        : typeof queueItem.directory === 'undefined'
+                        ? fileName
+                        : path.join(queueItem.directory, fileName),
+                fullOutputPath: outputFilePath,
+                mode: queueItem.mode,
+                removeOriginal: queueItem.removeOriginal,
+            });
+        }
 
-                isError = false;
+        if (isError === true) {
+            // 出力ファイルを削除
+            if (outputFilePath !== null) {
+                this.log.encode.info(`delete encode output file: ${outputFilePath}`);
+                await Util.sleep(1000);
 
-                // 終了通知 DB に登録を依頼
-                const fileName = outputFilePath === null ? null : path.basename(outputFilePath);
-                this.log.encode.info(
-                    `rmOrg: ${queueItem.removeOriginal}, hasSam: ${this.hasSamVideoFileIdItem(
-                        queueItem.sourceVideoFileId,
-                        queueItem.encodeId,
-                    )}`,
-                );
-                if (
-                    queueItem.removeOriginal === true &&
-                    this.hasSamVideoFileIdItem(queueItem.sourceVideoFileId, queueItem.encodeId) === true
-                ) {
-                    // queue に削除予定の videofile が存在するので、削除しないように false にする
-                    queueItem.removeOriginal = false;
-                }
-
-                this.encodeEvent.emitFinishEncode({
-                    recordedId: queueItem.recordedId,
-                    videoFileId: queueItem.sourceVideoFileId,
-                    parentDirName: queueItem.parentDir,
-                    filePath:
-                        outputFilePath === null || fileName === null
-                            ? null
-                            : typeof queueItem.directory === 'undefined'
-                            ? fileName
-                            : path.join(queueItem.directory, fileName),
-                    fullOutputPath: outputFilePath,
-                    mode: queueItem.mode,
-                    removeOriginal: queueItem.removeOriginal,
+                await FileUtil.unlink(outputFilePath).catch(err => {
+                    this.log.encode.error(`delete encode output file failed: ${outputFilePath}`);
+                    this.log.encode.error(err);
                 });
             }
 
-            if (isError === true) {
-                // 出力ファイルを削除
-                if (outputFilePath !== null) {
-                    this.log.encode.info(`delete encode output file: ${outputFilePath}`);
-                    await Util.sleep(1000);
+            // エラー通知
+            this.encodeEvent.emitErrorEncode();
+        }
 
-                    await FileUtil.unlink(outputFilePath).catch(err => {
-                        this.log.encode.error(`delete encode output file failed: ${outputFilePath}`);
-                        this.log.encode.error(err);
-                    });
-                }
-
-                // エラー通知
-                this.encodeEvent.emitErrorEncode();
-            }
-
-            this.finalize(queueItem.encodeId);
-        });
+        this.finalize(queueItem.encodeId);
     }
 
     /**
