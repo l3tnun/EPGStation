@@ -6,8 +6,8 @@ export default interface IReservationManageModel {
     getBroadcastStatus(): apid.BroadcastStatus;
     add(option: apid.ManualReserveOption): Promise<apid.ReserveId>;
     update(reserveId: apid.ReserveId, isSuppressLog?: boolean): Promise<void>;
-    updateRule(ruleId: apid.RuleId, isSuppressLog?: boolean): Promise<void>;
-    updateAll(): Promise<void>;
+    updateRule(ruleId: apid.RuleId, isSuppressLog?: boolean, isFirstUpdate?: boolean): Promise<void>;
+    updateAll(isFirstUpdate?: boolean): Promise<void>;
     cancel(reserveId: apid.ReserveId): Promise<void>;
     removeSkip(reserveId: apid.ReserveId): Promise<void>;
     removeOverlap(reserveId: apid.ReserveId): Promise<void>;

@@ -502,8 +502,13 @@ class ReservationManageModel implements IReservationManageModel {
      * ルール変更
      * @param ruleId: rule id
      * @param isSuppressLog ログ出力を抑えるか
+     * @param isFirstUpdate: boolean 初回更新か?
      */
-    public async updateRule(ruleId: apid.RuleId, isSuppressLog: boolean = false): Promise<void> {
+    public async updateRule(
+        ruleId: apid.RuleId,
+        isSuppressLog: boolean = false,
+        isFirstUpdate: boolean = false,
+    ): Promise<void> {
         // 実行権取得
         const exeId = await this.executeManagementModel.getExecution(
             ReservationManageModel.RULE_UPDATE_RESERVE_PRIORITY,
@@ -691,6 +696,14 @@ class ReservationManageModel implements IReservationManageModel {
         // 古いルール予約の時刻位置取得
         for (const reserve of oldRuleReserves) {
             times.push({ startAt: reserve.startAt, endAt: reserve.endAt });
+        }
+
+        // 初回更新かつ時刻指定予約である場合は
+        // createDiff 実行時に差分を出して録画タイマーを生成するように強制する
+        if (isFirstUpdate === true && rule?.isTimeSpecification === true) {
+            for (const r of oldRuleReserves) {
+                r.ruleUpdateCnt = -1; // ruleUpdateCnt は 0 以上しか存在しないので強制的に差分となる
+            }
         }
 
         // 新旧の予約での差分を生成
@@ -951,8 +964,9 @@ class ReservationManageModel implements IReservationManageModel {
 
     /**
      * 全ての予約情報の更新
+     * @param isFirstUpdate: boolean 初回更新か
      */
-    public async updateAll(): Promise<void> {
+    public async updateAll(isFirstUpdate: boolean = false): Promise<void> {
         this.log.system.info('all reservation update start');
 
         const isSuppressLog = this.config.isSuppressReservesUpdateAllLog;
@@ -979,7 +993,7 @@ class ReservationManageModel implements IReservationManageModel {
 
         // ルール予約更新
         for (const ruleId of ruleIds) {
-            await this.updateRule(ruleId, isSuppressLog).catch(err => {
+            await this.updateRule(ruleId, isSuppressLog, isFirstUpdate).catch(err => {
                 this.log.system.error(err);
             });
             await Util.sleep(10);

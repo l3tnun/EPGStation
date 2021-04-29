@@ -39,6 +39,8 @@ export default class EventSetter implements IEventSetter {
     private ipc: IIPCServer;
     private config: IConfigFile;
 
+    private isFirstreserveationUpdate: boolean = true;
+
     constructor(
         @inject('ILoggerModel') logger: ILoggerModel,
         @inject('IEPGUpdateEvent') epgUpdateEvent: IEPGUpdateEvent,
@@ -84,7 +86,8 @@ export default class EventSetter implements IEventSetter {
         this.epgUpdateEvent.setUpdated(async () => {
             await this.recordedManage.historyCleanup().catch(() => {});
 
-            await this.reservationManage.updateAll();
+            await this.reservationManage.updateAll(this.isFirstreserveationUpdate);
+            this.isFirstreserveationUpdate = false;
         });
 
         // ルール追加イベント
