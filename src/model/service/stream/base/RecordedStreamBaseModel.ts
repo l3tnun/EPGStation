@@ -2,7 +2,7 @@ import { ChildProcess, exec } from 'child_process';
 import * as fs from 'fs';
 import { inject, injectable } from 'inversify';
 import internal, { Readable } from 'stream';
-import UnrecognizeTransform from 'arib-subtitle-unrecognizer';
+import ID3MetadataTransform from 'arib-subtitle-timedmetadater';
 import * as apid from '../../../../../api';
 import * as fst from '../../../../lib/TailStream';
 import ProcessUtil from '../../../../util/ProcessUtil';
@@ -27,7 +27,7 @@ export default abstract class RecordedStreamBaseModel
     private videoUtil: IVideoUtil;
 
     private fileStream: Readable | null = null;
-    private unrecognizeTransform: UnrecognizeTransform | null = null;
+    private id3MetadataTransoform: ID3MetadataTransform | null = null;
     private streamProcess: ChildProcess | null = null;
     private videoFilePath: string | null = null;
     private videoFileInfo: VideoFileInfo | null = null;
@@ -127,10 +127,12 @@ export default abstract class RecordedStreamBaseModel
 
         // パイプ処理
         if (this.streamProcess.stdin !== null && this.fileStream !== null) {
-            if (this.useSubtitleUnrecognizerCmd === true) {
-                this.unrecognizeTransform = new UnrecognizeTransform();
-                this.fileStream.pipe(this.unrecognizeTransform);
-                this.unrecognizeTransform.pipe(this.streamProcess.stdin);
+            // ts が入力かつ、HLS 配信の場合は arib-subtitle-timedmetadater を通す
+            if (this.videoFileType === 'ts' && this.getStreamType() === 'RecordedHLS') {
+                this.log.stream.info('init id3MetadataTransoform');
+                this.id3MetadataTransoform = new ID3MetadataTransform();
+                this.fileStream.pipe(this.id3MetadataTransoform);
+                this.id3MetadataTransoform.pipe(this.streamProcess.stdin);
             } else {
                 this.fileStream.pipe(this.streamProcess.stdin);
             }
@@ -274,9 +276,9 @@ export default abstract class RecordedStreamBaseModel
             this.fileStream.destroy();
         }
 
-        if (this.unrecognizeTransform !== null) {
-            this.unrecognizeTransform.unpipe();
-            this.unrecognizeTransform.destroy();
+        if (this.id3MetadataTransoform !== null) {
+            this.id3MetadataTransoform.unpipe();
+            this.id3MetadataTransoform.destroy();
         }
 
         if (this.streamProcess !== null) {

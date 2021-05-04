@@ -2,7 +2,7 @@ import { ChildProcess } from 'child_process';
 import * as http from 'http';
 import { inject, injectable } from 'inversify';
 import internal from 'stream';
-import UnrecognizeTransform from 'arib-subtitle-unrecognizer';
+import ID3MetadataTransform from 'arib-subtitle-timedmetadater';
 import * as apid from '../../../../../api';
 import ProcessUtil from '../../../../util/ProcessUtil';
 import IConfigFile from '../../../IConfigFile';
@@ -23,7 +23,7 @@ export default abstract class LiveStreamBaseModel
     private stream: http.IncomingMessage | null = null;
     private streamProcess: ChildProcess | null = null;
     private mirakurunClientModel: IMirakurunClientModel;
-    private unrecognizeTransform: UnrecognizeTransform | null = null;
+    private id3MetadataTransoform: ID3MetadataTransform | null = null;
 
     constructor(
         @inject('IConfiguration') configure: IConfiguration,
@@ -123,10 +123,11 @@ export default abstract class LiveStreamBaseModel
 
             // パイプ処理
             if (this.streamProcess.stdin !== null) {
-                if (this.useSubtitleUnrecognizerCmd === true) {
-                    this.unrecognizeTransform = new UnrecognizeTransform();
-                    this.stream.pipe(this.unrecognizeTransform);
-                    this.unrecognizeTransform.pipe(this.streamProcess.stdin);
+                // HLS 配信の場合は arib-subtitle-timedmetadater を通す
+                if (this.getStreamType() === 'LiveHLS') {
+                    this.id3MetadataTransoform = new ID3MetadataTransform();
+                    this.stream.pipe(this.id3MetadataTransoform);
+                    this.id3MetadataTransoform.pipe(this.streamProcess.stdin);
                 } else {
                     this.stream.pipe(this.streamProcess.stdin);
                 }
@@ -200,9 +201,9 @@ export default abstract class LiveStreamBaseModel
             this.stream.destroy();
         }
 
-        if (this.unrecognizeTransform !== null) {
-            this.unrecognizeTransform.unpipe();
-            this.unrecognizeTransform.destroy();
+        if (this.id3MetadataTransoform !== null) {
+            this.id3MetadataTransoform.unpipe();
+            this.id3MetadataTransoform.destroy();
         }
 
         if (this.streamProcess !== null) {
