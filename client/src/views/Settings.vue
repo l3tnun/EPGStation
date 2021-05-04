@@ -310,7 +310,7 @@ import INavigationState from '@/model/state/navigation/INavigationState';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
 import { ISettingStorageModel, GuideViewMode, B24RenderType } from '@/model/storage/setting/ISettingStorageModel';
 import { Component, Vue, Watch } from 'vue-property-decorator';
-import Hls from 'hls-b24.js';
+import Hls from 'hls.js';
 import IColorThemeState from '@/model/state/IColorThemeState';
 import Mpegts from 'mpegts.js';
 

@@ -1,18 +1,11 @@
-import * as b24js from 'b24.js';
-import Hls from 'hls-b24.js';
+import Hls from 'hls.js';
 import * as aribb24js from 'aribb24.js';
-import { inject, injectable } from 'inversify';
+import { injectable } from 'inversify';
 import IB24RenderState from './IB24RenderState';
-import { ISettingStorageModel } from '@/model/storage/setting/ISettingStorageModel';
 
 @injectable()
 export default class B24RenderState implements IB24RenderState {
-    private settingStorageModel: ISettingStorageModel;
-    private b24Renderer: aribb24js.CanvasB24Renderer | b24js.WebVTTRenderer | null = null;
-
-    constructor(@inject('ISettingStorageModel') settingStorageModel: ISettingStorageModel) {
-        this.settingStorageModel = settingStorageModel;
-    }
+    private b24Renderer: aribb24js.CanvasID3Renderer | null = null;
 
     /**
      * set b24 subtitle render
@@ -22,40 +15,8 @@ export default class B24RenderState implements IB24RenderState {
     public init(video: HTMLVideoElement, hls: Hls): void {
         this.destroy();
 
-        const renderType = this.settingStorageModel.getSavedValue().b24RenderType;
-
-        // b24 render を使用する設定ではない場合は何もしない
-        if (renderType === 'default') {
-            return;
-        }
-
-        if (renderType === 'aribb24.js') {
-            this.b24Renderer = new aribb24js.CanvasB24Renderer({});
-            this.b24Renderer.attachMedia(video);
-        } else if (renderType === 'b24.js') {
-            this.b24Renderer = new b24js.WebVTTRenderer();
-            this.b24Renderer.init().then(() => {
-                if (this.b24Renderer) {
-                    this.b24Renderer.attachMedia(video);
-                }
-            });
-        }
-
-        if (this.b24Renderer === null) {
-            console.error('unknown b24 render type');
-
-            return;
-        }
-
-        hls.on(Hls.Events.FRAG_PARSING_PRIVATE_DATA, (_event, data) => {
-            if (this.b24Renderer === null) {
-                return;
-            }
-
-            for (const sample of data.samples) {
-                this.b24Renderer.pushData(sample.pid, sample.data, sample.pts);
-            }
-        });
+        this.b24Renderer = new aribb24js.CanvasID3Renderer({});
+        this.b24Renderer.attachMedia(video);
     }
 
     /**

@@ -9,7 +9,7 @@ import ILiveHLSVideoState from '@/model/state/onair/ILiveHLSVideoState';
 import IB24RenderState from '@/model/state/recorded/streaming/IB24RenderState';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
 import UaUtil from '@/util/UaUtil';
-import Hls from 'hls-b24.js';
+import Hls from 'hls.js';
 import { Component, Prop, Watch } from 'vue-property-decorator';
 import * as apid from '../../../../api';
 
