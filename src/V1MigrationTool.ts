@@ -549,6 +549,7 @@ class V1MigrationTool {
             this.log.system.info(`old recordedId: ${oldEncodeItem.recordedId} is not registered in database`);
             throw new Error('OldRecordedIdError');
         }
+        newEncodedItem.size = oldEncodeItem.filesize === null ? 0 : oldEncodeItem.filesize;
         newEncodedItem.recordedId = recordedId;
 
         return newEncodedItem;
