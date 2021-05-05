@@ -20,6 +20,7 @@ import container from '@/model/ModelContainer';
 import ISocketIOModel from '@/model/socketio/ISocketIOModel';
 import IScrollPositionState from '@/model/state/IScrollPositionState';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
+import Util from '@/util/Util';
 import { Component, Vue, Watch } from 'vue-property-decorator';
 import * as apid from '../../../api';
 
@@ -69,7 +70,7 @@ export default class WatchOnAir extends Vue {
                 } else if (this.watchParam.type === 'm2tsll') {
                     (this.videoParam as VideoParam.LiveMpegTsVideoParam) = {
                         type: 'LiveMpegTs',
-                        src: `./api/streams/live/${this.watchParam.channel}/m2tsll?mode=${this.watchParam.mode}`,
+                        src: `${window.location.origin}${Util.getSubDirectory()}/api/streams/live/${this.watchParam.channel}/m2tsll?mode=${this.watchParam.mode}`,
                     };
                 } else {
                     (this.videoParam as VideoParam.NormalVideoParam) = {
