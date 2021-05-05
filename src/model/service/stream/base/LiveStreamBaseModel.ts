@@ -125,6 +125,7 @@ export default abstract class LiveStreamBaseModel
             if (this.streamProcess.stdin !== null) {
                 // HLS 配信の場合は arib-subtitle-timedmetadater を通す
                 if (this.getStreamType() === 'LiveHLS') {
+                    this.log.stream.info('use arib-subtitle-timedmetadater');
                     this.id3MetadataTransoform = new ID3MetadataTransform();
                     this.stream.pipe(this.id3MetadataTransoform);
                     this.id3MetadataTransoform.pipe(this.streamProcess.stdin);

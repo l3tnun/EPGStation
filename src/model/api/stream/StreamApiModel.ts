@@ -17,12 +17,10 @@ import IStreamApiModel, { StreamResponse } from './IStreamApiModel';
 
 interface StreamConfig {
     cmd?: string;
-    useSubtitleUnrecognizerCmd: boolean;
 }
 
 interface RecordedStreamConfig {
     cmd: string;
-    useSubtitleUnrecognizerCmd: boolean;
 }
 
 @injectable()
@@ -81,7 +79,6 @@ export default class StreamApiModel implements IStreamApiModel {
                 cmd: conf.cmd,
             },
             option.mode,
-            conf.useSubtitleUnrecognizerCmd,
         );
 
         // manager に登録
@@ -109,7 +106,6 @@ export default class StreamApiModel implements IStreamApiModel {
                 cmd: conf.cmd,
             },
             option.mode,
-            conf.useSubtitleUnrecognizerCmd,
         );
 
         // manager に登録
@@ -137,7 +133,6 @@ export default class StreamApiModel implements IStreamApiModel {
                 cmd: conf.cmd,
             },
             option.mode,
-            conf.useSubtitleUnrecognizerCmd,
         );
 
         // manager に登録
@@ -165,7 +160,6 @@ export default class StreamApiModel implements IStreamApiModel {
                 cmd: conf.cmd,
             },
             option.mode,
-            conf.useSubtitleUnrecognizerCmd,
         );
 
         // manager に登録
@@ -193,7 +187,6 @@ export default class StreamApiModel implements IStreamApiModel {
 
         return {
             cmd: (config.stream.live.ts[type] as any)[mode].cmd,
-            useSubtitleUnrecognizerCmd: !!(config.stream.live.ts[type] as any)[mode].useSubtitleUnrecognizerCmd,
         };
     }
 
@@ -214,7 +207,6 @@ export default class StreamApiModel implements IStreamApiModel {
                 cmd: conf.cmd,
             },
             option.mode,
-            conf.useSubtitleUnrecognizerCmd,
         );
 
         // manager に登録
@@ -243,7 +235,6 @@ export default class StreamApiModel implements IStreamApiModel {
                 cmd: conf.cmd,
             },
             option.mode,
-            conf.useSubtitleUnrecognizerCmd,
         );
 
         // manager に登録
@@ -272,7 +263,6 @@ export default class StreamApiModel implements IStreamApiModel {
                 cmd: conf.cmd,
             },
             option.mode,
-            conf.useSubtitleUnrecognizerCmd,
         );
 
         // manager に登録
@@ -298,7 +288,6 @@ export default class StreamApiModel implements IStreamApiModel {
         }
 
         let cmd: string;
-        let useSubtitleUnrecognizerCmd = false;
         if (isEncodedVideo === true) {
             if (
                 typeof config.stream.recorded.encoded === 'undefined' ||
@@ -319,8 +308,6 @@ export default class StreamApiModel implements IStreamApiModel {
             }
 
             cmd = (config.stream.recorded.ts[type] as any)[option.mode].cmd;
-            useSubtitleUnrecognizerCmd = !!(config.stream.recorded.ts[type] as any)[option.mode]
-                .useSubtitleUnrecognizerCmd;
         }
 
         if (typeof cmd === 'undefined') {
@@ -329,7 +316,6 @@ export default class StreamApiModel implements IStreamApiModel {
 
         return {
             cmd: cmd,
-            useSubtitleUnrecognizerCmd: useSubtitleUnrecognizerCmd,
         };
     }
 
