@@ -41,6 +41,7 @@ import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
 import Mpegts from 'mpegts.js';
 import IOnAirSelectStreamState from '../../model/state/onair/IOnAirSelectStreamState';
 import Util from '../../util/Util';
+import UaUtil from '@/util/UaUtil';
 
 @Component({})
 export default class OnAirSelectStream extends Vue {
@@ -101,6 +102,7 @@ export default class OnAirSelectStream extends Vue {
             const url = this.dialogState.getM2TSURL();
 
             if (
+                (UaUtil.isiOS() === true && UaUtil.isiPadOS() === false) ||
                 this.storageModel.getSavedValue().isPreferredPlayingLiveM2TSOnWeb === false ||
                 Mpegts.isSupported() === false ||
                 Mpegts.getFeatureList().mseLivePlayback === false ||
