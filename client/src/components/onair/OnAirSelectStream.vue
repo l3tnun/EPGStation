@@ -41,7 +41,6 @@ import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
 import Mpegts from 'mpegts.js';
 import IOnAirSelectStreamState from '../../model/state/onair/IOnAirSelectStreamState';
 import Util from '../../util/Util';
-import UaUtil from '@/util/UaUtil';
 
 @Component({})
 export default class OnAirSelectStream extends Vue {
