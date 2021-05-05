@@ -95,6 +95,11 @@ export default class ConfigApiModel implements IConfigApiModel {
                             };
                         });
                     }
+                    if (typeof config.stream.live.ts.m2tsll !== 'undefined') {
+                        result.streamConfig.live.ts.m2tsll = config.stream.live.ts.m2tsll.map(c => {
+                            return c.name;
+                        });
+                    }
                     if (typeof config.stream.live.ts.webm !== 'undefined') {
                         result.streamConfig.live.ts.webm = config.stream.live.ts.webm.map(c => {
                             return c.name;

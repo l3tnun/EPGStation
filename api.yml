@@ -247,6 +247,11 @@ components:
                                     type: array
                                     items:
                                         $ref: '#/components/schemas/M2TSStreamParam'
+                                m2tsll:
+                                    description: ライブ M2TS Low Latency (mpegts.js 用) ストリーミング設定
+                                    type: array
+                                    items:
+                                        type: string
                                 webm:
                                     description: ライブ WebM ストリーミング設定
                                     type: array

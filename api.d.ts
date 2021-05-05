@@ -493,6 +493,7 @@ export interface Config {
         live?: {
             ts?: {
                 m2ts?: M2TSStreamParam[];
+                m2tsll?: string[];
                 webm?: string[];
                 mp4?: string[];
                 hls?: string[];
