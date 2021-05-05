@@ -9,6 +9,7 @@ import ISocketIOModel from '@/model/socketio/ISocketIOModel';
 import IB24RenderState from '@/model/state/recorded/streaming/IB24RenderState';
 import IRecordedHLSStreamingVideoState from '@/model/state/recorded/streaming/IRecordedHLSStreamingVideoState';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
+import HLSUtil from '@/util/HLSUtil';
 import UaUtil from '@/util/UaUtil';
 import Util from '@/util/Util';
 import Hls from 'hls.js';
@@ -165,7 +166,7 @@ export default class RecordedHLSStreamingVideo extends BaseVideo {
         }
 
         const videoSrc = `./streamfiles/stream${streamId}.m3u8`;
-        if (this.isSupportedHLSjs() === true) {
+        if (HLSUtil.isSupportedHLSjs() === false) {
             // hls.js 非対応
             this.setSrc(videoSrc);
             this.load();
@@ -202,10 +203,6 @@ export default class RecordedHLSStreamingVideo extends BaseVideo {
 
             this.b24RenderState.init(this.video, this.hls);
         }
-    }
-
-    private isSupportedHLSjs(): boolean {
-        return Hls.isSupported() === false || (UaUtil.isiOS() === true && UaUtil.isiPadOS() === false);
     }
 
     /**
@@ -300,7 +297,7 @@ export default class RecordedHLSStreamingVideo extends BaseVideo {
                 return;
             }
 
-            if (this.isSupportedHLSjs() === false) {
+            if (HLSUtil.isSupportedHLSjs() === true) {
                 this.video.currentTime = 0;
             }
             await Util.sleep(500);
