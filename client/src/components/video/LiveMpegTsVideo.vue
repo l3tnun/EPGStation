@@ -118,17 +118,6 @@ export default class LiveMpegTsVideo extends BaseVideo {
          * https://github.com/l3tnun/EPGStation/commit/352bf9a69fdd0848295afb91859e1a402b623212#commitcomment-50407815
          */
         this.mepgtsPlayer.on(Mpegts.Events.PES_PRIVATE_DATA_ARRIVED, data => {
-            if (data.stream_id === 0x8f) {
-                if (this.superimposeRenderer !== null) {
-                    let payload = this.parseMalformedPES(data.data);
-                    this.superimposeRenderer.pushData(data.pid, payload, payload.nearest_pts / 1000);
-                }
-            } else {
-                if (this.captionRenderer !== null) {
-                    this.captionRenderer.pushData(data.pid, data.data, data.pts / 1000);
-                }
-            }
-
             if (data.stream_id === 0xbd && data.data[0] === 0x80 && this.captionRenderer !== null) {
                 // private_stream_1, caption
                 this.captionRenderer.pushData(data.pid, data.data, data.pts / 1000);
