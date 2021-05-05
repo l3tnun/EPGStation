@@ -162,6 +162,7 @@ export default interface IConfigFile {
         live?: {
             ts?: {
                 m2ts?: StreamingCmd[];
+                m2tsll?: StreamingCmd[];
                 webm?: StreamingCmd[];
                 mp4?: StreamingCmd[];
                 hls?: StreamingCmd[];

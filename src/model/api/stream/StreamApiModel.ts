@@ -91,6 +91,33 @@ export default class StreamApiModel implements IStreamApiModel {
     }
 
     /**
+     * m2ts Low Latency (mpegts.js 用) 形式の live streaming を開始する
+     * @param option: apid.LiveStreamOption
+     * @return Promise<StreamResponse>
+     */
+    public async startLiveM2TsLLStream(option: apid.LiveStreamOption): Promise<StreamResponse> {
+        const conf = this.getTsLiveConfig('m2tsll', option.mode);
+
+        // stream 生成
+        const stream = await this.liveStreamProvider();
+        stream.setOption(
+            {
+                channelId: option.channelId,
+                cmd: conf.cmd,
+            },
+            option.mode,
+        );
+
+        // manager に登録
+        const streamId = await this.streamManageModel.start(stream);
+
+        return {
+            streamId: streamId,
+            stream: stream.getStream(),
+        };
+    }
+
+    /**
      * webm 形式の live streaming を開始する
      * @param option: apid.LiveStreamOption
      * @return Promise<StreamResponse>
@@ -168,11 +195,11 @@ export default class StreamApiModel implements IStreamApiModel {
 
     /**
      * config から指定した live stream コマンドを取り出す
-     * @param type: 'm2ts' | 'webm' | 'mp4' | 'hls'
+     * @param type: 'm2ts' | 'm2tsll' | 'webm' | 'mp4' | 'hls'
      * @param mode: number config stream index 番号
      * @return Promise<StreamConfig>
      */
-    private getTsLiveConfig(type: 'm2ts' | 'webm' | 'mp4' | 'hls', mode: number): StreamConfig {
+    private getTsLiveConfig(type: 'm2ts' | 'm2tsll' | 'webm' | 'mp4' | 'hls', mode: number): StreamConfig {
         const config = this.configure.getConfig();
 
         if (
