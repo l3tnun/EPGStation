@@ -93,9 +93,9 @@ export default class LiveHLSVideo extends BaseVideo {
                     await this.video.play().catch(err => {});
                 }
             });
-
-            this.b24RenderState.init(this.video, this.hls);
         }
+
+        this.b24RenderState.init(this.video);
     }
 
     /**

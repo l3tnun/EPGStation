@@ -200,9 +200,9 @@ export default class RecordedHLSStreamingVideo extends BaseVideo {
                     }, 100);
                 }
             });
-
-            this.b24RenderState.init(this.video, this.hls);
         }
+
+        this.b24RenderState.init(this.video);
     }
 
     /**

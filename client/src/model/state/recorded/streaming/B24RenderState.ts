@@ -12,7 +12,7 @@ export default class B24RenderState implements IB24RenderState {
      * @param video: HTMLVideoElement
      * @param hls: Hls
      */
-    public init(video: HTMLVideoElement, hls: Hls): void {
+    public init(video: HTMLVideoElement): void {
         this.destroy();
 
         this.b24Renderer = new aribb24js.CanvasID3Renderer({});
