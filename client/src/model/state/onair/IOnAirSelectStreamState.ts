@@ -1,6 +1,6 @@
 import * as apid from '../../../../../api';
 
-export type LiveStreamType = 'M2TS' | 'WebM' | 'MP4' | 'HLS';
+export type LiveStreamType = 'M2TS' | 'M2TS-LL' | 'WebM' | 'MP4' | 'HLS';
 
 export interface StreamConfigItem {
     text: string;
@@ -19,5 +19,4 @@ export default interface IOnAirSelectStreamState {
     updateStreamConfig(): void;
     getM2TSURL(): string | null;
     getM2TPlayListURL(): string | null;
-    isM2TSUnconvertedMode(): boolean;
 }

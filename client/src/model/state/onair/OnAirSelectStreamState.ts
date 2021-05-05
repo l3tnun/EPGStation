@@ -55,6 +55,10 @@ export default class OnAirSelectStreamState implements IOnAirSelectStreamState {
                     return c.name;
                 });
             }
+            if (typeof config.streamConfig.live.ts.m2tsll !== 'undefined' && config.streamConfig.live.ts.m2tsll.length > 0) {
+                this.streamTypes.push('M2TS-LL');
+                this.streamConfig['M2TS-LL'] = config.streamConfig.live.ts.m2tsll;
+            }
             if (typeof config.streamConfig.live.ts.webm !== 'undefined' && config.streamConfig.live.ts.webm.length > 0) {
                 this.streamTypes.push('WebM');
                 this.streamConfig['WebM'] = config.streamConfig.live.ts.webm;
@@ -183,30 +187,5 @@ export default class OnAirSelectStreamState implements IOnAirSelectStreamState {
         }
 
         return `/api/streams/live/${channel.id.toString(10)}/m2ts/playlist?mode=${this.selectedStreamConfig}`;
-    }
-
-    /**
-     * 選択された m2rs 形式の設定が無変換か判定する
-     * @return boolean true なら無変換
-     */
-    public isM2TSUnconvertedMode(): boolean {
-        if (typeof this.selectedStreamConfig === 'undefined') {
-            throw new Error('selectedStreamConfigIsUndefined');
-        }
-
-        const config = this.serverConfig.getConfig();
-        if (
-            config == null ||
-            typeof config.streamConfig === 'undefined' ||
-            typeof config.streamConfig.live === 'undefined' ||
-            typeof config.streamConfig.live.ts === 'undefined' ||
-            typeof config.streamConfig.live.ts.m2ts === 'undefined' ||
-            typeof config.streamConfig.live.ts.m2ts[this.selectedStreamConfig] === 'undefined'
-        ) {
-            // 指定されたパラメータが存在しない
-            throw new Error('ParameterIsNotFound');
-        }
-
-        return config.streamConfig.live.ts.m2ts[this.selectedStreamConfig].isUnconverted;
     }
 }

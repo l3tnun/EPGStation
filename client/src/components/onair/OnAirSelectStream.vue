@@ -99,26 +99,25 @@ export default class OnAirSelectStream extends Vue {
      */
     public async view(): Promise<void> {
         if (this.dialogState.selectedStreamType === 'M2TS') {
-            const url = this.dialogState.getM2TSURL();
-
-            if (
-                (UaUtil.isiOS() === true && UaUtil.isiPadOS() === false) ||
-                this.storageModel.getSavedValue().isPreferredPlayingLiveM2TSOnWeb === false ||
-                Mpegts.isSupported() === false ||
-                Mpegts.getFeatureList().mseLivePlayback === false ||
-                this.dialogState.isM2TSUnconvertedMode() === true
-            ) {
-                // URL Scheme による再生
-                this.m2tsViewOnURLScheme();
-            } else {
-                // web での再生
-                await this.m2tsViewOnWeb().catch(err => {
-                    this.snackbarState.open({
-                        color: 'error',
-                        text: '視聴ページへの移動に失敗',
-                    });
+            // URL Scheme による再生
+            this.m2tsViewOnURLScheme();
+        } else if (this.dialogState.selectedStreamType === 'M2TS-LL') {
+            // 再生に対応しているか?
+            if (Mpegts.isSupported() === false || Mpegts.getFeatureList().mseLivePlayback === false) {
+                this.snackbarState.open({
+                    color: 'error',
+                    text: '再生に対応していません',
                 });
+
+                return;
             }
+
+            await this.m2tsLLView().catch(err => {
+                this.snackbarState.open({
+                    color: 'error',
+                    text: '視聴ページへの移動に失敗',
+                });
+            });
         } else {
             const channel = this.dialogState.getChannelItem();
             if (channel !== null && typeof this.dialogState.selectedStreamType !== 'undefined' && typeof this.dialogState.selectedStreamConfig !== 'undefined') {
@@ -163,9 +162,9 @@ export default class OnAirSelectStream extends Vue {
     }
 
     /**
-     * web での m2ts 形式の再生
+     * M2TS Low  Latency 形式の再生
      */
-    private async m2tsViewOnWeb(): Promise<void> {
+    private async m2tsLLView(): Promise<void> {
         const channel = this.dialogState.getChannelItem();
         if (channel !== null && typeof this.dialogState.selectedStreamType !== 'undefined' && typeof this.dialogState.selectedStreamConfig !== 'undefined') {
             this.dialogState.isOpen = false;
@@ -173,7 +172,7 @@ export default class OnAirSelectStream extends Vue {
             await Util.move(this.$router, {
                 path: '/onair/watch',
                 query: {
-                    type: 'm2ts',
+                    type: 'm2tsll',
                     channel: channel.id.toString(10),
                     mode: this.dialogState.selectedStreamConfig.toString(10),
                 },
