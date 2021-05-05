@@ -41,6 +41,7 @@ export default class SettingStorageModel extends AbstractStorageBaseModel<ISetti
             isEnableEncodingSettingWhenCreateRule: false,
             isCheckDeleteOriginalAfterEncode: false,
             rulesLength: 24,
+            isForceEnableSubtitleStroke: true,
         };
     }
 

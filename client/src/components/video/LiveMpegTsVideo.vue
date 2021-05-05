@@ -10,6 +10,7 @@ import * as aribb24js from 'aribb24.js';
 import { Component, Prop } from 'vue-property-decorator';
 import Mpegts from 'mpegts.js';
 import UaUtil from '@/util/UaUtil';
+import SubtitleUtil from '@/util/SubtitleUtil';
 
 @Component({})
 export default class LiveMpegTsVideo extends BaseVideo {
@@ -94,20 +95,14 @@ export default class LiveMpegTsVideo extends BaseVideo {
         this.mepgtsPlayer.play();
 
         // 字幕対応
-        this.captionRenderer = new aribb24js.CanvasB24Renderer({
-            data_identifer: 0x80,
-            forceStrokeColor: 'black', // TODO config 化
-            normalFont: '"Windows TV MaruGothic", "MS Gothic", "Yu Gothic", sans-serif',
-            gaijiFont: '"Windows TV MaruGothic", "MS Gothic", "Yu Gothic", sans-serif',
-            drcsReplacement: true,
-        });
-        this.superimposeRenderer = new aribb24js.CanvasB24Renderer({
-            data_identifer: 0x81,
-            forceStrokeColor: 'black', // TODO config 化
-            normalFont: '"Windows TV MaruGothic", "MS Gothic", "Yu Gothic", sans-serif',
-            gaijiFont: '"Windows TV MaruGothic", "MS Gothic", "Yu Gothic", sans-serif',
-            drcsReplacement: true,
-        });
+        const captionOption = SubtitleUtil.getAribb24BaseOption();
+        captionOption.data_identifer = 0x80;
+        this.captionRenderer = new aribb24js.CanvasB24Renderer(captionOption);
+
+        const superimposeOption = SubtitleUtil.getAribb24BaseOption();
+        superimposeOption.data_identifer = 0x81;
+        this.superimposeRenderer = new aribb24js.CanvasB24Renderer(superimposeOption);
+
         this.captionRenderer.attachMedia(this.video);
         this.superimposeRenderer.attachMedia(this.video);
 

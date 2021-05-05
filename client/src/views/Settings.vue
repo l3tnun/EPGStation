@@ -274,6 +274,22 @@
                             </v-list-item-content>
                         </v-list-item>
 
+                        <v-divider></v-divider>
+
+                        <v-list-item three-line>
+                            <v-list-item-content>
+                                <div class="title">ビデオプレーヤ</div>
+                                <div class="my-2 d-flex flex-row align-center">
+                                    <div>
+                                        <v-list-item-title class="subtitle-1">字幕の縁取りを強制する</v-list-item-title>
+                                        <v-list-item-subtitle>aribb24.js 使用時に有効になります</v-list-item-subtitle>
+                                    </div>
+                                    <v-spacer></v-spacer>
+                                    <v-switch v-model="storageModel.tmp.isForceEnableSubtitleStroke" value></v-switch>
+                                </div>
+                            </v-list-item-content>
+                        </v-list-item>
+
                         <v-card-actions right>
                             <v-spacer></v-spacer>
                             <v-btn text v-on:click="reset">リセット</v-btn>

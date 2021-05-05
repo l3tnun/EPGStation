@@ -32,6 +32,7 @@ export interface ISettingValue {
     isEnableEncodingSettingWhenCreateRule: boolean;
     isCheckDeleteOriginalAfterEncode: boolean;
     rulesLength: number;
+    isForceEnableSubtitleStroke: boolean; // 字幕縁取りを強制するか
 }
 
 export type ISettingStorageModel = IStorageBaseModel<ISettingValue>;

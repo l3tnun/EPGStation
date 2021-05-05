@@ -1,6 +1,6 @@
-import Hls from 'hls.js';
 import * as aribb24js from 'aribb24.js';
 import { injectable } from 'inversify';
+import SubtitleUtil from '../../../../util/SubtitleUtil';
 import IB24RenderState from './IB24RenderState';
 
 @injectable()
@@ -15,12 +15,8 @@ export default class B24RenderState implements IB24RenderState {
     public init(video: HTMLVideoElement): void {
         this.destroy();
 
-        this.b24Renderer = new aribb24js.CanvasID3Renderer({
-            forceStrokeColor: 'black', // TODO config 化
-            normalFont: '"Windows TV MaruGothic", "MS Gothic", "Yu Gothic", sans-serif',
-            gaijiFont: '"Windows TV MaruGothic", "MS Gothic", "Yu Gothic", sans-serif',
-            drcsReplacement: true,
-        });
+        const b24Option = SubtitleUtil.getAribb24BaseOption();
+        this.b24Renderer = new aribb24js.CanvasID3Renderer(b24Option);
         this.b24Renderer.attachMedia(video);
     }
 
