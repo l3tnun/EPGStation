@@ -1,6 +1,7 @@
 import IStorageBaseModel from '../IStorageBaseModel';
 
 export interface IOnAirSelectStreamSettingValue {
+    useURLScheme: boolean;
     type: string;
     mode: number;
 }

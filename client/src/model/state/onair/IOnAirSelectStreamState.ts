@@ -9,6 +9,7 @@ export interface StreamConfigItem {
 
 export default interface IOnAirSelectStreamState {
     isOpen: boolean;
+    useURLScheme: boolean;
     streamTypes: LiveStreamType[];
     streamConfigItems: StreamConfigItem[];
     selectedStreamType: LiveStreamType | undefined;
@@ -16,6 +17,7 @@ export default interface IOnAirSelectStreamState {
     open(channelItem: apid.ScheduleChannleItem): void;
     close(): void;
     getChannelItem(): apid.ScheduleChannleItem | null;
+    updateStreamTypes(): void;
     updateStreamConfig(): void;
     getM2TSURL(): string | null;
     getM2TPlayListURL(): string | null;

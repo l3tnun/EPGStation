@@ -6,6 +6,7 @@
                     <div>{{ dialogState.getChannelItem().name }}</div>
                     <div class="d-flex">
                         <v-select
+                            v-if="isHiddenStreamTypes === false"
                             :items="dialogState.streamTypes"
                             v-model="dialogState.selectedStreamType"
                             v-on:change="updateStreamConfig"
@@ -20,6 +21,10 @@
                             class="guide-time"
                             :menu-props="{ auto: true }"
                         ></v-select>
+                    </div>
+                    <div class="d-flex">
+                        <v-switch value v-model="dialogState.useURLScheme" v-on:change="updateAllStreamConfig"></v-switch>
+                        <v-list-item-title class="subtitle-1">外部アプリで開く</v-list-item-title>
                     </div>
                 </div>
                 <v-card-actions>
@@ -36,7 +41,6 @@
 <script lang="ts">
 import container from '@/model/ModelContainer';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
-import { ISettingStorageModel } from '@/model/storage/setting/ISettingStorageModel';
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
 import Mpegts from 'mpegts.js';
 import IOnAirSelectStreamState from '../../model/state/onair/IOnAirSelectStreamState';
@@ -50,13 +54,26 @@ export default class OnAirSelectStream extends Vue {
     public dialogState: IOnAirSelectStreamState = container.get<IOnAirSelectStreamState>('IOnAirSelectStreamState');
     public isRemove: boolean = false;
     // ストリーム設定セレクタ再描画用
+    public isHiddenStreamTypes: boolean = false;
     public isHiddenStreamConfig: boolean = false;
 
     private snackbarState: ISnackbarState = container.get<ISnackbarState>('ISnackbarState');
-    private storageModel: ISettingStorageModel = container.get<ISettingStorageModel>('ISettingStorageModel');
 
     public beforeDestroy(): void {
         this.dialogState.close();
+    }
+
+    public updateAllStreamConfig(): void {
+        this.dialogState.updateStreamTypes();
+        this.dialogState.updateStreamConfig();
+
+        // ストリーム設定セレクタ再描画
+        this.isHiddenStreamTypes = true;
+        this.isHiddenStreamConfig = true;
+        this.$nextTick(() => {
+            this.isHiddenStreamTypes = false;
+            this.isHiddenStreamConfig = false;
+        });
     }
 
     public updateStreamConfig(): void {

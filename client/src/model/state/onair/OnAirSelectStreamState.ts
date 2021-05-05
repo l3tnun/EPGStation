@@ -10,6 +10,7 @@ import IOnAirSelectStreamState, { LiveStreamType, StreamConfigItem } from './IOn
 @injectable()
 export default class OnAirSelectStreamState implements IOnAirSelectStreamState {
     public isOpen: boolean = false;
+    public useURLScheme: boolean = false;
     public streamTypes: LiveStreamType[] = [];
     public streamConfigItems: StreamConfigItem[] = [];
     public selectedStreamType: LiveStreamType | undefined;
@@ -39,48 +40,8 @@ export default class OnAirSelectStreamState implements IOnAirSelectStreamState {
         this.isOpen = true;
         this.channelItem = channelItem;
 
-        this.streamTypes = [];
-        this.streamConfig = {};
-        const config = this.serverConfig.getConfig();
-        if (
-            config !== null &&
-            config.isEnableTSLiveStream === true &&
-            typeof config.streamConfig !== 'undefined' &&
-            typeof config.streamConfig.live !== 'undefined' &&
-            typeof config.streamConfig.live.ts !== 'undefined'
-        ) {
-            if (typeof config.streamConfig.live.ts.m2ts !== 'undefined' && config.streamConfig.live.ts.m2ts.length > 0) {
-                this.streamTypes.push('M2TS');
-                this.streamConfig['M2TS'] = config.streamConfig.live.ts.m2ts.map(c => {
-                    return c.name;
-                });
-            }
-            if (typeof config.streamConfig.live.ts.m2tsll !== 'undefined' && config.streamConfig.live.ts.m2tsll.length > 0) {
-                this.streamTypes.push('M2TS-LL');
-                this.streamConfig['M2TS-LL'] = config.streamConfig.live.ts.m2tsll;
-            }
-            if (typeof config.streamConfig.live.ts.webm !== 'undefined' && config.streamConfig.live.ts.webm.length > 0) {
-                this.streamTypes.push('WebM');
-                this.streamConfig['WebM'] = config.streamConfig.live.ts.webm;
-            }
-            if (typeof config.streamConfig.live.ts.mp4 !== 'undefined' && config.streamConfig.live.ts.mp4.length > 0) {
-                this.streamTypes.push('MP4');
-                this.streamConfig['MP4'] = config.streamConfig.live.ts.mp4;
-            }
-            if (typeof config.streamConfig.live.ts.hls !== 'undefined' && config.streamConfig.live.ts.hls.length > 0) {
-                this.streamTypes.push('HLS');
-                this.streamConfig['HLS'] = config.streamConfig.live.ts.hls;
-            }
-        }
-
-        if (typeof this.selectedStreamType === 'undefined') {
-            const savedType = this.streamSelectSetting.getSavedValue().type;
-            const newSelectedStreamType = this.streamTypes.find(type => {
-                return type === savedType;
-            });
-            this.selectedStreamType = typeof newSelectedStreamType === 'undefined' ? this.streamTypes[0] : newSelectedStreamType;
-        }
-
+        this.useURLScheme = this.streamSelectSetting.getSavedValue().useURLScheme;
+        this.updateStreamTypes(true);
         this.updateStreamConfig(true);
     }
 
@@ -92,6 +53,7 @@ export default class OnAirSelectStreamState implements IOnAirSelectStreamState {
         this.channelItem = null;
 
         // ストリームの選択情報を保存
+        this.streamSelectSetting.tmp.useURLScheme = this.useURLScheme;
         this.streamSelectSetting.tmp.type = this.selectedStreamType as string;
         this.streamSelectSetting.tmp.mode = typeof this.selectedStreamConfig === 'undefined' ? 0 : this.selectedStreamConfig;
         this.streamSelectSetting.save();
@@ -103,6 +65,63 @@ export default class OnAirSelectStreamState implements IOnAirSelectStreamState {
      */
     public getChannelItem(): apid.ScheduleChannleItem | null {
         return this.channelItem;
+    }
+
+    /**
+     * 配信方式の更新
+     */
+    public updateStreamTypes(isInit: boolean = false): void {
+        this.streamTypes = [];
+        this.streamConfig = {};
+
+        const config = this.serverConfig.getConfig();
+        if (
+            config !== null &&
+            config.isEnableTSLiveStream === true &&
+            typeof config.streamConfig !== 'undefined' &&
+            typeof config.streamConfig.live !== 'undefined' &&
+            typeof config.streamConfig.live.ts !== 'undefined'
+        ) {
+            if (this.useURLScheme === true) {
+                // URL Scheme 使用時
+                if (typeof config.streamConfig.live.ts.m2ts !== 'undefined' && config.streamConfig.live.ts.m2ts.length > 0) {
+                    this.streamTypes.push('M2TS');
+                    this.streamConfig['M2TS'] = config.streamConfig.live.ts.m2ts.map(c => {
+                        return c.name;
+                    });
+                }
+            } else {
+                // web 上での再生
+                if (typeof config.streamConfig.live.ts.m2tsll !== 'undefined' && config.streamConfig.live.ts.m2tsll.length > 0) {
+                    this.streamTypes.push('M2TS-LL');
+                    this.streamConfig['M2TS-LL'] = config.streamConfig.live.ts.m2tsll;
+                }
+                if (typeof config.streamConfig.live.ts.webm !== 'undefined' && config.streamConfig.live.ts.webm.length > 0) {
+                    this.streamTypes.push('WebM');
+                    this.streamConfig['WebM'] = config.streamConfig.live.ts.webm;
+                }
+                if (typeof config.streamConfig.live.ts.mp4 !== 'undefined' && config.streamConfig.live.ts.mp4.length > 0) {
+                    this.streamTypes.push('MP4');
+                    this.streamConfig['MP4'] = config.streamConfig.live.ts.mp4;
+                }
+                if (typeof config.streamConfig.live.ts.hls !== 'undefined' && config.streamConfig.live.ts.hls.length > 0) {
+                    this.streamTypes.push('HLS');
+                    this.streamConfig['HLS'] = config.streamConfig.live.ts.hls;
+                }
+            }
+        }
+
+        if (isInit === true) {
+            if (typeof this.selectedStreamType === 'undefined') {
+                const savedType = this.streamSelectSetting.getSavedValue().type;
+                const newSelectedStreamType = this.streamTypes.find(type => {
+                    return type === savedType;
+                });
+                this.selectedStreamType = typeof newSelectedStreamType === 'undefined' ? this.streamTypes[0] : newSelectedStreamType;
+            }
+        } else {
+            this.selectedStreamType = this.streamTypes[0];
+        }
     }
 
     /**

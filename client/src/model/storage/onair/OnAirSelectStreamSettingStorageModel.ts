@@ -11,6 +11,7 @@ export default class OnAirSelectStreamSettingStorageModel extends AbstractStorag
 
     public getDefaultValue(): IOnAirSelectStreamSettingValue {
         return {
+            useURLScheme: false,
             type: 'M2TS',
             mode: 0,
         };
