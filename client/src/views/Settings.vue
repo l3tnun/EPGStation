@@ -274,21 +274,6 @@
                             </v-list-item-content>
                         </v-list-item>
 
-                        <v-divider v-if="isShoweB24Render"></v-divider>
-
-                        <v-list-item v-if="isShoweB24Render" three-line>
-                            <v-list-item-content>
-                                <div class="title">ビデオプレーヤ</div>
-                                <div class="my-2 d-flex flex-row align-center">
-                                    <div>
-                                        <v-list-item-title class="subtitle-1">HLS 配信時の字幕表示方法</v-list-item-title>
-                                    </div>
-                                    <v-spacer></v-spacer>
-                                    <v-select :items="b24RenderTypeItens" v-model="storageModel.tmp.b24RenderType" class="b24-render-type" :menu-props="{ auto: true }"></v-select>
-                                </div>
-                            </v-list-item-content>
-                        </v-list-item>
-
                         <v-card-actions right>
                             <v-spacer></v-spacer>
                             <v-btn text v-on:click="reset">リセット</v-btn>
@@ -308,7 +293,7 @@ import container from '@/model/ModelContainer';
 import IScrollPositionState from '@/model/state/IScrollPositionState';
 import INavigationState from '@/model/state/navigation/INavigationState';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
-import { ISettingStorageModel, GuideViewMode, B24RenderType } from '@/model/storage/setting/ISettingStorageModel';
+import { ISettingStorageModel, GuideViewMode } from '@/model/storage/setting/ISettingStorageModel';
 import { Component, Vue, Watch } from 'vue-property-decorator';
 import IColorThemeState from '@/model/state/IColorThemeState';
 import Mpegts from 'mpegts.js';
@@ -319,11 +304,6 @@ Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
 interface GuideModeItem {
     text: string;
     value: GuideViewMode;
-}
-
-interface B24RenderTypeItem {
-    text: string;
-    value: B24RenderType;
 }
 
 interface SelectItem {
@@ -360,21 +340,6 @@ export default class Settings extends Vue {
         },
     ];
 
-    public readonly b24RenderTypeItens: B24RenderTypeItem[] = [
-        {
-            text: 'デフォルト',
-            value: 'default',
-        },
-        {
-            text: 'aribb24.js',
-            value: 'aribb24.js',
-        },
-        {
-            text: 'b24.js',
-            value: 'b24.js',
-        },
-    ];
-
     public guideLengthItems: SelectItem[] = [];
     public reservesLengthItems: SelectItem[] = [];
     public recordingLengthItems: SelectItem[] = [];
@@ -404,10 +369,6 @@ export default class Settings extends Vue {
 
     get isSupportedMpegts(): boolean {
         return Mpegts.isSupported();
-    }
-
-    get isShoweB24Render(): boolean {
-        return HLSUtil.isSupportedHLSjs() === true;
     }
 
     constructor() {
@@ -492,8 +453,6 @@ export default class Settings extends Vue {
     max-width: 100px
 .guide-time
     max-width: 70px
-.b24-render-type
-    max-width: 120px
 </style>
 
 <style lang="sass">
