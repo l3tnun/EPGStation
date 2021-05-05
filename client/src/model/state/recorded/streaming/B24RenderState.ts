@@ -15,7 +15,13 @@ export default class B24RenderState implements IB24RenderState {
     public init(video: HTMLVideoElement): void {
         this.destroy();
 
-        this.b24Renderer = new aribb24js.CanvasID3Renderer({});
+        this.b24Renderer = new aribb24js.CanvasID3Renderer({
+            data_identifer: 0x80,
+            forceStrokeColor: 'black', // TODO config 化
+            normalFont: '"Windows TV MaruGothic", "MS Gothic", "Yu Gothic", sans-serif',
+            gaijiFont: '"Windows TV MaruGothic", "MS Gothic", "Yu Gothic", sans-serif',
+            drcsReplacement: true,
+        });
         this.b24Renderer.attachMedia(video);
     }
 
