@@ -71,7 +71,7 @@ export default class LiveMpegTsVideo extends BaseVideo {
         }
 
         // mpegts.js の設定
-        Mpegts.LoggingControl.enableVerbose = false;
+        Mpegts.LoggingControl.enableVerbose = true;
         const mpegtsConfig: Mpegts.Config = {
             enableWorker: true,
             liveBufferLatencyChasing: true,
