@@ -99,12 +99,14 @@ export default class RecordedDetailSelectStreamState implements IRecordedDetailS
      * ダイアログを閉じる
      */
     public close(): void {
-        this.isOpen = false;
-
         // ストリームの選択情報を保存
-        this.streamSelectSetting.tmp.type = this.selectedStreamType as string;
-        this.streamSelectSetting.tmp.mode = typeof this.selectedStreamMode === 'undefined' ? 0 : this.selectedStreamMode;
-        this.streamSelectSetting.save();
+        if (this.isOpen === true) {
+            this.streamSelectSetting.tmp.type = this.selectedStreamType as string;
+            this.streamSelectSetting.tmp.mode = typeof this.selectedStreamMode === 'undefined' ? 0 : this.selectedStreamMode;
+            this.streamSelectSetting.save();
+        }
+
+        this.isOpen = false;
     }
 
     /**

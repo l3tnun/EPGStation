@@ -49,14 +49,16 @@ export default class OnAirSelectStreamState implements IOnAirSelectStreamState {
      * ダイアログを閉じる
      */
     public close(): void {
+        // ストリームの選択情報を保存
+        if (this.isOpen === true) {
+            this.streamSelectSetting.tmp.useURLScheme = this.useURLScheme;
+            this.streamSelectSetting.tmp.type = this.selectedStreamType as string;
+            this.streamSelectSetting.tmp.mode = typeof this.selectedStreamConfig === 'undefined' ? 0 : this.selectedStreamConfig;
+            this.streamSelectSetting.save();
+        }
+
         this.isOpen = false;
         this.channelItem = null;
-
-        // ストリームの選択情報を保存
-        this.streamSelectSetting.tmp.useURLScheme = this.useURLScheme;
-        this.streamSelectSetting.tmp.type = this.selectedStreamType as string;
-        this.streamSelectSetting.tmp.mode = typeof this.selectedStreamConfig === 'undefined' ? 0 : this.selectedStreamConfig;
-        this.streamSelectSetting.save();
     }
 
     /**
