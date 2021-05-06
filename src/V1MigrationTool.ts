@@ -225,8 +225,8 @@ class V1MigrationTool {
         if (oldRule.ignoreKeyCS !== null) {
             searchOption.ignoreKeyCS = oldRule.ignoreKeyCS;
         }
-        if (oldRule.keyRegExp !== null) {
-            searchOption.keyRegExp = oldRule.keyRegExp;
+        if (oldRule.ignoreKeyRegExp !== null) {
+            searchOption.ignoreKeyRegExp = oldRule.ignoreKeyRegExp;
         }
         if (oldRule.ignoreTitle !== null) {
             searchOption.ignoreName = oldRule.ignoreTitle;
