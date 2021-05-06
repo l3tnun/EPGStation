@@ -161,5 +161,13 @@ export default class LiveMpegTsVideo extends BaseVideo {
     public getCurrentTime(): number {
         return 0;
     }
+
+    /**
+     * 再生位置設定
+     * @param time: number (秒)
+     */
+    public setCurrentTime(time: number): void {
+        return;
+    }
 }
 </script>
