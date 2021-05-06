@@ -65,6 +65,20 @@ stream:
                       -c:v libx264 -vf yadif,scale=-2:480 -b:v 1500k -preset veryfast -y -f mpegts pipe:1'
                 - name: 無変換
 
+            m2tsll:
+                - name: 720p
+                  cmd:
+                      '%FFMPEG% -dual_mono_mode main -i pipe:0 -map 0 -c:s copy -c:d copy -ignore_unknown -threads 0
+                      -analyzeduration 500000 -fflags nobuffer -flags low_delay -max_delay 250000 -max_interleave_delta
+                      1 -threads 0 -c:a aac -ar 48000 -b:a 192k -ac 2 -c:v libx264 -vf yadif,scale=-2:720 -b:v 3000k
+                      -preset veryfast -bufsize:v 5M -y -f mpegts pipe:1'
+                - name: 480p
+                  cmd:
+                      '%FFMPEG% -dual_mono_mode main -i pipe:0 -map 0 -c:s copy -c:d copy -ignore_unknown -threads 0
+                      -analyzeduration 500000 -fflags nobuffer -flags low_delay -max_delay 250000 -max_interleave_delta
+                      1 -threads 0 -c:a aac -ar 48000 -b:a 128k -ac 2 -c:v libx264 -vf yadif,scale=-2:480 -b:v 1500k
+                      -preset veryfast -bufsize:v 5M -y -f mpegts pipe:1'
+
             webm:
                 - name: 720p
                   cmd:
