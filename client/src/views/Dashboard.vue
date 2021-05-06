@@ -72,6 +72,7 @@ import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
 import { ISettingStorageModel, ISettingValue } from '@/model/storage/setting/ISettingStorageModel';
 import UaUtil from '@/util/UaUtil';
 import Util from '@/util/Util';
+import ResizeObserver from 'resize-observer-polyfill';
 import { Component, Vue, Watch } from 'vue-property-decorator';
 import { Route } from 'vue-router';
 import * as apid from '../../../api';
@@ -92,7 +93,7 @@ Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
         RecordedsmallCard,
     },
 })
-export default class Main extends Vue {
+class Dashboard extends Vue {
     public isShow: boolean = false;
     public dashboardState: IDashboardState = container.get<IDashboardState>('IDashboardState');
     public recordedState: IRecordedState = container.get<IRecordedState>('IRecordedState');
@@ -113,6 +114,8 @@ export default class Main extends Vue {
     private recordingScroll: number = 0;
     private recordedScroll: number = 0;
     private reserveScroll: number = 0;
+
+    private resizeObserver: ResizeObserver | null = null;
 
     get recordingTitle(): string {
         return `録画中 ${this.recordingState.getRecorded().length}/${this.recordingState.getTotal()}`;
@@ -137,17 +140,63 @@ export default class Main extends Vue {
     }
 
     public created(): void {
-        if (UaUtil.isiOS() === true) {
-            // html の class に guide を追加
-            const element = document.getElementsByTagName('html')[0];
-            element.classList.add('fix-address-bar2');
-            element.style.overflow = 'auto';
-        }
-
         this.settingValue = this.setting.getSavedValue();
 
         // socket.io イベント
         this.socketIoModel.onUpdateState(this.onUpdateStatusCallback);
+    }
+
+    public mounted(): void {
+        if (UaUtil.isiOS() === false) {
+            return;
+        }
+
+        /**
+         * iOS, iPadOS 使用時に横示時にアドレスバーの位置を修正させる
+         */
+        if (this.needFixAddressBar() === true) {
+            this.addFixAddressBarClass();
+        }
+
+        // set resize observer
+        this.resizeObserver = new ResizeObserver(() => {
+            if (this.needFixAddressBar() === true) {
+                this.addFixAddressBarClass();
+            } else {
+                this.removeFixAddressBarClass();
+            }
+        });
+        if (this.resizeObserver !== null) {
+            this.resizeObserver.observe(this.$el);
+        }
+    }
+
+    /**
+     * アドレスバー修正が必要か
+     * @return boolean 必要なら true を返す
+     */
+    private needFixAddressBar(): boolean {
+        return this.$el.clientWidth >= Dashboard.MIN_MIDTH_OF_SIDE_BY_SIDE;
+    }
+
+    /**
+     * アドレスバーの修正
+     */
+    private addFixAddressBarClass(): void {
+        // html の class に guide を追加
+        const element = document.getElementsByTagName('html')[0];
+        element.classList.add('fix-address-bar2');
+        element.style.overflow = 'auto';
+    }
+
+    /**
+     * アドレスバーの修正を消去
+     */
+    private removeFixAddressBarClass(): void {
+        // html の class から guide を削除
+        const element = document.getElementsByTagName('html')[0];
+        element.classList.remove('fix-address-bar2');
+        element.style.overflow = '';
     }
 
     public beforeDestroy(): void {
@@ -157,10 +206,11 @@ export default class Main extends Vue {
         this.isShow = false;
 
         if (UaUtil.isiOS() === true) {
-            // html の class から guide を削除
-            const element = document.getElementsByTagName('html')[0];
-            element.classList.remove('fix-address-bar2');
-            element.style.overflow = '';
+            this.removeFixAddressBarClass();
+        }
+
+        if (this.resizeObserver !== null) {
+            this.resizeObserver.disconnect();
         }
     }
 
@@ -405,6 +455,12 @@ export default class Main extends Vue {
         };
     }
 }
+
+namespace Dashboard {
+    export const MIN_MIDTH_OF_SIDE_BY_SIDE = 1023;
+}
+
+export default Dashboard;
 </script>
 
 <style lang="sass" scoped>
