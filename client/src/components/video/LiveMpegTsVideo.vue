@@ -145,5 +145,21 @@ export default class LiveMpegTsVideo extends BaseVideo {
 
         return payload;
     }
+
+    /**
+     * 動画の長さを返す (秒)
+     * @return number
+     */
+    public getDuration(): number {
+        return 0;
+    }
+
+    /**
+     * 動画の現在再生位置を返す (秒)
+     * @return number
+     */
+    public getCurrentTime(): number {
+        return 0;
+    }
 }
 </script>
