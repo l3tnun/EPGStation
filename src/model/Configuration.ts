@@ -14,13 +14,15 @@ import ILoggerModel from './ILoggerModel';
  */
 @injectable()
 class Configuration implements IConfiguration {
+    private sampleConfig: IConfigFile | null = null;
     private config!: IConfigFile;
     private log: ILogger;
 
     constructor(@inject('ILoggerModel') logger: ILoggerModel) {
         this.log = logger.getLogger();
 
-        this.readConfig();
+        this.sampleConfig = this.readConfig(Configuration.CONFIG_SAMPLE_FILE_PATH);
+        this.config = this.readConfig(Configuration.CONFIG_FILE_PATH);
         this.log.system.info('config.yml read success');
 
         fs.watchFile(Configuration.CONFIG_FILE_PATH, async () => {
@@ -37,11 +39,13 @@ class Configuration implements IConfiguration {
 
     /**
      * read config
+     * @param configPath: ファイルパス
+     * @return IConfigFile
      */
-    private readConfig(): void {
+    private readConfig(configPath: string): IConfigFile {
         let str: string = '';
         try {
-            str = fs.readFileSync(Configuration.CONFIG_FILE_PATH, 'utf-8');
+            str = fs.readFileSync(configPath, 'utf-8');
         } catch (e) {
             if (e.code === 'ENOENT') {
                 this.log.system.fatal('config.yml is not found');
@@ -54,7 +58,7 @@ class Configuration implements IConfiguration {
         // parse configFile
         const newConfig: IConfigFile = <any>yaml.load(str);
 
-        this.config = this.formatConfig(newConfig);
+        return this.formatConfig(newConfig);
     }
 
     /**
@@ -121,6 +125,52 @@ class Configuration implements IConfiguration {
                 (<any>config)[key] = (<any>Configuration.DEFAULT_VALUE)[key];
             }
         }
+
+        // stream のデフォルト値設定
+        if (this.sampleConfig !== null && typeof config.stream !== 'undefined') {
+            if (typeof config.stream.live !== 'undefined' && typeof config.stream.live.ts !== 'undefined') {
+                if (typeof config.stream.live.ts.m2ts === 'undefined') {
+                    config.stream.live.ts.m2ts = this.sampleConfig.stream?.live?.ts?.m2ts;
+                }
+                if (typeof config.stream.live.ts.m2tsll === 'undefined') {
+                    config.stream.live.ts.m2tsll = this.sampleConfig.stream?.live?.ts?.m2tsll;
+                }
+                if (typeof config.stream.live.ts.webm === 'undefined') {
+                    config.stream.live.ts.webm = this.sampleConfig.stream?.live?.ts?.webm;
+                }
+                if (typeof config.stream.live.ts.mp4 === 'undefined') {
+                    config.stream.live.ts.mp4 = this.sampleConfig.stream?.live?.ts?.mp4;
+                }
+                if (typeof config.stream.live.ts.hls === 'undefined') {
+                    config.stream.live.ts.hls = this.sampleConfig.stream?.live?.ts?.hls;
+                }
+            }
+
+            if (typeof config.stream.recorded !== 'undefined') {
+                if (typeof config.stream.recorded.ts !== 'undefined') {
+                    if (typeof config.stream.recorded.ts.webm === 'undefined') {
+                        config.stream.recorded.ts.webm = this.sampleConfig.stream?.recorded?.ts?.webm;
+                    }
+                    if (typeof config.stream.recorded.ts.mp4 === 'undefined') {
+                        config.stream.recorded.ts.mp4 = this.sampleConfig.stream?.recorded?.ts?.mp4;
+                    }
+                    if (typeof config.stream.recorded.ts.hls === 'undefined') {
+                        config.stream.recorded.ts.hls = this.sampleConfig.stream?.recorded?.ts?.hls;
+                    }
+                }
+                if (typeof config.stream.recorded.encoded !== 'undefined') {
+                    if (typeof config.stream.recorded.encoded.webm === 'undefined') {
+                        config.stream.recorded.encoded.webm = this.sampleConfig.stream?.recorded?.encoded?.webm;
+                    }
+                    if (typeof config.stream.recorded.encoded.mp4 === 'undefined') {
+                        config.stream.recorded.encoded.mp4 = this.sampleConfig.stream?.recorded?.encoded?.mp4;
+                    }
+                    if (typeof config.stream.recorded.encoded.hls === 'undefined') {
+                        config.stream.recorded.encoded.hls = this.sampleConfig.stream?.recorded?.encoded?.hls;
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -141,6 +191,7 @@ class Configuration implements IConfiguration {
 
 namespace Configuration {
     export const CONFIG_FILE_PATH = path.join(__dirname, '..', '..', 'config', 'config.yml');
+    export const CONFIG_SAMPLE_FILE_PATH = path.join(__dirname, '..', '..', 'config', 'config.sample.yml');
     export const ROOT_PATH = path.join(__dirname, '..', '..').replace(new RegExp(`\\${path.sep}$`), '');
 
     export const DEFAULT_VALUE: IConfigFile = {
