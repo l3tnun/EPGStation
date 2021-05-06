@@ -9,7 +9,6 @@ import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
 import * as aribb24js from 'aribb24.js';
 import { Component, Prop } from 'vue-property-decorator';
 import Mpegts from 'mpegts.js';
-import UaUtil from '@/util/UaUtil';
 import SubtitleUtil from '@/util/SubtitleUtil';
 
 @Component({})
@@ -76,11 +75,9 @@ export default class LiveMpegTsVideo extends BaseVideo {
         const mpegtsConfig: Mpegts.Config = {
             enableWorker: true,
             liveBufferLatencyChasing: true,
+            liveBufferLatencyMinRemain: 1.0,
+            liveBufferLatencyMaxLatency: 2.0,
         };
-        if (UaUtil.isiPadOS() === true) {
-            mpegtsConfig.liveBufferLatencyMinRemain = 1.0;
-            mpegtsConfig.liveBufferLatencyMaxLatency = 2.0;
-        }
         this.mepgtsPlayer = Mpegts.createPlayer(
             {
                 type: 'mse',
