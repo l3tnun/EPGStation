@@ -40,7 +40,7 @@
                             </div>
                         </template>
                     </DashboardItem>
-                    <DashboardItem ref="reserveItem" :title="reserveTitle" v-on:scroll="onReserveScroll">
+                    <DashboardItem ref="reserveItem" :title="reserveTitle" :bage.sync="reserveConflictCnt" v-on:scroll="onReserveScroll" v-on:bage="gotoConflicts">
                         <template v-slot:items>
                             <div>
                                 <ReservesCard :reserves="reservesState.getReserves()" :flat="true" :isEditMode="false"></ReservesCard>
@@ -48,9 +48,6 @@
                                     <v-btn text block color="primary mx-auto" v-on:click="gotoNextPage('/reserves')">more</v-btn>
                                 </div>
                             </div>
-                        </template>
-                        <template v-if="reserveConflictCnt > 0" v-slot:decoration>
-                            <v-badge bordered color="pink" :content="reserveConflictCnt" class="pl-1"></v-badge>
                         </template>
                     </DashboardItem>
                 </div>
@@ -206,6 +203,19 @@ export default class Main extends Vue {
             path: path,
             query: {
                 page: '2',
+            },
+        });
+    }
+
+    /**
+     * 予約競合ページへ飛ぶ
+     */
+    public gotoConflicts(): void {
+        console.log('goto conflict');
+        Util.move(this.$router, {
+            path: '/reserves',
+            query: {
+                type: 'conflict',
             },
         });
     }
