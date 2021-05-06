@@ -96,6 +96,13 @@
                                 </div>
                                 <div class="my-2 d-flex flex-row align-center">
                                     <div>
+                                        <v-list-item-title class="subtitle-1">無料放送だけ表示する</v-list-item-title>
+                                    </div>
+                                    <v-spacer></v-spacer>
+                                    <v-switch v-model="storageModel.tmp.isShowOnlyFreePrograms" value></v-switch>
+                                </div>
+                                <div class="my-2 d-flex flex-row align-center">
+                                    <div>
                                         <v-list-item-title class="subtitle-1">放送波種別表示</v-list-item-title>
                                         <v-list-item-subtitle>ナビゲーションの表示を放送波別に分ける</v-list-item-subtitle>
                                     </div>

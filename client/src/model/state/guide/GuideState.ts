@@ -112,6 +112,10 @@ class GuideState implements IGuideState {
                 scheduleOption[option.type] = true;
             }
 
+            if (this.settingModel.getSavedValue().isShowOnlyFreePrograms === true) {
+                scheduleOption.isFree = true;
+            }
+
             this.schedules = await this.scheduleApiModel.getSchedules(scheduleOption);
         } else {
             // 放送局指定
@@ -124,6 +128,10 @@ class GuideState implements IGuideState {
                 isHalfWidth: option.isHalfWidth,
                 channelId: option.channelId,
             };
+
+            if (this.settingModel.getSavedValue().isShowOnlyFreePrograms === true) {
+                scheduleOption.isFree = true;
+            }
 
             this.schedules = await this.scheduleApiModel.getChannelSchedule(scheduleOption);
         }
