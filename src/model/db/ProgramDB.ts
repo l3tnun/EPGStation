@@ -863,8 +863,8 @@ export default class ProgramDB implements IProgramDB {
                 endAt: MoreThanOrEqual(option.startAt),
                 channelId: (<FindScheduleIdOption>option).channelId,
             };
-            if (option.isFree === true) {
-                queryOption.isFree = true;
+            if (typeof option.isFree !== 'undefined') {
+                queryOption.isFree = option.isFree;
             }
         } else if (
             typeof (<FindScheduleOption>option).types !== 'undefined' &&
@@ -877,8 +877,8 @@ export default class ProgramDB implements IProgramDB {
                     endAt: MoreThanOrEqual(option.startAt),
                     channelType: type,
                 };
-                if (option.isFree === true) {
-                    op.isFree = true;
+                if (typeof option.isFree !== 'undefined') {
+                    op.isFree = option.isFree;
                 }
 
                 queryOption.push(op);

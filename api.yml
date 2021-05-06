@@ -1593,7 +1593,7 @@ components:
                 type: boolean
 
         IsFreeProgram:
-            description: 無料放送のみ取得するか
+            description: '無料放送のみ取得するか (true: 無料放送, false: 有料放送, 無指定: 全て)'
             in: query
             name: isFree
             required: false
