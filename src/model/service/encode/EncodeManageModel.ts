@@ -456,7 +456,7 @@ class EncodeManageModel implements IEncodeManageModel {
             if (logs[j] != '') {
                 const log = JSON.parse(String(logs[j]));
                 this.log.encode.debug(log);
-                if (log.type == 'progress') {
+                if (log.type === 'progress') {
                     const encodingQueueItem = this.getRunnginQueueItem(encodeId);
                     if (encodingQueueItem != null) {
                         encodingQueueItem.percent = log.percent;

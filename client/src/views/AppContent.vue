@@ -66,7 +66,7 @@ export default class AppContent extends Vue {
 
         // イベント設定
         io.on('disconnect', this.onDisconnect);
-        io.on('reconnect', this.onReconnect);
+        io.on('connect', this.onReconnect);
     }
 
     /**
@@ -87,6 +87,7 @@ export default class AppContent extends Vue {
      * socketIO 再接続時
      */
     private onReconnect(): void {
+        const needsShowMsg = this.isDisconnected === true;
         this.isDisconnected = false;
 
         // reload
@@ -96,6 +97,10 @@ export default class AppContent extends Vue {
             this.$router.replace(fullPath);
 
             this.$nextTick(() => {
+                if (needsShowMsg === false) {
+                    return;
+                }
+
                 this.snackbarState.open({
                     text: '再接続されました',
                 });

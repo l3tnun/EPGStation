@@ -286,10 +286,10 @@ export default class ReserveDB implements IReserveDB {
 
         // option.times の連続した時間を一つにまとめる
         option.times = option.times.reduce((acc, cur, index) => {
-            if (index == 0) {
+            if (index === 0) {
                 return acc;
             }
-            if (acc[acc.length - 1].endAt == cur.startAt) {
+            if (acc[acc.length - 1].endAt === cur.startAt) {
                 acc[acc.length - 1].endAt = cur.endAt;
             } else {
                 acc.push(cur);

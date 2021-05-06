@@ -15,9 +15,8 @@
 import WatchOnAirInfoCard from '@/components/onair/watch/WatchOnAirInfoCard.vue';
 import TitleBar from '@/components/titleBar/TitleBar.vue';
 import VideoContainer from '@/components/video/VideoContainer.vue';
-import * as VideoParam from '@/components/video/ViedoParam';
+import { BaseVideoParam, LiveHLSParam, LiveMpegTsVideoParam, NormalVideoParam } from '@/components/video/ViedoParam';
 import container from '@/model/ModelContainer';
-import ISocketIOModel from '@/model/socketio/ISocketIOModel';
 import IScrollPositionState from '@/model/state/IScrollPositionState';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
 import Util from '@/util/Util';
@@ -40,7 +39,7 @@ interface WatchParam {
     },
 })
 export default class WatchOnAir extends Vue {
-    public videoParam: VideoParam.BaseVideoParam | null = null;
+    public videoParam: BaseVideoParam | null = null;
 
     private scrollState: IScrollPositionState = container.get<IScrollPositionState>('IScrollPositionState');
     private snackbarState: ISnackbarState = container.get<ISnackbarState>('ISnackbarState');
@@ -62,18 +61,18 @@ export default class WatchOnAir extends Vue {
         this.$nextTick(async () => {
             if (this.watchParam !== null) {
                 if (this.watchParam.type === 'hls') {
-                    (this.videoParam as VideoParam.LiveHLSParam) = {
+                    (this.videoParam as LiveHLSParam) = {
                         type: 'LiveHLS',
                         channelId: this.watchParam.channel,
                         mode: this.watchParam.mode,
                     };
                 } else if (this.watchParam.type === 'm2tsll') {
-                    (this.videoParam as VideoParam.LiveMpegTsVideoParam) = {
+                    (this.videoParam as LiveMpegTsVideoParam) = {
                         type: 'LiveMpegTs',
                         src: `${window.location.origin}${Util.getSubDirectory()}/api/streams/live/${this.watchParam.channel}/m2tsll?mode=${this.watchParam.mode}`,
                     };
                 } else {
-                    (this.videoParam as VideoParam.NormalVideoParam) = {
+                    (this.videoParam as NormalVideoParam) = {
                         type: 'Normal',
                         src: `./api/streams/live/${this.watchParam.channel}/${this.watchParam.type}?mode=${this.watchParam.mode}`,
                     };

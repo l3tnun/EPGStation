@@ -4,7 +4,7 @@ export const UPDATE_EVENT = 'updateStatus';
 
 export default interface ISocketIOModel {
     Iinitialize(): void;
-    getIO(): SocketIOClient.Socket | null;
+    getIO(): socketIo.Socket | null;
     onUpdateState(callback: () => void): void;
     offUpdateState(callback: () => void): void;
     onUpdateEncodeState(callback: () => void): void;

@@ -28,7 +28,7 @@ export default class SocketIOManageModel implements ISocketIOManageModel {
     public initialize(servers: http.Server[]): void {
         for (const s of servers) {
             this.ios.push(
-                SocketIO.default(s, {
+                new SocketIO.Server(s, {
                     path:
                         typeof this.config.subDirectory === 'undefined'
                             ? '/socket.io'

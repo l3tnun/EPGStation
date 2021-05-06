@@ -7,7 +7,7 @@ import ISocketIOModel from './ISocketIOModel';
 @injectable()
 class SocketIOModel implements ISocketIOModel {
     private serverConfiModel: IServerConfigModel;
-    private io: SocketIOClient.Socket | null = null;
+    private io: socketIo.Socket | null = null;
 
     constructor(@inject('IServerConfigModel') serverConfiModel: IServerConfigModel) {
         this.serverConfiModel = serverConfiModel;
@@ -22,7 +22,7 @@ class SocketIOModel implements ISocketIOModel {
             throw new Error('InitializationSocketIOError');
         }
 
-        this.io = socketIo.connect(`${location.protocol}//${location.hostname}:${config.socketIOPort}`, {
+        this.io = socketIo.io(`${location.protocol}//${location.hostname}:${config.socketIOPort}`, {
             path: `${Util.getSubDirectory()}/socket.io`,
         });
     }
@@ -30,7 +30,7 @@ class SocketIOModel implements ISocketIOModel {
     /**
      * 設定済み socketIO をのインスタを返す
      */
-    public getIO(): SocketIOClient.Socket | null {
+    public getIO(): socketIo.Socket | null {
         return this.io;
     }
 

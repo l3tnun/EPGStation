@@ -15,7 +15,7 @@
 import WatchOnRecordedInfoCard from '@/components/recorded/watch/WatchRecordedInfoCard.vue';
 import TitleBar from '@/components/titleBar/TitleBar.vue';
 import VideoContainer from '@/components/video/VideoContainer.vue';
-import * as VideoParam from '@/components/video/ViedoParam';
+import { BaseVideoParam, NormalVideoParam } from '@/components/video/ViedoParam';
 import container from '@/model/ModelContainer';
 import IScrollPositionState from '@/model/state/IScrollPositionState';
 import { Component, Vue, Watch } from 'vue-property-decorator';
@@ -31,7 +31,7 @@ Component.registerHooks(['beforeRouteUpdate', 'beforeRouteLeave']);
     },
 })
 export default class WatchRecorded extends Vue {
-    public videoParam: VideoParam.BaseVideoParam | null = null;
+    public videoParam: BaseVideoParam | null = null;
     public recordedId: apid.RecordedId | null = null;
 
     private scrollState: IScrollPositionState = container.get<IScrollPositionState>('IScrollPositionState');
@@ -44,7 +44,7 @@ export default class WatchRecorded extends Vue {
 
         this.$nextTick(async () => {
             if (videoId !== null) {
-                (this.videoParam as VideoParam.NormalVideoParam) = {
+                (this.videoParam as NormalVideoParam) = {
                     type: 'Normal',
                     src: `./api/videos/${videoId}`,
                 };
