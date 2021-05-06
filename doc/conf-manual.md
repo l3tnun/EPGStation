@@ -751,6 +751,9 @@ recordingPrepRecFailedCommand: '/usr/bin/logger prepfailed'
 | HALF_WIDTH_EXTENDED    | string \| null | 番組詳細(半角)                |
 | RECPATH                | string         | 録画ファイルのフルパス        |
 | LOGPATH                | string\| null  | ログファイルのフルパス        |
+| ERROR_CNT              | number \| null | エラーカウント                |
+| DROP_CNT               | number \| null | ドロップカウント              |
+| SCRAMBLING_CNT         | number \| null | スクランブルカウント          |
 
 ```yaml
 recordingStartCommand: '/bin/node /home/hoge/fuga.js start'

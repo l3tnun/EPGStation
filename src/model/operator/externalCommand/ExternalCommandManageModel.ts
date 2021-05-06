@@ -259,6 +259,9 @@ export default class ExternalCommandManageModel implements IExternalCommandManag
                         typeof recorded.dropLogFile === 'undefined' || recorded.dropLogFile === null
                             ? null
                             : path.join(this.config.dropLog, recorded.dropLogFile.filePath),
+                    ERROR_CNT: recorded.dropLogFile?.errorCnt.toString(10) || null,
+                    DROP_CNT: recorded.dropLogFile?.dropCnt.toString(10) || null,
+                    SCRAMBLING_CNT: recorded.dropLogFile?.scramblingCnt.toString(10) || null,
                 },
             } as any);
 
