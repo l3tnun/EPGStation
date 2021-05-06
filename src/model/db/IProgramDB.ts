@@ -29,6 +29,7 @@ export interface FindScheduleBaseOption {
     startAt: apid.UnixtimeMS;
     endAt: apid.UnixtimeMS;
     isHalfWidth: boolean;
+    isFree?: boolean;
 }
 
 /**

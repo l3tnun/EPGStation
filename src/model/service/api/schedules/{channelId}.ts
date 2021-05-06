@@ -14,6 +14,9 @@ export const get: Operation = async (req, res) => {
             isHalfWidth: req.query.isHalfWidth as any,
             channelId: parseInt(req.params.channelId, 10),
         };
+        if (typeof req.query.isFree === 'boolean') {
+            option.isFree = req.query.isFree;
+        }
         api.responseJSON(res, 200, await scheduleApiModel.getChannelSchedule(option));
     } catch (err) {
         api.responseServerError(res, err.message);
@@ -36,6 +39,9 @@ get.apiDoc = {
         },
         {
             $ref: '#/components/parameters/IsHalfWidth',
+        },
+        {
+            $ref: '#/components/parameters/IsFreeProgram',
         },
     ],
     responses: {

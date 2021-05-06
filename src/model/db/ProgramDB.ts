@@ -863,17 +863,25 @@ export default class ProgramDB implements IProgramDB {
                 endAt: MoreThanOrEqual(option.startAt),
                 channelId: (<FindScheduleIdOption>option).channelId,
             };
+            if (option.isFree === true) {
+                queryOption.isFree = true;
+            }
         } else if (
             typeof (<FindScheduleOption>option).types !== 'undefined' &&
             (<FindScheduleOption>option).types.length > 0
         ) {
             queryOption = [];
             for (const type of (<FindScheduleOption>option).types) {
-                queryOption.push({
+                const op: FindConditions<Program> = {
                     startAt: LessThanOrEqual(option.endAt),
                     endAt: MoreThanOrEqual(option.startAt),
                     channelType: type,
-                });
+                };
+                if (option.isFree === true) {
+                    op.isFree = true;
+                }
+
+                queryOption.push(op);
             }
         } else {
             throw new Error('FindScheduleOptionError');

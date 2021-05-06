@@ -61,6 +61,7 @@ export default class ScheduleApiModel implements IScheduleApiModel {
             endAt: option.endAt,
             isHalfWidth: option.isHalfWidth,
             types: types,
+            isFree: option.isFree,
         });
 
         return this.createSchedule(channels, programs, option.isHalfWidth);
@@ -118,6 +119,7 @@ export default class ScheduleApiModel implements IScheduleApiModel {
                 endAt: baseTime + 60 * 60 * 24 * 1000,
                 isHalfWidth: option.isHalfWidth,
                 channelId: option.channelId,
+                isFree: option.isFree,
             });
             programs.push(p);
             baseTime += 60 * 60 * 24 * 1000;

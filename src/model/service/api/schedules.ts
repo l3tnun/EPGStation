@@ -17,6 +17,9 @@ export const get: Operation = async (req, res) => {
             CS: req.query.CS as any,
             SKY: req.query.SKY as any,
         };
+        if (typeof req.query.isFree === 'boolean') {
+            option.isFree = req.query.isFree;
+        }
         api.responseJSON(res, 200, await scheduleApiModel.getSchedules(option));
     } catch (err) {
         api.responseServerError(res, err.message);
@@ -36,6 +39,9 @@ get.apiDoc = {
         },
         {
             $ref: '#/components/parameters/IsHalfWidth',
+        },
+        {
+            $ref: '#/components/parameters/IsFreeProgram',
         },
         {
             $ref: '#/components/parameters/requiredGR',

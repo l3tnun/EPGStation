@@ -1592,6 +1592,14 @@ components:
             schema:
                 type: boolean
 
+        IsFreeProgram:
+            description: 無料放送のみ取得するか
+            in: query
+            name: isFree
+            required: false
+            schema:
+                type: boolean
+
         QueryChannelId:
             description: 放送局 id
             name: channelId
