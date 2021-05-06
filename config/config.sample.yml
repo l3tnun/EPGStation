@@ -108,19 +108,18 @@ stream:
             hls:
                 - name: 720p
                   cmd:
-                      '%FFMPEG% -re -dual_mono_mode main -i pipe:0 -sn -threads 0 -ignore_unknown -max_muxing_queue_size
-                      1024 -f hls -hls_time 3 -hls_list_size 17 -hls_allow_cache 1 -hls_segment_filename
-                      %streamFileDir%/stream%streamNum%-%09d.ts -hls_flags delete_segments -c:a aac -ar 48000 -b:a 192k
-                      -ac 2 -c:v libx264 -vf yadif,scale=-2:720 -b:v 3000k -preset veryfast -flags +loop-global_header
-                      %OUTPUT%'
+                      '%FFMPEG% -re -dual_mono_mode main -i pipe:0 -sn -map 0 -threads 0 -ignore_unknown
+                      -max_muxing_queue_size 1024 -f hls -hls_time 3 -hls_list_size 17 -hls_allow_cache 1
+                      -hls_segment_filename %streamFileDir%/stream%streamNum%-%09d.ts -hls_flags delete_segments -c:a
+                      aac -ar 48000 -b:a 192k -ac 2 -c:v libx264 -vf yadif,scale=-2:720 -b:v 3000k -preset veryfast
+                      -flags +loop-global_header %OUTPUT%'
                 - name: 480p
                   cmd:
-                      '%FFMPEG% -re -dual_mono_mode main -i pipe:0 -sn -threads 0 -ignore_unknown -max_muxing_queue_size
-                      1024 -f hls -hls_time 3 -hls_list_size 17 -hls_allow_cache 1 -hls_segment_filename
-                      %streamFileDir%/stream%streamNum%-%09d.ts -hls_flags delete_segments -c:a aac -ar 48000 -b:a 128k
-                      -ac 2 -c:v libx264 -vf yadif,scale=-2:480 -b:v 1500k -preset veryfast -flags +loop-global_header
-                      %OUTPUT%'
-                # aribb24 が有効な環境でのみ使用可能
+                      '%FFMPEG% -re -dual_mono_mode main -i pipe:0 -sn -map 0 -threads 0 -ignore_unknown
+                      -max_muxing_queue_size 1024 -f hls -hls_time 3 -hls_list_size 17 -hls_allow_cache 1
+                      -hls_segment_filename %streamFileDir%/stream%streamNum%-%09d.ts -hls_flags delete_segments -c:a
+                      aac -ar 48000 -b:a 128k -ac 2 -c:v libx264 -vf yadif,scale=-2:480 -b:v 1500k -preset veryfast
+                      -flags +loop-global_header %OUTPUT%'
                 # - name: 720p (arib)
                 #   cmd:
                 #       '%FFMPEG% -re -dual_mono_mode main -fix_sub_duration -i pipe:0 -threads 0 -ignore_unknown
@@ -129,13 +128,6 @@ stream:
                 #       aac -ar 48000 -b:a 192k -ac 2 -c:v libx264 -vf yadif,scale=-2:720 -b:v 3000k -preset veryfast
                 #       -flags +loop-global_header -c:s webvtt -master_pl_name stream%streamNum%.m3u8
                 #       %streamFileDir%/stream%streamNum%-child.m3u8'
-                # - name: 720p (aribb24.js)
-                #   cmd:
-                #       '%FFMPEG% -re -dual_mono_mode main -i pipe:0 -sn -map 0 -threads 0 -ignore_unknown
-                #       -max_muxing_queue_size 1024 -f hls -hls_time 3 -hls_list_size 17 -hls_allow_cache 1
-                #       -hls_segment_filename %streamFileDir%/stream%streamNum%-%09d.ts -hls_flags delete_segments -c:a
-                #       aac -ar 48000 -b:a 192k -ac 2 -c:v libx264 -vf yadif,scale=-2:720 -b:v 3000k -preset veryfast
-                #       -flags +loop-global_header %OUTPUT%'
 
     recorded:
         ts:
@@ -168,31 +160,26 @@ stream:
             hls:
                 - name: 720p
                   cmd:
-                      '%FFMPEG% -dual_mono_mode main -i pipe:0 -sn -threads 0 -ignore_unknown -max_muxing_queue_size
-                      1024 -f hls -hls_time 3 -hls_list_size 0 -hls_allow_cache 1 -hls_segment_filename
-                      %streamFileDir%/stream%streamNum%-%09d.ts -hls_flags delete_segments -c:a aac -ar 48000 -b:a 192k
-                      -ac 2 -c:v libx264 -vf yadif,scale=-2:720 -b:v 3000k -preset veryfast -flags +loop-global_header
-                      %OUTPUT%'
+                      '%FFMPEG% -re -dual_mono_mode main -i pipe:0 -sn -map 0 -threads 0 -ignore_unknown
+                      -max_muxing_queue_size 1024 -f hls -hls_time 3 -hls_list_size 17 -hls_allow_cache 1
+                      -hls_segment_filename %streamFileDir%/stream%streamNum%-%09d.ts -hls_flags delete_segments -c:a
+                      aac -ar 48000 -b:a 192k -ac 2 -c:v libx264 -vf yadif,scale=-2:720 -b:v 3000k -preset veryfast
+                      -flags +loop-global_header %OUTPUT%'
                 - name: 480p
                   cmd:
-                      '%FFMPEG% -dual_mono_mode main -i pipe:0 -sn -threads 0 -ignore_unknown -max_muxing_queue_size
-                      1024 -f hls -hls_time 3 -hls_list_size 0 -hls_allow_cache 1 -hls_segment_filename
-                      %streamFileDir%/stream%streamNum%-%09d.ts -hls_flags delete_segments -c:a aac -ar 48000 -b:a 128k
-                      -ac 2 -c:v libx264 -vf yadif,scale=-2:480 -b:v 3000k -preset veryfast -flags +loop-global_header
-                      %OUTPUT%'
+                      '%FFMPEG% -re -dual_mono_mode main -i pipe:0 -sn -map 0 -threads 0 -ignore_unknown
+                      -max_muxing_queue_size 1024 -f hls -hls_time 3 -hls_list_size 17 -hls_allow_cache 1
+                      -hls_segment_filename %streamFileDir%/stream%streamNum%-%09d.ts -hls_flags delete_segments -c:a
+                      aac -ar 48000 -b:a 128k -ac 2 -c:v libx264 -vf yadif,scale=-2:480 -b:v 1500k -preset veryfast
+                      -flags +loop-global_header %OUTPUT%'
                 # - name: 720p (arib)
                 #   cmd:
-                #       '%FFMPEG% -analyzeduration 10MB -probesize 10MB -fix_sub_duration -i pipe:0 -vf
-                #       yadif,scale=1280:720 -c:v libx264 -preset veryfast -c:a aac  -c:s webvtt -master_pl_name
-                #       stream%streamNum%.m3u8 -hls_list_size 0 -hls_flags delete_segments
-                #       %streamFileDir%/stream%streamNum%-child.m3u8'
-                # - name: 720p (aribb24.js)
-                #   cmd:
-                #       '%FFMPEG% -dual_mono_mode main -sn -i pipe:0 -map 0 -threads 0 -ignore_unknown
-                #       -max_muxing_queue_size 1024 -f hls -hls_time 3 -hls_list_size 0 -hls_allow_cache 1
+                #       '%FFMPEG% -re -dual_mono_mode main -fix_sub_duration -i pipe:0 -threads 0 -ignore_unknown
+                #       -max_muxing_queue_size 1024 -f hls -hls_time 3 -hls_list_size 17 -hls_allow_cache 1
                 #       -hls_segment_filename %streamFileDir%/stream%streamNum%-%09d.ts -hls_flags delete_segments -c:a
                 #       aac -ar 48000 -b:a 192k -ac 2 -c:v libx264 -vf yadif,scale=-2:720 -b:v 3000k -preset veryfast
-                #       -flags +loop-global_header %OUTPUT%'
+                #       -flags +loop-global_header -c:s webvtt -master_pl_name stream%streamNum%.m3u8
+                #       %streamFileDir%/stream%streamNum%-child.m3u8'
 
         encoded:
             webm:
