@@ -218,6 +218,8 @@ export default abstract class BaseVide extends Vue {
         }
 
         this.video.currentTime = time;
+
+        this.fixSubtitleState();
     }
 
     /**
@@ -352,7 +354,11 @@ export default abstract class BaseVide extends Vue {
         }
 
         if (this.video.textTracks[0].mode !== this.lastSubtitleState) {
-            this.video.textTracks[0].mode = this.lastSubtitleState;
+            if (this.lastSubtitleState === 'showing') {
+                this.showSubtitle();
+            } else {
+                this.disabledSubtitle();
+            }
         }
     }
 }

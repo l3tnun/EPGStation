@@ -240,9 +240,10 @@ export default class VideoContainer extends Vue {
     public durationStr: string = '--:--';
     public playbackRate: number = 1.0;
 
-    // 字幕状態
+    // 字幕状態 (表示用)
     public isEnabledSubtitles: boolean = false;
     public isShowingSubtitle: boolean = false;
+
     public isiPad: boolean = UaUtil.isiPadOS();
 
     private isFirstPlay: boolean = true;
@@ -258,6 +259,10 @@ export default class VideoContainer extends Vue {
     // seek 時に使用する一時変数
     private needsReplay: boolean | null = null;
     private lastSeekedTime: number = 0; // 最後に slider を seek した時刻
+
+    // 内部字幕状態
+    // eslint-disable-next-line no-undef
+    private internalSubtitleState: TextTrackMode = 'disabled';
 
     public created(): void {
         document.addEventListener('keydown', this.keyDwonListener, false);
@@ -460,6 +465,7 @@ export default class VideoContainer extends Vue {
     // 読み込み完了
     public onLoadeddata(): void {
         this.isLoading = false;
+        this.forceUpdateSubtitle();
         this.updateSubtitleState();
     }
 
@@ -528,6 +534,9 @@ export default class VideoContainer extends Vue {
         this.updateLastSeekTime();
         (this.$refs.video as BaseVideo).setCurrentTime(time);
 
+        // 内部の字幕表示状態と実際の状態を強制的に合わせる
+        this.forceUpdateSubtitle();
+
         // シーク前に再生中であれば再開
         await Util.sleep(200);
         if (this.needsReplay === true) {
@@ -536,6 +545,25 @@ export default class VideoContainer extends Vue {
             });
         }
         this.needsReplay = null;
+    }
+
+    /**
+     * 強制的に実際の字幕の状態を内部の字幕状態に合わせる
+     */
+    private forceUpdateSubtitle(): void {
+        if (typeof this.$refs.video === 'undefined') {
+            return;
+        }
+
+        try {
+            if (this.internalSubtitleState === 'showing') {
+                (this.$refs.video as BaseVideo).showSubtitle();
+            } else {
+                (this.$refs.video as BaseVideo).disabledSubtitle();
+            }
+        } catch (err) {
+            console.error(err);
+        }
     }
 
     // 再生位置更新時に呼ばれる
@@ -721,9 +749,11 @@ export default class VideoContainer extends Vue {
 
         if ((this.$refs.video as BaseVideo).isShowingSubtitle() === true) {
             // 非表示
+            this.internalSubtitleState = 'disabled';
             (this.$refs.video as BaseVideo).disabledSubtitle();
         } else {
             // 表示
+            this.internalSubtitleState = 'showing';
             (this.$refs.video as BaseVideo).showSubtitle();
         }
 
