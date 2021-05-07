@@ -77,7 +77,6 @@ export default class LiveMpegTsVideo extends BaseVideo {
             liveBufferLatencyChasing: true,
             liveBufferLatencyMinRemain: 1.0,
             liveBufferLatencyMaxLatency: 2.0,
-            autoCleanupSourceBuffer: false,
         };
         this.mepgtsPlayer = Mpegts.createPlayer(
             {
