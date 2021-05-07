@@ -169,5 +169,34 @@ export default class LiveMpegTsVideo extends BaseVideo {
     public setCurrentTime(time: number): void {
         return;
     }
+
+    /**
+     * 字幕を表示させる
+     */
+    public showSubtitle(): void {
+        super.showSubtitle();
+        if (this.captionRenderer !== null) {
+            this.captionRenderer.show();
+        }
+
+        if (this.superimposeRenderer !== null) {
+            this.superimposeRenderer.show();
+        }
+    }
+
+    /**
+     * 字幕を非表示にする
+     */
+    public disabledSubtitle(): void {
+        super.disabledSubtitle();
+
+        if (this.captionRenderer !== null) {
+            this.captionRenderer.hide();
+        }
+
+        if (this.superimposeRenderer !== null) {
+            this.superimposeRenderer.hide();
+        }
+    }
 }
 </script>
