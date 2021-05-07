@@ -17,10 +17,16 @@ PC からの閲覧でもモダンな UI で操作可能です
         -   予約の競合や重複の警告
     -   番組の視聴
         -   放送中番組のライブ視聴
+        -   [aribb24.js][] を使用する Web での字幕/文字スーパー表示機能
+        -   [mpegts.js][] を使用する Web での[低遅延ライブ視聴機能](doc/caption-lowlatency-setup.md)
         -   録画済み番組のストリーミング視聴
         -   録画済み番組のダウンロード
 -   API
     -   [WebAPI Document](doc/webapi.md)
+
+
+[aribb24.js]: https://github.com/monyone/aribb24.js
+[mpegts.js]: https://github.com/xqq/mpegts.js
 
 ## スクリーンショット
 
@@ -64,6 +70,8 @@ sqlite3 パッケージのインストール時にバイナリが存在しなか
 ### [Linux / macOS 用セットアップマニュアル](doc/linux-setup.md)
 
 ### [Windows 用セットアップマニュアル](doc/windows-setup.md)
+
+### [字幕表示 / 低遅延配信用セットアップマニュアル](doc/caption-lowlatency-setup.md)
 
 ---
 
