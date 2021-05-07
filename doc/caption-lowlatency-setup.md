@@ -14,8 +14,19 @@ iOS Safari を含むフルプラットフォーム対応しています。
 
 [node-arib-subtitle-timedmetadater]: https://github.com/monyone/node-arib-subtitle-timedmetadater
 
+### ※iOS 及び iPadOS(PWA モード時のみ)での制約
 
+iOS 及び iPadOS(PWA モード時のみ) でフルスクリーン再生した場合に字幕が表示できません。(os のビデオプレーヤが使用されるた
+め)
 
+ただし WebVTT による字幕表示は可能なので、libaribb24 を有効化した ffmpeg による VTT 字幕は表示できます。 (表現力は劣りま
+す)
+
+### ffmpeg による VTT 字幕 720p のサンプル配置
+
+```bash
+'%FFMPEG% -re -dual_mono_mode main -fix_sub_duration -i pipe:0 -threads 0 -ignore_unknown -max_muxing_queue_size 1024 -f hls -hls_time 3 -hls_list_size 0 -hls_allow_cache 1 -hls_segment_filename %streamFileDir%/stream%streamNum%-%09d.ts -hls_flags delete_segments -c:a aac -ar 48000 -b:a 192k -ac 2 -c:v libx264 -vf yadif,scale=-2:720 -b:v 3000k -preset veryfast -flags +loop-global_header -c:s webvtt -master_pl_name stream%streamNum%.m3u8 %streamFileDir%/stream%streamNum%-child.m3u8'
+```
 
 ## M2TS-LL 低遅延配信の設定および字幕表示の設定
 
@@ -26,10 +37,10 @@ iOS Safari を含むフルプラットフォーム対応しています。
 ### 字幕/文字スーパーの抽出
 
 字幕ストリームとデータストリームを抽出するように指定してください
+
 ```bash
 -map 0 -c:s copy -c:d copy -ignore_unknown
 ```
-
 
 ### 低遅延最適化
 
@@ -43,7 +54,6 @@ FFmpeg 内部のパイプラインを低遅延化させるには、以下のよ�
 
 なお、`-re` パラメータは不要になりますので、入らないように注意してください
 
-
 ### 起動速度の最適化
 
 `-f mpegts -analyzeduration 500000` を `-i pipe:0` の前に入れて置くと視聴起動が早くなります
@@ -54,15 +64,13 @@ FFmpeg 内部のパイプラインを低遅延化させるには、以下のよ�
 
 配信の起動時間を約 3 秒まで短縮することができます
 
-
-### OpenGOPの禁止
+### OpenGOP の禁止
 
 libx264 使用の場合、`-flags +cgop` をつけて closed-gop を明示的に指定するようにしてください
 
 ```bash
 -c:v libx264 -flags +cgop
 ```
-
 
 ### M2TS-LL libx264 720p のサンプル配置
 
