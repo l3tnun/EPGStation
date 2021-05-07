@@ -116,6 +116,8 @@ import RecordedSelectStreamSettingStorageModel from './storage/recorded/Recorded
 import SendVideoFileSelectHostSettingStorageModel from './storage/recorded/SendVideoFileSelectHostSettingStorageModel';
 import { ISettingStorageModel } from './storage/setting/ISettingStorageModel';
 import SettingStorageModel from './storage/setting/SettingStorageModel';
+import { IVideoPlayerSettingModel } from './storage/video/IVideoPlayerSettingModel';
+import VideoPlayerSettingModel from './storage/video/VideoPlayerSettingModel';
 import StorageOperationModel from './storage/StorageOperationModel';
 import IColorThemeState from '@/model/state/IColorThemeState';
 import ColorThemeState from '@/model/state/ColorThemeState';
@@ -171,6 +173,8 @@ export default (container: Container): void => {
     container.bind<IRecordedSelectStreamSettingStorageModel>('IRecordedSelectStreamSettingStorageModel').to(RecordedSelectStreamSettingStorageModel).inSingletonScope();
 
     container.bind<ISendVideoFileSelectHostSettingStorageModel>('ISendVideoFileSelectHostSettingStorageModel').to(SendVideoFileSelectHostSettingStorageModel).inSingletonScope();
+
+    container.bind<IVideoPlayerSettingModel>('IVideoPlayerSettingModel').to(VideoPlayerSettingModel).inSingletonScope();
 
     container.bind<IServerConfigModel>('IServerConfigModel').to(ServerConfigModel).inSingletonScope();
 

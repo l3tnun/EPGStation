@@ -200,9 +200,11 @@ import RecordedHLSStreamingVideo from '@/components/video/RecordedHLSStreamingVi
 import RecordedStreamingVideo from '@/components/video/RecordedStreamingVideo.vue';
 import LiveMpegTsVideo from '@/components/video/LiveMpegTsVideo.vue';
 import * as VideoParam from '@/components/video/ViedoParam';
+import container from '@/model/ModelContainer';
 import UaUtil from '@/util/UaUtil';
 import Util from '@/util/Util';
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
+import { IVideoPlayerSettingModel } from '@/model/storage/video/IVideoPlayerSettingModel';
 
 interface SpeedItem {
     text: string;
@@ -245,6 +247,8 @@ export default class VideoContainer extends Vue {
     public isShowingSubtitle: boolean = false;
 
     public isiPad: boolean = UaUtil.isiPadOS();
+
+    private videoSetting: IVideoPlayerSettingModel = container.get<IVideoPlayerSettingModel>('IVideoPlayerSettingModel');
 
     private isFirstPlay: boolean = true;
     private isEnabledRotation: boolean = typeof window.screen.orientation !== 'undefined' && UaUtil.isMobile();
@@ -482,6 +486,14 @@ export default class VideoContainer extends Vue {
             if (this.isFirstPlay === true && typeof this.$refs.video !== 'undefined' && (this.$refs.video as BaseVideo).paused() === false) {
                 this.isShowControl = false;
                 this.isHideCursor = true;
+
+                // 字幕の初期表示状態と内部状態を合わせる
+                const isShowingSubtitle = this.internalSubtitleState === 'showing';
+                const subtitleConfig = this.videoSetting.getSavedValue().isShowSubtitle;
+                if (subtitleConfig !== isShowingSubtitle) {
+                    this.internalSubtitleState = subtitleConfig === true ? 'showing' : 'disabled';
+                    this.forceUpdateSubtitle();
+                }
             }
             this.isFirstPlay = false;
         }, 300);
@@ -756,6 +768,9 @@ export default class VideoContainer extends Vue {
             this.internalSubtitleState = 'showing';
             (this.$refs.video as BaseVideo).showSubtitle();
         }
+
+        this.videoSetting.tmp.isShowSubtitle = this.internalSubtitleState === 'showing';
+        this.videoSetting.save();
 
         this.updateSubtitleState();
     }
