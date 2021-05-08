@@ -4,7 +4,7 @@
         <v-card v-if="searchState.isTimeSpecification === false">
             <div class="pa-4">
                 <SearchOptionRow title="キーワード">
-                    <v-text-field v-model="searchState.searchOption.keyword" label="keyword" clearable v-on:keydown.enter="onKeywordEnter"></v-text-field>
+                    <v-text-field v-model="searchState.searchOption.keyword" label="keyword" clearable v-on:keydown.enter="onKeywordEnter" ref="keyword"></v-text-field>
                     <div class="d-flex flex-wrap">
                         <v-checkbox v-model="searchState.searchOption.keywordOption.keyCS" class="mx-1 my-0" label="大小区別"></v-checkbox>
                         <v-checkbox v-model="searchState.searchOption.keywordOption.keyRegExp" class="mx-1 my-0" label="正規表現"></v-checkbox>
@@ -232,6 +232,7 @@ import SearchGenreOption from '@/components/search/SearchGenreOption.vue';
 import SearchOptionRow from '@/components/search/SearchOptionRow.vue';
 import container from '@/model/ModelContainer';
 import ISearchState from '@/model/state/search/ISearchState';
+import VuetifyUtil from '@/util/VuetifyUtil';
 import { Component, Prop, Vue } from 'vue-property-decorator';
 
 @Component({
@@ -245,6 +246,12 @@ export default class SearchOption extends Vue {
 
     public isOpenStartTimepicker: boolean = false;
     public isOpenEndTimepicker: boolean = false;
+
+    public mounted(): void {
+        if (typeof this.$refs.keyword !== 'undefined') {
+            VuetifyUtil.focusTextFiled(this.$refs.keyword as Vue);
+        }
+    }
 
     public onKeywordEnter(e: Event): void {
         // フォーカスを外す
