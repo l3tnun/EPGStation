@@ -8,7 +8,7 @@
             </template>
             <v-card width="400">
                 <div class="recorded-search pa-4">
-                    <v-text-field v-model="searchState.keyword" label="キーワード" clearable v-on:keydown.enter="onSearch()"></v-text-field>
+                    <v-text-field v-model="searchState.keyword" label="キーワード" clearable v-on:keydown.enter="onSearch()" ref="keyword"></v-text-field>
                     <v-autocomplete
                         v-model="searchState.ruleId"
                         :loading="loading"
@@ -45,6 +45,7 @@ import container from '@/model/ModelContainer';
 import IRecordedSearchState from '@/model/state/recorded/search/IRecordedSearchState';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
 import Util from '@/util/Util';
+import VuetifyUtil from '@/util/VuetifyUtil';
 import { Component, Vue, Watch } from 'vue-property-decorator';
 import * as apid from '../../../../api';
 
@@ -149,6 +150,13 @@ export default class RecordedSearchMenu extends Vue {
             if (typeof this.$route.query.hasOriginalFile !== 'undefined') {
                 this.searchState.hasOriginalFile = (this.$route.query.hasOriginalFile as any) === true || this.$route.query.hasOriginalFile === 'true';
             }
+
+            // キーワードにフォーカスを当てる
+            this.$nextTick(() => {
+                if (typeof this.$refs.keyword !== 'undefined') {
+                    VuetifyUtil.focusTextFiled(this.$refs.keyword as Vue);
+                }
+            });
         }
     }
 }
