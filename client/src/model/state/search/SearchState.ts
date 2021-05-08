@@ -732,7 +732,7 @@ export default class SearchState implements ISearchState {
         }
 
         // エンコード設定
-        if (this.settingModel.getSavedValue().isEnableEncodingSettingWhenCreateRule === true && this.encodeOption !== null) {
+        if (this.isEditingRule() === false && this.settingModel.getSavedValue().isEnableEncodingSettingWhenCreateRule === true && this.encodeOption !== null) {
             const items = this.getEncodeModeItems();
             if (items.length > 0) {
                 this.encodeOption.mode1 = items[0];
