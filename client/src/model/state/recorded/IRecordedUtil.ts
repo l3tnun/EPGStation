@@ -15,6 +15,7 @@ export interface RecordedDisplayData {
         videoFiles?: apid.VideoFile[];
         canStremingVideoFiles?: apid.VideoFile[];
         drop?: string;
+        dropSimple?: string;
         hasDrop: boolean;
     };
     recordedItem: apid.RecordedItem;

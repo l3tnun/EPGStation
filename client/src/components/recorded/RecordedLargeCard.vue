@@ -21,7 +21,7 @@
                 class="text caption font-weight-light"
                 v-bind:class="{ droped: item.display.hasDrop === true }"
             >
-                {{ item.display.drop }}
+                {{ item.display.dropSimple }}
             </div>
             <div
                 v-else-if="typeof item.display.description === 'undefined' || item.display.description.replace(/\s+/g, '').length === 0"

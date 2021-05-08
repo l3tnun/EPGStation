@@ -24,7 +24,7 @@
                 class="text caption font-weight-light"
                 v-bind:class="{ droped: item.display.hasDrop === true }"
             >
-                {{ item.display.drop }}
+                {{ item.display.dropSimple }}
             </div>
 
             <div

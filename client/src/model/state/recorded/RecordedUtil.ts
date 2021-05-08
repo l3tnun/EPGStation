@@ -4,6 +4,7 @@ import DateUtil from '../../../util/DateUtil';
 import GenreUtil from '../../../util/GenreUtil';
 import IChannelModel from '../../channels/IChannelModel';
 import IServerConfigModel from '../../serverConfig/IServerConfigModel';
+import Util from '../../../util/Util';
 import IRecordedUtil, { RecordedDisplayData } from './IRecordedUtil';
 
 @injectable()
@@ -64,7 +65,15 @@ export default class RecordedUtil implements IRecordedUtil {
         }
 
         if (item.isRecording !== true && typeof item.dropLogFile !== 'undefined') {
-            result.display.drop = `drop: ${item.dropLogFile.dropCnt}, error: ${item.dropLogFile.errorCnt}, scrambling: ${item.dropLogFile.scramblingCnt}`;
+            let fileSize = 0;
+            if (typeof item.videoFiles !== 'undefined') {
+                for (const v of item.videoFiles) {
+                    fileSize += v.size;
+                }
+            }
+            const fileSizeStr = Util.getFileSizeStr(fileSize);
+            result.display.drop = `drop: ${item.dropLogFile.dropCnt}, error: ${item.dropLogFile.errorCnt}, scrambling: ${item.dropLogFile.scramblingCnt} ${fileSizeStr}`;
+            result.display.dropSimple = `${item.dropLogFile.dropCnt}/${item.dropLogFile.errorCnt}/${item.dropLogFile.scramblingCnt} ${fileSizeStr}`;
 
             result.display.hasDrop = item.dropLogFile.dropCnt > 0 || item.dropLogFile.errorCnt > 0 || item.dropLogFile.scramblingCnt > 0;
         }
