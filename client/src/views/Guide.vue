@@ -10,7 +10,7 @@
                 <GuideMainMenu v-on:updatedgenre="onUpdateGenre"></GuideMainMenu>
             </template>
         </TitleBar>
-        <div class="app-content guide" v-bind:class="{ 'is-dark': $vuetify.theme.dark === true }">
+        <div class="app-content guide" v-bind:class="darkClassList">
             <transition name="page">
                 <div v-if="guideState.getChannelsLength() > 0" class="overflow-hidden d-flex flex-column" style="height: 100%">
                     <Loading v-if="isLoading === true"></Loading>
@@ -23,7 +23,7 @@
                         </div>
                         <GuideScroller class="program-wrap overflow-auto" v-on:scroll="onProgramScroll" ref="programs">
                             <template v-slot:content>
-                                <div class="programs" v-bind:class="{ 'is-dark': $vuetify.theme.dark === true }" v-bind:style="programsStyle" ref="content">
+                                <div class="programs" v-bind:class="darkClassList" v-bind:style="programsStyle" ref="content">
                                     <TimeLine></TimeLine>
                                 </div>
                             </template>
@@ -110,6 +110,12 @@ export default class Guide extends Vue {
     }, 100);
 
     private isiOS: boolean = false;
+
+    get darkClassList(): any {
+        return {
+            'is-dark': this.settingValue?.isForceDisableDarkThemeForGuide !== true && this.$vuetify.theme.dark === true,
+        };
+    }
 
     get programsStyle(): any {
         const width = `calc(${this.guideState.getChannelsLength()} * var(--channel-width))`;

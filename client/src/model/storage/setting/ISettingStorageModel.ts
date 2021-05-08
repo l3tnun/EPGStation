@@ -12,6 +12,7 @@ export interface ISettingValue {
     onAirM2TSViewURLScheme: string | null;
     guideMode: GuideViewMode;
     guideLength: number;
+    isForceDisableDarkThemeForGuide: boolean;
     isShowOnlyFreePrograms: boolean;
     isEnableDisplayForEachBroadcastWave: boolean;
     isIncludeChannelIdWhenSearching: boolean;

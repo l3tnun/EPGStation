@@ -21,6 +21,7 @@ export default class SettingStorageModel extends AbstractStorageBaseModel<ISetti
             onAirM2TSViewURLScheme: null,
             guideMode: UaUtil.isiOS() === true ? 'all' : 'sequential',
             guideLength: 24,
+            isForceDisableDarkThemeForGuide: false,
             isShowOnlyFreePrograms: false,
             isEnableDisplayForEachBroadcastWave: false,
             isIncludeChannelIdWhenSearching: true,
