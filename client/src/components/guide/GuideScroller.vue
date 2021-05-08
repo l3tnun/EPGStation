@@ -28,15 +28,15 @@ export default class GuideScroller extends Vue {
     }).bind(this);
 
     public mounted(): void {
-        document.addEventListener('mousedown', this.mousedownListener, false);
-        document.addEventListener('mouseup', this.mouseupListener, false);
-        document.addEventListener('mousemove', this.mousemoveListener, false);
+        (this.$el as HTMLElement).addEventListener('mousedown', this.mousedownListener, false);
+        (this.$el as HTMLElement).addEventListener('mouseup', this.mouseupListener, false);
+        (this.$el as HTMLElement).addEventListener('mousemove', this.mousemoveListener, false);
     }
 
     public beforeDestroy(): void {
-        document.removeEventListener('mousedown', this.mousedownListener, false);
-        document.removeEventListener('mouseup', this.mouseupListener, false);
-        document.removeEventListener('mousemove', this.mousemoveListener, false);
+        (this.$el as HTMLElement).removeEventListener('mousedown', this.mousedownListener, false);
+        (this.$el as HTMLElement).removeEventListener('mouseup', this.mouseupListener, false);
+        (this.$el as HTMLElement).removeEventListener('mousemove', this.mousemoveListener, false);
     }
 
     public onScroll(e: Event): void {
