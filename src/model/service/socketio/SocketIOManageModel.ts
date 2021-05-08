@@ -33,6 +33,9 @@ export default class SocketIOManageModel implements ISocketIOManageModel {
                         typeof this.config.subDirectory === 'undefined'
                             ? '/socket.io'
                             : urljoin(this.config.subDirectory, '/socket.io'),
+                    cors: {
+                        origin: '*',
+                    },
                 }),
             );
         }
