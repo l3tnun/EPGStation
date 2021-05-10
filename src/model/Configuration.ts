@@ -48,7 +48,7 @@ class Configuration implements IConfiguration {
             str = fs.readFileSync(configPath, 'utf-8');
         } catch (e) {
             if (e.code === 'ENOENT') {
-                this.log.system.fatal('config.yml is not found');
+                this.log.system.fatal(`${configPath} is not found`);
             } else {
                 this.log.system.fatal(e);
             }
