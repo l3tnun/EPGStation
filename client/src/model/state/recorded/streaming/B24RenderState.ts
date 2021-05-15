@@ -1,23 +1,32 @@
 import * as aribb24js from 'aribb24.js';
+import Hls from 'hls.js';
 import { injectable } from 'inversify';
 import SubtitleUtil from '../../../../util/SubtitleUtil';
 import IB24RenderState from './IB24RenderState';
 
 @injectable()
 export default class B24RenderState implements IB24RenderState {
-    private b24Renderer: aribb24js.CanvasID3Renderer | null = null;
+    private b24Renderer: aribb24js.CanvasRenderer | null = null;
 
     /**
      * set b24 subtitle render
      * @param video: HTMLVideoElement
      * @param hls: Hls
      */
-    public init(video: HTMLVideoElement): void {
+    public init(video: HTMLVideoElement, hls?: Hls): void {
         this.destroy();
 
         const b24Option = SubtitleUtil.getAribb24BaseOption();
-        this.b24Renderer = new aribb24js.CanvasID3Renderer(b24Option);
+        this.b24Renderer = new aribb24js.CanvasRenderer(b24Option);
         this.b24Renderer.attachMedia(video);
+
+        if (typeof hls !== 'undefined') {
+            hls.on(Hls.Events.FRAG_PARSING_METADATA, (_e, data) => {
+                for (const sample of data.samples) {
+                    this.b24Renderer?.pushID3v2Data(sample.pts, sample.data);
+                }
+            });
+        }
     }
 
     /**

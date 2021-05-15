@@ -10,7 +10,6 @@ import IB24RenderState from '@/model/state/recorded/streaming/IB24RenderState';
 import IRecordedHLSStreamingVideoState from '@/model/state/recorded/streaming/IRecordedHLSStreamingVideoState';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
 import HLSUtil from '@/util/HLSUtil';
-import UaUtil from '@/util/UaUtil';
 import Util from '@/util/Util';
 import Hls from 'hls.js';
 import { Component, Prop, Watch } from 'vue-property-decorator';
@@ -183,6 +182,7 @@ export default class RecordedHLSStreamingVideo extends BaseVideo {
                     }
                     this.video.currentTime = 0;
                 });
+            this.b24RenderState.init(this.video);
         } else {
             // hls.js 対応
             this.hls = new Hls();
@@ -200,9 +200,8 @@ export default class RecordedHLSStreamingVideo extends BaseVideo {
                     }, 100);
                 }
             });
+            this.b24RenderState.init(this.video, this.hls);
         }
-
-        this.b24RenderState.init(this.video);
     }
 
     /**
