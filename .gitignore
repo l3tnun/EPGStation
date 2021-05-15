@@ -9,7 +9,6 @@ data/streamfiles/*
 .DS_Store
 config/*.json
 config/*.yml
-!config.sample.yml
 !operatorLogConfig.sample.yml
 !serviceLogConfig.sample.yml
 data/*.json
