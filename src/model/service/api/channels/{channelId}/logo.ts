@@ -24,9 +24,9 @@ export const get: Operation = async (req, res) => {
 };
 
 get.apiDoc = {
-    summary: '放送局ログ取得',
+    summary: '放送局ロゴ取得',
     tags: ['channels'],
-    description: '放送局のログを取得する',
+    description: '放送局のロゴを取得する',
     parameters: [
         {
             $ref: '#/components/parameters/PathChannelId',
@@ -34,7 +34,7 @@ get.apiDoc = {
     ],
     responses: {
         200: {
-            description: '放送局のログを取得しました',
+            description: '放送局のロゴを取得しました',
             content: {
                 'image/png': {},
             },
