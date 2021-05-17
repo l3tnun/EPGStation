@@ -26,7 +26,7 @@
                     ></v-text-field>
                 </div>
 
-                <v-checkbox v-model="setting.tmp.isSaveSameDirectory" class="mx-1 my-0" label="元ファイルを同じ場所に保存する"></v-checkbox>
+                <v-checkbox v-model="setting.tmp.isSaveSameDirectory" class="mx-1 my-0" label="元ファイルと同じ場所に保存する"></v-checkbox>
                 <v-checkbox v-model="setting.tmp.removeOriginal" class="mx-1 my-0" label="元ファイルを削除する"></v-checkbox>
             </div>
             <v-card-actions>
