@@ -1,7 +1,7 @@
 import * as aribb24js from 'aribb24.js';
 import Hls from 'hls.js';
 import { injectable } from 'inversify';
-import SubtitleUtil from '../../../../util/SubtitleUtil';
+import HLSUtil from '../../../../util/HLSUtil';
 import IB24RenderState from './IB24RenderState';
 
 @injectable()
@@ -16,7 +16,7 @@ export default class B24RenderState implements IB24RenderState {
     public init(video: HTMLVideoElement, hls?: Hls): void {
         this.destroy();
 
-        const b24Option = SubtitleUtil.getAribb24BaseOption();
+        const b24Option = HLSUtil.getAribb24BaseOption();
         this.b24Renderer = new aribb24js.CanvasRenderer(b24Option);
         this.b24Renderer.attachMedia(video);
 

@@ -1,4 +1,6 @@
 import Hls from 'hls.js';
+import container from '../model/ModelContainer';
+import { ISettingStorageModel } from '../model/storage/setting/ISettingStorageModel';
 import UaUtil from './UaUtil';
 
 namespace HLSUtil {
@@ -8,6 +10,26 @@ namespace HLSUtil {
      */
     export const isSupportedHLSjs = (): boolean => {
         return UaUtil.isiOS() === true || (UaUtil.isMac() === true && UaUtil.isSafari() === true) ? false : Hls.isSupported();
+    };
+
+    /**
+     * aribb24.js の option を生成する
+     */
+    export const getAribb24BaseOption = (): any => {
+        const storageModel: ISettingStorageModel = container.get<ISettingStorageModel>('ISettingStorageModel');
+        const config = storageModel.getSavedValue();
+
+        const baseOption: any = {
+            normalFont: '"Windows TV MaruGothic", "MS Gothic", "Yu Gothic", sans-serif',
+            gaijiFont: '"Windows TV MaruGothic", "MS Gothic", "Yu Gothic", sans-serif',
+            drcsReplacement: true,
+            enableAutoInBandMetadataTextTrackDetection: HLSUtil.isSupportedHLSjs() === false,
+        };
+        if (config.isForceEnableSubtitleStroke === true) {
+            baseOption.forceStrokeColor = 'black';
+        }
+
+        return baseOption;
     };
 }
 
