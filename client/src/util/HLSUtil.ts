@@ -20,8 +20,8 @@ namespace HLSUtil {
         const config = storageModel.getSavedValue();
 
         const baseOption: any = {
-            normalFont: '"Windows TV MaruGothic", "MS Gothic", "Yu Gothic", sans-serif',
-            gaijiFont: '"Windows TV MaruGothic", "MS Gothic", "Yu Gothic", sans-serif',
+            normalFont: '"Windows TV MaruGothic", "Hiragino Maru Gothic Pro", "HGMaruGothicMPRO", "Yu Gothic Medium", sans-serif',
+            gaijiFont: '"Windows TV MaruGothic", "Hiragino Maru Gothic Pro", "HGMaruGothicMPRO", "Yu Gothic Medium", sans-serif',
             drcsReplacement: true,
             enableAutoInBandMetadataTextTrackDetection: HLSUtil.isSupportedHLSjs() === false,
         };
