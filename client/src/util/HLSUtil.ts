@@ -22,8 +22,8 @@ namespace HLSUtil {
         // Windows Firefox では Yu Gothic や Meiryo では Canvas の垂直位置の指定がずれるため、MS Gothic を使用する #478
         const font =
             UaUtil.isWindows() === true && UaUtil.isFirefox() === true
-                ? '"Windows TV MaruGothic", "Hiragino Maru Gothic Pro", "HGMaruGothicMPRO", "Yu Gothic Medium", sans-serif'
-                : '"Windows TV MaruGothic", "MS Gothic", "Yu Gothic", sans-serif';
+                ? '"Windows TV MaruGothic", "MS Gothic", "Yu Gothic", sans-serif'
+                : '"Windows TV MaruGothic", "Hiragino Maru Gothic Pro", "HGMaruGothicMPRO", "Yu Gothic Medium", sans-serif';
 
         const baseOption: any = {
             normalFont: font,
