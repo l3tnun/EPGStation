@@ -19,9 +19,15 @@ namespace HLSUtil {
         const storageModel: ISettingStorageModel = container.get<ISettingStorageModel>('ISettingStorageModel');
         const config = storageModel.getSavedValue();
 
+        // Windows Firefox では Yu Gothic や Meiryo では Canvas の垂直位置の指定がずれるため、MS Gothic を使用する #478
+        const font =
+            UaUtil.isWindows() === true && UaUtil.isFirefox() === true
+                ? '"Windows TV MaruGothic", "Hiragino Maru Gothic Pro", "HGMaruGothicMPRO", "Yu Gothic Medium", sans-serif'
+                : '"Windows TV MaruGothic", "MS Gothic", "Yu Gothic", sans-serif';
+
         const baseOption: any = {
-            normalFont: '"Windows TV MaruGothic", "Hiragino Maru Gothic Pro", "HGMaruGothicMPRO", "Yu Gothic Medium", sans-serif',
-            gaijiFont: '"Windows TV MaruGothic", "Hiragino Maru Gothic Pro", "HGMaruGothicMPRO", "Yu Gothic Medium", sans-serif',
+            normalFont: font,
+            gaijiFont: font,
             drcsReplacement: true,
             enableAutoInBandMetadataTextTrackDetection: HLSUtil.isSupportedHLSjs() === false,
         };
