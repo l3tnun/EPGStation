@@ -372,7 +372,7 @@ export default class RecordedManageModel implements IRecordedManageModel {
         if (option.startAt - option.endAt >= 0) {
             throw new Error('TimeRangeError');
         }
-        recorded.duration = option.startAt - option.endAt;
+        recorded.duration = option.endAt - option.startAt;
         recorded.name = StrUtil.toDBStr(option.name);
         recorded.halfWidthName = StrUtil.toHalf(option.name);
         if (typeof option.description !== 'undefined') {
