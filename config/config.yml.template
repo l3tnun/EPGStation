@@ -47,7 +47,7 @@ urlscheme:
         android: intent://ADDRESS#Intent;package=org.videolan.vlc;type=video;scheme=PROTOCOL;end
     video:
         ios: infuse://x-callback-url/play?url=PROTOCOL://ADDRESS
-        android: intent://ADDRESS#Intent;package=com.mxtech.videoplayer.pro;type=video;scheme=PROTOCOL;end
+        android: intent://ADDRESS#Intent;package=com.mxtech.videoplayer.ad;type=video;scheme=PROTOCOL;end
     download:
         ios: vlc-x-callback://x-callback-url/download?url=PROTOCOL://ADDRESS&filename=FILENAME
 
