@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@mdi/font": "5.9.55",
-    "aribb24.js": "1.6.4",
+    "aribb24.js": "1.6.8",
     "axios": "0.21.1",
     "eventemitter2": "6.4.4",
     "hls.js": "1.0.2",
