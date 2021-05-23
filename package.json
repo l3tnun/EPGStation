@@ -30,7 +30,7 @@
     },
     "homepage": "https://github.com/l3tnun/EPGStation-V2#readme",
     "dependencies": {
-        "arib-subtitle-timedmetadater": "4.0.3",
+        "arib-subtitle-timedmetadater": "4.0.5",
         "aribts": "2.1.12",
         "axios": "0.21.1",
         "body-parser": "1.19.0",
