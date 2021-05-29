@@ -7,7 +7,7 @@ export const get: Operation = async (req, res) => {
     const encodeApiModel = container.get<IEncodeApiModel>('IEncodeApiModel');
 
     try {
-        api.responseJSON(res, 200, await encodeApiModel.getAll((req.query.isHalfWidth as any) as boolean));
+        api.responseJSON(res, 200, await encodeApiModel.getAll(req.query.isHalfWidth as any as boolean));
     } catch (err) {
         api.responseServerError(res, err.message);
     }

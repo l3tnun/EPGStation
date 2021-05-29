@@ -19,7 +19,8 @@ import StreamBaseModel from './StreamBaseModel';
 @injectable()
 export default abstract class LiveStreamBaseModel
     extends StreamBaseModel<LiveStreamOption>
-    implements ILiveStreamBaseModel {
+    implements ILiveStreamBaseModel
+{
     private stream: http.IncomingMessage | null = null;
     private streamProcess: ChildProcess | null = null;
     private mirakurunClientModel: IMirakurunClientModel;

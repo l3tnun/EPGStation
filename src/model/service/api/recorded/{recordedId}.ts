@@ -9,7 +9,7 @@ export const get: Operation = async (req, res) => {
     try {
         const recorded = await recordedApiModel.get(
             parseInt(req.params.recordedId, 10),
-            (req.query.isHalfWidth as any) as boolean,
+            req.query.isHalfWidth as any as boolean,
         );
         if (recorded === null) {
             api.responseError(res, {

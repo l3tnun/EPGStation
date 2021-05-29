@@ -7,7 +7,7 @@ export const get: Operation = async (req, res) => {
     const streamApiModel = container.get<IStreamApiModel>('IStreamApiModel');
 
     try {
-        const infos = await streamApiModel.getStreamInfos((req.query.isHalfWidth as any) as boolean);
+        const infos = await streamApiModel.getStreamInfos(req.query.isHalfWidth as any as boolean);
         api.responseJSON(res, 200, infos);
     } catch (err) {
         api.responseServerError(res, err.message);

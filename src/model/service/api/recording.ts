@@ -9,7 +9,7 @@ export const get: Operation = async (req, res) => {
 
     try {
         const option: GetRecordedOption = {
-            isHalfWidth: (req.query.isHalfWidth as any) as boolean,
+            isHalfWidth: req.query.isHalfWidth as any as boolean,
         };
         if (typeof req.query.offset !== 'undefined') {
             option.offset = parseInt(req.query.offset as any, 10);
