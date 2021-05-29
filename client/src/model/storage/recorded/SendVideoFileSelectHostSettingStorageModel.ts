@@ -6,7 +6,8 @@ import { ISendVideoFileSelectHostSettingStorageModel, ISendVideoFileSelectHostSe
 @injectable()
 export default class SendVideoFileSelectHostSettingStorageModel
     extends AbstractStorageBaseModel<ISendVideoFileSelectHostSettingValue>
-    implements ISendVideoFileSelectHostSettingStorageModel {
+    implements ISendVideoFileSelectHostSettingStorageModel
+{
     constructor(@inject('IStorageOperationModel') op: IStorageOperationModel) {
         super(op);
     }

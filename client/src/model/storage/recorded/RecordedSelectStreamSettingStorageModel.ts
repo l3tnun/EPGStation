@@ -6,7 +6,8 @@ import { IRecordedSelectStreamSettingStorageModel, IRecordedSelectStreamSettingV
 @injectable()
 export default class RecordedSelectStreamSettingStorageModel
     extends AbstractStorageBaseModel<IRecordedSelectStreamSettingValue>
-    implements IRecordedSelectStreamSettingStorageModel {
+    implements IRecordedSelectStreamSettingStorageModel
+{
     constructor(@inject('IStorageOperationModel') op: IStorageOperationModel) {
         super(op);
     }
