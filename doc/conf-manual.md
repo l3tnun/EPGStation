@@ -1040,7 +1040,7 @@ stream:
 | name           | string | yes  | Web インターフェイス上で表示される名前 |
 | host           | string | yes  | kodi が動作しているホストの URL        |
 | user           | string | no   | kodi のユーザー名                      |
-| pass           | string | no   | kodi のパスワード                      |
+| password       | string | no   | kodi のパスワード                      |
 
 ```yaml
 kodiHosts:
