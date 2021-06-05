@@ -123,7 +123,7 @@ class EncodeManageModel implements IEncodeManageModel {
     }
 
     /**
-     * queue をチャックする
+     * queue をチェックする
      * @return Promise<void>
      */
     private async checkQueue(): Promise<void> {
