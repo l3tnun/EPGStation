@@ -10,6 +10,7 @@ import IReserveDB, {
     IFindTimeRangesOption,
     IFindTimeSpecificationOption,
     IGetManualIdsOption,
+    IReserveTimeOption,
     RuleIdCountResult,
 } from './IReserveDB';
 
@@ -280,9 +281,16 @@ export default class ReserveDB implements IReserveDB {
         let queryBuilder = await connection.getRepository(Reserve).createQueryBuilder('reserve');
 
         // option.times の重複を削除
-        option.times = option.times.filter((time, i) => {
-            return option.times.indexOf(time) === i;
-        });
+        const newTimes: IReserveTimeOption[] = [];
+        const timeIndex: { [key: string]: boolean } = {};
+        for (const time of option.times) {
+            const key = time.startAt.toString() + time.endAt.toString();
+            if (typeof timeIndex[key] === 'undefined') {
+                timeIndex[key] = true;
+                newTimes.push(time);
+            }
+        }
+        option.times = newTimes;
 
         // option.times の連続した時間を一つにまとめる
         option.times = option.times.reduce((acc, cur, index) => {
@@ -334,7 +342,7 @@ export default class ReserveDB implements IReserveDB {
 
         // 指定された ruleId の除外
         if (typeof option.excludeRuleId !== 'undefined') {
-            queryBuilder = queryBuilder.andWhere('reserve.ruleId <> :ruleId', {
+            queryBuilder = queryBuilder.andWhere('(reserve.ruleId <> :ruleId or reserve.ruleId is null)', {
                 ruleId: option.excludeRuleId,
             });
         }
