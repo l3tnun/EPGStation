@@ -1256,7 +1256,7 @@ components:
                 cnt:
                     description: 録画数
                     type: integer
-                channelId:
+                genre:
                     $ref: '#/components/schemas/ProgramGenreLv1'
 
         RecordedSearchOptions:
