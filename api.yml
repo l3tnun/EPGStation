@@ -1267,9 +1267,13 @@ components:
                 - genres
             properties:
                 channels:
-                    $ref: '#/components/schemas/RecordedChannelListItem'
+                    type: array
+                    items:
+                       $ref: '#/components/schemas/RecordedChannelListItem'
                 genres:
-                    $ref: '#/components/schemas/RecordedGenreListItem'
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/RecordedGenreListItem'
 
         SendVideoLinkToKodiOption:
             description: kodiへビデオリンクを送信するときのオプション
