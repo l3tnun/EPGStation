@@ -28,7 +28,7 @@ export default class ScheduleApiModel implements IScheduleApiModel {
     ): Promise<apid.ScheduleProgramItem | null> {
         const program = await this.programDB.findId(programId);
 
-        return program === null ? null : this.toScheduleProgramItem(program, isHalfWidth);
+        return program === null ? null : this.toScheduleProgramItem(program, isHalfWidth, true);
     }
 
     /**
@@ -64,16 +64,23 @@ export default class ScheduleApiModel implements IScheduleApiModel {
             isFree: option.isFree,
         });
 
-        return this.createSchedule(channels, programs, option.isHalfWidth);
+        return this.createSchedule(channels, programs, option.isHalfWidth, !!option.needsRawExtended);
     }
 
     /**
      * Channel[] と Program[] から apid.Schedule[] を生成する
      * @param channels: Channel[]
      * @param programs: Program[]
+     * @param isHalfWidth: boolean true 半角文字で返す, false: オリジナルのまま
+     * @param needsRawExtended rawExtended を必要とするか
      * @return apid.Schedule[]
      */
-    private createSchedule(channels: Channel[], programs: Program[], isHalfWidth: boolean): apid.Schedule[] {
+    private createSchedule(
+        channels: Channel[],
+        programs: Program[],
+        isHalfWidth: boolean,
+        needsRawExtended: boolean,
+    ): apid.Schedule[] {
         // channelId ごとに programs をまとめる
         const programsIndex: { [key: number]: apid.ScheduleProgramItem[] } = {};
         for (const program of programs) {
@@ -81,7 +88,7 @@ export default class ScheduleApiModel implements IScheduleApiModel {
                 programsIndex[program.channelId] = [];
             }
 
-            programsIndex[program.channelId].push(this.toScheduleProgramItem(program, isHalfWidth));
+            programsIndex[program.channelId].push(this.toScheduleProgramItem(program, isHalfWidth, needsRawExtended));
         }
 
         // 結果を格納する
@@ -132,7 +139,7 @@ export default class ScheduleApiModel implements IScheduleApiModel {
             result.push({
                 channel: channelItem,
                 programs: program.map(p => {
-                    return this.toScheduleProgramItem(p, option.isHalfWidth);
+                    return this.toScheduleProgramItem(p, option.isHalfWidth, !!option.needsRawExtended);
                 }),
             });
         }
@@ -149,7 +156,7 @@ export default class ScheduleApiModel implements IScheduleApiModel {
         const channels = await this.channelDB.findAll(true);
         const programs = await this.programDB.findBroadcasting(option);
 
-        return this.createSchedule(channels, programs, option.isHalfWidth).map(s => {
+        return this.createSchedule(channels, programs, option.isHalfWidth, true).map(s => {
             if (s.programs.length > 1) {
                 s.programs = [s.programs[0]];
             }
@@ -176,7 +183,7 @@ export default class ScheduleApiModel implements IScheduleApiModel {
         });
 
         return programs.map(p => {
-            return this.toScheduleProgramItem(p, isHalfWidth);
+            return this.toScheduleProgramItem(p, isHalfWidth, true);
         });
     }
 
@@ -184,11 +191,13 @@ export default class ScheduleApiModel implements IScheduleApiModel {
      * Program を ScheduleProgramItem に変換する
      * @param program: Program | ProgramWithOverlap
      * @param isHalfWidth: boolean true 半角文字で返す, false: オリジナルのまま
+     * @param needsRawExtended rawExtended を必要とするか
      * @return apid.ScheduleProgramItem
      */
     private toScheduleProgramItem(
         program: Program | ProgramWithOverlap,
         isHalfWidth: boolean,
+        needsRawExtended: boolean,
     ): apid.ScheduleProgramItem {
         const result: apid.ScheduleProgramItem = {
             id: program.id,
@@ -219,7 +228,7 @@ export default class ScheduleApiModel implements IScheduleApiModel {
             }
         }
 
-        if (program.rawExtended !== null) {
+        if (needsRawExtended === true && program.rawExtended !== null) {
             if (isHalfWidth === true) {
                 if (program.rawHalfWidthExtended !== null) {
                     result.rawExtended = JSON.parse(program.rawHalfWidthExtended);

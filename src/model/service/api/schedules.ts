@@ -12,6 +12,7 @@ export const get: Operation = async (req, res) => {
             startAt: parseInt(req.query.startAt as any, 10),
             endAt: parseInt(req.query.endAt as any, 10),
             isHalfWidth: req.query.isHalfWidth as any,
+            needsRawExtended: req.query.needsRawExtended as any,
             GR: req.query.GR as any,
             BS: req.query.BS as any,
             CS: req.query.CS as any,
@@ -39,6 +40,9 @@ get.apiDoc = {
         },
         {
             $ref: '#/components/parameters/IsHalfWidth',
+        },
+        {
+            $ref: '#/components/parameters/NeedsRawExtended',
         },
         {
             $ref: '#/components/parameters/IsFreeProgram',

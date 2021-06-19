@@ -525,6 +525,7 @@ export interface ScheduleOption {
     startAt: UnixtimeMS;
     endAt: UnixtimeMS;
     isHalfWidth: boolean;
+    needsRawExtended?: boolean;
     isFree?: boolean;
     GR: boolean;
     BS: boolean;
@@ -539,6 +540,7 @@ export interface ChannelScheduleOption {
     startAt: UnixtimeMS;
     days: number; // 取得日数
     isHalfWidth: boolean;
+    needsRawExtended?: boolean;
     isFree?: boolean;
     channelId: ChannelId;
 }
