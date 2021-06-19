@@ -1,4 +1,5 @@
 import * as bodyParser from 'body-parser';
+import cors from 'cors';
 import express from 'express';
 import * as openapi from 'express-openapi';
 import * as fs from 'fs';
@@ -51,6 +52,10 @@ class ServiceServer implements IServiceServer {
         this.initOpenApi(api);
         this.setMime();
         this.setStaticFiles();
+
+        if (this.config.isAllowAllCROS === true) {
+            this.app.use(cors());
+        }
     }
 
     /**

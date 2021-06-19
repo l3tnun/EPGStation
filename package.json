@@ -34,6 +34,7 @@
         "aribts": "2.1.12",
         "axios": "0.21.1",
         "body-parser": "1.19.0",
+        "cros": "1.0.1",
         "diskusage-ng": "1.0.1",
         "express": "4.17.1",
         "express-openapi": "8.0.0",

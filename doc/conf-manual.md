@@ -30,6 +30,7 @@
     -   [ドロップログの保存先を変更したい](#dropLog)
     -   [アクセス URL の設定をルートではなくサブディレクトリ下に変更したい](#subdirectory)
     -   [Swagger UI で使用するサーバリストを変更したい](#apiservers)
+    -   [CROS ヘッダーをすべて許可したい](isallowallcros)
 -   [ファイル保存先](#ファイル保存先)
     -   [録画ファイルの保存先を変更したい](#recorded)
     -   [一時録画先を設定したい](#recordedtmp)
@@ -464,6 +465,14 @@ apiServers:
 ```
 
 [WebAPI Document](./webapi.md)
+
+### isAllowAllCROS
+
+#### CROS ヘッダーをすべて許可する (いずれ真面目に実装した際に削除する予定)
+
+| 種類    | デフォルト値 | 必須 |
+| ------- | ------------ | ---- |
+| boolean | false        | no   |
 
 ---
 
