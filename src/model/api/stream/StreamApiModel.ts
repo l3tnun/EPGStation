@@ -449,6 +449,12 @@ export default class StreamApiModel implements IStreamApiModel {
                     if (program.extended !== null && program.halfWidthExtended !== null) {
                         item.extended = isHalfWidth === true ? program.halfWidthExtended : program.extended;
                     }
+                    if (program.rawExtended !== null && program.rawHalfWidthExtended !== null) {
+                        item.rawExtended =
+                            isHalfWidth === true
+                                ? JSON.parse(program.rawHalfWidthExtended)
+                                : JSON.parse(program.rawExtended);
+                    }
                 }
 
                 items.push(item);
@@ -476,11 +482,18 @@ export default class StreamApiModel implements IStreamApiModel {
                         item.name = recorded.name;
                         item.startAt = recorded.startAt;
                         item.endAt = recorded.endAt;
-                        if (recorded.description !== null) {
-                            item.description = recorded.description;
+                        if (recorded.description !== null && recorded.halfWidthDescription !== null) {
+                            item.description =
+                                isHalfWidth === true ? recorded.halfWidthDescription : recorded.description;
                         }
-                        if (recorded.extended !== null) {
-                            item.extended = recorded.extended;
+                        if (recorded.extended !== null && recorded.halfWidthExtended !== null) {
+                            item.extended = isHalfWidth === true ? recorded.halfWidthExtended : recorded.extended;
+                        }
+                        if (recorded.rawExtended !== null && recorded.rawHalfWidthExtended !== null) {
+                            item.rawExtended =
+                                isHalfWidth === true
+                                    ? JSON.parse(recorded.rawHalfWidthExtended)
+                                    : JSON.parse(recorded.rawExtended);
                         }
                     }
                 }

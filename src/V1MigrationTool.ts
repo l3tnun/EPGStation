@@ -462,6 +462,8 @@ class V1MigrationTool {
             newRecorded.extended = oldRecorded.extended;
             newRecorded.extended = StrUtil.toHalf(oldRecorded.extended);
         }
+        newRecorded.rawExtended = null;
+        newRecorded.rawHalfWidthExtended = null;
         newRecorded.genre1 = oldRecorded.genre1;
         newRecorded.subGenre1 = oldRecorded.genre2;
         newRecorded.genre2 = oldRecorded.genre3;

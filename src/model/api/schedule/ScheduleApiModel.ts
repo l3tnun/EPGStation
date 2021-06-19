@@ -219,6 +219,16 @@ export default class ScheduleApiModel implements IScheduleApiModel {
             }
         }
 
+        if (program.rawExtended !== null) {
+            if (isHalfWidth === true) {
+                if (program.rawHalfWidthExtended !== null) {
+                    result.rawExtended = JSON.parse(program.rawHalfWidthExtended);
+                }
+            } else {
+                result.rawExtended = JSON.parse(program.rawExtended);
+            }
+        }
+
         if (program.genre1 !== null) {
             result.genre1 = program.genre1;
         }

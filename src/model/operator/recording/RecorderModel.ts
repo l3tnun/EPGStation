@@ -422,6 +422,8 @@ class RecorderModel implements IRecorderModel {
                 recorded.halfWidthDescription = program.halfWidthDescription;
                 recorded.extended = program.extended;
                 recorded.halfWidthExtended = program.halfWidthExtended;
+                recorded.rawExtended = program.rawExtended;
+                recorded.rawHalfWidthExtended = program.rawHalfWidthExtended;
                 recorded.genre1 = program.genre1;
                 recorded.subGenre1 = program.subGenre1;
                 recorded.genre2 = program.genre2;
@@ -442,6 +444,8 @@ class RecorderModel implements IRecorderModel {
             recorded.halfWidthDescription = this.reserve.halfWidthDescription;
             recorded.extended = this.reserve.extended;
             recorded.halfWidthExtended = this.reserve.halfWidthExtended;
+            recorded.rawExtended = this.reserve.rawExtended;
+            recorded.rawHalfWidthExtended = this.reserve.rawHalfWidthExtended;
             recorded.genre1 = this.reserve.genre1;
             recorded.subGenre1 = this.reserve.subGenre1;
             recorded.genre2 = this.reserve.genre2;

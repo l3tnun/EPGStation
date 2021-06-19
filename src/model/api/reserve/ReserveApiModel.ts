@@ -146,6 +146,15 @@ export default class ReserveApiModel implements IReserveApiModel {
                 item.extended = reserve.extended;
             }
         }
+        if (reserve.rawExtended !== null) {
+            if (isHalfWidth === true) {
+                if (reserve.rawHalfWidthExtended !== null) {
+                    item.rawExtended = JSON.parse(reserve.rawHalfWidthExtended);
+                }
+            } else {
+                item.rawExtended = JSON.parse(reserve.rawExtended);
+            }
+        }
         if (reserve.genre1 !== null) {
             item.genre1 = reserve.genre1;
         }

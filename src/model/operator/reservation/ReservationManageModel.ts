@@ -317,6 +317,8 @@ class ReservationManageModel implements IReservationManageModel {
         reserve.halfWidthDescription = program.halfWidthDescription;
         reserve.extended = program.extended;
         reserve.halfWidthExtended = program.halfWidthExtended;
+        reserve.rawExtended = program.rawExtended;
+        reserve.rawHalfWidthExtended = program.rawHalfWidthExtended;
         reserve.genre1 = program.genre1;
         reserve.subGenre1 = program.subGenre1;
         reserve.genre2 = program.genre2;

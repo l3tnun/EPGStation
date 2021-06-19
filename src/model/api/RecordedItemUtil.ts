@@ -56,6 +56,16 @@ export default class RecordedItemUtil implements IRecordedItemUtil {
             }
         }
 
+        if (recorded.rawExtended !== null) {
+            if (isHalfWidth === true) {
+                if (typeof recorded.rawHalfWidthExtended === 'string') {
+                    item.rawExtended = JSON.parse(recorded.rawHalfWidthExtended);
+                } else {
+                    item.rawExtended = JSON.parse(recorded.rawExtended);
+                }
+            }
+        }
+
         if (recorded.genre1 !== null) {
             item.genre1 = recorded.genre1;
         }
