@@ -197,10 +197,19 @@ export default class ProgramDB implements IProgramDB {
         if (typeof program.extended === 'undefined') {
             value.extended = null;
             value.halfWidthExtended = null;
+            value.rawExtended = null;
+            value.rawHalfWidthExtended = null;
         } else {
             const extended = this.createExtendedStr(program.extended);
             value.extended = extended;
             value.halfWidthExtended = StrUtil.toHalf(extended);
+
+            value.rawExtended = JSON.stringify(program.extended);
+            const halfRawExtended: { [key: string]: string } = {};
+            for (const key in program.extended) {
+                halfRawExtended[StrUtil.toHalf(key)] = StrUtil.toHalf(program.extended[key]);
+            }
+            value.rawHalfWidthExtended = JSON.stringify(halfRawExtended);
         }
 
         // video

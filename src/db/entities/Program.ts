@@ -103,6 +103,18 @@ export default class Program extends BaseEntity {
     public halfWidthExtended!: string | null;
 
     @Column({
+        type: 'text',
+        nullable: true,
+    })
+    public rawExtended!: string | null;
+
+    @Column({
+        type: 'text',
+        nullable: true,
+    })
+    public rawHalfWidthExtended!: string | null;
+
+    @Column({
         type: 'integer',
         nullable: true,
     })
