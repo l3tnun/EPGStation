@@ -47,15 +47,14 @@ class ServiceServer implements IServiceServer {
     private init(): void {
         this.setLog();
         const api = this.getApiDocument(ServiceServer.API_YML);
+        if (this.config.isAllowAllCORS === true) {
+            this.app.use(cors());
+        }
         this.setSwaggerUI();
         this.createUploadDir();
         this.initOpenApi(api);
         this.setMime();
         this.setStaticFiles();
-
-        if (this.config.isAllowAllCORS === true) {
-            this.app.use(cors());
-        }
     }
 
     /**
