@@ -53,7 +53,7 @@ export default interface IConfigFile {
 
     apiServers: string[];
 
-    isAllowAllCROS: boolean;
+    isAllowAllCORS: boolean;
 
     dbtype: Enums.DBType;
     sqlite?: {

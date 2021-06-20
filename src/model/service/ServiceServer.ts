@@ -53,7 +53,7 @@ class ServiceServer implements IServiceServer {
         this.setMime();
         this.setStaticFiles();
 
-        if (this.config.isAllowAllCROS === true) {
+        if (this.config.isAllowAllCORS === true) {
             this.app.use(cors());
         }
     }

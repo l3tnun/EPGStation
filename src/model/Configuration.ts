@@ -218,7 +218,7 @@ namespace Configuration {
     export const DEFAULT_VALUE: IConfigFile = {
         mirakurunPath: 'http+unix://%2Fvar%2Frun%2Fmirakurun.sock/',
         apiServers: [],
-        isAllowAllCROS: false,
+        isAllowAllCORS: false,
         dbtype: 'sqlite',
         epgUpdateIntervalTime: 10,
         conflictPriority: 1,
