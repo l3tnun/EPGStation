@@ -30,7 +30,7 @@
     -   [ドロップログの保存先を変更したい](#dropLog)
     -   [アクセス URL の設定をルートではなくサブディレクトリ下に変更したい](#subdirectory)
     -   [Swagger UI で使用するサーバリストを変更したい](#apiservers)
-    -   [CORS ヘッダーをすべて許可したい](isallowallcors)
+    -   [CORS ヘッダーをすべて許可したい](#isallowallcors)
 -   [ファイル保存先](#ファイル保存先)
     -   [録画ファイルの保存先を変更したい](#recorded)
     -   [一時録画先を設定したい](#recordedtmp)
