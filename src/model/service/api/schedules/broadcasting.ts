@@ -22,9 +22,9 @@ export const get: Operation = async (req, res) => {
 };
 
 get.apiDoc = {
-    summary: '放映中の番組報取得',
+    summary: '放映中の番組情報取得',
     tags: ['schedules'],
-    description: '放映中の番組報取得を取得する',
+    description: '放映中の番組情報を取得する',
     parameters: [
         {
             $ref: '#/components/parameters/AddtionTime',
@@ -35,7 +35,7 @@ get.apiDoc = {
     ],
     responses: {
         200: {
-            description: '放映中の番組報取得を取得しました',
+            description: '放映中の番組情報を取得しました',
             content: {
                 'application/json': {
                     schema: {
