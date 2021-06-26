@@ -125,6 +125,13 @@ class ReservationManageModel implements IReservationManageModel {
                 throw new Error('TimeSpecifiedOptionIsUndefined');
             }
 
+            // name チェック
+            if (typeof option.timeSpecifiedOption.name === 'undefined') {
+                finalize();
+                this.log.system.error('name is undefined');
+                throw new Error('NameIsUndefinedError');
+            }
+
             // 時刻チェック
             if (option.timeSpecifiedOption.endAt <= new Date().getTime()) {
                 finalize();

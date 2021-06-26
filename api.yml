@@ -787,10 +787,14 @@ components:
                     type: object
                     description: 時刻指定オプション
                     required:
+                        - name
                         - channelId
                         - startAt
                         - endAt
                     properties:
+                        name:
+                            description: 番組名
+                            type: string
                         channelId:
                             $ref: '#/components/schemas/ChannelId'
                         startAt:
