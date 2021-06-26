@@ -127,6 +127,7 @@ export enum RuleFuntions {
 export enum ThumbnailFunctions {
     regenerate = 'regenerate',
     fileCleanup = 'fileCleanup',
+    delete = 'delete',
 }
 
 /**

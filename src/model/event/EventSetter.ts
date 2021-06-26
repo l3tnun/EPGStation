@@ -253,6 +253,11 @@ export default class EventSetter implements IEventSetter {
             this.ipc.notifyClient();
         });
 
+        // サムネイル削除
+        this.thumbnailEvent.setDeleted(() => {
+            this.ipc.notifyClient();
+        });
+
         // 録画削除
         this.recordedEvent.setDeleteRecorded(recorded => {
             this.ipc.notifyClient();

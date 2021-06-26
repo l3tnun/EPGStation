@@ -24,6 +24,13 @@ class ThumbnailEvent implements IThumbnailEvent {
     }
 
     /**
+     * サムネイル削除イベント発行
+     */
+    public emitDeleted(): void {
+        this.emitter.emit(ThumbnailEvent.DELETED_EVENT);
+    }
+
+    /**
      * サムネイル追加イベント登録
      * @param callback: (videoFileId: apid.VideoFileId, recordedId: apid.RecordedId) => void
      */
@@ -39,10 +46,25 @@ class ThumbnailEvent implements IThumbnailEvent {
             },
         );
     }
+
+    /**
+     * サムネイル削除イベント登録
+     * @param callback: () => void
+     */
+    public setDeleted(callback: () => void): void {
+        this.emitter.on(ThumbnailEvent.DELETED_EVENT, async () => {
+            try {
+                await callback();
+            } catch (err) {
+                this.log.system.error(err);
+            }
+        });
+    }
 }
 
 namespace ThumbnailEvent {
     export const ADDED_EVENT = 'added';
+    export const DELETED_EVENT = 'deleted';
 }
 
 export default ThumbnailEvent;

@@ -467,6 +467,15 @@ export default class IPCClient implements IIPCClient {
                     func: ThumbnailFunctions.fileCleanup,
                 });
             },
+            delete: thumbnailId => {
+                return this.send({
+                    model: ModelName.thumbnail,
+                    func: ThumbnailFunctions.delete,
+                    args: {
+                        thumbnailId: thumbnailId,
+                    },
+                });
+            },
         };
     }
 

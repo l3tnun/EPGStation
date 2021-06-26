@@ -198,6 +198,37 @@ export default class ThumbnailManageModel implements IThumbnailManageModel {
     }
 
     /**
+     * 指定したサムネイルを削除する
+     * @param thumbnailId: apid.ThumbnailId
+     * @return Promise<void>
+     */
+    public async delete(thumbnailId: apid.ThumbnailId): Promise<void> {
+        const thumbnail = await this.thumbnailDB.findId(thumbnailId);
+        if (thumbnail === null) {
+            throw new Error('ThumbnailIsNotFound');
+        }
+
+        this.log.system.info(`delete thumbnail ${thumbnailId}`);
+
+        // DB から削除
+        await this.thumbnailDB.deleteOnce(thumbnailId).catch(err => {
+            this.log.system.error(`delete thumbnail error: ${thumbnailId}`);
+            this.log.system.error(err);
+            throw err;
+        });
+
+        // サムネイルファイルを削除
+        const filePath = path.join(this.config.thumbnail, thumbnail.filePath);
+        await FileUtil.unlink(filePath).catch(err => {
+            this.log.system.error(`delete thumbnail error: ${thumbnailId}`);
+            this.log.system.error(err);
+            throw err;
+        });
+
+        this.thumbnailEvent.emitDeleted();
+    }
+
+    /**
      * サムネイル再生性
      * @return Promise<void>
      */

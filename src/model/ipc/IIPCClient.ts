@@ -51,6 +51,7 @@ export interface IPCRuleManageModel {
 export interface IPCThumbnailManageModel {
     regenerate(): Promise<void>;
     fileCleanup(): Promise<void>;
+    delete(thumbnailId: apid.ThumbnailId): Promise<void>;
 }
 
 export interface IPCOperatorEncodeEvent {
