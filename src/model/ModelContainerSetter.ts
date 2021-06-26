@@ -72,12 +72,14 @@ import EventSetter from './event/EventSetter';
 import IEncodeEvent from './event/IEncodeEvent';
 import IEPGUpdateEvent from './event/IEPGUpdateEvent';
 import IEventSetter from './event/IEventSetter';
+import IOperatorEncodeEvent from './event/IOperatorEncodeEvent';
 import IRecordedEvent from './event/IRecordedEvent';
 import IRecordedTagEvent from './event/IRecordedTagEvent';
 import IRecordingEvent from './event/IRecordingEvent';
 import IReserveEvent from './event/IReserveEvent';
 import IRuleEvent from './event/IRuleEvent';
 import IThumbnailEvent from './event/IThumbnailEvent';
+import OperatorEncodeEvent from './event/OperatorEncodeEvent';
 import RecordedEvent from './event/RecordedEvent';
 import RecordedTagEvent from './event/RecordedTagEvent';
 import RecordingEvent from './event/RecordingEvent';
@@ -208,6 +210,8 @@ export const set = (container: Container): void => {
     container.bind<IReserveEvent>('IReserveEvent').to(ReserveEvent).inSingletonScope();
 
     container.bind<IEPGUpdateEvent>('IEPGUpdateEvent').to(EPGUpdateEvent).inSingletonScope();
+
+    container.bind<IOperatorEncodeEvent>('IOperatorEncodeEvent').to(OperatorEncodeEvent).inSingletonScope();
 
     container
         .bind<IEPGUpdateExecutorManageModel>('IEPGUpdateExecutorManageModel')

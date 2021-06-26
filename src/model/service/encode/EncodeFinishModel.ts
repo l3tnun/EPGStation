@@ -55,19 +55,21 @@ export default class EncodeFinishModel implements IEncodeFinishModel {
      * @param info: FinishEncodeInfo
      */
     private async finishEncode(info: FinishEncodeInfo): Promise<void> {
+        let newVideoFileId: apid.VideoFileId | null = null;
         try {
             if (info.fullOutputPath === null || info.filePath === null) {
                 // update file size
                 await this.ipc.recorded.updateVideoFileSize(info.videoFileId);
             } else {
                 // add encode file
-                await this.ipc.recorded.addVideoFile({
+                const id = await this.ipc.recorded.addVideoFile({
                     recordedId: info.recordedId,
                     parentDirectoryName: info.parentDirName,
                     filePath: info.filePath,
                     type: 'encoded',
                     name: info.mode,
                 });
+                newVideoFileId = id;
             }
         } catch (err) {
             this.log.encode.error('finish encode error');
@@ -80,6 +82,13 @@ export default class EncodeFinishModel implements IEncodeFinishModel {
         }
 
         this.socket.notifyClient();
+
+        // Operator にイベントを転送
+        await this.ipc.encodeEvent.emitFinishEncode({
+            recordedId: info.recordedId,
+            videoFileId: newVideoFileId,
+            mode: info.mode,
+        });
     }
 
     /**

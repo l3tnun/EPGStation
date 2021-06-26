@@ -1,12 +1,14 @@
 import * as events from 'events';
 import { inject, injectable } from 'inversify';
 import * as apid from '../../../api';
+import { OperatorFinishEncodeInfo } from '../event/IOperatorEncodeEvent';
 import ILogger from '../ILogger';
 import ILoggerModel from '../ILoggerModel';
 import { AddVideoFileOption, UploadedVideoFileOption } from '../operator/recorded/IRecordedManageModel';
 import IEncodeManageModel from '../service/encode/IEncodeManageModel';
 import ISocketIOManageModel from '../service/socketio/ISocketIOManageModel';
 import IIPCClient, {
+    IPCOperatorEncodeEvent,
     IPCRecordedManageModel,
     IPCRecordedTagManageModel,
     IPCRecordingManageModel,
@@ -16,6 +18,7 @@ import IIPCClient, {
 } from './IIPCClient';
 import {
     ClientMessageOption,
+    OperatorEncodeEventFunctions,
     ModelName,
     ParentMessage,
     PushEncodeMessage,
@@ -39,6 +42,7 @@ export default class IPCClient implements IIPCClient {
     public recording!: IPCRecordingManageModel;
     public rule!: IPCRuleManageModel;
     public thumbnail!: IPCThumbnailManageModel;
+    public encodeEvent!: IPCOperatorEncodeEvent;
 
     private log: ILogger;
     private listener: events.EventEmitter = new events.EventEmitter();
@@ -63,6 +67,7 @@ export default class IPCClient implements IIPCClient {
         this.setRecording();
         this.setRule();
         this.setThumbnail();
+        this.setEncodeEvent();
     }
 
     /**
@@ -460,6 +465,23 @@ export default class IPCClient implements IIPCClient {
                 return this.send({
                     model: ModelName.thumbnail,
                     func: ThumbnailFunctions.fileCleanup,
+                });
+            },
+        };
+    }
+
+    /**
+     * set encode event
+     */
+    private setEncodeEvent(): void {
+        this.encodeEvent = {
+            emitFinishEncode: (info: OperatorFinishEncodeInfo) => {
+                return this.send({
+                    model: ModelName.encodeEvent,
+                    func: OperatorEncodeEventFunctions.emitFinishEncode,
+                    args: {
+                        info: info,
+                    },
                 });
             },
         };

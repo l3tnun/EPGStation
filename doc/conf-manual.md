@@ -51,6 +51,7 @@
     -   [録画開始時に外部コマンドを実行したい](#recordingstartcommand)
     -   [録画終了時に外部コマンドを実行したい](#recordingfinishcommand)
     -   [録画失敗時に外部コマンドを実行したい](#recordingfailedcommand)
+    -   [エンコード終了時にコマンドを実行したい](#encodingfinishcommand)
     -   [エンコードやストリーミングで使用するプロセス数の上限を変更したい](#encodeprocessnum)
     -   [同時にエンコードするプロセス数の上限を更新したい](#concurrentencodenum)
     -   [録画ファイルを自動でエンコードしたい](#encode)
@@ -768,6 +769,27 @@ recordingPrepRecFailedCommand: '/usr/bin/logger prepfailed'
 recordingStartCommand: '/bin/node /home/hoge/fuga.js start'
 recordingFinishCommand: '/bin/bash /home/hoge/foo.sh end'
 recordingFailedCommand: '/usr/bin/logger recfailed'
+```
+
+### encodingFinishCommand
+
+-   エンコード終了時に実行するコマンド
+
+| 種類   | デフォルト値 | 必須 |
+| ------ | ------------ | ---- |
+| string | -            | no   |
+
+-   実行時に渡される環境変数は以下の通り
+
+| 変数名      | 種類           | 説明                                   |
+| ----------- | -------------- | -------------------------------------- |
+| RECORDEDID  | number         | recorded id                            |
+| VIDEOFILEID | number \| null | video file id                          |
+| OUTPUTPATH  | string \| null | エンコードしたビデオファイルのフルパス |
+| NODE        | string         | エンコードモード名                     |
+
+```yaml
+encodingFinishCommand: '/bin/node /home/hoge/fuga.js finish'
 ```
 
 ### encodeProcessNum

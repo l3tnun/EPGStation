@@ -6,6 +6,7 @@ import Reserve from '../../../db/entities/Reserve';
 import ProcessUtil from '../../../util/ProcessUtil';
 import IVideoUtil from '../../api/video/IVideoUtil';
 import IChannelDB from '../../db/IChannelDB';
+import { OperatorFinishEncodeInfo } from '../../event/IOperatorEncodeEvent';
 import { IReserveUpdateValues } from '../../event/IReserveEvent';
 import IConfigFile from '../../IConfigFile';
 import IConfiguration from '../../IConfiguration';
@@ -133,6 +134,19 @@ export default class ExternalCommandManageModel implements IExternalCommandManag
     }
 
     /**
+     * エンコードのコマンド実行を queue に追加する
+     * @param info: OperatorFinishEncodeInfo
+     */
+    public addEncodingFinishCmd(info: OperatorFinishEncodeInfo): void {
+        this.log.system.info(`encodingFinishCommand: ${this.config.encodingFinishCommand}`);
+        if (typeof this.config.encodingFinishCommand === 'undefined') {
+            return;
+        }
+
+        this.addFinishEncode(this.config.encodingFinishCommand, info);
+    }
+
+    /**
      * 外部コマンド実行を queue に追加する
      * @param cmd: string コマンド
      * @param reserve: Reserve
@@ -154,6 +168,20 @@ export default class ExternalCommandManageModel implements IExternalCommandManag
     private addRecorded(cmd: string, reserve: Recorded): void {
         this.queue.add<void>(() => {
             return this.createRecordedCmd(cmd, reserve).catch(err => {
+                this.log.system.error(`execute cmd error: ${cmd}`);
+                this.log.system.error(err);
+            });
+        });
+    }
+
+    /**
+     * 外部コマンド実行を queue に追加する
+     * @param cmd: string コマンド
+     * @param info OperatorFinishEncodeInfo
+     */
+    private addFinishEncode(cmd: string, info: OperatorFinishEncodeInfo): void {
+        this.queue.add<void>(() => {
+            return this.createFinishEncodeCmd(cmd, info).catch(err => {
                 this.log.system.error(`execute cmd error: ${cmd}`);
                 this.log.system.error(err);
             });
@@ -262,6 +290,53 @@ export default class ExternalCommandManageModel implements IExternalCommandManag
                     ERROR_CNT: recorded.dropLogFile?.errorCnt.toString(10) || null,
                     DROP_CNT: recorded.dropLogFile?.dropCnt.toString(10) || null,
                     SCRAMBLING_CNT: recorded.dropLogFile?.scramblingCnt.toString(10) || null,
+                },
+            } as any);
+
+            child.on('exit', () => {
+                this.log.system.info(`${cmd} process is fin`);
+                resolve();
+            });
+
+            child.on('error', err => {
+                this.log.system.error(`${cmd} process is error`);
+                this.log.system.error(String(err));
+                resolve();
+            });
+
+            // プロセスの即時終了対応
+            if (ProcessUtil.isExited(child) === true) {
+                child.removeAllListeners();
+                if (child.exitCode === 0) {
+                    this.log.system.info(`finish: ${cmd}`);
+                } else {
+                    this.log.system.error(`failed: ${cmd}`);
+                }
+                resolve();
+            }
+        });
+    }
+
+    /**
+     * 外部コマンドを実行する
+     * @param cmd string
+     * @param info OperatorFinishEncodeInfo
+     */
+    private async createFinishEncodeCmd(cmd: string, info: OperatorFinishEncodeInfo): Promise<void> {
+        this.log.system.info(`execute cmd: ${cmd}`);
+
+        const cmds = ProcessUtil.parseCmdStr(cmd);
+
+        return new Promise<void>(async resolve => {
+            const child = spawn(cmds.bin, cmds.args, {
+                stdio: 'ignore',
+                env: {
+                    PATH: process.env['PATH'],
+                    RECORDEDID: info.recordedId,
+                    VIDEOFILEID: info.videoFileId === null ? '' : info.videoFileId,
+                    OUTPUTPATH:
+                        info.videoFileId === null ? null : await this.videoUtil.getFullFilePathFromId(info.videoFileId),
+                    MODE: info.mode,
                 },
             } as any);
 

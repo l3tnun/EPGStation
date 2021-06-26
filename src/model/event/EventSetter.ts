@@ -11,6 +11,7 @@ import IRecordedTagManadeModel from '../operator/recordedTag/IRecordedTagManadeM
 import IRecordingManageModel from '../operator/recording/IRecordingManageModel';
 import IReservationManageModel from '../operator/reservation/IReservationManageModel';
 import IThumbnailManageModel from '../operator/thumbnail/IThumbnailManageModel';
+import IOperatorEncodeEvent from './IOperatorEncodeEvent';
 import IEPGUpdateEvent from './IEPGUpdateEvent';
 import IEventSetter from './IEventSetter';
 import IRecordedEvent from './IRecordedEvent';
@@ -24,6 +25,7 @@ import IThumbnailEvent from './IThumbnailEvent';
 export default class EventSetter implements IEventSetter {
     private log: ILogger;
     private epgUpdateEvent: IEPGUpdateEvent;
+    private encodeEvent: IOperatorEncodeEvent;
     private ruleEvent: IRuleEvent;
     private reserveEvent: IReserveEvent;
     private recordedEvent: IRecordedEvent;
@@ -44,6 +46,7 @@ export default class EventSetter implements IEventSetter {
     constructor(
         @inject('ILoggerModel') logger: ILoggerModel,
         @inject('IEPGUpdateEvent') epgUpdateEvent: IEPGUpdateEvent,
+        @inject('IOperatorEncodeEvent') encodeEvent: IOperatorEncodeEvent,
         @inject('IRuleEvent') ruleEvent: IRuleEvent,
         @inject('IReserveEvent') reserveEvent: IReserveEvent,
         @inject('IRecordingEvent') recordingEvent: IRecordingEvent,
@@ -62,6 +65,7 @@ export default class EventSetter implements IEventSetter {
     ) {
         this.log = logger.getLogger();
         this.epgUpdateEvent = epgUpdateEvent;
+        this.encodeEvent = encodeEvent;
         this.ruleEvent = ruleEvent;
         this.reserveEvent = reserveEvent;
         this.recordedEvent = recordedEvent;
@@ -316,6 +320,11 @@ export default class EventSetter implements IEventSetter {
         // 保護状態変更
         this.recordedEvent.setChangeProtect(() => {
             this.ipc.notifyClient();
+        });
+
+        // エンコード完了
+        this.encodeEvent.setFinishEncode(info => {
+            this.externalCommandManage.addEncodingFinishCmd(info);
         });
     }
 

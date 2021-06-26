@@ -1,5 +1,6 @@
 import Recorded from '../../../db/entities/Recorded';
 import Reserve from '../../../db/entities/Reserve';
+import { OperatorFinishEncodeInfo } from '../../event/IOperatorEncodeEvent';
 import { IReserveUpdateValues } from '../../event/IReserveEvent';
 
 export default interface IExternalCommandManageModel {
@@ -9,4 +10,5 @@ export default interface IExternalCommandManageModel {
     addRecordingStartCmd(recorded: Recorded): void;
     addRecordingFinishCmd(recorded: Recorded): void;
     addRecordingFailedCmd(recorded: Recorded): void;
+    addEncodingFinishCmd(info: OperatorFinishEncodeInfo): void;
 }

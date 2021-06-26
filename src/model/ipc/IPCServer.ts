@@ -1,6 +1,7 @@
 import { ChildProcess } from 'child_process';
 import { inject, injectable } from 'inversify';
 import * as apid from '../../../api';
+import IOperatorEncodeEvent, { OperatorFinishEncodeInfo } from '../event/IOperatorEncodeEvent';
 import IRecordedManageModel, {
     AddVideoFileOption,
     UploadedVideoFileOption,
@@ -12,6 +13,7 @@ import IRuleManageModel from '../operator/rule/IRuleManageModel';
 import IThumbnailManageModel from '../operator/thumbnail/IThumbnailManageModel';
 import IIPCServer from './IIPCServer';
 import {
+    OperatorEncodeEventFunctions,
     ModelName,
     NotifyClientMessage,
     PushEncodeMessage,
@@ -37,6 +39,7 @@ export default class IPCServer implements IIPCServer {
     private recordingManage: IRecordingManageModel;
     private ruleManage: IRuleManageModel;
     private thumbnailManage: IThumbnailManageModel;
+    private encodeEvent: IOperatorEncodeEvent;
     private child: ChildProcess | null = null;
     private functions: {
         [modelName: string]: IFunctionIndex;
@@ -50,6 +53,7 @@ export default class IPCServer implements IIPCServer {
         @inject('IRecordingManageModel') recordingManage: IRecordingManageModel,
         @inject('IRuleManageModel') ruleManage: IRuleManageModel,
         @inject('IThumbnailManageModel') thumbnailManage: IThumbnailManageModel,
+        @inject('IOperatorEncodeEvent') encodeEvent: IOperatorEncodeEvent,
     ) {
         this.reservationManage = reservationManage;
         this.recordedManage = recordedManage;
@@ -57,6 +61,7 @@ export default class IPCServer implements IIPCServer {
         this.recordingManage = recordingManage;
         this.ruleManage = ruleManage;
         this.thumbnailManage = thumbnailManage;
+        this.encodeEvent = encodeEvent;
 
         this.init();
     }
@@ -141,6 +146,7 @@ export default class IPCServer implements IIPCServer {
         this.functions[ModelName.recording] = this.getRecordingFunctions();
         this.functions[ModelName.rule] = this.getRuleFunctions();
         this.functions[ModelName.thumbnail] = this.getThumbnailFunctions();
+        this.functions[ModelName.encodeEvent] = this.getOperatorEncodeEventFunctions();
     }
 
     /**
@@ -236,7 +242,7 @@ export default class IPCServer implements IIPCServer {
         index[RecordedFunctions.addVideoFile] = async msg => {
             const option = this.getArgsValue<AddVideoFileOption>(msg, 'option');
 
-            await this.recordedManage.addVideoFile(option);
+            return await this.recordedManage.addVideoFile(option);
         };
 
         // addUploadedVideoFile
@@ -404,6 +410,22 @@ export default class IPCServer implements IIPCServer {
         // fileCleanup
         index[ThumbnailFunctions.fileCleanup] = async () => {
             await this.thumbnailManage.fileCleanup();
+        };
+
+        return index;
+    }
+
+    /**
+     * set operator encode event functions
+     */
+    private getOperatorEncodeEventFunctions(): IFunctionIndex {
+        const index: IFunctionIndex = {};
+
+        // emitFinishEncode
+        index[OperatorEncodeEventFunctions.emitFinishEncode] = async msg => {
+            const info = this.getArgsValue<OperatorFinishEncodeInfo>(msg, 'info');
+
+            this.encodeEvent.emitFinishEncode(info);
         };
 
         return index;
