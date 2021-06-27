@@ -786,7 +786,7 @@ recordingFailedCommand: '/usr/bin/logger recfailed'
 | RECORDEDID  | number         | recorded id                            |
 | VIDEOFILEID | number \| null | video file id                          |
 | OUTPUTPATH  | string \| null | エンコードしたビデオファイルのフルパス |
-| NODE        | string         | エンコードモード名                     |
+| MODE        | string         | エンコードモード名                     |
 
 ```yaml
 encodingFinishCommand: '/bin/node /home/hoge/fuga.js finish'
