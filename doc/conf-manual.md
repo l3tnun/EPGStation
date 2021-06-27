@@ -787,6 +787,15 @@ recordingFailedCommand: '/usr/bin/logger recfailed'
 | VIDEOFILEID | number \| null | video file id                          |
 | OUTPUTPATH  | string \| null | エンコードしたビデオファイルのフルパス |
 | MODE        | string         | エンコードモード名                     |
+| CHANNELID              | number         | channel id                    |
+| CHANNELNAME            | string \| null | 放送局名                      |
+| HALF_WIDTH_CHANNELNAME | string \| null | 放送局名(半角)                |
+| NAME                   | string         | 番組名                        |
+| HALF_WIDTH_NAME        | string         | 番組名(半角)                  |
+| DESCRIPTION            | string \| null | 番組概要                      |
+| HALF_WIDTH_DESCRIPTION | string \| null | 番組概要(半角)                |
+| EXTENDED               | string \| null | 番組詳細                      |
+| HALF_WIDTH_EXTENDED    | string \| null | 番組詳細(半角)                |
 
 ```yaml
 encodingFinishCommand: '/bin/node /home/hoge/fuga.js finish'
