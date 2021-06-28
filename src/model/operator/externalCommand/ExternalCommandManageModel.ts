@@ -6,6 +6,7 @@ import Reserve from '../../../db/entities/Reserve';
 import ProcessUtil from '../../../util/ProcessUtil';
 import IVideoUtil from '../../api/video/IVideoUtil';
 import IChannelDB from '../../db/IChannelDB';
+import IRecordedDB from '../../db/IRecordedDB';
 import { OperatorFinishEncodeInfo } from '../../event/IOperatorEncodeEvent';
 import { IReserveUpdateValues } from '../../event/IReserveEvent';
 import IConfigFile from '../../IConfigFile';
@@ -21,6 +22,7 @@ export default class ExternalCommandManageModel implements IExternalCommandManag
     private config: IConfigFile;
     private queue: IPromiseQueue;
     private channelDB: IChannelDB;
+    private recordedDB: IRecordedDB;
     private videoUtil: IVideoUtil;
 
     constructor(
@@ -28,12 +30,14 @@ export default class ExternalCommandManageModel implements IExternalCommandManag
         @inject('IConfiguration') configuration: IConfiguration,
         @inject('IPromiseQueue') queue: IPromiseQueue,
         @inject('IChannelDB') channelDB: IChannelDB,
+        @inject('IRecordedDB') recordedDB: IRecordedDB,
         @inject('IVideoUtil') videoUtil: IVideoUtil,
     ) {
         this.log = logger.getLogger();
         this.config = configuration.getConfig();
         this.queue = queue;
         this.channelDB = channelDB;
+        this.recordedDB = recordedDB;
         this.videoUtil = videoUtil;
     }
 
@@ -327,6 +331,18 @@ export default class ExternalCommandManageModel implements IExternalCommandManag
 
         const cmds = ProcessUtil.parseCmdStr(cmd);
 
+        // 番組情報を取得する
+        const recorded = await this.recordedDB.findId(info.recordedId);
+        if (recorded === null) {
+            throw new Error('RecordedIsNotFound');
+        }
+
+        // 局を取得する
+        const channel = await this.channelDB.findId(recorded.channelId);
+        if (channel === null) {
+            throw new Error('CannelIsNotFound');
+        }
+
         return new Promise<void>(async resolve => {
             const child = spawn(cmds.bin, cmds.args, {
                 stdio: 'ignore',
@@ -337,6 +353,15 @@ export default class ExternalCommandManageModel implements IExternalCommandManag
                     OUTPUTPATH:
                         info.videoFileId === null ? null : await this.videoUtil.getFullFilePathFromId(info.videoFileId),
                     MODE: info.mode,
+                    NAME: recorded.name,
+                    HALF_WIDTH_NAME: recorded.halfWidthName,
+                    DESCRIPTION: recorded.description || '',
+                    HALF_WIDTH_DESCRIPTION: recorded.halfWidthDescription || '',
+                    EXTENDED: recorded.extended || '',
+                    HALF_WIDTH_EXTENDED: recorded.halfWidthExtended || '',
+                    CHANNELID: typeof recorded.channelId === 'number' ? recorded.channelId.toString(10) : '',
+                    CHANNELNAME: typeof channel.name === 'string' ? channel.name : '',
+                    HALF_WIDTH_CHANNELNAME: typeof channel.halfWidthName === 'string' ? channel.halfWidthName : '',
                 },
             } as any);
 
