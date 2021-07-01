@@ -54,7 +54,7 @@ class IPTVApiModel implements IIPTVApiModel {
             }
 
             let logo = '';
-            const base = subDirectory === undefined ? host : `${host}/${subDirectory}`;
+            const base = subDirectory === undefined ? host : `${host}${subDirectory}`;
             if (channel.hasLogoData) {
                 logo = `tvg-logo="${isSecure ? 'https' : 'http'}://${base}/api/channels/${channel.id}/logo"`;
             }
@@ -107,9 +107,8 @@ class IPTVApiModel implements IIPTVApiModel {
                 continue;
             }
             str += `<channel id="${channel.id}" tp="${channel.channel}">`;
-            str += `<display-name lang="ja_JP">${
-                isHalfWidth === true ? channel.halfWidthName : channel.name
-            }</display-name>`;
+            str += `<display-name lang="ja_JP">${isHalfWidth === true ? channel.halfWidthName : channel.name
+                }</display-name>`;
             str += `<service_id>${channel.serviceId}</service_id>`;
             str += '</channel>\n';
 
