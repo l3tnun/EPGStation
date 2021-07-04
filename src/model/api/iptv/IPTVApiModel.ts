@@ -107,11 +107,11 @@ class IPTVApiModel implements IIPTVApiModel {
                 continue;
             }
             str += `<channel id="${channel.id}" tp="${channel.channel}">`;
-            str += `<display-name lang="ja_JP">${isHalfWidth === true ? channel.halfWidthName : channel.name
-                }</display-name>`;
+            str += `<display-name lang="ja_JP">${
+                isHalfWidth === true ? channel.halfWidthName : channel.name
+            }</display-name>`;
             str += `<service_id>${channel.serviceId}</service_id>`;
             str += '</channel>\n';
-
             for (const program of programsIndex[channel.id]) {
                 str += `<programme start="${this.getTimeStr(program.startAt)}" stop="${this.getTimeStr(
                     program.endAt,
