@@ -26,7 +26,13 @@ class IPTVApiModel implements IIPTVApiModel {
      * @param isHalfWidth: 半角で取得するか
      * @return Promise<string>
      */
-    public async getChannelList(host: string, isSecure: boolean, mode: number, isHalfWidth: boolean): Promise<string> {
+    public async getChannelList(
+        host: string,
+        isSecure: boolean,
+        mode: number,
+        isHalfWidth: boolean,
+        subDirectory?: string,
+    ): Promise<string> {
         const channels = await this.channelDB.findAll(true);
 
         const channelIndex: { [key: string]: number } = {};
@@ -48,11 +54,12 @@ class IPTVApiModel implements IIPTVApiModel {
             }
 
             let logo = '';
+            const base = subDirectory === undefined ? host : `${host}${subDirectory}`;
             if (channel.hasLogoData) {
-                logo = `tvg-logo="${isSecure ? 'https' : 'http'}://${host}/api/channels/${channel.id}/logo"`;
+                logo = `tvg-logo="${isSecure ? 'https' : 'http'}://${base}/api/channels/${channel.id}/logo"`;
             }
             str += `#EXTINF:-1 tvg-id="${channel.id}" ${logo} group-title="${channel.channelType}",${channelName}　\n`;
-            str += `${isSecure ? 'https' : 'http'}://${host}/api/streams/live/${channel.id}/m2ts?mode=${mode}\n`;
+            str += `${isSecure ? 'https' : 'http'}://${base}/api/streams/live/${channel.id}/m2ts?mode=${mode}\n`;
         }
 
         return str;
@@ -100,9 +107,8 @@ class IPTVApiModel implements IIPTVApiModel {
                 continue;
             }
             str += `<channel id="${channel.id}" tp="${channel.channel}">`;
-            str += `<display-name lang="ja_JP">${
-                isHalfWidth === true ? channel.halfWidthName : channel.name
-            }</display-name>`;
+            str += `<display-name lang="ja_JP">${isHalfWidth === true ? channel.halfWidthName : channel.name
+                }</display-name>`;
             str += `<service_id>${channel.serviceId}</service_id>`;
             str += '</channel>\n';
 

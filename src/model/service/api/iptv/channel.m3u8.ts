@@ -1,10 +1,12 @@
 import { Operation } from 'express-openapi';
 import IIPTVApiModel from '../../../api/iptv/IIPTVApiModel';
+import IConfiguration from '../../../IConfiguration';
 import container from '../../../ModelContainer';
 import * as api from '../../api';
 
 export const get: Operation = async (req, res) => {
     const iptvApiModel = container.get<IIPTVApiModel>('IIPTVApiModel');
+    const configuration = container.get<IConfiguration>('IConfiguration');
 
     try {
         if (typeof req.headers.host === 'undefined') {
@@ -16,6 +18,7 @@ export const get: Operation = async (req, res) => {
             api.isSecureProtocol(req),
             parseInt(req.query.mode as any, 10),
             req.query.isHalfWidth as any,
+            configuration.getConfig().subDirectory,
         );
         res.setHeader('Content-Type', 'application/x-mpegURL; charset="UTF-8"');
         res.status(200);
