@@ -140,6 +140,10 @@ export default class RecordingStreamCreator implements IRecordingStreamCreator {
                 this.deleteReserve(reserve.id);
             });
             tunerProgram.stream.once('error', () => {
+                this.log.system.error(`stream error: ${reserve.id}`);
+                if (tunerProgram.stream !== null) {
+                    tunerProgram.stream.push(null); //eof 通知
+                }
                 this.deleteReserve(reserve.id);
             });
         } catch (err) {

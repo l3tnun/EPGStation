@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as http from 'http';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
+import * as stream from 'stream';
 import * as apid from '../../../../api';
 import DropLogFile from '../../../db/entities/DropLogFile';
 import Recorded from '../../../db/entities/Recorded';
@@ -25,7 +26,7 @@ import ILoggerModel from '../../ILoggerModel';
 import IDropCheckerModel from './IDropCheckerModel';
 import IRecorderModel from './IRecorderModel';
 import IRecordingStreamCreator from './IRecordingStreamCreator';
-import IRecordingUtilModel from './IRecordingUtilModel';
+import IRecordingUtilModel, { RecFilePathInfo } from './IRecordingUtilModel';
 
 /**
  * Recorder
@@ -171,6 +172,7 @@ class RecorderModel implements IRecorderModel {
             }
         } catch (err) {
             this.log.system.error(`preprec failed: ${this.reserve.id}`);
+            this.log.system.error(err);
             if ((this.isStopPrepRec as any) === true) {
                 this.emitCancelEvent();
 
@@ -257,14 +259,6 @@ class RecorderModel implements IRecorderModel {
         const recFile = fs.createWriteStream(recPath.fullPath, { flags: 'a' });
         this.stream.pipe(recFile);
 
-        // delete file callback
-        const deleteRecFile = async () => {
-            await FileUtil.unlink(recPath.fullPath).catch(err => {
-                this.log.system.error(`delete error: ${this.reserve.id} ${recPath.fullPath}`);
-                this.log.system.error(err);
-            });
-        };
-
         // drop checker
         if (this.config.isEnabledDropCheck === true) {
             let dropFilePath: string | null = null;
@@ -310,7 +304,10 @@ class RecorderModel implements IRecorderModel {
                     this.destoryStream();
 
                     // delete file
-                    await deleteRecFile();
+                    await FileUtil.unlink(recPath.fullPath).catch(err => {
+                        this.log.system.error(`delete error: ${this.reserve.id} ${recPath.fullPath}`);
+                        this.log.system.error(err);
+                    });
                 }
 
                 reject(new Error('recordingStartError'));
@@ -320,61 +317,17 @@ class RecorderModel implements IRecorderModel {
             this.stream.once('data', async () => {
                 clearTimeout(recordingTimeoutId);
 
-                this.log.system.info(`add recorded: ${this.reserve.id} ${recPath.fullPath}`);
-                let recorded: Recorded;
-                try {
-                    recorded = await this.createRecorded();
-                    this.recordedId = await this.recordedDB.insertOnce(recorded);
-                    recorded.id = this.recordedId;
+                // 番組情報追加
+                const recorded = await this.addRecorded(recPath);
 
-                    // add video file
-                    const videoFile = new VideoFile();
-                    videoFile.parentDirectoryName = recPath.parendDir.name;
-                    videoFile.filePath = path.join(recPath.subDir, recPath.fileName);
-                    videoFile.type = 'ts';
-                    videoFile.name = 'TS';
-                    videoFile.recordedId = this.recordedId;
-                    this.log.system.info(`create video file: ${videoFile.filePath}`);
-                    this.videoFileId = await this.videoFileDB.insertOnce(videoFile);
-                    this.videoFileFulPath = recPath.fullPath;
-
-                    recorded.videoFiles = [videoFile];
-                } catch (err) {
-                    // DB 登録エラー
-                    this.log.system.error('add recorded DB error');
-                    this.log.system.error(err);
-                    this.destoryStream();
-
-                    reject(new Error('AddRecordedDBError'));
-
-                    await deleteRecFile();
+                // 終了処理セット
+                if (this.stream !== null) {
+                    this.setEndProcess(this.stream, recFile, recorded);
+                } else {
+                    reject(new Error('StreamIsNull'));
 
                     return;
                 }
-
-                // 録画終了処理
-                if (this.stream !== null) {
-                    this.stream.once('end', async () => {
-                        this.log.system.info(`finish stream: ${this.recordedId}`);
-                        await this.recEnd(recFile)
-                            .catch(err => {
-                                this.log.system.error(`failed recording end: ${this.reserve.id}`);
-                                this.log.system.error(err);
-                            })
-                            .catch(err => {
-                                // 録画終了処理失敗
-                                this.destoryStream();
-                                this.log.system.error('recording end error');
-                                this.log.system.error(err);
-
-                                // 録画終了処理失敗を通知
-                                this.recordingEvent.emitRecordingFailed(this.reserve, recorded);
-                            });
-                    });
-                }
-
-                // 録画開始を通知
-                this.recordingEvent.emitStartRecording(this.reserve, recorded);
 
                 resolve();
             });
@@ -384,6 +337,81 @@ class RecorderModel implements IRecorderModel {
             // 録画失敗を通知
             this.recordingEvent.emitPrepRecordingFailed(this.reserve);
             throw err;
+        });
+    }
+
+    /**
+     * 録画開始時の録画番組情報追加処理
+     * @param recPath: RecFilePathInfo
+     * @returns Promise<Recorded>
+     */
+    private async addRecorded(recPath: RecFilePathInfo): Promise<Recorded> {
+        this.log.system.info(`add recorded ${this.reserve.id} ${recPath.fullPath}`);
+        try {
+            const recorded = await this.createRecorded();
+            this.recordedId = await this.recordedDB.insertOnce(recorded);
+            recorded.id = this.recordedId;
+            this.log.system.info(`recording added reserveId: ${this.reserve.id}, recordedId: ${this.recordedId}`);
+
+            // add video file
+            const videoFile = new VideoFile();
+            videoFile.parentDirectoryName = recPath.parendDir.name;
+            videoFile.filePath = path.join(recPath.subDir, recPath.fileName);
+            videoFile.type = 'ts';
+            videoFile.name = 'TS';
+            videoFile.recordedId = this.recordedId;
+            this.log.system.info(`create video file: ${videoFile.filePath}`);
+            this.videoFileId = await this.videoFileDB.insertOnce(videoFile);
+            this.videoFileFulPath = recPath.fullPath;
+
+            recorded.videoFiles = [videoFile];
+
+            return recorded;
+        } catch (err) {
+            // DB 登録エラー
+            this.log.system.error('add recorded DB error');
+            this.log.system.error(err);
+            this.destoryStream();
+
+            // delete file
+            await FileUtil.unlink(recPath.fullPath).catch(err => {
+                this.log.system.error(`delete error: ${this.reserve.id} ${recPath.fullPath}`);
+                this.log.system.error(err);
+            });
+
+            throw new Error('AddRecordedDBError');
+        }
+    }
+
+    /**
+     * 終了処理追加
+     * @param s: Mirakurun からのストリーム
+     * @param recFile: 録画ファイルストリーム
+     * @param recorded: 番組情報
+     * @returns Promise<Recorded>
+     */
+    private async setEndProcess(s: http.IncomingMessage, recFile: fs.WriteStream, recorded: Recorded): Promise<void> {
+        const recFailed = (err: Error) => {
+            // 録画終了処理失敗
+            this.destoryStream();
+            this.log.system.error('recording end error');
+            this.log.system.error(err);
+
+            // 録画終了処理失敗を通知
+            this.recordingEvent.emitRecordingFailed(this.reserve, recorded);
+        };
+
+        this.log.system.info(`set stream.finished: reserveId: ${this.reserve.id} recordedId: ${this.recordedId}`);
+        stream.finished(s, {}, async err => {
+            if (err) {
+                recFailed(err);
+            } else {
+                try {
+                    await this.recEnd(recFile);
+                } catch (e) {
+                    recFailed(e);
+                }
+            }
         });
     }
 
@@ -475,11 +503,7 @@ class RecorderModel implements IRecorderModel {
      * @param recFile: fs.WriteStream
      */
     private async recEnd(recFile: fs.WriteStream): Promise<void> {
-        if (this.stream === null) {
-            return;
-        }
-
-        this.log.system.info(`start recEnd: ${this.recordedId}`);
+        this.log.system.info(`start recEnd reserveId: ${this.reserve.id} recordedId: ${this.recordedId}`);
 
         // stream 停止
         this.destoryStream();
@@ -489,7 +513,7 @@ class RecorderModel implements IRecorderModel {
 
         // 削除予定か?
         if (this.isPlanToDelete === true) {
-            this.log.system.info(`plan to delete: ${this.reserve.id}`);
+            this.log.system.info(`plan to delete reserveId: ${this.reserve.id} recordedId: ${this.recordedId}`);
 
             if (this.dropLogFileId !== null) {
                 await this.dropChecker.stop().catch(err => {
