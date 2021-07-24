@@ -2,7 +2,7 @@
 FROM --platform=$BUILDPLATFORM node:14-alpine3.13 AS client-builder
 COPY client/package*.json /app/client/
 WORKDIR /app/client
-RUN npm install --loglevel=info
+RUN npm install --no-save --loglevel=info
 COPY . /app/
 RUN npm run build --loglevel=info
 
@@ -10,7 +10,8 @@ FROM node:14-alpine3.13 AS server-builder
 RUN apk add --no-cache g++ make pkgconf python3
 WORKDIR /app
 COPY package*.json /app/
-RUN npm install --loglevel=info
+RUN npm config set python `which python3`
+RUN npm install --no-save --loglevel=info
 COPY . .
 RUN rm -rf client
 RUN npm run build-server --loglevel=info
