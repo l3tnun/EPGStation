@@ -7,7 +7,7 @@ COPY . /app/
 RUN npm run build --loglevel=info
 
 FROM node:14-alpine3.13 AS server-builder
-RUN apk add --no-cache g++ make pkgconf python
+RUN apk add --no-cache g++ make pkgconf python3
 WORKDIR /app
 COPY package*.json /app/
 RUN npm install --loglevel=info
