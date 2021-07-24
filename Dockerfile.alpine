@@ -1,12 +1,12 @@
 # 詳細については、Dockerfile.debianのコメントを参照。
-FROM --platform=$BUILDPLATFORM node:14-buster AS client-builder
+FROM --platform=$BUILDPLATFORM node:14-alpine3.13 AS client-builder
 COPY client/package*.json /app/client/
 WORKDIR /app/client
 RUN npm install --loglevel=info
 COPY . /app/
 RUN npm run build --loglevel=info
 
-FROM node:14-alpine AS server-builder
+FROM node:14-alpine3.13 AS server-builder
 RUN apk add --no-cache g++ make pkgconf python
 WORKDIR /app
 COPY package*.json /app/
@@ -15,7 +15,7 @@ COPY . .
 RUN rm -rf client
 RUN npm run build-server --loglevel=info
 
-FROM node:14-alpine
+FROM node:14-alpine3.13
 LABEL maintainer="l3tnun"
 COPY --from=server-builder /app /app/
 COPY --from=client-builder /app/client /app/client/
