@@ -4,7 +4,7 @@ FROM --platform=$BUILDPLATFORM node:14-buster AS client-builder
 COPY client/package*.json /app/client/
 WORKDIR /app/client
 # どこで時間が掛かっているのか確認できるようにログレベルを変更。
-RUN npm install --loglevel=info
+RUN npm install --no-save --loglevel=info
 # clientフォルダー外にビルドに必要なファイルが存在するため、全てコピーする。
 COPY . /app/
 RUN npm run build --loglevel=info
@@ -24,7 +24,7 @@ RUN apt-get update
 RUN apt-get install -y build-essential python
 WORKDIR /app
 COPY package*.json /app/
-RUN npm install --loglevel=info
+RUN npm install --no-save --loglevel=info
 # 最終イメージのサイズ削減のため、すべてコピーした後でclientフォルダーを削除。clientフォルダー以外
 # をコピーする方法は，ファイルが追加された場合に変更する必要があるため採用しない。
 COPY . .
