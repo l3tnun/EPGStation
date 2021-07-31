@@ -329,6 +329,9 @@ class RecorderModel implements IRecorderModel {
                     return;
                 }
 
+                // 録画開始を通知
+                this.recordingEvent.emitStartRecording(this.reserve, recorded);
+
                 resolve();
             });
         }).catch(err => {
