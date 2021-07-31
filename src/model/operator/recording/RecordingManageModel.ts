@@ -66,8 +66,17 @@ class RecordingManageModel implements IRecordingManageModel {
             this.deleteRecording(reserve);
         });
 
-        this.recordingEvent.setRecordingFailed(reserve => {
+        this.recordingEvent.setRecordingFailed(async reserve => {
             this.deleteRecording(reserve);
+
+            // 録画を再設定
+            const recorder = await this.provider();
+            if (recorder.setTimer(reserve, false) === true) {
+                this.log.system.debug(`readd recording: ${reserve.id}`);
+                this.recordingIndex[reserve.id] = recorder;
+            } else {
+                this.log.system.error(`readd recordgin error: ${reserve.id}`);
+            }
         });
 
         this.recordingEvent.setFinishRecording(reserve => {

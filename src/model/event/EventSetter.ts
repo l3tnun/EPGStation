@@ -167,9 +167,8 @@ export default class EventSetter implements IEventSetter {
         });
 
         // 録画失敗イベント
-        this.recordingEvent.setRecordingFailed((reserve, recorded) => {
+        this.recordingEvent.setRecordingFailed((_reserve, recorded) => {
             this.ipc.notifyClient();
-            this.reservationManage.cancel(reserve.id); // 予約から削除
             this.externalCommandManage.addRecordingFailedCmd(recorded);
         });
 
