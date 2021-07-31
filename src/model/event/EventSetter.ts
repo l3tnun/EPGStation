@@ -174,8 +174,8 @@ export default class EventSetter implements IEventSetter {
         });
 
         // 録画完了
-        this.recordingEvent.setFinishRecording(async (reserve, recorded, isStopRec) => {
-            if (isStopRec === false) {
+        this.recordingEvent.setFinishRecording(async (reserve, recorded, isNeedDeleteReservation) => {
+            if (isNeedDeleteReservation === true) {
                 if (reserve.ruleId === null) {
                     this.reservationManage.cancel(reserve.id); // 予約から削除
                 } else {

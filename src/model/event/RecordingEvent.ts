@@ -60,10 +60,10 @@ class RecordingEvent implements IRecordingEvent {
      * 録画完了イベント発行
      * @param reserve: Reserve
      * @param recorded: Recorded
-     * @param isStopRec: boolean true で録画中断を表す
+     * @param isNeedDeleteReservation: boolean true 予約の削除が必要
      */
-    public emitFinishRecording(reserve: Reserve, recorded: Recorded, isStopRec: boolean): void {
-        this.emitter.emit(RecordingEvent.FINISH_RECORDING_EVENT, reserve, recorded, isStopRec);
+    public emitFinishRecording(reserve: Reserve, recorded: Recorded, isNeedDeleteReservation: boolean): void {
+        this.emitter.emit(RecordingEvent.FINISH_RECORDING_EVENT, reserve, recorded, isNeedDeleteReservation);
     }
 
     /**
@@ -138,14 +138,16 @@ class RecordingEvent implements IRecordingEvent {
 
     /**
      * 録画完了イベント登録
-     * @param callback: (reserve: Reserve, rrecorded: Recorded, isStopRec: boolean) => void
+     * @param callback: (reserve: Reserve, rrecorded: Recorded, isNeedDeleteReservation: boolean) => void
      */
-    public setFinishRecording(callback: (reserve: Reserve, recorded: Recorded, isStopRec: boolean) => void): void {
+    public setFinishRecording(
+        callback: (reserve: Reserve, recorded: Recorded, isNeedDeleteReservation: boolean) => void,
+    ): void {
         this.emitter.on(
             RecordingEvent.FINISH_RECORDING_EVENT,
-            async (reserve: Reserve, recorded: Recorded, isStopRec: boolean) => {
+            async (reserve: Reserve, recorded: Recorded, isNeedDeleteReservation: boolean) => {
                 try {
-                    await callback(reserve, recorded, isStopRec);
+                    await callback(reserve, recorded, isNeedDeleteReservation);
                 } catch (err) {
                     this.log.system.error(err);
                 }

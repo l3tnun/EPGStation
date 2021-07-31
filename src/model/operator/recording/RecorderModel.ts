@@ -53,7 +53,7 @@ class RecorderModel implements IRecorderModel {
     private timerId: NodeJS.Timeout | null = null;
     private stream: http.IncomingMessage | null = null;
     private isStopPrepRec: boolean = false;
-    private isStopRec: boolean = false;
+    private isNeedDeleteReservation: boolean = true;
     private isPrepRecording: boolean = false;
     private isRecording: boolean = false;
     private isPlanToDelete: boolean = false;
@@ -391,11 +391,18 @@ class RecorderModel implements IRecorderModel {
      * @returns Promise<Recorded>
      */
     private async setEndProcess(s: http.IncomingMessage, recFile: fs.WriteStream, recorded: Recorded): Promise<void> {
-        const recFailed = (err: Error) => {
+        const recFailed = async (err: Error) => {
             // 録画終了処理失敗
             this.destoryStream();
-            this.log.system.error('recording end error');
+            this.log.system.error(`recording end error: reserveId: ${this.reserve.id} recordedId: ${this.recordedId}`);
             this.log.system.error(err);
+
+            // 録画終了処理
+            this.isNeedDeleteReservation = false;
+            await this.recEnd(recFile).catch(e => {
+                this.log.system.error(`recEnd error: reserveId: ${this.reserve.id} recordedId: ${this.recordedId}`);
+                this.log.system.error(e);
+            });
 
             // 録画終了処理失敗を通知
             this.recordingEvent.emitRecordingFailed(this.reserve, recorded);
@@ -404,12 +411,17 @@ class RecorderModel implements IRecorderModel {
         this.log.system.info(`set stream.finished: reserveId: ${this.reserve.id} recordedId: ${this.recordedId}`);
         stream.finished(s, {}, async err => {
             if (err) {
-                recFailed(err);
+                await recFailed(err);
             } else {
                 try {
-                    await this.recEnd(recFile);
+                    await this.recEnd(recFile).catch(e => {
+                        this.log.system.error(
+                            `recEnd error: reserveId: ${this.reserve.id} recordedId: ${this.recordedId}`,
+                        );
+                        this.log.system.error(e);
+                    });
                 } catch (e) {
-                    recFailed(e);
+                    await recFailed(e);
                 }
             }
         });
@@ -560,7 +572,11 @@ class RecorderModel implements IRecorderModel {
             const recorded = await this.recordedDB.findId(this.recordedId);
 
             // Recorded history 追加
-            if (this.reserve.isTimeSpecified === false && this.reserve.ruleId !== null && this.isStopRec === false) {
+            if (
+                this.reserve.isTimeSpecified === false &&
+                this.reserve.ruleId !== null &&
+                this.isNeedDeleteReservation === true
+            ) {
                 // ルール(Program Id 予約)の場合のみ記録する
                 try {
                     if (recorded !== null) {
@@ -579,7 +595,7 @@ class RecorderModel implements IRecorderModel {
 
             // 録画完了の通知
             if (recorded !== null) {
-                this.recordingEvent.emitFinishRecording(this.reserve, recorded, this.isStopRec);
+                this.recordingEvent.emitFinishRecording(this.reserve, recorded, this.isNeedDeleteReservation);
             }
         } else {
             this.log.system.info('failed to recording: recorded id is null');
@@ -674,7 +690,7 @@ class RecorderModel implements IRecorderModel {
                 this.stream.destroy();
                 this.stream.push(null); // eof 通知
             }
-            this.isStopRec = true;
+            this.isNeedDeleteReservation = false;
         }
     }
 
