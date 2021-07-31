@@ -69,12 +69,12 @@ export default class GuideDaySelectDialog extends Vue {
         // 日付
         this.dayItems = [];
         const now = DateUtil.getJaDate(new Date());
-        const hourStr = DateUtil.format(now, 'hh');
         let baseTime = new Date(DateUtil.format(now, 'yyyy/MM/dd 00:00:00 +0900')).getTime();
 
         const currentTime = typeof this.$route.query.time === 'string' ? this.$route.query.time : DateUtil.format(now, 'YYMMddhh');
 
         for (let i = 0; i < 8; i++) {
+            const hourStr = i === 0 ? DateUtil.format(now, 'hh') : '00';
             const date = new Date(baseTime);
             const value = DateUtil.format(date, 'YYMMdd' + hourStr);
             this.dayItems.push({
