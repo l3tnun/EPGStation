@@ -136,6 +136,14 @@ class DropCheckerModel implements IDropCheckerModel {
         this.tsPacketParser.pipe(this.tsPacketSelector);
         this.tsSectionParser.pipe(this.tsSectionAnalyzer);
         this.tsSectionParser.pipe(this.tsSectionUpdater);
+
+        // readableStream がエラーで終了したら停止
+        stream.finished(readableStream, {}, err => {
+            if (err) {
+                this.log.system.error(`drop log check stream error: ${srcFilePath}`);
+                this.stop();
+            }
+        });
     }
 
     /**

@@ -1,6 +1,7 @@
 import * as http from 'http';
 import { inject, injectable } from 'inversify';
 import Mirakurun from 'mirakurun';
+import { finished } from 'stream';
 import * as apid from '../../../../api';
 import * as mapid from '../../../../node_modules/mirakurun/api';
 import Reserve from '../../../db/entities/Reserve';
@@ -136,13 +137,9 @@ export default class RecordingStreamCreator implements IRecordingStreamCreator {
             tunerProgram.stream = s;
 
             // stream 停止時に programs から削除する
-            tunerProgram.stream.once('end', () => {
-                this.deleteReserve(reserve.id);
-            });
-            tunerProgram.stream.once('error', () => {
-                this.log.system.error(`stream error: ${reserve.id}`);
-                if (tunerProgram.stream !== null) {
-                    tunerProgram.stream.push(null); //eof 通知
+            finished(tunerProgram.stream, {}, err => {
+                if (err) {
+                    this.log.system.error(`RecordingStreamCreator stream error: ${reserve.id}`);
                 }
                 this.deleteReserve(reserve.id);
             });
