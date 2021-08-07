@@ -58,6 +58,7 @@ class RecorderModel implements IRecorderModel {
     private isPrepRecording: boolean = false;
     private isRecording: boolean = false;
     private isPlanToDelete: boolean = false;
+    private isCanceledCallingFinished: boolean = false; // mirakurun の stream の終了検知をキャンセルするか
     private eventEmitter = new events.EventEmitter();
 
     private dropLogFileId: apid.DropLogFileId | null = null;
@@ -236,6 +237,14 @@ class RecorderModel implements IRecorderModel {
                 this.log.system.error(err);
             }
         }
+
+        // stop drop check
+        if (this.dropLogFileId !== null) {
+            this.dropChecker.stop().catch(err => {
+                this.log.system.error(`dropChecker stop error: ${this.reserve.id}`);
+                this.log.system.error(err);
+            });
+        }
     }
 
     /**
@@ -269,13 +278,20 @@ class RecorderModel implements IRecorderModel {
 
         // save stream
         this.recFile = fs.createWriteStream(recPath.fullPath, { flags: 'a' });
-        this.recFile.once('error', err => {
-            this.log.system.error(`recFile error reserveId: ${this.reserve.id}, ${this.recordedId}`);
+        this.recFile.once('error', async err => {
+            // 書き込みエラー発生
+            this.log.system.error(`recFile error reserveId: ${this.reserve.id}, recordedId: ${this.recordedId}`);
             this.log.system.error(err);
             if (this.stream === null) {
                 this.cancel(false);
             } else {
-                this.stream.destroy(new Error('RecFileWriteError'));
+                this.isCanceledCallingFinished = true; // mirakurun の stream の終了処理を行わないようにセット
+                await this.recFailed(err).catch(err => {
+                    this.log.system.fatal(
+                        `Unexpected recFailed error: reserveId: ${this.reserve.id}, recordedId: ${this.recordedId}`,
+                    );
+                    this.log.system.fatal(err);
+                });
             }
         });
         this.stream.pipe(this.recFile);
@@ -343,7 +359,7 @@ class RecorderModel implements IRecorderModel {
 
                 // 終了処理セット
                 if (this.stream !== null) {
-                    this.setEndProcess(this.stream, recorded);
+                    this.setEndProcess(this.stream);
                 } else {
                     reject(new Error('StreamIsNull'));
 
@@ -410,44 +426,56 @@ class RecorderModel implements IRecorderModel {
     /**
      * 終了処理追加
      * @param s: Mirakurun からのストリーム
-     * @param recorded: 番組情報
      * @returns Promise<Recorded>
      */
-    private async setEndProcess(s: http.IncomingMessage, recorded: Recorded): Promise<void> {
-        const recFailed = async (err: Error) => {
-            // 録画終了処理失敗
-            this.destoryStream();
-            this.log.system.error(`recording end error: reserveId: ${this.reserve.id} recordedId: ${this.recordedId}`);
-            this.log.system.error(err);
-
-            // 録画終了処理
-            this.isNeedDeleteReservation = false;
-            await this.recEnd().catch(e => {
-                this.log.system.error(`recEnd error: reserveId: ${this.reserve.id} recordedId: ${this.recordedId}`);
-                this.log.system.error(e);
-            });
-
-            // 録画終了処理失敗を通知
-            this.recordingEvent.emitRecordingFailed(this.reserve, recorded);
-        };
-
+    private async setEndProcess(s: http.IncomingMessage): Promise<void> {
         this.log.system.info(`set stream.finished: reserveId: ${this.reserve.id} recordedId: ${this.recordedId}`);
         stream.finished(s, {}, async err => {
+            // 終了処理が呼ばれていたら無視する
+            if (this.isCanceledCallingFinished === true) {
+                return;
+            }
+
             if (err) {
-                await recFailed(err);
+                await this.recFailed(err);
             } else {
-                try {
-                    await this.recEnd().catch(e => {
-                        this.log.system.error(
-                            `recEnd error: reserveId: ${this.reserve.id} recordedId: ${this.recordedId}`,
-                        );
-                        this.log.system.error(e);
-                    });
-                } catch (e) {
-                    await recFailed(e);
-                }
+                await this.recEnd().catch(e => {
+                    this.log.system.fatal(
+                        `unexpected recEnd error: reserveId: ${this.reserve.id} recordedId: ${this.recordedId}`,
+                    );
+                    this.log.system.fatal(e);
+                });
             }
         });
+    }
+
+    /**
+     * 録画失敗処理
+     * @param err: Error
+     */
+    private async recFailed(err: Error): Promise<void> {
+        this.destoryStream();
+        this.log.system.error(`recording end error reserveId: ${this.reserve.id} recordedId: ${this.recordedId}`);
+        this.log.system.error(err);
+
+        // 録画終了処理
+        this.isNeedDeleteReservation = false;
+        await this.recEnd().catch(e => {
+            this.log.system.error(`recEnd error reserveId: ${this.reserve.id} recordedId: ${this.recordedId}`);
+            this.log.system.error(e);
+        });
+
+        // 録画終了処理失敗を通知
+        let recorded: Recorded | null = null;
+        if (this.recordedId !== null) {
+            try {
+                recorded = await this.recordedDB.findId(this.recordedId);
+            } catch (e) {
+                this.log.system.error(`reocrded is deleted: ${this.recordedId}`);
+                recorded = null;
+            }
+        }
+        this.recordingEvent.emitRecordingFailed(this.reserve, recorded);
     }
 
     /**
@@ -646,7 +674,7 @@ class RecorderModel implements IRecorderModel {
         } catch (err) {
             this.log.system.error(`get drop result error: ${this.dropLogFileId}`);
             this.log.system.error(err);
-            await this.dropChecker.stop();
+            await this.dropChecker.stop().catch(() => {});
 
             return;
         }

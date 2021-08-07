@@ -18,6 +18,8 @@ class DropCheckerModel implements IDropCheckerModel {
     private result: aribts.Result | null = null;
     private pidIndex: { [key: number]: string } = {};
     private time: Date | null = null;
+    private hasError: boolean = false; // パケットチェック中にエラーを検知したか？
+    private isFinished: boolean = false; // 終了処理が終わっているか？
 
     private transformStream: stream.Transform | null = null;
     private tsReadableConnector: aribts.TsReadableConnector | null = null;
@@ -73,14 +75,13 @@ class DropCheckerModel implements IDropCheckerModel {
             }
         });
 
-        let hasError = false;
         this.tsPacketAnalyzer.on('packetError', (pid, counter, expected) => {
             this.appendFile(
                 `error: (pid: ${this.pidToString(pid)}, counter: ${counter || '-'}, expected: ${
                     expected || '-'
                 }, time: ${this.getTime()})\n`,
             );
-            hasError = true;
+            this.hasError = true;
         });
 
         this.tsPacketAnalyzer.on('packetDrop', (pid, counter, expected) => {
@@ -89,36 +90,16 @@ class DropCheckerModel implements IDropCheckerModel {
                     expected || '-'
                 }, time: ${this.getTime()})\n`,
             );
-            hasError = true;
+            this.hasError = true;
         });
 
         this.tsPacketAnalyzer.on('packetScrambling', pid => {
             this.appendFile(`scrambling (pid: ${this.pidToString(pid)}, time: ${this.getTime()})\n`);
-            hasError = true;
+            this.hasError = true;
         });
 
-        this.tsPacketAnalyzer.on('finish', async () => {
-            if (this.tsPacketAnalyzer === null) {
-                return;
-            }
-
-            const result = this.tsPacketAnalyzer.getResult();
-            this.result = result;
-            this.listener.emit(DropCheckerModel.FINISH_EVENT);
-
-            if (hasError) {
-                await this.appendFile('\n');
-            }
-            for (const pid of Object.keys(result)) {
-                const pidNum = parseInt(pid, 10);
-                await this.appendFile(
-                    `pid: ${this.pidToString(pidNum)}, error: ${result[pid as any].error}, drop: ${
-                        result[pid as any].drop
-                    }, scrambling: ${result[pid as any].scrambling}, packet: ${
-                        result[pid as any].packet
-                    }, name: ${this.getPIDName(pidNum)}\n`,
-                );
-            }
+        this.tsPacketAnalyzer.on('finish', () => {
+            this.onFinish();
         });
 
         this.tsSectionAnalyzer.on('time', time => {
@@ -138,12 +119,52 @@ class DropCheckerModel implements IDropCheckerModel {
         this.tsSectionParser.pipe(this.tsSectionUpdater);
 
         // readableStream がエラーで終了したら停止
-        stream.finished(readableStream, {}, err => {
+        stream.finished(readableStream, {}, async err => {
             if (err) {
                 this.log.system.error(`drop log check stream error: ${srcFilePath}`);
                 this.stop();
             }
         });
+    }
+
+    /**
+     * 終了処理
+     * @returns Promise<void>
+     */
+    private async onFinish(): Promise<void> {
+        if (this.isFinished === true) {
+            return;
+        }
+        this.isFinished = true;
+
+        if (this.tsPacketAnalyzer === null) {
+            return;
+        }
+        this.tsPacketAnalyzer.removeAllListeners('finish');
+
+        const result = this.tsPacketAnalyzer.getResult();
+        this.result = result;
+        this.listener.emit(DropCheckerModel.FINISH_EVENT);
+
+        if (this.hasError) {
+            await this.appendFile('\n').catch(err => {
+                this.log.system.error(`append error: ${this.dest}`);
+                this.log.system.error(err);
+            });
+        }
+        for (const pid of Object.keys(result)) {
+            const pidNum = parseInt(pid, 10);
+            await this.appendFile(
+                `pid: ${this.pidToString(pidNum)}, error: ${result[pid as any].error}, drop: ${
+                    result[pid as any].drop
+                }, scrambling: ${result[pid as any].scrambling}, packet: ${
+                    result[pid as any].packet
+                }, name: ${this.getPIDName(pidNum)}\n`,
+            ).catch(err => {
+                this.log.system.error(`append error: ${this.dest}`);
+                this.log.system.error(err);
+            });
+        }
     }
 
     /**
@@ -338,6 +359,12 @@ class DropCheckerModel implements IDropCheckerModel {
      */
     public async stop(): Promise<void> {
         this.log.system.info(`stop drop check: ${this.dest}`);
+
+        // 終了処理
+        await this.onFinish().catch(err => {
+            this.log.system.error(`finish drop check error: ${this.dest}`);
+            this.log.system.error(err);
+        });
 
         if (this.tsSectionParser !== null) {
             this.tsSectionParser.removeAllListeners();

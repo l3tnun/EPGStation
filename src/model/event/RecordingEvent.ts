@@ -50,9 +50,9 @@ class RecordingEvent implements IRecordingEvent {
     /**
      * 録画失敗イベント発行
      * @param reserve: Reserve
-     * @param recorded: Recorded
+     * @param recorded: Recorded | null
      */
-    public emitRecordingFailed(reserve: Reserve, recorded: Recorded): void {
+    public emitRecordingFailed(reserve: Reserve, recorded: Recorded | null): void {
         this.emitter.emit(RecordingEvent.RECORDING_FAILED_EVENT, reserve, recorded);
     }
 
@@ -124,10 +124,10 @@ class RecordingEvent implements IRecordingEvent {
 
     /**
      * 録画失敗イベント登録
-     * @param callback: (reserve: Reserve, recorded: Recorded) => void
+     * @param callback: (reserve: Reserve, recorded: Recorded | null) => void
      */
-    public setRecordingFailed(callback: (reserve: Reserve, recorded: Recorded) => void): void {
-        this.emitter.on(RecordingEvent.RECORDING_FAILED_EVENT, async (reserve: Reserve, recorded: Recorded) => {
+    public setRecordingFailed(callback: (reserve: Reserve, recorded: Recorded | null) => void): void {
+        this.emitter.on(RecordingEvent.RECORDING_FAILED_EVENT, async (reserve: Reserve, recorded: Recorded | null) => {
             try {
                 await callback(reserve, recorded);
             } catch (err) {
