@@ -26,4 +26,5 @@ export default interface IRecordedDB {
     findChannelList(): Promise<apid.RecordedChannelListItem[]>;
     findGenreList(): Promise<apid.RecordedGenreListItem[]>;
     findOld(): Promise<Recorded | null>;
+    findReserveId(reserveId: apid.ReserveId): Promise<Recorded[]>;
 }

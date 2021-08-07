@@ -484,4 +484,26 @@ export default class RecordedDB implements IRecordedDB {
 
         return typeof result === 'undefined' ? null : result;
     }
+
+    /**
+     * 指定した reserveId の録画を返す
+     * @param reserveId: apid.ReserveId
+     * @return Promise<Recorded[]>
+     */
+    public async findReserveId(reserveId: apid.ReserveId): Promise<Recorded[]> {
+        const connection = await this.op.getConnection();
+
+        const queryBuilder = connection
+            .getRepository(Recorded)
+            .createQueryBuilder('recorded')
+            .where({ reserveId: reserveId })
+            .leftJoinAndSelect('recorded.videoFiles', 'videoFiles')
+            .leftJoinAndSelect('recorded.thumbnails', 'thumbnails')
+            .leftJoinAndSelect('recorded.dropLogFile', 'dropLogFile')
+            .leftJoinAndSelect('recorded.tags', 'tags');
+
+        return await this.promieRetry.run(() => {
+            return queryBuilder.getMany();
+        });
+    }
 }

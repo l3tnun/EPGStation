@@ -69,13 +69,21 @@ class RecordingManageModel implements IRecordingManageModel {
         this.recordingEvent.setRecordingFailed(async reserve => {
             this.deleteRecording(reserve);
 
-            // 録画を再設定
-            const recorder = await this.provider();
-            if (recorder.setTimer(reserve, false) === true) {
-                this.log.system.debug(`readd recording: ${reserve.id}`);
-                this.recordingIndex[reserve.id] = recorder;
+            const recordeds = await this.recordedDB.findReserveId(reserve.id);
+
+            if (recordeds.length < 3) {
+                // 録画を再設定
+                const recorder = await this.provider();
+                if (recorder.setTimer(reserve, false) === true) {
+                    this.log.system.debug(`readd recording: ${reserve.id}`);
+                    this.recordingIndex[reserve.id] = recorder;
+                } else {
+                    this.log.system.error(`readd recordgin error: ${reserve.id}`);
+                }
             } else {
-                this.log.system.error(`readd recordgin error: ${reserve.id}`);
+                // リトライ回数オーバー
+                this.log.system.error(`recording retry over: ${reserve.id}`);
+                this.recordingEvent.emitRecordingRetryOver(reserve);
             }
         });
 

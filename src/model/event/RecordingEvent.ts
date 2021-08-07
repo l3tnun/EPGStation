@@ -57,6 +57,14 @@ class RecordingEvent implements IRecordingEvent {
     }
 
     /**
+     * 録画リトライオーバーイベント発行
+     * @param reserve: Reserve
+     */
+    public emitRecordingRetryOver(reserve: Reserve): void {
+        this.emitter.emit(RecordingEvent.RECORDING_RETRY_OVER_EVENT, reserve);
+    }
+
+    /**
      * 録画完了イベント発行
      * @param reserve: Reserve
      * @param recorded: Recorded
@@ -137,6 +145,20 @@ class RecordingEvent implements IRecordingEvent {
     }
 
     /**
+     * 録画リトライオーバーイベント登録
+     * @param callback: (reserve: Reserve) => void
+     */
+    public setRecordingRetryOver(callback: (reserve: Reserve) => void): void {
+        this.emitter.on(RecordingEvent.RECORDING_RETRY_OVER_EVENT, async (reserve: Reserve) => {
+            try {
+                await callback(reserve);
+            } catch (err) {
+                this.log.system.error(err);
+            }
+        });
+    }
+
+    /**
      * 録画完了イベント登録
      * @param callback: (reserve: Reserve, rrecorded: Recorded, isNeedDeleteReservation: boolean) => void
      */
@@ -162,6 +184,7 @@ namespace RecordingEvent {
     export const PREP_RECORDING_FAILED_EVENT = 'PrepRecordingFailed';
     export const START_RECORDING_EVENT = 'StartRecordingEvent';
     export const RECORDING_FAILED_EVENT = 'RecordingFailedEvent';
+    export const RECORDING_RETRY_OVER_EVENT = 'RecordingRetryOverEvent';
     export const FINISH_RECORDING_EVENT = 'FinishRecordingEvent';
 }
 
