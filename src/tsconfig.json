@@ -17,7 +17,8 @@
         "noFallthroughCasesInSwitch": true,
         "esModuleInterop": true,
         "experimentalDecorators": true,
-        "emitDecoratorMetadata": true
+        "emitDecoratorMetadata": true,
+        "skipLibCheck": true
     },
     "include": ["./**/*"]
 }

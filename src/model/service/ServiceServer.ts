@@ -97,8 +97,8 @@ class ServiceServer implements IServiceServer {
             app: this.app,
             docsPath: '/docs',
             consumesMiddleware: {
-                'application/json': bodyParser.json(),
-                'text/text': bodyParser.text(),
+                'application/json': bodyParser.json() as any,
+                'text/text': bodyParser.text() as any,
                 'multipart/form-data': (req, res, next) => {
                     this.getUploader().single('file')(req, res, (err: any) => {
                         if (err) {

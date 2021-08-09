@@ -8,7 +8,7 @@ export const post: Operation = async (req, res) => {
     const recordedApiModel = container.get<IRecordedApiModel>('IRecordedApiModel');
 
     try {
-        if (typeof req.body.file === 'undefined') {
+        if (typeof req.file === 'undefined') {
             throw new Error('FileIsNotFound');
         }
 
