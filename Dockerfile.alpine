@@ -11,6 +11,7 @@ RUN apk add --no-cache g++ make pkgconf python3
 WORKDIR /app
 COPY package*.json /app/
 RUN npm config set python `which python3`
+ENV DOCKER="YES"
 RUN npm install --no-save --loglevel=info
 COPY . .
 RUN rm -rf client

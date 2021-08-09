@@ -7,6 +7,7 @@ WORKDIR /app/client
 RUN npm install --no-save --loglevel=info
 # clientフォルダー外にビルドに必要なファイルが存在するため、全てコピーする。
 COPY . /app/
+ENV DOCKER="YES"
 RUN npm run build --loglevel=info
 
 # サーバーはsqlite3のようなプラットフォーム依存のネイティブ・アドオンを含んでいる。そのため、各
