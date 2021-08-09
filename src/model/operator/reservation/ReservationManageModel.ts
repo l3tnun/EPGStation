@@ -334,6 +334,7 @@ class ReservationManageModel implements IReservationManageModel {
         reserve.subGenre3 = program.subGenre3;
         reserve.videoType = program.videoType;
         reserve.videoResolution = program.videoResolution;
+        reserve.videoComponentType = program.videoComponentType;
         reserve.videoStreamContent = program.videoStreamContent;
         reserve.audioSamplingRate = program.audioSamplingRate;
         reserve.audioComponentType = program.audioComponentType;
