@@ -1,6 +1,6 @@
 # クライアントはプラットフォーム依存のコードを含まないため、BUILDPLATFORMでビルドした結果を
 # 全てのTARGETPLATFORMで再利用できる。これによりビルド時間を短縮できる。
-FROM --platform=$BUILDPLATFORM node:14-buster AS client-builder
+FROM --platform=$BUILDPLATFORM node:16-buster AS client-builder
 COPY client/package*.json /app/client/
 WORKDIR /app/client
 # どこで時間が掛かっているのか確認できるようにログレベルを変更。
@@ -18,7 +18,7 @@ RUN npm run build --loglevel=info
 #
 # `npm run build-server`はプラットフォーム依存処理を含まないため、これをBUILDPLATFORMで実行すること
 # でビルド時間をさらに短縮可能だが、手順が煩雑で面倒なので現時点では行っていない。
-FROM node:14-buster AS server-builder
+FROM node:16-buster AS server-builder
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update
 RUN apt-get install -y build-essential python
@@ -31,7 +31,7 @@ COPY . .
 RUN rm -rf client
 RUN npm run build-server --loglevel=info
 
-FROM node:14-buster-slim
+FROM node:16-buster-slim
 LABEL maintainer="l3tnun"
 COPY --from=server-builder /app /app/
 COPY --from=client-builder /app/client /app/client/
