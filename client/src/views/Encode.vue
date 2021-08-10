@@ -1,5 +1,5 @@
 <template>
-    <v-content>
+    <v-main>
         <EditTitleBar
             v-if="isEditMode === true"
             :title="selectedTitle"
@@ -33,7 +33,7 @@
             :total="encodeState.getSelectedCnt()"
             v-on:delete="onExecuteMultiplueDeletion"
         ></EncodeMultipleDeletionDialog>
-    </v-content>
+    </v-main>
 </template>
 
 <script lang="ts">

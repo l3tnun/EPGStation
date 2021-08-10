@@ -1,5 +1,5 @@
 <template>
-    <v-content>
+    <v-main>
         <TitleBar title="ストレージ"></TitleBar>
         <transition name="page">
             <div v-if="storageState.getInfos().length > 0" ref="appContent" class="app-content">
@@ -16,7 +16,7 @@
                 </v-container>
             </div>
         </transition>
-    </v-content>
+    </v-main>
 </template>
 
 <script lang="ts">

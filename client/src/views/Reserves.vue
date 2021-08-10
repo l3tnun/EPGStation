@@ -1,5 +1,5 @@
 <template>
-    <v-content>
+    <v-main>
         <EditTitleBar
             v-if="isEditMode === true"
             :title="selectedTitle"
@@ -27,7 +27,7 @@
             :total="reservesState.getSelectedCnt()"
             v-on:delete="onExecuteMultiplueDeletion"
         ></ReserveMultipleDeletionDialog>
-    </v-content>
+    </v-main>
 </template>
 
 <script lang="ts">

@@ -1,5 +1,5 @@
 <template>
-    <v-content>
+    <v-main>
         <TitleBar ref="title" :title="this.searchState.isEditingRule() === true ? 'ルール編集' : '検索'"></TitleBar>
         <transition name="page">
             <div ref="appContent" class="app-content pa-3" v-bind:style="{ visibility: isVisible === true ? 'visible' : 'hidden' }" v-if="isShow === true">
@@ -14,7 +14,7 @@
                 <ProgramDialog></ProgramDialog>
             </div>
         </transition>
-    </v-content>
+    </v-main>
 </template>
 
 <script lang="ts">

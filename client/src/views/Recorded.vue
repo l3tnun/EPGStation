@@ -1,5 +1,5 @@
 <template>
-    <v-content>
+    <v-main>
         <EditTitleBar
             v-if="isEditMode === true"
             :title="selectedTitle"
@@ -38,7 +38,7 @@
             v-on:delete="onExecuteMultiplueDeletion"
         ></RecordedMultipleDeletionDialog>
         <RecordedCleanupDialog :isOpen.sync="isOpenCleanupDialog"></RecordedCleanupDialog>
-    </v-content>
+    </v-main>
 </template>
 
 <script lang="ts">

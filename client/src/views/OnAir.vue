@@ -1,5 +1,5 @@
 <template>
-    <v-content>
+    <v-main>
         <TitleBar title="放映中">
             <template v-slot:extension>
                 <v-tabs v-if="isTabView === true && onAirState.getSchedules().length > 0" v-model="onAirState.selectedTab" centered>
@@ -22,7 +22,7 @@
         <div style="visibility: hidden">dummy</div>
         <OnAirSelectStream></OnAirSelectStream>
         <ProgramDialog></ProgramDialog>
-    </v-content>
+    </v-main>
 </template>
 
 <script lang="ts">

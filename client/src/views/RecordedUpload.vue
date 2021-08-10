@@ -1,5 +1,5 @@
 <template>
-    <v-content>
+    <v-main>
         <TitleBar title="アップロード"></TitleBar>
         <transition name="page">
             <v-container>
@@ -11,7 +11,7 @@
             </v-container>
         </transition>
         <RecordedUploadingDialog :isOpen.sync="isUploading"></RecordedUploadingDialog>
-    </v-content>
+    </v-main>
 </template>
 
 <script lang="ts">

@@ -1,5 +1,5 @@
 <template>
-    <v-content>
+    <v-main>
         <TitleBar ref="title" title="番組詳細予約"></TitleBar>
         <transition name="page">
             <div ref="appContent" class="app-content manual-reserve pa-3 mx-auto">
@@ -10,7 +10,7 @@
                 <ManualReserveOptionComponent :isEditMode="isEditMode" v-on:cancel="cancel" v-on:add="add" v-on:update="update"></ManualReserveOptionComponent>
             </div>
         </transition>
-    </v-content>
+    </v-main>
 </template>
 
 <script lang="ts">

@@ -1,5 +1,5 @@
 <template>
-    <v-content>
+    <v-main>
         <TitleBar
             :title="typeof $route.query.channelId === 'undefined' ? guideState.getTitle($route.query.type) : guideState.getSingleStationTitle()"
             :needsTitleClickEvent="true"
@@ -35,7 +35,7 @@
         <ProgramDialog></ProgramDialog>
         <OnAirSelectStream :needsGotoGuideButton="true"></OnAirSelectStream>
         <GuideDaySelectDialog :isOpen.sync="isOpenDaySelectDialog"></GuideDaySelectDialog>
-    </v-content>
+    </v-main>
 </template>
 
 <script lang="ts">

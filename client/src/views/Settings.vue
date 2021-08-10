@@ -1,5 +1,5 @@
 <template>
-    <v-content>
+    <v-main>
         <TitleBar title="設定"></TitleBar>
         <transition name="page">
             <div v-if="isShow" ref="appContent" class="app-content">
@@ -316,7 +316,7 @@
                 </v-container>
             </div>
         </transition>
-    </v-content>
+    </v-main>
 </template>
 
 <script lang="ts">

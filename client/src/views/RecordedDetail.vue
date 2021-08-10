@@ -1,5 +1,5 @@
 <template>
-    <v-content>
+    <v-main>
         <TitleBar title="録画詳細">
             <template v-slot:menu>
                 <RecordedDetailMoreButton
@@ -79,7 +79,7 @@
                 </div>
             </transition>
         </v-container>
-    </v-content>
+    </v-main>
 </template>
 
 <script lang="ts">

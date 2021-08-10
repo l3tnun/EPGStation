@@ -1,5 +1,5 @@
 <template>
-    <v-content>
+    <v-main>
         <TitleBar title="EPGStation"></TitleBar>
         <div class="app-content d-flex flex-column mx-auto">
             <transition name="page">
@@ -53,7 +53,7 @@
                 </div>
             </transition>
         </div>
-    </v-content>
+    </v-main>
 </template>
 
 <script lang="ts">

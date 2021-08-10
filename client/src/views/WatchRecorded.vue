@@ -1,5 +1,5 @@
 <template>
-    <v-content>
+    <v-main>
         <TitleBar title="視聴"></TitleBar>
         <transition name="page">
             <div class="video-container-wrap mx-auto">
@@ -8,7 +8,7 @@
                 <div style="visibility: hidden">dummy</div>
             </div>
         </transition>
-    </v-content>
+    </v-main>
 </template>
 
 <script lang="ts">
