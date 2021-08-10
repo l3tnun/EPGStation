@@ -50,7 +50,7 @@ export default class OnAirSelectStreamState implements IOnAirSelectStreamState {
      */
     public close(): void {
         // ストリームの選択情報を保存
-        if (this.isOpen === true) {
+        if (typeof this.selectedStreamType !== 'undefined' && typeof this.selectedStreamConfig !== 'undefined') {
             this.streamSelectSetting.tmp.useURLScheme = this.useURLScheme;
             this.streamSelectSetting.tmp.type = this.selectedStreamType as string;
             this.streamSelectSetting.tmp.mode = typeof this.selectedStreamConfig === 'undefined' ? 0 : this.selectedStreamConfig;
@@ -152,7 +152,9 @@ export default class OnAirSelectStreamState implements IOnAirSelectStreamState {
      * @return string[]
      */
     private getStreamConfig(): string[] {
-        return typeof this.selectedStreamType === 'undefined' ? [] : this.streamConfig[this.selectedStreamType];
+        const result = typeof this.selectedStreamType === 'undefined' ? [] : this.streamConfig[this.selectedStreamType];
+
+        return typeof result === 'undefined' ? [] : result;
     }
 
     /**
