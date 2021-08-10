@@ -1,6 +1,6 @@
 <template>
     <v-app-bar app :dark="$vuetify.theme.dark === false" :color="appBarColor" :clipped-left="navigationState.isClipped">
-        <v-app-bar-nav-icon @click.stop="navigationState.toggle"></v-app-bar-nav-icon>
+        <v-app-bar-nav-icon @click.stop="toggle"></v-app-bar-nav-icon>
         <v-toolbar-title class="title-content" v-bind:class="{ clickable: !!needsTitleClickEvent === true }" v-on:click="onTitle">
             {{ title }}
         </v-toolbar-title>
@@ -36,6 +36,10 @@ export default class TitleBar extends Vue {
 
     public onTitle(): void {
         this.$emit('click');
+    }
+
+    public toggle(): void {
+        this.navigationState.toggle();
     }
 
     @Watch('title', { immediate: true })
