@@ -11,6 +11,7 @@
                                     <RecordedsmallCard
                                         :item="r"
                                         :isEditMode="false"
+                                        :isShowDropInfo="false"
                                         v-on:detail="gotoRecordedDetail"
                                         v-on:stopEncode="stopEncode"
                                         :noThumbnail="true"
