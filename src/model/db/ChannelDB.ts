@@ -55,10 +55,7 @@ export default class ChannelDB implements IChannelDB {
                 halfWidthName: StrUtil.toHalf(name),
                 remoteControlKeyId:
                     typeof channel.remoteControlKeyId === 'undefined' ? null : channel.remoteControlKeyId,
-                hasLogoData:
-                    typeof channel.logoId !== 'undefined' && typeof channel.hasLogoData === 'undefined'
-                        ? channel.logoId >= 0 // logoId が存在する場合は logoId でロゴデータを持っているか判断する
-                        : !!channel.hasLogoData,
+                hasLogoData: !!channel.hasLogoData,
                 channelTypeId: this.getChannelTypeId(channel.channel.type),
                 channelType: channel.channel.type,
                 channel: channel.channel.channel,
