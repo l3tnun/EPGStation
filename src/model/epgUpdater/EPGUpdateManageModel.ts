@@ -334,6 +334,17 @@ class EPGUpdateManageModel implements IEPGUpdateManageModel {
             return;
         }
 
+        // ロゴデータ保持判定のために放送局情報をすべて取得する
+        const serviceDatas = await this.mirakurunClient.getServices().catch(err => {
+            this.log.system.error('get service error');
+            this.log.system.error(err);
+            return [] as mapid.Service[];
+        });
+        const serviceDataIndex: { [serviceId: number]: mapid.Service } = {};
+        for (const s of serviceDatas) {
+            serviceDataIndex[s.id] = s;
+        }
+
         const createIndex: { [serviceId: number]: mapid.Service } = {}; // 追加用索引
         const updateIndex: { [serviceId: number]: mapid.Service } = {}; // 更新用索引
 
@@ -346,6 +357,11 @@ class EPGUpdateManageModel implements IEPGUpdateManageModel {
             ) {
                 // 除外索引に含まれる放送局を削除
                 continue;
+            }
+
+            // add hasLogoData
+            if (typeof serviceDataIndex[service.data.id] !== 'undefined') {
+                service.data.hasLogoData = serviceDataIndex[service.data.id].hasLogoData;
             }
             switch (service.type) {
                 case 'create':
