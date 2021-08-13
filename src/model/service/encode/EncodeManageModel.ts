@@ -1,52 +1,25 @@
-import { ChildProcess } from 'child_process';
+import * as path from 'path';
 import * as events from 'events';
 import { inject, injectable } from 'inversify';
 import { cloneDeep } from 'lodash';
-import * as path from 'path';
 import * as apid from '../../../../api';
-import FileUtil from '../../../util/FileUtil';
-import ProcessUtil from '../../../util/ProcessUtil';
-import Util from '../../../util/Util';
-import IVideoUtil, { VideoInfo } from '../../api/video/IVideoUtil';
-import IChannelDB from '../../db/IChannelDB';
-import IRecordedDB from '../../db/IRecordedDB';
-import IVideoFileDB from '../../db/IVideoFileDB';
 import IEncodeEvent from '../../event/IEncodeEvent';
 import IConfiguration from '../../IConfiguration';
 import IExecutionManagementModel from '../../IExecutionManagementModel';
 import ILogger from '../../ILogger';
 import ILoggerModel from '../../ILoggerModel';
-import IEncodeManageModel, { EncodeQueueInfo, EncodeRecordedIdIndex } from './IEncodeManageModel';
-import IEncodeProcessManageModel from './IEncodeProcessManageModel';
-
-interface EncodeQueueItem extends apid.AddEncodeProgramOption {
-    encodeId: apid.EncodeId;
-}
-
-interface RunningQueueItem {
-    process: ChildProcess;
-    encodeProgram: EncodeQueueItem;
-    isCanceld: boolean; // cancel して停止されたか
-    timerId: NodeJS.Timer; // エンコードタイムアウト
-    percent?: number;
-    log?: string;
-}
+import IEncodeManageModel, { EncodeInfoItem, EncodeQueueInfo, EncodeRecordedIdIndex } from './IEncodeManageModel';
+import { EncodeOption, EncoderModelProvider, IEncoderModel } from './IEncoderModel';
 
 @injectable()
 class EncodeManageModel implements IEncodeManageModel {
     private log: ILogger;
-    private configure: IConfiguration;
     private executeManagementModel: IExecutionManagementModel;
-    private processManager: IEncodeProcessManageModel;
-    private videoFileDB: IVideoFileDB;
-    private recordedDB: IRecordedDB;
-    private channelDB: IChannelDB;
-    private videoUtil: IVideoUtil;
+    private encoderModelProvider: EncoderModelProvider;
     private encodeEvent: IEncodeEvent;
     private concurrentEncodeNum: number;
-    private waitQueue: EncodeQueueItem[] = [];
-    private runningQueue: RunningQueueItem[] = [];
-    private usedFileNameIndex: { [name: string]: boolean } = {}; // 使用済みファイル名
+    private waitQueue: IEncoderModel[] = [];
+    private runningQueue: IEncoderModel[] = [];
     private idCnt: number = 1;
 
     private listener: events.EventEmitter = new events.EventEmitter();
@@ -55,22 +28,13 @@ class EncodeManageModel implements IEncodeManageModel {
         @inject('ILoggerModel') logger: ILoggerModel,
         @inject('IConfiguration') configure: IConfiguration,
         @inject('IExecutionManagementModel') executeManagementModel: IExecutionManagementModel,
-        @inject('IEncodeProcessManageModel') processManager: IEncodeProcessManageModel,
-        @inject('IVideoFileDB') videoFileDB: IVideoFileDB,
-        @inject('IRecordedDB') recordedDB: IRecordedDB,
-        @inject('IChannelDB') channelDB: IChannelDB,
-        @inject('IVideoUtil') videoUtil: IVideoUtil,
+        @inject('EncoderModelProvider') encoderModelProvider: EncoderModelProvider,
         @inject('IEncodeEvent') encodeEvent: IEncodeEvent,
     ) {
         this.log = logger.getLogger();
-        this.configure = configure;
         this.executeManagementModel = executeManagementModel;
         this.concurrentEncodeNum = configure.getConfig().concurrentEncodeNum;
-        this.processManager = processManager;
-        this.videoFileDB = videoFileDB;
-        this.recordedDB = recordedDB;
-        this.channelDB = channelDB;
-        this.videoUtil = videoUtil;
+        this.encoderModelProvider = encoderModelProvider;
         this.encodeEvent = encodeEvent;
 
         this.listener.on(EncodeManageModel.NEEDS_CHECK_QUEUE_EVENT, this.checkQueue.bind(this));
@@ -89,10 +53,36 @@ class EncodeManageModel implements IEncodeManageModel {
         // 実行権取得
         const exeId = await this.executeManagementModel.getExecution(EncodeManageModel.ADD_ENCODE_PRIPORITY);
 
-        // queue に積む item を生成する
-        const queueItem: EncodeQueueItem = cloneDeep(addOption) as any;
+        // encoder を生成する
+        const encoder = await this.encoderModelProvider();
+        const option = this.createEncodeOption(addOption);
+        encoder.setOption(option);
+
+        // queue に積む
+        this.waitQueue.push(encoder);
+        this.emitNeedsCheckQueue();
+
+        this.log.encode.info(`add new encode: ${option.encodeId}`);
+
+        // 実行権開放
+        this.executeManagementModel.unLockExecution(exeId);
+
+        // イベント発行
+        this.encodeEvent.emitAddEncode(option.encodeId);
+
+        return option.encodeId;
+    }
+
+    /**
+     * エンコードオプションを生成する
+     * @param baseOption: apid.AddEncodeProgramOption
+     * @returns EncodeOption
+     */
+    private createEncodeOption(baseOption: apid.AddEncodeProgramOption): EncodeOption {
+        // encoder のオプションを生成
+        const encodeOption: EncodeOption = cloneDeep(baseOption) as any;
         const encodeId = this.idCnt;
-        queueItem.encodeId = encodeId;
+        encodeOption.encodeId = encodeId;
 
         // idCnt をインクリメント
         if (this.idCnt === Number.MAX_SAFE_INTEGER) {
@@ -100,19 +90,7 @@ class EncodeManageModel implements IEncodeManageModel {
         }
         this.idCnt++;
 
-        // queue に積む
-        this.waitQueue.push(queueItem);
-        this.emitNeedsCheckQueue();
-
-        this.log.encode.info(`add new encode: ${encodeId}`);
-
-        // 実行権開放
-        this.executeManagementModel.unLockExecution(exeId);
-
-        // イベント発行
-        this.encodeEvent.emitAddEncode(encodeId);
-
-        return encodeId;
+        return encodeOption;
     }
 
     /**
@@ -127,417 +105,107 @@ class EncodeManageModel implements IEncodeManageModel {
      * @return Promise<void>
      */
     private async checkQueue(): Promise<void> {
-        // runningQueue がロック中 or 同時エンコード最大数に達している or waitQueue が空の場合はスルー
-        if (this.runningQueue.length >= this.concurrentEncodeNum || this.waitQueue.length === 0) {
-            return;
-        }
-
         // 実行権取得
         const exeId = await this.executeManagementModel.getExecution(
             EncodeManageModel.CREATE_ENCODING_PROCESS_PRIPORITY,
         );
 
+        // runningQueue がロック中 or 同時エンコード最大数に達している or waitQueue が空の場合はスルー
+        if (this.runningQueue.length >= this.concurrentEncodeNum || this.waitQueue.length === 0) {
+            // 実行権開放
+            this.executeManagementModel.unLockExecution(exeId);
+
+            return;
+        }
+
         // waitQueue から取り出す
-        let needsFinalize = false;
-        const encodeProgram = this.waitQueue.shift();
-        if (typeof encodeProgram !== 'undefined') {
-            // エンコードプロセスを生成して runningQueue に積む
-            try {
-                await this.addQueue(encodeProgram);
-            } catch (err) {
-                this.log.encode.error(`create encode process error: ${encodeProgram.encodeId}`);
-                this.log.encode.error(err);
+        const encoder = this.waitQueue.shift();
+        if (typeof encoder === 'undefined') {
+            // 実行権開放
+            this.executeManagementModel.unLockExecution(exeId);
 
-                needsFinalize = true;
-
-                // エラー通知
-                this.encodeEvent.emitErrorEncode();
-            }
+            return;
         }
 
-        // 実行権開放
-        this.executeManagementModel.unLockExecution(exeId);
+        // encodeOption が無い場合は何もしない
+        const encodeOption = encoder.getEncodeOption();
+        if (encodeOption === null) {
+            // 実行権開放
+            this.executeManagementModel.unLockExecution(exeId);
+            this.log.encode.warn('encodeOption is null'); // encoder 生成時にセットされているはずなので警告を出す
 
-        if (needsFinalize === true && typeof encodeProgram !== 'undefined') {
-            this.finalize(encodeProgram.encodeId);
+            return;
         }
-    }
-
-    /**
-     * エンコードプロセスを生成して runningQueue に積む
-     * @param queueItem: EncodeQueueItem
-     * @return Promise<ChildProcess>
-     */
-    private async addQueue(queueItem: EncodeQueueItem): Promise<void> {
-        const video = await this.videoFileDB.findId(queueItem.sourceVideoFileId);
-        if (video === null) {
-            throw new Error('VideoFileIdIsNotFound');
-        }
-
-        // 番組情報を取得する
-        const recorded = await this.recordedDB.findId(queueItem.recordedId);
-        if (recorded === null) {
-            throw new Error('RecordedIsNotFound');
-        }
-
-        // 局を取得する
-        const channel = await this.channelDB.findId(recorded.channelId);
-        if (channel === null) {
-            throw new Error('CannelIsNotFound');
-        }
-
-        // ソースビデオファイルのファイルパスを生成する
-        const inputFilePath = await this.videoUtil.getFullFilePathFromId(queueItem.sourceVideoFileId);
-        if (inputFilePath === null) {
-            throw new Error('VideoPathIsNotFound');
-        }
-
-        // ソースビデオファイルの存在を確認
-        try {
-            await FileUtil.stat(inputFilePath);
-        } catch (err) {
-            this.log.encode.error(`video file is not found: ${inputFilePath}`);
-            throw err;
-        }
-
-        // エンコードコマンド設定を探す
-        const encodeCmd = this.configure.getConfig().encode.find(enc => {
-            return enc.name === queueItem.mode;
-        });
-        if (typeof encodeCmd === 'undefined') {
-            throw new Error('EncodeCommandIsNotFound');
-        }
-
-        // 出力先ディレクトリパスを取得する
-        const outputDirPath = typeof encodeCmd.suffix === 'undefined' ? null : this.getDirPath(queueItem);
-
-        // 出力先ディレクトリの存在確認 & 作成
-        if (outputDirPath !== null) {
-            try {
-                await FileUtil.stat(outputDirPath);
-            } catch (e) {
-                // ディレクトリが存在しなければ作成する
-                this.log.encode.info(`mkdirp: ${outputDirPath}`);
-                await FileUtil.mkdir(outputDirPath);
-            }
-        }
-
-        // 出力先をファイルパスを生成する
-        const outputFilePath =
-            outputDirPath === null || typeof encodeCmd.suffix === 'undefined'
-                ? null
-                : await this.getFilePath(outputDirPath, inputFilePath, encodeCmd.suffix);
-
-        // 出力ファイルパスを使用済みファイル名として登録する
-        if (outputFilePath !== null) {
-            this.usedFileNameIndex[outputFilePath] = true;
-        }
-
-        // エンコード開始
-        this.log.encode.info(
-            `encode start. mode: ${queueItem.mode} name: ${recorded.name} file: ${inputFilePath} -> ${outputFilePath}`,
-        );
-
-        const config = this.configure.getConfig();
-
-        // DIR
-        let dir: string = '';
-        if (typeof encodeCmd.suffix === 'undefined' && typeof queueItem.directory !== 'undefined') {
-            dir = queueItem.directory;
-        } else if (outputFilePath !== null) {
-            dir = outputFilePath;
-        }
-
-        this.log.encode.info(`encodeCmd.suffix: ${encodeCmd.suffix}`);
-        this.log.encode.info(`queueItem.directory: ${queueItem.directory}`);
-        this.log.encode.info(`outputFilePath: ${outputFilePath}`);
-
-        // プロセスの生成
-        const childProcess = await this.processManager.create({
-            input: inputFilePath,
-            output: outputFilePath,
-            cmd: encodeCmd.cmd,
-            priority: EncodeManageModel.ENCODE_PRIPORITY,
-            spawnOption: {
-                env: {
-                    ...process.env,
-                    RECORDEDID: recorded.id.toString(10),
-                    INPUT: inputFilePath,
-                    OUTPUT: outputFilePath === null ? '' : outputFilePath,
-                    DIR: dir,
-                    SUBDIR: queueItem.directory || '',
-                    FFMPEG: config.ffmpeg,
-                    FFPROBE: config.ffprobe,
-                    NAME: recorded.name,
-                    HALF_WIDTH_NAME: recorded.halfWidthName,
-                    DESCRIPTION: recorded.description || '',
-                    HALF_WIDTH_DESCRIPTION: recorded.halfWidthDescription || '',
-                    EXTENDED: recorded.extended || '',
-                    HALF_WIDTH_EXTENDED: recorded.halfWidthExtended || '',
-                    VIDEOTYPE: recorded.videoType || '',
-                    VIDEORESOLUTION: recorded.videoResolution || '',
-                    VIDEOSTREAMCONTENT:
-                        typeof recorded.videoStreamContent === 'number' ? recorded.videoStreamContent.toString(10) : '',
-                    VIDEOCOMPONENTTYPE:
-                        typeof recorded.videoComponentType === 'number' ? recorded.videoComponentType.toString(10) : '',
-                    AUDIOSAMPLINGRATE:
-                        typeof recorded.audioSamplingRate === 'number' ? recorded.audioSamplingRate.toString(10) : '',
-                    AUDIOCOMPONENTTYPE:
-                        typeof recorded.audioComponentType === 'number' ? recorded.audioComponentType.toString(10) : '',
-                    CHANNELID: typeof recorded.channelId === 'number' ? recorded.channelId.toString(10) : '',
-                    CHANNELNAME: typeof channel.name === 'string' ? channel.name : '',
-                    HALF_WIDTH_CHANNELNAME: typeof channel.halfWidthName === 'string' ? channel.halfWidthName : '',
-                    GENRE1: typeof recorded.genre1 === 'number' ? recorded.genre1.toString(10) : '',
-                    SUBGENRE1: typeof recorded.subGenre1 === 'number' ? recorded.subGenre1.toString(10) : '',
-                    GENRE2: typeof recorded.genre2 === 'number' ? recorded.genre2.toString(10) : '',
-                    SUBGENRE2: typeof recorded.subGenre2 === 'number' ? recorded.subGenre2.toString(10) : '',
-                    GENRE3: typeof recorded.genre3 === 'number' ? recorded.genre3.toString(10) : '',
-                    SUBGENRE3: typeof recorded.subGenre3 === 'number' ? recorded.subGenre3.toString(10) : '',
-                    START_AT: recorded.startAt.toString(10),
-                    END_AT: recorded.endAt.toString(10),
-                    DROPLOG_ID: recorded.dropLogFile?.id.toString(10) || '',
-                    DROPLOG_PATH: recorded.dropLogFile?.filePath || '',
-                    ERROR_CNT: recorded.dropLogFile?.errorCnt.toString(10) || '',
-                    DROP_CNT: recorded.dropLogFile?.dropCnt.toString(10) || '',
-                    SCRAMBLING_CNT: recorded.dropLogFile?.scramblingCnt.toString(10) || '',
-                },
-            },
-        });
 
         // runningQueue に積む
-        this.runningQueue.push({
-            process: childProcess,
-            encodeProgram: queueItem,
-            isCanceld: false,
-            timerId: setTimeout(async () => {
-                this.log.encode.error(`encode process is time out: ${queueItem.encodeId} ${outputFilePath}`);
-                await this.cancel(queueItem.encodeId);
-            }, recorded.duration * (typeof encodeCmd.rate === 'undefined' ? EncodeManageModel.DEFAULT_TIMEOUT_RATE : encodeCmd.rate)),
+        this.runningQueue.push(encoder);
+
+        // エンコード終了時の処理をセット
+        encoder.setOnFinish((isError, outputFilePath) => {
+            this.onFinish(isError, outputFilePath, encodeOption);
         });
 
-        /**
-         * プロセスの設定
-         */
-        // debug 用
-        if (childProcess.stderr !== null) {
-            childProcess.stderr.on('data', data => {
-                this.log.encode.debug(String(data));
-            });
-        }
+        // エンコードプロセス開始
+        let needsFinalize = false;
+        try {
+            await encoder.start();
+        } catch (err) {
+            this.log.encode.error(`create encode process error: ${encoder.getEncodeId()}`);
+            this.log.encode.error(err);
 
-        // 進捗情報更新用
-        if (childProcess.stdout !== null) {
-            let videoInfo: VideoInfo | null = null;
-            try {
-                videoInfo = await this.videoUtil.getInfo(inputFilePath);
-            } catch (err) {
-                this.log.encode.error(`get encode vidoe file info: ${inputFilePath}`);
-                this.log.encode.error(err);
-            }
-            if (videoInfo !== null) {
-                childProcess.stdout.on('data', data => {
-                    try {
-                        this.updateEncodingProgressInfo(data, queueItem.encodeId);
-                    } catch (err) {
-                        // error
-                    }
-                });
-            }
-        }
-
-        // プロセス終了時に runningQueue からの削除 & emitNeedsCheckQueue() を実行する
-        childProcess.on('exit', async (code, signal) => {
-            this.childEndProcessing(code, signal, outputFilePath, queueItem);
-        });
-
-        // プロセスの即時終了対応
-        if (ProcessUtil.isExited(childProcess) === true) {
-            this.childEndProcessing(childProcess.exitCode, childProcess.signalCode, outputFilePath, queueItem);
-            childProcess.removeAllListeners();
-        }
-    }
-
-    /**
-     * エンコードプロセス終了処理
-     * @param code number | null
-     * @param signal NodeJS.Signals | null
-     * @param outputFilePath 出力先をファイルパス
-     * @param queueItem EncodeQueueItem
-     */
-    private async childEndProcessing(
-        code: number | null,
-        signal: NodeJS.Signals | null,
-        outputFilePath: string | null,
-        queueItem: EncodeQueueItem,
-    ): Promise<void> {
-        // exit code
-        this.log.encode.info(`exit code: ${code}, signal: ${signal}`);
-
-        // 使用済みファイル名から削除
-        if (outputFilePath !== null) {
-            delete this.usedFileNameIndex[outputFilePath];
-        }
-
-        let isError = true;
-        const encodingQueueItem = this.getRunnginQueueItem(queueItem.encodeId);
-        if (typeof encodingQueueItem === 'undefined') {
-            this.log.encode.fatal(`encode item is removed: ${queueItem.recordedId}`);
-        } else if (encodingQueueItem.isCanceld === true) {
-            // キャンセルされた
-            this.log.encode.info(`canceld encode: ${queueItem.encodeId}`);
-        } else if (code !== 0) {
-            // エンコードが正常終了しなかった
-            this.log.encode.error(`encode failed: ${queueItem.encodeId} ${outputFilePath}`);
-        } else {
-            // エンコード正常終了
-            this.log.encode.info(`Successfully encod: ${queueItem.encodeId} ${outputFilePath}`);
-
-            isError = false;
-
-            // 終了通知 DB に登録を依頼
-            const fileName = outputFilePath === null ? null : path.basename(outputFilePath);
-            this.log.encode.info(
-                `rmOrg: ${queueItem.removeOriginal}, hasSam: ${this.hasSamVideoFileIdItem(
-                    queueItem.sourceVideoFileId,
-                    queueItem.encodeId,
-                )}`,
-            );
-            if (
-                queueItem.removeOriginal === true &&
-                this.hasSamVideoFileIdItem(queueItem.sourceVideoFileId, queueItem.encodeId) === true
-            ) {
-                // queue に削除予定の videofile が存在するので、削除しないように false にする
-                queueItem.removeOriginal = false;
-            }
-
-            this.encodeEvent.emitFinishEncode({
-                recordedId: queueItem.recordedId,
-                videoFileId: queueItem.sourceVideoFileId,
-                parentDirName: queueItem.parentDir,
-                filePath:
-                    outputFilePath === null || fileName === null
-                        ? null
-                        : typeof queueItem.directory === 'undefined'
-                        ? fileName
-                        : path.join(queueItem.directory, fileName),
-                fullOutputPath: outputFilePath,
-                mode: queueItem.mode,
-                removeOriginal: queueItem.removeOriginal,
-            });
-        }
-
-        if (isError === true) {
-            // 出力ファイルを削除
-            if (outputFilePath !== null) {
-                this.log.encode.info(`delete encode output file: ${outputFilePath}`);
-                await Util.sleep(1000);
-
-                await FileUtil.unlink(outputFilePath).catch(err => {
-                    this.log.encode.error(`delete encode output file failed: ${outputFilePath}`);
-                    this.log.encode.error(err);
-                });
-            }
+            needsFinalize = true;
 
             // エラー通知
             this.encodeEvent.emitErrorEncode();
         }
 
-        this.finalize(queueItem.encodeId);
-    }
+        // 実行権開放
+        this.executeManagementModel.unLockExecution(exeId);
 
-    /**
-     * エンコード進捗情報更新
-     * @param data: エンコードプロセスの標準出力
-     * @param encodeId: apid.EncodeId
-     */
-    private updateEncodingProgressInfo(data: any, encodeId: apid.EncodeId): void {
-        const logs = String(data).split('\n');
-        for (let j = 0; j < logs.length; j++) {
-            if (logs[j] != '') {
-                const log = JSON.parse(String(logs[j]));
-                this.log.encode.debug(log);
-                if (log.type === 'progress') {
-                    const encodingQueueItem = this.getRunnginQueueItem(encodeId);
-                    if (encodingQueueItem != null) {
-                        encodingQueueItem.percent = log.percent;
-                        encodingQueueItem.log = log.log;
-
-                        // エンコード進捗変更通知
-                        this.encodeEvent.emitUpdateEncodeProgress();
-                    }
-                }
-            }
+        if (needsFinalize === true) {
+            this.finalize(encodeOption.encodeId);
         }
     }
 
     /**
-     * queueItem で指定された dir パスを取得する
-     * @param queueItem: EncodeQueueItem
-     * @return string
+     * エンコード終了処理
+     * @param isError: 異常終了か
+     * @param outputFilePath: エンコードファイルパス
+     * @param encodeOption: エンコードオプション
      */
-    private getDirPath(queueItem: EncodeQueueItem): string {
-        const parentDir = this.videoUtil.getParentDirPath(queueItem.parentDir);
-        if (parentDir === null) {
-            this.log.encode.error(`parent dir config is not found: ${queueItem.parentDir}`);
-            throw new Error('parentDirIsNotFound');
-        }
-
-        return typeof queueItem.directory === 'undefined' ? parentDir : path.join(parentDir, queueItem.directory);
-    }
-
-    /**
-     * 出力ファイル名を返す
-     * @param outputDirPath: string 出力先ディレクトリ
-     * @param inputFilePath: string 入力ファイルパス
-     * @param suffix: 拡張子
-     */
-    private async getFilePath(outputDirPath: string, inputFilePath: string, suffix: string): Promise<string> {
-        const basefileName = path.basename(inputFilePath, path.extname(inputFilePath));
-
-        let result: string | null = null;
-        let conflict = 0;
-        while (1) {
-            // ファイル名生成
-            let fileName = basefileName;
-            if (conflict > 0) {
-                fileName += `(${conflict.toString(10)})`;
-            }
-            fileName += suffix;
-
-            result = path.join(outputDirPath, fileName);
-
-            // 使用済みファイル名に一致するか
-            if (typeof this.usedFileNameIndex[result] !== 'undefined') {
-                conflict++;
-                continue;
+    private onFinish(isError: boolean, outputFilePath: string | null, encodeOption: EncodeOption): void {
+        if (isError) {
+            // エラー通知
+            this.encodeEvent.emitErrorEncode();
+        } else {
+            // 終了通知 DB に登録を依頼
+            const fileName = outputFilePath === null ? null : path.basename(outputFilePath);
+            if (
+                encodeOption.removeOriginal === true &&
+                this.hasSamVideoFileIdItem(encodeOption.sourceVideoFileId, encodeOption.encodeId) === true
+            ) {
+                // queue に削除予定の videofile が存在するので、削除しないように false にする
+                encodeOption.removeOriginal = false;
             }
 
-            // 同名ファイルがすでに存在するか
-            try {
-                await FileUtil.stat(result);
-                conflict++;
-            } catch (e) {
-                // 同名ファイルがすでに存在しなかった
-                break;
-            }
+            this.encodeEvent.emitFinishEncode({
+                recordedId: encodeOption.recordedId,
+                videoFileId: encodeOption.sourceVideoFileId,
+                parentDirName: encodeOption.parentDir,
+                filePath:
+                    outputFilePath === null || fileName === null
+                        ? null
+                        : typeof encodeOption.directory === 'undefined'
+                        ? fileName
+                        : path.join(encodeOption.directory, fileName),
+                fullOutputPath: outputFilePath,
+                mode: encodeOption.mode,
+                removeOriginal: encodeOption.removeOriginal,
+            });
         }
 
-        if (result === null) {
-            throw new Error('GetFilePathError');
-        }
-
-        return result;
-    }
-
-    /**
-     * 指定した encodeId を runningQueue から取り出す
-     * @param encodeId: apid.EncodeId
-     * @return RunningQueueItem | undefined
-     */
-    private getRunnginQueueItem(encodeId: apid.EncodeId): RunningQueueItem | undefined {
-        return this.runningQueue.find(q => {
-            return q.encodeProgram.encodeId === encodeId;
-        });
+        // 終了処理
+        this.finalize(encodeOption.encodeId);
     }
 
     /**
@@ -547,15 +215,19 @@ class EncodeManageModel implements IEncodeManageModel {
      * @return boolean 存在するなら true を返す
      */
     private hasSamVideoFileIdItem(videoFileId: apid.VideoFileId, excludeEncodeId: apid.EncodeId): boolean {
-        const runningItem = this.runningQueue.find(q => {
-            return q.encodeProgram.sourceVideoFileId === videoFileId && q.encodeProgram.encodeId !== excludeEncodeId;
+        const runningItem = this.runningQueue.find(i => {
+            const option = i.getEncodeOption();
+
+            return option !== null && option.sourceVideoFileId === videoFileId && option.encodeId !== excludeEncodeId;
         });
         if (typeof runningItem !== 'undefined') {
             return true;
         }
 
-        const waitItem = this.waitQueue.find(q => {
-            return q.sourceVideoFileId === videoFileId && q.encodeId !== excludeEncodeId;
+        const waitItem = this.waitQueue.find(i => {
+            const option = i.getEncodeOption();
+
+            return option !== null && option.sourceVideoFileId === videoFileId && option.encodeId !== excludeEncodeId;
         });
         if (typeof waitItem !== 'undefined') {
             return true;
@@ -572,15 +244,9 @@ class EncodeManageModel implements IEncodeManageModel {
         // 実行権取得
         const exeId = await this.executeManagementModel.getExecution(EncodeManageModel.CLEAR_QUEUE_PRIPORITY);
 
-        const queueItem = this.getRunnginQueueItem(encodeId);
-        if (typeof queueItem !== 'undefined') {
-            // タイムアウトタイマー停止
-            clearTimeout(queueItem.timerId);
-        }
-
         // runningQueue から encodeId の要素を削除する
         this.runningQueue = this.runningQueue.filter(q => {
-            return q.encodeProgram.encodeId !== encodeId;
+            return q.getEncodeId() !== encodeId;
         });
 
         // 実行権開放
@@ -604,15 +270,11 @@ class EncodeManageModel implements IEncodeManageModel {
         // runningQueue にあるので プロセスを殺す
         const runningQueueItem = this.getRunnginQueueItem(encodeId);
         if (typeof runningQueueItem !== 'undefined') {
-            runningQueueItem.isCanceld = true;
-            await ProcessUtil.kill(runningQueueItem.process).catch(err => {
-                this.log.encode.error(`kill encode process failed: ${encodeId}`);
-                this.log.encode.error(err);
-            });
+            await runningQueueItem.cancel();
         } else {
             // waitQueue から削除
             this.waitQueue = this.waitQueue.filter(q => {
-                return q.encodeId !== encodeId;
+                return q.getEncodeId() !== encodeId;
             });
 
             process.nextTick(() => {
@@ -627,28 +289,49 @@ class EncodeManageModel implements IEncodeManageModel {
     }
 
     /**
+     * 指定した encodeId を runningQueue から取り出す
+     * @param encodeId: apid.EncodeId
+     * @return IEncoderModel | undefined
+     */
+    private getRunnginQueueItem(encodeId: apid.EncodeId): IEncoderModel | undefined {
+        return this.runningQueue.find(q => {
+            return q.getEncodeId() === encodeId;
+        });
+    }
+
+    /**
      * queu に積まれている要素の recorded id の索引を返す
      */
     public getRecordedIndex(): EncodeRecordedIdIndex {
         const index: EncodeRecordedIdIndex = {};
 
         for (const item of this.runningQueue) {
-            if (typeof index[item.encodeProgram.recordedId] === 'undefined') {
-                index[item.encodeProgram.recordedId] = [];
+            const itemOption = item.getEncodeOption();
+            if (itemOption === null) {
+                continue;
             }
-            index[item.encodeProgram.recordedId].push({
-                encodeId: item.encodeProgram.encodeId,
-                name: item.encodeProgram.mode,
+
+            if (typeof index[itemOption.recordedId] === 'undefined') {
+                index[itemOption.recordedId] = [];
+            }
+            index[itemOption.recordedId].push({
+                encodeId: itemOption.encodeId,
+                name: itemOption.mode,
             });
         }
 
         for (const item of this.waitQueue) {
-            if (typeof index[item.recordedId] === 'undefined') {
-                index[item.recordedId] = [];
+            const itemOption = item.getEncodeOption();
+            if (itemOption === null) {
+                continue;
             }
-            index[item.recordedId].push({
-                encodeId: item.encodeId,
-                name: item.mode,
+
+            if (typeof index[itemOption.recordedId] === 'undefined') {
+                index[itemOption.recordedId] = [];
+            }
+            index[itemOption.recordedId].push({
+                encodeId: itemOption.encodeId,
+                name: itemOption.mode,
             });
         }
 
@@ -664,14 +347,27 @@ class EncodeManageModel implements IEncodeManageModel {
         const encodeIds: apid.EncodeId[] = [];
 
         // recordedId に該当する encodedId を取り出す
+        // wait queue
         for (const item of this.waitQueue) {
-            if (item.recordedId === recordedId) {
-                encodeIds.push(item.encodeId);
+            const itemOption = item.getEncodeOption();
+            if (itemOption === null) {
+                continue;
+            }
+
+            if (itemOption.recordedId === recordedId) {
+                encodeIds.push(itemOption.encodeId);
             }
         }
+
+        // running queue
         for (const item of this.runningQueue) {
-            if (item.encodeProgram.recordedId === recordedId) {
-                encodeIds.push(item.encodeProgram.encodeId);
+            const itemOption = item.getEncodeOption();
+            if (itemOption === null) {
+                continue;
+            }
+
+            if (itemOption.recordedId === recordedId) {
+                encodeIds.push(itemOption.encodeId);
             }
         }
 
@@ -701,25 +397,39 @@ class EncodeManageModel implements IEncodeManageModel {
             waitQueue: [],
         };
 
-        if (this.runningQueue.length > 0) {
-            queueInfo.runningQueue = this.runningQueue.map(i => {
-                return {
-                    id: i.encodeProgram.encodeId,
-                    mode: i.encodeProgram.mode,
-                    recordedId: i.encodeProgram.recordedId,
-                    percent: i.percent,
-                    log: i.log,
-                };
-            });
+        // running queue
+        for (const i of this.runningQueue) {
+            const option = i.getEncodeOption();
+            if (option === null) {
+                continue;
+            }
+
+            const result: EncodeInfoItem = {
+                id: option.encodeId,
+                mode: option.mode,
+                recordedId: option.recordedId,
+            };
+
+            const progress = i.getProgressInfo();
+            if (progress !== null) {
+                result.percent = progress.percent;
+                result.log = progress.log;
+            }
+
+            queueInfo.runningQueue.push(result);
         }
 
-        if (this.waitQueue.length > 0) {
-            queueInfo.waitQueue = this.waitQueue.map(i => {
-                return {
-                    id: i.encodeId,
-                    mode: i.mode,
-                    recordedId: i.recordedId,
-                };
+        // wait queue
+        for (const i of this.waitQueue) {
+            const option = i.getEncodeOption();
+            if (option === null) {
+                continue;
+            }
+
+            queueInfo.waitQueue.push({
+                id: option.encodeId,
+                mode: option.mode,
+                recordedId: option.recordedId,
             });
         }
 

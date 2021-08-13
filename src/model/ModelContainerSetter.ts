@@ -128,12 +128,16 @@ import IThumbnailManageModel from './operator/thumbnail/IThumbnailManageModel';
 import ThumbnailManageModel from './operator/thumbnail/ThumbnailManageModel';
 import PromiseQueue from './PromiseQueue';
 import PromiseRetry from './PromiseRetry';
+import EncodeFileManageModel from './service/encode/EncodeFileManageModel';
 import EncodeFinishModel from './service/encode/EncodeFinishModel';
 import EncodeManageModel from './service/encode/EncodeManageModel';
 import EncodeProcessManageModel from './service/encode/EncodeProcessManageModel';
+import EncoderModel from './service/encode/EncoderModel';
+import IEncodeFileManageModel from './service/encode/IEncodeFileManageModel';
 import IEncodeFinishModel from './service/encode/IEncodeFinishModel';
 import IEncodeManageModel from './service/encode/IEncodeManageModel';
 import IEncodeProcessManageModel from './service/encode/IEncodeProcessManageModel';
+import { EncoderModelProvider, IEncoderModel } from './service/encode/IEncoderModel';
 import IServiceServer from './service/IServiceServer';
 import ServiceServer from './service/ServiceServer';
 import ISocketIOManageModel from './service/socketio/ISocketIOManageModel';
@@ -312,6 +316,25 @@ export const set = (container: Container): void => {
         .bind<IEncodeProcessManageModel>('IEncodeProcessManageModel')
         .to(EncodeProcessManageModel)
         .inSingletonScope();
+
+    container.bind<IEncodeFileManageModel>('IEncodeFileManageModel').to(EncodeFileManageModel).inSingletonScope();
+
+    container.bind<IEncoderModel>('IEncoderModel').to(EncoderModel);
+
+    container.bind<EncoderModelProvider>('EncoderModelProvider').toProvider(context => {
+        return () => {
+            return new Promise<IEncoderModel>(
+                (resolve: (model: IEncoderModel) => void, reject: (err: Error) => void) => {
+                    try {
+                        const encoderModel = context.container.get<IEncoderModel>('IEncoderModel');
+                        resolve(encoderModel);
+                    } catch (err) {
+                        reject(err);
+                    }
+                },
+            );
+        };
+    });
 
     container.bind<IEncodeManageModel>('IEncodeManageModel').to(EncodeManageModel).inSingletonScope();
 
