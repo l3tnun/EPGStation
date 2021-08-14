@@ -264,7 +264,7 @@ class EncoderModel implements IEncoderModel {
             }
         }
 
-        // プロセス終了時に runningQueue からの削除 & emitNeedsCheckQueue() を実行する
+        // プロセス終了処理
         this.childProcess.on('exit', async (code, signal) => {
             this.childEndProcessing(code, signal, outputFilePath);
         });
