@@ -757,6 +757,9 @@ class RecorderModel implements IRecorderModel {
     public async update(newReserve: Reserve, isSuppressLog: boolean): Promise<void> {
         if (newReserve.isSkip === true || newReserve.isOverlap === true) {
             // skip されたかチェック
+            this.log.system.info(
+                `cancel recording by sikip or overlap reserveId: ${this.reserve.id}, recordedId: ${this.recordedId}`,
+            );
             await this.cancel(false).catch(err => {
                 this.log.system.error(`cancel recording error: ${newReserve.id}`);
                 this.log.system.error(err);
@@ -770,6 +773,9 @@ class RecorderModel implements IRecorderModel {
                 // 録画準備中 or 録画中
                 if (this.reserve.startAt > newReserve.startAt) {
                     // 開始時間が遅くなった
+                    this.log.system.info(
+                        `resetting recording timer reserveId: ${this.reserve.id}, recordedId: ${this.recordedId}`,
+                    );
                     await this.cancel(false).catch(err => {
                         this.log.system.error(`cancel recording error: ${newReserve.id}`);
                         this.log.system.error(err);
@@ -777,7 +783,7 @@ class RecorderModel implements IRecorderModel {
                     this.setTimer(newReserve, isSuppressLog); // タイマー再セット
                 } else if (this.reserve.endAt !== newReserve.endAt && this.reserve.programId === null) {
                     // 時間指定予約で終了時刻に変更があった
-                    this.log.system.debug(`change recording endAt: ${newReserve.id}`);
+                    this.log.system.info(`change recording endAt: ${newReserve.id}`);
 
                     if (this.isPrepRecording === true) {
                         // 録画準備中なら録画中になるまで待つ
