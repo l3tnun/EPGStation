@@ -762,7 +762,7 @@ class RecorderModel implements IRecorderModel {
         if (newReserve.isSkip === true || newReserve.isOverlap === true) {
             // skip されたかチェック
             this.log.system.info(
-                `cancel recording by sikip or overlap reserveId: ${this.reserve.id}, recordedId: ${this.recordedId}`,
+                `cancel recording by skip or overlap reserveId: ${this.reserve.id}, recordedId: ${this.recordedId}`,
             );
             await this.cancel(false).catch(err => {
                 this.log.system.error(`cancel recording error: ${newReserve.id}`);
