@@ -228,6 +228,8 @@ export default class IPCClient implements IIPCClient {
     private setRecorded(): void {
         this.recorded = {
             delete: (recordedId: apid.RecordedId) => {
+                this.log.system.info(`delete recorded by ipc: ${recordedId}`);
+
                 return this.send({
                     model: ModelName.recorded,
                     func: RecordedFunctions.delete,

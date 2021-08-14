@@ -75,7 +75,7 @@ class RecordingManageModel implements IRecordingManageModel {
                 // 録画を再設定
                 const recorder = await this.provider();
                 if (recorder.setTimer(reserve, false) === true) {
-                    this.log.system.debug(`readd recording: ${reserve.id}`);
+                    this.log.system.info(`readd recording: ${reserve.id}`);
                     this.recordingIndex[reserve.id] = recorder;
                 } else {
                     this.log.system.error(`readd recordgin error: ${reserve.id}`);
@@ -267,6 +267,7 @@ class RecordingManageModel implements IRecordingManageModel {
             return;
         }
 
+        this.log.system.info(`cancel recording reserveId: ${reserveId}, isPlanToDelete: ${isPlanToDelete}`);
         return this.recordingIndex[reserveId].cancel(isPlanToDelete);
     }
 

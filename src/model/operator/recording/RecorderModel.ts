@@ -437,6 +437,9 @@ class RecorderModel implements IRecorderModel {
             }
 
             if (err) {
+                this.log.system.error(
+                    `stream.finished error: reserveId: ${this.reserve.id} recordedId: ${this.recordedId}`,
+                );
                 await this.recFailed(err);
             } else {
                 await this.recEnd().catch(e => {
@@ -642,13 +645,18 @@ class RecorderModel implements IRecorderModel {
 
             // 録画完了の通知
             if (recorded !== null) {
+                this.log.system.info(
+                    `emit finish recording reserveId: ${this.reserve.id}, recordedId: ${this.recordedId}, isNeedDeleteReservation: ${this.isNeedDeleteReservation}`,
+                );
                 this.recordingEvent.emitFinishRecording(this.reserve, recorded, this.isNeedDeleteReservation);
             }
         } else {
             this.log.system.info('failed to recording: recorded id is null');
         }
 
-        this.log.system.info(`recording finish: ${this.reserve.id} ${this.videoFileFulPath}`);
+        this.log.system.info(
+            `recording finish reserveId: ${this.reserve.id}, recordedId: ${this.recordedId}, videoFileFulPath: ${this.videoFileFulPath}`,
+        );
     }
 
     /**

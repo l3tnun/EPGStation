@@ -127,6 +127,7 @@ export default class StorageManageModel implements IStorageManageModel {
 
                     // 録画を削除
                     try {
+                        this.log.system.info(`storage limit remove recorded: ${recorded.id}`);
                         await this.recordedManage.delete(recorded.id);
                     } catch (err) {
                         this.log.system.error(err);
