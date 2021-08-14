@@ -1365,15 +1365,17 @@ class ReservationManageModel implements IReservationManageModel {
         }[] = [];
 
         // 重複チェック用 index
-        const programIdIndex: { [key: number]: boolean } = {};
+        const programIdIndex: { [key: string]: boolean } = {};
 
         // list を生成
         for (let i = 0; i < matches.length; i++) {
-            const marchProgramId = matches[i].programId;
-            if (marchProgramId !== null) {
+            // programId 予約における重複を検知するためのキーを生成する
+            const matchProgramIdKey = this.getRuleProgramIdKey(matches[i]);
+
+            if (matchProgramIdKey !== null) {
                 // programId がすでに存在する場合は list に追加しない
-                if (typeof programIdIndex[marchProgramId] === 'undefined') {
-                    programIdIndex[marchProgramId] = true;
+                if (typeof programIdIndex[matchProgramIdKey] === 'undefined') {
+                    programIdIndex[matchProgramIdKey] = true;
                 } else {
                     continue;
                 }
@@ -1505,6 +1507,23 @@ class ReservationManageModel implements IReservationManageModel {
         }
 
         return 0;
+    }
+
+    /**
+     * 予約の ProgramId の重複検知するための key を生成する
+     * @param re: reserve
+     * @returns string | null programId 予約でない場合は null を返す
+     */
+    private getRuleProgramIdKey(re: Reserve): string | null {
+        // programId 予約ではない
+        if (re.programId === null) {
+            return null;
+        }
+
+        // 非ルール予約であれば ProgramId を返し、そうでなければ ProgramId に競合、重複、スキップ情報を追加して返す
+        return re.ruleId === null
+            ? re.programId.toString(10)
+            : `${re.programId.toString(10)}-${re.isConflict}-${re.isOverlap}-${re.isSkip}`;
     }
 }
 
