@@ -45,6 +45,7 @@
     > copy .\config\operatorLogConfig.sample.yml .\config\operatorLogConfig.yml
     > copy .\config\epgUpdaterLogConfig.sample.yml .\config\epgUpdaterLogConfig.yml
     > copy .\config\serviceLogConfig.sample.yml .\config\serviceLogConfig.yml
+    > copy .\config\enc.js.template .\config\enc.js
     ```
 
 4. 設定ファイルの編集
