@@ -714,6 +714,10 @@ class RecorderModel implements IRecorderModel {
      * @param isPlanToDelete: boolean ファイルが削除される予定か
      */
     public async cancel(isPlanToDelete: boolean): Promise<void> {
+        this.log.system.info(
+            `recording cancel reserveId: ${this.reserve.id}, recordedId: ${this.recordedId}, isPlanToDelete: ${isPlanToDelete}`,
+        );
+
         if (this.isPrepRecording === false && this.isRecording === false) {
             // 録画処理が開始されていない
             if (this.timerId !== null) {
