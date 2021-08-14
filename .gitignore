@@ -8,10 +8,9 @@ recorded/*
 thumbnail/*.jpg
 data/streamfiles/*
 .DS_Store
-config/*.json
-config/*.yml
-!operatorLogConfig.sample.yml
-!serviceLogConfig.sample.yml
+config/*
+!config/*.template
+!config/*.sample.yml
 data/*.json
 data/upload/*
 drop/*.log
