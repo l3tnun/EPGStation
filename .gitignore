@@ -16,7 +16,7 @@ data/upload/*
 drop/*.log
 node_modules
 dist
-!.gitkeep
 .cache
 data/upload/*
 data/key/*
+!.gitkeep
