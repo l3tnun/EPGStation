@@ -69,4 +69,3 @@ child.on('error', (err) => {
 process.on('SIGINT', () => {
     child.kill('SIGINT');
 });
-

@@ -33,6 +33,7 @@
     $ cp config/operatorLogConfig.sample.yml config/operatorLogConfig.yml
     $ cp config/epgUpdaterLogConfig.sample.yml config/epgUpdaterLogConfig.yml
     $ cp config/serviceLogConfig.sample.yml config/serviceLogConfig.yml
+    $ cp config/enc.js.template config/enc.js
     ```
 
 4. 設定ファイルの編集
