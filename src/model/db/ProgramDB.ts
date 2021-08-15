@@ -220,10 +220,18 @@ export default class ProgramDB implements IProgramDB {
             value.videoComponentType = program.video.componentType;
         }
 
-        // audio
-        if (typeof program.audio !== 'undefined') {
-            value.audioSamplingRate = program.audio.samplingRate;
-            value.audioComponentType = program.audio.componentType;
+        // audios
+        if (typeof program.audios !== 'undefined') {
+            for (const audio of program.audios) {
+                // TODO 複数音声データに対応する
+                // 互換性維持のため main の音声情報だけを格納する
+                if (audio.isMain === false) {
+                    continue;
+                }
+
+                value.audioSamplingRate = audio.samplingRate;
+                value.audioComponentType = audio.componentType;
+            }
         }
 
         return value;
