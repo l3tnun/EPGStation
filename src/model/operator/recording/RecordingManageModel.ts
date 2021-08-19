@@ -78,7 +78,7 @@ class RecordingManageModel implements IRecordingManageModel {
                     this.log.system.info(`readd recording: ${reserve.id}`);
                     this.recordingIndex[reserve.id] = recorder;
                 } else {
-                    this.log.system.error(`readd recordgin error: ${reserve.id}`);
+                    this.log.system.error(`readd recording error: ${reserve.id}`);
                 }
             } else {
                 // リトライ回数オーバー
@@ -205,7 +205,7 @@ class RecordingManageModel implements IRecordingManageModel {
                     this.log.system.debug(`add recording: ${reserve.id}`);
                     this.recordingIndex[reserve.id] = recorder;
                 } else {
-                    this.log.system.error(`add recordgin error: ${reserve.id}`);
+                    this.log.system.error(`add recording error: ${reserve.id}`);
                 }
             }
         }
