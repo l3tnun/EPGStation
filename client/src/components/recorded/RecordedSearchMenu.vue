@@ -11,6 +11,7 @@
                     <v-text-field v-model="searchState.keyword" label="キーワード" clearable v-on:keydown.enter="onSearch()" ref="keyword"></v-text-field>
                     <v-autocomplete
                         v-model="searchState.ruleId"
+                        :disabled="isNoRule === true"
                         :loading="loading"
                         :items="searchState.ruleItems"
                         :search-input.sync="search"
@@ -26,7 +27,10 @@
                     ></v-autocomplete>
                     <v-select v-model="searchState.channelId" :items="searchState.channelItems" label="放送局" clearable :menu-props="{ auto: true }"></v-select>
                     <v-select v-model="searchState.genre" :items="searchState.genreItems" label="ジャンル" clearable :menu-props="{ auto: true }"></v-select>
-                    <v-checkbox v-model="searchState.hasOriginalFile" label="元ファイルを含む" class="mt-2"></v-checkbox>
+                    <div class="check-boxes">
+                        <v-checkbox v-model="searchState.hasOriginalFile" label="元ファイルを含む" class="mt-2"></v-checkbox>
+                        <v-checkbox v-model="isNoRule" label="手動録画のみ" class="mt-2"></v-checkbox>
+                    </div>
                 </div>
                 <v-divider></v-divider>
                 <v-card-actions>
@@ -53,6 +57,7 @@ import * as apid from '../../../../api';
 export default class RecordedSearchMenu extends Vue {
     public loading: boolean = false;
     public search: string | null = null;
+    public isNoRule: boolean = false;
 
     @Watch('search', { immediate: true })
     public async onChangeSearch(newKeyword: string): Promise<void> {
@@ -83,7 +88,10 @@ export default class RecordedSearchMenu extends Vue {
             if (typeof this.searchState.keyword !== 'undefined') {
                 searchQuery.keyword = this.searchState.keyword;
             }
-            if (typeof this.searchState.ruleId !== 'undefined' && this.searchState.ruleId !== null) {
+            if (this.isNoRule === true) {
+                this.searchState.ruleId = 0;
+                searchQuery.ruleId = 0;
+            } else if (typeof this.searchState.ruleId !== 'undefined' && this.searchState.ruleId !== null) {
                 searchQuery.ruleId = this.searchState.ruleId;
             }
             if (typeof this.searchState.channelId !== 'undefined') {
@@ -129,12 +137,16 @@ export default class RecordedSearchMenu extends Vue {
     private setRuleId(): void {
         const ruleId = typeof this.$route.query.ruleId === 'undefined' ? null : parseInt(this.$route.query.ruleId as string, 10);
         this.searchState.ruleId = ruleId === null || isNaN(ruleId) === false ? ruleId : null;
+        if (this.searchState.ruleId === 0) {
+            this.isNoRule = true;
+        }
     }
 
     @Watch('isOpen', { immediate: true })
     public onChangeState(newState: boolean, oldState: boolean): void {
         if (newState === true && oldState === false) {
             this.searchState.initValues();
+            this.isNoRule = false;
 
             // query から値をセット
             this.setRuleId();
@@ -169,4 +181,10 @@ export default class RecordedSearchMenu extends Vue {
             margin: 0 !important
         .v-messages
             display: none
+
+    .check-boxes
+        display: flex
+        flex-wrap: wrap
+        .v-input--checkbox
+            padding-right: 8px
 </style>
