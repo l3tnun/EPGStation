@@ -632,4 +632,12 @@ export default class RecordedManageModel implements IRecordedManageModel {
             return false;
         }
     }
+
+    /**
+     * 指定された ruleId を録画情報から削除する
+     * @param ruleId: apid.Rule
+     */
+    public async removeRuleId(ruleId: apid.RuleId): Promise<void> {
+        await this.recordedDB.removeRuleId(ruleId);
+    }
 }

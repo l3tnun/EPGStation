@@ -32,4 +32,5 @@ export default interface IRecordedManageModel {
     historyCleanup(): Promise<void>;
     videoFileCleanup(): Promise<void>;
     dropLogFileCleanup(): Promise<void>;
+    removeRuleId(ruleId: apid.RuleId): Promise<void>;
 }

@@ -135,6 +135,25 @@ export default class RecordedDB implements IRecordedDB {
     }
 
     /**
+     * 指定した ruleId を削除する
+     * @param ruleId: apid.RuleId
+     * @return Promise<void>
+     */
+    public async removeRuleId(ruleId: apid.RuleId): Promise<void> {
+        const connection = await this.op.getConnection();
+        const queryBuilder = connection
+            .createQueryBuilder()
+            .update(Recorded)
+            .set({
+                ruleId: null,
+            })
+            .where({ ruleId: ruleId });
+        await this.promieRetry.run(() => {
+            return queryBuilder.execute();
+        });
+    }
+
+    /**
      * 保護状態を変更する
      * @param recordedId: apid.RecordedId
      * @param isProtect: boolean

@@ -121,7 +121,14 @@ export default class EventSetter implements IEventSetter {
         // ルール削除イベント
         this.ruleEvent.setDeleted(ruleId => {
             this.ipc.notifyClient();
-            this.reservationManage.updateRule(ruleId);
+            this.recordedManage.removeRuleId(ruleId).catch(err => {
+                this.log.system.error(`failed to remove ruleId from recorded. ruleId: ${ruleId}`);
+                this.log.system.error(err);
+            });
+            this.reservationManage.updateRule(ruleId).catch(err => {
+                this.log.system.error(`falied to update rule. ruleId: ${ruleId}`);
+                this.log.system.error(err);
+            });
         });
 
         // 予約情報更新イベント
