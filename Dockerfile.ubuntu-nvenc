@@ -1,3 +1,5 @@
+# 前半部詳細については、Dockerfile.debianのコメントを参照。
+
 FROM --platform=$BUILDPLATFORM node:16-buster AS client-builder
 COPY client/package*.json /app/client/
 WORKDIR /app/client
@@ -17,6 +19,9 @@ RUN npm install --no-save --loglevel=info
 COPY . .
 RUN rm -rf client
 RUN npm run build-server --loglevel=info
+
+
+#--------------
 
 
 FROM nvidia/cuda:11.4.1-devel-ubuntu20.04
