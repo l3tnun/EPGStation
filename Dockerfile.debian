@@ -14,7 +14,7 @@ RUN npm run build --loglevel=info
 # 上でnpmコマンドを実行することになるため、どうしても時間が掛かる。
 #
 # `npm install`時にネイティブ・アドオンをクロスビルドできればビルド時間を短縮できるが、現時点では明
-# 確な手順は存在しない。https://github.com/mapbox/node-pre-gyp/issues/348を見れはそれが分かる。
+# 確な手順は存在しない。https://github.com/mapbox/node-pre-gyp/issues/348を見ればそれが分かる。
 #
 # `npm run build-server`はプラットフォーム依存処理を含まないため、これをBUILDPLATFORMで実行すること
 # でビルド時間をさらに短縮可能だが、手順が煩雑で面倒なので現時点では行っていない。
