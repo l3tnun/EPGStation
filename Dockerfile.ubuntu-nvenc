@@ -1,0 +1,100 @@
+# 前半部詳細については、Dockerfile.debianのコメントを参照。
+
+FROM --platform=$BUILDPLATFORM node:16-buster AS client-builder
+COPY client/package*.json /app/client/
+WORKDIR /app/client
+RUN npm install --no-save --loglevel=info
+COPY . /app/
+RUN npm run build --loglevel=info
+
+
+FROM node:16-buster AS server-builder
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update
+RUN apt-get install -y build-essential python
+WORKDIR /app
+COPY package*.json /app/
+ENV DOCKER="YES"
+RUN npm install --no-save --loglevel=info
+COPY . .
+RUN rm -rf client
+RUN npm run build-server --loglevel=info
+
+
+#--------------
+
+
+FROM nvidia/cuda:11.4.1-devel-ubuntu20.04
+ENV DEBIAN_FRONTEND=noninteractive
+ENV CCACHE_DIR=/opt/.ccache
+ENV USE_CCACHE=1
+ENV DEV="make gcc git g++ automake curl wget autoconf build-essential libass-dev libfreetype6-dev libsdl1.2-dev libtheora-dev libtool libva-dev libvdpau-dev libvorbis-dev libxcb1-dev libxcb-shm0-dev libxcb-xfixes0-dev pkg-config texinfo zlib1g-dev ccache"
+
+ENV FFMPEG_VERSION=4.2.4
+ENV CUDA_CC=52    
+ENV NODE_VERSION 16
+
+RUN mkdir /opt/.ccache
+RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && \
+    apt-get -y install $DEV && \
+    curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - && \
+    apt-get update && \
+    apt-get -y install yasm libx264-dev libmp3lame-dev libopus-dev libvpx-dev && \
+    apt-get -y install libx265-dev libnuma-dev && \
+    apt-get -y install libasound2 libass9 libvdpau1 libva-x11-2 libva-drm2 libxcb-shm0 libxcb-xfixes0 libxcb-shape0 libvorbisenc2 libtheora0 libaribb24-dev && \
+    apt-get -y install nodejs
+
+RUN --mount=type=cache,target=/opt/.ccache \
+#nvenc build
+    git clone https://git.videolan.org/git/ffmpeg/nv-codec-headers.git && \
+    cd nv-codec-headers && make install && cd .. && \
+    rm -rf nv-codec-headers && \
+\
+#ffmpeg build
+    mkdir /tmp/ffmpeg_sources && \
+    cd /tmp/ffmpeg_sources && \
+    curl -fsSL http://ffmpeg.org/releases/ffmpeg-${FFMPEG_VERSION}.tar.bz2 | tar -xj --strip-components=1 && \
+    ./configure \
+      --prefix=/usr/local \
+      --disable-shared \
+      --pkg-config-flags=--static \
+      --enable-gpl \
+      --enable-libass \
+      --enable-libfreetype \
+      --enable-libmp3lame \
+      --enable-libopus \
+      --enable-libtheora \
+      --enable-libvorbis \
+      --enable-libvpx \
+      --enable-libx264 \
+      --enable-libx265 \
+      --enable-version3 \
+      --enable-libaribb24 \
+      --enable-nonfree \
+      --disable-debug \
+      --disable-doc \
+      --enable-cuda-nvcc --extra-cflags=-I/usr/local/cuda/include \
+      --extra-ldflags=-L/usr/local/cuda/lib64 \
+# CC指定フラグ追加 (https://github.com/NVIDIA/cuda-samples/issues/46#issuecomment-863835984 より)
+      --nvccflags="-gencode arch=compute_${CUDA_CC},code=sm_${CUDA_CC} -O2" \
+&& \
+    make -j$(nproc) && \
+    make install && \
+\
+# 不要なパッケージを削除
+    apt-get -y remove $DEV && \
+    apt-get autoremove -y && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
+    rm -rf /tmp/*
+    
+LABEL maintainer="l3tnun"
+COPY --from=server-builder /app /app/
+COPY --from=client-builder /app/client /app/client/
+EXPOSE 8888
+WORKDIR /app
+ENTRYPOINT ["npm"]
+CMD ["start"]
+
