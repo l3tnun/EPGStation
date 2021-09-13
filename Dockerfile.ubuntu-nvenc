@@ -31,7 +31,8 @@ ENV USE_CCACHE=1
 ENV DEV="make gcc git g++ automake curl wget autoconf build-essential libass-dev libfreetype6-dev libsdl1.2-dev libtheora-dev libtool libva-dev libvdpau-dev libvorbis-dev libxcb1-dev libxcb-shm0-dev libxcb-xfixes0-dev pkg-config texinfo zlib1g-dev ccache"
 
 ENV FFMPEG_VERSION=4.2.4
-ENV CUDA_CC=52    
+# https://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html#virtual-architecture-feature-list
+ENV CUDA_CC="35 50 52 53 60 61 62 70 72 75 80 86" 
 ENV NODE_VERSION 16
 
 RUN mkdir /opt/.ccache
@@ -55,6 +56,10 @@ RUN --mount=type=cache,target=/opt/.ccache \
 #ffmpeg build
     mkdir /tmp/ffmpeg_sources && \
     cd /tmp/ffmpeg_sources && \
+    ary=(`echo $CUDA_CC`) \
+    for i in `seq 1 ${#ary[@]}`; do  compute="compute_${ary[$i-1]},$compute"; done  \
+    for i in `seq 1 ${#ary[@]}`; do  sm="sm_${ary[$i-1]},$sm"; done \
+    CUDA_OPTION="-gencode arch=${compute}code=${sm} -O2" \
     curl -fsSL http://ffmpeg.org/releases/ffmpeg-${FFMPEG_VERSION}.tar.bz2 | tar -xj --strip-components=1 && \
     ./configure \
       --prefix=/usr/local \
@@ -78,7 +83,7 @@ RUN --mount=type=cache,target=/opt/.ccache \
       --enable-cuda-nvcc --extra-cflags=-I/usr/local/cuda/include \
       --extra-ldflags=-L/usr/local/cuda/lib64 \
 # CC指定フラグ追加 (https://github.com/NVIDIA/cuda-samples/issues/46#issuecomment-863835984 より)
-      --nvccflags="-gencode arch=compute_${CUDA_CC},code=sm_${CUDA_CC} -O2" \
+      --nvccflags="${CUDA_OPTION}" \
 && \
     make -j$(nproc) && \
     make install && \
