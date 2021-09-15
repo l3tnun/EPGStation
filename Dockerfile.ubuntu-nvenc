@@ -32,7 +32,7 @@ ENV DEV="make gcc git g++ automake curl wget autoconf build-essential libass-dev
 
 ENV FFMPEG_VERSION=4.2.4
 # https://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html#virtual-architecture-feature-list
-ENV CUDA_CC="35 50 52 53 60 61 62 70 72 75 80 86" 
+ENV CUDA_CC="35 37 50 52 53 60 61 62 70 72 75 80 86 87" 
 ENV NODE_VERSION 16
 
 RUN mkdir /opt/.ccache
@@ -47,7 +47,9 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked --mount=type=cache,t
     apt-get -y install libasound2 libass9 libvdpau1 libva-x11-2 libva-drm2 libxcb-shm0 libxcb-xfixes0 libxcb-shape0 libvorbisenc2 libtheora0 libaribb24-dev && \
     apt-get -y install nodejs
 
-RUN --mount=type=cache,target=/opt/.ccache \
+SHELL ["/bin/bash", "-c"]
+
+RUN \
 #nvenc build
     git clone https://git.videolan.org/git/ffmpeg/nv-codec-headers.git && \
     cd nv-codec-headers && make install && cd .. && \
@@ -56,11 +58,11 @@ RUN --mount=type=cache,target=/opt/.ccache \
 #ffmpeg build
     mkdir /tmp/ffmpeg_sources && \
     cd /tmp/ffmpeg_sources && \
-    ary=(`echo $CUDA_CC`) \
-    for i in `seq 1 ${#ary[@]}`; do  compute="compute_${ary[$i-1]},$compute"; done  \
-    for i in `seq 1 ${#ary[@]}`; do  sm="sm_${ary[$i-1]},$sm"; done \
-    CUDA_OPTION="-gencode arch=${compute}code=${sm} -O2" \
+    ary=(`echo $CUDA_CC`) && \
+    for i in `seq 1 ${#ary[@]}`;  do    gencode="-gencode arch=compute_${ary[$i-1]},code=sm_${ary[$i-1]} $gencode"; done && \
+    CUDA_OPTION="-arch sm_52 ${gencode} -O2" && \
     curl -fsSL http://ffmpeg.org/releases/ffmpeg-${FFMPEG_VERSION}.tar.bz2 | tar -xj --strip-components=1 && \
+    sed -i -e 's/$nvccflags -ptx/$nvccflags/g' ./configure && \
     ./configure \
       --prefix=/usr/local \
       --disable-shared \
@@ -80,6 +82,9 @@ RUN --mount=type=cache,target=/opt/.ccache \
       --enable-nonfree \
       --disable-debug \
       --disable-doc \
+# ccache有効
+      --cc="ccache cc" --cxx="ccache c++" \
+# CUDA Toolkit
       --enable-cuda-nvcc --extra-cflags=-I/usr/local/cuda/include \
       --extra-ldflags=-L/usr/local/cuda/lib64 \
 # CC指定フラグ追加 (https://github.com/NVIDIA/cuda-samples/issues/46#issuecomment-863835984 より)
@@ -98,6 +103,7 @@ RUN --mount=type=cache,target=/opt/.ccache \
 LABEL maintainer="l3tnun"
 COPY --from=server-builder /app /app/
 COPY --from=client-builder /app/client /app/client/
+RUN chmod 444 /app/src -R
 EXPOSE 8888
 WORKDIR /app
 ENTRYPOINT ["npm"]
