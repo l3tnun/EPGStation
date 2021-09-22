@@ -121,6 +121,10 @@ import VideoPlayerSettingModel from './storage/video/VideoPlayerSettingModel';
 import StorageOperationModel from './storage/StorageOperationModel';
 import IColorThemeState from '@/model/state/IColorThemeState';
 import ColorThemeState from '@/model/state/ColorThemeState';
+import VersionState from '@/model/state/version/VersionState';
+import IVersionState from '@/model/state/version/IVersionState';
+import VersionApiModel from '@/model/api/version/VersionApiModel';
+import IVersionApiModel from '@/model/api/version/IVersionApiModel';
 
 /**
  * container に各 Model を登録する
@@ -153,6 +157,8 @@ export default (container: Container): void => {
     container.bind<IDropLogApiModel>('IDropLogApiModel').to(DropLogApiModel).inSingletonScope();
 
     container.bind<IStorageApiModel>('IStorageApiModel').to(StorageApiModel).inSingletonScope();
+
+    container.bind<IVersionApiModel>('IVersionApiModel').to(VersionApiModel).inSingletonScope();
 
     container.bind<IThumbnailApiModel>('IThumbnailApiModel').to(ThumbnailApiModel).inSingletonScope();
 
@@ -245,6 +251,8 @@ export default (container: Container): void => {
     container.bind<IManualReserveState>('IManualReserveState').to(ManualReserveState).inSingletonScope();
 
     container.bind<IStorageState>('IStorageState').to(StorageState).inSingletonScope();
+
+    container.bind<IVersionState>('IVersionState').to(VersionState).inSingletonScope();
 
     container.bind<IColorThemeState>('IColorThemeState').to(ColorThemeState).inSingletonScope();
 };
