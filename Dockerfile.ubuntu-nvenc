@@ -37,9 +37,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked --mount=type=cache,t
     apt-get update && \
     apt-get -y install $DEV && \
     apt-get update && \
-    apt-get -y install yasm libx264-dev libmp3lame-dev libopus-dev libvpx-dev && \
-    apt-get -y install libx265-dev libnuma-dev && \
-    apt-get -y install libasound2 libass9 libvdpau1 libva-x11-2 libva-drm2 libxcb-shm0 libxcb-xfixes0 libxcb-shape0 libvorbisenc2 libtheora0 libaribb24-dev
+    apt-get -y install yasm libx264-dev libmp3lame-dev libopus-dev libvpx-dev libaribb24-dev && \
+    apt-get -y install libx265-dev libnuma-dev
 
 SHELL ["/bin/bash", "-c"]
 
@@ -100,18 +99,23 @@ FROM nvidia/cuda:11.4.1-runtime-ubuntu20.04
 
 ENV NODE_VERSION 16
 ENV DEBIAN_FRONTEND=noninteractive
+
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked --mount=type=cache,target=/var/lib/apt,sharing=locked \
     apt update && \
     apt install -y wget gcc g++ make && \
     wget https://deb.nodesource.com/setup_${NODE_VERSION}.x -O - | bash - && \
     apt-get -y install nodejs && \
     apt purge -y wget gcc g++ make
-
-LABEL maintainer="l3tnun"
 COPY --from=server-builder /app /app/
 COPY --from=client-builder /app/client /app/client/
 COPY --from=ffmpeg-build /ffmpeg /usr/local/
 RUN chmod 444 /app/src -R
+
+ENV RUNTIME="libasound2 libass9 libvdpau1 libva-x11-2 libva-drm2 libxcb-shm0 libxcb-xfixes0 libxcb-shape0 libvorbisenc2 libtheora0 libx264-155 libx265-179 libmp3lame0 libopus0 libvpx6 libaribb24-0"
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt install -y $RUNTIME
+
+LABEL maintainer="l3tnun"
 EXPOSE 8888
 WORKDIR /app
 ENTRYPOINT ["npm"]
