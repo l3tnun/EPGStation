@@ -21,10 +21,7 @@ RUN rm -rf client
 RUN npm run build-server --loglevel=info
 
 
-#--------------
-
-
-FROM nvidia/cuda:11.4.1-devel-ubuntu20.04
+FROM nvidia/cuda:11.4.1-devel-ubuntu20.04 AS ffmpeg-build
 ENV DEBIAN_FRONTEND=noninteractive
 ENV CCACHE_DIR=/opt/.ccache
 ENV USE_CCACHE=1
@@ -33,25 +30,22 @@ ENV DEV="make gcc git g++ automake curl wget autoconf build-essential libass-dev
 ENV FFMPEG_VERSION=4.2.4
 # https://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html#virtual-architecture-feature-list
 ENV CUDA_CC="35 37 50 52 53 60 61 62 70 72 75 80 86 87" 
-ENV NODE_VERSION 16
 
 RUN mkdir /opt/.ccache
 RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked --mount=type=cache,target=/var/lib/apt,sharing=locked \
     apt-get update && \
     apt-get -y install $DEV && \
-    curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - && \
     apt-get update && \
-    apt-get -y install yasm libx264-dev libmp3lame-dev libopus-dev libvpx-dev && \
-    apt-get -y install libx265-dev libnuma-dev && \
-    apt-get -y install libasound2 libass9 libvdpau1 libva-x11-2 libva-drm2 libxcb-shm0 libxcb-xfixes0 libxcb-shape0 libvorbisenc2 libtheora0 libaribb24-dev && \
-    apt-get -y install nodejs
+    apt-get -y install yasm libx264-dev libmp3lame-dev libopus-dev libvpx-dev libaribb24-dev && \
+    apt-get -y install libx265-dev libnuma-dev
 
 SHELL ["/bin/bash", "-c"]
 
-RUN \
+RUN --mount=type=cache,target=/opt/.ccache \
 #nvenc build
-    git clone https://git.videolan.org/git/ffmpeg/nv-codec-headers.git && \
+    GIT_SSL_NO_VERIFY=1 \
+    git clone https://git.videolan.org/git/ffmpeg/nv-codec-headers.git --depth=1 && \
     cd nv-codec-headers && make install && cd .. && \
     rm -rf nv-codec-headers && \
 \
@@ -64,7 +58,7 @@ RUN \
     curl -fsSL http://ffmpeg.org/releases/ffmpeg-${FFMPEG_VERSION}.tar.bz2 | tar -xj --strip-components=1 && \
     sed -i -e 's/$nvccflags -ptx/$nvccflags/g' ./configure && \
     ./configure \
-      --prefix=/usr/local \
+      --prefix=/ffmpeg \
       --disable-shared \
       --pkg-config-flags=--static \
       --enable-gpl \
@@ -99,11 +93,29 @@ RUN \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
     rm -rf /tmp/*
-    
-LABEL maintainer="l3tnun"
+
+
+FROM nvidia/cuda:11.4.1-runtime-ubuntu20.04
+
+ENV NODE_VERSION 16
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt update && \
+    apt install -y wget gcc g++ make && \
+    wget https://deb.nodesource.com/setup_${NODE_VERSION}.x -O - | bash - && \
+    apt-get -y install nodejs && \
+    apt purge -y wget gcc g++ make
 COPY --from=server-builder /app /app/
 COPY --from=client-builder /app/client /app/client/
+COPY --from=ffmpeg-build /ffmpeg /usr/local/
 RUN chmod 444 /app/src -R
+
+ENV RUNTIME="libasound2 libass9 libvdpau1 libva-x11-2 libva-drm2 libxcb-shm0 libxcb-xfixes0 libxcb-shape0 libvorbisenc2 libtheora0 libx264-155 libx265-179 libmp3lame0 libopus0 libvpx6 libaribb24-0"
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt install -y $RUNTIME
+
+LABEL maintainer="l3tnun"
 EXPOSE 8888
 WORKDIR /app
 ENTRYPOINT ["npm"]
