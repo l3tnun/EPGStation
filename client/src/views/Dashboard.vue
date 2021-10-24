@@ -1,6 +1,6 @@
 <template>
     <v-main>
-        <TitleBar title="EPGStation"></TitleBar>
+        <TitleBar :title="versionState.getVersionString()"></TitleBar>
         <div class="app-content d-flex flex-column mx-auto">
             <transition name="page">
                 <div v-if="isShow" class="dashboard" v-bind:class="dashboardClass">
@@ -70,6 +70,7 @@ import IRecordedState from '@/model/state/recorded/IRecordedState';
 import IRecordingState from '@/model/state/recording/IRecordingState';
 import IReservesState from '@/model/state/reserve/IReservesState';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
+import IVersionState from '@/model/state/version/IVersionState';
 import { ISettingStorageModel, ISettingValue } from '@/model/storage/setting/ISettingStorageModel';
 import UaUtil from '@/util/UaUtil';
 import Util from '@/util/Util';
@@ -106,6 +107,7 @@ class Dashboard extends Vue {
     private scrollState: IScrollPositionState = container.get<IScrollPositionState>('IScrollPositionState');
     private snackbarState: ISnackbarState = container.get<ISnackbarState>('ISnackbarState');
     private socketIoModel: ISocketIOModel = container.get<ISocketIOModel>('ISocketIOModel');
+    private versionState: IVersionState = container.get<IVersionState>('IVersionState');
     private onUpdateStatusCallback = (async (): Promise<void> => {
         await this.dashboardState.fetchData();
         await this.recordingState.fetchData(this.createFetchRecordingDataOption());

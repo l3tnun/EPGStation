@@ -9,7 +9,7 @@
     >
         <v-list-item>
             <v-list-item-content>
-                <v-list-item-title class="title">EPGStation</v-list-item-title>
+                <v-list-item-title class="title">{{ versionState.getVersionString() }}</v-list-item-title>
             </v-list-item-content>
         </v-list-item>
 
@@ -41,6 +41,9 @@
 import container from '@/model/ModelContainer';
 import IServerConfigModel from '@/model/serverConfig/IServerConfigModel';
 import INavigationState from '@/model/state/navigation/INavigationState';
+import ISocketIOModel from '@/model/socketio/ISocketIOModel';
+import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
+import IVersionState from '@/model/state/version/IVersionState';
 import { ISettingStorageModel, ISettingValue } from '@/model/storage/setting/ISettingStorageModel';
 import { Component, Vue, Watch } from 'vue-property-decorator';
 import { Location } from 'vue-router';
@@ -58,9 +61,23 @@ export default class Navigation extends Vue {
 
     private serverConfig: IServerConfigModel = container.get<IServerConfigModel>('IServerConfigModel');
     private setting: ISettingStorageModel = container.get<ISettingStorageModel>('ISettingStorageModel');
+    private socketIoModel: ISocketIOModel = container.get<ISocketIOModel>('ISocketIOModel');
+    private snackbarState: ISnackbarState = container.get<ISnackbarState>('ISnackbarState');
+    private versionState: IVersionState = container.get<IVersionState>('IVersionState');
+    private onUpdateStatusCallback = (async (): Promise<void> => {
+        await this.versionState.fetchData();
+    }).bind(this);
 
     public created(): void {
         this.navigationState.updateItems(this.$route);
+
+        // socket.io イベント
+        this.socketIoModel.onUpdateState(this.onUpdateStatusCallback);
+    }
+
+    public beforeDestroy(): void {
+        // socket.io イベント
+        this.socketIoModel.offUpdateState(this.onUpdateStatusCallback);
     }
 
     public getNavigationItemClass(index: number): any {
@@ -94,6 +111,16 @@ export default class Navigation extends Vue {
     @Watch('$route', { immediate: true, deep: true })
     public onUrlChange(): void {
         this.updateSelected();
+
+        this.$nextTick(async () => {
+            await this.versionState.fetchData().catch(err => {
+                this.snackbarState.open({
+                    color: 'error',
+                    text: 'バージョン情報取得に失敗',
+                });
+                console.error(err);
+            });
+        });
     }
 
     /**

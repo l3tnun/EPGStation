@@ -747,3 +747,10 @@ export interface StorageItem extends DiskUsage {
 export interface StorageInfo {
     items: StorageItem[];
 }
+
+/**
+ * バージョン情報
+ */
+export interface VersionInfo {
+    version: string;
+}
