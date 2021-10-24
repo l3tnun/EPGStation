@@ -17,7 +17,7 @@ jobs:
         distro:
           - alpine
           - debian
-          - ubuntu-evenc
+          - ubuntu-nvenc
         include:
           - distro: alpine
             platforms: >-
