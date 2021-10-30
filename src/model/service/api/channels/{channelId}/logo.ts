@@ -11,7 +11,7 @@ export const get: Operation = async (req, res) => {
         res.setHeader('Content-Type', 'image/png');
         res.status(200);
         res.end(result);
-    } catch (err) {
+    } catch (err: any) {
         if (err.message === IChannelApiModelError.NOT_FOUND) {
             api.responseError(res, {
                 code: 404,

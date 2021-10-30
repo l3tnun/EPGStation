@@ -33,7 +33,7 @@ export default class ConnectionCheckModel implements IConnectionCheckModel {
                 this.log.system.info('check mirakurun');
                 await this.mirakurunClient.getStatus();
                 break;
-            } catch (err) {
+            } catch (err: any) {
                 await Util.sleep(1000);
             }
         }
@@ -48,7 +48,7 @@ export default class ConnectionCheckModel implements IConnectionCheckModel {
                 this.log.system.info('check db');
                 await this.dbOperator.checkConnection();
                 break;
-            } catch (err) {
+            } catch (err: any) {
                 await Util.sleep(1000);
             }
         }

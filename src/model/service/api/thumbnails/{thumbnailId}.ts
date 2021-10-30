@@ -17,7 +17,7 @@ export const get: Operation = async (req, res) => {
         } else {
             api.responseFile(req, res, filePath, 'image/jpeg', false);
         }
-    } catch (err) {
+    } catch (err: any) {
         api.responseServerError(res, err.message);
     }
 };
@@ -58,7 +58,7 @@ export const del: Operation = async (req, res) => {
         await thumbnailApiModel.delete(parseInt(req.params.thumbnailId, 10));
 
         api.responseJSON(res, 200, { code: 200 });
-    } catch (err) {
+    } catch (err: any) {
         api.responseServerError(res, err.message);
     }
 };

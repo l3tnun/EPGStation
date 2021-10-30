@@ -34,7 +34,7 @@ export const get: Operation = async (req, res) => {
         keepTimer = setInterval(() => {
             streamApiModel.keep(result.streamId);
         }, 10 * 1000);
-    } catch (err) {
+    } catch (err: any) {
         api.responseServerError(res, err.message);
 
         return;

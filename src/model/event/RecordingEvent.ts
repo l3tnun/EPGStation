@@ -82,7 +82,7 @@ class RecordingEvent implements IRecordingEvent {
         this.emitter.on(RecordingEvent.START_PREP_RRECORDING_EVENT, async (reserve: Reserve) => {
             try {
                 await callback(reserve);
-            } catch (err) {
+            } catch (err: any) {
                 this.log.system.error(err);
             }
         });
@@ -96,7 +96,7 @@ class RecordingEvent implements IRecordingEvent {
         this.emitter.on(RecordingEvent.CANCEL_PREP_RRECORDING_EVENT, async (reserve: Reserve) => {
             try {
                 await callback(reserve);
-            } catch (err) {
+            } catch (err: any) {
                 this.log.system.error(err);
             }
         });
@@ -110,7 +110,7 @@ class RecordingEvent implements IRecordingEvent {
         this.emitter.on(RecordingEvent.PREP_RECORDING_FAILED_EVENT, async (reserve: Reserve) => {
             try {
                 await callback(reserve);
-            } catch (err) {
+            } catch (err: any) {
                 this.log.system.error(err);
             }
         });
@@ -124,7 +124,7 @@ class RecordingEvent implements IRecordingEvent {
         this.emitter.on(RecordingEvent.START_RECORDING_EVENT, async (reserve: Reserve, recorded: Recorded) => {
             try {
                 await callback(reserve, recorded);
-            } catch (err) {
+            } catch (err: any) {
                 this.log.system.error(err);
             }
         });
@@ -138,7 +138,7 @@ class RecordingEvent implements IRecordingEvent {
         this.emitter.on(RecordingEvent.RECORDING_FAILED_EVENT, async (reserve: Reserve, recorded: Recorded | null) => {
             try {
                 await callback(reserve, recorded);
-            } catch (err) {
+            } catch (err: any) {
                 this.log.system.error(err);
             }
         });
@@ -152,7 +152,7 @@ class RecordingEvent implements IRecordingEvent {
         this.emitter.on(RecordingEvent.RECORDING_RETRY_OVER_EVENT, async (reserve: Reserve) => {
             try {
                 await callback(reserve);
-            } catch (err) {
+            } catch (err: any) {
                 this.log.system.error(err);
             }
         });
@@ -170,7 +170,7 @@ class RecordingEvent implements IRecordingEvent {
             async (reserve: Reserve, recorded: Recorded, isNeedDeleteReservation: boolean) => {
                 try {
                     await callback(reserve, recorded, isNeedDeleteReservation);
-                } catch (err) {
+                } catch (err: any) {
                     this.log.system.error(err);
                 }
             },

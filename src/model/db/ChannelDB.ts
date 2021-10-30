@@ -87,7 +87,7 @@ export default class ChannelDB implements IChannelDB {
             }
 
             await queryRunner.commitTransaction();
-        } catch (err) {
+        } catch (err: any) {
             console.error(err);
             hasError = true;
             await queryRunner.rollbackTransaction();

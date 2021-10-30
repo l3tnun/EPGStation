@@ -20,7 +20,7 @@ export const get: Operation = async (req, res) => {
         } else {
             api.responseFile(req, res, filePath, 'text/plain', false);
         }
-    } catch (err) {
+    } catch (err: any) {
         if (err.message === DropLogApiErrors.FILE_IS_TOO_LARGE) {
             api.responseError(res, {
                 code: 416,

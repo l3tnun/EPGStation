@@ -78,7 +78,7 @@ abstract class StreamBaseModel<T> implements IStreamBaseModel<T> {
         // streamFilePath の存在チェック
         try {
             await FileUtil.access(this.config.streamFilePath, fs.constants.R_OK | fs.constants.W_OK);
-        } catch (err) {
+        } catch (err: any) {
             if (typeof err.code !== 'undefined' && err.code === 'ENOENT') {
                 // ディレクトリが存在しないので作成する
                 this.log.stream.info(`mkdirp: ${this.config.streamFilePath}`);
@@ -122,7 +122,7 @@ abstract class StreamBaseModel<T> implements IStreamBaseModel<T> {
         this.emitter.once(StreamBaseModel.EXIT_EVENT, async () => {
             try {
                 callback();
-            } catch (err) {
+            } catch (err: any) {
                 this.log.stream.error('exit stream callback error');
                 this.log.stream.error(err);
             }
@@ -150,7 +150,7 @@ abstract class StreamBaseModel<T> implements IStreamBaseModel<T> {
             let fileList: string[];
             try {
                 fileList = await FileUtil.readDir(this.config.streamFilePath);
-            } catch (err) {
+            } catch (err: any) {
                 this.log.stream.error(`get stream files list error: ${streamId} ${this.config.streamFilePath}`);
                 if (this.streamCheckTimer !== null) {
                     clearInterval(this.streamCheckTimer);

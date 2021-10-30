@@ -49,7 +49,7 @@ export default class RuleManageModel implements IRuleManageModel {
         let ruleId!: apid.RuleId;
         try {
             ruleId = await this.ruleDB.insertOnce(rule);
-        } catch (err) {
+        } catch (err: any) {
             this.unlockExecution();
             this.log.system.error('insert rule error');
             this.log.system.error(err);
@@ -95,7 +95,7 @@ export default class RuleManageModel implements IRuleManageModel {
         // rule 更新
         try {
             await this.ruleDB.updateOnce(rule);
-        } catch (err) {
+        } catch (err: any) {
             this.unlockExecution();
             this.log.system.error(`update rule error: ${rule.id}`);
             throw err;
@@ -118,7 +118,7 @@ export default class RuleManageModel implements IRuleManageModel {
 
         try {
             await this.ruleDB.enableOnce(ruleId);
-        } catch (err) {
+        } catch (err: any) {
             this.unlockExecution();
             this.log.system.error(`enable rule error: ${ruleId}`);
             throw err;
@@ -142,7 +142,7 @@ export default class RuleManageModel implements IRuleManageModel {
 
         try {
             await this.ruleDB.disableOnce(ruleId);
-        } catch (err) {
+        } catch (err: any) {
             this.unlockExecution();
             this.log.system.error(`disable rule error: ${ruleId}`);
             throw err;
@@ -166,7 +166,7 @@ export default class RuleManageModel implements IRuleManageModel {
 
         try {
             await this.ruleDB.deleteOnce(ruleId);
-        } catch (err) {
+        } catch (err: any) {
             this.unlockExecution();
             this.log.system.error(`delete rule error: ${ruleId}`);
             throw err;
@@ -191,7 +191,7 @@ export default class RuleManageModel implements IRuleManageModel {
         for (const ruleId of ruleIds) {
             try {
                 await this.delete(ruleId);
-            } catch (err) {
+            } catch (err: any) {
                 failedIds.push(ruleId);
             }
         }

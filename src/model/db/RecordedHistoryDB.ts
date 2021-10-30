@@ -38,7 +38,7 @@ export default class RecordedHistoryDB implements IRecordedHistoryDB {
                 await queryRunner.manager.insert(RecordedHistory, item);
             }
             await queryRunner.commitTransaction();
-        } catch (err) {
+        } catch (err: any) {
             console.error(err);
             hasError = err;
             await queryRunner.rollbackTransaction();

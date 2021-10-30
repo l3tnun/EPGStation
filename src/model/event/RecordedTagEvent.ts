@@ -65,7 +65,7 @@ class RecordedTagEvent implements IRecordedTagEvent {
         this.emitter.on(RecordedTagEvent.CREATED_EVENT, async (tag: RecordedTag) => {
             try {
                 await callback(tag);
-            } catch (err) {
+            } catch (err: any) {
                 this.log.system.error(err);
             }
         });
@@ -79,7 +79,7 @@ class RecordedTagEvent implements IRecordedTagEvent {
         this.emitter.on(RecordedTagEvent.UPDATED_EVENT, async (tagId: apid.RecordedTagId) => {
             try {
                 await callback(tagId);
-            } catch (err) {
+            } catch (err: any) {
                 this.log.system.error(err);
             }
         });
@@ -95,7 +95,7 @@ class RecordedTagEvent implements IRecordedTagEvent {
             async (tagId: apid.RecordedTagId, recordedId: apid.RecordedId) => {
                 try {
                     await callback(tagId, recordedId);
-                } catch (err) {
+                } catch (err: any) {
                     this.log.system.error(err);
                 }
             },
@@ -110,7 +110,7 @@ class RecordedTagEvent implements IRecordedTagEvent {
         this.emitter.on(RecordedTagEvent.DELETED_EVENT, async (tagId: apid.RecordedTagId) => {
             try {
                 await callback(tagId);
-            } catch (err) {
+            } catch (err: any) {
                 this.log.system.error(err);
             }
         });
@@ -126,7 +126,7 @@ class RecordedTagEvent implements IRecordedTagEvent {
             async (tagId: apid.RecordedTagId, recordedId: apid.RecordedId) => {
                 try {
                     await callback(tagId, recordedId);
-                } catch (err) {
+                } catch (err: any) {
                     this.log.system.error(err);
                 }
             },

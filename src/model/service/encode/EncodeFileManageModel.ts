@@ -40,7 +40,7 @@ export default class EncodeFileManageModel implements IEncodeFileManageModel {
             try {
                 await FileUtil.stat(result);
                 conflict++;
-            } catch (e) {
+            } catch (e: any) {
                 // 同名ファイルがすでに存在しなかった
                 break;
             }

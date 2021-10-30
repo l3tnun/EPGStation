@@ -8,7 +8,7 @@ export const get: Operation = async (req, res) => {
 
     try {
         api.responseJSON(res, 200, await configApiModel.getConfig(api.isSecureProtocol(req)));
-    } catch (err) {
+    } catch (err: any) {
         api.responseServerError(res, err.message);
     }
 };

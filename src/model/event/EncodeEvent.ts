@@ -67,7 +67,7 @@ class EncodeEvent implements IEncodeEvent {
         this.emitter.on(EncodeEvent.ADD_ENCODE_EVENT, async (encodeId: apid.EncodeId) => {
             try {
                 await callback(encodeId);
-            } catch (err) {
+            } catch (err: any) {
                 this.log.system.error(err);
             }
         });
@@ -81,7 +81,7 @@ class EncodeEvent implements IEncodeEvent {
         this.emitter.on(EncodeEvent.CANCEL_ENCODE_EVENT, async (encodeId: apid.EncodeId) => {
             try {
                 await callback(encodeId);
-            } catch (err) {
+            } catch (err: any) {
                 this.log.system.error(err);
             }
         });
@@ -95,7 +95,7 @@ class EncodeEvent implements IEncodeEvent {
         this.emitter.on(EncodeEvent.FINISH_ENCODE_EVENT, async (info: FinishEncodeInfo) => {
             try {
                 await callback(info);
-            } catch (err) {
+            } catch (err: any) {
                 this.log.system.error(err);
             }
         });
@@ -109,7 +109,7 @@ class EncodeEvent implements IEncodeEvent {
         this.emitter.on(EncodeEvent.ERROR_ENCODE_EVENT, async () => {
             try {
                 await callback();
-            } catch (err) {
+            } catch (err: any) {
                 this.log.system.error(err);
             }
         });
@@ -123,7 +123,7 @@ class EncodeEvent implements IEncodeEvent {
         this.emitter.on(EncodeEvent.UPDATE_ENCODE_EVENT, async () => {
             try {
                 await callback();
-            } catch (err) {
+            } catch (err: any) {
                 this.log.system.error(err);
             }
         });
@@ -137,7 +137,7 @@ class EncodeEvent implements IEncodeEvent {
         this.emitter.on(EncodeEvent.UPDATE_ENCODE_PROGRESS_EVENT, async () => {
             try {
                 await callback();
-            } catch (err) {
+            } catch (err: any) {
                 this.log.system.error(err);
             }
         });

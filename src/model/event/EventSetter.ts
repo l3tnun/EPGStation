@@ -358,7 +358,7 @@ export default class EventSetter implements IEventSetter {
         let tags: apid.RecordedTagId[] = [];
         try {
             tags = JSON.parse(tagsStr);
-        } catch (err) {
+        } catch (err: any) {
             this.log.system.error(`reserve tags parese error: ${tagsStr}`);
             this.log.system.error(err);
 

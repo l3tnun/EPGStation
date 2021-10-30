@@ -33,7 +33,7 @@ export const get: Operation = async (req, res) => {
             option.keyword = req.query.keyword;
         }
         api.responseJSON(res, 200, await recordingApiModel.gets(option));
-    } catch (err) {
+    } catch (err: any) {
         api.responseServerError(res, err.message);
     }
 };

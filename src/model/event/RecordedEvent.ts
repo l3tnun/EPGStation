@@ -81,7 +81,7 @@ class RecordedEvent implements IRecordedEvent {
         this.emitter.on(RecordedEvent.DELETE_RECORDED_EVENT, async (recorded: Recorded) => {
             try {
                 await callback(recorded);
-            } catch (err) {
+            } catch (err: any) {
                 this.log.system.error(err);
             }
         });
@@ -95,7 +95,7 @@ class RecordedEvent implements IRecordedEvent {
         this.emitter.on(RecordedEvent.CREATE_NEW_RECORDED, async (recordedId: apid.RecordedId) => {
             try {
                 await callback(recordedId);
-            } catch (err) {
+            } catch (err: any) {
                 this.log.system.error(err);
             }
         });
@@ -109,7 +109,7 @@ class RecordedEvent implements IRecordedEvent {
         this.emitter.on(RecordedEvent.UPDATE_VIDEO_FILE_SIZE, async (videoFileId: apid.VideoFileId) => {
             try {
                 await callback(videoFileId);
-            } catch (err) {
+            } catch (err: any) {
                 this.log.system.error(err);
             }
         });
@@ -123,7 +123,7 @@ class RecordedEvent implements IRecordedEvent {
         this.emitter.on(RecordedEvent.ADD_VIDEO_FILE, async (newVideoFileId: apid.VideoFileId) => {
             try {
                 await callback(newVideoFileId);
-            } catch (err) {
+            } catch (err: any) {
                 this.log.system.error(err);
             }
         });
@@ -141,7 +141,7 @@ class RecordedEvent implements IRecordedEvent {
             async (newVideoFileId: apid.VideoFileId, needsCreateThumbnail: boolean) => {
                 try {
                     await callback(newVideoFileId, needsCreateThumbnail);
-                } catch (err) {
+                } catch (err: any) {
                     this.log.system.error(err);
                 }
             },
@@ -156,7 +156,7 @@ class RecordedEvent implements IRecordedEvent {
         this.emitter.on(RecordedEvent.DLETE_VIDEO_FILE, async (videoFileId: apid.VideoFileId) => {
             try {
                 await callback(videoFileId);
-            } catch (err) {
+            } catch (err: any) {
                 this.log.system.error(err);
             }
         });
@@ -170,7 +170,7 @@ class RecordedEvent implements IRecordedEvent {
         this.emitter.on(RecordedEvent.CHANGE_PROTECT, async (recordedId: apid.RecordedId, isProtected: boolean) => {
             try {
                 await callback(recordedId, isProtected);
-            } catch (err) {
+            } catch (err: any) {
                 this.log.system.error(err);
             }
         });

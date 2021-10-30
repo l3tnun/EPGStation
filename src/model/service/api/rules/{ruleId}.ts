@@ -16,7 +16,7 @@ export const get: Operation = async (req, res) => {
                 message: 'Rule is not Found',
             });
         }
-    } catch (err) {
+    } catch (err: any) {
         api.responseServerError(res, err.message);
     }
 };
@@ -65,7 +65,7 @@ export const del: Operation = async (req, res) => {
         api.responseJSON(res, 200, {
             code: 200,
         });
-    } catch (err) {
+    } catch (err: any) {
         api.responseServerError(res, err.message);
     }
 };
@@ -106,7 +106,7 @@ export const put: Operation = async (req, res) => {
         api.responseJSON(res, 200, {
             code: 200,
         });
-    } catch (err) {
+    } catch (err: any) {
         api.responseServerError(res, err.message);
     }
 };

@@ -71,7 +71,7 @@ export default class EncodeFinishModel implements IEncodeFinishModel {
                 });
                 newVideoFileId = id;
             }
-        } catch (err) {
+        } catch (err: any) {
             this.log.encode.error('finish encode error');
             this.log.encode.error(err);
         }

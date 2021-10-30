@@ -27,7 +27,7 @@ export const post: Operation = async (req, res) => {
         await recordedApiModel.addUploadedVideoFile(option);
 
         api.responseJSON(res, 200, { code: 200, result: 'ok' });
-    } catch (err) {
+    } catch (err: any) {
         api.responseServerError(res, err.message);
     }
 };

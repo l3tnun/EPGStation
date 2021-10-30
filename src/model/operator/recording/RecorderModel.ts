@@ -128,7 +128,7 @@ class RecorderModel implements IRecorderModel {
         this.timerId = setTimeout(async () => {
             try {
                 this.prepRecord();
-            } catch (err) {
+            } catch (err: any) {
                 this.log.system.error(`failed prep record: ${this.reserve.id}`);
             }
         }, time);
@@ -172,7 +172,7 @@ class RecorderModel implements IRecorderModel {
             } else {
                 await this.doRecord();
             }
-        } catch (err) {
+        } catch (err: any) {
             this.log.system.error(`preprec failed: ${this.reserve.id}`);
             this.log.system.error(err);
             if ((this.isStopPrepRec as any) === true) {
@@ -221,7 +221,7 @@ class RecorderModel implements IRecorderModel {
                 this.stream.push(null); // eof 通知
                 this.stream.removeAllListeners('data');
                 this.stream = null;
-            } catch (err) {
+            } catch (err: any) {
                 this.log.system.error(`destory stream error: ${this.reserve.id}`);
                 this.log.system.error(err);
             }
@@ -232,7 +232,7 @@ class RecorderModel implements IRecorderModel {
             try {
                 this.recFile.removeAllListeners('error');
                 this.recFile.end();
-            } catch (err) {
+            } catch (err: any) {
                 this.log.system.error(`end recFile error: ${this.reserve.id}`);
                 this.log.system.error(err);
             }
@@ -302,7 +302,7 @@ class RecorderModel implements IRecorderModel {
             try {
                 await this.dropChecker.start(this.config.dropLog, recPath.fullPath, this.stream);
                 dropFilePath = this.dropChecker.getFilePath();
-            } catch (err) {
+            } catch (err: any) {
                 this.log.system.error(`drop check error: ${recPath.fullPath}`);
                 this.log.system.error(err);
                 dropFilePath = null;
@@ -318,7 +318,7 @@ class RecorderModel implements IRecorderModel {
                 this.log.system.info(`add drop log file: ${dropFilePath}`);
                 try {
                     this.dropLogFileId = await this.dropLogFileDB.insertOnce(dropLogFile);
-                } catch (err) {
+                } catch (err: any) {
                     this.dropLogFileId = null;
                     this.log.system.error(`add drop log file error: ${dropFilePath}`);
                     this.log.system.error(err);
@@ -407,7 +407,7 @@ class RecorderModel implements IRecorderModel {
             recorded.videoFiles = [videoFile];
 
             return recorded;
-        } catch (err) {
+        } catch (err: any) {
             // DB 登録エラー
             this.log.system.error('add recorded DB error');
             this.log.system.error(err);
@@ -473,7 +473,7 @@ class RecorderModel implements IRecorderModel {
         if (this.recordedId !== null) {
             try {
                 recorded = await this.recordedDB.findId(this.recordedId);
-            } catch (e) {
+            } catch (e: any) {
                 this.log.system.error(`reocrded is deleted: ${this.recordedId}`);
                 recorded = null;
             }
@@ -598,7 +598,7 @@ class RecorderModel implements IRecorderModel {
                 try {
                     const newVdeoFileFulPath = await this.recordingUtil.movingFromTmp(this.reserve, this.videoFileId);
                     this.videoFileFulPath = newVdeoFileFulPath;
-                } catch (err) {
+                } catch (err: any) {
                     this.log.system.fatal(`movingFromTmp error: ${this.videoFileId}`);
                     this.log.system.fatal(err);
                 }
@@ -637,7 +637,7 @@ class RecorderModel implements IRecorderModel {
                         history.endAt = recorded.endAt;
                         await this.recordedHistoryDB.insertOnce(history);
                     }
-                } catch (err) {
+                } catch (err: any) {
                     this.log.system.error(`add recorded history error: ${this.recordedId}`);
                     this.log.system.error(err);
                 }
@@ -679,7 +679,7 @@ class RecorderModel implements IRecorderModel {
                 drop += dropResult[pid].drop;
                 scrambling += dropResult[pid].scrambling;
             }
-        } catch (err) {
+        } catch (err: any) {
             this.log.system.error(`get drop result error: ${this.dropLogFileId}`);
             this.log.system.error(err);
             await this.dropChecker.stop().catch(() => {});
@@ -809,7 +809,7 @@ class RecorderModel implements IRecorderModel {
                     // 終了時刻変更
                     try {
                         this.streamCreator.changeEndAt(newReserve);
-                    } catch (err) {
+                    } catch (err: any) {
                         this.log.system.error(`change recording endAt: ${newReserve.id}`);
                         this.log.system.error(err);
                     }

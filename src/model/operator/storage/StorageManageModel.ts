@@ -77,7 +77,7 @@ export default class StorageManageModel implements IStorageManageModel {
             let free: number;
             try {
                 free = await this.getFreeSize(l.path);
-            } catch (err) {
+            } catch (err: any) {
                 this.log.system.error(`get disk info error: ${l.path}`);
                 this.log.system.error(err);
 
@@ -99,7 +99,7 @@ export default class StorageManageModel implements IStorageManageModel {
                     spawn(cmds.bin, cmds.args, {
                         stdio: 'ignore',
                     });
-                } catch (err) {
+                } catch (err: any) {
                     this.log.system.error(`limit cmd error: ${l.limitCmd}`);
                     this.log.system.error(err);
                 }
@@ -113,7 +113,7 @@ export default class StorageManageModel implements IStorageManageModel {
                     let recorded: Recorded | null = null;
                     try {
                         recorded = await this.recordedDB.findOld();
-                    } catch (err) {
+                    } catch (err: any) {
                         this.log.system.error('failed to find old recorded');
                         this.log.system.error(err);
                         break;
@@ -129,7 +129,7 @@ export default class StorageManageModel implements IStorageManageModel {
                     try {
                         this.log.system.info(`storage limit remove recorded: ${recorded.id}`);
                         await this.recordedManage.delete(recorded.id);
-                    } catch (err) {
+                    } catch (err: any) {
                         this.log.system.error(err);
                         break;
                     }
@@ -137,7 +137,7 @@ export default class StorageManageModel implements IStorageManageModel {
                     // 空き容量取得
                     try {
                         free = await this.getFreeSize(l.path);
-                    } catch (err) {
+                    } catch (err: any) {
                         this.log.system.error(`get disk info error: ${l.path}`);
                         this.log.system.error(err);
                         break;

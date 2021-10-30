@@ -29,7 +29,7 @@ class ReserveEvent implements IReserveEvent {
         this.emitter.on(ReserveEvent.UPDATE_EVENT, async (diff: IReserveUpdateValues) => {
             try {
                 await callback(diff);
-            } catch (err) {
+            } catch (err: any) {
                 this.log.system.error(err);
             }
         });

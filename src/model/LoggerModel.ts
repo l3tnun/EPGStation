@@ -40,7 +40,7 @@ export default class LoggerModel implements ILoggerModel {
                 const str = this.readLogFile(filePath);
                 const config: log4js.Configuration = yaml.load(str) as any;
                 log4js.configure(config);
-            } catch (err) {
+            } catch (err: any) {
                 console.error('log file parse error');
                 process.exit(1);
             }
@@ -78,7 +78,7 @@ export default class LoggerModel implements ILoggerModel {
         let str: string = '';
         try {
             str = fs.readFileSync(filePath, 'utf-8');
-        } catch (err) {
+        } catch (err: any) {
             if (err.code === 'ENOENT') {
                 console.error('log file is not found');
             } else {

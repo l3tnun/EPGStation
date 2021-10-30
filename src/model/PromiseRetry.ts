@@ -18,7 +18,7 @@ export default class PromiseRetry implements IPromiseRetry {
                 const result: T = await job();
 
                 return result;
-            } catch (err) {
+            } catch (err: any) {
                 error = err;
 
                 await Util.sleep(

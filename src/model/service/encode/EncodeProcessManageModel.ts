@@ -43,7 +43,7 @@ class EncodeProcessManageModel implements IEncodeProcessManageModel {
                         try {
                             const child = await this.killAndCreateProcess(this.childs[i].processId, option);
                             resolve(child);
-                        } catch (err) {
+                        } catch (err: any) {
                             reject(err);
                         }
 
@@ -60,7 +60,7 @@ class EncodeProcessManageModel implements IEncodeProcessManageModel {
                     this.childs.unshift(child);
                     resolve(child.child);
                     this.log.encode.info(`create new encode process: ${child.processId}`);
-                } catch (err) {
+                } catch (err: any) {
                     this.log.encode.error('create encode process failed');
                     this.log.encode.error(err);
                     reject(err);
@@ -101,7 +101,7 @@ class EncodeProcessManageModel implements IEncodeProcessManageModel {
                         clearInterval(timeoutId); // timeout クリア
                     }
                     this.log.encode.info(`kill & create new encode process: ${child.processId}`);
-                } catch (err) {
+                } catch (err: any) {
                     this.log.encode.error('kill & create new encode process failed');
                     this.log.encode.error(err);
                     reject(err);
@@ -124,7 +124,7 @@ class EncodeProcessManageModel implements IEncodeProcessManageModel {
             // kill
             try {
                 await this.killChild(planToKillProcessId);
-            } catch (err) {
+            } catch (err: any) {
                 this.log.encode.error(`kill process failed: ${planToKillProcessId}`);
                 this.log.encode.error(err);
                 this.removeListener(createChild);
@@ -167,7 +167,7 @@ class EncodeProcessManageModel implements IEncodeProcessManageModel {
                         this.log.encode.info(`kill child: ${processId}`);
                         await ProcessUtil.kill(this.childs[i].child);
                     }
-                } catch (err) {
+                } catch (err: any) {
                     this.log.encode.error(err);
                 }
 
@@ -190,7 +190,7 @@ class EncodeProcessManageModel implements IEncodeProcessManageModel {
         let cmds: ProcessUtil.Cmds;
         try {
             cmds = ProcessUtil.parseCmdStr(option.cmd);
-        } catch (err) {
+        } catch (err: any) {
             this.log.encode.error(`build process error: ${option.cmd}`);
             throw err;
         }

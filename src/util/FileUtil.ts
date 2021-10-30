@@ -70,7 +70,7 @@ namespace FileUtil {
     export const getFileSize = async (filePath: string): Promise<number> => {
         try {
             return (await FileUtil.stat(filePath)).size;
-        } catch (err) {
+        } catch (err: any) {
             throw new Error('FileIsNotFound');
         }
     };
@@ -174,7 +174,7 @@ namespace FileUtil {
     export const move = async (src: string, dest: string): Promise<void> => {
         try {
             await FileUtil.copyFile(src, dest);
-        } catch (err) {
+        } catch (err: any) {
             await FileUtil.unlink(dest).catch(() => {});
 
             throw err;
@@ -257,7 +257,7 @@ namespace FileUtil {
                                 const subFiles = await FileUtil.getFileList(filePath);
                                 Array.prototype.push.apply(results.files, subFiles.files);
                                 Array.prototype.push.apply(results.directories, subFiles.directories);
-                            } catch (err) {
+                            } catch (err: any) {
                                 // error
                             }
                         } else {

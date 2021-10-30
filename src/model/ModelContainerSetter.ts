@@ -249,7 +249,7 @@ export const set = (container: Container): void => {
                     try {
                         const recorderModel = context.container.get<IRecorderModel>('IRecorderModel');
                         resolve(recorderModel);
-                    } catch (err) {
+                    } catch (err: any) {
                         reject(err);
                     }
                 },
@@ -328,7 +328,7 @@ export const set = (container: Container): void => {
                     try {
                         const encoderModel = context.container.get<IEncoderModel>('IEncoderModel');
                         resolve(encoderModel);
-                    } catch (err) {
+                    } catch (err: any) {
                         reject(err);
                     }
                 },
@@ -348,7 +348,7 @@ export const set = (container: Container): void => {
                 try {
                     const streamModel = context.container.get<ILiveStreamBaseModel>('LiveStreamModel');
                     resolve(streamModel);
-                } catch (err) {
+                } catch (err: any) {
                     reject(err);
                 }
             });
@@ -365,7 +365,7 @@ export const set = (container: Container): void => {
                 try {
                     const streamModel = context.container.get<ILiveStreamBaseModel>('LiveHLSStreamModel');
                     resolve(streamModel);
-                } catch (err) {
+                } catch (err: any) {
                     reject(err);
                 }
             });
@@ -380,7 +380,7 @@ export const set = (container: Container): void => {
                 try {
                     const streamModel = context.container.get<IRecordedStreamBaseModel>('RecordedStreamModel');
                     resolve(streamModel);
-                } catch (err) {
+                } catch (err: any) {
                     reject(err);
                 }
             });
@@ -394,7 +394,7 @@ export const set = (container: Container): void => {
                 try {
                     const streamModel = context.container.get<IRecordedStreamBaseModel>('RecordedHLSStreamModel');
                     resolve(streamModel);
-                } catch (err) {
+                } catch (err: any) {
                     reject(err);
                 }
             });

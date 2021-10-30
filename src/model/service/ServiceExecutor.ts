@@ -28,7 +28,7 @@ encodeFinishModel.set();
 const serviceServer = container.get<IServiceServer>('IServiceServer');
 try {
     serviceServer.start();
-} catch (err) {
+} catch (err: any) {
     log.system.fatal(err);
     process.exit(1);
 }

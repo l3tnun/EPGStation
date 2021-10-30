@@ -40,7 +40,7 @@ export default class RuleDB implements IRuleDB {
                 await queryRunner.manager.insert(Rule, this.convertRuleToDBRule(item));
             }
             await queryRunner.commitTransaction();
-        } catch (err) {
+        } catch (err: any) {
             console.error(err);
             hasError = err;
             await queryRunner.rollbackTransaction();

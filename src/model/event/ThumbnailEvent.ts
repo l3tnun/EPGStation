@@ -40,7 +40,7 @@ class ThumbnailEvent implements IThumbnailEvent {
             async (videoFileId: apid.VideoFileId, recordedId: apid.RecordedId) => {
                 try {
                     await callback(videoFileId, recordedId);
-                } catch (err) {
+                } catch (err: any) {
                     this.log.system.error(err);
                 }
             },
@@ -55,7 +55,7 @@ class ThumbnailEvent implements IThumbnailEvent {
         this.emitter.on(ThumbnailEvent.DELETED_EVENT, async () => {
             try {
                 await callback();
-            } catch (err) {
+            } catch (err: any) {
                 this.log.system.error(err);
             }
         });

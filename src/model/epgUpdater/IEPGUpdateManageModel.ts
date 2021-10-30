@@ -21,7 +21,7 @@ export interface UpdateEvent extends ProgramBaseEvent {
 }
 
 export interface RedefineEvent extends ProgramBaseEvent {
-    type: 'redefine';
+    type: 'remove';
     data: RedefineProgram;
 }
 

@@ -11,7 +11,7 @@ export const get: Operation = async (req, res) => {
         api.responseJSON(res, 200, {
             duration: duration,
         });
-    } catch (err) {
+    } catch (err: any) {
         api.responseServerError(res, err.message);
     }
 };

@@ -184,7 +184,7 @@ class ReservationManageModel implements IReservationManageModel {
                     this.log.system.error(`program is reserved: ${option.programId}`);
                     throw new Error('ReservationManageModelReservedError');
                 }
-            } catch (err) {
+            } catch (err: any) {
                 finalize();
                 this.log.system.error('check reserved programs error');
                 throw new Error('ReservationManageModelCheckReservedProgramError');
@@ -194,7 +194,7 @@ class ReservationManageModel implements IReservationManageModel {
             try {
                 // 番組情報取得
                 program = await this.programDB.findId(option.programId);
-            } catch (err) {
+            } catch (err: any) {
                 this.log.system.error(`program is not found: ${option.programId}`);
                 finalize();
                 throw err;
@@ -237,7 +237,7 @@ class ReservationManageModel implements IReservationManageModel {
                 hasConflict: false,
                 hasOverlap: false,
             });
-        } catch (err) {
+        } catch (err: any) {
             finalize();
             this.log.system.error('reservation get error');
             throw err;
@@ -260,7 +260,7 @@ class ReservationManageModel implements IReservationManageModel {
         try {
             insertedId = await this.reserveDB.insertOnce(newReserve);
             newReserve.id = insertedId;
-        } catch (err) {
+        } catch (err: any) {
             finalize();
             this.log.system.info(`add reservation error: ${option.programId}`);
             throw new Error('ReservationManageModelAddReserveError');
@@ -641,7 +641,7 @@ class ReservationManageModel implements IReservationManageModel {
                     let channel: Channel | null;
                     try {
                         channel = await this.channelDB.findId(channelId);
-                    } catch (err) {
+                    } catch (err: any) {
                         this.log.system.error(`get channel id error: ${channelId}`);
                         continue;
                     }

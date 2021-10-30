@@ -15,7 +15,7 @@ export const get: Operation = async (req, res) => {
         api.responseJSON(res, 200, {
             streamId: streamId,
         });
-    } catch (err) {
+    } catch (err: any) {
         api.responseServerError(res, err.message);
     }
 };

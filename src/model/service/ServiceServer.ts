@@ -197,7 +197,7 @@ class ServiceServer implements IServiceServer {
         // upload dir
         try {
             fs.statSync(this.config.uploadTempDir);
-        } catch (e) {
+        } catch (e: any) {
             this.log.system.info(`mkdirp: ${this.config.uploadTempDir}`);
             mkdirp.sync(this.config.uploadTempDir);
         }
@@ -224,7 +224,7 @@ class ServiceServer implements IServiceServer {
                     try {
                         await FileUtil.unlink(filePath);
                         this.log.access.info(`delete upload file: ${filePath}`);
-                    } catch (err) {
+                    } catch (err: any) {
                         this.log.access.error(`upload file delete error: ${filePath}`);
                         this.log.access.error(err.message);
                     }

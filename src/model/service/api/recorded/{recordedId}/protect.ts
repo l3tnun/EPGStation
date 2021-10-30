@@ -9,7 +9,7 @@ export const put: Operation = async (req, res) => {
     try {
         await recordedApiModel.changeProtect(parseInt(req.params.recordedId, 10), true);
         api.responseJSON(res, 200, { code: 200 });
-    } catch (err) {
+    } catch (err: any) {
         api.responseServerError(res, err.message);
     }
 };

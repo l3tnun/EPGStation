@@ -62,7 +62,7 @@ class RuleEvent implements IRuleEvent {
         this.emitter.on(RuleEvent.ADDED_EVENT, async (ruleId: apid.RuleId) => {
             try {
                 await callback(ruleId);
-            } catch (err) {
+            } catch (err: any) {
                 this.log.system.error(err);
             }
         });
@@ -76,7 +76,7 @@ class RuleEvent implements IRuleEvent {
         this.emitter.on(RuleEvent.UPDATED_EVENT, async (ruleId: apid.RuleId) => {
             try {
                 await callback(ruleId);
-            } catch (err) {
+            } catch (err: any) {
                 this.log.system.error(err);
             }
         });
@@ -90,7 +90,7 @@ class RuleEvent implements IRuleEvent {
         this.emitter.on(RuleEvent.ENABLED_EVENT, async (ruleId: apid.RuleId) => {
             try {
                 await callback(ruleId);
-            } catch (err) {
+            } catch (err: any) {
                 this.log.system.error(err);
             }
         });
@@ -104,7 +104,7 @@ class RuleEvent implements IRuleEvent {
         this.emitter.on(RuleEvent.DISABLED_EVENT, async (ruleId: apid.RuleId) => {
             try {
                 await callback(ruleId);
-            } catch (err) {
+            } catch (err: any) {
                 this.log.system.error(err);
             }
         });
@@ -118,7 +118,7 @@ class RuleEvent implements IRuleEvent {
         this.emitter.on(RuleEvent.DELETED_EVENT, async (ruleId: apid.RuleId) => {
             try {
                 await callback(ruleId);
-            } catch (err) {
+            } catch (err: any) {
                 this.log.system.error(err);
             }
         });

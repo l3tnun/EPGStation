@@ -255,7 +255,7 @@ class EPGUpdateManageModel implements IEPGUpdateManageModel {
                         }
                     }
                     this.log.system.debug('OK');
-                } catch (err) {
+                } catch (err: any) {
                     this.log.system.error('event stream parse error');
                     const tmpHex = tmp.toString('hex').match(/../g);
                     if (tmpHex !== null) {
@@ -316,23 +316,20 @@ class EPGUpdateManageModel implements IEPGUpdateManageModel {
         const updateIndex: { [programId: number]: mapid.Program } = {}; // 更新用索引
 
         for (const program of programs) {
-            switch (program.type) {
-                case 'create':
-                    const createData = (<CreateEvent>program).data;
-                    if (typeof createData.name !== 'undefined' && this.isMainProgram(createData) === true) {
-                        createIndex[createData.id] = createData;
-                    }
-                    break;
-                case 'update':
-                    const updateData = (<CreateEvent>program).data;
-                    if (typeof updateData !== 'undefined' && this.isMainProgram(updateData) === true) {
-                        updateIndex[updateData.id] = updateData;
-                    }
-                    break;
-                case 'redefine':
-                    const from = (<RedefineEvent>program).data.from;
-                    deleteIndex[from] = from;
-                    break;
+            if (program.type === 'create') {
+                const createData = (<CreateEvent>program).data;
+                if (typeof createData.name !== 'undefined' && this.isMainProgram(createData) === true) {
+                    createIndex[createData.id] = createData;
+                }
+            } else if (program.type === 'update') {
+                const updateData = (<CreateEvent>program).data;
+                if (typeof updateData !== 'undefined' && this.isMainProgram(updateData) === true) {
+                    updateIndex[updateData.id] = updateData;
+                }
+            } else if (program.type === 'remove' || (program as any).type === 'redefine') {
+                // redefine は古いバージョンをサポートするため
+                const from = (<RedefineEvent>program).data.from;
+                deleteIndex[from] = from;
             }
         }
 
@@ -414,9 +411,9 @@ class EPGUpdateManageModel implements IEPGUpdateManageModel {
                         updateIndex[service.data.id] = service.data;
                     }
                     break;
-                case 'redefine':
-                    // redefine は存在しない
-                    throw new Error('ServiceRedefine');
+                case 'remove':
+                    // TODO 要確認
+                    // throw new Error('ServiceRedefine');
                     break;
             }
         }

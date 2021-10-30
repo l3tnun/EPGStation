@@ -149,7 +149,7 @@ class EncodeManageModel implements IEncodeManageModel {
         let needsFinalize = false;
         try {
             await encoder.start();
-        } catch (err) {
+        } catch (err: any) {
             this.log.encode.error(`create encode process error: ${encoder.getEncodeId()}`);
             this.log.encode.error(err);
 

@@ -29,7 +29,7 @@ class OperatorEncodeEvent implements IOperatorEncodeEvent {
         this.emitter.on(OperatorEncodeEvent.FINISH_ENCODE_EVENT, async (info: OperatorFinishEncodeInfo) => {
             try {
                 await callback(info);
-            } catch (err) {
+            } catch (err: any) {
                 this.log.system.error(err);
             }
         });

@@ -41,7 +41,7 @@ export default class RecordedTagDB implements IRecordedTagDB {
                 await queryRunner.manager.insert(RecordedTag, item);
             }
             await queryRunner.commitTransaction();
-        } catch (err) {
+        } catch (err: any) {
             console.error(err);
             hasError = err;
             await queryRunner.rollbackTransaction();

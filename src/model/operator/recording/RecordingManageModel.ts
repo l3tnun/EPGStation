@@ -134,7 +134,7 @@ class RecordingManageModel implements IRecordingManageModel {
             // 録画中から録画済みへ変更
             try {
                 await this.recordedDB.removeRecording(r.id);
-            } catch (err) {
+            } catch (err: any) {
                 this.log.system.error(`failed to remove recording: ${r.id}`);
                 this.log.system.error(err);
                 continue;

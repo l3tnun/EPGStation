@@ -8,7 +8,7 @@ export const del: Operation = async (req, res) => {
 
     try {
         api.responseJSON(res, 200, await reserveApiModel.removeOverlap(parseInt(req.params.reserveId, 10)));
-    } catch (err) {
+    } catch (err: any) {
         api.responseServerError(res, err.message);
     }
 };

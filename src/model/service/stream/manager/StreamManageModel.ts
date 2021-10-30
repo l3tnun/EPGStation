@@ -43,7 +43,7 @@ class StreamManageModel implements IStreamManageModel {
 
         try {
             await stream.start(streamId);
-        } catch (err) {
+        } catch (err: any) {
             this.log.stream.error('start stream error');
             this.log.stream.error(err);
             finalize();

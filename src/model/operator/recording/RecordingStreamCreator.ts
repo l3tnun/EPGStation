@@ -143,7 +143,7 @@ export default class RecordingStreamCreator implements IRecordingStreamCreator {
                 }
                 this.deleteReserve(reserve.id);
             });
-        } catch (err) {
+        } catch (err: any) {
             this.deleteReserve(reserve.id);
         }
 
@@ -199,7 +199,7 @@ export default class RecordingStreamCreator implements IRecordingStreamCreator {
                             isOk = false;
                             break;
                         }
-                    } catch (err) {
+                    } catch (err: any) {
                         this.log.system.warn(`tuner program get error: ${p.reserve.id}`);
                     }
                 }

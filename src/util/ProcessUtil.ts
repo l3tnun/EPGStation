@@ -29,7 +29,7 @@ namespace ProcessUtil {
                     child.kill('SIGINT');
                     resolve();
                 }, wait);
-            } catch (err) {
+            } catch (err: any) {
                 reject(err);
             }
         });
@@ -60,7 +60,7 @@ namespace ProcessUtil {
         // bin の存在確認
         try {
             fs.statSync(bin);
-        } catch (e) {
+        } catch (e: any) {
             throw new Error('CmdBinIsNotFound');
         }
 

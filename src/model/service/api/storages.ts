@@ -9,7 +9,7 @@ export const get: Operation = async (_req, res) => {
     try {
         const info = await storageApiModel.getInfo();
         api.responseJSON(res, 200, info);
-    } catch (err) {
+    } catch (err: any) {
         api.responseServerError(res, err.message);
     }
 };

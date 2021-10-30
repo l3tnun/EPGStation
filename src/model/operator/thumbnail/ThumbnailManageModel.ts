@@ -79,7 +79,7 @@ export default class ThumbnailManageModel implements IThumbnailManageModel {
         // check thumbnail dir
         try {
             await FileUtil.access(this.config.thumbnail, fs.constants.R_OK | fs.constants.W_OK);
-        } catch (err) {
+        } catch (err: any) {
             if (typeof err.code !== 'undefined' && err.code === 'ENOENT') {
                 // ディレクトリが存在しないので作成する
                 this.log.system.warn(`mkdirp: ${this.config.thumbnail}`);
@@ -133,7 +133,7 @@ export default class ThumbnailManageModel implements IThumbnailManageModel {
             thumbnail.recordedId = videoFile.recordedId;
             try {
                 await this.thumbnailDB.insertOnce(thumbnail);
-            } catch (err) {
+            } catch (err: any) {
                 this.log.system.error(`thumbnail add DB error: ${videoFileId}`);
                 this.log.system.error(err);
 
@@ -192,7 +192,7 @@ export default class ThumbnailManageModel implements IThumbnailManageModel {
             await FileUtil.stat(filePath);
 
             return this.getSaveFileName(recordedId, conflict + 1);
-        } catch (err) {
+        } catch (err: any) {
             return fileName;
         }
     }
@@ -271,7 +271,7 @@ export default class ThumbnailManageModel implements IThumbnailManageModel {
                     // ファイルが存在するので無視
                     existingThumbnailCnt++;
                     continue;
-                } catch (err) {
+                } catch (err: any) {
                     // ファイルが存在しない
                     nonExistingThumbnailIds.push(thumbnail.id);
                 }
@@ -348,7 +348,7 @@ export default class ThumbnailManageModel implements IThumbnailManageModel {
             await FileUtil.stat(filePath);
 
             return true;
-        } catch (err) {
+        } catch (err: any) {
             return false;
         }
     }

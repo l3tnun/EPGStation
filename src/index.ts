@@ -147,7 +147,7 @@ const runEPGUpdater = async () => {
 (async () => {
     try {
         await init();
-    } catch (err) {
+    } catch (err: any) {
         console.error('initialize error');
         console.error(err);
         process.exit(1);

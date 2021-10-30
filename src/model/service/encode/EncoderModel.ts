@@ -119,7 +119,7 @@ class EncoderModel implements IEncoderModel {
         // ソースビデオファイルの存在を確認
         try {
             await FileUtil.stat(inputFilePath);
-        } catch (err) {
+        } catch (err: any) {
             this.log.encode.error(`video file is not found: ${inputFilePath}`);
             throw err;
         }
@@ -139,7 +139,7 @@ class EncoderModel implements IEncoderModel {
         if (outputDirPath !== null) {
             try {
                 await FileUtil.stat(outputDirPath);
-            } catch (e) {
+            } catch (e: any) {
                 // ディレクトリが存在しなければ作成する
                 this.log.encode.info(`mkdirp: ${outputDirPath}`);
                 await FileUtil.mkdir(outputDirPath);
@@ -248,7 +248,7 @@ class EncoderModel implements IEncoderModel {
             let videoInfo: VideoInfo | null = null;
             try {
                 videoInfo = await this.videoUtil.getInfo(inputFilePath);
-            } catch (err) {
+            } catch (err: any) {
                 this.log.encode.error(`get encode vidoe file info: ${inputFilePath}`);
                 this.log.encode.error(err);
             }
@@ -257,7 +257,7 @@ class EncoderModel implements IEncoderModel {
                 this.childProcess.stdout.on('data', data => {
                     try {
                         this.updateEncodingProgressInfo(data);
-                    } catch (err) {
+                    } catch (err: any) {
                         // error
                     }
                 });

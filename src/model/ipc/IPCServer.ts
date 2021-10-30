@@ -81,7 +81,7 @@ export default class IPCServer implements IIPCServer {
                         id: msg.id,
                         result: result,
                     });
-                } catch (err) {
+                } catch (err: any) {
                     this.replay({
                         id: msg.id,
                         error: err.message,

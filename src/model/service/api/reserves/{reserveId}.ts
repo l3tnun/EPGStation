@@ -16,7 +16,7 @@ export const get: Operation = async (req, res) => {
         } else {
             api.responseJSON(res, 200, reserve);
         }
-    } catch (err) {
+    } catch (err: any) {
         api.responseServerError(res, err.message);
     }
 };
@@ -65,7 +65,7 @@ export const del: Operation = async (req, res) => {
 
     try {
         api.responseJSON(res, 200, await reserveApiModel.cancel(parseInt(req.params.reserveId, 10)));
-    } catch (err) {
+    } catch (err: any) {
         api.responseServerError(res, err.message);
     }
 };
@@ -105,7 +105,7 @@ export const put: Operation = async (req, res) => {
             code: 201,
             message: 'ok',
         });
-    } catch (err) {
+    } catch (err: any) {
         api.responseServerError(res, err.message);
     }
 };

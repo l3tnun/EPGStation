@@ -19,7 +19,7 @@ export const get: Operation = async (req, res) => {
         } else {
             api.responseJSON(res, 200, recorded);
         }
-    } catch (err) {
+    } catch (err: any) {
         api.responseServerError(res, err.message);
     }
 };
@@ -69,7 +69,7 @@ export const del: Operation = async (req, res) => {
     try {
         await recordedApiModel.delete(parseInt(req.params.recordedId, 10));
         api.responseJSON(res, 200, { code: 200 });
-    } catch (err) {
+    } catch (err: any) {
         api.responseServerError(res, err.message);
     }
 };

@@ -9,7 +9,7 @@ export const get: Operation = async (_req, res) => {
             JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', '..', '..', 'package.json'), 'utf-8'))
         );
         api.responseJSON(res, 200, { version: pkg.version });
-    } catch (err) {
+    } catch (err: any) {
         api.responseServerError(res, err.message);
     }
 };

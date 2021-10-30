@@ -141,7 +141,7 @@ class V1MigrationTool {
             }
 
             return JSON.parse(file);
-        } catch (err) {
+        } catch (err: any) {
             if (err.code === 'ENOENT') {
                 this.log.system.error(`${this.v1BackupFilePath} is not found`);
                 process.exit(1);

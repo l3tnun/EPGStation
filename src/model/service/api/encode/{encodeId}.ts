@@ -9,7 +9,7 @@ export const del: Operation = async (req, res) => {
     try {
         await encodeApiModel.cancel(parseInt(req.params.encodeId, 10));
         api.responseJSON(res, 200, { code: 200 });
-    } catch (err) {
+    } catch (err: any) {
         api.responseServerError(res, err.message);
     }
 };

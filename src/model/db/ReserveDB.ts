@@ -47,7 +47,7 @@ export default class ReserveDB implements IReserveDB {
                 await queryRunner.manager.insert(Reserve, item);
             }
             await queryRunner.commitTransaction();
-        } catch (err) {
+        } catch (err: any) {
             console.error(err);
             hasError = err;
             await queryRunner.rollbackTransaction();
@@ -130,7 +130,7 @@ export default class ReserveDB implements IReserveDB {
             }
 
             await queryRunner.commitTransaction();
-        } catch (err) {
+        } catch (err: any) {
             console.error(err);
             hasError = true;
             await queryRunner.rollbackTransaction();

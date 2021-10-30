@@ -9,7 +9,7 @@ export const get: Operation = async (_req, res) => {
     try {
         const list = await recordedApiModel.getSearchOptionList();
         api.responseJSON(res, 200, list);
-    } catch (err) {
+    } catch (err: any) {
         api.responseServerError(res, err.message);
     }
 };

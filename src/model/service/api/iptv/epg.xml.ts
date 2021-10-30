@@ -11,7 +11,7 @@ export const get: Operation = async (req, res) => {
         res.setHeader('Content-Type', 'application/xml; charset="UTF-8"');
         res.status(200);
         res.end(result);
-    } catch (err) {
+    } catch (err: any) {
         api.responseServerError(res, err.message);
     }
 };

@@ -25,7 +25,7 @@ const getDuration = filePath => {
             try {
                 const result = JSON.parse(stdout);
                 resolve(parseFloat(result.format.duration));
-            } catch (err) {
+            } catch (err: any) {
                 reject(err);
             }
         });

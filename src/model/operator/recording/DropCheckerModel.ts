@@ -184,7 +184,7 @@ class DropCheckerModel implements IDropCheckerModel {
         // ディレクトリが存在するか確認
         try {
             await FileUtil.access(logDirPath, fs.constants.R_OK | fs.constants.W_OK);
-        } catch (err) {
+        } catch (err: any) {
             if (typeof err.code !== 'undefined' && err.code === 'ENOENT') {
                 // ディレクトリが存在しないので作成する
                 this.log.system.info(`mkdirp: ${logDirPath}`);
@@ -202,7 +202,7 @@ class DropCheckerModel implements IDropCheckerModel {
             await FileUtil.stat(filePath);
 
             return this.getLogFilePath(logDirPath, srcFilePath, conflict + 1);
-        } catch (err) {
+        } catch (err: any) {
             return filePath;
         }
     }

@@ -19,7 +19,7 @@ export const get: Operation = async (req, res) => {
         } else {
             api.responseJSON(res, 200, program);
         }
-    } catch (err) {
+    } catch (err: any) {
         api.responseServerError(res, err.message);
     }
 };

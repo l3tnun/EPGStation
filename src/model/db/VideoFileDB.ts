@@ -38,7 +38,7 @@ export default class VideoFileDB implements IVideoFileDB {
                 await queryRunner.manager.insert(VideoFile, item);
             }
             await queryRunner.commitTransaction();
-        } catch (err) {
+        } catch (err: any) {
             console.error(err);
             hasError = err;
             await queryRunner.rollbackTransaction();

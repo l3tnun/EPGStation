@@ -68,7 +68,7 @@ export default class VideoUtil implements IVideoUtil {
                         size: parseInt(result.format.size, 10),
                         bitRate: parseFloat(result.format.bit_rate),
                     });
-                } catch (err) {
+                } catch (err: any) {
                     reject(err);
                 }
             });

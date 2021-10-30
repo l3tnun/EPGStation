@@ -84,7 +84,7 @@ export default abstract class RecordedStreamBaseModel
         // file read stream の生成
         try {
             this.setFileStream();
-        } catch (err) {
+        } catch (err: any) {
             this.log.stream.error('create file stream error');
             this.log.stream.error(err);
             await this.stop();
@@ -96,7 +96,7 @@ export default abstract class RecordedStreamBaseModel
         this.log.stream.info(`create encode process: ${poption.cmd}`);
         try {
             this.streamProcess = await this.processManager.create(poption);
-        } catch (err) {
+        } catch (err: any) {
             this.log.stream.error(`create encode process failed: ${poption.cmd}`);
             await this.stop();
         }

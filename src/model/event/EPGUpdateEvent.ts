@@ -28,7 +28,7 @@ class EPGUpdateEvent implements IEPGUpdateEvent {
         this.emitter.on(EPGUpdateEvent.UPDATED_EVENT, async () => {
             try {
                 await callback();
-            } catch (err) {
+            } catch (err: any) {
                 this.log.system.error(err);
             }
         });
@@ -42,7 +42,7 @@ class EPGUpdateEvent implements IEPGUpdateEvent {
         this.emitter.once(EPGUpdateEvent.UPDATED_EVENT, async () => {
             try {
                 await callback();
-            } catch (err) {
+            } catch (err: any) {
                 this.log.system.error(err);
             }
         });

@@ -197,7 +197,7 @@ class DBTools {
                 throw new Error('file is null');
             }
             backup = JSON.parse(file);
-        } catch (err) {
+        } catch (err: any) {
             if (err.code === 'ENOENT') {
                 console.error(`${this.filePath} is not found`);
                 process.exit(1);

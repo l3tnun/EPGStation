@@ -45,7 +45,7 @@ export default class RecordedDB implements IRecordedDB {
                 await queryRunner.manager.insert(Recorded, item);
             }
             await queryRunner.commitTransaction();
-        } catch (err) {
+        } catch (err: any) {
             console.error(err);
             hasError = err;
             await queryRunner.rollbackTransaction();

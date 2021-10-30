@@ -92,7 +92,7 @@ export default class RecordingUtilModel implements IRecordingUtilModel {
                 halfWidthChannelName = channel.halfWidthName;
                 sid = channel.serviceId.toString(10);
             }
-        } catch (err) {
+        } catch (err: any) {
             this.log.system.warn(`channel name get error: ${reserve.channelId}`);
         }
 
@@ -135,7 +135,7 @@ export default class RecordingUtilModel implements IRecordingUtilModel {
         // ディレクトリが存在するか確認
         try {
             await FileUtil.access(dir, fs.constants.R_OK | fs.constants.W_OK);
-        } catch (err) {
+        } catch (err: any) {
             if (typeof err.code !== 'undefined' && err.code === 'ENOENT') {
                 // ディレクトリが存在しないので作成する
                 this.log.system.info(`mkdirp: ${dir}`);
@@ -181,7 +181,7 @@ export default class RecordingUtilModel implements IRecordingUtilModel {
             await FileUtil.stat(fileFullPath);
 
             return this.getFileName(parentDir, subDir, fileName, extension, conflict + 1);
-        } catch (err) {
+        } catch (err: any) {
             return newFileName;
         }
     }
@@ -212,7 +212,7 @@ export default class RecordingUtilModel implements IRecordingUtilModel {
         try {
             await FileUtil.rename(oldVideoFilePath, newRecPath.fullPath);
             isSuccessRenameFile = true;
-        } catch (err) {
+        } catch (err: any) {
             this.log.system.debug(`rename file error: ${oldVideoFilePath} -> ${newRecPath.fullPath}`);
             this.log.system.debug(err);
         }
@@ -221,7 +221,7 @@ export default class RecordingUtilModel implements IRecordingUtilModel {
         if (isSuccessRenameFile === false) {
             try {
                 await FileUtil.copyFile(oldVideoFilePath, newRecPath.fullPath);
-            } catch (err) {
+            } catch (err: any) {
                 this.log.system.error(`copy file error: ${oldVideoFilePath} -> ${newRecPath.fullPath}`);
 
                 throw err;
@@ -235,7 +235,7 @@ export default class RecordingUtilModel implements IRecordingUtilModel {
                 parentDirectoryName: newRecPath.parendDir.name,
                 filePath: path.join(newRecPath.subDir, newRecPath.fileName),
             });
-        } catch (err) {
+        } catch (err: any) {
             // DB 更新失敗
             this.log.system.error(`update VideoFileDB path error: ${videoFileId}`);
             this.log.system.error(err);
@@ -245,7 +245,7 @@ export default class RecordingUtilModel implements IRecordingUtilModel {
                 this.log.system.info(`rollback renamed file: ${newRecPath.fullPath} -> ${oldVideoFilePath}`);
                 try {
                     await FileUtil.rename(newRecPath.fullPath, oldVideoFilePath);
-                } catch (e) {
+                } catch (e: any) {
                     this.log.system.error(`rollback renamed file error: ${newRecPath.fullPath} -> ${oldVideoFilePath}`);
                     this.log.system.error(e);
                     throw err;
@@ -255,7 +255,7 @@ export default class RecordingUtilModel implements IRecordingUtilModel {
                 this.log.system.info(`delete copied file: ${newRecPath.fullPath}`);
                 try {
                     await FileUtil.unlink(newRecPath.fullPath);
-                } catch (e) {
+                } catch (e: any) {
                     this.log.system.error(`delete copied file error: ${newRecPath.fullPath}`);
                     this.log.system.error(e);
                     throw err;
@@ -268,7 +268,7 @@ export default class RecordingUtilModel implements IRecordingUtilModel {
             this.log.system.info(`delete old file: ${oldVideoFilePath}`);
             try {
                 await FileUtil.unlink(oldVideoFilePath);
-            } catch (err) {
+            } catch (err: any) {
                 this.log.system.error(`delete old file error: ${oldVideoFilePath}`);
                 throw err;
             }
@@ -293,7 +293,7 @@ export default class RecordingUtilModel implements IRecordingUtilModel {
         try {
             const fileSize = await FileUtil.getFileSize(videoFileFulPath);
             await this.videoFileDB.updateSize(videoFileId, fileSize);
-        } catch (err) {
+        } catch (err: any) {
             this.log.system.error(`update file size error: ${videoFileId}`);
             this.log.system.error(err);
         }

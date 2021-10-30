@@ -15,7 +15,7 @@ export const get: Operation = async (req, res) => {
                 endAt: parseInt(req.query.endAt as string, 10),
             }),
         );
-    } catch (err) {
+    } catch (err: any) {
         api.responseServerError(res, err.message);
     }
 };

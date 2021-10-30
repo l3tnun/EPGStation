@@ -11,7 +11,7 @@ export const del: Operation = async (req, res) => {
         const tagId: apid.RecordedTagId = parseInt(req.params.tagId, 10);
         await recordedTagApiModel.delete(tagId);
         api.responseJSON(res, 200, { code: 200 });
-    } catch (err) {
+    } catch (err: any) {
         api.responseServerError(res, err.message);
     }
 };
@@ -53,7 +53,7 @@ export const put: Operation = async (req, res) => {
         api.responseJSON(res, 200, {
             code: 200,
         });
-    } catch (err) {
+    } catch (err: any) {
         api.responseServerError(res, err.message);
     }
 };

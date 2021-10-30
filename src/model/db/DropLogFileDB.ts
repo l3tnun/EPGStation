@@ -44,7 +44,7 @@ export default class DropLogFileDB implements IDropLogFileDB {
                 await queryRunner.manager.insert(DropLogFile, item);
             }
             await queryRunner.commitTransaction();
-        } catch (err) {
+        } catch (err: any) {
             console.error(err);
             hasError = err;
             await queryRunner.rollbackTransaction();

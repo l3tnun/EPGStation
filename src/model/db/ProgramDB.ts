@@ -84,7 +84,7 @@ export default class ProgramDB implements IProgramDB {
             }
 
             await queryRunner.commitTransaction();
-        } catch (err) {
+        } catch (err: any) {
             console.error(err);
             hasError = true;
             await queryRunner.rollbackTransaction();
@@ -318,7 +318,7 @@ export default class ProgramDB implements IProgramDB {
             }
 
             await queryRunner.commitTransaction();
-        } catch (err) {
+        } catch (err: any) {
             console.error(err);
             hasError = true;
             await queryRunner.rollbackTransaction();
