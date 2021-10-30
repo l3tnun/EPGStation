@@ -9,11 +9,11 @@ urlscheme:
     m2ts:
         ios: 'vlc-x-callback://x-callback-url/stream?url=PROTOCOL://ADDRESS"'
         android: 'intent://ADDRESS#Intent;package=org.videolan.vlc;type=video;scheme=PROTOCOL;end'
-        win: 'cvcvlc://PROTOCOL://ADDRESS'
+        win: 'cvlc://PROTOCOL://ADDRESS'
     video:
         ios: 'infuse://x-callback-url/play?url=PROTOCOL://ADDRESS'
         android: 'intent://ADDRESS#Intent;package=com.mxtech.videoplayer.ad;type=video;scheme=PROTOCOL;end'
-        win: 'cvcvlc://PROTOCOL://ADDRESS'
+        win: 'cvlc://PROTOCOL://ADDRESS'
 ```
 
 のように設定してください
