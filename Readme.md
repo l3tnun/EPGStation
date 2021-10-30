@@ -24,7 +24,6 @@ PC からの閲覧でもモダンな UI で操作可能です
 -   API
     -   [WebAPI Document](doc/webapi.md)
 
-
 [aribb24.js]: https://github.com/monyone/aribb24.js
 [mpegts.js]: https://github.com/xqq/mpegts.js
 
@@ -61,7 +60,10 @@ sqlite3 パッケージのインストール時にバイナリが存在しなか
 
 ### 構築済み推奨環境
 
-[docker-mirakurun-epgstation](https://github.com/l3tnun/docker-mirakurun-epgstation) で動作を確認しています
+-   [docker-mirakurun-epgstation](https://github.com/l3tnun/docker-mirakurun-epgstation)
+
+-   [nvenc + docker 環境での構築例](https://github.com/kazuki0824/EPGStation-nvenc-docker)
+    [(created by kazuki0824)](https://github.com/kazuki0824)
 
 ---
 
