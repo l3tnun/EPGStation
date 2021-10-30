@@ -17,7 +17,6 @@ jobs:
         distro:
           - alpine
           - debian
-          - ubuntu-nvenc
         include:
           - distro: alpine
             platforms: >-
@@ -27,12 +26,6 @@ jobs:
               linux/arm64/v8,
           - distro: debian
             # docker/setup-*-action has not supported linux/arm/v5.
-            platforms: >-
-              linux/amd64,
-              linux/arm/v7,
-              linux/arm64/v8,
-          - distro: ubuntu-nvenc
-            # NVIDIA Tegra X1 supports linux/arm64/v8, and Tegra K1 linux/arm/v7, but others are not known for now.
             platforms: >-
               linux/amd64,
               linux/arm/v7,
