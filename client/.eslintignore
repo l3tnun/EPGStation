@@ -1,3 +1,4 @@
 vue.config.js
 postcss.config.js
 src/plugins/*.js
+node_modules/
