@@ -94,6 +94,11 @@ export default class OnAir extends Vue {
         });
     }
 
+    @Watch('onAirState.selectedTab')
+    onTabChanged(): void {
+        window.scroll(0, 0);
+    }
+
     /**
      * 番組データ取得
      * @return Promise<void>
