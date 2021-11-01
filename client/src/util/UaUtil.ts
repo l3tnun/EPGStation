@@ -3,7 +3,7 @@ namespace UaUtil {
      * UA が iPadOS か判定
      */
     export const isiPadOS = (): boolean => {
-        return /Macintosh|macintosh/.test(navigator.userAgent) === true && 'ontouchend' in document;
+        return /iPad|Macintosh|macintosh/.test(navigator.userAgent) === true && 'ontouchend' in document;
     };
 
     /**
