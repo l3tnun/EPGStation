@@ -44,7 +44,9 @@ switch (config.dbtype) {
         ormConfig.password = config.mysql.password;
         ormConfig.database = config.mysql.database;
         ormConfig.bigNumberStrings = false;
-        if (typeof config.mysql.charset !== 'undefined') {
+        if (typeof config.mysql.charset === 'undefined') {
+            ormConfig.charset = 'utf8mb4';
+        } else {
             ormConfig.charset = config.mysql.charset;
         }
         break;
