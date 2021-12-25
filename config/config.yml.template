@@ -16,6 +16,9 @@ dbtype: sqlite
 #     database: epgstation
 #     charset: utf8mb4
 
+# 囲み文字を置換するか
+needToReplaceEnclosingCharacters: true
+
 epgUpdateIntervalTime: 10
 
 conflictPriority: 1

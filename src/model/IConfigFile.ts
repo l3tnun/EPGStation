@@ -76,6 +76,9 @@ export default interface IConfigFile {
         password: string;
     };
 
+    // 囲み文字を置換するか
+    needToReplaceEnclosingCharacters: boolean;
+
     // epg 更新時間間隔 (分)
     epgUpdateIntervalTime: number;
 

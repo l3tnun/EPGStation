@@ -220,6 +220,7 @@ namespace Configuration {
         apiServers: [],
         isAllowAllCORS: false,
         dbtype: 'sqlite',
+        needToReplaceEnclosingCharacters: true,
         epgUpdateIntervalTime: 10,
         conflictPriority: 1,
         recPriority: 2,

@@ -6,6 +6,8 @@ import * as mapid from '../../../node_modules/mirakurun/api';
 import Program from '../../db/entities/Program';
 import DateUtil from '../../util/DateUtil';
 import StrUtil from '../../util/StrUtil';
+import IConfigFile from '../IConfigFile';
+import IConfiguration from '../IConfiguration';
 import ILogger from '../ILogger';
 import ILoggerModel from '../ILoggerModel';
 import IPromiseRetry from '../IPromiseRetry';
@@ -36,15 +38,18 @@ interface KeywordOption {
 @injectable()
 export default class ProgramDB implements IProgramDB {
     private log: ILogger;
+    private config: IConfigFile;
     private op: IDBOperator;
     private promieRetry: IPromiseRetry;
 
     constructor(
         @inject('ILoggerModel') logger: ILoggerModel,
+        @inject('IConfiguration') conf: IConfiguration,
         @inject('IDBOperator') op: IDBOperator,
         @inject('IPromiseRetry') promieRetry: IPromiseRetry,
     ) {
         this.log = logger.getLogger();
+        this.config = conf.getConfig();
         this.op = op;
         this.promieRetry = promieRetry;
     }
@@ -154,7 +159,10 @@ export default class ProgramDB implements IProgramDB {
         const jaDate = DateUtil.getJaDate(new Date(program.startAt));
 
         // 番組名
-        const name = StrUtil.toDBStr(program.name);
+        const name =
+            this.config.needToReplaceEnclosingCharacters === true
+                ? StrUtil.toDBStr(StrUtil.replaceEnclosedCharacters(program.name))
+                : StrUtil.toDBStr(program.name);
         const halfWidthName = StrUtil.toHalf(name);
 
         const value: QueryDeepPartialEntity<Program> = {
@@ -188,7 +196,10 @@ export default class ProgramDB implements IProgramDB {
             value.description = null;
             value.halfWidthDescription = null;
         } else {
-            const description = StrUtil.toDBStr(program.description);
+            const description =
+                this.config.needToReplaceEnclosingCharacters === true
+                    ? StrUtil.toDBStr(StrUtil.replaceEnclosedCharacters(program.description))
+                    : StrUtil.toDBStr(program.description);
             value.description = description;
             value.halfWidthDescription = StrUtil.toHalf(description);
         }
@@ -260,7 +271,7 @@ export default class ProgramDB implements IProgramDB {
 
         const ret = StrUtil.toDBStr(str).trim();
 
-        return ret;
+        return this.config.needToReplaceEnclosingCharacters === true ? StrUtil.replaceEnclosedCharacters(ret) : ret;
     }
 
     /**
