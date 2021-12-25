@@ -13,6 +13,7 @@
     -   [利用する FFmpeg を明示的に指定したい](#ffmpeg)
     -   [利用する FFprobe を明示的に指定したい](#ffprobe)
 -   [詳細設定](#詳細設定)
+    -   [番組情報の囲み文字の設定を変更したい](#needtoreplaceenclosingcharacters)
     -   [録画時の Mirakurun の優先度を変更したい](#recpriority)
     -   [録画競合時の Mirakurun の優先度を変更したい](#conflictpriority)
     -   [時刻指定予約時の開始マージンを変更したい](#timespecifiedstartmargin)
@@ -220,6 +221,18 @@ ffprobe: '/usr/bin/ffprobe'
 ---
 
 ## 詳細設定
+
+### needToReplaceEnclosingCharacters
+
+#### 番組情報の囲み文字を [] で括った文字に置換するか
+
+| 種類    | デフォルト値 | 必須 |
+| ------- | ------------ | ---- |
+| boolean | true         | no   |
+
+```yaml
+needToReplaceEnclosingCharacters: true
+```
 
 ### recPriority
 
