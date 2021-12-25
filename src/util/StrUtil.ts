@@ -5,6 +5,47 @@
  */
 namespace StrUtil {
     /**
+     * 番組表で使用される囲み文字
+     */
+    const enclosedCharactersConvertTable: { [key: string]: string } = {
+        '\u{1f14a}': '[HV]',
+        '\u{1f13f}': '[P]',
+        '\u{1f14c}': '[SD]',
+        '\u{1f146}': '[W]',
+        '\u{1f14b}': '[MV]',
+        '\u{1f210}': '[手]',
+        '\u{1f211}': '[字]',
+        '\u{1f212}': '[双]',
+        '\u{1f213}': '[デ]',
+        '\u{1f142}': '[S]',
+        '\u{1f214}': '[二]',
+        '\u{1f215}': '[多]',
+        '\u{1f216}': '[解]',
+        '\u{1f14d}': '[SS]',
+        '\u{1f131}': '[B]',
+        '\u{1f13d}': '[N]',
+        '\u{1f217}': '[天]',
+        '\u{1f218}': '[交]',
+        '\u{1f219}': '[映]',
+        '\u{1f21a}': '[無]',
+        '\u{1f21b}': '[料]',
+        '\u{26bf}': '[鍵]',
+        '\u{1f21c}': '[前]',
+        '\u{1f21d}': '[後]',
+        '\u{1f21e}': '[再]',
+        '\u{1f21f}': '[新]',
+        '\u{1f220}': '[初]',
+        '\u{1f221}': '[終]',
+        '\u{1f222}': '[生]',
+        '\u{1f223}': '[販]',
+        '\u{1f224}': '[声]',
+        '\u{1f225}': '[吹]',
+        '\u{1f14e}': '[PPV]',
+        '\u{3299}': '[秘]',
+        '\u{1f200}': '[ほか]',
+    };
+
+    /**
      * 文字列をデータベース用文字列に変換する．
      * PostgreSQL非対応文字の削除
      * @param str: string
@@ -58,11 +99,17 @@ namespace StrUtil {
     };
 
     /**
-     * [] を中身ごと削除し 先頭と末尾のスペースを削除する
+     * [] でくくられた文字と囲み文字を削除し 先頭と末尾のスペースを削除する
      * @param str: string
      * @return string
      */
     export const deleteBrackets = (str: string): string => {
+        // 囲み文字を削除
+        for (const key in enclosedCharactersConvertTable) {
+            str = str.replace(key, '');
+        }
+
+        // [] でくくられた文字を削除 + 先頭と末尾のスペースを削除する
         return str.replace(/\[.+?\]/g, '').trim();
     };
 
@@ -90,6 +137,19 @@ namespace StrUtil {
      */
     export const replaceFileName = (str: string): string => {
         return StrUtil.replaceDirName(str).replace(/\//g, '／').replace(/\\/g, '￥').replace(/\¥/g, '￥');
+    };
+
+    /**
+     * 囲み文字を [] でくくった文字に置き換える
+     * @param str
+     * @returns
+     */
+    export const replaceEnclosedCharacters = (str: string): string => {
+        for (const key in enclosedCharactersConvertTable) {
+            str = str.replace(key, enclosedCharactersConvertTable[key]);
+        }
+
+        return str;
     };
 }
 
