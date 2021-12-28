@@ -56,7 +56,7 @@ sudo docker-compose down -v
 `docker-compose.yml` の `services -> mysql -> command` を以下のように変更する。
 
 ```
-command: --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci --performance-schema=false --expire_logs_days=1
+command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_520_ci --performance-schema=false --expire_logs_days=1
 ```
 
 ### 2-5. バックアップからデータベースの内容を復元させる
