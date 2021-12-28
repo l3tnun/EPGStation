@@ -63,7 +63,7 @@ class EPGUpdater implements IEPGUpdater {
             // 古い番組情報を削除
             this.log.system.info('delete old programs');
             await this.updateManage.deleteOldPrograms().catch(err => {
-                this.log.system.error('delete orld programs error');
+                this.log.system.error('delete old programs error');
                 this.log.system.error(err);
             });
         }, updateTime * 60 * 1000);
