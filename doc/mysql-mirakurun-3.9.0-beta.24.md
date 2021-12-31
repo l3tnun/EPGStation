@@ -6,6 +6,8 @@ Mirakurun 3.9.0-beta.24 以降から Unicode 処理が変更された影響に�
 
 ## 1. EPGStation の設定を変更する
 
+### 1-1. charset を追加する
+
 `config/config.yml` を開き `mysql.charset` を `utf8mb4` に設定する
 
 ```yaml
@@ -17,6 +19,21 @@ mysql:
     password: epgstation
     database: epgstation
     charset: utf8mb4
+```
+
+### 1-2. 囲み文字の置換設定を行う
+
+今までどおり囲み文字を置換する場合(デフォルト設定)
+
+```yaml
+needToReplaceEnclosingCharacters: true
+```
+
+囲み文字の置換をしない場合  
+※ DB に MySQL を使用し、`collation`を`utf8mb4_0900_as_ci`へ変更する必要あり
+
+```yaml
+needToReplaceEnclosingCharacters: false
 ```
 
 <br></br>
@@ -51,12 +68,18 @@ exit # コンテナから出る
 sudo docker-compose down -v
 ```
 
-### 2-4. MariaDB の設定を変更
+### 2-4. MySQL(MariaDB) の設定を変更
 
 `docker-compose.yml` の `services -> mysql -> command` を以下のように変更する。
 
 ```
-command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_520_ci --performance-schema=false --expire_logs_days=1
+# MySQL の場合
+command: --character-set-server=utf8mb4 --collation-server=utf8mb4_0900_as_ci --performance-schema=false --expire_logs_days=1 --default-authentication-plugin=mysql_native_password
+```
+
+```
+# MariaDB の場合
+command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --performance-schema=false --expire_logs_days=1
 ```
 
 ### 2-5. バックアップからデータベースの内容を復元させる
