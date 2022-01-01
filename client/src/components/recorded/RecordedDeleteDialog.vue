@@ -69,7 +69,7 @@ export default class RecordedDeleteDialog extends Vue {
             return {
                 id: v.id,
                 name: `${v.name} (${Util.getFileSizeStr(v.size)})`,
-                isDelete: true,
+                isDelete: false,
             };
         });
     }
