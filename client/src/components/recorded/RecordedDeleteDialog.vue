@@ -97,6 +97,13 @@ export default class RecordedDeleteDialog extends Vue {
     public async deleteRecorded(): Promise<void> {
         this.dialogModel = false;
 
+        // 削除対象が0件の場合は早期リターンをする
+        let isNoDelete = false;
+        isNoDelete = this.videoFiles.every(v => v.isDelete === false);
+        if (isNoDelete) {
+            return;
+        }
+
         try {
             const needsPageback = await this.delete();
             this.$nextTick(async () => {
