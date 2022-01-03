@@ -116,7 +116,7 @@ export default class RecordedDeleteDialog extends Vue {
                 });
             });
 
-            this.$emit('deleteSiccessful', needsPageback);
+            this.$emit('deleteSuccessful', needsPageback);
         } catch (err) {
             this.snackbarState.open({
                 color: 'error',

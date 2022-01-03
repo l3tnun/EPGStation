@@ -68,7 +68,7 @@
             :isOpen.sync="isOpenDeleteDialog"
             :recordedItem="recordedItem"
             :isDelaySnackbarViewNum="800"
-            v-on:deleteSiccessful="deleteSiccessful"
+            v-on:deleteSuccessful="deleteSuccessful"
         ></RecordedDeleteDialog>
     </div>
 </template>
@@ -183,8 +183,8 @@ export default class RecordedDetailMoreButton extends Vue {
         return false;
     }
 
-    public deleteSiccessful(deleteSiccessful: boolean): void {
-        if (deleteSiccessful === true) {
+    public deleteSuccessful(deleteSuccessful: boolean): void {
+        if (deleteSuccessful === true) {
             this.$router.back();
         }
     }
