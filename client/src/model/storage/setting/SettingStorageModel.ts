@@ -32,6 +32,7 @@ export default class SettingStorageModel extends AbstractStorageBaseModel<ISetti
             isPreferredPlayingOnWeb: UaUtil.isAndroid() !== true && UaUtil.isiOS() !== true,
             isShowTableMode: false,
             isShowDropInfoInsteadOfDescription: false,
+            deleteRecordedDefaultValue: false,
             shouldUseRecordedViewURLScheme: true,
             recordedViewURLScheme: null,
             shouldUseRecordedDownloadURLScheme: true,

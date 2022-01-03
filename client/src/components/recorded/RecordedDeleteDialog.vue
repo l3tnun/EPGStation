@@ -21,6 +21,7 @@ import IRecordedApiModel from '@/model/api/recorded/IRecordedApiModel';
 import IVideoApiModel from '@/model/api/video/IVideoApiModel';
 import container from '@/model/ModelContainer';
 import ISnackbarState from '@/model/state/snackbar/ISnackbarState';
+import { ISettingStorageModel } from '@/model/storage/setting/ISettingStorageModel';
 import Util from '@/util/Util';
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
 import * as apid from '../../../../api';
@@ -48,6 +49,7 @@ export default class RecordedDeleteDialog extends Vue {
     private recordedApiModel = container.get<IRecordedApiModel>('IRecordedApiModel');
     private videApiModel = container.get<IVideoApiModel>('IVideoApiModel');
     private snackbarState = container.get<ISnackbarState>('ISnackbarState');
+    private setting: ISettingStorageModel = container.get<ISettingStorageModel>('ISettingStorageModel');
 
     /**
      * Prop で受け取った isOpen を直接は書き換えられないので
@@ -65,11 +67,12 @@ export default class RecordedDeleteDialog extends Vue {
             return;
         }
 
+        const isDelete = this.setting.getSavedValue().deleteRecordedDefaultValue;
         this.videoFiles = this.recordedItem.videoFiles.map(v => {
             return {
                 id: v.id,
                 name: `${v.name} (${Util.getFileSizeStr(v.size)})`,
-                isDelete: true,
+                isDelete: isDelete,
             };
         });
     }

@@ -190,6 +190,15 @@
                                     <v-spacer></v-spacer>
                                     <v-switch v-model="storageModel.tmp.isShowDropInfoInsteadOfDescription" value></v-switch>
                                 </div>
+
+                                <div class="my-2 d-flex flex-row align-center">
+                                    <div>
+                                        <v-list-item-title class="subtitle-1">削除時のチェックを入れるか</v-list-item-title>
+                                        <v-list-item-subtitle>有効にするとファイル削除のチェックが入れられた状態で録画削除ダイアログが開かれます</v-list-item-subtitle>
+                                    </div>
+                                    <v-spacer></v-spacer>
+                                    <v-switch v-model="storageModel.tmp.deleteRecordedDefaultValue" value></v-switch>
+                                </div>
                                 <div class="my-2 d-flex flex-row align-center">
                                     <div>
                                         <v-list-item-title class="subtitle-1">web での再生を優先する</v-list-item-title>
