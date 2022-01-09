@@ -59,6 +59,7 @@ class RecorderModel implements IRecorderModel {
     private isRecording: boolean = false;
     private isPlanToDelete: boolean = false;
     private isCanceledCallingFinished: boolean = false; // mirakurun の stream の終了検知をキャンセルするか
+    private isStreamTimeout: boolean = false;           // stream取得がタイムアウトした場合はtrue
     private eventEmitter = new events.EventEmitter();
 
     private dropLogFileId: apid.DropLogFileId | null = null;
@@ -334,7 +335,9 @@ class RecorderModel implements IRecorderModel {
             }
 
             // stream からデータが来るまでの時間でタイムアウトを設定
+            this.isStreamTimeout = false;
             const recordingTimeoutId = setTimeout(async () => {
+                this.isStreamTimeout = true;
                 this.log.system.error(`recording failed: ${this.reserve.id}`);
 
                 if (this.stream !== null) {
@@ -354,17 +357,17 @@ class RecorderModel implements IRecorderModel {
             this.stream.once('data', async () => {
                 clearTimeout(recordingTimeoutId);
 
+                // すでにstream取得がタイムアウトしていた場合は停止
+                if (this.isStreamTimeout === true || this.stream === null) {
+                    reject(new Error('StreamIsNull'));
+                    return;
+                }
+
                 // 番組情報追加
                 const recorded = await this.addRecorded(recPath);
 
                 // 終了処理セット
-                if (this.stream !== null) {
-                    this.setEndProcess(this.stream);
-                } else {
-                    reject(new Error('StreamIsNull'));
-
-                    return;
-                }
+                await this.setEndProcess(this.stream);
 
                 // 録画開始を通知
                 this.recordingEvent.emitStartRecording(this.reserve, recorded);
@@ -374,8 +377,7 @@ class RecorderModel implements IRecorderModel {
         }).catch(err => {
             // 予想外の録画失敗エラー
             this.destoryStream();
-            // 録画失敗を通知
-            this.recordingEvent.emitPrepRecordingFailed(this.reserve);
+
             throw err;
         });
     }
