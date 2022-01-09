@@ -261,7 +261,7 @@ export default class RecordingStreamCreator implements IRecordingStreamCreator {
 
         // 予約終了時刻を過ぎたら stream を停止する
         this.timerIndex[reserve.id] = setTimeout(() => {
-            this.destoryStream(reserve);
+            this.destroyStream(reserve);
         }, reserve.endAt - now + 1000 * this.config.timeSpecifiedEndMargin);
 
         // mirakurun から channel stream を受け取る
@@ -293,7 +293,7 @@ export default class RecordingStreamCreator implements IRecordingStreamCreator {
      * stream 停止
      * @param reserve: Reserve
      */
-    private destoryStream(reserve: Reserve): void {
+    private destroyStream(reserve: Reserve): void {
         clearTimeout(this.timerIndex[reserve.id]);
         delete this.timerIndex[reserve.id];
 
@@ -323,7 +323,7 @@ export default class RecordingStreamCreator implements IRecordingStreamCreator {
 
         // timer 再設定
         this.timerIndex[reserve.id] = setTimeout(() => {
-            this.destoryStream(reserve);
+            this.destroyStream(reserve);
         }, reserve.endAt - new Date().getTime() + 1000 * this.config.timeSpecifiedEndMargin);
     }
 }

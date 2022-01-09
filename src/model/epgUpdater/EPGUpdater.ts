@@ -78,7 +78,7 @@ class EPGUpdater implements IEPGUpdater {
         try {
             await this.updateManage.start();
         } catch (err: any) {
-            this.log.system.error('destory event stream');
+            this.log.system.error('destroy event stream');
             this.isEventStreamAlive = false;
         }
     }
