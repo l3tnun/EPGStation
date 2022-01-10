@@ -1,6 +1,6 @@
 {
   "name": "epgstation-client",
-  "version": "2.6.19",
+  "version": "2.6.20",
   "private": true,
   "scripts": {
     "build": "vue-cli-service build",
