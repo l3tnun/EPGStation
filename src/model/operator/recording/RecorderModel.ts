@@ -333,11 +333,14 @@ class RecorderModel implements IRecorderModel {
                 return;
             }
 
-            // stream からデータが来るまでの時間でタイムアウトを設定
+            // stream データ受信のタイムアウト設定
+            let isStreamTimeout = false; // stream データ受信がタイムアウトした場合は true
             const recordingTimeoutId = setTimeout(async () => {
+                isStreamTimeout = true;
                 this.log.system.error(`recording failed: ${this.reserve.id}`);
 
                 if (this.stream !== null) {
+                    this.stream.removeListener('data', onData); // stream データ受信時のコールバックの登録を削除
                     this.destroyStream();
 
                     // delete file
@@ -350,9 +353,16 @@ class RecorderModel implements IRecorderModel {
                 reject(new Error('recordingStartError'));
             }, 1000 * 5);
 
-            // ストリームからデータが降ってきたときの設定
-            this.stream.once('data', async () => {
+            // stream データ受診時のコールバック関数定義
+            const onData = async () => {
                 clearTimeout(recordingTimeoutId);
+
+                if (isStreamTimeout === true) {
+                    // timeout が発生していたため何もしない
+                    this.log.system.error(`stream is timeouted. reserveId: ${this.reserve.id}`);
+
+                    return;
+                }
 
                 // 番組情報追加
                 const recorded = await this.addRecorded(recPath);
@@ -370,7 +380,10 @@ class RecorderModel implements IRecorderModel {
                 this.recordingEvent.emitStartRecording(this.reserve, recorded);
 
                 resolve();
-            });
+            };
+
+            // stream データ受診時のコールバック設定
+            this.stream.once('data', onData);
         }).catch(err => {
             // 予想外の録画失敗エラー
             this.destroyStream();
