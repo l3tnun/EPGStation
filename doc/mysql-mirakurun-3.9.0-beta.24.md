@@ -48,12 +48,11 @@ needToReplaceEnclosingCharacters: false
 ### 2-1. データベースのバックアップ作成
 
 ```bash
-sudo docker-compose down # コンテナを落とす
+sudo docker-compose kill epgstation && docker-compose rm -f epgstation # コンテナを落とす
 sudo docker-compose run --rm --entrypoint sh epgstation # epgstation のコンテナの中に入る
 
 # ここから epgstation のコンテナの中での作業
 # データベースのバックアップを取ります
-cd /app
 npm run backup config/backup.json # バックアップファイルは docker-compose.yml の volumes でマウントしている先を指定すること
 exit # コンテナから出る
 ```
@@ -85,10 +84,12 @@ command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --
 ### 2-5. バックアップからデータベースの内容を復元させる
 
 ```bash
-sudo docker-compose run --rm --entrypoint sh epgstation # epgstation のコンテナの中に入る
+# バージョンを固定していた場合はmirakuruのバージョンを変更しmirakurunとepgstationを更新する
+sudo docker-compose pull && sudo docker-compose build --pull
+# epgstation のコンテナの中に入る
+sudo docker-compose run --rm --entrypoint sh epgstation
 
 # ここから epgstation のコンテナの中での作業
-cd /app
 npm run restore config/backup.json
 exit # コンテナから出る
 ```

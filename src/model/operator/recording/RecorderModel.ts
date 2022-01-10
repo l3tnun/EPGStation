@@ -167,7 +167,7 @@ class RecorderModel implements IRecorderModel {
             // 録画準備のキャンセル or ストリーム取得中に予約が削除されていないかチェック
             if ((await this.reserveDB.findId(this.reserve.id)) === null) {
                 this.log.system.error(`canceled preprec: ${this.reserve.id}`);
-                this.destoryStream();
+                this.destroyStream();
                 this.emitCancelEvent();
             } else {
                 await this.doRecord();
@@ -210,7 +210,7 @@ class RecorderModel implements IRecorderModel {
      * strem 破棄
      * @param needesUnpip: boolean
      */
-    private destoryStream(needesUnpip: boolean = true): void {
+    private destroyStream(needesUnpip: boolean = true): void {
         // stop stream
         if (this.stream !== null) {
             try {
@@ -222,7 +222,7 @@ class RecorderModel implements IRecorderModel {
                 this.stream.removeAllListeners('data');
                 this.stream = null;
             } catch (err: any) {
-                this.log.system.error(`destory stream error: ${this.reserve.id}`);
+                this.log.system.error(`destroy stream error: ${this.reserve.id}`);
                 this.log.system.error(err);
             }
         }
@@ -258,7 +258,7 @@ class RecorderModel implements IRecorderModel {
         // 録画キャンセル
         if (this.isStopPrepRec === true) {
             this.log.system.error(`cancel recording: ${this.reserve.id}`);
-            this.destoryStream();
+            this.destroyStream();
             this.emitCancelEvent();
 
             return;
@@ -338,7 +338,7 @@ class RecorderModel implements IRecorderModel {
                 this.log.system.error(`recording failed: ${this.reserve.id}`);
 
                 if (this.stream !== null) {
-                    this.destoryStream();
+                    this.destroyStream();
 
                     // delete file
                     await FileUtil.unlink(recPath.fullPath).catch(err => {
@@ -373,7 +373,7 @@ class RecorderModel implements IRecorderModel {
             });
         }).catch(err => {
             // 予想外の録画失敗エラー
-            this.destoryStream();
+            this.destroyStream();
             // 録画失敗を通知
             this.recordingEvent.emitPrepRecordingFailed(this.reserve);
             throw err;
@@ -411,7 +411,7 @@ class RecorderModel implements IRecorderModel {
             // DB 登録エラー
             this.log.system.error('add recorded DB error');
             this.log.system.error(err);
-            this.destoryStream();
+            this.destroyStream();
 
             // delete file
             await FileUtil.unlink(recPath.fullPath).catch(err => {
@@ -457,7 +457,7 @@ class RecorderModel implements IRecorderModel {
      * @param err: Error
      */
     private async recFailed(err: Error): Promise<void> {
-        this.destoryStream();
+        this.destroyStream();
         this.log.system.error(`recording end error reserveId: ${this.reserve.id} recordedId: ${this.recordedId}`);
         this.log.system.error(err);
 
@@ -571,7 +571,7 @@ class RecorderModel implements IRecorderModel {
         this.log.system.info(`start recEnd reserveId: ${this.reserve.id} recordedId: ${this.recordedId}`);
 
         // stream 停止
-        this.destoryStream();
+        this.destroyStream();
 
         // 削除予定か?
         if (this.isPlanToDelete === true) {
