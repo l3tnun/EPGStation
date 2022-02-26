@@ -387,8 +387,6 @@ class RecorderModel implements IRecorderModel {
         }).catch(err => {
             // 予想外の録画失敗エラー
             this.destroyStream();
-            // 録画失敗を通知
-            this.recordingEvent.emitPrepRecordingFailed(this.reserve);
             throw err;
         });
     }
