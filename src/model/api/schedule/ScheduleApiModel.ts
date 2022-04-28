@@ -303,6 +303,7 @@ export default class ScheduleApiModel implements IScheduleApiModel {
             name: isHalfWidth ? channel.halfWidthName : channel.name,
             hasLogoData: channel.hasLogoData,
             channelType: <any>channel.channelType,
+            type: channel.type,
         };
 
         if (channel.remoteControlKeyId !== null) {

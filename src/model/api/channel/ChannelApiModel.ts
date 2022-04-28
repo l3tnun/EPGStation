@@ -35,6 +35,7 @@ class ChannelApiModel implements IChannelApiModel {
                 hasLogoData: c.hasLogoData,
                 channelType: <any>c.channelType,
                 channel: c.channel,
+                type: c.type,
             };
 
             if (c.remoteControlKeyId !== null) {
