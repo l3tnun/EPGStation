@@ -58,6 +58,7 @@ class IPTVApiModel implements IIPTVApiModel {
             if (channel.hasLogoData) {
                 logo = `tvg-logo="${isSecure ? 'https' : 'http'}://${base}/api/channels/${channel.id}/logo"`;
             }
+            str += `#KODIPROP:mimetype=video/mp2t\n`;
             str += `#EXTINF:-1 tvg-id="${channel.id}" ${logo} group-title="${channel.channelType}",${channelName}　\n`;
             str += `${isSecure ? 'https' : 'http'}://${base}/api/streams/live/${channel.id}/m2ts?mode=${mode}\n`;
         }
