@@ -44,7 +44,7 @@
         "lodash": "4.17.21",
         "log4js": "6.3.0",
         "minimist": "1.2.5",
-        "mirakurun": "3.9.0-beta.26",
+        "mirakurun": "3.9.0-rc.4",
         "mkdirp": "1.0.4",
         "multer": "1.4.3",
         "mysql": "2.18.1",
