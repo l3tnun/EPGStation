@@ -7,6 +7,7 @@ import DateUtil from '../../../util/DateUtil';
 import IChannelDB from '../../db/IChannelDB';
 import IProgramDB from '../../db/IProgramDB';
 import IIPTVApiModel from './IIPTVApiModel';
+import ChannelUtil from '../../../util/ChannelUtil';
 
 @injectable()
 class IPTVApiModel implements IIPTVApiModel {
@@ -39,7 +40,7 @@ class IPTVApiModel implements IIPTVApiModel {
 
         let str = '#EXTM3U\n';
         for (const channel of channels) {
-            if (channel.type !== 1) {
+            if (!ChannelUtil.isMediaService(channel.type)) {
                 continue;
             }
 
