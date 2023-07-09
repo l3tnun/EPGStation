@@ -107,7 +107,7 @@ class EncoderModel implements IEncoderModel {
         // 放送局情報を取得する
         const channel = await this.channelDB.findId(recorded.channelId);
         if (channel === null) {
-            throw new Error('CannelIsNotFound');
+            throw new Error('ChannelIsNotFound');
         }
 
         // ソースビデオファイルのファイルパスを生成する
