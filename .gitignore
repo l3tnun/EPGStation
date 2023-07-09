@@ -3,7 +3,7 @@
 *.log.*
 *.log-*
 *.db
-.devcontainer
+.devcontainer/.vscode-server/*
 recorded/*
 thumbnail/*.jpg
 data/streamfiles/*

@@ -41,7 +41,7 @@ PC からの閲覧でもモダンな UI で操作可能です
 ## 動作環境
 
 -   Linux / macOS / Windows
--   [Node.js](http://nodejs.org/) : ^14.6.0 || ^16.6.1
+-   [Node.js](http://nodejs.org/) : ^14.6.0 || ^16.6.1 || ^18.16.1
 -   [Mirakurun](https://github.com/Chinachu/Mirakurun) : ^3.2.0
 -   いずれかのデータベース
     -   [SQLite3](https://www.sqlite.org/)（設定不要だが検索機能に制限あり）[標準]
@@ -54,7 +54,7 @@ PC からの閲覧でもモダンな UI で操作可能です
 sqlite3 パッケージのインストール時にバイナリが存在しなかった場合は次の環境も必要
 
 -   for Linux / macOS
-    -   [Python 2.7, v3.5, v3.6, or v3.7](https://www.python.org/) node-gyp にて必要
+    -   [Python v3.x](https://www.python.org/) node-gyp にて必要
     -   [GCC](https://gcc.gnu.org/) node-gyp にて必要
 -   for Windows
     -   [windows-build-tools](https://npmjs.com/package/windows-build-tools) node-gyp にて必要

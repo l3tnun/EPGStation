@@ -1,3 +1,4 @@
+/* eslint-disable no-fallthrough */
 namespace ChannelUtil {
     /**
      * 映像・音声サービスであるかを返す

@@ -22,7 +22,7 @@ export interface TailStreamOption extends ReadableOptions {
 
 class TailStream extends Readable {
     private offset: number;
-    private closed: boolean = false;
+    private isClosed: boolean = false;
     private filePath: string;
     private readInProgress: boolean = false;
     private getFdInProgress: boolean = false;
@@ -50,7 +50,7 @@ class TailStream extends Readable {
         this.getFdInProgress = true;
 
         fs.open(this.filePath, 'r', (err, fd) => {
-            if (this.closed) {
+            if (this.isClosed) {
                 return;
             }
             assert.ok(this.getFdInProgress);
@@ -61,7 +61,7 @@ class TailStream extends Readable {
                     // and we're inside of a _read call already, start a watcher to be notified
                     // when it exists
                     setTimeout(() => {
-                        if (this.closed) {
+                        if (this.isClosed) {
                             return;
                         }
                         this.getFd();
@@ -83,7 +83,7 @@ class TailStream extends Readable {
 
         this.readInProgress = true;
         fs.fstat(this.fd, (err, stat) => {
-            if (this.closed) {
+            if (this.isClosed) {
                 return;
             }
             assert.ok(this.readInProgress);
@@ -119,7 +119,7 @@ class TailStream extends Readable {
             const buffer = new Buffer(size);
 
             fs.read(this.fd, buffer, 0, size, start, (e, bytesRead, buff) => {
-                if (this.closed) {
+                if (this.isClosed) {
                     return;
                 }
                 assert.ok(this.readInProgress);
@@ -186,7 +186,7 @@ class TailStream extends Readable {
     }
 
     public _read(size: number): void {
-        assert.ok(!this.closed);
+        assert.ok(!this.isClosed);
         assert.ok(!this.readPending);
         assert.ok(size);
 
@@ -212,7 +212,7 @@ class TailStream extends Readable {
     }
 
     private close(): void {
-        this.closed = true;
+        this.isClosed = true;
         this.push(null);
     }
 

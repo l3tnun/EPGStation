@@ -1,0 +1,16 @@
+{
+    "dockerComposeFile": ["docker-compose.yml"],
+    "service": "epgstation",
+    "workspaceFolder": "/work",
+    "customizations": {
+        "extensions": [
+            "dbaeumer.vscode-eslint",
+            "eamodio.gitlens",
+            "redhat.vscode-yaml",
+            "syler.sass-indented",
+            "42Crunch.vscode-openapi",
+            "esbenp.prettier-vscode",
+            "octref.vetur"
+        ]
+    }
+}

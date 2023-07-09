@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+    epgstation:
+        build:
+            context: epgstation
+        volumes:
+            - ../:/work
+            - .vscode-server:/home/node/.vscode-server
+        command: sleep infinity
