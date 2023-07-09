@@ -800,14 +800,16 @@ class ReservationManageModel implements IReservationManageModel {
         });
 
         let newReserves = this.copyReserveArray(addNewReserves);
-        Array.prototype.push.apply(newReserves, baseReserves);
+        // baseReserves を破壊しないように copyReserveArray で deep copy する
+        Array.prototype.push.apply(newReserves, this.copyReserveArray(baseReserves));
 
         // 予約情報を計算
         newReserves = this.createReserves(newReserves);
 
         // 古い予約情報と差分を列挙する
         const oldReserves = this.copyReserveArray(addOldReserves);
-        Array.prototype.push.apply(oldReserves, baseReserves);
+        // baseReserves を破壊しないように copyReserveArray で deep copy する
+        Array.prototype.push.apply(oldReserves, this.copyReserveArray(baseReserves));
 
         // oldReserves と newReserves の差分を列挙
         const diff = this.createReservesDiff(oldReserves, newReserves, isSuppressLog);
@@ -1409,7 +1411,8 @@ class ReservationManageModel implements IReservationManageModel {
         });
 
         // 予約情報が格納可能かチェックする
-        const reserves: { reserve: Reserve; idx: number }[] = [];
+        const conflictResults: { [key: number]: boolean } = {}; // 重複の評価結果の格納先
+        const reserves: { reserve: Reserve; idx: number }[] = []; // 時間帯が重複する番組情報の格納先
         for (const l of list) {
             if (matches[l.idx].isSkip) {
                 continue;
@@ -1458,8 +1461,9 @@ class ReservationManageModel implements IReservationManageModel {
                     }
                 }
 
+                // 重複したか？
                 if (isConflict) {
-                    matches[reserve.idx].isConflict = true;
+                    conflictResults[reserve.idx] = true;
                 }
             }
         }
@@ -1468,7 +1472,12 @@ class ReservationManageModel implements IReservationManageModel {
         const newReserves: Reserve[] = [];
         for (const l of list) {
             if (l.isStart) {
-                newReserves.push(matches[l.idx]);
+                // matches の破損防止のために予約情報のコピーする
+                const newReserve: Reserve = Object.assign({}, matches[l.idx]);
+                // 重複の評価結果の反映
+                newReserve.isConflict = conflictResults[l.idx] === true;
+                // 予約情報 の格納
+                newReserves.push(newReserve);
             }
         }
 
