@@ -19,11 +19,34 @@ export default class ChannelModel implements IChannelModel {
      */
     public async fetchChannels(): Promise<void> {
         this.channels = await this.channelsApiModel.getChannels();
+        this.channels = this.channels.filter(c => ChannelModel.isAudioVideoService(c.type));
 
         // 索引作成
         this.channelsIndex = {};
         for (const c of this.channels) {
             this.channelsIndex[c.id] = c;
+        }
+    }
+
+    /**
+     * 映像・音声サービスであるかを返す
+     * @param serviceType: number? 対象のサービスタイプ
+     * @see https://github.com/DBCTRADO/LibISDB/blob/master/LibISDB/LibISDBConsts.hpp#L122
+     */
+    public static isAudioVideoService(serviceType?: number): boolean {
+        switch (serviceType) {
+            case 0x01:
+            case 0x02:
+            case 0xa1:
+            case 0xa2:
+            case 0xa5:
+            case 0xa6:
+            case 0xad:
+            case null:
+            case undefined:
+                return true;
+            default:
+                return false;
         }
     }
 
@@ -53,6 +76,7 @@ export default class ChannelModel implements IChannelModel {
             hasLogoData: item.hasLogoData,
             channelType: item.channelType,
             channel: item.channelType,
+            type: item.type,
         };
     }
 

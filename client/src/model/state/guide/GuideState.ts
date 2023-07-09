@@ -1,3 +1,4 @@
+import ChannelModel from '@/model/channels/ChannelModel';
 import { IGuideGenreSettingStorageModel, IGuideGenreSettingValue } from '@/model/storage/guide/IGuideGenreSettingStorageModel';
 import { inject, injectable } from 'inversify';
 import * as apid from '../../../../../api';
@@ -117,6 +118,7 @@ class GuideState implements IGuideState {
             }
 
             this.schedules = await this.scheduleApiModel.getSchedules(scheduleOption);
+            this.schedules = this.schedules.filter(s => ChannelModel.isAudioVideoService(s.channel.type));
         } else {
             // 放送局指定
             this.timeLength = GuideState.SINGLE_STATION_LENGTH;

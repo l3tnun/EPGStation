@@ -352,6 +352,8 @@ components:
                     $ref: '#/components/schemas/ChannelType'
                 channel:
                     type: string
+                type:
+                    type: number
 
         ScheduleChannleItem:
             description: 番組表の放送局データ
@@ -380,6 +382,8 @@ components:
                     type: boolean
                 channelType:
                     $ref: '#/components/schemas/ChannelType'
+                type:
+                    type: number
 
         ScheduleProgramItem:
             description: 番組表の番組データ
