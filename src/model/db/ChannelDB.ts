@@ -1,5 +1,5 @@
 import { inject, injectable } from 'inversify';
-import { FindConditions } from 'typeorm';
+import { FindOptionsWhere } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import * as apid from '../../../api';
 import * as mapid from '../../../node_modules/mirakurun/api';
@@ -159,7 +159,7 @@ export default class ChannelDB implements IChannelDB {
     public async findChannleTypes(types: apid.ChannelType[], needSort: boolean = false): Promise<Channel[]> {
         const connection = await this.op.getConnection();
 
-        const queryOption: FindConditions<Channel>[] = [];
+        const queryOption: FindOptionsWhere<Channel>[] = [];
         for (const type of types) {
             queryOption.push({
                 channelType: type,

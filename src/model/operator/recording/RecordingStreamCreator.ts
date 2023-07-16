@@ -64,14 +64,17 @@ export default class RecordingStreamCreator implements IRecordingStreamCreator {
         });
 
         // 念の為 30 分毎ににゴミを削除
-        setInterval(() => {
-            const now = new Date().getTime();
-            for (const tuner of this.tuners) {
-                tuner.programs = tuner.programs.filter(p => {
-                    return now - p.reserve.endAt < 12 * 60 * 60 * 1000;
-                });
-            }
-        }, 30 * 60 * 1000);
+        setInterval(
+            () => {
+                const now = new Date().getTime();
+                for (const tuner of this.tuners) {
+                    tuner.programs = tuner.programs.filter(p => {
+                        return now - p.reserve.endAt < 12 * 60 * 60 * 1000;
+                    });
+                }
+            },
+            30 * 60 * 1000,
+        );
     }
 
     /**
@@ -260,9 +263,12 @@ export default class RecordingStreamCreator implements IRecordingStreamCreator {
         }
 
         // 予約終了時刻を過ぎたら stream を停止する
-        this.timerIndex[reserve.id] = setTimeout(() => {
-            this.destroyStream(reserve);
-        }, reserve.endAt - now + 1000 * this.config.timeSpecifiedEndMargin);
+        this.timerIndex[reserve.id] = setTimeout(
+            () => {
+                this.destroyStream(reserve);
+            },
+            reserve.endAt - now + 1000 * this.config.timeSpecifiedEndMargin,
+        );
 
         // mirakurun から channel stream を受け取る
         const channelStream = await mirakurun.getServiceStream(reserve.channelId, true).catch(err => {
@@ -322,8 +328,11 @@ export default class RecordingStreamCreator implements IRecordingStreamCreator {
         }
 
         // timer 再設定
-        this.timerIndex[reserve.id] = setTimeout(() => {
-            this.destroyStream(reserve);
-        }, reserve.endAt - new Date().getTime() + 1000 * this.config.timeSpecifiedEndMargin);
+        this.timerIndex[reserve.id] = setTimeout(
+            () => {
+                this.destroyStream(reserve);
+            },
+            reserve.endAt - new Date().getTime() + 1000 * this.config.timeSpecifiedEndMargin,
+        );
     }
 }

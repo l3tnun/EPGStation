@@ -1,5 +1,5 @@
 import { inject, injectable } from 'inversify';
-import mkdirp from 'mkdirp';
+import { mkdirp } from 'mkdirp';
 import * as path from 'path';
 import * as apid from '../../../../api';
 import DropLogFile from '../../../db/entities/DropLogFile';

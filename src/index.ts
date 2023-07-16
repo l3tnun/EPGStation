@@ -39,17 +39,21 @@ const init = async () => {
     const config = container.get<IConfiguration>('IConfiguration').getConfig();
 
     // set uid & gid
-    if (process.platform !== 'win32' && process.getuid() === 0) {
+    if (process.platform !== 'win32' && typeof process.getuid !== 'undefined' && process.getuid() === 0) {
         // gid
-        if (typeof config.gid === 'string' || typeof config.gid === 'number') {
-            process.setgid(config.gid);
-        } else {
-            process.setgid('video');
+        if (typeof process.setgid !== 'undefined') {
+            if (typeof config.gid === 'string' || typeof config.gid === 'number') {
+                process.setgid(config.gid);
+            } else {
+                process.setgid('video');
+            }
         }
 
         // uid
-        if (typeof config.uid === 'string' || typeof config.uid === 'number') {
-            process.setuid(config.uid);
+        if (typeof process.setuid !== 'undefined') {
+            if (typeof config.uid === 'string' || typeof config.uid === 'number') {
+                process.setuid(config.uid);
+            }
         }
     }
 

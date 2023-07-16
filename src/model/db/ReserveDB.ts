@@ -1,5 +1,5 @@
 import { inject, injectable } from 'inversify';
-import { FindConditions, FindManyOptions, In, IsNull, LessThan, LessThanOrEqual, MoreThanOrEqual } from 'typeorm';
+import { FindOptionsWhere, FindManyOptions, In, IsNull, LessThan, LessThanOrEqual, MoreThanOrEqual } from 'typeorm';
 import * as apid from '../../../api';
 import Reserve from '../../db/entities/Reserve';
 import { IReserveUpdateValues } from '../event/IReserveEvent';
@@ -178,7 +178,7 @@ export default class ReserveDB implements IReserveDB {
     }
 
     private createFindOption(option: apid.GetReserveOption): FindManyOptions<Reserve> {
-        const findConditions: FindConditions<Reserve> = {};
+        const findConditions: FindOptionsWhere<Reserve> = {};
         this.setReserveTypeOption(option.type, findConditions);
 
         if (typeof option.ruleId !== 'undefined') {
@@ -204,7 +204,10 @@ export default class ReserveDB implements IReserveDB {
         return findOption;
     }
 
-    private setReserveTypeOption(type: apid.GetReserveType | undefined, findConditions: FindConditions<Reserve>): void {
+    private setReserveTypeOption(
+        type: apid.GetReserveType | undefined,
+        findConditions: FindOptionsWhere<Reserve>,
+    ): void {
         if (type === 'normal') {
             findConditions.isConflict = false;
             findConditions.isSkip = false;
@@ -241,7 +244,7 @@ export default class ReserveDB implements IReserveDB {
     }
 
     private createFindListOption(option: apid.GetReserveListsOption): FindManyOptions<Reserve> {
-        const findConditions: FindConditions<Reserve> = {
+        const findConditions: FindOptionsWhere<Reserve> = {
             startAt: LessThanOrEqual((<apid.GetReserveListsOption>option).endAt),
             endAt: MoreThanOrEqual((<apid.GetReserveListsOption>option).startAt),
         };
@@ -293,17 +296,20 @@ export default class ReserveDB implements IReserveDB {
         option.times = newTimes;
 
         // option.times の連続した時間を一つにまとめる
-        option.times = option.times.reduce((acc, cur, index) => {
-            if (index === 0) {
+        option.times = option.times.reduce(
+            (acc, cur, index) => {
+                if (index === 0) {
+                    return acc;
+                }
+                if (acc[acc.length - 1].endAt === cur.startAt) {
+                    acc[acc.length - 1].endAt = cur.endAt;
+                } else {
+                    acc.push(cur);
+                }
                 return acc;
-            }
-            if (acc[acc.length - 1].endAt === cur.startAt) {
-                acc[acc.length - 1].endAt = cur.endAt;
-            } else {
-                acc.push(cur);
-            }
-            return acc;
-        }, option.times.slice(0, 1));
+            },
+            option.times.slice(0, 1),
+        );
 
         // times
         let timesQuery = '';
@@ -368,7 +374,7 @@ export default class ReserveDB implements IReserveDB {
     public async findRuleId(option: IFindRuleOption): Promise<Reserve[]> {
         const connection = await this.op.getConnection();
 
-        const whereOption: FindConditions<Reserve>[] = [{ ruleId: option.ruleId }];
+        const whereOption: FindOptionsWhere<Reserve>[] = [{ ruleId: option.ruleId }];
         if (option.hasSkip === false) {
             whereOption.push({ isSkip: false });
         }
@@ -403,7 +409,7 @@ export default class ReserveDB implements IReserveDB {
         return await this.promieRetry.run(() => {
             return queryBuilder.find({
                 endAt: LessThan(baseTime),
-            });
+            } as FindManyOptions<Reserve>);
         });
     }
 
@@ -466,7 +472,7 @@ export default class ReserveDB implements IReserveDB {
     public async countRuleIds(ruleIds: apid.RuleId[], type: apid.GetReserveType): Promise<RuleIdCountResult[]> {
         const connection = await this.op.getConnection();
 
-        const whereOption: FindConditions<Reserve> = {
+        const whereOption: FindOptionsWhere<Reserve> = {
             ruleId: In(ruleIds),
         };
         this.setReserveTypeOption(type, whereOption);

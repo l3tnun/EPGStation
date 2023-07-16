@@ -21,6 +21,9 @@ import ILoggerModel from '../ILoggerModel';
 import IServiceServer from './IServiceServer';
 import ISocketIOManageModel from './socketio/ISocketIOManageModel';
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const swaggerdist = require('swagger-ui-dist');
+
 @injectable()
 class ServiceServer implements IServiceServer {
     private log: ILogger;
@@ -166,6 +169,18 @@ class ServiceServer implements IServiceServer {
         if (fs.existsSync(ServiceServer.SWAGGER_UI_DIST) === false) {
             return;
         }
+
+        // replace url
+        // issue: https://github.com/swagger-api/swagger-ui/issues/5710
+        const pathToSwaggerUi: string = swaggerdist.getAbsoluteFSPath();
+        const indexContent = fs
+            .readFileSync(path.join(pathToSwaggerUi, 'swagger-initializer.js'))
+            .toString()
+            .replace('https://petstore.swagger.io/v2/swagger.json', '/api/docs');
+
+        this.app.get('/api-docs/swagger-initializer.js', (_req, res) => {
+            res.send(indexContent);
+        });
 
         // api doc
         this.app.use(this.createUrl('/api-docs'), express.static(ServiceServer.SWAGGER_UI_DIST));

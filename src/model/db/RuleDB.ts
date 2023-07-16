@@ -186,7 +186,7 @@ export default class RuleDB implements IRuleDB {
             });
         });
 
-        if (typeof result === 'undefined') {
+        if (typeof result === 'undefined' || result == null) {
             return null;
         } else if (isNeedCnt === true) {
             return this.convertDBRuleToRule(result);

@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import mkdirp from 'mkdirp';
+import { mkdirp } from 'mkdirp';
 import * as path from 'path';
 
 namespace FileUtil {

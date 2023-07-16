@@ -129,7 +129,7 @@ export default class RecordedTagDB implements IRecordedTagDB {
             return queryBuilder.getOne();
         });
 
-        if (typeof recorded === 'undefined') {
+        if (typeof recorded === 'undefined' || recorded == null) {
             throw new Error('RecordedIsUndefined');
         }
 

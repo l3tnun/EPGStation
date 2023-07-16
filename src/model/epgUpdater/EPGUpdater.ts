@@ -37,36 +37,39 @@ class EPGUpdater implements IEPGUpdater {
         this.notify();
 
         const updateTime = this.config.epgUpdateIntervalTime;
-        setInterval(async () => {
-            try {
-                if (this.isEventStreamAlive === true) {
-                    if (this.updateManage.getServiceQueueSize() > 0) {
-                        // queue に更新情報が無ければ実行しない
-                        await this.updateManage.saveSevice();
+        setInterval(
+            async () => {
+                try {
+                    if (this.isEventStreamAlive === true) {
+                        if (this.updateManage.getServiceQueueSize() > 0) {
+                            // queue に更新情報が無ければ実行しない
+                            await this.updateManage.saveSevice();
+                        }
+                        if (this.updateManage.getProgramQueueSize() > 0) {
+                            // queue に更新情報が無ければ実行しない
+                            await this.updateManage.saveProgram();
+                        }
+                    } else {
+                        // stream event に何らかの問題が発生した
+                        this.startEventStreamAnalysis();
+                        await this.updateManage.updateAll();
                     }
-                    if (this.updateManage.getProgramQueueSize() > 0) {
-                        // queue に更新情報が無ければ実行しない
-                        await this.updateManage.saveProgram();
-                    }
-                } else {
-                    // stream event に何らかの問題が発生した
-                    this.startEventStreamAnalysis();
-                    await this.updateManage.updateAll();
+
+                    this.notify();
+                } catch (err: any) {
+                    this.log.system.error('EPG update error');
+                    this.log.system.error(err);
                 }
 
-                this.notify();
-            } catch (err: any) {
-                this.log.system.error('EPG update error');
-                this.log.system.error(err);
-            }
-
-            // 古い番組情報を削除
-            this.log.system.info('delete old programs');
-            await this.updateManage.deleteOldPrograms().catch(err => {
-                this.log.system.error('delete old programs error');
-                this.log.system.error(err);
-            });
-        }, updateTime * 60 * 1000);
+                // 古い番組情報を削除
+                this.log.system.info('delete old programs');
+                await this.updateManage.deleteOldPrograms().catch(err => {
+                    this.log.system.error('delete old programs error');
+                    this.log.system.error(err);
+                });
+            },
+            updateTime * 60 * 1000,
+        );
     }
 
     /**

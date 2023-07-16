@@ -68,11 +68,14 @@ class EPGUpdateManageModel implements IEPGUpdateManageModel {
         await this.updateChannels();
 
         // タイムアウト設定
-        const timeout = setTimeout(() => {
-            this.log.system.error('update all timeout');
-            clearTimeout(timeout);
-            throw new Error('EPGUpdateAllTimeoutError');
-        }, 10 * 60 * 1000);
+        const timeout = setTimeout(
+            () => {
+                this.log.system.error('update all timeout');
+                clearTimeout(timeout);
+                throw new Error('EPGUpdateAllTimeoutError');
+            },
+            10 * 60 * 1000,
+        );
 
         this.log.system.info('get programs');
         const programs = await this.mirakurunClient.getPrograms().catch(err => {
