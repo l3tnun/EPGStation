@@ -40,7 +40,7 @@ PC からの閲覧でもモダンな UI で操作可能です
 
 ## 動作環境
 
--   Linux / macOS / Windows
+-   Linux / macOS / ~~Windows~~
 -   [Node.js](http://nodejs.org/) : ^14.6.0 || ^16.6.1 || ^18.16.1
 -   [Mirakurun](https://github.com/Chinachu/Mirakurun) : ^3.2.0
 -   いずれかのデータベース
@@ -56,8 +56,8 @@ sqlite3 パッケージのインストール時にバイナリが存在しなか
 -   for Linux / macOS
     -   [Python v3.x](https://www.python.org/) node-gyp にて必要
     -   [GCC](https://gcc.gnu.org/) node-gyp にて必要
--   for Windows
-    -   [windows-build-tools](https://npmjs.com/package/windows-build-tools) node-gyp にて必要
+-   ~~for Windows~~
+    -   ~~[windows-build-tools](https://npmjs.com/package/windows-build-tools) node-gyp にて必要~~
 
 ### 構築済み推奨環境
 
@@ -72,7 +72,7 @@ sqlite3 パッケージのインストール時にバイナリが存在しなか
 
 ### [Linux / macOS 用セットアップマニュアル](doc/linux-setup.md)
 
-### [Windows 用セットアップマニュアル](doc/windows-setup.md)
+### ~~[Windows 用セットアップマニュアル](doc/windows-setup.md)~~
 
 ### [字幕表示 / 低遅延配信用セットアップマニュアル](doc/caption-lowlatency-setup.md)
 
