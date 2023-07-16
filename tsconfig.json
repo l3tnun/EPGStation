@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
-        "target": "ES2015",
-        "module": "commonjs",
+        "target": "ES2021",
+        "module": "CommonJS",
         "sourceMap": true,
         "strict": true,
         "noImplicitAny": true,
@@ -18,7 +18,10 @@
         "esModuleInterop": true,
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
-        "skipLibCheck": true
+        "skipLibCheck": true,
+        "rootDir": "./src",
+        "outDir": "./dist/"
     },
-    "include": ["./**/*"]
+
+    "include": ["./src/**/*"]
 }

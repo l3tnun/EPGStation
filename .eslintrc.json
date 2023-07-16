@@ -7,7 +7,8 @@
     "plugins": ["@typescript-eslint"],
     "parser": "@typescript-eslint/parser",
     "parserOptions": {
-        "sourceType": "module"
+        "sourceType": "module",
+        "project": "./tsconfig.json"
     },
     "env": { "browser": true, "node": true, "es6": true },
     "rules": {
