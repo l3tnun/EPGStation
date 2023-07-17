@@ -12,14 +12,16 @@ import IProgramDB from '../../db/IProgramDB';
 import IVideoFileDB from '../../db/IVideoFileDB';
 import IConfigFile, { RecordedDirInfo } from '../../IConfigFile';
 import IConfiguration from '../../IConfiguration';
+import IExecutionManagementModel from '../../IExecutionManagementModel';
 import ILogger from '../../ILogger';
 import ILoggerModel from '../../ILoggerModel';
 import IRecordingUtilModel, { RecFilePathInfo } from './IRecordingUtilModel';
 
 @injectable()
-export default class RecordingUtilModel implements IRecordingUtilModel {
+class RecordingUtilModel implements IRecordingUtilModel {
     private log: ILogger;
     private config: IConfigFile;
+    private executeManagementModel: IExecutionManagementModel;
     private channelDB: IChannelDB;
     private programDB: IProgramDB;
     private videoFileDB: IVideoFileDB;
@@ -28,6 +30,7 @@ export default class RecordingUtilModel implements IRecordingUtilModel {
     constructor(
         @inject('ILoggerModel') logger: ILoggerModel,
         @inject('IConfiguration') configuration: IConfiguration,
+        @inject('IExecutionManagementModel') executeManagementModel: IExecutionManagementModel,
         @inject('IChannelDB') channelDB: IChannelDB,
         @inject('IProgramDB') programDB: IProgramDB,
         @inject('IVideoFileDB') videoFileDB: IVideoFileDB,
@@ -35,6 +38,7 @@ export default class RecordingUtilModel implements IRecordingUtilModel {
     ) {
         this.log = logger.getLogger();
         this.config = configuration.getConfig();
+        this.executeManagementModel = executeManagementModel;
         this.channelDB = channelDB;
         this.programDB = programDB;
         this.videoFileDB = videoFileDB;
@@ -43,11 +47,32 @@ export default class RecordingUtilModel implements IRecordingUtilModel {
 
     /**
      * 保存先ディレクトリを取得する
+     * _getRecPath 関数をラップして排他制御する
+     *
      * @param reserve: Reserve
      * @param isEnableTmp: 一時保存ディレクトリを使用するか
      * @return Promise<RecFilePathInfo> 保存先ファイルパス
      */
     public async getRecPath(reserve: Reserve, isEnableTmp: boolean): Promise<RecFilePathInfo> {
+        // ロック取得
+        const exeId = await this.executeManagementModel.getExecution(
+            RecordingUtilModel.GET_REC_PATH_PRIORITY,
+            RecordingUtilModel.GET_REC_PATH_LOCK_TIMEOUT,
+        );
+
+        return await this._getRecPath(reserve, isEnableTmp).finally(() => {
+            // 必ずロックを開放するようにする
+            this.executeManagementModel.unLockExecution(exeId);
+        });
+    }
+
+    /**
+     * 保存先ディレクトリを取得する
+     * @param reserve: Reserve
+     * @param isEnableTmp: 一時保存ディレクトリを使用するか
+     * @return Promise<RecFilePathInfo> 保存先ファイルパス
+     */
+    private async _getRecPath(reserve: Reserve, isEnableTmp: boolean): Promise<RecFilePathInfo> {
         // 親ディレクトリ
         let parentDir: RecordedDirInfo | null = null;
         let subDir = ''; // サブディレクトリ
@@ -299,3 +324,10 @@ export default class RecordingUtilModel implements IRecordingUtilModel {
         }
     }
 }
+
+namespace RecordingUtilModel {
+    export const GET_REC_PATH_LOCK_TIMEOUT = 10.0;
+    export const GET_REC_PATH_PRIORITY = 1;
+}
+
+export default RecordingUtilModel;
