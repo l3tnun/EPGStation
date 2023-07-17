@@ -1,5 +1,5 @@
 import { inject, injectable } from 'inversify';
-import { FindOptionsWhere, FindManyOptions, LessThan, LessThanOrEqual, MoreThanOrEqual, ObjectLiteral } from 'typeorm';
+import { FindOptionsWhere, LessThan, LessThanOrEqual, MoreThan, MoreThanOrEqual, ObjectLiteral } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import * as apid from '../../../api';
 import * as mapid from '../../../node_modules/mirakurun/api';
@@ -854,11 +854,12 @@ export default class ProgramDB implements IProgramDB {
         const repository = connection.getRepository(Program);
         const result = await this.promieRetry.run(() => {
             return repository.find({
-                channelId: channelId,
-                // startAt <= time && endAt >= time
-                startAt: LessThanOrEqual(startAt),
-                endAt: MoreThanOrEqual(startAt),
-            } as FindManyOptions<Program>);
+                where: {
+                    channelId: channelId,
+                    startAt: LessThanOrEqual(startAt),
+                    endAt: MoreThan(startAt),
+                },
+            });
         });
 
         return result.length === 0 ? null : result[0];

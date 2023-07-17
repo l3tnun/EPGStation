@@ -408,8 +408,10 @@ export default class ReserveDB implements IReserveDB {
 
         return await this.promieRetry.run(() => {
             return queryBuilder.find({
-                endAt: LessThan(baseTime),
-            } as FindManyOptions<Reserve>);
+                where: {
+                    endAt: LessThan(baseTime),
+                },
+            });
         });
     }
 
