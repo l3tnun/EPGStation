@@ -88,7 +88,7 @@ export default class RecordedManageModel implements IRecordedManageModel {
             this.recordingManageModel.hasReserve(recorded.reserveId) === true
         ) {
             this.log.system.info(
-                `cancel recording by recorded manager reserveId: ${recorded} recordedId: ${recorded.id}`,
+                `cancel recording by recorded manager reserveId: ${recorded.reserveId} recordedId: ${recorded.id}`,
             );
             await this.recordingManageModel.cancel(recorded.reserveId, true);
         }
