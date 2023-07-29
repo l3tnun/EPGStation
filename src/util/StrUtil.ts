@@ -106,7 +106,7 @@ namespace StrUtil {
     export const deleteBrackets = (str: string): string => {
         // 囲み文字を削除
         for (const key in enclosedCharactersConvertTable) {
-            str = str.replace(key, '');
+            str = str.replaceAll(key, '');
         }
 
         // [] でくくられた文字を削除 + 先頭と末尾のスペースを削除する
@@ -146,7 +146,7 @@ namespace StrUtil {
      */
     export const replaceEnclosedCharacters = (str: string): string => {
         for (const key in enclosedCharactersConvertTable) {
-            str = str.replace(key, enclosedCharactersConvertTable[key]);
+            str = str.replaceAll(key, enclosedCharactersConvertTable[key]);
         }
 
         return str;
