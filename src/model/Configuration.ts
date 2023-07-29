@@ -253,7 +253,7 @@ namespace Configuration {
         isSuppressReservesUpdateAllLog: false,
         urlscheme: {
             m2ts: {
-                ios: 'vlc-x-callback://x-callback-url/stream?url=PROTOCOL://ADDRESS"',
+                ios: 'vlc-x-callback://x-callback-url/stream?url=PROTOCOL%3A%2F%2FADDRESS"',
                 android: 'intent://ADDRESS#Intent;action=android.intent.action.VIEW;type=video/*;scheme=PROTOCOL;end',
             },
             video: {
@@ -261,7 +261,7 @@ namespace Configuration {
                 android: 'intent://ADDRESS#Intent;action=android.intent.action.VIEW;type=video/*;scheme=PROTOCOL;end',
             },
             download: {
-                ios: 'vlc-x-callback://x-callback-url/stream?url=PROTOCOL://ADDRESS',
+                ios: 'vlc-x-callback://x-callback-url/stream?url=PROTOCOL%3A%2F%2FADDRESS&filename=FILENAME',
             },
         },
         streamFilePath: path.join(__dirname, '..', '..', 'data', 'streamfiles'),
