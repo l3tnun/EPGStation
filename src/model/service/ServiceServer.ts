@@ -8,7 +8,7 @@ import * as https from 'https';
 import { inject, injectable } from 'inversify';
 import * as yaml from 'js-yaml';
 import * as log4js from 'log4js';
-import mkdirp from 'mkdirp';
+import { mkdirp } from 'mkdirp';
 import multer from 'multer';
 import { OpenAPIV3 } from 'openapi-types';
 import * as path from 'path';
