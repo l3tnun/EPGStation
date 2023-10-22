@@ -326,7 +326,7 @@ class RecordingUtilModel implements IRecordingUtilModel {
 }
 
 namespace RecordingUtilModel {
-    export const GET_REC_PATH_LOCK_TIMEOUT = 10.0;
+    export const GET_REC_PATH_LOCK_TIMEOUT = 5.0 * 1000;
     export const GET_REC_PATH_PRIORITY = 1;
 }
 
