@@ -786,7 +786,40 @@ class RecorderModel implements IRecorderModel {
                 this.setTimer(newReserve, isSuppressLog);
             } else {
                 // 録画準備中 or 録画中
-                if (this.reserve.startAt > newReserve.startAt) {
+                if (this.reserve.programId === null) {
+                    // 時間指定予約で時刻に変更があった
+                    // TODO 現時点では時刻指定で時間変更を受け入れられるようにな api になっていない
+                    // TODO 録画中 or 録画準備中の開始時刻変更にも対応していない
+                    if (this.reserve.endAt !== newReserve.endAt) {
+                        // 時間指定予約で終了時刻に変更があった
+                        this.log.system.info(`change recording endAt: ${newReserve.id}`);
+
+                        if (this.isPrepRecording === true) {
+                            // 録画準備中なら録画中になるまで待つ
+                            await new Promise<void>((resolve: () => void, reject: (err: Error) => void) => {
+                                this.log.system.debug(`wait change endAt: ${newReserve.id}`);
+                                // タイムアウト設定
+                                const timeoutId = setTimeout(() => {
+                                    reject(new Error('ChangeEndAtTimeoutError'));
+                                }, IRecordingStreamCreator.PREP_TIME);
+
+                                // 録画開始内部イベント発行街
+                                this.eventEmitter.once(RecorderModel.START_RECORDING_EVENT, () => {
+                                    clearTimeout(timeoutId);
+                                    resolve();
+                                });
+                            });
+                        }
+
+                        // 終了時刻変更
+                        try {
+                            this.streamCreator.changeEndAt(newReserve);
+                        } catch (err: any) {
+                            this.log.system.error(`change recording endAt: ${newReserve.id}`);
+                            this.log.system.error(err);
+                        }
+                    }
+                } else if (this.reserve.startAt < newReserve.startAt) {
                     // 開始時間が遅くなった
                     this.log.system.info(
                         `resetting recording timer reserveId: ${this.reserve.id}, recordedId: ${this.recordedId}`,
@@ -796,34 +829,6 @@ class RecorderModel implements IRecorderModel {
                         this.log.system.error(err);
                     });
                     this.setTimer(newReserve, isSuppressLog); // タイマー再セット
-                } else if (this.reserve.endAt !== newReserve.endAt && this.reserve.programId === null) {
-                    // 時間指定予約で終了時刻に変更があった
-                    this.log.system.info(`change recording endAt: ${newReserve.id}`);
-
-                    if (this.isPrepRecording === true) {
-                        // 録画準備中なら録画中になるまで待つ
-                        await new Promise<void>((resolve: () => void, reject: (err: Error) => void) => {
-                            this.log.system.debug(`wait change endAt: ${newReserve.id}`);
-                            // タイムアウト設定
-                            const timeoutId = setTimeout(() => {
-                                reject(new Error('ChangeEndAtTimeoutError'));
-                            }, IRecordingStreamCreator.PREP_TIME);
-
-                            // 録画開始内部イベント発行街
-                            this.eventEmitter.once(RecorderModel.START_RECORDING_EVENT, () => {
-                                clearTimeout(timeoutId);
-                                resolve();
-                            });
-                        });
-                    }
-
-                    // 終了時刻変更
-                    try {
-                        this.streamCreator.changeEndAt(newReserve);
-                    } catch (err: any) {
-                        this.log.system.error(`change recording endAt: ${newReserve.id}`);
-                        this.log.system.error(err);
-                    }
                 }
             }
         }
