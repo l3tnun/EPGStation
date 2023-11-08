@@ -162,6 +162,20 @@ class RecorderModel implements IRecorderModel {
 
         // 番組ストリームを取得する
         try {
+            // 番組開始時刻が変更されたことに伴い番組間に重なりが生じ、当該番組が削除されている
+            // NOTE: mirakurunの不具合に対処
+            if (this.reserve.programId) {
+                const program = await this.programDB.findId(this.reserve.programId);
+                if (program === null) {
+                    this.log.system.warn(
+                        `the program data does not found in database. retry later, (reerveId: ${this.reserve.id}, programId: ${this.reserve.programId})`,
+                    );
+                    this.isPrepRecording = false;
+                    this.emitCancelEvent();
+                    return;
+                }
+            }
+
             this.stream = await this.streamCreator.create(this.reserve);
 
             // 録画準備のキャンセル or ストリーム取得中に予約が削除されていないかチェック
@@ -745,6 +759,7 @@ class RecorderModel implements IRecorderModel {
                 }, 60 * 1000);
 
                 // 録画準備中
+                this.destroyStream();
                 this.eventEmitter.once(RecorderModel.CANCEL_EVENT, () => {
                     clearTimeout(timerId);
                     // prep rec キャンセル完了
@@ -820,15 +835,31 @@ class RecorderModel implements IRecorderModel {
                         }
                     }
                 } else if (this.reserve.startAt < newReserve.startAt) {
-                    // 開始時間が遅くなった
-                    this.log.system.info(
-                        `resetting recording timer reserveId: ${this.reserve.id}, recordedId: ${this.recordedId}`,
-                    );
-                    await this.cancel(false).catch(err => {
-                        this.log.system.error(`cancel recording error: ${newReserve.id}`);
-                        this.log.system.error(err);
-                    });
-                    this.setTimer(newReserve, isSuppressLog); // タイマー再セット
+                    // 開始時刻が遅くなった
+                    if (this.isRecording === false) {
+                        // まだ録画準備中なのでキャンセルしてタイマーを再セット
+                        this.log.system.info(
+                            `cancel prepare recording.`,
+                            `(reserveId: ${this.reserve.id}, programId: ${this.reserve.programId}, recordedId: ${this.recordedId})`,
+                        );
+                        await this.cancel(false).catch(err => {
+                            this.log.system.error(
+                                `cancel recording error: (reserveId: ${newReserve.id}, programId: ${this.reserve.programId})`,
+                            );
+                            this.log.system.error(err);
+                        });
+                        // NOTE: キャンセルエラーが発生したとしてもタイマーを再セット
+                        this.setTimer(newReserve, isSuppressLog);
+                    } else {
+                        // 録画中
+                        // NOTE:
+                        //  EPGstationがスケジュール変更を遅れて把握した可能性がある
+                        //  一度ストリームを開始した番組の開始時刻が変更されることはないのでここでは何もしない
+                        this.log.system.info(
+                            `Ignores schedule changes because this program is already recording.`,
+                            ` (reserveId: ${this.reserve.id}, programId: ${this.reserve.programId}, recordedId: ${this.recordedId})`,
+                        );
+                    }
                 }
             }
         }

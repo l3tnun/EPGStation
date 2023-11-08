@@ -22,6 +22,13 @@ class EPGUpdater implements IEPGUpdater {
         this.log = logger.getLogger();
         this.config = configuration.getConfig();
         this.updateManage = updateManage;
+
+        this.updateManage.on('program updated', () => {
+            this.notify();
+        });
+        this.updateManage.on('service updated', () => {
+            this.notify();
+        });
     }
 
     /**
@@ -37,30 +44,65 @@ class EPGUpdater implements IEPGUpdater {
         this.notify();
 
         const updateTime = this.config.epgUpdateIntervalTime;
+
+        // EventStream 監視ループ(watchdog)
+        setInterval(async () => {
+            try {
+                if (this.isEventStreamAlive === false) {
+                    // stream event に何らかの問題が発生した
+                    this.startEventStreamAnalysis();
+                    await this.updateManage.updateAll();
+                }
+            } catch (err: any) {
+                this.log.system.error('EPG update error');
+                this.log.system.error(err);
+            }
+        }, 10 * 1000);
+
+        // 溜め込んだQueueを設定ファイルで指定されたサイクルでDBへ保存
         setInterval(
             async () => {
                 try {
                     if (this.isEventStreamAlive === true) {
-                        if (this.updateManage.getServiceQueueSize() > 0) {
-                            // queue に更新情報が無ければ実行しない
-                            await this.updateManage.saveSevice();
-                        }
-                        if (this.updateManage.getProgramQueueSize() > 0) {
-                            // queue に更新情報が無ければ実行しない
-                            await this.updateManage.saveProgram();
-                        }
-                    } else {
-                        // stream event に何らかの問題が発生した
-                        this.startEventStreamAnalysis();
-                        await this.updateManage.updateAll();
+                        await this.updateManage.saveService();
                     }
-
-                    this.notify();
                 } catch (err: any) {
-                    this.log.system.error('EPG update error');
+                    this.log.system.error('service update error');
                     this.log.system.error(err);
                 }
+            },
+            updateTime * 60 * 1000,
+        );
+        setInterval(
+            async () => {
+                try {
+                    if (this.isEventStreamAlive === true) {
+                        await this.updateManage.saveProgram();
+                    }
+                } catch (err: any) {
+                    this.log.system.error('program update error');
+                    this.log.system.error(err);
+                }
+            },
+            updateTime * 60 * 1000,
+        );
 
+        // 放送中や放送開始時刻が間近の番組は短いサイクルでDBへ保存する
+        // NOTE: DB負荷などを考慮しEvent受信と同時のDB反映は見合わせる
+        setInterval(async () => {
+            try {
+                if (this.isEventStreamAlive === true) {
+                    const timeThreshold = new Date().getTime() + 5 * 60 * 1000;
+                    await this.updateManage.saveProgram(timeThreshold);
+                }
+            } catch (err: any) {
+                this.log.system.error('EPG update error');
+                this.log.system.error(err);
+            }
+        }, 10 * 1000);
+
+        setInterval(
+            async () => {
                 // 古い番組情報を削除
                 this.log.system.info('delete old programs');
                 await this.updateManage.deleteOldPrograms().catch(err => {
@@ -68,7 +110,7 @@ class EPGUpdater implements IEPGUpdater {
                     this.log.system.error(err);
                 });
             },
-            updateTime * 60 * 1000,
+            30 * 60 * 1000,
         );
     }
 
