@@ -34,7 +34,7 @@
     "dependencies": {
         "arib-subtitle-timedmetadater": "4.0.10",
         "aribts": "2.1.12",
-        "axios": "1.5.1",
+        "axios": "1.6.0",
         "body-parser": "1.20.2",
         "cors": "2.8.5",
         "diskusage-ng": "1.0.4",
