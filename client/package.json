@@ -10,7 +10,7 @@
     "dependencies": {
         "@mdi/font": "7.3.67",
         "aribb24.js": "1.11.0",
-        "axios": "1.5.1",
+        "axios": "1.6.0",
         "eventemitter2": "6.4.9",
         "hls.js": "1.4.12",
         "inversify": "6.0.2",
