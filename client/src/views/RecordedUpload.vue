@@ -15,7 +15,7 @@
 </template>
 
 <script lang="ts">
-import RecordedUploadForm from '@/components/recorded/upload/RecordedUploadFrom.vue';
+import RecordedUploadForm from '@/components/recorded/upload/RecordedUploadForm.vue';
 import RecordedUploadingDialog from '@/components/recorded/upload/RecordedUploadingDialog.vue';
 import TitleBar from '@/components/titleBar/TitleBar.vue';
 import container from '@/model/ModelContainer';
