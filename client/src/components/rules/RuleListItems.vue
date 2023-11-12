@@ -32,7 +32,7 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
         RuleItemMenu,
     },
 })
-export default class RuleListItens extends Vue {
+export default class RuleListItems extends Vue {
     @Prop({ required: true })
     public items!: RuleStateData[];
 

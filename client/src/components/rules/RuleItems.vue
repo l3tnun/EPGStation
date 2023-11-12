@@ -1,12 +1,12 @@
 <template>
     <div class="rules-wrap mb-1">
         <RuleTableItems v-if="elementWidth >= 780 - 24" :items="rules" :isEditMode.sync="isEditMode" v-on:changeState="changeState" v-on:selected="selected"></RuleTableItems>
-        <RuleListItens v-else :items="rules" :isEditMode.sync="isEditMode" v-on:changeState="changeState" v-on:selected="selected"></RuleListItens>
+        <RuleListItems v-else :items="rules" :isEditMode.sync="isEditMode" v-on:changeState="changeState" v-on:selected="selected"></RuleListItems>
     </div>
 </template>
 
 <script lang="ts">
-import RuleListItens from '@/components/rules/RuleListItens.vue';
+import RuleListItems from '@/components/rules/RuleListItems.vue';
 import RuleTableItems from '@/components/rules/RuleTableItems.vue';
 import IRuleApiModel from '@/model/api/rule/IRuleApiModel';
 import container from '@/model/ModelContainer';
@@ -19,7 +19,7 @@ import * as apid from '../../../../api';
 @Component({
     components: {
         RuleTableItems,
-        RuleListItens,
+        RuleListItems,
     },
 })
 export default class RuleItems extends Vue {
