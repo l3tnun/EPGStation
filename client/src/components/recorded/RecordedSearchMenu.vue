@@ -94,10 +94,10 @@ export default class RecordedSearchMenu extends Vue {
             } else if (typeof this.searchState.ruleId !== 'undefined' && this.searchState.ruleId !== null) {
                 searchQuery.ruleId = this.searchState.ruleId;
             }
-            if (typeof this.searchState.channelId !== 'undefined') {
+            if (typeof this.searchState.channelId !== 'undefined' && this.searchState.channelId !== null) {
                 searchQuery.channelId = this.searchState.channelId;
             }
-            if (typeof this.searchState.genre !== 'undefined') {
+            if (typeof this.searchState.genre !== 'undefined' && this.searchState.genre !== null) {
                 searchQuery.genre = this.searchState.genre;
             }
             if (this.searchState.hasOriginalFile === true) {
