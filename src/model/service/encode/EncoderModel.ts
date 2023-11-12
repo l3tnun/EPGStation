@@ -17,6 +17,7 @@ import ILoggerModel from '../../ILoggerModel';
 import IEncodeFileManageModel from './IEncodeFileManageModel';
 import IEncodeProcessManageModel from './IEncodeProcessManageModel';
 import { EncodeOption, EncodeProgressInfo, IEncoderModel } from './IEncoderModel';
+import IRecordingUtilModel from '../../operator/recording/IRecordingUtilModel';
 
 @injectable()
 class EncoderModel implements IEncoderModel {
@@ -29,6 +30,7 @@ class EncoderModel implements IEncoderModel {
     private channelDB: IChannelDB;
     private videoUtil: IVideoUtil;
     private encodeEvent: IEncodeEvent;
+    private recodingUtil: IRecordingUtilModel;
 
     private listener: events.EventEmitter = new events.EventEmitter();
 
@@ -48,6 +50,7 @@ class EncoderModel implements IEncoderModel {
         @inject('IChannelDB') channelDB: IChannelDB,
         @inject('IVideoUtil') videoUtil: IVideoUtil,
         @inject('IEncodeEvent') encodeEvent: IEncodeEvent,
+        @inject('IRecordingUtilModel') recodingUtil: IRecordingUtilModel,
     ) {
         this.log = logger.getLogger();
         this.configure = configure;
@@ -58,6 +61,7 @@ class EncoderModel implements IEncoderModel {
         this.channelDB = channelDB;
         this.videoUtil = videoUtil;
         this.encodeEvent = encodeEvent;
+        this.recodingUtil = recodingUtil;
     }
 
     /**
@@ -133,7 +137,7 @@ class EncoderModel implements IEncoderModel {
         }
 
         // 出力先ディレクトリパスを取得する
-        const outputDirPath = typeof encodeCmd.suffix === 'undefined' ? null : this.getDirPath(this.encodeOption);
+        const outputDirPath = typeof encodeCmd.suffix === 'undefined' ? null : await this.getDirPath(this.encodeOption);
 
         // 出力先ディレクトリの存在確認 & 作成
         if (outputDirPath !== null) {
@@ -285,11 +289,18 @@ class EncoderModel implements IEncoderModel {
      * @param queueItem: EncodeOption
      * @return string
      */
-    private getDirPath(queueItem: EncodeOption): string {
+    private async getDirPath(queueItem: EncodeOption): Promise<string> {
         const parentDir = this.videoUtil.getParentDirPath(queueItem.parentDir);
         if (parentDir === null) {
             this.log.encode.error(`parent dir config is not found: ${queueItem.parentDir}`);
             throw new Error('parentDirIsNotFound');
+        }
+
+        if (typeof queueItem.directory !== 'undefined' && queueItem.directory.length > 0) {
+            const recorded = await this.recordedDB.findId(queueItem.recordedId);
+            if (recorded !== null) {
+                queueItem.directory = await this.recodingUtil.formatFilePathString(queueItem.directory, recorded);
+            }
         }
 
         return typeof queueItem.directory === 'undefined' ? parentDir : path.join(parentDir, queueItem.directory);

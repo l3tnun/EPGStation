@@ -21,6 +21,7 @@ import ILogger from '../../ILogger';
 import ILoggerModel from '../../ILoggerModel';
 import IRecordingManageModel from '../recording/IRecordingManageModel';
 import IRecordedManageModel, { AddVideoFileOption, UploadedVideoFileOption } from './IRecordedManageModel';
+import IRecordingUtilModel from '../recording/IRecordingUtilModel';
 
 @injectable()
 export default class RecordedManageModel implements IRecordedManageModel {
@@ -34,6 +35,7 @@ export default class RecordedManageModel implements IRecordedManageModel {
     private recordingManageModel: IRecordingManageModel;
     private recordedEvent: IRecordedEvent;
     private videoUtil: IVideoUtil;
+    private recordingUtilModel: IRecordingUtilModel;
 
     constructor(
         @inject('ILoggerModel') logger: ILoggerModel,
@@ -47,6 +49,7 @@ export default class RecordedManageModel implements IRecordedManageModel {
         recordingManageModel: IRecordingManageModel,
         @inject('IRecordedEvent') recordedEvent: IRecordedEvent,
         @inject('IVideoUtil') videoUtil: IVideoUtil,
+        @inject('IRecordingUtilModel') recordingUtilModel: IRecordingUtilModel,
     ) {
         this.log = logger.getLogger();
         this.config = configuration.getConfig();
@@ -58,6 +61,7 @@ export default class RecordedManageModel implements IRecordedManageModel {
         this.recordingManageModel = recordingManageModel;
         this.recordedEvent = recordedEvent;
         this.videoUtil = videoUtil;
+        this.recordingUtilModel = recordingUtilModel;
     }
 
     /**
@@ -278,7 +282,10 @@ export default class RecordedManageModel implements IRecordedManageModel {
         // サブディレクトリ
         let dirPath = parentDirPath;
         if (typeof option.subDirectory !== 'undefined') {
-            dirPath = path.join(dirPath, option.subDirectory);
+            dirPath = path.join(
+                dirPath,
+                await this.recordingUtilModel.formatFilePathString(option.subDirectory, recorded),
+            );
 
             // check dir
             try {
@@ -317,7 +324,12 @@ export default class RecordedManageModel implements IRecordedManageModel {
                 recordedId: option.recordedId,
                 parentDirectoryName: option.parentDirectoryName,
                 filePath:
-                    typeof option.subDirectory === 'undefined' ? fileName : path.join(option.subDirectory, fileName),
+                    typeof option.subDirectory === 'undefined'
+                        ? fileName
+                        : path.join(
+                              await this.recordingUtilModel.formatFilePathString(option.subDirectory, recorded),
+                              fileName,
+                          ),
                 type: option.fileType,
                 name: option.viewName,
             });

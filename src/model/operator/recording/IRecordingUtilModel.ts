@@ -1,5 +1,6 @@
 import * as apid from '../../../../api';
 import Reserve from '../../../db/entities/Reserve';
+import Recorded from '../../../db/entities/Recorded';
 import { RecordedDirInfo } from '../../IConfigFile';
 
 export interface RecFilePathInfo {
@@ -13,4 +14,5 @@ export default interface IRecordingUtilModel {
     getRecPath(reserve: Reserve, isEnableTmp: boolean): Promise<RecFilePathInfo>;
     movingFromTmp(reserve: Reserve, videoFileId: apid.VideoFileId): Promise<string>;
     updateVideoFileSize(videoFileId: apid.VideoFileId): Promise<void>;
+    formatFilePathString(format: string | null | undefined, src: Recorded | Reserve): Promise<string>;
 }

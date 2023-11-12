@@ -3,6 +3,7 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import * as apid from '../../../../api';
 import Reserve from '../../../db/entities/Reserve';
+import Recorded from '../../../db/entities/Recorded';
 import DateUtil from '../../../util/DateUtil';
 import FileUtil from '../../../util/FileUtil';
 import StrUtil from '../../../util/StrUtil';
@@ -106,53 +107,17 @@ class RecordingUtilModel implements IRecordingUtilModel {
             subDir = reserve.directory === null ? '' : reserve.directory;
         }
 
-        // 局名
-        let channelName = reserve.channelId.toString(10); // 局名が取れなかったときのために id で一旦セットする
-        let halfWidthChannelName = channelName;
-        let sid = 'NULL';
-        try {
-            const channel = await this.channelDB.findId(reserve.channelId);
-            if (channel !== null) {
-                channelName = channel.name;
-                halfWidthChannelName = channel.halfWidthName;
-                sid = channel.serviceId.toString(10);
-            }
-        } catch (err: any) {
-            this.log.system.warn(`channel name get error: ${reserve.channelId}`);
-        }
-
-        // 時刻指定予約時の番組名取得
-        let programName = reserve.name;
-        if (reserve.isTimeSpecified === true) {
-            // 時刻指定予約なので番組情報を取得する
-            const program = await this.programDB.findChannelIdAndTime(reserve.channelId, reserve.startAt);
-            programName = program === null ? '番組名なし' : program.name;
-        }
-
         // ファイル名
         let fileName = reserve.recordedFormat === null ? this.config.recordedFormat : reserve.recordedFormat;
-        const jaDate = DateUtil.getJaDate(new Date(reserve.startAt));
-        fileName = fileName
-            .replace(/%YEAR%/g, DateUtil.format(jaDate, 'yyyy'))
-            .replace(/%SHORTYEAR%/g, DateUtil.format(jaDate, 'YY'))
-            .replace(/%MONTH%/g, DateUtil.format(jaDate, 'MM'))
-            .replace(/%DAY%/g, DateUtil.format(jaDate, 'dd'))
-            .replace(/%HOUR%/g, DateUtil.format(jaDate, 'hh'))
-            .replace(/%MIN%/g, DateUtil.format(jaDate, 'mm'))
-            .replace(/%SEC%/g, DateUtil.format(jaDate, 'ss'))
-            .replace(/%DOW%/g, DateUtil.format(jaDate, 'w'))
-            .replace(/%TYPE%/g, reserve.channelType)
-            .replace(/%CHID%/g, reserve.channelId.toString(10))
-            .replace(/%CHNAME%/g, channelName)
-            .replace(/%HALF_WIDTH_CHNAME%/g, halfWidthChannelName)
-            .replace(/%CH%/g, reserve.channel)
-            .replace(/%SID%/g, sid)
-            .replace(/%ID%/g, reserve.id.toString())
-            .replace(/%TITLE%/g, programName === null ? 'NULL' : programName)
-            .replace(/%HALF_WIDTH_TITLE%/g, reserve.halfWidthName === null ? 'NULL' : reserve.halfWidthName);
+        fileName = await this.formatFilePathString(fileName, reserve);
 
         // 使用禁止文字列置き換え
         fileName = StrUtil.replaceFileName(fileName);
+
+        // サブディレクトリ
+        if (subDir.length > 0) {
+            subDir = await this.formatFilePathString(subDir, reserve);
+        }
 
         // ディレクトリ
         const dir = path.join(parentDir.path, subDir);
@@ -322,6 +287,68 @@ class RecordingUtilModel implements IRecordingUtilModel {
             this.log.system.error(`update file size error: ${videoFileId}`);
             this.log.system.error(err);
         }
+    }
+
+    public async formatFilePathString(format: string | null | undefined, src: Recorded | Reserve): Promise<string> {
+        if (format == null) {
+            return '';
+        }
+        let id: string;
+        let programName: string = src.name;
+        let channelType: string = 'NULL';
+        let channel: string = 'NULL';
+        if (src instanceof Reserve) {
+            // Reserve
+            id = src.id.toString();
+            channelType = src.channelType;
+            channel = src.channel;
+            // 時刻指定予約時の番組名取得
+            if (src.isTimeSpecified === true) {
+                // 時刻指定予約なので番組情報を取得する
+                const program = await this.programDB.findChannelIdAndTime(src.channelId, src.startAt);
+                programName = program === null ? '番組名なし' : program.name;
+            }
+        } else {
+            // Recorded
+            id = src.reserveId?.toString() || 'NULL';
+        }
+
+        // 局名
+        let channelName = src.channelId.toString(10); // 局名が取れなかったときのために id で一旦セットする
+        let halfWidthChannelName = channelName;
+        let sid = 'NULL';
+        try {
+            const ch = await this.channelDB.findId(src.channelId);
+            if (ch !== null) {
+                channelName = ch.name;
+                halfWidthChannelName = ch.halfWidthName;
+                sid = ch.serviceId.toString(10);
+                channelType = ch.channelType;
+                channel = ch.channel;
+            }
+        } catch (err: any) {
+            this.log.system.warn(`channel name get error: ${src.channelId}`);
+        }
+        const jaDate = DateUtil.getJaDate(new Date(src.startAt));
+
+        return format
+            .replace(/%YEAR%/g, DateUtil.format(jaDate, 'yyyy'))
+            .replace(/%SHORTYEAR%/g, DateUtil.format(jaDate, 'YY'))
+            .replace(/%MONTH%/g, DateUtil.format(jaDate, 'MM'))
+            .replace(/%DAY%/g, DateUtil.format(jaDate, 'dd'))
+            .replace(/%HOUR%/g, DateUtil.format(jaDate, 'hh'))
+            .replace(/%MIN%/g, DateUtil.format(jaDate, 'mm'))
+            .replace(/%SEC%/g, DateUtil.format(jaDate, 'ss'))
+            .replace(/%DOW%/g, DateUtil.format(jaDate, 'w'))
+            .replace(/%TYPE%/g, channelType)
+            .replace(/%CHID%/g, src.channelId?.toString(10) || 'NULL')
+            .replace(/%CHNAME%/g, channelName)
+            .replace(/%HALF_WIDTH_CHNAME%/g, halfWidthChannelName)
+            .replace(/%CH%/g, channel)
+            .replace(/%SID%/g, sid)
+            .replace(/%ID%/g, id.toString())
+            .replace(/%TITLE%/g, programName === null ? 'NULL' : programName)
+            .replace(/%HALF_WIDTH_TITLE%/g, src.halfWidthName === null ? 'NULL' : src.halfWidthName);
     }
 }
 
