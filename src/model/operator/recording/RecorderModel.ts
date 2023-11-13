@@ -784,13 +784,16 @@ class RecorderModel implements IRecorderModel {
 
         this.isPlanToDelete = isPlanToDelete;
 
-        await this._cancel();
-
         if (this.isPrepRecording === true) {
+            await this._cancel();
             // 録画準備失敗を通知
             this.recordingEvent.emitCancelPrepRecording(this.reserve);
         } else if (this.isRecording === true) {
+            await this._cancel();
             this.isNeedDeleteReservation = false;
+        }
+        else {
+            await this._cancel();
         }
     }
 
