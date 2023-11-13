@@ -1,4 +1,5 @@
 /* eslint-disable no-case-declarations */
+import { EventEmitter } from 'events';
 import { IncomingMessage } from 'http';
 import { inject, injectable } from 'inversify';
 import mirakurun from 'mirakurun';
@@ -11,14 +12,15 @@ import ILogger from '../ILogger';
 import ILoggerModel from '../ILoggerModel';
 import IMirakurunClientModel from '../IMirakurunClientModel';
 import IEPGUpdateManageModel, {
-    CreateEvent,
     ProgramBaseEvent,
+    UpdateEvent,
+    RemoveEvent,
     RedefineEvent,
     ServiceEvent,
 } from './IEPGUpdateManageModel';
 
 @injectable()
-class EPGUpdateManageModel implements IEPGUpdateManageModel {
+class EPGUpdateManageModel extends EventEmitter implements IEPGUpdateManageModel {
     private log: ILogger;
     private mirakurunClient: mirakurun;
     private channelDB: IChannelDB;
@@ -42,6 +44,8 @@ class EPGUpdateManageModel implements IEPGUpdateManageModel {
         @inject('IChannelDB') channelDB: IChannelDB,
         @inject('IProgramDB') programDB: IProgramDB,
     ) {
+        super();
+
         this.log = loggerModel.getLogger();
         this.mirakurunClient = mirakurunClientModel.getClient();
         this.channelDB = channelDB;
@@ -204,12 +208,15 @@ class EPGUpdateManageModel implements IEPGUpdateManageModel {
             throw err;
         });
 
+        this.emit('event stream started');
+
         return new Promise<void>(async (_resolve: () => void, reject: (err: Error) => void) => {
             // エラー処理
             eventStream.once('error', err => {
                 this.log.system.error('event stream error');
                 this.log.system.error(err);
                 this.stopStream(eventStream);
+                this.emit('event stream aborted');
                 reject(err);
             });
 
@@ -266,6 +273,7 @@ class EPGUpdateManageModel implements IEPGUpdateManageModel {
                     }
                     this.log.system.error(err);
                     this.stopStream(eventStream);
+                    this.emit('event stream aborted');
                     reject(new Error('EventStreamParseError'));
                 }
                 tmp = Buffer.from([]);
@@ -304,69 +312,110 @@ class EPGUpdateManageModel implements IEPGUpdateManageModel {
     /**
      * programQueue の program を DB へ反映させる
      */
-    public async saveProgram(): Promise<void> {
+    public async saveProgram(timeThreshold: number = 0): Promise<void> {
         // 取り出し
         const programs = this.programQueue.splice(0, this.programQueue.length);
-
         if (programs.length === 0) {
             return;
         }
+        this.log.system.debug('number of de-queued items: %d', programs.length);
 
-        this.log.system.info('start save program');
+        try {
+            const deleteIndex: { [programId: number]: ProgramBaseEvent } = {}; // 追加用索引
+            const updateIndex: { [programId: number]: ProgramBaseEvent } = {}; // 追加用索引
+            let needToSave = false;
 
-        const deleteIndex: { [programId: number]: mapid.ProgramId } = {}; // 削除用索引
-        const createIndex: { [programId: number]: mapid.Program } = {}; // 追加用索引
-        const updateIndex: { [programId: number]: mapid.Program } = {}; // 更新用索引
+            if (timeThreshold === 0) needToSave = true;
 
-        for (const program of programs) {
-            if (program.type === 'create') {
-                const createData = (<CreateEvent>program).data;
-                if (typeof createData.name !== 'undefined' && this.isMainProgram(createData) === true) {
-                    createIndex[createData.id] = createData;
+            // eventを時系列を意識して整理
+            for (const event of programs) {
+                if (event.type === 'create' || event.type === 'update') {
+                    const program = (<UpdateEvent>event).data;
+                    if (typeof program.name !== 'undefined' && this.isMainProgram(program) === true) {
+                        updateIndex[program.id] = event;
+                        if (program.startAt < timeThreshold) needToSave = true;
+                        if (program.id in deleteIndex) {
+                            // このEvent以前に受信した"remove" or "redefine" Eventは破棄する
+                            delete deleteIndex[program.id];
+                        }
+                    }
+                } else if (event.type === 'remove') {
+                    const removeData = (<RemoveEvent>event).data;
+                    deleteIndex[removeData.id] = event;
+                    if (removeData.id in updateIndex) {
+                        // このEvent以前に受信した"create" or "update" Eventは破棄する
+                        delete updateIndex[removeData.id];
+                    }
+                } else if ((event as any).type === 'redefine') {
+                    // redefine は古いバージョンをサポートするため
+                    const from = (<RedefineEvent>event).data.from;
+                    deleteIndex[from] = event;
+                    if (from in updateIndex) {
+                        // このEvent以前に受信した"create" or "update" Eventは破棄する
+                        delete updateIndex[from];
+                    }
                 }
-            } else if (program.type === 'update') {
-                const updateData = (<CreateEvent>program).data;
-                if (typeof updateData !== 'undefined' && this.isMainProgram(updateData) === true) {
-                    updateIndex[updateData.id] = updateData;
-                }
-            } else if (program.type === 'remove' || (program as any).type === 'redefine') {
-                // redefine は古いバージョンをサポートするため
-                const from = (<RedefineEvent>program).data.from;
-                deleteIndex[from] = from;
             }
+
+            if (needToSave) {
+                const deleteValues: Array<mapid.ProgramId> = [];
+                const insertValues: Array<mapid.Program> = [];
+                const updateValues: Array<mapid.Program> = [];
+
+                for (const [_id, event] of Object.entries(deleteIndex)) {
+                    deleteValues.push((<RemoveEvent>event).data.id);
+                }
+                for (const [_id, event] of Object.entries(updateIndex)) {
+                    updateValues.push((<UpdateEvent>event).data);
+                }
+
+                if (deleteValues.length > 0 || insertValues.length > 0 || updateValues.length > 0) {
+                    this.log.system.info('update program db start');
+                    this.log.system.info({
+                        deleteValues: deleteValues.length,
+                        insertValues: insertValues.length,
+                        updateValues: updateValues.length,
+                    });
+
+                    await this.programDB.update(this.channelIndex, {
+                        insert: insertValues,
+                        update: updateValues,
+                        delete: deleteValues,
+                    });
+                    this.log.system.info('update program db done');
+
+                    this.emit('program updated');
+                }
+            } else {
+                // 整理した結果のEventをキューへ戻す
+                // NOTE: "remove"イベントは先頭へ
+                this.log.system.debug(
+                    'number of re-queued items: %d',
+                    Object.keys(deleteIndex).length + Object.keys(updateIndex).length,
+                );
+                this.programQueue = Object.values(deleteIndex).concat(Object.values(updateIndex), this.programQueue);
+            }
+        } catch (err: any) {
+            // キューへ全て戻す
+            this.log.system.debug('number of re-queued items: %d', programs.length);
+            this.programQueue = programs.concat(this.programQueue);
+            throw err;
         }
-
-        const deleteValues = Object.values(deleteIndex);
-        const insertValues = Object.values(createIndex);
-        const updateValues = Object.values(updateIndex);
-
-        this.log.system.info({
-            deleteValues: deleteValues.length,
-            insertValues: insertValues.length,
-            updateValues: updateValues.length,
-        });
-
-        this.log.system.info('update db');
-        await this.programDB.update(this.channelIndex, {
-            insert: insertValues,
-            update: updateValues,
-            delete: deleteValues,
-        });
-
-        this.log.system.info('update db done');
     }
 
     /**
      * 現在時刻より古い番組情報を削除
      */
     public async deleteOldPrograms(): Promise<void> {
+        this.log.system.info('delete old program db start');
         await this.programDB.deleteOld(new Date().getTime());
+        this.log.system.info('delete old program db done');
     }
 
     /**
      * serviceQueue の program を DB へ反映させる
      */
-    public async saveSevice(): Promise<void> {
+    public async saveService(): Promise<void> {
         // 取り出し
         const services = this.serviceQueue.splice(0, this.serviceQueue.length);
 
@@ -387,8 +436,6 @@ class EPGUpdateManageModel implements IEPGUpdateManageModel {
 
         const createIndex: { [serviceId: number]: mapid.Service } = {}; // 追加用索引
         const updateIndex: { [serviceId: number]: mapid.Service } = {}; // 更新用索引
-
-        this.log.system.info('start save service');
 
         for (const service of services) {
             if (
@@ -424,12 +471,12 @@ class EPGUpdateManageModel implements IEPGUpdateManageModel {
         const insertValues = Object.values(createIndex);
         const updateValues = Object.values(updateIndex);
 
+        this.log.system.info('update channel db start');
         this.log.system.info({
             insertValues: insertValues.length,
             updateValues: updateValues.length,
         });
 
-        this.log.system.info('update db');
         await this.channelDB.update({
             insert: insertValues,
             update: updateValues,
@@ -439,7 +486,8 @@ class EPGUpdateManageModel implements IEPGUpdateManageModel {
         this.updateChannelIndex(insertValues);
         this.updateChannelIndex(updateValues);
 
-        this.log.system.info('update db done');
+        this.log.system.info('update channel db done');
+        this.emit('service updated');
     }
 }
 
