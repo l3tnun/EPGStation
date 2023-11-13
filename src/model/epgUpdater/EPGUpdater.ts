@@ -5,6 +5,7 @@ import ILogger from '../ILogger';
 import ILoggerModel from '../ILoggerModel';
 import IEPGUpdateManageModel from './IEPGUpdateManageModel';
 import IEPGUpdater from './IEPGUpdater';
+import Util from '../../util/Util';
 
 @injectable()
 class EPGUpdater implements IEPGUpdater {
@@ -13,6 +14,9 @@ class EPGUpdater implements IEPGUpdater {
     private updateManage: IEPGUpdateManageModel;
 
     private isEventStreamAlive: boolean = false;
+    private lastUpdatedTime: number = 0;
+    private lastDeletedTime: number = 0;
+    private retryCount: number = 0;
 
     constructor(
         @inject('ILoggerModel') logger: ILoggerModel,
@@ -22,6 +26,34 @@ class EPGUpdater implements IEPGUpdater {
         this.log = logger.getLogger();
         this.config = configuration.getConfig();
         this.updateManage = updateManage;
+
+        this.updateManage.on('program updated', () => {
+            this.lastUpdatedTime = new Date().getTime();
+            this.notify();
+        });
+
+        this.updateManage.on('service updated', () => {
+            this.notify();
+        });
+
+        this.updateManage.on('event stream started', async () => {
+            this.log.system.info('event stream started');
+            this.retryCount = 0;
+            try {
+                await this.updateManage.updateAll();
+                this.notify();
+            } catch (err: any) {
+                this.log.system.error('updateAll error');
+            }
+            // updateAllが完了して以降、queueフラッシュ処理を有効にするために
+            // この位置でisEventStreamAliveをtrueにする
+            this.isEventStreamAlive = true;
+        });
+
+        this.updateManage.on('event stream aborted', () => {
+            this.log.system.info('has disconnected from the mirakurun');
+            this.isEventStreamAlive = false;
+        });
     }
 
     /**
@@ -29,47 +61,50 @@ class EPGUpdater implements IEPGUpdater {
      */
     public async start(): Promise<void> {
         this.log.system.info('start EPG update');
+
+        const updateInterval = this.config.epgUpdateIntervalTime * 60 * 1000;
+
+        // event streamを開始
         this.startEventStreamAnalysis();
-        await this.updateManage.updateAll().catch(err => {
-            this.log.system.fatal('epg initialization update error');
-            throw err;
-        });
-        this.notify();
 
-        const updateTime = this.config.epgUpdateIntervalTime;
-        setInterval(
-            async () => {
+        // 溜め込んだservice queueを設定ファイルで指定されたサイクルでDBへ保存
+        setInterval(async () => {
+            if (this.isEventStreamAlive === true) {
                 try {
-                    if (this.isEventStreamAlive === true) {
-                        if (this.updateManage.getServiceQueueSize() > 0) {
-                            // queue に更新情報が無ければ実行しない
-                            await this.updateManage.saveSevice();
-                        }
-                        if (this.updateManage.getProgramQueueSize() > 0) {
-                            // queue に更新情報が無ければ実行しない
-                            await this.updateManage.saveProgram();
-                        }
-                    } else {
-                        // stream event に何らかの問題が発生した
-                        this.startEventStreamAnalysis();
-                        await this.updateManage.updateAll();
-                    }
+                    await this.updateManage.saveService();
+                } catch (err: any) {
+                    this.log.system.error('service update error');
+                    this.log.system.error(err);
+                }
+            }
+        }, updateInterval);
 
-                    this.notify();
+        // 放送中や放送開始時刻が間近の番組は短いサイクルでDBへ保存する
+        // NOTE: DB負荷などを考慮しEvent受信と同時のDB反映は見合わせる
+        setInterval(async () => {
+            if (this.isEventStreamAlive === true) {
+                const now = new Date().getTime();
+                try {
+                    await this.updateManage.saveProgram(now + 5 * 60 * 1000);
+                    if (this.lastUpdatedTime + updateInterval <= now) {
+                        await this.updateManage.saveProgram();
+                        this.lastUpdatedTime = now;
+                    }
                 } catch (err: any) {
                     this.log.system.error('EPG update error');
                     this.log.system.error(err);
                 }
 
-                // 古い番組情報を削除
-                this.log.system.info('delete old programs');
-                await this.updateManage.deleteOldPrograms().catch(err => {
-                    this.log.system.error('delete old programs error');
-                    this.log.system.error(err);
-                });
-            },
-            updateTime * 60 * 1000,
-        );
+                if (this.lastDeletedTime + updateInterval <= now) {
+                    // 古い番組情報を削除
+                    await this.updateManage.deleteOldPrograms().catch(err => {
+                        this.log.system.error('delete old programs error');
+                        this.log.system.error(err);
+                    });
+                    this.lastDeletedTime = now;
+                }
+            }
+        }, 10 * 1000);
     }
 
     /**
@@ -77,12 +112,16 @@ class EPGUpdater implements IEPGUpdater {
      * stream に問題が発生した場合は this.isEventStreamAlive が false になる
      */
     private async startEventStreamAnalysis(): Promise<void> {
-        this.isEventStreamAlive = true;
-        try {
-            await this.updateManage.start();
-        } catch (err: any) {
-            this.log.system.error('destroy event stream');
-            this.isEventStreamAlive = false;
+        while (true) {
+            try {
+                this.log.system.info('trying to connecting to the mirakurun');
+                await this.updateManage.start();
+            } catch (err: any) {
+                this.log.system.error('destroy event stream');
+                this.retryCount++;
+                const retryInterval = Math.min(this.retryCount * 5 * 1000, 60 * 1000);
+                await Util.sleep(retryInterval);
+            }
         }
     }
 

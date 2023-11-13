@@ -4,7 +4,7 @@ import Reserve from '../../../db/entities/Reserve';
 
 interface IRecordingStreamCreator {
     setTuner(tuners: mapid.TunerDevice[]): void;
-    create(reserve: Reserve): Promise<http.IncomingMessage>;
+    create(reserve: Reserve, abortSignal: AbortSignal): Promise<http.IncomingMessage>;
     changeEndAt(reserve: Reserve): void;
 }
 
