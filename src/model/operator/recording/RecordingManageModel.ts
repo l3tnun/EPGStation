@@ -214,6 +214,9 @@ class RecordingManageModel implements IRecordingManageModel {
             for (const reserve of diff.update) {
                 const recorder = this.recordingIndex[reserve.id];
                 if (typeof recorder === 'undefined') {
+                    if (reserve.isSkip === true || reserve.isOverlap === true) {
+                        continue;
+                    }
                     // recorder がなかった
                     this.log.system.debug(`create new recorder: ${reserve.id}`);
                     const newRecorder = await this.provider();
@@ -226,6 +229,9 @@ class RecordingManageModel implements IRecordingManageModel {
                         this.log.system.error(`update recording error: ${reserve.id}`);
                         this.log.system.error(err);
                     });
+                    if (reserve.isSkip === true || reserve.isOverlap === true) {
+                        this.deleteRecording(reserve.id);
+                    }
                 }
             }
         }
