@@ -1,7 +1,6 @@
 import { inject, injectable } from 'inversify';
 import * as apid from '../../../../api';
 import * as mapid from '../../../../node_modules/mirakurun/api';
-import Reserve from '../../../db/entities/Reserve';
 import IRecordedDB from '../../db/IRecordedDB';
 import IReserveDB from '../../db/IReserveDB';
 import IRecordingEvent from '../../event/IRecordingEvent';
@@ -59,15 +58,15 @@ class RecordingManageModel implements IRecordingManageModel {
      */
     private setEvents(): void {
         this.recordingEvent.setCancelPrepRecording(reserve => {
-            this.deleteRecording(reserve);
+            this.deleteRecording(reserve.id);
         });
 
         this.recordingEvent.setPrepRecordingFailed(reserve => {
-            this.deleteRecording(reserve);
+            this.deleteRecording(reserve.id);
         });
 
         this.recordingEvent.setRecordingFailed(async reserve => {
-            this.deleteRecording(reserve);
+            this.deleteRecording(reserve.id);
 
             const recordeds = await this.recordedDB.findReserveId(reserve.id);
 
@@ -88,17 +87,17 @@ class RecordingManageModel implements IRecordingManageModel {
         });
 
         this.recordingEvent.setFinishRecording(reserve => {
-            this.deleteRecording(reserve);
+            this.deleteRecording(reserve.id);
         });
     }
 
     /**
      * 録画終了時に呼ばれる
-     * @param reserve: Reserve
+     * @param reserveId: Reserve Id
      */
-    private deleteRecording(reserve: Reserve): void {
-        this.log.system.debug(`delete recording index: ${reserve.id}`);
-        delete this.recordingIndex[reserve.id];
+    private deleteRecording(reserveId: apid.ReserveId): void {
+        this.log.system.debug(`delete recording index: ${reserveId}`);
+        delete this.recordingIndex[reserveId];
     }
 
     /**
@@ -215,6 +214,9 @@ class RecordingManageModel implements IRecordingManageModel {
             for (const reserve of diff.update) {
                 const recorder = this.recordingIndex[reserve.id];
                 if (typeof recorder === 'undefined') {
+                    if (reserve.isSkip === true || reserve.isOverlap === true) {
+                        continue;
+                    }
                     // recorder がなかった
                     this.log.system.debug(`create new recorder: ${reserve.id}`);
                     const newRecorder = await this.provider();
@@ -227,6 +229,9 @@ class RecordingManageModel implements IRecordingManageModel {
                         this.log.system.error(`update recording error: ${reserve.id}`);
                         this.log.system.error(err);
                     });
+                    if (reserve.isSkip === true || reserve.isOverlap === true) {
+                        this.deleteRecording(reserve.id);
+                    }
                 }
             }
         }
@@ -237,7 +242,7 @@ class RecordingManageModel implements IRecordingManageModel {
                 const recorder = this.recordingIndex[reserve.id];
                 if (typeof recorder !== 'undefined') {
                     this.log.system.debug(`delete recording: ${reserve.id}`);
-                    await recorder.cancel(false).catch(err => {
+                    await this.cancel(reserve.id, false).catch(err => {
                         this.log.system.error(`delete recording error: ${reserve.id}`);
                         this.log.system.error(err);
                     });
@@ -262,13 +267,16 @@ class RecordingManageModel implements IRecordingManageModel {
      * @return Promise<void>
      */
     public async cancel(reserveId: apid.ReserveId, isPlanToDelete: boolean): Promise<void> {
-        if (typeof this.recordingIndex[reserveId] === 'undefined') {
+        const recording = this.recordingIndex[reserveId];
+        if (typeof recording === 'undefined') {
             // 存在しないのでスルー
             return;
         }
 
+        this.deleteRecording(reserveId);
+
         this.log.system.info(`cancel recording reserveId: ${reserveId}, isPlanToDelete: ${isPlanToDelete}`);
-        return this.recordingIndex[reserveId].cancel(isPlanToDelete);
+        return recording.cancel(isPlanToDelete);
     }
 
     /**
