@@ -19,7 +19,7 @@ kodiHosts:
     - name: kodi1
       host: http://KodiHost:Port
       user: user
-      pass: password
+      password: password
 ```
 
 ## Kodi 本体から録画済み番組を再生する
