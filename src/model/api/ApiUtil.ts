@@ -40,7 +40,7 @@ export default class ApiUtil implements IApiUtil {
     /**
      * kodi へビデオリンクを送信する
      * @param source: ビデオリンク
-     * @param hkodiInfo: KodiInfo
+     * @param kodiInfo: KodiInfo
      */
     public async sendToKodi(source: string, kodiInfo: KodiInfo): Promise<void> {
         const option: AxiosRequestConfig = {
