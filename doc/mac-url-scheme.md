@@ -18,7 +18,7 @@ urlscheme:
 
 ## AppleScript でのカスタム URL Scheme アプリの作成
 
-[Quiita: AppleScript でカスタム URL スキーム](http://qiita.com/CorecaraBiz/items/9a1fc60aada31858d582) を参考にしていま
+[Qiita: AppleScript でカスタム URL スキーム](http://qiita.com/CorecaraBiz/items/9a1fc60aada31858d582) を参考にしていま
 す。詳しい解説はそちらを見てください
 
 Safari での挙動についてはこちらの [issue](https://github.com/l3tnun/EPGStation/issues/324#issuecomment-633255822) を参照
