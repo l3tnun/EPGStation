@@ -20,3 +20,4 @@ dist
 data/upload/*
 data/key/*
 !.gitkeep
+.idea
