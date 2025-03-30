@@ -71,6 +71,10 @@ export default class DBOperator implements IDBOperator {
                 subscribers: [subscriber],
                 migrationsRun: true,
                 migrations: migrations,
+                ssl: this.config.mysql.enable_ssl === true ? {
+                    minVersion: 'TLSv1.2',
+                    ca: this.config.mysql.ca_path || undefined
+                  } : null,
             });
         } else {
             throw new Error('DBTypeError');

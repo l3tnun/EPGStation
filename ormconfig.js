@@ -39,6 +39,8 @@ switch (config.dbtype) {
             password: config.mysql.password,
             database: config.mysql.database,
             charset: typeof config.mysql.charset === 'undefined' ? 'utf8mb4' : config.mysql.charset,
+            enable_ssl: config.mysql.enable_ssl,
+            ca_path: config.mysql.ca_path || undefined,
             bigNumberStrings: false,
             synchronize: false,
             logging: false,

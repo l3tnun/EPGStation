@@ -168,6 +168,8 @@ dbType: mysql
 | password       | string | yes  | DB 接続用のパスワード        |
 | database       | string | yes  | 使用するデータベース名       |
 | charset        | string | no   | 使用する文字コード           |
+| enable_ssl     | boolean | no   | TLS接続でDBサーバに接続するか |
+| ca_path        | string | no   | TLS接続時に指定するCA証明書のファイルパス | 
 
 ```yaml
 mysql:
