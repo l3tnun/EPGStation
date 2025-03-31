@@ -191,6 +191,7 @@ dbType: mysql
 | password       | string | yes  | DB 接続用のパスワード        |
 | database       | string | yes  | 使用するデータベース名       |
 | charset        | string | no   | 接続の文字コード。未設定のときは utf8mb4 |
+| ssl            | object | no   | TLS で接続するための設定。指定した値がそのまま MySQL ドライバー（mysql2）の `ssl` として渡される。省略すると TLS を使わない |
 
 ```yaml
 mysql:

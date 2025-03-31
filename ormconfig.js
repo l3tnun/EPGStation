@@ -50,6 +50,8 @@ switch (config.dbtype) {
             password: config.mysql.password,
             database: config.mysql.database,
             charset: typeof config.mysql.charset === 'undefined' ? 'utf8mb4' : config.mysql.charset,
+            // ssl は設定されたときだけ渡す。省略時は TLS を使わず接続する。
+            ...(typeof config.mysql.ssl === 'undefined' ? {} : { ssl: config.mysql.ssl }),
             bigNumberStrings: false,
             synchronize: false,
             logging: false,

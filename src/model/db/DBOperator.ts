@@ -106,6 +106,8 @@ export default class DBOperator implements IDBOperator {
                 subscribers: [subscriber],
                 migrationsRun: true,
                 migrations: migrations,
+                // ssl は設定されたときだけ渡す。省略時は option に含めず、TLS を使わず接続する。
+                ...(typeof this.config.mysql.ssl === 'undefined' ? {} : { ssl: this.config.mysql.ssl }),
             });
         } else {
             throw new Error('DBTypeError');

@@ -88,6 +88,7 @@ export default interface IConfigFile {
         password: string;
         database: string;
         charset?: string;
+        ssl?: unknown;
     };
     postgres?: {
         host: string;
