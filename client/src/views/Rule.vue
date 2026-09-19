@@ -21,7 +21,11 @@
                 <v-container>
                     <div v-if="ruleState.getRules().length > 0" v-bind:style="contentWrapStyle">
                         <RuleItems :rules="ruleState.getRules()" :isEditMode.sync="isEditMode" v-on:selected="selectItem"></RuleItems>
-                        <Pagination :total="ruleState.getTotal()" :pageSize="settingValue.rulesLength"></Pagination>
+                        <Pagination
+                            :total="ruleState.getTotal()"
+                            :pageSize="settingValue.rulesLength"
+                            :isEnableExtendedPagination="settingValue.isEnableExtendedPagination"
+                        ></Pagination>
                     </div>
                     <v-btn v-on:click="addRule" fab dark fixed bottom right color="pink">
                         <v-icon>mdi-plus</v-icon>

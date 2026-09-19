@@ -296,6 +296,14 @@
                                     <v-spacer></v-spacer>
                                     <v-select :items="rulesLengthItems" v-model="storageModel.tmp.rulesLength" class="guide-time" :menu-props="{ auto: true }"></v-select>
                                 </div>
+                                <div class="my-2 d-flex flex-row align-center">
+                                    <div>
+                                        <v-list-item-title class="subtitle-1">拡張ページネーションの有効化</v-list-item-title>
+                                        <v-list-item-subtitle>ルール一覧のページ移動を拡張ページネーションに置き換える</v-list-item-subtitle>
+                                    </div>
+                                    <v-spacer></v-spacer>
+                                    <v-switch v-model="storageModel.tmp.isEnableExtendedPagination" value></v-switch>
+                                </div>
                             </v-list-item-content>
                         </v-list-item>
 

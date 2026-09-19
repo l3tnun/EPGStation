@@ -1,13 +1,27 @@
 <template>
     <div>
-        <v-pagination v-if="total > pageSize" v-model="page" :circle="false" :length="totalPages" :total-visible="12" v-on:input="onMovePage" class="normal px-1"></v-pagination>
-        <div class="mobile">
-            <MobilePagination :pageSize="pageSize" :total="total"></MobilePagination>
-        </div>
+        <template v-if="isEnableExtendedPagination === true">
+            <ExtendedPagination :pageSize="pageSize" :total="total"></ExtendedPagination>
+        </template>
+        <template v-else>
+            <v-pagination
+                v-if="total > pageSize"
+                v-model="page"
+                :circle="false"
+                :length="totalPages"
+                :total-visible="12"
+                v-on:input="onMovePage"
+                class="normal px-1"
+            ></v-pagination>
+            <div class="mobile">
+                <MobilePagination :pageSize="pageSize" :total="total"></MobilePagination>
+            </div>
+        </template>
     </div>
 </template>
 
 <script lang="ts">
+import ExtendedPagination from '@/components/pagination/ExtendedPagination.vue';
 import MobilePagination from '@/components/pagination/MobilePagination.vue';
 import Util from '@/util/Util';
 import { cloneDeep } from 'lodash';
@@ -15,6 +29,7 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 
 @Component({
     components: {
+        ExtendedPagination,
         MobilePagination,
     },
 })
@@ -30,6 +45,12 @@ export default class Pagination extends Vue {
         required: true,
     })
     public total!: number;
+
+    // 拡張ページネーションを有効にするか (ルール一覧のみ)
+    @Prop({
+        default: false,
+    })
+    public isEnableExtendedPagination!: boolean;
 
     /**
      * pagination page

@@ -35,6 +35,7 @@ export interface ISettingValue {
     isEnableEncodingSettingWhenCreateRule: boolean;
     isCheckDeleteOriginalAfterEncode: boolean;
     rulesLength: number;
+    isEnableExtendedPagination: boolean; // ルール一覧のページネーションを拡張するか
     isForceEnableSubtitleStroke: boolean; // 字幕縁取りを強制するか
 }
 
