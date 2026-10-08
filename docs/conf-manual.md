@@ -191,7 +191,7 @@ dbType: mysql
 | password       | string | yes  | DB 接続用のパスワード        |
 | database       | string | yes  | 使用するデータベース名       |
 | charset        | string | no   | 接続の文字コード。未設定のときは utf8mb4 |
-| ssl            | object | no   | TLS で接続するための設定。指定した値がそのまま MySQL ドライバー（mysql2）の `ssl` として渡される。省略すると TLS を使わない |
+| ssl            | object | no   | TLS で接続するための設定。指定した値がそのまま MySQL ドライバー（mysql2）の `ssl` として渡される。省略すると TLS を使わない。詳しくは下の「MySQL へ TLS で接続する」を参照 |
 
 ```yaml
 mysql:
@@ -200,6 +200,47 @@ mysql:
     user: username
     password: password
     database: databaseName
+```
+
+#### MySQL へ TLS で接続する（`ssl`）
+
+`ssl` を指定すると、MySQL との通信を TLS で暗号化します。値は MySQL ドライバー（mysql2）の `ssl` にそのまま渡されます（Node.js の `tls.createSecureContext()` の option と同じ形です）。サーバーの接続とマイグレーション用の `ormconfig.js` の両方で同じ値が使われます。省略すると TLS を使わず接続します。
+
+mysql2 が読む項目は次のとおりです。
+
+| 項目               | 種類    | 説明                                                                                         |
+| ------------------ | ------- | -------------------------------------------------------------------------------------------- |
+| ca                 | string  | サーバー証明書を検証するための CA 証明書（PEM）。省略すると Node.js が持つ CA で検証する      |
+| cert               | string  | クライアント証明書（PEM）。MySQL がクライアント証明書を要求するときに指定する                |
+| key                | string  | クライアント証明書の秘密鍵（PEM）                                                            |
+| passphrase         | string  | 秘密鍵のパスフレーズ                                                                         |
+| ciphers            | string  | 使用する暗号スイート                                                                         |
+| minVersion         | string  | 使用する TLS の最低の版（例: `TLSv1.2`）                                                     |
+| maxVersion         | string  | 使用する TLS の最高の版                                                                      |
+| rejectUnauthorized | boolean | サーバー証明書を検証するか。省略すると `true`（検証する）                                    |
+| verifyIdentity     | boolean | 接続先のホスト名が証明書に含まれていることを確認するか。省略すると `false`（確認しない）     |
+
+`ssl` には、`Amazon RDS` のように mysql2 が用意している設定の名前（文字列）も書けます。`true` は書けません。証明書の検証に特別な設定が要らないときは `ssl: {}` と書きます。
+
+-   `ca`・`cert`・`key` には、証明書や鍵の**内容**（PEM の文字列）を書きます。ファイルのパスを書いても読み込まれません。YAML の `|` を使うと、PEM を複数行のまま書けます。環境変数から読むときは `!env` を付けます（環境変数の値に PEM を入れておきます）。
+-   `verifyIdentity` は既定では `false` で、接続先のホスト名が証明書と一致するかを確認しません。RDS などのマネージドな DB へ接続するときは、`verifyIdentity: true` を指定してください。そのとき `host` は証明書に含まれる名前にする必要があります。
+-   `rejectUnauthorized: false` を指定すると、証明書を検証しません。通信は暗号化されますが、接続先が本物であることは確認されないため、通信の盗聴や成りすましを防げません。検証用の環境以外では指定しないでください。
+
+```yaml
+mysql:
+    host: db.example.com
+    port: 3306
+    user: username
+    password: <password>
+    database: databaseName
+    ssl:
+        # CA 証明書の内容（ファイルのパスではない）
+        ca: |
+            -----BEGIN CERTIFICATE-----
+            MIID...（省略）...
+            -----END CERTIFICATE-----
+        minVersion: TLSv1.2
+        verifyIdentity: true
 ```
 
 囲み文字・絵文字などの 4 byte 文字を検索やルールのキーワードに使うには、接続の `charset` とデータベースの table の文字コードを両方 `utf8mb4` にする必要があります。`utf8`（utf8mb3）のままだと、大小区別をしない正規表現検索がエラーになります。`utf8mb4` にしても、大小区別をする正規表現検索では 4 byte 文字が byte 単位で照合されるため、`.` は 4 byte 文字に一致せず、4 byte 文字の範囲（`[X-Y]`）は MySQL ではエラーになります。確認方法と変更手順は [MySQL(MariaDB) の文字コード設定について](mysql-mirakurun-3.9.0-beta.24.md) を参照してください。

@@ -17,6 +17,17 @@ dbtype: sqlite
 #     port: 3306
 #     # UNIX ソケットで接続する場合に指定する（指定すると host と port は使われない）
 #     socketPath: /var/run/mysqld/mysqld.sock
+#     # TLS で接続する場合に指定する。値は mysql2 の ssl option（tls.createSecureContext と同じ形）。
+#     # ca・cert・key にはファイルのパスではなく証明書・鍵の内容（PEM）を書く。
+#     # verifyIdentity: true で接続先のホスト名も確認する（既定では確認しない）。
+#     # rejectUnauthorized: false にすると証明書を検証しなくなる。
+#     ssl:
+#         ca: |
+#             -----BEGIN CERTIFICATE-----
+#             ...
+#             -----END CERTIFICATE-----
+#         minVersion: TLSv1.2
+#         verifyIdentity: true
 #     # 値を環境変数から読むときは !env を付ける（例: user: !env MYSQL_USER）
 #     user: epgstation
 #     password: epgstation
