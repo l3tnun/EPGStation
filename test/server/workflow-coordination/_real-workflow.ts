@@ -159,6 +159,36 @@ export const flush = (): Promise<void> => new Promise(resolve => setImmediate(re
 export const eventually = (assertion: () => Promise<void> | void, timeout = 15_000): Promise<void> =>
     vi.waitFor(assertion, { interval: 50, timeout });
 
+/**
+ * 外部コマンドとサムネイルの実行待ち行列。本物の PromiseQueue に積み、受け付けた処理の終わりを後始末から待てるようにする。
+ * どちらの処理も実の子 process を起動し、一時 directory の中へ書く（外部コマンドの記録、サムネイルの file）。処理は子 process の
+ * 終了で終わる（実行時間の制限で打ち切ったときは、終了の確認を終えた時点で終わる）ので、`close` は、それまでに受け付けた処理が
+ * すべて終わるのを待つ。`close` の後に届いた処理は実行しない。後始末の後に起動した子 process が、消している途中や消した後の
+ * 一時 directory へ書かないようにするため。
+ */
+const createClosableQueue = () => {
+    const queue = new PromiseQueue();
+    const accepted = new Set<Promise<void>>();
+    let closed = false;
+    return {
+        add<T>(job: () => Promise<T>): Promise<T> {
+            if (closed) return new Promise<T>(() => undefined);
+            const result = queue.add(job) as Promise<T>;
+            const settled = result.then(
+                () => undefined,
+                () => undefined,
+            );
+            accepted.add(settled);
+            void settled.then(() => accepted.delete(settled));
+            return result;
+        },
+        close: async (): Promise<void> => {
+            closed = true;
+            await Promise.all([...accepted]);
+        },
+    };
+};
+
 export const createWorld = async (source: DataSource, root: string, options: WorldOptions = {}) => {
     const log = makeLogger();
     const loggerModel = { getLogger: () => log };
@@ -263,20 +293,22 @@ export const createWorld = async (source: DataSource, root: string, options: Wor
         wired.recordingUtil,
     );
     const tags = new RecordedTagManadeModel(loggerModel, recordedTagDB, events.recordedTag);
+    const thumbnailQueue = createClosableQueue();
     const thumbnail = new ThumbnailManageModel(
         loggerModel,
         configuration,
-        new PromiseQueue(),
+        thumbnailQueue,
         recordedDB,
         videoFileDB,
         thumbnailDB,
         events.thumbnail,
         videoUtil,
     );
+    const hookQueue = createClosableQueue();
     const hooks = new ExternalCommandManageModel(
         loggerModel,
         configuration,
-        new PromiseQueue(),
+        hookQueue,
         { findId: vi.fn(async () => ({ halfWidthName: 'synthetic-channel', name: 'synthetic-channel' })) },
         recordedDB,
         videoUtil,
@@ -342,10 +374,14 @@ export const createWorld = async (source: DataSource, root: string, options: Wor
         videoFileDB,
         videoUtil,
         wired,
-        /** 後始末（scheduler・録画・tuner server を止める）。 */
+        /**
+         * 後始末（scheduler・録画・tuner server を止め、受け付けた外部コマンドとサムネイルの子 process の終了を待つ）。
+         * 呼び出し元は、この後に一時 directory を消す。
+         */
         shutdown: async () => {
             await wired.shutdown();
             await tuner.close();
+            await Promise.all([hookQueue.close(), thumbnailQueue.close()]);
         },
     };
 };
