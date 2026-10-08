@@ -123,10 +123,7 @@ describe('Requirements 1.6-1.14 Settings control matrix implementation contract'
       ['isCheckAvoidDuplicate', 'ルール作成時に録画済み番組を排除をチェックする'],
       ['isEnableEncodingSettingWhenCreateRule', 'ルール作成時にエンコード設定を自動で行う'],
       ['isCheckDeleteOriginalAfterEncode', 'ルール作成時に元ファイルの自動削除をチェックする'],
-      [
-        'isEnableExtendedPagination',
-        'ルール一覧で先頭・最終ページへの移動とページ数の入力ができるページネーションを使う',
-      ],
+      ['isEnableExtendedPagination', 'ルール一覧のページ移動を拡張ページネーションに置き換える'],
       ['isForceEnableSubtitleStroke', 'aribb24.js 使用時に有効になります'],
     ])
   })

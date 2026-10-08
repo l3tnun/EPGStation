@@ -32,9 +32,7 @@ describe('Requirement 1.22 extended pagination switch in the rule section', () =
     const toggle = screen.getByRole('switch', { name: 'ルール 拡張ページネーションの有効化' })
     expect(toggle).not.toBeChecked()
     expect(
-      screen.getByText(
-        'ルール一覧で先頭・最終ページへの移動とページ数の入力ができるページネーションを使う',
-      ),
+      screen.getByText('ルール一覧のページ移動を拡張ページネーションに置き換える'),
     ).toBeVisible()
 
     const pageSize = screen.getByRole('combobox', { name: 'ルール 表示件数' })

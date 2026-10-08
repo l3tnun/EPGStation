@@ -152,7 +152,7 @@ export const SETTINGS_CONTROL_ROWS_BACK = [
   {
     section: 'ルール',
     label: '拡張ページネーションの有効化',
-    subtitle: 'ルール一覧で先頭・最終ページへの移動とページ数の入力ができるページネーションを使う',
+    subtitle: 'ルール一覧のページ移動を拡張ページネーションに置き換える',
     key: 'isEnableExtendedPagination',
     controlType: 'switch',
     tmpTarget: 'isEnableExtendedPagination',

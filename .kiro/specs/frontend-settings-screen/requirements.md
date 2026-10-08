@@ -39,7 +39,7 @@
 19. 検索 section の `自動スクロール ` control は `isEnableAutoScrollWhenEditingRule` を一時編集し、保存後は Search Rule feature が `/search?rule=<ruleId>` の EPG rule edit 初期自動検索だけに使用する値として永続化する。この control は manual search、query-driven search、time-specified rule edit、history restoration、検索結果 header の「録画設定へ移動」の挙動を変えてはならない。
 20. Settings 画面のカスタム switch は thumb と track の色、thumb position の変化に 150ms 程度の transition を持ち、checked と unchecked の切替が滑らかに見える表示を維持する。
 21. `guideLength`、`reservesLength`、`recordingLength`、`recordedLength`、`searchLength`、`rulesLength` など数値 select の各選択肢は、素の数値だけでなく `24時間`、`300件` のように単位 suffix（`時間 ` または `件 `）を付けて表示する。どの select が時間単位でどれが件数単位かを選択肢自体から判別できるようにする。
-22. ルール section は `表示件数`（`rulesLength`）の直後に、`拡張ページネーションの有効化 ` switch（`isEnableExtendedPagination`、helper text `ルール一覧で先頭・最終ページへの移動とページ数の入力ができるページネーションを使う `）を表示する。この switch は一時編集値 `tmp.isEnableExtendedPagination` を編集し、保存するまで Rule list の pagination を変えない。
+22. ルール section は `表示件数`（`rulesLength`）の直後に、`拡張ページネーションの有効化 ` switch（`isEnableExtendedPagination`、helper text `ルール一覧のページ移動を拡張ページネーションに置き換える `）を表示する。この switch は一時編集値 `tmp.isEnableExtendedPagination` を編集し、保存するまで Rule list の pagination を変えない。
 
 ### 要求 2: 一時編集と保存
 

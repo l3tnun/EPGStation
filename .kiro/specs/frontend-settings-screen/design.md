@@ -275,7 +275,7 @@ Settings screen は backend API を呼ばない。全 control は `SettingsPage`
 | 検索 | エンコードの自動設定 | `isEnableEncodingSettingWhenCreateRule` | switch | boolean | always | `tmp.isEnableEncodingSettingWhenCreateRule` |
 | 検索 | 元ファイルの自動削除 | `isCheckDeleteOriginalAfterEncode` | switch | boolean | always | `tmp.isCheckDeleteOriginalAfterEncode` |
 | ルール | 表示件数 | `rulesLength` | select | 1-100 | always | `tmp.rulesLength` |
-| ルール | 拡張ページネーションの有効化 | `isEnableExtendedPagination` | switch | boolean | always | `tmp.isEnableExtendedPagination`。helper text は `ルール一覧で先頭・最終ページへの移動とページ数の入力ができるページネーションを使う `。保存後の値は Rule list だけが参照する。 |
+| ルール | 拡張ページネーションの有効化 | `isEnableExtendedPagination` | switch | boolean | always | `tmp.isEnableExtendedPagination`。helper text は `ルール一覧のページ移動を拡張ページネーションに置き換える `。保存後の値は Rule list だけが参照する。 |
 | ビデオプレーヤ | 字幕の縁取りを強制する | `isForceEnableSubtitleStroke` | switch | boolean | always | `tmp.isForceEnableSubtitleStroke` |
 
 ### 既存不正値の表示規則
