@@ -18,12 +18,16 @@
 #   - test/server/**/*.test.ts の generic-password は `synthetic-*` と明示された
 #     test fixture の literal で実 credential ではない。
 config/config.yml.template:generic-password:17
+config/config.yml.template:generic-password:22
 docs/conf-manual.md:generic-password:177
+docs/conf-manual.md:generic-password:200
 docs/kodi.md:generic-password:22
 docs/mysql-mirakurun-3.9.0-beta.24.md:generic-password:58
 test/server/configuration/configuration.spec.test.ts:generic-password:238
 test/server/configuration/configuration.spec.test.ts:generic-password:241
 test/server/configuration/configuration.spec.test.ts:generic-password:242
+test/server/configuration/configuration.spec.test.ts:generic-password:245
+test/server/configuration/configuration.spec.test.ts:generic-password:246
 test/server/configuration/http.integration.test.ts:generic-password:59
 test/server/configuration/http.integration.test.ts:generic-password:60
 test/server/fixtures/configuration/synthetic-tls-key.pem:private-key:1
@@ -39,5 +43,8 @@ test/server/persistence/connection.spec.test.ts:generic-password:189
 test/server/persistence/connection.spec.test.ts:generic-password:224
 test/server/persistence/connection.spec.test.ts:generic-password:251
 test/server/persistence/connection.spec.test.ts:generic-password:296
+test/server/persistence/connection.spec.test.ts:generic-password:234
+test/server/persistence/connection.spec.test.ts:generic-password:269
+test/server/persistence/connection.spec.test.ts:generic-password:452
 test/server/service-interface/fixtures/synthetic-mtls.ts:private-key:41
 test/server/service-interface/fixtures/synthetic-mtls.ts:private-key:89
