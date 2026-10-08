@@ -79,6 +79,7 @@ describe('DBOperator connection contract characterization', () => {
                 migrationsRun: true,
                 subscribers: [join(compiledRoot, 'dist', 'db', 'subscribers', '**', '*.js')],
                 synchronize: false,
+                timeout: 5000,
                 type: 'better-sqlite3',
             },
         ]);
@@ -385,10 +386,38 @@ describe('DBOperator connection contract characterization', () => {
                 migrationsRun: true,
                 subscribers: [join(compiledRoot, 'dist', 'db', 'subscribers', '**', '*.js')],
                 synchronize: false,
+                timeout: 5000,
                 type: 'better-sqlite3',
             },
         ]);
         expect(candidate.manager.query).not.toHaveBeenCalled();
+    });
+
+    it.each([
+        ['a configured value', { busyTimeout: 200 }, 200],
+        ['zero (do not wait)', { busyTimeout: 0 }, 0],
+        ['omitted', {}, 5000],
+        ['omitted with sqlite.wal set', { wal: true }, 5000],
+    ])(
+        '[PERSIST-1.14-BUSY-TIMEOUT] passes sqlite.busyTimeout as the SQLite timeout option (%s)',
+        async (_scenario, sqlite, expected) => {
+            const candidate = createDataSourceDouble();
+            const options = await captureCandidate(candidate);
+
+            await createOperator({ dbtype: 'sqlite', sqlite }, createLogger()).getConnection();
+
+            expect(options).toHaveLength(1);
+            expect((options[0] as { timeout?: unknown }).timeout).toBe(expected);
+        },
+    );
+
+    it('[PERSIST-1.14-BUSY-TIMEOUT-UNCHANGED] passes an invalid sqlite.busyTimeout to the driver without checking it', async () => {
+        const candidate = createDataSourceDouble();
+        const options = await captureCandidate(candidate);
+
+        await createOperator({ dbtype: 'sqlite', sqlite: { busyTimeout: -1.5 } }, createLogger()).getConnection();
+
+        expect((options[0] as { timeout?: unknown }).timeout).toBe(-1.5);
     });
 
     it.each([

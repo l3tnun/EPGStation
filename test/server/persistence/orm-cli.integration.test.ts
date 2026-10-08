@@ -339,3 +339,17 @@ describe('typeorm migration CLI with the repository ormconfig against a REQUIRE 
         MYSQL_FIXTURE_LIFECYCLE_TIMEOUT_MS,
     );
 });
+
+describe('ormconfig.js SQLite busyTimeout option', () => {
+    it.each([
+        ['a configured value', 'sqlite:\n    busyTimeout: 200\n', 200],
+        ['omitted', 'sqlite:\n    wal: false\n', 5000],
+    ])('[PERSIST-1.14-ORM-CLI-BUSY-TIMEOUT] passes sqlite.busyTimeout as the timeout option (%s)', async (_scenario, yaml, expected) => {
+        const { project } = await createProject('sqlite', yaml);
+
+        const options = await ormOptions(project);
+
+        expect(options.type).toBe('better-sqlite3');
+        expect(options.timeout).toBe(expected);
+    });
+});
