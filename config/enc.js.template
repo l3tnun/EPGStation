@@ -1,4 +1,4 @@
-const spawn = require('child_process').spawn;
+import { spawn } from 'child_process';
 const ffmpeg = process.env.FFMPEG;
 
 const input = process.env.INPUT;

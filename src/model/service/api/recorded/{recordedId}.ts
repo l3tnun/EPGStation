@@ -1,14 +1,18 @@
 import { Operation } from 'express-openapi';
-import IRecordedApiModel from '../../../api/recorded/IRecordedApiModel';
-import container from '../../../ModelContainer';
-import * as api from '../../api';
+import IRecordedApiModel from '../../../api/recorded/IRecordedApiModel.js';
+import container from '../../../ModelContainer.js';
+import * as api from '../../api.js';
 
+/**
+ * `GET /recorded/{recordedId}` ハンドラ。`IRecordedApiModel#get` で録画詳細を取得する。
+ * `get` が `null`（該当録画なし）を返した場合は 404、それ以外の例外は 500 として返す。
+ */
 export const get: Operation = async (req, res) => {
     const recordedApiModel = container.get<IRecordedApiModel>('IRecordedApiModel');
 
     try {
         const recorded = await recordedApiModel.get(
-            parseInt(req.params.recordedId, 10),
+            parseInt(api.pathParam(req, 'recordedId'), 10),
             req.query.isHalfWidth as any as boolean,
         );
         if (recorded === null) {
@@ -63,11 +67,12 @@ get.apiDoc = {
     },
 };
 
+/** `DELETE /recorded/{recordedId}` ハンドラ。`IRecordedApiModel#delete` で録画情報を削除する。 */
 export const del: Operation = async (req, res) => {
     const recordedApiModel = container.get<IRecordedApiModel>('IRecordedApiModel');
 
     try {
-        await recordedApiModel.delete(parseInt(req.params.recordedId, 10));
+        await recordedApiModel.delete(parseInt(api.pathParam(req, 'recordedId'), 10));
         api.responseJSON(res, 200, { code: 200 });
     } catch (err: any) {
         api.responseServerError(res, err.message);

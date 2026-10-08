@@ -1,8 +1,13 @@
 import { Operation } from 'express-openapi';
-import IReserveApiModel from '../../../api/reserve/IReserveApiModel';
-import container from '../../../ModelContainer';
-import * as api from '../../api';
+import IReserveApiModel from '../../../api/reserve/IReserveApiModel.js';
+import container from '../../../ModelContainer.js';
+import * as api from '../../api.js';
 
+/**
+ * `POST /reserves/update` ハンドラ。予約の更新（全ルール予約を最新の番組情報で再計算する処理）を
+ * 手動で始める trigger で、`IReserveApiModel#updateAll` が更新の処理を開始した時点で 200 を返す。
+ * 更新の完了は待たない。開始後に更新が失敗しても、このハンドラの応答には反映されない。
+ */
 export const post: Operation = async (_req, res) => {
     const reserveApiModel = container.get<IReserveApiModel>('IReserveApiModel');
 

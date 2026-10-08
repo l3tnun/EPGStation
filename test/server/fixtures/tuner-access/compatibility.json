@@ -1,0 +1,75 @@
+{
+    "fixtures": [
+        {
+            "label": "Mirakurun minimum",
+            "product": "mirakurun",
+            "version": "3.8.0",
+            "statusProbe": { "status": 200, "body": { "version": "3.8.0" } },
+            "futureFields": false
+        },
+        {
+            "label": "mirakc minimum",
+            "product": "mirakc",
+            "version": "3.1.10",
+            "statusProbe": { "status": 404 },
+            "futureFields": false
+        },
+        {
+            "label": "Mirakurun future",
+            "product": "mirakurun",
+            "version": "8.4.2",
+            "statusProbe": { "status": 200, "body": { "version": "8.4.2", "futureCapability": true } },
+            "futureFields": true
+        },
+        {
+            "label": "mirakc future",
+            "product": "mirakc",
+            "version": "9.7.5",
+            "statusProbe": { "status": 404, "body": { "ignored": true } },
+            "futureFields": true
+        }
+    ],
+    "tuner": {
+        "index": 0,
+        "name": "synthetic-tuner",
+        "types": ["GR"],
+        "isAvailable": true,
+        "isRemote": false,
+        "isFree": true,
+        "isUsing": false,
+        "isFault": false
+    },
+    "service": {
+        "id": 101,
+        "serviceId": 102,
+        "networkId": 10,
+        "name": "synthetic-service",
+        "type": 1,
+        "hasLogoData": true,
+        "channel": { "type": "GR", "channel": "13" }
+    },
+    "program": {
+        "id": 201,
+        "eventId": 202,
+        "serviceId": 102,
+        "networkId": 10,
+        "startAt": 1000,
+        "duration": 60000,
+        "isFree": true,
+        "name": "synthetic-program",
+        "audio": { "componentType": 3, "samplingRate": 48000, "langs": ["jpn"] },
+        "extended": [{ "description": "synthetic-key", "text": "synthetic-value" }]
+    },
+    "expectedProgram": {
+        "id": 201,
+        "eventId": 202,
+        "serviceId": 102,
+        "networkId": 10,
+        "startAt": 1000,
+        "duration": 60000,
+        "isFree": true,
+        "name": "synthetic-program",
+        "audios": [{ "componentType": 3, "samplingRate": 48000, "langs": ["jpn"] }],
+        "extended": { "synthetic-key": "synthetic-value" }
+    }
+}

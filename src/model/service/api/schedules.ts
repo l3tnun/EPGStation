@@ -1,9 +1,16 @@
 import { Operation } from 'express-openapi';
-import * as apid from '../../../../api';
-import IScheduleApiModel from '../../api/schedule/IScheduleApiModel';
-import container from '../../ModelContainer';
-import * as api from '../api';
+import type * as apid from '../../../../api.js';
+import IScheduleApiModel from '../../api/schedule/IScheduleApiModel.js';
+import container from '../../ModelContainer.js';
+import * as api from '../api.js';
 
+/**
+ * `GET /schedules` ハンドラ。期間（startAt/endAt）と種別フィルタ（GR/BS/CS/SKY/isFree等、
+ * すべてquery）から検索条件を組み立て、`IScheduleApiModel#getSchedules` で番組表情報を返す。
+ * GR/BS/CS/SKYはrequiredなquery（省略不可）だが、BS4Kは任意（`req.query.BS4K`が`boolean`の
+ * ときだけoptionへ渡す）。既存clientがBS4Kを付けずに呼んだ場合はoption.BS4Kが`undefined`のまま
+ * になり、従来どおりGR/BS/CS/SKYの4種別だけで絞り込まれる。
+ */
 export const get: Operation = async (req, res) => {
     const scheduleApiModel = container.get<IScheduleApiModel>('IScheduleApiModel');
 
@@ -20,6 +27,9 @@ export const get: Operation = async (req, res) => {
         };
         if (typeof req.query.isFree === 'boolean') {
             option.isFree = req.query.isFree;
+        }
+        if (typeof req.query.BS4K === 'boolean') {
+            option.BS4K = req.query.BS4K;
         }
         api.responseJSON(res, 200, await scheduleApiModel.getSchedules(option));
     } catch (err: any) {
@@ -58,6 +68,9 @@ get.apiDoc = {
         },
         {
             $ref: '#/components/parameters/requiredSKY',
+        },
+        {
+            $ref: '#/components/parameters/optionalBS4K',
         },
     ],
     responses: {

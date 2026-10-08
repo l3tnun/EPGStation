@@ -1,0 +1,10 @@
+#!/bin/sh
+# private network host と credential が git へ入るのを止める。
+# tools/check-tracked-secrets.py が private network host と credential を、
+# tools/check-betterleaks-scan.py が secret と個人情報を検査する。
+# 最後に global の pre-commit hook も続けて呼ぶ。
+set -e
+root=$(git rev-parse --show-toplevel)
+python3 -B "$root/tools/check-tracked-secrets.py"
+python3 -B "$root/tools/check-betterleaks-scan.py"
+"$root/.githooks/_delegate-global" pre-commit "$@"

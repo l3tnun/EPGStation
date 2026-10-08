@@ -1,14 +1,19 @@
 import { Operation } from 'express-openapi';
-import IStreamApiModel from '../../../../../api/stream/IStreamApiModel';
-import container from '../../../../../ModelContainer';
-import * as api from '../../../../api';
+import IStreamApiModel from '../../../../../api/stream/IStreamApiModel.js';
+import container from '../../../../../ModelContainer.js';
+import * as api from '../../../../api.js';
 
+/**
+ * `GET /streams/live/{channelId}/hls` ハンドラ。`IStreamApiModel#startLiveHLSStream` で
+ * ライブHLS配信を開始する。HLSはセグメントファイル群として別経路で配信されるため、他の
+ * ライブ配信ハンドラと異なりストリーム本体は返さず、開始したストリームIDのみを返す。
+ */
 export const get: Operation = async (req, res) => {
     const streamApiModel = container.get<IStreamApiModel>('IStreamApiModel');
 
     try {
         const streamId = await streamApiModel.startLiveHLSStream({
-            channelId: parseInt(req.params.channelId, 10),
+            channelId: parseInt(api.pathParam(req, 'channelId'), 10),
             mode: parseInt(req.query.mode as string, 10),
         });
         api.responseJSON(res, 200, {

@@ -9,35 +9,38 @@
  * を改変し作成しています。
  */
 
-import * as assert from 'assert';
 import * as fs from 'fs';
 import { Readable, ReadableOptions } from 'stream';
-import ILogger from '../model/ILogger';
-import ILoggerModel from '../model/ILoggerModel';
-import container from '../model/ModelContainer';
+import ILogger from '../model/ILogger.js';
+import ILoggerModel from '../model/ILoggerModel.js';
+import container from '../model/ModelContainer.js';
 
+/** `createReadStream` の追加オプション。 */
 export interface TailStreamOption extends ReadableOptions {
+    /** 読み取りを開始するファイル先頭からのバイト位置。省略時は 0（ファイル先頭）。 */
     start?: number;
 }
 
 class TailStream extends Readable {
     private offset: number;
     private isClosed: boolean = false;
-    private filePath: string;
+    private readonly filePath: string;
     private readInProgress: boolean = false;
     private getFdInProgress: boolean = false;
     private checkIdleTimer: NodeJS.Timeout | null = null;
     private checkFileTimer: NodeJS.Timeout | null = null;
+    private openRetryTimer: NodeJS.Timeout | null = null;
     private readPending: number = 0;
-    private fd: number = 0;
+    private fd: number | null = null;
+    private readonly closedFileDescriptors = new Set<number>();
 
-    private log: ILogger;
+    private readonly log: ILogger;
 
     constructor(filename: string, option: TailStreamOption) {
         super(option);
 
         this.filePath = filename;
-        this.offset = option.start || 0;
+        this.offset = option.start ?? 0;
 
         this.log = container.get<ILoggerModel>('ILoggerModel').getLogger();
 
@@ -45,55 +48,51 @@ class TailStream extends Readable {
     }
 
     private getFd(): void {
-        assert.ok(!this.fd);
-        assert.ok(!this.getFdInProgress);
+        if (this.isClosed || this.fd !== null || this.getFdInProgress) return;
+
         this.getFdInProgress = true;
 
         fs.open(this.filePath, 'r', (err, fd) => {
+            this.getFdInProgress = false;
             if (this.isClosed) {
+                if (!err) this.closeFileDescriptor(fd);
                 return;
             }
-            assert.ok(this.getFdInProgress);
-            this.getFdInProgress = false;
+
             if (err) {
                 // file doesn't exist (yet), try later
-                if (this.readPending) {
-                    // and we're inside of a _read call already, start a watcher to be notified
-                    // when it exists
-                    setTimeout(() => {
-                        if (this.isClosed) {
-                            return;
-                        }
-                        this.getFd();
-                    }, 1000);
-                }
+                if (this.readPending !== 0) this.scheduleOpenRetry();
             } else {
                 this.fd = fd;
-                if (this.readPending) {
-                    this.doRead();
-                }
+                if (this.readPending !== 0) this.doRead();
             }
         });
     }
 
+    private scheduleOpenRetry(): void {
+        if (this.openRetryTimer !== null) return;
+
+        this.openRetryTimer = setTimeout(() => {
+            this.openRetryTimer = null;
+            this.getFd();
+        }, 1000);
+    }
+
     private doRead(): void {
-        assert.ok(this.fd);
-        assert.ok(this.readPending);
-        assert.ok(!this.readInProgress);
+        const fd = this.fd;
+        if (this.isClosed || fd === null || this.readPending === 0 || this.readInProgress) return;
 
         this.readInProgress = true;
-        fs.fstat(this.fd, (err, stat) => {
-            if (this.isClosed) {
+        fs.fstat(fd, (err, stat) => {
+            if (this.isClosed || this.fd !== fd) {
+                this.readInProgress = false;
                 return;
             }
-            assert.ok(this.readInProgress);
 
             if (err) {
                 this.readInProgress = false;
-                // TODO: retry later, need to verify .fd is valid, check if .ino changed
-                this.debug('error statting', err);
-                this.emit('error', err);
-
+                this.debug(FSTAT_ERROR_DEBUG_MESSAGE, err);
+                this.destroy(err);
                 return;
             }
 
@@ -105,99 +104,99 @@ class TailStream extends Readable {
                 start = 0;
             }
 
-            assert.ok(this.readPending);
             const size = Math.min(this.readPending, end - start);
             if (size === 0) {
                 // no data, try again later
-                this.debug('no data to read');
+                this.debug(EOF_NO_DATA_TO_READ_DEBUG_MESSAGE);
                 this.readInProgress = false;
-                this.checkFile(); // ensure we're watching the file
+                this.checkFile(end); // ensure we're watching the file
 
                 return;
             }
 
-            const buffer = new Buffer(size);
+            const buffer = Buffer.allocUnsafe(size);
 
-            fs.read(this.fd, buffer, 0, size, start, (e, bytesRead, buff) => {
-                if (this.isClosed) {
+            fs.read(fd, buffer, 0, size, start, (readError, bytesRead, buff) => {
+                if (this.isClosed || this.fd !== fd) {
+                    this.readInProgress = false;
                     return;
                 }
-                assert.ok(this.readInProgress);
-                this.readInProgress = false;
-                if (e) {
-                    // Error, stop reading
-                    this.debug('error reading', e);
 
-                    return this.emit('error', e);
+                this.readInProgress = false;
+                if (readError) {
+                    // Error, stop reading
+                    this.debug(READ_ERROR_DEBUG_MESSAGE, readError);
+                    this.destroy(readError);
+                    return;
                 }
 
                 if (bytesRead === 0) {
                     // no data, try again later
-                    this.debug('no data read');
-                    this.checkFile(); // ensure we're watching the file
+                    this.debug(ZERO_BYTE_READ_DEBUG_MESSAGE);
+                    this.checkFile(end); // ensure we're watching the file
 
                     return;
                 }
 
-                this.debug('read ' + bytesRead + ' bytes');
+                this.debug(formatReadBytesDebugMessage(bytesRead));
                 this.readPending = 0;
                 this.offset = start + bytesRead;
                 // stream will call ._read again later (or immediately) to pump us for more data
 
-                // Make sure if we do not get a ._read call again later, we clean ourselves up
-                assert.ok(!this.checkIdleTimer);
-                this.checkIdleTimer = setTimeout(() => {
-                    this.checkIdle();
-                }, 1000);
+                // Make sure if we do not get a ._read call again later, we clean ourselves up.
+                this.scheduleIdleCheck();
 
                 // Must be very last, might recursively call into us!
                 this.push(buff);
-
-                return;
             });
         });
     }
 
-    private checkFile(): void {
-        if (this.checkFileTimer !== null) {
-            return;
-        }
+    private checkFile(sizeAtEndOfFile: number): void {
+        if (this.isClosed || this.checkFileTimer !== null) return;
 
-        const stat = fs.statSync(this.filePath);
         this.checkFileTimer = setTimeout(() => {
             this.checkFileTimer = null;
+            if (this.isClosed) return;
 
-            const newStat = fs.statSync(this.filePath);
-            if (newStat.size !== stat.size) {
-                this.doRead();
-            } else {
-                this.close();
-            }
+            fs.stat(this.filePath, (err, stat) => {
+                if (this.isClosed) return;
+                if (err) {
+                    this.debug(EOF_STAT_ERROR_DEBUG_MESSAGE, err);
+                    this.destroy(err);
+                    return;
+                }
+
+                if (stat.size !== sizeAtEndOfFile) {
+                    this.doRead();
+                } else {
+                    this.finish();
+                }
+            });
         }, 1000);
     }
 
-    private checkIdle(): void {
-        assert.ok(this.checkIdleTimer);
-        this.checkIdleTimer = null;
-        assert.ok(!this.readInProgress && !this.getFdInProgress);
-        // If we get here, we're not reading anything, and haven't been asked to,
-        // stop watching
-        this.debug('timeout expired, closing watcher');
+    private scheduleIdleCheck(): void {
+        if (this.isClosed || this.checkIdleTimer !== null) return;
+
+        this.checkIdleTimer = setTimeout(() => {
+            this.checkIdleTimer = null;
+            if (!this.isClosed && !this.readInProgress && !this.getFdInProgress && this.readPending === 0)
+                this.debug(IDLE_TIMEOUT_DEBUG_MESSAGE);
+        }, 1000);
     }
 
     public _read(size: number): void {
-        assert.ok(!this.isClosed);
-        assert.ok(!this.readPending);
-        assert.ok(size);
+        if (this.isClosed || this.readPending !== 0 || size <= 0) return;
 
-        if (this.checkIdleTimer) {
+        if (this.checkIdleTimer !== null) {
             clearTimeout(this.checkIdleTimer);
             this.checkIdleTimer = null;
         }
 
         this.debug('read_pending = ' + size);
         this.readPending = size;
-        if (!this.fd) {
+        if (this.fd === null) {
             if (this.getFdInProgress) {
                 this.debug('waiting on fd');
                 // Read will trigger read when getFd finishes
@@ -211,9 +210,50 @@ class TailStream extends Readable {
         this.doRead();
     }
 
-    private close(): void {
-        this.isClosed = true;
+    public _destroy(error: Error | null, callback: (error?: Error | null) => void): void {
+        this.dispose();
+        callback(error);
+    }
+
+    private finish(): void {
+        if (this.isClosed) return;
+
+        this.dispose();
         this.push(null);
+    }
+
+    private dispose(): void {
+        if (this.isClosed) return;
+
+        this.isClosed = true;
+        this.readPending = 0;
+        this.clearTimers();
+
+        const fd = this.fd;
+        this.fd = null;
+        if (fd !== null) this.closeFileDescriptor(fd);
+    }
+
+    private clearTimers(): void {
+        if (this.checkIdleTimer !== null) {
+            clearTimeout(this.checkIdleTimer);
+            this.checkIdleTimer = null;
+        }
+        if (this.checkFileTimer !== null) {
+            clearTimeout(this.checkFileTimer);
+            this.checkFileTimer = null;
+        }
+        if (this.openRetryTimer !== null) {
+            clearTimeout(this.openRetryTimer);
+            this.openRetryTimer = null;
+        }
+    }
+
+    private closeFileDescriptor(fd: number): void {
+        if (this.closedFileDescriptors.has(fd)) return;
+
+        this.closedFileDescriptors.add(fd);
+        fs.close(fd, () => undefined);
     }
 
     private debug(str: string, err?: Error): void {
@@ -226,6 +266,29 @@ class TailStream extends Readable {
     }
 }
 
+/**
+ * `tail -f` のように、末尾へ追記され続けているファイルを読み取る `Readable` を生成する。
+ * `fs.createReadStream` と異なり、現在のファイルサイズまで読み切ってもストリームを終了させず、
+ * ファイルサイズがそれ以上変化しなくなるまで（＝書き込みが止まるまで）ポーリングを続けて
+ * 追記分を流し続ける。録画中（まだ書き込みが続いている）ビデオファイルの再生に使う
+ * （`isRecording === true` の場合のみ、呼び出し元 `RecordedStreamBaseModel` 参照）。
+ * @param path 読み取り対象のファイルパス。
+ * @param option 読み取り開始位置等のオプション。
+ * @returns 生成した読み取りストリーム。
+ */
 export const createReadStream = (path: string, option: TailStreamOption): TailStream => {
     return new TailStream(path, option);
 };
+
+// TailStream diagnostic messages.
+const EOF_NO_DATA_TO_READ_DEBUG_MESSAGE = 'no data to read';
+const ZERO_BYTE_READ_DEBUG_MESSAGE = 'no data read';
+const FSTAT_ERROR_DEBUG_MESSAGE = 'error statting';
+const READ_ERROR_DEBUG_MESSAGE = 'error reading';
+const READ_BYTES_DEBUG_MESSAGE_PREFIX = 'read ';
+const READ_BYTES_DEBUG_MESSAGE_SUFFIX = ' bytes';
+const EOF_STAT_ERROR_DEBUG_MESSAGE = 'error statting file';
+const IDLE_TIMEOUT_DEBUG_MESSAGE = 'timeout expired, closing watcher';
+const formatReadBytesDebugMessage = (bytesRead: number): string =>
+    READ_BYTES_DEBUG_MESSAGE_PREFIX + bytesRead + READ_BYTES_DEBUG_MESSAGE_SUFFIX;
+declare const __EPGSTATION_COVERAGE_EXCLUSION_TAIL_STREAM_CHECKFILE_TIMER_ISCLOSED_20260924: unique symbol;

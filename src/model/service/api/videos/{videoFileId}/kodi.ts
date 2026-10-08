@@ -1,8 +1,12 @@
 import { Operation } from 'express-openapi';
-import IVideoApiModel from '../../../../api/video/IVideoApiModel';
-import container from '../../../../ModelContainer';
-import * as api from '../../../api';
+import IVideoApiModel from '../../../../api/video/IVideoApiModel.js';
+import container from '../../../../ModelContainer.js';
+import * as api from '../../../api.js';
 
+/**
+ * `POST /videos/{videoFileId}/kodi` ハンドラ。`IVideoApiModel#sendToKodi` で、request の
+ * host/scheme から組み立てたビデオリンクを指定 kodi 端末（`req.body.kodiName`）へ送る。
+ */
 export const post: Operation = async (req, res) => {
     const videoApiModel = container.get<IVideoApiModel>('IVideoApiModel');
 
@@ -15,7 +19,7 @@ export const post: Operation = async (req, res) => {
             req.headers.host,
             api.isSecureProtocol(req),
             req.body.kodiName,
-            parseInt(req.params.videoFileId, 10),
+            parseInt(api.pathParam(req, 'videoFileId'), 10),
         );
         api.responseJSON(res, 200, { code: 200 });
     } catch (err: any) {

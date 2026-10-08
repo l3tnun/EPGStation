@@ -1,9 +1,13 @@
 import { Operation } from 'express-openapi';
-import * as apid from '../../../../api';
-import IRecordedTagApiModel from '../../api/recordedTag/IRecordedTagApiModel';
-import container from '../../ModelContainer';
-import * as api from '../api';
+import type * as apid from '../../../../api.js';
+import IRecordedTagApiModel from '../../api/recordedTag/IRecordedTagApiModel.js';
+import container from '../../ModelContainer.js';
+import * as api from '../api.js';
 
+/**
+ * `GET /tags` ハンドラ。query の offset / limit / name / excludeTagId から検索条件を組み立て、
+ * `IRecordedTagApiModel#gets` で録画タグ一覧を返す。
+ */
 export const get: Operation = async (req, res) => {
     const recordedTagApiModel = container.get<IRecordedTagApiModel>('IRecordedTagApiModel');
 
@@ -71,6 +75,7 @@ get.apiDoc = {
     },
 };
 
+/** `POST /tags` ハンドラ。`IRecordedTagApiModel#create` でタグを追加し、発行された id を返す。 */
 export const post: Operation = async (req, res) => {
     const recordedTagApiModel = container.get<IRecordedTagApiModel>('IRecordedTagApiModel');
 

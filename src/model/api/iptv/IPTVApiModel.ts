@@ -1,14 +1,15 @@
 /* eslint-disable no-control-regex */
 /* eslint-disable no-irregular-whitespace */
 import { inject, injectable } from 'inversify';
-import * as apid from '../../../../api';
-import Program from '../../../db/entities/Program';
-import DateUtil from '../../../util/DateUtil';
-import IChannelDB from '../../db/IChannelDB';
-import IProgramDB from '../../db/IProgramDB';
-import IIPTVApiModel from './IIPTVApiModel';
-import ChannelUtil from '../../../util/ChannelUtil';
+import type * as apid from '../../../../api.js';
+import Program from '../../../db/entities/Program.js';
+import DateUtil from '../../../util/DateUtil.js';
+import IChannelDB from '../../db/IChannelDB.js';
+import IProgramDB from '../../db/IProgramDB.js';
+import IIPTVApiModel, { IptvChannelListInput, IptvRequestContext } from './IIPTVApiModel.js';
+import ChannelUtil from '../../../util/ChannelUtil.js';
 
+/** `IIPTVApiModel`の実装。チャンネル一覧をm3u8、番組表をXMLTV形式へ変換して返す。 */
 @injectable()
 class IPTVApiModel implements IIPTVApiModel {
     private channelDB: IChannelDB;
@@ -21,22 +22,13 @@ class IPTVApiModel implements IIPTVApiModel {
 
     /**
      * channel list を生成
-     * @param host: host
-     * @param isSecure: https か
-     * @param mode: transcode mode
-     * @param isHalfWidth: 半角で取得するか
+     * @param input: channel list input
      * @return Promise<string>
      */
-    public async getChannelList(
-        host: string,
-        isSecure: boolean,
-        mode: number,
-        isHalfWidth: boolean,
-        subDirectory?: string,
-    ): Promise<string> {
+    public async getChannelList({ isHalfWidth, mode, publicUrls }: IptvChannelListInput): Promise<string> {
         const channels = await this.channelDB.findAll(true);
 
-        const channelIndex: { [key: string]: number } = {};
+        const channelIndexes = new Map<string, number>();
 
         let str = '#EXTM3U\n';
         for (const channel of channels) {
@@ -44,24 +36,18 @@ class IPTVApiModel implements IIPTVApiModel {
                 continue;
             }
 
-            let channelName = isHalfWidth === true ? channel.halfWidthName : channel.name;
-            if (typeof channelIndex[channelName] === 'undefined') {
-                channelIndex[channelName] = 0;
-            } else {
-                channelIndex[channelName] += 1;
-                for (let i = 0; i <= channelIndex[channelName]; i++) {
-                    channelName += ' ';
-                }
-            }
+            const sourceName = isHalfWidth === true ? channel.halfWidthName : channel.name;
+            const occurrenceIndex = channelIndexes.get(sourceName) ?? 0;
+            channelIndexes.set(sourceName, occurrenceIndex + 1);
+            const channelName = sourceName + (occurrenceIndex === 0 ? '' : ' '.repeat(occurrenceIndex + 1));
 
             let logo = '';
-            const base = subDirectory === undefined ? host : `${host}${subDirectory}`;
             if (channel.hasLogoData) {
-                logo = `tvg-logo="${isSecure ? 'https' : 'http'}://${base}/api/channels/${channel.id}/logo"`;
+                logo = `tvg-logo="${publicUrls.channelLogoUrl(channel.id)}"`;
             }
             str += `#KODIPROP:mimetype=video/mp2t\n`;
             str += `#EXTINF:-1 tvg-id="${channel.id}" ${logo} group-title="${channel.channelType}",${channelName}　\n`;
-            str += `${isSecure ? 'https' : 'http'}://${base}/api/streams/live/${channel.id}/m2ts?mode=${mode}\n`;
+            str += `${publicUrls.liveM2tsUrl(channel.id, mode)}\n`;
         }
 
         return str;
@@ -73,31 +59,49 @@ class IPTVApiModel implements IIPTVApiModel {
      * @param isHalfWidth: 半角で取得するか
      * @return Promise<string>
      */
-    public async getEpg(days: number, isHalfWidth: boolean): Promise<string> {
+    public getEpg(days: number, isHalfWidth: boolean): Promise<string> {
+        return this.generateEpg(days, isHalfWidth);
+    }
+
+    public getEpgForRequest(days: number, isHalfWidth: boolean, requestContext: IptvRequestContext): Promise<string> {
+        return this.generateEpg(days, isHalfWidth, requestContext);
+    }
+
+    private async generateEpg(
+        days: number,
+        isHalfWidth: boolean,
+        requestContext?: IptvRequestContext,
+    ): Promise<string> {
         const now = new Date().getTime();
         const programs = await this.programDB.findSchedule({
             startAt: now,
             endAt: now + 1000 * 60 * 60 * 24 * days,
             isHalfWidth: isHalfWidth,
-            types: ['GR', 'BS', 'CS', 'SKY'],
+            types: ['GR', 'BS', 'CS', 'SKY', 'BS4K'],
         });
+        requestContext?.ensureActive();
         const channels = await this.channelDB.findAll();
+        requestContext?.ensureActive();
 
         // channelId ごとに programs をまとめる
-        const programsIndex: { [key: number]: Program[] } = {};
+        const programsIndex: { [key: number]: ProgramProjection[] } = {};
         for (const program of programs) {
             if (typeof programsIndex[program.channelId] === 'undefined') {
                 programsIndex[program.channelId] = [];
             }
 
-            program.name = this.replaceStr(program.name);
-            if (program.description !== null) {
-                program.description = this.replaceStr(program.description);
-                if (program.extended !== null) {
-                    program.description += this.replaceStr(program.extended);
-                }
-            }
-            programsIndex[program.channelId].push(program);
+            const description = isHalfWidth ? program.halfWidthDescription : program.description;
+            const extended = isHalfWidth ? program.halfWidthExtended : program.extended;
+            programsIndex[program.channelId].push({
+                channelId: program.channelId,
+                startAt: program.startAt,
+                endAt: program.endAt,
+                name: this.replaceStr(isHalfWidth ? program.halfWidthName : program.name),
+                description:
+                    description === null
+                        ? null
+                        : this.replaceStr(description) + (extended === null ? '' : this.replaceStr(extended)),
+            });
         }
 
         let str =
@@ -155,8 +159,11 @@ class IPTVApiModel implements IIPTVApiModel {
     }
 }
 
+type ProgramProjection = Pick<Program, 'channelId' | 'startAt' | 'endAt' | 'name' | 'description'>;
+
 namespace IPTVApiModel {
     export const TIMEZONE = new Date().toString().replace(/^.*GMT([+-]\d{4}).*$/, '$1');
 }
 
+/** `IIPTVApiModel`実装の`IPTVApiModel`クラス（タイムゾーン用の`namespace`宣言とマージ済み）を公開する。 */
 export default IPTVApiModel;

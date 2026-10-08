@@ -1,0 +1,30 @@
+#!/bin/sh
+# Skips `docker pull` for an image the daemon already holds, and passes everything else through.
+#
+# `docker pull` contacts the registry even when the image is present, so job.sh's fixture-pull
+# step (a plain `docker pull` loop) fails whenever the registry is slow or unreachable -- over
+# images that are already there and did not change. The check for a present image happens in this
+# shim, so the step itself stays a plain pull.
+#
+# Only a pull of an image that `docker image inspect` already resolves is skipped. A pull of
+# anything absent runs for real, so a first run, a new image or a changed tag still fetches. Every
+# other docker command is passed through untouched.
+set -eu
+
+DOCKER=/usr/bin/docker
+
+if [ "${1:-}" = "pull" ]; then
+    target=''
+    for arg in "$@"; do
+        case "$arg" in
+            pull | -*) ;;
+            *) target=$arg ;;
+        esac
+    done
+    if [ -n "$target" ] && "$DOCKER" image inspect "$target" >/dev/null 2>&1; then
+        echo "$target"
+        exit 0
+    fi
+fi
+
+exec "$DOCKER" "$@"

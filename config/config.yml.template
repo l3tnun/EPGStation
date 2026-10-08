@@ -1,5 +1,7 @@
 port: 8888
 mirakurunPath: http+unix://%2Fvar%2Frun%2Fmirakurun.sock/
+# tunerRestRequestTimeoutMs: 30000
+# tunerStreamEstablishmentTimeoutMs: 30000
 
 dbtype: sqlite
 # sqlite:
@@ -30,6 +32,15 @@ recorded:
     - name: recorded
       path: '%ROOT%/recorded'
 
+encodeQueueLimit: 1024
+concurrentUploadNum: 3
+uploadReceiveTimeoutMs: 300000
+thumbnailMaxPending: 32
+hookCommandMaxPending: 64
+hookCommandTimeoutMs: 300000
+
+# storageLimitCommandTimeoutMs is passed through unchanged; the storage owner defines its default and validation.
+
 thumbnail: '%ROOT%/thumbnail'
 thumbnailSize: 480x270
 thumbnailPosition: 5
@@ -52,8 +63,14 @@ urlscheme:
     video:
         ios: infuse://x-callback-url/play?url=PROTOCOL://ADDRESS
         android: intent://ADDRESS#Intent;action=android.intent.action.VIEW;type=video/*;scheme=PROTOCOL;end
-    download:
-        ios: vlc-x-callback://x-callback-url/download?url=PROTOCOL%3A%2F%2FADDRESS&filename=FILENAME
+    # download:
+    #     iOS は既定で URL scheme を指定しない（未指定のままにする）。iOS Safari は録画ファイルを
+    #     ブラウザから直接ダウンロードできるが、vlc-x-callback などの URL scheme を経由すると
+    #     保存ファイル名が Base64 化されてしまうため、iOS 向けの download URL scheme はデフォルトでは
+    #     設定しない。urlscheme.download キー自体を省略した場合、サーバーは m2ts / video と同様に
+    #     未設定の項目を持つ空の設定として扱う（クラッシュせず、iOS はブラウザの通常ダウンロードを使う）。
+    #     必要な場合のみ利用者が以下のように指定する。
+    #     ios: vlc-x-callback://x-callback-url/download?url=PROTOCOL%3A%2F%2FADDRESS&filename=FILENAME
 
 stream:
     live:
@@ -61,11 +78,11 @@ stream:
             m2ts:
                 - name: 720p
                   cmd:
-                      '%FFMPEG% -re -dual_mono_mode main -i pipe:0 -sn -threads 0 -c:a aac -ar 48000 -b:a 192k -ac 2
+                      '%FFMPEG% -dual_mono_mode main -i pipe:0 -sn -threads 0 -c:a aac -ar 48000 -b:a 192k -ac 2
                       -c:v libx264 -vf yadif,scale=-2:720 -b:v 3000k -preset veryfast -y -f mpegts pipe:1'
                 - name: 480p
                   cmd:
-                      '%FFMPEG% -re -dual_mono_mode main -i pipe:0 -sn -threads 0 -c:a aac -ar 48000 -b:a 128k -ac 2
+                      '%FFMPEG% -dual_mono_mode main -i pipe:0 -sn -threads 0 -c:a aac -ar 48000 -b:a 128k -ac 2
                       -c:v libx264 -vf yadif,scale=-2:480 -b:v 1500k -preset veryfast -y -f mpegts pipe:1'
                 - name: 無変換
 
@@ -86,25 +103,25 @@ stream:
             webm:
                 - name: 720p
                   cmd:
-                      '%FFMPEG% -re -dual_mono_mode main -i pipe:0 -sn -threads 3 -c:a libvorbis -ar 48000 -b:a 192k -ac
+                      '%FFMPEG% -dual_mono_mode main -i pipe:0 -sn -threads 3 -c:a libvorbis -ar 48000 -b:a 192k -ac
                       2 -c:v libvpx-vp9 -vf yadif,scale=-2:720 -b:v 3000k -deadline realtime -speed 4 -cpu-used -8 -y -f
                       webm pipe:1'
                 - name: 480p
                   cmd:
-                      '%FFMPEG% -re -dual_mono_mode main -i pipe:0 -sn -threads 2 -c:a libvorbis -ar 48000 -b:a 128k -ac
+                      '%FFMPEG% -dual_mono_mode main -i pipe:0 -sn -threads 2 -c:a libvorbis -ar 48000 -b:a 128k -ac
                       2 -c:v libvpx-vp9 -vf yadif,scale=-2:480 -b:v 1500k -deadline realtime -speed 4 -cpu-used -8 -y -f
                       webm pipe:1'
 
             mp4:
                 - name: 720p
                   cmd:
-                      '%FFMPEG% -re -dual_mono_mode main -i pipe:0 -sn -threads 0 -c:a aac -ar 48000 -b:a 192k -ac 2
+                      '%FFMPEG% -dual_mono_mode main -i pipe:0 -sn -threads 0 -c:a aac -ar 48000 -b:a 192k -ac 2
                       -c:v libx264 -vf yadif,scale=-2:720 -b:v 3000k -profile:v baseline -preset veryfast -tune
                       fastdecode,zerolatency -movflags frag_keyframe+empty_moov+faststart+default_base_moof -y -f mp4
                       pipe:1'
                 - name: 480p
                   cmd:
-                      '%FFMPEG% -re -dual_mono_mode main -i pipe:0 -sn -threads 0 -c:a aac -ar 48000 -b:a 128k -ac 2
+                      '%FFMPEG% -dual_mono_mode main -i pipe:0 -sn -threads 0 -c:a aac -ar 48000 -b:a 128k -ac 2
                       -c:v libx264 -vf yadif,scale=-2:480 -b:v 1500k -profile:v baseline -preset veryfast -tune
                       fastdecode,zerolatency -movflags frag_keyframe+empty_moov+faststart+default_base_moof -y -f mp4
                       pipe:1'
@@ -112,21 +129,21 @@ stream:
             hls:
                 - name: 720p
                   cmd:
-                      '%FFMPEG% -re -dual_mono_mode main -i pipe:0 -sn -map 0 -threads 0 -ignore_unknown
+                      '%FFMPEG% -dual_mono_mode main -i pipe:0 -sn -map 0 -threads 0 -ignore_unknown
                       -max_muxing_queue_size 1024 -f hls -hls_time 3 -hls_list_size 17 -hls_allow_cache 1
                       -hls_segment_filename %streamFileDir%/stream%streamNum%-%09d.ts -hls_flags delete_segments -c:a
                       aac -ar 48000 -b:a 192k -ac 2 -c:v libx264 -vf yadif,scale=-2:720 -b:v 3000k -preset veryfast
                       -flags +loop-global_header %OUTPUT%'
                 - name: 480p
                   cmd:
-                      '%FFMPEG% -re -dual_mono_mode main -i pipe:0 -sn -map 0 -threads 0 -ignore_unknown
+                      '%FFMPEG% -dual_mono_mode main -i pipe:0 -sn -map 0 -threads 0 -ignore_unknown
                       -max_muxing_queue_size 1024 -f hls -hls_time 3 -hls_list_size 17 -hls_allow_cache 1
                       -hls_segment_filename %streamFileDir%/stream%streamNum%-%09d.ts -hls_flags delete_segments -c:a
                       aac -ar 48000 -b:a 128k -ac 2 -c:v libx264 -vf yadif,scale=-2:480 -b:v 1500k -preset veryfast
                       -flags +loop-global_header %OUTPUT%'
                 # - name: 720p (arib)
                 #   cmd:
-                #       '%FFMPEG% -re -dual_mono_mode main -fix_sub_duration -i pipe:0 -threads 0 -ignore_unknown
+                #       '%FFMPEG% -dual_mono_mode main -fix_sub_duration -i pipe:0 -threads 0 -ignore_unknown
                 #       -max_muxing_queue_size 1024 -f hls -hls_time 3 -hls_list_size 17 -hls_allow_cache 1
                 #       -hls_segment_filename %streamFileDir%/stream%streamNum%-%09d.ts -hls_flags delete_segments -c:a
                 #       aac -ar 48000 -b:a 192k -ac 2 -c:v libx264 -vf yadif,scale=-2:720 -b:v 3000k -preset veryfast

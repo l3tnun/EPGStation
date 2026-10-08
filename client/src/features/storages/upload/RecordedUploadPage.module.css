@@ -1,0 +1,272 @@
+.uploadPage {
+  background: #fff;
+  box-sizing: border-box;
+  box-shadow:
+    rgba(0, 0, 0, 0.2) 0 2px 1px -1px,
+    rgba(0, 0, 0, 0.14) 0 1px 1px 0,
+    rgba(0, 0, 0, 0.12) 0 1px 3px 0;
+  /* bottom margin mirrors v2 RecordedUpload.vue's trailing
+     `<div style="visibility: hidden">dummy</div>` after the fixed add-video FAB: it
+     reserves scroll room so the fixed FAB (bottom: 16px, 56px tall -> 72px total
+     footprint, see .fabRow below) never ends up covering the actions row once the
+     page is scrolled to its end on short viewports. */
+  margin: 12px auto 80px;
+  max-width: 800px;
+  padding: 16px 16px 0;
+  width: 100%;
+}
+
+:global([data-theme-mode='dark']) .uploadPage {
+  background: var(--mui-palette-background-paper, #1e1e1e);
+  color: rgb(255 255 255 / 87%);
+}
+
+.formRows,
+.videoBlocks {
+  display: grid;
+}
+
+.formRow {
+  padding-top: 16px;
+}
+
+@media (min-width: 480px) {
+  .formRow {
+    display: flex;
+  }
+
+  .rowTitle {
+    width: 25%;
+  }
+
+  .rowContent {
+    width: 75%;
+  }
+}
+
+.rowTitle {
+  color: rgba(0, 0, 0, 0.87);
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.375rem;
+}
+
+.requiredTitle {
+  color: red;
+  font-weight: 700;
+}
+
+.rowContent {
+  min-height: 70px;
+  min-width: 0;
+}
+
+.rowContent :global(.MuiFormControl-root) {
+  width: 100%;
+}
+
+.uploadSelectWrapper {
+  width: 100%;
+}
+
+.legacySelectField {
+  color: rgba(0, 0, 0, 0.6);
+  display: block;
+  font-size: 0.75rem;
+  line-height: 1;
+  min-height: 48px;
+  position: relative;
+  width: 100%;
+}
+
+.legacySelectField :global(.MuiInputBase-root) {
+  font: inherit;
+  font-size: 1rem;
+  min-height: 48px;
+  width: 100%;
+}
+
+.legacySelectField :global(.MuiSelect-select) {
+  box-sizing: border-box;
+  height: 48px;
+  min-height: 48px;
+  padding-bottom: 0;
+  padding-top: 16px;
+}
+
+:global([data-theme-mode='dark']) .rowTitle,
+:global([data-theme-mode='dark']) .legacySelectField :global(.MuiSelect-select),
+:global([data-theme-mode='dark']) .fileFieldLine {
+  color: rgb(255 255 255 / 87%);
+}
+
+:global([data-theme-mode='dark']) .requiredTitle {
+  color: red;
+}
+
+:global([data-theme-mode='dark']) .legacySelectField,
+:global([data-theme-mode='dark']) .fileField,
+:global([data-theme-mode='dark']) .filePlaceholder {
+  color: rgb(255 255 255 / 70%);
+}
+
+:global([data-theme-mode='dark']) .fileFieldLine {
+  border-bottom-color: rgb(255 255 255 / 50%);
+}
+
+.genreFields {
+  display: flex;
+  margin-bottom: 18px;
+  margin-top: -18px;
+}
+
+.genreFields .uploadSelectWrapper {
+  width: 50%;
+}
+
+.genreFields .uploadSelectWrapper :global(.MuiFormControl-root),
+.genreFields .uploadSelectWrapper .legacySelectField {
+  width: 100%;
+}
+
+.shortField {
+  max-width: 150px;
+}
+
+.dateRow {
+  margin-top: -13px;
+}
+
+.rowContent textarea {
+  height: 150px !important;
+  resize: vertical;
+}
+
+.datetimeField {
+  display: grid;
+}
+
+.datetimeDialogContent {
+  display: grid;
+  gap: 16px;
+  min-width: min(320px, calc(100vw - 96px));
+}
+
+.actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.videoBlocks {
+  margin: 0;
+}
+
+.videoBlock {
+  display: grid;
+  gap: 0;
+}
+
+.videoBlock > :not(:last-child) {
+  margin-bottom: 22px;
+}
+
+.fileField {
+  color: rgba(0, 0, 0, 0.6);
+  display: block;
+  font-size: 0.75rem;
+  line-height: 1;
+  position: relative;
+  width: 100%;
+}
+
+.fileField input {
+  cursor: pointer;
+  inset: 0;
+  opacity: 0;
+  position: absolute;
+  width: 100%;
+}
+
+.fileFieldLine {
+  align-items: center;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.42);
+  color: rgba(0, 0, 0, 0.87);
+  display: flex;
+  font-size: 1rem;
+  min-height: 48px;
+  padding-top: 16px;
+}
+
+.fileIcon {
+  font-family: 'Material Design Icons', sans-serif;
+  font-size: 20px;
+  line-height: 1;
+  margin-right: 8px;
+}
+
+.filePlaceholder {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.fileField[data-has-file='true'] .filePlaceholder {
+  display: none;
+}
+
+.fabRow {
+  bottom: 16px;
+  display: flex;
+  justify-content: flex-end;
+  margin: 0;
+  position: fixed;
+  right: 16px;
+  z-index: 10;
+}
+
+.addVideoFab {
+  background-color: #e91e63 !important;
+  color: #fff !important;
+}
+
+.mdiIcon {
+  font-family: 'Material Design Icons', sans-serif;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.actions {
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  justify-content: flex-end;
+  margin: 44px -16px 0;
+  min-height: 52px;
+  padding: 8px;
+}
+
+:global([data-theme-mode='dark']) .actions {
+  border-top-color: rgb(255 255 255 / 12%);
+}
+
+.uploadingDialogContent {
+  box-sizing: border-box;
+  min-width: min(300px, 72vw);
+  padding: 16px !important;
+}
+
+.uploadingDialogTitle {
+  font-size: 1.17em;
+  margin: 0 0 20px;
+}
+
+@media (max-width: 640px) {
+  .uploadPage {
+    margin-top: 12px;
+    max-width: calc(100% - 24px);
+    padding: 16px 16px 0;
+  }
+}
+
+@media (max-width: 479px) {
+  .actions {
+    border-top-color: rgba(0, 0, 0, 0.18);
+  }
+}

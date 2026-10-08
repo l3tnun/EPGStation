@@ -1,17 +1,19 @@
-/* eslint-disable no-case-declarations */
-import EventSource from 'eventsource';
 import { EventEmitter } from 'events';
-import { IncomingMessage } from 'http';
 import { inject, injectable } from 'inversify';
-import mirakurun from 'mirakurun';
-import * as mapid from '../../../node_modules/mirakurun/api';
-import IChannelDB from '../db/IChannelDB';
-import IChannelTypeIndex from '../db/IChannelTypeHash';
-import IProgramDB from '../db/IProgramDB';
-import IConfiguration from '../IConfiguration';
-import ILogger from '../ILogger';
-import ILoggerModel from '../ILoggerModel';
-import IMirakurunClientModel from '../IMirakurunClientModel';
+import IChannelDB from '../db/IChannelDB.js';
+import IChannelTypeIndex from '../db/IChannelTypeHash.js';
+import IProgramDB from '../db/IProgramDB.js';
+import IConfiguration from '../IConfiguration.js';
+import ILogger from '../ILogger.js';
+import ILoggerModel from '../ILoggerModel.js';
+import {
+    ProgramId,
+    TunerChange,
+    TunerProgram,
+    TunerServerAccess,
+    TunerServerId,
+    TunerService,
+} from '../tuner/types.js';
 import IEPGUpdateManageModel, {
     ProgramBaseEvent,
     UpdateEvent,
@@ -19,13 +21,13 @@ import IEPGUpdateManageModel, {
     RedefineEvent,
     ServiceEvent,
     EPGUpdateEvent,
-    TunerServerType,
-} from './IEPGUpdateManageModel';
+} from './IEPGUpdateManageModel.js';
 
+/** `IEPGUpdateManageModel` の実装。詳細は `IEPGUpdateManageModel` を参照。 */
 @injectable()
 class EPGUpdateManageModel extends EventEmitter implements IEPGUpdateManageModel {
     private log: ILogger;
-    private mirakurunClient: mirakurun;
+    private tunerServerAccess: TunerServerAccess;
     private channelDB: IChannelDB;
     private programDB: IProgramDB;
 
@@ -39,24 +41,20 @@ class EPGUpdateManageModel extends EventEmitter implements IEPGUpdateManageModel
     private excludeChannelIndex: { [channelId: number]: boolean } = {};
     private excludeSidIndex: { [serviceId: number]: boolean } = {};
 
-    // mirakurun or mirakc の識別
-    private tunerServerType: TunerServerType | null = null;
-    private updatedOnAirServiceIds: { [serviceId: mapid.ServiceId]: boolean } = {};
-    private updateServiceIds: { [serviceId: mapid.ServiceId]: boolean } = {};
-    private mirakurunPath: string;
+    private updatedOnAirServiceIds: { [serviceId: TunerServerId]: boolean } = {};
+    private updateServiceIds: { [serviceId: TunerServerId]: boolean } = {};
 
     constructor(
         @inject('ILoggerModel') loggerModel: ILoggerModel,
         @inject('IConfiguration') configuration: IConfiguration,
-        @inject('IMirakurunClientModel')
-        mirakurunClientModel: IMirakurunClientModel,
+        @inject('TunerServerAccess') tunerServerAccess: TunerServerAccess,
         @inject('IChannelDB') channelDB: IChannelDB,
         @inject('IProgramDB') programDB: IProgramDB,
     ) {
         super();
 
         this.log = loggerModel.getLogger();
-        this.mirakurunClient = mirakurunClientModel.getClient();
+        this.tunerServerAccess = tunerServerAccess;
         this.channelDB = channelDB;
         this.programDB = programDB;
 
@@ -72,7 +70,6 @@ class EPGUpdateManageModel extends EventEmitter implements IEPGUpdateManageModel
                 this.excludeSidIndex[c] = true;
             }
         }
-        this.mirakurunPath = config.mirakurunPath;
     }
 
     /**
@@ -85,44 +82,42 @@ class EPGUpdateManageModel extends EventEmitter implements IEPGUpdateManageModel
         const timeout = setTimeout(
             () => {
                 this.log.system.error('update all timeout');
-                clearTimeout(timeout);
-                throw new Error('EPGUpdateAllTimeoutError');
             },
             10 * 60 * 1000,
         );
 
-        this.log.system.info('get programs');
-        const programs = await this.mirakurunClient.getPrograms().catch(err => {
-            this.log.system.error('get programs error');
-            this.log.system.error(err);
+        try {
+            this.log.system.info('get programs');
+            const programs = await this.tunerServerAccess.getPrograms().catch(err => {
+                this.log.system.error('get programs error');
+                this.log.system.error(err);
+                throw err;
+            });
+            this.log.system.info('done get programs');
+
+            // メインの番組情報だけ取り出す
+            const insertPrograms = programs.filter(p => {
+                return this.isMainProgram(p);
+            });
+
+            this.log.system.info('start update programs');
+            await this.programDB.insert(this.channelIndex, insertPrograms).catch(err => {
+                this.log.system.error('update programs error');
+                this.log.system.error(err);
+                throw err;
+            });
+            this.log.system.info('done update programs');
+        } finally {
             clearTimeout(timeout);
-            throw err;
-        });
-        this.log.system.info('done get programs');
-
-        // メインの番組情報だけ取り出す
-        const insertPrograms = programs.filter(p => {
-            return this.isMainProgram(p);
-        });
-
-        this.log.system.info('start update programs');
-        await this.programDB.insert(this.channelIndex, insertPrograms).catch(err => {
-            this.log.system.error('update programs error');
-            this.log.system.error(err);
-            clearTimeout(timeout);
-            throw err;
-        });
-        this.log.system.info('done update programs');
-
-        clearTimeout(timeout);
+        }
     }
 
     /**
      * relatedItems からメインの番組情報か判定する
-     * @param program: mapid.Program
+     * @param program: TunerProgram
      * @returns boolean true ならメインの番組
      */
-    private isMainProgram(program: mapid.Program): boolean {
+    private isMainProgram(program: TunerProgram): boolean {
         if (typeof program.relatedItems === 'undefined') {
             return true;
         }
@@ -168,7 +163,7 @@ class EPGUpdateManageModel extends EventEmitter implements IEPGUpdateManageModel
      */
     public async updateChannels(): Promise<void> {
         this.log.system.info('get service');
-        let services = await this.mirakurunClient.getServices().catch(err => {
+        let services = await this.tunerServerAccess.getServices().catch(err => {
             this.log.system.error('get service error');
             this.log.system.error(err);
             throw err;
@@ -200,7 +195,7 @@ class EPGUpdateManageModel extends EventEmitter implements IEPGUpdateManageModel
      * @param services: Service[]
      * @return void
      */
-    private updateChannelIndex(services: mapid.Service[]): void {
+    private updateChannelIndex(services: TunerService[]): void {
         for (const service of services) {
             if (typeof service.channel === 'undefined') {
                 continue;
@@ -217,220 +212,72 @@ class EPGUpdateManageModel extends EventEmitter implements IEPGUpdateManageModel
     }
 
     /**
-     * チューナーサーバの種別のチェック
-     * @returns Promise<TunerServerType>
-     */
-    public async checkTunerServerType(): Promise<TunerServerType> {
-        if (this.tunerServerType !== null) {
-            return this.tunerServerType;
-        }
-
-        // getServerConfig() の実行の可否で判定を行う
-        try {
-            await this.mirakurunClient.getServerConfig();
-            this.tunerServerType = TunerServerType.mirakurun;
-        } catch (err) {
-            this.tunerServerType = TunerServerType.mirakc;
-        }
-
-        return this.tunerServerType;
-    }
-
-    /**
      * event stream の解析を開始する
      */
     public async start(): Promise<void> {
-        if (this.tunerServerType === null) {
-            await this.checkTunerServerType();
-        }
-
-        if (this.tunerServerType === TunerServerType.mirakurun) {
-            // mirakurun event stream 解析開始
-            return this.startAnalayzingMirakurunEvents();
-        } else {
-            // mirakc イベント通知解析開始
-            return this.startAnalyzingMirakcEvents();
-        }
-    }
-
-    /**
-     * mirakurun の event stream の解析を開始する
-     */
-    private async startAnalayzingMirakurunEvents(): Promise<void> {
-        this.log.system.info('start get stream');
-
-        const eventStream = await this.mirakurunClient.getEventsStream().catch(err => {
-            this.log.system.error('event stream get error');
-            this.log.system.error(err);
-            this.stopStream(eventStream);
-            throw err;
-        });
-
-        this.emit(EPGUpdateEvent.STREAM_STARTED);
-
-        return new Promise<void>(async (_resolve: () => void, reject: (err: Error) => void) => {
-            // エラー処理
-            eventStream.once('error', err => {
-                this.log.system.error('event stream error');
-                this.log.system.error(err);
-                this.stopStream(eventStream);
+        const handle = await this.tunerServerAccess.openChangeFeed({
+            started: () => {
+                this.emit(EPGUpdateEvent.STREAM_STARTED);
+            },
+            changed: change => {
+                this.consumeChange(change);
+            },
+            aborted: error => {
+                this.log.system.error('tuner change feed error');
+                this.log.system.error(error);
                 this.emit(EPGUpdateEvent.STREAM_ABORTED);
-                reject(err);
-            });
-
-            eventStream.once('end', () => {
-                this.log.system.error('event stream is ended');
-                this.stopStream(eventStream);
-                reject(new Error('EndedEventStream'));
-            });
-
-            eventStream.once('close', () => {
-                this.log.system.error('event stream is closed');
-                this.stopStream(eventStream);
-                reject(new Error('ClosedEventStream'));
-            });
-
-            // イベント受信処理
-            let tmp = Buffer.from([]);
-            eventStream.on('data', chunk => {
-                // tmp の末尾が [\n の場合無視
-                if (Buffer.compare(chunk, EPGUpdateManageModel.START_STRING) === 0) {
-                    return;
-                }
-
-                tmp = Buffer.concat([tmp, chunk]);
-
-                // tmp の末尾が },\n かチェック
-                if (
-                    Buffer.compare(
-                        tmp.slice(tmp.length - EPGUpdateManageModel.DATA_DELIMITER_STRING.length, tmp.length),
-                        EPGUpdateManageModel.DATA_DELIMITER_STRING,
-                    ) !== 0
-                ) {
-                    // JSON parse 可能ではない
-                    return;
-                }
-
-                try {
-                    // event 情報をパースして queue に積む
-                    this.log.system.debug(String(tmp));
-                    const events: mapid.Event[] = <mapid.Event[]>JSON.parse(`[${String(tmp).slice(0, -3)}]`);
-                    for (const event of events) {
-                        if (event.resource === 'program') {
-                            this.programQueue.push(<any>event);
-                        } else if (event.resource === 'service') {
-                            this.serviceQueue.push(<any>event);
-                        }
-                    }
-                    this.log.system.debug('OK');
-                } catch (err: any) {
-                    this.log.system.error('event stream parse error');
-                    const tmpHex = tmp.toString('hex').match(/../g);
-                    if (tmpHex !== null) {
-                        this.log.system.debug(tmpHex.join(' '));
-                    }
-                    this.log.system.error(err);
-                    this.stopStream(eventStream);
-                    this.emit(EPGUpdateEvent.STREAM_ABORTED);
-                    reject(new Error('EventStreamParseError'));
-                }
-                tmp = Buffer.from([]);
-            });
+            },
         });
+
+        await handle.completion;
     }
 
-    /**
-     * mirakc の /events の解析を開始する
-     */
-    private async startAnalyzingMirakcEvents(): Promise<void> {
-        this.log.system.info('start analyzing events');
-
-        let sse: EventSource;
-        try {
-            sse = new EventSource(new URL('/events', this.mirakurunPath).href);
-        } catch (err) {
-            this.log.system.error('failed to analyzing events');
-            this.log.system.error(err);
-            throw err;
+    private consumeChange(change: TunerChange): void {
+        switch (change.kind) {
+            case 'program':
+                switch (change.operation) {
+                    case 'create':
+                    case 'update':
+                        this.programQueue.push({
+                            resource: 'program',
+                            type: change.operation,
+                            data: change.program,
+                            time: change.time,
+                        });
+                        break;
+                    case 'remove':
+                        this.programQueue.push({
+                            resource: 'program',
+                            type: 'remove',
+                            data: { id: change.programId },
+                            time: change.time,
+                        });
+                        break;
+                    case 'redefine':
+                        this.programQueue.push({
+                            resource: 'program',
+                            type: 'redefine',
+                            data: { from: change.from, to: change.to },
+                            time: change.time,
+                        });
+                        break;
+                }
+                break;
+            case 'service':
+                this.serviceQueue.push({
+                    resource: 'service',
+                    type: change.operation,
+                    data: change.service,
+                    time: change.time,
+                });
+                break;
+            case 'on-air-service':
+                this.updatedOnAirServiceIds[change.serviceId] = true;
+                break;
+            case 'service-programs-updated':
+                this.updateServiceIds[change.serviceId] = true;
+                break;
         }
-
-        // open 時の処理
-        let isEventsOpend = false;
-        sse.onopen = () => {
-            isEventsOpend = true;
-            this.emit(EPGUpdateEvent.STREAM_STARTED);
-        };
-
-        // 放映中プログラムの更新
-        sse.addEventListener('onair.program-changed', ev => {
-            const { serviceId } = JSON.parse(ev.data as string);
-            this.updatedOnAirServiceIds[serviceId] = true;
-            this.log.system.debug(`mirakc update onair services: ${serviceId}`);
-        });
-
-        // プログラム更新
-        let isFirst = true;
-        let startTime = 0;
-        sse.addEventListener('epg.programs-updated', ev => {
-            const now = new Date().getTime();
-            if (isFirst === true) {
-                isFirst = false;
-                startTime = now;
-            }
-
-            // 接続時に送信される更新情報を無視するため、開始1秒間は処理しない
-            if (now - startTime <= 1000) {
-                return;
-            }
-
-            const { serviceId } = JSON.parse(ev.data as string);
-            this.updateServiceIds[serviceId] = true;
-            this.log.system.debug(`mirakc update normal services: ${serviceId}`);
-        });
-
-        return new Promise<void>((_resolve, reject: (err: Error) => void) => {
-            // エラー発生時のエラー処理の定義
-            const finalize = (errorMessage: string) => {
-                clearInterval(timer);
-                try {
-                    sse.close();
-                } catch (err) {
-                    // close エラーは無視
-                }
-                reject(Error(errorMessage));
-            };
-
-            // エラー発生時
-            sse.addEventListener('error', () => {
-                this.log.system.error('disconnected mirakc event.');
-                finalize('MirakcEventsClosed');
-            });
-
-            // 定期的に接続を監視する
-            const timer = setInterval(() => {
-                if (isEventsOpend === false) {
-                    // events に接続できていない
-                    this.log.system.error('events is not opened.');
-                    finalize('MirakcEventsIsNotOpened');
-                } else if (sse.readyState !== 1) {
-                    // events が切断された
-                    this.log.system.error('events has been closed.');
-                    finalize('MirakcEventsClosed');
-                }
-            }, 1000);
-        });
-    }
-
-    /**
-     * event stream を止める
-     * @param stream: IncomingMessage
-     */
-    private stopStream(stream: IncomingMessage): void {
-        stream.destroy();
-        stream.push(null); // eof 通知
-        stream.removeAllListeners();
-        this.programQueue = [];
-        this.serviceQueue = [];
     }
 
     /**
@@ -475,7 +322,7 @@ class EPGUpdateManageModel extends EventEmitter implements IEPGUpdateManageModel
                         // このEvent以前に受信した"create" or "update" Eventは破棄する
                         delete updateIndex[removeData.id];
                     }
-                } else if ((event as any).type === 'redefine') {
+                } else if (event.type === 'redefine') {
                     // redefine は古いバージョンをサポートするため
                     const from = (<RedefineEvent>event).data.from;
                     deleteIndex[from] = event;
@@ -487,12 +334,15 @@ class EPGUpdateManageModel extends EventEmitter implements IEPGUpdateManageModel
             }
 
             if (needToSave) {
-                const deleteValues: Array<mapid.ProgramId> = [];
-                const insertValues: Array<mapid.Program> = [];
-                const updateValues: Array<mapid.Program> = [];
+                const deleteValues: ProgramId[] = [];
+                const insertValues: TunerProgram[] = [];
+                const updateValues: TunerProgram[] = [];
 
-                for (const [_id, event] of Object.entries(deleteIndex)) {
-                    deleteValues.push((<RemoveEvent>event).data.id);
+                for (const [id] of Object.entries(deleteIndex)) {
+                    const programId = Number(id);
+                    if (Number.isFinite(programId) && Number.isInteger(programId)) {
+                        deleteValues.push(programId);
+                    }
                 }
                 for (const [_id, event] of Object.entries(updateIndex)) {
                     updateValues.push((<UpdateEvent>event).data);
@@ -553,18 +403,18 @@ class EPGUpdateManageModel extends EventEmitter implements IEPGUpdateManageModel
         }
 
         // ロゴデータ保持判定のために放送局情報をすべて取得する
-        const serviceDatas = await this.mirakurunClient.getServices().catch(err => {
+        const serviceDatas = await this.tunerServerAccess.getServices().catch(err => {
             this.log.system.error('get service error');
             this.log.system.error(err);
-            return [] as mapid.Service[];
+            return [] as TunerService[];
         });
-        const serviceDataIndex: { [serviceId: number]: mapid.Service } = {};
+        const serviceDataIndex: { [serviceId: number]: TunerService } = {};
         for (const s of serviceDatas) {
             serviceDataIndex[s.id] = s;
         }
 
-        const createIndex: { [serviceId: number]: mapid.Service } = {}; // 追加用索引
-        const updateIndex: { [serviceId: number]: mapid.Service } = {}; // 更新用索引
+        const createIndex: { [serviceId: number]: TunerService } = {}; // 追加用索引
+        const updateIndex: { [serviceId: number]: TunerService } = {}; // 更新用索引
 
         for (const service of services) {
             if (
@@ -575,19 +425,20 @@ class EPGUpdateManageModel extends EventEmitter implements IEPGUpdateManageModel
                 continue;
             }
 
-            // add hasLogoData
-            if (typeof serviceDataIndex[service.data.id] !== 'undefined') {
-                service.data.hasLogoData = serviceDataIndex[service.data.id].hasLogoData;
-            }
+            const currentService = serviceDataIndex[service.data.id];
+            const serviceData =
+                currentService === undefined
+                    ? service.data
+                    : { ...service.data, hasLogoData: currentService.hasLogoData };
             switch (service.type) {
                 case 'create':
-                    if (typeof service.data.name !== 'undefined') {
-                        createIndex[service.data.id] = service.data;
+                    if (typeof serviceData.name !== 'undefined') {
+                        createIndex[serviceData.id] = serviceData;
                     }
                     break;
                 case 'update':
-                    if (typeof service.data !== 'undefined') {
-                        updateIndex[service.data.id] = service.data;
+                    if (typeof serviceData !== 'undefined') {
+                        updateIndex[serviceData.id] = serviceData;
                     }
                     break;
                 case 'remove':
@@ -661,16 +512,15 @@ class EPGUpdateManageModel extends EventEmitter implements IEPGUpdateManageModel
      * 指定された channelId の番組情報を全件削除および全件更新する
      * @param channelIds
      */
-    private async saveMirakcServices(channelIds: mapid.ServiceId[]) {
+    private async saveMirakcServices(channelIds: TunerServerId[]): Promise<void> {
         // 番組情報を更新する前にチャンネル情報を更新する (更新する契機が存在しないため)
         await this.updateChannels();
 
         // 更新対象の番組情報を取得する
         this.log.system.info('get service programs');
-        const insertPrograms: mapid.Program[] = [];
+        const insertPrograms: TunerProgram[] = [];
         for (const serviceId of channelIds) {
-            const response = await fetch(new URL(`/api/services/${serviceId}/programs`, this.mirakurunPath));
-            const servicePrograms: mapid.Program[] = await response.json();
+            const servicePrograms = await this.tunerServerAccess.getProgramsByService(serviceId);
 
             // メインプログラムだけ取り出す
             for (const p of servicePrograms) {
@@ -689,12 +539,6 @@ class EPGUpdateManageModel extends EventEmitter implements IEPGUpdateManageModel
         });
         this.log.system.info('done update service programs');
     }
-}
-
-namespace EPGUpdateManageModel {
-    // event stream の開始文字列
-    export const START_STRING = Buffer.from([0x5b, 0x0a]);
-    export const DATA_DELIMITER_STRING = Buffer.from([0x7d, 0x0a, 0x2c, 0x0a]);
 }
 
 export default EPGUpdateManageModel;

@@ -1,0 +1,39 @@
+# betterleaks の custom rule set: 個人情報（開発者の home directory path 等）を検出する。
+#
+# tools/check-betterleaks-scan.py から `-c` で読み込まれる。default config の
+# 検出対象は secret（API key 等）であり、その global filter は `/home/...` や
+# `/Users/...` 形式の文字列を「よくある無害な path」として意図的に除外している
+# （betterleaks v1.8.1 の default config の filter 参照）。個人情報検出はこの
+# global filter を継承すると常に握り消されるため、本 file は `[extend]` を使わず
+# 独立した config として持つ。
+#
+# 実際の username・home directory・非公開の作業 directory の path や名前はここに書かない。
+# check-betterleaks-scan.py が実行時に $HOME・実行 user 名・非公開の作業 directory から
+# 生成した rule をこの file の内容へ追記し、一時 file として渡す。この file自体は
+# 誰の home directory にも一致する一般形の regex だけを持つ。
+
+[[rules]]
+id = "personal-home-directory-path"
+description = "Linux/BSD の per-user home directory への絶対 path（開発者個人の環境が特定できる）"
+regex = '''/home/[A-Za-z_][A-Za-z0-9_-]*(?:/[^\s'"()<>]*)?'''
+keywords = ["/home/"]
+# 既知の非個人 placeholder（doc の例示用 username、CI runner の既定 user、
+# devcontainer の既定 user）は個人情報ではないので除外する。
+filter = '''
+filter.matchesAny(finding["secret"], [
+  `^/home/(?:hoge|fuga|piyo)(?:/|$)`,
+  `^/home/runner(?:/|$)`,
+  `^/home/node(?:/|$)`
+])
+'''
+
+[[rules]]
+id = "personal-macos-home-directory-path"
+description = "macOS の per-user home directory への絶対 path（開発者個人の環境が特定できる）"
+regex = '''/Users/[A-Za-z_][A-Za-z0-9_.-]*(?:/[^\s'"()<>]*)?'''
+keywords = ["/users/"]
+filter = '''
+filter.matchesAny(finding["secret"], [
+  `(?i)^/users/(?:shared|guest)(?:/|$)`
+])
+'''

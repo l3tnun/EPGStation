@@ -15,7 +15,7 @@ export type ThumbnailId = number;
 export type DropLogFileId = number;
 export type RecordedTagId = number;
 export type EncodeId = number;
-export type ChannelType = 'GR' | 'BS' | 'CS' | 'SKY';
+export type ChannelType = 'GR' | 'BS' | 'CS' | 'SKY' | 'BS4K';
 export type ProgramGenreLv1 = number;
 export type ProgramGenreLv2 = number;
 export type ProgramVideoType = 'mpeg2' | 'h.264' | 'h.265';
@@ -127,6 +127,7 @@ export interface ReserveItem {
      */
     programId?: ProgramId;
     channelId: ChannelId;
+    channelType: ChannelType;
     startAt: UnixtimeMS;
     endAt: UnixtimeMS;
     name: string;
@@ -191,6 +192,7 @@ export interface BroadcastStatus {
     BS: boolean;
     CS: boolean;
     SKY: boolean;
+    BS4K: boolean;
 }
 
 /**
@@ -276,6 +278,7 @@ export interface RuleSearchOption {
     BS?: boolean; // BS
     CS?: boolean; // CS
     SKY?: boolean; // SKY
+    BS4K?: boolean; // BS4K
     channelIds?: ChannelId[]; // channels ids
     genres?: Genre[];
     times?: SearchTime[]; // 開始時間からの有効時間
@@ -533,6 +536,7 @@ export interface ScheduleOption {
     BS: boolean;
     CS: boolean;
     SKY: boolean;
+    BS4K?: boolean;
 }
 
 /**

@@ -1,14 +1,18 @@
 import { Operation } from 'express-openapi';
-import IScheduleApiModel from '../../../../api/schedule/IScheduleApiModel';
-import container from '../../../../ModelContainer';
-import * as api from '../../../api';
+import IScheduleApiModel from '../../../../api/schedule/IScheduleApiModel.js';
+import container from '../../../../ModelContainer.js';
+import * as api from '../../../api.js';
 
+/**
+ * `GET /schedules/detail/{programId}` ハンドラ。`IScheduleApiModel#getSchedule` で番組1件の
+ * 詳細を取得する。`getSchedule` が `null`（該当番組なし）を返した場合は404を返す。
+ */
 export const get: Operation = async (req, res) => {
     const scheduleApiModel = container.get<IScheduleApiModel>('IScheduleApiModel');
 
     try {
         const program = await scheduleApiModel.getSchedule(
-            parseInt(req.params.programId, 10),
+            parseInt(api.pathParam(req, 'programId'), 10),
             req.query.isHalfWidth as any,
         );
         if (program === null) {

@@ -1,16 +1,20 @@
 # クライアントはプラットフォーム依存のコードを含まないため、BUILDPLATFORMでビルドした結果を
 # 全てのTARGETPLATFORMで再利用できる。これによりビルド時間を短縮できる。
-FROM --platform=$BUILDPLATFORM node:18-bookworm AS client-builder
+# base image は digest で固定する。tag は動くため、同じ Dockerfile が時期によって別の
+# base で build され、手元で通った build と公開される image が別物になり得る。
+FROM --platform=$BUILDPLATFORM node:26-bookworm@sha256:9f94d34c787165dca03b74e5bf9c3bf90e8de79b19aa3d87fe1fa1694bf75c89 AS client-builder
 COPY client/package*.json /app/client/
 WORKDIR /app/client
 RUN npm config set fetch-retries 10 \
     && npm config set fetch-retry-mintimeout 100000 \
     && npm config set fetch-retry-maxtimeout 600000
 # どこで時間が掛かっているのか確認できるようにログレベルを変更。
-RUN npm install --no-save --loglevel=info
+RUN npm ci --loglevel=info
 # clientフォルダー外にビルドに必要なファイルが存在するため、全てコピーする。
 COPY . /app/
-RUN npm run build --loglevel=info
+WORKDIR /app/client
+# image build は組み立てだけを行う。lint、typecheck、unit test は CI の gate が実行する。
+RUN npm run bundle --loglevel=info
 
 # サーバーはsqlite3のようなプラットフォーム依存のネイティブ・アドオンを含んでいる。そのため、各
 # TARGETPLATFORMごとにソースをビルドしなければならない。BUILDPLATFORM以外のTARGETPLATFORMでは、QEMU
@@ -19,26 +23,37 @@ RUN npm run build --loglevel=info
 # `npm install`時にネイティブ・アドオンをクロスビルドできればビルド時間を短縮できるが、現時点では明
 # 確な手順は存在しない。https://github.com/mapbox/node-pre-gyp/issues/348を見ればそれが分かる。
 #
-# `npm run build-server`はプラットフォーム依存処理を含まないため、これをBUILDPLATFORMで実行すること
+# サーバーのコンパイルはプラットフォーム依存処理を含まないため、これをBUILDPLATFORMで実行すること
 # でビルド時間をさらに短縮可能だが、手順が煩雑で面倒なので現時点では行っていない。
-FROM node:18-bookworm AS server-builder
+FROM node:24-bookworm@sha256:be23f54a88d34e8824c741b19b91064094f92c1c97b194144bfc8b50d67258e2 AS server-builder
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update
 RUN apt-get install -y build-essential python3
 WORKDIR /app
 COPY package*.json /app/
 ENV DOCKER="YES"
+# fs-ext の build で node-gyp は、Node の header を Node 自身が示す取得先
+# （process.release.headersUrl、debian では nodejs.org）から download する。回線が遅いと
+# この download が ETIMEDOUT で失敗する。base image は同じ版の header を
+# /usr/local/include/node に持っているので、それを使わせて download そのものを無くす。
+# 指定は npm_config_ 接頭辞ではなく npm_package_config_node_gyp_ の形にする。node-gyp の
+# README は npm_config_ 接頭辞を npm@11 で deprecated、npm@12 で削除としており、この形が推奨。
+ENV npm_package_config_node_gyp_nodedir=/usr/local
 RUN npm config set fetch-retries 10 \
     && npm config set fetch-retry-mintimeout 100000 \
     && npm config set fetch-retry-maxtimeout 600000
-RUN npm install --no-save --loglevel=info
+# lockfile どおりに入れる。`npm install` は package.json とずれていれば解決し直すため、
+# 公開する image の依存が lockfile と一致する保証がない。`--no-save` はその書き換えを
+# 抑えるだけで、従わせる指定ではない。
+RUN npm ci --loglevel=info
 # 最終イメージのサイズ削減のため、すべてコピーした後でclientフォルダーを削除。clientフォルダー以外
 # をコピーする方法は，ファイルが追加された場合に変更する必要があるため採用しない。
 COPY . .
 RUN rm -rf client
-RUN npm run build-server --loglevel=info
+# 同じく組み立てだけを行う。lint、format、静的検査は CI の gate が実行する。
+RUN npm run compile
 
-FROM node:18-bookworm-slim
+FROM node:24-bookworm-slim@sha256:ba849c60be29959425b8734d57b8b4b7d56f98edd9504c9af091d5281095a71e
 LABEL maintainer="l3tnun"
 COPY --from=server-builder /app /app/
 COPY --from=client-builder /app/client /app/client/

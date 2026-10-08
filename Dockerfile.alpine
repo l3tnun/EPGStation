@@ -1,15 +1,19 @@
 # 詳細については、Dockerfile.debianのコメントを参照。
-FROM --platform=$BUILDPLATFORM node:18-alpine AS client-builder
+# base image は digest で固定する。tag は動くため、同じ Dockerfile が時期によって別の
+# base で build され、手元で通った build と公開される image が別物になり得る。
+FROM --platform=$BUILDPLATFORM node:26-alpine@sha256:2d984a15c9b54fd0aeb608b8e0d0d83529eb34d2966db27a1fb4f1edc3d298a3 AS client-builder
 COPY client/package*.json /app/client/
 WORKDIR /app/client
 RUN npm config set fetch-retries 10 \
     && npm config set fetch-retry-mintimeout 100000 \
     && npm config set fetch-retry-maxtimeout 600000
-RUN npm install --no-save --loglevel=info
+RUN npm ci --loglevel=info
 COPY . /app/
-RUN npm run build --loglevel=info
+WORKDIR /app/client
+# image build は組み立てだけを行う。lint、typecheck、unit test は CI の gate が実行する。
+RUN npm run bundle --loglevel=info
 
-FROM node:18-alpine3.19 AS server-builder
+FROM node:24-alpine@sha256:e67514e5d0f6c46656005e1b693b2ec9d52e80b641307de684d4a015ba7a4eaf AS server-builder
 RUN apk add --no-cache g++ make pkgconf python3 py3-pip
 # node-sqlite3 が依存する node-gyp が が依存する python3 の distutils 廃止に対応
 # node-sqlite3 が依存する node-gyp が v10 以上になれば不要になる
@@ -17,15 +21,26 @@ RUN pip install --break-system-pack setuptools
 WORKDIR /app
 COPY package*.json /app/
 ENV DOCKER="YES"
+# fs-ext の build で node-gyp は、Node の header を Node 自身が示す取得先
+# （process.release.headersUrl）から download する。回線が遅いとこの download が
+# ETIMEDOUT で失敗する。base image は同じ版の header を /usr/local/include/node に
+# 持っているので、それを使わせて download そのものを無くす。
+# 指定は npm_config_ 接頭辞ではなく npm_package_config_node_gyp_ の形にする。node-gyp の
+# README は npm_config_ 接頭辞を npm@11 で deprecated、npm@12 で削除としており、この形が推奨。
+ENV npm_package_config_node_gyp_nodedir=/usr/local
 RUN npm config set fetch-retries 10 \
     && npm config set fetch-retry-mintimeout 100000 \
     && npm config set fetch-retry-maxtimeout 600000
-RUN npm install --no-save --loglevel=info
+# lockfile どおりに入れる。`npm install` は package.json とずれていれば解決し直すため、
+# 公開する image の依存が lockfile と一致する保証がない。`--no-save` はその書き換えを
+# 抑えるだけで、従わせる指定ではない。
+RUN npm ci --loglevel=info
 COPY . .
 RUN rm -rf client
-RUN npm run build-server --loglevel=info
+# 同じく組み立てだけを行う。lint、format、静的検査は CI の gate が実行する。
+RUN npm run compile
 
-FROM node:18-alpine
+FROM node:24-alpine@sha256:e67514e5d0f6c46656005e1b693b2ec9d52e80b641307de684d4a015ba7a4eaf
 LABEL maintainer="l3tnun"
 COPY --from=server-builder /app /app/
 COPY --from=client-builder /app/client /app/client/

@@ -1,11 +1,11 @@
-const fs = require('fs');
-const path = require('path');
-const yaml = require('js-yaml');
-const { DataSource } = require('typeorm');
+import fs from 'node:fs';
+import path from 'node:path';
+import { load } from 'js-yaml';
+import { DataSource } from 'typeorm';
 
 // config.yml 読み込み
 const configFilePath = path.join('config', 'config.yml');
-const config = yaml.load(fs.readFileSync(configFilePath, 'utf-8'));
+const config = load(fs.readFileSync(configFilePath, 'utf-8'));
 
 // dist 下のディレクトリ設定
 const distDBBasePath = path.join('dist', 'db');
@@ -19,8 +19,10 @@ let ormConfig;
 switch (config.dbtype) {
     case 'sqlite':
         ormConfig = new DataSource({
-            type: 'sqlite',
-            database: path.join(__dirname, 'data', 'database.db'),
+            // 利用者向けの設定値は 'sqlite' のまま。TypeORM 1.x は node-sqlite3 driver を
+            // 廃止し better-sqlite3 へ置き換えたため、driver 名だけを読み替える。
+            type: 'better-sqlite3',
+            database: path.join(import.meta.dirname, 'data', 'database.db'),
             synchronize: false,
             logging: false,
             entities: [entitie],
@@ -53,4 +55,4 @@ switch (config.dbtype) {
         throw new Error('db config error');
 }
 
-module.exports = { ormConfig };
+export { ormConfig };

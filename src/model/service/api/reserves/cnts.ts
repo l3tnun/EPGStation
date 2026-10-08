@@ -1,8 +1,9 @@
 import { Operation } from 'express-openapi';
-import IReserveApiModel from '../../../api/reserve/IReserveApiModel';
-import container from '../../../ModelContainer';
-import * as api from '../../api';
+import IReserveApiModel from '../../../api/reserve/IReserveApiModel.js';
+import container from '../../../ModelContainer.js';
+import * as api from '../../api.js';
 
+/** `GET /reserves/cnts` ハンドラ。`IReserveApiModel#getCnts` で正常/競合/重複/スキップの件数を返す。 */
 export const get: Operation = async (_req, res) => {
     const reserveApiModel = container.get<IReserveApiModel>('IReserveApiModel');
 

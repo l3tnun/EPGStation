@@ -3,10 +3,11 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import * as url from 'url';
 import urljoin from 'url-join';
-import { KodiInfo } from '../IConfigFile';
-import IConfiguration from '../IConfiguration';
-import IApiUtil, { CreateM3U8Option } from './IApiUtil';
+import { KodiInfo } from '../IConfigFile.js';
+import IConfiguration from '../IConfiguration.js';
+import IApiUtil, { CreateM3U8Option } from './IApiUtil.js';
 
+/** `IApiUtil` の実装。詳細は `IApiUtil` を参照。 */
 @injectable()
 export default class ApiUtil implements IApiUtil {
     private configuration: IConfiguration;
@@ -43,6 +44,8 @@ export default class ApiUtil implements IApiUtil {
      * @param kodiInfo: KodiInfo
      */
     public async sendToKodi(source: string, kodiInfo: KodiInfo): Promise<void> {
+        const KODI_REQUEST_TIMEOUT_MS = 30_000;
+        const controller = new AbortController();
         const option: AxiosRequestConfig = {
             url: url.resolve(kodiInfo.host, '/jsonrpc'),
             method: 'POST',
@@ -50,6 +53,8 @@ export default class ApiUtil implements IApiUtil {
                 'Content-Type': 'application/json',
             },
             responseType: 'json',
+            signal: controller.signal,
+            timeout: KODI_REQUEST_TIMEOUT_MS,
             data: {
                 jsonrpc: '2.0',
                 method: 'Player.Open',
@@ -67,6 +72,23 @@ export default class ApiUtil implements IApiUtil {
             };
         }
 
-        await axios.request(option);
+        let timer!: NodeJS.Timeout;
+        const deadline = new Promise<never>((_resolve, reject) => {
+            timer = setTimeout(() => {
+                controller.abort();
+                reject(new Error('KodiRequestDeadlineExceeded'));
+            }, KODI_REQUEST_TIMEOUT_MS);
+        });
+        const request = new Promise<void>((resolve, reject) => {
+            axios.request(option).then(
+                () => resolve(),
+                error => reject(error),
+            );
+        });
+        try {
+            await Promise.race([deadline, request]);
+        } finally {
+            clearTimeout(timer);
+        }
     }
 }

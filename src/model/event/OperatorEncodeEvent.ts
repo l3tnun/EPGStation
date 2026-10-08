@@ -1,11 +1,16 @@
 import * as events from 'events';
 import { inject, injectable } from 'inversify';
-import ILogger from '../ILogger';
-import ILoggerModel from '../ILoggerModel';
-import IOperatorEncodeEvent, { OperatorFinishEncodeInfo } from './IOperatorEncodeEvent';
+import ILogger from '../ILogger.js';
+import ILoggerModel from '../ILoggerModel.js';
+import { EncodeCompletionInfo, EncodeCompletionSink } from '../ipc/IEncodeCompletionSink.js';
+import IOperatorEncodeEvent, { OperatorFinishEncodeInfo } from './IOperatorEncodeEvent.js';
 
+/**
+ * `IOperatorEncodeEvent` の実装。`EncodeCompletionSink`（`accept`）も兼ね、子process側からIPC
+ * 経由で届くエンコード完了通知を受けて `emitFinishEncode` を発行し、operator側の購読者へ伝える。
+ */
 @injectable()
-class OperatorEncodeEvent implements IOperatorEncodeEvent {
+class OperatorEncodeEvent implements IOperatorEncodeEvent, EncodeCompletionSink {
     private log: ILogger;
     private emitter: events.EventEmitter = new events.EventEmitter();
 
@@ -19,6 +24,10 @@ class OperatorEncodeEvent implements IOperatorEncodeEvent {
      */
     public emitFinishEncode(info: OperatorFinishEncodeInfo): void {
         this.emitter.emit(OperatorEncodeEvent.FINISH_ENCODE_EVENT, info);
+    }
+
+    public accept(info: EncodeCompletionInfo): void {
+        this.emitFinishEncode(info);
     }
 
     /**

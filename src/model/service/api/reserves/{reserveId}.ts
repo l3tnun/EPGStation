@@ -1,13 +1,20 @@
 import { Operation } from 'express-openapi';
-import IReserveApiModel from '../../../api/reserve/IReserveApiModel';
-import container from '../../../ModelContainer';
-import * as api from '../../api';
+import IReserveApiModel from '../../../api/reserve/IReserveApiModel.js';
+import container from '../../../ModelContainer.js';
+import * as api from '../../api.js';
 
+/**
+ * `GET /reserves/{reserveId}` ハンドラ。`IReserveApiModel#get` で予約1件を取得する。
+ * `get` が `null`（該当予約なし）を返した場合は 404、それ以外の例外は 500 として返す。
+ */
 export const get: Operation = async (req, res) => {
     const reserveApiModel = container.get<IReserveApiModel>('IReserveApiModel');
 
     try {
-        const reserve = await reserveApiModel.get(parseInt(req.params.reserveId, 10), req.query.isHalfWidth as any);
+        const reserve = await reserveApiModel.get(
+            parseInt(api.pathParam(req, 'reserveId'), 10),
+            req.query.isHalfWidth as any,
+        );
         if (reserve === null) {
             api.responseError(res, {
                 code: 404,
@@ -60,11 +67,12 @@ get.apiDoc = {
     },
 };
 
+/** `DELETE /reserves/{reserveId}` ハンドラ。`IReserveApiModel#cancel` で予約を取り消す。 */
 export const del: Operation = async (req, res) => {
     const reserveApiModel = container.get<IReserveApiModel>('IReserveApiModel');
 
     try {
-        api.responseJSON(res, 200, await reserveApiModel.cancel(parseInt(req.params.reserveId, 10)));
+        api.responseJSON(res, 200, await reserveApiModel.cancel(parseInt(api.pathParam(req, 'reserveId'), 10)));
     } catch (err: any) {
         api.responseServerError(res, err.message);
     }
@@ -96,17 +104,18 @@ del.apiDoc = {
     },
 };
 
+/** `PUT /reserves/{reserveId}` ハンドラ。`IReserveApiModel#edit` で手動予約の内容を更新する。 */
 export const put: Operation = async (req, res) => {
     const reserveApiModel = container.get<IReserveApiModel>('IReserveApiModel');
 
     try {
-        await reserveApiModel.edit(parseInt(req.params.reserveId, 10), req.body as any);
+        await reserveApiModel.edit(parseInt(api.pathParam(req, 'reserveId'), 10), req.body as any);
         api.responseJSON(res, 201, {
             code: 201,
             message: 'ok',
         });
     } catch (err: any) {
-        api.responseServerError(res, err.message);
+        api.responseOperationError(res, err);
     }
 };
 
@@ -132,6 +141,16 @@ put.apiDoc = {
     responses: {
         201: {
             description: '手動予約の更新に成功した',
+        },
+        409: {
+            description: '編集の対象ではない予約（自動予約とルール由来の番組リレー予約）は編集できない',
+            content: {
+                'application/json': {
+                    schema: {
+                        $ref: '#/components/schemas/Error',
+                    },
+                },
+            },
         },
         default: {
             description: '予期しないエラー',

@@ -1,20 +1,35 @@
 import { Operation } from 'express-openapi';
-import IIPTVApiModel from '../../../api/iptv/IIPTVApiModel';
-import container from '../../../ModelContainer';
-import * as api from '../../api';
+import IIPTVApiModel from '../../../api/iptv/IIPTVApiModel.js';
+import container from '../../../ModelContainer.js';
+import * as api from '../../api.js';
+import { completeIptvDocumentRequest } from '../../../api/iptv/IptvDocumentRequestGuard.js';
 
-export const get: Operation = async (req, res) => {
-    const iptvApiModel = container.get<IIPTVApiModel>('IIPTVApiModel');
-
-    try {
-        const result = await iptvApiModel.getEpg(parseInt(req.query.days as any, 10), req.query.isHalfWidth as any);
-        res.setHeader('Content-Type', 'application/xml; charset="UTF-8"');
-        res.status(200);
-        res.end(result);
-    } catch (err: any) {
-        api.responseServerError(res, err.message);
-    }
-};
+/**
+ * `GET /iptv/epg.xml` ハンドラ。`completeIptvDocumentRequest`（timeout・応答close監視付き、
+ * `src/model/api/iptv/IptvDocumentRequestGuard.ts`参照）の下でXMLTV形式のEPGを生成する。
+ * `IIPTVApiModel#getEpgForRequest`（任意実装、`requestContext`で途中打ち切りを検知できる）
+ * があればそちらを使い、無ければ`getEpg`にfall backする。
+ */
+export const get: Operation = (req, res) =>
+    completeIptvDocumentRequest(res, {
+        execute: async requestContext => {
+            const iptvApiModel = container.get<IIPTVApiModel>('IIPTVApiModel');
+            const days: number = req.query.days as any;
+            const isHalfWidth = req.query.isHalfWidth as any;
+            if (iptvApiModel.getEpgForRequest !== undefined) {
+                return iptvApiModel.getEpgForRequest(days, isHalfWidth, requestContext);
+            }
+            return iptvApiModel.getEpg(days, isHalfWidth);
+        },
+        failure: (error: any) => {
+            api.responseServerError(res, error?.message);
+        },
+        success: result => {
+            res.setHeader('Content-Type', 'application/xml; charset="UTF-8"');
+            res.status(200);
+            res.end(result);
+        },
+    });
 
 get.apiDoc = {
     summary: 'IPTV epg を取得',

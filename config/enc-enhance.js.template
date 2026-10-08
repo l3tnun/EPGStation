@@ -1,5 +1,4 @@
-const spawn = require('child_process').spawn;
-const execFile = require('child_process').execFile;
+import { execFile, spawn } from 'child_process';
 const ffmpeg = process.env.FFMPEG;
 const ffprobe = process.env.FFPROBE;
 
@@ -25,7 +24,7 @@ const getDuration = filePath => {
             try {
                 const result = JSON.parse(stdout);
                 resolve(parseFloat(result.format.duration));
-            } catch (err: any) {
+            } catch (err) {
                 reject(err);
             }
         });

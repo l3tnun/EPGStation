@@ -1,8 +1,9 @@
 import { Operation } from 'express-openapi';
-import IChannelApiModel from '../../api/channel/IChannelApiModel';
-import container from '../../ModelContainer';
-import * as api from '../api';
+import IChannelApiModel from '../../api/channel/IChannelApiModel.js';
+import container from '../../ModelContainer.js';
+import * as api from '../api.js';
 
+/** `GET /channels` ハンドラ。`IChannelApiModel#getChannels` で放送局情報一覧を返す。 */
 export const get: Operation = async (_req, res) => {
     const channelApiModel = container.get<IChannelApiModel>('IChannelApiModel');
 

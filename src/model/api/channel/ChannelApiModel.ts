@@ -1,21 +1,21 @@
 import { inject, injectable } from 'inversify';
-import mirakurun from 'mirakurun';
-import * as apid from '../../../../api';
-import IChannelDB from '../../db/IChannelDB';
-import IMirakurunClientModel from '../../IMirakurunClientModel';
-import IChannelApiModel, { IChannelApiModelError } from './IChannelApiModel';
+import type * as apid from '../../../../api.js';
+import IChannelDB from '../../db/IChannelDB.js';
+import { TunerServerAccess } from '../../tuner/types.js';
+import IChannelApiModel, { IChannelApiModelError } from './IChannelApiModel.js';
 
+/** `IChannelApiModel` の実装。詳細は `IChannelApiModel` を参照。 */
 @injectable()
 class ChannelApiModel implements IChannelApiModel {
     private channelDB: IChannelDB;
-    private mirakurunClient: mirakurun;
+    private tunerServerAccess: TunerServerAccess;
 
     constructor(
         @inject('IChannelDB') channelDB: IChannelDB,
-        @inject('IMirakurunClientModel') mirakurunClientModel: IMirakurunClientModel,
+        @inject('TunerServerAccess') tunerServerAccess: TunerServerAccess,
     ) {
         this.channelDB = channelDB;
-        this.mirakurunClient = mirakurunClientModel.getClient();
+        this.tunerServerAccess = tunerServerAccess;
     }
 
     /**
@@ -58,7 +58,7 @@ class ChannelApiModel implements IChannelApiModel {
             throw new Error(IChannelApiModelError.NOT_FOUND);
         }
 
-        return this.mirakurunClient.getLogoImage(channelId);
+        return this.tunerServerAccess.getLogo(channelId);
     }
 }
 

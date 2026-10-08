@@ -1,0 +1,43 @@
+# betterleaks (tools/check-betterleaks-scan.py) の default rule set が誤検知する
+# 既知の非 secret を許可する。fingerprint 形式は `path:rule-id:line`。
+#
+# `betterleaks git --staged` は default の gitleaks-ignore-path (".") で本 file を
+# repo root から自動で読む（cwd=REPO_ROOT で呼ぶため）。file名を `.gitleaksignore` に
+# しているのは betterleaks 自体がこの名前を受け付けるのに加えて、
+# tools/check-tracked-secrets.py が既に `.gitleaksignore` 内の
+# `path:rule-id:line` grammar の行を credential 誤検知から除外する仕組みを
+# 持っているため（`GITLEAKS_FINGERPRINT`）。
+#
+# 以下はいずれも tracked 全 file を betterleaks v1.8.1 の default rule set で
+# scan した結果を個別に確認したもの:
+#   - test/server/fixtures/configuration/synthetic-tls-key.pem と
+#     test/server/service-interface/fixtures/synthetic-mtls.ts の private-key は、
+#     test 用に生成した鍵で実運用の鍵ではない。
+#   - docs/*.md と config/config.yml.template の generic-password は、
+#     設定例の placeholder（`password`、project 名の `epgstation`）で実 credential ではない。
+#   - test/server/**/*.test.ts の generic-password は `synthetic-*` と明示された
+#     test fixture の literal で実 credential ではない。
+config/config.yml.template:generic-password:17
+docs/conf-manual.md:generic-password:177
+docs/kodi.md:generic-password:22
+docs/mysql-mirakurun-3.9.0-beta.24.md:generic-password:58
+test/server/configuration/configuration.spec.test.ts:generic-password:238
+test/server/configuration/configuration.spec.test.ts:generic-password:241
+test/server/configuration/configuration.spec.test.ts:generic-password:242
+test/server/configuration/http.integration.test.ts:generic-password:59
+test/server/configuration/http.integration.test.ts:generic-password:60
+test/server/fixtures/configuration/synthetic-tls-key.pem:private-key:1
+test/server/media-delivery/kodi.spec.test.ts:generic-password:23
+test/server/media-delivery/kodi.spec.test.ts:generic-password:40
+test/server/media-delivery/kodi.spec.test.ts:generic-password:136
+test/server/media-delivery/kodi.spec.test.ts:generic-password:140
+test/server/media-delivery/kodi.spec.test.ts:generic-password:144
+test/server/media-delivery/media-delivery-http.integration.test.ts:generic-password:840
+test/server/persistence/connection.spec.test.ts:generic-password:94
+test/server/persistence/connection.spec.test.ts:generic-password:134
+test/server/persistence/connection.spec.test.ts:generic-password:189
+test/server/persistence/connection.spec.test.ts:generic-password:224
+test/server/persistence/connection.spec.test.ts:generic-password:251
+test/server/persistence/connection.spec.test.ts:generic-password:296
+test/server/service-interface/fixtures/synthetic-mtls.ts:private-key:41
+test/server/service-interface/fixtures/synthetic-mtls.ts:private-key:89

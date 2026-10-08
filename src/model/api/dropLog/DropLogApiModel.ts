@@ -1,12 +1,13 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import * as apid from '../../../../api';
-import FileUtil from '../../../util/FileUtil';
-import IDropLogFileDB from '../../db/IDropLogFileDB';
-import IConfigFile from '../../IConfigFile';
-import IConfiguration from '../../IConfiguration';
-import IDropLogApiModel, { DropLogApiErrors } from './IDropLogApiModel';
+import type * as apid from '../../../../api.js';
+import FileUtil from '../../../util/FileUtil.js';
+import IDropLogFileDB from '../../db/IDropLogFileDB.js';
+import IConfigFile from '../../IConfigFile.js';
+import IConfiguration from '../../IConfiguration.js';
+import IDropLogApiModel, { DropLogApiErrors } from './IDropLogApiModel.js';
 
+/** `IDropLogApiModel` の実装。詳細は `IDropLogApiModel` を参照。 */
 @injectable()
 export default class DropLogApiModel implements IDropLogApiModel {
     private config: IConfigFile;

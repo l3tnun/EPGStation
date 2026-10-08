@@ -1,11 +1,12 @@
 import * as events from 'events';
 import { inject, injectable } from 'inversify';
-import * as apid from '../../../api';
-import Recorded from '../../db/entities/Recorded';
-import ILogger from '../ILogger';
-import ILoggerModel from '../ILoggerModel';
-import IRecordedEvent from './IRecordedEvent';
+import type * as apid from '../../../api.js';
+import Recorded from '../../db/entities/Recorded.js';
+import ILogger from '../ILogger.js';
+import ILoggerModel from '../ILoggerModel.js';
+import IRecordedEvent from './IRecordedEvent.js';
 
+/** `IRecordedEvent` の実装。詳細は `IRecordedEvent` を参照。 */
 @injectable()
 class RecordedEvent implements IRecordedEvent {
     private log: ILogger;
@@ -62,6 +63,14 @@ class RecordedEvent implements IRecordedEvent {
      */
     public emitDeleteVideoFile(videoFileId: apid.VideoFileId): void {
         this.emitter.emit(RecordedEvent.DLETE_VIDEO_FILE, videoFileId);
+    }
+
+    /**
+     * ドロップログ登録情報変更イベント発行
+     * @param dropLogFileId: apid.DropLogFileId
+     */
+    public emitDropLogFileChanged(dropLogFileId: apid.DropLogFileId): void {
+        this.emitter.emit(RecordedEvent.DROP_LOG_FILE_CHANGED, dropLogFileId);
     }
 
     /**
@@ -163,6 +172,20 @@ class RecordedEvent implements IRecordedEvent {
     }
 
     /**
+     * ドロップログ登録情報変更イベント登録
+     * @param callback: (dropLogFileId: apid.DropLogFileId) => void
+     */
+    public setDropLogFileChanged(callback: (dropLogFileId: apid.DropLogFileId) => void): void {
+        this.emitter.on(RecordedEvent.DROP_LOG_FILE_CHANGED, async (dropLogFileId: apid.DropLogFileId) => {
+            try {
+                await callback(dropLogFileId);
+            } catch (err: any) {
+                this.log.system.error(err);
+            }
+        });
+    }
+
+    /**
      * 保護状態を変更イベント登録
      * @param callback: (recordedId: apid.RecordedId, isProtected: boolean) => void
      */
@@ -184,6 +207,7 @@ namespace RecordedEvent {
     export const ADD_VIDEO_FILE = 'AddVideoFile';
     export const ADD_UPLOADED_VIDEO_FILE = 'addUploadedVideoFile';
     export const DLETE_VIDEO_FILE = 'DeleteVideoFile';
+    export const DROP_LOG_FILE_CHANGED = 'DropLogFileChanged';
     export const CHANGE_PROTECT = 'ChangeProtect';
 }
 

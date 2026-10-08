@@ -1,0 +1,20 @@
+port: 48100
+apiServers: []
+subDirectory: /synthetic/ui/
+recorded:
+    - name: tmp
+      path: '%ROOT%/temporary/'
+    - name: archive
+      path: '%ROOT%/archive/'
+recordedTmp: '%ROOT%/recording-buffer/'
+thumbnail: '%ROOT%/thumbnail/'
+streamFilePath: '%ROOT%/stream-files/'
+encode:
+    - name: synthetic-encode
+      cmd: synthetic-command-marker
+stream:
+    live:
+        ts: {}
+    recorded:
+        ts: {}
+        encoded: {}

@@ -1,6 +1,10 @@
-import * as apid from '../../api';
-import * as Enums from '../Enums';
+import type * as apid from '../../api.js';
+import * as Enums from '../Enums.js';
 
+/**
+ * HTTPS で待ち受ける場合の証明書一式とポート設定。config.yml の `https` キーに対応する。
+ * 未設定（`IConfigFile.https`が`undefined`）の場合はHTTPSを待ち受けない。
+ */
 export interface HttpsConfig {
     port: number;
     key: string; // 秘密鍵
@@ -9,6 +13,10 @@ export interface HttpsConfig {
     socketioPort?: number;
 }
 
+/**
+ * 録画保存先ディレクトリ1件分の設定。config.yml `recorded` 配列の要素に対応する
+ * （複数指定でき、`recording/RecordingUtilModel`側が空き容量等を見て使用先を選ぶ）。
+ */
 export interface RecordedDirInfo {
     name: string;
     path: string;
@@ -17,6 +25,10 @@ export interface RecordedDirInfo {
     limitCmd?: string; // 空き容量限界値を超えたときに実行するコマンド
 }
 
+/**
+ * クライアントから外部アプリを起動させるための URL scheme 設定。`m2ts`/`video`/`download`
+ * それぞれの配信種別ごとに、OSやプラットフォーム別のscheme文字列を保持する。
+ */
 export interface URLSchemeInfo {
     ios?: string;
     android?: string;
@@ -24,11 +36,16 @@ export interface URLSchemeInfo {
     win?: string;
 }
 
+/**
+ * 配信・エンコードで使うコマンド定義1件（表示名と、実行するコマンドのテンプレート文字列）。
+ * `cmd`が未設定の場合はコマンド実行を伴わない方式（後段の実装依存）を表す。
+ */
 export interface StreamingCmd {
     name: string;
     cmd?: string;
 }
 
+/** Kodi 連携（録画済みファイルの送信先）1台分の接続設定。config.yml `kodiHosts` 配列の要素。 */
 export interface KodiInfo {
     name: string;
     host: string;
@@ -45,6 +62,8 @@ export default interface IConfigFile {
     clientSocketioPort?: number;
     https?: HttpsConfig;
     mirakurunPath: string;
+    tunerRestRequestTimeoutMs?: unknown;
+    tunerStreamEstablishmentTimeoutMs?: unknown;
 
     subDirectory?: string;
 
@@ -115,12 +134,14 @@ export default interface IConfigFile {
 
     // ストレージ空き容量チェック間隔 (秒)
     storageLimitCheckIntervalTime: number;
+    storageLimitCommandTimeoutMs?: unknown;
 
     // サムネイル
     thumbnail: string;
     thumbnailCmd: string;
     thumbnailSize: string;
     thumbnailPosition: number;
+    thumbnailMaxPending: number;
 
     // drop log
     dropLog: string;
@@ -128,6 +149,8 @@ export default interface IConfigFile {
 
     // upload
     uploadTempDir: string;
+    concurrentUploadNum: number;
+    uploadReceiveTimeoutMs: number;
 
     ffmpeg: string;
     ffprobe: string;
@@ -135,6 +158,7 @@ export default interface IConfigFile {
     // エンコード設定
     encodeProcessNum: number; // エンコード、ストリーミング最大プロセス数
     concurrentEncodeNum: number; // 同時エンコード数
+    encodeQueueLimit: number;
     encode: {
         name: string;
         cmd: string;
@@ -155,6 +179,8 @@ export default interface IConfigFile {
     recordingFinishCommand?: string; // 録画終了
     recordingFailedCommand?: string; // 録画中のエラー
     encodingFinishCommand?: string; // エンコード終了
+    hookCommandMaxPending: number;
+    hookCommandTimeoutMs: number;
 
     // 視聴 URL Scheme 設定
     urlscheme: {

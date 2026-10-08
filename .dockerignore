@@ -1,4 +1,43 @@
 node_modules/
+# client/node_modules のような、root 以外の深さにある node_modules も除外する。
+# 素の "node_modules/" は build context の root にしか掛からない。
+**/node_modules/
 Dockerfile*
 .devcontainer
 recorded/*
+test/server/.artifacts/
+
+# Claude Code の作業領域（隔離 worktree・hook・state）。build context に入れない。
+# 隔離 worktree が含まれると、その中に複製された test 用の合成鍵 fixture が build context に入り、
+# image の secret scan に検出されて Docker image の確認が落ちる
+# （正規パスの合成鍵は許可対象だが、worktree 配下の重複コピーは一致しない）。
+.claude/
+
+# 実行環境の実データ（設定ファイル本体・DB・log・thumbnail・録画外の drop file）は
+# build に不要で、そのまま COPY されると実環境の情報が image に焼き込まれる。
+# git 追跡下の template/sample/.gitkeep は image の build に必要な可能性があるため、
+# .gitignore が実データ側だけを無視しているのに倣い、除外の対象を絞って明示的に再包含する。
+config/*
+!config/*.template
+!config/*.sample.yml
+data/*
+!data/key/
+!data/streamfiles/
+data/key/*
+!data/key/.gitkeep
+data/streamfiles/*
+!data/streamfiles/.gitkeep
+logs/*
+!logs/EPGUpdater/
+!logs/Operator/
+!logs/Service/
+logs/EPGUpdater/*
+!logs/EPGUpdater/.gitkeep
+logs/Operator/*
+!logs/Operator/.gitkeep
+logs/Service/*
+!logs/Service/.gitkeep
+thumbnail/*
+!thumbnail/.gitkeep
+drop/*
+!drop/.gitkeep

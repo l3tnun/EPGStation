@@ -1,0 +1,815 @@
+.reserveMenuItemIcon,
+.itemTitleIcon {
+  color: rgba(0, 0, 0, 0.54);
+  flex: 0 0 auto;
+}
+
+.reserveMenuItemIcon {
+  margin-right: 16px;
+}
+
+:global([data-theme-mode='dark']) .reserveMenuItemIcon,
+:global([data-theme-mode='dark']) .itemTitleIcon {
+  color: rgb(255 255 255 / 70%);
+}
+
+.reservesPage {
+  box-sizing: border-box;
+  container-type: inline-size;
+  margin: 0 auto;
+  max-width: 1600px;
+  padding: 8px;
+  width: 100%;
+}
+
+.state {
+  padding: 24px 8px;
+}
+
+.list {
+  display: grid;
+  gap: 8px;
+}
+
+.item {
+  background: #fff;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 12px;
+}
+
+:global([data-theme-mode='dark']) .item,
+:global([data-theme-mode='dark']) .manualProgramInfo,
+:global([data-theme-mode='dark']) .manualTimeReserveCard,
+:global([data-theme-mode='dark']) .manualOptionsCard,
+:global([data-theme-mode='dark']) .reservesPage[data-reserves-layout='card'] .list,
+:global([data-theme-mode='dark']) .reservesPage[data-reserves-layout='table'] .tableCard,
+:global([data-theme-mode='dark']) .list {
+  background: var(--mui-palette-background-paper, #1e1e1e);
+  color: rgb(255 255 255 / 87%);
+}
+
+:global([data-theme-mode='dark']) .itemDescription,
+:global([data-theme-mode='dark']) .itemLegacyTime,
+:global([data-theme-mode='dark']) .itemGenre,
+:global([data-theme-mode='dark']) .reserveDialogSubText,
+:global([data-theme-mode='dark']) .reserveDialogTimeButton,
+:global([data-theme-mode='dark']) .reserveDialogGenres {
+  color: rgb(255 255 255 / 70%);
+}
+
+:global([data-theme-mode='dark']) .reserveDialogContent {
+  color: inherit;
+}
+
+:global([data-theme-mode='dark']) .manualPanelChevron {
+  color: rgb(255 255 255 / 70%);
+}
+
+:global([data-theme-mode='dark']) .manualActions,
+:global([data-theme-mode='dark']) .reservesPage[data-reserves-layout='table'] .reservesTable th,
+:global([data-theme-mode='dark']) .reservesPage[data-reserves-layout='table'] .item td {
+  border-color: rgb(255 255 255 / 12%);
+}
+
+:global([data-theme-mode='dark']) .reservesPage[data-reserves-layout='table'] .reservesTable th {
+  color: rgb(255 255 255 / 70%);
+}
+
+.cardHeader {
+  position: relative;
+}
+
+.tableHeader {
+  display: none;
+}
+
+.tableCard,
+.reservesTable {
+  display: none;
+}
+
+.item[data-selected='true'] {
+  background: #4285f4;
+  color: #fff;
+}
+
+.selectedItem {
+  outline: 0;
+}
+
+.decoratedItem[data-reserve-state='reserve'] {
+  border-color: red;
+  border-width: 4px;
+}
+
+.decoratedItem[data-reserve-state='conflict'] {
+  background: #fffd6b;
+  border-color: red;
+  border-style: dashed;
+  border-width: 4px;
+}
+
+.decoratedItem[data-reserve-state='skip'] {
+  background: #aaa;
+}
+
+.decoratedItem[data-reserve-state='overlap'] {
+  background: #aaa;
+  color: black;
+  text-decoration: line-through;
+}
+
+.itemContentButton {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  display: block;
+  font: inherit;
+  min-width: 0;
+  padding: 0;
+  text-align: left;
+  width: 100%;
+}
+
+.itemContentButton:focus-visible {
+  outline: 2px solid Highlight;
+  outline-offset: 2px;
+}
+
+.itemTitle {
+  align-items: flex-start;
+  display: flex;
+  font-size: 1rem;
+  font-weight: 900;
+  line-height: 1.35;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.itemChannel,
+.itemDate,
+.itemTime,
+.itemDescription,
+.itemLegacyTime,
+.itemGenre {
+  display: block;
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+}
+
+.itemDescription,
+.itemLegacyTime,
+.itemGenre {
+  color: rgba(0, 0, 0, 0.72);
+}
+
+.itemDescription {
+  color: rgba(0, 0, 0, 0.87);
+  display: block;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  margin-top: 8px;
+  overflow-wrap: anywhere;
+}
+
+.itemContentButton .itemDescription {
+  -webkit-line-clamp: initial;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.itemGenre,
+.itemLegacyTime {
+  display: none;
+}
+
+.genreList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0;
+}
+
+.reserveDialogContent {
+  color: rgba(0, 0, 0, 0.87);
+  font-size: 0.875rem;
+  line-height: 1.375rem;
+  padding: 16px 16px 8px;
+}
+
+.reserveDialogTitle {
+  font-size: 1rem;
+  font-weight: 900;
+  line-height: 1.75;
+  margin-bottom: 4px;
+  overflow-wrap: anywhere;
+}
+
+.reserveDialogSubText,
+.reserveDialogTimeButton,
+.reserveDialogGenres {
+  color: rgba(0, 0, 0, 0.54);
+}
+
+.reserveDialogTimeButton {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  display: block;
+  font: inherit;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+}
+
+.reserveDialogGenres {
+  margin: 4px 0;
+}
+
+.reserveDialogContent .preWrap {
+  margin: 8px 0;
+}
+
+.preWrap {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.pagination {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.manualReservePage {
+  box-sizing: border-box;
+  display: grid;
+  gap: 0;
+  margin: 0 auto;
+  max-width: 800px;
+  padding: 12px;
+  width: 100%;
+}
+
+.manualTimeSwitch {
+  justify-self: start;
+  margin: 12px 0;
+}
+
+.manualProgramInfo,
+.manualTimeReserveCard {
+  background: #fff;
+  border-radius: 4px;
+  box-shadow:
+    rgba(0, 0, 0, 0.2) 0 2px 1px -1px,
+    rgba(0, 0, 0, 0.14) 0 1px 1px 0,
+    rgba(0, 0, 0, 0.12) 0 1px 3px 0;
+  padding: 16px;
+}
+
+.manualSpacer {
+  height: 8px;
+}
+
+.manualProgramName {
+  font-size: 1rem;
+  font-weight: 900;
+  line-height: 1.75rem;
+  margin-top: 0;
+  margin-bottom: 4px;
+}
+
+.manualProgramMeta,
+.manualProgramGenres {
+  font-size: 0.875rem;
+  font-weight: 300;
+  line-height: 1.25rem;
+}
+
+.manualProgramGenres {
+  margin: 4px 0;
+}
+
+.manualProgramDescription {
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5rem;
+  margin: 8px 0;
+  white-space: normal;
+}
+
+.manualProgramInfo h2,
+.manualOptionPanel h2 {
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.manualProgramInfo p {
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+}
+
+.manualSearchOptionRow {
+  display: block;
+  padding-top: 16px;
+}
+
+.manualSearchOptionRow:first-child {
+  padding-top: 0;
+}
+
+.manualSearchOptionTitle {
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.375rem;
+}
+
+.manualSearchOptionContent {
+  width: 100%;
+}
+
+.manualSelectField {
+  max-width: none;
+}
+
+.manualDateFields {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.manualDateSpacer {
+  display: inline-block;
+  width: 8px;
+}
+
+.manualOptionsCard {
+  background: #fff;
+  border-radius: 4px;
+  box-shadow:
+    rgba(0, 0, 0, 0.2) 0 2px 1px -1px,
+    rgba(0, 0, 0, 0.14) 0 1px 1px 0,
+    rgba(0, 0, 0, 0.12) 0 1px 3px 0;
+  overflow: hidden;
+}
+
+.manualOptionPanel {
+  display: grid;
+  gap: 8px 16px;
+  grid-template-columns: minmax(0, 1fr) 24px;
+  min-height: 38px;
+  padding: 6px 24px 10px 16px;
+}
+
+.manualPanelHeader {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  display: grid;
+  font: inherit;
+  grid-column: 1 / -1;
+  grid-template-columns: minmax(0, 1fr) 24px;
+  padding: 0;
+  text-align: left;
+}
+
+.manualPanelHeader:focus-visible {
+  outline: 2px solid #1976d2;
+  outline-offset: 2px;
+}
+
+.manualOptionPanel > :not(.manualPanelHeader) {
+  grid-column: 1 / -1;
+}
+
+.manualCollapsedPanel {
+  align-items: center;
+  padding-bottom: 6px;
+}
+
+.manualPanelChevron {
+  color: rgba(0, 0, 0, 0.62);
+  height: 24px;
+  position: relative;
+  width: 24px;
+  place-self: center end;
+}
+
+.manualPanelChevron::before {
+  border-color: currentcolor;
+  border-style: solid;
+  border-width: 0 2px 2px 0;
+  content: '';
+  height: 8px;
+  left: 8px;
+  position: absolute;
+  top: 9px;
+  transform: rotate(225deg);
+  width: 8px;
+}
+
+.manualPanelChevron[data-direction='down']::before {
+  top: 5px;
+  transform: rotate(45deg);
+}
+
+.manualFormGrid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: 1fr;
+  margin: 0 auto;
+  max-width: 522px;
+  width: 100%;
+}
+
+.manualCompactField {
+  max-width: 150px;
+}
+
+.manualWideField {
+  display: block;
+  margin: 0 auto;
+  max-width: 522px;
+  width: 100%;
+}
+
+/* Reserve the vertical space a helper-text row would occupy on every add-mode option-panel
+   field (directory / file format / encode 1-3), even when no helper/error text is rendered, so
+   field density stays consistent whether or not an individual field currently shows one. */
+.manualFormGrid :global(.MuiFormControl-root),
+.manualWideField:global(.MuiFormControl-root) {
+  padding-bottom: 10px;
+}
+
+.manualActions {
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+  padding: 8px;
+}
+
+@media (max-width: 520px) {
+  .manualReservePage {
+    padding: 12px;
+  }
+
+  .manualOptionsCard {
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+  }
+
+  .manualActions {
+    justify-content: flex-end;
+  }
+
+  .manualActions > button:first-child {
+    min-width: 110px;
+  }
+
+  .manualFormGrid {
+    grid-template-columns: 1fr;
+    max-width: none;
+  }
+
+  .manualDateFields {
+    display: block;
+  }
+
+  .manualSearchOptionRow {
+    padding-top: 20px;
+  }
+
+  .manualOptionPanel > :not(.manualPanelHeader) {
+    margin-left: 24px;
+    width: calc(100% - 42px);
+  }
+
+  .manualOptionPanel :global(.MuiFormControlLabel-root) {
+    width: calc(100% - 24px);
+  }
+
+  .manualOptionPanel :global(.MuiCheckbox-root) {
+    margin-right: 8px;
+    padding: 0;
+  }
+
+  .manualOptionPanel .manualWideField {
+    margin-left: 0;
+    margin-right: 0;
+    max-width: none;
+  }
+
+  .manualDateFields :global(.MuiFormControl-root) {
+    width: 100%;
+  }
+
+  .manualDateSpacer {
+    display: none;
+  }
+}
+
+@media (min-width: 480px) {
+  .manualSearchOptionRow {
+    display: flex;
+  }
+
+  .manualSearchOptionTitle {
+    flex: 0 0 25%;
+  }
+
+  .manualSearchOptionContent {
+    flex: 0 0 75%;
+    width: 75%;
+  }
+
+  .manualOptionPanel > :not(.manualPanelHeader) {
+    margin-left: 25%;
+    width: 75%;
+  }
+
+  .manualOptionPanel .manualFormGrid,
+  .manualOptionPanel .manualWideField {
+    margin-left: 0;
+    margin-right: 0;
+    max-width: none;
+  }
+}
+
+.reservesPage[data-reserves-layout='card'] .list {
+  background: #fff;
+  border-radius: 4px;
+  box-shadow:
+    rgba(0, 0, 0, 0.2) 0 3px 1px -2px,
+    rgba(0, 0, 0, 0.14) 0 2px 2px 0,
+    rgba(0, 0, 0, 0.12) 0 1px 5px 0;
+  gap: 0;
+  overflow: hidden;
+}
+
+.reservesPage[data-reserves-layout='card'] .item {
+  border-radius: 0;
+  min-height: 154px;
+  padding: 12px;
+}
+
+.reservesPage[data-reserves-layout='card'] .cardHeader {
+  display: block;
+}
+
+.reservesPage[data-reserves-layout='card'] .itemContentButton {
+  display: block;
+  width: 100%;
+}
+
+.reservesPage[data-reserves-layout='card'] .itemTitleIcon {
+  margin-right: 4px;
+  padding-bottom: 2px;
+}
+
+.reservesPage[data-reserves-layout='card'] .itemTitle {
+  display: block;
+  line-height: 1.75;
+  margin-bottom: -8px;
+  min-height: 36px;
+  padding-right: 44px;
+}
+
+.reservesPage[data-reserves-layout='card'] .itemChannel {
+  font-size: 0.875rem;
+  font-weight: 300;
+  line-height: 1.375rem;
+}
+
+.reservesPage[data-reserves-layout='card'] .itemLegacyTime {
+  color: rgba(0, 0, 0, 0.72);
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 300;
+  line-height: 1.25rem;
+  margin-bottom: 8px;
+}
+
+.reservesPage[data-reserves-layout='card'] .itemDescription {
+  font-weight: 300;
+  line-height: 1.25rem;
+}
+
+.reservesPage[data-reserves-layout='card'] :global([data-theme-mode='dark']) .itemLegacyTime,
+:global([data-theme-mode='dark']) .reservesPage[data-reserves-layout='card'] .itemLegacyTime,
+:global([data-theme-mode='dark']) .reservesPage[data-reserves-layout='card'] .itemDescription,
+:global([data-theme-mode='dark']) .reservesPage[data-reserves-layout='card'] .itemChannel {
+  color: rgb(255 255 255 / 70%);
+}
+
+.reservesPage[data-reserves-layout='card'] .cardMenu {
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+/* 868px content width equals the 900px border-box list boundary after 16px side padding. */
+@container (min-width: 868px) {
+  .reservesPage[data-reserves-layout='table'] .tableCard {
+    background: #fff;
+    border-radius: 4px;
+    box-shadow:
+      rgba(0, 0, 0, 0.2) 0 3px 1px -2px,
+      rgba(0, 0, 0, 0.14) 0 2px 2px 0,
+      rgba(0, 0, 0, 0.12) 0 1px 5px 0;
+    display: block;
+    margin: 0 auto;
+    max-width: 1600px;
+    overflow: hidden;
+    width: 100%;
+  }
+
+  .reservesPage[data-reserves-layout='table'] .reservesTable {
+    border-collapse: collapse;
+    display: table;
+    width: 100%;
+  }
+
+  .reservesPage[data-reserves-layout='table'] .channelColumn {
+    width: 160px;
+  }
+
+  .reservesPage[data-reserves-layout='table'] .dateColumn {
+    width: 96px;
+  }
+
+  .reservesPage[data-reserves-layout='table'] .timeColumn {
+    width: 112px;
+  }
+
+  .reservesPage[data-reserves-layout='table'] .menuColumn {
+    width: 68px;
+  }
+
+  .reservesPage[data-reserves-layout='table'] .reservesTable th {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+    color: rgba(0, 0, 0, 0.72);
+    font-size: 0.75rem;
+    font-weight: 500;
+    height: 48px;
+    min-height: 48px;
+    padding: 0 16px;
+    text-align: left;
+  }
+
+  .reservesPage[data-reserves-layout='table'] .item {
+    background: #fff;
+    border: 0;
+    border-radius: 0;
+    cursor: default;
+    height: 80px;
+  }
+
+  .reservesPage[data-reserves-layout='table'] .item[data-selected='true'],
+  .reservesPage[data-reserves-layout='table'] .item[data-selected='true'] td {
+    background: #4285f4;
+    color: #fff;
+  }
+
+  :global([data-theme-mode='dark']) .reservesPage[data-reserves-layout='table'] .item {
+    background: var(--mui-palette-background-paper, #1e1e1e);
+    color: rgb(255 255 255 / 87%);
+  }
+
+  :global([data-theme-mode='dark'])
+    .reservesPage[data-reserves-layout='table']
+    .item[data-selected='true'],
+  :global([data-theme-mode='dark'])
+    .reservesPage[data-reserves-layout='table']
+    .item[data-selected='true']
+    td {
+    background: #4285f4;
+    color: #fff;
+  }
+
+  .reservesPage[data-reserves-layout='table'] .item td {
+    border-bottom: thin solid rgba(0, 0, 0, 0.12);
+    font-size: 0.875rem;
+    height: 64px;
+    padding: 8px 16px;
+    vertical-align: middle;
+  }
+
+  .reservesPage[data-reserves-layout='table'] .itemChannel,
+  .reservesPage[data-reserves-layout='table'] .itemDate,
+  .reservesPage[data-reserves-layout='table'] .itemTime,
+  .reservesPage[data-reserves-layout='table'] .itemTitle,
+  .reservesPage[data-reserves-layout='table'] .itemDescription,
+  .reservesPage[data-reserves-layout='table'] .itemMenuCell {
+    display: table-cell;
+    margin: 0;
+  }
+
+  .reservesPage[data-reserves-layout='table'] .itemChannel,
+  .reservesPage[data-reserves-layout='table'] .itemDate,
+  .reservesPage[data-reserves-layout='table'] .itemTime {
+    overflow-wrap: normal;
+  }
+
+  .reservesPage[data-reserves-layout='table'] .itemContentButton {
+    display: block;
+  }
+
+  .reservesPage[data-reserves-layout='table'] .itemTitle {
+    font-size: 0.875rem;
+    font-weight: 400;
+  }
+
+  .reservesPage[data-reserves-layout='table'] .itemTitleIcon {
+    display: inline-flex;
+    height: 24px;
+    margin-right: 4px;
+    padding-bottom: 2px;
+    vertical-align: middle;
+    width: 24px;
+  }
+
+  .reservesPage[data-reserves-layout='table'] .itemTitle {
+    overflow-wrap: anywhere;
+  }
+
+  .reservesPage[data-reserves-layout='table'] .itemTime {
+    line-height: 1.5;
+    white-space: nowrap;
+  }
+
+  .reservesPage[data-reserves-layout='table'] .itemTime > span {
+    display: block;
+  }
+
+  .reservesPage[data-reserves-layout='table'] .itemLegacyTime,
+  .reservesPage[data-reserves-layout='table'] .itemGenre {
+    display: none;
+  }
+
+  .reservesPage[data-reserves-layout='table'] .itemDescription {
+    color: rgba(0, 0, 0, 0.87);
+    font-size: 0.875rem;
+    line-height: 1.45;
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+
+  :global([data-theme-mode='dark']) .reservesPage[data-reserves-layout='table'] .itemDescription {
+    color: rgb(255 255 255 / 87%);
+  }
+
+  .reservesPage[data-reserves-layout='table'] .itemMenuCell {
+    padding-left: 16px;
+    padding-right: 16px;
+    text-align: center;
+  }
+}
+
+@media (max-width: 899px) {
+  .reservesPage {
+    padding: 8px;
+  }
+
+  .list {
+    background: #fff;
+    border-radius: 4px;
+    box-shadow:
+      rgba(0, 0, 0, 0.2) 0 3px 1px -2px,
+      rgba(0, 0, 0, 0.14) 0 2px 2px 0,
+      rgba(0, 0, 0, 0.12) 0 1px 5px 0;
+    gap: 0;
+    overflow: hidden;
+  }
+
+  .item {
+    border-radius: 0;
+    padding: 12px;
+  }
+
+  .itemChannel,
+  .itemDate,
+  .itemTime {
+    display: inline;
+    margin-right: 4px;
+  }
+
+  .itemTitle {
+    margin-bottom: 4px;
+  }
+}
+
+@media (max-width: 520px) {
+  .reservesPage[data-reserves-layout='card'] .item {
+    padding-bottom: 16px;
+  }
+}

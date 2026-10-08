@@ -1,0 +1,5 @@
+#!/bin/sh
+# 自前の検査は無い。利用者の global の commit-msg hook を素通りさせないためだけに置く。
+set -e
+root=$(git rev-parse --show-toplevel)
+"$root/.githooks/_delegate-global" commit-msg "$@"

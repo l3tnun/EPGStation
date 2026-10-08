@@ -1,0 +1,160 @@
+import { Route } from 'react-router-dom'
+import { EncodePage } from '../../features/encode'
+import { RecordingPage } from '../../features/recording'
+import { ManualReservePage, ReservesPage } from '../../features/reserves'
+import { RuleListPage, SearchRulePage } from '../../features/search/rule'
+import { SettingsPage } from '../../features/settings/SettingsPage'
+import { StoragesPage } from '../../features/storages/StoragesPage'
+import { RecordedUploadPage } from '../../features/storages/upload/RecordedUploadPage'
+import {
+  getEnabledBroadcastWaves,
+  getRecordedDirectories,
+  getRecordedEncodeModes,
+} from '../lib/serverConfigSelectors'
+import type { AppRouteProps } from './routeProps'
+
+export function managementRoutes({
+  drawerLayout,
+  themeMode,
+  activeServerConfig,
+  dashboardSettings,
+  viewportWidth,
+  osPrefersDark,
+  onNavigationClick,
+  showSnackbar,
+  suppressRouteSnackbarClose,
+  onSettingsThemePreviewChange,
+  onSettingsThemePreviewRestore,
+  onSettingsSaved,
+  recordingApiRepository,
+  encodeApiRepository,
+  reservesApiRepository,
+  searchRuleApiRepository,
+  storagesApiRepository,
+  recordedApiRepository,
+}: AppRouteProps) {
+  return (
+    <>
+      <Route
+        path="/recording"
+        element={
+          <RecordingPage
+            isNavigationOpen={drawerLayout.isDrawerOpen}
+            onNavigationClick={onNavigationClick}
+            settings={dashboardSettings}
+            apiRepository={recordingApiRepository}
+            onFetchFailure={showSnackbar}
+          />
+        }
+      />
+      <Route
+        path="/encode"
+        element={
+          <EncodePage
+            isNavigationOpen={drawerLayout.isDrawerOpen}
+            onNavigationClick={onNavigationClick}
+            settings={dashboardSettings}
+            apiRepository={encodeApiRepository}
+            onFetchFailure={showSnackbar}
+          />
+        }
+      />
+      <Route
+        path="/reserves"
+        element={
+          <ReservesPage
+            isNavigationOpen={drawerLayout.isDrawerOpen}
+            onNavigationClick={onNavigationClick}
+            settings={dashboardSettings}
+            viewportWidth={viewportWidth}
+            apiRepository={reservesApiRepository}
+            onFetchFailure={showSnackbar}
+            isEnableDisplayForEachBroadcastWave={
+              dashboardSettings.isEnableDisplayForEachBroadcastWave
+            }
+          />
+        }
+      />
+      <Route
+        path="/reserves/manual"
+        element={
+          <ManualReservePage
+            isNavigationOpen={drawerLayout.isDrawerOpen}
+            onNavigationClick={onNavigationClick}
+            settings={dashboardSettings}
+            apiRepository={reservesApiRepository}
+            onFetchFailure={showSnackbar}
+          />
+        }
+      />
+      <Route
+        path="/search"
+        element={
+          <SearchRulePage
+            isNavigationOpen={drawerLayout.isDrawerOpen}
+            onNavigationClick={onNavigationClick}
+            settings={dashboardSettings}
+            enabledBroadcastWaves={getEnabledBroadcastWaves(activeServerConfig)}
+            encodeModes={getRecordedEncodeModes(activeServerConfig)}
+            recordedDirectories={getRecordedDirectories(activeServerConfig)}
+            apiRepository={searchRuleApiRepository}
+            onSnackbar={showSnackbar}
+          />
+        }
+      />
+      <Route
+        path="/rule"
+        element={
+          <RuleListPage
+            isNavigationOpen={drawerLayout.isDrawerOpen}
+            onNavigationClick={onNavigationClick}
+            settings={dashboardSettings}
+            viewportWidth={viewportWidth}
+            apiRepository={searchRuleApiRepository}
+            onSnackbar={showSnackbar}
+          />
+        }
+      />
+      <Route
+        path="/recorded/upload"
+        element={
+          <RecordedUploadPage
+            isNavigationOpen={drawerLayout.isDrawerOpen}
+            onNavigationClick={onNavigationClick}
+            isHalfWidthDisplayed={dashboardSettings.isHalfWidthDisplayed}
+            apiRepository={recordedApiRepository}
+            recordedDirectories={getRecordedDirectories(activeServerConfig)}
+            onSnackbar={showSnackbar}
+            suppressRouteSnackbarClose={suppressRouteSnackbarClose}
+          />
+        }
+      />
+      <Route
+        path="/storages"
+        element={
+          <StoragesPage
+            isNavigationOpen={drawerLayout.isDrawerOpen}
+            onNavigationClick={onNavigationClick}
+            apiRepository={storagesApiRepository}
+            onFetchFailure={showSnackbar}
+          />
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <SettingsPage
+            currentPreviewTheme={themeMode}
+            isNavigationOpen={drawerLayout.isDrawerOpen}
+            osPrefersDark={osPrefersDark}
+            onNavigationClick={onNavigationClick}
+            onSnackbar={showSnackbar}
+            onThemePreviewChange={onSettingsThemePreviewChange}
+            onThemePreviewRestore={onSettingsThemePreviewRestore}
+            onSettingsSaved={onSettingsSaved}
+          />
+        }
+      />
+    </>
+  )
+}

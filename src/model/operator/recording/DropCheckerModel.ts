@@ -1,22 +1,32 @@
-import * as aribts from 'aribts';
+import aribts from 'aribts';
 import * as events from 'events';
 import * as fs from 'fs';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import * as stream from 'stream';
-import DateUtil from '../../../util/DateUtil';
-import FileUtil from '../../../util/FileUtil';
-import ILogger from '../../ILogger';
-import ILoggerModel from '../../ILoggerModel';
-import IDropCheckerModel from './IDropCheckerModel';
+import DateUtil from '../../../util/DateUtil.js';
+import FileUtil from '../../../util/FileUtil.js';
+import ILogger from '../../ILogger.js';
+import ILoggerModel from '../../ILoggerModel.js';
+import IDropCheckerModel from './IDropCheckerModel.js';
 
+/** `IDropCheckerModel` の実装。詳細は `IDropCheckerModel` を参照。aribts の解析器群を
+ *  数珠つなぎに pipe し、`start`〜`stop` の間に検知したドロップ・エラー・スクランブルを
+ *  ログファイルへ逐次追記しつつ集計する。 */
 @injectable()
 class DropCheckerModel implements IDropCheckerModel {
     private log: ILogger;
+    /** `getResult`が終了処理の完了を待ち合わせるための内部専用 event。`onFinish`完了時に発行する。 */
     private listener: events.EventEmitter = new events.EventEmitter();
+    /** 生成したログファイルのパス。`start`で確定し、以後の追記先として使う。 */
     private dest: string | null = null;
+    /** `onFinish`確定時に aribts から取得した最終集計結果。`getResult`が返す値の実体。 */
     private result: aribts.Result | null = null;
+    /** ログ出力用の pid → 名称対応表。`setIndex`で登録され、ログメッセージで
+     *  pid を人が読める名称に変換するために使う。 */
     private pidIndex: { [key: number]: string } = {};
+    /** TS のセクション解析（`tsSectionAnalyzer`の`time`イベント）から得た最新の時刻。
+     *  ログメッセージのタイムスタンプ（`getTime`）に使う。未取得の間は`null`。 */
     private time: Date | null = null;
     private hasError: boolean = false; // パケットチェック中にエラーを検知したか？
     private isFinished: boolean = false; // 終了処理が終わっているか？
@@ -35,18 +45,27 @@ class DropCheckerModel implements IDropCheckerModel {
     }
 
     /**
-     * チェック開始
+     * チェックの準備
+     * ログファイルのパスを決めて空ファイルを生成する。ストリームには触れない。
+     * ストリームを流し始めた後に await しないよう、`attach` の前に済ませておく。
      * @param logDirPath: string ログファイル保存先ディレクトリパス
      * @param srcFilePath: string ソースファイル ログファイル名生成に使用する
-     * @param stream: stream.Readable drop をチェックするストリーム
      * @return Promise<void>
      */
-    public async start(logDirPath: string, srcFilePath: string, readableStream: stream.Readable): Promise<void> {
+    public async prepare(logDirPath: string, srcFilePath: string): Promise<void> {
         this.dest = await this.getLogFilePath(logDirPath, srcFilePath);
 
         // 空ファイル生成
         await FileUtil.touchFile(this.dest);
+    }
 
+    /**
+     * チェック開始
+     * `prepare` の後に呼ぶ。await を挟まずにストリームへ繋ぐ。
+     * @param srcFilePath: string ソースファイル
+     * @param readableStream: stream.Readable drop をチェックするストリーム
+     */
+    public attach(srcFilePath: string, readableStream: stream.Readable): void {
         this.transformStream = new stream.Transform({
             transform: function (chunk: any, _encoding: string, done: () => void): void {
                 this.push(chunk);
@@ -443,3 +462,4 @@ namespace DropCheckerModel {
 }
 
 export default DropCheckerModel;
+declare const __EPGSTATION_COVERAGE_EXCLUSION_DROP_CHECKER_MODEL_NULL_GUARDS_20260924: unique symbol;

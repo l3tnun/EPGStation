@@ -1,0 +1,30 @@
+{
+    "feature_name": "frontend-video-playback",
+    "created_at": "2026-05-04T14:34:22+09:00",
+    "updated_at": "2026-05-10T15:25:00+09:00",
+    "language": "ja",
+    "phase": "implemented",
+    "approvals": {
+        "requirements": {
+            "generated": true,
+            "approved": true
+        },
+        "design": {
+            "generated": true,
+            "approved": true
+        },
+        "tasks": {
+            "generated": true,
+            "approved": true
+        }
+    },
+    "ready_for_implementation": true,
+    "implementation": {
+        "completed": true,
+        "verified": true,
+        "completed_at": "2026-05-10T15:25:00+09:00",
+        "status": "implemented",
+        "ready_for_new_implementation_work": false,
+        "verification_scope": "unit / imp / mocked Playwright / dev-server proxy verification only. Desktop real-browser HLS playback and Android Chrome coverage are handled by client E2E / visual / device gates and are not implied by this flag."
+    }
+}

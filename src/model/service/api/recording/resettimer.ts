@@ -1,8 +1,12 @@
 import { Operation } from 'express-openapi';
-import IRecordingApiModel from '../../../api/recording/IRecordingApiModel';
-import container from '../../../ModelContainer';
-import * as api from '../../api';
+import IRecordingApiModel from '../../../api/recording/IRecordingApiModel.js';
+import container from '../../../ModelContainer.js';
+import * as api from '../../api.js';
 
+/**
+ * `POST /recording/resettimer` ハンドラ。`IRecordingApiModel#resetTimer`（全録画のタイマーを
+ * 最新の番組情報に基づいて再設定する処理）の完了を待ってから200を返す。
+ */
 export const post: Operation = async (_req, res) => {
     const recordingApiModel = container.get<IRecordingApiModel>('IRecordingApiModel');
     try {

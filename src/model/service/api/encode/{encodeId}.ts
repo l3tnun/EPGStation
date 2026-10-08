@@ -1,13 +1,14 @@
 import { Operation } from 'express-openapi';
-import IEncodeApiModel from '../../../api/encode/IEncodeApiModel';
-import container from '../../../ModelContainer';
-import * as api from '../../api';
+import IEncodeApiModel from '../../../api/encode/IEncodeApiModel.js';
+import container from '../../../ModelContainer.js';
+import * as api from '../../api.js';
 
+/** `DELETE /encode/{encodeId}` ハンドラ。`IEncodeApiModel#cancel` でエンコードをキャンセルする。 */
 export const del: Operation = async (req, res) => {
     const encodeApiModel = container.get<IEncodeApiModel>('IEncodeApiModel');
 
     try {
-        await encodeApiModel.cancel(parseInt(req.params.encodeId, 10));
+        await encodeApiModel.cancel(parseInt(api.pathParam(req, 'encodeId'), 10));
         api.responseJSON(res, 200, { code: 200 });
     } catch (err: any) {
         api.responseServerError(res, err.message);

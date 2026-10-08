@@ -46,7 +46,7 @@ export default class Channel extends BaseEntity {
     public channelTypeId!: number;
 
     @Column()
-    public channelType!: string; // GR BS CS SKY
+    public channelType!: string; // GR BS CS SKY BS4K
 
     @Column()
     public channel!: string;

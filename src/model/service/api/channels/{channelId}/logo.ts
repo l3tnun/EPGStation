@@ -1,13 +1,17 @@
 import { Operation } from 'express-openapi';
-import IChannelApiModel, { IChannelApiModelError } from '../../../../api/channel/IChannelApiModel';
-import container from '../../../../ModelContainer';
-import * as api from '../../../api';
+import IChannelApiModel, { IChannelApiModelError } from '../../../../api/channel/IChannelApiModel.js';
+import container from '../../../../ModelContainer.js';
+import * as api from '../../../api.js';
 
+/**
+ * `GET /channels/{channelId}/logo` ハンドラ。`IChannelApiModel#getLogo` でロゴ画像データを
+ * 取得して`image/png`で返す。`IChannelApiModelError.NOT_FOUND`は404、それ以外の例外は500。
+ */
 export const get: Operation = async (req, res) => {
     const channelApiModel = container.get<IChannelApiModel>('IChannelApiModel');
 
     try {
-        const result = await channelApiModel.getLogo(parseInt(req.params.channelId, 10));
+        const result = await channelApiModel.getLogo(parseInt(api.pathParam(req, 'channelId'), 10));
         res.setHeader('Content-Type', 'image/png');
         res.status(200);
         res.end(result);

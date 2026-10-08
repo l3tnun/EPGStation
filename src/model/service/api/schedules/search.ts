@@ -1,8 +1,12 @@
 import { Operation } from 'express-openapi';
-import IScheduleApiModel from '../../../api/schedule/IScheduleApiModel';
-import container from '../../../ModelContainer';
-import * as api from '../../api';
+import IScheduleApiModel from '../../../api/schedule/IScheduleApiModel.js';
+import container from '../../../ModelContainer.js';
+import * as api from '../../api.js';
 
+/**
+ * `POST /schedules/search` ハンドラ。body の検索条件（option）・半角表示指定（isHalfWidth）・
+ * 上限件数（limit）で `IScheduleApiModel#search` を呼び、番組検索結果を返す。
+ */
 export const post: Operation = async (req, res) => {
     const scheduleApiModel = container.get<IScheduleApiModel>('IScheduleApiModel');
 

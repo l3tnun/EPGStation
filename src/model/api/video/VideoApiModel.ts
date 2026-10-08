@@ -1,16 +1,23 @@
-import * as fileType from 'file-type';
-import { inject, injectable } from 'inversify';
+import { fileTypeFromFile } from 'file-type';
+import { inject, injectable, optional } from 'inversify';
 import * as path from 'path';
-import * as apid from '../../../../api';
-import IRecordedDB from '../../db/IRecordedDB';
-import IVideoFileDB from '../../db/IVideoFileDB';
-import IConfiguration from '../../IConfiguration';
-import IIPCClient from '../../ipc/IIPCClient';
-import IApiUtil from '../IApiUtil';
-import IPlayList from '../IPlayList';
-import IVideoApiModel, { VideoFilePathInfo } from './IVideoApiModel';
-import IVideoUtil from './IVideoUtil';
+import type * as apid from '../../../../api.js';
+import IRecordedDB from '../../db/IRecordedDB.js';
+import IVideoFileDB from '../../db/IVideoFileDB.js';
+import IConfiguration from '../../IConfiguration.js';
+import IIPCClient from '../../ipc/IIPCClient.js';
+import IStreamManageModel from '../../service/stream/manager/IStreamManageModel.js';
+import { toLegacyRecordedDeliveryError } from '../../service/stream/recorded/RecordedDeliveryLeaseConsumer.js';
+import IApiUtil from '../IApiUtil.js';
+import IPlayList from '../IPlayList.js';
+import IVideoApiModel, { VideoDelivery, VideoFilePathInfo } from './IVideoApiModel.js';
+import IVideoUtil from './IVideoUtil.js';
 
+/**
+ * `IVideoApiModel` の実装。録画済み番組の実体ファイル（ビデオファイル）に対する配信
+ * （`openDelivery`/`getFullFilePath`）・HLSプレイリスト生成・削除・長さ取得・kodiへの
+ * リンク送信を行うAPI層の窓口。
+ */
 @injectable()
 export default class VideoApiModel implements IVideoApiModel {
     private configuration: IConfiguration;
@@ -19,6 +26,7 @@ export default class VideoApiModel implements IVideoApiModel {
     private apiUtil: IApiUtil;
     private videoUtil: IVideoUtil;
     private ipc: IIPCClient;
+    private streamManageModel?: Pick<IStreamManageModel, 'acquireRecordedDelivery'>;
 
     constructor(
         @inject('IConfiguration') configuration: IConfiguration,
@@ -27,6 +35,9 @@ export default class VideoApiModel implements IVideoApiModel {
         @inject('IApiUtil') apiUtil: IApiUtil,
         @inject('IVideoUtil') videoUtil: IVideoUtil,
         @inject('IIPCClient') ipc: IIPCClient,
+        @inject('IStreamManageModel')
+        @optional()
+        streamManageModel?: Pick<IStreamManageModel, 'acquireRecordedDelivery'>,
     ) {
         this.configuration = configuration;
         this.videoFileDB = videoFileDB;
@@ -34,6 +45,7 @@ export default class VideoApiModel implements IVideoApiModel {
         this.apiUtil = apiUtil;
         this.videoUtil = videoUtil;
         this.ipc = ipc;
+        this.streamManageModel = streamManageModel;
     }
 
     /**
@@ -52,15 +64,57 @@ export default class VideoApiModel implements IVideoApiModel {
               };
     }
 
+    public async openDelivery(
+        videoFileId: apid.VideoFileId,
+        isActive: () => boolean = () => true,
+    ): Promise<VideoDelivery | null> {
+        if (this.streamManageModel === undefined) {
+            throw new Error('StreamManageModelIsUndefined');
+        }
+
+        let delivery;
+        try {
+            delivery = await this.streamManageModel.acquireRecordedDelivery(videoFileId, 0, isActive);
+        } catch (error: unknown) {
+            const legacy = toLegacyRecordedDeliveryError(error);
+            if (
+                legacy.message === 'VideoIsNull' ||
+                legacy.message === 'RecordedIsNull' ||
+                legacy.message === 'GetVideoFilePathError'
+            ) {
+                return null;
+            }
+            throw legacy;
+        }
+
+        try {
+            const mime = await this.createMime(delivery.source.inputPath);
+            if (isActive() === false) {
+                throw new Error('RecordedDeliveryStopped');
+            }
+            return {
+                isTail: delivery.source.kind === 'recording-tail-reader',
+                mime,
+                path: delivery.source.inputPath,
+                reader: delivery.source.kind === 'encoded-direct' ? undefined : delivery.source.reader,
+                release: () => delivery.release(),
+            };
+        } catch (error: unknown) {
+            await delivery.release();
+            throw error;
+        }
+    }
+
     /**
      * 指定されたファイルパスからファイルの mime を返す
      * @param filePath: string ファイルパス
      * @return Promise<string>
      */
     private async createMime(filePath: string): Promise<string> {
-        const mime = await fileType.fromFile(filePath);
+        const mime = await fileTypeFromFile(filePath);
         if (typeof mime !== 'undefined') {
-            return mime.mime;
+            // Matroska は公開 API の応答定義が列挙する video/x-matroska に統一する
+            return mime.mime === 'video/matroska' ? 'video/x-matroska' : mime.mime;
         }
 
         switch (path.extname(filePath)) {

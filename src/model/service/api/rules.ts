@@ -1,9 +1,13 @@
 import { Operation } from 'express-openapi';
-import * as apid from '../../../../api';
-import IRuleApiModel from '../../api/rule/IRuleApiModel';
-import container from '../../ModelContainer';
-import * as api from '../api';
+import type * as apid from '../../../../api.js';
+import IRuleApiModel from '../../api/rule/IRuleApiModel.js';
+import container from '../../ModelContainer.js';
+import * as api from '../api.js';
 
+/**
+ * `GET /rules` ハンドラ。query の offset / limit / type / keyword から検索条件を組み立て、
+ * `IRuleApiModel#gets` でルール一覧を返す。
+ */
 export const get: Operation = async (req, res) => {
     const ruleApiModel = container.get<IRuleApiModel>('IRuleApiModel');
 
@@ -70,6 +74,7 @@ get.apiDoc = {
     },
 };
 
+/** `POST /rules` ハンドラ。`IRuleApiModel#add` でルールを追加し、発行された id を返す。 */
 export const post: Operation = async (req, res) => {
     const ruleApiModel = container.get<IRuleApiModel>('IRuleApiModel');
 
@@ -78,7 +83,7 @@ export const post: Operation = async (req, res) => {
             ruleId: await ruleApiModel.add(req.body),
         });
     } catch (err: any) {
-        api.responseServerError(res, err.message);
+        api.responseOperationError(res, err);
     }
 };
 

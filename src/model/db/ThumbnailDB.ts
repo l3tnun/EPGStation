@@ -1,10 +1,11 @@
 import { inject, injectable } from 'inversify';
-import * as apid from '../../../api';
-import Thumbnail from '../../db/entities/Thumbnail';
-import IPromiseRetry from '../IPromiseRetry';
-import IDBOperator from './IDBOperator';
-import IThumbnailDB from './IThumbnailDB';
+import type * as apid from '../../../api.js';
+import Thumbnail from '../../db/entities/Thumbnail.js';
+import IPromiseRetry from '../IPromiseRetry.js';
+import IDBOperator from './IDBOperator.js';
+import IThumbnailDB from './IThumbnailDB.js';
 
+/** `IThumbnailDB` の実装。詳細は `IThumbnailDB` を参照。 */
 @injectable()
 export default class ThumbnailDB implements IThumbnailDB {
     private op: IDBOperator;
@@ -25,13 +26,13 @@ export default class ThumbnailDB implements IThumbnailDB {
         const connection = await this.op.getConnection();
         const queryRunner = connection.createQueryRunner();
 
-        // start transaction
-        await queryRunner.startTransaction();
-
         let hasError = false;
         try {
+            // start transaction
+            await queryRunner.startTransaction();
+
             // 削除
-            await queryRunner.manager.delete(Thumbnail, {});
+            await queryRunner.manager.createQueryBuilder().delete().from(Thumbnail).execute();
 
             // 挿入処理
             for (const item of items) {
@@ -40,10 +41,21 @@ export default class ThumbnailDB implements IThumbnailDB {
             await queryRunner.commitTransaction();
         } catch (err: any) {
             console.error(err);
-            hasError = err;
-            await queryRunner.rollbackTransaction();
+            hasError = true;
+            if (queryRunner.isTransactionActive) {
+                try {
+                    await queryRunner.rollbackTransaction();
+                } catch (cleanupError) {
+                    console.error(cleanupError);
+                }
+            }
         } finally {
-            await queryRunner.release();
+            try {
+                await queryRunner.release();
+            } catch (cleanupError) {
+                console.error(cleanupError);
+                hasError = true;
+            }
         }
 
         if (hasError) {

@@ -1,9 +1,12 @@
 import { inject, injectable } from 'inversify';
-import * as apid from '../../../api';
-import IConfigFile from '../IConfigFile';
-import IConfiguration from '../IConfiguration';
-import IReserveOptionChecker from './IReserveOptionChecker';
+import type * as apid from '../../../api.js';
+import IConfigFile from '../IConfigFile.js';
+import IConfiguration from '../IConfiguration.js';
+import IReserveOptionChecker from './IReserveOptionChecker.js';
 
+/** キーワード検索条件のうち、どの対象（CS・正規表現・番組名・概要・詳細）を検索に含めるかの
+ *  フラグ集合。`checkKeywordOption`が、キーワード未指定時は全て`false`、指定時は
+ *  少なくともいずれかが`true`であることを検証する。 */
 export interface KeywordOption {
     cs: boolean;
     regExp: boolean;
@@ -94,7 +97,13 @@ export default class ReserveOptionChecker implements IReserveOptionChecker {
         // channel と 放送局
         if (typeof option.channelIds !== 'undefined') {
             // channleIds が有効な場合は false でないといけない
-            if (!!option.GR === true || !!option.BS === true || !!option.CS === true || !!option.SKY === true) {
+            if (
+                !!option.GR === true ||
+                !!option.BS === true ||
+                !!option.CS === true ||
+                !!option.SKY === true ||
+                !!option.BS4K === true
+            ) {
                 return false;
             }
         }

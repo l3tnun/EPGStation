@@ -1,0 +1,13 @@
+#!/bin/sh
+# `git config core.hooksPath .githooks` を設定した repository では、利用者の global hook が
+# 素通りしてしまう。global 側に同名 hook があれば明示的に呼び直す。
+# 第 1 引数が hook 名、以降が本来の hook 引数。
+name="$1"
+shift
+global=$(git config --global --get core.hooksPath || true)
+[ -n "$global" ] || exit 0
+case "$global" in
+  '~'*) global="$HOME${global#\~}" ;;
+esac
+[ -x "$global/$name" ] || exit 0
+exec "$global/$name" "$@"

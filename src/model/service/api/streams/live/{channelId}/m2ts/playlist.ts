@@ -1,8 +1,14 @@
 import { Operation } from 'express-openapi';
-import IStreamApiModel from '../../../../../../api/stream/IStreamApiModel';
-import container from '../../../../../../ModelContainer';
-import * as api from '../../../../../api';
+import IStreamApiModel from '../../../../../../api/stream/IStreamApiModel.js';
+import container from '../../../../../../ModelContainer.js';
+import * as api from '../../../../../api.js';
 
+/**
+ * `GET /streams/live/{channelId}/m2ts/playlist` ハンドラ。`IStreamApiModel#getLiveM2TsStreamM3u8`
+ * でライブM2TS配信用のm3u8プレイリストを取得する。プレイリスト内のURLに使う host / scheme を
+ * request から決定する（`host` ヘッダ、`api.isSecureProtocol` によるhttps判定）。
+ * 対象ストリームが存在しない場合（`null`）は404を返す。
+ */
 export const get: Operation = async (req, res) => {
     const streamApiModel = container.get<IStreamApiModel>('IStreamApiModel');
 
@@ -12,7 +18,7 @@ export const get: Operation = async (req, res) => {
         }
 
         const playlist = await streamApiModel.getLiveM2TsStreamM3u8(req.headers.host, api.isSecureProtocol(req), {
-            channelId: parseInt(req.params.channelId, 10),
+            channelId: parseInt(api.pathParam(req, 'channelId'), 10),
             mode: parseInt(req.query.mode as string, 10),
         });
 

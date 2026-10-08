@@ -2,7 +2,33 @@ import { ChildProcess } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 
+/**
+ * 子process（プロセスグループ）の生存確認・終了・コマンド文字列の分解等、外部process
+ * 起動まわりで共通して使う補助関数群。
+ */
 namespace ProcessUtil {
+    export const wait = (milliseconds: number): Promise<void> => {
+        return new Promise(resolve => {
+            setTimeout(resolve, milliseconds);
+        });
+    };
+
+    export const isProcessGroupAlive = (pgid: number): boolean => {
+        try {
+            process.kill(-pgid, 0);
+            return true;
+        } catch (err: any) {
+            if (err?.code === 'ESRCH') {
+                return false;
+            }
+            throw err;
+        }
+    };
+
+    export const killProcessGroup = (pgid: number, signal: NodeJS.Signals): void => {
+        process.kill(-pgid, signal);
+    };
+
     /**
      * セットしたプロセスを前処理をしてから殺す
      * @param child: ChildProcess
@@ -40,7 +66,7 @@ namespace ProcessUtil {
         args: string[];
     }
 
-    export const ROOT_PATH = path.join(__dirname, '..', '..').replace(new RegExp(`\\${path.sep}$`), '');
+    export const ROOT_PATH = path.join(import.meta.dirname, '..', '..').replace(new RegExp(`\\${path.sep}$`), '');
 
     /**
      * 渡された cmd 文字列を bin と args に分離する
@@ -49,11 +75,7 @@ namespace ProcessUtil {
      */
     export const parseCmdStr = (cmd: string): ProcessUtil.Cmds => {
         let args = cmd.split(' ');
-        let bin = args.shift();
-        if (typeof bin === 'undefined') {
-            throw new Error('CmdParseError');
-        }
-
+        let bin = args.shift() as string;
         // %NODE% の replace
         bin = bin.replace(/%NODE%/g, process.argv[0]);
 
@@ -61,7 +83,7 @@ namespace ProcessUtil {
         try {
             fs.statSync(bin);
         } catch (e: any) {
-            throw new Error('CmdBinIsNotFound');
+            throw new Error('CmdBinIsNotFound', { cause: e });
         }
 
         args = args

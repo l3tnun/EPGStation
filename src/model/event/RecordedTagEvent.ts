@@ -1,11 +1,12 @@
 import * as events from 'events';
 import { inject, injectable } from 'inversify';
-import * as apid from '../../../api';
-import RecordedTag from '../../db/entities/RecordedTag';
-import ILogger from '../ILogger';
-import ILoggerModel from '../ILoggerModel';
-import IRecordedTagEvent from './IRecordedTagEvent';
+import type * as apid from '../../../api.js';
+import RecordedTag from '../../db/entities/RecordedTag.js';
+import ILogger from '../ILogger.js';
+import ILoggerModel from '../ILoggerModel.js';
+import IRecordedTagEvent from './IRecordedTagEvent.js';
 
+/** `IRecordedTagEvent` の実装。詳細は `IRecordedTagEvent` を参照。 */
 @injectable()
 class RecordedTagEvent implements IRecordedTagEvent {
     private log: ILogger;

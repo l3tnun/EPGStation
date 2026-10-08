@@ -47,7 +47,6 @@ declare module 'aribts' {
     export class TsSectionAnalyzer extends TsBase {}
     export class TsSectionUpdater extends TsBase {}
     export class TsPacketSelector extends TsBase {
-        // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
         constructor(option: any);
         public onPmt(tsSection: TsSectionProgramMap): void;
     }

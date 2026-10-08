@@ -2,27 +2,29 @@ import * as fs from 'fs';
 import minimist from 'minimist';
 import 'reflect-metadata';
 import { install } from 'source-map-support';
-import DropLogFile from './db/entities/DropLogFile';
-import Recorded from './db/entities/Recorded';
-import RecordedHistory from './db/entities/RecordedHistory';
-import RecordedTag from './db/entities/RecordedTag';
-import Reserve from './db/entities/Reserve';
-import Thumbnail from './db/entities/Thumbnail';
-import VideoFile from './db/entities/VideoFile';
-import IDBOperator from './model/db/IDBOperator';
-import IDropLogFileDB from './model/db/IDropLogFileDB';
-import IRecordedDB from './model/db/IRecordedDB';
-import IRecordedHistoryDB from './model/db/IRecordedHistoryDB';
-import IRecordedTagDB from './model/db/IRecordedTagDB';
-import IReserveDB from './model/db/IReserveDB';
-import IRuleDB, { RuleWithCnt } from './model/db/IRuleDB';
-import IThumbnailDB from './model/db/IThumbnailDB';
-import IVideoFileDB from './model/db/IVideoFileDB';
-import IConnectionCheckModel from './model/IConnectionCheckModel';
-import ILogger from './model/ILogger';
-import ILoggerModel from './model/ILoggerModel';
-import container from './model/ModelContainer';
-import * as containerSetter from './model/ModelContainerSetter';
+import DropLogFile from './db/entities/DropLogFile.js';
+import Recorded from './db/entities/Recorded.js';
+import RecordedHistory from './db/entities/RecordedHistory.js';
+import RecordedTag from './db/entities/RecordedTag.js';
+import Reserve from './db/entities/Reserve.js';
+import Thumbnail from './db/entities/Thumbnail.js';
+import VideoFile from './db/entities/VideoFile.js';
+import IDBOperator from './model/db/IDBOperator.js';
+import IDropLogFileDB from './model/db/IDropLogFileDB.js';
+import IRecordedDB from './model/db/IRecordedDB.js';
+import IRecordedHistoryDB from './model/db/IRecordedHistoryDB.js';
+import IRecordedTagDB from './model/db/IRecordedTagDB.js';
+import IReserveDB from './model/db/IReserveDB.js';
+import IRuleDB, { RuleWithCnt } from './model/db/IRuleDB.js';
+import IThumbnailDB from './model/db/IThumbnailDB.js';
+import IVideoFileDB from './model/db/IVideoFileDB.js';
+import IConnectionCheckModel from './model/IConnectionCheckModel.js';
+import ILogger from './model/ILogger.js';
+import ILoggerModel from './model/ILoggerModel.js';
+import container from './model/ModelContainer.js';
+import * as containerSetter from './model/ModelContainerSetter.js';
+import { fileURLToPath } from 'url';
+import { resolve } from 'path';
 install();
 
 containerSetter.set(container);
@@ -38,8 +40,16 @@ interface BackupData {
     recordedTagItems: RecordedTag[];
 }
 
+/**
+ * DBの内容をJSONファイルへバックアップ/復元するCLIツール。`--mode backup|restore` と
+ * `--output <path>` をコマンドライン引数で受け取り、`run()` を1回実行して終了する
+ * （`process.exit`で明示的に終了させる、常駐しないスクリプト）。file末尾で、この file が
+ * 直接起動された場合のみ自動的にインスタンス化・実行される。
+ */
 class DBTools {
+    /** `--output` で指定された、バックアップ/復元先のJSONファイルパス。 */
     private filePath: string;
+    /** `--mode` で指定された動作モード。 */
     private mode: 'backup' | 'restore';
 
     private log: ILogger;
@@ -239,4 +249,10 @@ class DBTools {
     }
 }
 
-new DBTools().run();
+export default DBTools;
+
+// この file が直接起動されたときだけ動かす。ESM に require.main は無いため、実行された
+// script の path と自分の path を比べる。
+if (process.argv[1] !== undefined && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+    new DBTools().run();
+}

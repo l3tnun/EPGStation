@@ -1,10 +1,10 @@
 import * as fs from 'fs';
 import { injectable } from 'inversify';
-import * as yaml from 'js-yaml';
-import * as log4js from 'log4js';
+import { load as loadYaml } from 'js-yaml';
+import log4js from 'log4js';
 import * as path from 'path';
-import ILogger from './ILogger';
-import ILoggerModel from './ILoggerModel';
+import ILogger from './ILogger.js';
+import ILoggerModel from './ILoggerModel.js';
 
 /**
  * Logger
@@ -38,10 +38,11 @@ export default class LoggerModel implements ILoggerModel {
         } else {
             try {
                 const str = this.readLogFile(filePath);
-                const config: log4js.Configuration = yaml.load(str) as any;
+                const config: log4js.Configuration = loadYaml(str) as any;
                 log4js.configure(config);
             } catch (err: any) {
                 console.error('log file parse error');
+                console.error(err);
                 process.exit(1);
             }
         }
@@ -114,8 +115,9 @@ export default class LoggerModel implements ILoggerModel {
      * @return file path
      */
     private createDefaultLogPath(dir: string, filename: string): string {
-        const logFileFullPath = path.join(__dirname, '..', '..', 'logs', dir, filename);
+        const logFileFullPath = path.join(import.meta.dirname, '..', '..', 'logs', dir, filename);
 
         return process.platform === 'win32' ? logFileFullPath.replace(/\\/g, '\\\\') : logFileFullPath;
     }
 }
+declare const __EPGSTATION_COVERAGE_EXCLUSION_LOGGER_MODEL_READLOGFILE_UNDEFINED_STR_20260924: unique symbol;

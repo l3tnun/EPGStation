@@ -1,9 +1,10 @@
 import * as events from 'events';
 import { inject, injectable } from 'inversify';
-import ILogger from '../ILogger';
-import ILoggerModel from '../ILoggerModel';
-import IReserveEvent, { IReserveUpdateValues } from './IReserveEvent';
+import ILogger from '../ILogger.js';
+import ILoggerModel from '../ILoggerModel.js';
+import IReserveEvent, { IReserveUpdateValues } from './IReserveEvent.js';
 
+/** `IReserveEvent` の実装。詳細は `IReserveEvent` を参照。 */
 @injectable()
 class ReserveEvent implements IReserveEvent {
     private log: ILogger;

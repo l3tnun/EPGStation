@@ -1,5 +1,7 @@
-import * as apid from '../../../../api';
+import type * as apid from '../../../../api.js';
 
+/** 録画処理・エンコード処理が生成したビデオファイルを、既存の録画済み情報へ紐付けて追加登録する
+ *  ためのオプション。`addUploadedVideoFile`（アップロード由来）とは別経路。 */
 export interface AddVideoFileOption {
     recordedId: apid.RecordedId;
     parentDirectoryName: string; // 親ディレクトリ名 (config.yaml)
@@ -21,6 +23,11 @@ export interface UploadedVideoFileOption {
     filePath: string; // ファイルパス (アップロード先)
 }
 
+/**
+ * 録画済み情報（`Recorded`）とそれに紐づくビデオファイルの追加・削除・保護状態変更、および
+ * 履歴・ビデオファイル・ドロップログの定期クリーンアップを担う操作層の契約。
+ * 実装は `RecordedManageModel`。
+ */
 export default interface IRecordedManageModel {
     delete(recordedId: apid.RecordedId): Promise<void>;
     updateVideoFileSize(videoFileId: apid.VideoFileId): Promise<void>;

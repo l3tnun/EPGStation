@@ -1,15 +1,17 @@
 import { inject, injectable } from 'inversify';
 import { In, IsNull, Not } from 'typeorm';
-import * as apid from '../../../api';
-import Recorded from '../../db/entities/Recorded';
-import Thumbnail from '../../db/entities/Thumbnail';
-import VideoFile from '../../db/entities/VideoFile';
-import StrUtil from '../../util/StrUtil';
-import IPromiseRetry from '../IPromiseRetry';
-import DBUtil from './DBUtil';
-import IDBOperator from './IDBOperator';
-import IRecordedDB, { FindAllOption, RecordedColumnOption } from './IRecordedDB';
+import type * as apid from '../../../api.js';
+import Recorded from '../../db/entities/Recorded.js';
+import Thumbnail from '../../db/entities/Thumbnail.js';
+import VideoFile from '../../db/entities/VideoFile.js';
+import StrUtil from '../../util/StrUtil.js';
+import { StorageDeletionCandidateRequest } from '../operator/storage/IStorageDeletionCandidatePort.js';
+import IPromiseRetry from '../IPromiseRetry.js';
+import DBUtil from './DBUtil.js';
+import IDBOperator from './IDBOperator.js';
+import IRecordedDB, { FindAllOption, RecordedColumnOption } from './IRecordedDB.js';
 
+/** `IRecordedDB` の実装。詳細は `IRecordedDB` を参照。 */
 @injectable()
 export default class RecordedDB implements IRecordedDB {
     private op: IDBOperator;
@@ -30,15 +32,15 @@ export default class RecordedDB implements IRecordedDB {
         const connection = await this.op.getConnection();
         const queryRunner = connection.createQueryRunner();
 
-        // start transaction
-        await queryRunner.startTransaction();
-
         let hasError = false;
         try {
+            // start transaction
+            await queryRunner.startTransaction();
+
             // 削除
-            await queryRunner.manager.delete(Thumbnail, {});
-            await queryRunner.manager.delete(VideoFile, {});
-            await queryRunner.manager.delete(Recorded, {});
+            await queryRunner.manager.createQueryBuilder().delete().from(Thumbnail).execute();
+            await queryRunner.manager.createQueryBuilder().delete().from(VideoFile).execute();
+            await queryRunner.manager.createQueryBuilder().delete().from(Recorded).execute();
 
             // 挿入処理
             for (const item of items) {
@@ -47,10 +49,21 @@ export default class RecordedDB implements IRecordedDB {
             await queryRunner.commitTransaction();
         } catch (err: any) {
             console.error(err);
-            hasError = err;
-            await queryRunner.rollbackTransaction();
+            hasError = true;
+            if (queryRunner.isTransactionActive) {
+                try {
+                    await queryRunner.rollbackTransaction();
+                } catch (cleanupError) {
+                    console.error(cleanupError);
+                }
+            }
         } finally {
-            await queryRunner.release();
+            try {
+                await queryRunner.release();
+            } catch (cleanupError) {
+                console.error(cleanupError);
+                hasError = true;
+            }
         }
 
         if (hasError) {
@@ -118,9 +131,9 @@ export default class RecordedDB implements IRecordedDB {
     /**
      * 指定した drop log file id を削除する
      * @param dropLogFileId: apid,DropLogFileId
-     * @return Promise<void>
+     * @return Promise<boolean> 変更された行が存在するなら true
      */
-    public async removeDropLogFileId(dropLogFileId: apid.DropLogFileId): Promise<void> {
+    public async removeDropLogFileId(dropLogFileId: apid.DropLogFileId): Promise<boolean> {
         const connection = await this.op.getConnection();
         const queryBuilder = connection
             .createQueryBuilder()
@@ -129,9 +142,11 @@ export default class RecordedDB implements IRecordedDB {
                 dropLogFileId: null,
             })
             .where({ dropLogFileId: dropLogFileId });
-        await this.promieRetry.run(() => {
+        const result = await this.promieRetry.run(() => {
             return queryBuilder.execute();
         });
+
+        return (result.affected ?? 0) > 0;
     }
 
     /**
@@ -386,14 +401,14 @@ export default class RecordedDB implements IRecordedDB {
             queryBuilder = queryBuilder.andWhere(q.query, q.values);
         }
 
-        // offset
-        if (typeof option.offset !== 'undefined') {
-            queryBuilder.skip(option.offset);
+        // offset・limit
+        // limit 0 は件数の制限なし（TypeORM 1.x の `take(0)` は `LIMIT 0` になるため take を付けない）
+        const pagination = DBUtil.resolvePagination(option);
+        if (typeof pagination.skip !== 'undefined') {
+            queryBuilder.skip(pagination.skip);
         }
-
-        // limit
-        if (typeof option.limit !== 'undefined') {
-            queryBuilder.take(option.limit);
+        if (typeof pagination.take !== 'undefined') {
+            queryBuilder.take(pagination.take);
         }
 
         // order by
@@ -502,6 +517,49 @@ export default class RecordedDB implements IRecordedDB {
         });
 
         return typeof result === 'undefined' ? null : result;
+    }
+
+    /**
+     * 保存先に属する未保護かつ未使用の最古録画 ID を返す
+     */
+    public async findOldestUnused(request: StorageDeletionCandidateRequest): Promise<apid.RecordedId | null> {
+        const connection = await this.op.getConnection();
+        const queryBuilder = connection.getRepository(Recorded).createQueryBuilder('recorded');
+        const storageNameOperand =
+            connection.options.type === 'mysql'
+                ? (alias: string): string => `CAST(${alias}.parentDirectoryName AS BINARY)`
+                : (alias: string): string => `CAST(${alias}.parentDirectoryName AS BLOB)`;
+        const storageNameParameter =
+            connection.options.type === 'mysql' ? 'CAST(:storageName AS BINARY)' : 'CAST(:storageName AS BLOB)';
+        const matchingVideo = queryBuilder
+            .subQuery()
+            .from(VideoFile, 'matchingVideo')
+            .where('matchingVideo.recordedId = recorded.id')
+            .andWhere(`${storageNameOperand('matchingVideo')} = ${storageNameParameter}`)
+            .getQuery();
+        const mismatchingVideo = queryBuilder
+            .subQuery()
+            .from(VideoFile, 'mismatchingVideo')
+            .where('mismatchingVideo.recordedId = recorded.id')
+            .andWhere(`${storageNameOperand('mismatchingVideo')} <> ${storageNameParameter}`)
+            .getQuery();
+
+        queryBuilder
+            .select('recorded.id', 'id')
+            .where('recorded.isProtected = :isProtected', {
+                isProtected: this.op.convertBoolean(false),
+            })
+            .andWhere(`EXISTS ${matchingVideo}`, { storageName: request.storageName })
+            .andWhere(`NOT EXISTS ${mismatchingVideo}`);
+        if (request.excludedRecordedIds.size > 0) {
+            queryBuilder.andWhere('recorded.id NOT IN (:...excludedRecordedIds)', {
+                excludedRecordedIds: [...request.excludedRecordedIds],
+            });
+        }
+        queryBuilder.orderBy('recorded.startAt', 'ASC').addOrderBy('recorded.id', 'ASC').take(1);
+
+        const result = await this.promieRetry.run(() => queryBuilder.getRawOne<{ id: apid.RecordedId }>());
+        return typeof result === 'undefined' ? null : result.id;
     }
 
     /**

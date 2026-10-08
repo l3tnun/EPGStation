@@ -1,7 +1,10 @@
 {
     "compilerOptions": {
         "target": "ES2021",
-        "module": "CommonJS",
+        // Error の cause を型として使う。実行時は Node 16.9 以降が持つ。emit の target は変えない。
+        "lib": ["ES2022"],
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext",
         "sourceMap": true,
         "strict": true,
         "noImplicitAny": true,

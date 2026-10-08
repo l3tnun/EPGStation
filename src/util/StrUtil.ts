@@ -1,4 +1,4 @@
-// import * as Enums from '../Enums';
+// import * as Enums from '../Enums.js';
 
 /**
  * 文字周りの Util
@@ -99,18 +99,25 @@ namespace StrUtil {
     };
 
     /**
-     * [] でくくられた文字と囲み文字を削除し 先頭と末尾のスペースを削除する
+     * 重複録画の判定に使う名前を作る。
+     * [] でくくられた文字と囲み文字を削除し 先頭と末尾のスペースを削除する。
+     * ただし前編と後編を区別するため、元の名前に [前] (囲み文字 U+1F21C も同じ) があれば `[前]`、
+     * [後] (囲み文字 U+1F21D も同じ) があれば `[後]` を、元の位置に関わらずこの順で末尾に付ける。
      * @param str: string
      * @return string
      */
     export const deleteBrackets = (str: string): string => {
+        // 前編・後編の印は削除する前に調べる
+        const former = ['\u{1f21c}', '[前]'].some(key => str.includes(key)) ? '[前]' : '';
+        const latter = ['\u{1f21d}', '[後]'].some(key => str.includes(key)) ? '[後]' : '';
+
         // 囲み文字を削除
         for (const key in enclosedCharactersConvertTable) {
             str = str.replaceAll(key, '');
         }
 
         // [] でくくられた文字を削除 + 先頭と末尾のスペースを削除する
-        return str.replace(/\[.+?\]/g, '').trim();
+        return str.replace(/\[.+?\]/g, '').trim() + former + latter;
     };
 
     /**

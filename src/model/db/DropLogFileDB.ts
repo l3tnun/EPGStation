@@ -1,13 +1,14 @@
 import { inject, injectable } from 'inversify';
-import * as apid from '../../../api';
-import DropLogFile from '../../db/entities/DropLogFile';
-import Recorded from '../../db/entities/Recorded';
-import Thumbnail from '../../db/entities/Thumbnail';
-import VideoFile from '../../db/entities/VideoFile';
-import IPromiseRetry from '../IPromiseRetry';
-import IDBOperator from './IDBOperator';
-import IDropLogFileDB, { UpdateCntOption } from './IDropLogFileDB';
+import type * as apid from '../../../api.js';
+import DropLogFile from '../../db/entities/DropLogFile.js';
+import Recorded from '../../db/entities/Recorded.js';
+import Thumbnail from '../../db/entities/Thumbnail.js';
+import VideoFile from '../../db/entities/VideoFile.js';
+import IPromiseRetry from '../IPromiseRetry.js';
+import IDBOperator from './IDBOperator.js';
+import IDropLogFileDB, { UpdateCntOption } from './IDropLogFileDB.js';
 
+/** `IDropLogFileDB` の実装。詳細は `IDropLogFileDB` を参照。 */
 @injectable()
 export default class DropLogFileDB implements IDropLogFileDB {
     private op: IDBOperator;
@@ -28,16 +29,16 @@ export default class DropLogFileDB implements IDropLogFileDB {
         const connection = await this.op.getConnection();
         const queryRunner = connection.createQueryRunner();
 
-        // start transaction
-        await queryRunner.startTransaction();
-
         let hasError = false;
         try {
+            // start transaction
+            await queryRunner.startTransaction();
+
             // 削除
-            await queryRunner.manager.delete(Thumbnail, {});
-            await queryRunner.manager.delete(VideoFile, {});
-            await queryRunner.manager.delete(Recorded, {});
-            await queryRunner.manager.delete(DropLogFile, {});
+            await queryRunner.manager.createQueryBuilder().delete().from(Thumbnail).execute();
+            await queryRunner.manager.createQueryBuilder().delete().from(VideoFile).execute();
+            await queryRunner.manager.createQueryBuilder().delete().from(Recorded).execute();
+            await queryRunner.manager.createQueryBuilder().delete().from(DropLogFile).execute();
 
             // 挿入処理
             for (const item of items) {
@@ -46,10 +47,21 @@ export default class DropLogFileDB implements IDropLogFileDB {
             await queryRunner.commitTransaction();
         } catch (err: any) {
             console.error(err);
-            hasError = err;
-            await queryRunner.rollbackTransaction();
+            hasError = true;
+            if (queryRunner.isTransactionActive) {
+                try {
+                    await queryRunner.rollbackTransaction();
+                } catch (cleanupError) {
+                    console.error(cleanupError);
+                }
+            }
         } finally {
-            await queryRunner.release();
+            try {
+                await queryRunner.release();
+            } catch (cleanupError) {
+                console.error(cleanupError);
+                hasError = true;
+            }
         }
 
         if (hasError) {
@@ -98,17 +110,19 @@ export default class DropLogFileDB implements IDropLogFileDB {
     /**
      * 指定したドロップログ情報を 1 件削除
      * @param dropLogFileId: apid.DropLogFileId
-     * @return Promise<void>
+     * @return Promise<boolean> 削除された行が存在するなら true
      */
-    public async deleteOnce(dropLogFileId: apid.DropLogFileId): Promise<void> {
+    public async deleteOnce(dropLogFileId: apid.DropLogFileId): Promise<boolean> {
         const connection = await this.op.getConnection();
         const queryBuilder = connection.createQueryBuilder().delete().from(DropLogFile).where({
             id: dropLogFileId,
         });
 
-        await this.promieRetry.run(() => {
+        const result = await this.promieRetry.run(() => {
             return queryBuilder.execute();
         });
+
+        return (result.affected ?? 0) > 0;
     }
 
     /**

@@ -1,9 +1,10 @@
 import { inject, injectable } from 'inversify';
-import * as apid from '../../../../api';
-import IConfiguration from '../../IConfiguration';
-import IIPCClient from '../../ipc/IIPCClient';
-import IConfigApiModel from './IConfigApiModel';
+import type * as apid from '../../../../api.js';
+import IConfiguration from '../../IConfiguration.js';
+import IIPCClient from '../../ipc/IIPCClient.js';
+import IConfigApiModel from './IConfigApiModel.js';
 
+/** `IConfigApiModel` の実装。詳細は `IConfigApiModel` を参照。 */
 @injectable()
 export default class ConfigApiModel implements IConfigApiModel {
     private configuration: IConfiguration;
@@ -51,24 +52,33 @@ export default class ConfigApiModel implements IConfigApiModel {
             return e.name;
         });
 
+        // config.urlscheme とその m2ts / video / download は IConfigFile 上は必須だが、config.yml を
+        // 手で編集した結果一部だけが欠落した場合でも 500 にせず「その項目の URL scheme を返さない」
+        // 状態として扱えるよう、ここでも欠落に対して防御する
+        // (`Configuration.setTemplateValues` が通常は補うが、二重に守る)。
+        const urlscheme = config.urlscheme ?? ({} as Partial<typeof config.urlscheme>);
+        const m2ts = urlscheme.m2ts ?? {};
+        const video = urlscheme.video ?? {};
+        const download = urlscheme.download ?? {};
+
         result.urlscheme = {
             m2ts: {
-                ios: config.urlscheme.m2ts.ios,
-                android: config.urlscheme.m2ts.android,
-                mac: config.urlscheme.m2ts.mac,
-                win: config.urlscheme.m2ts.win,
+                ios: m2ts.ios,
+                android: m2ts.android,
+                mac: m2ts.mac,
+                win: m2ts.win,
             },
             video: {
-                ios: config.urlscheme.video.ios,
-                android: config.urlscheme.video.android,
-                mac: config.urlscheme.video.mac,
-                win: config.urlscheme.video.win,
+                ios: video.ios,
+                android: video.android,
+                mac: video.mac,
+                win: video.win,
             },
             download: {
-                ios: config.urlscheme.download.ios,
-                android: config.urlscheme.download.android,
-                mac: config.urlscheme.download.mac,
-                win: config.urlscheme.download.win,
+                ios: download.ios,
+                android: download.android,
+                mac: download.mac,
+                win: download.win,
             },
         };
 

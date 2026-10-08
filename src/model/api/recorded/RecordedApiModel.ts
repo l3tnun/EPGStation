@@ -1,12 +1,14 @@
 import { inject, injectable } from 'inversify';
-import * as apid from '../../../../api';
-import IRecordedDB, { FindAllOption } from '../../db/IRecordedDB';
-import IIPCClient from '../../ipc/IIPCClient';
-import { UploadedVideoFileOption } from '../../operator/recorded/IRecordedManageModel';
-import IEncodeManageModel from '../../service/encode/IEncodeManageModel';
-import IRecordedItemUtil from '../IRecordedItemUtil';
-import IRecordedApiModel from './IRecordedApiModel';
+import type * as apid from '../../../../api.js';
+import IRecordedDB, { FindAllOption } from '../../db/IRecordedDB.js';
+import IIPCClient from '../../ipc/IIPCClient.js';
+import { UploadedVideoFileOption } from '../../operator/recorded/IRecordedManageModel.js';
+import IEncodeManageModel from '../../service/encode/IEncodeManageModel.js';
+import ServiceChildUserDeletionCoordinator from '../../workflow/ServiceChildUserDeletionCoordinator.js';
+import IRecordedItemUtil from '../IRecordedItemUtil.js';
+import IRecordedApiModel from './IRecordedApiModel.js';
 
+/** `IRecordedApiModel` の実装。詳細は `IRecordedApiModel` を参照。 */
 @injectable()
 export default class RecordedApiModel implements IRecordedApiModel {
     private ipc: IIPCClient;
@@ -86,9 +88,10 @@ export default class RecordedApiModel implements IRecordedApiModel {
      * @return Promise<void>
      */
     public async delete(recordedId: apid.RecordedId): Promise<void> {
-        await this.encodeManage.cancelEncodeByRecordedId(recordedId);
-
-        return this.ipc.recorded.delete(recordedId);
+        const coordinator = new ServiceChildUserDeletionCoordinator(this.encodeManage, {
+            requestUserDeletion: requestedRecordedId => this.ipc.recorded.delete(requestedRecordedId),
+        });
+        await coordinator.deleteByUser(recordedId);
     }
 
     /**
@@ -114,8 +117,10 @@ export default class RecordedApiModel implements IRecordedApiModel {
      * ファイルのクリーンアップ
      */
     public async fileCleanup(): Promise<void> {
-        await this.ipc.recorded.videoFileCleanup();
-        await this.ipc.recorded.dropLogFileCleanup();
+        const videoFileCleanup = Promise.resolve().then(() => this.ipc.recorded.videoFileCleanup());
+        const dropLogFileCleanup = Promise.resolve().then(() => this.ipc.recorded.dropLogFileCleanup());
+
+        await Promise.all([videoFileCleanup, dropLogFileCleanup]);
     }
 
     /**

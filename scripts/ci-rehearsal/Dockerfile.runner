@@ -1,0 +1,117 @@
+# A GitHub-hosted-runner lookalike for rehearsing .github/workflows/server.yml before a push:
+# ubuntu 24.04, Docker-in-Docker on the runner image's Docker 28.0.4 / buildx 0.36.1, user "runner",
+# TZ=UTC. Everything a rehearsal would otherwise fetch on every run is installed here instead --
+# mise, the Node toolchain, both dependency trees, the Playwright browsers -- so that a run needs
+# nothing from the network. What the run does fetch is what it is there to exercise.
+#
+# The workspace this image ships is not the candidate: the runner wipes and re-materializes the
+# tracked files on every run, keeping only node_modules. Only the manifests are copied in, and only
+# to install from.
+FROM ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=UTC
+
+# `python3` and the compiler are for the native addons in the dependency tree (fs-ext and sqlite3
+# both ship a .node), `iptables` for the nested Docker daemon, the rest for the workflow's own steps.
+RUN apt-get update -qq \
+    && apt-get install -y -qq --no-install-recommends \
+        ca-certificates curl gnupg git jq sudo python3 python3-setuptools make g++ xz-utils unzip \
+        iptables procps \
+    && rm -rf /var/lib/apt/lists/*
+
+# Pinned to the versions the hosted runner image carries; a rehearsal on a different Docker or
+# buildx is not a rehearsal of what the workflow will meet.
+RUN install -m 0755 -d /etc/apt/keyrings \
+    && curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc \
+    && echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu noble stable" \
+        > /etc/apt/sources.list.d/docker.list \
+    && apt-get update -qq \
+    && apt-get install -y -qq --no-install-recommends \
+        docker-ce=5:28.0.4-1~ubuntu.24.04~noble \
+        docker-ce-cli=5:28.0.4-1~ubuntu.24.04~noble \
+        containerd.io \
+        docker-buildx-plugin=0.36.1-1~ubuntu.24.04~noble \
+    && rm -rf /var/lib/apt/lists/*
+
+ARG WORKSPACE=/home/runner/work/EPGStation/EPGStation
+RUN useradd -m -u 1001 -s /bin/bash runner \
+    && usermod -aG docker runner \
+    && mkdir -p "${WORKSPACE}" /home/runner/work/_temp \
+    && chown -R runner:runner /home/runner
+
+USER runner
+WORKDIR ${WORKSPACE}
+ENV HOME=/home/runner
+ENV PATH=/home/runner/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+# Same fetch and checksum the workflow's install step performs, with the same pinned values; the
+# build argument keeps them declared in one place rather than duplicated here.
+ARG MISE_VERSION
+ARG MISE_SHA256
+RUN install -d -m 0755 "${HOME}/.local/bin" \
+    && curl -fsSL --retry 3 -o "${HOME}/.local/bin/mise" \
+        "https://github.com/jdx/mise/releases/download/${MISE_VERSION}/mise-${MISE_VERSION}-linux-x64" \
+    && echo "${MISE_SHA256}  ${HOME}/.local/bin/mise" | sha256sum -c - \
+    && chmod 0755 "${HOME}/.local/bin/mise"
+
+# The install step downloads this same binary on every run, and job.sh runs that step exactly as
+# server.yml has it, so the step cannot be changed to read the copy sitting beside it. The shim
+# answers that one request from here; the step's own checksum check is what makes serving it safe.
+USER root
+RUN install -d -m 0755 /opt/epgstation-rehearsal \
+    && cp "${HOME}/.local/bin/mise" /opt/epgstation-rehearsal/mise \
+    && chmod 0755 /opt/epgstation-rehearsal/mise
+COPY scripts/ci-rehearsal/curl-with-baked-mise /usr/local/bin/curl
+# `docker pull` reaches the registry even for an image already present, so job.sh's fixture-pull
+# step fails on a slow or unreachable registry over images that did not change. The shim skips
+# that one case and passes everything else through.
+COPY scripts/ci-rehearsal/docker-with-present-images /usr/local/bin/docker
+RUN chmod 0755 /usr/local/bin/curl /usr/local/bin/docker
+USER runner
+
+# Both trees declare their own toolchain, and the client's differs from the root's. Installing only
+# the root's leaves the client checks running under versions the client did not ask for.
+COPY --chown=runner:runner mise.toml ./
+COPY --chown=runner:runner client/mise.toml ./client/
+RUN mise trust --quiet \
+    && mise install \
+    && cd client \
+    && mise trust --quiet \
+    && mise install
+
+# Both trees are installed from their lockfiles, so a lockfile that no longer matches its
+# package.json fails here -- during the build, where the image digest that pins them is being
+# established -- rather than silently later.
+ARG BUILD_NODE
+COPY --chown=runner:runner package.json package-lock.json ./
+RUN mise exec "node@${BUILD_NODE}" -- npm ci --no-audit --no-fund
+
+COPY --chown=runner:runner client/package.json client/package-lock.json ./client/
+RUN cd client && mise exec "node@${BUILD_NODE}" -- npm ci --no-audit --no-fund
+
+# The browsers land under the runner's cache, where Playwright looks for them at run time.
+RUN cd client && mise exec "node@${BUILD_NODE}" -- npx --no-install playwright install chromium firefox webkit
+
+# Run as root: this installs the system libraries the browsers link against, and Playwright's own
+# escalation path expects an interactive sudo that a build has no way to answer.
+USER root
+RUN cd "${WORKSPACE}/client" \
+    && PATH="/home/runner/.local/bin:${PATH}" HOME=/home/runner \
+        mise exec "node@${BUILD_NODE}" -- npx --no-install playwright install-deps \
+    && rm -rf /var/lib/apt/lists/*
+USER runner
+
+# Recomputed by the runner before every rehearsal; a mismatch means this image no longer holds what
+# the repository declares, and the run stops rather than proceeding against the wrong toolchain.
+ARG IMAGE_DIGEST
+LABEL org.epgstation.rehearsal.digest="${IMAGE_DIGEST}"
+ENV EPGSTATION_REHEARSAL_IMAGE_DIGEST=${IMAGE_DIGEST}
+
+# The container itself runs as root, as the hosted runner's does: the nested Docker daemon and the
+# workspace bookkeeping need it. The workflow's own steps are what run as `runner`, and the runner
+# script asks for that user explicitly.
+USER root
+WORKDIR ${WORKSPACE}
+
+CMD ["sleep", "infinity"]

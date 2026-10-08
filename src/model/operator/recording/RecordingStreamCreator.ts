@@ -1,17 +1,15 @@
 import * as http from 'http';
 import { inject, injectable } from 'inversify';
-import Mirakurun from 'mirakurun';
 import { finished } from 'stream';
-import * as apid from '../../../../api';
-import * as mapid from '../../../../node_modules/mirakurun/api';
-import Reserve from '../../../db/entities/Reserve';
-import Util from '../../../util/Util';
-import IConfigFile from '../../IConfigFile';
-import IConfiguration from '../../IConfiguration';
-import ILogger from '../../ILogger';
-import ILoggerModel from '../../ILoggerModel';
-import IMirakurunClientModel from '../../IMirakurunClientModel';
-import IRecordingStreamCreator from './IRecordingStreamCreator';
+import type * as apid from '../../../../api.js';
+import Reserve from '../../../db/entities/Reserve.js';
+import Util from '../../../util/Util.js';
+import IConfigFile from '../../IConfigFile.js';
+import IConfiguration from '../../IConfiguration.js';
+import ILogger from '../../ILogger.js';
+import ILoggerModel from '../../ILoggerModel.js';
+import { BroadcastType, TunerInfo, TunerServerAccess, TunerStreamHandle } from '../../tuner/types.js';
+import IRecordingStreamCreator, { RecordingStreamCreationOptions } from './IRecordingStreamCreator.js';
 
 interface TunerProgram {
     reserve: Reserve;
@@ -19,7 +17,7 @@ interface TunerProgram {
 }
 
 interface TunerStatus {
-    types: mapid.ChannelType[];
+    types: BroadcastType[];
     programs: TunerProgram[];
 }
 
@@ -27,30 +25,41 @@ interface TimerIndex {
     [key: number]: NodeJS.Timeout;
 }
 
+/** `IRecordingStreamCreator` の実装。詳細は `IRecordingStreamCreator` を参照。 */
 @injectable()
 export default class RecordingStreamCreator implements IRecordingStreamCreator {
     private log: ILogger;
     private config: IConfigFile;
-    private mirakurunClientModel: IMirakurunClientModel;
+    private tunerServerAccess: TunerServerAccess;
+    /** tuner ごとに、現在その tuner を使っている予約（`programs`）を保持する。同一 tuner を
+     *  複数の予約で共有できるか（同一放送波の重複録画等）の判定に使う。`setTuner`で
+     *  1度だけ初期化される。 */
     private tuners: TunerStatus[] = [];
+    /** reserveId → 「時刻指定予約のストリームを終了時刻に破棄する」timer の対応表。
+     *  終了時刻の変更（`registerTimeSpecifiedEnd`）のたびに張り直される。 */
     private timerIndex: TimerIndex = {};
+    /** `create`が返した`http.IncomingMessage`から、close操作を持つ元の`TunerStreamHandle`を
+     *  引けるようにする対応表（streamそのものにはclose操作が無いため）。 */
+    private readonly streamHandleIndex = new WeakMap<http.IncomingMessage, TunerStreamHandle>();
+    /** 既に`close()`済みの`TunerStreamHandle`の集合。ストリーム終了検知（`finished`）と
+     *  明示的な`closeStream`呼び出しが両方起こり得るため、二重closeを防ぐのに使う。 */
+    private readonly closedStreamHandles = new WeakSet<TunerStreamHandle>();
 
     constructor(
         @inject('ILoggerModel') logger: ILoggerModel,
         @inject('IConfiguration') configuration: IConfiguration,
-        @inject('IMirakurunClientModel')
-        mirakurunClientModel: IMirakurunClientModel,
+        @inject('TunerServerAccess') tunerServerAccess: TunerServerAccess,
     ) {
         this.log = logger.getLogger();
         this.config = configuration.getConfig();
-        this.mirakurunClientModel = mirakurunClientModel;
+        this.tunerServerAccess = tunerServerAccess;
     }
 
     /**
      * tuner 情報セット
-     * @param tuners: mapid.TunerDevice[]
+     * @param tuners: TunerInfo[]
      */
-    public setTuner(tuners: mapid.TunerDevice[]): void {
+    public setTuner(tuners: TunerInfo[]): void {
         // 一度だけ tuner 情報をセット
         if (this.tuners.length !== 0) {
             return;
@@ -89,12 +98,11 @@ export default class RecordingStreamCreator implements IRecordingStreamCreator {
         for (const tuner of this.tuners) {
             for (let i = 0; i < tuner.programs.length; i++) {
                 if (tuner.programs[i].reserve.id === reserveId) {
-                    const programStream = tuner.programs[i].stream;
+                    const [program] = tuner.programs.splice(i, 1);
+                    const programStream = program.stream;
                     if (programStream !== null) {
-                        programStream.destroy();
-                        programStream.push(null); // eof 通知
+                        this.closeStream(programStream);
                     }
-                    tuner.programs.splice(i, 1);
                     this.log.system.debug(`delete stream: ${reserveId}`);
 
                     return;
@@ -108,10 +116,14 @@ export default class RecordingStreamCreator implements IRecordingStreamCreator {
      * @param reserve: Reserve
      * @return Promise<http.IncomingMessage>
      */
-    public async create(reserve: Reserve, abortSignal?: AbortSignal): Promise<http.IncomingMessage> {
+    public async create(
+        reserve: Reserve,
+        abortSignal?: AbortSignal,
+        options?: RecordingStreamCreationOptions,
+    ): Promise<http.IncomingMessage> {
         if (reserve.isConflict === true) {
             // tuner の割当がないのでそのままストリームを取得
-            return this.getStream(reserve, abortSignal);
+            return this.getStream(reserve, abortSignal, options);
         }
 
         const tunerId = await this.getTunerId(reserve);
@@ -119,11 +131,11 @@ export default class RecordingStreamCreator implements IRecordingStreamCreator {
             // 割り当てられる tuner がなかった
             this.log.system.warn(`TunerAssignmentError programId: ${reserve.id}`);
 
-            return this.getStream(reserve, abortSignal);
+            return this.getStream(reserve, abortSignal, options);
         }
 
         // stream 取得
-        const stream = this.getStream(reserve, abortSignal);
+        const stream = this.getStream(reserve, abortSignal, options);
 
         // create tuner program
         const tunerProgram: TunerProgram = {
@@ -188,7 +200,6 @@ export default class RecordingStreamCreator implements IRecordingStreamCreator {
                 }
 
                 // Mirakurun から最新の番組情報を取得して延長がないか確認
-                const mirakurun = this.mirakurunClientModel.getClient();
                 for (const p of this.tuners[i].programs) {
                     // 時刻指定予約はスキップ
                     if (p.reserve.programId === null) {
@@ -196,7 +207,7 @@ export default class RecordingStreamCreator implements IRecordingStreamCreator {
                     }
 
                     try {
-                        const newProgram = await mirakurun.getProgram(p.reserve.programId);
+                        const newProgram = await this.tunerServerAccess.getProgram(p.reserve.programId);
                         if (newProgram.startAt + newProgram.duration - now > IRecordingStreamCreator.PREP_TIME) {
                             // 延長があった
                             isOk = false;
@@ -213,15 +224,14 @@ export default class RecordingStreamCreator implements IRecordingStreamCreator {
                 }
 
                 // ストリーム停止
-                for (const p of this.tuners[i].programs) {
-                    if (p.stream !== null) {
-                        p.stream.destroy();
-                        p.stream.push(null); // eof 通知
-                    }
-                }
-
-                // program 削除
+                const endingPrograms = this.tuners[i].programs;
                 this.tuners[i].programs = [];
+                for (const p of endingPrograms) {
+                    if (p.stream !== null) {
+                        this.closeStream(p.stream);
+                    }
+                    this.log.system.debug(`delete stream: ${p.reserve.id}`);
+                }
 
                 return i;
             }
@@ -236,17 +246,48 @@ export default class RecordingStreamCreator implements IRecordingStreamCreator {
      * @param reserve: ReserveProgram
      * @return Promise<http.IncomingMessage>
      */
-    private getStream(reserve: Reserve, abortSignal?: AbortSignal): Promise<http.IncomingMessage> {
-        const mirakurun = this.mirakurunClientModel.getClient();
-        mirakurun.priority = reserve.isConflict ? this.config.conflictPriority : this.config.recPriority;
+    private getStream(
+        reserve: Reserve,
+        abortSignal?: AbortSignal,
+        options?: RecordingStreamCreationOptions,
+    ): Promise<http.IncomingMessage> {
+        const priority = reserve.isConflict ? this.config.conflictPriority : this.config.recPriority;
 
         if (reserve.programId === null) {
             // 時刻指定予約
-            return this.getTimeSpecifiedStream(reserve, mirakurun, abortSignal);
+            return this.getTimeSpecifiedStream(reserve, priority, abortSignal, options);
         } else {
             // programId 指定予約
-            return mirakurun.getProgramStream({ id: reserve.programId, decode: true, signal: abortSignal });
+            return this.tunerServerAccess
+                .openProgramStream({ programId: reserve.programId, priority, signal: abortSignal })
+                .then(handle => this.adoptStream(handle));
         }
+    }
+
+    private adoptStream(handle: TunerStreamHandle): http.IncomingMessage {
+        const stream = handle.stream as http.IncomingMessage;
+        this.streamHandleIndex.set(stream, handle);
+        finished(stream, {}, () => {
+            this.closeStreamHandle(handle);
+        });
+        return stream;
+    }
+
+    private closeStream(stream: http.IncomingMessage): void {
+        const handle = this.streamHandleIndex.get(stream);
+        if (handle !== undefined) {
+            this.closeStreamHandle(handle);
+        }
+        stream.destroy();
+        stream.push(null); // eof 通知
+    }
+
+    private closeStreamHandle(handle: TunerStreamHandle): void {
+        if (this.closedStreamHandles.has(handle)) {
+            return;
+        }
+        this.closedStreamHandles.add(handle);
+        handle.close();
     }
 
     /**
@@ -257,8 +298,9 @@ export default class RecordingStreamCreator implements IRecordingStreamCreator {
      */
     private async getTimeSpecifiedStream(
         reserve: Reserve,
-        mirakurun: Mirakurun,
+        priority: number,
         abortSignal?: AbortSignal,
+        options?: RecordingStreamCreationOptions,
     ): Promise<http.IncomingMessage> {
         const now = new Date().getTime();
         if (reserve.endAt < now) {
@@ -266,36 +308,49 @@ export default class RecordingStreamCreator implements IRecordingStreamCreator {
             throw new Error('TimeSpecifiedStreamTimeoutError');
         }
 
-        // 予約終了時刻を過ぎたら stream を停止する
-        this.timerIndex[reserve.id] = setTimeout(
-            () => {
-                this.destroyStream(reserve);
-            },
-            reserve.endAt - now + 1000 * this.config.timeSpecifiedEndMargin,
-        );
+        const ownsTimeSpecifiedEnd = options?.isTimeSpecifiedEndExternallyScheduled !== true;
+        if (ownsTimeSpecifiedEnd) {
+            // 予約終了時刻を過ぎたら stream を停止する
+            this.timerIndex[reserve.id] = setTimeout(
+                () => {
+                    this.destroyStream(reserve);
+                },
+                reserve.endAt - now + 1000 * this.config.timeSpecifiedEndMargin,
+            );
+        }
 
         // mirakurun から channel stream を受け取る
-        const channelStream = await mirakurun
-            .getServiceStream({ id: reserve.channelId, decode: true, signal: abortSignal })
+        const channelStream = await this.tunerServerAccess
+            .openServiceStream({ serviceId: reserve.channelId, priority, signal: abortSignal })
+            .then(handle => this.adoptStream(handle))
             .catch(err => {
                 this.log.system.error(`stream get error ${reserve.channelId}`);
                 this.log.system.error(err);
-                clearTimeout(this.timerIndex[reserve.id]);
-                delete this.timerIndex[reserve.id];
+                if (ownsTimeSpecifiedEnd) {
+                    clearTimeout(this.timerIndex[reserve.id]);
+                    delete this.timerIndex[reserve.id];
+                }
                 throw err;
             });
 
-        // 終了時に timer をリセット
-        channelStream.once('end', () => {
-            clearTimeout(this.timerIndex[reserve.id]);
-            delete this.timerIndex[reserve.id];
-        });
+        if (ownsTimeSpecifiedEnd) {
+            // 終了時に timer をリセット
+            channelStream.once('end', () => {
+                clearTimeout(this.timerIndex[reserve.id]);
+                delete this.timerIndex[reserve.id];
+            });
+        }
 
         // 予約時間まで待つ
-        if (now < reserve.startAt) {
-            channelStream.on('data', () => {}); // 読み込まないと stream がバッファに貯まるため
-            await Util.sleep(reserve.startAt - now - 1000 * this.config.timeSpecifiedStartMargin);
-            channelStream.removeAllListeners('data'); // clear
+        const remaining = Math.max(0, reserve.startAt - 1000 * this.config.timeSpecifiedStartMargin - Date.now());
+        if (remaining > 0) {
+            const drainStream = (): void => undefined;
+            channelStream.on('data', drainStream); // 読み込まないと stream がバッファに貯まるため
+            try {
+                await Util.sleep(remaining);
+            } finally {
+                channelStream.removeListener('data', drainStream);
+            }
         }
 
         return channelStream;
@@ -319,9 +374,13 @@ export default class RecordingStreamCreator implements IRecordingStreamCreator {
         }
 
         if (stream !== null) {
-            stream.destroy();
-            stream.push(null); // eof 通知
+            this.closeStream(stream);
         }
+    }
+
+    public releaseTimeSpecifiedEnd(reserveId: number): void {
+        clearTimeout(this.timerIndex[reserveId]);
+        delete this.timerIndex[reserveId];
     }
 
     /**
@@ -333,7 +392,8 @@ export default class RecordingStreamCreator implements IRecordingStreamCreator {
             throw new Error('StreamChangeAtError');
         }
 
-        // timer 再設定
+        // timer 再設定（旧 end の handle を clear してから差し替え、最新 end のみが発火する）
+        clearTimeout(this.timerIndex[reserve.id]);
         this.timerIndex[reserve.id] = setTimeout(
             () => {
                 this.destroyStream(reserve);

@@ -1,12 +1,13 @@
 import * as events from 'events';
 import { inject, injectable } from 'inversify';
-import * as apid from '../../../api';
-import Recorded from '../../db/entities/Recorded';
-import Reserve from '../../db/entities/Reserve';
-import ILogger from '../ILogger';
-import ILoggerModel from '../ILoggerModel';
-import IRecordingEvent from './IRecordingEvent';
+import type * as apid from '../../../api.js';
+import Recorded from '../../db/entities/Recorded.js';
+import Reserve from '../../db/entities/Reserve.js';
+import ILogger from '../ILogger.js';
+import ILoggerModel from '../ILoggerModel.js';
+import IRecordingEvent, { RecordingFailureSessionIdentity } from './IRecordingEvent.js';
 
+/** `IRecordingEvent` の実装。詳細は `IRecordingEvent` を参照。 */
 @injectable()
 class RecordingEvent implements IRecordingEvent {
     private log: ILogger;
@@ -53,8 +54,12 @@ class RecordingEvent implements IRecordingEvent {
      * @param reserve: Reserve
      * @param recorded: Recorded | null
      */
-    public emitRecordingFailed(reserve: Reserve, recorded: Recorded | null): void {
-        this.emitter.emit(RecordingEvent.RECORDING_FAILED_EVENT, reserve, recorded);
+    public emitRecordingFailed(
+        reserve: Reserve,
+        recorded: Recorded | null,
+        failureSession?: RecordingFailureSessionIdentity,
+    ): void {
+        this.emitter.emit(RecordingEvent.RECORDING_FAILED_EVENT, reserve, recorded, failureSession);
     }
 
     /**
@@ -143,14 +148,23 @@ class RecordingEvent implements IRecordingEvent {
      * 録画失敗イベント登録
      * @param callback: (reserve: Reserve, recorded: Recorded | null) => void
      */
-    public setRecordingFailed(callback: (reserve: Reserve, recorded: Recorded | null) => void): void {
-        this.emitter.on(RecordingEvent.RECORDING_FAILED_EVENT, async (reserve: Reserve, recorded: Recorded | null) => {
-            try {
-                await callback(reserve, recorded);
-            } catch (err: any) {
-                this.log.system.error(err);
-            }
-        });
+    public setRecordingFailed(
+        callback: (
+            reserve: Reserve,
+            recorded: Recorded | null,
+            failureSession?: RecordingFailureSessionIdentity,
+        ) => void,
+    ): void {
+        this.emitter.on(
+            RecordingEvent.RECORDING_FAILED_EVENT,
+            async (reserve: Reserve, recorded: Recorded | null, failureSession?: RecordingFailureSessionIdentity) => {
+                try {
+                    await callback(reserve, recorded, failureSession);
+                } catch (err: any) {
+                    this.log.system.error(err);
+                }
+            },
+        );
     }
 
     /**

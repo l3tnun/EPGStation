@@ -1,13 +1,17 @@
 import { Operation } from 'express-openapi';
-import IRuleApiModel from '../../../api/rule/IRuleApiModel';
-import container from '../../../ModelContainer';
-import * as api from '../../api';
+import IRuleApiModel from '../../../api/rule/IRuleApiModel.js';
+import container from '../../../ModelContainer.js';
+import * as api from '../../api.js';
 
+/**
+ * `GET /rules/{ruleId}` ハンドラ。`IRuleApiModel#get` でルール1件を取得する。
+ * `get` が `null`（該当ルールなし）を返した場合は 404、それ以外の例外は 500 として返す。
+ */
 export const get: Operation = async (req, res) => {
     const ruleApiModel = container.get<IRuleApiModel>('IRuleApiModel');
 
     try {
-        const rule = await ruleApiModel.get(parseInt(req.params.ruleId, 10));
+        const rule = await ruleApiModel.get(parseInt(api.pathParam(req, 'ruleId'), 10));
         if (rule !== null) {
             api.responseJSON(res, 200, rule);
         } else {
@@ -57,11 +61,12 @@ get.apiDoc = {
     },
 };
 
+/** `DELETE /rules/{ruleId}` ハンドラ。`IRuleApiModel#delete` でルールを削除する。 */
 export const del: Operation = async (req, res) => {
     const ruleApiModel = container.get<IRuleApiModel>('IRuleApiModel');
 
     try {
-        await ruleApiModel.delete(parseInt(req.params.ruleId, 10));
+        await ruleApiModel.delete(parseInt(api.pathParam(req, 'ruleId'), 10));
         api.responseJSON(res, 200, {
             code: 200,
         });
@@ -96,18 +101,22 @@ del.apiDoc = {
     },
 };
 
+/**
+ * `PUT /rules/{ruleId}` ハンドラ。path の `ruleId` を body（`apid.Rule`）へ上書きしてから
+ * `IRuleApiModel#update` を呼ぶ（body 側に id が含まれていても path の値で確定させる）。
+ */
 export const put: Operation = async (req, res) => {
     const ruleApiModel = container.get<IRuleApiModel>('IRuleApiModel');
 
     const rule = req.body;
-    rule.id = parseInt(req.params.ruleId, 10);
+    rule.id = parseInt(api.pathParam(req, 'ruleId'), 10);
     try {
         await ruleApiModel.update(rule);
         api.responseJSON(res, 200, {
             code: 200,
         });
     } catch (err: any) {
-        api.responseServerError(res, err.message);
+        api.responseOperationError(res, err);
     }
 };
 

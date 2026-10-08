@@ -1,12 +1,13 @@
 import { inject, injectable } from 'inversify';
-import * as apid from '../../../api';
-import Rule from '../../db/entities/Rule';
-import StrUtil from '../../util/StrUtil';
-import IPromiseRetry from '../IPromiseRetry';
-import DBUtil from './DBUtil';
-import IDBOperator from './IDBOperator';
-import IRuleDB, { RuleWithCnt } from './IRuleDB';
+import type * as apid from '../../../api.js';
+import Rule from '../../db/entities/Rule.js';
+import StrUtil from '../../util/StrUtil.js';
+import IPromiseRetry from '../IPromiseRetry.js';
+import DBUtil from './DBUtil.js';
+import IDBOperator from './IDBOperator.js';
+import IRuleDB, { RuleWithCnt } from './IRuleDB.js';
 
+/** `IRuleDB` の実装。詳細は `IRuleDB` を参照。 */
 @injectable()
 export default class RuleDB implements IRuleDB {
     private op: IDBOperator;
@@ -27,13 +28,13 @@ export default class RuleDB implements IRuleDB {
         const connection = await this.op.getConnection();
         const queryRunner = connection.createQueryRunner();
 
-        // start transaction
-        await queryRunner.startTransaction();
-
         let hasError = false;
         try {
+            // start transaction
+            await queryRunner.startTransaction();
+
             // 削除
-            await queryRunner.manager.delete(Rule, {});
+            await queryRunner.manager.createQueryBuilder().delete().from(Rule).execute();
 
             // 挿入処理
             for (const item of items) {
@@ -42,10 +43,21 @@ export default class RuleDB implements IRuleDB {
             await queryRunner.commitTransaction();
         } catch (err: any) {
             console.error(err);
-            hasError = err;
-            await queryRunner.rollbackTransaction();
+            hasError = true;
+            if (queryRunner.isTransactionActive) {
+                try {
+                    await queryRunner.rollbackTransaction();
+                } catch (cleanupError) {
+                    console.error(cleanupError);
+                }
+            }
         } finally {
-            await queryRunner.release();
+            try {
+                await queryRunner.release();
+            } catch (cleanupError) {
+                console.error(cleanupError);
+                hasError = true;
+            }
         }
 
         if (hasError) {
@@ -230,6 +242,7 @@ export default class RuleDB implements IRuleDB {
             BS: !!rule.searchOption.BS,
             CS: !!rule.searchOption.CS,
             SKY: !!rule.searchOption.SKY,
+            BS4K: !!rule.searchOption.BS4K,
             channelIds:
                 typeof rule.searchOption.channelIds === 'undefined'
                     ? null
@@ -332,6 +345,7 @@ export default class RuleDB implements IRuleDB {
                 BS: rule.BS,
                 CS: rule.CS,
                 SKY: rule.SKY,
+                BS4K: rule.BS4K,
                 isFree: rule.isFree,
             },
             reserveOption: {
@@ -472,14 +486,14 @@ export default class RuleDB implements IRuleDB {
             queryBuilder = queryBuilder.andWhere(DBUtil.createOrQuery(or), values);
         }
 
-        // offset
-        if (typeof option.offset !== 'undefined') {
-            queryBuilder = queryBuilder.skip(option.offset);
+        // offset・limit
+        // limit 0 は件数の制限なし（TypeORM 1.x の `take(0)` は `LIMIT 0` になるため take を付けない）
+        const pagination = DBUtil.resolvePagination(option);
+        if (typeof pagination.skip !== 'undefined') {
+            queryBuilder = queryBuilder.skip(pagination.skip);
         }
-
-        // limit
-        if (typeof option.limit !== 'undefined') {
-            queryBuilder = queryBuilder.take(option.limit);
+        if (typeof pagination.take !== 'undefined') {
+            queryBuilder = queryBuilder.take(pagination.take);
         }
 
         // order by
@@ -542,14 +556,14 @@ export default class RuleDB implements IRuleDB {
             queryBuilder = queryBuilder.andWhere(DBUtil.createOrQuery(or), values);
         }
 
-        // offset
-        if (typeof option.offset !== 'undefined') {
-            queryBuilder = queryBuilder.skip(option.offset);
+        // offset・limit
+        // limit 0 は件数の制限なし（TypeORM 1.x の `take(0)` は `LIMIT 0` になるため take を付けない）
+        const pagination = DBUtil.resolvePagination(option);
+        if (typeof pagination.skip !== 'undefined') {
+            queryBuilder = queryBuilder.skip(pagination.skip);
         }
-
-        // limit
-        if (typeof option.limit !== 'undefined') {
-            queryBuilder = queryBuilder.take(option.limit);
+        if (typeof pagination.take !== 'undefined') {
+            queryBuilder = queryBuilder.take(pagination.take);
         }
 
         const result = await this.promieRetry.run(() => {

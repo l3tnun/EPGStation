@@ -1,0 +1,67 @@
+name: Client
+on:
+  pull_request:
+concurrency:
+  group: client-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+permissions: {}
+env:
+  CI: '1'
+  TZ: UTC
+  DO_NOT_TRACK: '1'
+jobs:
+  check:
+    name: Lint, typecheck and format check
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Materialize candidate
+        env:
+          EPGSTATION_CANDIDATE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          EPGSTATION_READ_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          [[ $EPGSTATION_CANDIDATE_SHA =~ ^[0-9a-f]{40}$ ]] || exit 1
+          [[ -z $(ls -A .) ]] || exit 1
+          askpass="$RUNNER_TEMP/epgstation-git-askpass"
+          cat >"$askpass" <<'ASKPASS'
+          #!/bin/sh
+          case "${1-}" in
+            *Username*) printf '%s' x-access-token ;;
+            *Password*) printf '%s' "$EPGSTATION_READ_TOKEN" ;;
+            *) exit 64 ;;
+          esac
+          ASKPASS
+          chmod 0500 "$askpass"
+          git init --quiet .
+          git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          GIT_ASKPASS="$askpass" GIT_TERMINAL_PROMPT=0 git fetch --quiet --no-tags --depth=1 origin "$EPGSTATION_CANDIDATE_SHA"
+          git checkout --quiet --detach "$EPGSTATION_CANDIDATE_SHA"
+          git remote set-url origin https://invalid.local/candidate.git
+          rm -f "$askpass"
+          [[ $(git rev-parse HEAD) == "$EPGSTATION_CANDIDATE_SHA" ]] || exit 1
+      - name: Install pinned mise and the Node toolchain
+        env:
+          MISE_YES: '1'
+        run: |
+          set -euo pipefail
+          mise_version=v2026.9.1
+          mise_sha256=c98423c8470d6dc416d9f7036d0646d8ef5ae92ad9186907f8fcc84cbe7db4ea
+          install -d -m 0755 "$HOME/.local/bin"
+          curl -fsSL --retry 3 -o "$HOME/.local/bin/mise" "https://github.com/jdx/mise/releases/download/${mise_version}/mise-${mise_version}-linux-x64"
+          echo "${mise_sha256}  $HOME/.local/bin/mise" | sha256sum -c -
+          chmod 0755 "$HOME/.local/bin/mise"
+          echo "$HOME/.local/bin" >>"$GITHUB_PATH"
+          "$HOME/.local/bin/mise" trust --quiet
+          "$HOME/.local/bin/mise" install
+          "$HOME/.local/bin/mise" exec node@24.18.0 -- node --version
+      - name: Install dependencies
+        run: cd client && mise exec node@24.18.0 -- npm ci --ignore-scripts
+      - name: Lint
+        run: cd client && mise exec node@24.18.0 -- npm run lint
+      - name: Typecheck
+        run: cd client && mise exec node@24.18.0 -- npm run typecheck
+      - name: Format check
+        run: cd client && mise exec node@24.18.0 -- npm run format:check

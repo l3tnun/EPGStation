@@ -1,13 +1,17 @@
 import { Operation } from 'express-openapi';
-import IThumbnailApiModel from '../../../api/thumbnail/IThumbnailApiModel';
-import container from '../../../ModelContainer';
-import * as api from '../../api';
+import IThumbnailApiModel from '../../../api/thumbnail/IThumbnailApiModel.js';
+import container from '../../../ModelContainer.js';
+import * as api from '../../api.js';
 
+/**
+ * `GET /thumbnails/{thumbnailId}` ハンドラ。`IThumbnailApiModel#getIdFilePath` で画像の
+ * 絶対パスを取得し、`image/jpeg` として返す。パスが `null`（該当サムネイルなし）の場合は404。
+ */
 export const get: Operation = async (req, res) => {
     const thumbnailApiModel = container.get<IThumbnailApiModel>('IThumbnailApiModel');
 
     try {
-        const filePath = await thumbnailApiModel.getIdFilePath(parseInt(req.params.thumbnailId, 10));
+        const filePath = await thumbnailApiModel.getIdFilePath(parseInt(api.pathParam(req, 'thumbnailId'), 10));
 
         if (filePath === null) {
             api.responseError(res, {
@@ -51,11 +55,12 @@ get.apiDoc = {
     },
 };
 
+/** `DELETE /thumbnails/{thumbnailId}` ハンドラ。`IThumbnailApiModel#delete` でサムネイルを削除する。 */
 export const del: Operation = async (req, res) => {
     const thumbnailApiModel = container.get<IThumbnailApiModel>('IThumbnailApiModel');
 
     try {
-        await thumbnailApiModel.delete(parseInt(req.params.thumbnailId, 10));
+        await thumbnailApiModel.delete(parseInt(api.pathParam(req, 'thumbnailId'), 10));
 
         api.responseJSON(res, 200, { code: 200 });
     } catch (err: any) {

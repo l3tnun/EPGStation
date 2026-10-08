@@ -2,23 +2,32 @@ import { ChildProcess } from 'child_process';
 import * as events from 'events';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import * as apid from '../../../../api';
-import FileUtil from '../../../util/FileUtil';
-import ProcessUtil from '../../../util/ProcessUtil';
-import Util from '../../../util/Util';
-import IVideoUtil, { VideoInfo } from '../../api/video/IVideoUtil';
-import IChannelDB from '../../db/IChannelDB';
-import IRecordedDB from '../../db/IRecordedDB';
-import IVideoFileDB from '../../db/IVideoFileDB';
-import IEncodeEvent from '../../event/IEncodeEvent';
-import IConfiguration from '../../IConfiguration';
-import ILogger from '../../ILogger';
-import ILoggerModel from '../../ILoggerModel';
-import IEncodeFileManageModel from './IEncodeFileManageModel';
-import IEncodeProcessManageModel from './IEncodeProcessManageModel';
-import { EncodeOption, EncodeProgressInfo, IEncoderModel } from './IEncoderModel';
-import IRecordingUtilModel from '../../operator/recording/IRecordingUtilModel';
+import { StringDecoder } from 'string_decoder';
+import type * as apid from '../../../../api.js';
+import FileUtil from '../../../util/FileUtil.js';
+import ProcessUtil from '../../../util/ProcessUtil.js';
+import { isSubDirectoryInsideRoot } from '../../../util/SubDirectoryUtil.js';
+import Util from '../../../util/Util.js';
+import IVideoUtil, { VideoInfo } from '../../api/video/IVideoUtil.js';
+import IChannelDB from '../../db/IChannelDB.js';
+import IRecordedDB from '../../db/IRecordedDB.js';
+import IVideoFileDB from '../../db/IVideoFileDB.js';
+import IEncodeEvent from '../../event/IEncodeEvent.js';
+import IConfiguration from '../../IConfiguration.js';
+import ILogger from '../../ILogger.js';
+import ILoggerModel from '../../ILoggerModel.js';
+import IEncodeFileManageModel from './IEncodeFileManageModel.js';
+import IEncodeProcessManageModel from './IEncodeProcessManageModel.js';
+import { ManagedProcessHandle, ManagedStopRequestResult } from './IEncodeProcessManageModel.js';
+import { EncodeOption, EncodeProgressInfo, IEncoderModel } from './IEncoderModel.js';
+import IRecordingUtilModel from '../../operator/recording/IRecordingUtilModel.js';
 
+/**
+ * `IEncoderModel` の実装。エンコード予約1件（`EncodeOption`）につきこの class を1つ生成して使う
+ * 使い捨てのオブジェクトで、`setOption`→`start`の順で使う前提。実際のプロセス起動・停止は
+ * `IEncodeProcessManageModel`へ委譲し、自身はエンコードコマンドの組み立て、進捗ログの
+ * パース、タイムアウト監視、終了時の後始末（一時ファイル削除・イベント通知）を担当する。
+ */
 @injectable()
 class EncoderModel implements IEncoderModel {
     private log: ILogger;
@@ -32,13 +41,43 @@ class EncoderModel implements IEncoderModel {
     private encodeEvent: IEncodeEvent;
     private recodingUtil: IRecordingUtilModel;
 
+    /** `childEndProcessing` 完了（エンコード終了）を1回だけ通知するための内部専用 event。 */
     private listener: events.EventEmitter = new events.EventEmitter();
 
+    /** `setOption` で一度だけセットされるエンコード情報。`null` は未設定を表し、
+     *  二重に `setOption` すること自体がエラーになる。 */
     private encodeOption: EncodeOption | null = null; // エンコード情報
+    /** 起動中のエンコードプロセス本体。`start` で設定され、`childEndProcessing` で `null` に戻る。 */
     private childProcess: ChildProcess | null = null; // エンコードプロセス
-    private timerId: NodeJS.Timer | null = null; // タイムアウト検知用タイマーid
+    /** `processManager` に対して停止要求を出す際に使う不透明な handle。`childProcess` と対で管理される。 */
+    private managedProcessHandle: ManagedProcessHandle | null = null;
+    /** `cancel` が発行した停止要求の Promise。重複して `cancel` が呼ばれても新たな要求を
+     *  発行させず、同じ Promise を待たせるためにキャッシュする。 */
+    private stopRequestOperation: Promise<ManagedStopRequestResult> | null = null;
+    /** タイムアウト検知用タイマーid。エンコードの想定時間（`recorded.duration`×レート）を
+     *  超えると発火し、`cancel` を呼ぶ。`childEndProcessing` で確実にクリアされる。 */
+    private timerId: NodeJS.Timeout | null = null; // タイムアウト検知用タイマーid
+    /** キャンセルが呼び出されたか? `childEndProcessing` での「異常終了か/キャンセルか」の
+     *  判定・出力ファイル削除要否の分岐に使う。 */
     private isCanceld: boolean = false; // キャンセルが呼び出されたか?
+    /** 直近にパースできたエンコード進捗（percent とログ文字列）。`getProgressInfo` が返す値そのもの。 */
     private progressInfo: EncodeProgressInfo | null = null;
+    /** 標準出力の1行分JSONが複数の `data` チャンクへ分割された場合に、確定していない
+     *  行の断片を次のチャンクへ持ち越すためのバッファ。 */
+    private progressLineBuffer: string = '';
+    /** マルチバイト文字がチャンク境界で分割されても正しく文字列化できるよう状態を保持する
+     *  decoder。`updateEncodingProgressInfo` の通常経路で使う。 */
+    private progressDecoder: StringDecoder = new StringDecoder('utf8');
+    /** `childEndProcessing` の多重実行を防ぐフラグ（`exit` イベントと即時終了チェックの
+     *  両方から呼ばれうるため）。 */
+    private isSettled: boolean = false;
+    /** `childProcess`へ張った `exit` listener の参照。`removeProcessListeners` で
+     *  取り外すために保持する。 */
+    private childExitListener: ((code: number | null, signal: NodeJS.Signals | null) => void) | null = null;
+    /** `childProcess.stdout` へ張った進捗パース用 `data` listener の参照（未設定なら `null`）。 */
+    private stdoutDataListener: ((data: any) => void) | null = null;
+    /** `childProcess.stderr` へ張ったデバッグログ出力用 `data` listener の参照（未設定なら `null`）。 */
+    private stderrDataListener: ((data: any) => void) | null = null;
 
     constructor(
         @inject('ILoggerModel') logger: ILoggerModel,
@@ -176,7 +215,7 @@ class EncoderModel implements IEncoderModel {
         this.log.encode.info(`outputFilePath: ${outputFilePath}`);
 
         // プロセスの生成
-        this.childProcess = await this.processManager.create({
+        const processOption = {
             input: inputFilePath,
             output: outputFilePath,
             cmd: encodeCmd.cmd,
@@ -225,17 +264,27 @@ class EncoderModel implements IEncoderModel {
                     SCRAMBLING_CNT: recorded.dropLogFile?.scramblingCnt.toString(10) || '',
                 },
             },
-        });
+        };
+        try {
+            const startedProcess = await this.processManager.createManaged(processOption);
+            this.childProcess = startedProcess.child;
+            this.managedProcessHandle = startedProcess.handle;
+        } catch (err: any) {
+            if (outputFilePath !== null) {
+                this.fileManager.release(outputFilePath);
+            }
+            throw err;
+        }
 
         // タイムアウト設定
         this.timerId = setTimeout(
-            async () => {
+            () => {
                 if (this.encodeOption === null) {
                     return;
                 }
 
                 this.log.encode.error(`encode process is time out: ${this.encodeOption.encodeId} ${outputFilePath}`);
-                await this.cancel();
+                void this.cancel().catch(() => {});
             },
             recorded.duration *
                 (typeof encodeCmd.rate === 'undefined' ? EncoderModel.DEFAULT_TIMEOUT_RATE : encodeCmd.rate),
@@ -246,9 +295,10 @@ class EncoderModel implements IEncoderModel {
          */
         // debug 用
         if (this.childProcess.stderr !== null) {
-            this.childProcess.stderr.on('data', data => {
+            this.stderrDataListener = data => {
                 this.log.encode.debug(String(data));
-            });
+            };
+            this.childProcess.stderr.on('data', this.stderrDataListener);
         }
 
         // 進捗情報更新用
@@ -262,25 +312,26 @@ class EncoderModel implements IEncoderModel {
             }
             if (videoInfo !== null) {
                 // エンコードプロセスの標準出力から進捗情報を取り出す
-                this.childProcess.stdout.on('data', data => {
+                this.stdoutDataListener = data => {
                     try {
                         this.updateEncodingProgressInfo(data);
                     } catch (err: any) {
                         // error
                     }
-                });
+                };
+                this.childProcess.stdout.on('data', this.stdoutDataListener);
             }
         }
 
         // プロセス終了処理
-        this.childProcess.on('exit', async (code, signal) => {
-            this.childEndProcessing(code, signal, outputFilePath);
-        });
+        this.childExitListener = (code, signal) => {
+            void this.childEndProcessing(code, signal, outputFilePath);
+        };
+        this.childProcess.on('exit', this.childExitListener);
 
         // プロセスの即時終了対応
         if (ProcessUtil.isExited(this.childProcess) === true) {
-            this.childEndProcessing(this.childProcess.exitCode, this.childProcess.signalCode, outputFilePath);
-            this.childProcess.removeAllListeners();
+            void this.childEndProcessing(this.childProcess.exitCode, this.childProcess.signalCode, outputFilePath);
         }
     }
 
@@ -301,36 +352,160 @@ class EncoderModel implements IEncoderModel {
             if (recorded !== null) {
                 queueItem.directory = await this.recodingUtil.formatFilePathString(queueItem.directory, recorded);
             }
+
+            // 保存先の外を指す出力ディレクトリは使わず、親ディレクトリの直下に出力する
+            if (isSubDirectoryInsideRoot(queueItem.directory) === false) {
+                this.log.encode.warn(
+                    `output directory is outside the recorded directory, save directly under it. recordedId: ${queueItem.recordedId} directory: ${queueItem.directory}`,
+                );
+                queueItem.directory = undefined;
+            }
         }
 
         return typeof queueItem.directory === 'undefined' ? parentDir : path.join(parentDir, queueItem.directory);
     }
 
     /**
-     * エンコード進捗情報更新
-     * @param data: エンコードプロセスの標準出力
-     * @param encodeId: apid.EncodeId
+     * エンコードプロセスの標準出力（1行1 JSON の進捗レポートを想定）を取り込む。`data` イベントの
+     * 区切りは行区切りと一致しない（1行が複数チャンクに分かれる・複数行が1チャンクに収まる
+     * 両方が起こる）ため、`progressLineBuffer` に未確定分を持ち越しながら行を組み立てる。
+     * さらに、マルチバイト文字がチャンク境界で分割される場合に備えて `progressDecoder`
+     * （状態を保持する `StringDecoder`）で復元するが、何らかの理由でこの永続 decoder の内部状態が
+     * ずれてしまうと、以後ずっと JSON parse に失敗し続ける恐れがある。その保険として、常に
+     * このチャンク単独から作った使い捨ての `standaloneDecoder` でも同時にパースを試み、
+     * 永続 decoder 側が失敗して standalone 側が成功した場合は `progressDecoder` を
+     * standalone 側へ差し替えて以後の decoder として採用する（自己修復）。
+     * @param data エンコードプロセスの標準出力の生データ（`data` イベントの payload）
      */
     private updateEncodingProgressInfo(data: any): void {
         if (this.encodeOption === null) {
             return;
         }
 
-        const logs = String(data).split('\n');
-        for (let j = 0; j < logs.length; j++) {
-            if (logs[j] != '') {
-                const log = JSON.parse(String(logs[j]));
-                this.log.encode.debug(log);
-                if (log.type === 'progress' && typeof log.percent === 'number' && typeof log.log === 'string') {
-                    this.progressInfo = {
-                        percent: log.percent,
-                        log: log.log,
-                    };
+        const rawChunk = Buffer.from(data);
+        const chunk = this.decodeProgressChunk(rawChunk);
+        const standaloneDecoder = new StringDecoder('utf8');
+        const standaloneChunk = standaloneDecoder.write(rawChunk);
 
-                    // エンコード進捗変更通知
-                    this.encodeEvent.emitUpdateEncodeProgress();
-                }
+        if (chunk.includes('\n') === false) {
+            const record = this.progressLineBuffer + chunk;
+            if (this.tryApplyEncodingProgressLine(record)) {
+                this.progressLineBuffer = '';
+                return;
             }
+            if (this.tryApplyEncodingProgressLine(standaloneChunk)) {
+                this.progressLineBuffer = '';
+                this.progressDecoder = standaloneDecoder;
+                return;
+            }
+            this.retainProgressRecord(record);
+            return;
+        }
+
+        let records = chunk.split('\n');
+        const firstRecord = records.shift()!;
+        if (this.tryApplyEncodingProgressLine(this.progressLineBuffer + firstRecord) === false) {
+            const standaloneRecords = standaloneChunk.split('\n');
+            const standaloneFirstRecord = standaloneRecords.shift()!;
+            if (this.tryApplyEncodingProgressLine(standaloneFirstRecord)) {
+                this.progressDecoder = standaloneDecoder;
+                records = standaloneRecords;
+            }
+        }
+
+        const remainder = records.pop()!;
+        for (const record of records) {
+            this.tryApplyEncodingProgressLine(record);
+        }
+        if (this.tryApplyEncodingProgressLine(remainder)) {
+            this.progressLineBuffer = '';
+            return;
+        }
+        this.retainProgressRecord(remainder);
+    }
+
+    /**
+     * 永続 decoder（`progressDecoder`）でチャンクを文字列化する。
+     * @param data 生のバイト列
+     * @returns 文字列化した結果（マルチバイト文字が途中のバイト列は次回へ持ち越される）
+     */
+    private decodeProgressChunk(data: Buffer): string {
+        return this.progressDecoder.write(data);
+    }
+
+    /**
+     * 1行分の文字列を進捗JSONとして解釈できるか試す。「まだ行が完結していない」ことと
+     * 「本当に不正な内容」を区別しないため、失敗時は例外を握りつぶして `false` を返すだけにする
+     * （呼び出し側は `false` を「今回は確定させず持ち越す」判断に使う）。
+     * @param line 解釈を試みる1行
+     * @returns 解釈できたか
+     */
+    private tryApplyEncodingProgressLine(line: string): boolean {
+        try {
+            this.applyEncodingProgressLine(line);
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    /**
+     * 行が確定しないまま持ち越す際の受け皿。異常なプロセス（進捗JSONを吐かない/壊れた出力を
+     * 続ける等）が改行を送らず際限なくバッファを肥大させるのを防ぐため、上限
+     * （`MAX_PROGRESS_RECORD_BYTES`）を超えたら持ち越しを諦めてバッファと decoder を捨てる。
+     * @param record 持ち越す文字列
+     */
+    private retainProgressRecord(record: string): void {
+        if (Buffer.byteLength(record) > EncoderModel.MAX_PROGRESS_RECORD_BYTES) {
+            this.progressLineBuffer = '';
+            this.resetProgressDecoder();
+            return;
+        }
+        this.progressLineBuffer = record;
+    }
+
+    /** `progressDecoder` を初期状態へ作り直す（バッファ肥大時の破棄用）。 */
+    private resetProgressDecoder(): void {
+        this.progressDecoder = new StringDecoder('utf8');
+    }
+
+    /**
+     * 進捗JSON1行分をパースし、`type: 'progress'` かつ `percent`/`log` を含む形であれば
+     * `progressInfo` を更新して変更を通知する。それ以外の形式（parse失敗・想定外のJSON）は
+     * 何もしない（`tryApplyEncodingProgressLine` 側で「未完成の行」との区別に使われる）。
+     * @param line 解釈する1行（JSON文字列である前提）
+     * @throws JSON として parse できない場合は `JSON.parse` の例外がそのまま伝播する
+     */
+    private applyEncodingProgressLine(line: string): void {
+        const log = JSON.parse(line);
+        this.log.encode.debug(log);
+        if (log === null || log.type !== 'progress' || typeof log.percent !== 'number' || typeof log.log !== 'string') {
+            return;
+        }
+
+        this.progressInfo = {
+            percent: log.percent,
+            log: log.log,
+        };
+
+        // エンコード進捗変更通知
+        this.encodeEvent.emitUpdateEncodeProgress();
+    }
+
+    private removeProcessListeners(): void {
+        if (this.childProcess === null) {
+            return;
+        }
+
+        this.childProcess.removeListener('exit', this.childExitListener!);
+        this.childExitListener = null;
+        if (this.stdoutDataListener !== null) {
+            this.childProcess.stdout!.removeListener('data', this.stdoutDataListener);
+            this.stdoutDataListener = null;
+        }
+        if (this.stderrDataListener !== null) {
+            this.childProcess.stderr!.removeListener('data', this.stderrDataListener);
+            this.stderrDataListener = null;
         }
     }
 
@@ -346,13 +521,24 @@ class EncoderModel implements IEncoderModel {
         signal: NodeJS.Signals | null,
         outputFilePath: string | null,
     ): Promise<void> {
+        if (this.isSettled === true) {
+            return;
+        }
+        this.isSettled = true;
+
         // exit code
         this.log.encode.info(`exit code: ${code}, signal: ${signal}`);
 
         // タイムアウトタイマークリア
         if (this.timerId !== null) {
             clearTimeout(this.timerId);
+            this.timerId = null;
         }
+        this.removeProcessListeners();
+        this.childProcess = null;
+        this.managedProcessHandle = null;
+        this.progressDecoder.end();
+        this.progressLineBuffer = '';
 
         // ファイルパスの登録を削除
         if (outputFilePath !== null) {
@@ -407,18 +593,26 @@ class EncoderModel implements IEncoderModel {
 
         this.log.encode.info(`cancel encode: ${this.encodeOption.encodeId}`);
 
-        // プロセスが実行されていれば削除する
-        if (this.childProcess !== null) {
-            this.log.encode.info(
-                `kill encode process encodeId: ${this.encodeOption.encodeId}, pid: ${this.childProcess.pid}`,
-            );
-
-            this.isCanceld = true;
-            await ProcessUtil.kill(this.childProcess).catch(err => {
-                this.log.encode.error(`kill encode process failed: ${this.encodeOption?.encodeId}`);
-                this.log.encode.error(err);
-            });
+        const handle = this.managedProcessHandle;
+        if (handle === null) {
+            return;
         }
+
+        this.log.encode.info(
+            `kill encode process encodeId: ${this.encodeOption.encodeId}, pid: ${this.childProcess?.pid}`,
+        );
+
+        this.isCanceld = true;
+        if (this.stopRequestOperation === null) {
+            this.stopRequestOperation = Promise.resolve()
+                .then(() => this.processManager.requestStop(handle))
+                .catch(err => {
+                    this.log.encode.error(`stop encode process failed: ${this.encodeOption?.encodeId}`);
+                    this.log.encode.error(err);
+                    throw err;
+                });
+        }
+        await this.stopRequestOperation;
     }
 
     /**
@@ -450,6 +644,7 @@ namespace EncoderModel {
     export const ENCODE_FINISH_EVENT = 'encodeFinishEvent';
     export const ENCODE_PRIPORITY = 10;
     export const DEFAULT_TIMEOUT_RATE = 4.0;
+    export const MAX_PROGRESS_RECORD_BYTES = 64 * 1024;
 }
 
 export default EncoderModel;

@@ -1,10 +1,11 @@
 import diskusage from 'diskusage-ng';
 import { inject, injectable } from 'inversify';
-import * as apid from '../../../../api';
-import IConfigFile from '../../IConfigFile';
-import IConfiguration from '../../IConfiguration';
-import IStorageApiModel from './IStorageApiModel';
+import type * as apid from '../../../../api.js';
+import IConfigFile from '../../IConfigFile.js';
+import IConfiguration from '../../IConfiguration.js';
+import IStorageApiModel from './IStorageApiModel.js';
 
+/** `IStorageApiModel` の実装。詳細は `IStorageApiModel` を参照。 */
 @injectable()
 export default class StorageApiModel implements IStorageApiModel {
     private config: IConfigFile;

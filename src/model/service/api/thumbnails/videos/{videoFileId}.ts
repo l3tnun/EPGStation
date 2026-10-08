@@ -1,13 +1,14 @@
 import { Operation } from 'express-openapi';
-import IThumbnailApiModel from '../../../../api/thumbnail/IThumbnailApiModel';
-import container from '../../../../ModelContainer';
-import * as api from '../../../api';
+import IThumbnailApiModel from '../../../../api/thumbnail/IThumbnailApiModel.js';
+import container from '../../../../ModelContainer.js';
+import * as api from '../../../api.js';
 
+/** `POST /thumbnails/videos/{videoFileId}` ハンドラ。`IThumbnailApiModel#add` で指定ビデオファイルのサムネイル生成を開始させる。 */
 export const post: Operation = async (req, res) => {
     const thumbnailApiModel = container.get<IThumbnailApiModel>('IThumbnailApiModel');
 
     try {
-        await thumbnailApiModel.add(parseInt(req.params.videoFileId, 10));
+        await thumbnailApiModel.add(parseInt(api.pathParam(req, 'videoFileId'), 10));
         api.responseJSON(res, 200, { code: 200 });
     } catch (err: any) {
         api.responseServerError(res, err.message);

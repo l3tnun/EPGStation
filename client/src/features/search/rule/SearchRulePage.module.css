@@ -1,0 +1,1262 @@
+.page {
+  display: grid;
+  box-sizing: border-box;
+  gap: 8px;
+  margin: 0 auto;
+  max-width: 1600px;
+  padding: 12px;
+  width: 100%;
+}
+
+.form {
+  display: grid;
+  gap: 12px;
+  margin: 0 auto;
+  max-width: 800px;
+  width: 100%;
+}
+
+.searchTimeToggle {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: rgba(0, 0, 0, 0.54);
+  cursor: pointer;
+  display: flex;
+  font: inherit;
+  gap: 8px;
+  justify-self: start;
+  min-height: 32px;
+  padding: 0;
+}
+
+.searchTimeToggle:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.searchCard {
+  background: #fff;
+  box-shadow:
+    rgba(0, 0, 0, 0.2) 0 2px 1px -1px,
+    rgba(0, 0, 0, 0.14) 0 1px 1px 0,
+    rgba(0, 0, 0, 0.12) 0 1px 3px 0;
+  box-sizing: border-box;
+  color: #212121;
+  display: grid;
+  gap: 20px;
+  padding: 32px 16px 24px;
+}
+
+.searchRow {
+  display: grid;
+  grid-template-columns: 176px minmax(0, 1fr);
+  gap: 16px;
+  min-width: 0;
+}
+
+.searchLabel {
+  font-size: 0.875rem;
+  line-height: 32px;
+}
+
+.searchControl {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.searchField {
+  color: #1976d2;
+  display: grid;
+  font-size: 0.75rem;
+  gap: 0;
+  line-height: 18px;
+  min-width: 0;
+  position: relative;
+}
+
+.searchField .textInput {
+  color: #212121;
+  font-size: 1rem;
+}
+
+.legacyFloatingField {
+  display: block;
+  min-height: 50px;
+  padding-top: 18px;
+}
+
+.legacyFloatingField > span:first-child {
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 1rem;
+  left: 0;
+  line-height: 20px;
+  pointer-events: none;
+  position: absolute;
+  top: 24px;
+  transform: none;
+  transform-origin: left top;
+  transition:
+    color 150ms ease,
+    transform 150ms ease;
+  z-index: 1;
+}
+
+.legacyFloatingField .textInput::placeholder {
+  opacity: 0;
+}
+
+.legacyFloatingField:has([data-channel-select-wrapper][data-has-value='false']):not(:focus-within)
+  > span:first-child {
+  color: transparent;
+  visibility: hidden;
+}
+
+.legacyFloatingField:focus-within > span:first-child,
+.legacyFloatingField:has(.textInput:not(:placeholder-shown)) > span:first-child,
+.legacyFloatingField:has([data-channel-select-wrapper][data-has-value='true']) > span:first-child {
+  color: #1976d2;
+  transform: translateY(-22px) scale(0.75);
+  visibility: visible;
+}
+
+.keywordInput,
+.clearableInput {
+  padding-right: 32px;
+}
+
+.clearableInputWrap {
+  display: block;
+  min-width: 0;
+  position: relative;
+  width: 100%;
+}
+
+.clearableInputLabel {
+  color: rgb(0 0 0 / 60%);
+  display: block;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+:global([data-theme-mode='dark']) .clearableInputLabel {
+  color: rgb(255 255 255 / 70%);
+}
+
+.clearInputButton {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: #1976d2;
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  height: 32px;
+  justify-content: center;
+  padding: 0;
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+}
+
+.clearInputButton span {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.textInput {
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.42);
+  border-radius: 0;
+  box-sizing: border-box;
+  color: inherit;
+  font: inherit;
+  height: 32px;
+  min-width: 0;
+  outline: 0;
+  padding: 4px 0;
+  width: 100%;
+}
+
+.textInput:focus {
+  border-bottom-color: #1976d2;
+  box-shadow: inset 0 -1px 0 #1976d2;
+}
+
+.selectLikeInput {
+  padding-right: 28px;
+}
+
+.channelSelect {
+  max-width: 100%;
+  min-width: 0;
+  width: 100%;
+}
+
+.channelSelect:global(.MuiInputBase-root) {
+  max-width: 100%;
+  min-width: 0;
+  width: 100%;
+}
+
+.channelSelectDisplay {
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.channelSelectPlaceholder {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.channelSelectValue {
+  display: block;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.selectLikeInput:global(.MuiTextField-root) {
+  min-width: 0;
+}
+
+.selectLikeInput :global(.MuiInputBase-root) {
+  font: inherit;
+  min-height: 24px;
+  width: 100%;
+}
+
+.selectLikeInput :global(.MuiSelect-select) {
+  box-sizing: border-box;
+  min-height: 24px;
+  padding-bottom: 0;
+  padding-top: 0;
+}
+
+.checkboxLine {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  min-height: 28px;
+}
+
+.selectCheckboxGap {
+  margin-top: 12px;
+}
+
+.keywordCheckboxLine {
+  align-items: center;
+  column-gap: 8px;
+  row-gap: 0;
+}
+
+.checkboxLabel {
+  align-items: center;
+  color: rgba(0, 0, 0, 0.62);
+  display: inline-flex;
+  gap: 6px;
+  min-height: 28px;
+}
+
+.searchCard .checkboxLabel {
+  margin: 0;
+}
+
+.searchCard .checkboxLabel :global(.MuiFormControlLabel-label) {
+  font-size: 1rem;
+  line-height: 20px;
+}
+
+.keywordCheckboxLine .checkboxLabel {
+  flex: 0 0 auto;
+}
+
+.keywordCheckboxLine .checkboxLabel:nth-child(-n + 2) {
+  flex-basis: 96px;
+}
+
+.keywordCheckboxLine .checkboxLabel:nth-child(n + 3) {
+  flex-basis: 64px;
+}
+
+.checkboxLabel :global(.MuiCheckbox-root) {
+  margin: 0;
+  padding: 0;
+}
+
+.searchInlineFields {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 100px));
+}
+
+.timeFields {
+  align-items: center;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+}
+
+.timeTextInput {
+  max-width: 100px;
+}
+
+.periodFields {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.periodField {
+  min-width: 0;
+}
+
+.timeSeparator {
+  padding: 0 4px;
+}
+
+.genrePreview {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 2px;
+  display: grid;
+  max-height: 180px;
+  overflow: auto;
+  padding: 4px;
+}
+
+.genreItem {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  display: block;
+  font: inherit;
+  min-height: 32px;
+  padding: 6px;
+  text-align: left;
+  user-select: none;
+  width: 100%;
+}
+
+.genreItem:focus-visible {
+  outline: 1px solid #2196f3;
+  outline-offset: -1px;
+}
+
+.genreItem[data-selected='true'] {
+  background: rgba(33, 150, 243, 0.1);
+  color: #2196f3;
+}
+
+:global([data-theme-mode='dark']) .searchTimeToggle,
+:global([data-theme-mode='dark']) .checkboxLabel {
+  color: rgb(255 255 255 / 70%);
+}
+
+:global([data-theme-mode='dark']) .searchCard {
+  background: var(--mui-palette-background-paper, #1e1e1e);
+  color: rgb(255 255 255 / 87%);
+}
+
+:global([data-theme-mode='dark']) .searchField .textInput {
+  color: rgb(255 255 255 / 87%);
+}
+
+:global([data-theme-mode='dark']) .legacyFloatingField > span:first-child {
+  color: rgb(255 255 255 / 60%);
+}
+
+:global([data-theme-mode='dark']) .legacyFloatingField:focus-within > span:first-child,
+:global([data-theme-mode='dark'])
+  .legacyFloatingField:has(.textInput:not(:placeholder-shown))
+  > span:first-child,
+:global([data-theme-mode='dark'])
+  .legacyFloatingField:has([data-channel-select-wrapper][data-has-value='true'])
+  > span:first-child {
+  color: var(--mui-palette-primary-main, #90caf9);
+}
+
+:global([data-theme-mode='dark']) .textInput {
+  border-bottom-color: rgb(255 255 255 / 50%);
+  color: rgb(255 255 255 / 87%);
+  color-scheme: dark;
+}
+
+:global([data-theme-mode='dark']) .checkboxLabel :global(.MuiCheckbox-root) {
+  color: rgb(255 255 255 / 70%);
+}
+
+:global([data-theme-mode='dark']) .checkboxLabel :global(.MuiCheckbox-root.Mui-checked) {
+  color: var(--mui-palette-primary-main, #90caf9);
+}
+
+:global([data-theme-mode='dark']) .genrePreview {
+  border-color: rgb(255 255 255 / 12%);
+}
+
+:global([data-theme-mode='dark']) .resultItem,
+:global([data-theme-mode='dark']) .ruleList,
+:global([data-theme-mode='dark']) .ruleOptionCard {
+  background: var(--mui-palette-background-paper, #1e1e1e);
+  color: rgb(255 255 255 / 87%);
+}
+
+:global([data-theme-mode='dark']) .programDescription {
+  color: rgb(255 255 255 / 70%);
+}
+
+:global([data-theme-mode='dark']) .ruleHeader,
+:global([data-theme-mode='dark']) .ruleItem,
+:global([data-theme-mode='dark']) .ruleOptionActions {
+  border-color: rgb(255 255 255 / 12%);
+}
+
+:global([data-theme-mode='dark']) .ruleItem:hover,
+:global([data-theme-mode='dark']) .ruleItem:focus-within {
+  background: rgb(255 255 255 / 8%);
+}
+
+:global([data-theme-mode='dark']) .rulePanel summary::after,
+:global([data-theme-mode='dark']) .ruleOptionField,
+:global([data-theme-mode='dark']) .ruleOptionField .ruleOptionLabel {
+  color: rgb(255 255 255 / 70%);
+}
+
+.subGenreItem {
+  padding-left: 22px;
+}
+
+.genreActions {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.field {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.field input {
+  min-width: 0;
+  border: 1px solid #8a8f98;
+  border-radius: 4px;
+  padding: 8px;
+  color: inherit;
+  background: transparent;
+}
+
+.actions {
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin: -12px -16px -24px;
+  min-height: 52px;
+  padding: 8px;
+}
+
+:global([data-theme-mode='dark']) .actions {
+  border-top-color: rgb(255 255 255 / 12%);
+}
+
+.result {
+  display: grid;
+  gap: 8px;
+  margin: 32px auto;
+  max-width: 800px;
+  min-width: 0;
+  width: 100%;
+}
+
+.resultHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.resultList {
+  display: grid;
+  gap: 8px;
+}
+
+.resultItem {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  border-radius: 4px;
+  box-shadow:
+    rgba(0, 0, 0, 0.2) 0 2px 1px -1px,
+    rgba(0, 0, 0, 0.14) 0 1px 1px 0,
+    rgba(0, 0, 0, 0.12) 0 1px 3px 0;
+  padding: 16px;
+  color: inherit;
+  font-family: inherit;
+  text-align: left;
+  background: #fff;
+  cursor: pointer;
+}
+
+.resultItem[data-reserve-state='reserve'] {
+  border: 4px solid red;
+}
+
+.resultItem[data-reserve-state='conflict'] {
+  background: #fffd6b;
+  border: 4px dashed red;
+}
+
+.resultItem[data-reserve-state='skip'] {
+  background: #aaa;
+}
+
+.resultItem[data-reserve-state='overlap'] {
+  background: #aaa;
+  color: #000;
+  text-decoration: line-through;
+}
+
+:global([data-theme-mode='dark']) .resultItem[data-reserve-state='conflict'] {
+  background: #f6c90e;
+  border-color: red;
+  color: #000;
+}
+
+:global([data-theme-mode='dark']) .resultItem[data-reserve-state='reserve'] {
+  border-color: red;
+}
+
+:global([data-theme-mode='dark']) .resultItem[data-reserve-state='skip'] {
+  background: #717171;
+}
+
+:global([data-theme-mode='dark']) .resultItem[data-reserve-state='overlap'] {
+  background: #717171;
+  color: #fff;
+}
+
+.programName {
+  font-size: 1rem;
+  line-height: 28px;
+  overflow-wrap: anywhere;
+  font-weight: 900;
+}
+
+.programMeta {
+  color: color-mix(in srgb, currentColor 70%, transparent);
+  font-size: 0.875rem;
+  white-space: pre-line;
+}
+
+.programDescription {
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 0.875rem;
+  line-height: 20px;
+}
+
+.titleBarIcon {
+  display: inline-block;
+  font: normal normal normal 24px/1 'Material Design Icons';
+  height: 24px;
+  width: 24px;
+}
+
+.titleBarIcon[data-rule-title-icon='search']::before {
+  content: '\F0349';
+}
+
+.titleBarIcon[data-rule-title-icon='edit']::before {
+  content: '\F03EB';
+}
+
+.titleActions,
+.ruleActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.titleActions {
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 4px;
+}
+
+.accessibleText {
+  clip: rect(0 0 0 0);
+  border: 0;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+.ruleToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.ruleList {
+  display: grid;
+  background: #fff;
+  box-shadow:
+    rgba(0, 0, 0, 0.2) 0 2px 1px -1px,
+    rgba(0, 0, 0, 0.14) 0 1px 1px 0,
+    rgba(0, 0, 0, 0.12) 0 1px 3px 0;
+  color: #212121;
+  box-sizing: border-box;
+  gap: 0;
+  margin: 0 auto;
+  max-width: 100%;
+  width: 100%;
+}
+
+.ruleHeader {
+  display: grid;
+  grid-template-columns: 82px repeat(4, minmax(0, 1fr)) 80px 68px;
+  min-height: 48px;
+  align-items: center;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  font-size: 0.875rem;
+  padding: 0 12px;
+}
+
+.ruleItem {
+  display: grid;
+  grid-template-columns: 82px minmax(0, 1fr) 68px;
+  align-items: center;
+  gap: 0;
+  min-width: 0;
+  min-height: 48px;
+  border: 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 0;
+  padding: 0 12px;
+}
+
+.ruleItem[data-selected='true'] {
+  background: #4285f4;
+  color: #fff;
+}
+
+.ruleItem[data-selected='true']:hover,
+.ruleItem[data-selected='true']:focus-within {
+  background: #4285f4;
+}
+
+.ruleItem:hover,
+.ruleItem:focus-within {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.ruleSwitchButton {
+  justify-self: start;
+  min-width: 48px;
+  padding: 0;
+}
+
+/*
+ * `.ruleSwitchButton` renders as either a MUI `Button` (variant="text", edit mode off) or a plain
+ * `<span aria-hidden>` placeholder that keeps the grid column occupied while edit mode hides the
+ * switch (要求3 AC16). MUI `Button` ships its own runtime style as a single emotion-generated class
+ * (e.g. `.css-1rlxij4`) with `min-width: 64px` and `padding: 6px 8px`. That rule and the plain
+ * `.ruleSwitchButton` rule above both have selector specificity (0,1,0); emotion inserts its
+ * `<style>` after the page's own linked stylesheet, so on equal specificity it wins the cascade and
+ * the `min-width: 48px` / `padding: 0` above was silently discarded whenever `.ruleSwitchButton` was
+ * the MUI `Button` (see 要求3 AC33). Combining with `:global(.MuiButtonBase-root)` raises specificity
+ * to (0,2,0), which beats MUI's rule regardless of insertion order -- the same technique
+ * `.ruleFab:global(.MuiFab-root)` (1007 行目) already uses in this file. The plain-span placeholder
+ * has no `MuiButtonBase-root` class, so it keeps using the base rule above unchanged.
+ *
+ * BP-019: the `Button` has no explicit height, so its rendered box (a `display: inline-flex`
+ * container with `align-items: center`) shrinks to its tallest child -- the 14px-tall `.ruleSwitch`
+ * track. That makes the switch's tap target 48x14px, far short of v2's 38x24px track-sized tap
+ * target (v2 wraps the whole switch in one `<div>` sized to the row, see
+ * `RuleListItems.vue:6`/`RuleListItems.vue:7`; here `.ruleSwitch`'s own height is fixed at 14px by
+ * the track's visual design, so the same effect is reached by growing the `Button` box around it).
+ * Adding 5px of vertical padding grows the flex box by 2x5=10px without touching `.ruleSwitch`
+ * itself, taking the tap target to 48x24px -- matching v2's 24px height while keeping the already
+ * v2-exceeding 48px width unchanged. The extra 24px stays well inside the row's 48px `min-height`
+ * (centered by `.ruleItem`'s `align-items: center`), and the switch column's horizontal range
+ * (this button's own box) never reaches the keyword column or the actions column in either layout,
+ * so the taller box does not newly overlap either (regression-pinned by
+ * `search-rule-switch-hit-area.spec.ts`, `search-rule-list-row-hit-area.spec.ts`, and
+ * `search-rule-switch-vertical-hit-area.spec.ts`).
+ */
+.ruleSwitchButton:global(.MuiButtonBase-root) {
+  min-width: 48px;
+  padding: 5px 0;
+}
+
+.ruleSwitch {
+  background: #bdbdbd;
+  border-radius: 7px;
+  display: inline-block;
+  height: 14px;
+  position: relative;
+  transition: background-color 300ms ease;
+  width: 34px;
+}
+
+.ruleSwitch::after {
+  background: #fafafa;
+  border-radius: 50%;
+  box-shadow:
+    rgba(0, 0, 0, 0.2) 0 2px 1px -1px,
+    rgba(0, 0, 0, 0.14) 0 1px 1px 0,
+    rgba(0, 0, 0, 0.12) 0 1px 3px 0;
+  content: '';
+  height: 20px;
+  left: 0;
+  position: absolute;
+  top: -3px;
+  transition:
+    background-color 300ms ease,
+    left 300ms ease;
+  width: 20px;
+}
+
+.ruleSwitch[data-checked='true'] {
+  background: #64b5f6;
+}
+
+.ruleSwitch[data-checked='true']::after {
+  background: #1976d2;
+  left: 14px;
+}
+
+.ruleItemMain {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) 80px;
+  align-items: center;
+  gap: 0;
+  min-width: 0;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  font-family: inherit;
+  font-size: 0.875rem;
+  min-height: 48px;
+  text-align: left;
+  background: transparent;
+}
+
+.ruleItemMain > span {
+  min-width: 0;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  padding-right: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ruleItemMain > span:nth-child(5) {
+  justify-self: center;
+  text-align: center;
+  width: 100%;
+}
+
+.ruleActions {
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 8px;
+  justify-content: flex-end;
+  min-width: 68px;
+}
+
+.resultRuleActions {
+  display: flex;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.ruleOptionCard {
+  background: #fff;
+  box-shadow:
+    rgba(0, 0, 0, 0.2) 0 2px 1px -1px,
+    rgba(0, 0, 0, 0.14) 0 1px 1px 0,
+    rgba(0, 0, 0, 0.12) 0 1px 3px 0;
+  display: grid;
+  margin: 24px auto 0;
+  max-width: 800px;
+  width: 100%;
+}
+
+.rulePanels {
+  display: grid;
+  padding: 16px;
+}
+
+.rulePanel {
+  border: 0;
+  interpolate-size: allow-keywords;
+  min-height: 48px;
+}
+
+.rulePanel::details-content {
+  block-size: 0;
+  overflow: clip;
+  transition:
+    block-size 220ms cubic-bezier(0.4, 0, 0.2, 1),
+    content-visibility 220ms allow-discrete;
+}
+
+.rulePanel[open]::details-content {
+  block-size: auto;
+}
+
+.rulePanel summary {
+  align-items: center;
+  cursor: pointer;
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: 176px minmax(0, 1fr) 24px;
+  list-style: none;
+  min-height: 38px;
+  padding: 6px 0;
+}
+
+.rulePanel summary::-webkit-details-marker {
+  display: none;
+}
+
+.rulePanel summary::before {
+  content: attr(data-title);
+  grid-column: 1;
+}
+
+.rulePanel summary::after {
+  color: rgba(0, 0, 0, 0.54);
+  content: '\F0140';
+  font-family: 'Material Design Icons';
+  font-size: 22px;
+  grid-column: 3;
+  justify-self: end;
+}
+
+.rulePanel[open] summary::after {
+  content: '\F0143';
+}
+
+.rulePanelTitle {
+  display: none;
+}
+
+.rulePanelContent {
+  align-items: end;
+  box-sizing: border-box;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr);
+  margin-left: 176px;
+  padding: 0 0 8px 0;
+  width: calc(100% - 200px);
+}
+
+.rulePanelOptionContent {
+  align-items: center;
+  grid-template-columns: max-content max-content;
+}
+
+.ruleOptionField {
+  color: rgba(0, 0, 0, 0.62);
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  padding-top: 6px;
+}
+
+.ruleOptionField[data-width='period'] {
+  max-width: 90px;
+}
+
+.ruleOptionField[data-width='directory'],
+.ruleOptionField[data-width='encode'] {
+  max-width: 150px;
+}
+
+.ruleOptionField[data-wide='true'] {
+  grid-column: auto;
+}
+
+.ruleOptionSelectWrap {
+  max-width: 100%;
+  min-width: 0;
+  width: 100%;
+}
+
+/* セレクタを label 用の `<span class="ruleOptionLabel">`（RuleOptionField.tsx）に絞る。
+ * `.ruleOptionField span` のように広く書くと、field label の `<span>` だけでなく、
+ * `ClearableInput` が返す wrapper `<span class="clearableInputWrap">`（`.ruleOptionField` の
+ * 直接の子。ClearableInput.tsx 参照）にも一致する。`.textInput`（実 `<input>`、
+ * ClearableInput.tsx）は `font: inherit` / `color: inherit` を持つため
+ * （SearchRulePage.module.css 171-184行）、日数・sub directory・file format・
+ * sub directory1-3 などテキスト入力の実値が label と同じ 0.75rem・rgba(0,0,0,0.54) を
+ * 継承してしまい、v2（16px）より小さく表示される。 */
+.ruleOptionField .ruleOptionLabel {
+  color: rgba(0, 0, 0, 0.54);
+  font-size: 0.75rem;
+  line-height: 18px;
+}
+
+.ruleOptionField .clearInputButton span {
+  color: inherit;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.ruleOptionActions {
+  align-items: center;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  min-height: 52px;
+  padding: 8px;
+}
+
+.linkIcon::before {
+  content: '\F0337';
+  font-family: 'Material Design Icons';
+  font-size: 22px;
+}
+
+.scrollFab {
+  align-items: center;
+  background: #e91e63;
+  border: 0;
+  border-radius: 50%;
+  bottom: 16px;
+  box-shadow:
+    rgba(0, 0, 0, 0.2) 0 3px 5px -1px,
+    rgba(0, 0, 0, 0.14) 0 6px 10px 0,
+    rgba(0, 0, 0, 0.12) 0 1px 18px 0;
+  color: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  height: 56px;
+  justify-content: center;
+  left: calc(var(--app-main-offset, 0px) + 12px);
+  position: fixed;
+  right: auto;
+  width: 56px;
+  z-index: 10;
+}
+
+.chevronUpIcon::before {
+  content: '\F0143';
+  font-family: 'Material Design Icons';
+  font-size: 24px;
+}
+
+.fabSpace {
+  height: 56px;
+}
+
+.ruleActions button {
+  min-width: auto;
+  padding: 4px 8px;
+}
+
+.ruleActionIcon {
+  display: inline-block;
+  height: 24px;
+  width: 24px;
+}
+
+.ruleActionIcon::before {
+  content: '\F01D9';
+  font-family: 'Material Design Icons';
+  font-size: 24px;
+  line-height: 1;
+}
+
+.ruleMenuIcon {
+  display: inline-block;
+  flex: 0 0 24px;
+  font: normal normal normal 24px/1 'Material Design Icons';
+  height: 24px;
+  margin-right: 24px;
+  width: 24px;
+}
+
+.ruleMenuIcon[data-rule-menu-icon='recorded']::before {
+  content: '\F0D18';
+}
+
+.ruleMenuIcon[data-rule-menu-icon='edit']::before {
+  content: '\F03EB';
+}
+
+.ruleMenuIcon[data-rule-menu-icon='delete']::before {
+  content: '\F01B4';
+}
+
+.ruleFab {
+  bottom: 16px !important;
+  left: auto !important;
+  position: fixed !important;
+  right: 16px !important;
+  z-index: 10 !important;
+}
+
+.ruleFab:global(.MuiFab-root) {
+  background-color: #e91e63;
+  color: #fff;
+}
+
+.ruleFab:global(.MuiFab-root:hover) {
+  background-color: #d81b60;
+}
+
+:global([data-theme-mode='dark']) .ruleFab:global(.MuiFab-root) {
+  color: #fff;
+}
+
+.ruleDialog {
+  display: grid;
+  gap: 12px;
+  border: 1px solid rgba(128, 128, 128, 0.45);
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.ruleSearchMenu {
+  background: #fff;
+  color: rgba(0, 0, 0, 0.87);
+}
+
+.ruleSearchFields {
+  padding: 16px;
+}
+
+.ruleSearchActions {
+  align-items: center;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  display: flex;
+  justify-content: flex-end;
+  min-height: 52px;
+  padding: 8px;
+}
+
+:global([data-theme-mode='dark']) .ruleSearchMenu {
+  background: var(--mui-palette-background-paper, #1e1e1e);
+  color: rgb(255 255 255 / 87%);
+}
+
+:global([data-theme-mode='dark']) .ruleSearchActions {
+  border-top-color: rgb(255 255 255 / 12%);
+}
+
+@media (max-width: 1160px) {
+  .page {
+    padding: 12px;
+  }
+
+  .ruleList {
+    border-radius: 2px;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 755px) {
+  .searchCard {
+    gap: 18px;
+    padding: 24px 16px 18px;
+  }
+
+  .searchRow {
+    gap: 8px;
+    grid-template-columns: 1fr;
+  }
+
+  .searchLabel {
+    line-height: 24px;
+  }
+
+  .searchInlineFields {
+    gap: 8px;
+    grid-template-columns: repeat(2, minmax(0, 100px));
+  }
+
+  .periodFields {
+    grid-template-columns: 1fr;
+  }
+
+  .timeFields {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  }
+
+  .checkboxLine {
+    gap: 8px;
+  }
+
+  .checkboxLabel {
+    min-width: 0;
+  }
+
+  .rulePanel summary {
+    grid-template-columns: minmax(0, 1fr) 24px;
+  }
+
+  .rulePanel summary::before {
+    grid-column: 1;
+  }
+
+  .rulePanel summary::after {
+    grid-column: 2;
+  }
+
+  .rulePanelContent {
+    margin-left: 16px;
+    width: calc(100% - 40px);
+  }
+
+  .rulePanelOptionContent {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .result {
+    margin: 24px 0;
+    max-width: 100%;
+  }
+
+  .resultHeader {
+    justify-content: flex-end;
+    padding: 0 4px;
+  }
+
+  .resultRuleActions {
+    justify-content: flex-end;
+  }
+}
+
+.page[data-rule-layout='list'] .ruleHeader {
+  display: none;
+}
+
+.page[data-rule-layout='list'] .ruleItem {
+  grid-template-columns: 52px minmax(0, 1fr) 42px 36px;
+  min-height: 48px;
+  padding: 0 10px;
+}
+
+.page[data-rule-layout='list'] .ruleSwitchButton {
+  grid-column: 1;
+}
+
+/*
+ * `display: contents` would erase this `<button>`'s own box, leaving only its visible child
+ * `<span>`s (nth-child(1) and nth-child(5)) as hit-test targets. Those spans are centered within
+ * the row (via `.ruleItem`'s `align-items: center`) and sized to their content, not the full row,
+ * so tapping the row's right-side padding -- or any area above/below the text -- would fall through to
+ * the non-interactive `<article>` and not select the row (v2's row wraps
+ * toggle/keyword/menu in one real `<div>` that fills the row). Spanning columns 2 and 3 (the same
+ * two tracks nth-child(1)/nth-child(5) occupy individually) and using a real
+ * `flex` box with `align-self: stretch` gives the button one box that fills the full row height and
+ * the full width between the switch column (`grid-column: 1`) and the actions column
+ * (`grid-column: 4`), without extending into either -- keeping 要求3 AC33 (switch/keyword/actions
+ * hit-areas never overlap) intact.
+ */
+.page[data-rule-layout='list'] .ruleItemMain {
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+  grid-column: 2 / 4;
+  font-size: 1rem;
+  min-width: 0;
+}
+
+.page[data-rule-layout='list'] .ruleItemMain > span {
+  padding-right: 0;
+}
+
+.page[data-rule-layout='list'] .ruleItemMain > span:nth-child(1) {
+  flex: 1 1 auto;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  padding-left: 8px;
+  padding-right: 8px;
+  white-space: normal;
+  word-break: break-all;
+}
+
+.page[data-rule-layout='list'] .ruleItemMain > span:nth-child(2),
+.page[data-rule-layout='list'] .ruleItemMain > span:nth-child(3),
+.page[data-rule-layout='list'] .ruleItemMain > span:nth-child(4) {
+  display: none;
+}
+
+.page[data-rule-layout='list'] .ruleItemMain > span:nth-child(5) {
+  flex: 0 0 42px;
+  color: color-mix(in srgb, currentColor 54%, transparent);
+  font-size: 1rem;
+  text-align: center;
+}
+
+.page[data-rule-layout='list'] .ruleActions {
+  display: contents;
+  min-width: 0;
+}
+
+.page[data-rule-layout='list'] .ruleActions button {
+  grid-column: 4;
+  grid-row: 1;
+  justify-self: center;
+  min-width: 32px;
+  padding: 0;
+  width: 32px;
+}
+
+.page[data-rule-layout='list'] .ruleActions button:nth-child(1) {
+  transform: translateX(-84px);
+  z-index: 3;
+}
+
+.page[data-rule-layout='list'] .ruleActions button:nth-child(2) {
+  transform: translateX(-42px);
+  z-index: 2;
+}
+
+.page[data-rule-layout='list'] .ruleActions button:last-child {
+  transform: none;
+  z-index: 1;
+}
+
+:global([data-theme-mode='dark']) .channelSelectPlaceholder {
+  color: rgb(255 255 255 / 60%);
+}
+
+:global([data-theme-mode='dark'])
+  .legacyFloatingField:has([data-channel-select-wrapper][data-has-value='false']):not(:focus-within)
+  > span:first-child {
+  color: transparent;
+  visibility: hidden;
+}

@@ -1,14 +1,15 @@
 import { Operation } from 'express-openapi';
-import * as apid from '../../../../../api';
-import IRecordedTagApiModel from '../../../api/recordedTag/IRecordedTagApiModel';
-import container from '../../../ModelContainer';
-import * as api from '../../api';
+import type * as apid from '../../../../../api.js';
+import IRecordedTagApiModel from '../../../api/recordedTag/IRecordedTagApiModel.js';
+import container from '../../../ModelContainer.js';
+import * as api from '../../api.js';
 
+/** `DELETE /tags/{tagId}` ハンドラ。`IRecordedTagApiModel#delete` でタグを削除する。 */
 export const del: Operation = async (req, res) => {
     const recordedTagApiModel = container.get<IRecordedTagApiModel>('IRecordedTagApiModel');
 
     try {
-        const tagId: apid.RecordedTagId = parseInt(req.params.tagId, 10);
+        const tagId: apid.RecordedTagId = parseInt(api.pathParam(req, 'tagId'), 10);
         await recordedTagApiModel.delete(tagId);
         api.responseJSON(res, 200, { code: 200 });
     } catch (err: any) {
@@ -42,11 +43,12 @@ del.apiDoc = {
     },
 };
 
+/** `PUT /tags/{tagId}` ハンドラ。`IRecordedTagApiModel#update` でタグ名・色を変更する。 */
 export const put: Operation = async (req, res) => {
     const recordedTagApiModel = container.get<IRecordedTagApiModel>('IRecordedTagApiModel');
 
     try {
-        const tagId: apid.RecordedTagId = parseInt(req.params.tagId, 10);
+        const tagId: apid.RecordedTagId = parseInt(api.pathParam(req, 'tagId'), 10);
         const name: string = req.body.name;
         const color: string = req.body.color;
         await recordedTagApiModel.update(tagId, name, color);

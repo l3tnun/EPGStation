@@ -1,10 +1,11 @@
 import { inject, injectable } from 'inversify';
-import * as apid from '../../../../api';
-import IRecordedDB, { FindAllOption } from '../../db/IRecordedDB';
-import IIPCClient from '../../ipc/IIPCClient';
-import IRecordedItemUtil from '../IRecordedItemUtil';
-import IRecordingApiModel from './IRecordingApiModel';
+import type * as apid from '../../../../api.js';
+import IRecordedDB, { FindAllOption } from '../../db/IRecordedDB.js';
+import IIPCClient from '../../ipc/IIPCClient.js';
+import IRecordedItemUtil from '../IRecordedItemUtil.js';
+import IRecordingApiModel from './IRecordingApiModel.js';
 
+/** `IRecordingApiModel` の実装。詳細は `IRecordingApiModel` を参照。 */
 @injectable()
 export default class RecordingApiModel implements IRecordingApiModel {
     private ipc: IIPCClient;

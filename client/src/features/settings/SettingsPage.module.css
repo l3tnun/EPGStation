@@ -1,0 +1,464 @@
+.screen {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  overflow-x: hidden;
+  padding: 12px 0;
+  width: 100%;
+}
+
+.card {
+  background: #fff;
+  border-radius: 4px;
+  box-sizing: border-box;
+  color: rgba(0, 0, 0, 0.87);
+  max-width: 800px;
+  min-width: 0;
+  padding: 0;
+  width: min(100%, 800px);
+}
+
+.section {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  box-sizing: border-box;
+  min-width: 0;
+  padding: 16px 16px 17.5px;
+}
+
+.section:last-of-type {
+  border-bottom: 0;
+}
+
+.sectionHeading {
+  color: rgba(0, 0, 0, 0.87);
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 24px;
+  margin: 0 0 16px;
+}
+
+.controlsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.controlRow {
+  align-items: center;
+  box-sizing: border-box;
+  color: rgba(0, 0, 0, 0.87);
+  display: flex;
+  min-height: 36px;
+  min-width: 0;
+  position: relative;
+}
+
+.compactControlRow {
+  min-height: 24px;
+}
+
+.textControlRow {
+  align-items: stretch;
+  flex-direction: column;
+  min-height: 89px;
+}
+
+.schemeControlRow {
+  min-height: 94px;
+}
+
+.textControlInputWrap {
+  display: grid;
+  padding-top: 12px;
+  width: 100%;
+}
+
+.selectControlRow {
+  min-height: 70px;
+}
+
+.schemeHeader {
+  align-items: center;
+  display: flex;
+  min-height: 36px;
+}
+
+.schemeHeader .switchControl {
+  margin-left: auto;
+}
+
+.controlText {
+  color: rgba(0, 0, 0, 0.87);
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  padding-right: 16px;
+}
+
+.controlLabel {
+  color: rgba(0, 0, 0, 0.87);
+  font-size: 16px;
+  line-height: 19.2px;
+  overflow-wrap: anywhere;
+}
+
+.controlSubtitle {
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 14px;
+  line-height: 16px;
+  margin-top: 1px;
+  overflow-wrap: anywhere;
+}
+
+.switchControl {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  border-radius: 12px;
+  cursor: pointer;
+  flex: 0 0 auto;
+  height: 24px;
+  margin: 0 12px 0 0;
+  position: relative;
+  width: 38px;
+}
+
+.switchControl::before {
+  background: #fafafa;
+  border-radius: 50%;
+  box-shadow:
+    rgba(0, 0, 0, 0.2) 0 2px 1px -1px,
+    rgba(0, 0, 0, 0.14) 0 1px 1px 0,
+    rgba(0, 0, 0, 0.12) 0 1px 3px 0;
+  content: '';
+  height: 20px;
+  left: 0;
+  position: absolute;
+  top: 2px;
+  transition:
+    background-color 150ms ease,
+    transform 150ms ease;
+  width: 20px;
+  z-index: 1;
+}
+
+.switchControl::after {
+  background: rgba(0, 0, 0, 0.38);
+  border-radius: 7px;
+  content: '';
+  height: 14px;
+  left: 0;
+  position: absolute;
+  top: 5px;
+  transition: background-color 150ms ease;
+  width: 34px;
+}
+
+.switchControl:checked {
+  background: transparent;
+}
+
+.switchControl:checked::after {
+  background: rgba(25, 118, 210, 0.5);
+}
+
+.switchControl:checked::before {
+  background: #1976d2;
+  transform: translateX(14px);
+}
+
+.switchControl:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.selectControl {
+  align-self: center;
+  box-sizing: border-box;
+  flex: 0 0 70px;
+  margin-left: auto;
+  max-width: 70px;
+  min-width: 70px;
+  width: 70px;
+}
+
+.selectControl :global(.MuiInputBase-root) {
+  color: inherit;
+  font: inherit;
+  height: 32px;
+  line-height: 20px;
+  width: 100%;
+}
+
+.selectControl :global(.MuiSelect-select) {
+  align-items: center;
+  box-sizing: border-box;
+  display: flex;
+  font-size: 16px;
+  height: 32px;
+  min-height: 32px;
+  padding: 0 24px 0 0;
+}
+
+.selectControl :global(.MuiSelect-icon) {
+  color: rgba(0, 0, 0, 0.54);
+  right: 0;
+}
+
+.selectControl :global(.MuiInput-underline::before) {
+  border-bottom-color: rgba(0, 0, 0, 0.42);
+}
+
+.selectControl :global(.MuiInput-underline:hover:not(.Mui-disabled, .Mui-error)::before) {
+  border-bottom-color: rgba(0, 0, 0, 0.87);
+}
+
+.selectControl :global(.MuiInput-underline::after) {
+  border-bottom-color: #1976d2;
+}
+
+.selectControl :global(.MuiSelect-nativeInput) {
+  z-index: 2;
+}
+
+.wideSelectRow .selectControl {
+  flex-basis: 100px;
+  max-width: 100px;
+  min-width: 100px;
+  width: 100px;
+}
+
+.selectControl:disabled {
+  cursor: default;
+}
+
+.selectDisplay {
+  align-items: center;
+  align-self: flex-start;
+  box-sizing: border-box;
+  color: rgba(0, 0, 0, 0.87);
+  display: flex;
+  flex: 0 0 70px;
+  font-size: 16px;
+  height: 66px;
+  line-height: 20px;
+  margin-left: auto;
+  max-width: 70px;
+  min-width: 70px;
+  position: relative;
+}
+
+.wideSelectRow .selectDisplay {
+  flex-basis: 100px;
+  max-width: 100px;
+  min-width: 100px;
+}
+
+.selectDisplay > span {
+  align-items: center;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.42);
+  box-sizing: border-box;
+  display: flex;
+  height: 32px;
+  padding: 0 24px 0 0;
+  width: 100%;
+}
+
+.selectControl:focus-visible + .selectDisplay > span {
+  border-bottom-color: #1976d2;
+  border-bottom-width: 2px;
+}
+
+.textControl {
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.42);
+  border-radius: 0;
+  box-sizing: border-box;
+  color: rgba(0, 0, 0, 0.87);
+  font: inherit;
+  grid-area: 1 / 1;
+  height: 32px;
+  margin-top: 0;
+  padding: 0;
+  width: 100%;
+}
+
+.textControlClearable {
+  padding-right: 32px;
+}
+
+.textControlClearButton {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  bottom: auto;
+  color: #1976d2;
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  grid-area: 1 / 1;
+  height: 32px;
+  justify-content: center;
+  justify-self: end;
+  padding: 0;
+  position: relative;
+  right: 0;
+  width: 32px;
+}
+
+.textControlClearButton span {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.textControl::placeholder {
+  color: rgba(0, 0, 0, 0.6);
+  opacity: 1;
+}
+
+.textControl:disabled::placeholder {
+  color: rgba(0, 0, 0, 0.6);
+  opacity: 1;
+}
+
+.actions {
+  box-sizing: border-box;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  min-height: 52px;
+  padding: 8px;
+}
+
+.actions button {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  height: 36px;
+  min-width: 64px;
+}
+
+.actions button:first-child {
+  color: rgba(0, 0, 0, 0.87);
+}
+
+.actions button:last-child {
+  color: #1976d2;
+}
+
+.bottomSpacer {
+  height: 24px;
+  line-height: 24px;
+  visibility: hidden;
+}
+
+:global([data-theme-mode='dark']) .card {
+  background: var(--mui-palette-background-paper, #1e1e1e);
+  color: rgb(255 255 255 / 87%);
+}
+
+:global([data-theme-mode='dark']) .section {
+  border-bottom-color: rgb(255 255 255 / 12%);
+}
+
+:global([data-theme-mode='dark']) .sectionHeading,
+:global([data-theme-mode='dark']) .controlRow,
+:global([data-theme-mode='dark']) .controlText,
+:global([data-theme-mode='dark']) .controlLabel,
+:global([data-theme-mode='dark']) .selectDisplay,
+:global([data-theme-mode='dark']) .textControl,
+:global([data-theme-mode='dark']) .actions button:first-child {
+  color: rgb(255 255 255 / 87%);
+}
+
+:global([data-theme-mode='dark']) .controlSubtitle {
+  color: rgb(255 255 255 / 70%);
+}
+
+:global([data-theme-mode='dark']) .textControl::placeholder {
+  color: rgb(255 255 255 / 70%);
+}
+
+:global([data-theme-mode='dark']) .textControl:disabled::placeholder {
+  color: rgb(255 255 255 / 70%);
+}
+
+:global([data-theme-mode='dark']) .selectDisplay > span,
+:global([data-theme-mode='dark']) .textControl {
+  border-bottom-color: rgb(255 255 255 / 50%);
+}
+
+:global([data-theme-mode='dark']) .selectControl :global(.MuiSelect-select) {
+  color: rgb(255 255 255 / 87%);
+  color-scheme: dark;
+}
+
+:global([data-theme-mode='dark']) .selectControl :global(.MuiSelect-icon) {
+  color: rgb(255 255 255 / 70%);
+}
+
+:global([data-theme-mode='dark']) .selectControl :global(.MuiInput-underline::before) {
+  border-bottom-color: rgb(255 255 255 / 50%);
+}
+
+:global([data-theme-mode='dark'])
+  .selectControl
+  :global(.MuiInput-underline:hover:not(.Mui-disabled, .Mui-error)::before) {
+  border-bottom-color: rgb(255 255 255 / 87%);
+}
+
+:global([data-theme-mode='dark']) .selectControl :global(.MuiInput-underline::after) {
+  border-bottom-color: #90caf9;
+}
+
+:global([data-theme-mode='dark']) .switchControl::before {
+  background: #bdbdbd;
+}
+
+:global([data-theme-mode='dark']) .switchControl::after {
+  background: rgb(255 255 255 / 38%);
+}
+
+:global([data-theme-mode='dark']) .switchControl:checked::before {
+  background: var(--mui-palette-primary-main, #90caf9);
+}
+
+:global([data-theme-mode='dark']) .switchControl:checked::after {
+  background: rgb(144 202 249 / 50%);
+}
+
+@media (max-width: 800px) {
+  .screen {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 599px) {
+  .section {
+    padding-bottom: 18.5px;
+  }
+
+  .controlText {
+    padding-right: 0;
+  }
+
+  .compactSubtitleRow .controlSubtitle {
+    font-size: 14px;
+  }
+
+  .compactSubtitleRow .controlText {
+    flex-basis: 100%;
+    max-width: 100%;
+  }
+
+  .compactSubtitleRow .switchControl {
+    position: absolute;
+    right: 0;
+  }
+}
