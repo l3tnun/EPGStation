@@ -67,6 +67,20 @@ describe.each(['debian', 'alpine'] as const)('公開用 Docker image（%s）の�
             );
             expect(config).toContain(`mirakurunPath: ${facts.mirakurunPath}`);
 
+            // 10.13: 開発用の package と client の node_modules は image に無く、実行に要る物は在る
+            // （runImageCheck が確かめ済み。ここでは代表が実際に devDependencies の名前であることを確かめる）。
+            const manifest = JSON.parse(await readFile(join(repositoryRoot, 'package.json'), 'utf8'));
+            expect(facts.contents.devPackages).toEqual(['typescript', 'eslint', 'prettier', 'vitest']);
+            for (const name of facts.contents.devPackages) {
+                expect(Object.keys(manifest.devDependencies)).toContain(name);
+            }
+            expect(facts.contents).toMatchObject({
+                devPackagesPresent: [],
+                runtimePackagePresent: true,
+                clientNodeModulesPresent: false,
+                clientBundlePresent: true,
+            });
+
             // 10.11: registry への公開をしていない。本体は外部から取得しない（pull・curl の argv が無い）。
             assertNoRegistryAccess(ledger);
             expect(ledger.some(argv => argv.includes('pull') || argv.includes('curl'))).toBe(false);

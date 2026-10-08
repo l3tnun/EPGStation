@@ -1078,6 +1078,7 @@ flowchart LR
         Stub[Tuner Stub]
         Run[Server Runner]
         Probe[HTTP Probe]
+        Inspect[Image Content Inspector]
         Clean[Resource Cleaner]
     end
     PD[Dockerfile.debian / alpine] --> Plan
@@ -1119,7 +1120,7 @@ flowchart LR
 
 #### Image Dockerfile Deriver（同 module）
 
-製品の Dockerfile を読み、各 builder stage の依存の部分を `FROM <npm の層の tag> AS <stage>` の 1 行に置き換えた Dockerfile を生成する。それ以外の行（`COPY . .`、`RUN rm -rf client`、`RUN npm run compile`、`RUN npm run bundle`、最終 stage）は製品のまま。出力は `test/server/.artifacts/docker-image-check/<id>/Dockerfile` に置く。
+製品の Dockerfile を読み、各 builder stage の依存の部分を `FROM <npm の層の tag> AS <stage>` の 1 行に置き換えた Dockerfile を生成する。それ以外の行（`COPY . .`、`RUN rm -rf client`、`RUN npm run compile && npm prune --omit=dev`、`RUN npm run bundle && rm -rf node_modules`、最終 stage）は製品のまま。出力は `test/server/.artifacts/docker-image-check/<id>/Dockerfile` に置く。
 
 #### Image Builder
 
@@ -1144,6 +1145,10 @@ server container の中で `docker exec <id> node -e "fetch('http://127.0.0.1:88
 
 失敗時は server・stub 両方の `docker logs --tail` を失敗の message に含める。
 
+#### Image Content Inspector
+
+応答の確認のあと、同じ server container の中で `docker exec <id> node -e ...` を実行して image の中身を調べる（10.13）。`/app/package.json` の `devDependencies` の代表（`typescript`・`eslint`・`prettier`・`vitest`）が `/app/node_modules/<名前>` に無いこと、`dependencies` の `express` が在ること、`/app/client/node_modules` が無いこと、`/app/client/dist/index.html` が在ることを確かめ、満たさなければ `image-content-invalid`。製品の Dockerfile は、server の build（`npm run compile`）のあとに `npm prune --omit=dev` で開発用の package を除き、client の build（`npm run bundle`）のあとに client の `node_modules` を削除する。どちらも network を使わない（`--network=none` の構築で通る）。
+
 #### Resource Cleaner
 
 `finally` で、この run の container（server、stub）を `docker rm -f`、network を `docker network rm`、検査用 image を `docker rmi` し、その後 `docker inspect` で存在しないことを確かめる。依存 image・base は触らない（後確認で存在を確かめる）。片付けの失敗は `cleanup-failed`（10.12）。呼んだ docker の argv は ledger に残し、`push`・`login`・`--push`・registry への `--output` が無いことを確かめる（10.11）。
@@ -1158,6 +1163,7 @@ server container の中で `docker exec <id> node -e "fetch('http://127.0.0.1:88
 | 準備されていない | vitest の失敗（1）。理由 `not-prepared` |
 | 構築の失敗 | 1。理由 `build-failed` |
 | 起動・応答の失敗 | 1。理由 `start-failed` / `response-invalid` |
+| image の中身の不一致 | 1。理由 `image-content-invalid` |
 | 片付けの失敗 | 1。理由 `cleanup-failed` |
 
 ### 17.5 File Structure Plan
@@ -1317,7 +1323,7 @@ trigger（`master` への push と全 tag）、matrix の distro と platform、
 
 ### 17.9 Testing Strategy
 
-恒久の test は 2 file である。1 つは「製品の Docker image を build して起動する確認」（`docker-image.integration.test.ts`、integration、Requirement 10 の AC 1〜4・11・12）。もう 1 つは、要件を持つ依存の準備の道具の test（`docker-dependency-images.spec.test.ts`、spec。層の導出、lock 変更時の npm の層だけの作り直し、取得失敗の終了 code。AC 5〜10）である。`docker.yml` には恒久の test を置かない。
+恒久の test は 2 file である。1 つは「製品の Docker image を build して起動する確認」（`docker-image.integration.test.ts`、integration、Requirement 10 の AC 1〜4・11〜13）。もう 1 つは、要件を持つ依存の準備の道具の test（`docker-dependency-images.spec.test.ts`、spec。層の導出、lock 変更時の npm の層だけの作り直し、取得失敗の終了 code。AC 5〜10）である。`docker.yml` には恒久の test を置かない。
 
 | ID | 確認項目 | 手段 | 対応する要件 |
 | --- | --- | --- | --- |
@@ -1330,6 +1336,7 @@ trigger（`master` への push と全 tag）、matrix の distro と platform、
 | DC-7 | 層の導出: 製品の Dockerfile の形が規則に合わないとき exit 2 | 同 spec test（Dockerfile の複製を壊して） | 10.2, 10.9 |
 | DC-8 | registry へ公開しない: 呼んだ docker の argv に `push`・`login`・`--push`・registry への `--output` が無い | `docker-image.integration.test.ts` の ledger の検査 | 10.11 |
 | DC-9 | 片付け: 成功・失敗のどちらでも container・network・検査用 image が残らず、依存 image は残る | 同 integration の後確認（失敗の経路は、build 失敗を起こす入力で spec test が cleaner を呼ぶ） | 10.12 |
+| DC-10 | image の中身: 起動した server の container で、`package.json` の `devDependencies` の代表（`typescript`・`eslint`・`prettier`・`vitest`）が `/app/node_modules` に無く、`dependencies` の `express` は在り、`/app/client/node_modules` が無く、client の build 済みの成果物（`/app/client/dist`）が在る | 同 integration（Debian・Alpine）。比較する名前は test が `package.json` から読み、代表が `devDependencies` に在ることも確かめる | 10.13 |
 
 #### 実装時の確認（恒久の test にしない）
 
@@ -1356,6 +1363,7 @@ Docker Hub への実際の公開、QEMU での arm の構築、gha cache の保�
 | 10.10 | 揃っていなければ取らず「準備されていない」で失敗 | Prepared Verifier | DC-1 |
 | 10.11 | registry へ公開しない | docker 実行 helper の argv ledger | DC-8 |
 | 10.12 | 成功・失敗どちらでも container と構築した image を片付け、依存は残す | Resource Cleaner | DC-9 |
+| 10.13 | image に開発用 package と client の node_modules を含めない | 製品の Dockerfile（`npm prune --omit=dev`、client の `node_modules` の削除）、Image Content Inspector | DC-10 |
 | 11.1 | master への push・tag で、両 Dockerfile から構築して Docker Hub へ公開 | `docker.yml` | 実装時の確認（構文）、最初の実行 |
 | 11.2 | Debian・Alpine の platform の一覧 | `docker.yml` の matrix | 最初の実行 |
 | 11.3 | master の push の tag | `docker.yml` の `Docker tags` | 実装時の確認（tag の計算の 4 通り） |

@@ -435,6 +435,71 @@ export async function probeHttp({
     return elapsedMs;
 }
 
+/** image の中身の確認で、`devDependencies` から取り上げる代表の package。 */
+export const DEV_PACKAGE_SAMPLES = Object.freeze(['typescript', 'eslint', 'prettier', 'vitest']);
+
+/** image の中身の確認で、在ることを確かめる `dependencies` の代表の package。 */
+export const RUNTIME_PACKAGE_SAMPLE = 'express';
+
+/**
+ * 起動した server container の中で、image の中身を調べる。開発用の package の代表
+ * （`devDependencies`）と client の `node_modules` が無く、`express` と client の build 済みの
+ * 成果物（`client/dist/index.html`）が在ることを確かめる。満たさなければ `image-content-invalid`。
+ * 調べた事実 `{ devPackages, devPackagesPresent, runtimePackagePresent, clientNodeModulesPresent,
+ * clientBundlePresent }` を返す。
+ */
+export async function inspectImageContents({ root, run, names }) {
+    const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
+    const devPackages = DEV_PACKAGE_SAMPLES.filter(name => name in (manifest.devDependencies ?? {}));
+    if (
+        devPackages.length !== DEV_PACKAGE_SAMPLES.length ||
+        !(RUNTIME_PACKAGE_SAMPLE in (manifest.dependencies ?? {}))
+    ) {
+        throw new DockerImageCheckError(
+            'image-content-invalid',
+            'package.json no longer lists the sampled devDependencies / dependencies',
+        );
+    }
+    const script = `const fs = require('fs');
+const has = p => fs.existsSync(p);
+console.log(JSON.stringify({
+    devPackagesPresent: ${JSON.stringify(devPackages)}.filter(n => has('/app/node_modules/' + n)),
+    runtimePackagePresent: has('/app/node_modules/${RUNTIME_PACKAGE_SAMPLE}'),
+    clientNodeModulesPresent: has('/app/client/node_modules'),
+    clientBundlePresent: has('/app/client/dist/index.html'),
+}));`;
+    const result = await run(['docker', 'exec', names.server, 'node', '-e', script], { timeoutMs: INSPECT_TIMEOUT_MS });
+    let found;
+    try {
+        found = JSON.parse(String(result.stdout).trim());
+    } catch {
+        found = undefined;
+    }
+    if (result.code !== 0 || found === undefined) {
+        throw new DockerImageCheckError(
+            'image-content-invalid',
+            `could not inspect ${names.server}: ${tail(result.stderr)}`,
+        );
+    }
+    const problems = [];
+    if (found.devPackagesPresent.length > 0) {
+        problems.push(`devDependencies in image: ${found.devPackagesPresent.join(', ')}`);
+    }
+    if (!found.runtimePackagePresent) {
+        problems.push(`${RUNTIME_PACKAGE_SAMPLE} is missing from the image`);
+    }
+    if (found.clientNodeModulesPresent) {
+        problems.push('client/node_modules is in the image');
+    }
+    if (!found.clientBundlePresent) {
+        problems.push('client/dist/index.html is missing from the image');
+    }
+    if (problems.length > 0) {
+        throw new DockerImageCheckError('image-content-invalid', problems.join('; '));
+    }
+    return { devPackages, ...found };
+}
+
 /** 起動した server container の構成（network の名前と、host へ公開した port の束縛）。 */
 export async function inspectServerShape(run, names) {
     const inspected = await dockerOk(
@@ -516,7 +581,7 @@ export function assertNoRegistryAccess(ledger) {
 /**
  * 準備済みの確認から片付けまでの 1 回の流れ。成功・失敗のどちらでも、この run の container・
  * network・検査用 image を片付ける。返すのは確認した事実。失敗は `DockerImageCheckError`（`reason`
- * は `not-prepared`・`build-failed`・`start-failed`・`response-invalid`・`cleanup-failed`）。
+ * は `not-prepared`・`build-failed`・`start-failed`・`response-invalid`・`image-content-invalid`・`cleanup-failed`）。
  * 片付けも失敗したときは `cleanup-failed` に、先に起きた失敗の message を添える。
  */
 export async function runImageCheck({ root, run, flavor, id, probeDeadlineMs, sleep, now }) {
@@ -529,7 +594,15 @@ export async function runImageCheck({ root, run, flavor, id, probeDeadlineMs, sl
         const { names, mirakurunPath } = await startServer({ root, run, flavor, id });
         const expectedVersion = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).version;
         const elapsedMs = await probeHttp({ run, names, expectedVersion, deadlineMs: probeDeadlineMs, sleep, now });
-        facts = { names, mirakurunPath, expectedVersion, elapsedMs, ...(await inspectServerShape(run, names)) };
+        const contents = await inspectImageContents({ root, run, names });
+        facts = {
+            names,
+            mirakurunPath,
+            expectedVersion,
+            elapsedMs,
+            contents,
+            ...(await inspectServerShape(run, names)),
+        };
     } catch (error) {
         primary = error;
     }
