@@ -79,6 +79,22 @@ namespace StrUtil {
     };
 
     /**
+     * 正規表現の検索語の全角を半角へ変換する
+     * 全角の英数字・空白は半角にし、全角の記号は toHalf と同じ対応で半角にしたうえで、
+     * 正規表現の記号になる文字は直前にバックスラッシュを付けて文字そのものとして扱う。
+     * 半角で入力された文字は変換しない
+     * @param str: string
+     * @return string
+     */
+    export const toHalfRegExp = (str: string): string => {
+        return str.replace(/[！-～”’‘￥\u3000〜]/g, s => {
+            const half = toHalf(s);
+
+            return /[\\^$.|?*+()[\]{}]/.test(half) ? `\\${half}` : half;
+        });
+    };
+
+    /**
      * 半角英数記号を全角へ変換する
      * @param str: string
      * @return string

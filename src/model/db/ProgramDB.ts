@@ -559,7 +559,7 @@ export default class ProgramDB implements IProgramDB {
             // 正規表現
             const regexp = this.op.getRegexpStr(option.cs);
             const valueName = `${valueBaseName}Regexp`;
-            query.param[valueName] = keyword;
+            query.param[valueName] = StrUtil.toHalfRegExp(keyword);
             if (option.cs === true) {
                 if (option.name === true) {
                     or.push(`CAST(halfWidthName AS BINARY) ${regexp} :${valueName}`);
