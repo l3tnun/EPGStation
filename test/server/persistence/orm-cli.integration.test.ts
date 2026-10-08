@@ -46,9 +46,12 @@ const createProject = async (
     return { project, runtime };
 };
 
-const typeorm = async (project: string, args: readonly string[]) => {
+const typeorm = async (project: string, args: readonly string[], env: Record<string, string> = {}) => {
     try {
-        const result = await run(typeormBin, [...args], { cwd: project, env: { ...process.env, NODE_OPTIONS: '' } });
+        const result = await run(typeormBin, [...args], {
+            cwd: project,
+            env: { ...process.env, NODE_OPTIONS: '', ...env },
+        });
         return { code: 0, output: `${result.stdout}${result.stderr}` };
     } catch (error) {
         const failure = error as { code?: number; stdout?: string; stderr?: string };
@@ -62,6 +65,17 @@ const appliedMigrations = async (databasePath: string): Promise<string[]> => {
     try {
         const rows = (await source.query('SELECT name FROM migrations ORDER BY id ASC')) as Array<{ name: string }>;
         return rows.map(row => row.name);
+    } finally {
+        await source.destroy();
+    }
+};
+
+const recordedJournalMode = async (databasePath: string): Promise<string> => {
+    const source = new DataSource({ type: 'better-sqlite3', database: databasePath });
+    await source.initialize();
+    try {
+        const rows = (await source.query('PRAGMA journal_mode')) as Array<{ journal_mode: string }>;
+        return rows[0]?.journal_mode ?? '';
     } finally {
         await source.destroy();
     }
@@ -117,6 +131,45 @@ describe('typeorm migration CLI with the repository ormconfig (npm run orm-run /
 
         expect(result.code).not.toBe(0);
         expect(result.output).toContain('db config error');
+    });
+
+    it('[PERSIST-6.1-ORM-CLI-ENV] expands an !env value of config.yml the same way the server does', async () => {
+        const { project, runtime } = await createProject('!env EPGS_SYNTHETIC_ORM_DBTYPE');
+
+        const result = await typeorm(project, ['migration:run', '-d', './ormconfig.js'], {
+            EPGS_SYNTHETIC_ORM_DBTYPE: 'sqlite',
+        });
+
+        expect(result.code).toBe(0);
+        expect(await appliedMigrations(runtime.sqliteDatabasePath)).toEqual([...expectedSQLiteMigrations]);
+    });
+
+    it('[PERSIST-6.1-ORM-CLI-ENV-UNDEFINED] fails naming the undefined environment variable', async () => {
+        const { project } = await createProject('sqlite', 'sqlite:\n    extensions: [!env EPGS_SYNTHETIC_ORM_UNDEFINED]\n');
+        const result = await typeorm(project, ['migration:run', '-d', './ormconfig.js']);
+
+        expect(result.code).not.toBe(0);
+        expect(result.output).toContain('environment variable EPGS_SYNTHETIC_ORM_UNDEFINED is not defined');
+    });
+
+    it('[PERSIST-6.1-ORM-CLI-BETTER-SQLITE3] treats dbtype better-sqlite3 as sqlite', async () => {
+        const { project, runtime } = await createProject('better-sqlite3');
+
+        const result = await typeorm(project, ['migration:run', '-d', './ormconfig.js']);
+
+        expect(result.code).toBe(0);
+        expect(await appliedMigrations(runtime.sqliteDatabasePath)).toEqual([...expectedSQLiteMigrations]);
+    });
+
+    it('[PERSIST-1.12-ORM-CLI-WAL] puts the migrated SQLite file in WAL mode only when sqlite.wal is true', async () => {
+        const enabled = await createProject('sqlite', 'sqlite:\n    wal: true\n');
+        const disabled = await createProject('sqlite', 'sqlite:\n    wal: false\n');
+
+        expect((await typeorm(enabled.project, ['migration:run', '-d', './ormconfig.js'])).code).toBe(0);
+        expect((await typeorm(disabled.project, ['migration:run', '-d', './ormconfig.js'])).code).toBe(0);
+
+        expect(await recordedJournalMode(enabled.runtime.sqliteDatabasePath)).toBe('wal');
+        expect(await recordedJournalMode(disabled.runtime.sqliteDatabasePath)).toBe('delete');
     });
 
     it('[PERSIST-6.1-ORM-CLI-MYSQL-SOCKET] connects through the configured MySQL UNIX socket', async () => {

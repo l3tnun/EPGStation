@@ -451,6 +451,32 @@ describe('server configuration characterization contract', () => {
         });
     });
 
+    it.each([
+        ['better-sqlite3', 'sqlite'],
+        ['sqlite', 'sqlite'],
+        ['mysql', 'mysql'],
+    ])('[CFG-1.7-DBTYPE-ALIAS] provides dbtype %s as %s', (written, provided) => {
+        installInitialReadDouble(() => withEnvEntries([`dbtype: ${written}`]));
+
+        expect(new Configuration({ getLogger: () => createLogger() }).getConfig().dbtype).toBe(provided);
+    });
+
+    it('[CFG-1.7-DBTYPE-DEFAULT] keeps sqlite when dbtype is omitted', () => {
+        installInitialReadDouble(() => withEnvEntries([]));
+
+        expect(new Configuration({ getLogger: () => createLogger() }).getConfig().dbtype).toBe('sqlite');
+    });
+
+    it('[CFG-1.7-DBTYPE-RELOAD] reads the alias again on reload', async () => {
+        const watchFile = installInitialReadDouble(() => withEnvEntries(['dbtype: mysql']));
+        const configuration = new Configuration({ getLogger: () => createLogger() });
+        mutableFileSystem.promises.readFile = vi.fn(async () => withEnvEntries(['dbtype: better-sqlite3']));
+
+        await (watchFile.mock.calls[0][1] as () => Promise<void>)();
+
+        expect(configuration.getConfig().dbtype).toBe('sqlite');
+    });
+
     it('[CFG-1.1-ENV-LOAD-ONLY] never selects the !env tag when a value is written back to YAML', () => {
         vi.stubEnv('EPGS_SYNTHETIC_DB_USER', 'synthetic-user');
 
@@ -1266,10 +1292,10 @@ describe('ライブ配信の既定commandは-reを持たず、録画配信の既
 });
 
 /*
- * Requirements 1 から 7 の AC は、節ごとの個数（1: 6、2: 4、3: 3、4: 5、5: 4、6: 4、7: 12）で全 38 個である。
+ * Requirements 1 から 7 の AC は、節ごとの個数（1: 7、2: 4、3: 3、4: 5、5: 4、6: 4、7: 12）で全 39 個である。
  * 値は、その AC を検査する主 case の ID（case 題の先頭の `[ID]`）。補足 case（`CFG-4.2-*`）は含めない。
  */
-const acceptanceCriteriaCounts = { 1: 6, 2: 4, 3: 3, 4: 5, 5: 4, 6: 4, 7: 12 } as const;
+const acceptanceCriteriaCounts = { 1: 7, 2: 4, 3: 3, 4: 5, 5: 4, 6: 4, 7: 12 } as const;
 
 const acceptanceCriteriaTrace: Readonly<Record<string, readonly string[]>> = {
     '1.1': ['CFG-1.1-YAML-DEFAULTS', 'CFG-1.1-ENV-EXPANSION', 'CFG-1.1-ENV-LITERAL', 'CFG-1.1-ENV-LOAD-ONLY', 'CFG-1.1-ENV-NUMERIC-FIELD'],
@@ -1278,6 +1304,7 @@ const acceptanceCriteriaTrace: Readonly<Record<string, readonly string[]>> = {
     '1.4': ['CFG-1.1-PATH-NORMALIZATION'],
     '1.5': ['CFG-1.1-SUBDIRECTORY-NORMALIZATION', 'CFG-1.1-PATH-NORMALIZATION'],
     '1.6': ['CFG-1.2-SNAPSHOT'],
+    '1.7': ['CFG-1.7-DBTYPE-ALIAS', 'CFG-1.7-DBTYPE-DEFAULT', 'CFG-1.7-DBTYPE-RELOAD'],
     '2.1': ['CFG-1.3-INITIAL-READ-FAILURE', 'CFG-1.3-FILESYSTEM-FAILURE', 'CFG-1.3-ENV-UNDEFINED'],
     '2.2': ['CFG-1.3-MINIMUM-SUCCESS'],
     '2.3': ['CFG-1.3-INVALID-CANDIDATE'],
@@ -1313,11 +1340,11 @@ const acceptanceCriteriaTrace: Readonly<Record<string, readonly string[]>> = {
 };
 
 describe('server configuration acceptance criteria trace', () => {
-    it('[CFG-6.1-AC-TRACE] maps all 38 acceptance criteria to existing named cases', () => {
+    it('[CFG-6.1-AC-TRACE] maps all 39 acceptance criteria to existing named cases', () => {
         const expectedCriteria = Object.entries(acceptanceCriteriaCounts).flatMap(([requirement, count]) =>
             Array.from({ length: count }, (_unused, index) => `${requirement}.${index + 1}`),
         );
-        expect(expectedCriteria).toHaveLength(38);
+        expect(expectedCriteria).toHaveLength(39);
         expect(Object.keys(acceptanceCriteriaTrace).sort()).toEqual([...expectedCriteria].sort());
 
         const directory = join(process.cwd(), 'test/server/configuration');

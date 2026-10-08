@@ -2,10 +2,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { load } from 'js-yaml';
 import { DataSource } from 'typeorm';
+// `!env` と `dbtype` の読み替えは、EPGStation 本体と同じ定義（build 後の dist）を使う。
+import { CONFIG_YAML_OPTIONS, normalizeDBType } from './dist/model/ConfigYaml.js';
 
 // config.yml 読み込み
 const configFilePath = path.join('config', 'config.yml');
-const config = load(fs.readFileSync(configFilePath, 'utf-8'));
+const config = load(fs.readFileSync(configFilePath, 'utf-8'), CONFIG_YAML_OPTIONS);
+config.dbtype = normalizeDBType(config.dbtype);
 
 // dist 下のディレクトリ設定
 const distDBBasePath = path.join('dist', 'db');
@@ -23,6 +26,8 @@ switch (config.dbtype) {
             // 廃止し better-sqlite3 へ置き換えたため、driver 名だけを読み替える。
             type: 'better-sqlite3',
             database: path.join(import.meta.dirname, 'data', 'database.db'),
+            // sqlite.wal が true のときだけ journal_mode を WAL にする（それ以外では journal_mode を変えない）。
+            ...(config.sqlite?.wal === true ? { enableWAL: true } : {}),
             synchronize: false,
             logging: false,
             entities: [entitie],
