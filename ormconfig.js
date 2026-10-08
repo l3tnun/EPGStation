@@ -26,8 +26,10 @@ switch (config.dbtype) {
             // 廃止し better-sqlite3 へ置き換えたため、driver 名だけを読み替える。
             type: 'better-sqlite3',
             database: path.join(import.meta.dirname, 'data', 'database.db'),
-            // sqlite.wal が true のときだけ journal_mode を WAL にする（それ以外では journal_mode を変えない）。
-            ...(config.sqlite?.wal === true ? { enableWAL: true } : {}),
+            // 設定どおりの journal 方式を接続の直後に明示する（sqlite.wal が true なら WAL、それ以外は delete）。
+            prepareDatabase: db => {
+                db.pragma(`journal_mode = ${config.sqlite?.wal === true ? 'WAL' : 'DELETE'}`);
+            },
             synchronize: false,
             logging: false,
             entities: [entitie],

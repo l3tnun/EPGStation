@@ -229,7 +229,7 @@ SQLite のジャーナル方式を WAL (Write-Ahead Logging) にします。無�
 -   `wal` を `true` にした DB ファイルを、設定を外して（または `false` にして）起動すると、起動時に `delete` へ戻します。他のプロセスが DB ファイルを使っているために戻せないときは、起動に失敗します
 -   DB ファイルを直接コピーしてバックアップするときは、先に EPGStation を止めてください（`database.db-wal` に未反映の書き込みが残っていることがあります）。`npm run backup` は影響を受けません
 -   DB ファイルを NFS や SMB などのネットワークの保存先に置いている場合は、有効にしないでください（WAL はネットワーク上のファイルでは正しく動きません）
--   `npm run orm-run` など `ormconfig.js` を使うコマンドも、`wal` が `true` のときは DB ファイルを WAL にします
+-   `npm run orm-run` など `ormconfig.js` を使うコマンドも、`wal` の設定どおりに DB ファイルを WAL（`true`）または `delete`（それ以外）にします
 
 ### ffmpeg
 

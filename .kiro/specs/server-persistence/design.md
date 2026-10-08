@@ -625,7 +625,7 @@ sequenceDiagram
 
 1. 共通の Entity 集合を使用し、`dbtype` から SQLite または MySQL の Migration path を選ぶ。手動の CLI が読む `ormconfig.js`
    も、`!env` の展開、`better-sqlite3` の読み替え、`sqlite.wal` を `src/model/ConfigYaml.ts`（build 後の
-   `dist/model/ConfigYaml.js`）の共通定義で扱う。CLI は journal 方式を戻す処理を持たず、`sqlite.wal` が `true` のときだけ WAL にする。
+   `dist/model/ConfigYaml.js`）の共通定義で扱う。CLI も設定どおりの journal 方式を明示する: `DataSource` option の `prepareDatabase`（接続の直後に実行される）で、`sqlite.wal` が `true` なら `journal_mode = WAL`、それ以外は `journal_mode = DELETE` にする。
 2. `synchronize` を `false`、runtime の `migrationsRun` を `true` として `DataSource` を構築する。
 3. `initialize()` が TypeORM の管理 table を参照し、未適用 Migration を timestamp 順に実行する。
 4. SQLiteでは接続とMigrationが成功した候補へ、必要なextensionを設定順に読み込む。初期化Promiseへ合流したcallerはこの処理
@@ -1028,7 +1028,7 @@ portが入力として許容せずruntime validationも本機能が所有しな�
 | 5.2  | 初回を含む最大 5 job calls                                          | `retry.spec.test.ts`: call count                                                                    |
 | 5.3  | 5 回目の error identity を伝播                                      | `retry.spec.test.ts`: last error assertion                                                          |
 | 5.4  | transaction 経路の共通再試行除外                                    | `transactions.integration.test.ts`: 1 transaction attempt                                           |
-| 6.1  | `dbtype` 別 Migration と `migrationsRun`、手動の `orm-run`・`orm-gen` | `migrations.integration.test.ts`: pending apply、`orm-cli.integration.test.ts`: 実 SQLite の実行・生成・非対応 `dbtype`・`!env` の展開と未定義時の失敗・`better-sqlite3` の別名・`sqlite.wal` |
+| 6.1  | `dbtype` 別 Migration と `migrationsRun`、手動の `orm-run`・`orm-gen` | `migrations.integration.test.ts`: pending apply、`orm-cli.integration.test.ts`: 実 SQLite の実行・生成・非対応 `dbtype`・`!env` の展開と未定義時の失敗・`better-sqlite3` の別名・`sqlite.wal`(WAL にする / WAL の file を無効の設定で開くと delete に戻る) |
 | 6.2  | `synchronize: false` と版管理 DDL                                   | option assertion と schema diff fixture                                                             |
 | 6.3  | Migration 完了前の非公開                                            | `migrations.integration.test.ts`: failing migration                                                 |
 | 6.4  | 自動 `down` なし                                                    | migration spy と適用済み版維持                                                                      |

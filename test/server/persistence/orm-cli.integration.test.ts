@@ -172,6 +172,19 @@ describe('typeorm migration CLI with the repository ormconfig (npm run orm-run /
         expect(await recordedJournalMode(disabled.runtime.sqliteDatabasePath)).toBe('delete');
     });
 
+    it('[PERSIST-1.13-ORM-CLI-WAL-RETURN] returns a WAL database file to the delete journal when sqlite.wal is not true', async () => {
+        const { project, runtime } = await createProject('sqlite', 'sqlite:\n    wal: true\n');
+        expect((await typeorm(project, ['migration:run', '-d', './ormconfig.js'])).code).toBe(0);
+        expect(await recordedJournalMode(runtime.sqliteDatabasePath)).toBe('wal');
+        await writeFile(join(project, 'config', 'config.yml'), 'dbtype: sqlite\n');
+
+        const result = await typeorm(project, ['migration:run', '-d', './ormconfig.js']);
+
+        expect(result.code).toBe(0);
+        expect(await recordedJournalMode(runtime.sqliteDatabasePath)).toBe('delete');
+        expect(await appliedMigrations(runtime.sqliteDatabasePath)).toEqual([...expectedSQLiteMigrations]);
+    });
+
     it('[PERSIST-6.1-ORM-CLI-MYSQL-SOCKET] connects through the configured MySQL UNIX socket', async () => {
         const listener = await listenOnUnixSocket();
         listeners.push(listener);

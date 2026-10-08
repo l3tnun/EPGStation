@@ -145,7 +145,7 @@ SQLite または MySQL を使って EPGStation の管理情報を保存・検索
    ES module の package で設定ファイル `ormconfig.js` を読み込み、設定した SQLite または MySQL に対して接続時と同じ
    データ構造更新の一覧を使い、対応しない `dbtype` では `db config error` で失敗する。このとき `ormconfig.js` は、設定ファイ
    ルの `!env 環境変数名` を接続時と同じ規則で展開し（未定義の環境変数では失敗する）、`dbtype` の `better-sqlite3` を
-   `sqlite` と同じに扱い、`sqlite.wal` が `true` のときは SQLite の journal_mode を WAL にする
+   `sqlite` と同じに扱い、`sqlite.wal` が `true` のときは SQLite の journal_mode を WAL にし、それ以外のときは delete 方式にする（WAL にされた file も戻す）
 2. The データベース保存・検索機能 shall データ構造の自動同期ではなく、用意された更新を順番に適用する
 3. If データ構造更新に失敗したとき, the データベース保存・検索機能 shall 接続を利用可能として扱わずエラーを返す
 4. The データベース保存・検索機能 shall 適用済みのデータ構造更新を接続時に自動で降格しない
