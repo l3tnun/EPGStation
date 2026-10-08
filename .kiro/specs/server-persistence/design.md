@@ -185,6 +185,7 @@ interface DatabaseConnectionSettings {
         port: number;
         password: string;
         database: string;
+        socketPath?: string;
         charset?: string;
     };
 }
@@ -198,6 +199,7 @@ interface DatabaseConnectionSettings {
 | `sqlite.extensions` | 省略可                                 | `undefined` または順序付き配列       | 記載順を変更・重複排除せず読み込む                                                                  |
 | `sqlite.regexp`     | 省略可                                 | boolean または `undefined`           | `true` の場合だけ正規表現能力あり                                                                   |
 | MySQL 接続項目      | backend 選択時に `mysql` object が必要 | host、user、port、password、database | `mysql` object がなければ接続を開始せず error。値は採用 client へ渡し、接続可否を driver 結果で判定する |
+| `mysql.socketPath`  | 省略可                                 | 文字列または `undefined`             | 設定されているときだけ DataSource option の `socketPath` に渡す。省略時は option に `socketPath` を含めない。設定時にドライバーは `host` / `port` より `socketPath` を優先する |
 | `mysql.charset`     | 省略可                                 | 省略時 `utf8mb4`                     | DataSource option に渡す                                                                            |
 
 Requirement 8 のクライアント置換は、上表の設定 field を増やさず減らさず、SQLite 経路も変えない。保存済みデータベースデー
@@ -711,7 +713,7 @@ timeout、一般CRUD mutex／timeout、または自動再接続方式を追加�
 2. `DBOperator.createConnection()` の MySQL 分岐は `type: 'mysql'` を維持し、`driver` override、設定 field 追加、API /
    CLI / schema / データ移行、認証弱体化を行わない。
 3. 旧 `mysql` は直接依存に残さず、TypeORM が旧 client を選ばないようにする。
-4. 既存設定 field（`host` / `user` / `port` / `password` / `database` / 任意 `charset`）と SQLite 経路は変更しない。
+4. 既存設定 field（`host` / `user` / `port` / `password` / `database` / 任意 `socketPath` / 任意 `charset`）と SQLite 経路は変更しない。
 5. 保存済みデータベースデータはその場に残す。本 remediation はクライアントライブラリ置換であり、schema 変更やデータ移行
    ではない。
 6. 接続失敗は通常の driver / TypeORM 接続失敗として扱う。旧 client、削除済み `mysql_native_password`、認証弱体化へ
@@ -722,7 +724,7 @@ timeout、一般CRUD mutex／timeout、または自動再接続方式を追加�
 
 -   直接依存は `mysql2` と `typeorm` であり、旧 `mysql` は直接依存に無い（版は `package.json` が正本）。
 -   本番接続は TypeORM `type: 'mysql'` を選び、`driver` override が無い（`DBOperator.createConnection()`）。
--   既存 MySQL 設定 field は `host` / `user` / `port` / `password` / `database` / 任意 `charset` である
+-   既存 MySQL 設定 field は `host` / `user` / `port` / `password` / `database` / 任意 `socketPath` / 任意 `charset` である
     （`IConfigFile`、`config/config.yml.template`）。
 -   公式現行 MySQL LTS は image tag `mysql:lts` で表し、焦点 integration がこの tag と image digest を検証する
     （`test/server/persistence/mysql-lts-connection.integration.test.ts`）。
@@ -731,7 +733,7 @@ timeout、一般CRUD mutex／timeout、または自動再接続方式を追加�
 ### 本番 lifecycle
 
 1. `server-configuration` が既存のデータベース設定 snapshot を読む。MySQL のとき field は現行の `host` / `user` /
-   `port` / `password` / `database` / 任意 `charset` である。
+   `port` / `password` / `database` / 任意 `socketPath` / 任意 `charset` である。
 2. `DBOperator` が既存の `type: 'mysql'` option で TypeORM `DataSource` を生成する。`driver` は渡さない。
 3. TypeORM は直接依存の `mysql2` を既存 `type: 'mysql'` 経路から利用し、公式現行 MySQL LTS が要求する認証 handshake を
    完了する。
@@ -972,7 +974,7 @@ portが入力として許容せずruntime validationも本機能が所有しな�
 | 1.1  | SQLite path と SQLite `DataSource` option                           | `connection.spec.test.ts`: fake option投影 / `connection.integration.test.ts`: temporary file実接続 |
 | 1.2  | 初回接続 workflow の順序付き extension loop                         | `connection.spec.test.ts`: 2 件以上の読込み順                                                       |
 | 1.3  | extension失敗を最初の利用要求へ返す契約                             | `connection.spec.test.ts`: 途中失敗時の reject / その要求へ接続を返さない                           |
-| 1.4  | MySQL 必須設定と `DataSource` option                                | `connection.spec.test.ts`: fake option投影 / `connection.integration.test.ts`: 隔離MySQL実接続      |
+| 1.4  | MySQL 必須設定と `DataSource` option（任意の `socketPath` を含む）  | `connection.spec.test.ts`: fake option投影（`socketPath` の有無） / `connection.integration.test.ts`: 隔離MySQL実接続 / `connection-socket.integration.test.ts`: UNIX socket の待受けへ実 driver が接続すること |
 | 1.5  | backend、MySQL設定object、driver validationの失敗契約               | `connection.spec.test.ts`: 未対応方式・設定object欠落・接続値不受理                                 |
 | 1.6  | process singleton と初回遅延生成                                    | `connection.spec.test.ts`: instance identity                                                        |
 | 1.7  | `checkConnection()` の `getConnection()` と `select 1`              | `connection.spec.test.ts`: success / query error / pending settlement                               |

@@ -88,6 +88,10 @@ export default class DBOperator implements IDBOperator {
                 type: 'mysql',
                 host: this.config.mysql.host,
                 port: this.config.mysql.port,
+                // socketPath は設定されたときだけ渡す。省略時は option に含めず、host / port で接続する。
+                ...(typeof this.config.mysql.socketPath === 'undefined'
+                    ? {}
+                    : { socketPath: this.config.mysql.socketPath }),
                 username: this.config.mysql.user,
                 password: this.config.mysql.password,
                 database: this.config.mysql.database,

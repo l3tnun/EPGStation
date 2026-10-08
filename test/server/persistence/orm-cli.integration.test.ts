@@ -6,6 +6,7 @@ import { DataSource } from 'typeorm';
 import { afterAll, describe, expect, it } from 'vitest';
 
 import { createIsolatedCompiledRuntime, type IsolatedCompiledRuntime } from './harness';
+import { listenOnUnixSocket, type UnixSocketListener } from './unix-socket-listener';
 
 const run = promisify(execFile);
 const repositoryRoot = process.cwd();
@@ -18,9 +19,11 @@ const expectedSQLiteMigrations = [
 ] as const;
 
 const runtimes: IsolatedCompiledRuntime[] = [];
+const listeners: UnixSocketListener[] = [];
 
 afterAll(async () => {
     await Promise.all(runtimes.splice(0).map(runtime => runtime.cleanup()));
+    await Promise.all(listeners.splice(0).map(listener => listener.close()));
 });
 
 /**
@@ -29,13 +32,14 @@ afterAll(async () => {
  */
 const createProject = async (
     dbtype: string,
+    extraConfig = '',
 ): Promise<{ readonly project: string; readonly runtime: IsolatedCompiledRuntime }> => {
     const runtime = await createIsolatedCompiledRuntime();
     runtimes.push(runtime);
     const project = runtime.root;
     await mkdir(join(project, 'config'), { recursive: true });
     await mkdir(join(project, 'data'), { recursive: true });
-    await writeFile(join(project, 'config', 'config.yml'), `dbtype: ${dbtype}\n`);
+    await writeFile(join(project, 'config', 'config.yml'), `dbtype: ${dbtype}\n${extraConfig}`);
     await writeFile(join(project, 'package.json'), JSON.stringify({ name: 'orm-cli-project', type: 'module' }));
     await copyFile(join(repositoryRoot, 'ormconfig.js'), join(project, 'ormconfig.js'));
     await symlink(join(repositoryRoot, 'node_modules'), join(project, 'node_modules'), 'dir');
@@ -113,5 +117,28 @@ describe('typeorm migration CLI with the repository ormconfig (npm run orm-run /
 
         expect(result.code).not.toBe(0);
         expect(result.output).toContain('db config error');
+    });
+
+    it('[PERSIST-6.1-ORM-CLI-MYSQL-SOCKET] connects through the configured MySQL UNIX socket', async () => {
+        const listener = await listenOnUnixSocket();
+        listeners.push(listener);
+        const { project } = await createProject(
+            'mysql',
+            [
+                'mysql:',
+                '    host: synthetic-db.invalid',
+                '    port: 3307',
+                `    socketPath: ${listener.socketPath}`,
+                '    user: synthetic_user',
+                '    password: <synthetic-password>',
+                '    database: synthetic_database',
+                '',
+            ].join('\n'),
+        );
+
+        const result = await typeorm(project, ['migration:run', '-d', './ormconfig.js']);
+
+        expect(result.code).not.toBe(0);
+        expect(listener.accepted()).toBeGreaterThanOrEqual(1);
     });
 });

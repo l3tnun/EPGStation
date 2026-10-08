@@ -175,6 +175,51 @@ describe('DBOperator connection contract characterization', () => {
         ]);
     });
 
+    it('[PERSIST-1.1-MYSQL-SOCKET-PATH] forwards a configured UNIX socket path next to the host and port values', async () => {
+        const candidate = createDataSourceDouble();
+        const options = await captureCandidate(candidate);
+        const mysql = {
+            database: 'synthetic_database',
+            host: 'synthetic-db.invalid',
+            password: '<synthetic-password>',
+            port: 3307,
+            socketPath: '/synthetic/run/mysqld.sock',
+            user: 'synthetic_user',
+        };
+
+        await createOperator({ dbtype: 'mysql', mysql }, createLogger()).getConnection();
+
+        expect(options).toHaveLength(1);
+        expect(options[0]).toMatchObject({
+            host: mysql.host,
+            port: mysql.port,
+            socketPath: mysql.socketPath,
+            type: 'mysql',
+        });
+    });
+
+    it('[PERSIST-1.1-MYSQL-SOCKET-PATH-OMITTED] leaves socketPath out of the options when none is configured', async () => {
+        const candidate = createDataSourceDouble();
+        const options = await captureCandidate(candidate);
+
+        await createOperator(
+            {
+                dbtype: 'mysql',
+                mysql: {
+                    database: 'synthetic_database',
+                    host: 'synthetic-db.invalid',
+                    password: '<synthetic-password>',
+                    port: 3307,
+                    user: 'synthetic_user',
+                },
+            },
+            createLogger(),
+        ).getConnection();
+
+        expect(options).toHaveLength(1);
+        expect(Object.keys(options[0])).not.toContain('socketPath');
+    });
+
     it('[PERSIST-1.1-MYSQL-CHARSET] preserves an explicitly configured MySQL charset', async () => {
         const candidate = createDataSourceDouble();
         const options = await captureCandidate(candidate);

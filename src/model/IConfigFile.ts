@@ -83,6 +83,7 @@ export default interface IConfigFile {
         host: string;
         user: string;
         port: number;
+        socketPath?: string;
         password: string;
         database: string;
         charset?: string;

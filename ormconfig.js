@@ -37,6 +37,8 @@ switch (config.dbtype) {
             type: 'mysql',
             host: config.mysql.host,
             port: config.mysql.port,
+            // socketPath は設定されたときだけ渡す。省略時は host / port で接続する。
+            ...(typeof config.mysql.socketPath === 'undefined' ? {} : { socketPath: config.mysql.socketPath }),
             username: config.mysql.user,
             password: config.mysql.password,
             database: config.mysql.database,

@@ -164,6 +164,7 @@ dbType: mysql
 | -------------- | ------ | ---- | ---------------------------- |
 | host           | string | yes  | MySQL が動作するホスト名     |
 | port           | number | no   | MySQL が待ち受けるポート番号 |
+| socketPath     | string | no   | MySQL が待ち受ける UNIX ソケットのフルパス。指定すると `host` と `port` ではなくこのソケットで接続する |
 | user           | string | yes  | DB 接続用のユーザー名        |
 | password       | string | yes  | DB 接続用のパスワード        |
 | database       | string | yes  | 使用するデータベース名       |
