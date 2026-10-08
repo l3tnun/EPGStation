@@ -13,6 +13,8 @@ dbtype: sqlite
 # mysql:
 #     host: 192.168.xx.xx
 #     port: 3306
+#     # UNIX ソケットで接続する場合に指定する（指定すると host と port は使われない）
+#     socketPath: /var/run/mysqld/mysqld.sock
 #     user: epgstation
 #     password: epgstation
 #     database: epgstation
