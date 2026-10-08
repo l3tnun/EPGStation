@@ -305,7 +305,7 @@ describe('ExtendedPagination display (Requirements 8.33-8.38)', () => {
     expect(screen.getByRole('button', { name: 'ページ数を入力して移動' })).toHaveTextContent('47')
   })
 
-  it('[AC 8.38] marks only the current page with primary text color and scale(1.1) without changing its box', () => {
+  it('[AC 8.38] marks only the current page with scale(1.1) without changing its box', () => {
     const css = readFileSync('src/shared/ExtendedPagination.module.css', 'utf8')
     const button = css.match(/\.pageButton\s*\{([^}]*)\}/s)?.[1] ?? ''
     const current = css.match(/\.pageButton\[aria-current='page'\]\s*\{([^}]*)\}/s)?.[1] ?? ''
@@ -314,23 +314,21 @@ describe('ExtendedPagination display (Requirements 8.33-8.38)', () => {
     expect(button).toMatch(/margin:\s*4px 3px;/)
     expect(button).toMatch(/flex:\s*0 0 auto;/)
     expect(button).toMatch(/transform:\s*scale\(1\);/)
-    expect(current).toMatch(/color:\s*var\(--mui-palette-primary-main/)
+    expect(current).not.toMatch(/color|background/)
     expect(current).toMatch(/transform:\s*scale\(1\.1\);/)
     // The enlarged page must not change the layout box: no width, height, margin or padding.
     expect(current).not.toMatch(/(?:^|[;\s])(?:min-|max-)?(?:width|height)\s*:/)
     expect(current).not.toMatch(/margin|padding|border-width|font-size/)
   })
 
-  it('[AC 8.38] gives the buttons light and dark theme surfaces and keeps a dark current page distinguishable', () => {
+  it('[AC 8.48] takes the colors from the module shared with LegacyPagination and defines none itself', () => {
     const css = readFileSync('src/shared/ExtendedPagination.module.css', 'utf8')
+    const source = readFileSync('src/shared/ExtendedPagination.tsx', 'utf8')
+    const legacy = readFileSync('src/shared/LegacyPagination.tsx', 'utf8')
 
-    expect(css).toMatch(/\.pageButton\s*\{[^}]*background:\s*#fff;/s)
-    expect(css).toMatch(
-      /:global\(\[data-theme-mode='dark'\]\) \.pageButton\s*\{[^}]*background:\s*var\(--mui-palette-background-paper/s,
-    )
-    expect(css).toMatch(
-      /:global\(\[data-theme-mode='dark'\]\) \.pageButton\[aria-current='page'\]\s*\{[^}]*color:\s*var\(--mui-palette-primary-main/s,
-    )
+    expect(css).not.toMatch(/(?:^|[;{\s])(?:background|color|box-shadow)\s*:/)
+    expect(source).toContain("from './PaginationColors.module.css'")
+    expect(legacy).toContain("from './PaginationColors.module.css'")
   })
 
   it('[AC 8.46] gives the row no horizontal padding and never lets it exceed its container', () => {

@@ -386,7 +386,7 @@ select/checkbox/pagination の挙動差異が発生しない。
 35. 表示する要素数（`≪` と `≫` を含む）は 7 / 9 / 11 / 13 / 15 / 17 の 6 段階とする。`<nav>` の実測幅（`ResizeObserver`）を、button 1 個の実測幅と左右の余白の合計に要素数を掛けた値で割り、収まる最大の段階を選ぶ。1 段階ずつ増やすため、左右に 1 個ずつ足せない幅では増やさない。7 個が収まらない幅でも 7 個を下限とし、幅の測定前も 7 個とする。端末幅やソフトウェアキーボードの高さの固定値は使わない。
 36. 総 page 数 + 2 が選んだ要素数より小さいとき、存在する page の番号だけを表示する（要素数は総 page 数 + 2）。
 37. 現在 page を page 番号の並びの中央に置く。先頭または最終 page に近く片側が足りないときは、足りない分を反対側へずらして page 番号の個数を保ち、存在しない page 番号（1 未満・最終 page 超）を表示しない。
-38. 現在 page の button は文字色を theme の primary 色にし、`transform: scale(1.1)` で拡大する。拡大は `transform` だけで行い、button の幅・余白を他の button と同じに保つため、隣の button の位置は動かない。他の button は light/dark theme の paper 面と文字色で表示し、dark theme でも現在 page と区別できる。
+38. 現在 page の button は `transform: scale(1.1)` で拡大する。拡大は `transform` だけで行い、button の幅・余白を他の button と同じに保つため、隣の button の位置は動かない。配色は 48 に従い、dark theme でも現在 page は他の button と区別できる。
 39. 現在 page の button を押すと `ページ数を入力 ` dialog を開く。dialog は `ページ数 ` の text field（placeholder `1 〜 <最終 page>`、`inputMode="numeric"`、`ClearableTextField`）、`キャンセル `、`移動 ` button を持つ。dialog は開くたびに入力欄を空にして入力欄へ focus する。
 40. dialog の入力が空欄、0、負数、小数、数字以外（全角数字・指数表記を含む）、最終 page 超のいずれかのとき、`移動 ` を押しても Enter を押しても page を移動せず、1 や最終 page へ丸めず、dialog を開いたまま `1 〜 <最終 page> の整数を入力してください ` を表示する。入力を変えるとこのメッセージを消す。
 41. dialog の入力が 1 以上最終 page 以下の整数（先頭の 0 を含んでよい）のとき、`移動 ` または入力欄での Enter（IME の変換を確定する Enter を除く）で dialog を閉じ、その page 番号で `onPageChange` を呼ぶ。Enter は keydown の既定動作を取り消し、dialog を閉じて focus が戻った現在 page の button を、同じ Enter が続けて押して dialog を開き直すことがないようにする。入力が現在 page と同じときは dialog を閉じるだけで `onPageChange` を呼ばない。`キャンセル ` と dialog 外の click（Esc を含む）は dialog を閉じ、`onPageChange` を呼ばない。
@@ -396,3 +396,9 @@ select/checkbox/pagination の挙動差異が発生しない。
 45. 入力 dialog の開閉は 150ms のフェードで、拡大・縮小の動きを持たない。
 46. `ExtendedPagination` は 320px から 1920px までのどの viewport 幅（touch 端末の設定を含む）でも、`<nav>` と document の横幅を viewport より広げない。また `<nav>` の下に 72px の余白を持ち、画面右下に固定表示される操作 button（Rule list の追加 button）の上まで scroll でき、最終 page まで scroll した状態でどの button もこの固定 button に覆われない。
 47. `<nav>` の幅は内容の幅に引きずられず、親の幅に従う（`min-width: 0`）。viewport を広い幅から狭い幅へ変えても、実測幅が追従して要素数が減る。`LegacyPagination` が 1 行に収まり、はみ出さず、document の横幅を viewport より広げずに表示できる最小の viewport 幅（実測 328px）を、`ExtendedPagination` は下回らない。つまり 328px 以上のすべての幅で、先頭・中間・最終のどの page でも、要素が 1 行に並び、重ならず、`<nav>` と document の横幅が viewport を超えない。最小の 7 要素（280px）が入らない幅では、要素数を 7 より減らさずに 7 個を表示する（その幅は viewport 298px 未満であり、`LegacyPagination` も 328px 未満で崩れるため、比較の対象外とする）。
+48. `LegacyPagination` と `ExtendedPagination` の button の配色は、同じ規則（共通の CSS module）で定め、v2（Vuetify 2.7.0 の `v-pagination`、既定の theme）と同じにする。大きさ・余白・並べ方・個数の規則・拡大は配色に含めず、それぞれの規則に従う。値は計算された style で次のとおりとする。
+    - page 番号 button（現在 page 以外）: light theme は背景 `#FFFFFF`・文字 `rgba(0, 0, 0, 0.87)`、dark theme は背景 `#1E1E1E`・文字 `#FFFFFF`。影は `0 3px 1px -2px rgba(0,0,0,0.2), 0 2px 2px 0 rgba(0,0,0,0.14), 0 1px 5px 0 rgba(0,0,0,0.12)`。
+    - 現在 page の button: light/dark theme のどちらでも背景 `#1976D2`（v2 の既定 theme の primary。v3 の dark theme の primary `#90caf9` ではない）・文字 `#FFFFFF`。影は `0 2px 4px -1px rgba(0,0,0,0.2), 0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12)`。dark theme でも塗りと文字色を失わない。
+    - 矢印 button（`≪` `≫` `<` `>`）: 背景と影は page 番号 button と同じ。icon の色は light theme が `rgba(0, 0, 0, 0.54)`、dark theme が `#FFFFFF`。
+    - 押せない矢印 button: 背景・icon の色・影は押せるときと同じで、`opacity: 0.6` にする（色を変えない）。
+    - `LegacyPagination` の ellipsis の文字色は、light theme が `rgba(0, 0, 0, 0.87)`、dark theme が `#FFFFFF`。

@@ -16,14 +16,8 @@
 
 .pageButton {
   align-items: center;
-  background: #fff;
   border: 0;
   border-radius: 4px;
-  box-shadow:
-    rgba(0, 0, 0, 0.2) 0 3px 1px -2px,
-    rgba(0, 0, 0, 0.14) 0 2px 2px 0,
-    rgba(0, 0, 0, 0.12) 0 1px 5px 0;
-  color: rgba(0, 0, 0, 0.87);
   cursor: pointer;
   display: flex;
   flex: 0 0 auto;
@@ -41,12 +35,10 @@
 }
 
 .pageButton[aria-current='page'] {
-  color: var(--mui-palette-primary-main, #1976d2);
   transform: scale(1.1);
 }
 
 .pageButton:disabled {
-  color: rgba(0, 0, 0, 0.26);
   cursor: default;
 }
 
@@ -59,19 +51,6 @@
 
 .pageIcon::before {
   content: var(--extended-pagination-icon);
-}
-
-:global([data-theme-mode='dark']) .pageButton {
-  background: var(--mui-palette-background-paper, #1e1e1e);
-  color: rgb(255 255 255 / 87%);
-}
-
-:global([data-theme-mode='dark']) .pageButton[aria-current='page'] {
-  color: var(--mui-palette-primary-main, #90caf9);
-}
-
-:global([data-theme-mode='dark']) .pageButton:disabled {
-  color: rgb(255 255 255 / 38%);
 }
 
 /* `:global(.MuiPaper-root)` raises the specificity above MUI's own paper rules, which are injected

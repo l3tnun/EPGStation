@@ -7,6 +7,7 @@ import type { CSSProperties, FocusEvent, KeyboardEvent } from 'react'
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { ClearableTextField } from './ClearableTextField'
 import styles from './ExtendedPagination.module.css'
+import colors from './PaginationColors.module.css'
 import {
   EXTENDED_PAGINATION_DEFAULT_BUTTON_MARGIN,
   EXTENDED_PAGINATION_DEFAULT_BUTTON_WIDTH,
@@ -212,7 +213,7 @@ export function ExtendedPagination({
       <nav aria-label="ページ" className={styles.pagination} ref={navRef}>
         <button
           aria-label="最初のページへ移動"
-          className={styles.pageButton}
+          className={`${styles.pageButton} ${colors.pageButton} ${colors.navigationButton}`}
           disabled={currentPage <= 1}
           type="button"
           onClick={() => onPageChange(1)}
@@ -228,7 +229,7 @@ export function ExtendedPagination({
             <button
               aria-current="page"
               aria-label="ページ数を入力して移動"
-              className={styles.pageButton}
+              className={`${styles.pageButton} ${colors.pageButton}`}
               key={pageNumber}
               type="button"
               onClick={openDialog}
@@ -238,7 +239,7 @@ export function ExtendedPagination({
           ) : (
             <button
               aria-label={`ページ${pageNumber}へ移動`}
-              className={styles.pageButton}
+              className={`${styles.pageButton} ${colors.pageButton}`}
               key={pageNumber}
               type="button"
               onClick={() => onPageChange(pageNumber)}
@@ -249,7 +250,7 @@ export function ExtendedPagination({
         )}
         <button
           aria-label="最後のページへ移動"
-          className={styles.pageButton}
+          className={`${styles.pageButton} ${colors.pageButton} ${colors.navigationButton}`}
           disabled={currentPage >= pageCount}
           type="button"
           onClick={() => onPageChange(pageCount)}

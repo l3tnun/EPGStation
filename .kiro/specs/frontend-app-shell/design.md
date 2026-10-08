@@ -672,7 +672,7 @@ previous full route へ `replace` する 2 回の route change）の直前に `2
 | 測定 | `useLayoutEffect` で nav に `ResizeObserver` を張り、`clientWidth`、先頭 button の `offsetWidth`、先頭 2 button の `offsetLeft` の差（= 幅 + 余白）を読む。`offsetWidth` / `offsetLeft` は `transform` の影響を受けないので、拡大中の現在 page があっても値は変わらない。`ResizeObserver` が無い環境と button が測れない環境では、button 幅 34px・余白合計 6px の既定値を使う |
 | nav の幅 | `width: 100%; min-width: 0`。`min-width: 0` が無いと、nav は親の grid の最小内容幅として button の幅を押し付け、viewport を狭めても実測幅が縮まず要素数が減らない（実測: 360px 幅で 9 個のまま 372px に広がる）。実測の `LegacyPagination` の最小幅は 328px、`ExtendedPagination` は 7 個が入る 298px |
 | button の寸法 | 幅・高さ 34px、左右の margin 3px、`flex: 0 0 auto`。7 個で 280px となり、320px 幅でも収まる。nav は左右の padding を持たず、下に 72px の padding を持つ（Rule list の追加 button は右下に `fixed` で 56px、余白 16px で置かれるので、その上端より上に button が来る） |
-| 現在 page | 文字色 `var(--mui-palette-primary-main)`、`transform: scale(1.1)`。幅・margin は変えない |
+| 現在 page | `transform: scale(1.1)`。幅・margin は変えない。配色は `LegacyPagination` と共有する `PaginationColors.module.css`（requirements 8.48）が持つ |
 | 入力の検証 | `/^[0-9]+$/` に一致し、`Number` 値が 1 以上最終 page 以下 |
 | Enter | 入力欄の keydown で `isComposing` でない Enter を扱い、`preventDefault()` してから検証・移動する。取り消さないと、dialog を閉じて focus が戻った現在 page の button に同じ Enter の keypress が届いて click になり、dialog が開き直る |
 | dialog の位置 | `visualViewport` が有れば、開いている間 `resize` / `scroll` を購読し、`keyboardHeight = max(0, round(innerHeight - viewport.height))`、`availableHeight = max(1, floor(viewport.height - 24))`、`offsetTop = max(0, floor(viewport.offsetTop))` を求め、paper に `position: relative; margin: 0; top: calc(offsetTop - keyboardHeight / 2); max-height: availableHeight` を与える。閉じる最中は直前の値を保つ。`visualViewport` が無ければ CSS の fallback（幅 600px 以下で上端寄せ、`max-height: calc(100dvh - 24px)`）に任せる |
@@ -760,7 +760,7 @@ failure とする。論理名は `theme.ts` の識別子ではなく、値の所
 | `textSecondary`             | `rgba(0,0,0,0.6)`       | `rgba(255,255,255,0.7)`  | metadata、helper、caption                | `palette.text.secondary`                             |
 | `textDisabled`              | `rgba(0,0,0,0.38)`      | `rgba(255,255,255,0.5)`  | disabled label/icon                      | `palette.text.disabled`                              |
 | `primary`                   | `#1976d2`               | `#90caf9`                | primary button、link、progress fill      | `palette.primary.main`                               |
-| `pagination.selectedPage`   | `primary` token         | `primary` token          | LegacyPagination の選択中 page 背景         | CSS variable `--mui-palette-primary-main`            |
+| `pagination.selectedPage`   | `#1976d2`               | `#1976d2`                | Legacy/ExtendedPagination の現在 page 背景  | `shared/PaginationColors.module.css`（v2 と同じ）    |
 | `secondary`                 | `#9c27b0`               | `#ce93d8`                | secondary accent                         | `palette.secondary.main`                             |
 | `success`                   | `#2e7d32`               | `#66bb6a`                | success state                            | MUI default palette                                  |
 | `warning`                   | `#ed6c02`               | `#ffa726`                | warning state、conflict accent           | MUI default palette                                  |
@@ -782,9 +782,9 @@ reserve decoration token は conflict `#fffd6b`/`#f6c90e`、skip `#aaa`/`#717171
 `success` / `warning` / `error` / `info` の値は MUI default palette の値を採用し、`client/src/app/theme.ts` はこれらを上書きしない。
 `primary` / `secondary` は `client/src/app/theme.ts` が上表の値を設定する。
 
-`LegacyPagination` の選択中 page 背景は `pagination.selectedPage` として `primary` token を CSS variable
-`--mui-palette-primary-main` 経由で参照し、light/dark いずれの決め打ち値も CSS module に直書きしない。dark
-での実際の色は theme token の現行値（`#90caf9`）にそのまま従い、この spec が新しい dark 色を決め打ちしない。
+`LegacyPagination` と `ExtendedPagination` の button の配色（背景・文字・icon・影・押せない状態の透明度。値は requirements 8.48）は
+`client/src/shared/PaginationColors.module.css` だけが持ち、両方の button がその class を併用する。大きさ・余白・並べ方は各 component の CSS module が持つ。
+配色は v2 の `v-pagination` に合わせるので、現在 page の背景は theme の `primary` token（dark で `#90caf9`）に従わず、両 theme とも `#1976d2` の決め打ちである。
 
 pagination の ellipsis cluster は、要素の実測幅に基づく可変 window アルゴリズムを使う。`totalVisible`（12 固定）と、
 `ResizeObserver` で実測した pagination 要素の実際の幅（`useMeasuredContainerWidth`。`.pagination` は

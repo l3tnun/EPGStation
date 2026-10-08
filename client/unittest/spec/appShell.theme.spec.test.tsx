@@ -243,7 +243,7 @@ describe('Requirement 1.1-1.5 common App Shell bootstrap', () => {
       'src/features/settings/SettingsPage.module.css',
       'src/features/storages/StoragesPage.module.css',
       'src/features/video/playback/PlaybackPage.module.css',
-      'src/shared/LegacyPagination.module.css',
+      'src/shared/PaginationColors.module.css',
     ]
 
     cssFiles.forEach((path) => {
@@ -251,17 +251,19 @@ describe('Requirement 1.1-1.5 common App Shell bootstrap', () => {
     })
   })
 
-  it('[AS-7] wires the pagination selected page background to the shared primary theme token instead of a hardcoded value', () => {
-    const css = readFileSync('src/shared/LegacyPagination.module.css', 'utf8')
-    const selectedRule = css.match(/\.pageButton\[aria-current='page'\]\s*{[^}]*}/)
+  it('[AS-7] [AC 8.48] paints the current page #1976d2 with white text in both themes, not with the theme primary token', () => {
+    const css = readFileSync('src/shared/PaginationColors.module.css', 'utf8')
+    const light = css.match(
+      /(?:^|\n)\.pageButton\[aria-current='page'\],\s*:global\(\[data-theme-mode='dark'\]\) \.pageButton\[aria-current='page'\]\s*{([^}]*)}/,
+    )
 
-    expect(selectedRule?.[0]).toBeDefined()
-    expect(selectedRule?.[0]).toContain('var(--mui-palette-primary-main')
-
-    const darkOverrideCount = (
-      css.match(/data-theme-mode='dark'\]\)\s*\.pageButton\[aria-current='page'\]/g) ?? []
-    ).length
-
-    expect(darkOverrideCount).toBe(0)
+    expect(light?.[1]).toBeDefined()
+    expect(light?.[1]).toMatch(/background:\s*#1976d2;/)
+    expect(light?.[1]).toMatch(/color:\s*#fff;/)
+    expect(css).not.toContain('--mui-palette-primary-main')
+    // The current page rule comes after the dark rule for ordinary buttons, so it wins at equal specificity.
+    expect(css.indexOf("[aria-current='page']")).toBeGreaterThan(
+      css.indexOf(":global([data-theme-mode='dark']) .pageButton {"),
+    )
   })
 })

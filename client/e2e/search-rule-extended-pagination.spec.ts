@@ -355,53 +355,6 @@ for (const width of TOUCH_WIDTHS) {
   defineWidthTests(width, true)
 }
 
-test.describe('theme colors', () => {
-  test.use({ viewport: { width: 1280, height: VIEWPORT_HEIGHT } })
-
-  // eslint-disable-next-line no-empty-pattern -- Playwright requires a destructuring pattern here
-  test.beforeEach(({}, testInfo) => {
-    test.skip(!testInfo.project.name.startsWith('Desktop'), 'checked on the desktop projects')
-  })
-
-  for (const dark of [false, true]) {
-    test(`paints the current page with the primary color in the ${dark ? 'dark' : 'light'} theme`, async ({
-      page,
-    }) => {
-      await prepare(page, { enabled: true, dark })
-      await openRuleList(page, 24)
-      await readSettledRow(page)
-
-      const colors = await paginationNav(page).evaluate((nav) => {
-        const probe = document.createElement('span')
-        probe.style.color = 'var(--mui-palette-primary-main)'
-        nav.append(probe)
-        const primary = getComputedStyle(probe).color
-        probe.remove()
-        const buttons = Array.from(nav.querySelectorAll<HTMLButtonElement>('button'))
-        const current = nav.querySelector<HTMLButtonElement>('button[aria-current="page"]')
-        const other = buttons.find(
-          (button) => button !== current && button.getAttribute('aria-label')?.startsWith('ページ'),
-        )
-
-        return {
-          primary,
-          currentColor: current === null ? '' : getComputedStyle(current).color,
-          otherColor: other === undefined ? '' : getComputedStyle(other).color,
-          otherBackground: other === undefined ? '' : getComputedStyle(other).backgroundColor,
-          dataThemeMode: document
-            .querySelector('[data-theme-mode]')
-            ?.getAttribute('data-theme-mode'),
-        }
-      })
-
-      expect(colors.dataThemeMode).toBe(dark ? 'dark' : 'light')
-      expect(colors.currentColor).toBe(colors.primary)
-      expect(colors.otherColor).not.toBe(colors.primary)
-      expect(colors.otherBackground).not.toBe(dark ? 'rgb(255, 255, 255)' : 'rgba(0, 0, 0, 0)')
-    })
-  }
-})
-
 test.describe('setting off keeps the current pagination', () => {
   for (const width of [390, 1280]) {
     test(`renders the same legacy pagination at ${width}px with the setting off or absent`, async ({

@@ -1,3 +1,4 @@
+import colors from './PaginationColors.module.css'
 import styles from './LegacyPagination.module.css'
 import type { CSSProperties } from 'react'
 import { useEffect, useState } from 'react'
@@ -98,7 +99,7 @@ export function LegacyPagination({
     <nav className={styles.pagination} aria-label="ページ" ref={containerRef}>
       <button
         aria-label="前のページ"
-        className={styles.pageButton}
+        className={`${styles.pageButton} ${colors.pageButton} ${colors.navigationButton}`}
         disabled={currentPage <= 1}
         type="button"
         onClick={() => onPageChange(currentPage - 1)}
@@ -111,14 +112,18 @@ export function LegacyPagination({
       </button>
       {pages.map((pageNumber, index) =>
         pageNumber === 'ellipsis' ? (
-          <span className={styles.ellipsis} key={`ellipsis-${index}`} aria-hidden="true">
+          <span
+            className={`${styles.ellipsis} ${colors.ellipsis}`}
+            key={`ellipsis-${index}`}
+            aria-hidden="true"
+          >
             ...
           </span>
         ) : (
           <button
             aria-current={pageNumber === currentPage ? 'page' : undefined}
             aria-label={`${pageNumber} ページ`}
-            className={`${styles.pageButton} ${styles.numberButton}`}
+            className={`${styles.pageButton} ${colors.pageButton} ${styles.numberButton}`}
             key={pageNumber}
             type="button"
             onClick={() => onPageChange(pageNumber)}
@@ -129,7 +134,7 @@ export function LegacyPagination({
       )}
       <button
         aria-label="次のページ"
-        className={styles.pageButton}
+        className={`${styles.pageButton} ${colors.pageButton} ${colors.navigationButton}`}
         disabled={currentPage >= pageCount}
         type="button"
         onClick={() => onPageChange(currentPage + 1)}
