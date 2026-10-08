@@ -19,6 +19,7 @@ export const get: Operation = async (req, res) => {
                 message: 'thumbnail is not Found',
             });
         } else {
+            res.header('Cache-Control', 'private, max-age=14400');
             api.responseFile(req, res, filePath, 'image/jpeg', false);
         }
     } catch (err: any) {
