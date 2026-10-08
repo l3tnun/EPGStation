@@ -179,6 +179,7 @@ interface DatabaseConnectionSettings {
         extensions?: string[];
         regexp?: boolean;
         wal?: boolean;
+        busyTimeout?: number;
     };
     mysql?: {
         host: string;
@@ -201,6 +202,7 @@ interface DatabaseConnectionSettings {
 | `sqlite.extensions` | 省略可                                 | `undefined` または順序付き配列       | 記載順を変更・重複排除せず読み込む                                                                  |
 | `sqlite.regexp`     | 省略可                                 | boolean または `undefined`           | `true` の場合だけ正規表現能力あり                                                                   |
 | `sqlite.wal`        | 省略可                                 | boolean または `undefined`           | `true` の場合だけ journal_mode を WAL にする（既定は無効）。DataSource option の `enableWAL: true` として渡す。`true` 以外（省略・`false`・文字列を含む）は無効として扱う |
+| `sqlite.busyTimeout` | 省略可                                | 整数（ミリ秒）または `undefined`     | 他の接続が持つロックを待つ最長時間。DataSource option の `timeout` として渡す（`ormconfig.js` も同じ）。省略時は既定の `5000` を明示して渡す（TypeORM の `better-sqlite3` driver の既定と同じで、挙動は変わらない）。値は検証・変換せず driver に渡し、整数でない値・負の値・`2147483647` を超える値は `better-sqlite3` が接続の作成時に拒否する。待ち時間を過ぎてもロックが解放されなければ `SQLITE_BUSY` になる。元の提案は公開 PR #722（`busyTimeout: 90000` の固定）で、機械の速さで適切な値が変わるため設定可能にした |
 | MySQL 接続項目      | backend 選択時に `mysql` object が必要 | host、user、port、password、database | `mysql` object がなければ接続を開始せず error。値は採用 client へ渡し、接続可否を driver 結果で判定する |
 | `mysql.socketPath`  | 省略可                                 | 文字列または `undefined`             | 設定されているときだけ DataSource option の `socketPath` に渡す。省略時は option に `socketPath` を含めない。設定時にドライバーは `host` / `port` より `socketPath` を優先する |
 | `mysql.ssl`         | 省略可                                 | 任意の値または `undefined`           | 設定されているときだけ、値を検証・変換・複製せずそのまま DataSource option の `ssl` に渡す（`ormconfig.js` も同じ）。省略時は option に `ssl` を含めない（TLS を使わない従来の接続）。値の解釈は採用 client（`mysql2`）に委ね、`ca` / `cert` / `key` は証明書や鍵の内容（PEM）であり file path ではない。サーバー証明書の検証は `rejectUnauthorized`（driver 既定は `true`）で、host 名の照合は `verifyIdentity: true` を指定したときだけ行われる |
@@ -627,7 +629,7 @@ sequenceDiagram
 
 1. 共通の Entity 集合を使用し、`dbtype` から SQLite または MySQL の Migration path を選ぶ。手動の CLI が読む `ormconfig.js`
    も、`!env` の展開、`better-sqlite3` の読み替え、`sqlite.wal` を `src/model/ConfigYaml.ts`（build 後の
-   `dist/model/ConfigYaml.js`）の共通定義で扱う。CLI も設定どおりの journal 方式を明示する: `DataSource` option の `prepareDatabase`（接続の直後に実行される）で、`sqlite.wal` が `true` なら `journal_mode = WAL`、それ以外は `journal_mode = DELETE` にする。
+   `dist/model/ConfigYaml.js`）の共通定義で扱う。CLI も設定どおりの journal 方式を明示する: `DataSource` option の `prepareDatabase`（接続の直後に実行される）で、`sqlite.wal` が `true` なら `journal_mode = WAL`、それ以外は `journal_mode = DELETE` にする。 ロック待ち時間も同じ `sqlite.busyTimeout`（省略時 `5000`）を `timeout` として渡す。
 2. `synchronize` を `false`、runtime の `migrationsRun` を `true` として `DataSource` を構築する。
 3. `initialize()` が TypeORM の管理 table を参照し、未適用 Migration を timestamp 順に実行する。
 4. SQLiteでは接続とMigrationが成功した候補へ、必要なextensionを設定順に読み込む。初期化Promiseへ合流したcallerはこの処理
@@ -1000,6 +1002,7 @@ portが入力として許容せずruntime validationも本機能が所有しな�
 | 1.11 | 完全初期化前失敗の非公開・候補close・再試行可能状態                 | `connection.spec.test.ts`: shared error / cleanup / later reinitialization                          |
 | 1.12 | `sqlite.wal` が `true` のときの `enableWAL`                         | `connection.spec.test.ts`: option投影 / `sqlite-journal.integration.test.ts`: 実fileが WAL になり `-wal`・`-shm` が増える |
 | 1.13 | `sqlite.wal` が無効のときの delete 方式の確認と WAL からの復帰     | `connection.spec.test.ts`: pragma発行の順序・失敗時の候補close / `sqlite-journal.integration.test.ts`: 既定のfileが delete のまま、WAL だった file が delete に戻る、使用中で戻せないときの失敗 |
+| 1.14 | `sqlite.busyTimeout` の `timeout`（既定 5000）と `SQLITE_BUSY`        | `connection.spec.test.ts`: option投影（既定・設定値・不正な値の拒否） / `sqlite-busy-timeout.integration.test.ts`: 2 接続の実 file でロックを待ってから `SQLITE_BUSY` になる / `orm-cli.integration.test.ts`: `ormconfig.js` の `timeout` 投影 |
 | 2.1  | `Channel`、`Program` Entity / repository                            | `repositories.spec.test.ts`: round trip                                                             |
 | 2.2  | `Reserve`、`Rule` Entity / repository                               | `repositories.spec.test.ts`: round trip                                                             |
 | 2.3  | `Recorded`、`RecordedHistory` Entity / repository                   | `repositories.spec.test.ts`: round trip                                                             |
