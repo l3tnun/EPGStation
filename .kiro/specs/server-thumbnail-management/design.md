@@ -86,6 +86,9 @@ DB 保存結果が未解決の間は、同じ依頼を完了扱いにせず、�
 ### 2.3 取得・個別削除
 
 -   取得は、録画済み番組に関連付けられたサムネイル登録情報と JPEG の参照に必要な情報を返す。
+-   HTTP の取得（`GET /api/thumbnails/{thumbnailId}`）は、JPEG を返す成功の応答に `Cache-Control: private, max-age=14400` を付ける。
+    `api.responseFile` は応答 header を `res.set` で足すだけで `Cache-Control` を上書きしないので、取得処理が先に設定した値がそのまま
+    残る。登録情報が無い 404 や内部 error の応答には付けない（`Cache-Control` を出さない）。
 -   個別削除は、指定した登録情報の存在を確認し、登録情報と対応 JPEG の削除を試みる。
 -   JPEG 削除まで成功した場合だけ削除完了を通知する。
 -   登録情報が存在しない場合、または JPEG を削除できない場合は失敗とする。
@@ -377,7 +380,7 @@ case、server 全体の C0・C1 判定をそれぞれ一つずつ参照する。
 | TM-2.12 | `jpeg-generation.spec.test.ts#TM-2.12`        | S/I/G    | T,T,T,T,N,N,T,C,T                                | F/RE                        | 順/遅          | OutputReservation/temp/final                                | DB/filesystem/process          | 生成/publish/DB失敗時owned temp/finalだけ各1回削除・解放 |
 | TM-2.13 | `jpeg-generation.spec.test.ts#TM-2.13`        | S/I      | T,T,N,T,N,N,T,C,T                                | G/F                         | 順             | child                                                       | process                        | commandをexact bin/argsへ分離し空・不正commandを成功にしない |
 | TM-2.14 | `jpeg-generation.spec.test.ts#TM-2.14`        | S/I/G    | T,T,N,T,N,N,N,C,T                                | G                           | 順             | child                                                       | process                        | 合成markerを継承しsecret値を証拠化しない |
-| TM-3.1  | `thumbnail-access-delete.spec.test.ts#TM-3.1` | S/G      | T,T,T,T,N,N,T,C,T                                | S/F                         | 順             | DB query/file                                               | DB/HTTP/filesystem             | 登録済みJPEGの参照path、not-foundは404 carrier |
+| TM-3.1  | `thumbnail-access-delete.spec.test.ts#TM-3.1` | S/G      | T,T,T,T,N,N,T,C,T                                | S/F                         | 順             | DB query/file                                               | DB/HTTP/filesystem             | 登録済みJPEGの参照path、not-foundは404 carrier、成功の応答の`Cache-Control`（HTTP結合testで確認） |
 | TM-3.2  | `thumbnail-access-delete.spec.test.ts#TM-3.2` | S/G      | T,T,T,T,N,N,T,C,T                                | F                           | 順             | DB query                                                    | DB/HTTP/IPC                    | 登録情報不在は削除失敗、unlink・通知0 |
 | TM-3.3  | `thumbnail-access-delete.spec.test.ts#TM-3.3` | S/I/G    | N,N,N,T,N,N,N,C,T                                | S/F                         | 順             | DB registration/file                                        | DB/filesystem/IPC              | DB登録情報削除後に対応JPEG削除を試行 |
 | TM-3.4  | `thumbnail-access-delete.spec.test.ts#TM-3.4` | S/I      | N,N,N,T,N,N,N,N,T                                | S/RE                        | 順/衝          | listener                                                    | DB/filesystem                  | DB・JPEG成功後だけ削除通知1回 |
@@ -418,7 +421,7 @@ case、server 全体の C0・C1 判定をそれぞれ一つずつ参照する。
 | 境界       | concrete case                                                                                                  | 検証内容と後始末                                                                                                                                                       |
 | ---------- | -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | DB         | `integration/thumbnail-db.integration.test.ts#insert-find-delete-and-db-failure-cleanup`                       | temporary DB で `filePath`・`recordedId` の insert/find/delete、未解決保存、保存失敗を接続し、connectionをharness規則で解放する                                        |
-| HTTP       | `integration/thumbnail-http.integration.test.ts#get-add-delete-regenerate-cleanup-and-overload-error`          | 公開 adapter の生成・取得・削除・再生成・cleanup と not-found・満杯 error を exact status/body/file で確認し、request/response listenerを解放する                      |
+| HTTP       | `integration/thumbnail-http.integration.test.ts#get-add-delete-regenerate-cleanup-and-overload-error`          | 公開 adapter の生成・取得・削除・再生成・cleanup と not-found・満杯 error を exact status/body/file で確認し、取得の成功の応答だけに`Cache-Control: private, max-age=14400`が付き404には付かないことを確認し、request/response listenerを解放する                      |
 | IPC        | `integration/thumbnail-ipc.integration.test.ts#serialize-add-delete-regenerate-cleanup-and-error`              | videoFileId/thumbnailId、操作種別、成功・失敗を peer 間で接続し、pending request と listener を一回解放する                                                            |
 | filesystem | `integration/thumbnail-filesystem.integration.test.ts#exclusive-claim-temporary-publish-reconcile-and-cleanup` | temporary directoryで`wx` claim、EEXIST連番、childのtemporary出力、owned finalへのpublish、active reservationのcleanup除外、失敗時owned資源だけの一回回収をassertする  |
 | process    | `integration/thumbnail-process.integration.test.ts#deadline-stop-failure-late-close-and-live-child-lease`      | isolated synthetic childで正常/異常/spawn failure、期限、停止成功/失敗、late closeを接続し、live child最大1、DB/通知最大1、close後だけのcleanup・lease解放をassertする |

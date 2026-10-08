@@ -60,7 +60,7 @@ const expressLikeResponse = (response: ServerResponse): ServerResponse => {
 const request = async (
     method: string,
     path: string,
-): Promise<{ body: unknown; contentType: string | null; status: number }> => {
+): Promise<{ body: unknown; cacheControl: string | null; contentType: string | null; status: number }> => {
     const server = createServer(async (incoming, outgoing) => {
         const match = incoming.url?.match(
             /^\/api\/thumbnails(?:\/videos\/(?<videoFileId>\d+)|\/cleanup|\/(?<thumbnailId>\d+))?$/u,
@@ -92,9 +92,11 @@ const request = async (
         if (address === null || typeof address === 'string') throw new Error('Loopback listener has no TCP port');
         const response = await fetch(requestUrl(address.port, path), { method });
         const contentType = response.headers.get('content-type');
+        const cacheControl = response.headers.get('cache-control');
         const text = await response.text();
         return {
             body: contentType?.includes('application/json') === true ? JSON.parse(text) : text,
+            cacheControl,
             contentType,
             status: response.status,
         };
@@ -130,6 +132,7 @@ describe('thumbnail HTTP integration', () => {
 
             await expect(request('GET', '/api/thumbnails/12')).resolves.toEqual({
                 body: 'synthetic-http-jpeg',
+                cacheControl: 'private, max-age=14400',
                 contentType: 'image/jpeg',
                 status: 200,
             });
@@ -137,6 +140,7 @@ describe('thumbnail HTTP integration', () => {
             readPath.mockResolvedValueOnce(null);
             await expect(request('GET', '/api/thumbnails/13')).resolves.toEqual({
                 body: { code: 404, message: 'thumbnail is not Found' },
+                cacheControl: null,
                 contentType: 'application/json',
                 status: 404,
             });
