@@ -50,7 +50,7 @@ describe('Requirements 3.1-8.9 default settings consumer contract', () => {
     localStorage.clear()
   })
 
-  it('[AC 3.1] [AC 3.2] [AC 3.3] [AC 3.4] [AC 4.1] [AC 4.2] [AC 4.3] [AC 5.1] [AC 5.2] [AC 5.3] [AC 5.4] [AC 5.5] [AC 5.6] [AC 5.7] [AC 6.1] [AC 6.3] [AC 6.4] [AC 6.5] [AC 7.1] [AC 7.2] [AC 7.3] [AC 7.4] [AC 7.5] [AC 8.1] [AC 8.2] [AC 8.3] [AC 8.4] [AC 8.5] defines every user-visible default for general, playback, guide, list, recorded, search, rule, and video settings', () => {
+  it('[AC 3.1] [AC 3.2] [AC 3.3] [AC 3.4] [AC 4.1] [AC 4.2] [AC 4.3] [AC 5.1] [AC 5.2] [AC 5.3] [AC 5.4] [AC 5.5] [AC 5.6] [AC 5.7] [AC 6.1] [AC 6.3] [AC 6.4] [AC 6.5] [AC 7.1] [AC 7.2] [AC 7.3] [AC 7.4] [AC 7.5] [AC 8.1] [AC 8.2] [AC 8.3] [AC 8.4] [AC 8.5] [AC 8.10] defines every user-visible default for general, playback, guide, list, recorded, search, rule, and video settings', () => {
     const defaults = new DefaultSettingsFactory().create()
 
     expect(defaults).toStrictEqual({
@@ -86,7 +86,40 @@ describe('Requirements 3.1-8.9 default settings consumer contract', () => {
       isEnableEncodingSettingWhenCreateRule: false,
       isCheckDeleteOriginalAfterEncode: false,
       rulesLength: 24,
+      isEnableExtendedPagination: false,
       isForceEnableSubtitleStroke: true,
+    })
+  })
+
+  it('[AC 8.10] defaults isEnableExtendedPagination to false and backfills only that field into saved settings that lack it', () => {
+    expect(new DefaultSettingsFactory().create().isEnableExtendedPagination).toBe(false)
+    expect(
+      new DefaultSettingsFactory().create({ isIOS: true, isAndroid: false })
+        .isEnableExtendedPagination,
+    ).toBe(false)
+
+    localStorage.setItem('settings', JSON.stringify({ rulesLength: 10, isEnablePWA: false }))
+    const repository = new SettingsStorageRepository(localStorage, new DefaultSettingsFactory())
+
+    const result = repository.load()
+
+    expect(result.value.isEnableExtendedPagination).toBe(false)
+    expect(result.value.rulesLength).toBe(10)
+    expect(result.value.isEnablePWA).toBe(false)
+    expect(JSON.parse(localStorage.getItem('settings') ?? '{}')).toMatchObject({
+      rulesLength: 10,
+      isEnablePWA: false,
+      isEnableExtendedPagination: false,
+    })
+  })
+
+  it('[AC 8.10][AC 8.11] keeps a saved isEnableExtendedPagination=true across load', () => {
+    localStorage.setItem('settings', JSON.stringify({ isEnableExtendedPagination: true }))
+    const repository = new SettingsStorageRepository(localStorage, new DefaultSettingsFactory())
+
+    expect(repository.load().value.isEnableExtendedPagination).toBe(true)
+    expect(JSON.parse(localStorage.getItem('settings') ?? '{}')).toMatchObject({
+      isEnableExtendedPagination: true,
     })
   })
 

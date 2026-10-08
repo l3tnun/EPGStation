@@ -1,0 +1,109 @@
+.pagination {
+  align-items: center;
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  margin: 16px auto 0;
+  max-width: 100%;
+  /* The row is a grid item of the page: without this its buttons set the minimum width of the page,
+     so the measured width would never shrink with the viewport. */
+  min-width: 0;
+  /* Room under the row for the fixed add button at the bottom right of the rule list (56px high,
+     16px from the edge), so that scrolling to the end brings every button above it. */
+  padding: 0 0 72px;
+  width: 100%;
+}
+
+.pageButton {
+  align-items: center;
+  background: #fff;
+  border: 0;
+  border-radius: 4px;
+  box-shadow:
+    rgba(0, 0, 0, 0.2) 0 3px 1px -2px,
+    rgba(0, 0, 0, 0.14) 0 2px 2px 0,
+    rgba(0, 0, 0, 0.12) 0 1px 5px 0;
+  color: rgba(0, 0, 0, 0.87);
+  cursor: pointer;
+  display: flex;
+  flex: 0 0 auto;
+  font: inherit;
+  font-size: 14px;
+  height: 34px;
+  justify-content: center;
+  line-height: 1;
+  margin: 4px 3px;
+  min-width: 34px;
+  padding: 0;
+  transform: scale(1);
+  transition: transform 0.15s;
+  width: 34px;
+}
+
+.pageButton[aria-current='page'] {
+  color: var(--mui-palette-primary-main, #1976d2);
+  transform: scale(1.1);
+}
+
+.pageButton:disabled {
+  color: rgba(0, 0, 0, 0.26);
+  cursor: default;
+}
+
+.pageIcon {
+  display: inline-block;
+  font: normal normal normal 20px/1 'Material Design Icons';
+  height: 20px;
+  width: 20px;
+}
+
+.pageIcon::before {
+  content: var(--extended-pagination-icon);
+}
+
+:global([data-theme-mode='dark']) .pageButton {
+  background: var(--mui-palette-background-paper, #1e1e1e);
+  color: rgb(255 255 255 / 87%);
+}
+
+:global([data-theme-mode='dark']) .pageButton[aria-current='page'] {
+  color: var(--mui-palette-primary-main, #90caf9);
+}
+
+:global([data-theme-mode='dark']) .pageButton:disabled {
+  color: rgb(255 255 255 / 38%);
+}
+
+/* `:global(.MuiPaper-root)` raises the specificity above MUI's own paper rules, which are injected
+   after this file. */
+.dialogPaper:global(.MuiPaper-root) {
+  max-width: 300px;
+  width: calc(100% - 32px);
+}
+
+/* Without a visual viewport the keyboard cannot be measured: on narrow screens keep the dialog at
+   the top, where a keyboard does not reach. */
+@media (max-width: 600px) {
+  .dialogPaper:global(.MuiPaper-root) {
+    align-self: flex-start;
+    margin-top: 12px;
+  }
+}
+
+@supports (height: 100dvh) {
+  .dialogPaper:global(.MuiPaper-root) {
+    max-height: calc(100dvh - 24px);
+  }
+}
+
+/* With a visual viewport the dialog sits in the middle of the area the keyboard leaves free:
+   centered in the layout viewport, then moved by the visual viewport's top and half the keyboard. */
+.dialogPaper:global(.MuiPaper-root)[data-visual-viewport='true'] {
+  align-self: center;
+  margin: 0;
+  max-height: var(--extended-pagination-available-height, calc(100% - 24px));
+  position: relative;
+  top: calc(
+    var(--extended-pagination-offset-top, 0px) - var(--extended-pagination-keyboard-height, 0px) / 2
+  );
+}

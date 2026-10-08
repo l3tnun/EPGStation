@@ -204,6 +204,59 @@ export function createMixedRules(count = 12) {
   })
 }
 
+/**
+ * Serves `GET /api/rules` for a rule list of `total` synthetic rules (1,125 = 47 pages at the
+ * default 24 per page) and leaves every other request to the mocks installed before it. Rule ids
+ * are `10000 + position`, so a row's id tells which page it came from.
+ */
+export async function installPagedRuleListApiMocks(
+  page: Page,
+  { total = 1125 }: { total?: number } = {},
+): Promise<void> {
+  await page.route(
+    (url) => url.pathname.endsWith('/api/rules'),
+    async (route) => {
+      if (route.request().method() !== 'GET') {
+        await route.fallback()
+        return
+      }
+
+      const parameters = new URL(route.request().url()).searchParams
+      const limit = Number(parameters.get('limit') ?? 24)
+      const offset = Number(parameters.get('offset') ?? 0)
+      const count = Math.max(0, Math.min(limit, total - offset))
+      const rules = createMixedRules(count).map((rule, index) => ({
+        ...rule,
+        id: 10000 + offset + index,
+      }))
+
+      await route.fulfill({
+        contentType: 'application/json',
+        body: JSON.stringify({ rules, total }),
+      })
+    },
+  )
+}
+
+/**
+ * Sets `isEnableExtendedPagination` in the saved settings before the app starts; `null` removes
+ * the key so the app has to backfill its default.
+ */
+export async function seedExtendedPagination(page: Page, value: boolean | null): Promise<void> {
+  await page.addInitScript((seeded) => {
+    const saved = JSON.parse(window.localStorage.getItem('settings') ?? '{}') as Record<
+      string,
+      unknown
+    >
+    if (seeded === null) {
+      delete saved.isEnableExtendedPagination
+    } else {
+      saved.isEnableExtendedPagination = seeded
+    }
+    window.localStorage.setItem('settings', JSON.stringify(saved))
+  }, value)
+}
+
 export const searchRuleFixtureSecrecyText = JSON.stringify({
   searchChannels,
   searchPrograms,

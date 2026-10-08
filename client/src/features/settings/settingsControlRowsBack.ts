@@ -150,6 +150,14 @@ export const SETTINGS_CONTROL_ROWS_BACK = [
     tmpTarget: 'rulesLength',
   },
   {
+    section: 'ルール',
+    label: '拡張ページネーションの有効化',
+    subtitle: 'ルール一覧で先頭・最終ページへの移動とページ数の入力ができるページネーションを使う',
+    key: 'isEnableExtendedPagination',
+    controlType: 'switch',
+    tmpTarget: 'isEnableExtendedPagination',
+  },
+  {
     section: 'ビデオプレーヤ',
     label: '字幕の縁取りを強制する',
     subtitle: 'aribb24.js 使用時に有効になります',

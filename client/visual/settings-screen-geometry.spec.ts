@@ -129,10 +129,10 @@ for (const geometryCase of settingsGeometryCases) {
     // Provenance (C): the settings form's field/label set is fixed regardless of viewport or
     // theme (mocked API data does not add or remove settings rows). Measured via a
     // temporary console.log (`npx playwright test visual/settings-screen-geometry.spec.ts -g
-    // non-overlapping`, 3 runs x 4 cases): rowCount was 31 in every desktop/mobile x light/dark
+    // non-overlapping`, 3 runs x 4 cases): rowCount was 32 in every desktop/mobile x light/dark
     // combination. Pinned exactly so a row silently disappearing (or a stray extra `<label>`) is
     // caught, instead of only guarding against the list being fully empty.
-    expect(geometry.rowCount).toBe(31)
+    expect(geometry.rowCount).toBe(32)
     expect(geometry.verticalOverlapCount).toBe(0)
     expect(geometry.rows.every((row) => row.withinCard)).toBe(true)
     if (geometryCase.viewport.width >= 600) {

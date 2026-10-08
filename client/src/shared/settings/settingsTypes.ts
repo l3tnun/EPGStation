@@ -49,6 +49,7 @@ export interface DefaultSettingsValue {
   isEnableEncodingSettingWhenCreateRule: boolean
   isCheckDeleteOriginalAfterEncode: boolean
   rulesLength: number
+  isEnableExtendedPagination: boolean
   isForceEnableSubtitleStroke: boolean
 }
 

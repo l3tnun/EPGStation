@@ -35,6 +35,7 @@ export class DefaultSettingsFactory {
       isEnableEncodingSettingWhenCreateRule: false,
       isCheckDeleteOriginalAfterEncode: false,
       rulesLength: 24,
+      isEnableExtendedPagination: false,
       isForceEnableSubtitleStroke: true,
     }
   }
