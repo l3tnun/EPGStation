@@ -30,6 +30,8 @@ switch (config.dbtype) {
             prepareDatabase: db => {
                 db.pragma(`journal_mode = ${config.sqlite?.wal === true ? 'WAL' : 'DELETE'}`);
             },
+            // 他の接続のロックを待つ最長時間（ミリ秒）。sqlite.busyTimeout をそのまま渡し、省略時は 5000。
+            timeout: config.sqlite?.busyTimeout ?? 5000,
             synchronize: false,
             logging: false,
             entities: [entitie],

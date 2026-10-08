@@ -79,6 +79,7 @@ export default interface IConfigFile {
         extensions?: string[];
         regexp?: boolean;
         wal?: boolean;
+        busyTimeout?: number;
     };
     mysql?: {
         host: string;

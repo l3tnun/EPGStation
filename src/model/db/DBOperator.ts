@@ -79,6 +79,9 @@ export default class DBOperator implements IDBOperator {
                 // sqlite.wal が true のときだけ journal_mode を WAL にする。それ以外は初期化の後に
                 // delete 方式へ揃える（applySQLiteJournalMode）。
                 ...(this.config.sqlite?.wal === true ? { enableWAL: true } : {}),
+                // 他の接続のロックを待つ最長時間（ミリ秒）。sqlite.busyTimeout をそのまま渡し、省略時は
+                // better-sqlite3 の既定と同じ 5000。不正な値は driver が接続の作成時に拒否する。
+                timeout: this.config.sqlite?.busyTimeout ?? 5000,
                 synchronize: false,
                 logging: false,
                 entities: [entitie],
