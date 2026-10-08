@@ -462,6 +462,7 @@ Search / Rule は番組検索、検索結果からの予約/rule 作成、rule l
 34. list layout（`data-rule-layout='list'`、container 幅 780px 未満）の行選択領域（`.ruleItemMain`）は、switch 列と
     action menu 列を除いた行全体を占める実ボックスであり、keyword text の右側の余白を含む行のどこを click/tap しても
     edit mode の選択状態を切り替える。この領域は switch 列・action menu 列のどちらの text/area とも重ならない。
+35. Rule list は、`isEnableExtendedPagination` が `true` のときだけ pagination を `frontend-app-shell` 要求 8.33-8.47 の拡張 pagination に差し替える。`false`（default）のときは従来の `LegacyPagination` を、見た目も動作も変えずに表示する。page の移動は拡張・従来のどちらでも同じ `?page=` query の更新で行い、page size は `rulesLength` のままとする。この差し替えは Rule list だけに適用し、録画済み・予約・録画中など `LegacyPagination` を使う他の画面は変えない。
 
 ### 要求 4: dark theme coverage
 
@@ -475,7 +476,7 @@ Search / Rule は番組検索、検索結果からの予約/rule 作成、rule l
    `ruleOptionCard`、checkbox、`ruleSearchMenu` など多数の箇所で明示的な
    `:global([data-theme-mode='dark'])` token 上書きを持つ。dialog
    （`RuleDeleteDialogs.tsx`）は独自の色指定を持たず MUI `Dialog` の既定に委ね、pagination は
-   `frontend-*` 共通の `LegacyPagination`（本 spec の対象外）に委ねる。dark の検査は
+   `frontend-*` 共通の `LegacyPagination` と拡張 pagination（`frontend-app-shell` 要求 8.33-8.47。いずれも本 spec の対象外）に委ねる。dark の検査は
    `unittest/spec/searchRule.layout.spec.test.tsx`・`searchRule.ruleList.spec.test.tsx` と
    `e2e/search-rule-responsive-theme.spec.ts`・`dark-ui-cards.spec.ts`・`dark-ui-controls.spec.ts` が持ち、dialog と pagination の
    dark contrast は MUI の既定 palette と共有 component の契約に委ねる。

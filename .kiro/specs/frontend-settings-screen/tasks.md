@@ -29,6 +29,6 @@
   - `unittest/spec` は control matrix、save/reset/leave、theme preview、navigation regeneration request を requirements ID に紐づけて検証する。
   - `unittest/imp` は visible/disabled 条件、範囲外値表示、URL scheme placeholder overflow guard を検証する。
   - Playwright visual は desktop/mobile/light/dark の card geometry と section/control overlap absence を確認する。
-  - _Requirements: 1.1-1.21, 2.1-2.11, 3.1-3.7, 4.1-4.3_
+  - _Requirements: 1.1-1.22, 2.1-2.11, 3.1-3.7, 4.1-4.3_
 - [x] 6. Settings select の MUI dark token、4.5 item menu cap、二重矢印禁止、URL Scheme clear button の縦位置、検索自動スクロール設定の所有範囲を検証する。
   - _Requirements: 1.17-1.19, 2.9, 4.1-4.3_

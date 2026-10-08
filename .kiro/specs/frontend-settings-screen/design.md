@@ -146,7 +146,7 @@ Settings screen は backend API、search query、dialog/menu state を持たな�
 
 | 要件 | 概要 | コンポーネント | インターフェース | フロー |
 |-------------|---------|------------|------------|-------|
-| 1.1-1.21 | route と画面構成 | SettingsPage, SettingsControlMatrix, SettingsPreviewController, SettingsSaveController | State / Service | route/action flow |
+| 1.1-1.22 | route と画面構成 | SettingsPage, SettingsControlMatrix, SettingsPreviewController, SettingsSaveController | State / Service | route/action flow |
 | 2.1-2.11 | 一時編集と保存 | SettingsPage, SettingsControlMatrix, SettingsPreviewController, SettingsSaveController | State / Service | draft save flow |
 | 3.1-3.7 | reset と theme preview | SettingsPage, SettingsControlMatrix, SettingsPreviewController, SettingsSaveController | State / Service | reset/preview/leave flow |
 | 4.1-4.3 | dark theme coverage | SettingsPage, SettingsControlMatrix | State | route/action flow |
@@ -155,8 +155,8 @@ Settings screen は backend API、search query、dialog/menu state を持たな�
 
 | コンポーネント | ドメイン/レイヤー | 意図 | 要件カバレッジ | 主な依存 | 契約 |
 |-----------|--------------|--------|--------------|------------------|-----------|
-| SettingsPage | Feature UI | `/settings` route、title、section rendering、scroll completion、leave cleanup を扱う。 | 1.1-1.21, 2.1-2.11, 3.1-3.7 | App Shell title/snackbar | 状態管理 |
-| SettingsControlMatrix | Feature Config | section/key/control/options/range/visible/disabled/tmp target を固定する。 | 1.1-1.21, 2.1-2.4, 3.1-3.5 | SettingsValue schema | 状態管理 |
+| SettingsPage | Feature UI | `/settings` route、title、section rendering、scroll completion、leave cleanup を扱う。 | 1.1-1.22, 2.1-2.11, 3.1-3.7 | App Shell title/snackbar | 状態管理 |
+| SettingsControlMatrix | Feature Config | section/key/control/options/range/visible/disabled/tmp target を固定する。 | 1.1-1.22, 2.1-2.4, 3.1-3.5 | SettingsValue schema | 状態管理 |
 | SettingsPreviewController | Feature State | theme preview、reset rollback、leave rollback を扱う。 | 2.1-2.3, 3.1-3.7 | Color theme state / settings draft | 状態管理 |
 | SettingsSaveController | Feature Service | save、navigation regeneration request、snackbar を扱う。 | 2.4-2.7, 3.6, 3.7 | SettingsStorageRepository / App Shell | Service |
 
@@ -165,7 +165,7 @@ Settings screen は backend API、search query、dialog/menu state を持たな�
 | 項目 | 詳細 |
 |-------|--------|
 | 意図 | Settings screen の route lifecycle と UI composition を保持する。 |
-| 要件 | 1.1-1.21, 2.1-2.11, 3.1-3.7 |
+| 要件 | 1.1-1.22, 2.1-2.11, 3.1-3.7 |
 
 **責務と制約**
 - backend API、loading/error fetch state、dialog/menu state を持たない。
@@ -180,7 +180,7 @@ Settings screen は backend API、search query、dialog/menu state を持たな�
 | 項目 | 詳細 |
 |-------|--------|
 | 意図 | Settings UI の全 control を implementation-independent table として固定する。 |
-| 要件 | 1.1-1.21, 2.1-2.4, 3.1-3.5 |
+| 要件 | 1.1-1.22, 2.1-2.4, 3.1-3.5 |
 
 **責務と制約**
 - matrix の key は `SettingsValue` schema に存在する。
@@ -275,6 +275,7 @@ Settings screen は backend API を呼ばない。全 control は `SettingsPage`
 | 検索 | エンコードの自動設定 | `isEnableEncodingSettingWhenCreateRule` | switch | boolean | always | `tmp.isEnableEncodingSettingWhenCreateRule` |
 | 検索 | 元ファイルの自動削除 | `isCheckDeleteOriginalAfterEncode` | switch | boolean | always | `tmp.isCheckDeleteOriginalAfterEncode` |
 | ルール | 表示件数 | `rulesLength` | select | 1-100 | always | `tmp.rulesLength` |
+| ルール | 拡張ページネーションの有効化 | `isEnableExtendedPagination` | switch | boolean | always | `tmp.isEnableExtendedPagination`。helper text は `ルール一覧で先頭・最終ページへの移動とページ数の入力ができるページネーションを使う `。保存後の値は Rule list だけが参照する。 |
 | ビデオプレーヤ | 字幕の縁取りを強制する | `isForceEnableSubtitleStroke` | switch | boolean | always | `tmp.isForceEnableSubtitleStroke` |
 
 ### 既存不正値の表示規則

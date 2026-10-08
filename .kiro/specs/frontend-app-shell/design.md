@@ -175,7 +175,7 @@ client/src/
 │   ├── titleBar/                  # TitleBar / EditTitleBar と contract
 │   ├── theme.ts、drawerLayout.ts、realtime.ts、realtimeInvalidation.ts、pwa.ts、settingsStorageAdapter.ts、browserAdapters.ts
 ├── features/                      # routed screen。screen 固有の menu / dialog / action は各 feature が所有する
-└── shared/                        # settings、AppSelect、ClearableTextField、LegacyPagination
+└── shared/                        # settings、AppSelect、ClearableTextField、LegacyPagination、ExtendedPagination
 ```
 
 test:
@@ -213,7 +213,7 @@ schema を直接所有しない構造にする。
 | 5.1-5.22                                    | Drawer Responsive と Navigation Click | PageController, QueryController, ApiRepository, ActionController, DialogCoordinator, StorageAdapter | State / Service / API | route/query/action flow                               |
 | 6.1-6.23                                    | Version 更新と接続状態                | PageController, ApiRepository, ActionController, DialogCoordinator                                  | State / Service / API | version/socket/snackbar/reconnect/scroll history flow |
 | 7.1-7.13                                    | dark theme shell coverage             | StorageAdapter, PageController                                                                      | State                 | theme 反映と dark theme の静的 regression             |
-| 8.1-8.32                                    | 共有 form control と静的 guard        | 共有 form control（AppSelect、ClearableTextField、LegacyPagination）                                | UI contract           | 共有 control の描画と静的検査                         |
+| 8.1-8.47                                    | 共有 form control と静的 guard        | 共有 form control（AppSelect、ClearableTextField、LegacyPagination、ExtendedPagination）                              | UI contract           | 共有 control の描画と静的検査                         |
 
 ## コンポーネントとインターフェース
 
@@ -658,6 +658,25 @@ previous full route へ `replace` する 2 回の route change）の直前に `2
   `favicon.png`、`android.png`、`android-large.png`、`ios.png`、`ios-large.png`、`icon-192.png`、
   `icon-512.png`、`original.png`、`pwa-large.png` は既存のファイルをそのまま使用し、再生成しない。Vite default の
   `favicon.svg` など上記以外の favicon / install icon を残して参照してはならない。
+
+### ExtendedPagination 契約（要求 8.33-8.47）
+
+`client/src/shared/ExtendedPagination.tsx` は `LegacyPagination` と同じ props（`page`、`pageSize`、`total`、`onPageChange`）を持つ共有 component で、`isEnableExtendedPagination` が `true` のときだけ Rule list が `LegacyPagination` の代わりに描画する（`frontend-search-rule` 要求 3.35）。純粋な算出は `client/src/shared/extendedPagination.ts` に分ける。
+
+| 項目 | 規則 |
+| --- | --- |
+| 最終 page | `Math.max(1, Math.ceil(total / pageSize))`。`total <= pageSize` のときは `null` を返す |
+| 要素数の候補 | `[7, 9, 11, 13, 15, 17]`。`候補 * (button 実測幅 + 左右の余白) <= nav の実測幅` を満たす最大の候補。満たす候補が無い、または未測定のときは 7 |
+| 実際の要素数 | `min(要素数の候補, 最終 page + 2)`。page 番号の個数は要素数 - 2 |
+| page 番号の範囲 | 開始 = `現在 page - floor((個数 - 1) / 2)` を 1 以上にし、`開始 + 個数 - 1` が最終 page を超えるなら `最終 page - 個数 + 1` に寄せる |
+| 測定 | `useLayoutEffect` で nav に `ResizeObserver` を張り、`clientWidth`、先頭 button の `offsetWidth`、先頭 2 button の `offsetLeft` の差（= 幅 + 余白）を読む。`offsetWidth` / `offsetLeft` は `transform` の影響を受けないので、拡大中の現在 page があっても値は変わらない。`ResizeObserver` が無い環境と button が測れない環境では、button 幅 34px・余白合計 6px の既定値を使う |
+| nav の幅 | `width: 100%; min-width: 0`。`min-width: 0` が無いと、nav は親の grid の最小内容幅として button の幅を押し付け、viewport を狭めても実測幅が縮まず要素数が減らない（実測: 360px 幅で 9 個のまま 372px に広がる）。実測の `LegacyPagination` の最小幅は 328px、`ExtendedPagination` は 7 個が入る 298px |
+| button の寸法 | 幅・高さ 34px、左右の margin 3px、`flex: 0 0 auto`。7 個で 280px となり、320px 幅でも収まる。nav は左右の padding を持たず、下に 72px の padding を持つ（Rule list の追加 button は右下に `fixed` で 56px、余白 16px で置かれるので、その上端より上に button が来る） |
+| 現在 page | 文字色 `var(--mui-palette-primary-main)`、`transform: scale(1.1)`。幅・margin は変えない |
+| 入力の検証 | `/^[0-9]+$/` に一致し、`Number` 値が 1 以上最終 page 以下 |
+| Enter | 入力欄の keydown で `isComposing` でない Enter を扱い、`preventDefault()` してから検証・移動する。取り消さないと、dialog を閉じて focus が戻った現在 page の button に同じ Enter の keypress が届いて click になり、dialog が開き直る |
+| dialog の位置 | `visualViewport` が有れば、開いている間 `resize` / `scroll` を購読し、`keyboardHeight = max(0, round(innerHeight - viewport.height))`、`availableHeight = max(1, floor(viewport.height - 24))`、`offsetTop = max(0, floor(viewport.offsetTop))` を求め、paper に `position: relative; margin: 0; top: calc(offsetTop - keyboardHeight / 2); max-height: availableHeight` を与える。閉じる最中は直前の値を保つ。`visualViewport` が無ければ CSS の fallback（幅 600px 以下で上端寄せ、`max-height: calc(100dvh - 24px)`）に任せる |
+| dialog の遷移 | MUI `Dialog` の `transitionDuration` を 150 にする（既定の `Fade`。scale は使わない） |
 
 ## データモデル
 

@@ -142,7 +142,7 @@ Storage contract は routed screen ではない。API repository、dialog coordi
 | 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, 5.9, 5.10, 5.11, 5.12 | Guide settings | SettingsStorageRepository, SettingsValidator, SettingsDraftStore, AdjacentStorageRegistry | State / Service | settings value consumer flow |
 | 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7 | List page size と Recorded display settings | SettingsStorageRepository, SettingsValidator, SettingsDraftStore, AdjacentStorageRegistry | State / Service | settings value consumer flow |
 | 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 7.8 | Recorded playback URL scheme settings | SettingsStorageRepository, SettingsValidator, SettingsDraftStore, AdjacentStorageRegistry | State / Service | settings value consumer flow |
-| 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8, 8.9 | Search / Rule / Video player settings | SettingsStorageRepository, SettingsValidator, SettingsDraftStore, AdjacentStorageRegistry | State / Service | settings value consumer flow |
+| 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8, 8.9, 8.10, 8.11 | Search / Rule / Video player settings | SettingsStorageRepository, SettingsValidator, SettingsDraftStore, AdjacentStorageRegistry | State / Service | settings value consumer flow |
 | 9.1-9.13 | 隣接 workflow storage key | AdjacentStorageRegistry, DefaultSettingsFactory | State / Service | adjacent key default compatibility flow |
 
 ## コンポーネントとインターフェース
@@ -150,7 +150,7 @@ Storage contract は routed screen ではない。API repository、dialog coordi
 | コンポーネント | ドメイン/レイヤー | 意図 | 要件カバレッジ | 主な依存 | 契約 |
 |-----------|--------------|--------|--------------|------------------|-----------|
 | SettingsStorageRepository | Shared Storage | `settings` localStorage の read/write、missing storage、repair persist を扱う。 | 1.1-1.10, 2.1-2.8 | Browser localStorage | State / Service |
-| DefaultSettingsFactory | Shared Config | platform-dependent default settings object を生成する。 | 3.1-3.8, 4.1-4.7, 5.1-5.12, 6.1-6.7, 7.1-7.8, 8.1-8.9 | user agent platform input | Service |
+| DefaultSettingsFactory | Shared Config | platform-dependent default settings object を生成する。 | 3.1-3.8, 4.1-4.7, 5.1-5.12, 6.1-6.7, 7.1-7.8, 8.1-8.11 | user agent platform input | Service |
 | SettingsValidator | Shared Validation | unknown JSON を `SettingsValue` へ narrow し、parse failure、missing storage、missing field を補正する。保存 raw の不正値の補正は intentional fix がある場合だけ扱い、consumer `value` では型が default と違う field を default にする（`guideMode` の任意の string と範囲外の数値は保持）。 | 1.1-1.10 | default settings schema | Service |
 | SettingsDraftStore | Shared State | saved settings と `tmp` を分離し、save/reset/leave restore を提供する。表示 theme preview は saved/tmp と別の表示状態として扱う typed contract を提供する。 | 2.1-2.8, 3.2, 3.3, 3.6, 3.7 | SettingsStorageRepository | 状態管理 |
 | AdjacentStorageRegistry | Shared Storage | adjacent workflow storage key の key existence、default shape、spelling の compatibility contract だけを固定する。詳細利用と validation は workflow owner spec に委譲する。 | 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7, 9.8, 9.9, 9.10, 9.11, 9.12, 9.13 | workflow owner specs | 状態管理 |
@@ -255,6 +255,7 @@ interface SettingsLoadResult {
 | `isCheckDeleteOriginalAfterEncode` | boolean | `false` | Encode option default。 |
 | `rulesLength` | number | `24` | UI 許容範囲は 1-100。missing field のみ default で補完し、既存 field の範囲外/非整数は保持する。 |
 | `isForceEnableSubtitleStroke` | boolean | `true` | Video subtitle stroke option。 |
+| `isEnableExtendedPagination` | boolean | `false` | Rule list の pagination を拡張 pagination（`frontend-app-shell` 要求 8.33-8.47）にするか。`false` のときは従来の `LegacyPagination` のまま。Rule list 以外の画面は参照しない。 |
 
 ### 解析 / 補完 / 検証契約
 

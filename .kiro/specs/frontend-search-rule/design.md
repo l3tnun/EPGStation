@@ -112,7 +112,7 @@ field 契約の対象外とする。
 client/src/features/search/rule/
 ├── index.ts                      # SearchRulePage / RuleListPage / API repository factory / query key の公開
 ├── SearchRulePage.tsx            # /search の route root。hooks と components の合成だけを持つ
-├── RuleListPage.tsx              # /rule の route root。一覧状態、action、pagination
+├── RuleListPage.tsx              # /rule の route root。一覧状態、action、pagination（`isEnableExtendedPagination` が true のときだけ拡張 pagination、それ以外は `LegacyPagination`）
 ├── SearchRulePage.module.css     # 両画面の CSS module
 ├── genreLabels.ts                # genre / sub genre の表示名
 ├── query.ts                      # lib/ の barrel（型、route 解析、form state、request、payload）
@@ -196,18 +196,18 @@ schema を直接所有しない構造にする。
 | 1.1-1.15, 1.17-1.22 | Search route と query-driven search | PageController, QueryController, ApiRepository, ActionController, DialogCoordinator, StorageAdapter | State / Service / API | route/query/action flow |
 | 1.16                                                                                                                            | SearchResult header scroll action   | PageController                                                                                      | State / Service       | UI action flow          |
 | 2.1-2.41                                                                                                                        | Search からの reserve/rule workflow | PageController, QueryController, ApiRepository, ActionController, DialogCoordinator, StorageAdapter | State / Service / API | route/query/action flow |
-| 3.1-3.34 | Rule list と item actions           | PageController, QueryController, ApiRepository, ActionController, DialogCoordinator, StorageAdapter | State / Service / API | route/query/action flow |
+| 3.1-3.35 | Rule list と item actions           | PageController, QueryController, ApiRepository, ActionController, DialogCoordinator, StorageAdapter | State / Service / API | route/query/action flow |
 | 4.1-4.4 | dark theme coverage | PageController, DialogCoordinator | State | route/query/action flow |
 
 ## コンポーネントとインターフェース
 
 | コンポーネント    | ドメイン/レイヤー | 意図                                                                              | 要件カバレッジ                         | 主な依存                                                        | 契約        |
 | ----------------- | ----------------- | --------------------------------------------------------------------------------- | -------------------------------------- | --------------------------------------------------------------- | ----------- |
-| PageController    | Feature Routing   | route 初期化、title、fetch、loading/error/empty を統括する。                      | 1.1-1.22, 2.1-2.41, 3.1-3.34           | frontend-settings-storage / frontend-app-shell / EPGStation API | 状態管理    |
+| PageController    | Feature Routing   | route 初期化、title、fetch、loading/error/empty を統括する。                      | 1.1-1.22, 2.1-2.41, 3.1-3.35           | frontend-settings-storage / frontend-app-shell / EPGStation API | 状態管理    |
 | QueryController   | Feature Routing   | path/query/local UI input を typed model に変換する。                             | 1.1-1.13, 2.1-2.21, 3.1-3.3, 3.18-3.20 | frontend-settings-storage / frontend-app-shell / EPGStation API | Service     |
-| ApiRepository     | Feature API       | requirements で定義された endpoint request と typed error 変換を扱う。            | 1.10-1.15, 2.10-2.17, 3.1-3.34         | frontend-settings-storage / frontend-app-shell / EPGStation API | API         |
-| ActionController  | Feature Service   | menu、button、dialog submit、bulk action の結果を route/API/snackbar に接続する。 | 1.16, 2.10-2.41, 3.1-3.34              | frontend-settings-storage / frontend-app-shell / EPGStation API | Service/API |
-| DialogCoordinator | Feature UI        | dialog/menu/open-reset/close-cleanup/focus を管理する。                           | 2.14-2.41, 3.1-3.17, 3.21-3.34         | frontend-settings-storage / frontend-app-shell / EPGStation API | 状態管理    |
+| ApiRepository     | Feature API       | requirements で定義された endpoint request と typed error 変換を扱う。            | 1.10-1.15, 2.10-2.17, 3.1-3.35         | frontend-settings-storage / frontend-app-shell / EPGStation API | API         |
+| ActionController  | Feature Service   | menu、button、dialog submit、bulk action の結果を route/API/snackbar に接続する。 | 1.16, 2.10-2.41, 3.1-3.35              | frontend-settings-storage / frontend-app-shell / EPGStation API | Service/API |
+| DialogCoordinator | Feature UI        | dialog/menu/open-reset/close-cleanup/focus を管理する。                           | 2.14-2.41, 3.1-3.17, 3.21-3.35         | frontend-settings-storage / frontend-app-shell / EPGStation API | 状態管理    |
 | StorageAdapter    | Shared Boundary   | settings と隣接 localStorage key を consumer として読む。                         | 1.10, 1.13, 2.17-2.41, 3.20            | frontend-settings-storage / frontend-app-shell / EPGStation API | 状態管理    |
 
 ### ページ制御（PageController）
@@ -215,7 +215,7 @@ schema を直接所有しない構造にする。
 | 項目 | 詳細                                                                               |
 | ---- | ---------------------------------------------------------------------------------- |
 | 意図 | route 初期化、title、loading/error/empty、child component composition を統括する。 |
-| 要件 | 1.1-1.22, 2.1-2.41, 3.1-3.34                                                       |
+| 要件 | 1.1-1.22, 2.1-2.41, 3.1-3.35                                                       |
 
 **責務と制約**
 
@@ -241,7 +241,7 @@ schema を直接所有しない構造にする。
 | 項目 | 詳細                                                                   |
 | ---- | ---------------------------------------------------------------------- |
 | 意図 | API request builder、response adapter、typed error conversion を扱う。 |
-| 要件 | 1.10-1.15, 2.10-2.17, 3.1-3.34                                         |
+| 要件 | 1.10-1.15, 2.10-2.17, 3.1-3.35                                         |
 
 **責務と制約**
 
@@ -254,7 +254,7 @@ schema を直接所有しない構造にする。
 | 項目 | 詳細                                                                      |
 | ---- | ------------------------------------------------------------------------- |
 | 意図 | menu、dialog、button、bulk action の実行と snackbar/route update を扱う。 |
-| 要件 | 1.16, 2.10-2.41, 3.1-3.34                                                 |
+| 要件 | 1.16, 2.10-2.41, 3.1-3.35                                                 |
 
 **責務と制約**
 
@@ -267,7 +267,7 @@ schema を直接所有しない構造にする。
 | 項目 | 詳細                                                |
 | ---- | --------------------------------------------------- |
 | 意図 | dialog/menu open/reset/close cleanup/focus を扱う。 |
-| 要件 | 2.14-2.41, 3.1-3.17, 3.21-3.34                      |
+| 要件 | 2.14-2.41, 3.1-3.17, 3.21-3.35                      |
 
 **責務と制約**
 

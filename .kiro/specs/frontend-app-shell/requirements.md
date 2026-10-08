@@ -325,7 +325,7 @@ freshness と reconnect behavior を確認できる。
 
 ### 要求 8: 共有 form control と静的 guard
 
-**目的:** EPGStation ユーザーとして、共有 form control (`AppSelect`、`ClearableTextField`、`LegacyPagination`)
+**目的:** EPGStation ユーザーとして、共有 form control (`AppSelect`、`ClearableTextField`、`LegacyPagination`、`ExtendedPagination`)
 が一貫した挙動を持ち、native control や崩れた option 表示が紛れ込まないでほしい。これにより、画面ごとに再実装された
 select/checkbox/pagination の挙動差異が発生しない。
 
@@ -381,3 +381,18 @@ select/checkbox/pagination の挙動差異が発生しない。
     や error text を表示していない field でも、helper text 分の下部余白を確保した高さで描画する。field
     ごとの縦密度は helper text の有無によらず一定に保つ。この余白確保は上記 option panel の field に
     限定し、他の routed form や dialog 内の field には適用しない。
+33. `ExtendedPagination` は総 page 数 `ceil(total / pageSize)` が 1 以下（`total` が `pageSize` 以下）のとき何も表示しない。それ以外のとき `<nav aria-label="ページ">` に、先頭 page へ移動する `≪` button（accessible name `最初のページへ移動 `）、page 番号 button、最終 page へ移動する `≫` button（`最後のページへ移動 `）をこの順に 1 段で並べる。`≪` `≫` は MDI の chevron-double glyph で描く。
+34. page 番号 button の accessible name は `ページ<n>へ移動 ` とし、押すとその page 番号で `onPageChange` を呼ぶ。現在 page の button は `aria-current="page"` を持ち、accessible name は `ページ数を入力して移動 ` とする。現在 page が先頭のとき `≪` を、最終 page のとき `≫` を disabled にし、押しても `onPageChange` を呼ばない。`≪` は page 1、`≫` は最終 page で `onPageChange` を呼ぶ。
+35. 表示する要素数（`≪` と `≫` を含む）は 7 / 9 / 11 / 13 / 15 / 17 の 6 段階とする。`<nav>` の実測幅（`ResizeObserver`）を、button 1 個の実測幅と左右の余白の合計に要素数を掛けた値で割り、収まる最大の段階を選ぶ。1 段階ずつ増やすため、左右に 1 個ずつ足せない幅では増やさない。7 個が収まらない幅でも 7 個を下限とし、幅の測定前も 7 個とする。端末幅やソフトウェアキーボードの高さの固定値は使わない。
+36. 総 page 数 + 2 が選んだ要素数より小さいとき、存在する page の番号だけを表示する（要素数は総 page 数 + 2）。
+37. 現在 page を page 番号の並びの中央に置く。先頭または最終 page に近く片側が足りないときは、足りない分を反対側へずらして page 番号の個数を保ち、存在しない page 番号（1 未満・最終 page 超）を表示しない。
+38. 現在 page の button は文字色を theme の primary 色にし、`transform: scale(1.1)` で拡大する。拡大は `transform` だけで行い、button の幅・余白を他の button と同じに保つため、隣の button の位置は動かない。他の button は light/dark theme の paper 面と文字色で表示し、dark theme でも現在 page と区別できる。
+39. 現在 page の button を押すと `ページ数を入力 ` dialog を開く。dialog は `ページ数 ` の text field（placeholder `1 〜 <最終 page>`、`inputMode="numeric"`、`ClearableTextField`）、`キャンセル `、`移動 ` button を持つ。dialog は開くたびに入力欄を空にして入力欄へ focus する。
+40. dialog の入力が空欄、0、負数、小数、数字以外（全角数字・指数表記を含む）、最終 page 超のいずれかのとき、`移動 ` を押しても Enter を押しても page を移動せず、1 や最終 page へ丸めず、dialog を開いたまま `1 〜 <最終 page> の整数を入力してください ` を表示する。入力を変えるとこのメッセージを消す。
+41. dialog の入力が 1 以上最終 page 以下の整数（先頭の 0 を含んでよい）のとき、`移動 ` または入力欄での Enter（IME の変換を確定する Enter を除く）で dialog を閉じ、その page 番号で `onPageChange` を呼ぶ。Enter は keydown の既定動作を取り消し、dialog を閉じて focus が戻った現在 page の button を、同じ Enter が続けて押して dialog を開き直すことがないようにする。入力が現在 page と同じときは dialog を閉じるだけで `onPageChange` を呼ばない。`キャンセル ` と dialog 外の click（Esc を含む）は dialog を閉じ、`onPageChange` を呼ばない。
+42. `window.visualViewport` が使える環境では、dialog が開いている間だけ `visualViewport` の `resize` と `scroll` を購読し、可視領域の高さと `offsetTop` から dialog を可視領域の中央に置き、dialog の高さ上限を可視領域の高さ - 24px にする。キーボードの高さは `window.innerHeight` と `visualViewport.height` の差から求める。dialog を閉じている最中は位置を動かさず、閉じたら購読を解除する。
+43. dialog の入力欄が focus を得て 300ms 後に入力欄が可視領域の外にあるときは、入力欄を `scrollIntoView({ block: 'nearest' })` で可視領域へ入れる。dialog が閉じていれば何もしない。
+44. `window.visualViewport` が無い環境では、画面幅が 600px 以下のとき dialog を画面上端寄せ（上の余白 12px）にし、600px を超えるときは中央に置く。dialog の高さは `100dvh - 24px` を上限とする。
+45. 入力 dialog の開閉は 150ms のフェードで、拡大・縮小の動きを持たない。
+46. `ExtendedPagination` は 320px から 1920px までのどの viewport 幅（touch 端末の設定を含む）でも、`<nav>` と document の横幅を viewport より広げない。また `<nav>` の下に 72px の余白を持ち、画面右下に固定表示される操作 button（Rule list の追加 button）の上まで scroll でき、最終 page まで scroll した状態でどの button もこの固定 button に覆われない。
+47. `<nav>` の幅は内容の幅に引きずられず、親の幅に従う（`min-width: 0`）。viewport を広い幅から狭い幅へ変えても、実測幅が追従して要素数が減る。`LegacyPagination` が 1 行に収まり、はみ出さず、document の横幅を viewport より広げずに表示できる最小の viewport 幅（実測 328px）を、`ExtendedPagination` は下回らない。つまり 328px 以上のすべての幅で、先頭・中間・最終のどの page でも、要素が 1 行に並び、重ならず、`<nav>` と document の横幅が viewport を超えない。最小の 7 要素（280px）が入らない幅では、要素数を 7 より減らさずに 7 個を表示する（その幅は viewport 298px 未満であり、`LegacyPagination` も 328px 未満で崩れるため、比較の対象外とする）。

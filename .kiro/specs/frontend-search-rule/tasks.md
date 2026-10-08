@@ -28,7 +28,7 @@
       menu が同時に存在しても text overlap と horizontal overflow を発生させない。
     - delete success は optimistic removal せず、Socket.IO `updateStatus`、route
       change、または別 fetch による refetch-driven update に委ねる。
-    - _Requirements: 3.1-3.34_
+    - _Requirements: 3.1-3.35_
 
 - [x]   4. Search / Rule の unit/E2E/visual regression を整備する
     - `unittest/spec` と `unittest/imp` で search query builder、Socket.IO default-search guard、rule payload、selection
@@ -36,7 +36,7 @@
     - Playwright + MSW で Search form/result、ProgramDialog consumer、Rule list/edit/bulk、desktop/mobile visual
       cases を synthetic data で確認する。
     - fixture に実番組名、実 channel、実 URL、実 directory path、認証情報を含めない。
-    - _Requirements: 1.1-1.22, 2.1-2.41, 3.1-3.34, 4.1-4.4_
+    - _Requirements: 1.1-1.22, 2.1-2.41, 3.1-3.35, 4.1-4.4_
 - [x] 5. Search/Rule select の manual arrow と visible placeholder を除去し、keyword Enter
       submit の target default 正規化、Rule list width 100% contract、MUI checkbox/select regression guard を検証する。
 - [x] 6. Rule list の enable switch (`.ruleSwitchButton`) の click/tap 領域が keyword 列と重ならないよう、MUI
