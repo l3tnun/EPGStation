@@ -10,6 +10,9 @@ dbtype: sqlite
 #   regexp: true
 #   # true にすると SQLite のジャーナル方式を WAL にする（デフォルトは無効）
 #   wal: false
+#   # 他の接続が持つ DB のロックを待つ最長時間（ミリ秒、デフォルトは 5000）
+#   # 遅い保存先でログに database is locked が出るときに大きくする
+#   busyTimeout: 5000
 
 # dbtype: mysql
 # mysql:
