@@ -78,6 +78,7 @@ export default interface IConfigFile {
     sqlite?: {
         extensions?: string[];
         regexp?: boolean;
+        wal?: boolean;
     };
     mysql?: {
         host: string;

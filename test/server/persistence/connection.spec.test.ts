@@ -305,6 +305,117 @@ describe('DBOperator connection contract characterization', () => {
         expect(logger.system.error).not.toHaveBeenCalled();
     });
 
+    it('[PERSIST-1.12-WAL-OPTION] passes enableWAL to the SQLite DataSource only when sqlite.wal is true, without touching the journal mode afterwards', async () => {
+        const candidate = createDataSourceDouble();
+        const options = await captureCandidate(candidate);
+
+        await createOperator({ dbtype: 'sqlite', sqlite: { wal: true } }, createLogger()).getConnection();
+
+        expect(options).toStrictEqual([
+            {
+                database: join(compiledRoot, 'data', 'database.db'),
+                enableWAL: true,
+                entities: [join(compiledRoot, 'dist', 'db', 'entities', '**', '*.js')],
+                logging: false,
+                migrations: [join(compiledRoot, 'dist', 'db', 'migrations', 'sqlite', '**', '*.js')],
+                migrationsRun: true,
+                subscribers: [join(compiledRoot, 'dist', 'db', 'subscribers', '**', '*.js')],
+                synchronize: false,
+                type: 'better-sqlite3',
+            },
+        ]);
+        expect(candidate.manager.query).not.toHaveBeenCalled();
+    });
+
+    it.each([
+        ['false', { wal: false }],
+        ['omitted', {}],
+        ['the string "true"', { wal: 'true' }],
+        ['the number 1', { wal: 1 }],
+    ])('[PERSIST-1.13-WAL-DISABLED] does not pass enableWAL when sqlite.wal is %s', async (_scenario, sqlite) => {
+        const candidate = createDataSourceDouble();
+        const options = await captureCandidate(candidate);
+
+        await createOperator({ dbtype: 'sqlite', sqlite }, createLogger()).getConnection();
+
+        expect(options).toHaveLength(1);
+        expect(options[0]).not.toHaveProperty('enableWAL');
+    });
+
+    it('[PERSIST-1.13-JOURNAL-DELETE] sets the delete journal mode after the migrations and before the extensions when WAL is not enabled', async () => {
+        const calls: string[] = [];
+        const logger = createLogger();
+        const candidate = createDataSourceDouble({
+            driver: {
+                databaseConnection: {
+                    loadExtension: vi.fn((extension: string) => {
+                        calls.push(`extension:${extension}`);
+                    }),
+                },
+            },
+            initialize: vi.fn(async function (this: DataSource) {
+                calls.push('initialize');
+                return this;
+            }),
+            manager: {
+                query: vi.fn(async (sql: string) => {
+                    calls.push(sql);
+                    return [{ journal_mode: 'delete' }];
+                }),
+            },
+        } as unknown as Partial<DataSource>);
+        await captureCandidate(candidate);
+
+        await createOperator(
+            { dbtype: 'sqlite', sqlite: { extensions: ['synthetic-a'] } },
+            logger,
+        ).getConnection();
+
+        expect(calls).toEqual(['initialize', 'PRAGMA journal_mode = DELETE', 'extension:synthetic-a']);
+        expect(logger.system.error).not.toHaveBeenCalled();
+    });
+
+    it('[PERSIST-1.13-JOURNAL-DELETE-FAILURE] returns the pragma error and closes the unpublished candidate', async () => {
+        const failure = new Error('SYNTHETIC_PRAGMA_REJECTION');
+        const candidate = createDataSourceDouble({
+            manager: {
+                query: vi.fn(async () => {
+                    throw failure;
+                }),
+            },
+        } as unknown as Partial<DataSource>);
+        await captureCandidate(candidate);
+
+        const logger = createLogger();
+
+        await expect(createOperator({ dbtype: 'sqlite' }, logger).getConnection()).rejects.toBe(failure);
+
+        expect(candidate.destroy).toHaveBeenCalledOnce();
+        expect(logger.system.error).toHaveBeenCalledExactlyOnceWith('failed to set sqlite journal_mode to delete');
+    });
+
+    it('[PERSIST-1.13-MYSQL-NO-PRAGMA] never issues the SQLite pragma for MySQL', async () => {
+        const candidate = createDataSourceDouble();
+        await captureCandidate(candidate);
+
+        await createOperator(
+            {
+                dbtype: 'mysql',
+                mysql: {
+                    database: 'synthetic_database',
+                    host: 'synthetic-db.invalid',
+                    password: '<synthetic-password>',
+                    port: 3307,
+                    user: 'synthetic_user',
+                },
+                sqlite: { wal: true },
+            },
+            createLogger(),
+        ).getConnection();
+
+        expect(candidate.manager.query).not.toHaveBeenCalled();
+    });
+
     it('[PERSIST-1.2-EXTENSION-ORDER] loads SQLite extensions in configured order without deduplicating', async () => {
         const calls: string[] = [];
         const logger = createLogger();
@@ -893,7 +1004,8 @@ describe('DBOperator connection contract characterization', () => {
             .mockRejectedValueOnce(failure);
         const candidate = createDataSourceDouble({ manager: { query } as DataSource['manager'] });
         await captureCandidate(candidate);
-        const operator = createOperator({ dbtype: 'sqlite' }, createLogger());
+        // WAL を有効にして、接続時の journal 方式の確認（PRAGMA）が query を使わないようにする。
+        const operator = createOperator({ dbtype: 'sqlite', sqlite: { wal: true } }, createLogger());
 
         await expect(operator.checkConnection()).resolves.toBeUndefined();
         await expect(operator.checkConnection()).rejects.toBe(failure);

@@ -76,6 +76,9 @@ export default class DBOperator implements IDBOperator {
                 // 廃止し better-sqlite3 へ置き換えたため、driver 名だけを読み替える。
                 type: 'better-sqlite3',
                 database: path.join(appRootPath, 'data', 'database.db'),
+                // sqlite.wal が true のときだけ journal_mode を WAL にする。それ以外は初期化の後に
+                // delete 方式へ揃える（applySQLiteJournalMode）。
+                ...(this.config.sqlite?.wal === true ? { enableWAL: true } : {}),
                 synchronize: false,
                 logging: false,
                 entities: [entitie],
@@ -147,6 +150,7 @@ export default class DBOperator implements IDBOperator {
                 driver.connect = connect;
                 driver.disconnect = disconnect;
             }
+            await this.applySQLiteJournalMode(candidate);
             await this.setSQLiteExtensions(candidate);
 
             if (this.connection !== null) {
@@ -208,6 +212,29 @@ export default class DBOperator implements IDBOperator {
         }
 
         await this.connection.destroy();
+    }
+
+    /**
+     * sqlite の journal 方式を設定に合わせる。
+     *
+     * `sqlite.wal` が true のときは、接続時に TypeORM が WAL にする（`enableWAL`）。それ以外のときは
+     * delete 方式にする。SQLite は WAL だけを database file に記録するので、以前に WAL にされた file
+     * もここで delete 方式へ戻り、設定が無効のまま WAL で動き続けない。WAL でない file は何も変わらない。
+     * 他の接続が file を使っていて戻せないときは SQLite が `database is locked` で失敗し、error を log に
+     * 残して初期化を失敗させる（接続を公開せず、黙って WAL のまま動かない）。起動時は本体の process が
+     * 子 process より先に DB を開き（`checkDB`）、失敗は成功まで再試行される。
+     */
+    private async applySQLiteJournalMode(connection: DataSource): Promise<void> {
+        if (this.config.dbtype !== 'sqlite' || this.config.sqlite?.wal === true) {
+            return;
+        }
+
+        try {
+            await connection.manager.query('PRAGMA journal_mode = DELETE');
+        } catch (err: any) {
+            this.log.system.error('failed to set sqlite journal_mode to delete');
+            throw err;
+        }
     }
 
     /**
