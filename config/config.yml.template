@@ -8,6 +8,8 @@ dbtype: sqlite
 #   extensions:
 #     - '/hoge/regexp.dylib'
 #   regexp: true
+#   # true にすると SQLite のジャーナル方式を WAL にする（デフォルトは無効）
+#   wal: false
 
 # dbtype: mysql
 # mysql:

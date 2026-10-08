@@ -104,20 +104,20 @@ export default class ProgramDB implements IProgramDB {
 
             await queryRunner.commitTransaction();
         } catch (err: any) {
-            console.error(err);
+            this.log.system.error(err);
             hasError = true;
             if (queryRunner.isTransactionActive) {
                 try {
                     await queryRunner.rollbackTransaction();
                 } catch (cleanupError) {
-                    console.error(cleanupError);
+                    this.log.system.error(cleanupError);
                 }
             }
         } finally {
             try {
                 await queryRunner.release();
             } catch (cleanupError) {
-                console.error(cleanupError);
+                this.log.system.error(cleanupError);
                 hasError = true;
             }
         }
@@ -355,20 +355,20 @@ export default class ProgramDB implements IProgramDB {
 
             await queryRunner.commitTransaction();
         } catch (err: any) {
-            console.error(err);
+            this.log.system.error(err);
             hasError = true;
             if (queryRunner.isTransactionActive) {
                 try {
                     await queryRunner.rollbackTransaction();
                 } catch (cleanupError) {
-                    console.error(cleanupError);
+                    this.log.system.error(cleanupError);
                 }
             }
         } finally {
             try {
                 await queryRunner.release();
             } catch (cleanupError) {
-                console.error(cleanupError);
+                this.log.system.error(cleanupError);
                 hasError = true;
             }
         }

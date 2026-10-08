@@ -2,6 +2,8 @@ import { inject, injectable } from 'inversify';
 import type * as apid from '../../../api.js';
 import Rule from '../../db/entities/Rule.js';
 import StrUtil from '../../util/StrUtil.js';
+import ILogger from '../ILogger.js';
+import ILoggerModel from '../ILoggerModel.js';
 import IPromiseRetry from '../IPromiseRetry.js';
 import DBUtil from './DBUtil.js';
 import IDBOperator from './IDBOperator.js';
@@ -10,10 +12,16 @@ import IRuleDB, { RuleWithCnt } from './IRuleDB.js';
 /** `IRuleDB` の実装。詳細は `IRuleDB` を参照。 */
 @injectable()
 export default class RuleDB implements IRuleDB {
+    private log: ILogger;
     private op: IDBOperator;
     private promieRetry: IPromiseRetry;
 
-    constructor(@inject('IDBOperator') op: IDBOperator, @inject('IPromiseRetry') promieRetry: IPromiseRetry) {
+    constructor(
+        @inject('ILoggerModel') logger: ILoggerModel,
+        @inject('IDBOperator') op: IDBOperator,
+        @inject('IPromiseRetry') promieRetry: IPromiseRetry,
+    ) {
+        this.log = logger.getLogger();
         this.op = op;
         this.promieRetry = promieRetry;
     }
@@ -42,20 +50,20 @@ export default class RuleDB implements IRuleDB {
             }
             await queryRunner.commitTransaction();
         } catch (err: any) {
-            console.error(err);
+            this.log.system.error(err);
             hasError = true;
             if (queryRunner.isTransactionActive) {
                 try {
                     await queryRunner.rollbackTransaction();
                 } catch (cleanupError) {
-                    console.error(cleanupError);
+                    this.log.system.error(cleanupError);
                 }
             }
         } finally {
             try {
                 await queryRunner.release();
             } catch (cleanupError) {
-                console.error(cleanupError);
+                this.log.system.error(cleanupError);
                 hasError = true;
             }
         }

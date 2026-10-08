@@ -81,7 +81,8 @@ mysql:
 -   環境変数の値は常に文字列です。数値や真偽値には変換しないので、`port` など数値の項目には使えません（`encodeQueueLimit` のように整数を検査する項目は、起動に失敗します）
 -   指定した環境変数が定義されていないと、EPGStation は起動に失敗します（`environment variable <名前> is not defined`）。空文字列は定義済みとして扱います
 -   config.yml を書き換えたときの再読み込みでも、そのときの環境変数の値で展開されます。環境変数が定義されていない場合は再読み込みに失敗し、直前の設定を使い続けます
--   `!env` を読めるのは EPGStation 本体が読む config.yml だけです。`npm run orm-run` など `ormconfig.js` を使うコマンドと、ログ設定ファイルでは使えません
+-   `npm run orm-run` など `ormconfig.js` を使うコマンドも、config.yml の `!env` を同じ規則で展開します（`ormconfig.js` は build 済みの `dist` を読むので、先に build しておく必要があります）。環境変数が定義されていないと、コマンドは失敗します
+-   ログ設定ファイルでは `!env` は使えません
 
 ---
 
@@ -171,6 +172,7 @@ mirakurunPath: 'http://localhost:40772'
 | string | sqlite       | no   |
 
 -   値は `mysql` `sqlite` のいずれか
+-   `better-sqlite3` と書いても `sqlite` と同じに扱われます。DB のファイル、マイグレーション、バックアップの扱いも `sqlite` と同じです
 
 ```yaml
 dbType: mysql
@@ -209,13 +211,25 @@ mysql:
 | -------------- | -------- | ---- | ------------------------------ |
 | extensions     | string[] | no   | 読み込む拡張機能のパス         |
 | regexp         | boolean  | no   | 正規表現検索の有効化 or 無効化 |
+| wal            | boolean  | no   | WAL の有効化 or 無効化。`true` のときだけ有効（デフォルト値は無効） |
 
 ```yaml
 sqlite:
     extensions:
         - '/hoge/regexp.so'
     regexp: true
+    wal: true
 ```
+
+##### wal
+
+SQLite のジャーナル方式を WAL (Write-Ahead Logging) にします。無効のとき（デフォルト）は、ジャーナル方式 `delete` で動きます。
+
+-   有効にすると、`data/` に `database.db-wal` と `database.db-shm` が増えます。EPGStation の動作中はこの 2 つを消さないでください
+-   `wal` を `true` にした DB ファイルを、設定を外して（または `false` にして）起動すると、起動時に `delete` へ戻します。他のプロセスが DB ファイルを使っているために戻せないときは、起動に失敗します
+-   DB ファイルを直接コピーしてバックアップするときは、先に EPGStation を止めてください（`database.db-wal` に未反映の書き込みが残っていることがあります）。`npm run backup` は影響を受けません
+-   DB ファイルを NFS や SMB などのネットワークの保存先に置いている場合は、有効にしないでください（WAL はネットワーク上のファイルでは正しく動きません）
+-   `npm run orm-run` など `ormconfig.js` を使うコマンドも、`wal` が `true` のときは DB ファイルを WAL にします
 
 ### ffmpeg
 
