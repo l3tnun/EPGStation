@@ -24,9 +24,22 @@ export interface MysqlSchema {
     cleanup(): Promise<void>;
 }
 
+export interface SslOnlyUser {
+    readonly login: Pick<MysqlSchema['config'], 'password' | 'user'>;
+    cleanup(): Promise<void>;
+}
+
 export interface MySqlRuntime {
     readonly imageDigest: string;
+    /**
+     * 利用者を `REQUIRE SSL` で作り、`database` への全権限を与える。TLS を使わない接続はサーバーが拒否する。
+     */
+    createSslOnlyUser(database: string): Promise<SslOnlyUser>;
     createSchema(): Promise<MysqlSchema>;
+    /**
+     * MySQL 8.4 が data directory に自動生成した CA 証明書（PEM の内容）。サーバー証明書はこの CA が署名している。
+     */
+    readCaCertificate(): Promise<string>;
     cleanup(): Promise<void>;
 }
 
@@ -55,6 +68,16 @@ const loopbackHost = '127.0.0.1';
 const fixtureLabel = 'epgstation.persistence.fixture';
 const fixtureLabelValue = 'mysql';
 const leaseLabel = 'epgstation.persistence.lease';
+const sslOnlyRole = { password: '<synthetic-ssl-password>', user: 'synthetic-ssl-user' } as const;
+
+/** PEM の file から証明書の block だけを取り出す（前後の空白や制御文字を YAML や TLS の入力へ持ち込まない）。 */
+const pemBlock = (content: string): string => {
+    const block = /(-{5}BEGIN CERTIFICATE-{5})[^-]+(-{5}END CERTIFICATE-{5})/u.exec(content);
+    if (block === null) {
+        throw new Error('The MySQL data directory has no CA certificate');
+    }
+    return `${block[0]}\n`;
+};
 
 interface FixtureContainerLease {
     readonly containerName: string;
@@ -413,6 +436,31 @@ export async function provisionMySql(dependencies: MySqlProvisionDependencies = 
 
         return {
             imageDigest,
+            createSslOnlyUser: async database => {
+                const connection = await connect(rootConfig);
+                try {
+                    await query(
+                        connection,
+                        `CREATE USER '${sslOnlyRole.user}'@'%' IDENTIFIED WITH mysql_native_password BY '${sslOnlyRole.password}' REQUIRE SSL`,
+                    );
+                    await query(connection, `GRANT ALL PRIVILEGES ON \`${database}\`.* TO '${sslOnlyRole.user}'@'%'`);
+                } finally {
+                    await close(connection);
+                }
+                return {
+                    login: sslOnlyRole,
+                    cleanup: async () => {
+                        const cleanupConnection = await connect(rootConfig);
+                        try {
+                            await query(cleanupConnection, `DROP USER IF EXISTS '${sslOnlyRole.user}'@'%'`);
+                        } finally {
+                            await close(cleanupConnection);
+                        }
+                    },
+                };
+            },
+            readCaCertificate: () =>
+                runDocker(['exec', '--workdir', dataDirectory, lease.containerName, 'cat', 'ca.pem']).then(pemBlock),
             createSchema: async () => {
                 const database = `epgstation_${randomBytes(12).toString('hex')}`;
                 const connection = await connect(rootConfig);

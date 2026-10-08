@@ -3,9 +3,16 @@ import { copyFile, mkdir, readdir, readFile, symlink, writeFile } from 'node:fs/
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { DataSource } from 'typeorm';
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { createIsolatedCompiledRuntime, type IsolatedCompiledRuntime } from './harness';
+import {
+    MYSQL_FIXTURE_LIFECYCLE_TIMEOUT_MS,
+    provisionMySql,
+    type MySqlRuntime,
+    type MysqlSchema,
+    type SslOnlyUser,
+} from './mysql-runtime';
 import { listenOnUnixSocket, type UnixSocketListener } from './unix-socket-listener';
 
 const run = promisify(execFile);
@@ -207,4 +214,128 @@ describe('typeorm migration CLI with the repository ormconfig (npm run orm-run /
         expect(result.code).not.toBe(0);
         expect(listener.accepted()).toBeGreaterThanOrEqual(1);
     });
+});
+
+/** `ormconfig.js` が組み立てた DataSource の option を、CLI と同じ作業 directory で読み込んで JSON で返す。 */
+const ormOptions = async (project: string): Promise<Record<string, unknown>> => {
+    const result = await run(
+        process.execPath,
+        [
+            '--input-type=module',
+            '--eval',
+            "const { ormConfig } = await import('./ormconfig.js'); process.stdout.write(JSON.stringify(ormConfig.options));",
+        ],
+        { cwd: project, env: { ...process.env, NODE_OPTIONS: '' } },
+    );
+    return JSON.parse(result.stdout) as Record<string, unknown>;
+};
+
+const mysqlConfigYaml = (settings: Record<string, string | number>, extra = ''): string =>
+    ['mysql:', ...Object.entries(settings).map(([key, value]) => `    ${key}: ${JSON.stringify(value)}`), extra].join(
+        '\n',
+    );
+
+describe('ormconfig.js MySQL ssl option', () => {
+    const baseSettings = {
+        host: 'synthetic-db.invalid',
+        port: 3307,
+        user: 'synthetic_user',
+        password: '<synthetic-password>',
+        database: 'synthetic_database',
+    };
+
+    it('[PERSIST-1.4-ORM-CLI-MYSQL-SSL] passes the configured ssl value unchanged as the ssl option', async () => {
+        const { project } = await createProject(
+            'mysql',
+            mysqlConfigYaml(
+                baseSettings,
+                [
+                    '    ssl:',
+                    '        ca: |',
+                    '            -----BEGIN CERTIFICATE-----',
+                    '            SYNTHETIC',
+                    '            -----END CERTIFICATE-----',
+                    '        minVersion: TLSv1.2',
+                    '        verifyIdentity: true',
+                    '',
+                ].join('\n'),
+            ),
+        );
+
+        const options = await ormOptions(project);
+
+        expect(options.ssl).toEqual({
+            ca: '-----BEGIN CERTIFICATE-----\nSYNTHETIC\n-----END CERTIFICATE-----\n',
+            minVersion: 'TLSv1.2',
+            verifyIdentity: true,
+        });
+    });
+
+    it('[PERSIST-1.4-ORM-CLI-MYSQL-SSL-OMITTED] leaves ssl out of the options when none is configured', async () => {
+        const { project } = await createProject('mysql', mysqlConfigYaml(baseSettings, ''));
+
+        const options = await ormOptions(project);
+
+        expect(options.type).toBe('mysql');
+        expect(Object.keys(options)).not.toContain('ssl');
+    });
+});
+
+describe('typeorm migration CLI with the repository ormconfig against a REQUIRE SSL MySQL user', () => {
+    let mysqlRuntime: MySqlRuntime;
+    let schema: MysqlSchema;
+    let sslUser: SslOnlyUser;
+    let serverCa: string;
+
+    beforeAll(async () => {
+        mysqlRuntime = await provisionMySql();
+        schema = await mysqlRuntime.createSchema();
+        sslUser = await mysqlRuntime.createSslOnlyUser(schema.config.database);
+        serverCa = await mysqlRuntime.readCaCertificate();
+    }, MYSQL_FIXTURE_LIFECYCLE_TIMEOUT_MS);
+
+    afterAll(async () => {
+        await mysqlRuntime?.cleanup();
+    }, MYSQL_FIXTURE_LIFECYCLE_TIMEOUT_MS);
+
+    const settings = () => ({
+        host: schema.config.host,
+        port: schema.config.port,
+        ...sslUser.login,
+        database: schema.config.database,
+    });
+
+    it('[PERSIST-1.4-ORM-CLI-MYSQL-SSL-CONNECT] connects over TLS when ssl.ca is the server CA', async () => {
+        const indentedCa = serverCa
+            .split('\n')
+            .filter(line => line.trim() !== '')
+            .map(line => `            ${line}`)
+            .join('\n');
+        const { project } = await createProject(
+            'mysql',
+            mysqlConfigYaml(settings(), `    ssl:\n        ca: |\n${indentedCa}\n`),
+        );
+
+        const result = await typeorm(project, ['migration:show', '-d', './ormconfig.js']);
+
+        expect(result.output).not.toContain('Access denied');
+        expect(result.code).toBe(0);
+    });
+
+    it('[PERSIST-1.4-ORM-CLI-MYSQL-SSL-REQUIRED] is refused when ssl is omitted', async () => {
+        const { project } = await createProject('mysql', mysqlConfigYaml(settings(), ''));
+
+        const result = await typeorm(project, ['migration:show', '-d', './ormconfig.js']);
+
+        expect(result.code).not.toBe(0);
+        expect(result.output).toContain('Access denied');
+    });
+
+    it(
+        'releases the isolated MySQL fixture container after every case of the file',
+        async () => {
+            await mysqlRuntime.cleanup();
+        },
+        MYSQL_FIXTURE_LIFECYCLE_TIMEOUT_MS,
+    );
 });

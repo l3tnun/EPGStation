@@ -220,6 +220,70 @@ describe('DBOperator connection contract characterization', () => {
         expect(Object.keys(options[0])).not.toContain('socketPath');
     });
 
+    it('[PERSIST-1.4-MYSQL-SSL] forwards a configured ssl value unchanged as the ssl option', async () => {
+        const candidate = createDataSourceDouble();
+        const options = await captureCandidate(candidate);
+        const ssl = { ca: '<synthetic-ca-pem>', minVersion: 'TLSv1.2', rejectUnauthorized: true, verifyIdentity: true };
+        const mysql = {
+            database: 'synthetic_database',
+            host: 'synthetic-db.invalid',
+            password: '<synthetic-password>',
+            port: 3307,
+            ssl,
+            user: 'synthetic_user',
+        };
+
+        await createOperator({ dbtype: 'mysql', mysql }, createLogger()).getConnection();
+
+        expect(options).toHaveLength(1);
+        expect((options[0] as { ssl?: unknown }).ssl).toBe(ssl);
+    });
+
+    it('[PERSIST-1.4-MYSQL-SSL-PROFILE] forwards a string ssl value unchanged as the ssl option', async () => {
+        const candidate = createDataSourceDouble();
+        const options = await captureCandidate(candidate);
+
+        await createOperator(
+            {
+                dbtype: 'mysql',
+                mysql: {
+                    database: 'synthetic_database',
+                    host: 'synthetic-db.invalid',
+                    password: '<synthetic-password>',
+                    port: 3307,
+                    ssl: 'Amazon RDS',
+                    user: 'synthetic_user',
+                },
+            },
+            createLogger(),
+        ).getConnection();
+
+        expect(options).toHaveLength(1);
+        expect((options[0] as { ssl?: unknown }).ssl).toBe('Amazon RDS');
+    });
+
+    it('[PERSIST-1.4-MYSQL-SSL-OMITTED] leaves ssl out of the options when none is configured', async () => {
+        const candidate = createDataSourceDouble();
+        const options = await captureCandidate(candidate);
+
+        await createOperator(
+            {
+                dbtype: 'mysql',
+                mysql: {
+                    database: 'synthetic_database',
+                    host: 'synthetic-db.invalid',
+                    password: '<synthetic-password>',
+                    port: 3307,
+                    user: 'synthetic_user',
+                },
+            },
+            createLogger(),
+        ).getConnection();
+
+        expect(options).toHaveLength(1);
+        expect(Object.keys(options[0])).not.toContain('ssl');
+    });
+
     it('[PERSIST-1.1-MYSQL-CHARSET] preserves an explicitly configured MySQL charset', async () => {
         const candidate = createDataSourceDouble();
         const options = await captureCandidate(candidate);
