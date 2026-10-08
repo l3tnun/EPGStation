@@ -296,6 +296,10 @@ cleanup、次依頼開始を重複させない。
 外部処理の標準出力に、JSON形式の `type: "progress"`、数値 `percent`、文字列 `log` が揃った場合だけ進捗へ反映し、更新通知
 を行う。不正な行または進捗を出さない方法は進捗なしとして扱う。
 
+同梱の`config/enc-enhance.js.template`は、ffmpegの進捗行（`frame= … size=<数値>(kB|KiB) time=… bitrate=… speed=…x`）を正規表現で読み、
+`percent`と`log`を持つ上記のJSONを標準出力へ出す。sizeの単位はffmpeg 7.0未満の`kB`と7.0以降の`KiB`の両方、行頭の名前は`size=`と
+最後の行の`Lsize=`の両方を受け付ける。どれにも一致しない行は進捗なしとして読み飛ばす。
+
 ### 5.5 取消
 
 -   待機中: 対象を待機列から除き、外部処理を開始せず、保持中のexact recorded-use tokenを一回解放する。
@@ -573,6 +577,8 @@ consumer側をfake carrierで検査する。
 機能では非適用理由だけを記録する。
 
 補足として、同じfileの`EN-INTEGRATION-REAL-FFMPEG`の2 caseは、node のscriptで代用しているencode commandを、同梱の`config/enc.js.template`と本物の ffmpeg（入力は ffmpeg の lavfi で作る合成の TS）に置き換え、待機列の順の実行・出力の登録（実際の MP4 の video・audio stream）と、実行中の取消（途中出力の削除、待機列・実行中の一覧が空になる）を確かめる。AC の主testを兼ねず、上の Test Matrix の行数に数えない。
+
+同様に、`config/enc-enhance.js.template`の進捗行の解析は、`test/server/encoding/enc-enhance-progress.spec.test.ts`が、進捗行を標準エラー出力へ出す代用のffmpegを渡して実際に起動し、`kB`・`KiB`の各`size=`行と`Lsize=`行から進捗のJSONが出ること、一致しない行では出ないことを確かめる。これもACの主testを兼ねず、Test Matrixの行数に数えない。
 
 ## 10. 要件トレーサビリティ
 

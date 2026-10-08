@@ -96,6 +96,10 @@
 4. When 進捗情報を更新したとき, the 録画ファイル変換機能 shall 関係機能へ更新を通知する
 5. If 変換処理から進捗を取得できないとき, the 録画ファイル変換機能 shall 進捗を推定して補わない
 
+補足: 同梱の変換 script `config/enc-enhance.js.template` は、ffmpeg が標準エラー出力へ出す進捗行（`frame=`で始まる行）を読んで、
+上の進捗（`type: "progress"` の JSON）を標準出力へ出す。進捗行の size は、ffmpeg 7.0 未満の `kB`（例: `size=  122624kB`）と 7.0 以降の
+`KiB`（例: `size=  122624KiB`）のどちらでも、また最後の行の `Lsize=` でも読む。本補足は AC に数えない。
+
 ### Requirement 5: 変換依頼の取消
 
 **目的:** 利用者と録画済み番組管理として、不要になった変換を停止したい。
