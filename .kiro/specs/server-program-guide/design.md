@@ -505,8 +505,13 @@ logo Bufferは照会ごとに上流から取得し、database、filesystem、ま
 1. 通常keywordと除外keywordは半角化して半角spaceで分割する。
 2. 一つの選択field内では全tokenをANDで結び、選択されたname、description、extendedのfield間をORで結ぶ。除外keywordはその
    field集合の一致全体を否定する。
-3. regexpが利用可能なら入力を一つのregexpとして選択fieldへ適用する。database能力がない場合は同じ入力を通常keyword処理へ
-   fallbackする。
+3. regexpが利用可能なら入力を一つのregexpとして選択fieldへ適用する。適用の前に`StrUtil.toHalfRegExp`で入力を変換する。
+   全角の英数字と全角の空白（`　`）は`StrUtil.toHalf`と同じ対応で半角にする。全角の記号（`！`〜`～`のうち英数字以外、`”`・`’`・`‘`・`￥`・
+   `〜`）も同じ対応で半角にしたうえで、半角になった文字がregexpの記号（`\` `^` `$` `.` `|` `?` `*` `+` `(` `)` `[` `]` `{` `}`）なら
+   直前に`\`を付けて文字そのものとして照合する（`なぜ？`→`なぜ\?`、`（再）`→`\(再\)`、`￥`→`\\`）。半角で入力された文字は変換せず、
+   半角の記号は今までどおりregexpとして働く。この`\`+記号の形は、SQLite（regexp extension）、MySQL（ICU）、MariaDB（PCRE）、
+   PostgreSQL（`~`・`~*`）のいずれでも、その記号1文字に一致する同じ意味である。regexp書式の誤りは変換では直さず、databaseの
+   errorとして検索の失敗になる。database能力がない場合は同じ入力を通常keyword処理へfallbackする。
 4. case-sensitive能力がないdatabaseではcase-sensitive指定を無効化する。
 5. `channelIds`が一件以上あれば放送波指定を使わずID集合で絞る。ID指定がなければ選択放送波を使う。
 6. 複数genre条件はORで結び、各条件は保存した3slotのいずれかへ一致させる。
@@ -830,7 +835,7 @@ Acceptance Criterion 9が判定する。実行結果とcoverageはこの表に�
 | 4.9 / PG-S-036    | 表記選択                    | spec主、int HTTP補完         | halfWidth false/true                                   | query                                             | 非適用—同期projection                  | DB                               | DB、HTTP                                                                               | query reject                    | 指定表記のname/description                  | program-guide.spec.test.ts |
 | 5.1 / PG-S-037    | keyword/ignore対象field     | spec主、int DB補完           | null/空/1/複数語、field選択0/1/複数                    | query                                             | 非適用—時刻順以外                      | DB                               | SQLite/MySQL                                                                           | DB reject                       | 選択fieldだけ照合                           | program-guide.spec.test.ts |
 | 5.2 / PG-S-038    | keyword結合規則             | spec主、int DB補完           | 1/複数語、空field、重複語                              | query                                             | 条件評価順非保証                       | DB                               | SQLite/MySQL                                                                           | DB reject                       | field内AND・field間OR                       | program-guide.spec.test.ts |
-| 5.3 / PG-S-039    | regexp対応                  | spec主、int DB補完           | 有効/空/不正regexp                                     | query成功/失敗                                    | 非適用—同期query                       | DB                               | MySQL/対応backend                                                                      | regexp error                    | 選択文字列へregexp適用                      | program-guide.spec.test.ts |
+| 5.3 / PG-S-039    | regexp対応・全角変換        | spec主、int DB補完           | 有効/空/不正regexp、全角英数・空白・記号、半角記号     | query成功/失敗                                    | 非適用—同期query                       | DB                               | MySQL/対応backend                                                                      | regexp error                    | 選択文字列へregexp適用                      | program-guide.spec.test.ts |
 | 5.4 / PG-S-040    | regexp非対応fallback        | spec主、int DB補完           | 同じ入力、空/1/複数語                                  | query                                             | 非適用—同期query                       | DB                               | SQLite/非対応backend                                                                   | DB reject                       | 通常keywordとして処理                       | program-guide.spec.test.ts |
 | 5.5 / PG-S-041    | channel IDs優先             | spec主、int DB補完           | IDs 1/複数/重複、type併記                              | query                                             | 非適用—filter                          | DB                               | SQLite/MySQL                                                                           | DB reject                       | ID集合で絞りtype無視                        | program-guide.spec.test.ts |
 | 5.6 / PG-S-042    | IDsなし時放送波             | spec主、int DB補完           | IDs null/空、type 1/複数                               | query                                             | 非適用—filter                          | DB                               | SQLite/MySQL                                                                           | DB reject                       | typeを適用                                  | program-guide.spec.test.ts |

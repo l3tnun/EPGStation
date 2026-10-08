@@ -28,7 +28,19 @@ export const loggerModel = { getLogger: () => logger };
 
 export type DatabaseDialect = 'sqlite' | 'mysql';
 
-export const createDialectPersistence = async (dialect: DatabaseDialect) => {
+export interface DialectPersistenceOptions {
+    /**
+     * SQLite has no built-in REGEXP function; the server loads an extension when `sqlite.regexp` is set.
+     * With this option the in-memory SQLite connection reports the capability and a JavaScript function
+     * stands in for the extension (`X regexp Y` calls `regexp(Y, X)`).
+     */
+    readonly sqliteRegexp?: boolean;
+}
+
+export const createDialectPersistence = async (
+    dialect: DatabaseDialect,
+    persistenceOptions: DialectPersistenceOptions = {},
+) => {
     const Rule = loadProduction<new () => Record<string, unknown>>('db', 'entities', 'Rule.js');
     const Program = loadProduction<new () => Record<string, unknown>>('db', 'entities', 'Program.js');
     const RecordedHistory = loadProduction<new () => Record<string, unknown>>('db', 'entities', 'RecordedHistory.js');
@@ -67,6 +79,22 @@ export const createDialectPersistence = async (dialect: DatabaseDialect) => {
         }
         source = new DataSource(options);
         await source.initialize();
+        if (dialect === 'sqlite' && persistenceOptions.sqliteRegexp === true) {
+            config.sqlite = { regexp: true };
+            (
+                source.driver as unknown as {
+                    databaseConnection: {
+                        function(
+                            name: string,
+                            options: { deterministic: boolean },
+                            implementation: (pattern: string, text: string) => number,
+                        ): void;
+                    };
+                }
+            ).databaseConnection.function('regexp', { deterministic: true }, (pattern, text) =>
+                new RegExp(pattern, 'u').test(text) ? 1 : 0,
+            );
+        }
         const DBOperator = loadProduction<new (...args: unknown[]) => Record<string, unknown>>(
             'model',
             'db',

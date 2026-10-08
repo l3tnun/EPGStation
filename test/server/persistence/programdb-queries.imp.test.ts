@@ -286,6 +286,40 @@ describe('ProgramDB.findRule keyword conditions (unittest/imp)', () => {
         expect(str).not.toContain('halfWidthName');
     });
 
+    it('[R7.2] binds the regexp keyword with full-width characters converted and full-width symbols escaped', async () => {
+        const fixture = makeRuleQuery();
+
+        await fixture.provider.findRule({
+            searchOption: { keyword: 'ＡＢ　１２（再）なぜ？^.*$', keyRegExp: true, name: true, GR: true },
+        });
+
+        const [str, param] = whereOf(fixture.builder);
+        expect(str).toBe('(((halfWidthName regexp :keywordRegexp))) and (channelType in (:...channelType))');
+        expect(param).toEqual({ keywordRegexp: 'AB 12\\(再\\)なぜ\\?^.*$', channelType: ['GR'] });
+    });
+
+    it('[R7.2] converts the ignore regexp keyword the same way and leaves the fuzzy keyword unchanged', async () => {
+        const fixture = makeRuleQuery();
+
+        await fixture.provider.findRule({
+            searchOption: {
+                keyword: '（Ａ）',
+                name: true,
+                ignoreKeyword: '［Ｂ］￥',
+                ignoreKeyRegExp: true,
+                ignoreName: true,
+                BS: true,
+            },
+        });
+
+        const [, param] = whereOf(fixture.builder);
+        expect(param).toEqual({
+            keywordName0: '%(A)%',
+            ignoreKeywordRegexp: '\\[B\\]\\\\',
+            channelType: ['BS'],
+        });
+    });
+
     it('[R7.2] negates the ignore keyword and reads its own option flags', async () => {
         const fixture = makeRuleQuery();
 

@@ -10,6 +10,7 @@ if (compiledSnapshot === undefined) {
 interface StrUtilModule {
     toDBStr: (str: string) => string;
     toHalf: (str: string) => string;
+    toHalfRegExp: (str: string) => string;
     toDouble: (str: string) => string;
     deleteBrackets: (str: string) => string;
     replaceDirName: (str: string) => string;
@@ -60,6 +61,63 @@ describe('[IMP-CHAR-SF-4] StrUtil half/full width conversion', () => {
         // pass ahead of it, the generic shift would produce the full-width backslash U+FF3C '＼'
         // instead of the full-width yen sign U+FFE5 '￥'.
         expect(StrUtil.toDouble('a\\b')).toBe('ａ￥ｂ');
+    });
+});
+
+describe('[IMP-CHAR-SF-4] StrUtil regular-expression keyword conversion', () => {
+    it('converts full-width alphanumerics and the full-width space to half-width', async () => {
+        const StrUtil = await loadStrUtil();
+
+        expect(StrUtil.toHalfRegExp('ＡＢＣ　ａｂｃ０１２')).toBe('ABC abc012');
+    });
+
+    it('converts full-width symbols that are not regular-expression symbols without an escape', async () => {
+        const StrUtil = await loadStrUtil();
+
+        // ！ ＃ ＆ ＝ ＠ ／ ： ； ， － ＜ ＞ ％ ＿ ～ plus the symbols toHalf maps individually (” ’ ‘ 〜)
+        expect(StrUtil.toHalfRegExp('！＃＆＝＠／：；，－＜＞％＿～”’‘〜')).toBe('!#&=@/:;,-<>%_~"\'`~');
+    });
+
+    it.each([
+        ['＼', '\\\\'],
+        ['＾', '\\^'],
+        ['＄', '\\$'],
+        ['．', '\\.'],
+        ['｜', '\\|'],
+        ['？', '\\?'],
+        ['＊', '\\*'],
+        ['＋', '\\+'],
+        ['（', '\\('],
+        ['）', '\\)'],
+        ['［', '\\['],
+        ['］', '\\]'],
+        ['｛', '\\{'],
+        ['｝', '\\}'],
+        ['￥', '\\\\'],
+    ])('escapes the full-width %s so that it matches the half-width character itself', async (fullWidth, expected) => {
+        const StrUtil = await loadStrUtil();
+
+        expect(StrUtil.toHalfRegExp(fullWidth)).toBe(expected);
+    });
+
+    it('keeps half-width regular-expression symbols as they are', async () => {
+        const StrUtil = await loadStrUtil();
+
+        expect(StrUtil.toHalfRegExp('^a.+b?|(c)[d]{1,2}$\\d*')).toBe('^a.+b?|(c)[d]{1,2}$\\d*');
+    });
+
+    it('converts a mixed keyword per character: full-width escaped, half-width untouched', async () => {
+        const StrUtil = await loadStrUtil();
+
+        expect(StrUtil.toHalfRegExp('なぜ？')).toBe('なぜ\\?');
+        expect(StrUtil.toHalfRegExp('（再）')).toBe('\\(再\\)');
+        expect(StrUtil.toHalfRegExp('^ＡＢ.＊(Ｃ|d)$')).toBe('^AB.\\*(C|d)$');
+    });
+
+    it('returns the empty string for the empty string', async () => {
+        const StrUtil = await loadStrUtil();
+
+        expect(StrUtil.toHalfRegExp('')).toBe('');
     });
 });
 

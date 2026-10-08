@@ -479,6 +479,9 @@ sub directoryの検査は`server-recording-execution`の設計6.7.2の共通関�
 | boolean                | driver変換              | native表現  | persistence projectionに従う                    |
 | result order           | startAt昇順             | startAt昇順 | database間で同じprimary orderを使う             |
 
+Ruleのregexp keywordは番組検索と同じ変換を受ける（全角の英数字・空白は半角へ、全角の記号は文字そのものとして照合し、半角の記号は
+regexpとして働く。詳細はprogram-guideの検索queryに従う）。
+
 本機能はdatabase差を隠す新しい検索engineを持たない。query parameter bindingとdriver capabilityは永続化機能のcontractを利
 用する。
 

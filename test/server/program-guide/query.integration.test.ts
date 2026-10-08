@@ -408,6 +408,65 @@ describe('program guide Tasks 2.1-2.3 database query characterization', () => {
         }
     }, 30_000);
 
+    it('[PG-T2.2] converts full-width characters of a regexp keyword and matches full-width symbols literally in both dialects', async () => {
+        for (const dialect of ['sqlite', 'mysql'] as DatabaseDialect[]) {
+            const fixture = await createDialectPersistence(dialect, { sqliteRegexp: true });
+            try {
+                vi.useFakeTimers();
+                vi.setSystemTime(1_000);
+                const names = [
+                    [801, 'ABC 123'],
+                    [802, 'なぜ?'],
+                    [803, 'な'],
+                    [804, 'なぜ'],
+                    [805, '(再)'],
+                    [806, '再'],
+                    [807, 'a\\b'],
+                    [808, 'ab'],
+                ] as const;
+                await fixture.source.getRepository(fixture.Program).insert(
+                    names.map(([id, halfWidthName]) =>
+                        makeProgram({
+                            id,
+                            channelId: 11,
+                            name: `synthetic-${halfWidthName}`,
+                            halfWidthName,
+                            startAt: 2_000 + id,
+                            endAt: 3_000 + id,
+                        }),
+                    ),
+                );
+                const find = async (searchOption: Record<string, unknown>): Promise<number[]> => {
+                    const programs = await fixture.programDB.findRule({
+                        searchOption: { keyRegExp: true, name: true, channelIds: [11], ...searchOption },
+                    });
+                    return programs.map((value: { id: number }) => value.id);
+                };
+
+                // Full-width alphanumerics and the full-width space match the half-width name.
+                await expect(find({ keyword: 'ＡＢＣ　１２３' })).resolves.toEqual([801]);
+                await expect(find({ keyword: '^ＡＢＣ　１２３$', keyCS: true })).resolves.toEqual([801]);
+                // A full-width symbol is the character itself, not a regexp symbol.
+                await expect(find({ keyword: 'なぜ？' })).resolves.toEqual([802]);
+                await expect(find({ keyword: 'なぜ？', keyCS: true })).resolves.toEqual([802]);
+                await expect(find({ keyword: '（再）' })).resolves.toEqual([805]);
+                await expect(find({ keyword: 'ａ￥ｂ' })).resolves.toEqual([807]);
+                // Half-width regexp symbols keep working as regexp symbols.
+                await expect(find({ keyword: 'な.' })).resolves.toEqual([802, 804]);
+                await expect(find({ keyword: '^な(ぜ)?$' })).resolves.toEqual([803, 804]);
+                await expect(find({ keyword: 'a.?b$' })).resolves.toEqual([807, 808]);
+                // The exclusion keyword is converted the same way.
+                await expect(
+                    find({ keyword: 'な.', ignoreKeyword: 'ぜ？', ignoreKeyRegExp: true, ignoreName: true }),
+                ).resolves.toEqual([804]);
+                vi.useRealTimers();
+            } finally {
+                vi.useRealTimers();
+                await fixture.cleanup();
+            }
+        }
+    }, 30_000);
+
     it('[PG-T2.3] gives channel IDs precedence over waves, combines structured filters, sorts, and limits', async () => {
         for (const dialect of ['sqlite', 'mysql'] as DatabaseDialect[]) {
             const fixture = await createDialectPersistence(dialect);
