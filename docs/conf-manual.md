@@ -2,6 +2,7 @@
 
 ## コンフィグ逆引きレシピ
 
+-   [環境変数の利用](#環境変数の利用)
 -   [基本設定](#基本設定)
     -   [EPGStation の待ち受けポートを変えたい](#port)
     -   [EPGStation の Socket.IO 待ち受けポートを変えたい](#socketioport)
@@ -62,6 +63,25 @@
     -   [HLS 配信時の一時ファイルの出力先を変更したい](#streamfilepath)
     -   [ストリーミング視聴の設定を変更したい](#stream)
     -   [任意の Kodi と連携させたい](#kodihosts)
+
+---
+
+## 環境変数の利用
+
+config.yml の値に `!env 環境変数名` と書くと、その環境変数の値を使います。パスワードなどを config.yml に直接書きたくないときに使います。
+
+```yaml
+mysql:
+    host: localhost
+    user: !env MYSQL_USER
+    database: !env MYSQL_DATABASE
+```
+
+-   `!env` を付けない値は、`$MYSQL_USER` や `${MYSQL_USER}` のような書き方でも展開されず、書かれたとおりに使われます
+-   環境変数の値は常に文字列です。数値や真偽値には変換しないので、`port` など数値の項目には使えません（`encodeQueueLimit` のように整数を検査する項目は、起動に失敗します）
+-   指定した環境変数が定義されていないと、EPGStation は起動に失敗します（`environment variable <名前> is not defined`）。空文字列は定義済みとして扱います
+-   config.yml を書き換えたときの再読み込みでも、そのときの環境変数の値で展開されます。環境変数が定義されていない場合は再読み込みに失敗し、直前の設定を使い続けます
+-   `!env` を読めるのは EPGStation 本体が読む config.yml だけです。`npm run orm-run` など `ormconfig.js` を使うコマンドと、ログ設定ファイルでは使えません
 
 ---
 

@@ -19,6 +19,7 @@ interface ConfigurationRuntime {
 
 interface ConfigurationConstructor {
     new (loggerModel: { getLogger(): ConfigurationLogger }): ConfigurationRuntime;
+    readonly CONFIG_YAML_OPTIONS: Parameters<typeof yamlDump>[1];
     readonly DEFAULT_VALUE: Record<string, unknown>;
     readonly ROOT_PATH: string;
     readonly prototype: object;
@@ -174,8 +175,11 @@ afterEach(() => {
     mutableFileSystem.promises.readFile = originalReadFile;
     mutableFileSystem.readFileSync = originalReadFileSync;
     mutableFileSystem.watchFile = originalWatchFile;
+    vi.unstubAllEnvs();
     vi.restoreAllMocks();
 });
+
+const withEnvEntries = (entries: string[]): string => `${yamlCandidate('http')}${entries.join('\n')}\n`;
 
 const createConfiguration = (templateConfig: Record<string, unknown> | null): ConfigurationRuntime => {
     const configuration = Object.create(Configuration.prototype) as ConfigurationRuntime;
@@ -407,6 +411,111 @@ describe('server configuration characterization contract', () => {
         });
         expect(acquiredBeforeReload).toMatchObject(providerNumericDefaults);
         expect(logger.system.info).toHaveBeenCalledWith('updated config file');
+    });
+
+    it('[CFG-1.1-ENV-EXPANSION] replaces an !env value with the environment variable as a string', () => {
+        vi.stubEnv('EPGS_SYNTHETIC_DB_USER', 'synthetic-user');
+        vi.stubEnv('EPGS_SYNTHETIC_DB_PORT', '3307');
+        vi.stubEnv('EPGS_SYNTHETIC_EMPTY', '');
+        installInitialReadDouble(() =>
+            withEnvEntries([
+                'mysql:',
+                '    user: !env EPGS_SYNTHETIC_DB_USER',
+                '    port: !env EPGS_SYNTHETIC_DB_PORT',
+                '    database: !env EPGS_SYNTHETIC_EMPTY',
+            ]),
+        );
+
+        const provided = new Configuration({ getLogger: () => createLogger() }).getConfig();
+
+        expect(provided.mysql).toStrictEqual({ user: 'synthetic-user', port: '3307', database: '' });
+    });
+
+    it('[CFG-1.1-ENV-LITERAL] keeps values without !env exactly as written', () => {
+        vi.stubEnv('EPGS_SYNTHETIC_DB_USER', 'must-not-be-used');
+        installInitialReadDouble(() =>
+            withEnvEntries([
+                'mysql:',
+                '    host: EPGS_SYNTHETIC_DB_USER',
+                '    charset: $EPGS_SYNTHETIC_DB_USER',
+                '    database: ${EPGS_SYNTHETIC_DB_USER}',
+            ]),
+        );
+
+        const provided = new Configuration({ getLogger: () => createLogger() }).getConfig();
+
+        expect(provided.mysql).toStrictEqual({
+            host: 'EPGS_SYNTHETIC_DB_USER',
+            charset: '$EPGS_SYNTHETIC_DB_USER',
+            database: '${EPGS_SYNTHETIC_DB_USER}',
+        });
+    });
+
+    it('[CFG-1.1-ENV-LOAD-ONLY] never selects the !env tag when a value is written back to YAML', () => {
+        vi.stubEnv('EPGS_SYNTHETIC_DB_USER', 'synthetic-user');
+
+        const written = yamlDump({ user: 'synthetic-user' }, Configuration.CONFIG_YAML_OPTIONS);
+
+        expect(written).toBe('user: synthetic-user\n');
+    });
+
+    it('[CFG-1.1-ENV-NUMERIC-FIELD] fails the validation of an integer field given an !env string', () => {
+        vi.stubEnv('EPGS_SYNTHETIC_LIMIT', '2048');
+        const watchFile = installInitialReadDouble(() => withEnvEntries(['encodeQueueLimit: !env EPGS_SYNTHETIC_LIMIT']));
+
+        expect(() => new Configuration({ getLogger: () => createLogger() })).toThrow(
+            'ConfigValueError:encodeQueueLimit',
+        );
+        expect(watchFile).not.toHaveBeenCalled();
+    });
+
+    it('[CFG-1.3-ENV-UNDEFINED] fails to start naming the undefined environment variable', () => {
+        vi.stubEnv('EPGS_SYNTHETIC_UNDEFINED', undefined);
+        const watchFile = installInitialReadDouble(() =>
+            withEnvEntries(['mysql:', '    user: !env EPGS_SYNTHETIC_UNDEFINED']),
+        );
+
+        expect(() => new Configuration({ getLogger: () => createLogger() })).toThrow(
+            'environment variable EPGS_SYNTHETIC_UNDEFINED is not defined',
+        );
+        expect(watchFile).not.toHaveBeenCalled();
+    });
+
+    it('[CFG-2.1-ENV-RELOAD] reads the environment again on reload and switches to the new value', async () => {
+        vi.stubEnv('EPGS_SYNTHETIC_DB_USER', 'synthetic-first');
+        const watchFile = installInitialReadDouble(() =>
+            withEnvEntries(['mysql:', '    user: !env EPGS_SYNTHETIC_DB_USER']),
+        );
+        const configuration = new Configuration({ getLogger: () => createLogger() });
+        vi.stubEnv('EPGS_SYNTHETIC_DB_USER', 'synthetic-second');
+        mutableFileSystem.promises.readFile = vi.fn(async () =>
+            withEnvEntries(['mysql:', '    user: !env EPGS_SYNTHETIC_DB_USER']),
+        );
+
+        await (watchFile.mock.calls[0][1] as () => Promise<void>)();
+
+        expect(configuration.getConfig().mysql).toStrictEqual({ user: 'synthetic-second' });
+    });
+
+    it('[CFG-2.2-ENV-RELOAD-UNDEFINED] keeps the prior generation when a reload names an undefined variable', async () => {
+        vi.stubEnv('EPGS_SYNTHETIC_DB_USER', 'synthetic-first');
+        const watchFile = installInitialReadDouble(() =>
+            withEnvEntries(['mysql:', '    user: !env EPGS_SYNTHETIC_DB_USER']),
+        );
+        const logger = createLogger();
+        const configuration = new Configuration({ getLogger: () => logger });
+        const stableSnapshot = configuration.getConfig();
+        mutableFileSystem.promises.readFile = vi.fn(async () =>
+            withEnvEntries(['mysql:', '    user: !env EPGS_SYNTHETIC_UNDEFINED']),
+        );
+
+        await (watchFile.mock.calls[0][1] as () => Promise<void>)();
+
+        expect(configuration.getConfig()).toEqual(stableSnapshot);
+        expect(logger.system.error).toHaveBeenCalledWith('read config error');
+        expect(logger.system.error).toHaveBeenCalledWith(
+            expect.objectContaining({ message: 'environment variable EPGS_SYNTHETIC_UNDEFINED is not defined' }),
+        );
     });
 
     it('[CFG-4.1-DEFAULT-SNAPSHOT] provides all six internal numeric defaults in each complete clone', () => {
@@ -1163,13 +1272,13 @@ describe('ライブ配信の既定commandは-reを持たず、録画配信の既
 const acceptanceCriteriaCounts = { 1: 6, 2: 4, 3: 3, 4: 5, 5: 4, 6: 4, 7: 12 } as const;
 
 const acceptanceCriteriaTrace: Readonly<Record<string, readonly string[]>> = {
-    '1.1': ['CFG-1.1-YAML-DEFAULTS'],
+    '1.1': ['CFG-1.1-YAML-DEFAULTS', 'CFG-1.1-ENV-EXPANSION', 'CFG-1.1-ENV-LITERAL', 'CFG-1.1-ENV-LOAD-ONLY', 'CFG-1.1-ENV-NUMERIC-FIELD'],
     '1.2': ['CFG-1.1-YAML-DEFAULTS', 'CFG-1.1-LEGACY-SCHEDULING-DEFAULTS'],
     '1.3': ['CFG-1.1-STREAM-TEMPLATE', 'CFG-1.1-STREAM-PARENT'],
     '1.4': ['CFG-1.1-PATH-NORMALIZATION'],
     '1.5': ['CFG-1.1-SUBDIRECTORY-NORMALIZATION', 'CFG-1.1-PATH-NORMALIZATION'],
     '1.6': ['CFG-1.2-SNAPSHOT'],
-    '2.1': ['CFG-1.3-INITIAL-READ-FAILURE', 'CFG-1.3-FILESYSTEM-FAILURE'],
+    '2.1': ['CFG-1.3-INITIAL-READ-FAILURE', 'CFG-1.3-FILESYSTEM-FAILURE', 'CFG-1.3-ENV-UNDEFINED'],
     '2.2': ['CFG-1.3-MINIMUM-SUCCESS'],
     '2.3': ['CFG-1.3-INVALID-CANDIDATE'],
     '2.4': ['CFG-1.1-NO-TEMPLATE-INFERENCE', 'CFG-6.4-TEMPLATE-UNAVAILABLE'],
@@ -1177,9 +1286,9 @@ const acceptanceCriteriaTrace: Readonly<Record<string, readonly string[]>> = {
     '3.2': ['CFG-1.2-SNAPSHOT', 'CFG-1.2-DEEP-CLONE'],
     '3.3': ['CFG-1.2-SNAPSHOT', 'CFG-1.2-DEEP-CLONE'],
     '4.1': ['CFG-2.1-RELOAD-SUCCESS'],
-    '4.2': ['CFG-2.1-RELOAD-SUCCESS'],
+    '4.2': ['CFG-2.1-RELOAD-SUCCESS', 'CFG-2.1-ENV-RELOAD'],
     '4.3': ['CFG-2.1-RELOAD-SUCCESS', 'CFG-2.1-DEFERRED-ATOMIC-RELOAD'],
-    '4.4': ['CFG-2.2-RELOAD-FAILURE', 'CFG-2.2-FAILED-CANDIDATES'],
+    '4.4': ['CFG-2.2-RELOAD-FAILURE', 'CFG-2.2-FAILED-CANDIDATES', 'CFG-2.2-ENV-RELOAD-UNDEFINED'],
     '4.5': ['CFG-2.2-FAILED-CANDIDATES'],
     '5.1': ['CFG-3.1-SOCKET-PRIORITY'],
     '5.2': ['CFG-3.1-PUBLIC-ALLOWLIST'],

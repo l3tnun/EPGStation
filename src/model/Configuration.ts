@@ -1,5 +1,5 @@
 import { inject, injectable } from 'inversify';
-import { load as loadYaml } from 'js-yaml';
+import { CORE_SCHEMA, defineScalarTag, load as loadYaml } from 'js-yaml';
 // lodash 本体は UMD で、名前付き export を静的に読み取れない。使う関数を直接読む。
 import cloneDeep from 'lodash/cloneDeep.js';
 import * as path from 'path';
@@ -55,7 +55,9 @@ class Configuration implements IConfiguration {
         this.changeListener = async () => {
             this.log.system.info('updated config file');
             try {
-                const newConfig = <any>loadYaml(await this.fileAccess.read(this.fileAccess.configPath));
+                const newConfig = <any>(
+                    loadYaml(await this.fileAccess.read(this.fileAccess.configPath), Configuration.CONFIG_YAML_OPTIONS)
+                );
                 this.config = this.formatConfig(newConfig);
             } catch (err: any) {
                 this.log.system.error('read config error');
@@ -100,7 +102,7 @@ class Configuration implements IConfiguration {
         }
 
         // parse configFile
-        const newConfig: IConfigFile = <any>loadYaml(str);
+        const newConfig: IConfigFile = <any>loadYaml(str, Configuration.CONFIG_YAML_OPTIONS);
 
         return this.formatConfig(newConfig);
     }
@@ -324,6 +326,24 @@ class Configuration implements IConfiguration {
 }
 
 namespace Configuration {
+    /**
+     * config.yml の値に `!env 環境変数名` と書くと、その環境変数の値（文字列）に置き換わるタグ。
+     * 環境変数が定義されていないときは読み込みを失敗させる（空文字列は定義済みとして扱う）。
+     * 読み込みのたびに `process.env` を参照するので、再読み込みでは最新の値になる。
+     * タグ以外の YAML の解釈は既定（`CORE_SCHEMA`）のまま変えない。
+     */
+    export const ENV_TAG = defineScalarTag('!env', {
+        resolve: (name: string) => {
+            const value = process.env[name];
+            if (typeof value === 'undefined') {
+                throw new Error(`environment variable ${name} is not defined`);
+            }
+            return value;
+        },
+        identify: () => false,
+    });
+    export const CONFIG_YAML_OPTIONS = { schema: CORE_SCHEMA.withTags(ENV_TAG) };
+
     export const CONFIG_FILE_PATH = path.join(import.meta.dirname, '..', '..', 'config', 'config.yml');
     export const CONFIG_TEMPLATE_FILE_PATH = path.join(
         import.meta.dirname,

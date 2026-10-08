@@ -15,6 +15,7 @@ dbtype: sqlite
 #     port: 3306
 #     # UNIX ソケットで接続する場合に指定する（指定すると host と port は使われない）
 #     socketPath: /var/run/mysqld/mysqld.sock
+#     # 値を環境変数から読むときは !env を付ける（例: user: !env MYSQL_USER）
 #     user: epgstation
 #     password: epgstation
 #     database: epgstation
