@@ -175,14 +175,14 @@ export async function createRepositoryPersistence(
         const db = {
             ChannelDB: new constructors.ChannelDB(loggerModel, configuration, operator, retry),
             ProgramDB: new constructors.ProgramDB(loggerModel, configuration, operator, retry),
-            ReserveDB: new constructors.ReserveDB(operator, retry),
-            RuleDB: new constructors.RuleDB(operator, retry),
-            RecordedDB: new constructors.RecordedDB(operator, retry),
-            RecordedHistoryDB: new constructors.RecordedHistoryDB(operator, retry),
-            VideoFileDB: new constructors.VideoFileDB(operator, retry),
-            DropLogFileDB: new constructors.DropLogFileDB(operator, retry),
-            ThumbnailDB: new constructors.ThumbnailDB(operator, retry),
-            RecordedTagDB: new constructors.RecordedTagDB(operator, retry),
+            ReserveDB: new constructors.ReserveDB(loggerModel, operator, retry),
+            RuleDB: new constructors.RuleDB(loggerModel, operator, retry),
+            RecordedDB: new constructors.RecordedDB(loggerModel, operator, retry),
+            RecordedHistoryDB: new constructors.RecordedHistoryDB(loggerModel, operator, retry),
+            VideoFileDB: new constructors.VideoFileDB(loggerModel, operator, retry),
+            DropLogFileDB: new constructors.DropLogFileDB(loggerModel, operator, retry),
+            ThumbnailDB: new constructors.ThumbnailDB(loggerModel, operator, retry),
+            RecordedTagDB: new constructors.RecordedTagDB(loggerModel, operator, retry),
         };
         return {
             dialect,

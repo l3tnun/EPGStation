@@ -22,6 +22,7 @@ import {
     ReserveDB,
     VideoFileDB,
 } from './_harness';
+import { silentLoggerModel } from '../harness/silent-logger-model';
 
 /*
  * 録画の結合 test が共有する、本物の部品の配線。tuner server は loopback の実 HTTP server
@@ -254,9 +255,9 @@ export const wireRecording = (
         }),
     };
     const operator = { getConnection: async () => source, getLikeStr: () => 'like' };
-    const reserveDB = new ReserveDB(operator, retry);
-    const recordedDB = new RecordedDB(operator, retry);
-    const videoFileDB = new VideoFileDB(operator, retry);
+    const reserveDB = new ReserveDB(silentLoggerModel, operator, retry);
+    const recordedDB = new RecordedDB(silentLoggerModel, operator, retry);
+    const videoFileDB = new VideoFileDB(silentLoggerModel, operator, retry);
     const streamCreator = new RecordingStreamCreator({ getLogger: () => log }, configuration, tuner.access);
     streamCreator.setTuner(options.tuners ?? [{ types: ['GR'] }]);
     const programDB = options.programDB ?? {

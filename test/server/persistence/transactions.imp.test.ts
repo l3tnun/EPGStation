@@ -1,7 +1,8 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { makeReserve } from '../reservation-management/_harness';
 import { loadCompiled, repositoryOperator } from './repository-harness';
+import { createRecordingLoggerModel } from '../harness/silent-logger-model';
 
 const ReserveDB = loadCompiled<new (...arguments_: any[]) => any>('model/db/ReserveDB.js');
 
@@ -46,14 +47,19 @@ const makeFaultHarness = (fault: 'commit' | 'mutation' | 'release' | 'rollback' 
     };
     const connection = { createQueryRunner: vi.fn(() => runner) };
     const retry = { run: vi.fn(async <T>(job: () => Promise<T>) => job()) };
-    const repository = new ReserveDB(repositoryOperator(connection), retry);
-    return { primary, releaseFailure, repository, retry, rollbackFailure, runner };
+    const logging = createRecordingLoggerModel();
+    const repository = new ReserveDB(logging.loggerModel, repositoryOperator(connection), retry);
+    return { diagnostic: logging.error, primary, releaseFailure, repository, retry, rollbackFailure, runner };
 };
+
+afterEach(() => {
+    vi.restoreAllMocks();
+});
 
 describe('isolated transaction lifecycle characterization', () => {
     it('[PERSIST-3.1-START] releases an inactive runner and wraps a start failure as ReserveUpdateManyError without entering common retry', async () => {
         const harness = makeFaultHarness('start');
-        const diagnostic = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+        const diagnostic = harness.diagnostic;
 
         await expect(harness.repository.updateMany({ delete: [makeReserve({ id: 1 })] })).rejects.toThrow(
             'ReserveUpdateManyError',
@@ -69,7 +75,6 @@ describe('isolated transaction lifecycle characterization', () => {
         '[PERSIST-3.1-CLEANUP-%s] rolls an active failed attempt back, releases once, and returns the operation wrapper',
         async fault => {
             const harness = makeFaultHarness(fault);
-            vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
             await expect(harness.repository.updateMany({ delete: [makeReserve({ id: 1 })] })).rejects.toThrow(
                 'ReserveUpdateManyError',
@@ -84,7 +89,7 @@ describe('isolated transaction lifecycle characterization', () => {
     it('[PERSIST-3.1-ROLLBACK-CLEANUP] releases once and keeps ReserveUpdateManyError as the public error when rollback cleanup also fails', async () => {
         const harness = makeFaultHarness('rollback');
         harness.runner.manager.delete.mockRejectedValueOnce(harness.primary);
-        const diagnostic = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+        const diagnostic = harness.diagnostic;
 
         await expect(harness.repository.updateMany({ delete: [makeReserve({ id: 1 })] })).rejects.toThrow(
             'ReserveUpdateManyError',
@@ -95,9 +100,24 @@ describe('isolated transaction lifecycle characterization', () => {
         expect(diagnostic.mock.calls).toEqual([[harness.primary], [harness.rollbackFailure]]);
     });
 
+    it('[PERSIST-4.10-SYSTEM-LOG-ONLY] records the primary and cleanup failures in the system log and writes nothing to the console', async () => {
+        const harness = makeFaultHarness('rollback');
+        harness.runner.manager.delete.mockRejectedValueOnce(harness.primary);
+        const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+        const consoleLog = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+        await expect(harness.repository.updateMany({ delete: [makeReserve({ id: 1 })] })).rejects.toThrow(
+            'ReserveUpdateManyError',
+        );
+
+        expect(harness.diagnostic.mock.calls).toEqual([[harness.primary], [harness.rollbackFailure]]);
+        expect(consoleError).not.toHaveBeenCalled();
+        expect(consoleLog).not.toHaveBeenCalled();
+    });
+
     it('[PERSIST-3.1-RELEASE-CLEANUP] keeps ReserveUpdateManyError as the public error when only release cleanup fails after a committed operation', async () => {
         const harness = makeFaultHarness('release');
-        const diagnostic = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+        const diagnostic = harness.diagnostic;
 
         await expect(harness.repository.updateMany({ delete: [makeReserve({ id: 1 })] })).rejects.toThrow(
             'ReserveUpdateManyError',

@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createFluentBuilder, immediateRun, loadEntity } from './db-unit-fakes';
 import { loadCompiled, repositoryOperator } from './repository-harness';
+import { silentLoggerModel } from '../harness/silent-logger-model';
 
 type Provider = Record<string, (...arguments_: any[]) => Promise<any>>;
 
@@ -21,7 +22,7 @@ const makeProvider = (
     const connection = { getRepository, createQueryBuilder: vi.fn(() => write.builder) };
     const retry = { run: vi.fn(immediateRun) };
     const Repository = load(path);
-    return { getRepository, provider: new Repository(repositoryOperator(connection), retry), read, retry, write };
+    return { getRepository, provider: new Repository(silentLoggerModel, repositoryOperator(connection), retry), read, retry, write };
 };
 
 afterEach(() => {

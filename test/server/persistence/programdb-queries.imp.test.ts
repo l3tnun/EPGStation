@@ -103,7 +103,7 @@ describe('ProgramDB.insert transaction lifecycle (unittest/imp)', () => {
 
     it('[4.4] rolls back, releases and reports InsertError when an insert fails', async () => {
         const fixture = makeTransactional({ insert: true });
-        const diagnostic = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+        const diagnostic = fixture.error;
 
         await expect(fixture.provider.insert(channelTypes, [program(1)])).rejects.toThrow('InsertError');
 
@@ -114,7 +114,7 @@ describe('ProgramDB.insert transaction lifecycle (unittest/imp)', () => {
 
     it('[4.9] keeps InsertError as the public error when the rollback also fails', async () => {
         const fixture = makeTransactional({ insert: true, rollback: true });
-        const diagnostic = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+        const diagnostic = fixture.error;
 
         await expect(fixture.provider.insert(channelTypes, [program(1)])).rejects.toThrow('InsertError');
 
@@ -124,7 +124,7 @@ describe('ProgramDB.insert transaction lifecycle (unittest/imp)', () => {
 
     it('[4.9] keeps InsertError as the public error when only the release fails after a commit', async () => {
         const fixture = makeTransactional({ release: true });
-        const diagnostic = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+        const diagnostic = fixture.error;
 
         await expect(fixture.provider.insert(channelTypes, [program(1)])).rejects.toThrow('InsertError');
 
@@ -194,7 +194,7 @@ describe('ProgramDB.update incremental transaction (unittest/imp)', () => {
 
     it('[4.4] rolls back, releases and reports UpdateError when the transaction fails to commit', async () => {
         const fixture = makeTransactional({ commit: true });
-        const diagnostic = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+        const diagnostic = fixture.error;
 
         await expect(fixture.provider.update(channelTypes, { insert: [], update: [], delete: [] })).rejects.toThrow(
             'UpdateError',
@@ -206,7 +206,7 @@ describe('ProgramDB.update incremental transaction (unittest/imp)', () => {
 
     it('[4.9] keeps UpdateError as the public error when the rollback also fails', async () => {
         const fixture = makeTransactional({ commit: true, rollback: true });
-        const diagnostic = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+        const diagnostic = fixture.error;
 
         await expect(fixture.provider.update(channelTypes, { insert: [], update: [], delete: [] })).rejects.toThrow(
             'UpdateError',
@@ -217,7 +217,7 @@ describe('ProgramDB.update incremental transaction (unittest/imp)', () => {
 
     it('[4.9] keeps UpdateError as the public error when only the release fails', async () => {
         const fixture = makeTransactional({ release: true });
-        const diagnostic = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+        const diagnostic = fixture.error;
 
         await expect(fixture.provider.update(channelTypes, { insert: [], update: [], delete: [] })).rejects.toThrow(
             'UpdateError',

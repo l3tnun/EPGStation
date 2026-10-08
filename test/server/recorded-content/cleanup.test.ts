@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { flushNextTick, makeClient } from '../process-messaging/_harness';
+import { silentLoggerModel } from '../harness/silent-logger-model';
 
 const require = createRequire(join(process.cwd(), 'package.json'));
 const snapshot = process.env.EPGSTATION_SERVER_COMPILED_SNAPSHOT as string;
@@ -245,8 +246,8 @@ describe('recorded cleanup affected-row contract [RC-6.3]', () => {
         }
         const operator = { getConnection: vi.fn(async () => ({ createQueryBuilder: () => queryBuilder })) };
         const retry = { run: <T>(job: () => Promise<T>): Promise<T> => job() };
-        const recordedDB = new RecordedDB(operator, retry);
-        const dropLogFileDB = new DropLogFileDB(operator, retry);
+        const recordedDB = new RecordedDB(silentLoggerModel, operator, retry);
+        const dropLogFileDB = new DropLogFileDB(silentLoggerModel, operator, retry);
 
         await expect(recordedDB.removeDropLogFileId(9_001)).resolves.toBe(expected);
         await expect(dropLogFileDB.deleteOnce(9_001)).resolves.toBe(expected);
@@ -264,7 +265,7 @@ describe('recorded cleanup affected-row contract [RC-6.3]', () => {
         }
         const operator = { getConnection: vi.fn(async () => ({ createQueryBuilder: () => queryBuilder })) };
         const retry = { run: <T>(job: () => Promise<T>): Promise<T> => job() };
-        const dropLogFileDB = new DropLogFileDB(operator, retry);
+        const dropLogFileDB = new DropLogFileDB(silentLoggerModel, operator, retry);
 
         await expect(dropLogFileDB.deleteOnce(9_001)).resolves.toBe(false);
     });

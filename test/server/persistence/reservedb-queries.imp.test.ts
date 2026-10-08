@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createFluentBuilder, immediateRun, loadEntity } from './db-unit-fakes';
 import { loadCompiled, repositoryOperator } from './repository-harness';
+import { silentLoggerModel } from '../harness/silent-logger-model';
 
 type ReserveProvider = {
     insertOnce(reserve: object): Promise<number>;
@@ -28,7 +29,7 @@ const makeProvider = (repositoryResults: Record<string, unknown> = {}, builder =
     return {
         builder,
         getRepository,
-        provider: new ReserveDB(repositoryOperator(connection), retry),
+        provider: new ReserveDB(silentLoggerModel, repositoryOperator(connection), retry),
         repository,
         retry,
     };
@@ -171,7 +172,7 @@ describe('ReserveDB.findTimeRanges exclusions (unittest/imp)', () => {
         const builder = createFluentBuilder({ getMany: async () => rows });
         const createQueryBuilder = vi.fn(() => builder.builder);
         const connection = { getRepository: vi.fn(() => ({ createQueryBuilder })) };
-        const provider = new ReserveDB(repositoryOperator(connection), { run: vi.fn(immediateRun) });
+        const provider = new ReserveDB(silentLoggerModel, repositoryOperator(connection), { run: vi.fn(immediateRun) });
         return { builder, createQueryBuilder, provider };
     };
 

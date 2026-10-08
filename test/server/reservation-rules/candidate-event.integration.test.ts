@@ -8,6 +8,7 @@ import {
     makeReservationHarness,
     makeRule,
 } from '../fixtures/reservation-rules/runtime';
+import { silentLoggerModel } from '../harness/silent-logger-model';
 
 type Candidate = Record<string, unknown>;
 
@@ -434,7 +435,7 @@ describe('Rule count and same-coordinator handoff integration', () => {
     it('[RR-1.6][RR-T7.2] uses ReserveDB through the real RuleReservationCountPort and zero-fills only missing page IDs', async () => {
         const rules = [{ id: 73 }, { id: 29 }];
         const findAll = vi.fn(async () => [rules, 9]);
-        const provider = new ReserveDB({}, {});
+        const provider = new ReserveDB(silentLoggerModel, {}, {});
         const countRuleIds = vi.fn(async () => [{ ruleId: 73, ruleIdCnt: '4' }]);
         provider.countRuleIds = countRuleIds;
         const query = new RuleApiModel({ rule: {} }, { findAll }, provider);
@@ -454,7 +455,7 @@ describe('Rule count and same-coordinator handoff integration', () => {
 
     it('[RR-1.6][RR-T7.2] propagates a real ReserveDB count failure through the Rule query', async () => {
         const failure = new Error('synthetic-rule-count-failure');
-        const provider = new ReserveDB({}, {});
+        const provider = new ReserveDB(silentLoggerModel, {}, {});
         const countRuleIds = vi.fn(async () => Promise.reject(failure));
         provider.countRuleIds = countRuleIds;
         const query = new RuleApiModel({ rule: {} }, { findAll: vi.fn(async () => [[{ id: 81 }], 1]) }, provider);

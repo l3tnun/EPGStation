@@ -4,6 +4,7 @@ import * as fs from 'node:fs';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { silentLoggerModel } from '../harness/silent-logger-model';
 
 const require = createRequire(join(process.cwd(), 'package.json'));
 const snapshot = process.env.EPGSTATION_SERVER_COMPILED_SNAPSHOT as string;
@@ -75,7 +76,7 @@ describe('recorded content implementation characterization', () => {
         const connection = { getRepository: vi.fn(() => ({ createQueryBuilder: vi.fn(() => query) })) };
         const operator = { getConnection: vi.fn(async () => connection) };
         const retry = { run: vi.fn((operation: () => unknown) => operation()) };
-        const database = new RecordedDB(operator, retry);
+        const database = new RecordedDB(silentLoggerModel, operator, retry);
 
         await expect(database.findIds([])).resolves.toEqual([]);
         expect(operator.getConnection).not.toHaveBeenCalled();

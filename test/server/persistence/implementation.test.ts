@@ -8,6 +8,7 @@ import {
     type TestLogger,
 } from './harness';
 import { immediateRetry, loadCompiled, repositoryOperator, silentLogger } from './repository-harness';
+import { silentLoggerModel } from '../harness/silent-logger-model';
 
 const restores: Array<() => void> = [];
 
@@ -283,7 +284,7 @@ describe('Persistence repository value and dialect implementation characterizati
                 findIds(ids: number[], columns?: object): Promise<unknown[]>;
             }
         >('model/db/RecordedDB.js');
-        const repository = new RecordedDB(repositoryOperator(connection), immediateRetry);
+        const repository = new RecordedDB(silentLoggerModel, repositoryOperator(connection), immediateRetry);
         const selectedRelations = {
             isNeedVideoFiles: true,
             isNeedThumbnails: false,
@@ -311,7 +312,7 @@ describe('Persistence repository value and dialect implementation characterizati
                 findIds(ids: number[], columns?: object): Promise<unknown[]>;
             }
         >('model/db/RecordedDB.js');
-        const repository = new RecordedDB(repositoryOperator(connection), immediateRetry);
+        const repository = new RecordedDB(silentLoggerModel, repositoryOperator(connection), immediateRetry);
 
         await expect(
             repository.findIds([404], {
@@ -333,7 +334,7 @@ describe('Persistence repository value and dialect implementation characterizati
                 findIds(ids: number[], columns?: object): Promise<unknown[]>;
             }
         >('model/db/RecordedDB.js');
-        const repository = new RecordedDB(repositoryOperator(connection), immediateRetry);
+        const repository = new RecordedDB(silentLoggerModel, repositoryOperator(connection), immediateRetry);
 
         await expect(
             repository.findIds([1], {
@@ -357,7 +358,7 @@ describe('Persistence repository value and dialect implementation characterizati
                 findIds(ids: number[], columns?: object): Promise<unknown[]>;
             }
         >('model/db/RecordedDB.js');
-        const repository = new RecordedDB(repositoryOperator(connection), immediateRetry);
+        const repository = new RecordedDB(silentLoggerModel, repositoryOperator(connection), immediateRetry);
 
         await expect(repository.findIds([1])).resolves.toEqual([]);
         expect(builder.leftJoinAndSelect.mock.calls).toEqual([
@@ -374,7 +375,7 @@ describe('Persistence repository value and dialect implementation characterizati
                 findIds(ids: number[], columns?: object): Promise<unknown[]>;
             }
         >('model/db/RecordedDB.js');
-        const repository = new RecordedDB(repositoryOperator(connection), immediateRetry);
+        const repository = new RecordedDB(silentLoggerModel, repositoryOperator(connection), immediateRetry);
 
         await expect(repository.findIds([1, 1])).resolves.toEqual([]);
 
@@ -388,7 +389,7 @@ describe('Persistence repository value and dialect implementation characterizati
         };
         const RuleDB =
             loadCompiled<new (...arguments_: any[]) => { findId(id: number): Promise<unknown> }>('model/db/RuleDB.js');
-        const repository = new RuleDB(repositoryOperator(connection), immediateRetry);
+        const repository = new RuleDB(silentLoggerModel, repositoryOperator(connection), immediateRetry);
 
         await expect(repository.findId(1)).resolves.toMatchObject({
             searchOption: {
@@ -413,7 +414,7 @@ describe('Persistence repository value and dialect implementation characterizati
                 loadCompiled<new (...arguments_: any[]) => { findId(id: number): Promise<unknown> }>(
                     'model/db/RuleDB.js',
                 );
-            const repository = new RuleDB(repositoryOperator(connection), immediateRetry);
+            const repository = new RuleDB(silentLoggerModel, repositoryOperator(connection), immediateRetry);
 
             await expect(repository.findId(1)).rejects.toBeInstanceOf(SyntaxError);
         },

@@ -3,6 +3,7 @@ import 'reflect-metadata';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { silentLoggerModel } from '../harness/silent-logger-model';
 
 const require = createRequire(join(process.cwd(), 'package.json'));
 const snapshot = process.env.EPGSTATION_SERVER_COMPILED_SNAPSHOT as string;
@@ -48,7 +49,7 @@ const makeFixture = (findResult: unknown[] = []) => {
     const getRepository = vi.fn(() => ({ createQueryBuilder }));
     const getConnection = vi.fn(async () => ({ getRepository }));
     const retry = { run: vi.fn(async (job: () => Promise<unknown>) => job()) };
-    const provider = new ReserveDB({ getConnection }, retry);
+    const provider = new ReserveDB(silentLoggerModel, { getConnection }, retry);
     return { builder, createQueryBuilder, getConnection, getRepository, provider, retry };
 };
 

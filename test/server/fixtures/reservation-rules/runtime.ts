@@ -6,6 +6,7 @@ import { DataSource, type DataSourceOptions } from 'typeorm';
 import { vi } from 'vitest';
 
 import { provisionMariaDb } from '../../persistence/mysql-runtime';
+import { silentLoggerModel } from '../../harness/silent-logger-model';
 
 const require = createRequire(join(process.cwd(), 'package.json'));
 const compiledSnapshot = process.env.EPGSTATION_SERVER_COMPILED_SNAPSHOT;
@@ -94,9 +95,9 @@ export const createDialectPersistence = async (dialect: DatabaseDialect) => {
             'db',
             'ReserveDB.js',
         );
-        const ruleDB = new RuleDB(operator, retry);
-        const recordedHistoryDB = new RecordedHistoryDB(operator, retry);
-        const reserveDB = new ReserveDB(operator, retry);
+        const ruleDB = new RuleDB(silentLoggerModel, operator, retry);
+        const recordedHistoryDB = new RecordedHistoryDB(silentLoggerModel, operator, retry);
+        const reserveDB = new ReserveDB(silentLoggerModel, operator, retry);
         const programDB = new ProgramDB(
             loggerModel,
             { getConfig: () => ({ needToReplaceEnclosingCharacters: false }) },

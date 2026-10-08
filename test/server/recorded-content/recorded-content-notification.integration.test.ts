@@ -9,6 +9,7 @@ import { DataSource } from 'typeorm';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { makeLogger } from '../event-and-hook-delivery/_harness';
+import { silentLoggerModel } from '../harness/silent-logger-model';
 
 /*
  * 録画済み番組の変更を確定したとき、関係機能（クライアントへの通知）へ知らせることを、本物の部品で確かめる。
@@ -71,9 +72,9 @@ beforeEach(async () => {
     });
     await source.initialize();
     const operator = { getConnection: async () => source, getLikeStr: () => 'like' };
-    const recordedDB = new RecordedDB(operator, retry);
-    const recordedTagDB = new RecordedTagDB(operator, retry);
-    const dropLogFileDB = new DropLogFileDB(operator, retry);
+    const recordedDB = new RecordedDB(silentLoggerModel, operator, retry);
+    const recordedTagDB = new RecordedTagDB(silentLoggerModel, operator, retry);
+    const dropLogFileDB = new DropLogFileDB(silentLoggerModel, operator, retry);
     const logger = { getLogger: () => makeLogger() };
     const recordedEvent = new RecordedEvent(logger);
     const recordedTagEvent = new RecordedTagEvent(logger);
@@ -81,10 +82,10 @@ beforeEach(async () => {
         logger,
         { getConfig: () => ({ dropLog: dropLogDirectory, recorded: [], thumbnail: join(root!, 'thumbnail') }) },
         recordedDB,
-        new VideoFileDB(operator, retry),
-        new ThumbnailDB(operator, retry),
+        new VideoFileDB(silentLoggerModel, operator, retry),
+        new ThumbnailDB(silentLoggerModel, operator, retry),
         dropLogFileDB,
-        new RecordedHistoryDB(operator, retry),
+        new RecordedHistoryDB(silentLoggerModel, operator, retry),
         { cancel: vi.fn(), hasReserve: vi.fn(() => false) },
         recordedEvent,
         { getParentDirPath: vi.fn(), getFullFilePathFromVideoFile: vi.fn() },

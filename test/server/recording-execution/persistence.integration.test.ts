@@ -31,6 +31,7 @@ import {
     VideoFile,
     VideoFileDB,
 } from './_harness';
+import { silentLoggerModel } from '../harness/silent-logger-model';
 
 const RecordingApiModel = load<new (...args: any[]) => any>('model', 'api', 'recording', 'RecordingApiModel.js');
 const snapshot = process.env.EPGSTATION_SERVER_COMPILED_SNAPSHOT!;
@@ -220,9 +221,9 @@ describe('recording persistence sequence', () => {
                     updateTime: now,
                 });
                 const operator = { getConnection: async () => source, getLikeStr: () => 'like' };
-                const reserveDB = new ReserveDB(operator, retry);
-                const recordedDB = new RecordedDB(operator, retry);
-                const videoFileDB = new VideoFileDB(operator, retry);
+                const reserveDB = new ReserveDB(silentLoggerModel, operator, retry);
+                const recordedDB = new RecordedDB(silentLoggerModel, operator, retry);
+                const videoFileDB = new VideoFileDB(silentLoggerModel, operator, retry);
                 const configuration = {
                     getConfig: () => ({
                         conflictPriority: 9,
@@ -391,8 +392,8 @@ describe('recording persistence sequence', () => {
                 await manager.insert(Reserve, makeReserve({ id: 95, updateTime: 1, endAt: now - 1 }));
             });
             const operator = { getConnection: async () => source, getLikeStr: () => 'like' };
-            const reserveDB = new ReserveDB(operator, retry);
-            const recordedDB = new RecordedDB(operator, retry);
+            const reserveDB = new ReserveDB(silentLoggerModel, operator, retry);
+            const recordedDB = new RecordedDB(silentLoggerModel, operator, retry);
             const model = new RecordingManageModel(
                 { getLogger: () => logger },
                 { getConfig: () => ({ recordedTmp: '/synthetic-tmp' }) },
@@ -453,9 +454,9 @@ describe('recording persistence sequence', () => {
                     await manager.insert(VideoFile, video);
                 });
                 const operator = { getConnection: async () => source, getLikeStr: () => 'like' };
-                const reserveDB = new ReserveDB(operator, retry);
-                const recordedDB = new RecordedDB(operator, retry);
-                const videoFileDB = new VideoFileDB(operator, retry);
+                const reserveDB = new ReserveDB(silentLoggerModel, operator, retry);
+                const recordedDB = new RecordedDB(silentLoggerModel, operator, retry);
+                const videoFileDB = new VideoFileDB(silentLoggerModel, operator, retry);
                 const event = { emitFinishRecording: vi.fn() };
                 const recordingUtil = {
                     movingFromTmp: vi.fn(),
@@ -532,12 +533,12 @@ describe('recording execution database integration', () => {
                         timeSpecifiedStartMargin: 0,
                     }),
                 };
-                const reserveDB = new ReserveDB(operator, retry);
+                const reserveDB = new ReserveDB(silentLoggerModel, operator, retry);
                 const programDB = new ProgramDB({ getLogger: () => logger }, config, operator, retry);
-                const recordedDB = new RecordedDB(operator, retry);
-                const recordedHistoryDB = new RecordedHistoryDB(operator, retry);
-                const videoFileDB = new VideoFileDB(operator, retry);
-                const dropLogFileDB = new DropLogFileDB(operator, retry);
+                const recordedDB = new RecordedDB(silentLoggerModel, operator, retry);
+                const recordedHistoryDB = new RecordedHistoryDB(silentLoggerModel, operator, retry);
+                const videoFileDB = new VideoFileDB(silentLoggerModel, operator, retry);
+                const dropLogFileDB = new DropLogFileDB(silentLoggerModel, operator, retry);
                 const now = Date.now();
                 const programId = 9_401;
                 const channelTypes = { 11: { 12: { channel: 'synthetic-channel', id: 101, type: 'GR' } } };
@@ -730,14 +731,14 @@ describe('recording execution database integration', () => {
         async dialect => {
             await withDatabase(dialect, async (database, root) => {
                 const operator = { getConnection: async () => database, getLikeStr: () => 'like' };
-                const recordedDB = new RecordedDB(operator, retry);
-                const videoFileDB = new VideoFileDB(operator, retry);
-                const dropLogFileDB = new DropLogFileDB(operator, retry);
-                const recordedHistoryDB = new RecordedHistoryDB(operator, retry);
+                const recordedDB = new RecordedDB(silentLoggerModel, operator, retry);
+                const videoFileDB = new VideoFileDB(silentLoggerModel, operator, retry);
+                const dropLogFileDB = new DropLogFileDB(silentLoggerModel, operator, retry);
+                const recordedHistoryDB = new RecordedHistoryDB(silentLoggerModel, operator, retry);
                 const rejection = new Error('Task 9.4 injected database rejection');
                 const rejectRetry = { run: async (): Promise<never> => Promise.reject(rejection) };
-                const rejectedRecordedDB = new RecordedDB(operator, rejectRetry);
-                const rejectedVideoFileDB = new VideoFileDB(operator, rejectRetry);
+                const rejectedRecordedDB = new RecordedDB(silentLoggerModel, operator, rejectRetry);
+                const rejectedVideoFileDB = new VideoFileDB(silentLoggerModel, operator, rejectRetry);
 
                 await expect(recordedDB.findId(9_499)).resolves.toBeNull();
                 await expect(dropLogFileDB.findId(9_499)).resolves.toBeNull();
@@ -823,10 +824,10 @@ describe('recording execution database integration', () => {
                         timeSpecifiedStartMargin: 0,
                     }),
                 };
-                const reserveDB = new ReserveDB(operator, retry);
+                const reserveDB = new ReserveDB(silentLoggerModel, operator, retry);
                 const programDB = new ProgramDB({ getLogger: () => logger }, config, operator, retry);
-                const recordedDB = new RecordedDB(operator, retry);
-                const videoFileDB = new VideoFileDB(operator, retry);
+                const recordedDB = new RecordedDB(silentLoggerModel, operator, retry);
+                const videoFileDB = new VideoFileDB(silentLoggerModel, operator, retry);
                 const now = Date.now();
                 const programId = 9_402;
                 await programDB.insert({ 11: { 12: { channel: 'synthetic-channel', id: 101, type: 'GR' } } }, [
@@ -966,7 +967,7 @@ describe('recording execution database integration', () => {
                 await manager.insert(Recorded, recorded);
             });
             const operator = { getConnection: async () => source, getLikeStr: () => 'like' };
-            const recordedDB = new RecordedDB(operator, retry);
+            const recordedDB = new RecordedDB(silentLoggerModel, operator, retry);
             const converted = { id: 961, name: 'synthetic-converted-961' };
             const recordedItemUtil = {
                 convertRecordedToRecordedItem: vi.fn((recordedRow: any, isHalfWidth: unknown) => {

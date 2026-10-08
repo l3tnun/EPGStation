@@ -458,7 +458,6 @@ describe('atomic transaction characterization through real drivers', () => {
                     last: [901, 902, 900],
                 };
                 const retryBefore = retry.calls;
-                vi.spyOn(console, 'error').mockImplementation(() => undefined);
                 await expect(
                     db.ProgramDB.insert(channelIndex, positions[position].map(tunerProgram), [11]),
                 ).rejects.toThrow('InsertError');
@@ -481,7 +480,7 @@ describe('atomic transaction characterization through real drivers', () => {
             { cleanupFault: 'release', primaryFault: 'commit' },
             { cleanupFault: 'rollback', primaryFault: 'commit' },
         ] as const) {
-            await withDialects(async ({ db, dialect, entities, retry, source }) => {
+            await withDialects(async ({ db, dialect, entities, logMessages, retry, source }) => {
                 const previousId = 851;
                 const replacementId = 852;
                 await source
@@ -490,7 +489,7 @@ describe('atomic transaction characterization through real drivers', () => {
 
                 const retryBefore = retry.calls;
                 const faultHarness = installProgramInsertFault(source, { cleanupFault, primaryFault });
-                const diagnostic = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+                const logBefore = logMessages.length;
 
                 let rejection: unknown;
                 try {
@@ -503,7 +502,7 @@ describe('atomic transaction characterization through real drivers', () => {
                     rollback: faultHarness.runner.rollbackTransaction.mock.calls.length,
                     start: faultHarness.runner.startTransaction.mock.calls.length,
                 };
-                const diagnostics = diagnostic.mock.calls.map(call => call[0]);
+                const diagnostics = logMessages.slice(logBefore);
                 const activeAfterInsert = faultHarness.runner.isTransactionActive;
                 vi.restoreAllMocks();
                 await faultHarness.recover();
@@ -558,7 +557,6 @@ describe('atomic transaction characterization through real drivers', () => {
                     last: [901, 902, 900],
                 };
                 const retryBefore = retry.calls;
-                vi.spyOn(console, 'error').mockImplementation(() => undefined);
                 await expect(
                     db.ReserveDB.updateMany({
                         delete: [makeReserve({ id: 500 })],
@@ -583,8 +581,7 @@ describe('atomic transaction characterization through real drivers', () => {
                     const repository = db[restoreCase.repo];
                     await repository.restore([restoreCase.make(1)]);
                     const retryBefore = retry.calls;
-                    vi.spyOn(console, 'error').mockImplementation(() => undefined);
-                    await expect(repository.restore([restoreCase.make(2), restoreCase.make(2)])).rejects.toThrow(
+                        await expect(repository.restore([restoreCase.make(2), restoreCase.make(2)])).rejects.toThrow(
                         'restore error',
                     );
                     const rows = await source
@@ -601,7 +598,7 @@ describe('atomic transaction characterization through real drivers', () => {
     it('[PERSIST-4.8-4.9-RESTORE-LIFECYCLE] keeps restore wrappers while active and pre-cleanup faults leave the next connection usable', async () => {
         for (const restoreCase of restoreCases) {
             for (const fault of ['start', 'mutation', 'commit', 'rollback', 'release'] as const) {
-                await withDialects(async ({ db, entities, retry, source }) => {
+                await withDialects(async ({ db, entities, logMessages, retry, source }) => {
                     const previousId = 801;
                     const restoredId = 802;
                     if (restoreCase.entity === 'Thumbnail' || restoreCase.entity === 'VideoFile') {
@@ -613,7 +610,7 @@ describe('atomic transaction characterization through real drivers', () => {
 
                     const retryBefore = retry.calls;
                     const faultHarness = installRestoreFault(source, fault);
-                    const diagnostic = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+                    const logBefore = logMessages.length;
                     const repository = db[restoreCase.repo];
 
                     let rejection: unknown;
@@ -627,7 +624,7 @@ describe('atomic transaction characterization through real drivers', () => {
                         rollback: faultHarness.runner.rollbackTransaction.mock.calls.length,
                         start: faultHarness.runner.startTransaction.mock.calls.length,
                     };
-                    const diagnostics = diagnostic.mock.calls.map(call => call[0]);
+                    const diagnostics = logMessages.slice(logBefore);
                     const activeAfterRestore = faultHarness.runner.isTransactionActive;
                     vi.restoreAllMocks();
                     await faultHarness.recover();
@@ -692,7 +689,7 @@ describe('atomic transaction characterization through real drivers', () => {
 
     it('[PERSIST-4.8-4.9-RESERVE-UPDATE-MANY-LIFECYCLE] keeps ReserveUpdateManyError while active and release failure leaves committed rows', async () => {
         for (const fault of ['start', 'mutation', 'commit', 'rollback', 'release'] as const) {
-            await withDialects(async ({ db, entities, retry, source }) => {
+            await withDialects(async ({ db, entities, logMessages, retry, source }) => {
                 const previousId = 811;
                 const updatedId = 812;
                 await source
@@ -701,7 +698,7 @@ describe('atomic transaction characterization through real drivers', () => {
 
                 const retryBefore = retry.calls;
                 const faultHarness = installRestoreFault(source, fault);
-                const diagnostic = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+                const logBefore = logMessages.length;
 
                 let rejection: unknown;
                 try {
@@ -717,7 +714,7 @@ describe('atomic transaction characterization through real drivers', () => {
                     rollback: faultHarness.runner.rollbackTransaction.mock.calls.length,
                     start: faultHarness.runner.startTransaction.mock.calls.length,
                 };
-                const diagnostics = diagnostic.mock.calls.map(call => call[0]);
+                const diagnostics = logMessages.slice(logBefore);
                 const activeAfterUpdate = faultHarness.runner.isTransactionActive;
                 vi.restoreAllMocks();
                 await faultHarness.recover();
@@ -770,14 +767,14 @@ describe('atomic transaction characterization through real drivers', () => {
         });
 
         for (const fault of ['start', 'mutation', 'commit', 'rollback', 'release'] as const) {
-            await withDialects(async ({ db, entities, retry, source }) => {
+            await withDialects(async ({ db, entities, logMessages, retry, source }) => {
                 const previousId = 831;
                 const replacementId = 832;
                 await db.ChannelDB.insert([tunerChannel(previousId)]);
 
                 const retryBefore = retry.calls;
                 const faultHarness = installRestoreFault(source, fault);
-                const diagnostic = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+                const logBefore = logMessages.length;
 
                 let rejection: unknown;
                 try {
@@ -790,7 +787,7 @@ describe('atomic transaction characterization through real drivers', () => {
                     rollback: faultHarness.runner.rollbackTransaction.mock.calls.length,
                     start: faultHarness.runner.startTransaction.mock.calls.length,
                 };
-                const diagnostics = diagnostic.mock.calls.map(call => call[0]);
+                const diagnostics = logMessages.slice(logBefore);
                 const activeAfterInsert = faultHarness.runner.isTransactionActive;
                 vi.restoreAllMocks();
                 await faultHarness.recover();
@@ -832,7 +829,7 @@ describe('atomic transaction characterization through real drivers', () => {
     }, 120_000);
 
     it('[PERSIST-4.9-RESERVE-UPDATE-MANY-MUTATION-RELEASE] preserves the primary failure while release cleanup fails', async () => {
-        await withDialects(async ({ db, entities, retry, source }) => {
+        await withDialects(async ({ db, entities, logMessages, retry, source }) => {
             const previousId = 821;
             const updatedId = 822;
             const primary = new Error('synthetic-reserve-mutation-primary');
@@ -860,7 +857,7 @@ describe('atomic transaction characterization through real drivers', () => {
                 };
                 return runner;
             });
-            const diagnostic = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+            const logBefore = logMessages.length;
 
             let rejection: unknown;
             try {
@@ -877,7 +874,7 @@ describe('atomic transaction characterization through real drivers', () => {
                 rollback: runner.rollbackTransaction.mock.calls.length,
                 start: runner.startTransaction.mock.calls.length,
             };
-            const diagnostics = diagnostic.mock.calls.map(call => call[0]);
+            const diagnostics = logMessages.slice(logBefore);
             vi.restoreAllMocks();
             await recover();
             const rows = await source.getRepository(entities.Reserve).find({ order: { id: 'ASC' } });
@@ -907,7 +904,6 @@ describe('atomic transaction characterization through real drivers', () => {
         await withDialects(async ({ db, entities, source }) => {
             await db.RuleDB.restore([makeRule({ id: 41 })]);
             await db.ReserveDB.restore([makeReserve({ id: 51, programId: 51 })]);
-            vi.spyOn(console, 'error').mockImplementation(() => undefined);
             await expect(
                 db.ReserveDB.restore([makeReserve({ id: 52, programId: 52 }), makeReserve({ id: 52, programId: 53 })]),
             ).rejects.toThrow('restore error');
@@ -980,7 +976,6 @@ describe('atomic transaction characterization through real drivers', () => {
 
                 const retryBefore = retry.calls;
                 const faultHarness = installProgramUpdateFault(source, { cleanupFault, primaryFault });
-                const diagnostic = vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
                 let rejection: unknown;
                 try {
@@ -997,7 +992,6 @@ describe('atomic transaction characterization through real drivers', () => {
                     rollback: faultHarness.runner.rollbackTransaction.mock.calls.length,
                     start: faultHarness.runner.startTransaction.mock.calls.length,
                 };
-                const diagnostics = diagnostic.mock.calls.map(call => call[0]);
                 const activeAfterUpdate = faultHarness.runner.isTransactionActive;
                 vi.restoreAllMocks();
                 await faultHarness.recover();
@@ -1038,10 +1032,9 @@ describe('atomic transaction characterization through real drivers', () => {
                     rows.map(row => Number(row.id)),
                     `ProgramDB.update/${primaryFault ?? 'success'}/${cleanupFault ?? 'none'}/${dialect} rows`,
                 ).toEqual(expectedRows);
-                expect(logMessages).toEqual(
-                    primaryFault === 'mutation' ? [`program delete error: ${previousId}`, faultHarness.primary] : [],
-                );
-                expect(diagnostics).toEqual([
+                // 個別の削除失敗の記録に続いて、transaction の失敗と後始末の失敗が system log に残る。
+                expect(logMessages).toEqual([
+                    ...(primaryFault === 'mutation' ? [`program delete error: ${previousId}`, faultHarness.primary] : []),
                     ...(primaryFault === 'start' || primaryFault === 'commit' ? [faultHarness.primary] : []),
                     ...(cleanupFault === undefined ? [] : [faultHarness.cleanup]),
                 ]);

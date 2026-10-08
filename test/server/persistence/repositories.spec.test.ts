@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { immediateRetry, loadCompiledDefault, repositoryOperator, silentLogger } from './repository-harness';
+import { createRecordingLoggerModel, silentLoggerModel } from '../harness/silent-logger-model';
 
 const queryBuilder = (result: unknown) => {
     const builder = {
@@ -87,7 +88,7 @@ describe('typed persistence repository contracts', () => {
                   repositoryOperator(connection),
                   immediateRetry,
               )
-            : new Repository(repositoryOperator(connection), immediateRetry);
+            : new Repository(silentLoggerModel, repositoryOperator(connection), immediateRetry);
 
         await expect(instance.findId(404)).resolves.toBeNull();
     });
@@ -168,6 +169,7 @@ describe('typed persistence repository contracts', () => {
         const { manager, runner } = transactionRunner();
         const ReserveDB = loadCompiledDefault<{ updateMany(values: object): Promise<void> }>('model/db/ReserveDB.js');
         const repository = new ReserveDB(
+            silentLoggerModel,
             repositoryOperator({ createQueryRunner: vi.fn(() => runner) }),
             immediateRetry,
         );
@@ -262,7 +264,7 @@ describe('typed persistence repository contracts', () => {
             insertOnce(value: object): Promise<number>;
             updateOnce(value: object): Promise<void>;
         }>('model/db/RuleDB.js');
-        const repository = new RuleDB(repositoryOperator(connection), immediateRetry);
+        const repository = new RuleDB(silentLoggerModel, repositoryOperator(connection), immediateRetry);
 
         await expect(repository.insertOnce(rule)).resolves.toBe(73);
         await expect(repository.updateOnce(rule)).resolves.toBeUndefined();
@@ -353,7 +355,7 @@ describe('typed persistence repository contracts', () => {
         const RuleDB = loadCompiledDefault<{ findId(id: number, isNeedCnt?: boolean): Promise<unknown> }>(
             'model/db/RuleDB.js',
         );
-        const repository = new RuleDB(repositoryOperator(connection), immediateRetry);
+        const repository = new RuleDB(silentLoggerModel, repositoryOperator(connection), immediateRetry);
 
         await expect(repository.findId(56, true)).resolves.toMatchObject({
             id: 56,
@@ -373,7 +375,7 @@ describe('typed persistence repository contracts', () => {
         const builder = queryBuilder({ identifiers: [{ id: 1 }] });
         const connection = { createQueryBuilder: vi.fn(() => builder) };
         const RuleDB = loadCompiledDefault<{ insertOnce(value: unknown): Promise<number> }>('model/db/RuleDB.js');
-        const repository = new RuleDB(repositoryOperator(connection), immediateRetry);
+        const repository = new RuleDB(silentLoggerModel, repositoryOperator(connection), immediateRetry);
 
         // convertRuleToDBRule の `typeof rule === 'undefined' ? 0 : (<RuleWithCnt>rule).updateCnt` は
         // rule 自体が undefined のときの防御分岐だが、同じオブジェクトリテラルの次のプロパティ
@@ -394,7 +396,7 @@ describe('typed persistence repository contracts', () => {
         const RecordedHistoryDB = loadCompiledDefault<{ findAll(): Promise<unknown[]> }>(
             'model/db/RecordedHistoryDB.js',
         );
-        const repository = new RecordedHistoryDB(repositoryOperator(connection), immediateRetry);
+        const repository = new RecordedHistoryDB(silentLoggerModel, repositoryOperator(connection), immediateRetry);
 
         await expect(repository.findAll()).resolves.toEqual(rows);
         expect(builder.getMany).toHaveBeenCalledOnce();
@@ -408,6 +410,7 @@ describe('typed persistence repository contracts', () => {
             updateOnce(value: { id: number }): Promise<void>;
         }>('model/db/RecordedDB.js');
         const repository = new RecordedDB(
+            silentLoggerModel,
             repositoryOperator({ createQueryBuilder: vi.fn(() => builder) }),
             immediateRetry,
         );
@@ -432,6 +435,7 @@ describe('typed persistence repository contracts', () => {
             insertOnce(value: object): Promise<number>;
         }>('model/db/RecordedHistoryDB.js');
         const repository = new RecordedHistoryDB(
+            silentLoggerModel,
             repositoryOperator({ createQueryBuilder: vi.fn(() => builder) }),
             immediateRetry,
         );
@@ -458,7 +462,7 @@ describe('typed persistence repository contracts', () => {
             const builder = queryBuilder({ identifiers: [{ id: 73 }] });
             const connection = { createQueryBuilder: vi.fn(() => builder) };
             const Repository = loadCompiledDefault<{ insertOnce(value: object): Promise<number> }>(path);
-            const instance = new Repository(repositoryOperator(connection), immediateRetry);
+            const instance = new Repository(silentLoggerModel, repositoryOperator(connection), immediateRetry);
 
             await expect(instance.insertOnce({ marker: 'synthetic' })).resolves.toBe(73);
             expect(builder.values).toHaveBeenCalledWith({ marker: 'synthetic' });
@@ -471,7 +475,7 @@ describe('typed persistence repository contracts', () => {
         const RecordedDB = loadCompiledDefault<{
             findIds(ids: number[], columns: object): Promise<unknown[]>;
         }>('model/db/RecordedDB.js');
-        const repository = new RecordedDB(repositoryOperator(connection), immediateRetry);
+        const repository = new RecordedDB(silentLoggerModel, repositoryOperator(connection), immediateRetry);
 
         await expect(
             repository.findIds([1, 2], {
@@ -495,7 +499,7 @@ describe('typed persistence repository contracts', () => {
         const RecordedTagDB = loadCompiledDefault<{
             findAll(option: object): Promise<[object[], number]>;
         }>('model/db/RecordedTagDB.js');
-        const repository = new RecordedTagDB(repositoryOperator(connection), immediateRetry);
+        const repository = new RecordedTagDB(silentLoggerModel, repositoryOperator(connection), immediateRetry);
 
         await expect(repository.findAll({ name: 'synthetic', offset: 2, limit: 1 })).resolves.toEqual([rows, 1]);
         expect(builder.skip).toHaveBeenCalledWith(2);
@@ -512,6 +516,7 @@ describe('typed persistence repository contracts', () => {
             updateOnce(id: number, name: string, color: string): Promise<void>;
         }>('model/db/RecordedTagDB.js');
         const repository = new RecordedTagDB(
+            silentLoggerModel,
             repositoryOperator({
                 createQueryBuilder: vi.fn(() => builder),
                 getRepository: vi.fn(() => ({ createQueryBuilder: vi.fn(() => builder) })),
@@ -551,7 +556,7 @@ describe('typed persistence repository contracts', () => {
             deleteRelation(tagId: number, recordedId: number): Promise<void>;
             setRelation(tagId: number, recordedId: number): Promise<void>;
         }>('model/db/RecordedTagDB.js');
-        const repository = new RecordedTagDB(repositoryOperator(connection), immediateRetry);
+        const repository = new RecordedTagDB(silentLoggerModel, repositoryOperator(connection), immediateRetry);
 
         await expect(repository.setRelation(20, 7)).resolves.toBeUndefined();
         await expect(repository.deleteRelation(20, 7)).resolves.toBeUndefined();
@@ -587,7 +592,7 @@ describe('typed persistence repository contracts', () => {
             getRepository: vi.fn(() => ({ findOne: vi.fn(async () => ({ channelIds: '{broken-json' })) })),
         };
         const RuleDB = loadCompiledDefault<{ findId(id: number): Promise<unknown> }>('model/db/RuleDB.js');
-        const repository = new RuleDB(repositoryOperator(connection), immediateRetry);
+        const repository = new RuleDB(silentLoggerModel, repositoryOperator(connection), immediateRetry);
 
         await expect(repository.findId(1)).rejects.toBeInstanceOf(SyntaxError);
     });
@@ -597,7 +602,7 @@ describe('typed persistence repository contracts', () => {
         const connection = { createQueryRunner: vi.fn(() => runner) };
         const retry = { run: vi.fn(async <Value>(job: () => Promise<Value>) => job()) };
         const ReserveDB = loadCompiledDefault<{ updateMany(values: object): Promise<void> }>('model/db/ReserveDB.js');
-        const repository = new ReserveDB(repositoryOperator(connection), retry);
+        const repository = new ReserveDB(silentLoggerModel, repositoryOperator(connection), retry);
 
         await expect(
             repository.updateMany({ delete: [{ id: 1 }], insert: [{}], update: [{ id: 3 }] }),
@@ -691,6 +696,7 @@ describe('typed persistence repository contracts', () => {
     });
 
     it('[PERSIST-7.1-R4.2-FULL-AND-CHANNEL-FAILURE] preserves InsertError and releases full and selected-channel failures', async () => {
+        const logging = createRecordingLoggerModel();
         const full = transactionRunner();
         const selectedChannel = transactionRunner();
         const fullPrimary = new Error('synthetic-full-program-replacement-failure');
@@ -701,7 +707,7 @@ describe('typed persistence repository contracts', () => {
             insert(channelTypes: object, programs: object[], deleteChannelIds?: number[]): Promise<void>;
         }>('model/db/ProgramDB.js');
         const repository = new ProgramDB(
-            { getLogger: silentLogger },
+            logging.loggerModel,
             { getConfig: () => ({ needToReplaceEnclosingCharacters: false }) },
             repositoryOperator({
                 createQueryRunner: vi.fn().mockReturnValueOnce(full.runner).mockReturnValueOnce(selectedChannel.runner),
@@ -721,41 +727,37 @@ describe('typed persistence repository contracts', () => {
                 startAt: 2_000,
             },
         ];
-        const diagnostic = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+        const diagnostic = logging.error;
 
-        try {
-            const publicErrors: unknown[] = [];
-            for (const deleteChannelIds of [undefined, [11]] as const) {
-                try {
-                    await repository.insert(channelTypes, programs, deleteChannelIds);
-                } catch (error) {
-                    publicErrors.push(error);
-                }
+        const publicErrors: unknown[] = [];
+        for (const deleteChannelIds of [undefined, [11]] as const) {
+            try {
+                await repository.insert(channelTypes, programs, deleteChannelIds);
+            } catch (error) {
+                publicErrors.push(error);
             }
-
-            expect(publicErrors).toHaveLength(2);
-            for (const publicError of publicErrors) {
-                expect(publicError).toBeInstanceOf(Error);
-                expect((publicError as Error).message).toBe('InsertError');
-                expect((publicError as Error & { cause?: unknown }).cause).toBeUndefined();
-            }
-
-            for (const transaction of [full.runner, selectedChannel.runner]) {
-                expect(transaction.commitTransaction).not.toHaveBeenCalled();
-                expect(transaction.rollbackTransaction).toHaveBeenCalledOnce();
-                expect(transaction.release).toHaveBeenCalledOnce();
-            }
-            expect(diagnostic.mock.calls).toEqual([[fullPrimary], [selectedChannelPrimary]]);
-        } finally {
-            diagnostic.mockRestore();
         }
+
+        expect(publicErrors).toHaveLength(2);
+        for (const publicError of publicErrors) {
+            expect(publicError).toBeInstanceOf(Error);
+            expect((publicError as Error).message).toBe('InsertError');
+            expect((publicError as Error & { cause?: unknown }).cause).toBeUndefined();
+        }
+
+        for (const transaction of [full.runner, selectedChannel.runner]) {
+            expect(transaction.commitTransaction).not.toHaveBeenCalled();
+            expect(transaction.rollbackTransaction).toHaveBeenCalledOnce();
+            expect(transaction.release).toHaveBeenCalledOnce();
+        }
+        expect(diagnostic.mock.calls).toEqual([[fullPrimary], [selectedChannelPrimary]]);
     });
 
     it('[PERSIST-7.1-R4.3-RESTORE-COMMIT] commits one typed restore through the public port', async () => {
         const { deleteBuilder, runner } = transactionRunner();
         const connection = { createQueryRunner: vi.fn(() => runner) };
         const RuleDB = loadCompiledDefault<{ restore(items: object[]): Promise<void> }>('model/db/RuleDB.js');
-        const repository = new RuleDB(repositoryOperator(connection), immediateRetry);
+        const repository = new RuleDB(silentLoggerModel, repositoryOperator(connection), immediateRetry);
 
         await expect(repository.restore([])).resolves.toBeUndefined();
         // TypeORM 1.x rejects manager.delete(Entity, {}) with empty criteria, so restore() now wipes
@@ -767,6 +769,7 @@ describe('typed persistence repository contracts', () => {
     });
 
     it('[PERSIST-7.1-R4.3-RESTORE-MIDWAY-ROLLBACK] rolls back a typed restore when an inserted item fails', async () => {
+        const logging = createRecordingLoggerModel();
         const { deleteBuilder, manager, runner } = transactionRunner();
         const primary = new Error('synthetic-restore-insert-failure');
         manager.insert.mockRejectedValue(primary);
@@ -774,27 +777,25 @@ describe('typed persistence repository contracts', () => {
             'model/db/RecordedHistoryDB.js',
         );
         const repository = new RecordedHistoryDB(
+            logging.loggerModel,
             repositoryOperator({ createQueryRunner: vi.fn(() => runner) }),
             immediateRetry,
         );
-        const diagnostic = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+        const diagnostic = logging.error;
 
-        try {
-            await expect(repository.restore([{ id: 1 }])).rejects.toThrow('restore error');
-            expect(deleteBuilder.delete).toHaveBeenCalledOnce();
-            expect(deleteBuilder.execute).toHaveBeenCalledOnce();
-            expect(manager.insert).toHaveBeenCalledOnce();
-            expect(runner.commitTransaction).not.toHaveBeenCalled();
-            expect(runner.rollbackTransaction).toHaveBeenCalledOnce();
-            expect(runner.isTransactionActive).toBe(false);
-            expect(runner.release).toHaveBeenCalledOnce();
-            expect(diagnostic).toHaveBeenCalledExactlyOnceWith(primary);
-        } finally {
-            diagnostic.mockRestore();
-        }
+        await expect(repository.restore([{ id: 1 }])).rejects.toThrow('restore error');
+        expect(deleteBuilder.delete).toHaveBeenCalledOnce();
+        expect(deleteBuilder.execute).toHaveBeenCalledOnce();
+        expect(manager.insert).toHaveBeenCalledOnce();
+        expect(runner.commitTransaction).not.toHaveBeenCalled();
+        expect(runner.rollbackTransaction).toHaveBeenCalledOnce();
+        expect(runner.isTransactionActive).toBe(false);
+        expect(runner.release).toHaveBeenCalledOnce();
+        expect(diagnostic).toHaveBeenCalledExactlyOnceWith(primary);
     });
 
     it('[PERSIST-7.1-R4.5-STAGED-RESTORE] keeps an earlier typed restore committed when a later restore fails', async () => {
+        const logging = createRecordingLoggerModel();
         const first = transactionRunner();
         const second = transactionRunner();
         const primary = new Error('synthetic-later-restore-failure');
@@ -802,14 +803,16 @@ describe('typed persistence repository contracts', () => {
         const RuleDB = loadCompiledDefault<{ restore(items: object[]): Promise<void> }>('model/db/RuleDB.js');
         const ReserveDB = loadCompiledDefault<{ restore(items: object[]): Promise<void> }>('model/db/ReserveDB.js');
         const ruleRepository = new RuleDB(
+            logging.loggerModel,
             repositoryOperator({ createQueryRunner: vi.fn(() => first.runner) }),
             immediateRetry,
         );
         const reserveRepository = new ReserveDB(
+            logging.loggerModel,
             repositoryOperator({ createQueryRunner: vi.fn(() => second.runner) }),
             immediateRetry,
         );
-        const diagnostic = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+        const diagnostic = logging.error;
 
         await expect(ruleRepository.restore([])).resolves.toBeUndefined();
         await expect(reserveRepository.restore([])).rejects.toThrow('restore error');
@@ -893,30 +896,29 @@ describe('typed persistence repository contracts', () => {
     });
 
     it('[PERSIST-7.1-R4.8-COMMIT-FAILURE] rolls back and releases after a public batch commit failure', async () => {
+        const logging = createRecordingLoggerModel();
         const { runner } = transactionRunner();
         const primary = new Error('synthetic-reserve-commit-failure');
         runner.commitTransaction.mockRejectedValue(primary);
         const ReserveDB = loadCompiledDefault<{ updateMany(values: object): Promise<void> }>('model/db/ReserveDB.js');
         const repository = new ReserveDB(
+            logging.loggerModel,
             repositoryOperator({ createQueryRunner: vi.fn(() => runner) }),
             immediateRetry,
         );
-        const diagnostic = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+        const diagnostic = logging.error;
 
-        try {
-            await expect(repository.updateMany({})).rejects.toThrow('ReserveUpdateManyError');
-            expect(runner.startTransaction).toHaveBeenCalledOnce();
-            expect(runner.commitTransaction).toHaveBeenCalledOnce();
-            expect(runner.rollbackTransaction).toHaveBeenCalledOnce();
-            expect(runner.isTransactionActive).toBe(false);
-            expect(runner.release).toHaveBeenCalledOnce();
-            expect(diagnostic).toHaveBeenCalledExactlyOnceWith(primary);
-        } finally {
-            diagnostic.mockRestore();
-        }
+        await expect(repository.updateMany({})).rejects.toThrow('ReserveUpdateManyError');
+        expect(runner.startTransaction).toHaveBeenCalledOnce();
+        expect(runner.commitTransaction).toHaveBeenCalledOnce();
+        expect(runner.rollbackTransaction).toHaveBeenCalledOnce();
+        expect(runner.isTransactionActive).toBe(false);
+        expect(runner.release).toHaveBeenCalledOnce();
+        expect(diagnostic).toHaveBeenCalledExactlyOnceWith(primary);
     });
 
     it('[PERSIST-7.1-R4.9-PRIMARY-CLEANUP-DIAGNOSTICS] separates primary, rollback, and release diagnostics from the public wrapper', async () => {
+        const logging = createRecordingLoggerModel();
         const { manager, runner } = transactionRunner();
         const primary = new Error('synthetic-reserve-primary-failure');
         const rollback = new Error('synthetic-reserve-rollback-failure');
@@ -926,28 +928,25 @@ describe('typed persistence repository contracts', () => {
         runner.release.mockRejectedValue(release);
         const ReserveDB = loadCompiledDefault<{ updateMany(values: object): Promise<void> }>('model/db/ReserveDB.js');
         const repository = new ReserveDB(
+            logging.loggerModel,
             repositoryOperator({ createQueryRunner: vi.fn(() => runner) }),
             immediateRetry,
         );
-        const diagnostic = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+        const diagnostic = logging.error;
 
+        let publicError: unknown;
         try {
-            let publicError: unknown;
-            try {
-                await repository.updateMany({ delete: [{ id: 1 }] });
-            } catch (error) {
-                publicError = error;
-            }
-
-            expect(publicError).toBeInstanceOf(Error);
-            expect((publicError as Error).message).toBe('ReserveUpdateManyError');
-            expect((publicError as Error & { cause?: unknown }).cause).toBeUndefined();
-            expect(runner.rollbackTransaction).toHaveBeenCalledOnce();
-            expect(runner.release).toHaveBeenCalledOnce();
-            expect(diagnostic.mock.calls).toEqual([[primary], [rollback], [release]]);
-        } finally {
-            diagnostic.mockRestore();
+            await repository.updateMany({ delete: [{ id: 1 }] });
+        } catch (error) {
+            publicError = error;
         }
+
+        expect(publicError).toBeInstanceOf(Error);
+        expect((publicError as Error).message).toBe('ReserveUpdateManyError');
+        expect((publicError as Error & { cause?: unknown }).cause).toBeUndefined();
+        expect(runner.rollbackTransaction).toHaveBeenCalledOnce();
+        expect(runner.release).toHaveBeenCalledOnce();
+        expect(diagnostic.mock.calls).toEqual([[primary], [rollback], [release]]);
     });
 
     it.each([
@@ -962,6 +961,7 @@ describe('typed persistence repository contracts', () => {
     ])(
         '[PERSIST-4.8-RESTORE-START-%s] keeps the restore error wrapper after a transaction start failure',
         async (_name, modulePath) => {
+            const logging = createRecordingLoggerModel();
             const primary = new Error('synthetic-start-primary');
             const runner = {
                 commitTransaction: vi.fn(),
@@ -976,8 +976,8 @@ describe('typed persistence repository contracts', () => {
             const connection = { createQueryRunner: vi.fn(() => runner) };
             const retry = { run: vi.fn(async <T>(job: () => Promise<T>) => job()) };
             const Repository = loadCompiledDefault<{ restore(items: object[]): Promise<void> }>(modulePath);
-            const repository = new Repository(repositoryOperator(connection), retry);
-            const diagnostic = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+            const repository = new Repository(logging.loggerModel, repositoryOperator(connection), retry);
+            const diagnostic = logging.error;
 
             await expect(repository.restore([])).rejects.toThrow('restore error');
             expect(runner.startTransaction).toHaveBeenCalledOnce();
@@ -989,6 +989,7 @@ describe('typed persistence repository contracts', () => {
     );
 
     it('[PERSIST-4.8-CHANNEL-INSERT-START] releases an inactive runner and keeps the insert error wrapper after start failure', async () => {
+        const logging = createRecordingLoggerModel();
         const primary = new Error('synthetic-channel-insert-start-primary');
         const runner = {
             commitTransaction: vi.fn(),
@@ -1004,12 +1005,12 @@ describe('typed persistence repository contracts', () => {
         const retry = { run: vi.fn(async <T>(job: () => Promise<T>) => job()) };
         const ChannelDB = loadCompiledDefault<{ insert(channels: object[]): Promise<void> }>('model/db/ChannelDB.js');
         const repository = new ChannelDB(
-            { getLogger: silentLogger },
+            logging.loggerModel,
             { getConfig: () => ({}) },
             repositoryOperator(connection),
             retry,
         );
-        const diagnostic = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+        const diagnostic = logging.error;
 
         let rejection: unknown;
         try {
@@ -1029,6 +1030,7 @@ describe('typed persistence repository contracts', () => {
     });
 
     it('[PERSIST-4.8-PROGRAM-INSERT-START] releases an inactive runner and keeps InsertError after start failure', async () => {
+        const logging = createRecordingLoggerModel();
         const primary = new Error('synthetic-program-insert-start-primary');
         const runner = {
             commitTransaction: vi.fn(),
@@ -1046,12 +1048,12 @@ describe('typed persistence repository contracts', () => {
             insert(channelTypes: object, programs: object[], deleteChannelIds?: number[]): Promise<void>;
         }>('model/db/ProgramDB.js');
         const repository = new ProgramDB(
-            { getLogger: silentLogger },
+            logging.loggerModel,
             { getConfig: () => ({}) },
             repositoryOperator(connection),
             retry,
         );
-        const diagnostic = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+        const diagnostic = logging.error;
 
         let rejection: unknown;
         try {
@@ -1071,6 +1073,7 @@ describe('typed persistence repository contracts', () => {
     });
 
     it('[PERSIST-4.8-PROGRAM-UPDATE-START] releases an inactive runner and keeps UpdateError after start failure', async () => {
+        const logging = createRecordingLoggerModel();
         const primary = new Error('synthetic-program-update-start-primary');
         const runner = {
             commitTransaction: vi.fn(),
@@ -1088,12 +1091,12 @@ describe('typed persistence repository contracts', () => {
             update(channelTypes: object, values: object): Promise<void>;
         }>('model/db/ProgramDB.js');
         const repository = new ProgramDB(
-            { getLogger: silentLogger },
+            logging.loggerModel,
             { getConfig: () => ({}) },
             repositoryOperator(connection),
             retry,
         );
-        const diagnostic = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+        const diagnostic = logging.error;
 
         let rejection: unknown;
         try {
@@ -1113,6 +1116,7 @@ describe('typed persistence repository contracts', () => {
     });
 
     it('[PERSIST-4.8-RESERVE-UPDATE-MANY-START] releases an inactive runner and keeps ReserveUpdateManyError after start failure', async () => {
+        const logging = createRecordingLoggerModel();
         const primary = new Error('synthetic-reserve-update-many-start-primary');
         const runner = {
             commitTransaction: vi.fn(),
@@ -1127,8 +1131,8 @@ describe('typed persistence repository contracts', () => {
         const connection = { createQueryRunner: vi.fn(() => runner) };
         const retry = { run: vi.fn(async <T>(job: () => Promise<T>) => job()) };
         const ReserveDB = loadCompiledDefault<{ updateMany(values: object): Promise<void> }>('model/db/ReserveDB.js');
-        const repository = new ReserveDB(repositoryOperator(connection), retry);
-        const diagnostic = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+        const repository = new ReserveDB(logging.loggerModel, repositoryOperator(connection), retry);
+        const diagnostic = logging.error;
 
         let rejection: unknown;
         try {
@@ -1148,6 +1152,7 @@ describe('typed persistence repository contracts', () => {
     });
 
     it('[PERSIST-4.8-RESERVE-UPDATE-MANY-ACTIVE] rolls an active transaction back and keeps ReserveUpdateManyError after a mutation failure', async () => {
+        const logging = createRecordingLoggerModel();
         const primary = new Error('synthetic-reserve-update-many-mutation-primary');
         let active = false;
         const runner = {
@@ -1175,8 +1180,8 @@ describe('typed persistence repository contracts', () => {
         const connection = { createQueryRunner: vi.fn(() => runner) };
         const retry = { run: vi.fn(async <T>(job: () => Promise<T>) => job()) };
         const ReserveDB = loadCompiledDefault<{ updateMany(values: object): Promise<void> }>('model/db/ReserveDB.js');
-        const repository = new ReserveDB(repositoryOperator(connection), retry);
-        const diagnostic = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+        const repository = new ReserveDB(logging.loggerModel, repositoryOperator(connection), retry);
+        const diagnostic = logging.error;
 
         let rejection: unknown;
         try {
@@ -1198,6 +1203,7 @@ describe('typed persistence repository contracts', () => {
     });
 
     it('[PERSIST-4.8-RESERVE-UPDATE-MANY-RELEASE] keeps ReserveUpdateManyError after release failure', async () => {
+        const logging = createRecordingLoggerModel();
         const cleanup = new Error('synthetic-reserve-update-many-release-cleanup');
         let active = false;
         const runner = {
@@ -1221,8 +1227,8 @@ describe('typed persistence repository contracts', () => {
         const connection = { createQueryRunner: vi.fn(() => runner) };
         const retry = { run: vi.fn(async <T>(job: () => Promise<T>) => job()) };
         const ReserveDB = loadCompiledDefault<{ updateMany(values: object): Promise<void> }>('model/db/ReserveDB.js');
-        const repository = new ReserveDB(repositoryOperator(connection), retry);
-        const diagnostic = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+        const repository = new ReserveDB(logging.loggerModel, repositoryOperator(connection), retry);
+        const diagnostic = logging.error;
 
         let rejection: unknown;
         try {

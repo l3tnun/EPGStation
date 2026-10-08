@@ -134,7 +134,7 @@ describe('ChannelDB.insert row conversion (unittest/imp)', () => {
 
     it('[4.4] rolls back, releases and reports the insert error when the commit fails', async () => {
         const fixture = makeTransactional({ commit: true });
-        const diagnostic = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+        const diagnostic = fixture.error;
 
         await expect(fixture.provider.insert([service(1)])).rejects.toThrow('insert error');
 
@@ -144,7 +144,7 @@ describe('ChannelDB.insert row conversion (unittest/imp)', () => {
 
     it('[4.9] keeps the insert error as the public error when the rollback also fails', async () => {
         const fixture = makeTransactional({ commit: true, rollback: true });
-        const diagnostic = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+        const diagnostic = fixture.error;
 
         await expect(fixture.provider.insert([service(1)])).rejects.toThrow('insert error');
 
@@ -154,7 +154,7 @@ describe('ChannelDB.insert row conversion (unittest/imp)', () => {
 
     it('[4.9] keeps the insert error as the public error when only the release fails', async () => {
         const fixture = makeTransactional({ release: true });
-        const diagnostic = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+        const diagnostic = fixture.error;
 
         await expect(fixture.provider.insert([service(1)])).rejects.toThrow('insert error');
 

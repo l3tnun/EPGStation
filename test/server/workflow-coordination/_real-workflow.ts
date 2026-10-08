@@ -22,6 +22,7 @@ import {
 import { load } from '../recording-execution/_harness';
 import { chunk, createRealTuner, insertReserve, withSqlite, wireRecording } from '../recording-execution/_real-tuner-wiring';
 import { immediateRetry, repositoryOperator } from '../persistence/repository-harness';
+import { silentLoggerModel } from '../harness/silent-logger-model';
 
 /*
  * 機能間連携機能の結合 test が共有する、本物の部品の配線。
@@ -212,15 +213,15 @@ export const createWorld = async (source: DataSource, root: string, options: Wor
 
     const operator = repositoryOperator(source);
     const programDB = new ProgramDB(loggerModel, { getConfig: () => ({ needToReplaceEnclosingCharacters: false }) }, operator, immediateRetry);
-    const ruleDB = new RuleDB(operator, immediateRetry);
+    const ruleDB = new RuleDB(silentLoggerModel, operator, immediateRetry);
     const channelDB = new ChannelDB(loggerModel, { getConfig: () => ({ needToReplaceEnclosingCharacters: false }) }, operator, immediateRetry);
-    const reserveDB = new ReserveDB(operator, immediateRetry);
-    const recordedDB = new RecordedDB(operator, immediateRetry);
-    const recordedHistoryDB = new RecordedHistoryDB(operator, immediateRetry);
-    const recordedTagDB = new RecordedTagDB(operator, immediateRetry);
-    const videoFileDB = new VideoFileDB(operator, immediateRetry);
-    const thumbnailDB = new ThumbnailDB(operator, immediateRetry);
-    const dropLogFileDB = new DropLogFileDB(operator, immediateRetry);
+    const reserveDB = new ReserveDB(silentLoggerModel, operator, immediateRetry);
+    const recordedDB = new RecordedDB(silentLoggerModel, operator, immediateRetry);
+    const recordedHistoryDB = new RecordedHistoryDB(silentLoggerModel, operator, immediateRetry);
+    const recordedTagDB = new RecordedTagDB(silentLoggerModel, operator, immediateRetry);
+    const videoFileDB = new VideoFileDB(silentLoggerModel, operator, immediateRetry);
+    const thumbnailDB = new ThumbnailDB(silentLoggerModel, operator, immediateRetry);
+    const dropLogFileDB = new DropLogFileDB(silentLoggerModel, operator, immediateRetry);
     const videoUtil = new VideoUtil(configuration, videoFileDB, loggerModel);
 
     const tuner = await createRealTuner();

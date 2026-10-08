@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { DataSource, type DataSourceOptions } from 'typeorm';
 import { vi } from 'vitest';
 import { provisionMariaDb, type MariaDbRuntime, type MysqlSchema } from '../persistence/mysql-runtime';
+import { silentLoggerModel } from '../harness/silent-logger-model';
 
 const require = createRequire(join(process.cwd(), 'package.json'));
 const snapshot = process.env.EPGSTATION_SERVER_COMPILED_SNAPSHOT;
@@ -210,7 +211,7 @@ export const createPersistence = async (dialect: 'sqlite' | 'mysql', dependencie
     };
     const retry = dependencies.retry ?? { run: async <T>(job: () => Promise<T>) => job() };
     return {
-        db: new ReserveDB(operator, retry),
+        db: new ReserveDB(silentLoggerModel, operator, retry),
         source,
         cleanup: async () => cleanupPersistence(source, schema, maria),
     };

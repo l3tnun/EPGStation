@@ -3,6 +3,7 @@ import 'reflect-metadata';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { silentLoggerModel } from '../harness/silent-logger-model';
 
 const require = createRequire(join(process.cwd(), 'package.json'));
 const snapshot = process.env.EPGSTATION_SERVER_COMPILED_SNAPSHOT as string;
@@ -40,7 +41,7 @@ describe('recorded metadata implementation characterization', () => {
             getLikeStr: vi.fn(() => 'like'),
         };
         const retry = { run: vi.fn((callback: () => unknown) => callback()) };
-        const db = new RecordedTagDB(op, retry);
+        const db = new RecordedTagDB(silentLoggerModel, op, retry);
 
         await expect(db.findAll({ excludeTagId: [521, 522], name: 'Ａ　Ｂ', offset: 3, limit: 4 })).resolves.toEqual([
             [],
@@ -107,7 +108,7 @@ describe('recorded metadata implementation characterization', () => {
         };
         const op = { getConnection: vi.fn(async () => ({ createQueryBuilder: () => query })) };
         const retry = { run: vi.fn((callback: () => unknown) => callback()) };
-        const db = new RecordedHistoryDB(op, retry);
+        const db = new RecordedHistoryDB(silentLoggerModel, op, retry);
 
         await db.delete(524_000);
 
@@ -130,7 +131,7 @@ describe('recorded metadata implementation characterization', () => {
         };
         const op = { getConnection: vi.fn(async () => ({ createQueryBuilder: () => query })) };
         const retry = { run: vi.fn((callback: () => unknown) => callback()) };
-        const db = new RecordedHistoryDB(op, retry);
+        const db = new RecordedHistoryDB(silentLoggerModel, op, retry);
 
         await expect(db.delete(525_000)).rejects.toBe(persistenceFailure);
         expect(retry.run).toHaveBeenCalledOnce();

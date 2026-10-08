@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DataSource } from 'typeorm';
 import { describe, expect, it } from 'vitest';
+import { silentLoggerModel } from '../harness/silent-logger-model';
 
 const require = createRequire(join(process.cwd(), 'package.json'));
 const snapshot = process.env.EPGSTATION_SERVER_COMPILED_SNAPSHOT as string;
@@ -74,12 +75,12 @@ describe('recorded content database integration', () => {
         try {
             await source.initialize();
             const operator = { getConnection: async () => source, getLikeStr: () => 'like' };
-            const recordedDB = new RecordedDB(operator, retry);
-            const videoFileDB = new VideoFileDB(operator, retry);
-            const dropLogFileDB = new DropLogFileDB(operator, retry);
-            const thumbnailDB = new ThumbnailDB(operator, retry);
-            const recordedTagDB = new RecordedTagDB(operator, retry);
-            const recordedHistoryDB = new RecordedHistoryDB(operator, retry);
+            const recordedDB = new RecordedDB(silentLoggerModel, operator, retry);
+            const videoFileDB = new VideoFileDB(silentLoggerModel, operator, retry);
+            const dropLogFileDB = new DropLogFileDB(silentLoggerModel, operator, retry);
+            const thumbnailDB = new ThumbnailDB(silentLoggerModel, operator, retry);
+            const recordedTagDB = new RecordedTagDB(silentLoggerModel, operator, retry);
+            const recordedHistoryDB = new RecordedHistoryDB(silentLoggerModel, operator, retry);
 
             const dropLogFileId = await dropLogFileDB.insertOnce(
                 Object.assign(new DropLogFile(), {

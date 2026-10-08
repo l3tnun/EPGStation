@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createRunnerDouble, loadEntity, type RunnerFaults } from './db-unit-fakes';
 import { immediateRetry, loadCompiled, repositoryOperator } from './repository-harness';
+import { createRecordingLoggerModel } from '../harness/silent-logger-model';
 
 type Restorable = { restore(items: object[]): Promise<void> };
 
@@ -95,8 +96,9 @@ const build = (subject: Subject, faults: RunnerFaults) => {
     const double = createRunnerDouble(faults);
     const connection = { createQueryRunner: vi.fn(() => double.runner) };
     const Repository = loadCompiled<new (...arguments_: any[]) => Restorable>(subject.modulePath);
-    const repository = new Repository(repositoryOperator(connection), immediateRetry);
-    return { ...double, repository };
+    const logging = createRecordingLoggerModel();
+    const repository = new Repository(logging.loggerModel, repositoryOperator(connection), immediateRetry);
+    return { ...double, diagnostic: logging.error, repository };
 };
 
 afterEach(() => {
@@ -127,7 +129,7 @@ describe.each(subjects)('$name restore transaction lifecycle (unittest/imp)', su
 
     it('[4.4] rolls an active transaction back, releases, and reports restore error when an insert fails', async () => {
         const fixture = build(subject, { insert: true });
-        const diagnostic = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+        const diagnostic = fixture.diagnostic;
 
         await expect(fixture.repository.restore([...subject.items])).rejects.toThrow('restore error');
 
@@ -140,7 +142,7 @@ describe.each(subjects)('$name restore transaction lifecycle (unittest/imp)', su
 
     it('[4.9] keeps restore error as the public error and records the cleanup failure when rollback fails', async () => {
         const fixture = build(subject, { insert: true, rollback: true });
-        const diagnostic = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+        const diagnostic = fixture.diagnostic;
 
         await expect(fixture.repository.restore([...subject.items])).rejects.toThrow('restore error');
 
@@ -151,7 +153,7 @@ describe.each(subjects)('$name restore transaction lifecycle (unittest/imp)', su
 
     it('[4.8] does not roll back a transaction that never started but still releases the runner', async () => {
         const fixture = build(subject, { start: true });
-        const diagnostic = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+        const diagnostic = fixture.diagnostic;
 
         await expect(fixture.repository.restore([...subject.items])).rejects.toThrow('restore error');
 
@@ -163,7 +165,7 @@ describe.each(subjects)('$name restore transaction lifecycle (unittest/imp)', su
 
     it('[4.9] reports restore error and records the diagnostic when only release fails after a commit', async () => {
         const fixture = build(subject, { release: true });
-        const diagnostic = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+        const diagnostic = fixture.diagnostic;
 
         await expect(fixture.repository.restore([...subject.items])).rejects.toThrow('restore error');
 

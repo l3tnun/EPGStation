@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { createRunnerDouble, loadEntity } from './db-unit-fakes';
 import { immediateRetry, loadCompiled, repositoryOperator } from './repository-harness';
+import { silentLoggerModel } from '../harness/silent-logger-model';
 
 const Rule = loadEntity('Rule');
 const RuleDB =
@@ -18,7 +19,7 @@ const baseRule = (saveOption: object) => ({
 
 const restoreRows = async (saveOption: object) => {
     const double = createRunnerDouble();
-    const repository = new RuleDB(repositoryOperator({ createQueryRunner: () => double.runner }), immediateRetry);
+    const repository = new RuleDB(silentLoggerModel, repositoryOperator({ createQueryRunner: () => double.runner }), immediateRetry);
     await repository.restore([baseRule(saveOption)]);
     return double.runner.manager.insert.mock.calls as unknown as [unknown, Record<string, unknown>][];
 };

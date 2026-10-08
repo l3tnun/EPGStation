@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { immediateRetry, loadCompiled, repositoryOperator } from './repository-harness';
+import { silentLoggerModel } from '../harness/silent-logger-model';
 
 const basePersistedRule = {
     id: 1,
@@ -54,7 +55,7 @@ describe('repository serialization and ownership characterization', () => {
             getRepository: vi.fn(() => ({ findOne: vi.fn(async () => ({ ...basePersistedRule })) })),
         };
         const RuleDB = loadCompiled<new (...arguments_: any[]) => any>('model/db/RuleDB.js');
-        const repository = new RuleDB(repositoryOperator(connection), immediateRetry);
+        const repository = new RuleDB(silentLoggerModel, repositoryOperator(connection), immediateRetry);
 
         await expect(repository.findId(1)).resolves.toMatchObject({
             searchOption: {
@@ -74,7 +75,7 @@ describe('repository serialization and ownership characterization', () => {
             })),
         };
         const RuleDB = loadCompiled<new (...arguments_: any[]) => any>('model/db/RuleDB.js');
-        const repository = new RuleDB(repositoryOperator(connection), immediateRetry);
+        const repository = new RuleDB(silentLoggerModel, repositoryOperator(connection), immediateRetry);
 
         await expect(repository.findId(1)).rejects.toBeInstanceOf(SyntaxError);
     });
@@ -107,7 +108,7 @@ describe('repository serialization and ownership characterization', () => {
             })),
         };
         const ThumbnailDB = loadCompiled<new (...arguments_: any[]) => any>('model/db/ThumbnailDB.js');
-        const repository = new ThumbnailDB(repositoryOperator(connection), immediateRetry);
+        const repository = new ThumbnailDB(silentLoggerModel, repositoryOperator(connection), immediateRetry);
 
         await expect(repository.findId(1)).resolves.toBeNull();
     });
@@ -121,7 +122,7 @@ describe('repository serialization and ownership characterization', () => {
             })),
         };
         const DropLogFileDB = loadCompiled<new (...arguments_: any[]) => any>('model/db/DropLogFileDB.js');
-        const repository = new DropLogFileDB(repositoryOperator(connection), immediateRetry);
+        const repository = new DropLogFileDB(silentLoggerModel, repositoryOperator(connection), immediateRetry);
 
         await expect(repository.findId(1)).resolves.toBeNull();
     });
@@ -135,7 +136,7 @@ describe('repository serialization and ownership characterization', () => {
             })),
         };
         const VideoFileDB = loadCompiled<new (...arguments_: any[]) => any>('model/db/VideoFileDB.js');
-        const repository = new VideoFileDB(repositoryOperator(connection), immediateRetry);
+        const repository = new VideoFileDB(silentLoggerModel, repositoryOperator(connection), immediateRetry);
 
         await expect(repository.findId(1)).resolves.toBeNull();
     });
@@ -149,7 +150,7 @@ describe('repository serialization and ownership characterization', () => {
             })),
         };
         const VideoFileDB = loadCompiled<new (...arguments_: any[]) => any>('model/db/VideoFileDB.js');
-        const repository = new VideoFileDB(repositoryOperator(connection), immediateRetry);
+        const repository = new VideoFileDB(silentLoggerModel, repositoryOperator(connection), immediateRetry);
 
         await expect(
             repository.updateFilePath({
@@ -169,7 +170,7 @@ describe('repository serialization and ownership characterization', () => {
             })),
         };
         const VideoFileDB = loadCompiled<new (...arguments_: any[]) => any>('model/db/VideoFileDB.js');
-        const repository = new VideoFileDB(repositoryOperator(connection), immediateRetry);
+        const repository = new VideoFileDB(silentLoggerModel, repositoryOperator(connection), immediateRetry);
 
         await expect(repository.updateSize(9, 1024)).rejects.toThrow('VideoFileIsNull');
     });
@@ -198,7 +199,7 @@ describe('repository serialization and ownership characterization', () => {
             })),
         };
         const ReserveDB = loadCompiled<new (...arguments_: any[]) => any>('model/db/ReserveDB.js');
-        const repository = new ReserveDB(repositoryOperator(connection), immediateRetry);
+        const repository = new ReserveDB(silentLoggerModel, repositoryOperator(connection), immediateRetry);
 
         await expect(
             repository.findTimeSpecification({ channelId: 1, startAt: 100, endAt: 200 }),
@@ -282,7 +283,7 @@ describe('repository serialization and ownership characterization', () => {
             })),
         };
         const RecordedTagDB = loadCompiled<new (...arguments_: any[]) => any>('model/db/RecordedTagDB.js');
-        const repository = new RecordedTagDB(repositoryOperator(connection), immediateRetry);
+        const repository = new RecordedTagDB(silentLoggerModel, repositoryOperator(connection), immediateRetry);
 
         await expect(repository.updateOnce(3, 'name', '#fff')).rejects.toThrow('TagIsNull');
     });
@@ -311,7 +312,7 @@ describe('repository serialization and ownership characterization', () => {
             }),
         };
         const RecordedTagDB = loadCompiled<new (...arguments_: any[]) => any>('model/db/RecordedTagDB.js');
-        const repository = new RecordedTagDB(repositoryOperator(connection), immediateRetry);
+        const repository = new RecordedTagDB(silentLoggerModel, repositoryOperator(connection), immediateRetry);
 
         await expect(repository.setRelation(3, 11)).rejects.toThrow('RecordedTagIsUndefined');
     });
@@ -329,7 +330,7 @@ describe('repository serialization and ownership characterization', () => {
             })),
         };
         const RecordedTagDB = loadCompiled<new (...arguments_: any[]) => any>('model/db/RecordedTagDB.js');
-        const repository = new RecordedTagDB(repositoryOperator(connection), immediateRetry);
+        const repository = new RecordedTagDB(silentLoggerModel, repositoryOperator(connection), immediateRetry);
 
         await expect(repository.setRelation(3, 11)).rejects.toThrow('RecordedIsUndefined');
     });
@@ -354,7 +355,7 @@ describe('repository serialization and ownership characterization', () => {
             })),
         };
         const RecordedTagDB = loadCompiled<new (...arguments_: any[]) => any>('model/db/RecordedTagDB.js');
-        const repository = new RecordedTagDB(repositoryOperator(connection), immediateRetry);
+        const repository = new RecordedTagDB(silentLoggerModel, repositoryOperator(connection), immediateRetry);
 
         await expect(repository.deleteAllRelation(11)).resolves.toBeUndefined();
         expect(recorded.tags).toEqual([]);
@@ -391,7 +392,7 @@ describe('RecordedDB.findOld current fluent assembly (unittest/imp)', () => {
         const RecordedDB = loadCompiled<new (...arguments_: any[]) => { findOld(): Promise<unknown> }>(
             'model/db/RecordedDB.js',
         );
-        const repository = new RecordedDB(repositoryOperator(connection), retry);
+        const repository = new RecordedDB(silentLoggerModel, repositoryOperator(connection), retry);
 
         await expect(repository.findOld()).resolves.toEqual(row);
 
@@ -421,7 +422,7 @@ describe('RecordedDB.findOld current fluent assembly (unittest/imp)', () => {
         const RecordedDB = loadCompiled<new (...arguments_: any[]) => { findOld(): Promise<unknown> }>(
             'model/db/RecordedDB.js',
         );
-        const repository = new RecordedDB(repositoryOperator(connection), retry);
+        const repository = new RecordedDB(silentLoggerModel, repositoryOperator(connection), retry);
 
         await expect(repository.findOld()).resolves.toBeNull();
         expect(builder.getOne).toHaveBeenCalledOnce();
@@ -438,7 +439,7 @@ describe('RecordedDB.findOld current fluent assembly (unittest/imp)', () => {
         const RecordedDB = loadCompiled<new (...arguments_: any[]) => { findOld(): Promise<unknown> }>(
             'model/db/RecordedDB.js',
         );
-        const repository = new RecordedDB(repositoryOperator(connection), retry);
+        const repository = new RecordedDB(silentLoggerModel, repositoryOperator(connection), retry);
 
         await expect(repository.findOld()).rejects.toBe(sentinel);
         expect(builder.getOne).toHaveBeenCalledOnce();
@@ -473,7 +474,7 @@ describe('RecordedDB.removeRuleId current update assembly (unittest/imp)', () =>
         const RecordedDB = loadCompiled<new (...arguments_: any[]) => { removeRuleId(ruleId: number): Promise<void> }>(
             'model/db/RecordedDB.js',
         );
-        const repository = new RecordedDB(repositoryOperator(connection), retry);
+        const repository = new RecordedDB(silentLoggerModel, repositoryOperator(connection), retry);
 
         await expect(repository.removeRuleId(42)).resolves.toBeUndefined();
 
@@ -495,7 +496,7 @@ describe('RecordedDB.removeRuleId current update assembly (unittest/imp)', () =>
         const RecordedDB = loadCompiled<new (...arguments_: any[]) => { removeRuleId(ruleId: number): Promise<void> }>(
             'model/db/RecordedDB.js',
         );
-        const repository = new RecordedDB(repositoryOperator(connection), retry);
+        const repository = new RecordedDB(silentLoggerModel, repositoryOperator(connection), retry);
 
         await expect(repository.removeRuleId(7)).rejects.toBe(sentinel);
         expect(builder.execute).toHaveBeenCalledOnce();

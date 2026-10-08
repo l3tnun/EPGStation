@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DataSource } from 'typeorm';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { silentLoggerModel } from '../harness/silent-logger-model';
 
 const require = createRequire(join(process.cwd(), 'package.json'));
 const snapshot = process.env.EPGSTATION_SERVER_COMPILED_SNAPSHOT as string;
@@ -151,11 +152,11 @@ describe('recorded deletion filesystem integration', () => {
         try {
             const operator = { getConnection: async () => source, getLikeStr: () => 'like' };
             const retry = { run: <T>(operation: () => Promise<T>): Promise<T> => operation() };
-            const recordedDB = new RecordedDB(operator, retry);
-            const videoFileDB = new VideoFileDB(operator, retry);
-            const thumbnailDB = new ThumbnailDB(operator, retry);
-            const dropLogFileDB = new DropLogFileDB(operator, retry);
-            const recordedTagDB = new RecordedTagDB(operator, retry);
+            const recordedDB = new RecordedDB(silentLoggerModel, operator, retry);
+            const videoFileDB = new VideoFileDB(silentLoggerModel, operator, retry);
+            const thumbnailDB = new ThumbnailDB(silentLoggerModel, operator, retry);
+            const dropLogFileDB = new DropLogFileDB(silentLoggerModel, operator, retry);
+            const recordedTagDB = new RecordedTagDB(silentLoggerModel, operator, retry);
             const baseRecorded = (name: string) =>
                 Object.assign(new Recorded(), {
                     reserveId: null,

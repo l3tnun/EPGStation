@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createFluentBuilder, immediateRun, loadEntity } from './db-unit-fakes';
 import { loadCompiled, repositoryOperator } from './repository-harness';
+import { silentLoggerModel } from '../harness/silent-logger-model';
 
 type RecordedProvider = {
     removeRecording(recordedId: number): Promise<void>;
@@ -28,7 +29,7 @@ const makeProvider = (builders: ReturnType<typeof createFluentBuilder>[], update
     return {
         connection,
         getRepository,
-        provider: new RecordedDB(repositoryOperator(connection), retry),
+        provider: new RecordedDB(silentLoggerModel, repositoryOperator(connection), retry),
         retry,
         updateBuilder,
     };

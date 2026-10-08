@@ -19,6 +19,7 @@ import {
     type RepositoryDialect,
     type RepositoryPersistence,
 } from './repository-harness';
+import { silentLoggerModel } from '../harness/silent-logger-model';
 
 /*
  * 永続化の test が使う偽物（synchronize で作る schema、手書きの operator、即時の retry、microtask だけで解決する
@@ -547,8 +548,8 @@ describe('immediate retry double against the real PromiseRetry', () => {
             await withRepository(dialect, async ({ source, db, entities }) => {
                 const blocker = Number(await db.ReserveDB.insertOnce(makeReserve({ id: 4_001, ruleId: 9 })));
                 const operator = { getConnection: async () => source };
-                const doubled = new ReserveDB(operator, immediateRetry);
-                const real = new ReserveDB(operator, new PromiseRetry());
+                const doubled = new ReserveDB(silentLoggerModel, operator, immediateRetry);
+                const real = new ReserveDB(silentLoggerModel, operator, new PromiseRetry());
 
                 // 偽物の retry は 1 回で諦め、本物の driver の一意制約 error をそのまま返す。
                 const immediateFailure = await doubled
@@ -586,8 +587,9 @@ describe('identity convertBoolean operator against the real DBOperator', () => {
             const SnapshotReserveDB = (
                 require(join(snapshot, 'model', 'db', 'ReserveDB.js')) as { default: typeof ReserveDB }
             ).default;
-            const realDb = new SnapshotReserveDB(operator, immediateRetry);
+            const realDb = new SnapshotReserveDB(silentLoggerModel, operator, immediateRetry);
             const identityDb = new SnapshotReserveDB(
+                silentLoggerModel,
                 { getConnection: async () => source, convertBoolean: (value: boolean) => value },
                 immediateRetry,
             );
@@ -682,7 +684,7 @@ describe('microtask-only DB doubles against the event loop behavior of the real 
                 const SnapshotReserveDB = load<typeof ReserveDB>('model/db/ReserveDB.js');
                 const SnapshotPromiseRetry =
                     load<new () => { run<T>(job: () => Promise<T>): Promise<T> }>('model/PromiseRetry.js');
-                const db = new SnapshotReserveDB(operator, new SnapshotPromiseRetry());
+                const db = new SnapshotReserveDB(silentLoggerModel, operator, new SnapshotPromiseRetry());
                 for (const row of [
                     makeReserve({ id: undefined, ruleId: 3, startAt: 30 }),
                     makeReserve({ id: undefined, ruleId: 3, startAt: 20, isConflict: true }),

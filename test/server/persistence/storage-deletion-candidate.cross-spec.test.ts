@@ -7,6 +7,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { compiledSnapshot } from './harness';
 import { loadCompiledDefault, repositoryOperator } from './repository-harness';
+import { silentLoggerModel } from '../harness/silent-logger-model';
 
 const require = createRequire(join(process.cwd(), 'package.json'));
 
@@ -60,7 +61,7 @@ const candidateQuery = (result: { id: number } | undefined | Error, dialect: 'my
     };
     const retry = { run: vi.fn(<T>(job: () => Promise<T>) => job()) };
     const RecordedDB = loadCompiledDefault<StorageDeletionCandidatePort>('model/db/RecordedDB.js');
-    const repository = new RecordedDB(repositoryOperator(connection), retry);
+    const repository = new RecordedDB(silentLoggerModel, repositoryOperator(connection), retry);
     return { query, relationQueries, repository, retry };
 };
 
@@ -143,6 +144,7 @@ describe('storage deletion candidate persistence contract', () => {
         set(container);
         container.rebind('IDBOperator').toConstantValue({});
         container.rebind('IPromiseRetry').toConstantValue({});
+        container.rebind('ILoggerModel').toConstantValue(silentLoggerModel);
 
         expect(container.get('IStorageDeletionCandidatePort')).toBe(container.get('IRecordedDB'));
     });

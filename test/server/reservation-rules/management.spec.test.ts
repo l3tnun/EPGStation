@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createDialectPersistence, type DatabaseDialect } from '../fixtures/reservation-rules/runtime';
+import { silentLoggerModel } from '../harness/silent-logger-model';
 
 interface RuleOption {
     encodeOption?: Record<string, unknown>;
@@ -320,7 +321,7 @@ const makePersistenceBoundary = (firstGeneratedId = 41) => {
     };
     const operator = { getConnection: vi.fn(async () => connection) };
     const retry = { run: vi.fn(async <T>(job: () => Promise<T>) => job()) };
-    const ruleDB = new RuleDB(operator, retry);
+    const ruleDB = new RuleDB(silentLoggerModel, operator, retry);
 
     return { queryBuilder, retry, rows, ruleDB };
 };

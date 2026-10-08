@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createFluentBuilder, immediateRun } from './db-unit-fakes';
 import { loadCompiled, repositoryOperator } from './repository-harness';
+import { silentLoggerModel } from '../harness/silent-logger-model';
 
 type Pagination = { skip: number | undefined; take: number | undefined };
 type Option = { offset?: number; limit?: number };
@@ -50,7 +51,7 @@ describe('一覧の limit 0 を各 DB 層が件数の制限なしにする (unit
         ] as const) {
             const builder = createFluentBuilder({ getManyAndCount: async () => [[], 0] });
             const connection = { getRepository: vi.fn(() => ({ createQueryBuilder: () => builder.builder })) };
-            const provider = new RuleDB(repositoryOperator(connection), retry);
+            const provider = new RuleDB(silentLoggerModel, repositoryOperator(connection), retry);
 
             await provider.findAll(option);
 
@@ -66,7 +67,7 @@ describe('一覧の limit 0 を各 DB 層が件数の制限なしにする (unit
         ] as const) {
             const builder = createFluentBuilder({ getRawMany: async () => [] });
             const connection = { createQueryBuilder: vi.fn(() => builder.builder) };
-            const provider = new RuleDB(repositoryOperator(connection), retry);
+            const provider = new RuleDB(silentLoggerModel, repositoryOperator(connection), retry);
 
             await provider.findKeyword(option);
 
@@ -82,7 +83,7 @@ describe('一覧の limit 0 を各 DB 層が件数の制限なしにする (unit
         ] as const) {
             const builder = createFluentBuilder({ getManyAndCount: async () => [[], 0] });
             const connection = { getRepository: vi.fn(() => ({ createQueryBuilder: () => builder.builder })) };
-            const provider = new RecordedDB(repositoryOperator(connection), retry);
+            const provider = new RecordedDB(silentLoggerModel, repositoryOperator(connection), retry);
 
             await provider.findAll(option, relations);
 
@@ -98,7 +99,7 @@ describe('一覧の limit 0 を各 DB 層が件数の制限なしにする (unit
         ] as const) {
             const builder = createFluentBuilder({ getManyAndCount: async () => [[], 0] });
             const connection = { getRepository: vi.fn(() => ({ createQueryBuilder: () => builder.builder })) };
-            const provider = new RecordedTagDB(repositoryOperator(connection), retry);
+            const provider = new RecordedTagDB(silentLoggerModel, repositoryOperator(connection), retry);
 
             await provider.findAll(option);
 
@@ -117,7 +118,7 @@ describe('一覧の limit 0 を各 DB 層が件数の制限なしにする (unit
         ] as const) {
             const findAndCount = vi.fn(async () => [[], 0]);
             const connection = { getRepository: vi.fn(() => ({ findAndCount })) };
-            const provider = new ReserveDB(repositoryOperator(connection), retry);
+            const provider = new ReserveDB(silentLoggerModel, repositoryOperator(connection), retry);
 
             await provider.findAll(option);
 

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { deferred, load } from './_harness';
+import { silentLoggerModel } from '../harness/silent-logger-model';
 
 const ConnectionCheckModel = load<new (...args: any[]) => any>('model', 'ConnectionCheckModel.js');
 const RuleDB = load<new (...args: any[]) => any>('model', 'db', 'RuleDB.js');
@@ -101,6 +102,7 @@ describe('management wait and cleanup characterization', () => {
                 },
             };
             const repository = new RuleDB(
+                silentLoggerModel,
                 { getConnection: vi.fn(async () => ({ createQueryRunner: () => runner })) },
                 { run: vi.fn() },
             );
@@ -119,6 +121,7 @@ describe('management wait and cleanup characterization', () => {
                 manager: { delete: vi.fn(), insert: vi.fn() },
             };
             const startFailureRepository = new RuleDB(
+                silentLoggerModel,
                 { getConnection: vi.fn(async () => ({ createQueryRunner: () => startFailureRunner })) },
                 { run: vi.fn() },
             );

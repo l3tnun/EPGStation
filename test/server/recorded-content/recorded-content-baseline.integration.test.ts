@@ -9,6 +9,7 @@ import { describe, expect, it } from 'vitest';
 
 import { cleanupInOrder } from '../persistence/harness';
 import { provisionMariaDb, type MariaDbRuntime, type MysqlSchema } from '../persistence/mysql-runtime';
+import { silentLoggerModel } from '../harness/silent-logger-model';
 
 const require = createRequire(join(process.cwd(), 'package.json'));
 const snapshot = process.env.EPGSTATION_SERVER_COMPILED_SNAPSHOT as string;
@@ -44,15 +45,15 @@ const retry = { run: <T>(operation: () => Promise<T>): Promise<T> => operation()
 
 function createHarness(source: DataSource): DatabaseHarness {
     const operator = { getConnection: async () => source, getLikeStr: () => 'like' };
-    const recordedDB = new RecordedDB(operator, retry);
+    const recordedDB = new RecordedDB(silentLoggerModel, operator, retry);
     return {
         source,
         recordedDB,
-        videoFileDB: new VideoFileDB(operator, retry),
-        dropLogFileDB: new DropLogFileDB(operator, retry),
-        thumbnailDB: new ThumbnailDB(operator, retry),
-        recordedTagDB: new RecordedTagDB(operator, retry),
-        recordedHistoryDB: new RecordedHistoryDB(operator, retry),
+        videoFileDB: new VideoFileDB(silentLoggerModel, operator, retry),
+        dropLogFileDB: new DropLogFileDB(silentLoggerModel, operator, retry),
+        thumbnailDB: new ThumbnailDB(silentLoggerModel, operator, retry),
+        recordedTagDB: new RecordedTagDB(silentLoggerModel, operator, retry),
+        recordedHistoryDB: new RecordedHistoryDB(silentLoggerModel, operator, retry),
         api: new RecordedApiModel({}, recordedDB, { getRecordedIndex: () => ({}) }, new RecordedItemUtil()),
     };
 }

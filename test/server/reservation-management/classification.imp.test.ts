@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { makeModel, makeReserve, ReserveApiModel, ReserveDB } from './_harness';
+import { silentLoggerModel } from '../harness/silent-logger-model';
 
 describe('all-reservation-kinds-and-eight-flag-combinations', () => {
     it('[RM-1.2] classifies all eight flag combinations with legacy precedence', async () => {
@@ -44,7 +45,7 @@ describe('all-reservation-kinds-and-eight-flag-combinations', () => {
     });
 
     it('[RM-1.4] adapts the existing count query to the shared provider contract without filling missing IDs', async () => {
-        const provider = new ReserveDB({}, {});
+        const provider = new ReserveDB(silentLoggerModel, {}, {});
         const countRuleIds = vi.fn(async () => [
             { ruleId: 9, ruleIdCnt: 2 },
             { ruleId: 3, ruleIdCnt: 1 },

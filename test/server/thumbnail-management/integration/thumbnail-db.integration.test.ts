@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DataSource } from 'typeorm';
 import { describe, expect, it, vi } from 'vitest';
+import { silentLoggerModel } from '../../harness/silent-logger-model';
 
 const require = createRequire(join(process.cwd(), 'package.json'));
 const snapshot = process.env.EPGSTATION_SERVER_COMPILED_SNAPSHOT;
@@ -63,7 +64,7 @@ describe('thumbnail database integration', () => {
         try {
             await source.initialize();
             const operator = { getConnection: async () => source };
-            const thumbnails = new ThumbnailDB(operator, retry);
+            const thumbnails = new ThumbnailDB(silentLoggerModel, operator, retry);
             const recorded = await source.getRepository(Recorded).save(Object.assign(new Recorded(), recordedRow()));
 
             const firstId = await thumbnails.insertOnce({ filePath: 'first.jpg', recordedId: recorded.id });
@@ -79,7 +80,7 @@ describe('thumbnail database integration', () => {
                         releasePendingSave = resolve;
                     }).then(operation),
             };
-            const pendingThumbnails = new ThumbnailDB(operator, pendingRetry);
+            const pendingThumbnails = new ThumbnailDB(silentLoggerModel, operator, pendingRetry);
             const pendingInsert = pendingThumbnails.insertOnce({ filePath: 'pending.jpg', recordedId: recorded.id });
             await vi.waitFor(() => expect(releasePendingSave).toBeTypeOf('function'));
             await expect(thumbnails.findAll()).resolves.toMatchObject([{ id: firstId, filePath: 'first.jpg' }]);
@@ -91,7 +92,7 @@ describe('thumbnail database integration', () => {
             });
 
             const failure = new Error('synthetic thumbnail registration failure');
-            const failingThumbnails = new ThumbnailDB(operator, { run: async () => Promise.reject(failure) });
+            const failingThumbnails = new ThumbnailDB(silentLoggerModel, operator, { run: async () => Promise.reject(failure) });
             await expect(
                 failingThumbnails.insertOnce({ filePath: 'failed.jpg', recordedId: recorded.id }),
             ).rejects.toBe(failure);

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { makeReserve, Reserve, ReserveApiModel, ReserveDB } from './_harness';
+import { silentLoggerModel } from '../harness/silent-logger-model';
 
 const makeRuleCountProvider = (rows: readonly Record<string, unknown>[] = [], repositoryError?: Error) => {
     const queryBuilder: Record<string, any> = {};
@@ -17,7 +18,7 @@ const makeRuleCountProvider = (rows: readonly Record<string, unknown>[] = [], re
     const retry = { run: vi.fn(async (job: () => Promise<unknown>) => job()) };
 
     return {
-        provider: new ReserveDB({ getConnection }, retry),
+        provider: new ReserveDB(silentLoggerModel, { getConnection }, retry),
         getConnection,
         queryBuilder,
         retry,
@@ -40,7 +41,7 @@ const makeIdSelectProvider = (rows: readonly { id: number }[] = [], repositoryEr
     const retry = { run: vi.fn(async (job: () => Promise<unknown>) => job()) };
 
     return {
-        provider: new ReserveDB({ getConnection, convertBoolean }, retry),
+        provider: new ReserveDB(silentLoggerModel, { getConnection, convertBoolean }, retry),
         getConnection,
         createQueryBuilder,
         queryBuilder,

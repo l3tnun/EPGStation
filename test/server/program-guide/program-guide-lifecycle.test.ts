@@ -314,13 +314,13 @@ describe('program guide database resource lifecycle', () => {
                 }),
             };
             const getConnection = vi.fn().mockResolvedValue({ createQueryRunner: () => queryRunner });
+            const programLogger = logger();
             const database = new ProgramDB(
-                { getLogger: logger },
+                { getLogger: () => programLogger },
                 { getConfig: () => ({ needToReplaceEnclosingCharacters: false }) },
                 { getConnection },
                 { run: (operation: () => Promise<unknown>) => operation() },
             );
-            const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
             const operation = database.insert({ 10: { 161: { id: 61, type: 'GR', channel: '61' } } }, [
                 {
                     id: 601,
@@ -342,7 +342,7 @@ describe('program guide database resource lifecycle', () => {
             expect(queryRunner.commitTransaction).toHaveBeenCalledTimes(settlement === 'resolve' ? 1 : 0);
             expect(queryRunner.rollbackTransaction).toHaveBeenCalledTimes(settlement === 'reject' ? 1 : 0);
             expect(queryRunner.release).toHaveBeenCalledOnce();
-            expect(consoleError).toHaveBeenCalledTimes(settlement === 'reject' ? 1 : 0);
+            expect(programLogger.system.error).toHaveBeenCalledTimes(settlement === 'reject' ? 1 : 0);
             expect(vi.getTimerCount()).toBe(0);
         },
     );

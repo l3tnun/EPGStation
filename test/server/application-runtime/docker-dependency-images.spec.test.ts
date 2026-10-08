@@ -17,8 +17,10 @@ import {
 } from '../../../scripts/server-test/dependency-images.mjs';
 import {
     BUILD_TIMEOUT_MS,
+    DEV_PACKAGE_SAMPLES,
     DockerImageCheckError,
     PREPARE_COMMAND,
+    RUNTIME_PACKAGE_SAMPLE,
     STUB_PORT,
     assertNoRegistryAccess,
     buildCheckImage,
@@ -1046,6 +1048,16 @@ function statefulDocker(root: string, scenario: Scenario = {}) {
                     }),
                 );
             }
+            if (script.includes('devPackagesPresent')) {
+                return ok(
+                    JSON.stringify({
+                        devPackagesPresent: [],
+                        runtimePackagePresent: true,
+                        clientNodeModulesPresent: false,
+                        clientBundlePresent: true,
+                    }),
+                );
+            }
             return ok(
                 JSON.stringify({
                     status: scenario.indexStatus ?? 200,
@@ -1088,7 +1100,16 @@ function statefulDocker(root: string, scenario: Scenario = {}) {
 async function checkRoot(): Promise<string> {
     const root = await fixtureRoot();
     await cp(join(repositoryRoot, 'config'), join(root, 'config'), { recursive: true });
-    await writeFile(join(root, 'package.json'), '{"name":"server","version":"9.9.9"}\n');
+    // image の中身の確認が代表の package（開発用と実行用）を package.json から読むので、それらを載せる。
+    await writeFile(
+        join(root, 'package.json'),
+        `${JSON.stringify({
+            name: 'server',
+            version: '9.9.9',
+            dependencies: { [RUNTIME_PACKAGE_SAMPLE]: '0.0.0' },
+            devDependencies: Object.fromEntries(DEV_PACKAGE_SAMPLES.map(name => [name, '0.0.0'])),
+        })}\n`,
+    );
     return root;
 }
 

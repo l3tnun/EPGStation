@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { immediateRetry, loadCompiledDefault, repositoryOperator } from '../persistence/repository-harness';
 import { deferred, loadTool, makeDependencies, versionlessBackup, withProcess } from './_harness';
+import { silentLoggerModel } from '../harness/silent-logger-model';
 
 const mt38Stages = [
     { name: 'rule', port: 'IRuleDB', module: 'RuleDB', items: 'ruleItems' },
@@ -114,6 +115,7 @@ const prepareMt38 = async (stage: Mt38Stage, fault: Mt38Fault | 'none', releaseG
     const fake = makeMt38Runner(fault, releaseGate);
     const Repository = loadCompiledDefault<{ restore(items: object[]): Promise<void> }>(`model/db/${stage.module}.js`);
     const repository = new Repository(
+        silentLoggerModel,
         repositoryOperator({ createQueryRunner: vi.fn(() => fake.runner) }),
         immediateRetry,
     );

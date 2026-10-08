@@ -18,6 +18,7 @@ import {
     versionlessBackup,
     withProcess,
 } from './_harness';
+import { createRecordingLoggerModel } from '../harness/silent-logger-model';
 
 const snapshot = process.env.EPGSTATION_SERVER_COMPILED_SNAPSHOT!;
 const require = createRequire(join(process.cwd(), 'package.json'));
@@ -125,10 +126,14 @@ const backend = async (dialect: 'sqlite' | 'mysql', hooks: BackendHooks = {}) =>
         convertBoolean: (value: boolean) => value,
     };
     const retry = { run: <T>(operation: () => Promise<T>): Promise<T> => operation() };
+    const repositoryLog = createRecordingLoggerModel();
     const ports = Object.fromEntries(
-        Object.entries(repositories).map(([name, Repository]) => [name, new Repository(operator, retry)]),
+        Object.entries(repositories).map(([name, Repository]) => [
+            name,
+            new Repository(repositoryLog.loggerModel, operator, retry),
+        ]),
     ) as Record<string, any>;
-    return { operator, options, ports, root, source };
+    return { operator, options, ports, repositoryErrors: repositoryLog.error, root, source };
 };
 
 const inspectPersisted = async <T>(
@@ -310,11 +315,12 @@ const expectRestoreRejection = async (
     expect(rejection).toEqual(expect.objectContaining({ message: 'restore error' }));
 };
 
-const expectRestoreError = async (tool: any, stage: RestoreStage) => {
+const expectRestoreError = async (tool: any, stage: RestoreStage, repositoryErrors: { mock: { calls: unknown[][] } }) => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const recorded = () => [...error.mock.calls.flat(), ...repositoryErrors.mock.calls.flat()];
     try {
-        await expectRestoreRejection(startRestore(tool, stage), stage, () => error.mock.calls.flat());
-        return error.mock.calls.flat();
+        await expectRestoreRejection(startRestore(tool, stage), stage, recorded);
+        return recorded();
     } finally {
         error.mockRestore();
     }
@@ -891,9 +897,13 @@ describe('management SQLite/MySQL and filesystem characterization', () => {
                         try {
                             const tool = await makeRestoreTool(database.ports, input);
                             if (fault !== 'release-barrier') {
-                                diagnostics = await expectRestoreError(tool, stage);
+                                diagnostics = await expectRestoreError(tool, stage, database.repositoryErrors);
                             } else {
                                 const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+                                const recorded = () => [
+                                    ...error.mock.calls.flat(),
+                                    ...database.repositoryErrors.mock.calls.flat(),
+                                ];
                                 try {
                                     const restore = startRestore(tool, stage);
                                     await lifecycle.releaseBarrier!.entered.promise;
@@ -913,9 +923,9 @@ describe('management SQLite/MySQL and filesystem characterization', () => {
                                         expect(lifecycle.events).not.toContain(`${laterStage.name}:start`);
                                     }
                                     lifecycle.releaseBarrier!.proceed.resolve();
-                                    await expectRestoreRejection(restore, stage, () => error.mock.calls.flat());
+                                    await expectRestoreRejection(restore, stage, recorded);
                                     await settlement;
-                                    diagnostics = error.mock.calls.flat();
+                                    diagnostics = recorded();
                                 } finally {
                                     error.mockRestore();
                                 }
