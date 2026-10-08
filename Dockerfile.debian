@@ -14,7 +14,10 @@ RUN npm ci --loglevel=info
 COPY . /app/
 WORKDIR /app/client
 # image build は組み立てだけを行う。lint、typecheck、unit test は CI の gate が実行する。
-RUN npm run bundle --loglevel=info
+# bundle の成果物は client/dist にある。最終 image は実行に要らない client の node_modules を
+# 含めないため、bundle のあとで削除する。
+RUN npm run bundle --loglevel=info \
+    && rm -rf node_modules
 
 # サーバーはsqlite3のようなプラットフォーム依存のネイティブ・アドオンを含んでいる。そのため、各
 # TARGETPLATFORMごとにソースをビルドしなければならない。BUILDPLATFORM以外のTARGETPLATFORMでは、QEMU
@@ -51,7 +54,10 @@ RUN npm ci --loglevel=info
 COPY . .
 RUN rm -rf client
 # 同じく組み立てだけを行う。lint、format、静的検査は CI の gate が実行する。
-RUN npm run compile
+# compile のあとで開発用の package（devDependencies）を取り除く。lockfile で入れた node_modules から
+# 消すだけで、外部へは取りに行かない。
+RUN npm run compile \
+    && npm prune --omit=dev
 
 FROM node:24-bookworm-slim@sha256:ba849c60be29959425b8734d57b8b4b7d56f98edd9504c9af091d5281095a71e
 LABEL maintainer="l3tnun"

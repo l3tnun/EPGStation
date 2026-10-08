@@ -11,7 +11,10 @@ RUN npm ci --loglevel=info
 COPY . /app/
 WORKDIR /app/client
 # image build は組み立てだけを行う。lint、typecheck、unit test は CI の gate が実行する。
-RUN npm run bundle --loglevel=info
+# bundle の成果物は client/dist にある。最終 image は実行に要らない client の node_modules を
+# 含めないため、bundle のあとで削除する。
+RUN npm run bundle --loglevel=info \
+    && rm -rf node_modules
 
 FROM node:24-alpine@sha256:e67514e5d0f6c46656005e1b693b2ec9d52e80b641307de684d4a015ba7a4eaf AS server-builder
 RUN apk add --no-cache g++ make pkgconf python3 py3-pip
@@ -38,7 +41,10 @@ RUN npm ci --loglevel=info
 COPY . .
 RUN rm -rf client
 # 同じく組み立てだけを行う。lint、format、静的検査は CI の gate が実行する。
-RUN npm run compile
+# compile のあとで開発用の package（devDependencies）を取り除く。lockfile で入れた node_modules から
+# 消すだけで、外部へは取りに行かない。
+RUN npm run compile \
+    && npm prune --omit=dev
 
 FROM node:24-alpine@sha256:e67514e5d0f6c46656005e1b693b2ec9d52e80b641307de684d4a015ba7a4eaf
 LABEL maintainer="l3tnun"
