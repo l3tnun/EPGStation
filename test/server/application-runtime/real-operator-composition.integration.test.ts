@@ -138,11 +138,15 @@ describe('[AR-5.2] the spawned Service child is registered at once as the IPC pe
         const { operator } = await launch([GR], {
             // A real child process that only sends one request on the real IPC channel and never announces readiness.
             serviceExecutorSource: `
-import { writeFileSync } from 'node:fs';
+import { renameSync, writeFileSync } from 'node:fs';
 const markerUrl = new URL('../../../ipc-reply.json', import.meta.url);
+const pendingUrl = new URL('../../../ipc-reply.json.pending', import.meta.url);
 const startedAt = Date.now();
 process.on('message', message => {
-    writeFileSync(markerUrl, JSON.stringify({ elapsedMs: Date.now() - startedAt, message }));
+    // Written aside and renamed, so the marker appears only once its content is complete: the test
+    // reads it as soon as the name exists, and could otherwise see it created but still empty.
+    writeFileSync(pendingUrl, JSON.stringify({ elapsedMs: Date.now() - startedAt, message }));
+    renameSync(pendingUrl, markerUrl);
 });
 process.send({ id: 7, model: 'reserveation', func: 'getBroadcastStatus' });
 setInterval(() => undefined, 1_000_000);
