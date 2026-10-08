@@ -113,7 +113,7 @@ const tryCompleteUpload = async (operator: OperatorHandle): Promise<{ body: stri
 const expectRefusedForNoSlot = async (operator: OperatorHandle, admitted: number): Promise<void> => {
     const refused = await tryCompleteUpload(operator);
     expect(refused.status).toBeGreaterThanOrEqual(400);
-    expect(refused.body).toContain('Unexpected field');
+    expect(refused.body).toContain('Unexpected file field');
     // The refused request never took a slot or a directory.
     expect(await incomingEntries(operator)).toHaveLength(admitted);
 };
