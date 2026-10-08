@@ -28,7 +28,7 @@ export interface AppShellProps {
   themeMode: ShellThemeMode
   drawerHeaderTitle?: string
   snackbar?: ShellSnackbarState
-  onSnackbarClose?: () => void
+  onSnackbarClose?: (snackbar: ShellSnackbarState) => void
   isDisconnected?: boolean
   children: ReactNode
 }

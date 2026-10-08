@@ -270,6 +270,10 @@ freshness と reconnect behavior を確認できる。
     screen が保持する server state query を再検証し、表示中のデータを最新化する。
 23. フロントエンド起動時の bootstrap channel 情報取得に失敗したとき、EPGStation フロントエンドは version
     と server configuration の初期解決を妨げずに、失敗内容を console error として記録する。
+24. snackbar を表示している間に別の snackbar を表示するとき、EPGStation フロントエンドは後から表示した snackbar
+    を、前の snackbar の残り時間ではなく自身の `timeout` の間表示する。前の snackbar の自動消去が、後から表示した
+    snackbar を閉じたり、表示される前に取り消したりしてはならない。たとえば、切断の約 1 秒後に再接続した場合も
+    `再接続されました ` を `timeout` の間表示する。
 
 ### 要求 7: dark theme shell coverage
 

@@ -450,6 +450,10 @@ default)、reconnect は `再接続されました ` (default snackbar) とす�
 
 snackbar の min-height は `48px` とし、`ShellSnackbarHost.tsx` の `minHeight` を `48`（48px）とする。
 
+`ShellSnackbarHost.tsx` は表示する snackbar ごとに MUI `Snackbar` の `key` を切り替え、自動消去の timer を
+snackbar ごとに作り直す。`open` が `true` のまま内容だけが差し替わると、MUI の timer は前の snackbar の開始時刻から
+数え続け、後から表示した snackbar を残り時間の途中で（描画前なら表示されないまま）閉じてしまうためである。
+
 ## 機能固有の設計判断
 
 ### ナビゲーション項目生成表

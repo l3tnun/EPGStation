@@ -119,6 +119,57 @@ describe('Requirement 6.1-6.16 version, connection, and scroll history contracts
     expect(screen.queryByTestId('disconnected-overlay')).not.toBeInTheDocument()
   })
 
+  it('[AC 6.6] [AC 6.9] [AC 6.24] keeps the reconnect snackbar for its full time when the disconnect snackbar is still counting down', async () => {
+    vi.useFakeTimers()
+    const apiRepository = createSuccessfulApiRepository(['3.2.0'])
+    const connection = new SyntheticRealtimeConnection()
+
+    render(
+      <App
+        apiRepository={apiRepository}
+        realtimeConnectionFactory={() => connection}
+        osPrefersDark={false}
+        viewportWidth={1440}
+        initialDrawerState="none"
+      />,
+    )
+
+    await act(async () => {
+      await vi.runOnlyPendingTimersAsync()
+    })
+
+    act(() => {
+      connection.emit('disconnect')
+    })
+    expect(screen.getByRole('alert')).toHaveTextContent('接続が切断されました')
+
+    // The client reconnects about a second after the drop, while the disconnect snackbar still has
+    // roughly half of its display time left.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1000)
+    })
+    act(() => {
+      connection.emit('connect')
+    })
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(100)
+    })
+    expect(screen.getByRole('alert')).toHaveTextContent('再接続されました')
+
+    // Past the moment the disconnect snackbar's own timer would have run out (500 ms after the
+    // reconnect snackbar appeared), the reconnect snackbar must still be on screen.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(800)
+    })
+    expect(screen.getByRole('alert')).toHaveTextContent('再接続されました')
+
+    // It then closes after its own 1500 ms.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1500)
+    })
+    expect(screen.queryByText('再接続されました')).not.toBeInTheDocument()
+  })
+
   it('[AC 6.5] [AC 6.6] keeps reconnect restore active after StrictMode effect replay', async () => {
     window.history.replaceState(null, '', '/#/recorded?keyword=synthetic')
     const apiRepository = createSuccessfulApiRepository(['3.0.0'])

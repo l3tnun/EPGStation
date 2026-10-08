@@ -1,5 +1,9 @@
 import { expect, test } from '@playwright/test'
-import { installAppShellApiMocks, isDesktopViewport } from '../e2e/support/appShellMocks'
+import {
+  installAppShellApiMocks,
+  installDashboardApiMocks,
+  isDesktopViewport,
+} from '../e2e/support/appShellMocks'
 import { installGuideOnAirApiMocks } from '../e2e/support/guideOnAirMocks'
 import { expectAnnounced } from '../e2e/support/notificationObservation'
 import { createRealtimeHarness } from '../e2e/support/realtimeHarness'
@@ -145,6 +149,10 @@ test('keeps reconnect feedback from moving the title bar and the first navigatio
   page,
 }) => {
   const realtime = await createRealtimeHarness(page)
+  // The dashboard is the page this test stays on. Left unmocked its four requests fail, and each
+  // failure raises an error snackbar of its own; the ones that follow the reconnect refetch replace
+  // the reconnect notice before it is ever rendered, so it was announced only on some runs.
+  await installDashboardApiMocks(page)
 
   try {
     await page.setViewportSize({ width: 1440, height: 900 })

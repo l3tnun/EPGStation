@@ -22,7 +22,7 @@ const SNACKBAR_BACKGROUND_BY_SEVERITY: Record<ShellSnackbarSeverity | 'default',
 
 export interface ShellSnackbarHostProps {
   snackbar?: ShellSnackbarState
-  onSnackbarClose?: () => void
+  onSnackbarClose?: (snackbar: ShellSnackbarState) => void
 }
 
 export function ShellSnackbarHost({ snackbar, onSnackbarClose }: ShellSnackbarHostProps) {
@@ -62,10 +62,21 @@ export function ShellSnackbarHost({ snackbar, onSnackbarClose }: ShellSnackbarHo
         hidden
       />
       <Snackbar
+        // A new snackbar gets its own auto-hide timer. While `open` stays true across a swap, MUI
+        // keeps counting from the previous snackbar's start, so its expiry closed the newer one
+        // early -- or before it was ever rendered, as when a reconnect follows a disconnect by
+        // about the display time.
+        key={announced.history.length}
         open={snackbar !== undefined}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         autoHideDuration={snackbar?.timeout}
-        onClose={onSnackbarClose}
+        // Name the snackbar being closed. The timer that ends one snackbar can run after the next
+        // has been set but before it has rendered, and an unnamed close would take the new one.
+        onClose={() => {
+          if (snackbar !== undefined) {
+            onSnackbarClose?.(snackbar)
+          }
+        }}
         sx={{
           bottom: '8px !important',
           left: '50% !important',
@@ -88,7 +99,7 @@ export function ShellSnackbarHost({ snackbar, onSnackbarClose }: ShellSnackbarHo
                 <Button
                   color="inherit"
                   size="small"
-                  onClick={() => onSnackbarClose?.()}
+                  onClick={() => onSnackbarClose?.(snackbar)}
                   sx={{
                     borderRadius: '4px',
                     fontSize: '12px',
