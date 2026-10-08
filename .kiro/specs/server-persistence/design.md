@@ -57,7 +57,7 @@ Entity、Repository、QueryBuilder、QueryRunner、および Migration へ変換
 | 責務                                              | 所有機能                           | 本機能との契約                                                          |
 | ------------------------------------------------- | ---------------------------------- | ----------------------------------------------------------------------- |
 | YAML 読込み、共通補完、snapshot 配布              | `server-configuration`             | `IConfiguration.getConfig()` から database 設定 snapshot を受け取る     |
-| system log の sink、level、rotation、重大異常方針 | `server-operational-logging`       | 接続処理（`DBOperator`）は event と error を system logger へ渡す。transaction の raw error と rollback / release error は各 repository が `console.error` で記録する。番組増分更新と放送局更新の個別失敗は repository が system logger へ記録する                     |
+| system log の sink、level、rotation、重大異常方針 | `server-operational-logging`       | 接続処理（`DBOperator`）は event と error を system logger へ渡す。transaction の raw error と rollback / release error は各 repository が system logger へ記録する（標準出力・標準エラー出力へ直接書かない。子 process は標準入出力を捨てて起動されるため、直接の出力は残らない）。番組増分更新と放送局更新の個別失敗は repository が system logger へ記録する                     |
 | database が利用可能になるまでの起動待機           | `server-application-runtime`       | `checkConnection()` が失敗を返した後に 1 秒待って成功まで繰り返す       |
 | 明示的な接続終了を含む管理処理                    | `server-management-tools`          | backup・restore・旧版移行の完了後に `closeConnection()` を 1 回要求する |
 | backup payload、復元する種類と順序                | `server-management-tools`          | 種類ごとの `restore()` を順次呼び出す                                   |
@@ -119,7 +119,7 @@ flowchart LR
 | 項目          | 選択                              | 設計理由                                                                       |
 | ------------- | --------------------------------- | ------------------------------------------------------------------------------ |
 | ORM           | TypeORM 1.x の `DataSource` API   | Entity、relation、QueryBuilder、QueryRunner、Migration を同じ adapter で扱える |
-| SQLite driver | `better-sqlite3`                  | file database と native extension 読込みを提供する。TypeORM 1.x は旧 `sqlite3`（node-sqlite3）driver を廃止し `better-sqlite3` へ置き換えたため、利用者向け設定値は従来どおり `dbtype: 'sqlite'` のまま、`DataSource`生成時の`type`だけ`'better-sqlite3'`へ読み替える（`src/model/db/DBOperator.ts`） |
+| SQLite driver | `better-sqlite3`                  | file database と native extension 読込みを提供する。TypeORM 1.x は旧 `sqlite3`（node-sqlite3）driver を廃止し `better-sqlite3` へ置き換えたため、利用者向け設定値は従来どおり `dbtype: 'sqlite'` のまま、`DataSource`生成時の`type`だけ`'better-sqlite3'`へ読み替える（`src/model/db/DBOperator.ts`）。`dbtype: 'better-sqlite3'` は設定の読込み時に `sqlite` へ読み替わるので（`server-configuration`）、本機能は `sqlite` だけを扱う。journal 方式は `sqlite.wal` で選ぶ（下記「接続設定契約」） |
 | MySQL driver  | 直接依存の `mysql2`               | 既存 `type: 'mysql'` 経路で TypeORM が利用する保守中クライアント。旧 `mysql` は直接依存に含めない |
 | 接続単位      | process 内の保存済み `DataSource` | DI singleton の field に保存した接続を repository 間で共有する                 |
 | schema 更新   | backend 別 Migration              | 自動同期を無効にし、版管理された変更だけを順番に適用できる                     |
@@ -178,6 +178,7 @@ interface DatabaseConnectionSettings {
     sqlite?: {
         extensions?: string[];
         regexp?: boolean;
+        wal?: boolean;
     };
     mysql?: {
         host: string;
@@ -198,6 +199,7 @@ interface DatabaseConnectionSettings {
 | SQLite path         | 指定なし                               | `<server-root>/data/database.db`     | server root から決まる database file                                                                |
 | `sqlite.extensions` | 省略可                                 | `undefined` または順序付き配列       | 記載順を変更・重複排除せず読み込む                                                                  |
 | `sqlite.regexp`     | 省略可                                 | boolean または `undefined`           | `true` の場合だけ正規表現能力あり                                                                   |
+| `sqlite.wal`        | 省略可                                 | boolean または `undefined`           | `true` の場合だけ journal_mode を WAL にする（既定は無効）。DataSource option の `enableWAL: true` として渡す。`true` 以外（省略・`false`・文字列を含む）は無効として扱う |
 | MySQL 接続項目      | backend 選択時に `mysql` object が必要 | host、user、port、password、database | `mysql` object がなければ接続を開始せず error。値は採用 client へ渡し、接続可否を driver 結果で判定する |
 | `mysql.socketPath`  | 省略可                                 | 文字列または `undefined`             | 設定されているときだけ DataSource option の `socketPath` に渡す。省略時は option に `socketPath` を含めない。設定時にドライバーは `host` / `port` より `socketPath` を優先する |
 | `mysql.charset`     | 省略可                                 | 省略時 `utf8mb4`                     | DataSource option に渡す                                                                            |
@@ -214,7 +216,8 @@ Requirement 8 のクライアント置換は、上表の設定 field を増や�
 1. `connection` が存在すれば同じ保存済み instance を返す。
 2. `connection` がなく初期化Promiseが存在すれば、後続callerは新しい候補を作らず同じPromiseへ合流する。
 3. どちらもなければ、backend設定を検査して候補`DataSource`を一つ生成し、その初期化Promiseを直ちに共有する。
-4. `migrationsRun: true` により接続初期化中に未適用 Migration を順に実行し、続いてSQLite extensionを設定順に読み込む。
+4. `migrationsRun: true` により接続初期化中に未適用 Migration を順に実行し、続いてSQLiteではjournal方式を設定に合わせ（下記）、
+   SQLite extensionを設定順に読み込む。
 5. 接続、Migration、extensionがすべて成功した場合だけ候補を`connection` fieldへ代入し、初期化Promiseを解除して全callerへ
    同じinstanceを返す。
 6. いずれかが失敗した場合は候補を`connection`へ代入せず、作成済み候補を閉じ、初期化Promiseを解除して全callerへ同じ
@@ -224,6 +227,14 @@ Requirement 8 のクライアント置換は、上表の設定 field を増や�
    の error を返す。
 9. 一回の接続作成、Migration、extension読込み、または確認queryがpendingの間はその処理を待ち続け、EPGStation独自の
    timeout、detached `Promise.race()`、強制 abort、または timeout 後の別試行を追加しない。
+
+SQLite の journal 方式は、SQLite が journal_mode を database file に記録する（WAL だけが記録され、他は接続ごとの設定にな
+る）ことを踏まえ、設定どおりの方式にする。`sqlite.wal` が `true` のときは `DataSource` option の `enableWAL: true` で WAL に
+する（TypeORM が接続時に `journal_mode = WAL` を実行する）。`true` 以外のときは、候補の初期化（Migration を含む）の後に
+`PRAGMA journal_mode = DELETE` を実行する。通常の database file（WAL でないもの）には何も変えず、以前に WAL にされた file は
+delete 方式へ戻る。他の接続が file を使っていて戻せないときは SQLite が `database is locked` で失敗し、初期化の失敗（接続を
+公開せず、候補を閉じ、失敗を system log に記録する）として扱う。起動時は本体の process が子 process より先に DB を開く（`checkDB`、成功まで再試行）ので、切り替えは最初の接続で行われる。WAL にすると `data/` に `database.db-wal` と `database.db-shm` が増える。
+ネットワーク保存先では WAL を使えないため、有効にしない運用を前提とする。
 
 設定 reload は、構築済み `DBOperator` と `DataSource` を差し替えない。新しい接続先を反映するには、所有側 lifecycle に
 従って component または process を再構築する。
@@ -537,7 +548,7 @@ sequenceDiagram
     participant Caller
     participant Repo
     participant QR as QueryRunner
-    participant Log as console.error
+    participant Log as system log
 
     Caller->>Repo: batch operation
     Repo->>QR: createQueryRunner()
@@ -612,7 +623,9 @@ sequenceDiagram
 
 ### Migration
 
-1. 共通の Entity 集合を使用し、`dbtype` から SQLite または MySQL の Migration path を選ぶ。
+1. 共通の Entity 集合を使用し、`dbtype` から SQLite または MySQL の Migration path を選ぶ。手動の CLI が読む `ormconfig.js`
+   も、`!env` の展開、`better-sqlite3` の読み替え、`sqlite.wal` を `src/model/ConfigYaml.ts`（build 後の
+   `dist/model/ConfigYaml.js`）の共通定義で扱う。CLI は journal 方式を戻す処理を持たず、`sqlite.wal` が `true` のときだけ WAL にする。
 2. `synchronize` を `false`、runtime の `migrationsRun` を `true` として `DataSource` を構築する。
 3. `initialize()` が TypeORM の管理 table を参照し、未適用 Migration を timestamp 順に実行する。
 4. SQLiteでは接続とMigrationが成功した候補へ、必要なextensionを設定順に読み込む。初期化Promiseへ合流したcallerはこの処理
@@ -682,12 +695,13 @@ application runtime にその責務を割り当てず、新しい終了 caller �
 | driver 接続失敗                                 | driver error                                    | 公開せず候補を閉じる。旧 client / 弱体化認証へ進めない | runtime／management が後続確認を判断         |
 | Migration 失敗                                  | Migration error                                 | fieldへ保存せず候補を閉じる                 | 次の確認で新しい instance と未適用分を再試行 |
 | SQLite extension 失敗                           | extension error                                 | fieldへ保存せず候補を閉じる                 | 次の確認で新しい instanceから初期化を再試行  |
+| SQLite journal 方式の変更失敗（使用中で WAL から戻せない等） | `database is locked` などの query error | fieldへ保存せず候補を閉じる                 | 次の確認で新しい instanceから初期化を再試行  |
 | 初期化候補のclose失敗                           | 元の初期化errorを維持                           | fieldへ保存しない                           | close errorは別の内部cleanup診断として記録   |
 | `select 1` 失敗                                 | query error                                     | 既存 instance の自動置換は行わない          | runtime／management が起動待機を継続し得る   |
 | 一回の接続・確認が pending                      | 呼出元も pending                                | EPGStation は強制終了・別試行を追加しない   | driver／TypeORM の settlement を待つ         |
 | 通常 CRUD/query の一時失敗                      | 最大 5 回後の最後の error                       | transaction なし                            | repository の共通再試行                      |
 | transaction開始／atomic mutation／commit失敗    | 既存operation-specific wrapper                  | activeならrollback、全経路release           | raw DB errorは内部primary causeとして記録    |
-| raw operation failure後のrollback / release失敗 | 同じoperation-specific wrapperを維持            | cleanup失敗を別記録。commit成功とは扱わない | 各 repository が `console.error` へ記録                   |
+| raw operation failure後のrollback / release失敗 | 同じoperation-specific wrapperを維持            | cleanup失敗を別記録。commit成功とは扱わない | 各 repository が system log へ記録                        |
 | 成功後のreleaseだけが失敗                       | 該当repositoryのoperation-specific wrapper      | resource解放失敗を成功にしない              | raw release errorはcleanup診断に留める       |
 | JSON 復元失敗                                   | parsing error                                   | 読取結果を捏造しない                        | data 修復は管理側責務                        |
 | `destroy()` 失敗                                | close error                                     | 終了成功とは扱わない                        | 呼び出した管理 tool が処理結果を決定         |
@@ -982,6 +996,8 @@ portが入力として許容せずruntime validationも本機能が所有しな�
 | 1.9  | terminal `closeConnection()`                                        | `close.integration.test.ts`: tool caller / no-op / destroy                                          |
 | 1.10 | cold `getConnection()`のsingle-flight初期化                         | `connection.spec.test.ts`: concurrent callers / one initialization                                  |
 | 1.11 | 完全初期化前失敗の非公開・候補close・再試行可能状態                 | `connection.spec.test.ts`: shared error / cleanup / later reinitialization                          |
+| 1.12 | `sqlite.wal` が `true` のときの `enableWAL`                         | `connection.spec.test.ts`: option投影 / `sqlite-journal.integration.test.ts`: 実fileが WAL になり `-wal`・`-shm` が増える |
+| 1.13 | `sqlite.wal` が無効のときの delete 方式の確認と WAL からの復帰     | `connection.spec.test.ts`: pragma発行の順序・失敗時の候補close / `sqlite-journal.integration.test.ts`: 既定のfileが delete のまま、WAL だった file が delete に戻る、使用中で戻せないときの失敗 |
 | 2.1  | `Channel`、`Program` Entity / repository                            | `repositories.spec.test.ts`: round trip                                                             |
 | 2.2  | `Reserve`、`Rule` Entity / repository                               | `repositories.spec.test.ts`: round trip                                                             |
 | 2.3  | `Recorded`、`RecordedHistory` Entity / repository                   | `repositories.spec.test.ts`: round trip                                                             |
@@ -1007,11 +1023,12 @@ portが入力として許容せずruntime validationも本機能が所有しな�
 | 4.7  | 未列挙 batch を一律 atomic にしない境界                             | port review と代表的 characterization test                                                          |
 | 4.8  | start failureを含む全経路release、active時だけrollback              | `transactions.integration.test.ts`: lifecycle fault matrix                                          |
 | 4.9  | 既存operation wrapperを維持しraw DB／cleanup errorを内部で分離      | `transactions.integration.test.ts`: wrapper message / diagnostic separation                         |
+| 4.10 | 一括変更の失敗と後始末の失敗を system log へ記録する                | `transactions.imp.test.ts`・`repositories.spec.test.ts`・`channeldb.imp.test.ts`・`programdb-queries.imp.test.ts`: 各 repository が system logger の `error` を受ける |
 | 5.1  | 各失敗後に1,000 ms待ち、残りがある場合だけ再試行                    | `retry.spec.test.ts`: fake timer で5 waits・再試行4回                                               |
 | 5.2  | 初回を含む最大 5 job calls                                          | `retry.spec.test.ts`: call count                                                                    |
 | 5.3  | 5 回目の error identity を伝播                                      | `retry.spec.test.ts`: last error assertion                                                          |
 | 5.4  | transaction 経路の共通再試行除外                                    | `transactions.integration.test.ts`: 1 transaction attempt                                           |
-| 6.1  | `dbtype` 別 Migration と `migrationsRun`、手動の `orm-run`・`orm-gen` | `migrations.integration.test.ts`: pending apply、`orm-cli.integration.test.ts`: 実 SQLite の実行・生成・非対応 `dbtype` |
+| 6.1  | `dbtype` 別 Migration と `migrationsRun`、手動の `orm-run`・`orm-gen` | `migrations.integration.test.ts`: pending apply、`orm-cli.integration.test.ts`: 実 SQLite の実行・生成・非対応 `dbtype`・`!env` の展開と未定義時の失敗・`better-sqlite3` の別名・`sqlite.wal` |
 | 6.2  | `synchronize: false` と版管理 DDL                                   | option assertion と schema diff fixture                                                             |
 | 6.3  | Migration 完了前の非公開                                            | `migrations.integration.test.ts`: failing migration                                                 |
 | 6.4  | 自動 `down` なし                                                    | migration spy と適用済み版維持                                                                      |
@@ -1058,7 +1075,7 @@ portが入力として許容せずruntime validationも本機能が所有しな�
 | SQLite schema history                                  | `src/db/migrations/sqlite/*.ts`                                                                                 | Init、AddRawExtended、AddEventRelay、AddRuleBS4K                                          |
 | MySQL schema history                                   | `src/db/migrations/mysql/*.ts`                                                                                  | Init、AddRawExtended、AddEventRelay、AddRuleBS4K                                          |
 | runtime migration option と CLI 差                     | `src/model/db/DBOperator.ts`、`ormconfig.js`                                                                    | runtime `migrationsRun: true`、`synchronize: false`                                       |
-| 手動の migration CLI の設定                            | `ormconfig.js`、`package.json` の `orm-run`・`orm-gen`                                                           | ES module として読み込み、SQLite は `better-sqlite3`、MySQL は `mysql`、他の `dbtype` は `db config error` |
+| 手動の migration CLI の設定                            | `ormconfig.js`、`src/model/ConfigYaml.ts`、`package.json` の `orm-run`・`orm-gen`                                | ES module として読み込み、`!env` を展開し、`sqlite`（別名 `better-sqlite3`）は `better-sqlite3` driver（`sqlite.wal` が `true` なら WAL）、MySQL は `mysql`、他の `dbtype` は `db config error` |
 | restore stage orchestration                            | `src/DBTools.ts`                                                                                                | `restore()` による種類別呼出し                                                            |
 | explicit process close callers                         | `src/DBTools.ts`、`src/V1MigrationTool.ts`                                                                      | tool 終了前の `closeConnection()`                                                         |
 

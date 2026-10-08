@@ -48,6 +48,12 @@ SQLite または MySQL を使って EPGStation の管理情報を保存・検索
 11. If 接続作成、データ構造更新、またはSQLite外部拡張読込みが完全な初期化の公開前に失敗したとき, the データベース保存・
     検索機能 shall その候補接続を後続利用へ保存せず、作成済みの候補接続を閉じ、初期化を共有した各要求へエラーを返し、後
     続要求で新しい初期化を試みられる状態を維持する
+12. Where データベース方式が SQLite であり SQLite の WAL 設定（`sqlite.wal`）が `true` であるとき, the データベース保存・
+    検索機能 shall データベースファイルの journal_mode を WAL にして接続する
+13. Where データベース方式が SQLite であり `sqlite.wal` が省略されている、または `true` 以外であるとき, the データベース
+    保存・検索機能 shall journal_mode をdelete 方式にして接続する。以前に WAL にされたデータベースファイルも、接続の
+    たびに delete 方式へ戻し、設定が無効のまま WAL で動き続けないようにする。他の接続が使用中で戻せないときは、接続を返さ
+    ずエラーを返す
 
 ### Requirement 2: 管理情報の保存
 
@@ -112,6 +118,8 @@ SQLite または MySQL を使って EPGStation の管理情報を保存・検索
    索機能 shall `restore error`、`InsertError`、`ReserveUpdateManyError`など当該操作が従来から依頼元へ返すerror message
    を主失敗として維持し、元のdatabase errorと後始末のエラーをそれぞれ別の内部診断情報として記録し、それらを操作別error
    messageの代わりに依頼元へ返さない
+10. When 一括変更の開始、変更、確定、取消し、または接続資源の解放が失敗したとき, the データベース保存・検索機能 shall そ
+    のエラーを標準出力・標準エラー出力ではなく運用ログ（system log）へ記録する
 
 ### Requirement 5: データ操作の再試行
 
@@ -135,7 +143,9 @@ SQLite または MySQL を使って EPGStation の管理情報を保存・検索
 1. When データベースへ接続するとき, the データベース保存・検索機能 shall 選択されたデータベース方式に対応する未適用の
    データ構造更新を実行する。運用者が `npm run orm-run` で手動実行、または `npm run orm-gen` で更新の生成を行うときも、
    ES module の package で設定ファイル `ormconfig.js` を読み込み、設定した SQLite または MySQL に対して接続時と同じ
-   データ構造更新の一覧を使い、対応しない `dbtype` では `db config error` で失敗する
+   データ構造更新の一覧を使い、対応しない `dbtype` では `db config error` で失敗する。このとき `ormconfig.js` は、設定ファイ
+   ルの `!env 環境変数名` を接続時と同じ規則で展開し（未定義の環境変数では失敗する）、`dbtype` の `better-sqlite3` を
+   `sqlite` と同じに扱い、`sqlite.wal` が `true` のときは SQLite の journal_mode を WAL にする
 2. The データベース保存・検索機能 shall データ構造の自動同期ではなく、用意された更新を順番に適用する
 3. If データ構造更新に失敗したとき, the データベース保存・検索機能 shall 接続を利用可能として扱わずエラーを返す
 4. The データベース保存・検索機能 shall 適用済みのデータ構造更新を接続時に自動で降格しない
