@@ -456,11 +456,11 @@ describe('server configuration characterization contract', () => {
         installInitialReadDouble(() =>
             withEnvEntries([
                 'x-first: &first',
-                '    host: first-host',
-                '    user: first-user',
+                '    host: synthetic-first-host',
+                '    user: synthetic-first-user',
                 'x-second: &second',
-                '    host: second-host',
-                '    charset: second-charset',
+                '    host: synthetic-second-host',
+                '    charset: synthetic-second-charset',
                 'mysql:',
                 '    <<: [*first, *second]',
             ]),
@@ -468,24 +468,24 @@ describe('server configuration characterization contract', () => {
 
         const provided = new Configuration({ getLogger: () => createLogger() }).getConfig();
 
-        expect(provided.mysql).toStrictEqual({ host: 'first-host', user: 'first-user', charset: 'second-charset' });
+        expect(provided.mysql).toStrictEqual({ host: 'synthetic-first-host', user: 'synthetic-first-user', charset: 'synthetic-second-charset' });
     });
 
     it('[CFG-1.1-MERGE-KEY-EXPLICIT] prefers an explicitly written entry over the merged one', () => {
         installInitialReadDouble(() =>
             withEnvEntries([
                 'x-base: &base',
-                '    host: merged-host',
-                '    user: merged-user',
+                '    host: synthetic-merged-host',
+                '    user: synthetic-merged-user',
                 'mysql:',
-                '    host: explicit-host',
+                '    host: synthetic-explicit-host',
                 '    <<: *base',
             ]),
         );
 
         const provided = new Configuration({ getLogger: () => createLogger() }).getConfig();
 
-        expect(provided.mysql).toStrictEqual({ host: 'explicit-host', user: 'merged-user' });
+        expect(provided.mysql).toStrictEqual({ host: 'synthetic-explicit-host', user: 'synthetic-merged-user' });
     });
 
     it('[CFG-1.1-MERGE-KEY-ARRAY] merges inside the maps that are elements of an array', () => {
