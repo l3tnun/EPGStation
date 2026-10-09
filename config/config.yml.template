@@ -58,7 +58,7 @@ thumbnailMaxPending: 32
 hookCommandMaxPending: 64
 hookCommandTimeoutMs: 300000
 
-# storageLimitCommandTimeoutMs is passed through unchanged; the storage owner defines its default and validation.
+# storageLimitCommandTimeoutMs: 300000
 
 thumbnail: '%ROOT%/thumbnail'
 thumbnailSize: 480x270
