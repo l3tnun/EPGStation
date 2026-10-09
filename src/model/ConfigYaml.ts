@@ -1,4 +1,4 @@
-import { CORE_SCHEMA, defineScalarTag } from 'js-yaml';
+import { CORE_SCHEMA, defineScalarTag, mergeTag } from 'js-yaml';
 
 /**
  * config.yml の値に `!env 環境変数名` と書くと、その環境変数の値（文字列）に置き換わるタグ。
@@ -22,7 +22,7 @@ export const ENV_TAG = defineScalarTag('!env', {
 });
 
 /** config.yml を `js-yaml` の `load` で読むときの option。 */
-export const CONFIG_YAML_OPTIONS = { schema: CORE_SCHEMA.withTags(ENV_TAG) };
+export const CONFIG_YAML_OPTIONS = { schema: CORE_SCHEMA.withTags(mergeTag, ENV_TAG) };
 
 /**
  * `dbtype` の `better-sqlite3` を `sqlite` と同じ値として扱うために読み替える。
