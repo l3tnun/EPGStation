@@ -192,15 +192,25 @@ describe('retrying the stream request of a preparation that keeps failing', () =
                 });
                 await wired.manager.rebuildCandidatesAndStart();
 
+                // 6 回目の要求が server に届いた時点では、その失敗の応答が準備側へ戻って数えられたとは限らない。
+                // 要求の到着を待つだけで予約を消すと、応答の途中の要求が取り消しで中断され、数に入らないことがある。
+                // そこで 6 回目の後の要求は応答しない（7 回目が届いた時点で、6 回目までの失敗は必ず数え済み）。
+                // 7 回目は応答の途中で取り消されるので、失敗としては数えられない。
                 await vi.waitFor(() => expect(server.streamRequests('program', 104)).toHaveLength(6), {
                     interval: 100,
                     timeout: 45_000,
+                });
+                server.behave('program', 104, { kind: 'status', status: 503, delayMs: 60_000 });
+                await vi.waitFor(() => expect(server.streamRequests('program', 104)).toHaveLength(7), {
+                    interval: 100,
+                    timeout: 15_000,
                 });
                 await source.getRepository(Reserve).delete(4);
                 await wired.manager.update({ delete: [reservation], isSuppressLog: false });
                 await delay(6_000);
 
-                expect(server.streamRequests('program', 104)).toHaveLength(6);
+                // 取り消した後は要求しない。
+                expect(server.streamRequests('program', 104)).toHaveLength(7);
                 const warnings = messages(log.system.warn.mock.calls);
                 expect(warnings.filter(message => message.startsWith('preprec canceled: 4'))).toEqual([
                     'preprec canceled: 4 (2 failures since the last log, 6 in total)',
