@@ -151,6 +151,18 @@ describe('typeorm migration CLI with the repository ormconfig (npm run orm-run /
         expect(await appliedMigrations(runtime.sqliteDatabasePath)).toEqual([...expectedSQLiteMigrations]);
     });
 
+    it('[PERSIST-6.1-ORM-CLI-MERGE-KEY] expands a merge key of config.yml the same way the server does', async () => {
+        const { project, runtime } = await createProject(
+            'sqlite',
+            'x-base: &base\n    wal: true\nsqlite:\n    <<: *base\n',
+        );
+
+        const result = await typeorm(project, ['migration:run', '-d', './ormconfig.js']);
+
+        expect(result.code).toBe(0);
+        expect(await recordedJournalMode(runtime.sqliteDatabasePath)).toBe('wal');
+    });
+
     it('[PERSIST-6.1-ORM-CLI-ENV-UNDEFINED] fails naming the undefined environment variable', async () => {
         const { project } = await createProject('sqlite', 'sqlite:\n    extensions: [!env EPGS_SYNTHETIC_ORM_UNDEFINED]\n');
         const result = await typeorm(project, ['migration:run', '-d', './ormconfig.js']);

@@ -431,6 +431,113 @@ describe('server configuration characterization contract', () => {
         expect(provided.mysql).toStrictEqual({ user: 'synthetic-user', port: '3307', database: '' });
     });
 
+    it('[CFG-1.1-MERGE-KEY] merges the entries of an aliased map written with a merge key', () => {
+        installInitialReadDouble(() =>
+            withEnvEntries([
+                'x-base: &base',
+                '    host: synthetic-host',
+                '    user: synthetic-user',
+                'mysql:',
+                '    <<: *base',
+                '    database: synthetic-database',
+            ]),
+        );
+
+        const provided = new Configuration({ getLogger: () => createLogger() }).getConfig();
+
+        expect(provided.mysql).toStrictEqual({
+            host: 'synthetic-host',
+            user: 'synthetic-user',
+            database: 'synthetic-database',
+        });
+    });
+
+    it('[CFG-1.1-MERGE-KEY-MULTIPLE] merges a sequence of aliases and prefers the earlier one', () => {
+        installInitialReadDouble(() =>
+            withEnvEntries([
+                'x-first: &first',
+                '    host: first-host',
+                '    user: first-user',
+                'x-second: &second',
+                '    host: second-host',
+                '    charset: second-charset',
+                'mysql:',
+                '    <<: [*first, *second]',
+            ]),
+        );
+
+        const provided = new Configuration({ getLogger: () => createLogger() }).getConfig();
+
+        expect(provided.mysql).toStrictEqual({ host: 'first-host', user: 'first-user', charset: 'second-charset' });
+    });
+
+    it('[CFG-1.1-MERGE-KEY-EXPLICIT] prefers an explicitly written entry over the merged one', () => {
+        installInitialReadDouble(() =>
+            withEnvEntries([
+                'x-base: &base',
+                '    host: merged-host',
+                '    user: merged-user',
+                'mysql:',
+                '    host: explicit-host',
+                '    <<: *base',
+            ]),
+        );
+
+        const provided = new Configuration({ getLogger: () => createLogger() }).getConfig();
+
+        expect(provided.mysql).toStrictEqual({ host: 'explicit-host', user: 'merged-user' });
+    });
+
+    it('[CFG-1.1-MERGE-KEY-ARRAY] merges inside the maps that are elements of an array', () => {
+        const candidate = readCandidate();
+        delete candidate.recorded;
+        installInitialReadDouble(
+            () =>
+                `${yamlDump(candidate)}${[
+                    'x-limit: &limit',
+                    '    limitThreshold: 90',
+                    '    limitCmd: synthetic-limit-command',
+                    'recorded:',
+                    '    - name: archive-a',
+                    '      path: "%ROOT%/archive-a"',
+                    '      <<: *limit',
+                    '    - name: archive-b',
+                    '      path: "%ROOT%/archive-b"',
+                ].join('\n')}\n`,
+        );
+
+        const provided = new Configuration({ getLogger: () => createLogger() }).getConfig();
+
+        expect(provided.recorded).toMatchObject([
+            { name: 'archive-a', limitThreshold: 90, limitCmd: 'synthetic-limit-command' },
+            { name: 'archive-b' },
+        ]);
+        expect(provided.recorded[1]).not.toHaveProperty('limitThreshold');
+        expect(provided.recorded[0]).not.toHaveProperty('<<');
+    });
+
+    it('[CFG-1.1-MERGE-KEY-ENV] uses a merge key and !env in the same file', () => {
+        vi.stubEnv('EPGS_SYNTHETIC_DB_USER', 'synthetic-user');
+        installInitialReadDouble(() =>
+            withEnvEntries([
+                'x-base: &base',
+                '    host: synthetic-host',
+                '    user: !env EPGS_SYNTHETIC_DB_USER',
+                'mysql:',
+                '    <<: *base',
+                '    database: !env EPGS_SYNTHETIC_DB_USER',
+            ]),
+        );
+
+        const provided = new Configuration({ getLogger: () => createLogger() }).getConfig();
+
+        expect(provided.mysql).toStrictEqual({
+            host: 'synthetic-host',
+            user: 'synthetic-user',
+            database: 'synthetic-user',
+        });
+    });
+
     it('[CFG-1.1-ENV-LITERAL] keeps values without !env exactly as written', () => {
         vi.stubEnv('EPGS_SYNTHETIC_DB_USER', 'must-not-be-used');
         installInitialReadDouble(() =>
