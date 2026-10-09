@@ -92,6 +92,18 @@ mysql:
 -   config.yml を書き換えたときの再読み込みでも、そのときの環境変数の値で展開されます。環境変数が定義されていない場合は再読み込みに失敗し、直前の設定を使い続けます
 -   `npm run orm-run` など `ormconfig.js` を使うコマンドも、config.yml の `!env` を同じ規則で展開します（`ormconfig.js` は build 済みの `dist` を読むので、先に build しておく必要があります）。環境変数が定義されていないと、コマンドは失敗します
 -   ログ設定ファイルでは `!env` は使えません
+-   YAML のアンカー（`&名前`）と別名（`*名前`）、merge key `<<` も使えます。同じ内容を複数の項目に使い回せます。明示して書いた項目は取り込んだ値より優先されます
+
+    ```yaml
+    x-limit: &limit
+        limitThreshold: 90
+        limitCmd: /bin/bash ./config/storageLimit.sh
+
+    recorded:
+        - name: parent
+          path: '%ROOT%/recorded'
+          <<: *limit
+    ```
 
 ---
 
