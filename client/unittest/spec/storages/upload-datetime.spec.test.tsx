@@ -2,6 +2,11 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { useState } from 'react'
 import { describe, expect, it } from 'vitest'
 import { RecordedUploadDatetimePicker } from '@/features/storages/upload/components/RecordedUploadDatetimePicker'
+import {
+  MONDAY_FIRST_WEEKDAYS,
+  calendarWeekdayHeaders,
+  pickCalendarDay,
+} from '../shared/dateTimePickerTestKit'
 
 function DatetimePickerHarness({ initial = null }: { initial?: number | null }) {
   const [value, setValue] = useState<number | null>(initial)
@@ -42,8 +47,7 @@ describe('RecordedUploadDatetimePicker interactions', () => {
 
     fireEvent.click(screen.getByLabelText('日付※'))
     const dialog = await screen.findByRole('dialog', { name: '日付選択' })
-    expect(within(dialog).getByLabelText('日付')).toHaveValue('')
-    expect(within(dialog).getByLabelText('時刻')).toHaveValue('')
+    expect(within(dialog).queryByRole('gridcell', { selected: true })).toBeNull()
 
     fireEvent.click(within(dialog).getByRole('button', { name: '設定' }))
 
@@ -53,35 +57,38 @@ describe('RecordedUploadDatetimePicker interactions', () => {
     expect(screen.getByLabelText('日付※')).toHaveValue('')
   })
 
-  it('[AC 2.14] edits date and time independently in the dialog and clears each part', async () => {
+  it('[AC 2.14] shows the Monday-first calendar and picks a day while keeping the time', async () => {
     render(<DatetimePickerHarness initial={new Date('2026-05-05T12:30').getTime()} />)
 
     fireEvent.click(screen.getByLabelText('日付※'))
     const dialog = await screen.findByRole('dialog', { name: '日付選択' })
-    expect(within(dialog).getByLabelText('日付')).toHaveValue('2026-05-05')
-    expect(within(dialog).getByLabelText('時刻')).toHaveValue('12:30')
+    expect(calendarWeekdayHeaders(dialog)).toEqual(MONDAY_FIRST_WEEKDAYS)
+    expect(within(dialog).getByRole('gridcell', { name: '5' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
 
-    fireEvent.change(within(dialog).getByLabelText('日付'), { target: { value: '2026-07-10' } })
-    fireEvent.change(within(dialog).getByLabelText('時刻'), { target: { value: '08:15' } })
+    pickCalendarDay(dialog, 10)
     fireEvent.click(within(dialog).getByRole('button', { name: '設定' }))
 
     await waitFor(() => {
       expect(screen.queryByRole('dialog', { name: '日付選択' })).not.toBeInTheDocument()
     })
-    expect(screen.getByLabelText('日付※')).toHaveValue('2026-07-10T08:15')
+    expect(screen.getByLabelText('日付※')).toHaveValue('2026-05-10T12:30')
   })
 
-  it('[AC 2.22] clears the draft date and draft time fields independently inside the dialog', async () => {
-    render(<DatetimePickerHarness initial={new Date('2026-05-05T12:30').getTime()} />)
+  it('[AC 2.22] picking a day in the calendar does not change the selected time', async () => {
+    render(<DatetimePickerHarness initial={new Date('2026-05-05T08:15').getTime()} />)
 
     fireEvent.click(screen.getByLabelText('日付※'))
     const dialog = await screen.findByRole('dialog', { name: '日付選択' })
+    pickCalendarDay(dialog, 20)
+    fireEvent.click(within(dialog).getByRole('button', { name: '設定' }))
 
-    fireEvent.click(within(dialog).getByRole('button', { name: '日付をクリア' }))
-    expect(within(dialog).getByLabelText('日付')).toHaveValue('')
-
-    fireEvent.click(within(dialog).getByRole('button', { name: '時刻をクリア' }))
-    expect(within(dialog).getByLabelText('時刻')).toHaveValue('')
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog', { name: '日付選択' })).not.toBeInTheDocument()
+    })
+    expect(screen.getByLabelText('日付※')).toHaveValue('2026-05-20T08:15')
   })
 
   it('[AC 2.20] the dialog level clear button resets the value and closes without committing a draft', async () => {
@@ -89,7 +96,7 @@ describe('RecordedUploadDatetimePicker interactions', () => {
 
     fireEvent.click(screen.getByLabelText('日付※'))
     const dialog = await screen.findByRole('dialog', { name: '日付選択' })
-    fireEvent.change(within(dialog).getByLabelText('日付'), { target: { value: '2026-07-10' } })
+    pickCalendarDay(dialog, 10)
 
     fireEvent.click(within(dialog).getByRole('button', { name: 'クリア' }))
 

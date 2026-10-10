@@ -11,6 +11,7 @@ import {
   selectNameMatcher,
 } from '../recorded/recordedSpecHelpers'
 import { createRecordedRepository } from '../recorded/recordedSpecRepository'
+import { MONDAY_FIRST_WEEKDAYS, calendarWeekdayHeaders } from '../shared/dateTimePickerTestKit'
 import {
   uploadProgramNameInput,
   uploadVideoBlock,
@@ -75,18 +76,11 @@ describe('Recorded upload route and form state', () => {
     const datetimePicker = screen.getByTestId('recorded-upload-datetime-picker')
     expect(within(datetimePicker).queryByRole('button', { name: 'クリア' })).not.toBeInTheDocument()
     expect(within(datetimePicker).queryByRole('button', { name: '設定' })).not.toBeInTheDocument()
-    expect(datetimePicker).toHaveAttribute('data-locale', 'ja-JP')
-    expect(datetimePicker).toHaveAttribute('data-week-start', '1')
     fireEvent.click(screen.getByLabelText('日付※'))
     const dateDialog = await screen.findByRole('dialog', { name: '日付選択' })
-    expect(within(dateDialog).getByLabelText('日付')).toHaveAttribute('type', 'date')
-    expect(within(dateDialog).getByLabelText('時刻')).toHaveAttribute('type', 'time')
-    expect(within(dateDialog).getByText('日付', { selector: 'label' })).toHaveClass(
-      'MuiInputLabel-shrink',
-    )
-    expect(within(dateDialog).getByText('時刻', { selector: 'label' })).toHaveClass(
-      'MuiInputLabel-shrink',
-    )
+    expect(calendarWeekdayHeaders(dateDialog)).toEqual(MONDAY_FIRST_WEEKDAYS)
+    expect(within(dateDialog).queryByLabelText('日付')).not.toBeInTheDocument()
+    expect(within(dateDialog).queryByLabelText('時刻')).not.toBeInTheDocument()
     expect(within(dateDialog).getByRole('button', { name: 'クリア' })).toBeVisible()
     expect(within(dateDialog).getByRole('button', { name: '設定' })).toBeVisible()
     fireEvent.click(within(dateDialog).getByRole('button', { name: '設定' }))

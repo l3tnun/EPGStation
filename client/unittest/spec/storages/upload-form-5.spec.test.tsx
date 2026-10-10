@@ -5,6 +5,7 @@ import type { ServerConfigNavigationState } from '@/app/serverApi'
 import { DefaultSettingsFactory } from '@/shared/settings/defaultSettings'
 import { changeSettingsSelect, createShellRepository } from '../recorded/recordedSpecHelpers'
 import { createRecordedRepository } from '../recorded/recordedSpecRepository'
+import { fixCurrentDate, pickCalendarDay } from '../shared/dateTimePickerTestKit'
 import { uploadVideoBlock, warmUpRecordedUploadAppRender } from './recordedUploadSpecSupport'
 
 describe('Recorded upload route and form state', () => {
@@ -18,6 +19,7 @@ describe('Recorded upload route and form state', () => {
   })
 
   afterEach(() => {
+    vi.useRealTimers()
     vi.restoreAllMocks()
   })
 
@@ -61,7 +63,7 @@ describe('Recorded upload route and form state', () => {
     expect(block.getByLabelText('name')).toHaveValue('')
   })
 
-  it('[AC 2.14] clears the start field directly and reopens the dialog with fresh draft date/time', async () => {
+  it('[AC 2.14] clears the start field directly and opens the dialog from the current value', async () => {
     const recordedRepository = createRecordedRepository()
 
     render(
@@ -95,8 +97,10 @@ describe('Recorded upload route and form state', () => {
     })
     fireEvent.click(screen.getByLabelText('日付※'))
     const dateDialog = await screen.findByRole('dialog', { name: '日付選択' })
-    expect(within(dateDialog).getByLabelText('日付')).toHaveValue('2026-06-15')
-    expect(within(dateDialog).getByLabelText('時刻')).toHaveValue('09:00')
+    expect(within(dateDialog).getByRole('gridcell', { name: '15' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
 
     fireEvent.click(within(dateDialog).getByRole('button', { name: 'クリア' }))
     await waitFor(() => {
@@ -105,7 +109,8 @@ describe('Recorded upload route and form state', () => {
     expect(screen.getByLabelText('開始')).toHaveValue('')
   })
 
-  it('[AC 2.14] edits draft date and time inside the dialog and commits the combined value', async () => {
+  it('[AC 2.14] picks a day in the calendar and commits it as the start value', async () => {
+    fixCurrentDate('2026-07-01T12:00:00+09:00')
     const recordedRepository = createRecordedRepository()
 
     render(
@@ -131,9 +136,7 @@ describe('Recorded upload route and form state', () => {
     fireEvent.click(screen.getByLabelText('日付※'))
     const dateDialog = await screen.findByRole('dialog', { name: '日付選択' })
 
-    fireEvent.change(within(dateDialog).getByLabelText('日付'), {
-      target: { value: '2026-07-20' },
-    })
+    pickCalendarDay(dateDialog, 20)
     fireEvent.click(within(dateDialog).getByRole('button', { name: 'クリア' }))
     await waitFor(() => {
       expect(screen.queryByRole('dialog', { name: '日付選択' })).not.toBeInTheDocument()
@@ -142,28 +145,13 @@ describe('Recorded upload route and form state', () => {
 
     fireEvent.click(screen.getByLabelText('日付※'))
     const reopenedDialog = await screen.findByRole('dialog', { name: '日付選択' })
-    fireEvent.change(within(reopenedDialog).getByLabelText('日付'), {
-      target: { value: '2026-07-20' },
-    })
-    fireEvent.change(within(reopenedDialog).getByLabelText('時刻'), {
-      target: { value: '18:45' },
-    })
-    fireEvent.click(within(reopenedDialog).getByLabelText('日付をクリア'))
-    fireEvent.click(within(reopenedDialog).getByLabelText('時刻をクリア'))
-    expect(within(reopenedDialog).getByLabelText('日付')).toHaveValue('')
-    expect(within(reopenedDialog).getByLabelText('時刻')).toHaveValue('')
-
-    fireEvent.change(within(reopenedDialog).getByLabelText('日付'), {
-      target: { value: '2026-08-01' },
-    })
-    fireEvent.change(within(reopenedDialog).getByLabelText('時刻'), {
-      target: { value: '07:15' },
-    })
+    expect(within(reopenedDialog).queryByRole('gridcell', { selected: true })).toBeNull()
+    pickCalendarDay(reopenedDialog, 20)
     fireEvent.click(within(reopenedDialog).getByRole('button', { name: '設定' }))
     await waitFor(() => {
       expect(screen.queryByRole('dialog', { name: '日付選択' })).not.toBeInTheDocument()
     })
-    expect(screen.getByLabelText('開始')).toHaveValue('2026-08-01T07:15')
+    expect(screen.getByLabelText('開始')).toHaveValue('2026-07-20T00:00')
   })
 
   it('[AC 2.14] closes the date dialog without committing when dismissed via escape', async () => {
@@ -193,9 +181,7 @@ describe('Recorded upload route and form state', () => {
     fireEvent.click(screen.getByLabelText('日付※'))
     const dateDialog = await screen.findByRole('dialog', { name: '日付選択' })
 
-    fireEvent.change(within(dateDialog).getByLabelText('日付'), {
-      target: { value: '2026-09-09' },
-    })
+    pickCalendarDay(dateDialog, 9)
     fireEvent.keyDown(dateDialog, { key: 'Escape', code: 'Escape' })
     await waitFor(() => {
       expect(screen.queryByRole('dialog', { name: '日付選択' })).not.toBeInTheDocument()

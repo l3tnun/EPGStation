@@ -1,7 +1,12 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { ManualTimeSpecifiedFields } from '@/features/reserves/components/ManualTimeSpecifiedFields'
 import { createInitialFormState } from '@/features/reserves/lib/manualReserveForm'
+import {
+  MONDAY_FIRST_WEEKDAYS,
+  calendarWeekdayHeaders,
+  pickCalendarDay,
+} from '../shared/dateTimePickerTestKit'
 
 describe('ManualTimeSpecifiedFields clear button edges', () => {
   it('[AC 4.25] clears the program name, start, and end fields independently', () => {
@@ -254,5 +259,82 @@ describe('ManualTimeSpecifiedFields clear button edges', () => {
     )
 
     expect(startInput).toHaveValue('2026-07-01 09:30')
+  })
+})
+
+describe('ManualTimeSpecifiedFields date-time picker dialog', () => {
+  function renderFields(options: { disabled?: boolean } = {}) {
+    const setValue = vi.fn()
+    const formState = {
+      ...createInitialFormState(),
+      timeSpecifiedOption: {
+        name: null,
+        channelId: null,
+        startAt: Date.parse('2026-05-05T10:15:00+09:00'),
+        endAt: null,
+      },
+    }
+    render(
+      <ManualTimeSpecifiedFields
+        formState={formState}
+        channels={[]}
+        disabled={options.disabled ?? false}
+        setValue={setValue}
+      />,
+    )
+
+    return { setValue }
+  }
+
+  it('[AC 4.23] opens a Monday-first Japanese calendar from the start field and commits the picked day with the same time', async () => {
+    const { setValue } = renderFields()
+
+    fireEvent.click(screen.getByLabelText('開始'))
+    const dialog = await screen.findByRole('dialog', { name: '時刻 開始' })
+    expect(calendarWeekdayHeaders(dialog)).toEqual(MONDAY_FIRST_WEEKDAYS)
+    expect(within(dialog).getByRole('gridcell', { name: '5' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+
+    pickCalendarDay(dialog, 20)
+    fireEvent.click(within(dialog).getByRole('button', { name: '設定' }))
+
+    expect(setValue).toHaveBeenLastCalledWith(
+      'timeSpecifiedOption.startAt',
+      Date.parse('2026-05-20T10:15:00+09:00'),
+    )
+    expect(screen.getByLabelText('開始')).toHaveValue('2026-05-20 10:15')
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog', { name: '時刻 開始' })).not.toBeInTheDocument()
+    })
+  })
+
+  it('[AC 4.23] opens the end field dialog empty and clears the start value from the dialog クリア button', async () => {
+    const { setValue } = renderFields()
+
+    fireEvent.click(screen.getByLabelText('終了'))
+    const endDialog = await screen.findByRole('dialog', { name: '時刻 終了' })
+    expect(within(endDialog).queryByRole('gridcell', { selected: true })).toBeNull()
+    fireEvent.keyDown(endDialog, { key: 'Escape', code: 'Escape' })
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog', { name: '時刻 終了' })).not.toBeInTheDocument()
+    })
+    expect(setValue).not.toHaveBeenCalled()
+
+    fireEvent.click(screen.getByLabelText('開始'))
+    const startDialog = await screen.findByRole('dialog', { name: '時刻 開始' })
+    fireEvent.click(within(startDialog).getByRole('button', { name: 'クリア' }))
+
+    expect(setValue).toHaveBeenLastCalledWith('timeSpecifiedOption.startAt', null)
+    expect(screen.getByLabelText('開始')).toHaveValue('')
+  })
+
+  it('[AC 4.23] does not open the dialog while the fields are disabled', () => {
+    renderFields({ disabled: true })
+
+    fireEvent.click(screen.getByLabelText('開始'))
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 })

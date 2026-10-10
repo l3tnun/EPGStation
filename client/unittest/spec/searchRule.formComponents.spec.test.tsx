@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import {
   useRef,
   useState,
@@ -25,6 +25,7 @@ import {
 } from '@/features/search/rule/query'
 import type { SearchFormState, SearchRuleOptionDraft } from '@/features/search/rule/query'
 import { chooseMuiSelectOption } from './searchRuleSupport'
+import { fixCurrentDate, pickCalendarDay } from './shared/dateTimePickerTestKit'
 
 function FormHarness({
   initial,
@@ -74,6 +75,7 @@ const draft: SearchRuleOptionDraft = {
 
 describe('search form leaf components', () => {
   afterEach(() => {
+    vi.useRealTimers()
     vi.restoreAllMocks()
   })
 
@@ -417,6 +419,7 @@ describe('search form leaf components', () => {
   })
 
   it('[AC 2.30][AC 2.33] time rows set start, range, weekdays, durations, periods and actions', async () => {
+    fixCurrentDate('2026-01-01T12:00:00+09:00')
     const onClear = vi.fn()
     const onSubmit = vi.fn()
     render(
@@ -445,11 +448,9 @@ describe('search form leaf components', () => {
       isFree: true,
     })
     fireEvent.click(screen.getByRole('textbox', { name: '開始' }))
-    fireEvent.change(await screen.findByLabelText('開始日時'), {
-      target: { value: '2026-01-02T03:04' },
-    })
+    pickCalendarDay(await screen.findByRole('dialog', { name: '期間 開始' }), 2)
     fireEvent.click(screen.getByRole('button', { name: '設定' }))
-    await waitFor(() => expect(readForm().startPeriod).toBe(new Date('2026-01-02T03:04').getTime()))
+    await waitFor(() => expect(readForm().startPeriod).toBe(new Date('2026-01-02T00:00').getTime()))
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
     fireEvent.click(screen.getByRole('textbox', { name: '終了' }))
     fireEvent.click(await screen.findByRole('button', { name: 'クリア' }))
@@ -461,7 +462,7 @@ describe('search form leaf components', () => {
     expect(onSubmit).toHaveBeenCalled()
   })
 
-  it('[AC 2.30] period field clears from the text field and resets its draft on reopen', async () => {
+  it('[AC 2.30] period field clears from the text field and starts every dialog from the current value', async () => {
     const onChange = vi.fn()
     render(
       <SearchPeriodField
@@ -473,12 +474,24 @@ describe('search form leaf components', () => {
     fireEvent.click(screen.getByRole('button', { name: '開始をクリア' }))
     expect(onChange).toHaveBeenCalledWith(null)
     fireEvent.click(screen.getByRole('textbox', { name: '開始' }))
-    const draftBox = await screen.findByLabelText('開始日時')
-    expect(draftBox).toHaveValue('2026-01-02T03:04')
-    fireEvent.click(screen.getByRole('button', { name: '開始日時をクリア' }))
-    expect(draftBox).toHaveValue('')
-    fireEvent.click(screen.getByRole('button', { name: '設定' }))
+    const dialog = await screen.findByRole('dialog', { name: '期間 開始' })
+    expect(within(dialog).getByRole('gridcell', { name: '2' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+    pickCalendarDay(dialog, 9)
+    fireEvent.click(within(dialog).getByRole('button', { name: 'クリア' }))
     expect(onChange).toHaveBeenLastCalledWith(null)
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+
+    fireEvent.click(screen.getByRole('textbox', { name: '開始' }))
+    const reopened = await screen.findByRole('dialog', { name: '期間 開始' })
+    expect(within(reopened).getByRole('gridcell', { name: '2' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+    fireEvent.click(within(reopened).getByRole('button', { name: '設定' }))
+    expect(onChange).toHaveBeenLastCalledWith(new Date('2026-01-02T03:04').getTime())
   })
 
   it('[AC 3.16] rule list row toggles selection only in edit mode', () => {

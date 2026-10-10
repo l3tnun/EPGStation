@@ -10,6 +10,12 @@ import {
   createSearchRuleRepository,
   closeSearchPeriodDialog,
 } from './searchRuleSupport'
+import {
+  MONDAY_FIRST_WEEKDAYS,
+  calendarWeekdayHeaders,
+  fixCurrentDate,
+  pickCalendarDay,
+} from './shared/dateTimePickerTestKit'
 
 describe('Search route lifecycle', () => {
   beforeEach(() => {
@@ -98,6 +104,7 @@ describe('Search route lifecycle', () => {
   // `guide.programDialogActions.spec.test.tsx`.
   it('[AC 2.30] omits searchPeriods from the search when only the period start is set', async () => {
     window.history.replaceState(null, '', '/#/search')
+    fixCurrentDate('2026-05-01T12:00:00+09:00')
     const searchRuleRepository = createSearchRuleRepository()
 
     render(
@@ -113,10 +120,12 @@ describe('Search route lifecycle', () => {
 
     expect(await screen.findByRole('heading', { name: '検索' })).toBeVisible()
     fireEvent.click(screen.getByLabelText('開始'))
-    expect(await screen.findByRole('dialog', { name: '期間 開始' })).toBeVisible()
-    fireEvent.change(screen.getByLabelText('開始日時'), { target: { value: '2026-05-05T12:30' } })
+    const periodDialog = await screen.findByRole('dialog', { name: '期間 開始' })
+    expect(calendarWeekdayHeaders(periodDialog)).toEqual(MONDAY_FIRST_WEEKDAYS)
+    pickCalendarDay(periodDialog, 5)
     fireEvent.click(screen.getByRole('button', { name: '設定' }))
     await closeSearchPeriodDialog('開始')
+    expect(screen.getByLabelText('開始')).toHaveValue('2026-05-05T00:00')
 
     fireEvent.click(
       within(screen.getByRole('region', { name: '検索条件' })).getByRole('button', {
@@ -164,6 +173,7 @@ describe('Search route lifecycle', () => {
 
     beforeEach(async () => {
       window.history.replaceState(null, '', '/#/search')
+      fixCurrentDate('2026-05-01T12:00:00+09:00')
       searchRuleRepository = createSearchRuleRepository()
 
       render(
@@ -179,8 +189,7 @@ describe('Search route lifecycle', () => {
 
       expect(await screen.findByRole('heading', { name: '検索' })).toBeVisible()
       fireEvent.click(screen.getByLabelText('開始'))
-      expect(await screen.findByRole('dialog', { name: '期間 開始' })).toBeVisible()
-      fireEvent.change(screen.getByLabelText('開始日時'), { target: { value: '2026-05-05T12:30' } })
+      pickCalendarDay(await screen.findByRole('dialog', { name: '期間 開始' }), 5)
       fireEvent.click(screen.getByRole('button', { name: '設定' }))
       // Unlike the close-wait before the final search-button click in the test body below, this
       // dialog's own close transition does not need to finish before opening the *other* field's
@@ -195,10 +204,7 @@ describe('Search route lifecycle', () => {
 
     it('reflects both the already-set period start and the newly-set period end', async () => {
       fireEvent.click(screen.getByLabelText('終了'))
-      expect(await screen.findByRole('dialog', { name: '期間 終了' })).toBeVisible()
-      fireEvent.change(screen.getByLabelText('終了日時'), {
-        target: { value: '2026-05-05T13:30' },
-      })
+      pickCalendarDay(await screen.findByRole('dialog', { name: '期間 終了' }), 6)
       fireEvent.click(screen.getByRole('button', { name: '設定' }))
       await closeSearchPeriodDialog('終了')
 
@@ -214,8 +220,8 @@ describe('Search route lifecycle', () => {
         option: {
           searchPeriods: [
             {
-              startAt: new Date('2026-05-05T12:30').getTime(),
-              endAt: new Date('2026-05-05T13:30').getTime(),
+              startAt: new Date('2026-05-05T00:00').getTime(),
+              endAt: new Date('2026-05-06T00:00').getTime(),
             },
           ],
           times: [{ week: 0x7f }],
