@@ -21,13 +21,13 @@
         module を import する。
     -   TDD: 追加順序の意図的に誤った期待値で RED を確認した後、観測された実際の順序へ期待値を修正して GREEN にした。
     -   _Requirements: 1.1, 1.2, 1.3_
-    -   _Verification: `mise exec node@24.18.0 -- npm run test:server:imp -- test/server/shared-foundation/imp/promise-queue.test.ts` の 3 tests を対象とする_
+    -   _Verification: `mise exec node@24.18.0 -- npm run test:server:imp -- test/server/shared-foundation/imp/promise-queue.test.ts` を対象とする_
 
 -   [x] 2. 日時表示（`DateUtil`）の characterization test を作る
     -   `test/server/shared-foundation/imp/date-util.test.ts` に、書式トークンの置換、`w` トークンの曜日ラベル、
         `getJaDate` のタイムゾーン変換を確認する test を追加する。
     -   _Requirements: 2.1, 2.2, 2.3_
-    -   _Verification: `mise exec node@24.18.0 -- npm run test:server:imp -- test/server/shared-foundation/imp/date-util.test.ts` の 4 tests を対象とする_
+    -   _Verification: `mise exec node@24.18.0 -- npm run test:server:imp -- test/server/shared-foundation/imp/date-util.test.ts` を対象とする_
 
 -   [x] 3. 文字列正規化（`StrUtil`）の characterization test を作る
     -   `test/server/shared-foundation/imp/str-util.test.ts` に、NUL 除去、半角化・全角化、ディレクトリ名・ファイル名
@@ -37,7 +37,7 @@
     -   TDD: 全角化の `"` 変換について、意図した typographic quote ではなく既存コードの適用順序により全角引用符
         `＂` になる実際の挙動を RED で発見し、期待値を実際の挙動へ修正して GREEN にした。
     -   _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6_
-    -   _Verification: `mise exec node@24.18.0 -- npm run test:server:imp -- test/server/shared-foundation/imp/str-util.test.ts` の 15 tests を対象とする_
+    -   _Verification: `mise exec node@24.18.0 -- npm run test:server:imp -- test/server/shared-foundation/imp/str-util.test.ts` を対象とする_
 
 -   [x] 4. ファイル操作（`FileUtil`）の characterization test を作る
     -   `test/server/shared-foundation/imp/file-util.test.ts` に、読み書き・追記・削除・名前変更・移動（失敗時の後始
@@ -49,15 +49,15 @@
     -   TDD: 識別情報不一致のシナリオを、同一 path を rm 後に再作成する形から、別ディレクトリの識別情報を渡す形へ修
         正した（同一 path 再作成では inode 再利用により意図した RED が安定しなかったため）。
     -   _Requirements: 4.1, 4.2, 4.3, 4.4_
-    -   _Verification: `mise exec node@24.18.0 -- npm run test:server:imp -- test/server/shared-foundation/imp/file-util.test.ts test/server/shared-foundation/imp/file-util-read-dir-failure.test.ts` の 25 tests を対象とする_
+    -   _Verification: `mise exec node@24.18.0 -- npm run test:server:imp -- test/server/shared-foundation/imp/file-util.test.ts test/server/shared-foundation/imp/file-util-read-dir-failure.test.ts` を対象とする_
 
 -   [x] 5. 単純な時間待機（`Util.sleep`）の characterization test を作る
     -   `test/server/shared-foundation/imp/util.test.ts` に、境界直前で未完了であること、境界で一度だけ完了すること
         を fake timer で確認する test を追加する。
     -   _Requirements: 5.1_
-    -   _Verification: `mise exec node@24.18.0 -- npm run test:server:imp -- test/server/shared-foundation/imp/util.test.ts` の 3 tests を対象とする_
+    -   _Verification: `mise exec node@24.18.0 -- npm run test:server:imp -- test/server/shared-foundation/imp/util.test.ts` を対象とする_
 
 -   [x] 6. 全 test file の一括実行を用意する
     -   本 spec の `imp/` の 6 test file を一括実行できる状態にする。
     -   _Requirements: 1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 4.1, 4.2, 4.3, 4.4, 5.1_
-    -   _Verification: `mise exec node@24.18.0 -- npm run test:server:imp -- test/server/shared-foundation/imp/promise-queue.test.ts test/server/shared-foundation/imp/util.test.ts test/server/shared-foundation/imp/date-util.test.ts test/server/shared-foundation/imp/str-util.test.ts test/server/shared-foundation/imp/file-util.test.ts test/server/shared-foundation/imp/file-util-read-dir-failure.test.ts` の 50 tests を対象とする_
+    -   _Verification: `mise exec node@24.18.0 -- npm run test:server:imp -- test/server/shared-foundation/imp/promise-queue.test.ts test/server/shared-foundation/imp/util.test.ts test/server/shared-foundation/imp/date-util.test.ts test/server/shared-foundation/imp/str-util.test.ts test/server/shared-foundation/imp/file-util.test.ts test/server/shared-foundation/imp/file-util-read-dir-failure.test.ts` を対象とする_

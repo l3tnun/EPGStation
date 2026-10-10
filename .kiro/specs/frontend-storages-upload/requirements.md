@@ -48,9 +48,11 @@ Storages / Recorded Upload は storage usage view と録画済み metadata/uploa
    `800px` とする。
 2. route init 時、EPGStation フロントエンドは upload state を reset し、video item counter を 0 に戻し、exactly one
    empty video-file block を作成する。
-3. channel selector を作るとき、EPGStation フロントエンドは `isHalfWidthDisplayed` を参照する。3a. channel、genre、sub
+3. channel selector を作るとき、EPGStation フロントエンドは `isHalfWidthDisplayed` を参照する。
+3a. channel、genre、sub
    genre selector は empty value を持つ placeholder item を表示面の空状態としてだけ扱い、開いた listbox に
-   `channel`、`genre`、`sub genre` という field-name label を選択肢として露出しない。3b. channel selector は channel
+   `channel`、`genre`、`sub genre` という field-name label を選択肢として露出しない。
+3b. channel selector は channel
    model 由来の channel name / halfWidthName だけを表示し、recorded search option の `cnt` を流用した `(数値)`
    suffix や channel name 解決失敗時の数値だけの fallback option を露出しない。genre selector も `genre.name`
    （count suffix 除去後）だけを表示し、recorded search option の `(数値)` suffix を露出しない。

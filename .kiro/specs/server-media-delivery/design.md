@@ -456,7 +456,7 @@ Kodi再生では、設定済み送信先と録画ファイルを確認し、要�
 上の表に無い補助test（canonical ACとmatrix行を増やさない）として、`api-util`・`stream-api-keep-stopall`・
 `recorded-delivery-lease-consumer`・`recorded-delivery-snapshot-provider`・`recorded-playback-source-consumer`の各
 `.spec.test.ts`、`recorded-use-snapshot.test.ts`、`*.imp.test.ts`（資源回収・race・失敗分岐の個別case）、および
-`recorded-delivery-lease`・`recorded-playback-source`の各`.integration.test.ts`がある。
+`recorded-delivery-lease`・`recorded-playback-source`・`hls-real-components`・`hls-unconfirmed-stop`・`recorded-playback-persistence`・`tailstream-append`の各`.integration.test.ts`がある。
 
 仕様testは必ず`*.spec.test.ts`、内部algorithm・分岐testは`*.test.ts`、外部境界testは `*.integration.test.ts`とする。HTTP
 carrier、tuner access、recorded-content、process managerの内部実装を本機能へ複製せず、本機能が所有する要求・応
@@ -472,7 +472,7 @@ carrier、tuner access、recorded-content、process managerの内部実装を本
     race、process停止段階、cleanup finalizer・latch、Readable所有権、placeholderを検証する。R10.2の証拠は10.1に記載した4
     imp fileの具体的な実行結果であり、仕様testで代替しない。
 -   `integration`はHTTP、temporary filesystem、isolated child process、tuner access port、およびrecorded-content portを
-    接続する。R10.4の証拠は10.1に記載した5 integration fileの具体的な実行結果である。DBはrecorded-content ownerが提供す
+    接続する。R10.4の証拠は10.1に記載した境界のintegration fileの具体的な実行結果である。DBはrecorded-content ownerが提供す
     る照会結果の接続だけを対象とし、本機能はDB transaction、schema、直接queryを所有しない。公開業務IPCは非適用である。
     capacity deletionとの排他に使うPM内部resource-control carrierだけはrecorded-content integration fileで接続し、新しい
     公開operationまたはdomain serialization契約として扱わない。
@@ -616,7 +616,7 @@ carrier、tuner access、recorded-content、process managerの内部実装を本
 | MD-10.1 | `*.spec.test.ts`の83主test#MD-10.1                                    | S        | N×9               | 全仕様状態                              | 無                            | spec test                                  | 非適用                                         | AC欠落・重複                       | R1–R9全83 ACにspec主testが一つずつ対応する                                 | spec                            |
 | MD-10.2 | `live-delivery.test.tsほか3 fileの個別結果#MD-10.2`                   | I        | N×9               | 全内部状態                              | 境界/race                     | assertion結果                     | 非適用                                         | 分岐未割当               | 10.1記載の4 imp fileから値域・exact集合・終了・失敗の具体的結果を提示      | imp                             |
 | MD-10.3 | 本表（10.4）#MD-10.3                                                  | M        | N×9               | starting/ready/stopping/stopped/restart | 100ms/1秒/15秒/30秒/late/同着 | stream/file/timer/listener/handle/artifact | 非適用                                         | matrix空欄                         | 88行の一意性と全状態・時間・race・資源分類が揃う                           | review                          |
-| MD-10.4 | `media-delivery-http.integration.test.tsほか4 fileの個別結果#MD-10.4` | G        | N×9               | 全結合状態                              | 順/late                       | 全境界資源                                 | HTTP/filesystem/process/tuner/recorded-content | 境界未接続                         | 10.1記載の5 integration fileの結果とDB間接・IPC非適用理由を提示            | integration                     |
+| MD-10.4 | `media-delivery-http.integration.test.tsほか境界のintegration fileの個別結果#MD-10.4` | G        | N×9               | 全結合状態                              | 順/late                       | 全境界資源                                 | HTTP/filesystem/process/tuner/recorded-content | 境界未接続                         | 10.1記載の境界のintegration fileの結果とDB間接・IPC非適用理由を提示            | integration                     |
 | MD-10.5 | 機能固有suiteとRuntime R9 AC9#MD-10.5                                 | 品質判定 | N×9               | 品質判定                                | 全件成功/C0・C1               | suite/coverage                             | Runtime                                        | 未実行・失敗・除外未解決           | feature全件成功かつserver全体のC0・C1成立まで未完了                       | coverage                        |
 
 ### 10.5 品質判定
@@ -722,7 +722,7 @@ Requirement 9 Acceptance Criterion 9（server全体の単体testだけで`src/**
 | R10.1       | 10.1、10.4: 全83 ACの仕様test                                      |
 | R10.2       | 10.1、10.3、10.4: 4 imp fileの具体的結果、値域・分岐 |
 | R10.3       | 10.3、10.4: 状態・時間・race・資源の全88 AC matrix                 |
-| R10.4       | 10.1、10.2、10.4: 5 integration file、DB間接・IPC非適用            |
+| R10.4       | 10.1、10.2、10.4: 境界のintegration file、DB間接・IPC非適用            |
 | R10.5       | 10.5: 機能固有全件成功とserver全体のC0・C1                         |
 
 ## 12. ソース対応表
@@ -743,7 +743,7 @@ Requirement 9 Acceptance Criterion 9（server全体の単体testだけで`src/**
 | client playlist path                       | `client/src/features/video/playback/playbackLifecycleTypes.ts`（`buildHlsPlaylistUrl`）、`playbackLifecycleControllerBase.ts` | `./streamfiles/stream{id}.m3u8`                                                                                                                                                        |
 | stream API                                 | `src/model/service/api/streams.ts`、`src/model/service/api/streams/`                              | route・response                                                                                                                                                                        |
 | Kodi API                                   | `src/model/service/api/videos/{videoFileId}/kodi.ts`                                              | 認証、URL境界、30秒期限                                                                                                                                                                |
-| 機能固有server test                        | `test/server/media-delivery/`                                                                     | 88 ACの一意な主test、固有imp・integration assertion                                                                                                                          |
+| 機能固有server test                        | `test/server/media-delivery/`                                                                     | 83 ACの仕様主test、88行のmatrix、固有imp・integration assertion                                                                                                                          |
 
 active stream registry、recorded IDの確定・保持時点、recorded-use lease、service child snapshot handler、または容量削除
 候補filterを変更する場合は、利用中snapshotとRuntimeの権威的deletion gateを同じ変更単位で再検証する。

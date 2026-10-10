@@ -147,7 +147,7 @@ Storage contract は routed screen ではない。API repository、dialog coordi
 | コンポーネント | ドメイン/レイヤー | 意図 | 要件カバレッジ | 主な依存 | 契約 |
 |-----------|--------------|--------|--------------|------------------|-----------|
 | SettingsStorageRepository | Shared Storage | `settings` localStorage の read/write、missing storage、repair persist を扱う。 | 1.1-1.10, 2.1-2.8 | Browser localStorage | State / Service |
-| DefaultSettingsFactory | Shared Config | platform-dependent default settings object を生成する。 | 3.1-3.8, 4.1-4.7, 5.1-5.12, 6.1-6.7, 7.1-7.8, 8.1-8.11 | user agent platform input | Service |
+| DefaultSettingsFactory | Shared Config | platform-dependent default settings object を生成する。 | 3.1-3.8, 4.1-4.8, 5.1-5.12, 6.1-6.7, 7.1-7.8, 8.1-8.11 | user agent platform input | Service |
 | SettingsValidator | Shared Validation | unknown JSON を `SettingsValue` へ narrow し、parse failure、missing storage、missing field を補正する。保存 raw の不正値の補正は intentional fix がある場合だけ扱い、consumer `value` では型が default と違う field を default にする（`guideMode` の任意の string と範囲外の数値は保持）。 | 1.1-1.10 | default settings schema | Service |
 | AdjacentStorageRegistry | Shared Storage | adjacent workflow storage key の key existence、default shape、spelling の compatibility contract だけを固定する。詳細利用と validation は workflow owner spec に委譲する。 | 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7, 9.8, 9.9, 9.10, 9.11, 9.12, 9.13 | workflow owner specs | 状態管理 |
 
@@ -168,7 +168,7 @@ Storage contract は routed screen ではない。API repository、dialog coordi
 | 項目 | 詳細 |
 |-------|--------|
 | 意図 | default schema、platform default、field validation/backfill を固定する。 |
-| 要件 | 1.1-1.10, 3.1-8.9 |
+| 要件 | 1.1-1.10, 3.1-8.11 |
 
 **責務と制約**
 - `any` を使わず `unknown` を field ごとに narrow する。

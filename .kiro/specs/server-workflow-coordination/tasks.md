@@ -294,7 +294,7 @@ production差分を0件にする。owner実装待ちのtarget testはbarrier完�
 -   [x] 9. R8の品質を閉じる
 -   [x] 9.4 Layer 4のprovider結合testを完成する
 
-    -   `test/server/workflow-coordination/provider-contracts.integration.test.ts#layer-4`へ既存IPC consumer、recording
+    -   `test/server/workflow-coordination/provider-contracts.integration.test.ts#workflow-coordination Layer 4 provider contracts`へ既存IPC consumer、recording
         / recorded-content typed provider、DB / filesystem削除、startup handoffを接続するtestを追加する。
     -   HTTPは非適用理由を残し、IPC envelope / timeout / peer、event / Hook配送、Recording scheduler / barrier
         internals、recorded効果、Runtime observer / process mechanics、capacity adapterを各owner testへ委譲する。

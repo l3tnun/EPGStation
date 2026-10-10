@@ -28,6 +28,7 @@
       menu が同時に存在しても text overlap と horizontal overflow を発生させない。
     - delete success は optimistic removal せず、Socket.IO `updateStatus`、route
       change、または別 fetch による refetch-driven update に委ねる。
+    - Rule list の pagination は共有 component `AppPagination` が `isEnableExtendedPagination` に従って選ぶ（3.35）。
     - _Requirements: 3.1-3.35_
 
 - [x]   4. Search / Rule の unit/E2E/visual regression を整備する
@@ -39,6 +40,7 @@
     - _Requirements: 1.1-1.22, 2.1-2.41, 3.1-3.35, 4.1-4.4_
 - [x] 5. Search/Rule select の manual arrow と visible placeholder を除去し、keyword Enter
       submit の target default 正規化、Rule list width 100% contract、MUI checkbox/select regression guard を検証する。
+      - _Requirements: 1.1-1.22, 2.1-2.41, 3.1-3.35_
 - [x] 6. Rule list の enable switch (`.ruleSwitchButton`) の click/tap 領域が keyword 列と重ならないよう、MUI
       `Button` runtime style を上書きする selector specificity を修正し、390px list layout と desktop table
       layout の両方で geometry/click regression を e2e で検証する。

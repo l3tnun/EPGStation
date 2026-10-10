@@ -8,7 +8,7 @@
 省略時 1,024、正の安全な整数検証、完全な内部設定複製、および公開設定からの除外は `server-configuration` の起動時設定
 task 完了を前提とする。共有 process の spawn、枠予約、opaque managed handle、 `requestStop()`、signal 所有権は
 `server-media-process-management`、録画済み番組・録画ファイルの登録、サイズ更新、削除は `server-recorded-content`、受
-付・開始・取消・失敗・結果反映失敗の記録先は `server-operational-logging` の owner contract を利用する。以下の 21
+付・開始・取消・失敗・結果反映失敗の記録先は `server-operational-logging` の owner contract を利用する。以下の
 executable leaf task はそれぞれ 1〜3 時間の単一責務単位とする。各 leaf が変更または追加する具体 file は次表を正本とし、
 characterization task は production file を読取専用で参照する。
 

@@ -64,11 +64,15 @@ ownerのdomain実装を含まない。
 | 2.4     | `src/model/service/api/iptv/{channel.m3u8,epg.xml}.ts`、`src/model/api/iptv/IIPTVApiModel.ts`、`test/server/service-interface/{imp/iptv-carrier.test.ts,integration/service-interface.integration.test.ts}`                                                                                                                  |
 | 3.1–3.2 | `api.yml`、`api.d.ts`、`src/model/api/{reserve,stream,config}/**`、`src/model/service/api/{rules,recording}/**`、`test/server/service-interface/public-contract.spec.test.ts`                                                                                                                                                |
 | 4.1–4.3 | `src/model/service/{ServiceServer.ts,api.ts}`、`test/server/service-interface/{public-contract.spec.test.ts,imp/service-interface-characteristics.test.ts,api-responsefile-directory.imp.test.ts,api-response-guards.imp.test.ts,integration/service-interface.integration.test.ts}`                                                                                                                                    |
+| 4.4・4.5 | `test/server/service-interface/imp/{sub-directory-response.imp.test.ts,reservation-edit-response.imp.test.ts}` |
 | 5.1–5.7 | `src/model/service/{ServiceServer.ts,upload/UploadAdmissionController.ts,api/videos/upload.ts}`、`test/server/service-interface/{upload.spec.test.ts,imp/upload-lifecycle.test.ts,integration/service-interface.integration.test.ts}`                                                                                        |
+| 5.8     | `test/server/service-interface/{upload.spec.test.ts,imp/upload-lifecycle.test.ts}` |
 | 6.1–6.3 | `src/model/service/socketio/SocketIOManageModel.ts`、`test/server/service-interface/{realtime.spec.test.ts,imp/realtime-notifier.test.ts,integration/service-interface.integration.test.ts}`                                                                                                                                 |
 | 7.1–7.2 | `src/model/service/ServiceServer.ts`、`test/server/service-interface/{listener.spec.test.ts,integration/service-interface.integration.test.ts}`                                                                                                                                                                              |
 | 8.1–8.5 | `src/model/ModelContainerSetter.ts`、`test/server/service-interface/{public-contract.spec.test.ts,upload.spec.test.ts,realtime.spec.test.ts,listener.spec.test.ts,integration/service-interface.integration.test.ts,recorded-resource-use-binding.integration.test.ts,recorded-playback-source-binding.integration.test.ts}` |
 | 9.2・9.4・9.5 | `test/server/service-interface/{imp/*.test.ts,integration/service-interface.integration.test.ts}` |
+
+Task 9 の leaf は 9.2・9.4・9.5 で、9.1・9.3 は置かない。Task 8 の leaf 8.3 は 8.4・8.5 に依存するため、leaf 表と本文では 8.5 の後に並べる。
 
 -   [x] 1. Static 配信・公開情報・外部 URL の既存契約を固定する
 -   [x] 1.1 Static root、subDirectory、および HLS 公開 path を characterization する

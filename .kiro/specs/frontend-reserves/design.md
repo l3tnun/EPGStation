@@ -139,8 +139,8 @@ Flow は route/query/API/localStorage 境界で validation し、UI component �
 | 要件 | 概要 | コンポーネント | インターフェース | フロー |
 |-------------|---------|------------|------------|-------|
 | 1.1-1.13 | Reserves list route と fetch | PageController, QueryController, ApiRepository, StorageAdapter | State / Service / API | list route/fetch flow |
-| 2.1-2.24 | state variants と list actions | PageController, QueryController, ApiRepository, ActionController, DialogCoordinator, StorageAdapter | State / Service / API | route/query/action/export flow |
-| 3.1-3.12 | delete dialog と bulk edit | PageController, QueryController, ApiRepository, ActionController, DialogCoordinator, StorageAdapter | State / Service / API | route/query/action flow |
+| 2.1-2.24 | state variants と list actions | PageController, ApiRepository, ActionController, DialogCoordinator | State / Service / API | route/query/action/export flow |
+| 3.1-3.12 | delete dialog と bulk edit | PageController, ApiRepository, ActionController, DialogCoordinator | State / Service / API | route/query/action flow |
 | 4.1-4.32 | Manual Reserve | PageController, QueryController, ApiRepository, ActionController, DialogCoordinator, StorageAdapter | State / Service / API | manual add/edit flow |
 | 5.1-5.5, 6.1-6.3 | dark theme | PageController, DialogCoordinator | State | list route/fetch flow |
 
@@ -148,19 +148,19 @@ Flow は route/query/API/localStorage 境界で validation し、UI component �
 
 | コンポーネント | ドメイン/レイヤー | 意図 | 要件カバレッジ | 主な依存 | 契約 |
 |-----------|--------------|--------|--------------|------------------|-----------|
-| PageController | Feature Routing | route 初期化、title、fetch、loading/error/empty を統括する。 | 1.1-1.13, 2.1-2.24, 3.1-3.12, 4.1-4.32 | frontend-settings-storage / frontend-app-shell / EPGStation API | 状態管理 |
-| QueryController | Feature Routing | path/query/local UI input を typed model に変換する。 | 1.1-1.4, 2.1, 2.6-2.8, 4.1-4.32 | frontend-settings-storage / frontend-app-shell / EPGStation API | Service |
-| ApiRepository | Feature API | requirements で定義された endpoint request と typed error 変換を扱う。 | 1.5-1.13, 2.6-2.18, 3.2-3.12, 4.3-4.32 | frontend-settings-storage / frontend-app-shell / EPGStation API | API |
-| ActionController | Feature Service | menu、button、dialog submit、bulk action、shared component export の結果を route/API/snackbar に接続する。 | 2.8, 2.10-2.24, 3.2-3.12, 4.8-4.32 | frontend-settings-storage / frontend-app-shell / EPGStation API | Service/API |
-| DialogCoordinator | Feature UI | dialog/menu/open-reset/close-cleanup/focus と shared `ReserveDialog` / `ReserveMenu` / `ReserveDeleteDialog` / `ReserveListItem` export surface を管理する。 | 2.9, 2.14, 2.20, 2.21, 3.1-3.9, 4.1-4.7, 4.21 | frontend-settings-storage / frontend-app-shell / EPGStation API | 状態管理 |
-| StorageAdapter | Shared Boundary | settings と隣接 localStorage key を consumer として読む。 | 1.4, 4.11, 4.13-4.16, 4.19 | frontend-settings-storage / frontend-app-shell / EPGStation API | 状態管理 |
+| PageController | Feature Routing | route 初期化、title、fetch、loading/error/empty を統括する。 | 1.5-1.12, 2.1-2.6, 2.19-2.23, 3.12, 4.1-4.5, 4.16-4.18, 4.21-4.23, 4.26-4.28, 4.31-4.32, 5.1-6.3 | frontend-settings-storage / frontend-app-shell / EPGStation API | 状態管理 |
+| QueryController | Feature Routing | path/query/local UI input を typed model に変換する。 | 1.1-1.4, 1.13, 4.2-4.4 | frontend-settings-storage / frontend-app-shell / EPGStation API | Service |
+| ApiRepository | Feature API | requirements で定義された endpoint request と typed error 変換を扱う。 | 1.5-1.11, 2.8, 2.15-2.16, 3.2, 3.10-3.11, 4.3, 4.8-4.9, 4.12-4.15, 4.19-4.20, 4.24, 4.29-4.30 | frontend-settings-storage / frontend-app-shell / EPGStation API | API |
+| ActionController | Feature Service | menu、button、dialog submit、bulk action、shared component export の結果を route/API/snackbar に接続する。 | 2.7-2.8, 2.11-2.18, 3.2-3.7, 3.10-3.11, 4.6, 4.8-4.11, 4.27-4.28 | frontend-settings-storage / frontend-app-shell / EPGStation API | Service/API |
+| DialogCoordinator | Feature UI | dialog/menu/open-reset/close-cleanup/focus と shared `ReserveDialog` / `ReserveMenu` / `ReserveDeleteDialog` / `ReserveListItem` export surface を管理する。 | 2.9-2.10, 2.20-2.21, 2.24, 3.1, 3.8-3.9, 5.1-6.3 | frontend-settings-storage / frontend-app-shell / EPGStation API | 状態管理 |
+| StorageAdapter | Shared Boundary | settings と隣接 localStorage key を consumer として読む。 | 1.4, 4.12 | frontend-settings-storage / frontend-app-shell / EPGStation API | 状態管理 |
 
 ### ページ制御（PageController）
 
 | 項目 | 詳細 |
 |-------|--------|
 | 意図 | route 初期化、title、loading/error/empty、child component composition を統括する。 |
-| 要件 | 1.1-1.13, 2.1-2.24, 3.1-3.12, 4.1-4.32 |
+| 要件 | 1.5-1.12, 2.1-2.6, 2.19-2.23, 3.12, 4.1-4.5, 4.16-4.18, 4.21-4.23, 4.26-4.28, 4.31-4.32, 5.1-6.3 |
 
 **責務と制約**
 - route entrypoint と screen lifecycle だけを所有する。
@@ -172,7 +172,7 @@ Flow は route/query/API/localStorage 境界で validation し、UI component �
 | 項目 | 詳細 |
 |-------|--------|
 | 意図 | route query、path param、form/filter input を typed model に変換する。 |
-| 要件 | 1.1-1.4, 2.1, 2.6-2.8, 4.1-4.32 |
+| 要件 | 1.1-1.4, 1.13, 4.2-4.4 |
 
 **責務と制約**
 - `unknown` / string query を domain type へ narrow する。
@@ -184,7 +184,7 @@ Flow は route/query/API/localStorage 境界で validation し、UI component �
 | 項目 | 詳細 |
 |-------|--------|
 | 意図 | API request builder、response adapter、typed error conversion を扱う。 |
-| 要件 | 1.5-1.13, 2.6-2.18, 3.2-3.12, 4.3-4.32 |
+| 要件 | 1.5-1.11, 2.8, 2.15-2.16, 3.2, 3.10-3.11, 4.3, 4.8-4.9, 4.12-4.15, 4.19-4.20, 4.24, 4.29-4.30 |
 
 **責務と制約**
 - endpoint は requirements を正とする。
@@ -196,7 +196,7 @@ Flow は route/query/API/localStorage 境界で validation し、UI component �
 | 項目 | 詳細 |
 |-------|--------|
 | 意図 | menu、dialog、button、bulk action の実行と snackbar/route update を扱う。 |
-| 要件 | 2.8, 2.10-2.24, 3.2-3.12, 4.8-4.32 |
+| 要件 | 2.7-2.8, 2.11-2.18, 3.2-3.7, 3.10-3.11, 4.6, 4.8-4.11, 4.27-4.28 |
 
 **責務と制約**
 - 表示条件、disabled/hidden 条件、成功/失敗 snackbar は requirements を正とする。
@@ -208,7 +208,7 @@ Flow は route/query/API/localStorage 境界で validation し、UI component �
 | 項目 | 詳細 |
 |-------|--------|
 | 意図 | dialog/menu open/reset/close cleanup/focus を扱う。 |
-| 要件 | 2.9, 2.14, 2.20, 2.21, 3.1-3.9, 4.1-4.7, 4.21 |
+| 要件 | 2.9-2.10, 2.20-2.21, 2.24, 3.1, 3.8-3.9, 5.1-6.3 |
 
 **責務と制約**
 - open ごとに stale state を reset する。
@@ -220,7 +220,7 @@ Flow は route/query/API/localStorage 境界で validation し、UI component �
 | 項目 | 詳細 |
 |-------|--------|
 | 意図 | settings と adjacent localStorage key を consumer として読む。 |
-| 要件 | 1.4, 4.11, 4.13-4.16, 4.19 |
+| 要件 | 1.4, 4.12 |
 
 **責務と制約**
 - settings default、backfill、validation は `frontend-settings-storage` に委譲する。

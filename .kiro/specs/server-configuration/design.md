@@ -447,7 +447,7 @@ Requirement 9 Acceptance Criterion 9（server全体の単体testだけで`src/**
 
 ## 8. Acceptance Criteria トレーサビリティ
 
-下の表は AC から設計の節への対応である。AC から検査する named case への対応は、`configuration.spec.test.ts` の `[CFG-6.1-AC-TRACE]` が持つ（AC 1.1 から 7.12 の 38 個を、同 directory の `*.test.ts` に実在する case ID へ引く）。
+下の表は AC から設計の節への対応である。AC から検査する named case への対応は、`configuration.spec.test.ts` の `[CFG-6.1-AC-TRACE]` が持つ（AC 1.1 から 7.12 の全てを、同 directory の `*.test.ts` に実在する case ID へ引く）。
 
 | AC   | 設計上の対応先                        |
 | ---- | ------------------------------------- |
