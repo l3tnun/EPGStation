@@ -2,15 +2,107 @@ import { describe, expect, it, vi } from 'vitest'
 import {
   createFormStateFromPageInfo,
   createFormStateFromReserve,
+  createInitialFormState,
   createPageInfoFromFormState,
+  EMPTY_ENCODE_OPTION,
+  EMPTY_TIME_SPECIFIED_OPTION,
   formatManualDateTimeInput,
   normalizeFormState,
   nullableString,
   parseManualDateTimeInput,
   parseNullableNumber,
+  valueFromNullableNumber,
 } from '@/features/reserves/lib/manualReserveForm'
 
 describe('manualReserveForm direct unit edges', () => {
+  it('creates an initial form state whose option objects are copies of the empty options', () => {
+    const initial = createInitialFormState()
+
+    expect(initial).toStrictEqual({
+      isTimeSpecification: false,
+      timeSpecifiedOption: { name: null, channelId: null, startAt: null, endAt: null },
+      reserveOption: { allowEndLack: true },
+      saveOption: undefined,
+      encodeOption: { mode1: null, mode2: null, mode3: null, isDeleteOriginalAfterEncode: false },
+    })
+    expect(initial.timeSpecifiedOption).not.toBe(EMPTY_TIME_SPECIFIED_OPTION)
+    expect(initial.encodeOption).not.toBe(EMPTY_ENCODE_OPTION)
+  })
+
+  it('copies a present save option into the page info instead of sharing or dropping it', () => {
+    const saveOption = { parentDirectoryName: 'p', directory: 'd', recordedFormat: 'mp4' }
+
+    const pageInfo = createPageInfoFromFormState({
+      isTimeSpecification: false,
+      timeSpecifiedOption: { name: null, channelId: null, startAt: null, endAt: null },
+      reserveOption: { allowEndLack: true },
+      saveOption,
+      encodeOption: { mode1: null, mode2: null, mode3: null, isDeleteOriginalAfterEncode: false },
+    })
+
+    expect(pageInfo.saveOption).toStrictEqual(saveOption)
+    expect(pageInfo.saveOption).not.toBe(saveOption)
+  })
+
+  it('reads isTimeSpecified true from a reserve as a time specification', () => {
+    expect(createFormStateFromReserve({ id: 1, isTimeSpecified: true }).isTimeSpecification).toBe(
+      true,
+    )
+    expect(createFormStateFromReserve({ id: 1, isTimeSpecified: false }).isTimeSpecification).toBe(
+      false,
+    )
+  })
+
+  it('fills the keys a watched form state lacks in the time-specified and encode options', () => {
+    const normalized = normalizeFormState({
+      isTimeSpecification: true,
+      timeSpecifiedOption: { name: 'Only name' } as never,
+      reserveOption: { allowEndLack: false },
+      encodeOption: { mode1: 'h264' } as never,
+    })
+
+    expect(normalized.timeSpecifiedOption).toStrictEqual({
+      name: 'Only name',
+      channelId: null,
+      startAt: null,
+      endAt: null,
+    })
+    expect(normalized.encodeOption).toStrictEqual({
+      mode1: 'h264',
+      mode2: null,
+      mode3: null,
+      isDeleteOriginalAfterEncode: false,
+    })
+    expect(normalized.reserveOption).toStrictEqual({ allowEndLack: false })
+  })
+
+  it('converts a nullable number to the text of an input field', () => {
+    expect(valueFromNullableNumber(null)).toBe('')
+    expect(valueFromNullableNumber(undefined)).toBe('')
+    expect(valueFromNullableNumber(0)).toBe('0')
+    expect(valueFromNullableNumber(301)).toBe('301')
+  })
+
+  it('formats null and undefined as an empty date/time input', () => {
+    expect(formatManualDateTimeInput(null)).toBe('')
+    expect(formatManualDateTimeInput(undefined)).toBe('')
+  })
+
+  it('parses a date/time input with surrounding whitespace', () => {
+    expect(parseManualDateTimeInput('  2026-05-05 10:15 ')).toBe(
+      Date.parse('2026-05-05T10:15:00+09:00'),
+    )
+  })
+
+  it('accepts the first and last month, the last hour and the last minute of the allowed ranges', () => {
+    expect(parseManualDateTimeInput('2026-01-01 00:00')).toBe(
+      Date.parse('2026-01-01T00:00:00+09:00'),
+    )
+    expect(parseManualDateTimeInput('2026-12-31 23:59')).toBe(
+      Date.parse('2026-12-31T23:59:00+09:00'),
+    )
+  })
+
   it('[AC 4.4] restores a form state from a saved page info snapshot, including an omitted save option', () => {
     const pageInfo = {
       isTimeSpecification: true,
