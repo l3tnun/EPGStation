@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from '@/App'
+import { ProgramDialog } from '@/features/guide/ProgramDialog'
 import { DefaultSettingsFactory } from '@/shared/settings/defaultSettings'
 import { expectHashRoute } from './hashRouteAssertions'
 import {
@@ -633,5 +634,42 @@ describe('Guide route and fetch lifecycle', () => {
     await waitFor(() => {
       expectHashRoute('#/reserves/manual?reserveId=822')
     })
+  })
+})
+
+describe('Guide ProgramDialog detail button', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('[AC 4.7] navigates to the manual reserve page with the program id 300 ms after 詳細 is pressed', () => {
+    vi.useFakeTimers()
+    const onNavigate = vi.fn()
+
+    render(
+      <ProgramDialog
+        open
+        program={{ id: 910, name: 'Synthetic Detail Program', startAt: 0, endAt: 1_000 }}
+        reserveIndex={{}}
+        settings={new DefaultSettingsFactory().create()}
+        detailSetting={{ encode: 'TS', isDeleteOriginalAfterEncode: false }}
+        encodeModes={['TS']}
+        onClose={vi.fn()}
+        onExited={vi.fn()}
+        onNavigate={onNavigate}
+        onSnackbar={vi.fn()}
+        onAddReserve={vi.fn(async () => true)}
+        onDeleteReserve={vi.fn(async () => true)}
+        onUnlockSkipReserve={vi.fn(async () => true)}
+        onUnlockOverlapReserve={vi.fn(async () => true)}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: '詳細' }))
+    vi.advanceTimersByTime(299)
+    expect(onNavigate).not.toHaveBeenCalled()
+
+    vi.advanceTimersByTime(1)
+    expect(onNavigate).toHaveBeenCalledWith('/reserves/manual?programId=910')
   })
 })

@@ -108,6 +108,22 @@ describe('Requirement 3.1-3.16 navigation item generation', () => {
     expect(zeroWaveItems.some((item) => item.path === '/guide')).toBe(false)
   })
 
+  it('[AC 3.3] omits the 放映中 item when live streaming is disabled in the loaded config', () => {
+    const items = generateNavigationItems({
+      config: {
+        status: 'loaded',
+        liveStreamEnabled: false,
+        enabledBroadcastWaves: ['GR', 'BS'],
+      },
+      settings: {
+        isEnableDisplayForEachBroadcastWave: true,
+      },
+    })
+
+    expect(items.map((item) => item.label)).not.toContain('放映中')
+    expect(items.map((item) => item.label)).toContain('番組表GR')
+  })
+
   it('[AC 3.10] regenerates App drawer items from saved settings after a Settings save request without reload', () => {
     localStorage.setItem(
       'settings',

@@ -159,6 +159,92 @@ describe('Requirements 2.5, 3.1-3.7 Settings reset and theme preview workflow', 
     })
   })
 
+  it('[AC frontend-settings-storage 1.10] overwrites a mismatched stored value once its control is changed and saved', async () => {
+    localStorage.setItem(
+      'settings',
+      JSON.stringify({
+        ...new DefaultSettingsFactory().create(),
+        isEnablePWA: 'synthetic-not-a-boolean',
+        syntheticLegacyField: 'kept',
+      }),
+    )
+
+    render(<App osPrefersDark={false} viewportWidth={1440} initialDrawerState="none" />)
+
+    fireEvent.click(screen.getByRole('switch', { name: '全般 PWA' }))
+    fireEvent.click(screen.getByRole('button', { name: '保存' }))
+
+    await waitFor(() => {
+      expect(JSON.parse(localStorage.getItem('settings') ?? '{}')).toMatchObject({
+        isEnablePWA: false,
+        syntheticLegacyField: 'kept',
+      })
+    })
+  })
+
+  it('[AC frontend-settings-storage 1.10] [AC frontend-settings-storage 2.5] keeps stored unknown fields on the next save after a reset that was left without saving', async () => {
+    localStorage.setItem(
+      'settings',
+      JSON.stringify({
+        ...new DefaultSettingsFactory().create(),
+        syntheticLegacyField: 'kept',
+      }),
+    )
+
+    render(
+      <App
+        osPrefersDark={false}
+        viewportWidth={1440}
+        initialDrawerState="none"
+        navigationConfig={fullNavigationConfig}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'リセット' }))
+    fireEvent.click(screen.getByRole('button', { name: 'ダッシュボード' }))
+    await waitFor(() => {
+      expect(screen.getByTestId('title-bar')).toHaveTextContent('EPGStation')
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: '設定' }))
+    await waitFor(() => {
+      expect(screen.getByTestId('title-bar')).toHaveTextContent('設定')
+    })
+    fireEvent.click(screen.getByRole('switch', { name: '全般 PWA' }))
+    fireEvent.click(screen.getByRole('button', { name: '保存' }))
+
+    await waitFor(() => {
+      expect(JSON.parse(localStorage.getItem('settings') ?? '{}')).toMatchObject({
+        isEnablePWA: false,
+        syntheticLegacyField: 'kept',
+      })
+    })
+  })
+
+  it('[AC 1.10] disables the guide dark-color switch while the preview theme is light and enables it once the preview is dark', () => {
+    localStorage.setItem(
+      'settings',
+      JSON.stringify({
+        ...new DefaultSettingsFactory().create(),
+        shouldUseOSColorTheme: false,
+        isForceDarkTheme: false,
+      }),
+    )
+
+    render(<App osPrefersDark={false} viewportWidth={1440} initialDrawerState="none" />)
+
+    const guideSwitch = screen.getByRole('switch', {
+      name: '番組表 ダークテーマの配色を無効化する',
+    })
+    expect(screen.getByTestId('app-shell')).toHaveAttribute('data-theme-mode', 'light')
+    expect(guideSwitch).toBeDisabled()
+
+    fireEvent.click(screen.getByRole('switch', { name: '全般 ダークテーマ' }))
+
+    expect(screen.getByTestId('app-shell')).toHaveAttribute('data-theme-mode', 'dark')
+    expect(guideSwitch).toBeEnabled()
+  })
+
   it('[AC 2.5] [AC 3.7] restores unsaved tmp and visible theme from saved settings when leaving Settings', async () => {
     localStorage.setItem(
       'settings',

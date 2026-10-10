@@ -116,6 +116,21 @@ describe('Recorded upload request and form state implementation edges', () => {
     ).toBe(false)
   })
 
+  it('[AC 3.7] rejects a form whose program fields are complete but has no complete video block', () => {
+    const programFields = {
+      ...createInitialRecordedUploadFormState(['root']),
+      channelId: 12,
+      startAt: 1_700_000_000_000,
+      duration: 1800,
+      name: 'Synthetic program',
+    }
+
+    // Only a completely empty video block.
+    expect(validateRecordedUploadForm(programFields)).toBe(false)
+    // No video block at all.
+    expect(validateRecordedUploadForm({ ...programFields, videoBlocks: [] })).toBe(false)
+  })
+
   it('builds the metadata body with computed endAt and only populated optional fields', () => {
     expect(
       buildRecordedUploadMetadataBody({

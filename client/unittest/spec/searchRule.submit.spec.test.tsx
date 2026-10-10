@@ -60,6 +60,36 @@ describe('Search route lifecycle', () => {
     )
   })
 
+  it('[AC 1.13] [AC 2.20] shows 0 件ヒット and the Rule option form when the search result is empty', async () => {
+    window.history.replaceState(null, '', '/#/search')
+    const searchRuleRepository = createSearchRuleRepository()
+    vi.mocked(searchRuleRepository.searchSchedules).mockResolvedValue({ ok: true, value: [] })
+
+    render(
+      <App
+        settings={new DefaultSettingsFactory().create()}
+        apiRepository={createShellRepository()}
+        searchRuleApiRepository={searchRuleRepository}
+        osPrefersDark={false}
+        viewportWidth={1440}
+        initialDrawerState="none"
+      />,
+    )
+
+    await expectMuiSelectOption('channelId', 'Synthetic Channel')
+    const keyword = screen.getByLabelText('keyword')
+    fireEvent.change(keyword, { target: { value: 'No Hit Keyword' } })
+    await waitFor(() => {
+      expect(keyword).toHaveValue('No Hit Keyword')
+    })
+    fireEvent.keyDown(keyword, { key: 'Enter' })
+
+    expect(await screen.findByText('0 件ヒット')).toBeVisible()
+    expect(screen.queryByRole('list', { name: '検索結果一覧' })?.children).toHaveLength(0)
+    const ruleOption = screen.getByTestId('search-rule-option-anchor')
+    expect(within(ruleOption).getByRole('button', { name: '追加' })).toBeVisible()
+  })
+
   it('[AC 2.36] submits ignore keyword search on Enter with legacy default target normalization', async () => {
     window.history.replaceState(null, '', '/#/search')
     const searchRuleRepository = createSearchRuleRepository()

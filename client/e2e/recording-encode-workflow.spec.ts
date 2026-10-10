@@ -74,6 +74,10 @@ test('drives Recording list query, menu visibility, bulk delete, empty, and fail
   await expect(firstRow.getByRole('button', { name: /録画メニュー:/ })).toHaveCount(0)
   await expect(page.getByText('Synthetic Recording Alpha を選択')).toHaveCount(0)
   await firstRow.click()
+  await expect(firstRow).toHaveCSS(
+    'height',
+    testInfo.project.name.startsWith('Desktop') ? '48px' : '100px',
+  )
   await page.getByRole('button', { name: 'すべて選択' }).click()
   await page.getByRole('button', { name: '選択項目を削除' }).click()
   const deleteDialog = page.getByRole('dialog', { name: '録画一括削除' })

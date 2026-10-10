@@ -69,6 +69,29 @@ describe('Guide route and fetch lifecycle', () => {
     })
   })
 
+  it('[AC 3.2] shows the channel name of the first schedule as the title in a single-channel guide', async () => {
+    window.history.replaceState(null, '', '/#/guide?channelId=301&time=26050509')
+    const guideRepository = createGuideRepository()
+
+    render(
+      <App
+        settings={new DefaultSettingsFactory().create()}
+        apiRepository={createShellRepository()}
+        guideApiRepository={guideRepository}
+        navigationConfig={createGuideNavigationConfigWithEncodeModes()}
+        osPrefersDark={false}
+        viewportWidth={1440}
+        initialDrawerState="none"
+      />,
+    )
+
+    await waitForGuideVisible()
+    expect(guideRepository.fetchSchedule).toHaveBeenCalledWith(
+      expect.objectContaining({ mode: 'singleChannel', channelId: 301 }),
+    )
+    expect(screen.getByTestId('title-bar')).toHaveTextContent('Synthetic Channel')
+  })
+
   it('[AC 2.20] adds and removes the iOS address bar compensation class during Guide lifecycle', async () => {
     const userAgentDescriptor = Object.getOwnPropertyDescriptor(window.navigator, 'userAgent')
     const platformDescriptor = Object.getOwnPropertyDescriptor(window.navigator, 'platform')

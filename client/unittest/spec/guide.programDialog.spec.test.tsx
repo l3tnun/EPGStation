@@ -253,4 +253,89 @@ describe('Guide route and fetch lifecycle', () => {
       'Synthetic Delete Failure Target キャンセル失敗',
     )
   })
+
+  it.each([
+    {
+      label: 'adding a reserve',
+      programId: 721,
+      entry: undefined,
+      button: '予約',
+      repositoryMethod: 'addProgramReserve',
+      message: '予約失敗',
+    },
+    {
+      label: 'unlocking a skipped rule reserve',
+      programId: 722,
+      entry: { type: 'skip', item: { id: 822, programId: 722, ruleId: 501 } },
+      button: '除外解除',
+      repositoryMethod: 'unlockSkipReserve',
+      message: '除外解除失敗',
+    },
+    {
+      label: 'unlocking an overlapping rule reserve',
+      programId: 723,
+      entry: { type: 'overlap', item: { id: 823, programId: 723, ruleId: 501 } },
+      button: '重複解除',
+      repositoryMethod: 'unlockOverlapReserve',
+      message: '重複解除失敗',
+    },
+  ] as const)(
+    '[AC 4.15] announces $message in the snackbar when $label fails',
+    async ({ programId, entry, button, repositoryMethod, message }) => {
+      window.history.replaceState(null, '', '/#/guide?time=26050509')
+      const guideRepository = createGuideRepository()
+      const startAt = Date.parse('2026-05-05T09:00:00+09:00')
+
+      vi.mocked(guideRepository.fetchSchedule).mockResolvedValue({
+        ok: true,
+        value: [
+          {
+            channel: { id: 301, name: 'Synthetic Channel', type: 0x01 },
+            programs: [
+              {
+                id: programId,
+                name: 'Synthetic Failure Target',
+                startAt,
+                endAt: startAt + 30 * 60 * 1000,
+              },
+            ],
+          },
+        ],
+      })
+      vi.mocked(guideRepository.fetchReserveIndex).mockResolvedValue({
+        ok: true,
+        value: entry === undefined ? {} : { [programId]: entry },
+      })
+      vi.mocked(guideRepository[repositoryMethod]).mockResolvedValue({
+        ok: false,
+        error: 'synthetic-failure',
+        message,
+      } as never)
+
+      render(
+        <App
+          settings={new DefaultSettingsFactory().create()}
+          apiRepository={createShellRepository()}
+          guideApiRepository={guideRepository}
+          navigationConfig={createGuideNavigationConfigWithEncodeModes()}
+          osPrefersDark={false}
+          viewportWidth={1440}
+          initialDrawerState="none"
+        />,
+      )
+
+      fireEvent.click(await screen.findByTestId(`guide-program-${programId}`))
+      fireEvent.click(screen.getByRole('button', { name: button }))
+      expect(guideRepository[repositoryMethod]).toHaveBeenCalledTimes(1)
+
+      vi.useFakeTimers()
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(0)
+      })
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(200)
+      })
+      expect(screen.getByRole('alert')).toHaveTextContent(`Synthetic Failure Target ${message}`)
+    },
+  )
 })

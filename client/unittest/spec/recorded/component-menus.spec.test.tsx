@@ -91,6 +91,14 @@ describe('RecordedDetailMoreMenu', () => {
     return { onSnackbar }
   }
 
+  it('[AC 2.29] does not offer クリーンアップ in the Recorded detail more menu', () => {
+    renderMoreMenu({ id: 1 }, createRecordedRepository())
+    fireEvent.click(screen.getByRole('button', { name: '録画詳細メニュー: #1' }))
+
+    expect(screen.getAllByRole('menuitem').length).toBeGreaterThan(0)
+    expect(screen.queryByRole('menuitem', { name: 'クリーンアップ' })).not.toBeInTheDocument()
+  })
+
   it('[AC 3.13] toggles protection with success and failure notices, relying on Socket.IO updateStatus for the refetch instead of an explicit one', async () => {
     const apiRepository = createRecordedRepository()
     const protectedItem = renderMoreMenu({ id: 1, isProtected: true }, apiRepository)

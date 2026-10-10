@@ -185,4 +185,58 @@ describe('Dashboard summary fetch and realtime refresh', () => {
     expect(screen.queryByText('Synthetic recorded')).not.toBeInTheDocument()
     expect(screen.queryByText('Synthetic reserve')).not.toBeInTheDocument()
   })
+
+  describe('[AC 1.10] periodic summary refetch', () => {
+    const IOS_USER_AGENT =
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
+
+    async function renderDashboardAndSettle(
+      dashboardRepository: ReturnType<typeof createDashboardRepository>,
+    ) {
+      vi.useFakeTimers()
+      render(
+        <App
+          apiRepository={createShellRepository('9.9.9')}
+          dashboardApiRepository={dashboardRepository}
+          osPrefersDark={false}
+          viewportWidth={1440}
+          initialDrawerState="none"
+        />,
+      )
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(100)
+      })
+      expect(dashboardRepository.fetchRecording).toHaveBeenCalledTimes(1)
+    }
+
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    it('refetches the summary every 3000 ms on iOS / iPadOS while the Dashboard is shown', async () => {
+      vi.spyOn(window.navigator, 'userAgent', 'get').mockReturnValue(IOS_USER_AGENT)
+      const dashboardRepository = createDashboardRepository()
+
+      await renderDashboardAndSettle(dashboardRepository)
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(3000)
+      })
+      expect(dashboardRepository.fetchRecording).toHaveBeenCalledTimes(2)
+      expect(dashboardRepository.fetchReserveCounts).toHaveBeenCalledTimes(2)
+      expect(dashboardRepository.fetchRecorded).toHaveBeenCalledTimes(2)
+      expect(dashboardRepository.fetchReserves).toHaveBeenCalledTimes(2)
+    })
+
+    it('does not refetch periodically when the platform is not iOS / iPadOS', async () => {
+      const dashboardRepository = createDashboardRepository()
+
+      await renderDashboardAndSettle(dashboardRepository)
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(9000)
+      })
+      expect(dashboardRepository.fetchRecording).toHaveBeenCalledTimes(1)
+    })
+  })
 })

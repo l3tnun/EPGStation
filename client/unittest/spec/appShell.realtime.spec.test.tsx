@@ -170,6 +170,41 @@ describe('Requirement 6.1-6.16 version, connection, and scroll history contracts
     expect(screen.queryByText('再接続されました')).not.toBeInTheDocument()
   })
 
+  it('[AC 6.11] closes the disconnect snackbar by itself after the default 1500 ms', async () => {
+    vi.useFakeTimers()
+    const apiRepository = createSuccessfulApiRepository(['3.2.0'])
+    const connection = new SyntheticRealtimeConnection()
+
+    render(
+      <App
+        apiRepository={apiRepository}
+        realtimeConnectionFactory={() => connection}
+        osPrefersDark={false}
+        viewportWidth={1440}
+        initialDrawerState="none"
+      />,
+    )
+
+    await act(async () => {
+      await vi.runOnlyPendingTimersAsync()
+    })
+
+    act(() => {
+      connection.emit('disconnect')
+    })
+    expect(screen.getByRole('alert')).toHaveTextContent('接続が切断されました')
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1400)
+    })
+    expect(screen.getByRole('alert')).toHaveTextContent('接続が切断されました')
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(200)
+    })
+    expect(screen.queryByText('接続が切断されました')).not.toBeInTheDocument()
+  })
+
   it('[AC 6.5] [AC 6.6] keeps reconnect restore active after StrictMode effect replay', async () => {
     window.history.replaceState(null, '', '/#/recorded?keyword=synthetic')
     const apiRepository = createSuccessfulApiRepository(['3.0.0'])

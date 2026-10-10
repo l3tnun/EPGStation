@@ -263,6 +263,45 @@ describe('Recorded list actions', () => {
     expect(screen.getByText('一部番組の削除に失敗しました。')).toBeVisible()
   })
 
+  it('[AC 2.32] reports a failure after one second when only the thumbnail cleanup fails', async () => {
+    const recordedRepository = createRecordedRepository()
+    vi.mocked(recordedRepository.cleanupThumbnails).mockResolvedValue({
+      ok: false,
+      error: 'cleanup-failed',
+      message: 'サムネイルのクリーンアップに失敗',
+    })
+
+    render(
+      <App
+        settings={new DefaultSettingsFactory().create()}
+        apiRepository={createShellRepository()}
+        recordedApiRepository={recordedRepository}
+        osPrefersDark={false}
+        viewportWidth={1440}
+        initialDrawerState="none"
+      />,
+    )
+
+    await screen.findByTestId('recorded-page')
+    fireEvent.click(screen.getByRole('button', { name: '録画済みメニュー' }))
+    fireEvent.click(screen.getByRole('menuitem', { name: 'クリーンアップ' }))
+    const executeButton = await screen.findByRole('button', { name: '実行' })
+    vi.useFakeTimers()
+    fireEvent.click(executeButton)
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0)
+    })
+    expect(recordedRepository.cleanupRecorded).toHaveBeenCalled()
+    expect(recordedRepository.cleanupThumbnails).toHaveBeenCalled()
+    expect(screen.queryByText('クリーンアップに失敗')).not.toBeInTheDocument()
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1000)
+    })
+    expect(screen.getByText('クリーンアップに失敗')).toBeVisible()
+    expect(screen.queryByText('クリーンアップ完了')).not.toBeInTheDocument()
+  })
+
   it('[AC 2.8] [AC 2.30] [AC 2.31] [AC 2.33] runs cleanup in order with minimum one second progress and skips thumbnails on recorded failure', async () => {
     const recordedRepository = createRecordedRepository()
 
