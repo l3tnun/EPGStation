@@ -1033,6 +1033,8 @@ Acceptance Criterion 9が判定する。実行結果とcoverageはこの表に�
 | `test/server/program-guide/epgupdatemanage-saveservice-soft.imp.test.ts` | service保存の空queue早期return、除外service のcreate・update skip |
 | `test/server/program-guide/epg-update-executor-entry-seam.test.ts` | 更新child entryの初期化、updater起動、start reject時のexit code 1、自己起動 |
 | `test/server/program-guide/real-epg-update.integration.test.ts` | 実 HTTP の tuner server・本物の `TunerServerAccessModel`・`EPGUpdateManageModel`・`EPGUpdater`・実 SQLite（書き込みの遅れは本物の `ProgramDB` の前の門で作り、10 秒周期・10 分・30 秒だけ fake timer で進める）で、重なる周期処理の抑止と保留 1 件（R7.8・R7.14）、10 分を過ぎた全件同期の維持と遅れた結果の 1 回の反映（R7.9・R7.10）、service ID 集合の逐次取得と一括保存（R7.11）、service ごとの 30 秒の期限（R7.12）、一件の失敗で集合を未完了に残し通知を取り消さないこと（R7.13）、周期の DB 処理に別の 10 分期限が無いこと（R7.15）、変更 feed が 1 byte ずつ・複数 frame まとめで届く実 TCP の読み取り（`MirakurunChangeAdapter`・`MirakcChangeAdapter`） |
+| `test/server/program-guide/_real-epg-tuner.ts` | 上の `real-epg-update.integration.test.ts` が共有する本物の部品の配線（loopback の実 HTTP tuner server、実 SQLite、書き込みを待たせる門。補助 file） |
+| `test/server/program-guide/child-process-override-hook.ts` | `program-guide-boundaries.integration.test.ts` が本物の `EPGUpdateExecutorManageModel` の `spawn` 呼び出しを観察・制御するための loader hook（補助 file） |
 
 ## Primary production source ownership
 

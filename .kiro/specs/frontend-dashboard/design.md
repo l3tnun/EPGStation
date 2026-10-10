@@ -143,8 +143,8 @@ Flow は route/query/API/localStorage 境界で validation し、UI component �
 |-----------|--------------|--------|--------------|------------------|-----------|
 | PageController | Feature Routing | route 初期化、title、fetch、loading/error/empty、section scroll restore を統括する。 | 1.1-1.10, 2.1-2.7, 2.15-2.16, 3.1-3.8 | frontend-settings-storage / frontend-app-shell / EPGStation API | 状態管理 |
 | QueryController | Feature Routing | path/query/local UI input を typed model に変換する。 | 1.4, 2.2, 2.5, 2.7 | frontend-settings-storage / frontend-app-shell / EPGStation API | Service |
-| ApiRepository | Feature API | requirements で定義された endpoint request と typed error 変換を扱う。 | 1.3, 1.4, 1.8, 2.8-2.11 | frontend-settings-storage / frontend-app-shell / EPGStation API | API |
-| ActionController | Feature Service | menu、button、dialog submit、bulk action の結果を route/API/snackbar に接続する。 | 2.1-2.12 | frontend-settings-storage / frontend-app-shell / EPGStation API | Service/API |
+| ApiRepository | Feature API | requirements で定義された endpoint request と typed error 変換を扱う。 | 1.3, 1.4, 1.8（2.8-2.11 の API 呼び出しは owner の部品へ委譲） | frontend-settings-storage / frontend-app-shell / EPGStation API | API |
+| ActionController | Feature Service | menu、button、dialog submit、bulk action の結果を route/API/snackbar に接続する。 | 2.1-2.14 | frontend-settings-storage / frontend-app-shell / EPGStation API | Service/API |
 | DialogCoordinator | Feature UI | dialog/menu/open-reset/close-cleanup/focus を管理する。 | 2.4-2.6, 2.10, 2.11 | frontend-settings-storage / frontend-app-shell / EPGStation API | 状態管理 |
 | StorageAdapter | Shared Boundary | settings と scroll history state を consumer として読む。 | 1.4, 1.9, 2.12-2.14, 3.2, 3.3 | frontend-settings-storage / frontend-app-shell / EPGStation API | 状態管理 |
 
@@ -178,7 +178,7 @@ Flow は route/query/API/localStorage 境界で validation し、UI component �
 | 項目 | 詳細 |
 |-------|--------|
 | 意図 | API request builder、response adapter、typed error conversion を扱う。 |
-| 要件 | 1.3, 1.4, 1.8, 2.8-2.11 |
+| 要件 | 1.3, 1.4, 1.8（2.8-2.11 の API 呼び出しは `frontend-reserves` / `frontend-recorded` の部品へ委譲し、本 repository は呼ばない） |
 
 **責務と制約**
 - endpoint は requirements を正とする。
@@ -190,7 +190,7 @@ Flow は route/query/API/localStorage 境界で validation し、UI component �
 | 項目 | 詳細 |
 |-------|--------|
 | 意図 | menu、dialog、button、bulk action の実行と snackbar/route update を扱う。 |
-| 要件 | 2.1-2.12 |
+| 要件 | 2.1-2.14 |
 
 **責務と制約**
 - 表示条件、disabled/hidden 条件、成功/失敗 snackbar は requirements を正とする。

@@ -441,6 +441,8 @@ Requirement 9 Acceptance Criterion 9（server全体の単体testだけで`src/**
 | `test/server/configuration/http.integration.test.ts`       | 公開設定GETのHTTP projectionと非公開fieldの不在                    |
 | `test/server/configuration/file-access-and-template.imp.test.ts` | filesystem portのunwatchとtemplate読込失敗の内部分岐          |
 | `test/server/configuration/storage-timeout-provider.cross-spec.test.ts` | 7節の補足case（raw carrierの保持）                      |
+| `test/server/configuration/doubles-parity.integration.test.ts` | 他componentのtestが使う設定の偽物が、本物のConfigurationが既定値で補完した設定と同じkey・型・構造を持つこと |
+| `test/server/configuration/fs-override-hook.ts` | `implementation.test.ts` が本物のConfigurationのfile読込・watchを観察・制御するためのloader hook（補助file） |
 | `test/server/fixtures/configuration/`                      | 秘密情報と実運用pathを含まない合成YAML、鍵、証明書。templateと実行fileはtestが一時directoryに作って回収する |
 
 ## 8. Acceptance Criteria トレーサビリティ

@@ -40,6 +40,7 @@ consumer cross-spec evidence として再利用できるが、shared source の�
 -   `PromiseQueue` は `@injectable()` decorator を持つため、test は `reflect-metadata` を import した後に compiled
     module を読み込む。これは `src/index.ts` 自身の起動時初期化順序と同じであり、
     `test/server/application-runtime/child-supervision.spec.test.ts` が既に使う既存パターンを踏襲する。
+-   実 file system の失敗を確かめる `FileUtil.move` の test だけは、integration 層の `test/server/shared-foundation/file-util-real-failure.integration.test.ts` に置く（4.3）。
 -   `IPromiseQueue` は method シグネチャだけを持つ interface である。型の一致は production の compile が保証し、test は
     `PromiseQueue` を実行して `add` の契約（開始順・reject 伝播・失敗後続行）だけを検証する。type-only source として扱う。
 -   `FileUtil` の test は `node:os` の一時ディレクトリ配下で実ファイル操作を行う。実 URL、実番組情報、credential、実

@@ -106,6 +106,7 @@ client/src/
 `client/src/features/settings/` 配下。
 
 - `SettingsPage.tsx` — route root、title、section rendering、保存 / reset、scroll-data completion、離脱時の theme 復元。
+- `SettingsPage.module.css` — card、section、control 行の layout と色（theme token）。
 - `components/SettingsSection.tsx` — section 見出しと control の並び。switch + text の URL scheme 対を `SettingsSchemeControl` へまとめる。
 - `components/SettingsControl.tsx` — switch / select / text control と tmp binding。
 - `components/SettingsSchemeControl.tsx` — URL scheme の switch + text の対。
@@ -114,13 +115,13 @@ client/src/
 - `lib/settingsStorageAccess.ts` — localStorage の読取 / 保存、memory fallback、navigation 再生成 target。
 - `settingsControlMatrix.ts` — `SETTINGS_CONTROL_MATRIX` と section / visible / disabled / 表示値 / update / preview theme の解決関数。`settingsControlTypes.ts`（型）、`settingsControlRowsFront.ts`（全般 / 放映中 / 番組表 / 予約 / 録画中）、`settingsControlRowsBack.ts`（録画 / 検索 / ルール / ページネーション / ビデオプレーヤ）、`lib/settingsControlOptions.ts`（range / value option 生成）から組み立てる。
 - `settingsLayoutContract.ts` — section 順、card 幅、URL scheme placeholder。
-- `settingsPreview.ts` — theme preview、reset / 離脱の復元。
-- `settingsSave.ts` — 保存、navigation 再生成 request、snackbar。
+- `settingsPreview.ts` — theme preview、reset / 離脱の復元。責務名 SettingsPreviewController の実体。
+- `settingsSave.ts` — 保存、navigation 再生成 request、snackbar。責務名 SettingsSaveController の実体。
 
 test:
 
-- `client/unittest/spec/settingsScreen.bootstrapSave.spec.test.tsx`（route bootstrap と保存）、`settingsScreen.controlMatrixRendering.spec.test.tsx`（control 表の描画）、`settingsScreen.controlMatrixDraft.spec.test.tsx`（tmp 更新と不正値の扱い）、`settingsScreen.themePreview.spec.test.tsx`（reset / theme preview / 離脱）、`settingsScreen.controlInteractions.spec.test.tsx`（control 操作）、`settingsScreen.defensiveGuards.spec.test.tsx`（防御的な guard）。共有 helper は `unittest/spec/support/settingsScreenHelpers.tsx`。
-- `client/unittest/imp/settingsScreen.layoutMatrix.imp.test.ts`（layout と control 表の契約）、`settingsScreen.savePreview.imp.test.ts`（保存と preview の契約）、`settingsScreen.liveWebPlaybackSwitch.imp.test.ts`（放映中の web 再生 switch）、`settingsScreen.numericSelectUnitSuffix.imp.test.ts`（数値 select の単位表示）、`settingsStorageAccess.imp.test.ts`（storage access の memory fallback と保存失敗）。
+- `client/unittest/spec/settingsScreen.bootstrapSave.spec.test.tsx`（route bootstrap と保存）、`settingsScreen.controlMatrixRendering.spec.test.tsx`（control 表の描画）、`settingsScreen.controlMatrixDraft.spec.test.tsx`（tmp 更新と不正値の扱い）、`settingsScreen.themePreview.spec.test.tsx`（reset / theme preview / 離脱）、`settingsScreen.controlInteractions.spec.test.tsx`（control 操作）、`settingsScreen.defensiveGuards.spec.test.tsx`（防御的な guard）、`settingsScreen.extendedPaginationSwitch.spec.test.tsx`（拡張ページネーションの switch）。共有 helper は `unittest/spec/support/settingsScreenHelpers.tsx`。
+- `client/unittest/imp/settingsScreen.layoutMatrix.imp.test.ts`（layout と control 表の契約）、`settingsScreen.savePreview.imp.test.ts`（保存と preview の契約）、`settingsScreen.liveWebPlaybackSwitch.imp.test.ts`（放映中の web 再生 switch）、`settingsScreen.numericSelectUnitSuffix.imp.test.ts`（数値 select の単位表示）、`settingsStorageAccess.imp.test.ts`（storage access の memory fallback と保存失敗）、`settingsControlSupport.imp.test.ts`（accessible name・select 表示値・表示可否）。
 - `client/e2e/settings-screen-workflow.spec.ts`、visual `visual/settings-screen-geometry.spec.ts`。
 - 本物の browser の localStorage: `client/e2e/browser-api-parity.spec.ts`（本物の容量の上限での保存の失敗、参照の拒否〈既定値で起動し、保存時に失敗を通知する〉、古い client が保存した設定の読み込みと保存）。
 

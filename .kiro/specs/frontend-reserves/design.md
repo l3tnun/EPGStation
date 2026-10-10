@@ -116,6 +116,7 @@ client/src/
 - `client/unittest/spec/reserves/` — `reservesTestKit.tsx`（fixture / helper）と、route lifecycle、realtime、dialog、edit mode、actions、bulk delete、manual add form / add submit / edit の spec。
 - `client/unittest/imp/reserves/` — request、manual request、adapter、route helper、manual API、API action の imp。
 - `client/e2e/booking-workflow.spec.ts`、`client/e2e/manual-reserve-workflow.spec.ts` — deterministic mock E2E。fixture は `client/e2e/support/reservesFixtures.ts` / `manualReserveFixtures.ts`、handler は `reservesMocks.ts`、共通操作は `reservesWorkflowHelpers.ts`。
+- `client/e2e/dark-ui-reserves.spec.ts` — dark theme の e2e。card list、title menu、item menu、bulk delete dialog、ReserveDialog、手動予約 form、pagination の色と contrast を検査する。
 - `client/visual/booking-geometry.spec.ts` — geometry 検査。helper は `client/visual/bookingGeometryHelpers.ts`。
 
 ## システムフロー

@@ -45,6 +45,7 @@
         path、ディレクトリ自身、識別情報不一致）を確認する test を追加する。
     -   `test/server/shared-foundation/imp/file-util-read-dir-failure.test.ts` に、存在しないディレクトリの一覧取得
         （`FileUtil.readDir`）が元のファイルシステムエラーで reject されることを確認する test を追加する。
+    -   `test/server/shared-foundation/file-util-real-failure.integration.test.ts` に、実 file system で移動先の directory が無い・移動先に既存の directory がある場合に、移動元が残り移動先が作られない（または既存のまま）ことを確認する test を追加する（integration 層。`imp/` の一括実行には含まれない）。
     -   TDD: 識別情報不一致のシナリオを、同一 path を rm 後に再作成する形から、別ディレクトリの識別情報を渡す形へ修
         正した（同一 path 再作成では inode 再利用により意図した RED が安定しなかったため）。
     -   _Requirements: 4.1, 4.2, 4.3, 4.4_
@@ -57,6 +58,6 @@
     -   _Verification: `mise exec node@24.18.0 -- npm run test:server:imp -- test/server/shared-foundation/imp/util.test.ts` の 3 tests を対象とする_
 
 -   [x] 6. 全 test file の一括実行を用意する
-    -   本 spec の 6 test file を一括実行できる状態にする。
+    -   本 spec の `imp/` の 6 test file を一括実行できる状態にする。
     -   _Requirements: 1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 4.1, 4.2, 4.3, 4.4, 5.1_
     -   _Verification: `mise exec node@24.18.0 -- npm run test:server:imp -- test/server/shared-foundation/imp/promise-queue.test.ts test/server/shared-foundation/imp/util.test.ts test/server/shared-foundation/imp/date-util.test.ts test/server/shared-foundation/imp/str-util.test.ts test/server/shared-foundation/imp/file-util.test.ts test/server/shared-foundation/imp/file-util-read-dir-failure.test.ts` の 50 tests を対象とする_

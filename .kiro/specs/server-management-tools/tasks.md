@@ -181,6 +181,7 @@ envelope、checksum、全種類 transaction、retry、path 長上限を追加し
         既存境界を characterization する。
     -   空の録画済み配列と非文字列の先頭保存先名は別 fixture とし、非文字列時の error 記録だけを fail-fast 成功保証へ読
         み替えない。
+    -   手書きの v1 バックアップ fixture が v1 のバックアップ形式の型と同じ項目を持つことを、`test/server/management-tools/v1-fixture-parity.imp.test.ts`（`IMP-V1-FIXTURE`）で確認する。
     -   完了時には、正常な最終 v1 fixture、三つの入力 failure、および二つの既知入力特性が DB 開始前の既存順序で観測で
         き、production code の差分がない。
     -   _Requirements: 4.1, 4.2, 4.3, 5.6_
