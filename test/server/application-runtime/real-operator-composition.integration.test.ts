@@ -143,6 +143,9 @@ const markerUrl = new URL('../../../ipc-reply.json', import.meta.url);
 const pendingUrl = new URL('../../../ipc-reply.json.pending', import.meta.url);
 const startedAt = Date.now();
 process.on('message', message => {
+    // The Operator also sends unrelated notifications (type: 'notifyClient') to its Service child, and may
+    // send one before it answers the request. Only the answer to request 7 is the content under test.
+    if (message === null || typeof message !== 'object' || message.id !== 7) return;
     // Written aside and renamed, so the marker appears only once its content is complete: the test
     // reads it as soon as the name exists, and could otherwise see it created but still empty.
     writeFileSync(pendingUrl, JSON.stringify({ elapsedMs: Date.now() - startedAt, message }));
