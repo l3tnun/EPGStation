@@ -137,6 +137,7 @@ export function DateTimePickerDialog({
         >
           <StaticDateTimePicker
             ampm={false}
+            timeSteps={{ hours: 1, minutes: 1 }}
             timezone={timezone}
             displayStaticWrapperAs="mobile"
             orientation={landscape ? 'landscape' : 'portrait'}
