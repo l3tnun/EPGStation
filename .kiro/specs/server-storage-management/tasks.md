@@ -22,12 +22,12 @@ service-child利用gateを混同しない。本specは候補ID・storage名をru
 
 Cross-spec provider prerequisiteは、Configuration Task 4.2 の storage command timeout raw snapshot suite、Persistenceの
 `IStorageDeletionCandidatePort` provider suite、Recorded Content Task 5.8、ならびにRuntimeのuse-snapshot・deletion
-adapter suiteである。各consumer leafは対応provider suiteのRED→実装→GREEN完了前に開始せず、外部task IDはlocal
+adapter suiteである。各consumer leafは対応provider suiteの完了前に開始せず、外部task IDはlocal
 `_Depends:`へ混在させない。
 
 ただしRuntime Task 4.2のcompositionに必要なprovider preparationとして、Tasks 5.1 / 5.2は型付き
 `IRecordedStorageDeletionPort`、contract double、および対象testだけをRuntime 4.2より先に用意してよい。この先行段階は
-production binding、削除動作、公開API、DB、設定を変更せず、Task 5.1 / 5.2のGREENまたはintegration完了を意味しない。
+production binding、削除動作、公開API、DB、設定を変更せず、Task 5.1 / 5.2のintegration完了を意味しない。
 Runtime 4.2のcomposition後に、既存のRuntime use-snapshot・recording/service-child gate・deletion adapterの前提を満たして
 から、consumerのproduction binding、削除動作、integration / deletion gateへ進む。
 
@@ -140,17 +140,15 @@ Runtime 4.2のcomposition後に、既存のRuntime use-snapshot・recording/serv
     -   _Requirements: 4.3, 4.4, 4.6, 4.7_
     -   _Boundary: 容量不足 coordinator・容量取得 adapter_
 
--   [x] 2. 保存先単位の監視 ownership と 600 秒 watchdog を TDD で実現する
--   [x] 2.1 保存先単位の開始順、single-flight、および解放を RED から GREEN まで閉じる
+-   [x] 2. 保存先単位の監視 ownership と 600 秒 watchdog を実現する
+-   [x] 2.1 保存先単位の開始順、single-flight、および解放を test と実装で閉じる
 
     -   保存先 A の容量取得を deferred にしても、同じ tick が設定順で B、C の開始可否を判定し、異なる `StorageEntryId`な
-        ら先行完了を待たず開始する `unittest/spec` を先に追加する。
+        ら先行完了を待たず開始する `unittest/spec` を置く。
     -   次 tick では進行中の exact entry ID だけを skipし、同じ正規化pathを持つ別設定entryも独立して開始し、別entryを停
         止しないことを検証する。
     -   成功・失敗の通常 settlement で exact entry ID だけを一回解放し、別 operation の後着 callback が後続監視の
         ownership を解放しない反例を加える。
-    -   test が global `isRunning`、逐次 await、および全体解放という現行差を示して先に失敗し、production code はまだ変更
-        しない。
     -   完了時には、設定順、同一entry ID skip、同path別entry開始、exact entry ID解放をcall ledgerで独立して再現できる。
     -   設定snapshot indexとopaque identityからなる不変な`StorageEntryId`をentryごとに割り当てるprocess-local active
         operationを持ち、tickの設定順走査から各entry IDの独立Promise continuationを開始する。
@@ -163,7 +161,7 @@ Runtime 4.2のcomposition後に、既存のRuntime use-snapshot・recording/serv
     -   _Requirements: 2.4, 2.9, 2.10, 2.11, 3.11_
     -   _Boundary: 定期監視 controller・StorageEntryId operation state_
 
--   [x] 2.2 各 I/O 段階の 600 秒 ownership watchdog を RED から GREEN まで閉じる
+-   [x] 2.2 各 I/O 段階の 600 秒 ownership watchdog を test と実装で閉じる
 
     -   初回容量取得、利用中の録画の取得、候補取得、削除依頼、削除後再取得を個別に 599,999 ms で settle させる通常経路と、600,000 ms まで未
         確定にする `overdue` 経路を fake timer と deferred Promise で `unittest/spec` にする。
@@ -171,7 +169,6 @@ Runtime 4.2のcomposition後に、既存のRuntime use-snapshot・recording/serv
         しながら、別 entry ID と合成した録画・配信・番組更新・Web API probe を継続することを確認する。
     -   元 Promise の late resolve／reject が同じ段階を再実行せず、通常の次段階または局所終了と exact entry ID 解放へ一
         回だけ進む反例を加える。
-    -   test が watchdog 未実装を理由に先に失敗し、production code はまだ変更しない。
     -   完了時には、5段階それぞれで境界直前、期限到達、late settlement、および別 entry ID 継続を決定的に再現できる。
     -   各 I/O 段階へ単一 watchdog、operation generation、および一回だけの通常 continuation を持たせ、期限先着を
         `overdue` として記録する。
@@ -186,10 +183,10 @@ Runtime 4.2のcomposition後に、既存のRuntime use-snapshot・recording/serv
     -   _Boundary: entry ID operation watchdog・容量不足 coordinator_
     -   _Depends: 2.1_
 
--   [x] 3. 通知 command の有限監督と未回収 key 隔離を TDD で追加する
--   [x] 3.1 command 期限設定と通常 terminal lifecycle を RED から GREEN まで閉じる
+-   [x] 3. 通知 command の有限監督と未回収 key 隔離を追加する
+-   [x] 3.1 command 期限設定と通常 terminal lifecycle を test と実装で閉じる
 
-    -   Cross-spec prerequisiteとして、Configurationのstorage command timeout raw snapshot provider suiteがGREENで、省略
+    -   Cross-spec prerequisiteとして、Configurationのstorage command timeout raw snapshot provider suiteが完了し、省略
         値・raw値・clone・reload後snapshotを取得できることを確認してから着手する。
     -   optional 期限の省略値 `300_000`、最小 `1`、最大 `2_147_483_647` と、`0`、負数、小数、`NaN`、`Infinity`、上限超過
         を component 構築境界の `unittest/spec` にする。
@@ -199,7 +196,6 @@ Runtime 4.2のcomposition後に、既存のRuntime use-snapshot・recording/serv
         を失わず、後者を terminal へ暗黙変換しない反例を加える。
     -   設定 file parser、共通 default、reload を変更する test にせず、受領 snapshot の optional 値を本 component が正規
         化する契約だけを対象にする。
-    -   test が有限期限・operation registry 未実装を理由に先に失敗し、production code はまだ変更しない。
     -   完了時には、設定境界、normal terminal、spawn failure、non-terminal error の各 state と resource call 数を再現で
         きる。
     -   受領 snapshot の optional 値を正の有限な `commandTimeoutMs` へ正規化し、不正値では command 起動前に設定 error と
@@ -215,7 +211,7 @@ Runtime 4.2のcomposition後に、既存のRuntime use-snapshot・recording/serv
     -   _Requirements: 3.1, 3.2, 3.5, 3.7, 3.8_
     -   _Boundary: 通知 command supervisor_
 
--   [x] 3.2 timeout、未回収隔離、および late terminal を RED から GREEN まで閉じる
+-   [x] 3.2 timeout、未回収隔離、および late terminal を test と実装で閉じる
 
     -   deadline 先着で timeout failure を一回記録し、同じ exact child へ `SIGKILL` を一回要求して、追加3,000 ms の停止
         強化 timer を一件だけ登録する `unittest/spec` を追加する。
@@ -225,7 +221,6 @@ Runtime 4.2のcomposition後に、既存のRuntime use-snapshot・recording/serv
         generation だけが元 entry ID を一回解放し、過去の失敗を成功へ変更しない反例を加える。
     -   logical ownership 中は同じ entry ID の新しい command を 0 件、別 entry ID の command と合成した別 domain probe
         を継続し、 `stop()` 後も command deadline／late cleanup が残ることを確認する。
-    -   test が停止・未回収隔離・generation fence 未実装を理由に先に失敗し、production code はまだ変更しない。
     -   完了時には、SIGKILL 成功・false・throw、terminal 先着・追加期限先着・late terminal、停止後 deadline を決定的に再
         現できる。
     -   operation ID／generation gate により terminal と deadline の最初の遷移だけを採用し、deadline 先着時の failure、
@@ -259,8 +254,8 @@ Runtime 4.2のcomposition後に、既存のRuntime use-snapshot・recording/serv
     -   _Boundary: 容量不足 coordinator・通知 command supervisor integration_
     -   _Depends: 2.1, 3.1, 3.2_
 
--   [x] 4. 保存先限定・未使用・最古順の削除候補 port を TDD で実現する
--   [x] 4.1 候補 scope、利用中除外、および安定順序を RED から GREEN まで閉じる
+-   [x] 4. 保存先限定・未使用・最古順の削除候補 port を実現する
+-   [x] 4.1 候補 scope、利用中除外、および安定順序を test と実装で閉じる
 
     -   対象保存先だけに一件以上の video relation を持ち、全 relation の `parentDirectoryName` が storage 名と一致し、未
         保護の録画済み番組だけを候補にする `unittest/spec` を追加する。
@@ -268,12 +263,10 @@ Runtime 4.2のcomposition後に、既存のRuntime use-snapshot・recording/serv
         で検証する。
     -   候補を `startAt ASC`、同時刻では `id ASC` の一つの sort で一件返し、別保存先だけ・複数保存先・video 0件・対象な
         しを分ける。
-    -   修正前の global 未保護集合、利用中非除外、二回目の sort 上書きを欠陥 fixture として再現し、target oracle にしな
-        い。
-    -   test が既存 `findOld` の scope と sort 差を示して先に失敗し、production code はまだ変更しない。
+    -   global 未保護集合、利用中非除外、二回目の sort 上書きを欠陥 fixture として扱い、target oracle にしない。
     -   完了時には、保存先、保護、relation集合、利用中／試行済み、開始時刻／ID の matrix が一意の ID または `null` を返
         す。
-    -   Cross-spec prerequisiteとして、Persistenceの`IStorageDeletionCandidatePort` RED→provider実装→SQLite/MySQL GREEN
+    -   Cross-spec prerequisiteとして、Persistenceの`IStorageDeletionCandidatePort` provider実装とSQLite/MySQL
         suiteが完了し、primitive ID／`null`／reject contractを利用できることを確認してから着手する。
     -   本specで`storageName`と利用中・試行済みID集合を受ける型付き候補port contractを定義し、 `server-persistence`の承
         認済みprovider taskが条件を一つのquery contractとして適用したadapterへ接続する。
@@ -288,23 +281,21 @@ Runtime 4.2のcomposition後に、既存のRuntime use-snapshot・recording/serv
     -   _Requirements: 4.1_
     -   _Boundary: IStorageDeletionCandidatePort consumer contract・server-persistence provider integration_
 
--   [x] 5. 削除 consumer port、単位統一、および無進捗停止を TDD で実現する
--   [x] 5.1 排他的削除要求と削除後 MB 再判定を RED から GREEN まで閉じる
+-   [x] 5. 削除 consumer port、単位統一、および無進捗停止を実現する
+-   [x] 5.1 排他的削除要求と削除後 MB 再判定を test と実装で閉じる
 
     -   候補 ID と storage 名だけを `IRecordedStorageDeletionPort` へ渡し、`deleted` で同じ監視 path を再取得、
-        `not-deleted`／reject で再取得・別候補・retry を 0 件にする `unittest/spec` を追加する。
+        `not-deleted`／reject で再取得・別候補・retry を 0 件にする `unittest/spec` を置く。
     -   削除後の `nextAvailableBytes / 1024 / 1024` を初回と同じ MB 閾値へ比較し、raw byte と MB を直接比較しない target
         test を加える。
     -   録画済み番組 row 自体の削除失敗が port rejection または `not-deleted` として伝播し、成功や同一候補の再選択になら
         ないことを故障注入する。
-    -   test が直接録画済み管理呼出し、削除後 raw byte 比較、および削除 core failure の成功扱いという現行差を示して先に
-        失敗し、production code はまだ変更しない。
     -   完了時には、`deleted`、`not-deleted`、reject、post-read failure、MB 閾値の各 ledger が期待 call 数と結果を再現す
         る。
     -   Runtime Task 4.2より先には、型付き`IRecordedStorageDeletionPort`、contract double、およびこのtarget testだけを
         provider preparationとして用意してよい。この段階ではproduction binding、削除動作、公開API、DB、設定を変更しない。
         Recorded Content Task 5.8とRuntimeのrecording/service-child gate providerおよびapproved-order deletion adapter
-        suiteがGREENになり、Runtime 4.2がcompositionを閉じた後にだけ、consumerのproduction bindingと削除動作へ進む。
+        suiteが完了し、Runtime 4.2がcompositionを閉じた後にだけ、consumerのproduction bindingと削除動作へ進む。
     -   録画済み管理への直接削除接続を consumer port 呼出しへ置き換え、容量管理は `deleted`、`not-deleted`、reject だけ
         を観測する。
     -   `deleted` の後だけ同じ path を再取得し、raw byte 値を保持したまま MB へ換算して同じ閾値へ比較する。
@@ -317,18 +308,17 @@ Runtime 4.2のcomposition後に、既存のRuntime use-snapshot・recording/serv
     -   _Requirements: 4.2, 4.3, 4.5, 4.6, 4.9_
     -   _Boundary: IRecordedStorageDeletionPort consumer・容量不足 coordinator_
 
--   [x] 5.2 byte 無進捗と同一候補再選択の停止を RED から GREEN まで閉じる
+-   [x] 5.2 byte 無進捗と同一候補再選択の停止を test と実装で閉じる
 
     -   Runtime Task 4.2より先には、Task 5.1と共通の型付きport・contract doubleを使うtarget testだけをprovider
         preparationとして追加してよい。production loop、削除動作、公開API、DB、設定はRuntime 4.2のcomposition後まで変更し
         ない。
-    -   一件削除後の空き byte が減少または同値なら、追加候補取得と追加削除を 0 件にする `unittest/spec` を先に追加する。
+    -   一件削除後の空き byte が減少または同値なら、追加候補取得と追加削除を 0 件にする `unittest/spec` を置く。
     -   同じ候補 ID が adapter から再提示されても再削除せず、試行済み ID を次の候補 query の除外集合へ渡すことを検証す
         る。
     -   byte が増加してなお閾値以下の場合だけ、100 ms 後に別候補へ進み、増加後に閾値超過ならその entry を終える fake
         timer test を加える。
     -   固定削除件数上限、物理 byte 解放の推測、自動 retry、別候補規則への fallback を期待値へ追加しない。
-    -   test が無進捗 guard と試行済み集合の未実装を理由に先に失敗し、production code はまだ変更しない。
     -   完了時には、減少、同値、増加後超過、増加後不足、同一 ID 再提示の各 fixture で候補・削除 call 数を再現できる。
     -   一監視 operation ごとに前回 `availableBytes` と試行済み ID 集合を保持し、候補受領時に ID を集合へ追加する。
     -   削除後は MB 閾値判定より先に `nextAvailableBytes > previousAvailableBytes` を確認し、不増加または同一候補ではそ
@@ -438,7 +428,7 @@ Runtime 4.2のcomposition後に、既存のRuntime use-snapshot・recording/serv
 -   [x] 7.8 runtime-owned容量削除adapterの外部integrationを確認する
 
     -   Cross-spec prerequisiteとして、Recorded Content Task 5.8とRuntimeのuse-snapshot、recording/service-child gate、
-        approved-order deletion adapterのowner suiteがすべてGREENであることを確認する。
+        approved-order deletion adapterのowner suiteがすべて完了していることを確認する。
     -   `test/server/application-runtime/storage-pressure-deletion.integration.test.ts`のowner testで、副作用なしprepared
         deletion→録画利用gate→service-child利用gate→lock内final delete、busy/unknown時`not-deleted`、逆順一回解放を確認
         する。実行前提は`server-application-runtime`の容量削除adapter owner task完了である。

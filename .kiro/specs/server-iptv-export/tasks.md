@@ -16,9 +16,9 @@ task IDを書かない。
     `IptvPublicUrlBuilder`のcaller binding
 
 Runtime foundation完了後に本specの機能固有testを追加する。Task 2.3と`server-service-interface` Task 2.4は、同一
-production treeを一つのrevisionで変更するatomic cross-spec checkpointである。IPTV側だけを先に変更してproduction
-interfaceまたはcallerをcompile REDにしてはならず、両taskの変更、全production TypeScript compile、IPTV fake builder
-suite、および実HTTP carrier integrationが同一revisionでGREENになるまで、どちらのtaskも完了扱いにしない。このbarrierを満
+production treeを一つのrevisionで変更するatomic cross-spec checkpointである。interfaceとcallerを同じ変更単位で整合させ、
+全production TypeScriptがcompileでき、両taskの変更、IPTV fake builder suite、および実HTTP carrier integrationが同一revisionで
+成功するまで、どちらのtaskも完了扱いにしない。このbarrierを満
 たすまでTask 6.2、7.1、8.4へ進めない。共有foundation、設定、DB、番組意味、live route、HTTP carrierを本specへ重複実装しな
 い。
 
@@ -130,25 +130,24 @@ Task 8 の leaf は 8.2・8.4・8.5 で、8.1・8.3 は置かない。
     -   _Requirements: 2.3, 2.4, 2.12, 2.13, 4.1, 4.3, 4.4, 4.5_
     -   _Boundary: M3U8 表示名・設定順・チャンネル識別_
 
--   [x] 2.3 `IptvPublicUrlBuilder`をM3U8 generatorの構造入力へTDDで移行する
+-   [x] 2.3 `IptvPublicUrlBuilder`をM3U8 generatorの構造入力へ移行する
 
     -   対象は `src/model/api/iptv/IIPTVApiModel.ts`、`src/model/api/iptv/IPTVApiModel.ts`、
         `test/server/iptv-export/unittest/spec/m3u8.spec.test.ts`、および
         `test/server/iptv-export/unittest/imp/serializers.test.ts` とする。
-    -   `channelLogoUrl(channelId)`と`liveM2tsUrl(channelId, mode)`だけを公開するfake `IptvPublicUrlBuilder`を先にtestへ
-        追加し、generatorがraw Host・scheme・subDirectoryを要求するため失敗することを確認して、そのRED理由をbuilder入力
-        不足へ限定する。Task 2.1のraw入力serializer fixtureへtyped builderを持ち込まない。
-    -   `IIPTVApiModel`の構造入力、generator引数、および`IPTVApiModel`をtyped builderへ最小移行し、ロゴありではlogo URL
+    -   `channelLogoUrl(channelId)`と`liveM2tsUrl(channelId, mode)`だけを公開するfake `IptvPublicUrlBuilder`をtestで使い、generatorが
+        raw Host・scheme・subDirectoryを要求しないことを検証する。Task 2.1のraw入力serializer fixtureへtyped builderを持ち込まない。
+    -   `IIPTVApiModel`の構造入力、generator引数、および`IPTVApiModel`をtyped builderへ移行し、ロゴありではlogo URL
         を一回、対象チャンネルではlive URLを一回取得する。ロゴなしではlogo builder呼出し0回、全経路でstream開始0回を
         assertionする。
     -   URLのM3U8内配置とexact byteはIPTVが所有する。Host・scheme・forwarded情報のtrust、status、header、builder構成は
         `server-service-interface`、stable live routeとstreamは`server-media-delivery`が所有し、本leafへreverse importし
         ない。
-    -   最小production実装後にfake builderの仕様・実装testをGREENにする。同じrevisionでService Interface Task 2.4の
-        caller bindingも実装し、IPTV側だけを先にcompile REDへする中間revisionをcheckpointとして残さない。
+    -   fake builderの仕様・実装testが成功する。同じrevisionでService Interface Task 2.4の
+        caller bindingも実装し、IPTV側だけがcompileできない中間revisionをcheckpointとして残さない。
     -   完了時には、generatorにraw Host・scheme・subDirectory引数が残らず、URL、属性順、ASCII空白、U+3000、LFのexact
         byteが維持されることに加え、Service Interface Task 2.4、全production TypeScript compile、IPTV fake builder
-        suite、および実HTTP carrier integrationが同一revisionでGREENになる。いずれか一つの成功だけでは本taskを完了扱いに
+        suite、および実HTTP carrier integrationが同一revisionで成功する。いずれか一つの成功だけでは本taskを完了扱いに
         しない。
     -   DB snapshotとbuilderの構造境界を検証し、race・deadline・timer/listener・filesystem・IPC・child processは非適用と
         する。builder呼出しとURL配置の誤りをexact byteと呼出し回数で検出する。
@@ -199,21 +198,20 @@ Task 8 の leaf は 8.2・8.4・8.5 で、8.1・8.3 は置かない。
     -   _Requirements: 3.8, 3.9, 3.10, 3.11, 5.1, 5.2, 5.3, 5.4, 5.5, 5.6_
     -   _Boundary: XMLTV 番組文字列・時刻・serializer_
 
--   [x] 4. 半角番組本文と要求ローカル projection を TDD で整合させる
--   [x] 4.1 半角指定と保存済みentity不変条件をREDからGREENまで一変更単位で整合させる
+-   [x] 4. 半角番組本文と要求ローカル projection を test と実装で整合させる
+-   [x] 4.1 半角指定と保存済みentity不変条件を一変更単位で整合させる
 
     -   対象は `src/model/api/iptv/IPTVApiModel.ts`、
         `test/server/iptv-export/unittest/spec/representation.spec.test.ts`、および
         `test/server/iptv-export/unittest/imp/serializers.test.ts` とする。
     -   通常名と半角名、通常説明と半角説明、通常詳細と半角詳細が異なる synthetic 番組を用意し、`isHalfWidth=true` では半
-        角fieldだけがXMLTV番組本文へ現れ、入力entityが不変である期待値を先に固定する。既存通常表記testは成功したまま、半
-        角field未選択とentity代入だけを期待理由としてREDにする。
+        角fieldだけがXMLTV番組本文へ現れ、入力entityが不変であることを固定する。既存通常表記testは成功する。
     -   通常説明がない場合は半角詳細だけも出さず、選択後の番組名・説明へ既存の五記号置換と SUB 除去を同じ順で適用する。
-    -   各番組から通常または半角の名前・説明・詳細を要求ローカル値へ選ぶ最小production実装を行い、保存済みentityを変更せ
+    -   各番組から通常または半角の名前・説明・詳細を要求ローカル値へ選び、保存済みentityを変更せ
         ず置換・説明連結・直列化する。保存schema、番組query、HTTP carrier、外部API schemaは変更しない。
-    -   target仕様testと実装testを再実行してGREENにし、通常・半角の両要求後もDB portから受け取ったentityの全fieldが呼出
-        し前snapshotと一致することを確認する。REDのrequired testを残した状態で本checkboxを完了しない。
-    -   完了時には、通常・半角のexact byte、説明欠損、五記号、SUB、入力snapshot不変の全target testがGREENになる。
+    -   通常・半角の両要求後もDB portから受け取ったentityの全fieldが呼出し前snapshotと一致することを、target仕様testと
+        実装testが検証する。
+    -   完了時には、通常・半角のexact byte、説明欠損、五記号、SUB、入力snapshot不変の全target testが成功する。
     -   DB entity と要求ローカル projection の境界で通常・半角の連続順序を検証し、同時要求 race は task 4.2、timeout・
         timer/listener・filesystem・IPC・child process は非適用とする。field 選択・代入の誤りは snapshot と byte で検
         出する。
@@ -236,7 +234,7 @@ Task 8 の leaf は 8.2・8.4・8.5 で、8.1・8.3 は置かない。
     -   _Depends: 4.1_
 
 -   [x] 5. M3U8同名表示の承認済みsuffixを回帰固定する
--   [x] 5.1 同名1〜4件のsuffix 0、2、3、4…をREDからGREENまで整合させる
+-   [x] 5.1 同名1〜4件のsuffix 0、2、3、4…を整合させる
 
     -   対象は `test/server/iptv-export/unittest/spec/m3u8.spec.test.ts` と
         `test/server/iptv-export/unittest/imp/ordering.test.ts`、および
@@ -245,10 +243,9 @@ Task 8 の leaf は 8.2・8.4・8.5 で、8.1・8.3 は置かない。
         末尾ASCII空白が正確に0、2、3、4個となり、その後ろにU+3000を一文字置く承認済み結果を固定する。
     -   各件のチャンネルID、ロゴ、設定順、live URL、属性間空白、LFを含むM3U8全文書byteをassertし、部分文字列や表示名だけ
         の比較で代替しない。
-    -   同名counterの最初の値だけを0、後続値を2、3、4…へ対応させる最小production修正を行う。チャンネル順、ID、URL、
+    -   同名counterの最初の値だけを0、後続値を2、3、4…へ対応させる。チャンネル順、ID、URL、
         U+3000、属性間空白、LF、および公開schemaは変更しない。
-    -   完了時には、1〜4件の全文書assertionが全件GREENで、0、2、3、4…のsuffix、U+3000、ID対応が固定され、required testに
-        REDが残らない。
+    -   完了時には、1〜4件の全文書assertionが全件成功し、0、2、3、4…のsuffix、U+3000、ID対応が固定される。
     -   serializer 内の重複名 counter 境界を検証し、要求間 race・timeout・timer/listener・filesystem・IPC・child process
         は非適用とする。counter と loop 境界の誤りは1件から4件の exact byte で検出する。
     -   _Requirements: 2.4, 2.11, 4.3_
@@ -256,7 +253,7 @@ Task 8 の leaf は 8.2・8.4・8.5 で、8.1・8.3 は置かない。
     -   _Depends: 2.2_
 
 -   [x] 6. 各 IPTV 文書要求へ30秒の絶対期限と遅延結果隔離を追加する
--   [x] 6.1 要求ローカルの絶対期限と一回完了guardをREDからGREENまで一変更単位で実装する
+-   [x] 6.1 要求ローカルの絶対期限と一回完了guardを一変更単位で実装する
 
     -   対象は `src/model/service/api/iptv/channel.m3u8.ts`、`src/model/service/api/iptv/epg.xml.ts`、
         `test/server/iptv-export/unittest/spec/request-lifecycle.spec.test.ts`、および
@@ -269,13 +266,10 @@ Task 8 の leaf は 8.2・8.4・8.5 で、8.1・8.3 は置かない。
         書、または未処理 rejection を発生させないことを検証する。
     -   一件が期限到達または遅延中でも別要求は独立して正常完了し、文書全体の自動再生成が 0 回であることを同時要求
         fixture で確認する。
-    -   target testを先に実行し、既存の即時成功・失敗testは成功したまま、30秒absolute deadline、単一完了、late-result
-        fenceの不足だけを期待理由としてREDにする。
-    -   handlerごとにabsolute deadline、完了済み状態、timerを持つ最小production実装を行い、成功、失敗、期限、切断の先着
+    -   handlerごとにabsolute deadline、完了済み状態、timerを持ち、成功、失敗、期限、切断の先着
         一件だけを確定する。成功確定直前にも同じdeadlineを再確認し、完了時にtimer/listenerを一回解放する。
     -   期限・切断後のPromise resolve/rejectは観測して応答だけを抑止し、DB処理の取消、永続化timeout/retry、global queue
         を追加しない。
-    -   target仕様・実装testを再実行してGREENにし、REDのrequired testを残した状態で本checkboxを完了しない。
     -   完了時には、各要求の応答確定が最大一回、未処理rejectionと残留timer/listenerが0件で、残留がない。
     -   DB Promise・HTTP completion・timer/listener 境界で race、同着、期限直前・到達・超過、切断、資源解放を検証する。
         filesystem・IPC・child process は非適用とし、比較・CAS・cleanupの誤りは状態と副作用回数で検出する。
@@ -389,13 +383,12 @@ Task 8 の leaf は 8.2・8.4・8.5 で、8.1・8.3 は置かない。
         `test/server/iptv-export/unittest/imp/serializers.test.ts`、
         `test/server/iptv-export/unittest/imp/ordering.test.ts`、および
         `test/server/iptv-export/unittest/imp/request-completion.test.ts` とする。
-    -   imp の4 fileと値域caseが未実装の状態でimp gateを先に実行し、欠落している値域・分岐・meaningful assertionだけを期待理
-        由としてREDにする。現在の承認済み挙動を意図的に誤った期待値へ変えない。
+    -   imp gateは、4 fileの値域・分岐・meaningful assertionの欠落を検出する。現在の承認済み挙動を意図的に誤った期待値へ変えない。
     -   省略、正負の小数 floor、0件、対象・対象外、期間端点、同名・同時刻、説明欠損、文字置換、固定時差、DB・生成失敗を
         戻り値、exact byte、状態、副作用回数の meaningful assertion で検証する。
     -   DB/HTTP はport fixtureによる補助境界、filesystem・IPC・child processは非適用とする。deadline直前・到達・超過、
         late settlement、timer/listener解放を含む実装境界assertionを準備・検証する。
-    -   最小test/harnessと、承認済み差分に必要な最小production/seamだけを追加し、全imp target testをGREENにして実装境界assertion mappingを準備・検証する。REDのrequired testを残して8.4へ進まない。
+    -   test/harnessと、承認済み差分に必要なproduction/seamだけを追加し、全imp target testが成功して実装境界assertion mappingを準備・検証する。
     -   完了時には、値域・分岐matrixの未分類が0件で、実装境界assertion mappingが準備・検証済みになる。
     -   _Requirements: 7.2_
     -   _Boundary: IPTV implementation tests・実装境界assertion mapping consumption is Task 8.5_
@@ -404,16 +397,15 @@ Task 8 の leaf は 8.2・8.4・8.5 で、8.1・8.3 は置かない。
 -   [x] 8.4 DB読取からHTTP文書byteまでの結合境界を品質gateとして確定する
 
     -   対象は `test/server/iptv-export/integration/iptv-db-http.integration.test.ts` とする。
-    -   integration fileとSQLite/MySQL共通fixtureが存在しない状態で結合gateを先に実行し、DB/HTTP evidence欠落だけを期待
-        理由としてREDにする。
+    -   結合gateは、DB/HTTP evidenceの欠落を検出する。
     -   SQLite/MySQL共通repository fixtureから、M3U8・XMLTV query、Host、status、Content-Type、exact byteまでを接続し、
         DB成功・失敗、空文書、deadline、切断、late result、および同時要求隔離を検証する。
     -   DB connectionとHTTP response・timer・listenerの終了をassertし、IPC、filesystem、child processは本機能の結合経路
         に存在しないため非適用理由を残す。
     -   結合testが担当する境界はexact byte、status、回数、資源解放で検出し、unit testのmock呼出し確認だけで代
         替しない。
-    -   Persistence ownerのDB harnessとService Interface ownerのHTTP adapterを消費する最小integration harnessを追加し、
-        必要な承認済み差分だけを実装して全fixtureをGREENにする。REDのrequired testを残して8.5へ進まない。
+    -   Persistence ownerのDB harnessとService Interface ownerのHTTP adapterを消費するintegration harnessを追加し、
+        必要な承認済み差分だけを実装して全fixtureが成功する。
     -   完了時には、両DB contractのM3U8・XMLTV正常系と全failure fixtureが同じ承認済み結果を返し、結合境界の未分類が0件に
         なる。
     -   _Requirements: 7.4_

@@ -163,19 +163,19 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
     -   _Requirements: 1.5, 7.3_
     -   _Boundary: change feed・放送局索引・service buffer characterization_
 
--   [x] 4. 製品非依存のチューナー連携境界を TDD で適用する
--   [x] 4.1 製品非依存 port と有限要求の目標契約を失敗する仕様テストとして追加する
+-   [x] 4. 製品非依存のチューナー連携境界を test と実装で適用する
+-   [x] 4.1 製品非依存 port と有限要求の契約を仕様テストで固定する
 
-    -   放送局全件、番組全件、service 別番組、およびロゴの取得を製品非依存 port だけから受ける契約を `unittest/spec` と
-        して先に定義する。
-    -   各一回要求の取得失敗・有限 deadline 超過で更新完了を発行せず、ロゴ取得失敗を not-found へ変換しない目標結果を固
+    -   放送局全件、番組全件、service 別番組、およびロゴの取得を製品非依存 port だけから受ける契約を `unittest/spec` が
+        検証する。
+    -   各一回要求の取得失敗・有限 deadline 超過で更新完了を発行せず、ロゴ取得失敗を not-found へ変換しない結果を固
         定する。
     -   service ID ごとの要求へ30秒の独立 deadline を適用し、全 ID 列と後続 database 保存へ別の aggregate deadline を設
         けないことを fake timer と deferred port で検証する。
     -   Mirakurun と mirakc の合成 DTO・change から同じ保存・query 結果を得て、製品 client 型と discriminator が保存・公
         開 object に現れないことを確認する。
-    -   完了時には、既存 characterization test は成功したまま、直接 client・直接 REST・製品型・不足する deadline の箇所
-        だけが意図した理由で失敗する。
+    -   完了時には、既存 characterization test が成功したまま、直接 client・直接 REST・製品型・不足する deadline の無い
+        ことを test が確認する。
     -   _Requirements: 1.1, 2.1, 6.4, 6.6, 7.1, 7.12, 8.1, 8.2, 8.3_
     -   _Boundary: Program Guide tuner port contract_
     -   _Depends: 1.1, 1.2, 1.5, 2.4, 3.1_
@@ -194,16 +194,15 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
     -   _Boundary: 更新管理 model・放送局 query の tuner port adapter_
     -   _Depends: 4.1_
 
--   [x] 4.3 change feed の目標契約を失敗する仕様テストとして追加する
+-   [x] 4.3 change feed の契約を仕様テストで固定する
 
     -   製品非依存の program、service、on-air、service-programs-updated change を既存の buffer と ID 集合へ振り分ける契
-        約を `unittest/spec` として先に定義する。
+        約を `unittest/spec` が検証する。
     -   feed の開始・終了結果から接続ごとの全件同期、通信・解析失敗の切断状態、および通常終了時の既存 flag 差を再現する
         期待値を固定する。
     -   frame 解析、transport cleanup、製品 route、および製品 client 型が Program Guide 境界に存在しないことを
         `integration` の port stub で検証する。
-    -   完了時には、既存 characterization test は成功したまま、直接 feed 解析と製品固有 change 型の箇所だけが意図した理
-        由で失敗する。
+    -   完了時には、既存 characterization test が成功したまま、直接 feed 解析と製品固有 change 型が無いことを test が確認する。
     -   _Requirements: 2.3, 2.8, 2.9, 2.10, 7.2, 7.3, 8.1, 8.2, 8.3_
     -   _Boundary: Program Guide change feed contract_
     -   _Depends: 3.1, 3.4, 4.2_
@@ -222,17 +221,17 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
     -   _Boundary: change feed consumer・runtime binding_
     -   _Depends: 4.3_
 
--   [x] 5. 周期処理と番組 projection の承認済み差分を TDD で実装する
--   [x] 5.1 全件同期の10分観測を失敗する仕様テストとして追加する
+-   [x] 5. 周期処理と番組 projection の承認済み差分を test と実装で閉じる
+-   [x] 5.1 全件同期の10分観測を仕様テストで固定する
 
-    -   放送局全件保存後、番組全件取得の直前に600,000ミリ秒の観測を一回だけ開始する目標契約を `unittest/spec` で先に定義
+    -   放送局全件保存後、番組全件取得の直前に600,000ミリ秒の観測を一回だけ開始する契約を `unittest/spec` が検証
         する。
     -   観測が先着しても経過を一回記録するだけで、元の取得、projection、保存、resolve、reject、取消、および close を変更
         しないことを deferred port と fake timer で検証する。
     -   遅れて resolve・reject した通常結果を一回だけ反映し、settlement まで新しい全件同期を開始せず、保留再評価があれば
         現在状態で一回だけ行う期待値を固定する。
-    -   完了時には、3.3 の修正前 characterization は再現可能なまま、throw と active 早期解放だけを理由に target test が
-        失敗する。
+    -   完了時には、3.3 の characterization が再現可能なまま、観測 callback の throw と active 早期解放が無いことを target test が
+        確認する。
     -   _Requirements: 7.9, 7.10_
     -   _Boundary: 全件同期の10分観測_
     -   _Depends: 3.3, 4.2_
@@ -249,18 +248,17 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
     -   _Boundary: 全件同期の10分観測_
     -   _Depends: 5.1_
 
--   [x] 5.3 周期処理の active 一件・pending 一件を失敗する仕様テストとして追加する
+-   [x] 5.3 周期処理の active 一件・pending 一件を仕様テストで固定する
 
-    -   10秒 tick が active 中に複数回発火しても後続処理を開始せず、保留再評価を最大一件だけ記録する目標契約を
-        `unittest/spec` で先に定義する。
+    -   10秒 tick が active 中に複数回発火しても後続処理を開始せず、保留再評価を最大一件だけ記録する契約を
+        `unittest/spec` が検証する。
     -   program 保存、service 別番組更新、終了済み番組削除、および切断時全件同期を個別に未確定にし、各処理の通常
         settlement まで active 一件を維持することを検証する。
     -   settlement 後は過去の tick 時刻を使わず、現在時刻と feed 状態で一回だけ再評価し、その再評価中の tick も pending
         一件へ合流する期待値を固定する。
     -   Mirakurun の service→program、mirakc の on-air→deferred、および削除判定の既存順序と更新通知時点を変えないことも
         同じ matrix で確認する。
-    -   完了時には、既存 characterization test は成功したまま、重複開始と未完了処理を待たない箇所だけが意図した理由で失
-        敗する。
+    -   完了時には、既存 characterization test が成功したまま、重複開始と未完了処理を待たない箇所が無いことを test が確認する。
     -   _Requirements: 2.4, 2.5, 2.6, 2.7, 7.8, 7.10, 7.14, 7.15_
     -   _Boundary: EPG 更新 coordinator・周期 single-flight_
     -   _Depends: 1.4, 1.5, 3.2, 5.2_
@@ -282,9 +280,9 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
 
 -   [x] 5.5 (P) 空ジャンル配列をジャンルなしとして扱う
 
-    -   ジャンル欠落、空配列、一件、三件、四件以上、および標準範囲外を入力する `unittest/spec` を先に追加し、空配列だけ
-        が修正前の例外で失敗することを確認する。
-    -   存在する入力要素だけを先頭から最大3件投影し、空配列を全 slot 未設定として扱う最小修正を行う。
+    -   ジャンル欠落、空配列、一件、三件、四件以上、および標準範囲外を入力する `unittest/spec` が、空配列で
+        例外にならないことを検証する。
+    -   存在する入力要素だけを先頭から最大3件投影し、空配列を全 slot 未設定として扱う。
     -   ジャンルの順序、保存上限、および公開 field を変更せず、複数ジャンルを無制限保存する新しい schema を追加しない。
     -   完了時には、空配列が例外にならずジャンルなしとして保存され、他の正常 fixture と3.3の修正前 fixtureを明確に区別で
         きる。

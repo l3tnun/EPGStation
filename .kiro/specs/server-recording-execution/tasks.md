@@ -20,7 +20,7 @@ prepare/record/retry/finish、tuner stream の利用、録画 file 書込み、d
 event payload、および失敗伝播を維持する。番組リレー確認の20秒前 timer、session の5秒 retry、tuner追跡の30分整理周期を中
 央 scheduler へ移さず、録画 stream 本文へ一般的な時間制限を追加しない。
 
--   [x] 1. 単一周期 scan と世代付き録画 scheduler を TDD で実現する
+-   [x] 1. 単一周期 scan と世代付き録画 scheduler を実現する
 -   [x] 1.1 録画候補の採否と修正前の予約別 timer を characterization する
 
     -   通常・競合を候補へ含め、除外・重複を含めない既存 predicate を、4状態の synthetic 予約と `unittest/spec` で固定す
@@ -34,51 +34,48 @@ event payload、および失敗伝播を維持する。番組リレー確認の2
     -   _Boundary: Recording candidate predicate・legacy timer characterization_
     -   _Verification: unittest/spec, unittest/imp, characterization_
 
--   [x] 1.3 候補 registry と不透明世代を TDD で実装する
+-   [x] 1.3 候補 registry と不透明世代を実装する
 
-    -   まず、予約IDごとの最新候補一件、追加・更新・削除・起動再構築ごとに進む不透明な `bigint` 世代、および同一ID削除・
-        再追加後の古い準備結果・終了要求・取消済みcallbackが新世代へ作用しない契約を、deferred fixtureの失敗するtarget
-        testで定義する。generation、controller token、session tokenへ固定上限、number変換、wrap、serialization、永続化を
-        設けない否定assertionも含め、1.1の既存候補採否はGREENのままにする。
-    -   次に、保存済み予約snapshot、準備時点、終了時点、種類、状態、phase、世代を予約IDごとの一件へまとめ、通常・競合だ
-        けを登録する。追加・更新・削除・再構築でprocess-localな世代を単調増加させ、古いcallbackが比較以外の効果を持たな
-        いconsumer seamを最小実装する。
-    -   同じtarget testを再実行してGREENにし、予約row、DB schema、公開API、IPC envelope、永続queue、固定最大値、一般的
-        CAS基盤を追加していないことを確認する。
+    -   予約IDごとの最新候補一件、追加・更新・削除・起動再構築ごとに進む不透明な `bigint` 世代、および同一ID削除・再追
+        加後の古い準備結果・終了要求・取消済みcallbackが新世代へ作用しない契約を、deferred fixtureのtarget testが検証
+        する。generation、controller token、session tokenへ固定上限、number変換、wrap、serialization、永続化を設けない
+        否定assertionも含み、1.1の既存候補採否は変わらない。
+    -   保存済み予約snapshot、準備時点、終了時点、種類、状態、phase、世代を予約IDごとの一件へまとめ、通常・競合だけを
+        登録する。追加・更新・削除・再構築でprocess-localな世代を単調増加させ、古いcallbackが比較以外の効果を持たない
+        consumer seamを持つ。
+    -   予約row、DB schema、公開API、IPC envelope、永続queue、固定最大値、一般的CAS基盤を追加しない。
     -   完了時には、全fixtureが成功し、同じ予約IDの削除・再追加後も旧世代からの状態変更が0件であることを観測できる。
     -   _Requirements: 1.1, 1.2, 1.5, 1.7_
     -   _Boundary: RecordingCandidateRegistry_
     -   _Verification: unittest/spec, unittest/imp_
     -   _Depends: 1.1_
 
--   [x] 1.5 単一評価 loop と共有 wake を TDD で実装する
+-   [x] 1.5 単一評価 loop と共有 wake を実装する
 
-    -   まず、15秒の準備前倒し幅と3,000ms周期を分離し、遠未来候補数によらないtimer handle最大一件、最早deadlineが3秒未満
-        の場合だけのshort wake、期限到来済み処理の先行dispatch、0ms競合のmicrotask再評価を、fake schedulerの失敗する
-        target testで定義する。callback発火時・dispatch後・非同期境界後のwall clock/最新世代再読込、時計前進・後
-        退、event-loop遅延、同時刻準備の非直列dispatchと評価loop一件も検証し、1.1のlegacy fixtureは隔離してGREENに保つ。
-    -   次に、全候補とactiveな時刻指定終了milestoneを3秒以内ごとに走査し、最早deadlineだけへ共有timerを一件設定する。
-        timer callbackは評価loopをwakeし、期限到来済み準備はphase遷移後にsessionへdispatchして録画lifetimeをawaitせず、
-        評価中の追加wakeを再実行要求へ合流する最小実装を行う。
-    -   同じtarget testを再実行してGREENにし、active番組リレーtimer、session所有retry timer、tuner追跡整理intervalの所有
-        権と値を変更していないことを確認する。
+    -   15秒の準備前倒し幅と3,000ms周期を分離し、遠未来候補数によらないtimer handle最大一件、最早deadlineが3秒未満の場
+        合だけのshort wake、期限到来済み処理の先行dispatch、0ms競合のmicrotask再評価を、fake schedulerのtarget testが
+        検証する。callback発火時・dispatch後・非同期境界後のwall clock/最新世代再読込、時計前進・後退、event-loop遅延
+        、同時刻準備の非直列dispatchと評価loop一件も検証し、1.1のlegacy fixtureは隔離して維持する。
+    -   全候補とactiveな時刻指定終了milestoneを3秒以内ごとに走査し、最早deadlineだけへ共有timerを一件設定する。timer
+        callbackは評価loopをwakeし、期限到来済み準備はphase遷移後にsessionへdispatchして録画lifetimeをawaitせず、評価
+        中の追加wakeを再実行要求へ合流する。
+    -   active番組リレーtimer、session所有retry timer、tuner追跡整理intervalの所有権と値を変更しない。
     -   完了時には、大量遠未来予約でもscheduler所有handleと並行評価が各一件以下であることを観測できる。
     -   _Requirements: 1.3, 1.4, 1.6_
     -   _Boundary: RecordingScheduleController_
     -   _Verification: unittest/spec, unittest/imp, load test_
     -   _Depends: 1.3_
 
--   [x] 1.7 差分受付、評価合流、および scheduler CAS を TDD で実装する
+-   [x] 1.7 差分受付、評価合流、および scheduler CAS を実装する
 
-    -   まず、insert・update・deleteの同期enqueue、同一event-loopのmutation burstを一回へ合流するmicrotask wake、評価中
-        mutation・timer callback・reset競合時の予約ID/期待世代/session token/期待phaseの同期照合を、失敗するtarget test
-        で定義する。controller tokenまたは世代が古いcallbackのno-op、throwしない受付と後続評価rejectionの局所記録、二重
-        dispatch 0件も確認し、単発差分の既存結果はGREENに保つ。
-    -   次に、予約差分とreset要求を同じ評価入口へ集約し、差分適用ごとに候補世代を進めて最新時刻を直ちに再評価する。
-        `Waiting`から`Preparing`、active時刻指定終了のdispatch前に期待世代・session token・phaseを同期照合し、一回だけ状
-        態を進める最小実装を行う。
-    -   同じtarget testを再実行してGREENにし、session内部の全終了原因、event、DB効果へ普遍的exactly-once、retry、永続
-        queue、公開schemaを追加していないことを確認する。
+    -   insert・update・deleteの同期enqueue、同一event-loopのmutation burstを一回へ合流するmicrotask wake、評価中
+        mutation・timer callback・reset競合時の予約ID/期待世代/session token/期待phaseの同期照合を、target testが検証
+        する。controller tokenまたは世代が古いcallbackのno-op、throwしない受付と後続評価rejectionの局所記録、二重
+        dispatch 0件も検証し、単発差分の既存結果は変わらない。
+    -   予約差分とreset要求を同じ評価入口へ集約し、差分適用ごとに候補世代を進めて最新時刻を直ちに再評価する。
+        `Waiting`から`Preparing`、active時刻指定終了のdispatch前に期待世代・session token・phaseを同期照合し、一回だけ
+        状態を進める。
+    -   session内部の全終了原因、event、DB効果へ普遍的exactly-once、retry、永続queue、公開schemaを追加しない。
     -   完了時には、mutation数に比例したtimer handle、並行評価、旧世代からの状態変更が各0件であることを観測できる。
     -   facade 内部の同期 `acceptMutation(diff)` を Task 1.7 の受付入口として固定する。`Failed` の no-op、起動前・
         `Starting` の snapshot 保留、snapshot不能時の controller 直接受付、`Started` での scheduler 開始確認後一回だけの
@@ -89,16 +86,15 @@ event payload、および失敗伝播を維持する。番組リレー確認の2
     -   _Verification: unittest/spec, unittest/imp, integration_
     -   _Depends: 1.5_
 
--   [x] 1.9 時刻指定終了を中央 milestone へ TDD で統合する
+-   [x] 1.9 時刻指定終了を中央 milestone へ統合する
 
-    -   まず、activeな時刻指定録画だけを`endAt + endMargin`のscheduler所有milestoneへ登録し、更新時に新世代・新時刻へ置
-        換する契約を、失敗するtarget testで定義する。旧時刻・更新後時刻・時計前進・取消・完了・first-data待機中終了を組
-        み合わせ、期待世代・session token・phase一致時だけ一回終了し、番組指定の強制終了milestoneは0、relay確認はsession
-        専用timerのままであることを確認する。時刻指定の既存更新fixtureはGREENに保つ。
-    -   次に、時刻指定stream開始後に最新世代の終了milestoneを中央controllerへ登録し、終了時刻変更で旧世代を無効化する。
-        sessionの取消・完了・失敗でmilestoneを除去し、終了反映全体を評価loop内でawaitしない最小実装を行う。
-    -   同じtarget testを再実行してGREENにし、時刻指定の開始margin、開始前stream消費、開始内部event最大15秒待ち、番組指
-        定streamの上流終端契約を変更していないことを確認する。
+    -   activeな時刻指定録画だけを`endAt + endMargin`のscheduler所有milestoneへ登録し、更新時に新世代・新時刻へ置換す
+        る契約を、target testが検証する。旧時刻・更新後時刻・時計前進・取消・完了・first-data待機中終了を組み合わせ、
+        期待世代・session token・phase一致時だけ一回終了し、番組指定の強制終了milestoneは0、relay確認はsession専用
+        timerのままである。時刻指定の既存更新fixtureは変わらない。
+    -   時刻指定stream開始後に最新世代の終了milestoneを中央controllerへ登録し、終了時刻変更で旧世代を無効化する。
+        sessionの取消・完了・失敗でmilestoneを除去し、終了反映全体を評価loop内でawaitしない。
+    -   時刻指定の開始margin、開始前stream消費、開始内部event最大15秒待ち、番組指定streamの上流終端契約を変更しない。
     -   完了時には、古い終了時刻による早期終了が0件、最新時刻での終了が一回、scheduler所有timer handleが一件以下であるこ
         とを観測できる。
     -   _Requirements: 2.5, 2.6, 2.7_
@@ -120,34 +116,33 @@ event payload、および失敗伝播を維持する。番組リレー確認の2
     -   _Boundary: RecordingSession reservation mutation characterization_
     -   _Verification: unittest/spec, unittest/imp, integration_
 
--   [x] 2.3 session 所有 retry と取消時無効化を TDD で実装する
+-   [x] 2.3 session 所有 retry と取消時無効化を実装する
 
-    -   まず、stream取得失敗後の一件の5秒timerと`RetryWaiting`、期待世代・session token・attempt・phase一致時だけの再準
-        備を、失敗するtarget testで定義する。取消・対象外化・置換・更新・`Completed`・`Cancelled`・cleanup後のlate
-        callbackからstream取得・準備・通知が各0件となることを確認し、attempt 0から時刻指定は最大4回、番組指定は終了時刻
-        前なら回数を使い切っても再試行を続ける既存fixtureはGREENに保つ。
-    -   次に、有限backoffをsessionの一件のhandleへ保持し、callback前に世代・session token・attempt・phaseを同期検査す
-        る。取消・更新・終端時にhandleを一回解除してtokenを進め、後着callbackをno-opへ収束させる最小実装を行う。
-    -   同じtarget testを再実行してGREENにし、新しいretry回数、指数backoff、永続attempt、共通queueを追加していないこと、
-        番組指定の再試行の継続判定が失敗直後の終了時刻の確認だけであることを確認する。
+    -   stream取得失敗後の一件の5秒timerと`RetryWaiting`、期待世代・session token・attempt・phase一致時だけの再準備を
+        、target testが検証する。取消・対象外化・置換・更新・`Completed`・`Cancelled`・cleanup後のlate callbackから
+        stream取得・準備・通知が各0件となることを確認し、attempt 0から時刻指定は最大4回、番組指定は終了時刻前なら回数
+        を使い切っても再試行を続ける既存fixtureは変わらない。
+    -   有限backoffをsessionの一件のhandleへ保持し、callback前に世代・session token・attempt・phaseを同期検査する。取
+        消・更新・終端時にhandleを一回解除してtokenを進め、後着callbackをno-opへ収束させる。
+    -   新しいretry回数、指数backoff、永続attempt、共通queueを追加せず、番組指定の再試行の継続判定は失敗直後の終了時刻
+        の確認だけである。
     -   完了時には、取消または終了後のstream要求、準備通知、残留retry timerが各0件であることを観測できる。
     -   _Requirements: 2.8, 3.7, 3.9_
     -   _Boundary: RecordingSession retry lifecycle_
     -   _Verification: unittest/spec, unittest/imp, integration_
     -   _Depends: 1.7, 2.1_
 
--   [x] 2.5 削除前取消の terminal barrier を TDD で実装する
+-   [x] 2.5 削除前取消の terminal barrier を実装する
 
-    -   まず、利用者削除だけを`recorded-content-deletion`へ写像し、active indexの所有を保ったまま放送受信、writer
-        close、drop stop、late終了処理の終端後だけ成功する契約を、失敗するtarget testで定義する。Waiting、
-        RetryWaiting、Preparing、first-data待機中、Recording、同一sessionの複数要求join、60,000ms境界とlate terminalを検
-        証し、容量不足削除からの取消・停止・terminal待機0件、通常取消へのbarrier拡張なしをassertする。通常取消の既存
-        fixtureはGREENに保つ。
-    -   次に、該当理由だけでsessionを停止中としてindexへ保持し、stream破棄、first-data gate取消、writer・drop・late
-        continuationの終端を一つのlatchへ集約する。barrier成功後だけdetachし、期限到達時は失敗を返してlate terminalを観
-        測し続ける最小実装を行う。
-    -   同じtarget testを再実行してGREENにし、planned-delete経路で録画中解除・移動・size・drop反映・履歴・完了通知・再録
-        画判断を開始せず、容量不足削除をこの入口へ接続していないことを確認する。
+    -   利用者削除だけを`recorded-content-deletion`へ写像し、active indexの所有を保ったまま放送受信、writer close、
+        drop stop、late終了処理の終端後だけ成功する契約を、target testが検証する。Waiting、RetryWaiting、Preparing、
+        first-data待機中、Recording、同一sessionの複数要求join、60,000ms境界とlate terminalを検証し、容量不足削除から
+        の取消・停止・terminal待機0件、通常取消へのbarrier拡張なしをassertする。通常取消の既存fixtureは変わらない。
+    -   該当理由だけでsessionを停止中としてindexへ保持し、stream破棄、first-data gate取消、writer・drop・late
+        continuationの終端を一つのlatchへ集約する。barrier成功後だけdetachし、期限到達時は失敗を返してlate terminalを
+        観測し続ける。
+    -   planned-delete経路で録画中解除・移動・size・drop反映・履歴・完了通知・再録画判断を開始せず、容量不足削除をこの
+        入口へ接続しない。
     -   完了時には、利用者削除成功後の対象fileへ作用可能なcontinuationと、容量不足削除起因のsession取消・停止・待機が各0
         件であることを観測できる。
     -   _Requirements: 2.9, 5.1_
@@ -155,22 +150,21 @@ event payload、および失敗伝播を維持する。番組リレー確認の2
     -   _Verification: unittest/spec, unittest/imp, integration_
     -   _Depends: 2.3_
 
--   [x] 2.7 録画利用 snapshot と排他 gate を TDD で実装する
+-   [x] 2.7 録画利用 snapshot と排他 gate を実装する
 
-    -   まず、active sessionに対応するrecorded IDの重複除去、既知空集合、安全に列挙不能な`unknown`、ID未確定の準備中
-        sessionと終了済みsessionの除外を、失敗するtarget testで定義する。activeあり・なし・不明、token保持中の同ID新
-        session拒否、別ID継続、double/stale/別ID releaseを表駆動で検証し、busy/unknown経路のcancel/stop/destroy/
-        close/drop/query/deleteを各0件とする。2.5のterminal barrier fixtureはGREENに保つ。
-    -   次に、active session registryと同じ直列化境界からrecorded IDを一時点に列挙し、不明なら部分集合や空集合でなく
-        `unknown`を返す。`busy`・`unknown`・一件の不透明tokenを実装し、token保持中は同IDの新sessionだけを拒否する最小実
-        装を行う。
+    -   active sessionに対応するrecorded IDの重複除去、既知空集合、安全に列挙不能な`unknown`、ID未確定の準備中
+        sessionと終了済みsessionの除外を、target testが検証する。activeあり・なし・不明、token保持中の同ID新session拒
+        否、別ID継続、double/stale/別ID releaseを表駆動で検証し、busy/unknown経路の
+        cancel/stop/destroy/close/drop/query/deleteを各0件とする。2.5のterminal barrier fixtureは変わらない。
+    -   active session registryと同じ直列化境界からrecorded IDを一時点に列挙し、不明なら部分集合や空集合でなく
+        `unknown`を返す。`busy`・`unknown`・一件の不透明tokenを備え、token保持中は同IDの新sessionだけを拒否する。
     -   `addRecorded`後かつ`Recording` CAS、終了処理設定、開始通知、relay設定前をadmission commit pointとし、actual
         session identityと登録objectを結ぶ。CAS不成立時だけexact registrationを解放し、block時は自己所有
         `PendingRegistrationResources`のpath、recorded/video/drop rowを一つのcleanup lifetimeで一回回収する。writer、
         stream、drop、size更新のcontinuation終端後だけ同じidentityを解放し、failure通知、既存active session、別session、
         token所有者へは作用させない。
-    -   同じtarget testを再実行してGREENにし、exact tokenの一回解放だけが現在のgateを解放し、予約row、候補SQL、file・ DB
-        削除、service-child gate、公開API、IPC schema、session停止を追加していないことを確認する。
+    -   exact tokenの一回解放だけが現在のgateを解放し、予約row、候補SQL、file・DB削除、service-child gate、公開API、
+        IPC schema、session停止を追加しない。
     -   完了時には、snapshot取得とbusy/unknown判定によるsession・stream・writer・dropへの作用が0件であることを観測でき
         る。
     -   _Requirements: 2.9_
@@ -178,7 +172,7 @@ event payload、および失敗伝播を維持する。番組リレー確認の2
     -   _Verification: unittest/spec, unittest/imp_
     -   _Depends: 2.5_
 
--   [x] 2.8 fake容量不足削除consumerとのsnapshot・gate接続をGREENで検証する
+-   [x] 2.8 fake容量不足削除consumerとのsnapshot・gate接続を検証する
 
     -   fake Runtime/Storage consumerへknown snapshotを渡すと候補queryの除外IDだけへ使われ、`unknown`またはsnapshot取得
         rejectでは候補queryと削除要求が各0件になることを確認する。
@@ -233,16 +227,14 @@ event payload、および失敗伝播を維持する。番組リレー確認の2
     -   _Verification: unittest/spec, integration_
     -   _Depends: 3.1_
 
--   [x] 3.5 録画準備と論理割当を共通 tuner port へ TDD で接続する
+-   [x] 3.5 録画準備と論理割当を共通 tuner port へ接続する
 
-    -   まず、最新番組・番組stream・service stream・closeを`server-tuner-access`の正準portだけへ要求する契約を、失敗する
-        target testと静的依存検査で定義する。open前の接続失敗・取消、handle後のend/close/error、冪等な同期closeを製品差
-        のないfake handleで検証し、stream本文へ録画時間または600秒watchdogを適用しない。3.2・3.3の業務結果はGREENに保
-        つ。
-    -   次に、4操作を正準tuner-access handleへ委譲し、正規化errorを既存の準備・録画判断へ写像する最小実装を行う。
-        priority、同一channel共有、途中終了判断、再試行回数、時刻指定margin、論理tuner追跡は変更しない。
-    -   同じtarget testを再実行してGREENにし、REST client、認証、接続deadline、stream確立、製品別extensionを本specへ複製
-        していないことを確認する。
+    -   最新番組・番組stream・service stream・closeを`server-tuner-access`の正準portだけへ要求する契約を、target
+        testと静的依存検査が検証する。open前の接続失敗・取消、handle後のend/close/error、冪等な同期closeを製品差のない
+        fake handleで検証し、stream本文へ録画時間または600秒watchdogを適用しない。3.2・3.3の業務結果は変わらない。
+    -   4操作を正準tuner-access handleへ委譲し、正規化errorを既存の準備・録画判断へ写像する。priority、同一channel共有
+        、途中終了判断、再試行回数、時刻指定margin、論理tuner追跡は変更しない。
+    -   REST client、認証、接続deadline、stream確立、製品別extensionを本specへ複製しない。
     -   完了時には、録画実行packageから製品固有client・型・URLへの直接依存が0件であることを観測できる。
     -   _Requirements: 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 8.1, 8.2_
     -   _Boundary: StreamAllocator・RecordingTunerPort adapter_
@@ -266,14 +258,13 @@ event payload、および失敗伝播を維持する。番組リレー確認の2
 
 -   [x] 3.7 番組指定の準備再試行の運用logを集約する
 
-    -   まず、fake timerで、attempt 0〜3の失敗は1回ごと、attempt 4以降の失敗は直前の記録から60秒以上経った失敗の時点で一回に
-        まとめて、失敗回数（直前の記録以後と総数）と最後のエラーを記録し、59,999msでは記録しないことを、失敗するtarget testで
-        定義する。attempt 4以降の準備開始logも記録しないことを含める。
-    -   取得に成功して録画へ進むとき、取消で準備を取り消すとき、および予約終了時刻に達して準備失敗を通知するときは、未記録の失敗があれば60秒を待たずに記録し
-        てから進み、なければ記録しないこと、保持した失敗を次の準備へ持ち越さないことを、同じtarget testで定義する。時刻指定予約
-        は従来どおり1回ごとであることを確認する。
-    -   次に、`prepRecord`の失敗処理が、attempt 4以降の失敗を回数と最後のエラーだけ保持し、時刻判定でまとめて記録する最小
-        実装を行う。
+    -   fake timerで、attempt 0〜3の失敗は1回ごと、attempt 4以降の失敗は直前の記録から60秒以上経った失敗の時点で一回に
+        まとめて、失敗回数（直前の記録以後と総数）と最後のエラーを記録し、59,999msでは記録しないことを、target testが
+        検証する。attempt 4以降の準備開始logも記録しないことを含める。
+    -   取得に成功して録画へ進むとき、取消で準備を取り消すとき、および予約終了時刻に達して準備失敗を通知するときは、未
+        記録の失敗があれば60秒を待たずに記録してから進み、なければ記録しないこと、保持した失敗を次の準備へ持ち越さない
+        ことを、同じtarget testが検証する。時刻指定予約は1回ごとに記録する。
+    -   `prepRecord`の失敗処理は、attempt 4以降の失敗を回数と最後のエラーだけ保持し、時刻判定でまとめて記録する。
     -   完了時には、再試行が続く間のlogが60秒に一回以下であり、録画開始・取消・準備失敗の前に未記録の失敗が（あれば）必ず記録されること
         を観測できる。
     -   _Requirements: 3.18_
@@ -281,7 +272,7 @@ event payload、および失敗伝播を維持する。番組リレー確認の2
     -   _Verification: unittest/spec_
     -   _Depends: 2.3_
 
--   [x] 4. 録画先選択の排他、no-clobber確保、および遅延結果をTDDで整合させる
+-   [x] 4. 録画先選択の排他、no-clobber確保、および遅延結果を整合させる
 -   [x] 4.1 優先度1・5秒取得待ちと録画先選択順をcharacterizationする
 
     -   path選択専用のexecution coordinatorへ優先度1、最大5秒で実行権を要求し、取得後だけ録画先選択を開始する既存契約を
@@ -297,32 +288,30 @@ event payload、および失敗伝播を維持する。番組リレー確認の2
     -   _Boundary: Recording path selection consumer・execution coordinator contract_
     -   _Verification: unittest/spec, unittest/imp, integration_
 
--   [x] 4.3 no-clobber file 確保と handle 引渡しを TDD で実装する
+-   [x] 4.3 no-clobber file 確保と handle 引渡しを実装する
 
-    -   まず、同じ候補名の二録画を競合させ、実行権内で最初だけがno-clobber作成に成功し、他方がsuffix付きの別fileを確保す
-        る契約を、失敗するtarget testで定義する。writerの確保済みhandle引継ぎとappend再open 0件、pipe前失敗・取消時の
-        exact session所有handle/fileだけのcleanupを検証し、4.1の実行権fixtureはGREENに保つ。
-    -   次に、候補名ごとの排他的作成を試し、存在済みの場合だけ次suffixへ進み、成功pathとhandleを同じsessionへ引き渡
-        す。writerはそのhandleだけへ書き込み、準備失敗時は所有handleをcloseして未公開fileだけを削除する最小実装を行う。
-    -   同じtarget testを再実行してGREENにし、path公開形式、file名置換、suffix規則、保存先選択、一時保存先、一般的
-        canonical containment契約を変更していないことを確認する。
+    -   同じ候補名の二録画を競合させ、実行権内で最初だけがno-clobber作成に成功し、他方がsuffix付きの別fileを確保する契
+        約を、target testが検証する。writerの確保済みhandle引継ぎとappend再open 0件、pipe前失敗・取消時のexact
+        session所有handle/fileだけのcleanupを検証し、4.1の実行権fixtureは変わらない。
+    -   候補名ごとの排他的作成を試し、存在済みの場合だけ次suffixへ進み、成功pathとhandleを同じsessionへ引き渡す。
+        writerはそのhandleだけへ書き込み、準備失敗時は所有handleをcloseして未公開fileだけを削除する。
+    -   path公開形式、file名置換、suffix規則、保存先選択、一時保存先、一般的canonical containment契約を変更しない。
     -   完了時には、同時録画で同じ書込先を返す件数と別所有fileを変更する件数が各0件であることを観測できる。
     -   _Requirements: 3.15, 3.16, 4.1_
     -   _Boundary: RecordingFileWriter allocation・recording path ownership_
     -   _Verification: unittest/spec, unittest/imp, filesystem integration_
     -   _Depends: 4.1_
 
--   [x] 4.5 録画先選択の owner watchdog と後着整理を TDD で実装する
+-   [x] 4.5 録画先選択の owner watchdog と後着整理を実装する
 
-    -   まず、番組・放送局read、directory access/作成、no-clobber確保をdeferredにし、599,999ms以内のsettlementと
-        600,000ms未確定の`path-selection-overdue`を、失敗するtarget testで定義する。期限後も実行権・underlying Promise・
-        途中handleの所有を保持し、同queue後続と同session録画開始を進めず、別session/domainは継続する。後着
-        success/failureのexact cleanupと一回release、再実行0件を検証し、4.1〜4.3はGREENに保つ。
-    -   次に、一件の選択全体へ600秒watchdogと一意execution IDを設定し、通常settlementと期限の先着一件だけで状態遷移す
-        る。overdue時は同operationの所有を保持してsession stream終了を要求し、後着settlementをexact sessionのhandle/file
-        整理と一回releaseだけへ限定する最小実装を行う。
-    -   同じtarget testを再実行してGREENにし、underlying I/O取消・再実行、DB read個別timeout、共通queue解放、永続結
-        果、retry、process停止を追加していないことを確認する。
+    -   番組・放送局read、directory access/作成、no-clobber確保をdeferredにし、599,999ms以内のsettlementと600,000ms未
+        確定の`path-selection-overdue`を、target testが検証する。期限後も実行権・underlying Promise・途中handleの所有
+        を保持し、同queue後続と同session録画開始を進めず、別session/domainは継続する。後着success/failureのexact
+        cleanupと一回release、再実行0件を検証し、4.1〜4.3は変わらない。
+    -   一件の選択全体へ600秒watchdogと一意execution IDを設定し、通常settlementと期限の先着一件だけで状態遷移する。
+        overdue時は同operationの所有を保持してsession stream終了を要求し、後着settlementをexact sessionのhandle/file整
+        理と一回releaseだけへ限定する。
+    -   underlying I/O取消・再実行、DB read個別timeout、共通queue解放、永続結果、retry、process停止を追加しない。
     -   完了時には、overdue中の同queue並行path選択、二重release、別session停止が各0件であることを観測できる。
     -   _Requirements: 3.17_
     -   _Boundary: Recording path selection owner watchdog_
@@ -331,20 +320,18 @@ event payload、および失敗伝播を維持する。番組リレー確認の2
 
 -   [x] 4.6 保存先の外を指すsubdirectoryを使わず保存先直下へ保存する
 
-    -   まず、書式展開後のsubdirectoryが`..`・先頭`/`の後の`..`・NULで保存先の外を指す予約と、`a/../b`・`/anime`のように
-        保存先の中に収まる予約を`unittest/spec`で定義し、外を指す予約が現行実装で保存先の外にfileを作ることを
-        RED で確認する。
-    -   次に、共通の判定関数を録画先選択の書式展開の後に適用し、外を指す場合はsubdirectoryを空として扱い、運用logへ記録して
-        録画を続ける最小実装を行う。登録される相対pathがfile名だけになることを確認する。
-    -   同じtestを再実行してGREENにし、内に収まる指定の実file、no-clobber、一時保存先、登録path形式が変わらないことを確認
-        する。
+    -   書式展開後のsubdirectoryが`..`・先頭`/`の後の`..`・NULで保存先の外を指す予約と、`a/../b`・`/anime`のように保存
+        先の中に収まる予約を`unittest/spec`で定義し、外を指す予約でも保存先の外にfileが作られないことを検証する。
+    -   共通の判定関数を録画先選択の書式展開の後に適用し、外を指す場合はsubdirectoryを空として扱い、運用logへ記録して
+        録画を続ける。登録される相対pathがfile名だけになることを確認する。
+    -   内に収まる指定の実file、no-clobber、一時保存先、登録path形式が変わらないことを確認する。
     -   完了時には、外を指す指定で保存先の外に作られるfileが0件で、録画が失敗しないことを観測できる。
     -   _Requirements: 3.19_
     -   _Boundary: Recording path selection sub directory_
     -   _Verification: unittest/spec, unittest/imp_
     -   _Depends: 4.3_
 
--   [x] 5. 録画開始、first-data settlement、および結果登録をTDDで整合させる
+-   [x] 5. 録画開始、first-data settlement、および結果登録を整合させる
 -   [x] 5.1 stream取得後から録画開始通知までの既存順をcharacterizationする
 
     -   stream取得と予約存続確認後に内部`Recording`化・内部開始eventを行い、その後にpath、writer、pipe、最初のdata待ちへ
@@ -361,33 +348,32 @@ event payload、および失敗伝播を維持する。番組リレー確認の2
     -   _Boundary: RecordingSession start characterization・RecordingFileWriter・LifecyclePublisher_
     -   _Verification: unittest/spec, unittest/imp, integration, characterization_
 
--   [x] 5.3 first-data settlement gate と登録失敗 cleanup を TDD で実装する
+-   [x] 5.3 first-data settlement gate と登録失敗 cleanup を実装する
 
-    -   まず、data、5秒timeout、stream/writer error、取消、時刻指定終了、登録rejectを同着させ、先着一件だけが準備結果を
-        確定する契約を、失敗するtarget testで定義する。登録reject時のstream/writer終了、exact sessionの部分file整理、外
-        側Promiseの有限失敗、残attemptへの遷移を検証する。録画済みrowだけ作成済みならその行の削除を試み、開始
-        event/relay timerを発行せず、後発continuationの二重作用を0件とする。5.1の正常順はGREENに保つ。
-    -   次に、first-data処理へ一件のsettlement gateを置き、最初の結果だけを採用する。winner後にlistener/timerを解除
-        し、generation・session token・phaseでlate continuationを無効化する。二段登録は別要求のまま、reject時は定義済み
-        順でexact sessionの資源と作成済みの録画済みrowだけを整理する最小実装を行う。
-    -   同じtarget testを再実行してGREENにし、新しい共通transactionを追加していないことを確認する。
+    -   data、5秒timeout、stream/writer error、取消、時刻指定終了、登録rejectを同着させ、先着一件だけが準備結果を確定
+        する契約を、target testが検証する。登録reject時のstream/writer終了、exact sessionの部分file整理、外側Promiseの
+        有限失敗、残attemptへの遷移を検証する。録画済みrowだけ作成済みならその行の削除を試み、開始event/relay timerを
+        発行せず、後発continuationの二重作用を0件とする。5.1の正常順は変わらない。
+    -   first-data処理へ一件のsettlement gateを置き、最初の結果だけを採用する。winner後にlistener/timerを解除し、
+        generation・session token・phaseでlate continuationを無効化する。二段登録は別要求のまま、reject時は定義済み順
+        でexact sessionの資源と作成済みの録画済みrowだけを整理する。
+    -   新しい共通transactionを追加しない。
     -   完了時には、準備Promiseの永久pending、二重登録・通知・cleanup、late作用が各0件であることを観測できる。
     -   _Requirements: 4.2, 4.3, 4.7, 4.8_
     -   _Boundary: RecordingSession first-data settlement gate_
     -   _Verification: unittest/spec, unittest/imp, integration_
     -   _Depends: 5.1_
 
--   [x] 5.5 登録 owner watchdog と late-result fence を TDD で実装する
+-   [x] 5.5 登録 owner watchdog と late-result fence を実装する
 
-    -   まず、first-data後の各登録をpendingにし、599,999ms以内のsettlementと600,000ms未確定の `registration-overdue`を、
-        失敗するtarget testで定義する。overdue後もstream・writer・gate・作成済みrow・DB Promiseの所有を保持し、同session
-        の重複登録/開始を0件とする。別session/domainの継続、後着結果から一回だけの既存成功/reject完了、24時間進行した
-        stream本文へのwatchdog非適用を検証し、5.3の即時fixtureはGREENに保つ。
-    -   次に、二段登録へ一件の600秒watchdogを設定し、通常settlementと期限の先着一件でoperation stateを進める。overdue時
-        は資源を保持してexact sessionだけを隔離し、後着DB settlementを同じ結果の通常成功またはreject経路へ一回だけ戻す最
-        小実装を行う。
-    -   同じtarget testを再実行してGREENにし、stream本文・data間隔・録画時間・別session・operator processへwatchdogを伝
-        播せず、DB取消・登録retry・共通transactionを追加していないことを確認する。
+    -   first-data後の各登録をpendingにし、599,999ms以内のsettlementと600,000ms未確定の `registration-overdue`を、
+        target testが検証する。overdue後もstream・writer・gate・作成済みrow・DB Promiseの所有を保持し、同sessionの重複
+        登録/開始を0件とする。別session/domainの継続、後着結果から一回だけの既存成功/reject完了、24時間進行した
+        stream本文へのwatchdog非適用を検証し、5.3の即時fixtureは変わらない。
+    -   二段登録へ一件の600秒watchdogを設定し、通常settlementと期限の先着一件でoperation stateを進める。overdue時は資
+        源を保持してexact sessionだけを隔離し、後着DB settlementを同じ結果の通常成功またはreject経路へ一回だけ戻す。
+    -   stream本文・data間隔・録画時間・別session・operator processへwatchdogを伝播せず、DB取消・登録retry・共通
+        transactionを追加しない。
     -   完了時には、overdue後の二重row作成、二重開始event、別session停止、本文timeoutが各0件であることを観測できる。
     -   _Requirements: 4.9, 4.10_
     -   _Boundary: Recording result registration owner watchdog_
@@ -463,17 +449,16 @@ event payload、および失敗伝播を維持する。番組リレー確認の2
     -   _Boundary: StartupRecordingReconciler characterization_
     -   _Verification: unittest/spec, unittest/imp, filesystem+DB integration_
 
--   [x] 7.3 起動時整理と候補再構築を独立 stage として TDD で実装する
+-   [x] 7.3 起動時整理と候補再構築を独立 stage として実装する
 
-    -   まず、録画中結果一覧reject時に項目loop・候補再構築・schedulerを開始せず、整理stageを一回rejectする契約を、失敗す
-        るtarget testで定義する。項目loop完了後だけ保存予約一覧へ進み、通常・競合候補の再構築成功後だけ3秒schedulerを開
-        始する。項目内最終再取得rejectと保存予約一覧rejectを空成功にせず、全stage failureで内部retry timer 0件、runtime
-        failure一回とする。7.1の項目内fixtureはGREENに保つ。
-    -   次に、録画中一覧と各項目を逐次整理し、stage rejectと項目内failureをDesignどおり分ける。整理成功後だけ保存予約一
-        覧を一回取得し、終了済みを除く通常・競合を最新世代としてregistryへ再構築し、成功後だけ共有3秒wakeを開始する最小
-        実装を行う。
-    -   同じtarget testを再実行してGREENにし、failure時に空registry置換・scheduler開始・内部retryを行わず、前process復
-        元、追加DB timeout、retry、ack、永続startup state、公開eventを追加していないことを確認する。
+    -   録画中結果一覧reject時に項目loop・候補再構築・schedulerを開始せず、整理stageを一回rejectする契約を、target
+        testが検証する。項目loop完了後だけ保存予約一覧へ進み、通常・競合候補の再構築成功後だけ3秒schedulerを開始する。
+        項目内最終再取得rejectと保存予約一覧rejectを空成功にせず、全stage failureで内部retry timer 0件、runtime
+        failure一回とする。7.1の項目内fixtureは変わらない。
+    -   録画中一覧と各項目を逐次整理し、stage rejectと項目内failureをDesignどおり分ける。整理成功後だけ保存予約一覧を
+        一回取得し、終了済みを除く通常・競合を最新世代としてregistryへ再構築し、成功後だけ共有3秒wakeを開始する。
+    -   failure時に空registry置換・scheduler開始・内部retryを行わず、前process復元、追加DB timeout、retry、ack、永続
+        startup state、公開eventを追加しない。
     -   完了時には、失敗stage後の候補・timer・後続stage開始件数が各0件であることを観測できる。
     -   _Requirements: 7.6, 7.8, 7.9, 7.10, 7.11_
     -   _Boundary: RecordingExecutionFacade startup stages・RecordingCandidateRegistry_
@@ -483,10 +468,10 @@ event payload、および失敗伝播を維持する。番組リレー確認の2
 -   [x] 7.4 起動時整理で取り消される予約を候補再構築で録画準備にかけない
 
     -   起動時整理が録画完了を通知した手動予約・番組リレー予約が、予約の取消より先に読んだ保存済み予約一覧に残る場合を、
-        target test（`startup.spec.test.ts#RE-7.12`）で定義する。
-    -   候補再構築がその予約を候補へ入れず、録画準備の開始と、後から届いた取消による録画準備の取消を通知しない最小実装を
-        行う。ルール予約（番組リレーを除く）と、起動時整理の対象でない開始時刻を過ぎた予約は従来どおり候補へ入れる。
-    -   完了時には、同じtarget testがGREENになり、7.1・7.3のfixtureもGREENのままである。
+        target test（`startup.spec.test.ts#RE-7.12`）が検証する。
+    -   候補再構築がその予約を候補へ入れず、録画準備の開始と、後から届いた取消による録画準備の取消を通知しない。ルール
+        予約（番組リレーを除く）と、起動時整理の対象でない開始時刻を過ぎた予約は候補へ入れる。
+    -   完了時には、同じtarget testが成功し、7.1・7.3のfixtureも成功する。
     -   _Requirements: 7.12_
     -   _Boundary: RecordingExecutionFacade startup stages・RecordingCandidateRegistry_
     -   _Verification: unittest/spec_
@@ -667,12 +652,12 @@ task ID、source の class 分割、private call 順、公開 API / IPC / DB sch
 
 ### 検証と実装の許可範囲
 
--   既存契約に対する観測では、先に承認済み契約を oracle とする RED test を置く。
+-   既存契約に対する観測では、承認済み契約を oracle とする。
 -   欠落が観測だけで閉じる場合は product code を変更しない。
--   契約欠陥が RED で示された場合だけ、その欠陥を直す最小実装を許可する。
+-   product code の変更は、承認済み契約の欠陥を直す最小実装に限る。
 -   coverage のためだけの product code 変更は禁止する。
 -   準備中 update の timeout / failure は、Requirements 2 の成功系不変条件を oracle として continuation・state・timer/listener
-    資源の終端を focused 観測し、新しい失敗製品契約や task ID / checkbox を追加せず、上記 RED 先行・契約欠陥時のみ実装・
+    資源の終端を focused 観測し、新しい失敗製品契約や task ID / checkbox を追加せず、上記の契約欠陥時のみ実装・
     coverage のみの product 変更禁止を維持する。
 
 ## Leaf execution contract

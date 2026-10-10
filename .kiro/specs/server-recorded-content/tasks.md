@@ -64,13 +64,13 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
     -   _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6_
     -   _Boundary: タグ・保護・履歴_
 
--   [x] 2.3 (P) 録画履歴の追加・照会を characterization し、保持期限を TDD で仕様へ合わせる
+-   [x] 2.3 (P) 録画履歴の追加・照会を characterization し、保持期限を仕様へ合わせる
 
     -   番組指定の自動予約が番組リレーではなく正常終了し、予約削除が必要な場合だけ、比較用番組名、放送局、録画終了時刻を
         履歴へ加える挙動を `unittest/spec` で固定する。
     -   指定期間の履歴と自動予約ルールの重複判定に必要な情報を `unittest/imp` で検証する。
-    -   fake clockで保持日数のcutoffより前・同時刻・後を作り、同時刻を保持して期限を過ぎた履歴だけを削除するtarget test
-        を先に失敗させる。DB query失敗を成功へ変えず呼出元へ返すことも故障注入で確認する。
+    -   fake clockで保持日数のcutoffより前・同時刻・後を作り、同時刻を保持して期限を過ぎた履歴だけを削除することを
+        target testが検証する。DB query失敗を成功へ変えず呼出元へ返すことも故障注入で確認する。
     -   `src/model/db/RecordedHistoryDB.ts`は`endAt < cutoff`で削除し、cutoffと同時刻の履歴は保持する。
     -   SQLiteとMariaDBの実DB integrationでcutoffより前だけが削除され、同時刻と後の履歴が保持されることを確認する。
     -   完了時には、対象・非対象の録画終了系列と保持期限fixtureが承認済みの履歴集合を再現し、production差分が保持期限の
@@ -78,11 +78,11 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
     -   _Requirements: 6.1, 6.2, 6.3, 6.4_
     -   _Boundary: 録画履歴_
 
--   [x] 2.4 録画ファイル再生source providerを RED から GREEN まで閉じる
+-   [x] 2.4 録画ファイル再生source providerをtestと実装で閉じる
 
     -   `test/server/recorded-content/playback-source.spec.test.ts`と`playback-source.test.ts`へ、video file IDから
         recorded IDだけを返す予備照会、およびconsumerがlease取得後に渡すexpected recorded IDと一致するかを確認する全情報
-        再読取を分けて固定するtarget testを先に追加する。既存再生要求の`playPosition`を`open()`へ渡して返却sourceが同じ
+        再読取を分けて固定するtarget testを追加する。既存再生要求の`playPosition`を`open()`へ渡して返却sourceが同じ
         値を保持すること、対応消失・別recorded IDへの変更、対象なし、path解決失敗、動画情報失敗、reader open失敗では
         sourceを返さないことを別々に確認する。
     -   `IRecordedPlaybackSourceProvider`と`RecordedPlaybackSourceProvider`を追加し、`encoded-direct`、録画中の末尾追尾
@@ -108,8 +108,8 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
     -   _Verification: unittest/spec, unittest/imp, integration_
     -   _Depends: 2.3, 4.2_
 
--   [x] 3. アップロード済み一時ファイルの安全な引受けをTDDで実現する
--   [x] 3.1 upload adoption、配置・DB登録・通知境界を RED から GREEN まで閉じる
+-   [x] 3. アップロード済み一時ファイルの安全な引受けを実現する
+-   [x] 3.1 upload adoption、配置・DB登録・通知境界をtestと実装で閉じる
 
     -   保存先外へ出るサブディレクトリ（`..`）を拒否する`unittest/spec`（`upload.spec.test.ts`）と、`\`を含むもの、および空・
         `.`・`..`の要素を含むサブディレクトリ（`a\b`、`a//b`、`./a`、`a/..`）を拒否する`unittest/imp`
@@ -119,8 +119,8 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
         する。
     -   番組・保存先不明、ディレクトリ準備・移動失敗、DB登録失敗ごとに、当該要求が渡した一時ファイルまたは作成・移動した
         宛先だけをbest-effortに整理することを故障注入で検証する。
-    -   testは現行との差を示して先に失敗し、既存ファイルまたは別要求のファイルを削除できる挙動を合格条件にしない。
-    -   完了時には、各反例の期待効果と禁止効果が独立したassertionになり、production codeはまだ変更されていない。
+    -   既存ファイルまたは別要求のファイルを削除できる挙動を合格条件にしない。
+    -   完了時には、各反例の期待効果と禁止効果が独立したassertionになる。
     -   `src/model/operator/recorded/RecordedUploadAdoptionModel.ts`を作成し、
         `uploadTempDir/incoming/{uploadToken}/payload`のexact grammar、途中link非経由、およびtokenごとの
         `adopted/{uploadToken}`排他的作成を実装する。
@@ -149,7 +149,7 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
         い。
     -   完了時には、3.1の配置testが通り、選択root外と既存・別要求fileの内容・存在が不変になる。
     -   配置成功後に表示名、種類、サイズ、保存先、相対名、対象番組を登録し、配置とDB登録の両方が成功した時点だけを引受け
-        成功とする`integration` testを先に追加する。
+        成功とする`integration` testを追加する。
     -   DB登録失敗では移動済みfileを削除して失敗を返し、DB登録後のfile追加通知またはサムネイル受付失敗では配置と登録を保
         持して成功を巻き戻さないことを故障注入する。
     -   失敗するtarget testを確認してから、通知失敗をcommit前失敗として扱う箇所だけを最小修正する。
@@ -170,14 +170,13 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
     -   _Requirements: 7.1, 7.3, 7.4_
     -   _Boundary: 動画情報確認_
 
--   [x] 4.2 動画情報確認の有限 lifecycle を RED から GREEN まで閉じる
+-   [x] 4.2 動画情報確認の有限 lifecycle をtestと実装で閉じる
 
     -   fake timerと制御可能なchildで、spawn直前から30,000msの直前・到達・超過と、応答確定直前の期限再確認を
         `unittest/spec` にする。
     -   期限到達で一度だけ失敗を確定し、強制停止を要求して追加3秒だけ終了を確認し、終了未確認を運用ログへ渡すことを検証
         する。
     -   期限後の終了通知、stdout、解析完了が同じ要求を成功へ変えず、並行する別要求の結果へ作用しない反例を追加する。
-    -   testが有限期限と結果fenceの未実装を示して失敗することを確認し、production codeはまだ変更しない。
     -   完了時には、期限、停止要求、追加確認、遅延callbackの各観測点を独立して再現できる。
     -   要求ごとに独立したmonotonic期限、単一settlement、process handle、および期限後結果fenceを実装する。
     -   30秒超過時の強制停止と追加3秒確認を実装し、終了未確認だけを許可済み診断情報で記録する。
@@ -199,7 +198,7 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
     -   _Requirements: 5.4, 5.5, 8.1, 8.2, 8.6, 8.7, 8.8_
     -   _Boundary: 録画済み番組・個別録画ファイル削除_
 
--   [x] 5.2 削除前提、exact効果、および確定通知を RED から GREEN まで閉じる
+-   [x] 5.2 削除前提、exact効果、および確定通知をtestと実装で閉じる
 
     -   録画中の削除では、本機能がエンコード取消・録画停止の全体順序を開始せず、前提処理済みの要求だけを削除本体へ渡す
         `unittest/spec` を追加する。
@@ -212,10 +211,7 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
     -   同じ対象IDの存在・保護状態と関連resource集合から削除対象を確定し、個別実ファイル失敗後も続行可能なDB効果を試みる
         ことを故障注入する。
     -   DB削除が確定しない場合に成功通知を出さず、実際に確定した削除だけを通知するtarget testを追加する。
-    -   testが現行の録画停止順序、token・lock不在、path結合、および部分DB失敗後の成功扱いとの差を示して先に失敗すること
-        を確認する。
-    -   完了時には、委譲、token、lock内再読取、path境界、DB失敗の各反例testが意図した現行差を再現し、production codeはま
-        だ変更されていない。
+    -   完了時には、委譲、token、lock内再読取、path境界、DB失敗の各反例testが対応する契約を検証する。
     -   資源種別ごとの管理rootと相対pathを正規化し、rootから親までのlink非経由を効果直前に確認する。
     -   最終entryがsymbolic linkならlink先でなくlink自体だけを削除し、root外または途中link経由では実ファイルへ作用しな
         い。
@@ -237,10 +233,9 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
     -   _Requirements: 1.5, 5.4, 5.5, 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8, 8.9, 8.10_
     -   _Boundary: 録画済み番組・個別録画ファイル削除_
 
--   [x] 5.3 prepared deletion token registryを RED から GREEN まで閉じる
+-   [x] 5.3 prepared deletion token registryをtestと実装で閉じる
 
-    -   一回消費、同時再利用、replay、stale、種類違い、失敗後再利用、および未使用token回収のtarget testを先に追加し、
-        token registry未実装だけが意図した理由でREDになることを確認する。
+    -   一回消費、同時再利用、replay、stale、種類違い、失敗後再利用、および未使用token回収のtarget testを追加する。
     -   `src/model/operator/recorded/PreparedDeletionTokenRegistry.ts`を作成し、provider種類ごとのactive tokenを
         `WeakMap`相当、消費済みtokenを`WeakSet`相当でinstance内だけに保持する。
     -   final operation入口でactive entryを同期的に除いて消費済みへ移してから最初の`await`へ進み、同時または後続再利用は
@@ -248,31 +243,27 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
     -   success、typed result、同期throw、rejectionでもtokenをactiveへ戻さず、未使用tokenは参照破棄後に回収可能とする。
         永続一覧、期限timer、定期GC、checkpoint、retryを追加しない。
     -   `unittest/imp`で一回消費、同時再利用、replay、stale、種類違い、失敗後再利用、未使用token回収可能性を検証する。
-    -   実装後に同じtarget testを再実行してGREENを確認する。
     -   完了時には一つのtokenから効果実行へ進む呼出しが最大一件になる。
     -   _Requirements: 5.4, 5.5, 8.1, 8.2, 8.6, 8.7, 8.8_
     -   _Boundary: prepared deletion token lifecycle_
     -   _Depends: 5.2_
 
--   [x] 5.4 recorded ID resource mutation lockを RED から GREEN まで閉じる
+-   [x] 5.4 recorded ID resource mutation lockをtestと実装で閉じる
 
-    -   同一ID直列化、異なるID並行、先行失敗、同期throw、rejection、および最終解放のtarget testを先に追加し、mutation
-        lock未実装だけが意図した理由でREDになることを確認する。
+    -   同一ID直列化、異なるID並行、先行失敗、同期throw、rejection、および最終解放のtarget testを追加する。
     -   `src/model/operator/recorded/RecordedResourceMutationLock.ts`を作成し、同じrecorded IDの最終再読取とmutationだけ
         をFIFOで直列化し、異なるIDは互いに待たせない。
     -   success、typed result、同期throw、rejectionの全経路でlockを一回解放し、token registryをlock代わりにせず、待機列
         が空になったIDのentryを回収する。
     -   `unittest/imp`で同一ID直列化、異なるID並行、取得待ち中の先行失敗、同期throw、rejection、最終解放を検証する。
-    -   実装後に同じtarget testを再実行してGREENを確認する。
     -   完了時には同一ID raceが決定的な順序で再現され、全終了経路で次要求が進み、使用後entryが残らない。
     -   _Requirements: 8.1, 8.2, 8.4, 8.5, 8.6, 8.7, 8.8, 8.9_
     -   _Boundary: recorded ID resource mutation lock_
     -   _Depends: 5.2_
 
--   [x] 5.5 番組全体のprepared deletion providerを RED から GREEN まで閉じる
+-   [x] 5.5 番組全体のprepared deletion providerをtestと実装で閉じる
 
-    -   prepareの副作用0、lock内再読取、state変化拒否、およびexact-ID planのtarget testを先に追加し、番組全体provider未
-        実装だけが意図した理由でREDになることを確認する。
+    -   prepareの副作用0、lock内再読取、state変化拒否、およびexact-ID planのtarget testを追加する。
     -   `src/model/operator/recorded/IPreparedRecordedDeletionProvider.ts`を作成し、
         `src/model/operator/recorded/RecordedManageModel.ts`へ副作用なしの`prepareUserDeletion()`とone-shot
         `deletePrepared()`を実装する。
@@ -280,39 +271,34 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
         ID、path、entity、lock handleを公開しない。
     -   final operationはTask 5.3のtokenを消費してTask 5.4のlock内で存在、保護、録画状態、reserve ID、全relationを再読取
         し、state変化時は効果0で拒否し、適格時だけ最終exact-ID planをTask 5.2へ渡す。
-    -   実装後に同じtarget testを再実行してGREENを確認する。
     -   完了時にはprepare単独のfile・DB・event・停止・取消効果が0件になる。
     -   _Requirements: 5.4, 8.1, 8.2, 8.3, 8.4, 8.5, 8.9, 8.10_
     -   _Boundary: 利用者の番組全体prepared deletion provider_
     -   _Depends: 5.2, 5.3, 5.4_
 
--   [x] 5.6 個別録画fileのprepared deletion providerを RED から GREEN まで閉じる
+-   [x] 5.6 個別録画fileのprepared deletion providerをtestと実装で閉じる
 
-    -   個別file race、whole decision、final再読取、および対象拡張禁止のtarget testを先に追加し、個別file provider未実装
-        だけが意図した理由でREDになることを確認する。
+    -   個別file race、whole decision、final再読取、および対象拡張禁止のtarget testを追加する。
     -   `src/model/operator/recorded/IPreparedVideoFileDeletionProvider.ts`を作成し、対象なし・保護中・prepared・
         `WholeRecordedDeletionRequired`を副作用なしで判定する。
     -   録画中または最後の一件なら個別効果0でwhole decisionを返す。直接削除はTask 5.3のtoken消費とTask 5.4のlock内で対象
         file、親、保護、録画状態、全video relationを再読取し、適格時のexact videoFile IDだけをTask 5.2へ渡す。
     -   final再読取で録画中または最後の一件へ変わった場合は部分削除せずwhole decisionを返し、呼出元に新しい番組全体
         prepareを要求する。古い個別tokenや親snapshotを再利用しない。
-    -   実装後に同じtarget testを再実行してGREENを確認する。
     -   完了時には別fileまたは番組全体へ削除対象を暗黙に拡張しない。
     -   _Requirements: 5.5, 8.1, 8.2, 8.6, 8.7, 8.8, 8.9, 8.10_
     -   _Boundary: 利用者の個別file prepared deletion provider_
     -   _Depends: 5.2, 5.3, 5.4_
 
--   [x] 5.7 容量不足削除providerを RED から GREEN まで閉じる
+-   [x] 5.7 容量不足削除providerをtestと実装で閉じる
 
-    -   保存先所属、録画状態race、typed拒否、およびbusy・unknown時の効果0をtarget testへ先に追加し、容量不足削除provider
-        未実装だけが意図した理由でREDになることを確認する。
+    -   保存先所属、録画状態race、typed拒否、およびbusy・unknown時の効果0をtarget testへ追加する。
     -   `src/model/operator/recorded/IRecordedStorageDeletionProvider.ts`を作成し、対象なし、保護中、録画中、relationな
         し、保存先不一致を理由付き`not-deleted`、適格時をopaque tokenとして副作用なしで返す。
     -   final operationはTask 5.3のtokenを消費し、Task 5.4のlock内で存在、保護、録画状態、全video relation、保存先所属を
         再読取する。変化時は実file・DB・event効果0の`not-deleted`、適格時だけTask 5.2のexact-ID削除を実行する。
     -   録画・encode・配信use gate、候補選択、容量再計測、最大60秒terminal barrierは実装せず、
         `server-application-runtime`と`server-storage-management`がcompositionできるdomain providerだけを完成させる。
-    -   実装後に同じtarget testを再実行してGREENを確認する。
     -   完了時にはbusy・unknown時に削除を開始しないprovider契約を境界testから利用できる。
     -   _Requirements: 8.1, 8.2, 8.4, 8.5, 8.9, 8.10_
     -   _Boundary: 容量不足用prepared deletion provider_
@@ -348,15 +334,13 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
     -   _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7, 9.8, 9.15, 9.16_
     -   _Boundary: 録画ファイル整理・ドロップログ整理_
 
--   [x] 6.2 link非追従、root内包、および列挙失敗分離を RED から GREEN まで閉じる
+-   [x] 6.2 link非追従、root内包、および列挙失敗分離をtestと実装で閉じる
 
     -   root内からroot外を指すfile link、directory link、broken linkを辿らず、未登録ならlink自体だけを削除する
         `unittest/spec` を追加する。
     -   正規化後にroot外となるentryを再帰・削除せず、dotfileとdot-directoryを対象外とする反例を追加する。
     -   root列挙失敗は対象種類を失敗にし、個別subdirectoryの列挙失敗・同期的種類確認失敗は記録して他対象を続け、owning要
         求を未settledにしないことを検証する。
-    -   testが現行のlink追従、subdirectory失敗の黙殺、およびcallback内同期例外の未settledとの差を示して先に失敗すること
-        を確認する。
     -   完了時には、link先とroot外markerへ作用しないこと、各列挙失敗の要求結果を再現できる。
     -   entry種類をlink非追従で確認し、symbolic linkを一件のentryとして扱い、link先へ再帰しない列挙を実装する。
     -   各entryの正規化pathとroot内包を確認し、dot entryを除外して、空ディレクトリを深い順に処理する。
@@ -367,7 +351,7 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
     -   _Requirements: 9.3, 9.4, 9.7, 9.8, 9.12, 9.13, 9.14, 9.15, 9.16, 9.17_
     -   _Boundary: 管理保存先の安全な列挙_
 
--   [x] 6.3 種類別single-flight、10分caller期限、および変更通知を RED から GREEN まで閉じる
+-   [x] 6.3 種類別single-flight、10分caller期限、および変更通知をtestと実装で閉じる
 
     -   録画ファイル整理とドロップログ整理を同時に開始し、一方の成功・失敗・期限超過を他方の結果として共有しない
         `unittest/spec` を追加する。
@@ -375,12 +359,9 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
         証する。
     -   callerが10分で期限超過しても処理中状態を維持し、先行本体の後着成功・失敗でだけ同種を再受付するfake timer testを
         追加する。
-    -   ドロップログ整理で関係または登録を変更した場合も、確定した変更を関係機能へ一度通知する旧欠落のtarget testを追加
+    -   ドロップログ整理で関係または登録を変更した場合も、確定した変更を関係機能へ一度通知するtarget testを追加
         する。
-    -   testが現行の逐次開始、無期限caller待ち、同種重複実行、およびdrop-log変更通知欠落との差を示して先に失敗することを
-        確認する。
-    -   完了時には、二種類の独立状態、caller期限、drop-log変更通知のtarget testが意図した理由で失敗し、production codeは
-        まだ変更されていない。
+    -   完了時には、二種類の独立状態、caller期限、drop-log変更通知がtarget testで観測できる。
     -   録画ファイル整理用とドロップログ整理用の独立したprocess-local状態を持ち、開始時に同種重複だけを原子的に拒否す
         る。
     -   処理本体の成功・失敗を確定する `finally` だけで状態を解除し、callerの10分期限超過では本体も状態も解除しない。

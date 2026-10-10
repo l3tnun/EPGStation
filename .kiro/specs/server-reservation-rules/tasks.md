@@ -5,18 +5,17 @@
 ## Cross-spec execution prerequisite
 
 共有 server test foundation と Node.js 24/26 matrix は `server-application-runtime` が所有する。該当 foundation task
-group 完了後に本 spec を実行し、共有 foundation を重複させず、自動予約ルール固有の test と承認済み差分の最小実装だけを追
+group 完了後に本 spec を実行し、共有 foundation を重複させず、自動予約ルール固有の test と承認済み差分の実装だけを追
 加する。
 
 予約件数 query port の入力・結果契約は本 spec、provider 実装は `server-reservation-management` が所有する。既存の
 `IReserveDB` 注入を通じて `IRuleReservationCountPort` を `RuleApiModel` へ供給し、追加の composition は設けない。予約
-execution coordinator の exact release、期限切れ waiter 除外、衝突しない ID の production 修正と failing target test も
+execution coordinator の exact release、期限切れ waiter 除外、衝突しない ID の production 修正と target test も
 `server-reservation-management` に一度だけ置く。本 spec は port 契約と provider 完了後の結合確認だけを所有し、予約 row、
 差分、競合、skip、最終 duplicate、trigger 順序、IPC・HTTP・event carrier を実装しない。
 
 実装時は 1〜5、6.1、7.1 を provider 非依存の前半として先に完了する。6.2〜6.4、7.2、7.3 は
-`server-reservation-management` の全 domain task と owner suite 完了後に実行し、owner 実装前の失敗 test を本 spec の中間
-状態へ残さない。
+`server-reservation-management` の全 domain task と owner suite 完了後に実行する。
 
 各 leaf task は 1〜3 時間の実行単位とする。各task本文で明示したtest・production fileを主対象とし、`_Depends_`がないleaf
 は共有foundation以外のtask-local prerequisiteを持たない。
@@ -31,7 +30,7 @@ execution coordinator の exact release、期限切れ waiter 除外、衝突し
 | 1.4  | `test/server/reservation-rules/recording-options.spec.test.ts#RR-4.3` | `unittest/spec, unittest/imp` | `1.2` | `npm run test:server:spec -- test/server/reservation-rules/recording-options.spec.test.ts` |
 | 2.1  | `test/server/reservation-rules/management.spec.test.ts`                                                                                                   | `unittest/spec`                                   | なし（共有foundationのみ）                                                  | `npm run test:server:spec -- test/server/reservation-rules/management.spec.test.ts`                                                                                      |
 | 2.2  | `test/server/reservation-rules/management.spec.test.ts`                                                                                                   | `unittest/spec`                                   | なし（共有foundationのみ）                                                  | `npm run test:server:spec -- test/server/reservation-rules/management.spec.test.ts`                                                                                      |
-| 2.3  | `test/server/reservation-rules/management.spec.test.ts`<br>`test/server/reservation-rules/database-query.test.ts`<br>`src/model/api/rule/RuleApiModel.ts` | `unittest/spec` RED・`unittest/imp` GREEN         | `2.1`                                                                       | `npm run test:server:spec -- test/server/reservation-rules/management.spec.test.ts`<br>`npm run test:server:imp -- test/server/reservation-rules/database-query.test.ts` |
+| 2.3  | `test/server/reservation-rules/management.spec.test.ts`<br>`test/server/reservation-rules/database-query.test.ts`<br>`src/model/api/rule/RuleApiModel.ts` | `unittest/spec`・`unittest/imp` | `2.1`                                                                       | `npm run test:server:spec -- test/server/reservation-rules/management.spec.test.ts`<br>`npm run test:server:imp -- test/server/reservation-rules/database-query.test.ts` |
 | 3.1  | `test/server/reservation-rules/program-search.spec.test.ts`                                                                                               | `unittest/spec`                                   | なし（共有foundationのみ）                                                  | `npm run test:server:spec -- test/server/reservation-rules/program-search.spec.test.ts`                                                                                  |
 | 3.2  | `test/server/reservation-rules/recording-options.spec.test.ts`                                                                                            | `unittest/spec`                                   | `1.1, 3.1`                                                                  | `npm run test:server:spec -- test/server/reservation-rules/recording-options.spec.test.ts`                                                                               |
 | 3.3  | `test/server/reservation-rules/duplicate-history.spec.test.ts`                                                                                            | `unittest/spec`                                   | なし（共有foundationのみ）                                                  | `npm run test:server:spec -- test/server/reservation-rules/duplicate-history.spec.test.ts`                                                                               |
@@ -95,16 +94,15 @@ execution coordinator の exact release、期限切れ waiter 除外、衝突し
     -   _Boundary: Rule mutation coordinator・Rule change event port_
     -   _Depends: 1.1, 1.2_
 
--   [x] 1.4 保存先内ディレクトリの検査を一つのTDD単位で実装する
+-   [x] 1.4 保存先内ディレクトリの検査を実装する
 
     -   保存先内directoryと各encode出力先directoryが`..`・先頭`/`の後の`..`・NULで録画保存先の外を指すRuleの追加・変更が
-        Rule row・変更eventとも0件で失敗し、`a/../b`・`/anime`は従来どおり保存される期待値を先に定義して、現行実装でRED
-        になることを確認する。
-    -   共通の判定関数をRuleの追加・変更の検査へ接続する最小実装を行い、他の検証規則と保存形式を変えない。
-    -   完了時には、同じtarget testがGREENとなり、既存の追加・変更の正常系が維持される。
+        Rule row・変更eventとも0件で失敗し、`a/../b`・`/anime`は保存されることをtarget testが検証する。
+    -   共通の判定関数をRuleの追加・変更の検査へ接続し、他の検証規則と保存形式を変えない。
+    -   完了時には、target testが通り、既存の追加・変更の正常系が維持される。
     -   _Requirements: 4.3_
     -   _Boundary: Rule option validator・sub directory_
-    -   _Verification: unittest/spec RED, unittest/imp GREEN_
+    -   _Verification: unittest/spec, unittest/imp_
     -   _Depends: 1.2_
 
 -   [x] 2. Rule read/query と予約件数 consumer port を契約化する
@@ -129,21 +127,21 @@ execution coordinator の exact release、期限切れ waiter 除外、衝突し
     -   _Requirements: 1.7_
     -   _Boundary: Rule keyword query_
 
--   [x] 2.3 予約件数 query port を一つのTDD単位で契約化・接続する
+-   [x] 2.3 予約件数 query port を契約化・接続する
 
     -   canonical内部contractを`ReservationStateFilter`、値を `'all' | 'normal' | 'conflict' | 'skip' | 'overlap'`、結果
         をreadonly collectionとして固定し、公開queryの`type`と既存値を変更しない。
     -   page内Rule ID列と確定したfilterだけをconsumer-owned portへ一回渡し、空page、port非利用query、順不同・部分結果、
-        欠落Rule IDの0件投影、repository rejectを同じ`unittest/spec` targetに定義してREDを確認する。
-    -   確定したfilter名・値shape・readonly結果shapeだけからなる内部contractとfake provider seamを最小実装し、Rule順序、
-        total、filter未指定時の非呼出しを維持して同じtargetをGREENにする。
+        欠落Rule IDの0件投影、repository rejectを同じ`unittest/spec` targetで検証する。
+    -   確定したfilter名・値shape・readonly結果shapeだけからなる内部contractとfake provider seamを実装し、Rule順序、
+        total、filter未指定時の非呼出しを維持する。
     -   providerの予約query意味、保存row、追加のcomposition、public field、database schema、IPC envelope、独自変換を追加し
         ない。
-    -   完了時には、確定したcontractがtestへ一意に反映され、同じtestのRED→最小production→GREENが閉じ、Rule query coreの
+    -   完了時には、確定したcontractがtestへ一意に反映され、Rule query coreの
         contract testに予約repository具象が現れない。
     -   _Requirements: 1.6_
     -   _Boundary: Rule query service・IRuleReservationCountPort_
-    -   _Verification: unittest/spec RED, unittest/imp GREEN_
+    -   _Verification: unittest/spec, unittest/imp_
     -   _Depends: 2.1_
 
 -   [x] 3. 番組候補、録画条件、および履歴由来の重複可能性を固定する
@@ -244,8 +242,8 @@ execution coordinator の exact release、期限切れ waiter 除外、衝突し
 
 -   [x] 5.3 time Rule keyword の runtime 必須・public schema optional 差を独立 characterization する
 
-    -   keyword 省略を共有 public schema が表現できる一方、runtime validator と candidate evaluator が拒否する現状を別
-        contract fixture で再現する。
+    -   keyword 省略を共有 public schema が表現できる一方、runtime validator と candidate evaluator が拒否する差を別
+        contract fixture で固定する。
     -   runtime の既存受理条件を schema optional へ合わせず、新しい discriminator、field、error body を追加しない。
     -   完了時には、schema validation と runtime operation の相違が一つずつ観測でき、どちらかを他方の保証として扱わな
         い。
@@ -255,7 +253,7 @@ execution coordinator の exact release、期限切れ waiter 除外、衝突し
 
 -   [x] 5.4 keyword query が両 Rule 種別を返す特性を独立 characterization する
 
-    -   program/time の両 Rule、同一 keyword、keyword なしを実 repository 経路へ保存し、ID順・一Rule一件・非集約の現状を
+    -   program/time の両 Rule、同一 keyword、keyword なしを実 repository 経路へ保存し、ID順・一Rule一件・非集約の挙動を
         characterization する。
     -   2.2 の正常契約testとは fixture と test名を分け、program Ruleだけへの絞り込みや keyword dedupe を追加しない。
     -   完了時には、両種別の各 ID が別 item として返り、production code の差分がない。
@@ -266,7 +264,7 @@ execution coordinator の exact release、期限切れ waiter 除外、衝突し
 -   [x] 5.5 local 年月日・JST midnight・local weekday の分離を独立 characterization する
 
     -   process timezone を日本標準時、UTC、非日本標準時へ切り替え、local 年月日から作る JST 0時と `Date.getDay()` の
-        local weekday が分離する現状を isolated process で再現する。
+        local weekday が分離することを isolated process で再現する。
     -   一貫した timezone calendar、timezone設定、DST補正を追加せず、通常の time candidate testと fixtureを分ける。
     -   完了時には、各 timezone の基準 epoch と曜日選択が承認済み split を再現し、実環境 timezone に依存しない。
     -   _Requirements: 3.4, 3.5, 3.6, 3.8_

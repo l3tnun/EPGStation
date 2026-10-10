@@ -49,7 +49,7 @@ foundation、設定既定値、tuner stream 取得、録画 file/domain 解決�
         channel・形式・画質の拒否を、provider stub を使う `unittest/spec` で固定する。
     -   ライブ M2TS の外部 player playlist、直接接続 close による停止、および確立済み stream 本文を時間だけで終了しない
         挙動を `integration` で確認する。
-    -   tuner stream 取得失敗を含む現行の stream/system logger category と error projection を characterization し、本
+    -   tuner stream 取得失敗を含む stream/system logger category と error projection を characterization し、本
         spec で一律の category 変更を行わない。
     -   完了時には、各形式、変換有無、入力拒否、開始失敗、接続 close、外部 playlist、および長時間本文の fixture が既存結
         果を再現し、production code の差分がない。
@@ -119,15 +119,15 @@ foundation、設定既定値、tuner stream 取得、録画 file/domain 解決�
     -   設定済み Kodi と録画 file の照合、要求由来の protocol・host による file URL、JSON-RPC payload、および通信失敗を
         `unittest/spec` で固定する。
     -   Basic 認証は Kodi transport だけへ渡し、file URL、payload、log へ埋め込まないことを `unittest/imp` で確認する。
-    -   request-derived host の信頼境界は承認済み現行契約として維持し、本 task で allowlist や URL 再解釈を追加しない。
+    -   request-derived host の信頼境界は承認済み契約として維持し、本 task で allowlist や URL 再解釈を追加しない。
     -   完了時には、認証有無、設定・file 欠落、通信 reject、および URL shape の fixture が既存結果を再現し、timeout 差分
         だけが後続 task の対象として残る。
     -   _Requirements: 7.1, 7.2, 7.3, 7.4, 7.6_
     -   _Boundary: Kodi Client characterization（Kodi 専用 fixture と test file）_
     -   _Verification: unittest/spec, unittest/imp_
 
--   [x] 2. 開始予約・有限 deadline・世代隔離を TDD で実現する
--   [x] 2.1 Stream Manager の開始・停止状態遷移を RED から GREEN まで閉じる
+-   [x] 2. 開始予約・有限 deadline・世代隔離を test と実装で実現する
+-   [x] 2.1 Stream Manager の開始・停止状態遷移を test と実装で閉じる
 
     -   start 受付時に一意 object を `starting` として同期予約し、外部 I/O 中も別 start/stop/keep/list が進む目標を
         deferred port 付き `unittest/spec` で定義する。
@@ -137,8 +137,6 @@ foundation、設定既定値、tuner stream 取得、録画 file/domain 解決�
         ないことを `unittest/imp` で検証する。
     -   tuner/file reader、Readable、timer、listener、managed/HLS handleは各streamの実装が所有し、各ActiveStreamが
         一つだけ持つ`ResourceLeaseBundle`へ後始末関数を登録して、stale adoptionでは後着resourceを得た側が整理する目標を含める。
-    -   完了時には 1 群の characterization は成功したまま、非同期 I/O 外出し、snapshot stop、即時 terminal、object
-        identity の未実装契約だけが意図した理由で失敗する。
     -   `starting`、`ready`、`stopping` と object identity を管理し、同期区間を予約・状態遷移だけに限定して外部 I/O を外
         で実行する。
     -   ActiveStreamごとの`ResourceLeaseBundle`へ登録した後始末関数を保持し、重複close、timeout、stop、terminalを
@@ -151,15 +149,13 @@ foundation、設定既定値、tuner stream 取得、録画 file/domain 解決�
     -   _Boundary: Stream Manager・ActiveStream state machine_
     -   _Verification: unittest/spec, unittest/imp_
 
--   [x] 2.2 30 秒開始 deadline と first-terminal-wins を RED から GREEN まで閉じる
+-   [x] 2.2 30 秒開始 deadline と first-terminal-wins を test と実装で閉じる
 
     -   入力検証後から live の tuner/process/本文接続、recorded の番組・動画情報・実 path・reader/process/本文接続または
         HLS stdin 接続までを一件の 30 秒期限で監督する目標を fake timer 付き `unittest/spec` で定義する。
     -   deadline と成功・失敗を同着させ、最初の terminal だけを採用し、期限後に得た tuner handle、file reader、process
         handle は同じ object の best-effort cleanup だけへ渡すことを定義する。
     -   確立後本文、HLS readiness、15 秒 keep、録画 file 追尾には開始 deadline が残らない否定 fixture を用意する。
-    -   完了時には characterization は成功したまま、30 秒 settlement と late resource cleanup の未実装契約だけが失敗す
-        る。
     -   内部定数 `MEDIA_DELIVERY_START_TIMEOUT_MS = 30000` と first-terminal-wins latch を追加し、設定項目や公開 API へ
         露出しない。
     -   deadline 時は同じ object を `stopping` へ遷移させ、開始途中に登録された cleanup を一回実行し、late result を応答
@@ -170,30 +166,28 @@ foundation、設定既定値、tuner stream 取得、録画 file/domain 解決�
     -   _Boundary: Delivery Start Coordinator_
     -   _Verification: unittest/spec, unittest/imp_
 
--   [x] 2.3 Live Stream の tuner・process handle 接続を RED から GREEN まで閉じる
+-   [x] 2.3 Live Stream の tuner・process handle 接続を test と実装で閉じる
 
-    -   tuner取得、process開始、stdin不在、即時terminal、およびdeadlineで、取得済み資源だけが逆順に一回解放されるlive専
-        用target testを先に追加し、consumer接続不足だけが意図した理由でREDになることを確認する。
+    -   tuner取得、process開始、stdin不在、即時terminal、およびdeadlineで、取得済み資源だけが逆順に一回解放されることをlive専
+        用target testが検証する。
     -   `server-tuner-access` の stream handle と `server-media-process-management` の pipe child/opaque handle を開始
         coordinator へ登録し、writer stdin 接続までを確立点にする。
     -   tuner 取得、process 開始、stdin 不在、即時 terminal、deadline の各失敗で、得られた資源だけを逆順に best-effort
-        停止する最小変更を行う。
-    -   無変換 M2TS は process 枠を使わず、変換ありだけが managed handle を保持し、現行 logger category と公開形式を変更
+        停止する。
+    -   無変換 M2TS は process 枠を使わず、変換ありだけが managed handle を保持し、logger category と公開形式を変更
         しない。
-    -   最小変更後に同じlive専用target testを再実行してGREENを確認する。
     -   完了時には遅延 handle が別配信へ作用せず、確立済み本文は 30 秒後も継続する。
     -   _Requirements: 1.1, 1.3, 1.4, 1.6, 1.8, 1.9_
     -   _Boundary: Live Stream consumer adapter（共有 coordinator と manager は変更しない）_
     -   _Depends: 2.2_
     -   _Verification: unittest/spec, unittest/imp, integration_
 
--   [x] 2.4 Recorded Stream の recorded-content・process handle 接続を RED から GREEN まで閉じる
+-   [x] 2.4 Recorded Stream の recorded-content・process handle 接続を test と実装で閉じる
 
     -   本taskは`server-recorded-content` Task 2.4が提供する再生用source providerを前提とし、providerが未統合のtreeでは
         consumerだけを先行完了扱いにしない。
     -   Task 2.5が取得・adoptしたsourceを受けるRecorded Stream内部input、process、stdin、deadline、late successをcall
-        ledgerで固定するrecorded専用target testを先に追加し、consumer adapter不足だけが意図した理由でREDになることを確認
-        する。target testはadopt済みsource contract doubleを入力にし、本taskから
+        ledgerで固定するrecorded専用target testが検証する。target testはadopt済みsource contract doubleを入力にし、本taskから
         provider、`RecordedDeliveryUsePort`、recorded ID予備照会、lease取得、exact releaseを呼ばない。それらの順序と
         resource利用境界はTask 2.5だけが所有する。
     -   Task 2.5から渡された解決済みの録画file・録画済み番組・動画情報・実path・`playPosition`を持つtagged sourceを受け
@@ -205,16 +199,15 @@ foundation、設定既定値、tuner stream 取得、録画 file/domain 解決�
     -   source、process、stdin、deadlineの各失敗とlate successで、同じownerが持つreader/handleだけをbest-effort停止す
         る。
     -   TS/encoded、録画中 reader、再生位置、HLS/非 HLS の既存選択を維持する。
-    -   最小変更後に同じrecorded専用target testを再実行してGREENを確認する。
     -   完了時には期限後のsource/reader/processが応答へ採用されず、file追尾は30秒後も継続する。
     -   _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.10, 2.12_
     -   _Boundary: Recorded Stream consumer adapter（共有 coordinator と manager は変更しない）_
     -   _Depends: 2.2_
     -   _Verification: unittest/spec, unittest/imp, integration_
 
--   [x] 2.5 録画file配信のresource利用leaseとread-only snapshotを RED から GREEN まで閉じる
+-   [x] 2.5 録画file配信のresource利用leaseとread-only snapshotを test と実装で閉じる
 
-    -   `server-recorded-content` Task 2.4のproviderを先に完了させてから、本consumer taskを開始する。予備照会でrecorded
+    -   `server-recorded-content` Task 2.4のproviderの完了を前提とする。予備照会でrecorded
         IDを確定した後、再生source provider・process・HLS writerより前に`delivery`用途のexact leaseを一回取得し、同じ
         video file ID、expected recorded ID、および既存再生要求の`playPosition`をproviderへ渡して対応とsource値を再検証
         する順序をcall ledgerで定義する。対応消失・変更、取得失敗、期限超過・状態不明ではsource/process開始を各0件にす
@@ -225,8 +218,6 @@ foundation、設定既定値、tuner stream 取得、録画 file/domain 解決�
         ない。対応を安全に列挙できない場合は部分集合でなく`unknown`を返す。
     -   snapshot取得でstart、stop、keep、finalize、leaseを各0回にし、PMのgeneration、通常5秒carrier、capacity deletion
         gateを本specへ複製しない。
-    -   完了時には既存testが成功したまま、予備照会→acquire→provider再検証→source採用、exact release、known/unknown
-        snapshotの未実装契約だけが意図した理由で失敗する。
     -   `server-process-messaging`が提供するresource-use carrierを受けるconsumer portを定義し、予備照会後のacquire、
         expected recorded IDと`playPosition`を渡すRecorded Content provider再検証、source採用を承認順序で接続する。取得
         失敗、対応変更、またはstale adoptionではreader、process、writer、公開応答、通知を作らない。
@@ -238,7 +229,7 @@ foundation、設定既定値、tuner stream 取得、録画 file/domain 解決�
     -   PM carrier実装は`server-process-messaging`、consumer portとsnapshot providerの一回bindingは
         `server-service-interface`の後続service child composition taskへ明示的に委譲し、本taskでは
         `ModelContainerSetter`を変更しない。
-    -   完了時には同じ2.5の全target testがGREENになり、leaseなし録画source利用、重複release、部分snapshotが0件
+    -   完了時には2.5の全target testが成功し、leaseなし録画source利用、重複release、部分snapshotが0件
         で、consumer portとread-only providerを独立したcontract doubleから検証できる。
     -   検証は`unittest/spec`、`unittest/imp`、PM contract doubleとrecorded-content portを使うdomain-local
         `integration`で行う。
@@ -247,8 +238,8 @@ foundation、設定既定値、tuner stream 取得、録画 file/domain 解決�
     -   _Depends: 2.4; server-recorded-content Task 2.4_
     -   _Verification: unittest/spec, unittest/imp, integration_
 
--   [x] 3. HLS Artifact Index と競合しない採番を TDD で実現する
--   [x] 3.1 HLS Artifact Index の起動時走査・準備・再試行を RED から GREEN まで閉じる
+-   [x] 3. HLS Artifact Index と競合しない採番を test と実装で実現する
+-   [x] 3.1 HLS Artifact Index の起動時走査・準備・再試行を test と実装で閉じる
 
     -   保存先を一度だけ準備して read/write access を確認し、`stream{id}` 直後が数字でない成果物から ID を抽出する
         `HLSFileDeleterModel` の走査・列挙（`scanAtStartup`・`scanCurrent`・`listExact`）契約を一時 directory の `unittest/spec` で定義する。
@@ -256,8 +247,6 @@ foundation、設定既定値、tuner stream 取得、録画 file/domain 解決�
         予約することを定義する。
     -   mkdir/access/read 失敗では error を記録して HLS だけを失敗させ、後続 HLS start で準備と走査を再試行し、非 HLS
         start は継続することを定義する。
-    -   完了時には既存 test は成功したまま、startup scan、exact ID、残存保持、および HLS 限定再試行の未実装契約だけが失
-        敗する。
     -   保存先の mkdir、read/write access、scan、exact ID 抽出を一つの index に集約し、startup/current artifact ID をメ
         モリーで保持する。
     -   起動失敗は HLS 未初期化状態と error 記録へ収束させ、HLS start 時だけ同じ準備を再試行する。
@@ -268,15 +257,13 @@ foundation、設定既定値、tuner stream 取得、録画 file/domain 解決�
     -   _Boundary: HLS Artifact Index・startup initialization_
     -   _Verification: unittest/spec, unittest/imp, integration_
 
--   [x] 3.2 allocation cursor・wrap・予約集合を RED から GREEN まで閉じる
+-   [x] 3.2 allocation cursor・wrap・予約集合を test と実装で閉じる
 
     -   `allocationCursor` から active/starting/stopping、startup artifact、確認済み current artifact の ID を飛ばして候
         補を同期予約する目標を `unittest/spec` で定義する。
     -   `Number.MAX_SAFE_INTEGER` の次を 0 とし、wrap 後も使用中 ID を飛ばし、利用可能 ID がない間は重複を返さないことを
         `unittest/imp` で確認する。
     -   cleanup 後は成果物なしを確認できた ID だけを候補へ戻し、強制解放時も cursor を解放 ID の次へ進めることを定義す
-        る。
-    -   完了時には既存 test は成功したまま、cursor、wrap、全予約集合、および強制解放後の次候補の未実装契約だけが失敗す
         る。
     -   同期境界内で候補選択、`starting` object 登録、cursor 更新を不可分に行い、停止中・成果物残存 ID を再利用しない。
     -   wrap を safe integer 範囲内で行い、候補なしを重複 ID ではなく明示的な開始失敗として扱う。
@@ -286,7 +273,7 @@ foundation、設定既定値、tuner stream 取得、録画 file/domain 解決�
     -   _Boundary: Stream Manager HLS allocator_
     -   _Verification: unittest/spec, unittest/imp_
 
--   [x] 3.3 非同期 snapshot と writer 前 exact 再確認を RED から GREEN まで閉じる
+-   [x] 3.3 非同期 snapshot と writer 前 exact 再確認を test と実装で閉じる
 
     -   artifact snapshot 中に start/stop/keep/list の同期境界を保持せず、同じ snapshot を使う並行 start も同期予約で異
         なる ID を得る目標を deferred filesystem 付き `unittest/spec` で定義する。
@@ -294,7 +281,6 @@ foundation、設定既定値、tuner stream 取得、録画 file/domain 解決�
         ID を確認済み集合へ加えて次候補を選ぶことを定義する。
     -   snapshot/recheck failure、stop 同着、late scan result を交差させ、別 object の予約と通知を変更しないことを確認す
         る。
-    -   完了時には既存 test は成功したまま、非同期 snapshot、並行予約、writer 前 fence の未実装契約だけが失敗する。
     -   filesystem snapshot と exact recheck を同期境界外で実行し、結果の適用時に object identity と状態を再照合する。
     -   recheck で衝突した予約だけを解放して次候補へ進み、writer/process/tuner/file reader を衝突 ID で開始しない。
     -   走査不能 ID は成果物状態未確認として候補から外し、承認されていない一般 retry や世代 directory を追加しない。
@@ -304,15 +290,14 @@ foundation、設定既定値、tuner stream 取得、録画 file/domain 解決�
     -   _Boundary: HLS allocator・HLS Artifact Index integration_
     -   _Verification: unittest/spec, unittest/imp, integration_
 
--   [x] 4. exact な HLS readiness 判定を TDD で実現する
--   [x] 4.1 exact selector を使う readiness を RED から GREEN まで閉じる
+-   [x] 4. exact な HLS readiness 判定を test と実装で実現する
+-   [x] 4.1 exact selector を使う readiness を test と実装で閉じる
 
     -   親 `stream{id}.m3u8` の完全一致と、`stream{id}` 直後が数字でない媒体成果物 2 件以上だけで ready となる目標を、一
         時 directory と fake timer の `unittest/spec` で定義する。
     -   `stream1` 判定へ `stream10` の segment を混入させず、子 playlist と字幕 playlist は必須にせず、利用可能な字幕だ
         けを親へ追加することを定義する。
     -   100 ms poll、停止時 timer cancel、全体 deadline なし、ready 通知一回を既存 characterization と同時に検証する。
-    -   完了時には 1.4 の characterization は成功したまま、ID 境界を誤る fixture だけが意図した理由で失敗する。
     -   readiness の列挙を `HLSFileDeleterModel.listExact()` へ集約し、親完全一致と媒体成果物数を同一 snapshot から判定す
         る。
     -   ready 遷移と字幕反映を同じ object identity へ限定し、停止後または ID 再利用後の poll result を無作用にする。
@@ -322,8 +307,8 @@ foundation、設定既定値、tuner stream 取得、録画 file/domain 解決�
     -   _Boundary: HLS Readiness Monitor_
     -   _Verification: unittest/spec, unittest/imp, integration_
 
--   [x] 5. HLS writer 停止・成果物整理・強制解放を TDD で実現する
--   [x] 5.1 opaque HLS handle への停止委譲を RED から GREEN まで閉じる
+-   [x] 5. HLS writer 停止・成果物整理・強制解放を test と実装で実現する
+-   [x] 5.1 opaque HLS handle への停止委譲を test と実装で閉じる
 
     -   readiness/keep timer と tuner/file reader/transform input を先に止め、保存済み `HlsWriterHandle` の `stopHls()`
         を一回呼ぶ目標を `unittest/spec` で定義する。
@@ -331,7 +316,6 @@ foundation、設定既定値、tuner stream 取得、録画 file/domain 解決�
         を受けてから artifact 整理へ進むことを `unittest/imp` で確認する。
     -   provider が所有する SIGINT 一回・1 秒最大 3 回、残存時 SIGKILL 一回・1 秒最大 3 回の結果と reject/throw を合成
         し、delivery が signal や論理枠解放を重複実行しないことを定義する。
-    -   完了時には既存 test は成功したまま、opaque handle、停止順序、provider result 消費の未実装契約だけが失敗する。
     -   stream object が開始時に保存した generation-safe opaque handle だけで `stopHls()` へ委譲し、timer/input 停止後に
         一回実行する。
     -   stop result または失敗を同一停止 operation へ保存し、並行 stop はその operation へ参加させる。
@@ -343,7 +327,7 @@ foundation、設定既定値、tuner stream 取得、録画 file/domain 解決�
     -   _Boundary: HLS Stop Coordinator・process manager consumer port_
     -   _Verification: unittest/spec, unittest/imp, integration_
 
--   [x] 5.2 exact artifact 削除・最大 3 pass・失敗記録を RED から GREEN まで閉じる
+-   [x] 5.2 exact artifact 削除・最大 3 pass・失敗記録を test と実装で閉じる
 
     -   各 pass で対象 ID の exact artifact だけを列挙・削除・再走査し、残存または失敗時も最大 3 pass まで進む目標を一時
         directory の `unittest/spec` で定義する。
@@ -351,7 +335,6 @@ foundation、設定既定値、tuner stream 取得、録画 file/domain 解決�
         る。
     -   scan、exact list、unlink、rescan を個別に失敗させ、ID・pass・操作・error を記録し、scan/list/rescan 失敗時は残存
         状態を未確認として安全な後続処理へ進むことを定義する。
-    -   完了時には既存 test は成功したまま、exact 境界、3 pass、構造化 cleanup 記録の未実装契約だけが失敗する。
     -   `HLSFileDeleterModel.listExact()` を使って各 pass の列挙・削除・再走査結果を返し、別 ID の file を対象外にする。
     -   各補助処理の失敗を承認済み field 付き error event として記録し、安全に実行可能な次の file/pass/終端へ進む。
     -   成功、残存、未確認を区別した cleanup result を Stop Coordinator へ返し、deleter 自身は stream 一覧や ID を解放し
@@ -361,7 +344,7 @@ foundation、設定既定値、tuner stream 取得、録画 file/domain 解決�
     -   _Boundary: HLS Artifact Deleter・operational logging producer_
     -   _Verification: unittest/spec, unittest/imp, integration_
 
--   [x] 5.3 一回だけの強制解放と遅延 event 隔離を RED から GREEN まで閉じる
+-   [x] 5.3 一回だけの強制解放と遅延 event 隔離を test と実装で閉じる
 
     -   process 終了未確認、stop reject、artifact 残存、scan 未確認の全経路で、cleanup 後に同じ object を一覧から除去し
         ID を一回強制解放する目標を `unittest/spec` で定義する。
@@ -369,7 +352,6 @@ foundation、設定既定値、tuner stream 取得、録画 file/domain 解決�
         記録することを `unittest/imp` で定義する。
     -   強制解放後の late exit/error/delete result/readiness timer が、再利用 ID の object、artifact、process 枠、通知へ
         作用せず、cursor は解放 ID の次から進むことを確認する。
-    -   完了時には既存 test は成功したまま、force finalizer、診断 event、generation fence の未実装契約だけが失敗する。
     -   writer result と artifact cleanup result の成否にかかわらず一回だけ実行される finalizer で、同じ object の一覧除
         去、ID 解放、cursor 更新、通知を行う。
     -   object identity、状態、finalized latch を各 callback/timer/result 適用時に照合し、stale result を無作用にする。
@@ -396,15 +378,13 @@ foundation、設定既定値、tuner stream 取得、録画 file/domain 解決�
     -   _Verification: unittest/spec, unittest/imp, integration_
 
 -   [x] 6. 非 HLS 資源を managed handle で停止する
--   [x] 6.1 非 HLS の best-effort 停止と一覧除去を RED から GREEN まで閉じる
+-   [x] 6.1 非 HLS の best-effort 停止と一覧除去を test と実装で閉じる
 
     -   live は tuner stream と変換、recorded は file reader と変換を停止し、変換は保存済み `ManagedProcessHandle` の
         `requestStop()` だけへ委譲する目標を `unittest/spec` で定義する。
     -   pipe child へ直接 signal を送らず、同じ handle の停止 operation へ参加し、process terminal を stop 応答条件にし
         ないことを `unittest/imp` で確認する。
     -   input/process 停止の一部が reject しても残りを試し、最後に同じ object を一覧から除去して通知することを定義する。
-    -   完了時には既存 test は成功したまま、managed handle、best-effort continuation、失敗時一覧除去の差分だけが失敗す
-        る。
     -   live/recorded の input cleanup を best-effort で行い、保存済み opaque handle の `requestStop()` へ一回委譲する。
     -   各 cleanup error を記録して残りの後始末を続け、stop operation の終端で同じ object を一覧から一回除去する。
     -   direct stream、公開 response、process manager の signal/slot 所有権を変更しない。
@@ -413,16 +393,14 @@ foundation、設定既定値、tuner stream 取得、録画 file/domain 解決�
     -   _Boundary: non-HLS stop consumer adapters・Stream Manager finalizer_
     -   _Verification: unittest/spec, unittest/imp, integration_
 
--   [x] 7. Kodi 通信の有限 deadline を TDD で実現する
--   [x] 7.1 Kodi の 30 秒 response deadline を RED から GREEN まで閉じる
+-   [x] 7. Kodi 通信の有限 deadline を test と実装で実現する
+-   [x] 7.1 Kodi の 30 秒 response deadline を test と実装で閉じる
 
     -   一回の HTTP request 直前から response body の受信・JSON 解釈完了までを 30 秒で監督する目標を fake timer と
         deferred response の `unittest/spec` で定義する。
     -   deadline と response/parse error を同着させて最初の terminal だけを採用し、期限後 response を成功に変えず別
         request へ転用しないことを確認する。
     -   認証情報が transport だけへ渡り file URL に含まれない既存 characterization を同時に成功させる。
-    -   完了時には 1.6 の characterization は成功したまま、有限 deadline と late response 隔離だけが意図した理由で失敗す
-        る。
     -   内部定数 `KODI_REQUEST_TIMEOUT_MS = 30000` を HTTP client request に適用し、設定 schema や公開 API へ追加しな
         い。
     -   response parse まで first-terminal-wins latch で監督し、settlement 後の timer/listener と late response を整理す

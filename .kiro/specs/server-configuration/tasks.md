@@ -5,7 +5,7 @@
 ## Cross-spec execution prerequisite
 
 共有 server test foundation と Node.js 24/26 matrix は `server-application-runtime` が所有する。該当 foundation task
-group 完了後に本 spec を実行し、共有 foundation を重複させず、設定管理固有の test と承認済み差分の最小実装だけを追加す
+group 完了後に本 spec を実行し、共有 foundation を重複させず、設定管理固有の test と承認済み差分の実装だけを追加す
 る。
 
 -   [x] 1. 既存の設定候補構築と起動条件を仕様テストで固定する
@@ -98,14 +98,14 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
     -   _Requirements: 6.1, 6.2, 6.3, 6.4_
     -   _Boundary: 外部コマンド設定の解釈_
 
--   [x] 4. 承認済みの処理量・期限設定を TDD で追加する
--   [x] 4.1 6項目の目標契約をRED確認から最小実装・GREENまで一単位で追加する
+-   [x] 4. 承認済みの処理量・期限設定を追加する
+-   [x] 4.1 6項目の目標契約を一単位で追加する
 
-    -   6項目の省略時既定値、許容境界、型不正、範囲外、完全複製への包含、公開設定からの除外、および起動時保持を、まず
-        target `unittest/spec` と`unittest/imp`へ追加し、未実装契約だけが意図した理由で失敗するREDを確認する。
+    -   6項目の省略時既定値、許容境界、型不正、範囲外、完全複製への包含、公開設定からの除外、および起動時保持を、
+        target `unittest/spec` と`unittest/imp`が検証する。
     -   timer に直接渡す2項目は 1 と 2,147,483,647 を受理し、その外側、小数、文字列、非有限値を拒否する境界を固定する。
-    -   `src/model/IConfigFile.ts`、`src/model/Configuration.ts`、および`config/config.yml.template`へ、REDを解消する
-        型、補完・検証、標準設定の最小変更だけを実装する。
+    -   `src/model/IConfigFile.ts`、`src/model/Configuration.ts`、および`config/config.yml.template`へ、
+        型、補完・検証、標準設定を実装する。
     -   エンコード待機1,024件、同時アップロード3件、アップロード受信300,000ミリ秒、サムネイル待機32件、外部コマンド待機
         64件、外部コマンド期限300,000ミリ秒を省略時に補う。
     -   6項目を内部設定として完全な設定複製へ含め、公開設定 schema や公開 API へ追加しない。
@@ -115,30 +115,27 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
         可する。
     -   二つの期限には1以上2,147,483,647以下の整数だけを許可し、丸め、文字列変換、上限超過の分割 timeout を行わない。
     -   初回の不正値は設定提供前にエラーとし、再読み込みの不正値は候補だけを破棄して直前値を維持する。
-    -   同じtarget `unittest/spec`と`unittest/imp`を再実行する。
     -   完了時には、最小値・最大値が成功し、0、負数、小数、文字列、非有限値、上限超過の全fixtureが設定エラーとなる。既存
-        characterization testとtarget testが同じ変更単位の終了時にGREENで、公開結果のshapeが変わらず、赤いtestが残ってい
-        ないことを観測できる。
+        characterization testとtarget testが成功し、公開結果のshapeが変わらないことを観測できる。
     -   _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 7.8, 7.9, 7.10, 7.11, 7.12_
     -   _Boundary: 起動時スナップショット設定・標準値・候補検証_
     -   _Depends: 1.1, 1.2, 2.1, 3.1_
 
--   [x] 4.2 storage command timeout raw snapshot契約をREDから最小実装・GREENまで一単位で追加する
+-   [x] 4.2 storage command timeout raw snapshot契約を一単位で追加する
 
     -   `test/server/configuration/storage-timeout-provider.cross-spec.test.ts`でfield不在、有効raw値、不正raw値を読み、
-        完全cloneとreload前後snapshotが参照非共有のまま同じraw値を保持する補足contractを先に定義する。
+        完全cloneとreload前後snapshotが参照非共有のまま同じraw値を保持する補足contractをtarget testが検証する。
     -   公開projectionに`storageLimitCommandTimeoutMs`が現れず、providerがdefault補完、数値変換、範囲検証、consumer開始
         を行わない期待値を固定する。
-    -   raw field carrier未実装だけを理由にtarget testが失敗する意図したREDを確認してからproduction/configを変更する。
     -   `IConfigFile`、`Configuration`、`config/config.yml.template`へoptional raw `storageLimitCommandTimeoutMs`
         carrierを追加し、field不在、有効値、不正値をprovider側で解釈せず完全cloneへ保持する。
     -   reload成功時だけ新snapshotへ切り替え、取得ごとに参照非共有のraw値を返し、公開allowlistへ追加しない。
     -   既定値300,000、正の有限値判定、timer適用、設定errorによるstorage開始抑止はStorage Management consumerへ残す。
     -   初回読込、clone二回、reload成功・失敗、field不在、有効raw、不正raw、公開projectionを同じsynthetic YAML fixtureで
-        target testとして再実行する。
+        target testが検証する。
     -   補足caseをRequirement 8の正式inventory件数へ加算せず、Storage Managementのconsumer testからraw snapshotを利用で
         きるcross-spec fixtureとして公開する。
-    -   完了時には同じtarget testと既存configuration characterizationがGREENで、旧新snapshot混在、参照共有、providerによ
+    -   完了時には同じtarget testと既存configuration characterizationが成功し、旧新snapshot混在、参照共有、providerによ
         る変換・拒否、公開field追加、および公開漏えいが0件になる。
     -   _Requirements: 1.1, 3.1, 3.2, 3.3, 4.2, 4.3, 4.4, 4.5, 5.4, 8.1, 8.2, 8.3, 8.4_
     -   _Boundary: storage timeout raw configuration provider contract・complete snapshot・cross-spec verification_
@@ -218,12 +215,9 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
 
 -   [x] 6.4 filesystemと公開設定HTTP projectionを結合検証する
 
-    -   temporary設定・template pathを注入できない現行境界だけを理由に失敗するfilesystem target `integration` testを先に
-        追加し、意図したREDを確認してからproduction seamを変更する。
     -   `src/model/IConfigurationFileAccess.ts`、`src/model/ConfigurationFileAccess.ts`、
         `src/model/ModelContainerSetter.ts`のDesign済みseamを用い、
-        `test/server/configuration/filesystem.integration.test.ts`からtemporary設定・template pathを注入する最小変更を行
-        う。
+        `test/server/configuration/filesystem.integration.test.ts`からtemporary設定・template pathを注入できるようにする。
     -   filesystem integrationで設定・templateの正常、不在、読取不能、解析失敗と、正常・不正な変更通知を接続し、同期・非
         同期readのpath・回数、旧・新設定、直前値保持、file close、同一listenerのwatch/unwatch、fixture回収を検証する。
     -   合成鍵・証明書とephemeral portはisolated child内の`ServiceServer.start()`へ接続し、成功時のlistener開始と、不
@@ -233,9 +227,8 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
         証し、DB認証情報、内部path、外部command、6つの処理量・期限fieldが応答に存在しないことをfield単位でassertする。
     -   DBは設定状態を永続化せず、IPCは設定外情報の配送を所有せず、外部コマンド実行と製品process再起動は利用機能が所有す
         るため非適用と記録する。isolated childはtest隔離であり製品process contractへ昇格させず、未実行を成功扱いしない。
-    -   同じfilesystem targetとHTTP projection integrationを再実行する。
-    -   完了時には、targetがGREENになり、filesystemとHTTPの成功・失敗・後始末を境界別に観測でき、DB・IPC・製品processの
-        非適用理由を含む結合matrixの未分類と赤いtestが0件である。
+    -   完了時には、targetが成功し、filesystemとHTTPの成功・失敗・後始末を境界別に観測でき、DB・IPC・製品processの
+        非適用理由を含む結合matrixの未分類が0件である。
     -   _Depends: 1.1, 1.3, 2.1, 2.2, 3.1, 3.2, 4.1, 4.2, 5.1, 5.2, 6.3_
     -   _Requirements: 8.4_
 

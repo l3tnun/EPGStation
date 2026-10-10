@@ -19,7 +19,6 @@
         失敗後の後続 job 実行を確認する test を追加する。
     -   `PromiseQueue` が `@injectable()` decorator を持つため、`reflect-metadata` を先に読み込んでから compiled
         module を import する。
-    -   TDD: 追加順序の意図的に誤った期待値で RED を確認した後、観測された実際の順序へ期待値を修正して GREEN にした。
     -   _Requirements: 1.1, 1.2, 1.3_
     -   _Verification: `mise exec node@24.18.0 -- npm run test:server:imp -- test/server/shared-foundation/imp/promise-queue.test.ts` を対象とする_
 
@@ -34,8 +33,7 @@
         正規化、囲み文字の相互変換、重複録画判定の名前（`deleteBrackets`）を確認する test を追加する。
     -   重複録画判定の名前は、[前]・[後]（`[]` 表記と囲み文字、位置違い、両方）を末尾に `[前]`、`[後]` の順で付け、[再]・[字]
         など他の囲み文字と `[]` 表記は除き、[前]・[後] の無い名前は除去と trim だけの結果になることを確認する。
-    -   TDD: 全角化の `"` 変換について、意図した typographic quote ではなく既存コードの適用順序により全角引用符
-        `＂` になる実際の挙動を RED で発見し、期待値を実際の挙動へ修正して GREEN にした。
+    -   全角化の `"` 変換は、typographic quote ではなく既存コードの適用順序により全角引用符 `＂` になる挙動を test が検証する。
     -   _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6_
     -   _Verification: `mise exec node@24.18.0 -- npm run test:server:imp -- test/server/shared-foundation/imp/str-util.test.ts` を対象とする_
 
@@ -46,8 +44,6 @@
     -   `test/server/shared-foundation/imp/file-util-read-dir-failure.test.ts` に、存在しないディレクトリの一覧取得
         （`FileUtil.readDir`）が元のファイルシステムエラーで reject されることを確認する test を追加する。
     -   `test/server/shared-foundation/file-util-real-failure.integration.test.ts` に、実 file system で移動先の directory が無い・移動先に既存の directory がある場合に、移動元が残り移動先が作られない（または既存のまま）ことを確認する test を追加する（integration 層。`imp/` の一括実行には含まれない）。
-    -   TDD: 識別情報不一致のシナリオを、同一 path を rm 後に再作成する形から、別ディレクトリの識別情報を渡す形へ修
-        正した（同一 path 再作成では inode 再利用により意図した RED が安定しなかったため）。
     -   _Requirements: 4.1, 4.2, 4.3, 4.4_
     -   _Verification: `mise exec node@24.18.0 -- npm run test:server:imp -- test/server/shared-foundation/imp/file-util.test.ts test/server/shared-foundation/imp/file-util-read-dir-failure.test.ts` を対象とする_
 

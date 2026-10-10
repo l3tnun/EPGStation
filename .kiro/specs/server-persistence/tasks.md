@@ -5,7 +5,7 @@
 ## Cross-spec execution prerequisite
 
 共有 server test foundation と Node.js 24/26 matrix は `server-application-runtime` が所有する。該当 foundation task
-group 完了後に本 spec を実行し、共有 foundation を重複させず、永続化固有の test と承認済み差分の最小実装だけを追加する。
+group 完了後に本 spec を実行し、共有 foundation を重複させず、永続化固有の test と承認済み差分の実装だけを追加する。
 
 -   [x] 1. 接続とデータ構造更新の既存契約を固定する
 -   [x] 1.1 SQLite と MySQL の接続選択を characterization する
@@ -132,12 +132,12 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
     -   _Boundary: DBOperator dialect adapter_
     -   _Depends: 1.1_
 
--   [x] 2.7 保存先限定削除候補providerをREDから最小実装・GREENまで一単位で追加する
+-   [x] 2.7 保存先限定削除候補providerを一単位で追加する
 
     -   `test/server/persistence/storage-deletion-candidate.cross-spec.test.ts`でstorage名と除外Recorded ID集合を受け、
-        一件のprimitive IDまたは`null`だけを返す、srcの`IStorageDeletionCandidatePort`と同じ形の契約（test内の`StorageDeletionCandidatePort`）を先に定義する。
+        一件のprimitive IDまたは`null`だけを返す、srcの`IStorageDeletionCandidatePort`と同じ形の契約（test内の`StorageDeletionCandidatePort`）を定義する。
     -   未保護、一件以上のvideo relation、全relationの保存先一致、空・非空除外集合、`startAt ASC, id ASC`、query
-        rejectionをfake query境界で検証し、既存`findOld()`を適合済みと扱わないREDを確認する。
+        rejectionをfake query境界で検証し、既存`findOld()`を適合済みと扱わない。
     -   `IRecordedDB`／`RecordedDB`へ`findOldestUnused()`を追加し、対象relationの`EXISTS`と不一致relation
         の`NOT EXISTS`、protection、除外ID、二段sort、limit一件を一つのparameterized queryとして適用する。
     -   空除外集合では空`NOT IN`を生成せず、SQLite/MySQLのboolean投影以外は同じprimitive ID／`null`／元error contractを
@@ -146,7 +146,7 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
     -   `test/server/persistence/storage-deletion-candidate.integration.test.ts`でtemporary SQLiteと隔離MySQLへ単
         独・mixed storage relation、保護、空・非空除外集合、同時刻ID順、0件、driver/query failureを接続する。
     -   query/connection cleanupと共通read retryを既存owner契約で観測し、部分候補やerrorの`null`変換を行わない。
-    -   完了時には同じtarget testと両backend integrationがGREENとなり、同じrow集合・順序・primitive ID／`null`が得ら
+    -   完了時には同じtarget testと両backend integrationが通り、同じrow集合・順序・primitive ID／`null`が得ら
         れ、entity/DTO/token返却、usage判定、file削除、lock取得、および残留query資源が0件になる。
     -   _Requirements: 3.2, 3.3, 3.4, 3.5, 3.8, 3.10, 5.1, 5.2, 5.3, 7.4_
     -   _Boundary: IStorageDeletionCandidatePort persistence provider・RecordedDB query・SQLite/MySQL integration_
@@ -157,7 +157,7 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
 
     -   既存実装分類 A として、予約の一括追加・更新・削除、および番組の全件・放送局単位置換が全変更成功時だけ確定するこ
         とを `integration` で固定する。
-    -   先頭・中間・末尾の変更失敗を注入し、開始前の row 集合へ取り消され、従来の操作別 error message が caller へ返るこ
+    -   先頭・中間・末尾の変更失敗を注入し、開始前の row 集合へ取り消され、操作別 error message が caller へ返るこ
         とを確認する。
     -   transaction 全体を共通再試行へ渡さず、一つの transaction attempt だけが開始されることを `unittest/imp` で検証す
         る。
@@ -170,7 +170,7 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
     -   既存実装分類 A として、復元対象の各種類が削除と全追加を一つの確定単位とし、途中失敗時にその種類だけを開始前へ戻
         すことを parameterized `integration` test で固定する。
     -   復元全体を一つの transaction にせず、確定済みの前段を後段失敗で取り消さない既存の段階順を確認する。
-    -   各種類の失敗が従来の `restore error` として返り、共通再試行が重ならないことを `unittest/imp` で検証する。
+    -   各種類の失敗が `restore error` として返り、共通再試行が重ならないことを `unittest/imp` で検証する。
     -   完了時には、全復元種類の成功・中間失敗と、前段確定後の後段失敗を自動testで再現できる。
     -   _Requirements: 4.3, 4.4, 4.5, 5.4_
     -   _Boundary: Entity restore transactions_
@@ -202,27 +202,24 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
     -   _Depends: 1.1_
 
 -   [x] 4. cold start の接続初期化を承認済み契約へ変更する
--   [x] 4.1 共有初期化と完全初期化後公開をREDから最小実装・GREENまで一単位で変更する
+-   [x] 4.1 共有初期化と完全初期化後公開を一単位で変更する
 
-    -   修正前の並行候補生成、外部拡張失敗後の保存候補、および回収されない候補を focused `unittest/imp` で再現してから、
-        目標 `unittest/spec` を追加する。
+    -   並行候補生成、外部拡張失敗後の保存候補、および回収されない候補を focused `unittest/imp` で、
+        目標 `unittest/spec` と合わせて検証する。
     -   同時要求が一つの接続作成・データ構造更新・外部拡張読込みへ合流し、成功時は同じ instance、失敗時は同じ primary
         error を受け取る契約を定義する。
     -   接続、データ構造更新、外部拡張の各失敗で候補を公開せず一回閉じ、close failure は primary error を置換せず別の内
         部診断へ残すcaseを定義する。
     -   不採用候補の回収と、失敗後の次要求が新しい初期化を開始できるcaseを含め、無期限 settlement を有限 timeout へ変更
         しない。
-    -   目標testがsingle-flight、公開時点、cleanup、または再初期化の未実装だけを理由に失敗するREDを確認してから
-        productionを変更する。
     -   一つの process 内で cold start 中の要求が同じ初期化結果へ合流し、接続作成、データ構造更新、外部拡張読込みを重複
-        開始しない最小状態を追加する。
+        開始しない状態を持つ。
     -   すべての初期化段階が成功した候補だけを保存し、primary failure または不採用の候補を閉じ、共有中の要求へ同じ結果を
         返す。
     -   cleanup error は運用ログの内部診断へ分離し、元の接続・更新・外部拡張 error、既存の接続ポート、保存済み接続の順次
         再利用、および無期限待機を変更しない。
-    -   同じ`unittest/spec`と`unittest/imp` targetを再実行する。
-    -   完了時には、既存characterizationと目標testがGREENになり、候補生成・初期化・更新・拡張読込み・候補closeの各回数が
-        承認済み契約と一致し、赤いtestが残らない。
+    -   完了時には、既存characterizationと目標testが通り、候補生成・初期化・更新・拡張読込み・候補closeの各回数が
+        承認済み契約と一致する。
     -   _Requirements: 1.3, 1.6, 1.10, 1.11, 6.3, 6.5_
     -   _Boundary: DBOperator―cold initialization_
     -   _Depends: 1.2, 1.3, 1.4_
@@ -240,20 +237,19 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
     -   _Depends: 4.1_
 
 -   [x] 5. 一括変更資源の失敗処理を承認済み契約へ変更する
--   [x] 5.1 transaction lifecycleの全対象をREDから最小実装・GREENまで一単位で変更する
+-   [x] 5.1 transaction lifecycleの全対象を一単位で変更する
 
     -   transaction 資源の確保後について、開始、変更、確定、取消し、および解放を個別に失敗させる domain 固有のtarget
         `integration` fault harness を追加する。
     -   全経路で解放を一回だけ試み、開始済みの場合だけ取消し、元の database failure と取消し・解放failureを別の内部診断
         へ記録する目標testを定義する。
-    -   依頼元には各操作が従来から返す error message だけを維持し、cleanup error や公開 `cause` で置き換えないことを
+    -   依頼元には各操作が返す error message だけを維持し、cleanup error や公開 `cause` で置き換えないことを
         `unittest/spec` で固定する。
     -   operation が成功しても解放だけ失敗した場合は同じ操作別 error と内部 cleanup 診断になるcaseを含める。
-    -   目標testが開始失敗時の未解放、無条件取消し、cleanup errorによるwrapper置換など、修正対象ごとの意図した理由だけで
-        失敗するREDを確認してからproductionを変更する。
+    -   目標testが開始失敗時の未解放、無条件取消し、cleanup errorによるwrapper置換などを、対象ごとに検証する。
     -   放送局の一括保存、番組置換、および番組増分更新について、transaction 開始を含む全経路で資源を解放し、開始済みの場
         合だけ取消す。
-    -   元の操作 failure と cleanup failure を分離して記録し、各操作の従来の caller error、番組増分の個別失敗継続、およ
+    -   元の操作 failure と cleanup failure を分離して記録し、各操作の caller error、番組増分の個別失敗継続、およ
         び非一律な確定境界を変更しない。
     -   予約の一括追加・更新・削除、予約復元、およびルール復元について、開始失敗を含む全経路で資源を一回解放し、activeな
         変更だけを取消す。
@@ -262,15 +258,15 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
     -   生成 ID、ルールの保存形式、一種類ごとの確定単位、および共通再試行の非適用を変更しない。
     -   録画済み番組および録画履歴の種類別復元について、開始失敗を含む全経路で資源を一回解放し、active な変更だけを取消
         す。
-    -   元の database error と cleanup error を別々に記録し、caller には従来の `restore error` だけを返す。
+    -   元の database error と cleanup error を別々に記録し、caller には `restore error` だけを返す。
     -   録画済み番組復元時の関連管理情報削除、一種類ごとの確定、および前段確定後の後段非 rollback を変更しない。
     -   録画ファイル、ドロップログ、サムネイル、およびタグの種類別復元について、開始失敗を含む全経路で資源を一回解放
         し、active な変更だけを取消す。
-    -   元の database error と cleanup error を別々に記録し、caller には従来の `restore error` だけを返す。
+    -   元の database error と cleanup error を別々に記録し、caller には `restore error` だけを返す。
     -   実ファイルへの副作用を追加せず、種類別確定、段階順、多対多 relation、および共通再試行の非適用を維持する。
-    -   同じ`unittest/spec`とdomain固有`integration` fault matrixを全操作群へ適用して再実行し、共通再試行を重ねない。
-    -   完了時には、成功、開始失敗、変更失敗、確定失敗、取消し失敗、解放失敗の全caseがGREENになり、各操作群のrow集合、資
-        源回収回数、cleanup診断、および従来のcaller errorが承認済み契約と一致して赤いtestが残らない。
+    -   同じ`unittest/spec`とdomain固有`integration` fault matrixを全操作群へ適用し、共通再試行を重ねない。
+    -   完了時には、成功、開始失敗、変更失敗、確定失敗、取消し失敗、解放失敗の全caseが通り、各操作群のrow集合、資
+        源回収回数、cleanup診断、およびcaller errorが承認済み契約と一致する。
     -   _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9, 5.4_
     -   _Boundary: QueryRunner lifecycle・Channel・Program・Reserve・Rule・Recorded restore transactions_
     -   _Depends: 3.1, 3.2, 3.3_
@@ -416,14 +412,14 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
 -   `src/model/IConfigFile.ts`
 -   `config/config.yml.template`
 
-各 leaf は TDD 順、成功 / 失敗 oracle、command 種別、実装の記録を持ち、公開や publish を行わない。`mysql2`
+各 leaf は成功 / 失敗 oracle、command 種別、実装の記録を持ち、公開や publish を行わない。`mysql2`
 と `typeorm` を直接依存とする（版は `package.json` が正本）。公式現行 LTS は image tag `mysql:lts` で表し、焦点 integration が
 tag と image digest を検証する。
 
 -   [x] 8. 現行公式 MySQL LTS へ本番接続できるよう直接依存を置換する
--   [x] 8.1 公式現行 MySQL LTS の接続・終了 RED と公開前後の既存 state を固定する
+-   [x] 8.1 公式現行 MySQL LTS の接続・終了と公開前後の既存 state を固定する
 
-    -   TDD: 実装より先に RED test を追加する。公式現行 LTS は image tag `mysql:lts` で表し、確認した
+    -   公式現行 LTS は image tag `mysql:lts` で表し、確認した
         digest を実装の記録へ残す。
     -   設定は既存 Configuration 契約（`dbtype` と `mysql.host` / `user` / `port` / `password` / `database`、任意
         `charset`）を `DBOperator` へ渡す。新しい設定 field と `driver` override を追加しない。
@@ -431,29 +427,27 @@ tag と image digest を検証する。
         `test/server/persistence/mysql-lts-connection.integration.test.ts` を新設する。既存
         `mysql-runtime.ts` の `mysql:8.4` と削除済み認証 plugin の有効化 option は公式 LTS 証跡に使わない。削除済み
         旧認証 plugin や認証弱体化 option を付けない。
-    -   公式 LTS に対し `Configuration` → `DBOperator` の接続作成と `closeConnection()` を観測する。旧直接
-        `mysql@2.18.1` では公開前 handshake が失敗し、候補は公開されず閉じられ、通常の接続失敗が返ることを RED oracle
+    -   公式 LTS に対し `Configuration` → `DBOperator` の接続作成と `closeConnection()` を観測する。公開前 handshake が失敗した場合、候補は公開されず閉じられ、通常の接続失敗が返ることを oracle
         とする。失敗 identity は `ER_NOT_SUPPORTED_AUTH_MODE` または同等の認証 handshake 拒否であり、timeout や
         skip、別 image への読替えではない。
     -   公開後の既存 state は、公開済み instance の `checkConnection()` / `select 1` 失敗が既存 query error を返し、自動
         close / 置換をしないことである。既存 `[PERSIST-1.11-FAILED-*-INITIALIZATION]` と `[PERSIST-1.3-CHECK]` をこの
         二分の oracle として維持し、公式 LTS 経路が公開後失敗を新しい再接続契約へ変えないことを named case で固定する。
-    -   成功 oracle（本 leaf）: 公式 LTS 接続 case が期待した公開前認証失敗で RED になり、公開前 cleanup と公開後 query
+    -   成功 oracle（本 leaf）: 公式 LTS 接続 case で、公開前 cleanup と公開後 query
         error の二分が named case から逆引きできる。失敗 oracle: skip、`mysql:8.4` 弱体化 fixture の流用、固定 version の
         image を現行 LTS の証跡にすること、認証弱体化、公開後失敗での自動 close / 置換。
     -   Command 種別は `integration` と既存 state の `unittest/spec`。検証 command は
         `npm run test:server:integration -- test/server/persistence/mysql-lts-connection.integration.test.ts`、
         `npm run test:server:spec -- test/server/persistence/connection.spec.test.ts`。
     -   確認した LTS tag / digest、失敗 identity、command を実装の記録に残す。公開や publish はしない。
-    -   完了時には、公式現行 LTS への本番接続 RED が focused integration から観測でき、公開前候補 cleanup / 公開後
+    -   完了時には、公式現行 LTS への本番接続が focused integration から観測でき、公開前候補 cleanup / 公開後
         query error の既存 state が named spec case から逆引きでき、production source の差分がない。
     -   _Requirements: 8.1, 8.2, 8.4_
     -   _Boundary: DBOperator―公式 MySQL LTS 接続_
 
--   [x] 8.2 置換前と同じ schema・migration history・代表 row の in-place 互換 RED を作る
+-   [x] 8.2 置換前と同じ schema・migration history・代表 row の in-place 互換を固定する
 
-    -   TDD: 8.1 の公式 LTS provisioner を使い、空 schema からの Migration / CRUD とは別の in-place fixture を先に RED
-        として追加する。
+    -   8.1 の公式 LTS provisioner を使い、空 schema からの Migration / CRUD とは別の in-place fixture を置く。
     -   exact path は `test/server/persistence/mysql-lts-inplace-stored-data.integration.test.ts` と
         `test/server/fixtures/persistence/mysql-inplace/` である。既存
         `connection.integration.test.ts` の空隔離 schema は代替にしない。
@@ -467,19 +461,17 @@ tag と image digest を検証する。
     -   `IConfigFile` と `config/config.yml.template` の field 不変確認は設定形状の補助証跡に限定する。
     -   Command 種別は `integration`。検証 command は
         `npm run test:server:integration -- test/server/persistence/mysql-lts-inplace-stored-data.integration.test.ts`。
-    -   成功 oracle（本 leaf）: 旧直接 `mysql@2.18.1` では公式 LTS へ開けず、読取り・更新・再読取りまで到達できない
-        RED になる。失敗 oracle: 空 schema からの Migration / CRUD を本証跡へ読み替える、履歴を再実行して上書きする、設定
+    -   成功 oracle（本 leaf）: in-place fixture が公式 LTS 上で読取り・更新・再読取りまで到達する。失敗 oracle: 空 schema からの Migration / CRUD を本証跡へ読み替える、履歴を再実行して上書きする、設定
         型の静的比較だけで 8.3 を満たしたとする。
-    -   実装の記録には fixture の migration 名、代表 row 識別、command、RED 理由を残す。公開や publish はしない。
-    -   完了時には、in-place fixture が空 schema 経路と区別でき、旧 client では公式 LTS 上の保存データ互換を証明でき
-        ないことが focused integration から観測できる。
+    -   実装の記録には fixture の migration 名、代表 row 識別、command を残す。公開や publish はしない。
+    -   完了時には、in-place fixture が空 schema 経路と区別でき、公式 LTS 上の保存データ互換が focused integration から観測できる。
     -   _Requirements: 8.1, 8.3, 8.4_
     -   _Boundary: DBOperator―in-place 保存データ_
     -   _Depends: 8.1_
 
 -   [x] 8.3 TypeORM 互換の直接依存 `mysql2` へ置換し、旧直接 `mysql` を除去する
 
-    -   TDD: 8.1 と 8.2 の RED が残っていることを確認してから依存を置換する。本 leaf では GREEN を宣言しない。
+    -   8.1 と 8.2 の focused integration を、依存の置換後に成功させる。
     -   採用する `mysql2` 版は、`typeorm` の peerDependencies を満たす版として `package.json` に固定する。
     -   `package.json` へ直接依存 `mysql2` を追加し、直接依存 `mysql` とその lockfile 条目を除去する。TypeORM
         `type: 'mysql'` を維持し、`driver` override を追加しない。
@@ -497,15 +489,15 @@ tag と image digest を検証する。
         であること、および 8.1 / 8.2 を弱体化せずに再実行できること。失敗 oracle: peer 範囲外の版、`mysql` の残留、
         `driver` override、設定 field 追加、公式 LTS への認証弱体化。
     -   実装の記録には選んだ `mysql2` 版、peer 範囲の根拠、TypeORM 解決の確認方法と結果、lockfile 差分要約を残す。
-    -   完了時には、直接依存が検証済み `mysql2` だけになり、既存 `type: 'mysql'` 経路と設定 field が保たれ、GREEN 証跡は
-        まだ 8.4 の担当である。
+    -   完了時には、直接依存が検証済み `mysql2` だけになり、既存 `type: 'mysql'` 経路と設定 field が保たれる。成功の証跡は
+        8.4 が担当する。
     -   _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5_
     -   _Boundary: package.json―TypeORM mysql2_
     -   _Depends: 8.2_
 
--   [x] 8.4 公式 LTS 接続・終了と in-place 保存データの GREEN を確認し、既存 R1〜6 の主 test を置換後に再確認する
+-   [x] 8.4 公式 LTS 接続・終了と in-place 保存データを確認し、既存 R1〜6 の主 test を置換後に再確認する
 
-    -   TDD: 8.3 の置換後にだけ GREEN を取る。8.1 と 8.2 の focused integration が公式現行 LTS で成功し、公開後
+    -   8.3 の置換後に、8.1 と 8.2 の focused integration が公式現行 LTS で成功し、公開後
         `select 1` 失敗は既存 query error のままであることを確認する。
     -   接続作成の成功は `getConnection()` の公開完了である。その後 `closeConnection()` が接続を解放する。in-place
         経路は既存 row の読取り・代表更新・再読取り・schema / migration history 非変更・close / cleanup をすべて通す。
@@ -531,7 +523,7 @@ tag と image digest を検証する。
     -   完了時には、公式現行 LTS の接続・終了と in-place 保存データ互換、置換後 R1〜6 の主 test の再確認が、上記の command の
         全件成功として確認できる。
     -   _Requirements: 8.1, 8.2, 8.3, 8.4_
-    -   _Boundary: DBOperator―公式 MySQL LTS GREEN_
+    -   _Boundary: DBOperator―公式 MySQL LTS 接続・保存データ確認_
     -   _Depends: 8.3_
 
 ## 接続設定・一覧・error 記録の追加契約
@@ -618,7 +610,7 @@ tag と image digest を検証する。
 | 8.1  | `test/server/persistence/mysql-lts-runtime.ts`<br>`test/server/persistence/mysql-lts-connection.integration.test.ts`<br>`test/server/persistence/connection.spec.test.ts`                                                                               | `integration`<br>`unittest/spec`                   | `7.4`                                                                                      | `npm run test:server:integration -- test/server/persistence/mysql-lts-connection.integration.test.ts`<br>`npm run test:server:spec -- test/server/persistence/connection.spec.test.ts`                                                                                                                                                                                                                                                                                            |
 | 8.2  | `test/server/persistence/mysql-lts-inplace-stored-data.integration.test.ts`<br>`test/server/fixtures/persistence/mysql-inplace/`                                                                                                                                                                    | `integration`                                      | `8.1`                                                                                      | `npm run test:server:integration -- test/server/persistence/mysql-lts-inplace-stored-data.integration.test.ts`                                                                                                                                                                                                                                                                                                                                                                    |
 | 8.3  | `package.json`<br>`package-lock.json`<br>`test/server/persistence/mysql-runtime.ts`（旧 `mysql` 除去後の管理クライアント切替が必要な場合のみ）                                                                                                                                                      | package-manager<br>`integration`                   | `8.2`                                                                                      | `typeorm` の peer `mysql2` を満たす版を `package.json` に固定し、`mysql2` 追加と直接 `mysql` 除去後に 8.1 / 8.2 の focused integration を再実行する                                                                                                                                                                                                                                                                         |
-| 8.4  | `test/server/persistence/mysql-lts-connection.integration.test.ts`<br>`test/server/persistence/mysql-lts-inplace-stored-data.integration.test.ts`<br>`test/server/persistence/connection.spec.test.ts`<br>`test/server/persistence/repositories.spec.test.ts`<br>`test/server/persistence/search-dialects.spec.test.ts`<br>`test/server/persistence/retry.spec.test.ts`<br>`test/server/persistence/implementation.test.ts`<br>`test/server/persistence/connection.integration.test.ts`<br>`test/server/persistence/migrations.integration.test.ts`<br>`test/server/persistence/queries.integration.test.ts`<br>`test/server/persistence/transactions.integration.test.ts`<br>`test/server/persistence/close.integration.test.ts` | `integration`・`unittest/spec`・`unittest/imp` | `8.3`                                                                                      | 最終計測前に 3 種 RED witness を一時 dirty として raw へ残して復元し、最終 bytes を commit して clean `HEAD^{tree}` を固定したうえで、inventory GREEN と次の targeted GREEN だけをその tree で実行する。<br>`npm run test:server:integration -- test/server/persistence/mysql-lts-connection.integration.test.ts`<br>`npm run test:server:integration -- test/server/persistence/mysql-lts-inplace-stored-data.integration.test.ts`<br>`npm run test:server:spec -- test/server/persistence/connection.spec.test.ts`<br>`npm run test:server:spec -- test/server/persistence/repositories.spec.test.ts`<br>`npm run test:server:spec -- test/server/persistence/search-dialects.spec.test.ts`<br>`npm run test:server:spec -- test/server/persistence/retry.spec.test.ts`<br>`npm run test:server:imp -- test/server/persistence/implementation.test.ts`<br>`npm run test:server:integration -- test/server/persistence/connection.integration.test.ts`<br>`npm run test:server:integration -- test/server/persistence/migrations.integration.test.ts`<br>`npm run test:server:integration -- test/server/persistence/queries.integration.test.ts`<br>`npm run test:server:integration -- test/server/persistence/transactions.integration.test.ts`<br>`npm run test:server:integration -- test/server/persistence/close.integration.test.ts` |
+| 8.4  | `test/server/persistence/mysql-lts-connection.integration.test.ts`<br>`test/server/persistence/mysql-lts-inplace-stored-data.integration.test.ts`<br>`test/server/persistence/connection.spec.test.ts`<br>`test/server/persistence/repositories.spec.test.ts`<br>`test/server/persistence/search-dialects.spec.test.ts`<br>`test/server/persistence/retry.spec.test.ts`<br>`test/server/persistence/implementation.test.ts`<br>`test/server/persistence/connection.integration.test.ts`<br>`test/server/persistence/migrations.integration.test.ts`<br>`test/server/persistence/queries.integration.test.ts`<br>`test/server/persistence/transactions.integration.test.ts`<br>`test/server/persistence/close.integration.test.ts` | `integration`・`unittest/spec`・`unittest/imp` | `8.3`                                                                                      | 最終 bytes を commit して clean `HEAD^{tree}` を固定したうえで、inventory と次の targeted test だけをその tree で実行する。<br>`npm run test:server:integration -- test/server/persistence/mysql-lts-connection.integration.test.ts`<br>`npm run test:server:integration -- test/server/persistence/mysql-lts-inplace-stored-data.integration.test.ts`<br>`npm run test:server:spec -- test/server/persistence/connection.spec.test.ts`<br>`npm run test:server:spec -- test/server/persistence/repositories.spec.test.ts`<br>`npm run test:server:spec -- test/server/persistence/search-dialects.spec.test.ts`<br>`npm run test:server:spec -- test/server/persistence/retry.spec.test.ts`<br>`npm run test:server:imp -- test/server/persistence/implementation.test.ts`<br>`npm run test:server:integration -- test/server/persistence/connection.integration.test.ts`<br>`npm run test:server:integration -- test/server/persistence/migrations.integration.test.ts`<br>`npm run test:server:integration -- test/server/persistence/queries.integration.test.ts`<br>`npm run test:server:integration -- test/server/persistence/transactions.integration.test.ts`<br>`npm run test:server:integration -- test/server/persistence/close.integration.test.ts` |
 | 9.1  | `test/server/persistence/connection.spec.test.ts`<br>`test/server/persistence/sqlite-journal.integration.test.ts`<br>`test/server/persistence/orm-cli.integration.test.ts` | `unittest/spec`<br>`integration` | `4.1` | `npm run test:server:spec -- test/server/persistence/connection.spec.test.ts`<br>`npm run test:server:integration -- test/server/persistence/sqlite-journal.integration.test.ts`<br>`npm run test:server:integration -- test/server/persistence/orm-cli.integration.test.ts` |
 | 9.2  | `test/server/persistence/connection.spec.test.ts`<br>`test/server/persistence/sqlite-busy-timeout.integration.test.ts`<br>`test/server/persistence/orm-cli.integration.test.ts` | `unittest/spec`<br>`integration` | `4.1` | `npm run test:server:spec -- test/server/persistence/connection.spec.test.ts`<br>`npm run test:server:integration -- test/server/persistence/sqlite-busy-timeout.integration.test.ts`<br>`npm run test:server:integration -- test/server/persistence/orm-cli.integration.test.ts` |
 | 9.3  | `test/server/persistence/connection.spec.test.ts`<br>`test/server/persistence/connection-socket.integration.test.ts`<br>`test/server/persistence/connection-ssl.integration.test.ts`<br>`test/server/persistence/orm-cli.integration.test.ts` | `unittest/spec`<br>`integration` | `4.1` | `npm run test:server:spec -- test/server/persistence/connection.spec.test.ts`<br>`npm run test:server:integration -- test/server/persistence/connection-socket.integration.test.ts`<br>`npm run test:server:integration -- test/server/persistence/connection-ssl.integration.test.ts`<br>`npm run test:server:integration -- test/server/persistence/orm-cli.integration.test.ts` |

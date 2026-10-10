@@ -29,12 +29,12 @@ spec の task ID は local `_Depends:` に記載しない。
 | 1.1  | `test/server/reservation-management/reservation-types.spec.test.ts`<br>`test/server/reservation-management/classification.imp.test.ts`<br>`test/server/reservation-management/reservation-persistence.integration.test.ts`                                                                                                                                                                                                                                                                                                                                               | `unittest/spec`・`unittest/imp`・`integration`                  | なし（共有foundationのみ）                                                                                | `npm run test:server:spec -- test/server/reservation-management/reservation-types.spec.test.ts`<br>`npm run test:server:imp -- test/server/reservation-management/classification.imp.test.ts`<br>`npm run test:server:integration -- test/server/reservation-management/reservation-persistence.integration.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | 1.2  | `test/server/reservation-management/reservation-types.spec.test.ts`<br>`test/server/reservation-management/classification.imp.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                   | `unittest/spec`・`unittest/imp`                                 | なし（共有foundationのみ）                                                                                | `npm run test:server:spec -- test/server/reservation-management/reservation-types.spec.test.ts`<br>`npm run test:server:imp -- test/server/reservation-management/classification.imp.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | 1.3  | `test/server/reservation-management/queries.spec.test.ts`<br>`test/server/reservation-management/classification.imp.test.ts`<br>`test/server/reservation-management/reservation-persistence.integration.test.ts`                                                                                                                                                                                                                                                                                                                                                         | `unittest/spec`・`unittest/imp`・`integration`                  | `1.1, 1.2`                                                                                                | `npm run test:server:spec -- test/server/reservation-management/queries.spec.test.ts`<br>`npm run test:server:imp -- test/server/reservation-management/classification.imp.test.ts`<br>`npm run test:server:integration -- test/server/reservation-management/reservation-persistence.integration.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| 1.4  | `test/server/reservation-management/queries.spec.test.ts`<br>`test/server/reservation-management/classification.imp.test.ts`<br>`test/server/reservation-management/reservation-persistence.integration.test.ts`<br>`src/model/db/ReserveDB.ts`                                                                                                                                                                                                                                                                                                                          | `unittest/spec` RED・`unittest/imp` GREEN・`integration`        | `1.3`                                                                                                     | `npm run test:server:spec -- test/server/reservation-management/queries.spec.test.ts`<br>`npm run test:server:imp -- test/server/reservation-management/classification.imp.test.ts`<br>`npm run test:server:integration -- test/server/reservation-management/reservation-persistence.integration.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| 1.4  | `test/server/reservation-management/queries.spec.test.ts`<br>`test/server/reservation-management/classification.imp.test.ts`<br>`test/server/reservation-management/reservation-persistence.integration.test.ts`<br>`src/model/db/ReserveDB.ts`                                                                                                                                                                                                                                                                                                                          | `unittest/spec`・`unittest/imp`・`integration`        | `1.3`                                                                                                     | `npm run test:server:spec -- test/server/reservation-management/queries.spec.test.ts`<br>`npm run test:server:imp -- test/server/reservation-management/classification.imp.test.ts`<br>`npm run test:server:integration -- test/server/reservation-management/reservation-persistence.integration.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | 2.1  | `test/server/reservation-management/manual-mutations.spec.test.ts`<br>`test/server/reservation-management/characterization.test.ts`<br>`test/server/reservation-management/reservation-persistence.integration.test.ts`                                                                                                                                                                                                                                                                                                                                                  | `unittest/spec`・`unittest/imp`・`integration`                  | なし（共有foundationのみ）                                                                                | `npm run test:server:spec -- test/server/reservation-management/manual-mutations.spec.test.ts`<br>`npm run test:server:imp -- test/server/reservation-management/characterization.test.ts`<br>`npm run test:server:integration -- test/server/reservation-management/reservation-persistence.integration.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | 2.2  | `test/server/reservation-management/manual-mutations.spec.test.ts`<br>`test/server/reservation-management/characterization.test.ts`<br>`test/server/reservation-management/reservation-persistence.integration.test.ts`                                                                                                                                                                                                                                                                                                                                                  | `unittest/spec`・`unittest/imp`・`integration` characterization | `1.1, 1.2`                                                                                                | `npm run test:server:spec -- test/server/reservation-management/manual-mutations.spec.test.ts`<br>`npm run test:server:imp -- test/server/reservation-management/characterization.test.ts`<br>`npm run test:server:integration -- test/server/reservation-management/reservation-persistence.integration.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| 2.3  | `test/server/reservation-management/manual-mutations.spec.test.ts`<br>`test/server/reservation-management/characterization.test.ts`<br>`test/server/reservation-management/reservation-persistence.integration.test.ts`<br>`src/model/operator/reservation/ReservationManageModel.ts`                                                                                                                                                                                                                                                                                    | `unittest/spec` RED・`unittest/imp` GREEN・`integration`        | `2.1, 2.2`                                                                                                | `npm run test:server:spec -- test/server/reservation-management/manual-mutations.spec.test.ts`<br>`npm run test:server:imp -- test/server/reservation-management/characterization.test.ts`<br>`npm run test:server:integration -- test/server/reservation-management/reservation-persistence.integration.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| 2.3  | `test/server/reservation-management/manual-mutations.spec.test.ts`<br>`test/server/reservation-management/characterization.test.ts`<br>`test/server/reservation-management/reservation-persistence.integration.test.ts`<br>`src/model/operator/reservation/ReservationManageModel.ts`                                                                                                                                                                                                                                                                                    | `unittest/spec`・`unittest/imp`・`integration`        | `2.1, 2.2`                                                                                                | `npm run test:server:spec -- test/server/reservation-management/manual-mutations.spec.test.ts`<br>`npm run test:server:imp -- test/server/reservation-management/characterization.test.ts`<br>`npm run test:server:integration -- test/server/reservation-management/reservation-persistence.integration.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | 2.4  | `test/server/reservation-management/manual-mutations.spec.test.ts#RM-2.13` | `unittest/spec, unittest/imp` | `2.3` | `npm run test:server:spec -- test/server/reservation-management/manual-mutations.spec.test.ts` |
-| 2.5  | `test/server/reservation-management/manual-mutations.spec.test.ts`<br>`test/server/reservation-management/update-program-found.imp.test.ts`<br>`test/server/reservation-management/reservation-persistence.integration.test.ts`<br>`src/model/operator/reservation/ReservationManageModel.ts` | `unittest/spec` RED・`unittest/imp` GREEN・`integration` | `2.3` | `npm run test:server:spec -- test/server/reservation-management/manual-mutations.spec.test.ts`<br>`npm run test:server:imp -- test/server/reservation-management/update-program-found.imp.test.ts`<br>`npm run test:server:integration -- test/server/reservation-management/reservation-persistence.integration.test.ts` |
+| 2.5  | `test/server/reservation-management/manual-mutations.spec.test.ts`<br>`test/server/reservation-management/update-program-found.imp.test.ts`<br>`test/server/reservation-management/reservation-persistence.integration.test.ts`<br>`src/model/operator/reservation/ReservationManageModel.ts` | `unittest/spec`・`unittest/imp`・`integration` | `2.3` | `npm run test:server:spec -- test/server/reservation-management/manual-mutations.spec.test.ts`<br>`npm run test:server:imp -- test/server/reservation-management/update-program-found.imp.test.ts`<br>`npm run test:server:integration -- test/server/reservation-management/reservation-persistence.integration.test.ts` |
 | 3.1  | `test/server/reservation-management/rule-reconciliation.spec.test.ts`<br>`test/server/reservation-management/candidate-identity.imp.test.ts`<br>`test/server/reservation-management/reservation-persistence.integration.test.ts`                                                                                                                                                                                                                                                                                                                                         | `unittest/spec`・`unittest/imp`・`integration` characterization | なし（共有foundationのみ）                                                                                | `npm run test:server:spec -- test/server/reservation-management/rule-reconciliation.spec.test.ts`<br>`npm run test:server:imp -- test/server/reservation-management/candidate-identity.imp.test.ts`<br>`npm run test:server:integration -- test/server/reservation-management/reservation-persistence.integration.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | 3.2  | `test/server/reservation-management/rule-reconciliation.spec.test.ts`<br>`test/server/reservation-management/candidate-identity.imp.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                             | `unittest/spec`・`unittest/imp`                                 | `1.2, 3.1`                                                                                                | `npm run test:server:spec -- test/server/reservation-management/rule-reconciliation.spec.test.ts`<br>`npm run test:server:imp -- test/server/reservation-management/candidate-identity.imp.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | 4.1  | `test/server/reservation-management/relay.spec.test.ts`<br>`test/server/reservation-management/characterization.test.ts`<br>`test/server/reservation-management/reservation-event.integration.test.ts`                                                                                                                                                                                                                                                                                                                                                                   | `unittest/spec`・`unittest/imp`・`integration`                  | なし（共有foundationのみ）                                                                                | `npm run test:server:spec -- test/server/reservation-management/relay.spec.test.ts`<br>`npm run test:server:imp -- test/server/reservation-management/characterization.test.ts`<br>`npm run test:server:integration -- test/server/reservation-management/reservation-event.integration.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
@@ -44,12 +44,12 @@ spec の task ID は local `_Depends:` に記載しない。
 | 5.2  | `test/server/reservation-management/state-transitions.spec.test.ts`<br>`test/server/reservation-management/characterization.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                     | `unittest/spec`・`unittest/imp` characterization                | `1.2, 5.1`                                                                                                | `npm run test:server:spec -- test/server/reservation-management/state-transitions.spec.test.ts`<br>`npm run test:server:imp -- test/server/reservation-management/characterization.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | 5.3  | `test/server/reservation-management/state-transitions.spec.test.ts`<br>`test/server/reservation-management/classification.imp.test.ts`<br>`test/server/reservation-management/reservation-event.integration.test.ts`<br>`src/model/operator/reservation/ReservationManageModel.ts`                                                                                                                                                                                                                                                                                       | `unittest/spec`・`unittest/imp`・`integration`                  | `5.2`                                                                                                     | `npm run test:server:spec -- test/server/reservation-management/state-transitions.spec.test.ts`<br>`npm run test:server:imp -- test/server/reservation-management/classification.imp.test.ts`<br>`npm run test:server:integration -- test/server/reservation-management/reservation-event.integration.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | 6.1  | `test/server/reservation-management/lifecycle-diff-concurrency.spec.test.ts`<br>`test/server/reservation-management/characterization.test.ts`<br>`test/server/reservation-management/reservation-event.integration.test.ts`                                                                                                                                                                                                                                                                                                                                              | `unittest/spec`・`unittest/imp`・`integration`                  | なし（共有foundationのみ）                                                                                | `npm run test:server:spec -- test/server/reservation-management/lifecycle-diff-concurrency.spec.test.ts`<br>`npm run test:server:imp -- test/server/reservation-management/characterization.test.ts`<br>`npm run test:server:integration -- test/server/reservation-management/reservation-event.integration.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| 6.2  | `test/server/reservation-management/lifecycle-diff-concurrency.spec.test.ts`<br>`test/server/reservation-management/candidate-identity.imp.test.ts`<br>`test/server/reservation-management/reservation-event.integration.test.ts`<br>`src/model/operator/reservation/ReservationManageModel.ts`                                                                                                                                                                                                                                                                          | `unittest/spec` RED・`unittest/imp` GREEN・`integration`        | `5.3, 6.1`                                                                                                | `npm run test:server:spec -- test/server/reservation-management/lifecycle-diff-concurrency.spec.test.ts`<br>`npm run test:server:imp -- test/server/reservation-management/candidate-identity.imp.test.ts`<br>`npm run test:server:integration -- test/server/reservation-management/reservation-event.integration.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| 6.3  | `test/server/reservation-management/lifecycle-diff-concurrency.spec.test.ts`<br>`test/server/reservation-management/candidate-identity.imp.test.ts`<br>`test/server/reservation-management/reservation-persistence.integration.test.ts`<br>`src/model/operator/reservation/ReservationManageModel.ts`<br>`src/model/db/ReserveDB.ts`                                                                                                                                                                                                                                     | `unittest/spec` RED・`unittest/imp` GREEN・`integration`        | `5.1, 5.3`                                                                                                | `npm run test:server:spec -- test/server/reservation-management/lifecycle-diff-concurrency.spec.test.ts`<br>`npm run test:server:imp -- test/server/reservation-management/candidate-identity.imp.test.ts`<br>`npm run test:server:integration -- test/server/reservation-management/reservation-persistence.integration.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| 6.2  | `test/server/reservation-management/lifecycle-diff-concurrency.spec.test.ts`<br>`test/server/reservation-management/candidate-identity.imp.test.ts`<br>`test/server/reservation-management/reservation-event.integration.test.ts`<br>`src/model/operator/reservation/ReservationManageModel.ts`                                                                                                                                                                                                                                                                          | `unittest/spec`・`unittest/imp`・`integration`        | `5.3, 6.1`                                                                                                | `npm run test:server:spec -- test/server/reservation-management/lifecycle-diff-concurrency.spec.test.ts`<br>`npm run test:server:imp -- test/server/reservation-management/candidate-identity.imp.test.ts`<br>`npm run test:server:integration -- test/server/reservation-management/reservation-event.integration.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| 6.3  | `test/server/reservation-management/lifecycle-diff-concurrency.spec.test.ts`<br>`test/server/reservation-management/candidate-identity.imp.test.ts`<br>`test/server/reservation-management/reservation-persistence.integration.test.ts`<br>`src/model/operator/reservation/ReservationManageModel.ts`<br>`src/model/db/ReserveDB.ts`                                                                                                                                                                                                                                     | `unittest/spec`・`unittest/imp`・`integration`        | `5.1, 5.3`                                                                                                | `npm run test:server:spec -- test/server/reservation-management/lifecycle-diff-concurrency.spec.test.ts`<br>`npm run test:server:imp -- test/server/reservation-management/candidate-identity.imp.test.ts`<br>`npm run test:server:integration -- test/server/reservation-management/reservation-persistence.integration.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | 6.4  | `test/server/reservation-management/lifecycle-diff-concurrency.spec.test.ts`<br>`test/server/reservation-management/reservation-event.integration.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                               | `unittest/spec`・`integration` restart harness                  | `6.2, 6.3`                                                                                                | `npm run test:server:spec -- test/server/reservation-management/lifecycle-diff-concurrency.spec.test.ts`<br>`npm run test:server:integration -- test/server/reservation-management/reservation-event.integration.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | 7.1  | `test/server/reservation-management/execution-coordinator.imp.test.ts`<br>`test/server/reservation-management/lifecycle-diff-concurrency.spec.test.ts` | `unittest/imp`・`unittest/spec`・fake timer | なし（共有foundationのみ）                                                                                | `npm run test:server:imp -- test/server/reservation-management/execution-coordinator.imp.test.ts`<br>`npm run test:server:spec -- test/server/reservation-management/lifecycle-diff-concurrency.spec.test.ts` |
-| 7.2  | `test/server/reservation-management/lifecycle-diff-concurrency.spec.test.ts`<br>`test/server/reservation-management/execution-coordinator.imp.test.ts`<br>`test/server/reservation-management/reservation-event.integration.test.ts`<br>`src/model/ExecutionManagementModel.ts`                                                                                                                                                                                                                                                                                          | `unittest/spec` RED・`unittest/imp` GREEN・`integration`        | `7.1`                                                                                                     | `npm run test:server:spec -- test/server/reservation-management/lifecycle-diff-concurrency.spec.test.ts`<br>`npm run test:server:imp -- test/server/reservation-management/execution-coordinator.imp.test.ts`<br>`npm run test:server:integration -- test/server/reservation-management/reservation-event.integration.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| 7.3  | `test/server/reservation-management/lifecycle-diff-concurrency.spec.test.ts`<br>`test/server/reservation-management/execution-coordinator.imp.test.ts`<br>`test/server/reservation-management/reservation-event.integration.test.ts`<br>`src/model/ExecutionManagementModel.ts`                                                                                                                                                                                                                                                                                          | `unittest/spec` RED・`unittest/imp` GREEN・`integration`        | `7.2`                                                                                                     | `npm run test:server:spec -- test/server/reservation-management/lifecycle-diff-concurrency.spec.test.ts`<br>`npm run test:server:imp -- test/server/reservation-management/execution-coordinator.imp.test.ts`<br>`npm run test:server:integration -- test/server/reservation-management/reservation-event.integration.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| 7.2  | `test/server/reservation-management/lifecycle-diff-concurrency.spec.test.ts`<br>`test/server/reservation-management/execution-coordinator.imp.test.ts`<br>`test/server/reservation-management/reservation-event.integration.test.ts`<br>`src/model/ExecutionManagementModel.ts`                                                                                                                                                                                                                                                                                          | `unittest/spec`・`unittest/imp`・`integration`        | `7.1`                                                                                                     | `npm run test:server:spec -- test/server/reservation-management/lifecycle-diff-concurrency.spec.test.ts`<br>`npm run test:server:imp -- test/server/reservation-management/execution-coordinator.imp.test.ts`<br>`npm run test:server:integration -- test/server/reservation-management/reservation-event.integration.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| 7.3  | `test/server/reservation-management/lifecycle-diff-concurrency.spec.test.ts`<br>`test/server/reservation-management/execution-coordinator.imp.test.ts`<br>`test/server/reservation-management/reservation-event.integration.test.ts`<br>`src/model/ExecutionManagementModel.ts`                                                                                                                                                                                                                                                                                          | `unittest/spec`・`unittest/imp`・`integration`        | `7.2`                                                                                                     | `npm run test:server:spec -- test/server/reservation-management/lifecycle-diff-concurrency.spec.test.ts`<br>`npm run test:server:imp -- test/server/reservation-management/execution-coordinator.imp.test.ts`<br>`npm run test:server:integration -- test/server/reservation-management/reservation-event.integration.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | 7.4  | `test/server/reservation-management/lifecycle-diff-concurrency.spec.test.ts`<br>`test/server/reservation-management/execution-coordinator.imp.test.ts`<br>`test/server/reservation-management/reservation-event.integration.test.ts`<br>`src/model/operator/reservation/ReservationManageModel.ts`                                                                                                                                                                                                                                                                       | `unittest/spec`・`unittest/imp`・`integration`                  | `2.3, 3.1, 4.3, 6.2, 6.3, 7.3`                                                                            | `npm run test:server:spec -- test/server/reservation-management/lifecycle-diff-concurrency.spec.test.ts`<br>`npm run test:server:imp -- test/server/reservation-management/execution-coordinator.imp.test.ts`<br>`npm run test:server:integration -- test/server/reservation-management/reservation-event.integration.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | 7.5  | `test/server/reservation-management/lifecycle-diff-concurrency.spec.test.ts`<br>`test/server/reservation-management/reservation-event.integration.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                               | `unittest/spec`・`integration`                                  | `3.1, 7.4`                                                                                                | `npm run test:server:spec -- test/server/reservation-management/lifecycle-diff-concurrency.spec.test.ts`<br>`npm run test:server:integration -- test/server/reservation-management/reservation-event.integration.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | 8.1  | `test/server/reservation-management/reservation-persistence.integration.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | `integration`                                                   | `1.4, 3.1, 6.3`                                                                                           | `npm run test:server:integration -- test/server/reservation-management/reservation-persistence.integration.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
@@ -105,20 +105,20 @@ spec の task ID は local `_Depends:` に記載しない。
     -   _Verification: unittest/spec, unittest/imp, SQLite/MySQL integration_
     -   _Depends: 1.1, 1.2_
 
--   [x] 1.4 Rule別予約件数providerを一つのTDD単位で契約化・接続する
+-   [x] 1.4 Rule別予約件数providerを一つの単位で契約化・接続する
 
     -   rules側consumerと同じ`ReservationStateFilter`、既存5値、およびreadonly結果collectionを使用し、公開query
         の`type`、database filter、および変換規則を変更しない。
     -   page内Rule ID列と確定したfilterを受けるprovider contractをrules側consumerと同じfixtureへ定義し、空ID列、順不同・
-        部分結果、exact filter、repository rejectを同じ`unittest/spec` targetでRED確認する。
-    -   確定したfilter名・値shape・readonly結果shapeだけを扱うprovider adapterを既存予約queryへ最小接続し、欠落Ruleの0件
-        投影はconsumer側へ残して同じtargetをGREENにする。
+        部分結果、exact filter、repository rejectを同じ`unittest/spec` targetが検証する。
+    -   確定したfilter名・値shape・readonly結果shapeだけを扱うprovider adapterを既存予約queryへ接続し、欠落Ruleの0件
+        投影はconsumer側へ残す。
     -   database schema、公開field、IPC envelope、独自cache、retry、追加のcompositionを設けない。
-    -   完了時には確定したcontractがtestへ一意に反映され、同じtestのRED→最小production→GREENが閉じ、rules側query coreが
+    -   完了時には確定したcontractがtestへ一意に反映され、rules側query coreが
         予約repository具象へ直接依存しない。
     -   _Requirements: 7.2, 7.3, 7.6_
     -   _Boundary: Reservation query service・IRuleReservationCountPort provider_
-    -   _Verification: unittest/spec RED, unittest/imp GREEN, integration_
+    -   _Verification: unittest/spec, unittest/imp, integration_
     -   _Depends: 1.3_
 
 -   [x] 2. 手動予約 mutation と状態変更を既存契約・承認済み差分へ揃える
@@ -149,52 +149,50 @@ spec の task ID は local `_Depends:` に記載しない。
     -   _Verification: unittest/spec, unittest/imp, integration, characterization_
     -   _Depends: 1.1, 1.2_
 
--   [x] 2.3 手動追加・編集の承認済み差分を一つのTDD単位で実装する
+-   [x] 2.3 手動追加・編集の承認済み差分を一つの単位で実装する
 
     -   時刻指定追加は `startAt < endAt` かつ `endAt > now`、手動・relay追加はskip/overlapだけを除いた既存conflict予約も
-        事前計画へ含める期待値を先に固定する。
+        事前計画へ含める期待値を固定する。
     -   編集は手動予約のpredicateを満たすrowだけをfield変更前に受理し（手動由来の番組リレー予約は2.5で加える）、保存成功時に
         `updateTime`を更新する期待値を定義する。
     -   既存option受理範囲、時刻指定名、公開field、競合時の新規row0件を変更しない assertionを含める。
-    -   2.1・2.2のcharacterizationを維持し、承認済み差分だけが現行productionとの差でREDになることを確認してから、時刻区
-        間検査、通常・競合を含む追加事前計画、exact manual predicate、編集保存時刻更新だけを追加する。
+    -   2.1・2.2のcharacterizationを維持し、時刻区
+        間検査、通常・競合を含む追加事前計画、exact manual predicate、編集保存時刻更新を承認済み差分とする。
     -   add/editの入力、queue entry、Promiseをcallごとに分離し、CAS、generation、retry、request合流、public schema変更を
         追加しない。
-    -   完了時には、同じtarget testがGREENとなり、正常追加・編集・取消の既存row/event結果が維持される。
+    -   完了時には、同じtarget testが成功し、正常追加・編集・取消の既存row/event結果が維持される。
     -   _Requirements: 2.3, 2.5, 2.6, 2.11, 4.5, 6.5, 8.14, 8.17_
     -   _Boundary: Reservation mutation coordinator・manual mutation delta_
-    -   _Verification: unittest/spec RED, unittest/imp GREEN, integration_
+    -   _Verification: unittest/spec, unittest/imp, integration_
     -   _Depends: 2.1, 2.2_
 
--   [x] 2.4 手動追加・編集の保存先内ディレクトリ検査を一つのTDD単位で実装する
+-   [x] 2.4 手動追加・編集の保存先内ディレクトリ検査を一つの単位で実装する
 
     -   保存先内ディレクトリとencode出力先ディレクトリが`..`・先頭`/`の後の`..`・NULで録画保存先の外を指す追加・編集が、実
-        行権取得0回・DB効果0件・event0件で失敗し、`a/../b`・`/anime`は従来どおり保存される期待値を先に定義して、現行実装で
-        REDになることを確認する。
-    -   共通の判定関数を追加・編集の入口検査へ接続する最小実装を行い、既存のencode option検査、時刻指定入力検査、競合検査
+        行権取得0回・DB効果0件・event0件で失敗し、`a/../b`・`/anime`は保存される期待値を定義する。
+    -   共通の判定関数を追加・編集の入口検査へ接続し、既存のencode option検査、時刻指定入力検査、競合検査
         の結果を変えない。
-    -   完了時には、同じtarget testがGREENとなり、既存の追加・編集の正常系が維持される。
+    -   完了時には、同じtarget testが成功し、追加・編集の正常系が維持される。
     -   _Requirements: 2.13_
     -   _Boundary: Reservation mutation coordinator・manual option validation_
-    -   _Verification: unittest/spec RED, unittest/imp GREEN_
+    -   _Verification: unittest/spec, unittest/imp_
     -   _Depends: 2.3_
 
--   [x] 2.5 手動由来の番組リレー予約の編集を一つのTDD単位で受理する
+-   [x] 2.5 手動由来の番組リレー予約の編集を一つの単位で受理する
 
     -   手動由来の番組リレー予約（`ruleId === null && isTimeSpecified === false && isEventRelay === true && programId !== null`）
         の編集が、番組指定手動予約と同じ更新規則でfieldと`updateTime`を変更し、`updateOnce`→unlock→eventの順で完了する期待値
-        を先に定義し、現行実装でREDになることを確認する。
+        を定義する。
     -   番組自動予約、時刻自動予約、rule由来の番組リレー予約と、`isTimeSpecified`・`isEventRelay`単独で手動判定しない
         near miss は、fieldを変更せず`ReservationIsNotEditable`で拒否し、入力・encode option不正の`ReservationEditError`と
         区別する期待値を定義する。
-    -   編集の受理判定に手動由来の番組リレー予約のpredicateを加え、受理しないrowの失敗を`ReservationIsNotEditable`にする最小
-        実装を行い、競合再計算と公開形式を変えない。
+    -   編集の受理判定に手動由来の番組リレー予約のpredicateを加え、受理しないrowの失敗を`ReservationIsNotEditable`にし、競合再計算と公開形式を変えない。
     -   番組情報の更新（`update`）の後も、手動由来の番組リレー予約で編集した録画条件（途中終了許可、tags、保存先、encode）が
         維持されることを`unittest/imp`で確かめる。
-    -   完了時には、同じtarget testがGREENとなり、既存の手動予約の編集と拒否のcaseが維持される。
+    -   完了時には、同じtarget testが成功し、手動予約の編集と拒否のcaseが維持される。
     -   _Requirements: 2.6_
     -   _Boundary: Reservation mutation coordinator・manual edit_
-    -   _Verification: unittest/spec RED, unittest/imp GREEN, integration_
+    -   _Verification: unittest/spec, unittest/imp, integration_
     -   _Depends: 2.3_
 
 -   [x] 3. 自動予約候補から予約差分を作る契約を実装・検証する
@@ -311,33 +309,33 @@ spec の task ID は local `_Depends:` に記載しない。
     -   _Boundary: Program refresh coordinator・update-all batch_
     -   _Verification: unittest/spec, unittest/imp, integration_
 
--   [x] 6.2 全体更新後の全予約sweepを一つのTDD単位で実装する
+-   [x] 6.2 全体更新後の全予約sweepを一つの単位で実装する
 
     -   各itemの逐次settlement後に、保存済み全予約を再読込し、time manualを含む通常・競合候補を一回plannerへ渡す期待値を
         固定する。
     -   item途中の成功をrollbackせず、全対象eager開始、batch合流、generation、共通CASを導入しない期待値を含める。
-    -   6.1の既存batch testを維持し、最終sweepとtime-manual差分だけが現行との差でREDになることを確認してから、三つの既存
+    -   6.1の既存batch testを維持し、三つの既存
         loopがsettleした後だけ保存済み全予約を再読込し、skip/overlapを除く通常・競合予約を一回再計画する。
-    -   conflict-only変更を一つのdiffとして保存・通知し、既存10ms yield、個別failure継続、callごとの非合流を維持する。
-    -   完了時には、同じtarget testがGREENとなり、各callの個別完了時点と開始受理を混同しない。
+    -   conflict-only変更を一つのdiffとして保存・通知し、10ms yield、個別failure継続、callごとの非合流を維持する。
+    -   完了時には、同じtarget testが成功し、各callの個別完了時点と開始受理を混同しない。
     -   _Requirements: 5.6, 6.7, 8.1, 8.2, 8.3, 8.5, 8.7, 8.12, 8.13_
     -   _Boundary: Program refresh coordinator・full reservation sweep_
-    -   _Verification: unittest/spec RED, unittest/imp GREEN, integration_
+    -   _Verification: unittest/spec, unittest/imp, integration_
     -   _Depends: 5.3, 6.1_
 
--   [x] 6.3 期限切れdeleteと残存予約再計画を一つのTDD単位で実装する
+-   [x] 6.3 期限切れdeleteと残存予約再計画を一つの単位で実装する
 
     -   `endAt < now`だけを削除し、等号を保持し、削除時間帯に重なる残存予約の競合を同じ計画入力で再計算する期待値を定義
         する。
     -   expired deleteと残存conflict updateを一つのdiffへまとめ、commit→unlock→eventの順に一回処理する。
     -   周期cleanup、利用可能なIPC clean handler、件数上限、retryを追加しない。
-    -   起動時だけの既存caller characterizationを維持し、残存競合更新だけが現行との差でREDになることを確認してから、期限
+    -   起動時だけの既存caller characterizationを維持し、期限
         切れ対象と重なる残存予約を取得し、deleteとconflict updateを一つのtransactionへ渡す。
     -   database failureではeventを発行せず、成功時だけ実行権解放後に確定diffを一回emitする。
-    -   完了時には、同じtarget testがGREENとなり、等号境界、起動時caller、IPC cleanup gapが不変になる。
+    -   完了時には、同じtarget testが成功し、等号境界、起動時caller、IPC cleanup gapが不変になる。
     -   _Requirements: 5.6, 6.7, 8.4, 8.5_
     -   _Boundary: Expired reservation cleaner・ReservationDiff persistence_
-    -   _Verification: unittest/spec RED, unittest/imp GREEN, SQLite/MySQL integration_
+    -   _Verification: unittest/spec, unittest/imp, SQLite/MySQL integration_
     -   _Depends: 5.1, 5.3_
 
 -   [x] 6.4 保存済み予約からの起動再評価handoffを統合検証する
@@ -353,7 +351,7 @@ spec の task ID は local `_Depends:` に記載しない。
     -   _Verification: unittest/spec, integration, restart harness_
     -   _Depends: 6.2, 6.3_
 
--   [x] 7. reservation execution coordinator の継続性をTDDで実装する
+-   [x] 7. reservation execution coordinator の継続性を test と実装で閉じる
 -   [x] 7.1 lock漏れ、期限切れwaiter残存、およびID衝突の回帰を固定する
 
     -   Rule read reject、時刻候補生成例外、編集validation failureのいずれでも取得済み実行権を残さず、exact IDを一回解放
@@ -366,7 +364,7 @@ spec の task ID は local `_Depends:` に記載しない。
     -   _Boundary: Reservation execution coordinator の継続性_
     -   _Verification: unittest/spec, unittest/imp, fake timer_
 
--   [x] 7.2 60秒waiter、衝突しないID、およびexact releaseを一つのTDD単位で実装する
+-   [x] 7.2 60秒waiter、衝突しないID、およびexact releaseを一つの単位で実装する
 
     -   `allocating/waiting/granted/overdue/expired/released`の全状態と、
         `allocating→waiting→granted→released`、`granted→overdue→released`、 `allocating|waiting→expired`だけを有効遷移と
@@ -386,17 +384,17 @@ spec の task ID は local `_Depends:` に記載しない。
         検証する。
     -   7.1の回帰testを維持したまま、安全整数
         counter、使用中IDの同期skip、ID未割当priority降順・同priority FIFO allocation-wait、entry state、priority queue、timeout時の除外・無効
-        化、および無効entry skipを一つのcoordinatorへ実装する。
+        化、および無効entry skipを一つのcoordinatorが備える。
     -   release通知または`waiting` entryのtimeoutでIDが空いたとき、allocation-waitをpollingなしにpriority降順、同priority内FIFOで再走査し、元の取得期限内に未使用IDを割り当てる。
     -   現在ownerと一致する未解放IDだけを一回releaseし、次の有効entryへ実行権を渡す。
     -   retry、generation、CAS、persistent queue、fairness、starvation防止、他domainとのqueue共有を追加しない。
-    -   完了時には、同じtarget testがGREENとなり、priorityと同priority受付順の既存結果が維持される。
+    -   完了時には、同じtarget testが成功し、priorityと同priority受付順の結果が維持される。
     -   _Requirements: 8.8, 8.9, 8.15, 8.16, 8.17_
     -   _Boundary: Reservation execution coordinator production owner_
-    -   _Verification: unittest/spec RED, unittest/imp GREEN, fake timer, barrier, integration_
+    -   _Verification: unittest/spec, unittest/imp, fake timer, barrier, integration_
     -   _Depends: 7.1_
 
--   [x] 7.3 600秒owner watchdogとlate settlementを一つのTDD単位で実装する
+-   [x] 7.3 600秒owner watchdogとlate settlementを一つの単位で実装する
 
     -   実行権取得後600,000msの直前・到達・超過でunderlying operationを未確定にし、watchdog先着時もexact IDを解放済みと
         せず同じqueueの後続を開始しない。
@@ -404,15 +402,15 @@ spec の task ID は local `_Depends:` に記載しない。
         しないことをspiesで検証する。
     -   late success/rejectでDB処理を再実行せず、通常のcatch/finally/event順序とexact releaseを一回だけ行い後続を再開す
         る。
-    -   以上のtargetが現行productionとの差でREDになることを確認してから、実行権取得時にowner watchdogを開始し、先着時は
+    -   実行権取得時にowner watchdogを開始し、先着時は
         exact IDとunderlying Promiseを`overdue`として保持して同じlaneだけを保留する。
     -   元operation settlement時だけ通常の確定経路へ戻し、同じIDを一回releaseしてwatchdog状態を解除する。
     -   timeoutでDB効果を推測せず、再実行、別ID解放、process再起動、別domain停止を追加しない。
-    -   完了時には、同じtarget testがGREENとなり、overdue log、未解放owner、別domain継続、late settlement、一回release、
+    -   完了時には、同じtarget testが成功し、overdue log、未解放owner、別domain継続、late settlement、一回release、
         後続再開が独立して観測でき、600秒未満の正常・失敗operationは通常finallyだけで解放される。
     -   _Requirements: 8.11, 8.17, 8.18_
     -   _Boundary: Reservation execution coordinator・owner watchdog_
-    -   _Verification: unittest/spec RED, unittest/imp GREEN, fake timer, deferred Promise, integration_
+    -   _Verification: unittest/spec, unittest/imp, fake timer, deferred Promise, integration_
     -   _Depends: 7.2_
 
 -   [x] 7.4 全reservation mutationを共通exact-release境界へ接続する
@@ -544,8 +542,8 @@ spec の task ID は local `_Depends:` に記載しない。
 
     -   `test/server/reservation-management/reservation-persistence.integration.test.ts`で予約の保存、検
         索、filter、count、差分transactionをSQLite・MySQLのsynthetic fixtureへ接続する。
-    -   canonical caseが存在しない状態をREDとして確認してから最小fixture・testを追加し、
-        `#sqlite-and-mysql-save-query-filter-count-and-diff-rollback`をGREENにする。
+    -   最小fixture・testが、
+        `#sqlite-and-mysql-save-query-filter-count-and-diff-rollback`のcanonical caseを満たす。
     -   delete、insert、updateの各段階へfailureを注入し、rollback、event非発行、process内採番の既存境界をDBごとに確認す
         る。
     -   完了時には両DB adapterが同じ予約結果を返し、予約domainがdriver lifecycleまたは独自retryを追加していない。
@@ -557,8 +555,8 @@ spec の task ID は local `_Depends:` に記載しない。
 
     -   `test/server/reservation-management/reservation-http.integration.test.ts`で既存method、status、body、optional
         field、not-found、およびerror projectionをsynthetic domain fixtureへ接続する。
-    -   canonical caseが存在しない状態をREDとして確認してから最小harness・testを追加し、
-        `#public-routes-status-body-and-projection`をGREENにする。
+    -   最小harness・testが、
+        `#public-routes-status-body-and-projection`のcanonical caseを満たす。
     -   完了時には予約の一覧、詳細、追加、編集、取消のHTTP契約が承認済みcarrierと一致し、新しいwire fieldまたはrouteを追
         加していない。
     -   _Requirements: 9.4_
@@ -569,8 +567,8 @@ spec の task ID は local `_Depends:` に記載しない。
 
     -   `test/server/reservation-management/reservation-ipc.integration.test.ts`で既存IPC envelope、応答、5秒timeout後の
         domain継続をsynthetic fixtureへ接続する。
-    -   canonical caseが存在しない状態をREDとして確認してから最小harness・testを追加し、
-        `#existing-handlers-wait-and-detached-update-all`をGREENにする。
+    -   最小harness・testが、
+        `#existing-handlers-wait-and-detached-update-all`のcanonical caseを満たす。
     -   IPC handlerが存在しない`clean`操作、filesystem、およびchild processは非適用理由を明記し、存在しないhandlerや新し
         いIPC versionを追加しない。
     -   完了時には既存handlerを持つ予約操作のIPC契約が一致し、carrier timeoutが進行中domain処理をcancelしない。
@@ -582,8 +580,8 @@ spec の task ID は local `_Depends:` に記載しない。
 
     -   `test/server/reservation-management/reservation-event.integration.test.ts`で正準候補の受取、予約差分
         transaction、録画候補handoff、およびprocess内eventを同じcall ledgerへ接続する。
-    -   canonical caseが存在しない状態をREDとして確認してから最小harness・testを追加し、
-        `#rule-candidate-to-commit-unlock-diff-and-consumers`をGREENにする。
+    -   最小harness・testが、
+        `#rule-candidate-to-commit-unlock-diff-and-consumers`のcanonical caseを満たす。
     -   commit後のevent一回、rollback時event 0回、exact release、期限後確定、および資源解放を確認し、rules側条件評価や
         recording側session処理を本機能へ複製しない。
     -   完了時には候補入力から保存確定、差分、eventまでの順序が一意で、失敗時の部分通知または二重通知がない。
@@ -626,8 +624,8 @@ task ID、source の class 分割、private call 順、公開 API / IPC / DB sch
 
 ### 検証と実装の許可範囲
 
--   invalid / missing target および update の read / DB rejection は、承認済み契約（Requirements 5 / 8）を oracle とし、先
-    に focused characterization を置く。現行挙動が GREEN なら missing evidence だけを閉じ、product code は変更しない。契
-    約軸で実際に RED になった場合だけ、別分類の defect candidate とする。観測は operation 結果・exact unlock・event 非発
+-   invalid / missing target および update の read / DB rejection は、承認済み契約（Requirements 5 / 8）を oracle とし、
+    focused characterization を置く。対象の挙動が契約を満たすなら missing evidence だけを閉じ、product code は変更しない。契
+    約軸で満たさない場合だけ、別分類の defect candidate とする。観測は operation 結果・exact unlock・event 非発
     行・no mutation を含める。新しい HTTP status 表、公開契約、task ID、checkbox は作らない。
 -   coverage のためだけの product code 変更は禁止する。

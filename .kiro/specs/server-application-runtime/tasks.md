@@ -34,8 +34,8 @@ storage の候補選択は provider owner に残す。容量不足削除 adapter
 候補、exclusive gate、terminal 判定、resource lock、exact-ID deletion、Encode・配信利用状態を再実装しない。
 
 起動時のチューナーサーバー状態確認と DB 接続確認は、一回の試行にも復旧待ち全体にも EPGStation 独自 timeout を追加せず、
-失敗後に1秒待って無期限に続ける。`server-management-tools` が所有する backup、restore、v1 migration の DB 利用待ちも従来
-どおり無期限であり、runtime から共通 timeout、試行上限、取消、または別の待機 abstraction を重ねない。
+失敗後に1秒待って無期限に続ける。`server-management-tools` が所有する backup、restore、v1 migration の DB 利用待ちも
+無期限であり、runtime から共通 timeout、試行上限、取消、または別の待機 abstraction を重ねない。
 
 起動時整理の各 stage に対する600秒は観測 deadline だけである。deadline 到達で underlying operation を cancel、失敗確定、
 ownership 解放、または再実行せず、late success / failure を元の一回の operation の結果として一回だけ反映する。
@@ -48,7 +48,7 @@ Service と EPG の child 監督は承認済み terminal event をそのまま�
 -   [x] 1.1 唯一の server test root と compiled production import 規則を確立する
 
     -   `test/server` を唯一の server test root とし、Vitest で仕様、実装・characterization、結合 test を命名別に選択で
-        きる初期構成を、先に失敗するtestから追加する。
+        きる初期構成を追加する。
     -   `package.json`と`package-lock.json`へ共有runnerのexactなVitest依存をbootstrapする。固定root script、V8
         coverage、harness、artifact設定は1.2以降の責務として追加しない。
     -   server production を compile した後、test が production と同じ `dist` 成果物を importし、test 用に別の
@@ -62,8 +62,8 @@ Service と EPG の child 監督は承認済み terminal event をそのまま�
 
 -   [x] 1.2 固定 root command と V8 coverage を共有 foundation へ追加する
 
-    -   先に失敗するfoundation contract testで、`test/server/`、`vitest.server.config.ts`、共通harness、および
-        `test/server/.gitignore`の`.artifacts/` ignoreが欠けている現状を固定してから最小設定を追加する。
+    -   foundation contract testが、`test/server/`、`vitest.server.config.ts`、共通harness、および
+        `test/server/.gitignore`の`.artifacts/` ignoreの存在を固定する。
     -   rootにexact script `test:server:build`、`test:server:spec`、`test:server:imp`、
         `test:server:integration`、`test:server`、`test:server:coverage`の6 commandを一度だけ追加する。
     -   全 server test、仕様 test、実装 test、結合 test、およびV8 coverageを個別または一括実行する固定 root commandを追
@@ -79,8 +79,8 @@ Service と EPG の child 監督は承認済み terminal event をそのまま�
         testはruntime artifact snapshotをimportし、作業treeで事前生成した`dist/`を参照しない。
     -   coverageとruntimeの全成果物を`test/server/.artifacts/{coverage,runtime}`へ固定し、repository root、repository外
         directory、tracked reportへ出力しない。spec別runner、別test root、別coverage commandを作成しない。
-    -   完了時にはfoundation contract testと同じtestがGREENになり、固定commandの選択結果と終了statusがfixture suiteの種
-        類・成功・失敗へ一意に対応し、production/config差分を含むこのcheckbox内でRED→最小実装→GREENが閉じる。
+    -   完了時にはfoundation contract testが成功し、固定commandの選択結果と終了statusがfixture suiteの種
+        類・成功・失敗へ一意に対応する。
     -   _Requirements: 9.1, 9.2_
     -   _Boundary: Shared Server Test Commands・V8 Coverage_
     -   _Verification: command contract test; coverage smokeはtest/report完了後の100% threshold未達による非0終了を
@@ -140,7 +140,7 @@ Service と EPG の child 監督は承認済み terminal event をそのまま�
 
     -   Node.js 24必須cellと同じcommand・suite一覧をNode.js 26 additional cellへ要求し、26固有runner、command、
         fixture、skip、18 fallbackを持たせない。
-    -   matrix設定を最小更新し、同じ手順がGREENになることをこのcheckbox内で閉じる。
+    -   matrix設定を最小更新し、同じ手順が成立する。
     -   Node.js 24 mandatory cellと同じfresh依存導入、server build、全server test、startup smokeをNode.js 26で実行す
         るadditional cellを設定する。coverageは24の回だけが判定し、26の回は`npm run test:server`を一度だけ実行する。
     -   Node.js 26だけの別runner、別command、別fixture、skip allowlistを作らず、同じsuiteの差だけを検出する。
@@ -231,16 +231,16 @@ cross-spec task IDを作らない。
     -   _Verification: unittest/spec, unittest/imp, composition characterization_
     -   _Depends: 3.2_
 
--   [x] 4.2 snapshot aggregateと容量不足削除adapterをtarget testから最小実装する
+-   [x] 4.2 snapshot aggregateと容量不足削除adapterを実装する
 
     -   Cross-spec prerequisiteとしてRecorded Contentのprepared deletion、Recording Executionのread-only
         active-recording snapshotと非取消deletion gate、Process Messagingのcurrent-generation carrier/registry、
         Encoding／Media Deliveryのread-only snapshot、Service Interfaceのservice-child binding、およびStorageのtyped
         `IRecordedStorageDeletionPort`・contract double・対象testのprovider preparationが完了していることを確認してから着
         手する。このpreparationはStorageのproduction binding、削除動作、公開API、DB、設定、integration / deletion gateの
-        GREENを意味しない。Runtime 4.2のcomposition後にStorageが既存gateへ進む。
-    -   先に失敗するtarget testで、Recording snapshotとcurrent-generation service-child snapshotを各一回読み、両方
-        `known`の場合だけ検証・重複排除したreadonly和集合をStorage candidate filterへ渡す期待値を定義する。provider不
+        成立を意味しない。Runtime 4.2のcomposition後にStorageが既存gateへ進む。
+    -   target testで、Recording snapshotとcurrent-generation service-child snapshotを各一回読み、両方
+        `known`の場合だけ検証・重複排除したreadonly和集合をStorage candidate filterへ渡すことを検証する。provider不
         在、`unknown`、reject、generation mismatch、不正ID、通常5秒期限ではcandidate query/deleteを各0件とし、late reply
         や旧generationの結果を再利用しない。
     -   snapshotを候補除外のprefilterだけに使い、candidateごとに `prepareStorageDeletion`→recording gate→service-child
@@ -253,12 +253,12 @@ cross-spec task IDを作らない。
         token先着を分け、final deleteとqueue公開が重ならないよう二つの権威的gateを維持する。
     -   active recordingの終了、利用者削除terminal barrier、録画/Encode取消、queue wait/drain/retry、candidate選択、
         capacity再測定を各0件とし、候補、gate内部判定、resource lock、file/DB効果はprovider ownerへ残す。
-    -   完了時には同じtarget testがGREENになり、known unionだけがcandidate filterへ渡り、unknown系のcandidate
+    -   完了時にはtarget testが成功し、known unionだけがcandidate filterへ渡り、unknown系のcandidate
         query/delete 0件、busy/unknown時の副作用0件、全terminal pathの逆順exact release、およびRuntime外のowner重複0件が
-        観測され、production差分を含むRED→最小実装→GREENがこのcheckbox内で閉じる。
+        観測される。
     -   _Requirements: 4.4_
     -   _Boundary: StorageRecordedUseSnapshotAdapter・StoragePressureDeletionAdapter・Runtime Composition_
-    -   _Verification: unittest/spec RED, unittest/imp GREEN, storage-pressure-deletion integration_
+    -   _Verification: unittest/spec, unittest/imp, storage-pressure-deletion integration_
     -   _Depends: 4.1_
 
 -   [x] 5. Web・API child の開始と継続監督を固定する
@@ -276,25 +276,25 @@ cross-spec task IDを作らない。
     -   _Verification: unittest/spec, compiled child-process characterization_
     -   _Depends: 4.2_
 
--   [x] 5.2 Service childのgeneration単位監督をtarget testから最小実装する
+-   [x] 5.2 Service childのgeneration単位監督を実装する
 
     -   generation identityはchildとの相関だけに用いるopaqueな値とし、spawnごとにfreshに新規割当して過去のidentityを再利
         用しない。大小・順序、永続値、IPC公開値、正負分岐には用いない。
-    -   先に失敗するtarget testで、Service childの`exit`と`error`同tickでは先着terminalだけがlistener detach、active
+    -   target testで、Service childの`exit`と`error`同tickでは先着terminalだけがlistener detach、active
         identity無効化、異常記録、次generation spawn、current peer登録を各一回行い、後着・stale callbackの作用を0件とす
         る。
     -   最小generation guardを実装し、連続terminal eventをbounded fixtureで発行して固定restart cap、backoff、stability
         windowなしで各generationの先着受付から一回だけ再spawnへ進むことを確認する。
     -   stdout・stderrがpipe構成の場合だけbuffer滞留を防ぐ読取を行い、pipeでないstreamを新たに作らない。
     -   IPC disconnect専用restart、direct childの子孫回収、共通shutdown / drainを追加しない。
-    -   完了時には同じtarget testがGREENになり、exit/error raceごとの再spawn・peer登録がexact一回、旧listener・stale作用
-        0件、pipe読取、cap・backoff・子孫回収0件となり、production差分を含むRED→最小実装→GREENがこのcheckbox内で閉じる。
+    -   完了時にはtarget testが成功し、exit/error raceごとの再spawn・peer登録がexact一回、旧listener・stale作用
+        0件、pipe読取、cap・backoff・子孫回収0件となる。
     -   _Requirements: 5.3, 5.4, 8.2, 8.3, 8.6, 8.7_
     -   _Boundary: Service Child Supervisor_
     -   _Verification: unittest/spec, unittest/imp, bounded child supervisor characterization_
     -   _Depends: 5.1_
 
--   [x] 6. 起動時三段階と600秒観測をTDDで実現する
+-   [x] 6. 起動時三段階と600秒観測を実現する
 -   [x] 6.1 録画整理のprovider効果と通常event委譲を結合 characterization する
 
     -   runtimeがrecording ownerの起動時整理portを一回呼び、一時file移動と対応予約fileのsize反映をowner operationへ委譲
@@ -310,28 +310,28 @@ cross-spec task IDを作らない。
     -   _Verification: unittest/spec, provider contract integration_
     -   _Depends: 5.2_
 
--   [x] 6.2 600秒soft observerをtarget testから最小実装する
+-   [x] 6.2 600秒soft observerを実装する
 
-    -   先に失敗するtarget testで各provider Promiseの599,999ms、600,000ms、600,001ms、resolve/reject同tick raceを定義
+    -   target testで各provider Promiseの599,999ms、600,000ms、600,001ms、resolve/reject同tick raceを定義
         し、deadline到達はoverdue記録だけでcancel、failure、ownership解放、retry、shutdown、releaseを各0件とする。
     -   process-local observerを最小実装し、original Promiseのlate success/failureを同じtyped outcomeへ一回だけ反映し、
         timerとsettlementの先着/後着で二重通知しない。
     -   Runtimeはstageを直列選択せず、observerが受けた一つのprovider operationを包んで同じ結果を返すだけにする。
     -   stateをDB、file、IPC、公開readyへ保存せず、開始済みService childや整理非依存業務を停止しない。
-    -   完了時には同じ境界/race testがGREENになり、overdue後のcancel/release/retry 0件、late outcome exact一回、残留
-        timer 0件となり、production差分を含むRED→最小実装→GREENがこのcheckbox内で閉じる。
+    -   完了時には境界/race testが成功し、overdue後のcancel/release/retry 0件、late outcome exact一回、残留
+        timer 0件となる。
     -   _Requirements: 6.7, 6.8_
     -   _Boundary: Runtime Startup Stage Observer_
-    -   _Verification: unittest/spec RED, unittest/imp GREEN, fake-clock race regression_
+    -   _Verification: unittest/spec, unittest/imp, fake-clock race regression_
     -   _Depends: 6.1_
 
--   [x] 6.3 Workflow startup入口への一回handoffをtarget testから最小実装する
+-   [x] 6.3 Workflow startup入口への一回handoffを実装する
 
     -   Cross-spec prerequisiteとしてWorkflowの実在Task 8.1完了後に8.2が完了し、
         `RuntimeStartupWorkflowPort.runAfterServiceSupervisionAccepted`がreconciliation→combined
         `rebuildCandidatesAndStart()`（再構築成功後に3秒scheduler開始）→expired cleanup→EPG callbackのpolicyを所有するこ
         とを確認する。
-    -   先に失敗するtarget testで、Runtimeがevent bindingを一回登録し、operator/tuner同一snapshotとstorageを開始し、
+    -   target testで、Runtimeがevent bindingを一回登録し、operator/tuner同一snapshotとstorageを開始し、
         Service supervision accepted/current peer登録後にready ackを待たず、600秒observed portsとEPG callbackを単一
         Workflow入口へbindingして一回invokeする期待値を定義する。
     -   最小composition bindingと一回guardを実装し、Runtimeが三stageを直列選択、combined providerを分割、failure/retry
@@ -341,11 +341,10 @@ cross-spec task IDを作らない。
     -   Workflow入口がfulfilした`Failed` outcomeは、Runtimeの既存重大異常記録経路(`log.system.fatal`)へstageとcauseを
         一回だけ記録し、process全体のunhandledRejectionへ意図的に漏らさない。予期しないPromise rejection用catchは維持
         し、typed `Failed`とは混同しない。
-    -   完了時には同じtarget testがGREENになり、Workflow入口とEPG callbackが各最大一回、Runtime独自stage選択0件となり、
-        production差分を含むRED→最小実装→GREENがこのcheckbox内で閉じる。
+    -   完了時にはtarget testが成功し、Workflow入口とEPG callbackが各最大一回、Runtime独自stage選択0件となる。
     -   _Requirements: 2.7, 6.1, 6.4, 6.6, 6.7, 7.1_
     -   _Boundary: RuntimeStartupWorkflowPort Binding・Runtime Composition_
-    -   _Verification: unittest/spec RED, unittest/imp GREEN, startup handoff contract_
+    -   _Verification: unittest/spec, unittest/imp, startup handoff contract_
     -   _Depends: 6.2_
 
 -   [x] 7. 番組情報更新childの開始と継続監督を固定する
@@ -364,9 +363,9 @@ cross-spec task IDを作らない。
     -   _Verification: unittest/spec, compiled child-process integration_
     -   _Depends: 6.3_
 
--   [x] 7.2 EPG childのgeneration単位監督をtarget testから最小実装する
+-   [x] 7.2 EPG childのgeneration単位監督を実装する
 
-    -   先に失敗するtarget testで`exit`、`disconnect`、`close`、`error`の全順列と同tick raceを発行し、先着だけが異常記
+    -   target testで`exit`、`disconnect`、`close`、`error`の全順列と同tick raceを発行し、先着だけが異常記
         録、exact child listener除去、active identity無効化、同じspawn経路の再実行を各一回行い、後着・stale作用を0件とす
         る。
     -   `disconnect`ではlistener除去と再spawnの前にexact childへ`SIGINT`を一回送り、他のterminalでは追加signalを送らな
@@ -375,8 +374,8 @@ cross-spec task IDを作らない。
         い。
     -   最小generation guardを実装し、bounded fixtureで複数回再起動して固定restart cap、backoff、stability window、
         global drain、子孫回収が各0件であることを確認する。
-    -   完了時には同じtarget testがGREENになり、四eventのcall順、disconnect exact signal、旧listener/stale作用0件、pipe
-        drain、無上限再spawnが成立し、production差分を含むRED→最小実装→GREENがこのcheckbox内で閉じる。
+    -   完了時にはtarget testが成功し、四eventのcall順、disconnect exact signal、旧listener/stale作用0件、pipe
+        drain、無上限再spawnが成立する。
     -   _Requirements: 7.3, 8.4, 8.5, 8.6, 8.7_
     -   _Boundary: EPG Child Supervisor_
     -   _Verification: unittest/spec, unittest/imp, table-driven child characterization_
@@ -426,7 +425,7 @@ cross-spec task IDを作らない。
         る。
     -   Runtimeはprovider内部、Workflow coordination、PM wire、公開HTTP APIを複製せず、process境界、binding identity、重
         複登録0件だけを検証する。
-    -   完了時には6つのapproved integration aliasがGREENとなり、missing/extra binding、Runtime owner重複、
+    -   完了時には6つのapproved integration aliasが成功し、missing/extra binding、Runtime owner重複、
         production/config変更が各0件になる。
     -   _Requirements: 4.4, 4.5, 6.1, 6.7, 7.1_
     -   _Boundary: Runtime Cross-spec Handoff Integration_
@@ -743,7 +742,7 @@ product codeを変えずに、箇所と理由を記録して保守者の判断�
 Major 13はDesign §12.3.1を実装する。product code（`src/**`）は変更せず、除く箇所と件数（16 file、statement 67件、branch 20件）を
 変えない。
 
--   [x] 13.1 commentや無関係な変更で落ちないこと、codeの変更で落ちることのtestを先に書き、今の実装で前者が落ちることを確かめる
+-   [x] 13.1 commentや無関係な変更で落ちないこと、codeの変更で落ちることのtestを書く
 
     -   `compiled-snapshot-coverage.test.ts`に、実際の`VideoUtil.ts`と`ReservationManageModel.ts`（同じ単位に同じcode`0`の除外が3箇所ある）
         のsourceを書き換えたものを`ts.transpileModule`（`tsconfig.json`の設定）でcompileし、discoveryに通すcaseを足す。
@@ -752,12 +751,10 @@ Major 13はDesign §12.3.1を実装する。product code（`src/**`）は変更�
         書き換え前と同じcodeのentryが除かれ、母数がその分だけ減ることをassertする。
     -   落ちるべきcase: 除外のspanのcodeを変える、除外を含む単位の別のcodeを変える、根拠として結び付ける単位のcodeを変える。どれも
         `malformed-coverage-exclusion`で失敗することをassertする。
-    -   今の実装（file全体のdigestと位置を含むID）で、落ちてはならないcaseがすべて`malformed-coverage-exclusion`で落ち（RED）、落ちる
-        べきcaseが失敗することを実行して記録する。
-    -   完了時には、追加したcaseのうち落ちてはならないcaseだけが今の実装でREDであり、その出力が記録に残る。
+    -   完了時には、落ちてはならないcaseと落ちるべきcaseを含むtestが追加されている。
     -   _Requirements: 9.11, 9.12_
     -   _Boundary: Coverage Measurement Toolchain_
-    -   _Verification: unittest/spec（RED）_
+    -   _Verification: unittest/spec_
     -   _Depends: 12.6_
 
 -   [x] 13.2 token列、関数の単位、承認の解決を実装する
@@ -767,10 +764,9 @@ Major 13はDesign §12.3.1を実装する。product code（`src/**`）は変更�
     -   承認を引数に取って解決する関数と、sourceとbasis entryからkey・code・各単位の`codeSha256`を返す関数をexportする。
     -   この関数を使い、合成した承認で、解決が0件のcase（basisに無いspan）と2件以上のcase（constructorのparameter propertyのように
         2つのdist spanが同じsourceの範囲へ対応するsource map）、単位の名前が0件・2件以上のcase、`code`が表と食い違うcaseが
-        `malformed-coverage-exclusion`で失敗し、messageに件数・単位の名前・今の`codeSha256`が出ることをassertするtestを先に書き、
-        REDを確かめてから実装する。
+        `malformed-coverage-exclusion`で失敗し、messageに件数・単位の名前・今の`codeSha256`が出ることをassertするtestを書く。
     -   markerの検査（未知のmarker、2個以上、末尾でない、形の違い、別fileのmarker）は今の規則とtestのまま保つ。
-    -   完了時には、13.1の落ちてはならないcaseがGREENになり、落ちるべきcase、0件・2件以上のcase、markerのcaseがすべて期待どおり
+    -   完了時には、13.1の落ちてはならないcaseが成功し、落ちるべきcase、0件・2件以上のcase、markerのcaseがすべて期待どおり
         失敗し、`compiled-snapshot-coverage.test.ts`が全件成功する。
     -   _Requirements: 9.10, 9.11, 9.12, 9.13_
     -   _Boundary: Coverage Measurement Toolchain_
@@ -811,12 +807,12 @@ Major 14はDesign §12.3.2を実装する。treeのidは「何を検証したか
 -   [x] 14.1 作業場所の中身の記録をtestから作る
 
     -   新規`test/server/application-runtime/spec/worktree-content.spec.test.ts`に、`test/server/.artifacts/`の下に作った一時の
-        git repositoryで次をassertするcaseを先に書く: cleanなら`contentTree === headTree`・`uncommittedChanges === false`、追跡中の
+        git repositoryで次をassertするcaseを書く: cleanなら`contentTree === headTree`・`uncommittedChanges === false`、追跡中の
         fileを変えると`contentTree`が変わり`true`、ignoreされていない未追跡のfileを含み、ignoreされたfileを含まない、実行の前後で
         `git status --porcelain`の出力とindexが変わらない、git repositoryでなければ各fieldが`null`、commandとして実行すると
         `contentTree`を1行で出力する。
     -   testのgitのcommitはidentityを環境変数（`GIT_AUTHOR_*`・`GIT_COMMITTER_*`）で渡し、利用者のgitの設定に依らない。
-    -   moduleが無い状態でREDを確かめてから、新規`scripts/server-test/worktree-content.mjs`を実装する（一時indexは
+    -   新規`scripts/server-test/worktree-content.mjs`を実装する（一時indexは
         `test/server/.artifacts/worktree-content/`の下に置き、使い終えたら消す）。
     -   完了時には、追加したcaseがすべて成功し、利用者のindex・作業file・refが変わらないことがtestで確かめられている。
     -   _Requirements: 9.14, 9.15, 9.16_
@@ -829,12 +825,12 @@ Major 14はDesign §12.3.2を実装する。treeのidは「何を検証したか
     -   `coverage-command-terminal.test.ts`と`compiled-snapshot-coverage.test.ts`に、未commitの変更がある記録（`uncommittedChanges:
         true`、`contentTree !== headTree`）でcoverageのrunと`writeCanonicalCoverageArtifacts`を通し、失敗せずにartifactを書き、
         `coverage-final.binding.json`に`worktreeContent`が入ることをassertするcaseと、gitが使えない記録（各field`null`）でも判定が
-        続くcaseを先に書く。今の実装で`dirty-worktree`（または`worktreeDirty`の欠落）で落ちること（RED）を記録する。
+        続くcaseを書く。
     -   `run-tests.mjs`の`currentWorktreeDirty`・`currentTreeDigest`を`snapshotWorktreeContent`に替え、`writeCanonicalCoverageArtifacts`
         の`worktreeDirty`と`dirty-worktree`を除き、binding sidecarの`treeDigest`を`worktreeContent`に置き換え、registryの照合の値に
         `contentTree ?? 'unrecorded'`を渡す。`dirty-worktree`を期待する既存のcaseは、記録を確かめるcaseに置き換える。
     -   `run-coverage-gate-cli.mjs`のcommentから、未commitの変更で失敗するという説明を除く（挙動は変えない）。
-    -   完了時には、追加したcaseがGREENになり、`dirty-worktree`がsourceとtestから無くなり、coverageの道具のtest 5本が全件成功する。
+    -   完了時には、追加したcaseが成功し、`dirty-worktree`がsourceとtestから無くなり、coverageの道具のtest 5本が全件成功する。
     -   _Requirements: 9.14, 9.15_
     -   _Boundary: Coverage Measurement Toolchain_
     -   _Verification: unittest/spec_
@@ -846,10 +842,10 @@ Major 14はDesign §12.3.2を実装する。treeのidは「何を検証したか
         が失敗せず、artifactに`candidate: { tree, source: 'worktree', headTree, uncommittedChanges: true }`を記録するcase、
         `--candidate`を渡したときに`source: 'argument'`でそのtreeを使いHEADと比べないcase、`--candidate`無しの引数を
         `parseNodeAcceptanceMatrixArguments`が受け付けるcase、候補のtreeを取り出せないときに`materialize-failed`で失敗するcaseを
-        先に書く。今の実装で前の3つが`dirty-worktree`・`candidate-mismatch`・必須の`--candidate`で落ちること（RED）を記録する。
+        書く。
     -   `run-node-acceptance-matrix.mjs`の`dirty-worktree`・`candidate-mismatch`を除き、`--candidate`を任意にし、無ければ
         `snapshotWorktreeContent`の`contentTree`を候補にする。workspaceの作り方は変えない。
-    -   完了時には、追加したcaseがGREENになり、node-matrixのsourceにHEADとの一致や未commitの変更を合否の条件にする箇所が無い。
+    -   完了時には、追加したcaseが成功し、node-matrixのsourceにHEADとの一致や未commitの変更を合否の条件にする箇所が無い。
     -   _Requirements: 9.14, 9.16_
     -   _Boundary: Coverage Command・Node.js Acceptance Matrix_
     -   _Verification: unittest/spec_
@@ -905,12 +901,12 @@ Major 14はDesign §12.3.2を実装する。treeのidは「何を検証したか
 | 3.1  | `test/server/application-runtime/dependency-wait.spec.test.ts`<br>`test/server/application-runtime/imp/runtime-characteristics.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | `unittest/spec, unittest/imp, fake-clock characterization`                                                                     | `2.2`                        | `npm run test:server:spec -- test/server/application-runtime/dependency-wait.spec.test.ts`<br>`npm run test:server:imp -- test/server/application-runtime/imp/runtime-characteristics.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                               |
 | 3.2  | `test/server/application-runtime/dependency-wait.spec.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | `unittest/spec, deferred-promise regression, fake clock`                                                                       | `3.1`                        | `npm run test:server:spec -- test/server/application-runtime/dependency-wait.spec.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | 4.1  | `test/server/application-runtime/operator-composition.spec.test.ts`<br>`test/server/application-runtime/imp/runtime-characteristics.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | `unittest/spec, unittest/imp, composition characterization`                                                                    | `3.2`                        | `npm run test:server:spec -- test/server/application-runtime/operator-composition.spec.test.ts`<br>`npm run test:server:imp -- test/server/application-runtime/imp/runtime-characteristics.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                          |
-| 4.2  | `test/server/application-runtime/operator-composition.spec.test.ts`<br>`test/server/application-runtime/imp/runtime-characteristics.test.ts`<br>`test/server/application-runtime/storage-pressure-deletion.integration.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | `unittest/spec RED, unittest/imp GREEN, storage-pressure-deletion integration`                                                 | `4.1`                        | `npm run test:server:spec -- test/server/application-runtime/operator-composition.spec.test.ts`<br>`npm run test:server:imp -- test/server/application-runtime/imp/runtime-characteristics.test.ts`<br>`npm run test:server:integration -- test/server/application-runtime/storage-pressure-deletion.integration.test.ts`                                                                                                                                                                                                                                                                                    |
+| 4.2  | `test/server/application-runtime/operator-composition.spec.test.ts`<br>`test/server/application-runtime/imp/runtime-characteristics.test.ts`<br>`test/server/application-runtime/storage-pressure-deletion.integration.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | `unittest/spec, unittest/imp, storage-pressure-deletion integration`                                                 | `4.1`                        | `npm run test:server:spec -- test/server/application-runtime/operator-composition.spec.test.ts`<br>`npm run test:server:imp -- test/server/application-runtime/imp/runtime-characteristics.test.ts`<br>`npm run test:server:integration -- test/server/application-runtime/storage-pressure-deletion.integration.test.ts`                                                                                                                                                                                                                                                                                    |
 | 5.1  | `test/server/application-runtime/service-child-supervision.spec.test.ts`<br>`test/server/application-runtime/integration/runtime-boundaries.integration.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | `unittest/spec, compiled child-process characterization`                                                                       | `4.2`                        | `npm run test:server:spec -- test/server/application-runtime/service-child-supervision.spec.test.ts`<br>`npm run test:server:integration -- test/server/application-runtime/integration/runtime-boundaries.integration.test.ts`                                                                                                                                                                                                                                                                                                                                                                              |
 | 5.2  | `test/server/application-runtime/service-child-supervision.spec.test.ts`<br>`test/server/application-runtime/imp/runtime-characteristics.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | `unittest/spec, unittest/imp, bounded child supervisor characterization`                                                       | `5.1`                        | `npm run test:server:spec -- test/server/application-runtime/service-child-supervision.spec.test.ts`<br>`npm run test:server:imp -- test/server/application-runtime/imp/runtime-characteristics.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                     |
 | 6.1  | `test/server/application-runtime/startup-composition.spec.test.ts`<br>`test/server/application-runtime/startup-composition.integration.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | `unittest/spec, provider contract integration`                                                                                 | `5.2`                        | `npm run test:server:spec -- test/server/application-runtime/startup-composition.spec.test.ts`<br>`npm run test:server:integration -- test/server/application-runtime/startup-composition.integration.test.ts`                                                                                                                                                                                                                                                                                                                                                                                               |
-| 6.2  | `test/server/application-runtime/startup-composition.spec.test.ts`<br>`test/server/application-runtime/imp/runtime-characteristics.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | `unittest/spec RED, unittest/imp GREEN, fake-clock race regression`                                                            | `6.1`                        | `npm run test:server:spec -- test/server/application-runtime/startup-composition.spec.test.ts`<br>`npm run test:server:imp -- test/server/application-runtime/imp/runtime-characteristics.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                           |
-| 6.3  | `test/server/application-runtime/startup-composition.spec.test.ts`<br>`test/server/application-runtime/imp/runtime-characteristics.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | `unittest/spec RED, unittest/imp GREEN, startup handoff contract`                                                              | `6.2`                        | `npm run test:server:spec -- test/server/application-runtime/startup-composition.spec.test.ts`<br>`npm run test:server:imp -- test/server/application-runtime/imp/runtime-characteristics.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                           |
+| 6.2  | `test/server/application-runtime/startup-composition.spec.test.ts`<br>`test/server/application-runtime/imp/runtime-characteristics.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | `unittest/spec, unittest/imp, fake-clock race regression`                                                            | `6.1`                        | `npm run test:server:spec -- test/server/application-runtime/startup-composition.spec.test.ts`<br>`npm run test:server:imp -- test/server/application-runtime/imp/runtime-characteristics.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                           |
+| 6.3  | `test/server/application-runtime/startup-composition.spec.test.ts`<br>`test/server/application-runtime/imp/runtime-characteristics.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | `unittest/spec, unittest/imp, startup handoff contract`                                                              | `6.2`                        | `npm run test:server:spec -- test/server/application-runtime/startup-composition.spec.test.ts`<br>`npm run test:server:imp -- test/server/application-runtime/imp/runtime-characteristics.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                           |
 | 7.1  | `test/server/application-runtime/startup-composition.integration.test.ts` | compiled child-process integration | `6.3`                        | `npm run test:server:integration -- test/server/application-runtime/startup-composition.integration.test.ts` |
 | 7.2  | `test/server/application-runtime/child-supervision.spec.test.ts`<br>`test/server/application-runtime/imp/runtime-characteristics.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | `unittest/spec, unittest/imp, table-driven child characterization`                                                             | `7.1`                        | `npm run test:server:spec -- test/server/application-runtime/child-supervision.spec.test.ts`<br>`npm run test:server:imp -- test/server/application-runtime/imp/runtime-characteristics.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                             |
 | 8.1  | `test/server/application-runtime/startup-composition.spec.test.ts`<br>`test/server/application-runtime/imp/runtime-characteristics.test.ts`<br>`test/server/application-runtime/integration/runtime-boundaries.integration.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | `unittest/spec, unittest/imp, compiled runtime integration, fake clock`                                                        | `4.2, 5.2, 6.3, 7.1, 7.2`    | `npm run test:server:spec -- test/server/application-runtime/startup-composition.spec.test.ts`<br>`npm run test:server:imp -- test/server/application-runtime/imp/runtime-characteristics.test.ts`<br>`npm run test:server:integration -- test/server/application-runtime/integration/runtime-boundaries.integration.test.ts`                                                                                                                                                                                                                                                                                |
@@ -938,7 +934,7 @@ Major 14はDesign §12.3.2を実装する。treeのidは「何を検証したか
 | 12.4 | 組立・child登録・IPC・起動・管理commandの未到達のfileに対応する単体test | `unittest/spec`<br>`unittest/imp` | `9.9, 12.2` | `npm run test:server:coverage` |
 | 12.5 | `src/model/service/`・`src/model/api/`の未到達のfileに対応する単体test | `unittest/spec`<br>`unittest/imp` | `9.9, 12.2` | `npm run test:server:coverage` |
 | 12.6 | なし（判定のみ） | Node.js 24のcell | `12.1, 12.2, 12.3, 12.4, 12.5` | `node scripts/server-test/run-node-acceptance-matrix.mjs` |
-| 13.1 | `test/server/application-runtime/spec/compiled-snapshot-coverage.test.ts` | `unittest/spec`（RED） | `12.6` | `npm run test:server:spec -- test/server/application-runtime/spec/compiled-snapshot-coverage.test.ts` |
+| 13.1 | `test/server/application-runtime/spec/compiled-snapshot-coverage.test.ts` | `unittest/spec` | `12.6` | `npm run test:server:spec -- test/server/application-runtime/spec/compiled-snapshot-coverage.test.ts` |
 | 13.2 | `scripts/server-test/compiled-snapshot-coverage.mjs`<br>`test/server/application-runtime/spec/compiled-snapshot-coverage.test.ts` | `unittest/spec` | `13.1` | `npm run test:server:spec -- test/server/application-runtime/spec/compiled-snapshot-coverage.test.ts` |
 | 13.3 | `scripts/server-test/compiled-snapshot-coverage.mjs`<br>`test/server/application-runtime/spec/compiled-snapshot-coverage.test.ts` | `unittest/spec`、位置IDとanchorの一致の記録 | `13.2` | `npm run test:server:spec -- test/server/application-runtime/spec/compiled-snapshot-coverage.test.ts` |
 | 13.4 | なし（判定のみ） | coverageの判定 | `13.3` | `npm run test:server:coverage` |

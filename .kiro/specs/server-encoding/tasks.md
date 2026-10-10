@@ -52,7 +52,7 @@ envelope、request/reply timeout、再送は `server-process-messaging`、browse
         知を返すことを検証する。
     -   新しい機能 instance は空の待機・実行一覧と ID 1 から始まり、以前の依頼・途中出力を復元、追跡、整理しないことを
         `unittest/imp` で確認する。
-    -   `Number.MAX_SAFE_INTEGER` を割り当てた次の ID が 1 になり、新しい衝突探索、世代、永続 ID を追加しない現行規則を
+    -   `Number.MAX_SAFE_INTEGER` を割り当てた次の ID が 1 になり、新しい衝突探索、世代、永続 ID を追加しない規則を
         固定する。
     -   完了時には、正常受付、同時実行数 0、再起動相当、最大安全整数折返しの各 fixture が承認済み結果を再現
         し、production code の差分がない。
@@ -75,11 +75,11 @@ envelope、request/reply timeout、再送は `server-process-messaging`、browse
     -   _Requirements: 1.11, 4.1, 4.2_
     -   _Boundary: 変換操作窓口・一覧契約_
 
--   [x] 2. 同期 queue admission と起動時上限を TDD で実現する
--   [x] 2.1 起動 snapshot、同期予約、および副作用なし拒否を RED から GREEN まで閉じる
+-   [x] 2. 同期 queue admission と起動時上限を test と実装で実現する
+-   [x] 2.1 起動 snapshot、同期予約、および副作用なし拒否を test と実装で閉じる
 
     -   `server-configuration` から受け取った省略時 1,024 と、1、1,024、`Number.MAX_SAFE_INTEGER` を機能構築時に保持
-        し、0、負数、小数、`NaN`、`Infinity`、安全でない整数、非数値で構築を失敗させる `unittest/spec` を先に追加する。
+        し、0、負数、小数、`NaN`、`Infinity`、安全でない整数、非数値で構築が失敗することを `unittest/spec` で検証する。
     -   同じ event loop で複数受付を開始し、最初の非同期境界より前に `受付処理中 + 待機中` を検査・予約して上限を超え
         ず、実行中は計数しない目標を deferred fixture で定義する。
     -   上限到達時は新しい一件だけを同期的に拒否し、ID counter、job provider、待機・実行一覧、追加通知、および受付済み依
@@ -88,16 +88,12 @@ envelope、request/reply timeout、再送は `server-process-messaging`、browse
         全な job を残さない目標を `unittest/imp` で定義する。
     -   稼働中に設定 source を変更しても既存 instance の上限は変わらず、新しい instance だけが変更後 snapshot を使うこと
         を確認する。
-    -   既存 characterization が成功したまま、未実装の待機上限、同期予約、および failure cleanup だけが意図した理由で
-        RED になることを確認してから、次の最小実装へ進む。
     -   構築時に待機上限を snapshot し、正の安全な整数でなければ機能を起動させない consumer-side guard を追加す
         る。default、設定 file parse、公開 projection は変更しない。
     -   `受付処理中 + 待機中` の検査と受付予約を await より前の同じ同期区間で行い、予約済みの後続受付が更新済み件数を観
         測するようにする。
-    -   成功時は予約一件を待機 job 一件へ移し、失敗・拒否時は予約、実行権、および部分生成物を一回だけ戻す最小変更に限定
-        する。
+    -   成功時は予約一件を待機 job 一件へ移し、失敗・拒否時は予約、実行権、および部分生成物を一回だけ戻す。
     -   実行中 job を上限へ含めず、上限拒否に retry、別 queue、永続状態、ID 探索を追加しない。
-    -   実装後に同じ target test を再実行して GREEN を確認する。
     -   完了時には全 interleave で `受付処理中 + 待機中 <= encodeQueueLimit`、拒否時副作用 0、失敗後残留予約 0 が観測さ
         れる。
     -   検証は `unittest/spec` と `unittest/imp` で行う。
@@ -120,7 +116,7 @@ envelope、request/reply timeout、再送は `server-process-messaging`、browse
     -   _Boundary: 設定 snapshot・受付／待機管理・変換操作窓口 integration_
     -   _Depends: 1.2, 2.1_
 
--   [x] 2.3 録画済みresource利用leaseとread-only snapshotを RED から GREEN まで閉じる
+-   [x] 2.3 録画済みresource利用leaseとread-only snapshotを test と実装で閉じる
 
     -   受付枠予約後、待機列への公開、ID・job・追加通知、録画情報read、process開始より前に`encoding`用途のexact leaseを
         一回取得し、取得失敗・期限超過・状態不明ではそれらの副作用が0件になる目標を`unittest/spec`で定義する。
@@ -130,8 +126,6 @@ envelope、request/reply timeout、再送は `server-process-messaging`、browse
         でなく`unknown`を返す。snapshot取得によるqueue、取消、lease操作、通知を各0回にする。
     -   PMのgeneration、request identity、通常5秒carrier、parent deletion gateを本specへ複製せず、consumer request・
         token保持・snapshot projectionだけをtargetにする。
-    -   既存characterizationが成功したまま、queue公開前acquire、exact release、known/unknown snapshotの未実装契約だけが
-        意図した理由でREDになることを確認してから、次の最小実装へ進む。
     -   `server-process-messaging`が提供するresource-use carrierを受けるconsumer portを定義し、受付予約から待機公開前
         acquireへ進み、同じexact tokenをjobへ保持する。取得失敗では予約を一回解放し、ID・job・queue・通知・read・spawnを
         作らない。
@@ -143,7 +137,6 @@ envelope、request/reply timeout、再送は `server-process-messaging`、browse
     -   PM carrier実装は`server-process-messaging`、consumer portとsnapshot providerの一回bindingは
         `server-service-interface`の後続service child composition taskへ明示的に委譲し、本taskでは
         `ModelContainerSetter`を変更しない。
-    -   実装後に同じtarget testを再実行してGREENを確認する。
     -   完了時にはqueue公開前leaseなしjob、重複release、部分snapshotが0件で、consumer portとread-only providerを独立した
         contract doubleから検証できる。
     -   検証は`unittest/spec`、`unittest/imp`、PM contract doubleを使うdomain-local `integration`で行う。
@@ -175,7 +168,7 @@ envelope、request/reply timeout、再送は `server-process-messaging`、browse
     -   出力ありでは元名と suffix から候補を作り、既存ファイルと同時実行中の予約を避けて `(1)`、`(2)` と進み、終了時に当
         該予約を解放することを `unittest/imp` で確認する。
     -   共有枠取得または process 開始が reject した場合は、既に取得した exact 出力予約を一回解放して元の開始 error を呼
-        出元へ返す RED を先に追加し、`EncoderModel.start()` の開始失敗境界だけを最小修正する。
+        出元へ返すことを test が検証し、`EncoderModel.start()` の開始失敗境界で扱う。
     -   出力なしの方法は output を `null` とし、依頼の directory だけを command 環境へ渡して出力名予約を作らないことを検
         証する。
     -   filesystem fixture は synthetic temporary root だけを使い、管理保存先の domain 登録や共有 process spawn を再実装
@@ -206,31 +199,31 @@ envelope、request/reply timeout、再送は `server-process-messaging`、browse
     -   _Requirements: 3.3, 3.4, 3.5, 3.7, 3.8, 3.9_
     -   _Boundary: 変換 job・command adapter_
 
--   [x] 3.4 出力ディレクトリの保存先外指定を一つのTDD単位で閉じる
+-   [x] 3.4 出力ディレクトリの保存先外指定を一つの単位で閉じる
 
     -   手動の変換依頼で`directory`が`..`・先頭`/`の後の`..`・NULにより録画保存先の外を指す場合に依頼を待機列へ追加せず
-        失敗し、`a/../b`・`/anime`は従来どおり受け付ける期待値を、書式展開後に外を指す登録済みの値は親保存先の直下へ出力
-        して録画保存先の外にfileを作らない期待値とともに先に定義し、現行実装でREDになることを確認する。
-    -   共通の判定関数を手動依頼の受付と出力先決定へ接続する最小実装を行い、出力名の選択、環境変数、結果登録の既存契約を
+        失敗し、`a/../b`・`/anime`は受け付け、書式展開後に外を指す登録済みの値は親保存先の直下へ出力して録画保存先の外にfileを
+        作らないことを、target testが検証する。
+    -   共通の判定関数を手動依頼の受付と出力先決定へ接続し、出力名の選択、環境変数、結果登録の既存契約を
         変えない。
-    -   完了時には、同じtarget testがGREENとなり、外を指す指定で保存先の外に作られるfileが0件になる。
+    -   完了時には、target testが成功し、外を指す指定で保存先の外に作られるfileが0件になる。
     -   _Requirements: 1.1, 3.1_
     -   _Boundary: 手動依頼の受付・出力先決定_
-    -   _Verification: unittest/spec RED, unittest/imp GREEN_
+    -   _Verification: unittest/spec, unittest/imp_
     -   _Depends: 3.2_
 
 -   [x] 4. 進捗、取消、および途中出力 cleanup を検証する
--   [x] 4.1 進捗の取得・非推定・通知を RED から GREEN まで閉じる
+-   [x] 4.1 進捗の取得・非推定・通知を test と実装で閉じる
 
     -   stdout の一行が `type: "progress"`、数値 `percent`、文字列 `log` をすべて持つ場合だけ実行中情報を更新することを
-        `unittest/spec` で先に固定する。完全な JSON を一回の data event で受ける既存契約、複数行、複数 chunk に分割され
+        `unittest/spec` で固定する。完全な JSON を一回の data event で受ける既存契約、複数行、複数 chunk に分割され
         た一行、および不正行後の有効行をそれぞれ反例にする。
     -   不正 JSON、別 type、field 欠損、および進捗を出さない command では進捗を生成・推定せず、以前に存在しない値を一覧
         へ追加しないことを確認する。
     -   有効な進捗更新ごとに encoding domain の更新 event を一回発行し、browser への集約・配送回数は後続 delivery owner
         に残す。
-    -   分割された有効行を失う現行差だけが意図した理由で RED になることを確認してから、stdout chunk を一行境界とみなさ
-        ず、完結行を一回だけ処理する最小の line framing を実装する。状態反映後に更新 event を発行し、不正入力では既存値
+    -   stdout chunk を一行境界とみなさ
+        ず、完結行を一回だけ処理する line framing を実装する。状態反映後に更新 event を発行し、不正入力では既存値
         を変更しない。
     -   BufferのUTF-8多byte文字内分割をdecoderで保持する。改行なしの不正recordは次の完結JSON chunkで破棄して再同期し、未
         完recordは64KiBを内部上限として超過時に破棄する。terminal時はdecoderの未完byteとrecord bufferを破棄する。
@@ -260,7 +253,7 @@ envelope、request/reply timeout、再送は `server-process-messaging`、browse
     -   _Boundary: 受付／待機管理・変換 job・managed process consumer integration_
     -   _Depends: 3.1, 3.3_
 
--   [x] 4.3 異常終了・取消時の途中出力 cleanup を RED から GREEN まで閉じる
+-   [x] 4.3 異常終了・取消時の途中出力 cleanup を test と実装で閉じる
 
     -   異常終了または取消で当該 job が作成しかけた出力だけを best-effort に削除し、出力なしでは unlink を要求しないこと
         を `unittest/spec` で固定する。
@@ -269,9 +262,9 @@ envelope、request/reply timeout、再送は `server-process-messaging`、browse
     -   cleanup 失敗は運用ログ port へ渡して queue finalization を妨げず、対象を実行中から除いて次の待機依頼を確認する。
     -   新しい機能 instance が再起動前の途中出力を探索・整理しないことを再確認し、orphan adoption、再照合、generation
         cleanup を追加しない。
-    -   遅延または重複した terminal event で予約解放、途中出力削除、完了 callback、queue finalization、および次依頼開始
-        が二重になる現行差を RED にし、副作用より前の同期 one-shot guard と当該 job が所有する timer・listener の一回だ
-        けの解放を最小実装する。他 owner の listener を一括削除しない。
+    -   遅延または重複した terminal event でも予約解放、途中出力削除、完了 callback、queue finalization、および次依頼開始
+        が二重にならないよう、副作用より前の同期 one-shot guard と当該 job が所有する timer・listener の一回だ
+        けの解放を行う。他 owner の listener を一括削除しない。
     -   完了時には、異常、取消、正常、出力なし、unlink 失敗、再起動相当の各 fixture で、削除対象、log、queue、予約残数が
         承認済み値になる。
     -   検証は `unittest/spec`、`unittest/imp`、temporary filesystem の `integration` で行う。
@@ -280,10 +273,10 @@ envelope、request/reply timeout、再送は `server-process-messaging`、browse
     -   _Depends: 3.1, 3.2_
 
 -   [x] 5. 結果登録成功を元ファイル削除の commit point にする
--   [x] 5.1 正常な結果反映と削除失敗境界を RED から GREEN まで閉じる
+-   [x] 5.1 正常な結果反映と削除失敗境界を test と実装で閉じる
 
     -   出力ありでは新しい録画ファイル登録、出力なしでは元ファイルサイズ更新を録画済み管理 port へ依頼することを
-        `unittest/spec` で先に固定し、未成立の契約だけを最小実装する。
+        `unittest/spec` で固定する。
     -   同じ元ファイルを使う別の待機・実行 job があれば元ファイル削除指定を抑止し、反映成功かつ別 job なしの場合だけ削除
         候補になることを検証する。
     -   反映成功後に削除不要または削除成功なら、画面更新要求と、録画済み番組 ID、新規録画ファイル ID または `null`、変換
@@ -297,46 +290,42 @@ envelope、request/reply timeout、再送は `server-process-messaging`、browse
     -   _Requirements: 6.1, 6.2, 6.3, 6.5, 6.7, 6.8_
     -   _Boundary: 結果反映・変換イベント_
 
--   [x] 5.2 結果登録・サイズ更新失敗時の削除禁止を RED から GREEN まで閉じる
+-   [x] 5.2 結果登録・サイズ更新失敗時の削除禁止を test と実装で閉じる
 
     -   新規録画ファイル登録を reject させ、失敗を記録して元ファイル削除を 0 回にし、画面更新要求と新規録画ファイル ID
-        `null` の完了 outcome へ進む `unittest/spec` を先に追加する。
+        `null` の完了 outcome へ進むことを `unittest/spec` で検証する。
     -   元ファイルサイズ更新を reject させた場合も、元ファイル削除 0 回と完了 outcome 一回を同じ契約として検証する。
     -   `removeOriginal` が真、同じ source job がない条件を明示して、削除されない理由が登録・更新失敗だけになる反例を作
         る。
     -   retry、quarantine、generation、再照合状態、IPC 業務 operation を新設せず、現在の一回の結果反映入力に対する効果だ
         けを target にする。
-    -   既存 characterization は成功したまま、現行の登録・更新失敗後に元ファイル削除へ進む差だけが意図した理由で RED に
-        なることを確認してから、次の最小修正へ進む。
-    -   録画ファイル登録またはサイズ更新の成功を明示的に保持し、失敗時は error 記録後に元ファイル削除分岐を通らない最小
-        変更にする。
+    -   録画ファイル登録またはサイズ更新の成功を明示的に保持し、失敗時は error 記録後に元ファイル削除分岐を通らない
+        ようにする。
     -   反映失敗時も画面更新要求と完了 outcome へ進み、新規録画ファイル ID は `null` とする既存 payload shape を維持す
         る。
     -   反映成功時だけ、元ファイル削除指定と同一 source job 不在を評価して削除を依頼する。
     -   反映成功後の元ファイル削除失敗では後続通知へ進まない既存分岐を変えず、失敗を成功扱いにしない。
-    -   実装後に同じ target test を再実行して GREEN を確認する。
-    -   完了時には 5.2 と同じ target test が通り、すべての反映失敗 fixture で元ファイル削除 0 回、完了 outcome 1 回にな
+    -   完了時には 5.2 の target test が通り、すべての反映失敗 fixture で元ファイル削除 0 回、完了 outcome 1 回にな
         る。
     -   検証は `unittest/spec`、`unittest/imp`、fake recorded-content port の `integration` で行う。
     -   _Requirements: 6.4, 6.5, 6.6, 6.7, 6.8_
     -   _Boundary: 結果反映・変換イベント_
     -   _Depends: 5.1_
 
--   [x] 5.3 結果settlement後のrecorded resource lease解放を RED から GREEN まで閉じる
+-   [x] 5.3 結果settlement後のrecorded resource lease解放を test と実装で閉じる
 
     -   `EncodeFinishModel.finishEncode()`による登録・サイズ更新・条件付き元file削除と、その成功・失敗の結果settlementが
-        完了するまで、Task 2.3で取得した同じexact lease tokenを保持するtarget testを先に追加する。
+        完了するまで、Task 2.3で取得した同じexact lease tokenを保持することをtarget testが検証する。
     -   結果反映成功、登録・更新失敗、元file削除失敗、正常・異常終了、待機取消、開始失敗を分け、結果settlementへ到達した
         jobは全経路でsettlement後にだけ一回releaseすることをcall ledgerで検証する。結果settlementへ到達しない経路の
         releaseはTask 2.3の責務として重複実装しない。
     -   同じservice child内の`IEncodeFinishModel`へ結果settlement Promiseを返すdirect local operationを追加し、
-        `EncodeManageModel`がその完了を観測してからreleaseする最小実装にする。結果settlement専用のchild-local finish
+        `EncodeManageModel`がその完了を観測してからreleaseする。結果settlement専用のchild-local finish
         event listenerはdirect portへ置換して二重実行を0件にし、settlement内部の既存完了通知IPCは維持する。queue
         finalization、画面更新、完了outcome、元file削除の既存順序を変更しない。
     -   release失敗は記録するが、確定済みの結果、元file削除の成否、queue finalizationを巻き戻さず、別jobのtokenをrelease
         しない。二重terminal、late settlement、重複callbackでも同じtokenを高々一回releaseする。
-    -   実装後に同じtarget testをGREENにし、`EncodeFinishModel.finishEncode()`の成功・失敗とresource releaseを接続する
-        domain-local integrationを実行する。
+    -   `EncodeFinishModel.finishEncode()`の成功・失敗とresource releaseを接続するdomain-local integrationで検証する。
     -   完了時には結果反映前のearly release、結果settlement後のlease残留、二重release、別job tokenのreleaseが0件となる。
     -   _Requirements: 3.1, 3.2, 5.1, 5.2, 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 6.8_
     -   _Boundary: 結果反映settlement・recorded resource lease release_

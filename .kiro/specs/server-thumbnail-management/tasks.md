@@ -6,7 +6,7 @@
 
 共有 server test foundation、`test/server` root、固定 command は `server-application-runtime` Requirement 9
 、V8 coverage、coverage の計測の道具、および Node.js 24 必須・Node.js 26 追加matrix も同 spec が所有する。同 spec の foundation 完了後に本計画を実行し、本 spec は
-`test/server/thumbnail-management/` の機能固有 test、fixture、assertion、および承認済み差分の最小実装だけを追加する。
+`test/server/thumbnail-management/` の機能固有 test、fixture、assertion、および承認済み差分の実装だけを追加する。
 
 `thumbnailMaxPending` の config schema、既定値 32、1〜10,000 の整数 validation、および標準設定は `server-configuration`
 Task 4.1 が所有する。本 spec は同 task 完了後の検証済み設定 snapshot を消費し、
@@ -49,7 +49,7 @@ Task 4.1 が所有する。本 spec は同 task 完了後の検証済み設定 s
         解決、および非同期 listener の deferred fixture を追加する。
     -   既存実装を変更せず、FIFO、一件実行、受付時の JPEG・DB row・完了通知 0、DB settlement までの後続開始 0、成功通知
         後に listener 完了を待たない順序を exact call ledger で固定する。
-    -   完了時には TM-1.2、TM-1.3、TM-1.8、TM-1.9、TM-1.10 の characterization が現行結果で成功し、production 差分が 0
+    -   完了時には TM-1.2、TM-1.3、TM-1.8、TM-1.9、TM-1.10 の characterization が成功し、production 差分が 0
         件である。
     -   _Requirements: 1.2, 1.3, 1.8, 1.9, 1.10_
     -   _Boundary: サムネイル生成受付・FIFO lifecycle_
@@ -60,7 +60,7 @@ Task 4.1 が所有する。本 spec は同 task 完了後の検証済み設定 s
         在、保存先 ENOENT・読書き拒否、動画内位置、画像サイズ、および生成 command の fixture を追加する。
     -   `test/server/thumbnail-management/imp/maintenance-branches.test.ts` で、保存先作成成功・失敗、spawn 前失敗、およ
         び対象外 row/file 不変を検証する。
-    -   完了時には TM-2.1、TM-2.4、TM-2.5、TM-2.6 が現行の spawn 回数、引数、保存先副作用を再現し、production 差分が 0
+    -   完了時には TM-2.1、TM-2.4、TM-2.5、TM-2.6 が spawn 回数、引数、保存先副作用を再現し、production 差分が 0
         件である。
     -   _Requirements: 2.1, 2.4, 2.5, 2.6_
     -   _Boundary: JPEG 生成前処理_
@@ -112,29 +112,27 @@ Task 4.1 が所有する。本 spec は同 task 完了後の検証済み設定 s
     -   _Requirements: 6.1, 6.2, 6.3, 6.4_
     -   _Boundary: サムネイル生成依頼の再起動境界_
 
--   [x] 2. 起動 snapshot に従う上限付き受付を TDD で実現する
--   [x] 2.1 検証済み待機上限の起動 snapshot 消費を RED から GREEN まで閉じる
+-   [x] 2. 起動 snapshot に従う上限付き受付を test と実装で実現する
+-   [x] 2.1 検証済み待機上限の起動 snapshot 消費を test と実装で閉じる
 
     -   `server-configuration` Task 4.1 完了後、
         `test/server/thumbnail-management/spec/generation-admission.spec.test.ts` に検証済み 32、1、10,000 と稼働中の設
-        定 source 変更を追加し、現在 instance の上限保持不足だけが意図した理由で RED になることを先に確認する。
+        定 source 変更を追加し、現在 instance の上限が保持されることを検証する。
     -   `src/model/operator/thumbnail/ThumbnailManageModel.ts` は `thumbnailMaxPending` を constructor で一度だけ取得・
         保持し、config schema、既定値、値域 validation、template は実装しない。
     -   `test/server/thumbnail-management/imp/admission-limits.test.ts` で設定取得一回、現在 instance の上限不変、新
         instance の新 snapshot 消費を確認する。
-    -   完了時には TM-1.4〜TM-1.6 が GREEN で、consumer 側の赤 test が0件になり、設定 owner の source 差分が0件である。
+    -   完了時には TM-1.4〜TM-1.6 が成功し、設定 owner の source 差分が0件である。
     -   _Requirements: 1.4, 1.5, 1.6, 7.2_
     -   _Boundary: サムネイル管理の検証済み起動 snapshot consumption_
     -   _Depends: 1.1_
 
--   [x] 2.2 bounded admission と同期過負荷拒否を RED から GREEN まで閉じる
+-   [x] 2.2 bounded admission と同期過負荷拒否を test と実装で閉じる
 
     -   `test/server/thumbnail-management/spec/generation-admission.spec.test.ts` に、待機上限直前・到達・超過、実行中一
         件、同着受付、重複 ID、および受付済み依頼を追加する。
     -   実行中一件を待機数へ含めず、満杯時は新規依頼だけを既存 error carrier へ同期的に渡し、受理済み依頼の取消 0 を
         exact ledger で定義する。
-    -   1.1 と 2.1 は成功したまま、TM-1.1 と TM-1.7 の bounded admission 不足だけが意図した理由で RED になることを確認し
-        てから、次の最小実装へ進む。
     -   `src/model/operator/thumbnail/ThumbnailManageModel.ts` の同期 `add()` 境界で待機数確認と追加を不可分にし、満杯時
         は既存 error carrier を throw する。
     -   `src/model/operator/thumbnail/IThumbnailManageModel.ts` の公開契約を変えず、重複依頼、FIFO、受付と完了の分離、
@@ -142,49 +140,45 @@ Task 4.1 が所有する。本 spec は同 task 完了後の検証済み設定 s
     -   `test/server/thumbnail-management/imp/admission-limits.test.ts` と
         `test/server/thumbnail-management/imp/queue-lifecycle.test.ts` で、任意の同着受付でも受理数が上限以下、受付済み
         取消 0、同一 ID の独立要素を確認する。
-    -   実装後に同じ target test を再実行し、TM-1.1 と TM-1.7 が GREEN になることを確認する。
-    -   完了時には任意の同着受付でも受理数が上限以下、受付済み取消 0、bounded admission の赤 test 0 件になる。
+    -   完了時には任意の同着受付でも受理数が上限以下、受付済み取消 0 になる。
     -   _Requirements: 1.1, 1.2, 1.3, 1.7, 1.8, 7.2_
     -   _Boundary: サムネイル生成の bounded admission・FIFO_
     -   _Depends: 2.1_
 
--   [x] 2.3 regenerate の満杯失敗隔離を RED から GREEN まで閉じる
+-   [x] 2.3 regenerate の満杯失敗隔離を test と実装で閉じる
 
     -   `test/server/thumbnail-management/spec/thumbnail-regeneration.spec.test.ts` と
         `test/server/thumbnail-management/imp/maintenance-branches.test.ts` に、複数番組の途中で `add()` が同期的な満杯
-        error を返し、前後の対象は調査可能である fixture を先に追加して TM-4.6 の差分だけが RED になることを確認する。
+        error を返し、前後の対象は調査可能である fixture を追加し、TM-4.6 を検証する。
     -   `src/model/operator/thumbnail/ThumbnailManageModel.ts` の regenerate は対象単位で同期 `add()` error を catch
-        し、recorded/video identity と原 error を logger ledger へ一回記録して後続番組を続ける最小修正だけを行う。
+        し、recorded/video identity と原 error を logger ledger へ一回記録して後続番組を続ける。
     -   受付済み依頼を取り消さず、失敗対象の追加 0、後続対象の調査・追加継続、再生成要求が追加済み JPEG の完成を待たない
         ことを exact queue/logger ledger で検証する。
-    -   完了時には TM-4.6 が GREEN で、原失敗の記録一回、後続対象の処理一回以上、赤 test 0 件を観測できる。
+    -   完了時には TM-4.6 が成功し、原失敗の記録一回、後続対象の処理一回以上を観測できる。
     -   _Requirements: 4.6_
     -   _Boundary: 不足サムネイル再生成の admission failure isolation_
     -   _Depends: 2.2_
 
 -   [x] 3. 録画ファイル確認へ有限な開始準備期限を追加する
--   [x] 3.1 30 秒期限と late result fence を RED から GREEN まで閉じる
+-   [x] 3.1 30 秒期限と late result fence を test と実装で閉じる
 
     -   `test/server/thumbnail-management/spec/jpeg-generation.spec.test.ts` と
         `test/server/thumbnail-management/imp/deadline-fences.test.ts` に 29,999、30,000、30,001ms、確認成功・失敗・
         late settlement の fake timer/deferred fixture を追加する。
     -   期限時は依頼を一度だけ失敗として queue 先頭を解放し、late 確認から process、DB 保存、通知を開始しない期待値を
         exact count で定義する。
-    -   既存即時経路は成功したまま、TM-2.2、TM-2.3 の deadline と fence 不足だけが意図した理由で RED になることを確認し
-        てから、次の最小実装へ進む。
     -   `src/model/operator/thumbnail/ThumbnailManageModel.ts` に request token、settled guard、monotonic 30 秒 absolute
         deadline を追加し、確認完了から生成へ進む直前にも同じ deadline を確認する。
     -   録画済み番組管理・永続化機能の retry、取消、DB timeout は変更せず、consumer 側の late result 利用だけを止める。
     -   timer、queue 先頭、request 参照が成功・失敗・期限の全経路で各一回解放されることを
         `test/server/thumbnail-management/imp/deadline-fences.test.ts` で確認する。
-    -   実装後に同じ target test を再実行し、TM-2.2 と TM-2.3 が GREEN になることを確認する。
     -   完了時には期限後の process・DB 保存・通知が各 0 件で、timer、queue 先頭、request 参照が全経路で一回解放される。
     -   _Requirements: 1.2, 1.10, 2.1, 2.2, 2.3, 7.2_
     -   _Boundary: サムネイル生成の preparation lifecycle_
     -   _Depends: 1.2, 2.2_
 
 -   [x] 4. 出力名を排他的に予約し temporary JPEG から publish する
--   [x] 4.1 同名 race、temporary 出力、および owned cleanup を RED から GREEN まで閉じる
+-   [x] 4.1 同名 race、temporary 出力、および owned cleanup を test と実装で閉じる
 
     -   `test/server/thumbnail-management/spec/jpeg-generation.spec.test.ts` と
         `test/server/thumbnail-management/imp/output-reservation.test.ts` に、`wx` claim、`EEXIST` 連番、同着二依頼、
@@ -193,8 +187,6 @@ Task 4.1 が所有する。本 spec は同 task 完了後の検証済み設定 s
         row/JPEG 不変を期待値にする。
     -   生成・publish・DB 保存の原失敗と各 owned cleanup 失敗は、同じ request/reservation identity を持つ別 logger
         ledger entry として各一回記録し、後続依頼を汚染しない期待値を定義する。
-    -   既存単独命名 test は成功したまま、TM-2.7、TM-2.12、TM-5.1、TM-5.3 の排他所有差分だけが意図した理由で RED になる
-        ことを確認してから、次の最小実装へ進む。
     -   `src/model/operator/thumbnail/ThumbnailManageModel.ts` に request identity、claim 済み final、request 固有
         temporary directory/file、および一回解放状態を持つ `OutputReservation` を追加する。
     -   final 候補を `open(..., "wx")` で claim し、child は temporary path だけへ出力し、正常 terminal と出力の存在確認後に
@@ -203,14 +195,13 @@ Task 4.1 が所有する。本 spec は同 task 完了後の検証済み設定 s
         DB 失敗時は owned temp/final だけを一回回収する。
     -   原失敗と cleanup 失敗を別々に記録し、request/reservation identity、各記録回数一回、後続 request の publish・DB・
         通知継続を logger/call ledger で確認する。
-    -   実装後に同じ target test を再実行し、TM-2.7、TM-2.12、TM-5.1、TM-5.3 が GREEN になることを確認する。
     -   完了時には同名競合でも所有 final の重複 0、active path の誤削除 0、失敗 identity の混同 0 になる。
     -   _Requirements: 2.7, 2.10, 2.12, 5.1, 5.3, 7.2_
     -   _Boundary: OutputReservation・filesystem publish_
     -   _Depends: 1.3, 1.5, 3.1_
 
 -   [x] 5. JPEG child の業務 settlement と資源 finalization を分離する
--   [x] 5.1 300 秒期限、停止、late terminal、および child lease を RED から GREEN まで閉じる
+-   [x] 5.1 300 秒期限、停止、late terminal、および child lease を test と実装で閉じる
 
     -   `test/server/thumbnail-management/spec/jpeg-generation.spec.test.ts` と
         `test/server/thumbnail-management/imp/deadline-fences.test.ts` に 299,999、300,000、300,001ms、正常・異常
@@ -219,8 +210,6 @@ Task 4.1 が所有する。本 spec は同 task 完了後の検証済み設定 s
         terminal 後の owned cleanup と slot 解放一回を期待値にする。
     -   process 原失敗、停止失敗、および terminal 後 cleanup 失敗を request/reservation identity 付きの別 logger ledger
         entry として各一回記録し、後続可能な terminal 経路では次依頼を継続する期待値を定義する。
-    -   既存即時 terminal test は成功したまま、TM-1.2、TM-1.9、TM-2.8、TM-2.9 の finite lifecycle 不足だけが意図した理由
-        で RED になることを確認してから、次の最小実装へ進む。
     -   `src/model/operator/thumbnail/ThumbnailManageModel.ts` で正常・異常 terminal、error、deadline の先着一件だけを
         request tokenへ確定し、業務 settlement と child lease finalization を別状態にする。
     -   `src/util/ProcessUtil.ts` の既存停止方法を deadline 時に一回だけ使い、新しい signal escalation や自動 retry は追
@@ -229,7 +218,6 @@ Task 4.1 が所有する。本 spec は同 task 完了後の検証済み設定 s
         し、terminal 未確認なら専用 queue だけを停止したまま許可済み情報を記録する。
     -   logger ledger で原失敗と cleanup 失敗の回数・request/reservation identity を分離し、terminal 確認後は後続依頼が
         一回開始することを確認する。
-    -   実装後に同じ target test を再実行し、TM-1.2、TM-1.9、TM-2.8、TM-2.9 が GREEN になることを確認する。
     -   完了時には live child、stop、publish、DB insert、通知、cleanup、解放・failure log が設計上限を超えない。
     -   _Requirements: 1.2, 1.9, 1.10, 2.8, 2.9, 2.10, 2.11, 2.12, 7.2_
     -   _Boundary: JPEG process lifecycle・child lease_
@@ -346,7 +334,7 @@ Task 4.1 が所有する。本 spec は同 task 完了後の検証済み設定 s
     -   Requirement 2.12の一時JPEG未生成/既不存在を実filesystemで再現し、元生成失敗と後続queueを保持する。
     -   `thumbnail-absent-output-cleanup.integration.test.ts`で不存在、実EISDIR、errno無し故障を分ける。
     -   `imp/queue-lifecycle.test.ts`でDB保存失敗に伴う一時JPEGのENOENTと真の回収故障を分類し、元DB失敗を隠さない。
-    -   先行RED後に所有一時JPEGのENOENTだけを削除目的達成として扱い、final/個別削除/汎用unlink契約を維持する。
+    -   所有一時JPEGのENOENTだけを削除目的達成として扱い、final/個別削除/汎用unlink契約を維持する。
     -   仕様/実装/結合の関連test、独立review、機能全体の品質判定を通すまで完了にしない。
     -   _Requirements: 2.12, 7.4, 7.5_
     -   _Boundary: owned temporary JPEG filesystem_

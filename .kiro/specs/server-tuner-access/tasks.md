@@ -5,7 +5,7 @@
 ## Cross-spec execution prerequisite
 
 共有 server test foundation と Node.js 24/26 matrix は `server-application-runtime` が所有する。該当 foundation task
-group 完了後に本 spec を実行し、共有 foundation を重複せず、本 spec 固有 test と承認済み差分・未実装契約の最小実装だけを
+group 完了後に本 spec を実行し、共有 foundation を重複せず、本 spec 固有 test と承認済み差分・未実装契約の実装だけを
 追加する。
 
 -   [x] 1. 既存の接続・情報・変更通知・stream契約をcharacterizationする
@@ -66,68 +66,62 @@ group 完了後に本 spec を実行し、共有 foundation を重複せず、�
     -   _Requirements: 7.4, 7.5, 7.6, 7.7_
     -   _Boundary: startup gate_
 
--   [x] 2. 承認済み差分をtargetごとのRED・最小実装・GREENで追加する
--   [x] 2.1 (P) 直接REST accessと安全なtransportをREDから最小実装・GREENまで一単位で追加する
+-   [x] 2. 承認済み差分をtargetごとのtestと実装で追加する
+-   [x] 2.1 (P) 直接REST accessと安全なtransportを一単位で追加する
 
-    -   共通REST・stream routeを直接要求し、製品別の共通route分岐を必要としない目標契約を`unittest/spec`で先に固定する。
+    -   共通REST・stream routeを直接要求し、製品別の共通route分岐を必要としない目標契約を`unittest/spec`で固定する。
     -   HTTP・標準・legacy Unix socket、base path、root-relative redirect、禁止scheme・optionを、新しいtransport境界へ適
         用する期待値を定義する。named pipeは既存parser・request optionのbest-effortなcharacterizationとして扱い、実接続
         を期待値に加えない。
-    -   1.1のcharacterizationは成功したまま、直接API利用とtransportの未実装だけを理由にtarget testが失敗するREDを確認し
-        てからproductionを変更する。
+    -   1.1のcharacterizationは維持し、直接API利用とtransportをtarget testが検証する。
     -   network HTTPと標準・legacy Unix socketをimmutable targetへ変換し、base path、固定route、ID、queryを安全に組み立
         てる。Windows named pipeは既存parser・request optionをbest-effortにcharacterizeしたまま保持し、新しい実接続契約
         を追加しない。HTTPS、userinfo、credential、proxy、certificate optionをtargetへ持たせない。
     -   root-relative redirectだけを同じ接続先で追跡し、absolute・別origin・relative locationを拒否する。
     -   GET、bodyなし、EPGStation User-Agent、200–202、JSON・Buffer・Readableを扱う共通REST gatewayを実装し、中間・失敗
         responseを回収して個別要求を自動retryしない。
-    -   同じ`unittest/spec`、`unittest/imp`、合成HTTP transport targetを再実行する。
-    -   完了時には、既存characterizationとtarget testがGREENになり、HTTP・Unix socketのmethod・path・query・header・
-        response種別が契約へ一致し、実接続先のlog漏えいと赤い必須testが0件になる。
+    -   完了時には、既存characterizationとtarget testが通り、HTTP・Unix socketのmethod・path・query・header・
+        response種別が契約へ一致し、実接続先のlog漏えいが0件になる。
     -   _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 1.10, 1.11, 2.1, 2.2, 2.3, 2.4, 2.5, 4.1, 4.2, 5.1, 6.1,
         6.2, 7.4_
     -   _Boundary: connection target・HTTP transport・REST gateway_
     -   _Depends: 1.1_
 
--   [x] 2.2 (P) 製品非依存DTOと情報・ロゴfacadeをREDから最小実装・GREENまで一単位で追加する
+-   [x] 2.2 (P) 製品非依存DTOと情報・ロゴfacadeを一単位で追加する
 
-    -   稼働状態、チューナー、放送局、番組、放送局別番組、個別番組のEPGStation所有DTOを `unittest/spec`で先に固定する。
+    -   稼働状態、チューナー、放送局、番組、放送局別番組、個別番組のEPGStation所有DTOを `unittest/spec`で固定する。
     -   複数・単数音声、extended、optional field、未知field、required field欠落、JSON不正、非finite値の正規化matrixを定
         義する。
     -   raw objectを共有せず、製品discriminator・製品由来型をconsumer条件へ出さず、情報を保存またはcacheしない期待値を定
         義する。
-    -   1.2の既存取得testは成功したまま、製品非依存DTOと不正payload拒否の未実装だけを理由にtarget testが失敗するREDを確
-        認してからproductionを変更する。
+    -   1.2の既存取得testは維持し、製品非依存DTOと不正payload拒否をtarget testが検証する。
     -   稼働状態、版、チューナー、放送局、番組と入れ子要素を新規objectへcopyし、複数・単数音声とextendedの製品差を共通表
         現へ変換する。required fieldとJSON shapeを検査し、未知fieldだけでは拒否しない。
     -   情報・ロゴ操作を単一access facadeへまとめ、接続先を起動時snapshotとして保持し、取得結果を保存・memoizeせず、同じ
         ロゴ要求も毎回gatewayへ渡す。
-    -   Mirakurun 3.8.0、mirakc 3.1.10、未知field、それ以降の版文字列を含む同じ`unittest/spec`、
-        `unittest/imp`、consumer stub targetを再実行する。
-    -   完了時には、既存取得testと正規化・facade targetがGREENになり、製品由来型・raw object共有・cache副作用・赤いtest
-        が0件になる。
+    -   Mirakurun 3.8.0、mirakc 3.1.10、未知field、それ以降の版文字列を、`unittest/spec`、
+        `unittest/imp`、consumer stub targetが含む。
+    -   完了時には、既存取得testと正規化・facade targetが通り、製品由来型・raw object共有・cache副作用が0件になる。
     -   _Requirements: 1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 6.1, 6.2, 6.3, 6.4, 6.5_
     -   _Boundary: payload normalizer・owned DTO contract_
     -   _Depends: 1.2_
 
--   [x] 2.3 (P) 製品判定と変更adapterをREDから最小実装・GREENまで一単位で追加する
+-   [x] 2.3 (P) 製品判定と変更adapterを一単位で追加する
 
     -   capability probeの最終200 objectだけをMirakurun、最終404だけをmirakcとしてcacheし、network、cancel、timeout、
         parse、その他statusでは判定しないmatrixを`unittest/spec`で定義する。
     -   Mirakurun frameとmirakc SSEを製品別adapterで正規化し、mirakc通知後の放送局別番組取得を独立REST要求として扱う期待
         値を定義する。
     -   初期取得失敗は開始rejectとして伝え、元のerrorのまま伝わること（error同一性）は`change-feed.test.ts`が固定し、Mirakurun通常終了時の異常通知差を維持する。
-    -   1.3のcharacterizationは成功したまま、誤判定cache防止とadapter分離の未実装だけを理由にtarget testが失敗するREDを
-        確認してからproductionを変更する。
+    -   1.3のcharacterizationは維持し、誤判定cache防止とadapter分離をtarget testが検証する。
     -   最終200のJSON objectだけをMirakurun、最終404だけをmirakcとして判定・cacheし、その他の失敗では次回に再probeする。
     -   Mirakurun frameとmirakc SSEを別adapterで正規化する。任意chunk、初期snapshot抑止、独立REST失敗、通常終了差を維持
         し、製品判定後の一つのadapterを冪等close可能なfeed handleとしてfacadeへ結合する。
     -   Mirakurun frameのうちprogram・service以外のresource（`tuner`、`job`、`job_schedule`、未知のresource）は`time`だけを
         検査して読み飛ばし、feedを閉じない。`resource`が文字列でないframe、およびprogram・serviceの内容が不正なframeは解析
         失敗とする。
-    -   同じ`unittest/spec`、`unittest/imp`、consumer stub targetを再実行する。
-    -   完了時には、既存characterizationとprobe・両adapter・feed lifecycleのtargetがGREENになり、誤判定cache、通知の保
-        存・再接続、接続情報漏えい、および赤いtestが0件になる。
+    -   完了時には、既存characterizationとprobe・両adapter・feed lifecycleのtargetが通り、誤判定cache、通知の保
+        存・再接続、接続情報漏えいが0件になる。
     -   _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 7.1, 7.3, 7.4_
     -   _Boundary: product detector・change adapter contracts_
     -   _Concrete target: `src/model/tuner/TunerServerAccessModel.ts`、`src/model/tuner/types.ts`、
@@ -135,7 +129,7 @@ group 完了後に本 spec を実行し、共有 foundation を重複せず、�
         `src/model/tuner/change/MirakcChangeAdapter.ts`_
     -   _Depends: 1.3_
 
--   [x] 2.4 (P) 有限deadlineと破棄可能なstream handleをREDから最小実装・GREENまで一単位で追加する
+-   [x] 2.4 (P) 有限deadlineと破棄可能なstream handleを一単位で追加する
 
     -   番組・放送局streamのID、decode、request-local priority、Readable受渡しを`unittest/spec`で定義する。
     -   `close`の冪等性、request・response破棄、確立後terminal event透過、自動再開なし、競合判断なし、resource解放確認
@@ -148,15 +142,13 @@ group 完了後に本 spec を実行し、共有 foundation を重複せず、�
     -   caller cancelとtimeoutのfirst-terminal-wins、request・response・timer・listener cleanup、blanket retryなしを定義
         する。
     -   handle返却後とchange feedには総継続deadlineを残さず、起動確認には一回・全体ともEPGStation期限を適用しない。
-    -   1.4と1.5のcharacterizationは成功したまま、有限deadline、共通handle、request-local priority、cleanupの未実装だけ
-        を理由にtarget testが失敗するREDを確認してからproductionを変更する。
+    -   1.4と1.5のcharacterizationは維持し、有限deadline、共通handle、request-local priority、cleanupをtarget testが検証する。
     -   caller signalとtimeoutを一つのabortへ合成し、first-terminal-winsでsettleしてtimerとlistenerを回収するdeadline
         coordinatorを起動後要求だけへ適用する。
     -   番組・放送局stream要求を組み立て、accepted responseとReadable取得時にdeadline資源を解除して冪等close可能なhandle
         を返す。確立後へ同じdeadline、自動再開、競合判断、接続先resource解放完了resultを追加しない。
-    -   同じ`unittest/spec`、`unittest/imp`、fake timer targetを再実行する。
-    -   完了時には、既存characterizationと境界・race・cleanup・録画／ライブstream targetがGREENになり、起動確認は無期限
-        のまま、残留timer・listener・赤いtestが0件になる。
+    -   完了時には、既存characterizationと境界・race・cleanup・録画／ライブstream targetが通り、起動確認は無期限
+        のまま、残留timer・listenerが0件になる。
     -   _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 6.3, 7.1, 7.2, 7.3, 7.4,
         7.5, 7.6, 7.7_
     -   _Boundary: deadline coordinator・stream gateway・stream handle_
@@ -168,16 +160,13 @@ group 完了後に本 spec を実行し、共有 foundation を重複せず、�
     -   完了境界: consumerとDB型境界の移行後も、production bootstrapの共有`TunerServerAccess` bindingはTask 6.4が所有す
         る。Task 6.4で`src/index.ts`の予約用チューナー取得まで正準portへ結線するまで、本taskのcheckboxは完了にしない。
 
-    -   正準portへ未結線であることだけを理由に失敗する番組情報・変更feed・予約照会のtarget `integration` testを先に追加
-        し、意図したREDを確認する。
+    -   番組情報・変更feed・予約照会が正準portを経由することをtarget `integration` testが検証する。
     -   番組情報・番組表には正規化済み情報、変更feed、放送局別番組、ロゴ取得結果だけを渡し、通知集約・保存・再接続判断を
         残す。
     -   予約管理には正規化済みチューナー能力だけを渡し、競合計画と割当判断を残す。
     -   DB・予約・番組情報の境界から製品package由来型を除き、番組ジャンル、音声、説明、囲み文字、対象放送局の業務変換は
         各consumerの既存規則を変更しない。
-    -   同じtarget `integration` testを再実行する。
-    -   完了時には、情報・変更・予約consumerのtargetがGREENになり、正準port経由で成功して製品route・frame・型の再定義と
-        赤いtestが0件になる。
+    -   完了時には、情報・変更・予約consumerのtargetが通り、正準port経由で成功して製品route・frame・型の再定義が0件になる。
     -   _Requirements: 1.4, 1.5, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 3.1, 3.2, 3.3, 3.5_
     -   _Boundary: explicit integration―tuner access・program guide・reservation query_
     -   _Concrete target: `src/model/epgUpdater/EPGUpdateManageModel.ts`、
@@ -189,41 +178,36 @@ group 完了後に本 spec を実行し、共有 foundation を重複せず、�
 
 -   [x] 6.2 (P) 録画・ライブconsumerをstream portへ結線する
 
-    -   stream portへ未結線であることだけを理由に失敗する録画・ライブconsumerのtarget `integration` testを先に追加し、意
-        図したREDを確認する。
+    -   録画・ライブconsumerがstream portを経由することをtarget `integration` testが検証する。
     -   予約録画実行へ番組・放送局stream handleを渡し、録画時刻、録画追従、録画結果、終了条件をconsumer側へ残す。
     -   映像配信へ放送局stream handleを渡し、変換、HLS、視聴session、配信終了条件をconsumer側へ残す。
-    -   同じtarget `integration` testを再実行する。
-    -   完了時には、録画・ライブconsumerのtargetがGREENになり、priority、Readable、close、terminal eventが維持され、赤い
-        testが0件になる。
+    -   完了時には、録画・ライブconsumerのtargetが通り、priority、Readable、close、terminal eventが維持される。
     -   _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7_
     -   _Boundary: explicit integration―tuner access・recording・media delivery_
     -   _Depends: 2.4_
 
 -   [x] 6.3 (P) ロゴconsumerをlogo portへ結線する
 
-    -   logo portへ未結線であることだけを理由に失敗するBuffer受渡し、not-found、server error、再要求のtarget
-        `integration` testを先に追加し、意図したREDを確認する。
+    -   logo port経由のBuffer受渡し、not-found、server error、再要求をtarget
+        `integration` testが検証する。
     -   ロゴconsumerでは保存済み情報がexactにfalseの場合だけ既存not-foundとし、trueまたは未設定ではlogo portを呼び、
         upstream失敗をserver errorとして維持する。
     -   同じ放送局への再要求を毎回upstreamへ送り、取得画像または取得errorを保存・cacheしない。
-    -   同じtarget `integration` testを再実行する。
-    -   完了時には、ロゴconsumerのtargetがGREENになり、Buffer受渡し、not-found、server error、再要求が維持され、赤いtest
-        が0件になる。
+    -   完了時には、ロゴconsumerのtargetが通り、Buffer受渡し、not-found、server error、再要求が維持される。
     -   _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5_
     -   _Boundary: explicit integration―tuner access・logo_
     -   _Depends: 2.2_
 
 -   [x] 6.4 access facadeを共有bindingし専用client packageを除去する
 
-    -   production import graph、共有instance数、起動時snapshot、および専用client package不在を検証するtarget dependency
-        testを先に追加し、旧bindingとpackage依存だけを理由に失敗するREDを確認する。
+    -   production import graph、共有instance数、起動時snapshot、および専用client package不在をtarget dependency
+        testが検証する。
     -   access facade、transport、normalizer、product detectorをprocess内で共有し、接続targetとdeadlineは起動時snapshot
         から一度だけ生成する。
     -   情報、変更、録画、ライブ、ロゴのproduction import graphから専用client packageとpackage API型を除去する。
-    -   package削除後に同じtarget dependency test、fresh install、production build、domain testを再実行する。
-    -   完了時には、targetがGREENになり、専用client packageなしでinstall・build・domain testが成功し、production import
-        hitと赤いtestが0件になる。
+    -   package削除後もtarget dependency test、fresh install、production build、domain testが成功する。
+    -   完了時には、targetが通り、専用client packageなしでinstall・build・domain testが成功し、production import
+        hitが0件になる。
     -   _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 2.6, 2.7_
     -   _Boundary: access composition・dependency removal_
     -   _Depends: 6.1, 6.2, 6.3_

@@ -16,12 +16,12 @@ test、および承認済み差分の結合検証だけを追加する。
 
 DB 接続 lifecycle、種類内 transaction、migration、および repository retry は `server-persistence` が所有する。復元
 transaction の開始失敗を含む全経路 release、active 時だけの rollback、raw database error と cleanup error の分離、および
-従来の `restore error` 維持は、`server-persistence` の target test と最小修正が完了した後に本 spec から結合検証する。本
+`restore error` の維持は、`server-persistence` の target test と修正が完了した後に本 spec から結合検証する。本
 spec は同じ production 修正を重複実装しない。
 
 Rule、Reserve、Recorded、Thumbnail、VideoFile、DropLogFile、RecordedHistory、RecordedTag の業務上の意味は各 domain owner
 に残す。本 spec は版番号を持たない JSON、管理 CLI、処理順序、v1 変換、および管理時 DB 利用待ちだけを所有する。
-backup、restore、v1 migration の DB 利用待ちは従来どおり無期限とし、timeout、試行上限、自動停止、排他、version
+backup、restore、v1 migration の DB 利用待ちは無期限とし、timeout、試行上限、自動停止、排他、version
 envelope、checksum、全種類 transaction、retry、path 長上限を追加しない。Windows service command は script 名だけを維持
 し、動作保証または Windows runtime test を追加しない。
 
@@ -152,14 +152,14 @@ envelope、checksum、全種類 transaction、retry、path 長上限を追加し
 -   [x] 3.3 復元 transaction の失敗後処理を管理コマンド経由で結合検証する
 
     -   既存実装分類 B である transaction lifecycle の production 修正は `server-persistence` に残し、その target test
-        と最小修正が完了した状態を実行前提とする。
-    -   管理 CLI から transaction 開始失敗と cleanup failure を注入する target integration test を先に追加し、開始失敗後
-        の rollback または未解放 resource が承認済み契約と異なる理由で RED になることを確認する。Persistence owner の最
-        小修正と本機能の fault-injection harness だけを適用し、同じ target test を GREEN にする。
+        と修正が完了した状態を実行前提とする。
+    -   管理 CLI から transaction 開始失敗と cleanup failure を注入する target integration test が、開始失敗後の
+        rollback と resource 解放が承認済み契約どおりであることを検証する。Persistence owner の修正と本機能の
+        fault-injection harness だけを用いる。
     -   全 8 restore port について transaction 開始、mutation、commit、rollback、release の failure を注入し、開始失敗で
         は rollback せず、active な failure だけを rollback し、全経路で release 完了後に coordinator が settle すること
         を管理 CLI から確認する。
-    -   raw database error と rollback / release error を内部診断で分離し、組合せにかかわらず管理者には従来の
+    -   raw database error と rollback / release error を内部診断で分離し、組合せにかかわらず管理者には
         `restore error` だけを返し、後続 stage を開始しないことを検証する。
     -   commit 後の release failure では当該 stage が確定済みのまま command が失敗し、前段を全体 rollback しないことを確
         認する。
@@ -318,12 +318,12 @@ envelope、checksum、全種類 transaction、retry、path 長上限を追加し
 
 -   [x] 6.2 parser・JSON・v1変換・DB待機の値域と分岐を`unittest/imp`で完成させる
 
-    -   Design の `IMP-CHAR-MT-7.2` に列挙したconcrete caseを先に追加し、CLI必須値、JSON種類、nullable変換、無期限DB待
-        ち、cleanup raceの未実装caseが期待した理由でREDになることを確認する。
+    -   Design の `IMP-CHAR-MT-7.2` に列挙したconcrete caseが、CLI必須値、JSON種類、nullable変換、無期限DB待ち、
+        cleanup raceを検証する。
     -   `IMP-CLIJSON`、`IMP-V1`、`IMP-DBCLEAN`へ`null`、空、0、1、最小、有効最大、範囲外、不正型、重複をDesignの
         `V-DBTOOLS-CLI`、`V-V1-CLI`、`V-JSON`、`V-ROWS`、`V-V1`、`V-WAIT`どおり割り当てる。製品上限がない値へ新しい上限
         を追加せず、非適用値域には理由を持たせる。
-    -   必要最小限のfixture、fake timer、deferred Promise、fault injectionだけを追加し、同じtarget testをGREENにする。接
+    -   fixture、fake timer、deferred Promise、fault injectionだけを用いる。接
         続確認の一回と全体にtimeoutを追加せず、失敗後だけ1,000 ms待機し、管理command間のlock・retry・自動停止を導入しな
         い。
     -   Designの`V-DBTOOLS-CLI`、`V-V1-CLI`、`V-JSON`、`V-ROWS`、`V-V1`、`V-WAIT`の対象をassertionへ対応付け、JSON root key・処理順・終了状態・resource releaseを検証する。`extended`と
@@ -348,15 +348,14 @@ envelope、checksum、全種類 transaction、retry、path 長上限を追加し
 
 -   [x] 6.4 SQLite・MySQLとJSON filesystemの境界を結合検証する
 
-    -   `INT-BOUNDARY-MT-7.4`のDB・filesystem target integration caseを先に追加し、backend、transaction、connection、
-        file cleanupの未接続箇所が期待した理由でREDになることを確認する。
+    -   `INT-BOUNDARY-MT-7.4`のDB・filesystem target integration caseが、backend、transaction、connection、file cleanupを検証する。
     -   `INT-DBFS`で一時SQLiteと隔離MySQL schemaの8 collection read・replaceおよびv1 insertを実行し、QueryRunnerの開
         始、commit、active時だけのrollback、全経路release、connection closeをexact countで検証する。R3.8のproduction修正
         はPersistence ownerから消費し、本機能へ複製しない。
     -   同じ境界testをtemporary filesystemへ接続し、UTF-8 read、invalid JSON、compact direct write、write failure時の空
         またはpartial targetを観測する。入力fileと実media fileは変更せず、atomic rename・自動復旧を追加しない。
-    -   必要最小限のDB seed、fault injector、一時tree回収harnessを実装し、同じtarget testをSQLite・MySQL双方でGREENにす
-        る。一方のbackend成功を他方の代替証拠にしない。
+    -   DB seed、fault injector、一時tree回収harnessを用い、target testをSQLite・MySQL双方で実行する。一方のbackend成功を
+        他方の代替証拠にしない。
     -   完了時には、`INT-BOUNDARY-MT-7.4`のDB・filesystem caseが成功し、transaction、connection、一時file・directoryの未
         解放と対象外file副作用が0件になる。
     -   _Requirements: 7.4_
@@ -364,13 +363,13 @@ envelope、checksum、全種類 transaction、retry、path 長上限を追加し
 
 -   [x] 6.5 compiled CLI processの終了・進行・資源解放を結合検証する
 
-    -   `INT-BOUNDARY-MT-7.4`のcompiled CLI target integration caseを先に追加し、終了状態、進行順、無期限待機時のharness
-        回収、またはresource解放の未接続箇所が期待した理由でREDになることを確認する。
+    -   `INT-BOUNDARY-MT-7.4`のcompiled CLI target integration caseが、終了状態、進行順、無期限待機時のharness回収、
+        resource解放を検証する。
     -   `INT-CLI`でproductionと同じcompiled `backup`、`restore`、`v1migrate`をisolated childとして実行し、success 0と
         input・mode・parse・repository・close failure 1、進行順、close barrierを検証する。
     -   DB pendingでは待機中を観測した後にharnessがchildを終了し、child、pipe、listener、一時directory、DB handleを一回
         回収する。harness期限を製品timeout、management cancellation、Windows runtime成功へ読み替えない。
-    -   必要最小限のcompiled fixtureとprocess回収harnessを実装し、同じtarget testをGREENにする。HTTPとIPCを新設せず、
+    -   compiled fixtureとprocess回収harnessを用いる。HTTPとIPCを新設せず、
         command自身による通常runtime停止または管理command間のlockを追加しない。
     -   完了時には、`INT-BOUNDARY-MT-7.4`のcompiled CLI caseが成功し、exit 0・1、進行・close順、child・pipe・listener・
         一時資源の未解放が0件になる。
