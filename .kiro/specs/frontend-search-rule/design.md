@@ -112,7 +112,7 @@ field 契約の対象外とする。
 client/src/features/search/rule/
 ├── index.ts                      # SearchRulePage / RuleListPage / API repository factory / query key の公開
 ├── SearchRulePage.tsx            # /search の route root。hooks と components の合成だけを持つ
-├── RuleListPage.tsx              # /rule の route root。一覧状態、action、pagination（`isEnableExtendedPagination` が true のときだけ拡張 pagination、それ以外は `LegacyPagination`）
+├── RuleListPage.tsx              # /rule の route root。一覧状態、action、pagination（共有の `AppPagination` が `isEnableExtendedPagination` で拡張 pagination と `LegacyPagination` を選ぶ）
 ├── SearchRulePage.module.css     # 両画面の CSS module
 ├── genreLabels.ts                # genre / sub genre の表示名
 ├── query.ts                      # lib/ の barrel（型、route 解析、form state、request、payload）

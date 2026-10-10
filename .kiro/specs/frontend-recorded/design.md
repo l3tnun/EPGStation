@@ -92,7 +92,7 @@ graph TB
 
 `client/src/features/recorded/` が list / detail を所有する。TS/TSX の 1 file は 300 行前後に保ち、CSS module は対象外とする。
 
-- `RecordedPage.tsx` — `/recorded` route root。query と settings から request / query key を組み立て、一覧、pagination、edit mode、dialog を composition する。
+- `RecordedPage.tsx` — `/recorded` route root。query と settings から request / query key を組み立て、一覧、pagination（共有の `AppPagination` が `isEnableExtendedPagination` で拡張 pagination と `LegacyPagination` を選ぶ）、edit mode、dialog を composition する。
 - `RecordedDetailPage.tsx` — `/recorded/detail/:id` route root。
 - `recordedPageProps.ts` — 両 page が受け取る props 型。
 - `index.ts` — 共有 component（`RecordedItemMenu`、`RecordedDeleteDialog`、`RecordedBulkDeleteDialog`、`AddEncodeDialog`）と bulk delete action の export。

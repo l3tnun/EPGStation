@@ -138,7 +138,7 @@
 8. Video subtitle rendering option を決めるとき、EPGStation フロントエンドは `isForceEnableSubtitleStroke` を参照する。
 9. `searchLength` の UI 許容値は 50 から 600 の 50 刻みとする。
 10. default settings object を作成するとき、EPGStation フロントエンドは `isEnableExtendedPagination=false` を設定する。保存済みの settings に `isEnableExtendedPagination` が無い場合は、他の field を変えずにこの default だけを補完する。
-11. Rule list の pagination を決めるとき、EPGStation フロントエンドは `isEnableExtendedPagination` を参照し、`true` のときだけ拡張 pagination を、それ以外のときは従来の `LegacyPagination` を使う。
+11. 録画済み・録画中・予約・ルール一覧の pagination を決めるとき、EPGStation フロントエンドは `isEnableExtendedPagination` を参照し、`true` のときだけ拡張 pagination を、それ以外のときは従来の `LegacyPagination` を使う（`frontend-app-shell` 要求 8.49）。
 
 ### 要求 9: 隣接 workflow storage key
 

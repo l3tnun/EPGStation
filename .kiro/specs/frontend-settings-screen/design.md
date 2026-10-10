@@ -112,7 +112,7 @@ client/src/
 - `components/SettingsControlText.tsx` — control の label と subtitle。
 - `lib/settingsControlSupport.ts` — accessible name、select 表示値、表示可否、change handler 型。
 - `lib/settingsStorageAccess.ts` — localStorage の読取 / 保存、memory fallback、navigation 再生成 target。
-- `settingsControlMatrix.ts` — `SETTINGS_CONTROL_MATRIX` と section / visible / disabled / 表示値 / update / preview theme の解決関数。`settingsControlTypes.ts`（型）、`settingsControlRowsFront.ts`（全般 / 放映中 / 番組表 / 予約 / 録画中）、`settingsControlRowsBack.ts`（録画 / 検索 / ルール / ビデオプレーヤ）、`lib/settingsControlOptions.ts`（range / value option 生成）から組み立てる。
+- `settingsControlMatrix.ts` — `SETTINGS_CONTROL_MATRIX` と section / visible / disabled / 表示値 / update / preview theme の解決関数。`settingsControlTypes.ts`（型）、`settingsControlRowsFront.ts`（全般 / 放映中 / 番組表 / 予約 / 録画中）、`settingsControlRowsBack.ts`（録画 / 検索 / ルール / ページネーション / ビデオプレーヤ）、`lib/settingsControlOptions.ts`（range / value option 生成）から組み立てる。
 - `settingsLayoutContract.ts` — section 順、card 幅、URL scheme placeholder。
 - `settingsPreview.ts` — theme preview、reset / 離脱の復元。
 - `settingsSave.ts` — 保存、navigation 再生成 request、snackbar。
@@ -275,7 +275,7 @@ Settings screen は backend API を呼ばない。全 control は `SettingsPage`
 | 検索 | エンコードの自動設定 | `isEnableEncodingSettingWhenCreateRule` | switch | boolean | always | `tmp.isEnableEncodingSettingWhenCreateRule` |
 | 検索 | 元ファイルの自動削除 | `isCheckDeleteOriginalAfterEncode` | switch | boolean | always | `tmp.isCheckDeleteOriginalAfterEncode` |
 | ルール | 表示件数 | `rulesLength` | select | 1-100 | always | `tmp.rulesLength` |
-| ルール | 拡張ページネーションの有効化 | `isEnableExtendedPagination` | switch | boolean | always | `tmp.isEnableExtendedPagination`。helper text は `ルール一覧のページ移動を拡張ページネーションに置き換える `。保存後の値は Rule list だけが参照する。 |
+| ページネーション | 拡張ページネーションの有効化 | `isEnableExtendedPagination` | switch | boolean | always | `tmp.isEnableExtendedPagination`。helper text は `録画済み・録画中・予約・ルール一覧のページ移動を拡張ページネーションに置き換える `。保存後の値は `AppPagination`（`frontend-app-shell` 要求 8.49）を通して録画済み・録画中・予約・ルール一覧が参照する。 |
 | ビデオプレーヤ | 字幕の縁取りを強制する | `isForceEnableSubtitleStroke` | switch | boolean | always | `tmp.isForceEnableSubtitleStroke` |
 
 ### 既存不正値の表示規則

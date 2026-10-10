@@ -101,6 +101,7 @@ Recorded は録画済み一覧、詳細、watch/streaming/upload への入口を
     `maxButtons` が 0 以下（実測前を含む、実測幅 137px 以下、負値も含む）のときは、`maxLength` の計算上
     `maxButtons` が 12 のときと同じ値になるため、任意の総ページ数・current page の組み合わせで `maxButtons`
     12 と同じ結果になる。
+16. settings の `isEnableExtendedPagination` が true のとき、Recorded list は上記 15 の従来 pagination に代えて、共有 component `AppPagination`（`frontend-app-shell` 要求 8.49）を通じて拡張 pagination（`frontend-app-shell` 要求 8.33-8.47）を表示する。false（default）のときは上記 15 の従来 pagination を変えずに表示する。page の移動は同じ `?page=` query の更新で行い、edit mode の保持など pagination 移動時の扱い（要求 1 の他の AC）も拡張・従来で変わらない。
 
 ### 要求 2: Recorded list actions
 

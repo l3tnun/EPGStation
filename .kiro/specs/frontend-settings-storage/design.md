@@ -255,7 +255,7 @@ interface SettingsLoadResult {
 | `isCheckDeleteOriginalAfterEncode` | boolean | `false` | Encode option default。 |
 | `rulesLength` | number | `24` | UI 許容範囲は 1-100。missing field のみ default で補完し、既存 field の範囲外/非整数は保持する。 |
 | `isForceEnableSubtitleStroke` | boolean | `true` | Video subtitle stroke option。 |
-| `isEnableExtendedPagination` | boolean | `false` | Rule list の pagination を拡張 pagination（`frontend-app-shell` 要求 8.33-8.47）にするか。`false` のときは従来の `LegacyPagination` のまま。Rule list 以外の画面は参照しない。 |
+| `isEnableExtendedPagination` | boolean | `false` | ページ送りを持つ画面（録画済み・録画中・予約・ルール一覧）の pagination を拡張 pagination（`frontend-app-shell` 要求 8.33-8.47）にするか。`false` のときは従来の `LegacyPagination` のまま。1 つの設定で 4 画面を同時に切り替える（`frontend-app-shell` 要求 8.49）。 |
 
 ### 解析 / 補完 / 検証契約
 

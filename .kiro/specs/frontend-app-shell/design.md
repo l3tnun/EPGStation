@@ -175,7 +175,7 @@ client/src/
 │   ├── titleBar/                  # TitleBar / EditTitleBar と contract
 │   ├── theme.ts、drawerLayout.ts、realtime.ts、realtimeInvalidation.ts、pwa.ts、settingsStorageAdapter.ts、browserAdapters.ts
 ├── features/                      # routed screen。screen 固有の menu / dialog / action は各 feature が所有する
-└── shared/                        # settings、AppSelect、ClearableTextField、LegacyPagination、ExtendedPagination
+└── shared/                        # settings、AppSelect、ClearableTextField、AppPagination、LegacyPagination、ExtendedPagination
 ```
 
 test:
@@ -213,7 +213,7 @@ schema を直接所有しない構造にする。
 | 5.1-5.22                                    | Drawer Responsive と Navigation Click | PageController, QueryController, ApiRepository, ActionController, DialogCoordinator, StorageAdapter | State / Service / API | route/query/action flow                               |
 | 6.1-6.23                                    | Version 更新と接続状態                | PageController, ApiRepository, ActionController, DialogCoordinator                                  | State / Service / API | version/socket/snackbar/reconnect/scroll history flow |
 | 7.1-7.13                                    | dark theme shell coverage             | StorageAdapter, PageController                                                                      | State                 | theme 反映と dark theme の静的 regression             |
-| 8.1-8.47                                    | 共有 form control と静的 guard        | 共有 form control（AppSelect、ClearableTextField、LegacyPagination、ExtendedPagination）                              | UI contract           | 共有 control の描画と静的検査                         |
+| 8.1-8.49                                    | 共有 form control と静的 guard        | 共有 form control（AppSelect、ClearableTextField、AppPagination、LegacyPagination、ExtendedPagination）                              | UI contract           | 共有 control の描画と静的検査                         |
 
 ## コンポーネントとインターフェース
 
@@ -663,9 +663,13 @@ previous full route へ `replace` する 2 回の route change）の直前に `2
   `icon-512.png`、`original.png`、`pwa-large.png` は既存のファイルをそのまま使用し、再生成しない。Vite default の
   `favicon.svg` など上記以外の favicon / install icon を残して参照してはならない。
 
+### AppPagination 契約（要求 8.49）
+
+`client/src/shared/AppPagination.tsx` は、ページ送りを持つ画面（`RecordedPage`、`RecordingPage`、`ReservesPage`、`RuleListPage`）が使う唯一の入口である。props は `LegacyPagination` と同じ `page`、`pageSize`、`total`、`onPageChange` に、設定の `isEnableExtendedPagination` を加えたもので、`true` のときだけ `ExtendedPagination`、それ以外は `LegacyPagination` を同じ props で描画する。画面は設定の真偽を自分で分岐せず、`LegacyPagination` と `ExtendedPagination` を直接 import しない。`AppPagination` は wrapper 要素や余白を足さないので、設定が `false` のときの DOM と見た目は `LegacyPagination` を直接描画していたときと同じである。設定の保存 key と既定値は `frontend-settings-storage`、設定画面の項目は `frontend-settings-screen` が定める。
+
 ### ExtendedPagination 契約（要求 8.33-8.47）
 
-`client/src/shared/ExtendedPagination.tsx` は `LegacyPagination` と同じ props（`page`、`pageSize`、`total`、`onPageChange`）を持つ共有 component で、`isEnableExtendedPagination` が `true` のときだけ Rule list が `LegacyPagination` の代わりに描画する（`frontend-search-rule` 要求 3.35）。純粋な算出は `client/src/shared/extendedPagination.ts` に分ける。
+`client/src/shared/ExtendedPagination.tsx` は `LegacyPagination` と同じ props（`page`、`pageSize`、`total`、`onPageChange`）を持つ共有 component で、`AppPagination` が `isEnableExtendedPagination` の `true` のときだけ `LegacyPagination` の代わりに描画する（要求 8.49）。純粋な算出は `client/src/shared/extendedPagination.ts` に分ける。
 
 | 項目 | 規則 |
 | --- | --- |

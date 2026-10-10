@@ -52,6 +52,7 @@ Recording / Encode は録画中 item と encode running/waiting job の一覧、
 32. normal mode の item click は `/recorded/detail/:recordedId` へ遷移する。
 33. Recorded shared item menu を使う場合も encode enqueue action は `recordedItem.isRecording !== true` の条件を満たす場合だけ表示する。
 34. Recording empty/loading/error では item がある時だけ content wrapper を mount し、explicit empty copy を追加しない。
+35. Recording list の pagination は、settings の `isEnableExtendedPagination` が `true` のとき、共有 component `AppPagination`（`frontend-app-shell` 要求 8.49）を通じて拡張 pagination（`frontend-app-shell` 要求 8.33-8.47）を表示し、`false`（default）のとき従来の pagination を変えずに表示する。page の移動は拡張・従来で同じ `?page=` query の更新で行い、page size は `recordingLength` のままとする。Encode list はページ送りを持たないので対象外とする。
 
 ### 要求 2: Encode list
 

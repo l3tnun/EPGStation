@@ -329,7 +329,7 @@ freshness と reconnect behavior を確認できる。
 
 ### 要求 8: 共有 form control と静的 guard
 
-**目的:** EPGStation ユーザーとして、共有 form control (`AppSelect`、`ClearableTextField`、`LegacyPagination`、`ExtendedPagination`)
+**目的:** EPGStation ユーザーとして、共有 form control (`AppSelect`、`ClearableTextField`、`AppPagination`、`LegacyPagination`、`ExtendedPagination`)
 が一貫した挙動を持ち、native control や崩れた option 表示が紛れ込まないでほしい。これにより、画面ごとに再実装された
 select/checkbox/pagination の挙動差異が発生しない。
 
@@ -406,3 +406,4 @@ select/checkbox/pagination の挙動差異が発生しない。
     - 矢印 button（`≪` `≫` `<` `>`）: 背景と影は page 番号 button と同じ。icon の色は light theme が `rgba(0, 0, 0, 0.54)`、dark theme が `#FFFFFF`。
     - 押せない矢印 button: 背景・icon の色・影は押せるときと同じで、`opacity: 0.6` にする（色を変えない）。
     - `LegacyPagination` の ellipsis の文字色は、light theme が `rgba(0, 0, 0, 0.87)`、dark theme が `#FFFFFF`。
+49. 共有 component `AppPagination`（`client/src/shared/AppPagination.tsx`）は、`page`、`pageSize`、`total`、`onPageChange` と設定 `isEnableExtendedPagination` を受け取り、`isEnableExtendedPagination` が `true` のときだけ `ExtendedPagination`（8.33-8.47）を、それ以外（既定の `false` を含む）のとき `LegacyPagination` を、同じ `page`、`pageSize`、`total`、`onPageChange` で描画する。ページ送りを持つ画面（録画済み・録画中・予約・ルール一覧。検索結果と encode 一覧はページ送りを持たない）は `LegacyPagination` や `ExtendedPagination` を直接描画せず、この component だけを使う。拡張・従来の選択は画面ごとの分岐ではなくこの 1 か所で行い、どちらの場合も各画面の page、総数、page size、URL の `?page=` 更新、移動の処理は変えない。設定が `false` のときの各画面の表示は、この component を使う前と同じにする。見た目（配色・大きさ・余白）は `ExtendedPagination` と `LegacyPagination` それぞれの規則（8.1-8.48）のままで、`AppPagination` 自身は余分な要素や余白を足さない。

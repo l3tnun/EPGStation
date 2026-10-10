@@ -20,7 +20,7 @@
 
 1. `/settings` を表示するとき、EPGStation フロントエンドは title `設定 ` の通常画面として表示する。
 2. Settings 画面を表示するとき、EPGStation フロントエンドは backend API を呼ばず、`frontend-settings-storage` の一時編集値を form control に反映する。
-3. Settings 画面を表示するとき、EPGStation フロントエンドは `全般 `、`放映中 `、`番組表 `、`予約 `、`録画中 `、`録画 `、`検索 `、`ルール `、`ビデオプレーヤ ` の section を現在順で表示する。
+3. Settings 画面を表示するとき、EPGStation フロントエンドは `全般 `、`放映中 `、`番組表 `、`予約 `、`録画中 `、`録画 `、`検索 `、`ルール `、`ページネーション `、`ビデオプレーヤ ` の section を現在順で表示する。
 4. Settings 画面の route 初期化が完了したとき、EPGStation フロントエンドは scroll restoration 完了を通知する。
 5. Settings 画面は backend API を呼ばず、route guard なしの通常 route として表示する。
 6. Settings 画面は control matrix として、section、label、settings key、control 種別、表示条件、disabled 条件、選択肢、`tmp` 反映先を requirements/design で固定する。
@@ -39,7 +39,7 @@
 19. 検索 section の `自動スクロール ` control は `isEnableAutoScrollWhenEditingRule` を一時編集し、保存後は Search Rule feature が `/search?rule=<ruleId>` の EPG rule edit 初期自動検索だけに使用する値として永続化する。この control は manual search、query-driven search、time-specified rule edit、history restoration、検索結果 header の「録画設定へ移動」の挙動を変えてはならない。
 20. Settings 画面のカスタム switch は thumb と track の色、thumb position の変化に 150ms 程度の transition を持ち、checked と unchecked の切替が滑らかに見える表示を維持する。
 21. `guideLength`、`reservesLength`、`recordingLength`、`recordedLength`、`searchLength`、`rulesLength` など数値 select の各選択肢は、素の数値だけでなく `24時間`、`300件` のように単位 suffix（`時間 ` または `件 `）を付けて表示する。どの select が時間単位でどれが件数単位かを選択肢自体から判別できるようにする。
-22. ルール section は `表示件数`（`rulesLength`）の直後に、`拡張ページネーションの有効化 ` switch（`isEnableExtendedPagination`、helper text `ルール一覧のページ移動を拡張ページネーションに置き換える `）を表示する。この switch は一時編集値 `tmp.isEnableExtendedPagination` を編集し、保存するまで Rule list の pagination を変えない。
+22. ページネーション section は、`ルール` section の次、`ビデオプレーヤ` section の前に置き、`拡張ページネーションの有効化 ` switch（`isEnableExtendedPagination`、helper text `録画済み・録画中・予約・ルール一覧のページ移動を拡張ページネーションに置き換える `）を表示する。この switch は一時編集値 `tmp.isEnableExtendedPagination` を編集し、保存するまで録画済み・録画中・予約・ルール一覧のどの pagination も変えない。保存した値は 4 画面を同時に切り替える（`frontend-app-shell` 要求 8.49）。`ルール` section には `表示件数`（`rulesLength`）だけが残る。
 
 ### 要求 2: 一時編集と保存
 

@@ -29,7 +29,7 @@ Reserves は予約一覧、状態別 route、delete/unskip/unoverlap、edit mode
 9. API が 0 件を返したとき、EPGStation フロントエンドは explicit empty copy を追加しない。
 10. Socket.IO fetch では route-driven fetch のように list を hidden state へ切り替えず、現在表示を維持したまま現在 route option で refetch する。
 11. Socket.IO `updateStatus` による fetch が失敗したとき、EPGStation フロントエンドは snackbar 通知を行わず、直前まで表示していた list をそのまま維持する。
-12. pagination は `total <= reservesLength`（0 件、または 1 ページに収まる件数）のとき非表示にし、`total > reservesLength` のときだけ表示する。ページ数は `total === 0` のとき 1、それ以外は `Math.ceil(total / reservesLength)` とする。
+12. pagination は `total <= reservesLength`（0 件、または 1 ページに収まる件数）のとき非表示にし、`total > reservesLength` のときだけ表示する。ページ数は `total === 0` のとき 1、それ以外は `Math.ceil(total / reservesLength)` とする。 settings の `isEnableExtendedPagination` が `true` のときは、共有 component `AppPagination`（`frontend-app-shell` 要求 8.49）を通じて拡張 pagination（`frontend-app-shell` 要求 8.33-8.47）を表示し、`false`（default）のときは従来の pagination を変えずに表示する。表示の有無（`total <= reservesLength` で非表示）、ページ数、`?page=` query での移動は、拡張・従来で同じとする。
 13. `page` query が非整数または 1 未満のとき、EPGStation フロントエンドは `page=1` として扱い、`GET /reserves` の `offset` を `0` に丸める。
 
 ### 要求 2: state variants と list actions
