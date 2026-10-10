@@ -274,6 +274,20 @@ describe('[AR-4.3][AR-4.5] the event binding is registered once and links reserv
         const addedRecord = join(operator.root, 'hook-added.log');
         const deletedRecord = join(operator.root, 'hook-deleted.log');
         await ready(operator);
+
+        // Right after it starts listening, the Service emits one updateStatus caused by the Operator's own
+        // startup work, not by any reservation change. The Service keeps a single 200 ms window, so once
+        // that notification has been received nothing is pending and a later change opens a fresh window.
+        // Receive it first (the client connects within milliseconds of the Service answering), so the
+        // counts below see only what the change under test causes.
+        const startupClient = await connectSocketIo(operator.servicePort);
+        sockets.push(startupClient);
+        await waitFor(
+            () => startupClient.events().includes('updateStatus'),
+            'the updateStatus caused by the Operator startup',
+            async () => ({ diagnostics: await operator.diagnostics(), events: startupClient.timedEvents() }),
+        );
+        await startupClient.close();
         await withDatabase(operator.root, database => seedChannel(database, { channelType: 'GR', id: channelId, name: 'synthetic GR' }));
 
         const notificationsAfter = async (action: () => Promise<void>): Promise<number> => {
