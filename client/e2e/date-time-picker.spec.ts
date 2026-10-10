@@ -1,4 +1,4 @@
-import { expect, test, type Locator, type Page } from '@playwright/test'
+import { expect, test, type CDPSession, type Locator, type Page } from '@playwright/test'
 import { installAppShellApiMocks } from './support/appShellMocks'
 import {
   expectMondayFirstCalendar,
@@ -337,6 +337,27 @@ async function expectToolbarAligned(dialog: Locator): Promise<void> {
   expect(measured!.diff).toBeLessThanOrEqual(1)
 }
 
+// 列の上で wheel を回して、option を列の見える範囲に入れる（実際の操作で届くことを確かめる）。
+async function revealByWheel(page: Page, option: Locator): Promise<void> {
+  const column = option.locator('xpath=ancestor::*[@role="listbox"][1]')
+  for (let step = 0; step < 80; step += 1) {
+    const columnBox = await column.boundingBox()
+    const optionBox = await option.boundingBox()
+    expect(columnBox).not.toBeNull()
+    expect(optionBox).not.toBeNull()
+    if (
+      optionBox!.y >= columnBox!.y &&
+      optionBox!.y + optionBox!.height <= columnBox!.y + columnBox!.height
+    ) {
+      return
+    }
+    await page.mouse.move(columnBox!.x + columnBox!.width / 2, columnBox!.y + columnBox!.height / 2)
+    await page.mouse.wheel(0, optionBox!.y < columnBox!.y ? -150 : 150)
+    await page.waitForTimeout(30)
+  }
+  throw new Error('option を列の scroll で見える範囲に入れられません')
+}
+
 test.describe('picker fits the usable page size without scrolling the dialog', () => {
   for (const screen of pickerScreens) {
     for (const [width, height] of usableSizes) {
@@ -373,11 +394,11 @@ test.describe('picker fits the usable page size without scrolling the dialog', (
           [23, 59],
         ]) {
           const hourOption = dialog.getByRole('option', { name: `${hour} 時間`, exact: true })
-          await hourOption.scrollIntoViewIfNeeded()
+          await revealByWheel(page, hourOption)
           await hourOption.click()
           await expectVisibleInViewport(page, hourOption, `${hour} 時間`)
           const minuteOption = dialog.getByRole('option', { name: `${minute} 分`, exact: true })
-          await minuteOption.scrollIntoViewIfNeeded()
+          await revealByWheel(page, minuteOption)
           await minuteOption.click()
           await expectVisibleInViewport(page, minuteOption, `${minute} 分`)
           await expectDialogDoesNotScroll(dialog)
@@ -416,7 +437,7 @@ test.describe('picker follows the visible area while it stays open', () => {
         await expectToolbarAligned(dialog)
         for (const label of ['0 時間', '23 時間', '0 分', '59 分']) {
           const option = dialog.getByRole('option', { name: label, exact: true })
-          await option.scrollIntoViewIfNeeded()
+          await revealByWheel(page, option)
           await expectVisibleInViewport(page, option, `${width}x${height} ${label}`)
         }
         await dialog.getByRole('tab', { name: '日付を選択' }).click()
@@ -446,7 +467,7 @@ test.describe('picker selects every minute', () => {
       const minutes = dialog.getByRole('listbox').nth(1).getByRole('option')
       await expect(minutes).toHaveCount(60)
       const last = dialog.getByRole('option', { name: '59 分', exact: true })
-      await last.scrollIntoViewIfNeeded()
+      await revealByWheel(page, last)
       await expectVisibleInViewport(page, last, '59 分')
       await expectDialogDoesNotScroll(dialog)
       await dialog.getByRole('option', { name: '9 時間', exact: true }).click()
@@ -454,6 +475,118 @@ test.describe('picker selects every minute', () => {
       await dialog.getByRole('button', { name: '設定' }).click()
       await expect(dialog).toHaveCount(0)
       await expect(field).toHaveValue(/09:58$/)
+    })
+  }
+})
+
+// MUI の列は pointer: fine のとき hover の間だけ scroll できる。fine と申告される環境で指で触っても、
+// 最初の操作から scroll できること。
+test.describe('picker columns scroll from the first touch or wheel', () => {
+  test.use({ hasTouch: true })
+
+  async function declareFinePointer(page: Page): Promise<CDPSession> {
+    const session = await page.context().newCDPSession(page)
+    await session.send('Emulation.setEmulatedMedia', {
+      features: [
+        { name: 'pointer', value: 'fine' },
+        { name: 'hover', value: 'hover' },
+      ],
+    })
+    return session
+  }
+
+  // 指で上へ払う（touchStart → touchMove → touchEnd）。
+  async function swipeUp(session: CDPSession, column: Locator): Promise<void> {
+    const box = await column.boundingBox()
+    expect(box).not.toBeNull()
+    const x = box!.x + box!.width / 2
+    const startY = box!.y + box!.height - 10
+    const endY = box!.y + 10
+    await session.send('Input.dispatchTouchEvent', {
+      type: 'touchStart',
+      touchPoints: [{ x, y: startY }],
+    })
+    for (let step = 1; step <= 8; step += 1) {
+      await session.send('Input.dispatchTouchEvent', {
+        type: 'touchMove',
+        touchPoints: [{ x, y: startY + ((endY - startY) * step) / 8 }],
+      })
+    }
+    await session.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+    await column.page().waitForTimeout(400)
+  }
+
+  const scrollTop = (column: Locator) => column.evaluate((node) => node.scrollTop)
+
+  async function sweepToEnd(session: CDPSession, column: Locator): Promise<void> {
+    const before = await scrollTop(column)
+    await swipeUp(session, column)
+    expect(await scrollTop(column), 'first swipe scrolls the column').toBeGreaterThan(before)
+    for (let step = 0; step < 30; step += 1) {
+      const atEnd = await column.evaluate(
+        (node) => node.scrollTop + node.clientHeight >= node.scrollHeight - 1,
+      )
+      if (atEnd) {
+        return
+      }
+      await swipeUp(session, column)
+    }
+    throw new Error('列を最後まで払えません')
+  }
+
+  for (const screen of pickerScreens) {
+    test(`${screen.name} columns scroll by touch swipes under a fine pointer`, async ({
+      page,
+      browserName,
+    }) => {
+      test.skip(browserName !== 'chromium', 'CDP の touch は Chromium のみ')
+      await page.setViewportSize({ width: 375, height: 548 })
+      const session = await declareFinePointer(page)
+      const field = await screen.open(page)
+      await field.tap()
+      const dialog = page.getByRole('dialog', { name: screen.dialogName })
+      await expect(dialog).toBeVisible()
+      await dialog.getByRole('tab', { name: '時間を選択' }).tap()
+
+      const [hours, minutes] = [
+        dialog.getByRole('listbox').nth(0),
+        dialog.getByRole('listbox').nth(1),
+      ]
+      for (const [column, label] of [
+        [hours, '23 時間'],
+        [minutes, '59 分'],
+      ] as const) {
+        await sweepToEnd(session, column)
+        const option = dialog.getByRole('option', { name: label, exact: true })
+        await expectVisibleInViewport(page, option, label)
+        await option.tap()
+      }
+      await expectDialogDoesNotScroll(dialog)
+      await dialog.getByRole('button', { name: '設定' }).tap()
+      await expect(dialog).toHaveCount(0)
+      await expect(field).toHaveValue(screen.suffix)
+    })
+
+    test(`${screen.name} columns scroll by the first mouse wheel under a fine pointer`, async ({
+      page,
+      browserName,
+    }) => {
+      test.skip(browserName !== 'chromium', 'pointer の申告の上書きは Chromium のみ')
+      await page.setViewportSize({ width: 375, height: 548 })
+      await declareFinePointer(page)
+      const field = await screen.open(page)
+      await field.click()
+      const dialog = page.getByRole('dialog', { name: screen.dialogName })
+      await dialog.getByRole('tab', { name: '時間を選択' }).click()
+      for (const column of [
+        dialog.getByRole('listbox').nth(0),
+        dialog.getByRole('listbox').nth(1),
+      ]) {
+        const box = await column.boundingBox()
+        await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2)
+        await page.mouse.wheel(0, 100)
+        await expect.poll(() => scrollTop(column)).toBeGreaterThan(0)
+      }
     })
   }
 })
