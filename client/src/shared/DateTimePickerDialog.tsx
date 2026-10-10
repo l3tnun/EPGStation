@@ -137,6 +137,7 @@ export function DateTimePickerDialog({
         >
           <StaticDateTimePicker
             ampm={false}
+            views={['year', 'month', 'day', 'hours', 'minutes']}
             timeSteps={{ hours: 1, minutes: 1 }}
             timezone={timezone}
             displayStaticWrapperAs="mobile"
@@ -166,6 +167,12 @@ export function DateTimePickerDialog({
                 mt: `${headerMargin}px`,
                 mb: `${headerMargin}px`,
               },
+              // 年・月の画面も dialog の幅と calendar の高さに収める。
+              '& .MuiMonthCalendar-root': {
+                width: '100%',
+                rowGap: 'min(16px, calc((var(--pk-calendar-height) - 160px) / 3))',
+              },
+              '& .MuiYearCalendar-root': { width: '100%', maxHeight: '100%' },
               '& .MuiPickerDay-root': { '--PickerDay-size': 'var(--pk-cell)' },
               '& .MuiDayCalendar-weekDayLabel': {
                 width: 'var(--pk-cell)',
@@ -179,11 +186,12 @@ export function DateTimePickerDialog({
                 height: 'var(--pk-calendar-height)',
               },
               // MUI は pointer: fine のとき hover の間だけ列を scroll させる。入力の種類に依らず最初の操作から scroll できるよう、常に auto にする。
-              '& .MuiMultiSectionDigitalClockSection-root.MuiMultiSectionDigitalClockSection-root': {
-                maxHeight: 'none',
-                height: '100%',
-                overflowY: 'auto',
-              },
+              '& .MuiMultiSectionDigitalClockSection-root.MuiMultiSectionDigitalClockSection-root':
+                {
+                  maxHeight: 'none',
+                  height: '100%',
+                  overflowY: 'auto',
+                },
               '& .MuiDateTimePickerTabs-root .MuiTab-root': { minHeight: ramp(40, 48) },
               '& .MuiDateTimePickerTabs-root': { minHeight: ramp(40, 48) },
               // 上部の月日と時刻は同じ大きさの文字にし、下端を揃えて縦の中心を合わせる。
