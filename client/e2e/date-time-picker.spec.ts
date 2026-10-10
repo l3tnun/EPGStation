@@ -230,7 +230,7 @@ const pickerScreens: PickerScreen[] = [
   {
     name: 'Recorded Upload',
     dialogName: '日付選択',
-    suffix: /T23:55$/,
+    suffix: /T23:59$/,
     open: async (page) => {
       await installStoragesUploadApiMocks(page)
       await page.goto('/#/recorded/upload')
@@ -241,7 +241,7 @@ const pickerScreens: PickerScreen[] = [
   {
     name: 'Search period',
     dialogName: '期間 開始',
-    suffix: /T23:55$/,
+    suffix: /T23:59$/,
     open: async (page) => {
       await installSearchRuleWorkflowApiMocks(page)
       await page.goto('/#/search')
@@ -255,7 +255,7 @@ const pickerScreens: PickerScreen[] = [
   {
     name: 'Manual Reserve',
     dialogName: '時刻 開始',
-    suffix: / 23:55$/,
+    suffix: / 23:59$/,
     open: async (page) => {
       await installReservesApiMocks(page)
       await page.goto(`/#/reserves/manual?programId=${manualProgramDetail.id}`)
@@ -370,7 +370,7 @@ test.describe('picker fits the usable page size without scrolling the dialog', (
         await expect(dialog.getByRole('listbox')).toHaveCount(2)
         for (const [hour, minute] of [
           [0, 0],
-          [23, 55],
+          [23, 59],
         ]) {
           const hourOption = dialog.getByRole('option', { name: `${hour} 時間`, exact: true })
           await hourOption.scrollIntoViewIfNeeded()
@@ -414,7 +414,7 @@ test.describe('picker follows the visible area while it stays open', () => {
         await expectDialogDoesNotScroll(dialog)
         await expectDialogChromeVisible(page, dialog)
         await expectToolbarAligned(dialog)
-        for (const label of ['0 時間', '23 時間', '0 分', '55 分']) {
+        for (const label of ['0 時間', '23 時間', '0 分', '59 分']) {
           const option = dialog.getByRole('option', { name: label, exact: true })
           await option.scrollIntoViewIfNeeded()
           await expectVisibleInViewport(page, option, `${width}x${height} ${label}`)
@@ -431,6 +431,29 @@ test.describe('picker follows the visible area while it stays open', () => {
         )
         await dialog.getByRole('tab', { name: '時間を選択' }).click()
       }
+    })
+  }
+})
+
+test.describe('picker selects every minute', () => {
+  for (const screen of pickerScreens) {
+    test(`${screen.name} lists 0 to 59 minutes and picks 58`, async ({ page }) => {
+      await page.setViewportSize({ width: 375, height: 548 })
+      const field = await screen.open(page)
+      await field.click()
+      const dialog = page.getByRole('dialog', { name: screen.dialogName })
+      await dialog.getByRole('tab', { name: '時間を選択' }).click()
+      const minutes = dialog.getByRole('listbox').nth(1).getByRole('option')
+      await expect(minutes).toHaveCount(60)
+      const last = dialog.getByRole('option', { name: '59 分', exact: true })
+      await last.scrollIntoViewIfNeeded()
+      await expectVisibleInViewport(page, last, '59 分')
+      await expectDialogDoesNotScroll(dialog)
+      await dialog.getByRole('option', { name: '9 時間', exact: true }).click()
+      await dialog.getByRole('option', { name: '58 分', exact: true }).click()
+      await dialog.getByRole('button', { name: '設定' }).click()
+      await expect(dialog).toHaveCount(0)
+      await expect(field).toHaveValue(/09:58$/)
     })
   }
 })
