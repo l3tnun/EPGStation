@@ -79,4 +79,28 @@ describe('rule mutation queue and timer', () => {
         expect(pendingEvent.emitAdded).toHaveBeenCalledWith(902);
         expect(vi.getTimerCount()).toBe(0);
     });
+
+    it('[IMP-MUTATION-TIMER-LIFECYCLE] unrefs the queue advance timer so a stalled mutation cannot keep the process alive', async () => {
+        vi.useFakeTimers();
+        const fakeSetTimeout = globalThis.setTimeout;
+        const unrefSpies: Array<ReturnType<typeof vi.spyOn>> = [];
+        const setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout').mockImplementation(((
+            handler: () => void,
+            delay?: number,
+        ) => {
+            const timer = fakeSetTimeout(handler, delay);
+            if (delay === 10_000) unrefSpies.push(vi.spyOn(timer, 'unref'));
+            return timer;
+        }) as unknown as typeof setTimeout);
+
+        try {
+            const { manager } = makeRuleManager({ checkRuleOption: () => true });
+            await expect(manager.add(makeRule())).resolves.toBe(901);
+        } finally {
+            setTimeoutSpy.mockRestore();
+        }
+
+        expect(unrefSpies).toHaveLength(1);
+        expect(unrefSpies[0]).toHaveBeenCalledOnce();
+    });
 });

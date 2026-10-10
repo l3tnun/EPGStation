@@ -165,6 +165,14 @@ describe('rule option validation characterization', () => {
         ],
         ['exclude keyword with regexp but no target', { ignoreKeyword: 'synthetic', ignoreKeyRegExp: true }, false],
         ['exclude flags without keyword', { ignoreExtended: true }, false],
+        ['include case flag without keyword', { keyCS: true }, false],
+        ['include regexp flag without keyword', { keyRegExp: true }, false],
+        ['include description target without keyword', { description: true }, false],
+        ['include extended target without keyword', { extended: true }, false],
+        ['exclude name target without keyword', { ignoreName: true }, false],
+        ['exclude case flag without keyword', { ignoreKeyCS: true }, false],
+        ['exclude regexp flag without keyword', { ignoreKeyRegExp: true }, false],
+        ['exclude description target without keyword', { ignoreDescription: true }, false],
     ])('[IMP-VAL-RULE-BOUNDARIES] captures program keyword fields: %s', async (_name, search, accepted) => {
         await expectValidationThroughAddAndUpdate(withSearch(baseProgramRule(), search), accepted);
     });
@@ -177,6 +185,8 @@ describe('rule option validation characterization', () => {
         ['channel IDs with GR', { channelIds: [101], GR: true }, false],
         ['empty channel IDs with SKY', { channelIds: [], SKY: true }, false],
         ['channel IDs with BS4K', { channelIds: [101], BS4K: true }, false],
+        ['channel IDs with BS', { channelIds: [101], BS: true }, false],
+        ['channel IDs with CS', { channelIds: [101], CS: true }, false],
     ])('[IMP-VAL-RULE-BOUNDARIES] captures channel and wave exclusivity: %s', async (_name, search, accepted) => {
         await expectValidationThroughAddAndUpdate(withSearch(baseProgramRule(), search), accepted);
     });
