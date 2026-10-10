@@ -146,12 +146,6 @@
   display: grid;
 }
 
-.datetimeDialogContent {
-  display: grid;
-  gap: 16px;
-  min-width: min(320px, calc(100vw - 96px));
-}
-
 .actions {
   align-items: center;
   display: flex;

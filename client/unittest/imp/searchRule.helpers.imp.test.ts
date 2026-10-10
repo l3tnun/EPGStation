@@ -9,7 +9,6 @@ import {
 } from '@/features/search/rule/lib/genreSelection'
 import {
   formatDatetimeLocalInput,
-  parseDatetimeLocalInput,
   parseNullableTextInput,
   parseNumberInput,
 } from '@/features/search/rule/lib/inputParsers'
@@ -138,9 +137,6 @@ describe('input parsers', () => {
     expect(parseNumberInput('-1')).toBeNull()
     expect(parseNumberInput('1.5')).toBeNull()
     expect(parseNumberInput('12')).toBe(12)
-    expect(parseDatetimeLocalInput('')).toBeNull()
-    expect(parseDatetimeLocalInput('not-a-date')).toBeNull()
-    expect(parseDatetimeLocalInput('2026-01-02T03:04')).toBe(new Date('2026-01-02T03:04').getTime())
     expect(formatDatetimeLocalInput(null)).toBe('')
     expect(formatDatetimeLocalInput(undefined)).toBe('')
     expect(formatDatetimeLocalInput(new Date('2026-01-02T03:04').getTime())).toBe(

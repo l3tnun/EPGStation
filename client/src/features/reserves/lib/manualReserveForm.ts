@@ -134,6 +134,9 @@ export function valueFromNullableNumber(value: number | null | undefined): strin
   return value === null || value === undefined ? '' : String(value)
 }
 
+// 時刻指定予約の入力欄と日時 picker が壁時計として扱う timezone。
+export const MANUAL_RESERVE_TIME_ZONE = 'Asia/Tokyo'
+
 export function formatManualDateTimeInput(value: number | null | undefined): string {
   if (value === null || value === undefined) {
     return ''
@@ -145,7 +148,7 @@ export function formatManualDateTimeInput(value: number | null | undefined): str
   }
 
   const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Asia/Tokyo',
+    timeZone: MANUAL_RESERVE_TIME_ZONE,
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',

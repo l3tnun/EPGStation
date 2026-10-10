@@ -8,16 +8,6 @@ export function parseNumberInput(value: string): number | null {
   return Number.isSafeInteger(parsed) && parsed >= 0 ? parsed : null
 }
 
-export function parseDatetimeLocalInput(value: string): number | null {
-  if (value === '') {
-    return null
-  }
-
-  const parsed = new Date(value).getTime()
-
-  return Number.isFinite(parsed) ? parsed : null
-}
-
 export function formatDatetimeLocalInput(value: number | null | undefined): string {
   if (value === null || value === undefined) {
     return ''

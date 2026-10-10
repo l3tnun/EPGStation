@@ -3,8 +3,10 @@ import TextField from '@mui/material/TextField'
 import { useEffect, useRef, useState } from 'react'
 import type { UseFormSetValue } from 'react-hook-form'
 import { ClearableTextField } from '@/shared/ClearableTextField'
+import { DateTimePickerDialog } from '@/shared/DateTimePickerDialog'
 import { appSelectMenuProps } from '@/shared/appSelectConfig'
 import {
+  MANUAL_RESERVE_TIME_ZONE,
   formatManualDateTimeInput,
   nullableString,
   parseManualDateTimeInput,
@@ -26,7 +28,7 @@ import styles from '../ReservesPage.module.css'
 function useManualDateTimeDraft(
   committedValue: number | null | undefined,
   commit: (parsed: number | null) => void,
-): [string, (text: string) => void] {
+): [string, (text: string) => void, (value: number | null) => void] {
   const normalized = committedValue ?? null
   const [draft, setDraft] = useState(() => formatManualDateTimeInput(normalized))
   const lastCommittedRef = useRef<number | null>(normalized)
@@ -38,16 +40,25 @@ function useManualDateTimeDraft(
     }
   }, [normalized])
 
-  const handleChange = (text: string) => {
-    setDraft(text)
-    // 完全に "yyyy-MM-dd[ T]HH:mm" と一致しない入力 (途中まで打った状態や無効な文字列) は
-    // milliseconds へ変換しない。number へ commit するのは空文字 (null) か完全一致のときだけ。
-    const parsed = parseManualDateTimeInput(text)
+  const commitValue = (parsed: number | null) => {
     lastCommittedRef.current = parsed
     commit(parsed)
   }
 
-  return [draft, handleChange]
+  const handleChange = (text: string) => {
+    setDraft(text)
+    // 完全に "yyyy-MM-dd[ T]HH:mm" と一致しない入力 (途中まで打った状態や無効な文字列) は
+    // milliseconds へ変換しない。number へ commit するのは空文字 (null) か完全一致のときだけ。
+    commitValue(parseManualDateTimeInput(text))
+  }
+
+  // 日時 picker dialog の確定は、整った値なので draft をその表示形式へ揃えて commit する。
+  const handlePicked = (picked: number | null) => {
+    setDraft(formatManualDateTimeInput(picked))
+    commitValue(picked)
+  }
+
+  return [draft, handleChange, handlePicked]
 }
 
 export function ManualTimeSpecifiedFields({
@@ -61,14 +72,22 @@ export function ManualTimeSpecifiedFields({
   disabled: boolean
   setValue: UseFormSetValue<ManualReserveFormState>
 }) {
-  const [startDraft, handleStartChange] = useManualDateTimeDraft(
+  const [startDraft, handleStartChange, handleStartPicked] = useManualDateTimeDraft(
     formState.timeSpecifiedOption?.startAt,
     (parsed) => setValue('timeSpecifiedOption.startAt', parsed),
   )
-  const [endDraft, handleEndChange] = useManualDateTimeDraft(
+  const [endDraft, handleEndChange, handleEndPicked] = useManualDateTimeDraft(
     formState.timeSpecifiedOption?.endAt,
     (parsed) => setValue('timeSpecifiedOption.endAt', parsed),
   )
+
+  const [openedPicker, setOpenedPicker] = useState<'start' | 'end' | null>(null)
+  const closePicker = () => setOpenedPicker(null)
+  const openPicker = (which: 'start' | 'end') => {
+    if (!disabled) {
+      setOpenedPicker(which)
+    }
+  }
 
   return (
     <section className={styles.manualTimeReserveCard} aria-label="時刻指定予約">
@@ -123,6 +142,7 @@ export function ManualTimeSpecifiedFields({
             value={startDraft}
             disabled={disabled}
             onClear={() => handleStartChange('')}
+            onClick={() => openPicker('start')}
             onChange={(event) => handleStartChange(event.target.value)}
           />
           <span className={styles.manualDateSpacer} aria-hidden="true" />
@@ -132,9 +152,42 @@ export function ManualTimeSpecifiedFields({
             value={endDraft}
             disabled={disabled}
             onClear={() => handleEndChange('')}
+            onClick={() => openPicker('end')}
             onChange={(event) => handleEndChange(event.target.value)}
           />
         </div>
+        <DateTimePickerDialog
+          open={openedPicker === 'start'}
+          title="時刻 開始"
+          titleId="manual-time-start-title"
+          timezone={MANUAL_RESERVE_TIME_ZONE}
+          value={formState.timeSpecifiedOption?.startAt ?? null}
+          onSet={(picked) => {
+            handleStartPicked(picked)
+            closePicker()
+          }}
+          onClear={() => {
+            handleStartPicked(null)
+            closePicker()
+          }}
+          onClose={closePicker}
+        />
+        <DateTimePickerDialog
+          open={openedPicker === 'end'}
+          title="時刻 終了"
+          titleId="manual-time-end-title"
+          timezone={MANUAL_RESERVE_TIME_ZONE}
+          value={formState.timeSpecifiedOption?.endAt ?? null}
+          onSet={(picked) => {
+            handleEndPicked(picked)
+            closePicker()
+          }}
+          onClear={() => {
+            handleEndPicked(null)
+            closePicker()
+          }}
+          onClose={closePicker}
+        />
       </div>
     </section>
   )
