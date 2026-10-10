@@ -749,7 +749,7 @@ timeout、一般CRUD mutex／timeout、または自動再接続方式を追加�
 -   本番接続は TypeORM `type: 'mysql'` を選び、`driver` override が無い（`DBOperator.createConnection()`）。
 -   既存 MySQL 設定 field は `host` / `user` / `port` / `password` / `database` / 任意 `socketPath` / 任意 `charset` / 任意 `ssl` である
     （`IConfigFile`、`config/config.yml.template`）。
--   公式現行 MySQL LTS は image tag `mysql:lts` で表し、焦点 integration がこの tag と image digest を検証する
+-   公式現行 MySQL LTS は image tag `mysql:9.7`（最新の LTS を版で固定する。`lts` のような動く tag は知らない間に版が変わるので使わない）で表し、焦点 integration がこの tag と image digest を検証する。通常の隔離 MySQL fixture も同じ `mysql:9.7`、MariaDB の fixture は `mariadb:12.3` である
     （`test/server/persistence/mysql-lts-connection.integration.test.ts`）。
 -   保存データの互換は維持を要求するだけであり、移行手順は対象外である。
 
@@ -813,7 +813,7 @@ sequenceDiagram
 
 Requirement 8 の主検証は、実際の本番接続境界である。
 
--   焦点 integration は、公式現行 MySQL LTS（image tag `mysql:lts`）に対し `Configuration` → `DBOperator` の接続作成と接続終了を検証する。接続作成の成功は `getConnection()` の公開完了を意味する。公開後の `select 1` 失敗
+-   焦点 integration は、公式現行 MySQL LTS（image tag `mysql:9.7`）に対し `Configuration` → `DBOperator` の接続作成と接続終了を検証する。接続作成の成功は `getConnection()` の公開完了を意味する。公開後の `select 1` 失敗
     は既存 query error の返却であり、公開済み instance の自動 close / 置換ではない。焦点 integration
     はこの既存 state 契約を oracle にする。
 -   Requirement 8.3 の主証跡は、`test/server/persistence/mysql-lts-inplace-stored-data.integration.test.ts` の in-place 保存データ互換 integration である。置換前と
@@ -831,7 +831,7 @@ Requirement 8 の主検証は、実際の本番接続境界である。
 | 直接依存 | `package.json`、`package-lock.json` | `mysql2` を直接依存とし、旧 `mysql` は含めない |
 | 本番接続 option | `src/model/db/DBOperator.ts` | `type: 'mysql'` 維持、`driver` 非追加 |
 | 設定契約 | `src/model/IConfigFile.ts`、`config/config.yml.template` | field 不変の確認。変更しない |
-| 焦点接続・終了 test | `test/server/persistence/mysql-lts-connection.integration.test.ts` | 公式 LTS image / tag（`mysql:lts`）。公開後 `select 1` は既存 query error 契約 |
+| 焦点接続・終了 test | `test/server/persistence/mysql-lts-connection.integration.test.ts` | 公式 LTS image / tag（`mysql:9.7`）。公開後 `select 1` は既存 query error 契約 |
 | 保存データ in-place 互換 test | `test/server/persistence/mysql-lts-inplace-stored-data.integration.test.ts` | 既存 schema / migration history / 代表 row の読取り・更新・再読取り・履歴非変更・close / cleanup |
 | 既存実driver接続 test | `test/server/persistence/connection.integration.test.ts`、`close.integration.test.ts` | 採用 client `mysql2` での実 driver 接続と close |
 
@@ -852,12 +852,12 @@ compile境界、V8 coverage、root commandを再定義せず、永続化固有�
 | `test/server/persistence/connection.integration.test.ts`   | `integration`       | temporary SQLiteと隔離MySQLへの実driver接続、確認query、close             |
 | `test/server/persistence/mysql-lts-connection.integration.test.ts` | `integration` | 公式現行 MySQL LTS への本番 Configuration→DBOperator 接続作成と close。公開後 `select 1` は既存 query error 契約 |
 | `test/server/persistence/mysql-lts-inplace-stored-data.integration.test.ts` | `integration` | 置換前と同じ schema / migration history と代表保存 row を in-place で開き、Configuration→DBOperator→mysql2 で既存 row 読取り、代表更新・再読取り、履歴非変更、close / cleanup |
-| `test/server/persistence/transactions.integration.test.ts` | `integration`       | 実driverで予約一括、番組置換、種類別 restore のcommit / rollback          |
+| `test/server/persistence/transactions.integration.test.ts` | `integration`       | 実driverで予約一括、番組置換、種類別 restore のcommit / rollback（SQLite、MySQL 9.7、MariaDB 12.3） |
 | `test/server/persistence/migrations.integration.test.ts`   | `integration`       | backend 別 pending Migration、同期無効、失敗候補cleanup、再確認、降格なし |
-| `test/server/persistence/queries.integration.test.ts`      | `integration`       | 実driverでCRUD、relation、boolean、文字列検索、正規表現能力を確認         |
+| `test/server/persistence/queries.integration.test.ts`      | `integration`       | 実driverでCRUD、relation、boolean、文字列検索、正規表現能力を確認（SQLite、MySQL 9.7、MariaDB 12.3） |
 | `test/server/persistence/close.integration.test.ts`        | `integration`       | 実driverのclose、no-op、destroy await/error、terminal lifecycle           |
 | `test/server/persistence/doubles-parity.integration.test.ts` | `integration` | test の偽物と本番の部品の一致: synchronize の schema と migration の schema（全 table の列・既定値・NULL 可否・index）、MySQL の認証失敗・接続拒否と sqlite の拡張の実 error、query builder の偽物が記録する条件と実 SQL の結果（`findTimeRanges` の全 flag・除外、`findRuleId`・`findLists`・`findKeyword` の offset・limit、`removeRecording`・`changeProtect` の早期 return）、即時 retry と本物の `PromiseRetry`、恒等の `convertBoolean` と本物の `DBOperator`、microtask だけで解決する DB の偽物と better-sqlite3（event loop に戻らない）・MySQL（戻る）の違い |
-| `test/server/persistence/harness.ts`、`backend-runtime.ts`、`mysql-runtime.ts` | integration helper | temporary SQLite database と隔離 MySQL schema を作り、cleanup する |
+| `test/server/persistence/harness.ts`、`backend-runtime.ts`、`mysql-runtime.ts` | integration helper | temporary SQLite database と隔離 MySQL・MariaDB の schema を作り、cleanup する。`mysql-runtime.ts` は `provisionMySql`（MySQL 9.7）、`provisionMariaDb`（MariaDB 12.3）で公式 image（最新の LTS を版で固定した tag）の container を起動する。環境変数 `EPGS_TEST_{MYSQL,MARIADB}_{HOST,PORT,USER,PASSWORD}` で起動済みの server を指定すると container を作らずそのserverに無作為な名前のdatabaseを作る（mutation testing用） |
 | `test/server/persistence/mysql-lts-runtime.ts`             | integration helper  | 公式 MySQL LTS container の起動と cleanup                                 |
 | `test/server/fixtures/persistence/mysql-inplace/`          | integration fixture | 置換前と同じ schema / migration history と代表保存 row を持つ in-place fixture |
 
@@ -868,7 +868,7 @@ Requirements Traceability、唯一の機能固有test matrix、既存case件数�
 
 | 補足case | 種別 | test path | assertion |
 | -------- | ---- | --------- | --------- |
-| `[PERSIST-2.7]` `storage deletion candidate through real sqlite` / `real mysql` | `integration` | `storage-deletion-candidate.integration.test.ts` | SQLite・MySQL の実driverで、保存先不一致、保護中、別保存先relation混在、除外ID、同じ`startAt`の`id ASC` tie-break、全候補除外=`null`、接続を閉じた後のrejectを検証し、recorded／video row数が変わらないことを確認する |
+| `[PERSIST-2.7]` `storage deletion candidate through real sqlite` / `real mysql` / `real mariadb` | `integration` | `storage-deletion-candidate.integration.test.ts` | SQLite・MySQL 9.7・MariaDB 12.3 の実driverで、保存先不一致、保護中、別保存先relation混在、除外ID、同じ`startAt`の`id ASC` tie-break、全候補除外=`null`、接続を閉じた後のrejectを検証し、recorded／video row数が変わらないことを確認する |
 | `[PERSIST-2.7]` returns one primitive id and applies storage, protection, exclusion, and stable order together | `spec/imp` | `storage-deletion-candidate.cross-spec.test.ts` | fake query境界で保護、relation、除外ID、`orderBy`と`addOrderBy`、`take(1)`、primitive IDの戻り値を確認する |
 | `[PERSIST-2.7]` uses byte-exact storage identity / maps absence to null / preserves the final query rejection | `spec/imp` | `storage-deletion-candidate.cross-spec.test.ts` | 保存先名のbyte単位比較、除外IDが空のとき`NOT IN`を生成しないこと、該当なし=`null`、最終query rejectを`null`へ変換しないことを確認する |
 | `[PERSIST-2.7]` binds the storage-owned candidate port to the singleton RecordedDB provider | `spec/imp` | `storage-deletion-candidate.cross-spec.test.ts` | storage側のportを`RecordedDB`のsingletonへ直接bindingすることを確認する |

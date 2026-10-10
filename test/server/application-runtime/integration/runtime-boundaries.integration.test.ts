@@ -1511,14 +1511,12 @@ const loadDbOperator = (): new (logger: unknown, configuration: unknown) => DbOp
  * generated per run and never written to any file or env file, and it is force-removed in a
  * `finally`. No private-network host is contacted and no credential is persisted.
  *
- * MEASURED CONSTRAINT (why MariaDB rather than mysql:8.x): EPGStation pins the `mysql@2.18.1`
- * driver, which predates `caching_sha2_password`. Against `mysql:8.4` the owner's own DBOperator
- * fails with `ER_NOT_SUPPORTED_AUTH_MODE: Client does not support authentication protocol requested
- * by server`. MariaDB speaks the same wire protocol through the same pinned driver and still
- * defaults to `mysql_native_password`, so it exercises the real MySQL code path of `DBOperator`
- * (`type: 'mysql'`, the mysql migration set, `migrationsRun: true`) rather than a substitute path.
+ * MariaDB speaks the MySQL wire protocol and still defaults to `mysql_native_password`, so it
+ * exercises the real MySQL code path of `DBOperator` (`type: 'mysql'`, the mysql migration set,
+ * `migrationsRun: true`) rather than a substitute path. The tag is the latest MariaDB LTS, pinned
+ * by version like the persistence fixtures.
  */
-const MYSQL_BOUNDARY_IMAGE = 'mariadb:10.11';
+const MYSQL_BOUNDARY_IMAGE = 'mariadb:12.3';
 const MYSQL_BOUNDARY_DATABASE = 'epgstation_ar917';
 const MYSQL_BOUNDARY_USER = 'test-boundary';
 

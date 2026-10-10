@@ -120,7 +120,7 @@ describe('isolated pre-fix rule defects', () => {
         }
         // Same budget and same reason as the spec-layer siblings (`program-search.spec.test.ts:107-109`,
         // `duplicate-history.spec.test.ts:129`, `management.spec.test.ts:545`): the mysql dialect boots a
-        // real `mysql:8.4` container (`test/server/persistence/mysql-runtime.ts:236-267`), which alone
+        // real `mysql:9.7` container (`test/server/persistence/mysql-runtime.ts:236-267`), which alone
         // measured 3441ms idle and 4857ms at 14-way concurrency. Nothing hangs; the default 5000ms is
         // simply smaller than contended provisioning plus the query work.
     }, 20_000);

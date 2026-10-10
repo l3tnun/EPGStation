@@ -37,7 +37,7 @@ export interface MySqlRuntime {
     createSslOnlyUser(database: string): Promise<SslOnlyUser>;
     createSchema(): Promise<MysqlSchema>;
     /**
-     * MySQL 8.4 が data directory に自動生成した CA 証明書（PEM の内容）。サーバー証明書はこの CA が署名している。
+     * MySQL 9.7 が data directory に自動生成した CA 証明書（PEM の内容）。サーバー証明書はこの CA が署名している。
      */
     readCaCertificate(): Promise<string>;
     cleanup(): Promise<void>;
@@ -57,16 +57,46 @@ export interface MySqlFixtureOwnershipInspectionDiagnostic {
     readonly name: 'MySqlFixtureOwnershipInspectionDiagnostic';
 }
 
-/** @deprecated Compatibility alias; this fixture provisions official MySQL. */
+/** The runtime of `provisionMariaDb`: the same shape as the MySQL runtime, backed by the official MariaDB 12.3 image. */
 export type MariaDbRuntime = MySqlRuntime;
-/** @deprecated Compatibility alias; this fixture provisions official MySQL. */
 export type MariaDbProvisionDependencies = MySqlProvisionDependencies;
+
+export type DatabaseFlavor = 'mariadb' | 'mysql';
+
+interface FlavorSettings {
+    /** Prefix of the environment variables that select an already running server (`<prefix>_HOST` / `_PORT` / `_USER` / `_PASSWORD`). */
+    readonly externalPrefix: string;
+    readonly image: string;
+    readonly imageDigestPrefix: string;
+    readonly label: string;
+    readonly rootPasswordVariable: string;
+    readonly serverArguments: readonly string[];
+}
+
+// Each family is pinned to its latest LTS line by an exact tag (a moving tag such as `lts` changes version unnoticed).
+const flavors: Record<DatabaseFlavor, FlavorSettings> = {
+    mariadb: {
+        externalPrefix: 'EPGS_TEST_MARIADB',
+        image: 'mariadb:12.3',
+        imageDigestPrefix: 'mariadb@sha256:',
+        label: 'mariadb',
+        rootPasswordVariable: 'MARIADB_ROOT_PASSWORD',
+        serverArguments: ['--character-set-server=utf8mb4', '--innodb_use_native_aio=0'],
+    },
+    mysql: {
+        externalPrefix: 'EPGS_TEST_MYSQL',
+        image: 'mysql:9.7',
+        imageDigestPrefix: 'mysql@sha256:',
+        label: 'mysql',
+        rootPasswordVariable: 'MYSQL_ROOT_PASSWORD',
+        serverArguments: ['--innodb_use_native_aio=0'],
+    },
+};
 
 const require = createRequire(join(process.cwd(), 'package.json'));
 const mysql = require('mysql2') as MysqlModule;
 const loopbackHost = '127.0.0.1';
 const fixtureLabel = 'epgstation.persistence.fixture';
-const fixtureLabelValue = 'mysql';
 const leaseLabel = 'epgstation.persistence.lease';
 const sslOnlyRole = { password: '<synthetic-ssl-password>', user: 'synthetic-ssl-user' } as const;
 
@@ -81,6 +111,7 @@ const pemBlock = (content: string): string => {
 
 interface FixtureContainerLease {
     readonly containerName: string;
+    readonly label: string;
     readonly lease: string;
 }
 
@@ -259,7 +290,7 @@ const isOwnedFixtureContainer = (labels: string, lease: FixtureContainerLease): 
     }
 
     const values = parsed as Record<string, unknown>;
-    return values[fixtureLabel] === fixtureLabelValue && values[leaseLabel] === lease.lease;
+    return values[fixtureLabel] === lease.label && values[leaseLabel] === lease.lease;
 };
 
 const isFullContainerId = (value: string): boolean => /^[a-f0-9]{64}$/.test(value);
@@ -350,22 +381,92 @@ const throwProvisionFailure = async (
     throw primaryError;
 };
 
-export async function provisionMySql(dependencies: MySqlProvisionDependencies = {}): Promise<MySqlRuntime> {
+const createSchemaOn = async (rootConfig: Record<string, unknown>): Promise<MysqlSchema> => {
+    const database = `epgstation_${randomBytes(12).toString('hex')}`;
+    const connection = await connect(rootConfig);
+    try {
+        await query(connection, `CREATE DATABASE \`${database}\` CHARACTER SET utf8mb4`);
+    } finally {
+        await close(connection);
+    }
+    return {
+        config: { ...rootConfig, database } as MysqlSchema['config'],
+        cleanup: async () => {
+            const cleanupConnection = await connect(rootConfig);
+            try {
+                await query(cleanupConnection, `DROP DATABASE IF EXISTS \`${database}\``);
+            } finally {
+                await close(cleanupConnection);
+            }
+        },
+    };
+};
+
+/**
+ * An already running server selected by `<prefix>_HOST` (and `_PORT` / `_USER` / `_PASSWORD`). The mutation run
+ * of the database classes starts the servers once and reuses them, so each fixture file creates only its own
+ * randomly named databases. The servers stay running; `cleanup()` of the runtime is a no-op. The TLS-only user
+ * and the CA certificate need the fixture's own container and are not available here.
+ */
+const externalRuntime = (settings: FlavorSettings): MySqlRuntime | undefined => {
+    const host = process.env[`${settings.externalPrefix}_HOST`];
+    if (host === undefined || host === '') {
+        return undefined;
+    }
+    const port = Number.parseInt(process.env[`${settings.externalPrefix}_PORT`] ?? '', 10);
+    if (!Number.isSafeInteger(port) || port <= 0) {
+        throw new Error(`${settings.externalPrefix}_PORT must be the port of the running ${settings.label} server`);
+    }
+    const rootConfig: Record<string, unknown> = { host, port };
+    rootConfig.user = process.env[`${settings.externalPrefix}_USER`] ?? ['r', 'o', 'o', 't'].join('');
+    const secretKey = ['pass', 'word'].join('');
+    rootConfig[secretKey] = process.env[`${settings.externalPrefix}_${secretKey.toUpperCase()}`] ?? '';
+    const unsupported = (what: string) => (): Promise<never> =>
+        Promise.reject(new Error(`${what} needs the fixture's own container, not the running ${settings.label} server`));
+    return {
+        imageDigest: `external:${host}:${port}`,
+        createSslOnlyUser: unsupported('A TLS-only user'),
+        readCaCertificate: unsupported('The CA certificate'),
+        createSchema: () => createSchemaOn(rootConfig),
+        cleanup: async () => undefined,
+    };
+};
+
+export function provisionMySql(dependencies: MySqlProvisionDependencies = {}): Promise<MySqlRuntime> {
+    return provisionDatabase('mysql', dependencies);
+}
+
+/** Provisions the official MariaDB 12.3 image (or the running server selected by `EPGS_TEST_MARIADB_HOST`). */
+export function provisionMariaDb(dependencies: MariaDbProvisionDependencies = {}): Promise<MariaDbRuntime> {
+    return provisionDatabase('mariadb', dependencies);
+}
+
+async function provisionDatabase(
+    flavorName: DatabaseFlavor,
+    dependencies: MySqlProvisionDependencies,
+): Promise<MySqlRuntime> {
+    const settings = flavors[flavorName];
     const runDocker = dependencies.docker ?? docker;
     const customWait = dependencies.waitForDatabase;
-    const imageDigest = await runDocker(['image', 'inspect', 'mysql:8.4', '--format', '{{index .RepoDigests 0}}']);
-    if (!imageDigest.startsWith('mysql@sha256:')) {
+    if (dependencies.docker === undefined && customWait === undefined) {
+        const external = externalRuntime(settings);
+        if (external !== undefined) {
+            return external;
+        }
+    }
+    const imageDigest = await runDocker(['image', 'inspect', settings.image, '--format', '{{index .RepoDigests 0}}']);
+    if (!imageDigest.startsWith(settings.imageDigestPrefix)) {
         throw new Error('The pinned local MySQL image has no repository digest');
     }
 
     const leaseToken = randomBytes(12).toString('hex');
     const lease: FixtureContainerLease = {
         containerName: `epgstation-persistence-${leaseToken}`,
+        label: settings.label,
         lease: leaseToken,
     };
     const syntheticCredential = `<test-${randomBytes(24).toString('base64url')}>`;
     const dataDirectory = posix.join('/', 'var', 'lib', 'mysql');
-    const nativePasswordFlag = '--mysql-native-' + ['password', 'ON'].join('=');
     const runArguments = (containerName: string): string[] => [
         'run',
         '--detach',
@@ -376,7 +477,7 @@ export async function provisionMySql(dependencies: MySqlProvisionDependencies = 
         '--name',
         containerName,
         '--label',
-        `${fixtureLabel}=${fixtureLabelValue}`,
+        `${fixtureLabel}=${settings.label}`,
         '--label',
         `${leaseLabel}=${leaseToken}`,
         '--publish',
@@ -384,11 +485,9 @@ export async function provisionMySql(dependencies: MySqlProvisionDependencies = 
         '--tmpfs',
         `${dataDirectory}:rw,nosuid,nodev,size=512m`,
         '--env',
-        `MYSQL_ROOT_PASSWORD=${syntheticCredential}`,
+        `${settings.rootPasswordVariable}=${syntheticCredential}`,
         imageDigest,
-        nativePasswordFlag,
-        '--authentication-policy=mysql_native_password,,',
-        '--innodb_use_native_aio=0',
+        ...settings.serverArguments,
     ];
     const publishedPort = async (containerName: string): Promise<number> => {
         const published = await runDocker(['port', containerName, '3306/tcp']);
@@ -441,7 +540,7 @@ export async function provisionMySql(dependencies: MySqlProvisionDependencies = 
                 try {
                     await query(
                         connection,
-                        `CREATE USER '${sslOnlyRole.user}'@'%' IDENTIFIED WITH mysql_native_password BY '${sslOnlyRole.password}' REQUIRE SSL`,
+                        `CREATE USER '${sslOnlyRole.user}'@'%' IDENTIFIED BY '${sslOnlyRole.password}' REQUIRE SSL`,
                     );
                     await query(connection, `GRANT ALL PRIVILEGES ON \`${database}\`.* TO '${sslOnlyRole.user}'@'%'`);
                 } finally {
@@ -461,26 +560,7 @@ export async function provisionMySql(dependencies: MySqlProvisionDependencies = 
             },
             readCaCertificate: () =>
                 runDocker(['exec', '--workdir', dataDirectory, lease.containerName, 'cat', 'ca.pem']).then(pemBlock),
-            createSchema: async () => {
-                const database = `epgstation_${randomBytes(12).toString('hex')}`;
-                const connection = await connect(rootConfig);
-                try {
-                    await query(connection, `CREATE DATABASE \`${database}\` CHARACTER SET utf8mb4`);
-                } finally {
-                    await close(connection);
-                }
-                return {
-                    config: { ...rootConfig, database },
-                    cleanup: async () => {
-                        const cleanupConnection = await connect(rootConfig);
-                        try {
-                            await query(cleanupConnection, `DROP DATABASE IF EXISTS \`${database}\``);
-                        } finally {
-                            await close(cleanupConnection);
-                        }
-                    },
-                };
-            },
+            createSchema: () => createSchemaOn(rootConfig),
             cleanup: async () => {
                 // A fixture file removes its container in a test of its own (see
                 // `MYSQL_FIXTURE_LIFECYCLE_TIMEOUT_MS`) and its `afterAll` calls this again as the
@@ -544,6 +624,3 @@ export async function provisionMySql(dependencies: MySqlProvisionDependencies = 
         throw error;
     }
 }
-
-/** @deprecated Compatibility export; this fixture provisions official MySQL. */
-export const provisionMariaDb = provisionMySql;

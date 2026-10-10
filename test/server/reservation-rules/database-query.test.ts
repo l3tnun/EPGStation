@@ -224,7 +224,7 @@ describe('Rule reservation count query implementation', () => {
             mysql: { caseSensitive: [701], endAtBoundary: [703], regularExpression: [701] },
             sqlite: { caseSensitive: [701, 702], endAtBoundary: [703], regularExpression: [] },
         });
-        // `queryDialectBranches()` boots a real `mysql:8.4` container
+        // `queryDialectBranches()` boots a real `mysql:9.7` container
         // (`test/server/persistence/mysql-runtime.ts:236-267`), measured at 3441ms idle and 4857ms at
         // 14-way concurrency. Nothing hangs; the default 5000ms is simply smaller than contended
         // provisioning plus the query work. Same budget as `program-search.spec.test.ts:107-109`.
@@ -244,7 +244,7 @@ describe('Rule reservation count query implementation', () => {
         expect(queryLedger.mysql.filter).toMatch(/channelId.+in/iu);
         expect(queryLedger.mysql.filter).toMatch(/ORDER BY.+startAt.+ASC/u);
         expect(queryLedger.mysql.bindValues).toEqual(expect.arrayContaining(['%ordered%', '%target%', 101]));
-        // `queryDialectBranches()` boots a real `mysql:8.4` container
+        // `queryDialectBranches()` boots a real `mysql:9.7` container
         // (`test/server/persistence/mysql-runtime.ts:236-267`), measured at 3441ms idle and 4857ms at
         // 14-way concurrency. Nothing hangs; the default 5000ms is simply smaller than contended
         // provisioning plus the query work. Same budget as `program-search.spec.test.ts:107-109`.
@@ -255,7 +255,7 @@ describe('Rule reservation count query implementation', () => {
 
         expect(result.sqlite.caseSensitive).not.toEqual(result.mysql.caseSensitive);
         expect(result.sqlite.regularExpression).not.toEqual(result.mysql.regularExpression);
-        // `queryDialectBranches()` boots a real `mysql:8.4` container
+        // `queryDialectBranches()` boots a real `mysql:9.7` container
         // (`test/server/persistence/mysql-runtime.ts:236-267`), measured at 3441ms idle and 4857ms at
         // 14-way concurrency. Nothing hangs; the default 5000ms is simply smaller than contended
         // provisioning plus the query work. Same budget as `program-search.spec.test.ts:107-109`.

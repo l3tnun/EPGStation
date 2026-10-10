@@ -17,7 +17,12 @@ import {
     type StartWatchdog,
     type TestLogger,
 } from './harness';
-import { MYSQL_FIXTURE_LIFECYCLE_TIMEOUT_MS, provisionMySql, type MySqlRuntime } from './mysql-runtime';
+import {
+    MYSQL_FIXTURE_LIFECYCLE_TIMEOUT_MS,
+    provisionMariaDb,
+    provisionMySql,
+    type MySqlRuntime,
+} from './mysql-runtime';
 
 type OperatorConstructor = NonNullable<Parameters<typeof createOperator>[2]>;
 
@@ -436,11 +441,12 @@ describe('SQLite forward migration integration', () => {
     });
 });
 
-describe('MySQL forward migration integration', () => {
+// The MySQL forward migrations run against MySQL 9.7 and MariaDB 12.3 (MariaDB takes the operator's `mysql` dialect).
+describe.each(['mysql', 'mariadb'] as const)('%s forward migration integration', target => {
     let databaseRuntime: MySqlRuntime;
 
     beforeAll(async () => {
-        databaseRuntime = await provisionMySql();
+        databaseRuntime = await (target === 'mysql' ? provisionMySql : provisionMariaDb)();
     }, MYSQL_FIXTURE_LIFECYCLE_TIMEOUT_MS);
 
     afterAll(async () => {
