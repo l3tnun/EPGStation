@@ -101,6 +101,7 @@ describe('Requirement 1.1-1.5 Settings screen route bootstrap', () => {
       '録画',
       '検索',
       'ルール',
+      'ページネーション',
       'ビデオプレーヤ',
     ])
     await waitFor(() => {

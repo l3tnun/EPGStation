@@ -388,9 +388,7 @@ test.describe('setting off keeps the current pagination', () => {
 test.describe('switching it on from the settings screen', () => {
   test.use({ viewport: { width: 390, height: VIEWPORT_HEIGHT } })
 
-  test('enables the extended pagination only after saving, and only on the rule list', async ({
-    page,
-  }, testInfo) => {
+  test('enables the extended pagination only after saving', async ({ page }, testInfo) => {
     test.skip(!testInfo.project.name.startsWith('Desktop'), 'checked on the desktop projects')
     await prepare(page)
 
@@ -398,7 +396,9 @@ test.describe('switching it on from the settings screen', () => {
     await expect(page.getByRole('button', { name: '次のページ' })).toBeVisible()
 
     await page.goto('/#/settings')
-    const toggle = page.getByRole('switch', { name: 'ルール 拡張ページネーションの有効化' })
+    const toggle = page.getByRole('switch', {
+      name: 'ページネーション 拡張ページネーションの有効化',
+    })
     await expect(toggle).not.toBeChecked()
     await toggle.check()
     await page.getByRole('button', { name: '保存' }).click()

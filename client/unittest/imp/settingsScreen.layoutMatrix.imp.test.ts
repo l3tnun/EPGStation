@@ -30,6 +30,7 @@ describe('Settings screen layout implementation contract', () => {
       '録画',
       '検索',
       'ルール',
+      'ページネーション',
       'ビデオプレーヤ',
     ])
   })
@@ -123,7 +124,10 @@ describe('Requirements 1.6-1.14 Settings control matrix implementation contract'
       ['isCheckAvoidDuplicate', 'ルール作成時に録画済み番組を排除をチェックする'],
       ['isEnableEncodingSettingWhenCreateRule', 'ルール作成時にエンコード設定を自動で行う'],
       ['isCheckDeleteOriginalAfterEncode', 'ルール作成時に元ファイルの自動削除をチェックする'],
-      ['isEnableExtendedPagination', 'ルール一覧のページ移動を拡張ページネーションに置き換える'],
+      [
+        'isEnableExtendedPagination',
+        '録画済み・録画中・予約・ルール一覧のページ移動を拡張ページネーションに置き換える',
+      ],
       ['isForceEnableSubtitleStroke', 'aribb24.js 使用時に有効になります'],
     ])
   })
