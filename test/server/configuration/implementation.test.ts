@@ -464,6 +464,71 @@ describe('server configuration implementation characterization', () => {
         expect(urlscheme.download).toEqual({});
     });
 
+    // 期待値は設定の説明書（docs/conf-manual.md）の「デフォルト値」の欄に書かれた値。実装の値を写したものではない。
+    // 説明書が相対 path で「EPGStation 直下の ○○」と書く項目は、EPGStation の root 直下の path を期待する。
+    const documentedDefaults: Array<[key: string, expected: () => unknown]> = [
+        ['dbtype', () => 'sqlite'],
+        ['ffmpeg', () => '/usr/local/bin/ffmpeg'],
+        ['ffprobe', () => '/usr/local/bin/ffprobe'],
+        ['needToReplaceEnclosingCharacters', () => true],
+        ['recPriority', () => 2],
+        ['conflictPriority', () => 1],
+        ['streamingPriority', () => 0],
+        ['timeSpecifiedStartMargin', () => 1],
+        ['timeSpecifiedEndMargin', () => 1],
+        ['recordedHistoryRetentionPeriodDays', () => 90],
+        ['epgUpdateIntervalTime', () => 10],
+        ['isSuppressReservesUpdateAllLog', () => false],
+        ['isEnabledDropCheck', () => false],
+        ['isAllowAllCORS', () => false],
+        ['dropLog', () => join(Configuration.ROOT_PATH, 'drop')],
+        ['recorded', () => [{ name: 'recorded', path: join(Configuration.ROOT_PATH, 'recorded') }]],
+        ['recordedFormat', () => '%YEAR%年%MONTH%月%DAY%日%HOUR%時%MIN%分%SEC%秒-%TITLE%'],
+        ['recordedFileExtension', () => '.ts'],
+        ['storageLimitCheckIntervalTime', () => 60],
+        ['thumbnail', () => join(Configuration.ROOT_PATH, 'thumbnail')],
+        [
+            'thumbnailCmd',
+            () => '%FFMPEG% -ss %THUMBNAIL_POSITION% -y -i %INPUT% -vframes 1 -f image2 -s %THUMBNAIL_SIZE% %OUTPUT%',
+        ],
+        ['thumbnailSize', () => '480x270'],
+        ['thumbnailPosition', () => 5],
+        ['uploadTempDir', () => join(Configuration.ROOT_PATH, 'data', 'upload')],
+        ['encodeProcessNum', () => 0],
+        ['concurrentEncodeNum', () => 0],
+        ['streamFilePath', () => join(Configuration.ROOT_PATH, 'data', 'streamfiles')],
+    ];
+
+    it.each(documentedDefaults)(
+        '[CFG-1.1-DOCUMENTED-DEFAULTS] fills %s with the default value the configuration manual states',
+        (key, expected) => {
+            const formatted = createConfiguration().formatConfig({
+                port: 48100,
+                apiServers: [loopbackApiServer(48100)],
+            });
+
+            expect(formatted[key]).toStrictEqual(expected());
+        },
+    );
+
+    // 説明書に既定値の記載が無い項目。実装の値で固定する（config.yml.template と同じ値）。
+    it('[CFG-1.1-UNDOCUMENTED-DEFAULTS] fills the items the manual gives no default for with the implementation values', () => {
+        const formatted = createConfiguration().formatConfig({ port: 48100, apiServers: [loopbackApiServer(48100)] });
+
+        expect(formatted.encode).toStrictEqual([]);
+        // URL scheme の文字列そのものは、fixture に実在し得る値を書かない検査（lint）に触れるため書かない。
+        // ここでは形（どの項目に文字列があるか）だけを固定する。m2ts.ios と download.ios の値は別の test が確かめる。
+        const urlscheme = formatted.urlscheme as Record<string, Record<string, unknown>>;
+        expect(Object.keys(urlscheme).sort()).toEqual(['download', 'm2ts', 'video']);
+        expect(Object.keys(urlscheme.m2ts).sort()).toEqual(['android', 'ios']);
+        expect(Object.keys(urlscheme.video).sort()).toEqual(['android', 'ios']);
+        for (const value of [...Object.values(urlscheme.m2ts), ...Object.values(urlscheme.video)]) {
+            expect(typeof value).toBe('string');
+            expect(value).not.toBe('');
+        }
+        expect(urlscheme.download).toStrictEqual({});
+    });
+
     it('[CFG-1.1-PATH-NORMALIZATION] replaces the first root marker and removes one trailing separator', () => {
         const configuration = createConfiguration();
         const input = `%ROOT%${sep}archive%ROOT%${sep}${sep}`;
