@@ -619,6 +619,11 @@ cleanupの順序とfailure handlingは各consumerが所有する。
 | public contract        | Rule routes、status、body key、optional field、keyword両種別                   | 公開契約 fixture 比較                   |
 | characterization       | 現行の特性（time Rule keywordのschema/runtime差、keyword query、timezone split） | 正常contractと分離した明示test          |
 
+test名の先頭に付く印の意味は次のとおりである。`[RR-n.m]`のn.mはrequirementsのAC番号、`[RR-Tn.m]`のn.mはtasks.mdのtask番号である。
+`[RR-CHAR-n.m]`は現行特性（characterization）を固定するcaseで、n.mは対応するACの番号である。`[INTEGRATION-n.m]`は結合testの
+locatorで、n.mは対応するACの番号である。`[IMP-…]`・`[CHAR-…]`は内部の値域・分岐や現行特性を固定するimplementation unit testの名前で、ACの番号を持たない。
+ACからtestを辿るときは、下の「主要テスト対応表」と「機能全体Test Matrix」を正とする。
+
 ### 主要テスト対応表
 
 -   program/time Ruleの保存round-tripで種別、検索条件、録画条件、内部更新count、およびJSON arrayを確認する。

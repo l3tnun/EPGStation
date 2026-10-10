@@ -109,7 +109,9 @@ async function expectListItemGeometryStable(list: Locator, expectedCount: number
     })
 }
 
-test('keeps Recording list geometry stable on desktop and mobile', async ({ page }, testInfo) => {
+test('[AC 1.27] keeps Recording list geometry stable on desktop and mobile', async ({
+  page,
+}, testInfo) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/#/recording')
 

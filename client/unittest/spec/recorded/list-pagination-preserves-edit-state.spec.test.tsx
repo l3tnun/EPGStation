@@ -28,7 +28,7 @@ describe('Recorded list pagination and the app-shell timestamp route boundary', 
     vi.restoreAllMocks()
   })
 
-  it('keeps edit mode active (and usable) across a pagination move that drops the timestamp query', async () => {
+  it('[AC frontend-app-shell 5.22] keeps edit mode active (and usable) across a pagination move that drops the timestamp query', async () => {
     const recordedRepository = createRecordedRepository()
 
     render(

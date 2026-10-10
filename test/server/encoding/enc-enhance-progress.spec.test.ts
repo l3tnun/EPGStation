@@ -61,7 +61,7 @@ const runTemplate = async (stderrLines: string[]): Promise<{ code: number | null
     }
 };
 
-describe('enc-enhance.js.template の進捗行の解析', () => {
+describe('[EN-SPEC-R4-3] enc-enhance.js.template の進捗行の解析', () => {
     it.each([
         ['ffmpeg 7.0 未満の kB', 'size=  122624kB', 122624],
         ['ffmpeg 7.0 以降の KiB', 'size=  122624KiB', 122624],

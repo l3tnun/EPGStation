@@ -717,6 +717,10 @@ subdirectoryはroute前方へ付加され得る。
 | characterization         | timeout callback、空genre、部分commit、service remove、通常切断flag、放送局保存と索引の乖離、service buffer消失 |
 | compatibility            | Mirakurunとmirakcの合成DTO/changeから同じ保存entity・query・public fixtureを得るmatrix                          |
 
+test名の先頭に付く印の意味は次のとおりである。`[PG-n.m]`のn.mはrequirementsのAC番号、`[PG-Tn.m]`のn.mはtasks.mdのtask番号である。
+`[PG-AUX-Tn.m]`は同じtask番号の補助caseで、主caseの件数に加えない。`[PG-I-nnn]`・`[PG-MB-…]`・`[PG-MC-…]`・`[PG-X-…]`は
+「唯一の機能固有Test Matrix」の補完testのlabelであり、ACの番号ではない。ACからtestを辿るときは、Test Matrixを正とする。
+
 ### 主要検証
 
 -   services/programsの各deadline境界でtimeoutし、更新outcomeを発行せず、次の更新機会と保存済みqueryが利用できること。

@@ -298,6 +298,8 @@ unit test は `npm run coverage:gate` で statements・branches・functions・li
 - `unittest/imp`: unknown JSON validator、default factory、storage adapter、repair persist の分岐と edge case を検証する。
 - E2E: Settings screen owner の E2E から storage contract を間接確認する。本 spec 単独では routed E2E を定義しない。
 
+test 名の先頭に付ける `[AC n.m]` の n.m は、test file が属する本 spec（file 名と配置 directory で決まる）の受け入れ条件の番号である。他の spec の受け入れ条件を確かめる test は `[AC <spec 名> n.m]` と書く（例: `[AC frontend-app-shell 8.32]`）。E2E と visual の test も同じ書式の ID を test 名の先頭に付ける。受け入れ条件の番号から test を辿るときは、この書式の ID を `grep` する。
+
 ### Visual Regression 契約
 
 この feature は UI を直接所有しないため、`visual-cases.md` は契約確認用の case 一覧（検査は unit test）、`mock-data.md` は契約確認用の fixture として持つ（fixture の実体は `client/src/shared/settings/__fixtures__/settingsStorageFixtures.ts`）。Settings storage の visual regression 反映は consumer spec が所有し、主に `frontend-settings-screen/visual-cases.md` と `frontend-settings-screen/mock-data.md` を正本とする。

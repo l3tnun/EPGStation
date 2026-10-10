@@ -906,11 +906,14 @@ Runtimeが所有するRequirements 1から9の全64 Acceptance Criteriaを一行
 以下の64 IDはすべて一意である。locatorは各IDを確かめるtest、または実行・レビューの手順を指す。R1からR8は47 canonical case、R9は17 quality layer
 （9.1〜9.17）である。
 
+AR-1.1〜AR-1.3と、AR-9.4・AR-9.6・AR-9.17以外のAR-9.xは、`[AR-n.m]`を題に持つtest caseが無い。
+locator列に書いたfile・実行手順・commandの結果が判定である。
+
 | AR ID   | Requirement | Layer | Canonical locator                                                              | 値・状態・時間・資源・境界              |
 | ------- | ----------- | ----- | ------------------------------------------------------------------------------ | --------------------------------------- |
-| AR-1.1  | R1.1        | N     | Node.js matrixの実行（§12.4）#AR-1.1                                          | Node 24 minimum、fresh workspace        |
-| AR-1.2  | R1.2        | N     | Node.js matrixの実行（§12.4）#AR-1.2                                          | 24 install/build/start/test、process/DB |
-| AR-1.3  | R1.3        | N     | Node.js matrixの実行（§12.4）#AR-1.3                                          | 26 additional matrix、同suite           |
+| AR-1.1  | R1.1        | N     | Node.js matrixの実行（§12.4）の判定                                          | Node 24 minimum、fresh workspace        |
+| AR-1.2  | R1.2        | N     | Node.js matrixの実行（§12.4）の判定                                          | 24 install/build/start/test、process/DB |
+| AR-1.3  | R1.3        | N     | Node.js matrixの実行（§12.4）の判定                                          | 26 additional matrix、同suite           |
 | AR-1.4  | R1.4        | R     | `package.json`の`engines`、`mise.toml`、両server Docker stage（§15）           | 24未満unsupported、18 fallback 0        |
 | AR-2.1  | R2.1        | S/I   | `startup-preparation.spec.test.ts#AR-2.1`                                      | log→config順、同期throw/reject          |
 | AR-2.2  | R2.2        | S/I   | `startup-preparation.spec.test.ts#AR-2.2`                                      | root、group string/number               |

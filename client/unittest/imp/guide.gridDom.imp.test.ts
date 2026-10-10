@@ -92,7 +92,7 @@ describe('createProgramElement', () => {
     expect(element.querySelector('.name')?.textContent).toBe('')
   })
 
-  it('[G-3] does not attach its own click listener, letting the click bubble to the delegated container listener', () => {
+  it('[AC 2.16] does not attach its own click listener, letting the click bubble to the delegated container listener', () => {
     const layoutProgram: GuideGridLayoutProgram = {
       channel: {},
       program: { id: 1, startAt: 0, endAt: 1_000 },

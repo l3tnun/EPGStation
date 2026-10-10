@@ -740,6 +740,8 @@ unit test は `npm run coverage:gate` で statements・branches・functions・li
   は必ず表示ラベルを持つ。空表示を維持する必要がある fallback item は `display:none` 等で open
   state の menu/listbox から除外し、MUI listbox 先頭に空白行を出さない。
 
+test 名の先頭に付ける `[AC n.m]` の n.m は、test file が属する本 spec（file 名と配置 directory で決まる）の受け入れ条件の番号である。他の spec の受け入れ条件を確かめる test は `[AC <spec 名> n.m]` と書く（例: `[AC frontend-app-shell 8.32]`）。E2E と visual の test も同じ書式の ID を test 名の先頭に付ける。受け入れ条件の番号から test を辿るときは、この書式の ID を `grep` する。
+
 ### Visual Regression 契約
 
 この feature の詳細 layout は、本文の App Shell / drawer / title bar contract と `visual-cases.md` の visual

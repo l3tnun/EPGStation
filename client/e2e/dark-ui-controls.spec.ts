@@ -84,7 +84,9 @@ test('audits dark Search form controls and clear action contrast', async ({ page
   await expectNoUiAuditFailures(rows)
 })
 
-test('audits dark select and combobox controls across pages', async ({ page }) => {
+test('[AC frontend-app-shell 7.6] audits dark select and combobox controls across pages', async ({
+  page,
+}) => {
   await installAppShellApiMocks(page, {
     enableBroadcastWaveNavigation: true,
     forceDarkTheme: true,

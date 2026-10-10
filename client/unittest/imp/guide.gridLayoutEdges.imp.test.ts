@@ -7,7 +7,7 @@ import {
 import { WEEKDAYS } from '@/features/guide/lib/guideGridTypes'
 
 describe('firstGenre', () => {
-  it('[AC guide.genre-fallback] falls back to genre3 when genre1 and genre2 are absent', () => {
+  it('[AC 2.16] falls back to genre3 when genre1 and genre2 are absent', () => {
     expect(firstGenre({ genre3: 9 })).toBe(9)
   })
 })

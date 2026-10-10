@@ -70,7 +70,7 @@ describe('Storages implementation edges', () => {
     expect(STORAGES_FAILURE_MESSAGE).toBe('ストレージ情報取得に失敗')
   })
 
-  it('[A-6] no longer exports a viewport-width-driven storage layout, matching v2 Storages.vue having no such branch', () => {
+  it('[design Storages layout の画面幅分岐] no longer exports a viewport-width-driven storage layout, matching v2 Storages.vue having no such branch', () => {
     // v2 reference: client/src/views/Storages.vue has no viewport-width branch at all, and the
     // v3 640px breakpoint's only visual effect (`@media (max-width: 640px) { padding: 12px }`)
     // restated the same padding as the non-media-query default, i.e. it was a no-op.

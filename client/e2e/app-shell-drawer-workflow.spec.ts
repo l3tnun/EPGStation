@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { installAppShellApiMocks, installDashboardApiMocks } from './support/appShellMocks'
 
-test('auto-opens the permanent drawer when resizing from mobile overlay width to desktop width', async ({
+test('[AC 5.4] auto-opens the permanent drawer when resizing from mobile overlay width to desktop width', async ({
   page,
 }) => {
   await installAppShellApiMocks(page)
@@ -25,7 +25,7 @@ test('auto-opens the permanent drawer when resizing from mobile overlay width to
   await expect(page.getByTestId('shell-main')).toHaveAttribute('data-main-offset', '0')
 })
 
-test('keeps the permanent navigation drawer vertically scrollable without horizontal overflow', async ({
+test('[AC 5.5] keeps the permanent navigation drawer vertically scrollable without horizontal overflow', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1264, height: 360 })

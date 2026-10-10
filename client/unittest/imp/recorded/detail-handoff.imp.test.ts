@@ -94,7 +94,7 @@ describe('Recorded detail implementation edges', () => {
     })
   })
 
-  it('restores recorded stream setting and builds validated streaming routes', () => {
+  it('[AC 4.8] restores recorded stream setting and builds validated streaming routes', () => {
     const storage = window.localStorage
     const streamConfig = {
       recorded: {

@@ -54,7 +54,7 @@ describe('App Shell readCurrentRouteScrollPosition fixed shell branch', () => {
     document.body.innerHTML = ''
   })
 
-  it('reads the shell-main scroll offsets when the fixed iOS shell is active', () => {
+  it('[AC 6.17] reads the shell-main scroll offsets when the fixed iOS shell is active', () => {
     document.documentElement.classList.add('fix-address-bar2')
     document.body.innerHTML = '<main data-testid="shell-main"></main>'
     const shellMain = document.querySelector<HTMLElement>("[data-testid='shell-main']")!
@@ -64,7 +64,7 @@ describe('App Shell readCurrentRouteScrollPosition fixed shell branch', () => {
     expect(readCurrentRouteScrollPosition()).toStrictEqual({ x: 3, y: 9 })
   })
 
-  it('falls back to the window scroll position when the fixed shell has no shell-main element', () => {
+  it('[AC 6.17] falls back to the window scroll position when the fixed shell has no shell-main element', () => {
     document.documentElement.classList.add('fix-address-bar2')
 
     expect(readCurrentRouteScrollPosition()).toStrictEqual({
@@ -73,7 +73,7 @@ describe('App Shell readCurrentRouteScrollPosition fixed shell branch', () => {
     })
   })
 
-  it('reads the window scroll position when the fixed iOS shell is not active', () => {
+  it('[AC 6.17] reads the window scroll position when the fixed iOS shell is not active', () => {
     expect(readCurrentRouteScrollPosition()).toStrictEqual({
       x: window.scrollX,
       y: window.scrollY,

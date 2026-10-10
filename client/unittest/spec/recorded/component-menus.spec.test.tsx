@@ -184,7 +184,7 @@ describe('RecordedDetailVideoFileMenu', () => {
 })
 
 describe('RecordedSearchDialog', () => {
-  it('[AC 2.1] submits on Enter, clears fields, and changes the genre', async () => {
+  it('[AC 2.1] [AC 2.34] submits on Enter, clears fields, and changes the genre', async () => {
     const apiRepository = createRecordedRepository()
     const onNavigate = vi.fn()
     render(

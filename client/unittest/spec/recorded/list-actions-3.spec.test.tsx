@@ -148,7 +148,7 @@ describe('Recorded list edit-mode, selection, and navigation branches', () => {
     expect(screen.getByTestId('edit-title-bar')).toHaveTextContent('0 件選択 (0.0B)')
   })
 
-  it('[AC 4.1] opens the upload route from the recorded menu', async () => {
+  it('[AC 4.1] [AC 4.4] opens the upload route from the recorded menu', async () => {
     const recordedRepository = createRecordedRepository()
 
     render(

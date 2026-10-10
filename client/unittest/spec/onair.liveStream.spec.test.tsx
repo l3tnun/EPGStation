@@ -193,7 +193,7 @@ describe('On Air card and ProgramDialog actions', () => {
     }
   })
 
-  it('[AC 3.14] resolves the live M2TS-LL absolute URL under the document sub directory', async () => {
+  it('[AC frontend-video-playback 3.14] resolves the live M2TS-LL absolute URL under the document sub directory', async () => {
     const mediaSourceDescriptor = Object.getOwnPropertyDescriptor(window, 'MediaSource')
     class SyntheticMediaSource {
       static isTypeSupported = vi.fn(() => true)

@@ -365,27 +365,27 @@ runner、coverageの設定とcommandは`server-application-runtime` Requirement 
 
 | 要件 | 設計箇所                                            | 主な検証／失敗・資源境界                                                                                        |
 | ---- | --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| 1.1  | 初期化と記録の流れ、設定と出力契約                  | 設定fileなし初期化characterization                                                                              |
-| 1.2  | ログ初期化器、ログ設定adapter、役割別category       | 3役割のsample integration                                                                                       |
-| 1.3  | 状態と不変条件、失敗表                              | 不在・読取不能・解析失敗のprocess test                                                                          |
-| 1.4  | インターフェース、状態と不変条件、失敗表            | 初期化前取得のprocess test                                                                                      |
-| 2.1  | 用途別logger集合                                    | system category出力test                                                                                         |
-| 2.2  | 用途別logger集合、HTTPアクセスadapter               | access category出力test                                                                                         |
-| 2.3  | 用途別logger集合、呼出元との分類契約      | 配信開始・継続・停止・失敗のstream category出力                                                                 |
-| 2.4  | 用途別logger集合、役割別category                    | encode producerとService sample integration                                                                     |
-| 2.5  | インターフェース、設定形式                          | level filtering test                                                                                            |
-| 3.1  | 予約・録画processの起動、役割別category             | Operator相当process integration                                                                                 |
-| 3.2  | Web・API processの起動、役割別category              | Service相当process integration                                                                                  |
-| 3.3  | 番組情報更新processの起動、役割別category           | EPG updater相当process integration                                                                              |
-| 3.4  | 設定形式                                            | rotation integration                                                                                            |
-| 3.5  | Web・API/番組情報更新processの起動、不変条件        | 設定変更と再初期化test                                                                                          |
-| 4.1  | HTTPアクセスの記録                                  | 受付時の追跡開始integration                                                                                     |
-| 4.2  | HTTPアクセスの記録、HTTPアクセス記録契約            | terminal event時のcombined記録integration                                                                       |
-| 4.3  | 責任境界、HTTPアクセスadapter                       | middlewareがHTTP判断を変更しないtest                                                                            |
-| 5.1  | 重大な異常の記録                                    | uncaught exception fatal記録と終了effect 0件test                                                                |
-| 5.2  | 重大な異常の記録                                    | unhandled rejection fatal記録と終了effect 0件test                                                               |
-| 5.3  | process停止・再起動との統合境界、呼出元との分類契約 | terminal別記録・即時再起動matrix                                                                  |
-| 5.4  | 責任境界、不変条件、統合境界                        | logging port自身の停止・再起動effectがないtest                                                                  |
+| 1.1  | 初期化と記録の流れ、設定と出力契約                  | 設定fileなし初期化characterization（OL-IMP-DEFAULT-ROUTING・OL-IMP-DEFAULT-ORDER） |
+| 1.2  | ログ初期化器、ログ設定adapter、役割別category       | 3役割のsample integration（OL-SPEC-ROLE-CONFIG・OL-PROC-ROLE-ENTRYPOINT・OL-ROT-ROLE-APPENDER） |
+| 1.3  | 状態と不変条件、失敗表                              | 不在・読取不能・解析失敗のprocess test（OL-SPEC-INIT-FAIL） |
+| 1.4  | インターフェース、状態と不変条件、失敗表            | 初期化前取得のprocess test（OL-SPEC-PREINIT） |
+| 2.1  | 用途別logger集合                                    | system category出力test（OL-SPEC-SYSTEM） |
+| 2.2  | 用途別logger集合、HTTPアクセスadapter               | access category出力test（OL-SPEC-HTTP） |
+| 2.3  | 用途別logger集合、呼出元との分類契約      | 配信開始・継続・停止・失敗のstream category出力（OL-SPEC-STREAM・OL-SPEC-STREAM-ACQUISITION-FAILURE） |
+| 2.4  | 用途別logger集合、役割別category                    | encode producerとService sample integration（OL-SPEC-ENCODE・OL-SPEC-ENCODE-FAILURE・OL-SPEC-ENCODE-CANCEL・OL-PROC-PURPOSE） |
+| 2.5  | インターフェース、設定形式                          | level filtering test（OL-SPEC-LEVEL・OL-SPEC-DEFAULT-SCREEN） |
+| 3.1  | 予約・録画processの起動、役割別category             | Operator相当process integration（OL-PROC-ROLE-ENTRYPOINT） |
+| 3.2  | Web・API processの起動、役割別category              | Service相当process integration（OL-PROC-ROLE-ENTRYPOINT） |
+| 3.3  | 番組情報更新processの起動、役割別category           | EPG updater相当process integration（OL-PROC-ROLE-ENTRYPOINT） |
+| 3.4  | 設定形式                                            | rotation integration（OL-ROT-CAPACITY・OL-SPEC-ROTATION-CONFIG） |
+| 3.5  | Web・API/番組情報更新processの起動、不変条件        | 設定変更と再初期化test（OL-PROC-REINITIALIZATION・OL-SPEC-ROLE-CONFIG） |
+| 4.1  | HTTPアクセスの記録                                  | 受付時の追跡開始integration（OL-SPEC-HTTP） |
+| 4.2  | HTTPアクセスの記録、HTTPアクセス記録契約            | terminal event時のcombined記録integration（OL-HTTP-LOOPBACK） |
+| 4.3  | 責任境界、HTTPアクセスadapter                       | middlewareがHTTP判断を変更しないtest（OL-SPEC-HTTP） |
+| 5.1  | 重大な異常の記録                                    | uncaught exception fatal記録と終了effect 0件test（OL-SPEC-FATAL-OBSERVERS・OL-PROC-FATAL-OBSERVERS） |
+| 5.2  | 重大な異常の記録                                    | unhandled rejection fatal記録と終了effect 0件test（OL-SPEC-FATAL-OBSERVERS・OL-PROC-FATAL-OBSERVERS） |
+| 5.3  | process停止・再起動との統合境界、呼出元との分類契約 | terminal別記録・即時再起動matrix（OL-SPEC-SUPERVISOR） |
+| 5.4  | 責任境界、不変条件、統合境界                        | logging port自身の停止・再起動effectがないtest（OL-SPEC-LOGGER-EFFECTS） |
 | 6.1  | `unittest/spec`、状態・失敗・資源matrix             | Requirements 1から5の外部契約；初期化失敗、listener・process終了境界                                            |
 | 6.2  | `unittest/imp`、設定と出力契約、HTTPアクセスの記録  | 役割・用途・出力先・level・初期化失敗・HTTP終了分岐；logger・listener境界                                       |
 | 6.3  | 状態・失敗・資源matrix                              | 未初期化・再初期化、HTTP重複・順序、重大異常近接、rotation・書込失敗；logger・listener・file・process境界       |

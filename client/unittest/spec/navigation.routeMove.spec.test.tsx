@@ -134,7 +134,7 @@ describe('Requirement 5.1-5.13 drawer click and route move', () => {
 })
 
 describe('Requirement 4.1-4.8 selected navigation judgement', () => {
-  it('[AC 4.1] [AC 4.2] [AC 4.4] [AC 4.8] matches path and only item-defined query keys while ignoring guide-owned extra query', () => {
+  it('[AC 4.1] [AC 4.2] [AC 4.4] [AC 4.8] [AC 4.3] [AC 5.14] matches path and only item-defined query keys while ignoring guide-owned extra query', () => {
     const items = generateNavigationItems({
       config: fullConfig,
       settings: {

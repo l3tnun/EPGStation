@@ -32,21 +32,21 @@ describe('Encode legacy fixed-dimension contracts sourced from v2', () => {
     return css.slice(start)
   }
 
-  it('[A-4] sizes the encode cancel dialog paper by content, only capping it at v2 max-width: 300px', () => {
+  it('[AC 2.24] sizes the encode cancel dialog paper by content, only capping it at v2 max-width: 300px', () => {
     const cancelDialogPaperRule = rule('.cancelDialogPaper')
 
     expect(cancelDialogPaperRule).toContain('max-width: 300px')
     expect(cancelDialogPaperRule).not.toMatch(/(?<!max-)\bwidth:\s*300px/u)
   })
 
-  it('[A-5] derives the encode item thumbnail height from the v2 1.7778 aspect ratio instead of a fixed min-height', () => {
+  it('[AC 2.23] derives the encode item thumbnail height from the v2 1.7778 aspect ratio instead of a fixed min-height', () => {
     const thumbnailRule = rule('.thumbnail')
 
     expect(thumbnailRule).toContain('aspect-ratio: 1.7778')
     expect(thumbnailRule).not.toMatch(/min-height/u)
   })
 
-  it('[A-5] does not force a fixed row min-height on the encode item or its button above 600px', () => {
+  it('[AC 2.23] does not force a fixed row min-height on the encode item or its button above 600px', () => {
     const itemRule = rule('.item')
     const itemButtonRule = rule('.itemButton')
 
@@ -54,7 +54,7 @@ describe('Encode legacy fixed-dimension contracts sourced from v2', () => {
     expect(itemButtonRule).not.toMatch(/min-height/u)
   })
 
-  it('[A-5] does not reintroduce a fixed row min-height at the 600px breakpoint', () => {
+  it('[AC 2.23] does not reintroduce a fixed row min-height at the 600px breakpoint', () => {
     const block = mediaBlock()
 
     expect(block).not.toMatch(/\.item,\s*\n\s*\.item\[data-edit-mode='true'\]\s*\{[^}]*min-height/u)

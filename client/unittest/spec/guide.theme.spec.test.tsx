@@ -109,14 +109,14 @@ describe('Guide route and fetch lifecycle', () => {
     )
   })
 
-  it('[G-12] does not gate the size-setting select width behind an exact-match viewport media query', () => {
+  it('[AC 3.25] does not gate the size-setting select width behind an exact-match viewport media query', () => {
     const guideCss = readFileSync('src/features/guide/GuidePage.module.css', 'utf8')
 
     expect(guideCss).not.toMatch(/@media\s*\(\s*width:\s*600px\s*\)/)
   })
 
-  it('[AC 32] does not add helper-text row padding to the ProgramDialog encode AppSelect', () => {
-    // The helper-text row reservation (AC 32) is scoped to `/reserves/manual` add-mode
+  it('[AC 4.24a] does not add helper-text row padding to the ProgramDialog encode AppSelect', () => {
+    // The helper-text row reservation (frontend-app-shell AC 8.32) is scoped to `/reserves/manual` add-mode
     // option-panel fields (`ReservesPage.module.css`), not applied theme-wide, so this
     // fixed-height dialog row needs no counter-rule: measured scrollHeight 55px against
     // clientHeight 53px, forcing scroll inside `.programOptionList`, does not reproduce

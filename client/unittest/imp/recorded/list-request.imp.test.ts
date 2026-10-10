@@ -9,7 +9,7 @@ import {
 import { DefaultSettingsFactory } from '@/shared/settings/defaultSettings'
 
 describe('Recorded list request implementation edges', () => {
-  it('builds GET /recorded parameters from settings and route query', () => {
+  it('[AC frontend-app-shell 5.17] [AC 1.3] builds GET /recorded parameters from settings and route query', () => {
     const settings = {
       ...new DefaultSettingsFactory().create(),
       isHalfWidthDisplayed: false,
@@ -35,7 +35,7 @@ describe('Recorded list request implementation edges', () => {
     })
   })
 
-  it('normalizes invalid page to page 1 and ignores malformed optional filters', () => {
+  it('[AC 1.3] normalizes invalid page to page 1 and ignores malformed optional filters', () => {
     const settings = new DefaultSettingsFactory().create()
 
     expect(

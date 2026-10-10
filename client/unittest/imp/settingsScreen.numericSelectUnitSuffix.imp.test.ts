@@ -25,7 +25,7 @@ function optionsFor(key: string) {
 }
 
 describe('Settings screen v2 parity: numeric select unit suffix', () => {
-  it.each(HOUR_SUFFIX_KEYS)('labels every %s option with the 時間 suffix', (key) => {
+  it.each(HOUR_SUFFIX_KEYS)('[AC 1.21] labels every %s option with the 時間 suffix', (key) => {
     const options = optionsFor(key)
 
     expect(options.length).toBeGreaterThan(0)
@@ -34,7 +34,7 @@ describe('Settings screen v2 parity: numeric select unit suffix', () => {
     })
   })
 
-  it.each(COUNT_SUFFIX_KEYS)('labels every %s option with the 件 suffix', (key) => {
+  it.each(COUNT_SUFFIX_KEYS)('[AC 1.21] labels every %s option with the 件 suffix', (key) => {
     const options = optionsFor(key)
 
     expect(options.length).toBeGreaterThan(0)
@@ -43,7 +43,7 @@ describe('Settings screen v2 parity: numeric select unit suffix', () => {
     })
   })
 
-  it('never falls back to a bare numeric string label (matches v2 exactly)', () => {
+  it('[AC 1.21] never falls back to a bare numeric string label (matches v2 exactly)', () => {
     const allNumericOptions = [...HOUR_SUFFIX_KEYS, ...COUNT_SUFFIX_KEYS].flatMap((key) =>
       optionsFor(key),
     )

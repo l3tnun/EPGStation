@@ -39,7 +39,9 @@ test('audits dark Dashboard recorded item menu text and icon contrast', async ({
   await expectNoUiAuditFailures(rows)
 })
 
-test('audits dark Recorded detail menu text and icon contrast', async ({ page }, testInfo) => {
+test('[AC frontend-recorded 5.4] audits dark Recorded detail menu text and icon contrast', async ({
+  page,
+}, testInfo) => {
   await installAppShellApiMocks(page, {
     enableBroadcastWaveNavigation: true,
     forceDarkTheme: true,
@@ -67,7 +69,9 @@ test('audits dark Recorded detail menu text and icon contrast', async ({ page },
   await expectNoUiAuditFailures(rows)
 })
 
-test('audits dark table surfaces across routed owners', async ({ page }) => {
+test('[AC frontend-app-shell 7.11] [AC frontend-recorded 5.5] audits dark table surfaces across routed owners', async ({
+  page,
+}) => {
   await page.unrouteAll()
   await installAppShellApiMocks(page, {
     enableBroadcastWaveNavigation: true,
@@ -133,7 +137,7 @@ test('audits dark table surfaces across routed owners', async ({ page }) => {
   ])
 })
 
-test('audits dark Recorded detail streaming, encode, and download dialogs', async ({
+test('[AC frontend-recorded 5.4] audits dark Recorded detail streaming, encode, and download dialogs', async ({
   page,
 }, testInfo) => {
   await installAppShellApiMocks(page, {

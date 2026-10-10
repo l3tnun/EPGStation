@@ -68,7 +68,7 @@ describe('Requirement 1.1-1.5 common App Shell bootstrap', () => {
     expect(screen.getByTestId('shell-drawer')).toHaveAttribute('data-drawer-open', 'true')
   })
 
-  it('[AC 5.1] [AC 5.2] updates the default drawer layout when the viewport crosses the desktop breakpoint', () => {
+  it('[AC 5.1] [AC 5.2] [AC 5.3] updates the default drawer layout when the viewport crosses the desktop breakpoint', () => {
     window.history.replaceState(null, '', '/#/')
     Object.defineProperty(window, 'innerWidth', {
       configurable: true,

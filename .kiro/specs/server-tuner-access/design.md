@@ -682,6 +682,9 @@ fixtureを定義する。共有runner、C0・C1の判定は`server-application-r
 -   compatibility matrixはMirakurun 3.8.0、mirakc 3.1.10の契約fixtureに加え、未知の追加fieldとそれ以降の版文字列を通
     し、exact版allowlist拒否がないことを確認する。
 
+test名の`[TA-n.m]`のn.mはtasks.mdのtask番号であり、AC番号ではない。ACからtestを辿るときは、`unittest/spec`が53 ACを一行ずつ
+固定する`[TA-AC-<AC番号>]`、または下記のcanonical locatorの表を正とする。
+
 通常の契約testは合成serverを使う。本物のserverとの比較integrationは隔離したDocker fixtureを使い、setupと全観測を
 明示timeout付きのcase内で実行する。setup失敗を含めて`finally`でcontainer・network・一時fileを回収し、Docker command
 自身にも期限とprocess groupの終了を設ける。stream fixtureはtest本体の`finally`で解放し、製品のfeedに総継続時間timeoutが

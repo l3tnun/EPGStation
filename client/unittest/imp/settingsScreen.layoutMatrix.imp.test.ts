@@ -19,7 +19,7 @@ import {
 } from '@/features/settings/settingsLayoutContract'
 
 describe('Settings screen layout implementation contract', () => {
-  it('keeps the task 1 section order and desktop card width stable', () => {
+  it('[AC 1.16] keeps the task 1 section order and desktop card width stable', () => {
     expect(SETTINGS_CARD_MAX_WIDTH_PX).toBe(800)
     expect(SETTINGS_SECTION_ORDER).toStrictEqual([
       '全般',
@@ -35,7 +35,7 @@ describe('Settings screen layout implementation contract', () => {
     ])
   })
 
-  it('uses only a synthetic long URL scheme placeholder for overflow regression', () => {
+  it('[AC 1.13] [AC 1.15] uses only a synthetic long URL scheme placeholder for overflow regression', () => {
     expect(SETTINGS_URL_SCHEME_PLACEHOLDER).toContain('synthetic')
     expect(SETTINGS_URL_SCHEME_PLACEHOLDER.length).toBeGreaterThan(96)
     expect(SETTINGS_URL_SCHEME_PLACEHOLDER).not.toContain('http://')
@@ -47,7 +47,7 @@ describe('Settings screen layout implementation contract', () => {
 describe('Requirements 1.6-1.14 Settings control matrix implementation contract', () => {
   const defaultTmp = new DefaultSettingsFactory().create()
 
-  it('fixes every Settings screen control key in the approved section order', () => {
+  it('[AC 1.6] [AC 1.7] fixes every Settings screen control key in the approved section order', () => {
     expect(SETTINGS_CONTROL_MATRIX.map((control) => control.key)).toStrictEqual([
       'isEnablePWA',
       'shouldUseOSColorTheme',
@@ -132,7 +132,7 @@ describe('Requirements 1.6-1.14 Settings control matrix implementation contract'
     ])
   })
 
-  it('derives select options from Settings Storage UI contract', () => {
+  it('[AC 1.11] derives select options from Settings Storage UI contract', () => {
     const guideMode = SETTINGS_CONTROL_MATRIX.find((control) => control.key === 'guideMode')
     const guideLength = SETTINGS_CONTROL_MATRIX.find((control) => control.key === 'guideLength')
     const searchLength = SETTINGS_CONTROL_MATRIX.find((control) => control.key === 'searchLength')
@@ -167,7 +167,7 @@ describe('Requirements 1.6-1.14 Settings control matrix implementation contract'
     ).toStrictEqual({ min: 1, max: 100, step: 1 })
   })
 
-  it('fixes visible and disabled conditions in the matrix contract', () => {
+  it('[AC 1.6] fixes visible and disabled conditions in the matrix contract', () => {
     const matrixKeys: readonly string[] = SETTINGS_CONTROL_MATRIX.map((control) => control.key)
 
     expect(matrixKeys).toContain('isPreferredPlayingLiveM2TSOnWeb')

@@ -8,7 +8,7 @@ import {
 import { createInitialFormState } from '@/features/reserves/lib/manualReserveForm'
 
 describe('ManualOptionPanels clear button edges', () => {
-  it('[AC 32] reserves helper-text row height on every /reserves/manual add-mode option-panel field', () => {
+  it('[AC frontend-app-shell 8.32] reserves helper-text row height on every /reserves/manual add-mode option-panel field', () => {
     // Scoped to this route's option-panel fields (directory / file format / encode 1-3) rather
     // than a theme-wide MuiFormControl override: a theme-wide override pushes this
     // same padding onto fixed-height dialog rows app-wide (Guide ProgramDialog

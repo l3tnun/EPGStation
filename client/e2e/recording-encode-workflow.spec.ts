@@ -40,7 +40,7 @@ test('uses only synthetic Recording and Encode fixture values', () => {
   }
 })
 
-test('drives Recording list query, menu visibility, bulk delete, empty, and failure states', async ({
+test('[AC 1.33] drives Recording list query, menu visibility, bulk delete, empty, and failure states', async ({
   page,
 }, testInfo) => {
   await setRecordingEncodeSettings(page)

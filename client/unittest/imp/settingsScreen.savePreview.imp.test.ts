@@ -13,7 +13,7 @@ import {
 } from '@/features/settings/settingsSave'
 
 describe('Requirements 2.2-2.4 Settings save implementation contract', () => {
-  it('persists tmp before emitting the success snackbar and navigation regeneration request', () => {
+  it('[AC frontend-app-shell 3.16] persists tmp before emitting the success snackbar and navigation regeneration request', () => {
     const calls: string[] = []
     const target = new EventTarget()
     const showSnackbar = vi.fn(() => {
@@ -38,7 +38,7 @@ describe('Requirements 2.2-2.4 Settings save implementation contract', () => {
     expect(showSnackbar).toHaveBeenCalledWith(SETTINGS_SAVE_SUCCESS_SNACKBAR)
   })
 
-  it('reports a persistence failure with an error snackbar and requests no navigation regeneration', () => {
+  it('[AC frontend-app-shell 3.16] reports a persistence failure with an error snackbar and requests no navigation regeneration', () => {
     const target = new EventTarget()
     const showSnackbar = vi.fn()
     const navigationRequest = vi.fn()

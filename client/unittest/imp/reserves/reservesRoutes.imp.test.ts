@@ -13,7 +13,7 @@ import {
 } from '@/features/reserves/reservesRequests'
 
 describe('Reserve route and action helper implementation edges', () => {
-  it('resolves reserve state priority before decoration visibility', () => {
+  it('[AC 2.5] resolves reserve state priority before decoration visibility', () => {
     expect(
       resolveReserveVisualState({
         isSkip: true,

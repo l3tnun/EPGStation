@@ -81,7 +81,9 @@ test('audits dark Rule mobile card count and menu affordance contrast', async ({
   await expectNoUiAuditFailures(rows)
 })
 
-test('audits dark card surfaces across routed owners', async ({ page }) => {
+test('[AC frontend-app-shell 7.7] [AC frontend-app-shell 7.8] audits dark card surfaces across routed owners', async ({
+  page,
+}) => {
   await page.unrouteAll()
   await installAppShellApiMocks(page, {
     enableBroadcastWaveNavigation: true,

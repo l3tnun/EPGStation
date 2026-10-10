@@ -5,7 +5,14 @@ import { join } from 'node:path';
 import { PassThrough } from 'node:stream';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { baseConfig, compiled, fakeChild, fsStubs as nodeFs, logger, prepareRecordedDeliveryFsMocks } from './_media-harness';
+import {
+    baseConfig,
+    compiled,
+    fakeChild,
+    fsStubs as nodeFs,
+    logger,
+    prepareRecordedDeliveryFsMocks,
+} from './_media-harness';
 
 const RecordedHLSStreamModel = compiled<any>('model', 'service', 'stream', 'RecordedHLSStreamModel.js').default;
 let RecordedStreamModel: new (...args: any[]) => any;
@@ -514,8 +521,7 @@ describe('recorded stream implementation characterization', () => {
 
     it('[MD-6.2][TailStream] closes a pending read and suppresses its late callback', async () => {
         let readCallback:
-            | ((error: NodeJS.ErrnoException | null, bytesRead: number, buffer: Buffer) => void)
-            | undefined;
+            ((error: NodeJS.ErrnoException | null, bytesRead: number, buffer: Buffer) => void) | undefined;
         const open = nodeFs.open.mockImplementation(((path, flags, callback) => {
             callback(null, 18);
         }) as typeof nodeFs.open);
@@ -831,7 +837,7 @@ describe('recorded stream implementation characterization', () => {
         expect(finish).not.toHaveBeenCalled();
     });
 
-    it('[MD-2.13] preserves the compatible TailStream truncate-and-resend', { timeout: 5_000 }, async () => {
+    it('[MD-2.9] preserves the compatible TailStream truncate-and-resend', { timeout: 5_000 }, async () => {
         const dir = mkdtempSync(join(tmpdir(), 'epg-tail-truncate-'));
         dirs.push(dir);
         const path = join(dir, 'video.ts');

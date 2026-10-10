@@ -5,7 +5,7 @@ test.beforeEach(async ({ page }) => {
   await installAppShellApiMocks(page)
 })
 
-test('keeps the settings card centered and capped on desktop', async ({ page }) => {
+test('[AC 1.16] keeps the settings card centered and capped on desktop', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/#/settings')
 
@@ -28,7 +28,7 @@ test('keeps the settings card centered and capped on desktop', async ({ page }) 
   )
 })
 
-test('does not horizontally overflow with long URL scheme placeholders on mobile', async ({
+test('[AC 1.15] does not horizontally overflow with long URL scheme placeholders on mobile', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 })
@@ -113,7 +113,7 @@ const settingsGeometryCases = [
 ] as const
 
 for (const geometryCase of settingsGeometryCases) {
-  test(`keeps settings controls non-overlapping on ${geometryCase.name} theme`, async ({
+  test(`[AC 1.15] keeps settings controls non-overlapping on ${geometryCase.name} theme`, async ({
     page,
   }) => {
     await page.setViewportSize(geometryCase.viewport)

@@ -102,7 +102,7 @@ describe('Dashboard more actions and time labels', () => {
     expect(window.location.hash).toMatch(/^#\/reserves\?type=conflict&timestamp=\d+$/)
   })
 
-  it('[AC7] routes to the conflict reserves list when the reserve section title label text is clicked directly', async () => {
+  it('[AC 2.7] routes to the conflict reserves list when the reserve section title label text is clicked directly', async () => {
     const dashboardRepository = createDashboardRepository()
     vi.mocked(dashboardRepository.fetchReserveCounts).mockResolvedValue({
       ok: true,
@@ -129,7 +129,7 @@ describe('Dashboard more actions and time labels', () => {
     expect(window.location.hash).toMatch(/^#\/reserves\?type=conflict&timestamp=\d+$/)
   })
 
-  it('[AC7] calls the conflict handler exactly once (not doubled by event bubbling) when the conflict badge is clicked', () => {
+  it('[AC 2.7] calls the conflict handler exactly once (not doubled by event bubbling) when the conflict badge is clicked', () => {
     const onConflictClick = vi.fn()
 
     render(
@@ -159,7 +159,7 @@ describe('Dashboard more actions and time labels', () => {
     expect(onConflictClick).toHaveBeenCalledTimes(1)
   })
 
-  it('[AC7] exposes the reserve section title label and conflict badge as sibling native buttons reachable by keyboard', async () => {
+  it('[AC 2.7] exposes the reserve section title label and conflict badge as sibling native buttons reachable by keyboard', async () => {
     const dashboardRepository = createDashboardRepository()
     vi.mocked(dashboardRepository.fetchReserveCounts).mockResolvedValue({
       ok: true,
@@ -206,7 +206,7 @@ describe('Dashboard more actions and time labels', () => {
     }
   })
 
-  it('[AC7] does not navigate and creates no press region in the section title when there is no conflict', async () => {
+  it('[AC 2.7] does not navigate and creates no press region in the section title when there is no conflict', async () => {
     const dashboardRepository = createDashboardRepository()
 
     render(

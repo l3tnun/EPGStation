@@ -106,7 +106,7 @@ test('shows a snackbar when the startup config request fails', async ({ page }) 
   await expectAnnounced(page, '設定ダウンロードに失敗しました')
 })
 
-test('keeps dark snackbar message and action text white', async ({ page }) => {
+test('[AC 7.9] keeps dark snackbar message and action text white', async ({ page }) => {
   await installAppShellApiMocks(page, { mode: 'config-failure', forceDarkTheme: true })
   await installDashboardApiMocks(page)
 

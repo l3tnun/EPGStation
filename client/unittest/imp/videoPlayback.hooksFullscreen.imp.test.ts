@@ -176,7 +176,7 @@ describe('usePlaybackFullscreen toggle/exit contract', () => {
     expect(result.current.isFullscreenFallback).toBe(true)
   })
 
-  it('[AC 4.6] uses HTMLVideoElement.webkitEnterFullscreen() instead of the CSS fallback when the container has no requestFullscreen but the video supports native fullscreen (iPhone Safari)', () => {
+  it('[AC 4.6b] uses HTMLVideoElement.webkitEnterFullscreen() instead of the CSS fallback when the container has no requestFullscreen but the video supports native fullscreen (iPhone Safari)', () => {
     const player = document.createElement('div')
     // iPhone Safari: no Element.requestFullscreen on the container.
     const video = document.createElement('video')
@@ -280,7 +280,7 @@ describe('usePlaybackFullscreen toggle/exit contract', () => {
     expect(result.current.isFullscreenFallback).toBe(true)
   })
 
-  it('[AC 4.6] on iPad, falls back to the CSS-only fullscreen state (not native video fullscreen) when the container requestFullscreen() rejects, keeping the app UI, full seek range, and PiP available', async () => {
+  it('[AC 4.6c] on iPad, falls back to the CSS-only fullscreen state (not native video fullscreen) when the container requestFullscreen() rejects, keeping the app UI, full seek range, and PiP available', async () => {
     setNavigatorPlatform({ maxTouchPoints: 5, platform: 'iPad', userAgent: IPAD_USER_AGENT })
     const player = document.createElement('div')
     const requestFullscreen = vi.fn(async () => {
@@ -310,7 +310,7 @@ describe('usePlaybackFullscreen toggle/exit contract', () => {
     expect(result.current.isFullscreenFallback).toBe(true)
   })
 
-  it('[AC 4.6][6c] on iPad, falls back to the CSS-only fullscreen state (not webkitEnterFullscreen()) when the container has no requestFullscreen at all, so a standalone PWA on iPad never drops to the Apple native player UI', async () => {
+  it('[AC 4.6c] on iPad, falls back to the CSS-only fullscreen state (not webkitEnterFullscreen()) when the container has no requestFullscreen at all, so a standalone PWA on iPad never drops to the Apple native player UI', async () => {
     // requirements.md 6c: unlike any other non-iPhone environment, iPad never takes the
     // native-video-fullscreen fallback here, even for the "container requestFullscreen is
     // missing entirely" case (see the "still uses container requestFullscreen" test below for
@@ -364,7 +364,7 @@ describe('usePlaybackFullscreen toggle/exit contract', () => {
     expect(result.current.isFullscreenFallback).toBe(false)
   })
 
-  it('[AC 4.6] on iPhone, uses video.webkitEnterFullscreen() without ever calling the container requestFullscreen(), even though it exists and would resolve', async () => {
+  it('[AC 4.6b] on iPhone, uses video.webkitEnterFullscreen() without ever calling the container requestFullscreen(), even though it exists and would resolve', async () => {
     // Confirmed on an iOS 26.5 simulator: Element.requestFullscreen() on the container resolves
     // and sets document.fullscreenElement on iPhone Safari, but the composited visual result
     // never actually expands past the element's pre-fullscreen box -- a resolved promise gives
@@ -448,7 +448,7 @@ describe('usePlaybackFullscreen toggle/exit contract', () => {
     expect(webkitEnterFullscreen).not.toHaveBeenCalled()
   })
 
-  it('[6d] resyncs --app-viewport-height from the current window.innerHeight when entering the CSS fallback, instead of leaving a stale measurement in place', () => {
+  it('[AC 4.6d] resyncs --app-viewport-height from the current window.innerHeight when entering the CSS fallback, instead of leaving a stale measurement in place', () => {
     // requirements.md 6d: on iPadOS standalone PWAs, WebKit can leave the viewport measurement
     // holding a stale value until a real geometry change (e.g. a device rotation) "exercises"
     // it. Simulate that by changing window.innerHeight without firing resize/orientationchange/

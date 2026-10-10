@@ -124,7 +124,7 @@ describe('Guide route and fetch lifecycle', () => {
     })
   })
 
-  it('[G-7] keeps a saved encode value selectable even after it is removed from server config', async () => {
+  it('[AC 4.22] keeps a saved encode value selectable even after it is removed from server config', async () => {
     window.history.replaceState(null, '', '/#/guide?time=26050509')
     localStorage.setItem(
       'GuideProgramDetailSetting',

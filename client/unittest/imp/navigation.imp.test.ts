@@ -140,7 +140,7 @@ describe('Navigation model implementation edges', () => {
     ])
   })
 
-  it('does not select reserves when the item-defined type query does not match', () => {
+  it('[AC 4.5] does not select reserves when the item-defined type query does not match', () => {
     const items = generateNavigationItems({
       config: loadedConfig(['GR']),
       settings: {

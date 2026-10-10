@@ -187,7 +187,7 @@ afterEach(async () => {
     await Promise.all(temporaryRoots.splice(0).map(root => rm(root, { force: true, recursive: true })));
 });
 
-describe('recorded cleanup caller deadline [RC-6.3]', () => {
+describe('recorded cleanup caller deadline [RC-9.11]', () => {
     it.each(['videoFileCleanup', 'dropLogFileCleanup'] as const)(
         '[RC-9.11] applies the exact 599,999/600,000ms boundary and ignores a late %s reply',
         async cleanupMethod => {
@@ -227,7 +227,7 @@ describe('recorded cleanup caller deadline [RC-6.3]', () => {
     );
 });
 
-describe('recorded cleanup affected-row contract [RC-6.3]', () => {
+describe('recorded cleanup affected-row contract [RC-9.6]', () => {
     it.each([
         ['affected=0', 0, false],
         ['affected=1', 1, true],
@@ -271,7 +271,7 @@ describe('recorded cleanup affected-row contract [RC-6.3]', () => {
     });
 });
 
-describe('managed cleanup removal gate [RC-6.2]', () => {
+describe('managed cleanup removal gate [RC-9.13/9.14]', () => {
     it('[RC-9.13/9.14] rejects every independently changed root identity component', async () => {
         const root = await temporaryRoot();
         const candidate = join(root, 'candidate.log');
@@ -351,7 +351,7 @@ describe('managed cleanup removal gate [RC-6.2]', () => {
     });
 });
 
-describe('recorded drop-log cleanup implementation characterization [RC-6.1]', () => {
+describe('recorded drop-log cleanup implementation characterization [RC-9.5/9.6/9.7/9.8/9.14/9.15/9.16/9.17]', () => {
     it('[RC-9.14/9.15] returns exact empty candidates and rejects synthetic root and parent entries before inspection', async () => {
         const root = await temporaryRoot();
         const parent = resolve(root, '..');
@@ -519,7 +519,7 @@ describe('recorded drop-log cleanup implementation characterization [RC-6.1]', (
     });
 });
 
-describe('recorded drop-log cleanup implementation [RC-6.2]', () => {
+describe('recorded drop-log cleanup implementation [RC-9.12/9.13/9.14/9.17]', () => {
     it('link-dot-entry-and-continue-after-error', async () => {
         const parent = await temporaryRoot();
         const root = join(parent, 'managed');

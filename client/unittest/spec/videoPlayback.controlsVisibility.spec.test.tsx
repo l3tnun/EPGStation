@@ -243,7 +243,7 @@ describe('Video playback requirement 4: control visibility, gestures and shortcu
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 
-  it('[6d] sizes the CSS fullscreen fallback from --app-viewport-height instead of a raw 100vh that can hold a stale iPadOS-standalone-PWA measurement', () => {
+  it('[AC 4.6d] sizes the CSS fullscreen fallback from --app-viewport-height instead of a raw 100vh that can hold a stale iPadOS-standalone-PWA measurement', () => {
     // requirements.md 6d: raw `100vh` pushed bottomControls off-screen on iPad standalone PWAs.
     // --app-viewport-height is the app shell's own JS-measured, continuously-resynced viewport
     // height (useFixedShellViewport.ts); `100vh` stays only as the fallback for environments

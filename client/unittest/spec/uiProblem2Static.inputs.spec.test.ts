@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 describe('UI2 static regression guards', () => {
-  it('[AC 8.27] does not render native checkboxes outside switch controls', () => {
+  it('[AC 8.27] [AC 7.12] does not render native checkboxes outside switch controls', () => {
     const files = listTsxFiles(join(process.cwd(), 'src'))
     const failures = files.flatMap((file) => {
       const source = readFileSync(file, 'utf8')
@@ -48,7 +48,7 @@ describe('UI2 static regression guards', () => {
     expect(failures).toEqual([])
   })
 
-  it('[AC 8.29] keeps text inputs on shared clearable implementations', () => {
+  it('[AC 8.29] [AC 7.13] keeps text inputs on shared clearable implementations', () => {
     const files = listTsxFiles(join(process.cwd(), 'src'))
     const failures = files.flatMap((file) => {
       const source = readFileSync(file, 'utf8')

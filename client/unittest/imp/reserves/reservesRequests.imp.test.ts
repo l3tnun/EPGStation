@@ -59,7 +59,7 @@ describe('Reserves list request implementation edges', () => {
     expect(resolveReservesTitle('skip')).toBe('除外')
   })
 
-  it('normalizes page query and builds GET /reserves parameters from settings', () => {
+  it('[AC 1.13] normalizes page query and builds GET /reserves parameters from settings', () => {
     const settings = {
       ...new DefaultSettingsFactory().create(),
       isHalfWidthDisplayed: true,

@@ -1213,6 +1213,11 @@ Requirements 1から8の68 ACは、次節の`RM-1.1`から`RM-8.18`と同じ番�
 する共通cancelは非適用。stream/file/child processは本機能が所有せず、filesystemはDB adapter内部のため業務境界として非適
 用である。主test欄のR1〜R8はすべて一意な`*.spec.test.ts` named caseである。
 
+test名の先頭に付く印の意味は次のとおりである。`[RM-n.m]`のn.mはrequirementsのAC番号である。`[RM-Tnn]`は正常系の表のscenario ID、
+`[RM-Cnn]`は現行特性（characterization）の表の行であり、どちらもAC番号ではない。`[RM-Tn.m]`のn.mはtasks.mdのtask番号である。
+`[RM-AUX-n.m]`は主caseとは別に同じACを補助して確かめるcaseで、主caseの件数に加えない。ACからtestを辿るときは、
+上の表のmain test欄とRequirements Traceabilityを正とする。
+
 | ID      | 主test・証跡                                      | 種別     | 入力9             | 状態            | 時間     | 資源                            | 境界/failure                | assertion                                      |
 | ------- | ------------------------------------------------- | -------- | ----------------- | --------------- | -------- | ------------------------------- | --------------------------- | ---------------------------------------------- |
 | RM-1.1  | `reservation-types.spec.test.ts#RM-1.1`           | S        | N,N,N,T,T,N,N,N,T | Q               | 順       | DB                              | DB/種類混同                 | 4種類を区別保存 |

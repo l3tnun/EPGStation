@@ -71,7 +71,7 @@ describe('Requirement 1.1-1.5 Settings screen route bootstrap', () => {
     expect(css).not.toContain('min-width: 94px')
   })
 
-  it('[AC 1.1] [AC 1.3] [AC 1.4] [AC 1.5] renders /settings as a normal shell screen and signals scroll restoration readiness', async () => {
+  it('[AC 1.1] [AC 1.3] [AC 1.4] [AC 1.5] [AC 1.2] renders /settings as a normal shell screen and signals scroll restoration readiness', async () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch')
     const scrollHistory = createScrollHistorySpy()
 

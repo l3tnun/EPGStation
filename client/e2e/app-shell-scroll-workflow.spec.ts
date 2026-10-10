@@ -12,7 +12,9 @@ import { expect, test } from '@playwright/test'
 import { installAppShellApiMocks } from './support/appShellMocks'
 import { installSearchRuleWorkflowApiMocks } from './support/searchRuleMocks'
 
-test('restores the rule list scroll position immediately after browser back', async ({ page }) => {
+test('[AC 6.15] restores the rule list scroll position immediately after browser back', async ({
+  page,
+}) => {
   await installAppShellApiMocks(page)
   await installSearchRuleWorkflowApiMocks(page)
 
@@ -45,7 +47,7 @@ test('restores the rule list scroll position immediately after browser back', as
     .toBe(savedScrollY)
 })
 
-test('restores each Rule list page scroll position across multiple browser-back steps', async ({
+test('[AC 6.15] restores each Rule list page scroll position across multiple browser-back steps', async ({
   page,
 }) => {
   await installAppShellApiMocks(page)
@@ -106,7 +108,9 @@ for (const {
   detourTestId,
   renderedLocator,
 } of routeScrollRestoreCases) {
-  test(`restores route scroll position after browser back on ${route}`, async ({ page }) => {
+  test(`[AC 6.15] restores route scroll position after browser back on ${route}`, async ({
+    page,
+  }) => {
     await installRouteScrollRestoreMocks(page)
 
     await page.goto(`/#${withRouteTimestamp(route)}`)

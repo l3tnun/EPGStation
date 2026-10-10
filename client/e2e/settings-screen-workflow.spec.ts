@@ -36,7 +36,7 @@ test('saves settings changes and regenerates broadcast-wave navigation', async (
   await expect(page.getByTestId('navigation-item-guide')).toHaveCount(0)
 })
 
-test('keeps settings select controls operable through the styled field surface', async ({
+test('[AC 1.17] keeps settings select controls operable through the styled field surface', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
@@ -51,7 +51,7 @@ test('keeps settings select controls operable through the styled field surface',
   await expect(guideModeSelect).toHaveText('最小')
 })
 
-test('renders settings select controls with MUI select without blank native options', async ({
+test('[AC 1.18] renders settings select controls with MUI select without blank native options', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 })

@@ -108,7 +108,7 @@ describe('UI2 static regression guards', () => {
     expect(failures).toEqual([])
   })
 
-  it('[AC 8.24] does not render blank visible select options', () => {
+  it('[AC 8.24] [AC 7.10] does not render blank visible select options', () => {
     const files = listTsxFiles(join(process.cwd(), 'src'))
     const failures = files.flatMap((file) => {
       const source = readFileSync(file, 'utf8')

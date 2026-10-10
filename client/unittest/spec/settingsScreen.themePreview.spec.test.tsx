@@ -21,7 +21,7 @@ describe('Requirements 2.5, 3.1-3.7 Settings reset and theme preview workflow', 
     vi.restoreAllMocks()
   })
 
-  it('[AC 3.2] previews manual dark theme changes before save without persisting localStorage', () => {
+  it('[AC 3.2] [AC 4.2] previews manual dark theme changes before save without persisting localStorage', () => {
     localStorage.setItem(
       'settings',
       JSON.stringify({
@@ -69,7 +69,7 @@ describe('Requirements 2.5, 3.1-3.7 Settings reset and theme preview workflow', 
     })
   })
 
-  it('[AC 3.3] [AC 3.4] [AC 3.5] resets tmp to defaults without persisting and restores visible theme from saved settings', async () => {
+  it('[AC 3.3] [AC 3.4] [AC 3.5] [AC 3.6] resets tmp to defaults without persisting and restores visible theme from saved settings', async () => {
     localStorage.setItem(
       'settings',
       JSON.stringify({

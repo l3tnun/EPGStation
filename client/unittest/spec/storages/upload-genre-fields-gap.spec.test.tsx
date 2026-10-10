@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 // genre and sub genre `<v-select>` (each `style="width: 50%"`) directly adjacent inside a bare
 // `<div class="d-flex">`. Vuetify's `.d-flex` utility is only `display: flex !important` and adds
 // no gap, so the two selects sit flush against each other (0px gap) in v2.
-describe('[A-7] Recorded upload genre/subGenre row matches the v2 flush (no gap) layout', () => {
+describe('[design genre / subGenre 横並びの間隔] Recorded upload genre/subGenre row matches the v2 flush (no gap) layout', () => {
   const css = readFileSync('src/features/storages/upload/RecordedUploadPage.module.css', 'utf8')
 
   function rule(selector: string): string {
