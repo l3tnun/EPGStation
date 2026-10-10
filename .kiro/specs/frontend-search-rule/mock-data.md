@@ -45,6 +45,20 @@ Search / Rule visual cases は search options、program results、reserve states
 - empty は results 空配列、total 0。
 - error は synthetic error code、snackbar trigger、failure kind (`initial` / `refresh` / `scroll` / `ruleListFetch`) を含める。
 
+## Dataset と fixture の対応
+
+dataset 名は spec 上の名前であり、test の fixture はこの名前の定数としては存在しない。次の関数・定数が各 dataset を実現する（すべて `client/e2e/support/searchRuleMocks.ts`）。
+
+| Dataset | fixture |
+| --- | --- |
+| `searchOptionsFull` | `searchChannels`（`GET /api/channels` 互換の配列。`installSearchRuleWorkflowApiMocks` が返す）。unit test 側の option は `client/unittest/spec/searchRuleSupport.tsx` の `createSearchRuleRepository()` が返す |
+| `searchResultsMixed` | `createMixedSearchResults()`（`installSearchRuleWorkflowApiMocks` の `mixed: true` と `installPagedRuleListApiMocks` が使う） |
+| `searchProgramDialogStates` | `searchPrograms` と `createMixedSearchResults()` の reserve 状態（none / manual / rule / conflict / skip / overlap） |
+| `ruleMixedList` | `createMixedRules()`。長い keyword で crowded row を作る補助は `installSearchRuleCrowdedRowApiMocks` の `crowdedRule` |
+| `ruleEditFull` | `ruleList` の先頭（`GET /api/rules/:id` が返す rule） |
+| `searchEmpty` | `SearchRuleRealtimeMockController.clearSearchPrograms()` で検索結果を空にする |
+| `searchError` | 各 test が handler を失敗応答に差し替えて作る（共有の fixture は持たない） |
+
 ## 禁止事項
 
 - 実番組名、実 channel 名、実 directory path、実 URL、認証情報を含めない。
