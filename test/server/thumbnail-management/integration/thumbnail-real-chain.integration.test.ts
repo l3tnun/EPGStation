@@ -74,6 +74,7 @@ describe('thumbnail generation, registration, and deletion on real components', 
         );
         const log = logger();
         const thumbnailEvent = { emitAdded: vi.fn(), emitDeleted: vi.fn() };
+        const queue = new PromiseQueue();
         const model = new ThumbnailManageModel(
             { getLogger: () => log },
             {
@@ -85,7 +86,7 @@ describe('thumbnail generation, registration, and deletion on real components', 
                     thumbnailSize: '480x270',
                 }),
             },
-            new PromiseQueue(),
+            queue,
             persistence.db.RecordedDB,
             persistence.db.VideoFileDB,
             persistence.db.ThumbnailDB,
@@ -98,6 +99,8 @@ describe('thumbnail generation, registration, and deletion on real components', 
             interval: 100,
             timeout: 30_000,
         });
+        // 追加の通知は一時 directory の片付けより先に出るので、生成の job が queue で終わるまで待つ。
+        await queue.add(async () => undefined);
 
         const thumbnails = (await persistence.db.ThumbnailDB.findAll()) as Array<{ filePath: string; id: number }>;
         expect(thumbnails).toEqual([expect.objectContaining({ filePath: `${recordedId}.jpg`, recordedId })]);
