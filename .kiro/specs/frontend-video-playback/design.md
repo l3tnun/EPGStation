@@ -287,7 +287,7 @@ path を二重に結合しない。
 | URL      | ./streamfiles/stream<streamId>.m3u8 | none        | HLS playlist URL for player                            | playlist URL builder。`playbackMedia.ts` の API base path とは別の document 相対 media URL として組み立てる            |
 | URL      | /streams/live/:channelId/m2tsll     | mode        | direct live M2TS-LL media URL                          | document 相対（`./api/streams/live/:channelId/m2tsll?mode=<mode>`）の media URL builder。M2TS-LL だけは `window.location.href` を基準に解いた absolute URL を渡す。fetch repository endpoint ではない |
 | GET      | /videos/:videoFileId                | none        | direct video file response                             | controlled playback error                                                                                   |
-| GET      | /videos/:videoFileId/duration       | none        | duration                                               | 失敗時は `動画長の取得に失敗` snackbar を出し、再生は続ける                                                                             |
+| GET      | /videos/:videoFileId/duration       | none        | duration                                               | 失敗時は `動画長の取得に失敗` snackbar を出し、再生は続ける（repository の error message は内部用で画面に出ない）                                                                             |
 | GET      | /recorded/:recordedId               | isHalfWidth | recorded watch info                                    | info fetch failure is non-fatal                                                                             |
 
 ### 共有型契約

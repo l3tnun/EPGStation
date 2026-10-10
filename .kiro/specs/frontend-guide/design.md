@@ -360,7 +360,7 @@ genre setting dialog が描画する switch も genre id `0` から `15` まで�
 
 ### 番組表固有の非ページネーション
 
-Guide は route `page`、API `limit/offset`、settings page size を持たない。fetch length は `guideLength` から `startAt/endAt/days` を作る。
+Guide は route `page`、API `limit/offset`、settings page size を持たない。fetch length は、通常の番組表では `guideLength` から `startAt/endAt` を作り、単一 channel の番組表では `startAt` から 8 日（`days` は固定の 8）とする。
 
 ## データモデル
 

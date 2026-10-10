@@ -79,7 +79,7 @@ graph TB
 | Server state | TanStack Query | API response cache、loading/error/refetch | Settings Storage は backend API を所有せず、server state を持たない。consumer spec の server state は TanStack Query 境界に従う。 |
 | Local state | React local state/reducer | settings value、settings draft、localStorage repair state | Settings 画面は `tmp`（settings draft）を `SettingsPage` の React state に持ち、読み書きは `client/src/features/settings/lib/settingsStorageAccess.ts` が `SettingsStorageRepository` で行う（保存は `persistSettingsTmp`）。Zustand は使わない。 |
 | UI / CSS | MUI Core + `@mdi/font` + theme token + `*.module.css` | consumer 向け visual contract | Settings Storage 自体は visual layout を所有しないが、consumer visual-cases の geometry/screenshot contract は theme/shared component に接続する。 |
-| Form / validation | React Hook Form + Zod | typed settings validation、consumer form validation | Zod schema を settings contract validation の境界とし、Settings screen の React Hook Form が consumer になる。 |
+| Form / validation | `SettingsValidator`（手書きの型判定） | typed settings validation、consumer form validation | settings の値の検証は `shared/settings` の `SettingsValidator` が行い、Zod は使わない。Zod と React Hook Form は consumer の form（予約・ルール・upload など）が自分の入力検証に使う。 |
 | API client | native `fetch` wrapper + typed request/response validation | backend integration | Settings Storage は backend REST API を所有しない。consumer API は repository base `./api` と endpoint path を二重結合しない。 |
 | Socket.IO | `socket.io-client` | realtime update trigger | Settings Storage は Socket.IO subscription を所有しない。 |
 | Lint / format / alias | ESLint flat config + typescript-eslint + React Hooks plugin / Prettier / `@/` | static gate と import 解決 | `@/` は Vite / TypeScript / Vitest / ESLint で同一解決規則にする。 |

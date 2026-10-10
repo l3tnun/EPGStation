@@ -305,6 +305,17 @@ interface ReservationQueryService {
 }
 ```
 
+この概念 interface の名前と実装の名前は次のとおり対応する。本 design の `ignoreOverlap`・`skip`・`overlap`・`conflict` は、保存する field では `isIgnoreOverlap`・`isSkip`・`isOverlap`・`isConflict` である。
+
+| 概念 interface での名前                                      | 実装での名前                                                                                   |
+| ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
+| `ReservationDiff`                                            | `IReserveUpdateValues`（event へ渡す差分）、`ReserveDiffData`（`ReservationManageModel` 内の作業用の型） |
+| `applyDiff(diff)`                                            | `reserveDB.updateMany(diff)`                                                                   |
+| `updateAll(firstProgramGuideUpdate)`                         | `updateAll(isFirstUpdate?)`                                                                    |
+| `Reservation`、`ReservationId`                               | `Reserve`（`src/db/entities/Reserve.ts`）、`ReserveId`                                         |
+| `suppressLog`                                                | `isSuppressLog`                                                                                |
+| `ignoreOverlap`・`skip`・`overlap`・`conflict`               | `isIgnoreOverlap`・`isSkip`・`isOverlap`・`isConflict`                                         |
+
 -   `getExecution` の待機期限は省略時60,000 msであり、取得後に行う情報読取またはmutationの処理時間上限ではない。
 -   実行権の取得後には別の600,000 ms owner watchdogを開始する。通常の成功、失敗、同期例外、または早期returnが先なら
     `finally`でexact IDを解放する。watchdogが先なら取消不能なDB処理を終了済みとみなさず、exact IDを`overdue`として記録し
@@ -725,8 +736,8 @@ sequenceDiagram
 予約用の process 内排他 queue、実行中 operation、未配送 event は再起動時に復元しない。保存済み row が再評価の正本であ
 る。
 
-初回 `updateAll(true)` の最後に全保存予約を conflict sweep し、時刻指定手動予約を含む確定差分と全通常・競合予約 snapshot
-を録画実行へ渡す。これにより isolated/overlapping を問わず、保存済み予約から競合状態と録画候補を再構築する。
+初回 `updateAll(true)` の最後に全保存予約を conflict sweep し、時刻指定手動予約を含む確定差分と保存済みの全予約（通常・競合・
+skip・overlap を含む）の snapshot を録画実行へ渡す。これにより isolated/overlapping を問わず、保存済み予約から競合状態と録画候補を再構築する。
 
 この snapshot は録画実行が録画候補と時刻指定手動予約の timer を組み直すための入力であり、予約の変更として扱わない。外部
 連携（予約変更コマンドなど）へ渡す予約差分は、番組指定手動予約・番組リレー予約・rule ごとの更新が確定した差分だけであ

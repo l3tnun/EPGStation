@@ -265,8 +265,8 @@ DB または生成処理が明示的に失敗した場合は、既存の文書�
 
 ### 6.2 30秒の文書応答期限
 
-HTTP handler開始時のmonotonic clockへ30,000msを加え、一要求のabsolute deadlineを一回固定する。同じresponse fenceがquery
-変換、public URL provider構成、persistence read Promise、文書生成、応答確定を囲む。保存済み情報へ有限読取時間を適用する
+HTTP handler開始時のmonotonic clockへ30,000msを加え、一要求のabsolute deadlineを一回固定する。同じresponse fenceがhandler開始後のquery
+参照、public URL provider構成、persistence read Promise、文書生成、応答確定を囲む。保存済み情報へ有限読取時間を適用する
 とは、このhandler fenceがDB読取Promiseを待てる時間を有限にすることである。
 
 このfenceは基礎DB connectionやqueryをcancel、timeout、retryせず、persistenceの接続lifecycleと内部失敗契約を変更しない。
@@ -288,6 +288,7 @@ streamの継続時間を制限するものではない。本機能が生成す�
 -   期限到達後または要求切断後に DB 読み取りや生成が完了しても応答を送らない。
 -   遅延結果を別要求へ適用しない。
 -   DB connection/queryをcancelまたはtimeoutせず、遅延完了を観測して応答への採用だけを抑止する。
+-   XMLTVの生成は、provider契約の`getEpgForRequest`（任意実装）が渡される`IptvRequestContext.ensureActive()`で、生成の途中でも期限到達または要求切断を確認し、超えていれば例外で生成を打ち切る。`getEpgForRequest`が無い実装では`getEpg`を呼び、生成の途中では確認しない。
 
 完了状態と timer は要求ごとに破棄し、別要求へ持ち越さない。サーバー再起動で処理中の HTTP 要求は通常の接続切断として終わ
 り、再開しない。
@@ -341,7 +342,7 @@ sequenceDiagram
     participant M as IPTV文書生成
 
     C->>H: XMLTV要求
-    H->>H: absolute deadline固定・query変換
+    H->>H: absolute deadline固定・query参照
     H->>P: 指定期間の番組読取
     P-->>H: 番組一覧
     H->>D: チャンネル読取
@@ -584,6 +585,7 @@ carrier、`T`はfixture値、`B`は境界、`D`は重複である。`証跡`の�
 | CONFIRMED | `src/model/api/iptv/IPTVApiModel.ts`                     | exact M3U8/XMLTV連結（3・4・5節のfull-byte出力）、対象選択、設定順/標準順、文字置換、固定offset、要求ローカルの`ProgramProjection`（番組entityを書き換えない）、typed `IptvPublicUrlBuilder`を受ける`getChannelList({ isHalfWidth, mode, publicUrls })` |
 | CONFIRMED | `src/model/service/api/iptv/channel.m3u8.ts`             | Host、scheme、設定済みsubDirectoryから要求ごとにfrozenな`IptvPublicUrlBuilder`を構成、Content-Type、HTTP 200、既存error carrier、`IptvDocumentRequestGuard`による30秒期限。queryのfloorはOpenAPIのcoercerが適用し、handlerはcoerce済みの値を再変換せずそのままproviderへ渡す |
 | CONFIRMED | `src/model/service/api/iptv/epg.xml.ts`                  | XML Content-Type、HTTP 200、既存error carrier、`IptvDocumentRequestGuard`による30秒期限。queryのfloorはOpenAPIのcoercerが適用し、handlerはcoerce済みの値を再変換せずそのままproviderへ渡す |
+| CONFIRMED | `src/model/api/iptv/IIPTVApiModel.ts`                    | provider契約`getChannelList`・`getEpg`と、任意実装の`getEpgForRequest`（`IptvRequestContext.ensureActive()`で生成途中の期限・切断を確認する。実装が無ければ呼び出し側が`getEpg`を使う） |
 | CONFIRMED | `src/model/api/iptv/IptvDocumentRequestGuard.ts` | 30秒absolute deadline（`now < deadline`）、先着一件のsettled、timerとlistenerの解放、切断、late結果の観測                                                                                     |
 | CONFIRMED | `src/util/ChannelUtil.ts`                                | 共通media service判定                                                                                                                                                                      |
 | CONFIRMED | `src/model/db/ChannelDB.ts`                              | M3U8設定順とXMLTV標準順の読取入口                                                                                                                                                           |
@@ -613,6 +615,7 @@ IPC wire、DB schema、設定、保存形式は変更しない。owner-local tes
 
 | Primary source | Owner-local test locator | Cross-spec consumer |
 | --- | --- | --- |
+| `src/model/api/iptv/IIPTVApiModel.ts` | `test/server/iptv-export/**/*.test.ts` | Service Interface は route composition consumer。 |
 | `src/model/api/iptv/IptvDocumentRequestGuard.ts` | `test/server/iptv-export/**/*.test.ts` | Service Interface は route composition consumer。 |
 | `src/model/service/api/iptv/channel.m3u8.ts` | `test/server/iptv-export/**/*.test.ts` | Service Interface は route composition consumer。 |
 | `src/model/service/api/iptv/epg.xml.ts` | `test/server/iptv-export/**/*.test.ts` | Service Interface は route composition consumer。 |

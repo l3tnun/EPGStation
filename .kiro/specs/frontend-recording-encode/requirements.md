@@ -78,7 +78,7 @@ Recording / Encode は録画中 item と encode running/waiting job の一覧、
 16. bulk cancel 成功時、EPGStation フロントエンドは `選択したエンコードをキャンセルしました。`、一部または全件失敗時は `一部エンコードのキャンセルに失敗しました。` を snackbar で通知する。
 17. Encode title bar の edit action entrypoint は kebab menu ではなく `mdi-pencil` 相当の direct icon button とし、実行時に edit mode へ入る。
 18. Encode fetch に失敗したとき、EPGStation フロントエンドは `エンコード情報取得に失敗` を snackbar で通知する。
-19. bulk cancel dialog は screenshot 未取得として扱い、安定 screenshot が必要な場合のみ mock API で確認する。
+19. bulk cancel dialog の状態は mock API で再現でき、画面の確認（`visual-cases.md` の `encode-cancel-dialog`）はその mock で行う。
 20. `GET /encode` には `isHalfWidth=<isHalfWidthDisplayed>` を送る。保存済み設定が読めない場合は `true` を使う。
 21. empty state は content area を mount したまま section が空になる blank presentation とし、explicit copy を追加しない。
 22. single cancel dialog と bulk cancel dialog は close animation 後に短い delay で remove/remount する。

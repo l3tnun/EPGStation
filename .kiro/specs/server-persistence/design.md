@@ -633,7 +633,7 @@ sequenceDiagram
 ### Migration
 
 1. 共通の Entity 集合を使用し、`dbtype` から SQLite または MySQL の Migration path を選ぶ。手動の CLI が読む `ormconfig.js`
-   も、`!env` の展開、`better-sqlite3` の読み替え、`sqlite.wal` を `src/model/ConfigYaml.ts`（build 後の
+   も、`!env` と merge key（`<<`）の展開、`better-sqlite3` の読み替え、`sqlite.wal` を `src/model/ConfigYaml.ts`（build 後の
    `dist/model/ConfigYaml.js`）の共通定義で扱う。CLI も設定どおりの journal 方式を明示する: `DataSource` option の `prepareDatabase`（接続の直後に実行される）で、`sqlite.wal` が `true` なら `journal_mode = WAL`、それ以外は `journal_mode = DELETE` にする。 ロック待ち時間も同じ `sqlite.busyTimeout`（省略時 `5000`）を `timeout` として渡す。
 2. `synchronize` を `false`、runtime の `migrationsRun` を `true` として `DataSource` を構築する。
 3. `initialize()` が TypeORM の管理 table を参照し、未適用 Migration を timestamp 順に実行する。
@@ -1046,7 +1046,7 @@ portが入力として許容せずruntime validationも本機能が所有しな�
 | 5.2  | 初回を含む最大 5 job calls                                          | `retry.spec.test.ts`: call count                                                                    |
 | 5.3  | 5 回目の error identity を伝播                                      | `retry.spec.test.ts`: last error assertion                                                          |
 | 5.4  | transaction 経路の共通再試行除外                                    | `transactions.integration.test.ts`: 1 transaction attempt                                           |
-| 6.1  | `dbtype` 別 Migration と `migrationsRun`、手動の `orm-run`・`orm-gen` | `migrations.integration.test.ts`: pending apply、`orm-cli.integration.test.ts`: 実 SQLite の実行・生成・非対応 `dbtype`・`!env` の展開と未定義時の失敗・`better-sqlite3` の別名・`sqlite.wal`(WAL にする / WAL の file を無効の設定で開くと delete に戻る) |
+| 6.1  | `dbtype` 別 Migration と `migrationsRun`、手動の `orm-run`・`orm-gen` | `migrations.integration.test.ts`: pending apply、`orm-cli.integration.test.ts`: 実 SQLite の実行・生成・非対応 `dbtype`・`!env` の展開と未定義時の失敗・merge key（`<<`）の展開・`better-sqlite3` の別名・`sqlite.wal`(WAL にする / WAL の file を無効の設定で開くと delete に戻る) |
 | 6.2  | `synchronize: false` と版管理 DDL                                   | option assertion と schema diff fixture                                                             |
 | 6.3  | Migration 完了前の非公開                                            | `migrations.integration.test.ts`: failing migration                                                 |
 | 6.4  | 自動 `down` なし                                                    | migration spy と適用済み版維持                                                                      |
@@ -1093,7 +1093,7 @@ portが入力として許容せずruntime validationも本機能が所有しな�
 | SQLite schema history                                  | `src/db/migrations/sqlite/*.ts`                                                                                 | Init、AddRawExtended、AddEventRelay、AddRuleBS4K                                          |
 | MySQL schema history                                   | `src/db/migrations/mysql/*.ts`                                                                                  | Init、AddRawExtended、AddEventRelay、AddRuleBS4K                                          |
 | runtime migration option と CLI 差                     | `src/model/db/DBOperator.ts`、`ormconfig.js`                                                                    | runtime `migrationsRun: true`、`synchronize: false`                                       |
-| 手動の migration CLI の設定                            | `ormconfig.js`、`src/model/ConfigYaml.ts`、`package.json` の `orm-run`・`orm-gen`                                | ES module として読み込み、`!env` を展開し、`sqlite`（別名 `better-sqlite3`）は `better-sqlite3` driver（`sqlite.wal` が `true` なら WAL）、MySQL は `mysql`、他の `dbtype` は `db config error` |
+| 手動の migration CLI の設定                            | `ormconfig.js`、`src/model/ConfigYaml.ts`、`package.json` の `orm-run`・`orm-gen`                                | ES module として読み込み、`!env` と merge key（`<<`）を展開し、`sqlite`（別名 `better-sqlite3`）は `better-sqlite3` driver（`sqlite.wal` が `true` なら WAL）、MySQL は `mysql`、他の `dbtype` は `db config error` |
 | restore stage orchestration                            | `src/DBTools.ts`                                                                                                | `restore()` による種類別呼出し                                                            |
 | explicit process close callers                         | `src/DBTools.ts`、`src/V1MigrationTool.ts`                                                                      | tool 終了前の `closeConnection()`                                                         |
 

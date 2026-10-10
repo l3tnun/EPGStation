@@ -103,7 +103,7 @@ Video playback は live watch、recorded direct watch、recorded streaming watch
 16a. Android / coarse pointer 環境では、loading 中でない場合だけ player 背景または control 外周の tap で controls 表示を toggle する。loading 中は loading indicator と textless spinner だけを表示し、center/bottom controls を表示してはならない。button、slider、menu などの interactive control 上の tap は control 操作だけを行い、controls 表示 toggle に伝播させない。
 17. `/recorded/watch` と `/recorded/streaming/:videoFileId` の recorded info card は App Shell dark theme token を継承し、dark theme で white card surface、black primary text、black description text を残してはならない。描画色なので E2E の dark theme test が検証する。
 18. player setting restore で localStorage access が例外を投げた場合、EPGStation フロントエンドは player 描画を継続する。
-19. fullscreen 化に成功したとき、EPGStation フロントエンドは screen orientation lock API が利用可能な場合 landscape へ lock し、bottom control の外側に回転 button を表示する。lock API が利用できない場合は回転 button を表示せず、fullscreen 中に lock API が利用可能になった場合は回転 button を表示する。
+19. mobile で fullscreen 化に成功したとき、EPGStation フロントエンドは screen orientation lock API が利用可能な場合 landscape へ lock し、bottom control の外側に回転 button を表示する。lock API が利用できない場合は回転 button を表示せず、fullscreen 中に lock API が利用可能になった場合は回転 button を表示する。mobile 以外では回転 button を表示しない。
 
 ### 要求 5: recorded streaming の再生契約
 

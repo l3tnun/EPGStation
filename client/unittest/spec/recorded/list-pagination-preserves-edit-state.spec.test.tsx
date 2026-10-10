@@ -5,13 +5,13 @@ import { DefaultSettingsFactory } from '@/shared/settings/defaultSettings'
 import { createShellRepository } from './recordedSpecHelpers'
 import { createRecordedRepository } from './recordedSpecRepository'
 
-// The route boundary in AppShellContent redirects (via <Navigate replace>) any non-root routed
-// URL that lacks a `timestamp` query parameter. Recorded pagination navigates with
-// buildRecordedPageSearch, which deletes `timestamp` from the outgoing search before pushing the
-// new page — so every page change momentarily produces a URL the boundary must redirect. See
-// .kiro/specs/frontend-app-shell/requirements.md Requirement 5.16-5.18.
+// The route boundary in AppShellContent normalizes (by replacing the location in place, without
+// remounting the routed screen) any non-root routed URL that lacks a `timestamp` query parameter.
+// Recorded pagination navigates with buildRecordedPageSearch, which deletes `timestamp` from the
+// outgoing search before pushing the new page — so every page change momentarily produces a URL
+// the boundary must normalize. See .kiro/specs/frontend-app-shell/requirements.md AC 5.22.
 //
-// This test only asserts on edit mode surviving the redirect, not on selection surviving it: a
+// This test only asserts on edit mode surviving the normalization, not on selection surviving it: a
 // refetch (any refetch, pagination or not) intentionally narrows the current selection to ids
 // still visible in the newly returned page — see the `toggleVisibleRecordedSelection` call and
 // its comment a few lines above in RecordedPage.tsx. That narrowing is independent of this route

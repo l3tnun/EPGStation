@@ -22,7 +22,7 @@ Guide は番組表 route、schedule fetch、large grid、day/time/genre/size men
 2. `type` query が有効な放送波の場合、EPGStation フロントエンドはその放送波に限定した schedule fetch を行う。
 3. `type` query がない場合、EPGStation フロントエンドは enabled broadcast wave 全体を対象にした schedule fetch を行う。
 4. `time` query がある場合、EPGStation フロントエンドはその日時を日本時間(JST, Asia/Tokyo)の `YYMMddhh` として扱い、Guide 開始時刻、schedule fetch window、reserve index fetch window に同一の絶対時刻を使う。UTC/local timezone のまま解釈して 9 時間ずらしてはならない。
-5. `channelId` query がある場合、EPGStation フロントエンドは single-channel guide として channel schedule fetch を行う。
+5. `channelId` query がある場合、EPGStation フロントエンドは single-channel guide として channel schedule fetch を行い、開始時刻から 8 日分を取得する。
 6. invalid `type` query がある場合、EPGStation フロントエンドはその `type` を無視し、`type` query がない場合と同じ normal guide として enabled broadcast wave 全体を対象に schedule fetch を行う。これは invalid broadcast type を API query に流さない intentional fix とする。
 7. invalid `time` query がある場合、EPGStation フロントエンドは現在時刻を Guide 開始時刻として扱い、invalid `time` を API query、title、day selector、time selector の選択状態へ反映しない。snackbar は表示しない。
 8. invalid `channelId` query がある場合、EPGStation フロントエンドはその `channelId` を無視し、single-channel guide ではなく normal guide として schedule fetch を行う。snackbar は表示しない。

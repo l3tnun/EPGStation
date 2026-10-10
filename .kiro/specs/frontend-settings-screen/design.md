@@ -161,6 +161,8 @@ Settings screen は backend API、search query、dialog/menu state を持たな�
 | SettingsPreviewController | Feature State | theme preview、reset rollback、leave rollback を扱う。 | 2.1-2.3, 3.1-3.7 | Color theme state / settings draft | 状態管理 |
 | SettingsSaveController | Feature Service | save、navigation regeneration request、snackbar を扱う。 | 2.4-2.7, 3.6, 3.7 | SettingsStorageRepository / App Shell | Service |
 
+SettingsControlMatrix・SettingsPreviewController・SettingsSaveController は責務の名前で、実在する class ではない。実体はそれぞれ `settingsControlMatrix.ts`（と `settingsControlTypes.ts`・`settingsControlRows*.ts`）、`settingsPreview.ts`、`settingsSave.ts` の関数群である。
+
 ### 設定ページ（SettingsPage）
 
 | 項目 | 詳細 |
@@ -174,7 +176,7 @@ Settings screen は backend API、search query、dialog/menu state を持たな�
 - title/snackbar/navigation regeneration は App Shell contract へ typed request として渡す。
 - control matrix は単一の centered settings card に配置し、desktop max width 800px を layout owner contract とする。section ごとの独立 card、nested cards、dashboard-style multi-column layout は採用しない。
 - select control は MUI `TextField select` / `Select` を使用し、theme、focus-visible、keyboard operation、screen reader name を維持する。styled display 用要素と browser-default select を分離した透明 overlay 実装、MUI native-select variant、browser default select は禁止する。
-- Settings の select menu/listbox は 最大 4.5 item 分、216px を超えない。select control は owner width を変更せず、control matrix の幅は既存 CSS が決定する。
+- Settings の select menu/listbox は 最大 4.5 item 分、216px を超えない。この上限は共有 select の設定（`client/src/shared/appSelectConfig.ts`）が決め、受け入れ条件は共有 select の spec 側で確かめる。select control は owner width を変更せず、control matrix の幅は既存 CSS が決定する。
 
 ### 設定コントロール表（SettingsControlMatrix）
 

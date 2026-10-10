@@ -211,7 +211,7 @@ Flow は route/query/API/localStorage 境界で validation し、UI component �
 | 項目 | 詳細 |
 |-------|--------|
 | 意図 | settings を consumer として読み、OnAir 固有 adjacent localStorage key を restore/save する。 |
-| 要件 | 1.4, 1.6, 3.3, 3.4, 3.10 |
+| 要件 | 1.4, 1.6, 3.3, 3.4, 3.14 |
 
 **責務と制約**
 - settings default、backfill、validation は `frontend-settings-storage` に委譲する。

@@ -24,7 +24,7 @@
 
 - [x] 4. ProgramDialog と予約・除外・重複 action を実装する
   - ProgramDialog は Guide owned shared component として metadata、description、extended linkify、menu/action matrix、close animation 後 remove/remount を提供する。
-  - reserve/add/delete/skip/unskip/overlap/unoverlap/search/rule/recorded handoff は API request、snackbar、refetch-driven update の契約に従う。
+  - reserve/add/delete/skip/unskip/overlap/unoverlap/search/rule は API request、snackbar、refetch-driven update の契約に従う。
   - `http://` / `https://` のみ anchor 化し、`target="_blank"` と `rel="noopener noreferrer"` を付与し、それ以外の scheme は plain text のまま扱う。
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9, 4.10, 4.11, 4.12, 4.13, 4.14, 4.15, 4.16, 4.17, 4.18, 4.19, 4.20, 4.21, 4.22, 4.23, 4.24, 4.24a, 4.24b, 4.25, 4.26, 4.27_
 

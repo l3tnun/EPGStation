@@ -231,6 +231,7 @@ Flow は route/query/API/localStorage 境界で validation し、UI component �
 | GET | /recording | limit/offset/isHalfWidth | recording summary items | 録画中 summary fetch failure snackbar |
 | GET | /recorded | limit/offset/isHalfWidth plus recorded filters | recorded summary items | 録画済み summary fetch failure snackbar |
 | GET | /reserves | type/limit/offset/isHalfWidth | reserve summary items | 予約 summary fetch failure snackbar |
+| GET | /channels | none | channel id と name の対応（summary item の channel label の補完用。shell の bootstrap と共有。recording / recorded / reserves の取得時に一度だけ読む） | — |
 | GET | /reserves/cnts | none | normal/conflicts/skips/overlaps counts | 予約情報取得に失敗 |
 | POST | /encode | encode body | enqueue result | delegated endpoint。Dashboard は body/文言を所有せず `frontend-recorded` を参照する |
 | PUT | /recorded/:recordedId/protect | none | result | delegated endpoint。Dashboard は body/文言を所有せず `frontend-recorded` を参照する |

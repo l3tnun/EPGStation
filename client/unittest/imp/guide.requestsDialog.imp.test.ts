@@ -17,7 +17,7 @@ import {
 import { DefaultSettingsFactory } from '@/shared/settings/defaultSettings'
 
 describe('Guide request builder implementation edges', () => {
-  it('builds ProgramDialog search, recorded, and add-reserve contracts from settings and dialog state', () => {
+  it('builds ProgramDialog search and add-reserve contracts from settings and dialog state', () => {
     const settings = {
       ...new DefaultSettingsFactory().create(),
       isIncludeChannelIdWhenSearching: true,

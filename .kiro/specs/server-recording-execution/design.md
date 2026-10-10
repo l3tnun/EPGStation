@@ -1587,6 +1587,8 @@ catch-up、`無`は当該ACに時間または順序contractがないことを表
 Requirement 9はtest suiteや品質判定を自己検証しない。次の5層を確認項目のkeyとし、各keyの状態は12.1の証跡
 列で表す。
 
+`SPEC-CASES-RE-9.1`・`IMP-CHAR-RE-9.2`・`MATRIX-RE-9.3`・`RUNTIME-R9-RE-9.5`は、この名前を持つtestではなく集計上の判定名である。test fileの登録と層の分類は`test/server/recording-execution/domain-suite-matrix.imp.test.ts`（定義は`domain-suite-matrix.mjs`）が確かめ、全件成功の判定は`server-application-runtime`が所有する固定commandの共有runnerが行う。test名の先頭に付くのは`INT-CASES-RE-9.4`だけである。
+
 | 証跡key               | evidence layer                | 成立条件                                                                                                                                                                 |
 | --------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `SPEC-CASES-RE-9.1`   | spec case                     | 12.1のRE-1.1〜RE-8.2と一意な`*.spec.test.ts#RE-N.M`が72件、欠落・重複0件で全件成功                                                                                       |
@@ -1861,6 +1863,24 @@ Test Matrixとは別の追跡表であり、canonical test locatorは重複所�
 | `.kiro/specs/server-application-runtime/design.md`                                | 容量不足削除composition                                            | active録画を取消さない`RecordingRecordedUseGate`のprovider binding           |
 | `.kiro/specs/server-application-runtime/design.md`                                | 容量削除候補用snapshot composition                                 | active session recorded IDのread-only providerとunknown時の候補query停止     |
 | `src/index.ts`                                                                    | 起動時の録画整理・予約整理順序                                     | 録画整理、候補再構築、3秒周期開始を独立段階にしfailureをruntimeへ返すbarrier |
+
+3.1の論理コンポーネントと3.2の論理ポートは、次のとおり実装の class・method に対応する。論理名は設計上の責務の名前であり、`src/`・`test/` にその名前の class は無い。
+
+| 論理名                                                           | 実装                                                                                                                    |
+| ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `RecordingScheduleController`、`RecordingCandidateRegistry`      | 同名の class（`RecordingScheduleController.ts`、`RecordingCandidateRegistry.ts`）                                       |
+| `RecordingSession`                                               | `RecorderModel`（1 予約につき 1 インスタンス）                                                                          |
+| `StreamAllocator`、`RecordingTunerPort`                          | `RecordingStreamCreator`（`TunerServerAccess` の `getProgram`・`openProgramStream`・`openServiceStream` を使う）        |
+| `RecordingFileWriter`                                            | `RecordingUtilModel`（`getRecPath`・`movingFromTmp`・`updateVideoFileSize`）                                            |
+| `DropCounter`                                                    | `DropCheckerModel`                                                                                                      |
+| `RecordingLifecyclePublisher`                                    | `RecordingEvent`（`IRecordingEvent`）                                                                                   |
+| `RecordingRecordedUseGate`、`RecordingRecordedUseSnapshot`       | `RecordingRecordedUseProvider`（`tryAcquireDeletion`・`getActiveRecordedIds` など）                                     |
+| `RecordedContentPort` の `createRecordingResult`                 | `RecorderModel` が `recordedDB.insertOnce` で行う                                                                       |
+| `RecordedContentPort` の `createVideoFile`                       | `RecorderModel` が `videoFileDB.insertOnce` で行う                                                                      |
+| `RecordedContentPort` の `updateProgram`                         | `RecorderModel` が `recordedDB.updateOnce` で行う                                                                       |
+| `RecordedContentPort` の `clearRecordingFlag`                    | `RecorderModel` と `RecordingManageModel.cleanup()` が `recordedDB.removeRecording` で行う                              |
+| `RecordedContentPort` の `findRecordedProgram`                   | `RecorderModel` と `RecordingManageModel` が `recordedDB.findId` で行う                                                 |
+| `StartupRecordingReconciler`、`RecordingExecutionFacade` ほか    | 3.2末尾の表のとおり `RecordingManageModel`                                                                              |
 
 録画実行層は製品固有 client・型へ直接依存しない。stream 取得、最新番組メタデータ取得、終了は全て `server-tuner-access` の
 port 経由で行う。

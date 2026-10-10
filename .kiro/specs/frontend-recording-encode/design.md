@@ -235,8 +235,8 @@ Flow は route/query/API/localStorage 境界で validation し、UI component �
 | GET | /channels | none | shared channel index | channel label hydration 用。失敗時は recording fetch failure とせず、recording item の `channelId` numeric fallback を使う |
 | DELETE | /recorded/:recordedId | none | delete recorded result | Recording item menu delete で全 video file が選択された場合だけ使う。Recording bulk delete では使わない |
 | DELETE | /videos/:videoFileId | none | delete result | delete failure snackbar |
-| PUT | /recorded/:id/protect | none | result | protect failure snackbar |
-| PUT | /recorded/:id/unprotect | none | result | unprotect failure snackbar |
+| PUT | /recorded/:recordedId/protect | none | result | protect failure snackbar |
+| PUT | /recorded/:recordedId/unprotect | none | result | unprotect failure snackbar |
 | GET | /encode | isHalfWidth | running/waiting encode list | encode fetch failure snackbar |
 | DELETE | /encode/:encodeId | none | cancel result | cancel failure snackbar |
 
@@ -267,8 +267,8 @@ interface SnackbarRequest {
 | --- | --- | --- |
 | rule | `ruleId` がある item で表示 | `/search?rule=<ruleId>` へ遷移する。 |
 | search | always | `ruleId` がある場合は `/recorded?ruleId=<ruleId>`、ない場合は program name 由来の `/recorded` keyword search へ遷移する。 |
-| protect | unprotected item で表示 | `/recorded/:id/protect`、成功/失敗 snackbar。即時 refetch は要求しない。icon は `frontend-recorded` owner contract の `mdi-lock`。 |
-| unprotect | protected item で表示 | `/recorded/:id/unprotect`、成功/失敗 snackbar。即時 refetch は要求しない。icon は `frontend-recorded` owner contract の `mdi-lock-open`。 |
+| protect | unprotected item で表示 | `/recorded/:recordedId/protect`、成功/失敗 snackbar。即時 refetch は要求しない。icon は `frontend-recorded` owner contract の `mdi-lock`。 |
+| unprotect | protected item で表示 | `/recorded/:recordedId/unprotect`、成功/失敗 snackbar。即時 refetch は要求しない。icon は `frontend-recorded` owner contract の `mdi-lock-open`。 |
 | delete | always | RecordedDeleteDialog contract を使う。全 video file 選択時は `DELETE /recorded/:recordedId`、一部選択時は selected `videoFiles[].id` を `DELETE /videos/:videoFileId` で削除する。 |
 | encode | hidden | recording item では実行可能 action として扱わない。 |
 | stop | hidden | shared menu に存在しても Recording view は handler 未接続のため hidden intentional fix。 |

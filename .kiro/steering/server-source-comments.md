@@ -11,6 +11,9 @@ member 変数にコメントが無いと、実装の意図が読めない。expo
 適用範囲は `src/**` のみ。`client/**` は対象外（`client-is-not-product-code` の扱いと同じく、v3の
 `client/**` は product code ではない）。
 
+この書式は、新規に書くコメントと変更するコメントに適用する。既存のコメント（`@return` を使うものを含む）は、
+その箇所を変更しないかぎり一括では書き換えない。
+
 ## 形式: JSDoc + `@param` / `@returns` タグを使う
 
 - 関数・method・class・interface の説明は `/** ... */` の JSDoc block とする。行末 `//` の単発コメントは

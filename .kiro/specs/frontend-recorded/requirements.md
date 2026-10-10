@@ -523,7 +523,5 @@ Recorded は録画済み一覧、詳細、watch/streaming/upload への入口を
    icon、pagination を含めて背景と文字/icon の contrast を維持する。
 5. Recorded list の table layout は dark theme で table container、header、row、cell、menu cell が App Shell table dark
    token を継承し、white table surface や black cell foreground を残してはならない。
-6. Recorded upload form の required label（`放送局※`、`日付※`、`長さ※`、`番組名※`）、MUI select（`file type`、
-   `directory` など）、date dialog（`日付`、`時刻`）、video file control（`name`、`video file` など）は、light
-   theme と dark theme のそれぞれで、次の visible text を表示し、48px height の select/input 密度を維持し、text は
-   contrast 比 4.5 以上、icon/border など非 text 要素は 3 以上を維持する。
+6. Recorded upload form（`/recorded/upload`）の required label、select、date dialog、video file control の light/dark
+   theme での見た目は `frontend-storages-upload` の要求 4（dark theme coverage）が所有し、本 spec は規定しない。

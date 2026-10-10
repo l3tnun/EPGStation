@@ -16,7 +16,7 @@ Recording / Encode の visual regression は、録画中 list、エンコード 
 | encode-list | `/encode` loaded | 1440x900 | `encodeMixedList` | encode progress、queue state、cancel action が stable row/card height を保つ。 |
 | encode-state-variants | `/encode` failed/completed optional states | 1440x900 | `encodeMixedList` | running/waiting を主要表示としつつ、failed/completed fixture が表示対象外または補助表示として明示される。 |
 | encode-empty-blank | `/encode` running/waiting empty | 1440x900 | `encodeEmpty` | main content は空で、`エンコード中`、`待機中`、empty copy、placeholder container を表示しない。 |
-| encode-cancel-dialog | cancel dialog open | 1440x900 | `encodeCancelTargets` | cancel dialog の文言と action row が max width 内に収まり、screenshot 未取得の bulk cancel state を mock で確認できる。 |
+| encode-cancel-dialog | cancel dialog open | 1440x900 | `encodeCancelTargets` | cancel dialog の文言と action row が max width 内に収まり、bulk cancel の状態を mock で確認できる。 |
 | recording-empty-error | `/recording` empty/error | 1440x900 | `recordingEmpty`, `recordingError` | empty presentation と snackbar が App Shell title や pagination 領域を押し出さない。 |
 | recording-encode-dark | `/recording` and `/encode` dark theme | 1440x900 + 390x844 | `recordingMixedList`, `encodeMixedList`, `settingsDarkTheme` | recording desktop table container、recording mobile card、encode running/waiting item、list/progress/dialog/menu/pagination の contrast が保たれ、white surface fallback と empty encode state の light surface が残らない。 |
 

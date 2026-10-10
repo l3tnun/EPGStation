@@ -80,7 +80,7 @@ On Air は放映中番組の一覧、broadcast-wave tab/list、program dialog、
 21. channel が指定されていないとき、EPGStation フロントエンドは `視聴` button を無効化し、クリックしても API 呼び出しや route 遷移を行わない。dialog の内容（select、switch、`視聴`/`キャンセル`/`番組表` button を含む card 自体）は channel の有無に関わらず常に描画され、`視聴` button だけが channel 未指定または候補 0 件のときに無効化される。
 22. stream select dialog の `外部アプリで開く` switch は、切り替え時に background-color と位置を 150ms の transition で変化させる。
 23. live watch page の info card は Socket.IO `updateStatus` 通知を受けたとき、`GET /streams` を再 fetch する。
-24. 設定 `isPreferredPlayingLiveM2TSOnWeb` は `M2TS` の遷移先を変化させない。同設定は Settings 画面の `放映中` section に compatibility control として存在するのみで、live stream handoff の挙動を読んで変える consumer を持たない。`M2TS-LL` はこの設定に依らず常に live watch route へ遷移する。
+24. 設定 `isPreferredPlayingLiveM2TSOnWeb` は `M2TS` の遷移先を変化させない。同設定は Settings 画面の `放映中` section に、mpegts live 再生に対応する browser でだけ表示される compatibility control として存在するのみで、live stream handoff の挙動を読んで変える consumer を持たない。`M2TS-LL` はこの設定に依らず常に live watch route へ遷移する。
 25. stream select dialog で配信方式（type）を変更したとき、EPGStation フロントエンドは新しい配信方式の画質候補に現在選択中の mode index が存在する場合はその mode を維持し、存在しない場合だけ mode を 0 に補正する。
 
 ### 要求 4: live playback と dark theme

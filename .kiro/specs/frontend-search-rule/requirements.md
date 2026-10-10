@@ -233,7 +233,9 @@ Search / Rule は番組検索、検索結果からの予約/rule 作成、rule l
     height - offset で算出する。
     `useSearchRuleRouteEffects.ts` は `needsResultScrollRef.current` を rule-edit-preload
     分岐（設定値で gate）、user submit（`useSearchRuleActions.ts`、常に true）、'search' mode の
-    `didRouteSearchChange` 分岐（`routeState.shouldAutoSearch` が true の場合）の 3 箇所で設定する。
+    `didRouteSearchChange` 分岐（`routeState.shouldAutoSearch` が true の場合）の 3 箇所で設定し、さらに初回 mount の初期値
+    （`useSearchRuleFormState.ts`。復元した page info が無く、'search' mode で `routeState.shouldAutoSearch` が true のとき true）でも
+    true にする。
     test: `searchRule.ruleEdit.spec.test.tsx` の `[AC 2.22] auto-scrolls a query-driven
     /search?keyword=`。
 23. `/reserves`、`/recorded`、`/recorded/details`、program dialog、rule list など別 screen から
@@ -386,7 +388,7 @@ Search / Rule は番組検索、検索結果からの予約/rule 作成、rule l
     `RuleListRow.tsx` は edit mode 中、switch の grid track 幅を保った空 `<span aria-hidden>` に
     置き換え、有効化/無効化操作と選択操作が同一行で競合しないようにする。
 17. bulk delete dialog は `選択した <total> 件のルールを削除しますか。` を表示する。
-18. bulk delete dialog を 0 件選択で開いたとき、EPGStation フロントエンドは dialog を閉じ、`ルールを選択してください。`
+18. 0 件選択で一括削除を実行したとき、EPGStation フロントエンドは bulk delete dialog を開かず、`ルールを選択してください。`
     を snackbar で通知する。
 19. bulk delete 成功時は `選択したルールを削除しました。`、一部または全件失敗時は `一部ルールの削除に失敗しました。`
     を snackbar で通知する。

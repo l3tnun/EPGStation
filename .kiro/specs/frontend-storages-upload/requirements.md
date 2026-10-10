@@ -77,7 +77,7 @@ Storages / Recorded Upload は storage usage view と録画済み metadata/uploa
 16. Recorded Upload form は desktop / mobile のどちらでも required field、video-file block、FAB、reset/upload
     action が重ならず、video-file block 追加で既存 input の表示順を変えない。
 17. upload form の text-like field は clearable
-    相当として、`日付※`、`開始日時`、`長さ※`、`番組名※`、`概要`、`詳細`、video block `name` / `sub directory`
+    相当として、`日付※`、`長さ※`、`番組名※`、`概要`、`詳細`、video block `name` / `sub directory`
     の non-empty enabled state で field 右端に clear button を表示し、押下で該当 field だけを空にする。file input、Rule
     autocomplete の内部 input は対象外とする。select のうち `channel`、`genre`、`sub genre` は `AppSelect`
     として、non-empty enabled state で clear action を表示し、押下で該当 select value だけを空にする。

@@ -362,11 +362,11 @@ stateDiagram-v2
 `stream{id}.m3u8`へ完全一致させ、媒体成果物も`stream{id}`の直後が数字ではないものだけを同じ
 `HLSFileDeleterModel.listExact()`で選ぶ。したがって`stream1`のready判定へ`stream10`のsegmentを数えない。この二条件を満たし
 た時点でreadyとする。子playlistと字幕playlistはreadyの必須条件ではなく、字幕playlistが利用できる場合だけ親playlistへ字幕
-情報を反映する。準備確認自体に全体deadlineは設けず、明示停止、15秒のkeep期限、または配信側終了条件まで続ける。
+情報を反映する。開始と停止はそれぞれ、共有の実行管理（`getExecution`）の順番待ちを一度通る（優先度は開始・通常停止が1、強制停止が10）。準備確認自体に全体deadlineは設けず、明示停止、15秒のkeep期限、または配信側終了条件まで続ける。
 
 ライブHLSは変換または放送受信の終了で停止する。録画HLSはファイル生成終了後も、明示停止またはkeep途絶まで配信情報と生成済
 み成果物を保持する。存在しないstreamのstopは成功扱い、存在しないstreamのkeepは失敗とする。状態変化は関係機能へ通知する。
-全配信停止は要求受付時点の管理中一覧を走査し、一件ずつ停止を要求する。直接接続のcloseはその接続に対応する配信を停止す
+全配信停止は要求受付時点の管理中一覧を走査し、一件ずつ強制停止の優先度で停止を要求する。直接接続のcloseはその接続に対応する配信を停止す
 る。
 
 ## 8. HLS停止と成果物削除
@@ -729,7 +729,8 @@ Requirement 9 Acceptance Criterion 9（server全体の単体testだけで`src/**
 
 | 機能                                       | 主な実装位置                                                                                      | 責任                                                                                                                                                                                   |
 | ------------------------------------------ | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 配信一覧、ID、start/stop/keep              | `src/model/service/stream/manager/StreamManageModel.ts`                                           | cursor、停止中ID、起動時予約、opaque writer handle                                                                                                                                     |
+| 配信一覧、start/stop/keep                  | `src/model/service/stream/manager/StreamManageModel.ts`                                           | 配信一覧、start/stop/keep、opaque writer handle                                                                                                                                     |
+| ID割当（cursor、停止中ID、起動時予約）     | `src/model/service/stream/manager/HlsStreamIdAllocator.ts`                                        | `IStreamIdAllocator`の実装。巡回cursor、停止中IDの除外、起動時走査で見つけた成果物のID予約                                  |
 | 共通HLS readiness/keep                     | `src/model/service/stream/base/StreamBaseModel.ts`                                                | 親playlist・媒体成果物確認、15秒keep                                                                                                                                                   |
 | ライブ配信                                 | `src/model/service/stream/base/LiveStreamBaseModel.ts`                                            | 対応形式、視聴command、公開HLS path、30秒開始期限、encode process stdinのerror記録とexit code/signalの記録                                                                             |
 | 録画ファイル再生source provider | `src/model/operator/recorded/{IRecordedPlaybackSourceProvider,RecordedPlaybackSourceProvider}.ts` | recorded ID予備照会、全情報再読取、direct/reader variantと採用前整理を所有する                                                                                                         |

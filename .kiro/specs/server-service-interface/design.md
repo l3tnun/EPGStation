@@ -489,7 +489,7 @@ interface UploadRuntimeSettings {
 
 ### 10.2 実行枠
 
-Upload Admission Controller は process 内の使用中件数だけを保持する。
+Upload Admission Controller は process 内の使用中件数だけを保持する。次の `UploadAdmission`・`UploadRuntimeSettings`・`UploadTempOwnership` は責務を示す概念上の型で、実装にこの名前の型は無い（実行枠は `UploadAdmissionController`、設定は `Configuration` の `concurrentUploadNum`・`uploadReceiveTimeoutMs`、一時 file の所有は incoming／adopted の directory の別が担う）。`UploadRequestFinalizer` も概念上の型で、実装の終了処理は class の `finishOnce` が boolean を返す。
 
 ```typescript
 interface UploadAdmission {
@@ -829,6 +829,7 @@ sequenceDiagram
 -   各 delayed callback は対応する timer state を一回だけ `null` へ戻してから、構成済み Socket.IO destination を順に処理
     する。各 destination の `emit`/`send` 呼出しから同期的または直接観測可能な失敗が得られた場合は、その失敗を運用ログへ
     記録し、残りの destination を継続する。
+-   Socket.IO が未 initialize（構成済み destination が 0 件）のまま delayed callback が走ったときは、timer state を戻した後で `must call SocketIoManageModel initialize` の例外を投げる。
 -   送信失敗に対する retry、永続化、再接続後 replay、業務状態 rollback は0回であり、process fatal へ昇格しない。timer
     state の解放も一回だけである。Socket.IO が配送 acknowledgement を返さない非同期配送結果を、新しい成功・失敗契約へ変
     更しない。
@@ -1069,7 +1070,7 @@ AC単位の対応は、重複する第二の一覧を持たず、19節の74行�
 | ---------------------------- | ------------------------------------------------------ |
 | `src/model/IConfigFile.ts`   | 同時数と受信期限を内部設定として保持する。             |
 | `src/model/Configuration.ts` | 二つの省略値と各許容範囲の検証を適用する。             |
-| `config/config.yml.template` | 二つの設定の用途、既定値、および再起動反映を説明する。 |
+| `docs/conf-manual.md`        | 二つの設定の用途、既定値、および再起動反映を説明する。 |
 
 ## 17. Source mapping
 
@@ -1119,7 +1120,7 @@ directory には operation module だけを置き、route から使う補助 mod
 
 Requirements 1から8の69 ACは69個のcanonical `unittest/spec` caseへ一対一に割り当てる。Requirement 9の5 ACはbehavior case
 へ混ぜず、spec case 一覧、具体的`unittest/imp`結果、matrix、HTTP/IPC/filesystem/process integration、
-server 全体の C0/C1 の5層に分ける。各層の locator は次のとおりである。
+server 全体の C0/C1 の5層に分ける。各層の locator は次のとおりである。locator は代表の file であり、同じ層の補助 file も `SI-` の ID を持つ。test 名は `PC#SI-x` の形ではなく、各 spec test の file 内にある `caseLocator` の表（ID と case の対応）から辿る。
 
 | 略号  | locator                                                                   | 証拠                                                           |
 | ----- | --------------------------------------------------------------------------------- | -------------------------------------------------------------- |
@@ -1210,7 +1211,7 @@ case の突き合わせ、`SI-9.3`は本表そのもの、`SI-9.5`は共有 comm
 | SI-7.5  | R7.5  | `RT#SI-7.5`         | S/G   | T・二event                           | Socket.IO payload             | なし                | payload argument 0 |
 | SI-7.6  | R7.6  | `RT#SI-7.6`         | S/I/G | T/D・disconnect/reconnect            | timer/socket                  | client不在          | persistence/replay/retry 0 |
 | SI-8.1  | R8.1  | `LS#SI-8.1`         | S/G   | B・HTTP設定有無                      | listener/process              | bind失敗            | 設定portだけ開始、bind失敗は記録して例外送出 |
-| SI-8.2  | R8.2  | `LS#SI-8.2`         | S/G   | B・HTTPS三設定                       | TLS listener/process          | key/cert/bind失敗   | 設定HTTPS開始 |
+| SI-8.2  | R8.2  | `LS#SI-8.2`         | S/G   | B・HTTPS三設定                       | TLS listener/process          | なし（R8.2 は失敗時の挙動を定めない） | 設定HTTPS開始 |
 | SI-8.3  | R8.3  | `LS#SI-8.3`         | S/G   | B・CA有無/証明書                     | TLS handshake                 | 無効client cert     | requestCert/rejectUnauthorized |
 | SI-8.4  | R8.4  | `LS#SI-8.4`         | S/G   | C/B・CORS on/off                     | middleware/HTTP               | origin差            | on時Web/API全origin |
 | SI-8.5  | R8.5  | `LS#SI-8.5`         | S/G   | C/T・Socket.IO接続                   | socket CORS                   | origin差            | 全origin許可 |

@@ -107,7 +107,7 @@ sequenceDiagram
 
 1. 運用ログを初期化し、設定を取得する。
 2. root起動なら、`gid`が`null`または`undefined`のときだけ`video` groupへ切り替え、空文字列を含む文字列または数値が設定されているときはその値のgroupへ切り替える。設定されたuserがあればuserも切り替える。
-3. 切替後の実行主体で予約・録画管理用log設定を読み込む。
+3. root起動かどうかに関わらず、実行主体の切替え処理の後に予約・録画管理用log設定を読み込む（root以外では切替えず、現在の実行主体で読み込む）。
 4. チューナーサーバーの状態取得を試し、失敗中は1秒待って繰り返す。
 5. 成功後にDB接続確認へ進み、失敗中は1秒待って繰り返す。
 6. Workflow providerのprocess-local event binding入口を一回呼ぶ。Workflowはevent-and-hook-delivery所有の引数なし

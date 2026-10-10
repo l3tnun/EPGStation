@@ -353,8 +353,12 @@ interface OldBackupData {
     dbRevisionInfo: { revision: number };
 }
 
-type RuleIndex = ReadonlyMap<number, number>;
-type RecordedIndex = ReadonlyMap<number, number>;
+interface RuleIndex {
+    [oldRuleId: number]: RuleId;
+}
+interface RecordedIndex {
+    [oldRecordedId: number]: RecordedId;
+}
 ```
 
 process 内 object で index を保持してよい。index は DB へ永続化せず、失敗または process 終了で失われる。

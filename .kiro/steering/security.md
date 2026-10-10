@@ -16,25 +16,23 @@
 
 ## 書いてよいもの
 
-placeholder、環境変数名、記号 root のみ使用する。
+placeholder と環境変数名のみ使用する。
 
 ```text
-EPGSTATION_MIRAKURUN_URL=<mirakurun-url>
-EPGSTATION_FFMPEG_PATH=<ffmpeg-path>
-EPGSTATION_FFPROBE_PATH=<ffprobe-path>
-EPGSTATION_CURRENT_UI_URL=<current-ui-url>
-FRONTEND_APP_ROOT=<frontend-app-root>
+EPGSTATION_CURRENT_UI_URL=<current-epgstation-ui-url>
+EPGSTATION_IOS_MAC_SSH_HOST=<mac-ssh-host>
+EPGSTATION_ANDROID_SDK_ROOT=<android-sdk-root>
 ```
 
 ## ローカル専用ファイル
 
-実環境値や実データを含む可能性があるものは git に含めない。
+実環境値や実データを含む可能性があるものは git に含めない（`.gitignore` で除外している）。
 
 - `.env.local`
-- `config/config.yml.local`
-- 一時調査資料配下の local notes。
-- 一時調査資料配下の research screenshots。
+- `config/` 配下の設定 file（`*.template` と `*.sample.yml` を除く）
+- `client/device/.device-lab.local.env`（雛形は `client/device/.device-lab.local.env.template`）
+- `client/device/artifacts/`
 
 ## Verification Gate
 
-docs、specs、test fixture、snapshot を追加または更新した後は、secrets scan を実行する。検出された URL / path / runtime 値が policy 文言や placeholder ではなく実値である場合、tracked file から削除する。
+docs、specs、test fixture、snapshot を追加または更新した後は、secrets scan を実行する。scan は `.githooks/pre-commit` が呼ぶ `tools/check-tracked-secrets.py`（private network host と credential）と `tools/check-betterleaks-scan.py`（secret と個人情報）である。検出された URL / path / runtime 値が policy 文言や placeholder ではなく実値である場合、tracked file から削除する。
