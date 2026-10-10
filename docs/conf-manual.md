@@ -621,6 +621,8 @@ subDirectory: subdir
 | -------- | --------------------------- | ---- |
 | string[] | [ 'http://localhost:8888' ] | no   |
 
+省略したときは、`port` を書いていれば `http://localhost:<port>` を使う。`port` を書かず `https` だけで待ち受けるときは、`https://localhost:<https の port>` を使う。
+
 ```yaml
 apiServers:
     - http://localhost:8888

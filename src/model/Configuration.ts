@@ -154,7 +154,11 @@ class Configuration implements IConfiguration {
 
         // set apiServes
         if (newConfig.apiServers.length === 0) {
-            newConfig.apiServers.push(`http://localhost:${newConfig.port}`);
+            if (typeof newConfig.port !== 'undefined') {
+                newConfig.apiServers.push(`http://localhost:${newConfig.port}`);
+            } else if (typeof newConfig.https !== 'undefined') {
+                newConfig.apiServers.push(`https://localhost:${newConfig.https.port}`);
+            }
         }
 
         // subDirectory のパス整形
