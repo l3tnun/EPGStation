@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { installAppShellApiMocks } from './support/appShellMocks'
+import { pickDateTime } from './support/dateTimePicker'
 import { getActiveRouteScrollY } from './support/routeScroll'
 import {
   createSearchRuleRequestLog,
@@ -60,7 +61,7 @@ test('keeps Search period dialogs, submit scroll, result-link scroll, and geomet
   await page.getByRole('textbox', { name: '開始', exact: true }).click()
   const startDialog = page.getByRole('dialog', { name: '期間 開始' })
   await expect(startDialog).toBeVisible()
-  await startDialog.getByLabel('開始日時').fill('2026-05-05T09:00')
+  await pickDateTime(startDialog, { year: 2026, month: 5, day: 5, hour: 9, minute: 0 })
   await startDialog.getByRole('button', { name: '設定' }).click()
   await expect(startDialog).toBeHidden()
   await expect(
@@ -73,7 +74,7 @@ test('keeps Search period dialogs, submit scroll, result-link scroll, and geomet
     .click()
   const endDialog = page.getByRole('dialog', { name: '期間 終了' })
   await expect(endDialog).toBeVisible()
-  await endDialog.getByLabel('終了日時').fill('2026-05-05T12:00')
+  await pickDateTime(endDialog, { year: 2026, month: 5, day: 5, hour: 12, minute: 0 })
   await endDialog.getByRole('button', { name: '設定' }).click()
   await expect(endDialog).toBeHidden()
   await expect(

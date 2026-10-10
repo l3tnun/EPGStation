@@ -37,7 +37,8 @@ test('adds and edits Manual Reserve with deterministic API payloads', async ({ p
   // Type the replacement value keystroke by keystroke (select-all then type over the existing
   // value) instead of `fill()`, which sets the whole value in one shot and would not catch a
   // regression where the field only accepts a single, atomic, fully-formed string.
-  await startInput.click()
+  // click は日時 picker dialog を開くので、keyboard で入力するときは focus だけを当てる。
+  await startInput.focus()
   await startInput.selectText()
   await page.keyboard.type('2026-05-07 10:00', { delay: 30 })
   await expect(startInput).toHaveValue('2026-05-07 10:00')
