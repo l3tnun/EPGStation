@@ -33,6 +33,20 @@ const mutate = [
     'src/util/DateUtil.ts',
     'src/util/ChannelUtil.ts',
     'src/util/SubDirectoryUtil.ts',
+    // 録画済みの管理・upload の取り込み・thumbnail・外部 command・file 操作
+    'src/model/operator/recorded/RecordedManageModel.ts',
+    'src/model/operator/recorded/RecordedUploadAdoptionModel.ts',
+    'src/model/operator/thumbnail/ThumbnailManageModel.ts',
+    'src/model/operator/externalCommand/ExternalCommandManageModel.ts',
+    'src/util/FileUtil.ts',
+    // 削除と起動の workflow
+    'src/model/workflow/ParentUserDeletionCoordinator.ts',
+    'src/model/workflow/ParentVideoFileDeletionCoordinator.ts',
+    'src/model/workflow/RuntimeStartupWorkflowPort.ts',
+    'src/model/workflow/ServiceChildUserDeletionCoordinator.ts',
+    'src/model/workflow/StartupContinuationCoordinator.ts',
+    // upload の受け付け
+    'src/model/service/upload/UploadAdmissionController.ts',
 ];
 
 /** @type {import('@stryker-mutator/api/core').PartialStrykerOptions} */
