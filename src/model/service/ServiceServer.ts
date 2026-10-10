@@ -577,13 +577,14 @@ class ServiceServer implements IServiceServer {
             });
 
             // socket.io
-            if (typeof this.config.https.socketioPort === 'undefined') {
+            const httpsSocketioPort = this.config.https.socketioPort;
+            if (typeof httpsSocketioPort === 'undefined') {
                 sokcetioServers.push(httpsServer);
             } else {
                 const socketIOServer = https.createServer(option);
                 sokcetioServers.push(socketIOServer);
-                socketIOServer.listen(this.config.https.socketioPort, () => {
-                    this.log.system.info(`https SocketIO listening on ${this.config.socketioPort}`);
+                socketIOServer.listen(httpsSocketioPort, () => {
+                    this.log.system.info(`https SocketIO listening on ${httpsSocketioPort}`);
                 });
             }
         }
