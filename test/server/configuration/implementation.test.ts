@@ -357,6 +357,83 @@ describe('server configuration implementation characterization', () => {
         expect(watchFile).toHaveBeenCalledTimes(1);
     });
 
+    it('[CFG-1.1-STREAM-KEEP-EXPLICIT] keeps every stream child the configuration writes instead of the template value', () => {
+        const children = (prefix: string, names: readonly string[]): Record<string, unknown> =>
+            Object.fromEntries(names.map(name => [name, [{ name: `${prefix}-${name}` }]]));
+        const explicitStream = (): Record<string, any> => ({
+            live: { ts: children('explicit-live', ['m2ts', 'm2tsll', 'webm', 'mp4', 'hls']) },
+            recorded: {
+                ts: children('explicit-recorded-ts', ['webm', 'mp4', 'hls']),
+                encoded: children('explicit-recorded-encoded', ['webm', 'mp4', 'hls']),
+            },
+        });
+        const templateStream = {
+            live: { ts: children('template-live', ['m2ts', 'm2tsll', 'webm', 'mp4', 'hls']) },
+            recorded: {
+                ts: children('template-recorded-ts', ['webm', 'mp4', 'hls']),
+                encoded: children('template-recorded-encoded', ['webm', 'mp4', 'hls']),
+            },
+        };
+        const configuration = createConfiguration();
+        configuration.templateConfig = { stream: templateStream };
+
+        const formatted = configuration.formatConfig({ ...cloneCandidate(), stream: explicitStream() });
+
+        expect(formatted.stream).toEqual(explicitStream());
+    });
+
+    it.each([
+        ['no stream section', {}],
+        ['an empty stream section', { stream: {} }],
+        ['stream sections without ts and encoded', { stream: { live: {}, recorded: {} } }],
+    ])(
+        '[CFG-1.1-STREAM-TEMPLATE-PARTIAL] leaves stream children undefined when the template has %s',
+        (_label, template) => {
+            const configuration = createConfiguration();
+            configuration.templateConfig = template;
+
+            const formatted = configuration.formatConfig({
+                ...cloneCandidate(),
+                stream: { live: { ts: {} }, recorded: { ts: {}, encoded: {} } },
+            });
+
+            const stream = formatted.stream as Record<string, any>;
+            for (const target of [stream.live.ts, stream.recorded.ts, stream.recorded.encoded]) {
+                expect(Object.values(target).filter(value => value !== undefined)).toEqual([]);
+            }
+            expect(Object.keys(stream.live.ts).sort()).toEqual(['hls', 'm2ts', 'm2tsll', 'mp4', 'webm']);
+            expect(Object.keys(stream.recorded.ts).sort()).toEqual(['hls', 'mp4', 'webm']);
+            expect(Object.keys(stream.recorded.encoded).sort()).toEqual(['hls', 'mp4', 'webm']);
+        },
+    );
+
+    it('[CFG-1.1-STREAM-ABSENT] does not create a stream section when the configuration omits it although a template exists', () => {
+        const configuration = createConfiguration();
+        configuration.templateConfig = { stream: { live: { ts: { m2ts: [{ name: 'template-m2ts' }] } } } };
+        const candidate = cloneCandidate();
+        delete candidate.stream;
+
+        const formatted = configuration.formatConfig(candidate);
+
+        expect(formatted.stream).toBeUndefined();
+    });
+
+    it('[CFG-1.1-URLSCHEME-NULL-CATEGORY] fills a urlscheme category written as null from the defaults and keeps the others', () => {
+        const configuration = createConfiguration();
+        const kept = { ios: 'explicit-video-ios' };
+
+        const formatted = configuration.formatConfig({
+            ...cloneCandidate(),
+            urlscheme: { m2ts: null, video: kept, download: null },
+        });
+
+        const urlscheme = formatted.urlscheme as Record<string, unknown>;
+        const defaults = Configuration.DEFAULT_VALUE.urlscheme as Record<string, unknown>;
+        expect(urlscheme.m2ts).toEqual(defaults.m2ts);
+        expect(urlscheme.video).toEqual(kept);
+        expect(urlscheme.download).toEqual({});
+    });
+
     it('[CFG-1.1-PATH-NORMALIZATION] replaces the first root marker and removes one trailing separator', () => {
         const configuration = createConfiguration();
         const input = `%ROOT%${sep}archive%ROOT%${sep}${sep}`;

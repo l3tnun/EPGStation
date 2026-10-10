@@ -42,6 +42,39 @@ describe('configuration filesystem port and template reading', () => {
         expect(listener).not.toHaveBeenCalled();
     });
 
+    it('[CFG-8.2] logs a missing template as a system warning and starts with the configuration alone', () => {
+        const templateMissing = Object.assign(new Error('synthetic template missing'), { code: 'ENOENT' });
+        const log = {
+            stream: { warn: vi.fn() },
+            system: { error: vi.fn(), fatal: vi.fn(), info: vi.fn(), warn: vi.fn() },
+        };
+        const fileAccess = {
+            configPath: 'synthetic-config.yml',
+            read: vi.fn(),
+            readSync: vi.fn((targetPath: string) => {
+                if (targetPath === 'synthetic-template.yml') {
+                    throw templateMissing;
+                }
+                return 'port: 48100\n';
+            }),
+            templatePath: 'synthetic-template.yml',
+            unwatch: vi.fn(),
+            watch: vi.fn(),
+        };
+        const exit = vi.spyOn(process, 'exit').mockImplementation(() => undefined as never);
+
+        const configuration = new Configuration({ getLogger: () => log }, fileAccess) as {
+            getConfig(): { port: number };
+        };
+
+        expect(log.system.warn).toHaveBeenCalledExactlyOnceWith('synthetic-template.yml is not found');
+        expect(log.system.fatal).not.toHaveBeenCalled();
+        expect(log.stream.warn).not.toHaveBeenCalled();
+        expect(exit).not.toHaveBeenCalled();
+        expect(configuration.getConfig().port).toBe(48100);
+        expect(fileAccess.watch).toHaveBeenCalledOnce();
+    });
+
     it('[CFG-8.2] logs an unreadable template through the stream warning and still fails on the missing configuration', () => {
         const templateFailure = Object.assign(new Error('synthetic template permission failure'), { code: 'EACCES' });
         const configFailure = Object.assign(new Error('synthetic config missing'), { code: 'ENOENT' });
