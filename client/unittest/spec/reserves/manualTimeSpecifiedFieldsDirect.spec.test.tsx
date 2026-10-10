@@ -1,10 +1,11 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ManualTimeSpecifiedFields } from '@/features/reserves/components/ManualTimeSpecifiedFields'
 import { createInitialFormState } from '@/features/reserves/lib/manualReserveForm'
 import {
   MONDAY_FIRST_WEEKDAYS,
   calendarWeekdayHeaders,
+  fixCurrentDate,
   pickCalendarDay,
 } from '../shared/dateTimePickerTestKit'
 
@@ -263,6 +264,10 @@ describe('ManualTimeSpecifiedFields clear button edges', () => {
 })
 
 describe('ManualTimeSpecifiedFields date-time picker dialog', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   function renderFields(options: { disabled?: boolean } = {}) {
     const setValue = vi.fn()
     const formState = {
@@ -328,6 +333,32 @@ describe('ManualTimeSpecifiedFields date-time picker dialog', () => {
 
     expect(setValue).toHaveBeenLastCalledWith('timeSpecifiedOption.startAt', null)
     expect(screen.getByLabelText('開始')).toHaveValue('')
+  })
+
+  it('[AC 4.23] picks a day for the end field from an empty value and clears an existing end value', async () => {
+    fixCurrentDate('2026-05-01T12:00:00+09:00')
+    const { setValue } = renderFields()
+
+    fireEvent.click(screen.getByLabelText('終了'))
+    const endDialog = await screen.findByRole('dialog', { name: '時刻 終了' })
+    pickCalendarDay(endDialog, 20)
+    fireEvent.click(within(endDialog).getByRole('button', { name: '設定' }))
+
+    expect(setValue).toHaveBeenLastCalledWith(
+      'timeSpecifiedOption.endAt',
+      Date.parse('2026-05-20T00:00:00+09:00'),
+    )
+    expect(screen.getByLabelText('終了')).toHaveValue('2026-05-20 00:00')
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog', { name: '時刻 終了' })).not.toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByLabelText('終了'))
+    const reopened = await screen.findByRole('dialog', { name: '時刻 終了' })
+    fireEvent.click(within(reopened).getByRole('button', { name: 'クリア' }))
+
+    expect(setValue).toHaveBeenLastCalledWith('timeSpecifiedOption.endAt', null)
+    expect(screen.getByLabelText('終了')).toHaveValue('')
   })
 
   it('[AC 4.23] does not open the dialog while the fields are disabled', () => {
