@@ -250,7 +250,7 @@ HLSへ渡す。直接再生・downloadの再生位置は常に0であり、動�
 ば追記位置から読み続け、不変ならreaderを終了し、現在の読取位置より縮小していれば先頭から読み直す。readerのdestroyでは末
 尾確認timerを取り消し、開いたfile handleを閉じる。これはreader内部の資源回収であり、公開API、IPC、DB、設定、HLS公開
 path、ログ契約を変更しない。`RecordedStreamBaseModel`がsourceを受け取らずに自身でDBから解決する経路では、`src/lib/TailStream.ts`の
-追尾readerを使う。
+追尾readerを使う。この経路は、`StreamManageModel.startRecorded()`が常にsourceを渡すため、本番の開始手順からは通らず、単体testが`RecordedStreamBaseModel`を直接呼んで確かめる。
 
 開始時は`recordedPlaybackSource.resolveRecordedId(videoFileId)`だけを呼び、recorded IDを得るまでsourceを開かない。この予
 備照会はRecorded Content providerが所有し、本機能はDBを直接読まない。recorded IDを得た後、
