@@ -1405,7 +1405,7 @@ describe('ライブ配信の既定commandは-reを持たず、録画配信の既
 const acceptanceCriteriaCounts = { 1: 7, 2: 4, 3: 3, 4: 5, 5: 4, 6: 4, 7: 12 } as const;
 
 const acceptanceCriteriaTrace: Readonly<Record<string, readonly string[]>> = {
-    '1.1': ['CFG-1.1-YAML-DEFAULTS', 'CFG-1.1-ENV-EXPANSION', 'CFG-1.1-ENV-LITERAL', 'CFG-1.1-ENV-LOAD-ONLY', 'CFG-1.1-ENV-NUMERIC-FIELD'],
+    '1.1': ['CFG-1.1-YAML-DEFAULTS', 'CFG-1.1-ENV-EXPANSION', 'CFG-1.1-ENV-LITERAL', 'CFG-1.1-ENV-LOAD-ONLY', 'CFG-1.1-ENV-NUMERIC-FIELD', 'CFG-1.1-MERGE-KEY', 'CFG-1.1-MERGE-KEY-MULTIPLE', 'CFG-1.1-MERGE-KEY-EXPLICIT', 'CFG-1.1-MERGE-KEY-ARRAY', 'CFG-1.1-MERGE-KEY-ENV'],
     '1.2': ['CFG-1.1-YAML-DEFAULTS', 'CFG-1.1-LEGACY-SCHEDULING-DEFAULTS'],
     '1.3': ['CFG-1.1-STREAM-TEMPLATE', 'CFG-1.1-STREAM-PARENT'],
     '1.4': ['CFG-1.1-PATH-NORMALIZATION'],

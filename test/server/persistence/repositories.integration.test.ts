@@ -124,6 +124,10 @@ describe('repository contracts through real SQLite and MySQL drivers', () => {
             await db.ProgramDB.insert(index, [tunerProgram(101, 11), tunerProgram(102, 11)], [11]);
             await expect(db.ProgramDB.findId(404)).resolves.toBeNull();
             await expect(db.ProgramDB.findChannelIdAndTime(11, 101_000)).resolves.toMatchObject({ id: 101 });
+            // 前の番組（101: 101_000〜102_000）の終了時刻と次の番組（102）の開始時刻が同じ 102_000 のとき、その時刻は次の番組に当たる。
+            await expect(db.ProgramDB.findChannelIdAndTime(11, 101_999)).resolves.toMatchObject({ id: 101 });
+            await expect(db.ProgramDB.findChannelIdAndTime(11, 102_000)).resolves.toMatchObject({ id: 102 });
+            await expect(db.ProgramDB.findChannelIdAndTime(11, 103_000)).resolves.toBeNull();
             const schedule = await db.ProgramDB.findSchedule({
                 channelId: 11,
                 startAt: 100_000,
