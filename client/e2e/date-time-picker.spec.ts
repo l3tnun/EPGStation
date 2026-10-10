@@ -590,3 +590,48 @@ test.describe('picker columns scroll from the first touch or wheel', () => {
     })
   }
 })
+
+test.describe('picker selects year, month and day from the calendar header', () => {
+  const sizes: Array<[number, number]> = [
+    [375, 548],
+    [320, 460],
+    [667, 320],
+    [1280, 800],
+  ]
+  for (const screen of pickerScreens) {
+    for (const [width, height] of sizes) {
+      test(`${screen.name} picks 2027 March 15 ${width}x${height}`, async ({ page }) => {
+        await page.setViewportSize({ width, height })
+        const field = await screen.open(page)
+        await field.click()
+        const dialog = page.getByRole('dialog', { name: screen.dialogName })
+        await expect(dialog).toBeVisible()
+        await dialog.getByRole('tab', { name: '日付を選択' }).click()
+
+        await dialog.getByRole('button', { name: /年選択表示に切り替える/ }).click()
+        await expect(dialog.getByRole('radio', { name: '2027', exact: true })).toBeVisible()
+        await expectDialogDoesNotScroll(dialog)
+        await expectDialogChromeVisible(page, dialog)
+        await dialog.getByRole('radio', { name: '2027', exact: true }).click()
+
+        // 年を選ぶと月の一覧（日本語）が開く。
+        await expect(dialog.getByRole('radio', { name: '12月', exact: true })).toBeVisible()
+        await expect(dialog.getByRole('radio')).toHaveCount(12)
+        await expectDialogDoesNotScroll(dialog)
+        await expectDialogChromeVisible(page, dialog)
+        await expectVisibleInViewport(
+          page,
+          dialog.getByRole('radio', { name: '12月', exact: true }),
+          '12月',
+        )
+        await dialog.getByRole('radio', { name: '3月', exact: true }).click()
+
+        await expect(dialog.getByText('2027年3月', { exact: true })).toBeVisible()
+        await dialog.getByRole('gridcell', { name: '15', exact: true }).click()
+        await dialog.getByRole('button', { name: '設定' }).click()
+        await expect(dialog).toHaveCount(0)
+        await expect(field).toHaveValue(/^2027-03-15[T ]\d\d:\d\d$/)
+      })
+    }
+  }
+})
