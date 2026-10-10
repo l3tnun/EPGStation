@@ -305,6 +305,18 @@ lines をすべて 100% に固定する。
 `client/src` 全体の除外行は 2% 以内とする。これは file をまたぐので lint は検出せず、review で確認する。
 通常の coverage 現状確認は `npm run coverage` を使い、手元の`npm run preflight`の step `client` が `npm run coverage:gate` を実行する。
 
+## Mutation Testing
+
+coverage 100% でも残る「通るだけで何も確かめていない test」を見つけるため、重要な純粋 logic に絞って Stryker（`@stryker-mutator/core`、`@stryker-mutator/vitest-runner`）の mutation testing を手動または定期で流す。`client` で `npm run mutation:client` を実行する。
+
+- 位置づけ: coverage gate の代わりでも、preflight・CI の gate でもない。生き残った mutant は「unit test の追加」「等価・冗長・到達不能として記録」のいずれかで扱う。
+- 対象 test は unit test（`unittest/spec`・`unittest/imp`）だけで、e2e・visual・device は流さない。
+- 対象 file は `client/stryker.client.config.mjs` の `mutate` を正本とする。手動予約の payload 変換（`manualReservePayload.ts`、`manualReserveForm.ts`、`reserveSelection.ts`）と、ルール検索の request・payload 変換（`rulePayload.ts`、`searchRequest.ts`、`inputParsers.ts`、`searchRoute.ts`）。対象を足すときは、component ではなく入力から request・payload・表示値への変換のような純粋 logic に限り、`mutate` と本節を同時に更新する。
+- 設定: `coverageAnalysis: perTest`、`ignoreStatic: true`、`concurrency: 2`。専用の vitest 設定（`vitest.mutation.config.ts`）が、Stryker の sandbox で動かない test（client の外にある file を読む 2 file）を除く。除外の理由は設定の comment に残す。
+- incremental の cache: `client/.artifacts/mutation/incremental.json`（環境変数 `EPGS_MUTATION_INCREMENTAL_FILE` で上書きできる）。git の管理外の手元の cache で、消えたら全 mutant を流し直す。
+- vitest は Stryker vitest-runner と test 名の区切りが一致する版に固定する。vitest の版を変えるときは、`mutation:client` が全 mutant を「test 無しで生存」と報告しないこと（score が 0% にならないこと）を確認する。
+- mutation score の数値の達成だけを目的にした test の追加は、coverage と同じく禁止する。
+
 ## Visual Regression
 
 visual regression は Playwright screenshot assertion と geometry assertion を組み合わせる。Chromium を pixel

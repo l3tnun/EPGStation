@@ -106,6 +106,18 @@ tool、package、script、configurationの追加は、承認済みImplementation
 -   coverageの計測値や未達locationを理由に、product code変更、広い除外、feature-specの一括変更、到達可能性の主張を認可しな
     い。そのようなfollow-upは、対象owner specの通常の承認済みRequirements → Design → Tasksプロセスを経る。
 
+## Mutation Testing
+
+coverageが拾えない「通るだけで何も確かめていないtest」を見つけるため、重要moduleに絞ってStryker（`@stryker-mutator/core`、`@stryker-mutator/vitest-runner`）のmutation testingを手動または定期で流す。
+
+-   位置づけ: coverage gateの代わりでも、preflight・CIのgateでもない。pull requestやreleaseの合否に数えず、生き残ったmutantは「test追加」「等価・冗長・到達不能として記録」「source側の冗長の指摘」のいずれかで扱う。
+-   対象test: 単体testの層（`unittest/spec`と`unittest/imp`）だけ。結合testは流さない（実DB・実processを使うため遅く、Stryker sandboxの複製でも動かない）。
+-   対象file: `stryker.server.config.mjs`の`mutate`を正本とする。予約の競合判定と割り当て（`ReservationManageModel.ts`、`Tuner.ts`）、録画のscheduler（`RecordingScheduleController.ts`、`RecordingCandidateRegistry.ts`）、ルール管理と予約optionの検査（`RuleManageModel.ts`、`ReserveOptionChecker.ts`）、削除・保存の判断（`StorageManageModel.ts`、`StoragePressureDeletionAdapter.ts`、`PreparedDeletionTokenRegistry.ts`）、設定の解釈（`ConfigYaml.ts`、`Configuration.ts`）、file名・日時・channelの処理（`StrUtil.ts`、`DateUtil.ts`、`ChannelUtil.ts`、`SubDirectoryUtil.ts`）の15 file。対象を足すときは、分岐が多く結果が予約・録画・file名に直結するmoduleに限り、`mutate`と本節を同時に更新する。
+-   設定: `coverageAnalysis: perTest`、`ignoreStatic: true`（module先頭の定数表のmutantは全testを流すため除く）、`concurrency: 2`（memoryは1 runにつき約5 GB）。serverのtestはsourceではなくbuild済みの`dist`を読むので、`buildCommand`でmutant入りのsrcからsandboxの`dist`を作り、専用のvitest設定（`vitest.mutation.server.config.ts`）がそれを読む。Stryker実行下のthreads poolで動かないtestはこの専用設定で除外し、除外の理由は設定のcommentに残す。
+-   incrementalのcache: `test/server/.artifacts/mutation/incremental.json`（環境変数`EPGS_MUTATION_INCREMENTAL_FILE`で上書きできる）。versionを管理しない手元のcacheで、消えたら全mutantを流し直す。sourceまたはtestが変わった部分だけが再実行される。ただしtest全体の直列dry-runは毎回走る。
+-   vitestはStryker vitest-runnerとtest名の区切りが一致する版に固定する。vitestの版を変えるときは、`mutation:server`が全mutantを「test無しで生存」と報告しないこと（scoreが0%にならないこと）を確認する。
+-   mutation scoreは品質の傾向を見る指標であり、数値の達成を目的にしたtest追加は、coverageと同じく禁止する。mutantを殺すtestは、そのmutantが表す不具合を外部から観測できるassertionにする。
+
 ## 不一致の分類と処理
 
 仕様、source、test、runtime evidenceが一致しない場合は、次のいずれかへ分類する。

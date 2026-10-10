@@ -85,6 +85,24 @@ PR の `check` job（§7）が実行する検査と同じ。
 - 本物の v3 server に繋ぐ e2e: `cd client && npx playwright test -c e2e/real-server/playwright.config.ts`。6 の build が要る。global setup が server を一時 directory へ compile し、sqlite と手作りの tuner server で 2 つ（root と `subDirectory` の下）起動して、終わったら止める。browser の実行 file を指定するときは `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` に置く。preflight の step にはまだ入っていない。
 - 6 は 7 と 8 の前提。Playwright の `webServer` は build 済みの `dist/` を `vite preview` で配信するだけなので、`client/src` を変えたら 7 / 8 の前に 6 をやり直す。7 と 8 は同じ preview port を使うので同時に実行しない。並行して実行するときは `PLAYWRIGHT_PREVIEW_PORT` で port を分ける。
 
+### mutation testing
+
+重要な module について、単体 test が挙動を確かめているかを Stryker で確かめる。コードに小さな変更（mutant）を入れ、単体 test が失敗すれば「殺した」、全部通れば「生き残った」と数える。coverage が 100% でも、通るだけで何も確かめていない test は生き残りとして見える。手動または定期で流す検査で、preflight・CI には入らない。
+
+| 対象 | command | 設定 | incremental の cache |
+| --- | --- | --- | --- |
+| server | `npm run mutation:server` | `stryker.server.config.mjs`、`vitest.mutation.server.config.ts` | `test/server/.artifacts/mutation/incremental.json` |
+| client | `client/` で `npm run mutation:client` | `client/stryker.client.config.mjs`、`client/vitest.mutation.config.ts` | `client/.artifacts/mutation/incremental.json` |
+
+- 対象 file は各設定の `mutate` に列挙している。一部だけ流すには `-- --mutate <path>` を渡す（例: `npm run mutation:server -- --mutate src/util/StrUtil.ts`）。行の範囲は `path:開始行-終了行`。
+- 流すのは単体 test（spec・imp）だけ。server は mutant を入れた `src` を sandbox で compile して test に読ませるため、最初に build の時間がかかる。全 test を直列に流す確認（dry-run）が毎回あり、server は約 5 分、client は約 6 分が下限になる。
+- 既定は `ignoreStatic: true`（module 先頭の定数表の mutant を除く）と `concurrency: 2`。memory は server で約 5 GB、client で約 2 GB になるので、ほかの重い run と同時に流さない。
+- module 先頭の定数表の mutant（report の `static: true`）は、`ignoreStatic` により全 test ではなく、その行を覆う test だけで実行される。端末の表の score にもこの mutant が数えられるので、定数表の多い file の score は低く出る。
+- cache は git の管理外。`EPGS_MUTATION_INCREMENTAL_FILE` で場所を変えられる。消えても全 mutant を流し直すだけで結果は変わらない。
+- 結果は端末の表と `reports/mutation/` の report（server は `reports/mutation/server/report.html`、client は `client/reports/mutation/report.json`）に出る。生き残った mutant を読み、test を足す、または等価・冗長として記録する。
+- Stryker は vitest 4.1.11 の組で動作を確認している。vitest の版を変えたら、score が 0% でない（全 mutant が「test 無しで生存」になっていない）ことを確かめる。
+- Stryker の sandbox で動かない test は専用の vitest 設定が除外している（process.env.TZ を実行中に変える test、build 工具や npm の path に依存する test、client の外の file を読む test）。
+
 ## 6. 全体の検査（preflight）
 
 ```bash
@@ -153,4 +171,5 @@ hosted CI が実行しない検査を含め、公開してよい状態かを手�
 
 - 実機の device suite: [client/device/README.md](../client/device/README.md)。
 - `docker.yml` が公開する arm 系（`linux/arm/v6`・`linux/arm/v7`・`linux/arm64`）の build: 手元では確かめていない。Docker image の確認（§5）は `linux/amd64` だけを対象にする。
+- mutation testing（§5）: 手動または定期で流す。preflight の合否には数えない。
 - commit 時の秘密情報・個人情報の検査: [docs/betterleaks.md](betterleaks.md)。pre-commit hook が staged な変更を検査する。
