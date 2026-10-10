@@ -178,7 +178,12 @@ export function DateTimePickerDialog({
                 width: '100%',
                 height: 'var(--pk-calendar-height)',
               },
-              '& .MuiMultiSectionDigitalClockSection-root': { maxHeight: 'none', height: '100%' },
+              // MUI は pointer: fine のとき hover の間だけ列を scroll させる。入力の種類に依らず最初の操作から scroll できるよう、常に auto にする。
+              '& .MuiMultiSectionDigitalClockSection-root.MuiMultiSectionDigitalClockSection-root': {
+                maxHeight: 'none',
+                height: '100%',
+                overflowY: 'auto',
+              },
               '& .MuiDateTimePickerTabs-root .MuiTab-root': { minHeight: ramp(40, 48) },
               '& .MuiDateTimePickerTabs-root': { minHeight: ramp(40, 48) },
               // 上部の月日と時刻は同じ大きさの文字にし、下端を揃えて縦の中心を合わせる。
