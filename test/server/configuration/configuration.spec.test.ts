@@ -739,6 +739,28 @@ describe('server configuration characterization contract', () => {
         expect(formatted.apiServers).toEqual([loopbackApiServer(48100)]);
     });
 
+    it('[CFG-1.2-API-SERVERS-HTTPS-ONLY] fills apiServers with the HTTPS port when only HTTPS listens', () => {
+        const configuration = createConfiguration(null);
+        const candidate = readCandidate();
+        delete candidate.port;
+        candidate.https = { port: 48443, key: 'synthetic-key.pem', cert: 'synthetic-cert.pem' };
+
+        const formatted = configuration.formatConfig(candidate);
+
+        expect(formatted.apiServers).toEqual([['https:', '', 'localhost:48443'].join('/')]);
+    });
+
+    it('[CFG-1.2-API-SERVERS-EXPLICIT] keeps apiServers as written and prefers the HTTP port when both listen', () => {
+        const configuration = createConfiguration(null);
+        const explicit = readCandidate();
+        explicit.apiServers = ['http://synthetic.invalid'];
+        const both = readCandidate();
+        both.https = { port: 48443, key: 'synthetic-key.pem', cert: 'synthetic-cert.pem' };
+
+        expect(configuration.formatConfig(explicit).apiServers).toEqual(['http://synthetic.invalid']);
+        expect(configuration.formatConfig(both).apiServers).toEqual([loopbackApiServer(48100)]);
+    });
+
     // These six fields keep the same default values as v2's Configuration.DEFAULT_VALUE
     // (v2 5cf2ea383 src/model/Configuration.ts:224-229) and have no dedicated
     // default-application test elsewhere in test/server; every other reference to them across
@@ -1406,7 +1428,7 @@ const acceptanceCriteriaCounts = { 1: 7, 2: 4, 3: 3, 4: 5, 5: 4, 6: 4, 7: 12 } a
 
 const acceptanceCriteriaTrace: Readonly<Record<string, readonly string[]>> = {
     '1.1': ['CFG-1.1-YAML-DEFAULTS', 'CFG-1.1-ENV-EXPANSION', 'CFG-1.1-ENV-LITERAL', 'CFG-1.1-ENV-LOAD-ONLY', 'CFG-1.1-ENV-NUMERIC-FIELD', 'CFG-1.1-MERGE-KEY', 'CFG-1.1-MERGE-KEY-MULTIPLE', 'CFG-1.1-MERGE-KEY-EXPLICIT', 'CFG-1.1-MERGE-KEY-ARRAY', 'CFG-1.1-MERGE-KEY-ENV'],
-    '1.2': ['CFG-1.1-YAML-DEFAULTS', 'CFG-1.1-LEGACY-SCHEDULING-DEFAULTS'],
+    '1.2': ['CFG-1.1-YAML-DEFAULTS', 'CFG-1.1-LEGACY-SCHEDULING-DEFAULTS', 'CFG-1.2-API-SERVERS-HTTPS-ONLY', 'CFG-1.2-API-SERVERS-EXPLICIT'],
     '1.3': ['CFG-1.1-STREAM-TEMPLATE', 'CFG-1.1-STREAM-PARENT'],
     '1.4': ['CFG-1.1-PATH-NORMALIZATION'],
     '1.5': ['CFG-1.1-SUBDIRECTORY-NORMALIZATION', 'CFG-1.1-PATH-NORMALIZATION'],
