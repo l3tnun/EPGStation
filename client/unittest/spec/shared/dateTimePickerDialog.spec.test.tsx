@@ -96,3 +96,32 @@ describe('DateTimePickerDialog', () => {
     expect(onClose).toHaveBeenCalledTimes(1)
   })
 })
+
+describe('DateTimePickerDialog timezone', () => {
+  it('[AC frontend-reserves 4.23] shows and commits the wall clock of the given timezone instead of the browser timezone', async () => {
+    const onSet = vi.fn()
+    // 2026-05-05 22:00 JST は Auckland (UTC+12) では 2026-05-06 01:00。
+    render(
+      <DateTimePickerDialog
+        open
+        title="時刻 開始"
+        titleId="tz-picker-title"
+        timezone="Pacific/Auckland"
+        value={Date.parse('2026-05-05T22:00:00+09:00')}
+        onSet={onSet}
+        onClear={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    )
+
+    const dialog = await screen.findByRole('dialog', { name: '時刻 開始' })
+    expect(within(dialog).getByRole('gridcell', { name: '6' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+    pickCalendarDay(dialog, 20)
+    fireEvent.click(within(dialog).getByRole('button', { name: '設定' }))
+
+    expect(onSet).toHaveBeenCalledWith(Date.parse('2026-05-20T01:00:00+12:00'))
+  })
+})
