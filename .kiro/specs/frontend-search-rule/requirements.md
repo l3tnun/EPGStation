@@ -291,7 +291,7 @@ Search / Rule は番組検索、検索結果からの予約/rule 作成、rule l
     field は直接ミリ秒入力ではなく dialog activator として扱う。各 dialog は月・曜日を日本語で表示し、
     週の始まりを月曜にした calendar（先頭の列が月曜）、24 時間表記の時刻の選択、`クリア` / `設定`
     action を持つ（Recorded Upload、Manual Reserve と共通の部品）。calendar で日を選び `設定` を押すと
-    field に `yyyy-MM-ddTHH:mm` で反映し、`クリア` は値を空にする。dialog は幅 320px でも calendar と日時の表示が切れず、横 scroll なしで全ての週の日を選べる。dialog はブラウザの表示領域（Safari の toolbar の出し入れ・端末の回転・window の大きさの変更で変わる）に収まり、表示領域が変われば追随する。dialog 自体は縦に scroll せず、`クリア` / `設定` button は常に scroll なしで見え、calendar の view は全ての週が scroll なしで見える。時刻の view の時と分の列は、それぞれ列の中の scroll だけで 0 時・0 分から 23 時・最後の分まで選べる。上部の月日と時刻は同じ大きさの文字で、縦の中心が揃う。両端が揃うまで `searchPeriods` を送らない。
+    field に `yyyy-MM-ddTHH:mm` で反映し、`クリア` は値を空にする。dialog は幅 320px でも calendar と日時の表示が切れず、横 scroll なしで全ての週の日を選べる。dialog はブラウザの表示領域（Safari の toolbar の出し入れ・端末の回転・window の大きさの変更で変わる）に収まり、表示領域が変われば追随する。dialog 自体は縦に scroll せず、`クリア` / `設定` button は常に scroll なしで見え、calendar の view は全ての週が scroll なしで見える。時刻の view の時と分の列は、それぞれ列の中の scroll だけで 0 時・0 分から 23 時・59 分まで選べる。分は 1 分単位で、0〜59 の全ての分を選べる（09:58 のような時刻も選べる）。上部の月日と時刻は同じ大きさの文字で、縦の中心が揃う。両端が揃うまで `searchPeriods` を送らない。
 31. Search form の `検索` button を実行して検索結果を取得したとき、EPGStation フロントエンドは
     SearchResult section の先頭へ scroll する。SearchResult header の link icon は検索条件ではなく Rule
     option card の先頭へ scroll する。
