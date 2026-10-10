@@ -24,7 +24,9 @@ export async function showCalendarMonth(
     if ((await label.count()) > 0) {
       return
     }
+    // 月の切り替えの animation の間は前の月と次の月の見出しが両方 DOM にあるので、1 つになるまで待つ。
     const header = dialog.locator('[id$="-grid-label"]')
+    await expect(header).toHaveCount(1)
     const text = (await header.textContent()) ?? ''
     const match = /^(\d+)年(\d+)月$/.exec(text)
     if (match === null) {
@@ -33,7 +35,7 @@ export async function showCalendarMonth(
     const shown = Number(match[1]) * 12 + Number(match[2])
     const goal = year * 12 + month
     await dialog.getByRole('button', { name: shown > goal ? '先月' : '来月' }).click()
-    await expect(header).not.toHaveText(text)
+    await expect(header.filter({ hasNotText: text })).toHaveCount(1)
   }
   throw new Error(`calendar を ${year}年${month}月へ動かせません`)
 }

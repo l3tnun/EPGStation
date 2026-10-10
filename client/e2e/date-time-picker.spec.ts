@@ -340,8 +340,14 @@ async function expectToolbarAligned(dialog: Locator): Promise<void> {
 }
 
 // 列の上で wheel を回して、option を列の見える範囲に入れる（実際の操作で届くことを確かめる）。
+// Playwright の mobile WebKit は wheel を送れないので、列そのものを scroll して、
+// dialog ではなく列が scroll して最後の option まで届くことを確かめる。
 async function revealByWheel(page: Page, option: Locator): Promise<void> {
   const column = option.locator('xpath=ancestor::*[@role="listbox"][1]')
+  const canWheel = !(
+    test.info().project.use.isMobile === true &&
+    page.context().browser()?.browserType().name() === 'webkit'
+  )
   for (let step = 0; step < 80; step += 1) {
     const columnBox = await column.boundingBox()
     const optionBox = await option.boundingBox()
@@ -353,8 +359,16 @@ async function revealByWheel(page: Page, option: Locator): Promise<void> {
     ) {
       return
     }
-    await page.mouse.move(columnBox!.x + columnBox!.width / 2, columnBox!.y + columnBox!.height / 2)
-    await page.mouse.wheel(0, optionBox!.y < columnBox!.y ? -150 : 150)
+    const delta = optionBox!.y < columnBox!.y ? -150 : 150
+    if (canWheel) {
+      await page.mouse.move(
+        columnBox!.x + columnBox!.width / 2,
+        columnBox!.y + columnBox!.height / 2,
+      )
+      await page.mouse.wheel(0, delta)
+    } else {
+      await column.evaluate((element, dy) => element.scrollBy(0, dy), delta)
+    }
     await page.waitForTimeout(30)
   }
   throw new Error('option を列の scroll で見える範囲に入れられません')
