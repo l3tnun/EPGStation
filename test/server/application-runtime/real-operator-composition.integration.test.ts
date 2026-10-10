@@ -63,7 +63,7 @@ const launch = async (
 };
 
 const ready = (operator: OperatorHandle): Promise<void> =>
-    waitFor(() => serviceAnswers(operator.servicePort), 'the Service API', () => operator.stdout());
+    waitFor(() => serviceAnswers(operator.servicePort), 'the Service API', () => operator.diagnostics());
 
 const tunerRequests = (stub: TunerStub): number => stub.requests.filter(path => path.startsWith('/api/tuners')).length;
 
@@ -116,7 +116,7 @@ describe('[AR-4.6] a failed tuner snapshot stops the Operator composition and re
         await waitFor(
             async () => (await operator.readSystemLog()).includes('unhandledRejection'),
             'the recorded unhandledRejection',
-            () => operator.stdout(),
+            () => operator.diagnostics(),
         );
         // Nothing downstream may start, however long it is given.
         await sleep(2_000);
@@ -156,7 +156,7 @@ setInterval(() => undefined, 1_000_000);
         await waitFor(
             async () => (await readdir(operator.root)).includes('ipc-reply.json'),
             'the IPC reply written by the child',
-            () => operator.stdout(),
+            () => operator.diagnostics(),
         );
         const reply = JSON.parse(await readFile(marker, 'utf8')) as { message: unknown };
         expect(reply.message).toEqual({ id: 7, result: { BS: false, BS4K: false, CS: false, GR: true, SKY: false } });
@@ -295,7 +295,7 @@ describe('[AR-4.3][AR-4.5] the event binding is registered once and links reserv
             reserveId = await addTimeSpecifiedReserve(operator, channelId, futureHour(0), futureHour(30));
         });
         expect(firstNotifications).toBe(1);
-        await waitFor(async () => (await readLines(addedRecord)).length >= 1, 'the added hook', () => operator.stdout());
+        await waitFor(async () => (await readLines(addedRecord)).length >= 1, 'the added hook', () => operator.diagnostics());
         await sleep(500);
         expect(await readLines(addedRecord)).toEqual([String(reserveId)]);
         expect(await withDatabase(operator.root, database => database.prepare('SELECT id FROM reserve').all())).toEqual([
@@ -307,14 +307,14 @@ describe('[AR-4.3][AR-4.5] the event binding is registered once and links reserv
         for (let restart = 1; restart <= 3; restart += 1) {
             const pids = operator.servicePids();
             process.kill(pids[pids.length - 1], 'SIGKILL');
-            await waitFor(() => operator.servicePids().length === restart + 1, `Service restart ${restart}`, () => operator.stdout());
-            await waitFor(() => serviceAnswers(operator.servicePort), `the Service after restart ${restart}`, () => operator.stdout());
+            await waitFor(() => operator.servicePids().length === restart + 1, `Service restart ${restart}`, () => operator.diagnostics());
+            await waitFor(() => serviceAnswers(operator.servicePort), `the Service after restart ${restart}`, () => operator.diagnostics());
         }
         const afterRestarts = await notificationsAfter(async () => {
             await addTimeSpecifiedReserve(operator, channelId, futureHour(120), futureHour(150));
         });
         expect(afterRestarts).toBe(1);
-        await waitFor(async () => (await readLines(addedRecord)).length >= 2, 'the second added hook', () => operator.stdout());
+        await waitFor(async () => (await readLines(addedRecord)).length >= 2, 'the second added hook', () => operator.diagnostics());
         await sleep(1_000);
         expect(await readLines(addedRecord)).toHaveLength(2);
 
@@ -324,7 +324,7 @@ describe('[AR-4.3][AR-4.5] the event binding is registered once and links reserv
             expect(status).toBe(200);
         });
         expect(deletedNotifications).toBe(1);
-        await waitFor(async () => (await readLines(deletedRecord)).length >= 1, 'the deleted hook', () => operator.stdout());
+        await waitFor(async () => (await readLines(deletedRecord)).length >= 1, 'the deleted hook', () => operator.diagnostics());
         await sleep(500);
         expect(await readLines(deletedRecord)).toEqual([String(reserveId)]);
     }, 90_000);
@@ -359,7 +359,7 @@ describe('[AR-4.2] the recording side receives the same tuner snapshot (real pro
         await waitFor(
             () => streamPaths().includes('/api/services/1000/stream') && streamPaths().includes('/api/services/1001/stream'),
             'both stream requests',
-            () => ({ paths: streamPaths(), stdout: operator.stdout() }),
+            async () => ({ diagnostics: await operator.diagnostics(), paths: streamPaths() }),
             60_000,
         );
         expect(streamPaths().sort()).toEqual(['/api/services/1000/stream', '/api/services/1001/stream']);
