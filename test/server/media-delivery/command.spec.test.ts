@@ -13,7 +13,10 @@ beforeAll(async () => {
     EncodeProcessManageModel = await prepareEncodeProcessManageModel();
 });
 
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => {
+    vi.restoreAllMocks();
+    vi.clearAllMocks();
+});
 
 const createProcessManager = () =>
     new EncodeProcessManageModel({ getLogger: logger }, { getConfig: () => baseConfig() });

@@ -37,6 +37,7 @@ const makeProvider = (builders: ReturnType<typeof createFluentBuilder>[], update
 
 afterEach(() => {
     vi.restoreAllMocks();
+    vi.clearAllMocks();
 });
 
 describe('RecordedDB record updates (unittest/imp)', () => {

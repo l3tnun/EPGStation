@@ -29,6 +29,7 @@ afterEach(() => {
     vi.clearAllTimers();
     vi.useRealTimers();
     vi.restoreAllMocks();
+    vi.clearAllMocks();
 });
 
 describe('recording retry policy', () => {

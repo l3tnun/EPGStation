@@ -37,6 +37,7 @@ const makeProvider = (repositoryResults: Record<string, unknown> = {}, builder =
 
 afterEach(() => {
     vi.restoreAllMocks();
+    vi.clearAllMocks();
 });
 
 describe('ReserveDB single-row writes (unittest/imp)', () => {
