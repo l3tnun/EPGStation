@@ -20,6 +20,7 @@
     "test:run": "vitest run unittest",
     "coverage": "vitest run unittest --coverage",
     "coverage:gate": "VITEST_COVERAGE_GATE=1 vitest run unittest --coverage",
+    "mutation:client": "stryker run stryker.client.config.mjs",
     "e2e": "playwright test e2e",
     "visual": "playwright test visual",
     "device:smoke": "node device/run-device-tests.mjs --suite smoke",
@@ -50,6 +51,8 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@playwright/test": "1.63.0",
+    "@stryker-mutator/core": "10.0.0",
+    "@stryker-mutator/vitest-runner": "10.0.0",
     "@testing-library/jest-dom": "7.0.1",
     "@testing-library/react": "16.3.3",
     "@types/node": "26.6.4",

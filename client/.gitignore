@@ -11,6 +11,10 @@ node_modules
 dist
 dist-ssr
 coverage
+# mutation testing（Stryker）の作業 directory・report・incremental の cache
+.stryker-tmp
+reports/mutation
+.artifacts
 playwright-report
 test-results
 *.local

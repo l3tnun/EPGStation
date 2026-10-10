@@ -16,6 +16,7 @@
         "test:server:integration": "node scripts/server-test/run-tests.mjs integration",
         "test:server": "node scripts/server-test/run-tests.mjs all",
         "test:server:coverage": "node scripts/server-test/run-tests.mjs coverage",
+        "mutation:server": "stryker run stryker.server.config.mjs",
         "lint": "eslint --fix src/ test/server/ scripts/server-test/",
         "lint:src": "eslint --fix src/",
         "lint:check": "eslint src/ test/server/ scripts/server-test/",
@@ -79,6 +80,8 @@
     },
     "devDependencies": {
         "@eslint/js": "10.0.1",
+        "@stryker-mutator/core": "10.0.0",
+        "@stryker-mutator/vitest-runner": "10.0.0",
         "@types/body-parser": "1.19.6",
         "@types/express": "5.0.6",
         "@types/js-yaml": "4.0.9",
