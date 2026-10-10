@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import type { ShellSnackbarState } from '@/app/AppShell'
 import { readCurrentRouteScrollPosition, useScrollHistory } from '@/app/scrollHistory'
-import { LegacyPagination } from '@/shared/LegacyPagination'
+import { AppPagination } from '@/shared/AppPagination'
 import type { SettingsConsumerValue } from '@/shared/settings'
 import { useDeferredLoading } from '@/shared/useDeferredLoading'
 import { useMeasuredContainerWidth } from '@/shared/useMeasuredContainerWidth'
@@ -243,7 +243,8 @@ export function ReservesPage({
               onSnackbar={onFetchFailure}
             />
           )}
-          <LegacyPagination
+          <AppPagination
+            isEnableExtendedPagination={settings.isEnableExtendedPagination}
             page={request.page}
             pageSize={request.limit}
             total={total}

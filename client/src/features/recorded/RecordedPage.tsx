@@ -8,7 +8,7 @@ import {
   useScrollHistoryPageReady,
 } from '@/app/scrollHistory'
 
-import { LegacyPagination } from '@/shared/LegacyPagination'
+import { AppPagination } from '@/shared/AppPagination'
 import { useDeferredLoading } from '@/shared/useDeferredLoading'
 import { useMeasuredContainerWidth } from '@/shared/useMeasuredContainerWidth'
 import {
@@ -301,7 +301,8 @@ export function RecordedPage({
                 ))}
               </div>
             )}
-            <LegacyPagination
+            <AppPagination
+              isEnableExtendedPagination={settings.isEnableExtendedPagination}
               page={request.page}
               pageSize={request.limit}
               total={total}

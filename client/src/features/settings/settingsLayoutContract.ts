@@ -9,6 +9,7 @@ export const SETTINGS_SECTION_ORDER = [
   '録画',
   '検索',
   'ルール',
+  'ページネーション',
   'ビデオプレーヤ',
 ] as const
 

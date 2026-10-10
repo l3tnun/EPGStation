@@ -2,7 +2,7 @@ import { SETTINGS_UI_CONTRACT } from '@/shared/settings'
 import type { SettingsControlDefinition } from './settingsControlTypes'
 import { rangeOptions, valueOptions } from './lib/settingsControlOptions'
 
-/** 録画 / 検索 / ルール / ビデオプレーヤ の control 定義（表示順）。 */
+/** 録画 / 検索 / ルール / ページネーション / ビデオプレーヤ の control 定義（表示順）。 */
 export const SETTINGS_CONTROL_ROWS_BACK = [
   {
     section: '録画',
@@ -150,9 +150,9 @@ export const SETTINGS_CONTROL_ROWS_BACK = [
     tmpTarget: 'rulesLength',
   },
   {
-    section: 'ルール',
+    section: 'ページネーション',
     label: '拡張ページネーションの有効化',
-    subtitle: 'ルール一覧のページ移動を拡張ページネーションに置き換える',
+    subtitle: '録画済み・録画中・予約・ルール一覧のページ移動を拡張ページネーションに置き換える',
     key: 'isEnableExtendedPagination',
     controlType: 'switch',
     tmpTarget: 'isEnableExtendedPagination',

@@ -52,7 +52,7 @@ describe('Requirement 1.22 extended pagination switch in its own pagination sect
     const previousControl = within(screen.getByTestId('settings-card'))
       .getAllByRole('combobox')
       .filter(
-        (control) => control.compareDocumentPosition(toggle) & Node.DOCUMENT_POSITION_PRECEDING,
+        (control) => control.compareDocumentPosition(toggle) & Node.DOCUMENT_POSITION_FOLLOWING,
       )
       .at(-1)
     expect(previousControl).toBe(pageSize)

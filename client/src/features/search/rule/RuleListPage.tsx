@@ -8,8 +8,7 @@ import {
   useScrollHistory,
   useScrollHistoryPageReady,
 } from '@/app/scrollHistory'
-import { LegacyPagination } from '@/shared/LegacyPagination'
-import { ExtendedPagination } from '@/shared/ExtendedPagination'
+import { AppPagination } from '@/shared/AppPagination'
 import type { SettingsConsumerValue } from '@/shared/settings'
 import { useMeasuredContainerWidth } from '@/shared/useMeasuredContainerWidth'
 import type { RuleListItem, SearchRuleApiRepository } from './api'
@@ -343,21 +342,13 @@ export function RuleListPage({
             })}
           </div>
         )}
-        {settings.isEnableExtendedPagination ? (
-          <ExtendedPagination
-            page={route.page}
-            pageSize={request.limit}
-            total={total}
-            onPageChange={goToPage}
-          />
-        ) : (
-          <LegacyPagination
-            page={route.page}
-            pageSize={request.limit}
-            total={total}
-            onPageChange={goToPage}
-          />
-        )}
+        <AppPagination
+          isEnableExtendedPagination={settings.isEnableExtendedPagination}
+          page={route.page}
+          pageSize={request.limit}
+          total={total}
+          onPageChange={goToPage}
+        />
         {!isEditMode ? (
           <Fab
             aria-label="追加"

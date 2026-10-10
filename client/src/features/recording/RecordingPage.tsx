@@ -7,7 +7,7 @@ import { readCurrentRouteScrollPosition, useScrollHistory } from '@/app/scrollHi
 import { EditTitleBar, TitleBar } from '@/app/titleBar'
 import { RecordedBulkDeleteDialog, RecordedItemMenu } from '@/features/recorded'
 import type { RecordedListItem } from '@/features/recorded/recordedApi'
-import { LegacyPagination } from '@/shared/LegacyPagination'
+import { AppPagination } from '@/shared/AppPagination'
 import type { SettingsConsumerValue } from '@/shared/settings'
 import { RecordingCards } from './components/RecordingCards'
 import { RecordingTable } from './components/RecordingTable'
@@ -202,7 +202,8 @@ export function RecordingPage({
         >
           {!isCardLayout ? <RecordingTable {...listProps} /> : undefined}
           {isCardLayout ? <RecordingCards {...listProps} /> : undefined}
-          <LegacyPagination
+          <AppPagination
+            isEnableExtendedPagination={settings.isEnableExtendedPagination}
             page={request.page}
             pageSize={request.limit}
             total={total}
