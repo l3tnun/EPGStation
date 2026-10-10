@@ -1,5 +1,5 @@
 import { readFile, readdir } from 'node:fs/promises';
-import { chmod, writeFile } from 'node:fs/promises';
+import { chmod, rename, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
@@ -252,6 +252,29 @@ const readLines = async (file: string): Promise<string[]> => {
     }
 };
 
+/**
+ * Puts a recording tap in front of the real Service entry: the compiled `ServiceExecutor.js` is renamed and a
+ * wrapper takes its place. The wrapper appends a line to `service-notify-client.log` for every `notifyClient`
+ * message the Service child receives from the Operator, then loads the real entry unchanged.
+ */
+const installNotificationTap = async (root: string): Promise<void> => {
+    const directory = join(root, 'dist', 'model', 'service');
+    await rename(join(directory, 'ServiceExecutor.js'), join(directory, 'ServiceExecutorActual.js'));
+    await writeFile(
+        join(directory, 'ServiceExecutor.js'),
+        `
+import { appendFileSync } from 'node:fs';
+const recordUrl = new URL('../../../service-notify-client.log', import.meta.url);
+process.on('message', message => {
+    if (message !== null && typeof message === 'object' && message.type === 'notifyClient') {
+        appendFileSync(recordUrl, 'notifyClient\\n');
+    }
+});
+await import('./ServiceExecutorActual.js');
+`,
+    );
+};
+
 describe('[AR-4.3][AR-4.5] the event binding is registered once and links reservation changes (real process)', () => {
     const channelId = 1000;
 
@@ -272,28 +295,36 @@ describe('[AR-4.3][AR-4.5] the event binding is registered once and links reserv
                     .replace('__ADDED__', `'${added}'`)
                     .replace('__DELETED__', `'${deleted}'`);
                 await writeFile(configPath, text);
+                await installNotificationTap(root);
             },
         });
+        const notifyRecord = join(operator.root, 'service-notify-client.log');
         const addedRecord = join(operator.root, 'hook-added.log');
         const deletedRecord = join(operator.root, 'hook-deleted.log');
         await ready(operator);
-
-        // Right after it starts listening, the Service emits one updateStatus caused by the Operator's own
-        // startup work, not by any reservation change. The Service keeps a single 200 ms window, so once
-        // that notification has been received nothing is pending and a later change opens a fresh window.
-        // Receive it first (the client connects within milliseconds of the Service answering), so the
-        // counts below see only what the change under test causes.
-        const startupClient = await connectSocketIo(operator.servicePort);
-        sockets.push(startupClient);
-        await waitFor(
-            () => startupClient.events().includes('updateStatus'),
-            'the updateStatus caused by the Operator startup',
-            async () => ({ diagnostics: await operator.diagnostics(), events: startupClient.timedEvents() }),
-        );
-        await startupClient.close();
         await withDatabase(operator.root, database => seedChannel(database, { channelType: 'GR', id: channelId, name: 'synthetic GR' }));
 
-        const notificationsAfter = async (action: () => Promise<void>): Promise<number> => {
+        // The Operator's own startup work (the expired-reservation cleanup) also sends one notifyClient to the
+        // Service, and the Service turns it into an updateStatus about 200 ms after it processes it. That is
+        // not a reservation change, and when it is emitted relative to the test's client is a matter of timing.
+        // So the notifications caused by a change are counted where they are state: the notifyClient messages
+        // the Service child receives on the IPC channel (recorded by the tap installed in `prepare`). The
+        // Operator finishes sending its startup notifications before it announces the EPG updater, and a
+        // round trip on the same channel (`broadcastOf` asks the Operator) returns only after every message
+        // sent earlier has been received, so the count is settled by state, not by waiting.
+        const receivedNotifyClient = async (): Promise<number> => (await readLines(notifyRecord)).length;
+        const settledNotifyClient = async (): Promise<number> => {
+            await waitFor(() => operator.count('start epg updater pid') >= 1, 'the end of the Operator startup', () =>
+                operator.diagnostics(),
+            );
+            await broadcastOf(operator);
+            return receivedNotifyClient();
+        };
+
+        const notificationsAfter = async (
+            action: () => Promise<void>,
+        ): Promise<{ delivered: number; received: number }> => {
+            const before = await settledNotifyClient();
             const client = await connectSocketIo(operator.servicePort);
             sockets.push(client);
             await action();
@@ -301,17 +332,20 @@ describe('[AR-4.3][AR-4.5] the event binding is registered once and links reserv
             // second notification from a duplicated binding arrive before counting.
             await waitFor(() => client.events().includes('updateStatus'), 'an updateStatus notification', () => client.events());
             await sleep(1_000);
-            const count = client.events().filter(name => name === 'updateStatus').length;
+            const delivered = client.events().filter(name => name === 'updateStatus').length;
             await client.close();
-            return count;
+            return { delivered, received: (await receivedNotifyClient()) - before };
         };
 
         // (1) The initial binding: a reservation add reaches the DB, the subscriber and the hook once each.
+        // The Operator sent exactly one notifyClient for it. The subscriber sees at least one updateStatus;
+        // a second one may be the Operator-startup notification landing in this client's connection.
         let reserveId = 0;
-        const firstNotifications = await notificationsAfter(async () => {
+        const first = await notificationsAfter(async () => {
             reserveId = await addTimeSpecifiedReserve(operator, channelId, futureHour(0), futureHour(30));
         });
-        expect(firstNotifications).toBe(1);
+        expect(first.received).toBe(1);
+        expect(first.delivered).toBeGreaterThanOrEqual(1);
         await waitFor(async () => (await readLines(addedRecord)).length >= 1, 'the added hook', () => operator.diagnostics());
         await sleep(500);
         expect(await readLines(addedRecord)).toEqual([String(reserveId)]);
@@ -330,7 +364,9 @@ describe('[AR-4.3][AR-4.5] the event binding is registered once and links reserv
         const afterRestarts = await notificationsAfter(async () => {
             await addTimeSpecifiedReserve(operator, channelId, futureHour(120), futureHour(150));
         });
-        expect(afterRestarts).toBe(1);
+        // No startup notification is pending any more (the first phase waited for its updateStatus and a
+        // further second), so the subscriber sees exactly the one for the change.
+        expect(afterRestarts).toEqual({ delivered: 1, received: 1 });
         await waitFor(async () => (await readLines(addedRecord)).length >= 2, 'the second added hook', () => operator.diagnostics());
         await sleep(1_000);
         expect(await readLines(addedRecord)).toHaveLength(2);
@@ -340,7 +376,7 @@ describe('[AR-4.3][AR-4.5] the event binding is registered once and links reserv
             const { status } = await fetchJson(operator.servicePort, `/api/reserves/${reserveId}`, { method: 'DELETE' });
             expect(status).toBe(200);
         });
-        expect(deletedNotifications).toBe(1);
+        expect(deletedNotifications).toEqual({ delivered: 1, received: 1 });
         await waitFor(async () => (await readLines(deletedRecord)).length >= 1, 'the deleted hook', () => operator.diagnostics());
         await sleep(500);
         expect(await readLines(deletedRecord)).toEqual([String(reserveId)]);
