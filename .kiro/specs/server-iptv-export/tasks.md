@@ -397,8 +397,7 @@ suite、および実HTTP carrier integrationが同一revisionでGREENになる�
     -   最小test/harnessと、承認済み差分に必要な最小production/seamだけを追加し、全imp target testをGREENにして実装境界assertion mappingを準備・検証する。REDのrequired testを残して8.4へ進まない。
     -   完了時には、値域・分岐matrixの未分類が0件で、実装境界assertion mappingが準備・検証済みになる。
     -   _Requirements: 7.2_
-    -   _Boundary: IPTV implementation tests・実装境界assertion mapping
-        consumption is Task 8.5_
+    -   _Boundary: IPTV implementation tests・実装境界assertion mapping consumption is Task 8.5_
     -   _Depends: 7.3_
 
 -   [x] 8.4 DB読取からHTTP文書byteまでの結合境界を品質gateとして確定する
@@ -430,5 +429,5 @@ suite、および実HTTP carrier integrationが同一revisionでGREENになる�
         一覧とmatrixを読む監査testは置かない。
     -   完了時には、本機能の単体testと結合testが全件成功し、server全体の判定（`server-application-runtime` Requirement 9
         Acceptance Criterion 9）に本機能のsourceの未到達が残らない。
-    -   _Depends: 8.2, 8.4_
     -   _Requirements: 7.1, 7.3, 7.5_
+    -   _Depends: 8.2, 8.4_
