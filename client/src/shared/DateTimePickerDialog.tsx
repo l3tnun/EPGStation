@@ -89,7 +89,14 @@ export function DateTimePickerDialog({
               actionBar: { actions: [] },
               calendarHeader: { format: calendarHeaderFormat },
             }}
-            sx={{ bgcolor: 'transparent' }}
+            sx={{
+              bgcolor: 'transparent',
+              // 狭い幅では dialog の幅に合わせて縮める（MUI の既定は 320px 固定）。
+              minWidth: 'min(320px, calc(100vw - 32px))',
+              maxWidth: '100%',
+              '& .MuiDateCalendar-root': { width: '100%', maxWidth: '100%' },
+              '& .MuiMultiSectionDigitalClock-root': { width: '100%' },
+            }}
           />
         </LocalizationProvider>
       </DialogContent>

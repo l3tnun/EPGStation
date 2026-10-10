@@ -72,7 +72,7 @@ Storages / Recorded Upload は storage usage view と録画済み metadata/uploa
 12. Rule autocomplete は route init と search input change で `GET /rules/keyword` を呼び、query は常に
     `limit=1000`、typed value が null でない場合のみ `keyword` を追加する。
 13. Rule autocomplete items は `keyword` を表示し、`id` を値にする。
-14. datetime picker は月・曜日を日本語で表示し、週の始まりを月曜にした calendar（先頭の列が月曜）と、24 時間表記で時、分の順に選ぶ時刻の選択、`クリア` / `設定` button を持つ。この picker は Search の期間、Manual Reserve の時刻指定と共通の部品（`client/src/shared/DateTimePickerDialog.tsx`）で表示する。
+14. datetime picker は月・曜日を日本語で表示し、週の始まりを月曜にした calendar（先頭の列が月曜）と、24 時間表記で時、分の順に選ぶ時刻の選択、`クリア` / `設定` button を持つ。この picker は Search の期間、Manual Reserve の時刻指定と共通の部品（`client/src/shared/DateTimePickerDialog.tsx`）で表示する。幅 320px・高さ 568px の画面でも、calendar の 7 列、前後の月の矢印、上部の日時の表示、時刻の選択、`クリア` / `設定` button が dialog の幅の内側に切れずに収まり、横 scroll を出さずに全ての週の日を選べる（縦は dialog の中の scroll で届く）。
 15. reset は form state を再作成するが、route init と異なり rule autocomplete fetch を再実行しない。
 16. Recorded Upload form は desktop / mobile のどちらでも required field、video-file block、FAB、reset/upload
     action が重ならず、video-file block 追加で既存 input の表示順を変えない。
