@@ -1,6 +1,5 @@
 import { AdjacentStorageRegistry } from '@/shared/settings'
 import { DefaultSettingsFactory } from '@/shared/settings/defaultSettings'
-import { SettingsDraftStore } from '@/shared/settings/settingsDraftStore'
 import { SettingsStorageRepository } from '@/shared/settings/settingsStorage'
 import { replaceURLSchemePlaceholders } from '@/shared/settings/urlScheme'
 import {
@@ -110,7 +109,7 @@ describe('Requirements 4.7, 4.8, 7.7, 7.8, 9.1-9.13 adjacent workflow storage co
 })
 
 describe('synthetic settings storage fixtures', () => {
-  it('[AC 2.1] [AC 2.2] [AC 4.7] [AC 7.8] provides synthetic saved and tmp settings states without persisting runtime values', () => {
+  it('[AC 4.7] [AC 7.8] provides synthetic saved settings states that load unchanged without persisting runtime values', () => {
     expect(settingsStorageStateMatrix).toHaveLength(3)
     expect(settingsStorageStateMatrix.map((item) => item.platformVariant)).toStrictEqual([
       'desktop',
@@ -127,12 +126,8 @@ describe('synthetic settings storage fixtures', () => {
         new DefaultSettingsFactory(),
         fixture.defaultSettingsInput,
       )
-      const store = new SettingsDraftStore(repository)
 
-      store.updateTmp(fixture.tmpSettings)
-
-      expect(store.getSaved()).toStrictEqual(fixture.savedSettings)
-      expect(store.getTmp()).toStrictEqual(fixture.tmpSettings)
+      expect(repository.load().value).toStrictEqual(fixture.savedSettings)
       expect(fixture.urlSchemeTemplate).toContain('PROTOCOL')
       expect(fixture.urlSchemeTemplate).toContain('ADDRESS')
       expect(fixture.urlSchemeTemplate).toContain('FILENAME')

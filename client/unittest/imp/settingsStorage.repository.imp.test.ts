@@ -1,6 +1,5 @@
 import { SETTINGS_UI_CONTRACT } from '@/shared/settings'
 import { DefaultSettingsFactory } from '@/shared/settings/defaultSettings'
-import { SettingsDraftStore } from '@/shared/settings/settingsDraftStore'
 import { SettingsStorageRepository } from '@/shared/settings/settingsStorage'
 import { createDefaultSettingsInputFromNavigator } from '@/shared/settings/platformDefaultSettings'
 import { ThrowingStorage, WriteFailingStorage } from './support/settingsStorageFixtures'
@@ -185,7 +184,7 @@ describe('SettingsStorageRepository implementation edges', () => {
     })
   })
 
-  it('returns save failure to the caller without throwing or replacing saved draft state', () => {
+  it('returns save failure to the caller without throwing or replacing the stored settings', () => {
     const storage = new WriteFailingStorage()
     storage.seed(
       'settings',
@@ -195,26 +194,10 @@ describe('SettingsStorageRepository implementation edges', () => {
       }),
     )
     const repository = new SettingsStorageRepository(storage, new DefaultSettingsFactory())
-    const store = new SettingsDraftStore(repository)
 
-    store.updateControl('shouldUseOSColorTheme', false)
-    store.updateControl('isForceDarkTheme', true)
-    store.updateControl('isEnablePWA', true)
-    const result = store.save()
+    const result = repository.save({ ...repository.load().value, isEnablePWA: true })
 
-    expect(result.ok).toBe(false)
-    expect(store.getSaved().isEnablePWA).toBe(false)
-    expect(store.getTmp().isEnablePWA).toBe(true)
-    expect(store.getThemePreviewState()).toStrictEqual({
-      tmp: {
-        shouldUseOSColorTheme: false,
-        isForceDarkTheme: true,
-      },
-      visible: {
-        shouldUseOSColorTheme: false,
-        isForceDarkTheme: true,
-      },
-    })
+    expect(result).toBe(false)
     expect(JSON.parse(storage.getItem('settings') ?? '{}')).toMatchObject({
       isEnablePWA: false,
     })

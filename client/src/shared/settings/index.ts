@@ -1,6 +1,5 @@
 export { AdjacentStorageRegistry } from './adjacentStorageRegistry'
 export { DefaultSettingsFactory } from './defaultSettings'
-export { SettingsDraftStore } from './settingsDraftStore'
 export { SettingsStorageRepository } from './settingsStorage'
 export { SettingsValidator } from './settingsValidation'
 export { SETTINGS_UI_CONTRACT } from './settingsUiContract'
@@ -18,7 +17,6 @@ export type {
   SettingsRawObject,
   SettingsRawValue,
   SettingsValidationResult,
-  ThemePreviewState,
   ThemeSettings,
 } from './settingsTypes'
 export type { URLSchemePlaceholders } from './urlScheme'

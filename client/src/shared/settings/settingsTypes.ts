@@ -81,11 +81,6 @@ export interface ThemeSettings {
   isForceDarkTheme: boolean
 }
 
-export interface ThemePreviewState {
-  tmp: ThemeSettings
-  visible: ThemeSettings
-}
-
 export type AdjacentStorageKey =
   | 'OnAirSelectStreamSetting'
   | 'RecordedSelectStreamSetting'
