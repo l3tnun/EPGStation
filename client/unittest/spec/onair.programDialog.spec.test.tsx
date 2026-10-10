@@ -234,7 +234,7 @@ describe('On Air card and ProgramDialog actions', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('Synthetic GR program キャンセル失敗')
   })
 
-  it('[AC 4.3] [AC 4.8] shows 編集/検索/重複解除 for a manual reserve in overlap state and edits it', async () => {
+  it('[AC frontend-guide 4.3] [AC frontend-guide 4.8] shows 編集/検索/重複解除 for a manual reserve in overlap state and edits it', async () => {
     const repository = createOnAirRepository([createSchedule('GR', 121, 30)], {
       121: { type: 'overlap', item: { reserveId: 921, programId: 121 } },
     })
@@ -255,7 +255,7 @@ describe('On Air card and ProgramDialog actions', () => {
     })
   })
 
-  it('[AC 4.3] [AC 4.8] shows 編集/検索/除外解除 for a manual reserve in skip state and edits it', async () => {
+  it('[AC frontend-guide 4.3] [AC frontend-guide 4.8] shows 編集/検索/除外解除 for a manual reserve in skip state and edits it', async () => {
     const repository = createOnAirRepository([createSchedule('GR', 122, 30)], {
       122: { type: 'skip', item: { reserveId: 922, programId: 122 } },
     })

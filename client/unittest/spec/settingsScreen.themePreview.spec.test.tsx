@@ -135,7 +135,7 @@ describe('Requirements 2.5, 3.1-3.7 Settings reset and theme preview workflow', 
     })
   })
 
-  it('[AC 1.10] keeps unknown fields and mismatched stored values when saving without a reset', async () => {
+  it('[AC frontend-settings-storage 1.7] [AC frontend-settings-storage 1.10] keeps unknown fields and mismatched stored values when saving without a reset', async () => {
     localStorage.setItem(
       'settings',
       JSON.stringify({

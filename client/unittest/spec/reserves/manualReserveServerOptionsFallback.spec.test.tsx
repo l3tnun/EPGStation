@@ -129,7 +129,7 @@ describe('Manual Reserve server option fetch fallback', () => {
     await new Promise((resolve) => setTimeout(resolve, 0))
   })
 
-  it('[AC 3.26] waits for the server option fetch before emitting scroll restoration done, since it gates whether the encode panels render', async () => {
+  it('[AC 4.32] waits for the server option fetch before emitting scroll restoration done, since it gates whether the encode panels render', async () => {
     window.history.replaceState(null, '', '/#/reserves/manual')
     const deferred = createResolvingDeferred<{
       channels: readonly never[]

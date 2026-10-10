@@ -19,7 +19,7 @@ describe('Search route lifecycle', () => {
     document.documentElement.classList.remove('fix-address-bar2')
   })
 
-  it('[AC 2.12] clears the search form and hides prior results when クリア is pressed', async () => {
+  it('[AC 2.32] clears the search form and hides prior results when クリア is pressed', async () => {
     window.history.replaceState(null, '', '/#/search?keyword=Synthetic')
     const searchRuleRepository = createSearchRuleRepository()
 
@@ -47,7 +47,7 @@ describe('Search route lifecycle', () => {
     expect(screen.queryByRole('region', { name: '検索結果' })).not.toBeInTheDocument()
   })
 
-  it('[AC 2.7] reports rule add failure without navigating away when addRule rejects', async () => {
+  it('[AC 2.12] reports rule add failure without navigating away when addRule rejects', async () => {
     window.history.replaceState(null, '', '/#/search?keyword=Synthetic')
     const searchRuleRepository = createSearchRuleRepository()
     vi.mocked(searchRuleRepository.addRule).mockRejectedValueOnce(
@@ -72,7 +72,7 @@ describe('Search route lifecycle', () => {
     expect(screen.getByRole('heading', { name: '検索' })).toBeVisible()
   })
 
-  it('[AC 2.7] reports rule update failure when updateRule rejects during rule edit', async () => {
+  it('[AC 2.13] reports rule update failure when updateRule rejects during rule edit', async () => {
     window.history.replaceState(null, '', '/#/search?rule=55')
     const searchRuleRepository = createSearchRuleRepository()
     vi.mocked(searchRuleRepository.updateRule).mockRejectedValueOnce(
@@ -97,7 +97,7 @@ describe('Search route lifecycle', () => {
     expect(await screen.findByText('ルール更新に失敗')).toBeVisible()
   })
 
-  it('[AC 2.7] reports rule update failure when updateRule resolves without throwing', async () => {
+  it('[AC 2.13] reports rule update failure when updateRule resolves without throwing', async () => {
     window.history.replaceState(null, '', '/#/search?rule=55')
     const searchRuleRepository = createSearchRuleRepository()
     vi.mocked(searchRuleRepository.updateRule).mockResolvedValueOnce({
@@ -182,7 +182,7 @@ describe('Search route lifecycle', () => {
     expect(searchRuleRepository.addRule).not.toHaveBeenCalled()
   })
 
-  it('[AC 2.7] navigates back after a successful rule update once the success delay elapses', async () => {
+  it('[AC 2.13] navigates back after a successful rule update once the success delay elapses', async () => {
     window.history.replaceState(null, '', '/#/')
     window.history.pushState(null, '', '/#/search?rule=55')
     const searchRuleRepository = createSearchRuleRepository()

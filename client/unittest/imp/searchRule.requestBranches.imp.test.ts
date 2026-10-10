@@ -18,7 +18,7 @@ function form(overrides: Partial<SearchFormState> = {}): SearchFormState {
 describe('createTimeSpecifiedSearchOption', () => {
   const base = { ...createDefaultSearchTimeReserveFormState(), keyword: 'k', channelId: 1 }
 
-  it('[AC 2.11] converts HH:MM texts to seconds, wraps ranges past midnight and sends week=0x7f for no weekday', () => {
+  it('[AC 1.11] converts HH:MM texts to seconds, wraps ranges past midnight and sends week=0x7f for no weekday', () => {
     expect(
       createTimeSpecifiedSearchOption({ ...base, startTime: '01:30', endTime: '02:00' }),
     ).toEqual({
@@ -73,7 +73,7 @@ describe('createTimeSpecifiedSearchOption', () => {
 })
 
 describe('buildSearchRequestBody branches', () => {
-  it('[AC 2.12] sends keyword targets, ignore keyword targets and legacy defaulting', () => {
+  it('[AC 1.12] sends keyword targets, ignore keyword targets and legacy defaulting', () => {
     const body = buildSearchRequestBody({
       form: form({
         keyword: ' key ',
@@ -109,7 +109,7 @@ describe('buildSearchRequestBody branches', () => {
     })
   })
 
-  it('[AC 2.14] uses broadcast waves only without channels and drops them when all visible waves are enabled', () => {
+  it('[AC 1.14] uses broadcast waves only without channels and drops them when all visible waves are enabled', () => {
     const partial = buildSearchRequestBody({
       form: form({ broadcastWaves: { GR: true, BS: false } }),
       settings,
@@ -130,7 +130,7 @@ describe('buildSearchRequestBody branches', () => {
     expect(none.option.GR).toBeUndefined()
   })
 
-  it('[AC 2.14] keeps the "omit when all visible waves enabled" rule with BS4K as a 5th visible wave', () => {
+  it('[AC 1.14] keeps the "omit when all visible waves enabled" rule with BS4K as a 5th visible wave', () => {
     const partial = buildSearchRequestBody({
       form: form({ broadcastWaves: { GR: true, BS: true, CS: true, SKY: true, BS4K: false } }),
       settings,
@@ -145,7 +145,7 @@ describe('buildSearchRequestBody branches', () => {
     expect(allFive.option.BS4K).toBeUndefined()
   })
 
-  it('[AC 2.11] sends genres, time start/range, durations, periods and isFree', () => {
+  it('[AC 1.11] sends genres, time start/range, durations, periods and isFree', () => {
     const body = buildSearchRequestBody({
       form: form({
         selectedGenres: [{ genre: 1, subGenre: 2 }],

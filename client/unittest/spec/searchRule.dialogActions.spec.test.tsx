@@ -23,7 +23,7 @@ describe('Search route lifecycle', () => {
     vi.restoreAllMocks()
   })
 
-  it('[AC 2.10] navigates to the reservation edit page from a search result ProgramDialog', async () => {
+  it('[AC 2.5] navigates to the reservation edit page from a search result ProgramDialog', async () => {
     window.history.replaceState(null, '', '/#/search?keyword=Synthetic')
     const searchRuleRepository = createSearchRuleRepository()
     vi.mocked(searchRuleRepository.fetchReserveIndex).mockResolvedValue({
@@ -55,7 +55,7 @@ describe('Search route lifecycle', () => {
     })
   })
 
-  it('[AC 2.10] deletes an existing reservation from a search result ProgramDialog', async () => {
+  it('[AC 2.16] deletes an existing reservation from a search result ProgramDialog', async () => {
     window.history.replaceState(null, '', '/#/search?keyword=Synthetic')
     const searchRuleRepository = createSearchRuleRepository()
     vi.mocked(searchRuleRepository.fetchReserveIndex).mockResolvedValue({
@@ -89,7 +89,7 @@ describe('Search route lifecycle', () => {
     expect(await screen.findByText('Synthetic Program One キャンセル')).toBeVisible()
   })
 
-  it('[AC 2.10] unlocks a skipped reservation from a search result ProgramDialog', async () => {
+  it('[AC 2.7] unlocks a skipped reservation from a search result ProgramDialog', async () => {
     window.history.replaceState(null, '', '/#/search?keyword=Synthetic')
     const searchRuleRepository = createSearchRuleRepository()
     vi.mocked(searchRuleRepository.fetchReserveIndex).mockResolvedValue({
@@ -123,7 +123,7 @@ describe('Search route lifecycle', () => {
     expect(await screen.findByText('Synthetic Program One 除外解除')).toBeVisible()
   })
 
-  it('[AC 2.10] unlocks an overlapping reservation from a search result ProgramDialog', async () => {
+  it('[AC 2.7] unlocks an overlapping reservation from a search result ProgramDialog', async () => {
     window.history.replaceState(null, '', '/#/search?keyword=Synthetic')
     const searchRuleRepository = createSearchRuleRepository()
     vi.mocked(searchRuleRepository.fetchReserveIndex).mockResolvedValue({

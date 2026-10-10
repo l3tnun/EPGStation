@@ -30,7 +30,7 @@ describe('RecordedWatchInfoCard contract', () => {
     expect(card.querySelector('article')?.children).toHaveLength(1)
   })
 
-  it('[VP-3] uses a 4px border radius matching the Vuetify v-card default v2 relied on', () => {
+  it('[design: Visual Implementation Contract, info card radius] uses a 4px border radius matching the Vuetify v-card default v2 relied on', () => {
     // v2 WatchRecordedInfoCard.vue renders an unstyled Vuetify <v-card>, whose
     // border-radius comes from $card-border-radius: $border-radius-root (4px in
     // vuetify 2.7.0's default theme, see vuetify (a v2 dependency)

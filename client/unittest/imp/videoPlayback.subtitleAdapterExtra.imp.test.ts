@@ -144,7 +144,7 @@ describe('Video Playback subtitle adapter contract edges', () => {
     expect(feedB24).toHaveBeenCalledWith(new Uint8Array([0x81, 9]), 1)
   })
 
-  it('[VP-1] routes caption and superimpose PES packets to their own feeder only, never the other', () => {
+  it('[AC 4.1a] routes caption and superimpose PES packets to their own feeder only, never the other', () => {
     const captionFeedB24 = vi.fn()
     const superimposeFeedB24 = vi.fn()
     const feeders = {

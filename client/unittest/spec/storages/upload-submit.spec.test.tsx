@@ -103,8 +103,8 @@ describe('Recorded upload route and form state', () => {
   // can prove the two uploads happen in the order the blocks were filled. Kept separate from
   // `fillIncompleteThirdBlock` below (which adds the still-empty third block on top of this) so the
   // ordering test does not also pay for filling a block it never asserts on -- that assertion
-  // belongs entirely to the "silently skips" test, which is the only one that needs a third block
-  // to skip in the first place.
+  // belongs entirely to the "excludes a completely empty video block" test, which is the only one
+  // that needs a third, empty block to exclude in the first place.
   async function fillTwoValidatedVideoBlocks(
     recordedRepository: RecordedApiRepository,
   ): Promise<{ firstFile: File; secondFile: File; addVideoBlockButton: HTMLElement }> {
@@ -122,7 +122,7 @@ describe('Recorded upload route and form state', () => {
   }
 
   // Adds a third, still-empty video block on top of `fillTwoValidatedVideoBlocks`, which the
-  // "silently skips an incomplete block" test uses to trigger the AC 3.11 skip branch. Split out of
+  // "excludes a completely empty video block" test uses to trigger the AC 3.8 exclusion. Split out of
   // that helper (rather than folded into a single "full form" helper) so the two tests below each
   // only pay for the block-fill work their own assertion needs.
   async function fillIncompleteThirdBlock(
@@ -143,7 +143,7 @@ describe('Recorded upload route and form state', () => {
   // work on its critical path. AC tags are redistributed onto whichever test actually exercises
   // each contract: AC 3.1 and 3.9 are the dialog and the metadata request this test observes; the
   // sequencing half of AC 3.2 (video upload deferred until metadata resolves) is also this test's,
-  // since it never resolves the metadata promise. AC 3.10 and AC 3.11 belong to the next two tests
+  // since it never resolves the metadata promise. AC 3.11 and AC 3.8 belong to the next two tests
   // below (themselves later split further apart, see the comment there), and AC 3.4 / 3.13 belong
   // to the test after those, all of which resolve metadata immediately instead.
   it('[AC 3.1] [AC 3.2] [AC 3.9] shows the upload dialog, sends recorded metadata once despite a double click, and defers video upload until it resolves', async () => {
@@ -194,15 +194,15 @@ describe('Recorded upload route and form state', () => {
     expect(recordedRepository.createRecorded).toHaveBeenCalledTimes(1)
   })
 
-  // Kept separate from the "silently skips an incomplete block" proof below rather than combined
+  // Kept separate from the "excludes a completely empty video block" proof below rather than combined
   // with it in one render: under CPU contention (coverage instrumentation plus other preflight
   // steps sharing the host) a combined test's own real-clock duration can exceed vitest's default
   // 5000ms per-test timeout, the same failure mode the comment on the split above documents for
   // this file. This test only needs the two validated blocks `fillTwoValidatedVideoBlocks` fills
-  // (proving order does not need a third, incomplete block to skip -- that is entirely the next
+  // (proving order does not need a third, empty block to exclude -- that is entirely the next
   // test's job) and does not observe the success UI, so it stops as soon as both uploads are
   // confirmed.
-  it('[AC 3.10] uploads validated video blocks in the order the blocks were filled once metadata resolves', async () => {
+  it('[AC 3.11] uploads validated video blocks in the order the blocks were filled once metadata resolves', async () => {
     const recordedRepository = createRecordedRepository()
 
     render(
@@ -250,11 +250,11 @@ describe('Recorded upload route and form state', () => {
   })
 
   // The other half of the split described above. Needs its own third, empty block (via
-  // `fillIncompleteThirdBlock`) to exercise the AC 3.11 skip branch. Also re-asserts (via
+  // `fillIncompleteThirdBlock`) to exercise the AC 3.8 exclusion of a completely empty block. Also re-asserts (via
   // `toHaveBeenNthCalledWith`) that the first and second blocks are still uploaded with their own
-  // file when a third, incomplete block is present -- the call-count check alone does not
-  // tell the two validated blocks apart from the skipped incomplete one.
-  it('[AC 3.11] silently skips an incomplete video block without blocking submission', async () => {
+  // file when a third, completely empty block is present -- the call-count check alone does not
+  // tell the two validated blocks apart from the excluded empty one.
+  it('[AC 3.8] excludes a completely empty video block from the upload targets without blocking submission', async () => {
     const recordedRepository = createRecordedRepository()
 
     render(

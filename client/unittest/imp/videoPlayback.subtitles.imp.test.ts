@@ -225,7 +225,7 @@ describe('Video playback subtitle settings and shared controls', () => {
       pts: 11000,
     })
     adapter?.dispose()
-    // [VP-1] caption and superimpose ARIB data groups are decoded by two independent
+    // [AC 4.1a] caption and superimpose ARIB data groups are decoded by two independent
     // Controller/Feeder/Renderer triples (aribb24.js 2.x's Feeder discards whichever
     // data group doesn't match its own `recieve.type`), so every lifecycle step below
     // happens twice -- once per subsystem -- and a 0xbd/0x80 caption packet must reach
@@ -262,7 +262,7 @@ describe('Video playback subtitle settings and shared controls', () => {
     ])
   })
 
-  it('[VP-1] constructs a Superimpose-type Feeder alongside the default Caption-type Feeder', () => {
+  it('[AC 4.1a] constructs a Superimpose-type Feeder alongside the default Caption-type Feeder', () => {
     class FakeController {
       public attachFeeder(): void {
         return undefined
