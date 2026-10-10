@@ -201,3 +201,236 @@ test.describe('narrow 320x568 viewport', () => {
     await expect(field).toHaveValue('2026-05-31 09:30')
   })
 })
+
+// 実際に page が使える大きさ（iPhone SE は Safari の toolbar・アドレスバーの分だけ画面より小さい）を含む。
+const usableSizes: Array<[number, number]> = [
+  [320, 460],
+  [320, 568],
+  [375, 548],
+  [375, 627],
+  [375, 667],
+  [390, 664],
+  [390, 844],
+  [414, 715],
+  [414, 896],
+  [667, 320],
+  [768, 1024],
+  [1280, 800],
+  [1920, 1080],
+]
+
+interface PickerScreen {
+  name: string
+  dialogName: string
+  suffix: RegExp
+  open: (page: Page) => Promise<Locator>
+}
+
+const pickerScreens: PickerScreen[] = [
+  {
+    name: 'Recorded Upload',
+    dialogName: '日付選択',
+    suffix: /T23:55$/,
+    open: async (page) => {
+      await installStoragesUploadApiMocks(page)
+      await page.goto('/#/recorded/upload')
+      await expect(page.getByTestId('recorded-upload-page')).toBeVisible()
+      return page.getByLabel('日付※')
+    },
+  },
+  {
+    name: 'Search period',
+    dialogName: '期間 開始',
+    suffix: /T23:55$/,
+    open: async (page) => {
+      await installSearchRuleWorkflowApiMocks(page)
+      await page.goto('/#/search')
+      await expect(page.getByRole('heading', { name: '検索' })).toBeVisible()
+      return page.getByTestId('search-rule-page').getByRole('textbox', {
+        name: '開始',
+        exact: true,
+      })
+    },
+  },
+  {
+    name: 'Manual Reserve',
+    dialogName: '時刻 開始',
+    suffix: / 23:55$/,
+    open: async (page) => {
+      await installReservesApiMocks(page)
+      await page.goto(`/#/reserves/manual?programId=${manualProgramDetail.id}`)
+      await page.getByRole('switch', { name: '時刻指定' }).click()
+      await expect(page.getByRole('region', { name: '時刻指定予約' })).toBeVisible()
+      return page.getByRole('textbox', { name: '開始' })
+    },
+  },
+]
+
+// dialog 自体（paper・DialogContent・picker の root）は縦に scroll しない。
+async function expectDialogDoesNotScroll(dialog: Locator): Promise<void> {
+  const scrolls = await dialog.evaluate((paper) => {
+    const targets = [
+      paper,
+      paper.querySelector('.MuiDialogContent-root'),
+      paper.querySelector('.MuiPickersLayout-root'),
+    ]
+    return targets.map((element) =>
+      element === null ? 'missing' : `${element.scrollHeight - element.clientHeight}`,
+    )
+  })
+  for (const overflow of scrolls) {
+    expect(
+      Number(overflow),
+      `scrollHeight - clientHeight: ${scrolls.join(',')}`,
+    ).toBeLessThanOrEqual(0)
+  }
+}
+
+async function expectVisibleInViewport(page: Page, target: Locator, label: string): Promise<void> {
+  const box = await target.boundingBox()
+  const viewport = page.viewportSize()!
+  expect(box, label).not.toBeNull()
+  expect(box!.x, `${label} left`).toBeGreaterThanOrEqual(0)
+  expect(box!.y, `${label} top`).toBeGreaterThanOrEqual(0)
+  expect(box!.x + box!.width, `${label} right`).toBeLessThanOrEqual(viewport.width)
+  expect(box!.y + box!.height, `${label} bottom`).toBeLessThanOrEqual(viewport.height)
+  // 他の要素や overflow で隠れていないこと（中心が自分自身の点であること）。
+  const hit = await target.evaluate((element) => {
+    const rect = element.getBoundingClientRect()
+    const top = document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2)
+    return top !== null && element.contains(top)
+  })
+  expect(hit, `${label} is not covered or clipped`).toBe(true)
+}
+
+async function expectDialogChromeVisible(page: Page, dialog: Locator): Promise<void> {
+  await expectVisibleInViewport(page, dialog, 'dialog')
+  await expectVisibleInViewport(page, dialog.getByRole('button', { name: 'クリア' }), 'クリア')
+  await expectVisibleInViewport(page, dialog.getByRole('button', { name: '設定' }), '設定')
+}
+
+// 上部の月日と時刻は同じ大きさの文字で、縦の中心が 1px 以内で揃う。
+async function expectToolbarAligned(dialog: Locator): Promise<void> {
+  const measured = await dialog.evaluate((paper) => {
+    const date = paper.querySelectorAll(
+      '.MuiDateTimePickerToolbar-dateContainer .MuiPickersToolbarText-root',
+    )
+    const time = paper.querySelector(
+      '.MuiDateTimePickerToolbar-timeDigitsContainer .MuiPickersToolbarText-root',
+    )
+    const monthDay = date[date.length - 1]
+    if (monthDay === undefined || time === null) {
+      return null
+    }
+    const center = (element: Element) => {
+      const rect = element.getBoundingClientRect()
+      return rect.y + rect.height / 2
+    }
+    return {
+      dateSize: getComputedStyle(monthDay).fontSize,
+      timeSize: getComputedStyle(time).fontSize,
+      diff: Math.abs(center(monthDay) - center(time)),
+    }
+  })
+  expect(measured).not.toBeNull()
+  expect(measured!.dateSize).toBe(measured!.timeSize)
+  expect(measured!.diff).toBeLessThanOrEqual(1)
+}
+
+test.describe('picker fits the usable page size without scrolling the dialog', () => {
+  for (const screen of pickerScreens) {
+    for (const [width, height] of usableSizes) {
+      test(`${screen.name} ${width}x${height}`, async ({ page }) => {
+        await page.setViewportSize({ width, height })
+        const field = await screen.open(page)
+        await field.click()
+        const dialog = page.getByRole('dialog', { name: screen.dialogName })
+        await expect(dialog).toBeVisible()
+        await page.waitForTimeout(400)
+
+        // calendar の view: 全ての週が scroll なしで見える。
+        await dialog.getByRole('tab', { name: '日付を選択' }).click()
+        await expectDialogDoesNotScroll(dialog)
+        await expectDialogChromeVisible(page, dialog)
+        await expectToolbarAligned(dialog)
+        const weeks = dialog.locator('[role="row"][aria-rowindex]').filter({
+          has: page.locator('[role="gridcell"]'),
+        })
+        const lastWeek = weeks.last()
+        await expectVisibleInViewport(page, lastWeek, 'last week')
+        const contentBox = await dialog.locator('.MuiDialogContent-root').boundingBox()
+        const lastBox = await lastWeek.boundingBox()
+        expect(lastBox!.y + lastBox!.height).toBeLessThanOrEqual(contentBox!.y + contentBox!.height)
+
+        // 時刻の view: 時と分の列は列の scroll だけで最初から最後まで選べる。
+        await dialog.getByRole('tab', { name: '時間を選択' }).click()
+        await expectDialogDoesNotScroll(dialog)
+        await expectDialogChromeVisible(page, dialog)
+        await expectToolbarAligned(dialog)
+        await expect(dialog.getByRole('listbox')).toHaveCount(2)
+        for (const [hour, minute] of [
+          [0, 0],
+          [23, 55],
+        ]) {
+          const hourOption = dialog.getByRole('option', { name: `${hour} 時間`, exact: true })
+          await hourOption.scrollIntoViewIfNeeded()
+          await hourOption.click()
+          await expectVisibleInViewport(page, hourOption, `${hour} 時間`)
+          const minuteOption = dialog.getByRole('option', { name: `${minute} 分`, exact: true })
+          await minuteOption.scrollIntoViewIfNeeded()
+          await minuteOption.click()
+          await expectVisibleInViewport(page, minuteOption, `${minute} 分`)
+          await expectDialogDoesNotScroll(dialog)
+          await expectDialogChromeVisible(page, dialog)
+        }
+        await dialog.getByRole('button', { name: '設定' }).click()
+        await expect(dialog).toHaveCount(0)
+        await expect(field).toHaveValue(screen.suffix)
+      })
+    }
+  }
+})
+
+test.describe('picker follows the visible area while it stays open', () => {
+  for (const screen of pickerScreens) {
+    test(`${screen.name} keeps fitting while the viewport changes`, async ({ page }) => {
+      await page.setViewportSize({ width: 375, height: 627 })
+      const field = await screen.open(page)
+      await field.click()
+      const dialog = page.getByRole('dialog', { name: screen.dialogName })
+      await expect(dialog).toBeVisible()
+      await dialog.getByRole('tab', { name: '時間を選択' }).click()
+
+      // Safari の toolbar が出る → 横向きにする → 広い画面に戻す、の順に表示領域を変える。
+      for (const [width, height] of [
+        [375, 548],
+        [667, 320],
+        [375, 627],
+        [1280, 800],
+        [320, 460],
+      ]) {
+        await page.setViewportSize({ width, height })
+        await page.waitForTimeout(300)
+        await expectDialogDoesNotScroll(dialog)
+        await expectDialogChromeVisible(page, dialog)
+        await expectToolbarAligned(dialog)
+        for (const label of ['0 時間', '23 時間', '0 分', '55 分']) {
+          const option = dialog.getByRole('option', { name: label, exact: true })
+          await option.scrollIntoViewIfNeeded()
+          await expectVisibleInViewport(page, option, `${width}x${height} ${label}`)
+        }
+        await dialog.getByRole('tab', { name: '日付を選択' }).click()
+        await expectDialogDoesNotScroll(dialog)
+        await expectVisibleInViewport(
+          page,
+          dialog
+            .locator('[role="row"][aria-rowindex]')
+            .filter({ has: page.locator('[role="gridcell"]') })
+            .last(),
+          `${width}x${height} last week`,
+        )
+        await dialog.getByRole('tab', { name: '時間を選択' }).click()
+      }
+    })
+  }
+})

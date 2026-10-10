@@ -1,5 +1,5 @@
-import { fireEvent, render, screen, within } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { DateTimePickerDialog } from '@/shared/DateTimePickerDialog'
 import {
   MONDAY_FIRST_WEEKDAYS,
@@ -123,5 +123,61 @@ describe('DateTimePickerDialog timezone', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: '設定' }))
 
     expect(onSet).toHaveBeenCalledWith(Date.parse('2026-05-20T01:00:00+12:00'))
+  })
+})
+
+describe('DateTimePickerDialog follows the visible area', () => {
+  const originalWidth = window.innerWidth
+  const originalHeight = window.innerHeight
+
+  afterEach(() => {
+    window.innerWidth = originalWidth
+    window.innerHeight = originalHeight
+    Reflect.deleteProperty(window, 'visualViewport')
+  })
+
+  function resizeWindow(width: number, height: number) {
+    act(() => {
+      window.innerWidth = width
+      window.innerHeight = height
+      window.dispatchEvent(new Event('resize'))
+    })
+  }
+
+  it('[AC frontend-storages-upload 2.14] stacks the toolbar above the calendar when the area is tall and moves it to the left when it is short and wide', async () => {
+    window.innerWidth = 375
+    window.innerHeight = 627
+    renderDialog(MAY_5_1230)
+    const dialog = await screen.findByRole('dialog', { name: '日付選択' })
+    expect(dialog.querySelector('.MuiPickersLayout-landscape')).toBeNull()
+
+    resizeWindow(375, 627)
+    expect(dialog.querySelector('.MuiPickersLayout-landscape')).toBeNull()
+
+    resizeWindow(667, 320)
+    expect(dialog.querySelector('.MuiPickersLayout-landscape')).not.toBeNull()
+    expect(within(dialog).getByRole('button', { name: '設定' })).toBeVisible()
+
+    resizeWindow(375, 548)
+    expect(dialog.querySelector('.MuiPickersLayout-landscape')).toBeNull()
+  })
+
+  it('[AC frontend-storages-upload 2.14] reads the visual viewport when the browser has one and stops listening on unmount', async () => {
+    const viewport = Object.assign(new EventTarget(), { width: 667, height: 320 })
+    Object.defineProperty(window, 'visualViewport', { value: viewport, configurable: true })
+    const removeListener = vi.spyOn(viewport, 'removeEventListener')
+    const { unmount } = renderDialog(MAY_5_1230)
+    const dialog = await screen.findByRole('dialog', { name: '日付選択' })
+    expect(dialog.querySelector('.MuiPickersLayout-landscape')).not.toBeNull()
+
+    act(() => {
+      viewport.height = 627
+      viewport.width = 375
+      viewport.dispatchEvent(new Event('resize'))
+    })
+    expect(dialog.querySelector('.MuiPickersLayout-landscape')).toBeNull()
+
+    unmount()
+    expect(removeListener).toHaveBeenCalledWith('resize', expect.any(Function))
   })
 })
