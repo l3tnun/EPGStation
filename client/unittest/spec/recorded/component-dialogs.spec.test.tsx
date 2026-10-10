@@ -250,8 +250,9 @@ describe('RecordedDownloadDialog and DropLogDialog', () => {
     expect(onClose).toHaveBeenCalled()
   })
 
-  it('[AC 3.16] shows a placeholder when no drop log content exists', () => {
+  it('[AC 3.16] [AC 3.27] shows a placeholder when no drop log content exists in a dialog capped at 600px', () => {
     render(<DropLogDialog open title="Log" content={null} onClose={vi.fn()} />)
     expect(screen.getByText('ログファイルがありません')).toBeInTheDocument()
+    expect(window.getComputedStyle(screen.getByRole('dialog')).maxWidth).toBe('600px')
   })
 })

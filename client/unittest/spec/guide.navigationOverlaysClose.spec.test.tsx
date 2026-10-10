@@ -23,7 +23,7 @@ describe('Guide navigation overlay dismissal (Escape/cancel) without selecting a
     vi.restoreAllMocks()
   })
 
-  it('[AC 3.33] closes the day-select dialog on Escape without navigating', async () => {
+  it('[AC 3.33] [AC 3.7] closes the day-select dialog on Escape without navigating and removes it from the DOM', async () => {
     render(
       <App
         settings={new DefaultSettingsFactory().create()}
@@ -45,9 +45,10 @@ describe('Guide navigation overlay dismissal (Escape/cancel) without selecting a
     await waitFor(() => {
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     })
+    expect(dayDialog.isConnected).toBe(false)
   })
 
-  it('[AC 3.18] closes the genre visibility dialog via cancel without persisting changes', async () => {
+  it('[AC 3.18] [AC 3.24] closes the genre visibility dialog via cancel without persisting changes and removes it from the DOM', async () => {
     render(
       <App
         settings={new DefaultSettingsFactory().create()}
@@ -74,5 +75,6 @@ describe('Guide navigation overlay dismissal (Escape/cancel) without selecting a
     await waitFor(() => {
       expect(screen.queryByRole('dialog', { name: '表示ジャンル' })).not.toBeInTheDocument()
     })
+    expect(genreDialog.isConnected).toBe(false)
   })
 })
