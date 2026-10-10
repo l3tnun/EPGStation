@@ -70,6 +70,9 @@ export interface RepositoryPersistence {
     readonly entities: Record<(typeof entityNames)[number], Constructor<Record<string, unknown>>>;
     readonly db: Record<(typeof repositoryNames)[number], Record<string, (...arguments_: any[]) => Promise<any>>>;
     readonly logMessages: unknown[];
+    /** The `DBOperator` and logger model the repositories were built with, for building another repository over the same database. */
+    readonly loggerModel: object;
+    readonly operator: object;
     readonly retry: { readonly calls: number; run<T>(job: () => Promise<T>): Promise<T> };
     cleanup(): Promise<void>;
 }
@@ -190,6 +193,8 @@ export async function createRepositoryPersistence(
             entities,
             db,
             logMessages,
+            loggerModel,
+            operator,
             retry,
             cleanup,
         };

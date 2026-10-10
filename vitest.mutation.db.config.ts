@@ -41,6 +41,9 @@ const integrationFiles = [
     'persistence/transactions.integration.test.ts',
     'persistence/storage-deletion-candidate.integration.test.ts',
     'persistence/doubles-parity.integration.test.ts',
+    'persistence/rule-program-roundtrip.integration.test.ts',
+    'persistence/search-queries.integration.test.ts',
+    'persistence/channel-tag-queries.integration.test.ts',
 ];
 
 const projects = ((base as any).test.projects as any[]).map(project => ({
