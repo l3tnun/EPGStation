@@ -14,7 +14,7 @@ Storages / Recorded Upload visual regression は、storage list、usage display�
 - upload-form、upload-form-mobile、upload-progress: 同 spec の "keeps upload form, FAB, and progress dialog inside viewport" と、`client/e2e/storages-upload-workflow.spec.ts` の upload workflow（required の赤、48px の select、channel option）。
 - upload-rollback-error: 同 visual spec の "keeps upload desktop progress and rollback error geometry stable" と、e2e の rollback workflow。
 - storages-empty-error: e2e の "renders storage usage and keeps blank empty/error states"。
-- storages-upload-dark: `client/e2e/dark-ui-cards.spec.ts`（storage item の surface）と `client/e2e/dark-ui-controls.spec.ts`（upload の select）。usage bar、progress dialog、disabled controls、action icons、required 赤の dark は自動 test が無い。
+- storages-upload-dark: `client/e2e/dark-ui-cards.spec.ts`（storage item の surface）と `client/e2e/dark-ui-controls.spec.ts`（upload の select）、`client/e2e/dark-ui-storages-upload.spec.ts`（required の赤、usage bar、progress dialog）。disabled controls と action icons の dark は自動 test が無い。
 
 | Case | Route / State | Viewport | Mock Dataset | Visual invariant |
 | --- | --- | --- | --- | --- |
