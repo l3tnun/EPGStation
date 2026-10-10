@@ -1139,7 +1139,7 @@ barrierへ保持する。
 | `%CH%`                  | 物理チャンネル           | `Reserve.channel`。放送局DBから対象channelが引ければその`channel`で上書き                                             | 見つからなければ`NULL`                                             |
 | `%SID%`                 | サービスID               | 放送局DBから引けた`serviceId`                                                                                          | 10進数文字列。引けなければ`NULL`                                   |
 | `%ID%`                  | 紐付くID                 | `Reserve`では自身の予約ID。`Recorded`では紐付く`reserveId`                                                             | 10進数文字列。`Recorded`で`reserveId`が`null`なら`NULL`            |
-| `%TITLE%`               | 番組タイトル             | `src.name`。時刻指定予約（`isTimeSpecified`）だけは番組表を検索し、見つかった番組名で上書きする                       | 見つからなければ`番組名なし`                                       |
+| `%TITLE%`               | 番組タイトル             | `src.name`。時刻指定予約（`isTimeSpecified`）だけは番組表を検索し、見つかった番組名で上書きする。検索は、放送局と予約の開始時刻を含む番組を引く（`startAt <= 時刻 < endAt`。前の番組の終了時刻と同じ時刻は次の番組に当たる） | 見つからなければ`番組名なし`                                       |
 | `%HALF_WIDTH_TITLE%`    | 番組タイトル（半角）     | `src.halfWidthName`。`%TITLE%`と異なり時刻指定予約でも番組表を再検索しない                                            | `null`なら`NULL`                                                   |
 
 置換後、確定した`fileName`だけへ`StrUtil.replaceFileName()`を適用し、Windowsで使用できない文字を全角文字へ**置換**する

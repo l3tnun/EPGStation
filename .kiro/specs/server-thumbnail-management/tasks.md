@@ -341,7 +341,7 @@ Task 4.1 が所有する。本 spec は同 task 完了後の検証済み設定 s
     -   _Boundary: サムネイル管理 IPC adapter integration_
     -   _Depends: 6.7_
 
--   [ ] 6.9 未生成の所有一時JPEGの回収を分類する
+-   [x] 6.9 未生成の所有一時JPEGの回収を分類する
 
     -   Requirement 2.12の一時JPEG未生成/既不存在を実filesystemで再現し、元生成失敗と後続queueを保持する。
     -   `thumbnail-absent-output-cleanup.integration.test.ts`で不存在、実EISDIR、errno無し故障を分ける。
@@ -352,8 +352,8 @@ Task 4.1 が所有する。本 spec は同 task 完了後の検証済み設定 s
     -   _Boundary: owned temporary JPEG filesystem_
     -   _Depends: 6.5_
 
--   [ ] 7. 機能固有の品質を閉じる
--   [ ] 7.4 本機能の品質判定を満たす
+-   [x] 7. 機能固有の品質を閉じる
+-   [x] 7.4 本機能の品質判定を満たす
 
     -   Task 6.1から6.9の機能固有の単体test（`unittest/spec`・`unittest/imp`）と`integration`を、`server-application-runtime`が
         所有する共有commandで全件成功させる。本specではcommand・config・thresholdを追加しない。

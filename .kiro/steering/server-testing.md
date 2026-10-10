@@ -163,9 +163,13 @@ lintの規則はdisable commentで外さない。
 1. **製品を実行して判定する。** testは`src`のproduction codeを実際に実行し、戻り値、副作用、状態遷移、順序、解放を
    assertする。sourceの文字列・構文・件数・ファイル構成を読んで形を判定するtest、値や文字列を比べるだけのtest、title
    だけで本体が空のtest、本体の先頭で`return`して何も検証しないtestを書かない。構造の規則は、testではなくlintに置く。
-2. **層と対応を保つ。** testは`*.spec.test.ts`（または`unittest/spec/`）、`*.imp.test.ts`（または`imp/`）、
-   `*.integration.test.ts`のいずれかに置き、層の責務（「Test種別と責務」）を越えない。各受入基準に、その基準を主に検証する
-   `unittest/spec`のcaseを1つ持たせ、case名に基準IDを書く。assertの無いcaseを主caseにしない。
+2. **層と対応を保つ。** testの層は`scripts/server-test/test-selection.mjs`のpatternで決まる。specは`*.spec.test.ts`・
+   `*.cross-spec.test.ts`・`spec/`配下（`unittest/spec/`を含む）、integrationは`*.integration.test.ts`・`integration/`配下・
+   `program-guide/public-api.contract.test.ts`、imp（既存実装の振る舞いを確かめる層）は`*.imp.test.ts`・`imp/`・
+   `implementation/`・`characterization/`配下と、どれにも当たらない`*.test.ts`である。新しく置くfileは、名前かdirectoryで
+   層を明示する。testは層の責務（「Test種別と責務」）を越えない。各受入基準に、その基準を主に検証する`unittest/spec`の
+   caseを1つ持たせ、case名に基準IDを書く。assertの無いcaseを主caseにしない。ただし`server-shared-foundation`は新規のtestを
+   持たず、既存の共通部品の現状の振る舞いを確かめる`imp/`のtestだけを持つ。条件との対応はその機能のdesignの表で示す。
 3. **Test Matrixを埋める。** 値、状態、時間、資源の各観点を空欄にせず、testまたは非適用理由へ割り当てる。
 4. **fixtureは合成値にする。** URL、IP address、credential、番組名、チューナー名、保存pathは機械に依存しない合成値
    （`.invalid`のhost、loopback、`<...>`、`synthetic-`始まりの名前）にする。lintが検出するのは上の表の範囲で、検出器が

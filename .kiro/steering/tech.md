@@ -31,27 +31,25 @@ clientのtest stackとcoverage方針は`.kiro/steering/testing.md`を正本と�
 | package manager | npm。`client/` に独立した `package-lock.json` を持つ |
 | router | React Router の hash route 対応 router。初期 route contract は `/#/...` を維持する |
 | data fetching / cache | TanStack Query |
-| local state | React local reducer / local state を基本とし、App Shell 横断 state など必要最小限に Zustand を使う |
+| local state | React local reducer / local state を使う。global store library は使わない |
 | UI component | MUI Core を基盤にし、EPGStation 固有 shared component と theme token で visual contract を満たす |
 | form / validation | React Hook Form + Zod |
 | API client | native `fetch` wrapper と typed request / response validation。repository base `./api` と endpoint path を二重結合しない |
 | Socket.IO | `socket.io-client` を継続採用する |
 | media playback | `hls.js` と `mpegts.js` を継続採用する |
-| date/time | `date-fns` |
-| icon | MUI icon を基本にし、現行 Material 系 UI parity を優先する |
-| class utility | `clsx` |
+| icon | `@mdi/font`（Material Design Icons の web font） |
 | linter | ESLint flat config + typescript-eslint + React Hooks plugin |
 | formatter | Prettier |
-| CSS | MUI theme + `*.module.scss`。global SCSS は bootstrap/reset 程度に限定する |
+| CSS | MUI theme + `*.module.css`。global CSS は `client/src/index.css` の reset・bootstrap だけにする |
 | path alias | `@/` を採用し、Vite / TypeScript / Vitest / ESLint で同じ解決規則にする |
 
 ## State / Boundary Rules
 
-server state は TanStack Query に置き、screen/dialog/edit/bulk state は feature-local reducer または React local state を基本とする。Snackbar、connection、server config、settings draft のような App Shell 横断 state だけを Zustand の候補にする。
+server state は TanStack Query に置き、screen/dialog/edit/bulk state は feature-local reducer または React local state を基本とする。Snackbar、connection、server config、settings draft のような App Shell 横断 state も、Zustand などの global store library は使わず、App Shell の hook が持つ。
 
 UI component は endpoint 文字列、raw query、localStorage schema を直接所有しない。route/query parser、API repository、action controller、dialog coordinator、storage adapter を feature boundary として分離する。
 
-Guide の大量 program cell DOM は `GuideGridRenderer` が React tree の外側で所有する。`HTMLElement`、DOM index、scroll restoration の内部 DOM 参照を React state、Zustand store、Redux 相当 store に保存しない。
+Guide の大量 program cell DOM は `GuideGridRenderer` が React tree の外側で所有する。`HTMLElement`、DOM index、scroll restoration の内部 DOM 参照を React state、外部の store に保存しない。
 
 ## Script Policy
 

@@ -1014,7 +1014,7 @@ test root、coverage command、Node.js matrix を作らない。Node.js 24 必�
 
 ### 14.7 録画済みresource利用portと再生source providerのcross-spec補足test
 
-これは73個のcanonical ACを増やさず、Recording Execution、Encoding、Media Delivery、Process Messaging、およびRuntimeの結
+これは74個のcanonical ACを増やさず、Recording Execution、Encoding、Media Delivery、Process Messaging、およびRuntimeの結
 合証拠を補強するtestである。
 
 -   `test/server/service-interface/recorded-resource-use-binding.integration.test.ts`で、service child起動ごとに一つの
@@ -1040,7 +1040,7 @@ test root、coverage command、Node.js matrix を作らない。Node.js 24 必�
 
 ## 15. Traceability の正本
 
-AC単位の対応は、重複する第二の一覧を持たず、19節の73行だけを正本とする。
+AC単位の対応は、重複する第二の一覧を持たず、19節の74行だけを正本とする。
 
 ## 16. 実装配置
 
@@ -1059,7 +1059,7 @@ AC単位の対応は、重複する第二の一覧を持たず、19節の73行�
 | `src/model/ModelContainerSetter.ts`のservice child構成  | 同じPM resource-use clientを二domainへbindingし、二つのread-only snapshot providerをPM handlerへ一回bindingする。Recorded Contentのplayback source providerをMedia Delivery consumerへ一回bindingし、error handoffだけを接続する。 |
 | `src/model/service/socketio/SocketIOManageModel.ts`     | 二つの200ms callbackでdestination単位の送信失敗を隔離し、timer stateを一回解放する。                                                                                                                                               |
 | `api.yml`                                               | 予約一覧の四項目を配列へ訂正し、stream情報を`viodeFileId`へ訂正する。                                                                                                                                                              |
-| 18.1の`test/server/service-interface/**`                | 68 canonical caseと5 evidence layerを分離して配置する。                                                                                                                                                                            |
+| 18.1の`test/server/service-interface/**`                | 69 canonical caseと5 evidence layerを分離して配置する。                                                                                                                                                                            |
 
 ### 16.2 設定配置
 
@@ -1086,7 +1086,7 @@ AC単位の対応は、重複する第二の一覧を持たず、19節の73行�
 | 公開 projection | `src/model/api/reserve/ReserveApiModel.ts`、`src/model/api/stream/StreamApiModel.ts`、`src/model/api/config/ConfigApiModel.ts` | 四配列、`viodeFileId`、`broadcast` を返す runtime 動作を確認できる。 |
 | 共通 response | `src/model/service/api.ts` の `responseJSON`、`responseFile`、`responseServerError`、`isSecureProtocol` | no-cache、file/range/download、500本文、HTTPS 判定を確認できる。 |
 | Byte range境界 | `src/model/service/api.ts`の`readRangeHeader`、`responseFile`、`sendResponse` | 8.3のsource確定分岐を確認でき、12 caseのwire結果とhandle解放回数は`IMP#SI-9.2`と`INT#SI-9.4`が固定している。 |
-| 公開 URL | `src/model/api/ApiUtil.ts`、`src/model/api/video/VideoApiModel.ts`、`src/model/api/iptv/IPTVApiModel.ts` | Host、通信方式、`subDirectory` を各 model で直接連結する確認済み実装である。 |
+| 公開 URL | `src/model/api/ApiUtil.ts`、`src/model/api/video/VideoApiModel.ts`、`src/model/service/api/iptv/channel.m3u8.ts` | 動画の URL は model が Host、通信方式、`subDirectory` を連結する。IPTV の URL は route adapter（`channel.m3u8.ts`）が要求ごとに URL builder を作って `IPTVApiModel` へ渡す。 |
 | Upload 受信 | `src/model/service/ServiceServer.ts` の `uploadFile`、`createUploadDir`、`cleanupStaleIncomingUploads` | `uploadTempDir`配下にincoming/adopted namespaceを作り、listener前に残存したincoming token directoryを整理する。受信は実行枠の取得、token directory、body timer、single finalizerを経る。 |
 | Upload route | `src/model/service/api/videos/upload.ts` | 公開 multipart 入力、録画済み番組への登録、HTTP 200本文、HTTP 500を確認できる。 |
 | Upload登録API model | `src/model/service/api/videos/upload.ts`、`IPCClient.uploadedVideoRegistrationPort`、`IPCServer`の`addUploadedVideoFile` | 10分期限、二値のdispatch disposition、pre-domain atomic adoption、rename後ackを持つ。 |
@@ -1117,7 +1117,7 @@ directory には operation module だけを置き、route から使う補助 mod
 
 ### 18.1 test の層と非循環性
 
-Requirements 1から8の68 ACは68個のcanonical `unittest/spec` caseへ一対一に割り当てる。Requirement 9の5 ACはbehavior case
+Requirements 1から8の69 ACは69個のcanonical `unittest/spec` caseへ一対一に割り当てる。Requirement 9の5 ACはbehavior case
 へ混ぜず、spec case 一覧、具体的`unittest/imp`結果、matrix、HTTP/IPC/filesystem/process integration、
 server 全体の C0/C1 の5層に分ける。各層の locator は次のとおりである。
 
@@ -1138,7 +1138,7 @@ canonical contractを補強するが、新しいACや公開契約を作らない
 C0/C1は実在するbranchだけを対象とし、存在しないsyntaxや到達不能branchをtest都合で追加しない。feature固有testは共有
 coverage commandやthresholdを定義せず、判定・除外を`EXT`へ委ねる。
 
-### 18.2 73行 matrix
+### 18.2 74行 matrix
 
 `S`はcanonical `unittest/spec`、`I`は`unittest/imp`、`G`はintegration、`M`は本表そのもの、`Q`はRuntimeの品質判定である。入力
 の`C`はHTTP carrier、`T`はsynthetic fixture、`B`は境界、`D`は重複・競合、`N`は呼出値なしを表す。`SI-9.1`は一覧と
@@ -1215,15 +1215,15 @@ case の突き合わせ、`SI-9.3`は本表そのもの、`SI-9.5`は共有 comm
 | SI-8.4  | R8.4  | `LS#SI-8.4`         | S/G   | C/B・CORS on/off                     | middleware/HTTP               | origin差            | on時Web/API全origin |
 | SI-8.5  | R8.5  | `LS#SI-8.5`         | S/G   | C/T・Socket.IO接続                   | socket CORS                   | origin差            | 全origin許可 |
 | SI-8.6  | R8.6  | `LS#SI-8.6`         | S/G   | C/T・代表全surface                   | middleware/HTTP/socket        | unauthorized相当    | 共通app auth追加0 |
-| SI-9.1  | R9.1  | `PC/UP/RT/LS`の68 case | S   | N・case一覧                          | spec/case locators            | 欠落/重複           | 68 ACと68 canonical case一意対応 |
+| SI-9.1  | R9.1  | `PC/UP/RT/LS`の69 case | S   | N・case一覧                          | spec/case locators            | 欠落/重複           | 69 ACと69 canonical case一意対応 |
 | SI-9.2  | R9.2  | `IMP#SI-9.2`        | I     | coercion/adoption race/range 12 case | value/raw fs/timer/listener   | invalid/race        | coercion、rename先着、dest非削除、range具体結果 |
-| SI-9.3  | R9.3  | 本節の matrix       | M     | N・matrix                            | design matrix                 | 欠落/重複/空欄      | 73 IDと必須分類が揃う |
+| SI-9.3  | R9.3  | 本節の matrix       | M     | N・matrix                            | design matrix                 | 欠落/重複/空欄      | 74 IDと必須分類が揃う |
 | SI-9.4  | R9.4  | `INT#SI-9.4`        | G     | C/T/B/D・range/adoption/restart      | HTTP/IPC/fs/process           | boundary/race       | wire range、ACK loss、owner一意、二DELETE接続 |
 | SI-9.5  | R9.5  | `EXT#SI-9.5`        | Q     | N・品質判定                          | suite/C0/C1                   | 未実行/未解決       | feature全件+server全体のC0/C1成立まで未完了 |
 
 ## 19. Formal Requirements Traceability
 
-次の73行だけをnumeric formal traceとする。R1からR8の68行はcanonical behavior case、R9の5行は独立したevidence/release
+次の74行だけをnumeric formal traceとする。R1からR8の69行はcanonical behavior case、R9の5行は独立したevidence/release
 layerである。
 
 | Requirement ID | 設計・主検証              |

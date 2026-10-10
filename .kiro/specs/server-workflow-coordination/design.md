@@ -1451,9 +1451,20 @@ production compile境界、V8 coverage、root commandを再定義しない。
 | `test/server/workflow-coordination/architecture.spec.test.ts`               | UI handoff と Hook handoff の独立（一方の reject が他方を止めない）                                 |
 | `test/server/workflow-coordination/provider-contracts.integration.test.ts`  | 実 provider との接続（予約・録画、Runtime 起動の typed outcome、既存 IPC wire）                     |
 | `test/server/workflow-coordination/startup-workflow-entry-guard.integration.test.ts` | 起動 port が複数の service child 登録に対して一回だけ invoke されること                   |
+| `test/server/workflow-coordination/real-program-rule.integration.test.ts` | 番組情報の更新後の整理と予約の更新、ルールの追加・変更・削除に伴う予約の再計算（実部品） |
+| `test/server/workflow-coordination/real-reservation-recording.integration.test.ts` | 予約の追加・変更・削除・スキップと録画の準備・取消・再試行上限（実部品） |
+| `test/server/workflow-coordination/real-recording-finish.integration.test.ts` | 録画完了後のサムネイル・エンコード依頼、タグの関連付け、コマンドと画面通知の選択（実部品） |
+| `test/server/workflow-coordination/real-relay-recorded-change.integration.test.ts` | 番組の中継候補の予約と、録画済み番組の変更に伴うサムネイル依頼・予約取消（実部品） |
+| `test/server/workflow-coordination/real-user-deletion.integration.test.ts` | 利用者による録画済み番組の削除。エンコードの取消、録画の終了待ち、録画側の判断への委譲（実部品） |
+| `test/server/workflow-coordination/real-boundary-partial.integration.test.ts` | 画面通知と外部コマンドの境界。通知を集約せず、完了しない通知やコマンドが後続を止めないこと（実部品） |
+| `test/server/workflow-coordination/real-world-teardown.integration.test.ts` | 実部品の配線の後始末。操作が起動した外部コマンドの終了を待ってから一時 directory を消すこと |
+| `test/server/workflow-coordination/_real-workflow.ts` | 上の結合 test が共有する実部品の配線（補助 file） |
+| `test/server/workflow-coordination/_real-encode.ts` | 実の子 process で動かすエンコードの配線（補助 file） |
 | `test/server/workflow-coordination/imp/*.test.ts`                           | 実装の性質（`EventSetter` と `StartupContinuationCoordinator` の特性）                              |
 | `test/server/workflow-coordination/restart.characterization.test.ts`        | timeout / restart時のconsumer進行喪失とremote cancel / rollback / retry / replay / duplicate効果各0 |
 | `test/server/fixtures/workflow-coordination/`                               | synthetic entity、deferred port、call ledger、fake event adapter                                    |
+
+上の `real-*.integration.test.ts` は、DB・録画・外部コマンドなどに実部品を使う。実部品が子 process を起動するのは、他機能の部品（外部コマンド、エンコード）を通すためであり、本機能が子 process を所有するわけではない。
 
 ### Unit / component tests
 

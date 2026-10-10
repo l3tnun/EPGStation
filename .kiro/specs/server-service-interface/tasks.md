@@ -63,7 +63,7 @@ ownerのdomain実装を含まない。
 | 2.3     | `src/model/service/api/{encode,storage,streams}/**`、`test/server/service-interface/public-contract.spec.test.ts`                                                                                                                                                                                                            |
 | 2.4     | `src/model/service/api/iptv/{channel.m3u8,epg.xml}.ts`、`src/model/api/iptv/IIPTVApiModel.ts`、`test/server/service-interface/{imp/iptv-carrier.test.ts,integration/service-interface.integration.test.ts}`                                                                                                                  |
 | 3.1–3.2 | `api.yml`、`api.d.ts`、`src/model/api/{reserve,stream,config}/**`、`src/model/service/api/{rules,recording}/**`、`test/server/service-interface/public-contract.spec.test.ts`                                                                                                                                                |
-| 4.1–4.3 | `src/model/service/{ServiceServer.ts,api.ts}`、`test/server/service-interface/{public-contract.spec.test.ts,imp/response-file.test.ts,integration/service-interface.integration.test.ts}`                                                                                                                                    |
+| 4.1–4.3 | `src/model/service/{ServiceServer.ts,api.ts}`、`test/server/service-interface/{public-contract.spec.test.ts,imp/service-interface-characteristics.test.ts,api-responsefile-directory.imp.test.ts,api-response-guards.imp.test.ts,integration/service-interface.integration.test.ts}`                                                                                                                                    |
 | 5.1–5.7 | `src/model/service/{ServiceServer.ts,upload/UploadAdmissionController.ts,api/videos/upload.ts}`、`test/server/service-interface/{upload.spec.test.ts,imp/upload-lifecycle.test.ts,integration/service-interface.integration.test.ts}`                                                                                        |
 | 6.1–6.3 | `src/model/service/socketio/SocketIOManageModel.ts`、`test/server/service-interface/{realtime.spec.test.ts,imp/realtime-notifier.test.ts,integration/service-interface.integration.test.ts}`                                                                                                                                 |
 | 7.1–7.2 | `src/model/service/ServiceServer.ts`、`test/server/service-interface/{listener.spec.test.ts,integration/service-interface.integration.test.ts}`                                                                                                                                                                              |
@@ -285,7 +285,7 @@ ownerのdomain実装を含まない。
     -   _Verification: unittest/imp_
     -   _Depends: 4.4_
 
--   [ ] 5. Upload admission と request lifecycle を TDD で実現する
+-   [x] 5. Upload admission と request lifecycle を TDD で実現する
 -   [x] 5.1 既存 multipart・登録・応答契約を characterization する
 
     -   一要求一 file、録画済み番組、保存先、表示名、file 種類の既存 multipart schema と、一時保存先への受信を固定する。
@@ -401,7 +401,7 @@ ownerのdomain実装を含まない。
     -   _Verification: unittest/spec, unittest/imp, child-process/filesystem integration, RED/GREEN_
     -   _Depends: 5.6_
 
--   [ ] 5.8 Multipart filenameのcharsetと登録carrierの名前保持を検証する
+-   [x] 5.8 Multipart filenameのcharsetと登録carrierの名前保持を検証する
 
     -   通常filenameをUTF-8、extended filenameを明示charsetで一回だけ解釈し、extendedを優先する契約を固定する。
     -   主spec caseは解釈済みの日本語とliteral `Ã©` を製品upload routeから登録portへ渡し、名前を再decodeせず、成功応答と
@@ -565,7 +565,7 @@ ownerのdomain実装を含まない。
         る。
     -   feature-local回帰checkpointを実行し、このleaf開始後のproduction/config変更を0件にする。後続Tasks 9.2・9.4で追加
         するtestを完成させ、本機能の品質判定はTask 9.5で満たす。本leafで共有基盤を再実装しない。
-    -   完了時には、Requirement 7・8を含む全68 Acceptance Criteria が一件以上の成功 test へ対応し、未分類・未検証が0件と
+    -   完了時には、Requirement 7・8を含む全69 Acceptance Criteria が一件以上の成功 test へ対応し、未分類・未検証が0件と
         なる。
     -   _Requirements: 3.7, 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 8.1, 8.2, 8.3, 8.4, 8.5, 8.6_
     -   _Boundary: Service Interface end-to-end integration_

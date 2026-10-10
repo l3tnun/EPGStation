@@ -202,7 +202,7 @@ interface DatabaseConnectionSettings {
 | `sqlite.extensions` | 省略可                                 | `undefined` または順序付き配列       | 記載順を変更・重複排除せず読み込む                                                                  |
 | `sqlite.regexp`     | 省略可                                 | boolean または `undefined`           | `true` の場合だけ正規表現能力あり                                                                   |
 | `sqlite.wal`        | 省略可                                 | boolean または `undefined`           | `true` の場合だけ journal_mode を WAL にする（既定は無効）。DataSource option の `enableWAL: true` として渡す。`true` 以外（省略・`false`・文字列を含む）は無効として扱う |
-| `sqlite.busyTimeout` | 省略可                                | 整数（ミリ秒）または `undefined`     | 他の接続が持つロックを待つ最長時間。DataSource option の `timeout` として渡す（`ormconfig.js` も同じ）。省略時は既定の `5000` を明示して渡す（TypeORM の `better-sqlite3` driver の既定と同じで、挙動は変わらない）。値は検証・変換せず driver に渡し、整数でない値・負の値・`2147483647` を超える値は `better-sqlite3` が接続の作成時に拒否する。待ち時間を過ぎてもロックが解放されなければ `SQLITE_BUSY` になる。元の提案は公開 PR #722（`busyTimeout: 90000` の固定）で、機械の速さで適切な値が変わるため設定可能にした |
+| `sqlite.busyTimeout` | 省略可                                | 整数（ミリ秒）または `undefined`     | 他の接続が持つロックを待つ最長時間。DataSource option の `timeout` として渡す（`ormconfig.js` も同じ）。省略時は既定の `5000` を明示して渡す（TypeORM の `better-sqlite3` driver の既定と同じで、挙動は変わらない）。値は検証・変換せず driver に渡し、整数でない値・負の値・`2147483647` を超える値は `better-sqlite3` が接続の作成時に拒否する。待ち時間を過ぎてもロックが解放されなければ `SQLITE_BUSY` になる。適切な値は機械の速さで変わるため、設定で変えられる |
 | MySQL 接続項目      | backend 選択時に `mysql` object が必要 | host、user、port、password、database | `mysql` object がなければ接続を開始せず error。値は採用 client へ渡し、接続可否を driver 結果で判定する |
 | `mysql.socketPath`  | 省略可                                 | 文字列または `undefined`             | 設定されているときだけ DataSource option の `socketPath` に渡す。省略時は option に `socketPath` を含めない。設定時にドライバーは `host` / `port` より `socketPath` を優先する |
 | `mysql.ssl`         | 省略可                                 | 任意の値または `undefined`           | 設定されているときだけ、値を検証・変換・複製せずそのまま DataSource option の `ssl` に渡す（`ormconfig.js` も同じ）。省略時は option に `ssl` を含めない（TLS を使わない従来の接続）。値の解釈は採用 client（`mysql2`）に委ね、`ca` / `cert` / `key` は証明書や鍵の内容（PEM）であり file path ではない。サーバー証明書の検証は `rejectUnauthorized`（driver 既定は `true`）で、host 名の照合は `verifyIdentity: true` を指定したときだけ行われる |
@@ -281,6 +281,11 @@ interface IPromiseRetry {
 | `IDropLogFileDB`     | 追加、件数更新、削除、restore                          | ID、全件                                                  | log 実体は操作しない                     |
 | `IThumbnailDB`       | 追加、削除、recorded 単位削除、restore                 | ID、全件                                                  | image 実体は操作しない                   |
 | `IRecordedTagDB`     | 追加、更新、削除、relation 追加/削除、restore          | ID、一覧/件数                                             | many-to-many relation を所有する         |
+
+`IProgramDB` の時刻による照会は、端点を次のとおり扱う。放送局と時刻による照会（`findChannelIdAndTime`）は、指定した放送局で
+`startAt <= 時刻 < endAt` の番組を 1 件返す。開始時刻は含み、終了時刻は含まないため、前の番組の終了時刻と次の番組の開始時刻が
+同じ時刻なら、その時刻は次の番組に当たる。一方、放送中の照会（`findBroadcasting`）は `startAt <= 時刻 <= endAt` の閉区間で、
+全放送局の番組を返す。
 
 repository は業務上の「この変更を許可するか」を判断しない。caller が渡した型付き値を保存形式へ変換し、database 制約と処
 理契約だけを適用する。
@@ -868,6 +873,13 @@ Requirements Traceability、唯一の機能固有test matrix、既存case件数�
 | `[PERSIST-2.7]` uses byte-exact storage identity / maps absence to null / preserves the final query rejection | `spec/imp` | `storage-deletion-candidate.cross-spec.test.ts` | 保存先名のbyte単位比較、除外IDが空のとき`NOT IN`を生成しないこと、該当なし=`null`、最終query rejectを`null`へ変換しないことを確認する |
 | `[PERSIST-2.7]` binds the storage-owned candidate port to the singleton RecordedDB provider | `spec/imp` | `storage-deletion-candidate.cross-spec.test.ts` | storage側のportを`RecordedDB`のsingletonへ直接bindingすることを確認する |
 
+### test 名の ID の付け方
+
+test 名の先頭の `[PERSIST-n.m-…]` は、`n.m` を tasks.md の task 番号（`PERSIST-1.1`〜`PERSIST-1.4`、`PERSIST-2.1`〜`PERSIST-2.7`、
+`PERSIST-3.1`〜`PERSIST-3.4`、`PERSIST-4.1` など）にしたものと、条件番号（`PERSIST-1.8`〜`PERSIST-1.14`、`PERSIST-4.8`〜`PERSIST-4.10`、
+`PERSIST-6.1-ORM-CLI-*`）にしたものが混在する。たとえば `PERSIST-1.2-EXTENSION-FAILURE` は task 1.2 の test で、条件 1.3 を確かめる。
+ID だけでは、どちらの番号かは決まらない。条件から test を辿るときは、下の「Requirements Traceability」の表を正とする。
+
 ### Test種別と判定責務
 
 -   `unittest/spec`はRequirements 1から6をoracleとし、注入したfake DataSourceで方式選択、同時初期化、公開guard、保存・検
@@ -1002,7 +1014,7 @@ portが入力として許容せずruntime validationも本機能が所有しな�
 | 1.11 | 完全初期化前失敗の非公開・候補close・再試行可能状態                 | `connection.spec.test.ts`: shared error / cleanup / later reinitialization                          |
 | 1.12 | `sqlite.wal` が `true` のときの `enableWAL`                         | `connection.spec.test.ts`: option投影 / `sqlite-journal.integration.test.ts`: 実fileが WAL になり `-wal`・`-shm` が増える |
 | 1.13 | `sqlite.wal` が無効のときの delete 方式の確認と WAL からの復帰     | `connection.spec.test.ts`: pragma発行の順序・失敗時の候補close / `sqlite-journal.integration.test.ts`: 既定のfileが delete のまま、WAL だった file が delete に戻る、使用中で戻せないときの失敗 |
-| 1.14 | `sqlite.busyTimeout` の `timeout`（既定 5000）と `SQLITE_BUSY`        | `connection.spec.test.ts`: option投影（既定・設定値・不正な値の拒否） / `sqlite-busy-timeout.integration.test.ts`: 2 接続の実 file でロックを待ってから `SQLITE_BUSY` になる / `orm-cli.integration.test.ts`: `ormconfig.js` の `timeout` 投影 |
+| 1.14 | `sqlite.busyTimeout` の `timeout`（既定 5000）と `SQLITE_BUSY`        | `connection.spec.test.ts`: option投影（既定・設定値・不正な値を変えずに渡す） / `sqlite-busy-timeout.integration.test.ts`: 2 接続の実 file でロックを待ってから `SQLITE_BUSY` になる。不正な値を driver が拒否することもここで確かめる / `orm-cli.integration.test.ts`: `ormconfig.js` の `timeout` 投影 |
 | 2.1  | `Channel`、`Program` Entity / repository                            | `repositories.spec.test.ts`: round trip                                                             |
 | 2.2  | `Reserve`、`Rule` Entity / repository                               | `repositories.spec.test.ts`: round trip                                                             |
 | 2.3  | `Recorded`、`RecordedHistory` Entity / repository                   | `repositories.spec.test.ts`: round trip                                                             |
@@ -1019,6 +1031,7 @@ portが入力として許容せずruntime validationも本機能が所有しな�
 | 3.8  | MySQL boolean、binary LIKE / regexp                                 | `search-dialects.spec.test.ts`: MySQL truth table                                                   |
 | 3.9  | backend 間の非同一契約                                              | dialect integration test の backend 別期待値                                                        |
 | 3.10 | JSON parsing error の伝播                                           | `repositories.spec.test.ts`: corrupt stored value                                                   |
+| 3.11 | `limit` が 0 のときは件数を制限しない（`offset` があればその位置以降の全件） | `list-limit-zero.imp.test.ts`: 各 repository の一覧取得が limit 0 で `take` を付けない / `doubles-parity.integration.test.ts`: SQLite・MySQL の実 DB で limit 0 が全件を返す |
 | 4.1  | `ReserveDB.updateMany()` transaction                                | `transactions.integration.test.ts`: all-or-rollback                                                 |
 | 4.2  | `ProgramDB.insert()` の全件/放送局置換                              | `transactions.integration.test.ts`: delete+insert atomicity                                         |
 | 4.3  | repository ごとの `restore()` transaction                           | `transactions.integration.test.ts`: one type atomicity                                              |

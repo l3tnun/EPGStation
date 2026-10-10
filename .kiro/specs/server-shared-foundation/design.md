@@ -45,3 +45,29 @@ consumer cross-spec evidence として再利用できるが、shared source の�
 -   `FileUtil` の test は `node:os` の一時ディレクトリ配下で実ファイル操作を行う。実 URL、実番組情報、credential、実
     保存 path、実チューナーサーバー情報を fixture に含めない。
 
+### 条件と test の対応
+
+本機能は新規の test を持たず、既存部品の現状の振る舞いを確かめる test だけを持つ。test の ID（`IMP-CHAR-SF-n`）の n は
+source の並びの番号であり、Requirement の番号とは一致しない。条件から test を辿るときは次の表を正とする。
+
+| 条件 | 主な test（`test/server/shared-foundation/` 配下） |
+| --- | --- |
+| 1.1 | `imp/promise-queue.test.ts`: 前の job が完了してから追加順に開始する |
+| 1.2 | `imp/promise-queue.test.ts`: job 自身の拒否理由で呼び出し元が reject される |
+| 1.3 | `imp/promise-queue.test.ts`: 前の job が reject した後も後続の job が完了する |
+| 2.1 | `imp/date-util.test.ts`: `yyyy/MM/dd hh:mm:ss` のゼロ詰めと `YY` の置換 |
+| 2.2 | `imp/date-util.test.ts`: `w` が曜日の日本語 1 文字になる |
+| 2.3 | `imp/date-util.test.ts`: `getJaDate` が UTC+9 の壁時計の時刻へずらす |
+| 3.1 | `imp/str-util.test.ts`: NUL の除去（NUL の無い文字列はそのまま） |
+| 3.2 | `imp/str-util.test.ts`: 全角の英数字・記号を半角へ変換する |
+| 3.3 | `imp/str-util.test.ts`: 半角の英数字を全角へ変換する（`[`・`]` は半角のまま。バックスラッシュは全角の円記号） |
+| 3.4 | `imp/str-util.test.ts`: ディレクトリ名・ファイル名で使えない記号を全角へ置換する |
+| 3.5 | `imp/str-util.test.ts`: 囲み文字と `[]` の区間の除去、`[前]`・`[後]` の付け直し（`deleteBrackets` の各 case） |
+| 3.6 | `imp/str-util.test.ts`: 囲み文字を `[]` 表記へ往復変換する |
+| 4.1 | `imp/file-util.test.ts`: 読み書き・追記・削除・名前変更・移動・一覧取得・ディレクトリ削除の成功 |
+| 4.2 | `imp/file-util.test.ts`・`imp/file-util-read-dir-failure.test.ts`: 存在しない file の読み取り・削除・サイズ取得（`FileIsNotFound`）・一覧取得の失敗 |
+| 4.3 | `imp/file-util.test.ts`（コピー失敗時の後始末）と `file-util-real-failure.integration.test.ts`（実 file system の失敗） |
+| 4.4 | `imp/file-util.test.ts`: 管理対象ディレクトリの外・自身・識別情報の不一致を削除不可と判定する |
+| 5.1 | `imp/util.test.ts`: 境界の直前まで完了せず、境界で 1 度だけ完了する |
+
+`toHalfRegExp`・`getFileList` など、条件を持たない公開関数は、現状の振る舞いを確かめる test だけがあり、上の表の対象外である。

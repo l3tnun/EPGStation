@@ -234,7 +234,7 @@ active session registryと、service childのEncoding待機列・実行中一覧
 childのencode・配信利用gateを順に取得し、いずれかを取得できなければ`not-deleted`を返す。両gate取得後だけrecorded-content
 のfinal deleteへ進み、全終了経路で取得済みgateを逆順に一回解放する。
 
-本機能は `RecordedDeletionPlan`、`prepareStorageDeletion()`、`deletePreparedForStorage()`、`hasReservation()`、または録
+本機能は `StorageDeletionPreparationToken`、`prepareStorageDeletion()`、`deletePreparedForStorage()`、`hasReservation()`、または録
 画取消operationをimport・呼出しせず、利用者削除workflowやencode取消へも接続しない。したがってrecordingへの直接依存はな
 く、`deleteForStoragePressure(recordedId, storageName)`の`deleted` / `not-deleted` / rejectだけを観測する。
 
@@ -263,7 +263,7 @@ settlement、二重解放を0件にする。
 -   public response を構築中の `StorageItem[]`
 
 録画済み番組 row、録画 file、thumbnail、drop log、tag relation、録画予約、encode job、配信 session、および
-`RecordedDeletionPlan` は所有しない。candidate ID を削除 port へ渡した後、runtime adapter が plan を operation-local に
+`StorageDeletionPreparationToken` は所有しない。candidate ID を削除 port へ渡した後、runtime adapter が token を operation-local に
 保持し、削除効果と event は録画済み番組管理機能が所有する。
 
 ## 主要 workflow、状態、および timeline
@@ -747,7 +747,7 @@ wall clock の 300 秒待機を test に使わない。deadline、interval、100
     画・encode・配信中IDを用意する。全videoが対象保存先に属する未使用recordだけを`startAt, id`順で選び、試行済みIDを再選
     択しない。
 -   storage側はfake `IRecordedStorageDeletionPort`へのcandidate ID / storageName受渡し、`deleted`後の同一path再取得、
-    `not-deleted` / rejection後のloop停止だけを検証し、plan、barrier、path / DB readの内部期待値を重複所有しない。
+    `not-deleted` / rejection後のloop停止だけを検証し、token、barrier、path / DB readの内部期待値を重複所有しない。
 -   未確定I/Oを`overdue`、未回収commandを`unreaped`としてexact entry IDへ隔離し、同じentryの後続監視とchild起動を0件にす
     る一方、別entry、録画、配信、番組情報更新、およびWeb・APIが継続することを検証する。元Promiseの後着settlementまたは
     exact childのlate terminalだけが同じentryを一回解放し、別operationの後着callbackは作用させない。
@@ -971,7 +971,7 @@ Requirements、Design、test、設定を同じ変更単位で更新する。未�
 | 容量削除consumer portとruntime composition  | `.kiro/specs/server-application-runtime/design.md`                                                                                                                                                                                                                                                                  | `deleteForStoragePressure(recordedId, storageName)`、副作用なしprepare→録画gate→service-child gate→lock内final delete                                 |
 | 録画済み番組の容量削除core                  | `.kiro/specs/server-recorded-content/design.md`                                                                                                                                                                                                                                                                     | `prepareStorageDeletion()`、lock内最終再読取、storage所属、exact-ID path / row、全DB settlement                                                       |
 | 録画実行の容量削除contract                  | `.kiro/specs/server-application-runtime/design.md`の容量削除composition、`.kiro/specs/server-recording-execution/design.md`のrecorded ID利用gate                                                                                                                                                                    | active録画時の`busy`、不明時の`unknown`、token保持中の同ID新規利用blockと一回解放。容量不足削除から録画取消・terminal barrierを呼ばない               |
-| 設定 snapshot と command parser owner       | `.kiro/specs/server-configuration/design.md`                                                                                                                                                                                                                                                                        | constructor snapshot、storage の再構築時反映、`CommandSettingParser`                                                                                  |
+| 設定 snapshot と command parser owner       | `.kiro/specs/server-configuration/design.md`                                                                                                                                                                                                                                                                        | constructor snapshot、storage の再構築時反映、`ProcessUtil.parseCmdStr`                                                                                  |
 | repository owner                            | `.kiro/specs/server-persistence/design.md`                                                                                                                                                                                                                                                                          | `IRecordedDB` query port、DB 接続・retry・relation ownership                                                                                          |
 | system logger contract                      | `src/model/ILogger.ts`、`src/model/ILoggerModel.ts`、`.kiro/specs/server-operational-logging/design.md`                                                                                                                                                                                                             | system info/error、sink・level・rotation は logging owner                                                                                             |
 | DI と singleton scope                       | `src/model/ModelContainerSetter.ts`                                                                                                                                                                                                                                                                                 | `IStorageManageModel`、`IStorageApiModel`、recorded DB/manage bindings。candidate port、利用中snapshot adapter、runtime-owned deletion adapterの binding |

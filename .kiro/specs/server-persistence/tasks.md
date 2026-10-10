@@ -312,24 +312,24 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
         査する。Node.js matrix、C0/C1はTask 7.5だけで判定する。
     -   完了時には、永続化固有suiteが共有rootから選択可能で、SQLiteとMySQLの成功・失敗・cleanup caseおよび非秘密fixture
         をTask 7.1から7.5の品質判定へ引き渡せる。
-    -   _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 1.10, 1.11, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 3.1, 3.2,
-        3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 3.10, 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9, 5.1, 5.2, 5.3, 5.4, 6.1,
-        6.2, 6.3, 6.4, 6.5_
+    -   _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 1.10, 1.11, 1.12, 1.13, 1.14, 2.1, 2.2, 2.3, 2.4, 2.5,
+        2.6, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 3.10, 3.11, 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9, 4.10,
+        5.1, 5.2, 5.3, 5.4, 6.1, 6.2, 6.3, 6.4, 6.5_
     -   _Boundary: Persistence domain validation_
     -   _Depends: 6.1, 6.2_
 
 -   [x] 7. 永続化固有testを共有server品質gateへ接続する
--   [x] 7.1 全50 ACの機能固有仕様caseとR1〜R6/R7.1の`unittest/spec`を完成させる
+-   [x] 7.1 全55 ACの機能固有仕様caseとR1〜R6/R7.1の`unittest/spec`を完成させる
 
-    -   Requirements 1から7の全50 ACを一意に列挙し、各ACへ主case、補助case、test path、fixture、期待する戻り値・error・
+    -   Requirements 1から7の全55 ACを一意に列挙し、各ACへ主case、補助case、test path、fixture、期待する戻り値・error・
         状態・副作用を割り当て、未割当ACを0件にする。割り当てはDesignの要件追跡表と`unittest/spec`のtest titleを正とし、別のmatrix
         fileを作らない。
     -   `test/server/persistence/connection.spec.test.ts`、`repositories.spec.test.ts`、
         `search-dialects.spec.test.ts`、`retry.spec.test.ts`で、方式選択、同時初期化、完全初期化後公開、保存・検索、
         backend差、一括確定、再試行、Migration、および明示終了を外部契約として検証する。
-    -   Designの`XSP-PERSIST-STORAGE-CANDIDATE-*`はformal trace外の補足caseとして維持し、50 ACのcase件数、成功の根拠へ加算
+    -   Designの`XSP-PERSIST-STORAGE-CANDIDATE-*`はformal trace外の補足caseとして維持し、55 ACのcase件数、成功の根拠へ加算
         しない。
-    -   完了時には、全50 ACを主caseから逆引きでき、R1〜R6 と R7.1は成功したnamed `unittest/spec` caseから逆引きでき
+    -   完了時には、全55 ACを主caseから逆引きでき、R1〜R6 と R7.1は成功したnamed `unittest/spec` caseから逆引きでき
         る。R7.2〜R7.5は各Task 7.2〜7.5が閉じ、未割当、根拠のないskip、補足caseのformal trace混入はいずれも0件である。
     -   _Depends: 1.1, 1.2, 1.3, 1.4, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 3.1, 3.2, 3.3, 3.4, 4.1, 4.3, 5.1, 6.3_
     -   _Requirements: 7.1_
@@ -534,6 +534,57 @@ tag と image digest を検証する。
     -   _Boundary: DBOperator―公式 MySQL LTS GREEN_
     -   _Depends: 8.3_
 
+## 接続設定・一覧・error 記録の追加契約
+
+次の task group は、後から足された条件（1.4 の `socketPath`・`ssl`、1.12〜1.14、3.11、4.10、6.1 の `ormconfig.js`）に対応する。
+実装と test は済んでいる。
+
+-   [x] 9. 接続設定・一覧・error 記録の追加契約を固定する
+-   [x] 9.1 SQLite の journal 方式（`sqlite.wal`）を固定する
+
+    -   `sqlite.wal` が `true` のときだけ WAL にし、無効なら delete 方式にして、WAL だった file も delete 方式へ戻す。他の接続が
+        使用中で戻せないときは接続を返さず error にする。
+    -   `connection.spec.test.ts`（option の投影、pragma の順序、失敗時の候補 close）、`sqlite-journal.integration.test.ts`
+        （実 file）、`orm-cli.integration.test.ts`（`ormconfig.js`）で確かめる。
+    -   _Requirements: 1.12, 1.13, 6.1_
+    -   _Boundary: DBOperator―SQLite の journal 方式_
+
+-   [x] 9.2 SQLite のロック待ち時間（`sqlite.busyTimeout`）を固定する
+
+    -   値を変えずに driver へ渡し、省略時は 5000 ミリ秒とする。不正な値は driver が拒否する。
+    -   `connection.spec.test.ts`、`sqlite-busy-timeout.integration.test.ts`、`orm-cli.integration.test.ts` で確かめる。
+    -   _Requirements: 1.14_
+    -   _Boundary: DBOperator―SQLite のロック待ち_
+
+-   [x] 9.3 MySQL の `socketPath`・`ssl` を固定する
+
+    -   設定されているときだけ値を変えずに driver へ渡し、サーバーと `ormconfig.js` で同じに扱う。
+    -   `connection.spec.test.ts`、`connection-socket.integration.test.ts`、`connection-ssl.integration.test.ts`、
+        `orm-cli.integration.test.ts` で確かめる。
+    -   _Requirements: 1.4_
+    -   _Boundary: DBOperator―MySQL の接続先と TLS_
+
+-   [x] 9.4 一覧の `limit` が 0 のときの扱いを固定する
+
+    -   `limit` 0 は件数を制限しないものとして扱い、`offset` があればその位置以降の全件を返す。
+    -   `list-limit-zero.imp.test.ts`、`findkeyword-offset-limit.imp.test.ts`、`programdb-queries.imp.test.ts`、
+        `doubles-parity.integration.test.ts`（実 DB）で確かめる。
+    -   _Requirements: 3.11_
+    -   _Boundary: 各 repository の一覧取得_
+
+-   [x] 9.5 一括変更の失敗と後始末の失敗を system log へ記録することを固定する
+
+    -   `transactions.imp.test.ts`、`repositories.spec.test.ts`、`channeldb.imp.test.ts`、`programdb-queries.imp.test.ts` で確かめる。
+    -   _Requirements: 4.10_
+    -   _Boundary: 各 repository の一括変更_
+
+-   [x] 9.6 `ormconfig.js` の設定の読み込みを固定する
+
+    -   `ormconfig.js` が、`!env`・merge key の展開と `dbtype` の `better-sqlite3` の読み替えを、サーバーと同じ規則で行う。
+    -   `orm-cli.integration.test.ts` で確かめる。
+    -   _Requirements: 6.1_
+    -   _Boundary: `ormconfig.js`_
+
 ## Leaf実行契約
 
 | Leaf | Concrete target                                                                                                                                                                                                                                                                                    | Test type                                          | Local Depends                                                                              | Verification command                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
@@ -541,7 +592,7 @@ tag と image digest を検証する。
 | 1.1  | `test/server/persistence/connection.spec.test.ts`<br>`test/server/persistence/implementation.test.ts`                                                                                                                                                                                              | `unittest/spec`<br>`unittest/imp`                  | なし（共有foundationのみ）                                                                 | `npm run test:server:spec -- test/server/persistence/connection.spec.test.ts`<br>`npm run test:server:imp -- test/server/persistence/implementation.test.ts`                                                                                                                                                                                                                                                                                                                      |
 | 1.2  | `test/server/persistence/connection.spec.test.ts`<br>`test/server/persistence/implementation.test.ts`                                                                                                                                                                                              | `unittest/spec`<br>`unittest/imp`                  | なし（共有foundationのみ）                                                                 | `npm run test:server:spec -- test/server/persistence/connection.spec.test.ts`<br>`npm run test:server:imp -- test/server/persistence/implementation.test.ts`                                                                                                                                                                                                                                                                                                                      |
 | 1.3  | `test/server/persistence/connection.spec.test.ts`<br>`test/server/persistence/implementation.test.ts`<br>`test/server/persistence/close.integration.test.ts`                                                                                                                                       | `unittest/spec`<br>`unittest/imp`<br>`integration` | なし（共有foundationのみ）                                                                 | `npm run test:server:spec -- test/server/persistence/connection.spec.test.ts`<br>`npm run test:server:imp -- test/server/persistence/implementation.test.ts`<br>`npm run test:server:integration -- test/server/persistence/close.integration.test.ts`                                                                                                                                                                                                                            |
-| 1.4  | `test/server/persistence/connection.spec.test.ts`<br>`test/server/persistence/connection-socket.integration.test.ts`<br>`test/server/persistence/connection-ssl.integration.test.ts`<br>`test/server/persistence/orm-cli.integration.test.ts`<br>`test/server/persistence/migrations.integration.test.ts`                                                                                                                                                                                      | `unittest/spec`<br>`integration`                   | なし（共有foundationのみ）                                                                 | `npm run test:server:spec -- test/server/persistence/connection.spec.test.ts`<br>`npm run test:server:integration -- test/server/persistence/connection-socket.integration.test.ts`<br>`npm run test:server:integration -- test/server/persistence/connection-ssl.integration.test.ts`<br>`npm run test:server:integration -- test/server/persistence/orm-cli.integration.test.ts`<br>`npm run test:server:integration -- test/server/persistence/migrations.integration.test.ts`                                                                                                                                                                                                                                                                                                      |
+| 1.4  | `test/server/persistence/connection.spec.test.ts`<br>`test/server/persistence/orm-cli.integration.test.ts`<br>`test/server/persistence/migrations.integration.test.ts`                                                                                                                                                                                      | `unittest/spec`<br>`integration`                   | なし（共有foundationのみ）                                                                 | `npm run test:server:spec -- test/server/persistence/connection.spec.test.ts`<br>`npm run test:server:integration -- test/server/persistence/orm-cli.integration.test.ts`<br>`npm run test:server:integration -- test/server/persistence/migrations.integration.test.ts`                                                                                                                                                                                                                                                                                                      |
 | 2.1  | `test/server/persistence/repositories.spec.test.ts`<br>`test/server/persistence/implementation.test.ts`                                                                                                                                                                                            | `unittest/spec`<br>`unittest/imp`                  | なし（共有foundationのみ）                                                                 | `npm run test:server:spec -- test/server/persistence/repositories.spec.test.ts`<br>`npm run test:server:imp -- test/server/persistence/implementation.test.ts`                                                                                                                                                                                                                                                                                                                    |
 | 2.2  | `test/server/persistence/repositories.spec.test.ts`<br>`test/server/persistence/implementation.test.ts`                                                                                                                                                                                            | `unittest/spec`<br>`unittest/imp`                  | なし（共有foundationのみ）                                                                 | `npm run test:server:spec -- test/server/persistence/repositories.spec.test.ts`<br>`npm run test:server:imp -- test/server/persistence/implementation.test.ts`                                                                                                                                                                                                                                                                                                                    |
 | 2.3  | `test/server/persistence/repositories.spec.test.ts`<br>`test/server/persistence/implementation.test.ts`<br>`test/server/persistence/queries.integration.test.ts`                                                                                                                                   | `unittest/spec`<br>`unittest/imp`<br>`integration` | なし（共有foundationのみ）                                                                 | `npm run test:server:spec -- test/server/persistence/repositories.spec.test.ts`<br>`npm run test:server:imp -- test/server/persistence/implementation.test.ts`<br>`npm run test:server:integration -- test/server/persistence/queries.integration.test.ts`                                                                                                                                                                                                                        |
@@ -568,3 +619,9 @@ tag と image digest を検証する。
 | 8.2  | `test/server/persistence/mysql-lts-inplace-stored-data.integration.test.ts`<br>`test/server/fixtures/persistence/mysql-inplace/`                                                                                                                                                                    | `integration`                                      | `8.1`                                                                                      | `npm run test:server:integration -- test/server/persistence/mysql-lts-inplace-stored-data.integration.test.ts`                                                                                                                                                                                                                                                                                                                                                                    |
 | 8.3  | `package.json`<br>`package-lock.json`<br>`test/server/persistence/mysql-runtime.ts`（旧 `mysql` 除去後の管理クライアント切替が必要な場合のみ）                                                                                                                                                      | package-manager<br>`integration`                   | `8.2`                                                                                      | `typeorm` の peer `mysql2` を満たす版を `package.json` に固定し、`mysql2` 追加と直接 `mysql` 除去後に 8.1 / 8.2 の focused integration を再実行する                                                                                                                                                                                                                                                                         |
 | 8.4  | `test/server/persistence/mysql-lts-connection.integration.test.ts`<br>`test/server/persistence/mysql-lts-inplace-stored-data.integration.test.ts`<br>`test/server/persistence/connection.spec.test.ts`<br>`test/server/persistence/repositories.spec.test.ts`<br>`test/server/persistence/search-dialects.spec.test.ts`<br>`test/server/persistence/retry.spec.test.ts`<br>`test/server/persistence/implementation.test.ts`<br>`test/server/persistence/connection.integration.test.ts`<br>`test/server/persistence/migrations.integration.test.ts`<br>`test/server/persistence/queries.integration.test.ts`<br>`test/server/persistence/transactions.integration.test.ts`<br>`test/server/persistence/close.integration.test.ts` | `integration`・`unittest/spec`・`unittest/imp` | `8.3`                                                                                      | 最終計測前に 3 種 RED witness を一時 dirty として raw へ残して復元し、最終 bytes を commit して clean `HEAD^{tree}` を固定したうえで、inventory GREEN と次の targeted GREEN だけをその tree で実行する。<br>`npm run test:server:integration -- test/server/persistence/mysql-lts-connection.integration.test.ts`<br>`npm run test:server:integration -- test/server/persistence/mysql-lts-inplace-stored-data.integration.test.ts`<br>`npm run test:server:spec -- test/server/persistence/connection.spec.test.ts`<br>`npm run test:server:spec -- test/server/persistence/repositories.spec.test.ts`<br>`npm run test:server:spec -- test/server/persistence/search-dialects.spec.test.ts`<br>`npm run test:server:spec -- test/server/persistence/retry.spec.test.ts`<br>`npm run test:server:imp -- test/server/persistence/implementation.test.ts`<br>`npm run test:server:integration -- test/server/persistence/connection.integration.test.ts`<br>`npm run test:server:integration -- test/server/persistence/migrations.integration.test.ts`<br>`npm run test:server:integration -- test/server/persistence/queries.integration.test.ts`<br>`npm run test:server:integration -- test/server/persistence/transactions.integration.test.ts`<br>`npm run test:server:integration -- test/server/persistence/close.integration.test.ts` |
+| 9.1  | `test/server/persistence/connection.spec.test.ts`<br>`test/server/persistence/sqlite-journal.integration.test.ts`<br>`test/server/persistence/orm-cli.integration.test.ts` | `unittest/spec`<br>`integration` | `4.1` | `npm run test:server:spec -- test/server/persistence/connection.spec.test.ts`<br>`npm run test:server:integration -- test/server/persistence/sqlite-journal.integration.test.ts`<br>`npm run test:server:integration -- test/server/persistence/orm-cli.integration.test.ts` |
+| 9.2  | `test/server/persistence/connection.spec.test.ts`<br>`test/server/persistence/sqlite-busy-timeout.integration.test.ts`<br>`test/server/persistence/orm-cli.integration.test.ts` | `unittest/spec`<br>`integration` | `4.1` | `npm run test:server:spec -- test/server/persistence/connection.spec.test.ts`<br>`npm run test:server:integration -- test/server/persistence/sqlite-busy-timeout.integration.test.ts`<br>`npm run test:server:integration -- test/server/persistence/orm-cli.integration.test.ts` |
+| 9.3  | `test/server/persistence/connection.spec.test.ts`<br>`test/server/persistence/connection-socket.integration.test.ts`<br>`test/server/persistence/connection-ssl.integration.test.ts`<br>`test/server/persistence/orm-cli.integration.test.ts` | `unittest/spec`<br>`integration` | `4.1` | `npm run test:server:spec -- test/server/persistence/connection.spec.test.ts`<br>`npm run test:server:integration -- test/server/persistence/connection-socket.integration.test.ts`<br>`npm run test:server:integration -- test/server/persistence/connection-ssl.integration.test.ts`<br>`npm run test:server:integration -- test/server/persistence/orm-cli.integration.test.ts` |
+| 9.4  | `test/server/persistence/list-limit-zero.imp.test.ts`<br>`test/server/persistence/findkeyword-offset-limit.imp.test.ts`<br>`test/server/persistence/programdb-queries.imp.test.ts`<br>`test/server/persistence/doubles-parity.integration.test.ts` | `unittest/imp`<br>`integration` | `2.3` | `npm run test:server:imp -- test/server/persistence/list-limit-zero.imp.test.ts`<br>`npm run test:server:imp -- test/server/persistence/findkeyword-offset-limit.imp.test.ts`<br>`npm run test:server:imp -- test/server/persistence/programdb-queries.imp.test.ts`<br>`npm run test:server:integration -- test/server/persistence/doubles-parity.integration.test.ts` |
+| 9.5  | `test/server/persistence/transactions.imp.test.ts`<br>`test/server/persistence/repositories.spec.test.ts`<br>`test/server/persistence/channeldb.imp.test.ts`<br>`test/server/persistence/programdb-queries.imp.test.ts` | `unittest/spec`<br>`unittest/imp` | `5.1` | `npm run test:server:imp -- test/server/persistence/transactions.imp.test.ts`<br>`npm run test:server:spec -- test/server/persistence/repositories.spec.test.ts`<br>`npm run test:server:imp -- test/server/persistence/channeldb.imp.test.ts`<br>`npm run test:server:imp -- test/server/persistence/programdb-queries.imp.test.ts` |
+| 9.6  | `test/server/persistence/orm-cli.integration.test.ts` | `integration` | `4.3` | `npm run test:server:integration -- test/server/persistence/orm-cli.integration.test.ts` |

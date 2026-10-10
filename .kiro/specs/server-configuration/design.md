@@ -56,8 +56,9 @@ flowchart LR
 4. ストリーミング設定で基準となる選択肢（標準値テンプレート）を利用できる場合、その値を省略箇所へ補う。
 5. 本書 3.1 の6項目を検証する。
 6. HTTP または HTTPS の最低条件を確認する。
-7. サーバー基準位置を表す記号、保存先、配信サブディレクトリを内部表記へ正規化し、`dbtype` の `better-sqlite3` を `sqlite` へ読み替える。
-8. 成功した候補を有効な設定として保持する。
+7. `apiServers` が空のとき、API 文書（OpenAPI の `servers`）の送信先として 1 件を補う。最上位の `port` があれば `http://localhost:<port>`、無く HTTPS だけで待ち受けるなら `https://localhost:<https の port>` とする。明示した `apiServers` は変えない。
+8. サーバー基準位置を表す記号、保存先、配信サブディレクトリを内部表記へ正規化し、`dbtype` の `better-sqlite3` を `sqlite` へ読み替える。
+9. 成功した候補を有効な設定として保持する。
 
 設定ファイルを読めない、YAML として解釈できない、`!env` が参照する環境変数が定義されていない、または HTTP/HTTPS の最低条件を満たさない場合は、後続機能へ設定を提供せ
 ずサーバー起動を失敗させる。3.1 の検証に失敗した場合は設定エラーを返し、不正な値を利用する機能を開始しない。
@@ -449,10 +450,10 @@ Requirement 9 Acceptance Criterion 9（server全体の単体testだけで`src/**
 | AC   | 設計上の対応先                        |
 | ---- | ------------------------------------- |
 | 1.1  | 2.1 手順 1                            |
-| 1.2  | 2.1 手順 3                            |
+| 1.2  | 2.1 手順 3、7                         |
 | 1.3  | 2.1 手順 4                            |
-| 1.4  | 2.1 手順 7                            |
-| 1.5  | 2.1 手順 7                            |
+| 1.4  | 2.1 手順 8                            |
+| 1.5  | 2.1 手順 8                            |
 | 1.6  | 2.2 一時録画用保存先の除外            |
 | 1.7  | 2.1 `dbtype` の読み替え               |
 | 2.1  | 2.1 初回読み込み失敗                  |
@@ -487,6 +488,8 @@ Requirement 9 Acceptance Criterion 9（server全体の単体testだけで`src/**
 | 7.10 | 2.1、5 設定エラーと機能開始抑止       |
 | 7.11 | 2.4、3.1 公開設定から除外             |
 | 7.12 | 2.3、3.1 完全複製への包含と起動時保持 |
+
+AC 1.1 と 1.7 のうち `ormconfig.js` が行う部分（`!env`・merge key の展開と `dbtype` の `better-sqlite3` の読み替え）は、`server-persistence` の `PERSIST-6.1-ORM-CLI-ENV`・`PERSIST-6.1-ORM-CLI-MERGE-KEY`・`PERSIST-6.1-ORM-CLI-BETTER-SQLITE3`（`test/server/persistence/orm-cli.integration.test.ts`）が確かめる。上の `[CFG-6.1-AC-TRACE]` は本機能の directory の case だけを引くため、この 3 件は含まない。
 
 Requirement 8のtest品質要件は、次の各行で設計箇所、主な検証、および失敗・資源境界へ対応付ける。
 

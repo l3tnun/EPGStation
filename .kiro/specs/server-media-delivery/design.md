@@ -118,7 +118,7 @@ stream IDから再構成しない。配信機能はpipeに使うchildとは別�
 process group、object token、opaque handleの定義は`server-media-process-management`に従う。これらをclientへ公開せず、
 親playlistの`./streamfiles/stream{streamId}.m3u8`を変更しない。
 
-`activeStreams`、停止中ID、起動時成果物ID、走査で確認した成果物ID、およびallocation cursorをメモリー内で保持する。再起動
+`StreamManageModel.streams`、停止中ID、起動時成果物ID、走査で確認した成果物ID、およびallocation cursorをメモリー内で保持する。再起動
 前の配信状態は復元しない。
 
 `ResourceLeaseBundle`は`StreamManageModel`内部だけの型であり、API、IPC、公開playlistへ露出しない。tuner stream、file
@@ -324,7 +324,7 @@ HLS保存先の初期化では、`streamFilePath`が存在しなければ作成�
 
 1. ID予約用の同期境界へ入る前にHLS保存先を非同期走査し、成果物IDのsnapshotを得る。走査中はstart、stop、keep、一覧取得の
    同期境界を保持しない。
-2. 同期境界内で`allocationCursor`から調査を始め、snapshot、`activeStreams`、停止中ID、`startupArtifactIds`、および走査で
+2. 同期境界内で`allocationCursor`から調査を始め、snapshot、`StreamManageModel.streams`、停止中ID、`startupArtifactIds`、および走査で
    確認済みの成果物IDに含まれない候補を選ぶ。同じ境界で`starting` objectとして予約してcursorを進めるため、同じsnapshotを
    使った並行startも同じIDを予約しない。
 3. 候補が`Number.MAX_SAFE_INTEGER`なら次を0とし、それ以外は1を加える。
@@ -431,7 +431,7 @@ Kodi再生では、設定済み送信先と録画ファイルを確認し、要�
 
 ## 10. 再起動とテスト設計
 
-再起動時に`activeStreams`、準備状態、keep期限を復元しない。起動時走査で残存成果物IDだけを予約してから新規配信を受け付け
+再起動時に`StreamManageModel.streams`、準備状態、keep期限を復元しない。起動時走査で残存成果物IDだけを予約してから新規配信を受け付け
 る。サーバー全体終了時に全配信の回収完了まで待つ新しい専用経路は追加しない。
 
 ### 10.1 機能固有test配置
@@ -559,7 +559,7 @@ carrier、tuner access、recorded-content、process managerの内部実装を本
 | MD-3.6  | `hls-lifecycle.spec.test.ts#[PRIMARY R3.6]`                                   | S/I/G    | N,N,N,T,T,N,N,N,T | H starting                              | 100ms/同                      | timer/artifact                             | filesystem/HTTP                                | 別ID混在                           | 親と媒体2件で同じobjectだけready                                           | spec                            |
 | MD-3.7  | `hls-lifecycle.spec.test.ts#[PRIMARY R3.7]`                                   | S/I/G    | N,N,N,T,T,N,N,N,T | H starting/ready                        | 順                            | playlist/file                              | filesystem/HTTP                                | 字幕なし・読取失敗                 | 利用可能時だけ字幕情報を追加                                               | spec                            |
 | MD-3.8  | `hls-lifecycle.spec.test.ts#[PRIMARY R3.8]`                                   | S/I/G    | C,C,T,T,T,T,T,C,T | H starting                              | 無                            | parent playlist                            | filesystem                                     | path生成失敗                       | 保存先直下の`stream{id}.m3u8`                                              | spec                            |
-| MD-3.9  | `hls-lifecycle.spec.test.ts#[PRIMARY R3.9]`                                   | S/G      | C,C,T,T,T,T,T,C,T | H starting/ready                        | 無                            | 公開path                                   | HTTP                                           | static取得失敗                     | `./streamfiles/stream{id}.m3u8`完全一致、世代なし                          | spec                            |
+| MD-3.9  | `hls-lifecycle.spec.test.ts#[PRIMARY R3.9]`（client 側の補助は `client/unittest/spec/videoPlayback.lifecycle.spec.test.tsx` と `client/unittest/imp/videoPlayback.hlsLifecycle.imp.test.ts`） | S/G      | C,C,T,T,T,T,T,C,T | H starting/ready                        | 無                            | 公開path                                   | HTTP                                           | static取得失敗                     | `./streamfiles/stream{id}.m3u8`完全一致、世代なし                          | spec                            |
 | MD-3.10 | `hls-lifecycle.spec.test.ts#[PRIMARY R3.10]`                                  | S/I/G    | C,C,T,T,T,N,T,C,T | H starting/ready                        | 15秒直前/同                   | keep timer                                 | HTTP                                           | stop同着                           | 有効keepだけdeadlineを15秒へ更新                                           | spec                            |
 | MD-3.11 | `hls-lifecycle.spec.test.ts#[PRIMARY R3.11]`                                  | S/I/G    | N×9               | H starting/ready                        | 15秒直前・到達・超過          | keep timer/handle                          | process/filesystem                             | stop失敗                           | keep途絶で停止へ一回遷移                                                   | spec                            |
 | MD-3.12 | `hls-lifecycle.spec.test.ts#[PRIMARY R3.12]`                                  | S/I/G    | N×9               | H starting                              | 100ms直前・到達               | readiness timer                            | filesystem                                     | scan失敗                           | 100ms間隔でexact成果物を確認                                               | spec                            |
@@ -740,7 +740,7 @@ Requirement 9 Acceptance Criterion 9（server全体の単体testだけで`src/**
 | HLS成果物削除                              | `src/model/service/stream/util/HLSFileDeleterModel.ts`                                            | exact ID境界、3 pass、error log                                                                                                                                                        |
 | shared process枠                           | `src/model/service/encode/EncodeProcessManageModel.ts`                                            | HLS group停止とopaque handle                                                                                                                                                           |
 | static route                               | `src/model/service/ServiceServer.ts`                                                              | `/streamfiles`                                                                                                                                                                         |
-| client playlist path                       | `client/src/features/video/playback/playbackLifecycle.ts`                                         | `./streamfiles/stream{id}.m3u8`                                                                                                                                                        |
+| client playlist path                       | `client/src/features/video/playback/playbackLifecycleTypes.ts`（`buildHlsPlaylistUrl`）、`playbackLifecycleControllerBase.ts` | `./streamfiles/stream{id}.m3u8`                                                                                                                                                        |
 | stream API                                 | `src/model/service/api/streams.ts`、`src/model/service/api/streams/`                              | route・response                                                                                                                                                                        |
 | Kodi API                                   | `src/model/service/api/videos/{videoFileId}/kodi.ts`                                              | 認証、URL境界、30秒期限                                                                                                                                                                |
 | 機能固有server test                        | `test/server/media-delivery/`                                                                     | 88 ACの一意な主test、固有imp・integration assertion                                                                                                                          |

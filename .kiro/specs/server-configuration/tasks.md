@@ -18,7 +18,7 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
     -   標準値テンプレートを利用できる場合と利用できない場合を分け、利用できない基準値を推定して補わないことを確認する。
     -   完了時には、省略、末尾区切り、基準位置記号、およびストリーミング設定の各 fixture が承認済みの設定候補を再現
         し、production code の差分がない。
-    -   _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 2.4_
+    -   _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.7, 2.4_
     -   _Boundary: 初回読み込み・候補構築_
 
 -   [x] 1.2 設定取得の独立性と録画保存先の選別を characterization する
@@ -41,6 +41,18 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
     -   完了時には、正常な待受構成だけが設定を提供し、各失敗 fixture は起動失敗として観測できる。
     -   _Requirements: 2.1, 2.2, 2.3_
     -   _Boundary: 初回読み込み・最低起動条件_
+
+-   [x] 1.4 `!env`・anchor/alias/merge key の展開と `better-sqlite3` の読み替えを固定する
+
+    -   `config.yml` の `!env 環境変数名`、YAML の anchor・alias・merge key `<<`、`dbtype` の `better-sqlite3` を `sqlite` として
+        扱う規則を `src/model/ConfigYaml.ts` に置き、サーバーと `ormconfig.js` が同じ定義を読む。
+    -   `unittest/spec` で、`!env` の展開と未定義時の失敗、merge key（複数・明示した値の優先・配列の要素の中・`!env` との併用）、
+        `dbtype` の読み替えを固定する。
+    -   `ormconfig.js` 側の同じ規則は、`server-persistence` の結合 test（`test/server/persistence/orm-cli.integration.test.ts`）が
+        確かめる。
+    -   完了時には、上の各規則が設定候補に反映され、`ormconfig.js` も同じ結果になる。
+    -   _Requirements: 1.1, 1.7, 2.1, 4.2, 4.4_
+    -   _Boundary: 初回読み込み・YAML の解釈_
 
 -   [x] 2. 設定変更時の切替契約を仕様テストで固定する
 -   [x] 2.1 変更検知から有効設定の一括置換までを characterization する
@@ -245,6 +257,7 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
 | 1.1  | `test/server/configuration/configuration.spec.test.ts`<br>`test/server/configuration/implementation.test.ts`                                                                                                                                   | `unittest/spec`<br>`unittest/imp`                  | なし（共有foundationのみ）                              | `npm run test:server:spec -- test/server/configuration/configuration.spec.test.ts`<br>`npm run test:server:imp -- test/server/configuration/implementation.test.ts`                                                                                                                                                                                             |
 | 1.2  | `test/server/configuration/configuration.spec.test.ts`<br>`test/server/configuration/implementation.test.ts`                                                                                                                                   | `unittest/spec`<br>`unittest/imp`                  | なし（共有foundationのみ）                              | `npm run test:server:spec -- test/server/configuration/configuration.spec.test.ts`<br>`npm run test:server:imp -- test/server/configuration/implementation.test.ts`                                                                                                                                                                                             |
 | 1.3  | `test/server/configuration/configuration.spec.test.ts`<br>`test/server/configuration/filesystem.integration.test.ts`                                                                                                                           | `unittest/spec`<br>`integration`                   | なし（共有foundationのみ）                              | `npm run test:server:spec -- test/server/configuration/configuration.spec.test.ts`<br>`npm run test:server:integration -- test/server/configuration/filesystem.integration.test.ts`                                                                                                                                                                             |
+| 1.4  | `src/model/ConfigYaml.ts`<br>`test/server/configuration/configuration.spec.test.ts` | `unittest/spec` | `1.1` | `npm run test:server:spec -- test/server/configuration/configuration.spec.test.ts` |
 | 2.1  | `test/server/configuration/configuration.spec.test.ts`<br>`test/server/configuration/implementation.test.ts`                                                                                                                                   | `unittest/spec`<br>`unittest/imp`                  | なし（共有foundationのみ）                              | `npm run test:server:spec -- test/server/configuration/configuration.spec.test.ts`<br>`npm run test:server:imp -- test/server/configuration/implementation.test.ts`                                                                                                                                                                                             |
 | 2.2  | `test/server/configuration/configuration.spec.test.ts`<br>`test/server/configuration/implementation.test.ts`                                                                                                                                   | `unittest/spec`<br>`unittest/imp`                  | なし（共有foundationのみ）                              | `npm run test:server:spec -- test/server/configuration/configuration.spec.test.ts`<br>`npm run test:server:imp -- test/server/configuration/implementation.test.ts`                                                                                                                                                                                             |
 | 3.1  | `test/server/configuration/configuration.spec.test.ts`<br>`test/server/configuration/http.integration.test.ts`                                                                                                                                 | `unittest/spec`<br>`integration`                   | `1.2`                                                   | `npm run test:server:spec -- test/server/configuration/configuration.spec.test.ts`<br>`npm run test:server:integration -- test/server/configuration/http.integration.test.ts`                                                                                                                                                                                   |
