@@ -272,7 +272,7 @@ interface SnackbarRequest {
 
 - route init/search menu open は `/recorded/options` で channel/genre/rule related option を取得する。
 - rule autocomplete は `/rules/keyword?limit=1000[&keyword=...]`、rule completion は `/rules/:ruleId` を使う。`/rules/:ruleId` failure は log のみで、search menu snackbar へ伝播しない。
-- search option failure は `/recorded/options` と `/rules/keyword` の failure で `録画検索オプションの取得に失敗 ` snackbar を表示する。
+- search option failure は `/recorded/options` と `/rules/keyword` の failure で `録画検索オプションの取得に失敗` snackbar を表示する。
 - search menu は `/recorded/options` の channel/genre と `/rules/keyword` の rule keyword を state に保持し、rule/channel/genre を select control として表示する。数値入力欄で代替してはならない。
 - channel/genre select は `AppSelect` の clearable owner を使い、rule 欄は MUI `Autocomplete`（`frontend-storages-upload` の rule autocomplete と同じ入力駆動パターン）を使う。いずれも選択済みのときだけ clear action を表示する。clear 後は route query と次回 fetch から該当 filter を除外し、placeholder/label は selected text と重ならない位置に戻す。options loading / disabled state では clear action を表示しない。rule 欄の clear action は `Autocomplete` 標準の clear icon（`clearText` prop で aria-label を指定）を使うが、既定の hover/focus 限定表示を `sx` で常時表示へ上書きし、他の clearable owner と同じ「選択済みなら常に見える」契約に揃える。
 - search menu の keyword text field は shared clearable owner を使い、non-empty かつ disabled でないときだけ field 右端に clear action を表示し、押下で keyword だけを空にする。
@@ -286,9 +286,9 @@ interface SnackbarRequest {
 
 - list/detail は Socket.IO `updateStatus` を `frontend-app-shell` の realtime invalidation（`updateStatus` -> `recorded/list`、`recorded/detail` query key invalidation）経由で購読し、visible route の data を refetch する。
 - route fetch 完了後は scroll restoration の done signal を発行する。
-- Socket.IO refetch 自体は scroll restoration done signal を発行せず、failure snackbar catch も持たない。route fetch failure だけが `録画データ取得に失敗 ` を表示する。
+- Socket.IO refetch 自体は scroll restoration done signal を発行せず、failure snackbar catch も持たない。route fetch failure だけが `録画データ取得に失敗` を表示する。
 - action 成功後の visible label/state は optimistic update ではなく、requirements が refetch を要求する action だけ refetch-driven update を正とする。protect/unprotect は snackbar のみを表示し、即時 refetch を要求しない。
-- cleanup は `POST /recorded/cleanup` 成功後だけ `POST /thumbnails/cleanup` を実行する。recorded cleanup 失敗時は thumbnails cleanup を skip し、thumbnail cleanup 失敗時も最終結果を failure とする。success/failure のどちらも `クリーンアップ中 ` progress を最低 1 秒表示してから snackbar を出す。
+- cleanup は `POST /recorded/cleanup` 成功後だけ `POST /thumbnails/cleanup` を実行する。recorded cleanup 失敗時は thumbnails cleanup を skip し、thumbnail cleanup 失敗時も最終結果を failure とする。success/failure のどちらも `クリーンアップ中` progress を最低 1 秒表示してから snackbar を出す。
 
 ### レスポンシブ契約
 
@@ -317,15 +317,15 @@ default shape と parse failure 時の backfill は `frontend-settings-storage` 
 
 Recorded は `RecordedDeleteDialog`、`RecordedBulkDeleteDialog`、`RecordedItemMenu`、`AddEncodeDialog` の物理 owner として named export を提供する。`AddEncodeDialog` は `POST /encode` body、`AddEncodeSeting`、Recorded list/detail entrypoint を Recorded workflow が所有するため `features/recorded` 配下に置く。
 
-consumer は component ごとに分ける。Dashboard は `RecordedItemMenu` を使い、その中の `RecordedDeleteDialog`・`AddEncodeDialog` を経由して、削除、保護、エンコード追加、エンコード停止の action semantics を再定義しない。Recording は `RecordedItemMenu` と `RecordedBulkDeleteDialog` を recording context で使い、add encode と stop encode は表示しない。Recorded list 編集モードと Recording 編集モードは同じ `RecordedBulkDeleteDialog` を使い、Recording は `disableOption=true` 相当で `全て ` / `オリジナルファイルだけ ` / `エンコードファイルだけ ` の option を非表示にする。option select は削除対象とする video file の絞り込み条件を切り替えるだけであり、`全て ` を選んでも item 単位 API（`DELETE /recorded/:id`）へは切り替わらない。`RecordedBulkDeleteDialog` はどの option でも選択 item の video file を列挙し `DELETE /videos/:videoFileId` を 1 件ずつ呼ぶ。Recorded list の select-all は Recording / Reserves と同じ helper contract とし、表示中 item が全選択済みなら visible id を解除し、一部未選択なら visible id をすべて追加する。Recorded detail delete dialog の host は detail PageController / DialogCoordinator が保持し、全 video file delete 成功時に previous route へ戻す。Dashboard / Recording / Recorded list / Recorded detail の protect/unprotect menu icon は `protect=mdi-lock`、`unprotect=mdi-lock-open` とし、同一 icon にまとめない。
+consumer は component ごとに分ける。Dashboard は `RecordedItemMenu` を使い、その中の `RecordedDeleteDialog`・`AddEncodeDialog` を経由して、削除、保護、エンコード追加、エンコード停止の action semantics を再定義しない。Recording は `RecordedItemMenu` と `RecordedBulkDeleteDialog` を recording context で使い、add encode と stop encode は表示しない。Recorded list 編集モードと Recording 編集モードは同じ `RecordedBulkDeleteDialog` を使い、Recording は `disableOption=true` 相当で `全て` / `オリジナルファイルだけ` / `エンコードファイルだけ` の option を非表示にする。option select は削除対象とする video file の絞り込み条件を切り替えるだけであり、`全て` を選んでも item 単位 API（`DELETE /recorded/:id`）へは切り替わらない。`RecordedBulkDeleteDialog` はどの option でも選択 item の video file を列挙し `DELETE /videos/:videoFileId` を 1 件ずつ呼ぶ。Recorded list の select-all は Recording / Reserves と同じ helper contract とし、表示中 item が全選択済みなら visible id を解除し、一部未選択なら visible id をすべて追加する。Recorded detail delete dialog の host は detail PageController / DialogCoordinator が保持し、全 video file delete 成功時に previous route へ戻す。Dashboard / Recording / Recorded list / Recorded detail の protect/unprotect menu icon は `protect=mdi-lock`、`unprotect=mdi-lock-open` とし、同一 icon にまとめない。
 
 ### Visual contract
 
 | UI | Owner | Contract |
 | --- | --- | --- |
-| `RecordedDeleteDialog` | frontend-recorded | max width 300、video file checkbox list、`キャンセル ` / `削除 ` action。 |
-| `RecordedBulkDeleteDialog` | frontend-recorded | Recorded list では `全て ` / `オリジナルファイルだけ ` / `エンコードファイルだけ ` option を表示し、Recording consumer では `disableOption=true` 相当で option を非表示にする。選択数 body、`キャンセル ` / `削除 ` action、close animation 後の remove/remount を維持する。option の値に関わらず削除は `DELETE /videos/:videoFileId` の video file 単位で行い、item 単位の `DELETE /recorded/:id` は呼ばない。 |
-| `AddEncodeDialog` | frontend-recorded | max width 500、source/preset/directory/sub directory/same directory/remove original controls、`キャンセル ` / `追加 ` action。長い番組名、preset 名、directory 名でも dialog body は horizontal overflow を出さず、field は owner 幅内で収縮し select 表示は ellipsis で省略する。 |
+| `RecordedDeleteDialog` | frontend-recorded | max width 300、video file checkbox list、`キャンセル` / `削除` action。 |
+| `RecordedBulkDeleteDialog` | frontend-recorded | Recorded list では `全て` / `オリジナルファイルだけ` / `エンコードファイルだけ` option を表示し、Recording consumer では `disableOption=true` 相当で option を非表示にする。選択数 body、`キャンセル` / `削除` action、close animation 後の remove/remount を維持する。option の値に関わらず削除は `DELETE /videos/:videoFileId` の video file 単位で行い、item 単位の `DELETE /recorded/:id` は呼ばない。 |
+| `AddEncodeDialog` | frontend-recorded | max width 500、source/preset/directory/sub directory/same directory/remove original controls、`キャンセル` / `追加` action。長い番組名、preset 名、directory 名でも dialog body は horizontal overflow を出さず、field は owner 幅内で収縮し select 表示は ellipsis で省略する。 |
 
 ## データモデル
 
@@ -357,7 +357,7 @@ unit test は `npm run coverage:gate` で statements・branches・functions・li
 
 Recorded は `RecordedDeleteDialog`、`RecordedBulkDeleteDialog`、`RecordedItemMenu`、`AddEncodeDialog` の visual owner であり、Dashboard / Recording consumer はこの visual contract を再定義しない。tracked artifact には実番組名、実 URL、実ロゴ、サムネイル、実 file path、認証情報、環境固有値を含めない。
 
-`RecordedDownloadDialog` は visual owner を Recorded とする。dialog は accessible name `録画ダウンロード ` を持つが、本文内 heading は追加しない。backdrop click、Escape、route change、close action 後は dialog subtree を remove し、次回 open では stale video file / play list state を持ち越さず remount する。
+`RecordedDownloadDialog` は visual owner を Recorded とする。dialog は accessible name `録画ダウンロード` を持つが、本文内 heading は追加しない。backdrop click、Escape、route change、close action 後は dialog subtree を remove し、次回 open では stale video file / play list state を持ち越さず remount する。
 
 Streaming action は `frontend-video-playback` への handoff を行うだけで、Recorded 側では player lifecycle を所有しない。handoff model は `recordedId`、`videoFileId`、`streamingType`、`mode`、`fileType` を欠落させずに渡し、WebM / MP4 / HLS / Direct stream の再生可否、absolute seek、subtitle 表示は `frontend-video-playback` の契約を正とする。
 

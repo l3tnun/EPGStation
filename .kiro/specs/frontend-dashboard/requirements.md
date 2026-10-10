@@ -23,9 +23,9 @@ Dashboard は録画中、録画済み、予約の summary を表示し、各 lis
 3. Dashboard 初期化時、route path/query change 時、Socket.IO `updateStatus` 時、EPGStation フロントエンドは `GET /reserves/cnts`、`GET /recording`、`GET /recorded`、`GET /reserves` を取得する。
 4. Dashboard fetch option は settings の `isHalfWidthDisplayed`、`recordingLength`、`recordedLength`、`reservesLength` を参照し、summary request は Dashboard route `page` query を offset へ反映せず page 1 相当の `offset=0` を使う。recorded は Dashboard route query の `keyword`、`ruleId`、`channelId`、`genre`、`hasOriginalFile` を反映し、reserves は `type=normal` を送る。この `offset=0` 固定は Dashboard summary の page query 混入を避ける intentional fix とする。
 5. data load 前、EPGStation フロントエンドは Dashboard 本体を表示せず、load 完了後に transition で表示する。
-6. section は `録画中 `、`録画済み `、`予約 ` の順で表示し、各 title は `表示件数/総件数 ` 形式とする。
+6. section は `録画中`、`録画済み`、`予約` の順で表示し、各 title は `表示件数/総件数` 形式とする。
 7. API が 0 件を返したとき、EPGStation フロントエンドは追加の empty copy を表示せず、`0/0` を含む現在の summary title 表示を維持する。
-8. fetch 失敗時、EPGStation フロントエンドは snackbar 文言を使い、`GET /reserves/cnts` は `予約情報取得に失敗 `、録画中 data は `録画中データ取得に失敗 `、録画済み data は `録画済みデータ取得に失敗 `、予約 data は `予約データ取得に失敗 ` として区別する。
+8. fetch 失敗時、EPGStation フロントエンドは snackbar 文言を使い、`GET /reserves/cnts` は `予約情報取得に失敗`、録画中 data は `録画中データ取得に失敗`、録画済み data は `録画済みデータ取得に失敗`、予約 data は `予約データ取得に失敗` として区別する。
 9. Dashboard は録画中、録画済み、予約の 3 section の scroll position を route leave/update 時に保存し、history restore の場合だけ復元する。通常の route 表示や summary refresh では保存済み scroll position を強制復元しない。
 10. iOS / iPadOS では、Dashboard を表示している間だけ 3000ms 間隔で summary を再取得する（Socket.IO `updateStatus` が遅延または取りこぼされても、Dashboard が現在の server state に追従するため）。iOS / iPadOS 以外では、この定期の再取得をしない。
 
@@ -35,15 +35,15 @@ Dashboard は録画中、録画済み、予約の summary を表示し、各 lis
 
 #### 受け入れ条件
 
-1. more button は各 section の `total > 表示件数 ` の場合だけ表示する。
+1. more button は各 section の `total > 表示件数` の場合だけ表示する。
 2. ユーザーが recording / recorded / reserves の more action を実行したとき、EPGStation フロントエンドはそれぞれ `/recording?page=2`、`/recorded?page=2`、`/reserves?page=2` へ遷移する（URL には `timestamp` query が付く）。
 3. ユーザーが recorded item または recording item を選択したとき、EPGStation フロントエンドは recorded detail workflow へ遷移する（URL には `timestamp` query が付く）。
 4. ユーザーが reserve card を選択したとき、EPGStation フロントエンドは `ReserveDialog` を開き、番組名、channel、日時、genre、description、extended を表示する。extended 内の `http://` / `https://` URL は `frontend-reserves` の shared dialog contract として link 化する。
 5. ReserveDialog の日時を選択したとき、EPGStation フロントエンドは `/guide?time=<YYMMddhh>` へ遷移し、settings `isEnableDisplayForEachBroadcastWave=true` かつ channel lookup で解決できる場合だけ `type=<wave>` を付与する（URL には `timestamp` query が付く）。
 6. reserve item の kebab menu は `ReserveMenu` として扱い、recorded search、edit、delete、unlock を提供する。
 7. 予約 conflict badge は conflict count が 1 以上のとき表示し、badge と、それを含む section title 全体（ラベル文字部分を含む）のどちらを click しても `/reserves?type=conflict` へ遷移する（URL には `timestamp` query が付く）。conflict count が 0 のときは section title を click しても遷移しない。
-8. protect/unprotect は `PUT /recorded/:id/protect` / `PUT /recorded/:id/unprotect` を呼び、`保護に成功 ` / `保護に失敗 `、`保護解除に成功 ` / `保護解除に失敗 ` を snackbar で通知する。Dashboard は owner menu の icon contract を再利用し、`protect` は `mdi-lock`、`unprotect` は `mdi-lock-open` を表示する。
-9. stop encode は `DELETE /recorded/:id/encode` を呼び、`エンコード停止 ` / `エンコード停止に失敗 ` を snackbar で通知する。
+8. protect/unprotect は `PUT /recorded/:id/protect` / `PUT /recorded/:id/unprotect` を呼び、`保護に成功` / `保護に失敗`、`保護解除に成功` / `保護解除に失敗` を snackbar で通知する。Dashboard は owner menu の icon contract を再利用し、`protect` は `mdi-lock`、`unprotect` は `mdi-lock-open` を表示する。
+9. stop encode は `DELETE /recorded/:id/encode` を呼び、`エンコード停止` / `エンコード停止に失敗` を snackbar で通知する。
 10. recorded delete は全選択で `DELETE /recorded/:id`、一部選択で `DELETE /videos/:videoFileId`、0 選択では API call と snackbar なしで閉じる。
 11. reserve delete は `DELETE /reserves/:id`、unlock は skip/overlap ごとに `DELETE /reserves/:id/skip` または `DELETE /reserves/:id/overlap` を呼び、文言は `frontend-reserves` の action contract に従う。
 12. Dashboard 上の recorded/recording item menu は `frontend-recorded` / `frontend-recording-encode` の action contract を再利用し、add encode handoff は `RecordedItemMenu` 相当の dialog と `POST /encode` body contract に従う。

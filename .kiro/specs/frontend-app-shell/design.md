@@ -68,7 +68,7 @@ memory とする。矛盾がある場合は同一 spec の requirements と requ
 
 全 routed owner の user-editable text-like input は shared `ClearableTextField` または owner 内の同等 clear
 button を通す。非 select の MUI `TextField` を直接置く場合は静的検査で failure とし、raw `<input type="text">`
-相当は同一 label/control 内に `...をクリア ` accessible name を持つ button を隣接させる。対象外は file input、range
+相当は同一 label/control 内に `...をクリア` accessible name を持つ button を隣接させる。対象外は file input、range
 slider、switch/checkbox、select/combobox、Autocomplete が生成する内部 input に限定する。shared clear adornment は MUI
 `InputAdornment position="end"` の中央揃えを使い、negative margin で右端へ押し込まない。Settings の URL
 Scheme など owner 固有 clear button も input
@@ -338,10 +338,10 @@ path を二重に結合しない。
 
 | メソッド | エンドポイント                               | リクエスト                                                                  | レスポンス                                                                                           | エラー                                                                                                               |
 | -------- | -------------------------------------------- | --------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| GET      | /config                                      | none                                                                        | server configuration for live/guide/navigation capability                                            | initial fetch failure shows `設定ダウンロードに失敗しました ` (`color=error`, `timeout=5000`)                         |
-| GET      | /version                                     | none                                                                        | version string                                                                                       | failure shows `バージョン情報取得に失敗 ` (`color=error`)                                                             |
-| EVENT    | socket.io disconnect                         | socket disconnect                                                           | disconnected overlay visible                                                                         | `接続が切断されました ` snackbar                                                                                      |
-| EVENT    | socket.io initialize                         | socket initialize result                                                    | socket instance                                                                                      | null result shows `SocketIO の初期設定に失敗しました ` (`color=error`)                                                |
+| GET      | /config                                      | none                                                                        | server configuration for live/guide/navigation capability                                            | initial fetch failure shows `設定ダウンロードに失敗しました` (`color=error`, `timeout=5000`)                         |
+| GET      | /version                                     | none                                                                        | version string                                                                                       | failure shows `バージョン情報取得に失敗` (`color=error`)                                                             |
+| EVENT    | socket.io disconnect                         | socket disconnect                                                           | disconnected overlay visible                                                                         | `接続が切断されました` snackbar                                                                                      |
+| EVENT    | socket.io initialize                         | socket initialize result                                                    | socket instance                                                                                      | null result shows `SocketIO の初期設定に失敗しました` (`color=error`)                                                |
 | EVENT    | dev proxy `/api/config` socketIOPort rewrite | React dev server receives backend config with a backend-only Socket.IO port | rewrite `socketIOPort` to the browser-facing dev server port before returning config to the browser  | no change to the client-side Socket.IO connector implementation is required; `/socket.io` proxy becomes usable from desktop and other terminals |
 | EVENT    | socket.io connect after disconnect           | previous full route                                                         | routed server state query invalidation, then two-step restore via Dashboard then previous full route | route restore (`navigate` call) の失敗を捕捉する notification は無い                                                              |
 | EVENT    | socket.io updateStatus                       | application state update                                                    | Socket.IO invalidation matrix の query を invalidate し、`refreshVersion({ notifyOnFailure: false })` で version も refresh する（version 取得失敗は通知しない）                                                     | `refreshVersion` の failure は snackbar を出さない                                                                |
@@ -443,10 +443,10 @@ interface ScrollHistoryState {
 token（背景 `#424242`）、`timeout` 省略時 `1500` とする。Snackbar の foreground は theme
 mode に依存させず message と action の両方を白文字に固定し、MUI `SnackbarContent` の default foreground や dark theme
 text token へ委譲しない。具体的な background token は MUI theme と EPGStation 固有 shared
-component で決める。version 取得失敗は `バージョン情報取得に失敗 ` (`color=error`)、初期 server config fetch failure は
-`設定ダウンロードに失敗しました ` (`color=error`, `timeout=5000`)、Socket.IO 初期設定失敗は
-`SocketIO の初期設定に失敗しました ` (`color=error`)、disconnect は `接続が切断されました ` (`color=error`, timeout
-default)、reconnect は `再接続されました ` (default snackbar) とする。
+component で決める。version 取得失敗は `バージョン情報取得に失敗` (`color=error`)、初期 server config fetch failure は
+`設定ダウンロードに失敗しました` (`color=error`, `timeout=5000`)、Socket.IO 初期設定失敗は
+`SocketIO の初期設定に失敗しました` (`color=error`)、disconnect は `接続が切断されました` (`color=error`, timeout
+default)、reconnect は `再接続されました` (default snackbar) とする。
 
 snackbar の min-height は `48px` とし、`ShellSnackbarHost.tsx` の `minHeight` を `48`（48px）とする。
 
@@ -460,14 +460,14 @@ snackbar ごとに作り直す。`open` が `true` のまま内容だけが差�
 
 | config 状態       | `isEnableDisplayForEachBroadcastWave` | 有効な放送波 | 番組表 item 結果                                                                    |
 | ----------------- | ------------------------------------- | ------------ | ----------------------------------------------------------------------------------- |
-| config not loaded | any                                   | unknown      | loading-time placeholder として generic `番組表 ` を表示できる。                     |
-| config loaded     | false                                 | 0            | `番組表 ` を表示しない intentional fix。                                             |
-| config loaded     | false                                 | 1+           | generic `番組表 ` を 1 件表示する。                                                  |
-| config loaded     | true                                  | 0            | `番組表 ` を表示しない。generic fallback もしない。                                  |
-| config loaded     | true                                  | 1            | enabled wave の `番組表 GR/BS/CS/SKY/BS4K` を 1 件表示する。generic `番組表 ` にはしない。 |
+| config not loaded | any                                   | unknown      | loading-time placeholder として generic `番組表` を表示できる。                     |
+| config loaded     | false                                 | 0            | `番組表` を表示しない intentional fix。                                             |
+| config loaded     | false                                 | 1+           | generic `番組表` を 1 件表示する。                                                  |
+| config loaded     | true                                  | 0            | `番組表` を表示しない。generic fallback もしない。                                  |
+| config loaded     | true                                  | 1            | enabled wave の `番組表 GR/BS/CS/SKY/BS4K` を 1 件表示する。generic `番組表` にはしない。 |
 | config loaded     | true                                  | 2+           | enabled wave の数だけ `GR`, `BS`, `CS`, `SKY`, `BS4K` 順で表示する。                 |
 
-`放映中 ` は TS live stream capability が true のときだけ表示する。settings save が成功した後は reload せず
+`放映中` は TS live stream capability が true のときだけ表示する。settings save が成功した後は reload せず
 navigation item を再生成する。
 
 基本 navigation item は次の順序と route/icon/label を formal design 内の正本として持つ。Guide item の詳細だけを research
@@ -534,7 +534,7 @@ icon 列は `client/src/app/navigation/items.ts` の実装と一致する。
   受ける。
 - selected 判定は item が持つ query key だけを比較し、`timestamp`、Guide の `time` / `channelId`
   など item 未定義 query は無視する。
-- generic `番組表 ` click は `/guide` だけを target にし、`type` / `time` / `channelId` を追加しない。broadcast-wave item
+- generic `番組表` click は `/guide` だけを target にし、`type` / `time` / `channelId` を追加しない。broadcast-wave item
   click は `type` だけを追加する。
 - Guide route へ遷移するときに現在時刻、channel、scroll など Guide 固有 query を組み立てる責務は `frontend-guide`
   にあり、Navigation は static target と `type` のみを所有する。
@@ -559,7 +559,7 @@ route change 時の snackbar close は、`useRouteScrollRestoration.ts` の effe
 この ref は reconnect 復元（`useRealtimeConnection.ts` の two-step restore、`navigate('/', { replace: true })` の後に
 previous full route へ `replace` する 2 回の route change）の直前に `2` へ設定され、restore が発生させる
 2 回の route change close を消費してから通常の無条件 close に戻る。これにより reconnect 成功後に表示する
-`再接続されました ` snackbar が、restore 自体の route change によって即座に閉じられることを防ぐ。
+`再接続されました` snackbar が、restore 自体の route change によって即座に閉じられることを防ぐ。
 
 - route change 時に visible snackbar を閉じ、scroll history state を更新する。React Router は scroll position を
   保存しないため、browser history restore ではない通常の route 遷移では active page scroll container を即時
@@ -597,10 +597,10 @@ previous full route へ `replace` する 2 回の route change）の直前に `2
   catch を持たない。
 - Navigation drawer header には version string 表示 slot を持ち、route change と Socket.IO `updateStatus` 後の version
   refresh 結果を反映する。
-- disconnect 中は full-screen overlay を表示し、disconnect 時に `接続が切断されました `
+- disconnect 中は full-screen overlay を表示し、disconnect 時に `接続が切断されました`
   snackbar を表示する。disconnect 後の connect success では設定画面以外の routed server state
   query を invalidate し、`navigate('/', { replace: true })`、`setTimeout(..., 0)` の待機、previous full route への
-  `replace`、`setTimeout(..., 0)` の待機、 `再接続されました ` snackbar の順で復元する。restore
+  `replace`、`setTimeout(..., 0)` の待機、 `再接続されました` snackbar の順で復元する。restore
   failure の catch/通知分岐は持たない。
 - theme は saved settings と OS preference から起動時と settings save/preview に同期する。settings
   default/backfill は所有しない。

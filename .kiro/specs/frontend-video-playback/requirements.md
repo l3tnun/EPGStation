@@ -43,7 +43,7 @@ Video playback は live watch、recorded direct watch、recorded streaming watch
 3. recorded streaming で `streamingType=webm` または `mp4` のとき、EPGStation フロントエンドは corresponding streaming media source を使う。
 4. live watch では、EPGStation フロントエンドは selected live stream type/mode に対応する player mapping を使う。
 5. recorded info card fetch に失敗しても、EPGStation フロントエンドは playback 自体を fatal にしない。
-6. recorded info card fetch failure は playback 非 fatal とし、`番組情報取得に失敗 ` を snackbar で通知する。live info card fetch と `ストリーム情報取得に失敗 ` snackbar は `frontend-onair` が所有する。
+6. recorded info card fetch failure は playback 非 fatal とし、`番組情報取得に失敗` を snackbar で通知する。live info card fetch と `ストリーム情報取得に失敗` snackbar は `frontend-onair` が所有する。
 7. recorded display data がない場合、EPGStation フロントエンドは recorded info card を描画しない。
 8. recorded direct watch route は raw video API source を使うが、通常 entrypoint では encoded file かつ `isPreferredPlayingOnWeb=true` の場合だけ生成される。
 9. HLS playback の readiness polling は `GET /streams?isHalfWidth=<isHalfWidthDisplayed>` を使い、対象 stream が enabled になるまで timer で確認する。`isHalfWidthDisplayed` は settings-storage の channel display contract から読む。
@@ -63,11 +63,11 @@ Video playback は live watch、recorded direct watch、recorded streaming watch
 5. media decode/network error の shared overlay は、別途 player-error design が追加されるまで導入しない。
 6. HLS lifecycle error は shared media decode/network overlay ではなく stream lifecycle error として扱う。
 7. HLS start failure、missing stream id、readiness timeout/abort は loading のままにせず、recoverable error state を表示し、timer/keep interval/pending wait を破棄する。
-8. HLS lifecycle snackbar は `ストリーム開始に失敗 `、`ストリーム id 取得に失敗 `、`ストリーム停止に失敗 ` を維持する。`ストリーム停止に失敗 ` は unmount 中の stop 失敗で出るため snackbar host が残らず、`unittest/imp` の HLS controller test が検証する。
+8. HLS lifecycle snackbar は `ストリーム開始に失敗`、`ストリーム id 取得に失敗`、`ストリーム停止に失敗` を維持する。`ストリーム停止に失敗` は unmount 中の stop 失敗で出るため snackbar host が残らず、`unittest/imp` の HLS controller test が検証する。
 9. WebM/MP4 recorded streaming と live WebM/MP4 は direct stream response を `<video>` に渡し、frontend は start/keep/stop API を呼ばない。
 10. WebM/MP4 direct stream は backend が HTTP request close で keep/stop を管理する。
 11. recorded WebM/MP4 の out-of-range seek は `ss` 付き URL rebuild で restart し、playback rate と paused/playing state を復元する。
-12. live M2TS-LL は mpegts.js の MSE live playback support を必要とし、dialog preflight 未対応時は `再生に対応していません `、player 内未対応時は `非対応ブラウザーです。`、video element 欠落時は `video 要素がありません。` を表示する。video element 欠落は `PlaybackVideoElement` が常に `video` を描画するため画面からは到達しない防御的分岐で、`unittest/imp` が readiness 関数を直接呼んで検証する。
+12. live M2TS-LL は mpegts.js の MSE live playback support を必要とし、dialog preflight 未対応時は `再生に対応していません`、player 内未対応時は `非対応ブラウザーです。`、video element 欠落時は `video 要素がありません。` を表示する。video element 欠落は `PlaybackVideoElement` が常に `video` を描画するため画面からは到達しない防御的分岐で、`unittest/imp` が readiness 関数を直接呼んで検証する。
 13. in-progress recording の recorded streaming では、duration が確定しない間も `/videos/:videoFileId/duration` の取得値に取得後経過秒を加えた推定総尺を使い、synthetic 1 秒 timeupdate ごとに current time / duration display と seek max を更新する。録画中の time display が `00:00/10:00` などの固定総尺で止まり続ける状態を禁止する。
 14. live M2TS-LL は origin を含む absolute media URL を mpegts.js に渡す。sub directory 配下で動作する場合も `/api/streams/live/:channelId/m2tsll?mode=<mode>` を origin + sub directory で解決し、relative URL のまま渡してはならない。
 

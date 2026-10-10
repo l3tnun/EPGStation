@@ -278,9 +278,9 @@ Recording item menu は `frontend-recorded` owned `RecordedItemMenu` を recordi
 
 Recording list adapter は `/recording` response item に `channelName` がない場合、`/channels` の shared channel index から `channelId` を解決する。`isHalfWidthDisplayed=true` では `halfWidthName`、false では `name` を優先し、該当 channel がない場合のみ `channelId.toString(10)` を表示 fallback とする。Dashboard と Recording の channel label 表示は同じ hydration helper を使い、UI 側で数値 fallback を先に確定させない。
 
-Recording と Encode の title bar 編集 entrypoint は kebab menu 配下ではなく、`mdi-pencil` 相当の direct icon button とする。Recorded / Reserves の title bar menu とは意図的な差であり、direct icon button を実行すると edit mode に入り、title を `<selectedCount> 件選択 ` に切り替える。
+Recording と Encode の title bar 編集 entrypoint は kebab menu 配下ではなく、`mdi-pencil` 相当の direct icon button とする。Recorded / Reserves の title bar menu とは意図的な差であり、direct icon button を実行すると edit mode に入り、title を `<selectedCount> 件選択` に切り替える。
 
-Recording edit mode では menu column の content を空にし（checkbox や別の selection control は追加しない）、table row height `48px`、title / channel / time columns、mobile card height `100px` を維持する。Bulk delete dialog は `RecordedBulkDeleteDialog` の `disableOption=true` consumer case とし、Recorded 側の `削除対象 ` select を表示しない。
+Recording edit mode では menu column の content を空にし（checkbox や別の selection control は追加しない）、table row height `48px`、title / channel / time columns、mobile card height `100px` を維持する。Bulk delete dialog は `RecordedBulkDeleteDialog` の `disableOption=true` consumer case とし、Recorded 側の `削除対象` select を表示しない。
 
 ### 空表示とマウント契約
 
@@ -326,7 +326,7 @@ unit test は `npm run coverage:gate` で statements・branches・functions・li
 
 Recording は Recorded owned shared dialog を consumer として使う。`RecordedBulkDeleteDialog` の option 非表示 consumer state はこの feature の visual cases で確認するが、dialog の基本 visual contract は `frontend-recorded` を正とする。tracked artifact には実番組名、実 URL、実ロゴ、サムネイル、実 file path、ffmpeg / ffprobe 実 path、認証情報、環境固有値を含めない。
 
-Encode page は running / waiting queue がどちらも空の場合、main content を空にする。`エンコード中 `、`待機中 `、empty copy、placeholder container は描画しない。running または waiting の対象が存在する場合だけ該当 section label と item container を描画する。
+Encode page は running / waiting queue がどちらも空の場合、main content を空にする。`エンコード中`、`待機中`、empty copy、placeholder container は描画しない。running または waiting の対象が存在する場合だけ該当 section label と item container を描画する。
 
 dark theme では recording list、encode list、progress row、cancel/delete dialog、action menu、pagination、empty/error surface が App Shell theme token と一致する。icon や secondary text が background と同化する場合、または empty encode state に light placeholder が残る場合は visual regression failure とする。
 

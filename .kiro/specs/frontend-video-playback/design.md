@@ -325,7 +325,7 @@ result だけを共有する。
 
 `WatchPageTitleInput` は entrypoint owner から Video Playback へ渡す typed boundary とする。`/onair/watch` は
 `frontend-onair`、`/recorded/watch` と `/recorded/streaming/:videoFileId` は `frontend-recorded` が
-`{ route, title: '視聴', owner }` を提供し、Video Playback はこの title を App Shell へ中継するだけで `視聴 `
+`{ route, title: '視聴', owner }` を提供し、Video Playback はこの title を App Shell へ中継するだけで `視聴`
 の文言を再定義しない。
 
 - live `channelId/type/mode` は route type が `hls` / `m2ts` / `m2tsll` / `webm` / `mp4` のいずれかで、server
@@ -352,23 +352,23 @@ result だけを共有する。
   `/recorded/watch` を生成する。TS/raw direct watch は通常 entrypoint からは生成しない。
 - route/query の数値 param は非数値文字列を拒否する厳密な finite integer 検証（`playbackRoutes.ts` の
   `parseFiniteInteger`: 数字のみの正規表現 + `Number.isSafeInteger`）を行う。route 段階で invalid と判定した場合は
-  player を mount せず、`再生条件が不正です ` 等の controlled error を表示する。
+  player を mount せず、`再生条件が不正です` 等の controlled error を表示する。
 
 ### 制御されたエラー / 空 UI
 
-- invalid `/onair/watch` は player を mount せず、inline controlled error `再生条件が不正です `
+- invalid `/onair/watch` は player を mount せず、inline controlled error `再生条件が不正です`
   を表示する。snackbar は表示しない。
 - invalid `/recorded/watch` は `videoId` が invalid の場合だけ player を mount せず、inline controlled error
-  `再生対象が不正です ` を表示する。`videoId` が valid で `recordedId` だけ invalid の場合は raw video
+  `再生対象が不正です` を表示する。`videoId` が valid で `recordedId` だけ invalid の場合は raw video
   player を維持し、recorded info card だけ描画しない。TS/raw direct watch の platform unsupported は route
   validation では判定せず、通常 entrypoint 側で route 生成を抑止する。
 - invalid `/recorded/streaming/:videoFileId` は `videoFileId`、`streamingType`、`mode` のいずれかが invalid な場合だけ
-  `PlaybackPlayerContainer` と info card を mount せず、inline controlled error `ストリーム再生条件が不正です `
+  `PlaybackPlayerContainer` と info card を mount せず、inline controlled error `ストリーム再生条件が不正です`
   を表示する。`recordedId` だけ invalid または欠落の場合は streaming player を維持し、recorded info
   card だけ描画しない。snackbar は表示しない。
 - HLS start/readiness failure は player area に recoverable error state を表示し、route leave cleanup を必ず実行する。
-- recorded info card fetch failure は playback 非 fatal。recorded は `番組情報取得に失敗 ` snackbar を表示して player
-  lifecycle は継続する。inline info error にはしない。live info card fetch、表示、`ストリーム情報取得に失敗 ` snackbar は
+- recorded info card fetch failure は playback 非 fatal。recorded は `番組情報取得に失敗` snackbar を表示して player
+  lifecycle は継続する。inline info error にはしない。live info card fetch、表示、`ストリーム情報取得に失敗` snackbar は
   `frontend-onair` が所有する。
 
 ### HLS ライフサイクル契約
@@ -404,9 +404,9 @@ result だけを共有する。
   `readinessTimeoutId` を常に clear してから返す。
 - start/stop の二重呼び出し、late resolve、seek restart は generation token で無視する。
 - `streamId === null` など start failure path は必ず resolve/reject し、pending promise を残さない。
-- recorded HLS の seek restart を含む HLS start は、network/backend timing による一時的な start failure で即座に user-visible error へ落とさず、同一 generation 内で短い delay 後に少なくとも 1 回 retry する。retry 中に route leave / source change / 次の seek restart が発生した場合は generation token により古い retry を無視し、古い stream が後から返った場合は cleanup する。retry 後も start に失敗した場合だけ `ストリーム開始に失敗 ` を表示する。retry delay は `500ms`、retry 回数は `1` 回（`hooks/usePlaybackLifecycle.ts` が `playbackLifecycleControllerBase` へ渡す `retryDelayMs: 500` / `startRetryCount: 1`）とする。起動失敗側はこの retry で有限時間の recoverable error として扱い、readiness 待ち側は上記の 3 状態判定と `readinessTimeoutMs` safety net（既定 `1800000`）により、いずれも無限待ちにはならず有限時間で recoverable error に落ちる設計とする。
-- HLS start failure は `ストリーム開始に失敗 `、missing stream id は `ストリーム id 取得に失敗 `、stop failure は
-  `ストリーム停止に失敗 ` snackbar を表示する。
+- recorded HLS の seek restart を含む HLS start は、network/backend timing による一時的な start failure で即座に user-visible error へ落とさず、同一 generation 内で短い delay 後に少なくとも 1 回 retry する。retry 中に route leave / source change / 次の seek restart が発生した場合は generation token により古い retry を無視し、古い stream が後から返った場合は cleanup する。retry 後も start に失敗した場合だけ `ストリーム開始に失敗` を表示する。retry delay は `500ms`、retry 回数は `1` 回（`hooks/usePlaybackLifecycle.ts` が `playbackLifecycleControllerBase` へ渡す `retryDelayMs: 500` / `startRetryCount: 1`）とする。起動失敗側はこの retry で有限時間の recoverable error として扱い、readiness 待ち側は上記の 3 状態判定と `readinessTimeoutMs` safety net（既定 `1800000`）により、いずれも無限待ちにはならず有限時間で recoverable error に落ちる設計とする。
+- HLS start failure は `ストリーム開始に失敗`、missing stream id は `ストリーム id 取得に失敗`、stop failure は
+  `ストリーム停止に失敗` snackbar を表示する。
 - recorded HLS/WebM/MP4 の out-of-range seek restart では restart 前の playback rate と paused/playing
   state を維持し、restart 後に再適用する。WebM/MP4 stream URL も restart 時の seek second を `ss` query として送る。
 
@@ -422,7 +422,7 @@ result だけを共有する。
   `origin + subDirectory + /api/streams/live/:channelId/m2tsll?mode=<mode>` の absolute
   URL を mpegts.js に渡す。live WebM/MP4 と recorded WebM/MP4 は relative media
   URL のままでよいが、M2TS-LL だけは mpegts.js の MediaSource URL 解決差を避けるため origin を含める。
-- M2TS-LL は dialog preflight で未対応なら `再生に対応していません `、player 内の browser support check 失敗なら
+- M2TS-LL は dialog preflight で未対応なら `再生に対応していません`、player 内の browser support check 失敗なら
   `非対応ブラウザーです。`、video element が取得できない場合は `video 要素がありません。` を使う。browser support
   check は mpegts.js 相当の MSE live playback capability を判定する。
 - `<video>` 要素は kind/streaming type に関わらず常に `autoplay playsinline` を持つ。単一の `PlaybackVideoElement`
@@ -550,9 +550,9 @@ fallback するため、常にビットマップをそのまま描く方が、�
 ### 情報カード / 字幕契約
 
 - recorded watch info は `/recorded/:recordedId?isHalfWidth=<setting>`、recorded streaming duration は
-  `/videos/:videoFileId/duration` を使う。live info card と `ストリーム情報取得に失敗 ` snackbar は `frontend-onair`
+  `/videos/:videoFileId/duration` を使う。live info card と `ストリーム情報取得に失敗` snackbar は `frontend-onair`
   が所有し、本 spec は player validation result と HLS readiness polling だけを提供する。On Air / Guide の dialog
-  preflight で使う `再生に対応していません ` snackbar は entrypoint owner が発行し、Video Playback は player 内の
+  preflight で使う `再生に対応していません` snackbar は entrypoint owner が発行し、Video Playback は player 内の
   `非対応ブラウザーです。` / `video 要素がありません。` を所有する。
 - `/recorded/streaming/:videoFileId` は semantic param 名として `videoFileId` を使うが、hash route compatibility
   test では `/recorded/streaming/:videoFileId` の single-param path shape と query contract を維持する。

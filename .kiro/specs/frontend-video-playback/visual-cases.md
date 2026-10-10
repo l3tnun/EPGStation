@@ -15,7 +15,7 @@ Viewport 列と dataset 列は設計時の SVG フレームの値と概念上の
 | playback-recorded-web | recorded playback route | 1440x900 | `recordedPlaybackWeb` | player surface、title/info、controls が centered max width 内に収まり、subtitle overlay が controls を覆わない。 |
 | playback-live-web | live playback route | 1440x900 | `livePlaybackWeb` | live player と On Air owned info card が max width 1200 内で共存する。 |
 | playback-mobile | recorded playback route | 390x844 | `recordedPlaybackWeb` | player aspect ratio と controls が mobile 幅で horizontal overflow を出さない。 |
-| playback-controlled-error-invalid-route | invalid route | 1440x900 | `playbackControlledErrorInvalidRoute` | `再生条件が不正です ` を inline 表示し、player と info card を mount せず、snackbar を表示しない。 |
+| playback-controlled-error-invalid-route | invalid route | 1440x900 | `playbackControlledErrorInvalidRoute` | `再生条件が不正です` を inline 表示し、player と info card を mount せず、snackbar を表示しない。 |
 | playback-controlled-error-unsupported | unsupported stream combination | 1440x900 | `playbackControlledErrorUnsupported` | `非対応ブラウザーです。` を player surface 内の controlled error として表示し、実 URL や stack trace を表示しない。 |
 | playback-stream-loading | stream starting/loading | 1440x900 | `playbackStreamLoading` | loading/progress feedback が player container の stable dimensions を維持する。 |
 | playback-subtitle | subtitle visible | 1440x900 | `playbackSubtitleSamples` | subtitle stroke setting が反映され、長い subtitle text が readable で controls と重ならない。 |

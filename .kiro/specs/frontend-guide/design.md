@@ -295,21 +295,21 @@ interface SnackbarRequest {
 - `/reserves/lists` の `startAt` / `endAt` は schedule fetch window と同じ値を使い、grid 端の reserve decoration と ProgramDialog action state を同じ時間範囲で確定させる。
 - Socket.IO `updateStatus` では schedule 全体を再取得せず、reserve index だけを更新して grid decoration と ProgramDialog action state に反映する。
 - ProgramDialog action は成功/失敗どちらでも snackbar 表示後に dialog を close する。action 成功時は schedule grid 全体を再取得せず、reserve index だけを即時 refetch して既存 program DOM の reserve/conflict/skip/overlap class を更新する。後続の Socket.IO `updateStatus` でも reserve index だけを更新し、schedule 全体の再取得は発火しない。
-- 別端末で ProgramDialog の `予約 ` / `削除 ` / `除外 ` / `除外解除 ` / `重複解除 ` が成功し、server が `updateStatus` を送信した場合、操作していない端末の Guide も同じ reserve index query を refetch し、該当 program cell と開いている ProgramDialog の action state を更新する。
-- `DELETE /reserves/:reserveId` は manual reserve では削除、rule reserve / conflict では skip/cancel として扱う。conflict の `除外 ` 後は Socket.IO refresh により skip decoration と action state へ遷移する。
+- 別端末で ProgramDialog の `予約` / `削除` / `除外` / `除外解除` / `重複解除` が成功し、server が `updateStatus` を送信した場合、操作していない端末の Guide も同じ reserve index query を refetch し、該当 program cell と開いている ProgramDialog の action state を更新する。
+- `DELETE /reserves/:reserveId` は manual reserve では削除、rule reserve / conflict では skip/cancel として扱う。conflict の `除外` 後は Socket.IO refresh により skip decoration と action state へ遷移する。
 
 ### ProgramDialog snackbar 契約
 
-- no reserve success/failure: `<programName> 予約 ` / `<programName> 予約失敗 `。
-- manual/rule reserve delete or skip success/failure: `<programName> キャンセル ` / `<programName> キャンセル失敗 `。
-- unskip success/failure: `<programName> 除外解除 ` / `<programName> 除外解除失敗 `。
-- unoverlap success/failure: `<programName> 重複解除 ` / `<programName> 重複解除失敗 `。
-- ProgramDialog は常設 `閉じる ` button を持つ。Guide time selector は常設 `閉じる ` button を持ち、API call なしで dialog を close する。live stream select dialog の `キャンセル ` / `視聴 ` / optional `番組表 ` button は `frontend-onair` owned `LiveStreamSelectDialog` contract に従う。
-- Genre setting dialog は `キャンセル ` と `更新 ` button を持つ。`キャンセル ` は保存せず close し、`更新 ` は保存後に schedule refetch せず既存 DOM の `hide` class を更新する。
+- no reserve success/failure: `<programName> 予約` / `<programName> 予約失敗`。
+- manual/rule reserve delete or skip success/failure: `<programName> キャンセル` / `<programName> キャンセル失敗`。
+- unskip success/failure: `<programName> 除外解除` / `<programName> 除外解除失敗`。
+- unoverlap success/failure: `<programName> 重複解除` / `<programName> 重複解除失敗`。
+- ProgramDialog は常設 `閉じる` button を持つ。Guide time selector は常設 `閉じる` button を持ち、API call なしで dialog を close する。live stream select dialog の `キャンセル` / `視聴` / optional `番組表` button は `frontend-onair` owned `LiveStreamSelectDialog` contract に従う。
+- Genre setting dialog は `キャンセル` と `更新` button を持つ。`キャンセル` は保存せず close し、`更新` は保存後に schedule refetch せず既存 DOM の `hide` class を更新する。
 - ProgramDialog の共通 UI、action matrix、linkify、close animation 後の remove/remount、Android Chrome の Guide grid scroll 干渉を避ける lazy unmount/remount は Guide が所有する。SearchRule、OnAir は ProgramDialog を再実装せず、Guide owned shared component を consumer として使う。
 - ProgramDialog extended text renderer は `http://` / `https://` のみを tokenized link とし、`target="_blank"` と `rel="noopener noreferrer"` を付ける。`javascript:` など他 scheme は plain text のままとし、HTML string の直接挿入を禁止する。
-- ProgramDialog の `詳細 `、`編集 `、`ルール `、`検索 ` の route 遷移 action は、dialog close を先に実行し、約 300ms の close animation 待機後に route を変更する。click と同一 tick で hash route を変更して dialog close animation を飛ばしてはならない。
-- ProgramDialog は active close と external unmount を分離する。button/backdrop/action close は parent の close handler を呼んで dialog open state と `GuideProgramDetailSetting` を更新する。route leave や close animation 中の unmount cleanup は persisted setting callback だけを呼び、parent page state の close 更新を再入させない。これにより `検索 ` / `編集 ` / `ルール ` へ遷移した後に Guide route へ戻っても React Router の hash state と grid selection が破綻せず、同じ test/user flow 内で次の ProgramDialog action を継続できる。
+- ProgramDialog の `詳細`、`編集`、`ルール`、`検索` の route 遷移 action は、dialog close を先に実行し、約 300ms の close animation 待機後に route を変更する。click と同一 tick で hash route を変更して dialog close animation を飛ばしてはならない。
+- ProgramDialog は active close と external unmount を分離する。button/backdrop/action close は parent の close handler を呼んで dialog open state と `GuideProgramDetailSetting` を更新する。route leave や close animation 中の unmount cleanup は persisted setting callback だけを呼び、parent page state の close 更新を再入させない。これにより `検索` / `編集` / `ルール` へ遷移した後に Guide route へ戻っても React Router の hash state と grid selection が破綻せず、同じ test/user flow 内で次の ProgramDialog action を継続できる。
 - Reserves screen の `ReserveDialog` は ProgramDialog とは別 component であり、Reserves owner の action/snackbar contract に従う。
 
 ### Guide 表示設定 storage 契約
@@ -331,7 +331,7 @@ Guide size setting field は shared `AppSelect` / MUI Select で実装し、visu
 | time width | `10-100 step 10` |
 | font size | `0.5-40.0 step 0.5`。表示は小数 1 桁。 |
 
-`保存 ` は `GuideSizeSetting` の current tmp を永続化し、`保存されました ` snackbar を表示する。`リセット ` は tmp を default に戻すだけで、保存 action まで localStorage へ永続化しない。route leave 時は保存済み値へ復元する。
+`保存` は `GuideSizeSetting` の current tmp を永続化し、`保存されました` snackbar を表示する。`リセット` は tmp を default に戻すだけで、保存 action まで localStorage へ永続化しない。route leave 時は保存済み値へ復元する。
 
 Guide は保存済み `GuideSizeSetting` を `.app-content.guide` の CSS variables へ反映する。tablet/mobile の切替 breakpoint は `600px`、program font size は `pt` 単位を使う。CSS variables は `--channel-tablet-height`、`--channel-tablet-width`、`--channel-tablet-fontsize`、`--timescale-tablet-height`、`--timescale-tablet-width`、`--timescale-tablet-fontsize`、`--program-tablet-fontsize`、`--channel-mobile-height`、`--channel-mobile-width`、`--channel-mobile-fontsize`、`--timescale-mobile-height`、`--timescale-mobile-width`、`--timescale-mobile-fontsize`、`--program-mobile-fontsize` を正とする。
 
@@ -345,7 +345,7 @@ genre setting dialog が描画する switch も genre id `0` から `15` まで�
 
 ### Guide route / grid 固有契約
 
-- Title は `番組表 `、任意の broadcast type suffix、半角スペース、`MM/dd(w)` を組み合わせる。
+- Title は `番組表`、任意の broadcast type suffix、半角スペース、`MM/dd(w)` を組み合わせる。
 - full guide schedule は audio/video service channel だけを表示対象にする。
 - history restore ではない route/query update 後の scroll は channel header `scrollLeft=0`、time scale `scrollTop=0` を含めて初期位置へ戻す。
 - history restore では schedule data と reserve index を取得し、program grid DOM、channel header、time scale の初期準備が完了した後、user-visible content を表示完了扱いにする前に `restoreScroll(position)` を実行する。通常位置で一度表示してから保存済み位置へ scroll する flicker は許容しない。
@@ -353,8 +353,8 @@ genre setting dialog が描画する switch も genre id `0` から `15` まで�
 - TimeLine の minute-boundary timer は route leave / unmount で cleanup する。
 - Guide page は高さを `100vh` 直接参照ではなく App Shell の `--app-viewport-height` と title bar 高さ差分から決める。iOS / iPadOS の address bar / Stage Manager resize 補正は App Shell の `fix-address-bar2` と `--app-viewport-height` が所有し、Guide page は `fix-address-bar` を独自に付与しない。
 - Guide page は program grid、channel header、time scale の内部 scroll sync を所有するため、page lifecycle 中に `guide-shell-scroll-lock` を document に付与し、外側 `shell-main` の縦 scroll を抑止する。program grid 最下部で追加 scroll しても `shell-main.scrollTop` が増えたり、channel header が grid と一緒に上へ逃げたりしてはならない。
-- ProgramDialog の検索遷移は settings-storage の `isIncludeChannelIdWhenSearching` と `isIncludeGenreWhenSearching` を参照し、channel / genre / subGenre query を含めるかを決める。遷移先 `/search?keyword=...` は `frontend-search-rule` の query-driven auto-search contract に接続され、SearchRule 側で route 初期化後に `POST /schedules/search` が発火する。その後、ユーザーが Search 画面の rule option `追加 ` をそのまま押した場合も、`encodeOption` の mode1/2/3 が全て null なら該当 field を omit した body で `POST /rules` が成功することを SearchRule 側の contract とする。Guide 側は close animation 待機後に query を正しく渡すことだけを所有し、Search 画面で追加 click を要求する状態を作らない。
-- Guide から開く stream select dialog は `frontend-onair` owned `LiveStreamSelectDialog` を consumer として使う。Guide consumer が渡す入力は `showGuide=true`、対象 `channelId`、現在の有効 `time`、stream start callback であり、`番組表 ` button は 300ms 程度の遷移 delay 後に `/guide?channelId=<channelId>` と現在 `time` のみを生成する。`type` は維持しない。URL scheme / M2TS playlist fallback / watch route の実行、`キャンセル ` / `視聴 ` button、stream 候補生成、stream select snackbar は On Air / Video Playback spec の owner contract に委譲する。
+- ProgramDialog の検索遷移は settings-storage の `isIncludeChannelIdWhenSearching` と `isIncludeGenreWhenSearching` を参照し、channel / genre / subGenre query を含めるかを決める。遷移先 `/search?keyword=...` は `frontend-search-rule` の query-driven auto-search contract に接続され、SearchRule 側で route 初期化後に `POST /schedules/search` が発火する。その後、ユーザーが Search 画面の rule option `追加` をそのまま押した場合も、`encodeOption` の mode1/2/3 が全て null なら該当 field を omit した body で `POST /rules` が成功することを SearchRule 側の contract とする。Guide 側は close animation 待機後に query を正しく渡すことだけを所有し、Search 画面で追加 click を要求する状態を作らない。
+- Guide から開く stream select dialog は `frontend-onair` owned `LiveStreamSelectDialog` を consumer として使う。Guide consumer が渡す入力は `showGuide=true`、対象 `channelId`、現在の有効 `time`、stream start callback であり、`番組表` button は 300ms 程度の遷移 delay 後に `/guide?channelId=<channelId>` と現在 `time` のみを生成する。`type` は維持しない。URL scheme / M2TS playlist fallback / watch route の実行、`キャンセル` / `視聴` button、stream 候補生成、stream select snackbar は On Air / Video Playback spec の owner contract に委譲する。
 - ProgramDialog action 成功後は schedule 全体を再取得せず reserve index だけを再取得し、既存 grid DOM の reserve/conflict/skip/overlap class を即時更新する。reserve index refetch 失敗時は既存 schedule を破棄せず、番組表データ取得失敗とは別に扱う。
 - dark theme では Guide 固有 palette、ProgramDialog paper/content/action area、time selector、genre dialog の背景/文字/補助文字を App Shell theme state と同期させる。Guide dark color disabled setting は program cell palette のみを対象とし、dialog や routed main content を light 固定にしない。
 
@@ -406,7 +406,7 @@ reserve は赤（`#ff0000`）の 4px solid border、conflict は `reserveConflic
 
 ProgramDialog は max width `500px`、paper radius `4px`、content padding `16px 16px 20px`、footer padding `8px`、field gap `8px` とする。metadata は textSecondary、description/extended は body 14px/20px、divider は App Shell `divider` token。dark theme では paper/content/action area すべて `chromeSurface` を使い、Guide cell palette setting で dialog surface を変更しない。
 
-ProgramDialog の no reserve footer は `元ファイル削除 ` checkbox と `エンコード ` select を footer 上段の 52px option row 内で右寄せ・中央揃えにする。footer 自体は fixed height にせず `height:auto` とし、short content では option row + action row だけに shrink する。`エンコード ` select の option は `TS`、server config の `encodeModes` / `encode` 由来の mode、保存済み選択値の順に重複排除して作る。frontend は encode mode 名を hardcode せず、Guide、SearchRule、OnAir の consumer は App Shell が取得した server config 由来の同一配列を shared ProgramDialog へ渡す。
+ProgramDialog の no reserve footer は `元ファイル削除` checkbox と `エンコード` select を footer 上段の 52px option row 内で右寄せ・中央揃えにする。footer 自体は fixed height にせず `height:auto` とし、short content では option row + action row だけに shrink する。`エンコード` select の option は `TS`、server config の `encodeModes` / `encode` 由来の mode、保存済み選択値の順に重複排除して作る。frontend は encode mode 名を hardcode せず、Guide、SearchRule、OnAir の consumer は App Shell が取得した server config 由来の同一配列を shared ProgramDialog へ渡す。
 
 ProgramDialog footer control は visible な MUI form control として扱う。encode select は shared `AppSelect` / MUI Select を使い、control box は 48px 高さ、max width `120px` とし、selected text は MUI Select の表示面を唯一の表示 source とする。同じ mode 名を sibling `span`、absolute overlay、display-only text で再描画してはならない。delete-original は MUI `Checkbox` / `FormControlLabel` を使い、checkbox label と encode select の vertical center が揃うよう 52px option row 内で align center する。checked state では primary fill と白い check mark を表示する。select/checkbox の操作対象を透明 overlay や不可視 DOM にしてはならず、label、underline、arrow、check mark は dark theme の `chromeSurface` 上で十分な contrast を持つ。mobile では footer、checkbox、select が dialog bounds 内に収まり、action buttons と重なったり水平 overflow を発生させたりしない。
 

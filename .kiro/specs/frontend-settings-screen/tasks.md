@@ -1,7 +1,7 @@
 # Implementation Plan
 
 - [x] 1. `/settings` route と SettingsPage layout を実装する
-  - App Shell の通常 title `設定 ` と scroll restoration done signal を使い、backend API を呼ばない route として表示する。
+  - App Shell の通常 title `設定` と scroll restoration done signal を使い、backend API を呼ばない route として表示する。
   - 単一 centered settings card、desktop max width 800px、mobile 1 column、section order を維持する。
   - 長い URL scheme placeholder でも horizontal overflow が出ないことを visual/geometry assertion で確認できる。
   - _Depends: frontend-settings-storage 1, frontend-app-shell 1_
@@ -15,7 +15,7 @@
 
 - [x] 3. 一時編集、保存、navigation regeneration を実装する
   - control change は Settings Storage の `tmp` だけを更新し、保存 action で永続化する。
-  - 保存が成功した後は `保存されました ` snackbar を表示し、App Shell へ navigation regeneration request を送る。
+  - 保存が成功した後は `保存されました` snackbar を表示し、App Shell へ navigation regeneration request を送る。
   - Settings screen は validation error snackbar と rollback path を持たず、保存の成功と失敗の snackbar（`保存されました` と `設定の保存に失敗しました`）を所有する。
   - _Requirements: 2.1-2.4, 2.6-2.11_
 

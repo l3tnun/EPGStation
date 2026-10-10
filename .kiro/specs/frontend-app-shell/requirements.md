@@ -111,7 +111,7 @@ link は利用できる。
 13. server configuration が取得済みになった後、enabled broadcast
     wave が 0 件の場合に generic な「番組表」を非表示にする挙動は intentional fix として扱い、クリック先のない Guide
     navigation を出さないための仕様とする。
-14. `設定 ` navigation item は icon name `settings` を維持する。
+14. `設定` navigation item は icon name `settings` を維持する。
 15. `isEnablePWA=false` の保存済み設定を読む consumer は App Shell startup とし、manifest、iOS PWA meta、service worker
     setup を無効化する。settings-storage は field/default だけを所有する。
 16. Settings 画面で保存 action が成功したとき、Settings 画面は App Shell へ navigation regeneration
@@ -219,7 +219,7 @@ freshness と reconnect behavior を確認できる。
 1. route が変更されたとき、EPGStation フロントエンドは selected navigation
    state を更新し、表示中の version 情報を refresh する。
 2. application state update event を受信したとき、EPGStation フロントエンドは表示中の version 情報を refresh する。
-3. version 情報を取得できないとき、EPGStation フロントエンドは error snackbar `バージョン情報取得に失敗 `
+3. version 情報を取得できないとき、EPGStation フロントエンドは error snackbar `バージョン情報取得に失敗`
    でユーザーへ通知する。
 4. realtime connection が disconnected の間、EPGStation フロントエンドは full-screen disconnected overlay を表示する。
 5. disconnected 後に realtime connection が restored したとき、EPGStation フロントエンドは Dashboard
@@ -230,15 +230,15 @@ freshness と reconnect behavior を確認できる。
    history restore ではない通常遷移では active page scroll container を `{ x: 0, y: 0 }` に戻す。
 8. navigation drawer header には現在の version string を表示し、route change と application state update
    event 後の version refresh 結果を反映する。
-9. realtime connection が disconnected したとき、EPGStation フロントエンドは `接続が切断されました `
+9. realtime connection が disconnected したとき、EPGStation フロントエンドは `接続が切断されました`
    snackbar を表示する。
 10. realtime connection restored は、過去に disconnected overlay を表示した後の socket connect 成功として扱う。
 11. disconnected snackbar の timeout は通常 snackbar
     default に従い、永続表示に変更しない。永続表示へ変える場合は別の intentional change として扱う。
 12. フロントエンド起動時の server configuration 取得に失敗したとき、EPGStation フロントエンドは error snackbar
-    `設定ダウンロードに失敗しました ` を timeout 5000ms で表示する。
+    `設定ダウンロードに失敗しました` を timeout 5000ms で表示する。
 13. Socket.IO の初期設定で socket instance を取得できないとき、EPGStation フロントエンドは error snackbar
-    `SocketIO の初期設定に失敗しました ` を表示する。
+    `SocketIO の初期設定に失敗しました` を表示する。
 14. routed screen が scroll history を保存または復元するとき、EPGStation フロントエンドは shared scroll history
     contract を通じて
     `isNeedRestoreHistory`、`saveScrollData`、`getScrollData`、`updateHistoryPosition`、`emitDoneGetData`、`onDoneGetData`
@@ -273,7 +273,7 @@ freshness と reconnect behavior を確認できる。
 24. snackbar を表示している間に別の snackbar を表示するとき、EPGStation フロントエンドは後から表示した snackbar
     を、前の snackbar の残り時間ではなく自身の `timeout` の間表示する。前の snackbar の自動消去が、後から表示した
     snackbar を閉じたり、表示される前に取り消したりしてはならない。たとえば、切断の約 1 秒後に再接続した場合も
-    `再接続されました ` を `timeout` の間表示する。
+    `再接続されました` を `timeout` の間表示する。
 
 ### 要求 7: dark theme shell coverage
 
@@ -385,15 +385,15 @@ select/checkbox/pagination の挙動差異が発生しない。
     や error text を表示していない field でも、helper text 分の下部余白を確保した高さで描画する。field
     ごとの縦密度は helper text の有無によらず一定に保つ。この余白確保は上記 option panel の field に
     限定し、他の routed form や dialog 内の field には適用しない。
-33. `ExtendedPagination` は総 page 数 `ceil(total / pageSize)` が 1 以下（`total` が `pageSize` 以下）のとき何も表示しない。それ以外のとき `<nav aria-label="ページ">` に、先頭 page へ移動する `≪` button（accessible name `最初のページへ移動 `）、page 番号 button、最終 page へ移動する `≫` button（`最後のページへ移動 `）をこの順に 1 段で並べる。`≪` `≫` は MDI の chevron-double glyph で描く。
-34. page 番号 button の accessible name は `ページ<n>へ移動 ` とし、押すとその page 番号で `onPageChange` を呼ぶ。現在 page の button は `aria-current="page"` を持ち、accessible name は `ページ数を入力して移動 ` とする。現在 page が先頭のとき `≪` を、最終 page のとき `≫` を disabled にし、押しても `onPageChange` を呼ばない。`≪` は page 1、`≫` は最終 page で `onPageChange` を呼ぶ。
+33. `ExtendedPagination` は総 page 数 `ceil(total / pageSize)` が 1 以下（`total` が `pageSize` 以下）のとき何も表示しない。それ以外のとき `<nav aria-label="ページ">` に、先頭 page へ移動する `≪` button（accessible name `最初のページへ移動`）、page 番号 button、最終 page へ移動する `≫` button（`最後のページへ移動`）をこの順に 1 段で並べる。`≪` `≫` は MDI の chevron-double glyph で描く。
+34. page 番号 button の accessible name は `ページ<n>へ移動` とし、押すとその page 番号で `onPageChange` を呼ぶ。現在 page の button は `aria-current="page"` を持ち、accessible name は `ページ数を入力して移動` とする。現在 page が先頭のとき `≪` を、最終 page のとき `≫` を disabled にし、押しても `onPageChange` を呼ばない。`≪` は page 1、`≫` は最終 page で `onPageChange` を呼ぶ。
 35. 表示する要素数（`≪` と `≫` を含む）は 7 / 9 / 11 / 13 / 15 / 17 の 6 段階とする。`<nav>` の実測幅（`ResizeObserver`）を、button 1 個の実測幅と左右の余白の合計に要素数を掛けた値で割り、収まる最大の段階を選ぶ。1 段階ずつ増やすため、左右に 1 個ずつ足せない幅では増やさない。7 個が収まらない幅でも 7 個を下限とし、幅の測定前も 7 個とする。端末幅やソフトウェアキーボードの高さの固定値は使わない。
 36. 総 page 数 + 2 が選んだ要素数より小さいとき、存在する page の番号だけを表示する（要素数は総 page 数 + 2）。
 37. 現在 page を page 番号の並びの中央に置く。先頭または最終 page に近く片側が足りないときは、足りない分を反対側へずらして page 番号の個数を保ち、存在しない page 番号（1 未満・最終 page 超）を表示しない。
 38. 現在 page の button は `transform: scale(1.1)` で拡大する。拡大は `transform` だけで行い、button の幅・余白を他の button と同じに保つため、隣の button の位置は動かない。配色は 48 に従い、dark theme でも現在 page は他の button と区別できる。
-39. 現在 page の button を押すと `ページ数を入力 ` dialog を開く。dialog は `ページ数 ` の text field（placeholder `1 〜 <最終 page>`、`inputMode="numeric"`、`ClearableTextField`）、`キャンセル `、`移動 ` button を持つ。dialog は開くたびに入力欄を空にして入力欄へ focus する。
-40. dialog の入力が空欄、0、負数、小数、数字以外（全角数字・指数表記を含む）、最終 page 超のいずれかのとき、`移動 ` を押しても Enter を押しても page を移動せず、1 や最終 page へ丸めず、dialog を開いたまま `1 〜 <最終 page> の整数を入力してください ` を表示する。入力を変えるとこのメッセージを消す。
-41. dialog の入力が 1 以上最終 page 以下の整数（先頭の 0 を含んでよい）のとき、`移動 ` または入力欄での Enter（IME の変換を確定する Enter を除く）で dialog を閉じ、その page 番号で `onPageChange` を呼ぶ。Enter は keydown の既定動作を取り消し、dialog を閉じて focus が戻った現在 page の button を、同じ Enter が続けて押して dialog を開き直すことがないようにする。入力が現在 page と同じときは dialog を閉じるだけで `onPageChange` を呼ばない。`キャンセル ` と dialog 外の click（Esc を含む）は dialog を閉じ、`onPageChange` を呼ばない。
+39. 現在 page の button を押すと `ページ数を入力` dialog を開く。dialog は `ページ数` の text field（placeholder `1 〜 <最終 page>`、`inputMode="numeric"`、`ClearableTextField`）、`キャンセル`、`移動` button を持つ。dialog は開くたびに入力欄を空にして入力欄へ focus する。
+40. dialog の入力が空欄、0、負数、小数、数字以外（全角数字・指数表記を含む）、最終 page 超のいずれかのとき、`移動` を押しても Enter を押しても page を移動せず、1 や最終 page へ丸めず、dialog を開いたまま `1 〜 <最終 page> の整数を入力してください` を表示する。入力を変えるとこのメッセージを消す。
+41. dialog の入力が 1 以上最終 page 以下の整数（先頭の 0 を含んでよい）のとき、`移動` または入力欄での Enter（IME の変換を確定する Enter を除く）で dialog を閉じ、その page 番号で `onPageChange` を呼ぶ。Enter は keydown の既定動作を取り消し、dialog を閉じて focus が戻った現在 page の button を、同じ Enter が続けて押して dialog を開き直すことがないようにする。入力が現在 page と同じときは dialog を閉じるだけで `onPageChange` を呼ばない。`キャンセル` と dialog 外の click（Esc を含む）は dialog を閉じ、`onPageChange` を呼ばない。
 42. `window.visualViewport` が使える環境では、dialog が開いている間だけ `visualViewport` の `resize` と `scroll` を購読し、可視領域の高さと `offsetTop` から dialog を可視領域の中央に置き、dialog の高さ上限を可視領域の高さ - 24px にする。キーボードの高さは `window.innerHeight` と `visualViewport.height` の差から求める。dialog を閉じている最中は位置を動かさず、閉じたら購読を解除する。
 43. dialog の入力欄が focus を得て 300ms 後に入力欄が可視領域の外にあるときは、入力欄を `scrollIntoView({ block: 'nearest' })` で可視領域へ入れる。dialog が閉じていれば何もしない。
 44. `window.visualViewport` が無い環境では、画面幅が 600px 以下のとき dialog を画面上端寄せ（上の余白 12px）にし、600px を超えるときは中央に置く。dialog の高さは `100dvh - 24px` を上限とする。

@@ -270,45 +270,45 @@ dialog 表示中に配信方式（type）select を変更したときは、こ�
 
 On Air は `LiveStreamSelectDialog` の 物理 owner として named export を提供する。consumer は On Air screen 自身と Guide とする。`showGuide` prop の契約は「On Air から開くと false、Guide から開くと true」で固定する。
 
-Dialog input は対象 `channelId`、表示用 channel name、現在の Guide `time`、show-guide flag、stream start callback を含む。On Air owner は stream type/mode 候補生成、`useURLScheme` toggle による候補再構築、`OnAirSelectStreamSetting` の保存/復元/invalid 補正、M2TS URL scheme / playlist fallback、watch route builder、`再生に対応していません ` / `視聴ページへの移動に失敗 ` snackbar を所有する。consumer はこれらを再定義しない。
+Dialog input は対象 `channelId`、表示用 channel name、現在の Guide `time`、show-guide flag、stream start callback を含む。On Air owner は stream type/mode 候補生成、`useURLScheme` toggle による候補再構築、`OnAirSelectStreamSetting` の保存/復元/invalid 補正、M2TS URL scheme / playlist fallback、watch route builder、`再生に対応していません` / `視聴ページへの移動に失敗` snackbar を所有する。consumer はこれらを再定義しない。
 
 M2TS URL scheme は 、Settings の `onAirM2TSViewURLScheme` が non-empty ならそれを最優先し、empty/null の場合は `/api/config.urlscheme.m2ts` から current platform の template を選ぶ。platform 判定は iOS user agent（iPhone / iPad / iPod）、Android user agent、iPadOS (`Mac` platform + `maxTouchPoints > 1`)、macOS、Windows の順で行う。template が解決できない場合だけ、repository base `./api` に `streams/live/:channelId/m2ts/playlist?mode=:mode` を結合した相対 URL（`./api/streams/live/:channelId/m2ts/playlist?mode=:mode`）を `window.location.href` へ渡す。相対 URL は文書の path を基準に解決されるため、subDirectory 配下でも同じ配下の API を指す。template の `PROTOCOL` は current `location.protocol` から `:` を除いた値、`ADDRESS` は `location.host + subDirectory + /api/streams/live/:channelId/m2ts?mode=:mode` とし、template に `vlc-x-callback` を含む場合のみ `ADDRESS` を `encodeURIComponent` する。tracked spec/test artifact には実 host や実 scheme を残さず synthetic placeholder を使う。
 
 `/api/config` の streamConfig は fetch adapter 境界で iOS 用に正規化する。iOS では live TS の `webm` / `mp4` を常に削除する。`m2tsll` は iPad/iPhone というモデル判定では残す/削除しない。実行中の browser が mpegts.js の MSE live playback（`Mpegts.isSupported() && getFeatureList().mseLivePlayback` -- W3C `MediaSource` または Apple `ManagedMediaSource` のいずれかで `video/mp4; codecs="avc1.42E01E,mp4a.40.2"` が `isTypeSupported` になり、かつ fetch+`ReadableStream` の network stream IO が使える場合に true）を feature detection した結果だけを adapter 既定値の入力にし、support があるときだけ `m2tsll` を残す。iPhone/iPad のいずれでも、`ManagedMediaSource` または `MediaSource` 経由でこの support を満たす環境だけが `m2tsll` を残し、満たさない環境は機種を問わず削除される。残った live 候補は URL Scheme 用の `m2ts` と web playback 用の `hls`、および support 済み環境の `m2tsll` に限定される。On Air の dialog や Guide consumer はこの正規化済み config だけを入力に候補生成し、iOS 非対応形式の個別再表示をしてはならない。
 
-Dialog は常設 `キャンセル ` button と `視聴 ` 確定 button を持つ。`キャンセル ` は API call なしで close し、`視聴 ` は現在選択中の stream handoff を実行する。`番組表 ` button は `showGuide=true` の場合だけ表示し、On Air から開いた場合は表示しない。
+Dialog は常設 `キャンセル` button と `視聴` 確定 button を持つ。`キャンセル` は API call なしで close し、`視聴` は現在選択中の stream handoff を実行する。`番組表` button は `showGuide=true` の場合だけ表示し、On Air から開いた場合は表示しない。
 
 ### ProgramDialog アクション表
 
 On Air は Guide owned shared ProgramDialog を consume し、Guide ProgramDialog と同じ no reserve / manual / rule / skip / overlap action matrix を使う。reserve index は ProgramDialog open 時の action state 決定だけに供給し、OnAirCard 自体には reserve/conflict/skip/overlap class を付けない。
 
-On Air consumer は ProgramDialog の active close handler と persisted setting callback を分けて渡す。active close では `GuideProgramDetailSetting` と dialog open state を更新し、route leave / external unmount cleanup では setting の永続化だけを行う。`検索 `、`編集 `、`ルール ` で別 route へ遷移してから `/onair` へ戻る flow では、OnAirCard 一覧が再表示され、同一 test/user session 内で削除、除外、除外解除、重複解除など後続 action を継続できる。
+On Air consumer は ProgramDialog の active close handler と persisted setting callback を分けて渡す。active close では `GuideProgramDetailSetting` と dialog open state を更新し、route leave / external unmount cleanup では setting の永続化だけを行う。`検索`、`編集`、`ルール` で別 route へ遷移してから `/onair` へ戻る flow では、OnAirCard 一覧が再表示され、同一 test/user session 内で削除、除外、除外解除、重複解除など後続 action を継続できる。
 
 | 状態 | 主アクション | API / Route | Snackbar | Close |
 | --- | --- | --- | --- | --- |
-| no reserve | 予約 | `POST /reserves` with `programId`, `allowEndLack`, optional encode option | `<programName> 予約 ` / `<programName> 予約失敗 ` | success/failure 後に close |
-| manual reserve | 削除 | `DELETE /reserves/:reserveId` | `<programName> キャンセル ` / `<programName> キャンセル失敗 ` | success/failure 後に close |
-| rule reserve | 除外 | `DELETE /reserves/:reserveId` | `<programName> キャンセル ` / `<programName> キャンセル失敗 ` | success/failure 後に close |
-| skip | 除外解除 | `DELETE /reserves/:reserveId/skip` | `<programName> 除外解除 ` / `<programName> 除外解除失敗 ` | success/failure 後に close |
-| overlap | 重複解除 | `DELETE /reserves/:reserveId/overlap` | `<programName> 重複解除 ` / `<programName> 重複解除失敗 ` | success/failure 後に close |
+| no reserve | 予約 | `POST /reserves` with `programId`, `allowEndLack`, optional encode option | `<programName> 予約` / `<programName> 予約失敗` | success/failure 後に close |
+| manual reserve | 削除 | `DELETE /reserves/:reserveId` | `<programName> キャンセル` / `<programName> キャンセル失敗` | success/failure 後に close |
+| rule reserve | 除外 | `DELETE /reserves/:reserveId` | `<programName> キャンセル` / `<programName> キャンセル失敗` | success/failure 後に close |
+| skip | 除外解除 | `DELETE /reserves/:reserveId/skip` | `<programName> 除外解除` / `<programName> 除外解除失敗` | success/failure 後に close |
+| overlap | 重複解除 | `DELETE /reserves/:reserveId/overlap` | `<programName> 重複解除` / `<programName> 重複解除失敗` | success/failure 後に close |
 
-常設 `閉じる ` button は API call なしで dialog を close する。
+常設 `閉じる` button は API call なしで dialog を close する。
 
 ### `/onair/watch` 情報カード
 
 - `/onair/watch` の physical route component と player validation は `frontend-video-playback` が所有する。On Air は On Air 一覧からの route builder、stream selection entrypoint、live info card matching/fetch のみを所有する。
 - live watch route は query key `channel`、stream `type`、`mode` を validate する。`type` query は `hls`、`m2tsll`、`webm`、`mp4` の serialized value を使う。表示名 `M2TS-LL` は route query では `m2tsll`、`WebM` / `MP4` / `HLS` は lowercase に変換する。
 - `GET /streams?isHalfWidth=<setting>` で stream info を取得し、route query `channel` の数値値と stream item `channelId`、および `mode` に一致する stream info があるときだけ info card を表示する。stream info の backend 内部 `type` は route query の stream type と直接比較しない。
-- stream info fetch failure は `ストリーム情報取得に失敗 ` snackbar を表示するが、player route 自体は video-playback owner の validation/lifecycle に委譲する。
+- stream info fetch failure は `ストリーム情報取得に失敗` snackbar を表示するが、player route 自体は video-playback owner の validation/lifecycle に委譲する。
 - live info card は `endAt - now` を次回更新 timer として使う。`endAt - now <= 0`、stream info が 0 件、または fetch failure の場合は 1000ms retry とする。Socket.IO `updateStatus` は OnAir list 側の refetch trigger であり、live info card の stream info は route init と timer に加えて Socket.IO `updateStatus` でも更新される。route leave/destroy では timer と Socket.IO subscription を cleanup する。
-- stream select dialog は呼び出し元に応じて `番組表 ` button の表示可否を受け取る。On Air から開いた場合は `番組表 ` button を表示しない。
+- stream select dialog は呼び出し元に応じて `番組表` button の表示可否を受け取る。On Air から開いた場合は `番組表` button を表示しない。
 
 ### Visual contract
 
 | UI | Owner | Contract |
 | --- | --- | --- |
 | `OnAirCard` | frontend-onair | single column、centered、max width 800、1 item per channel/schedule。 |
-| `LiveStreamSelectDialog` | frontend-onair | max width 400、scrollable、header は selected channel name、stream type/config select、`外部アプリで開く ` switch、optional `番組表 `、常設 `キャンセル ` / `視聴 ` action。switch は track background と thumb position / color に 150ms 程度の transition を持つ。 |
+| `LiveStreamSelectDialog` | frontend-onair | max width 400、scrollable、header は selected channel name、stream type/config select、`外部アプリで開く` switch、optional `番組表`、常設 `キャンセル` / `視聴` action。switch は track background と thumb position / color に 150ms 程度の transition を持つ。 |
 | `/onair/watch` content | frontend-onair / frontend-video-playback | live watch player/info content は centered max width 1200 の領域に配置する。physical player は frontend-video-playback、info card は frontend-onair が所有する。 |
 
 ## データモデル
@@ -346,7 +346,7 @@ OnAirCard list は centered single column max width `800px`、card padding `12px
 
 iOS / iPadOS fixed shell の visual regression では、`isOnAirTabListView=true` の `/onair` で title bar height が通常 toolbar だけの 64px を超えること、`shell-main` の computed `padding-top` が実測 title bar height と一致すること、On Air list top が title bar bottom 以上であることを確認する。
 
-LiveStreamSelectDialog は max width `400px`、content padding `16px 24px`、control gap `12px`、action row `8px 16px` とする。保存済み stream type/mode が候補にない場合も select が空白にならず、先頭候補を表示する。Guide consumer の `番組表 ` button がある場合も action row height を変えない。
+LiveStreamSelectDialog は max width `400px`、content padding `16px 24px`、control gap `12px`、action row `8px 16px` とする。保存済み stream type/mode が候補にない場合も select が空白にならず、先頭候補を表示する。Guide consumer の `番組表` button がある場合も action row height を変えない。
 
 `/onair/watch` は centered max width `1200px` とする。info card は desktop・mobile とも player の下に縦積みし、最大幅 `800px`、padding `12px 16px`、player との間は `.watchPage` の padding `8px` とする。player controls と autoplay/subtitle は Video Playback owner を正とし、On Air は info card が controls を覆わないことだけを固定する。
 
@@ -358,7 +358,7 @@ LiveStreamSelectDialog は max width `400px`、content padding `16px 24px`、con
 - blank body、tab/list mode、card click split、route watch immediate、Socket.IO update、next endAt timer、10 秒 progress interval、0 件時 1 秒 retry、destroy cleanup を検証する。
 - OnAirSelectStreamSetting の settings-storage default shape 消費、restore、invalid補正、close保存を検証する。
 - On Air ProgramDialog action matrix、常設 close button、success/failure close を検証する。
-- `/onair/watch` query key `channel`、info card matching と `ストリーム情報取得に失敗 ` snackbar を検証する。
+- `/onair/watch` query key `channel`、info card matching と `ストリーム情報取得に失敗` snackbar を検証する。
 
 ## セキュリティとプライバシー
 

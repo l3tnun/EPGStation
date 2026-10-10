@@ -41,7 +41,7 @@
 4. ユーザーが reset action を実行したとき、EPGStation フロントエンドは一時編集値 `tmp` を default settings object に置き換え、保存 action が実行されるまで localStorage へ永続化しない。reset の後に保存 action が実行されたときは、保存済みの値を引き継がず `tmp`（default settings object に、その後の変更を加えたもの）だけを書く。保存済み JSON の追加 field と型不一致の値は残らない。
 5. Settings 画面から離れるとき、EPGStation フロントエンドは未保存の一時編集値を破棄し、保存済み settings object から `tmp` を復元する。
 6. settings storage の保存に失敗したとき、EPGStation フロントエンドは例外によって application 全体を停止させない。
-7. settings save action の user-facing snackbar と navigation regeneration は Settings screen / App Shell が所有し、storage contract は保存失敗を caller へ例外伝播しないことだけを定義する。validation error snackbar と rollback path は持たず、保存 action が成功した後は Settings screen が `保存されました ` を、保存が失敗した（書き込みが例外になった）ときは `設定の保存に失敗しました` を表示する。
+7. settings save action の user-facing snackbar と navigation regeneration は Settings screen / App Shell が所有し、storage contract は保存失敗を caller へ例外伝播しないことだけを定義する。validation error snackbar と rollback path は持たず、保存 action が成功した後は Settings screen が `保存されました` を、保存が失敗した（書き込みが例外になった）ときは `設定の保存に失敗しました` を表示する。
 8. Settings 画面の theme control は `tmp` による即時 preview を許可する。reset 時は `tmp` を default settings object に戻すが、表示 theme は保存済み settings 由来の状態へ戻す。leave/destroy 時は `tmp` と表示 theme をどちらも保存済み settings 由来の状態へ戻す。
 
 ### 要求 3: 全般と theme settings

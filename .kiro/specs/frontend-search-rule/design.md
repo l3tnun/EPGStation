@@ -84,7 +84,7 @@ graph TB
 
 Search / Rule の keyword、ignore keyword、duration、period datetime、Rule option text/number、Rule search menu
 keyword は shared clearable input owner を使う。非 select の MUI `TextField` を直接配置せず、raw
-input を使う場合も同一 field 内に `...をクリア ` accessible name を持つ clear
+input を使う場合も同一 field 内に `...をクリア` accessible name を持つ clear
 button を隣接させる。select/combobox、checkbox、genre button、Autocomplete 内部 input はこの clearable text
 field 契約の対象外とする。
 
@@ -295,7 +295,7 @@ path を二重に結合しない。
 
 | メソッド | エンドポイント               | リクエスト                                                                                                                                                                                      | レスポンス                                               | エラー                                                                             |
 | -------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| POST     | /schedules/search            | { option, isHalfWidth, limit }                                                                                                                                                                  | program search results                                   | 初回/query-driven failure は `検索に失敗 `; refresh failure は `検索情報更新に失敗 ` |
+| POST     | /schedules/search            | { option, isHalfWidth, limit }                                                                                                                                                                  | program search results                                   | 初回/query-driven failure は `検索に失敗`; refresh failure は `検索情報更新に失敗` |
 | GET      | /rules                       | type=normal/limit/offset/optional keyword plus isHalfWidth display option                                                                                                                       | rule list                                                | ルールデータ取得に失敗                                                             |
 | GET      | /rules/:ruleId               | none                                                                                                                                                                                            | rule detail for preload/edit                             | rule preload controlled error                                                      |
 | GET      | /reserves                    | type=all&ruleId=:ruleId&isHalfWidth=:setting                                                                                                                                                    | reserve list for rule edit/time-specified relation       | reserve preload controlled error                                                   |
@@ -340,11 +340,11 @@ Search submit は `POST /schedules/search` に `{ option, isHalfWidth, limit }` 
 | keyword target default | keyword が non-empty で `name` / `description` / `extended` target がすべて false の場合、`name=true`、`description=true` を設定する。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | exclude words          | `ignoreKeyword`、`ignoreKeyCS`、`ignoreKeyRegExp`、`ignoreName`、`ignoreDescription`、`ignoreExtended` を `option` へ反映する。empty ignore keyword は送らない。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | exclude target default | ignore keyword が non-empty で `ignoreName` / `ignoreDescription` / `ignoreExtended` target がすべて false の場合、`ignoreName=true`、`ignoreDescription=true` を設定する。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| channel selector       | UI は text/numeric input ではなく `/channels` の id/name から作る select/combobox とする。複数 channel を選択でき、未選択時は表示面に muted placeholder color の `channel` を表示し、non-empty 時は `channelIdをクリア ` clear action で全選択を解除できる。表示面は MUI theme token を継承する 48px density の standard select とし、outlined variant の `fieldset` や raw text input 用 border/underline を重ねてはならない。複数選択時の表示名は 1 行 ellipsis で親 card 幅内に収め、selected label の長さや件数で combobox の実幅が親 card を突き抜けてはならない。selected channel ids がある場合は `channelIds` を送り、broadcast wave 条件とは排他にする。rule edit では selected id が fetched option にない場合も rule detail の channelNames から fallback option を挿入し、表示名と id を維持する。                                                                                                                                                    |
+| channel selector       | UI は text/numeric input ではなく `/channels` の id/name から作る select/combobox とする。複数 channel を選択でき、未選択時は表示面に muted placeholder color の `channel` を表示し、non-empty 時は `channelIdをクリア` clear action で全選択を解除できる。表示面は MUI theme token を継承する 48px density の standard select とし、outlined variant の `fieldset` や raw text input 用 border/underline を重ねてはならない。複数選択時の表示名は 1 行 ellipsis で親 card 幅内に収め、selected label の長さや件数で combobox の実幅が親 card を突き抜けてはならない。selected channel ids がある場合は `channelIds` を送り、broadcast wave 条件とは排他にする。rule edit では selected id が fetched option にない場合も rule detail の channelNames から fallback option を挿入し、表示名と id を維持する。                                                                                                                                                    |
 | broadcast wave         | channel ids が空の場合だけ `GR` / `BS` / `CS` / `SKY` / `BS4K` boolean filter を送る。visible wave がすべて disabled の場合は全 visible wave を enabled に戻し、visible wave がすべて enabled の場合は `GR` / `BS` / `CS` / `SKY` / `BS4K` key 自体を omit する。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| genre/subGenre         | genre select は genre 定義の top-level genre を option に持つ select/combobox とし、numeric input にしない。この select は検索対象の単一 genre 値ではなく genre list filter であり、all-filter 状態を `すべて ` として表示する。`すべて ` では全 top-level genre を一覧表示し、top-level genre 選択時は下の一覧をその genre に絞る。genre select は clearable select ではないため、genre 選択後も右端の `genreをクリア ` clear button を表示しない。genre list filter を全件表示へ戻す操作は、select menu 内の `すべて ` option 選択だけで行う。検索対象 genre は一覧内の item click で複数選択し、top-level 選択は `{ genre }`、subGenre 選択は `{ genre, subGenre }` として backend `genres` 配列へ変換する。`サブジャンル表示 ` OFF 時は subGenre button 群を非表示にし、既存 subGenre 選択を同一 genre の top-level 選択へ正規化する。genre item の blue tint は selected state 専用であり、hover は selected と同じ background/color を使わない。 |
+| genre/subGenre         | genre select は genre 定義の top-level genre を option に持つ select/combobox とし、numeric input にしない。この select は検索対象の単一 genre 値ではなく genre list filter であり、all-filter 状態を `すべて` として表示する。`すべて` では全 top-level genre を一覧表示し、top-level genre 選択時は下の一覧をその genre に絞る。genre select は clearable select ではないため、genre 選択後も右端の `genreをクリア` clear button を表示しない。genre list filter を全件表示へ戻す操作は、select menu 内の `すべて` option 選択だけで行う。検索対象 genre は一覧内の item click で複数選択し、top-level 選択は `{ genre }`、subGenre 選択は `{ genre, subGenre }` として backend `genres` 配列へ変換する。`サブジャンル表示` OFF 時は subGenre button 群を非表示にし、既存 subGenre 選択を同一 genre の top-level 選択へ正規化する。genre item の blue tint は selected state 専用であり、hover は selected と同じ background/color を使わない。 |
 | time specification     | UI の first time row を `times[0].week` / `times[0].start` / `times[0].range` へ変換する。`start` は 0-23 時、`range` は 1-23 時間の select/combobox とし、直接数値入力 field にしない。未選択時は表示面に `start` / `range` を表示し、non-empty 時は各 select の clear action で null に戻せる。weekday がすべて未選択の場合は `week=0x7f` を送る。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| search period          | UI は `開始 ` / `終了 ` の readonly text field から日時 picker dialog を開く。dialog は共有部品 `DateTimePickerDialog`（月曜始まりの日本語 calendar と 24 時間表記の時刻の選択）に `クリア ` / `設定 ` action を持ち、local datetime を Unix time milliseconds へ変換する。start/end の両方が指定されている場合だけ `searchPeriods` を 1 件送る。片側だけの場合は `searchPeriods` を omit する。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| search period          | UI は `開始` / `終了` の readonly text field から日時 picker dialog を開く。dialog は共有部品 `DateTimePickerDialog`（月曜始まりの日本語 calendar と 24 時間表記の時刻の選択）に `クリア` / `設定` action を持ち、local datetime を Unix time milliseconds へ変換する。start/end の両方が指定されている場合だけ `searchPeriods` を 1 件送る。片側だけの場合は `searchPeriods` を omit する。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | duration               | UI minute value を seconds に変換し、下限/上限を `durationMin` / `durationMax` へ反映する。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | free-only / flags      | free-only は `isFree`、除外条件などは option key へ non-empty value だけを反映する。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 
@@ -352,7 +352,7 @@ Search submit は `POST /schedules/search` に `{ option, isHalfWidth, limit }` 
 `keyword`、`keyCS`、`keyRegExp`、`name`、`description`、`extended`、`ignoreKeyword`、`ignoreKeyCS`、`ignoreKeyRegExp`、`ignoreName`、`ignoreDescription`、`ignoreExtended`、`channelIds`、`GR`、`BS`、`CS`、`SKY`、`BS4K`、`genres`、`times`、`searchPeriods`、`durationMin`、`durationMax`、`isFree`
 を扱う。empty value は上記 omit rule に従う。
 
-plain `/search` の `時刻指定 ` は `時刻指定 ` switch
+plain `/search` の `時刻指定` は `時刻指定` switch
 に対応する controlled switch とする。rule edit 中は常に disabled、通常 `/search`
 では操作可能で、OFF では通常検索 card、ON では番組名 keyword / channel select / 開始・終了 time field / weekday
 checkbox の time-specified rule card を表示する。ON に切り替えても `/schedules/search` は発火せず、検索実行前から Rule
@@ -361,7 +361,7 @@ option card を表示する。time-specified rule add payload は
 を生成し、weekday が 0 件の場合は normal search と同じ `week=0x7f` へ正規化する。
 
 query-driven search は `keyword`、`channelId`、`genre`、`subGenre`
-のいずれかを query から form に反映した場合に query-driven search として検索を発火する。Guide ProgramDialog の `検索 ` action は
+のいずれかを query から form に反映した場合に query-driven search として検索を発火する。Guide ProgramDialog の `検索` action は
 `/search?keyword=<programName>` を入口にするため、SearchRule 側は route 初期化後に user submit を待たず
 `POST /schedules/search` を実行し、query 由来 keyword にも keyword target default を適用する。`rule`
 query がある場合は rule edit mode が優先され、query-driven search は実行しない。
@@ -378,8 +378,8 @@ button は value が non-empty のときだけ field 右端に表示し、該当
 string/null 相当に戻す。select/combobox は clearable な場合だけ select owner の clear
 action を持つ。Search form の channel / start time / range、Rule option form の directory / directory1-3 /
 mode1-3 は clearable select として扱う。Search form の genre select は clearable select 対象外であり、non-empty
-state でも `genreをクリア ` button を表示しない。`file format` は select ではなく clearable な text field として扱う。通常検索 UI の `range` select と、
-time-specified UI の `終了 ` field の両方を、field 右端の clear button の確認対象に含める。read-only
+state でも `genreをクリア` button を表示しない。`file format` は select ではなく clearable な text field として扱う。通常検索 UI の `range` select と、
+time-specified UI の `終了` field の両方を、field 右端の clear button の確認対象に含める。read-only
 activator、disabled field、textarea はこの clear button 対象外とする。
 
 Rule option の directory / directory1-3 / mode1-3 select は、empty value を placeholder/clear
@@ -412,9 +412,9 @@ value とする。
   error を出さず SearchResult section へ smooth scroll する。user submit 後の検索結果 scroll、route-backed auto
   search、rule edit preload、SearchResult header の「録画設定へ移動」button はすべて `behavior: smooth`
   を維持する。同一 helper を使い、**scroll target（`resultRef`/`ruleOptionRef` が指す element）が
-  mount されていない場合にだけ** `スクロールに失敗 ` snackbar を表示する。title bar の高さが取得できない
+  mount されていない場合にだけ** `スクロールに失敗` snackbar を表示する。title bar の高さが取得できない
   場合は offset 0 として scroll を続行し、`window.scrollTo`/`shell-main.scrollTo` 自体が例外を投げた
-  場合も同様に握りつぶして続行し、いずれも `スクロールに失敗 ` を出してはならない。
+  場合も同様に握りつぶして続行し、いずれも `スクロールに失敗` を出してはならない。
   `Element.scrollIntoView()` に直接委譲して title bar offset を失ってはならない、という制約は維持する。
 - Rule add/update body は `{ isTimeSpecification, searchOption, reserveOption, saveOption?, encodeOption? }`
   を基本とする。normal rule は `isTimeSpecification=false` と search form 由来の `searchOption`、time-specified rule は
@@ -458,10 +458,10 @@ value とする。
 - ProgramDialog の共通 UI、linkify、close animation 後の remove/remount、基本 action matrix は `frontend-guide`
   が所有する。SearchRule は search result から共通 ProgramDialog へ渡す decoration/reserve index、rule edit
   route、search result 固有の handoff input だけを所有し、ProgramDialog を重複実装しない。
-- routed title は plain `/search` で `検索 `、`/search?rule=<ruleId>` で `ルール編集 `、`/rule` で `ルール ` とする。`rule`
+- routed title は plain `/search` で `検索`、`/search?rule=<ruleId>` で `ルール編集`、`/rule` で `ルール` とする。`rule`
   query が存在する場合は search query values より rule edit mode title を優先する。
 - `/rule` title bar の検索 icon は Rule search menu を開く。`/search` へ遷移する action ではない。Rule search
-  menu は current route の `keyword` query を `キーワード ` field へ preload し、`閉じる ` は route を変えず close、`検索 `
+  menu は current route の `keyword` query を `キーワード` field へ preload し、`閉じる` は route を変えず close、`検索`
   は menu close 後約 300ms 待って `/rule?keyword=<keyword>` へ遷移する。keyword が空の場合は `/rule`
   へ遷移する。
 - time-specified rule edit の reserve cards は `frontend-reserves` owned `ReserveListItem` を
@@ -470,17 +470,17 @@ value とする。
   action を発火しない。
 - Search result ProgramDialog は Guide と同じ no reserve / manual / rule / skip / overlap action
   matrix を使い、表示 button は状態ごとに明示する。
-- no reserve は `詳細 `、`検索 `、`予約 ` と encode selector / delete-original checkbox を表示する。
-- manual reserve は `編集 `、`検索 `、`削除 ` を表示する。表示 label は `削除 `、snackbar 文言は `<programName> キャンセル `
-  / `<programName> キャンセル失敗 ` を維持する。
-- rule reserve は `ルール `、`検索 ` と、状態に応じて `除外 `、`除外解除 `、`重複解除 ` を表示する。
+- no reserve は `詳細`、`検索`、`予約` と encode selector / delete-original checkbox を表示する。
+- manual reserve は `編集`、`検索`、`削除` を表示する。表示 label は `削除`、snackbar 文言は `<programName> キャンセル`
+  / `<programName> キャンセル失敗` を維持する。
+- rule reserve は `ルール`、`検索` と、状態に応じて `除外`、`除外解除`、`重複解除` を表示する。
 - no reserve は `POST /reserves` に `{ programId, allowEndLack: true }` と optional `encodeOption`
-  を送り、`<programName> 予約 ` / `<programName> 予約失敗 ` snackbar を表示して close する。`isDeleteOriginalAfterEncode`
+  を送り、`<programName> 予約` / `<programName> 予約失敗` snackbar を表示して close する。`isDeleteOriginalAfterEncode`
   は `encodeOption` 内の field として送る。
-- manual/rule reserve は `DELETE /reserves/:reserveId` を送り、`<programName> キャンセル ` /
-  `<programName> キャンセル失敗 ` snackbar を表示して close する。
+- manual/rule reserve は `DELETE /reserves/:reserveId` を送り、`<programName> キャンセル` /
+  `<programName> キャンセル失敗` snackbar を表示して close する。
 - skip は `DELETE /reserves/:reserveId/skip`、overlap は `DELETE /reserves/:reserveId/overlap` を送り、それぞれ
-  `除外解除 ` / `重複解除 ` の success/failure snackbar を表示して close する。
+  `除外解除` / `重複解除` の success/failure snackbar を表示して close する。
 - `GET /reserves/lists` は result program の reserve state decoration と ProgramDialog action 分岐に使う。
   decoration は `frontend-guide` が所有する `GuideReserveIndex` / `ReserveVisualState`
   （`reserve`/`conflict`/`skip`/`overlap`）を再利用し、`SearchResultSection` の各結果 item に
@@ -490,8 +490,8 @@ value とする。
   `GuidePage.module.css` と同じ token 調整（`conflict` 背景 `#f6c90e`、`skip`/`overlap` 背景
   `#717171`、`overlap` 文字色 `#fff`）を適用する。
 - Rule enable/disable は API await 後に state を確定し、失敗時は rollback と snackbar を行う intentional fix とする。
-- Rule add/update 成功後は `ルール追加に成功 ` / `ルール更新に成功 ` snackbar を表示し、既存 delay 後に previous
-  route へ戻る。失敗時は `ルール追加に失敗 ` / `ルール更新に失敗 ` を表示して route を維持する。
+- Rule add/update 成功後は `ルール追加に成功` / `ルール更新に成功` snackbar を表示し、既存 delay 後に previous
+  route へ戻る。失敗時は `ルール追加に失敗` / `ルール更新に失敗` を表示して route を維持する。
 - Rule add/update/delete 後の list update は optimistic mutation ではなく refetch-driven update を正とする。
 - Rule option は normal
   search 完了後であれば 0 件結果でも表示でき、time-specified が ON の場合は検索実行前でも表示できる。
@@ -501,7 +501,7 @@ value とする。
 ### Snackbar 文言一覧
 
 SearchRule は requirements の exact text を正とする。主な文言は
-`検索に失敗 `、`検索情報更新に失敗 `、`初期化失敗 `、`スクロールに失敗 `、`予約情報更新に失敗 `、`予約情報取得に失敗 `、`ルール追加に成功 `、`ルール追加に失敗 `、`ルール更新に成功 `、`ルール更新に失敗 `、`有効化: <keyword>`、`無効化: <keyword>`、`ルールの有効化に失敗 `、`ルールの無効化に失敗 `、`<keyword> を削除 `、`<keyword> を削除に失敗 `、`選択したルールを削除しました。`、`一部ルールの削除に失敗しました。`
+`検索に失敗`、`検索情報更新に失敗`、`初期化失敗`、`スクロールに失敗`、`予約情報更新に失敗`、`予約情報取得に失敗`、`ルール追加に成功`、`ルール追加に失敗`、`ルール更新に成功`、`ルール更新に失敗`、`有効化: <keyword>`、`無効化: <keyword>`、`ルールの有効化に失敗`、`ルールの無効化に失敗`、`<keyword> を削除`、`<keyword> を削除に失敗`、`選択したルールを削除しました。`、`一部ルールの削除に失敗しました。`
 とする。API 表の generic failure 表記はこの一覧を上書きしない。
 
 Search result item typography は次を正とする。program title（`.programName`）は `16px` / `28px` / `font-weight:900`、
@@ -522,8 +522,8 @@ font が日本語 glyph fallback を壊さないよう、App Shell / MUI 側の 
   state だけを反転する。
 - `/rule` edit mode title は App Shell shared `EditTitleBar` を使う。Reserves / Recorded /
   Recording と同じ close/select-all/delete icon button、48px toolbar density、dark/light
-  treatment を正とし、RuleList 固有の `すべて選択 ` / `選択削除 ` / `終了 ` text button row を実装してはならない。
-- Rule bulk delete dialog は  max-width 300px、title `ルール削除 `、body
+  treatment を正とし、RuleList 固有の `すべて選択` / `選択削除` / `終了` text button row を実装してはならない。
+- Rule bulk delete dialog は  max-width 300px、title `ルール削除`、body
   `選択した <total> 件のルールを削除しますか。`、text actions を使う。0 件時は dialog を開かず
   `ルールを選択してください。` snackbar を表示する。
 - Search page state は history restore の場合だけ
@@ -538,9 +538,9 @@ font が日本語 glyph fallback を壊さないよう、App Shell / MUI 側の 
 - ProgramDialog の action matrix、button label、linkify、close/remount、snackbar 文言の正本は `frontend-guide`
   であり、SearchRule は search result の reserve index/decorator と handoff input だけを test scope とする。
 - Guide / OnAir / Recorded などから `/search?keyword=...` へ遷移した route-backed search は、ProgramDialog
-  の検索 action と同じく keyword target の `名前 ` と `概要 ` を UI 上でも checked にする。request
+  の検索 action と同じく keyword target の `名前` と `概要` を UI 上でも checked にする。request
   builder だけで暗黙補完して checkbox を未選択に見せてはならない。keyword がある状態で target
-  checkbox がすべて off のまま user submit した場合も、default target として `名前 ` / `概要 `
+  checkbox がすべて off のまま user submit した場合も、default target として `名前` / `概要`
   を form state に反映してから検索する。
 - 放送波チェックボックス（`GR`/`BS`/`CS`/`SKY`/`BS4K`）にも上記 keyword target と同じ規約を適用する: channel
   未選択かつ visible な放送波チェックボックスが全て off のまま user submit した場合、request builder
@@ -564,7 +564,7 @@ font が日本語 glyph fallback を壊さないよう、App Shell / MUI 側の 
   card）が消える。
 - Search form の user submit 成功後は SearchResult section 先頭へ smooth scroll を行う。SearchResult
   header の link icon は form ではなく Rule option card 先頭へ smooth scroll する。scroll target が存在しない場合は
-  `スクロールに失敗 ` snackbar を表示する。route-backed auto search / rule edit preload も Search page
+  `スクロールに失敗` snackbar を表示する。route-backed auto search / rule edit preload も Search page
   と同じ smooth scroll を維持する。rule edit 中の user submit は existing rule の reserve/save/encode
   draft を維持しつつ、検索条件だけを新しい request body へ更新する。
 - Search page の top FAB は 56px circular pink button / white `mdi-chevron-up` 相当とする。位置は
@@ -572,7 +572,7 @@ font が日本語 glyph fallback を壊さないよう、App Shell / MUI 側の 
   `bottom = 16px` を正とし、desktop permanent drawer の `256px` 幅に重なって欠けてはならない。top FAB の click
   は section scroll helper と同じ active scroll owner 解決を使い、iOS / iPadOS の `html.fix-address-bar2` 中では
   `window` ではなく `shell-main.scrollTo({ top: 0, behavior: "smooth" })` を呼ぶ。通常環境では `window.scrollTo`
-  を使う。top FAB は scroll API 呼び出しが失敗しても `スクロールに失敗 ` snackbar を表示せず、silent に
+  を使う。top FAB は scroll API 呼び出しが失敗しても `スクロールに失敗` snackbar を表示せず、silent に
   best-effort で終える。
 - Search form action row は  action row 上部に 1px
   divider を置き、card 末尾に pseudo element divider を描画しない。
@@ -684,8 +684,8 @@ Search form card 内の checkbox は MUI `FormControlLabel` の default negative
 input left edge に揃え、16px の text size を使うが、Rule option card 末尾の
 encode/delete option checkbox にはこの補正を適用しない。keyword と ignore keyword の target checkbox row は fixed 3
 column width ではなく、先頭 2 項目を 96px、残り 3 項目を 64px の flex item とする。288px viewport
-では `大小区別 ` / `正規表現 ` を 1 行目、`名前 ` / `概要 ` / `詳細 ` を 2 行目に収め、390px viewport では
-`大小区別 ` / `正規表現 ` / `名前 ` を 1 行目、`概要 ` / `詳細 ` を 2 行目に収め、ラベルを折り返さない。
+では `大小区別` / `正規表現` を 1 行目、`名前` / `概要` / `詳細` を 2 行目に収め、390px viewport では
+`大小区別` / `正規表現` / `名前` を 1 行目、`概要` / `詳細` を 2 行目に収め、ラベルを折り返さない。
 Search form の `keyword`、`ignore keyword`、`channel` は floating label
 contract に従い、空欄かつ未 focus では外側の青い小 label を表示せず、field 内に placeholder text
 だけを表示する。focus 中、または value / selected channel がある場合だけ label を field 外上部へ 150ms
@@ -700,7 +700,7 @@ contract に従い、空欄かつ未 focus では外側の青い小 label を表
 - Search form の genre list は top-level genre と subGenre の複数選択、selected
   visual、clear、subGenre 表示 OFF 時の正規化、query-backed genre/subGenre 初期選択を検証する。
 - plain `/search` Socket.IO default search 抑止、query auto-search、0-hit result、rule preload を検証する。
-- SearchResult header の `<n> 件ヒット ` 表示と link icon click による SearchRuleOption card への title-bar-offset
+- SearchResult header の `<n> 件ヒット` 表示と link icon click による SearchRuleOption card への title-bar-offset
   scroll を検証する。
 - Search top FAB は 1264px 以上で drawer 右端 + 12px に表示され、drawer と重ならないことを geometry assertion
   で確認する。iOS / iPadOS fixed shell では `shell-main.scrollTop > 0` の状態から top FAB を押すと

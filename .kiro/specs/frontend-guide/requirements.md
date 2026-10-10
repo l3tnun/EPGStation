@@ -65,7 +65,7 @@ Guide は番組表 route、schedule fetch、large grid、day/time/genre/size men
 
 #### 受け入れ条件
 
-1. Guide title は app bar と document title で同期し、full guide では `番組表 `、任意の broadcast-wave suffix、表示日の suffix を 次の形式で表示する。`番組表<type>` の後に半角 space と `MM/dd(曜)` を続ける（例: `番組表GR 05/05(火)`）。
+1. Guide title は app bar と document title で同期し、full guide では `番組表`、任意の broadcast-wave suffix、表示日の suffix を 次の形式で表示する。`番組表<type>` の後に半角 space と `MM/dd(曜)` を続ける（例: `番組表GR 05/05(火)`）。
 2. single-channel guide では、schedule 取得後に先頭 schedule の channel name を title として表示する。
 3. title bar の title を選択したとき、EPGStation フロントエンドは max width 150 の day selector dialog を開く。
 4. day selector dialog は dialog open 時点の現在日を先頭に 8 日分を縦 1 列で昇順表示し、先頭日の value は現在 hour、翌日以降は `00` hour として扱う。day selector は genre dialog の 2 列 grid layout を継承してはならない。day selector dialog の accessible name は `日付選択` とし、genre setting dialog の `表示ジャンル` と混同してはならない。
@@ -74,13 +74,13 @@ Guide は番組表 route、schedule fetch、large grid、day/time/genre/size men
 7. day selector dialog は close animation 後に DOM を remove/remount する。
 8. title bar 右側の clock action は Guide route data と renderer が利用可能になった後に表示し、選択時に time selector menu/dialog を開く。既存 data がある background refetch 中は非表示にしてはならない。
 9. time selector は day select と hour select を表示し、day options は route `time` の有効性に関わらず、常に selector を開いた時点の現在日を先頭に 8 日分とする。route `time` は selected day/hour の初期値解決と disabled 判定にだけ使い、day 候補生成の基準日には使わない。hour options は 0 から 23 とする。day select の表示文字列は `MM/DD(曜)` 形式とし、年を表示してはならない。route value は `YYMMdd` とする。
-10. time selector の `表示 ` を実行したとき、EPGStation フロントエンドは日本時間の `/guide?time=<YYMMddhh>` へ遷移し、選択された broadcast value があれば `type`、現在の有効な `channelId` があれば `channelId` を付与する。
+10. time selector の `表示` を実行したとき、EPGStation フロントエンドは日本時間の `/guide?time=<YYMMddhh>` へ遷移し、選択された broadcast value があれば `type`、現在の有効な `channelId` があれば `channelId` を付与する。
 11. time selector の overlay background は  drawer を含む viewport 全体を覆い、outside click で menu を閉じ、透明 background を DOM から remove する。
 12. broadcast select は broadcast-specific guide navigation が有効なときだけ time selector 内に表示する。
 13. broadcast select は server config で有効な `GR`、`BS`、`CS`、`SKY`、`BS4K` をこの順で表示し、選択時に `type` query を更新する。
-14. title bar 右側の dots menu は `予約情報更新 `、`表示ジャンル `、`表示設定 ` を表示する。
-15. main menu の `予約情報更新 ` を実行したとき、EPGStation フロントエンドは `POST /reserves/update` を呼び、成功時は `予約情報の更新開始 `、失敗時は `予約情報の更新を開始できませんでした。` を snackbar で通知する。
-16. main menu の `表示ジャンル ` を実行したとき、EPGStation フロントエンドは menu を閉じてから 300ms 後に
+14. title bar 右側の dots menu は `予約情報更新`、`表示ジャンル`、`表示設定` を表示する。
+15. main menu の `予約情報更新` を実行したとき、EPGStation フロントエンドは `POST /reserves/update` を呼び、成功時は `予約情報の更新開始`、失敗時は `予約情報の更新を開始できませんでした。` を snackbar で通知する。
+16. main menu の `表示ジャンル` を実行したとき、EPGStation フロントエンドは menu を閉じてから 300ms 後に
     genre setting dialog を開く。
     この delay は menu 自体の close transition（MUI `Menu` の paper が DOM から消えるまで約 290ms）を待つためのものである。
     delay 無しで開くと、dialog の backdrop が opacity 0 → 1 で fade-in する間に、close 中の menu 項目と重なって見える。
@@ -89,15 +89,15 @@ Guide は番組表 route、schedule fetch、large grid、day/time/genre/size men
     `client/unittest/spec/guide.menus.spec.test.tsx` の
     `waits for the closing main menu animation before opening the genre dialog` で
     300ms 未満では dialog が開かず、300ms 経過後に開くことを検証する。
-17. main menu の `表示設定 ` を実行したとき、EPGStation フロントエンドは `/guide/setting` へ遷移する。
-18. genre setting dialog は `キャンセル ` と `更新 ` button を持ち、`更新 ` で genre visibility を保存したとき、EPGStation フロントエンドは Guide 表示に反映する。`キャンセル ` は保存せず close する。
-19. `/guide/setting` を表示するとき、EPGStation フロントエンドは title `番組表設定 ` を表示する。
+17. main menu の `表示設定` を実行したとき、EPGStation フロントエンドは `/guide/setting` へ遷移する。
+18. genre setting dialog は `キャンセル` と `更新` button を持ち、`更新` で genre visibility を保存したとき、EPGStation フロントエンドは Guide 表示に反映する。`キャンセル` は保存せず close する。
+19. `/guide/setting` を表示するとき、EPGStation フロントエンドは title `番組表設定` を表示する。
 20. size setting route で Guide size を保存したとき、EPGStation フロントエンドは Guide dimension と font size に反映する。
 21. genre setting dialog は max width 500、genre 0-15 の switch、default all true を持つ。
 22. genre setting dialog の保存後、EPGStation フロントエンドは schedule refetch を行わず、既存 program DOM の `hide` class を更新する。
 23. 非表示 genre の program cell は DOM と click target と geometry を維持したまま、次の muted surface と text color で表示する。`visibility:hidden`、`display:none`、DOM removal によって番組情報を完全不可視にしてはならない。light theme は background `#f8f8f8` / text `#888`、dark theme は background `#272121` / text `#888` を使い、`.ctg-*` palette より後で `.hide` palette を一括適用する。
 24. genre setting dialog は route change と close animation 後に DOM を remove/remount する。
-25. `/guide/setting` は storage key `GuideSizeSetting` を扱い、`tablet`/`mobile`（画面の表示名は通常表示/モバイル表示）の各 7 項目、既定値、select range、`保存 ` snackbar `保存されました `、`リセット ` は一時値 default 復元のみで保存しない挙動、600px breakpoint、program font `pt` 指定を維持する。
+25. `/guide/setting` は storage key `GuideSizeSetting` を扱い、`tablet`/`mobile`（画面の表示名は通常表示/モバイル表示）の各 7 項目、既定値、select range、`保存` snackbar `保存されました`、`リセット` は一時値 default 復元のみで保存しない挙動、600px breakpoint、program font `pt` 指定を維持する。
 26. `GuideSizeSetting` の tablet default は `channelHeight=30`、`channelWidth=140`、`channelFontsize=14`、`timescaleHeight=180`、`timescaleWidth=30`、`timescaleFontsize=16`、`programFontSize=10` とする。
 27. `GuideSizeSetting` の mobile default は `channelHeight=20`、`channelWidth=100`、`channelFontsize=12`、`timescaleHeight=120`、`timescaleWidth=20`、`timescaleFontsize=12`、`programFontSize=7.5` とする。
 28. `/guide/setting` の select range は channel width `0-600 step 10`、time height `10-400 step 10`、channel height `10-100 step 10`、time width `10-100 step 10`、font size `0.5-40.0 step 0.5` とし、font size は小数 1 桁で表示する。
@@ -117,25 +117,25 @@ Guide は番組表 route、schedule fetch、large grid、day/time/genre/size men
 #### 受け入れ条件
 
 1. program item を選択したとき、EPGStation フロントエンドは program dialog を開き、route change 時には dialog を閉じる。
-2. no reserve 状態では、EPGStation フロントエンドは encode selector、delete-original checkbox、`詳細 `、`検索 `、`予約 ` を表示する。
-3. reserve が存在する状態では、EPGStation フロントエンドは編集系ボタンの表示を『予約の有無 → reserveItem の `ruleId` の有無（rule 予約か manual 予約か）→ type』の優先順で決める。`ruleId` が無い（manual reserve）場合、EPGStation フロントエンドは type（reserve/conflict/skip/overlap）に関わらず `編集 ` を表示する。manual reserve の reserve または conflict 状態では、`編集 `、`検索 `、`削除 ` を表示する。
-4. rule reserve の normal または conflict 状態では、EPGStation フロントエンドは `ルール `、`検索 `、`除外 ` を表示する。
-5. skip 状態では、EPGStation フロントエンドは reserveItem の `ruleId` の有無に応じて `編集 `（manual reserve）または `ルール `（rule reserve）と、`検索 `、`除外解除 ` を表示する。
-6. overlap 状態では、EPGStation フロントエンドは reserveItem の `ruleId` の有無に応じて `編集 `（manual reserve）または `ルール `（rule reserve）と、`検索 `、`重複解除 ` を表示する。
-7. `詳細 ` を実行したとき、EPGStation フロントエンドは `/reserves/manual?programId=<programId>` へ遷移する。
-8. manual reserve の `編集 ` を実行したとき、EPGStation フロントエンドは `/reserves/manual?reserveId=<reserveId>` へ遷移する。
-9. rule reserve の `ルール ` を実行したとき、EPGStation フロントエンドは `/search?rule=<ruleId>` へ遷移する。
-10. `検索 ` を実行したとき、EPGStation フロントエンドは番組名を基準に `/search` query を生成し、settings に応じて channel と genre/subGenre を含める。遷移先の SearchRule はこの query を query-driven auto-search として扱うため、Guide 側は検索 button 押下を別途要求する中間 route を作ってはならない。
-11. no reserve の `予約 ` を実行したとき、EPGStation フロントエンドは `POST /reserves` に `programId` と `allowEndLack: true` を渡し、encode が `TS` 以外なら `encodeOption.mode1` と `isDeleteOriginalAfterEncode` を反映する。
-12. manual reserve の `削除 ` または rule reserve の `除外 ` を実行したとき、EPGStation フロントエンドは `DELETE /reserves/:reserveId` を呼ぶ。
-13. `除外解除 ` を実行したとき、EPGStation フロントエンドは `DELETE /reserves/:reserveId/skip` を呼ぶ。
-14. `重複解除 ` を実行したとき、EPGStation フロントエンドは `DELETE /reserves/:reserveId/overlap` を呼ぶ。
+2. no reserve 状態では、EPGStation フロントエンドは encode selector、delete-original checkbox、`詳細`、`検索`、`予約` を表示する。
+3. reserve が存在する状態では、EPGStation フロントエンドは編集系ボタンの表示を『予約の有無 → reserveItem の `ruleId` の有無（rule 予約か manual 予約か）→ type』の優先順で決める。`ruleId` が無い（manual reserve）場合、EPGStation フロントエンドは type（reserve/conflict/skip/overlap）に関わらず `編集` を表示する。manual reserve の reserve または conflict 状態では、`編集`、`検索`、`削除` を表示する。
+4. rule reserve の normal または conflict 状態では、EPGStation フロントエンドは `ルール`、`検索`、`除外` を表示する。
+5. skip 状態では、EPGStation フロントエンドは reserveItem の `ruleId` の有無に応じて `編集`（manual reserve）または `ルール`（rule reserve）と、`検索`、`除外解除` を表示する。
+6. overlap 状態では、EPGStation フロントエンドは reserveItem の `ruleId` の有無に応じて `編集`（manual reserve）または `ルール`（rule reserve）と、`検索`、`重複解除` を表示する。
+7. `詳細` を実行したとき、EPGStation フロントエンドは `/reserves/manual?programId=<programId>` へ遷移する。
+8. manual reserve の `編集` を実行したとき、EPGStation フロントエンドは `/reserves/manual?reserveId=<reserveId>` へ遷移する。
+9. rule reserve の `ルール` を実行したとき、EPGStation フロントエンドは `/search?rule=<ruleId>` へ遷移する。
+10. `検索` を実行したとき、EPGStation フロントエンドは番組名を基準に `/search` query を生成し、settings に応じて channel と genre/subGenre を含める。遷移先の SearchRule はこの query を query-driven auto-search として扱うため、Guide 側は検索 button 押下を別途要求する中間 route を作ってはならない。
+11. no reserve の `予約` を実行したとき、EPGStation フロントエンドは `POST /reserves` に `programId` と `allowEndLack: true` を渡し、encode が `TS` 以外なら `encodeOption.mode1` と `isDeleteOriginalAfterEncode` を反映する。
+12. manual reserve の `削除` または rule reserve の `除外` を実行したとき、EPGStation フロントエンドは `DELETE /reserves/:reserveId` を呼ぶ。
+13. `除外解除` を実行したとき、EPGStation フロントエンドは `DELETE /reserves/:reserveId/skip` を呼ぶ。
+14. `重複解除` を実行したとき、EPGStation フロントエンドは `DELETE /reserves/:reserveId/overlap` を呼ぶ。
 15. ProgramDialog action の成功/失敗 snackbar は program name と action 結果を含め、action 完了後に dialog を閉じる。
 16. dialog close 時、EPGStation フロントエンドは encode selector と delete-original checkbox の選択を Guide dialog 用 settings として保持する。
 17. ProgramDialog は max width 500 とし、program metadata、description、extended text を表示し、extended text 内の `http://` と `https://` URL だけを dialog open 後に linkify する。生成 anchor は `target="_blank"` と `rel="noopener noreferrer"` を付与し、それ以外の scheme は plain text のまま扱う。`rel="noopener noreferrer"` は常に付与する。
 18. ProgramDialog は Android scroll 互換のため close animation 後に DOM を remove/remount する。
-19. rule reserve conflict の `除外 ` は `DELETE /reserves/:reserveId` を呼ぶ。frontend は skip 化または削除の backend 内部分岐を直接判定せず、後続の Socket.IO `updateStatus` による reserve index 更新で conflict/skip/none の表示状態を確定する。
-20. ProgramDialog の `詳細 `、`編集 `、`ルール `、`検索 ` route action は close animation 後に遷移し、遷移先から同じ Guide route へ戻った直後も grid item を再選択して後続 action を継続できる。route leave / external unmount では dialog setting の保存だけを行い、親 page の close state 更新を再入させて hash route 復帰を妨げない。
+19. rule reserve conflict の `除外` は `DELETE /reserves/:reserveId` を呼ぶ。frontend は skip 化または削除の backend 内部分岐を直接判定せず、後続の Socket.IO `updateStatus` による reserve index 更新で conflict/skip/none の表示状態を確定する。
+20. ProgramDialog の `詳細`、`編集`、`ルール`、`検索` route action は close animation 後に遷移し、遷移先から同じ Guide route へ戻った直後も grid item を再選択して後続 action を継続できる。route leave / external unmount では dialog setting の保存だけを行い、親 page の close state 更新を再入させて hash route 復帰を妨げない。
 21. mobile viewport の ProgramDialog は横幅を viewport に合わせるが、高さを viewport 比率で固定しない。content が短い場合は content + footer の高さに shrink し、下部に巨大な空白を残さない。content が長い場合だけ max-height 内で scroll する。
 22. no reserve 状態の encode selector は `TS` と server config の encode mode 一覧を source とし、`H.264` などの固定値を frontend に hardcode しない。保存済み dialog setting が server config に含まれない mode を持つ場合だけ、その値を現在選択値として追加表示する。
 23. no reserve 状態の encode selector と delete-original checkbox は read-only 表示ではなく、mouse/touch/keyboard と Testing Library / Playwright で操作可能な control とする。encode selector は shared `AppSelect` / MUI Select、delete-original checkbox は MUI `Checkbox` / `FormControlLabel` を正とし、raw `<select>` と raw `<input type="checkbox">` を直接描画してはならない。encode selector の選択値は MUI Select の表示面だけが描画し、同じ mode 名を sibling `span` や overlay text で再描画して二重表示してはならない。
@@ -153,12 +153,12 @@ Guide は番組表 route、schedule fetch、large grid、day/time/genre/size men
 #### 受け入れ条件
 
 1. full guide の channel header を選択したとき、EPGStation フロントエンドは stream select dialog を表示する。
-2. Guide から開いた stream select dialog では `番組表 ` button を表示し、`/guide?channelId=<channelId>` へ遷移し、現在 `time` があれば維持する。
+2. Guide から開いた stream select dialog では `番組表` button を表示し、`/guide?channelId=<channelId>` へ遷移し、現在 `time` があれば維持する。
 3. Guide から live stream を開始するとき、EPGStation フロントエンドは stream type/config を選択して watch route へ遷移する。
-4. unsupported combination では、EPGStation フロントエンドは `再生に対応していません ` を snackbar で通知する。
-5. Guide stream dialog の `番組表 ` button は `type` を維持しない。`type` 維持へ変える場合は別の intentional change として扱う。
-6. watch route への移動失敗は `視聴ページへの移動に失敗 ` を snackbar で通知する。
-7. Guide から開いた stream select dialog の `番組表 ` button は `channelId` と現在 `time` だけを受け取り、300ms 程度の短い delay 後に `/guide?channelId=<channelId>[&time=<YYMMddhh>]` へ遷移する。stream type/mode/URL scheme の保存と watch route 生成は `frontend-onair` / `frontend-video-playback` の owner contract に従う。
+4. unsupported combination では、EPGStation フロントエンドは `再生に対応していません` を snackbar で通知する。
+5. Guide stream dialog の `番組表` button は `type` を維持しない。`type` 維持へ変える場合は別の intentional change として扱う。
+6. watch route への移動失敗は `視聴ページへの移動に失敗` を snackbar で通知する。
+7. Guide から開いた stream select dialog の `番組表` button は `channelId` と現在 `time` だけを受け取り、300ms 程度の短い delay 後に `/guide?channelId=<channelId>[&time=<YYMMddhh>]` へ遷移する。stream type/mode/URL scheme の保存と watch route 生成は `frontend-onair` / `frontend-video-playback` の owner contract に従う。
 
 ### 要求 6: loading/error/empty
 
@@ -167,7 +167,7 @@ Guide は番組表 route、schedule fetch、large grid、day/time/genre/size men
 #### 受け入れ条件
 
 1. Guide fetch が共有 hook `useDeferredLoading` の遅延（200ms）を超えて続くとき、EPGStation フロントエンドは番組表の領域の上に暗い scrim（`rgb(0, 0, 0, 0.6)`）と円形 progress（indeterminate、size 60、thickness 4、primary 色）を表示し、fetch の完了と scroll 位置の復元の後に（表示した場合は最短表示時間 200ms を過ぎてから）消す。遅延より早く終わる fetch では表示しない。grid は復元の前に表示しない。fetch に失敗した場合や schedule data が空の場合も、結果が確定した後は scrim を残さない。loading と empty は、scrim と progress の有無で区別できる。
-2. Guide fetch に失敗したとき、EPGStation フロントエンドは `番組表情報の取得に失敗しました ` を snackbar で通知する。
+2. Guide fetch に失敗したとき、EPGStation フロントエンドは `番組表情報の取得に失敗しました` を snackbar で通知する。
 3. schedule data が空のとき、EPGStation フロントエンドは要求 1 の blank presentation を維持し、empty 専用文言と snackbar を追加しない。
 
 ### 要求 7: reserve reflection と dark theme

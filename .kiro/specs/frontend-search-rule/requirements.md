@@ -19,8 +19,8 @@ Search / Rule は番組検索、検索結果からの予約/rule 作成、rule l
 
 #### 受け入れ条件
 
-1. `/search` を表示するとき、EPGStation フロントエンドは title `検索 ` を表示する。
-2. `/search?rule=<ruleId>` を表示するとき、EPGStation フロントエンドは title `ルール編集 ` を表示する。
+1. `/search` を表示するとき、EPGStation フロントエンドは title `検索` を表示する。
+2. `/search?rule=<ruleId>` を表示するとき、EPGStation フロントエンドは title `ルール編集` を表示する。
 3. `/search` を plain route で表示したとき、EPGStation フロントエンドは user action 前に default
    search を実行せず、検索結果領域に empty/help text を追加表示しない。
 4. `/search` に keyword/channel/genre などの query があるとき、EPGStation フロントエンドは query-driven
@@ -34,7 +34,7 @@ Search / Rule は番組検索、検索結果からの予約/rule 作成、rule l
     28px / font-weight 900 とし、description は 14px / 20px とする。iOS Safari でも title と
     description が button UA default font に縮小され、放送局名や日時より小さく表示されてはならない。
 8. `/search` query は `keyword`、`channelId`、`genre`、`subGenre` を form に反映して auto-search する。Guide
-   ProgramDialog の `検索 ` action から `/search?keyword=...` へ遷移した場合も同じ query-driven
+   ProgramDialog の `検索` action から `/search?keyword=...` へ遷移した場合も同じ query-driven
    auto-search として扱い、route 表示後に user が検索 button を押さなくても `POST /schedules/search` を実行する。
 9. `rule` query が存在する場合、EPGStation フロントエンドは query search values を無視し、rule edit mode を優先する。
 10. `POST /schedules/search` body は `{ option, isHalfWidth, limit }` とし、`isHalfWidth` は
@@ -45,17 +45,17 @@ Search / Rule は番組検索、検索結果からの予約/rule 作成、rule l
     keyword が non-empty で `name` / `description` / `extended` の target がすべて OFF の場合、検索実行前の request
     body では `name=true`、`description=true` を自動適用する。keyword が empty の場合は keyword
     target を request body に残さない。
-13. Search result は result が `null` でない場合 0 件でも `<n> 件ヒット ` を表示し、pagination は持たず `searchLength`
+13. Search result は result が `null` でない場合 0 件でも `<n> 件ヒット` を表示し、pagination は持たず `searchLength`
     limit に依存する。
 14. broadcast wave は channel 未選択時だけ API filter に使い、全 visible wave が enabled の場合は `GR` / `BS` / `CS` /
     `SKY` / `BS4K` key を omit する。visible wave がすべて disabled の場合は全 visible
     wave を enabled に戻してから検索する。この「戻す」対象は outgoing request body だけでなく検索条件
     form の表示（チェックボックス）にも及ぶ。詳細は要求 1.22。
 15. time-specified rule payload では weekday が 0 件選択の場合、API には全曜日を表す `week=0x7f` を送る。
-16. SearchResult header は `<n> 件ヒット ` text と link icon button を表示し、link icon click で SearchRuleOption
+16. SearchResult header は `<n> 件ヒット` text と link icon button を表示し、link icon click で SearchRuleOption
     card へ scroll する。
-17. 初回または query-driven の normal EPG search が失敗したとき、EPGStation フロントエンドは `検索に失敗 `
-    を snackbar で通知する。既存検索結果の refresh 失敗は要求 2 の `検索情報更新に失敗 ` を使う。
+17. 初回または query-driven の normal EPG search が失敗したとき、EPGStation フロントエンドは `検索に失敗`
+    を snackbar で通知する。既存検索結果の refresh 失敗は要求 2 の `検索情報更新に失敗` を使う。
 18. Search 画面は route leave/update 時に
     `searchOption`、`genreSelect`、`reserveOption`、`saveOption`、`encodeOption`、`isSearched` 相当の page
     state を保存し、history restore の場合だけ復元する。plain `/search` の初回表示では復元 state がない限り default
@@ -91,7 +91,7 @@ Search / Rule は番組検索、検索結果からの予約/rule 作成、rule l
       false になり、復元した初期値を上書きしない。
 19. Search form と search result list は desktop / mobile のどちらでも form controls と result
     action が重ならず、route state restore 後も control order を維持する。
-20. Search 初期化に失敗したときは `初期化失敗 ` を snackbar で通知する。`スクロールに失敗 ` は SearchResult header の
+20. Search 初期化に失敗したときは `初期化失敗` を snackbar で通知する。`スクロールに失敗` は SearchResult header の
     link icon（要求 1.16）または rule option card への scroll 遷移先要素が mount されていない場合にだけ通知し、
     scroll 先の高さ計算（title bar 高さ取得、`window.scrollTo` 自体の例外）を理由に通知してはならない。
     `client/src/features/search/rule/lib/pageScroll.ts` の
@@ -99,9 +99,9 @@ Search / Rule は番組検索、検索結果からの予約/rule 作成、rule l
       `window.scrollTo` 呼び出し例外は握りつぶして `true` を返す。`scrollToTop` 呼び出し側
       （`client/src/features/search/rule/hooks/useSearchRuleActions.ts`）は failure 通知を発行しない。
       scroll 先 element が実際に mount されていない場合（`resultRef`/`ruleOptionRef` が
-      `null`）だけ、`スクロールに失敗 ` を通知する。
+      `null`）だけ、`スクロールに失敗` を通知する。
     - 検索結果が一時的に消える現象は本項の scroll 通知の対象ではなく、要求 1.21 の再 render 由来の
-      form/検索結果リセットの対象である。`スクロールに失敗 ` の snackbar 表示自体が ancestor 再 render を
+      form/検索結果リセットの対象である。`スクロールに失敗` の snackbar 表示自体が ancestor 再 render を
       誘発し得るため、要求 1.21 のガードはこの再 render に対しても有効でなければならない。
     - 検索画面の検索 form 自体の content 高さは **1198px** である（`document.documentElement.scrollHeight`
       の実測）。viewport 高さがこれを下回る窓では検索前から縦 scrollbar が出ているが、これを上回る窓では
@@ -109,7 +109,7 @@ Search / Rule は番組検索、検索結果からの予約/rule 作成、rule l
       現れ、`window.innerWidth` が scrollbar 幅ぶん狭くなる。この幅変化は `useResolvedViewportWidth` を
       更新して shell を再 render させるため、要求 1.21 のガードはこの再 render に対しても有効でなければ
       ならず、これを外すと検索結果が一瞬だけ描画されて消え、scroll 先の `resultRef` が `null` になって
-      `スクロールに失敗 ` の通知が出る。
+      `スクロールに失敗` の通知が出る。
     - この機構は `client/unittest/spec/searchRule.routeEffectsReplay.spec.test.tsx` の
       「keeps the result list when a scrollbar appearing narrows the viewport after a search」が
       fixture 上で固定する。この fixture は `?keyword=...` route query 由来の auto-search を使うため、
@@ -159,23 +159,23 @@ Search / Rule は番組検索、検索結果からの予約/rule 作成、rule l
 
 1. search result の program dialog から reserve action を実行したとき、EPGStation フロントエンドは対応 reserve API
    workflow を実行する。
-2. search result の program dialog は no reserve では encode selector、delete-original checkbox、`詳細 `、`検索 `、`予約 `
+2. search result の program dialog は no reserve では encode selector、delete-original checkbox、`詳細`、`検索`、`予約`
    を表示する。
 3. search result の program dialog は manual reserve（reserveItem に `ruleId` が無い）では、type（reserve/conflict/skip/
-   overlap）に関わらず `編集 `、`検索 ` と、状態に応じた `削除 `、`除外解除 `、`重複解除 ` を表示する。
-4. search result の program dialog は rule reserve（reserveItem に `ruleId` がある）では `ルール `、`検索 ` と、状態に応じた
-   `除外 `、`除外解除 `、`重複解除 ` を表示する。
-5. no reserve の `詳細 ` は `/reserves/manual?programId=<programId>`、manual reserve の `編集 ` は
-   `/reserves/manual?reserveId=<reserveId>`、rule reserve の `ルール ` は `/search?rule=<ruleId>` へ遷移する。
-6. no reserve の `予約 ` 成功時は `<programName> 予約 `、失敗時は `<programName> 予約失敗 ` を snackbar で通知する。
-7. program dialog の `除外 `、`除外解除 `、`重複解除 ` は Guide ProgramDialog と同じ reserve API contract と snackbar
+   overlap）に関わらず `編集`、`検索` と、状態に応じた `削除`、`除外解除`、`重複解除` を表示する。
+4. search result の program dialog は rule reserve（reserveItem に `ruleId` がある）では `ルール`、`検索` と、状態に応じた
+   `除外`、`除外解除`、`重複解除` を表示する。
+5. no reserve の `詳細` は `/reserves/manual?programId=<programId>`、manual reserve の `編集` は
+   `/reserves/manual?reserveId=<reserveId>`、rule reserve の `ルール` は `/search?rule=<ruleId>` へ遷移する。
+6. no reserve の `予約` 成功時は `<programName> 予約`、失敗時は `<programName> 予約失敗` を snackbar で通知する。
+7. program dialog の `除外`、`除外解除`、`重複解除` は Guide ProgramDialog と同じ reserve API contract と snackbar
    contract に従う。
 8. rule option form から rule を作成するとき、EPGStation フロントエンドは settings の rule default を参照する。
 9. `/search?rule=<ruleId>` を表示するとき、EPGStation フロントエンドは rule edit mode を読み込み、query search
    values を search condition として扱わない。
-10. normal EPG search の refresh に失敗したとき、EPGStation フロントエンドは `検索情報更新に失敗 `
+10. normal EPG search の refresh に失敗したとき、EPGStation フロントエンドは `検索情報更新に失敗`
     を snackbar で通知する。継続して失敗し続け、一度も成功しない場合も含めて、Socket.IO `updateStatus`
-    経由の再取得失敗は常に `検索情報更新に失敗 ` を出す。
+    経由の再取得失敗は常に `検索情報更新に失敗` を出す。
     判定基準は「同じ query key に対する応答が過去にあったか」（成功・失敗を問わない）という
       試行ベースとする。search query の key は新規の検索・rule submit（新しい `activeRequest`）の
       ときだけ変わるため、同じ key に対する 2 回目以降の応答は Socket.IO 経由の再取得でしかあり得ない。
@@ -192,27 +192,27 @@ Search / Rule は番組検索、検索結果からの予約/rule 作成、rule l
       `hasAttemptedSearchResultRef`（初回/再取得の文言選択にだけ使う）とは独立しているため互いを
       阻害しない。fixture test（`searchRule.scrollAndRuleFailures.spec.test.tsx` の `[Fix #40]` 2 test）
       がこれを検証する。
-11. time-specified rule edit の refresh に失敗したとき、EPGStation フロントエンドは `予約情報更新に失敗 `
+11. time-specified rule edit の refresh に失敗したとき、EPGStation フロントエンドは `予約情報更新に失敗`
     を snackbar で通知する。継続して失敗し続け、一度も成功しない場合も含めて、Socket.IO
-    `updateStatus` 経由の再取得失敗は常に `予約情報更新に失敗 ` を出す。
+    `updateStatus` 経由の再取得失敗は常に `予約情報更新に失敗` を出す。
     判定基準は AC 2.10 と同じ「試行ベース」とし、`hasAttemptedRuleReservesRef` を使う。
       rule-reserves query の key は同一 rule 編集 session の間変化しないため、2 回目以降の応答は
       Socket.IO 経由の再取得でしかあり得ない。fixture test（同ファイルの
       `[AC 2.11] reports the fixed refresh-failure text, ...`）がこれを検証する。
-12. new rule 保存では `POST /rules` を呼び、成功時は `ルール追加に成功 `、失敗時は `ルール追加に失敗 `
+12. new rule 保存では `POST /rules` を呼び、成功時は `ルール追加に成功`、失敗時は `ルール追加に失敗`
     を snackbar で通知し、成功後は既存 delay 後に前の route へ戻る。
-13. rule edit 保存では `PUT /rules/:ruleId` を呼び、成功時は `ルール更新に成功 `、失敗時は `ルール更新に失敗 `
+13. rule edit 保存では `PUT /rules/:ruleId` を呼び、成功時は `ルール更新に成功`、失敗時は `ルール更新に失敗`
     を snackbar で通知し、成功後は既存 delay 後に前の route へ戻る。
 14. validation failure では、EPGStation フロントエンドは field-level validation を追加せず generic snackbar-only
     behavior を維持する。
-15. no reserve の `予約 ` は `POST /reserves` に `{ programId, allowEndLack: true }` と、TS 以外選択時の
+15. no reserve の `予約` は `POST /reserves` に `{ programId, allowEndLack: true }` と、TS 以外選択時の
     `encodeOption.mode1` / `isDeleteOriginalAfterEncode` を送る。
-16. manual reserve の `削除 ` は `DELETE /reserves/:reserveId` を呼び、snackbar は `<programName> キャンセル ` /
-    `<programName> キャンセル失敗 ` を維持する。
+16. manual reserve の `削除` は `DELETE /reserves/:reserveId` を呼び、snackbar は `<programName> キャンセル` /
+    `<programName> キャンセル失敗` を維持する。
 17. time-specified rule edit 初期表示では `GET /reserves?type=all&ruleId=<ruleId>&isHalfWidth=<isHalfWidthDisplayed>`
-    を取得して reserve cards を表示し、初期取得失敗は `予約情報取得に失敗 ` を snackbar で通知する。reserve が 1 件以上の
-    場合だけ `予約数 <n> 件 ` を見出しに表示し、0 件（未取得中を含む）の場合は件数テキストを表示しない。
-    `TimeSpecifiedReserveSection.tsx` は reserve が 1 件以上のときだけ `予約数 <n> 件 ` を表示し、
+    を取得して reserve cards を表示し、初期取得失敗は `予約情報取得に失敗` を snackbar で通知する。reserve が 1 件以上の
+    場合だけ `予約数 <n> 件` を見出しに表示し、0 件（未取得中を含む）の場合は件数テキストを表示しない。
+    `TimeSpecifiedReserveSection.tsx` は reserve が 1 件以上のときだけ `予約数 <n> 件` を表示し、
     0 件のときは件数テキストも一覧も表示しない。
 18. Rule add/update body は `isTimeSpecification`、`searchOption`、`reserveOption`、`saveOption`、optional
     `encodeOption` の生成規則を維持する。
@@ -265,8 +265,8 @@ Search / Rule は番組検索、検索結果からの予約/rule 作成、rule l
     `ReserveListItem.tsx` は `isEditMode=true` の場合 menu 自体を描画しない（delete/unlock も
     含め一切の action を発火不能にする）。これは design.md の「ProgramDialog とルールアクション表」節が、
     time-specified rule edit 内では reserve card から action を発火しないと決めた設計判断である。
-27. Rule option form の `有効 `、`状況に応じて末尾がかけることを許可 `、`録画済み番組を排除 `、`元ファイルの自動削除 `
-    checkbox と、`日数 `、`directory`、`sub directory`、`file format`、`mode1-3`、`directory1-3`、`sub directory1-3`
+27. Rule option form の `有効`、`状況に応じて末尾がかけることを許可`、`録画済み番組を排除`、`元ファイルの自動削除`
+    checkbox と、`日数`、`directory`、`sub directory`、`file format`、`mode1-3`、`directory1-3`、`sub directory1-3`
     fields は read-only 表示ではなく編集可能な controlled control とする。`directory` / `directory1-3` は server
     config の recorded directory を option に持つ select/combobox、`mode1-3` は server config の encode
     modes を option に持つ select/combobox とし、直接 text input に置き換えない。server config に encode
@@ -280,55 +280,55 @@ Search / Rule は番組検索、検索結果からの予約/rule 作成、rule l
     sub-toggle、free flag、rule option checkbox は同一 `SearchCheckbox` owner を共有する。
 28. Rule option の accordion/panel
     summary は pointer と keyboard で開閉でき、開閉時に非 0ms のアニメーションを持つ。表示 title が CSS 疑似要素であっても DOM 上の summary は操作可能な target として残す。
-29. Search form の `サブジャンル表示 ` checkbox は read-only ではなく編集可能な controlled
+29. Search form の `サブジャンル表示` checkbox は read-only ではなく編集可能な controlled
     control とし、OFF のときは subGenre button 群を非表示にし、hidden subGenre 選択を search/rule payload に残さない。
     `SearchGenreRow.tsx` は OFF 切替時に選択済み subGenre を同じ genre の top-level
     選択へ正規化し、hidden な subGenre 選択を残さない（`searchRule.formComponents.spec.test.tsx`
     の `[AC 2.34]` の test が検証する）。
-30. Search form の `期間 ` は `開始 ` / `終了 ` の日時 picker dialog として表示し、text
+30. Search form の `期間` は `開始` / `終了` の日時 picker dialog として表示し、text
     field は直接ミリ秒入力ではなく dialog activator として扱う。各 dialog は月・曜日を日本語で表示し、
-    週の始まりを月曜にした calendar（先頭の列が月曜）、24 時間表記の時刻の選択、`クリア ` / `設定 `
-    action を持つ（Recorded Upload、Manual Reserve と共通の部品）。calendar で日を選び `設定 ` を押すと
-    field に `yyyy-MM-ddTHH:mm` で反映し、`クリア ` は値を空にする。両端が揃うまで `searchPeriods` を送らない。
-31. Search form の `検索 ` button を実行して検索結果を取得したとき、EPGStation フロントエンドは
+    週の始まりを月曜にした calendar（先頭の列が月曜）、24 時間表記の時刻の選択、`クリア` / `設定`
+    action を持つ（Recorded Upload、Manual Reserve と共通の部品）。calendar で日を選び `設定` を押すと
+    field に `yyyy-MM-ddTHH:mm` で反映し、`クリア` は値を空にする。両端が揃うまで `searchPeriods` を送らない。
+31. Search form の `検索` button を実行して検索結果を取得したとき、EPGStation フロントエンドは
     SearchResult section の先頭へ scroll する。SearchResult header の link icon は検索条件ではなく Rule
     option card の先頭へ scroll する。
-32. Search form の `クリア ` / `検索 ` action row は action
+32. Search form の `クリア` / `検索` action row は action
     row の上に divider を持ち、card 末尾には追加 divider を描画しない。dark theme では divider を dark
     token に置き換える。
-33. Search form の `放送局 `、ジャンル一覧の絞り込み、`時刻 start`、`時刻 range` は
-    select/combobox として表示し、直接数値入力 field に置き換えない。`放送局 ` は `/channels` の channel
+33. Search form の `放送局`、ジャンル一覧の絞り込み、`時刻 start`、`時刻 range` は
+    select/combobox として表示し、直接数値入力 field に置き換えない。`放送局` は `/channels` の channel
     id/name を option として表示し、rule edit で現在の channel id が一覧にない場合も既存 rule の channel
     name を fallback option として保持する。ジャンル select は検索対象の単一 genre 値ではなく、下のジャンル一覧を
-    `すべて ` または top-level genre で絞り込むための control とする。`start` は 0-23 時、`range`
+    `すべて` または top-level genre で絞り込むための control とする。`start` は 0-23 時、`range`
     は 1-23 時間の option として扱い、選択値を `times[0].start` / `times[0].range` に反映する。
 34. Search form のジャンル一覧は 複数の top-level genre / subGenre をクリックで選択できる。top-level
     genre を選択した場合は `{ genre }` を search/rule payload に含め、subGenre を選択した場合は `{ genre, subGenre }`
-    を含める。ジャンル一覧の `クリア `
-    は選択済み top-level/subGenre だけを解除し、一覧の絞り込み select は維持する。`サブジャンル表示 `
+    を含める。ジャンル一覧の `クリア`
+    は選択済み top-level/subGenre だけを解除し、一覧の絞り込み select は維持する。`サブジャンル表示`
     を OFF にした場合は subGenre
     button 群を非表示にし、既存の subGenre 選択は同じ genre の top-level 選択へ正規化する。ジャンル一覧の hover は selected
     state と同じ青背景/青文字を表示してはならない。選択状態だけが blue
     tint を持ち、hover だけでは選択済みと誤認させない。
 35. Search form / Search result / Rule option card は max-width `800px`
-    と同じ幅契約を共有し、keyword 入力 card と結果/録画設定 card の最大横幅がずれてはならない。Search form の `長さ `
+    と同じ幅契約を共有し、keyword 入力 card と結果/録画設定 card の最大横幅がずれてはならない。Search form の `長さ`
     にある `最小(分)` / `最大(分)` fields は 各 field の最大幅を 100px 程度に抑え、form
-    row 全幅へ引き伸ばさない。Rule option form の `日数 ` は 90px 程度、`directory` / `directory1-3` / `mode1-3`
+    row 全幅へ引き伸ばさない。Rule option form の `日数` は 90px 程度、`directory` / `directory1-3` / `mode1-3`
     select は 150px 程度を上限とし、`sub directory` / `file format` は available width を使える text field とする。
 36. Search form の keyword text
     field で Enter を押した場合、EPGStation フロントエンドは現在 DOM/input に入力されている最新 keyword 値を使って検索を実行する。React
-    state の遅延により直前入力が欠落した stale request を送ってはならない。Enter submit と `検索 ` button
+    state の遅延により直前入力が欠落した stale request を送ってはならない。Enter submit と `検索` button
     submit は同一の request body 正規化を使う。keyword が non-empty で番組名、概要、詳細の全 target
-    checkbox が OFF の場合、Enter submit と `検索 ` button
+    checkbox が OFF の場合、Enter submit と `検索` button
     submit は番組名と概要を ON にした request を送る。target checkbox が一つ以上 ON の場合は user
     selection を変更しない。ignore keyword が non-empty で ignore の番組名、概要、詳細 target
-    checkbox がすべて OFF の場合も、Enter submit と `検索 ` button
+    checkbox がすべて OFF の場合も、Enter submit と `検索` button
     submit は同じ正規化で ignore 番組名と ignore 概要を ON にした request を送る。ignore target
     checkbox が一つ以上 ON の場合は user selection を変更しない。
 37. Search form、Rule option form、Rule search menu の text/number/datetime text field と clearable select
     相当の select/combobox は、値が non-empty かつ disabled/read-only でないとき field 右端に clear
-    button を表示し、押下で該当 field の値だけを空にする。Search form では keyword、ignore keyword、duration min/max、period dialog の datetime field、channel、start time、range を対象にする。Rule option form では `日数 `、`directory`、`sub directory`、`file format`、`mode1-3`、`directory1-3`、`sub directory1-3` を対象にする。`file format` は select ではなく clearable な text field として扱う。通常検索 UI の `range` select と時刻指定 UI の `終了 ` field は、いずれも確認対象として扱い、対象外として省略してはならない。
-38. plain `/search` の `時刻指定 ` switch は  rule
+    button を表示し、押下で該当 field の値だけを空にする。Search form では keyword、ignore keyword、duration min/max、period dialog の datetime field、channel、start time、range を対象にする。Rule option form では `日数`、`directory`、`sub directory`、`file format`、`mode1-3`、`directory1-3`、`sub directory1-3` を対象にする。`file format` は select ではなく clearable な text field として扱う。通常検索 UI の `range` select と時刻指定 UI の `終了` field は、いずれも確認対象として扱い、対象外として省略してはならない。
+38. plain `/search` の `時刻指定` switch は  rule
     edit 中以外は操作可能であり、OFF では通常検索 card、ON では番組名/channel/開始/終了/曜日の time-specified rule
     card を表示する。ON のときは検索実行前でも Rule option form を表示し、通常検索結果 request を発火してはならない。
 39. Search form の select 行と checkbox 行の間、Rule option card の field label の余白は既存の margin-top /
@@ -346,21 +346,21 @@ Search / Rule は番組検索、検索結果からの予約/rule 作成、rule l
 
 #### 受け入れ条件
 
-1. `/rule` を表示するとき、EPGStation フロントエンドは title `ルール ` を表示し、rule list を取得する。
+1. `/rule` を表示するとき、EPGStation フロントエンドは title `ルール` を表示し、rule list を取得する。
 2. keyword query があるとき、EPGStation フロントエンドは keyword filter を rule list fetch に反映する。
-3. rule list fetch に失敗したとき、EPGStation フロントエンドは `ルールデータ取得に失敗 ` を snackbar で通知する。
+3. rule list fetch に失敗したとき、EPGStation フロントエンドは `ルールデータ取得に失敗` を snackbar で通知する。
    page content 内に別の error 要素は描画しない。
 4. title bar の検索 icon を実行したとき、EPGStation フロントエンドは `/search` へ遷移せず、Rule search menu を開く。
-5. Rule search menu は keyword query の現在値を `キーワード ` field に反映し、`閉じる ` と `検索 ` action を表示する。
-6. Rule search menu の `検索 ` action は menu を閉じて約 300ms 待ってから `/rule?keyword=<keyword>`
+5. Rule search menu は keyword query の現在値を `キーワード` field に反映し、`閉じる` と `検索` action を表示する。
+6. Rule search menu の `検索` action は menu を閉じて約 300ms 待ってから `/rule?keyword=<keyword>`
    へ遷移し、keyword が空の場合は `/rule` へ遷移する。
 7. edit mode 外では rule enable switch を表示する。
 8. rule enable action を実行したとき、EPGStation フロントエンドは `PUT /rules/:ruleId/enable` を呼び、成功時は
    `有効化: <keyword>` を snackbar で通知する。
 9. rule disable action を実行したとき、EPGStation フロントエンドは `PUT /rules/:ruleId/disable` を呼び、成功時は
    `無効化: <keyword>` を snackbar で通知する。
-10. rule enable/disable action は API result を待ち、失敗時は UI state を戻し、`ルールの有効化に失敗 ` /
-    `ルールの無効化に失敗 ` を snackbar で通知する。
+10. rule enable/disable action は API result を待ち、失敗時は UI state を戻し、`ルールの有効化に失敗` /
+    `ルールの無効化に失敗` を snackbar で通知する。
 11. item menu の edit action を実行したとき、EPGStation フロントエンドは `/search?rule=<ruleId>` へ遷移する。
 12. item menu の recorded search action を実行したとき、EPGStation フロントエンドは `/recorded?ruleId=<ruleId>`
     へ遷移する。
@@ -375,13 +375,13 @@ Search / Rule は番組検索、検索結果からの予約/rule 作成、rule l
     `unittest/spec/searchRule.ruleListMenus.spec.test.tsx` の
     `waits for the closing item menu animation before opening the delete confirmation dialog`
     （300ms 未満では dialog が開かず、300ms 経過後に開くことを確認する）。
-14. single delete dialog は title `ルール削除 `、body `<keyword> を削除しますか?`、`キャンセル `、`削除 ` を表示し、confirm で
+14. single delete dialog は title `ルール削除`、body `<keyword> を削除しますか?`、`キャンセル`、`削除` を表示し、confirm で
     `DELETE /rules/:ruleId` を呼ぶ。
-    `RuleDeleteDialogs.tsx` は `DialogTitle` に `ルール削除 ` を設定し、`aria-labelledby` で dialog の
+    `RuleDeleteDialogs.tsx` は `DialogTitle` に `ルール削除` を設定し、`aria-labelledby` で dialog の
     accessible name にする（`searchRule.ruleList.spec.test.tsx` の
     `findByRole('dialog', { name: 'ルール削除' })` で検証する）。bulk delete dialog（要求 3.28）と
     同じ title 構成である。
-15. single delete 成功時は `<keyword> を削除 `、失敗時は `<keyword> を削除に失敗 ` を snackbar で通知する。
+15. single delete 成功時は `<keyword> を削除`、失敗時は `<keyword> を削除に失敗` を snackbar で通知する。
 16. edit mode では enable switch を表示せず、item click は selection toggle として扱う。
     `RuleListRow.tsx` は edit mode 中、switch の grid track 幅を保った空 `<span aria-hidden>` に
     置き換え、有効化/無効化操作と選択操作が同一行で競合しないようにする。
@@ -407,7 +407,7 @@ Search / Rule は番組検索、検索結果からの予約/rule 作成、rule l
     は呼び出し元 hook（`useSearchRuleQueries.ts`）が持つ `settings.isHalfWidthDisplayed` をそれぞれ渡す。
 24. delete 成功後は row を optimistic に削除せず、表示更新は Socket.IO `updateStatus` による refetch、route
     change、または別 fetch によって反映する。
-25. edit mode は Reserves / Recorded / Recording と同じ shared `EditTitleBar` contract を使い、`<selectedCount> 件選択 `
+25. edit mode は Reserves / Recorded / Recording と同じ shared `EditTitleBar` contract を使い、`<selectedCount> 件選択`
     title、close icon による exit、select-all icon、delete icon を表示する。独自の text button row を title
     bar に並べてはならない。exit で選択解除、select-all の visible rows toggle、refetch 後も visible な rule
     id の selection preservation を維持する。選択済み rule row/card は outline-only ではなく Recorded /
@@ -448,7 +448,7 @@ Search / Rule は番組検索、検索結果からの予約/rule 作成、rule l
     list layout（`data-rule-layout='list'`、container 幅 780px 未満）では keyword 列（`:nth-child(1)`）だけ `white-space:normal`、`word-break:break-all` に切り替え、
     `.ruleActions{flex-wrap:nowrap}` で action menu の折り返しを防ぐ。
 28. Rule list の一括削除確認は title bar 下の inline content ではなく modal dialog として表示し、title
-    `ルール削除 `、body `選択した <total> 件のルールを削除しますか。`、`キャンセル `、`削除 ` text action を持つ。dialog
+    `ルール削除`、body `選択した <total> 件のルールを削除しますか。`、`キャンセル`、`削除` text action を持つ。dialog
     paper は  max-width 300px を上限とする。
 29. Rule row/card は pointer hover と focus-within で背景色が変化し、light/dark
     theme のどちらでも隣接 row と区別できる。hover state は transparent のままにしない。

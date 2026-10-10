@@ -331,7 +331,7 @@ Dashboard から開く recorded item menu は MUI portal として body 配下�
 
 ### 機能テストケース
 
-- recording/recorded/reserves summary request の settings 由来 limit、`offset=0` 固定、isHalfWidth と `/reserves/cnts` の `normal/conflicts/skips/overlaps`、`予約情報取得に失敗 ` snackbar を検証する。Socket.IO `updateStatus` 後は API 呼び出し回数だけでなく、録画中/録画済み/予約 summary の表示テキストが更新後 response へ差し替わり、更新前 item が DOM から消えることを検証する。
+- recording/recorded/reserves summary request の settings 由来 limit、`offset=0` 固定、isHalfWidth と `/reserves/cnts` の `normal/conflicts/skips/overlaps`、`予約情報取得に失敗` snackbar を検証する。Socket.IO `updateStatus` 後は API 呼び出し回数だけでなく、録画中/録画済み/予約 summary の表示テキストが更新後 response へ差し替わり、更新前 item が DOM から消えることを検証する。
 - Dashboard item menu/action が owner spec contract へ委譲され、専用分岐しないことを検証する。recorded search action は ruleId あり/なしの両 fixture で `/recorded?ruleId=<ruleId>` と `/recorded?keyword=<keyword>` の両遷移を検証する。
 - Dashboard 上の recorded / recording menu action、ReserveMenu の unlock、ReserveDeleteDialog の削除成功後は、Socket.IO `updateStatus` の到着だけに依存せず現在表示中の Dashboard query を明示 refetch する。iOS Safari で Socket.IO が遅延または取りこぼされた場合でも、操作元画面の summary item と section title が成功後 response へ差し替わることを固定する。
 - recorded add encode handoff、recording thumbnail なし、recording summary row が  text content の必要最小高さで収まり 100px thumbnail row height に固定されないこと、recorded no-image が height `100px` / `flex-basis:30%` / `max-width:200px` fallback になること、recorded description/drop display toggle、section scroll restoration flag と fetch failure/blank state を検証する。

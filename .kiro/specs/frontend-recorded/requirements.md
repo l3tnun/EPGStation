@@ -22,7 +22,7 @@ Recorded は録画済み一覧、詳細、watch/streaming/upload への入口を
 
 #### 受け入れ条件
 
-1. `/recorded` を表示するとき、EPGStation フロントエンドは title `録画済み ` を表示する。
+1. `/recorded` を表示するとき、EPGStation フロントエンドは title `録画済み` を表示する。
 2. Recorded list 初期化時、EPGStation フロントエンドは settings と route query から list fetch option を作成する。
 3. page query があるとき、EPGStation フロントエンドは page を検証し、invalid value では controlled error または page
    1 への正規化を行う。
@@ -35,7 +35,7 @@ Recorded は録画済み一覧、詳細、watch/streaming/upload への入口を
 8. list route query の `keyword` は string として、`ruleId`、`channelId`、`genre` は parse して、`hasOriginalFile`
    は boolean true または string `true` のとき true として fetch option に反映する。
 9. `ruleId=0` は手動録画のみを表す query として扱う。
-10. Recorded list fetch に失敗したとき、EPGStation フロントエンドは `録画データ取得に失敗 ` を snackbar で通知する。
+10. Recorded list fetch に失敗したとき、EPGStation フロントエンドは `録画データ取得に失敗` を snackbar で通知する。
 11. Recorded list が 0 件のとき、EPGStation フロントエンドは list content を表示せず、明示的 empty
     copy を追加しない。
 12. route refresh 用 `timestamp` query は user-facing filter state と search menu state に露出しない。
@@ -112,7 +112,7 @@ Recorded は録画済み一覧、詳細、watch/streaming/upload への入口を
 1. search menu から検索を実行したとき、EPGStation フロントエンドは non-empty condition だけを route
    query として反映する。
 2. `/recorded/options` または `/rules/keyword` の search option 取得に失敗したとき、EPGStation フロントエンドは
-   `録画検索オプションの取得に失敗 ` を snackbar で通知する。`/rules/:ruleId`
+   `録画検索オプションの取得に失敗` を snackbar で通知する。`/rules/:ruleId`
    completion 取得失敗は log のみに留め、snackbar を表示しない。
 3. search menu の rule、channel、genre は `/rules/keyword` と `/recorded/options` の結果を option とする select
    control として表示し、mouse/touch/keyboard で選択した値を route query と list fetch
@@ -134,7 +134,7 @@ Recorded は録画済み一覧、詳細、watch/streaming/upload への入口を
 5. route query に `ruleId` があり `/rules/keyword` の一覧に該当 rule がないとき、EPGStation フロントエンドは
    `/rules/:ruleId` を取得し、`searchOption.keyword` を rule
    select の選択肢として補完する。補完取得失敗は log のみに留め、snackbar を表示しない。
-6. title bar menu の `編集 ` を実行したとき、EPGStation フロントエンドは edit mode に入り、title を
+6. title bar menu の `編集` を実行したとき、EPGStation フロントエンドは edit mode に入り、title を
    `<selectedCount> 件選択 (<selectedTotalFileSize>)` に切り替える。edit mode は pagination（`goToPage`）による
    route 遷移では解除されない。`goToPage` が呼ぶ `buildRecordedPageSearch` は `timestamp` query を明示的に削除するため
    （`requests/searchPath.ts`）、この route 遷移は必ず `frontend-app-shell` 要求5 の AC22 が定める `timestamp` 補完 `replace`
@@ -166,14 +166,14 @@ Recorded は録画済み一覧、詳細、watch/streaming/upload への入口を
    一覧から消えたときに `selectedIds` へ id が残り続けることを防ぐ。test:
    `client/unittest/spec/recorded/list-actions-3.spec.test.tsx`
    （`[AC 2.7] narrows a stale selection to what refetched data still contains, like Recording/Reserves`）。
-8. title bar menu の `クリーンアップ ` を実行したとき、EPGStation フロントエンドは cleanup dialog を開く。
-9. title bar menu の `アップロード ` を実行したとき、EPGStation フロントエンドは menu の close transition 完了を
+8. title bar menu の `クリーンアップ` を実行したとき、EPGStation フロントエンドは cleanup dialog を開く。
+9. title bar menu の `アップロード` を実行したとき、EPGStation フロントエンドは menu の close transition 完了を
    待たず、即時に upload route へ遷移する。
 10. edit mode で delete action を実行したとき、EPGStation フロントエンドは multiple deletion dialog を開く。
 11. edit mode で 0 件選択の delete
     action を実行したとき、EPGStation フロントエンドは dialog を閉じ、`番組を選択してください。`
     を snackbar で通知する。
-12. bulk delete dialog では `全て `、`オリジナルファイルだけ `、`エンコードファイルだけ ` の削除対象 option を表示する。
+12. bulk delete dialog では `全て`、`オリジナルファイルだけ`、`エンコードファイルだけ` の削除対象 option を表示する。
 13. bulk delete 成功時、EPGStation フロントエンドは `選択した番組を削除しました。`、一部または全件失敗時は
     `一部番組の削除に失敗しました。` を snackbar で通知する。一括削除は `全て`/`オリジナルファイルだけ`/
     `エンコードファイルだけ` のいずれの option でも、選択した item の video file を列挙し
@@ -186,13 +186,13 @@ Recorded は録画済み一覧、詳細、watch/streaming/upload への入口を
     open は Recorded list ではいずれも menu を閉じた直後に遅延なく実行する。`RecordedItemMenu.tsx` の
     `actionDelayMs` prop（既定 0）は rule 遷移と delete dialog open にだけ適用し、search 遷移と encode
     dialog open には適用しない。Recording 画面は 100ms を渡す。
-16. protect action 成功時は `保護に成功 `、失敗時は `保護に失敗 ` を snackbar で通知する。item menu の `protect`
+16. protect action 成功時は `保護に成功`、失敗時は `保護に失敗` を snackbar で通知する。item menu の `protect`
     表示は `mdi-lock` icon を使う。
-17. unprotect action 成功時は `保護解除に成功 `、失敗時は `保護解除に失敗 ` を snackbar で通知する。item menu の
+17. unprotect action 成功時は `保護解除に成功`、失敗時は `保護解除に失敗` を snackbar で通知する。item menu の
     `unprotect` 表示は `mdi-lock-open` icon を使い、`protect` と同じ閉じた鍵 icon にしてはならない。
 18. Encode action は item が録画中でなく server config で encode が有効な場合に表示し、add encode dialog を開く。
-19. add encode 成功時は `エンコード追加 `、失敗時は `エンコード追加に失敗しました ` を snackbar で通知する。
-20. stop encode action は encoding 中 item に表示し、成功時は `エンコード停止 `、失敗時は `エンコード停止に失敗 `
+19. add encode 成功時は `エンコード追加`、失敗時は `エンコード追加に失敗しました` を snackbar で通知する。
+20. stop encode action は encoding 中 item に表示し、成功時は `エンコード停止`、失敗時は `エンコード停止に失敗`
     を snackbar で通知する。
     stop encode action の表示条件は `isEncoding === true` のみとし、`isRecording` は条件に含めない。
     stop encode は `DELETE /recorded/:recordedId/encode`（`src/model/service/api/recorded/{recordedId}/encode.ts`）
@@ -219,19 +219,19 @@ Recorded は録画済み一覧、詳細、watch/streaming/upload への入口を
     を呼ぶ。
 27. Recorded delete dialog で一部 video file だけが選択されたとき、EPGStation フロントエンドは
     `DELETE /videos/:videoFileId` を呼ぶ。
-28. Recorded delete 成功時は `<recordedItem.name> を削除 `、失敗時は `<recordedItem.name> を削除に失敗 `
+28. Recorded delete 成功時は `<recordedItem.name> を削除`、失敗時は `<recordedItem.name> を削除に失敗`
     を snackbar で通知する。
 29. cleanup dialog は Recorded list title bar action としてのみ提供し、Recorded detail more menu には表示しない。
-30. cleanup dialog は `クリーンアップ中 ` progress を表示し、`POST /recorded/cleanup` が成功した場合だけ
+30. cleanup dialog は `クリーンアップ中` progress を表示し、`POST /recorded/cleanup` が成功した場合だけ
     `POST /thumbnails/cleanup` を実行し、最低 1 秒 progress を維持する。
 31. `POST /recorded/cleanup` が失敗した場合、EPGStation フロントエンドは thumbnails
-    cleanup を実行せず、最低 1 秒 progress 後に `クリーンアップに失敗 ` を snackbar で通知する。
-32. `POST /thumbnails/cleanup` が失敗した場合、EPGStation フロントエンドは最低 1 秒 progress 後に `クリーンアップに失敗 `
+    cleanup を実行せず、最低 1 秒 progress 後に `クリーンアップに失敗` を snackbar で通知する。
+32. `POST /thumbnails/cleanup` が失敗した場合、EPGStation フロントエンドは最低 1 秒 progress 後に `クリーンアップに失敗`
     を snackbar で通知する。
-33. cleanup 成功時は `クリーンアップ完了 ` を snackbar で通知する。
+33. cleanup 成功時は `クリーンアップ完了` を snackbar で通知する。
 34. recorded search menu の keyword は non-empty かつ disabled でないとき clear button を表示し、押下で該当 value
     だけを空にする。
-35. recorded search menu の `ルール `、`放送局 `、`ジャンル ` select は `AppSelect` として、選択済みかつ
+35. recorded search menu の `ルール`、`放送局`、`ジャンル` select は `AppSelect` として、選択済みかつ
     enabled state で field 右端に clear action を表示し、押下で該当 select value だけを空にする。clear action は owner
     幅を変更せず、選択 text と placeholder/label text が重なって読めない状態を作ってはならない。検索 option が未取得または disabled
     の場合は clear action を表示しない。
@@ -280,7 +280,7 @@ Recorded は録画済み一覧、詳細、watch/streaming/upload への入口を
    すべてに対して `DELETE /videos/:videoFileId` を呼ぶ。途中の 1 件が失敗しても残りの選択済み video file への
    呼び出しを打ち切ってはならない。
    `deleteSelectedVideoFiles()`（`RecordedDeleteDialogs.tsx`）は全件を試行してから成否をまとめる。
-10. delete 成功時は `<recordedItem.name> を削除 `、失敗時は `<recordedItem.name> を削除に失敗 ` を snackbar で通知する。
+10. delete 成功時は `<recordedItem.name> を削除`、失敗時は `<recordedItem.name> を削除に失敗` を snackbar で通知する。
     snackbar は `AppShell`（`client/src/app/AppShell.tsx`）がルーティングされる画面の外側で保持する shell
     状態であり、`navigate(-1)` で画面が切り替わっても同じ `ShellSnackbarHost` が表示を継続するため、遅延なく
     表示する。
@@ -307,12 +307,12 @@ Recorded は録画済み一覧、詳細、watch/streaming/upload への入口を
     返さなければ `buildVideoDownloadUrl()`（`GET /videos/:videoFileId?isDownload=true`）を `href` に使い、
     playlist button は常に `buildVideoPlaylistUrl()`（`GET /videos/:videoFileId/playlist`）を使う。
 15. Kodi dialog は保存済み host を復元または初期選択し、`POST /videos/:videoFileId/kodi` に `{ kodiName }`
-    を送信し、成功時は `送信しました `、失敗時は `送信に失敗しました ` を snackbar で通知する。
+    を送信し、成功時は `送信しました`、失敗時は `送信に失敗しました` を snackbar で通知する。
     `SendVideoFileToKodiDialog.tsx` の `send()` は `apiRepository.sendVideoFileToKodi({ videoFileId,
     kodiName: hostName })` を呼び、結果に応じてこの 2 文言を snackbar へ渡す（host 復元の検証強化は条件 5
     に記載）。
 16. drop log は `dropLogFile` があり、かつ録画中ではない detail item の場合のみ
-    `GET /dropLogs/:dropLogFileId?maxsize=512` を呼び、失敗時は `ログファイル取得に失敗しました `
+    `GET /dropLogs/:dropLogFileId?maxsize=512` を呼び、失敗時は `ログファイル取得に失敗しました`
     を snackbar で通知する。`dropLogFile` がない場合または `isRecording === true` の場合、drop/error/scrambling
     metadata は表示せず、click action は no-op とする。
     `formatRecordedDropInfo()`（`lib/recordedFormat.ts`）は
@@ -330,7 +330,7 @@ Recorded は録画済み一覧、詳細、watch/streaming/upload への入口を
     `requests/settingsStorage.ts`）はいずれも `features/recorded` 配下にあり、`features/encode` 配下には
     存在しない。
 18. detail data 取得では `GET /recorded/:id` に `isHalfWidth=<isHalfWidthDisplayed>` を渡し、取得失敗時は
-    `録画データ取得に失敗 ` を snackbar で通知する。
+    `録画データ取得に失敗` を snackbar で通知する。
     `RecordedDetailPage.tsx` は `useQuery` で `fetchRecordedDetail` を呼び、`recordedApi.ts` が
     `buildRecordedDetailRequestUrl({ recordedId, isHalfWidth })`（`GET /recorded/:id?isHalfWidth=<bool>`）で URL を組み立てる。
     失敗時は `RECORDED_FAILURE_MESSAGE`（`requests/constants.ts` = `` `録画データ取得に失敗` ``）を
@@ -349,7 +349,7 @@ Recorded は録画済み一覧、詳細、watch/streaming/upload への入口を
     （`RecordedDetailPage.tsx` の `formatRecordedDropInfo()` と、`dropLogFile !== undefined && dropInfo
     !== null` の条件で描画を制御する）。
 21. Socket.IO `updateStatus` による list/detail refetch 失敗は snackbar を追加せず、route-driven
-    fetch 失敗だけが `録画データ取得に失敗 ` を通知する。
+    fetch 失敗だけが `録画データ取得に失敗` を通知する。
     Socket.IO の `updateStatus` は `REALTIME_UPDATE_STATUS_QUERY_KEYS`
     （`client/src/app/realtimeInvalidation.ts`、`RECORDED_QUERY_KEY`/`RECORDED_DETAIL_QUERY_KEY` を含む）
     経由で `queryClient.invalidateQueries()` するだけであり、`RecordedDetailPage.tsx` の
@@ -402,7 +402,7 @@ Recorded は録画済み一覧、詳細、watch/streaming/upload への入口を
     の `onDeleteSuccess` が `allFilesDeleted === true` のときだけこれを呼ぶ（条件 11 と同じ contract）。
     「前の画面へ戻る」責務は dialog 自身ではなく host 側にある。
 26. `RecordedBulkDeleteDialog` consumer は Recorded list 編集モードと Recording 編集モードを含む。Recorded list では
-    `全て `、`オリジナルファイルだけ `、`エンコードファイルだけ ` の削除対象 option を表示し、Recording 編集モードでは
+    `全て`、`オリジナルファイルだけ`、`エンコードファイルだけ` の削除対象 option を表示し、Recording 編集モードでは
     `disableOption=true` 相当で削除対象 option を表示しない。consumer は dialog body、selection 0 件 snackbar、bulk
     delete 成功/失敗 snackbar、video file delete iteration を再定義しない。
     `client/src/features/recorded/components/RecordedDeleteDialogs.tsx` の
@@ -428,7 +428,7 @@ Recorded は録画済み一覧、詳細、watch/streaming/upload への入口を
     （`SendVideoFileToKodiDialog.tsx` の `kodiHostField`）も同じ 32px compact 高さを使い、
     `RecordedPage.module.css` の `.addEncodeField` 系クラスが `min-height:32px` を CSS 側でも固定する。
     test: `component-encode-kodi-stream.spec.test.tsx`。
-29. add encode dialog の `元ファイルと同じ場所に保存する ` が ON のとき、`recorded` select と `sub directory`
+29. add encode dialog の `元ファイルと同じ場所に保存する` が ON のとき、`recorded` select と `sub directory`
     input は disabled になり、`POST /encode` body は `isSaveSameDirectory: true` を送り、`parentDir` と `directory`
     を送らない。
     `AddEncodeDialog.tsx` は `recorded` select に
@@ -478,7 +478,7 @@ Recorded は録画済み一覧、詳細、watch/streaming/upload への入口を
 
 #### 受け入れ条件
 
-1. `/recorded/detail/:id` を表示するとき、EPGStation フロントエンドは title `録画詳細 ` を表示する。
+1. `/recorded/detail/:id` を表示するとき、EPGStation フロントエンドは title `録画詳細` を表示する。
 2. encoded recorded playback action を実行したとき、EPGStation フロントエンドは settings と file type に応じて web
    watch または external handoff を選択する。
 3. streaming action を実行したとき、EPGStation フロントエンドは selected stream type/mode を query として streaming
@@ -491,17 +491,17 @@ Recorded は録画済み一覧、詳細、watch/streaming/upload への入口を
 7. streaming handoff は
    `/recorded/streaming/:videoFileId?recordedId=<recordedId>&streamingType=<webm|mp4|hls>&mode=<modeIndex>&fileType=<ts|encoded>`
    を生成する。`fileType` が `ts` でも `encoded` でもない場合は invalid route を生成せず、type/mode 欠落と同じ
-   `配信設定が正しく入力されていません ` を snackbar で通知する。
+   `配信設定が正しく入力されていません` を snackbar で通知する。
    `fileType` は playback 側の route 検証に使う。`client/src/features/video/playback/playbackRoutes.ts` の
    `resolveRecordedStreamingWatchRoute` は、`fileType` が `ts` でも `encoded` でもなければ route を invalid とし、
    `streamConfig.recorded[fileType]` の mode 数で `mode` の範囲を検証する。query 1 個の追加で
    route 単体から playback 条件を確定できる。
 8. streaming handoff に必要な type または mode が欠ける場合、EPGStation フロントエンドは invalid route を生成せず
-   `配信設定が正しく入力されていません ` を snackbar で通知する。
+   `配信設定が正しく入力されていません` を snackbar で通知する。
 9. streaming handoff に必要な recordedId または videoFileId が欠ける場合、EPGStation フロントエンドは invalid
-   route を生成せず `番組 ID が不正です ` を snackbar で通知する。
+   route を生成せず `番組 ID が不正です` を snackbar で通知する。
 10. `/recorded/watch` または `/recorded/streaming/:videoFileId` を表示するとき、Recorded workflow は watch route title
-    input として `視聴 ` を提供する。physical route component、route validation、player lifecycle は
+    input として `視聴` を提供する。physical route component、route validation、player lifecycle は
     `frontend-video-playback` が所有し、Video Playback は title 文言を再定義せず中継する。
 
 ### 要求 5: detail dialog と playback handoff の契約
@@ -510,11 +510,11 @@ Recorded は録画済み一覧、詳細、watch/streaming/upload への入口を
 
 #### 受け入れ条件
 
-1. detail more menu の download dialog は heading を追加せず、`録画ダウンロード ` dialog label、video
+1. detail more menu の download dialog は heading を追加せず、`録画ダウンロード` dialog label、video
    files、play lists の構成を維持する。
 2. download dialog は backdrop click で閉じ、close 後に DOM から remove される。download link と playlist link の URL
    contract は既存の `GET /videos/:videoFileId?isDownload=true` と `GET /videos/:videoFileId/playlist` を維持する。
-   download dialog は backdrop click に加えて `閉じる ` button でも閉じられる。
+   download dialog は backdrop click に加えて `閉じる` button でも閉じられる。
    この button は他の Recorded dialog（delete、add encode、streaming、Kodi）と同様に明示的な閉じる手段を
    提供するためのものであり、dialog label と本文構成（要求 5.1）を変えず、heading も追加しない。
 3. recorded streaming handoff から playback page に遷移した後の autoplay、絶対 seek、HLS restart、ARIB 字幕 renderer は

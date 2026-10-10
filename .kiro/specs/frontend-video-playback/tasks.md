@@ -9,7 +9,7 @@
 
 - [x] 2. direct / streaming player mapping と recorded info card を実装する
   - recorded direct、recorded HLS/WebM/MP4 streaming、live watch の player mapping を API/media URL builder と `PlaybackShell.tsx` の `PlaybackPlayerContainer` に接続する。
-  - recorded info card fetch failure は playback 非 fatal として `番組情報取得に失敗 ` snackbar を表示し、live info card は On Air owner に残す。
+  - recorded info card fetch failure は playback 非 fatal として `番組情報取得に失敗` snackbar を表示し、live info card は On Air owner に残す。
   - HLS readiness polling は `GET /streams?isHalfWidth=<isHalfWidthDisplayed>` を使い、recorded direct watch route は通常 entrypoint boundary に従う。
   - React dev server で実 HLS を確認するため、`/streamfiles` proxy の設定を regression guard（`viteConfig.imp.test.ts`）に含める。`#EXTM3U` manifest の到達は実 backend での手動確認とする。
   - _Requirements: 2.1-2.11_

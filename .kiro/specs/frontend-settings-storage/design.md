@@ -161,7 +161,7 @@ Storage contract は routed screen ではない。API repository、dialog coordi
 **責務と制約**
 - `settings` key だけを所有し、routed screen、backend API、dialog/menu UI を持たない。
 - parse failure、missing storage、missing field は `SettingsValidator` の repair result に従って保存し直す。保存 raw の不正値の補正は intentional fix が明記された field だけに限定する。consumer `value` では、型が default と違う field を default にする（`guideMode` の任意の string と範囲外の数値は保持）。
-- write failure は caller へ例外を伝播しない。storage operation は失敗を application 全体の停止にしない。navigation regeneration と `保存されました ` snackbar は Settings screen / App Shell 側の user-facing contract であり、storage owner は文言や表示を所有しない。
+- write failure は caller へ例外を伝播しない。storage operation は失敗を application 全体の停止にしない。navigation regeneration と `保存されました` snackbar は Settings screen / App Shell 側の user-facing contract であり、storage owner は文言や表示を所有しない。
 
 ### 設定バリデーター（SettingsValidator）
 
@@ -244,7 +244,7 @@ interface SettingsLoadResult {
 | `shouldUseRecordedDownloadURLScheme` | boolean | `true` | external download scheme enable。 |
 | `recordedDownloadURLScheme` | string/null | `null` | `PROTOCOL` / `ADDRESS` / `FILENAME` replacement。 |
 | `searchLength` | number | `300` | UI 許容値は 50-600 の 50 刻み。missing field のみ default で補完し、既存 field の範囲外/刻み不一致は保持する。 |
-| `isEnableAutoScrollWhenEditingRule` | boolean | `true` | `/settings` 検索 section の `自動スクロール ` 保存値。Search Rule は `/search?rule=<ruleId>` の EPG rule edit 初期自動検索成功後に検索結果へ title-bar-offset scroll するかどうかだけに使う。 |
+| `isEnableAutoScrollWhenEditingRule` | boolean | `true` | `/settings` 検索 section の `自動スクロール` 保存値。Search Rule は `/search?rule=<ruleId>` の EPG rule edit 初期自動検索成功後に検索結果へ title-bar-offset scroll するかどうかだけに使う。 |
 | `isEnableCopyKeywordToDirectory` | boolean | `false` | Rule creation default。 |
 | `isCheckAvoidDuplicate` | boolean | `false` | Rule/reserve option default。 |
 | `isEnableEncodingSettingWhenCreateRule` | boolean | `false` | Rule creation encode setting default。 |

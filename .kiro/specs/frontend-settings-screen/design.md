@@ -141,7 +141,7 @@ graph TB
     RouteLeave[Route Leave] --> RestoreSavedTheme
 ```
 
-Settings screen は backend API、search query、dialog/menu state を持たない。全 control は `tmp` を更新し、保存 action では storage save が成功したときにだけ navigation regeneration request と `保存されました ` snackbar を実行する。失敗時は error snackbar `設定の保存に失敗しました` を出し、再生成は要求しない。
+Settings screen は backend API、search query、dialog/menu state を持たない。全 control は `tmp` を更新し、保存 action では storage save が成功したときにだけ navigation regeneration request と `保存されました` snackbar を実行する。失敗時は error snackbar `設定の保存に失敗しました` を出し、再生成は要求しない。
 
 ## 要件トレーサビリティ
 
@@ -209,7 +209,7 @@ Settings screen は backend API、search query、dialog/menu state を持たな�
 
 **責務と制約**
 - storage save が成功した後に App Shell へ navigation regeneration request を送る。storage save は例外を caller へ伝播せず結果（`ok`）を返すので、Settings screen は `ok: false` のとき error snackbar `設定の保存に失敗しました` を表示し、navigation regeneration request は送らない（v2 は書込に失敗しても `保存されました` を出していたが、失敗を正しく知らせる）。rollback path は持たない。
-- success snackbar は `保存されました `、失敗 snackbar は `設定の保存に失敗しました`（severity `error`）。settings-specific validation error snackbar と rollback path は持たない。
+- success snackbar は `保存されました`、失敗 snackbar は `設定の保存に失敗しました`（severity `error`）。settings-specific validation error snackbar と rollback path は持たない。
 
 ### API 契約
 
@@ -253,7 +253,7 @@ Settings screen は backend API を呼ばない。全 control は `SettingsPage`
 | 放映中 | 放送波種別表示 | `isOnAirTabListView` | switch | boolean | always | `tmp.isOnAirTabListView` |
 | 放映中 | web での再生を優先する | `isPreferredPlayingLiveM2TSOnWeb` | switch | boolean | mpegts.js 対応時のみ表示 | `tmp.isPreferredPlayingLiveM2TSOnWeb` |
 | 放映中 | 視聴 URL Scheme | `onAirM2TSViewURLScheme` | text | string/null | always | `tmp.onAirM2TSViewURLScheme` に入力値をそのまま保持する |
-| 番組表 | 描画設定 | `guideMode` | select | `逐次 `=`sequential` / `最小 `=`minimum` / `すべて `=`all` | always | `tmp.guideMode` |
+| 番組表 | 描画設定 | `guideMode` | select | `逐次`=`sequential` / `最小`=`minimum` / `すべて`=`all` | always | `tmp.guideMode` |
 | 番組表 | 表示時間 | `guideLength` | select | 1-24 | always | `tmp.guideLength` |
 | 番組表 | ダークテーマの配色を無効化する | `isForceDisableDarkThemeForGuide` | switch | boolean | 現在 preview 中の表示 theme が light のとき disabled | `tmp.isForceDisableDarkThemeForGuide` |
 | 番組表 | 無料放送だけ表示する | `isShowOnlyFreePrograms` | switch | boolean | always | `tmp.isShowOnlyFreePrograms` |
@@ -276,7 +276,7 @@ Settings screen は backend API を呼ばない。全 control は `SettingsPage`
 | 検索 | エンコードの自動設定 | `isEnableEncodingSettingWhenCreateRule` | switch | boolean | always | `tmp.isEnableEncodingSettingWhenCreateRule` |
 | 検索 | 元ファイルの自動削除 | `isCheckDeleteOriginalAfterEncode` | switch | boolean | always | `tmp.isCheckDeleteOriginalAfterEncode` |
 | ルール | 表示件数 | `rulesLength` | select | 1-100 | always | `tmp.rulesLength` |
-| ページネーション | 拡張ページネーションの有効化 | `isEnableExtendedPagination` | switch | boolean | always | `tmp.isEnableExtendedPagination`。helper text は `録画済み・録画中・予約・ルール一覧のページ移動を拡張ページネーションに置き換える `。保存後の値は `AppPagination`（`frontend-app-shell` 要求 8.49）を通して録画済み・録画中・予約・ルール一覧が参照する。 |
+| ページネーション | 拡張ページネーションの有効化 | `isEnableExtendedPagination` | switch | boolean | always | `tmp.isEnableExtendedPagination`。helper text は `録画済み・録画中・予約・ルール一覧のページ移動を拡張ページネーションに置き換える`。保存後の値は `AppPagination`（`frontend-app-shell` 要求 8.49）を通して録画済み・録画中・予約・ルール一覧が参照する。 |
 | ビデオプレーヤ | 字幕の縁取りを強制する | `isForceEnableSubtitleStroke` | switch | boolean | always | `tmp.isForceEnableSubtitleStroke` |
 
 ### 既存不正値の表示規則
@@ -292,8 +292,8 @@ Settings screen は backend API を呼ばない。全 control は `SettingsPage`
 
 - route enter: saved settings を `tmp` へ copy し、OS color theme 判定が `tmp.isForceDarkTheme` と表示 theme を更新しうる。scroll-data completion を通知する。backend fetch、loading indicator、settings-specific error snackbar は存在しない。
 - control change: `tmp` のみ更新する。theme controls は preview として color theme state も即時更新する。
-- `保存 `: `tmp` を `settings` localStorage へ保存する処理が成功した後、App Shell へ navigation regeneration request を発行し、`保存されました ` snackbar を表示する。失敗した場合は navigation regeneration request も `保存されました ` も行わず、error snackbar `設定の保存に失敗しました` を表示する。storage save failure は caller へ例外伝播せず結果で返る。
-- `リセット `: `tmp` を default settings object に置換する。localStorage には保存しない。表示 theme は保存済み settings 由来へ戻す。
+- `保存`: `tmp` を `settings` localStorage へ保存する処理が成功した後、App Shell へ navigation regeneration request を発行し、`保存されました` snackbar を表示する。失敗した場合は navigation regeneration request も `保存されました` も行わず、error snackbar `設定の保存に失敗しました` を表示する。storage save failure は caller へ例外伝播せず結果で返る。
+- `リセット`: `tmp` を default settings object に置換する。localStorage には保存しない。表示 theme は保存済み settings 由来へ戻す。
 - route leave / destroyed: 未保存 `tmp` を破棄し、保存済み settings から `tmp` と表示 theme を復元する。
 - navigation item の生成条件や label は `frontend-app-shell` が所有する。Settings は保存が成功した後の再生成要求だけを所有する。
 
@@ -324,13 +324,13 @@ unit test は `npm run coverage:gate` で statements・branches・functions・li
 
 `visual-cases.md` は screenshot / geometry / interaction test の撮影条件を定義する。`mock-data.md` は visual cases で使う synthetic settings object、invalid existing values、theme preview、edited tmp fixture 条件を定義する。
 
-Settings Screen は `/settings` の visual owner であり、`frontend-settings-storage` は storage contract だけを所有する。Settings visual fixture は backend API response を持たず、URL scheme control には placeholder だけを使う。Settings visual cases は単一の centered settings card、desktop max width 800px、section order `全般 ` から `ビデオプレーヤ `、mobile 1 column を正とする。tracked artifact には実 URL、実 host、認証情報、Mirakurun URL、ffmpeg / ffprobe 実 path、環境固有値を含めない。
+Settings Screen は `/settings` の visual owner であり、`frontend-settings-storage` は storage contract だけを所有する。Settings visual fixture は backend API response を持たず、URL scheme control には placeholder だけを使う。Settings visual cases は単一の centered settings card、desktop max width 800px、section order `全般` から `ビデオプレーヤ`、mobile 1 column を正とする。tracked artifact には実 URL、実 host、認証情報、Mirakurun URL、ffmpeg / ffprobe 実 path、環境固有値を含めない。
 
 ### Visual Implementation Contract
 
 Settings page は single centered card を使い、desktop max width `800px`、mobile width `100%`、container padding は desktop `12px 0` / mobile `12px` とする。card 自体に内側 padding は持たせず、section は `16px 16px 17.5px` 相当の padding と bottom divider を持つ。Section title は  20px/24px/500、control label は 16px/19.2px、helper text は 14px/16px textSecondary とする。
 
-Select、text input、switch、checkbox、slider、number input は MUI density standard を使い、height を viewport 幅で変えない。Settings select は MUI TextField select / Select を使い、CSS module の透明 native select と表示用 overlay の組み合わせを禁止する。Settings select の右端 icon は MUI Select icon だけを表示し、CSS module の `::before` / `::after` や追加 span で下三角を重ねてはならない。表示値は  compact 表示に合わせて `時間 ` / `件 ` suffix を表示面から省略してよいが、開いた listbox item は実ラベルを表示し、Android/iOS でも先頭に空白の選択不能 item を見せない。許容値外の保存済み値は hidden fallback item で空表示にし、route 表示だけで storage を補正しない。Custom switch は thumb の `background-color` / `transform`、track の `background-color` がいずれも `150ms ease` で変化し、checked / unchecked の切替が瞬時ではなく滑らかに見えることを正とする。Long URL scheme placeholder は input 内で overflow hidden または horizontal scroll にし、page horizontal overflow を出さない。URL Scheme text control の placeholder `URL` は native input placeholder として未入力時だけ表示し、入力済み状態では非表示にして入力文字列と重ねない。放映中、録画視聴、録画ダウンロードの 3 種は同一の native placeholder 実装とし、別要素の fake placeholder を絶対配置しない。URL Scheme text control は non-empty かつ enabled の場合に field 右端の clear button を表示し、押下で該当 text value だけを empty string に戻す。clear button は `bottom: 0` や fixed `top` px で行下端/row 全体へ固定せず、input と同一 grid cell に重ね、input underline の縦中央へ揃える。Save/reset action row は card 内末尾に置き、padding `8px`、button hit area min height `36px`、text button 表示、reset は default text color、save は primary text color とする。card 後続へ不可視 dummy/spacer を置き、Settings 画面の下端に余白を残す。
+Select、text input、switch、checkbox、slider、number input は MUI density standard を使い、height を viewport 幅で変えない。Settings select は MUI TextField select / Select を使い、CSS module の透明 native select と表示用 overlay の組み合わせを禁止する。Settings select の右端 icon は MUI Select icon だけを表示し、CSS module の `::before` / `::after` や追加 span で下三角を重ねてはならない。表示値は  compact 表示に合わせて `時間` / `件` suffix を表示面から省略してよいが、開いた listbox item は実ラベルを表示し、Android/iOS でも先頭に空白の選択不能 item を見せない。許容値外の保存済み値は hidden fallback item で空表示にし、route 表示だけで storage を補正しない。Custom switch は thumb の `background-color` / `transform`、track の `background-color` がいずれも `150ms ease` で変化し、checked / unchecked の切替が瞬時ではなく滑らかに見えることを正とする。Long URL scheme placeholder は input 内で overflow hidden または horizontal scroll にし、page horizontal overflow を出さない。URL Scheme text control の placeholder `URL` は native input placeholder として未入力時だけ表示し、入力済み状態では非表示にして入力文字列と重ねない。放映中、録画視聴、録画ダウンロードの 3 種は同一の native placeholder 実装とし、別要素の fake placeholder を絶対配置しない。URL Scheme text control は non-empty かつ enabled の場合に field 右端の clear button を表示し、押下で該当 text value だけを empty string に戻す。clear button は `bottom: 0` や fixed `top` px で行下端/row 全体へ固定せず、input と同一 grid cell に重ね、input underline の縦中央へ揃える。Save/reset action row は card 内末尾に置き、padding `8px`、button hit area min height `36px`、text button 表示、reset は default text color、save は primary text color とする。card 後続へ不可視 dummy/spacer を置き、Settings 画面の下端に余白を残す。
 
 Theme preview は `tmp` value を App Shell token に即時反映し、Settings card、section title、helper text、input/select、icon/adornment、snackbar が同じ frame で切り替わる。dark theme では select の開閉 icon を `rgb(255 255 255 / 70%)`（`textSecondary` 相当）、disabled control を `textDisabled` で描き、background と同化しない。navigation icon は App Shell が持つ。
 
@@ -339,9 +339,9 @@ Settings select は MUI `TextField select` と `appSelectMenuProps` を必ず使
 ### 機能テストケース
 
 - control matrix の全 key、section order、option/range、disabled/visible 条件を検証する。
-- 検索 section の `自動スクロール ` switch は保存後に `isEnableAutoScrollWhenEditingRule` として永続化され、Search Rule feature の EPG rule edit 初期自動検索だけに反映されることを integration test で検証する。
+- 検索 section の `自動スクロール` switch は保存後に `isEnableAutoScrollWhenEditingRule` として永続化され、Search Rule feature の EPG rule edit 初期自動検索だけに反映されることを integration test で検証する。
 - OS theme on/off、manual dark preview、reset、leave rollback の状態遷移を検証する。
-- 保存が成功したときに navigation regeneration request と `保存されました ` snackbar が発行され、失敗したときは request が発行されず `設定の保存に失敗しました` の error snackbar だけが表示されることを検証する。
+- 保存が成功したときに navigation regeneration request と `保存されました` snackbar が発行され、失敗したときは request が発行されず `設定の保存に失敗しました` の error snackbar だけが表示されることを検証する。
 - backend API、dialog/menu、settings-specific validation error snackbar を作らないこと（保存の成功と失敗の snackbar は作る）を E2E と spec test で確認する。
 
 ## セキュリティとプライバシー

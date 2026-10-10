@@ -2,7 +2,7 @@
 
 - [x] 1. Recorded list route、query、fetch、rendering を実装する
   - `/recorded` list は settings と route query から page、keyword、ruleId、channelId、genre、hasOriginalFile、half-width、limit/offset を作る。
-  - initial route、route/query change、Socket.IO `updateStatus` を TanStack Query invalidation/refetch に接続し、route fetch failure だけ `録画データ取得に失敗 ` を出す。
+  - initial route、route/query change、Socket.IO `updateStatus` を TanStack Query invalidation/refetch に接続し、route fetch failure だけ `録画データ取得に失敗` を出す。
   - list title、empty/loading/error、table/card display、drop/description display、scroll restoration done signal が観測できる。
   - _Depends: frontend-app-shell 5, frontend-settings-storage 2_
   - _Requirements: 1.1-1.15_
@@ -22,7 +22,7 @@
 - [x] 4. playback/upload handoff を隣接 owner contract に接続する
   - Recorded watch/streaming/upload/download/external URL scheme route handoff は Settings Storage と Video Playback owner contract を consumer として扱う。
   - `isPreferredPlayingOnWeb`、URL scheme fallback、placeholder replacement、recorded streaming saved setting を requirements に従って適用する。
-  - invalid streaming handoff では `配信設定が正しく入力されていません ` または `番組 ID が不正です ` を出し、Video Playback へ title input `視聴 ` を渡す。
+  - invalid streaming handoff では `配信設定が正しく入力されていません` または `番組 ID が不正です` を出し、Video Playback へ title input `視聴` を渡す。
   - upload route へ遷移しても Recorded list/detail の action contract と ownership が重複しない。
   - _Depends: frontend-video-playback 1, frontend-storages-upload 2_
   - _Requirements: 4.1-4.10_

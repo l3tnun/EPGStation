@@ -263,15 +263,15 @@ interface SnackbarRequest {
 2. `POST /recorded` で metadata を作成する。
 3. 作成された `recordedId` を使い、各 video block を multipart `POST /videos/upload` へ送る。body は `recordedId`、`viewName`、`fileType`、`parentDirectoryName`、`file` を含み、`subDirectory` は non-empty string の場合だけ含める。
 4. いずれかの upload が失敗した場合は rollback として `DELETE /recorded/:recordedId` を実行する。
-5. rollback failure は log に留め、user-facing snackbar は元の failure として `アップロードに失敗 ` だけを表示する。
+5. rollback failure は log に留め、user-facing snackbar は元の failure として `アップロードに失敗` だけを表示する。
 6. success/failure/progress は upload progress dialog が所有する。
-7. validation failure は `入力内容に問題があります。`、upload success は `アップロード完了 `、metadata failure / video upload failure は `アップロードに失敗 ` を snackbar で通知する。emit owner は ActionController とし、Progress dialog は persistent `アップロード中 ` と indeterminate 表示だけを所有する。
+7. validation failure は `入力内容に問題があります。`、upload success は `アップロード完了`、metadata failure / video upload failure は `アップロードに失敗` を snackbar で通知する。emit owner は ActionController とし、Progress dialog は persistent `アップロード中` と indeterminate 表示だけを所有する。
 8. upload 成功後は current form values を維持しつつ、route を `/recorded/upload?timestamp=<number>` へ更新する。
 
 ### ストレージ画面契約
 
 - route fetch 前に existing storage state を clear する。
-- `GET /storages` は query/body なし。Socket.IO `updateStatus` を `frontend-app-shell` の realtime invalidation（`updateStatus` -> `storages` query key invalidation）経由で購読して refetch する。route fetch failure は `ストレージ情報取得に失敗 ` snackbar を表示し、Socket.IO refetch failure では追加 snackbar を出さない。
+- `GET /storages` は query/body なし。Socket.IO `updateStatus` を `frontend-app-shell` の realtime invalidation（`updateStatus` -> `storages` query key invalidation）経由で購読して refetch する。route fetch failure は `ストレージ情報取得に失敗` snackbar を表示し、Socket.IO refetch failure では追加 snackbar を出さない。
 - empty/error は blank presentation と snackbar を維持する。専用 empty copy を追加しない。
 - file size formatting と usage ratio は current utility に合わせ、`total=0` では division by zero を避ける。
 
@@ -281,7 +281,7 @@ interface SnackbarRequest {
 - required row title（`放送局※` / `日付※` / `長さ※` / `番組名※`）は `.requiredTitle` を最終 color owner とし、light/dark theme とも赤色を維持する。dark theme の row title 一括 color override で required red を白へ上書きしない。
 - form は channel、genre、rule autocomplete、start/end/duration、program name、description、extended、video blocks を持つ。
 - video block は `viewName`、`fileType` (`ts` / `encoded`)、`parentDirectoryName`、optional `subDirectory`、`file` を持つ。
-- video block の visible label / accessible name は 原文 label を正とし、field label は `name`、`file type`、`directory`、`sub directory`、`video file` を使う。block number suffix は row title `ビデオファイル<n>` にだけ付け、field label には付けない。 `表示名 `、`ファイル種別 `、`保存先 `、`サブディレクトリ `、`動画ファイル ` へ翻訳してはならない。
+- video block の visible label / accessible name は 原文 label を正とし、field label は `name`、`file type`、`directory`、`sub directory`、`video file` を使う。block number suffix は row title `ビデオファイル<n>` にだけ付け、field label には付けない。 `表示名`、`ファイル種別`、`保存先`、`サブディレクトリ`、`動画ファイル` へ翻訳してはならない。
 - video file block の file selection control は icon、selected filename、placeholder `video file` の owner を持ち、file selected 後は placeholder を隠して selected filename と重複させない。
 - channel、genre、sub genre、video block type、directory は select 操作性を維持する。control は MUI `combobox` として keyboard/mouse/touch 操作を受け、`aria-label` は visible label と同じ原文 label を持つ。独自 label + browser-default select、MUI native-select variant、表示用 overlay で MUI theme を迂回してはならない。select owner の横幅は row/content CSS が決定し、MUI の component や `AppSelect` は owner 幅を短縮してはならない。menu/listbox Paper は `AppSelect` / `MuiSelect.defaultProps.MenuProps` により 216px max height を共有する。open menu/listbox に空白 option、空白 `MenuItem`、`<em />` だけの item を表示してはならない。
 - `genre` と sub genre selector は横並び 2 分割で、selected text と dropdown text が折り返しや重なりを起こさない高さ `48px` の select とする。
@@ -290,7 +290,7 @@ interface SnackbarRequest {
 - remove-video-block action は追加しない。add-only video block UI を維持する。
 - reset は form state を再作成し datetime picker を remount するが、route init と異なり `/rules/keyword` の autocomplete fetch を再実行しない。
 - `isHalfWidthDisplayed` は channel selector display option にだけ反映する。rule autocomplete display には適用しない。
-- `日付※` input は direct text input (`yyyy-MM-ddTHH:mm`) と `日付選択 ` dialog open を分離する。direct input/fill の後に dialog が残って後続操作を覆う状態は failure とする。dialog は title `日付選択 `、月曜始まりの日本語 calendar、時刻の選択を持つ共有部品 `DateTimePickerDialog`（`@mui/x-date-pickers` の `StaticDateTimePicker`、dayjs の adapter、週の始まりを月曜にした日本語 locale、24 時間表記）を使い、field click で draft を現在値から初期化し、blur だけで close しない。close は backdrop/Escape/`クリア `/`設定 ` の明示操作に限定し、browser default の `datetime-local` / `date` / `time` input を dialog 内容として出さない。
+- `日付※` input は direct text input (`yyyy-MM-ddTHH:mm`) と `日付選択` dialog open を分離する。direct input/fill の後に dialog が残って後続操作を覆う状態は failure とする。dialog は title `日付選択`、月曜始まりの日本語 calendar、時刻の選択を持つ共有部品 `DateTimePickerDialog`（`@mui/x-date-pickers` の `StaticDateTimePicker`、dayjs の adapter、週の始まりを月曜にした日本語 locale、24 時間表記）を使い、field click で draft を現在値から初期化し、blur だけで close しない。close は backdrop/Escape/`クリア`/`設定` の明示操作に限定し、browser default の `datetime-local` / `date` / `time` input を dialog 内容として出さない。
 - upload form の user-editable text-like field は shared clearable owner を使い、non-empty かつ enabled の場合に field 右端へ clear action を表示する。対象は direct datetime、dialog datetime、duration、program name、description、extended、video block `name` / `sub directory` とし、select、file input、Rule autocomplete 内部 input は対象外とする。select のうち `channel` / `genre` / `sub genre` は `AppSelect` として non-empty enabled state で clear action を表示する。
 - rule autocomplete item は `RuleKeywordItem: { id, keyword }` とし、表示は `keyword`、値は `id` を使う。
 - recorded directory names は server config の recorded directory list を source とする。localStorage ではなく ApiRepository / config supplier から供給する。
@@ -334,7 +334,7 @@ Storage path と upload file は placeholder / synthetic label だけを使う�
 
 Storages list は 960px 未満は `max-width` を指定せず、`min-width:960px` で `max-width:900px`、`min-width:1264px` で `max-width:1185px`、`min-width:1904px` で `max-width:1785px` とする。padding は breakpoint 無しで常時 `12px`、centering は `margin: 0 auto`。item padding `8px`、storage name は `1.17em` bold（`h3`）、footer（`<used> 使用済み` / `<available> 空き`）は 14px/20px textSecondary とする。Usage bar は height `25px`、角丸なし、fill は `#1976d2`（`value=useRate`）、track の `useRate` より右は `rgba(25, 118, 210, 0.3)` で、0% / 中間 / ほぼ満杯でも container width を変えない。
 
-Upload form は max width `800px`、content surface `contentSurface`、padding `16px 16px 0`、form row の padding-top `16px`、action row top margin `44px` とする。Mobile fixed FAB は 56px square、right/bottom `16px`、z-index は dialog より低く、form controls と重ならない。Progress feedback は persistent `アップロード中 ` dialog、indeterminate progress height `4px`、step label は画面に出さない。
+Upload form は max width `800px`、content surface `contentSurface`、padding `16px 16px 0`、form row の padding-top `16px`、action row top margin `44px` とする。Mobile fixed FAB は 56px square、right/bottom `16px`、z-index は dialog より低く、form controls と重ならない。Progress feedback は persistent `アップロード中` dialog、indeterminate progress height `4px`、step label は画面に出さない。
 
 Recorded upload の channel / genre / sub genre / file type / directory select は shared `AppSelect` を使い、MUI theme、dark token、4.5 item menu cap、vertical center 表示を継承する。select は MUI class を持つ 48px control とし、browser default select の 23px height や raw appearance へ退行した場合は visual regression failure とする。required row title（`放送局※` / `日付※` / `長さ※` / `番組名※`）は light/dark theme とも赤色を維持し、dark theme の row title 一括 color override で白へ上書きしない。channel / genre / sub genre は選択済みの場合に field 内 clear action を表示し、clear は当該 field と従属 field だけを空にする。`file type` / `directory` の未選択 placeholder は visible option として menu に出さず、hidden fallback とする。date/time picker dialog は共有部品 `DateTimePickerDialog`（MUI dialog 内の月曜始まりの日本語 calendar と時刻の選択）を使い、明暗の両 theme で背景・文字色を dialog に合わせる。empty field で placeholder と label が重なる状態はユーザー操作上の破綻であり、regression として扱う。
 
@@ -346,7 +346,7 @@ dark theme では usage bar track/fill、file input/select、disabled controls�
 - rule autocomplete が `/rules/keyword?limit=1000[&keyword]` を使うことを検証する。
 - upload validation が default `parentDirectoryName` を空判定に含めず、完全に空の video block を upload target から除外し、一部入力済み block を検証し、blank program/viewName と invalid block skip 禁止を検証する。
 - `POST /recorded` `{ recordedId }` response followed by multipart `POST /videos/upload` sequence、`parentDirectoryName` field、optional non-empty `subDirectory`、indeterminate uploading dialog、failure rollback と rollback failure log-only を検証する。
-- title、storage footer の `<used> 使用済み ` / `<available> 空き `、add-only video block、reset で `/rules/keyword` を再 fetch しないこと、`入力内容に問題があります。`、`アップロード完了 `、metadata failure で rollback しない negative assertion、close animation 後の remove/remount を requirements ID に紐づけて検証する。
+- title、storage footer の `<used> 使用済み` / `<available> 空き`、add-only video block、reset で `/rules/keyword` を再 fetch しないこと、`入力内容に問題があります。`、`アップロード完了`、metadata failure で rollback しない negative assertion、close animation 後の remove/remount を requirements ID に紐づけて検証する。
 
 ## セキュリティとプライバシー
 

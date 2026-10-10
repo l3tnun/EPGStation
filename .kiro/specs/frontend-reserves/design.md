@@ -296,11 +296,11 @@ interface SnackbarRequest {
 - item menu、delete/unskip/unoverlap、bulk delete の snackbar と dialog wording は requirements を正とする。
 - item menu の表示 label は `recorded`、`edit`、`delete`、`unlock` を維持する。遷移先と API contract は requirements を正とする。
 - item menu の recorded search は `/recorded?ruleId=<ruleId>`、manual edit は `/reserves/manual?reserveId=<reserveId>`、rule edit は `/search?rule=<ruleId>` へ遷移する。rule edit handoff は 遷移元で auto-scroll を抑止せず、SearchRule の `isEnableAutoScrollWhenEditingRule` 設定だけで初回検索結果 scroll 有無を決める。URL は `/search?rule=<ruleId>` のままとし、この形式で navigation の selected 判定を維持する。
-- 単体 delete 成功後は optimistic removal を行わず、`refetch` を明示的に呼んで即座に list を更新する（`ReservesPage.tsx` の `ReserveDeleteDialog` は `onDeleteSuccess={refetch}` を渡す）。unlock（skip/overlap 解除）成功後と bulk delete 成功後は明示的な refetch を行わず、Socket.IO `updateStatus`、route change、または別 fetch による refetch-driven update を待つ。この非対称は意図的な仕様である。`予約情報更新 ` 成功後も直接 list refetch を行わない。
-- Reserves title は query なしまたは `type=normal` で `予約 `、`type=conflict` で `競合 `、`type=overlap` で `重複 `、`type=skip` で `除外 ` とする。invalid type を `normal` に正規化した場合は `予約 ` を表示する。
+- 単体 delete 成功後は optimistic removal を行わず、`refetch` を明示的に呼んで即座に list を更新する（`ReservesPage.tsx` の `ReserveDeleteDialog` は `onDeleteSuccess={refetch}` を渡す）。unlock（skip/overlap 解除）成功後と bulk delete 成功後は明示的な refetch を行わず、Socket.IO `updateStatus`、route change、または別 fetch による refetch-driven update を待つ。この非対称は意図的な仕様である。`予約情報更新` 成功後も直接 list refetch を行わない。
+- Reserves title は query なしまたは `type=normal` で `予約`、`type=conflict` で `競合`、`type=overlap` で `重複`、`type=skip` で `除外` とする。invalid type を `normal` に正規化した場合は `予約` を表示する。
 - Reserves screen は `needsDecoration` を渡さず、table layout も state class を付けないため、state class priority は保持しても visible decoration を表示しない。SearchRule の time-specified rule edit だけが `needsDecoration=true` を渡す consumer である。
 - bulk delete は selection を clear して edit mode を終了した後、選択予約へ `DELETE /reserves/:reserveId` を順次実行する。一部または全件失敗時は `一部番組のキャンセルに失敗しました。` を表示する。
-- bulk delete dialog は single delete dialog と同じ 300px 幅系の confirmation dialog とし、visible title を出さず、選択件数本文、`キャンセル `、`削除 ` だけを表示する。screen reader 用の accessible name は `予約一括削除 ` として保持する。confirm 後に edit mode と selection を先に clear し、optimistic removal は行わない。
+- bulk delete dialog は single delete dialog と同じ 300px 幅系の confirmation dialog とし、visible title を出さず、選択件数本文、`キャンセル`、`削除` だけを表示する。screen reader 用の accessible name は `予約一括削除` として保持する。confirm 後に edit mode と selection を先に clear し、optimistic removal は行わない。
 - edit mode の select-all は現在表示中の reserve id のみを対象に toggle し、全選択済み状態で再実行した場合は表示中 selection を解除する。
 - Reserves screen の reserve dialog は Guide owned ProgramDialog とは別 component の `ReserveDialog` であり、番組名、channel、日時、genre、description、extended を表示する。extended の URL linkify、time row click から `/guide?time=<YYMMddhh>` と conditional `type=<wave>` を作る規則、delete/unlock、snackbar wording は Reserves owner contract に従う。
 - extended の URL linkify は `https?://` に続く `[^\s<>"']+` を URL とみなし（`client/src/features/reserves/lib/reserveRoutes.ts` の `linkifyReserveExtendedText`）、`isSafeHttpUrl` で `http:`/`https:` 以外の protocol へ解決される値をリンク化しない。
@@ -318,9 +318,9 @@ Reserves は `ReserveDialog`、`ReserveMenu`、`ReserveDeleteDialog`、`ReserveL
 | UI | Owner | Contract |
 | --- | --- | --- |
 | `ReserveListItem` | frontend-reserves | 通常 card layout と table layout の描画 owner。list container width 915px 以下では card/list rows、916px 以上では max width 1600px の table を表示する。table layout では state class decoration を表示しない。`needsDecoration` / `disableEdit` prop は export 契約を正とする。 |
-| `ReserveDialog` | frontend-reserves | 番組名、channel、日時、genre、description、extended、`閉じる ` action。max width 500px。body contract を formal spec へ取り込む。 |
-| `ReserveDeleteDialog` | frontend-reserves | max width 300、`<予約名> を削除しますか?`、`キャンセル ` / `削除 ` action。 |
-| `ReserveBulkDeleteDialog` | frontend-reserves | max width 300、`選択した <total> 件の番組を削除しますか。`、`キャンセル ` / `削除 ` action。dark theme でも Paper/body/button text contrast を維持する。 |
+| `ReserveDialog` | frontend-reserves | 番組名、channel、日時、genre、description、extended、`閉じる` action。max width 500px。body contract を formal spec へ取り込む。 |
+| `ReserveDeleteDialog` | frontend-reserves | max width 300、`<予約名> を削除しますか?`、`キャンセル` / `削除` action。 |
+| `ReserveBulkDeleteDialog` | frontend-reserves | max width 300、`選択した <total> 件の番組を削除しますか。`、`キャンセル` / `削除` action。dark theme でも Paper/body/button text contrast を維持する。 |
 | `ReserveMenu` | frontend-reserves | title bar menu と item menu の item icon/text は MUI portal 配下でも body-level `data-theme-mode` で dark token を受け、黒い icon/text を残さない。 |
 
 ## データモデル
@@ -369,7 +369,7 @@ dark theme の table layout では table card だけでなく `ReserveListItem` 
 
 ReserveDialog は max width `500px`、content padding は `sm` 以上で `20px 24px`、`xs` で `16px 16px 8px`、本文は 14px / line-height 22px、description / extended の段落は上下 margin `8px`、genre は上下 margin `4px` とする。Delete dialog は max width `300px`、content padding `16px`、action row は MUI 既定の padding `8px`。Bulk delete dialog は max width `300px`、content padding `16px 16px 0`、action row min-height `52px` / padding `8px`、visible title なしとする。Manual Reserve form は max width `800px`、option panel gap `8px 16px`、form grid gap `18px`、dark theme surface は all `contentSurface` / portal `chromeSurface` に統一する。Manual Reserve option panel header は button として実装し、`aria-expanded` を持ち、click / keyboard activation で panel body を animated mount/unmount できることを正とする。ReserveDialog、single delete、bulk delete、Manual Reserve option panel は UI library の enter/exit transition を維持し、`transitionDuration={0}` などで open/close animation を無効化してはならない。
 
-Manual Reserve の user-editable text-like field は shared clearable owner を使い、non-empty かつ enabled の場合に field 右端へ clear action を表示する。対象は時刻指定 `番組名 `、start/end、保存 `sub directory`、`file format`、encode1-3 `sub directory` とし、channel/directory/mode の select は App Shell select contract の対象として扱う。Manual Reserve の `channel`、保存 `directory`、encode1-3 `mode` / `directory` は `appSelectMenuProps` を共有し、empty value placeholder は open listbox の visible option に出さず `display:none` 等の hidden fallback item に限定する。
+Manual Reserve の user-editable text-like field は shared clearable owner を使い、non-empty かつ enabled の場合に field 右端へ clear action を表示する。対象は時刻指定 `番組名`、start/end、保存 `sub directory`、`file format`、encode1-3 `sub directory` とし、channel/directory/mode の select は App Shell select contract の対象として扱う。Manual Reserve の `channel`、保存 `directory`、encode1-3 `mode` / `directory` は `appSelectMenuProps` を共有し、empty value placeholder は open listbox の visible option に出さず `display:none` 等の hidden fallback item に限定する。
 
 ### 読み込み中表示
 
