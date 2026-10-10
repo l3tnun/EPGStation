@@ -169,10 +169,13 @@ export function DateTimePickerDialog({
               },
               // 年・月の画面も dialog の幅と calendar の高さに収める。
               '& .MuiMonthCalendar-root': {
-                width: '100%',
+                width: 'min(320px, calc(100vw - 32px))',
                 rowGap: 'min(16px, calc((var(--pk-calendar-height) - 160px) / 3))',
               },
-              '& .MuiYearCalendar-root': { width: '100%', maxHeight: '100%' },
+              '& .MuiYearCalendar-root': {
+                width: 'min(320px, calc(100vw - 32px))',
+                maxHeight: '100%',
+              },
               '& .MuiPickerDay-root': { '--PickerDay-size': 'var(--pk-cell)' },
               '& .MuiDayCalendar-weekDayLabel': {
                 width: 'var(--pk-cell)',
