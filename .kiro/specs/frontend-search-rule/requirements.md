@@ -413,7 +413,8 @@ Search / Rule は番組検索、検索結果からの予約/rule 作成、rule l
 26. Rule list layout は container width 780px 境界で card/table を切り替え、keyword fallback `-`、channel/genre first +
     `他<n>`、`reservesCnt` fallback 0 を維持する。table layout の outer list は table layout
     と同じく利用可能な content width に対して `width: 100%` で伸縮し、任意の固定 `max-width`
-    で 1160px などに頭打ちしてはならない。
+    で 1160px などに頭打ちしてはならない。ただし `/search` と `/rule` が共有する page wrapper の上限
+    `1600px` は除き、それより狭い viewport では一覧は content 幅に追従する。
     `RuleListPage` が自身の描画する `<section className={styles.page}>` に `ref` を張り、
     `useMeasuredContainerWidth`（`client/src/shared/useMeasuredContainerWidth.ts`、`ResizeObserver` で
     実際の `clientWidth` を測定する。navigation drawer の開閉による content 幅の変化はこの実測値に

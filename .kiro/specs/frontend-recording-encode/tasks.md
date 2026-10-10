@@ -9,7 +9,7 @@
   - _Requirements: 1.1-1.34_
 
 - [x] 2. Encode running/waiting list と cancel workflow を実装する
-  - `/encode` route は running/waiting list、pagination、loading/error/empty、Socket.IO `updateStatus` / `updateEncode` refetch を扱う。
+  - `/encode` route は running/waiting list、loading/error/empty、Socket.IO `updateStatus` / `updateEncode` refetch を扱う。
   - single/bulk cancel、edit mode、select-all、exit、cancel dialog open/close cleanup を requirements の snackbar/API contract に接続する。
   - cancel dialog は close animation 後に remove/remount し、progress 更新や edit mode selection で item height が不安定に変化しない。
   - waiting/running item の display、progress、button visibility、empty state が visual contract と一致する。

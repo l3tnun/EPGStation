@@ -26,10 +26,10 @@
   - Manual Reserve dialog/page layout は desktop/mobile のどちらでも target field、option panels、save/cancel action が重ならない。
   - Manual Reserve の channel/directory/mode select は MUI select contract に従い、visible empty placeholder item を表示しない。
   - submit success/failure、fetch failure snackbar、Socket.IO time-specified no-op、route leave cleanup が requirements と一致する。
-  - _Requirements: 4.1-4.31_
+  - _Requirements: 4.1-4.32_
 
 - [x] 5. Reserves の unit/E2E/visual regression を整備する
   - `unittest/spec` と `unittest/imp` で route query、fetch option、state class priority、menu/dialog/action API、Manual Reserve payload、Socket.IO behavior を検証する。
   - Playwright + MSW で list table/card、dialog/menu、bulk edit、Manual Reserve add/edit、desktop/mobile visual cases を確認する。
   - fixture に実番組名、実 channel 名、実 URL、実ロゴ、認証情報を含めない。
-  - _Requirements: 1.1-1.13, 2.1-2.24, 3.1-3.12, 4.1-4.31, 5.1-5.5, 6.1-6.3_
+  - _Requirements: 1.1-1.13, 2.1-2.24, 3.1-3.12, 4.1-4.32, 5.1-5.5, 6.1-6.3_

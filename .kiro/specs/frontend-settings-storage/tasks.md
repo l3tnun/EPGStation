@@ -3,7 +3,7 @@
 - [x] 1. React frontend foundation と settings storage 基盤を作成する
   - `client/` に、Node.js 24.18.0 の mise pin、Vite React TypeScript、npm lock、ESLint flat config、Prettier、Vitest、V8 coverage、Playwright/MSW、`@/` alias、`build` / `build:verify` / `check` script gate を置く。
   - `build` は Vite production build（`bundle`）、`build:verify` は lint、typecheck、unit test、`build`、`check` は lint、format:check、typecheck、`test:dev-server`、`unittest/spec`、`unittest/imp` を通す構成にする。
-  - SettingsStorageRepository、SettingsValidator、DefaultSettingsFactory、SettingsDraftStore、AdjacentStorageRegistry の実装境界を用意し、localStorage key `settings` の read/write と JSON parse failure fallback が unit test で観測できる。
+  - SettingsStorageRepository、SettingsValidator、DefaultSettingsFactory、AdjacentStorageRegistry の実装境界を用意し、localStorage key `settings` の read/write と JSON parse failure fallback が unit test で観測できる。
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 1.10_
 
 - [x] 2. default settings と platform-dependent contract を実装する
@@ -13,7 +13,7 @@
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, 5.9, 5.10, 5.11, 5.12, 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 7.8, 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8, 8.9_
 
 - [x] 3. tmp draft、save、reset、leave restore を実装する
-  - 保存済み settings と一時編集値 `tmp` を分離し、control change、save、reset、leave restore の状態遷移を提供する。
+  - 保存済み settings と一時編集値 `tmp` を分離し、control change、save、reset、leave restore の状態遷移を Settings 画面（`SettingsPage` の React state と `lib/settingsStorageAccess.ts` の `persistSettingsTmp`）で提供する。受け入れ条件は `unittest/spec/settingsScreen.*` で確かめる。
   - save failure は application 全体を停止させず caller に制御を返し、Settings screen が snackbar を所有できる境界にする。
   - theme preview は `tmp` に反応するが、reset/leave では保存済み settings 由来の表示 theme に戻ることを unit test で観測できる。
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8_

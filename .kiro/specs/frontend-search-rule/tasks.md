@@ -13,7 +13,7 @@
 - [x]   2. Search からの reserve/rule workflow を実装する
     - search result ProgramDialog は Guide owned shared
       component の consumer として使い、reserve/rule/add/edit/delete/search handoff を重複実装しない。
-    - rule add/edit form は React Hook Form + Zod で payload validation を行い、settings default、avoid duplicate、copy
+    - rule add/edit form は form の値を local state で持ち、Zod の schema で payload を検証し、settings default、avoid duplicate、copy
       keyword、encode setting default を反映する。
     - action 成功後の route/refetch/snackbar/dialog cleanup と selection preservation が requirements と一致する。
     - _Depends: frontend-guide 4, frontend-reserves 2_

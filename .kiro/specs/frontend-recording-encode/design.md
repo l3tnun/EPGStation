@@ -22,7 +22,7 @@
 
 ### この仕様が所有するもの
 
-- `/recording`、`/encode`、list fetch、pagination、edit mode、single/bulk delete/cancel、blank state。
+- `/recording`、`/encode`、list fetch、pagination（`/recording` のみ）、edit mode、single/bulk delete/cancel、blank state。
 - requirements に明記された route/query/API/localStorage/action/snackbar/dialog/menu behavior。
 - 本 spec 配下の PageController、QueryController、ApiRepository、ActionController、DialogCoordinator、StorageAdapter の責務境界。
 

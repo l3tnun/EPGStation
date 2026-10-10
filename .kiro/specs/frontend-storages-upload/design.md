@@ -259,7 +259,7 @@ interface SnackbarRequest {
 
 ### アップロード手順
 
-1. form validation は完全に空の video block を upload target から除外し、一部だけ入力された video block を検証対象にする。完全に空とは `viewName=null` かつ `file=null` であり、default `parentDirectoryName` は空判定に影響しない。program name と入力済み video block `viewName` blank は invalid。invalid block を skip しない。
+1. form validation は完全に空の video block を upload target から除外し、一部だけ入力された video block を検証対象にする。完全に空とは `viewName=null` かつ `file=null` であり、default `parentDirectoryName` は空判定に影響しない。program name と入力済み video block `viewName` blank は invalid。invalid block を skip しない。完全な video block が 1 件も無い form は invalid とし、upload を開始しない。
 2. `POST /recorded` で metadata を作成する。
 3. 作成された `recordedId` を使い、各 video block を multipart `POST /videos/upload` へ送る。body は `recordedId`、`viewName`、`fileType`、`parentDirectoryName`、`file` を含み、`subDirectory` は non-empty string の場合だけ含める。
 4. いずれかの upload が失敗した場合は rollback として `DELETE /recorded/:recordedId` を実行する。

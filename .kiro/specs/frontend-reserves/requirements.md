@@ -121,6 +121,7 @@ Reserves は予約一覧、状態別 route、delete/unskip/unoverlap、edit mode
 29. manual reserve の server option (channel/directory/encode mode) 取得が失敗した場合、EPGStation フロントエンドは空 option へ fallback して画面表示を継続する。取得完了前に画面が unmount された場合は、成功/失敗いずれの取得結果も適用しない。
 30. Manual Reserve の `エンコード1`、`エンコード2`、`エンコード3`、`ファイル削除` の option panel は、`/api/config` から取得した encode mode option が 1 件以上ある場合だけ表示する。encode mode option が 0 件の場合、EPGStation フロントエンドはこの 4 panel を描画しない。
 31. Manual Reserve の時刻指定 `番組名` field の label は `name` とする。
+32. Manual Reserve は server option（encode mode）の取得が終わるまで、スクロール復元の完了を知らせない。encode panel の表示の有無が決まって画面の高さが確定してから、戻ったときの位置を復元する。
 
 ### 要求 5: Reserves dark theme
 

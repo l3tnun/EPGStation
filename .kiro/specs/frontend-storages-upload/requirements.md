@@ -119,7 +119,7 @@ Storages / Recorded Upload は storage usage view と録画済み metadata/uploa
    の rollback を試み、rollback 失敗は記録に留め、元の失敗として `アップロードに失敗 ` を snackbar で通知して progress
    dialog を閉じる。
 7. Validation は intentional fix として、program name と video `viewName` の empty/blank
-   string を不正とし、入力済み video block の required fields を upload API 開始前に検証する。
+   string を不正とし、入力済み video block の required fields を upload API 開始前に検証する。完全な video block が 1 件も無い form（video が無い form）も不正とし、upload API を呼ばない。
 8. EPGStation フロントエンドは完全に空の video block を upload target から除外するが、一部だけ入力された不正な video
    block を upload loop で silently skip して成功扱いにしない。完全に空とは `viewName=null` かつ `file=null`
    であり、default `parentDirectoryName` は空判定に影響しない。

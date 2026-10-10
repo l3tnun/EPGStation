@@ -97,7 +97,7 @@ field 契約の対象外とする。
 | Server state              | TanStack Query                                                                                                                               | API response cache、loading/error/refetch、Socket.IO invalidation | query key は route/query/API option から導出し、Socket.IO `updateStatus` などの event は該当 query invalidation/refetch に接続する。                               |
 | Local state               | React local state/reducer                                                                                               | screen/dialog/edit/bulk state と App Shell 横断 state             | server state は TanStack Query に置く。Zustand は使わない。                                 |
 | UI / CSS                  | MUI Core + `@mdi/font` + theme token + `*.module.css`                                                                                          | MUI theme に基づく visual contract、responsive                | global CSS は `src/index.css` の bootstrap/reset 程度に限定し、visual-cases の geometry/screenshot contract を theme/shared component に接続する。                                   |
-| Form / validation         | React Hook Form + Zod                                                                                                                        | form state、submit validation、typed payload validation           | Search form、Rule add/edit form、time-specified rule form はこの境界に従う。                                                                                       |
+| Form / validation         | form の値は hook の local state（`useState`）、送信は React Hook Form の `handleSubmit`、payload の検証は Zod | form state、submit validation、typed payload validation           | Search form、Rule add/edit form、time-specified rule form はこの境界に従う。                                                                                       |
 | API client                | native `fetch` wrapper + typed request/response validation                                                                                   | backend integration                                               | repository base `./api` と endpoint path を二重結合しない。endpoint/query/body contract はこの design と requirements を正とする。                                 |
 | Socket.IO                 | `socket.io-client`                                                                                                                           | realtime update trigger                                           | event handler は feature repository / TanStack Query invalidation 境界へ接続し、failure snackbar の有無は各 design の契約に従う。                                  |
 | Lint / format / alias     | ESLint flat config + typescript-eslint + React Hooks plugin / Prettier / `@/`                                                                | static gate と import 解決                                        | `@/` は Vite / TypeScript / Vitest / ESLint で同一解決規則にする。                                                                                                 |
@@ -579,7 +579,7 @@ font が日本語 glyph fallback を壊さないよう、App Shell / MUI 側の 
 - Rule list layout breakpoint は 780px とする（導出の詳細は要求 3.26 および
   `client/src/features/search/rule/lib/ruleLayout.ts` のコメント参照）。table
   layout の list container は `<table>` 要素と同じく available content width に追従する `width: 100%` を正とし、
-  desktop で `max-width: 1160px` などの上限を設けて viewport 伸縮を止めてはならない。
+  desktop で `max-width: 1160px` などの上限を設けて viewport 伸縮を止めてはならない（`/search` と `/rule` が共有する page wrapper の上限 1600px を除く）。
 
 ## データモデル
 
@@ -667,7 +667,7 @@ surface、white plus icon を維持する。MUI `Fab color="secondary"` の them
 color が light/dark で黒へ戻る実装は禁止し、`.MuiFab-root` owner style で foreground を白に固定する。
 
 Rule edit/create form は Search form と同じ max width `800px` と control gap を使い、auto scroll target が title
-bar に隠れないよう scroll margin top `titleBarHeight + 16px` を持つ。ProgramDialog / menu portal は App Shell
+bar に隠れない位置は、上の scroll 座標の計算（title bar の高さを引く）で決める。ProgramDialog / menu portal は App Shell
 `chromeSurface`、dark theme では form、list、dialog、menu、pagination のすべてで light surface を残さない。
 
 Search/Rule の select は shared `AppSelect` または複数選択専用 owner を通して MUI theme、4.5
@@ -710,7 +710,7 @@ contract に従い、空欄かつ未 focus では外側の青い小 label を表
   effects、`searchLength`、`isEnableAutoScrollWhenEditingRule`、title-bar-offset
   scroll、`GET /rules type=normal/keyword/limit/offset`、enable/disable rollback、bulk delete 0 件、selection
   preservation を検証する。
-- Search ProgramDialog action matrix、reserve body、`/skip` / `/overlap` endpoint、snackbar exact text を検証する。
+- ProgramDialog の action と snackbar の文言は frontend-guide の test で確かめる。search 側は ProgramDialog への受け渡しと、編集・削除・解除の画面の流れを確かめる。
 
 ## セキュリティとプライバシー
 

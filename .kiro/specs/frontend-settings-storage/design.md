@@ -25,7 +25,7 @@
 
 - `settings` localStorage key、JSON 保存形式、default value、platform-dependent default、missing storage / missing field の補完、`tmp` 一時値、保存、reset、隣接 workflow storage key の存在。
 - requirements に明記された localStorage key/default/backfill/validation behavior。
-- 本 spec 配下の SettingsStorageRepository、SettingsValidator、SettingsDraftStore、AdjacentStorageRegistry の責務境界。
+- 本 spec 配下の SettingsStorageRepository、SettingsValidator、AdjacentStorageRegistry の責務境界。
 
 ### 境界外
 
@@ -59,8 +59,7 @@ formal design の正本は、この design と同一 spec の requirements、vis
 graph TB
     Consumer[Settings Consumer] --> SettingsStorageRepository
     SettingsStorageRepository --> SettingsValidator
-    SettingsStorageRepository --> SettingsDraftStore
-    SettingsDraftStore --> AdjacentStorageRegistry
+    SettingsStorageRepository --> AdjacentStorageRegistry
     SettingsStorageRepository --> ShellContracts
     SettingsValidator --> SettingsStorageRepository
 ```
@@ -78,7 +77,7 @@ graph TB
 | フロントエンド | React / TypeScript / Vite | typed settings contract | package root は `client/`、package name は `epgstation-client`。 |
 | ルーティング | なし | storage contract は route/query を所有しない | routed screen は React Router hash route 対応 router の consumer として別 spec が扱う。 |
 | Server state | TanStack Query | API response cache、loading/error/refetch | Settings Storage は backend API を所有せず、server state を持たない。consumer spec の server state は TanStack Query 境界に従う。 |
-| Local state | React local state/reducer | settings value、settings draft、localStorage repair state | settings draft の契約は `SettingsDraftStore`（`client/src/shared/settings/settingsDraftStore.ts`）が提供し、unit test で検証する。Settings 画面は `tmp` を React state に持ち、`SettingsStorageRepository` で読み書きする。Zustand は使わない。 |
+| Local state | React local state/reducer | settings value、settings draft、localStorage repair state | Settings 画面は `tmp`（settings draft）を `SettingsPage` の React state に持ち、読み書きは `client/src/features/settings/lib/settingsStorageAccess.ts` が `SettingsStorageRepository` で行う（保存は `persistSettingsTmp`）。Zustand は使わない。 |
 | UI / CSS | MUI Core + `@mdi/font` + theme token + `*.module.css` | consumer 向け visual contract | Settings Storage 自体は visual layout を所有しないが、consumer visual-cases の geometry/screenshot contract は theme/shared component に接続する。 |
 | Form / validation | React Hook Form + Zod | typed settings validation、consumer form validation | Zod schema を settings contract validation の境界とし、Settings screen の React Hook Form が consumer になる。 |
 | API client | native `fetch` wrapper + typed request/response validation | backend integration | Settings Storage は backend REST API を所有しない。consumer API は repository base `./api` と endpoint path を二重結合しない。 |
@@ -107,7 +106,6 @@ client/src/
 - `client/src/shared/settings/defaultSettings.ts` — platform input から default settings object を生成する。
 - `client/src/shared/settings/settingsValidation.ts` — parse failure、missing storage、missing field の backfill と補正結果を返す。保存 raw の不正値の補正は intentional fix が別途定義された field だけに限定する。consumer `value` では、型が default と違う field を default にする（`guideMode` の任意の string と範囲外の数値は保持）。
 - `client/src/shared/settings/settingsStorage.ts` — `settings` localStorage read/write、missing storage、parse failure fallback、repair persist を扱う。
-- `client/src/shared/settings/settingsDraftStore.ts` — saved value と `tmp` の分離、save/reset/leave restore を扱う。
 - `client/src/shared/settings/platformDefaultSettings.ts` — navigator から `DefaultSettingsInput`（`isIOS` / `isAndroid`）を作る。
 - `client/src/shared/settings/settingsUiContract.ts` — Settings 画面が使う UI 許容値の contract を公開する。
 - `client/src/shared/settings/urlScheme.ts`、`urlSchemePlatform.ts` — URL scheme の placeholder replacement と platform 判定の共通 helper。
@@ -115,7 +113,7 @@ client/src/
 - `client/src/shared/settings/__fixtures__/settingsStorageFixtures.ts` — 共有 fixture。
 - `client/src/app/settingsStorageAdapter.ts` — App Shell が theme と navigation の設定を読む adapter。
 - `client/src/shared/settings/adjacentStorageRegistry.ts` — adjacent workflow storage key の default compatibility contract を集約する。
-- `client/unittest/spec/settingsStorage.contract.spec.test.ts`（storage と default の契約）、`settingsStorage.draft.spec.test.ts`（tmp の遷移）、`settingsStorage.adjacent.spec.test.ts`（adjacent key と synthetic fixture）— unittest/spec。
+- `client/unittest/spec/settingsStorage.contract.spec.test.ts`（storage と default の契約）、`settingsStorage.adjacent.spec.test.ts`（adjacent key と synthetic fixture）— unittest/spec。
 - `client/unittest/imp/settingsStorage.repository.imp.test.ts`（repository の実装境界）、`settingsStorage.registryUrlScheme.imp.test.ts`（registry、URL scheme、fixture 安全性）— unittest/imp。共有 fixture は `client/src/shared/settings/__fixtures__/settingsStorageFixtures.ts`（state matrix と adjacent key）、storage の例外と書込失敗の stub は `client/unittest/imp/support/settingsStorageFixtures.ts`。
 
 ## システムフロー
@@ -126,23 +124,22 @@ graph TB
     Parser --> Validator
     Validator --> RepairedValue
     RepairedValue --> Persist
-    RepairedValue --> DraftStore
 ```
 
-Storage contract は routed screen ではない。API repository、dialog coordinator、route query parser を持たず、localStorage boundary と settings draft state だけを扱う。
+Storage contract は routed screen ではない。API repository、dialog coordinator、route query parser を持たず、localStorage boundary だけを扱う。
 
 ## 要件トレーサビリティ
 
 | 要件 | 概要 | コンポーネント | インターフェース | フロー |
 |-------------|---------|------------|------------|-------|
 | 1.1-1.10 | Settings storage key と保存形式 | SettingsStorageRepository, SettingsValidator, DefaultSettingsFactory | State / Service | localStorage load/save/repair flow |
-| 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8 | 一時値、保存、reset | SettingsStorageRepository, SettingsValidator, SettingsDraftStore, AdjacentStorageRegistry | State / Service | draft save/reset/restore flow |
-| 3.1-3.8 | 全般と theme settings | DefaultSettingsFactory, SettingsValidator, SettingsDraftStore | State / Service | settings value consumer flow |
-| 4.1-4.8 | 放映中と live playback settings | SettingsStorageRepository, SettingsValidator, SettingsDraftStore, AdjacentStorageRegistry, URL scheme helper（`urlScheme.ts`） | State / Service | settings value consumer flow |
-| 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, 5.9, 5.10, 5.11, 5.12 | Guide settings | SettingsStorageRepository, SettingsValidator, SettingsDraftStore, AdjacentStorageRegistry | State / Service | settings value consumer flow |
-| 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7 | List page size と Recorded display settings | SettingsStorageRepository, SettingsValidator, SettingsDraftStore, AdjacentStorageRegistry | State / Service | settings value consumer flow |
-| 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 7.8 | Recorded playback URL scheme settings | SettingsStorageRepository, SettingsValidator, SettingsDraftStore, AdjacentStorageRegistry | State / Service | settings value consumer flow |
-| 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8, 8.9, 8.10, 8.11 | Search / Rule / Video player settings | SettingsStorageRepository, SettingsValidator, SettingsDraftStore, AdjacentStorageRegistry | State / Service | settings value consumer flow |
+| 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8 | 一時値、保存、reset | SettingsStorageRepository, SettingsValidator, Settings 画面の下書き | State / Service | draft save/reset/restore flow |
+| 3.1-3.8 | 全般と theme settings | DefaultSettingsFactory, SettingsValidator | State / Service | settings value consumer flow |
+| 4.1-4.8 | 放映中と live playback settings | SettingsStorageRepository, SettingsValidator, AdjacentStorageRegistry, URL scheme helper（`urlScheme.ts`） | State / Service | settings value consumer flow |
+| 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, 5.9, 5.10, 5.11, 5.12 | Guide settings | SettingsStorageRepository, SettingsValidator, AdjacentStorageRegistry | State / Service | settings value consumer flow |
+| 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7 | List page size と Recorded display settings | SettingsStorageRepository, SettingsValidator, AdjacentStorageRegistry | State / Service | settings value consumer flow |
+| 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 7.8 | Recorded playback URL scheme settings | SettingsStorageRepository, SettingsValidator, AdjacentStorageRegistry | State / Service | settings value consumer flow |
+| 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8, 8.9, 8.10, 8.11 | Search / Rule / Video player settings | SettingsStorageRepository, SettingsValidator, AdjacentStorageRegistry | State / Service | settings value consumer flow |
 | 9.1-9.13 | 隣接 workflow storage key | AdjacentStorageRegistry, DefaultSettingsFactory | State / Service | adjacent key default compatibility flow |
 
 ## コンポーネントとインターフェース
@@ -152,7 +149,6 @@ Storage contract は routed screen ではない。API repository、dialog coordi
 | SettingsStorageRepository | Shared Storage | `settings` localStorage の read/write、missing storage、repair persist を扱う。 | 1.1-1.10, 2.1-2.8 | Browser localStorage | State / Service |
 | DefaultSettingsFactory | Shared Config | platform-dependent default settings object を生成する。 | 3.1-3.8, 4.1-4.7, 5.1-5.12, 6.1-6.7, 7.1-7.8, 8.1-8.11 | user agent platform input | Service |
 | SettingsValidator | Shared Validation | unknown JSON を `SettingsValue` へ narrow し、parse failure、missing storage、missing field を補正する。保存 raw の不正値の補正は intentional fix がある場合だけ扱い、consumer `value` では型が default と違う field を default にする（`guideMode` の任意の string と範囲外の数値は保持）。 | 1.1-1.10 | default settings schema | Service |
-| SettingsDraftStore | Shared State | saved settings と `tmp` を分離し、save/reset/leave restore を提供する。表示 theme preview は saved/tmp と別の表示状態として扱う typed contract を提供する。 | 2.1-2.8, 3.2, 3.3, 3.6, 3.7 | SettingsStorageRepository | 状態管理 |
 | AdjacentStorageRegistry | Shared Storage | adjacent workflow storage key の key existence、default shape、spelling の compatibility contract だけを固定する。詳細利用と validation は workflow owner spec に委譲する。 | 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7, 9.8, 9.9, 9.10, 9.11, 9.12, 9.13 | workflow owner specs | 状態管理 |
 
 ### 設定ストレージリポジトリ（SettingsStorageRepository）
@@ -179,11 +175,11 @@ Storage contract は routed screen ではない。API repository、dialog coordi
 - 保存 raw の boolean / enum / numeric range の不正値の補正は missing field backfill とは別扱いとし、intentional fix が明記された field だけで行う。consumer `value` では、型が default と違う field を default にする（`guideMode` の任意の string と範囲外の数値は保持）。
 - unknown additional field は requirements 外として consumer contract に含めないが、storage read/write では削除せず保持してよい。
 
-### 設定ドラフトストア（SettingsDraftStore）
+### 設定画面の下書き（`SettingsPage` の React state）
 
 | 項目 | 詳細 |
 |-------|--------|
-| 意図 | saved value と temporary edit value を分離する契約を提供する。 |
+| 意図 | saved value と temporary edit value `tmp` を分離する。実装は Settings 画面側（`client/src/features/settings/SettingsPage.tsx` と `lib/settingsStorageAccess.ts`）にあり、受け入れ条件の追跡先は `client/unittest/spec/settingsScreen.*` の test である。 |
 | 要件 | 2.1-2.8, 3.2, 3.3, 3.6, 3.7 |
 
 **責務と制約**
@@ -259,9 +255,9 @@ interface SettingsLoadResult {
 
 ### 解析 / 補完 / 検証契約
 
-- `localStorage.getItem('settings')` が missing の場合、default settings object を JSON で保存し、その object を source of truth とする。
+- Settings 画面の読み込み（`SettingsStorageRepository.load()`）で `localStorage.getItem('settings')` が missing の場合、default settings object を JSON で保存し、その object を source of truth とする。App Shell など読むだけの consumer（`client/src/app/settingsStorageAdapter.ts`、`pwa.ts`、`lib/shellSettingsSnapshots.ts`）は default で補った値を使うが保存しない。
 - JSON parse 不能、配列、null、primitive など settings object として扱えない値は default settings object に退避して保存し直す intentional fix とする。壊れた localStorage で画面全体を停止させないための fix とする。
-- default に存在する field が missing または `undefined` の場合は default で補完して保存する。
+- default に存在する field が missing または `undefined` の場合は、Settings 画面の読み込みでは default で補完して保存する。読むだけの consumer は補完した値を使うが保存しない。
 - 既存 field の boolean / enum / range 不正値は、field ごとの intentional fix が別途定義されない限り、保存する raw をそのまま保持する。consumer に渡す `value` は、既存 field の型が default の型と違えば default になり、範囲外の数値と任意の string の enum は保持する。unknown additional field は contract 外として consumer へ要求しないが、読み書き時に削除せず保持してよい。Settings 画面の保存（`SettingsStorageRepository.save`）も通常は保存済み JSON を読み、未知の field と、型違いのため default として読まれる field の保存済み raw を残す（変更した field だけを上書きする）。reset の後の保存だけは `tmp` を書くので、型違いの raw は default に置き換わり、未知の field は残らない。
 - storage write failure は application 全体を停止させない。成功と失敗の snackbar（`保存されました` と `設定の保存に失敗しました`）は Settings 画面が出すため、本 spec は write failure の snackbar 文言を定義しない。
 

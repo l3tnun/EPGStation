@@ -27,7 +27,7 @@ strategy に接続し、実装境界を曖昧にしない。
 - `/onair/watch`、`/recorded/watch`、`/recorded/streaming/:videoFileId`、player params、HLS/WebM/MP4/direct
   playback、platform constraints、error/empty。
 - requirements に明記された route/query/API/localStorage/action/snackbar/dialog/menu behavior。
-- 本 spec 配下の PageController、QueryController、ApiRepository、ActionController、DialogCoordinator、StorageAdapter の責務境界。
+- 本 spec 配下の PageController、QueryController、ApiRepository、ActionController、StorageAdapter の責務境界。
 
 ### 境界外
 
@@ -67,7 +67,6 @@ graph TB
     PageController --> QueryController
     PageController --> ApiRepository
     PageController --> ActionController
-    ActionController --> DialogCoordinator
     ActionController --> ShellContracts
     QueryController --> StorageAdapter
     StorageAdapter --> SettingsStorage
@@ -158,8 +157,7 @@ graph TB
     QueryController --> PageController
     PageController --> ApiRepository
     ApiRepository --> PageController
-    PageController --> DialogCoordinator
-    DialogCoordinator --> ActionController
+    PageController --> ActionController
     ActionController --> ShellContracts
 ```
 
@@ -170,26 +168,25 @@ schema を直接所有しない構造にする。
 
 | 要件                                                    | 概要                                      | コンポーネント                                                                                                      | インターフェース           | フロー                                 |
 | ------------------------------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | -------------------------- | -------------------------------------- |
-| 1.1-1.13 | route validation と player state          | PageController, QueryController, ApiRepository, ActionController, DialogCoordinator, StorageAdapter                 | State / Service / API      | route/query/action flow                |
-| 2.1-2.11                                                | direct / streaming player mapping         | PageController, QueryController, ApiRepository, VideoContainer, StorageAdapter, ViteDevProxy                       | State / Service / API      | player mapping/info flow               |
+| 1.1-1.13 | route validation と player state          | PageController, QueryController, ApiRepository, ActionController, StorageAdapter                 | State / Service / API      | route/query/action flow                |
+| 2.1-2.11                                                | direct / streaming player mapping         | PageController, QueryController, ApiRepository, PlaybackPlayerContainer, StorageAdapter, ViteDevProxy                       | State / Service / API      | player mapping/info flow               |
 | 3.1-3.14                                                | stream lifecycle と platform constraints  | HlsPlayer, DirectStreamPlayer, ApiRepository, ActionController, StorageAdapter                                      | State / Service / API      | stream lifecycle/player flow           |
-| 4.1-4.19                                                | subtitle、player setting、shared controls | PageController, QueryController, ApiRepository, ActionController, DialogCoordinator, StorageAdapter, VideoContainer | State / Service / API / UI | route/query/action/player control flow |
-| 5.1-5.6 | recorded streaming の再生契約 | PageController, ApiRepository, ActionController, VideoContainer | State / Service / API / UI | route/query/action/player control flow |
+| 4.1-4.19                                                | subtitle、player setting、shared controls | PageController, QueryController, ApiRepository, ActionController, StorageAdapter, PlaybackPlayerContainer | State / Service / API / UI | route/query/action/player control flow |
+| 5.1-5.6 | recorded streaming の再生契約 | PageController, ApiRepository, ActionController, PlaybackPlayerContainer | State / Service / API / UI | route/query/action/player control flow |
 
 ## コンポーネントとインターフェース
 
-| コンポーネント     | ドメイン/レイヤー | 意図                                                                                                                                                                                                                            | 要件カバレッジ                                                                                                                                                                               | 主な依存                                                        | 契約        |
-| ------------------ | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | ----------- |
-| PageController     | Feature Routing   | route 初期化、validation result、player composition、loading/error/empty を統括する。TitleBar への title 書き込みは entrypoint owner から渡される title input を中継するだけで、On Air / Recorded の title 文言を再定義しない。 | 1.1-1.13, 2.1-2.11, 3.1-3.14, 4.1-4.19, 5.1-5.6                                                                                                                                                       | frontend-settings-storage / frontend-app-shell / EPGStation API | 状態管理    |
-| QueryController    | Feature Routing   | path/query/local UI input を typed model に変換する。                                                                                                                                                                           | 1.1-1.13, 2.1-2.11, 3.1-3.14, 4.1-4.19 | frontend-settings-storage / frontend-app-shell / EPGStation API | Service     |
-| ApiRepository      | Feature API       | requirements で定義された endpoint request と typed error 変換を扱う。                                                                                                                                                          | 1.1-1.13, 2.1-2.11, 3.1-3.14, 4.1-4.19, 5.1-5.6 | frontend-settings-storage / frontend-app-shell / EPGStation API | API         |
-| ActionController   | Feature Service   | menu、button、dialog submit、bulk action の結果を route/API/snackbar に接続する。                                                                                                                                               | 1.1-1.13, 2.1-2.11, 3.1-3.14, 4.1-4.19, 5.1-5.6 | frontend-settings-storage / frontend-app-shell / EPGStation API | Service/API |
-| DialogCoordinator  | Feature UI        | dialog/menu/open-reset/close-cleanup/focus を管理する。                                                                                                                                                                         | 1.1-1.13, 2.1-2.11, 3.1-3.14, 4.1-4.19 | frontend-settings-storage / frontend-app-shell / EPGStation API | 状態管理    |
-| StorageAdapter     | Shared Boundary   | settings と隣接 localStorage key を consumer として読む。                                                                                                                                                                       | 1.1-1.13, 2.1-2.11, 3.1-3.14, 4.1-4.19 | frontend-settings-storage / frontend-app-shell / EPGStation API | 状態管理    |
-| VideoContainer     | Feature UI        | player kind ごとの player component を選択し、shared player controls を提供する。                                                                                                                                               | 2.1-2.11, 3.1-3.14, 4.1-4.19, 5.1-5.6                                                                                                                                                                 | Browser media APIs / EPGStation API                             | UI / Player |
-| ViteDevProxy       | Dev Boundary      | React dev server の proxy を保持し、実 HLS 確認時に `/api`、`/socket.io`、`/streamfiles` を backend へ転送する。                                                                                                                 | 2.10                                                                                                                                                                                          | EPGStation API / streamfiles                                     | Dev config  |
-| HlsPlayer          | Feature Player    | live/recorded HLS start/keep/stop、readiness、seek restart、cleanup を扱う。                                                                                                                                                    | 3.1-3.8, 3.11, 4.1, 4.2, 4.6                                                                                                                                                                 | EPGStation stream API                                           | Player      |
-| DirectStreamPlayer | Feature Player    | M2TS-LL/WebM/MP4/direct video response を `<video>` に渡し、browser media lifecycle を扱う。                                                                                                                                    | 3.9, 3.10, 3.12, 4.3, 4.5, 4.6                                                                                                                                                               | Browser media APIs                                              | Player      |
+| コンポーネント | ドメイン/レイヤー | 実装の file | 意図 | 要件カバレッジ | 主な依存 | 契約 |
+| ------------------ | ----------------- | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | ----------- |
+| PageController | Feature Routing | `PlaybackRouteShell.tsx`、`RecordedWatchPages.tsx` | route 初期化、validation result、player composition、loading/error/empty を統括する。TitleBar への title 書き込みは entrypoint owner から渡される title input を中継するだけで、On Air / Recorded の title 文言を再定義しない。 | 1.1-1.13, 2.1-2.11, 3.1-3.14, 4.1-4.19, 5.1-5.6 | frontend-settings-storage / frontend-app-shell / EPGStation API | 状態管理 |
+| QueryController | Feature Routing | `playbackRoutes.ts` | path/query/local UI input を typed model に変換する。 | 1.1-1.13, 2.1-2.11, 3.1-3.14, 4.1-4.19 | frontend-settings-storage / frontend-app-shell / EPGStation API | Service |
+| ApiRepository | Feature API | `playbackMedia.ts`、`playbackLifecycleRepository.ts`、`recordedWatchRequests.ts` | requirements で定義された endpoint request と typed error 変換を扱う。 | 1.1-1.13, 2.1-2.11, 3.1-3.14, 4.1-4.19, 5.1-5.6 | frontend-settings-storage / frontend-app-shell / EPGStation API | API |
+| ActionController | Feature Service | `hooks/usePlaybackVideoEvents.ts`、`playbackLifecycleController.ts` | menu、button、dialog submit、bulk action の結果を route/API/snackbar に接続する。 | 1.1-1.13, 2.1-2.11, 3.1-3.14, 4.1-4.19, 5.1-5.6 | frontend-settings-storage / frontend-app-shell / EPGStation API | Service/API |
+| StorageAdapter | Shared Boundary | `playbackSettings.ts` | settings と隣接 localStorage key を consumer として読む。 | 1.1-1.13, 2.1-2.11, 3.1-3.14, 4.1-4.19 | frontend-settings-storage / frontend-app-shell / EPGStation API | 状態管理 |
+| PlaybackPlayerContainer | Feature UI | `PlaybackShell.tsx`（`PlaybackPlayerContainer`） | player kind ごとの player component を選択し、shared player controls を提供する。 | 2.1-2.11, 3.1-3.14, 4.1-4.19, 5.1-5.6 | Browser media APIs / EPGStation API | UI / Player |
+| ViteDevProxy | Dev Boundary | `client/vite.config.ts` | React dev server の proxy を保持し、実 HLS 確認時に `/api`、`/socket.io`、`/streamfiles` を backend へ転送する。 | 2.10 | EPGStation API / streamfiles | Dev config |
+| HlsPlayer | Feature Player | `hooks/usePlaybackLifecycle.ts`、`playbackLifecycleController.ts`、`hooks/usePlaybackMediaSources.ts` | live/recorded HLS start/keep/stop、readiness、seek restart、cleanup を扱う。 | 3.1-3.8, 3.11, 4.1, 4.2, 4.6 | EPGStation stream API | Player |
+| DirectStreamPlayer | Feature Player | `playbackLifecycle.ts`、`components/PlaybackVideoElement.tsx`、`hooks/usePlaybackMediaSources.ts` | M2TS-LL/WebM/MP4/direct video response を `<video>` に渡し、browser media lifecycle を扱う。 | 3.9, 3.10, 3.12, 4.3, 4.5, 4.6 | Browser media APIs | Player |
 
 ### ページ制御（PageController）
 
@@ -242,19 +239,6 @@ schema を直接所有しない構造にする。
 - 表示条件、disabled/hidden 条件、成功/失敗 snackbar は requirements を正とする。
 - action 完了後の refetch、dialog close、route move を一箇所に集約する。
 - 破壊的 action は confirm dialog または requirements に定義された no-op 条件を経由する。
-
-### ダイアログ調整（DialogCoordinator）
-
-| 項目 | 詳細                                                |
-| ---- | --------------------------------------------------- |
-| 意図 | dialog/menu open/reset/close cleanup/focus を扱う。 |
-| 要件 | 3.12, 4.3, 4.5, 4.6                                 |
-
-**責務と制約**
-
-- open ごとに stale state を reset する。
-- close animation 後の remove/remount が requirements にある場合は維持する。
-- dialog body の screenshot が不足する場合は mock API または検証 config で fixture を補完する。
 
 ### ストレージアダプター（StorageAdapter）
 
@@ -379,7 +363,7 @@ result だけを共有する。
   player を維持し、recorded info card だけ描画しない。TS/raw direct watch の platform unsupported は route
   validation では判定せず、通常 entrypoint 側で route 生成を抑止する。
 - invalid `/recorded/streaming/:videoFileId` は `videoFileId`、`streamingType`、`mode` のいずれかが invalid な場合だけ
-  `VideoContainer` と info card を mount せず、inline controlled error `ストリーム再生条件が不正です `
+  `PlaybackPlayerContainer` と info card を mount せず、inline controlled error `ストリーム再生条件が不正です `
   を表示する。`recordedId` だけ invalid または欠落の場合は streaming player を維持し、recorded info
   card だけ描画しない。snackbar は表示しない。
 - HLS start/readiness failure は player area に recoverable error state を表示し、route leave cleanup を必ず実行する。
@@ -456,7 +440,7 @@ result だけを共有する。
 
 ### Player surface / controls visual contract
 
-`VideoContainer` は 16:9 の黒い player surface と custom overlay controls を所有する。media element は player
+`PlaybackPlayerContainer` は 16:9 の黒い player surface と custom overlay controls を所有する。media element は player
 surface 全体に広げ、実 media URL、実サムネイル、実番組名を visual fixture に含めない。
 
 Synthetic visual layout の player 固有 token は以下で固定する。App Shell の page theme は隣接 owner へ委譲するが、player
@@ -582,7 +566,7 @@ fallback するため、常にビットマップをそのまま描く方が、�
 - playback page 遷移時は `<video autoplay playsinline>`
   を正とし、frontend は mute 属性を付与しない。browser autoplay policy で `play()`
   が reject された場合は snackbar ではなく log only とし、user gesture による再生を妨げない。
-- recorded WebM/MP4 の seek state は `basePlayPosition` と segment-local `video.currentTime`
+- recorded WebM/MP4 の seek state は `activeBaseSeekSeconds`（segment の開始秒）と segment-local `video.currentTime`
   を分離して扱う。UI の current time と seek bar value は absolute seconds、video element の `currentTime` は current
   segment 内の relative seconds とする。
 - recorded WebM/MP4 の segment 外 seek は `GET /streams/recorded/:videoFileId/:type?mode=<mode>&ss=<absoluteSeconds>`

@@ -12,7 +12,7 @@ EPGStation の運用者は録画 storage の使用量を確認し、外部で作
 
 ## 期待する結果
 
-- `/storages` で各 storage の使用量が割合と容量で表示され、error / empty が区別できる。
+- `/storages` で各 storage の使用量が割合と容量で表示される。empty / error では一覧を出さず、error は snackbar で知らせる。
 - `/recorded/upload` で metadata（channel、日時、rule、genre など）と video file を form 入力でき、validation を通った場合だけ upload が始まる。
 - upload は metadata 登録の後に file を順に送り、進捗 dialog を出し、失敗時は登録した metadata を削除して結果を通知する。
 - dark theme と select 部品の契約で操作性を保つ。

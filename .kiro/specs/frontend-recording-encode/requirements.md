@@ -2,11 +2,11 @@
 
 ## 概要
 
-Recording / Encode は録画中 item と encode running/waiting job の一覧、pagination、edit mode、cancel/delete action を扱う。
+Recording / Encode は録画中 item と encode running/waiting job の一覧、pagination（`/recording` のみ）、edit mode、cancel/delete action を扱う。
 
 ## 境界コンテキスト
 
-- **対象範囲**: `/recording`、`/encode`、list fetch、pagination、edit mode、single/bulk delete/cancel、blank state。
+- **対象範囲**: `/recording`、`/encode`、list fetch、pagination（`/recording` のみ）、edit mode、single/bulk delete/cancel、blank state。
 - **対象外**: Recorded list/detail の encode enqueue、AddEncodeDialog、video player、settings default。Encode queue page は `POST /encode` を発火しない。
 - **隣接する期待事項**: page size と display setting は `frontend-settings-storage`、shell は `frontend-app-shell` に従う。
 

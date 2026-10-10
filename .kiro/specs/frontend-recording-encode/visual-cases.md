@@ -26,8 +26,8 @@ Recording / Encode の visual regression は、録画中 list、エンコード 
 - Socket.IO 相当 update で list item が更新されても action menu open state が意図せず別 item に移動しない。
 - Recording consumer の `RecordedBulkDeleteDialog` は Recorded visual contract と同じ component を使い、option 非表示以外の layout を分岐しない。
 - Recording item の channel 表示は `/channels` fixture で解決した channel name / halfWidthName を表示し、該当 channel が存在する case で numeric channelId を表示しない。
-- Recording edit mode の selection checkbox は visible text label を list body に出さず、accessible name だけを持つため、table/card width を広げないことを確認する。
-- Recording edit mode の table row は 48px height を維持し、menu button を非表示にして checkbox を表示しても title / channel / time cell の並びを崩さない。Bulk delete dialog は `削除対象 ` select を持たず、`選択した <count> 件の番組を削除しますか。`、`キャンセル `、`削除 ` を表示する。
+- Recording edit mode の選択は行・card の selected 色だけで表し、checkbox や選択用の label を出さないため、table/card width を広げないことを確認する。
+- Recording edit mode の table row は 48px height を維持し、menu button の領域を空にしても title / channel / time cell の並びを崩さない。Bulk delete dialog は `削除対象 ` select を持たず、`選択した <count> 件の番組を削除しますか。`、`キャンセル `、`削除 ` を表示する。
 - Recording desktop table dark case は table container、visible row、cell、menu/action cell を個別に computed style 監査し、white fallback surface と black foreground を failure とする。
 - Encode item の single cancel dialog と bulk cancel dialog は Paper 実体を max-width 300px のみに固定し（width は固定しないため短文 body では 300px 未満に縮む）、bulk cancel dialog に 90px fixed height にしない。Dialog content は padding `16px 16px 0`、text color primary、action row は min-height 52px と padding 8px を持ち、短文 body では縦スクロールを出さない。accessible name は single `エンコード停止 `、bulk `エンコード一括停止 ` とする。
 - pagination は App Shell/shared pagination contract へ委譲し、本 feature visual regression では disabled/loading state が item body を押し出さないことを確認する。

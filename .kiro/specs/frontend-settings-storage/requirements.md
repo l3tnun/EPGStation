@@ -21,8 +21,8 @@
 1. settings storage を初期化するとき、EPGStation フロントエンドは localStorage key `settings` を settings object の保存先として使う。
 2. settings storage を保存するとき、EPGStation フロントエンドは settings object を JSON serialized value として保存する。
 3. settings storage を読むとき、EPGStation フロントエンドは保存済み settings object を frontend 全体の source of truth として扱う。
-4. settings storage key が存在しないとき、EPGStation フロントエンドは default settings object を作成し、その値を保存済み settings として書き込む。
-5. 保存済み settings object に default settings object が持つ field が欠けているとき、EPGStation フロントエンドは欠けている field を default value で補完し、補完後の object を保存する。
+4. Settings 画面が settings storage を読み込むとき（`SettingsStorageRepository.load()`）、settings storage key が存在しなければ、EPGStation フロントエンドは default settings object を作成し、その値を保存済み settings として書き込む。App Shell など読むだけの consumer は、補完した値を使うが localStorage へ保存しない。
+5. Settings 画面が settings storage を読み込むとき、保存済み settings object に default settings object が持つ field が欠けていれば、EPGStation フロントエンドは欠けている field を default value で補完し、補完後の object を保存する。読むだけの consumer は補完した値を使うが保存しない。
 6. 保存済み settings object が default settings object に存在しない追加 field を含むとき、EPGStation フロントエンドはその追加 field をこの contract の要求として扱わない。
 7. 保存済み settings object が default settings object に存在しない追加 field を含む場合、settings storage は読み書き時に追加 field を削除せず保持してよい。ただしその追加 field は typed consumer contract の要求として扱わない。
 8. 保存済み JSON が parse 不能、または settings object として扱えない場合、EPGStation フロントエンドは intentional fix として default settings object に退避し、退避後の object を保存済み settings として書き込む。

@@ -133,7 +133,7 @@ Flow は route/query/API/localStorage 境界で validation し、UI component �
 
 | 要件 | 概要 | コンポーネント | インターフェース | フロー |
 |-------------|---------|------------|------------|-------|
-| 1.1-1.9 | route と summary 表示 | PageController, QueryController, ApiRepository, StorageAdapter | State / Service / API | summary fetch / scroll restore flow |
+| 1.1-1.10 | route と summary 表示 | PageController, QueryController, ApiRepository, StorageAdapter | State / Service / API | summary fetch / scroll restore flow |
 | 2.1-2.16 | more link と item action | ActionController, DialogCoordinator, QueryController, ApiRepository | State / Service / API | delegated menu/dialog/action flow |
 | 3.1-3.8 | responsive と visual state | PageController, StorageAdapter | State | responsive/theme rendering flow |
 
@@ -141,7 +141,7 @@ Flow は route/query/API/localStorage 境界で validation し、UI component �
 
 | コンポーネント | ドメイン/レイヤー | 意図 | 要件カバレッジ | 主な依存 | 契約 |
 |-----------|--------------|--------|--------------|------------------|-----------|
-| PageController | Feature Routing | route 初期化、title、fetch、loading/error/empty、section scroll restore を統括する。 | 1.1-1.9, 2.1-2.7, 2.15-2.16, 3.1-3.8 | frontend-settings-storage / frontend-app-shell / EPGStation API | 状態管理 |
+| PageController | Feature Routing | route 初期化、title、fetch、loading/error/empty、section scroll restore を統括する。 | 1.1-1.10, 2.1-2.7, 2.15-2.16, 3.1-3.8 | frontend-settings-storage / frontend-app-shell / EPGStation API | 状態管理 |
 | QueryController | Feature Routing | path/query/local UI input を typed model に変換する。 | 1.4, 2.2, 2.5, 2.7 | frontend-settings-storage / frontend-app-shell / EPGStation API | Service |
 | ApiRepository | Feature API | requirements で定義された endpoint request と typed error 変換を扱う。 | 1.3, 1.4, 1.8, 2.8-2.11 | frontend-settings-storage / frontend-app-shell / EPGStation API | API |
 | ActionController | Feature Service | menu、button、dialog submit、bulk action の結果を route/API/snackbar に接続する。 | 2.1-2.12 | frontend-settings-storage / frontend-app-shell / EPGStation API | Service/API |
@@ -153,7 +153,7 @@ Flow は route/query/API/localStorage 境界で validation し、UI component �
 | 項目 | 詳細 |
 |-------|--------|
 | 意図 | route 初期化、title、loading/error/empty、child component composition を統括する。 |
-| 要件 | 1.1-1.8, 2.1-2.7, 2.15-2.16, 3.1-3.8 |
+| 要件 | 1.1-1.8, 1.10, 2.1-2.7, 2.15-2.16, 3.1-3.8 |
 
 **責務と制約**
 - route entrypoint と screen lifecycle だけを所有する。

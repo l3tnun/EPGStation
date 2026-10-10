@@ -18,11 +18,11 @@ EPGStation の利用者は録画中の番組と encode job の状況を確認し
 
 ## 方針
 
-録画中と encode queue の一覧、pagination、edit mode、cancel / delete を本 spec の要求とし、item menu / dialog の実体は `frontend-recorded` の共有 component 契約に従う。
+録画中と encode queue の一覧、pagination（`/recording` のみ）、edit mode、cancel / delete を本 spec の要求とし、item menu / dialog の実体は `frontend-recorded` の共有 component 契約に従う。
 
 ## スコープ
 
-- **In**: `/recording`、`/encode`、list fetch、pagination、edit mode、single / bulk delete と cancel、空状態、responsive / dark theme。
+- **In**: `/recording`、`/encode`、list fetch、pagination（`/recording` のみ）、edit mode、single / bulk delete と cancel、空状態、responsive / dark theme。
 - **Out**: 録画済みからの encode 追加（AddEncodeDialog）、player、settings の default。
 
 ## 境界候補

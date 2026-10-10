@@ -140,17 +140,17 @@ Flow は route/query/API/localStorage 境界で validation し、UI component �
 | 1.1-1.13 | Reserves list route と fetch | PageController, QueryController, ApiRepository, StorageAdapter | State / Service / API | list route/fetch flow |
 | 2.1-2.24 | state variants と list actions | PageController, QueryController, ApiRepository, ActionController, DialogCoordinator, StorageAdapter | State / Service / API | route/query/action/export flow |
 | 3.1-3.12 | delete dialog と bulk edit | PageController, QueryController, ApiRepository, ActionController, DialogCoordinator, StorageAdapter | State / Service / API | route/query/action flow |
-| 4.1-4.31 | Manual Reserve | PageController, QueryController, ApiRepository, ActionController, DialogCoordinator, StorageAdapter | State / Service / API | manual add/edit flow |
+| 4.1-4.32 | Manual Reserve | PageController, QueryController, ApiRepository, ActionController, DialogCoordinator, StorageAdapter | State / Service / API | manual add/edit flow |
 | 5.1-5.5, 6.1-6.3 | dark theme | PageController, DialogCoordinator | State | list route/fetch flow |
 
 ## コンポーネントとインターフェース
 
 | コンポーネント | ドメイン/レイヤー | 意図 | 要件カバレッジ | 主な依存 | 契約 |
 |-----------|--------------|--------|--------------|------------------|-----------|
-| PageController | Feature Routing | route 初期化、title、fetch、loading/error/empty を統括する。 | 1.1-1.13, 2.1-2.24, 3.1-3.12, 4.1-4.31 | frontend-settings-storage / frontend-app-shell / EPGStation API | 状態管理 |
-| QueryController | Feature Routing | path/query/local UI input を typed model に変換する。 | 1.1-1.4, 2.1, 2.6-2.8, 4.1-4.31 | frontend-settings-storage / frontend-app-shell / EPGStation API | Service |
-| ApiRepository | Feature API | requirements で定義された endpoint request と typed error 変換を扱う。 | 1.5-1.13, 2.6-2.18, 3.2-3.12, 4.3-4.31 | frontend-settings-storage / frontend-app-shell / EPGStation API | API |
-| ActionController | Feature Service | menu、button、dialog submit、bulk action、shared component export の結果を route/API/snackbar に接続する。 | 2.8, 2.10-2.24, 3.2-3.12, 4.8-4.31 | frontend-settings-storage / frontend-app-shell / EPGStation API | Service/API |
+| PageController | Feature Routing | route 初期化、title、fetch、loading/error/empty を統括する。 | 1.1-1.13, 2.1-2.24, 3.1-3.12, 4.1-4.32 | frontend-settings-storage / frontend-app-shell / EPGStation API | 状態管理 |
+| QueryController | Feature Routing | path/query/local UI input を typed model に変換する。 | 1.1-1.4, 2.1, 2.6-2.8, 4.1-4.32 | frontend-settings-storage / frontend-app-shell / EPGStation API | Service |
+| ApiRepository | Feature API | requirements で定義された endpoint request と typed error 変換を扱う。 | 1.5-1.13, 2.6-2.18, 3.2-3.12, 4.3-4.32 | frontend-settings-storage / frontend-app-shell / EPGStation API | API |
+| ActionController | Feature Service | menu、button、dialog submit、bulk action、shared component export の結果を route/API/snackbar に接続する。 | 2.8, 2.10-2.24, 3.2-3.12, 4.8-4.32 | frontend-settings-storage / frontend-app-shell / EPGStation API | Service/API |
 | DialogCoordinator | Feature UI | dialog/menu/open-reset/close-cleanup/focus と shared `ReserveDialog` / `ReserveMenu` / `ReserveDeleteDialog` / `ReserveListItem` export surface を管理する。 | 2.9, 2.14, 2.20, 2.21, 3.1-3.9, 4.1-4.7, 4.21 | frontend-settings-storage / frontend-app-shell / EPGStation API | 状態管理 |
 | StorageAdapter | Shared Boundary | settings と隣接 localStorage key を consumer として読む。 | 1.4, 4.11, 4.13-4.16, 4.19 | frontend-settings-storage / frontend-app-shell / EPGStation API | 状態管理 |
 
@@ -159,7 +159,7 @@ Flow は route/query/API/localStorage 境界で validation し、UI component �
 | 項目 | 詳細 |
 |-------|--------|
 | 意図 | route 初期化、title、loading/error/empty、child component composition を統括する。 |
-| 要件 | 1.1-1.13, 2.1-2.24, 3.1-3.12, 4.1-4.31 |
+| 要件 | 1.1-1.13, 2.1-2.24, 3.1-3.12, 4.1-4.32 |
 
 **責務と制約**
 - route entrypoint と screen lifecycle だけを所有する。
@@ -171,7 +171,7 @@ Flow は route/query/API/localStorage 境界で validation し、UI component �
 | 項目 | 詳細 |
 |-------|--------|
 | 意図 | route query、path param、form/filter input を typed model に変換する。 |
-| 要件 | 1.1-1.4, 2.1, 2.6-2.8, 4.1-4.31 |
+| 要件 | 1.1-1.4, 2.1, 2.6-2.8, 4.1-4.32 |
 
 **責務と制約**
 - `unknown` / string query を domain type へ narrow する。
@@ -183,7 +183,7 @@ Flow は route/query/API/localStorage 境界で validation し、UI component �
 | 項目 | 詳細 |
 |-------|--------|
 | 意図 | API request builder、response adapter、typed error conversion を扱う。 |
-| 要件 | 1.5-1.13, 2.6-2.18, 3.2-3.12, 4.3-4.31 |
+| 要件 | 1.5-1.13, 2.6-2.18, 3.2-3.12, 4.3-4.32 |
 
 **責務と制約**
 - endpoint は requirements を正とする。
@@ -195,7 +195,7 @@ Flow は route/query/API/localStorage 境界で validation し、UI component �
 | 項目 | 詳細 |
 |-------|--------|
 | 意図 | menu、dialog、button、bulk action の実行と snackbar/route update を扱う。 |
-| 要件 | 2.8, 2.10-2.24, 3.2-3.12, 4.8-4.31 |
+| 要件 | 2.8, 2.10-2.24, 3.2-3.12, 4.8-4.32 |
 
 **責務と制約**
 - 表示条件、disabled/hidden 条件、成功/失敗 snackbar は requirements を正とする。
@@ -271,7 +271,7 @@ interface SnackbarRequest {
 - edit mode の target field は disabled とし、program/time target を変更できる UI にしない。existing reserve が `programId` を持つ場合は `GET /schedules/detail/:programId?isHalfWidth=<setting>` で schedule detail を補完取得し、program information 表示だけに使う。
 - query に `reserveId` と `programId` が同時にある場合は `reserveId` edit mode を優先し、`programId` branch は実行しない。
 - `/reserves/manual` no-query add mode で時刻指定 off のまま追加した場合、program target がないため request builder は `manual-reserve-invalid` エラーとして失敗し、API call せず `予約の追加に失敗しました。` snackbar を表示する。
-- Manual Reserve init では option panels index `[0, 1, 2, 3, 6]` を open する。index は基本情報、録画 option、保存 option、エンコード option、詳細 option の open state を表す。panel header は button として実装し、open/closed は local draft state で保持する。panel body は MUI `Collapse` または同等の height transition を使い、open/close の transition duration を 0ms にしてはならない。閉じた panel は exit transition 完了後に入力 control を描画せず、再 open 時に form draft value を再表示する。
+- Manual Reserve init では option panels index `[0, 1, 2, 3, 6]` を open する。index は 0=オプション、1=ディレクトリ、2=ファイル名形式、3/4/5=エンコード1/2/3、6=ファイル削除 を表し、初期 open は 0・1・2・3（エンコード1）・6 である。panel header は button として実装し、open/closed は local draft state で保持する。panel body は MUI `Collapse` または同等の height transition を使い、open/close の transition duration を 0ms にしてはならない。閉じた panel は exit transition 完了後に入力 control を描画せず、再 open 時に form draft value を再表示する。
 - Manual Reserve の `エンコード2` / `エンコード3` は初期 closed の panel だが、開いた場合は `mode2` / `mode3`、`directory2` / `directory3`、`sub directory2` / `sub directory3` を `encodeOption` draft に接続する。
 - Manual Reserve の `エンコード1` / `エンコード2` / `エンコード3` / `ファイル削除` panel は、encode mode option が 1 件以上ある場合だけ表示する。
 - Manual Reserve の時刻指定 `番組名` field の label は `name` とする。他 field の命名規則（`channel`、`file format` などの英小文字 short label）に合わせた値である。

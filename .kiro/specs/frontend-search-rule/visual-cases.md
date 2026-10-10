@@ -4,7 +4,7 @@
 
 Search / Rule visual regression は、search form、result list、ProgramDialog、rule list card/table、rule edit/create form、responsive breakpoint、history restore が user-visible contract として安定することを検証する。
 
-`design.md` の Visual Implementation Contract にある search form density、rule list breakpoint、rule edit scroll margin、dark portal surface を geometry assertion の正本にする。
+`design.md` の Visual Implementation Contract にある search form density、rule list breakpoint、rule edit の scroll 位置（title bar の高さを引いた位置）、dark portal surface を geometry assertion の正本にする。
 
 ## Layout Cases
 
@@ -14,7 +14,7 @@ Search / Rule visual regression は、search form、result list、ProgramDialog�
 | search-results | `/search?keyword=synthetic` | 1440x900 | `searchResultsMixed` | result list、reserve/rule action が search form と重ならない。 |
 | search-query-handoff | Guide ProgramDialog `検索 ` action から `/search?keyword=<programName>` へ遷移 | 1440x900 / 390x844 | `guideProgramDialogStates`, `searchResultsMixed` | `/search` 表示後に追加操作なしで search request が実行され、keyword field、result header、ProgramDialog 由来の channel/genre query visual state が一致する。keyword target が未選択でも request では name/description が有効になる。 |
 | search-program-dialog | search result program selected | 1440x900 | `searchProgramDialogStates` | ProgramDialog は Guide owner と同じ action semantics を保ち、Search 由来の rule workflow action が表示される。 |
-| rule-list-table | `/rule` wide | 1440x900 | `ruleMixedList` | 780px 以上の table layout で keyword fallback、channel/genre `他<n>`、reservesCnt fallback 0 が崩れず、outer list が content width いっぱいに伸縮して固定 max width で頭打ちしない。 |
+| rule-list-table | `/rule` wide | 1440x900 | `ruleMixedList` | 780px 以上の table layout で keyword fallback、channel/genre `他<n>`、reservesCnt fallback 0 が崩れず、outer list が content width いっぱいに伸縮し、共有 page wrapper の上限 1600px を除いて固定 max width で頭打ちしない。 |
 | rule-list-card | `/rule` narrow | 390x844 | `ruleMixedList` | 779px 以下の card layout で long keyword、予約数、action menu affordance が重ならず、dark theme でも黒系固定色を残さない。 |
 | rule-edit-form | `/search?rule=<ruleId>` edit | 1440x900 | `ruleEditFull` | rule edit は `/search` の query state として表示し、keyword/options/encode/save controls が form layout 内で安定し、auto scroll setting の影響で target control が隠れない。 |
 | search-empty-error | search empty/error | 1440x900 | `searchEmpty`, `searchError` | empty/error state と snackbar が form controls を押し出さない。 |
@@ -59,4 +59,4 @@ Search / Rule visual regression は、search form、result list、ProgramDialog�
 - Loading visual は skeleton placeholder を許容するが、visual regression は form/result/rule option の geometry が変わらないことを正とする。
 - dark theme は App Shell theme token へ委譲し、SearchRule は geometry と contrast assertion だけを持つ。
 - dark theme では dialog/menu portal も SearchRule owner visual case に含め、text/icon/disabled state が背景と同化しないことを確認する。`/rule` mobile card の予約数と overflow menu 疑似要素は、card root だけでなく該当 child/pseudo-element の computed color を検査する。
-- form/search result/rule option card max width 800px、rule table breakpoint 780px、card は table と同じ `width: 100%`（固定 max width なし）を確認する。search card padding は `32px 16px 24px`（CSS の値。geometry では確かめない）。
+- form/search result/rule option card max width 800px、rule table breakpoint 780px、card は table と同じ `width: 100%`（共有 page wrapper の上限 1600px を除き固定 max width なし）を確認する。search card padding は `32px 16px 24px`（CSS の値。geometry では確かめない）。

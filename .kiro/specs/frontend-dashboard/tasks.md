@@ -5,7 +5,7 @@
   - `GET /reserves/cnts`、`GET /recording`、`GET /recorded`、`GET /reserves` を settings と route query から組み立て、Dashboard route `page` は summary offset に混入させない。
   - initial route、route/query change、Socket.IO `updateStatus` は TanStack Query invalidation/refetch に接続し、load 前は本体を隠し、完了後に表示する。
   - _Depends: frontend-app-shell 5, frontend-settings-storage 2_
-  - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9_
+  - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 1.10_
 
 - [x] 2. Dashboard item navigation と delegated action entrypoint を実装する
   - more button は total が表示件数を超える場合だけ表示し、各 list route の `page=2` へ遷移する。
@@ -24,4 +24,4 @@
   - `unittest/spec` と `unittest/imp` で fetch options、snackbar 文言、more condition、delegated action entrypoint、scroll restore を検証する。
   - Playwright + MSW で summary loading/empty/error、desktop/mobile layout、conflict badge、delegated dialog/menu entrypoint を synthetic data で確認する。
   - fixture と screenshot baseline に実番組名、実 URL、実ロゴ、サムネイル、認証情報を含めない。
-  - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 2.10, 2.11, 2.12, 2.13, 2.14, 2.15, 2.16, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8_
+  - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 1.10, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 2.10, 2.11, 2.12, 2.13, 2.14, 2.15, 2.16, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8_

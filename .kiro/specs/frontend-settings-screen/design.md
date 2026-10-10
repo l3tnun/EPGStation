@@ -80,7 +80,7 @@ graph TB
 | Server state | TanStack Query | API response cache、loading/error/refetch | Settings screen は backend API を所有しないが、App Shell など隣接 owner の server state は TanStack Query 境界に従う。 |
 | Local state | React local state/reducer | screen state と settings draft state | settings draft（`tmp`）は `SettingsPage` の React state に持ち、読み書きは `lib/settingsStorageAccess.ts` が `SettingsStorageRepository` で行う。Zustand は使わない。 |
 | UI / CSS | MUI Core + `@mdi/font` + theme token + `*.module.css` | MUI theme に基づく visual contract、responsive | global CSS は `src/index.css` の bootstrap/reset 程度に限定し、visual-cases の geometry/screenshot contract を theme/shared component に接続する。 |
-| Form / validation | React Hook Form + Zod | settings form state、save/reset validation、typed settings validation | `frontend-settings-storage` の typed settings contract と Zod validation を form 境界へ接続する。 |
+| Form / validation | 使わない（`SettingsPage` の React state と `SettingsValidator`） | settings form state、save/reset validation、typed settings validation | 編集値は `SettingsPage` の React state に持ち、値の検証は `frontend-settings-storage` の `SettingsValidator` が行う。 |
 | API client | native `fetch` wrapper + typed request/response validation | backend integration | Settings screen は backend API を所有しない。隣接 owner の API は repository base `./api` と endpoint path を二重結合しない。 |
 | Socket.IO | `socket.io-client` | realtime update trigger | Settings screen は Socket.IO subscription を所有しない。 |
 | Lint / format / alias | ESLint flat config + typescript-eslint + React Hooks plugin / Prettier / `@/` | static gate と import 解決 | `@/` は Vite / TypeScript / Vitest / ESLint で同一解決規則にする。 |
@@ -122,7 +122,7 @@ test:
 - `client/unittest/spec/settingsScreen.bootstrapSave.spec.test.tsx`（route bootstrap と保存）、`settingsScreen.controlMatrixRendering.spec.test.tsx`（control 表の描画）、`settingsScreen.controlMatrixDraft.spec.test.tsx`（tmp 更新と不正値の扱い）、`settingsScreen.themePreview.spec.test.tsx`（reset / theme preview / 離脱）、`settingsScreen.controlInteractions.spec.test.tsx`（control 操作）、`settingsScreen.defensiveGuards.spec.test.tsx`（防御的な guard）。共有 helper は `unittest/spec/support/settingsScreenHelpers.tsx`。
 - `client/unittest/imp/settingsScreen.layoutMatrix.imp.test.ts`（layout と control 表の契約）、`settingsScreen.savePreview.imp.test.ts`（保存と preview の契約）、`settingsScreen.liveWebPlaybackSwitch.imp.test.ts`（放映中の web 再生 switch）、`settingsScreen.numericSelectUnitSuffix.imp.test.ts`（数値 select の単位表示）、`settingsStorageAccess.imp.test.ts`（storage access の memory fallback と保存失敗）。
 - `client/e2e/settings-screen-workflow.spec.ts`、visual `visual/settings-screen-geometry.spec.ts`。
-- 本物の browser の localStorage: `client/e2e/browser-api-parity.spec.ts`（本物の容量の上限での保存の失敗、参照の拒否〈起動時の shell の読み込みが拒否を受け止めないので、直るまで失敗を期待する〉、古い client が保存した設定の読み込みと保存）。
+- 本物の browser の localStorage: `client/e2e/browser-api-parity.spec.ts`（本物の容量の上限での保存の失敗、参照の拒否〈既定値で起動し、保存時に失敗を通知する〉、古い client が保存した設定の読み込みと保存）。
 
 ## システムフロー
 

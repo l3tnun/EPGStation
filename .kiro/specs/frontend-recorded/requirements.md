@@ -394,8 +394,10 @@ Recorded は録画済み一覧、詳細、watch/streaming/upload への入口を
 25. `RecordedDeleteDialog` consumer は Recorded list/detail、Dashboard、Recording を含む。detail で全 video file
     delete が成功した場合、dialog host は previous route へ戻る責務を持つ。
     `client/src/features/recorded/index.ts` が export する `RecordedDeleteDialog` は
-    `RecordedDetailMoreMenu.tsx`（detail）、`RecordedPage.tsx`（list、`RecordedDetailMoreMenu` 経由）、
-    `DashboardRecordsSection.tsx`、`RecordingPage.tsx` から import される。detail host
+    `RecordedDetailMoreMenu.tsx`（detail）と `RecordedItemMenu.tsx`（list・Dashboard・Recording の item menu）
+    から import される。list は `RecordedListItemView.tsx`、Dashboard は `DashboardRecordsSection.tsx`、
+    Recording は `RecordingPage.tsx` から `RecordedItemMenu` を経由して使う。`AddEncodeDialog` は
+    `RecordedItemMenu.tsx` と `RecordedDetailPage.tsx` から import される。detail host
     （`RecordedDetailPage.tsx`）は `onDeletedAllFiles={() => navigate(-1)}` を渡し、`RecordedDetailMoreMenu`
     の `onDeleteSuccess` が `allFilesDeleted === true` のときだけこれを呼ぶ（条件 11 と同じ contract）。
     「前の画面へ戻る」責務は dialog 自身ではなく host 側にある。

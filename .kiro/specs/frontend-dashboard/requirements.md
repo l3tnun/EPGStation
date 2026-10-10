@@ -27,6 +27,7 @@ Dashboard は録画中、録画済み、予約の summary を表示し、各 lis
 7. API が 0 件を返したとき、EPGStation フロントエンドは追加の empty copy を表示せず、`0/0` を含む現在の summary title 表示を維持する。
 8. fetch 失敗時、EPGStation フロントエンドは snackbar 文言を使い、`GET /reserves/cnts` は `予約情報取得に失敗 `、録画中 data は `録画中データ取得に失敗 `、録画済み data は `録画済みデータ取得に失敗 `、予約 data は `予約データ取得に失敗 ` として区別する。
 9. Dashboard は録画中、録画済み、予約の 3 section の scroll position を route leave/update 時に保存し、history restore の場合だけ復元する。通常の route 表示や summary refresh では保存済み scroll position を強制復元しない。
+10. iOS / iPadOS では、Dashboard を表示している間だけ 3000ms 間隔で summary を再取得する（Socket.IO `updateStatus` が遅延または取りこぼされても、Dashboard が現在の server state に追従するため）。iOS / iPadOS 以外では、この定期の再取得をしない。
 
 ### 要求 2: more link と item action
 

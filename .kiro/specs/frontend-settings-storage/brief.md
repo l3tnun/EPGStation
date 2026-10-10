@@ -6,10 +6,10 @@ EPGStation frontend の App Shell、番組表、放映中、録画済み、検�
 
 ## 現状
 
-- contract の実体は `client/src/shared/settings/` にある。型は `settingsTypes.ts`、default と platform 依存 default は `defaultSettings.ts` / `platformDefaultSettings.ts`、解析 / 補完 / 検証は `settingsValidation.ts` と `settingsStorage.ts`、編集中の値は `settingsDraftStore.ts`、settings 以外の localStorage key の登録は `adjacentStorageRegistry.ts`、URL scheme の platform 判定は `urlScheme.ts` / `urlSchemePlatform.ts`。
+- contract の実体は `client/src/shared/settings/` にある。型は `settingsTypes.ts`、default と platform 依存 default は `defaultSettings.ts` / `platformDefaultSettings.ts`、解析 / 補完 / 検証は `settingsValidation.ts` と `settingsStorage.ts`、settings 以外の localStorage key の登録は `adjacentStorageRegistry.ts`、URL scheme の platform 判定は `urlScheme.ts` / `urlSchemePlatform.ts`。
 - App Shell の読み取りは `client/src/app/settingsStorageAdapter.ts`（theme と navigation）、`client/src/app/pwa.ts`、`client/src/app/lib/shellSettingsSnapshots.ts` が `SettingsValidator` で行い、書き手は `/settings` 画面の `client/src/features/settings/lib/settingsStorageAccess.ts` だけである。
 - server API は呼ばない。
-- test は `client/unittest/spec/settingsStorage.*.spec.test.ts`（contract / draft / adjacent）と `unittest/imp/settingsStorage.*.imp.test.ts`（repository / registryUrlScheme）。UI を持たないため e2e / visual は消費側 spec が担う。
+- test は `client/unittest/spec/settingsStorage.*.spec.test.ts`（contract / adjacent）と `unittest/imp/settingsStorage.*.imp.test.ts`（repository / registryUrlScheme）。UI を持たないため e2e / visual は消費側 spec が担う。
 
 ## 期待する結果
 
