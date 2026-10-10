@@ -1,6 +1,7 @@
 import { once } from 'node:events';
 import { createServer as createNetServer, type Server } from 'node:net';
 import type { Server as HttpServer } from 'node:http';
+import { join } from 'node:path';
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -75,5 +76,41 @@ describe('HTTP listener start failure [SI-8.1][LISTEN-FAILURE]', () => {
 
         expect(thrown).toHaveLength(0);
         expect(log.system.fatal).not.toHaveBeenCalled();
+    });
+});
+
+describe('dedicated Socket.IO listener log [SI-7.2][LISTEN-LOG]', () => {
+    const reservePort = async (): Promise<number> => {
+        const probe = createNetServer();
+        probe.listen(0, '127.0.0.1');
+        await once(probe, 'listening');
+        const address = probe.address();
+        if (address === null || typeof address === 'string') throw new Error('Synthetic probe did not bind TCP');
+        await close(probe as unknown as HttpServer);
+        return address.port;
+    };
+
+    it('[SI-7.2][LISTEN-LOG] records the HTTPS Socket.IO port, not the HTTP one, when only HTTPS is configured', async () => {
+        const socketioPort = await reservePort();
+        const servers: HttpServer[] = [];
+        const log = { system: { fatal: vi.fn(), info: vi.fn() } };
+        const service = Object.create(ServiceServer.prototype) as any;
+        service.app = express();
+        service.config = {
+            https: {
+                cert: join(process.cwd(), 'test/server/fixtures/configuration/synthetic-tls-cert.pem'),
+                key: join(process.cwd(), 'test/server/fixtures/configuration/synthetic-tls-key.pem'),
+                port: 0,
+                socketioPort,
+            },
+        };
+        service.log = log;
+        service.socketIoManageModel = { initialize: (listeners: HttpServer[]) => servers.push(...listeners) };
+
+        service.start();
+        started.push(...servers);
+        await vi.waitFor(() =>
+            expect(log.system.info).toHaveBeenCalledWith(`https SocketIO listening on ${String(socketioPort)}`),
+        );
     });
 });
