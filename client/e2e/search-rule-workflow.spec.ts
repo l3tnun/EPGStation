@@ -149,7 +149,7 @@ test('drives Rule list fetch, item actions, and bulk edit workflow', async ({ pa
   await expect(bulkDeleteDialog).toContainText('選択した 2 件のルールを削除しますか。')
   // A: v2 client/src/components/rules/RuleMultipleDeletionDialog.vue:2
   // `<v-dialog ... max-width="300" ...>`; also spec'd at
-  // .kiro/specs/frontend-search-rule/visual-cases.md:33 ("bulk delete dialog は max-width 300px を超えず").
+  // .kiro/specs/frontend-search-rule/visual-cases.md ("bulk delete dialog は max-width 300px を超えず").
   await expect
     .soft(
       bulkDeleteDialog.evaluate((node) => Math.round(node.getBoundingClientRect().width)),

@@ -91,7 +91,7 @@ export function useSearchRuleFormState({
       pageInfo: scrollHistory.getScrollData(),
     }),
   )
-  // Query-driven auto-search (v2 `Search.vue`'s `isQuerySearch` branch, ~line 379) always scrolls
+  // Query-driven auto-search (v2 `Search.vue`'s `isQuerySearch` branch) always scrolls
   // to the result once the first search succeeds, independent of
   // `isEnableAutoScrollWhenEditingRule` (AC 2.22). `useSearchRuleRouteEffects.ts` only sets this
   // flag when `routeSearch` actually changes *after* mount (AC 1.21's guard against unrelated
@@ -155,7 +155,7 @@ export function useSearchRuleFormState({
   const [activeRequest, setActiveRequest] = useState<ActiveSearchRequest | null>(() => {
     // A restored page info takes priority over the URL's query-driven auto search entirely (v2
     // `Search.vue` `onUrlChange()` only reaches its `isQuerySearch` branch in the *non*-restore
-    // path - see 276-386 行目): restoring re-searches only when the saved snapshot says a search
+    // path): restoring re-searches only when the saved snapshot says a search
     // had actually run (`isSearched`), independent of what `routeState.shouldAutoSearch` says
     // about the current URL.
     const shouldSeedActiveRequest =

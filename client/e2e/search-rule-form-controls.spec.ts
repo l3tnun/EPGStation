@@ -178,7 +178,7 @@ test('keeps Search selects, checkboxes, period, duplicate, and encode option con
   await expect(page.getByRole('textbox', { name: '日数' })).toHaveValue('7')
   // v2: client/src/components/search/SearchRuleOption.vue:174 `.period { max-width: 90px }`.
   // v3: SearchRulePage.module.css `.ruleOptionField[data-width='period'] { max-width: 90px }`;
-  // also spec'd at .kiro/specs/frontend-search-rule/visual-cases.md:56 ("duplicate period は 90px 程度").
+  // also spec'd at .kiro/specs/frontend-search-rule/visual-cases.md ("duplicate period は 90px 程度").
   // 100 = 90px + 10px margin for box-model rounding.
   await expect
     .soft(
@@ -205,7 +205,7 @@ test('keeps Search selects, checkboxes, period, duplicate, and encode option con
   await expect(muiSelectCombobox(page, 'directory', true)).toBeVisible()
   // v2: client/src/components/search/SearchRuleOption.vue:176 `.directory { max-width: 150px }`.
   // v3: SearchRulePage.module.css `.ruleOptionField[data-width='directory'] { max-width: 150px }`;
-  // also spec'd at .kiro/specs/frontend-search-rule/visual-cases.md:56 ("directory/mode select は 150px 程度").
+  // also spec'd at .kiro/specs/frontend-search-rule/visual-cases.md ("directory/mode select は 150px 程度").
   // 160 = 150px + 10px margin for box-model rounding.
   await expect
     .soft(
@@ -232,7 +232,7 @@ test('keeps Search selects, checkboxes, period, duplicate, and encode option con
   await selectMuiOption({ page, name: 'mode2', value: 'synthetic-encode-sub' })
   // v2: client/src/components/search/SearchRuleOption.vue:178 `.encode-mode { max-width: 150px }`.
   // v3: SearchRulePage.module.css `.ruleOptionField[data-width='encode'] { max-width: 150px }`;
-  // also spec'd at .kiro/specs/frontend-search-rule/visual-cases.md:56 ("directory/mode select は 150px 程度").
+  // also spec'd at .kiro/specs/frontend-search-rule/visual-cases.md ("directory/mode select は 150px 程度").
   // 160 = 150px + 10px margin for box-model rounding.
   await expect
     .soft(

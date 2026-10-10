@@ -7,7 +7,7 @@ import type {
 
 /**
  * Search 画面の route leave/update 時に保存し、history restore のときだけ復元する page state。
- * v2 `Search.vue` の `PageInfo`（39-48 行目）に相当する。v2 の `searchOption`/`reserveOption`/
+ * v2 `Search.vue` の `PageInfo` に相当する。v2 の `searchOption`/`reserveOption`/
  * `saveOption`/`encodeOption` は v3 では `optionDraft` にまとまっており、`genreSelect`
  * （選択中ジャンルそのもの）は `form.selectedGenres` に含まれるため、別フィールドとしては持たない。
  */
@@ -36,7 +36,7 @@ export function createSearchPageInfoFromState({
 }
 
 /**
- * v2 `savePageInfo()`（Search.vue 251-269 行目）の `isEditingRule() === true` の間は保存しない、
+ * v2 `savePageInfo()`（Search.vue）の `isEditingRule() === true` の間は保存しない、
  * という guard に相当する。ルール編集画面を離れるときの page state はここでは保存しない。
  */
 export function shouldSaveSearchPageInfo({ mode }: { mode: SearchRouteState['mode'] }): boolean {

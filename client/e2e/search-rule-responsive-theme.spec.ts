@@ -173,8 +173,8 @@ test('keeps Search result cards and Rule list width responsive', async ({ page }
   await expect(ruleHeader).toBeHidden()
   // list layout (`data-rule-layout='list'`, container width < 780px) の `.ruleItemMain` は
   // `display: flex` の実ボックスであり、`display: contents` ではない
-  // (client/src/features/search/rule/SearchRulePage.module.css:1180-1187)。要求 34
-  // (.kiro/specs/frontend-search-rule/requirements.md:464-466) は、この行選択領域が switch 列と
+  // (client/src/features/search/rule/SearchRulePage.module.css の `.ruleItemMain`)。
+  // frontend-search-rule の要求 3.34 は、この行選択領域が switch 列と
   // action menu 列を除いた行全体を占める実ボックスであることを求めており、`display: contents` では
   // 要素自身のボックスが消え、keyword text 右側の余白などが hit-test 対象にならず要求を満たさない。
   await expect

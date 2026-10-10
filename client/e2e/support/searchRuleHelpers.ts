@@ -174,7 +174,7 @@ export async function expectClearButtonInsideField(
     // both implementations - SearchRulePage.module.css `.clearInputButton` (right:0/width:32px/
     // height:32px/top:50%+translateY(-50%)) for text inputs, and shared/AppSelect.tsx's IconButton
     // sx (right:0/width:32/height:32/top:controlHeight/2+translateY(-50%)) for selects. Also spec'd
-    // at .kiro/specs/frontend-search-rule/visual-cases.md:50 ("Clear button は field/card 右端では
+    // at .kiro/specs/frontend-search-rule/visual-cases.md ("Clear button は field/card 右端では
     // なく対象 input/select の右端に重なり... 隣の input や card 端へ逃げてはならない").
     // +1 on fieldRight tolerates box-model rounding for the right:0 alignment.
     expect(
