@@ -168,6 +168,17 @@ describe('recording candidate registry', () => {
         expect(registry.get(127)).toBeUndefined();
     });
 
+    it('[RE-1.7][Task 1.3] records the generation issued by remove as the latest generation of the removed id', () => {
+        const registry = new RecordingCandidateRegistry();
+        const added = registry.upsert(makeReserve({ id: 128 }));
+
+        const removedGeneration = registry.remove(128);
+
+        expect(removedGeneration).toBeGreaterThan(added.generation);
+        expect(registry.latestGeneration(128)).toBe(removedGeneration);
+        expect(registry.get(128)).toBeUndefined();
+    });
+
     it('[RE-1.7][Task 1.3] fences deferred preparation, ending, and cancelled callbacks after delete and re-add', async () => {
         const registry = new RecordingCandidateRegistry();
         const old = registry.upsert(makeReserve({ id: 131 }));
@@ -710,5 +721,164 @@ describe('recording schedule contract', () => {
         expect(harness.dispatchPreparation.mock.calls[0][1]).toBe(current.generation);
         expect(current.generation).not.toBe(oldGeneration);
         harness.controller.stop();
+    });
+
+    const registerActiveTimeSpecified = (harness: any, id: number, dueAt: number) => {
+        const candidate = harness.registry.upsert(
+            makeReserve({ id, isTimeSpecified: true, programId: null, startAt: 2_000_000, endAt: 1_900_000 }),
+            'Recording',
+        );
+        const session = harness.controller.getSessionSnapshot(id);
+        const milestone = { reservationId: id, generation: candidate.generation, sessionToken: session.sessionToken };
+        harness.controller.registerTimeSpecifiedEnd({ ...milestone, dueAt });
+        return milestone;
+    };
+
+    it('[RE-1.7][Task 1.9] discards sessions and time-specified endings when the controller stops', async () => {
+        const harness = makeScheduleHarness({ now: 1_000_000 });
+        await harness.controller.start();
+        const milestone = registerActiveTimeSpecified(harness, 511, 1_500_000);
+        expect(harness.controller.timeSpecifiedEnds.size).toBe(1);
+
+        harness.controller.stop();
+
+        expect(harness.controller.timeSpecifiedEnds.size).toBe(0);
+        expect(harness.controller.getSessionSnapshot(511).sessionToken).not.toBe(milestone.sessionToken);
+    });
+
+    it('[RE-1.5][Task 1.7] leaves queued mutations untouched when a wake arrives before the controller starts', () => {
+        const harness = makeScheduleHarness();
+
+        harness.controller.acceptMutation({ insert: [makeReserve({ id: 512 })], isSuppressLog: false });
+        harness.controller.wake();
+
+        expect(harness.registry.get(512)).toBeUndefined();
+        expect(harness.dispatchMutation).not.toHaveBeenCalled();
+        expect(harness.fakeScheduler.activeTimers()).toHaveLength(0);
+    });
+
+    it('[RE-2.6][Task 1.9] re-evaluates immediately when an already due time-specified ending is registered', async () => {
+        const harness = makeScheduleHarness({ now: 1_000_000 });
+        await harness.controller.start();
+
+        registerActiveTimeSpecified(harness, 513, 1_000_000);
+
+        expect(harness.dispatchTimeSpecifiedEnd).toHaveBeenCalledOnce();
+        expect(harness.registry.get(513).phase).toBe('Finishing');
+        harness.controller.stop();
+    });
+
+    it('[RE-1.4][Task 1.9] removes a time-specified ending by id and re-arms the shared wake without it', async () => {
+        const harness = makeScheduleHarness({ now: 1_000_000 });
+        await harness.controller.start();
+        const milestone = registerActiveTimeSpecified(harness, 514, 1_001_200);
+        expect(harness.fakeScheduler.activeTimers()[0].delayMs).toBe(1_200);
+
+        harness.controller.removeTimeSpecifiedEnd(514);
+
+        expect(harness.controller.timeSpecifiedEnds.size).toBe(0);
+        expect(harness.fakeScheduler.activeTimers()).toHaveLength(1);
+        expect(harness.fakeScheduler.activeTimers()[0].delayMs).toBe(3_000);
+
+        harness.controller.registerTimeSpecifiedEnd({ ...milestone, dueAt: 1_001_200 });
+        harness.controller.removeTimeSpecifiedEnd(514, 0n as any);
+        harness.controller.removeTimeSpecifiedEnd(514, milestone.generation, 0n as any);
+        expect(harness.controller.timeSpecifiedEnds.size).toBe(1);
+        harness.controller.removeTimeSpecifiedEnd(514, milestone.generation);
+        expect(harness.controller.timeSpecifiedEnds.size).toBe(0);
+
+        harness.controller.registerTimeSpecifiedEnd({ ...milestone, dueAt: 1_001_200 });
+        harness.controller.removeTimeSpecifiedEnd(514, undefined, milestone.sessionToken);
+        expect(harness.controller.timeSpecifiedEnds.size).toBe(0);
+        harness.controller.stop();
+    });
+
+    it('[RE-1.7][Task 1.9] forgets the session of a reservation that became skipped or was deleted', async () => {
+        const harness = makeScheduleHarness();
+        await harness.controller.start();
+        harness.controller.acceptMutation({
+            insert: [makeReserve({ id: 516 }), makeReserve({ id: 517 })],
+            isSuppressLog: false,
+        });
+        harness.fakeScheduler.flushMicrotasks();
+        expect(harness.controller.sessions.has(516)).toBe(true);
+        expect(harness.controller.sessions.has(517)).toBe(true);
+
+        harness.controller.acceptMutation({
+            update: [makeReserve({ id: 516, isSkip: true })],
+            delete: [makeReserve({ id: 517 })],
+            isSuppressLog: false,
+        });
+        harness.fakeScheduler.flushMicrotasks();
+
+        expect(harness.controller.sessions.has(516)).toBe(false);
+        expect(harness.controller.sessions.has(517)).toBe(false);
+        harness.controller.stop();
+    });
+
+    it.each([
+        ['Recording', true],
+        ['PathSelectionOverdue', true],
+        ['AwaitingFirstData', true],
+        ['Registering', true],
+        ['RegistrationOverdue', true],
+        ['Waiting', false],
+        ['Preparing', false],
+        ['RetryWaiting', false],
+        ['StoppingForDeletion', false],
+        ['Finishing', false],
+        ['Completed', false],
+        ['Cancelled', false],
+    ])('[RE-2.6][Task 1.9] accepts a time-specified ending only in an active phase: %s', (phase, accepted) => {
+        const harness = makeScheduleHarness();
+        const candidate = harness.registry.upsert(
+            makeReserve({ id: 518, isTimeSpecified: true, programId: null, startAt: 2_000_000, endAt: 2_100_000 }),
+            phase,
+        );
+
+        harness.controller.registerTimeSpecifiedEnd({
+            reservationId: 518,
+            generation: candidate.generation,
+            dueAt: 2_100_000,
+        });
+
+        expect(harness.controller.timeSpecifiedEnds.has(518)).toBe(accepted);
+    });
+
+    it('[RE-1.5][Task 1.7] keeps idle waiters pending while a zero-delay wake is still queued', async () => {
+        let reads = 0;
+        let resolved = false;
+        let controller: any;
+        const clock = {
+            now: vi.fn(() => {
+                reads += 1;
+                if (reads === 1) {
+                    void controller.whenIdle().then(() => {
+                        resolved = true;
+                    });
+                    return 999_999;
+                }
+                return 1_000_000;
+            }),
+        };
+        const harness = makeScheduleHarness({
+            clock,
+            reservations: [makeReserve({ id: 519, startAt: 1_015_000, endAt: 1_060_000 })],
+        });
+        controller = harness.controller;
+
+        await controller.start();
+        for (let index = 0; index < 5; index++) await Promise.resolve();
+
+        expect(harness.fakeScheduler.microtasks).toHaveLength(1);
+        expect(harness.dispatchPreparation).not.toHaveBeenCalled();
+        expect(resolved).toBe(false);
+
+        harness.fakeScheduler.flushMicrotasks();
+        for (let index = 0; index < 5; index++) await Promise.resolve();
+
+        expect(harness.dispatchPreparation).toHaveBeenCalledOnce();
+        expect(resolved).toBe(true);
+        controller.stop();
     });
 });
