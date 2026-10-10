@@ -29,7 +29,7 @@ Reserves visual regression は、予約 list、state variants、card/table layou
 - SearchRule の time-specified rule edit だけが `needsDecoration=true` consumer として decoration を表示できる。
 - Manual Reserve program add では、時刻指定 switch off 時に program information section だけを表示し、時刻指定 switch on 時に program information section を非表示にして time-specified target fields だけを表示する。on/off を往復しても余分な section が残らないことを確認する。
 - Manual Reserve option panels は `[0, 1, 2, 3, 6]` を初期 open とし、panel header クリックで非 0ms の transition duration を持って開閉できることを確認する。`エンコード2` / `エンコード3` は初期 closed だが、開いた場合は mode、directory、sub directory の control が表示され、閉じると exit transition 完了後に input が消える。
-- Manual Reserve の時刻指定 start/end は `yyyy-MM-dd HH:mm` 表示を正とし、UNIX milliseconds の裸値が text field に出る場合は failure とする。
+- Manual Reserve の時刻指定 start/end は `yyyy-MM-dd HH:mm` 表示を正とし、UNIX milliseconds の裸値が text field に出る場合は failure とする。start/end の click で開く日時 picker dialog は、月曜始まりの日本語 calendar と時刻の選択、`クリア` / `設定` を持ち、明暗の両 theme と幅 375px で dialog からはみ出さないことを確認する。
 - Manual Reserve の時刻指定 `番組名`、start/end、保存 `sub directory`、`file format`、encode1-3 `sub directory` は non-empty 時に clear button を表示し、押下で対象 field だけが空になることを確認する。select/combobox は clearable text field の代表確認に含めない。
 - ReserveDialog は max width 500px とし、visual regression では body field order と overflow safety を固定する。
 - dark theme では reserve/manual main content と dialog/menu portal の contrast を確認し、state decoration、card datetime/channel/description text、menu icon、disabled text、pagination icon が背景と同化しないことを geometry/contrast assertion に含める。

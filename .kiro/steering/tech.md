@@ -32,7 +32,7 @@ clientのtest stackとcoverage方針は`.kiro/steering/testing.md`を正本と�
 | router | React Router の hash route 対応 router。初期 route contract は `/#/...` を維持する |
 | data fetching / cache | TanStack Query |
 | local state | React local reducer / local state を使う。global store library は使わない |
-| UI component | MUI Core を基盤にし、EPGStation 固有 shared component と theme token で visual contract を満たす |
+| UI component | MUI Core を基盤にし、EPGStation 固有 shared component と theme token で visual contract を満たす。日時の選択は `@mui/x-date-pickers`（MIT の community 版）と dayjs の adapter を使う共有部品 `DateTimePickerDialog` に集約する |
 | form / validation | React Hook Form + Zod |
 | API client | native `fetch` wrapper と typed request / response validation。repository base `./api` と endpoint path を二重結合しない |
 | Socket.IO | `socket.io-client` を継続採用する |

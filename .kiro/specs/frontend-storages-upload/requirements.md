@@ -70,7 +70,7 @@ Storages / Recorded Upload は storage usage view と録画済み metadata/uploa
 12. Rule autocomplete は route init と search input change で `GET /rules/keyword` を呼び、query は常に
     `limit=1000`、typed value が null でない場合のみ `keyword` を追加する。
 13. Rule autocomplete items は `keyword` を表示し、`id` を値にする。
-14. datetime picker は Japanese locale、Monday first day、`クリア ` / `設定 ` button を維持する。
+14. datetime picker は月・曜日を日本語で表示し、週の始まりを月曜にした calendar（先頭の列が月曜）と、24 時間表記で時、分の順に選ぶ時刻の選択、`クリア ` / `設定 ` button を持つ。この picker は Search の期間、Manual Reserve の時刻指定と共通の部品（`client/src/shared/DateTimePickerDialog.tsx`）で表示する。
 15. reset は form state を再作成するが、route init と異なり rule autocomplete fetch を再実行しない。
 16. Recorded Upload form は desktop / mobile のどちらでも required field、video-file block、FAB、reset/upload
     action が重ならず、video-file block 追加で既存 input の表示順を変えない。
@@ -84,14 +84,13 @@ Storages / Recorded Upload は storage usage view と録画済み metadata/uploa
 19. `日付※` input は直接 keyboard / automated input で `yyyy-MM-ddTHH:mm` を受け付け、同じ field から `日付選択 `
     dialog を開ける。field の text 部分、underline、空白部分のどこを click しても dialog が開き、click/focus/blur の順序差で即時に閉じたり、後続 input や submit
     button を覆い続けたりしてはならない。
-20. `日付選択 ` dialog は title `日付選択 `、date picker 相当の `日付 ` input、time
-    picker 相当の `時刻 ` input、`クリア `、`設定 ` action を持つ。`設定 ` は date/time の合成値を `日付※`
-    に反映して閉じ、`クリア ` は値を空にして閉じる。単一の browser default `datetime-local`
-    input だけを dialog 内容として出してはならない。
+20. `日付選択 ` dialog は title `日付選択 `、月曜始まりの日本語 calendar、時刻の選択、`クリア `、`設定 ` action を持つ。
+    calendar で日を選ぶと draft の日付が変わり、`設定 ` は draft の日付と時刻の合成値を `日付※`
+    に反映して閉じ、`クリア ` は値を空にして閉じる。dialog を開くと、現在の値（空なら未選択）から draft を初期化する。
+    単一の browser default `datetime-local` input や `date` / `time` input だけを dialog 内容として出してはならない。
 21. video-file block の file selection control は icon + selected filename + underline control とし、file
     selected 後は selected filename を表示して placeholder `video file` を重複表示しない。
-22. `日付選択` dialog 内の `日付` input と `時刻` input は各々独立した clear button を持ち、押下すると該当 input だけを
-    空にする。
+22. `日付選択` dialog で calendar の日を選んでも、選択済みの時刻は変わらない。時刻を選んでも、選択済みの日付は変わらない。
 23. Rule autocomplete の応答が入力順と逆に解決したとき、EPGStation フロントエンドは直近の入力に対応する応答だけを候補として
     表示し、先に入力された値の遅延応答を破棄する。
 24. video-file block の `file type` / `directory` select は空値の placeholder item を持ち、これを選択すると値を空へ戻す。

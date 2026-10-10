@@ -286,8 +286,10 @@ Search / Rule は番組検索、検索結果からの予約/rule 作成、rule l
     選択へ正規化し、hidden な subGenre 選択を残さない（`searchRule.formComponents.spec.test.tsx`
     の `[AC 2.34]` の test が検証する）。
 30. Search form の `期間 ` は `開始 ` / `終了 ` の日時 picker dialog として表示し、text
-    field は直接ミリ秒入力ではなく dialog activator として扱う。各 dialog は `クリア ` / `設定 `
-    action を持ち、両端が揃うまで `searchPeriods` を送らない。
+    field は直接ミリ秒入力ではなく dialog activator として扱う。各 dialog は月・曜日を日本語で表示し、
+    週の始まりを月曜にした calendar（先頭の列が月曜）、24 時間表記の時刻の選択、`クリア ` / `設定 `
+    action を持つ（Recorded Upload、Manual Reserve と共通の部品）。calendar で日を選び `設定 ` を押すと
+    field に `yyyy-MM-ddTHH:mm` で反映し、`クリア ` は値を空にする。両端が揃うまで `searchPeriods` を送らない。
 31. Search form の `検索 ` button を実行して検索結果を取得したとき、EPGStation フロントエンドは
     SearchResult section の先頭へ scroll する。SearchResult header の link icon は検索条件ではなく Rule
     option card の先頭へ scroll する。

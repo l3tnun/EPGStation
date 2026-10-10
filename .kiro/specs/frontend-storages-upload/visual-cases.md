@@ -43,5 +43,5 @@ Storages / Recorded Upload visual regression は、storage list、usage display�
 - storages list max width は 960px 未満は指定なし、960px 以上で 900px、1264px 以上で 1185px、1904px 以上で 1785px、upload form max width 800px、item padding 8px、usage bar height 25px、form padding `16px 16px 0`、FAB 56px square、progress height 4px とする。
 - upload form は `放送局※`、`日付※`、`長さ※`、`番組名※` の computed color が light/dark とも red であることを確認する。dark theme の row title 一括 color override で白へ上書きされないことも確認する。
 - upload form の `channel` select は option text が channel name / halfWidthName であり、id だけの数値 option を含まないことを確認する。
-- upload form の `日付※` は direct input 後に後続 `長さ※` input と submit button を dialog/backdrop が覆わないこと、field text/underline/空白部分の click で `日付選択 ` dialog を開くこと、dialog 内に `日付 ` date input と `時刻 ` time input が分離して存在すること、`設定 ` / `クリア ` で閉じることを確認する。
+- upload form の `日付※` は direct input 後に後続 `長さ※` input と submit button を dialog/backdrop が覆わないこと、field text/underline/空白部分の click で `日付選択 ` dialog を開くこと、dialog 内に月曜始まりの日本語 calendar と時刻の選択が存在し、明暗の両 theme で背景・文字色が dialog に合っていること、幅 375px でも calendar が dialog からはみ出さないこと、`設定 ` / `クリア ` で閉じることを確認する。
 - upload form の `日付※`、`長さ※`、`番組名※`、`概要 `、`詳細 `、video block `name` / `sub directory` は non-empty 時に clear button を表示し、押下で対象 field だけが空になることを確認する。select、file input、Rule autocomplete 内部 input は対象外とする。
