@@ -358,20 +358,50 @@ describe('server configuration implementation characterization', () => {
     });
 
     it('[CFG-1.1-STREAM-KEEP-EXPLICIT] keeps every stream child the configuration writes instead of the template value', () => {
-        const children = (prefix: string, names: readonly string[]): Record<string, unknown> =>
-            Object.fromEntries(names.map(name => [name, [{ name: `${prefix}-${name}` }]]));
         const explicitStream = (): Record<string, any> => ({
-            live: { ts: children('explicit-live', ['m2ts', 'm2tsll', 'webm', 'mp4', 'hls']) },
+            live: {
+                ts: {
+                    m2ts: [{ name: 'synthetic-explicit-m2ts' }],
+                    m2tsll: [{ name: 'synthetic-explicit-m2tsll' }],
+                    webm: [{ name: 'synthetic-explicit-live-webm' }],
+                    mp4: [{ name: 'synthetic-explicit-live-mp4' }],
+                    hls: [{ name: 'synthetic-explicit-live-hls' }],
+                },
+            },
             recorded: {
-                ts: children('explicit-recorded-ts', ['webm', 'mp4', 'hls']),
-                encoded: children('explicit-recorded-encoded', ['webm', 'mp4', 'hls']),
+                ts: {
+                    webm: [{ name: 'synthetic-explicit-ts-webm' }],
+                    mp4: [{ name: 'synthetic-explicit-ts-mp4' }],
+                    hls: [{ name: 'synthetic-explicit-ts-hls' }],
+                },
+                encoded: {
+                    webm: [{ name: 'synthetic-explicit-encoded-webm' }],
+                    mp4: [{ name: 'synthetic-explicit-encoded-mp4' }],
+                    hls: [{ name: 'synthetic-explicit-encoded-hls' }],
+                },
             },
         });
         const templateStream = {
-            live: { ts: children('template-live', ['m2ts', 'm2tsll', 'webm', 'mp4', 'hls']) },
+            live: {
+                ts: {
+                    m2ts: [{ name: 'synthetic-template-m2ts' }],
+                    m2tsll: [{ name: 'synthetic-template-m2tsll' }],
+                    webm: [{ name: 'synthetic-template-live-webm' }],
+                    mp4: [{ name: 'synthetic-template-live-mp4' }],
+                    hls: [{ name: 'synthetic-template-live-hls' }],
+                },
+            },
             recorded: {
-                ts: children('template-recorded-ts', ['webm', 'mp4', 'hls']),
-                encoded: children('template-recorded-encoded', ['webm', 'mp4', 'hls']),
+                ts: {
+                    webm: [{ name: 'synthetic-template-ts-webm' }],
+                    mp4: [{ name: 'synthetic-template-ts-mp4' }],
+                    hls: [{ name: 'synthetic-template-ts-hls' }],
+                },
+                encoded: {
+                    webm: [{ name: 'synthetic-template-encoded-webm' }],
+                    mp4: [{ name: 'synthetic-template-encoded-mp4' }],
+                    hls: [{ name: 'synthetic-template-encoded-hls' }],
+                },
             },
         };
         const configuration = createConfiguration();
