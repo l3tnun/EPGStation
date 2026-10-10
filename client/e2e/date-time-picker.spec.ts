@@ -307,6 +307,8 @@ async function expectDialogChromeVisible(page: Page, dialog: Locator): Promise<v
   await expectVisibleInViewport(page, dialog, 'dialog')
   await expectVisibleInViewport(page, dialog.getByRole('button', { name: 'クリア' }), 'クリア')
   await expectVisibleInViewport(page, dialog.getByRole('button', { name: '設定' }), '設定')
+  await expectVisibleInViewport(page, dialog.locator('.MuiPickersLayout-toolbar'), '上部の日時')
+  await expectVisibleInViewport(page, dialog.getByRole('tab', { name: '時間を選択' }), '時間の tab')
 }
 
 // 上部の月日と時刻は同じ大きさの文字で、縦の中心が 1px 以内で揃う。
