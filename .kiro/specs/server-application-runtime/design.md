@@ -1216,12 +1216,12 @@ sequenceDiagram
 | `docker-gate-node24` | `docker-image.integration.test.ts` を単独で実行。Debian・Alpine の構築・起動・応答・片付け | container A（hosted runner 模擬、0-3 CPU） |
 
 - `--all` の並列 group は 2 系統で、container A の `server-check` → `docker-gate-node24` と、container B の `client` → `client-browser`。container A の系統は並列 group の中でクリティカルパス（client → client-browser、続く node-matrix）の外にある。node-matrix は各 cell が各 test を一度ずつ流す構造である（§12.4）。
-- `docker-image.integration.test.ts` は integration の一部として node-matrix の Node 24 の回でも host の daemon で流れ、Node 26 の回では除外 env で外す（現状のまま。挙動は変えない）。
+- `docker-image.integration.test.ts` は integration の一部として node-matrix の Node 24 の回でも host の daemon で流れ、Node 26 の回では除外 env で外す。
 - `--only docker-gate-node24` の前に `--only deps-prepare` が要る運用は変えない。
 
 ### 17.8 公開用 workflow の設計（Requirement 11）
 
-`.github/workflows/docker.yml` は次の内容にする。action は commit SHA で固定する。契約は下の「v2 との差と理由」の表と 17.10 が正で、yaml は実装の参照である。
+`.github/workflows/docker.yml` は次の内容にする。action は commit SHA で固定する。契約は下の「workflow の設計判断と理由」の表と 17.10 が正で、yaml は実装の参照である。
 
 ```yaml
 name: Docker
@@ -1304,20 +1304,20 @@ jobs:
           push: true
 ```
 
-#### v2 との差と理由
+#### workflow の設計判断と理由
 
-trigger（`master` への push と全 tag）、matrix の distro と platform、tag の付け方、secret 名、`MAIN_DISTRO` は v2 と同じである。上の `username` と `password` の `<secrets.…>` は、実装では GitHub Actions の `secrets` の参照（式の記法 `${{ … }}`）として書く。次の点だけが v2 と違う。
+trigger（`master` への push と全 tag）、matrix の distro と platform、tag の付け方、secret 名、`MAIN_DISTRO` は上の yaml のとおりである。上の `username` と `password` の `<secrets.…>` は、実装では GitHub Actions の `secrets` の参照（式の記法 `${{ … }}`）として書く。次の点を設計として定める。
 
-| 変更点 | 理由 |
+| 設計 | 理由 |
 | --- | --- |
-| action を Node 24 の版へ更新し、commit SHA で固定する | v2 の action は Node 12 で、今の runner では動かない。tag は動かせる参照のため、`DOCKERHUB_TOKEN` を渡す job では SHA で固定する |
-| `actions/cache` + local cache をやめ、`cache-from` / `cache-to` を `type=gha`（scope は distro ごと）にする | v2 の `actions/cache` は旧版のため今は動かない。`type=gha` は追加の action が要らず、scope を分けると matrix の 2 job が同じ cache を上書きし合わない |
-| `provenance: false` を指定する | build-push-action は v4 以降、指定しないと attestation を付けて multi-arch の index に entry が増える。v2 と同じ image を出す |
-| `::set-output` を `$GITHUB_OUTPUT` への書き込みにする | `::set-output` は非推奨で、公式の置き換えは `$GITHUB_OUTPUT` である |
-| `${{ secrets.DOCKERHUB_IMAGE }}` と `matrix.distro` を `env` で shell へ渡す | script への展開を避ける。tag の計算の論理は v2 と同一である |
-| job に `permissions: contents: read` を与える（top-level は `{}`） | `{}` のままでは GITHUB_TOKEN に権限が無く、private repository の checkout が取得できない。v2 は `permissions` を書かず repository の既定に従っていた |
+| action は Node 24 の版を使い、commit SHA で固定する | Node 12 の action は今の runner では動かない。tag は動かせる参照のため、`DOCKERHUB_TOKEN` を渡す job では SHA で固定する |
+| cache は `cache-from` / `cache-to` を `type=gha`（scope は distro ごと）にする | `type=gha` は追加の action が要らず、scope を分けると matrix の 2 job が同じ cache を上書きし合わない |
+| `provenance: false` を指定する | build-push-action は v4 以降、指定しないと attestation を付けて multi-arch の index に entry が増える。attestation の無い image を出す |
+| tag の出力は `$GITHUB_OUTPUT` への書き込みにする | `::set-output` は非推奨で、公式の置き換えは `$GITHUB_OUTPUT` である |
+| `${{ secrets.DOCKERHUB_IMAGE }}` と `matrix.distro` を `env` で shell へ渡す | script への展開を避ける |
+| job に `permissions: contents: read` を与える（top-level は `{}`） | `{}` のままでは GITHUB_TOKEN に権限が無く、private repository の checkout が取得できない |
 | env を `MAIN_DISTRO` だけにする | runner 上の step が他の env を読まない |
-| platform の一覧を 1 行にする | v2 の折り畳み記法と末尾の `,` をやめ、同じ platform の一覧を明示する |
+| platform の一覧を 1 行にする | 折り畳み記法と末尾の `,` を使わず、platform の一覧を明示する |
 
 `pull_request` を含まないので、PR の検査では実行しない（11.5）。
 

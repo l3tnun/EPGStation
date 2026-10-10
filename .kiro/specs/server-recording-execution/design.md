@@ -136,7 +136,7 @@ start state と一つの `startPromise` を所有する。最初の呼出しだ�
 | `RecordingRecordedUseGate`     | 容量不足削除と録画利用をrecorded ID単位で排他し、active利用を停止しない    | file・DB削除、service child利用  |
 | `RecordingRecordedUseSnapshot` | active sessionに対応するrecorded IDをread-onlyで一時点の集合へ投影する     | 候補query、削除可否、session停止 |
 
-facade 内部の `acceptMutation(diff)` が予約差分を同期で受け付ける。`Failed` では何もせず、候補起動前または起動中は複製可能な差分だけを起動後へ保留し、複製できない入力は controller へ一回だけ直接渡す。`Started` では scheduler 開始を確認してから controller へ一回だけ渡す。既存 `update(diff)` は互換入口としてこの同期受付を呼び、開始済みの場合にだけ従来どおり controller idle と session mutation tail を待つ。facade は後続の候補評価、再試行、timer、queue を所有しない。
+facade 内部の `acceptMutation(diff)` が予約差分を同期で受け付ける。`Failed` では何もせず、候補起動前または起動中は複製可能な差分だけを起動後へ保留し、複製できない入力は controller へ一回だけ直接渡す。`Started` では scheduler 開始を確認してから controller へ一回だけ渡す。既存 `update(diff)` は互換入口としてこの同期受付を呼び、開始済みの場合にだけ controller idle と session mutation tail を待つ。facade は後続の候補評価、再試行、timer、queue を所有しない。
 
 ### 3.2 主要ポート
 
@@ -798,7 +798,7 @@ scheduler開始を行わない。本機能内では同じ段階を再試行せ�
 consumerが待たずに始めるため、候補再構築の予約一覧readがその取消より先に行われることがある。この予約を候補へ入れると、起
 動直後に録画準備を始め、取消の到着で準備を取り消し、録画準備の開始と取消の通知が一回ずつ余分に出る。ルール予約（番組リ
 レーを除く）はconsumerが予約を取り消さずルール予約の再計算を要求するので、この除外の対象にしない。起動時整理の対象でない
-保存済み予約は、開始時刻を過ぎていても終了前であれば従来どおり候補へ入れ、起動後に録画準備を始める。
+保存済み予約は、開始時刻を過ぎていても終了前であれば候補へ入れ、起動後に録画準備を始める。
 
 候補再構築段階は2.3のstart lifecycleを使う。並行呼出しは`Starting`の同じPromiseへjoinし、成功後は`Started`の同じ完了結
 果、失敗後は`Failed`の同じ失敗を返す。したがって保存済み予約一覧readと共有wake作成はprocess内で最大一回であり、失敗時の
@@ -954,12 +954,12 @@ attempt 3 が失敗したら準備失敗を通知し、同じ準備ループで�
 時刻指定では attempt 3 未満の失敗、番組指定では attempt 3 未満または予約終了時刻前の失敗を指し、「最終attempt」はそれ以外の
 失敗を指す。
 
-番組指定予約が終了時刻まで再試行を続けるあいだの準備失敗の運用ログは、attempt 0〜3 の失敗は従来どおり 1 回ごとに記録し、
+番組指定予約が終了時刻まで再試行を続けるあいだの準備失敗の運用ログは、attempt 0〜3 の失敗は 1 回ごとに記録し、
 attempt 4 以降の失敗は記録せずに回数と最後のエラーだけを保持して、直前に記録した時刻から 60 秒以上経った失敗の時点で、
 保持した失敗回数（直前の記録以後と総数）と最後のエラーを 1 回にまとめて記録する。attempt 4 以降の開始ごとの準備開始ログも
 記録しない。取得に成功して録画へ進むとき、取消などで準備を取り消すとき、および終了時刻に達して準備失敗を通知するときは、まだ記録して
 いない失敗があれば 60 秒を待たずにまとめて記録してから進み、なければ何も記録しない。保持した失敗は、準備を新たに始める
-（attempt 0）ときに破棄し、置き換えなどで記録せずに終わった準備の分を次の準備へ持ち越さない。時刻指定予約は attempt 3 で終わるので、記録は従来から変わらない。
+（attempt 0）ときに破棄し、置き換えなどで記録せずに終わった準備の分を次の準備へ持ち越さない。時刻指定予約は attempt 3 で終わるので、すべての失敗を 1 回ごとに記録する。
 
 各5秒待機は予約スケジューラーの将来timerではなく、実行中sessionの有限backoffである。sessionはtimer handleを一件だけ所有
 し、phaseを`RetryWaiting`へ遷移して期待RecordingGeneration、session token、attemptをcallbackへcaptureする。取消、更新で

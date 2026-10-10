@@ -640,7 +640,7 @@ Dockerfileを前提にする。外部からの取得は準備の段階（10.1）
         `Docker tags`のstep、QEMU・Buildx・Docker Hubのlogin・build-pushの各stepで構成する。actionはcommit SHAで固定し、`type=gha`のcacheをdistroごとの
         scopeで持ち、`provenance: false`とする。
     -   Docker Hubの認証情報は`secrets`の参照で渡し、`DOCKERHUB_IMAGE`と`matrix.distro`は`env`でshellへ渡す。
-    -   完了時には、workflowがDesign §17.8の「v2との差と理由」の表と一致し、`pull_request`を含まない。
+    -   完了時には、workflowがDesign §17.8の「workflowの設計判断と理由」の表と一致し、`pull_request`を含まない。
     -   _Requirements: 11.1, 11.2, 11.5_
     -   _Boundary: Docker Publish Workflow_
     -   _Verification: 11.2の実装時の確認_
@@ -662,9 +662,9 @@ Dockerfileを前提にする。外部からの取得は準備の段階（10.1）
     -   `tools/check-tracked-secrets.py`は、Docker Hubのloginの`password`引数へ`DOCKERHUB_TOKEN`のsecrets参照（式の記法`${{ … }}`）を渡す行をcredentialらしき値として弾く（値の正規表現が空白で切れ、placeholderに合わない）。
         `.github/workflows/`配下の行に限り、`${{ secrets.<識別子> }}`だけの参照を値と見なさないようにする。
     -   検査を弱めすぎないため、`${{ 'abc' }}`のようなリテラル、`${{ secrets.X }}abc`のように参照に値が続く形、workflow以外のfile、実際のtokenらしき文字列は
-        引き続き弾く。pre-commit hookは飛ばさない。
+        弾く。pre-commit hookは飛ばさない。
     -   上記のsecrets参照を`password`引数へ渡す行が通ること、上記の弾く例が弾かれることを、変更前後の実行結果として実装の記録に残す。
-    -   完了時には、secrets参照を含む`docker.yml`がpre-commit hookを通ってcommitでき、弾くべき例が引き続き弾かれる。
+    -   完了時には、secrets参照を含む`docker.yml`がpre-commit hookを通ってcommitでき、弾くべき例が弾かれる。
     -   _Requirements: 11.1_
     -   _Boundary: Tracked Secrets Check_
     -   _Verification: `python3 tools/check-tracked-secrets.py`をstageした例で実行した結果_

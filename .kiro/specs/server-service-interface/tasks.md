@@ -462,7 +462,7 @@ Task 9 の leaf は 9.2・9.4・9.5 で、9.1・9.3 は置かない。Task 8 の
 -   [x] 7.2 Client CA・CORS・共通認証非追加を characterization する
 
     -   CA 設定時に client 証明書を要求・検証し、有効・無効な synthetic 証明書の接続結果を固定する。
-    -   API 全接続元許可時に Web と API の HTTP 応答へすべての接続元を許可し、Socket.IO は既存どおり全接続元を許可するこ
+    -   API 全接続元許可時に Web と API の HTTP 応答へすべての接続元を許可し、Socket.IO は全接続元を許可するこ
         とを確認する。
     -   Web、API、画像、映像、API 文書、および通知へ共通アプリケーション認証を暗黙に追加しない負契約を代表 route で検証
         する。

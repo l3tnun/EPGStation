@@ -490,7 +490,7 @@ logo Bufferは照会ごとに上流から取得し、database、filesystem、ま
 ### 番組表と放送中query
 
 -   放送波指定は選択されたGR、BS、CS、SKY、BS4Kを対象とし、放送局指定はchannel IDを対象とする。BS4Kのqueryは任意で、
-    指定しなければ従来どおりGR/BS/CS/SKYの4種別だけで絞り込む。
+    指定しなければGR/BS/CS/SKYの4種別だけで絞り込む。
 -   期間重複条件は`program.startAt <= requested.endAt`かつ`program.endAt >= requested.startAt`であり、両端を含む。
 -   `isFree`が指定された番組表queryでは保存値と一致する番組だけを返す。
 -   query結果は`startAt ASC`であり、同じ開始時刻へ追加tie-breakを設けない。
@@ -961,7 +961,7 @@ Acceptance Criterion 9が判定する。実行結果とcoverageはこの表に�
 
 -   実外部serverを用いた長時間feed、network切断、large program listのruntime結果は未実行である。通常gateは合成
     HTTP・stream fixtureで契約を検証し、実環境値をtracked証跡へ残さない。
--   database driver更新後のregexp、LIKE、同時刻結果順は実driver integrationで再確認する。同じ開始時刻の安定順は引き続き
+-   database driver更新後のregexp、LIKE、同時刻結果順は実driver integrationで再確認する。同じ開始時刻の安定順は
     保証しない。
 -   process shutdown時に未保存bufferをdrainする保証は存在しない。shutdown protocolを追加する場合はapplication runtimeと
     同じ変更単位で設計する。

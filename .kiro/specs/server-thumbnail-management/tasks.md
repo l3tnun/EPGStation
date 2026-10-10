@@ -41,13 +41,13 @@ Task 4.1 が所有する。本 spec は同 task 完了後の検証済み設定 s
 | 6.8  | `test/server/thumbnail-management/integration/thumbnail-ipc.integration.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                             | `integration`                                     | `6.7`                                    | `npm run test:server:integration -- test/server/thumbnail-management/integration/thumbnail-ipc.integration.test.ts`                                                                                                                                                                                                                                                                                                                                                                    |
 | 7.4  | `test/server/thumbnail-management/**`（Task 6.1〜6.8 の全 test file） | `unittest/spec`・`unittest/imp`・`integration` | `6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 6.8` | `npm run test:server`（`server-application-runtime` が所有する共有 command） |
 
--   [x] 1. 既存の生成・参照・整理契約を characterization する
+-   [x] 1. 生成・参照・整理契約を characterization する
 -   [x] 1.1 FIFO、重複依頼、受付と完了の分離を固定する
 
     -   `test/server/thumbnail-management/spec/generation-admission.spec.test.ts` と
         `test/server/thumbnail-management/imp/queue-lifecycle.test.ts` に、受付順、同一録画ファイルの重複依頼、DB 保存未
         解決、および非同期 listener の deferred fixture を追加する。
-    -   既存実装を変更せず、FIFO、一件実行、受付時の JPEG・DB row・完了通知 0、DB settlement までの後続開始 0、成功通知
+    -   実装を変更せず、FIFO、一件実行、受付時の JPEG・DB row・完了通知 0、DB settlement までの後続開始 0、成功通知
         後に listener 完了を待たない順序を exact call ledger で固定する。
     -   完了時には TM-1.2、TM-1.3、TM-1.8、TM-1.9、TM-1.10 の characterization が成功し、production 差分が 0
         件である。
@@ -65,7 +65,7 @@ Task 4.1 が所有する。本 spec は同 task 完了後の検証済み設定 s
     -   _Requirements: 2.1, 2.4, 2.5, 2.6_
     -   _Boundary: JPEG 生成前処理_
 
--   [x] 1.3 command、登録、通知、および既存失敗 cleanup を固定する
+-   [x] 1.3 command、登録、通知、および失敗 cleanup を固定する
 
     -   `test/server/thumbnail-management/spec/jpeg-generation.spec.test.ts` と
         `test/server/thumbnail-management/imp/queue-lifecycle.test.ts` に、実行対象と引数の分離、親環境継承、正常・異常
@@ -84,7 +84,7 @@ Task 4.1 が所有する。本 spec は同 task 完了後の検証済み設定 s
         敗、JPEG unlink 失敗、および削除成功の fixture を追加する。
     -   `test/server/thumbnail-management/imp/maintenance-branches.test.ts` で、DB 先行削除、JPEG 失敗時の DB 復元 0・通
         知 0、両方成功時だけ通知 1 を検証する。
-    -   完了時には TM-3.1〜TM-3.5 が既存の row、JPEG、error、通知結果を再現し、production 差分が 0 件である。
+    -   完了時には TM-3.1〜TM-3.5 が row、JPEG、error、通知結果を再現し、production 差分が 0 件である。
     -   _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
     -   _Boundary: サムネイル取得・個別削除_
 
@@ -97,7 +97,7 @@ Task 4.1 が所有する。本 spec は同 task 完了後の検証済み設定 s
         cleanup 由来 add 0 の fixture を追加する。
     -   再生成と cleanup の照合・削除が失敗しても、失敗した対象以外の後続対象について照合・削除を継続することを検証す
         る。
-    -   完了時には TM-4.1〜TM-4.5 と TM-5.2、TM-5.4、TM-5.5 が既存の照合・追加・削除・継続結果を再現し、production差分が
+    -   完了時には TM-4.1〜TM-4.5 と TM-5.2、TM-5.4、TM-5.5 が照合・追加・削除・継続結果を再現し、production差分が
         0 件である。
     -   _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 5.2, 5.4, 5.5_
     -   _Boundary: 不足サムネイル再生成・クリーンアップ_

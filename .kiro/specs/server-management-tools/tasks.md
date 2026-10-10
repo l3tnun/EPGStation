@@ -26,21 +26,21 @@ envelope、checksum、全種類 transaction、retry、path 長上限を追加し
 し、動作保証または Windows runtime test を追加しない。
 
 -   [x] 1. 管理コマンドの受付、待機、および終了契約を固定する
--   [x] 1.1 既存 CLI と入力検査を characterization する
+-   [x] 1.1 CLI と入力検査を characterization する
 
-    -   既存実装分類 A として、`backup`、`restore`、`v1migrate` の既存 command、short / long alias、入力元・出力先の受
-        付、および余分な引数の既存取扱いを `unittest/spec` と compiled process test で固定する。
-    -   mode、入力元、または出力先の未指定・空文字と未対応 mode は、logger 初期化、file 操作、DB 確認を開始せず既存
+    -   既存実装分類 A として、`backup`、`restore`、`v1migrate` の command、short / long alias、入力元・出力先の受
+        付、および余分な引数の取扱いを `unittest/spec` と compiled process test で固定する。
+    -   mode、入力元、または出力先の未指定・空文字と未対応 mode は、logger 初期化、file 操作、DB 確認を開始せず
         message と終了状態 1 を返すことを spy で確認する。
     -   `install-win-service` と `uninstall-win-service` は `package.json` の script 名の確認（レビュー）だけで扱い、
         Windows 上の起動、終了 code、service lifecycle を成功条件にしない。
-    -   完了時には、三つの管理 command の正常な受付と入力不正 matrix が既存 CLI surface を再現し、二つの Windows command
+    -   完了時には、三つの管理 command の正常な受付と入力不正 matrix が CLI surface を再現し、二つの Windows command
         名が残り、production code の差分がない。
     -   _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 5.6, 6.1, 6.2, 6.3_
     -   _Boundary: Management CLI adapter_
     -   _Verification: unittest/spec, unittest/imp, compiled process_
 
--   [x] 1.2 (P) DB 利用可能性を無期限に待つ既存契約を characterization する
+-   [x] 1.2 (P) DB 利用可能性を無期限に待つ契約を characterization する
 
     -   既存実装分類 A として、最初の接続確認を直ちに開始し、失敗後だけ 1,000 ms 待って新しい確認を始め、任意回数後の成
         功で対象 operation を一度だけ開始することを fake sleep で固定する。
@@ -80,7 +80,7 @@ envelope、checksum、全種類 transaction、retry、path 長上限を追加し
         を synthetic repository fixture で確認する。
     -   8 read を一つの snapshot、transaction、lock へ統合せず、途中 read failure では後続 read と出力 write を開始しな
         いことを検証する。
-    -   完了時には、8 repository の呼出順、引数、await barrier、途中失敗位置、および進行 label が既存契約どおり観測で
+    -   完了時には、8 repository の呼出順、引数、await barrier、途中失敗位置、および進行 label が契約どおり観測で
         き、production code の差分がない。
     -   _Requirements: 2.1, 5.4, 5.6_
     -   _Boundary: Backup coordinator―repository read order_
@@ -92,7 +92,7 @@ envelope、checksum、全種類 transaction、retry、path 長上限を追加し
     -   既存実装分類 A として、8 collection の exact root key と emission order を typed synthetic fixture で固定し、
         version、format ID、indent、trailing newline がない compact JSON を確認する。
     -   指定 path へ UTF-8 で同期 direct write し、既存 file を直接置換することを fake filesystem で検証する。
-    -   write failure で出力が空または途中内容になり得る既存特性を再現し、temporary file、fsync、atomic rename、旧 file
+    -   write failure で出力が空または途中内容になり得る特性を再現し、temporary file、fsync、atomic rename、旧 file
         復元、checksum を期待値にしない。
     -   完了時には、期待 byte 列、encoding、単一 write 対象、および write failure 後の非原子的結果が再現され、production
         code の差分がない。
@@ -121,11 +121,11 @@ envelope、checksum、全種類 transaction、retry、path 長上限を追加し
 
     -   既存実装分類 A として、DB 利用待ち成功後に指定 file を UTF-8 で同期 read し、`JSON.parse()` の結果を復元へ渡すこ
         とを `unittest/spec` で固定する。
-    -   file 不在、read failure、parse failure では最初の repository mutation を開始せず、既存の出力と終了状態 1 を返す
+    -   file 不在、read failure、parse failure では最初の repository mutation を開始せず、出力と終了状態 1 を返す
         ことを検証する。
     -   JSON として解釈後に 8 collection、row field、ID relation、重複 ID を一括事前検査せず、extra root field は参照せ
-        ず、不足・不正値は到達 stage で失敗し得る既存特性を分離して確認する。
-    -   完了時には、正常入力、三つの file failure、および JSON として有効だが後段不正な入力の mutation 開始位置が既存順
+        ず、不足・不正値は到達 stage で失敗し得る特性を分離して確認する。
+    -   完了時には、正常入力、三つの file failure、および JSON として有効だが後段不正な入力の mutation 開始位置が順
         序どおり観測でき、production code の差分がない。
     -   _Requirements: 3.1, 3.2, 5.1, 5.6_
     -   _Boundary: Restore coordinator―Synchronous JSON file adapter_
@@ -178,11 +178,11 @@ envelope、checksum、全種類 transaction、retry、path 長上限を追加し
     -   file 不在、read failure、parse failure は DB availability probe と row insert を開始せず終了状態 1 を返すことを
         `unittest/spec` で確認する。
     -   `dbRevisionInfo` を runtime 受入判定に使わず、version allowlist、schema preflight、upgrade registry を追加しない
-        既存境界を characterization する。
+        境界を characterization する。
     -   空の録画済み配列と非文字列の先頭保存先名は別 fixture とし、非文字列時の error 記録だけを fail-fast 成功保証へ読
         み替えない。
     -   手書きの v1 バックアップ fixture が v1 のバックアップ形式の型と同じ項目を持つことを、`test/server/management-tools/v1-fixture-parity.imp.test.ts`（`IMP-V1-FIXTURE`）で確認する。
-    -   完了時には、正常な最終 v1 fixture、三つの入力 failure、および二つの既知入力特性が DB 開始前の既存順序で観測で
+    -   完了時には、正常な最終 v1 fixture、三つの入力 failure、および二つの既知入力特性が DB 開始前の順序で観測で
         き、production code の差分がない。
     -   _Requirements: 4.1, 4.2, 4.3, 5.6_
     -   _Boundary: v1 migration coordinator―Synchronous JSON file adapter_
@@ -193,7 +193,7 @@ envelope、checksum、全種類 transaction、retry、path 長上限を追加し
 
     -   keyword、除外 keyword、検索 flag、放送波、放送局、genre、曜日時刻、無料条件、時間条件、予約条件、保存条件を
         nullable branch ごとに `unittest/spec` で固定する。
-    -   最大 3 組の encode index、保存先、元 file 削除指定を既存設定 snapshot から変換し、対応 encode index がない場合は
+    -   最大 3 組の encode index、保存先、元 file 削除指定を設定 snapshot から変換し、対応 encode index がない場合は
         fallback せず失敗することを確認する。
     -   rule を一件ずつ追加し、各旧 ID を返された新 ID へ process 内だけで対応付け、永続 index、retry、重複防止 key を追
         加しないことを検証する。
@@ -207,7 +207,7 @@ envelope、checksum、全種類 transaction、retry、path 長上限を追加し
 -   [x] 4.3 v1 録画済み番組変換と状態・除外項目を characterization する
 
     -   旧 rule ID が対応表にある場合だけ新 ID を関連付け、正の program ID と手動予約、放送局、時刻、名称、説明、genre、
-        video / audio 情報を既存規則で射影する。
+        video / audio 情報を規則で射影する。
     -   録画中ではなく未保護として登録し、音声 sampling rate、未変換の詳細、log 位置、error / drop / scrambling 件数、一
         時録画状態を移行しないことを `unittest/spec` で確認する。
     -   `extended` 原文を `extended` に保持し、半角化した値を `halfWidthExtended` に設定する（`description` と同じ写像）。
@@ -222,7 +222,7 @@ envelope、checksum、全種類 transaction、retry、path 長上限を追加し
 
     -   thumbnail、元録画 file、encode 済み file の管理情報を新 recorded ID へ関連付け、path は metadata として登録する
         だけで実 file を copy、move、delete しないことを検証する。
-    -   元録画 file の型・表示名・親保存先、encoded file の型・名称・親保存先、および size の null から 0 への既存変換を
+    -   元録画 file の型・表示名・親保存先、encoded file の型・名称・親保存先、および size の null から 0 への変換を
         `unittest/imp` で固定する。
     -   encoded item の旧 recorded ID に対応がない場合は追加せず失敗し、録画履歴は名称、放送局 ID、終了時刻を一件ずつ追
         加することを確認する。
@@ -241,9 +241,9 @@ envelope、checksum、全種類 transaction、retry、path 長上限を追加し
         `integration` call trace で固定する。
     -   各種類の先頭・中間・末尾 failure を注入し、後続を開始せず、それ以前に追加済みの row を migration 全体として
         rollback しないことを確認する。
-    -   同じ入力の再実行で既処理分を識別せず重複登録し得る既存特性を隔離 fixture で再現し、checkpoint、resume、
+    -   同じ入力の再実行で既処理分を識別せず重複登録し得る特性を隔離 fixture で再現し、checkpoint、resume、
         idempotency key、whole-operation retry を期待値にしない。
-    -   完了時には、固定 stage 順、全 failure point の残存 row、後続非開始、および再実行時の既存重複特性が SQLite と
+    -   完了時には、固定 stage 順、全 failure point の残存 row、後続非開始、および再実行時の重複特性が SQLite と
         MySQL の synthetic data で観測できる。
     -   _Requirements: 4.4, 4.5, 4.6, 4.7, 4.12, 4.13, 5.4, 5.6_
     -   _Boundary: v1 migration coordinator―Ordered row insertion_
@@ -305,7 +305,7 @@ envelope、checksum、全種類 transaction、retry、path 長上限を追加し
 -   [x] 6.1 正式な機能固有の仕様testを完成する
 
     -   `SPEC-CLI`、`SPEC-BACKUP`、`SPEC-RESTORE`、`SPEC-V1`、`SPEC-DB`のcanonical filenameへ、管理command受付、版なし
-        JSON、復元・移行順、部分失敗、進行表示、終了状態の主caseを、R1からR5の各ACへ一つずつ実装する。既存挙動を
+        JSON、復元・移行順、部分失敗、進行表示、終了状態の主caseを、R1からR5の各ACへ一つずつ実装する。挙動を
         characterizationするcaseではproductionを変更せず、R3.8だけはTask 3.3で承認済み差分を閉じる。
     -   R3.8は6.6で足す。R6（Windows service用のcommand名）は`package.json`の確認で扱い、主caseにしない。R7の5 ACはspec testの主caseへ混入
         させず、Task 6.2から6.7で確かめる。

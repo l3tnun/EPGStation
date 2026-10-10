@@ -261,7 +261,7 @@ operationとして委譲する。
 | `DELETE <base>/api/recorded/{recordedId}` | 既存10進path変換後、service child deletion coordinatorの`deleteByUser(recordedId)`をawait | model `recorded`、function `delete`、args `{ recordedId }`、`void` / error reply、既存5,000ms期限           | 成功はHTTP 200と`{ code: 200 }`、失敗は既存HTTP 500本文 |
 | `DELETE <base>/api/videos/{videoFileId}`  | 既存10進path変換後、typed individual-video deletion requestをawait                        | model `recorded`、function `deleteVideoFile`、args `{ videoFileId }`、`void` / error reply、既存5,000ms期限 | 成功はHTTP 200と`{ code: 200 }`、失敗は既存HTTP 500本文 |
 
-番組全体削除では、child coordinatorが既存どおり対象Encode取消を完了した後だけ、抽象
+番組全体削除では、child coordinatorが対象Encode取消を完了した後だけ、抽象
 `ChildUserDeletionRequestPort.requestUserDeletion(recordedId)`を呼ぶ。service child composition adapterはこれを
 `IPCRecordedManageModel.delete(recordedId)`へ写像する。個別動画削除は
 `IPCRecordedManageModel.deleteVideoFile(videoFileId)`へ写像し、childで番組全体削除用のEncode取消を追加しない。
@@ -393,7 +393,7 @@ HLS を開始して得た `streamId` に対し、client から見える親 playl
     で拒否した場合は、要求の形は正しく対象の予約の種類による拒否なので、HTTP 409 と
     `{ code: 409, message: 'Conflict', errors: 'ReservationIsNotEditable' }`を返す。変換は同じ`responseOperationError`が行う。
     機械可読な API 文書では、`PUT /reserves/{reserveId}`の応答に 409（本文は`Error`）を載せる。
--   `responseOperationError`は`InvalidSubDirectory`と`ReservationIsNotEditable`以外の失敗を、従来どおり
+-   `responseOperationError`は`InvalidSubDirectory`と`ReservationIsNotEditable`以外の失敗を、
     `responseServerError`と同じ HTTP 500 で返す。予約が無い（`ReservationIsNotFound`）編集と、入力・encode option不正
     （`ReservationEditError`）の編集も HTTP 500 である。どれも IPC 越しでもメッセージ文字列で判別できる。
 -   内部処理の失敗は HTTP 500 と `code`、`message`、必要な場合だけ `errors` を持つ既存本文へ変換する。
@@ -458,7 +458,7 @@ IPTV Route Adapter（`channel.m3u8.ts`）は Host・scheme・`subDirectory` か�
 `<scheme>://<host><base>/api/streams/live/{channelId}/m2ts?mode={mode}` として provider へ注入する。IPTV provider は
 builder が返した URL を M3U の既存位置へ置き、URL 文字列を連結しない。
 
-live/recorded の playlist と外部再生連携は、`ApiUtil`（`createM3U8PlayListStr`・`getHost`）が既存どおり組み立てる。
+live/recorded の playlist と外部再生連携は、`ApiUtil`（`createM3U8PlayListStr`・`getHost`）が組み立てる。
 公開 path、query、URL scheme、Host、subDirectory の通信内容は変更しない。この設計は Host の固定値や新しい公開routeを追加しない。
 
 ## 10. 動画アップロード

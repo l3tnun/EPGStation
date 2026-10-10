@@ -27,7 +27,7 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
         `unittest/spec` で固定する。
     -   接続作成、データ構造更新、外部拡張、および簡易問い合わせの Promise を制御し、長時間相当の fake clock を進めても
         EPGStation 独自の timeout、別試行、強制中断が発生しないことを `unittest/imp` で確認する。
-    -   外部拡張の途中失敗後に初期化済み候補が保存されたままになる修正前の差は、目標契約と混ぜず focused
+    -   外部拡張の途中失敗後に初期化済み候補が保存されたままになる差は、目標契約と混ぜず focused
         characterization として再現する。
     -   完了時には、元 Promise が settle した結果だけが呼出元へ届き、pending 中の追加 timer と並行再試行が 0 件で、拡張
         の成功・失敗順を自動検証できる。

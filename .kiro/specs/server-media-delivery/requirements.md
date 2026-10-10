@@ -60,7 +60,7 @@
 12. The 映像配信・再生連携機能 shall 録画済み番組、動画情報、実パス、および視聴用変換の確立へ正の有限な開始期限を適用す
     る
 
-> **Recorded Content provider契約:** consumerはproviderが解決済みsourceに保持して渡す`playPosition`を既存の再生位置選択
+> **Recorded Content provider契約:** consumerはproviderが解決済みsourceに保持して渡す`playPosition`を再生位置選択
 > へ用いる。provider失敗時にDB、実path、動画情報を直接再解決するfallbackを持たず、公開API、IPC、設定、DB schema、公開
 > response、HLS公開pathを変更しない。
 
@@ -83,7 +83,7 @@
 
 ### Requirement 3: HLS配信
 
-**目的:** 利用者として、既存のURL形式を変えずにライブ放送と録画ファイルをHLSで視聴したい。
+**目的:** 利用者として、決まったURL形式でライブ放送と録画ファイルをHLSで視聴したい。
 
 #### Acceptance Criteria
 
@@ -98,8 +98,8 @@
 6. When プレイリストと映像データが利用可能になったとき, the 映像配信・再生連携機能 shall 対象配信を視聴可能として示す
 7. If 利用可能な字幕があるとき, the 映像配信・再生連携機能 shall HLSプレイリストへ字幕情報を追加する
 8. The 映像配信・再生連携機能 shall 親プレイリストを設定済みの共通HLS保存先直下の `stream{streamId}.m3u8` として生成する
-9. The 映像配信・再生連携機能 shall 利用者向け親プレイリストのパスを `./streamfiles/stream{streamId}.m3u8` のまま維持
-   し、世代ディレクトリまたは世代識別子を公開パスへ追加しない
+9. The 映像配信・再生連携機能 shall 利用者向け親プレイリストのパスを `./streamfiles/stream{streamId}.m3u8` とし、
+   世代ディレクトリまたは世代識別子を公開パスへ追加しない
 10. When HLS配信の継続要求を受け付けたとき, the 映像配信・再生連携機能 shall 自動停止までの時間を15秒へ延長する
 11. If 開始または直前の継続要求から15秒以内に次の継続要求が届かないとき, the 映像配信・再生連携機能 shall 対象HLS配信を
     停止する

@@ -140,7 +140,7 @@ DB 保存結果が未解決の間は、同じ依頼を完了扱いにせず、�
 `OutputReservation` は request の識別（`requestId`）、reservation の識別（`reservationId`）、final の相対名と path、request固有の
 temporary directory・file、publish 済みの印、および一回だけの解放状態を持つ内部情報である。child lease は専用待機列の job が
 `GenerationRequest`（terminal の確認と業務 settlement の状態）の確定まで保持する。active reservationはメモリー内set
-へ保持し、名前選択と明示的クリーンアップの双方から除外する。DBへ保存するのは従来どおりfinal相対`filePath`と
+へ保持し、名前選択と明示的クリーンアップの双方から除外する。DBへ保存するのはfinal相対`filePath`と
 `recordedId`だけであり、reservation identity、temporary path、状態を公開path、DB schema、API、IPCへ追加しない。
 
 ### 3.3 設定

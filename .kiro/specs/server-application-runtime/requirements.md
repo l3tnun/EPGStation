@@ -241,7 +241,7 @@ coverage の計測の道具を一度だけ所有して提供し、本機能自�
 
 ### Requirement 11: 公開用 Docker image の構築と公開
 
-**目的:** 利用者として、x86_64 以外の機器（ARM の機器を含む）でも、公開された Docker image で EPGStation を使いたい。保守者として、公開用 image を v2 と同じく GitHub Actions で作りたい。
+**目的:** 利用者として、x86_64 以外の機器（ARM の機器を含む）でも、公開された Docker image で EPGStation を使いたい。保守者として、公開用 image を GitHub Actions で作りたい。
 
 **境界:** 公開用 image の構築と Docker Hub への公開を対象とする。image の中身が動くことの確認は Requirement 10（手元、linux/amd64）が行う。公開先の認証情報は repository に置かず、GitHub Actions の secret から渡す。
 

@@ -742,10 +742,10 @@ skip・overlap を含む）の snapshot を録画実行へ渡す。これによ�
 この snapshot は録画実行が録画候補と時刻指定手動予約の timer を組み直すための入力であり、予約の変更として扱わない。外部
 連携（予約変更コマンドなど）へ渡す予約差分は、番組指定手動予約・番組リレー予約・rule ごとの更新が確定した差分だけであ
 り、再構築のために全予約を送り直した分（`update` に全予約を入れた差分）の `update` は含めない。この差分の `insert` と
-`delete` は、conflict sweep が確定した追加・削除として従来どおり外部連携へ渡す。起動時の conflict sweep が競合状態だけを
+`delete` は、conflict sweep が確定した追加・削除として外部連携へ渡す。起動時の conflict sweep が競合状態だけを
 変えた予約は、この送り直しに含まれて録画実行へ渡り、外部連携へは渡らない。送り直しによって、同じ予約について外部 command
 が重ねて実行されることはない（rule ごとの更新は時間帯の重なる他の予約も再計算するため、同じ予約が複数の rule の差分に入る
-ことはあり、その分は従来どおり差分ごとに渡る）。
+ことはあり、その分は差分ごとに渡る）。
 
 ## 競合判定
 
@@ -936,7 +936,7 @@ function enum には `clean` が宣言されている一方、IPC server handler
 
 ### 公開API
 
-公開 carrier は既存の route、method、status、および body を維持する。ここでいう path は既存 API base からの相対 path で
+公開 carrier の route、method、status、および body は次のとおりとする。ここでいう path は既存 API base からの相対 path で
 ある。
 
 | Operation      | Method / path                          | Success                               | Reservation contract                                                |
@@ -958,7 +958,7 @@ function enum には `clean` が宣言されている一方、IPC server handler
 program/time の区別として提供する。
 
 保存済み `encodeDirectory2` は公開APIの予約 item に含めない。projection は第二 encode の mode と親保存先を返し得るが、第
-二 encode のディレクトリは返さず、第三 encode のディレクトリを既存どおり返す。この非対称を修正済みの typo として正規化し
+二 encode のディレクトリは返さず、第三 encode のディレクトリを返す。この非対称を修正済みの typo として正規化し
 ない。
 
 `GET /reserves` の状態 filter は exact exclusive flag 組合せで、`GET /reserves/lists` と `/cnts` は
@@ -968,7 +968,7 @@ schema とも `normal`・`conflicts`・`skips`・`overlaps` を配列で返し�
 
 ### process 間操作
 
-既存 IPC の reservation operation は次を維持する。
+IPC の reservation operation は次のとおりとする。
 
 | Function             | Input                       | Completion semantics                                               |
 | -------------------- | --------------------------- | ------------------------------------------------------------------ |
@@ -988,7 +988,7 @@ mutation が完了する可能性がある。request ID による carrier 応答
 しない。
 
 IPC server の既存 argument 取得以上の、型・範囲・余剰 field の新しい一括 validation 層はこの設計で追加しない。公開
-schema と domain checker が実際に検査する条件を test し、存在しない「旧 IPC」との互換期間を定義しない。
+schema と domain checker が実際に検査する条件を test し、互換期間を定義しない。
 
 ### process 内 event と録画候補
 
@@ -1015,7 +1015,7 @@ return した rejected Promise を捕捉して log する。予約差分 callbac
 
 ## 既知差と適用境界
 
-この表は、仕様 case が確認する契約と、引き続き設計対象外とする既知差を区別する。
+この表は、仕様 case が確認する契約と、設計対象外とする既知差を区別する。
 
 | ID                             | 要件または期待                                      | 確認できる実装特性                                                                            | 設計上の扱い                                                               |
 | ------------------------------ | --------------------------------------------------- | --------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |

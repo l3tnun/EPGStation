@@ -57,7 +57,7 @@ Task 8 の leaf は 8.2・8.4・8.5 で、8.1・8.3 は置かない。
         `test/server/iptv-export/unittest/spec/query.spec.test.ts`、`test/server/iptv-export/unittest/imp/query.test.ts`、
         および `test/server/iptv-export/integration/iptv-db-http.integration.test.ts` とする。
     -   `mode` と `days` を OpenAPI の整数入力として受け付け、`days` 省略時は 3、`isHalfWidth` 省略時は `true` を使用す
-        る既存契約を `unittest/spec` で固定する。
+        る契約を `unittest/spec` で固定する。
     -   正・負の小数 query が数値化後に floor され、`3.9` は `3`、`-1.2` は `-2` として文書生成へ渡ることを OpenAPI
         middleware を含む `integration` で確認する。
     -   日数の最小値・最大値を IPTV 文書生成側で追加検査せず、画質番号の利用可能性も映像配信機能へ問い合わせないことを
@@ -78,7 +78,7 @@ Task 8 の leaf は 8.2・8.4・8.5 で、8.1・8.3 は置かない。
     -   M3U8 要求ごとにチャンネルを、XMLTV 要求ごとに番組とチャンネルを新しく読み、結果文字列、失敗、および進行状態を別
         要求へ共有しないことを deferred port で検証する。
     -   チャンネル読取失敗を M3U8 全体の失敗、チャンネルまたは番組読取失敗を XMLTV 全体の失敗とし、成功済み部分だけの文
-        書を返さない既存結果を `unittest/spec` で固定する。
+        書を返さない結果を `unittest/spec` で固定する。
     -   一度の失敗後に IPTV 文書生成全体を自動再実行せず、永続化機能が所有する内部 retry の意味は変更しないことを
         invocation count で確認する。
     -   30 秒期限は Task 6 で扱い、固着読取はこの characterization の成功条件に含めない。
@@ -182,7 +182,7 @@ Task 8 の leaf は 8.2・8.4・8.5 で、8.1・8.3 は置かない。
         `test/server/iptv-export/unittest/spec/representation.spec.test.ts`、および
         `test/server/iptv-export/unittest/imp/serializers.test.ts` とする。
     -   通常表記の番組名と通常説明を出し、通常説明がある場合だけ詳細説明を直後へ連結し、通常説明がなければ詳細説明だけを
-        出さない既存契約を `unittest/spec` で固定する。
+        出さない契約を `unittest/spec` で固定する。
     -   番組名・通常説明・詳細説明だけに五記号の全角類似文字置換と SUB 除去を適用し、チャンネル名、識別子、属性値、およ
         び M3U8 項目へ一律適用しないことを文字 matrix で検証する。
     -   XMLTV header を改行なしで開始し、`channel` 後だけ LF 一文字、説明前だけ ASCII 空白四文字、`programme` 間と
@@ -206,7 +206,7 @@ Task 8 の leaf は 8.2・8.4・8.5 で、8.1・8.3 は置かない。
         `test/server/iptv-export/unittest/imp/serializers.test.ts` とする。
     -   通常名と半角名、通常説明と半角説明、通常詳細と半角詳細が異なる synthetic 番組を用意し、`isHalfWidth=true` では半
         角fieldだけがXMLTV番組本文へ現れ、入力entityが不変であることを固定する。既存通常表記testは成功する。
-    -   通常説明がない場合は半角詳細だけも出さず、選択後の番組名・説明へ既存の五記号置換と SUB 除去を同じ順で適用する。
+    -   通常説明がない場合は半角詳細だけも出さず、選択後の番組名・説明へ五記号置換と SUB 除去を同じ順で適用する。
     -   各番組から通常または半角の名前・説明・詳細を要求ローカル値へ選び、保存済みentityを変更せ
         ず置換・説明連結・直列化する。保存schema、番組query、HTTP carrier、外部API schemaは変更しない。
     -   通常・半角の両要求後もDB portから受け取ったentityの全fieldが呼出し前snapshotと一致することを、target仕様testと

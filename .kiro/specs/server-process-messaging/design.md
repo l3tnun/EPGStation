@@ -366,7 +366,7 @@ filesystem内のpath namespaceで判定する。
 このためtransport callbackだけで「delivery可能性あり」をownership transferへ変換せず、ack loss、receiver reply loss、
 service child replacementでもfileの所在からownerを一意に決められる。PMはadoption状態を永続化・retryせず、child再起動時の
 incoming token directory掃除とparent側adopted cleanupは各filesystem ownerへ委譲する。業務replyの10分期限後も開始済み
-parent operationを取消さず、late replyを新しいHTTP requestへ配送しない既存規則を維持する。
+parent operationを取消さず、late replyを新しいHTTP requestへ配送しない。
 
 PM補助testは、send前失敗、deliveryなし、rename先着、unlink先着、ack loss、reply loss、child replacementを組み合わせ、
 incoming/adoptedのpayload/token directoryとfinal destinationのownerが常に一つであること、domain callがrename成功後だけ一

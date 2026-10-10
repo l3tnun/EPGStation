@@ -8,7 +8,7 @@
 その foundation task group の完了後に本 spec を実行し、本 spec では運用ログ固有の test と、明示した用途分類の最小修正だ
 けを追加する。
 
--   [x] 1. ログ初期化と設定適用の既存契約を固定する
+-   [x] 1. ログ初期化と設定適用の契約を固定する
 -   [x] 1.1 設定指定前の4用途loggerと重要度filterをcharacterization testで固定する
 
     -   既存実装分類Aとして、設定を指定しない初期化でsystem、access、stream、encodeの4用途が画面出力へ接続され、infoを既
@@ -28,7 +28,7 @@
     -   完了時には、4種類の失敗すべてで業務処理到達を示す観測値が0件となり、失敗表示と終了結果を区別して確認できる。
     -   _Requirements: 1.3, 1.4_
 
--   [x] 1.3 役割別sampleと出力先置換の既存契約をcharacterization testで固定する
+-   [x] 1.3 役割別sampleと出力先置換の契約をcharacterization testで固定する
 
     -   既存実装分類Aとして、予約・録画、Web・API、番組情報更新の各sampleが定めるcategory、重要度、出力先、容量、保持
         数、切替名形式を読み取る。
@@ -38,7 +38,7 @@
     -   完了時には、3役割のrouting matrixと12種類の置換結果がsample設定と一致することを自動testで確認できる。
     -   _Requirements: 1.2, 3.1, 3.2, 3.3_
 
--   [x] 2. 役割別processとfile appenderの既存動作を固定する
+-   [x] 2. 役割別processとfile appenderの動作を固定する
 -   [x] 2.1 役割別processの設定分離と次回初期化時反映を検証する
 
     -   既存実装分類Aとして、予約・録画processの画面出力から役割別設定への切替、Web・API processと番組情報更新processの
@@ -110,7 +110,7 @@
         果は変更しない。
     -   `unittest/spec`とcross-spec integration testで、放送stream取得失敗を含む各配信事象がstream用途へ残ることを検証す
         る。
-    -   完了時には、配信失敗がsystem用途だけに残る経路が0件となり、既存の配信結果と利用者向け応答は変わらない。
+    -   完了時には、配信失敗がsystem用途だけに残る経路が0件となり、配信結果と利用者向け応答は、stream用途への記録によって変化しない。
     -   _Requirements: 2.3_
     -   _Boundary: Media Delivery Producer―用途別logger統合_
     -   _Depends: 1.1_

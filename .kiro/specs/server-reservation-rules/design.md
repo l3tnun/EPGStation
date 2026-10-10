@@ -468,7 +468,7 @@ time Ruleの空channel配列、空time配列、およびweekday bit 0は保存�
 
 sub directoryの検査は`server-recording-execution`の設計6.7.2の共通関数`isSubDirectoryInsideRoot()`を使い、他の検証規則
 より先に評価する。外を指す指定は`add`・`update`を`InvalidSubDirectory`で拒否し、Rule row、変更event、および後続の候補
-再計算を0件にする。保存先の中に収まる指定（`a/../b`、先頭の`/`）は従来どおり保存する。
+再計算を0件にする。保存先の中に収まる指定（`a/../b`、先頭の`/`）は保存する。
 
 ### データベース別検索
 

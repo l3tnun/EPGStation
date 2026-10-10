@@ -260,7 +260,7 @@ path、ログ契約を変更しない。`RecordedStreamBaseModel`がsourceを受
 lease取得後に同じproviderの`open(videoFileId, recordedId, playPosition, option)`を呼ぶ。録画ファイルの直接配信（
 `acquireRecordedDelivery`）は動画情報を使わないため、`option.allowMissingVideoInfo`を`true`にして動画情報の取得失敗を許し、
 視聴用変換は指定しない。providerはvideo file/recorded対応、動画
-情報、実path、readerを再読取し、既存再生要求の`playPosition`を解決済みsourceへ保持する。対応消失・変更または対象なしなら
+情報、実path、readerを再読取し、再生要求の`playPosition`を解決済みsourceへ保持する。対応消失・変更または対象なしなら
 sourceを返さず失敗する。したがって、lease取得前に得たrecorded IDと一致しないsourceを採用しない。返った
 `OpenedRecordedPlaybackSource`はprovider所有であり、本機能が開始coordinatorへ採用できると確定した時点でだけ`adopt()`す
 る。`adopt()`が`stale`ならsource、process、HTTP本文を各0件にする。採用前の失敗、期限超過、またはlate resultはprovider
@@ -269,7 +269,7 @@ sourceを返さず失敗する。したがって、lease取得前に得たrecord
 bundleへ採用してcloseする。配信機能はprovider失敗時にDB、path、動画情報を直接再照会するfallbackを持たない。これにより予
 備照会とlease取得の間に容量不足削除が先着しても、削除済みsnapshotをsource利用へ使わない。
 
-採用後のRecorded Stream consumerはsourceの`playPosition`だけを既存の再生位置選択、再生時間確認、および`%SS%`置換へ渡す。
+採用後のRecorded Stream consumerはsourceの`playPosition`だけを再生位置選択、再生時間確認、および`%SS%`置換へ渡す。
 再生位置をDB、実path、動画情報から再解決するconsumer側fallbackは持たない。
 
 録画済み番組管理機能によるsource解決と必要な変換の確立は、一件の30秒開始期限で監督する。期限は入力検証後からHTTP本文へ接

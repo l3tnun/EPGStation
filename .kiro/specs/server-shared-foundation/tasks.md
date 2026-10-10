@@ -2,7 +2,7 @@
 
 ## Execution ownership
 
-本 spec は、既存 6 source の外部から観測可能な振る舞いに対する owner-local characterization test だけを所有する。製
+本 spec は、6 source の外部から観測可能な振る舞いに対する owner-local characterization test だけを所有する。製
 品 behavior と共有 test foundation は所有しない。production source は本 batch で変更しない。
 
 `test/server/shared-foundation/imp/test-lint-conditional-test.test.ts` は test 用 ESLint rule の test であり、本 spec
@@ -33,7 +33,7 @@
         正規化、囲み文字の相互変換、重複録画判定の名前（`deleteBrackets`）を確認する test を追加する。
     -   重複録画判定の名前は、[前]・[後]（`[]` 表記と囲み文字、位置違い、両方）を末尾に `[前]`、`[後]` の順で付け、[再]・[字]
         など他の囲み文字と `[]` 表記は除き、[前]・[後] の無い名前は除去と trim だけの結果になることを確認する。
-    -   全角化の `"` 変換は、typographic quote ではなく既存コードの適用順序により全角引用符 `＂` になる挙動を test が検証する。
+    -   全角化の `"` 変換は、typographic quote ではなくコードの適用順序により全角引用符 `＂` になる挙動を test が検証する。
     -   _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6_
     -   _Verification: `mise exec node@24.18.0 -- npm run test:server:imp -- test/server/shared-foundation/imp/str-util.test.ts` を対象とする_
 

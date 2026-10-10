@@ -69,7 +69,7 @@ Entity、Repository、QueryBuilder、QueryRunner、および Migration へ変換
 本機能から直接利用できる上位機能は `server-configuration` と `server-operational-logging` だけであ
 る。TypeORM、`better-sqlite3`、`mysql2` は保存 adapter の技術依存であり、業務機能への逆依存を作らない。downstream 機能の
 service、HTTP API、event model を接続管理や repository の内部へ import しない。ただし既存ポートの入力 DTO 型は互換性維持
-のため境界型として利用できる。MySQL の driver は直接依存の `mysql2` であり、旧来の `mysql` は直接依存に含めない。
+のため境界型として利用できる。MySQL の driver は直接依存の `mysql2` であり、`mysql` は直接依存に含めない。
 
 ### この設計を見直す必要がある変更
 
@@ -119,7 +119,7 @@ flowchart LR
 | 項目          | 選択                              | 設計理由                                                                       |
 | ------------- | --------------------------------- | ------------------------------------------------------------------------------ |
 | ORM           | TypeORM 1.x の `DataSource` API   | Entity、relation、QueryBuilder、QueryRunner、Migration を同じ adapter で扱える |
-| SQLite driver | `better-sqlite3`                  | file database と native extension 読込みを提供する。TypeORM 1.x は旧 `sqlite3`（node-sqlite3）driver を廃止し `better-sqlite3` へ置き換えたため、利用者向け設定値は従来どおり `dbtype: 'sqlite'` のまま、`DataSource`生成時の`type`だけ`'better-sqlite3'`へ読み替える（`src/model/db/DBOperator.ts`）。`dbtype: 'better-sqlite3'` は設定の読込み時に `sqlite` へ読み替わるので（`server-configuration`）、本機能は `sqlite` だけを扱う。journal 方式は `sqlite.wal` で選ぶ（下記「接続設定契約」） |
+| SQLite driver | `better-sqlite3`                  | file database と native extension 読込みを提供する。TypeORM 1.x は `sqlite3`（node-sqlite3）driver を提供せず `better-sqlite3` を使うため、利用者向け設定値は `dbtype: 'sqlite'` とし、`DataSource`生成時の`type`だけ`'better-sqlite3'`へ読み替える（`src/model/db/DBOperator.ts`）。`dbtype: 'better-sqlite3'` は設定の読込み時に `sqlite` へ読み替わるので（`server-configuration`）、本機能は `sqlite` だけを扱う。journal 方式は `sqlite.wal` で選ぶ（下記「接続設定契約」） |
 | MySQL driver  | 直接依存の `mysql2`               | 既存 `type: 'mysql'` 経路で TypeORM が利用する保守中クライアント。旧 `mysql` は直接依存に含めない |
 | 接続単位      | process 内の保存済み `DataSource` | DI singleton の field に保存した接続を repository 間で共有する                 |
 | schema 更新   | backend 別 Migration              | 自動同期を無効にし、版管理された変更だけを順番に適用できる                     |
@@ -202,10 +202,10 @@ interface DatabaseConnectionSettings {
 | `sqlite.extensions` | 省略可                                 | `undefined` または順序付き配列       | 記載順を変更・重複排除せず読み込む                                                                  |
 | `sqlite.regexp`     | 省略可                                 | boolean または `undefined`           | `true` の場合だけ正規表現能力あり                                                                   |
 | `sqlite.wal`        | 省略可                                 | boolean または `undefined`           | `true` の場合だけ journal_mode を WAL にする（既定は無効）。DataSource option の `enableWAL: true` として渡す。`true` 以外（省略・`false`・文字列を含む）は無効として扱う |
-| `sqlite.busyTimeout` | 省略可                                | 整数（ミリ秒）または `undefined`     | 他の接続が持つロックを待つ最長時間。DataSource option の `timeout` として渡す（`ormconfig.js` も同じ）。省略時は既定の `5000` を明示して渡す（TypeORM の `better-sqlite3` driver の既定と同じで、挙動は変わらない）。値は検証・変換せず driver に渡し、整数でない値・負の値・`2147483647` を超える値は `better-sqlite3` が接続の作成時に拒否する。待ち時間を過ぎてもロックが解放されなければ `SQLITE_BUSY` になる。適切な値は機械の速さで変わるため、設定で変えられる |
+| `sqlite.busyTimeout` | 省略可                                | 整数（ミリ秒）または `undefined`     | 他の接続が持つロックを待つ最長時間。DataSource option の `timeout` として渡す（`ormconfig.js` も同じ）。省略時は既定の `5000` を明示して渡す（TypeORM の `better-sqlite3` driver の既定と同じ）。値は検証・変換せず driver に渡し、整数でない値・負の値・`2147483647` を超える値は `better-sqlite3` が接続の作成時に拒否する。待ち時間を過ぎてもロックが解放されなければ `SQLITE_BUSY` になる。適切な値は機械の速さで変わるため、設定で変えられる |
 | MySQL 接続項目      | backend 選択時に `mysql` object が必要 | host、user、port、password、database | `mysql` object がなければ接続を開始せず error。値は採用 client へ渡し、接続可否を driver 結果で判定する |
 | `mysql.socketPath`  | 省略可                                 | 文字列または `undefined`             | 設定されているときだけ DataSource option の `socketPath` に渡す。省略時は option に `socketPath` を含めない。設定時にドライバーは `host` / `port` より `socketPath` を優先する |
-| `mysql.ssl`         | 省略可                                 | 任意の値または `undefined`           | 設定されているときだけ、値を検証・変換・複製せずそのまま DataSource option の `ssl` に渡す（`ormconfig.js` も同じ）。省略時は option に `ssl` を含めない（TLS を使わない従来の接続）。値の解釈は採用 client（`mysql2`）に委ね、`ca` / `cert` / `key` は証明書や鍵の内容（PEM）であり file path ではない。サーバー証明書の検証は `rejectUnauthorized`（driver 既定は `true`）で、host 名の照合は `verifyIdentity: true` を指定したときだけ行われる |
+| `mysql.ssl`         | 省略可                                 | 任意の値または `undefined`           | 設定されているときだけ、値を検証・変換・複製せずそのまま DataSource option の `ssl` に渡す（`ormconfig.js` も同じ）。省略時は option に `ssl` を含めない（TLS を使わない接続）。値の解釈は採用 client（`mysql2`）に委ね、`ca` / `cert` / `key` は証明書や鍵の内容（PEM）であり file path ではない。サーバー証明書の検証は `rejectUnauthorized`（driver 既定は `true`）で、host 名の照合は `verifyIdentity: true` を指定したときだけ行われる |
 | `mysql.charset`     | 省略可                                 | 省略時 `utf8mb4`                     | DataSource option に渡す                                                                            |
 
 Requirement 8 のクライアント置換は、上表の設定 field を増やさず減らさず、SQLite 経路も変えない。保存済みデータベースデー
@@ -235,7 +235,7 @@ Requirement 8 のクライアント置換は、上表の設定 field を増や�
 SQLite の journal 方式は、SQLite が journal_mode を database file に記録する（WAL だけが記録され、他は接続ごとの設定にな
 る）ことを踏まえ、設定どおりの方式にする。`sqlite.wal` が `true` のときは `DataSource` option の `enableWAL: true` で WAL に
 する（TypeORM が接続時に `journal_mode = WAL` を実行する）。`true` 以外のときは、候補の初期化（Migration を含む）の後に
-`PRAGMA journal_mode = DELETE` を実行する。通常の database file（WAL でないもの）には何も変えず、以前に WAL にされた file は
+`PRAGMA journal_mode = DELETE` を実行する。通常の database file（WAL でないもの）には何も変えず、WAL にされている file は
 delete 方式へ戻る。他の接続が file を使っていて戻せないときは SQLite が `database is locked` で失敗し、初期化の失敗（接続を
 公開せず、候補を閉じ、失敗を system log に記録する）として扱う。起動時は本体の process が子 process より先に DB を開く（`checkDB`、成功まで再試行）ので、切り替えは最初の接続で行われる。WAL にすると `data/` に `database.db-wal` と `database.db-shm` が増える。
 ネットワーク保存先では WAL を使えないため、有効にしない運用を前提とする。
@@ -549,7 +549,7 @@ eager load しない。件数の上限（limit）が 0 のときは件数を制�
 は `queryRunner.manager.createQueryBuilder().delete().from(Entity).execute()` で実装する（例:
 `src/model/db/ProgramDB.ts`、`RecordedDB.ts`、`ReserveDB.ts`、`RuleDB.ts`、`ThumbnailDB.ts`、`VideoFileDB.ts`、
 `DropLogFileDB.ts`、`RecordedTagDB.ts`、`RecordedHistoryDB.ts` の `restore()` / cleanup 経路）。対して「放送局単位の番組
-置換」のように非空 criteria（`channelId: In(ids)` 等）を指定する削除は、従来どおり `manager.delete(Entity, criteria)`
+置換」のように非空 criteria（`channelId: In(ids)` 等）を指定する削除は、`manager.delete(Entity, criteria)`
 を使う。
 
 ```mermaid
@@ -585,7 +585,7 @@ sequenceDiagram
 QueryRunnerを生成した後は`startTransaction()`自体の同期・非同期failureを含むすべての経路を一つの`try/catch/finally`へ置
 く。rollbackは`queryRunner.isTransactionActive`がtrueの場合だけ試みる。開始、mutation、commitの最初のraw failureは内部の
 primary cause／診断情報として保持し、rollbackまたはreleaseのfailureは別のcleanup診断として記録する。いずれのraw errorも
-依頼元へ直接投影せず、repository portが従来から持つ`ReserveUpdateManyError`、`InsertError`、または`restore error`を返
+依頼元へ直接投影せず、repository portが操作ごとに定める`ReserveUpdateManyError`、`InsertError`、または`restore error`を返
 す。rollback／release failureはoperation wrapperを置き換えない。operation failureがなくreleaseだけ失敗した場合も成功とせ
 ず、該当repositoryの同じoperation wrapperを返し、raw release errorはcleanup診断に留める。raw errorを公開`Error.cause`へ
 格納して依頼元から参照可能にすることも行わない。

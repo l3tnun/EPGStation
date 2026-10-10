@@ -6,19 +6,19 @@
 理情報を復元し、または EPGStation v1 のバックアップを本仕様の管理情報へ変換して追加するための管理コマンドを提供する。録
 画映像、サムネイル画像、ドロップログなどの実ファイルは移送せず、それらを指す管理情報だけを扱う。
 
-既存のコマンド名、引数、版番号を持たない JSON 形式、同期ファイル入出力、処理順序、種類単位の確定、および v1 移行の変換規
-則を互換境界として維持する。管理者は処理中の種類と終了状態を確認できるが、バックアップ全体の同一時点性、復元・移行全体の
+コマンド名、引数、版番号を持たない JSON 形式、同期ファイル入出力、処理順序、種類単位の確定、および v1 移行の変換規
+則を互換境界とする。管理者は処理中の種類と終了状態を確認できるが、バックアップ全体の同一時点性、復元・移行全体の
 一括 rollback、通常運用との排他、途中再開、および v1 移行の重複防止は本機能の保証に含めない。
 
-確認済みのコマンド、順序、wire、部分確定、出力、終了状態、および DB 利用可能性を無期限に待つ挙動を維持する。管理者は通常
+確認済みのコマンド、順序、wire、部分確定、出力、終了状態、および DB 利用可能性を無期限に待つ挙動を備える。管理者は通常
 稼働中の EPGStation を停止してからコマンドを実行する。コマンド自身による自動停止、版管理、事前 schema 検査、operation 全
 体の transaction、maintenance lock、temporary file への atomic write、v1 移行の再開・重複排除、または Windows 対応保証は
 新しく導入しない。これらを後で修正するときは、該当 Requirements、Design、test、および実装を同じ変更単位で更新する。
 
 ### 設計目標
 
--   `backup`、`restore`、`v1migrate` の既存 CLI と入出力指定を維持する。
--   8 種類の管理情報と、録画済み番組とタグの関連付けを除外した版なし JSON wire を維持する。
+-   `backup`、`restore`、`v1migrate` の CLI と入出力指定を受け付ける。
+-   8 種類の管理情報と、録画済み番組とタグの関連付けを除外した版なし JSON wire とする。
 -   復元と v1 移行の順序、種類単位または行単位の確定、および途中失敗後に残る状態を一意にする。
 -   v1 の識別番号を実行中の対応表で変換し、管理情報だけを本仕様の entity へ写像する。
 -   DB 接続確認が失敗を返した後は 1 秒待って再確認し、一回の確認にも待機全体にも EPGStation 独自の期限を追加しない。
@@ -116,7 +116,7 @@ transaction や domain data の意味を再実装しない。
 
 | 相手機能                        | 本機能が受け取るもの                                           | 本機能が返すもの                               | 相手側に残る責任                                    |
 | ------------------------------- | -------------------------------------------------------------- | ---------------------------------------------- | --------------------------------------------------- |
-| `server-configuration`          | process 内設定 snapshot                                        | なし                                           | YAML 読込、既存top-level default、reload、deep-copy |
+| `server-configuration`          | process 内設定 snapshot                                        | なし                                           | YAML 読込、top-level default、reload、deep-copy |
 | `server-operational-logging`    | system logger                                                  | 進行と失敗の記録                               | sink、level、rotation、flush                        |
 | `server-persistence`            | availability probe、close、repository Promise                  | query、replace、insert の依頼                  | DB 選択、接続、migration、transaction、共通 retry   |
 | `server-reservation-rules`      | Rule の domain 形式                                            | backup snapshot、restore row、v1 AddRuleOption | Rule の意味と通常 CRUD                              |
@@ -131,7 +131,7 @@ repository の共通 retry は一つの query または insert の内部動作�
 
 | Component                           | Domain or Layer | Intent                                                        | Requirements                                      | Key Dependencies                  | Contracts      |
 | ----------------------------------- | --------------- | ------------------------------------------------------------- | ------------------------------------------------- | --------------------------------- | -------------- |
-| Management CLI adapter              | CLI             | 既存 command と必須引数を operation へ写像する                | 1.1-1.5, 5.2, 5.6, 6.1-6.3                        | process P0、CLI parser P1         | Batch          |
+| Management CLI adapter              | CLI             | command と必須引数を operation へ写像する                | 1.1-1.5, 5.2, 5.6, 6.1-6.3                        | process P0、CLI parser P1         | Batch          |
 | Management DB availability wait     | Coordination    | DB 確認失敗後に1秒待ち、成功するまで無期限に再確認する        | 5.1-5.3                                           | DB operator P0、sleep P0          | Service, State |
 | Backup coordinator                  | Application     | 8 種類を固定順で読み、版なし JSON を同期書出しする            | 2.1-2.5, 5.4-5.6                                  | repositories P0、filesystem P0    | Batch          |
 | Restore coordinator                 | Application     | JSON を読み、8 種類を固定順で置換する                         | 3.1-3.7, 5.4-5.6                                  | repositories P0、filesystem P0    | Batch, State   |
@@ -164,10 +164,10 @@ repository の共通 retry は一つの query または insert の内部動作�
 | root script `backup`                | `DBTools -m backup -o <path>`  | mode と output                              | versionless backup を `<path>` へ書く   |
 | root script `restore`               | `DBTools -m restore -o <path>` | mode と input path として使う output option | versionless backup を `<path>` から読む |
 | root script `v1migrate`             | `V1MigrationTool -i <path>`    | input                                       | v1 backup を `<path>` から読む          |
-| root script `install-win-service`   | 既存 script 名                 | 既存 `winser` 引数                          | command 名だけを維持する                |
-| root script `uninstall-win-service` | 既存 script 名                 | 既存 `winser` 引数                          | command 名だけを維持する                |
+| root script `install-win-service`   | script 名                      | `winser` 引数                          | command 名だけを維持する                |
+| root script `uninstall-win-service` | script 名                      | `winser` 引数                          | command 名だけを維持する                |
 
-`-m` / `--mode`、`-o` / `--output`、`-i` / `--input` の alias を維持する。R1.4 の specification oracle は、DBTools の
+`-m` / `--mode`、`-o` / `--output`、`-i` / `--input` の alias を受け付ける。R1.4 の specification oracle は、DBTools の
 mode または output の未指定・空文字、および v1 input の未指定・空文字で DB operation を開始せず終了状態 1 を返すことであ
 り、file call count を要求しない。source characterization では、DBTools の未指定・空文字と v1 input 未指定は input /
 output file operation 0、v1 input の空文字は未指定判定を通過して空 path の input read を一回試み、その失敗で DB
@@ -189,7 +189,7 @@ interface SleepPort {
 }
 ```
 
-`IConnectionCheckModel` は通常 server 起動と管理 command が共有する既存 port である。管理 command 専用の新しい待機
+`IConnectionCheckModel` は通常 server 起動と管理 command が共有する port である。管理 command 専用の新しい待機
 service は作らず、次の処理をそのまま利用する。
 
 1. `IDBOperator.checkConnection()` を直ちに一回呼ぶ。
@@ -236,7 +236,7 @@ precondition は CLI validation と DB availability wait の成功である。co
 | Order | Progress label     | Repository operation  | Projection                                                      |
 | ----: | ------------------ | --------------------- | --------------------------------------------------------------- |
 |     1 | `rule`             | rules `findAll`       | update count を含む rule domain form                            |
-|     2 | `reserve`          | reserves `findAll`    | 通常表記、既存一覧順                                            |
+|     2 | `reserve`          | reserves `findAll`    | 通常表記、一覧順                                                 |
 |     3 | `drop log file`    | drop logs `findAll`   | metadata only                                                   |
 |     4 | `recorded`         | recorded `findAll`    | video、thumbnail、drop log、tag relation を join しない通常表記 |
 |     5 | `thumbnail file`   | thumbnails `findAll`  | metadata only                                                   |
@@ -319,7 +319,7 @@ sequenceDiagram
 各 repository はquery runner作成後の`startTransaction()`、delete／insert、commitを一つの`try/catch/finally`へ置く。開始
 失敗を含む全経路で`release()`を試み、rollbackは`queryRunner.isTransactionActive`の場合だけ行う。開始、mutation、commitの
 raw database errorはrepository内部のprimary cause／診断として保持し、rollbackまたはreleaseのerrorは別のcleanup診断に記録
-する。依頼元には各restore portの既存`restore error` messageだけを返し、raw database／cleanup errorを投影しない。
+する。依頼元には各restore portの`restore error` messageだけを返し、raw database／cleanup errorを投影しない。
 management coordinatorはrepository Promiseがこれらの後始末までsettleするのを待ち、失敗時は後続stageを開始しない。
 
 commit が成功した後に release が失敗した場合、command は失敗を返す一方、その stage は確定済みである。すでに commit した
@@ -601,7 +601,7 @@ backup は `run`、`start backup`、8 stage、`writing`、`finish` の順で記�
 ### Security Considerations
 
 -   management CLI は local operator 権限で実行され、追加の HTTP auth boundary を持たない。
--   入出力 path は管理者が指定する既存契約を維持し、本機能独自の managed-root 制限を追加しない。
+-   入出力 path は管理者が指定する path をそのまま使い、本機能独自の managed-root 制限を追加しない。
 -   backup JSON は暗号化されず、管理情報を含み得る。配置先の access control と保全は管理者の責任である。
 -   tracked spec、fixture、log expectation に実 endpoint、credential、実番組、実ユーザー、実 media path を含めない。
 -   backup / input file の内容を意図して log へ出さない。ただし入力の JSON が壊れているとき、`JSON.parse` の標準 error message に入力の

@@ -42,8 +42,8 @@ foundation、設定既定値、tuner stream 取得、録画 file/domain 解決�
 | 8.7  | `test/server/media-delivery/media-delivery-http.integration.test.ts`<br>`test/server/media-delivery/media-delivery-filesystem.integration.test.ts`<br>`test/server/media-delivery/media-delivery-process.integration.test.ts`<br>`test/server/media-delivery/media-delivery-tuner.integration.test.ts`<br>`test/server/media-delivery/media-delivery-recorded-content.integration.test.ts`                                                                                                                | `integration`                                      | `8.2, 8.6`                                                                                      | `npm run test:server:integration -- test/server/media-delivery/media-delivery-http.integration.test.ts` <br>`npm run test:server:integration -- test/server/media-delivery/media-delivery-filesystem.integration.test.ts`<br>`npm run test:server:integration -- test/server/media-delivery/media-delivery-process.integration.test.ts`<br>`npm run test:server:integration -- test/server/media-delivery/media-delivery-tuner.integration.test.ts`<br>`npm run test:server:integration -- test/server/media-delivery/media-delivery-recorded-content.integration.test.ts`                                                                                                                                                                        |
 | 8.8  | `test/server/media-delivery/live-delivery.test.ts`<br>`test/server/media-delivery/media-delivery-http.integration.test.ts` | `unittest/spec`・`unittest/imp`・`integration` | `2.1, 2.2, 2.3, 2.4, 2.5, 3.1, 3.2, 3.3, 4.1, 5.1, 5.2, 5.3, 5.4, 6.1, 7.1, 8.4, 8.5, 8.6, 8.7` | `npm run test:server:imp -- test/server/media-delivery/live-delivery.test.ts`<br>`npm run test:server:integration -- test/server/media-delivery/media-delivery-http.integration.test.ts` |
 
--   [x] 1. 既存の配信・公開契約を characterization する
--   [x] 1.1 ライブ直接配信と視聴用変換の既存契約を固定する
+-   [x] 1. 配信・公開契約を characterization する
+-   [x] 1.1 ライブ直接配信と視聴用変換の契約を固定する
 
     -   M2TS、低遅延 M2TS、WebM、MP4、HLS の選択、無変換 M2TS の tuner stream 直結、変換時だけの process 枠利用、および
         channel・形式・画質の拒否を、provider stub を使う `unittest/spec` で固定する。
@@ -51,7 +51,7 @@ foundation、設定既定値、tuner stream 取得、録画 file/domain 解決�
         挙動を `integration` で確認する。
     -   tuner stream 取得失敗を含む stream/system logger category と error projection を characterization し、本
         spec で一律の category 変更を行わない。
-    -   完了時には、各形式、変換有無、入力拒否、開始失敗、接続 close、外部 playlist、および長時間本文の fixture が既存結
+    -   完了時には、各形式、変換有無、入力拒否、開始失敗、接続 close、外部 playlist、および長時間本文の fixture が結
         果を再現し、production code の差分がない。
     -   _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.7, 1.9, 4.5_
     -   _Boundary: Live Stream characterization（ライブ専用 fixture と test file）_
@@ -63,9 +63,9 @@ foundation、設定既定値、tuner stream 取得、録画 file/domain 解決�
         `unittest/spec` で固定する。
     -   妥当な再生位置と再生時間超過、録画済み番組・file・実 path の欠落、file open 失敗、および録画 file 用外部 player
         playlist を `integration` で確認する。
-    -   既存の TS/encoded 分岐、録画中 flag、および公開 response shape を変更しない。
+    -   TS/encoded 分岐、録画中 flag、および公開 response shape を変更しない。
     -   完了時には、元 file、変換済み file、録画中 file、開始位置境界、missing/open failure、および playlist の fixture
-        が既存結果を再現し、production code の差分がない。
+        が結果を再現し、production code の差分がない。
     -   _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.10, 2.11_
     -   _Boundary: Recorded Stream characterization（録画専用 fixture と test file）_
     -   _Verification: unittest/spec, unittest/imp, integration_
@@ -85,13 +85,13 @@ foundation、設定既定値、tuner stream 取得、録画 file/domain 解決�
     -   _Boundary: Tail reader characterization（`src/lib/TailStream.ts`、`src/model/operator/recorded/RecordedPlaybackSourceProvider.ts`の`RecordingTailReadable`）_
     -   _Verification: unittest/spec, unittest/imp_
 
--   [x] 1.4 HLS readiness、配信状態、再起動境界の既存契約を固定する
+-   [x] 1.4 HLS readiness、配信状態、再起動境界の契約を固定する
 
     -   HLS 開始が ready 前に ID を返すこと、starting/ready 表示、親 playlist、媒体成果物 2 件、任意字幕、100 ms
         poll、15 秒 keep、および readiness に全体期限がないことを fake timer と一時 directory で `unittest/spec` にす
         る。
     -   配信一覧の形式・画質・対象・ready 状態、存在しない stop の成功、存在しない keep の失敗、録画 HLS writer 終了後の
-        保持、状態変更通知、および停止中 ID 非再利用を固定する。既存 wire key `viodeFileId` は本 spec で訂正しない。
+        保持、状態変更通知、および停止中 ID 非再利用を固定する。wire key `viodeFileId` は本 spec で訂正しない。
     -   親 path `./streamfiles/stream{streamId}.m3u8`、`/streamfiles` static route、メモリー内状態の非復元、および全配信
         回収を待つ専用 shutdown 経路がないことを contract test で確認する。
     -   完了時には、readiness/keep/status/restart の fixture が成功し、世代 directory、公開 generation ID、状態永続化、
@@ -101,7 +101,7 @@ foundation、設定既定値、tuner stream 取得、録画 file/domain 解決�
     -   _Boundary: HLS Readiness Monitor・status projection・restart contract_
     -   _Verification: unittest/spec, unittest/imp, integration_
 
--   [x] 1.5 (P) 視聴用 command の既存置換規則と環境を固定する
+-   [x] 1.5 (P) 視聴用 command の置換規則と環境を固定する
 
     -   command 省略、半角空白分割、引用符・shell 非解釈、実行 file の `%NODE%`、引数の `%ROOT%` と `%SPACE%` を
         `unittest/spec` で固定する。
@@ -109,7 +109,7 @@ foundation、設定既定値、tuner stream 取得、録画 file/domain 解決�
         placeholder の未置換を live/recorded process adapter との `integration` で確認する。
     -   親 process の環境だけを継承し、録画変換固有の環境変数、shell、引用符 parser、未承認の placeholder 推定を追加しな
         い。
-    -   完了時には、全 placeholder matrix と環境 snapshot が既存 command/引数を再現し、production code の差分がない。
+    -   完了時には、全 placeholder matrix と環境 snapshot が command/引数を再現し、production code の差分がない。
     -   _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7, 9.8_
     -   _Boundary: command interpretation characterization（`ProcessUtil` と配信別 option builder）_
     -   _Verification: unittest/spec, unittest/imp, integration_
@@ -120,7 +120,7 @@ foundation、設定既定値、tuner stream 取得、録画 file/domain 解決�
         `unittest/spec` で固定する。
     -   Basic 認証は Kodi transport だけへ渡し、file URL、payload、log へ埋め込まないことを `unittest/imp` で確認する。
     -   request-derived host の信頼境界は承認済み契約として維持し、本 task で allowlist や URL 再解釈を追加しない。
-    -   完了時には、認証有無、設定・file 欠落、通信 reject、および URL shape の fixture が既存結果を再現し、timeout 差分
+    -   完了時には、認証有無、設定・file 欠落、通信 reject、および URL shape の fixture が結果を再現し、timeout 差分
         だけが後続 task の対象として残る。
     -   _Requirements: 7.1, 7.2, 7.3, 7.4, 7.6_
     -   _Boundary: Kodi Client characterization（Kodi 専用 fixture と test file）_
@@ -192,13 +192,13 @@ foundation、設定既定値、tuner stream 取得、録画 file/domain 解決�
         resource利用境界はTask 2.5だけが所有する。
     -   Task 2.5から渡された解決済みの録画file・録画済み番組・動画情報・実path・`playPosition`を持つtagged sourceを受け
         る。`encoded-direct`はpathをprocess入力へ渡してreaderを登録せず、reader variantだけを開始coordinatorとresource
-        bundleへ登録する。sourceの`playPosition`だけを既存の再生位置選択へ使い、DB照会、情報probe、path解決、reader種別
+        bundleへ登録する。sourceの`playPosition`だけを再生位置選択へ使い、DB照会、情報probe、path解決、reader種別
         選択、再生位置の再解決を本specに再実装しない。
     -   provider failure、direct DB/path fallback 0、adopt前reader整理はTask 2.5が所有し、本taskはadopt済みsourceだけを
         受ける。sourceを受けた後のreader/process/timer/listenerは本specだけが一回解放する。
     -   source、process、stdin、deadlineの各失敗とlate successで、同じownerが持つreader/handleだけをbest-effort停止す
         る。
-    -   TS/encoded、録画中 reader、再生位置、HLS/非 HLS の既存選択を維持する。
+    -   TS/encoded、録画中 reader、再生位置、HLS/非 HLS の選択を変更しない。
     -   完了時には期限後のsource/reader/processが応答へ採用されず、file追尾は30秒後も継続する。
     -   _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.10, 2.12_
     -   _Boundary: Recorded Stream consumer adapter（共有 coordinator と manager は変更しない）_
@@ -209,7 +209,7 @@ foundation、設定既定値、tuner stream 取得、録画 file/domain 解決�
 
     -   `server-recorded-content` Task 2.4のproviderの完了を前提とする。予備照会でrecorded
         IDを確定した後、再生source provider・process・HLS writerより前に`delivery`用途のexact leaseを一回取得し、同じ
-        video file ID、expected recorded ID、および既存再生要求の`playPosition`をproviderへ渡して対応とsource値を再検証
+        video file ID、expected recorded ID、および再生要求の`playPosition`をproviderへ渡して対応とsource値を再検証
         する順序をcall ledgerで定義する。対応消失・変更、取得失敗、期限超過・状態不明ではsource/process開始を各0件にす
         る。
     -   直接応答reader、変換process、録画HLS writerがsourceを利用しなくなるまで同じtokenを保持し、close、開始失敗、
@@ -297,11 +297,11 @@ foundation、設定既定値、tuner stream 取得、録画 file/domain 解決�
         時 directory と fake timer の `unittest/spec` で定義する。
     -   `stream1` 判定へ `stream10` の segment を混入させず、子 playlist と字幕 playlist は必須にせず、利用可能な字幕だ
         けを親へ追加することを定義する。
-    -   100 ms poll、停止時 timer cancel、全体 deadline なし、ready 通知一回を既存 characterization と同時に検証する。
+    -   100 ms poll、停止時 timer cancel、全体 deadline なし、ready 通知一回を characterization と同時に検証する。
     -   readiness の列挙を `HLSFileDeleterModel.listExact()` へ集約し、親完全一致と媒体成果物数を同一 snapshot から判定す
         る。
     -   ready 遷移と字幕反映を同じ object identity へ限定し、停止後または ID 再利用後の poll result を無作用にする。
-    -   既存の 100 ms、15 秒 keep、公開 path、および readiness 無期限契約を変更しない。
+    -   100 ms、15 秒 keep、公開 path、および readiness 無期限契約を変更しない。
     -   完了時には 4.1 の全 fixture が成功し、`stream1`/`stream10` 混在、stop 同着、subtitle 有無で誤通知がない。
     -   _Requirements: 3.5, 3.6, 3.7, 3.12, 3.13, 4.10_
     -   _Boundary: HLS Readiness Monitor_
@@ -400,12 +400,12 @@ foundation、設定既定値、tuner stream 取得、録画 file/domain 解決�
         deferred response の `unittest/spec` で定義する。
     -   deadline と response/parse error を同着させて最初の terminal だけを採用し、期限後 response を成功に変えず別
         request へ転用しないことを確認する。
-    -   認証情報が transport だけへ渡り file URL に含まれない既存 characterization を同時に成功させる。
+    -   認証情報が transport だけへ渡り file URL に含まれない characterization を同時に成功させる。
     -   内部定数 `KODI_REQUEST_TIMEOUT_MS = 30000` を HTTP client request に適用し、設定 schema や公開 API へ追加しな
         い。
     -   response parse まで first-terminal-wins latch で監督し、settlement 後の timer/listener と late response を整理す
         る。
-    -   既存 URL、payload、Basic auth、error projection を変更しない。
+    -   URL、payload、Basic auth、error projection を変更しない。
     -   完了時には 7.1 の全 fixture が成功し、期限後成功、認証漏えい、残留 timer が 0 件になる。
     -   _Requirements: 7.3, 7.4, 7.5, 7.6_
     -   _Boundary: Kodi Client deadline_
@@ -431,7 +431,7 @@ foundation、設定既定値、tuner stream 取得、録画 file/domain 解決�
 
     -   tuner stream handle、recorded-content lookup、managed/HLS process handle、logger port を合成 adapter で接続
         し、live direct/transformed と recorded direct/transformed/HLS の開始・本文・停止を `integration` で確認する。
-    -   外部 player playlist と `./streamfiles/stream{streamId}.m3u8` が既存 `/streamfiles` carrier で取得でき、世代情報
+    -   外部 player playlist と `./streamfiles/stream{streamId}.m3u8` が`/streamfiles` carrier で取得でき、世代情報
         や認証情報を URL に追加しないことを確認する。HTTP carrier 自体の再設計は `server-service-interface` に残す。
     -   command placeholder、HLS ready/keep、Kodi、開始 deadline を同じ domain suite から実行し、共有 test foundation と
         Node matrix の定義は変更しない。

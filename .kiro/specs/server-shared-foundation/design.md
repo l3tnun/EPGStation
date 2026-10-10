@@ -2,7 +2,7 @@
 
 ## 1. 目的と責任境界
 
-本機能は、次の 6 source が持つ既存の外部から観測可能な振る舞いを、利用機能から独立して確認する spec
+本機能は、次の 6 source が持つ外部から観測可能な振る舞いを、利用機能から独立して確認する spec
 である。製品としての振る舞い、公開 API、IPC、DB schema、設定、保存形式を所有せず、変更しない。
 
 | source | 対応する Requirement |
@@ -48,7 +48,7 @@ consumer cross-spec evidence として再利用できるが、shared source の�
 
 ### 条件と test の対応
 
-本機能は新規の test を持たず、既存部品の現状の振る舞いを確かめる test だけを持つ。test の ID（`IMP-CHAR-SF-n`）の n は
+本機能は新規の test を持たず、各部品の振る舞いを確かめる test だけを持つ。test の ID（`IMP-CHAR-SF-n`）の n は
 source の並びの番号であり、Requirement の番号とは一致しない。条件から test を辿るときは次の表を正とする。
 
 | 条件 | 主な test（`test/server/shared-foundation/` 配下） |
@@ -71,4 +71,4 @@ source の並びの番号であり、Requirement の番号とは一致しない�
 | 4.4 | `imp/file-util.test.ts`: 管理対象ディレクトリの外・自身・識別情報の不一致を削除不可と判定する |
 | 5.1 | `imp/util.test.ts`: 境界の直前まで完了せず、境界で 1 度だけ完了する |
 
-`toHalfRegExp`・`getFileList` など、条件を持たない公開関数は、現状の振る舞いを確かめる test だけがあり、上の表の対象外である。
+`toHalfRegExp`・`getFileList` など、条件を持たない公開関数は、振る舞いを確かめる test だけがあり、上の表の対象外である。

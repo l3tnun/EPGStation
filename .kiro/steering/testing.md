@@ -43,8 +43,11 @@ test が安定して CI で通る状態になってから導入する。
    検出するので、`client/e2e`・`client/visual` では固定時間の待ち（`page.waitForTimeout` など）を使わず、状態を待つ。
 3. **fixture は合成値にする。**（lint は検出しない） credential、実番組名、実 URL、実ロゴ、実サムネイルを test・baseline・fixture に含めない。
 4. **coverage 除外の合計。** `client/src` 全体の除外行は 2% 以内とする（file ごとの上限は lint が検出する）。
-5. **`.kiro/specs` は現在の仕様だけを書く。** 旧実装（v2、Vuetify、`.vue`、「旧実装」「React 版」との比較）、過去の版の
-   内容、報告・指摘の経緯を書かない。値の根拠はリポジトリの外に置き、spec には値を書く。
+5. **`.kiro/specs` は現在の仕様だけを書く。** 対象は client の spec（`.kiro/specs/frontend-*`）と server の spec
+   （`.kiro/specs/server-*`）の全 file（requirements・design・tasks・brief・mock-data など）である。別の実装や過去の版との比較
+   （別の版の名前を挙げた「〜と同じ」「〜から変わらない」「従来」「以前は」を含む）、過去の版の内容、報告・指摘の経緯、作業の
+   手順（失敗する状態を経る手順など）を書かない。挙動は今の挙動として書く。値の根拠はリポジトリの外に置き、spec には値を書く。
+   旧版との互換そのものが要件である場合は、比較ではなく現在の互換要件として書く。
 
 ## 網羅の範囲
 

@@ -251,7 +251,7 @@ bufferはprocessの終了動作に従う。
 | 番組情報更新childの`exit`／`close`                                     | system/fatalで中断またはcloseを記録           | runtimeが対象childのlistenerを除去し、待機を挟まず同じspawn処理を再実行する                           |
 | 番組情報更新childの`disconnect`                                        | system/fatalで切断を記録                      | runtimeが対象childへ`SIGINT`を送り、listenerを除去してから待機を挟まず同じspawn処理を再実行する       |
 | 番組情報更新childの`spawn`後`error`                                    | system/fatalで通知種別とerror詳細を記録       | runtimeが対象childのlistenerを除去し、待機を挟まず同じspawn処理を再実行する                           |
-| Web・API／番組情報更新childの`uncaughtException`／`unhandledRejection` | child内observerが通知ごとにsystem/fatalへ記録 | 記録だけでは非0終了を開始しない。processが別の理由で終了した場合だけruntimeが既存の監督規則を適用する |
+| Web・API／番組情報更新childの`uncaughtException`／`unhandledRejection` | child内observerが通知ごとにsystem/fatalへ記録 | 記録だけでは非0終了を開始しない。processが別の理由で終了した場合だけruntimeが監督規則を適用する |
 | 親operator processの`uncaughtException`／`unhandledRejection`          | 親observerが通知ごとにsystem/fatalへ記録      | 記録だけでは新規受付停止、非0終了、または再起動を開始しない                                           |
 
 運用ログ記録機能はchildの終了、回収、再起動、待機時間、signal送信、または同じroleの再利用可否を判断しない。これらはサー
