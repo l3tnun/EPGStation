@@ -38,8 +38,9 @@ test('shows 0 件ヒット and the Rule option for an empty result without movin
   await searchFor(page, 'Synthetic No Hit')
 
   await expect(page.getByText('0 件ヒット')).toBeVisible()
-  await expect(page.getByRole('region', { name: '検索結果' }).getByRole('button', { name: '追加' }))
-    .toBeVisible()
+  await expect(
+    page.getByRole('region', { name: '検索結果' }).getByRole('button', { name: '追加' }),
+  ).toBeVisible()
   expect(await documentTopOf(page, 'keyword')).toBe(keywordTopBefore)
 })
 
