@@ -130,7 +130,7 @@ describe('repository contracts through real SQLite and MySQL drivers', () => {
             await expect(db.ChannelDB.findId(404)).resolves.toBeNull();
             expect((await db.ChannelDB.findAll()).map((row: { id: number }) => Number(row.id))).toEqual([11, 12]);
 
-            await db.ChannelDB.update({ insert: [], update: [channel(11, 'synthetic-updated')] });
+            await db.ChannelDB.update({ insert: [], update: [channel(11, 'synthetic-updated')], delete: [] });
             await expect(db.ChannelDB.findId(11)).resolves.toMatchObject({ name: 'synthetic-updated' });
             await db.ChannelDB.insert([channel(11, 'synthetic-replaced')]);
             await expect(db.ChannelDB.findId(12)).resolves.toBeNull();
@@ -138,7 +138,16 @@ describe('repository contracts through real SQLite and MySQL drivers', () => {
                 { id: 11, name: 'synthetic-replaced' },
             ]);
 
-            const index = { 1: { 11: { id: 11, type: 'GR', channel: 'synthetic-11' } } };
+            // update の delete は、指定した channel id の行だけを追加・更新と同じ transaction で消す
+            const channelIds = async () => (await db.ChannelDB.findAll()).map((row: { id: number }) => Number(row.id));
+            await db.ChannelDB.update({ insert: [channel(12)], update: [], delete: [] });
+            await expect(channelIds()).resolves.toEqual([11, 12]);
+            await db.ChannelDB.update({ insert: [channel(13)], update: [], delete: [12] });
+            await expect(channelIds()).resolves.toEqual([11, 13]);
+            await db.ChannelDB.update({ insert: [], update: [], delete: [13, 404] });
+            await expect(channelIds()).resolves.toEqual([11]);
+
+            const index ={ 1: { 11: { id: 11, type: 'GR', channel: 'synthetic-11' } } };
             await db.ProgramDB.insert(index, [tunerProgram(101, 11), tunerProgram(102, 11)], [11]);
             await expect(db.ProgramDB.findId(404)).resolves.toBeNull();
             await expect(db.ProgramDB.findChannelIdAndTime(11, 101_000)).resolves.toMatchObject({ id: 101 });

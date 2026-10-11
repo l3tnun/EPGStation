@@ -271,7 +271,7 @@ interface IPromiseRetry {
 
 | Port                 | 変更 operation                                         | 主な検索 operation                                        | 特記事項                                 |
 | -------------------- | ------------------------------------------------------ | --------------------------------------------------------- | ---------------------------------------- |
-| `IChannelDB`         | `insert`、`update`                                     | ID、放送種別、全件                                        | 並び順指定を扱う                         |
+| `IChannelDB`         | `insert`、`update`（追加・更新・指定IDの削除を同じtransactionで行う） | ID、放送種別、全件                         | 並び順指定を扱う                         |
 | `IProgramDB`         | 全件/放送局置換 `insert`、増分 `update`、古い番組削除  | ID、event relay、rule、放送局時刻、schedule、放送中、全件 | 置換と増分で確定契約が異なる             |
 | `IReserveDB`         | `insertOnce`、`updateOnce`、`updateMany`、`restore`    | ID、一覧/件数、番組、時間範囲、rule、手動 ID              | `updateMany` は transaction              |
 | `IRuleDB`            | 追加、更新、有効化、無効化、削除、restore              | ID、一覧/件数、keyword、ID 群                             | JSON text field を domain 形式へ復元する |

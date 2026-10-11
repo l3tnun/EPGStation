@@ -190,7 +190,7 @@ describe('program guide Tasks 3.3-3.4 isolated confirmed-defect characterization
 
         await expect(model.saveService()).resolves.toBeUndefined();
 
-        expect(channelDB.update).toHaveBeenCalledWith({ insert: [created], update: [] });
+        expect(channelDB.update).toHaveBeenCalledWith({ insert: [created], update: [], delete: [] });
         expect(model.log.system.error).toHaveBeenCalledWith(failure);
     });
 
@@ -257,14 +257,22 @@ describe('program guide approved compatibility characterization', () => {
         expect(database.log.system.error).toHaveBeenCalledWith(firstFailure);
     });
 
-    it('[PG-T3.4][compatibility] retains a service remove event for reconciliation by a later full snapshot', async () => {
-        const { channelDB, model } = createManageModel();
-        model.serviceQueue.push({ resource: 'service', type: 'remove', data: service(3) });
+    it('[PG-T3.4][compatibility] mirakc sends no service remove: the program refetch re-reads every channel so a vanished channel drops out', async () => {
+        const retained = service(4);
+        const vanished = service(5);
+        const { channelDB, client, model, programDB } = createManageModel({
+            getProgramsByService: vi.fn().mockResolvedValue([]),
+        });
+        client.getServices.mockResolvedValueOnce([retained, vanished]).mockResolvedValueOnce([retained]);
 
-        await model.saveService();
+        await model.updateChannels();
+        model.updateServiceIds = { 4: true };
+        await model.saveUpdateServices();
 
-        expect(channelDB.update).toHaveBeenCalledWith({ insert: [], update: [] });
-        expect(model.serviceQueue).toEqual([]);
+        expect(channelDB.insert).toHaveBeenNthCalledWith(2, [retained]);
+        expect(channelDB.update).not.toHaveBeenCalled();
+        expect(model.channelIndex).toEqual({ 10: { 104: { id: 4, type: 'GR', channel: '4' } } });
+        expect(programDB.insert).toHaveBeenLastCalledWith(model.channelIndex, [], [4]);
     });
 
     it.each([

@@ -415,6 +415,7 @@ class EPGUpdateManageModel extends EventEmitter implements IEPGUpdateManageModel
 
         const createIndex: { [serviceId: number]: TunerService } = {}; // 追加用索引
         const updateIndex: { [serviceId: number]: TunerService } = {}; // 更新用索引
+        const deleteIndex: { [serviceId: number]: TunerService } = {}; // 削除用索引
 
         for (const service of services) {
             if (
@@ -434,37 +435,59 @@ class EPGUpdateManageModel extends EventEmitter implements IEPGUpdateManageModel
                 case 'create':
                     if (typeof serviceData.name !== 'undefined') {
                         createIndex[serviceData.id] = serviceData;
+                        // このイベント以前に受信した remove は破棄する
+                        delete deleteIndex[serviceData.id];
                     }
                     break;
                 case 'update':
                     if (typeof serviceData !== 'undefined') {
                         updateIndex[serviceData.id] = serviceData;
+                        // このイベント以前に受信した remove は破棄する
+                        delete deleteIndex[serviceData.id];
                     }
                     break;
                 case 'remove':
-                    // TODO 要確認
-                    // throw new Error('ServiceRedefine');
+                    // このイベント以前に受信した create / update は破棄する
+                    delete createIndex[serviceData.id];
+                    delete updateIndex[serviceData.id];
+                    deleteIndex[serviceData.id] = serviceData;
                     break;
             }
         }
 
         const insertValues = Object.values(createIndex);
         const updateValues = Object.values(updateIndex);
+        const deleteValues = Object.values(deleteIndex);
+        const deleteIds = deleteValues.map(s => s.id);
 
         this.log.system.info('update channel db start');
         this.log.system.info({
             insertValues: insertValues.length,
             updateValues: updateValues.length,
+            deleteValues: deleteValues.length,
         });
 
         await this.channelDB.update({
             insert: insertValues,
             update: updateValues,
+            delete: deleteIds,
         });
 
         // 放送局索引情報更新
         this.updateChannelIndex(insertValues);
         this.updateChannelIndex(updateValues);
+        for (const s of deleteValues) {
+            delete this.channelIndex[s.networkId]?.[s.serviceId];
+        }
+
+        // 削除された放送局の番組を削除する (予約・ルール・録画済みは変更しない)
+        if (deleteIds.length > 0) {
+            await this.programDB.insert(this.channelIndex, [], deleteIds).catch(err => {
+                this.log.system.error('delete service programs error');
+                this.log.system.error(err);
+                throw err;
+            });
+        }
 
         this.log.system.info('update channel db done');
         this.emit(EPGUpdateEvent.SERVICE_UPDATED);

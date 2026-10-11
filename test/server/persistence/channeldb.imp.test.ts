@@ -1,3 +1,4 @@
+import { In } from 'typeorm';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createFluentBuilder, createRunnerDouble, immediateRun, loadEntity, type RunnerFaults } from './db-unit-fakes';
@@ -5,7 +6,7 @@ import { loadCompiled, repositoryOperator } from './repository-harness';
 
 type ChannelProvider = {
     insert(channels: object[], needesDeleted?: boolean): Promise<void>;
-    update(values: { insert: object[]; update: object[]; delete: object[] }): Promise<void>;
+    update(values: { insert: object[]; update: object[]; delete: number[] }): Promise<void>;
     findId(channelId: number): Promise<unknown>;
     findChannleTypes(types: string[], needSort?: boolean): Promise<{ id: number; serviceId: number }[]>;
     findAll(needSort?: boolean): Promise<{ id: number; serviceId: number }[]>;
@@ -165,11 +166,36 @@ describe('ChannelDB.insert row conversion (unittest/imp)', () => {
     it('[3.1] update inserts the new and the changed services without wiping the table', async () => {
         const fixture = makeTransactional();
 
-        await fixture.provider.update({ insert: [service(1)], update: [service(2)], delete: [service(3)] });
+        await fixture.provider.update({ insert: [service(1)], update: [service(2)], delete: [] });
 
         expect(fixture.deletedEntities).toEqual([]);
+        expect(fixture.runner.manager.delete).not.toHaveBeenCalled();
         expect(fixture.runner.manager.insert.mock.calls.map(([, row]) => (row as { id: number }).id)).toEqual([1, 2]);
         expect(fixture.events).toEqual(['start', 'insert', 'insert', 'commit', 'release']);
+    });
+
+    it('[3.1] update deletes only the listed channel ids in the same transaction before the inserts, without wiping the table', async () => {
+        const fixture = makeTransactional();
+
+        await fixture.provider.update({ insert: [service(1)], update: [], delete: [3, 4] });
+
+        expect(fixture.deletedEntities).toEqual([]);
+        expect(fixture.runner.manager.delete).toHaveBeenCalledExactlyOnceWith(Channel, { id: In([3, 4]) });
+        expect(fixture.events).toEqual(['start', 'delete', 'insert', 'commit', 'release']);
+    });
+
+    it('[3.1] update rolls back and reports the insert error when deleting a listed channel fails', async () => {
+        const fixture = makeTransactional();
+        const failure = new Error('synthetic-channel-delete-failure');
+        fixture.runner.manager.delete.mockRejectedValueOnce(failure);
+
+        await expect(fixture.provider.update({ insert: [], update: [], delete: [3] })).rejects.toThrow(
+            'insert error',
+        );
+
+        expect(fixture.runner.commitTransaction).not.toHaveBeenCalled();
+        expect(fixture.events).toEqual(['start', 'rollback', 'release']);
+        expect(fixture.error.mock.calls).toEqual([[failure]]);
     });
 });
 

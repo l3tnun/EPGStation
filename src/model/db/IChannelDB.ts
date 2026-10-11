@@ -5,11 +5,12 @@ import { TunerService } from '../tuner/types.js';
 /**
  * insert/update で channel を新規登録・更新する際に、追加分と更新分をまとめて渡すための入れ物。
  * tuner から取得した service 一覧を「新規に増えた channel」と「既存の channel の更新」に
- * 呼び出し側で仕分けた結果を保持する。
+ * 呼び出し側で仕分けた結果を保持する。tuner から削除された channel は `delete` に channel id で渡す。
  */
 export interface ChannelUpdateValues {
     insert: TunerService[];
     update: TunerService[];
+    delete: apid.ChannelId[];
 }
 
 /**
@@ -23,8 +24,9 @@ export default interface IChannelDB {
      */
     insert(channels: TunerService[]): Promise<void>;
     /**
-     * channel の変更差分（追加・更新）だけを反映する。全件削除は行わない点で `insert` と異なる。
-     * @param values 追加分・更新分に仕分け済みの channel 一覧
+     * channel の変更差分（追加・更新・削除）だけを反映する。全件削除は行わない点で `insert` と異なる。
+     * 削除は `values.delete` に指定した channel id の行だけを、追加・更新と同じ transaction で消す。
+     * @param values 追加分・更新分・削除分に仕分け済みの channel 一覧
      */
     update(values: ChannelUpdateValues): Promise<void>;
     /**
