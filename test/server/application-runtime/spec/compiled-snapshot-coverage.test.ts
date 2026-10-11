@@ -5714,33 +5714,15 @@ describe('discoverCompiledSnapshotCoverage: identity-stable VideoUtil statement 
     // exactly that (`{`, whitespace, whitespace, `}`) and never reach the basis -- only
     // statement 3 (`return;`, the sole span with an executable token) still does, so only its id
     // remains authorized here.
-    //
-    // Mutation testing (Stryker) copies the repository into a sandbox and prepends the one line
-    // `// @ts-nocheck` to every source file under `src/` before compiling, so the sandbox's
-    // VideoUtil.ts has one more line and its compiled output is that header's length longer before
-    // the pinned spans. `SANDBOX_HEADER_LINES` / `SANDBOX_HEADER_BYTES` carry that shift (both 0 in an
-    // ordinary run); every pinned line and offset below is written as the ordinary value plus the shift.
-    const SANDBOX_HEADER = '// @ts-nocheck\n';
-    const REPOSITORY_ROOT = resolve('.');
-    const SANDBOX_HEADER_LINES = readFileSync(join(REPOSITORY_ROOT, TARGET_SOURCE_PATH), 'utf8').startsWith(
-        SANDBOX_HEADER,
-    )
-        ? 1
-        : 0;
-    const SANDBOX_HEADER_BYTES = SANDBOX_HEADER_LINES * SANDBOX_HEADER.length;
     const AUTHORIZED_STATEMENT_IDS = [
-        `statement:src/model/api/video/VideoUtil.ts:${110 + SANDBOX_HEADER_LINES}:20-${110 + SANDBOX_HEADER_LINES}:27:${3959 + SANDBOX_HEADER_BYTES}:${3966 + SANDBOX_HEADER_BYTES}`,
+        'statement:src/model/api/video/VideoUtil.ts:110:20-110:27:3959:3966',
     ] as const;
     // Branch-basis extension: the SAME true arm's own branch-outcome entry (the `IfStatement`'s
     // `thenStatement`, spanning the whole `{ return; }` block) is authorized too -- see
     // `COVERAGE_EXCLUSION_VIDEO_UTIL_AUTHORIZED_BRANCH_IDS` in compiled-snapshot-coverage.mjs.
-    const AUTHORIZED_BRANCH_IDS = [
-        `branch:src/model/api/video/VideoUtil.ts:${109 + SANDBOX_HEADER_LINES}:29-${111 + SANDBOX_HEADER_LINES}:17:${3937 + SANDBOX_HEADER_BYTES}:${3984 + SANDBOX_HEADER_BYTES}`,
-    ] as const;
-    const TRUE_ARM_COMPILED_SPAN = {
-        endOffset: 3984 + SANDBOX_HEADER_BYTES,
-        startOffset: 3937 + SANDBOX_HEADER_BYTES,
-    } as const;
+    const AUTHORIZED_BRANCH_IDS = ['branch:src/model/api/video/VideoUtil.ts:109:29-111:17:3937:3984'] as const;
+    const TRUE_ARM_COMPILED_SPAN = { endOffset: 3984, startOffset: 3937 } as const;
+    const REPOSITORY_ROOT = resolve('.');
 
     function statementIdOf(sourcePath: string, entry: { start: { line: number; column: number }; end: { line: number; column: number }; startOffset: number; endOffset: number }): string {
         return `statement:${sourcePath}:${entry.start.line}:${entry.start.column}-${entry.end.line}:${entry.end.column}:${entry.startOffset}:${entry.endOffset}`;
@@ -5770,7 +5752,7 @@ describe('discoverCompiledSnapshotCoverage: identity-stable VideoUtil statement 
         const span = jsBody.slice(TRUE_ARM_COMPILED_SPAN.startOffset, TRUE_ARM_COMPILED_SPAN.endOffset);
         if (!span.includes('return')) {
             throw new Error(
-                `actual compiled VideoUtil.js span [${TRUE_ARM_COMPILED_SPAN.startOffset},${TRUE_ARM_COMPILED_SPAN.endOffset}) does not look like the true-arm body: ${JSON.stringify(span)}`,
+                `actual compiled VideoUtil.js span [3937,3984) does not look like the true-arm body: ${JSON.stringify(span)}`,
             );
         }
         return { jsBody, mapJson, snapshotRoot };
@@ -5902,7 +5884,7 @@ describe('discoverCompiledSnapshotCoverage: identity-stable VideoUtil statement 
             expect(present.branchIds.has(id)).toBe(false);
         }
         // settled = true starts on source line 112 after the class JSDoc insertion.
-        expect([...present.statementIds].some(id => id.includes(`:${112 + SANDBOX_HEADER_LINES}:`))).toBe(true);
+        expect([...present.statementIds].some(id => id.includes(':112:'))).toBe(true);
         expect(present.statementIds.size).toBeGreaterThan(0);
         expect(present.branchIds.size).toBeGreaterThan(0);
 
@@ -6000,11 +5982,11 @@ describe('discoverCompiledSnapshotCoverage: identity-stable VideoUtil statement 
         // offset [3959, 3966) -- the authorized statement id's own offsets -- with hand-specified
         // mappings pointing that exact range at source 110:20-110:27 (the authorized id's own
         // source position). No `if` (or other branch-outcome construct) appears anywhere.
-        const scriptBody = `${' '.repeat(3946 + SANDBOX_HEADER_BYTES)}function f(){return;}`;
+        const scriptBody = `${' '.repeat(3946)}function f(){return;}`;
         const mappings = buildMappings([
             { genColumn: 0, genLine: 0, srcColumn: 0, srcLine: 0 },
-            { genColumn: 3959 + SANDBOX_HEADER_BYTES, genLine: 0, srcColumn: 20, srcLine: 109 + SANDBOX_HEADER_LINES },
-            { genColumn: 3966 + SANDBOX_HEADER_BYTES, genLine: 0, srcColumn: 27, srcLine: 109 + SANDBOX_HEADER_LINES },
+            { genColumn: 3959, genLine: 0, srcColumn: 20, srcLine: 109 },
+            { genColumn: 3966, genLine: 0, srcColumn: 27, srcLine: 109 },
         ]);
         writeCompiledScript(scriptPath, {
             body: scriptBody,

@@ -11,13 +11,20 @@ import base from './vitest.server.config.ts';
 // - server の test は build 済みの `dist` を読む。Stryker の buildCommand が mutant 入りの src から
 //   sandbox の `<cwd>/dist` を作るので、それを compiled snapshot にする。
 // - Stryker は vitest を threads pool・worker 1 に固定する。単体 test の層（spec・imp）は、その条件でも、
-//   sandbox（repository の複製）の中でも全部動くので、除外する test は無い。
-//   sandbox は Stryker が全ての `src/**/*.ts` の先頭に `// @ts-nocheck` の 1 行を足すので、build した dist の
-//   offset と行番号が通常より 15 byte・1 行ずれる。この差に依存する test
-//   （application-runtime/spec/compiled-snapshot-coverage.test.ts）はその差を読んで合わせている。
+//   sandbox（repository の複製）の中でも動く。除外する単体 test は
+//   application-runtime/spec/compiled-snapshot-coverage.test.ts の 1 つだけ。
+//   この test は、網羅率の除外の印の行を末尾に持つ src の file の実物の text を読んで、網羅率を測る道具を確かめる。
+//   Stryker は mutate する file を書き換える（mutant の切り替えを挟み、整形し直し、末尾の改行を落とす）ので、
+//   その file の実物は sandbox に無く、この test は sandbox では成り立たない。
+//   src の code を実行しないので mutant を殺せず、除外しても mutation の結果は変わらない。
+//   Stryker は、読み込みの途中で失敗した test file を報告せず、その file の test は黙って動かない。
+//   そのため、sandbox で動かない test は、失敗のまま残さずここで明示して除外する。
 //   sandbox は client を複製しない（`/client/*`）が、依存の image の計画の test が読む client の
 //   package.json と lock は複製する（stryker.server.config.mjs の `ignorePatterns`）。
 const pre = (patterns: string[]): string[] => patterns.map(pattern => `test/server/${pattern}`);
+
+// sandbox で成り立たないため除外する単体 test（理由は上のコメント）。
+const mutationExcludedTests = ['application-runtime/spec/compiled-snapshot-coverage.test.ts'];
 
 const projects = ((base as any).test.projects as any[])
     .filter(project => project.test.name !== 'integration')
@@ -28,7 +35,7 @@ const projects = ((base as any).test.projects as any[])
             ...project.test,
             root: process.cwd(),
             include: pre(project.test.include),
-            exclude: pre(project.test.exclude ?? []),
+            exclude: pre([...(project.test.exclude ?? []), ...mutationExcludedTests]),
             env: {
                 ...(project.test.env ?? {}),
                 EPGSTATION_SERVER_COMPILED_SNAPSHOT: resolve(process.cwd(), 'dist'),
