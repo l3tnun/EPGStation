@@ -625,7 +625,7 @@ class ReservationManageModel implements IReservationManageModel {
                 throw err;
             });
             if (oldReserve === null) {
-                this.log.system.error(`reservation is not  is not found: ${reserveId}`);
+                this.log.system.error(`reservation is not found: ${reserveId}`);
                 throw new Error('ReservationIsNotFound');
             }
 
