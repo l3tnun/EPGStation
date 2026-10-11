@@ -841,6 +841,18 @@ describe('media process management implementation characterization', () => {
             'SIGKILL-check': 'SIGKILL-check',
         }[failure];
         expect(logger.encode.error).toHaveBeenCalledWith(expect.objectContaining({ stage: expectedStage }));
+        // 段階の情報に続けて、失敗の原因の例外そのものも記録する。
+        const expectedMessage = {
+            'group-check': 'check failed',
+            'SIGINT-send': 'int failed',
+            'SIGINT-check': 'int check failed',
+            wait: 'wait failed',
+            'SIGKILL-send': 'kill failed',
+            'SIGKILL-check': 'kill check failed',
+        }[failure];
+        expect(
+            logger.encode.error.mock.calls.some(([arg]) => arg instanceof Error && arg.message === expectedMessage),
+        ).toBe(true);
     });
 
     it('[MP-IMP-R6-HLS-LOGGER-FAILURE] releases the slot and retains the late-error sink when stop diagnostics throw', async () => {
@@ -1305,6 +1317,11 @@ describe('media process management implementation characterization', () => {
         await expect(manager.createManaged({ ...option, priority: 10 })).rejects.toThrow('synthetic cleanup failure');
         expect(processStubs.spawn).toHaveBeenCalledOnce();
         expect(logger.encode.error).toHaveBeenCalledWith(`kill process failed: ${processInfo.processId}`);
+        expect(
+            logger.encode.error.mock.calls.some(
+                ([arg]) => arg instanceof Error && arg.message === 'synthetic cleanup failure',
+            ),
+        ).toBe(true);
         expect(vi.getTimerCount()).toBe(0);
     });
 
@@ -1500,6 +1517,111 @@ describe('media process management implementation characterization', () => {
 
         expect(registryOf(original)).toHaveLength(1);
         expect(registryOf(restarted)).toEqual([]);
+    });
+
+    it.each(['create', 'createManaged'] as const)(
+        '[MP-IMP-R8-LATE-ERROR-SINK] %s keeps a late error sink after exit alone until close, and none when close came first',
+        async method => {
+            const manager = makeManager({ encodeProcessNum: 1 });
+            // 旧来の create は spawn イベントより前に返るので、spawn の microtask が済むまで進める。
+            const settleSpawn = async (): Promise<void> => {
+                for (let turn = 0; turn < 5; turn += 1) await Promise.resolve();
+            };
+            const exitFirst = spawnManaged();
+            await manager[method](option);
+            await settleSpawn();
+
+            exitFirst.emit('exit', 0);
+
+            expect(registryOf(manager)).toEqual([]);
+            expect(exitFirst.listenerCount('error')).toBe(1);
+            expect(exitFirst.listenerCount('close')).toBe(1);
+            expect(() => exitFirst.emit('error', new Error('late error after exit'))).not.toThrow();
+            exitFirst.emit('close', 0, null);
+            expect(exitFirst.listenerCount('error')).toBe(0);
+            expect(exitFirst.listenerCount('close')).toBe(0);
+
+            const closeFirst = spawnManaged();
+            await manager[method](option);
+            await settleSpawn();
+
+            closeFirst.emit('close', 0, null);
+
+            expect(registryOf(manager)).toEqual([]);
+            expect(closeFirst.listenerCount('error')).toBe(0);
+            expect(closeFirst.listenerCount('close')).toBe(0);
+        },
+    );
+
+    it('[MP-IMP-R8-DIAGNOSTICS] logs a failed spawn, an unparsable command and each started process', async () => {
+        const manager = makeManager({ encodeProcessNum: 1 });
+        const spawnFailure = new Error('synthetic spawn failure');
+        processStubs.spawn.mockImplementationOnce(() => {
+            throw spawnFailure;
+        });
+
+        await expect(manager.createManaged(option)).rejects.toThrow('synthetic spawn failure');
+
+        expect(logger.encode.error.mock.calls).toEqual([['create encode process failed'], [spawnFailure]]);
+
+        logger.encode.error.mockClear();
+        await expect(manager.createManaged({ ...option, cmd: '/synthetic/not-found' })).rejects.toThrow(
+            'CmdBinIsNotFound',
+        );
+
+        expect(logger.encode.error.mock.calls[0]).toEqual(['build process error: /synthetic/not-found']);
+        expect(logger.encode.error.mock.calls[1]).toEqual(['create encode process failed']);
+        expect(logger.encode.error.mock.calls[2][0]).toBeInstanceOf(Error);
+
+        spawnManaged();
+        await manager.createManaged(option);
+        const processInfo = registryOf(manager)[0] as { processId: number };
+
+        expect(logger.encode.info).toHaveBeenCalledWith(`create new encode process: ${processInfo.processId}`);
+    });
+
+    it('[MP-IMP-R8-DIAGNOSTICS] logs a replacement after the stopped process has released its slot', async () => {
+        vi.useFakeTimers();
+        const manager = makeManager({ encodeProcessNum: 1 });
+        const playback = spawnManaged();
+        await manager.createManaged(option);
+        const replacement = manager.createManaged({ ...option, priority: 10 });
+        await vi.advanceTimersByTimeAsync(500);
+        spawnManaged();
+        playback.emit('exit', 0);
+        await replacement;
+
+        expect(
+            logger.encode.info.mock.calls.some(([message]) => /^kill & create new encode process: \d+$/u.test(message)),
+        ).toBe(true);
+    });
+
+    it('[MP-IMP-R3-RESERVATION-CLEANUP] drops the replacement reservation after a replacement and after a timed-out one, freeing the slot', async () => {
+        vi.useFakeTimers();
+        const manager = makeManager({ encodeProcessNum: 1 });
+        const reservations = (): Set<unknown> =>
+            (manager as unknown as { replacementReservations: Set<unknown> }).replacementReservations;
+        const first = spawnManaged();
+        await manager.createManaged(option);
+        const replaced = manager.createManaged({ ...option, priority: 10 });
+        await vi.advanceTimersByTimeAsync(500);
+        const second = spawnManaged();
+        first.emit('exit', 0);
+        await expect(replaced).resolves.toMatchObject({ child: second });
+        expect(reservations().size).toBe(0);
+
+        const timedOut = expect(manager.createManaged({ ...option, priority: 20 })).rejects.toThrow(
+            'EncodeProcessManageModelTimeoutError',
+        );
+        await vi.advanceTimersByTimeAsync(3000);
+        await vi.advanceTimersByTimeAsync(1);
+        await timedOut;
+        expect(reservations().size).toBe(0);
+
+        second.emit('exit', 0);
+        const later = spawnManaged();
+        await expect(manager.createManaged(option)).resolves.toMatchObject({ child: later });
+        expect(registryOf(manager)).toHaveLength(1);
     });
 
     it('[MP-IMP-R7-NO-DRAIN] exposes admission only and no manager-owned drain or business-result API', () => {
