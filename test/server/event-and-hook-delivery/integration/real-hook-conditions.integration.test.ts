@@ -162,7 +162,11 @@ const makeRealConfiguration = async (hookLines: readonly string[]) => {
     };
     const configuration = new Configuration({ getLogger: () => logger }, access);
     cleanups.push(() => unwatchFile(configPath));
-    const rewrite = async (lines: readonly string[]) => {
+    /**
+     * config.yml を書き換え、変更の検知と、新しい値が getConfig に反映されたこと（`applied`）まで待つ。
+     * 'updated config file' の記録は読み込みの前に出るので、記録だけでは反映の完了を意味しない。
+     */
+    const rewrite = async (lines: readonly string[], applied: () => void) => {
         const reloaded = logger.system.info.mock.calls.filter(([text]) => text === 'updated config file').length;
         // 前回の更新と mtime が同じにならないよう、少し待ってから書き換える
         await sleep(30);
@@ -174,6 +178,7 @@ const makeRealConfiguration = async (hookLines: readonly string[]) => {
                 ).toBeGreaterThan(reloaded),
             { timeout: 8_000, interval: 25 },
         );
+        await vi.waitFor(applied, { timeout: 8_000, interval: 25 });
     };
     return { configuration, logger, rewrite };
 };
@@ -476,12 +481,10 @@ describe('hook limits that follow the configuration read at start', () => {
         const running = makeModel(real.configuration);
         expect(real.configuration.getConfig().hookCommandMaxPending).toBe(2);
 
-        await real.rewrite([
-            'hookCommandMaxPending: 100',
-            'hookCommandTimeoutMs: 5000',
-            `reserveNewAddtionCommand: '${recorderCommand(log)}'`,
-        ]);
-        expect(real.configuration.getConfig().hookCommandMaxPending).toBe(100);
+        await real.rewrite(
+            ['hookCommandMaxPending: 100', 'hookCommandTimeoutMs: 5000', `reserveNewAddtionCommand: '${recorderCommand(log)}'`],
+            () => expect(real.configuration.getConfig().hookCommandMaxPending).toBe(100),
+        );
 
         for (let id = 1; id <= 5; id += 1) {
             running.model.addUpdateReseves({ insert: [makeReserve({ id })], isSuppressLog: false });
@@ -515,8 +518,7 @@ describe('hook limits that follow the configuration read at start', () => {
         ];
         const real = await makeRealConfiguration(lines(600));
         const running = makeModel(real.configuration);
-        await real.rewrite(lines(60_000));
-        expect(real.configuration.getConfig().hookCommandTimeoutMs).toBe(60_000);
+        await real.rewrite(lines(60_000), () => expect(real.configuration.getConfig().hookCommandTimeoutMs).toBe(60_000));
 
         const acceptedAt = Date.now();
         running.model.addUpdateReseves({ insert: [makeReserve({ id: 1 })], isSuppressLog: false });

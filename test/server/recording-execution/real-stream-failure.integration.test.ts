@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 
-import { readFile } from 'node:fs/promises';
+import { readFile, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -26,6 +26,11 @@ describe('a tuner server that drops the connection while a recording is running'
                 await preparation;
                 await vi.waitFor(() => expect(wired.started).toHaveBeenCalledOnce());
                 for (let index = 1; index < 5; index++) await sender.write(chunk(index));
+                // 送った data が録画先の file に届き切ってから切る。送り終えただけでは受け取り側に届いていないことがある。
+                await vi.waitFor(async () => {
+                    const [partial] = await wired.videoFileDB.findAll();
+                    expect((await stat(join(root, partial.filePath))).size).toBe(5 * CHUNK_SIZE);
+                });
 
                 response.socket?.destroy();
 
