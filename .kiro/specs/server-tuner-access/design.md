@@ -665,7 +665,9 @@ fixtureを定義する。共有runner、C0・C1の判定は`server-application-r
 
 ### test層
 
--   `unittest/spec`はRequirements 1から7の53 ACを下記canonical locatorで一行ずつ固定し、R8.1の対応版・transport・共通
+-   Requirements 1から7の53 ACは下記canonical locatorで一行ずつ固定する。このうち1.4だけは本物のinstallとcompileを流すため
+    `test/server/tuner-access/clean-install.integration.test.ts`（直列実行の一覧に載せ、他の重いtestと並行させない）で固定し、
+    残りの52 ACは`unittest/spec`が固定する。`unittest/spec`はR8.1の対応版・transport・共通
     DTO・change feed・stream・logo・deadline・startup barrierの外部契約を証明する。
 -   implementation testはroute template、target parser、normalizer、product判定、deadline race、stream handle、Mirakurun
     の通常終了差を検証し、R8.2の内部値域と分岐を証明する。
@@ -683,7 +685,7 @@ fixtureを定義する。共有runner、C0・C1の判定は`server-application-r
     し、exact版allowlist拒否がないことを確認する。
 
 test名の`[TA-n.m]`のn.mはtasks.mdのtask番号であり、AC番号ではない。ACからtestを辿るときは、`unittest/spec`が53 ACを一行ずつ
-固定する`[TA-AC-<AC番号>]`、または下記のcanonical locatorの表を正とする。
+固定する`[TA-AC-<AC番号>]`（1.4は上記の`clean-install.integration.test.ts`）、または下記のcanonical locatorの表を正とする。
 
 通常の契約testは合成serverを使う。本物のserverとの比較integrationは隔離したDocker fixtureを使い、setupと全観測を
 明示timeout付きのcase内で実行する。setup失敗を含めて`finally`でcontainer・network・一時fileを回収し、Docker command
@@ -821,6 +823,7 @@ OSがserver正式対応外であるため、本機能の完了判定を妨げな
 | test file                                                         | 責任                                                                                                              |
 | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | `test/server/tuner-access/tuner-access.spec.test.ts`              | Requirements 1から7の53 ACのcanonical契約                                                                         |
+| `test/server/tuner-access/clean-install.integration.test.ts`      | `[TA-AC-1.4]`。clean directoryでの本物のinstallとcompile、import graphにMirakurun専用client packageが無いこと。直列実行 |
 | `test/server/tuner-access/implementation.test.ts`                 | target parser、route、DTO、package非依存、error分岐                                                               |
 | `test/server/tuner-access/implementation-target.test.ts`          | legacy Unix形式のtarget解釈、request失敗のsanitize、status objectと最低・以降版の正規化                           |
 | `test/server/tuner-access/implementation.posix.test.ts`           | named pipeのrequest option seam。platform境界のselectorが非Windowsだけで選択する                                  |

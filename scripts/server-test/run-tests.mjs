@@ -58,7 +58,7 @@ const COVERAGE_MODE = 'coverage';
 const UNIT_COVERAGE_PROJECTS = Object.freeze(['spec', 'imp']);
 const wholeLayerModes = ['spec', 'imp', 'integration', 'all'];
 // SERIALIZED_REAL_PROCESS_FILES: files whose rows drive real Docker builds and containers against
-// the daemon under fixed wall-clock budgets. A whole-layer run gives them a serialized invocation of
+// the daemon, or a real clean install and compile, under fixed wall-clock budgets. A whole-layer run gives them a serialized invocation of
 // their own rather than a place in the parallel batch. Single source of truth: `./serialized-real-process-files.mjs`.
 
 // PR CI does not run the server suite, so there is no 4-CPU hosted-runner shape to size an unset
@@ -554,8 +554,8 @@ export async function runAgainstCompiledSnapshot({
     }
 
     const layers = runMode === 'all' || runMode === 'recording-execution' ? ['spec', 'imp', 'integration'] : [runMode];
-    // Files whose rows drive real Docker builds and containers against the daemon (their own leaf
-    // command runs them with `--maxWorkers 1 --no-file-parallelism`). Inside a whole-layer run they
+    // Files whose rows drive real Docker builds and containers against the daemon, or a real clean
+    // install and compile (their own leaf command runs them with `--maxWorkers 1 --no-file-parallelism`). Inside a whole-layer run they
     // would share the worker pool with the other files and the daemon with their MySQL fixture
     // teardown, so a whole-layer run keeps them out of the parallel batch and gathers them, across
     // every layer this call runs, into `pendingSerializedFiles` below -- dispatched once, after every
