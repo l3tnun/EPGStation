@@ -4,7 +4,7 @@ import { mkdtemp, readdir, readFile, rm, stat, writeFile } from 'node:fs/promise
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { logger, makeReserve, RecordingUtilModel } from './_harness';
+import { logger, makeRecorded, makeReserve, RecordingUtilModel } from './_harness';
 
 const require = createRequire(join(process.cwd(), 'package.json'));
 const snapshot = process.env.EPGSTATION_SERVER_COMPILED_SNAPSHOT as string;
@@ -370,5 +370,96 @@ describe('[RE-9.2] recording directory permission and file size update', () => {
 
         expect(sizeUpdate).not.toHaveBeenCalled();
         expect(logger.system.error).toHaveBeenCalledWith('update file size error: 71');
+    });
+});
+
+describe('[RE-9.2] recording path selection details', () => {
+    const buildModel = (config: Record<string, unknown>, channel: unknown = null) =>
+        new RecordingUtilModel(
+            { getLogger: () => logger },
+            { getConfig: () => ({ recordedFileExtension: '.ts', recordedFormat: 'synthetic', ...config }) },
+            { getExecution: vi.fn(async () => 5), unLockExecution: vi.fn() },
+            { findId: vi.fn(async () => channel) },
+            { findChannelIdAndTime: vi.fn(async () => null) },
+            {},
+            {},
+        );
+
+    it('does not reserve a file unless the caller asks for a reserved file', async () => {
+        const model = buildModel({ recorded: [{ name: 'synthetic-root', path: root }] });
+
+        const recPath = await model.getRecPath(makeReserve({ id: 1 }), false);
+
+        expect(recPath.fileHandle).toBeUndefined();
+        await expect(stat(join(root, 'synthetic.ts'))).rejects.toMatchObject({ code: 'ENOENT' });
+    });
+
+    it('saves under the first recorded directory when the temporary directory is requested but not configured', async () => {
+        const model = buildModel({ recorded: [{ name: 'synthetic-root', path: root }] });
+
+        const recPath = await model.getRecPath(makeReserve({ id: 1 }), true);
+
+        expect(recPath.parendDir).toEqual({ name: 'synthetic-root', path: root });
+        expect(recPath.fullPath).toBe(join(root, 'synthetic.ts'));
+    });
+
+    it('creates a missing sub directory and reports it', async () => {
+        const model = buildModel({ recorded: [{ name: 'synthetic-root', path: root }] });
+
+        const recPath = await model.getRecPath(makeReserve({ id: 1, directory: 'created-sub' }), false);
+
+        expect(recPath.fullPath).toBe(join(root, 'created-sub', 'synthetic.ts'));
+        expect((await stat(join(root, 'created-sub'))).isDirectory()).toBe(true);
+        expect(logger.system.info).toHaveBeenCalledWith(`mkdirp: ${join(root, 'created-sub')}`);
+        expect(logger.system.fatal).not.toHaveBeenCalled();
+    });
+
+    it('does not keep the process alive for the path selection watchdog', async () => {
+        const realSetTimeout = globalThis.setTimeout;
+        const unrefs: Array<ReturnType<typeof vi.spyOn>> = [];
+        vi.spyOn(globalThis, 'setTimeout').mockImplementation(((callback: () => void, delay?: number) => {
+            const timer = realSetTimeout(callback, delay);
+            if (delay === 600_000) unrefs.push(vi.spyOn(timer, 'unref'));
+            return timer;
+        }) as unknown as typeof setTimeout);
+        const model = buildModel({ recorded: [{ name: 'synthetic-root', path: root }] });
+
+        await model.getRecPath(makeReserve({ id: 1 }), false);
+
+        expect(unrefs).toHaveLength(1);
+        expect(unrefs[0]).toHaveBeenCalledTimes(1);
+    });
+
+    it('closes the source file after copying it into the reserved destination', async () => {
+        const { model, oldPath } = build();
+        await writeFile(oldPath, 'synthetic-payload');
+        failRenameOnce();
+        const original = fs.promises.open.bind(fs.promises);
+        const opened: Array<{ flags: unknown; handle: fs.promises.FileHandle }> = [];
+        vi.spyOn(fs.promises, 'open').mockImplementation((async (path: fs.PathLike, flags?: fs.OpenMode) => {
+            const handle = await original(path as string, flags as string);
+            opened.push({ flags, handle });
+            return handle;
+        }) as unknown as typeof fs.promises.open);
+
+        await model.movingFromTmp(makeReserve({ id: 1 }), 71);
+
+        const source = opened.find(entry => entry.flags === 'r');
+        expect(source).toBeDefined();
+        expect(source!.handle.fd).toBe(-1);
+    });
+
+    it('uses NULL for the channel type and channel of a recorded program whose channel is unknown', async () => {
+        const model = buildModel({ recorded: [{ name: 'synthetic-root', path: root }] });
+
+        await expect(model.formatFilePathString('%TYPE%/%CH%', makeRecorded({ channelId: 10 }))).resolves.toBe('NULL/NULL');
+    });
+
+    it('keeps the reservation channel type and channel when the channel lookup finds nothing', async () => {
+        const model = buildModel({ recorded: [{ name: 'synthetic-root', path: root }] });
+
+        await expect(model.formatFilePathString('%TYPE%/%CH%', makeReserve({ id: 1 }))).resolves.toBe(
+            'GR/synthetic-channel',
+        );
     });
 });

@@ -21,6 +21,14 @@ export const recordingDomainSuiteMatrix = [
         tests: [
             test('recording-manage-mutation-boundaries.imp.test.ts', 'imp', ['fake-timer']),
             test('recording-manage-p1.test.ts', 'imp', ['fake-timer']),
+            test('recording-manage-recorded-use.imp.test.ts', 'imp', ['fake-timer']),
+            test('recorder-mutation-a.imp.test.ts', 'imp', ['fake-timer', 'stream']),
+            test('recorder-mutation-b.imp.test.ts', 'imp', ['fake-timer', 'stream']),
+            test('recorder-mutation-c.imp.test.ts', 'imp', ['fake-timer', 'stream']),
+            test('recorder-mutation-d.imp.test.ts', 'imp', ['fake-timer', 'stream']),
+            test('recorder-mutation-e.imp.test.ts', 'imp', ['fake-timer', 'stream']),
+            test('recorder-mutation-f.imp.test.ts', 'imp', ['fake-timer', 'stream']),
+            test('recorder-mutation-g.imp.test.ts', 'imp', ['fake-timer', 'stream']),
             test('mutation-acceptance-facade.integration.test.ts', 'integration'),
             test('apply-schedule-removal.imp.test.ts', 'imp'),
         ],
@@ -57,6 +65,7 @@ export const recordingDomainSuiteMatrix = [
         tests: [
             test('stream-allocation-boundary.test.ts', 'imp', ['fake-timer', 'stream']),
             test('settuner-delegation.imp.test.ts', 'imp'),
+            test('stream-creator-lifecycle.imp.test.ts', 'imp', ['fake-timer', 'stream']),
             test('tuner-boundary.spec.test.ts', 'spec', ['fake-timer', 'stream', 'filesystem']),
             test('tuner-stream.integration.test.ts', 'integration', ['fake-timer', 'stream']),
         ],
