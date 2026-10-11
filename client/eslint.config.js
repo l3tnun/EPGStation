@@ -12,6 +12,7 @@ import epgstationTestRules, {
 export default defineConfig([
   globalIgnores([
     'dist',
+    '.stryker-tmp*',
     'coverage',
     'playwright-report',
     'test-results',
