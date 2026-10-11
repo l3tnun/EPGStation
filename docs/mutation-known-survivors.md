@@ -689,3 +689,141 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 | 処理の場所 | mutator | 理由 |
 | --- | --- | --- |
 | `buildEndpointUrl` の `query === undefined \|\| query === ''` | ConditionalExpression | 到達不能: `query` は全呼び出しで空にならない。空のとき endpoint だけという分岐は来ない |
+### API の呼び出しと応答の変換: 共通の理由
+
+次の 3 種類の生き残りは、API の呼び出しと応答の変換の file に共通で現れる。個別の節には載せず、ここにまとめる。
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `fetchJson`・`fetchAction` の `catch` の block を空にする（`dashboardApi.ts`、`encodeApi.ts`、`recordingApi.ts`、`app/api/fetchServerApiRepository.ts`） | BlockStatement | 振る舞いが変わらない: null の代わりに undefined（`fetchAction` は false の代わりに undefined）が返るだけで、呼び出し側の変換は null も undefined も同じ失敗として扱う |
+| 既定の base path `options.basePath ?? './api'`（各 repository の生成関数） | StringLiteral、LogicalOperator | 定数表で判定できない: report が `static` と報告する。既定の `./api` と、指定した base path の使われ方は `unittest/imp/api.basePathResolution.imp.test.ts` が確かめている |
+| channel の index を `Map.get(item.channelId)` で引く前の `item.channelId === undefined` の判定（`recordedAdapters.ts`、`recordingApi.ts`、`dashboardRecordedAdapters.ts`、`reserveAdapters.ts`、`search/rule/api/channelNames.ts`） | ConditionalExpression | 冗長: index の key は数値だけなので、undefined で引いても何も見つからず、同じ項目がそのまま返る |
+
+### `src/features/guide/guideApi.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `createRequestSetFromScheduleRequest` が作る `guideQuery` の全体と、`mode` を持たない要求の分岐が作る `schedule` の各項目（`mode`・`isHalfWidth`・`isFree`・各放送波の真偽） | ObjectLiteral、StringLiteral、BooleanLiteral、ConditionalExpression、EqualityOperator | 到達不能: URL を組み立てる `buildGuideRequestUrls` は `guideQuery` を読まない。`mode` を持たない要求は予約の索引の取得にだけ渡り、そこで使うのは `reserveIndex` だけで `schedule` は読まれない |
+
+### `src/features/recorded/recordedApi.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `fetchRecordedDetail` の `response === null` の判定と `\|\|` | ConditionalExpression、LogicalOperator | 冗長: 続く `!isRecord(response)` が null も弾く |
+
+### `src/features/recorded/api/recordedSearchAdapters.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `SEARCH_OPTION_GENRE_NAMES`（ジャンル名の表） | ObjectLiteral、StringLiteral | 定数表で判定できない: 16 個の名前を全部確かめる test がある |
+| `adaptVideoDuration` の `typeof value === 'number'`・`typeof value.duration !== 'number'` | ConditionalExpression | 冗長: `Number.isFinite` が数値以外を弾く |
+
+### `src/features/recording/recordingApi.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `adaptChannelIndex` の `typeof channel.id !== 'number'` と `name !== undefined` | ConditionalExpression | 振る舞いが変わらない: 数値でない id や undefined の名前を index に入れても、数値の channelId で引く側から見えない |
+| `hydrateRecordingChannelName` の `channelName === undefined` | ConditionalExpression | 振る舞いが変わらない: 項目は元から `channelName: undefined` の key を持ち、spread しても同じ形になる |
+| `createFetchRecordedApiRepository({ fetcher, basePath })` の引数の object | ObjectLiteral | 定数表で判定できない: report が `static` と報告する。録画済みの repository への継承は `recording` の test が確かめている |
+
+### `src/features/storages/storagesApi.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `isRecord` の判定、`isNonNegativeFiniteNumber` の `typeof value === 'number'`、`adaptStoragesResponse` の `isRecord`・`items` が配列かの判定 | ConditionalExpression、LogicalOperator、BlockStatement | 冗長: 外側の `try/catch` が例外を同じ失敗の結果に変える。`Number.isFinite` は数値以外を弾く |
+
+### `src/features/reserves/lib/reserveAdapters.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `isRecord` の `typeof value === 'object'` | ConditionalExpression | 冗長: 文字列や数値は property が全部 undefined になり、続く id の判定で弾かれる（`isRecord` 自体の判定は test が確かめている） |
+| `isSafeInteger` の `typeof value === 'number'` | ConditionalExpression | 冗長: `Number.isSafeInteger` が数値以外を弾く |
+| `adaptReserveItem` の開始時刻・終了時刻の逆転判定の `startAt !== undefined`・`endAt !== undefined` と `&&` | ConditionalExpression、LogicalOperator | 振る舞いが変わらない: undefined との大小比較は常に false で、どちらかが無ければ何も消えない |
+
+### `src/features/reserves/lib/manualReserveServerOptions.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `EMPTY_SERVER_OPTIONS` | ObjectLiteral、ArrayDeclaration | 定数表で判定できない: 3 つとも空であることを確かめる test がある |
+| `isRecord` の `typeof value === 'object'` | ConditionalExpression | 冗長: 文字列は後段の `typeof channel.id !== 'number'` で弾かれる |
+
+### `src/features/onair/lib/onairLiveStreamAdapters.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `adaptChannelNameIndex` の `typeof entry.name === 'string'` | ConditionalExpression | 冗長: 後段の `typeof name === 'string'` が文字列でない名前を弾く |
+
+### `src/features/guide/lib/guideApiAdapters.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `resolveDefaultFetch` | BlockStatement | 定数表で判定できない: report が `static` と報告する。`fetcher` を渡さないとき global の `fetch` が使われることは test が確かめている |
+
+### `src/app/api/serverConfigAdapters.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `adaptServerConfig` の `isEncodeEnabled` に代入する式 | ConditionalExpression、EqualityOperator | 冗長: 代入する式は外側の `if` と同じ条件で、そこへ来た時点で常に true |
+
+### `src/shared/legacyPaginationDesktop.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `desktopPaginationRange` の loop の条件と増分（`pageNumber <= to`、`pageNumber += 1`） | EqualityOperator、BooleanLiteral、UpdateOperator | Stryker の制約: 条件を常に真にする・増分を逆向きにする mutant は無限 loop になり、配列が伸び続けて runner が止まる（timeout の約 6 分ごとに回復を待つ）ため、この 1 行を除いて流した。範囲の出力は通常の test が確かめている |
+| `computeDesktopPaginationItems` の最後の `items[index - 1]` | ArithmeticOperator | 振る舞いが変わらない: 連続する `'ellipsis'` のどれを残すかが変わるだけで、出力は同じ |
+
+### `src/app/navigation/routeMatching.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `currentQueryMatchesCondition` の `actual === undefined` | ConditionalExpression、BlockStatement | 振る舞いが変わらない: undefined は続く比較で false になる |
+| `listComparableQueryKeys` の `query[key] !== undefined` | ConditionalExpression | 振る舞いが変わらない: 値が undefined の key を含めても、値の列は両側とも空で一致する |
+| `normalizeQueryValue` の `value === undefined` | ConditionalExpression、BlockStatement、ArrayDeclaration | 冗長: 比べる key は少なくとも片側に値があるので、undefined を `[undefined]` や別の配列にしても、反対側の値の列と一致することが無い |
+
+### `src/app/navigation/items.ts`・`src/app/navigation/regenerationRequest.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `baseBeforeConfigItems`・`baseAfterGuideItems`（項目の表）と、`generateNavigationItems` の放映中の項目の条件 | ArrayDeclaration、ObjectLiteral、StringLiteral、ConditionalExpression | 定数表で判定できない: 全項目を並びまで確かめる test がある |
+| `NAVIGATION_REGENERATION_EVENT` | StringLiteral | 定数表で判定できない: 名前を確かめる test がある |
+
+### `src/app/realtime.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `SOCKET_INITIALIZATION_FAILURE_MESSAGE`・`DISCONNECT_MESSAGE`・`RECONNECT_MESSAGE` | StringLiteral | 定数表で判定できない: 文言を確かめる test がある |
+
+### `src/features/settings` と `src/shared/settings`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `settingsControlSupport.ts` の `formatSettingsSelectValue` の `controlType !== 'select'` | ConditionalExpression、BlockStatement | 冗長: `options` を持つのは select だけで、それ以外は `find` が undefined になり同じく元の値を返す |
+| `settingsControlMatrix.ts` の `createSettingsControlUpdate` の `typeof rawValue === 'string' ? rawValue : String(rawValue)` | ConditionalExpression、StringLiteral | 振る舞いが変わらない: 文字列に `String` を掛けても同じ文字列 |
+| `settingsSave.ts` の保存成功・失敗の snackbar の定数 | ObjectLiteral、StringLiteral | 定数表で判定できない: 保存の test が値を確かめている |
+| `adjacentStorageRegistry.ts` の `definitions`（隣接する保存先の表） | ArrayDeclaration、ObjectLiteral、StringLiteral、BooleanLiteral | 定数表で判定できない: 8 項目の key・owner・既定値を並びまで確かめる test がある |
+| `settingsControlOptions.ts` の `rangeOptions`・`valueOptions` | ArrowFunction | 定数表で判定できない: module 先頭で定義される arrow function 全体の置き換え。呼び出したときの結果は test が確かめている |
+
+### `src/app/drawerLayout.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `APP_SHELL_DRAWER_TRANSITION_EASING` | StringLiteral | 定数表で判定できない: 値を確かめる test がある |
+
+### `src/app/lib/serverConfigSelectors.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `getRecordedDownloadUrlScheme`・`getRecordedViewUrlScheme` の `os === null`・`!('urlscheme' in config)` の判定 | ConditionalExpression、LogicalOperator | 振る舞いが変わらない: 判定を外しても、続く `config.urlscheme?.…?.[os]` が undefined になり、`?? null` で同じ null を返す |
+
+### `src/app/lib/shellSettingsSnapshots.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `loadThemeSettingsSnapshot`・`loadNavigationSettingsSnapshot` の `typeof window !== 'undefined'` | ConditionalExpression、StringLiteral | 冗長: window が無いときの `window.localStorage` の読み込みの例外を、外側の `try/catch` が拾って同じ既定値を返す |
+
+### `src/app/scroll/scrollHistoryContext.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `createMissingScrollHistory`（provider が無いときの既定の履歴） | BlockStatement、ObjectLiteral、ArrowFunction | 定数表で判定できない: module の読み込み時に評価される式。各 method の戻り値と例外は test が確かめている |
+| `createMissingScrollHistory` の `clearRestoreHistory` の `return undefined` | BlockStatement | 振る舞いが変わらない: 空の本体も undefined を返す |
