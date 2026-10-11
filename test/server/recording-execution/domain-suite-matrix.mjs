@@ -25,6 +25,7 @@ export const recordingDomainSuiteMatrix = [
             test('recorder-mutation-a.imp.test.ts', 'imp', ['fake-timer', 'stream']),
             test('recorder-mutation-b.imp.test.ts', 'imp', ['fake-timer', 'stream']),
             test('recorder-mutation-c.imp.test.ts', 'imp', ['fake-timer', 'stream']),
+            test('recorder-mutation-d.imp.test.ts', 'imp', ['fake-timer', 'stream']),
             test('mutation-acceptance-facade.integration.test.ts', 'integration'),
             test('apply-schedule-removal.imp.test.ts', 'imp'),
         ],
