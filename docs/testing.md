@@ -103,6 +103,8 @@ PR の `check` job（§7）が実行する検査と同じ。
 - cache は git の管理外。`EPGS_MUTATION_INCREMENTAL_FILE` で場所を変えられる。消えても全 mutant を流し直すだけで結果は変わらない。
 - cache は、test を足しても前回の生き残りを流し直さないことがある。足した test が mutant を殺すかを確かめるときは、対象を絞って `--force` を付けて流す（例: `npm run mutation:server -- --force --mutate src/util/StrUtil.ts`）。
 - 結果は端末の表と `reports/mutation/` の report（server は `reports/mutation/server/report.html`、client は `client/reports/mutation/report.json`）に出る。生き残った mutant を読み、test を足す、または等価・冗長として記録する。
+- report の json は `node scripts/mutation/summarize.mjs <report.json> [<file の部分文字列>]` で集計できる。file ごとの mutant 数・Killed・Survived・NoCoverage・Timeout・score と、生き残りの一覧（行・mutator・置き換え後・static かどうか）が出る。
+- 既知の生き残り（test を足さないと判断して理由を付けたもの）は [mutation-known-survivors.md](mutation-known-survivors.md) にある。流した後は集計の生き残りをこの一覧と見比べ、載っていないものだけを扱う。対象 file の決め方と新しい module を足す手順は、steering の Mutation Testing 節（server・DB は `.kiro/steering/server-testing.md`、client は `.kiro/steering/testing.md`）にある。
 - Stryker は vitest 4.1.11 の組で動作を確認している。vitest の版を変えたら、score が 0% でない（全 mutant が「test 無しで生存」になっていない）ことを確かめる。
 - Stryker の sandbox で動かない test は専用の vitest 設定が除外している（process.env.TZ を実行中に変える test、build 工具や npm の path に依存する test、client の外の file を読む test）。
 
