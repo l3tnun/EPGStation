@@ -268,7 +268,7 @@ HLS成果物の削除と配信識別番号の解放は`server-media-delivery`が
 suiteは`test/server/media-process-management/`にあり、仕様testは`media-process-management.spec.test.ts`、実装testは
 `implementation.test.ts`、結合testは`process-group.integration.test.ts`である。Linux process group用のsynthetic child
 fixtureは結合testが実行時に一時directoryへ生成し、case終了時に回収する。このほか、エンコード要求側（`EncoderModel`）の
-分岐を確かめる`*.imp.test.ts`が4件ある。本機能唯一の機能固有test matrixは7.3の形式で
+分岐を確かめる`*.imp.test.ts`が4件と、プロセスの終了準備（出力pipeの切離し、listenerの回収、待機後の中断）とcommand文字列の解析を確かめる`process-util-child-cleanup.imp.test.ts`がある。本機能唯一の機能固有test matrixは7.3の形式で
 持ち、別のmatrixまたはledgerへ判定を分散させない。suiteとtestが存在する事実は、実行結果やcoverageが得られた証拠ではな
 い。
 

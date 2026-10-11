@@ -114,7 +114,7 @@ client/src/
 - `client/src/app/settingsStorageAdapter.ts` — App Shell が theme と navigation の設定を読む adapter。
 - `client/src/shared/settings/adjacentStorageRegistry.ts` — adjacent workflow storage key の default compatibility contract を集約する。
 - `client/unittest/spec/settingsStorage.contract.spec.test.ts`（storage と default の契約）、`settingsStorage.adjacent.spec.test.ts`（adjacent key と synthetic fixture）— unittest/spec。
-- `client/unittest/imp/settingsStorage.repository.imp.test.ts`（repository の実装境界）、`settingsStorage.registryUrlScheme.imp.test.ts`（registry、URL scheme、fixture 安全性）— unittest/imp。共有 fixture は `client/src/shared/settings/__fixtures__/settingsStorageFixtures.ts`（state matrix と adjacent key）、storage の例外と書込失敗の stub は `client/unittest/imp/support/settingsStorageFixtures.ts`。
+- `client/unittest/imp/settingsStorage.repository.imp.test.ts`（repository の実装境界）、`settingsStorage.registryUrlScheme.imp.test.ts`（registry、URL scheme、fixture 安全性）、`settingsStorage.addEncodeAndGuideSettings.imp.test.ts`（追加 encode 設定の保存、番組表の大きさ設定の正規化と定数表、保存済み値の上書き、platform ごとの storage 経路）— unittest/imp。共有 fixture は `client/src/shared/settings/__fixtures__/settingsStorageFixtures.ts`（state matrix と adjacent key）、storage の例外と書込失敗の stub は `client/unittest/imp/support/settingsStorageFixtures.ts`。
 
 ## システムフロー
 

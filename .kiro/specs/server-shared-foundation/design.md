@@ -73,4 +73,4 @@ characterization test を `test/server/shared-foundation/` に持つ。
 | 4.4  | `imp/file-util.test.ts`: 管理対象ディレクトリの外・自身・識別情報の不一致を削除不可と判定する                                                                                                    |
 | 5.1  | `imp/util.test.ts`: 境界の直前まで完了せず、境界で 1 度だけ完了する                                                                                                                              |
 
-`toHalfRegExp`・`getFileList` など、条件を持たない公開関数は、振る舞いを確かめる test だけがあり、上の表の対象外である。
+`toHalfRegExp`・`getFileList` など、条件を持たない公開関数は、振る舞いを確かめる test だけがあり、上の表の対象外である。`ChannelUtil.isMediaService` の判定は `imp/channel-util.test.ts` が確かめる（同じく表の対象外）。

@@ -852,6 +852,7 @@ compile境界、V8 coverage、root commandを再定義せず、永続化固有�
 | `test/server/persistence/search-dialects.spec.test.ts`     | `unittest/spec`     | boolean、LIKE、case-sensitive 指定、regexp capability、backend 差         |
 | `test/server/persistence/retry.spec.test.ts`               | `unittest/spec`     | 5 attempts、5 waits、最後の error、transaction 除外                       |
 | `test/server/persistence/implementation.test.ts`           | `unittest/imp`      | dialect helper、characterization、内部値域、方式別分岐                    |
+| `test/server/persistence/promise-retry-zero-attempts.imp.test.ts` | `unittest/imp` | 試行回数 0 のとき job を一度も実行せず retry error にすること、許された試行がすべて失敗したとき最後の失敗を再 throw すること |
 | `test/server/persistence/connection.integration.test.ts`   | `integration`       | temporary SQLiteと隔離MySQLへの実driver接続、確認query、close             |
 | `test/server/persistence/mysql-lts-connection.integration.test.ts` | `integration` | 公式現行 MySQL LTS への本番 Configuration→DBOperator 接続作成と close。公開後 `select 1` は既存 query error 契約 |
 | `test/server/persistence/mysql-lts-inplace-stored-data.integration.test.ts` | `integration` | 置換前と同じ schema / migration history と代表保存 row を in-place で開き、Configuration→DBOperator→mysql2 で既存 row 読取り、代表更新・再読取り、履歴非変更、close / cleanup |

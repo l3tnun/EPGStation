@@ -1459,6 +1459,10 @@ compile境界、V8 coverage、root commandを再定義しない。次の表を�
 | `test/server/reservation-management/candidate-identity.imp.test.ts`              | program/time identity、差分取消                                                |
 | `test/server/reservation-management/execution-coordinator.imp.test.ts`           | private state、縮小max、ID、資源/race、exact release                            |
 | `test/server/reservation-management/execution-coordinator-queues.imp.test.ts`    | 既定の期限60秒、複数待機者のうち先頭だけの解決、期限切れの待機者の除去、期限切れentryのIDを塞がないこと |
+| `test/server/reservation-management/manual-add-guards.imp.test.ts`               | 手動予約の追加の前提（event relay への挿入の log、予約済み番組 error の cause の保持、時刻指定予約の組立ての拒否。RM-2.1・RM-2.3・RM-4.2） |
+| `test/server/reservation-management/rule-update-guards.imp.test.ts`              | rule更新時の既存予約・影響範囲の検索条件、無効 rule の扱い、初回更新での時刻指定予約の再構築、予約差分の更新判定、手動予約の encode 設定の確認（RM-2.1・RM-3.3・RM-3.5・RM-8.1・RM-8.2） |
+| `test/server/reservation-management/reservation-state-guards.imp.test.ts`        | 取消・skip・重複の解除時の検索範囲と通知、期限切れ予約の cleanup の検索範囲、plane sweep の順序と番組重複の扱い（RM-5.1〜RM-5.3・RM-6.1〜RM-6.3・RM-8.4） |
+| `test/server/reservation-management/tuner.imp.test.ts`                           | tuner 割当て simulation の受入れ・拒否・解放（RM-6.1）                         |
 | `test/server/reservation-management/characterization.test.ts`                    | 更新時刻・時刻範囲・rule行拒否・競合行評価の契約（RM-C06・RM-C07・RM-C11・RM-C16） |
 | `test/server/reservation-management/reservation-persistence.integration.test.ts` | SQLite/MySQL保存・query・filter・count・rollback、番組単位の除外と解除（RM-T07・RM-5.1・RM-5.3） |
 | `test/server/reservation-management/reservation-http.integration.test.ts`        | 公開route、status、body、projection                                            |
