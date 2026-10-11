@@ -1,6 +1,6 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import type { Socket } from 'node:net';
-import { cp, mkdir, readFile, symlink, writeFile } from 'node:fs/promises';
+import { cp, mkdir, readdir, readFile, symlink, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -151,7 +151,13 @@ export const waitFor = async (
         }
         await new Promise(resolve => setTimeout(resolve, 25));
     }
-    throw new Error(`Did not observe ${description}: ${JSON.stringify(diagnostic())}`);
+    let evidence: unknown;
+    try {
+        evidence = await diagnostic();
+    } catch (error) {
+        evidence = `diagnostic failed: ${String(error)}`;
+    }
+    throw new Error(`Did not observe ${description} within ${deadlineMilliseconds} ms: ${JSON.stringify(evidence)}`);
 };
 
 export const sleep = (milliseconds: number): Promise<void> =>
@@ -170,7 +176,41 @@ export interface OperatorOptions {
     readonly tunerPort: number;
 }
 
+export interface OperatorDiagnostics {
+    readonly exit: { readonly code: number | null; readonly signal: NodeJS.Signals | null };
+    readonly logs: Readonly<Record<string, string>>;
+    readonly servicePids: readonly number[];
+    readonly servicePort: number;
+    readonly stderr: string;
+    readonly stdout: string;
+    readonly tunerPort: number;
+}
+
+const logTailLength = 4_000;
+
+/** Tails of every log file under `logs/<component>`, keyed by relative path. Missing files are skipped. */
+const readLogTails = async (root: string): Promise<Record<string, string>> => {
+    const tails: Record<string, string> = {};
+    for (const component of ['Operator', 'Service']) {
+        let names: string[];
+        try {
+            names = await readdir(join(root, 'logs', component));
+        } catch {
+            continue;
+        }
+        for (const name of names.sort()) {
+            try {
+                tails[`${component}/${name}`] = (await readFile(join(root, 'logs', component, name), 'utf8')).slice(-logTailLength);
+            } catch {
+                // A log file that cannot be read is not evidence.
+            }
+        }
+    }
+    return tails;
+};
+
 export interface OperatorHandle {
+    readonly tunerPort: number;
     readonly root: string;
     readonly servicePort: number;
     readonly runSession: ChildHarnessSession;
@@ -181,6 +221,11 @@ export interface OperatorHandle {
     /** Number of occurrences of `text` in the Operator stdout. */
     count(text: string): number;
     readSystemLog(): Promise<string>;
+    /**
+     * What to show when a wait times out: the Operator's stdout and stderr, whether it exited (code and
+     * signal), the ports being waited on, and the tails of the Operator and Service log files.
+     */
+    diagnostics(): Promise<OperatorDiagnostics>;
     /** Pids announced by `start service pid:` lines, in order. */
     servicePids(): number[];
     stop(): Promise<void>;
@@ -258,6 +303,16 @@ export const startOperator = async (options: OperatorOptions): Promise<OperatorH
     let stopped = false;
     return {
         count: text => runSession.stdout.split(text).length - 1,
+        diagnostics: async () => ({
+            exit: { code: runSession.child.exitCode, signal: runSession.child.signalCode },
+            logs: await readLogTails(runSession.tempDirectory),
+            servicePids: pidsOf('start service'),
+            servicePort: options.servicePort,
+            stderr: runSession.stderr.slice(-logTailLength),
+            stdout: runSession.stdout.slice(-logTailLength),
+            tunerPort: options.tunerPort,
+        }),
+        tunerPort: options.tunerPort,
         epgPids: () => pidsOf('start epg updater'),
         isAlive: () => runSession.child.exitCode === null && runSession.child.signalCode === null,
         readSystemLog: async () => {
