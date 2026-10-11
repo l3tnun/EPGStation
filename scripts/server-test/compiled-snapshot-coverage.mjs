@@ -1576,11 +1576,9 @@ const COVERAGE_EXCLUSION_DROP_CHECKER_MODEL_NULL_GUARDS_MARKER =
 // `whenFalse` arm is unreachable because `RecorderModel.addRecorded`'s own `catch` block always re-throws via
 // `throw new Error('AddRecordedDBError', { cause: err })`, so anything that reaches this
 // ternary by rejecting `registration` is already an `Error` instance.
-// Finally, the `if (!takeOutcome()) return;` (guarding
-// `this.recordedUseProvider.releaseSessionUse(...)`) is reached only after the earlier `outcomeSettled` check
-// already found `outcomeSettled === false`, with no `await` and no callback re-entry point
-// between that check and here -- so `takeOutcome()` here always succeeds (returns `true`), and the
-// `!takeOutcome()` arm can never run.
+// (The `if (!takeOutcome())` arm guarding `this.recordedUseProvider.releaseSessionUse(...)` is NOT excluded:
+// `tryRegisterSessionUse` is a callback re-entry point, so a cancellation can take the outcome during it,
+// and a test drives that arm.)
 // The approval binds to `doRecord` and `addRecorded`.
 const COVERAGE_EXCLUSION_RECORDER_MODEL_ONDATA_TIMEOUT_GUARDS_MARKER =
     '__EPGSTATION_COVERAGE_EXCLUSION_RECORDER_MODEL_ONDATA_TIMEOUT_GUARDS_20260924';
@@ -2020,33 +2018,27 @@ export const COVERAGE_EXCLUSION_AUTHORIZATIONS = Object.freeze([
     Object.freeze({
         alternativeOwnerEntries: Object.freeze(['test/server/recording-execution/**/*.test.ts']),
         boundFunctions: Object.freeze([
-            Object.freeze({ codeSha256: '4a483b283c5a26ee44820a9a90d8bd575f9c75062dbc2536d49c6c4e364a8557', name: 'RecorderModel.doRecord' }),
+            Object.freeze({ codeSha256: 'ef1c8103ae6bbd06594343ce015de3ac1474140f76a17dc4939a145503909804', name: 'RecorderModel.doRecord' }),
             Object.freeze({ codeSha256: 'f4507b87eee37b00b07b246302b9ec1735f5a610c82d63debbc709995fd5da78', name: 'RecorderModel.addRecorded' }),
         ]),
         branchAnchors: Object.freeze([
             Object.freeze({
                 code: 'return ;',
                 functionName: 'RecorderModel.doRecord',
-                tokenEnd: 2002,
-                tokenStart: 2000,
+                tokenEnd: 2122,
+                tokenStart: 2120,
             }),
             Object.freeze({
                 code: 'new Error ( \'AddRecordedDBError\' )',
                 functionName: 'RecorderModel.doRecord',
-                tokenEnd: 2247,
-                tokenStart: 2242,
-            }),
-            Object.freeze({
-                code: '{ this . recordedUseProvider . releaseSessionUse ( this , recordedUse ) ; return ; }',
-                functionName: 'RecorderModel.doRecord',
-                tokenEnd: 2728,
-                tokenStart: 2713,
+                tokenEnd: 2367,
+                tokenStart: 2362,
             }),
             Object.freeze({
                 code: 'return ;',
                 functionName: 'RecorderModel.doRecord',
-                tokenEnd: 2859,
-                tokenStart: 2857,
+                tokenEnd: 2903,
+                tokenStart: 2901,
             }),
         ]),
         decisionIdentity: 'recorder-model-ondata-timeout-guards-authorization',
@@ -2057,68 +2049,32 @@ export const COVERAGE_EXCLUSION_AUTHORIZATIONS = Object.freeze([
             Object.freeze({
                 code: 'return ;',
                 functionName: 'RecorderModel.doRecord',
-                tokenEnd: 2002,
-                tokenStart: 2000,
+                tokenEnd: 2122,
+                tokenStart: 2120,
             }),
             Object.freeze({
                 code: 'new',
                 functionName: 'RecorderModel.doRecord',
-                tokenEnd: 2243,
-                tokenStart: 2242,
+                tokenEnd: 2363,
+                tokenStart: 2362,
             }),
             Object.freeze({
                 code: 'Error',
                 functionName: 'RecorderModel.doRecord',
-                tokenEnd: 2244,
-                tokenStart: 2243,
+                tokenEnd: 2364,
+                tokenStart: 2363,
             }),
             Object.freeze({
                 code: '\'AddRecordedDBError\'',
                 functionName: 'RecorderModel.doRecord',
-                tokenEnd: 2246,
-                tokenStart: 2245,
-            }),
-            Object.freeze({
-                code: 'this',
-                functionName: 'RecorderModel.doRecord',
-                tokenEnd: 2715,
-                tokenStart: 2714,
-            }),
-            Object.freeze({
-                code: 'recordedUseProvider',
-                functionName: 'RecorderModel.doRecord',
-                tokenEnd: 2717,
-                tokenStart: 2716,
-            }),
-            Object.freeze({
-                code: 'releaseSessionUse',
-                functionName: 'RecorderModel.doRecord',
-                tokenEnd: 2719,
-                tokenStart: 2718,
-            }),
-            Object.freeze({
-                code: 'this',
-                functionName: 'RecorderModel.doRecord',
-                tokenEnd: 2721,
-                tokenStart: 2720,
-            }),
-            Object.freeze({
-                code: 'recordedUse',
-                functionName: 'RecorderModel.doRecord',
-                tokenEnd: 2723,
-                tokenStart: 2722,
+                tokenEnd: 2366,
+                tokenStart: 2365,
             }),
             Object.freeze({
                 code: 'return ;',
                 functionName: 'RecorderModel.doRecord',
-                tokenEnd: 2727,
-                tokenStart: 2725,
-            }),
-            Object.freeze({
-                code: 'return ;',
-                functionName: 'RecorderModel.doRecord',
-                tokenEnd: 2859,
-                tokenStart: 2857,
+                tokenEnd: 2903,
+                tokenStart: 2901,
             }),
         ]),
     }),
