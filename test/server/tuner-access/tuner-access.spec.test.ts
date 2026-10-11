@@ -1285,7 +1285,8 @@ describe('tuner access characterization contract', () => {
         expect(vi.getTimerCount()).toBe(0);
     });
 
-    it.each(canonicalAcceptanceProbes)(
+    // 1.4 は clean install と compile を実際に行うので、mutation testing の sandbox（`EPGS_MUTATION_RUN`）では飛ばす。
+    it.each(canonicalAcceptanceProbes.filter(probe => probe.id !== '1.4' || process.env.EPGS_MUTATION_RUN !== '1'))(
         '[TA-AC-$id] $label',
         async probe => {
             await probe.run();
@@ -1876,6 +1877,29 @@ describe('tuner server access DTO contract', () => {
             { type: 'movement', networkId: 33, serviceId: 32, eventId: 35 },
         ]);
         expect(program.relatedItems).not.toBe(relatedItems);
+    });
+
+    it('[TA-2.2] accepts a related item without a type and omits the type from the DTO', async () => {
+        const access = new TunerServerAccessModel('http://synthetic.invalid:40772', 'epgstation/synthetic', {
+            getJson: vi.fn(async () => [
+                {
+                    id: 30,
+                    eventId: 31,
+                    serviceId: 32,
+                    networkId: 33,
+                    startAt: 2_000,
+                    duration: 60_000,
+                    isFree: false,
+                    relatedItems: [{ networkId: 33, serviceId: 32, eventId: 36 }],
+                },
+            ]),
+            getBuffer: vi.fn(),
+        });
+
+        const [program] = await access.getPrograms();
+
+        expect(program.relatedItems).toEqual([{ networkId: 33, serviceId: 32, eventId: 36 }]);
+        expect(Object.keys(program.relatedItems[0])).not.toContain('type');
     });
 
     it.each([

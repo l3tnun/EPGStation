@@ -33,6 +33,19 @@ const mutate = [
     'src/util/DateUtil.ts',
     'src/util/ChannelUtil.ts',
     'src/util/SubDirectoryUtil.ts',
+    // エンコードの管理・実行・完了処理
+    'src/model/service/encode/EncodeManageModel.ts',
+    'src/model/service/encode/EncodeProcessManageModel.ts',
+    'src/model/service/encode/EncoderModel.ts',
+    'src/model/service/encode/EncodeFinishModel.ts',
+    'src/model/service/encode/EncodeFileManageModel.ts',
+    // 配信の管理と HLS の stream id の割り当て
+    'src/model/service/stream/manager/StreamManageModel.ts',
+    'src/model/service/stream/manager/HlsStreamIdAllocator.ts',
+    // EPG の更新と tuner server への接続
+    'src/model/epgUpdater/EPGUpdateManageModel.ts',
+    'src/model/tuner/TunerServerAccessModel.ts',
+    'src/model/tuner/transport/ConnectionTargetParser.ts',
 ];
 
 /** @type {import('@stryker-mutator/api/core').PartialStrykerOptions} */
