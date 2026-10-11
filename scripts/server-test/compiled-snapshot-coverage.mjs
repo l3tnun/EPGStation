@@ -2273,7 +2273,7 @@ export const COVERAGE_EXCLUSION_AUTHORIZATIONS = Object.freeze([
         alternativeOwnerEntries: Object.freeze(['test/server/encoding/**/*.test.ts']),
         boundFunctions: Object.freeze([
             Object.freeze({ codeSha256: 'b37d9f827666837d3d3fbef89a94fcedc7f55242caa0e598f75b1b88031b17f3', name: 'EncodeManageModel.checkQueue' }),
-            Object.freeze({ codeSha256: 'c299e58955973f00f65a35afed91cc59862e1fe95303bf0fcfd0736be3534ee7', name: 'EncodeManageModel.push' }),
+            Object.freeze({ codeSha256: '736d1dc7dd099530ef81c12d191bb93b26b55a76893b42e8e11b12c8e5cbb654', name: 'EncodeManageModel.push' }),
         ]),
         branchAnchors: Object.freeze([
             Object.freeze({
