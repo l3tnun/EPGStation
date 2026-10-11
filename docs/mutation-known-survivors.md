@@ -827,3 +827,195 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 | --- | --- | --- |
 | `createMissingScrollHistory`（provider が無いときの既定の履歴） | BlockStatement、ObjectLiteral、ArrowFunction | 定数表で判定できない: module の読み込み時に評価される式。各 method の戻り値と例外は test が確かめている |
 | `createMissingScrollHistory` の `clearRestoreHistory` の `return undefined` | BlockStatement | 振る舞いが変わらない: 空の本体も undefined を返す |
+### `src/features/guide/GuideGridRenderer.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `programDoms` の初期値 | ArrayDeclaration | 振る舞いが変わらない: `mount` の先頭の `destroy()` が `[]` に戻すので、初期値は外に出ない |
+| `destroy` の `this.timerId !== null` | ConditionalExpression | 振る舞いが変わらない: `clearTimeout(null)` は無害 |
+| 描画の途中で世代が変わったときの `return false` | BooleanLiteral | 冗長: 呼び出し側の `mount` が世代を再確認して同じく戻る |
+
+### `src/features/guide/lib/guideGridDom.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `setTextChild` の `innerText` に対応しているかの判定（`typeof HTMLElement !== 'undefined'` と `'innerText'`） | ConditionalExpression、StringLiteral | 振る舞いが変わらない: jsdom の `HTMLElement` には `innerText` が無く、どちらの置き換えでも `textContent` の経路になる。`innerText` を使う経路は実ブラウザでしか通らない |
+
+### `src/features/guide/lib/guideGridInteraction.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `onMouseUp` の `this.programGrid?.classList` | OptionalChaining | 到達不能: `detach` が先に timer を解除してから `programGrid` を null にするため、null で呼ばれない |
+
+### `src/features/guide/lib/guideGridLayout.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `isFiniteNumber` の `typeof value === 'number'` | ConditionalExpression | 冗長: 後ろの `Number.isFinite` が数でない値を弾く |
+| 日付を分解する `part` の既定値 `'0'` | StringLiteral | 振る舞いが変わらない: `Number('')` と `Number('0')` はどちらも 0 |
+| 番組の `genre3` が数かの判定 | ConditionalExpression | 振る舞いが変わらない: 数でなくても undefined が入るだけで結果が同じ |
+| 窓の先頭に切り詰めるかの `clippedStartAt === baseStartAt` | ConditionalExpression | 冗長: else の枝も同じ 0 を返す |
+| ジャンルが非表示かの判定の `genre !== undefined` | ConditionalExpression | 冗長: `genreVisibility[undefined]` は `false` と等しくならない |
+
+### `src/features/guide/lib/guideGridVisibility.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| 現在時刻線の `now < input.startAt` | ConditionalExpression、EqualityOperator | 振る舞いが変わらない: 開始前でも開始と同時でも、分数が 0 以下になり同じ位置（画面外）を返す |
+
+### `src/features/guide/lib/guidePageState.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| 番組の検索の `programId === undefined` | ConditionalExpression | 振る舞いが変わらない: undefined の id では見つからず undefined になる |
+| 履歴の URL の `split('#')[1]?.split` | OptionalChaining | 到達不能: 直前の `includes('#')` で `[1]` は必ずある |
+| query が undefined のときの `false` | ConditionalExpression | 振る舞いが変わらない: `URLSearchParams(undefined)` は `timestamp` を持たない |
+| `hasDisplayChannels` の `schedules.length === 0` | ConditionalExpression | 冗長: 空の schedule から作る配置も channel が 0 件になり同じ結果 |
+
+### `src/features/guide/lib/guideProgramText.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `linkifyGuideProgramExtendedText` の `text === ''` | ConditionalExpression、StringLiteral | 振る舞いが変わらない: 空文字も同じく `[]` になる |
+| `parseGuideProgramDetailSetting` の `value === null` と `typeof parsed !== 'object' \|\| parsed === null` | ConditionalExpression、LogicalOperator、BlockStatement | 振る舞いが変わらない: null や object でない値は、後続の項目の検査か `JSON.parse` の catch で同じ既定値になる |
+
+### `src/features/guide/lib/guideSizeSettingForm.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `GUIDE_SIZE_FIELDS`（表と各項目の label・min・max・step） | ArrayDeclaration、ObjectLiteral、StringLiteral | 定数表で判定できない: 全項目の値を確かめる test がある |
+
+### `src/features/guide/lib/programDialogText.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `resolveLegacyGenre` の `genre === undefined`、`subGenre === undefined` | ConditionalExpression | 振る舞いが変わらない: undefined の表引きは undefined になり、同じ結果になる |
+| 映像・音声の種別とサンプリング周波数の `=== undefined ? undefined : 表[...]` | ConditionalExpression | 振る舞いが変わらない: undefined の表引きは undefined で、後段の filter が除く |
+
+### `src/features/guide/lib/programGenreLabels.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `GENRE_NAMES`・`SUB_GENRE_NAMES`・`VIDEO_COMPONENT_TYPES`・`AUDIO_COMPONENT_TYPES`・`AUDIO_SAMPLING_RATES`（表と全値） | ObjectLiteral、StringLiteral | 定数表で判定できない: 表全体の値を確かめる test がある |
+
+### `src/features/recorded/lib/recordedFormat.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `GENRE_NAMES`（表と全値） | ObjectLiteral、StringLiteral | 定数表で判定できない: 16 個の値を全部確かめる test がある |
+| `formatRecordedGenre` の `genre === undefined`、`subGenre === undefined` | ConditionalExpression、BlockStatement | 振る舞いが変わらない: undefined の表引きは undefined で、続く判定が同じ結果にする |
+
+### `src/features/recorded/requests/extendedText.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `isSafeHttpUrl` の protocol の判定と catch の block | ConditionalExpression、BlockStatement | 振る舞いが変わらない: 呼び出し側の正規表現が `http(s)://` で始まる文字列だけを通す。catch が undefined を返しても呼び出し側では偽として扱われる |
+| `text === ''` の早期 return | ConditionalExpression、StringLiteral | 振る舞いが変わらない: 空文字も同じく `[]` になる |
+
+### `src/features/recording/lib/recordingFormat.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `WEEKDAYS`、`RECORDING_CARD_LAYOUT_MEDIA_QUERY` | ArrayDeclaration、StringLiteral | 定数表で判定できない: 7 曜日の値と media query の文字列を確かめる test がある |
+
+### `src/features/reserves/lib/reserveLabels.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `reserveGenreLabels` の `item.genres.length > 0` | ConditionalExpression、EqualityOperator | 冗長: 空配列の `every` は真なので、直後の条件で同じく旧 genre 欄に落ちる |
+
+### `src/features/search/rule/genreLabels.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `GENRE_NAMES`・`SUB_GENRE_NAMES`（表と全値） | ObjectLiteral、StringLiteral | 定数表で判定できない: 表全体の値を確かめる test がある |
+
+### `src/features/search/rule/lib/programDisplay.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `programs === null \|\| programs.length === 0` | ConditionalExpression | 定数表で判定できない: report が `static` と報告するため判定できない。番組が無いときの表示は test が確かめている |
+
+### `src/features/search/rule/lib/channelSelectOptions.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| ルールの channel 名を引く `ruleDetailIndex >= 0` と `ruleDetail?.` | ConditionalExpression、OptionalChaining | 振る舞いが変わらない／到達不能: 添字が -1 のときの表引きは undefined で id の文字列に戻る。添字が 0 以上なら `ruleDetail` は必ずある |
+
+### `src/features/search/rule/lib/ruleOptionDraft.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `isEnableEncodingSettingWhenCreateRule && firstAvailableEncodeMode !== undefined` の右の項 | ConditionalExpression | 振る舞いが変わらない: モードの一覧が空なら、右の項に依らず `encodeOption` は undefined になる |
+
+### `src/features/search/rule/lib/searchFormState.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `DEFAULT_TARGETS`、`DEFAULT_WEEKDAYS`、`DEFAULT_TIME_RESERVE_WEEKDAYS` | ObjectLiteral、BooleanLiteral | 定数表で判定できない: 既定の状態を `createDefaultSearchFormState` の戻り値で確かめる test がある |
+| `createSearchFormStateFromOption` の曜日の `week === 0x7f \|\|` | ConditionalExpression | 冗長: 0x7f はすべての bit が立っているので、右の項だけで同じ結果になる |
+
+### `src/features/search/rule/lib/searchFormItems.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `START_TIME_ITEMS`、`RANGE_TIME_ITEMS` | ArrayDeclaration、StringLiteral、ArithmeticOperator | 定数表で判定できない: 開始 24 件・範囲 23 件の全件を確かめる test がある |
+
+### `src/features/storages/upload/lib/uploadFormat.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `REQUIRED_UPLOAD_SCHEMA`（zod の schema） | ObjectLiteral、MethodExpression | 定数表で判定できない: module の読み込み時に評価される式。検証の結果は test が確かめている |
+| `parseDatetimeLocalValue` の `value === ''` | ConditionalExpression、BlockStatement、StringLiteral | 振る舞いが変わらない: 空文字は日付として不正で、どのみち null になる |
+| `createSubGenreItems` の `genre === null` | ConditionalExpression、BlockStatement | 定数表で判定できない: report が `static` と報告する。null のときも表引きの結果が空になり同じ |
+| `createValidatedVideoUploadRequests` の `viewName === null && file === null` | ConditionalExpression、LogicalOperator、EqualityOperator、BlockStatement | 冗長: 直後の判定が同じ `[]` を返す |
+
+### `src/features/onair/lib/liveStreamSelection.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `isGuideRouteTimeValue` の `2000 + 年`、年・月・日・時の一致の検査（個別の 1 つと組み合わせ） | ArithmeticOperator、ConditionalExpression、LogicalOperator | 冗長: 年・月・日・時のどれかが範囲外だと `Date.UTC` の繰り上がりで別の項目が一致しなくなるため、1 つを外しても結果が同じ。年は符号を逆にしても自己整合する |
+
+### `src/features/onair/lib/onairStreams.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `formatWatchInfoTime` の曜日の取り出し（`part.type === 'weekday'` と既定値 `'Sun'`） | ConditionalExpression、StringLiteral | 到達不能: 曜日だけを書式化すると part は 1 つで必ず見つかり、既定値は使われない |
+| `normalizeMode` の `typeof mode !== 'number'` と `mode < 0` の `<=` | ConditionalExpression、EqualityOperator | 振る舞いが変わらない: 数でない値は `Number.isSafeInteger` が弾く。0 のときは 0 を返すので同じ |
+| `readOnAirSelectStreamSetting` の `storage === undefined` と `?? 'null'` と `typeof raw.mode === 'number'` | ConditionalExpression、BlockStatement、StringLiteral | 振る舞いが変わらない: storage が undefined なら例外を catch して既定値になり、空文字の `JSON.parse` も例外で既定値になる。数でない mode は `Number.isSafeInteger` が弾く |
+| `resolveLiveM2TSUrlSchemeTemplate` の `platform === null` | ConditionalExpression | 振る舞いが変わらない: null の表引きは undefined で、`?? null` で同じ null になる |
+
+### `src/features/onair/lib/onairWatch.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `calculateOnAirProgress` の `startAt === undefined`・`endAt === undefined`・`endAt <= startAt` の一部 | ConditionalExpression、LogicalOperator、EqualityOperator | 冗長: undefined や同じ時刻のときは割り算が NaN か無限大になり、`clampOnAirProgress` が 0 にする。終了が開始より前の範囲を弾く条件は test が確かめている |
+
+### `src/features/video/playback/lib/playbackShellSupport.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `readSeekSeconds` の `value > 0` | EqualityOperator | 振る舞いが変わらない: 0 のときはどちらでも 0 |
+| `getVideoPlayerStorage` の `typeof window === 'undefined'` と catch の block | ConditionalExpression、StringLiteral、BlockStatement | 冗長: window が無ければ `window.localStorage` が例外になり、catch が同じ undefined を返す |
+
+### `src/features/video/playback/playbackControls.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `formatPlaybackTime` の `seconds > 0` | EqualityOperator | 振る舞いが変わらない: 0 のときはどちらでも 0 秒 |
+| `clampPlaybackSeek` の `duration <= 0` | EqualityOperator | 振る舞いが変わらない: duration が 0 のとき、clamp の結果も 0 |
+
+### `src/features/video/playback/playbackLifecycleController.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `startWithRetry` が世代の失効で投げる error（`lastError ?? new Error(...)` とその文言） | LogicalOperator、StringLiteral | 振る舞いが変わらない: 呼び出し側の `start()` の catch が error の中身を使わない |
+| `startWithRetry`・`poll` の `this.abortController?.signal` | OptionalChaining | 到達不能: 開始の処理中と readiness の確認中は `abortController` が必ずある |
+| `waitForReadiness` の `completeWait` の `isSettling = true`、`resolveReady` の `isSettling = true` | BooleanLiteral | 冗長: 完了後は timer が解除され、`resolveReady` の直後に `completeWait` が同じ値を設定する |
+| `resolveTerminal`・`poll` の世代が失効したときの早期 return と `completeWait()` | ConditionalExpression、BlockStatement、CallExpression | 冗長: 世代を進める処理が `completeWait` を先に呼び、続く `isSettling` の判定が同じく何もせず戻る |
+
+### `src/features/video/playback/playbackLifecycleControllerBase.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `clearAbortableResources` の `readinessTimeoutId !== undefined` | ConditionalExpression | 振る舞いが変わらない: `clearTimeout(undefined)` は無害 |

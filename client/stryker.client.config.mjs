@@ -110,6 +110,48 @@ const mutate = [
   // （docs/mutation-known-survivors.md）。流すときはその 1 行を除く（`<path>:<開始行>-<終了行>` の範囲指定）。
   'src/shared/legacyPaginationDesktop.ts',
   'src/shared/extendedPagination.ts',
+  // 番組表の描画と配置
+  'src/features/guide/GuideGridRenderer.ts',
+  'src/features/guide/lib/guideGridLayout.ts',
+  'src/features/guide/lib/guideGridDom.ts',
+  'src/features/guide/lib/guideGridInteraction.ts',
+  'src/features/guide/lib/guideGridVisibility.ts',
+  'src/features/guide/lib/guidePageState.ts',
+  'src/features/guide/lib/guideProgramText.ts',
+  'src/features/guide/lib/programDialogText.ts',
+  'src/features/guide/lib/programGenreLabels.ts',
+  'src/features/guide/lib/guideSizeSettingForm.ts',
+  // 表示の整形と文言
+  'src/features/recorded/lib/recordedFormat.ts',
+  'src/features/dashboard/lib/dashboardFormat.ts',
+  'src/features/storages/upload/lib/uploadFormat.ts',
+  'src/features/recording/lib/recordingFormat.ts',
+  'src/features/reserves/lib/reserveLabels.ts',
+  'src/features/reserves/lib/manualProgramFormat.ts',
+  'src/features/search/rule/genreLabels.ts',
+  'src/features/recorded/requests/extendedText.ts',
+  'src/features/search/rule/lib/programDisplay.ts',
+  'src/features/search/rule/lib/ruleListText.ts',
+  // 検索・ルールの form
+  'src/features/search/rule/lib/searchFormState.ts',
+  'src/features/search/rule/lib/searchFormItems.ts',
+  'src/features/search/rule/lib/ruleOptionDraft.ts',
+  'src/features/search/rule/lib/genreSelection.ts',
+  'src/features/search/rule/lib/searchPageInfo.ts',
+  'src/features/search/rule/lib/pageScroll.ts',
+  'src/features/search/rule/lib/channelSelectOptions.ts',
+  // 放映中
+  'src/features/onair/lib/onairStreams.ts',
+  'src/features/onair/lib/onairWatch.ts',
+  'src/features/onair/lib/liveStreamSelection.ts',
+  // 再生
+  'src/features/video/playback/playbackLifecycleController.ts',
+  'src/features/video/playback/playbackLifecycleControllerBase.ts',
+  'src/features/video/playback/playbackMedia.ts',
+  'src/features/video/playback/playbackControls.ts',
+  'src/features/video/playback/playbackStreamMetadata.ts',
+  'src/features/video/playback/platformDetection.ts',
+  'src/features/video/playback/lib/playbackShellSupport.ts',
 ]
 
 /** @type {import('@stryker-mutator/api/core').PartialStrykerOptions} */
