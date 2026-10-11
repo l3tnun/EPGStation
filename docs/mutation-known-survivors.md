@@ -209,7 +209,6 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 | 処理の場所 | mutator | 理由 |
 | --- | --- | --- |
 | `legacyRecordedResourceUsePort`（object と `acquire`）、`NEEDS_CHECK_QUEUE_EVENT`、`UNLOCK_EVENT` | ObjectLiteral、ArrowFunction、StringLiteral | 定数表で判定できない: module の読み込み時に評価される式 |
-| `UNLOCK_TIMEOUT` | ArithmeticOperator | 振る舞いが変わらない: どこからも参照されない定数 |
 | `checkQueue` の `waitQueue.length === 0` | ConditionalExpression | 冗長: 空なら直後の `shift()` が undefined になり、続く `typeof encoder === 'undefined'` で同じ結果になる |
 | `checkQueue` の `typeof encoder === 'undefined'` の判定と、その中の `unLockExecution` | ConditionalExpression、BlockStatement、StringLiteral、CallExpression | 到達不能: 直前の判定が空を弾くので来ない |
 | `createFinishEncodeInfo` の `outputFilePath === null`・`fileName === null` | LogicalOperator、ConditionalExpression | 冗長: 2 つは常に一致する |
