@@ -95,12 +95,13 @@ PR の `check` job（§7）が実行する検査と同じ。
 | client | `client/` で `npm run mutation:client` | `client/stryker.client.config.mjs`、`client/vitest.mutation.config.ts` | `client/.artifacts/mutation/incremental.json` |
 | DB の query の class（`src/model/db/`） | `npm run mutation:db`（下の手順で DB を起動してから） | `stryker.db.config.mjs`、`vitest.mutation.db.config.ts` | `test/server/.artifacts/mutation/incremental-db.json` |
 
-- 対象 file は各設定の `mutate` に列挙している。一部だけ流すには `-- --mutate <path>` を渡す（例: `npm run mutation:server -- --mutate src/util/StrUtil.ts`）。行の範囲は `path:開始行-終了行`。
+- 対象 file は各設定の `mutate` に列挙している。一部だけ流すには `-- --mutate <path>` を渡す（例: `npm run mutation:server -- --mutate src/util/StrUtil.ts`）。行の範囲は `path:開始行-終了行`。複数の file はコンマで区切る（`--mutate a.ts,b.ts`。`--mutate` を複数回書くと最後の 1 つだけが効く）。
 - DB の class の単体 test は query builder を偽物にしているので、`mutation:db` は persistence の単体 test に加えて、実 DB で query の正しさを見る結合 test（`persistence/{repositories,queries,transactions,storage-deletion-candidate,doubles-parity}.integration.test.ts`）も流す。結合 test が mutant ごとに container を作らないよう、MySQL 9.7 を先に起動したままにする。`docker run --rm --name <名前> --publish 127.0.0.1:<port>:3306 --tmpfs /var/lib/mysql:rw,nosuid,nodev,size=1g --env MYSQL_ROOT_PASSWORD=<password> mysql:9.7 --innodb_use_native_aio=0 --max-connections=400` で立て、環境変数 `EPGS_TEST_MYSQL_*`（`_HOST`・`_PORT`・`_USER`〈既定 root〉・`_PASSWORD`）で接続先を渡す。test は接続先に無作為の名前の database を作って消す。run が終わったら container を止める。製品に MySQL と MariaDB を区別する code は無く、mutant が通る経路は同じなので、MariaDB 12.3 の接続先にも同じ MySQL を使い回す（MariaDB 固有の解釈の違いは通常の結合 test の suite が毎回確かめる）。この環境変数は DB の結合 test 全般が読む（未指定なら今までどおり test が container を作る）。ただし TLS 専用の利用者や CA 証明書を使う test（`connection-ssl`・`orm-cli`）は、この変数を付けずに流す。
 - それ以外は単体 test（spec・imp）だけを流す。server は mutant を入れた `src` を sandbox で compile して test に読ませるため、最初に build の時間がかかる。全 test を直列に流す確認（dry-run）が毎回あり、server は約 5 分、client は約 6 分が下限になる。
 - 既定は `ignoreStatic: true`（module 先頭の定数表の mutant を除く）と `concurrency: 2`。memory は server で約 5 GB、client で約 2 GB になるので、ほかの重い run と同時に流さない。
-- module 先頭の定数表の mutant（report の `static: true`）は、`ignoreStatic` により全 test ではなく、その行を覆う test だけで実行される。端末の表の score にもこの mutant が数えられるので、定数表の多い file の score は低く出る。
+- module 先頭の定数表の mutant（report の `static: true`）は、この設定では判定できない。`ignoreStatic` でもその行を覆う test だけで実行されるが、module の読み込みが mutant の有効化より先に済むため、test が値を確かめていても「生き残った」と出る。端末の表の score にも数えられるので、定数表の多い file の score は低く出る。定数表の値は、値そのものを確かめる test で守る（Stryker の結果では確かめられない）。
 - cache は git の管理外。`EPGS_MUTATION_INCREMENTAL_FILE` で場所を変えられる。消えても全 mutant を流し直すだけで結果は変わらない。
+- cache は、test を足しても前回の生き残りを流し直さないことがある。足した test が mutant を殺すかを確かめるときは、対象を絞って `--force` を付けて流す（例: `npm run mutation:server -- --force --mutate src/util/StrUtil.ts`）。
 - 結果は端末の表と `reports/mutation/` の report（server は `reports/mutation/server/report.html`、client は `client/reports/mutation/report.json`）に出る。生き残った mutant を読み、test を足す、または等価・冗長として記録する。
 - Stryker は vitest 4.1.11 の組で動作を確認している。vitest の版を変えたら、score が 0% でない（全 mutant が「test 無しで生存」になっていない）ことを確かめる。
 - Stryker の sandbox で動かない test は専用の vitest 設定が除外している（process.env.TZ を実行中に変える test、build 工具や npm の path に依存する test、client の外の file を読む test）。
