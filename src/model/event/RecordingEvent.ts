@@ -22,7 +22,7 @@ class RecordingEvent implements IRecordingEvent {
      * @param reserve: Reserve
      */
     public emitStartPrepRecording(reserve: Reserve): void {
-        this.emitter.emit(RecordingEvent.START_PREP_RRECORDING_EVENT, reserve);
+        this.emitter.emit(RecordingEvent.START_PREP_RECORDING_EVENT, reserve);
     }
 
     /**
@@ -30,7 +30,7 @@ class RecordingEvent implements IRecordingEvent {
      * @param reserve: Reserve
      */
     public emitCancelPrepRecording(reserve: Reserve): void {
-        this.emitter.emit(RecordingEvent.CANCEL_PREP_RRECORDING_EVENT, reserve);
+        this.emitter.emit(RecordingEvent.CANCEL_PREP_RECORDING_EVENT, reserve);
     }
 
     /**
@@ -93,7 +93,7 @@ class RecordingEvent implements IRecordingEvent {
      * @param callback: (reserve: Reserve) => void
      */
     public setStartPrepRecording(callback: (reserve: Reserve) => void): void {
-        this.emitter.on(RecordingEvent.START_PREP_RRECORDING_EVENT, async (reserve: Reserve) => {
+        this.emitter.on(RecordingEvent.START_PREP_RECORDING_EVENT, async (reserve: Reserve) => {
             try {
                 await callback(reserve);
             } catch (err: any) {
@@ -107,7 +107,7 @@ class RecordingEvent implements IRecordingEvent {
      * @param callback: (reserve: Reserve) => void
      */
     public setCancelPrepRecording(callback: (reserve: Reserve) => void): void {
-        this.emitter.on(RecordingEvent.CANCEL_PREP_RRECORDING_EVENT, async (reserve: Reserve) => {
+        this.emitter.on(RecordingEvent.CANCEL_PREP_RECORDING_EVENT, async (reserve: Reserve) => {
             try {
                 await callback(reserve);
             } catch (err: any) {
@@ -219,8 +219,8 @@ class RecordingEvent implements IRecordingEvent {
 }
 
 namespace RecordingEvent {
-    export const START_PREP_RRECORDING_EVENT = 'StartPrepRecording';
-    export const CANCEL_PREP_RRECORDING_EVENT = 'CancelPrepRecording';
+    export const START_PREP_RECORDING_EVENT = 'StartPrepRecording';
+    export const CANCEL_PREP_RECORDING_EVENT = 'CancelPrepRecording';
     export const PREP_RECORDING_FAILED_EVENT = 'PrepRecordingFailed';
     export const START_RECORDING_EVENT = 'StartRecordingEvent';
     export const RECORDING_FAILED_EVENT = 'RecordingFailedEvent';
