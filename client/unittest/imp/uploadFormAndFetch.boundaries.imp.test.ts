@@ -61,7 +61,7 @@ describe('upload form validation', () => {
     ['zero duration', { duration: 0 }],
     ['no name', { name: null }],
     ['blank name', { name: '   ' }],
-    ['no video block', { videoBlocks: [] }],
+    ['no video block', { videoBlocks: [] as RecordedUploadVideoBlockState[] }],
   ] as const)('rejects a form with %s', (_label, patch) => {
     expect(validateRecordedUploadForm(form(patch))).toBe(false)
   })
@@ -133,10 +133,14 @@ describe('upload metadata body', () => {
   it('sends a sub directory only when it is not blank', () => {
     const base = { recordedId: 1, parentDirectoryName: 'dir', viewName: 'v', fileType: 'ts', file }
     expect(
-      buildRecordedUploadVideoFormData({ ...base, subDirectory: '  ' } as never).has('subDirectory'),
+      buildRecordedUploadVideoFormData({ ...base, subDirectory: '  ' } as never).has(
+        'subDirectory',
+      ),
     ).toBe(false)
     expect(
-      buildRecordedUploadVideoFormData({ ...base, subDirectory: 'sub' } as never).get('subDirectory'),
+      buildRecordedUploadVideoFormData({ ...base, subDirectory: 'sub' } as never).get(
+        'subDirectory',
+      ),
     ).toBe('sub')
   })
 })

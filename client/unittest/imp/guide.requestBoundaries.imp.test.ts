@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import {
-  createGuideDateOptions,
-  formatDayLabel,
-  HOUR_MS,
-} from '@/features/guide/lib/guideDate'
+import { createGuideDateOptions, formatDayLabel, HOUR_MS } from '@/features/guide/lib/guideDate'
 import {
   buildGuideFetchRequestSet,
   createJapanTimestamp,
@@ -108,13 +104,28 @@ describe('guide normal schedule request', () => {
 
   it('includes BS4K without a type only when it is enabled, and never with a type', () => {
     expect(
-      createNormalScheduleRequest({ settings, type: undefined, startAt, enabledBroadcastWaves: ['BS4K'] }).BS4K,
+      createNormalScheduleRequest({
+        settings,
+        type: undefined,
+        startAt,
+        enabledBroadcastWaves: ['BS4K'],
+      }).BS4K,
     ).toBe(true)
     expect(
-      createNormalScheduleRequest({ settings, type: 'GR', startAt, enabledBroadcastWaves: ['BS4K'] }),
+      createNormalScheduleRequest({
+        settings,
+        type: 'GR',
+        startAt,
+        enabledBroadcastWaves: ['BS4K'],
+      }),
     ).toMatchObject({ GR: true, BS: false, CS: false, SKY: false, BS4K: false })
     expect(
-      createNormalScheduleRequest({ settings, type: 'BS4K', startAt, enabledBroadcastWaves: ['BS4K'] }).BS4K,
+      createNormalScheduleRequest({
+        settings,
+        type: 'BS4K',
+        startAt,
+        enabledBroadcastWaves: ['BS4K'],
+      }).BS4K,
     ).toBe(true)
   })
 

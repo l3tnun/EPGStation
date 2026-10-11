@@ -6,6 +6,10 @@ import {
 import {
   normalizeGuideSizeSetting,
   DEFAULT_GUIDE_SIZE_SETTING,
+  readGuideGenreVisibility,
+  readGuideSizeSetting,
+  writeGuideGenreVisibility,
+  writeGuideSizeSetting,
 } from '@/features/guide/guideStorage'
 import {
   readAddEncodeSetting,
@@ -39,9 +43,19 @@ describe('add-encode setting storage', () => {
   it('keeps a stored encode mode and parent directory when they are strings or null', () => {
     expect(
       readAddEncodeSetting(
-        storageOf({ encodeMode: 'm', parentDirectory: 'dir', isSaveSameDirectory: true, removeOriginal: true }),
+        storageOf({
+          encodeMode: 'm',
+          parentDirectory: 'dir',
+          isSaveSameDirectory: true,
+          removeOriginal: true,
+        }),
       ),
-    ).toStrictEqual({ encodeMode: 'm', parentDirectory: 'dir', isSaveSameDirectory: true, removeOriginal: true })
+    ).toStrictEqual({
+      encodeMode: 'm',
+      parentDirectory: 'dir',
+      isSaveSameDirectory: true,
+      removeOriginal: true,
+    })
     expect(
       readAddEncodeSetting(storageOf({ encodeMode: null, parentDirectory: null })),
     ).toMatchObject({ encodeMode: null, parentDirectory: null })
@@ -84,6 +98,73 @@ describe('guide size setting normalization', () => {
     expect(normalized.tablet.channelWidth).toBe(0)
     expect(normalized.tablet.channelFontsize).toBe(1)
     expect(normalized.mobile.channelHeight).toBe(30)
+  })
+})
+
+describe('guide storage constant tables', () => {
+  const limits = {
+    channelHeight: [10, 100],
+    channelWidth: [0, 600],
+    channelFontsize: [0.5, 40],
+    timescaleHeight: [10, 400],
+    timescaleWidth: [10, 100],
+    timescaleFontsize: [0.5, 40],
+    programFontSize: [0.5, 40],
+  } as const
+
+  it('holds the default sizes of the tablet and mobile layouts', () => {
+    expect(DEFAULT_GUIDE_SIZE_SETTING).toStrictEqual({
+      tablet: {
+        channelHeight: 30,
+        channelWidth: 140,
+        channelFontsize: 14,
+        timescaleHeight: 180,
+        timescaleWidth: 30,
+        timescaleFontsize: 16,
+        programFontSize: 10,
+      },
+      mobile: {
+        channelHeight: 20,
+        channelWidth: 100,
+        channelFontsize: 12,
+        timescaleHeight: 120,
+        timescaleWidth: 20,
+        timescaleFontsize: 12,
+        programFontSize: 7.5,
+      },
+    })
+  })
+
+  it('clamps every size field to its own minimum and maximum', () => {
+    const tooLarge = Object.fromEntries(Object.keys(limits).map((key) => [key, 100000]))
+    const tooSmall = Object.fromEntries(Object.keys(limits).map((key) => [key, -100000]))
+    const normalized = normalizeGuideSizeSetting({ tablet: tooLarge, mobile: tooSmall } as never)
+
+    for (const [key, [min, max]] of Object.entries(limits)) {
+      expect((normalized.tablet as unknown as Record<string, number>)[key]).toBe(max)
+      expect((normalized.mobile as unknown as Record<string, number>)[key]).toBe(min)
+    }
+  })
+
+  it('stores the genre visibility and sizes under their own keys for all 16 genres', () => {
+    const written = new Map<string, string>()
+    const storage = {
+      getItem: (key: string) => written.get(key) ?? null,
+      setItem: (key: string, value: string) => void written.set(key, value),
+    }
+
+    writeGuideGenreVisibility(storage, { 3: false })
+    writeGuideSizeSetting(storage, DEFAULT_GUIDE_SIZE_SETTING)
+
+    const genres = JSON.parse(written.get('GuideGenreSetting') ?? '{}') as Record<string, boolean>
+    expect(Object.keys(genres)).toHaveLength(16)
+    expect(genres['3']).toBe(false)
+    expect(genres['15']).toBe(true)
+    expect(JSON.parse(written.get('GuideSizeSetting') ?? '{}')).toStrictEqual(
+      DEFAULT_GUIDE_SIZE_SETTING,
+    )
+    expect(readGuideGenreVisibility(storage)[3]).toBe(false)
+    expect(readGuideSizeSetting(storage)).toStrictEqual(DEFAULT_GUIDE_SIZE_SETTING)
   })
 })
 

@@ -41,7 +41,9 @@ describe('list request URLs: base path handling', () => {
       './api/recorded/5?isHalfWidth=true',
     )
     expect(buildRecordedListRequestUrl({ settings, search: '' })).toMatch(/^\.\/api\/recorded\?/)
-    expect(buildRuleKeywordRequestUrl({ keyword: 'k' })).toBe('./api/rules/keyword?limit=1000&keyword=k')
+    expect(buildRuleKeywordRequestUrl({ keyword: 'k' })).toBe(
+      './api/rules/keyword?limit=1000&keyword=k',
+    )
     expect(buildRecordingListRequestUrl({ settings, search: '' })).toMatch(/^\.\/api\/recording\?/)
     expect(
       buildRecordingListRequestUrlFromRequest({
@@ -76,9 +78,9 @@ describe('list request URLs: base path handling', () => {
         basePath: '/x/',
       }),
     ).toBe('/x/recording?isHalfWidth=false&limit=3&offset=6')
-    expect(
-      buildRecordingListRequestUrl({ settings, search: '', basePath: '/x/' }),
-    ).toMatch(/^\/x\/recording\?/)
+    expect(buildRecordingListRequestUrl({ settings, search: '', basePath: '/x/' })).toMatch(
+      /^\/x\/recording\?/,
+    )
     expect(buildDashboardSummaryRequests({ settings, search: '', basePath: '/x/' })).toMatchObject({
       reserveCounts: '/x/reserves/cnts',
     })

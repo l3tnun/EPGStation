@@ -49,11 +49,15 @@ describe('live watch route', () => {
   ])('accepts a %s mode only below the number of configured modes (%i)', (type, count) => {
     const search = (mode: number) => `?type=${type}&channel=3&mode=${mode}`
 
-    expect(resolveLiveWatchRoute({ search: search(count - 1), streamConfig: liveConfig })).toStrictEqual({
+    expect(
+      resolveLiveWatchRoute({ search: search(count - 1), streamConfig: liveConfig }),
+    ).toStrictEqual({
       ok: true,
       value: { kind: 'live', channelId: 3, mode: count - 1, streamingType: type },
     })
-    expect(resolveLiveWatchRoute({ search: search(count), streamConfig: liveConfig })).toStrictEqual({
+    expect(
+      resolveLiveWatchRoute({ search: search(count), streamConfig: liveConfig }),
+    ).toStrictEqual({
       ok: false,
       message: '再生条件が不正です',
     })
@@ -82,15 +86,22 @@ describe('live watch route', () => {
   })
 
   it('rejects a missing mode or channel even when the other parts are valid', () => {
-    expect(resolveLiveWatchRoute({ search: '?type=hls&channel=1', streamConfig: liveConfig }).ok).toBe(false)
-    expect(resolveLiveWatchRoute({ search: '?type=hls&mode=0', streamConfig: liveConfig }).ok).toBe(false)
+    expect(
+      resolveLiveWatchRoute({ search: '?type=hls&channel=1', streamConfig: liveConfig }).ok,
+    ).toBe(false)
+    expect(resolveLiveWatchRoute({ search: '?type=hls&mode=0', streamConfig: liveConfig }).ok).toBe(
+      false,
+    )
   })
 
   it.each(['01', '1e2', '+1', ' 1', '1.0', '-1', '1a', 'a1'])(
     'rejects %s as a channel number',
     (channel) => {
       expect(
-        resolveLiveWatchRoute({ search: `?type=hls&channel=${encodeURIComponent(channel)}&mode=0`, streamConfig: liveConfig }).ok,
+        resolveLiveWatchRoute({
+          search: `?type=hls&channel=${encodeURIComponent(channel)}&mode=0`,
+          streamConfig: liveConfig,
+        }).ok,
       ).toBe(false)
     },
   )
@@ -147,22 +158,43 @@ describe('recorded streaming watch route', () => {
       ['mp4', 4],
     ] as const) {
       expect(
-        resolveRecordedStreamingWatchRoute({ videoFileId: '1', search: search(type, 'ts', count - 1), streamConfig: recorded }).ok,
+        resolveRecordedStreamingWatchRoute({
+          videoFileId: '1',
+          search: search(type, 'ts', count - 1),
+          streamConfig: recorded,
+        }).ok,
       ).toBe(true)
       expect(
-        resolveRecordedStreamingWatchRoute({ videoFileId: '1', search: search(type, 'ts', count), streamConfig: recorded }).ok,
+        resolveRecordedStreamingWatchRoute({
+          videoFileId: '1',
+          search: search(type, 'ts', count),
+          streamConfig: recorded,
+        }).ok,
       ).toBe(false)
       expect(
-        resolveRecordedStreamingWatchRoute({ videoFileId: '1', search: search(type, 'encoded', 1), streamConfig: recorded }).ok,
+        resolveRecordedStreamingWatchRoute({
+          videoFileId: '1',
+          search: search(type, 'encoded', 1),
+          streamConfig: recorded,
+        }).ok,
       ).toBe(false)
     }
   })
 
   it('treats a missing mode list as zero modes instead of failing', () => {
     for (const type of ['hls', 'webm', 'mp4']) {
-      for (const streamConfig of [undefined, {}, { recorded: {} }, { recorded: { ts: {} } }] as never[]) {
+      for (const streamConfig of [
+        undefined,
+        {},
+        { recorded: {} },
+        { recorded: { ts: {} } },
+      ] as never[]) {
         expect(
-          resolveRecordedStreamingWatchRoute({ videoFileId: '1', search: search(type, 'ts', 0), streamConfig }),
+          resolveRecordedStreamingWatchRoute({
+            videoFileId: '1',
+            search: search(type, 'ts', 0),
+            streamConfig,
+          }),
         ).toStrictEqual({ ok: false, message: 'ストリーム再生条件が不正です' })
       }
     }
@@ -171,14 +203,26 @@ describe('recorded streaming watch route', () => {
   it('rejects live-only streaming types, unknown file types and a missing video id', () => {
     for (const type of ['m2ts', 'x']) {
       expect(
-        resolveRecordedStreamingWatchRoute({ videoFileId: '1', search: search(type, 'ts', 0), streamConfig: recorded }).ok,
+        resolveRecordedStreamingWatchRoute({
+          videoFileId: '1',
+          search: search(type, 'ts', 0),
+          streamConfig: recorded,
+        }).ok,
       ).toBe(false)
     }
     expect(
-      resolveRecordedStreamingWatchRoute({ videoFileId: '1', search: search('hls', 'x', 0), streamConfig: recorded }).ok,
+      resolveRecordedStreamingWatchRoute({
+        videoFileId: '1',
+        search: search('hls', 'x', 0),
+        streamConfig: recorded,
+      }).ok,
     ).toBe(false)
     expect(
-      resolveRecordedStreamingWatchRoute({ videoFileId: undefined, search: search('hls', 'ts', 0), streamConfig: recorded }).ok,
+      resolveRecordedStreamingWatchRoute({
+        videoFileId: undefined,
+        search: search('hls', 'ts', 0),
+        streamConfig: recorded,
+      }).ok,
     ).toBe(false)
   })
 
@@ -205,24 +249,43 @@ describe('recorded streaming watch route', () => {
 
 describe('playback lifecycle helpers', () => {
   it('uses the HLS API for an hls streaming type even when the source is not an HLS stream', () => {
-    expect(resolvePlaybackLifecycleMode({ sourceKind: 'direct-video', streamingType: 'hls' })).toBe('hls-api')
+    expect(resolvePlaybackLifecycleMode({ sourceKind: 'direct-video', streamingType: 'hls' })).toBe(
+      'hls-api',
+    )
     expect(resolvePlaybackLifecycleMode({ sourceKind: 'hls-stream' })).toBe('hls-api')
-    expect(resolvePlaybackLifecycleMode({ sourceKind: 'direct-video', streamingType: 'mp4' })).toBe('direct-video')
-    expect(resolvePlaybackLifecycleMode({ sourceKind: 'direct-response' as never, streamingType: 'mp4' })).toBe('direct-response')
+    expect(resolvePlaybackLifecycleMode({ sourceKind: 'direct-video', streamingType: 'mp4' })).toBe(
+      'direct-video',
+    )
+    expect(
+      resolvePlaybackLifecycleMode({
+        sourceKind: 'direct-response' as never,
+        streamingType: 'mp4',
+      }),
+    ).toBe('direct-response')
   })
 
   it('keeps only origin, path and query of an absolute URL when rebuilding for a seek', () => {
-    expect(rebuildDirectStreamUrlForSeek('http://host:8080/a/b?x=1', 5)).toBe('http://host:8080/a/b?x=1&ss=5')
+    expect(rebuildDirectStreamUrlForSeek('http://host:8080/a/b?x=1', 5)).toBe(
+      'http://host:8080/a/b?x=1&ss=5',
+    )
     expect(rebuildDirectStreamUrlForSeek('https://host/p', 7)).toBe('https://host/p?ss=7')
-    expect(rebuildDirectStreamUrlForSeek('HTTP://Host:80/a%20b?x=1', 5)).toBe('http://host/a%20b?x=1&ss=5')
-    expect(rebuildDirectStreamUrlForSeek('/api/videos/1?isDownload=true', 5)).toBe('/api/videos/1?isDownload=true&ss=5')
-    expect(rebuildDirectStreamUrlForSeek('/api/go?to=http://other/p', 5)).toBe('/api/go?to=http%3A%2F%2Fother%2Fp&ss=5')
+    expect(rebuildDirectStreamUrlForSeek('HTTP://Host:80/a%20b?x=1', 5)).toBe(
+      'http://host/a%20b?x=1&ss=5',
+    )
+    expect(rebuildDirectStreamUrlForSeek('/api/videos/1?isDownload=true', 5)).toBe(
+      '/api/videos/1?isDownload=true&ss=5',
+    )
+    expect(rebuildDirectStreamUrlForSeek('/api/go?to=http://other/p', 5)).toBe(
+      '/api/go?to=http%3A%2F%2Fother%2Fp&ss=5',
+    )
   })
 })
 
 describe('HLS lifecycle repository requests', () => {
   function repository(response: { ok: boolean; body?: unknown }) {
-    const fetcher = vi.fn(async () => ({ ok: response.ok, json: async () => response.body }) as Response)
+    const fetcher = vi.fn(
+      async () => ({ ok: response.ok, json: async () => response.body }) as Response,
+    )
     return {
       fetcher,
       repo: createFetchHlsLifecycleRepository({
@@ -262,10 +325,13 @@ describe('HLS lifecycle repository requests', () => {
 })
 
 describe('video player setting storage', () => {
-  const storageOf = (value: string | null) => ({ getItem: () => value, setItem: vi.fn() }) as unknown as Storage
+  const storageOf = (value: string | null) =>
+    ({ getItem: () => value, setItem: vi.fn() }) as unknown as Storage
 
   it('reads a stored boolean and falls back to hidden subtitles otherwise', () => {
-    expect(readVideoPlayerSetting(storageOf('{"isShowSubtitle":true}'))).toStrictEqual({ isShowSubtitle: true })
+    expect(readVideoPlayerSetting(storageOf('{"isShowSubtitle":true}'))).toStrictEqual({
+      isShowSubtitle: true,
+    })
     for (const raw of [null, 'null', '5', '"x"', '{}', '{"isShowSubtitle":"yes"}', '{broken']) {
       expect(readVideoPlayerSetting(storageOf(raw))).toStrictEqual({ isShowSubtitle: false })
     }
@@ -278,13 +344,22 @@ describe('video player setting storage', () => {
     expect(saveVideoPlayerSetting(storage, { isShowSubtitle: true })).toBe(true)
     expect(storage.setItem).toHaveBeenCalledWith('VideoPlayerSetting', '{"isShowSubtitle":true}')
     expect(saveVideoPlayerSetting(undefined, { isShowSubtitle: true })).toBe(false)
-    const failing = { setItem: () => { throw new Error('full') } } as unknown as Storage
+    const failing = {
+      setItem: () => {
+        throw new Error('full')
+      },
+    } as unknown as Storage
     expect(saveVideoPlayerSetting(failing, { isShowSubtitle: true })).toBe(false)
   })
 
   it('mounts the subtitle renderer for an HLS stream source, hls and m2tsll only', () => {
     const resolve = (sourceKind: never, streamingType?: never) =>
-      resolveSubtitleRendererContract({ sourceKind, streamingType, isForceEnableSubtitleStroke: true, isShowSubtitle: true })
+      resolveSubtitleRendererContract({
+        sourceKind,
+        streamingType,
+        isForceEnableSubtitleStroke: true,
+        isShowSubtitle: true,
+      })
 
     expect(resolve('hls-stream' as never).rendererMounted).toBe(true)
     expect(resolve('direct-video' as never, 'hls' as never).rendererMounted).toBe(true)
@@ -349,7 +424,9 @@ describe('recorded video hand-off URLs', () => {
 
   it('uses ./api when no base path is given and drops a trailing slash', () => {
     expect(buildVideoDownloadUrl({ videoFileId: 1 })).toBe('./api/videos/1?isDownload=true')
-    expect(buildVideoDownloadUrl({ videoFileId: 1, basePath: '/x/' })).toBe('/x/videos/1?isDownload=true')
+    expect(buildVideoDownloadUrl({ videoFileId: 1, basePath: '/x/' })).toBe(
+      '/x/videos/1?isDownload=true',
+    )
     expect(buildVideoPlaylistUrl({ videoFileId: 1 })).toBe('./api/videos/1/playlist')
     expect(buildVideoPlaylistUrl({ videoFileId: 1, basePath: '/x/' })).toBe('/x/videos/1/playlist')
     expect(
@@ -368,11 +445,19 @@ describe('recorded video hand-off URLs', () => {
     const target = buildRecordedPlaybackHandoffTarget({
       recordedId: 1,
       file: { id: 3, type: 'ts', filename: 'f.ts' },
-      settings: { ...settings, shouldUseRecordedViewURLScheme: true, recordedViewURLScheme: 'PROTOCOL://ADDRESS/FILENAME' },
+      settings: {
+        ...settings,
+        shouldUseRecordedViewURLScheme: true,
+        recordedViewURLScheme: 'PROTOCOL://ADDRESS/FILENAME',
+      },
       browserHref: 'https://h:8080/sub/page.html',
     })
 
-    expect(target).toStrictEqual({ ok: true, kind: 'href', href: 'https://h:8080/sub/api/videos/3/f.ts' })
+    expect(target).toStrictEqual({
+      ok: true,
+      kind: 'href',
+      href: 'https://h:8080/sub/api/videos/3/f.ts',
+    })
   })
 
   it('falls back to the playlist when the view URL scheme is off, blank or missing', () => {
@@ -382,27 +467,43 @@ describe('recorded video hand-off URLs', () => {
     expect(
       buildRecordedPlaybackHandoffTarget({
         ...base,
-        settings: { ...settings, shouldUseRecordedViewURLScheme: false, recordedViewURLScheme: 'PROTOCOL://ADDRESS' },
+        settings: {
+          ...settings,
+          shouldUseRecordedViewURLScheme: false,
+          recordedViewURLScheme: 'PROTOCOL://ADDRESS',
+        },
       }),
     ).toStrictEqual(playlist)
     expect(
       buildRecordedPlaybackHandoffTarget({
         ...base,
-        settings: { ...settings, shouldUseRecordedViewURLScheme: true, recordedViewURLScheme: '   ' },
+        settings: {
+          ...settings,
+          shouldUseRecordedViewURLScheme: true,
+          recordedViewURLScheme: '   ',
+        },
       }),
     ).toStrictEqual(playlist)
     expect(
       buildRecordedPlaybackHandoffTarget({
         ...base,
         recordedViewUrlScheme: '   ',
-        settings: { ...settings, shouldUseRecordedViewURLScheme: true, recordedViewURLScheme: null },
+        settings: {
+          ...settings,
+          shouldUseRecordedViewURLScheme: true,
+          recordedViewURLScheme: null,
+        },
       }),
     ).toStrictEqual(playlist)
     expect(
       buildRecordedPlaybackHandoffTarget({
         ...base,
         recordedViewUrlScheme: null,
-        settings: { ...settings, shouldUseRecordedViewURLScheme: true, recordedViewURLScheme: null },
+        settings: {
+          ...settings,
+          shouldUseRecordedViewURLScheme: true,
+          recordedViewURLScheme: null,
+        },
       }),
     ).toStrictEqual(playlist)
   })
@@ -420,14 +521,27 @@ describe('recorded stream selection', () => {
       { type: 'WebM', modes: ['a'] },
     ])
     expect(resolveRecordedStreamCandidates({ streamConfig, fileType: 'x' })).toStrictEqual([])
-    expect(resolveRecordedStreamCandidates({ streamConfig: {} as never, fileType: 'ts' })).toStrictEqual([])
-    expect(resolveRecordedStreamCandidates({ streamConfig: undefined, fileType: 'ts' })).toStrictEqual([])
+    expect(
+      resolveRecordedStreamCandidates({ streamConfig: {} as never, fileType: 'ts' }),
+    ).toStrictEqual([])
+    expect(
+      resolveRecordedStreamCandidates({ streamConfig: undefined, fileType: 'ts' }),
+    ).toStrictEqual([])
   })
 
   it('reads a saved selection and falls back to the default for anything unusable', () => {
-    expect(readRecordedSelectStreamSetting(stored({ type: 'MP4', mode: 2 }))).toStrictEqual({ type: 'MP4', mode: 2 })
-    expect(readRecordedSelectStreamSetting(stored({ type: 'HLS', mode: 'x' }))).toStrictEqual({ type: 'HLS', mode: 0 })
-    expect(readRecordedSelectStreamSetting(stored({ type: 'HLS', mode: 1.5 }))).toStrictEqual({ type: 'HLS', mode: 0 })
+    expect(readRecordedSelectStreamSetting(stored({ type: 'MP4', mode: 2 }))).toStrictEqual({
+      type: 'MP4',
+      mode: 2,
+    })
+    expect(readRecordedSelectStreamSetting(stored({ type: 'HLS', mode: 'x' }))).toStrictEqual({
+      type: 'HLS',
+      mode: 0,
+    })
+    expect(readRecordedSelectStreamSetting(stored({ type: 'HLS', mode: 1.5 }))).toStrictEqual({
+      type: 'HLS',
+      mode: 0,
+    })
     for (const raw of [{ mode: 1 }, { type: 'DASH', mode: 1 }, 5, null]) {
       expect(readRecordedSelectStreamSetting(stored(raw))).toStrictEqual(defaults)
     }
@@ -439,7 +553,8 @@ describe('recorded stream selection', () => {
   it('keeps a saved mode only while it is inside the available modes', () => {
     const candidates = [{ type: 'WebM', modes: ['a', 'b', 'c'] }] as never
     const normalize = (mode: unknown) =>
-      normalizeRecordedSelectStreamSetting({ saved: { type: 'WebM', mode } as never, candidates }).mode
+      normalizeRecordedSelectStreamSetting({ saved: { type: 'WebM', mode } as never, candidates })
+        .mode
 
     expect(normalize(0)).toBe(0)
     expect(normalize(2)).toBe(2)
@@ -453,16 +568,57 @@ describe('recorded stream selection', () => {
     const selection = { type: 'MP4', mode: 1 } as never
     const failure = { ok: false, message: expect.any(String) }
 
-    expect(buildRecordedStreamingRoute({ recordedId: 1, videoFileId: 2, fileType: 'ts', selection })).toStrictEqual({
+    expect(
+      buildRecordedStreamingRoute({ recordedId: 1, videoFileId: 2, fileType: 'ts', selection }),
+    ).toStrictEqual({
       ok: true,
       to: '/recorded/streaming/2?recordedId=1&streamingType=mp4&mode=1&fileType=ts',
     })
-    expect(buildRecordedStreamingRoute({ recordedId: 1, videoFileId: undefined, fileType: 'ts', selection })).toStrictEqual(failure)
-    expect(buildRecordedStreamingRoute({ recordedId: undefined, videoFileId: 2, fileType: 'ts', selection })).toStrictEqual(failure)
-    expect(buildRecordedStreamingRoute({ recordedId: 1, videoFileId: 2, fileType: 'ts', selection: null })).toStrictEqual(failure)
-    expect(buildRecordedStreamingRoute({ recordedId: 1, videoFileId: 2, fileType: 'ts', selection: { type: 'DASH', mode: 1 } as never })).toStrictEqual(failure)
-    expect(buildRecordedStreamingRoute({ recordedId: 1, videoFileId: 2, fileType: 'ts', selection: { type: 'MP4', mode: -1 } })).toStrictEqual(failure)
-    expect(buildRecordedStreamingRoute({ recordedId: 1, videoFileId: 2, fileType: 'x', selection })).toStrictEqual(failure)
-    expect(buildRecordedStreamingRoute({ recordedId: 1, videoFileId: 2, selection })).toStrictEqual(failure)
+    expect(
+      buildRecordedStreamingRoute({
+        recordedId: 1,
+        videoFileId: undefined,
+        fileType: 'ts',
+        selection,
+      }),
+    ).toStrictEqual(failure)
+    expect(
+      buildRecordedStreamingRoute({
+        recordedId: undefined,
+        videoFileId: 2,
+        fileType: 'ts',
+        selection,
+      }),
+    ).toStrictEqual(failure)
+    expect(
+      buildRecordedStreamingRoute({
+        recordedId: 1,
+        videoFileId: 2,
+        fileType: 'ts',
+        selection: null,
+      }),
+    ).toStrictEqual(failure)
+    expect(
+      buildRecordedStreamingRoute({
+        recordedId: 1,
+        videoFileId: 2,
+        fileType: 'ts',
+        selection: { type: 'DASH', mode: 1 } as never,
+      }),
+    ).toStrictEqual(failure)
+    expect(
+      buildRecordedStreamingRoute({
+        recordedId: 1,
+        videoFileId: 2,
+        fileType: 'ts',
+        selection: { type: 'MP4', mode: -1 },
+      }),
+    ).toStrictEqual(failure)
+    expect(
+      buildRecordedStreamingRoute({ recordedId: 1, videoFileId: 2, fileType: 'x', selection }),
+    ).toStrictEqual(failure)
+    expect(buildRecordedStreamingRoute({ recordedId: 1, videoFileId: 2, selection })).toStrictEqual(
+      failure,
+    )
   })
 })
