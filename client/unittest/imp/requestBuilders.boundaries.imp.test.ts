@@ -6,6 +6,7 @@ import {
 import {
   buildEncodeListRequestUrl,
   createEncodeSectionItems,
+  ENCODE_FAILURE_MESSAGE,
   type EncodeProgramItem,
 } from '@/features/encode/encodeRequests'
 import { parseOptionalNumber } from '@/features/recorded/lib/recordedRoute'
@@ -18,11 +19,17 @@ import {
 import {
   buildRecordingListRequestUrl,
   buildRecordingListRequestUrlFromRequest,
+  RECORDING_FAILURE_MESSAGE,
 } from '@/features/recording/recordingRequests'
 import {
   buildReservesListRequestUrl,
   buildReservesListRequestUrlFromRequest,
+  RESERVES_FAILURE_MESSAGE,
+  RESERVES_UPDATE_FAILURE_MESSAGE,
+  RESERVES_UPDATE_STARTED_MESSAGE,
+  resolveReservesTitle,
 } from '@/features/reserves/lib/reservesListRequests'
+import { STORAGES_FAILURE_MESSAGE } from '@/features/storages/storagesRequests'
 import { DefaultSettingsFactory } from '@/shared/settings'
 import type { RecordedListItem } from '@/features/recorded/recordedApi'
 
@@ -112,6 +119,25 @@ describe('dashboard recorded request: optional filters', () => {
       search: '?ruleId=&channelId=abc&genre=7',
     }).recorded
     expect(noisy).toBe(`${plain}&genre=7`)
+  })
+})
+
+describe('list failure messages and reserve titles', () => {
+  it('keeps the user-facing texts', () => {
+    expect(RESERVES_FAILURE_MESSAGE).toBe('予約データ取得に失敗')
+    expect(RESERVES_UPDATE_STARTED_MESSAGE).toBe('予約情報の更新開始')
+    expect(RESERVES_UPDATE_FAILURE_MESSAGE).toBe('予約情報の更新を開始できませんでした。')
+    expect(RECORDING_FAILURE_MESSAGE).toBe('録画データ取得に失敗')
+    expect(ENCODE_FAILURE_MESSAGE).toBe('エンコード情報取得に失敗')
+    expect(STORAGES_FAILURE_MESSAGE).toBe('ストレージ情報取得に失敗')
+  })
+
+  it('titles each reserve list type', () => {
+    expect(resolveReservesTitle(undefined)).toBe('予約')
+    expect(resolveReservesTitle('normal')).toBe('予約')
+    expect(resolveReservesTitle('conflict')).toBe('競合')
+    expect(resolveReservesTitle('overlap')).toBe('重複')
+    expect(resolveReservesTitle('skip')).toBe('除外')
   })
 })
 
