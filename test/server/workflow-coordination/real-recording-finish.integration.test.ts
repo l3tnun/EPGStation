@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import {
     eventually,
+    hookLines,
     Program,
     programRow,
     ruleOption,
@@ -42,7 +43,10 @@ const finishRecording = async (
     beforeEnd: () => Promise<void> | void = () => undefined,
 ) => {
     const started = await startRecording(world, options);
-    await new Promise(resolve => setTimeout(resolve, 600));
+    // 開始の後続処理（タグ・通知・開始の外部コマンド）は、外部コマンドの記録が現れた時点ですべて済んでいる。
+    await eventually(async () => {
+        expect((await hookLines(world.hookLog)).some(line => line.startsWith('start:'))).toBe(true);
+    });
     await beforeEnd();
     started.sender.end();
     await eventually(() => expect(world.wired.finished).toHaveBeenCalledOnce());
@@ -99,10 +103,14 @@ describe('recording finish follow-ups on real components', () => {
                     order.length = 0;
                 },
             );
-            await eventually(() => expect(order).toContain('notify'));
+            // 外部コマンドの後の通知（後続処理の最後）が出るまで待つ。他の機能の通知は先に出るので、それでは判定しない。
+            await eventually(() => {
+                expect(order).toContain('hook');
+                expect(order[order.indexOf('hook') + 1]).toBe('notify');
+            });
 
-            // 手動予約は、録画が完了すると削除される。
-            expect(await world.reserveDB.findId(reserve.id)).toBeNull();
+            // 手動予約は、録画が完了すると削除される（削除は後続処理と並行して進むので、DB に現れるまで待つ）。
+            await eventually(async () => expect(await world.reserveDB.findId(reserve.id)).toBeNull());
             const [recorded] = (await world.recordedDB.findReserveId(reserve.id)) as Array<Record<string, any>>;
             const [videoFile] = (await world.videoFileDB.findAll()) as Array<Record<string, any>>;
             // 他の機能が出す画面向けの通知（予約の削除・タグの関連付け・サムネイル）は順序の対象外にして、依頼の順序を見る。
@@ -181,10 +189,19 @@ describe('recording finish follow-ups on real components', () => {
 
     it('[WC-3.6][WC-3.8] relates the tags and selects the command and the notification without waiting for the thumbnail or the encode requests to finish', async () => {
         await withWorld({}, async world => {
+            // サムネイルの生成は、test が開放の file を置くまで終わらない（時間ではなく状態で「まだ終わっていない」を作る）。
             const slowScript = join(world.root, 'slow-thumbnail.cjs');
+            const releaseFile = join(world.root, 'release-thumbnail');
             await writeFile(
                 slowScript,
-                "setTimeout(() => require('node:fs').writeFileSync(process.argv[3], 'synthetic-jpeg'), 2500);\n",
+                [
+                    "const fs = require('node:fs');",
+                    'const timer = setInterval(() => {',
+                    `    if (!fs.existsSync(${JSON.stringify(releaseFile)})) return;`,
+                    '    clearInterval(timer);',
+                    "    fs.writeFileSync(process.argv[3], 'synthetic-jpeg');",
+                    '}, 20);',
+                ].join('\n'),
             );
             world.config.thumbnailCmd = `%FFMPEG% ${slowScript} %INPUT% %OUTPUT%`;
             const tag = await world.tags.create('not waiting', '#333333');
@@ -207,6 +224,7 @@ describe('recording finish follow-ups on real components', () => {
             expect(stored.tags).toEqual([expect.objectContaining({ id: tag })]);
             // サムネイルの生成はまだ終わっていないが、後続は進んでいる。
             expect(await world.thumbnailDB.findAll()).toEqual([]);
+            await writeFile(releaseFile, '');
             await eventually(async () => expect(await world.thumbnailDB.findAll()).toHaveLength(1));
         });
     }, 60_000);
@@ -288,10 +306,11 @@ describe('recording finish follow-ups on real components', () => {
                         },
                     );
                     await eventually(() => expect(world.log.system.error).toHaveBeenCalledWith(failure));
-                    await new Promise(resolve => setTimeout(resolve, 500));
 
-                    // それより前に始めた予約の削除は取り消されず、録画の完了も取り消されない。
-                    expect(await world.reserveDB.findId(reserve.id)).toBeNull();
+                    // それより前に始めた予約の削除は取り消されず、録画の完了も取り消されない（DB に現れるまで待つ）。
+                    await eventually(async () => expect(await world.reserveDB.findId(reserve.id)).toBeNull());
+                    // 後続が進まないこと（不在）の確認なので、状態が揃った後に少し置いてから見る。
+                    await new Promise(resolve => setTimeout(resolve, 500));
                     const [recorded] = (await world.recordedDB.findReserveId(reserve.id)) as Array<Record<string, any>>;
                     expect(recorded.isRecording).toBe(false);
                     expect(await world.videoFileDB.findAll()).toHaveLength(1);
