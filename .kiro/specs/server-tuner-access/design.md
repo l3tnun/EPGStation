@@ -827,6 +827,8 @@ OSがserver正式対応外であるため、本機能の完了判定を妨げな
 | `test/server/tuner-access/deadline.test.ts`                       | REST全body、stream確立、abort race、timer/listener cleanup                                                        |
 | `test/server/tuner-access/product-detection.test.ts`              | redirect後の200 object／404、その他status、network、timeout、parseとcache matrix                                  |
 | `test/server/tuner-access/change-feed.test.ts`                    | 両製品の通知、通常終了差、初期取得失敗の元error伝播                                                               |
+| `test/server/tuner-access/change-feed-unsupported-frame-types.test.ts` | Mirakurunの変更通知のうち、未対応のtypeを持つprogram・service frameをdata形状に関わらず異常として扱う            |
+| `test/server/tuner-access/transport-redirect-cleanup.test.ts`     | redirectを追跡したとき、役目を終えた要求のlistenerを外す                                                          |
 | `test/server/tuner-access/transport.integration.test.ts`          | HTTP、Unix socketのrequest・stream                                                                                |
 | `test/server/tuner-access/transport.win32.integration.test.ts`    | Windows上だけでtemporary named pipeへ接続する。必須integrationに数えない                                          |
 | `test/server/tuner-access/compatibility.integration.test.ts`      | 最低版・以降版の互換fixture                                                                             |
