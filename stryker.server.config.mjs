@@ -12,6 +12,8 @@ const incrementalFile =
 
 // 重要 module の一覧。評価対象を増やすときはここに足す。
 // `path:開始行-終了行` の形で範囲を絞れる。
+// DB の class（stryker.db.config.mjs）と配信の本体（stryker.delivery.config.mjs）は、結合 test も
+// 対象 test に入れる専用の設定だけで流すので、ここには入れない。
 const mutate = [
     // 予約の競合判定と tuner の割り当て
     'src/model/operator/reservation/ReservationManageModel.ts',
@@ -63,18 +65,6 @@ const mutate = [
     // 配信の管理と HLS の stream id の割り当て
     'src/model/service/stream/manager/StreamManageModel.ts',
     'src/model/service/stream/manager/HlsStreamIdAllocator.ts',
-    // 配信の本体（live・録画済みの stream、HLS の file の削除、録画済みの使用権と再生元）
-    'src/model/service/stream/base/StreamBaseModel.ts',
-    'src/model/service/stream/base/LiveStreamBaseModel.ts',
-    'src/model/service/stream/base/RecordedStreamBaseModel.ts',
-    'src/model/service/stream/LiveStreamModel.ts',
-    'src/model/service/stream/LiveHLSStreamModel.ts',
-    'src/model/service/stream/RecordedStreamModel.ts',
-    'src/model/service/stream/RecordedHLSStreamModel.ts',
-    'src/model/service/stream/util/HLSFileDeleterModel.ts',
-    'src/model/service/stream/recorded/RecordedDeliveryLeaseConsumer.ts',
-    'src/model/service/stream/recorded/RecordedPlaybackSourceConsumer.ts',
-    'src/model/service/stream/recorded/DeliveryRecordedUseSnapshotProvider.ts',
     // EPG の更新と tuner server への接続
     'src/model/epgUpdater/EPGUpdateManageModel.ts',
     'src/model/tuner/TunerServerAccessModel.ts',
