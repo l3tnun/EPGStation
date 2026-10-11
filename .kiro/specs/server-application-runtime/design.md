@@ -1183,8 +1183,8 @@ test/server/application-runtime/
 ```
 
 #### 関連する file
-- `scripts/server-test/serialized-real-process-files.mjs` — `SERIALIZED_REAL_PROCESS_FILES` に `application-runtime/docker-image.integration.test.ts` を載せる。
-- `scripts/server-test/run-tests.mjs` — 直列で流す一覧は `SERIALIZED_REAL_PROCESS_FILES` で、Docker image の test は `DOCKER_IMAGE_CHECK_LOCATOR`（`application-runtime/docker-image.integration.test.ts`）が指す。`EPGSTATION_TEST_SKIP_DOCKER_IMAGE_CHECK` が `1` のときだけ、この 1 file を直列の一覧から外す。
+- `scripts/server-test/serialized-real-process-files.mjs` — `SERIALIZED_REAL_PROCESS_FILES` に `application-runtime/docker-image.integration.test.ts` を載せる。この一覧は Docker の確認専用ではなく、本物の process を期限付きで流す file の一覧で、`tuner-access/clean-install.integration.test.ts`（clean な directory での本物の install と compile）も載っている。
+- `scripts/server-test/run-tests.mjs` — 直列で流す一覧は `SERIALIZED_REAL_PROCESS_FILES` で、Docker image の test は `DOCKER_IMAGE_CHECK_LOCATOR`（`application-runtime/docker-image.integration.test.ts`）が指す。`EPGSTATION_TEST_SKIP_DOCKER_IMAGE_CHECK` が `1` のときだけ、Docker image の 1 file を直列の一覧から外す（ほかの file は直列で流す）。
 - `scripts/server-test/run-node-acceptance-matrix.mjs` — Node 26 の回の除外 env の名前と説明は `docker-image.integration.test.ts` に合わせてある。
 - `scripts/ci-rehearsal/job.sh` — `serialized` の locator は `<layer>/<test/server 配下の path>` の形で対応する。
 - `scripts/ci-rehearsal/setup.sh`、`scripts/preflight-clean-stale-containers.sh` — 残骸の pattern は `epgstation-docker-check-*`・`epgs-docker-check-*` で、network と container も回収する。

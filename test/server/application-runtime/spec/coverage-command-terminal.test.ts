@@ -919,9 +919,27 @@ describe('whole-layer (`all`) dispatch: EPGSTATION_TEST_SKIP_DOCKER_IMAGE_CHECK'
     }
 
     const dockerImageFile = 'application-runtime/docker-image.integration.test.ts';
+    const cleanInstallFile = 'tuner-access/clean-install.integration.test.ts';
 
-    it('the serialized real-process files are exactly the Docker image check', () => {
-        expect(SERIALIZED_REAL_PROCESS_FILES).toEqual([dockerImageFile]);
+    it('the serialized real-process files are exactly the Docker image check and the tuner clean-install check', () => {
+        expect(SERIALIZED_REAL_PROCESS_FILES).toEqual([dockerImageFile, cleanInstallFile]);
+    });
+
+    it('GREEN: the clean-install check runs in the same single-worker invocation as the Docker image check, also when the Docker check is skipped', async () => {
+        for (const skipDockerImageCheck of [false, true]) {
+            const invocations: string[][] = [];
+            await probeWholeLayerCommandPath({
+                skipDockerImageCheck,
+                run: async (_command, args) => {
+                    invocations.push(args as string[]);
+                },
+            });
+            const withCleanInstall = invocations.filter(invocation => invocation.includes(cleanInstallFile));
+            expect(withCleanInstall).toHaveLength(1);
+            expect(withCleanInstall[0]).toContain('--no-file-parallelism');
+            expect(withCleanInstall[0]).toEqual(expect.arrayContaining(['--maxWorkers', '1']));
+            expect(invocations[invocations.length - 1]).toBe(withCleanInstall[0]);
+        }
     });
 
     it('GREEN: unset (default) runs docker-image.integration.test.ts alone after the parallel batches, never inside one', async () => {

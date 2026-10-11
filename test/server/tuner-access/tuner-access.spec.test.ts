@@ -2,12 +2,12 @@ import 'reflect-metadata';
 
 import { spawn } from 'node:child_process';
 import { EventEmitter } from 'node:events';
-import { access as fsAccess, chmod, cp, mkdtemp, readdir, rm } from 'node:fs/promises';
 import { PassThrough } from 'node:stream';
 import { createRequire } from 'node:module';
-import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
+import { runNpm } from '../harness/clean-install-process';
 
 const require = createRequire(join(process.cwd(), 'package.json'));
 const compiledSnapshot = process.env.EPGSTATION_SERVER_COMPILED_SNAPSHOT;
@@ -118,106 +118,6 @@ const deferredOperation = <T>() => {
     });
     return { promise, reject, resolve };
 };
-const cleanInstallChildTimeoutMs = 20_000;
-const cleanInstallChildTerminationGraceMs = 1_000;
-const cleanInstallProbeCleanupAllowanceMs = 8_000;
-const cleanInstallProbeTimeoutMs =
-    2 * (cleanInstallChildTimeoutMs + cleanInstallChildTerminationGraceMs) + cleanInstallProbeCleanupAllowanceMs;
-const isCleanInstallEnvironmentFailure = (args: readonly string[], output: string) =>
-    args[0] === 'ci' &&
-    /\bnpm error code (?:EAI_AGAIN|ECONN(?:REFUSED|RESET)|ENET(?:DOWN|UNREACH)|ENOTCACHED|ENOTFOUND|ETIMEDOUT)\b/iu.test(
-        output,
-    );
-const runNpm = (
-    cwd: string,
-    args: readonly string[],
-    {
-        spawnNpm = spawn,
-        terminationGraceMs = cleanInstallChildTerminationGraceMs,
-        timeoutMs = cleanInstallChildTimeoutMs,
-    }: {
-        readonly spawnNpm?: typeof spawn;
-        readonly terminationGraceMs?: number;
-        readonly timeoutMs?: number;
-    } = {},
-): Promise<string> =>
-    new Promise((resolve, reject) => {
-        const npmCli = process.env.npm_execpath;
-        if (npmCli === undefined) {
-            reject(new Error('The npm CLI path is required for the clean-install probe'));
-            return;
-        }
-        const child = spawnNpm(process.execPath, [npmCli, ...args], {
-            cwd,
-            env: {
-                ...process.env,
-                npm_config_audit: 'false',
-                npm_config_fund: 'false',
-                npm_config_progress: 'false',
-                npm_config_update_notifier: 'false',
-            },
-            stdio: ['ignore', 'pipe', 'pipe'],
-        });
-        let output = '';
-        let timedOut = false;
-        let terminationGrace: NodeJS.Timeout | undefined;
-        const deadline = setTimeout(() => {
-            timedOut = true;
-            child.kill('SIGTERM');
-            terminationGrace = setTimeout(() => child.kill('SIGKILL'), terminationGraceMs);
-        }, timeoutMs);
-        const clearDeadlines = () => {
-            clearTimeout(deadline);
-            if (terminationGrace !== undefined) clearTimeout(terminationGrace);
-        };
-        child.stdout?.on('data', chunk => {
-            output += String(chunk);
-        });
-        child.stderr?.on('data', chunk => {
-            output += String(chunk);
-        });
-        child.once('error', error => {
-            if (timedOut) return;
-            clearDeadlines();
-            reject(error);
-        });
-        child.once('close', (code, signal) => {
-            clearDeadlines();
-            if (timedOut) {
-                reject(
-                    new Error(
-                        `clean-install environment timeout after ${timeoutMs}ms: npm ${args.join(' ')} closed with ${
-                            signal ?? `exit code ${code}`
-                        }`,
-                    ),
-                );
-            } else if (code === 0) {
-                resolve(output);
-            } else {
-                const category = isCleanInstallEnvironmentFailure(args, output)
-                    ? 'clean-install environment failure'
-                    : 'clean-install product regression';
-                reject(new Error(`${category}: npm ${args.join(' ')} failed with exit code ${code}: ${output}`));
-            }
-        });
-    });
-const runNode = (cwd: string, source: string): Promise<string> =>
-    new Promise((resolve, reject) => {
-        const child = spawn(process.execPath, ['-e', source], { cwd, stdio: ['ignore', 'pipe', 'pipe'] });
-        let standardOutput = '';
-        let standardError = '';
-        child.stdout?.on('data', chunk => {
-            standardOutput += String(chunk);
-        });
-        child.stderr?.on('data', chunk => {
-            standardError += String(chunk);
-        });
-        child.once('error', reject);
-        child.once('close', code => {
-            if (code === 0) resolve(standardOutput);
-            else reject(new Error(`node import-graph probe failed with exit code ${code}: ${standardError}`));
-        });
-    });
 const makeResponse = (
     statusCode: number | undefined,
     body: Buffer | string,
@@ -258,17 +158,6 @@ const makeRequestHarness = (
     return { options, request, responses: emittedResponses };
 };
 
-const makeTestOwnedDirectoriesTraversable = async (root: string): Promise<void> => {
-    await chmod(root, 0o700);
-    const entries = await readdir(root, { withFileTypes: true });
-    for (const entry of entries) {
-        if (!entry.isDirectory()) {
-            continue;
-        }
-        await makeTestOwnedDirectoriesTraversable(join(root, entry.name));
-    }
-};
-
 const canonicalAcceptanceProbes: readonly CanonicalProbe[] = [
     {
         id: '1.1',
@@ -293,78 +182,6 @@ const canonicalAcceptanceProbes: readonly CanonicalProbe[] = [
             expect(access(statusTransport('99.7.5')).getStatus()).resolves.toMatchObject({
                 version: { current: '99.7.5' },
             }),
-    },
-    {
-        id: '1.4',
-        label: 'builds without the dedicated client package and keeps the public status transport direct',
-        run: async () => {
-            const cleanRoot = await mkdtemp(join(tmpdir(), 'epgstation-tuner-clean-install-'));
-            const transport = statusTransport();
-            try {
-                await Promise.all([
-                    cp('api.d.ts', join(cleanRoot, 'api.d.ts')),
-                    cp('src', join(cleanRoot, 'src'), { recursive: true }),
-                    cp('package.json', join(cleanRoot, 'package.json')),
-                    cp('package-lock.json', join(cleanRoot, 'package-lock.json')),
-                    cp('tsconfig.json', join(cleanRoot, 'tsconfig.json')),
-                ]);
-                await runNpm(cleanRoot, [
-                    'ci',
-                    '--ignore-scripts',
-                    '--no-audit',
-                    '--fund=false',
-                    '--no-progress',
-                    '--no-update-notifier',
-                    '--prefer-offline',
-                ]);
-                await runNpm(cleanRoot, ['run', 'compile']);
-                await expect(fsAccess(join(cleanRoot, 'node_modules', 'mirakurun'))).rejects.toMatchObject({
-                    code: 'ENOENT',
-                });
-                const resolvedGraph = JSON.parse(
-                    await runNode(
-                        cleanRoot,
-                        [
-                            "const Module = require('node:module');",
-                            'const resolved = [];',
-                            'const originalResolveFilename = Module._resolveFilename;',
-                            'Module._resolveFilename = function(request) {',
-                            '  const value = originalResolveFilename.apply(this, arguments);',
-                            '  resolved.push([request, value]);',
-                            '  return value;',
-                            '};',
-                            "require('reflect-metadata');",
-                            "require('./dist/model/ModelContainerSetter.js');",
-                            'process.stdout.write(JSON.stringify(resolved));',
-                        ].join('\n'),
-                    ),
-                ) as Array<[string, string]>;
-                expect(resolvedGraph).toEqual(
-                    expect.arrayContaining([
-                        expect.arrayContaining([expect.stringMatching(/[\\/]model[\\/]ModelContainerSetter\.js$/u)]),
-                    ]),
-                );
-                expect(resolvedGraph.map(([request]) => request)).not.toEqual(
-                    expect.arrayContaining([expect.stringMatching(/^mirakurun(?:\/|$)/u)]),
-                );
-                expect(resolvedGraph.map(([, resolved]) => resolved)).not.toEqual(
-                    expect.arrayContaining([expect.stringMatching(/[\\/]node_modules[\\/]mirakurun(?:[\\/]|$)/u)]),
-                );
-                await expect(access(transport).getStatus()).resolves.toEqual({
-                    available: true,
-                    version: { current: '3.8.0', latest: '9.7.5' },
-                });
-                expect(transport.getJson).toHaveBeenNthCalledWith(1, '/api/status', {
-                    signal: expect.any(AbortSignal),
-                });
-                expect(transport.getJson).toHaveBeenNthCalledWith(2, '/api/version', {
-                    signal: expect.any(AbortSignal),
-                });
-            } finally {
-                await makeTestOwnedDirectoriesTraversable(cleanRoot);
-                await rm(cleanRoot, { force: true, recursive: true });
-            }
-        },
     },
     {
         id: '1.5',
@@ -1285,15 +1102,11 @@ describe('tuner access characterization contract', () => {
         expect(vi.getTimerCount()).toBe(0);
     });
 
-    // 1.4 は clean install と compile を実際に行うので、mutation testing の sandbox（`EPGS_MUTATION_RUN`）では飛ばす。
-    it.each(canonicalAcceptanceProbes.filter(probe => probe.id !== '1.4' || process.env.EPGS_MUTATION_RUN !== '1'))(
-        '[TA-AC-$id] $label',
-        async probe => {
-            await probe.run();
-            executedCanonicalProbeIds.add(probe.id);
-        },
-        cleanInstallProbeTimeoutMs,
-    );
+    // 1.4 は clean install と compile を実際に行うので、`clean-install.integration.test.ts` が直列実行で固定する。
+    it.each(canonicalAcceptanceProbes)('[TA-AC-$id] $label', async probe => {
+        await probe.run();
+        executedCanonicalProbeIds.add(probe.id);
+    });
 
     it('[TA-1.2] retrieves every eligible logo request upstream without caching', async () => {
         const logo = Buffer.from('synthetic-logo');
