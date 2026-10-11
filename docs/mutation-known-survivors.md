@@ -253,6 +253,44 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 | `optional`、`defined`、`normalizePrograms` | ArrowFunction | 定数表で判定できない: module 先頭で定義される arrow function 全体の置き換え |
 | `withDeadline` の `disposeLateValue === undefined` | ConditionalExpression | 振る舞いが変わらない: REST の late value では undefined を呼ぶ TypeError が try/catch で握りつぶされる |
 
+### `src/model/tuner/transport/TunerHttpTransport.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `drain`、`collect` | ArrowFunction | 定数表で判定できない: module 先頭で定義される arrow function 全体の置き換え。呼び出したときの振る舞いは test が確かめている |
+| `get` の `cleanupRequestError` の `request?.removeListener` | OptionalChaining | 到達不能: この関数は `cleanup(false)` か request の `close` からしか呼ばれず、どちらも request の生成後 |
+
+### `src/model/tuner/change/MirakurunChangeAdapter.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `asRecord` | ArrowFunction | 定数表で判定できない: module 先頭で定義される arrow function 全体の置き換え |
+| `changeFromFrame` の service frame の `frame.resource === 'service'` の判定（左の項を true にする） | ConditionalExpression | 冗長: program の frame で type が `create`・`update`・`remove`・`redefine` のものは手前で返っており、残る program の frame の type は一覧に無いため、右の項だけで同じ結果になる |
+
+### `src/model/event/EventSetter.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `RESERVE_DELETION_HOLD_LIMIT_MS` | ArithmeticOperator | 定数表で判定できない: 10 分で保留が解けることを確かめる test がある |
+| `selectDeletionsAwaitingRecordingEnd` の `deleted.length === 0` の早期 return | ConditionalExpression | 冗長: 空の配列への `filter` も空の配列を返す |
+| `setTag` の `tags.length > 0` | ConditionalExpression、EqualityOperator | 振る舞いが変わらない: 空の配列では繰り返しが 0 回で、結果が同じ |
+
+### event 名の定数（`src/model/event/` の各 event class）
+
+対象: `EPGUpdateEvent.ts`、`EncodeEvent.ts`、`OperatorEncodeEvent.ts`、`RecordedEvent.ts`、`RecordedTagEvent.ts`、`RecordingEvent.ts`、`ReserveEvent.ts`、`RuleEvent.ts`、`ThumbnailEvent.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| module 先頭の event 名の定数（`UPDATED_EVENT`、`ADDED_EVENT` など `export const` の文字列） | StringLiteral | 定数表で判定できない: module の読み込み時に評価される式。名前は同じ process の中で発火と購読を結ぶ目印で、発火側と購読側が同じ定数を使うため、値が変わっても対応は保たれる。発火した値が購読へ届くことは各 event class の test が確かめている |
+
+### `src/model/service/socketio/SocketIOManageModel.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `initialize` の sub directory が無いときの path `'/socket.io'` | StringLiteral | 振る舞いが変わらない: 空文字を渡すと socket.io は指定を無視して既定の `/socket.io` を使う |
+| `initialize` の `cors: { origin: '*' }` の中身 | ObjectLiteral | 振る舞いが変わらない: 空の object を渡しても `cors` の既定の origin が `*` で同じ |
+| `initialize` の起動 log の文言 | StringLiteral | 振る舞いが変わらない: log だけ |
+
 ## DB（`stryker.db.config.mjs`）
 
 ### `src/model/db/ProgramDB.ts`

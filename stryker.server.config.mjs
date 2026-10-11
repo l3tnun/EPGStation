@@ -66,6 +66,25 @@ const mutate = [
     'src/model/epgUpdater/EPGUpdateManageModel.ts',
     'src/model/tuner/TunerServerAccessModel.ts',
     'src/model/tuner/transport/ConnectionTargetParser.ts',
+    // tuner server への通信と変更の監視
+    'src/model/tuner/transport/TunerHttpTransport.ts',
+    'src/model/tuner/transport/TunerUserAgent.ts',
+    'src/model/tuner/change/MirakurunChangeAdapter.ts',
+    'src/model/tuner/change/MirakcChangeAdapter.ts',
+    'src/model/tuner/change/ProductDetector.ts',
+    // event と通知の配線
+    'src/model/event/EventSetter.ts',
+    'src/model/event/RecordingEvent.ts',
+    'src/model/event/RecordedEvent.ts',
+    'src/model/event/EncodeEvent.ts',
+    'src/model/event/RuleEvent.ts',
+    'src/model/event/RecordedTagEvent.ts',
+    'src/model/event/ThumbnailEvent.ts',
+    'src/model/event/EPGUpdateEvent.ts',
+    'src/model/event/ReserveEvent.ts',
+    'src/model/event/OperatorEncodeEvent.ts',
+    'src/model/event/OperatorEncodeEventBinding.ts',
+    'src/model/service/socketio/SocketIOManageModel.ts',
 ];
 
 /** @type {import('@stryker-mutator/api/core').PartialStrykerOptions} */
