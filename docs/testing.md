@@ -102,7 +102,7 @@ PR の `check` job（§7）が実行する検査と同じ。
 - それ以外は単体 test（spec・imp）だけを流す。server は mutant を入れた `src` を sandbox で compile して test に読ませるため、最初に build の時間がかかる。全 test を直列に流す確認（dry-run）が毎回あり、server は約 5 分、client は約 6 分が下限になる。
 - 既定は `ignoreStatic: true`（module 先頭の定数表の mutant を除く）と `concurrency: 2`。memory は server で約 5 GB、client で約 2 GB になるので、ほかの重い run と同時に流さない。
 - module 先頭の定数表の mutant（report の `static: true`）は、この設定では判定できない。`ignoreStatic` でもその行を覆う test だけで実行されるが、module の読み込みが mutant の有効化より先に済むため、test が値を確かめていても「生き残った」と出る。端末の表の score にも数えられるので、定数表の多い file の score は低く出る。定数表の値は、値そのものを確かめる test で守る（Stryker の結果では確かめられない）。
-- cache は git の管理外。`EPGS_MUTATION_INCREMENTAL_FILE` で場所を変えられる。消えても全 mutant を流し直すだけで結果は変わらない。
+- cache は git の管理外。`EPGS_MUTATION_INCREMENTAL_FILE` で場所を変えられる。消えても全 mutant を流し直すだけで結果は変わらない。cache は run の最後にだけ書かれるので、途中で止めた run の結果は残らない（長い run は対象を分けて流す）。
 - cache は、test を足しても前回の生き残りを流し直さないことがある。足した test が mutant を殺すかを確かめるときは、対象を絞って `--force` を付けて流す（例: `npm run mutation:server -- --force --mutate src/util/StrUtil.ts`）。
 - 同じ checkout で複数の run を同時に流すときは、cache・report・sandbox の場所を run ごとに分ける。分けないと、cache と report を互いに上書きし、server・DB・配信の本体の設定は sandbox（`.stryker-tmp`）も共有する。cache は `EPGS_MUTATION_INCREMENTAL_FILE` で分けられるが、report と sandbox は command の引数で変えられないので、元の設定を読み込んで上書きする設定 file を run ごとに作り、`npx stryker run <その file>` で流す（作った file は commit しない）。client の例（`client/` に置く）:
 
