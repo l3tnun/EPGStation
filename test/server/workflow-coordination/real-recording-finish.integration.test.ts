@@ -136,7 +136,8 @@ describe('recording finish follow-ups on real components', () => {
             await eventually(async () => {
                 expect(await world.thumbnailDB.findAll()).toEqual([expect.objectContaining({ recordedId: recorded.id })]);
             });
-            expect(await thumbnailFiles(world)).toHaveLength(1);
+            // 行は一時 directory の片付けより先に入るので、片付けが済んで最終の file だけが残るまで待つ。
+            await eventually(async () => expect(await thumbnailFiles(world)).toHaveLength(1));
             const stored = (await world.recordedDB.findId(recorded.id)) as Record<string, any>;
             expect((stored.tags as Array<{ id: number }>).map(tag => tag.id).sort()).toEqual([first, second].sort());
             expect((await settledHookLines(world.hookLog, 3)).filter(line => line.startsWith('finish:'))).toEqual([
