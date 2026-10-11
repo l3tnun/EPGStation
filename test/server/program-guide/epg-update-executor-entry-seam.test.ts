@@ -111,6 +111,20 @@ describe('EPGUpdateExecutor entry seam', () => {
         await Promise.resolve();
     });
 
+    it('initializes the logger with the EPG updater log configuration beside the compiled tree when no path is given', async () => {
+        const { container, initialize } = createFakeContainer('resolve');
+        const { runEPGUpdateExecutor } = await loadEPGUpdateExecutor();
+
+        runEPGUpdateExecutor({ container });
+
+        expect(initialize).toHaveBeenCalledExactlyOnceWith(
+            join(dirname(compiledExecutorPath), '..', '..', '..', 'config', 'epgUpdaterLogConfig.yml'),
+        );
+
+        await Promise.resolve();
+        await Promise.resolve();
+    });
+
     it('exits the process with code 1 when updater.start() rejects', async () => {
         const { container, start } = createFakeContainer('reject');
         const { runEPGUpdateExecutor } = await loadEPGUpdateExecutor();
@@ -163,7 +177,7 @@ describe('EPGUpdateExecutor real self-invocation (the EPGUpdater entry)', () => 
             "const event = value => process.stdout.write(value + '\\n');",
             'const loggerModel = {',
             "    initialize: logConfigPath => event('logger:init:' + logConfigPath),",
-            '    getLogger: () => ({ system: { fatal: value => event(\'fatal:\' + String(value)) } }),',
+            "    getLogger: () => ({ system: { fatal: value => event('fatal:' + String(value)) } }),",
             '};',
             "const updater = { start: () => (event('updater:start'), Promise.resolve()) };",
             'const dependencies = { ILoggerModel: loggerModel, IEPGUpdater: updater };',
@@ -201,11 +215,9 @@ describe('EPGUpdateExecutor real self-invocation (the EPGUpdater entry)', () => 
                 stdout: string;
                 stderr: string;
             }>((resolve, reject) => {
-                const child = spawn(
-                    process.execPath,
-                    ['--import', pathToFileURL(preloadPath).href, entryPath],
-                    { stdio: ['ignore', 'pipe', 'pipe'] },
-                );
+                const child = spawn(process.execPath, ['--import', pathToFileURL(preloadPath).href, entryPath], {
+                    stdio: ['ignore', 'pipe', 'pipe'],
+                });
                 let stdoutText = '';
                 let stderrText = '';
                 child.stdout.setEncoding('utf8');
@@ -230,7 +242,14 @@ describe('EPGUpdateExecutor real self-invocation (the EPGUpdater entry)', () => 
             // 'config', 'epgUpdaterLogConfig.yml')`; computed the same way here from the entry's own
             // (realpath'd) directory, so this only matches if the guard's no-argument call actually
             // evaluated that real default-path expression rather than some test-supplied path.
-            const expectedLogConfigPath = join(dirname(entryPath), '..', '..', '..', 'config', 'epgUpdaterLogConfig.yml');
+            const expectedLogConfigPath = join(
+                dirname(entryPath),
+                '..',
+                '..',
+                '..',
+                'config',
+                'epgUpdaterLogConfig.yml',
+            );
             expect(stdout).toContain(`logger:init:${expectedLogConfigPath}\n`);
         } finally {
             await rm(preloadDirectory, { recursive: true, force: true });
