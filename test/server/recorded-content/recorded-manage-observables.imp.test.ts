@@ -59,15 +59,15 @@ const makeFixture = (recorded: RecordedRowStub, hasReserve: boolean = true) => {
         emitDeleteVideoFile: vi.fn(),
     };
     const videoUtil = {
-        getFullFilePathFromVideoFile: vi.fn((video: { filePath: string }) => `/synthetic-root/${video.filePath}`),
+        getFullFilePathFromVideoFile: vi.fn((video: { filePath: string }) => `synthetic-root/${video.filePath}`),
         getParentDirPath: vi.fn(() => null),
     };
     const model = new RecordedManageModel(
         { getLogger: () => ({ system: systemLog }) },
         {
             getConfig: () => ({
-                dropLog: '/synthetic-drop-log',
-                recorded: [{ name: 'main', path: '/synthetic-root' }],
+                dropLog: 'synthetic-drop-log',
+                recorded: [{ name: 'main', path: 'synthetic-root' }],
                 thumbnail: 'synthetic-thumbnail',
             }),
         },
@@ -308,8 +308,8 @@ describe('[RC-9.9] video file cleanup removes only what is neither registered no
         vi.spyOn(FileUtil, 'stat').mockResolvedValue({});
         vi.spyOn(FileUtil, 'captureManagedRootIdentity').mockReturnValue(identity);
         vi.spyOn(FileUtil, 'getFileList').mockResolvedValue({
-            directories: ['/synthetic-root/a', '/synthetic-root/abc/def', '/synthetic-root/keep', '/synthetic-root/xy'],
-            files: ['/synthetic-root/keep/registered.ts', '/synthetic-root/orphan.ts'],
+            directories: ['synthetic-root/a', 'synthetic-root/abc/def', 'synthetic-root/keep', 'synthetic-root/xy'],
+            files: ['synthetic-root/keep/registered.ts', 'synthetic-root/orphan.ts'],
         });
         vi.spyOn(FileUtil, 'isManagedEntrySafeForRemoval').mockReturnValue(true);
         vi.spyOn(FileUtil, 'isEmptyDirectory').mockResolvedValue(true);
@@ -318,8 +318,8 @@ describe('[RC-9.9] video file cleanup removes only what is neither registered no
 
         await fixture.model.videoFileCleanup();
 
-        expect(unlink.mock.calls).toEqual([['/synthetic-root/orphan.ts']]);
-        expect(rmdir.mock.calls).toEqual([['/synthetic-root/abc/def'], ['/synthetic-root/xy'], ['/synthetic-root/a']]);
+        expect(unlink.mock.calls).toEqual([['synthetic-root/orphan.ts']]);
+        expect(rmdir.mock.calls).toEqual([['synthetic-root/abc/def'], ['synthetic-root/xy'], ['synthetic-root/a']]);
     });
 
     it('does not list anything for removal when the managed roots have no entries', async () => {
