@@ -222,7 +222,8 @@ class Configuration implements IConfiguration {
     private setTemplateValues(config: IConfigFile): void {
         for (const key in Configuration.DEFAULT_VALUE) {
             if (typeof (<any>config)[key] === 'undefined') {
-                (<any>config)[key] = (<any>Configuration.DEFAULT_VALUE)[key];
+                // 配列・object は標準値そのものを渡さず複製する (後続の整形が標準値を書き換えないため)
+                (<any>config)[key] = structuredClone((<any>Configuration.DEFAULT_VALUE)[key]);
             }
         }
 
@@ -232,14 +233,16 @@ class Configuration implements IConfiguration {
         // config.urlscheme 自体は undefined ではないため直前のループでは補われず、そのカテゴリが
         // undefined/null のまま残って参照時に例外になる。カテゴリ単位でも個別に補う。
         if (typeof config.urlscheme === 'undefined' || config.urlscheme === null) {
-            (<any>config).urlscheme = Configuration.DEFAULT_VALUE.urlscheme;
+            (<any>config).urlscheme = structuredClone(Configuration.DEFAULT_VALUE.urlscheme);
         } else {
             for (const category of ['m2ts', 'video', 'download'] as const) {
                 if (
                     typeof (<any>config.urlscheme)[category] === 'undefined' ||
                     (<any>config.urlscheme)[category] === null
                 ) {
-                    (<any>config.urlscheme)[category] = (<any>Configuration.DEFAULT_VALUE.urlscheme)[category];
+                    (<any>config.urlscheme)[category] = structuredClone(
+                        (<any>Configuration.DEFAULT_VALUE.urlscheme)[category],
+                    );
                 }
             }
         }

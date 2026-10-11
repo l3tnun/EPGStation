@@ -151,7 +151,7 @@ namespace EncodeEvent {
     export const FINISH_ENCODE_EVENT = 'finishEncodeEvent';
     export const ERROR_ENCODE_EVENT = 'errorEncodeEvent';
     export const UPDATE_ENCODE_EVENT = 'updateEncodeEvent';
-    export const UPDATE_ENCODE_PROGRESS_EVENT = 'updateENcodeProgressEvent';
+    export const UPDATE_ENCODE_PROGRESS_EVENT = 'updateEncodeProgressEvent';
 }
 
 export default EncodeEvent;

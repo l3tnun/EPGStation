@@ -108,7 +108,7 @@ class EncodeManageModel implements IEncodeManageModel {
      */
     public async push(addOption: apid.AddEncodeProgramOption): Promise<apid.EncodeId> {
         if (this.concurrentEncodeNum <= 0) {
-            throw new Error('CncurrentEncodeNumIsZero');
+            throw new Error('ConcurrentEncodeNumIsZero');
         }
 
         const addOptionSnapshot = cloneDeep(addOption) as apid.AddEncodeProgramOption;
@@ -670,7 +670,6 @@ class EncodeManageModel implements IEncodeManageModel {
 
 namespace EncodeManageModel {
     export const UNLOCK_EVENT = 'unlockEvent';
-    export const UNLOCK_TIMEOUT = 1000 * 60;
     export const CANCEL_ENCODE_PRIPORITY = 1;
     export const ADD_ENCODE_PRIPORITY = 2;
     export const CREATE_ENCODING_PROCESS_PRIPORITY = 2;

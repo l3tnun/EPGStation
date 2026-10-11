@@ -178,6 +178,7 @@ describe('ReservationManageModel failure-path characterization (unittest/imp)', 
                 message: 'ReservationIsNotFound',
             });
 
+            expect(harness.log.system.error).toHaveBeenCalledWith('reservation is not found: 31');
             expect(harness.programDB.findId).not.toHaveBeenCalled();
             expect(harness.reserveDB.updateMany).not.toHaveBeenCalled();
             expect(harness.reserveEvent.emitUpdated).not.toHaveBeenCalled();

@@ -99,7 +99,7 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 | `formatConfig` の `typeof newConfig.https !== 'undefined'` | ConditionalExpression、StringLiteral | 到達不能: `port` も `https` も無い設定は直前の `PortSettingError` で弾かれるので、この `else if` へ来たとき `https` は必ずある |
 | `setTemplateValues` の `typeof config.urlscheme === 'undefined'` | ConditionalExpression、StringLiteral | 冗長: undefined は直前の `DEFAULT_VALUE` の補完で既に埋まり、残る null の判定は別の条件で検出される |
 | `Configuration.CONFIG_FILE_PATH`・`CONFIG_TEMPLATE_FILE_PATH`・`ROOT_PATH` の path の要素 | StringLiteral | 定数表で判定できない: module の読み込み時に評価される式 |
-| `Configuration.DEFAULT_VALUE`（既定値の表と、その中の path の要素） | StringLiteral、ObjectLiteral、ArrayDeclaration、BooleanLiteral | 定数表で判定できない: 項目ごとに値を確かめる test があり、説明書（`docs/conf-manual.md`）に既定値が無い `encode`・`urlscheme` の形は実装の値で固定している。`mirakurunPath` は説明書が「デフォルト値なし・必須」とするのに実装は既定値を持ち、食い違うので値を確かめる test が無い |
+| `Configuration.DEFAULT_VALUE`（既定値の表と、その中の path の要素） | StringLiteral、ObjectLiteral、ArrayDeclaration、BooleanLiteral | 定数表で判定できない: 項目ごとに値を確かめる test があり、説明書（`docs/conf-manual.md`）に既定値が無い `encode`・`urlscheme` の形は実装の値で固定している。`mirakurunPath` の既定値は説明書に書いてあるが、値を確かめる test は無い |
 
 ### `src/util/StrUtil.ts`
 
@@ -209,7 +209,6 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 | 処理の場所 | mutator | 理由 |
 | --- | --- | --- |
 | `legacyRecordedResourceUsePort`（object と `acquire`）、`NEEDS_CHECK_QUEUE_EVENT`、`UNLOCK_EVENT` | ObjectLiteral、ArrowFunction、StringLiteral | 定数表で判定できない: module の読み込み時に評価される式 |
-| `UNLOCK_TIMEOUT` | ArithmeticOperator | 振る舞いが変わらない: どこからも参照されない定数 |
 | `checkQueue` の `waitQueue.length === 0` | ConditionalExpression | 冗長: 空なら直後の `shift()` が undefined になり、続く `typeof encoder === 'undefined'` で同じ結果になる |
 | `checkQueue` の `typeof encoder === 'undefined'` の判定と、その中の `unLockExecution` | ConditionalExpression、BlockStatement、StringLiteral、CallExpression | 到達不能: 直前の判定が空を弾くので来ない |
 | `createFinishEncodeInfo` の `outputFilePath === null`・`fileName === null` | LogicalOperator、ConditionalExpression | 冗長: 2 つは常に一致する |

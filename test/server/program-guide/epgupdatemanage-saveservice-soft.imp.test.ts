@@ -72,7 +72,7 @@ describe('EPGUpdateManageModel.saveService soft residual (unittest/imp)', () => 
 
         await expect(excludeModel.saveService()).resolves.toBeUndefined();
         expect(excludeGetServices).toHaveBeenCalledOnce();
-        expect(excludeChannelUpdate).toHaveBeenCalledExactlyOnceWith({ insert: [], update: [] });
+        expect(excludeChannelUpdate).toHaveBeenCalledExactlyOnceWith({ insert: [], update: [], delete: [] });
         expect(excludeModel.serviceQueue).toEqual([]);
     });
 });

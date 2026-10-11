@@ -178,7 +178,9 @@ https:
 
 | 種類   | デフォルト値 | 必須 |
 | ------ | ------------ | ---- |
-| string | -            | yes  |
+| string | `http+unix://%2Fvar%2Frun%2Fmirakurun.sock/` | no   |
+
+省略すると、Mirakurun の UNIX socket（`/var/run/mirakurun.sock`）へ接続します。
 
 ```yaml
 mirakurunPath: 'http://localhost:40772'

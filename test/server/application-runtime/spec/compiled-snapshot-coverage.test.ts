@@ -6251,12 +6251,12 @@ describe('discoverCompiledSnapshotCoverage: exclusion approval table (real compi
         return `${anchor.functionName}|${anchor.tokenStart}|${anchor.tokenEnd}|${anchor.code}`;
     }
 
-    it('lists 16 approvals in the function-unit-bound form only, with 67 statement anchors and 20 branch anchors', () => {
+    it('lists 16 approvals in the function-unit-bound form only, with 61 statement anchors and 19 branch anchors', () => {
         expect(APPROVALS).toHaveLength(16);
         expect(new Set(APPROVALS.map(approval => approval.sourcePath)).size).toBe(16);
         expect(new Set(APPROVALS.map(approval => approval.markerIdentifier)).size).toBe(16);
-        expect(APPROVALS.reduce((total, approval) => total + approval.statementAnchors.length, 0)).toBe(67);
-        expect(APPROVALS.reduce((total, approval) => total + approval.branchAnchors.length, 0)).toBe(20);
+        expect(APPROVALS.reduce((total, approval) => total + approval.statementAnchors.length, 0)).toBe(61);
+        expect(APPROVALS.reduce((total, approval) => total + approval.branchAnchors.length, 0)).toBe(19);
         for (const approval of APPROVALS) {
             expect(Object.keys(approval).sort()).toEqual([
                 'alternativeOwnerEntries',

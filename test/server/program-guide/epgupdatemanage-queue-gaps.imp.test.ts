@@ -268,8 +268,8 @@ describe('EPGUpdateManageModel program queue (unittest/imp)', () => {
 });
 
 describe('EPGUpdateManageModel service queue (unittest/imp)', () => {
-    it('[PG-3.2] saves named creations and updates, keeps the current logo flag and skips removals and excluded services', async () => {
-        const { channelDB, emitted, log, model, tuner } = makeModel({ excludeChannels: [1006], excludeSids: [555] });
+    it('[PG-3.2] saves named creations and updates, keeps the current logo flag, deletes removals and skips excluded services', async () => {
+        const { channelDB, emitted, log, model, programDB, tuner } = makeModel({ excludeChannels: [1006], excludeSids: [555] });
         tuner.getServices.mockResolvedValue([service(1001, { hasLogoData: true })]);
         model.serviceQueue.push(
             { data: service(1001), resource: 'service', time: 1, type: 'create' },
@@ -285,10 +285,12 @@ describe('EPGUpdateManageModel service queue (unittest/imp)', () => {
         expect(channelDB.update).toHaveBeenCalledExactlyOnceWith({
             insert: [service(1001, { hasLogoData: true })],
             update: [service(1003)],
+            delete: [1004],
         });
+        expect(programDB.insert).toHaveBeenCalledExactlyOnceWith(model.channelIndex, [], [1004]);
         expect(log.system.info.mock.calls).toEqual([
             ['update channel db start'],
-            [{ insertValues: 1, updateValues: 1 }],
+            [{ insertValues: 1, updateValues: 1, deleteValues: 1 }],
             ['update channel db done'],
         ]);
         expect(model.channelIndex).toEqual({
@@ -306,7 +308,113 @@ describe('EPGUpdateManageModel service queue (unittest/imp)', () => {
         await model.saveService();
 
         expect(log.system.error.mock.calls).toEqual([['get service error'], [failure]]);
-        expect(channelDB.update).toHaveBeenCalledExactlyOnceWith({ insert: [service(1001)], update: [] });
+        expect(channelDB.update).toHaveBeenCalledExactlyOnceWith({ insert: [service(1001)], update: [], delete: [] });
+    });
+});
+
+describe('EPGUpdateManageModel service removal (unittest/imp)', () => {
+    const queue = (model: any, type: string, data: unknown) =>
+        model.serviceQueue.push({ data, resource: 'service', time: 1, type });
+
+    it('[PG-1.5] deletes the removed channel row, its programs and its index entry, and leaves the other channels', async () => {
+        const { channelDB, emitted, model, programDB, tuner } = makeModel();
+        tuner.getServices.mockResolvedValue([service(1001), service(1002)]);
+        model.channelIndex = {
+            10: { 1: { id: 1001, type: 'GR', channel: '1001' }, 2: { id: 1002, type: 'GR', channel: '1002' } },
+            11: { 5: { id: 1100005, type: 'BS', channel: 'BS01' } },
+        };
+        queue(model, 'remove', service(1002));
+
+        await model.saveService();
+
+        expect(channelDB.update).toHaveBeenCalledExactlyOnceWith({ insert: [], update: [], delete: [1002] });
+        expect(programDB.insert).toHaveBeenCalledExactlyOnceWith(model.channelIndex, [], [1002]);
+        expect(model.channelIndex).toEqual({
+            10: { 1: { id: 1001, type: 'GR', channel: '1001' } },
+            11: { 5: { id: 1100005, type: 'BS', channel: 'BS01' } },
+        });
+        expect(emitted).toEqual([EPGUpdateEvent.SERVICE_UPDATED]);
+    });
+
+    it('[PG-1.5] ignores a removal of an excluded channel or service id', async () => {
+        const { channelDB, programDB, model } = makeModel({ excludeChannels: [1002], excludeSids: [3] });
+        queue(model, 'remove', service(1002));
+        queue(model, 'remove', service(1003));
+
+        await model.saveService();
+
+        expect(channelDB.update).toHaveBeenCalledExactlyOnceWith({ insert: [], update: [], delete: [] });
+        expect(programDB.insert).not.toHaveBeenCalled();
+    });
+
+    it('[PG-1.5] deletes nothing from the programs when no channel was removed', async () => {
+        const { model, programDB } = makeModel();
+        queue(model, 'create', service(1001));
+
+        await model.saveService();
+
+        expect(programDB.insert).not.toHaveBeenCalled();
+    });
+
+    it('[PG-1.5] keeps only the later of a removal and a creation or update of the same channel', async () => {
+        const { channelDB, model, programDB } = makeModel();
+        queue(model, 'create', service(1001));
+        queue(model, 'remove', service(1001));
+        queue(model, 'update', service(1002));
+        queue(model, 'remove', service(1002));
+        queue(model, 'remove', service(1003));
+        queue(model, 'create', service(1003));
+        queue(model, 'remove', service(1004));
+        queue(model, 'update', service(1004));
+
+        await model.saveService();
+
+        expect(channelDB.update).toHaveBeenCalledExactlyOnceWith({
+            insert: [service(1003)],
+            update: [service(1004)],
+            delete: [1001, 1002],
+        });
+        expect(programDB.insert).toHaveBeenCalledExactlyOnceWith(model.channelIndex, [], [1001, 1002]);
+    });
+
+    it('[PG-1.5] removes a channel that is not in the index without failing', async () => {
+        const { channelDB, model } = makeModel();
+        model.channelIndex = { 10: {} };
+        queue(model, 'remove', service(1001, { networkId: 99 }));
+        queue(model, 'remove', service(1002));
+
+        await expect(model.saveService()).resolves.toBeUndefined();
+
+        expect(channelDB.update).toHaveBeenCalledExactlyOnceWith({ insert: [], update: [], delete: [1001, 1002] });
+        expect(model.channelIndex).toEqual({ 10: {} });
+    });
+
+    it('[PG-1.5] logs and rethrows a failure to delete the programs of a removed channel without announcing the update', async () => {
+        const { emitted, log, model, programDB } = makeModel();
+        const failure = new Error('synthetic program delete failure');
+        programDB.insert.mockRejectedValueOnce(failure);
+        queue(model, 'remove', service(1001));
+
+        await expect(model.saveService()).rejects.toBe(failure);
+
+        expect(log.system.error.mock.calls).toEqual([['delete service programs error'], [failure]]);
+        expect(emitted).toEqual([]);
+    });
+
+    it('[PG-1.6] mirakc: a channel absent from the next full channel fetch leaves the stored channels and the index at the program refetch', async () => {
+        const { channelDB, model, programDB, tuner } = makeModel();
+        tuner.getServices
+            .mockResolvedValueOnce([service(1001), service(1002)])
+            .mockResolvedValueOnce([service(1001)]);
+
+        await model.updateChannels();
+        model.updateServiceIds = { 1001: true };
+        await model.saveUpdateServices();
+
+        expect(channelDB.insert.mock.calls).toEqual([[[service(1001), service(1002)]], [[service(1001)]]]);
+        expect(channelDB.update).not.toHaveBeenCalled();
+        expect(model.channelIndex).toEqual({ 10: { 1: { id: 1001, type: 'GR', channel: '1001' } } });
+        expect(programDB.insert).toHaveBeenCalledExactlyOnceWith(model.channelIndex, [], [1001]);
     });
 });
 

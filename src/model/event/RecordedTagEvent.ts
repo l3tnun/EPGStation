@@ -38,7 +38,7 @@ class RecordedTagEvent implements IRecordedTagEvent {
      * @param recordedId: apid.RecordedId
      */
     public emitRelated(tagId: apid.RecordedTagId, recordedId: apid.RecordedId): void {
-        this.emitter.emit(RecordedTagEvent.RELATER_EVENT, tagId, recordedId);
+        this.emitter.emit(RecordedTagEvent.RELATED_EVENT, tagId, recordedId);
     }
 
     /**
@@ -92,7 +92,7 @@ class RecordedTagEvent implements IRecordedTagEvent {
      */
     public setRelated(callback: (tagId: apid.RecordedTagId, recordedId: apid.RecordedId) => void): void {
         this.emitter.on(
-            RecordedTagEvent.RELATER_EVENT,
+            RecordedTagEvent.RELATED_EVENT,
             async (tagId: apid.RecordedTagId, recordedId: apid.RecordedId) => {
                 try {
                     await callback(tagId, recordedId);
@@ -138,7 +138,7 @@ class RecordedTagEvent implements IRecordedTagEvent {
 namespace RecordedTagEvent {
     export const CREATED_EVENT = 'Created';
     export const UPDATED_EVENT = 'Updated';
-    export const RELATER_EVENT = 'Related';
+    export const RELATED_EVENT = 'Related';
     export const DELETED_EVENT = 'Deleted';
     export const DELETED_RELATION_EVENT = 'DeletedRelation';
 }

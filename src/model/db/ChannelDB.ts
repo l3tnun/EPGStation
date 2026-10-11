@@ -1,5 +1,5 @@
 import { inject, injectable } from 'inversify';
-import { FindOptionsWhere } from 'typeorm';
+import { FindOptionsWhere, In } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity.js';
 import type * as apid from '../../../api.js';
 import Channel from '../../db/entities/Channel.js';
@@ -36,9 +36,14 @@ export default class ChannelDB implements IChannelDB {
      * Mirakurun から取得した channel 情報を DB へ全件挿入する
      * @param channels: Service[]
      * @param needesDeleted: 更新前に全データ削除が必要か
+     * @param deleteChannelIds: 同じ transaction で削除する channel id (空なら削除しない)
      * @return Promise<void>
      */
-    public async insert(channels: TunerService[], needesDeleted: boolean = true): Promise<void> {
+    public async insert(
+        channels: TunerService[],
+        needesDeleted: boolean = true,
+        deleteChannelIds: apid.ChannelId[] = [],
+    ): Promise<void> {
         const values: QueryDeepPartialEntity<Channel>[] = [];
 
         // 挿入データ作成
@@ -74,6 +79,11 @@ export default class ChannelDB implements IChannelDB {
             if (needesDeleted === true) {
                 // 削除
                 await queryRunner.manager.createQueryBuilder().delete().from(Channel).execute();
+            }
+
+            // 指定された channel のみ削除
+            if (deleteChannelIds.length > 0) {
+                await queryRunner.manager.delete(Channel, { id: In(deleteChannelIds) });
             }
 
             // 挿入処理
@@ -143,7 +153,7 @@ export default class ChannelDB implements IChannelDB {
         Array.prototype.push.apply(channels, values.insert);
         Array.prototype.push.apply(channels, values.update);
 
-        await this.insert(channels, false);
+        await this.insert(channels, false, values.delete);
     }
 
     /**

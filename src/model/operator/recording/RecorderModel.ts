@@ -1138,6 +1138,28 @@ class RecorderModel implements IRecorderModel {
                 }
                 releaseRegistrationOwner();
             };
+            // 待機が取り消された後に登録結果が確定したときの後始末
+            const settleAfterRegistrationCancelled = async (
+                cancellablePhases: ReadonlyArray<'Registering' | 'RegistrationOverdue' | 'Recording'> = [
+                    'Registering',
+                    'RegistrationOverdue',
+                ],
+            ): Promise<void> => {
+                if (isReplacementRegistrationOwner()) destroyReplacedWaitingStream();
+                if (registrationOwner === null || registrationOwner.intent !== 'Deletion') {
+                    await cleanupRegistrationFailureResources();
+                }
+                if (registrationResources !== null) await this.cleanupPendingRegistration(registrationResources);
+                await settlePendingCancellation();
+                const currentSchedule = this.scheduleBinding;
+                if (
+                    registrationOwner?.intent === 'Cancel' &&
+                    this.matchesRegistrationOwner(registrationOwner, currentSchedule)
+                ) {
+                    this.transitionSchedulePhase(currentSchedule, cancellablePhases, 'Cancelled');
+                }
+                releaseRegistrationOwner();
+            };
             const onData = async () => {
                 if (firstDataObserved || outcomeSettled) return;
                 firstDataObserved = true;
@@ -1212,24 +1234,7 @@ class RecorderModel implements IRecorderModel {
                     return;
                 }
                 if (outcomeSettled) {
-                    if (isReplacementRegistrationOwner()) destroyReplacedWaitingStream();
-                    if (registrationOwner === null || registrationOwner.intent !== 'Deletion') {
-                        await cleanupRegistrationFailureResources();
-                    }
-                    if (registrationResources !== null) await this.cleanupPendingRegistration(registrationResources);
-                    await settlePendingCancellation();
-                    const currentSchedule = this.scheduleBinding;
-                    if (
-                        registrationOwner?.intent === 'Cancel' &&
-                        this.matchesRegistrationOwner(registrationOwner, currentSchedule)
-                    ) {
-                        this.transitionSchedulePhase(
-                            currentSchedule,
-                            ['Registering', 'RegistrationOverdue'],
-                            'Cancelled',
-                        );
-                    }
-                    releaseRegistrationOwner();
+                    await settleAfterRegistrationCancelled();
                     return;
                 }
 
@@ -1278,7 +1283,10 @@ class RecorderModel implements IRecorderModel {
                     return;
                 }
                 if (!takeOutcome()) {
+                    // 使用登録の最中に待機が取り消された。録画の開始を取りやめ、登録結果の確定後に取り消された場合と同じ後始末で promise を決める
                     this.recordedUseProvider.releaseSessionUse(this, recordedUse);
+                    // 使用登録の直前に Registering から Recording へ進めた phase も、取消なら Cancelled にする
+                    await settleAfterRegistrationCancelled(['Registering', 'RegistrationOverdue', 'Recording']);
                     return;
                 }
                 this.activeRecordedUse = recordedUse;

@@ -62,7 +62,7 @@ class RecordedEvent implements IRecordedEvent {
      * @param videoFileId: apid.VideoFileId
      */
     public emitDeleteVideoFile(videoFileId: apid.VideoFileId): void {
-        this.emitter.emit(RecordedEvent.DLETE_VIDEO_FILE, videoFileId);
+        this.emitter.emit(RecordedEvent.DELETE_VIDEO_FILE, videoFileId);
     }
 
     /**
@@ -162,7 +162,7 @@ class RecordedEvent implements IRecordedEvent {
      * @param callback: (videoFileId: apid.VideoFileId) => void
      */
     public setDeleteVideoFile(callback: (videoFileId: apid.VideoFileId) => void): void {
-        this.emitter.on(RecordedEvent.DLETE_VIDEO_FILE, async (videoFileId: apid.VideoFileId) => {
+        this.emitter.on(RecordedEvent.DELETE_VIDEO_FILE, async (videoFileId: apid.VideoFileId) => {
             try {
                 await callback(videoFileId);
             } catch (err: any) {
@@ -206,7 +206,7 @@ namespace RecordedEvent {
     export const CREATE_NEW_RECORDED = 'createNewRecorded';
     export const ADD_VIDEO_FILE = 'AddVideoFile';
     export const ADD_UPLOADED_VIDEO_FILE = 'addUploadedVideoFile';
-    export const DLETE_VIDEO_FILE = 'DeleteVideoFile';
+    export const DELETE_VIDEO_FILE = 'DeleteVideoFile';
     export const DROP_LOG_FILE_CHANGED = 'DropLogFileChanged';
     export const CHANGE_PROTECT = 'ChangeProtect';
 }

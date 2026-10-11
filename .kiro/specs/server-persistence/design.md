@@ -271,7 +271,7 @@ interface IPromiseRetry {
 
 | Port                 | 変更 operation                                         | 主な検索 operation                                        | 特記事項                                 |
 | -------------------- | ------------------------------------------------------ | --------------------------------------------------------- | ---------------------------------------- |
-| `IChannelDB`         | `insert`、`update`                                     | ID、放送種別、全件                                        | 並び順指定を扱う                         |
+| `IChannelDB`         | `insert`、`update`（追加・更新・指定IDの削除を同じtransactionで行う） | ID、放送種別、全件                         | 並び順指定を扱う                         |
 | `IProgramDB`         | 全件/放送局置換 `insert`、増分 `update`、古い番組削除  | ID、event relay、rule、放送局時刻、schedule、放送中、全件 | 置換と増分で確定契約が異なる             |
 | `IReserveDB`         | `insertOnce`、`updateOnce`、`updateMany`、`restore`    | ID、一覧/件数、番組、時間範囲、rule、手動 ID              | `updateMany` は transaction              |
 | `IRuleDB`            | 追加、更新、有効化、無効化、削除、restore              | ID、一覧/件数、keyword、ID 群                             | JSON text field を domain 形式へ復元する |
@@ -518,6 +518,9 @@ sequenceDiagram
 eager load しない。件数の上限（limit）が 0 のときは件数を制限しないものとして扱い、`take` 相当を適用しない
 （TypeORM 1.x は `take(0)` を `LIMIT 0` にするため、0 件を返さないよう適用を避ける）。位置指定（offset）が 1 以上のとき
 は、上限なしの位置指定を拒む MySQL でも通るよう、`take` 相当に十分大きな固定値を与えて offset 以降の全件を返す。
+`limit` を省いて offset だけを指定したとき（offset が 0 でも）も同じく、十分大きな固定値を与える
+（MySQL・MariaDB は上限なしの位置指定を 0 でも拒むため）。この変換は一覧を持つ全 repository（`ReserveDB`・`RuleDB`・
+`RecordedDB`・`RecordedTagDB`）が共通の関数（`DBUtil.resolvePagination`）で行う。
 番組検索（`ProgramDB.findRule`）の `limit` も、0 のときは `limit` を適用せず件数を制限しない（位置指定は使わない）。
 
 ### Dialect ごとの検索契約
@@ -1034,7 +1037,7 @@ portが入力として許容せずruntime validationも本機能が所有しな�
 | 3.8  | MySQL boolean、binary LIKE / regexp                                 | `search-dialects.spec.test.ts`: MySQL truth table                                                   |
 | 3.9  | backend 間の非同一契約                                              | dialect integration test の backend 別期待値                                                        |
 | 3.10 | JSON parsing error の伝播                                           | `repositories.spec.test.ts`: corrupt stored value                                                   |
-| 3.11 | `limit` が 0 のときは件数を制限しない（`offset` があればその位置以降の全件） | `list-limit-zero.imp.test.ts`: 各 repository の一覧取得が limit 0 で `take` を付けない / `doubles-parity.integration.test.ts`: SQLite・MySQL の実 DB で limit 0 が全件を返す |
+| 3.11 | `limit` が 0 のときは件数を制限しない（`offset` があればその位置以降の全件）。`limit` を省いた `offset` も同じ | `list-limit-zero.imp.test.ts`: 各 repository の一覧取得が limit 0 で `take` を付けず、limit を省いた offset に大きな `take` を付ける / `doubles-parity.integration.test.ts`・`repositories.integration.test.ts`・`rule-program-roundtrip.integration.test.ts`: SQLite・MySQL・MariaDB の実 DB で limit 0 と limit を省いた offset が全件を返す |
 | 4.1  | `ReserveDB.updateMany()` transaction                                | `transactions.integration.test.ts`: all-or-rollback                                                 |
 | 4.2  | `ProgramDB.insert()` の全件/放送局置換                              | `transactions.integration.test.ts`: delete+insert atomicity                                         |
 | 4.3  | repository ごとの `restore()` transaction                           | `transactions.integration.test.ts`: one type atomicity                                              |

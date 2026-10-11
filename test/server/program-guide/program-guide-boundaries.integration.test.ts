@@ -213,7 +213,7 @@ describe('Program Guide update manager/coordinator boundary', () => {
             expect(deferredServiceSave.state()).toEqual({ status: 'pending' });
             expect(updater.isUpdateCycleActive).toBe(true);
             expect(programDB.insert.mock.calls.map(call => call[2])).toEqual([[101], [102]]);
-            expect(channelDB.update).toHaveBeenCalledWith({ insert: [], update: [service] });
+            expect(channelDB.update).toHaveBeenCalledWith({ insert: [], update: [service], delete: [] });
             const fullCycleTime = updater.lastUpdatedTime;
             expect(fullCycleTime).toBeGreaterThanOrEqual(160_000);
             expect(fullCycleTime).toBeLessThan(161_000);

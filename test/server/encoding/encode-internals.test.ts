@@ -2130,7 +2130,7 @@ describe('encode terminal settlement internals', () => {
     it('[EN-IMP-CONCURRENT-ZERO] rejects an admission with its stable error when no encode may run concurrently', async () => {
         const fixture = makeTerminalManage(0);
         try {
-            await expect(fixture.manage.push(option(971))).rejects.toThrow('CncurrentEncodeNumIsZero');
+            await expect(fixture.manage.push(option(971))).rejects.toThrow('ConcurrentEncodeNumIsZero');
             expect(fixture.recordedResourceUse.acquire).not.toHaveBeenCalled();
         } finally {
             fixture.manage.listener.removeAllListeners();

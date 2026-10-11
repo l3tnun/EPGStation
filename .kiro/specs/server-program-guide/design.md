@@ -405,8 +405,15 @@ stateDiagram-v2
 
 ### service changeとservice別programs
 
--   service `create`と`update`は除外設定を適用し、同じIDの最後の候補を保存する。`remove`通知だけでは放送局または関連番組
-    を削除しない。
+-   service `create`と`update`は除外設定を適用し、同じIDの最後の候補を保存する。`remove`は除外設定を適用し（除外された
+    放送局は無視する）、同じIDの先行する`create`/`update`の候補を除いて削除候補にする。後続の`create`/`update`は同じIDの
+    先行`remove`を除く。保存では、追加・更新と同じtransactionで`ChannelDB.update`の`delete`（channel IDの一覧）に該当する放送局の
+    行だけを削除し、続けて`ProgramDB.insert(channelIndex, [], 削除したID)`で該当放送局の番組を削除し、メモリ上の放送局索引からも外す。
+    予約・自動予約ルール・録画済みは変更しない。保存後は既存の`SERVICE_UPDATED`を発行する。
+-   `remove`通知を送るのはMirakurunだけである。mirakcの変更通知は放映中番組の変化（`onair.program-changed`）と番組更新
+    （`epg.programs-updated`）だけで、放送局の追加・削除の通知は無い。mirakcでは、この二つの通知による番組の取り直し
+    （`saveMirakcServices`）のたびに放送局を全件取得して保存済みの放送局と索引を作り直すため、消えた放送局は次の取り直しで
+    保存済みの放送局から外れる。この動きを維持する（放送局の削除通知を前提にしない）。
 -   service change保存時はロゴ有無補完のためservices全件取得を試みる。取得失敗時は空の補完集合として処理を続け、元change
     にある値だけで保存を試みる。
 -   設定周期のMirakurun更新呼出しはservice change保存の開始時にも現在のservice bufferをその呼出しのbatchとして一度取り出
@@ -620,7 +627,8 @@ logo Bufferは照会ごとに上流から取得し、database、filesystem、ま
    はcallbackからthrowせず経過を記録するだけとし、元Promiseの遅延したresolveまたはrejectを通常結果として一回扱う。
 2. 修正前は空の `genres` 配列が先頭要素参照で例外になり得る。正規化では `genres` の欠落または空配列を「ジャンルなし」と
    して扱い、存在する要素だけを入力順に最大 3 件投影する。修正前の例外は characterization fixture にだけ残す。
-3. 放送局changeの`remove`は保存へ反映せず、次の放送局全件同期まで残る。これは1.5と1.6の区別として維持する。
+3. mirakcは放送局changeの`remove`を送らず、消えた放送局は次の番組の取り直し（放送局の全件取得）まで残る。1.5（Mirakurunの
+   削除通知で即時に外す）と1.6（全件取得で整理する）の区別として維持する。
 4. 放送局全件・増分保存も一部の行失敗を記録だけにしてresolveし得る。保存済み集合と成功通知が一致する保証にはしない。
 5. Mirakurunの通常`end`・`close`は再接続loopへ戻る一方、切断通知を発行しないため、再接続待機中も接続flagがtrueのままであ
    る。
@@ -670,7 +678,7 @@ logo Bufferは照会ごとに上流から取得し、database、filesystem、ま
 | event                 | trigger                              | payload                  | delivery・順序                                | idempotency                             |
 | --------------------- | ------------------------------------ | ------------------------ | --------------------------------------------- | --------------------------------------- |
 | 内部program updated   | program増分repositoryがresolve       | なし                     | 同一更新process内EventEmitter                 | keyなし。外部outcomeへ直接転送しない    |
-| 内部service updated   | service増分repositoryがresolve       | なし                     | 同一更新process内EventEmitter                 | keyなし。removeのみでは発行対象保存なし |
+| 内部service updated   | service増分repositoryがresolve       | なし                     | 同一更新process内EventEmitter                 | keyなし。removeも保存対象になる        |
 | feed started          | change feed確立                      | なし                     | 全件同期を一度開始する                        | 接続ごとに一回                          |
 | feed aborted          | 通信または解析error                  | errorはlogへ渡す         | 切断flagをfalseへする                         | terminal cleanupは一回                  |
 | program guide updated | 全件同期成功または設定周期の通知時点 | `{ msg: 'updated' }`相当 | childから親へ渡し、親がdomain eventを発行する | generationなし、重複可能                |
@@ -714,7 +722,7 @@ subdirectoryはroute前方へ付加され得る。
 | `*.spec.test.ts`         | Requirements 1から8の71 AC、全件同期、change集約、周期、query、logo、製品非依存結果                             |
 | implementation unit test | 中心番組判定、projection、keyword組立、buffer復元、ID集合、表示projection                                       |
 | integration              | tuner access stub、SQLite/MySQL persistence、update process event、HTTP adapter                                 |
-| characterization         | timeout callback、空genre、部分commit、service remove、通常切断flag、放送局保存と索引の乖離、service buffer消失 |
+| characterization         | timeout callback、空genre、部分commit、mirakcの放送局全件取得による整理、通常切断flag、放送局保存と索引の乖離、service buffer消失 |
 | compatibility            | Mirakurunとmirakcの合成DTO/changeから同じ保存entity・query・public fixtureを得るmatrix                          |
 
 test名の先頭に付く印の意味は次のとおりである。`[PG-n.m]`のn.mはrequirementsのAC番号、`[PG-Tn.m]`のn.mはtasks.mdのtask番号である。
@@ -769,7 +777,7 @@ test名の先頭に付く印の意味は次のとおりである。`[PG-n.m]`の
 | feed started            | services/programs REST     | 放送局・番組全件置換 | 番組表、詳細、放送中、検索、予約候補、更新outcome |
 | program change          | normalized change feed     | program増分保存      | 次のquery、設定周期の更新outcome                  |
 | service create/update   | normalized change feed     | 放送局増分保存       | 放送局一覧、番組表の放送局projection              |
-| service remove          | normalized change feed     | 即時削除なし         | 次の全件同期まで保存済み結果を維持                |
+| service remove          | normalized change feed     | 放送局と番組の削除   | 放送局一覧、番組表（mirakcは次の取り直しで反映）  |
 | on-air service change   | service別programs REST     | 対象service番組置換  | 放送中、番組表、詳細                              |
 | deferred service change | service別programs REST     | 対象service番組置換  | 番組表、詳細、検索、更新outcome                   |
 | cleanup timer           | 保存済みProgram            | `endAt < now`削除    | 番組表、詳細、放送中、検索                        |
@@ -805,7 +813,7 @@ Acceptance Criterion 9が判定する。実行結果とcoverageはこの表に�
 | 1.2 / PG-S-002    | 除外適用                    | spec主、imp補完              | 除外空/1/重複、対象0/最大ID、未知ID                    | 取得成功→選別                                     | 非適用—同期判定                        | DB transaction                   | DB                                                                                     | 保存reject                      | channel/service除外後だけ保存               | program-guide.spec.test.ts |
 | 1.3 / PG-S-003    | Channel保存field            | spec主、imp補完              | optional null、空名、0/1/最大ID、不正DTOは上流境界     | projection成功/失敗                               | 非適用—同期変換                        | DB transaction                   | DB                                                                                     | field変換失敗                   | 利用可能field完全一致                       | program-guide.spec.test.ts |
 | 1.4 / PG-S-004    | service追加/変更            | spec主、imp/int補完          | create/update各1、同一ID重複                           | feed中→buffer→保存                                | 保存中の同ID通知race                   | listener、DB                     | stream、DB                                                                             | repository reject               | 対象だけ追加/更新                           | program-guide.spec.test.ts |
-| 1.5 / PG-S-005    | remove即時削除なし          | spec主、imp補完              | remove 1/重複、未知ID                                  | feed中                                            | 重複通知                               | listener、DB call ledger         | stream、DB                                                                             | 非適用—保存を開始しない         | channel/program削除0                        | program-guide.spec.test.ts |
+| 1.5 / PG-S-005    | remove即時削除              | spec主、imp補完              | remove 1/重複、未知ID、除外、create/updateとの順序     | feed中                                            | 重複通知                               | listener、DB call ledger         | stream、DB                                                                             | 放送局削除reject                | 対象のchannel・program・索引だけ削除、除外は無視 | program-guide.spec.test.ts |
 | 1.6 / PG-S-006    | 次回全件で整理              | spec主、int DB補完           | 取得空/1、保存済み1/複数                               | 旧集合→全件成功/失敗                              | changeとの順序                         | DB transaction                   | SQLite/MySQL                                                                           | 全件保存reject                  | 成功時だけ欠落局を整理                      | program-guide.spec.test.ts |
 | 2.1 / PG-S-007    | 初回/再接続programs取得     | spec主、int tuner補完        | 空/1/最大fixture、不正DTOは上流境界                    | 初回/再接続/失敗                                  | timeout、late settlement               | REST、stream、DB                 | tuner REST/stream、DB                                                                  | 取得reject                      | 接続ごと一回取得                            | program-guide.spec.test.ts |
 | 2.2 / PG-S-008    | 中心番組選択                | spec主、imp補完              | related空/1/複数/重複/不正参照                         | 選択成功/skip                                     | 非適用—純粋判定                        | 非適用—資源なし                  | 非適用—内部algorithm                                                                   | 選択不能                        | 中心番組だけ保存対象                        | program-guide.spec.test.ts |
@@ -886,7 +894,7 @@ Acceptance Criterion 9が判定する。実行結果とcoverageはこの表に�
 | 1.2  | 全件同期、所有data                     | channel ID・service ID除外matrix                  |
 | 1.3  | 保存済み放送局                         | Channel field projection                          |
 | 1.4  | service changeとservice別programs      | create/update増分保存                             |
-| 1.5  | service changeとservice別programs      | remove即時削除なし                                |
+| 1.5  | service changeとservice別programs      | removeで放送局と番組を削除（mirakcは1.6）         |
 | 1.6  | 全件同期                               | 次回全件結果による放送局整理                      |
 | 2.1  | 全件同期                               | initial/reconnect programs取得                    |
 | 2.2  | 中心番組選択                           | related item判定matrix                            |

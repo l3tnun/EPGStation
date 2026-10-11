@@ -761,6 +761,21 @@ describe('server configuration characterization contract', () => {
         expect(configuration.formatConfig(both).apiServers).toEqual([loopbackApiServer(48100)]);
     });
 
+    it('[CFG-1.2-DEFAULTS-NOT-SHARED] copies omitted defaults so formatting one config never changes the next or the defaults', () => {
+        const configuration = createConfiguration(null);
+        const defaultsBefore = structuredClone(Configuration.DEFAULT_VALUE);
+
+        const first = configuration.formatConfig({ port: 48100 });
+        const second = configuration.formatConfig({ port: 48200 });
+
+        expect(first.apiServers).toEqual([loopbackApiServer(48100)]);
+        expect(second.apiServers).toEqual([loopbackApiServer(48200)]);
+        expect(second.apiServers).not.toBe(first.apiServers);
+        expect(second.recorded).not.toBe(first.recorded);
+        expect(Configuration.DEFAULT_VALUE).toEqual(defaultsBefore);
+        expect(Configuration.DEFAULT_VALUE.apiServers).toEqual([]);
+    });
+
     // These six fields keep the same default values as v2's Configuration.DEFAULT_VALUE
     // (v2 5cf2ea383 src/model/Configuration.ts:224-229) and have no dedicated
     // default-application test elsewhere in test/server; every other reference to them across

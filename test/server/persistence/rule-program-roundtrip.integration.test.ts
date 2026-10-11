@@ -365,6 +365,11 @@ describe('RuleDB stores and restores every column of a rule through real drivers
             expect(page.map((rule: { id: number }) => rule.id)).toEqual([alpha, none]);
             expect(pageTotal).toBe(4);
 
+            // limit を省いた offset は offset 以降の全件 (MySQL・MariaDB は上限なしの offset を拒むので上限を補う)
+            const [fromOffset, fromOffsetTotal] = await db.RuleDB.findAll({ offset: 1 });
+            expect(fromOffset.map((rule: { id: number }) => rule.id)).toEqual([alpha, none, gamma]);
+            expect(fromOffsetTotal).toBe(4);
+
             await expect(db.RuleDB.findKeyword({})).resolves.toEqual([
                 { id: alphaBeta, keyword: 'alpha beta' },
                 { id: alpha, keyword: 'Ａlpha' },

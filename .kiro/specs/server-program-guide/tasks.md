@@ -13,8 +13,8 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
 
     -   既存実装は変更せず、放送局一覧の取得、放送局・service の除外、識別子・名称・放送波・番号・ロゴ有無の保存を
         `unittest/spec` で固定する。
-    -   追加・変更通知による増分保存、削除通知だけでは即時削除しないこと、および次の全件同期で取得結果に合わせて整理する
-        ことを synthetic fixture で検証する。
+    -   追加・変更通知による増分保存、削除通知（Mirakurun）で放送局と番組と索引を直ちに外すこと、および次の全件同期（mirakc
+        では番組の取り直しのたびの放送局の全件取得）で取得結果に合わせて整理することを synthetic fixture で検証する。
     -   保存 projection と放送局索引が同じ除外済み入力を使うことを `unittest/imp` で確認し、DB 接続・transaction の実装
         は永続化機能に委ねる。
     -   完了時には、全件、追加、変更、削除通知、除外の各 fixture が承認済みの放送局集合を再現し、production code の差分
@@ -59,7 +59,7 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
 
 -   [x] 1.5 service 変更と service 別番組の一括更新を characterization する
 
-    -   service の追加・変更を最後の候補へ集約し、削除通知だけでは保存済み放送局を削除しない既存結果を `unittest/spec`
+    -   service の追加・変更・削除を最後の候補へ集約し、削除通知で保存済み放送局と番組を削除する結果を `unittest/spec`
         で固定する。
     -   on-air と deferred の対象 ID 集合を呼出開始時に一つの snapshot とし、現在の ID 順で番組を取得した後、集合全体を
         一回の一括保存へ渡すことを `unittest/imp` で検証する。
@@ -154,7 +154,7 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
 
 -   [x] 3.4 修正前の feed・放送局索引・service buffer 不整合を characterization する
 
-    -   放送局削除通知の保留と Mirakurun 通常終了時の接続 flag を、望ましい仕様テストへ混ぜず既存結果として再現する。
+    -   mirakc の放送局全件取得による整理と Mirakurun 通常終了時の接続 flag を、望ましい仕様テストへ混ぜず既存結果として再現する。
     -   service change 保存前の services 全件取得失敗が空配列へ変換され、queued service 保存自体を失敗させないこと、放送
         局全件入力欠落時の DB と索引の乖離、および放送局増分保存 reject 時の buffer 消失を synthetic fixture で固定す
         る。

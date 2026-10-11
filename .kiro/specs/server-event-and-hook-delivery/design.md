@@ -111,6 +111,10 @@ event binding入口だけを一回呼ぶ。この向きにより、PM・Workflow
 `setDropLogFileChanged(callback)` で配送し、emit と callback の payload は一件の型付き `DropLogFileId` とする。内部の
 raw event key はこの公開 interface contract に含めない。
 
+event 名の定数（各 event class の namespace 定数）は同じ class の中でだけ使う内部の目印で、emit と callback 登録は同じ
+定数を使う。process をまたぐ通信や外部への公開には使わない。定数の名前と値は綴りを正しく保ち（例: `DELETE_VIDEO_FILE`、
+`START_PREP_RECORDING_EVENT`、`RELATED_EVENT`、`updateEncodeProgressEvent`）、`imp/event-names.imp.test.ts` が名前と値を固定する。
+
 ### 4.2 delivery attempt と完了境界
 
 Event Adapter は Node.js `EventEmitter` の登録順に wrapper listener を呼び出す。各 wrapper は callback を一回だけ呼び、

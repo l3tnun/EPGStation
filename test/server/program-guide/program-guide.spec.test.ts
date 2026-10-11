@@ -171,6 +171,7 @@ const observeServiceChanges = async () => {
     const updated = service(12, 112, { name: 'synthetic-service-updated', hasLogoData: false });
     const removed = service(13, 113);
     const harness = createModel({ services: [service(11, 111), service(12, 112)] });
+    harness.model.channelIndex = { 10: { 113: { id: 13, type: 'GR', channel: '13' } } };
     const outcomes: string[] = [];
     harness.model.on(EPGUpdateEvent.SERVICE_UPDATED, () => outcomes.push('updated'));
     harness.model.serviceQueue.push(
@@ -728,17 +729,29 @@ const canonicalSpecCases: CanonicalSpecCase[] = [
         expect(observation.channelDB.update).toHaveBeenCalledWith({
             insert: [observation.created],
             update: [expect.objectContaining({ id: observation.updated.id, name: observation.updated.name })],
+            delete: [observation.removed.id],
         });
         expect(observation.outcomes).toEqual(['updated']);
     }),
-    canonicalCase('PG-S-005', 'does not delete a channel or its programs for a remove notification alone', async () => {
-        const observation = await observeServiceChanges();
-        const persisted = observation.channelDB.update.mock.calls[0][0];
-        expect([...persisted.insert, ...persisted.update].map((value: { id: number }) => value.id)).not.toContain(
-            observation.removed.id,
-        );
-        expect(observation.channelDB).not.toHaveProperty('delete');
-    }),
+    canonicalCase(
+        'PG-S-005',
+        'deletes only the removed channel, its programs and its index entry for a remove notification',
+        async () => {
+            const observation = await observeServiceChanges();
+            const persisted = observation.channelDB.update.mock.calls[0][0];
+            expect([...persisted.insert, ...persisted.update].map((value: { id: number }) => value.id)).not.toContain(
+                observation.removed.id,
+            );
+            expect(persisted.delete).toEqual([observation.removed.id]);
+            expect(observation.programDB.insert).toHaveBeenCalledExactlyOnceWith(
+                observation.model.channelIndex,
+                [],
+                [observation.removed.id],
+            );
+            expect(observation.model.channelIndex[10][observation.removed.serviceId]).toBeUndefined();
+            expect(observation.outcomes).toEqual(['updated']);
+        },
+    ),
     canonicalCase('PG-S-006', 'passes a later complete snapshot without channels that disappeared', async () => {
         const observation = await observeChannelSynchronization();
         expect(observation.channelDB.insert).toHaveBeenNthCalledWith(2, [observation.included]);
@@ -1398,7 +1411,7 @@ describe('program guide Risk A specification characterization', () => {
         expect(model.channelIndex).toEqual({ 10: { 104: { id: 4, type: 'GR', channel: '4' } } });
     });
 
-    it('[PG-AUX-T1.4-1.6] create/update changes are persisted, remove alone is retained until a later full sync', async () => {
+    it('[PG-AUX-T1.4-1.6] create/update changes are persisted and a remove deletes the channel without touching the full sync', async () => {
         const created = service(11, 111, { hasLogoData: false });
         const updated = service(12, 112, { name: 'synthetic-service-updated', hasLogoData: false });
         const updatedWithCurrentLogo = { ...updated, hasLogoData: true };
@@ -1413,7 +1426,11 @@ describe('program guide Risk A specification characterization', () => {
 
         await model.saveService();
 
-        expect(channelDB.update).toHaveBeenCalledWith({ insert: [created], update: [updatedWithCurrentLogo] });
+        expect(channelDB.update).toHaveBeenCalledWith({
+            insert: [created],
+            update: [updatedWithCurrentLogo],
+            delete: [13],
+        });
         expect(outcomes).toEqual(['updated']);
         expect(model.serviceQueue).toEqual([]);
     });
