@@ -413,13 +413,13 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
 -   `config/config.yml.template`
 
 各 leaf は成功 / 失敗 oracle、command 種別、実装の記録を持ち、公開や publish を行わない。`mysql2`
-と `typeorm` を直接依存とする（版は `package.json` が正本）。公式現行 LTS は image tag `mysql:lts` で表し、焦点 integration が
+と `typeorm` を直接依存とする（版は `package.json` が正本）。公式現行 LTS は image tag `mysql:9.7` で表し、焦点 integration が
 tag と image digest を検証する。
 
 -   [x] 8. 現行公式 MySQL LTS へ本番接続できるよう直接依存を置換する
 -   [x] 8.1 公式現行 MySQL LTS の接続・終了と公開前後の既存 state を固定する
 
-    -   公式現行 LTS は image tag `mysql:lts` で表し、確認した
+    -   公式現行 LTS は image tag `mysql:9.7` で表し、確認した
         digest を実装の記録へ残す。
     -   設定は既存 Configuration 契約（`dbtype` と `mysql.host` / `user` / `port` / `password` / `database`、任意
         `charset`）を `DBOperator` へ渡す。新しい設定 field と `driver` override を追加しない。
@@ -501,7 +501,7 @@ tag と image digest を検証する。
         `select 1` 失敗は既存 query error のままであることを確認する。
     -   接続作成の成功は `getConnection()` の公開完了である。その後 `closeConnection()` が接続を解放する。in-place
         経路は既存 row の読取り・代表更新・再読取り・schema / migration history 非変更・close / cleanup をすべて通す。
-    -   公式現行 LTS（`mysql:lts`）の tag と digest、および TypeORM の runtime 解決を再確認し、確認値を実装の記録に残す。
+    -   公式現行 LTS（`mysql:9.7`）の tag と digest、および TypeORM の runtime 解決を再確認し、確認値を実装の記録に残す。
     -   既存 `connection.integration.test.ts` と `close.integration.test.ts` の MySQL 隔離経路は、公式 LTS の確認の代替に
         せず、旧 client 除去後も既存契約のまま成功することを回帰確認する。焦点 LTS test だけでは Requirement 8.1 の既
         存振る舞い縮小を検出しない。

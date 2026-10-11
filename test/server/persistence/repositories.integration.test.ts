@@ -8,10 +8,16 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest
 import { makeProgram, makeRule } from '../fixtures/reservation-rules/runtime';
 import { makeReserve } from '../reservation-management/_harness';
 import { cleanupInOrder, compiledSnapshot } from './harness';
-import { MYSQL_FIXTURE_LIFECYCLE_TIMEOUT_MS, provisionMySql, type MySqlRuntime } from './mysql-runtime';
+import {
+    MYSQL_FIXTURE_LIFECYCLE_TIMEOUT_MS,
+    provisionMariaDb,
+    provisionMySql,
+    type MySqlRuntime,
+} from './mysql-runtime';
 import { createRepositoryPersistence, type RepositoryDialect, type RepositoryPersistence } from './repository-harness';
 
 let mysqlRuntime: MySqlRuntime | undefined;
+let mariaDbRuntime: MySqlRuntime | undefined;
 let sqliteRegexpExtension: string;
 
 const require = createRequire(join(process.cwd(), 'package.json'));
@@ -22,11 +28,11 @@ const { normalizeTunerService } = require(join(compiledSnapshot, 'model', 'tuner
 
 beforeAll(async () => {
     sqliteRegexpExtension = getLoadablePath();
-    mysqlRuntime = await provisionMySql();
+    [mysqlRuntime, mariaDbRuntime] = await Promise.all([provisionMySql(), provisionMariaDb()]);
 }, MYSQL_FIXTURE_LIFECYCLE_TIMEOUT_MS);
 
 afterAll(async () => {
-    await cleanupInOrder([async () => mysqlRuntime?.cleanup()]);
+    await cleanupInOrder([async () => mysqlRuntime?.cleanup(), async () => mariaDbRuntime?.cleanup()]);
 });
 
 afterEach(() => {
@@ -34,13 +40,25 @@ afterEach(() => {
     vi.restoreAllMocks();
 });
 
+// The repository contracts hold on SQLite, MySQL 9.7 and MariaDB 12.3. MariaDB is a MySQL-family server, so its
+// cases run with the `mysql` dialect of the operator; the label only says which server a failure came from.
 const withDialects = async (run: (fixture: RepositoryPersistence, dialect: RepositoryDialect) => Promise<void>) => {
-    for (const dialect of ['sqlite', 'mysql'] as const) {
-        const fixture = await createRepositoryPersistence(dialect, mysqlRuntime, {
+    const targets = [
+        { label: 'sqlite', dialect: 'sqlite', runtime: undefined },
+        { label: 'mysql', dialect: 'mysql', runtime: mysqlRuntime },
+        { label: 'mariadb', dialect: 'mysql', runtime: mariaDbRuntime },
+    ] as const;
+    for (const { label, dialect, runtime } of targets) {
+        const fixture = await createRepositoryPersistence(dialect, runtime, {
             ...(dialect === 'sqlite' ? { sqliteRegexpExtension } : {}),
         });
         try {
             await run(fixture, dialect);
+        } catch (error) {
+            if (error instanceof Error) {
+                error.message = `[${label}] ${error.message}`;
+            }
+            throw error;
         } finally {
             await fixture.cleanup();
         }
@@ -645,9 +663,9 @@ describe('repository contracts through real SQLite and MySQL drivers', () => {
 // it for tens of seconds), and a hook only has Vitest's default 10 s. The `afterAll` above confirms the
 // container is gone and removes it itself only when this test did not run (a filtered or aborted file).
 it(
-    'releases the isolated MySQL fixture container after every case of the file',
+    'releases the isolated MySQL and MariaDB fixture containers after every case of the file',
     async () => {
-        await mysqlRuntime?.cleanup();
+        await cleanupInOrder([async () => mysqlRuntime?.cleanup(), async () => mariaDbRuntime?.cleanup()]);
     },
     MYSQL_FIXTURE_LIFECYCLE_TIMEOUT_MS,
 );

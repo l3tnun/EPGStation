@@ -34,7 +34,8 @@ export interface OfficialMySqlLtsOwnershipInspectionDiagnostic {
     readonly name: 'OfficialMySqlLtsOwnershipInspectionDiagnostic';
 }
 
-const officialLtsImageTag = 'mysql:lts';
+// The latest LTS line, pinned by an exact tag (a moving tag such as `lts` changes version unnoticed).
+const officialLtsImageTag = 'mysql:9.7';
 const loopbackHost = '127.0.0.1';
 const fixtureLabel = 'epgstation.persistence.fixture';
 const fixtureLabelValue = 'mysql-lts';

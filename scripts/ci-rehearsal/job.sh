@@ -148,7 +148,7 @@ case "$KIND" in
   *)
     run_step "Pull database fixture images" "$BASE" \
       'set -euo pipefail
-for image in mysql:8.4 mysql:lts mariadb:10.11; do
+for image in mysql:9.7 mariadb:12.3; do
   for attempt in 1 2 3; do
     docker pull -q "$image" && break
     [[ $attempt -lt 3 ]] || exit 1

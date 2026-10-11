@@ -1,17 +1,23 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { cleanupInOrder } from './harness';
-import { MYSQL_FIXTURE_LIFECYCLE_TIMEOUT_MS, provisionMySql, type MySqlRuntime } from './mysql-runtime';
-import { createRepositoryPersistence, type RepositoryDialect, type RepositoryPersistence } from './repository-harness';
+import {
+    MYSQL_FIXTURE_LIFECYCLE_TIMEOUT_MS,
+    provisionMariaDb,
+    provisionMySql,
+    type MySqlRuntime,
+} from './mysql-runtime';
+import { createRepositoryPersistence, type RepositoryPersistence } from './repository-harness';
 
 let mysqlRuntime: MySqlRuntime | undefined;
+let mariaDbRuntime: MySqlRuntime | undefined;
 
 beforeAll(async () => {
-    mysqlRuntime = await provisionMySql();
+    [mysqlRuntime, mariaDbRuntime] = await Promise.all([provisionMySql(), provisionMariaDb()]);
 }, MYSQL_FIXTURE_LIFECYCLE_TIMEOUT_MS);
 
 afterAll(async () => {
-    await cleanupInOrder([async () => mysqlRuntime?.cleanup()]);
+    await cleanupInOrder([async () => mysqlRuntime?.cleanup(), async () => mariaDbRuntime?.cleanup()]);
 });
 
 const recorded = (startAt: number, isProtected: boolean = false) => ({
@@ -65,11 +71,15 @@ const addRecorded = async (
     return id;
 };
 
+// MariaDB is a MySQL-family server, so its cases run with the operator's `mysql` dialect.
 const withDialect = async (
-    dialect: RepositoryDialect,
+    target: 'mariadb' | 'mysql' | 'sqlite',
     run: (fixture: RepositoryPersistence) => Promise<void>,
 ): Promise<void> => {
-    const fixture = await createRepositoryPersistence(dialect, mysqlRuntime);
+    const fixture =
+        target === 'sqlite'
+            ? await createRepositoryPersistence('sqlite')
+            : await createRepositoryPersistence('mysql', target === 'mysql' ? mysqlRuntime : mariaDbRuntime);
     try {
         await run(fixture);
     } finally {
@@ -77,7 +87,7 @@ const withDialect = async (
     }
 };
 
-describe.each(['sqlite', 'mysql'] as const)('storage deletion candidate through real %s', dialect => {
+describe.each(['sqlite', 'mysql', 'mariadb'] as const)('storage deletion candidate through real %s', dialect => {
     it('[PERSIST-2.7] selects only all-matching relations by startAt/id and preserves null, exclusion, retry, and query failure', async () => {
         await withDialect(dialect, async fixture => {
             await addRecorded(fixture, { startAt: 1, storages: ['main'], isProtected: true });
@@ -138,9 +148,9 @@ describe.each(['sqlite', 'mysql'] as const)('storage deletion candidate through 
 // it for tens of seconds), and a hook only has Vitest's default 10 s. The `afterAll` above confirms the
 // container is gone and removes it itself only when this test did not run (a filtered or aborted file).
 it(
-    'releases the isolated MySQL fixture container after every case of the file',
+    'releases the isolated MySQL and MariaDB fixture containers after every case of the file',
     async () => {
-        await mysqlRuntime?.cleanup();
+        await cleanupInOrder([async () => mysqlRuntime?.cleanup(), async () => mariaDbRuntime?.cleanup()]);
     },
     MYSQL_FIXTURE_LIFECYCLE_TIMEOUT_MS,
 );

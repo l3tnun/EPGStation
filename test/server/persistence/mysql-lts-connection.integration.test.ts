@@ -9,7 +9,7 @@ describe('DBOperator official MySQL LTS connection integration', () => {
     it('[PERSIST-8.4-NO-WEAK-AUTH] provisions official LTS without deleted-plugin or weakened-auth options', async () => {
         const runtime = await provisionOfficialMySqlLts();
         try {
-            expect(runtime.imageTag).toBe('mysql:lts');
+            expect(runtime.imageTag).toBe('mysql:9.7');
             expect(runtime.imageDigest.startsWith('mysql@sha256:')).toBe(true);
             expect(runtime.mysqldArguments.join(' ')).not.toMatch(/mysql-native-password|authentication-policy/u);
         } finally {

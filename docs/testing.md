@@ -10,7 +10,7 @@ EPGStation の build、test、静的な検査、全体の検査（preflight）�
 - `npm run preflight -- --all` を流す場合は、CPU が 12 以上（模擬 container の CPU 帯が既定で `0-3` と `4-11`。変えるには `EPGS_PREFLIGHT_CPUSET_A` / `EPGS_PREFLIGHT_CPUSET_B`）と、memory が container 2 つ分（模擬 container は 1 つにつき `--memory=16g`）。
 - `TZ=Asia/Tokyo`。server の test はこの時刻帯を前提にする。
 - git の `user.name` / `user.email`。server の test が一時 repository で git を呼ぶ。
-- MySQL の fixture image（`mysql:8.4`、`mysql:lts`、`mariadb:10.11`）が pull 済みであること。
+- DB の fixture image（`mysql:9.7`、`mariadb:12.3`。それぞれ最新の LTS を版で固定した tag）が pull 済みであること。DB の query の結合 test は SQLite・MySQL 9.7・MariaDB 12.3 で流れ、MySQL・MariaDB を使う他の結合 test も同じ版で流れる。
 - `ffmpeg`・`ffprobe` が PATH にあること（libx264・mpeg2video・aac・mp2 の encoder を持つもの）。本物の ffmpeg を使う結合 test が、lavfi で合成の極小の動画を作る。
 - tuner server の fixture image（`chinachu/mirakurun:latest`、`mirakc/mirakc:latest`）が pull 済みであること。`test/server/tuner-access/real-tuner-server.integration.test.ts` が、外へ出られない Docker network に tuner 無しで起動する。
 - test は `npm run` 経由で起動する（`npm_execpath` を使う test がある）。
@@ -93,9 +93,11 @@ PR の `check` job（§7）が実行する検査と同じ。
 | --- | --- | --- | --- |
 | server | `npm run mutation:server` | `stryker.server.config.mjs`、`vitest.mutation.server.config.ts` | `test/server/.artifacts/mutation/incremental.json` |
 | client | `client/` で `npm run mutation:client` | `client/stryker.client.config.mjs`、`client/vitest.mutation.config.ts` | `client/.artifacts/mutation/incremental.json` |
+| DB の query の class（`src/model/db/`） | `npm run mutation:db`（下の手順で DB を起動してから） | `stryker.db.config.mjs`、`vitest.mutation.db.config.ts` | `test/server/.artifacts/mutation/incremental-db.json` |
 
 - 対象 file は各設定の `mutate` に列挙している。一部だけ流すには `-- --mutate <path>` を渡す（例: `npm run mutation:server -- --mutate src/util/StrUtil.ts`）。行の範囲は `path:開始行-終了行`。
-- 流すのは単体 test（spec・imp）だけ。server は mutant を入れた `src` を sandbox で compile して test に読ませるため、最初に build の時間がかかる。全 test を直列に流す確認（dry-run）が毎回あり、server は約 5 分、client は約 6 分が下限になる。
+- DB の class の単体 test は query builder を偽物にしているので、`mutation:db` は persistence の単体 test に加えて、実 DB で query の正しさを見る結合 test（`persistence/{repositories,queries,transactions,storage-deletion-candidate,doubles-parity}.integration.test.ts`）も流す。結合 test が mutant ごとに container を作らないよう、MySQL 9.7 を先に起動したままにする。`docker run --rm --name <名前> --publish 127.0.0.1:<port>:3306 --tmpfs /var/lib/mysql:rw,nosuid,nodev,size=1g --env MYSQL_ROOT_PASSWORD=<password> mysql:9.7 --innodb_use_native_aio=0 --max-connections=400` で立て、環境変数 `EPGS_TEST_MYSQL_*`（`_HOST`・`_PORT`・`_USER`〈既定 root〉・`_PASSWORD`）で接続先を渡す。test は接続先に無作為の名前の database を作って消す。run が終わったら container を止める。製品に MySQL と MariaDB を区別する code は無く、mutant が通る経路は同じなので、MariaDB 12.3 の接続先にも同じ MySQL を使い回す（MariaDB 固有の解釈の違いは通常の結合 test の suite が毎回確かめる）。この環境変数は DB の結合 test 全般が読む（未指定なら今までどおり test が container を作る）。ただし TLS 専用の利用者や CA 証明書を使う test（`connection-ssl`・`orm-cli`）は、この変数を付けずに流す。
+- それ以外は単体 test（spec・imp）だけを流す。server は mutant を入れた `src` を sandbox で compile して test に読ませるため、最初に build の時間がかかる。全 test を直列に流す確認（dry-run）が毎回あり、server は約 5 分、client は約 6 分が下限になる。
 - 既定は `ignoreStatic: true`（module 先頭の定数表の mutant を除く）と `concurrency: 2`。memory は server で約 5 GB、client で約 2 GB になるので、ほかの重い run と同時に流さない。
 - module 先頭の定数表の mutant（report の `static: true`）は、`ignoreStatic` により全 test ではなく、その行を覆う test だけで実行される。端末の表の score にもこの mutant が数えられるので、定数表の多い file の score は低く出る。
 - cache は git の管理外。`EPGS_MUTATION_INCREMENTAL_FILE` で場所を変えられる。消えても全 mutant を流し直すだけで結果は変わらない。

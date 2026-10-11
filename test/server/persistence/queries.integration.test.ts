@@ -11,10 +11,14 @@ import {
     MYSQL_MIGRATION_CASE_TIMEOUT_MS,
     appliedMigrationNames,
     createBackendRuntime,
-    type BackendDialect,
     type BackendRuntime,
 } from './backend-runtime';
-import { MYSQL_FIXTURE_LIFECYCLE_TIMEOUT_MS, provisionMySql, type MySqlRuntime } from './mysql-runtime';
+import {
+    MYSQL_FIXTURE_LIFECYCLE_TIMEOUT_MS,
+    provisionMariaDb,
+    provisionMySql,
+    type MySqlRuntime,
+} from './mysql-runtime';
 
 const require = createRequire(join(process.cwd(), 'package.json'));
 
@@ -124,10 +128,15 @@ const installProgramFindIdDriverFault = (source: DataSource, programId: number, 
     };
 };
 
+type ServerTarget = 'mariadb' | 'mysql';
+type QueryTarget = ServerTarget | 'sqlite';
+const serverTargets: readonly ServerTarget[] = ['mysql', 'mariadb'];
+
 let mysqlRuntime: MySqlRuntime;
+let mariaDbRuntime: MySqlRuntime;
 
 beforeAll(async () => {
-    mysqlRuntime = await provisionMySql();
+    [mysqlRuntime, mariaDbRuntime] = await Promise.all([provisionMySql(), provisionMariaDb()]);
 }, MYSQL_FIXTURE_LIFECYCLE_TIMEOUT_MS);
 
 /**
@@ -138,21 +147,24 @@ beforeAll(async () => {
  * without the schema case before it (a filtered run) creates the backend itself, migration included.
  * SQLite cases keep a backend of their own: creating one is cheap.
  */
-let sharedMysqlBackend: Promise<BackendRuntime> | undefined;
+const sharedServerBackends: Partial<Record<ServerTarget, Promise<BackendRuntime>>> = {};
 
-const acquireSharedMysqlBackend = (): Promise<BackendRuntime> => {
-    sharedMysqlBackend ??= createBackendRuntime('mysql', mysqlRuntime, logger());
-    return sharedMysqlBackend;
+const serverRuntime = (target: ServerTarget): MySqlRuntime => (target === 'mysql' ? mysqlRuntime : mariaDbRuntime);
+
+// MariaDB is a MySQL-family server, so its backend runs with the operator's `mysql` dialect.
+const acquireSharedServerBackend = (target: ServerTarget): Promise<BackendRuntime> => {
+    sharedServerBackends[target] ??= createBackendRuntime('mysql', serverRuntime(target), logger());
+    return sharedServerBackends[target];
 };
 
 const acquireBackend = async (
-    dialect: BackendDialect,
+    target: QueryTarget,
 ): Promise<{ readonly runtime: BackendRuntime; readonly release: () => Promise<void> }> => {
-    if (dialect === 'sqlite') {
+    if (target === 'sqlite') {
         const runtime = await createBackendRuntime('sqlite', mysqlRuntime, logger());
         return { runtime, release: () => runtime.cleanup() };
     }
-    const runtime = await acquireSharedMysqlBackend();
+    const runtime = await acquireSharedServerBackend(target);
     await runtime.source
         .createQueryBuilder()
         .delete()
@@ -161,22 +173,28 @@ const acquireBackend = async (
     return { runtime, release: async () => undefined };
 };
 
-const releaseSharedMysqlBackend = async (): Promise<void> => {
-    const pending = sharedMysqlBackend;
-    sharedMysqlBackend = undefined;
-    // A backend whose creation failed has already released what it acquired.
-    const runtime = await pending?.catch(() => undefined);
-    await runtime?.cleanup();
+const releaseSharedServerBackends = async (): Promise<void> => {
+    for (const target of serverTargets) {
+        const pending = sharedServerBackends[target];
+        sharedServerBackends[target] = undefined;
+        // A backend whose creation failed has already released what it acquired.
+        const runtime = await pending?.catch(() => undefined);
+        await runtime?.cleanup();
+    }
 };
 
 afterAll(async () => {
-    await cleanupInOrder([releaseSharedMysqlBackend, async () => mysqlRuntime.cleanup()]);
+    await cleanupInOrder([
+        releaseSharedServerBackends,
+        async () => mysqlRuntime.cleanup(),
+        async () => mariaDbRuntime.cleanup(),
+    ]);
 });
 
-it(
-    '[PERSIST-6.1-MYSQL-QUERY-SCHEMA] applies the operator-managed forward migrations to the schema the MySQL query cases share',
-    async () => {
-        const runtime = await acquireSharedMysqlBackend();
+it.each(serverTargets)(
+    '[PERSIST-6.1-MYSQL-QUERY-SCHEMA] applies the operator-managed forward migrations to the schema the %s query cases share',
+    async target => {
+        const runtime = await acquireSharedServerBackend(target);
         expect(runtime.source.isInitialized).toBe(true);
         await expect(appliedMigrationNames(runtime.source)).resolves.toEqual(EXPECTED_MYSQL_MIGRATIONS);
         await expect(runtime.operator.checkConnection()).resolves.toBeUndefined();
@@ -184,9 +202,9 @@ it(
     MYSQL_MIGRATION_CASE_TIMEOUT_MS,
 );
 
-describe.each(['sqlite', 'mysql'] as const)('backend query integration through real %s', dialect => {
+describe.each(['sqlite', ...serverTargets] as const)('backend query integration through real %s', dialect => {
     it('[PERSIST-2.6-BACKEND-LIFECYCLE] applies backend-specific search capability after operator-managed migrations', async () => {
-        const { runtime, release } = await acquireBackend(dialect as BackendDialect);
+        const { runtime, release } = await acquireBackend(dialect);
         try {
             const Program = loadCompiledDefault<new () => Record<string, unknown>>(
                 runtime.snapshot,
@@ -213,7 +231,7 @@ describe.each(['sqlite', 'mysql'] as const)('backend query integration through r
                 },
             });
             expect(likeResult.map((program: { id: number }) => Number(program.id))).toEqual(
-                dialect === 'mysql' ? [701, 703] : [701, 702, 703],
+                dialect !== 'sqlite' ? [701, 703] : [701, 702, 703],
             );
 
             const regexpResult = await programDB.findRule({
@@ -226,7 +244,7 @@ describe.each(['sqlite', 'mysql'] as const)('backend query integration through r
                 },
             });
             expect(regexpResult.map((program: { id: number }) => Number(program.id))).toEqual(
-                dialect === 'mysql' ? [701, 703] : [],
+                dialect !== 'sqlite' ? [701, 703] : [],
             );
 
             const freeResult = await programDB.findRule({
@@ -240,7 +258,7 @@ describe.each(['sqlite', 'mysql'] as const)('backend query integration through r
     });
 
     it('[PERSIST-7.4-REAL-DRIVER-RETRY] retries real QueryRunner faults, preserves the final error, and releases each query runner', async () => {
-        const { runtime, release } = await acquireBackend(dialect as BackendDialect);
+        const { runtime, release } = await acquireBackend(dialect);
         try {
             const Program = loadCompiledDefault<new () => Record<string, unknown>>(
                 runtime.snapshot,
@@ -288,10 +306,10 @@ describe.each(['sqlite', 'mysql'] as const)('backend query integration through r
 // it for tens of seconds), and a hook only has Vitest's default 10 s. The `afterAll` above confirms the
 // container is gone and removes it itself only when this test did not run (a filtered or aborted file).
 it(
-    'releases the isolated MySQL fixture container after every case of the file',
+    'releases the isolated MySQL and MariaDB fixture containers after every case of the file',
     async () => {
-        await releaseSharedMysqlBackend();
-        await mysqlRuntime.cleanup();
+        await releaseSharedServerBackends();
+        await cleanupInOrder([async () => mysqlRuntime.cleanup(), async () => mariaDbRuntime.cleanup()]);
     },
     MYSQL_FIXTURE_LIFECYCLE_TIMEOUT_MS,
 );

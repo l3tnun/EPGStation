@@ -91,7 +91,7 @@ fi
 # can hand the same rehearsal different databases. Copying them in from the host settles both: the
 # nested daemon holds exactly what the host holds, by digest, and the pull that follows finds them
 # already there.
-for image in mysql:8.4 mysql:lts mariadb:10.11; do
+for image in mysql:9.7 mariadb:12.3; do
     if ! docker image inspect "$image" >/dev/null 2>&1; then
         echo "pulling $image on the host so the rehearsal does not have to"
         docker pull -q "$image" >/dev/null
