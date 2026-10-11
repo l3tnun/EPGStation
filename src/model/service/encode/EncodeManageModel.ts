@@ -108,7 +108,7 @@ class EncodeManageModel implements IEncodeManageModel {
      */
     public async push(addOption: apid.AddEncodeProgramOption): Promise<apid.EncodeId> {
         if (this.concurrentEncodeNum <= 0) {
-            throw new Error('CncurrentEncodeNumIsZero');
+            throw new Error('ConcurrentEncodeNumIsZero');
         }
 
         const addOptionSnapshot = cloneDeep(addOption) as apid.AddEncodeProgramOption;
