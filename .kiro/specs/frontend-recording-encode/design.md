@@ -115,7 +115,7 @@ client/src/
 - `client/src/features/encode/components/` — `EncodeItem`（item と section）、`EncodeCancelDialogs`（single / bulk）。
 - `client/src/features/encode/hooks/useVisibleEncode.ts` — query と可視 list state。
 - `client/src/features/encode/encodeApi.ts`、`encodeRequests.ts` — `GET /encode`、`DELETE /encode/:encodeId` の request builder と typed adapter、表示 item の生成、bulk cancel。
-- `client/unittest/spec/recording/`、`client/unittest/spec/encode/` — test kit と list / menu、list / edit・realtime の spec。`client/unittest/imp/recording.imp.test.ts`、`encode.imp.test.ts` — imp。
+- `client/unittest/spec/recording/`、`client/unittest/spec/encode/` — test kit と list / menu、list / edit・realtime の spec。`client/unittest/imp/recording.imp.test.ts`、`encode.imp.test.ts`、`recording.weekdayLabels.imp.test.ts`（曜日の表示）、`recording.apiFailuresDropLogAndChannelNames.imp.test.ts`（API の失敗・drop log の採否・channel 名の補完）、`encode.apiFailures.imp.test.ts`（API の失敗と取消 request）— imp。
 - `client/e2e/recording-encode-workflow.spec.ts` — deterministic mock E2E。fixture は `client/e2e/support/recordingEncodeFixtures.ts`、handler は `recordingEncodeMocks.ts`。
 - `client/visual/recording-encode-geometry.spec.ts` — geometry 検査。
 

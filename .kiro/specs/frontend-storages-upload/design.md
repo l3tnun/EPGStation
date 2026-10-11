@@ -106,7 +106,7 @@ graph TB
 
 test:
 
-- `client/unittest/spec/storages.spec.test.tsx`、`client/unittest/imp/storages.imp.test.ts`。
+- `client/unittest/spec/storages.spec.test.tsx`、`client/unittest/imp/storages.imp.test.ts`、`client/unittest/imp/storages.apiPayloadValidation.imp.test.ts`（storage API の応答の検証）。
 - `client/unittest/spec/storages/upload-*.spec.test.tsx`（helper は `recordedUploadSpecSupport.tsx`）、`client/unittest/imp/storages/upload-*.imp.test.ts`（`upload-format`・`upload-requests`・`upload-run`）、`client/unittest/imp/uploadFormAndFetch.validationAndRequestBodies.imp.test.ts`（upload form の検証、metadata の本文、予約の拡張文の link、予約 fetch の補助）。
 - `client/e2e/storages-upload-workflow.spec.ts`（mock は `client/e2e/support/storagesUploadMocks.ts`）。
 - `client/visual/storages-upload-geometry.spec.ts`。

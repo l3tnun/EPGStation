@@ -105,7 +105,7 @@ graph TB
 test:
 
 - `client/unittest/spec/recorded/*.spec.test.tsx` — 画面ごとの spec（`list-*`、`detail-*`）。共有 helper は `recordedSpecHelpers.tsx`、`recordedSpecRepository.tsx`。
-- `client/unittest/imp/recorded/*.imp.test.ts` — request builder、adapter、transport、handoff、action の実装 test（`encodeRequestAndFormatting` は追加 encode の request 本文と親 directory の解決、ファイルサイズの表示、題名からの検索 keyword）。一覧 request の URL と任意の filter は `client/unittest/imp/requestBuilders.listUrlsAndFilters.imp.test.ts` が確かめる。
+- `client/unittest/imp/recorded/*.imp.test.ts` — request builder、adapter、transport、handoff、action の実装 test（`encodeRequestAndFormatting` は追加 encode の request 本文と親 directory の解決、ファイルサイズの表示、題名からの検索 keyword）。一覧 request の URL と任意の filter は `client/unittest/imp/requestBuilders.listUrlsAndFilters.imp.test.ts` が確かめる。`client/unittest/imp/recorded.*.imp.test.ts` は、drop 情報の表示可否と文言・エラー判定（`dropInfoVisibility`）、拡張文の link（`extendedTextLinks`）、詳細のジャンルと時刻の文言（`genreAndTimeText`）を確かめる。
 - `client/e2e/recorded-list-workflow.spec.ts`、`recorded-scroll-workflow.spec.ts`、`recorded-detail-workflow.spec.ts`、`recorded-ios.spec.ts`。helper は `client/e2e/support/recordedWorkflow.ts`、mock は `recordedMocks.ts` と `recordedFixtures.ts`。
 - `client/visual/recorded-geometry.spec.ts`。
 
