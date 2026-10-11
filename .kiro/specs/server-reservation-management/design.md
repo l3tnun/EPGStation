@@ -1458,6 +1458,7 @@ compile境界、V8 coverage、root commandを再定義しない。次の表を�
 | `test/server/reservation-management/classification.imp.test.ts`                  | 予約種類、8状態flag、録画候補、public分類                                      |
 | `test/server/reservation-management/candidate-identity.imp.test.ts`              | program/time identity、差分取消                                                |
 | `test/server/reservation-management/execution-coordinator.imp.test.ts`           | private state、縮小max、ID、資源/race、exact release                            |
+| `test/server/reservation-management/execution-coordinator-queues.imp.test.ts`    | 既定の期限60秒、複数待機者のうち先頭だけの解決、期限切れの待機者の除去、期限切れentryのIDを塞がないこと |
 | `test/server/reservation-management/characterization.test.ts`                    | 更新時刻・時刻範囲・rule行拒否・競合行評価の契約（RM-C06・RM-C07・RM-C11・RM-C16） |
 | `test/server/reservation-management/reservation-persistence.integration.test.ts` | SQLite/MySQL保存・query・filter・count・rollback、番組単位の除外と解除（RM-T07・RM-5.1・RM-5.3） |
 | `test/server/reservation-management/reservation-http.integration.test.ts`        | 公開route、status、body、projection                                            |

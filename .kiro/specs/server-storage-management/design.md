@@ -678,7 +678,7 @@ production compile境界、V8 coverage、root commandを再定義せず、次の
 | `test/server/application-runtime/storage-pressure-deletion.integration.test.ts` | prepare、録画・service-child gate、最終削除を接続するruntime所有test    |
 | `test/server/storage-management/_storage-harness.ts`                            | 実path、実番組、実command、credentialを含まない合成設定・entity・child  |
 
-上表に挙げない補助のimp test（`pressure-deletion-adapter.imp.test.ts`、`recorded-use-snapshot-adapter.test.ts`、
+上表に挙げない補助のimp test（`pressure-deletion-adapter.imp.test.ts`、`recorded-use-snapshot-adapter.test.ts`、`recorded-use-snapshot-validation.test.ts`、
 `snapshot-catch.imp.test.ts`、`snapshot-unknown.imp.test.ts`、`start-interval-catch.imp.test.ts`、`getfreesize-err.imp.test.ts`、
 `free-size-success.imp.test.ts`、`storageapi-getinfo.imp.test.ts`）も`test/server/storage-management/`に置く。
 
