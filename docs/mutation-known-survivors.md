@@ -291,6 +291,106 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 | `initialize` の `cors: { origin: '*' }` の中身 | ObjectLiteral | 振る舞いが変わらない: 空の object を渡しても `cors` の既定の origin が `*` で同じ |
 | `initialize` の起動 log の文言 | StringLiteral | 振る舞いが変わらない: log だけ |
 
+### `src/lib/TailStream.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `debug` の本体（`err` の有無の判定、`log.stream.error` の呼び出し）と、`debug` を呼ぶ各所（fstat・read・stat の失敗、読み取り無し、読み取り量、待機）の呼び出しと文言 | ConditionalExpression、BlockStatement、CallExpression、StringLiteral | 振る舞いが変わらない: log だけ（`err` の無い呼び出しは何も出さない） |
+| 診断文言の定数（`EOF_NO_DATA_TO_READ_DEBUG_MESSAGE` など）と `formatReadBytesDebugMessage` | StringLiteral、ArrowFunction、ArithmeticOperator | 定数表で判定できない: module の読み込み時に評価される式。log の文言だけ |
+| `getFd` の open 完了時の `readPending !== 0` なら `doRead` | ConditionalExpression | 冗長: `doRead` が先頭で `readPending === 0` を弾く |
+| `scheduleIdleCheck` の timer の中の条件 | ConditionalExpression、LogicalOperator | 振る舞いが変わらない: 条件が真のとき呼ぶのは出力の無い `debug` だけ |
+| `_read` の `checkIdleTimer !== null`、`clearTimers` の `checkIdleTimer`・`checkFileTimer`・`openRetryTimer` の `!== null` | ConditionalExpression | 振る舞いが変わらない: `clearTimeout(null)` は無害 |
+| `_read` の `getFdInProgress` の判定と中の block | ConditionalExpression、BlockStatement | 冗長: 続く `getFd` が同じ判定で何もせず戻る（差は `debug` だけ） |
+| `dispose` の `isClosed` なら return | ConditionalExpression | 冗長: 2 回目の `dispose` も、状態と timer を 0 に戻し、閉じる fd が無いだけで結果が同じ |
+
+### `src/model/ExecutionManagementModel.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `exeQueue` の初期値 | ArrayDeclaration | 冗長: 余計な要素は `grantNext` が状態の不一致で読み捨て、ID の使用判定にも影響しない |
+| `allocateExecutionId` の `attempt < this.maxExecutionId` | EqualityOperator | 冗長: 1 周して全部使用中なら、1 回余分に試しても最初の候補が使用中のまま |
+| `expire` の `clearTimeout(entry.timerId)`、`removeEntry` の `allocationQueue` 側 | CallExpression | 冗長: 期限の timer は既に発火済みで、`allocationQueue` の期限切れ entry は直後の `assignAllocationWaiters` が読み捨てる |
+| `expire` の log の文言 | StringLiteral | 振る舞いが変わらない: log だけ |
+| `assignAllocationWaiters` の割り当て後の `allocationQueue.shift()` | CallExpression | 冗長: 状態が `waiting` に変わった entry は次の周回で読み捨てられる |
+| `startOwnerWatchdog` の timer の中の `entry.state !== 'granted'` | ConditionalExpression | 冗長: `owner` が entry である間に状態が `granted` 以外になるのは watchdog 自身だけ |
+| `grant` の `owner`・`id`・`state` の 3 条件のうち個別の 1 条件、条件の組み合わせの変更 | ConditionalExpression、LogicalOperator | 冗長: 3 条件が同じ事実（今の保持者が自分であること）を重ねて検査している。全体を外す変更は test が殺している |
+| `UNLOCK_EVENT` | StringLiteral | 定数表で判定できない: module の読み込み時に評価される式。名前は内部の目印 |
+
+### `src/model/PromiseQueue.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `queue` の初期値 `Promise.resolve(true)` | BooleanLiteral | 振る舞いが変わらない: 初期値は待つだけで、値は使われない |
+
+### `src/model/ConnectionCheckModel.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| 確認の開始を知らせる log の文言 | StringLiteral | 振る舞いが変わらない: log だけ |
+
+### `src/model/LoggerModel.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `readLogFile` の `let str = ''` | StringLiteral | 振る舞いが変わらない: 直後に必ず読み込みで上書きされるか `process.exit` する |
+| `readLogFile` の `typeof str === 'undefined'` の判定と中身 | ConditionalExpression、StringLiteral、BlockStatement、CallExpression | 到達不能: `str` は文字列で、undefined にならない（到達不能の目印が source にある） |
+| `createDefaultLogPath` の `process.platform === 'win32'` | ConditionalExpression | 振る舞いが変わらない: Linux では path に `\` が無く、置換しても同じ |
+
+### `src/model/ServiceChildRecordedUseRegistry.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `GRANTED`・`BLOCKED`・`UNKNOWN`・`BUSY` | ObjectLiteral | 定数表で判定できない: module 先頭で評価される式。返す状態は test が確かめている |
+| `release` の `isReleaseInput` の判定と、その中の `isPeer`・`isRequestId` の組み合わせ | ConditionalExpression、LogicalOperator | 冗長: 不正な peer・request id は、続く lease の検索で見つからず `unknown` になる |
+| `release` の `unknownLeases.delete(lease)` | CallExpression | 振る舞いが変わらない: 解放した lease は他から参照されず、`WeakSet` に残っても判定に使われない |
+| `tryAcquireDeletion` の `[...(leases ?? [])]` の既定の空配列 | ArrayDeclaration | 振る舞いが変わらない: 要素が文字列でも `WeakSet.has` は false |
+| `releaseDeletion` の `recordedId === undefined` | ConditionalExpression | 冗長: 続く `deletionTokens.get(undefined) !== token` が同じ結果 |
+
+### `src/model/epgUpdater/EPGUpdateExecutorManageModel.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| 起動 log の文言 | StringLiteral | 振る舞いが変わらない: log だけ |
+| `settleTerminal` の `lateErrorScope` の既定値 `'none'` | StringLiteral | 振る舞いが変わらない: `'close'`・`'same-tick'` 以外はどの枝にも入らない |
+
+### `src/model/epgUpdater/EPGUpdater.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| constructor の `PROGRAM_UPDATED`・`SERVICE_UPDATED` の購読 | CallExpression | 振る舞いが変わらない: 購読する関数の本体が空（通知は周期の更新に任せている） |
+
+### `src/model/epgUpdater/EPGUpdateExecutor.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `runEPGUpdateExecutor` の既定の container の分岐、file 末尾の自己起動の判定 | ConditionalExpression、StringLiteral、EqualityOperator、BlockStatement、CallExpression | Stryker で判定できない: 実際の子 process として起動する test でしか通らず、Stryker は子 process の mutant を有効にできない。その test（`epg-update-executor-entry-seam.test.ts`）は実 process でこの分岐の結果を確かめている |
+
+### `src/model/operator/recordedTag/RecordedTagManadeModel.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `create`・`update`・`setRelation`・`delete`・`deleteRelation` の成功時の log の文言 | StringLiteral | 振る舞いが変わらない: log だけ |
+
+### `src/model/operator/recording/RecordingRecordedUseProvider.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `UNKNOWN_SNAPSHOT`・`UNKNOWN_DELETION`・`BUSY_DELETION` | ObjectLiteral | 定数表で判定できない: module 先頭で評価される式。返す状態は test が確かめている |
+
+### `src/model/operator/storage/StorageRecordedUseSnapshotAdapter.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `UNKNOWN` | ObjectLiteral | 定数表で判定できない: module 先頭で評価される式。返す状態は test が確かめている |
+| `readRecordingSnapshot`・`readServiceChildSnapshot` の catch を空にする | BlockStatement | 振る舞いが変わらない: undefined を返しても、続く検査で known でないと判定され同じ `unknown` になる |
+| `isRecordedId` の `typeof recordedId === 'number'` | ConditionalExpression | 冗長: 続く `Number.isSafeInteger` が数でない値を弾く |
+
+### `src/util/ProcessUtil.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `ROOT_PATH` | StringLiteral | 定数表で判定できない: module の読み込み時に評価される式 |
+
 ## DB（`stryker.db.config.mjs`）
 
 ### `src/model/db/ProgramDB.ts`
