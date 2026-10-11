@@ -657,7 +657,8 @@ indexへ戻さない。session不在はno-opとしてresolveする。`recorded-c
 `AwaitingFirstData`の取消はstream破棄に加えてstart-outcome arbiterへ`cancelled`を一回だけ渡し、first-data timeoutを解除
 する。`Registering`または`RegistrationOverdue`では同じarbiterへ取消を一回だけ渡すが、進行中のDB Promiseを完了済みとは扱
 わず、後着結果を同一sessionのcleanupへ接続する。取消後のdata、timeout、登録結果は別の開始結果、5秒retry、録画開始通知を
-作らない。
+作らない。登録結果の確定後、録画済み番組の使用登録の最中に取消が届いた場合も同じで、使用登録を返し、録画開始を取りやめ、
+取消済みの登録結果と同じcleanupを行って録画開始処理のPromiseを一回だけ決める（決まらないまま残さない）。
 
 `recorded-content-deletion`によるactive sessionの取消は、sessionをactive indexから直ちに消さず `StoppingForDeletion`とし
 て保持する。streamへ`destroy()`とEOFを要求した後、writerの`close`、drop checkerの停止、対象file/rowへ作用し得る録画終了

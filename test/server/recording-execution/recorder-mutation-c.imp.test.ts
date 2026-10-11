@@ -640,7 +640,7 @@ describe('recorder registration completion', () => {
             },
         });
         const { harness } = fixture;
-        await registerPending(fixture);
+        const outcome = await registerPending(fixture);
 
         fixture.videoInsert.resolve(31);
         await waitUntil(() => fixture.provider!.releaseSessionUse.mock.calls.length > 0, 'the recorded use release');
@@ -651,6 +651,37 @@ describe('recorder registration completion', () => {
         });
         expect(harness.model.activeRecordedUse).toBeNull();
         expect(harness.model.setEndProcess).not.toHaveBeenCalled();
+        expect(harness.recordingEvent.emitStartRecording).not.toHaveBeenCalled();
+
+        // 取り消された録画の開始は取りやめられ、doRecord の promise が決まる
+        await settle(outcome);
+        expect(outcome.state).toBe('resolved');
+        expect(fixture.writer.destroyed).toBe(true);
+        expect(harness.videoFileDB.deleteOnce).toHaveBeenCalledExactlyOnceWith(31);
+        expect(harness.recordedDB.deleteOnce).toHaveBeenCalledExactlyOnceWith(21);
+        expect(harness.model.registrationOwners.size).toBe(0);
+        expect(harness.model.pendingRegistrationResources).toBeNull();
+    });
+
+    it('[RE-4.9] settles the wait and cancels the session when a cancellation arrives while the use is being registered', async () => {
+        const fixture = makeFixture({
+            onTryRegisterUse: model => {
+                model.recordRegistrationTerminationIntent('Cancel');
+                model.cancelFirstDataWait();
+                return 'registered';
+            },
+        });
+        const { harness } = fixture;
+        const outcome = await registerPending(fixture);
+
+        fixture.videoInsert.resolve(31);
+        await settle(outcome);
+
+        expect(outcome.state).toBe('resolved');
+        expect(fixture.provider!.releaseSessionUse).toHaveBeenCalledOnce();
+        expect(fixture.sessionBinding!.state.phase).toBe('Cancelled');
+        expect(harness.videoFileDB.deleteOnce).toHaveBeenCalledExactlyOnceWith(31);
+        expect(harness.model.registrationOwners.size).toBe(0);
         expect(harness.recordingEvent.emitStartRecording).not.toHaveBeenCalled();
     });
 
