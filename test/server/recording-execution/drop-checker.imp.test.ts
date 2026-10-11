@@ -522,6 +522,18 @@ describe('[Task 3.6] DropCheckerModel drop/error/scrambling characterization', (
             expect(logger.system.info).toHaveBeenCalledWith(`mkdirp: ${missingDir}`);
         });
 
+        // 問題の行・空行・集計行の追記は await されずに発火するため、ファイル内の順序は決まらない。
+        // 行が揃うまで待ち、空行は改行の総数（問題の行 1 + 空行 1 + 集計行 1 = 3）で確かめる。
+        const readCompleteLog = async (logPath: string, parts: string[], newlines: number): Promise<string> => {
+            let log = '';
+            await vi.waitFor(async () => {
+                log = await readFile(logPath, 'utf8');
+                for (const part of parts) expect(log).toContain(part);
+                expect(log.split('\n').length - 1).toBe(newlines);
+            });
+            return log;
+        };
+
         it('writes a transport error line with "-" for a zero counter and an absent expected value', async () => {
             const root = await makeRoot();
             const checker = makeChecker();
@@ -530,8 +542,11 @@ describe('[Task 3.6] DropCheckerModel drop/error/scrambling characterization', (
             await startDropChecker(checker, root, 'synthetic-error-line.ts', buildStream(packets));
             await checker.getResult();
 
-            const log = await readLogUntilContains(checker.getFilePath()!, 'pid: 0x0161, error: 1');
-            expect(log).toMatch(/^error: \(pid: 0x0161, counter: -, expected: -, time: -\)\n/);
+            await readCompleteLog(
+                checker.getFilePath()!,
+                ['error: (pid: 0x0161, counter: -, expected: -, time: -)\n', 'pid: 0x0161, error: 1'],
+                3,
+            );
         });
 
         it('separates the per-PID summary from error lines with one blank line', async () => {
@@ -542,8 +557,8 @@ describe('[Task 3.6] DropCheckerModel drop/error/scrambling characterization', (
             await startDropChecker(checker, root, 'synthetic-error-blank.ts', buildStream(packets));
             await checker.getResult();
 
-            const log = await readLogUntilContains(checker.getFilePath()!, 'pid: 0x0162, error: 1');
-            expect(log).toMatch(/^error: \(pid: 0x0162, counter: \S+, expected: \S+, time: -\)\n\npid: 0x0162, /);
+            const log = await readCompleteLog(checker.getFilePath()!, ['pid: 0x0162, error: 1'], 3);
+            expect(log).toMatch(/error: \(pid: 0x0162, counter: \S+, expected: \S+, time: -\)\n/);
         });
 
         it('separates the per-PID summary from scrambling lines with one blank line', async () => {
@@ -553,9 +568,13 @@ describe('[Task 3.6] DropCheckerModel drop/error/scrambling characterization', (
             await startDropChecker(checker, root, 'synthetic-scrambling-blank.ts', buildStream([scramblingPacket(0x0163)]));
             await checker.getResult();
 
-            const log = await readLogUntilContains(checker.getFilePath()!, 'pid: 0x0163, error: 0');
-            expect(log).toBe(
-                'scrambling (pid: 0x0163, time: -)\n\npid: 0x0163, error: 0, drop: 0, scrambling: 1, packet: 1, name: -\n',
+            await readCompleteLog(
+                checker.getFilePath()!,
+                [
+                    'scrambling (pid: 0x0163, time: -)\n',
+                    'pid: 0x0163, error: 0, drop: 0, scrambling: 1, packet: 1, name: -\n',
+                ],
+                3,
             );
         });
 
