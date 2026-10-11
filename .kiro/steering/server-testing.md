@@ -121,6 +121,7 @@ coverageが拾えない「通るだけで何も確かめていないtest」を�
 -   既知の生き残りの一覧: [docs/mutation-known-survivors.md](../../docs/mutation-known-survivors.md)。流した後はこの一覧と比べ、載っていない生き残りだけを扱う。sourceが変わって理由が成り立たなくなった項目は消す。一覧は理由が成り立つものだけを持ち、経緯は書かない。
 -   設定: `coverageAnalysis: perTest`、`ignoreStatic: true`（module先頭の定数表のmutantに全testを流さない。この設定では定数表のmutantは判定できず「生き残った」と出るので、定数表の値は値そのものを確かめるtestで守る）、`concurrency: 2`（memoryは1 runにつき約5 GB）。serverのtestはsourceではなくbuild済みの`dist`を読むので、`buildCommand`でmutant入りのsrcからsandboxの`dist`を作り、専用のvitest設定（`vitest.mutation.server.config.ts`）がそれを読む。Stryker実行下のthreads poolで動かないtestはこの専用設定で除外し、除外の理由は設定のcommentに残す。
 -   incrementalのcache: `test/server/.artifacts/mutation/incremental.json`（環境変数`EPGS_MUTATION_INCREMENTAL_FILE`で上書きできる）。versionを管理しない手元のcacheで、消えたら全mutantを流し直す。sourceまたはtestが変わった部分だけが再実行される。ただしtestを足しても前回の生き残りを再実行しないことがあるので、足したtestがmutantを殺すかは対象を絞って`--force`で確かめる。test全体の直列dry-runは毎回走る。
+-   配信の本体（`src/model/service/stream/`のstreamのmodel・HLS fileの削除・録画済みの使用権と再生元）は`mutation:delivery`（`stryker.delivery.config.mjs`、`vitest.mutation.delivery.config.ts`、cacheは`test/server/.artifacts/mutation/incremental-delivery.json`）で別に流す。processの起動・fileの書き出し・HTTPの配信は結合testが確かめているので、単体testに加えて`media-delivery/*.integration.test.ts`などDockerを使わない結合testを対象testにする。
 -   vitestはStryker vitest-runnerとtest名の区切りが一致する版に固定する。vitestの版を変えるときは、`mutation:server`が全mutantを「test無しで生存」と報告しないこと（scoreが0%にならないこと）を確認する。
 -   mutation scoreは品質の傾向を見る指標であり、数値の達成を目的にしたtest追加は、coverageと同じく禁止する。mutantを殺すtestは、そのmutantが表す不具合を外部から観測できるassertionにする。
 
