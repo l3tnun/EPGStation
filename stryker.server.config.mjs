@@ -25,6 +25,12 @@ const mutate = [
     'src/model/operator/storage/StorageManageModel.ts',
     'src/model/operator/storage/StoragePressureDeletionAdapter.ts',
     'src/model/operator/recorded/PreparedDeletionTokenRegistry.ts',
+    // 録画の実行・管理・stream・drop 検査
+    'src/model/operator/recording/RecorderModel.ts',
+    'src/model/operator/recording/RecordingManageModel.ts',
+    'src/model/operator/recording/RecordingUtilModel.ts',
+    'src/model/operator/recording/DropCheckerModel.ts',
+    'src/model/operator/recording/RecordingStreamCreator.ts',
     // 設定の解釈
     'src/model/ConfigYaml.ts',
     'src/model/Configuration.ts',

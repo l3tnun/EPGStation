@@ -57,6 +57,7 @@ export const recordingDomainSuiteMatrix = [
         tests: [
             test('stream-allocation-boundary.test.ts', 'imp', ['fake-timer', 'stream']),
             test('settuner-delegation.imp.test.ts', 'imp'),
+            test('stream-creator-lifecycle.imp.test.ts', 'imp', ['fake-timer', 'stream']),
             test('tuner-boundary.spec.test.ts', 'spec', ['fake-timer', 'stream', 'filesystem']),
             test('tuner-stream.integration.test.ts', 'integration', ['fake-timer', 'stream']),
         ],

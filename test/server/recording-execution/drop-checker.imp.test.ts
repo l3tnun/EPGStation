@@ -503,4 +503,206 @@ describe('[Task 3.6] DropCheckerModel drop/error/scrambling characterization', (
         expect(access).toHaveBeenCalledWith(root, expect.any(Number));
         access.mockRestore();
     });
+
+    describe('log content and lifecycle details', () => {
+        const scramblingPacket = (pid: number, cc = 0): Buffer =>
+            buildPacket({ pid, continuityCounter: cc, transportScramblingControl: 0b10 });
+
+        // MJD 60314 = 2024-01-05, BCD 15:06:07 (a TDT section has no CRC and no syntax indicator).
+        const buildTdtSection = (): Buffer => Buffer.from([0x70, 0x70, 0x05, 0xeb, 0x9a, 0x15, 0x06, 0x07]);
+
+        it('reports the created log directory', async () => {
+            const root = await makeRoot();
+            const missingDir = join(root, 'created-by-prepare');
+            const checker = makeChecker();
+            logger.system.info.mockClear();
+
+            await startDropChecker(checker, missingDir, 'synthetic-program.ts', buildStream([]));
+
+            expect(logger.system.info).toHaveBeenCalledWith(`mkdirp: ${missingDir}`);
+        });
+
+        it('writes a transport error line with "-" for a zero counter and an absent expected value', async () => {
+            const root = await makeRoot();
+            const checker = makeChecker();
+            const packets = [buildPacket({ pid: 0x0161, continuityCounter: 0, transportErrorIndicator: 1 })];
+
+            await startDropChecker(checker, root, 'synthetic-error-line.ts', buildStream(packets));
+            await checker.getResult();
+
+            const log = await readLogUntilContains(checker.getFilePath()!, 'pid: 0x0161, error: 1');
+            expect(log).toMatch(/^error: \(pid: 0x0161, counter: -, expected: -, time: -\)\n/);
+        });
+
+        it('separates the per-PID summary from error lines with one blank line', async () => {
+            const root = await makeRoot();
+            const checker = makeChecker();
+            const packets = [buildPacket({ pid: 0x0162, continuityCounter: 3, transportErrorIndicator: 1 })];
+
+            await startDropChecker(checker, root, 'synthetic-error-blank.ts', buildStream(packets));
+            await checker.getResult();
+
+            const log = await readLogUntilContains(checker.getFilePath()!, 'pid: 0x0162, error: 1');
+            expect(log).toMatch(/^error: \(pid: 0x0162, counter: \S+, expected: \S+, time: -\)\n\npid: 0x0162, /);
+        });
+
+        it('separates the per-PID summary from scrambling lines with one blank line', async () => {
+            const root = await makeRoot();
+            const checker = makeChecker();
+
+            await startDropChecker(checker, root, 'synthetic-scrambling-blank.ts', buildStream([scramblingPacket(0x0163)]));
+            await checker.getResult();
+
+            const log = await readLogUntilContains(checker.getFilePath()!, 'pid: 0x0163, error: 0');
+            expect(log).toBe(
+                'scrambling (pid: 0x0163, time: -)\n\npid: 0x0163, error: 0, drop: 0, scrambling: 1, packet: 1, name: -\n',
+            );
+        });
+
+        it('does not insert a blank line when no packet problem was found', async () => {
+            const root = await makeRoot();
+            const checker = makeChecker();
+
+            await startDropChecker(
+                checker,
+                root,
+                'synthetic-clean.ts',
+                buildStream([buildPacket({ pid: 0x0164, continuityCounter: 0 })]),
+            );
+            await checker.getResult();
+
+            const log = await readLogUntilContains(checker.getFilePath()!, 'pid: 0x0164, error: 0');
+            expect(log).toBe('pid: 0x0164, error: 0, drop: 0, scrambling: 0, packet: 1, name: -\n');
+        });
+
+        it('takes the section time from a TDT section carried in the stream', async () => {
+            const root = await makeRoot();
+            const checker = makeChecker();
+            const packets = [
+                buildPsiPacket(0x0014, buildTdtSection(), 0),
+                scramblingPacket(0x0170),
+                scramblingPacket(0x0171),
+            ];
+
+            await startDropChecker(checker, root, 'synthetic-tdt.ts', buildStream(packets));
+            await checker.getResult();
+
+            const log = await readLogUntilContains(checker.getFilePath()!, 'scrambling (pid: 0x0171');
+            expect(log).toMatch(/scrambling \(pid: 0x0171, time: 2024\/01\/0[56] \d\d:\d\d:\d\d\)/);
+        });
+
+        it('does not report a stream error or stop early when the source ends normally', async () => {
+            const root = await makeRoot();
+            const checker = makeChecker();
+            logger.system.error.mockClear();
+            const live = new PassThrough();
+            await startDropChecker(checker, root, 'synthetic-normal-end.ts', live);
+            const analyzer = (checker as any).tsPacketAnalyzer;
+
+            live.end(buildPacket({ pid: 0x0165, continuityCounter: 0 }));
+            await checker.getResult();
+            await new Promise(resolve => setImmediate(resolve));
+
+            expect(logger.system.error).not.toHaveBeenCalled();
+            expect((checker as any).tsPacketAnalyzer).toBe(analyzer);
+        });
+
+        it('writes each per-PID summary only once when stop() follows a finished check', async () => {
+            const root = await makeRoot();
+            const checker = makeChecker();
+            await startDropChecker(
+                checker,
+                root,
+                'synthetic-stop-after-finish.ts',
+                buildStream([buildPacket({ pid: 0x0166, continuityCounter: 0 })]),
+            );
+            await checker.getResult();
+            await readLogUntilContains(checker.getFilePath()!, 'pid: 0x0166, error: 0');
+
+            await checker.stop();
+            await writes.settle();
+
+            const log = await readFile(checker.getFilePath()!, 'utf8');
+            expect(log.split('pid: 0x0166, error: 0').length - 1).toBe(1);
+        });
+
+        it('stop() before prepare and attach finishes without logging an error', async () => {
+            const checker = makeChecker();
+            logger.system.error.mockClear();
+
+            await checker.stop();
+
+            expect(logger.system.error).not.toHaveBeenCalled();
+        });
+
+        it('stop() removes the listeners it installed on the analysis stages', async () => {
+            const root = await makeRoot();
+            const checker = makeChecker();
+            const live = new PassThrough();
+            await startDropChecker(checker, root, 'synthetic-stop-listeners.ts', live);
+            const sectionParser = (checker as any).tsSectionParser;
+            const readableConnector = (checker as any).tsReadableConnector;
+            const packetParser = (checker as any).tsPacketParser;
+            for (const stage of [sectionParser, readableConnector, packetParser]) {
+                stage.on('synthetic-listener', () => undefined);
+                expect(stage.eventNames()).toContain('synthetic-listener');
+            }
+
+            await checker.stop();
+
+            expect(sectionParser.eventNames()).toEqual([]);
+            expect(readableConnector.eventNames()).toEqual([]);
+            expect(packetParser.eventNames()).toEqual([]);
+            live.destroy();
+        });
+
+        it('getResult() stays pending until exactly 10 seconds have passed and then drops its finish listener', async () => {
+            vi.useFakeTimers();
+            try {
+                const root = await makeRoot();
+                const checker = makeChecker();
+                const live = new PassThrough();
+                await startDropChecker(checker, root, 'synthetic-timeout-boundary.ts', live);
+
+                let rejected = false;
+                const assertion = checker.getResult().catch((error: Error) => {
+                    rejected = true;
+                    return error;
+                });
+                await vi.advanceTimersByTimeAsync(9_999);
+                expect(rejected).toBe(false);
+                expect((checker as any).listener.listenerCount('finish_event')).toBe(1);
+
+                await vi.advanceTimersByTimeAsync(1);
+                await expect(assertion).resolves.toHaveProperty('message', 'GetResultTimeout');
+                expect((checker as any).listener.listenerCount('finish_event')).toBe(0);
+                live.destroy();
+            } finally {
+                vi.useRealTimers();
+            }
+        });
+
+        it.each([
+            ['the blank line', (text: string) => text === '\n'],
+            ['a per-PID summary line', (text: string) => text.startsWith('pid: ')],
+        ])('reports a failed append of %s with the destination and the error', async (_name, shouldFail) => {
+            const root = await makeRoot();
+            const checker = makeChecker();
+            logger.system.error.mockClear();
+            const failure = new Error('synthetic selective append failure');
+            const append = vi.spyOn(FileUtil, 'appendFile').mockImplementation(async (_file: string, text: string) => {
+                if (shouldFail(text)) throw failure;
+            });
+            const packets = [0, 1, 3].map(cc => buildPacket({ pid: 0x0180, continuityCounter: cc }));
+
+            await startDropChecker(checker, root, 'synthetic-selective-failure.ts', buildStream(packets));
+            await checker.getResult();
+            await vi.waitFor(() => {
+                expect(logger.system.error).toHaveBeenCalledWith(failure);
+            });
+
+            expect(logger.system.error).toHaveBeenCalledWith(`append error: ${checker.getFilePath()}`);
+            append.mockRestore();
+        });
+    });
 });
