@@ -12,7 +12,12 @@ import {
   writeGuideSizeSetting,
 } from '@/features/guide/guideStorage'
 import {
+  ADD_ENCODE_SETTING_STORAGE_KEY,
+  DEFAULT_ADD_ENCODE_SETTING,
   readAddEncodeSetting,
+  readSendVideoFileSelectHostSetting,
+  writeAddEncodeSetting,
+  writeSendVideoFileSelectHostSetting,
   type RecordedLocalStorageLike,
 } from '@/features/recorded/requests/settingsStorage'
 import { DefaultSettingsFactory, SettingsStorageRepository } from '@/shared/settings'
@@ -66,6 +71,70 @@ describe('add-encode setting storage', () => {
       encodeMode: null,
       parentDirectory: null,
     })
+  })
+})
+
+describe('add-encode and Kodi host setting storage keys and defaults', () => {
+  const recordingStorage = (value: string | null) => ({
+    getItem: vi.fn((): string | null => value),
+    setItem: vi.fn(),
+  })
+
+  it('stores the add-encode setting under the key kept for earlier versions', () => {
+    expect(ADD_ENCODE_SETTING_STORAGE_KEY).toBe('AddEncodeSeting')
+    const storage = recordingStorage(null)
+
+    readAddEncodeSetting(storage)
+    writeAddEncodeSetting(storage, { ...DEFAULT_ADD_ENCODE_SETTING, encodeMode: 'm' })
+
+    expect(storage.getItem).toHaveBeenCalledExactlyOnceWith('AddEncodeSeting')
+    expect(storage.setItem).toHaveBeenCalledExactlyOnceWith(
+      'AddEncodeSeting',
+      '{"encodeMode":"m","parentDirectory":null,"isSaveSameDirectory":false,"removeOriginal":false}',
+    )
+  })
+
+  it('starts the add-encode setting without a mode, directory, same-directory save or original removal', () => {
+    expect(DEFAULT_ADD_ENCODE_SETTING).toStrictEqual({
+      encodeMode: null,
+      parentDirectory: null,
+      isSaveSameDirectory: false,
+      removeOriginal: false,
+    })
+    for (const raw of [null, 'null', '5', '{broken']) {
+      expect(readAddEncodeSetting(recordingStorage(raw))).toStrictEqual(DEFAULT_ADD_ENCODE_SETTING)
+    }
+    expect(readAddEncodeSetting(recordingStorage('{}'))).toStrictEqual(DEFAULT_ADD_ENCODE_SETTING)
+  })
+
+  it('returns a copy of the add-encode default so a caller cannot change it', () => {
+    const first = readAddEncodeSetting(recordingStorage(null))
+    first.removeOriginal = true
+
+    expect(readAddEncodeSetting(recordingStorage(null)).removeOriginal).toBe(false)
+  })
+
+  it('stores the Kodi host selection under its own key and defaults to no host', () => {
+    const storage = recordingStorage(null)
+
+    expect(readSendVideoFileSelectHostSetting(storage)).toStrictEqual({ hostName: null })
+    writeSendVideoFileSelectHostSetting(storage, { hostName: 'living-room' })
+
+    expect(storage.getItem).toHaveBeenCalledExactlyOnceWith('SendVideoFileSelectHostSetting')
+    expect(storage.setItem).toHaveBeenCalledExactlyOnceWith(
+      'SendVideoFileSelectHostSetting',
+      '{"hostName":"living-room"}',
+    )
+    expect(readSendVideoFileSelectHostSetting(recordingStorage('{"hostName":"tv"}'))).toStrictEqual(
+      {
+        hostName: 'tv',
+      },
+    )
+    for (const raw of ['5', '{broken', '{"hostName":3}']) {
+      expect(readSendVideoFileSelectHostSetting(recordingStorage(raw))).toStrictEqual({
+        hostName: null,
+      })
+    }
   })
 })
 
