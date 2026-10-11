@@ -92,7 +92,7 @@ PR の `check` job（§7）が実行する検査と同じ。
 | 対象 | command | 設定 | incremental の cache |
 | --- | --- | --- | --- |
 | server | `npm run mutation:server` | `stryker.server.config.mjs`、`vitest.mutation.server.config.ts` | `test/server/.artifacts/mutation/incremental.json` |
-| client | `client/` で `npm run mutation:client` | `client/stryker.client.config.mjs`、`client/vitest.mutation.config.ts` | `client/.artifacts/mutation/incremental.json` |
+| client | `client/` で `npm run mutation:client` | `client/stryker.client.config.mjs`（vitest は通常の `client/vite.config.ts`） | `client/.artifacts/mutation/incremental.json` |
 | DB の query の class（`src/model/db/`） | `npm run mutation:db`（下の手順で DB を起動してから） | `stryker.db.config.mjs`、`vitest.mutation.db.config.ts` | `test/server/.artifacts/mutation/incremental-db.json` |
 | 配信の本体（`src/model/service/stream/` の stream の model・HLS file の削除・録画済みの使用権と再生元） | `npm run mutation:delivery` | `stryker.delivery.config.mjs`、`vitest.mutation.delivery.config.ts` | `test/server/.artifacts/mutation/incremental-delivery.json` |
 
@@ -124,7 +124,7 @@ PR の `check` job（§7）が実行する検査と同じ。
 - report の json は `node scripts/mutation/summarize.mjs <report.json> [<file の部分文字列>]` で集計できる。file ごとの mutant 数・Killed・Survived・NoCoverage・Timeout・score と、生き残りの一覧（行・mutator・置き換え後・static かどうか）が出る。
 - 既知の生き残り（test を足さないと判断して理由を付けたもの）は [mutation-known-survivors.md](mutation-known-survivors.md) にある。流した後は集計の生き残りをこの一覧と見比べ、載っていないものだけを扱う。対象 file の決め方と新しい module を足す手順は、steering の Mutation Testing 節（server・DB は `.kiro/steering/server-testing.md`、client は `.kiro/steering/testing.md`）にある。
 - Stryker は vitest 4.1.11 の組で動作を確認している。vitest の版を変えたら、score が 0% でない（全 mutant が「test 無しで生存」になっていない）ことを確かめる。
-- Stryker の sandbox で動かない test は専用の vitest 設定が除外している（process.env.TZ を実行中に変える test、build 工具や npm の path に依存する test、client の外の file を読む test）。
+- Stryker の sandbox で動かないために除外している単体 test は無い。sandbox は repository を複製した directory で、次の 3 点が通常の実行と違うので、test はそれに合わせてある。(1) server の test は vitest の threads pool・worker 1 で動き、その中では `process.env.TZ` を実行中に切り替えても効かない。時刻帯を固定する test（`shared-foundation/imp/date-util-timezone.test.ts`）は、`TZ=UTC` で起動した子 process の中で確かめる。(2) Stryker は sandbox の全ての `src/**/*.ts` の先頭に `// @ts-nocheck` の 1 行を足す。build した dist の byte の位置と元の source の行番号が 15 byte・1 行ずれるので、dist の位置を固定して比べる test（`application-runtime/spec/compiled-snapshot-coverage.test.ts` の VideoUtil の除外の確認）は、このずれを読んで合わせる。(3) sandbox へ複製する file は設定の `ignorePatterns` で決まる。server の設定は client を複製しない（`/client/*`）が、依存の image の計画の test（`application-runtime/docker-dependency-images.spec.test.ts`）が読む `client/package.json` と `client/package-lock.json` は複製する。client の設定は `public/`（画像）と `src` の `.module.css` を複製する。これらを読む test（`detail-metadata.spec.test.tsx`・`dashboardItemRoutes.spec.test.tsx`）も sandbox で動く。docs や `.github` など、server の設定が複製しない path を読む test を足すときは、その path を `ignorePatterns` から外す。
 
 ## 6. 全体の検査（preflight）
 

@@ -127,7 +127,11 @@ export default {
     // 複製すると dry run が遅くなる。
     ignorePatterns: [
         '/.stryker-tmp*',
-        '/client',
+        // client は server の test に使わないので複製しないが、依存の image の計画の test
+        // （application-runtime/docker-dependency-images.spec.test.ts）が client の package.json と lock を読む。
+        '/client/*',
+        '!/client/package.json',
+        '!/client/package-lock.json',
         '/docs',
         '/recorded',
         '/thumbnail',
