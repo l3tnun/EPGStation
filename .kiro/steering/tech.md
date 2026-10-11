@@ -14,7 +14,7 @@ server testの品質契約は`.kiro/steering/server-testing.md`を正本とす�
 
 server test foundation、固定command、Node.js 24必須・Node.js 26追加matrixは`server-application-runtime`が一度だけ所有する。各`server-*`は同じfoundationへ機能固有testを追加し、runner、test root、coverage configurationを重複実装しない。
 
-重要moduleの単体testの品質は、coverageに加えてStryker（mutation testing）を手動または定期で流して確かめる。serverは`stryker.server.config.mjs`（root、`npm run mutation:server`）、clientは`client/stryker.client.config.mjs`（`npm run mutation:client`）を使い、対象file、`ignoreStatic`、concurrency 2、単体testの層だけを流すこと、incrementalのcacheの置き場は`.kiro/steering/server-testing.md`と`.kiro/steering/testing.md`を正本とする。preflightとCIのgateにはしない。Stryker 10.0.0とvitest 4.1.11はtest名の区切りが一致する組で、どちらも固定版で置く。
+重要moduleの単体testの品質は、coverageに加えてStryker（mutation testing）を手動または定期で流して確かめる。serverは`stryker.server.config.mjs`（root、`npm run mutation:server`。DBのclassは`mutation:db`、配信の本体は`mutation:delivery`で結合testも含めて別に流す）、clientは`client/stryker.client.config.mjs`（`npm run mutation:client`）を使い、対象file、`ignoreStatic`、concurrency 2、単体testの層だけを流すこと、incrementalのcacheの置き場は`.kiro/steering/server-testing.md`と`.kiro/steering/testing.md`を正本とする。preflightとCIのgateにはしない。Stryker 10.0.0とvitest 4.1.11はtest名の区切りが一致する組で、どちらも固定版で置く。
 
 clientのtest stackとcoverage方針は`.kiro/steering/testing.md`を正本とし、serverのtest gateをclientへ適用しない。
 

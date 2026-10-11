@@ -312,7 +312,7 @@ coverage 100% でも残る「通るだけで何も確かめていない test」�
 - 位置づけ: coverage gate の代わりでも、preflight・CI の gate でもない。生き残った mutant は「unit test の追加」「等価・冗長・到達不能として記録」のいずれかで扱う。
 - 対象 test は unit test（`unittest/spec`・`unittest/imp`）だけで、e2e・visual・device は流さない。
 - 対象 file の決め方: 対象の一覧は `client/stryker.client.config.mjs` の `mutate` を正本とし、分類の comment を付ける。本節は基準だけを持つ。
-    - 対象に入れる: 入力から request・payload・表示値への変換のような、component に依らない純粋 logic。現在は手動予約の payload 変換（`manualReservePayload.ts`、`manualReserveForm.ts`、`reserveSelection.ts`）と、ルール検索の request・payload 変換（`rulePayload.ts`、`searchRequest.ts`、`inputParsers.ts`、`searchRoute.ts`）。
+    - 対象に入れる: 入力から request・payload・表示値への変換のような、component に依らない純粋 logic。API の呼び出しと応答の変換（request の組み立て、route の解釈、取得結果の整形）、設定の保存と読み込み、shell（route の path とスクロール履歴）、番組表の描画と配置の計算、表示の整形（日時・大きさ・文字列）、検索 form、放映中、再生（route・lifecycle・字幕・録画の再生の受け渡し）の各画面に依らない処理。
     - 対象に入れない: component、型だけの file（処理が無い）、e2e・visual・device でしか確かめられない振る舞い（対象 test が unit test だけのため）。
 - 新しい module を対象に足す手順: 上の基準に合うかを確かめる → `mutate` に分類の comment 付きで足す → 対象を絞って流す（`-- --mutate <path>`、初回は全 mutant が走る） → 生き残りを「unit test の追加」「等価・冗長・到達不能として記録」に分ける → test を足した場合は `--force` で殺せたことを確かめる → 記録するものを [docs/mutation-known-survivors.md](../../docs/mutation-known-survivors.md) の client の節に足す。
 - 既知の生き残りの一覧: [docs/mutation-known-survivors.md](../../docs/mutation-known-survivors.md)。流した後はこの一覧と比べ、載っていない生き残りだけを扱う。source が変わって理由が成り立たなくなった項目は消す。一覧は理由が成り立つものだけを持ち、経緯は書かない。

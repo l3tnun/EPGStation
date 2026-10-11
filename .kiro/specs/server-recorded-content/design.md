@@ -970,7 +970,7 @@ resultとtoken errorは内部で既存の対象なし・保護・削除失敗応
 | `delete.integration.test.ts`                                        | 利用者削除・個別file削除・容量不足削除のSQLite結合（最終再読取、exact-ID削除）    |
 | `recorded-content-baseline.integration.test.ts`                     | 既存の公開契約の結合                                                              |
 | `drop-log-serving.spec.test.ts`                                     | ドロップログ参照（Requirement 2.3）                                               |
-| `*.imp.test.ts`（`playback-reader`、`upload-adoption`、`upload-default-filesystem`、`upload-fault-injection`、`update-video-file-size`、`deletion-parent-pinning`、`path-based-file-operations`、`legacy-delete-cascade`、`historycleanup-catch`、`videofilecleanup-dir-catch`、`deleterelation-catch`、`setrelation-catch`、`create-tag-insert-catch`） | 個別の分岐・失敗注入・補助 |
+| `*.imp.test.ts`（`playback-reader`、`upload-adoption`、`upload-default-filesystem`、`upload-fault-injection`、`update-video-file-size`、`deletion-parent-pinning`、`path-based-file-operations`、`legacy-delete-cascade`、`historycleanup-catch`、`videofilecleanup-dir-catch`、`deleterelation-catch`、`setrelation-catch`、`create-tag-insert-catch`、`file-util`、`playback-tail-reader-timer-and-length`、`recorded-manage-observables`、`recorded-tag-creation-notification`、`upload-adoption-paths`、`upload-observables`） | 個別の分岐・失敗注入・補助 |
 
 HTTP route、IPC carrier、共有runnerを本機能側へ再実装しない。本機能はsynthetic payload、DB schema、temporary filesystem
 scenario、child process scenarioと期待するdomain結果を所有し、各carrierのownerが提供するharnessへ接続する。Requirement

@@ -169,7 +169,7 @@ client/src/features/search/rule/
 test:
 
 - `client/unittest/spec/searchRule.*.spec.test.tsx` — 画面 spec（layout、route、submit、controls、scroll、ruleEdit、dialog、ruleEditResults、timeSpecified、ruleList）。共有 fixture と helper は `searchRuleSupport.tsx`。
-- `client/unittest/imp/searchRule.*.imp.test.ts` — request / payload builder、scroll FAB、API repository（rule 追加、検索、rule detail）。
+- `client/unittest/imp/searchRule.*.imp.test.ts` — request / payload builder、scroll FAB、API repository（rule 追加、検索、rule detail）、入力 parser・rule payload・検索 request・検索 route（`searchRule.parsersPayloadAndRequests`）。
 - `client/e2e/search-rule-*.spec.ts` — workflow、form-controls、select-parity、scroll-geometry、responsive-theme、extended-pagination、pagination-narrow-width、list-row-hit-area、switch-hit-area、switch-vertical-hit-area。helper は `e2e/support/searchRuleHelpers.ts`、mock は `searchRuleMocks.ts`。
 - `client/visual/search-rule-*.spec.ts` — geometry assertion（`search-rule-geometry.spec.ts` を主とし、crowded-row-geometry、extended-pagination、option-fontsize）。
 

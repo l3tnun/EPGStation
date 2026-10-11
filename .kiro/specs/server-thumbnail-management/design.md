@@ -311,7 +311,7 @@ scenarioの定義だけを所有する。実行結果、coverage結果は所有�
 Node.js 24/26 matrix、および server 全体の C0・C1 判定は、サーバー起動・稼働管理機能（`server-application-runtime`）の
 Requirement 9 だけが所有する。本機能から共有command や coverage 判定を再定義しない。
 
-以下の path は `test/server/thumbnail-management/` に実在する（`imp/*.test.ts` は `imp/` 配下の 6 test file と補助の `_thumbnail-harness.ts`）。
+以下の path は `test/server/thumbnail-management/` に実在する（`imp/*.test.ts` は `imp/` 配下の 7 test file と補助の `_thumbnail-harness.ts`）。
 実行結果と coverage 結果は本機能が記録せず、共有 runner が所有する。
 
 -   `test/server/thumbnail-management/spec/generation-admission.spec.test.ts`

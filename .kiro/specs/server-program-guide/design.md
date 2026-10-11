@@ -1043,6 +1043,7 @@ Acceptance Criterion 9が判定する。実行結果とcoverageはこの表に�
 | `test/server/program-guide/scheduleapi-optional-fields.imp.test.ts` | 番組項目のoptional field（genre・video・audio）のcopyとnull省略、番組なしchannelの除外 |
 | `test/server/program-guide/updatechannels-insert-catch.imp.test.ts` | 放送局保存のinsert reject時の記録と再throw |
 | `test/server/program-guide/epgupdatemanage-saveservice-soft.imp.test.ts` | service保存の空queue早期return、除外service のcreate・update skip |
+| `test/server/program-guide/epgupdatemanage-queues-and-service-removal.imp.test.ts` | 中心番組の判定、放送局更新、change feedの反映、番組queueとservice queueの処理、service削除、放送中・更新済みserviceの扱い |
 | `test/server/program-guide/epg-update-executor-entry-seam.test.ts` | 更新child entryの初期化（既定のlog設定path含む）、updater起動、start reject時のexit code 1、自己起動 |
 | `test/server/program-guide/epg-update-executor-superseded-child.test.ts` | 監視中でなくなった更新childのmessage・終了eventを無視し、再起動しないこと |
 | `test/server/program-guide/update-fallback-notification.test.ts` | event stream無しの全件更新後に親processへ更新完了を知らせること |

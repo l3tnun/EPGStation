@@ -8,6 +8,7 @@ import {
 import {
   resolveLiveWatchRoute,
   resolveRecordedStreamingWatchRoute,
+  resolveRecordedWatchRoute,
 } from '@/features/video/playback/playbackRoutes'
 import {
   readVideoPlayerSetting,
@@ -30,6 +31,7 @@ import {
   normalizeRecordedSelectStreamSetting,
   readRecordedSelectStreamSetting,
   resolveRecordedStreamCandidates,
+  writeRecordedSelectStreamSetting,
 } from '@/features/recorded/requests/streamSelect'
 
 const ids = (n: number) => Array.from({ length: n }, (_, index) => `m${index}`)
@@ -620,5 +622,88 @@ describe('recorded stream selection', () => {
     expect(buildRecordedStreamingRoute({ recordedId: 1, videoFileId: 2, selection })).toStrictEqual(
       failure,
     )
+  })
+})
+
+describe('playback constant tables', () => {
+  const recordingStorage = (value: string | null) => ({
+    getItem: vi.fn((): string | null => value),
+    setItem: vi.fn(),
+  })
+
+  it('names the error shown for each kind of invalid watch route', () => {
+    expect(resolveLiveWatchRoute({ search: '?type=hls', streamConfig: liveConfig })).toStrictEqual({
+      ok: false,
+      message: '再生条件が不正です',
+    })
+    expect(resolveRecordedWatchRoute('')).toStrictEqual({
+      ok: false,
+      message: '再生対象が不正です',
+    })
+    expect(resolveRecordedWatchRoute('?videoId=x')).toStrictEqual({
+      ok: false,
+      message: '再生対象が不正です',
+    })
+    expect(
+      resolveRecordedStreamingWatchRoute({
+        videoFileId: undefined,
+        search: '?streamingType=hls&fileType=ts&mode=0&recordedId=9',
+      }),
+    ).toStrictEqual({ ok: false, message: 'ストリーム再生条件が不正です' })
+  })
+
+  it('reads and saves the video player setting under its own key and starts with hidden subtitles', () => {
+    const storage = recordingStorage(null)
+
+    expect(readVideoPlayerSetting(storage as unknown as Storage)).toStrictEqual({
+      isShowSubtitle: false,
+    })
+    expect(storage.getItem).toHaveBeenCalledExactlyOnceWith('VideoPlayerSetting')
+    expect(readVideoPlayerSetting(undefined)).toStrictEqual({ isShowSubtitle: false })
+    expect(
+      readVideoPlayerSetting(recordingStorage('{"isShowSubtitle":"x"}') as unknown as Storage),
+    ).toStrictEqual({ isShowSubtitle: false })
+  })
+
+  it('selects WebM mode 0 by default and names the stream types in the route query', () => {
+    expect(readRecordedSelectStreamSetting(undefined)).toStrictEqual({ type: 'WebM', mode: 0 })
+    expect(
+      normalizeRecordedSelectStreamSetting({ saved: { type: 'HLS', mode: 5 }, candidates: [] }),
+    ).toStrictEqual({ type: 'WebM', mode: 0 })
+
+    for (const [type, query] of [
+      ['WebM', 'webm'],
+      ['MP4', 'mp4'],
+      ['HLS', 'hls'],
+    ] as const) {
+      expect(
+        buildRecordedStreamingRoute({
+          recordedId: 1,
+          videoFileId: 2,
+          fileType: 'encoded',
+          selection: { type, mode: 0 },
+        }),
+      ).toStrictEqual({
+        ok: true,
+        to: `/recorded/streaming/2?recordedId=1&streamingType=${query}&mode=0&fileType=encoded`,
+      })
+    }
+  })
+
+  it('keeps the recorded stream selection under its own key', () => {
+    const storage = recordingStorage('{"type":"HLS","mode":1}')
+
+    expect(readRecordedSelectStreamSetting(storage)).toStrictEqual({ type: 'HLS', mode: 1 })
+    writeRecordedSelectStreamSetting(storage, { type: 'MP4', mode: 2 })
+
+    expect(RECORDED_SELECT_STREAM_SETTING_STORAGE_KEY).toBe('RecordedSelectStreamSetting')
+    expect(storage.getItem).toHaveBeenCalledExactlyOnceWith('RecordedSelectStreamSetting')
+    expect(storage.setItem).toHaveBeenCalledExactlyOnceWith(
+      'RecordedSelectStreamSetting',
+      '{"type":"MP4","mode":2}',
+    )
+    expect(() =>
+      writeRecordedSelectStreamSetting(undefined, { type: 'MP4', mode: 2 }),
+    ).not.toThrow()
   })
 })
