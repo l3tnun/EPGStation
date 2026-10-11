@@ -182,6 +182,16 @@ describe('recorded streaming watch route', () => {
     ).toBe(false)
   })
 
+  it('judges an unknown file type before waiting for the config', () => {
+    expect(
+      resolveRecordedStreamingWatchRoute({
+        videoFileId: '1',
+        search: search('hls', 'x', 0),
+        isConfigLoaded: false,
+      }),
+    ).toStrictEqual({ ok: false, message: 'ストリーム再生条件が不正です' })
+  })
+
   it('waits for the config before judging the mode', () => {
     expect(
       resolveRecordedStreamingWatchRoute({
@@ -204,6 +214,7 @@ describe('playback lifecycle helpers', () => {
   it('keeps only origin, path and query of an absolute URL when rebuilding for a seek', () => {
     expect(rebuildDirectStreamUrlForSeek('http://host:8080/a/b?x=1', 5)).toBe('http://host:8080/a/b?x=1&ss=5')
     expect(rebuildDirectStreamUrlForSeek('https://host/p', 7)).toBe('https://host/p?ss=7')
+    expect(rebuildDirectStreamUrlForSeek('HTTP://Host:80/a%20b?x=1', 5)).toBe('http://host/a%20b?x=1&ss=5')
     expect(rebuildDirectStreamUrlForSeek('/api/videos/1?isDownload=true', 5)).toBe('/api/videos/1?isDownload=true&ss=5')
     expect(rebuildDirectStreamUrlForSeek('/api/go?to=http://other/p', 5)).toBe('/api/go?to=http%3A%2F%2Fother%2Fp&ss=5')
   })
@@ -378,6 +389,13 @@ describe('recorded video hand-off URLs', () => {
       buildRecordedPlaybackHandoffTarget({
         ...base,
         settings: { ...settings, shouldUseRecordedViewURLScheme: true, recordedViewURLScheme: '   ' },
+      }),
+    ).toStrictEqual(playlist)
+    expect(
+      buildRecordedPlaybackHandoffTarget({
+        ...base,
+        recordedViewUrlScheme: '   ',
+        settings: { ...settings, shouldUseRecordedViewURLScheme: true, recordedViewURLScheme: null },
       }),
     ).toStrictEqual(playlist)
     expect(

@@ -37,6 +37,7 @@ describe('guide route: channel id and time parsing', () => {
   it('pads a single-digit month and day in the route time', () => {
     expect(formatGuideRouteTime(createJapanTimestamp(2026, 3, 5, 1))).toBe('26030501')
     expect(formatGuideRouteTime(createJapanTimestamp(2026, 11, 25, 21))).toBe('26112521')
+    expect(formatGuideRouteTime(createJapanTimestamp(2005, 3, 5, 1))).toBe('05030501')
   })
 
   it('has no time when the query is missing', () => {

@@ -239,6 +239,22 @@ describe('App Shell session scroll history navigation', () => {
     expect(stored().history[0].data).toStrictEqual({ page: 2 })
   })
 
+  it('does not wake a pending waiter when scroll data is saved for the current URL', async () => {
+    vi.useFakeTimers()
+    try {
+      const url = { current: 'http://localhost/#/a' }
+      const history = create(url)
+      history.updateHistoryPosition({ x: 1, y: 1 })
+      const pending = history.onDoneGetData(60000)
+
+      history.saveScrollData({ page: 2 }, 'http://localhost/#/a')
+
+      expect(await settlesWithin(pending)).toBe(false)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('discards the entries after the current one when a new URL is visited', () => {
     const url = { current: 'http://localhost/#/a' }
     const history = create(url)
