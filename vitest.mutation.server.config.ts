@@ -17,8 +17,6 @@ const mutationExclusions = [
     // process.env.TZ を実行中に切り替える。threads pool の中では切り替えが効かず失敗する。
     'shared-foundation/imp/date-util-timezone.test.ts',
     // build 工具・clean install・npm の path に依存し、sandbox の複製では再現できない。
-    'tuner-access/implementation.test.ts',
-    'tuner-access/tuner-access.spec.test.ts',
     'application-runtime/spec/compiled-snapshot-coverage.test.ts',
     'application-runtime/docker-dependency-images.spec.test.ts',
 ];
@@ -33,7 +31,12 @@ const projects = ((base as any).test.projects as any[])
             root: process.cwd(),
             include: pre(project.test.include),
             exclude: pre([...(project.test.exclude ?? []), ...mutationExclusions]),
-            env: { ...(project.test.env ?? {}), EPGSTATION_SERVER_COMPILED_SNAPSHOT: resolve(process.cwd(), 'dist') },
+            env: {
+                ...(project.test.env ?? {}),
+                EPGSTATION_SERVER_COMPILED_SNAPSHOT: resolve(process.cwd(), 'dist'),
+                // mutation の実行中だけ立てる。sandbox では再現できない clean install の probe を test 側で飛ばす目印。
+                EPGS_MUTATION_RUN: '1',
+            },
         },
     }));
 
