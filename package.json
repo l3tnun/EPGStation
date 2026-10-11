@@ -18,6 +18,7 @@
         "test:server:coverage": "node scripts/server-test/run-tests.mjs coverage",
         "mutation:server": "stryker run stryker.server.config.mjs",
         "mutation:db": "stryker run stryker.db.config.mjs",
+        "mutation:delivery": "stryker run stryker.delivery.config.mjs",
         "lint": "eslint --fix src/ test/server/ scripts/server-test/",
         "lint:src": "eslint --fix src/",
         "lint:check": "eslint src/ test/server/ scripts/server-test/",

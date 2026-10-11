@@ -56,6 +56,18 @@ const mutate = [
     // 配信の管理と HLS の stream id の割り当て
     'src/model/service/stream/manager/StreamManageModel.ts',
     'src/model/service/stream/manager/HlsStreamIdAllocator.ts',
+    // 配信の本体（live・録画済みの stream、HLS の file の削除、録画済みの使用権と再生元）
+    'src/model/service/stream/base/StreamBaseModel.ts',
+    'src/model/service/stream/base/LiveStreamBaseModel.ts',
+    'src/model/service/stream/base/RecordedStreamBaseModel.ts',
+    'src/model/service/stream/LiveStreamModel.ts',
+    'src/model/service/stream/LiveHLSStreamModel.ts',
+    'src/model/service/stream/RecordedStreamModel.ts',
+    'src/model/service/stream/RecordedHLSStreamModel.ts',
+    'src/model/service/stream/util/HLSFileDeleterModel.ts',
+    'src/model/service/stream/recorded/RecordedDeliveryLeaseConsumer.ts',
+    'src/model/service/stream/recorded/RecordedPlaybackSourceConsumer.ts',
+    'src/model/service/stream/recorded/DeliveryRecordedUseSnapshotProvider.ts',
     // EPG の更新と tuner server への接続
     'src/model/epgUpdater/EPGUpdateManageModel.ts',
     'src/model/tuner/TunerServerAccessModel.ts',
