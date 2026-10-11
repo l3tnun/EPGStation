@@ -1,6 +1,6 @@
 # mutation testing の既知の生き残り
 
-mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.kiro/steering/server-testing.md`・`.kiro/steering/testing.md` の「Mutation Testing」）で、test を足さないと判断して残してある生き残りの一覧。server（`stryker.server.config.mjs`）・DB（`stryker.db.config.mjs`）・client（`client/stryker.client.config.mjs`）の設定ごとに分け、その中を対象 file ごとの節にしている。生き残りが無い file は載せない。
+mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.kiro/steering/server-testing.md`・`.kiro/steering/testing.md` の「Mutation Testing」）で、test を足さないと判断して残してある生き残りの一覧。server（`stryker.server.config.mjs`）・DB（`stryker.db.config.mjs`）・配信の本体（`stryker.delivery.config.mjs`）・client（`client/stryker.client.config.mjs`）の設定ごとに分け、その中を対象 file ごとの節にしている。生き残りが無い file は載せない。
 
 ## 使い方
 
@@ -390,6 +390,59 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 | --- | --- | --- |
 | `ROOT_PATH` | StringLiteral | 定数表で判定できない: module の読み込み時に評価される式 |
 
+### `src/model/operator/recording/RecorderModel.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| 録画の各処理の log の文言と `log.system.*` の呼び出し（`cleanupPendingRegistration` の削除失敗の記録、録画の開始・失敗・終了の記録など） | StringLiteral、CallExpression、BlockStatement | 振る舞いが変わらない: log だけ |
+| `bindScheduleSession` の `previous !== null && bindingChanged` の左の項、RetryWaiting を引き継ぐ条件の `binding.phase === 'RetryWaiting'`・`this.retryTimerId !== null` の確認、`recordRegistrationTerminationIntent` の `current === null` の早期 return、`hasRegistrationOwner` の `binding !== null` | ConditionalExpression、LogicalOperator | 冗長: `bindingChanged` が `previous !== null` を含む。ほかも `scheduleRetry` や `matchesRegistrationOwner` 側の確認と重なり、外しても観測できる結果が同じ |
+| `promoteRegistrationTerminationIntent` の優先度の比較 `<=` | EqualityOperator | 振る舞いが変わらない: 優先度が等しいときは、return しても代入しても `owner.intent` が同じ値のまま |
+| `setTimer` の `timerId !== null` の確認（2 か所）と、待ち時間が負のときの `time < 0` の補正 | ConditionalExpression | 振る舞いが変わらない: `clearTimeout(null)` は無害で、負の待ち時間は `setTimeout` が 1 ms に丸めるので 0 のときと結果が同じ |
+| `setEventRelayTimer` の `time < 0` の補正 | ConditionalExpression | 振る舞いが変わらない: 同上 |
+| 録画準備の `currentSchedule === null \|\| !currentSchedule.tryTransition('Preparing', 'Recording')` の左の項、録画準備の終了時の `currentRetryPhase === null \|\| !transitionSchedulePhase(...)` の左の項 | ConditionalExpression、LogicalOperator | 冗長: null を渡すと直後の例外処理か、null の phase からの遷移の失敗で、同じ後始末と return になる |
+| `destroyAcquiredStream` の `acquiredStream === null \|\| this.stream === acquiredStream` の左の項 | ConditionalExpression、LogicalOperator | 冗長: 直前の `acquiredStream === null && this.stream !== null` の return により、左の項が true のとき `this.stream` も null で、右の項が同じ結果になる |
+| 録画終了後の drop 検査停止の `isEnabledDropCheck === true` | ConditionalExpression | 振る舞いが変わらない: drop 検査が無効なら停止処理の中で何も起きない |
+| 録画開始処理（`doRecord`）の登録 owner と watchdog の二重 guard（watchdog 停止後の `registrationOwner === null` の確認、`registrationOwner === null \|\| registrationOwner.intent !== 'Deletion'`、取消の意図の判定、`registeringSchedule`・`activeSchedule` の null 確認、登録済みを示す flag の代入） | ConditionalExpression、LogicalOperator、BooleanLiteral、OptionalChaining | 冗長: 先に watchdog が止まる、または owner は非 null でしか呼ばれないため、同じ確認を重ねているだけ |
+| 先頭データの観測を示す `firstDataObserved = true` | BooleanLiteral | 振る舞いが変わらない: `settleFailure` が同期で結果の確定を立てるので、この値は届かない |
+| `_cancel` の `else if (this.isRecording === true)`、`cancel` の対象 phase の一覧の `'RetryWaiting'` | ConditionalExpression、StringLiteral | 到達不能: 前の分岐で除かれる、または同じ値の代入 |
+| `cleanupPendingRegistration` の最後の `resources.videoFileId !== null`・`resources.recordedId !== null`・`resources.dropLogFileId !== null`（`this.xxxId === resources.xxxId` との `&&` の左の項を true にする） | ConditionalExpression | 冗長: 左の項が false（`resources` 側が null）のとき、右の項が true になるのは `this` 側も null のときだけで、null を null に代入するだけで結果が変わらない |
+| `stopForDeletion` の `currentSchedule !== null && deletionPhase !== null` の左の項を true にする | ConditionalExpression | 冗長: `currentSchedule` が null のとき `deletionPhase` も必ず null なので、右の項だけで同じ結果になる |
+| `registrationTerminationIntentPriority`（終了の意図の優先度の表） | ObjectLiteral、NumericLiteral | 定数表で判定できない: 優先順の全組み合わせは test が確かめている |
+| `CANCEL_EVENT`、`START_RECORDING_EVENT`、`EVENT_RELAY_CHECK_TIME` | StringLiteral、ArithmeticOperator | 定数表で判定できない: 値を確かめる test がある |
+
+### `src/model/operator/recording/RecordingManageModel.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| 録画管理の各処理の log の文言と `log.system.*` の呼び出し（予約の削除・追加・再試行・起動時の整理など） | StringLiteral、CallExpression、BlockStatement | 振る舞いが変わらない: log だけ |
+| `observePreparingRecordedUse` の `recorder === undefined`、`observeActiveRecordedUse` の `unknown !== undefined && unknown !== recorder` の左の項 | ConditionalExpression | 振る舞いが変わらない: `undefined` の使用登録を解放しても何も起きない |
+| `observeNormalRecordedUseTerminal`・`releaseRecordedUse`・`releaseRecordedUsesForReservation` の `normalRecordedUseTerminals.delete(...)`・`unknownRecordedUseSessions.delete(...)`・同じ値かの確認 | CallExpression、ConditionalExpression | 冗長: 録画の終端を待つ map と不明な使用登録の map の掃除は他の経路でも同じ状態になる |
+| `isAwaitingNormalRecordedUseTerminal`・`releaseRecordedUse`・`findActiveRecordedUse`・`isRecordedUseId` の確認 | ConditionalExpression、LogicalOperator | 冗長: `findActiveRecordedUse` と `releaseRecordedUse` が互いに同じ確認を重ねており、片方を外しても他方が担保する |
+| `isCurrentRecordingFailure` の `currentCandidate?.generation === failure.generation`（true への置き換えと `?.` を外す変更の 2 件） | ConditionalExpression、OptionalChaining | 冗長: 直前の `getSessionSnapshot` が候補の世代で session を作るので、session の世代の確認が候補の世代の確認と同じ事実を検査済み。session が取れているとき候補も必ずある |
+| `failCandidateStartup` の起動前の変更・録画失敗の退避配列の掃除、`rebuildCandidatesAndStartInternal` の先行の flush と、skip・重複を個別に false にした変種 | CallExpression、ConditionalExpression、BlockStatement | 冗長: 起動に失敗したあとは再実行されないので、退避配列の掃除や先行の flush は観測できない。skip・重複を個別に false にした変種は `rebuildCandidates` の後段で同じ結果になる |
+| `snapshotStartupMutationRows` の予約の行の検証、`ensureScheduleStarted` の確認、`applyScheduleMutation` の `current === undefined \|\| candidate === undefined \|\| ...` と `recorder !== undefined && indexedToken !== undefined && ...` の組み合わせ | ConditionalExpression、LogicalOperator | 冗長: 検証に失敗しても catch で同じ分岐になる、`ensureScheduleStarted` は起動済みのときにしか呼ばれない |
+
+### `src/model/operator/recording/RecordingUtilModel.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| 録画 file の移動・保存先の整理の log の文言と、catch の中が log だけの block | StringLiteral、CallExpression、BlockStatement | 振る舞いが変わらない: log だけ |
+| `_getRecPath` の `reserve.parentDirectoryName === null` の分岐 | ConditionalExpression、BlockStatement | 冗長: この分岐を外しても、後の「見つからなければ先頭の保存先」で同じ結果になる |
+| `cleanupOverdueRecPath` と `_getRecPath` の `typeof err.code !== 'undefined' && err.code === 'ENOENT'` の左の項 | ConditionalExpression、StringLiteral | 冗長: 右の項が定義済みを含意する |
+| `movingFromTmp` の `isMoveCompleted === true && finalCloseError !== undefined` の左の項 | ConditionalExpression | 到達不能: ここへ来る時点で `isMoveCompleted` は常に true |
+| `isReserveSource`（module 先頭の arrow function）、`GET_REC_PATH_LOCK_TIMEOUT`、`GET_REC_PATH_OWNER_TIMEOUT` | ArrowFunction、ArithmeticOperator | 定数表で判定できない: module の読み込み時に評価される式。`getExecution(1, 5000)` の引数と 600,000 ms の境界は test が確かめている |
+
+### `src/model/operator/recording/DropCheckerModel.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| log の文言と log 呼び出し | StringLiteral | 振る舞いが変わらない: log だけ |
+| `attach` の `TsPacketSelector` の設定（`pids`・`programNumbers`）、`pmt` の登録、selector への pipe | ObjectLiteral、ArrayDeclaration、CallExpression | 振る舞いが変わらない: selector の出力はどこにも繋がっておらず、設定しても観測できない |
+| `onFinish` の `removeAllListeners('finish')` の文字列 | StringLiteral | 振る舞いが変わらない: `finish` は一度しか発火しない |
+| `getLogFilePath` の `typeof err.code !== 'undefined' && err.code === 'ENOENT'` の左の項 | ConditionalExpression、StringLiteral | 冗長: 右の項が定義済みを含意する |
+| `appendFile` の `this.dest === null` の確認と throw、`getResult` の `this.result === null` の確認と throw | ConditionalExpression、BlockStatement、StringLiteral | 到達不能: `attach` は `prepare` の後にしか呼ばれず、`dest`・`result` は null にならない |
+| `FINISH_EVENT` | StringLiteral | 定数表で判定できない: module の読み込み時に評価される式。結果待ちの test が通る |
+
 ## DB（`stryker.db.config.mjs`）
 
 ### `src/model/db/ProgramDB.ts`
@@ -449,6 +502,56 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 | `findAll`・`findKeyword` の `keywordAnd.length > 0` | ConditionalExpression、EqualityOperator | 振る舞いが変わらない: 配列は必ず 1 件以上入るので同じ |
 | `findAll`・`getIds` の query builder の alias と `orderBy` の文字列 | StringLiteral | 振る舞いが変わらない: 並びは主キー順で同じ、alias は使われない |
 
+## 配信の本体（`stryker.delivery.config.mjs`）
+
+結合 test も対象 test に入れた設定（`npm run mutation:delivery`）での生き残り。
+
+### `src/model/service/stream/base/RecordedStreamBaseModel.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `videoFileType` の初期値 `'encoded'` | StringLiteral | 定数表で判定できない: `start` の最初に必ず `setVideFileInfo` が上書きするので、初期値は使われない |
+| ログ文言を作る `createEncodeProcessLogMessage`・`createEncodeProcessFailureLogMessage` | ArrowFunction、StringLiteral | 定数表で判定できない: module 先頭で評価される式。log の文言だけ |
+| `start` の `processOption === null` の確認 | ConditionalExpression | 冗長: 直後の `setVideFileInfo` が同じ message で拒否する |
+| `start` の入力 reader を作る条件 `videoFileType === 'ts'` | ConditionalExpression | 冗長: 入力 reader が存在するのは `ts`（reader つきの再生元または file stream）のときだけで、`encoded` では入力 reader が null |
+| `stopInternal` の `getStreamType() === 'RecordedHLS'` | ConditionalExpression | 冗長: 非 HLS では `prepStreamDir` が呼ばれず、`getHlsStopFinalization()` も null を返す |
+| `observeManagedProcessTerminal` の再入の確認と、`close`・`error`・`exit` の listener の取り外し | ConditionalExpression、BlockStatement、StringLiteral、CallExpression | 冗長: 再入の確認と listener の取り外しは重複した安全策。close・error・exit のいずれかが一度来ると他の listener は外れ、再入しない |
+| `finishProcessStartGeneration` の `pendingHlsWriterStops.add(finalization)` | CallExpression | 振る舞いが変わらない: 追跡専用で、判定には使われない |
+
+### `src/model/service/stream/base/LiveStreamBaseModel.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `createStartSession` の `session.stream === null` | ConditionalExpression | 到達不能: 直前で tuner の stream を取得済みで、null にならない |
+| `setMirakurunStream` の `processOption !== null` | ConditionalExpression | 到達不能: 冒頭で null を弾いており、この catch で null にならない |
+| `setMirakurunStream` が tuner の stream の `close`・`end`・`error` に登録する listener の `once`（true → false） | BooleanLiteral | 冗長: 3 つの handler は `closeTunerStream` で、同じ handle の 2 回目以降は先頭の確認で何もしない。listener は session の後始末でも外す |
+| `closeTunerStream` の `tunerStreamHandle` の代入 | ConditionalExpression、AssignmentOperator | 振る舞いが変わらない: `tunerStreamHandle` は書き込み専用の field で、読む所が無い |
+| `disposeSession` の `getStreamType() === 'LiveHLS'` | ConditionalExpression | 冗長: 非 HLS では `getHlsStopFinalization()` が null を返すので同じ結果になる |
+| `disposeSession` の `activeStartSession === session` | ConditionalExpression | 冗長: 後始末されるのは現行の session だけ（新しい start の前に古い session は後始末される） |
+
+### `src/model/service/stream/base/StreamBaseModel.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `checkStreamDir` の `typeof err.code !== 'undefined'` | ConditionalExpression、StringLiteral | 冗長: 続く `err.code === 'ENOENT'` の確認が決める |
+| `stop`・`startCheckStreamEnable`・`setStopTimer` の `streamCheckTimer !== null`・`streamStopTimer !== null` | ConditionalExpression | 振る舞いが変わらない: `clearInterval(null)`・`clearTimeout(null)` は無害で、後に null を代入するだけ |
+| `stop` の `emitter.removeAllListeners(EXIT_EVENT)` | CallExpression | 冗長: 直前の emit で `once` の listener は消えており、他に listener が無い |
+| `EXIT_EVENT` | StringLiteral | 定数表で判定できない: 発行側と購読側が同じ定数を使うので、値を変えても動作が同じ |
+
+### `src/model/service/stream/util/HLSFileDeleterModel.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `deleteAllFiles`・`deleteArtifact` の log の method 名 `'info'` | StringLiteral | 振る舞いが変わらない: `'error'` 以外は info に流れるので同じ |
+| `scan` の正規表現の `^` | Regex | 冗長: 続く `isHlsArtifactForStream` が `startsWith` で同じ判定をする |
+| `isHlsArtifactForStream` の `suffix.length > 0`・`/[0-9]/u.test(suffix.charAt(0)) === false` | ConditionalExpression、EqualityOperator | 定数表で判定できない: report が `static` と報告する行。`stream1`（拡張子無し）を artifact に数えないこと、`stream10` を `stream1` のものにしないことは test が確かめている |
+
+### `src/model/service/stream/recorded/DeliveryRecordedUseSnapshotProvider.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `remove` の `count === undefined` | ConditionalExpression | 到達不能: 解除は register の後に 1 回だけで、その時点で件数が必ずある |
+
 ## client（`client/stryker.client.config.mjs`）
 
 ### `src/features/reserves/lib/manualReserveForm.ts`
@@ -493,3 +596,96 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 | --- | --- | --- |
 | `parseInteger` の `value === null` | ConditionalExpression | 振る舞いが変わらない: null は `/^\d+$/` に合わず undefined になる（report は `static` と報告する） |
 | `parseRuleRoute` の `page < 1` | EqualityOperator | 振る舞いが変わらない: page が 1 のとき 1 を返すので同じ |
+
+### page 番号・選択の解析（`features/recorded/requests/listRequest.ts`、`features/recording/recordingRequests.ts`、`features/reserves/lib/reservesListRequests.ts`、`features/encode/encodeRequests.ts`、`features/guide/lib/guideRoute.ts`）
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `parsePositivePage` の `value === null \|\| value === ''` と `parsed >= 1` | ConditionalExpression、LogicalOperator、StringLiteral、EqualityOperator | 振る舞いが変わらない: 省略すると `Number('')`・`Number(null)` が 0 になり、続く `>= 1` で同じ結果（既定の 1、または undefined）になる。page が 1 のとき両方 1 |
+| `toggleVisibleRecordedSelection`・`toggleVisibleRecordingSelection`・`toggleVisibleEncodeSelection` の `visible...Ids.length > 0` | ConditionalExpression、EqualityOperator | 振る舞いが変わらない: 表示が空のときは「全部選択済み」でも「未選択」でも返る集合が同じ |
+
+### `src/features/recorded/requests/listRequest.ts`、`recordingRequests.ts`、`encodeRequests.ts`、`storagesRequests.ts`、`reservesListRequests.ts`、`reservesFetch.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `RECORDING_QUERY_KEY`・`RECORDING_FAILURE_MESSAGE`、`ENCODE_QUERY_KEY`・`ENCODE_FAILURE_MESSAGE`、`STORAGES_QUERY_KEY`・`STORAGES_FAILURE_MESSAGE`・`STORAGE_SIZE_UNITS`、`RESERVES_QUERY_KEY`・各 message・`RESERVES_ROUTE_TITLES`（予約の種別の題名）、`reservesFetch.ts` の `resolveDefaultFetch` | StringLiteral、ArrayDeclaration、ObjectLiteral、ArrowFunction | 定数表で判定できない: module の読み込み時に評価される式。取得失敗・更新の文言と予約の種別の題名は値を確かめる test がある |
+| `parseReservesType` の先頭の `normal` の判定 | ConditionalExpression | 冗長: 外しても続く既定の分岐が同じ値を返す |
+| `formatStorageSize` の `value > 0`（`>= 0` との違い） | EqualityOperator | 振る舞いが変わらない: 0 のとき同じ |
+
+### `src/features/recorded/requests/`（`addEncode.ts`、`bulkDelete.ts`、`fileSize.ts`、`searchPath.ts`、`uploadForm.ts`）
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `resolveAddEncodeParentDirectory` の `storedParentDirectory !== undefined`・`!== null` | ConditionalExpression | 振る舞いが変わらない: 一覧に null・undefined は含まれないため、`includes` が false で同じ結果 |
+| `bulkDelete` の対象を選ぶ `(item.videoFiles ?? [])` の既定の配列 | ArrayDeclaration | 振る舞いが変わらない: 余分な要素（文字列）は `id` が無く、続く処理で除かれる |
+| `formatRecordedFileSize` の `typeof size === 'number'` | ConditionalExpression | 冗長: 外しても `Number.isFinite(undefined)` が false で 0 になる |
+| `createRecordedSearchKeyword` の区切り文字が空のときの分岐 | ConditionalExpression | 冗長: 全体を返すのと同じ結果（`slice(0, 0)` の空は元の題名に戻る） |
+| `validateRecordedUploadForm` の `duration !== null` | ConditionalExpression | 冗長: 続く `duration > 0` が null で false |
+
+### `src/features/guide/lib/guideRoute.ts`、`guideUrls.ts`、`guideDate.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `guideRoute.ts` の時刻・チャンネルの解析で null を調べる判定（`value === null`、`hour < 0 \|\| hour > 23`、月日の食い違いの検査 `parts.year !== year \|\| ...`） | ConditionalExpression、LogicalOperator、EqualityOperator | 冗長: null は `Number(null) = 0` や正規表現の不一致で同じ結果になる。月日の食い違いの検査は年・月・日が互いに重なっていて、1 つを外しても別の項目が検出する |
+| `guideRoute.ts` の `enabledBroadcastWaves = []` の既定配列 | ArrayDeclaration | 振る舞いが変わらない: 文字列を入れても `includes('BS4K')` が false |
+| `guideUrls.ts` の `createGuideProgramSearchKeyword` の区切り文字が空のときの分岐 | ConditionalExpression | 冗長: 全体を返すのと同じ結果（`slice(0, 0)` の空は元の題名に戻る） |
+| `guideDate.ts` の `getJapanDateParts` の `?? '0'` | StringLiteral | 到達不能: 常に値があり、右辺に来ない |
+| `guideDate.ts` の `HOUR_MS` | ArithmeticOperator | 定数表で判定できない: module の読み込み時に評価される式。1 時間の長さは test が確かめている |
+
+### `src/features/guide/guideStorage.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `isRecord`、`readGuideGenreVisibility`・`readGuideSizeSetting` の `storage === undefined`・`?? 'null'`・非 record の確認 | ConditionalExpression、StringLiteral | 冗長: 非 record は項目ごとの検証で既定値になる。storage が undefined のときは例外から既定値に戻る |
+| `GUIDE_GENRE_SETTING_STORAGE_KEY`・`GUIDE_SIZE_SETTING_STORAGE_KEY`・`GUIDE_GENRE_IDS`・`GUIDE_SIZE_FIELD_LIMITS`・`DEFAULT_GUIDE_SIZE_SETTING` | StringLiteral、ObjectLiteral、ArithmeticOperator | 定数表で判定できない: module の読み込み時に評価される式。保存 key・16 ジャンル・既定の大きさ・上限下限は値を確かめる test がある |
+
+### `src/features/recorded/requests/settingsStorage.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `isRecord`、`readAddEncodeSetting`・`readSendVideoFileSelectHostSetting` の `raw === null ? null : JSON.parse(raw)`・非 record の確認・`typeof parsed.hostName === 'string' \|\| parsed.hostName === null` | ConditionalExpression | 冗長: 非 object・null は例外か既定値になり、外側の try/catch で既定値に戻る |
+| `resolveKodiHostName` の `storedHostName !== undefined && storedHostName !== null` | ConditionalExpression | 振る舞いが変わらない: 一覧に null・undefined は含まれないため、`includes` が false で同じ結果 |
+| `ADD_ENCODE_SETTING_STORAGE_KEY`・`DEFAULT_ADD_ENCODE_SETTING` | StringLiteral、ObjectLiteral、BooleanLiteral | 定数表で判定できない: module の読み込み時に評価される式。保存 key と既定値は値を確かめる test がある |
+
+### `src/features/reserves/lib/reserveRoutes.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `isSafeHttpUrl` の `url.protocol === 'http:' \|\| ...`、catch の戻り値、`linkifyReserveExtendedText` の `text === undefined \|\| text === ''` | ConditionalExpression、LogicalOperator、BooleanLiteral | 振る舞いが変わらない: 一致した URL は必ず http か https で、catch の戻り値が false でも undefined でも同じ。空の text は後続の処理でも空のまま |
+
+### `src/app/lib/routePath.ts`、`src/app/scroll/memoryScrollHistory.ts`、`src/app/scroll/sessionScrollHistory.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `createFullRoutePathFromBrowserHash` の `replace(/^#/, '')` の `^` | Regex | 冗長: hash は必ず `#` で始まる |
+| `memoryScrollHistory.ts` の `getScrollData` の `savedScrollData === null ? null : ...` | ConditionalExpression | 振る舞いが変わらない: 保存値が null のとき `null as T` が null |
+| `sessionScrollHistory.ts` の `isScrollPosition`・`isScrollHistoryEntry` の `typeof value !== 'object' \|\| value === null` | ConditionalExpression、LogicalOperator | 冗長: 非 object の項目は後続の型の検査で落ちる |
+| `readStoredHistory` の既定の履歴 `history: []` | ArrayDeclaration | 振る舞いが変わらない: 履歴の既定配列に文字列を入れても `slice(0, 0)` で捨てられる |
+| `getScrollData` の `currentEntry === null \|\| currentEntry.data === null` | ConditionalExpression | 振る舞いが変わらない: データが null のとき `return null` と `return currentEntry.data` が同じ |
+| `SCROLL_HISTORY_STORAGE_KEY` ほか module 先頭の定数 | StringLiteral | 定数表で判定できない: module の読み込み時に評価される式。保存 key は test が確かめている |
+
+### 再生（`src/features/video/playback/`、`src/features/recorded/requests/videoHandoff.ts`、`streamSelect.ts`）
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `buildVideoViewUrl`・`buildRawVideoUrl`・`buildBrowserRelativeApiUrl` の `basePath = './api'` の既定引数 | StringLiteral | 到達不能: 呼び出し元が常に既定の base path を渡すため、既定引数は使われない |
+| `buildBrowserRelativeApiUrl` の `basePath.replace(/^\.\//, '/').replace(/\/$/, '')` | Regex、StringLiteral | 冗長: 呼び出し元が常に `./api` を渡す（`^` の有無・末尾 `/` の除去は結果が同じ） |
+| `buildRecordedViewUrlSchemeUrl` の `template === undefined \|\| template === null \|\| template.trim() === ''`、`buildRecordedPlaybackHandoffTarget` の `recordedViewUrlScheme !== null` | ConditionalExpression、LogicalOperator | 振る舞いが変わらない: 保存値が空白のとき、既定値への置き換えを経由して同じ結果になる |
+| `normalizeRecordedStreamMode`・`resolveRecordedStreamFileConfig`・`resolveRecordedStreamCandidates` の `typeof` の判定、`mode <= 0`、storage が undefined のときの分岐 | ConditionalExpression、LogicalOperator、EqualityOperator | 冗長: `typeof` の判定を外しても `Number.isSafeInteger('x')` が false。`mode <= 0` は 0 のとき同じ。未知のファイル種別は `undefined` のまま。storage が undefined のときは例外から既定値 |
+| `readVideoPlayerSetting`・`saveVideoPlayerSetting` の storage が undefined・null の JSON・非 object の分岐と保存の catch | ConditionalExpression、LogicalOperator、BlockStatement | 冗長: storage が undefined・null の JSON・非 object は例外か型の不一致で既定値になり、結果が同じ。保存の catch は false を返す前に同じ結果 |
+| `parseFiniteInteger`・`parseOptionalFiniteInteger` の null・undefined の判定、`isRecordedStreamingFileType` の拡張 | ConditionalExpression、LogicalOperator | 冗長: 先頭の判定を外しても、正規表現の不一致か null で同じ結果。拡張した種別は後続の mode 数の 0 で不正になる |
+| `rebuildDirectStreamUrlForSeek` の scheme を判定する正規表現の `\d` → `\D` | Regex | 到達不能: 数字を含む scheme は `new URL` が origin を `null` にするため実在しない |
+| `LIVE_WATCH_ERROR`・`RECORDED_WATCH_ERROR`・`RECORDED_STREAMING_ERROR`、`VIDEO_PLAYER_SETTING_KEY`・`DEFAULT_VIDEO_PLAYER_SETTING`、`DEFAULT_RECORDED_SELECT_STREAM_SETTING`・`RECORDED_STREAM_TYPE_QUERY` | StringLiteral、ObjectLiteral | 定数表で判定できない: module の読み込み時に評価される式。エラー文言・保存 key・既定値・方式名の query は値を確かめる test がある |
+
+### 設定の保存（`src/shared/settings/settingsStorage.ts`、`src/features/settings/lib/settingsStorageAccess.ts`）
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `shared/settings/settingsStorage.ts` の読み込みの失敗を null にする catch と `JSON.parse(this.readRawSettings() ?? 'null')` | BlockStatement、StringLiteral | 振る舞いが変わらない: 読み込みの失敗は null、`undefined` でも `?? 'null'` で同じ |
+| `getReadableSettingsStorage` の `typeof window === 'undefined'`、`createInitialSettingsTmp` の保存の catch | ConditionalExpression、BlockStatement | 冗長: `window` が無いとき `window.localStorage` が例外で、catch が同じ値を返す。保存の catch は repository 側の例外処理で同じ結果 |
+
+### 要求の組み立て（`src/features/dashboard/dashboardRequests.ts`）
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `buildEndpointUrl` の `query === undefined \|\| query === ''` | ConditionalExpression | 到達不能: `query` は全呼び出しで空にならない。空のとき endpoint だけという分岐は来ない |
