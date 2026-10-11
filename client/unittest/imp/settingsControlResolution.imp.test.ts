@@ -93,17 +93,27 @@ describe('settings control resolution', () => {
   })
 
   it('displays an empty string for a null text value and the string for a saved text value', () => {
-    expect(resolveSettingsControlDisplayValue(textControl, tmpWith({ onAirM2TSViewURLScheme: null }))).toBe('')
+    expect(
+      resolveSettingsControlDisplayValue(textControl, tmpWith({ onAirM2TSViewURLScheme: null })),
+    ).toBe('')
     expect(
       resolveSettingsControlDisplayValue(textControl, tmpWith({ onAirM2TSViewURLScheme: 'saved' })),
     ).toBe('saved')
   })
 
   it('displays a switch as true only for a true boolean and false for anything else', () => {
-    expect(resolveSettingsControlDisplayValue(switchControl, tmpWith({ isEnablePWA: true }))).toBe('true')
-    expect(resolveSettingsControlDisplayValue(switchControl, tmpWith({ isEnablePWA: false }))).toBe('false')
-    expect(resolveSettingsControlDisplayValue(switchControl, tmpWith({ isEnablePWA: 'true' }))).toBe('false')
-    expect(resolveSettingsControlDisplayValue(switchControl, tmpWith({ isEnablePWA: null }))).toBe('false')
+    expect(resolveSettingsControlDisplayValue(switchControl, tmpWith({ isEnablePWA: true }))).toBe(
+      'true',
+    )
+    expect(resolveSettingsControlDisplayValue(switchControl, tmpWith({ isEnablePWA: false }))).toBe(
+      'false',
+    )
+    expect(
+      resolveSettingsControlDisplayValue(switchControl, tmpWith({ isEnablePWA: 'true' })),
+    ).toBe('false')
+    expect(resolveSettingsControlDisplayValue(switchControl, tmpWith({ isEnablePWA: null }))).toBe(
+      'false',
+    )
   })
 
   it('creates no update for a select control that has no options', () => {

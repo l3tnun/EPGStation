@@ -35,7 +35,11 @@ describe('URL scheme platform detection', () => {
 
   it('detects from a navigator-like object and returns null when there is none', () => {
     expect(
-      detectNavigatorUrlSchemePlatform({ userAgent: 'x Android x', platform: '', maxTouchPoints: 0 }),
+      detectNavigatorUrlSchemePlatform({
+        userAgent: 'x Android x',
+        platform: '',
+        maxTouchPoints: 0,
+      }),
     ).toBe('android')
     expect(detectNavigatorUrlSchemePlatform(undefined)).toBeNull()
   })

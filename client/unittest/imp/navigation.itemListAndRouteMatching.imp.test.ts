@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { generateNavigationItems } from '@/app/navigation/items'
-import {
-  findSelectedNavigationItem,
-  shouldPushNavigation,
-} from '@/app/navigation/routeMatching'
+import { findSelectedNavigationItem, shouldPushNavigation } from '@/app/navigation/routeMatching'
 import {
   NAVIGATION_REGENERATION_EVENT,
   subscribeToNavigationRegenerationRequests,
@@ -194,9 +191,9 @@ describe('navigation route matching', () => {
   })
 
   it('pushes when a query key exists on only one side', () => {
-    expect(
-      shouldPushNavigation({ path: '/p', query: { k: 'a' } }, { path: '/p', query: {} }),
-    ).toBe(true)
+    expect(shouldPushNavigation({ path: '/p', query: { k: 'a' } }, { path: '/p', query: {} })).toBe(
+      true,
+    )
     expect(
       shouldPushNavigation({ path: '/p', query: {} }, { path: '/p', query: { k: ['a', 'b'] } }),
     ).toBe(true)
