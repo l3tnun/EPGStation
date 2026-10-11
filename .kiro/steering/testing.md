@@ -316,7 +316,7 @@ coverage 100% でも残る「通るだけで何も確かめていない test」�
     - 対象に入れない: component、型だけの file（処理が無い）、e2e・visual・device でしか確かめられない振る舞い（対象 test が unit test だけのため）。
 - 新しい module を対象に足す手順: 上の基準に合うかを確かめる → `mutate` に分類の comment 付きで足す → 対象を絞って流す（`-- --mutate <path>`、初回は全 mutant が走る） → 生き残りを「unit test の追加」「等価・冗長・到達不能として記録」に分ける → test を足した場合は `--force` で殺せたことを確かめる → 記録するものを [docs/mutation-known-survivors.md](../../docs/mutation-known-survivors.md) の client の節に足す。
 - 既知の生き残りの一覧: [docs/mutation-known-survivors.md](../../docs/mutation-known-survivors.md)。流した後はこの一覧と比べ、載っていない生き残りだけを扱う。source が変わって理由が成り立たなくなった項目は消す。一覧は理由が成り立つものだけを持ち、経緯は書かない。
-- 設定: `coverageAnalysis: perTest`、`ignoreStatic: true`、`concurrency: 2`。専用の vitest 設定（`vitest.mutation.config.ts`）が、Stryker の sandbox で動かない test（client の外にある file を読む 2 file）を除く。除外の理由は設定の comment に残す。
+- 設定: `coverageAnalysis: perTest`、`ignoreStatic: true`、`concurrency: 2`。vitest は通常の設定（`vite.config.ts`）をそのまま使い、sandbox で動かないために除外する test は無い（sandbox は `public/` と `src` の `.module.css` を含む client の中身を複製するので、それらを読む test も動く）。
 - incremental の cache: `client/.artifacts/mutation/incremental.json`（環境変数 `EPGS_MUTATION_INCREMENTAL_FILE` で上書きできる）。git の管理外の手元の cache で、消えたら全 mutant を流し直す。test を足しても前回の生き残りを再実行しないことがあるので、足した test が mutant を殺すかは対象を絞って `--force` で確かめる。定数表の mutant（`static`）はこの設定では判定できない。
 - vitest は Stryker vitest-runner と test 名の区切りが一致する版に固定する。vitest の版を変えるときは、`mutation:client` が全 mutant を「test 無しで生存」と報告しないこと（score が 0% にならないこと）を確認する。
 - mutation score の数値の達成だけを目的にした test の追加は、coverage と同じく禁止する。

@@ -157,7 +157,9 @@ const mutate = [
 /** @type {import('@stryker-mutator/api/core').PartialStrykerOptions} */
 export default {
   testRunner: 'vitest',
-  vitest: { configFile: 'vitest.mutation.config.ts' },
+  // 通常の test と同じ設定を使う。sandbox は client の中身（public と src の .module.css を含む）を複製するので、
+  // 除外する test は無い。
+  vitest: { configFile: 'vite.config.ts' },
   mutate,
   // sandbox へ複製しない path。先頭の `/` で client 直下だけに限る。
   // `/.stryker-tmp*` は並行して流す run の sandbox（`.stryker-tmp-<名前>` など）で、
@@ -168,7 +170,6 @@ export default {
     '/e2e',
     '/visual',
     '/device',
-    '/public',
     '/coverage',
     '/reports',
     '/.artifacts',

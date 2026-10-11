@@ -12,16 +12,9 @@ import base from './vitest.server.config.ts';
 //   include / exclude の先頭に `test/server/` を付ける（vitest.mutation.server.config.ts と同じ）。
 // - server の test は build 済みの `dist` を読む。Stryker の buildCommand が mutant 入りの src から
 //   sandbox の `<cwd>/dist` を作るので、それを compiled snapshot にする。
-// - Stryker は vitest を threads pool・worker 1 に固定する。その条件で動かない test は下の一覧で除く。
+// - Stryker は vitest を threads pool・worker 1 に固定する。この条件でも、sandbox（repository の複製）の中でも
+//   動かない test は無いので、除外する test は無い（理由は vitest.mutation.server.config.ts を参照）。
 const pre = (patterns: string[]): string[] => patterns.map(pattern => `test/server/${pattern}`);
-
-const mutationExclusions = [
-    // process.env.TZ を実行中に切り替える。threads pool の中では切り替えが効かず失敗する。
-    'shared-foundation/imp/date-util-timezone.test.ts',
-    // build 工具・clean install・npm の path に依存し、sandbox の複製では再現できない。
-    'application-runtime/spec/compiled-snapshot-coverage.test.ts',
-    'application-runtime/docker-dependency-images.spec.test.ts',
-];
 
 // 配信の結合 test。
 const integrationFiles = [
@@ -40,11 +33,10 @@ const projects = ((base as any).test.projects as any[]).map(project => {
             ...project.test,
             root: process.cwd(),
             include: isIntegration ? pre(integrationFiles) : pre(project.test.include),
-            exclude: pre([...(project.test.exclude ?? []), ...mutationExclusions]),
+            exclude: pre(project.test.exclude ?? []),
             env: {
                 ...(project.test.env ?? {}),
                 EPGSTATION_SERVER_COMPILED_SNAPSHOT: resolve(process.cwd(), 'dist'),
-                EPGS_MUTATION_RUN: '1',
             },
         },
     };
