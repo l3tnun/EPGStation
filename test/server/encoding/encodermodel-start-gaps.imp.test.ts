@@ -74,12 +74,9 @@ const makeHarness = async (options: HarnessOptions = {}) => {
     child.stdout = null;
     const createManaged = vi.fn(async (_request: unknown) => ({ child, handle: {} }));
     const log = { debug: vi.fn(), error: vi.fn(), info: vi.fn(), warn: vi.fn() };
-    const fileManager = {
-        getFilePath: vi.fn(async (directory: string, _input: string, suffix: string) =>
-            join(directory, `result${suffix}`),
-        ),
-        release: vi.fn(),
-    };
+    const reserveOutput = vi.fn(async (directory: string, _input: string, suffix: string) =>
+        join(directory, `result${suffix}`),
+    );
     const model = new EncoderModel(
         { getLogger: () => ({ encode: log }) },
         {
@@ -90,7 +87,7 @@ const makeHarness = async (options: HarnessOptions = {}) => {
             }),
         },
         { create: vi.fn(), createManaged, requestStop: vi.fn() },
-        fileManager,
+        { getFilePath: reserveOutput, release: vi.fn() },
         { findId: vi.fn(async () => ('video' in options ? options.video : { id: 902 })) },
         { findId: vi.fn(async () => ('recorded' in options ? options.recorded : baseRecorded())) },
         {
@@ -128,7 +125,7 @@ const makeHarness = async (options: HarnessOptions = {}) => {
         child.exitCode = 0;
         child.emit('exit', 0, null);
     };
-    return { child, createManaged, env, fileManager, inputPath, log, model, root, settle };
+    return { child, createManaged, env, inputPath, log, model, reserveOutput, root, settle };
 };
 
 /**
@@ -200,11 +197,7 @@ describe('EncoderModel start process request (unittest/imp)', () => {
         const outputDirectory = join(harness.root, 'nested');
         const outputPath = join(outputDirectory, 'result.mp4');
         expect(harness.log.info).toHaveBeenCalledWith(`mkdirp: ${outputDirectory}`);
-        expect(harness.fileManager.getFilePath).toHaveBeenCalledExactlyOnceWith(
-            outputDirectory,
-            harness.inputPath,
-            '.mp4',
-        );
+        expect(harness.reserveOutput).toHaveBeenCalledExactlyOnceWith(outputDirectory, harness.inputPath, '.mp4');
         expect(harness.createManaged.mock.calls[0][0]).toMatchObject({ input: harness.inputPath, output: outputPath });
         expect(harness.env()).toMatchObject({ DIR: outputPath, INPUT: harness.inputPath, OUTPUT: outputPath, SUBDIR: 'nested' });
         expect(harness.log.info.mock.calls.map((call: unknown[]) => call[0])).toEqual([

@@ -2123,7 +2123,7 @@ const makeTerminalManage = (concurrentEncodeNum = 1) => {
         if (callback === null || callback === undefined) throw new Error('MissingSyntheticFinishCallback');
         return callback;
     };
-    return { created, directFinish, event, execution, infos, logger, manage, recordedResourceUse, terminal, token };
+    return { created, directFinish, event, execution, infos, lease: token, logger, manage, recordedResourceUse, terminal };
 };
 
 describe('encode terminal settlement internals', () => {
@@ -2147,7 +2147,7 @@ describe('encode terminal settlement internals', () => {
             fixture.terminal(0)(true, null);
 
             await vi.waitFor(() =>
-                expect(fixture.recordedResourceUse.release).toHaveBeenCalledExactlyOnceWith(fixture.token),
+                expect(fixture.recordedResourceUse.release).toHaveBeenCalledExactlyOnceWith(fixture.lease),
             );
             expect(fixture.event.emitErrorEncode).toHaveBeenCalledOnce();
             expect(fixture.directFinish.finishEncode).not.toHaveBeenCalled();
@@ -2173,7 +2173,7 @@ describe('encode terminal settlement internals', () => {
             fixture.terminal(0)(true, null);
 
             await vi.waitFor(() =>
-                expect(fixture.recordedResourceUse.release).toHaveBeenCalledExactlyOnceWith(fixture.token),
+                expect(fixture.recordedResourceUse.release).toHaveBeenCalledExactlyOnceWith(fixture.lease),
             );
             await vi.waitFor(() => expect(fixture.logger.system.error).toHaveBeenCalledWith(failure));
             expect(fixture.event.emitErrorEncode).toHaveBeenCalledOnce();
@@ -2198,7 +2198,7 @@ describe('encode terminal settlement internals', () => {
                 ['synthetic-execution-1'],
                 ['synthetic-execution-2'],
             ]);
-            expect(fixture.recordedResourceUse.release).toHaveBeenCalledExactlyOnceWith(fixture.token);
+            expect(fixture.recordedResourceUse.release).toHaveBeenCalledExactlyOnceWith(fixture.lease);
             expect(fixture.created[0].started).toBe(false);
         } finally {
             fixture.manage.listener.removeAllListeners();
