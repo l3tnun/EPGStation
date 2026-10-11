@@ -7,7 +7,12 @@ import {
   type RecordedUploadVideoBlockState,
 } from '@/features/recorded/requests/uploadForm'
 import { linkifyReserveExtendedText } from '@/features/reserves/lib/reserveRoutes'
-import { fetchAction, fetchJson, fetchJsonAction } from '@/features/reserves/lib/reservesFetch'
+import {
+  fetchAction,
+  fetchJson,
+  fetchJsonAction,
+  resolveDefaultFetch,
+} from '@/features/reserves/lib/reservesFetch'
 
 const file = new File(['x'], 'a.ts')
 
@@ -162,6 +167,20 @@ describe('reserve extended text links', () => {
 })
 
 describe('reserve fetch helpers', () => {
+  it('resolves the default fetcher to a function bound to the global fetch', async () => {
+    const original = globalThis.fetch
+    const spy = vi.fn(async () => ({ ok: true }) as Response)
+    globalThis.fetch = spy as never
+    try {
+      const fetcher = resolveDefaultFetch()
+      await fetcher('/x')
+
+      expect(spy).toHaveBeenCalledWith('/x')
+    } finally {
+      globalThis.fetch = original
+    }
+  })
+
   const failing = vi.fn(async () => {
     throw new Error('network')
   })

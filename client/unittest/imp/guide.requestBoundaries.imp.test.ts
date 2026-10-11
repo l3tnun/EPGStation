@@ -170,6 +170,17 @@ describe('guide request URLs', () => {
     })
   })
 
+  it('adds the free-only filter of a normal schedule only when it is on', () => {
+    const freeOnly = {
+      ...(normal as unknown as { schedule: object }),
+      schedule: { ...(normal as unknown as { schedule: object }).schedule, isFree: true },
+    } as never
+
+    expect(buildGuideRequestUrls({ requestSet: freeOnly }).schedule).toBe(
+      './api/schedules?startAt=1000&endAt=2000&isHalfWidth=true&isFree=true&GR=true&BS=false&CS=true&SKY=false&BS4K=true',
+    )
+  })
+
   it('adds the free-only filter only when it is on, and addresses a single channel by id', () => {
     expect(buildGuideRequestUrls({ requestSet: single, basePath: '/x/' })).toStrictEqual({
       schedule: '/x/schedules/7?startAt=1000&days=7&isHalfWidth=false&isFree=true',
