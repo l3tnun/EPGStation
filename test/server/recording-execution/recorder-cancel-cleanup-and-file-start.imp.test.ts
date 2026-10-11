@@ -11,7 +11,7 @@ import { flushImmediate, makeRecorder, makeRecordingSessionBinding, makeReserve 
 let root = '';
 
 beforeEach(async () => {
-    root = await mkdtemp(join(tmpdir(), 'epgstation-recorder-mutation-b-'));
+    root = await mkdtemp(join(tmpdir(), 'epgstation-recorder-cancel-cleanup-'));
 });
 
 afterEach(async () => {
