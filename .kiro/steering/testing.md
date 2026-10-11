@@ -313,7 +313,7 @@ coverage 100% でも残る「通るだけで何も確かめていない test」�
 - 対象 test は unit test（`unittest/spec`・`unittest/imp`）だけで、e2e・visual・device は流さない。
 - 対象 file は `client/stryker.client.config.mjs` の `mutate` を正本とする。手動予約の payload 変換（`manualReservePayload.ts`、`manualReserveForm.ts`、`reserveSelection.ts`）と、ルール検索の request・payload 変換（`rulePayload.ts`、`searchRequest.ts`、`inputParsers.ts`、`searchRoute.ts`）。対象を足すときは、component ではなく入力から request・payload・表示値への変換のような純粋 logic に限り、`mutate` と本節を同時に更新する。
 - 設定: `coverageAnalysis: perTest`、`ignoreStatic: true`、`concurrency: 2`。専用の vitest 設定（`vitest.mutation.config.ts`）が、Stryker の sandbox で動かない test（client の外にある file を読む 2 file）を除く。除外の理由は設定の comment に残す。
-- incremental の cache: `client/.artifacts/mutation/incremental.json`（環境変数 `EPGS_MUTATION_INCREMENTAL_FILE` で上書きできる）。git の管理外の手元の cache で、消えたら全 mutant を流し直す。
+- incremental の cache: `client/.artifacts/mutation/incremental.json`（環境変数 `EPGS_MUTATION_INCREMENTAL_FILE` で上書きできる）。git の管理外の手元の cache で、消えたら全 mutant を流し直す。test を足しても前回の生き残りを再実行しないことがあるので、足した test が mutant を殺すかは対象を絞って `--force` で確かめる。定数表の mutant（`static`）はこの設定では判定できない。
 - vitest は Stryker vitest-runner と test 名の区切りが一致する版に固定する。vitest の版を変えるときは、`mutation:client` が全 mutant を「test 無しで生存」と報告しないこと（score が 0% にならないこと）を確認する。
 - mutation score の数値の達成だけを目的にした test の追加は、coverage と同じく禁止する。
 
