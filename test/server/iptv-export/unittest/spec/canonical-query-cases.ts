@@ -66,13 +66,19 @@ const request = async (app: Express, path: string): Promise<{ readonly body: str
     }
 };
 
+// OpenAPI 層の組み立て（api.yml の読み込みと全 route の登録）は 1 回に約 1 秒の CPU を使う。route は model を
+// request ごとに container から取り出すので、組み立てた app は全 case で共有でき、case ごとに組み直さない
+// （負荷の下で case ごとの時間切れに近づく原因だった）。
+let sharedOpenApiApp: Promise<Express> | undefined;
+const getOpenApiApp = (): Promise<Express> => (sharedOpenApiApp ??= createOpenApiApp());
+
 const withQueryModel = async (model: Record<string, any>, run: (app: Express) => Promise<void>): Promise<void> => {
     container().bind('IIPTVApiModel').toConstantValue(model);
     container()
         .bind('IConfiguration')
         .toConstantValue({ getConfig: () => ({}) });
     try {
-        await run(await createOpenApiApp());
+        await run(await getOpenApiApp());
     } finally {
         for (const binding of ['IIPTVApiModel', 'IConfiguration']) {
             if (container().isBound(binding)) container().unbind(binding);

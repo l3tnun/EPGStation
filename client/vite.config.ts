@@ -10,7 +10,7 @@ const packageRoot = dirname(fileURLToPath(import.meta.url))
 const repositoryRoot = resolve(packageRoot, '..')
 const devProxyTarget = process.env.EPGSTATION_DEV_PROXY_TARGET ?? 'http://127.0.0.1:8888'
 const enableCoverageGate = process.env.VITEST_COVERAGE_GATE === '1'
-// coverage:gate の fork pool worker 数の上限。既定は CPU 数と 8 の小さい方(8 はこれまで計測した
+// 単体 test の fork pool worker 数の上限(coverage:gate に限らず全ての run に掛かる)。既定は CPU 数と 8 の小さい方(8 はこれまで計測した
 // 最大値、下の coverage.thresholds 手前のコメント参照)。EPGSTATION_COVERAGE_GATE_MAX_WORKERS が
 // 数値で与えられていれば、それを 1〜CPU数 の範囲に収めて使う(下げる方向にだけ効く、
 // EPGSTATION_TEST_MAX_WORKERS と同じ考え方)。docker-gate-node24 と同時に
@@ -196,9 +196,13 @@ export default defineConfig({
     // faster than --maxWorkers=4 on the same 8-core cpuset (179.74s), which leaves most of the
     // container's CPUs idle. `coverageGateMaxWorkers` (above) keeps this at or below
     // whatever CPU count is actually available, still never higher than the 8 measured here as
-    // safe, so a smaller box (e.g. 4 CPUs) falls back to 4 workers. This does
-    // not apply outside coverage:gate: plain runs (no coverage instrumentation) do not exhibit this
-    // contention.
+    // safe, so a smaller box (e.g. 4 CPUs) falls back to 4 workers. The same cap also applies to
+    // plain runs (no coverage instrumentation): without it vitest starts one worker per CPU minus
+    // one (15 on a 16-core host), and a full-suite run on such a host failed 4 tests with the 5000ms
+    // default timeout (different tests in different runs, slowest passing test 5714ms), whereas the
+    // same run with 8 workers passed all 339 files with the slowest test at 2994ms and only about
+    // 14% more wall time. Those tests are CPU-bound renders of the whole application, so what makes
+    // them slow is the number of workers competing for the cores, not any timer.
     //
     // That 8-worker measurement was still in isolation (nothing else sharing the box).
     // release-preflight.sh's `--all` parallel group (docker-gate-node24 / client+client-browser
@@ -219,7 +223,7 @@ export default defineConfig({
     // group; a standalone `--only client` or `scripts/ci-rehearsal/job.sh ... client-static -` run
     // (e.g. the push-before-hosted-CI use in AGENTS.md) leaves it unset and gets this file's own
     // CPU-count-based default instead.
-    maxWorkers: enableCoverageGate ? coverageGateMaxWorkers : undefined,
+    maxWorkers: coverageGateMaxWorkers,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html'],

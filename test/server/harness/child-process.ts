@@ -404,25 +404,19 @@ const compileScenario = async (sourceEntrypoint: string, compiledEntrypoint: str
         target: ts.ScriptTarget.ES2021,
         types: ['node'],
     };
-    const program = ts.createProgram([sourceEntrypoint], compilerOptions);
-    const preEmitDiagnostics = ts.getPreEmitDiagnostics(program);
-    if (preEmitDiagnostics.length > 0) {
-        throw new Error(formatDiagnostics(preEmitDiagnostics));
-    }
-
-    let emittedJavaScript: string | undefined;
-    const emitResult = program.emit(undefined, (fileName, text) => {
-        if (fileName.endsWith('.js')) {
-            emittedJavaScript = text;
-        }
+    // 型検査（createProgram）は @types/node など標準の型定義を毎回読み直すため、1 回に約 0.4〜0.8 秒の CPU を使い、
+    // 子 process の起動より重い。負荷の下ではこれが test の時間切れの主因になるので、構文だけを検査して
+    // JavaScript へ変換する（変換結果は型検査を通した場合と同じで、子 process の振る舞いの検証は変わらない）。
+    const transpiled = ts.transpileModule(source, {
+        compilerOptions,
+        fileName: sourceEntrypoint,
+        reportDiagnostics: true,
     });
-    if (emitResult.diagnostics.length > 0) {
-        throw new Error(formatDiagnostics(emitResult.diagnostics));
+    const diagnostics = transpiled.diagnostics ?? [];
+    if (diagnostics.length > 0) {
+        throw new Error(formatDiagnostics(diagnostics));
     }
-    if (emittedJavaScript === undefined) {
-        throw new Error('TypeScript did not emit the synthetic child entrypoint');
-    }
-    await writeFile(compiledEntrypoint, emittedJavaScript, { encoding: 'utf8', mode: 0o600 });
+    await writeFile(compiledEntrypoint, transpiled.outputText, { encoding: 'utf8', mode: 0o600 });
 };
 
 export const spawnCompiledChildScenario = async (
