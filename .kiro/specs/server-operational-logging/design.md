@@ -420,6 +420,7 @@ Acceptance Criterion 9へ委譲する。本Designはそのfoundationへ追加す
 | ------------------------------------------------------------------ | ------------------------------------------------------------------------- |
 | `test/server/operational-logging/operational-logging.spec.test.ts` | `unittest/spec`: logger、初期化、役割、HTTP、重大異常契約                 |
 | `test/server/operational-logging/implementation.test.ts`           | `unittest/imp`: token置換、category、level、HTTP終了分岐                  |
+| `test/server/operational-logging/logger-model-startup-failures.imp.test.ts` | `unittest/imp`: 初期化前のlogger要求、設定fileの不存在・読込失敗・解析失敗でのprocess終了 |
 | `test/server/operational-logging/http.integration.test.ts`         | `integration`: 実middleware、HTTP応答、初回terminal通知、listener後始末   |
 | `test/server/operational-logging/process.integration.test.ts`      | `integration`: 役割別entrypoint、fatal記録、terminal分類、process間分離   |
 | `test/server/operational-logging/rotation.integration.test.ts`     | `integration`: 実appender、rotation、権限・容量相当の失敗、終了直前の結果 |

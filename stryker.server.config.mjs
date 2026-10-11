@@ -7,7 +7,8 @@ import { fileURLToPath } from 'node:url';
 const tscPath = fileURLToPath(new URL('./node_modules/typescript/bin/tsc', import.meta.url));
 
 // incremental の cache。環境変数で別の場所に変えられる。消えたら全 mutant を流し直す。
-const incrementalFile = process.env.EPGS_MUTATION_INCREMENTAL_FILE ?? 'test/server/.artifacts/mutation/incremental.json';
+const incrementalFile =
+    process.env.EPGS_MUTATION_INCREMENTAL_FILE ?? 'test/server/.artifacts/mutation/incremental.json';
 
 // 重要 module の一覧。評価対象を増やすときはここに足す。
 // `path:開始行-終了行` の形で範囲を絞れる。
@@ -97,6 +98,25 @@ const mutate = [
     'src/model/event/OperatorEncodeEvent.ts',
     'src/model/event/OperatorEncodeEventBinding.ts',
     'src/model/service/socketio/SocketIOManageModel.ts',
+    // 録画済みの再生元・資源の排他、EPG 更新の実行、基盤の処理
+    'src/model/operator/recorded/RecordedPlaybackSourceProvider.ts',
+    'src/model/operator/recorded/RecordedResourceMutationLock.ts',
+    'src/model/epgUpdater/EPGUpdater.ts',
+    'src/model/epgUpdater/EPGUpdateExecutorManageModel.ts',
+    'src/model/epgUpdater/EPGUpdateExecutor.ts',
+    'src/lib/TailStream.ts',
+    'src/model/ExecutionManagementModel.ts',
+    'src/model/ServiceChildRecordedUseRegistry.ts',
+    'src/model/LoggerModel.ts',
+    'src/model/ConnectionCheckModel.ts',
+    'src/model/PromiseRetry.ts',
+    'src/model/PromiseQueue.ts',
+    'src/model/ConfigurationFileAccess.ts',
+    'src/model/operator/recording/RecordingRecordedUseProvider.ts',
+    'src/model/operator/recordedTag/RecordedTagManadeModel.ts',
+    'src/model/operator/storage/StorageRecordedUseSnapshotAdapter.ts',
+    'src/util/ProcessUtil.ts',
+    'src/util/Util.ts',
 ];
 
 /** @type {import('@stryker-mutator/api/core').PartialStrykerOptions} */

@@ -86,6 +86,22 @@ describe('ServiceChildRecordedUseRegistry', () => {
         expect(registry.acquire(lease(plainPeer, 2, 12))).toEqual({ status: 'unknown' });
     });
 
+    it('[AR-9.4] accepts a peer that can only remove listeners as current without attaching listeners', () => {
+        const registry = new ServiceChildRecordedUseRegistry();
+        const removeOnlyPeer = { removeListener: () => undefined };
+
+        expect(() => registry.registerPeer(removeOnlyPeer)).not.toThrow();
+        expect(registry.acquire(lease(removeOnlyPeer, 1, 10))).toEqual({ status: 'granted' });
+    });
+
+    it('[AR-9.4] answers unknown to a release from a registered peer that never acquired a lease', () => {
+        const registry = new ServiceChildRecordedUseRegistry();
+        const peer = new EventEmitter();
+        registry.registerPeer(peer);
+
+        expect(registry.release({ acquisitionRequestId: 1, senderPeer: peer })).toBe('unknown');
+    });
+
     it.each([
         ['request id 0', { requestId: 0 }],
         ['negative request id', { requestId: -1 }],
