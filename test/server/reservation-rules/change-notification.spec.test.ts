@@ -2,9 +2,13 @@ import 'reflect-metadata';
 
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { makeReservationHarness } from '../fixtures/reservation-rules/runtime';
+import {
+    makeReservationHarness,
+    preloadReservationRuleModules,
+    RESERVATION_RULE_PRELOAD_TIMEOUT_MS,
+} from '../fixtures/reservation-rules/runtime';
 
 interface RuleOption {
     id?: number;
@@ -97,6 +101,10 @@ const settle = async (): Promise<void> => {
     await Promise.resolve();
     await Promise.resolve();
 };
+
+beforeAll(() => {
+    preloadReservationRuleModules();
+}, RESERVATION_RULE_PRELOAD_TIMEOUT_MS);
 
 afterEach(() => {
     vi.clearAllTimers();

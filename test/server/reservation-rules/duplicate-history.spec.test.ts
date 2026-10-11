@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import {
     createDialectPersistence,
@@ -6,7 +6,13 @@ import {
     makeProgram,
     makeReservationHarness,
     makeRule,
+    preloadReservationRuleModules,
+    RESERVATION_RULE_PRELOAD_TIMEOUT_MS,
 } from '../fixtures/reservation-rules/runtime';
+
+beforeAll(() => {
+    preloadReservationRuleModules();
+}, RESERVATION_RULE_PRELOAD_TIMEOUT_MS);
 
 afterEach(() => {
     vi.useRealTimers();
@@ -42,9 +48,7 @@ describe('recorded-history possible duplicate characterization', () => {
     // full-suite contention, so this needs an explicit, generous budget.
     it('[RR-5.2] compares matching recorded history within the configured period', async () => {
         for (const dialect of ['sqlite', 'mysql'] as DatabaseDialect[]) {
-            const fixtureStartedAt = Date.now();
             const fixture = await createDialectPersistence(dialect);
-            console.error(`[timing] createDialectPersistence(${dialect}): ${Date.now() - fixtureStartedAt}ms`);
             try {
                 vi.useFakeTimers();
                 vi.setSystemTime(1_800_000_000_000);

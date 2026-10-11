@@ -4,9 +4,15 @@ import { EventEmitter } from 'node:events';
 import { PassThrough } from 'node:stream';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createDeferred } from '../harness/async';
-import { createDialectPersistence, type DatabaseDialect, makeProgram } from '../fixtures/reservation-rules/runtime';
+import {
+    createDialectPersistence,
+    type DatabaseDialect,
+    makeProgram,
+    preloadReservationRuleModules,
+    RESERVATION_RULE_PRELOAD_TIMEOUT_MS,
+} from '../fixtures/reservation-rules/runtime';
 
 const deleteQueryBuilder = () => {
     const builder = {
@@ -64,6 +70,10 @@ const readStoredProgramContract = async (api: any, now: number) => {
         search: search.map((value: any) => value.id),
     };
 };
+
+beforeAll(() => {
+    preloadReservationRuleModules();
+}, RESERVATION_RULE_PRELOAD_TIMEOUT_MS);
 
 afterEach(() => {
     vi.clearAllTimers();

@@ -4,8 +4,14 @@ import { EventEmitter } from 'node:events';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import { PassThrough } from 'node:stream';
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createDialectPersistence, type DatabaseDialect, makeProgram } from '../fixtures/reservation-rules/runtime';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import {
+    createDialectPersistence,
+    type DatabaseDialect,
+    makeProgram,
+    preloadReservationRuleModules,
+    RESERVATION_RULE_PRELOAD_TIMEOUT_MS,
+} from '../fixtures/reservation-rules/runtime';
 import { createDeferred } from '../harness/async';
 
 const require = createRequire(join(process.cwd(), 'package.json'));
@@ -88,6 +94,10 @@ const createCoordinator = (
     updater.startEventStreamAnalysis = vi.fn();
     return { updateManage, updater };
 };
+
+beforeAll(() => {
+    preloadReservationRuleModules();
+}, RESERVATION_RULE_PRELOAD_TIMEOUT_MS);
 
 afterEach(() => {
     restoreProcessSend?.();

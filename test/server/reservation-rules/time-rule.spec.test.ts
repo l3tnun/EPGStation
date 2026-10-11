@@ -1,8 +1,17 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { makeReservationHarness, makeRule } from '../fixtures/reservation-rules/runtime';
+import {
+    makeReservationHarness,
+    makeRule,
+    preloadReservationRuleModules,
+    RESERVATION_RULE_PRELOAD_TIMEOUT_MS,
+} from '../fixtures/reservation-rules/runtime';
 
 const evaluatedAt = new Date('2030-01-07T00:00:00+09:00').getTime();
+
+beforeAll(() => {
+    preloadReservationRuleModules();
+}, RESERVATION_RULE_PRELOAD_TIMEOUT_MS);
 
 afterEach(() => {
     vi.useRealTimers();

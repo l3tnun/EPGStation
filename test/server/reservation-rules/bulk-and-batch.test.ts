@@ -1,6 +1,16 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { loadProduction, loggerModel, makeReservationHarness } from '../fixtures/reservation-rules/runtime';
+import {
+    loadProduction,
+    loggerModel,
+    makeReservationHarness,
+    preloadReservationRuleModules,
+    RESERVATION_RULE_PRELOAD_TIMEOUT_MS,
+} from '../fixtures/reservation-rules/runtime';
+
+beforeAll(() => {
+    preloadReservationRuleModules();
+}, RESERVATION_RULE_PRELOAD_TIMEOUT_MS);
 
 afterEach(() => {
     vi.clearAllTimers();

@@ -201,7 +201,8 @@ lintの規則はdisable commentで外さない。
    上書きが要るときは`{ ...process.env, 名前: 値 }`とし、`NODE_V8_COVERAGE`を落とさない。
 7. **時間でなく状態を待つ。** 待つ対象の状態（deferredの解決、event、queueのjobの完了、`kill`の呼出し、callの回数、
    fake timerの`advance`）を直接待つ。固定時間のsleepを足して通さない。期限を延ばしてtestを通さない。時間の経過そのものを
-   検証するtestはfake timerを使い、clockをtest側で進める。
+   検証するtestはfake timerを使い、clockをtest側で進める。compiled moduleの初回loadのような一度きりの重い準備は、test本体に
+   置かず、明示timeout付きのtop-level `beforeAll`で済ませる。
 8. **後始末をhookに置かない。** 外部command、container削除、process終了待ちのような重い後始末を、timeoutの短い
    `afterEach`・`afterAll`に置かない。testの本体（`try`/`finally`、または末尾に置いた明示timeout付きのcase）で行う。hookに
    残すのは、冪等で軽いfallbackだけにする。

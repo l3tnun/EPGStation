@@ -1,6 +1,13 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { loadProduction, makeProgram, makeReservationHarness, makeRule } from '../fixtures/reservation-rules/runtime';
+import {
+    loadProduction,
+    makeProgram,
+    makeReservationHarness,
+    makeRule,
+    preloadReservationRuleModules,
+    RESERVATION_RULE_PRELOAD_TIMEOUT_MS,
+} from '../fixtures/reservation-rules/runtime';
 
 // 先頭が区切りの指定は、保存先の絶対 path と見分けが付かないよう値を組み立てて渡す
 const rooted = (relative: string): string => `/${relative}`;
@@ -30,6 +37,10 @@ const installCandidateConsumer = (model: unknown) => {
     (model as { createDiff: typeof consumer }).createDiff = consumer;
     return consumer;
 };
+
+beforeAll(() => {
+    preloadReservationRuleModules();
+}, RESERVATION_RULE_PRELOAD_TIMEOUT_MS);
 
 afterEach(() => {
     vi.useRealTimers();

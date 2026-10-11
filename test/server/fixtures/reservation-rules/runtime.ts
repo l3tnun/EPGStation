@@ -37,14 +37,29 @@ export interface DialectPersistenceOptions {
     readonly sqliteRegexp?: boolean;
 }
 
+type EntityClass = new () => Record<string, unknown>;
+type DatabaseClass = new (...args: unknown[]) => Record<string, (...args: any[]) => Promise<any>>;
+
+const loadEntities = () => ({
+    Rule: loadProduction<EntityClass>('db', 'entities', 'Rule.js'),
+    Program: loadProduction<EntityClass>('db', 'entities', 'Program.js'),
+    RecordedHistory: loadProduction<EntityClass>('db', 'entities', 'RecordedHistory.js'),
+    Reserve: loadProduction<EntityClass>('db', 'entities', 'Reserve.js'),
+});
+
+const loadDatabaseModules = () => ({
+    DBOperator: loadProduction<new (...args: unknown[]) => Record<string, unknown>>('model', 'db', 'DBOperator.js'),
+    RuleDB: loadProduction<DatabaseClass>('model', 'db', 'RuleDB.js'),
+    ProgramDB: loadProduction<DatabaseClass>('model', 'db', 'ProgramDB.js'),
+    RecordedHistoryDB: loadProduction<DatabaseClass>('model', 'db', 'RecordedHistoryDB.js'),
+    ReserveDB: loadProduction<DatabaseClass>('model', 'db', 'ReserveDB.js'),
+});
+
 export const createDialectPersistence = async (
     dialect: DatabaseDialect,
     persistenceOptions: DialectPersistenceOptions = {},
 ) => {
-    const Rule = loadProduction<new () => Record<string, unknown>>('db', 'entities', 'Rule.js');
-    const Program = loadProduction<new () => Record<string, unknown>>('db', 'entities', 'Program.js');
-    const RecordedHistory = loadProduction<new () => Record<string, unknown>>('db', 'entities', 'RecordedHistory.js');
-    const Reserve = loadProduction<new () => Record<string, unknown>>('db', 'entities', 'Reserve.js');
+    const { Rule, Program, RecordedHistory, Reserve } = loadEntities();
     let maria: Awaited<ReturnType<typeof provisionMariaDb>> | undefined;
     let schema: Awaited<ReturnType<Awaited<ReturnType<typeof provisionMariaDb>>['createSchema']>> | undefined;
     let source: DataSource | undefined;
@@ -95,34 +110,12 @@ export const createDialectPersistence = async (
                 new RegExp(pattern, 'u').test(text) ? 1 : 0,
             );
         }
-        const DBOperator = loadProduction<new (...args: unknown[]) => Record<string, unknown>>(
-            'model',
-            'db',
-            'DBOperator.js',
-        );
+        const { DBOperator, RuleDB, ProgramDB, RecordedHistoryDB, ReserveDB } = loadDatabaseModules();
         const operator = new DBOperator(loggerModel, { getConfig: () => config }) as Record<string, unknown> & {
             connection: DataSource | null;
         };
         operator.connection = source;
         const retry = { run: async <T>(job: () => Promise<T>) => job() };
-        const RuleDB = loadProduction<new (...args: unknown[]) => Record<string, (...args: any[]) => Promise<any>>>(
-            'model',
-            'db',
-            'RuleDB.js',
-        );
-        const ProgramDB = loadProduction<new (...args: unknown[]) => Record<string, (...args: any[]) => Promise<any>>>(
-            'model',
-            'db',
-            'ProgramDB.js',
-        );
-        const RecordedHistoryDB = loadProduction<
-            new (...args: unknown[]) => Record<string, (...args: any[]) => Promise<any>>
-        >('model', 'db', 'RecordedHistoryDB.js');
-        const ReserveDB = loadProduction<new (...args: unknown[]) => Record<string, (...args: any[]) => Promise<any>>>(
-            'model',
-            'db',
-            'ReserveDB.js',
-        );
         const ruleDB = new RuleDB(silentLoggerModel, operator, retry);
         const recordedHistoryDB = new RecordedHistoryDB(silentLoggerModel, operator, retry);
         const reserveDB = new ReserveDB(silentLoggerModel, operator, retry);
@@ -206,13 +199,28 @@ export const makeProgram = (overrides: Record<string, unknown> = {}) => ({
     ...overrides,
 });
 
+// The first require of the compiled reservation model, entity and database modules (and their dependency trees)
+// is slow on a busy machine. Test files that use makeReservationHarness or createDialectPersistence call
+// preloadReservationRuleModules in a top-level beforeAll with this timeout so the cold load is not charged
+// to the time budget of the first test.
+export const RESERVATION_RULE_PRELOAD_TIMEOUT_MS = 60_000;
+
+type ReservationManageModelConstructor = new (...args: unknown[]) => {
+    updateAll(first?: boolean): Promise<void>;
+    updateRule(id: number, suppress?: boolean, first?: boolean): Promise<void>;
+};
+
+const loadReservationManageModel = (): ReservationManageModelConstructor =>
+    loadProduction<ReservationManageModelConstructor>('model', 'operator', 'reservation', 'ReservationManageModel.js');
+
+export const preloadReservationRuleModules = (): void => {
+    loadReservationManageModel();
+    loadEntities();
+    loadDatabaseModules();
+};
+
 export const makeReservationHarness = (overrides: Record<string, unknown> = {}) => {
-    const ReservationManageModel = loadProduction<
-        new (...args: unknown[]) => {
-            updateAll(first?: boolean): Promise<void>;
-            updateRule(id: number, suppress?: boolean, first?: boolean): Promise<void>;
-        }
-    >('model', 'operator', 'reservation', 'ReservationManageModel.js');
+    const ReservationManageModel = loadReservationManageModel();
     const execution = {
         getExecution: vi.fn(async () => 'synthetic-execution'),
         unLockExecution: vi.fn(),

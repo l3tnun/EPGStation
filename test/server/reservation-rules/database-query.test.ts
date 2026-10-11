@@ -3,9 +3,15 @@ import 'reflect-metadata';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import { Container } from 'inversify';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { createDialectPersistence, type DatabaseDialect, makeProgram } from '../fixtures/reservation-rules/runtime';
+import {
+    createDialectPersistence,
+    type DatabaseDialect,
+    makeProgram,
+    preloadReservationRuleModules,
+    RESERVATION_RULE_PRELOAD_TIMEOUT_MS,
+} from '../fixtures/reservation-rules/runtime';
 
 interface RuleQueryApi {
     gets(option: { type?: 'all' | 'normal' | 'conflict' | 'skip' | 'overlap' }): Promise<{
@@ -180,6 +186,10 @@ const queryDialectBranches = async () => {
 
     return results;
 };
+
+beforeAll(() => {
+    preloadReservationRuleModules();
+}, RESERVATION_RULE_PRELOAD_TIMEOUT_MS);
 
 describe('Rule reservation count query implementation', () => {
     it('resolves through the production container IReserveDB binding and projects legacy counts', async () => {

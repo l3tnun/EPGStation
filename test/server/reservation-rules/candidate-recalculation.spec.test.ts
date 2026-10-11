@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import {
     createDialectPersistence,
@@ -7,6 +7,8 @@ import {
     makeProgram,
     makeReservationHarness,
     makeRule,
+    preloadReservationRuleModules,
+    RESERVATION_RULE_PRELOAD_TIMEOUT_MS,
 } from '../fixtures/reservation-rules/runtime';
 
 type Coordinator = {
@@ -113,6 +115,10 @@ const runSequentialBatch = async () => {
     await batch;
     return updateRule;
 };
+
+beforeAll(() => {
+    preloadReservationRuleModules();
+}, RESERVATION_RULE_PRELOAD_TIMEOUT_MS);
 
 afterEach(() => {
     vi.clearAllMocks();

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { DataSource } from 'typeorm';
 
 import {
@@ -7,6 +7,8 @@ import {
     makeProgram,
     makeReservationHarness,
     makeRule,
+    preloadReservationRuleModules,
+    RESERVATION_RULE_PRELOAD_TIMEOUT_MS,
 } from '../fixtures/reservation-rules/runtime';
 import { silentLoggerModel } from '../harness/silent-logger-model';
 
@@ -107,6 +109,10 @@ const observeReservationTransaction = (source: DataSource, ledger: string[], rej
         return runner;
     });
 };
+
+beforeAll(() => {
+    preloadReservationRuleModules();
+}, RESERVATION_RULE_PRELOAD_TIMEOUT_MS);
 
 afterEach(() => {
     vi.useRealTimers();

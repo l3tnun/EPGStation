@@ -2,9 +2,14 @@ import 'reflect-metadata';
 
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { createDialectPersistence, type DatabaseDialect } from '../fixtures/reservation-rules/runtime';
+import {
+    createDialectPersistence,
+    type DatabaseDialect,
+    preloadReservationRuleModules,
+    RESERVATION_RULE_PRELOAD_TIMEOUT_MS,
+} from '../fixtures/reservation-rules/runtime';
 import { silentLoggerModel } from '../harness/silent-logger-model';
 
 interface RuleOption {
@@ -387,6 +392,10 @@ const settle = async (): Promise<void> => {
     await Promise.resolve();
 };
 
+beforeAll(() => {
+    preloadReservationRuleModules();
+}, RESERVATION_RULE_PRELOAD_TIMEOUT_MS);
+
 afterEach(() => {
     vi.clearAllTimers();
     vi.useRealTimers();
@@ -506,9 +515,7 @@ describe('rule list and keyword query specification characterization', () => {
     // full-suite contention, so this needs an explicit, generous budget.
     it('[RR-1.6] preserves actual detail, token AND, paging, total, ID order, and type count in both dialects', async () => {
         for (const dialect of ['sqlite', 'mysql'] as DatabaseDialect[]) {
-            const fixtureStartedAt = Date.now();
             const fixture = await createDialectPersistence(dialect);
-            console.error(`[timing] createDialectPersistence(${dialect}): ${Date.now() - fixtureStartedAt}ms`);
             try {
                 const first = programRule();
                 first.id = 3;

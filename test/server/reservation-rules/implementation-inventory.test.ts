@@ -1,6 +1,13 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { loadProduction, loggerModel, makeReservationHarness, makeRule } from '../fixtures/reservation-rules/runtime';
+import {
+    loadProduction,
+    loggerModel,
+    makeReservationHarness,
+    makeRule,
+    preloadReservationRuleModules,
+    RESERVATION_RULE_PRELOAD_TIMEOUT_MS,
+} from '../fixtures/reservation-rules/runtime';
 
 interface RuleManager {
     add(rule: unknown): Promise<number>;
@@ -50,6 +57,10 @@ const makeRuleManager = (optionChecker: RuleOptionChecker) => {
 const drainMicrotasks = async (): Promise<void> => {
     for (let index = 0; index < 8; index++) await Promise.resolve();
 };
+
+beforeAll(() => {
+    preloadReservationRuleModules();
+}, RESERVATION_RULE_PRELOAD_TIMEOUT_MS);
 
 afterEach(() => {
     vi.clearAllTimers();

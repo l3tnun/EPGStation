@@ -1,14 +1,24 @@
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { createDialectPersistence, type DatabaseDialect, makeProgram } from '../fixtures/reservation-rules/runtime';
+import {
+    createDialectPersistence,
+    type DatabaseDialect,
+    makeProgram,
+    preloadReservationRuleModules,
+    RESERVATION_RULE_PRELOAD_TIMEOUT_MS,
+} from '../fixtures/reservation-rules/runtime';
 
 const require = createRequire(join(process.cwd(), 'package.json'));
 const compiledSnapshot = process.env.EPGSTATION_SERVER_COMPILED_SNAPSHOT;
 if (compiledSnapshot === undefined) throw new Error('The compiled server snapshot is required');
 const ScheduleApiModel = (require(join(compiledSnapshot, 'model', 'api', 'schedule', 'ScheduleApiModel.js')) as any)
     .default;
+
+beforeAll(() => {
+    preloadReservationRuleModules();
+}, RESERVATION_RULE_PRELOAD_TIMEOUT_MS);
 
 afterEach(() => {
     vi.useRealTimers();
