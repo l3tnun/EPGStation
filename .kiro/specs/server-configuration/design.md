@@ -440,6 +440,7 @@ Requirement 9 Acceptance Criterion 9（server全体の単体testだけで`src/**
 | `test/server/configuration/filesystem.integration.test.ts` | 設定、template、鍵、証明書、実行file、watcher・listenerの後始末    |
 | `test/server/configuration/http.integration.test.ts`       | 公開設定GETのHTTP projectionと非公開fieldの不在                    |
 | `test/server/configuration/file-access-and-template.imp.test.ts` | filesystem portのunwatchとtemplate読込失敗の内部分岐          |
+| `test/server/configuration/file-access-real-files.imp.test.ts` | filesystem portの設定・templateの配置先と、実fileのUTF-8読込 |
 | `test/server/configuration/storage-timeout-provider.cross-spec.test.ts` | 7節の補足case（raw carrierの保持）                      |
 | `test/server/configuration/doubles-parity.integration.test.ts` | 他componentのtestが使う設定の偽物が、本物のConfigurationが既定値で補完した設定と同じkey・型・構造を持つこと |
 | `test/server/configuration/fs-override-hook.ts` | `implementation.test.ts` が本物のConfigurationのfile読込・watchを観察・制御するためのloader hook（補助file） |
