@@ -9,7 +9,7 @@ description: Use when designing, writing, reviewing, or completing EPGStation se
 
 テスト件数や coverage score ではなく、契約、値域、状態、失敗、境界、資源解放を検証する。client には適用しない。
 
-最初に `.kiro/steering/server-testing.md` を読む。test を書く・直す・review するときは、同 file の「testを書く規則」（lint が検出する規則の表と、人が見て守る規則 1〜13）を名指しで守る。未作成の場合、本 skill は調査と steering 作成にだけ使う。project gate やテスト完了を確定せず、正本未整備を報告する。
+最初に `.kiro/steering/server-testing.md` を読む。test を書く・直す・review するときは、同 file の「testを書く規則」（lint が検出する規則の表と、人が見て守る規則 1〜13）を名指しで守る。未作成の場合、本 skill は調査と steering 作成にだけ使う。project gate やテスト完了を確定せず、正本未整備を報告する。mutation testing を流すとき・生き残りを扱うときは、`server-testing.md` の Mutation Testing 節と `docs/mutation-known-survivors.md` を読む。
 
 **REQUIRED SUB-SKILLS:**
 
