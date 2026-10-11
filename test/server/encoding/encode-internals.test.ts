@@ -314,6 +314,7 @@ describe('Tasks 4.1, 4.3, and 5.1 internal characterization', () => {
         await abnormal.end(1, false, 'abnormal-output.mp4');
         expect(abnormal.release).toHaveBeenCalledWith('abnormal-output.mp4');
         expect(unlink).toHaveBeenLastCalledWith('abnormal-output.mp4');
+        expect(abnormal.log.encode.info).toHaveBeenCalledWith('delete encode output file: abnormal-output.mp4');
         expectTerminalCleanup(abnormal, { isError: true, output: 'abnormal-output.mp4' });
 
         const cancelled = makeTerminalFixture();
@@ -2073,4 +2074,214 @@ describe('environment and timeout internals', () => {
             unhandledRejectionObservers.delete(observeUnhandledRejection);
         },
     );
+});
+
+const makeTerminalManage = (concurrentEncodeNum = 1) => {
+    const created: SyntheticEncoder[] = [];
+    const infos: FinishEncodeInfo[] = [];
+    const directFinish = {
+        finishEncode: vi.fn(async (info: FinishEncodeInfo) => {
+            infos.push(info);
+        }),
+    };
+    const event = {
+        emitAddEncode: vi.fn(),
+        emitCancelEncode: vi.fn(),
+        emitErrorEncode: vi.fn(),
+        emitFinishEncode: vi.fn(),
+        emitUpdateEncodeProgress: vi.fn(),
+    };
+    let lockCall = 0;
+    const execution = {
+        getExecution: vi.fn(async (_priority?: number) => `synthetic-execution-${++lockCall}`),
+        unLockExecution: vi.fn(),
+    };
+    const logger = {
+        encode: { error: vi.fn(), info: vi.fn(), warn: vi.fn() },
+        system: { error: vi.fn() },
+    };
+    const token = {};
+    const recordedResourceUse: RecordedResourceUsePort = {
+        acquire: vi.fn(async () => ({ token })),
+        release: vi.fn(async () => undefined),
+    };
+    const manage = new EncodeManageModel(
+        { getLogger: () => logger },
+        { getConfig: () => ({ concurrentEncodeNum, encodeQueueLimit: 10 }) },
+        execution,
+        vi.fn(async () => {
+            const item = encoder(null, null);
+            created.push(item);
+            return item;
+        }),
+        event,
+        recordedResourceUse,
+        directFinish,
+    ) as EncodeManageRuntime & { listener: EventEmitter };
+    const terminal = (index: number): NonNullable<SyntheticEncoder['finishCallback']> => {
+        const callback = created[index]?.finishCallback;
+        if (callback === null || callback === undefined) throw new Error('MissingSyntheticFinishCallback');
+        return callback;
+    };
+    return { created, directFinish, event, execution, infos, logger, manage, recordedResourceUse, terminal, token };
+};
+
+describe('encode terminal settlement internals', () => {
+    it('[EN-IMP-CONCURRENT-ZERO] rejects an admission with its stable error when no encode may run concurrently', async () => {
+        const fixture = makeTerminalManage(0);
+        try {
+            await expect(fixture.manage.push(option(971))).rejects.toThrow('CncurrentEncodeNumIsZero');
+            expect(fixture.recordedResourceUse.acquire).not.toHaveBeenCalled();
+        } finally {
+            fixture.manage.listener.removeAllListeners();
+        }
+    });
+
+    it('[EN-IMP-TERMINAL-ERROR] reports an abnormal end, frees the slot and releases the lease without reflecting a result', async () => {
+        const fixture = makeTerminalManage();
+        try {
+            await fixture.manage.push(option(931));
+            await vi.waitFor(() => expect(fixture.created[0]?.started).toBe(true));
+            expect(fixture.manage.getEncodeInfo()).toMatchObject({ runningQueue: [{ recordedId: 931 }] });
+
+            fixture.terminal(0)(true, null);
+
+            await vi.waitFor(() =>
+                expect(fixture.recordedResourceUse.release).toHaveBeenCalledExactlyOnceWith(fixture.token),
+            );
+            expect(fixture.event.emitErrorEncode).toHaveBeenCalledOnce();
+            expect(fixture.directFinish.finishEncode).not.toHaveBeenCalled();
+            expect(fixture.event.emitFinishEncode).not.toHaveBeenCalled();
+            expect(fixture.manage.getEncodeInfo()).toEqual({ runningQueue: [], waitQueue: [] });
+        } finally {
+            fixture.manage.listener.removeAllListeners();
+        }
+    });
+
+    it('[EN-IMP-TERMINAL-ERROR] still releases the lease when freeing the slot fails after an abnormal end', async () => {
+        const fixture = makeTerminalManage();
+        const failure = new Error('SyntheticFinalizeFailure');
+        try {
+            await fixture.manage.push(option(932));
+            await vi.waitFor(() => expect(fixture.created[0]?.started).toBe(true));
+            // finalize() だけが使う優先度 3 の実行権の取得を失敗させる。
+            fixture.execution.getExecution.mockImplementation(async (priority?: number) => {
+                if (priority === 3) throw failure;
+                return 'synthetic-execution';
+            });
+
+            fixture.terminal(0)(true, null);
+
+            await vi.waitFor(() =>
+                expect(fixture.recordedResourceUse.release).toHaveBeenCalledExactlyOnceWith(fixture.token),
+            );
+            await vi.waitFor(() => expect(fixture.logger.system.error).toHaveBeenCalledWith(failure));
+            expect(fixture.event.emitErrorEncode).toHaveBeenCalledOnce();
+        } finally {
+            fixture.manage.listener.removeAllListeners();
+        }
+    });
+
+    it('[EN-IMP-NULL-OPTION-UNLOCK] releases the execution lock taken for the queue check when the dequeued job has no option', async () => {
+        const fixture = makeTerminalManage();
+        // queue の確認は手動で 1 回だけ行う。push が取る実行権が 1 回目、確認が取る実行権が 2 回目になる。
+        fixture.manage.listener.removeAllListeners();
+        try {
+            await fixture.manage.push(option(933));
+            expect(fixture.execution.unLockExecution.mock.calls).toEqual([['synthetic-execution-1']]);
+            fixture.created[0].getEncodeOption = vi.fn(() => null);
+
+            await (fixture.manage as unknown as { checkQueue(): Promise<void> }).checkQueue();
+
+            expect(fixture.logger.encode.warn.mock.calls).toEqual([['encodeOption is null']]);
+            expect(fixture.execution.unLockExecution.mock.calls).toEqual([
+                ['synthetic-execution-1'],
+                ['synthetic-execution-2'],
+            ]);
+            expect(fixture.recordedResourceUse.release).toHaveBeenCalledExactlyOnceWith(fixture.token);
+            expect(fixture.created[0].started).toBe(false);
+        } finally {
+            fixture.manage.listener.removeAllListeners();
+        }
+    });
+
+    it('[EN-IMP-FINISH-INFO-PATH] joins the output file name to the option directory, and uses the bare name without a directory', async () => {
+        const fixture = makeTerminalManage(2);
+        try {
+            await fixture.manage.push(option(934));
+            await fixture.manage.push({ ...option(936), directory: undefined });
+            await vi.waitFor(() => expect(fixture.created.every(item => item.started)).toBe(true));
+
+            fixture.terminal(0)(false, '/synthetic/out/with-directory.mp4');
+            fixture.terminal(1)(false, '/synthetic/out/without-directory.mp4');
+            await vi.waitFor(() => expect(fixture.infos).toHaveLength(2));
+
+            expect(fixture.infos[0]).toMatchObject({
+                filePath: join('synthetic-subdirectory', 'with-directory.mp4'),
+                fullOutputPath: '/synthetic/out/with-directory.mp4',
+                recordedId: 934,
+                videoFileId: 935,
+            });
+            expect(fixture.infos[1]).toMatchObject({
+                filePath: 'without-directory.mp4',
+                fullOutputPath: '/synthetic/out/without-directory.mp4',
+                recordedId: 936,
+            });
+        } finally {
+            fixture.manage.listener.removeAllListeners();
+        }
+    });
+
+    it('[EN-IMP-FINISH-INFO-REMOVE-ORIGINAL] keeps the original deletion only when no other queued or running job uses the same source file', async () => {
+        const fixture = makeTerminalManage(2);
+        try {
+            // running: A(source 942) と B(option 無し)、waiting: C(別の source)と D(option 無し)
+            await fixture.manage.push({ ...option(941), removeOriginal: true });
+            await fixture.manage.push(option(943));
+            await vi.waitFor(() => expect(fixture.created.every(item => item.started)).toBe(true));
+            await fixture.manage.push(option(945));
+            await fixture.manage.push(option(947));
+            fixture.created[1].getEncodeOption = vi.fn(() => null);
+            fixture.created[3].getEncodeOption = vi.fn(() => null);
+
+            fixture.terminal(0)(false, '/synthetic/out/a.mp4');
+            await vi.waitFor(() => expect(fixture.infos).toHaveLength(1));
+
+            expect(fixture.infos[0]).toMatchObject({ removeOriginal: true, videoFileId: 942 });
+        } finally {
+            fixture.manage.listener.removeAllListeners();
+        }
+    });
+
+    it('[EN-IMP-FINISH-INFO-REMOVE-ORIGINAL] cancels the original deletion while another waiting job uses the same source file', async () => {
+        const fixture = makeTerminalManage(1);
+        try {
+            await fixture.manage.push({ ...option(951), removeOriginal: true });
+            await vi.waitFor(() => expect(fixture.created[0]?.started).toBe(true));
+            await fixture.manage.push(option(951));
+
+            fixture.terminal(0)(false, '/synthetic/out/a.mp4');
+            await vi.waitFor(() => expect(fixture.infos).toHaveLength(1));
+
+            expect(fixture.infos[0]).toMatchObject({ removeOriginal: false, videoFileId: 952 });
+        } finally {
+            fixture.manage.listener.removeAllListeners();
+        }
+    });
+
+    it('[EN-IMP-FINISH-INFO-REMOVE-ORIGINAL] cancels the original deletion while another running job uses the same source file', async () => {
+        const fixture = makeTerminalManage(2);
+        try {
+            await fixture.manage.push({ ...option(961), removeOriginal: true });
+            await fixture.manage.push(option(961));
+            await vi.waitFor(() => expect(fixture.created.every(item => item.started)).toBe(true));
+
+            fixture.terminal(0)(false, '/synthetic/out/a.mp4');
+            await vi.waitFor(() => expect(fixture.infos).toHaveLength(1));
+
+            expect(fixture.infos[0]).toMatchObject({ removeOriginal: false, videoFileId: 962 });
+        } finally {
+            fixture.manage.listener.removeAllListeners();
+        }
+    });
 });
