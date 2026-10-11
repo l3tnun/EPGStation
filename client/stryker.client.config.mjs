@@ -158,7 +158,11 @@ const mutate = [
 export default {
   testRunner: 'vitest',
   // 通常の test と同じ設定を使う。sandbox は client の中身（public と src の .module.css を含む）を複製するので、
-  // 除外する test は無い。
+  // 除外する test は無い。vitest runner の `vitest.related`（既定で有効）により、動くのは mutate する file へ
+  // import でたどり着ける test だけ。src の text を読む静的な guard の test 2 つ
+  // （unittest/spec/dashboard/dashboardLayout.spec.test.tsx と unittest/imp/searchRule.scrollFab.imp.test.ts）は
+  // sandbox では成り立たないが、読む file を import しないので動かない。import でたどり着ける位置に
+  // そのような test が現れたら、mutation 専用の vitest 設定で理由を添えて除外する。
   vitest: { configFile: 'vite.config.ts' },
   mutate,
   // sandbox へ複製しない path。先頭の `/` で client 直下だけに限る。

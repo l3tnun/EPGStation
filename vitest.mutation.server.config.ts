@@ -17,8 +17,11 @@ import base from './vitest.server.config.ts';
 //   Stryker は mutate する file を書き換える（mutant の切り替えを挟み、整形し直し、末尾の改行を落とす）ので、
 //   その file の実物は sandbox に無く、この test は sandbox では成り立たない。
 //   src の code を実行しないので mutant を殺せず、除外しても mutation の結果は変わらない。
-//   Stryker は、読み込みの途中で失敗した test file を報告せず、その file の test は黙って動かない。
-//   そのため、sandbox で動かない test は、失敗のまま残さずここで明示して除外する。
+//   server の設定（stryker.server.config.mjs）は `vitest.related` を無効にしているので、単体 test は
+//   mutate する file との import の関係に関わらず全件動く。この test が dry run で失敗すると run が止まる。
+//   一方、file の読み込み（describe の中の処理）で失敗した場合は、Stryker は失敗と数えず、その file の test が
+//   黙って動かないまま run が続く。どちらにしても結果が信用できなくなるため、
+//   sandbox で成り立たない test は、失敗のまま残さずここで明示して除外する。
 //   sandbox は client を複製しない（`/client/*`）が、依存の image の計画の test が読む client の
 //   package.json と lock は複製する（stryker.server.config.mjs の `ignorePatterns`）。
 const pre = (patterns: string[]): string[] => patterns.map(pattern => `test/server/${pattern}`);

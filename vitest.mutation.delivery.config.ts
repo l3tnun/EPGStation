@@ -16,6 +16,8 @@ import base from './vitest.server.config.ts';
 //   application-runtime/spec/compiled-snapshot-coverage.test.ts の 1 つだけ。網羅率の除外の印の行を持つ src の
 //   file の実物の text を読む test で、Stryker が mutate する file を書き換える sandbox では成り立たず、
 //   src の code を実行しないので mutant も殺せない（理由は vitest.mutation.server.config.ts を参照）。
+//   この設定も `vitest.related` を無効にしているので、この test は import の関係に関わらず動き、
+//   失敗すると dry run が止まる。
 const pre = (patterns: string[]): string[] => patterns.map(pattern => `test/server/${pattern}`);
 
 // sandbox で成り立たないため除外する単体 test。
