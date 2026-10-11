@@ -104,6 +104,22 @@ PR の `check` job（§7）が実行する検査と同じ。
 - module 先頭の定数表の mutant（report の `static: true`）は、この設定では判定できない。`ignoreStatic` でもその行を覆う test だけで実行されるが、module の読み込みが mutant の有効化より先に済むため、test が値を確かめていても「生き残った」と出る。端末の表の score にも数えられるので、定数表の多い file の score は低く出る。定数表の値は、値そのものを確かめる test で守る（Stryker の結果では確かめられない）。
 - cache は git の管理外。`EPGS_MUTATION_INCREMENTAL_FILE` で場所を変えられる。消えても全 mutant を流し直すだけで結果は変わらない。
 - cache は、test を足しても前回の生き残りを流し直さないことがある。足した test が mutant を殺すかを確かめるときは、対象を絞って `--force` を付けて流す（例: `npm run mutation:server -- --force --mutate src/util/StrUtil.ts`）。
+- 同じ checkout で複数の run を同時に流すときは、cache・report・sandbox の場所を run ごとに分ける。分けないと、cache と report を互いに上書きし、server・DB・配信の本体の設定は sandbox（`.stryker-tmp`）も共有する。cache は `EPGS_MUTATION_INCREMENTAL_FILE` で分けられるが、report と sandbox は command の引数で変えられないので、元の設定を読み込んで上書きする設定 file を run ごとに作り、`npx stryker run <その file>` で流す（作った file は commit しない）。client の例（`client/` に置く）:
+
+    ```js
+    import base from './stryker.client.config.mjs'
+
+    const name = process.env.RUN_NAME ?? 'run'
+
+    export default {
+      ...base,
+      incrementalFile: `.artifacts/mutation/incremental-${name}.json`,
+      tempDirName: `.stryker-tmp-${name}`,
+      jsonReporter: { fileName: `reports/mutation/${name}/report.json` },
+    }
+    ```
+
+    server・DB・配信の本体も同じ形で、`htmlReporter` の `fileName` も分ける。`.stryker-tmp*` は各設定の `ignorePatterns` と git の無視、client の lint・format の無視に入っている（root の lint・format は `src/` などだけを見る）ので、並んだ sandbox が別の run へ複製されたり検査の対象になったりはしない。同時に流すと CPU が飽和して最初の dry-run が遅くなり、設定の `dryRunTimeoutMinutes`（30 分）を超えて止まることがある。その場合は同じ設定 file でこの値を上げるか、同時の本数を減らす。memory も run の数だけ要る（上の目安）。
 - 結果は端末の表と `reports/mutation/` の report（server は `reports/mutation/server/report.html`、client は `client/reports/mutation/report.json`）に出る。生き残った mutant を読み、test を足す、または等価・冗長として記録する。
 - report の json は `node scripts/mutation/summarize.mjs <report.json> [<file の部分文字列>]` で集計できる。file ごとの mutant 数・Killed・Survived・NoCoverage・Timeout・score と、生き残りの一覧（行・mutator・置き換え後・static かどうか）が出る。
 - 既知の生き残り（test を足さないと判断して理由を付けたもの）は [mutation-known-survivors.md](mutation-known-survivors.md) にある。流した後は集計の生き残りをこの一覧と見比べ、載っていないものだけを扱う。対象 file の決め方と新しい module を足す手順は、steering の Mutation Testing 節（server・DB は `.kiro/steering/server-testing.md`、client は `.kiro/steering/testing.md`）にある。
