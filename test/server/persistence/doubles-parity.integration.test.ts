@@ -480,22 +480,14 @@ describe('query builder doubles against real SQL', () => {
                 // builder の偽物は skip(n)・take(n) を呼んだことを記録するだけで、SQL にならない。本物の TypeORM は
                 // take(0) を `LIMIT 0`（0 件）にするので、limit 0（件数の制限なし）は take を付けずに全件を返す。
                 // limit 0 に offset が付くときは、両 DB とも offset 以降の全件を返す。
-                // limit の無い skip は sqlite では `LIMIT -1 OFFSET n` にするが、
-                // MySQL では OffsetWithoutLimitNotSupportedError で拒む（offset が 0 でも拒む）。
+                // limit の無い skip は MySQL・MariaDB では OffsetWithoutLimitNotSupportedError で拒まれる
+                // （offset が 0 でも拒む）ので、limit を省いた offset にも十分大きな take を補い、
+                // どの DB でも offset 以降の全件を返す。
                 await expect(keywordIds({ keyword: 'alpha', limit: 0 })).resolves.toEqual(alpha);
                 await expect(keywordIds({ keyword: 'alpha', limit: 0, offset: 1 })).resolves.toEqual(alpha.slice(1));
                 await expect(keywordIds({ keyword: 'alpha', limit: 0, offset: 0 })).resolves.toEqual(alpha);
-                if (dialect === 'sqlite') {
-                    await expect(keywordIds({ keyword: 'alpha', offset: 1 })).resolves.toEqual(alpha.slice(1));
-                    await expect(keywordIds({ keyword: 'alpha', offset: 0 })).resolves.toEqual(alpha);
-                } else {
-                    await expect(keywordIds({ keyword: 'alpha', offset: 1 })).rejects.toMatchObject({
-                        name: 'OffsetWithoutLimitNotSupportedError',
-                    });
-                    await expect(keywordIds({ keyword: 'alpha', offset: 0 })).rejects.toMatchObject({
-                        name: 'OffsetWithoutLimitNotSupportedError',
-                    });
-                }
+                await expect(keywordIds({ keyword: 'alpha', offset: 1 })).resolves.toEqual(alpha.slice(1));
+                await expect(keywordIds({ keyword: 'alpha', offset: 0 })).resolves.toEqual(alpha);
                 await expect(keywordIds({})).resolves.toEqual(ruleIds);
                 await expect(db.RuleDB.findKeyword({ keyword: 'alpha', limit: 1 })).resolves.toEqual([
                     { id: alpha[0], keyword: 'synthetic-alpha-1' },

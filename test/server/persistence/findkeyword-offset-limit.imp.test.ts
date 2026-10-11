@@ -113,10 +113,10 @@ describe('RuleDB.findKeyword offset/limit (unittest/imp)', () => {
 
     it.each([
         {
-            title: 'offset 0 only calls skip(0)',
+            title: 'offset 0 only calls skip(0) and a large take (MySQL rejects an offset without a limit)',
             option: { keyword: 'bound', offset: 0 },
             expectSkip: 0 as number | null,
-            expectTake: null as number | null,
+            expectTake: 2147483647 as number | null,
         },
         {
             title: 'limit 0 (no row limit) calls neither skip nor take',

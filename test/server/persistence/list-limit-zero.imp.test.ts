@@ -27,7 +27,16 @@ describe('一覧の limit 0（件数の制限なし）の変換 (unittest/imp)',
         ['どちらも省略すると何も適用しない', {}, { skip: undefined, take: undefined }],
         ['limit だけなら take へそのまま渡す', { limit: 20 }, { skip: undefined, take: 20 }],
         ['offset と limit はそのまま渡す', { offset: 5, limit: 20 }, { skip: 5, take: 20 }],
-        ['offset だけなら skip へそのまま渡す', { offset: 5 }, { skip: 5, take: undefined }],
+        [
+            'limit を省いた offset は十分大きな take で offset 以降の全件にする',
+            { offset: 5 },
+            { skip: 5, take: 2147483647 },
+        ],
+        [
+            'limit を省いた offset 0 も十分大きな take を付ける (MySQL は上限なしの offset を 0 でも拒む)',
+            { offset: 0 },
+            { skip: 0, take: 2147483647 },
+        ],
         ['limit 0 は take を付けない', { limit: 0 }, { skip: undefined, take: undefined }],
         ['limit 0 と offset 0 は何も適用しない', { limit: 0, offset: 0 }, { skip: undefined, take: undefined }],
         [
@@ -108,11 +117,15 @@ describe('一覧の limit 0 を各 DB 層が件数の制限なしにする (unit
         }
     });
 
-    it('ReserveDB.findAll は limit 0 で take を付けず、offset 付きなら大きな take を付ける', async () => {
+    it('ReserveDB.findAll は limit 0 で take を付けず、offset 付き (limit を省いた offset も) なら大きな take を付ける', async () => {
         for (const [option, expected] of [
             [{ type: 'normal', limit: 0 }, {}],
             [
                 { type: 'normal', limit: 0, offset: 2 },
+                { skip: 2, take: 2147483647 },
+            ],
+            [
+                { type: 'normal', offset: 2 },
                 { skip: 2, take: 2147483647 },
             ],
         ] as const) {
