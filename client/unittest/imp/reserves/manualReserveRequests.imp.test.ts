@@ -36,6 +36,67 @@ describe('Manual Reserve implementation edges', () => {
     expect(parseManualReserveMode('?reserveId=abc&programId=def')).toStrictEqual({ kind: 'add' })
   })
 
+  it('treats an empty or zero id in the query as no id and as id 0 respectively', () => {
+    expect(parseManualReserveMode('?reserveId=')).toStrictEqual({ kind: 'add' })
+    expect(parseManualReserveMode('?reserveId=&programId=')).toStrictEqual({ kind: 'add' })
+    expect(parseManualReserveMode('?reserveId=0')).toStrictEqual({ kind: 'edit', reserveId: 0 })
+    expect(parseManualReserveMode('?programId=0')).toStrictEqual({ kind: 'program', programId: 0 })
+  })
+
+  it('builds Manual Reserve fetch URLs under ./api when no base path is given', () => {
+    expect(buildManualReserveDetailRequestUrl({ reserveId: 11, isHalfWidth: true })).toBe(
+      './api/reserves/11?isHalfWidth=true',
+    )
+    expect(buildManualProgramDetailRequestUrl({ programId: 22, isHalfWidth: false })).toBe(
+      './api/schedules/detail/22?isHalfWidth=false',
+    )
+  })
+
+  it('omits the encode option when every mode is undefined even if the flag is set', () => {
+    expect(
+      buildManualReserveEditPayload({
+        reserveOption: { allowEndLack: true },
+        saveOption: undefined,
+        encodeOption: { isDeleteOriginalAfterEncode: true } as never,
+      }),
+    ).toStrictEqual({ allowEndLack: true })
+  })
+
+  it('sends the parent directory and directory of each of the three encode modes', () => {
+    expect(
+      buildManualReserveEditPayload({
+        reserveOption: { allowEndLack: true },
+        saveOption: undefined,
+        encodeOption: {
+          mode1: 'a',
+          encodeParentDirectoryName1: 'pa',
+          directory1: 'da',
+          mode2: 'b',
+          encodeParentDirectoryName2: 'pb',
+          directory2: 'db',
+          mode3: 'c',
+          encodeParentDirectoryName3: 'pc',
+          directory3: 'dc',
+          isDeleteOriginalAfterEncode: false,
+        },
+      }),
+    ).toStrictEqual({
+      allowEndLack: true,
+      encodeOption: {
+        mode1: 'a',
+        encodeParentDirectoryName1: 'pa',
+        directory1: 'da',
+        mode2: 'b',
+        encodeParentDirectoryName2: 'pb',
+        directory2: 'db',
+        mode3: 'c',
+        encodeParentDirectoryName3: 'pc',
+        directory3: 'dc',
+        isDeleteOriginalAfterEncode: false,
+      },
+    })
+  })
+
   it('builds Manual Reserve fetch URLs with isHalfWidth and a single base path join', () => {
     expect(
       buildManualReserveDetailRequestUrl({

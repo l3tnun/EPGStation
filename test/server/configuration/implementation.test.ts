@@ -357,6 +357,178 @@ describe('server configuration implementation characterization', () => {
         expect(watchFile).toHaveBeenCalledTimes(1);
     });
 
+    it('[CFG-1.1-STREAM-KEEP-EXPLICIT] keeps every stream child the configuration writes instead of the template value', () => {
+        const explicitStream = (): Record<string, any> => ({
+            live: {
+                ts: {
+                    m2ts: [{ name: 'synthetic-explicit-m2ts' }],
+                    m2tsll: [{ name: 'synthetic-explicit-m2tsll' }],
+                    webm: [{ name: 'synthetic-explicit-live-webm' }],
+                    mp4: [{ name: 'synthetic-explicit-live-mp4' }],
+                    hls: [{ name: 'synthetic-explicit-live-hls' }],
+                },
+            },
+            recorded: {
+                ts: {
+                    webm: [{ name: 'synthetic-explicit-ts-webm' }],
+                    mp4: [{ name: 'synthetic-explicit-ts-mp4' }],
+                    hls: [{ name: 'synthetic-explicit-ts-hls' }],
+                },
+                encoded: {
+                    webm: [{ name: 'synthetic-explicit-encoded-webm' }],
+                    mp4: [{ name: 'synthetic-explicit-encoded-mp4' }],
+                    hls: [{ name: 'synthetic-explicit-encoded-hls' }],
+                },
+            },
+        });
+        const templateStream = {
+            live: {
+                ts: {
+                    m2ts: [{ name: 'synthetic-template-m2ts' }],
+                    m2tsll: [{ name: 'synthetic-template-m2tsll' }],
+                    webm: [{ name: 'synthetic-template-live-webm' }],
+                    mp4: [{ name: 'synthetic-template-live-mp4' }],
+                    hls: [{ name: 'synthetic-template-live-hls' }],
+                },
+            },
+            recorded: {
+                ts: {
+                    webm: [{ name: 'synthetic-template-ts-webm' }],
+                    mp4: [{ name: 'synthetic-template-ts-mp4' }],
+                    hls: [{ name: 'synthetic-template-ts-hls' }],
+                },
+                encoded: {
+                    webm: [{ name: 'synthetic-template-encoded-webm' }],
+                    mp4: [{ name: 'synthetic-template-encoded-mp4' }],
+                    hls: [{ name: 'synthetic-template-encoded-hls' }],
+                },
+            },
+        };
+        const configuration = createConfiguration();
+        configuration.templateConfig = { stream: templateStream };
+
+        const formatted = configuration.formatConfig({ ...cloneCandidate(), stream: explicitStream() });
+
+        expect(formatted.stream).toEqual(explicitStream());
+    });
+
+    it.each([
+        ['no stream section', {}],
+        ['an empty stream section', { stream: {} }],
+        ['stream sections without ts and encoded', { stream: { live: {}, recorded: {} } }],
+    ])(
+        '[CFG-1.1-STREAM-TEMPLATE-PARTIAL] leaves stream children undefined when the template has %s',
+        (_label, template) => {
+            const configuration = createConfiguration();
+            configuration.templateConfig = template;
+
+            const formatted = configuration.formatConfig({
+                ...cloneCandidate(),
+                stream: { live: { ts: {} }, recorded: { ts: {}, encoded: {} } },
+            });
+
+            const stream = formatted.stream as Record<string, any>;
+            for (const target of [stream.live.ts, stream.recorded.ts, stream.recorded.encoded]) {
+                expect(Object.values(target).filter(value => value !== undefined)).toEqual([]);
+            }
+            expect(Object.keys(stream.live.ts).sort()).toEqual(['hls', 'm2ts', 'm2tsll', 'mp4', 'webm']);
+            expect(Object.keys(stream.recorded.ts).sort()).toEqual(['hls', 'mp4', 'webm']);
+            expect(Object.keys(stream.recorded.encoded).sort()).toEqual(['hls', 'mp4', 'webm']);
+        },
+    );
+
+    it('[CFG-1.1-STREAM-ABSENT] does not create a stream section when the configuration omits it although a template exists', () => {
+        const configuration = createConfiguration();
+        configuration.templateConfig = { stream: { live: { ts: { m2ts: [{ name: 'template-m2ts' }] } } } };
+        const candidate = cloneCandidate();
+        delete candidate.stream;
+
+        const formatted = configuration.formatConfig(candidate);
+
+        expect(formatted.stream).toBeUndefined();
+    });
+
+    it('[CFG-1.1-URLSCHEME-NULL-CATEGORY] fills a urlscheme category written as null from the defaults and keeps the others', () => {
+        const configuration = createConfiguration();
+        const kept = { ios: 'explicit-video-ios' };
+
+        const formatted = configuration.formatConfig({
+            ...cloneCandidate(),
+            urlscheme: { m2ts: null, video: kept, download: null },
+        });
+
+        const urlscheme = formatted.urlscheme as Record<string, unknown>;
+        const defaults = Configuration.DEFAULT_VALUE.urlscheme as Record<string, unknown>;
+        expect(urlscheme.m2ts).toEqual(defaults.m2ts);
+        expect(urlscheme.video).toEqual(kept);
+        expect(urlscheme.download).toEqual({});
+    });
+
+    // 期待値は設定の説明書（docs/conf-manual.md）の「デフォルト値」の欄に書かれた値。実装の値を写したものではない。
+    // 説明書が相対 path で「EPGStation 直下の ○○」と書く項目は、EPGStation の root 直下の path を期待する。
+    const documentedDefaults: Array<[key: string, expected: () => unknown]> = [
+        ['dbtype', () => 'sqlite'],
+        ['ffmpeg', () => '/usr/local/bin/ffmpeg'],
+        ['ffprobe', () => '/usr/local/bin/ffprobe'],
+        ['needToReplaceEnclosingCharacters', () => true],
+        ['recPriority', () => 2],
+        ['conflictPriority', () => 1],
+        ['streamingPriority', () => 0],
+        ['timeSpecifiedStartMargin', () => 1],
+        ['timeSpecifiedEndMargin', () => 1],
+        ['recordedHistoryRetentionPeriodDays', () => 90],
+        ['epgUpdateIntervalTime', () => 10],
+        ['isSuppressReservesUpdateAllLog', () => false],
+        ['isEnabledDropCheck', () => false],
+        ['isAllowAllCORS', () => false],
+        ['dropLog', () => join(Configuration.ROOT_PATH, 'drop')],
+        ['recorded', () => [{ name: 'recorded', path: join(Configuration.ROOT_PATH, 'recorded') }]],
+        ['recordedFormat', () => '%YEAR%年%MONTH%月%DAY%日%HOUR%時%MIN%分%SEC%秒-%TITLE%'],
+        ['recordedFileExtension', () => '.ts'],
+        ['storageLimitCheckIntervalTime', () => 60],
+        ['thumbnail', () => join(Configuration.ROOT_PATH, 'thumbnail')],
+        [
+            'thumbnailCmd',
+            () => '%FFMPEG% -ss %THUMBNAIL_POSITION% -y -i %INPUT% -vframes 1 -f image2 -s %THUMBNAIL_SIZE% %OUTPUT%',
+        ],
+        ['thumbnailSize', () => '480x270'],
+        ['thumbnailPosition', () => 5],
+        ['uploadTempDir', () => join(Configuration.ROOT_PATH, 'data', 'upload')],
+        ['encodeProcessNum', () => 0],
+        ['concurrentEncodeNum', () => 0],
+        ['streamFilePath', () => join(Configuration.ROOT_PATH, 'data', 'streamfiles')],
+    ];
+
+    it.each(documentedDefaults)(
+        '[CFG-1.1-DOCUMENTED-DEFAULTS] fills %s with the default value the configuration manual states',
+        (key, expected) => {
+            const formatted = createConfiguration().formatConfig({
+                port: 48100,
+                apiServers: [loopbackApiServer(48100)],
+            });
+
+            expect(formatted[key]).toStrictEqual(expected());
+        },
+    );
+
+    // 説明書に既定値の記載が無い項目。実装の値で固定する（config.yml.template と同じ値）。
+    it('[CFG-1.1-UNDOCUMENTED-DEFAULTS] fills the items the manual gives no default for with the implementation values', () => {
+        const formatted = createConfiguration().formatConfig({ port: 48100, apiServers: [loopbackApiServer(48100)] });
+
+        expect(formatted.encode).toStrictEqual([]);
+        // URL scheme の文字列そのものは、fixture に実在し得る値を書かない検査（lint）に触れるため書かない。
+        // ここでは形（どの項目に文字列があるか）だけを固定する。m2ts.ios と download.ios の値は別の test が確かめる。
+        const urlscheme = formatted.urlscheme as Record<string, Record<string, unknown>>;
+        expect(Object.keys(urlscheme).sort()).toEqual(['download', 'm2ts', 'video']);
+        expect(Object.keys(urlscheme.m2ts).sort()).toEqual(['android', 'ios']);
+        expect(Object.keys(urlscheme.video).sort()).toEqual(['android', 'ios']);
+        for (const value of [...Object.values(urlscheme.m2ts), ...Object.values(urlscheme.video)]) {
+            expect(typeof value).toBe('string');
+            expect(value).not.toBe('');
+        }
+        expect(urlscheme.download).toStrictEqual({});
+    });
+
     it('[CFG-1.1-PATH-NORMALIZATION] replaces the first root marker and removes one trailing separator', () => {
         const configuration = createConfiguration();
         const input = `%ROOT%${sep}archive%ROOT%${sep}${sep}`;

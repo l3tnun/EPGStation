@@ -15,7 +15,7 @@ const pre = (patterns: string[]): string[] => patterns.map(pattern => `test/serv
 
 const mutationExclusions = [
     // process.env.TZ を実行中に切り替える。threads pool の中では切り替えが効かず失敗する。
-    'shared-foundation/imp/date-util.test.ts',
+    'shared-foundation/imp/date-util-timezone.test.ts',
     // build 工具・clean install・npm の path に依存し、sandbox の複製では再現できない。
     'tuner-access/implementation.test.ts',
     'tuner-access/tuner-access.spec.test.ts',

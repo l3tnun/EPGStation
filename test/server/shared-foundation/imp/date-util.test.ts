@@ -33,6 +33,27 @@ describe('[IMP-CHAR-SF-3] DateUtil.format compatible output', () => {
         expect(DateUtil.format(date, 'YY/MM/dd')).toBe('26/07/30');
     });
 
+    it('keeps a two-digit hour, minute and second as they are without a third leading digit', async () => {
+        const DateUtil = await loadDateUtil();
+        const date = new Date(2026, 11, 31, 23, 59, 58);
+
+        expect(DateUtil.format(date, 'yyyy/MM/dd hh:mm:ss')).toBe('2026/12/31 23:59:58');
+    });
+
+    it.each([
+        [2026, 6, 26, '日'],
+        [2026, 6, 27, '月'],
+        [2026, 6, 28, '火'],
+        [2026, 6, 29, '水'],
+        [2026, 6, 30, '木'],
+        [2026, 6, 31, '金'],
+        [2026, 7, 1, '土'],
+    ])('substitutes w with the Japanese label for %i-%i-%i', async (year, month, day, label) => {
+        const DateUtil = await loadDateUtil();
+
+        expect(DateUtil.format(new Date(year, month, day, 12, 0, 0), 'w')).toBe(label);
+    });
+
     it('substitutes w with the Japanese day-of-week label for the given date', async () => {
         const DateUtil = await loadDateUtil();
         // 2026-07-30 is a Thursday; the expected label is a literal, not derived via the same
@@ -44,31 +65,23 @@ describe('[IMP-CHAR-SF-3] DateUtil.format compatible output', () => {
     });
 });
 
-describe('[IMP-CHAR-SF-3] DateUtil.getJaDate compatible output', () => {
-    it('shifts an arbitrary local Date to a UTC+9 wall-clock instant', async () => {
-        // Pinned (not the ambient host TZ) so the expected literal below is portable across CI
-        // environments, and chosen so the local-vs-JST offset does not cancel to zero (which would
-        // let an identity/no-op implementation coincidentally pass).
-        const originalTimezone = process.env.TZ;
-        process.env.TZ = 'UTC';
-        try {
+describe('[IMP-CHAR-SF-3] DateUtil.getJaDate offset direction', () => {
+    // process.env.TZ cannot be switched inside a worker once it has started, so the host offset is
+    // injected through the Date itself.
+    it.each([
+        [0, 9],
+        [-540, 0],
+        [300, 14],
+    ])(
+        'adds the difference between the local offset (%i min) and UTC+9 to the instant (%i hours)',
+        async (offsetMinutes, hours) => {
             const DateUtil = await loadDateUtil();
-            const localDate = new Date(2026, 6, 30, 9, 7, 4);
+            const localDate = new Date(Date.UTC(2026, 6, 30, 0, 0, 0));
+            localDate.getTimezoneOffset = () => offsetMinutes;
 
             const jaDate = DateUtil.getJaDate(localDate);
 
-            // `DateUtil.format` (the only production consumer) reads `jaDate` through these same
-            // local (non-UTC) getters -- this is a literal, hardcoded JST wall-clock expectation,
-            // not a recomputation of the implementation's own offset formula.
-            expect(jaDate.getFullYear()).toBe(2026);
-            expect(jaDate.getMonth()).toBe(6);
-            expect(jaDate.getDate()).toBe(30);
-            expect(jaDate.getHours()).toBe(18);
-            expect(jaDate.getMinutes()).toBe(7);
-            expect(jaDate.getSeconds()).toBe(4);
-        } finally {
-            if (originalTimezone === undefined) delete process.env.TZ;
-            else process.env.TZ = originalTimezone;
-        }
-    });
+            expect(jaDate.getTime() - localDate.getTime()).toBe(hours * 60 * 60 * 1000);
+        },
+    );
 });
