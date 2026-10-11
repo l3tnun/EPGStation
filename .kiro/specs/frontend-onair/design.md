@@ -106,7 +106,7 @@ graph TB
 test:
 
 - `client/unittest/spec/onair.*.spec.test.tsx`（route / card / liveStream / liveWatch / programDialog）と `unittest/spec/support/onairSpecHarness.tsx`。
-- `client/unittest/imp/onair.*.imp.test.ts`（requests / api）。
+- `client/unittest/imp/onair.*.imp.test.ts`（requests / api / apiActionRequests / apiAdapterInputValidation）。この glob の外に、`client/unittest/imp/onairStreams.inputValidationAndDefaults.imp.test.ts`（stream 選択の入力検証と既定値）と `onairWatch.reserveIndexAndProgress.imp.test.ts`（予約の索引と進捗）がある。
 - `client/e2e/broadcast-onair-workflow.spec.ts`、`broadcast-ios.spec.ts`、support `client/e2e/support/broadcastWorkflow.ts` / `guideOnAirMocks.ts` / `guideOnAirFixtures.ts`。
 - browser の時計での更新: `client/e2e/browser-api-parity.spec.ts`（`page.clock` で放映中の番組の終わりをまたぎ、一覧を読み直すこと）。
 - `client/visual/broadcast-geometry.spec.ts`。

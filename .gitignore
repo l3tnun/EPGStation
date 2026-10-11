@@ -26,7 +26,7 @@ client/device/artifacts/
 .playwright-cli/
 /test/server/.artifacts/
 # mutation testing（Stryker）の作業 directory と report。incremental の cache は上の test/server/.artifacts の下。
-/.stryker-tmp/
+/.stryker-tmp*/
 /reports/mutation/
 
 # Agent skills copied from external repositories are local generated/vendor data.

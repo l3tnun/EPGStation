@@ -689,6 +689,7 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 | 処理の場所 | mutator | 理由 |
 | --- | --- | --- |
 | `buildEndpointUrl` の `query === undefined \|\| query === ''` | ConditionalExpression | 到達不能: `query` は全呼び出しで空にならない。空のとき endpoint だけという分岐は来ない |
+
 ### API の呼び出しと応答の変換: 共通の理由
 
 次の 3 種類の生き残りは、API の呼び出しと応答の変換の file に共通で現れる。個別の節には載せず、ここにまとめる。
@@ -769,7 +770,7 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 
 | 処理の場所 | mutator | 理由 |
 | --- | --- | --- |
-| `desktopPaginationRange` の loop の条件と増分（`pageNumber <= to`、`pageNumber += 1`） | EqualityOperator、BooleanLiteral、UpdateOperator | Stryker の制約: 条件を常に真にする・増分を逆向きにする mutant は無限 loop になり、配列が伸び続けて runner が止まる（timeout の約 6 分ごとに回復を待つ）ため、この 1 行を除いて流した。範囲の出力は通常の test が確かめている |
+| `desktopPaginationRange` の loop の条件と増分（`pageNumber <= to`、`pageNumber += 1`） | EqualityOperator、BooleanLiteral、UpdateOperator | Stryker の制約: 条件を常に真にする・増分を逆向きにする mutant は無限 loop になり、配列が伸び続けて runner が止まるため、流すときはこの 1 行を除く（設定の comment を参照）。範囲の出力は通常の test が確かめている |
 | `computeDesktopPaginationItems` の最後の `items[index - 1]` | ArithmeticOperator | 振る舞いが変わらない: 連続する `'ellipsis'` のどれを残すかが変わるだけで、出力は同じ |
 
 ### `src/app/navigation/routeMatching.ts`
@@ -827,6 +828,7 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 | --- | --- | --- |
 | `createMissingScrollHistory`（provider が無いときの既定の履歴） | BlockStatement、ObjectLiteral、ArrowFunction | 定数表で判定できない: module の読み込み時に評価される式。各 method の戻り値と例外は test が確かめている |
 | `createMissingScrollHistory` の `clearRestoreHistory` の `return undefined` | BlockStatement | 振る舞いが変わらない: 空の本体も undefined を返す |
+
 ### `src/features/guide/GuideGridRenderer.ts`
 
 | 処理の場所 | mutator | 理由 |

@@ -107,7 +107,7 @@ graph TB
 test:
 
 - `client/unittest/spec/guide.*.spec.test.tsx`（theme / route / loading / streamDialog / refresh / programDialog / programDialogActions / menus）と `unittest/spec/support/guideSpecHarness.tsx`。
-- `client/unittest/imp/guide.*.imp.test.ts`（requests / requestsDialog / api / storage / gridLayout / gridRenderer / routeParsingAndRequestUrls）と `unittest/imp/support/guideImpHarness.ts`。
+- `client/unittest/imp/guide.*.imp.test.ts`（requests / requestsDialog / api / storage / gridLayout / gridRenderer / routeParsingAndRequestUrls）と `unittest/imp/support/guideImpHarness.ts`。この glob の外に、番組表の route の時刻値の暦の妥当性を確かめる `client/unittest/imp/liveStreamSelection.guideRouteTimeValidity.imp.test.ts` がある。
 - `client/e2e/broadcast-guide-workflow.spec.ts`、`broadcast-guide-dialog-workflow.spec.ts`、`guide-fixed-shell.spec.ts`、support `client/e2e/support/broadcastWorkflow.ts` / `guideOnAirMocks.ts` / `guideOnAirFixtures.ts`。
 - `client/visual/broadcast-geometry.spec.ts`。
 

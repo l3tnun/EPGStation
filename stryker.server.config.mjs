@@ -123,7 +123,10 @@ export default {
     buildCommand: `node ${tscPath}`,
     // sandbox へ複製しない path。先頭の `/` で repository root 直下だけに限る
     // （`recorded` のように書くと src/model/api/recorded/ なども除外されて module が見つからなくなる）。
+    // `/.stryker-tmp*` は並行して流す run の sandbox（`.stryker-tmp-<名前>` など）で、
+    // 複製すると dry run が遅くなる。
     ignorePatterns: [
+        '/.stryker-tmp*',
         '/client',
         '/docs',
         '/recorded',

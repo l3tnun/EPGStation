@@ -110,7 +110,7 @@ unittest・e2e・visual は `client/unittest`・`client/e2e`・`client/visual` �
 - `client/src/features/dashboard/components/` — `DashboardRecordsSection`（録画中 / 録画済み）、`DashboardReservesSection`。
 - `client/src/features/dashboard/hooks/` — `useDashboardSummaryQuery`（4 request の並列取得と失敗 snackbar）、`useDashboardScrollHistory`（section scroll の保存 / 復元）。
 - `client/src/features/dashboard/lib/` — `dashboardFormat`（iOS scroll chain guard、遷移先 path、時刻 label、drop info）、`dashboardRecordedAdapters` / `dashboardReserveAdapters`（API 応答の adapter）。
-- `client/unittest/spec/dashboard/` — `dashboardTestKit.tsx`（fixture / helper）と layout、summary、edges、realtime removal、scroll history、more / time label、item route、menu の spec。`client/unittest/imp/dashboard.imp.test.ts`、`dashboard.adapters.imp.test.ts`、`dashboard.apiEdges.imp.test.ts`、`dashboard.format.imp.test.ts` — imp。
+- `client/unittest/spec/dashboard/` — `dashboardTestKit.tsx`（fixture / helper）と layout、summary、edges、realtime removal、scroll history、more / time label、item route、menu の spec。`client/unittest/imp/dashboard.imp.test.ts`、`dashboard.adapters.imp.test.ts`、`dashboard.apiEdges.imp.test.ts`、`dashboard.format.imp.test.ts`、`dashboard.adapterFieldTypes.imp.test.ts`（record adapter と予約件数の field 型）、`dashboard.apiFailuresAndPriming.imp.test.ts`（request URL・失敗・channel index の先読み）、`dashboard.scrollChainThresholds.imp.test.ts`（iOS の scroll chain の閾値と録画済みの metadata 行）— imp。一覧は glob `client/unittest/imp/dashboard*.imp.test.ts` を正とする。
 - `client/e2e/dashboard-workflow.spec.ts`、`dashboard-android.spec.ts` — deterministic mock E2E。fixture は `client/e2e/support/dashboardFixtures.ts`、handler は `dashboardMocks.ts`。
 - `client/visual/dashboard-geometry.spec.ts` — geometry 検査。
 
