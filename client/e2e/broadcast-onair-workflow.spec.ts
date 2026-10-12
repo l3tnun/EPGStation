@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { installAppShellApiMocks } from './support/appShellMocks'
+import { withRouteTimestamp } from './support/appShellWorkflow'
 import { installBroadcastWorkflowMocks } from './support/broadcastWorkflow'
 import { installGuideOnAirApiMocks } from './support/guideOnAirMocks'
 import { selectMuiOption } from './support/muiSelect'
@@ -52,16 +53,19 @@ test('keeps On Air card and stream dialog surfaces dark-theme aware', async ({ p
 })
 
 test('shows synthetic empty and error states without leaking fixture content', async ({ page }) => {
+  // timestamp の無い URL は、app が mount の後に timestamp を足した URL へ replace する。
+  // 空の画面への assertion はその前に通り抜けるので、続く hash 移動をこの replace が
+  // 上書きしうる。最初から timestamp を持つ URL へ移動して、この replace を起こさない。
   await page.unrouteAll()
   await installAppShellApiMocks(page, { enableBroadcastWaveNavigation: true })
   await installGuideOnAirApiMocks(page, { guide: 'empty', onAir: 'empty' })
 
-  await page.goto('/#/guide?time=23111507')
+  await page.goto(`/#${withRouteTimestamp('/guide?time=23111507')}`)
   await expect(page.getByTestId('guide-page')).toHaveAttribute('data-guide-visible', 'true')
   await expect(page.getByTestId('guide-program-grid')).toHaveCount(0)
   await expect(page.getByText('Synthetic Morning News')).toHaveCount(0)
 
-  await page.goto('/#/onair')
+  await page.goto(`/#${withRouteTimestamp('/onair')}`)
   await expect(page.getByTestId('onair-page')).toHaveCount(0)
   await expect(page.getByText('Synthetic OnAir News')).toHaveCount(0)
 
@@ -69,12 +73,12 @@ test('shows synthetic empty and error states without leaking fixture content', a
   await installAppShellApiMocks(page, { enableBroadcastWaveNavigation: true })
   await installGuideOnAirApiMocks(page, { guide: 'failure', onAir: 'failure', streams: 'failure' })
 
-  await page.goto('/#/guide?time=23111507')
+  await page.goto(`/#${withRouteTimestamp('/guide?time=23111507')}`)
   await expectAnnounced(page, '番組表情報の取得に失敗しました')
 
-  await page.goto('/#/onair')
+  await page.goto(`/#${withRouteTimestamp('/onair')}`)
   await expectAnnounced(page, '番組情報取得に失敗')
 
-  await page.goto('/#/onair/watch?type=hls&channel=301&mode=0')
+  await page.goto(`/#${withRouteTimestamp('/onair/watch?type=hls&channel=301&mode=0')}`)
   await expectAnnounced(page, 'ストリーム情報取得に失敗')
 })

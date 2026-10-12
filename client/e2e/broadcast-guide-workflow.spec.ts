@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { getHashSearchParams, installBroadcastWorkflowMocks } from './support/broadcastWorkflow'
+import { withRouteTimestamp } from './support/appShellWorkflow'
 import { selectMuiOption } from './support/muiSelect'
 import {
   createSearchRuleRequestLog,
@@ -197,8 +198,10 @@ test('reflects ProgramDialog reserve actions in the Guide grid without fetch err
   await expect(page.getByTestId('guide-program-4101')).toHaveClass(/reserve/)
   await expect(page.getByText('番組表情報の取得に失敗しました')).toHaveCount(0)
 
-  await page.goto('/#/dashboard')
-  await page.goto('/#/guide?type=GR&time=23111507')
+  // timestamp の無い URL への移動は、app が後から timestamp を足して replace する。
+  // 続く移動を上書きされないよう、timestamp 付きの URL へ移動する。
+  await page.goto(`/#${withRouteTimestamp('/dashboard')}`)
+  await page.goto(`/#${withRouteTimestamp('/guide?type=GR&time=23111507')}`)
 
   await expect(page.getByTestId('guide-page')).toHaveAttribute('data-guide-visible', 'true')
   await expect(page.getByTestId('guide-program-4101')).toHaveClass(/reserve/)
