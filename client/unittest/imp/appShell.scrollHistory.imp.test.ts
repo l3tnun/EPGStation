@@ -177,6 +177,51 @@ describe('App Shell scroll history implementation edges', () => {
     expect(scrollHistory.getHistoryPosition()).toStrictEqual({ x: 0, y: 100 })
   })
 
+  it('keeps the restore flag and stores data on the current entry when saving without an explicit url', () => {
+    let currentUrl = 'http://localhost/#/recorded?timestamp=100'
+    const scrollHistory = createSessionScrollHistory({
+      storage: window.sessionStorage,
+      locationProvider: () => currentUrl,
+    })
+
+    scrollHistory.updateHistoryPosition({ x: 0, y: 100 })
+    currentUrl = 'http://localhost/#/recorded?timestamp=200'
+    scrollHistory.updateHistoryPosition({ x: 0, y: 200 })
+    currentUrl = 'http://localhost/#/recorded?timestamp=100'
+    scrollHistory.updateHistoryPosition()
+
+    expect(scrollHistory.isNeedRestoreHistory()).toBe(true)
+
+    scrollHistory.saveScrollData({ page: 1 })
+
+    expect(scrollHistory.isNeedRestoreHistory()).toBe(true)
+    expect(scrollHistory.getScrollData()).toStrictEqual({ page: 1 })
+  })
+
+  it('stores data without an explicit url on the current entry even after the location moved on', () => {
+    let currentUrl = 'http://localhost/#/recorded?timestamp=100'
+    const scrollHistory = createSessionScrollHistory({
+      storage: window.sessionStorage,
+      locationProvider: () => currentUrl,
+    })
+
+    scrollHistory.updateHistoryPosition({ x: 0, y: 100 })
+    currentUrl = 'http://localhost/#/recorded?timestamp=200'
+    scrollHistory.saveScrollData({ page: 1 })
+
+    expect(scrollHistory.getHistoryPosition()).toStrictEqual({ x: 0, y: 100 })
+    expect(scrollHistory.getScrollData()).toStrictEqual({ page: 1 })
+
+    scrollHistory.updateHistoryPosition({ x: 0, y: 200 })
+
+    expect(scrollHistory.getScrollData()).toBeNull()
+
+    currentUrl = 'http://localhost/#/recorded?timestamp=100'
+    scrollHistory.updateHistoryPosition()
+
+    expect(scrollHistory.getScrollData()).toStrictEqual({ page: 1 })
+  })
+
   it('settles and clears pending completion timeout when a new navigation resets the signal', async () => {
     vi.useFakeTimers()
     const clearTimeoutSpy = vi.spyOn(globalThis, 'clearTimeout')
