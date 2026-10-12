@@ -255,6 +255,28 @@ describe('App Shell route scroll position accessors', () => {
     expect(createBrowserScrollPosition()).toStrictEqual({ x: window.scrollX, y: window.scrollY })
   })
 
+  it('reads the non-zero window scroll offsets when there is no fixed shell container', () => {
+    const scrollXDescriptor = Object.getOwnPropertyDescriptor(window, 'scrollX')
+    const scrollYDescriptor = Object.getOwnPropertyDescriptor(window, 'scrollY')
+    Object.defineProperty(window, 'scrollX', { configurable: true, value: 120 })
+    Object.defineProperty(window, 'scrollY', { configurable: true, value: 340 })
+
+    try {
+      expect(createBrowserScrollPosition()).toStrictEqual({ x: 120, y: 340 })
+    } finally {
+      for (const [name, descriptor] of [
+        ['scrollX', scrollXDescriptor],
+        ['scrollY', scrollYDescriptor],
+      ] as const) {
+        if (descriptor !== undefined) {
+          Object.defineProperty(window, name, descriptor)
+        } else {
+          Reflect.deleteProperty(window, name)
+        }
+      }
+    }
+  })
+
   it('reads (0, 0) scroll position without a window', () => {
     vi.stubGlobal('window', undefined)
 

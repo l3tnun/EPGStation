@@ -184,6 +184,22 @@ describe('SettingsStorageRepository implementation edges', () => {
     })
   })
 
+  it('overwrites a type-compatible stored value that differs from the default when the default is saved', () => {
+    const defaults = new DefaultSettingsFactory().create()
+    localStorage.setItem('settings', JSON.stringify({ ...defaults, guideLength: 99 }))
+    const repository = new SettingsStorageRepository(localStorage, new DefaultSettingsFactory())
+
+    const result = repository.save({
+      ...repository.load().value,
+      guideLength: defaults.guideLength,
+    })
+
+    expect(result).toBe(true)
+    expect(JSON.parse(localStorage.getItem('settings') ?? '{}')).toMatchObject({
+      guideLength: defaults.guideLength,
+    })
+  })
+
   it('returns save failure to the caller without throwing or replacing the stored settings', () => {
     const storage = new WriteFailingStorage()
     storage.seed(
