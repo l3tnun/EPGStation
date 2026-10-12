@@ -2,7 +2,7 @@
 # 全てのTARGETPLATFORMで再利用できる。これによりビルド時間を短縮できる。
 # base image は digest で固定する。tag は動くため、同じ Dockerfile が時期によって別の
 # base で build され、手元で通った build と公開される image が別物になり得る。
-FROM --platform=$BUILDPLATFORM node:26-bookworm@sha256:f1233c415b41ffcf237c717b3dea92e9d4ea006e0e4c71edcb790605d74f5404 AS client-builder
+FROM --platform=$BUILDPLATFORM node:26-trixie@sha256:32fa97f3363975684b08bf4e8a68a47c7905175cc20275b50b974bbd02aba731 AS client-builder
 COPY client/package*.json /app/client/
 WORKDIR /app/client
 RUN npm config set fetch-retries 10 \
@@ -28,7 +28,7 @@ RUN npm run bundle --loglevel=info \
 #
 # サーバーのコンパイルはプラットフォーム依存処理を含まないため、これをBUILDPLATFORMで実行すること
 # でビルド時間をさらに短縮可能だが、手順が煩雑で面倒なので現時点では行っていない。
-FROM node:24-bookworm@sha256:3d27e5c11e5786e309ec3e03f93ae536eb36e6e5eb3714d5eb3300a36157add0 AS server-builder
+FROM node:24-trixie@sha256:1278a37eb510ec1606fba0e80f554bcc941ae0b44f35ae373c4822ae7717c64d AS server-builder
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update
 RUN apt-get install -y build-essential python3
@@ -59,7 +59,7 @@ RUN rm -rf client
 RUN npm run compile \
     && npm prune --omit=dev
 
-FROM node:24-bookworm-slim@sha256:d6aa754f16b3197301076f047b5def2f02ea1dbbc2ca920407d46d7ec7f87b20
+FROM node:24-trixie-slim@sha256:173f125896c3b47ddf056734c7ea789d04595a6a08769a8f78e0df642781fb66
 LABEL maintainer="l3tnun"
 COPY --from=server-builder /app /app/
 COPY --from=client-builder /app/client /app/client/

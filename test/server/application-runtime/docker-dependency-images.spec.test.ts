@@ -130,7 +130,7 @@ describe('依存の計画: base は製品の Dockerfile が固定した digest �
         await editDockerfile(
             root,
             'Dockerfile.alpine',
-            text => `FROM node:24-bookworm@sha256:${'0'.repeat(64)} AS stray\n${text}`,
+            text => `FROM node:24-trixie@sha256:${'0'.repeat(64)} AS stray\n${text}`,
         );
         expect(planFailure(root)).toMatchObject({ name: 'DependencyImagePlanError', reason: 'base-digest-conflict' });
     });
@@ -138,7 +138,7 @@ describe('依存の計画: base は製品の Dockerfile が固定した digest �
     it('[AR-10.2] digest で固定されていない外部の FROM は base-digest-missing で失敗する', async () => {
         const root = await fixtureRoot();
         await editDockerfile(root, 'Dockerfile.debian', text =>
-            text.replace(/node:24-bookworm-slim@sha256:[0-9a-f]{64}/u, 'scratch'),
+            text.replace(/node:24-trixie-slim@sha256:[0-9a-f]{64}/u, 'scratch'),
         );
         expect(planFailure(root)).toBeInstanceOf(DependencyImagePlanError);
         expect(planFailure(root)).toMatchObject({ reason: 'base-digest-missing' });
@@ -280,7 +280,7 @@ describe('依存の計画: 導けない形は終了 code 2 の入力の誤りに
         [
             '小文字の from の行がある',
             'Dockerfile.debian',
-            text => text.replace(/^FROM node:24-bookworm-slim@/mu, 'from node:24-bookworm-slim@'),
+            text => text.replace(/^FROM node:24-trixie-slim@/mu, 'from node:24-trixie-slim@'),
             'from-line-malformed',
         ],
         [
@@ -374,7 +374,7 @@ describe('依存の計画: lock file の変更で作り直す層', () => {
     it('[AR-10.7] server の base の digest の変更で、その flavor の server の OS の層と npm の層だけが変わる', async () => {
         const root = await fixtureRoot();
         const before = tagsByKind(root);
-        const pinned = pinnedBases(await readFile(join(root, 'Dockerfile.debian'), 'utf8')).get('node:24-bookworm')!;
+        const pinned = pinnedBases(await readFile(join(root, 'Dockerfile.debian'), 'utf8')).get('node:24-trixie')!;
         await editDockerfile(root, 'Dockerfile.debian', text => text.replace(pinned, `sha256:${'f'.repeat(64)}`));
         expect(changed(before, tagsByKind(root))).toEqual(['debian-server/npm', 'debian-server/os']);
     });
