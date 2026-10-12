@@ -106,8 +106,6 @@ const mutate = [
   'src/app/lib/serverConfigSelectors.ts',
   'src/app/lib/shellSettingsSnapshots.ts',
   'src/app/scroll/scrollHistoryContext.ts',
-  // desktopPaginationRange の loop の条件・増分の mutant は無限 loop になり runner が止まる
-  // （docs/mutation-known-survivors.md）。流すときはその 1 行を除く（`<path>:<開始行>-<終了行>` の範囲指定）。
   'src/shared/legacyPaginationDesktop.ts',
   'src/shared/extendedPagination.ts',
   // 番組表の描画と配置
