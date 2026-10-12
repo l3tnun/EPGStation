@@ -1,0 +1,4 @@
+interface:
+  display_name: "EPGStation Server Testing"
+  short_description: "Server test design and coverage quality"
+  default_prompt: "Use $epgstation-server-testing to design and verify EPGStation server tests for this change."

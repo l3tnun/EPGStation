@@ -20,3 +20,23 @@ dist
 data/upload/*
 data/key/*
 !.gitkeep
+.env.local
+client/device/.device-lab.local.env
+client/device/artifacts/
+.playwright-cli/
+/test/server/.artifacts/
+# mutation testing（Stryker）の作業 directory と report。incremental の cache は上の test/server/.artifacts の下。
+/.stryker-tmp*/
+/reports/mutation/
+
+# Agent skills copied from external repositories are local generated/vendor data.
+# Keep project-owned skills under .agents/skills/local/ or .agents/skills/epgstation-*.
+.agents/skills/*
+!.agents/skills/local/
+!.agents/skills/local/**
+!.agents/skills/epgstation-*/
+!.agents/skills/epgstation-*/**
+!.agents/skills/incremental-commit-discipline/
+!.agents/skills/incremental-commit-discipline/**
+!.agents/skills/ui-parity-verification/
+!.agents/skills/ui-parity-verification/**

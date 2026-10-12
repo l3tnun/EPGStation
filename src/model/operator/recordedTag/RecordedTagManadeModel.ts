@@ -1,13 +1,14 @@
 import { inject, injectable } from 'inversify';
-import * as apid from '../../../../api';
-import RecordedTag from '../../../db/entities/RecordedTag';
-import StrUtil from '../../../util/StrUtil';
-import IRecordedTagDB from '../../db/IRecordedTagDB';
-import IRecordedTagEvent from '../../event/IRecordedTagEvent';
-import ILogger from '../../ILogger';
-import ILoggerModel from '../../ILoggerModel';
-import IRecordedTagManadeModel from './IRecordedTagManadeModel';
+import type * as apid from '../../../../api.js';
+import RecordedTag from '../../../db/entities/RecordedTag.js';
+import StrUtil from '../../../util/StrUtil.js';
+import IRecordedTagDB from '../../db/IRecordedTagDB.js';
+import IRecordedTagEvent from '../../event/IRecordedTagEvent.js';
+import ILogger from '../../ILogger.js';
+import ILoggerModel from '../../ILoggerModel.js';
+import IRecordedTagManadeModel from './IRecordedTagManadeModel.js';
 
+/** `IRecordedTagManadeModel` の実装。詳細は `IRecordedTagManadeModel` を参照。 */
 @injectable()
 export default class RecordedTagManadeModel implements IRecordedTagManadeModel {
     private log: ILogger;
@@ -87,7 +88,7 @@ export default class RecordedTagManadeModel implements IRecordedTagManadeModel {
      */
     public async delete(tagId: apid.RecordedTagId): Promise<void> {
         await this.recordedTagDB.deleteOnce(tagId).catch(err => {
-            this.log.system.error(`delete tag error: ${name}`);
+            this.log.system.error(`delete tag error: ${tagId}`);
             throw err;
         });
         this.log.system.info(`delete tag id: ${tagId}`);

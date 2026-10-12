@@ -1,10 +1,17 @@
 import { inject, injectable } from 'inversify';
 import { FindOptionsWhere, FindManyOptions, In, IsNull, LessThan, LessThanOrEqual, MoreThanOrEqual } from 'typeorm';
-import * as apid from '../../../api';
-import Reserve from '../../db/entities/Reserve';
-import { IReserveUpdateValues } from '../event/IReserveEvent';
-import IPromiseRetry from '../IPromiseRetry';
-import IDBOperator from './IDBOperator';
+import type * as apid from '../../../api.js';
+import Reserve from '../../db/entities/Reserve.js';
+import IRuleReservationCountPort, {
+    ReservationStateFilter,
+    RuleReservationCount,
+} from '../api/rule/IRuleReservationCountPort.js';
+import { IReserveUpdateValues } from '../event/IReserveEvent.js';
+import ILogger from '../ILogger.js';
+import ILoggerModel from '../ILoggerModel.js';
+import IPromiseRetry from '../IPromiseRetry.js';
+import DBUtil from './DBUtil.js';
+import IDBOperator from './IDBOperator.js';
 import IReserveDB, {
     IFindRuleOption,
     IFindTimeRangesOption,
@@ -12,14 +19,21 @@ import IReserveDB, {
     IGetManualIdsOption,
     IReserveTimeOption,
     RuleIdCountResult,
-} from './IReserveDB';
+} from './IReserveDB.js';
 
+/** `IReserveDB` の実装。`IRuleReservationCountPort` も兼ね、rule ごとの予約件数照会にも使われる。詳細は `IReserveDB` を参照。 */
 @injectable()
-export default class ReserveDB implements IReserveDB {
+export default class ReserveDB implements IReserveDB, IRuleReservationCountPort {
+    private log: ILogger;
     private op: IDBOperator;
     private promieRetry: IPromiseRetry;
 
-    constructor(@inject('IDBOperator') op: IDBOperator, @inject('IPromiseRetry') promieRetry: IPromiseRetry) {
+    constructor(
+        @inject('ILoggerModel') logger: ILoggerModel,
+        @inject('IDBOperator') op: IDBOperator,
+        @inject('IPromiseRetry') promieRetry: IPromiseRetry,
+    ) {
+        this.log = logger.getLogger();
         this.op = op;
         this.promieRetry = promieRetry;
     }
@@ -34,13 +48,13 @@ export default class ReserveDB implements IReserveDB {
         const connection = await this.op.getConnection();
         const queryRunner = connection.createQueryRunner();
 
-        // start transaction
-        await queryRunner.startTransaction();
-
         let hasError = false;
         try {
+            // start transaction
+            await queryRunner.startTransaction();
+
             // 削除
-            await queryRunner.manager.delete(Reserve, {});
+            await queryRunner.manager.createQueryBuilder().delete().from(Reserve).execute();
 
             // 挿入処理
             for (const item of items) {
@@ -48,11 +62,22 @@ export default class ReserveDB implements IReserveDB {
             }
             await queryRunner.commitTransaction();
         } catch (err: any) {
-            console.error(err);
-            hasError = err;
-            await queryRunner.rollbackTransaction();
+            this.log.system.error(err);
+            hasError = true;
+            if (queryRunner.isTransactionActive) {
+                try {
+                    await queryRunner.rollbackTransaction();
+                } catch (cleanupError) {
+                    this.log.system.error(cleanupError);
+                }
+            }
         } finally {
-            await queryRunner.release();
+            try {
+                await queryRunner.release();
+            } catch (cleanupError) {
+                this.log.system.error(cleanupError);
+                hasError = true;
+            }
         }
 
         if (hasError) {
@@ -99,11 +124,11 @@ export default class ReserveDB implements IReserveDB {
         const connection = await this.op.getConnection();
         const queryRunner = connection.createQueryRunner();
 
-        // start transaction
-        await queryRunner.startTransaction();
-
         let hasError = false;
         try {
+            // start transaction
+            await queryRunner.startTransaction();
+
             // delete
             if (typeof values.delete !== 'undefined' && values.delete.length > 0) {
                 const deleteIds = values.delete.map(d => {
@@ -131,11 +156,22 @@ export default class ReserveDB implements IReserveDB {
 
             await queryRunner.commitTransaction();
         } catch (err: any) {
-            console.error(err);
+            this.log.system.error(err);
             hasError = true;
-            await queryRunner.rollbackTransaction();
+            if (queryRunner.isTransactionActive) {
+                try {
+                    await queryRunner.rollbackTransaction();
+                } catch (cleanupError) {
+                    this.log.system.error(cleanupError);
+                }
+            }
         } finally {
-            await queryRunner.release();
+            try {
+                await queryRunner.release();
+            } catch (cleanupError) {
+                this.log.system.error(cleanupError);
+                hasError = true;
+            }
         }
 
         if (hasError === true) {
@@ -189,12 +225,14 @@ export default class ReserveDB implements IReserveDB {
             where: findConditions,
         };
 
-        if (typeof option.offset !== 'undefined') {
-            findOption.skip = option.offset;
+        // limit 0 は件数の制限なし（TypeORM 1.x の `take(0)` は `LIMIT 0` になるため take を付けない）
+        const pagination = DBUtil.resolvePagination(option);
+        if (typeof pagination.skip !== 'undefined') {
+            findOption.skip = pagination.skip;
         }
 
-        if (typeof option.limit !== 'undefined') {
-            findOption.take = option.limit;
+        if (typeof pagination.take !== 'undefined') {
+            findOption.take = pagination.take;
         }
 
         findOption.order = {
@@ -516,5 +554,15 @@ export default class ReserveDB implements IReserveDB {
         return await this.promieRetry.run(() => {
             return queryBuilder.getRawMany();
         });
+    }
+
+    public async countByRuleIds(
+        ruleIds: readonly apid.RuleId[],
+        state: ReservationStateFilter,
+    ): Promise<readonly RuleReservationCount[]> {
+        if (ruleIds.length === 0) return [];
+
+        const counts = await this.countRuleIds([...ruleIds], state);
+        return counts.map(count => ({ ruleId: count.ruleId, count: Number(count.ruleIdCnt) }));
     }
 }

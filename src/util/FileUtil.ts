@@ -2,6 +2,11 @@ import * as fs from 'fs';
 import { mkdirp } from 'mkdirp';
 import * as path from 'path';
 
+/**
+ * `fs` の代表的なファイル操作を Promise 化した薄いラッパー関数群。加えて、削除操作の安全側
+ * チェック（`captureManagedRootIdentity`/`isManagedEntrySafeForRemoval`、管理対象ルート配下か
+ * どうかの確認）もここに置かれている。
+ */
 namespace FileUtil {
     /**
      * unlink
@@ -71,7 +76,7 @@ namespace FileUtil {
         try {
             return (await FileUtil.stat(filePath)).size;
         } catch (err: any) {
-            throw new Error('FileIsNotFound');
+            throw new Error('FileIsNotFound', { cause: err });
         }
     };
 
@@ -227,48 +232,175 @@ namespace FileUtil {
         directories: string[];
     }
 
+    const emptyFileList = (): FileList => ({
+        files: [],
+        directories: [],
+    });
+
+    interface ManagedFileListResult extends FileList {
+        enumerationSucceeded: boolean;
+    }
+
+    export interface ManagedRootIdentity {
+        readonly entryDevice: number;
+        readonly entryInode: number;
+        readonly entryIsSymbolicLink: boolean;
+        readonly targetDevice: number;
+        readonly targetInode: number;
+    }
+
+    export const captureManagedRootIdentity = (managedRoot: string): ManagedRootIdentity => {
+        const resolvedRoot = path.resolve(managedRoot);
+        const entryStats = fs.lstatSync(resolvedRoot);
+        const targetStats = fs.statSync(resolvedRoot);
+        if (targetStats.isDirectory() === false) throw new Error('ManagedRootIsNotDirectory');
+        return {
+            entryDevice: entryStats.dev,
+            entryInode: entryStats.ino,
+            entryIsSymbolicLink: entryStats.isSymbolicLink(),
+            targetDevice: targetStats.dev,
+            targetInode: targetStats.ino,
+        };
+    };
+
+    const isSameManagedRoot = (managedRoot: string, expected: ManagedRootIdentity): boolean => {
+        const current = captureManagedRootIdentity(managedRoot);
+        return (
+            current.entryDevice === expected.entryDevice &&
+            current.entryInode === expected.entryInode &&
+            current.entryIsSymbolicLink === expected.entryIsSymbolicLink &&
+            current.targetDevice === expected.targetDevice &&
+            current.targetInode === expected.targetInode
+        );
+    };
+
+    export const isManagedEntrySafeForRemoval = (
+        managedRoot: string,
+        entryPath: string,
+        expectedRoot: ManagedRootIdentity,
+        expectedDirectory: boolean = false,
+    ): boolean => {
+        const resolvedRoot = path.resolve(managedRoot);
+        const resolvedEntry = path.resolve(entryPath);
+        const relativePath = path.relative(resolvedRoot, resolvedEntry);
+        if (
+            relativePath.length === 0 ||
+            relativePath === '..' ||
+            relativePath.startsWith(`..${path.sep}`) ||
+            path.isAbsolute(relativePath)
+        ) {
+            return false;
+        }
+
+        const segments = relativePath.split(path.sep);
+        let parentPath = resolvedRoot;
+        try {
+            if (isSameManagedRoot(resolvedRoot, expectedRoot) === false) return false;
+            for (const segment of segments.slice(0, -1)) {
+                parentPath = path.join(parentPath, segment);
+                const parentStats = fs.lstatSync(parentPath);
+                if (parentStats.isSymbolicLink() || parentStats.isDirectory() === false) return false;
+            }
+            if (expectedDirectory) {
+                const entryStats = fs.lstatSync(resolvedEntry);
+                return entryStats.isSymbolicLink() === false && entryStats.isDirectory();
+            }
+        } catch {
+            return false;
+        }
+        return true;
+    };
+
+    const emptyManagedFileListResult = (enumerationSucceeded: boolean): ManagedFileListResult => ({
+        ...emptyFileList(),
+        enumerationSucceeded,
+    });
+
+    const readFileListDirectory = (directoryPath: string): Promise<string[]> => {
+        return new Promise<string[]>((resolve, reject) => {
+            try {
+                fs.readdir(directoryPath, (err, files) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(files);
+                    }
+                });
+            } catch (error: unknown) {
+                reject(error);
+            }
+        });
+    };
+
+    const isManagedEntry = (managedRoot: string, entryPath: string): boolean => {
+        const relativePath = path.relative(managedRoot, entryPath);
+        return (
+            relativePath.length > 0 &&
+            relativePath !== '..' &&
+            relativePath.startsWith(`..${path.sep}`) === false &&
+            path.isAbsolute(relativePath) === false
+        );
+    };
+
+    const recordFileListFailure = (message: string, failedPath: string, error: unknown): void => {
+        console.error(`${message}: ${failedPath}`, error);
+    };
+
+    const getManagedFileList = async (
+        directoryPath: string,
+        managedRoot: string,
+        isManagedRoot: boolean,
+    ): Promise<ManagedFileListResult> => {
+        let entries: string[];
+        try {
+            entries = await readFileListDirectory(directoryPath);
+        } catch (error: unknown) {
+            if (isManagedRoot) throw error;
+            recordFileListFailure('failed to enumerate managed subdirectory', directoryPath, error);
+            return emptyManagedFileListResult(false);
+        }
+
+        const results = emptyManagedFileListResult(true);
+        for (const entry of entries) {
+            if (entry.startsWith('.')) continue;
+
+            const entryPath = path.resolve(directoryPath, entry);
+            if (isManagedEntry(managedRoot, entryPath) === false) continue;
+
+            let isDirectory: boolean;
+            let isSymbolicLink: boolean;
+            try {
+                const stats = fs.lstatSync(entryPath);
+                isSymbolicLink = stats.isSymbolicLink();
+                isDirectory = stats.isDirectory();
+            } catch (error: unknown) {
+                recordFileListFailure('failed to inspect managed entry', entryPath, error);
+                continue;
+            }
+
+            if (isSymbolicLink || isDirectory === false) {
+                results.files.push(entryPath);
+                continue;
+            }
+
+            const subFiles = await getManagedFileList(entryPath, managedRoot, false);
+            if (subFiles.enumerationSucceeded === false) continue;
+            results.files.push(...subFiles.files);
+            results.directories.push(...subFiles.directories);
+            results.directories.push(entryPath);
+        }
+
+        return results;
+    };
+
     /**
      * 指定したディレクトリ以下の file と directory 一覧を返す
      * @return Promise<FileUtil.FileList>
      */
-    export const getFileList = (fileDir: string): Promise<FileUtil.FileList> => {
-        return new Promise<FileUtil.FileList>((resolve: (result: FileList) => void, reject: (err: Error) => void) => {
-            fs.readdir(fileDir, async (err, files) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    const results: FileList = {
-                        files: [],
-                        directories: [],
-                    };
-                    for (const file of files) {
-                        // 隠しディレクトリはスキップ
-                        if (file.slice(0, 1) === '.') {
-                            continue;
-                        }
-
-                        // get full path
-                        const filePath = path.join(fileDir, file);
-
-                        if (fs.statSync(filePath).isDirectory()) {
-                            results.directories.push(filePath);
-                            try {
-                                // sub directory 探索
-                                const subFiles = await FileUtil.getFileList(filePath);
-                                Array.prototype.push.apply(results.files, subFiles.files);
-                                Array.prototype.push.apply(results.directories, subFiles.directories);
-                            } catch (err: any) {
-                                // error
-                            }
-                        } else {
-                            results.files.push(filePath);
-                        }
-                    }
-
-                    resolve(results);
-                }
-            });
-        });
+    export const getFileList = async (fileDir: string): Promise<FileUtil.FileList> => {
+        const managedRoot = path.resolve(fileDir);
+        const { files, directories } = await getManagedFileList(managedRoot, managedRoot, true);
+        return { files, directories };
     };
 
     /**

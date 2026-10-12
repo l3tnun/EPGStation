@@ -1,0 +1,1322 @@
+@font-face {
+  font-family: 'Material Design Icons';
+  font-style: normal;
+  font-weight: 400;
+  src: url('../../../../client/node_modules/@mdi/font/fonts/materialdesignicons-webfont.woff2')
+    format('woff2');
+}
+
+.recordedPage {
+  box-sizing: border-box;
+  margin: 0 auto;
+  padding: 8px;
+  width: 100%;
+}
+
+.recordedPage[data-recorded-layout='table'] {
+  max-width: 1016px;
+}
+
+.menuButtonIcon {
+  align-items: center;
+  display: inline-flex;
+  font-family: 'Material Design Icons';
+  font-size: 24px;
+  font-style: normal;
+  font-weight: 400;
+  height: 24px;
+  justify-content: center;
+  line-height: 1;
+  width: 24px;
+}
+
+.menuButtonIcon::before {
+  content: '\F01D9';
+}
+
+.titleBarIcon {
+  display: inline-block;
+  font: normal normal normal 24px/1 'Material Design Icons';
+  height: 24px;
+  width: 24px;
+}
+
+.titleBarIcon[data-recorded-title-icon='search']::before {
+  content: '\F0349';
+}
+
+.titleBarIcon[data-recorded-title-icon='more']::before {
+  content: '\F01D9';
+}
+
+.state {
+  padding: 24px 8px;
+}
+
+.list {
+  display: grid;
+  gap: 8px;
+}
+
+.tableWrap {
+  background: #fff;
+  box-shadow:
+    0 3px 1px -2px rgb(0 0 0 / 20%),
+    0 2px 2px 0 rgb(0 0 0 / 14%),
+    0 1px 5px 0 rgb(0 0 0 / 12%);
+  margin: 0 auto;
+  max-width: 1000px;
+  width: 100%;
+}
+
+.table {
+  border-collapse: collapse;
+  cursor: pointer;
+  width: 100%;
+}
+
+.table th,
+.table td {
+  border-bottom: 1px solid rgb(0 0 0 / 12%);
+  font-size: 0.875rem;
+  height: 48px;
+  line-height: 1.5;
+  padding: 0 16px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.table th {
+  color: rgb(0 0 0 / 54%);
+  font-weight: 500;
+}
+
+.table tbody tr:not(.selectedTableRow):hover {
+  background-color: #eee;
+}
+
+:global([data-theme-mode='dark']) .tableWrap,
+:global([data-theme-mode='dark']) .recordedSearchMenu {
+  background: var(--mui-palette-background-paper, #1e1e1e);
+  color: rgb(255 255 255 / 87%);
+}
+
+:global([data-theme-mode='dark']) .table th,
+:global([data-theme-mode='dark']) .table td,
+:global([data-theme-mode='dark']) .recordedSearchActions {
+  border-color: rgb(255 255 255 / 12%);
+}
+
+:global([data-theme-mode='dark']) .table th,
+:global([data-theme-mode='dark']) .itemMeta,
+:global([data-theme-mode='dark']) .legacyMenuIcon,
+:global([data-theme-mode='dark']) .recordedSearchSelectField > span,
+:global([data-theme-mode='dark']) .recordedSearchLegacySelect,
+:global([data-theme-mode='dark']) .recordedSearchLegacySelect > span {
+  color: rgb(255 255 255 / 70%);
+}
+
+:global([data-theme-mode='dark']) .table tbody tr:not(.selectedTableRow):hover {
+  background-color: #616161;
+}
+
+.tableChannelCell {
+  min-width: 180px;
+}
+
+.tableTimeCell {
+  width: 190px;
+}
+
+.tableMenuCell {
+  padding: 0 8px;
+  text-align: center;
+  width: 68px;
+}
+
+.selectedTableRow {
+  background-color: #4285f4;
+  color: #fff;
+}
+
+.card {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+
+.cards {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(auto-fill, 300px);
+  justify-content: center;
+}
+
+.smallCards {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 1fr;
+}
+
+.card {
+  position: relative;
+}
+
+.selectedCard {
+  background-color: #4285f4;
+  color: #fff;
+}
+
+.selectedCard .itemMeta,
+.selectedCard .itemDescription {
+  color: #fff;
+}
+
+.card > * {
+  min-width: 0;
+}
+
+.itemTitle {
+  font-size: 1rem;
+  line-height: 1.35;
+  margin: 12px 0 6px;
+  overflow-wrap: anywhere;
+}
+
+.itemDescription {
+  color: #54636f;
+  display: -webkit-box;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  margin: 0;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.thumbnail,
+.noImage {
+  aspect-ratio: 16 / 9;
+  background: transparent;
+  border-radius: 0;
+  display: block;
+  overflow: hidden;
+  width: 96px;
+}
+
+.thumbnail {
+  object-fit: cover;
+}
+
+.noImage {
+  object-fit: cover;
+}
+
+.cards .card .thumbnail,
+.cards .card .noImage {
+  min-width: 300px;
+  width: 300px;
+}
+
+.cardBody {
+  box-sizing: border-box;
+  min-height: 112px;
+  padding: 8px;
+}
+
+.cardTitleRow {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  min-height: 36px;
+}
+
+.cardTitleRow .itemTitle {
+  flex: 1 1 auto;
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.375;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cardTitleRow :global(.MuiIconButton-root) {
+  flex: 0 0 auto;
+  height: 36px;
+  padding: 6px;
+  width: 36px;
+}
+
+.itemMeta {
+  color: rgb(0 0 0 / 54%);
+  font-size: 0.75rem;
+  font-weight: 300;
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cards .itemDescription {
+  color: rgb(0 0 0 / 87%);
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+:global([data-theme-mode='dark']) .itemDescription,
+:global([data-theme-mode='dark']) .cards .itemDescription,
+:global([data-theme-mode='dark']) .smallCards .card .itemDescription,
+:global([data-theme-mode='dark']) .recordedDetailPage .itemDescription {
+  color: rgb(255 255 255 / 87%);
+}
+
+:global([data-theme-mode='dark']) .thumbnail,
+:global([data-theme-mode='dark']) .noImage {
+  background: transparent;
+  color: rgb(255 255 255 / 70%);
+}
+
+.itemDescriptionDummy {
+  visibility: hidden;
+}
+
+.dropWarning {
+  color: red !important;
+  font-weight: 700 !important;
+}
+
+.legacyMenuPaper {
+  box-shadow:
+    rgb(0 0 0 / 20%) 0 5px 5px -3px,
+    rgb(0 0 0 / 14%) 0 8px 10px 1px,
+    rgb(0 0 0 / 12%) 0 3px 14px 2px;
+  min-width: 120px;
+}
+
+.legacyMenuList {
+  padding: 8px 0;
+}
+
+.legacyMenuItem.legacyMenuItem {
+  color: rgb(0 0 0 / 87%);
+  font-size: 16px;
+  line-height: 24px;
+  min-height: 56px;
+  min-width: 120px;
+  padding: 0 16px;
+}
+
+:global([data-theme-mode='dark']) .legacyMenuItem.legacyMenuItem {
+  color: rgb(255 255 255 / 87%);
+}
+
+.legacyMenuIcon {
+  color: rgb(0 0 0 / 54%);
+  display: inline-flex;
+  height: 24px;
+  justify-content: center;
+  margin-right: 12px;
+  min-width: 24px;
+  position: relative;
+  width: 24px;
+}
+
+.legacyMenuIcon::before,
+.legacyMenuIcon::after {
+  box-sizing: border-box;
+  content: '';
+  position: absolute;
+}
+
+.legacyMenuIcon[data-recorded-menu-icon='search']::before {
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  height: 13px;
+  left: 4px;
+  top: 4px;
+  width: 13px;
+}
+
+.legacyMenuIcon[data-recorded-menu-icon='search']::after {
+  background: currentColor;
+  height: 8px;
+  left: 15px;
+  top: 15px;
+  transform: rotate(-45deg);
+  transform-origin: top center;
+  width: 2px;
+}
+
+.legacyMenuIcon[data-recorded-menu-icon='encode']::before {
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  height: 18px;
+  left: 3px;
+  top: 3px;
+  width: 18px;
+}
+
+.legacyMenuIcon[data-recorded-menu-icon='encode']::after {
+  background:
+    linear-gradient(currentColor, currentColor) center / 12px 2px no-repeat,
+    linear-gradient(currentColor, currentColor) center / 2px 12px no-repeat;
+  height: 18px;
+  left: 3px;
+  top: 3px;
+  width: 18px;
+}
+
+.legacyMenuIcon[data-recorded-menu-icon='delete']::before {
+  background: currentColor;
+  border-radius: 1px;
+  height: 14px;
+  left: 5px;
+  top: 8px;
+  width: 14px;
+}
+
+.legacyMenuIcon[data-recorded-menu-icon='delete']::after {
+  background:
+    linear-gradient(currentColor, currentColor) 5px 0 / 8px 3px no-repeat,
+    linear-gradient(currentColor, currentColor) 3px 4px / 14px 3px no-repeat;
+  height: 8px;
+  left: 2px;
+  top: 2px;
+  width: 20px;
+}
+
+.legacyMenuIcon[data-recorded-menu-icon='rule']::before {
+  border: 2px solid currentColor;
+  border-radius: 2px;
+  height: 16px;
+  left: 4px;
+  top: 5px;
+  width: 16px;
+}
+
+.legacyMenuIcon[data-recorded-menu-icon='rule']::after {
+  background:
+    linear-gradient(currentColor, currentColor) 0 0 / 16px 2px no-repeat,
+    linear-gradient(currentColor, currentColor) 4px 5px / 8px 2px no-repeat,
+    linear-gradient(currentColor, currentColor) 4px 10px / 8px 2px no-repeat;
+  height: 14px;
+  left: 4px;
+  top: 8px;
+  width: 16px;
+}
+
+.legacyMenuIcon[data-recorded-menu-icon='stop']::before {
+  background: currentColor;
+  border-radius: 1px;
+  height: 14px;
+  left: 5px;
+  top: 5px;
+  width: 14px;
+}
+
+.legacyMenuIcon::before {
+  align-items: center;
+  background: none !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  display: inline-flex;
+  font-family: 'Material Design Icons';
+  font-size: 24px;
+  height: 24px !important;
+  justify-content: center;
+  left: auto !important;
+  line-height: 1;
+  position: static;
+  top: auto !important;
+  transform: none !important;
+  width: 24px !important;
+}
+
+.legacyMenuIcon::after {
+  content: none !important;
+}
+
+.legacyMenuIcon[data-recorded-menu-icon='rule']::before {
+  content: '\F00ED';
+}
+
+.legacyMenuIcon[data-recorded-menu-icon='search']::before {
+  content: '\F0349';
+}
+
+.legacyMenuIcon[data-recorded-menu-icon='protect']::before {
+  content: '\F033E';
+}
+
+.legacyMenuIcon[data-recorded-menu-icon='unprotect']::before {
+  content: '\F033F';
+}
+
+.legacyMenuIcon[data-recorded-menu-icon='encode']::before {
+  content: '\F0419';
+}
+
+.legacyMenuIcon[data-recorded-menu-icon='delete']::before {
+  content: '\F01B4';
+}
+
+.legacyMenuIcon[data-recorded-menu-icon='stop']::before {
+  content: '\F04DB';
+}
+
+.legacyMenuIcon[data-recorded-menu-icon='edit']::before {
+  content: '\F03EB';
+}
+
+.legacyMenuIcon[data-recorded-menu-icon='upload']::before {
+  content: '\F0552';
+}
+
+.legacyMenuIcon[data-recorded-menu-icon='download']::before {
+  content: '\F01DA';
+}
+
+.detailTitleMenuButton.detailTitleMenuButton {
+  height: 48px;
+  width: 48px;
+}
+
+.recordedSearchMenu {
+  background: #fff;
+  color: rgb(0 0 0 / 87%);
+  width: 100%;
+}
+
+.recordedSearchFields {
+  padding: 16px;
+}
+
+.recordedSearchFields :global(.MuiFormControl-root) {
+  margin: 0 0 10px;
+}
+
+.recordedSearchFields :global(.MuiInputBase-root) {
+  font-size: 16px;
+}
+
+.recordedSearchFields :global(.MuiInputLabel-root) {
+  font-size: 16px;
+}
+
+.recordedSearchFields :global(.MuiFormHelperText-root) {
+  display: none;
+}
+
+.recordedSearchSelectField {
+  position: relative;
+}
+
+.recordedSearchLegacySelect {
+  color: rgb(0 0 0 / 60%);
+  display: block;
+  font-size: 0.75rem;
+  line-height: 1;
+  min-height: 48px;
+  position: relative;
+  width: 100%;
+}
+
+.recordedSearchLegacySelect > span {
+  bottom: 8px;
+  color: rgb(0 0 0 / 60%);
+  font-size: 16px;
+  left: 0;
+  line-height: 24px;
+  pointer-events: none;
+  position: absolute;
+}
+
+.recordedSearchLegacySelect[data-has-value='false'] > span {
+  display: none;
+}
+
+.recordedSearchLegacySelect[data-has-value='true'] > span {
+  bottom: auto;
+  font-size: 12px;
+  line-height: 16px;
+  top: -16px;
+}
+
+.recordedSearchLegacySelect :global(.MuiInputBase-root) {
+  font: inherit;
+  font-size: 16px;
+  min-height: 48px;
+  width: 100%;
+}
+
+.recordedSearchLegacySelect :global(.MuiSelect-select) {
+  box-sizing: border-box;
+  min-height: 48px;
+  padding-bottom: 0 !important;
+  padding-top: 16px !important;
+}
+
+.recordedSearchSelectField > span {
+  display: none;
+}
+
+.recordedSearchChecks {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.recordedSearchChecks :global(.MuiFormControlLabel-root) {
+  margin-left: -11px;
+  margin-right: 8px;
+}
+
+.recordedSearchActions {
+  border-top: 1px solid rgb(0 0 0 / 12%);
+}
+
+.smallCards {
+  gap: 4px;
+  padding-top: 4px;
+}
+
+.smallCards .card {
+  display: grid;
+  gap: 0;
+  grid-template-columns: 30% minmax(0, 1fr);
+  grid-template-rows: 34px 20px 20px 20px;
+  height: 100px;
+  overflow: hidden;
+  padding: 0;
+}
+
+.smallCards .card > button:first-child {
+  height: 36px;
+  padding: 6px;
+  position: absolute;
+  right: 4px;
+  top: 4px;
+  width: 36px;
+  z-index: 1;
+}
+
+.smallCards .card .thumbnail,
+.smallCards .card .noImage {
+  border-bottom-left-radius: inherit;
+  border-top-right-radius: 0;
+  grid-column: 1;
+  grid-row: 1 / 5;
+  height: 100px;
+  max-width: 200px;
+  width: 100%;
+}
+
+.smallCards .card .itemTitle {
+  display: block;
+  font-size: 0.875rem;
+  grid-column: 2;
+  grid-row: 1;
+  height: 22px;
+  line-height: 22px;
+  margin: 12px 8px 0;
+  padding-right: 30px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: auto;
+  overflow: hidden;
+}
+
+.smallCards .card .itemMeta {
+  grid-column: 2;
+  height: 20px;
+  line-height: 20px;
+  margin: 0 8px;
+}
+
+.smallCards .card .itemDescription {
+  color: rgb(0 0 0 / 87%);
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 400;
+  grid-column: 2;
+  grid-row: 4;
+  height: 20px;
+  line-height: 20px;
+  margin: 0 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: auto;
+}
+
+.pagination {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.hiddenDummy {
+  visibility: hidden;
+}
+
+.detailHero {
+  align-items: center;
+  display: grid;
+  gap: 6px;
+  grid-template-columns: 400px minmax(0, 1fr);
+  margin-bottom: 24px;
+}
+
+.detailHero .thumbnail,
+.detailHero .noImage {
+  max-height: 400px;
+  width: 100%;
+}
+
+.recordedDetailPage {
+  padding: 12px;
+}
+
+@media (min-width: 960px) {
+  .recordedDetailPage {
+    max-width: 900px;
+  }
+}
+
+@media (min-width: 1264px) {
+  .recordedDetailPage {
+    max-width: 1185px;
+  }
+}
+
+@media (min-width: 1904px) {
+  .recordedDetailPage {
+    max-width: 1785px;
+  }
+}
+
+.recordedDetailPage .thumbnail,
+.recordedDetailPage .noImage {
+  max-height: 240px;
+  min-width: 100px;
+}
+
+.recordedDetailPage .itemTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 2rem;
+  margin: 0;
+}
+
+.recordedDetailPage .itemDescription {
+  color: rgb(0 0 0 / 87%);
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.45;
+  padding-top: 0;
+  overflow: visible;
+  white-space: pre-wrap;
+  -webkit-line-clamp: unset;
+}
+
+.recordedDetailPage .itemChannelMeta {
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.75rem;
+  margin: 4px 0;
+}
+
+.recordedDetailPage .itemSubMeta {
+  font-size: 0.875rem;
+  font-weight: 300;
+  line-height: 1.375rem;
+  margin: 0;
+}
+
+.detailDropButton {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  display: inline-block;
+  font-size: 0.875rem;
+  font-weight: 400;
+  margin-top: 8px;
+  min-width: 0;
+  padding: 0;
+  text-transform: none;
+}
+
+.detailDropButton[data-has-drop-error='true'] {
+  background: #ffc0cb;
+  color: #f00;
+  font-weight: 700;
+}
+
+.detailDropButton:hover {
+  text-decoration: underline;
+}
+
+.detailDropButton[data-has-drop-error='true']:hover {
+  background: #ffc0cb;
+}
+
+.dropLogContent.dropLogContent {
+  padding: 16px 16px 0;
+}
+
+.dropLogPre {
+  color: rgb(0 0 0 / 87%);
+  font-family: Roboto, Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 20px;
+  margin: 0;
+  overflow: auto;
+  white-space: pre-wrap;
+}
+
+:global([data-theme-mode='dark']) .dropLogPre {
+  color: rgb(255 255 255 / 87%);
+}
+
+.actionRow {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.detailPrimaryAction.detailPrimaryAction,
+.detailEncodeAction.detailEncodeAction,
+.detailStopAction.detailStopAction,
+.detailKodiAction.detailKodiAction {
+  /* v2 の v-btn の label 組み。MUI 既定（0.4px / 24.5px）のままだと label 幅が 3.4px 縮んで
+     flex の中央寄せが icon を右へ押し、行箱が 3.5px 高いぶん文字が上下中央からずれる。 */
+  letter-spacing: 1.25px;
+  line-height: 21px;
+  box-shadow:
+    rgba(0, 0, 0, 0.2) 0 3px 1px -2px,
+    rgba(0, 0, 0, 0.14) 0 2px 2px 0,
+    rgba(0, 0, 0, 0.12) 0 1px 5px 0;
+  color: #fff;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 16px;
+  text-transform: uppercase;
+}
+
+.detailPrimaryAction.detailPrimaryAction[data-recorded-detail-action='play'] {
+  width: 94px;
+}
+
+.detailPrimaryAction.detailPrimaryAction[data-recorded-detail-action='streaming'] {
+  width: 146px;
+}
+
+.detailPrimaryAction.detailPrimaryAction {
+  background-color: #1976d2;
+}
+
+.detailPrimaryAction.detailPrimaryAction:hover {
+  background-color: #1565c0;
+}
+
+.detailEncodeAction.detailEncodeAction {
+  background-color: #009688;
+  width: 117px;
+}
+
+.detailEncodeAction.detailEncodeAction:hover {
+  background-color: #00897b;
+}
+
+.detailStopAction.detailStopAction,
+.detailKodiAction.detailKodiAction {
+  background-color: #009688;
+}
+
+.detailStopAction.detailStopAction {
+  width: 96px;
+}
+
+.detailKodiAction.detailKodiAction {
+  width: 92px;
+}
+
+.detailStopAction.detailStopAction:hover,
+.detailKodiAction.detailKodiAction:hover {
+  background-color: #00897b;
+}
+
+.detailActionIcon {
+  font-family: 'Material Design Icons';
+  font-size: 18px;
+  height: 18px;
+  line-height: 1;
+  /* Vuetify は v-btn 内の先頭 icon を .v-icon--left で左へ 4px 寄せる。label との 8px は
+     button 側の gap が受け持つので、ここでは右 margin を足さない。 */
+  margin-left: -4px;
+  width: 18px;
+}
+
+.detailVideoMenu {
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  max-width: 200px;
+  padding: 8px;
+}
+
+.detailVideoMenuButton.detailVideoMenuButton {
+  background: #4caf50;
+  box-shadow:
+    rgba(0, 0, 0, 0.2) 0 3px 1px -2px,
+    rgba(0, 0, 0, 0.14) 0 2px 2px 0,
+    rgba(0, 0, 0, 0.12) 0 1px 5px 0;
+  color: #fff;
+  margin: 4px;
+  min-height: 36px;
+  padding: 0 16px;
+  text-transform: none;
+}
+
+a.detailVideoMenuButton {
+  align-items: center;
+  border-radius: 4px;
+  box-sizing: border-box;
+  display: inline-flex;
+  font-size: 0.875rem;
+  justify-content: center;
+  line-height: 1.75;
+  text-decoration: none;
+}
+
+.streamSelectPaper.streamSelectPaper {
+  min-height: 162px;
+}
+
+.streamSelectContent.streamSelectContent {
+  padding: 16px 16px 0;
+}
+
+.streamSelectTitle {
+  color: rgb(0 0 0 / 87%);
+  font-size: 16px;
+  line-height: 24px;
+  margin-bottom: 14px;
+}
+
+:global([data-theme-mode='dark']) .streamSelectTitle,
+:global([data-theme-mode='dark']) .downloadTitle,
+:global([data-theme-mode='dark']) .downloadSectionLabel,
+:global([data-theme-mode='dark']) .kodiTitle,
+:global([data-theme-mode='dark']) .addEncodeTitle {
+  color: rgb(255 255 255 / 87%);
+}
+
+.streamSelectFields {
+  align-items: flex-start;
+  display: flex;
+  gap: 0;
+}
+
+.legacySelectField {
+  display: block;
+  min-height: 56px;
+  position: relative;
+  width: 100%;
+}
+
+.legacySelectField :global(.MuiInputBase-root),
+.kodiHostField :global(.MuiInputBase-root),
+.addEncodeField :global(.MuiInputBase-root) {
+  font: inherit;
+  font-size: 16px;
+  min-height: 32px;
+  width: 100%;
+}
+
+.legacySelectField :global(.MuiSelect-select),
+.kodiHostField :global(.MuiSelect-select),
+.addEncodeField :global(.MuiSelect-select) {
+  box-sizing: border-box;
+  min-height: 32px;
+  padding-bottom: 0;
+  padding-top: 0;
+  text-overflow: ellipsis;
+}
+
+:global([data-theme-mode='dark']) .legacySelectField :global(.MuiInput-underline::before),
+:global([data-theme-mode='dark']) .kodiHostField :global(.MuiInput-underline::before),
+:global([data-theme-mode='dark']) .addEncodeField :global(.MuiInput-underline::before),
+:global([data-theme-mode='dark']) .addEncodeField input {
+  border-bottom-color: rgb(255 255 255 / 50%);
+  color: rgb(255 255 255 / 87%);
+}
+
+:global([data-theme-mode='dark']) .kodiHostField span,
+:global([data-theme-mode='dark']) .addEncodeField span,
+:global([data-theme-mode='dark']) .addEncodeDirectoryField span {
+  color: rgb(255 255 255 / 70%);
+}
+
+:global([data-theme-mode='dark']) .addEncodeField input:disabled {
+  color: rgb(255 255 255 / 38%);
+}
+
+:global([data-theme-mode='dark']) .addEncodeClearButton {
+  color: rgb(255 255 255 / 70%);
+}
+
+.streamTypeField {
+  max-width: 120px;
+}
+
+.streamSelectActions.streamSelectActions {
+  padding: 8px 16px 8px 8px;
+}
+
+.streamSelectActions.streamSelectActions button {
+  color: #1976d2;
+}
+
+.streamSelectActions.streamSelectActions button:first-child {
+  width: 110px;
+}
+
+.streamSelectActions.streamSelectActions button:last-child {
+  width: 64px;
+}
+
+.downloadPaper.downloadPaper {
+  max-height: calc(100% - 64px);
+}
+
+.downloadContent.downloadContent {
+  padding: 16px 16px 0;
+}
+
+.downloadTitle {
+  color: rgb(0 0 0 / 87%);
+  font-size: 16px;
+  line-height: 28px;
+}
+
+.downloadSectionLabel {
+  color: rgb(0 0 0 / 87%);
+  font-size: 16px;
+  line-height: 24px;
+  margin-top: 8px;
+}
+
+.downloadActionRow {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.downloadButton {
+  align-items: center;
+  background-color: #1976d2;
+  border-radius: 4px;
+  box-shadow:
+    0 3px 1px -2px rgb(0 0 0 / 20%),
+    0 2px 2px 0 rgb(0 0 0 / 14%),
+    0 1px 5px 0 rgb(0 0 0 / 12%);
+  box-sizing: border-box;
+  color: #fff;
+  display: inline-flex;
+  font-size: 14px;
+  font-weight: 500;
+  height: 36px;
+  justify-content: center;
+  letter-spacing: 0;
+  line-height: 36px;
+  margin: 4px;
+  min-width: 64px;
+  padding: 0 16px;
+  text-decoration: none;
+}
+
+.downloadButton:visited {
+  color: #fff;
+}
+
+.kodiPaper.kodiPaper {
+  max-height: calc(100% - 64px);
+}
+
+.kodiContent.kodiContent {
+  padding: 16px 12px 0;
+}
+
+.kodiTitle {
+  color: rgb(0 0 0 / 87%);
+  font-size: 16px;
+  line-height: 28px;
+}
+
+.kodiHostField {
+  display: block;
+  min-height: 62px;
+  position: relative;
+}
+
+.kodiHostField span {
+  color: rgb(0 0 0 / 60%);
+  display: block;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.kodiActionRow {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.kodiVideoButton.kodiVideoButton {
+  background-color: #4caf50;
+  box-shadow:
+    rgba(0, 0, 0, 0.2) 0 3px 1px -2px,
+    rgba(0, 0, 0, 0.14) 0 2px 2px 0,
+    rgba(0, 0, 0, 0.12) 0 1px 5px 0;
+  color: #fff;
+  margin: 4px;
+  min-height: 36px;
+  min-width: 64px;
+  padding: 0 16px;
+  text-transform: none;
+}
+
+.kodiVideoButton.kodiVideoButton:hover {
+  background-color: #43a047;
+}
+
+.kodiActions.kodiActions {
+  padding: 8px 16px 8px 8px;
+}
+
+.kodiActions.kodiActions button {
+  color: #1976d2;
+  width: 64px;
+}
+
+.addEncodePaper.addEncodePaper {
+  max-height: calc(100% - 64px);
+}
+
+.addEncodeContent.addEncodeContent {
+  overflow-x: hidden;
+  padding: 16px 12px 0;
+}
+
+.addEncodeTitle {
+  color: rgb(0 0 0 / 87%);
+  font-size: 16px;
+  line-height: 28px;
+  margin-bottom: 2px;
+  overflow-wrap: anywhere;
+}
+
+.addEncodeRow {
+  align-items: flex-start;
+  display: flex;
+}
+
+.addEncodeField {
+  display: block;
+  min-height: 62px;
+  min-width: 0;
+  position: relative;
+}
+
+.addEncodeSourceField {
+  flex-basis: 35%;
+}
+
+.addEncodePresetField {
+  flex-basis: 65%;
+}
+
+.addEncodeField span {
+  color: rgb(0 0 0 / 60%);
+  display: block;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.addEncodeDirectoryField span {
+  color: rgb(0 0 0 / 60%);
+  font-size: 16px;
+  left: 0;
+  line-height: 20px;
+  pointer-events: none;
+  position: absolute;
+  top: 20px;
+  transform: none;
+  transform-origin: left top;
+  transition:
+    color 150ms ease,
+    font-size 150ms ease,
+    transform 150ms ease;
+}
+
+/* Mirrors the working .legacyFloatingField technique (SearchRulePage.module.css):
+   the native placeholder is invisible and exists only to drive :placeholder-shown,
+   so the visible span can shrink out of the way once the field has a value or focus. */
+.addEncodeDirectoryField input::placeholder {
+  opacity: 0;
+}
+
+.addEncodeDirectoryField:focus-within span,
+.addEncodeDirectoryField:has(input:not(:placeholder-shown)) span {
+  font-size: 12px;
+  transform: translateY(-20px);
+}
+
+:global([data-theme-mode='dark']) .addEncodeDirectoryField:focus-within span,
+:global([data-theme-mode='dark']) .addEncodeDirectoryField:has(input:not(:placeholder-shown)) span {
+  color: rgb(255 255 255 / 70%);
+}
+
+.addEncodeDirectoryField input {
+  margin-top: 16px;
+}
+
+.addEncodeDirectoryField input:has(+ .addEncodeClearButton) {
+  padding-right: 32px;
+}
+
+.addEncodeField input {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid rgb(0 0 0 / 42%);
+  border-radius: 0;
+  box-sizing: border-box;
+  color: rgb(0 0 0 / 87%);
+  font: inherit;
+  font-size: 16px;
+  height: 32px;
+  line-height: 24px;
+  outline: 0;
+  padding: 0 24px 0 0;
+  width: 100%;
+}
+
+.addEncodeField input:disabled {
+  color: rgb(0 0 0 / 38%);
+}
+
+.addEncodeClearButton {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: rgb(0 0 0 / 54%);
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  height: 28px;
+  justify-content: center;
+  padding: 0;
+  position: absolute;
+  right: 0;
+  top: 19px;
+  width: 28px;
+}
+
+.addEncodeContent.addEncodeContent :global(.MuiFormControlLabel-root) {
+  display: flex;
+  height: 28px;
+  margin: 0 0 0 4px;
+  width: 100%;
+}
+
+.addEncodeContent.addEncodeContent :global(.MuiCheckbox-root) {
+  height: 24px;
+  padding: 0;
+  width: 24px;
+}
+
+.addEncodeContent.addEncodeContent :global(.MuiFormControlLabel-label) {
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.addEncodeActions.addEncodeActions {
+  padding: 8px 16px 8px 8px;
+}
+
+.addEncodeActions.addEncodeActions button {
+  color: #1976d2;
+}
+
+.addEncodeActions.addEncodeActions button:first-child {
+  color: #ff5252;
+  width: 110px;
+}
+
+@media (min-width: 800px) {
+  .recordedDetailPage .thumbnail,
+  .recordedDetailPage .noImage {
+    max-height: 400px;
+    min-width: 400px;
+  }
+}
+
+@media (max-width: 799px) {
+  .detailHero {
+    grid-template-columns: 1fr;
+  }
+}
+
+.addEncodeActions.addEncodeActions button:last-child {
+  width: 64px;
+}
+
+@media (max-width: 640px) {
+  .recordedPage {
+    padding: 4px;
+  }
+}
+
+@media (max-width: 430px) {
+  .detailPrimaryAction.detailPrimaryAction[data-recorded-detail-action='play'],
+  .detailPrimaryAction.detailPrimaryAction[data-recorded-detail-action='streaming'],
+  .detailPrimaryAction.detailPrimaryAction,
+  .detailEncodeAction.detailEncodeAction {
+    width: 126px;
+  }
+
+  .addEncodeDirectoryRow {
+    display: block;
+  }
+
+  .addEncodeDirectoryRow .addEncodeField {
+    min-height: 56px;
+  }
+
+  .recordedDetailPage.recordedDetailPage {
+    padding: 12px;
+  }
+
+  .recordedItemMenuPaper {
+    transform: translateX(9px) !important;
+  }
+
+  .recordedMainMenuPaper {
+    transform: translateY(-4px) !important;
+  }
+
+  .recordedSearchChecks {
+    display: block;
+  }
+}

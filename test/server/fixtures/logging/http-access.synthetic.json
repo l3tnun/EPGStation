@@ -1,0 +1,36 @@
+{
+    "method": "PATCH",
+    "path": "/synthetic/access?mode=fixture",
+    "status": 207,
+    "contentLength": 17,
+    "remoteAddress": "synthetic-remote-address-9",
+    "headerCases": {
+        "missing": {
+            "headers": {},
+            "expected": {
+                "referer": "",
+                "userAgent": "undefined"
+            }
+        },
+        "empty": {
+            "headers": {
+                "referer": "",
+                "user-agent": ""
+            },
+            "expected": {
+                "referer": "",
+                "userAgent": ""
+            }
+        },
+        "duplicate": {
+            "headers": {
+                "referer": "https://first.synthetic.invalid/, https://second.synthetic.invalid/",
+                "user-agent": "SyntheticAgent/1.0, SyntheticAgent/2.0"
+            },
+            "expected": {
+                "referer": "https://first.synthetic.invalid/, https://second.synthetic.invalid/",
+                "userAgent": "SyntheticAgent/1.0, SyntheticAgent/2.0"
+            }
+        }
+    }
+}

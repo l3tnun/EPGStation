@@ -1,8 +1,12 @@
 import { Operation } from 'express-openapi';
-import IRecordedApiModel from '../../../api/recorded/IRecordedApiModel';
-import container from '../../../ModelContainer';
-import * as api from '../../api';
+import IRecordedApiModel from '../../../api/recorded/IRecordedApiModel.js';
+import container from '../../../ModelContainer.js';
+import * as api from '../../api.js';
 
+/**
+ * `POST /recorded/cleanup` ハンドラ。`IRecordedApiModel#fileCleanup`（実体の無いビデオ
+ * ファイル・ドロップログファイルのDBレコード掃除）の完了を待ってから 200 を返す。
+ */
 export const post: Operation = async (_req, res) => {
     const recordedApiModel = container.get<IRecordedApiModel>('IRecordedApiModel');
     try {

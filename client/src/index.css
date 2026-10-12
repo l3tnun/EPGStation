@@ -1,0 +1,118 @@
+@font-face {
+  font-family: Roboto;
+  font-style: normal;
+  font-weight: 300;
+  src: url('../../client/node_modules/typeface-roboto/files/roboto-latin-300.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: Roboto;
+  font-style: normal;
+  font-weight: 400;
+  src: url('../../client/node_modules/typeface-roboto/files/roboto-latin-400.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: Roboto;
+  font-style: normal;
+  font-weight: 500;
+  src: url('../../client/node_modules/typeface-roboto/files/roboto-latin-500.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: Roboto;
+  font-style: normal;
+  font-weight: 700;
+  src: url('../../client/node_modules/typeface-roboto/files/roboto-latin-700.woff2') format('woff2');
+}
+
+:root {
+  --app-document-background: #f5f5f5;
+  color: #111827;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+  font-synthesis: weight;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+}
+
+html,
+body,
+#root {
+  background: var(--app-document-background);
+  min-height: 100%;
+  overscroll-behavior-y: none;
+}
+
+html.fix-address-bar {
+  height: 100%;
+  overflow: hidden !important;
+}
+
+html.fix-address-bar2 {
+  height: var(--app-viewport-height, 100%);
+  overflow: hidden !important;
+  width: 100%;
+}
+
+html.fix-address-bar body,
+html.fix-address-bar #root,
+html.fix-address-bar2 body,
+html.fix-address-bar2 #root {
+  height: var(--app-viewport-height, 100%);
+}
+
+html.fix-address-bar2 body,
+html.fix-address-bar2 #root,
+html.fix-address-bar2 [data-testid='app-shell'] {
+  height: var(--app-viewport-height, 100%);
+  min-height: 0;
+  overflow: hidden;
+}
+
+html.fix-address-bar #root,
+html.fix-address-bar2 #root {
+  min-height: 100%;
+}
+
+html.fix-address-bar2 [data-testid='shell-content'] {
+  height: var(--app-viewport-height, 100%);
+  min-height: 0;
+  overflow: hidden;
+}
+
+html.fix-address-bar2 [data-testid='shell-main'] {
+  box-sizing: border-box;
+  height: var(--app-viewport-height, 100%);
+  max-height: var(--app-viewport-height, 100%);
+  min-height: 0;
+  overscroll-behavior-y: contain;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding-top: var(--app-title-bar-height, 64px);
+  -webkit-overflow-scrolling: touch;
+}
+
+html.fix-address-bar2 [data-testid='title-bar'],
+html.fix-address-bar2 [data-testid='edit-title-bar'] {
+  position: fixed !important;
+  top: 0;
+  right: 0;
+  left: var(--app-main-offset, 0px);
+  width: auto;
+  touch-action: none;
+  transform: translateZ(0);
+}
+
+html[data-theme-mode='dark'] {
+  --app-document-background: #121212;
+}

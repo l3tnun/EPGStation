@@ -1,15 +1,25 @@
 import * as path from 'path';
 import { inject, injectable } from 'inversify';
 import { DataSource } from 'typeorm';
-import IConfigFile from '../IConfigFile';
-import IConfiguration from '../IConfiguration';
-import ILogger from '../ILogger';
-import ILoggerModel from '../ILoggerModel';
-import IDBOperator from './IDBOperator';
+import IConfigFile from '../IConfigFile.js';
+import IConfiguration from '../IConfiguration.js';
+import ILogger from '../ILogger.js';
+import ILoggerModel from '../ILoggerModel.js';
+import IDBOperator from './IDBOperator.js';
 
+/**
+ * `IDBOperator` の実装。config.yml の `dbtype`（sqlite/mysql）に応じた TypeORM `DataSource` を
+ * 生成・接続し、DB接続まわりの各 DB クラス（`op: IDBOperator` として注入される）へ単一の
+ * 接続を提供する。
+ */
 @injectable()
 export default class DBOperator implements IDBOperator {
+    /** 確立済みの接続。一度確立されれば `getConnection` はこれを再利用し、再接続を試みない。 */
     private connection: DataSource | null = null;
+    /** 接続確立が進行中の間だけ値を持つ、その完了を表す Promise。`getConnection` が同時に
+     *  複数回呼ばれても接続の生成を1回に留めるためのdedupe用で、成功・失敗いずれでも
+     *  完了後は`clearConnectionInitialization`により`null`へ戻る。 */
+    private connectionInitialization: Promise<DataSource> | null = null;
     private config: IConfigFile;
     private log: ILogger;
 
@@ -18,22 +28,38 @@ export default class DBOperator implements IDBOperator {
         this.config = conf.getConfig();
     }
 
-    public async getConnection(): Promise<DataSource> {
-        if (this.connection === null) {
-            this.connection = await this.createConnection();
-            await this.setSQLiteExtensions();
+    public getConnection(): Promise<DataSource> {
+        if (this.connection !== null) {
+            return Promise.resolve(this.connection);
         }
 
-        return this.connection;
+        if (this.connectionInitialization !== null) {
+            return this.connectionInitialization;
+        }
+
+        let resolveInitialization!: (connection: DataSource) => void;
+        let rejectInitialization!: (error: unknown) => void;
+        const initialization = new Promise<DataSource>((resolve, reject) => {
+            resolveInitialization = resolve;
+            rejectInitialization = reject;
+        });
+        this.connectionInitialization = initialization;
+        void this.initializeConnection().then(resolveInitialization, rejectInitialization);
+        void initialization.then(
+            () => this.clearConnectionInitialization(),
+            () => this.clearConnectionInitialization(),
+        );
+
+        return initialization;
     }
 
     /**
-     * DB へ接続を行い接続済みのDataSourceを返す
+     * DB 接続候補を生成する
      * @returns DataSource
      */
-    private async createConnection(): Promise<DataSource> {
+    private createConnection(): DataSource {
         // アプリのルートディレクトリ
-        const appRootPath = path.join(__dirname, '..', '..', '..');
+        const appRootPath = path.join(import.meta.dirname, '..', '..', '..');
 
         // dist 下のディレクトリ設定
         const distDBBasePath = path.join(appRootPath, 'dist', 'db');
@@ -46,8 +72,16 @@ export default class DBOperator implements IDBOperator {
         let connection: DataSource;
         if (this.config.dbtype === 'sqlite') {
             connection = new DataSource({
-                type: 'sqlite',
+                // 利用者向けの設定値は 'sqlite' のまま。TypeORM 1.x は node-sqlite3 driver を
+                // 廃止し better-sqlite3 へ置き換えたため、driver 名だけを読み替える。
+                type: 'better-sqlite3',
                 database: path.join(appRootPath, 'data', 'database.db'),
+                // sqlite.wal が true のときだけ journal_mode を WAL にする。それ以外は初期化の後に
+                // delete 方式へ揃える（applySQLiteJournalMode）。
+                ...(this.config.sqlite?.wal === true ? { enableWAL: true } : {}),
+                // 他の接続のロックを待つ最長時間（ミリ秒）。sqlite.busyTimeout をそのまま渡し、省略時は
+                // better-sqlite3 の既定と同じ 5000。不正な値は driver が接続の作成時に拒否する。
+                timeout: this.config.sqlite?.busyTimeout ?? 5000,
                 synchronize: false,
                 logging: false,
                 entities: [entitie],
@@ -60,6 +94,10 @@ export default class DBOperator implements IDBOperator {
                 type: 'mysql',
                 host: this.config.mysql.host,
                 port: this.config.mysql.port,
+                // socketPath は設定されたときだけ渡す。省略時は option に含めず、host / port で接続する。
+                ...(typeof this.config.mysql.socketPath === 'undefined'
+                    ? {}
+                    : { socketPath: this.config.mysql.socketPath }),
                 username: this.config.mysql.user,
                 password: this.config.mysql.password,
                 database: this.config.mysql.database,
@@ -71,15 +109,93 @@ export default class DBOperator implements IDBOperator {
                 subscribers: [subscriber],
                 migrationsRun: true,
                 migrations: migrations,
+                // ssl は設定されたときだけ渡す。省略時は option に含めず、TLS を使わず接続する。
+                ...(typeof this.config.mysql.ssl === 'undefined' ? {} : { ssl: this.config.mysql.ssl }),
             });
         } else {
             throw new Error('DBTypeError');
         }
 
-        // 接続処理実施
-        await connection.initialize();
-
         return connection;
+    }
+
+    private async initializeConnection(): Promise<DataSource> {
+        let candidate: DataSource | null = null;
+        let candidateClosedDuringInitialization = false;
+        let candidateInitialized = false;
+        let driverConnectStarted = false;
+        let driverDisconnectedDuringInitialization = false;
+        try {
+            candidate = this.createConnection();
+            const destroy = candidate.destroy;
+            const driver = candidate.driver;
+            const connect = driver.connect;
+            const disconnect = driver.disconnect;
+            candidate.destroy = async () => {
+                candidateClosedDuringInitialization = true;
+                try {
+                    await destroy.call(candidate);
+                } catch (error) {
+                    this.logInitializationCleanupError(error);
+                }
+            };
+            driver.connect = async () => {
+                driverConnectStarted = true;
+                await connect.call(driver);
+            };
+            driver.disconnect = async () => {
+                driverDisconnectedDuringInitialization = true;
+                await disconnect.call(driver);
+            };
+            try {
+                await candidate.initialize();
+                candidateInitialized = true;
+            } finally {
+                candidate.destroy = destroy;
+                driver.connect = connect;
+                driver.disconnect = disconnect;
+            }
+            await this.applySQLiteJournalMode(candidate);
+            await this.setSQLiteExtensions(candidate);
+
+            if (this.connection !== null) {
+                await this.closeInitializationCandidate(candidate);
+                return this.connection;
+            }
+
+            this.connection = candidate;
+            return candidate;
+        } catch (error) {
+            if (candidate !== null && !candidateClosedDuringInitialization) {
+                const failedCandidate = candidate;
+                if (candidateInitialized || !driverConnectStarted) {
+                    await this.closeInitializationCandidate(failedCandidate);
+                } else if (!driverDisconnectedDuringInitialization) {
+                    await this.closeInitializationCandidate(failedCandidate, () => failedCandidate.driver.disconnect());
+                }
+            }
+            throw error;
+        }
+    }
+
+    private clearConnectionInitialization(): void {
+        this.connectionInitialization = null;
+    }
+
+    private async closeInitializationCandidate(
+        candidate: DataSource,
+        close: () => Promise<void> = () => candidate.destroy(),
+    ): Promise<void> {
+        try {
+            await close();
+        } catch (error) {
+            this.logInitializationCleanupError(error);
+        }
+    }
+
+    private logInitializationCleanupError(error: unknown): void {
+        this.log.system.error('failed to close database initialization candidate');
+        this.log.system.error(error);
     }
 
     /**
@@ -104,32 +220,53 @@ export default class DBOperator implements IDBOperator {
     }
 
     /**
+     * sqlite の journal 方式を設定に合わせる。
+     *
+     * `sqlite.wal` が true のときは、接続時に TypeORM が WAL にする（`enableWAL`）。それ以外のときは
+     * delete 方式にする。SQLite は WAL だけを database file に記録するので、以前に WAL にされた file
+     * もここで delete 方式へ戻り、設定が無効のまま WAL で動き続けない。WAL でない file は何も変わらない。
+     * 他の接続が file を使っていて戻せないときは SQLite が `database is locked` で失敗し、error を log に
+     * 残して初期化を失敗させる（接続を公開せず、黙って WAL のまま動かない）。起動時は本体の process が
+     * 子 process より先に DB を開き（`checkDB`）、失敗は成功まで再試行される。
+     */
+    private async applySQLiteJournalMode(connection: DataSource): Promise<void> {
+        if (this.config.dbtype !== 'sqlite' || this.config.sqlite?.wal === true) {
+            return;
+        }
+
+        try {
+            await connection.manager.query('PRAGMA journal_mode = DELETE');
+        } catch (err: any) {
+            this.log.system.error('failed to set sqlite journal_mode to delete');
+            throw err;
+        }
+    }
+
+    /**
      * sqlite の外部拡張読み込み
      */
-    private async setSQLiteExtensions(): Promise<void> {
+    private async setSQLiteExtensions(connection: DataSource): Promise<void> {
         if (
             this.config.dbtype !== 'sqlite' ||
             typeof this.config.sqlite === 'undefined' ||
-            typeof this.config.sqlite.extensions === 'undefined' ||
-            this.connection === null
+            typeof this.config.sqlite.extensions === 'undefined'
         ) {
             return;
         }
 
         // 外部拡張読み込み
+        //
+        // better-sqlite3 の loadExtension は同期で、失敗は例外で返る。node-sqlite3 の callback
+        // 形式とは異なる。
         for (const extension of this.config.sqlite.extensions) {
             this.log.system.info(`load extension: ${extension}`);
-            await new Promise<void>((resolve: () => void, reject: (err: Error) => void) => {
-                (<any>this.connection).driver.databaseConnection.loadExtension(extension, (err: Error | null) => {
-                    if (err) {
-                        this.log.system.error(`failed to load extension: ${extension}`);
-                        reject(err);
-                    } else {
-                        this.log.system.info(`loaded extension success: ${extension}`);
-                        resolve();
-                    }
-                });
-            });
+            try {
+                (<any>connection).driver.databaseConnection.loadExtension(extension);
+            } catch (err: any) {
+                this.log.system.error(`failed to load extension: ${extension}`);
+                throw err;
+            }
+            this.log.system.info(`loaded extension success: ${extension}`);
         }
     }
 

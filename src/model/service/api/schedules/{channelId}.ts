@@ -1,9 +1,14 @@
 import { Operation } from 'express-openapi';
-import * as apid from '../../../../../api';
-import IScheduleApiModel from '../../../api/schedule/IScheduleApiModel';
-import container from '../../../ModelContainer';
-import * as api from '../../api';
+import type * as apid from '../../../../../api.js';
+import IScheduleApiModel from '../../../api/schedule/IScheduleApiModel.js';
+import container from '../../../ModelContainer.js';
+import * as api from '../../api.js';
 
+/**
+ * `GET /schedules/{channelId}` ハンドラ。開始時刻（startAt）・日数（days）・種別フィルタ
+ * （query）から検索条件を組み立て、`IScheduleApiModel#getChannelSchedule` で指定放送局の
+ * 番組表情報を返す。
+ */
 export const get: Operation = async (req, res) => {
     const scheduleApiModel = container.get<IScheduleApiModel>('IScheduleApiModel');
 
@@ -13,7 +18,7 @@ export const get: Operation = async (req, res) => {
             days: parseInt(req.query.days as any, 10),
             isHalfWidth: req.query.isHalfWidth as any,
             needsRawExtended: req.query.needsRawExtended as any,
-            channelId: parseInt(req.params.channelId, 10),
+            channelId: parseInt(api.pathParam(req, 'channelId'), 10),
         };
         if (typeof req.query.isFree === 'boolean') {
             option.isFree = req.query.isFree;

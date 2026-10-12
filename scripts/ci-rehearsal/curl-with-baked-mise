@@ -1,0 +1,40 @@
+#!/bin/sh
+# Serves one URL from the image and passes everything else to the real curl.
+#
+# The workflow's install step downloads the pinned mise release on every run. The image already
+# holds that exact binary, but job.sh runs the step's text exactly as server.yml has it, so the
+# step cannot be changed to read the local copy. Without this shim a rehearsal reached out to
+# GitHub for it -- and a 5xx from there failed the gate, which says nothing about this
+# repository. Answering that one request locally is what makes a rehearsal independent of GitHub
+# being reachable.
+#
+# Serving a request the caller believes went to the network is only safe because the caller checks:
+# the step verifies the pinned sha256 immediately afterwards, so bytes that are not the pinned
+# release fail there. The version and checksum are part of the image digest, so a changed pin
+# rebuilds the image rather than silently serving a stale binary. Every other request, including
+# every other GitHub URL, reaches the network unchanged.
+set -eu
+
+BAKED_MISE=/opt/epgstation-rehearsal/mise
+url=''
+output=''
+expect_output=0
+
+for arg in "$@"; do
+    if [ "$expect_output" -eq 1 ]; then
+        output=$arg
+        expect_output=0
+        continue
+    fi
+    case "$arg" in
+        -o) expect_output=1 ;;
+        https://github.com/jdx/mise/releases/download/*/mise-*-linux-x64) url=$arg ;;
+    esac
+done
+
+if [ -n "$url" ] && [ -n "$output" ] && [ -r "$BAKED_MISE" ]; then
+    cp "$BAKED_MISE" "$output"
+    exit 0
+fi
+
+exec /usr/bin/curl "$@"

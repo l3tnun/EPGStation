@@ -1,19 +1,27 @@
 import * as http from 'http';
 import { inject, injectable } from 'inversify';
-import * as SocketIO from 'socket.io';
+import { Server as SocketIOServer } from 'socket.io';
 import urljoin from 'url-join';
-import IConfigFile from '../../IConfigFile';
-import IConfiguration from '../../IConfiguration';
-import ILogger from '../../ILogger';
-import ILoggerModel from '../../ILoggerModel';
-import ISocketIOManageModel from './ISocketIOManageModel';
+import IConfigFile from '../../IConfigFile.js';
+import IConfiguration from '../../IConfiguration.js';
+import ILogger from '../../ILogger.js';
+import ILoggerModel from '../../ILoggerModel.js';
+import ISocketIOManageModel from './ISocketIOManageModel.js';
 
+/**
+ * `ISocketIOManageModel` の実装。socket.io server を各 `http.Server`（複数listen先ぶん）に
+ * 被せて初期化し、client への状態変更通知を行う。短時間に連続で呼ばれても実際の emit は
+ * 200ms に1回へ間引く（`notifyClient`/`notifyUpdateEncodeProgress` それぞれ独立に）。
+ */
 @injectable()
 export default class SocketIOManageModel implements ISocketIOManageModel {
     private log: ILogger;
     private config: IConfigFile;
-    private ios: SocketIO.Server[] = [];
+    /** `initialize` で構築した、`http.Server` それぞれに対応する socket.io server 一覧。 */
+    private ios: SocketIOServer[] = [];
+    /** `notifyClient` の間引き用timer。稼働中は`null`以外になり、発火すると`null`に戻る。 */
     private callTimer: NodeJS.Timer | null = null;
+    /** `notifyUpdateEncodeProgress` の間引き用timer。役割は `callTimer` と同様。 */
     private encodeProgressCallTimer: NodeJS.Timer | null = null;
 
     constructor(@inject('ILoggerModel') logger: ILoggerModel, @inject('IConfiguration') configuration: IConfiguration) {
@@ -28,7 +36,7 @@ export default class SocketIOManageModel implements ISocketIOManageModel {
     public initialize(servers: http.Server[]): void {
         for (const s of servers) {
             this.ios.push(
-                new SocketIO.Server(s, {
+                new SocketIOServer(s, {
                     path:
                         typeof this.config.subDirectory === 'undefined'
                             ? '/socket.io'
@@ -56,7 +64,11 @@ export default class SocketIOManageModel implements ISocketIOManageModel {
                 }
 
                 for (const io of this.ios) {
-                    io.sockets.emit('updateStatus');
+                    try {
+                        io.sockets.emit('updateStatus');
+                    } catch (error: unknown) {
+                        this.log.system.error(error);
+                    }
                 }
             }, 200);
         }
@@ -75,7 +87,11 @@ export default class SocketIOManageModel implements ISocketIOManageModel {
                 }
 
                 for (const io of this.ios) {
-                    io.sockets.emit('updateEncode');
+                    try {
+                        io.sockets.emit('updateEncode');
+                    } catch (error: unknown) {
+                        this.log.system.error(error);
+                    }
                 }
             }, 200);
         }

@@ -1,0 +1,530 @@
+.dashboardPage {
+  --dashboard-description: rgba(0, 0, 0, 0.62);
+  --dashboard-focus: #1976d2;
+  --dashboard-hover: rgba(0, 0, 0, 0.04);
+  --dashboard-meta: rgba(0, 0, 0, 0.74);
+  --dashboard-reserve-icon: rgba(0, 0, 0, 0.54);
+  --dashboard-reserve-text: rgba(0, 0, 0, 0.87);
+  --dashboard-section-shadow:
+    rgba(0, 0, 0, 0.2) 0 3px 1px -2px, rgba(0, 0, 0, 0.14) 0 2px 2px 0,
+    rgba(0, 0, 0, 0.12) 0 1px 5px 0;
+  --dashboard-surface: #fff;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  font-family: Roboto, sans-serif;
+  gap: 0;
+  margin: 0 auto;
+  max-width: 600px;
+  opacity: 0;
+  padding: 4px;
+  transition: opacity 160ms ease;
+  width: 100%;
+}
+
+:global([data-theme-mode='dark']) .dashboardPage {
+  --dashboard-description: rgba(255, 255, 255, 0.7);
+  --dashboard-focus: #90caf9;
+  --dashboard-hover: rgba(255, 255, 255, 0.08);
+  --dashboard-meta: rgba(255, 255, 255, 0.76);
+  --dashboard-reserve-icon: rgba(255, 255, 255, 0.7);
+  --dashboard-reserve-text: rgba(255, 255, 255, 0.87);
+  --dashboard-section-shadow:
+    rgba(0, 0, 0, 0.28) 0 3px 1px -2px, rgba(0, 0, 0, 0.2) 0 2px 2px 0,
+    rgba(0, 0, 0, 0.16) 0 1px 5px 0;
+  --dashboard-surface: #1e1e1e;
+}
+
+.dashboardPage[data-dashboard-transition='entered'] {
+  opacity: 1;
+}
+
+.sections {
+  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+}
+
+.section {
+  background: var(--dashboard-surface);
+  border: 0;
+  border-radius: 4px;
+  box-shadow: var(--dashboard-section-shadow);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-height: 60px;
+  min-width: 0;
+  overflow: hidden;
+  padding: 0;
+  width: 100%;
+}
+
+.sectionTitle {
+  font-size: 1rem;
+  font-weight: 400;
+  height: 60px;
+  line-height: 1.35;
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  padding: 16px;
+  /* sectionTitleLabelButton の当たり判定用 pseudo-element の位置決め基準にする。
+     offset を指定しないため見た目には影響しない。 */
+  position: relative;
+}
+
+.section[data-testid='dashboard-section-recording'] .sectionTitle {
+  line-height: 1.75;
+}
+
+.sectionHeader {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.sectionTitleLabelButton {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  letter-spacing: inherit;
+  margin: 0;
+  padding: 0;
+  text-align: inherit;
+}
+
+/* ラベル文字の見た目（文字サイズ・色・行の高さ）は変えず、クリック可能領域だけを
+   タイトル行（.sectionTitle）全体に広げる。button 自身は position を変更しない
+   （テキストに合わせた見た目のまま）ため、:focus-visible の輪郭サイズも変わらない。 */
+.sectionTitleLabelButton::before {
+  bottom: 0;
+  content: '';
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+.conflictButton {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  gap: 5px;
+  letter-spacing: 0;
+  margin-left: 5px;
+  padding: 0;
+}
+
+.conflictBadge {
+  background: #e91e63;
+  border-radius: 10px;
+  box-sizing: border-box;
+  color: #fff;
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 400;
+  height: 20px;
+  line-height: 12px;
+  min-width: 20px;
+  padding: 4px 6px;
+  text-align: center;
+  transform: translateY(2px);
+}
+
+.itemList {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  list-style: none;
+  margin: 0;
+  min-height: 0;
+  padding: 0 8px 4px;
+}
+
+.item {
+  align-items: flex-start;
+  background: var(--dashboard-surface);
+  border: 0;
+  border-radius: 0;
+  display: flex;
+  font-size: 0.875rem;
+  gap: 4px;
+  line-height: 1.4;
+  margin: 4px 0;
+  min-width: 0;
+}
+
+.reserveItem {
+  margin: 0;
+  position: relative;
+}
+
+.reserveItem > button[aria-label^='予約メニュー'] {
+  height: 36px;
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  width: 36px;
+}
+
+.moreItem {
+  display: block;
+  margin: 8px 0;
+}
+
+.moreButton {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: #1976d2;
+  cursor: pointer;
+  display: flex;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  justify-content: center;
+  letter-spacing: 0;
+  min-height: 36px;
+  padding: 0;
+  text-align: center;
+  text-transform: uppercase;
+  width: 100%;
+}
+
+.moreButton:hover {
+  background: var(--dashboard-hover);
+}
+
+.section[data-testid='dashboard-section-recorded'] .item {
+  height: 100px;
+  margin: 4px 0 0;
+}
+
+.section[data-testid='dashboard-section-recording'] .item {
+  margin: 4px 0 0;
+}
+
+.section[data-testid='dashboard-section-recorded'] .itemList {
+  padding-top: 0;
+}
+
+.section[data-testid='dashboard-section-recording'] .itemList {
+  padding-top: 0;
+}
+
+.recordedItem {
+  position: relative;
+}
+
+.recordingItem {
+  position: relative;
+}
+
+.recordedItem > button[aria-label^='録画メニュー'] {
+  height: 36px;
+  position: absolute;
+  right: 4px;
+  top: 4px;
+  width: 36px;
+}
+
+.recordingItem > button[aria-label^='録画メニュー'] {
+  height: 36px;
+  position: absolute;
+  right: 4px;
+  top: 4px;
+  width: 36px;
+}
+
+.section[data-testid='dashboard-section-reserves'] .itemList {
+  padding: 0 0 4px;
+}
+
+.section .itemList:empty {
+  padding: 0;
+}
+
+.itemContentButton {
+  align-items: flex-start;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  flex: 1 1 auto;
+  font: inherit;
+  gap: 8px;
+  min-width: 0;
+  padding: 0;
+  text-align: left;
+}
+
+.itemContentButton:hover {
+  background: var(--dashboard-hover);
+}
+
+.itemContentButton:focus-visible {
+  outline: 2px solid var(--dashboard-focus);
+  outline-offset: 2px;
+}
+
+.reserveContentButton {
+  box-sizing: border-box;
+  padding: 0 13px 15px 11px;
+  width: 100%;
+}
+
+.recordedContentButton {
+  gap: 0;
+  height: 100px;
+  width: 100%;
+}
+
+.recordingContentButton {
+  width: 100%;
+}
+
+.itemText {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  overflow: hidden;
+  padding-top: 10px;
+}
+
+.reserveContentButton .itemText {
+  padding-top: 12px;
+}
+
+.recordedText {
+  flex: 1 1 auto;
+  gap: 0;
+  height: 100px;
+  padding: 8px;
+}
+
+.recordingText {
+  flex: 1 1 auto;
+  gap: 0;
+  padding: 8px;
+}
+
+.itemTitle,
+.itemMeta,
+.itemDescription {
+  overflow-wrap: anywhere;
+}
+
+.itemTitle {
+  display: -webkit-box;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.2;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.itemMeta {
+  color: var(--dashboard-meta);
+  font-size: 0.8125rem;
+  line-height: 1.35;
+}
+
+.itemDescription {
+  color: var(--dashboard-description);
+  display: -webkit-box;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.reserveTitleLine {
+  align-items: flex-start;
+  display: block;
+  gap: 4px;
+  min-height: 36px;
+  min-width: 0;
+  padding-right: 36px;
+}
+
+.reserveIcon {
+  color: var(--dashboard-reserve-icon);
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-family: 'Material Design Icons', sans-serif;
+  font-size: 20px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 1;
+  margin-right: 4px;
+  padding-bottom: 2px;
+  vertical-align: -4px;
+}
+
+.reserveIconRule::before {
+  content: '\F00ED';
+}
+
+.reserveIconTimer::before {
+  content: '\F051B';
+}
+
+.reserveTitle,
+.reserveDescription {
+  -webkit-box-orient: initial;
+  -webkit-line-clamp: initial;
+  display: block;
+  overflow: visible;
+}
+
+.reserveTitle {
+  display: inline;
+  font-weight: 900;
+  line-height: 28px;
+}
+
+.reserveChannelMeta {
+  color: var(--dashboard-reserve-text);
+  font-size: 0.875rem;
+  font-weight: 300;
+  line-height: 1.55;
+}
+
+.reserveTimeMeta {
+  color: var(--dashboard-reserve-text);
+  font-size: 0.75rem;
+  font-weight: 300;
+  line-height: 1.65;
+  margin-bottom: 8px;
+}
+
+.reserveDescription {
+  color: var(--dashboard-reserve-text);
+  font-size: 0.875rem;
+  font-weight: 300;
+  line-height: 1.43;
+}
+
+.recordedItem .itemTitle,
+.recordedItem .itemMeta,
+.recordedItem .itemDescription,
+.recordingItem .itemTitle,
+.recordingItem .itemMeta,
+.recordingItem .itemDescription {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recordedItem .itemTitle,
+.recordingItem .itemTitle {
+  -webkit-box-orient: initial;
+  -webkit-line-clamp: initial;
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.57;
+  margin-top: 4px;
+  padding-right: 30px;
+}
+
+.recordingItem .itemTitle {
+  letter-spacing: 0.1px;
+}
+
+.recordedItem .itemMeta,
+.recordingItem .itemMeta {
+  color: var(--dashboard-reserve-text);
+  font-size: 0.75rem;
+  font-weight: 300;
+  line-height: 1.67;
+}
+
+.recordedItem .itemDescription,
+.recordingItem .itemDescription {
+  color: var(--dashboard-reserve-text);
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.67;
+}
+
+.recordingItem .itemMeta,
+.recordingItem .itemDescription {
+  letter-spacing: 0.4px;
+}
+
+.thumbnail,
+.noImage {
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  border-radius: 0;
+  display: block;
+  height: 100px;
+  min-width: 0;
+  object-fit: cover;
+}
+
+.recordedThumbnail {
+  flex: 0 0 30%;
+  flex-basis: 30%;
+  height: 100px;
+  max-width: 200px;
+  min-width: 0;
+  width: auto;
+}
+
+.noImage {
+  background: var(--dashboard-hover);
+}
+
+@media (min-width: 1023px) {
+  .dashboardPage {
+    height: calc(100vh - 72px);
+    max-width: none;
+    overflow: hidden;
+  }
+
+  .sections {
+    flex-direction: row;
+    height: 100%;
+  }
+
+  .section {
+    flex: 1 1 33.333%;
+    max-height: 100%;
+    min-height: 0;
+  }
+
+  .itemList {
+    flex: 0 1 auto;
+    max-height: calc(100% - 60px);
+    overscroll-behavior-y: contain;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@supports (height: 100dvh) {
+  @media (min-width: 1023px) {
+    .dashboardPage {
+      height: calc(100dvh - 72px);
+    }
+  }
+}

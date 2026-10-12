@@ -1,23 +1,62 @@
 import * as fs from 'fs';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import * as apid from '../../../../api';
-import Reserve from '../../../db/entities/Reserve';
-import Recorded from '../../../db/entities/Recorded';
-import DateUtil from '../../../util/DateUtil';
-import FileUtil from '../../../util/FileUtil';
-import StrUtil from '../../../util/StrUtil';
-import IVideoUtil from '../../api/video/IVideoUtil';
-import IChannelDB from '../../db/IChannelDB';
-import IProgramDB from '../../db/IProgramDB';
-import IVideoFileDB from '../../db/IVideoFileDB';
-import IConfigFile, { RecordedDirInfo } from '../../IConfigFile';
-import IConfiguration from '../../IConfiguration';
-import IExecutionManagementModel from '../../IExecutionManagementModel';
-import ILogger from '../../ILogger';
-import ILoggerModel from '../../ILoggerModel';
-import IRecordingUtilModel, { RecFilePathInfo } from './IRecordingUtilModel';
+import type * as apid from '../../../../api.js';
+import Reserve from '../../../db/entities/Reserve.js';
+import Recorded from '../../../db/entities/Recorded.js';
+import DateUtil from '../../../util/DateUtil.js';
+import FileUtil from '../../../util/FileUtil.js';
+import StrUtil from '../../../util/StrUtil.js';
+import { isSubDirectoryInsideRoot } from '../../../util/SubDirectoryUtil.js';
+import IVideoUtil from '../../api/video/IVideoUtil.js';
+import IChannelDB from '../../db/IChannelDB.js';
+import IProgramDB from '../../db/IProgramDB.js';
+import IVideoFileDB from '../../db/IVideoFileDB.js';
+import IConfigFile, { RecordedDirInfo } from '../../IConfigFile.js';
+import IConfiguration from '../../IConfiguration.js';
+import IExecutionManagementModel from '../../IExecutionManagementModel.js';
+import ILogger from '../../ILogger.js';
+import ILoggerModel from '../../ILoggerModel.js';
+import IRecordingUtilModel, { RecFilePathInfo } from './IRecordingUtilModel.js';
 
+/**
+ * `getRecPath` の排他制御区間が `GET_REC_PATH_OWNER_TIMEOUT` を超過した場合に投げられるエラー。
+ * タイムアウト後も内部の `_getRecPath` は実行され続けるため、`terminal` にはその遅延実行が
+ * 完了し（ロック解放・後片付けまで終わり）安全に後続処理へ進めるようになったことを示す
+ * Promise を保持する（`RecorderModel.handlePathSelectionOverdue` 参照）。
+ */
+export class PathSelectionOverdueError extends Error {
+    public readonly terminal: Promise<void>;
+
+    constructor(terminal: Promise<void>) {
+        super();
+        this.name = 'PathSelectionOverdueError';
+        this.terminal = terminal;
+    }
+}
+
+/**
+ * `error` が `PathSelectionOverdueError` かどうかを判定する type guard。
+ * `name` の一致だけでなく `terminal` が thenable であることも確認し、たまたま同じ `name` を
+ * 持つだけの無関係な `Error` を overdue 扱いしてしまわないようにしている。
+ * @param error 判定対象の値
+ * @returns `PathSelectionOverdueError` であれば `true`
+ */
+export const isPathSelectionOverdueError = (error: unknown): error is PathSelectionOverdueError => {
+    if (!(error instanceof Error) || error.name !== 'PathSelectionOverdueError') return false;
+    const terminal = (error as unknown as { terminal?: { then?: unknown } }).terminal;
+    return terminal !== undefined && typeof terminal.then === 'function';
+};
+
+/**
+ * `formatFilePathString` の入力が予約かどうかを判定する。
+ * 録画の経路は予約を `Object.freeze({ ...reservation })` で写した plain object として渡すため、
+ * `instanceof Reserve` では予約を録画済みと取り違える。`isTimeSpecified` は `Reserve` だけが持ち、
+ * `Recorded` には無い field なので、これで分ける。
+ */
+const isReserveSource = (src: Recorded | Reserve): src is Reserve => 'isTimeSpecified' in src;
+
+/** `IRecordingUtilModel` の実装。詳細は `IRecordingUtilModel` を参照。 */
 @injectable()
 class RecordingUtilModel implements IRecordingUtilModel {
     private log: ILogger;
@@ -54,16 +93,66 @@ class RecordingUtilModel implements IRecordingUtilModel {
      * @param isEnableTmp: 一時保存ディレクトリを使用するか
      * @return Promise<RecFilePathInfo> 保存先ファイルパス
      */
-    public async getRecPath(reserve: Reserve, isEnableTmp: boolean): Promise<RecFilePathInfo> {
-        // ロック取得
+    public async getRecPath(
+        reserve: Reserve,
+        isEnableTmp: boolean,
+        isReserveFile: boolean = false,
+    ): Promise<RecFilePathInfo> {
         const exeId = await this.executeManagementModel.getExecution(
             RecordingUtilModel.GET_REC_PATH_PRIORITY,
             RecordingUtilModel.GET_REC_PATH_LOCK_TIMEOUT,
         );
 
-        return await this._getRecPath(reserve, isEnableTmp).finally(() => {
-            // 必ずロックを開放するようにする
-            this.executeManagementModel.unLockExecution(exeId);
+        return new Promise<RecFilePathInfo>((resolve, reject) => {
+            let isOverdue = false;
+            let resolveTerminal!: () => void;
+            const terminal = new Promise<void>(resolveTerminalCallback => {
+                resolveTerminal = resolveTerminalCallback;
+            });
+            const watchdog = setTimeout(() => {
+                isOverdue = true;
+                reject(new PathSelectionOverdueError(terminal));
+            }, RecordingUtilModel.GET_REC_PATH_OWNER_TIMEOUT);
+            watchdog.unref();
+            const completeLateFailure = (): void => {
+                this.executeManagementModel.unLockExecution(exeId);
+                resolveTerminal();
+            };
+            const completeLateSelection = async (result: RecFilePathInfo): Promise<void> => {
+                await this.cleanupOverdueRecPath(result);
+                completeLateFailure();
+            };
+            const settle = (onTime: () => void, late: () => void): void => {
+                clearTimeout(watchdog);
+                if (isOverdue) {
+                    late();
+                    return;
+                }
+                this.executeManagementModel.unLockExecution(exeId);
+                onTime();
+            };
+
+            void this._getRecPath(reserve, isEnableTmp, isReserveFile).then(
+                result =>
+                    settle(
+                        () => resolve(result),
+                        () => void completeLateSelection(result),
+                    ),
+                error => settle(() => reject(error), completeLateFailure),
+            );
+        });
+    }
+
+    private async cleanupOverdueRecPath(recPath: RecFilePathInfo): Promise<void> {
+        const fileHandle = recPath.fileHandle;
+        if (fileHandle === undefined) return;
+        await fileHandle.close().catch(error => {
+            this.log.system.error(`close overdue recFile error: ${recPath.fullPath}`);
+            this.log.system.error(error);
+        });
+        await FileUtil.unlink(recPath.fullPath).catch(error => {
+            this.log.system.error(`delete overdue recFile error: ${recPath.fullPath}`);
+            this.log.system.error(error);
         });
     }
 
@@ -73,7 +162,11 @@ class RecordingUtilModel implements IRecordingUtilModel {
      * @param isEnableTmp: 一時保存ディレクトリを使用するか
      * @return Promise<RecFilePathInfo> 保存先ファイルパス
      */
-    private async _getRecPath(reserve: Reserve, isEnableTmp: boolean): Promise<RecFilePathInfo> {
+    private async _getRecPath(
+        reserve: Reserve,
+        isEnableTmp: boolean,
+        isReserveFile: boolean,
+    ): Promise<RecFilePathInfo> {
         // 親ディレクトリ
         let parentDir: RecordedDirInfo | null = null;
         let subDir = ''; // サブディレクトリ
@@ -117,6 +210,14 @@ class RecordingUtilModel implements IRecordingUtilModel {
         // サブディレクトリ
         if (subDir.length > 0) {
             subDir = await this.formatFilePathString(subDir, reserve);
+
+            // 保存先の外を指すサブディレクトリは使わず、親ディレクトリの直下に保存する
+            if (isSubDirectoryInsideRoot(subDir) === false) {
+                this.log.system.warn(
+                    `sub directory is outside the recorded directory, save directly under it. reserveId: ${reserve.id} directory: ${subDir}`,
+                );
+                subDir = '';
+            }
         }
 
         // ディレクトリ
@@ -135,6 +236,27 @@ class RecordingUtilModel implements IRecordingUtilModel {
                 this.log.system.fatal(`dir permission error: ${dir}`);
                 this.log.system.fatal(err);
                 throw err;
+            }
+        }
+
+        if (isReserveFile === true) {
+            for (let conflict = 0; ; conflict += 1) {
+                const newFileName = this.getConflictFileName(fileName, this.config.recordedFileExtension, conflict);
+                const fullPath = path.join(parentDir.path, subDir, newFileName);
+                let fileHandle: fs.promises.FileHandle;
+                try {
+                    fileHandle = await fs.promises.open(fullPath, 'wx');
+                } catch (err: any) {
+                    if (err?.code === 'EEXIST') continue;
+                    throw err;
+                }
+                return {
+                    parendDir: parentDir,
+                    subDir,
+                    fileName: newFileName,
+                    fullPath,
+                    fileHandle,
+                };
             }
         }
 
@@ -163,8 +285,7 @@ class RecordingUtilModel implements IRecordingUtilModel {
         extension: string,
         conflict: number = 0,
     ): Promise<string> {
-        const conflictStr = conflict === 0 ? '' : `(${conflict})`;
-        const newFileName = `${fileName}${conflictStr}${extension}`;
+        const newFileName = this.getConflictFileName(fileName, extension, conflict);
         const fileFullPath = path.join(parentDir, subDir, newFileName);
 
         try {
@@ -174,6 +295,11 @@ class RecordingUtilModel implements IRecordingUtilModel {
         } catch (err: any) {
             return newFileName;
         }
+    }
+
+    private getConflictFileName(fileName: string, extension: string, conflict: number): string {
+        const conflictStr = conflict === 0 ? '' : `(${conflict})`;
+        return `${fileName}${conflictStr}${extension}`;
     }
 
     /**
@@ -194,77 +320,149 @@ class RecordingUtilModel implements IRecordingUtilModel {
         }
 
         // 本来の保存先を取得
-        const newRecPath = await this.getRecPath(reserve, false);
-
-        // rename で移動可能か試す
-        let isSuccessRenameFile = false;
-        this.log.system.info(`move file: ${oldVideoFilePath} -> ${newRecPath.fullPath}`);
-        try {
-            await FileUtil.rename(oldVideoFilePath, newRecPath.fullPath);
-            isSuccessRenameFile = true;
-        } catch (err: any) {
-            this.log.system.debug(`rename file error: ${oldVideoFilePath} -> ${newRecPath.fullPath}`);
-            this.log.system.debug(err);
+        const newRecPath = await this.getRecPath(reserve, false, true);
+        const destinationReservation = newRecPath.fileHandle;
+        if (destinationReservation === undefined) {
+            throw new Error('ReservedFileHandleIsUndefined');
         }
+        let isDestinationReservationClosed = false;
+        const closeDestinationReservation = async (): Promise<void> => {
+            if (isDestinationReservationClosed === true) return;
+            await destinationReservation.close();
+            isDestinationReservationClosed = true;
+        };
+        let isMoveCompleted: boolean;
+        let finalCloseError: Error | undefined;
 
-        // rename で移動できなかった場合はコピーrecordedTmp から本来の保存先へコピー
-        if (isSuccessRenameFile === false) {
+        try {
             try {
-                await FileUtil.copyFile(oldVideoFilePath, newRecPath.fullPath);
-            } catch (err: any) {
-                this.log.system.error(`copy file error: ${oldVideoFilePath} -> ${newRecPath.fullPath}`);
+                await destinationReservation.stat();
+            } catch (error) {
+                await closeDestinationReservation().catch(closeError => {
+                    this.log.system.error(`close reserved file error: ${newRecPath.fullPath}`);
+                    this.log.system.error(closeError);
+                });
+                throw error;
+            }
 
+            // rename で移動可能か試す
+            let isSuccessRenameFile = false;
+            this.log.system.info(`move file: ${oldVideoFilePath} -> ${newRecPath.fullPath}`);
+            try {
+                await fs.promises.rename(oldVideoFilePath, newRecPath.fullPath);
+                isSuccessRenameFile = true;
+            } catch (err: any) {
+                this.log.system.debug(`rename file error: ${oldVideoFilePath} -> ${newRecPath.fullPath}`);
+                this.log.system.debug(err);
+            }
+
+            // rename で移動できなかった場合はコピーrecordedTmp から本来の保存先へコピー
+            if (isSuccessRenameFile === false) {
+                try {
+                    await this.copyFileToReservation(oldVideoFilePath, destinationReservation);
+                } catch (err: any) {
+                    this.log.system.error(`copy file error: ${oldVideoFilePath} -> ${newRecPath.fullPath}`);
+                    await closeDestinationReservation().catch(error => {
+                        this.log.system.error(`close reserved file error: ${newRecPath.fullPath}`);
+                        this.log.system.error(error);
+                    });
+                    await FileUtil.unlink(newRecPath.fullPath).catch(error => {
+                        this.log.system.error(`delete copied file error: ${newRecPath.fullPath}`);
+                        this.log.system.error(error);
+                    });
+
+                    throw err;
+                }
+            }
+
+            // VideoFile DB 更新
+            try {
+                await this.videoFileDB.updateFilePath({
+                    videoFileId: videoFileId,
+                    parentDirectoryName: newRecPath.parendDir.name,
+                    filePath: path.join(newRecPath.subDir, newRecPath.fileName),
+                });
+            } catch (err: any) {
+                // DB 更新失敗
+                this.log.system.error(`update VideoFileDB path error: ${videoFileId}`);
+                this.log.system.error(err);
+
+                if (isSuccessRenameFile === true) {
+                    // rename したファイルを元に戻す
+                    this.log.system.info(`rollback renamed file: ${newRecPath.fullPath} -> ${oldVideoFilePath}`);
+                    try {
+                        await closeDestinationReservation();
+                        await fs.promises.rename(newRecPath.fullPath, oldVideoFilePath);
+                    } catch (e: any) {
+                        this.log.system.error(
+                            `rollback renamed file error: ${newRecPath.fullPath} -> ${oldVideoFilePath}`,
+                        );
+                        this.log.system.error(e);
+                        throw err;
+                    }
+                } else {
+                    // コピーしたファイルを削除する
+                    this.log.system.info(`delete copied file: ${newRecPath.fullPath}`);
+                    try {
+                        await closeDestinationReservation();
+                        await FileUtil.unlink(newRecPath.fullPath);
+                    } catch (e: any) {
+                        this.log.system.error(`delete copied file error: ${newRecPath.fullPath}`);
+                        this.log.system.error(e);
+                        throw err;
+                    }
+                }
                 throw err;
             }
-        }
 
-        // VideoFile DB 更新
-        try {
-            await this.videoFileDB.updateFilePath({
-                videoFileId: videoFileId,
-                parentDirectoryName: newRecPath.parendDir.name,
-                filePath: path.join(newRecPath.subDir, newRecPath.fileName),
+            // rename で移動できなかった場合は recordedTmp にある古いファイルを削除する
+            if (isSuccessRenameFile === false) {
+                this.log.system.info(`delete old file: ${oldVideoFilePath}`);
+                try {
+                    await FileUtil.unlink(oldVideoFilePath);
+                } catch (err: any) {
+                    this.log.system.error(`delete old file error: ${oldVideoFilePath}`);
+                    throw err;
+                }
+            }
+
+            isMoveCompleted = true;
+        } finally {
+            await closeDestinationReservation().catch((error: Error) => {
+                this.log.system.error(`close reserved file error: ${newRecPath.fullPath}`);
+                this.log.system.error(error);
+                finalCloseError = error;
             });
-        } catch (err: any) {
-            // DB 更新失敗
-            this.log.system.error(`update VideoFileDB path error: ${videoFileId}`);
-            this.log.system.error(err);
-
-            if (isSuccessRenameFile === true) {
-                // rename したファイルを元に戻す
-                this.log.system.info(`rollback renamed file: ${newRecPath.fullPath} -> ${oldVideoFilePath}`);
-                try {
-                    await FileUtil.rename(newRecPath.fullPath, oldVideoFilePath);
-                } catch (e: any) {
-                    this.log.system.error(`rollback renamed file error: ${newRecPath.fullPath} -> ${oldVideoFilePath}`);
-                    this.log.system.error(e);
-                    throw err;
-                }
-            } else {
-                // コピーしたファイルを削除する
-                this.log.system.info(`delete copied file: ${newRecPath.fullPath}`);
-                try {
-                    await FileUtil.unlink(newRecPath.fullPath);
-                } catch (e: any) {
-                    this.log.system.error(`delete copied file error: ${newRecPath.fullPath}`);
-                    this.log.system.error(e);
-                    throw err;
-                }
-            }
         }
-
-        // rename で移動できなかった場合は recordedTmp にある古いファイルを削除する
-        if (isSuccessRenameFile === false) {
-            this.log.system.info(`delete old file: ${oldVideoFilePath}`);
-            try {
-                await FileUtil.unlink(oldVideoFilePath);
-            } catch (err: any) {
-                this.log.system.error(`delete old file error: ${oldVideoFilePath}`);
-                throw err;
-            }
-        }
-
+        if (isMoveCompleted === true && finalCloseError !== undefined) throw finalCloseError;
         return newRecPath.fullPath;
+    }
+
+    private async copyFileToReservation(sourcePath: string, destination: fs.promises.FileHandle): Promise<void> {
+        const source = await fs.promises.open(sourcePath, 'r');
+        const buffer = Buffer.allocUnsafe(64 * 1024);
+        let position = 0;
+        try {
+            await destination.truncate(0);
+            for (;;) {
+                const { bytesRead } = await source.read(buffer, 0, buffer.length, position);
+                if (bytesRead === 0) return;
+                let offset = 0;
+                while (offset < bytesRead) {
+                    const { bytesWritten } = await destination.write(
+                        buffer,
+                        offset,
+                        bytesRead - offset,
+                        position + offset,
+                    );
+                    if (bytesWritten === 0) throw new Error('ReservationWriteFailed');
+                    offset += bytesWritten;
+                }
+                position += bytesRead;
+            }
+        } finally {
+            await source.close();
+        }
     }
 
     /**
@@ -294,7 +492,7 @@ class RecordingUtilModel implements IRecordingUtilModel {
         let programName: string = src.name;
         let channelType: string = 'NULL';
         let channel: string = 'NULL';
-        if (src instanceof Reserve) {
+        if (isReserveSource(src)) {
             // Reserve
             id = src.id.toString(10);
             channelType = src.channelType;
@@ -351,6 +549,7 @@ class RecordingUtilModel implements IRecordingUtilModel {
 
 namespace RecordingUtilModel {
     export const GET_REC_PATH_LOCK_TIMEOUT = 5.0 * 1000;
+    export const GET_REC_PATH_OWNER_TIMEOUT = 600 * 1000;
     export const GET_REC_PATH_PRIORITY = 1;
 }
 

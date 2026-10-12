@@ -1,0 +1,215 @@
+.recordingPage {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+}
+
+.recordingTableCard {
+  background: var(--mui-palette-background-paper, #fff);
+  border-radius: 4px;
+  box-shadow:
+    0 3px 1px -2px rgba(0, 0, 0, 0.2),
+    0 2px 2px 0 rgba(0, 0, 0, 0.14),
+    0 1px 5px 0 rgba(0, 0, 0, 0.12);
+  margin: 0 auto;
+  max-width: 1000px;
+  overflow-x: auto;
+  width: 100%;
+}
+
+:global([data-theme-mode='dark']) .recordingTableCard {
+  background: var(--mui-palette-background-paper, #1e1e1e);
+  box-shadow:
+    0 3px 1px -2px rgba(0, 0, 0, 0.28),
+    0 2px 2px 0 rgba(0, 0, 0, 0.2),
+    0 1px 5px 0 rgba(0, 0, 0, 0.16);
+}
+
+.recordingCards {
+  display: none;
+}
+
+.recordingTable {
+  border-collapse: collapse;
+  color: rgba(0, 0, 0, 0.87);
+  font-size: 0.875rem;
+  width: 100%;
+}
+
+.recordingTable th,
+.recordingTable td {
+  border-bottom: thin solid rgba(0, 0, 0, 0.12);
+  font-weight: 400;
+  height: 48px;
+  padding: 0 16px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.recordingTable th {
+  color: rgba(0, 0, 0, 0.6);
+  font-weight: 500;
+  height: 48px;
+}
+
+.recordingTable tbody tr {
+  cursor: pointer;
+}
+
+.recordingTable tbody tr:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+:global([data-theme-mode='dark']) .recordingTable {
+  color: rgb(255 255 255 / 87%);
+}
+
+:global([data-theme-mode='dark']) .recordingTable th,
+:global([data-theme-mode='dark']) .recordingTable td {
+  border-bottom-color: rgb(255 255 255 / 12%);
+}
+
+:global([data-theme-mode='dark']) .recordingTable th {
+  color: rgb(255 255 255 / 70%);
+}
+
+:global([data-theme-mode='dark']) .recordingTable tbody tr:hover {
+  background: rgb(255 255 255 / 8%);
+}
+
+.recordingTable tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.selectedRow {
+  background: #4285f4;
+  color: #fff;
+}
+
+.selectedRow td {
+  background: #4285f4;
+  color: #fff;
+}
+
+.selectedRow:hover {
+  background: #4285f4;
+}
+
+.selectedRow:hover td {
+  background: #4285f4;
+}
+
+.recordingCard {
+  background: var(--mui-palette-background-paper, #fff);
+  color: var(--mui-palette-text-primary, rgba(0, 0, 0, 0.87));
+  cursor: pointer;
+  display: flex;
+  height: 100px;
+  margin: 4px 0;
+  position: relative;
+  width: 100%;
+}
+
+:global([data-theme-mode='dark']) .recordingCard {
+  background: var(--mui-palette-background-paper, #1e1e1e);
+  color: var(--mui-palette-text-primary, rgb(255 255 255 / 87%));
+}
+
+.recordingCard.selectedCard {
+  background: #4285f4;
+  color: #fff;
+}
+
+.cardContent {
+  flex-basis: 100%;
+  margin: auto 0;
+  min-width: 0;
+  overflow-wrap: break-word;
+  padding: 8px;
+}
+
+.cardHeader {
+  align-items: center;
+  display: flex;
+  min-width: 0;
+}
+
+.cardTitle {
+  flex: 1 1 auto;
+  font-size: 0.875rem;
+  font-weight: 700;
+  overflow: hidden;
+  padding-right: 30px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cardMenu {
+  margin-right: 4px;
+  margin-top: 2px;
+  position: absolute;
+  right: 0;
+}
+
+.cardText,
+.cardDescription {
+  font-size: 0.75rem;
+  font-weight: 300;
+  line-height: 1.25rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cardDescription {
+  font-weight: 400;
+}
+
+.cardDummy {
+  visibility: hidden;
+}
+
+.channelColumn {
+  min-width: 180px;
+}
+
+.timeColumn {
+  width: 190px;
+}
+
+.menuColumn {
+  box-sizing: border-box;
+  text-align: center;
+  width: 68px;
+}
+
+.recordingPage :global(nav[aria-label='ページ']) {
+  margin-top: -3px;
+}
+
+.pagination {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  padding: 8px 0;
+}
+
+@media (max-width: 600px) {
+  .recordingPage {
+    gap: 0;
+    padding: 8px;
+  }
+
+  .recordingTableCard {
+    display: none;
+  }
+
+  .recordingCards {
+    display: block;
+  }
+
+  .recordingPage :global(nav[aria-label='ページ']) {
+    margin-top: 8px;
+  }
+}

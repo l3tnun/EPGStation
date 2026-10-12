@@ -1,12 +1,13 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import * as apid from '../../../../api';
-import IThumbnailDB from '../../db/IThumbnailDB';
-import IConfigFile from '../../IConfigFile';
-import IConfiguration from '../../IConfiguration';
-import IIPCClient from '../../ipc/IIPCClient';
-import IThumbnailApiModel from './IThumbnailApiModel';
+import type * as apid from '../../../../api.js';
+import IThumbnailDB from '../../db/IThumbnailDB.js';
+import IConfigFile from '../../IConfigFile.js';
+import IConfiguration from '../../IConfiguration.js';
+import IIPCClient from '../../ipc/IIPCClient.js';
+import IThumbnailApiModel from './IThumbnailApiModel.js';
 
+/** `IThumbnailApiModel` の実装。詳細は `IThumbnailApiModel` を参照。 */
 @injectable()
 export default class ThumbnailApiModel implements IThumbnailApiModel {
     private ipc: IIPCClient;

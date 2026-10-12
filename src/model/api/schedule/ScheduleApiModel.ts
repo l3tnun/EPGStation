@@ -1,11 +1,12 @@
 import { inject, injectable } from 'inversify';
-import * as apid from '../../../../api';
-import Channel from '../../../db/entities/Channel';
-import Program from '../../../db/entities/Program';
-import IChannelDB from '../../db/IChannelDB';
-import IProgramDB, { ProgramWithOverlap } from '../../db/IProgramDB';
-import IScheduleApiModel from './IScheduleApiModel';
+import type * as apid from '../../../../api.js';
+import Channel from '../../../db/entities/Channel.js';
+import Program from '../../../db/entities/Program.js';
+import IChannelDB from '../../db/IChannelDB.js';
+import IProgramDB, { ProgramWithOverlap } from '../../db/IProgramDB.js';
+import IScheduleApiModel from './IScheduleApiModel.js';
 
+/** `IScheduleApiModel` の実装。詳細は `IScheduleApiModel` を参照。 */
 @injectable()
 export default class ScheduleApiModel implements IScheduleApiModel {
     private channelDB: IChannelDB;
@@ -49,6 +50,9 @@ export default class ScheduleApiModel implements IScheduleApiModel {
         }
         if (option.SKY === true) {
             types.push('SKY');
+        }
+        if (option.BS4K === true) {
+            types.push('BS4K');
         }
 
         if (types.length === 0) {

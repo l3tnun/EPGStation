@@ -1,19 +1,28 @@
 import { inject, injectable } from 'inversify';
-import * as apid from '../../../api';
-import Recorded from '../../db/entities/Recorded';
-import RecordedTag from '../../db/entities/RecordedTag';
-import StrUtil from '../../util/StrUtil';
-import IPromiseRetry from '../IPromiseRetry';
-import DBUtil from './DBUtil';
-import IDBOperator from './IDBOperator';
-import IRecordedTagDB from './IRecordedTagDB';
+import type * as apid from '../../../api.js';
+import Recorded from '../../db/entities/Recorded.js';
+import RecordedTag from '../../db/entities/RecordedTag.js';
+import StrUtil from '../../util/StrUtil.js';
+import ILogger from '../ILogger.js';
+import ILoggerModel from '../ILoggerModel.js';
+import IPromiseRetry from '../IPromiseRetry.js';
+import DBUtil from './DBUtil.js';
+import IDBOperator from './IDBOperator.js';
+import IRecordedTagDB from './IRecordedTagDB.js';
 
+/** `IRecordedTagDB` の実装。詳細は `IRecordedTagDB` を参照。 */
 @injectable()
 export default class RecordedTagDB implements IRecordedTagDB {
+    private log: ILogger;
     private op: IDBOperator;
     private promieRetry: IPromiseRetry;
 
-    constructor(@inject('IDBOperator') op: IDBOperator, @inject('IPromiseRetry') promieRetry: IPromiseRetry) {
+    constructor(
+        @inject('ILoggerModel') logger: ILoggerModel,
+        @inject('IDBOperator') op: IDBOperator,
+        @inject('IPromiseRetry') promieRetry: IPromiseRetry,
+    ) {
+        this.log = logger.getLogger();
         this.op = op;
         this.promieRetry = promieRetry;
     }
@@ -28,13 +37,13 @@ export default class RecordedTagDB implements IRecordedTagDB {
         const connection = await this.op.getConnection();
         const queryRunner = connection.createQueryRunner();
 
-        // start transaction
-        await queryRunner.startTransaction();
-
         let hasError = false;
         try {
+            // start transaction
+            await queryRunner.startTransaction();
+
             // 削除
-            await queryRunner.manager.delete(RecordedTag, {});
+            await queryRunner.manager.createQueryBuilder().delete().from(RecordedTag).execute();
 
             // 挿入処理
             for (const item of items) {
@@ -42,11 +51,22 @@ export default class RecordedTagDB implements IRecordedTagDB {
             }
             await queryRunner.commitTransaction();
         } catch (err: any) {
-            console.error(err);
-            hasError = err;
-            await queryRunner.rollbackTransaction();
+            this.log.system.error(err);
+            hasError = true;
+            if (queryRunner.isTransactionActive) {
+                try {
+                    await queryRunner.rollbackTransaction();
+                } catch (cleanupError) {
+                    this.log.system.error(cleanupError);
+                }
+            }
         } finally {
-            await queryRunner.release();
+            try {
+                await queryRunner.release();
+            } catch (cleanupError) {
+                this.log.system.error(cleanupError);
+                hasError = true;
+            }
         }
 
         if (hasError) {
@@ -257,14 +277,14 @@ export default class RecordedTagDB implements IRecordedTagDB {
             queryBuilder = queryBuilder.andWhere(q.query, q.values);
         }
 
-        // offset
-        if (typeof option.offset !== 'undefined') {
-            queryBuilder = queryBuilder.skip(option.offset);
+        // offset・limit
+        // limit 0 は件数の制限なし（TypeORM 1.x の `take(0)` は `LIMIT 0` になるため take を付けない）
+        const pagination = DBUtil.resolvePagination(option);
+        if (typeof pagination.skip !== 'undefined') {
+            queryBuilder = queryBuilder.skip(pagination.skip);
         }
-
-        // limit
-        if (typeof option.limit !== 'undefined') {
-            queryBuilder = queryBuilder.take(option.limit);
+        if (typeof pagination.take !== 'undefined') {
+            queryBuilder = queryBuilder.take(pagination.take);
         }
 
         return await this.promieRetry.run(() => {

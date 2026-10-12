@@ -1,8 +1,9 @@
 import { Operation } from 'express-openapi';
-import IStreamApiModel from '../../api/stream/IStreamApiModel';
-import container from '../../ModelContainer';
-import * as api from '../api';
+import IStreamApiModel from '../../api/stream/IStreamApiModel.js';
+import container from '../../ModelContainer.js';
+import * as api from '../api.js';
 
+/** `GET /streams` ハンドラ。`IStreamApiModel#getStreamInfos` で配信中ストリーム一覧を返す。 */
 export const get: Operation = async (req, res) => {
     const streamApiModel = container.get<IStreamApiModel>('IStreamApiModel');
 
@@ -47,6 +48,7 @@ get.apiDoc = {
     },
 };
 
+/** `DELETE /streams` ハンドラ。`IStreamApiModel#stopAll` で配信中の全ストリームを停止する。 */
 export const del: Operation = async (_req, res) => {
     const streamApiModel = container.get<IStreamApiModel>('IStreamApiModel');
 

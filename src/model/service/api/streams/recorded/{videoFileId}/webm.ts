@@ -1,14 +1,20 @@
 import { Operation } from 'express-openapi';
-import IStreamApiModel, { StreamResponse } from '../../../../../api/stream/IStreamApiModel';
-import container from '../../../../../ModelContainer';
-import * as api from '../../../../api';
+import IStreamApiModel, { StreamResponse } from '../../../../../api/stream/IStreamApiModel.js';
+import container from '../../../../../ModelContainer.js';
+import * as api from '../../../../api.js';
 
+/**
+ * `GET /streams/recorded/{videoFileId}/webm` ハンドラ。`IStreamApiModel#startRecordedWebMStream`
+ * （トランスコード、`ss` で指定した秒位置から再生開始）で開始したストリームを response へ
+ * 直接 pipe し続ける。lifecycle 管理（keep timer・切断/終了検知）はライブ配信側の
+ * `streams/live/{channelId}/m2ts.ts` と同じ。
+ */
 export const get: Operation = async (req, res) => {
     const streamApiModel = container.get<IStreamApiModel>('IStreamApiModel');
 
     let isClosed: boolean = false;
     let result: StreamResponse;
-    let keepTimer: NodeJS.Timer;
+    let keepTimer: NodeJS.Timeout;
 
     const stop = async () => {
         clearInterval(keepTimer);
@@ -27,7 +33,7 @@ export const get: Operation = async (req, res) => {
 
     try {
         result = await streamApiModel.startRecordedWebMStream({
-            videoFileId: parseInt(req.params.videoFileId, 10),
+            videoFileId: parseInt(api.pathParam(req, 'videoFileId'), 10),
             playPosition: parseInt(req.query.ss as string, 10),
             mode: parseInt(req.query.mode as string, 10),
         });

@@ -1,8 +1,9 @@
 import { Operation } from 'express-openapi';
-import IStorageApiModel from '../../api/storage/IStorageApiModel';
-import container from '../../ModelContainer';
-import * as api from '../api';
+import IStorageApiModel from '../../api/storage/IStorageApiModel.js';
+import container from '../../ModelContainer.js';
+import * as api from '../api.js';
 
+/** `GET /storages` ハンドラ。`IStorageApiModel#getInfo` でストレージの空き容量等の情報を返す。 */
 export const get: Operation = async (_req, res) => {
     const storageApiModel = container.get<IStorageApiModel>('IStorageApiModel');
 

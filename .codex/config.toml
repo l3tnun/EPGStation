@@ -1,0 +1,22 @@
+model = "gpt-5.6-terra"
+model_reasoning_effort = "max"
+
+[features.multi_agent_v2]
+hide_spawn_agent_metadata = false
+tool_namespace = "agents"
+
+[agents.server_explorer]
+description = "Read-only EPGStation server source investigation and evidence collection."
+config_file = "./agents/server-explorer.toml"
+
+[agents.server_worker]
+description = "Bounded ordinary and high-risk implementation and test work for approved EPGStation server tasks."
+config_file = "./agents/server-worker.toml"
+
+[agents.server_reviewer]
+description = "Independent adversarial review of EPGStation server implementation and tests."
+config_file = "./agents/server-reviewer.toml"
+
+[agents.spec_reviewer]
+description = "Cross-spec consistency review for EPGStation server specifications."
+config_file = "./agents/spec-reviewer.toml"

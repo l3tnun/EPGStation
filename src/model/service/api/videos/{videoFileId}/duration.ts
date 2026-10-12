@@ -1,13 +1,14 @@
 import { Operation } from 'express-openapi';
-import IVideoApiModel from '../../../../api/video/IVideoApiModel';
-import container from '../../../../ModelContainer';
-import * as api from '../../../api';
+import IVideoApiModel from '../../../../api/video/IVideoApiModel.js';
+import container from '../../../../ModelContainer.js';
+import * as api from '../../../api.js';
 
+/** `GET /videos/{videoFileId}/duration` ハンドラ。`IVideoApiModel#getDuration` で動画の長さ（秒）を取得する。 */
 export const get: Operation = async (req, res) => {
     const videoFileApiModel = container.get<IVideoApiModel>('IVideoApiModel');
 
     try {
-        const duration = await videoFileApiModel.getDuration(parseInt(req.params.videoFileId, 10));
+        const duration = await videoFileApiModel.getDuration(parseInt(api.pathParam(req, 'videoFileId'), 10));
         api.responseJSON(res, 200, {
             duration: duration,
         });

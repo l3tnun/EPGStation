@@ -1,13 +1,14 @@
 import { Operation } from 'express-openapi';
-import IReserveApiModel from '../../../../api/reserve/IReserveApiModel';
-import container from '../../../../ModelContainer';
-import * as api from '../../../api';
+import IReserveApiModel from '../../../../api/reserve/IReserveApiModel.js';
+import container from '../../../../ModelContainer.js';
+import * as api from '../../../api.js';
 
+/** `DELETE /reserves/{reserveId}/skip` ハンドラ。`IReserveApiModel#removeSkip` で除外状態を解除する。 */
 export const del: Operation = async (req, res) => {
     const reserveApiModel = container.get<IReserveApiModel>('IReserveApiModel');
 
     try {
-        api.responseJSON(res, 200, await reserveApiModel.removeSkip(parseInt(req.params.reserveId, 10)));
+        api.responseJSON(res, 200, await reserveApiModel.removeSkip(parseInt(api.pathParam(req, 'reserveId'), 10)));
     } catch (err: any) {
         api.responseServerError(res, err.message);
     }

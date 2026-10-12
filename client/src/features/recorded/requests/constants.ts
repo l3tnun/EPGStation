@@ -1,0 +1,9 @@
+export const RECORDED_QUERY_KEY = ['recorded', 'list'] as const
+export const RECORDED_DETAIL_QUERY_KEY = ['recorded', 'detail'] as const
+export const RECORDED_FAILURE_MESSAGE = '録画データ取得に失敗'
+export const RECORDED_SEARCH_OPTIONS_FAILURE_MESSAGE = '録画検索オプションの取得に失敗'
+export const RECORDED_RULE_KEYWORDS_FAILURE_MESSAGE = 'ルール情報取得に失敗'
+export const SEND_VIDEO_FILE_SELECT_HOST_SETTING_STORAGE_KEY = 'SendVideoFileSelectHostSetting'
+export const RECORDED_SELECT_STREAM_SETTING_STORAGE_KEY = 'RecordedSelectStreamSetting'
+export const RECORDED_INVALID_STREAM_SETTING_MESSAGE = '配信設定が正しく入力されていません'
+export const RECORDED_INVALID_HANDOFF_ID_MESSAGE = '番組 ID が不正です'

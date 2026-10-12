@@ -2,26 +2,28 @@ import * as fs from 'fs';
 import minimist from 'minimist';
 import 'reflect-metadata';
 import { install } from 'source-map-support';
-import * as apid from '../api';
-import Recorded from './db/entities/Recorded';
-import RecordedHistory from './db/entities/RecordedHistory';
-import Thumbnail from './db/entities/Thumbnail';
-import VideoFile from './db/entities/VideoFile';
-import IDBOperator from './model/db/IDBOperator';
-import IRecordedDB from './model/db/IRecordedDB';
-import IRecordedHistoryDB from './model/db/IRecordedHistoryDB';
-import IRuleDB from './model/db/IRuleDB';
-import IThumbnailDB from './model/db/IThumbnailDB';
-import IVideoFileDB from './model/db/IVideoFileDB';
-import IConfigFile from './model/IConfigFile';
-import IConfiguration from './model/IConfiguration';
-import IConnectionCheckModel from './model/IConnectionCheckModel';
-import ILogger from './model/ILogger';
-import ILoggerModel from './model/ILoggerModel';
-import container from './model/ModelContainer';
-import * as containerSetter from './model/ModelContainerSetter';
-import StrUtil from './util/StrUtil';
-import { OldBackupData, OldEncodedItem, OldRecordedHistoryItem, OldRecordedItem, OldRuleItem } from './v1';
+import type * as apid from '../api.js';
+import Recorded from './db/entities/Recorded.js';
+import RecordedHistory from './db/entities/RecordedHistory.js';
+import Thumbnail from './db/entities/Thumbnail.js';
+import VideoFile from './db/entities/VideoFile.js';
+import IDBOperator from './model/db/IDBOperator.js';
+import IRecordedDB from './model/db/IRecordedDB.js';
+import IRecordedHistoryDB from './model/db/IRecordedHistoryDB.js';
+import IRuleDB from './model/db/IRuleDB.js';
+import IThumbnailDB from './model/db/IThumbnailDB.js';
+import IVideoFileDB from './model/db/IVideoFileDB.js';
+import IConfigFile from './model/IConfigFile.js';
+import IConfiguration from './model/IConfiguration.js';
+import IConnectionCheckModel from './model/IConnectionCheckModel.js';
+import ILogger from './model/ILogger.js';
+import ILoggerModel from './model/ILoggerModel.js';
+import container from './model/ModelContainer.js';
+import * as containerSetter from './model/ModelContainerSetter.js';
+import StrUtil from './util/StrUtil.js';
+import type { OldBackupData, OldEncodedItem, OldRecordedHistoryItem, OldRecordedItem, OldRuleItem } from './v1.js';
+import { fileURLToPath } from 'url';
+import { resolve } from 'path';
 
 install();
 
@@ -41,6 +43,12 @@ interface NewRecordedData {
     videoFile?: VideoFile;
 }
 
+/**
+ * EPGStation v1 のバックアップファイル（`OldBackupData`形式のJSON）を読み込み、rule・録画済み
+ * 番組・録画履歴・サムネイル・ビデオファイル情報を現行スキーマへ変換してDBへ投入するCLIツール。
+ * `--input <path>` で入力fileを指定し、`run()` を1回実行して終了する（常駐しないスクリプト）。
+ * file末尾で、この file が直接起動された場合のみ自動的にインスタンス化・実行される。
+ */
 class V1MigrationTool {
     private log: ILogger;
     private config: IConfigFile;
@@ -52,6 +60,7 @@ class V1MigrationTool {
     private thumbnailDB: IThumbnailDB;
     private videoFileDB: IVideoFileDB;
 
+    /** `--input` で指定された、v1バックアップJSONファイルのパス。 */
     private v1BackupFilePath: string;
 
     constructor() {
@@ -460,7 +469,7 @@ class V1MigrationTool {
         }
         if (oldRecorded.extended !== null) {
             newRecorded.extended = oldRecorded.extended;
-            newRecorded.extended = StrUtil.toHalf(oldRecorded.extended);
+            newRecorded.halfWidthExtended = StrUtil.toHalf(oldRecorded.extended);
         }
         newRecorded.rawExtended = null;
         newRecorded.rawHalfWidthExtended = null;
@@ -573,4 +582,10 @@ class V1MigrationTool {
     }
 }
 
-new V1MigrationTool().run();
+export default V1MigrationTool;
+
+// この file が直接起動されたときだけ動かす。ESM に require.main は無いため、実行された
+// script の path と自分の path を比べる。
+if (process.argv[1] !== undefined && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+    new V1MigrationTool().run();
+}

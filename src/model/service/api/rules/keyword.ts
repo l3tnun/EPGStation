@@ -1,9 +1,14 @@
 import { Operation } from 'express-openapi';
-import * as apid from '../../../../../api';
-import IRuleApiModel from '../../../api/rule/IRuleApiModel';
-import container from '../../../ModelContainer';
-import * as api from '../../api';
+import type * as apid from '../../../../../api.js';
+import IRuleApiModel from '../../../api/rule/IRuleApiModel.js';
+import container from '../../../ModelContainer.js';
+import * as api from '../../api.js';
 
+/**
+ * `GET /rules/keyword` ハンドラ。query の offset / limit / keyword から検索条件を組み立て、
+ * `IRuleApiModel#searchKeyword` でキーワード検索したルール一覧を返す（`rules.ts` の `get` とは
+ * 検索対象・呼び出す method が異なる）。
+ */
 export const get: Operation = async (req, res) => {
     const ruleApiModel = container.get<IRuleApiModel>('IRuleApiModel');
 
@@ -66,6 +71,11 @@ get.apiDoc = {
     },
 };
 
+/**
+ * `POST /rules/keyword` ハンドラ。`req.body`をそのまま`IRuleApiModel#add`へ渡してルールを
+ * 新規追加し、追加された`ruleId`を返す（`rules.ts`の`post`と同じ追加処理を、この経路からも呼べる
+ * ようにしたもの）。
+ */
 export const post: Operation = async (req, res) => {
     const ruleApiModel = container.get<IRuleApiModel>('IRuleApiModel');
 
@@ -74,7 +84,7 @@ export const post: Operation = async (req, res) => {
             ruleId: await ruleApiModel.add(req.body),
         });
     } catch (err: any) {
-        api.responseServerError(res, err.message);
+        api.responseOperationError(res, err);
     }
 };
 

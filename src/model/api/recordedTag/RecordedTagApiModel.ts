@@ -1,9 +1,10 @@
 import { inject, injectable } from 'inversify';
-import * as apid from '../../../../api';
-import IRecordedTagDB from '../../db/IRecordedTagDB';
-import IIPCClient from '../../ipc/IIPCClient';
-import IRecordedTagApiModel from './IRecordedTagApiModel';
+import type * as apid from '../../../../api.js';
+import IRecordedTagDB from '../../db/IRecordedTagDB.js';
+import IIPCClient from '../../ipc/IIPCClient.js';
+import IRecordedTagApiModel from './IRecordedTagApiModel.js';
 
+/** `IRecordedTagApiModel` の実装。詳細は `IRecordedTagApiModel` を参照。 */
 @injectable()
 export default class RecordedTagApiModel implements IRecordedTagApiModel {
     private ipc: IIPCClient;

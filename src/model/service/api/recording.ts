@@ -1,9 +1,14 @@
 import { Operation } from 'express-openapi';
-import { GetRecordedOption } from '../../../../api';
-import IRecordingApiModel from '../../api/recording/IRecordingApiModel';
-import container from '../../ModelContainer';
-import * as api from '../api';
+import { GetRecordedOption } from '../../../../api.js';
+import IRecordingApiModel from '../../api/recording/IRecordingApiModel.js';
+import container from '../../ModelContainer.js';
+import * as api from '../api.js';
 
+/**
+ * `GET /recording` ハンドラ。query の各種絞り込み条件（offset / limit / isReverse / ruleId /
+ * channelId / genre / keyword / isHalfWidth）から検索条件を組み立て、
+ * `IRecordingApiModel#gets` で録画中番組の情報一覧を返す。
+ */
 export const get: Operation = async (req, res) => {
     const recordingApiModel = container.get<IRecordingApiModel>('IRecordingApiModel');
 

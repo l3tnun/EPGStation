@@ -1,13 +1,14 @@
 import { Operation } from 'express-openapi';
-import IStreamApiModel from '../../../api/stream/IStreamApiModel';
-import container from '../../../ModelContainer';
-import * as api from '../../api';
+import IStreamApiModel from '../../../api/stream/IStreamApiModel.js';
+import container from '../../../ModelContainer.js';
+import * as api from '../../api.js';
 
+/** `DELETE /streams/{streamId}` ハンドラ。`IStreamApiModel#stop` で指定ストリームを停止する。 */
 export const del: Operation = async (req, res) => {
     const streamApiModel = container.get<IStreamApiModel>('IStreamApiModel');
 
     try {
-        await streamApiModel.stop(parseInt(req.params.streamId, 10));
+        await streamApiModel.stop(parseInt(api.pathParam(req, 'streamId'), 10));
         api.responseJSON(res, 200, {
             code: 200,
         });

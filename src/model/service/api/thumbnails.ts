@@ -1,8 +1,9 @@
 import { Operation } from 'express-openapi';
-import IThumbnailApiModel from '../../api/thumbnail/IThumbnailApiModel';
-import container from '../../ModelContainer';
-import * as api from '../api';
+import IThumbnailApiModel from '../../api/thumbnail/IThumbnailApiModel.js';
+import container from '../../ModelContainer.js';
+import * as api from '../api.js';
 
+/** `POST /thumbnails` ハンドラ。`IThumbnailApiModel#regenerate` で未生成・欠損サムネイルを再生成する。 */
 export const post: Operation = async (_req, res) => {
     const thumbnailApiModel = container.get<IThumbnailApiModel>('IThumbnailApiModel');
     try {

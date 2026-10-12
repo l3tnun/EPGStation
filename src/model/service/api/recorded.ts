@@ -1,9 +1,14 @@
 import { Operation } from 'express-openapi';
-import { GetRecordedOption } from '../../../../api';
-import IRecordedApiModel from '../../api/recorded/IRecordedApiModel';
-import container from '../../ModelContainer';
-import * as api from '../api';
+import { GetRecordedOption } from '../../../../api.js';
+import IRecordedApiModel from '../../api/recorded/IRecordedApiModel.js';
+import container from '../../ModelContainer.js';
+import * as api from '../api.js';
 
+/**
+ * `GET /recorded` ハンドラ。query の各種絞り込み条件（offset / limit / isReverse / ruleId /
+ * channelId / genre / keyword / hasOriginalFile）から検索条件を組み立て、
+ * `IRecordedApiModel#gets` で録画一覧を返す。
+ */
 export const get: Operation = async (req, res) => {
     const recordedApiModel = container.get<IRecordedApiModel>('IRecordedApiModel');
 
@@ -99,6 +104,7 @@ get.apiDoc = {
     },
 };
 
+/** `POST /recorded` ハンドラ。`IRecordedApiModel#createNewRecorded` で録画情報を新規作成する。 */
 export const post: Operation = async (req, res) => {
     const recordedApiModel = container.get<IRecordedApiModel>('IRecordedApiModel');
 

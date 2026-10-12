@@ -1,5 +1,12 @@
-import * as apid from '../../../api';
+import type * as apid from '../../../api.js';
+import type {
+    RecordedResourceUseKind,
+    RecordedUseAcquireStatus,
+    RecordedUseReleaseStatus,
+    RecordedUseSnapshotPayload,
+} from './IRecordedResourceUse.js';
 
+/** 親子プロセス間メッセージ（`SendMessage`/`ReplayMessage`等）を対応付けるための一意な識別子。 */
 export type MessageId = number;
 
 /**
@@ -17,6 +24,7 @@ export interface NotifyClientMessage extends ParentMessage {
     type: 'notifyClient';
 }
 
+/** 親プロセスから子プロセスへのエンコード追加要求。`value`は追加するエンコード予約の内容。 */
 export interface PushEncodeMessage extends ParentMessage {
     type: 'pushEncode';
     value: apid.AddEncodeProgramOption;
@@ -45,6 +53,48 @@ export interface ReplayMessage {
     id: MessageId;
     result?: any;
     error?: string;
+}
+
+/** 子プロセスから親プロセスへの、録画済みファイルの利用権（lease）取得要求。 */
+export interface RecordedUseAcquireMessage {
+    readonly type: 'recordedUseAcquire';
+    readonly id: MessageId;
+    readonly recordedId: number;
+    readonly kind: RecordedResourceUseKind;
+}
+
+/** `RecordedUseAcquireMessage`（同じ`id`）への応答。`status`が取得結果を表す。 */
+export interface RecordedUseAcquireReplyMessage {
+    readonly type: 'recordedUseAcquireReply';
+    readonly id: MessageId;
+    readonly status: RecordedUseAcquireStatus;
+}
+
+/** 子プロセスから親プロセスへの、取得済み利用権の解放要求。`acquisitionRequestId`は対応する
+ *  `RecordedUseAcquireMessage.id`。 */
+export interface RecordedUseReleaseMessage {
+    readonly type: 'recordedUseRelease';
+    readonly acquisitionRequestId: MessageId;
+}
+
+/** `RecordedUseReleaseMessage`（同じ`acquisitionRequestId`）への応答。`status`が解放結果を表す。 */
+export interface RecordedUseReleaseReplyMessage {
+    readonly type: 'recordedUseReleaseReply';
+    readonly acquisitionRequestId: MessageId;
+    readonly status: RecordedUseReleaseStatus;
+}
+
+/** 親プロセスから子プロセスへの、その時点で保持している録画使用状況のsnapshot要求。 */
+export interface RecordedUseSnapshotRequestMessage {
+    readonly type: 'recordedUseSnapshotRequest';
+    readonly id: MessageId;
+}
+
+/** `RecordedUseSnapshotRequestMessage`（同じ`id`）への応答。子プロセス側が把握している使用状況を返す。 */
+export interface RecordedUseSnapshotReplyMessage {
+    readonly type: 'recordedUseSnapshotReply';
+    readonly id: MessageId;
+    readonly snapshot: RecordedUseSnapshotPayload;
 }
 
 /**
@@ -118,7 +168,6 @@ export enum RuleFuntions {
     enable = 'enable',
     disable = 'disable',
     delete = 'delete',
-    deletes = 'deletes',
 }
 
 /**

@@ -1,0 +1,48 @@
+.pagination {
+  align-items: center;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  justify-content: center;
+  margin: 16px auto 0;
+  max-width: 100%;
+  padding: 0 8px 8px;
+}
+
+.pageButton {
+  border: 0;
+  border-radius: 4px;
+  cursor: pointer;
+  flex: 0 0 36px;
+  font: inherit;
+  height: 36px;
+  min-width: 36px;
+  padding: 0;
+  width: 36px;
+}
+
+.pageButton:disabled {
+  cursor: default;
+}
+
+.pageIcon {
+  display: inline-block;
+  font: normal normal normal 24px/1 'Material Design Icons';
+  height: 24px;
+  width: 24px;
+}
+
+.pageIcon::before {
+  content: var(--legacy-pagination-icon);
+}
+
+.ellipsis {
+  min-width: 24px;
+  text-align: center;
+}
+
+@media (max-width: 500px) {
+  .pagination {
+    justify-content: center;
+  }
+}

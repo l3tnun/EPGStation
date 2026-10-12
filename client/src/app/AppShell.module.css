@@ -1,0 +1,429 @@
+@font-face {
+  font-family: 'Material Design Icons';
+  font-style: normal;
+  font-weight: 400;
+  src: url('../../../client/node_modules/@mdi/font/fonts/materialdesignicons-webfont.woff2')
+    format('woff2');
+}
+
+.shell {
+  min-height: 100vh;
+}
+
+.drawerContent {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border-right: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.drawerTitle {
+  display: flex;
+  align-items: center;
+  height: 48px;
+  margin: 0;
+  padding: 0 16px;
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 24px;
+  letter-spacing: 0.25px;
+}
+
+.content {
+  box-sizing: border-box;
+  min-height: 100vh;
+}
+
+.main {
+  box-sizing: border-box;
+  min-height: 100vh;
+}
+
+.screenBody {
+  box-sizing: border-box;
+  padding: 24px;
+}
+
+.routeTitle {
+  margin: 0 0 8px;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.routeText {
+  margin: 0;
+  font-size: 14px;
+}
+
+.navigationList {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  padding: 8px 0;
+  list-style: none;
+}
+
+.navigationItem {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  align-items: center;
+  width: 100%;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+}
+
+.navigationItem[data-selected='true'] {
+  background: rgba(0, 0, 0, 0.12);
+  color: inherit;
+  font-weight: 400;
+}
+
+.navigationItem:not([data-selected='true']):hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.navigationItem:focus,
+.navigationItem:not([data-selected='true']):focus {
+  outline: none;
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.navigationIcon {
+  position: relative;
+  justify-self: start;
+  width: 24px;
+  height: 24px;
+  color: rgb(0 0 0 / 54%);
+  font-size: 0;
+}
+
+:global([data-theme-mode='dark']) .navigationIcon {
+  color: rgb(255 255 255 / 70%);
+}
+
+:global([data-theme-mode='dark']) .navigationItem[data-selected='true'],
+:global([data-theme-mode='dark']) .navigationItem:focus,
+:global([data-theme-mode='dark']) .navigationItem:not([data-selected='true']):focus {
+  background: rgb(255 255 255 / 16%);
+}
+
+:global([data-theme-mode='dark']) .navigationItem:not([data-selected='true']):hover {
+  background: rgb(255 255 255 / 8%);
+}
+
+.navigationIcon::before,
+.navigationIcon::after {
+  position: absolute;
+  box-sizing: border-box;
+  content: '';
+}
+
+.navigationItem[data-icon='mdi-view-dashboard'] .navigationIcon::before {
+  inset: 1px;
+  border: 2px solid currentColor;
+  box-shadow:
+    inset 6px 0 0 transparent,
+    inset 8px 0 0 currentColor,
+    inset 0 6px 0 transparent,
+    inset 0 8px 0 currentColor;
+}
+
+.navigationItem[data-icon='mdi-table-large'] .navigationIcon::before,
+.navigationItem[data-icon='mdi-television-guide'] .navigationIcon::before {
+  inset: 1px;
+  border: 2px solid currentColor;
+}
+
+.navigationItem[data-icon='mdi-table-large'] .navigationIcon::after,
+.navigationItem[data-icon='mdi-television-guide'] .navigationIcon::after {
+  inset: 6px 1px 1px;
+  border-top: 2px solid currentColor;
+  box-shadow: 0 4px 0 currentColor;
+}
+
+.navigationItem[data-icon='mdi-progress-download'] .navigationIcon::before,
+.navigationItem[data-icon='mdi-sync'] .navigationIcon::before {
+  inset: 2px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+}
+
+.navigationItem[data-icon='mdi-progress-download'] .navigationIcon::after,
+.navigationItem[data-icon='mdi-sync'] .navigationIcon::after {
+  right: 1px;
+  bottom: 3px;
+  width: 6px;
+  height: 6px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-20deg);
+}
+
+.navigationItem[data-icon='mdi-movie'] .navigationIcon::before,
+.navigationItem[data-icon='mdi-filmstrip-box-multiple'] .navigationIcon::before {
+  inset: 2px;
+  border: 2px solid currentColor;
+}
+
+.navigationItem[data-icon='mdi-movie'] .navigationIcon::after,
+.navigationItem[data-icon='mdi-filmstrip-box-multiple'] .navigationIcon::after {
+  inset: 5px 3px;
+  border-left: 2px solid currentColor;
+  border-right: 2px solid currentColor;
+}
+
+.navigationItem[data-icon='mdi-dns'] .navigationIcon::before,
+.navigationItem[data-icon='mdi-sd'] .navigationIcon::before {
+  inset: 2px;
+  border: 2px solid currentColor;
+  border-radius: 2px;
+}
+
+.navigationItem[data-icon='mdi-dns'] .navigationIcon::after,
+.navigationItem[data-icon='mdi-sd'] .navigationIcon::after {
+  left: 5px;
+  right: 5px;
+  top: 5px;
+  height: 2px;
+  background: currentColor;
+  box-shadow: 0 4px 0 currentColor;
+}
+
+.navigationItem[data-icon='mdi-clock-outline'] .navigationIcon::before {
+  inset: 1px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+}
+
+.navigationItem[data-icon='mdi-clock-outline'] .navigationIcon::after {
+  left: 8px;
+  top: 4px;
+  width: 5px;
+  height: 6px;
+  border-left: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+}
+
+.navigationItem[data-icon='mdi-television-play'] .navigationIcon::before {
+  inset: 2px 1px 4px;
+  border: 2px solid currentColor;
+  border-radius: 2px;
+}
+
+.navigationItem[data-icon='mdi-television-play'] .navigationIcon::after {
+  left: 7px;
+  bottom: 1px;
+  width: 5px;
+  height: 2px;
+  background: currentColor;
+}
+
+.navigationItem[data-icon='mdi-radiobox-marked'] .navigationIcon::before {
+  inset: 2px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+}
+
+.navigationItem[data-icon='mdi-radiobox-marked'] .navigationIcon::after {
+  inset: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.navigationItem[data-icon='mdi-magnify'] .navigationIcon::before {
+  left: 2px;
+  top: 2px;
+  width: 10px;
+  height: 10px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+}
+
+.navigationItem[data-icon='mdi-magnify'] .navigationIcon::after {
+  right: 2px;
+  bottom: 2px;
+  width: 7px;
+  height: 2px;
+  background: currentColor;
+  transform: rotate(45deg);
+}
+
+.navigationItem[data-icon='mdi-calendar'] .navigationIcon::before {
+  inset: 2px;
+  border: 2px solid currentColor;
+  border-radius: 2px;
+}
+
+.navigationItem[data-icon='mdi-calendar'] .navigationIcon::after {
+  left: 4px;
+  right: 4px;
+  top: 6px;
+  height: 2px;
+  background: currentColor;
+}
+
+.navigationItem[data-icon='mdi-book-open-variant'] .navigationIcon::before {
+  inset: 2px 1px;
+  border: 2px solid currentColor;
+  border-radius: 2px;
+}
+
+.navigationItem[data-icon='mdi-book-open-variant'] .navigationIcon::after {
+  top: 3px;
+  bottom: 3px;
+  left: 8px;
+  width: 2px;
+  background: currentColor;
+}
+
+.navigationItem[data-icon='mdi-harddisk'] .navigationIcon::before {
+  inset: 2px;
+  border: 2px solid currentColor;
+  border-radius: 3px;
+}
+
+.navigationItem[data-icon='mdi-harddisk'] .navigationIcon::after {
+  left: 5px;
+  right: 5px;
+  bottom: 5px;
+  height: 2px;
+  background: currentColor;
+}
+
+.navigationItem[data-icon='settings'] .navigationIcon::before {
+  inset: 2px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  box-shadow:
+    0 -3px 0 -1px currentColor,
+    0 3px 0 -1px currentColor,
+    3px 0 0 -1px currentColor,
+    -3px 0 0 -1px currentColor;
+}
+
+.navigationItem[data-icon='settings'] .navigationIcon::after {
+  inset: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.navigationIcon::before {
+  inset: auto !important;
+  position: static !important;
+  display: inline-block;
+  width: 24px !important;
+  height: 24px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: none !important;
+  font: normal normal normal 24px/1 'Material Design Icons';
+  text-rendering: auto;
+  transform: none !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.navigationIcon::after {
+  content: none !important;
+}
+
+.navigationItem[data-icon='mdi-view-dashboard'] .navigationIcon::before {
+  content: '\F056E';
+}
+
+.navigationItem[data-icon='mdi-television-play'] .navigationIcon::before {
+  content: '\F0ECF';
+}
+
+.navigationItem[data-icon='mdi-table-large'] .navigationIcon::before {
+  content: '\F04F1';
+}
+
+.navigationItem[data-icon='mdi-television-guide'] .navigationIcon::before {
+  content: '\F0503';
+}
+
+.navigationItem[data-icon='mdi-progress-download'] .navigationIcon::before {
+  content: '\F0997';
+}
+
+.navigationItem[data-icon='mdi-sync'] .navigationIcon::before {
+  content: '\F04E6';
+}
+
+.navigationItem[data-icon='mdi-movie'] .navigationIcon::before {
+  content: '\F0381';
+}
+
+.navigationItem[data-icon='mdi-filmstrip-box-multiple'] .navigationIcon::before {
+  content: '\F0D18';
+}
+
+.navigationItem[data-icon='mdi-dns'] .navigationIcon::before {
+  content: '\F01D6';
+}
+
+.navigationItem[data-icon='mdi-sd'] .navigationIcon::before {
+  content: '\F0479';
+}
+
+.navigationItem[data-icon='mdi-clock-outline'] .navigationIcon::before {
+  content: '\F0150';
+}
+
+.navigationItem[data-icon='mdi-radiobox-marked'] .navigationIcon::before {
+  content: '\F043E';
+}
+
+.navigationItem[data-icon='mdi-magnify'] .navigationIcon::before {
+  content: '\F0349';
+}
+
+.navigationItem[data-icon='mdi-calendar'] .navigationIcon::before {
+  content: '\F00ED';
+}
+
+.navigationItem[data-icon='mdi-book-open-variant'] .navigationIcon::before {
+  content: '\F14F7';
+}
+
+.navigationItem[data-icon='mdi-harddisk'] .navigationIcon::before {
+  content: '\F02CA';
+}
+
+.navigationItem[data-icon='settings'] .navigationIcon::before {
+  content: '\F0493';
+}
+
+.navigationLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 16px;
+}
+
+.disconnectedOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1300;
+  background: rgba(0, 0, 0, 0.6);
+}

@@ -1,0 +1,16 @@
+appenders:
+    system:
+        type: file
+        filename: '%ServiceSystem%'
+        maxLogSize: 1024
+        backups: 2
+        pattern: '-yyyy-MM-dd'
+categories:
+    default:
+        appenders:
+            - system
+        level: info
+    system:
+        appenders:
+            - system
+        level: info

@@ -1,8 +1,9 @@
 import { Operation } from 'express-openapi';
-import IRecordedApiModel from '../../../api/recorded/IRecordedApiModel';
-import container from '../../../ModelContainer';
-import * as api from '../../api';
+import IRecordedApiModel from '../../../api/recorded/IRecordedApiModel.js';
+import container from '../../../ModelContainer.js';
+import * as api from '../../api.js';
 
+/** `GET /recorded/options` ハンドラ。`IRecordedApiModel#getSearchOptionList` で録画検索の選択肢一覧を返す。 */
 export const get: Operation = async (_req, res) => {
     const recordedApiModel = container.get<IRecordedApiModel>('IRecordedApiModel');
 

@@ -1,6 +1,11 @@
-import { BaseEntity, Column, Entity, JoinTable, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import Recorded from './Recorded';
+import { BaseEntity, Column, Entity, JoinTable, ManyToOne, PrimaryGeneratedColumn, Relation } from 'typeorm';
+import Recorded from './Recorded.js';
 
+/**
+ * 録画済み番組の実体ファイル（元TSファイル、またはエンコード済みファイル。`type` で区別）
+ * 1件を表す永続化 entity。`filePath` は `parentDirectoryName`（config.yml の保存先設定名）
+ * 配下からの相対パス。`recorded` は元になった録画。
+ */
 @Entity()
 export default class VideoFile extends BaseEntity {
     @PrimaryGeneratedColumn({
@@ -39,5 +44,5 @@ export default class VideoFile extends BaseEntity {
 
     @ManyToOne(() => Recorded, recorded => recorded.videoFiles)
     @JoinTable({ name: 'recordedId' })
-    public recorded?: Recorded;
+    public recorded?: Relation<Recorded>;
 }

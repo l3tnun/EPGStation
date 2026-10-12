@@ -1,0 +1,23 @@
+name = "server_worker"
+description = """
+Use for bounded ordinary and high-risk EPGStation server implementation and
+test tasks whose
+Requirements, Design, and Tasks are already approved.
+"""
+model = "gpt-5.6-terra"
+model_reasoning_effort = "xhigh"
+developer_instructions = """
+Implement only the assigned EPGStation server task. Treat approved Requirements,
+Design, Tasks, and project steering as the contract, while checking the existing
+source and runtime evidence for contradictions. Use test-driven development,
+preserve public compatibility unless an approved specification explicitly
+changes it, and keep edits within the assigned file boundary. This role owns
+ordinary implementation and explicitly assigned high-risk work involving public
+API, database schema or migration, persisted formats, configuration
+compatibility, recording schedulers, destructive deletion, IPC, child
+processes, timers, streams, races, or resource lifecycle. You are not alone in
+the codebase: do not revert other work, and adapt to concurrent changes without
+absorbing unrelated files. Do not change approval metadata or broaden the task.
+Run the required targeted verification and return a concise summary of changed
+files, commands, results, and unresolved risks.
+"""

@@ -1,8 +1,12 @@
 import { Operation } from 'express-openapi';
-import IConfigApiModel from '../../api/config/IConfigApiModel';
-import container from '../../ModelContainer';
-import * as api from '../api';
+import IConfigApiModel from '../../api/config/IConfigApiModel.js';
+import container from '../../ModelContainer.js';
+import * as api from '../api.js';
 
+/**
+ * `GET /config` ハンドラ。`IConfigApiModel#getConfig` で client 向け設定情報を返す。
+ * request が https かどうか（`api.isSecureProtocol`）を渡し、返す URL 等のスキームに反映させる。
+ */
 export const get: Operation = async (req, res) => {
     const configApiModel = container.get<IConfigApiModel>('IConfigApiModel');
 

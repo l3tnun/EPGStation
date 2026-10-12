@@ -1,10 +1,11 @@
 import * as events from 'events';
 import { inject, injectable } from 'inversify';
-import * as apid from '../../../api';
-import ILogger from '../ILogger';
-import ILoggerModel from '../ILoggerModel';
-import IEncodeEvent, { FinishEncodeInfo } from './IEncodeEvent';
+import type * as apid from '../../../api.js';
+import ILogger from '../ILogger.js';
+import ILoggerModel from '../ILoggerModel.js';
+import IEncodeEvent, { FinishEncodeInfo } from './IEncodeEvent.js';
 
+/** `IEncodeEvent` の実装。詳細は `IEncodeEvent` を参照。 */
 @injectable()
 class EncodeEvent implements IEncodeEvent {
     private log: ILogger;
@@ -150,7 +151,7 @@ namespace EncodeEvent {
     export const FINISH_ENCODE_EVENT = 'finishEncodeEvent';
     export const ERROR_ENCODE_EVENT = 'errorEncodeEvent';
     export const UPDATE_ENCODE_EVENT = 'updateEncodeEvent';
-    export const UPDATE_ENCODE_PROGRESS_EVENT = 'updateENcodeProgressEvent';
+    export const UPDATE_ENCODE_PROGRESS_EVENT = 'updateEncodeProgressEvent';
 }
 
 export default EncodeEvent;

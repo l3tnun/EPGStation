@@ -1,8 +1,9 @@
 import { Operation } from 'express-openapi';
-import IEncodeApiModel from '../../api/encode/IEncodeApiModel';
-import container from '../../ModelContainer';
-import * as api from '../api';
+import IEncodeApiModel from '../../api/encode/IEncodeApiModel.js';
+import container from '../../ModelContainer.js';
+import * as api from '../api.js';
 
+/** `GET /encode` ハンドラ。`IEncodeApiModel#getAll` で実行中/待機中のエンコード情報一覧を返す。 */
 export const get: Operation = async (req, res) => {
     const encodeApiModel = container.get<IEncodeApiModel>('IEncodeApiModel');
 
@@ -46,6 +47,7 @@ get.apiDoc = {
     },
 };
 
+/** `POST /encode` ハンドラ。`IEncodeApiModel#add` で手動エンコードを追加し、発行された id を返す。 */
 export const post: Operation = async (req, res) => {
     const encodeApiModel = container.get<IEncodeApiModel>('IEncodeApiModel');
 
@@ -54,7 +56,7 @@ export const post: Operation = async (req, res) => {
             encodeId: await encodeApiModel.add(req.body),
         });
     } catch (err: any) {
-        api.responseServerError(res, err.message);
+        api.responseOperationError(res, err);
     }
 };
 

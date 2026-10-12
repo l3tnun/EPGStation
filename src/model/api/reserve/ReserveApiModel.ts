@@ -1,10 +1,11 @@
 import { inject, injectable } from 'inversify';
-import * as apid from '../../../../api';
-import Reserve from '../../../db/entities/Reserve';
-import IReserveDB from '../../db/IReserveDB';
-import IIPCClient from '../../ipc/IIPCClient';
-import IReserveApiModel from './IReserveApiModel';
+import type * as apid from '../../../../api.js';
+import Reserve from '../../../db/entities/Reserve.js';
+import IReserveDB from '../../db/IReserveDB.js';
+import IIPCClient from '../../ipc/IIPCClient.js';
+import IReserveApiModel from './IReserveApiModel.js';
 
+/** `IReserveApiModel` の実装。詳細は `IReserveApiModel` を参照。 */
 @injectable()
 export default class ReserveApiModel implements IReserveApiModel {
     private ipc: IIPCClient;
@@ -78,6 +79,7 @@ export default class ReserveApiModel implements IReserveApiModel {
             isTimeSpecified: reserve.isTimeSpecified,
             isDeleteOriginalAfterEncode: reserve.isDeleteOriginalAfterEncode,
             channelId: reserve.channelId,
+            channelType: <apid.ChannelType>reserve.channelType,
             startAt: reserve.startAt,
             endAt: reserve.endAt,
             name: isHalfWidth ? reserve.halfWidthName : reserve.name,

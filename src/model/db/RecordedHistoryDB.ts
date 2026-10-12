@@ -1,16 +1,25 @@
 import { inject, injectable } from 'inversify';
-import * as apid from '../../../api';
-import RecordedHistory from '../../db/entities/RecordedHistory';
-import IPromiseRetry from '../IPromiseRetry';
-import IDBOperator from './IDBOperator';
-import IRecordedHistoryDB from './IRecordedHistoryDB';
+import type * as apid from '../../../api.js';
+import RecordedHistory from '../../db/entities/RecordedHistory.js';
+import ILogger from '../ILogger.js';
+import ILoggerModel from '../ILoggerModel.js';
+import IPromiseRetry from '../IPromiseRetry.js';
+import IDBOperator from './IDBOperator.js';
+import IRecordedHistoryDB from './IRecordedHistoryDB.js';
 
+/** `IRecordedHistoryDB` の実装。詳細は `IRecordedHistoryDB` を参照。 */
 @injectable()
 export default class RecordedHistoryDB implements IRecordedHistoryDB {
+    private log: ILogger;
     private op: IDBOperator;
     private promieRetry: IPromiseRetry;
 
-    constructor(@inject('IDBOperator') op: IDBOperator, @inject('IPromiseRetry') promieRetry: IPromiseRetry) {
+    constructor(
+        @inject('ILoggerModel') logger: ILoggerModel,
+        @inject('IDBOperator') op: IDBOperator,
+        @inject('IPromiseRetry') promieRetry: IPromiseRetry,
+    ) {
+        this.log = logger.getLogger();
         this.op = op;
         this.promieRetry = promieRetry;
     }
@@ -25,13 +34,13 @@ export default class RecordedHistoryDB implements IRecordedHistoryDB {
         const connection = await this.op.getConnection();
         const queryRunner = connection.createQueryRunner();
 
-        // start transaction
-        await queryRunner.startTransaction();
-
         let hasError = false;
         try {
+            // start transaction
+            await queryRunner.startTransaction();
+
             // 削除
-            await queryRunner.manager.delete(RecordedHistory, {});
+            await queryRunner.manager.createQueryBuilder().delete().from(RecordedHistory).execute();
 
             // 挿入処理
             for (const item of items) {
@@ -39,11 +48,22 @@ export default class RecordedHistoryDB implements IRecordedHistoryDB {
             }
             await queryRunner.commitTransaction();
         } catch (err: any) {
-            console.error(err);
-            hasError = err;
-            await queryRunner.rollbackTransaction();
+            this.log.system.error(err);
+            hasError = true;
+            if (queryRunner.isTransactionActive) {
+                try {
+                    await queryRunner.rollbackTransaction();
+                } catch (cleanupError) {
+                    this.log.system.error(cleanupError);
+                }
+            }
         } finally {
-            await queryRunner.release();
+            try {
+                await queryRunner.release();
+            } catch (cleanupError) {
+                this.log.system.error(cleanupError);
+                hasError = true;
+            }
         }
 
         if (hasError) {
@@ -77,7 +97,7 @@ export default class RecordedHistoryDB implements IRecordedHistoryDB {
             .createQueryBuilder()
             .delete()
             .from(RecordedHistory)
-            .where('endAt <= :time', { time: time });
+            .where('endAt < :time', { time: time });
 
         await this.promieRetry.run(() => {
             return queryBuilder.execute();

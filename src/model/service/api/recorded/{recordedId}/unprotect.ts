@@ -1,13 +1,17 @@
 import { Operation } from 'express-openapi';
-import IRecordedApiModel from '../../../../api/recorded/IRecordedApiModel';
-import container from '../../../../ModelContainer';
-import * as api from '../../../api';
+import IRecordedApiModel from '../../../../api/recorded/IRecordedApiModel.js';
+import container from '../../../../ModelContainer.js';
+import * as api from '../../../api.js';
 
+/**
+ * `PUT /recorded/{recordedId}/unprotect` ハンドラ。`IRecordedApiModel#changeProtect` を
+ * `isProtect=false` で呼び、録画を自動削除対象に戻す。
+ */
 export const put: Operation = async (req, res) => {
     const recordedApiModel = container.get<IRecordedApiModel>('IRecordedApiModel');
 
     try {
-        await recordedApiModel.changeProtect(parseInt(req.params.recordedId, 10), false);
+        await recordedApiModel.changeProtect(parseInt(api.pathParam(req, 'recordedId'), 10), false);
         api.responseJSON(res, 200, { code: 200 });
     } catch (err: any) {
         api.responseServerError(res, err.message);

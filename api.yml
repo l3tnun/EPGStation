@@ -85,13 +85,14 @@ components:
             type: integer
 
         ChannelType:
-            description: 放送波タイプ
+            description: 放送波タイプ。チューナーサーバーの設定次第でこれ以外の文字列も返り得る
             type: string
             enum:
                 - GR
                 - BS
                 - CS
                 - SKY
+                - BS4K
 
         ProgramGenreLv1:
             description: ジャンル
@@ -197,6 +198,7 @@ components:
                         - BS
                         - CS
                         - SKY
+                        - BS4K
                     properties:
                         GR:
                             type: boolean
@@ -205,6 +207,8 @@ components:
                         CS:
                             type: boolean
                         SKY:
+                            type: boolean
+                        BS4K:
                             type: boolean
                 recorded:
                     description: 指定可能な録画ディレクトリ名
@@ -608,6 +612,9 @@ components:
                 SKY:
                     description: SKY
                     type: boolean
+                BS4K:
+                    description: BS4K
+                    type: boolean
                 channelIds:
                     description: 放送局
                     type: array
@@ -832,6 +839,7 @@ components:
                 - isTimeSpecified
                 - isDeleteOriginalAfterEncode
                 - channelId
+                - channelType
                 - startAt
                 - endAt
                 - name
@@ -884,6 +892,8 @@ components:
                     $ref: '#/components/schemas/ProgramId'
                 channelId:
                     $ref: '#/components/schemas/ChannelId'
+                channelType:
+                    $ref: '#/components/schemas/ChannelType'
                 startAt:
                     $ref: '#/components/schemas/UnixtimeMS'
                 endAt:
@@ -959,13 +969,21 @@ components:
                 - overlaps
             properties:
                 normal:
-                    $ref: '#/components/schemas/ReserveListItem'
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/ReserveListItem'
                 conflicts:
-                    $ref: '#/components/schemas/ReserveListItem'
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/ReserveListItem'
                 skips:
-                    $ref: '#/components/schemas/ReserveListItem'
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/ReserveListItem'
                 overlaps:
-                    $ref: '#/components/schemas/ReserveListItem'
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/ReserveListItem'
 
         ReserveCnts:
             description: 予約カウント
@@ -1470,7 +1488,7 @@ components:
                     type: boolean
                 channelId:
                     $ref: '#/components/schemas/ChannelId'
-                videoFileId:
+                viodeFileId:
                     $ref: '#/components/schemas/VideoFileId'
                 recordedId:
                     $ref: '#/components/schemas/RecordedId'
@@ -1720,6 +1738,14 @@ components:
             in: query
             name: SKY
             required: true
+            schema:
+                type: boolean
+
+        optionalBS4K:
+            description: BS4K
+            in: query
+            name: BS4K
+            required: false
             schema:
                 type: boolean
 

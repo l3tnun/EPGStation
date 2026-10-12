@@ -8,12 +8,18 @@ import {
     OneToMany,
     OneToOne,
     PrimaryGeneratedColumn,
+    Relation,
 } from 'typeorm';
-import DropLogFile from './DropLogFile';
-import RecordedTag from './RecordedTag';
-import Thumbnail from './Thumbnail';
-import VideoFile from './VideoFile';
+import DropLogFile from './DropLogFile.js';
+import RecordedTag from './RecordedTag.js';
+import Thumbnail from './Thumbnail.js';
+import VideoFile from './VideoFile.js';
 
+/**
+ * 録画済み番組（録画中も含む）1件を表す永続化 entity。`isRecording` が `true` の間は
+ * 録画実行中を表し、完了すると `false` に更新される。`videoFiles`/`thumbnails`（複数持てる）・
+ * `dropLogFile`（1対1、ドロップ検出時のみ存在）・`tags`（多対多）は関連 entity への参照。
+ */
 @Entity()
 export default class Recorded extends BaseEntity {
     @PrimaryGeneratedColumn({
@@ -186,10 +192,10 @@ export default class Recorded extends BaseEntity {
     public isRecording!: boolean;
 
     @OneToMany(() => VideoFile, videoFile => videoFile.recorded)
-    public videoFiles?: VideoFile[];
+    public videoFiles?: Relation<VideoFile>[];
 
     @OneToMany(() => Thumbnail, thumbnail => thumbnail.recorded)
-    public thumbnails?: Thumbnail[];
+    public thumbnails?: Relation<Thumbnail>[];
 
     @Column({
         type: 'integer',
@@ -206,5 +212,5 @@ export default class Recorded extends BaseEntity {
 
     @ManyToMany(() => RecordedTag)
     @JoinTable()
-    public tags!: RecordedTag[];
+    public tags!: Relation<RecordedTag>[];
 }

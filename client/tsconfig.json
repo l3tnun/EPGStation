@@ -1,24 +1,37 @@
 {
-    "compilerOptions": {
-        "target": "es5",
-        "module": "esnext",
-        "strict": true,
-        "jsx": "preserve",
-        "importHelpers": true,
-        "moduleResolution": "node",
-        "experimentalDecorators": true,
-        "esModuleInterop": true,
-        "allowSyntheticDefaultImports": true,
-        "sourceMap": true,
-        "skipLibCheck": true,
-        "baseUrl": ".",
-        "types": ["webpack-env", "vuetify"],
-        "paths": {
-            "@/*": ["src/*"]
-        },
-        "lib": ["esnext", "dom", "dom.iterable", "scripthost"],
-        "typeRoots": ["src/@types/"]
+  "compilerOptions": {
+    "target": "ES2023",
+    "useDefineForClassFields": true,
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "allowJs": false,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "types": ["vite/client", "vitest/globals", "@testing-library/jest-dom", "node"],
+    "ignoreDeprecations": "6.0",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
     },
-    "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue", "tests/**/*.ts", "tests/**/*.tsx"],
-    "exclude": ["node_modules"]
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": [
+    "src",
+    "unittest",
+    "e2e",
+    "visual",
+    "vite.config.ts",
+    "vitest.setup.ts",
+    "playwright.config.ts"
+  ]
 }

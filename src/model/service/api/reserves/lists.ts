@@ -1,8 +1,12 @@
 import { Operation } from 'express-openapi';
-import IReserveApiModel from '../../../api/reserve/IReserveApiModel';
-import container from '../../../ModelContainer';
-import * as api from '../../api';
+import IReserveApiModel from '../../../api/reserve/IReserveApiModel.js';
+import container from '../../../ModelContainer.js';
+import * as api from '../../api.js';
 
+/**
+ * `GET /reserves/lists` ハンドラ。`startAt`/`endAt`（query、UNIX time ms）の期間で
+ * `IReserveApiModel#getLists` を呼び、正常/競合/重複/スキップ種別ごとに分けた予約一覧を返す。
+ */
 export const get: Operation = async (req, res) => {
     const reserveApiModel = container.get<IReserveApiModel>('IReserveApiModel');
 

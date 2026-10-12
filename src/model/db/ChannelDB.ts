@@ -1,17 +1,18 @@
 import { inject, injectable } from 'inversify';
-import { FindOptionsWhere } from 'typeorm';
-import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
-import * as apid from '../../../api';
-import * as mapid from '../../../node_modules/mirakurun/api';
-import Channel from '../../db/entities/Channel';
-import StrUtil from '../../util/StrUtil';
-import IConfiguration from '../IConfiguration';
-import ILogger from '../ILogger';
-import ILoggerModel from '../ILoggerModel';
-import IPromiseRetry from '../IPromiseRetry';
-import IChannelDB, { ChannelUpdateValues } from './IChannelDB';
-import IDBOperator from './IDBOperator';
+import { FindOptionsWhere, In } from 'typeorm';
+import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity.js';
+import type * as apid from '../../../api.js';
+import Channel from '../../db/entities/Channel.js';
+import StrUtil from '../../util/StrUtil.js';
+import IConfiguration from '../IConfiguration.js';
+import ILogger from '../ILogger.js';
+import ILoggerModel from '../ILoggerModel.js';
+import IPromiseRetry from '../IPromiseRetry.js';
+import { BroadcastType, TunerService } from '../tuner/types.js';
+import IChannelDB, { ChannelUpdateValues } from './IChannelDB.js';
+import IDBOperator from './IDBOperator.js';
 
+/** `IChannelDB` の実装。詳細は `IChannelDB` を参照。 */
 @injectable()
 export default class ChannelDB implements IChannelDB {
     private log: ILogger;
@@ -35,9 +36,14 @@ export default class ChannelDB implements IChannelDB {
      * Mirakurun から取得した channel 情報を DB へ全件挿入する
      * @param channels: Service[]
      * @param needesDeleted: 更新前に全データ削除が必要か
+     * @param deleteChannelIds: 同じ transaction で削除する channel id (空なら削除しない)
      * @return Promise<void>
      */
-    public async insert(channels: mapid.Service[], needesDeleted: boolean = true): Promise<void> {
+    public async insert(
+        channels: TunerService[],
+        needesDeleted: boolean = true,
+        deleteChannelIds: apid.ChannelId[] = [],
+    ): Promise<void> {
         const values: QueryDeepPartialEntity<Channel>[] = [];
 
         // 挿入データ作成
@@ -59,20 +65,25 @@ export default class ChannelDB implements IChannelDB {
                 channelTypeId: this.getChannelTypeId(channel.channel.type),
                 channelType: channel.channel.type,
                 channel: channel.channel.channel,
-                type: typeof (channel as any)['type'] !== 'number' ? null : (channel as any)['type'],
+                type: channel.type,
             });
         }
 
         const connection = await this.op.getConnection();
         const queryRunner = connection.createQueryRunner();
 
-        await queryRunner.startTransaction();
-
         let hasError = false;
         try {
+            await queryRunner.startTransaction();
+
             if (needesDeleted === true) {
                 // 削除
-                await queryRunner.manager.delete(Channel, {});
+                await queryRunner.manager.createQueryBuilder().delete().from(Channel).execute();
+            }
+
+            // 指定された channel のみ削除
+            if (deleteChannelIds.length > 0) {
+                await queryRunner.manager.delete(Channel, { id: In(deleteChannelIds) });
             }
 
             // 挿入処理
@@ -88,11 +99,22 @@ export default class ChannelDB implements IChannelDB {
 
             await queryRunner.commitTransaction();
         } catch (err: any) {
-            console.error(err);
+            this.log.system.error(err);
             hasError = true;
-            await queryRunner.rollbackTransaction();
+            if (queryRunner.isTransactionActive) {
+                try {
+                    await queryRunner.rollbackTransaction();
+                } catch (cleanupError) {
+                    this.log.system.error(cleanupError);
+                }
+            }
         } finally {
-            await queryRunner.release();
+            try {
+                await queryRunner.release();
+            } catch (cleanupError) {
+                this.log.system.error(cleanupError);
+                hasError = true;
+            }
         }
 
         if (hasError) {
@@ -104,7 +126,7 @@ export default class ChannelDB implements IChannelDB {
      * ChannelTypeId を取得する
      * @paramChannelTypeId
      */
-    private getChannelTypeId(type: mapid.ChannelType): number {
+    private getChannelTypeId(type: BroadcastType): number {
         switch (type) {
             case 'GR':
                 return 0;
@@ -114,6 +136,8 @@ export default class ChannelDB implements IChannelDB {
                 return 2;
             case 'SKY':
                 return 3;
+            case 'BS4K':
+                return 5;
             default:
                 return 4;
         }
@@ -125,11 +149,11 @@ export default class ChannelDB implements IChannelDB {
      * @return Promise<void>
      */
     public async update(values: ChannelUpdateValues): Promise<void> {
-        const channels: mapid.Service[] = [];
+        const channels: TunerService[] = [];
         Array.prototype.push.apply(channels, values.insert);
         Array.prototype.push.apply(channels, values.update);
 
-        await this.insert(channels, false);
+        await this.insert(channels, false, values.delete);
     }
 
     /**
@@ -206,7 +230,7 @@ export default class ChannelDB implements IChannelDB {
     private sortChannels(channels: Channel[]): Channel[] {
         const config = this.configuration.getConfig();
 
-        let order: number[] = [];
+        let order: number[];
         let key: string;
         if (typeof config.channelOrder !== 'undefined') {
             order = config.channelOrder;

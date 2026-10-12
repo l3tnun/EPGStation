@@ -1,0 +1,514 @@
+.page {
+  display: flex;
+  justify-content: center;
+  padding: 0;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-width: 1200px;
+  width: 100%;
+}
+
+.playerContainer {
+  align-items: center;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  box-sizing: border-box;
+  color: #fff;
+  display: flex;
+  justify-content: center;
+  max-width: 1200px;
+  min-height: 180px;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
+.playerContainer[data-cursor-hidden='true'] {
+  cursor: none;
+}
+
+.playerContainer[data-fullscreen-fallback='true'] {
+  bottom: 0;
+  /*
+   * requirements.md 6d: raw `100vh` can hold a stale iPadOS-standalone-PWA viewport measurement
+   * (WebKit leaves it wrong until a real geometry change "exercises" it, e.g. a device rotation),
+   * which pushed bottomControls off-screen. --app-viewport-height is the app shell's own
+   * JS-measured (`window.visualViewport.height ?? window.innerHeight`) viewport height
+   * (useFixedShellViewport.ts), kept fresh continuously and resynced explicitly when this
+   * fallback toggles (usePlaybackFullscreen.ts), so it does not carry that staleness. The `100vh`
+   * fallback value keeps this rule unaffected on browsers where the variable is unset.
+   */
+  height: var(--app-viewport-height, 100vh);
+  left: 0;
+  max-width: none;
+  position: fixed;
+  right: 0;
+  top: 0;
+  width: 100vw;
+  z-index: 1300;
+}
+
+.mediaElement {
+  height: 100%;
+  object-fit: contain;
+  width: 100%;
+}
+
+.loadingIndicator {
+  height: 50px;
+  left: 50%;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 50px;
+  z-index: 2;
+}
+
+.legacyLoadingSpinner {
+  box-sizing: border-box;
+  height: 50px;
+  left: 50%;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 50px;
+  z-index: 2;
+}
+
+.legacyLoadingSpinner::before {
+  animation: legacy-loading-spin 700ms linear infinite;
+  border: 4px solid transparent;
+  border-left-color: var(--mui-palette-primary-main, #1976d2);
+  border-radius: 50%;
+  box-sizing: border-box;
+  content: '';
+  inset: 0;
+  position: absolute;
+}
+
+@keyframes legacy-loading-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.lifecycleError {
+  box-sizing: border-box;
+  padding: 16px;
+  position: absolute;
+  text-align: center;
+  z-index: 3;
+}
+
+/*
+ * Screen-reader only: visible loading presentation for the 'waiting' state is owned by a
+ * separate, not-yet-approved visual design item. Changing what is on screen here would also
+ * diff visual/video-playback-geometry.spec.ts's video-playback-hls-loading.png baseline.
+ * This element still gives assistive tech an accessible, elapsed-time-aware description of the
+ * waiting state.
+ */
+.waitingStatus {
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+.centerControls {
+  align-items: center;
+  display: flex;
+  gap: 0;
+  left: 50%;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 4;
+}
+
+.speedControls {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: absolute;
+  opacity: 0.8;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 68px;
+  z-index: 4;
+}
+
+.bottomControls {
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.85), transparent);
+  bottom: 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 60px;
+  left: 0;
+  padding: 0 8px;
+  position: absolute;
+  right: 0;
+  z-index: 4;
+}
+
+.rotationButton {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  color: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  height: 36px;
+  justify-content: center;
+  min-width: 36px;
+  padding: 0;
+  position: absolute;
+  right: 8px;
+  text-shadow: 0 0 10px #000;
+  top: 8px;
+  z-index: 5;
+}
+
+.rotationButton .playbackIcon {
+  font-size: 24px;
+}
+
+.bottomControlsRow {
+  align-items: center;
+  display: flex;
+  gap: 0;
+  min-width: 0;
+}
+
+.centerControls button,
+.speedControls button,
+.bottomControls button {
+  align-items: center;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 999px;
+  color: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  font:
+    12px Arial,
+    sans-serif;
+  height: 32px;
+  justify-content: center;
+  min-width: 32px;
+  padding: 0 8px;
+  text-shadow: 0 0 10px #000;
+}
+
+.speedControls button {
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  box-shadow: none;
+  color: #fff;
+  font:
+    14px Arial,
+    sans-serif;
+  height: 36px;
+  min-width: 36px;
+  padding: 0;
+  width: 36px;
+}
+
+.speedControls button:nth-child(2) {
+  border-radius: 4px;
+  min-width: 68px;
+  width: 68px;
+}
+
+.centerControls button {
+  height: 36px;
+  margin-left: 16px;
+  margin-right: 16px;
+  min-width: 36px;
+  width: 36px;
+}
+
+.centerControls button,
+.bottomControls button {
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  box-shadow: none;
+  color: #fff;
+  padding: 0;
+}
+
+.bottomControls button {
+  height: 36px;
+  min-width: 36px;
+}
+
+.playbackIcon {
+  align-items: center;
+  display: inline-flex;
+  font: normal normal normal 24px/1 'Material Design Icons';
+  height: 24px;
+  justify-content: center;
+  width: 24px;
+}
+
+.playbackIcon::before {
+  display: inline-block;
+}
+
+.playbackIcon[data-playback-icon='play']::before {
+  content: '\F040A';
+}
+
+.playbackIcon[data-playback-icon='pause']::before {
+  content: '\F03E4';
+}
+
+.centerControls .playbackIcon[data-playback-icon='play'],
+.centerControls .playbackIcon[data-playback-icon='pause'] {
+  font-size: 60px;
+  height: 60px;
+  width: 60px;
+}
+
+.playbackIcon[data-playback-icon='rewind-30']::before {
+  content: '\F0D96';
+}
+
+.playbackIcon[data-playback-icon='rewind-10']::before {
+  content: '\F0D2A';
+}
+
+.playbackIcon[data-playback-icon='forward-10']::before {
+  content: '\F0D71';
+}
+
+.playbackIcon[data-playback-icon='forward-30']::before {
+  content: '\F0D06';
+}
+
+.playbackIcon[data-playback-icon='plus-circle']::before {
+  content: '\F0417';
+}
+
+.playbackIcon[data-playback-icon='minus-circle']::before {
+  content: '\F0376';
+}
+
+.playbackIcon[data-playback-icon='volume-high']::before {
+  content: '\F057E';
+}
+
+.playbackIcon[data-playback-icon='volume-medium']::before {
+  content: '\F0580';
+}
+
+.playbackIcon[data-playback-icon='volume-off']::before {
+  content: '\F0581';
+}
+
+.playbackIcon[data-playback-icon='subtitles']::before {
+  content: '\F0A16';
+}
+
+.playbackIcon[data-playback-icon='picture-in-picture']::before {
+  content: '\F0E57';
+}
+
+.playbackIcon[data-playback-icon='screen-rotation']::before {
+  content: '\F0475';
+}
+
+.playbackIcon[data-playback-icon='fullscreen']::before {
+  content: '\F0293';
+}
+
+.playbackIcon[data-playback-icon='fullscreen-exit']::before {
+  content: '\F0294';
+}
+
+.bottomControls input[type='range'] {
+  appearance: none;
+  background: transparent;
+  height: 16px;
+  margin: 0;
+  min-width: 0;
+}
+
+.bottomControls input[type='range']::-webkit-slider-runnable-track {
+  background: #9e9e9e;
+  border-radius: 2px;
+  height: 4px;
+}
+
+.bottomControls input[type='range']::-webkit-slider-thumb {
+  appearance: none;
+  background: #e0e0e0;
+  border: 0;
+  border-radius: 50%;
+  height: 12px;
+  margin-top: -4px;
+  width: 12px;
+}
+
+.bottomControls input[type='range']::-moz-range-track {
+  background: #9e9e9e;
+  border-radius: 2px;
+  height: 4px;
+}
+
+.bottomControls input[type='range']::-moz-range-thumb {
+  background: #e0e0e0;
+  border: 0;
+  border-radius: 50%;
+  height: 12px;
+  width: 12px;
+}
+
+.bottomControls > input[type='range'] {
+  width: 100%;
+}
+
+.bottomControlsRow input[type='range'] {
+  flex: 0 0 64px;
+  margin-left: 8px;
+  width: 64px;
+}
+
+.bottomControls > input.hiddenSeekBar {
+  height: 32px;
+  left: 8px;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  top: -8px;
+  width: calc(100% - 16px);
+}
+
+.timeDisplay {
+  color: #fff;
+  flex: 1 1 auto;
+  font:
+    12px Arial,
+    sans-serif;
+  margin-left: 8px;
+  margin-right: 8px;
+  min-width: 86px;
+  white-space: nowrap;
+}
+
+.timeSeparator {
+  margin-left: 4px;
+  margin-right: 4px;
+}
+
+.disabledControl {
+  opacity: 0.3;
+}
+
+.controlledError {
+  align-items: center;
+  aspect-ratio: 16 / 9;
+  background: var(--mui-palette-background-paper, #fff);
+  border: 1px solid rgba(127, 127, 127, 0.24);
+  border-radius: 4px;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  margin: 0 auto;
+  max-width: 960px;
+  min-height: 180px;
+  overflow-wrap: anywhere;
+  padding: 16px;
+  width: 100%;
+}
+
+.infoCardWrap {
+  box-sizing: border-box;
+  padding: 8px;
+  width: 100%;
+}
+
+.infoCard {
+  background: var(--mui-palette-background-paper, #fff);
+  border: 0;
+  border-radius: 4px;
+  box-shadow:
+    rgba(0, 0, 0, 0.2) 0 2px 1px -1px,
+    rgba(0, 0, 0, 0.14) 0 1px 1px 0,
+    rgba(0, 0, 0, 0.12) 0 1px 3px 0;
+  box-sizing: border-box;
+  color: var(--mui-palette-text-primary, rgb(0 0 0 / 87%));
+  font-size: 0.875rem;
+  font-weight: 300;
+  line-height: 20px;
+  margin: 0 auto;
+  max-width: 800px;
+  padding: 12px 16px;
+  width: 100%;
+}
+
+:global([data-theme-mode='dark']) .infoCard {
+  background: var(--mui-palette-background-paper, #1e1e1e);
+  border: 1px solid rgb(255 255 255 / 12%);
+  box-shadow:
+    rgba(0, 0, 0, 0.5) 0 2px 1px -1px,
+    rgba(0, 0, 0, 0.36) 0 1px 1px 0,
+    rgba(0, 0, 0, 0.3) 0 1px 3px 0;
+  color: var(--mui-palette-text-primary, rgb(255 255 255));
+}
+
+.infoCard > :first-child {
+  font-size: 1rem;
+  font-weight: 900;
+  line-height: 28px;
+}
+
+.infoCardTitle {
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 22px;
+  margin-top: 2px;
+  overflow-wrap: anywhere;
+}
+
+.infoCardTime {
+  color: rgb(0 0 0 / 60%);
+  font-size: 0.75rem;
+  font-weight: 300;
+  line-height: 20px;
+  margin-top: 2px;
+}
+
+:global([data-theme-mode='dark']) .infoCardTime {
+  color: rgb(255 255 255 / 70%);
+}
+
+.infoCardDescription {
+  color: var(--mui-palette-text-secondary, rgb(0 0 0 / 87%));
+  font-size: 0.875rem;
+  font-weight: 300;
+  line-height: 20px;
+  margin-top: 2px;
+}
+
+:global([data-theme-mode='dark']) .infoCardDescription {
+  color: var(--mui-palette-text-secondary, rgb(255 255 255 / 70%));
+}

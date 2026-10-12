@@ -1,11 +1,12 @@
 import * as events from 'events';
 import { inject, injectable } from 'inversify';
-import * as apid from '../../../api';
-import RecordedTag from '../../db/entities/RecordedTag';
-import ILogger from '../ILogger';
-import ILoggerModel from '../ILoggerModel';
-import IRecordedTagEvent from './IRecordedTagEvent';
+import type * as apid from '../../../api.js';
+import RecordedTag from '../../db/entities/RecordedTag.js';
+import ILogger from '../ILogger.js';
+import ILoggerModel from '../ILoggerModel.js';
+import IRecordedTagEvent from './IRecordedTagEvent.js';
 
+/** `IRecordedTagEvent` の実装。詳細は `IRecordedTagEvent` を参照。 */
 @injectable()
 class RecordedTagEvent implements IRecordedTagEvent {
     private log: ILogger;
@@ -37,7 +38,7 @@ class RecordedTagEvent implements IRecordedTagEvent {
      * @param recordedId: apid.RecordedId
      */
     public emitRelated(tagId: apid.RecordedTagId, recordedId: apid.RecordedId): void {
-        this.emitter.emit(RecordedTagEvent.RELATER_EVENT, tagId, recordedId);
+        this.emitter.emit(RecordedTagEvent.RELATED_EVENT, tagId, recordedId);
     }
 
     /**
@@ -91,7 +92,7 @@ class RecordedTagEvent implements IRecordedTagEvent {
      */
     public setRelated(callback: (tagId: apid.RecordedTagId, recordedId: apid.RecordedId) => void): void {
         this.emitter.on(
-            RecordedTagEvent.RELATER_EVENT,
+            RecordedTagEvent.RELATED_EVENT,
             async (tagId: apid.RecordedTagId, recordedId: apid.RecordedId) => {
                 try {
                     await callback(tagId, recordedId);
@@ -137,7 +138,7 @@ class RecordedTagEvent implements IRecordedTagEvent {
 namespace RecordedTagEvent {
     export const CREATED_EVENT = 'Created';
     export const UPDATED_EVENT = 'Updated';
-    export const RELATER_EVENT = 'Related';
+    export const RELATED_EVENT = 'Related';
     export const DELETED_EVENT = 'Deleted';
     export const DELETED_RELATION_EVENT = 'DeletedRelation';
 }

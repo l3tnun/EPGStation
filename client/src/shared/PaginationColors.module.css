@@ -1,0 +1,49 @@
+/* Colors shared by LegacyPagination and ExtendedPagination. They match the v2 v-pagination
+   (Vuetify 2.7.0, default theme): the current page is #1976d2 with white text in both themes, not
+   the primary color of the v3 dark theme. Size, spacing and layout stay in each component's own
+   CSS module. */
+
+.pageButton {
+  background: #fff;
+  box-shadow:
+    rgba(0, 0, 0, 0.2) 0 3px 1px -2px,
+    rgba(0, 0, 0, 0.14) 0 2px 2px 0,
+    rgba(0, 0, 0, 0.12) 0 1px 5px 0;
+  color: rgba(0, 0, 0, 0.87);
+}
+
+.navigationButton {
+  color: rgba(0, 0, 0, 0.54);
+}
+
+.pageButton:disabled {
+  opacity: 0.6;
+}
+
+.ellipsis {
+  color: rgba(0, 0, 0, 0.87);
+}
+
+:global([data-theme-mode='dark']) .pageButton {
+  background: #1e1e1e;
+  color: #fff;
+}
+
+:global([data-theme-mode='dark']) .navigationButton {
+  color: #fff;
+}
+
+:global([data-theme-mode='dark']) .ellipsis {
+  color: #fff;
+}
+
+/* After the dark rules, and as specific as them, so the current page keeps its fill in both themes. */
+.pageButton[aria-current='page'],
+:global([data-theme-mode='dark']) .pageButton[aria-current='page'] {
+  background: #1976d2;
+  box-shadow:
+    rgba(0, 0, 0, 0.2) 0 2px 4px -1px,
+    rgba(0, 0, 0, 0.14) 0 4px 5px 0,
+    rgba(0, 0, 0, 0.12) 0 1px 10px 0;
+  color: #fff;
+}

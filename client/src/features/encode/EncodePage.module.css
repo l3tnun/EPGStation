@@ -1,0 +1,238 @@
+.encodePage {
+  box-sizing: border-box;
+  margin: 0 auto;
+  max-width: 800px;
+  padding: 8px;
+  width: 100%;
+}
+
+.section {
+  margin: 0;
+  padding: 0;
+}
+
+.section + .section {
+  padding-top: 8px;
+}
+
+.sectionTitle {
+  font-size: 1.25rem;
+  font-weight: 500;
+  line-height: 2rem;
+  margin: 0;
+  padding: 4px 0;
+}
+
+.list {
+  display: grid;
+  gap: 8px;
+}
+
+.item {
+  align-items: stretch;
+  background: var(--mui-palette-background-paper, #fff);
+  border: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  border-radius: 4px;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  overflow: hidden;
+}
+
+:global([data-theme-mode='dark']) .item {
+  background: var(--mui-palette-background-paper, #1e1e1e);
+  color: var(--mui-palette-text-primary, rgb(255 255 255 / 87%));
+}
+
+.item[data-edit-mode='true'] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.item[data-selected='true'] {
+  background: rgb(66, 133, 244);
+}
+
+.itemButton {
+  align-items: stretch;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: default;
+  display: grid;
+  grid-template-columns: minmax(112px, 200px) minmax(0, 1fr);
+  min-width: 0;
+  padding: 0;
+  text-align: left;
+  width: 100%;
+}
+
+.item[data-edit-mode='true'] .itemButton {
+  cursor: pointer;
+}
+
+.thumbnail {
+  align-self: start;
+  aspect-ratio: 1.7778;
+  background: color-mix(in srgb, currentColor 8%, transparent);
+  object-fit: cover;
+  width: 100%;
+}
+
+.thumbnailFallback {
+  background: transparent;
+}
+
+.content {
+  box-sizing: border-box;
+  display: grid;
+  gap: 2px;
+  grid-template-rows: repeat(4, minmax(18px, auto)) auto;
+  min-width: 0;
+  padding: 10px 12px;
+}
+
+.title,
+.meta,
+.mode,
+.progressText {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.title {
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.meta,
+.mode,
+.progressText {
+  font-size: 0.75rem;
+}
+
+.mode {
+  font-weight: 400;
+}
+
+.progressTrack {
+  align-self: end;
+  background: rgba(25, 118, 210, 0.3);
+  border-radius: 2px;
+  display: block;
+  height: 4px;
+  margin-left: -5px;
+  overflow: hidden;
+  width: calc(100% + 54px);
+}
+
+.progressBar {
+  background: #1976d2;
+  display: block;
+  height: 100%;
+  min-width: 0;
+}
+
+.itemActions {
+  align-self: start;
+  padding: 4px;
+}
+
+.item:not(:has(.progressTrack)) .itemActions {
+  padding-top: 18px;
+}
+
+.itemActions :global(.MuiIconButton-root) {
+  height: 36px;
+  padding: 0;
+  width: 36px;
+}
+
+.titleIconButton:global(.MuiIconButton-root) {
+  height: 48px;
+  margin-right: -12px;
+  padding: 12px;
+  width: 48px;
+}
+
+.closeIcon,
+.editIcon {
+  display: inline-block;
+  font-family: 'Material Design Icons';
+  font-size: 24px;
+  height: 24px;
+  line-height: 1;
+  width: 24px;
+}
+
+.closeIcon::before {
+  content: '󰅖';
+}
+
+.editIcon::before {
+  content: '󰏫';
+}
+
+.cancelDialogPaper {
+  max-width: 300px !important;
+}
+
+.bulkCancelDialogPaper {
+  min-height: 120px;
+}
+
+.singleCancelContent,
+.bulkCancelContent {
+  color: var(--mui-palette-text-primary, rgba(0, 0, 0, 0.87));
+  font-size: 1rem;
+  line-height: 1.5;
+  padding: 16px 16px 0 !important;
+}
+
+.cancelDialogPaper :global(.MuiDialogActions-root) {
+  box-sizing: border-box;
+  min-height: 52px;
+  padding: 8px;
+}
+
+@media (max-width: 600px) {
+  .encodePage {
+    padding: 8px;
+  }
+
+  .item:has(.thumbnailFallback) {
+    min-height: 82px;
+  }
+
+  .itemButton {
+    grid-template-columns: minmax(96px, 30%) minmax(0, 1fr);
+  }
+
+  .itemButton:has(.thumbnailFallback) {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 82px;
+  }
+
+  .thumbnailFallback {
+    display: none;
+  }
+
+  .content {
+    padding: 8px;
+  }
+
+  .item:has(.thumbnailFallback) .content {
+    grid-template-rows: repeat(3, minmax(18px, auto));
+  }
+
+  .item:not(:has(.progressTrack)) .itemActions {
+    padding-top: 4px;
+  }
+
+  .progressTrack {
+    margin-left: 13px;
+    width: calc(100% + 32px);
+  }
+}

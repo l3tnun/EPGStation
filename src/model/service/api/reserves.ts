@@ -1,9 +1,14 @@
 import { Operation } from 'express-openapi';
-import * as apid from '../../../../api';
-import IReserveApiModel from '../../api/reserve/IReserveApiModel';
-import container from '../../ModelContainer';
-import * as api from '../api';
+import type * as apid from '../../../../api.js';
+import IReserveApiModel from '../../api/reserve/IReserveApiModel.js';
+import container from '../../ModelContainer.js';
+import * as api from '../api.js';
 
+/**
+ * `GET /reserves` ハンドラ。query から検索条件（type / ruleId / offset / limit / isHalfWidth）を
+ * 組み立てて `IReserveApiModel#gets` に渡し、予約一覧を返す。未指定の query は `option` に
+ * 反映しない（`IReserveApiModel#gets` 側の既定値に委ねる）。
+ */
 export const get: Operation = async (req, res) => {
     const reserveApiModel = container.get<IReserveApiModel>('IReserveApiModel');
 
@@ -75,6 +80,7 @@ get.apiDoc = {
     },
 };
 
+/** `POST /reserves` ハンドラ。`IReserveApiModel#add` で手動予約を追加し、発行された id を返す。 */
 export const post: Operation = async (req, res) => {
     const reserveApiModel = container.get<IReserveApiModel>('IReserveApiModel');
 
@@ -83,7 +89,7 @@ export const post: Operation = async (req, res) => {
             reserveId: await reserveApiModel.add(req.body),
         });
     } catch (err: any) {
-        api.responseServerError(res, err.message);
+        api.responseOperationError(res, err);
     }
 };
 

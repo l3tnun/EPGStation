@@ -1,16 +1,25 @@
 import { inject, injectable } from 'inversify';
-import * as apid from '../../../api';
-import VideoFile from '../../db/entities/VideoFile';
-import IPromiseRetry from '../IPromiseRetry';
-import IDBOperator from './IDBOperator';
-import IVideoFileDB, { UpdateFilePathOption } from './IVideoFileDB';
+import type * as apid from '../../../api.js';
+import VideoFile from '../../db/entities/VideoFile.js';
+import ILogger from '../ILogger.js';
+import ILoggerModel from '../ILoggerModel.js';
+import IPromiseRetry from '../IPromiseRetry.js';
+import IDBOperator from './IDBOperator.js';
+import IVideoFileDB, { UpdateFilePathOption } from './IVideoFileDB.js';
 
+/** `IVideoFileDB` の実装。詳細は `IVideoFileDB` を参照。 */
 @injectable()
 export default class VideoFileDB implements IVideoFileDB {
+    private log: ILogger;
     private op: IDBOperator;
     private promieRetry: IPromiseRetry;
 
-    constructor(@inject('IDBOperator') op: IDBOperator, @inject('IPromiseRetry') promieRetry: IPromiseRetry) {
+    constructor(
+        @inject('ILoggerModel') logger: ILoggerModel,
+        @inject('IDBOperator') op: IDBOperator,
+        @inject('IPromiseRetry') promieRetry: IPromiseRetry,
+    ) {
+        this.log = logger.getLogger();
         this.op = op;
         this.promieRetry = promieRetry;
     }
@@ -25,13 +34,13 @@ export default class VideoFileDB implements IVideoFileDB {
         const connection = await this.op.getConnection();
         const queryRunner = connection.createQueryRunner();
 
-        // start transaction
-        await queryRunner.startTransaction();
-
         let hasError = false;
         try {
+            // start transaction
+            await queryRunner.startTransaction();
+
             // 削除
-            await queryRunner.manager.delete(VideoFile, {});
+            await queryRunner.manager.createQueryBuilder().delete().from(VideoFile).execute();
 
             // 挿入処理
             for (const item of items) {
@@ -39,11 +48,22 @@ export default class VideoFileDB implements IVideoFileDB {
             }
             await queryRunner.commitTransaction();
         } catch (err: any) {
-            console.error(err);
-            hasError = err;
-            await queryRunner.rollbackTransaction();
+            this.log.system.error(err);
+            hasError = true;
+            if (queryRunner.isTransactionActive) {
+                try {
+                    await queryRunner.rollbackTransaction();
+                } catch (cleanupError) {
+                    this.log.system.error(cleanupError);
+                }
+            }
         } finally {
-            await queryRunner.release();
+            try {
+                await queryRunner.release();
+            } catch (cleanupError) {
+                this.log.system.error(cleanupError);
+                hasError = true;
+            }
         }
 
         if (hasError) {

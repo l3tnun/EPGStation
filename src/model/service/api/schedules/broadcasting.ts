@@ -1,9 +1,13 @@
 import { Operation } from 'express-openapi';
-import * as apid from '../../../../../api';
-import IScheduleApiModel from '../../../api/schedule/IScheduleApiModel';
-import container from '../../../ModelContainer';
-import * as api from '../../api';
+import type * as apid from '../../../../../api.js';
+import IScheduleApiModel from '../../../api/schedule/IScheduleApiModel.js';
+import container from '../../../ModelContainer.js';
+import * as api from '../../api.js';
 
+/**
+ * `GET /schedules/broadcasting` ハンドラ。`time`（query、追加時間・ms）を指定して
+ * `IScheduleApiModel#getBroadcastingSchedule` で放送中番組の情報一覧を返す。
+ */
 export const get: Operation = async (req, res) => {
     const scheduleApiModel = container.get<IScheduleApiModel>('IScheduleApiModel');
 
