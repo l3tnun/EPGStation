@@ -5,7 +5,7 @@ EPGStation の build、test、静的な検査、全体の検査（preflight）�
 ## 1. 前提
 
 - Docker（rootful、buildx）。Docker image の確認と、hosted runner を模擬する container に使う。
-- mise。`mise.toml` が Node 24.18.0 / 26.4.0 を指定する。`mise install` で両方を入れておく（`node-matrix` は `mise exec node@26` を使う）。
+- mise。`mise.toml` が Node 24.21.0 / 26.11.1 を指定する。`mise install` で両方を入れておく（`node-matrix` は `mise exec node@26` を使う）。
 - host の `python3` と PyYAML（`import yaml`）。`scripts/ci-rehearsal/setup.sh` と `scripts/ci-rehearsal/job.sh` が `.github/workflows/*.yml` の step の `run` を取り出すのに使う。
 - `npm run preflight -- --all` を流す場合は、CPU が 12 以上（模擬 container の CPU 帯が既定で `0-3` と `4-11`。変えるには `EPGS_PREFLIGHT_CPUSET_A` / `EPGS_PREFLIGHT_CPUSET_B`）と、memory が container 2 つ分（模擬 container は 1 つにつき `--memory=16g`）。
 - `TZ=Asia/Tokyo`。server の test はこの時刻帯を前提にする。
@@ -195,8 +195,8 @@ hosted CI が実行しない検査を含め、公開してよい状態かを手�
 
 | workflow | 実行契機 | 内容 |
 | --- | --- | --- |
-| `.github/workflows/server.yml` | pull request のときだけ | 単一 job `check`（Node 24.18.0）。root の lint・typecheck・format:check |
-| `.github/workflows/client.yml` | pull request のときだけ | 単一 job `check`（Node 24.18.0）。client の lint・typecheck・format:check |
+| `.github/workflows/server.yml` | pull request のときだけ | 単一 job `check`（Node 24.21.0）。root の lint・typecheck・format:check |
+| `.github/workflows/client.yml` | pull request のときだけ | 単一 job `check`（Node 24.21.0）。client の lint・typecheck・format:check |
 | `.github/workflows/docker.yml` | `master` への push と tag（PR では走らない） | Docker image を Docker Hub へ公開する |
 
 - push では `server.yml`・`client.yml` は走らない。push 前に、模擬 container（`bash scripts/ci-rehearsal/setup.sh` で作る）で同じ job を通す。

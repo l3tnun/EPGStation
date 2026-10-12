@@ -226,7 +226,7 @@ Android の設定 -> ユーザー補助 にて "操作の監視" が必要なサ
 
 ## テストと CI（開発者向け）
 
-- 前提: Docker（rootful、buildx）、mise（`mise.toml` の Node 24.18.0 / 26.4.0）、`TZ=Asia/Tokyo`、git の `user.name` / `user.email`。test は `npm run` 経由で起動する。
+- 前提: Docker（rootful、buildx）、mise（`mise.toml` の Node 24.21.0 / 26.11.1）、`TZ=Asia/Tokyo`、git の `user.name` / `user.email`。test は `npm run` 経由で起動する。
 - build: `npm run all-install` で依存を入れ、`npm run build` で server と client を build する。
 - 日常の test: server は `npm run test:server`、client は `cd client && npm run test:run`、両方は `npm run ci`。
 - 全体の検査: `npm run preflight -- --all`。log の directory（起動時に `log:` と表示される）の `summary.tsv` で全 step が `exit=0` であることを確かめる。PR を受けるとき（merge の条件）と公開前に実行する。

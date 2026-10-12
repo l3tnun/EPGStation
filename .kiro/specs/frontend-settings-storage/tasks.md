@@ -1,7 +1,7 @@
 # Implementation Plan
 
 - [x] 1. React frontend foundation と settings storage 基盤を作成する
-  - `client/` に、Node.js 24.18.0 の mise pin、Vite React TypeScript、npm lock、ESLint flat config、Prettier、Vitest、V8 coverage、Playwright/MSW、`@/` alias、`build` / `build:verify` / `check` script gate を置く。
+  - `client/` に、Node.js 24.21.0 の mise pin、Vite React TypeScript、npm lock、ESLint flat config、Prettier、Vitest、V8 coverage、Playwright/MSW、`@/` alias、`build` / `build:verify` / `check` script gate を置く。
   - `build` は Vite production build（`bundle`）、`build:verify` は lint、typecheck、unit test、`build`、`check` は lint、format:check、typecheck、`test:dev-server`、`unittest/spec`、`unittest/imp` を通す構成にする。
   - SettingsStorageRepository、SettingsValidator、DefaultSettingsFactory、AdjacentStorageRegistry の実装境界を用意し、localStorage key `settings` の read/write と JSON parse failure fallback が unit test で観測できる。
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 1.10_

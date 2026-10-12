@@ -1,7 +1,7 @@
 # 詳細については、Dockerfile.debianのコメントを参照。
 # base image は digest で固定する。tag は動くため、同じ Dockerfile が時期によって別の
 # base で build され、手元で通った build と公開される image が別物になり得る。
-FROM --platform=$BUILDPLATFORM node:26-alpine@sha256:2d984a15c9b54fd0aeb608b8e0d0d83529eb34d2966db27a1fb4f1edc3d298a3 AS client-builder
+FROM --platform=$BUILDPLATFORM node:26-alpine@sha256:143494b1da2945f061539253adc65e4f1569ddf07da2d384c022c791a9d90a4a AS client-builder
 COPY client/package*.json /app/client/
 WORKDIR /app/client
 RUN npm config set fetch-retries 10 \
@@ -16,7 +16,7 @@ WORKDIR /app/client
 RUN npm run bundle --loglevel=info \
     && rm -rf node_modules
 
-FROM node:24-alpine@sha256:e67514e5d0f6c46656005e1b693b2ec9d52e80b641307de684d4a015ba7a4eaf AS server-builder
+FROM node:24-alpine@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1 AS server-builder
 RUN apk add --no-cache g++ make pkgconf python3 py3-pip
 # node-sqlite3 が依存する node-gyp が が依存する python3 の distutils 廃止に対応
 # node-sqlite3 が依存する node-gyp が v10 以上になれば不要になる
@@ -46,7 +46,7 @@ RUN rm -rf client
 RUN npm run compile \
     && npm prune --omit=dev
 
-FROM node:24-alpine@sha256:e67514e5d0f6c46656005e1b693b2ec9d52e80b641307de684d4a015ba7a4eaf
+FROM node:24-alpine@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1
 LABEL maintainer="l3tnun"
 COPY --from=server-builder /app /app/
 COPY --from=client-builder /app/client /app/client/

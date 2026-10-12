@@ -56,12 +56,12 @@ jobs:
           echo "$HOME/.local/bin" >>"$GITHUB_PATH"
           "$HOME/.local/bin/mise" trust --quiet
           "$HOME/.local/bin/mise" install
-          "$HOME/.local/bin/mise" exec node@24.18.0 -- node --version
+          "$HOME/.local/bin/mise" exec node@24.21.0 -- node --version
       - name: Install dependencies
-        run: cd client && mise exec node@24.18.0 -- npm ci --ignore-scripts
+        run: cd client && mise exec node@24.21.0 -- npm ci --ignore-scripts
       - name: Lint
-        run: cd client && mise exec node@24.18.0 -- npm run lint
+        run: cd client && mise exec node@24.21.0 -- npm run lint
       - name: Typecheck
-        run: cd client && mise exec node@24.18.0 -- npm run typecheck
+        run: cd client && mise exec node@24.21.0 -- npm run typecheck
       - name: Format check
-        run: cd client && mise exec node@24.18.0 -- npm run format:check
+        run: cd client && mise exec node@24.21.0 -- npm run format:check

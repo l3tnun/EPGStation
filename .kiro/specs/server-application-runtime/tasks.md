@@ -864,13 +864,13 @@ Major 14はDesign §12.3.2を実装する。treeのidは「何を検証したか
         一致すること、作業場所の入力fileを書き換えても`--tree`のdigestが変わらないことをassertする。
     -   確認の前に`bash scripts/ci-rehearsal/setup.sh`で模擬container（既定`epgs-runner-rehearsal`）を用意する。
     -   未commitの変更（`src/**`以外の無害な変更）がある作業場所で、`bash scripts/release-preflight.sh --only deps-prepare`と
-        `scripts/ci-rehearsal/job.sh tree:<CANDIDATE> 24.18.0 server-check -`を実行し、どちらも成功し、`summary.tsv`の`tree=`と
+        `scripts/ci-rehearsal/job.sh tree:<CANDIDATE> 24.21.0 server-check -`を実行し、どちらも成功し、`summary.tsv`の`tree=`と
         containerの`HEAD^{tree}`が`CANDIDATE`と一致することを確かめる。確かめた後に作業場所の変更を手で戻す（gitのcheckout・restore・
         stashを使わない）。
     -   完了時には、未commitの変更がある作業場所でpreflightのstepが失敗せず、全stepが同じ`CANDIDATE`を記録する。
     -   _Requirements: 9.14, 9.17_
     -   _Boundary: Preflight Steps_
-    -   _Verification: `bash scripts/release-preflight.sh --only deps-prepare`、`scripts/ci-rehearsal/job.sh tree:<CANDIDATE> 24.18.0 server-check -`_
+    -   _Verification: `bash scripts/release-preflight.sh --only deps-prepare`、`scripts/ci-rehearsal/job.sh tree:<CANDIDATE> 24.21.0 server-check -`_
     -   _Depends: 14.1, 14.3_
 
 -   [x] 14.5 未commitの変更がある作業場所でNode.js matrixを流し、中身で合否が決まることを確かめる
@@ -941,7 +941,7 @@ Major 14はDesign §12.3.2を実装する。treeのidは「何を検証したか
 | 14.1 | `scripts/server-test/worktree-content.mjs`<br>`test/server/application-runtime/spec/worktree-content.spec.test.ts` | `unittest/spec` | `13.4` | `npm run test:server:spec -- test/server/application-runtime/spec/worktree-content.spec.test.ts` |
 | 14.2 | `scripts/server-test/run-tests.mjs`<br>`scripts/server-test/compiled-snapshot-coverage.mjs`<br>`scripts/server-test/run-coverage-gate-cli.mjs`<br>`test/server/application-runtime/spec/coverage-command-terminal.test.ts`<br>`test/server/application-runtime/spec/compiled-snapshot-coverage.test.ts` | `unittest/spec` | `14.1` | `npm run test:server:spec -- test/server/application-runtime/spec/coverage-command-terminal.test.ts`<br>`npm run test:server:spec -- test/server/application-runtime/spec/compiled-snapshot-coverage.test.ts` |
 | 14.3 | `scripts/server-test/run-node-acceptance-matrix.mjs`<br>`test/server/application-runtime/spec/coverage-command-terminal.test.ts` | `unittest/spec` | `14.1` | `npm run test:server:spec -- test/server/application-runtime/spec/coverage-command-terminal.test.ts` |
-| 14.4 | `scripts/release-preflight.sh`<br>`scripts/ci-rehearsal/job.sh`<br>`scripts/ci-rehearsal/image-digest.mjs`<br>`test/server/application-runtime/spec/image-digest.spec.test.ts` | preflightのstepと模擬runnerの実行 | `14.1, 14.3` | `bash scripts/release-preflight.sh --only deps-prepare`<br>`scripts/ci-rehearsal/job.sh tree:<CANDIDATE> 24.18.0 server-check -` |
+| 14.4 | `scripts/release-preflight.sh`<br>`scripts/ci-rehearsal/job.sh`<br>`scripts/ci-rehearsal/image-digest.mjs`<br>`test/server/application-runtime/spec/image-digest.spec.test.ts` | preflightのstepと模擬runnerの実行 | `14.1, 14.3` | `bash scripts/release-preflight.sh --only deps-prepare`<br>`scripts/ci-rehearsal/job.sh tree:<CANDIDATE> 24.21.0 server-check -` |
 | 14.5 | なし（判定のみ） | Node.js 24・26のcell | `13.4, 14.2, 14.3` | `node scripts/server-test/run-node-acceptance-matrix.mjs` |
 
 ## Implementation Notes
