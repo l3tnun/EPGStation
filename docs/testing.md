@@ -211,6 +211,6 @@ hosted CI が実行しない検査を含め、公開してよい状態かを手�
 ## 8. preflight に含まれないもの
 
 - 実機の device suite: [client/device/README.md](../client/device/README.md)。
-- `docker.yml` が公開する arm 系（`linux/arm/v6`・`linux/arm/v7`・`linux/arm64`）の build: 手元では確かめていない。Docker image の確認（§5）は `linux/amd64` だけを対象にする。
+- `docker.yml` が公開する arm64（`linux/arm64`）の build: 手元では確かめていない。Docker image の確認（§5）は `linux/amd64` だけを対象にする。
 - mutation testing（§5）: 手動または定期で流す。preflight の合否には数えない。
 - commit 時の秘密情報・個人情報の検査: [docs/betterleaks.md](betterleaks.md)。pre-commit hook が staged な変更を検査する。

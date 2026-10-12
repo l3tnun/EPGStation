@@ -59,6 +59,8 @@ sqlite3 パッケージのインストール時にバイナリが存在しなか
 -   ~~for Windows~~
     -   ~~[windows-build-tools](https://npmjs.com/package/windows-build-tools) node-gyp にて必要~~
 
+v3 の Docker image は linux/amd64 と linux/arm64 向けです。32-bit ARM（linux/arm/v6、linux/arm/v7）の image は提供しません。Node.js 24 以降が 32-bit ARM 向けの build を公開していないためです。
+
 ### 構築済み推奨環境
 
 -   [docker-mirakurun-epgstation](https://github.com/l3tnun/docker-mirakurun-epgstation)

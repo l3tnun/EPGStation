@@ -1250,9 +1250,9 @@ jobs:
           - debian
         include:
           - distro: alpine
-            platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8
+            platforms: linux/amd64,linux/arm64/v8
           - distro: debian
-            platforms: linux/amd64,linux/arm/v7,linux/arm64/v8
+            platforms: linux/amd64,linux/arm64/v8
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

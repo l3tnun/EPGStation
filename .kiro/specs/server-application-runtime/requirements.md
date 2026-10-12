@@ -248,7 +248,7 @@ coverage の計測の道具を一度だけ所有して提供し、本機能自�
 #### Acceptance Criteria
 
 1. When `master` branch へ push されたとき, or git tag が作られたとき, the 公開用 image の構築 shall GitHub Actions で `Dockerfile.debian` と `Dockerfile.alpine` のそれぞれから image を構築して Docker Hub へ公開する
-2. The 公開用 image の構築 shall Debian 版を linux/amd64・linux/arm/v7・linux/arm64/v8 向けに、Alpine 版を linux/amd64・linux/arm/v6・linux/arm/v7・linux/arm64/v8 向けに構築する
+2. The 公開用 image の構築 shall Debian 版・Alpine 版のどちらも linux/amd64・linux/arm64/v8 向けに構築する（Node.js 24 以降は 32-bit ARM の公式 build を提供しないため、linux/arm/v6・linux/arm/v7 は対象外とする）
 3. When `master` branch へ push されたとき, the 公開用 image の構築 shall `<branch>-debian`・`<branch>-alpine` の tag を付け、Debian 版には `<branch>` の tag も付ける
 4. When git tag が作られたとき, the 公開用 image の構築 shall `<tag>-debian`・`<tag>-alpine`・`debian`・`alpine` の tag を付け、Debian 版には `<tag>` と `latest` の tag も付ける
 5. While pull request の検査を行うとき, the 公開用 image の構築 shall 実行しない
