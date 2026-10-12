@@ -100,7 +100,7 @@ PR の `check` job（§7）が実行する検査と同じ。
 - DB の class の単体 test は query builder を偽物にしているので、`mutation:db` は persistence の単体 test に加えて、実 DB で query の正しさを見る結合 test（`persistence/{repositories,queries,transactions,storage-deletion-candidate,doubles-parity}.integration.test.ts`）も流す。結合 test が mutant ごとに container を作らないよう、MySQL 9.7 を先に起動したままにする。`docker run --rm --name <名前> --publish 127.0.0.1:<port>:3306 --tmpfs /var/lib/mysql:rw,nosuid,nodev,size=1g --env MYSQL_ROOT_PASSWORD=<password> mysql:9.7 --innodb_use_native_aio=0 --max-connections=400` で立て、環境変数 `EPGS_TEST_MYSQL_*`（`_HOST`・`_PORT`・`_USER`〈既定 root〉・`_PASSWORD`）で接続先を渡す。test は接続先に無作為の名前の database を作って消す。run が終わったら container を止める。製品に MySQL と MariaDB を区別する code は無く、mutant が通る経路は同じなので、MariaDB 12.3 の接続先にも同じ MySQL を使い回す（MariaDB 固有の解釈の違いは通常の結合 test の suite が毎回確かめる）。この環境変数は DB の結合 test 全般が読む（未指定なら今までどおり test が container を作る）。ただし TLS 専用の利用者や CA 証明書を使う test（`connection-ssl`・`orm-cli`）は、この変数を付けずに流す。
 - 配信の本体は、process の起動・file の書き出し・HTTP の配信を確かめる結合 test（`media-delivery/*.integration.test.ts` など。Docker は使わない）が単体 test だけでは見えない動作を覆っているので、`mutation:delivery` は単体 test に加えてそれらを流す。dry-run が約 6 分、11 file・約 1,400 mutant で約 50 分かかる。
 - それ以外は単体 test（spec・imp）だけを流す。server は mutant を入れた `src` を sandbox で compile して test に読ませるため、最初に build の時間がかかる。全 test を直列に流す確認（dry-run）が毎回あり、server は約 5 分、client は約 6 分が下限になる。
-- 既定は `ignoreStatic: true`（module 先頭の定数表の mutant を除く）と `concurrency: 2`。memory は server で約 5 GB、client で約 2 GB になるので、ほかの重い run と同時に流さない。
+- 既定は `ignoreStatic: true`（module 先頭の定数表の mutant を除く）と `concurrency: 2`。memory は server で約 5 GB、client で約 2 GB になるので、ほかの重い run と同時に流さない。client は test の runner 1 本あたり約 1 GB 増える（`concurrency` 2 で約 2 GB、6 では約 6.4 GB に達し、process ごとの memory の上限を超えうる）ので、`concurrency` を上げるときは上限を確かめる。
 - module 先頭の定数表の mutant（report の `static: true`）は、この設定では判定できない。`ignoreStatic` でもその行を覆う test だけで実行されるが、module の読み込みが mutant の有効化より先に済むため、test が値を確かめていても「生き残った」と出る。端末の表の score にも数えられるので、定数表の多い file の score は低く出る。定数表の値は、値そのものを確かめる test で守る（Stryker の結果では確かめられない）。
 - cache は git の管理外。`EPGS_MUTATION_INCREMENTAL_FILE` で場所を変えられる。消えても全 mutant を流し直すだけで結果は変わらない。cache は run の最後にだけ書かれるので、途中で止めた run の結果は残らない（長い run は対象を分けて流す）。
 - cache は、test を足しても前回の生き残りを流し直さないことがある。足した test が mutant を殺すかを確かめるときは、対象を絞って `--force` を付けて流す（例: `npm run mutation:server -- --force --mutate src/util/StrUtil.ts`）。
@@ -120,6 +120,23 @@ PR の `check` job（§7）が実行する検査と同じ。
     ```
 
     server・DB・配信の本体も同じ形で、`htmlReporter` の `fileName` も分ける。`.stryker-tmp*` は各設定の `ignorePatterns` と git の無視、client の lint・format の無視に入っている（root の lint・format は `src/` などだけを見る）ので、並んだ sandbox が別の run へ複製されたり検査の対象になったりはしない。同時に流すと CPU が飽和して最初の dry-run が遅くなり、設定の `dryRunTimeoutMinutes`（30 分）を超えて止まることがある。その場合は同じ設定 file でこの値を上げるか、同時の本数を減らす。CPU が飽和すると、dry-run の中の test が vitest の既定の 5 秒の時間制限で落ちて run が止まることもある（build 済みの module を最初に読み込む時間がその test の時間に入る test がある）。同時に動く worker の数（各 run の `concurrency` の合計）は CPU の数より少なくする。memory も run の数だけ要る（上の目安）。
+- client の全 file を 1 回の run で流すと長く、cache は最後にしか書かれないので、途中で止まると全部を失う。全 file の一覧を何個かに分けて流す。各部分は、上の例と同じく、`mutate` の部分、cache、report、sandbox を部分ごとに持つ設定 file にし、`base.mutate` を `PART` 環境変数で切る（`PART` は 0 から `PARTS - 1`）。例（`client/` に置く）:
+
+    ```js
+    import base from './stryker.client.config.mjs'
+
+    const part = Number(process.env.PART ?? 0)
+    const parts = Number(process.env.PARTS ?? 4)
+    const name = `part${part}`
+
+    export default {
+      ...base,
+      mutate: base.mutate.filter((_, index) => index % parts === part),
+      incrementalFile: `.artifacts/mutation/incremental-${name}.json`,
+      tempDirName: `.stryker-tmp-${name}`,
+      jsonReporter: { fileName: `reports/mutation/${name}/report.json` },
+    }
+    ```
 - 結果は端末の表と `reports/mutation/` の report（server は `reports/mutation/server/report.html`、client は `client/reports/mutation/report.json`）に出る。生き残った mutant を読み、test を足す、または等価・冗長として記録する。
 - report の json は `node scripts/mutation/summarize.mjs <report.json> [<file の部分文字列>]` で集計できる。file ごとの mutant 数・Killed・Survived・NoCoverage・Timeout・score と、生き残りの一覧（行・mutator・置き換え後・static かどうか）が出る。
 - 既知の生き残り（test を足さないと判断して理由を付けたもの）は [mutation-known-survivors.md](mutation-known-survivors.md) にある。流した後は集計の生き残りをこの一覧と見比べ、載っていないものだけを扱う。対象 file の決め方と新しい module を足す手順は、steering の Mutation Testing 節（server・DB は `.kiro/steering/server-testing.md`、client は `.kiro/steering/testing.md`）にある。
