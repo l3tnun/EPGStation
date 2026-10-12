@@ -90,6 +90,16 @@ v3 の Docker image は linux/amd64 と linux/arm64 向けです。32-bit ARM（
     $ npm run build
     ```
 
+更新の前に、v2 から更新する場合は [docs/migration-v2-to-v3.md](docs/migration-v2-to-v3.md) を確認してください
+
+---
+
+## v2 からの移行について
+
+v2 から v3 へ更新するには、データベースと `config/` のバックアップ、Node.js 24 以上への更新、
+`config/enc.js` の更新（`require` を `import` へ）が必要です  
+詳しくは [docs/migration-v2-to-v3.md](docs/migration-v2-to-v3.md) を参照してください
+
 ---
 
 ## v1 からの移行について
