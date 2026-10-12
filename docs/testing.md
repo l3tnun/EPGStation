@@ -102,7 +102,7 @@ PR の `check` job（§7）が実行する検査と同じ。
 - それ以外は単体 test（spec・imp）だけを流す。server は mutant を入れた `src` を sandbox で compile して test に読ませるため、最初に build の時間がかかる。全 test を直列に流す確認（dry-run）が毎回あり、server は約 5 分、client は約 6 分が下限になる。
 - 既定は `ignoreStatic: true`（module 先頭の定数表の mutant を除く）と `concurrency: 2`。memory は server で約 5 GB、client で約 2 GB になるので、ほかの重い run と同時に流さない。client は test の runner 1 本あたり約 1 GB 増える（`concurrency` 2 で約 2 GB、6 では約 6.4 GB に達し、process ごとの memory の上限を超えうる）ので、`concurrency` を上げるときは上限を確かめる。
 - module 先頭の定数表の mutant（report の `static: true`）は、この設定では判定できない。`ignoreStatic` でもその行を覆う test だけで実行されるが、module の読み込みが mutant の有効化より先に済むため、test が値を確かめていても「生き残った」と出る。端末の表の score にも数えられるので、定数表の多い file の score は低く出る。定数表の値は、値そのものを確かめる test で守る（Stryker の結果では確かめられない）。
-- cache は git の管理外。`EPGS_MUTATION_INCREMENTAL_FILE` で場所を変えられる。消えても全 mutant を流し直すだけで結果は変わらない。cache は run の最後にだけ書かれるので、途中で止めた run の結果は残らない（長い run は対象を分けて流す）。
+- cache は git の管理外。`EPGS_MUTATION_INCREMENTAL_FILE` で場所を変えられる。消えても全 mutant を流し直すだけで結果は変わらない。run を止めたときは、Stryker がそこまでの結果を書き出そうとするので、途中までの結果が残ることがある。書き出しが終わる前に process が kill されると、途中で切れた（不正な JSON の）file が残り、次の run が `ProjectReader.readIncrementalReport` の `SyntaxError` で、始まってすぐ失敗する。そのときは、その file を消すか、`EPGS_MUTATION_INCREMENTAL_FILE` を別の場所へ向ける（新しい file になるだけで、全 mutant が流し直しになる）。長い run は対象を分けて流す。
 - cache は、test を足しても前回の生き残りを流し直さないことがある。足した test が mutant を殺すかを確かめるときは、対象を絞って `--force` を付けて流す（例: `npm run mutation:server -- --force --mutate src/util/StrUtil.ts`）。
 - 同じ checkout で複数の run を同時に流すときは、cache・report・sandbox の場所を run ごとに分ける。分けないと、cache と report を互いに上書きし、server・DB・配信の本体の設定は sandbox（`.stryker-tmp`）も共有する。cache は `EPGS_MUTATION_INCREMENTAL_FILE` で分けられるが、report と sandbox は command の引数で変えられないので、元の設定を読み込んで上書きする設定 file を run ごとに作り、`npx stryker run <その file>` で流す（作った file は commit しない）。client の例（`client/` に置く）:
 
@@ -120,7 +120,7 @@ PR の `check` job（§7）が実行する検査と同じ。
     ```
 
     server・DB・配信の本体も同じ形で、`htmlReporter` の `fileName` も分ける。`.stryker-tmp*` は各設定の `ignorePatterns` と git の無視、client の lint・format の無視に入っている（root の lint・format は `src/` などだけを見る）ので、並んだ sandbox が別の run へ複製されたり検査の対象になったりはしない。同時に流すと CPU が飽和して最初の dry-run が遅くなり、設定の `dryRunTimeoutMinutes`（30 分）を超えて止まることがある。その場合は同じ設定 file でこの値を上げるか、同時の本数を減らす。CPU が飽和すると、dry-run の中の test が vitest の既定の 5 秒の時間制限で落ちて run が止まることもある（build 済みの module を最初に読み込む時間がその test の時間に入る test がある）。同時に動く worker の数（各 run の `concurrency` の合計）は CPU の数より少なくする。memory も run の数だけ要る（上の目安）。
-- client の全 file を 1 回の run で流すと長く、cache は最後にしか書かれないので、途中で止まると全部を失う。全 file の一覧を何個かに分けて流す。各部分は、上の例と同じく、`mutate` の部分、cache、report、sandbox を部分ごとに持つ設定 file にし、`base.mutate` を `PART` 環境変数で切る（`PART` は 0 から `PARTS - 1`）。例（`client/` に置く）:
+- client の全 file を 1 回の run で流すと長く、止めたり kill したりしたときに cache が失われたり壊れたりすることがある。分けると、各部分の cache が小さく独立するので、1 つの部分の失敗が他に及ばない。全 file の一覧を何個かに分けて流す。各部分は、上の例と同じく、`mutate` の部分、cache、report、sandbox を部分ごとに持つ設定 file にし、`base.mutate` を `PART` 環境変数で切る（`PART` は 0 から `PARTS - 1`）。例（`client/` に置く）:
 
     ```js
     import base from './stryker.client.config.mjs'

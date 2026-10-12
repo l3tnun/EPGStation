@@ -567,7 +567,7 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 
 | 処理の場所 | mutator | 理由 |
 | --- | --- | --- |
-| `buildManualReserveAddPayload` の `parsedTimeSpecifiedOption?.success` を含む条件 | OptionalChaining、ConditionalExpression、LogicalOperator | 冗長: `isTimeSpecification` が true のとき `parsedTimeSpecifiedOption` は必ず null でない（`?.` は型のための記述）。false のとき `&&` は短絡する |
+| `buildManualReserveAddPayload` の `parsedTimeSpecifiedOption?.success` を含む 2 つの条件（失敗の判定 `isTimeSpecification ? parsedTimeSpecifiedOption?.success !== true : ...` の `?.` と、payload を組む `isTimeSpecification && parsedTimeSpecifiedOption?.success === true`） | OptionalChaining、ConditionalExpression、LogicalOperator | 冗長: `isTimeSpecification` が true のとき `parsedTimeSpecifiedOption` は必ず null でない（`?.` は型のための記述）。false のとき `&&` は短絡する |
 
 ### `src/features/reserves/lib/reserveSelection.ts`
 
@@ -607,8 +607,8 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 
 | 処理の場所 | mutator | 理由 |
 | --- | --- | --- |
-| `RECORDING_QUERY_KEY`・`RECORDING_FAILURE_MESSAGE`、`ENCODE_FAILURE_MESSAGE`、`STORAGES_FAILURE_MESSAGE`、`RESERVES_QUERY_KEY`・各 message・`RESERVES_ROUTE_TITLES`（予約の種別の題名） | StringLiteral、ArrayDeclaration、ObjectLiteral、ArrowFunction | 定数表で判定できない: module の読み込み時に評価される式。取得失敗・更新の文言と予約の種別の題名は値を確かめる test がある |
-| `parseReservesType` の先頭の `normal` の判定 | ConditionalExpression | 冗長: 外しても続く既定の分岐が同じ値を返す |
+| `RECORDING_FAILURE_MESSAGE`、`ENCODE_FAILURE_MESSAGE`、`STORAGES_FAILURE_MESSAGE`、`RESERVES_FAILURE_MESSAGE` ほかの各 message、`RESERVES_ROUTE_TITLES`（予約の種別の題名） | StringLiteral、ObjectLiteral、ArrowFunction | 定数表で判定できない: module の読み込み時に評価される式。取得失敗・更新の文言と予約の種別の題名は値を確かめる test がある |
+| `parseReservesType` の先頭の `normal` の判定（`value === 'normal'` と、その `'normal'` の文字列） | ConditionalExpression、StringLiteral | 冗長: 外しても続く既定の分岐が同じ値を返す |
 | `formatStorageSize` の `value > 0`（`>= 0` との違い） | EqualityOperator | 振る舞いが変わらない: 0 のとき同じ |
 
 ### `src/features/recorded/requests/`（`addEncode.ts`、`bulkDelete.ts`、`fileSize.ts`、`searchPath.ts`、`uploadForm.ts`）
@@ -667,7 +667,8 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 | `createFullRoutePathFromBrowserHash` の `replace(/^#/, '')` の `^` | Regex | 冗長: hash は必ず `#` で始まる |
 | `createTimestampNormalizedRoutePath` の `location.pathname === ''` | ConditionalExpression、StringLiteral | 到達不能: router は空の pathname を `/` にして渡すので、空の pathname は来ない（report は `static` と報告するが、関数の中の式で定数ではない） |
 | `memoryScrollHistory.ts` の `getScrollData` の `savedScrollData === null ? null : ...` | ConditionalExpression | 振る舞いが変わらない: 保存値が null のとき `null as T` が null |
-| `sessionScrollHistory.ts` の `isScrollPosition`・`isScrollHistoryEntry` の `typeof value !== 'object' \|\| value === null` | ConditionalExpression、LogicalOperator | 冗長: 非 object の項目は後続の型の検査で落ちる |
+| `sessionScrollHistory.ts` の `isScrollPosition` の `typeof value !== 'object' \|\| value === null` | ConditionalExpression | 冗長: 非 object の値は後続の `position.x` が undefined になって型の検査で落ちる。null は呼び出し元が `entry.position === null` で先に除くため来ない（`isScrollHistoryEntry` の同じ式は test が殺している） |
+| `readStoredHistory` の `rawValue === null` の判定（block を含む） | ConditionalExpression、BlockStatement | 冗長: 外しても `JSON.parse(null)` は null を返し、続く `parsed.history` が例外を投げて、catch の既定値（同じ中身）に戻る |
 | `readStoredHistory` の既定の履歴 `history: []` | ArrayDeclaration | 振る舞いが変わらない: 履歴の既定配列に文字列を入れても `slice(0, 0)` で捨てられる |
 | `getScrollData` の `currentEntry === null \|\| currentEntry.data === null` | ConditionalExpression | 振る舞いが変わらない: データが null のとき `return null` と `return currentEntry.data` が同じ |
 | `SCROLL_HISTORY_STORAGE_KEY` ほか module 先頭の定数 | StringLiteral | 定数表で判定できない: module の読み込み時に評価される式。保存 key は test が確かめている |
