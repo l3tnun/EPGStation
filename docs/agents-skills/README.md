@@ -124,7 +124,6 @@ npx cc-sdd@latest --codex-skills --lang ja --dry-run
 - `.agents/skills/kiro-spec-design/SKILL.md`
 - `.agents/skills/kiro-spec-tasks/SKILL.md`
 - `.agents/skills/kiro-review/SKILL.md`
-- `.codex/agents/spec-reviewer.toml`
 - `.kiro/settings/templates/specs/*.md`
 - `AGENTS.md`
 
