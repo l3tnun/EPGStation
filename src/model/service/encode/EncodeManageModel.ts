@@ -25,6 +25,13 @@ interface RecordedUseLease {
     terminalPromise?: Promise<void>;
 }
 
+/** 待機中のエンコードを開始しない時間帯。0 時からの経過分で、`start` 以上 `end` 未満を表す
+ *  （`start` 0〜1,439、`end` 0〜1,440。`start > end` は日付を跨ぐ）。 */
+interface EncodeSuspendTime {
+    start: number;
+    end: number;
+}
+
 /** `IRecordedResourceUsePort` 未注入時に使う no-op 実装。録画ファイルの使用権管理
  *  （録画中ファイルの排他等）が導入される前の挙動（常に許可・何もしない解放）を再現する。 */
 const legacyRecordedResourceUsePort: IRecordedResourceUsePort = {
@@ -49,6 +56,11 @@ class EncodeManageModel implements IEncodeManageModel {
     private concurrentEncodeNum: number;
     /** 受け付けられる queue（`admissionReservations` + `waitQueue`）の総数上限。 */
     private encodeQueueLimit: number;
+    /** 待機中のエンコードを開始しない時間帯。config.yml の `encodeSuspendTimes` を constructor で
+     *  一度だけ検証して経過分へ変換する。省略時は空配列（停止時間帯なし）。 */
+    private encodeSuspendTimes: EncodeSuspendTime[];
+    /** 停止時間帯の終了時に待機列を再確認する timer。同時に一つだけ持つ。 */
+    private suspendResumeTimer: ReturnType<typeof setTimeout> | null = null;
     /** `push` が受理判定から `waitQueue` への追加までの間、queue 上限の空き枠を
      *  先取りしておくための予約数。`waitQueue.length` に含まれない分をここで数えることで、
      *  非同期処理中の要求が上限判定をすり抜けて二重に受理されるのを防ぐ。 */
@@ -93,12 +105,15 @@ class EncodeManageModel implements IEncodeManageModel {
             throw new Error('InvalidEncodeQueueLimit');
         }
         this.encodeQueueLimit = encodeQueueLimit;
+        this.encodeSuspendTimes = Object.prototype.hasOwnProperty.call(config, 'encodeSuspendTimes')
+            ? EncodeManageModel.parseSuspendTimes(config.encodeSuspendTimes)
+            : [];
         this.encoderModelProvider = encoderModelProvider;
         this.encodeEvent = encodeEvent;
         this.recordedResourceUsePort = recordedResourceUsePort ?? legacyRecordedResourceUsePort;
         this.encodeFinishModel = encodeFinishModel ?? null;
 
-        this.listener.on(EncodeManageModel.NEEDS_CHECK_QUEUE_EVENT, this.checkQueue.bind(this));
+        this.listener.on(EncodeManageModel.NEEDS_CHECK_QUEUE_EVENT, this.requestCheckQueue.bind(this));
     }
 
     /**
@@ -278,6 +293,73 @@ class EncodeManageModel implements IEncodeManageModel {
                 this.emitNeedsCheckQueue();
             }
         }
+    }
+
+    /**
+     * 待機列確認の要求を受ける。開始できる待機依頼があっても停止時間帯の間は確認せず、時間帯の終了時に
+     * 再確認する timer を設定する
+     * @return Promise<void>
+     */
+    private requestCheckQueue(): Promise<void> {
+        if (this.runningQueue.length < this.concurrentEncodeNum && this.waitQueue.length > 0) {
+            const now = new Date();
+            const suspendRemainingMinutes = this.getSuspendRemainingMinutes(now);
+            if (suspendRemainingMinutes !== null) {
+                this.scheduleSuspendResume(now, suspendRemainingMinutes);
+
+                return Promise.resolve();
+            }
+        }
+
+        return this.checkQueue();
+    }
+
+    /**
+     * 現在時刻を含む停止時間帯のうち、最も早く終わるものの終了までの分数を返す
+     * @param now: 現在時刻 (ローカル時刻の時・分で判定する)
+     * @return number | null 停止時間帯に含まれなければ null
+     */
+    private getSuspendRemainingMinutes(now: Date): number | null {
+        const current = now.getHours() * 60 + now.getMinutes();
+        let remaining: number | null = null;
+        for (const range of this.encodeSuspendTimes) {
+            const isInRange =
+                range.start < range.end
+                    ? range.start <= current && current < range.end
+                    : current >= range.start || current < range.end;
+            if (isInRange === false) {
+                continue;
+            }
+
+            // 日付を跨ぐ時間帯で終了が翌日側にある場合は 1 日分を足す
+            const minutes = range.end > current ? range.end - current : range.end + 24 * 60 - current;
+            remaining = remaining === null ? minutes : Math.min(remaining, minutes);
+        }
+
+        return remaining;
+    }
+
+    /**
+     * 停止時間帯の終了時に待機列を再確認する timer を設定する。既に設定済みなら何もしない
+     * @param now: 停止時間帯と判定した時刻
+     * @param remainingMinutes: 停止時間帯の終了までの分数
+     */
+    private scheduleSuspendResume(now: Date, remainingMinutes: number): void {
+        if (this.suspendResumeTimer !== null) {
+            return;
+        }
+
+        const delay = remainingMinutes * 60 * 1000 - (now.getSeconds() * 1000 + now.getMilliseconds());
+        this.suspendResumeTimer = setTimeout(() => {
+            this.suspendResumeTimer = null;
+
+            // 待機列確認は一回につき一件だけ開始するため、空き枠の数だけ確認を要求する
+            const checkCount = Math.min(this.concurrentEncodeNum - this.runningQueue.length, this.waitQueue.length);
+            for (let i = 0; i < checkCount; i++) {
+                this.emitNeedsCheckQueue();
+            }
+        }, delay);
+        this.suspendResumeTimer.unref();
     }
 
     /**
@@ -678,6 +760,57 @@ namespace EncodeManageModel {
     export const ENCODE_PRIPORITY = 10;
     export const DEFAULT_TIMEOUT_RATE = 4.0;
     export const DEFAULT_QUEUE_LIMIT = 1024;
+
+    /**
+     * config.yml の `encodeSuspendTimes` を検証し、0 時からの経過分へ変換する
+     * @param value: 設定値
+     * @return EncodeSuspendTime[]
+     * @throws Error InvalidEncodeSuspendTimes 配列でない、または不正な要素を含む場合
+     */
+    export const parseSuspendTimes = (value: unknown): EncodeSuspendTime[] => {
+        if (Array.isArray(value) === false) {
+            throw new Error('InvalidEncodeSuspendTimes');
+        }
+
+        return value.map(range => {
+            if (typeof range !== 'object' || range === null || Array.isArray(range) === true) {
+                throw new Error('InvalidEncodeSuspendTimes');
+            }
+
+            const start = parseSuspendMinutes(range.start, 23 * 60 + 59);
+            const end = parseSuspendMinutes(range.end, 24 * 60);
+            if (start === null || end === null || start === end) {
+                throw new Error('InvalidEncodeSuspendTimes');
+            }
+
+            return { start, end };
+        });
+    };
+
+    /**
+     * HH:mm 形式の時刻を 0 時からの経過分へ変換する
+     * @param value: 時刻
+     * @param maximum: 許可する最大の経過分
+     * @return number | null 形式外または範囲外なら null
+     */
+    const parseSuspendMinutes = (value: unknown, maximum: number): number | null => {
+        if (typeof value !== 'string') {
+            return null;
+        }
+
+        const match = /^(\d{2}):(\d{2})$/u.exec(value);
+        if (match === null) {
+            return null;
+        }
+
+        const hours = Number(match[1]);
+        const minutes = Number(match[2]);
+        if (minutes > 59 || hours * 60 + minutes > maximum) {
+            return null;
+        }
+
+        return hours * 60 + minutes;
+    };
 }
 
 export default EncodeManageModel;

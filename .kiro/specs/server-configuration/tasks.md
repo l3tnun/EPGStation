@@ -141,6 +141,22 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
     -   _Boundary: storage timeout raw configuration provider contract・complete snapshot・cross-spec verification_
     -   _Depends: 4.1_
 
+-   [x] 4.3 エンコード停止時間帯の既定値と検証を一単位で追加する
+
+    -   `encodeSuspendTimes` の省略時の空配列、境界 `00:00`・`23:59`（`start`）と `24:00`（`end`）の受理、明示 `null`、
+        配列以外、object でない要素、`start`・`end` の欠落と文字列以外、1桁の時、`24:00` の `start`、範囲外、同時刻の拒否を、
+        target `unittest/spec` と `unittest/imp` が検証する。
+    -   `src/model/IConfigFile.ts`、`src/model/Configuration.ts`、および `config/config.yml.template` へ、型、補完・検証、
+        標準設定（記載例のcomment）を実装する。
+    -   完全な設定複製へ含め、公開設定 schema や公開 API へ追加しない。時間帯の意味と開始の保留は `server-encoding` に残
+        し、この task では default、型、検証、および設定取得契約だけを変更する。
+    -   初回の不正値は設定提供前に `ConfigValueError:encodeSuspendTimes` とし、再読み込みの不正値は候補だけを破棄して直前
+        値を維持する。
+    -   完了時には、境界値が成功し、不正値の全fixtureが設定エラーとなり、公開結果のshapeが変わらないことを観測できる。
+    -   _Requirements: 7.10, 7.11, 7.12, 7.13, 7.14_
+    -   _Boundary: 起動時スナップショット設定・標準値・候補検証_
+    -   _Depends: 4.1_
+
 -   [x] 5. 設定ライフサイクルを実ファイル境界で結合検証する
 -   [x] 5.1 初回読込、再読み込み、再起動相当の切替を結合検証する
 
@@ -168,18 +184,18 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
 -   [x] 6. 設定管理固有testを共有server品質gateへ接続する
 -   [x] 6.1 正式な機能固有test inventoryを作り`unittest/spec`を完成させる
 
-    -   `test/server/configuration/configuration.spec.test.ts`にRequirements 1から7の全38 ACと主case、補助
+    -   `test/server/configuration/configuration.spec.test.ts`にRequirements 1から7の全41 ACと主case、補助
         case、fixture、期待する戻り値・error・状態・effectを一意に対応付け、未割当ACを0件にする。対応表は同fileの
-        `[CFG-6.1-AC-TRACE]`が持ち、AC 1.1から7.12の38個の鍵ごとに、同directoryの`*.test.ts`に実在するcase IDを引き、
+        `[CFG-6.1-AC-TRACE]`が持ち、AC 1.1から7.14の41個の鍵ごとに、同directoryの`*.test.ts`に実在するcase IDを引き、
         `CFG-4.2-*`の補助caseを含まないこと、およびskip・todoのcaseが無いことを検査する。
     -   同fileで、読込・補完・正規化、HTTP/HTTPS最低条件、独立複製、再読み込み中の旧設定・成功後の新設定・失敗後の直前設
-        定、公開allowlist、外部コマンド解釈、および6項目の既定値・検証・起動時保持を外部契約として検証する。
+        定、公開allowlist、外部コマンド解釈、6項目と`encodeSuspendTimes`の既定値・検証・起動時保持を外部契約として検証する。
     -   `test/server/fixtures/configuration/`には実秘密情報と実運用pathを含まない合成YAML、鍵、証明書だけを配置し、
-        templateと実行fileはtestが一時directoryに作って回収する。Designの補足case（`CFG-4.2-*`）は正式trace外のままとし、38 ACの
+        templateと実行fileはtestが一時directoryに作って回収する。Designの補足case（`CFG-4.2-*`）は正式trace外のままとし、41 ACの
         inventory、Requirement 8のmatrix、case件数へ加えない。
-    -   完了時には、正式inventoryから全38 ACを成功したnamed caseへ逆引きでき、未割当、根拠のないskip、および補助
+    -   完了時には、正式inventoryから全41 ACを成功したnamed caseへ逆引きでき、未割当、根拠のないskip、および補助
         caseの正式trace混入がいずれも0件である。
-    -   _Depends: 1.1, 1.2, 1.3, 2.1, 2.2, 3.1, 3.2, 4.1, 4.2, 5.1, 5.2_
+    -   _Depends: 1.1, 1.2, 1.3, 2.1, 2.2, 3.1, 3.2, 4.1, 4.2, 4.3, 5.1, 5.2_
     -   _Requirements: 8.1_
 
 -   [x] 6.2 省略値・値域・複製・正規化の分岐を`unittest/imp`で完成させる
@@ -257,9 +273,10 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
 | 3.2  | `src/util/ProcessUtil.ts`<br>`test/server/configuration/configuration.spec.test.ts`<br>`test/server/configuration/implementation.test.ts`                                                                                                      | `unittest/spec`<br>`unittest/imp`                  | なし（共有foundationのみ）                              | `npm run test:server:spec -- test/server/configuration/configuration.spec.test.ts`<br>`npm run test:server:imp -- test/server/configuration/implementation.test.ts`                                                                                                                                                                                             |
 | 4.1  | `src/model/IConfigFile.ts`<br>`src/model/Configuration.ts`<br>`config/config.yml.template`<br>`test/server/configuration/configuration.spec.test.ts`<br>`test/server/configuration/implementation.test.ts`                                     | `unittest/spec`<br>`unittest/imp`                  | `1.1, 1.2, 2.1, 3.1`                                    | `npm run test:server:spec -- test/server/configuration/configuration.spec.test.ts`<br>`npm run test:server:imp -- test/server/configuration/implementation.test.ts`                                                                                                                                                                                             |
 | 4.2  | `src/model/IConfigFile.ts`<br>`src/model/Configuration.ts`<br>`config/config.yml.template`<br>`test/server/configuration/storage-timeout-provider.cross-spec.test.ts`                                                                          | `unittest/spec`                                    | `4.1`                                                   | `npm run test:server:spec -- test/server/configuration/storage-timeout-provider.cross-spec.test.ts`                                                                                                                                                                                                                                                             |
+| 4.3  | `src/model/IConfigFile.ts`<br>`src/model/Configuration.ts`<br>`config/config.yml.template`<br>`test/server/configuration/configuration.spec.test.ts`<br>`test/server/configuration/implementation.test.ts` | `unittest/spec`<br>`unittest/imp` | `4.1` | `npm run test:server:spec -- test/server/configuration/configuration.spec.test.ts`<br>`npm run test:server:imp -- test/server/configuration/implementation.test.ts` |
 | 5.1  | `test/server/configuration/filesystem.integration.test.ts`                                                                                                                                                                                     | `integration`                                      | `4.1`                                                   | `npm run test:server:integration -- test/server/configuration/filesystem.integration.test.ts`                                                                                                                                                                                                                                                                   |
 | 5.2  | `test/server/configuration/configuration.spec.test.ts`<br>`test/server/configuration/implementation.test.ts`<br>`test/server/configuration/http.integration.test.ts`                                                                           | `unittest/spec`<br>`unittest/imp`<br>`integration` | `4.1`                                                   | `npm run test:server:spec -- test/server/configuration/configuration.spec.test.ts`<br>`npm run test:server:imp -- test/server/configuration/implementation.test.ts`<br>`npm run test:server:integration -- test/server/configuration/http.integration.test.ts`                                                                                                  |
-| 6.1  | `test/server/configuration/configuration.spec.test.ts`                                                                                                                                                                                         | `unittest/spec`                                    | `1.1, 1.2, 1.3, 2.1, 2.2, 3.1, 3.2, 4.1, 4.2, 5.1, 5.2` | `npm run test:server:spec -- test/server/configuration/configuration.spec.test.ts`                                                                                                                                                                                                                                                                              |
+| 6.1  | `test/server/configuration/configuration.spec.test.ts`                                                                                                                                                                                         | `unittest/spec`                                    | `1.1, 1.2, 1.3, 2.1, 2.2, 3.1, 3.2, 4.1, 4.2, 4.3, 5.1, 5.2` | `npm run test:server:spec -- test/server/configuration/configuration.spec.test.ts`                                                                                                                                                                                                                                                                              |
 | 6.2  | `test/server/configuration/implementation.test.ts`                                                                                                                                                                                             | `unittest/imp`                                     | `1.1, 1.2, 1.3, 2.1, 2.2, 3.1, 3.2, 4.1, 6.1`           | `npm run test:server:imp -- test/server/configuration/implementation.test.ts`                                                                                                                                                                                                                                                                                   |
 | 6.3  | `test/server/configuration/configuration.spec.test.ts`<br>`test/server/configuration/implementation.test.ts`<br>`test/server/configuration/filesystem.integration.test.ts`<br>`test/server/configuration/http.integration.test.ts`             | `unittest/spec`<br>`unittest/imp`<br>`integration` | `6.1, 6.2`                                              | `npm run test:server:spec -- test/server/configuration/configuration.spec.test.ts`<br>`npm run test:server:imp -- test/server/configuration/implementation.test.ts`<br>`npm run test:server:integration -- test/server/configuration/filesystem.integration.test.ts`<br>`npm run test:server:integration -- test/server/configuration/http.integration.test.ts` |
 | 6.4  | `src/model/IConfigurationFileAccess.ts`<br>`src/model/ConfigurationFileAccess.ts`<br>`src/model/ModelContainerSetter.ts`<br>`test/server/configuration/filesystem.integration.test.ts`<br>`test/server/configuration/http.integration.test.ts` | `integration`                                      | `1.1, 1.3, 2.1, 2.2, 3.1, 3.2, 4.1, 4.2, 5.1, 5.2, 6.3` | `npm run test:server:integration -- test/server/configuration/filesystem.integration.test.ts`<br>`npm run test:server:integration -- test/server/configuration/http.integration.test.ts`                                                                                                                                                                        |

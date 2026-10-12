@@ -139,6 +139,7 @@ class Configuration implements IConfiguration {
             newConfig.hookCommandTimeoutMs,
             Configuration.SETTIMEOUT_DELAY_MAX_MS,
         );
+        this.assertEncodeSuspendTimes(newConfig.encodeSuspendTimes);
 
         // http or https の設定が存在するかチェック
         if (
@@ -212,6 +213,31 @@ class Configuration implements IConfiguration {
     private assertIntegerInRange(field: string, value: number, maximum: number): void {
         if (!Number.isInteger(value) || value < 1 || value > maximum) {
             throw new Error(`ConfigValueError:${field}`);
+        }
+    }
+
+    /**
+     * value が、start (00:00〜23:59) と end (00:00〜24:00) を HH:mm 形式の異なる時刻で持つ object の配列であることを検証する。
+     * 時間帯の重なり・順序と意味 (境界、日跨ぎ) は利用側 (EncodeManageModel) が扱う。
+     * @param value: 検証対象の値
+     * @throws Error ConfigValueError:encodeSuspendTimes
+     */
+    private assertEncodeSuspendTimes(value: unknown): void {
+        const isValid =
+            Array.isArray(value) &&
+            value.every(
+                range =>
+                    typeof range === 'object' &&
+                    range !== null &&
+                    Array.isArray(range) === false &&
+                    typeof range.start === 'string' &&
+                    typeof range.end === 'string' &&
+                    Configuration.SUSPEND_START_TIME_PATTERN.test(range.start) &&
+                    Configuration.SUSPEND_END_TIME_PATTERN.test(range.end) &&
+                    range.start !== range.end,
+            );
+        if (isValid === false) {
+            throw new Error('ConfigValueError:encodeSuspendTimes');
         }
     }
 
@@ -371,6 +397,13 @@ namespace Configuration {
      */
     export const PENDING_QUEUE_SAFETY_LIMIT = 10_000;
 
+    /**
+     * `encodeSuspendTimes` の `start` (00:00〜23:59) と `end` (00:00〜24:00) に許可する HH:mm 形式。
+     * 詳細: `.kiro/specs/server-configuration/design.md` 3.1.1 節。
+     */
+    export const SUSPEND_START_TIME_PATTERN = /^(?:[01]\d|2[0-3]):[0-5]\d$/u;
+    export const SUSPEND_END_TIME_PATTERN = /^(?:(?:[01]\d|2[0-3]):[0-5]\d|24:00)$/u;
+
     export const DEFAULT_VALUE: IConfigFile = {
         mirakurunPath: 'http+unix://%2Fvar%2Frun%2Fmirakurun.sock/',
         apiServers: [],
@@ -411,6 +444,7 @@ namespace Configuration {
         ffprobe: '/usr/local/bin/ffprobe',
         encodeProcessNum: 0,
         concurrentEncodeNum: 0,
+        encodeSuspendTimes: [],
         encode: [],
         isSuppressReservesUpdateAllLog: false,
         urlscheme: {

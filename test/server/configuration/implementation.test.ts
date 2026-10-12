@@ -231,6 +231,53 @@ describe('server configuration implementation characterization', () => {
         },
     );
 
+    it.each([
+        ['an empty array', []],
+        ['the earliest start and the latest end', [{ start: '00:00', end: '24:00' }]],
+        ['the latest start and the earliest end', [{ start: '23:59', end: '00:00' }]],
+        [
+            'several ranges that overlap',
+            [
+                { start: '18:00', end: '23:00' },
+                { start: '22:00', end: '02:00' },
+            ],
+        ],
+    ])('[CFG-4.3-BOUNDARY] preserves %s for encodeSuspendTimes exactly', (_label, ranges) => {
+        const configuration = createConfiguration();
+
+        const formatted = configuration.formatConfig({ ...cloneCandidate(), encodeSuspendTimes: ranges });
+
+        expect(formatted.encodeSuspendTimes).toStrictEqual(ranges);
+    });
+
+    it.each([
+        ['null', null],
+        ['an object', { start: '18:00', end: '19:00' }],
+        ['a string', '18:00-19:00'],
+        ['a null element', [null]],
+        ['an array element', [['18:00', '19:00']]],
+        ['a string element', ['18:00']],
+        ['a missing end', [{ start: '18:00' }]],
+        ['a missing start', [{ end: '19:00' }]],
+        ['a numeric start', [{ start: 1080, end: '19:00' }]],
+        ['a numeric end', [{ start: '18:00', end: 1140 }]],
+        ['a one-digit hour', [{ start: '7:00', end: '08:00' }]],
+        ['seconds', [{ start: '07:00:00', end: '08:00' }]],
+        ['surrounding spaces', [{ start: ' 07:00', end: '08:00' }]],
+        ['24:00 as start', [{ start: '24:00', end: '01:00' }]],
+        ['24:01 as end', [{ start: '23:00', end: '24:01' }]],
+        ['hour 25', [{ start: '25:00', end: '01:00' }]],
+        ['minute 60', [{ start: '23:60', end: '01:00' }]],
+        ['the same start and end', [{ start: '18:00', end: '18:00' }]],
+        ['one invalid range after a valid one', [{ start: '18:00', end: '19:00' }, { start: '20:00' }]],
+    ])('[CFG-4.3-INVALID] rejects %s for encodeSuspendTimes', (_label, ranges) => {
+        const configuration = createConfiguration();
+
+        expect(() => configuration.formatConfig({ ...cloneCandidate(), encodeSuspendTimes: ranges })).toThrow(
+            'ConfigValueError:encodeSuspendTimes',
+        );
+    });
+
     it('[CFG-2.1-DEFERRED-ATOMIC-RELOAD] exposes only the old clone while reading and replaces the complete internal reference once', async () => {
         const { watchFile } = installReloadDouble(reloadCandidate(48100, 'old-generation'));
         const logger = createLogger();
@@ -309,6 +356,7 @@ describe('server configuration implementation characterization', () => {
         };
         expect(Object.values(configuration)).not.toContain(snapshotConsumer);
         expect(Object.getOwnPropertyNames(Configuration.prototype).sort()).toEqual([
+            'assertEncodeSuspendTimes',
             'assertIntegerInRange',
             'assertPositiveSafeInteger',
             'constructor',

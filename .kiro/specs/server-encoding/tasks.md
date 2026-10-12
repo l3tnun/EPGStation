@@ -39,9 +39,10 @@ envelope、request/reply timeout、再送は `server-process-messaging`、browse
 | 6.2  | `test/server/encoding/encode-boundaries.integration.test.ts`<br>`src/model/service/encode/EncoderModel.ts`<br>`src/util/ProcessUtil.ts`                                                                                                                                      | `integration`                                      | `3.2, 3.3, 4.2, 4.3, 5.2, 5.3`                                              | `npm run test:server:integration -- test/server/encoding/encode-boundaries.integration.test.ts`                                                                                                                                                                   |
 | 6.3  | `test/server/encoding/encode-contracts.spec.test.ts` | `unittest/spec` | `1.1, 1.2, 2.1, 2.2, 2.3, 3.1, 3.2, 3.3, 4.1, 4.2, 4.3, 5.2, 5.3, 6.1, 6.2` | `npm run test:server:spec -- test/server/encoding/encode-contracts.spec.test.ts` |
 | 6.4  | `test/server/encoding/encode-internals.test.ts`                                                                                                                                                                                                                              | `unittest/imp`                                     | `6.3`                                                                       | `npm run test:server:imp -- test/server/encoding/encode-internals.test.ts`                                                                                                                                                                                        |
-| 6.5  | `.kiro/specs/server-encoding/design.md` | レビュー | `6.4` | なし（Design §9.1の54行のレビュー） |
+| 6.5  | `.kiro/specs/server-encoding/design.md` | レビュー | `6.4` | なし（Design §9.1の60行のレビュー） |
 | 6.6  | `test/server/encoding/encode-boundaries.integration.test.ts`                                                                                                                                                                                                                 | `integration`                                      | `6.2, 6.5`                                                                  | `npm run test:server:integration -- test/server/encoding/encode-boundaries.integration.test.ts`                                                                                                                                                                   |
 | 6.7  | `test/server/encoding/encode-contracts.spec.test.ts`<br>`test/server/encoding/encode-internals.test.ts`<br>`test/server/encoding/encode-boundaries.integration.test.ts` | `unittest/spec`・`unittest/imp`・`integration` | `2.1, 2.2, 2.3, 5.2, 5.3, 6.3, 6.4, 6.5, 6.6` | `npm run test:server:spec -- test/server/encoding/encode-contracts.spec.test.ts`<br>`npm run test:server:imp -- test/server/encoding/encode-internals.test.ts`<br>`npm run test:server:integration -- test/server/encoding/encode-boundaries.integration.test.ts` |
+| 7.1  | `test/server/encoding/encode-contracts.spec.test.ts`<br>`test/server/encoding/encode-internals.test.ts`<br>`src/model/service/encode/EncodeManageModel.ts` | `unittest/spec`・`unittest/imp` | `2.1, 3.1` | `npm run test:server:spec -- test/server/encoding/encode-contracts.spec.test.ts`<br>`npm run test:server:imp -- test/server/encoding/encode-internals.test.ts` |
 
 -   [x] 1. 依頼、識別番号、およびメモリー内状態の既存契約を仕様テストで固定する
 -   [x] 1.1 依頼受付と process-local 識別・再起動契約を characterization する
@@ -370,12 +371,12 @@ envelope、request/reply timeout、再送は `server-process-messaging`、browse
 
 -   [x] 6.3 R1〜R7 の仕様 test の主 case を完成する
 
-    -   R1からR7の49件を一意な`unittest/spec`主testへ割り当て、`encode-contracts.spec.test.ts`のtest titleから各ACを逆引きで
+    -   R1からR7の55件を一意な`unittest/spec`主testへ割り当て、`encode-contracts.spec.test.ts`のtest titleから各ACを逆引きで
         きる形にする。
     -   各主testは戻り値だけでなく、queue、通知、port call、取消、結果反映、およびcleanupの意味ある結果をassertする。
-    -   完了時には49件すべてが一つの主testへ追跡でき、未割当・重複・空assertionが0件になる。
-    -   _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 1.10, 1.11, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 3.1, 3.2,
-        3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4.1, 4.2, 4.3, 4.4, 4.5, 5.1, 5.2, 5.3, 5.4, 6.1, 6.2, 6.3, 6.4, 6.5, 6.6,
+    -   完了時には55件すべてが一つの主testへ追跡でき、未割当・重複・空assertionが0件になる。
+    -   _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 1.10, 1.11, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9,
+        2.10, 2.11, 2.12, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4.1, 4.2, 4.3, 4.4, 4.5, 5.1, 5.2, 5.3, 5.4, 6.1, 6.2, 6.3, 6.4, 6.5, 6.6,
         6.7, 6.8, 6.9, 7.1, 7.2, 7.3, 7.4, 7.5, 8.1_
     -   _Boundary: 録画ファイル変換 spec test case_
     -   _Depends: 1.1, 1.2, 2.1, 2.2, 2.3, 3.1, 3.2, 3.3, 4.1, 4.2, 4.3, 5.2, 5.3, 6.1, 6.2_
@@ -391,10 +392,10 @@ envelope、request/reply timeout、再送は `server-process-messaging`、browse
 
 -   [x] 6.5 機能固有 test matrix の状態・競合・資源分類を完成する
 
-    -   Design §9.1の54行のmatrixで受付前・待機・実行・成功・失敗・取消・再起動、同着受付、取消と期限の競合、late
+    -   Design §9.1の60行のmatrixで受付前・待機・実行・成功・失敗・取消・再起動、同着受付、取消と期限の競合、late
         settlementを一意に分類する。
     -   待機枠、timer、process、途中出力、元fileの解放または保持を記録し、空欄と未分類を0件にする。
-    -   完了時にはDesign §9.1の54行が必須列と主testのlocatorを持ち、空欄と未分類が0件である。
+    -   完了時にはDesign §9.1の60行が必須列と主testのlocatorを持ち、空欄と未分類が0件である。
     -   _Requirements: 8.3_
     -   _Boundary: 録画ファイル変換 Design test matrix_
     -   _Depends: 6.4_
@@ -421,3 +422,26 @@ envelope、request/reply timeout、再送は `server-process-messaging`、browse
         Acceptance Criterion 9）に本機能のsourceの未到達が残らない。
     -   _Depends: 2.1, 2.2, 2.3, 5.2, 5.3, 6.3, 6.4, 6.5, 6.6_
     -   _Requirements: 8.5_
+
+-   [x] 7. 停止時間帯の待機保持と再開を test と実装で実現する
+-   [x] 7.1 起動時の停止時間帯 snapshot、待機保持、および終了時の再開を test と実装で閉じる
+
+    -   `encodeSuspendTimes` の省略を停止時間帯なしとし、`00:00`・`23:59`・`24:00` の境界と日付跨ぎを受理し、明示
+        `null`、配列以外、object でない要素、`start`・`end` の欠落、形式外、範囲外、同時刻で構築が失敗することを
+        `unittest/spec` と `unittest/imp` で検証する。
+    -   停止時間帯中は空き枠があっても待機列の先頭を取り出さず、受け付け順を保ったまま保持し、実行中 job へ停止を要求せ
+        ず、新しい依頼の受付と追加通知を続けることを fake timer で検証する。
+    -   終了時刻の直前では開始せず、到達後に再開 timer が一回だけ発火し、空き枠と待機数の小さい方の回数だけ確認を要求し
+        て受付順に開始することを検証する。重なる時間帯では最初の確認が再び timer を設定する。
+    -   稼働中に設定 source を変更しても既存 instance の停止時間帯は変わらず、新しい instance だけが変更後 snapshot を使
+        うことを確認する。
+    -   構築時に停止時間帯を検証して0時からの経過分へ変換し、待機列確認の要求で空き枠と待機依頼がある場合だけ時間帯を
+        判定する。時間帯中は実行権を取得せずに要求を終え、`unref()` した再開 timer を一つだけ設定する。既存の待機列確
+        認（`checkQueue`）とその coverage 除外の承認は変更しない。
+    -   公開 API、Web UI 向け公開設定、IPC 業務 payload へ field を追加しない。
+    -   完了時には時間帯中の開始0件、実行中 job の停止要求0回、再開 timer の重複0件、終了後の空き枠の範囲での受付順の開始
+        が観測される。
+    -   検証は `unittest/spec` と `unittest/imp` で行う。
+    -   _Requirements: 2.7, 2.8, 2.9, 2.10, 2.11, 2.12, 8.2_
+    -   _Boundary: 待機／実行管理_
+    -   _Depends: 2.1, 3.1_

@@ -163,6 +163,11 @@ export default interface IConfigFile {
     encodeProcessNum: number; // エンコード、ストリーミング最大プロセス数
     concurrentEncodeNum: number; // 同時エンコード数
     encodeQueueLimit: number;
+    // 待機中のエンコードを開始しない時間帯 (HH:mm、start 以上 end 未満、start > end は日跨ぎ)
+    encodeSuspendTimes: {
+        start: string;
+        end: string;
+    }[];
     encode: {
         name: string;
         cmd: string;
