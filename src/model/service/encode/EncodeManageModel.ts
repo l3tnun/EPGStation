@@ -296,22 +296,23 @@ class EncodeManageModel implements IEncodeManageModel {
     }
 
     /**
-     * 待機列確認の要求を受ける。開始できる待機依頼があっても停止時間帯の間は確認せず、時間帯の終了時に
+     * 待機列確認の要求を受ける。停止時間帯の間は、空き枠や待機依頼の有無にかかわらず確認せず
+     * (実行権を待つ間に空き枠や待機依頼ができても開始しないため)、待機依頼があれば時間帯の終了時に
      * 再確認する timer を設定する
      * @return Promise<void>
      */
     private requestCheckQueue(): Promise<void> {
-        if (this.runningQueue.length < this.concurrentEncodeNum && this.waitQueue.length > 0) {
-            const now = new Date();
-            const suspendRemainingMinutes = this.getSuspendRemainingMinutes(now);
-            if (suspendRemainingMinutes !== null) {
-                this.scheduleSuspendResume(now, suspendRemainingMinutes);
-
-                return Promise.resolve();
-            }
+        const now = new Date();
+        const suspendRemainingMinutes = this.getSuspendRemainingMinutes(now);
+        if (suspendRemainingMinutes === null) {
+            return this.checkQueue();
         }
 
-        return this.checkQueue();
+        if (this.waitQueue.length > 0) {
+            this.scheduleSuspendResume(now, suspendRemainingMinutes);
+        }
+
+        return Promise.resolve();
     }
 
     /**

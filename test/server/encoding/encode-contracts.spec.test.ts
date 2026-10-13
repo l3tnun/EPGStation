@@ -2914,6 +2914,28 @@ describe('encode suspend-time contracts', () => {
         ['after a range across midnight', [{ start: '23:00', end: '02:00' }], [2, 0], true],
         ['before 24:00', [{ start: '22:00', end: '24:00' }], [23, 59], false],
         ['at 24:00', [{ start: '22:00', end: '24:00' }], [0, 0], true],
+        ['at a 00:00 start', [{ start: '00:00', end: '01:00' }], [0, 0], false],
+        ['before a 00:00 start', [{ start: '00:00', end: '01:00' }], [23, 59], true],
+        ['inside a one-minute range', [{ start: '23:59', end: '00:00' }], [23, 59], false],
+        ['after a one-minute range', [{ start: '23:59', end: '00:00' }], [0, 0], true],
+        [
+            'inside only the later of overlapping ranges',
+            [
+                { start: '18:00', end: '20:00' },
+                { start: '19:00', end: '21:00' },
+            ],
+            [20, 30],
+            false,
+        ],
+        [
+            'after overlapping ranges',
+            [
+                { start: '18:00', end: '20:00' },
+                { start: '19:00', end: '21:00' },
+            ],
+            [21, 0],
+            true,
+        ],
         [
             'inside a later range',
             [
@@ -3033,7 +3055,8 @@ describe('encode suspend-time contracts', () => {
             ipcServer.setEncode(addOption());
             const ipcPayload = child.send.mock.calls[0][0] as { type: string; value: apid.AddEncodeProgramOption };
             expect(ipcPayload).not.toHaveProperty('encodeSuspendTimes');
-            expect(ipcPayload.value).not.toHaveProperty('encodeSuspendTimes');
+            // 業務 payload は依頼の項目だけで、停止時間帯などの設定を足さない
+            expect(ipcPayload.value).toStrictEqual(addOption());
         } finally {
             child.removeAllListeners();
         }
