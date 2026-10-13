@@ -239,7 +239,10 @@ describe('Video playback subtitle settings and shared controls', () => {
       'attachFeeder',
       'attachRenderer',
       'attachMedia',
+      // [AC 4.4a] on にするときは、各 Controller で hide() の後に show() を呼ぶ
+      'hide',
       'show',
+      'hide',
       'show',
       'hide',
       'hide',
