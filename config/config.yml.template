@@ -69,6 +69,9 @@ ffprobe: /usr/local/bin/ffprobe
 
 encodeProcessNum: 4
 concurrentEncodeNum: 1
+# encodeSuspendTimes:
+#     - start: '18:00'
+#       end: '24:00'
 encode:
     - name: H.264
       cmd: '%NODE% %ROOT%/config/enc.js'

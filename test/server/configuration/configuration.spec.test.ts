@@ -699,6 +699,58 @@ describe('server configuration characterization contract', () => {
         expect(watchFile).toHaveBeenCalledTimes(1);
     });
 
+    it('[CFG-4.3-DEFAULT] supplies an empty encodeSuspendTimes array that no clone or later generation shares', () => {
+        const configuration = createConfiguration(null);
+        configuration.config = configuration.formatConfig(readCandidate());
+
+        const first = configuration.getConfig();
+        (first.encodeSuspendTimes as unknown[]).push({ start: '01:00', end: '02:00' });
+        const second = configuration.getConfig();
+        const nextGeneration = createConfiguration(null).formatConfig(readCandidate());
+
+        expect(second.encodeSuspendTimes).toEqual([]);
+        expect(nextGeneration.encodeSuspendTimes).toEqual([]);
+        expect(Configuration.DEFAULT_VALUE.encodeSuspendTimes).toEqual([]);
+    });
+
+    it('[CFG-4.3-INITIAL-INVALID] rejects an invalid encodeSuspendTimes before installing the watcher', () => {
+        const watchFile = installInitialReadDouble(() =>
+            reloadCandidate(48100, 'invalid-initial-generation', {
+                encodeSuspendTimes: [{ start: '18:00', end: '18:00' }],
+            }),
+        );
+
+        expect(() => new Configuration({ getLogger: () => createLogger() })).toThrow(
+            'ConfigValueError:encodeSuspendTimes',
+        );
+        expect(watchFile).not.toHaveBeenCalled();
+    });
+
+    it('[CFG-4.3-RELOAD-INVALID] discards an invalid encodeSuspendTimes reload and keeps the previous ranges', async () => {
+        const stableRanges = [{ start: '23:00', end: '02:00' }];
+        const watchFile = installInitialReadDouble(() =>
+            reloadCandidate(48100, 'stable-generation', { encodeSuspendTimes: stableRanges }),
+        );
+        const logger = createLogger();
+        const configuration = new Configuration({ getLogger: () => logger });
+        const stableInternalReference = configuration.config;
+        const readFile = vi.fn();
+        mutableFileSystem.promises.readFile = readFile;
+        const changeListener = watchFile.mock.calls[0][1] as () => Promise<void>;
+
+        for (const invalid of [null, [{ start: '24:00', end: '01:00' }], [{ start: '07:00' }]]) {
+            readFile.mockResolvedValueOnce(reloadCandidate(48200, 'invalid-ranges', { encodeSuspendTimes: invalid }));
+
+            await changeListener();
+
+            expect(configuration.config).toBe(stableInternalReference);
+            expect(configuration.getConfig().encodeSuspendTimes).toEqual(stableRanges);
+        }
+        expect(logger.system.error).toHaveBeenCalledWith(
+            expect.objectContaining({ message: 'ConfigValueError:encodeSuspendTimes' }),
+        );
+    });
+
     it('[CFG-2.2-RELOAD-FAILURE] keeps the prior generation and the same watcher after a read failure', async () => {
         const watchFile = installInitialReadDouble(() => reloadCandidate(48100, 'stable-generation'));
         const logger = createLogger();
@@ -1436,10 +1488,10 @@ describe('ライブ配信の既定commandは-reを持たず、録画配信の既
 });
 
 /*
- * Requirements 1 から 7 の AC は、節ごとの個数（1: 7、2: 4、3: 3、4: 5、5: 4、6: 4、7: 12）で全 39 個である。
+ * Requirements 1 から 7 の AC は、節ごとの個数（1: 7、2: 4、3: 3、4: 5、5: 4、6: 4、7: 14）で全 41 個である。
  * 値は、その AC を検査する主 case の ID（case 題の先頭の `[ID]`）。補足 case（`CFG-4.2-*`）は含めない。
  */
-const acceptanceCriteriaCounts = { 1: 7, 2: 4, 3: 3, 4: 5, 5: 4, 6: 4, 7: 12 } as const;
+const acceptanceCriteriaCounts = { 1: 7, 2: 4, 3: 3, 4: 5, 5: 4, 6: 4, 7: 14 } as const;
 
 const acceptanceCriteriaTrace: Readonly<Record<string, readonly string[]>> = {
     '1.1': ['CFG-1.1-YAML-DEFAULTS', 'CFG-1.1-ENV-EXPANSION', 'CFG-1.1-ENV-LITERAL', 'CFG-1.1-ENV-LOAD-ONLY', 'CFG-1.1-ENV-NUMERIC-FIELD', 'CFG-1.1-MERGE-KEY', 'CFG-1.1-MERGE-KEY-MULTIPLE', 'CFG-1.1-MERGE-KEY-EXPLICIT', 'CFG-1.1-MERGE-KEY-ARRAY', 'CFG-1.1-MERGE-KEY-ENV'],
@@ -1478,17 +1530,19 @@ const acceptanceCriteriaTrace: Readonly<Record<string, readonly string[]>> = {
     '7.7': ['CFG-4.1-BOUNDARY', 'CFG-4.1-INVALID'],
     '7.8': ['CFG-4.1-BOUNDARY', 'CFG-4.1-INVALID', 'CFG-4.1-LIMIT-CONSTANTS'],
     '7.9': ['CFG-4.1-BOUNDARY', 'CFG-4.1-INVALID', 'CFG-4.1-LIMIT-CONSTANTS'],
-    '7.10': ['CFG-4.1-INITIAL-INVALID', 'CFG-4.1-RELOAD-INVALID'],
+    '7.10': ['CFG-4.1-INITIAL-INVALID', 'CFG-4.1-RELOAD-INVALID', 'CFG-4.3-INITIAL-INVALID', 'CFG-4.3-RELOAD-INVALID'],
     '7.11': ['CFG-3.1-PUBLIC-ALLOWLIST', 'CFG-3.1-HTTP-ALLOWLIST'],
     '7.12': ['CFG-4.1-DEFAULT-SNAPSHOT', 'CFG-2.1-RELOAD-SUCCESS'],
+    '7.13': ['CFG-4.3-DEFAULT'],
+    '7.14': ['CFG-4.3-BOUNDARY', 'CFG-4.3-INVALID'],
 };
 
 describe('server configuration acceptance criteria trace', () => {
-    it('[CFG-6.1-AC-TRACE] maps all 39 acceptance criteria to existing named cases', () => {
+    it('[CFG-6.1-AC-TRACE] maps all 41 acceptance criteria to existing named cases', () => {
         const expectedCriteria = Object.entries(acceptanceCriteriaCounts).flatMap(([requirement, count]) =>
             Array.from({ length: count }, (_unused, index) => `${requirement}.${index + 1}`),
         );
-        expect(expectedCriteria).toHaveLength(39);
+        expect(expectedCriteria).toHaveLength(41);
         expect(Object.keys(acceptanceCriteriaTrace).sort()).toEqual([...expectedCriteria].sort());
 
         const directory = join(process.cwd(), 'test/server/configuration');

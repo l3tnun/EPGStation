@@ -2734,3 +2734,308 @@ describe('command, environment, and deadline characterization', () => {
         },
     );
 });
+
+/**
+ * 停止時間帯（`encodeSuspendTimes`）の契約。時刻は local time の `Date` で与え、fake timer で再開 timer を進める。
+ * `setImmediate` は偽装しないので、`flushEventLoop` で待機列確認の settlement を待てる。
+ */
+const SUSPEND_FAKE_TIMERS = { toFake: ['setTimeout', 'clearTimeout', 'Date'] } as const;
+
+const localTime = (hours: number, minutes: number, seconds = 0, milliseconds = 0): Date =>
+    new Date(2026, 0, 5, hours, minutes, seconds, milliseconds);
+
+/** assertion が失敗しても listener を残さないための軽い後始末。各 test は本体でも後始末する。 */
+const suspendFixtureReleases = new Set<() => void>();
+
+const makeSuspendManage = (concurrentEncodeNum: number, encodeSuspendTimes?: unknown) => {
+    const encoders: SyntheticEncoder[] = [];
+    const provider = vi.fn(async () => {
+        const encoder = makeEncoder();
+        encoders.push(encoder);
+        return encoder;
+    });
+    const logger = {
+        encode: { error: vi.fn(), info: vi.fn(), warn: vi.fn() },
+        system: { error: vi.fn() },
+    };
+    const event = new EncodeEvent({ getLogger: () => logger });
+    const config: Record<string, unknown> = { concurrentEncodeNum };
+    if (typeof encodeSuspendTimes !== 'undefined') config.encodeSuspendTimes = encodeSuspendTimes;
+    let executionCall = 0;
+    const activeExecutions = new Set<string>();
+    const execution = {
+        getExecution: vi.fn(async () => {
+            executionCall += 1;
+            const executionId = `synthetic-suspend-execution-${executionCall}`;
+            activeExecutions.add(executionId);
+            return executionId;
+        }),
+        unLockExecution: vi.fn((executionId: string) => {
+            activeExecutions.delete(executionId);
+        }),
+    };
+    const recordedResourceUse = {
+        acquire: vi.fn(async () => ({ token: {} })),
+        release: vi.fn(async () => undefined),
+    };
+    const manage = new EncodeManageModel(
+        { getLogger: () => logger },
+        { getConfig: () => config },
+        execution,
+        provider,
+        event,
+        recordedResourceUse,
+    );
+    const manageEmitter = (manage as unknown as { listener: EventEmitter }).listener;
+    const eventEmitter = (event as unknown as { emitter: EventEmitter }).emitter;
+    suspendFixtureReleases.add(() => {
+        manageEmitter.removeAllListeners();
+        eventEmitter.removeAllListeners();
+    });
+    const settle = async (): Promise<void> => {
+        for (let round = 0; round < 8; round += 1) await flushEventLoop();
+    };
+    const started = (): number[] =>
+        encoders.filter(encoder => encoder.start.mock.calls.length > 0).map(encoder => encoder.option!.encodeId);
+    const cleanup = async (): Promise<void> => {
+        for (const encoder of encoders) encoder.finish(false, null);
+        await settle();
+        manageEmitter.removeAllListeners();
+        eventEmitter.removeAllListeners();
+        expect(activeExecutions.size).toBe(0);
+    };
+    return { cleanup, config, encoders, event, execution, logger, manage, provider, settle, started };
+};
+
+describe('encode suspend-time contracts', () => {
+    afterEach(() => {
+        vi.clearAllTimers();
+        for (const release of suspendFixtureReleases) release();
+        suspendFixtureReleases.clear();
+    });
+
+    it('[EN-SPEC-R2-7] keeps waiting requests in order without starting them inside a suspend range', async () => {
+        vi.useFakeTimers(SUSPEND_FAKE_TIMERS);
+        vi.setSystemTime(localTime(18, 0));
+        const fixture = makeSuspendManage(2, [{ start: '18:00', end: '24:00' }]);
+
+        await fixture.manage.push(addOption({ recordedId: 271 }));
+        await fixture.manage.push(addOption({ recordedId: 272 }));
+        await fixture.settle();
+
+        expect(fixture.started()).toEqual([]);
+        expect(fixture.manage.getEncodeInfo()).toEqual({
+            runningQueue: [],
+            waitQueue: [
+                { id: 1, mode: 'synthetic-mode', recordedId: 271 },
+                { id: 2, mode: 'synthetic-mode', recordedId: 272 },
+            ],
+        });
+        expect(vi.getTimerCount()).toBe(1);
+
+        await vi.advanceTimersByTimeAsync(6 * 60 * 60 * 1000);
+        await fixture.settle();
+        expect(fixture.started()).toEqual([1, 2]);
+        await fixture.cleanup();
+        expect(vi.getTimerCount()).toBe(0);
+    });
+
+    it('[EN-SPEC-R2-8] keeps a running encode and keeps accepting new requests after a suspend range begins', async () => {
+        vi.useFakeTimers(SUSPEND_FAKE_TIMERS);
+        vi.setSystemTime(localTime(17, 59, 59, 999));
+        const fixture = makeSuspendManage(2, [{ start: '18:00', end: '19:00' }]);
+        const added: number[] = [];
+        fixture.event.setAddEncode(id => added.push(id));
+
+        await fixture.manage.push(addOption({ recordedId: 281 }));
+        await fixture.settle();
+        expect(fixture.started()).toEqual([1]);
+
+        vi.setSystemTime(localTime(18, 0));
+        await expect(fixture.manage.push(addOption({ recordedId: 282 }))).resolves.toBe(2);
+        await fixture.settle();
+
+        expect(added).toEqual([1, 2]);
+        expect(fixture.encoders[0].cancel).not.toHaveBeenCalled();
+        expect(fixture.started()).toEqual([1]);
+        expect(fixture.manage.getEncodeInfo()).toEqual({
+            runningQueue: [{ id: 1, mode: 'synthetic-mode', recordedId: 281 }],
+            waitQueue: [{ id: 2, mode: 'synthetic-mode', recordedId: 282 }],
+        });
+
+        fixture.encoders[0].finish(false, null);
+        await fixture.settle();
+        expect(fixture.started()).toEqual([1]);
+        expect(fixture.manage.getEncodeInfo().runningQueue).toEqual([]);
+
+        await vi.advanceTimersByTimeAsync(60 * 60 * 1000);
+        await fixture.settle();
+        expect(fixture.started()).toEqual([1, 2]);
+        await fixture.cleanup();
+    });
+
+    it('[EN-SPEC-R2-9] starts waiting requests in order within the free slots once the range ends', async () => {
+        vi.useFakeTimers(SUSPEND_FAKE_TIMERS);
+        vi.setSystemTime(localTime(18, 30));
+        const fixture = makeSuspendManage(2, [{ start: '18:00', end: '19:00' }]);
+
+        for (const recordedId of [291, 292, 293]) await fixture.manage.push(addOption({ recordedId }));
+        await fixture.settle();
+        expect(fixture.started()).toEqual([]);
+        expect(vi.getTimerCount()).toBe(1);
+
+        await vi.advanceTimersByTimeAsync(30 * 60 * 1000 - 1);
+        await fixture.settle();
+        expect(fixture.started()).toEqual([]);
+
+        await vi.advanceTimersByTimeAsync(1);
+        await fixture.settle();
+        expect(fixture.started()).toEqual([1, 2]);
+        expect(fixture.manage.getEncodeInfo()).toMatchObject({
+            runningQueue: [{ id: 1 }, { id: 2 }],
+            waitQueue: [{ id: 3 }],
+        });
+        expect(vi.getTimerCount()).toBe(0);
+
+        fixture.encoders[0].finish(false, null);
+        await fixture.settle();
+        expect(fixture.started()).toEqual([1, 2, 3]);
+        await fixture.cleanup();
+    });
+
+    it.each([
+        ['just before the start', [{ start: '18:00', end: '19:00' }], [17, 59], true],
+        ['at the start', [{ start: '18:00', end: '19:00' }], [18, 0], false],
+        ['just before the end', [{ start: '18:00', end: '19:00' }], [18, 59], false],
+        ['at the end', [{ start: '18:00', end: '19:00' }], [19, 0], true],
+        ['before a range across midnight', [{ start: '23:00', end: '02:00' }], [22, 59], true],
+        ['late in a range across midnight', [{ start: '23:00', end: '02:00' }], [23, 30], false],
+        ['early in a range across midnight', [{ start: '23:00', end: '02:00' }], [1, 59], false],
+        ['after a range across midnight', [{ start: '23:00', end: '02:00' }], [2, 0], true],
+        ['before 24:00', [{ start: '22:00', end: '24:00' }], [23, 59], false],
+        ['at 24:00', [{ start: '22:00', end: '24:00' }], [0, 0], true],
+        [
+            'inside a later range',
+            [
+                { start: '01:00', end: '02:00' },
+                { start: '05:00', end: '06:00' },
+            ],
+            [5, 30],
+            false,
+        ],
+        [
+            'between ranges',
+            [
+                { start: '01:00', end: '02:00' },
+                { start: '05:00', end: '06:00' },
+            ],
+            [3, 0],
+            true,
+        ],
+    ] as const)(
+        '[EN-SPEC-R2-10] treats %s as the expected suspend state',
+        async (_label, ranges, [hours, minutes], expectedStart) => {
+            vi.useFakeTimers(SUSPEND_FAKE_TIMERS);
+            vi.setSystemTime(localTime(hours, minutes));
+            const fixture = makeSuspendManage(1, ranges);
+
+            await fixture.manage.push(addOption({ recordedId: 2101 }));
+            await fixture.settle();
+
+            expect(fixture.started()).toEqual(expectedStart ? [1] : []);
+            expect(vi.getTimerCount()).toBe(expectedStart ? 0 : 1);
+            vi.clearAllTimers();
+            await fixture.cleanup();
+        },
+    );
+
+    it('[EN-SPEC-R2-11] treats an omitted setting as no suspend range and keeps the startup snapshot until restart', async () => {
+        vi.useFakeTimers(SUSPEND_FAKE_TIMERS);
+        vi.setSystemTime(localTime(3, 0));
+        const running = makeSuspendManage(1);
+        running.config.encodeSuspendTimes = [{ start: '00:00', end: '24:00' }];
+
+        await running.manage.push(addOption({ recordedId: 2111 }));
+        await running.settle();
+        expect(running.started()).toEqual([1]);
+        expect(vi.getTimerCount()).toBe(0);
+
+        const restarted = makeSuspendManage(1, running.config.encodeSuspendTimes);
+        await restarted.manage.push(addOption({ recordedId: 2112 }));
+        await restarted.settle();
+        expect(restarted.started()).toEqual([]);
+        expect(vi.getTimerCount()).toBe(1);
+
+        vi.clearAllTimers();
+        await running.cleanup();
+        await restarted.cleanup();
+    });
+
+    it('[EN-SPEC-R2-12] accepts only valid ranges at construction and keeps them out of public config and IPC payloads', async () => {
+        const logger = { encode: { error: vi.fn(), info: vi.fn(), warn: vi.fn() }, system: { error: vi.fn() } };
+        const execution = { getExecution: vi.fn(), unLockExecution: vi.fn() };
+        const provider = vi.fn();
+        const event = new EncodeEvent({ getLogger: () => logger });
+        const construct = (encodeSuspendTimes: unknown) =>
+            new EncodeManageModel(
+                { getLogger: () => logger },
+                { getConfig: () => ({ concurrentEncodeNum: 1, encodeSuspendTimes }) },
+                execution,
+                provider,
+                event,
+            );
+
+        try {
+            for (const valid of [[], [{ start: '00:00', end: '24:00' }], [{ start: '23:59', end: '00:00' }]]) {
+                const manage = construct(valid);
+                (manage as unknown as { listener: EventEmitter }).listener.removeAllListeners();
+            }
+            for (const invalid of [
+                null,
+                {},
+                [null],
+                [{ start: '18:00' }],
+                [{ start: '7:00', end: '08:00' }],
+                [{ start: '24:00', end: '01:00' }],
+                [{ start: '23:00', end: '24:01' }],
+                [{ start: '18:00', end: '18:00' }],
+            ]) {
+                expect(() => construct(invalid)).toThrow('InvalidEncodeSuspendTimes');
+            }
+            expect(execution.getExecution).not.toHaveBeenCalled();
+            expect(provider).not.toHaveBeenCalled();
+        } finally {
+            (event as unknown as { emitter: EventEmitter }).emitter.removeAllListeners();
+        }
+
+        const publicConfig = new ConfigApiModel(
+            {
+                getConfig: () => ({
+                    clientSocketioPort: 45_001,
+                    encode: [{ name: 'synthetic-mode' }],
+                    encodeSuspendTimes: [{ start: '18:00', end: '19:00' }],
+                    recorded: [{ name: 'synthetic-parent' }],
+                    urlscheme: {
+                        download: { android: '', ios: '', mac: '', win: '' },
+                        m2ts: { android: '', ios: '', mac: '', win: '' },
+                        video: { android: '', ios: '', mac: '', win: '' },
+                    },
+                }),
+            },
+            { reserveation: { getBroadcastStatus: vi.fn(async () => ({})) } },
+        );
+        expect(await publicConfig.getConfig(false)).not.toHaveProperty('encodeSuspendTimes');
+
+        const child = Object.assign(new EventEmitter(), { send: vi.fn() });
+        try {
+            const ipcServer = new IPCServer({}, {}, {}, {}, {}, {}, {});
+            ipcServer.register(child);
+            ipcServer.setEncode(addOption());
+            const ipcPayload = child.send.mock.calls[0][0] as { type: string; value: apid.AddEncodeProgramOption };
+            expect(ipcPayload).not.toHaveProperty('encodeSuspendTimes');
+            expect(ipcPayload.value).not.toHaveProperty('encodeSuspendTimes');
+        } finally {
+            child.removeAllListeners();
+        }
+    });
+});

@@ -128,6 +128,7 @@ jobを開始・取消・並べ替えず、leaseを取得・解放せず、queue�
 | `concurrentEncodeNum` | 本機能で同時に実行する変換数 | 設定管理に従う | 0以下なら新規受付を拒否                     | 起動時     |
 | `encodeProcessNum`    | メディア変換全体の共有処理数 | 設定管理に従う | 共有管理側で検証                            | 起動時     |
 | `encodeQueueLimit`    | 受付処理中と待機中の合計上限 | 1,024          | `Number.isSafeInteger(value) && value >= 1` | 起動時     |
+| `encodeSuspendTimes`  | 待機依頼を開始しない時間帯   | 停止時間帯なし | `start`・`end`の`HH:mm`配列（下記）         | 起動時     |
 | `encode[].rate`       | 録画時間に掛ける実行時間倍率 | 4              | 変換方法の設定に従う                        | 変換開始時 |
 
 `encodeQueueLimit` はproperty自体がない場合、またはencode設定を含むconfig objectが空の場合だけ1,024を使う。明示された
@@ -135,6 +136,13 @@ jobを開始・取消・並べ替えず、leaseを取得・解放せず、queue�
 
 `encodeQueueLimit` は設定ファイルだけの運用設定であり、公開API、Web UI向け公開設定、IPCの業務データには追加しない。構築
 済みの管理インスタンスは設定ファイルを再読込せず、変更は再起動後に反映する。
+
+`encodeSuspendTimes` はproperty自体がない場合だけ停止時間帯なし（空配列）とする。値は配列で、各要素は`start`と`end`の二つ
+の文字列を持つobjectとする。`start`は`00:00`〜`23:59`、`end`は`00:00`〜`24:00`の、時と分をそれぞれ2桁で書く`HH:mm`形
+式とし、`start`と`end`は異なる時刻とする。明示された`null`、配列以外、objectでない要素、`start`・`end`の欠落、形式外の
+文字列、範囲外の時刻、および`start`と`end`が同じ要素は省略とみなさず、`InvalidEncodeSuspendTimes`で構築を失敗させる。構
+築時に各要素を0時からの経過分（`start`は0〜1,439、`end`は0〜1,440）へ変換して保持し、稼働中の設定ファイル変更は反映し
+ない。`encodeQueueLimit`と同じく、公開API、Web UI向け公開設定、IPCの業務データには追加しない。
 
 ## 5. 処理の設計
 
@@ -187,6 +195,22 @@ stateDiagram-v2
 
 一件の終了または開始失敗で実行中一覧から対象を除いた後、次のイベントループで待機列を再確認する。この繰返しにより、空き枠
 の範囲で受付順に処理を開始する。
+
+#### 停止時間帯
+
+待機列確認の要求（`NEEDS_CHECK_QUEUE_EVENT`）を受けたとき、本機能の空き枠と待機依頼がある場合は、実行権を取得する前に現在
+時刻（`Date`のローカル時・分）が停止時間帯に含まれるかを判定する。各時間帯は、`start < end`なら`start <= 現在 < end`、
+`start > end`なら`現在 >= start`または`現在 < end`（日付を跨ぐ）で含まれると判定する。含まれる場合は、実行権を取得せず、
+待機列を変更せず、ジョブを開始せずに要求を終える。含まれない場合と、空き枠または待機依頼がない場合は既存の待機列確認へ進む。
+判定は要求を受けた時点で行うため、時間帯の開始前に実行権待ちへ入った確認は、そのまま既存の確認として進む。既存の待機列確認
+（`checkQueue`）の処理は変更しない。実行中の変換、受付、取消、進捗、結果反映は停止時間帯の影響を受けない。
+
+停止時間帯で確認を終えたときは、再開timerを一つだけ設定する。delayは、現在時刻を含む時間帯のうち最も早く終わる`end`ま
+でのミリ秒数（現在の秒とミリ秒を差し引いた値、1以上）とする。timerが既にあれば新たに設定しない。timerは`unref()`し、process
+の終了を妨げない。timerが発火したらtimerを破棄し、`min(concurrentEncodeNum - runningQueue.length, waitQueue.length)`回だけ
+待機列確認を要求する。各確認は既存どおり一件ずつ実行権の下で先頭を開始するため、空き枠の範囲で受付順に開始する。重なる別
+の時間帯がまだ続いている場合は、最初の確認が改めて再開timerを設定する。空き枠がない場合や待機列が空の場合は確認を要求せ
+ず、後続の終了・受付による確認へ任せる。
 
 ### 5.3 開始前確認と外部処理
 
@@ -427,6 +451,7 @@ sequenceDiagram
 | 待機上限設定               | `src/model/IConfigFile.ts`、`src/model/Configuration.ts`     | 任意の `encodeQueueLimit` と省略値1,024を扱う                                   |
 | 起動時snapshotと検証       | `src/model/service/encode/EncodeManageModel.ts`              | 正の安全な整数へ検証し、不正値で構築を失敗させる                                |
 | 上限到達前の同期受付予約   | `src/model/service/encode/EncodeManageModel.ts`              | 非同期境界前に受付予約と待機中の合計を検査・予約する                            |
+| 停止時間帯                 | `src/model/IConfigFile.ts`、`src/model/Configuration.ts`、`src/model/service/encode/EncodeManageModel.ts` | 任意の `encodeSuspendTimes` を起動時に検証・保持し、時間帯中は待機列から開始せず、終了時に空き枠の範囲で再開する |
 | 結果反映成功による削除条件 | `src/model/service/encode/EncodeFinishModel.ts`              | 登録またはサイズ更新の成功を確認した後だけ元ファイル削除へ進む                  |
 | 録画済みresource利用lease  | PM所有`RecordedResourceUseClient`とservice child composition | queue公開前のacquire、待機から結果settlement後まで保持、Task 5.3のexact release |
 
@@ -436,13 +461,13 @@ sequenceDiagram
 
 本機能は`server-application-runtime`が所有する共有server test foundationへ、次の機能固有suiteを追加する。testは
 `test/server/encoding/`に置き、仕様testは`encode-contracts.spec.test.ts`、実装testは `encode-internals.test.ts`、結合
-testは`encode-boundaries.integration.test.ts`とする。次節の54行を本機能唯一の機能固有Test Matrixとし、別matrixまたは
+testは`encode-boundaries.integration.test.ts`とする。次節の60行を本機能唯一の機能固有Test Matrixとし、別matrixまたは
 ledgerへ判定を分散させない。
 
 ### 9.1 AC別Test Matrix
 
 各Acceptance Criterionは一行と一意な主test IDを持つ。同じtest caseが別ACを補助できても、主test IDを兼用しない。
-R8.1・R8.3・R8.5は動作のtest caseを持たず、R8.1はR1〜R7の49主testの集合、R8.3は本表、R8.5は共有gateで判定する。これらの行のIDは判定対象の名前であり、主test IDの一意性の数には含めない。
+R8.1・R8.3・R8.5は動作のtest caseを持たず、R8.1はR1〜R7の55主testの集合、R8.3は本表、R8.5は共有gateで判定する。これらの行のIDは判定対象の名前であり、主test IDの一意性の数には含めない。
 `境界`の`adapter`はportのfakeを接続する単体test、`実境界`はDB、HTTP、IPC、filesystem、processを接続する結合testを表す。
 最後の列は実装状態、主testの件数、および除外を表す。
 
@@ -465,6 +490,12 @@ R8.1・R8.3・R8.5は動作のtest caseを持たず、R8.1はR1〜R7の49主test
 | `R2.4 / EN-SPEC-R2-4`   | spec／同上                                           | 共有枠なし                                                                                | 開始中→失敗                                  | settlement reject                                | 待機枠・実行枠                                        | process adapter                      | create reject             | 失敗確定し再待機・自動retryなし                                                                                                                                                      | 実装済み／主test 1／除外なし                                              |
 | `R2.5 / EN-SPEC-R2-5`   | spec／同上                                           | 待機2、実行1                                                                              | 実行→終了                                    | terminal後の次tick                               | 実行枠・queue listener                                | process adapter                      | なし                      | 枠解放後に次の先頭を確認                                                                                                                                                             | 実装済み／主test 1／除外なし                                              |
 | `R2.6 / EN-SPEC-R2-6`   | spec／同上                                           | 待機・実行各1                                                                             | 稼働中→再起動                                | restart                                          | memory queue                                          | DB非適用: 永続化しない               | なし                      | DB write 0回、process-localだけで保持                                                                                                                                                | 実装済み／主test 1／DB除外理由あり                                    |
+| `R2.7 / EN-SPEC-R2-7` | spec／同上 | 停止時間帯内、待機2・空き枠2 | 待機 | 時間帯開始・境界時刻 | 待機枠・実行枠・timer | adapter | なし | 開始0件、待機列の順序不変、再開timer1件 | 実装済み／主test 1／除外なし |
+| `R2.8 / EN-SPEC-R2-8` | spec／同上 | 時間帯前に実行1、時間帯内に追加1 | 実行中・受付中 | 時間帯へ入る | 実行枠・待機枠・listener | process・event adapter | なし | 実行中jobへの停止要求0回、新規依頼は受付・追加通知・待機 | 実装済み／主test 1／除外なし |
+| `R2.9 / EN-SPEC-R2-9` | spec／同上 | 待機3、同時実行上限2 | 待機→実行 | fake timerで終了時刻直前・到達 | timer・実行枠・待機枠 | adapter | なし | 終了時刻到達後だけ受付順に2件開始し1件待機、timer残留0 | 実装済み／主test 1／除外なし |
+| `R2.10 / EN-SPEC-R2-10` | spec／同上 | `HH:mm`境界、日付跨ぎ、`24:00`、複数時間帯 | 待機 | 開始時刻・終了時刻の直前・到達 | timer | adapter | なし | 開始時刻以上・終了時刻未満だけ保持、跨ぎ・複数時間帯を判定 | 実装済み／主test 1／除外なし |
+| `R2.11 / EN-SPEC-R2-11` | spec／同上 | propertyなし、起動後に設定変更 | 起動前→稼働中→再起動 | 起動snapshot | config値 | config adapter | 省略 | 省略は停止なし、稼働中instanceは起動時の値を保持し新instanceだけ変更後の値 | 実装済み／主test 1／除外なし |
+| `R2.12 / EN-SPEC-R2-12` | spec／同上 | `null`、配列以外、非object要素、欠落、形式外、範囲外、同時刻、境界`00:00`・`23:59`・`24:00` | 起動前 | validation | instance・projection | config・HTTP・IPC adapter | 各不正値 | 境界を受理し不正値は起動失敗、API・UI設定・IPC業務payloadにfieldなし | 実装済み／主test 1／除外なし |
 | `R3.1 / EN-SPEC-R3-1`   | spec／同上                                           | 番組・元file・局・mode・保存先                                                            | 開始前                                       | 順次確認                                         | DB参照・file                                          | DB・filesystem adapter               | なし                      | 6項目確認後だけprocess開始                                                                                                                                                           | 実装済み／主test 1／除外なし                                              |
 | `R3.2 / EN-SPEC-R3-2`   | spec／同上                                           | 6項目を一つずつ欠損、`null`                                                               | 開始前→失敗                                  | 各取得reject                                     | DB参照・file・実行枠                                  | DB・filesystem・process adapter      | missing/reject            | spawn 0回、失敗終了、枠回収                                                                                                                                                          | 実装済み／主test 1／除外なし                                              |
 | `R3.3 / EN-SPEC-R3-3`   | spec／`encode-contracts.spec.test.ts`                | duration 0・1・最大有効値、rate 1                                                         | 開始前                                       | timer設定                                        | timer                                                 | 非適用: 純粋計算                     | overflow/不正値は上流契約 | `duration × rate`と一致                                                                                                                                                              | 実装済み／主test 1／範囲外は上流理由                                  |
@@ -497,27 +528,28 @@ R8.1・R8.3・R8.5は動作のtest caseを持たず、R8.1はR1〜R7の49主test
 | `R7.3 / EN-SPEC-R7-3`   | spec／同上                                           | 再起動                                                                                    | 起動直後                                     | restart                                          | ID counter                                            | 非適用                               | なし                      | 最初のID 1                                                                                                                                                                           | 実装済み／主test 1／除外なし                                              |
 | `R7.4 / EN-SPEC-R7-4`   | spec／`encode-contracts.spec.test.ts`                | 最大安全整数、次の依頼                                                                    | 稼働中                                       | wrap境界                                         | ID counter                                            | 非適用                               | なし                      | 次IDを1へ戻す                                                                                                                                                                        | 実装済み／主test 1／除外なし                                              |
 | `R7.5 / EN-SPEC-R7-5`   | spec／同上                                           | 再起動前の孤立途中出力                                                                    | 再起動                                       | startup                                          | filesystem                                            | filesystem adapter                   | なし                      | scan・unlink 0回                                                                                                                                                                     | 実装済み／主test 1／除外なし                                              |
-| `R8.1 / EN-SPEC-R1-1〜EN-SPEC-R7-5（49主testの集合）` | spec／`encode-contracts.spec.test.ts`                | R1–R7契約一覧                                                                         | 全状態                                       | 通常・失敗・race                                 | 全機能固有資源                                        | adapter群                            | 代表失敗注入              | 49契約主testが一意に存在                                                                                                                                                             | 実装済み／主test 49／除外なし                                              |
+| `R8.1 / EN-SPEC-R1-1〜EN-SPEC-R7-5（55主testの集合）` | spec／`encode-contracts.spec.test.ts`                | R1–R7契約一覧                                                                         | 全状態                                       | 通常・失敗・race                                 | 全機能固有資源                                        | adapter群                            | 代表失敗注入              | 55契約主testが一意に存在                                                                                                                                                             | 実装済み／主test 55／除外なし                                              |
 | `R8.2 / EN-SPEC-R8-2`   | imp／`encode-internals.test.ts`・`*.imp.test.ts`     | 値域・分岐一覧                                                                        | 全内部状態                                   | 境界・settlement                                 | queue・timer・process・file                           | adapter群                            | 各分岐失敗                | 指定内部caseを追加imp caseへ収容                                                                                                                                                     | 実装済み／除外なし     |
-| `R8.3 / EN-MATRIX-R8-3` | Test Matrix／本節                                    | null、空、0、1、最小、最大、範囲外、不正型、重複                                          | 受付前・待機・実行・成功・失敗・取消・再起動 | 同着、取消×期限、late settlement                 | 待機枠・timer・process・途中出力・元file              | 全分類                               | 未分類cell                | 54行・主ID重複0・非適用理由あり                                                                                                                                                      | 実装済み（本表）／54 AC                                                    |
+| `R8.3 / EN-MATRIX-R8-3` | Test Matrix／本節                                    | null、空、0、1、最小、最大、範囲外、不正型、重複                                          | 受付前・待機・実行・成功・失敗・取消・再起動 | 同着、取消×期限、late settlement                 | 待機枠・timer・process・途中出力・元file              | 全分類                               | 未分類cell                | 60行・主ID重複0・非適用理由あり                                                                                                                                                      | 実装済み（本表）／60 AC                                                    |
 | `R8.4 / EN-INTEGRATION-T6-6-HTTP-IPC-FS-PROCESS` | integration／`encode-boundaries.integration.test.ts` | HTTP各操作、IPC各操作、衝突file、synthetic command                                        | 全状態                                       | process停止・IPC settlement                      | HTTP server・IPC peer・file・child・listener          | HTTP・IPC・filesystem・process実境界 | carrier/process/file失敗  | 9.4の境界caseを個別実行し成功・失敗・cleanupを観測                                                                                                                                   | 実装済み／主test＋境界case／DB transaction非適用                           |
 | `R8.5 / EN-GATE-R8-5`   | 品質判定／共有foundation                             | 機能固有suite（spec・imp・integration）                                                   | 全状態                                       | 全件成功とC0・C1                                 | test・coverage結果                                    | 共有foundation                       | 不一致未解決              | 全件成功とRuntime Requirement 9 Acceptance Criterion 9のC0・C1成立まで未完了                                                                                                         | 実装済み（共有gate）／除外2件（`EncodeFileManageModel.getFilePath`、`EncodeManageModel.checkQueue`） |
 
 入力観点の非適用は次のように限定する。TypeScript内部interfaceだけに対する不正型はcompile時型検証の責務であり、runtime
 castで存在しないvalidationを創作しない。ただし設定、HTTP payload、process stdoutの不正型は実際のruntime境界として検証す
 る。空は省略設定、空文字の環境変数・log・引数・空queueへ、`null`は出力なし・欠損外部取得へ、0と1は上限・件数・進捗・数値
-環境変数へ割り当てる。最小・最大・範囲外は`encodeQueueLimit`、識別番号、progress、durationへ割り当て、承認済み最大値がな
+環境変数へ割り当てる。最小・最大・範囲外は`encodeQueueLimit`、`encodeSuspendTimes`の時刻、識別番号、progress、durationへ割り当て、承認済み最大値がな
 い項目は上流validation境界として理由付き非適用にする。重複は同着受付、重複取消、重複progress、重複terminal・通知へ割り当
 てる。
 
 ### 9.2 必須観点と追加実装case
 
-R1からR7の49 ACはすべて`encode-contracts.spec.test.ts`の一意な`EN-SPEC-*`主testで判定する。次の`EN-IMP-*`はR8.2を満たす
+R1からR7の55 ACはすべて`encode-contracts.spec.test.ts`の一意な`EN-SPEC-*`主testで判定する。次の`EN-IMP-*`はR8.2を満たす
 追加caseであり、主testの代替や重複したAC traceにはしない。
 
 | 必須観点               | 主test／追加case                                                                                            | 判定とassertion                                                                                                                              |
 | ---------------------- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | `encodeQueueLimit`値域 | `EN-SPEC-R1-6`、`EN-SPEC-R1-7`／`EN-IMP-QUEUE-LIMIT-VALIDATION`                                             | propertyなし・空config objectだけが1,024。明示`null`、空文字、非数値、非安全整数は起動失敗                                                   |
+| 停止時間帯 | `EN-SPEC-R2-7`〜`EN-SPEC-R2-12`／`EN-IMP-SUSPEND-TIMES-VALIDATION`、`EN-IMP-SUSPEND-TIMES-RESUME`、`EN-IMP-SUSPEND-TIMES-LOCK-WAIT` | propertyなしだけが停止なし。境界`00:00`・`23:59`・`24:00`を受理し、明示`null`・不正型・形式外・範囲外・同時刻は起動失敗。再開timerは重複せず、delayは最も早い`end`まで、発火時の確認要求は空き枠と待機数の小さい方の回数。時間帯の開始前に要求され実行権を待っていた確認は、取得後に一件だけ開始する |
 | 再入                   | `EN-SPEC-R2-5`、`EN-SPEC-R6-9`／`EN-IMP-QUEUE-REENTRY`                                                      | queue確認中の追加・終了event再入でも同じjobを二重dequeueせず、実行権と枠を各一回だけ解放                                                     |
 | 受付実行権の取得失敗   | `EN-SPEC-R1-8`／`EN-IMP-ADMISSION-CLEANUP`                                                     | 受付reservationを一回解放。未取得の実行権は解放0回、ID・job・通知・queue追加0回                                                              |
 | job生成失敗            | `EN-SPEC-R1-9`／`EN-IMP-ADMISSION-CLEANUP`                                                       | 受付reservationと取得済み実行権を各一回解放し、不完全job・ID公開・通知0回                                                                    |
@@ -537,6 +569,7 @@ R1からR7の49 ACはすべて`encode-contracts.spec.test.ts`の一意な`EN-SPE
 | -------------- | ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
 | 受付前・受付中 | 起動snapshotの上限で同期予約し、直列化したままlease取得、満杯・取得失敗なら副作用なしで拒否 | reservationをlease付き待機一件へ移すか失敗時に一回解放                                 |
 | 待機           | FIFO末尾でexact leaseとともに保持し、取消なら開始しない                                     | 待機枠とleaseを各一回解放、process生成0回                                              |
+| 停止時間帯中   | 待機列を変更せず開始せず、再開timerを一つだけ保持する。実行中・受付・取消は影響を受けない | 再開timerの設定は一回、発火後に破棄し、空き枠の範囲だけ開始する |
 | 実行・停止中   | 高優先度handleを保持し、取消・期限・入替えは同じstop operationへjoin                        | timer、listener、stop promiseを重複生成せずchild直接signal 0回                         |
 | 成功・反映中   | 実行枠を先に解放し、DB登録または更新のsettlementを待つ                                      | queue finalize一回、結果反映一回                                                       |
 | 反映成功       | DB登録・更新成功を元file削除可否のcommit pointとする                                        | 全削除条件成立時だけ元file削除一回                                                     |
@@ -601,6 +634,12 @@ consumer側をfake carrierで検査する。
 | 2.4  | 5.2、6        | 共有枠失敗時の終了                             |
 | 2.5  | 5.2、5.6、9.2 | 終了後の次依頼確認と再入                       |
 | 2.6  | 4.1、4.2、7.3 | メモリー内管理                                 |
+| 2.7  | 5.2           | 停止時間帯中の待機保持                         |
+| 2.8  | 5.1、5.2      | 停止時間帯中の実行継続と受付                   |
+| 2.9  | 5.2           | 停止時間帯終了後の空き枠の範囲での再開         |
+| 2.10 | 4.3、5.2      | 時間帯の判定（境界・日付跨ぎ・ローカル時刻）   |
+| 2.11 | 4.3           | 起動時の読込・省略時なし・再起動時の反映       |
+| 2.12 | 4.3、7.1、7.2 | 値の検証と非公開設定                           |
 | 3.1  | 5.3           | 開始前の6項目確認。保存先外のdirectoryは親保存先直下へ |
 | 3.2  | 5.3、6        | 確認失敗時の終了                               |
 | 3.3  | 5.4           | duration×rate                                  |
@@ -635,7 +674,7 @@ consumer側をfake carrierで検査する。
 | 7.5  | 6             | 過去の途中出力を自動整理しない                 |
 | 8.1  | 9.1           | R1–R7の仕様testと一意な主test                  |
 | 8.2  | 9.1、9.2      | 内部値域・分岐と追加imp case                   |
-| 8.3  | 9.1、9.2、9.3 | 54 ACの状態・race・資源分類                    |
+| 8.3  | 9.1、9.2、9.3 | 60 ACの状態・race・資源分類                    |
 | 8.4  | 9.1、9.4      | HTTP・IPC・filesystem・process                 |
 | 8.5  | 9.1           | 単体・結合testの全件成功とC0・C1の品質判定     |
 
@@ -663,7 +702,7 @@ consumer側をfake carrierで検査する。
 | 機能固有仕様test          | `test/server/encoding/encode-contracts.spec.test.ts`                                                                                     | R1–R7の外部契約とR8.1                                                                  |
 | 機能固有実装test          | `test/server/encoding/encode-internals.test.ts`                                                                                          | 値域・分岐assertion                                                         |
 | 機能固有結合test          | `test/server/encoding/encode-boundaries.integration.test.ts`                                                                             | HTTP・IPC・filesystem・process                                                         |
-| 機能固有Test Matrix       | 本設計の§9.1                                                                                                                             | 54 ACの一意な主test                                                                    |
+| 機能固有Test Matrix       | 本設計の§9.1                                                                                                                             | 60 ACの一意な主test                                                                    |
 
 待機列・実行中一覧の所有構造、queue公開前のlease取得、recorded IDの保持時点、service child snapshot handler、または容量
 削除候補filterを変更する場合は、利用中snapshot、resource lease、Runtimeの最終deletion gate、および
