@@ -159,6 +159,20 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
     -   _Boundary: 起動時スナップショット設定・標準値・候補検証_
     -   _Depends: 4.1_
 
+-   [x] 4.4 中断されたエンコードの出力途中のファイルを削除する設定を一単位で追加する
+
+    -   `encodeRemoveInterruptedOutput` の省略時の `true`、`true`・`false` の受理、明示 `null`（値の無い key）、文字列
+        `'true'`・`'false'`、数値 `0`・`1`、object の拒否、および `!env` で与えた値の拒否を、target `unittest/spec`（設定の読
+        み込みを通した主 case）と `unittest/imp` が検証する。公開設定と HTTP の応答の入力に値を入れ、出力に現れないことを検証
+        する。
+    -   `src/model/IConfigFile.ts`、`src/model/Configuration.ts`、`config/config.yml.template`（記載例の comment）、
+        `docs/conf-manual.md` へ、型、補完・検証、標準設定、説明を加える。
+    -   初回の不正値は設定提供前に `ConfigValueError:encodeRemoveInterruptedOutput` とし、再読み込みの不正値は候補だけを破棄
+        して直前値を維持する。
+    -   _Requirements: 7.10, 7.11, 7.12, 7.15, 7.16_
+    -   _Boundary: 起動時スナップショット設定・標準値・候補検証_
+    -   _Depends: 4.3_
+
 -   [x] 5. 設定ライフサイクルを実ファイル境界で結合検証する
 -   [x] 5.1 初回読込、再読み込み、再起動相当の切替を結合検証する
 
@@ -186,16 +200,16 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
 -   [x] 6. 設定管理固有testを共有server品質gateへ接続する
 -   [x] 6.1 正式な機能固有test inventoryを作り`unittest/spec`を完成させる
 
-    -   `test/server/configuration/configuration.spec.test.ts`にRequirements 1から7の全41 ACと主case、補助
+    -   `test/server/configuration/configuration.spec.test.ts`にRequirements 1から7の全43 ACと主case、補助
         case、fixture、期待する戻り値・error・状態・effectを一意に対応付け、未割当ACを0件にする。対応表は同fileの
-        `[CFG-6.1-AC-TRACE]`が持ち、AC 1.1から7.14の41個の鍵ごとに、同directoryの`*.test.ts`に実在するcase IDを引き、
+        `[CFG-6.1-AC-TRACE]`が持ち、AC 1.1から7.16の43個の鍵ごとに、同directoryの`*.test.ts`に実在するcase IDを引き、
         `CFG-4.2-*`の補助caseを含まないこと、およびskip・todoのcaseが無いことを検査する。
     -   同fileで、読込・補完・正規化、HTTP/HTTPS最低条件、独立複製、再読み込み中の旧設定・成功後の新設定・失敗後の直前設
         定、公開allowlist、外部コマンド解釈、6項目と`encodeSuspendTimes`の既定値・検証・起動時保持を外部契約として検証する。
     -   `test/server/fixtures/configuration/`には実秘密情報と実運用pathを含まない合成YAML、鍵、証明書だけを配置し、
-        templateと実行fileはtestが一時directoryに作って回収する。Designの補足case（`CFG-4.2-*`）は正式trace外のままとし、41 ACの
+        templateと実行fileはtestが一時directoryに作って回収する。Designの補足case（`CFG-4.2-*`）は正式trace外のままとし、43 ACの
         inventory、Requirement 8のmatrix、case件数へ加えない。
-    -   完了時には、正式inventoryから全41 ACを成功したnamed caseへ逆引きでき、未割当、根拠のないskip、および補助
+    -   完了時には、正式inventoryから全43 ACを成功したnamed caseへ逆引きでき、未割当、根拠のないskip、および補助
         caseの正式trace混入がいずれも0件である。
     -   _Depends: 1.1, 1.2, 1.3, 2.1, 2.2, 3.1, 3.2, 4.1, 4.2, 4.3, 5.1, 5.2_
     -   _Requirements: 8.1_

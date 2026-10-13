@@ -134,6 +134,7 @@ flowchart LR
 | `rule`         | `add(rule)`、`update(rule)`、`enable(ruleId)`、`disable(ruleId)`、`delete(ruleId)`                                                                                                                                                                                  | 自動予約ルール機能                  |
 | `thumbnail`    | `regenerate()`、`fileCleanup()`、`add(videoFileId)`、`delete(thumbnailId)`                                                                                                                                                                                          | サムネイル管理機能                  |
 | `encodeEvent`  | `emitFinishEncode(info)`                                                                                                                                                                                                                                            | `EncodeCompletionSink.accept(info)` |
+| `encodeQueue`  | `add(option)`、`updateOutputPath(id, outputPath)`、`remove(id)`、`list()` | 録画ファイル変換機能の依頼記録窓口（`EncodeQueueStore`） |
 
 表にない target / operation は提供しない。interface と enum に名前だけが存在しても Dispatcher の固定表に handler がない
 operation は supported と扱わず、この設計だけで handler を追加しない。
@@ -539,10 +540,11 @@ timer は依頼ごとに一つだけ持つ。応答または同期送信失敗�
 
 ### 10.2 エンコード依頼
 
-録画完了後などにエンコード受付が必要な場合、現在の通知先へ `pushEncode` と依頼内容を送る。送信先を利用できない場合は、既
-存の呼出し元へ送信不能を知らせる契約を維持する。送信呼出しの同期失敗も同じcaller-facing failureとし、送信 callback の非
-同期失敗は運用ログへ記録する。いずれも依頼を保存、自動再送、または別のchildへ転送せず、新しい acknowledgment を追加しな
-い。
+録画完了後などにエンコード受付が必要な場合、`setEncode(option)` は依頼を録画ファイル変換機能の依頼記録窓口へ渡して同期で
+戻る。依頼記録窓口は識別番号を割り当てて依頼を記録した後、現在の通知先へ `pushEncode` と識別番号付きの依頼内容を送る
+（`pushEncode(encodeId, option)`）。通知先が無い、送信呼出しの同期失敗、送信 callback の非同期失敗は、いずれも運用ログへ記
+録して通知を破棄する。依頼の記録は残り、Web・API 側の次の起動時に録画ファイル変換機能が戻す。本機能は通知を保存、自動再
+送、または別のchildへ転送せず、新しい acknowledgment を追加しない。
 
 ### 10.3 一方向配送の失敗契約
 
@@ -551,7 +553,7 @@ timer は依頼ごとに一つだけ持つ。応答または同期送信失敗�
 | 配送種別       | recipientなし               | 同期throw                   | 非同期callback failure | 保存・retry・別child転送 |
 | -------------- | --------------------------- | --------------------------- | ---------------------- | ------------------------ |
 | `notifyClient` | 記録して破棄する。          | 記録して破棄する。          | 記録して破棄する。     | すべて0                  |
-| `pushEncode`   | 既存caller-facing failure。 | 既存caller-facing failure。 | 記録して破棄する。     | すべて0                  |
+| `pushEncode`   | 記録して破棄する（依頼の記録は残る）。 | 記録して破棄する（依頼の記録は残る）。 | 記録して破棄する。     | すべて0                  |
 
 replyは通知ではないためこの表へ混在させず、request-local targetに対するrecipientなし、同期throw、非同期callback failure
 を `PM-6.4`で検証する。
@@ -616,7 +618,7 @@ Reply Senderはrequest-local reply targetだけへ送る。対象が未接続、
 -   応答は同じ数値識別子と、結果またはエラーメッセージを持つ。
 -   識別子の範囲は1から `Number.MAX_SAFE_INTEGER` までである。
 -   応答順序は保証しない。
--   通知は `notifyClient` と `pushEncode` の二種類で、応答を要求しない。
+-   通知は `notifyClient` と `pushEncode` の二種類で、応答を要求しない。`pushEncode` は依頼の記録の識別番号を持つ。
 -   通常依頼の同時件数へ固定上限を追加しない。
 
 ### 12.2 公開 API 契約
@@ -683,7 +685,7 @@ schema、status、およびエラー表現を保持する。内部採番の変�
 | `src/model/ipc/IPCServer.ts`                                      | 通信相手登録、request-specific reply target、振分け・応答、および現在の通知先への通知を担う。                                                             |
 | `src/model/ipc/IEncodeCompletionSink.ts`                          | エンコード完了結果のpayloadとconsumer-owned inbound portを保持する。                                                                                      |
 | PM内部resource-control adapter                                    | 録画済みresource leaseとcurrent-generation snapshotのrequest/reply、通常5秒期限、late reply破棄を担う。                                                   |
-| `test/server/process-messaging/*.spec.test.ts`                    | R1からR6の44 ACに、`#PM-N.M`のcanonical主caseを一件ずつ持つ。                                                                                             |
+| `test/server/process-messaging/*.spec.test.ts`                    | R1からR6の45 ACに、`#PM-N.M`のcanonical主caseを一件ずつ持つ。                                                                                             |
 | `test/server/process-messaging/imp/*.test.ts`                     | 採番、状態遷移、timer、振分け、transport failure、および通信相手入替えの分岐を検証する。                                                                  |
 | `test/server/process-messaging/integration/*.integration.test.ts` | isolated child processによる依頼・応答・切断・再登録・再起動を検証する。                                                                                  |
 
@@ -729,7 +731,7 @@ schema、status、およびエラー表現を保持する。内部採番の変�
 
 | Evidence class | Status         | 確認事項                                                                                                                                                                                                       |
 | -------------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Specification  | `CONFIRMED`    | R1からR7の49 AC、特に同期連番、`pending`・`retired`、FIFO allocation wait、三種類の10分期限、request-specific reply target、identity-based current peer無効化をoracleとする。 |
+| Specification  | `CONFIRMED`    | R1からR7の50 AC、特に同期連番、`pending`・`retired`、FIFO allocation wait、三種類の10分期限、request-specific reply target、identity-based current peer無効化をoracleとする。 |
 | Source S1      | `CONFIRMED`    | `IPCClient`は`number`のIDを1から`Number.MAX_SAFE_INTEGER`まで同期予約し、折返し、`pending`、`retired`、識別子未付与FIFO waitを持つ。 |
 | Source S2      | `CONFIRMED`    | 一般送信は5秒、upload結果登録、video cleanup、drop-log cleanupは各600,000msである。 |
 | Source S3      | `CONFIRMED`    | `IPCServer.register()`の受付callbackは受付元childを`requester`としてcaptureし、`replay()`はそのchildだけへ応答する。 |
@@ -764,13 +766,13 @@ commit pointも変更しない。
 
 ### 17.1 Canonical registry
 
-R1からR6の主case globは`test/server/process-messaging/*.spec.test.ts`である。次の6 fileだけに44個のnamed `#PM-N.M`主case
+R1からR6の主case globは`test/server/process-messaging/*.spec.test.ts`である。次の6 fileだけに45個のnamed `#PM-N.M`主case
 を一意に置き、一つのACを複数の主caseへ割り当てない。補助`unittest/imp`またはintegration caseは主case件数へ加えない。補助caseは、確かめるACの主caseと同じ`[PM-N.M]`をtest名に付けてよく、
 `PM-N.M`を名乗るtestは主case一つとimp・integrationの補助caseに分かれる。主caseの一意性は`*.spec.test.ts`の中だけで数える。
 
 | Registry key          | Canonical locator / expansion                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | 責任                                                                                  |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
-| `SPEC-OPS`            | `test/server/process-messaging/operation-routing.spec.test.ts#PM-1.1`から`#PM-1.8`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | R1の8主case                                                                           |
+| `SPEC-OPS`            | `test/server/process-messaging/operation-routing.spec.test.ts#PM-1.1`から`#PM-1.9`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | R1の9主case                                                                           |
 | `SPEC-CORR`           | `test/server/process-messaging/correlation.spec.test.ts#PM-2.1`から`#PM-2.16`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | R2の16主case                                                                          |
 | `SPEC-VALID`          | `test/server/process-messaging/validation.spec.test.ts#PM-3.1`から`#PM-3.3`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | R3の3主case                                                                           |
 | `SPEC-DEADLINE`       | `test/server/process-messaging/deadlines.spec.test.ts#PM-4.1`から`#PM-4.7`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | R4の7主case                                                                           |
@@ -831,6 +833,7 @@ locator、Numeric ID、evidence keyは17.1と18節で同じ値を使う。
 | PM-1.6     | `test/server/process-messaging/operation-routing.spec.test.ts#PM-1.6` | S/G   | V-ARGS                                      | DSP/RE-AP                            | T-ORDER                                   | R-MSG/R-DSP                     | B-IPC/B-PORT・thumbnail handler失敗                            | thumbnail作成・再作成・削除・cleanupを配送 |
 | PM-1.7     | `test/server/process-messaging/operation-routing.spec.test.ts#PM-1.7` | S/G   | V-ARGS                                      | DSP/RE-AP                            | T-ORDER                                   | R-MSG/R-DSP                     | B-IPC/B-PORT・handler失敗                                      | `resetTimer`は担当へ、`emitFinishEncode(info)`はPM所有sinkへ配送しevent reverse import 0 |
 | PM-1.8     | `test/server/process-messaging/operation-routing.spec.test.ts#PM-1.8` | S/I   | V-ROUTE                                     | DSP/CAN-NA/RE-AP                     | T-SYNC                                    | R-DSP                           | B-PORT・業務拒否                                               | carrierはhandler結果を伝えるだけで業務可否を上書きしない |
+| PM-1.9     | `test/server/process-messaging/operation-routing.spec.test.ts#PM-1.9` | S/G   | V-ARGS                                      | DSP/RE-AP                            | T-5S                                      | R-MSG/R-DSP                     | B-IPC/B-PORT・記録窓口の失敗                                   | `encodeQueue`の`add`・`updateOutputPath`・`remove`・`list`をexact argsで依頼記録窓口へ一回ずつ配送し、結果・rejectを返す |
 | PM-2.1     | `test/server/process-messaging/correlation.spec.test.ts#PM-2.1`       | S/I/G | V-ID/V-ROUTE                                | REQ/RE-AP                            | T-SYNC                                    | R-CORR/R-MSG                    | B-IPC・send失敗                                                | 一意number、target、operation、argsを一envelopeで送る |
 | PM-2.2     | `test/server/process-messaging/correlation.spec.test.ts#PM-2.2`       | S/I   | V-ROUTE                                     | DSP                                  | T-SYNC                                    | R-DSP                           | B-PORT・未対応                                                 | fixed tableのexact handlerを一回呼ぶ |
 | PM-2.3     | `test/server/process-messaging/correlation.spec.test.ts#PM-2.3`       | S/G   | V-MESSAGE                                   | REQ/DSP                              | T-ORDER                                   | R-CORR/R-DSP                    | B-IPC・reply send失敗                                          | 成功resultを同じIDで返す |
@@ -867,18 +870,18 @@ locator、Numeric ID、evidence keyは17.1と18節で同じ値を使う。
 | PM-6.4     | `test/server/process-messaging/peer-registry.spec.test.ts#PM-6.4`     | S/I/G | V-PEER                                      | DSP/F/PEER                           | T-RACE                                    | R-DSP                           | B-IPC・reply recipientなし/同期throw/非同期callback failure    | request-local targetの三failureを記録・破棄し別child転送0 |
 | PM-6.5     | `test/server/process-messaging/peer-registry.spec.test.ts#PM-6.5`     | S/I   | V-PEER                                      | NTF/PEER                             | T-NOWAIT                                  | R-PEER                          | B-IPC・currentなし                                             | 状態通知send 0、保存0、listener/timer 0 |
 | PM-6.6     | `test/server/process-messaging/peer-registry.spec.test.ts#PM-6.6`     | S/I/G | V-PEER                                      | PEER/RST-AP                          | T-RACE                                    | R-PEER                          | B-IPC・四terminal/replacement同着                              | identity一致時だけcurrent無効化、旧eventは新child不変、listener解放 |
-| PM-7.1     | `*.spec.test.ts`の44主case#PM-7.1                                     | S     | V-EVIDENCE                                  | REQ/DSP/NTF/PEER                     | T-STATIC                                  | R-EVIDENCE                      | 44主case・欠落/重複                                      | R1-R6の44 ACと44 canonical主caseを一意対応 |
+| PM-7.1     | `*.spec.test.ts`の45主case#PM-7.1                                     | S     | V-EVIDENCE                                  | REQ/DSP/NTF/PEER                     | T-STATIC                                  | R-EVIDENCE                      | 45主case・欠落/重複                                      | R1-R6の45 ACと45 canonical主caseを一意対応 |
 | PM-7.2     | `IMP-CHAR-PM-7.2`                                                     | I     | V-ID/V-ROUTE/V-ARGS/V-TIME/V-MESSAGE/V-PEER | REQ/DSP/NTF/PEER/CAN-NA/RE-AP/RST-AP | T-SYNC/T-ORDER/T-5S/T-10M/T-RACE/T-NOWAIT | R-CORR/R-DSP/R-PEER/R-MSG       | B-PORT/B-IPC・全機能固有failure                                | concrete imp caseを一意対応し、不存在は各spec caseのcall ledgerで確認 |
-| PM-7.3     | 本節の Feature Test Matrix#PM-7.3                                    | M     | V-EVIDENCE                                  | 全profile                            | T-STATIC                                  | R-EVIDENCE                      | matrix・列/N/A欠落                                   | PM-1.1からPM-7.5の49行と全分類が揃う |
+| PM-7.3     | 本節の Feature Test Matrix#PM-7.3                                    | M     | V-EVIDENCE                                  | 全profile                            | T-STATIC                                  | R-EVIDENCE                      | matrix・列/N/A欠落                                   | PM-1.1からPM-7.5の50行と全分類が揃う |
 | PM-7.4     | `INT-BOUNDARY-PM-7.4`                                                 | G     | V-ID/V-MESSAGE/V-PEER                       | REQ/DSP/NTF/PEER/RST-AP              | T-ORDER/T-RACE                            | R-CORR/R-DSP/R-PEER             | child IPC/process・HTTP/DB/filesystem N/A                      | 逆順、切断、再登録、再起動非復元と全resource cleanup |
 | PM-7.5     | `RUNTIME-R9-PM-7.5`                                                   | Q     | V-EVIDENCE                                  | 品質判定 S/F                         | T-STATIC                                  | test/coverage                   | Runtime・未実行/失敗/未解決                                    | 単体・結合testの全件成功とRuntime R9 AC9のC0・C1が未成立なら未完了。PMでcommand・設定・判定の再定義0 |
 
-Feature Test Matrixは49行、Numeric IDは`PM-1.1`から`PM-7.5`の49個で、R1からR6の44主caseとR7の5 layerを重複なく
+Feature Test Matrixは50行、Numeric IDは`PM-1.1`から`PM-7.5`の50個で、R1からR6の45主caseとR7の5 layerを重複なく
 分離する。
 
 ## 18. Numeric Formal Trace
 
-Formal TraceはRequirements 1から7の49 Acceptance Criteriaを`PM-N.M`へ一対一で割り当てる。
+Formal TraceはRequirements 1から7の50 Acceptance Criteriaを`PM-N.M`へ一対一で割り当てる。
 
 | AC      | Numeric ID | Component / contract              | 状態・失敗                         | Canonical locator                                                     |
 | ------- | ---------- | --------------------------------- | ---------------------------------- | --------------------------------------------------------------------- |
@@ -890,6 +893,7 @@ Formal TraceはRequirements 1から7の49 Acceptance Criteriaを`PM-N.M`へ一�
 | R1.AC6  | PM-1.6     | Facade / thumbnail operations     | 配送・handler失敗                  | `test/server/process-messaging/operation-routing.spec.test.ts#PM-1.6` |
 | R1.AC7  | PM-1.7     | Facade / recording・consumer port | 配送・handler失敗                  | `test/server/process-messaging/operation-routing.spec.test.ts#PM-1.7` |
 | R1.AC8  | PM-1.8     | Dispatcher / domain boundary      | 業務判断を変更しない               | `test/server/process-messaging/operation-routing.spec.test.ts#PM-1.8` |
+| R1.AC9  | PM-1.9     | Facade / encode queue operations  | 通常5秒期限                        | `test/server/process-messaging/operation-routing.spec.test.ts#PM-1.9` |
 | R2.AC1  | PM-2.1     | Request envelope                  | 同期予約・send failure             | `test/server/process-messaging/correlation.spec.test.ts#PM-2.1`       |
 | R2.AC2  | PM-2.2     | Dispatcher table                  | exact handler                      | `test/server/process-messaging/correlation.spec.test.ts#PM-2.2`       |
 | R2.AC3  | PM-2.3     | Success reply                     | same ID/result                     | `test/server/process-messaging/correlation.spec.test.ts#PM-2.3`       |
@@ -926,13 +930,13 @@ Formal TraceはRequirements 1から7の49 Acceptance Criteriaを`PM-N.M`へ一�
 | R6.AC4  | PM-6.4     | Reply Sender                      | disconnected target record/discard | `test/server/process-messaging/peer-registry.spec.test.ts#PM-6.4`     |
 | R6.AC5  | PM-6.5     | Peer Registry                     | no current notification no-op      | `test/server/process-messaging/peer-registry.spec.test.ts#PM-6.5`     |
 | R6.AC6  | PM-6.6     | Peer Registry                     | four terminal identity fence       | `test/server/process-messaging/peer-registry.spec.test.ts#PM-6.6`     |
-| R7.AC1  | PM-7.1     | Feature test catalog              | 44主case                           | `*.spec.test.ts`の44主case#PM-7.1                                      |
+| R7.AC1  | PM-7.1     | Feature test catalog              | 45主case                           | `*.spec.test.ts`の45主case#PM-7.1                                      |
 | R7.AC2  | PM-7.2     | Feature test catalog              | implementation-characteristic      | `IMP-CHAR-PM-7.2`                                                     |
-| R7.AC3  | PM-7.3     | Feature test catalog              | 49行matrix                         | 本節の Feature Test Matrix#PM-7.3                                      |
+| R7.AC3  | PM-7.3     | Feature test catalog              | 50行matrix                         | 本節の Feature Test Matrix#PM-7.3                                      |
 | R7.AC4  | PM-7.4     | Feature test catalog              | child IPC integration              | `INT-BOUNDARY-PM-7.4`                                                 |
 | R7.AC5  | PM-7.5     | Runtime Requirement 9 判定        | server全体のC0・C1                 | `RUNTIME-R9-PM-7.5`                                                   |
 
-Formal Traceは49行、Numeric IDは49個、重複・余剰・未割当は0である。R1からR6は44個のcanonical `*.spec.test.ts#PM-N.M`主
+Formal Traceは50行、Numeric IDは50個、重複・余剰・未割当は0である。R1からR6は45個のcanonical `*.spec.test.ts#PM-N.M`主
 case、R7はspec case / implementation-characteristic / matrix / integration / 品質判定の5 layerである。
 
 ## 19. 不一致処理、risk、再確認条件

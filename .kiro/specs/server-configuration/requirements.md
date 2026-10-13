@@ -114,10 +114,10 @@ YAML 形式のサーバー設定を読み込み、省略値と表記を整え、
    き換える
 4. If 指定された実行ファイルが存在しないとき, the サーバー設定管理機能 shall 外部コマンドを開始せずエラーを返す
 
-### Requirement 7: 処理量、処理期限、および処理時間帯の設定
+### Requirement 7: 処理量、処理期限、処理時間帯、および中断時の後始末の設定
 
 **目的:** 運用者として、サーバー再起動時に反映される処理量上限、アップロード・外部コマンドの期限、およびエンコードを開始し
-ない時間帯を設定したい。
+ない時間帯と、再起動で中断されたエンコードの出力途中のファイルを削除するかを設定したい。
 
 #### Acceptance Criteria
 
@@ -135,7 +135,7 @@ YAML 形式のサーバー設定を読み込み、省略値と表記を整え、
 8. The サーバー設定管理機能 shall `thumbnailMaxPending` と `hookCommandMaxPending` に1以上10,000以下の整数だけを許可する
 9. The サーバー設定管理機能 shall `hookCommandTimeoutMs` と `uploadReceiveTimeoutMs` に1以上2,147,483,647以下の整数だけ
    を許可する
-10. If Requirement 7.7から7.9または7.14の条件を満たさない設定を読み込んだとき, the サーバー設定管理機能 shall その設定を利用する機
+10. If Requirement 7.7から7.9、7.14、または7.16の条件を満たさない設定を読み込んだとき, the サーバー設定管理機能 shall その設定を利用する機
     能を開始せず設定エラーを返す
 11. The サーバー設定管理機能 shall Requirement 7の設定をWeb UI向け公開設定へ含めない
 12. The サーバー設定管理機能 shall Requirement 7の設定を取得時の複製へ含めるが、各利用機能が起動時に保持した値を設定再読
@@ -144,6 +144,9 @@ YAML 形式のサーバー設定を読み込み、省略値と表記を整え、
 14. The サーバー設定管理機能 shall `encodeSuspendTimes` に、`start` と `end` の二つの文字列を持つobjectの配列で、`start`
     が`00:00`〜`23:59`、`end`が`00:00`〜`24:00`の`HH:mm`形式であり、かつ`start`と`end`が異なるものだけを許可する。要素
     の`start`・`end`以外のkeyは検証せずに無視し、その要素を受理する
+15. When `encodeRemoveInterruptedOutput` が省略されているとき, the サーバー設定管理機能 shall 中断されたエンコードの出力途中
+    のファイルを削除する設定として`true`を補う
+16. The サーバー設定管理機能 shall `encodeRemoveInterruptedOutput` に真偽値（`true`または`false`）だけを許可する
 
 ### Requirement 8: 機能固有サーバーテストの品質判定
 

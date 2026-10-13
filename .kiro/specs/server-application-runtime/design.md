@@ -326,7 +326,7 @@ interface IStorageRecordedUseSnapshotPort {
 object identityから確定したgenerationとPM request IDへleaseを結び付ける。Encodeは同じleaseを待機中から実行・結果反映
 terminalまで保持する。childがgenerationを自己申告して選ばない。live配信はrecorded resourceを使わないため対象外である。
 
-acquire/releaseは通常PM requestと同じ5秒期限を使用し、新しい設定値、retry、永続queue、または公開APIを追加しない。acquire
+acquire/releaseは通常PM requestと同じ5秒期限を使用し、新しい設定値、retry、永続queue、または公開APIを追加しない。Encodeの依頼の記録と、service childの起動時に記録から待機列へ戻す処理は`server-encoding`（Requirement 7.2）の責務であり、戻す依頼のleaseも新しいgenerationから同じacquireで取得する。acquire
 が失敗または期限超過ならEncode／録画file配信を開始しない。期限超過後のlate acquire replyはuse開始へ採用せず、同じ
 generationとrequest IDの解放をbest-effortで一回依頼する。releaseの送信・応答を確認できない場合、parentはそのleaseを「使
 用なし」へ推測で変えず、容量不足削除を`not-deleted`にする。これは新しい利用者向け業務operationではなく、承認済みの削除直

@@ -259,7 +259,7 @@ envelope、checksum、全種類 transaction、retry、path 長上限を追加し
         deterministic に注入し、無期限待ちは harness 側で観測後に process を終了する。
     -   実 database、実設定、実 media file、実 endpoint を使わず、relation と実 file の除外、部分確定、進行順、終了状態
         を確認する。
-    -   完了時には、SQLite 固有 suite が 40 acceptance criteria の該当 trace を再現し、A 分類の production code に差分が
+    -   完了時には、SQLite 固有 suite が 41 acceptance criteria の該当 trace を再現し、A 分類の production code に差分が
         なく、B 分類の production 差分が `server-persistence` owner だけに限定されている。
     -   _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 2.1, 2.2, 2.3, 2.4, 2.5, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 4.1,
         4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9, 4.10, 4.11, 4.12, 4.13, 5.1, 5.2, 5.3, 5.4, 5.5, 5.6_
@@ -275,7 +275,7 @@ envelope、checksum、全種類 transaction、retry、path 長上限を追加し
         種類別 transaction と行別追加を一つの全体 transaction へ統合しないことを確認する。
     -   実認証情報を fixture、log、assertion output に保存せず、suite の success、failure、cleanup で隔離 schema を片付
         ける。
-    -   完了時には、MySQL 固有 suite が 40 acceptance criteria の該当 trace を再現し、backend 差を新しい management
+    -   完了時には、MySQL 固有 suite が 41 acceptance criteria の該当 trace を再現し、backend 差を新しい management
         post-process で隠していない。
     -   _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 4.1, 4.2, 4.3, 4.4, 4.5, 4.6,
         4.7, 4.8, 4.9, 4.10, 4.11, 4.12, 4.13, 5.1, 5.3, 5.4, 5.5, 5.6_
@@ -333,15 +333,15 @@ envelope、checksum、全種類 transaction、retry、path 長上限を追加し
     -   _Requirements: 7.2_
     -   _Depends: 6.1_
 
--   [x] 6.3 状態・失敗・時間・資源・非適用matrixを45 ACで完成させる
+-   [x] 6.3 状態・失敗・時間・資源・非適用matrixを46 ACで完成させる
 
-    -   Design のMatrix 45行で、R1からR7の45 ACを、DB接続前・待機中・接続後、JSON解析前・処理中・部分成功・失敗、1,000 ms再確認と
+    -   Design のMatrix 46行で、R1からR7の46 ACを、DB接続前・待機中・接続後、JSON解析前・処理中・部分成功・失敗、1,000 ms再確認と
         無期限待機、runtimeと管理commandおよび複数管理commandの競合へ割り当てる。cancelはOS process終了、再入は別command
         process、restartはcheckpointなしの新規実行とし、製品内cancel API・resume・排他lockを作らない。
     -   transaction、connection、input file、output file、timer、child process、pipe、listenerを取得からterminal結果まで
         追跡する。
     -   HTTPとIPCはcarrier自体がなく非適用、Windows service commandはruntime成功が非適用である理由を保持する。
-    -   完了時には、45行の契約、種別、入力、状態、時間・race、資源、境界、failure、期待結果の欠落・重複・未分類・N/A理由欠落が
+    -   完了時には、46行の契約、種別、入力、状態、時間・race、資源、境界、failure、期待結果の欠落・重複・未分類・N/A理由欠落が
         0件になる。
     -   _Requirements: 7.3_
     -   _Depends: 6.1, 6.2_
@@ -386,6 +386,15 @@ envelope、checksum、全種類 transaction、retry、path 長上限を追加し
     -   _Requirements: 3.8, 7.1_
     -   _Depends: 6.1_
 
+
+-   [x] 6.7 復元の最初にエンコードの依頼の記録を全件削除することを`SPEC-RESTORE#MT-3.9`の仕様testで確かめる
+
+    -   `src/DBTools.ts` の復元で、最初の種類（自動予約ルール）の復元より前に `IEncodeQueueDB.deleteAll()` を一回呼ぶ。失敗した
+        ら後続の種類を開始せず、`restore error` の失敗として終了する。バックアップには依頼の記録を含めない。
+    -   fake port で、呼出しの順序（全件削除が最初）、reject 時に後続の復元が始まらないこと、公開 message が `restore error`
+        のみであることを `SPEC-RESTORE#MT-3.9` で検証し、実 SQLite の DB integration test で記録が消えることを確かめる。
+    -   _Requirements: 3.9_
+    -   _Boundary: 管理情報の復元_
 -   [x] 6.7 本機能の品質判定を満たす
 
     -   Task 6.1から6.6の機能固有の単体test（`unittest/spec`・`unittest/imp`）と`integration`を、`server-application-runtime`が
@@ -424,7 +433,7 @@ envelope、checksum、全種類 transaction、retry、path 長上限を追加し
 | 5.3  | `test/server/management-tools/compiled-cli.integration.test.ts`                                                                                                                                   | `compiled process E2E, Node.js 24/26 matrix` | `5.1, 5.2`                                                        | `npm run test:server:integration -- test/server/management-tools/compiled-cli.integration.test.ts`                                                                                                                                                                                          |
 | 6.1  | `test/server/management-tools/cli.spec.test.ts`<br>`test/server/management-tools/backup.spec.test.ts`<br>`test/server/management-tools/restore.spec.test.ts`<br>`test/server/management-tools/v1-migration.spec.test.ts`<br>`test/server/management-tools/database-lifecycle.spec.test.ts` | `unittest/spec` | `1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 3.3, 4.1, 4.2, 4.3, 4.4, 4.5, 5.3` | `npm run test:server:spec -- test/server/management-tools/cli.spec.test.ts`<br>`npm run test:server:spec -- test/server/management-tools/backup.spec.test.ts`<br>`npm run test:server:spec -- test/server/management-tools/restore.spec.test.ts`<br>`npm run test:server:spec -- test/server/management-tools/v1-migration.spec.test.ts`<br>`npm run test:server:spec -- test/server/management-tools/database-lifecycle.spec.test.ts` |
 | 6.2  | `test/server/management-tools/cli-json.test.ts`                                                                                                                                                   | `unittest/imp` | `6.1`                                                             | `npm run test:server:imp -- test/server/management-tools/cli-json.test.ts`                                                                                                                                                                                                                  |
-| 6.3  | `.kiro/specs/server-management-tools/design.md` | レビュー | `6.1, 6.2` | なし（DesignのMatrix 45行のレビュー） |
+| 6.3  | `.kiro/specs/server-management-tools/design.md` | レビュー | `6.1, 6.2` | なし（DesignのMatrix 46行のレビュー） |
 | 6.4  | `test/server/management-tools/db-filesystem.integration.test.ts`                                                                                                                                  | `integration` | `3.3, 4.5, 6.3`                                                   | `npm run test:server:integration -- test/server/management-tools/db-filesystem.integration.test.ts`                                                                                                                                                                                         |
 | 6.5  | `test/server/management-tools/compiled-cli.integration.test.ts`                                                                                                                                   | `integration` | `5.3, 6.3`                                                        | `npm run test:server:integration -- test/server/management-tools/compiled-cli.integration.test.ts`                                                                                                                                                                                          |
 | 6.6  | `test/server/management-tools/restore.spec.test.ts` | `unittest/spec` | `6.1` | `npm run test:server:spec -- test/server/management-tools/restore.spec.test.ts` |
