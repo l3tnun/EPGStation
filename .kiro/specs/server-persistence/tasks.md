@@ -582,15 +582,15 @@ tag と image digest を検証する。
 -   [x] 10. エンコードの依頼の記録を保存する
 -   [x] 10.1 `EncodeQueue` entity、`IEncodeQueueDB`、SQLite・MySQL の migration を追加する
 
-    -   entity `EncodeQueue`（table `encode_queue`）を、`id`（主キー、自動採番なし。SQLite `integer`・MySQL `bigint`）、
-        `option`（text NOT NULL）、`outputPath`（text NULL 可）、`createdAt`（SQLite `integer`・MySQL `bigint`、NOT NULL）で定義す
-        る。
+    -   entity `EncodeQueue`（table `encode_queue`）を、`id`（主キー、自動採番なし。SQLite・MySQL とも `bigint`。SQLite の
+        `integer` の主キーは行番号の別名になり自動採番されるため使わない）、`option`（text NOT NULL）、`outputPath`（text NULL
+        可）、`createdAt`（`bigint`、NOT NULL）で定義する。
     -   `IEncodeQueueDB` に `insertOnce`、`updateOutputPath`、`deleteOnce`、`deleteAll`、`findAll`（識別番号の昇順）を置き、
-        依頼内容は JSON text で保存し、読むときに object へ戻す。MySQL の `bigint` が文字列で返る場合も数値へ戻す。
+        依頼内容は JSON 文字列のまま保存・返却する（解釈と検証は利用側）。MySQL の `bigint` が文字列で返る場合も数値へ戻す。
     -   migration は `npm run orm-gen` で SQLite と MySQL の各1本を生成し、lint と format を通す形に整える（SQL は変えない）。
     -   `repository-harness.ts` の entity 一覧、`migrations.integration.test.ts`・`migrations.imp.test.ts`・
         `orm-cli.integration.test.ts` の migration 一覧、`stryker.db.config.mjs` の `mutate` を更新する。
-    -   最大安全整数の識別番号、JSON の往復、出力先の更新、存在しない識別番号の削除・更新、全件削除、昇順の全件を SQLite と
+    -   最大安全整数の識別番号、JSON 文字列の往復、出力先の更新、存在しない識別番号の削除・更新、全件削除、昇順の全件を SQLite と
         MySQL の結合 test、builder の呼出しを `unittest/imp` で検証する。
     -   _Requirements: 2.7, 6.1, 6.2_
     -   _Boundary: エンコードの依頼の記録の保存_

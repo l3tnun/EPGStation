@@ -53,12 +53,14 @@ const expectedSQLiteMigrations = [
     'AddRawExtended1624085241577',
     'AddEventRelay1716647355956',
     'AddRuleBS4K1790497623886',
+    'AddEncodeQueue1791894953778',
 ] as const;
 const expectedMysqlMigrations = [
     'Init1601186196169',
     'AddRawExtended1624084351785',
     'AddEventRelay1716647383635',
     'AddRuleBS4K1790497623885',
+    'AddEncodeQueue1791894978617',
 ] as const;
 const syntheticAttemptKey = '__EPGSTATION_PERSISTENCE_SYNTHETIC_MIGRATION_ATTEMPT__';
 
@@ -250,7 +252,7 @@ describe('SQLite forward migration integration', () => {
         }
     });
 
-    it('[PERSIST-1.4-SQLITE-DOWN] reverts the four forward migrations through undoLastMigration in reverse order', async () => {
+    it('[PERSIST-1.4-SQLITE-DOWN] reverts the five forward migrations through undoLastMigration in reverse order', async () => {
         const runtime = await createIsolatedCompiledRuntime();
         await mkdir(dirname(runtime.sqliteDatabasePath), { recursive: true });
         const operator = runtime.createOperator({ dbtype: 'sqlite' }, logger());
@@ -258,6 +260,14 @@ describe('SQLite forward migration integration', () => {
         try {
             source = await operator.getConnection();
             await expect(migrationNames(source)).resolves.toEqual(expectedSQLiteMigrations);
+            const encodeQueueTable = "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'encode_queue'";
+            await expect(source.query(encodeQueueTable)).resolves.toEqual([{ name: 'encode_queue' }]);
+
+            await source.undoLastMigration();
+            await expect(migrationNames(source)).resolves.toEqual(expectedSQLiteMigrations.slice(0, 4));
+            await expect(source.query(encodeQueueTable)).resolves.toEqual([]);
+            const ruleBeforeBS4KRevert = (await source.query('PRAGMA table_info("rule")')) as Array<{ name: string }>;
+            expect(ruleBeforeBS4KRevert.map(column => column.name)).toContain('BS4K');
 
             await source.undoLastMigration();
             await expect(migrationNames(source)).resolves.toEqual(expectedSQLiteMigrations.slice(0, 3));
@@ -296,7 +306,7 @@ describe('SQLite forward migration integration', () => {
             await source.undoLastMigration();
             await expect(migrationNames(source)).resolves.toEqual([]);
             const remainingProductTables = (await source.query(
-                `SELECT name FROM sqlite_master WHERE type = 'table' AND name IN ('reserve', 'program', 'recorded', 'rule', 'channel', 'recorded_tag', 'recorded_history', 'video_file', 'thumbnail', 'drop_log_file', 'recorded_tags_recorded_tag')`,
+                `SELECT name FROM sqlite_master WHERE type = 'table' AND name IN ('reserve', 'program', 'recorded', 'rule', 'channel', 'recorded_tag', 'recorded_history', 'video_file', 'thumbnail', 'drop_log_file', 'recorded_tags_recorded_tag', 'encode_queue')`,
             )) as Array<{ name: string }>;
             expect(remainingProductTables).toEqual([]);
         } finally {
@@ -320,8 +330,9 @@ describe('SQLite forward migration integration', () => {
             source = await operator.getConnection();
             await expect(migrationNames(source)).resolves.toEqual(expectedSQLiteMigrations);
 
-            // Revert only AddRuleBS4K so the row inserted below lands on the pre-migration `rule`
-            // schema, the same shape a v2 database being moved onto this candidate would have.
+            // Revert AddEncodeQueue and then AddRuleBS4K so the row inserted below lands on the pre-migration
+            // `rule` schema, the same shape a v2 database being moved onto this candidate would have.
+            await source.undoLastMigration();
             await source.undoLastMigration();
             await expect(migrationNames(source)).resolves.toEqual(expectedSQLiteMigrations.slice(0, 3));
             await source.query(
@@ -664,7 +675,7 @@ describe.each(['mysql', 'mariadb'] as const)('%s forward migration integration',
         }
     }, 60_000);
 
-    it('[PERSIST-1.4-MYSQL-DOWN] reverts the four forward migrations through undoLastMigration in reverse order', async () => {
+    it('[PERSIST-1.4-MYSQL-DOWN] reverts the five forward migrations through undoLastMigration in reverse order', async () => {
         let runtime: IsolatedCompiledRuntime | undefined;
         let schema: Awaited<ReturnType<MySqlRuntime['createSchema']>> | undefined;
         let source: DataSource | undefined;
@@ -674,6 +685,14 @@ describe.each(['mysql', 'mariadb'] as const)('%s forward migration integration',
             const operator = runtime.createOperator({ dbtype: 'mysql', mysql: schema.config }, logger());
             source = await operator.getConnection();
             await expect(migrationNames(source)).resolves.toEqual(expectedMysqlMigrations);
+            const encodeQueueTable = "SHOW TABLES LIKE 'encode_queue'";
+            await expect(source.query(encodeQueueTable)).resolves.toHaveLength(1);
+
+            await source.undoLastMigration();
+            await expect(migrationNames(source)).resolves.toEqual(expectedMysqlMigrations.slice(0, 4));
+            await expect(source.query(encodeQueueTable)).resolves.toEqual([]);
+            const ruleBeforeBS4KRevert = (await source.query('SHOW COLUMNS FROM `rule`')) as Array<{ Field: string }>;
+            expect(ruleBeforeBS4KRevert.map(column => column.Field)).toContain('BS4K');
 
             await source.undoLastMigration();
             await expect(migrationNames(source)).resolves.toEqual(expectedMysqlMigrations.slice(0, 3));
@@ -709,6 +728,7 @@ describe.each(['mysql', 'mariadb'] as const)('%s forward migration integration',
             expect(remainingTableNames).not.toContain('reserve');
             expect(remainingTableNames).not.toContain('program');
             expect(remainingTableNames).not.toContain('channel');
+            expect(remainingTableNames).not.toContain('encode_queue');
         } finally {
             await cleanupInOrder([
                 async () => {
@@ -733,8 +753,9 @@ describe.each(['mysql', 'mariadb'] as const)('%s forward migration integration',
             source = await operator.getConnection();
             await expect(migrationNames(source)).resolves.toEqual(expectedMysqlMigrations);
 
-            // Revert only AddRuleBS4K so the row inserted below lands on the pre-migration `rule`
-            // schema, the same shape a v2 database being moved onto this candidate would have.
+            // Revert AddEncodeQueue and then AddRuleBS4K so the row inserted below lands on the pre-migration
+            // `rule` schema, the same shape a v2 database being moved onto this candidate would have.
+            await source.undoLastMigration();
             await source.undoLastMigration();
             await expect(migrationNames(source)).resolves.toEqual(expectedMysqlMigrations.slice(0, 3));
             await source.query(

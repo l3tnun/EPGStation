@@ -93,6 +93,7 @@ export const EXPECTED_MYSQL_MIGRATIONS = [
     'AddRawExtended1624084351785',
     'AddEventRelay1716647383635',
     'AddRuleBS4K1790497623885',
+    'AddEncodeQueue1791894978617',
 ] as const;
 
 /** The explicit budget of a case that applies the operator's forward migrations to an empty MySQL schema. */

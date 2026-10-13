@@ -68,6 +68,7 @@ const privateSourceConfig = (): Record<string, unknown> => ({
     hookCommandTimeoutMs: 'hook-timeout-marker',
     storageLimitCommandTimeoutMs: { marker: 'storage-timeout-carrier-marker' },
     encodeSuspendTimes: [{ start: '18:00', end: 'encode-suspend-marker' }],
+    encodeRemoveInterruptedOutput: false,
     unknownPrivateSetting: 'unknown-private-marker',
 });
 
@@ -152,6 +153,7 @@ describe('configuration public HTTP projection boundary', () => {
                     'hookCommandTimeoutMs',
                     'storageLimitCommandTimeoutMs',
                     'encodeSuspendTimes',
+                    'encodeRemoveInterruptedOutput',
                 ]) {
                     expect(body).not.toHaveProperty(internalField);
                 }

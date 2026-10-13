@@ -140,6 +140,7 @@ class Configuration implements IConfiguration {
             Configuration.SETTIMEOUT_DELAY_MAX_MS,
         );
         this.assertEncodeSuspendTimes(newConfig.encodeSuspendTimes);
+        this.assertBoolean('encodeRemoveInterruptedOutput', newConfig.encodeRemoveInterruptedOutput);
 
         // http or https の設定が存在するかチェック
         if (
@@ -212,6 +213,18 @@ class Configuration implements IConfiguration {
      */
     private assertIntegerInRange(field: string, value: number, maximum: number): void {
         if (!Number.isInteger(value) || value < 1 || value > maximum) {
+            throw new Error(`ConfigValueError:${field}`);
+        }
+    }
+
+    /**
+     * value が真偽値 (true または false) であることを検証する。null・文字列 ('true' を含む)・数値は許可しない
+     * @param field: エラー message に含める設定項目名
+     * @param value: 検証対象の値
+     * @throws Error ConfigValueError:${field}
+     */
+    private assertBoolean(field: string, value: unknown): void {
+        if (typeof value !== 'boolean') {
             throw new Error(`ConfigValueError:${field}`);
         }
     }
@@ -445,6 +458,7 @@ namespace Configuration {
         encodeProcessNum: 0,
         concurrentEncodeNum: 0,
         encodeSuspendTimes: [],
+        encodeRemoveInterruptedOutput: true,
         encode: [],
         isSuppressReservesUpdateAllLog: false,
         urlscheme: {

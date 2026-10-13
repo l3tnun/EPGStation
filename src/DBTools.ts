@@ -11,6 +11,7 @@ import Thumbnail from './db/entities/Thumbnail.js';
 import VideoFile from './db/entities/VideoFile.js';
 import IDBOperator from './model/db/IDBOperator.js';
 import IDropLogFileDB from './model/db/IDropLogFileDB.js';
+import IEncodeQueueDB from './model/db/IEncodeQueueDB.js';
 import IRecordedDB from './model/db/IRecordedDB.js';
 import IRecordedHistoryDB from './model/db/IRecordedHistoryDB.js';
 import IRecordedTagDB from './model/db/IRecordedTagDB.js';
@@ -56,6 +57,7 @@ class DBTools {
     private connectionChecker: IConnectionCheckModel;
     private dbOperator: IDBOperator;
     private dropLogFileDB: IDropLogFileDB;
+    private encodeQueueDB: IEncodeQueueDB;
     private recordedDB: IRecordedDB;
     private recordedHistoryDB: IRecordedHistoryDB;
     private recordedTagDB: IRecordedTagDB;
@@ -98,6 +100,7 @@ class DBTools {
         this.connectionChecker = container.get<IConnectionCheckModel>('IConnectionCheckModel');
         this.dbOperator = container.get<IDBOperator>('IDBOperator');
         this.dropLogFileDB = container.get<IDropLogFileDB>('IDropLogFileDB');
+        this.encodeQueueDB = container.get<IEncodeQueueDB>('IEncodeQueueDB');
         this.recordedDB = container.get<IRecordedDB>('IRecordedDB');
         this.recordedHistoryDB = container.get<IRecordedHistoryDB>('IRecordedHistoryDB');
         this.recordedTagDB = container.get<IRecordedTagDB>('IRecordedTagDB');
@@ -216,6 +219,21 @@ class DBTools {
                 console.error(err);
                 process.exit(1);
             }
+        }
+
+        // エンコードの依頼の記録を全件削除する。復元前の記録が、復元後の別の録画済み番組を指して
+        // 変換されないため。依頼の記録はバックアップに含めず、復元もしない。失敗したら後続を開始しない
+        this.log.system.info('--- delete encode queue ---');
+        // 元の DB の error は log へ残し、管理者へは `restore error` だけを返す（各種類の復元の失敗と同じ形）
+        const isDeleted = await this.encodeQueueDB.deleteAll().then(
+            () => true,
+            (err: unknown) => {
+                this.log.system.error(err);
+                return false;
+            },
+        );
+        if (isDeleted === false) {
+            throw new Error('restore error');
         }
 
         // restore

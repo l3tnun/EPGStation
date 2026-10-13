@@ -11,6 +11,16 @@ export interface OperationCase {
 const option = { name: 'synthetic-option' };
 const rule = { id: 71, name: 'synthetic-rule' };
 const info = { mode: 'synthetic-mode', recordedId: 81, videoFileId: 82 };
+const encodeOption = {
+    mode: 'synthetic-mode',
+    parentDir: 'synthetic-parent',
+    recordedId: 91,
+    removeOriginal: false,
+    sourceVideoFileId: 92,
+};
+const encodeOutputPath = 'synthetic-output/encoded.mp4';
+const encodeRequestToken = 'synthetic-request-token-1';
+const encodeQueueRecords = [{ createdAt: 1_000, id: 93, option: encodeOption, outputPath: null }];
 
 export const operationCases: readonly OperationCase[] = [
     {
@@ -222,6 +232,47 @@ export const operationCases: readonly OperationCase[] = [
         handlerArgs: [info],
         invoke: client => client.encodeEvent.emitFinishEncode(info),
         model: 'encodeEvent',
+    },
+    {
+        args: { option: encodeOption, requestToken: encodeRequestToken },
+        domain: 'encodeQueue',
+        func: 'add',
+        handlerArgs: [encodeOption, encodeRequestToken],
+        invoke: client => client.encodeQueue.add(encodeOption, encodeRequestToken),
+        model: 'encodeQueue',
+        result: 93,
+    },
+    {
+        args: { requestToken: encodeRequestToken },
+        domain: 'encodeQueue',
+        func: 'abandon',
+        handlerArgs: [encodeRequestToken],
+        invoke: client => client.encodeQueue.abandon(encodeRequestToken),
+        model: 'encodeQueue',
+    },
+    {
+        args: { encodeId: 93, outputPath: encodeOutputPath },
+        domain: 'encodeQueue',
+        func: 'updateOutputPath',
+        handlerArgs: [93, encodeOutputPath],
+        invoke: client => client.encodeQueue.updateOutputPath(93, encodeOutputPath),
+        model: 'encodeQueue',
+    },
+    {
+        args: { encodeId: 93 },
+        domain: 'encodeQueue',
+        func: 'remove',
+        handlerArgs: [93],
+        invoke: client => client.encodeQueue.remove(93),
+        model: 'encodeQueue',
+    },
+    {
+        domain: 'encodeQueue',
+        func: 'list',
+        handlerArgs: [],
+        invoke: client => client.encodeQueue.list(),
+        model: 'encodeQueue',
+        result: encodeQueueRecords,
     },
 ] as const;
 

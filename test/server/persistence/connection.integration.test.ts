@@ -52,6 +52,7 @@ const expectedSQLiteMigrations = [
     'AddRawExtended1624085241577',
     'AddEventRelay1716647355956',
     'AddRuleBS4K1790497623886',
+    'AddEncodeQueue1791894953778',
 ] as const;
 
 interface Deferred<Value> {

@@ -45,6 +45,10 @@ const repositories = {
     IRecordedTagDB: load<new (...args: any[]) => any>('model/db/RecordedTagDB.js'),
 };
 
+// エンコードの依頼の記録。復元の種類ではないため `entities`・`repositories` に入れず、MT-3.9 の case だけで使う。
+const EncodeQueueEntity = load<new () => any>('db/entities/EncodeQueue.js');
+const EncodeQueueRepository = load<new (...args: any[]) => any>('model/db/EncodeQueueDB.js');
+
 const cleanups: Array<() => Promise<void>> = [];
 const drainCleanups = async () => {
     const failures: unknown[] = [];
@@ -797,6 +801,53 @@ describe('management SQLite/MySQL and filesystem characterization', () => {
         },
         120_000,
     );
+
+    it('[MT-3.9] deletes every encode request record in actual SQLite before restoring and keeps them out of the backup', async () => {
+        try {
+            const database = await backend('sqlite');
+            const restoreInput = join(database.root, 'synthetic-mt39-restore.json');
+            const backupOutput = join(database.root, 'synthetic-mt39-backup.json');
+            await writeFile(restoreInput, JSON.stringify(restoreDocument()), 'utf8');
+            const encodeQueueDB = new EncodeQueueRepository(
+                createRecordingLoggerModel().loggerModel,
+                database.operator,
+                { run: <T>(operation: () => Promise<T>): Promise<T> => operation() },
+            );
+            await encodeQueueDB.insertOnce({ id: 1, option: '{"recordedId":41}', outputPath: null, createdAt: 10 });
+            await encodeQueueDB.insertOnce({
+                id: 2,
+                option: '{"recordedId":42}',
+                outputPath: join(database.root, 'synthetic-partial.mp4'),
+                createdAt: 11,
+            });
+            expect(await database.source.getRepository(EncodeQueueEntity).count()).toBe(2);
+
+            const harness = toolHarness(database.ports, { IEncodeQueueDB: encodeQueueDB });
+            const DBTools = await loadTool('DBTools.js', harness.container, fs);
+            const restoreTool = await withProcess(['-m', 'restore', '-o', restoreInput], () => new DBTools());
+            await restoreTool.restore();
+
+            expect(await database.source.getRepository(EncodeQueueEntity).count()).toBe(0);
+            for (const [name, Entity] of Object.entries(entities)) {
+                expect(await database.source.getRepository(Entity).count(), `${name} restore row count`).toBe(1);
+            }
+
+            await encodeQueueDB.insertOnce({
+                id: 3,
+                option: '{"marker":"synthetic-encode-queue-marker"}',
+                outputPath: null,
+                createdAt: 12,
+            });
+            const backupTool = await withProcess(['-m', 'backup', '-o', backupOutput], () => new DBTools());
+            await backupTool.backup();
+            const backup = JSON.parse(await readFile(backupOutput, 'utf8')) as Record<string, unknown>;
+            expect(Object.keys(backup)).toEqual(Object.keys(versionlessBackup()));
+            expect(await readFile(backupOutput, 'utf8')).not.toContain('synthetic-encode-queue-marker');
+            expect(await database.source.getRepository(EncodeQueueEntity).count()).toBe(1);
+        } finally {
+            await drainCleanups();
+        }
+    }, 120_000);
 
     it.each(['sqlite', 'mysql'] as const)(
         '[MT-5.1/MT-5.2] keeps %s backup input and rows untouched until DB availability settles',

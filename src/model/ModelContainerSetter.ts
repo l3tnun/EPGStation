@@ -1,3 +1,4 @@
+import type * as apid from '../../api.js';
 import { readFileSync } from 'fs';
 import { Container } from 'inversify';
 import { join } from 'path';
@@ -47,6 +48,8 @@ import DropLogFileDB from './db/DropLogFileDB.js';
 import IChannelDB from './db/IChannelDB.js';
 import IDBOperator from './db/IDBOperator.js';
 import IDropLogFileDB from './db/IDropLogFileDB.js';
+import EncodeQueueDB from './db/EncodeQueueDB.js';
+import IEncodeQueueDB from './db/IEncodeQueueDB.js';
 import IProgramDB from './db/IProgramDB.js';
 import IRecordedDB from './db/IRecordedDB.js';
 import IRecordedHistoryDB from './db/IRecordedHistoryDB.js';
@@ -151,6 +154,10 @@ import StartupContinuationCoordinator from './workflow/StartupContinuationCoordi
 import EncodeFileManageModel from './service/encode/EncodeFileManageModel.js';
 import EncodeFinishModel from './service/encode/EncodeFinishModel.js';
 import EncodeManageModel from './service/encode/EncodeManageModel.js';
+import IEncodeQueueStorePort from './service/encode/IEncodeQueueStorePort.js';
+import EncodeQueueStore from './operator/encode/EncodeQueueStore.js';
+import IEncodeQueueStore, { EncodeQueueRecord } from './operator/encode/IEncodeQueueStore.js';
+import FileUtil from '../util/FileUtil.js';
 import EncodeProcessManageModel from './service/encode/EncodeProcessManageModel.js';
 import EncoderModel from './service/encode/EncoderModel.js';
 import IEncodeFileManageModel from './service/encode/IEncodeFileManageModel.js';
@@ -207,6 +214,7 @@ const recordedPlaybackSourceProviderKey = 'IRecordedPlaybackSourceProvider';
 const recordedDeliveryLeaseConsumerKey = 'RecordedDeliveryLeaseConsumer';
 const serviceChildRecordedUseCompositionKey = 'ServiceChildRecordedUseComposition';
 const serviceChildRecordedUseRegistryKey = 'ServiceChildRecordedUseRegistry';
+const encodingQueueStorePortKey = 'EncodingQueueStorePort';
 
 type EncodeFinishSettlementOwner = IEncodeManageModel & {
     setEncodeFinishModel(model: IEncodeFinishModel): void;
@@ -230,6 +238,41 @@ class EncodingRecordedResourceUseAdapter implements IRecordedResourceUsePort {
     private getResourceUseClient(): RecordedResourceUseClient {
         if (this.resourceUseClient === null) throw new Error('RecordedResourceUseClientNotBound');
         return this.resourceUseClient;
+    }
+}
+
+/** Web・API 側処理の依頼記録 port。`IPCClient.encodeQueue` が作られた後で結び付ける（`IPCClient` が
+ *  `IEncodeManageModel` を注入するため、constructor で受け取ると循環する）。 */
+class EncodingQueueStoreAdapter implements IEncodeQueueStorePort {
+    private port: IEncodeQueueStorePort | null = null;
+
+    public bind(port: IEncodeQueueStorePort): void {
+        this.port = port;
+    }
+
+    public add(option: apid.AddEncodeProgramOption, requestToken: string): Promise<apid.EncodeId> {
+        return this.getPort().add(option, requestToken);
+    }
+
+    public abandon(requestToken: string): Promise<void> {
+        return this.getPort().abandon(requestToken);
+    }
+
+    public updateOutputPath(encodeId: apid.EncodeId, outputPath: string): Promise<void> {
+        return this.getPort().updateOutputPath(encodeId, outputPath);
+    }
+
+    public remove(encodeId: apid.EncodeId): Promise<void> {
+        return this.getPort().remove(encodeId);
+    }
+
+    public list(): Promise<EncodeQueueRecord[]> {
+        return this.getPort().list();
+    }
+
+    private getPort(): IEncodeQueueStorePort {
+        if (this.port === null) throw new Error('EncodeQueueStorePortNotBound');
+        return this.port;
     }
 }
 
@@ -301,6 +344,7 @@ class ServiceChildRecordedUseComposition {
         private readonly encoding: IEncodeManageModel,
         private readonly delivery: StagedDeliveryRecordedUseSnapshotProvider,
         private readonly deliverySnapshot: DeliveryRecordedUseSnapshotProvider,
+        private readonly encodingQueueStore: EncodingQueueStoreAdapter,
     ) {}
 
     public bind(ipcClient: IPCClient): void {
@@ -310,6 +354,7 @@ class ServiceChildRecordedUseComposition {
         const resourceUseClient = ipcClient.recordedResourceUseClient;
         this.encodingAdapter.bind(resourceUseClient);
         this.deliveryAdapter.bind(resourceUseClient);
+        this.encodingQueueStore.bind(ipcClient.encodeQueue);
         this.delivery.bind(this.deliverySnapshot);
         ipcClient.recordedUseSnapshotHandlerRegistrationPort.register(
             new ServiceChildRecordedUseSnapshotHandler(this.encoding, this.delivery),
@@ -404,6 +449,10 @@ export const set = (container: Container): void => {
     container.bind<IVideoFileDB>('IVideoFileDB').to(VideoFileDB).inSingletonScope();
 
     container.bind<IDropLogFileDB>('IDropLogFileDB').to(DropLogFileDB).inSingletonScope();
+
+    container.bind<IEncodeQueueDB>('IEncodeQueueDB').to(EncodeQueueDB).inSingletonScope();
+
+    container.bind<IEncodeQueueStore>('IEncodeQueueStore').to(EncodeQueueStore).inSingletonScope();
 
     container.bind<IRuleEvent>('IRuleEvent').to(RuleEvent).inSingletonScope();
 
@@ -644,6 +693,11 @@ export const set = (container: Container): void => {
         .inSingletonScope();
 
     container
+        .bind<EncodingQueueStoreAdapter>(encodingQueueStorePortKey)
+        .toDynamicValue(() => new EncodingQueueStoreAdapter())
+        .inSingletonScope();
+
+    container
         .bind<IEncodeManageModel>('IEncodeManageModel')
         .toDynamicValue(
             context =>
@@ -654,6 +708,14 @@ export const set = (container: Container): void => {
                     context.get<EncoderModelProvider>('EncoderModelProvider'),
                     context.get<IEncodeEvent>('IEncodeEvent'),
                     context.get<EncodingRecordedResourceUseAdapter>(encodingRecordedResourceUsePortKey),
+                    undefined,
+                    context.get<EncodingQueueStoreAdapter>(encodingQueueStorePortKey),
+                    {
+                        recordedDB: context.get<IRecordedDB>('IRecordedDB'),
+                        videoUtil: context.get<IVideoUtil>('IVideoUtil'),
+                        isSameFile: EncodeManageModel.isSameFile,
+                        removeFile: FileUtil.unlink,
+                    },
                 ),
         )
         .inSingletonScope();
@@ -670,6 +732,7 @@ export const set = (container: Container): void => {
                         stagedDeliveryRecordedUseSnapshotProviderKey,
                     ),
                     context.get<DeliveryRecordedUseSnapshotProvider>(deliveryRecordedUseSnapshotProviderKey),
+                    context.get<EncodingQueueStoreAdapter>(encodingQueueStorePortKey),
                 ),
         )
         .inSingletonScope();

@@ -279,6 +279,34 @@ describe('server configuration implementation characterization', () => {
         );
     });
 
+    it.each([
+        ['true', true],
+        ['false', false],
+    ])('[CFG-4.4-BOUNDARY] preserves %s for encodeRemoveInterruptedOutput exactly', (_label, value) => {
+        const configuration = createConfiguration();
+
+        const formatted = configuration.formatConfig({ ...cloneCandidate(), encodeRemoveInterruptedOutput: value });
+
+        expect(formatted.encodeRemoveInterruptedOutput).toBe(value);
+    });
+
+    it.each([
+        ['null', null],
+        ["the string 'true'", 'true'],
+        ["the string 'false'", 'false'],
+        ['an empty string', ''],
+        ['the number 0', 0],
+        ['the number 1', 1],
+        ['an object', { enabled: true }],
+        ['an array', [true]],
+    ])('[CFG-4.4-INVALID] rejects %s for encodeRemoveInterruptedOutput', (_label, value) => {
+        const configuration = createConfiguration();
+
+        expect(() => configuration.formatConfig({ ...cloneCandidate(), encodeRemoveInterruptedOutput: value })).toThrow(
+            'ConfigValueError:encodeRemoveInterruptedOutput',
+        );
+    });
+
     it('[CFG-2.1-DEFERRED-ATOMIC-RELOAD] exposes only the old clone while reading and replaces the complete internal reference once', async () => {
         const { watchFile } = installReloadDouble(reloadCandidate(48100, 'old-generation'));
         const logger = createLogger();
@@ -357,6 +385,7 @@ describe('server configuration implementation characterization', () => {
         };
         expect(Object.values(configuration)).not.toContain(snapshotConsumer);
         expect(Object.getOwnPropertyNames(Configuration.prototype).sort()).toEqual([
+            'assertBoolean',
             'assertEncodeSuspendTimes',
             'assertIntegerInRange',
             'assertPositiveSafeInteger',
@@ -545,6 +574,7 @@ describe('server configuration implementation characterization', () => {
         ['uploadTempDir', () => join(Configuration.ROOT_PATH, 'data', 'upload')],
         ['encodeProcessNum', () => 0],
         ['concurrentEncodeNum', () => 0],
+        ['encodeRemoveInterruptedOutput', () => true],
         ['streamFilePath', () => join(Configuration.ROOT_PATH, 'data', 'streamfiles')],
     ];
 

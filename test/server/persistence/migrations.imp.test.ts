@@ -215,6 +215,13 @@ const expectations: readonly Expectation[] = [
         down: ['DROP COLUMN ON rule'],
     },
     {
+        dialect: 'mysql',
+        file: '1791894978617-AddEncodeQueue',
+        className: 'AddEncodeQueue1791894978617',
+        up: ['CREATE TABLE encode_queue'],
+        down: ['DROP TABLE encode_queue'],
+    },
+    {
         dialect: 'sqlite',
         file: '1601185891878-Init',
         className: 'Init1601185891878',
@@ -355,6 +362,13 @@ const expectations: readonly Expectation[] = [
             'RENAME temporary_rule TO rule',
         ],
         down: ['RENAME rule TO temporary_rule', 'CREATE TABLE rule', 'COPY INTO rule', 'DROP TABLE temporary_rule'],
+    },
+    {
+        dialect: 'sqlite',
+        file: '1791894953778-AddEncodeQueue',
+        className: 'AddEncodeQueue1791894953778',
+        up: ['CREATE TABLE encode_queue'],
+        down: ['DROP TABLE encode_queue'],
     },
 ];
 

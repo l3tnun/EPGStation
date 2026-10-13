@@ -81,7 +81,10 @@ const logger = {
 const client = new IPCClient(
     { getLogger: () => logger },
     { notifyClient: () => observe('notification', { kind: 'notifyClient' }) },
-    { push: value => observe('notification', { kind: 'pushEncode', value }) },
+    {
+        push: value => observe('notification', { kind: 'push', value }),
+        pushPersisted: async (encodeId, value) => observe('notification', { encodeId, kind: 'pushEncode', value }),
+    },
 );
 
 const observeState = () =>
@@ -114,6 +117,13 @@ process.on('message', message => {
         case 'request':
             observe('requestStarted', { key: message.key });
             client.recorded.addVideoFile({ marker: message.marker }).then(
+                value => observe('settled', { key: message.key, status: 'resolved', value }),
+                error => observe('settled', { error: error.message, key: message.key, status: 'rejected' }),
+            );
+            return;
+        case 'encodeQueue':
+            observe('requestStarted', { key: message.key });
+            client.encodeQueue[message.func](...message.args).then(
                 value => observe('settled', { key: message.key, status: 'resolved', value }),
                 error => observe('settled', { error: error.message, key: message.key, status: 'rejected' }),
             );
@@ -506,6 +516,58 @@ describe('compiled process-messaging child IPC boundary: out of order, disconnec
         expect(await child.state()).toMatchObject({ leased: 0, pending: 0, retired: 0, timers: 0, waiters: 0 });
     });
 
+    it('[Task 8.1] [PM-1.9] carries encode queue record operations and the recorded pushEncode through a real child IPC channel', async () => {
+        const { domains, server } = makeServer();
+        const option = { mode: 'synthetic-mode', parentDir: 'synthetic-parent', recordedId: 61, sourceVideoFileId: 62 };
+        const records = [{ createdAt: 1_000, id: 63, option, outputPath: 'synthetic-output/encoded.mp4' }];
+        domains.encodeQueue.add.mockResolvedValue(63);
+        domains.encodeQueue.list.mockResolvedValue(records);
+        domains.encodeQueue.remove.mockRejectedValue(new Error('synthetic-queue-store-failure'));
+        domains.encodeQueue.abandon.mockResolvedValue(undefined);
+        domains.encodeQueue.enqueueFromRecording.mockImplementation(
+            (request: unknown, send: (encodeId: number, value: unknown) => boolean) => {
+                send(64, request);
+            },
+        );
+        const child = await createCompiledChildHarness();
+        server.register(child.child);
+
+        const commands = [
+            { args: [option, 'synthetic-request-token-3'], func: 'add', key: 'add' },
+            { args: [63, 'synthetic-output/encoded.mp4'], func: 'updateOutputPath', key: 'updateOutputPath' },
+            { args: [], func: 'list', key: 'list' },
+            { args: [63], func: 'remove', key: 'remove' },
+            { args: ['synthetic-request-token-4'], func: 'abandon', key: 'abandon' },
+        ];
+        for (const command of commands) await child.command({ kind: 'encodeQueue', ...command });
+        const settled = await Promise.all(
+            commands.map(({ key }) => child.waitForObservation('settled', observation => observation.key === key)),
+        );
+
+        expect(settled).toEqual([
+            expect.objectContaining({ key: 'add', status: 'resolved', value: 63 }),
+            expect.objectContaining({ key: 'updateOutputPath', status: 'resolved' }),
+            expect.objectContaining({ key: 'list', status: 'resolved', value: records }),
+            expect.objectContaining({ error: 'synthetic-queue-store-failure', key: 'remove', status: 'rejected' }),
+            expect.objectContaining({ key: 'abandon', status: 'resolved' }),
+        ]);
+        expect(domains.encodeQueue.add).toHaveBeenCalledExactlyOnceWith(option, 'synthetic-request-token-3');
+        expect(domains.encodeQueue.abandon).toHaveBeenCalledExactlyOnceWith('synthetic-request-token-4');
+        expect(domains.encodeQueue.updateOutputPath).toHaveBeenCalledExactlyOnceWith(
+            63,
+            'synthetic-output/encoded.mp4',
+        );
+        expect(domains.encodeQueue.list).toHaveBeenCalledExactlyOnceWith();
+        expect(domains.encodeQueue.remove).toHaveBeenCalledExactlyOnceWith(63);
+
+        expect(server.setEncode(option)).toBeUndefined();
+        await expect(
+            child.waitForObservation('notification', observation => observation.kind === 'pushEncode'),
+        ).resolves.toMatchObject({ encodeId: 64, kind: 'pushEncode', value: option });
+        expect(domains.encodeQueue.enqueueFromRecording).toHaveBeenCalledOnce();
+        expect(await child.state()).toMatchObject({ leased: 0, pending: 0, retired: 0, timers: 0, waiters: 0 });
+    });
+
     it('[Task 5.1] keeps the 5-second and 10-minute boundaries terminal across late replies', async () => {
         const normal = deferred<string>();
         const adoption = deferred<string>();
@@ -876,10 +938,11 @@ describe('compiled process-messaging child IPC boundary: out of order, disconnec
         ).resolves.toMatchObject({
             kind: 'notifyClient',
         });
-        server.setEncode({ recordedId: 52 } as never);
+        expect(server.pushEncode(52, { recordedId: 52 } as never)).toBe(true);
         await expect(
             replacement.waitForObservation('notification', observation => observation.kind === 'pushEncode'),
         ).resolves.toMatchObject({
+            encodeId: 52,
             kind: 'pushEncode',
             value: { recordedId: 52 },
         });

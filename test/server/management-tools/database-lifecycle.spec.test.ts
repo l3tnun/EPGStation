@@ -78,6 +78,7 @@ describe('management database lifecycle characterization', () => {
         'IConnectionCheckModel',
         'IDBOperator',
         'IDropLogFileDB',
+        'IEncodeQueueDB',
         'IRecordedDB',
         'IRecordedHistoryDB',
         'IRecordedTagDB',

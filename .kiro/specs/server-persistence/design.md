@@ -281,7 +281,7 @@ interface IPromiseRetry {
 | `IDropLogFileDB`     | 追加、件数更新、削除、restore                          | ID、全件                                                  | log 実体は操作しない                     |
 | `IThumbnailDB`       | 追加、削除、recorded 単位削除、restore                 | ID、全件                                                  | image 実体は操作しない                   |
 | `IRecordedTagDB`     | 追加、更新、削除、relation 追加/削除、restore          | ID、一覧/件数                                             | many-to-many relation を所有する         |
-| `IEncodeQueueDB`     | 追加（`insertOnce`）、出力先の更新（`updateOutputPath`）、削除（`deleteOnce`）、全件削除（`deleteAll`） | 全件（`findAll`、識別番号の昇順） | 識別番号は呼出し元が渡し自動採番しない。依頼内容はJSON textで保存し、読むときに戻す。restoreは持たない |
+| `IEncodeQueueDB`     | 追加（`insertOnce`）、出力先の更新（`updateOutputPath`）、削除（`deleteOnce`）、全件削除（`deleteAll`） | 全件（`findAll`、識別番号の昇順） | 識別番号は呼出し元が渡し自動採番しない。依頼内容はJSON文字列のまま保存・返却し、解釈と検証は利用側（`server-encoding`の依頼記録窓口）が行う。restoreは持たない |
 
 `IProgramDB` の時刻による照会は、端点を次のとおり扱う。放送局と時刻による照会（`findChannelIdAndTime`）は、指定した放送局で
 `startAt <= 時刻 < endAt` の番組を 1 件返す。開始時刻は含み、終了時刻は含まないため、前の番組の終了時刻と次の番組の開始時刻が

@@ -231,6 +231,7 @@ const container = { get: (key: string): unknown => {
         case 'IIPCServer': return { register: noOperation };
         case 'IEPGUpdateExecutorManageModel': return { execute: noOperation };
         case 'IEncodeFinishModel': return { set: noOperation };
+        case 'IEncodeManageModel': return { restore: async (): Promise<void> => undefined };
         case 'IServiceServer': return { start: noOperation };
         case 'IEPGUpdater': return { start: () => pending };
         default: return {};
@@ -604,6 +605,8 @@ const container = {
                 return { checkMirakurun: () => pending, checkDB: () => pending };
             case 'IEncodeFinishModel':
                 return { set: (): void => undefined };
+            case 'IEncodeManageModel':
+                return { restore: async (): Promise<void> => undefined };
             case 'IServiceServer':
                 return {
                     start: (): void => undefined,

@@ -55,7 +55,16 @@ const createClient = (): Client => ({
     release: vi.fn(async () => undefined),
 });
 
-const createIpcClient = (client: Client) => ({
+const createEncodeQueue = () => ({
+    add: vi.fn(async () => 41),
+    abandon: vi.fn(async () => undefined),
+    updateOutputPath: vi.fn(async () => undefined),
+    remove: vi.fn(async () => undefined),
+    list: vi.fn(async () => []),
+});
+
+const createIpcClient = (client: Client, encodeQueue = createEncodeQueue()) => ({
+    encodeQueue,
     recordedResourceUseClient: client,
     recordedUseSnapshotHandlerRegistrationPort: { register: vi.fn() },
 });
@@ -227,6 +236,61 @@ describe('ModelContainerSetter service-child recorded-use composition', () => {
         expect(ipcClient.recordedUseSnapshotHandlerRegistrationPort.register).toHaveBeenCalledOnce();
         expect(container.get('IEncodeFinishModel')).toBe(finishModel);
         expect(ipcClient.recordedUseSnapshotHandlerRegistrationPort.register).toHaveBeenCalledOnce();
+    });
+
+    it('[AR-9.4] fails the encode queue store adapter until the IPC client is bound, then delegates every operation', async () => {
+        const container = createContainer();
+        const adapter = container.get<{
+            add(option: unknown, requestToken: string): Promise<number>;
+            abandon(requestToken: string): Promise<void>;
+            updateOutputPath(encodeId: number, outputPath: string): Promise<void>;
+            remove(encodeId: number): Promise<void>;
+            list(): Promise<unknown[]>;
+        }>('EncodingQueueStorePort');
+        const option = { recordedId: 5 };
+
+        expect(() => adapter.add(option, 'synthetic-token')).toThrow('EncodeQueueStorePortNotBound');
+        expect(() => adapter.abandon('synthetic-token')).toThrow('EncodeQueueStorePortNotBound');
+        expect(() => adapter.updateOutputPath(41, 'synthetic-output.mp4')).toThrow('EncodeQueueStorePortNotBound');
+        expect(() => adapter.remove(41)).toThrow('EncodeQueueStorePortNotBound');
+        expect(() => adapter.list()).toThrow('EncodeQueueStorePortNotBound');
+
+        const encodeQueue = createEncodeQueue();
+        container.rebind('IIPCClient').toConstantValue(createIpcClient(createClient(), encodeQueue));
+        container.rebind('ISocketIOManageModel').toConstantValue({ notifyClient: vi.fn() });
+        container.rebind('IEncodeManageModel').toConstantValue({
+            getQueuedAndRunningRecordedIds: () => ({ recordedIds: new Set<number>(), status: 'known' }),
+            setEncodeFinishModel: vi.fn(),
+        });
+        container.get('IEncodeFinishModel');
+
+        await expect(adapter.add(option, 'synthetic-token')).resolves.toBe(41);
+        await adapter.abandon('synthetic-token');
+        await adapter.updateOutputPath(41, 'synthetic-output.mp4');
+        await adapter.remove(41);
+        await expect(adapter.list()).resolves.toEqual([]);
+        expect(encodeQueue.add).toHaveBeenCalledExactlyOnceWith(option, 'synthetic-token');
+        expect(encodeQueue.abandon).toHaveBeenCalledExactlyOnceWith('synthetic-token');
+        expect(encodeQueue.updateOutputPath).toHaveBeenCalledExactlyOnceWith(41, 'synthetic-output.mp4');
+        expect(encodeQueue.remove).toHaveBeenCalledExactlyOnceWith(41);
+        expect(encodeQueue.list).toHaveBeenCalledOnce();
+    });
+
+    it('[AR-9.4] builds the encode queue with the queue store adapter and the restoration dependencies', () => {
+        const container = createContainer();
+        const model = container.get<object>('IEncodeManageModel') as unknown as {
+            encodeQueueStorePort: unknown;
+            restoreDependencies: { recordedDB: unknown; videoUtil: unknown; isSameFile: unknown; removeFile: unknown };
+        };
+
+        expect(model.encodeQueueStorePort).toBe(container.get('EncodingQueueStorePort'));
+        expect(model.restoreDependencies.recordedDB).toBe(container.get('IRecordedDB'));
+        expect(model.restoreDependencies.videoUtil).toBe(container.get('IVideoUtil'));
+        expect(model.restoreDependencies.isSameFile).toBe(
+            (EncodeManageModel as unknown as { isSameFile: unknown }).isSameFile,
+        );
+        expect(model.restoreDependencies.removeFile).toEqual(expect.any(Function));
+        expect(container.get('IEncodeQueueStore')).toBe(container.get('IEncodeQueueStore'));
     });
 
     it('[AR-9.4] tracks deliveries in one shared registry that the snapshot provider reads', () => {

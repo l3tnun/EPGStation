@@ -32,6 +32,7 @@ const dependencies = {
     IConnectionCheckModel: { checkDB: async () => event('db:check') },
     IDBOperator: { closeConnection: async () => event('db:close') },
     IDropLogFileDB: { findAll: async () => (event('read:drop-log'), []) },
+    IEncodeQueueDB: { deleteAll: async () => event('delete-all:encode-queue') },
     IRecordedDB: emptyCollection('recorded'),
     IRecordedHistoryDB: { findAll: async () => (event('read:recorded-history'), []) },
     IRecordedTagDB: emptyCollection('recorded-tag'),

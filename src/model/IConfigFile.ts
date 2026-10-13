@@ -168,6 +168,8 @@ export default interface IConfigFile {
         start: string;
         end: string;
     }[];
+    // 再起動で中断されたエンコードの出力途中のファイルを、再起動後に削除するか
+    encodeRemoveInterruptedOutput: boolean;
     encode: {
         name: string;
         cmd: string;

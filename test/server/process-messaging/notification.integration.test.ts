@@ -44,18 +44,18 @@ const run = (): Promise<unknown[]> =>
             messages.push(message);
             if ((message as any).observation === 'ready') {
                 child.send({ type: 'notifyClient' });
-                child.send({ type: 'pushEncode', value: { recordedId: 31, mode: 'synthetic' } });
+                child.send({ encodeId: 41, type: 'pushEncode', value: { recordedId: 31, mode: 'synthetic' } });
             }
             if (messages.length === 3) finish();
         });
     });
 
 describe('compiled IPCClient reverse notification boundary', () => {
-    it('[Task 1.2] delivers exact one-way payloads to client-owned ports without replies', async () => {
+    it('[Task 1.2] [Task 8.1] delivers exact one-way payloads to client-owned ports without replies', async () => {
         await expect(run()).resolves.toEqual([
             { observation: 'ready' },
             { observation: 'notifyClient' },
-            { observation: 'pushEncode', value: { recordedId: 31, mode: 'synthetic' } },
+            { encodeId: 41, observation: 'pushEncode', value: { recordedId: 31, mode: 'synthetic' } },
         ]);
     });
 });

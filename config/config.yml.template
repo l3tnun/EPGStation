@@ -74,6 +74,8 @@ concurrentEncodeNum: 1
 # encodeSuspendTimes:
 #     - start: '18:00'
 #       end: '24:00'
+# 再起動で中断されたエンコードの出力途中のファイルを、再起動後に削除するか（既定 true。残すときは false）
+# encodeRemoveInterruptedOutput: true
 encode:
     - name: H.264
       cmd: '%NODE% %ROOT%/config/enc.js'

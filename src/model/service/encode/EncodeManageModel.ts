@@ -1,5 +1,7 @@
 import * as path from 'path';
 import * as events from 'events';
+import * as fs from 'fs';
+import { randomUUID } from 'crypto';
 import { inject, injectable, unmanaged } from 'inversify';
 // lodash 本体は UMD で、名前付き export を静的に読み取れない。使う関数を直接読む。
 import cloneDeep from 'lodash/cloneDeep.js';
@@ -14,6 +16,23 @@ import { EncodingRecordedUseSnapshot } from './IEncodingRecordedUseSnapshotProvi
 import IRecordedResourceUsePort from './IRecordedResourceUsePort.js';
 import { EncodeOption, EncoderModelProvider, IEncoderModel } from './IEncoderModel.js';
 import IEncodeFinishModel from './IEncodeFinishModel.js';
+import IEncodeQueueStorePort from './IEncodeQueueStorePort.js';
+import type { EncodeQueueRecord } from '../../operator/encode/IEncodeQueueStore.js';
+import type IRecordedDB from '../../db/IRecordedDB.js';
+import type IVideoUtil from '../../api/video/IVideoUtil.js';
+
+/**
+ * 起動時の復元（`restore`）で使う読取とファイル操作。録画済み番組と録画ファイルの読取、録画ファイルの full path、
+ * 親保存先の path、同じ実体のファイルかの判定、および出力途中のファイルの削除を行う。
+ */
+export interface EncodeRestoreDependencies {
+    recordedDB: Pick<IRecordedDB, 'findId'>;
+    videoUtil: Pick<IVideoUtil, 'getFullFilePathFromVideoFile' | 'getParentDirPath'>;
+    /** 二つの path が同じ実体（device と inode）のファイルを指すか。どちらかが存在しなければ false */
+    isSameFile(a: string, b: string): Promise<boolean>;
+    /** ファイルを削除する */
+    removeFile(filePath: string): Promise<void>;
+}
 
 /** 1件のエンコード（`IEncoderModel`）が録画ファイルの使用権を借りている間の状態。 */
 interface RecordedUseLease {
@@ -69,8 +88,27 @@ class EncodeManageModel implements IEncodeManageModel {
     private waitQueue: IEncoderModel[] = [];
     /** 現在プロセスを起動して実行中のエンコード一覧。 */
     private runningQueue: IEncoderModel[] = [];
-    /** 次に発行する encodeId の候補。`Number.MAX_SAFE_INTEGER` に達したら 0 へ巻き戻る。 */
-    private idCnt: number = 1;
+    /** 依頼の記録（管理側の依頼記録窓口）への操作。識別番号もここで割り当てられる。未注入なら記録せず、
+     *  識別番号を `processLocalNextEncodeId` から順に割り当てる */
+    private encodeQueueStorePort: IEncodeQueueStorePort | null;
+    /** 記録 port が未注入のときに次に割り当てる識別番号 */
+    private processLocalNextEncodeId: number = 1;
+    /** 起動時の復元で使う読取とファイル操作。未注入なら記録の判定を省き、そのまま戻す。 */
+    private restoreDependencies: EncodeRestoreDependencies | null;
+    /** 中断された変換の出力途中のファイルを復元時に削除するか（`encodeRemoveInterruptedOutput`、省略時 true） */
+    private removeInterruptedOutput: boolean;
+    /** `restore` を一度だけ始めるための Promise */
+    private restoreStarted: Promise<void> | null = null;
+    /** 復元の間だけ設定され、受付・取消はこれの完了を待つ */
+    private restoring: Promise<void> | null = null;
+    /** 起動時の記録の一覧に含まれていた識別番号。識別番号付きの受け渡しの重複除去に使う */
+    private listedEncodeIds = new Set<apid.EncodeId>();
+    /** 識別番号付きの受け渡しを受付中の識別番号。復元が同じ識別番号を二重に戻さないために使う */
+    private admittingEncodeIds = new Set<apid.EncodeId>();
+    /** 復元が判定中の識別番号。受け渡しが同じ識別番号を二重に受け付けないために使う */
+    private restoringEncodeIds = new Set<apid.EncodeId>();
+    /** 一覧の取得に失敗したときのやり直しの timer */
+    private restoreRetryTimer: ReturnType<typeof setTimeout> | null = null;
     /** 録画ファイルの使用権取得/解放の委譲先。DI で注入されなければ
      *  `legacyRecordedResourceUsePort`（no-op）を使う。 */
     private recordedResourceUsePort: IRecordedResourceUsePort;
@@ -93,6 +131,8 @@ class EncodeManageModel implements IEncodeManageModel {
         @inject('IEncodeEvent') encodeEvent: IEncodeEvent,
         @unmanaged() recordedResourceUsePort?: IRecordedResourceUsePort,
         @unmanaged() encodeFinishModel?: IEncodeFinishModel,
+        @unmanaged() encodeQueueStorePort?: IEncodeQueueStorePort,
+        @unmanaged() restoreDependencies?: EncodeRestoreDependencies,
     ) {
         this.log = logger.getLogger();
         this.executeManagementModel = executeManagementModel;
@@ -112,6 +152,9 @@ class EncodeManageModel implements IEncodeManageModel {
         this.encodeEvent = encodeEvent;
         this.recordedResourceUsePort = recordedResourceUsePort ?? legacyRecordedResourceUsePort;
         this.encodeFinishModel = encodeFinishModel ?? null;
+        this.encodeQueueStorePort = encodeQueueStorePort ?? null;
+        this.restoreDependencies = restoreDependencies ?? null;
+        this.removeInterruptedOutput = config.encodeRemoveInterruptedOutput !== false;
 
         this.listener.on(EncodeManageModel.NEEDS_CHECK_QUEUE_EVENT, this.requestCheckQueue.bind(this));
     }
@@ -122,6 +165,45 @@ class EncodeManageModel implements IEncodeManageModel {
      * @return apid.EncodeId
      */
     public async push(addOption: apid.AddEncodeProgramOption): Promise<apid.EncodeId> {
+        // 復元の間だけ待つ。復元していないときは待たず、受付上限の予約を同じ同期処理の中で行う
+        if (this.restoring !== null) {
+            await this.restoring;
+        }
+
+        return this.admit(addOption, null);
+    }
+
+    public async pushPersisted(encodeId: apid.EncodeId, addOption: apid.AddEncodeProgramOption): Promise<void> {
+        if (this.restoring !== null) {
+            await this.restoring;
+        }
+        if (this.isEncodeIdInUse(encodeId) === true || this.listedEncodeIds.has(encodeId) === true) {
+            return;
+        }
+
+        this.admittingEncodeIds.add(encodeId);
+        try {
+            await this.admit(addOption, encodeId);
+        } catch (err: unknown) {
+            this.log.encode.error(`recorded encode request is rejected and its record is removed: ${encodeId}`);
+            this.log.encode.error(err);
+            await this.removeRecord(encodeId);
+        } finally {
+            this.admittingEncodeIds.delete(encodeId);
+        }
+    }
+
+    /**
+     * 受付の本体。`persistedEncodeId` が null なら依頼記録窓口に記録して識別番号を受け取り、そうでなければ記録済みの
+     * 識別番号を使う
+     * @param addOption: 依頼内容
+     * @param persistedEncodeId: 記録済みの識別番号または null
+     * @return 識別番号
+     */
+    private async admit(
+        addOption: apid.AddEncodeProgramOption,
+        persistedEncodeId: apid.EncodeId | null,
+    ): Promise<apid.EncodeId> {
         if (this.concurrentEncodeNum <= 0) {
             throw new Error('ConcurrentEncodeNumIsZero');
         }
@@ -138,7 +220,7 @@ class EncodeManageModel implements IEncodeManageModel {
         let encoder: IEncoderModel | undefined;
         let option: EncodeOption;
         let reservationHeld = true;
-        let previousIdCnt: number | undefined;
+        let recordedEncodeId: apid.EncodeId | undefined;
         let recordedUseLease: RecordedUseLease | undefined;
         try {
             // 実行権取得
@@ -154,11 +236,16 @@ class EncodeManageModel implements IEncodeManageModel {
                 throw new Error('InvalidRecordedResourceUseLease');
             }
             recordedUseLease = { port: recordedResourceUsePort, token: acquired.token };
-            previousIdCnt = this.idCnt;
+
+            // 依頼を記録して識別番号を受け取る
+            const encodeId = persistedEncodeId === null ? await this.addRecord(addOptionSnapshot) : persistedEncodeId;
+            if (persistedEncodeId === null) {
+                recordedEncodeId = encodeId;
+            }
 
             // encoder を生成する
             encoder = await this.encoderModelProvider();
-            option = this.createEncodeOption(addOptionSnapshot);
+            option = this.createEncodeOption(addOptionSnapshot, encodeId);
             encoder.setOption(option);
             this.recordedUseLeases.set(encoder, recordedUseLease);
 
@@ -173,8 +260,8 @@ class EncodeManageModel implements IEncodeManageModel {
             reservationHeld = false;
         } catch (err: any) {
             this.waitQueue = this.waitQueue.filter(item => item !== encoder);
-            if (typeof previousIdCnt !== 'undefined') {
-                this.idCnt = previousIdCnt;
+            if (typeof recordedEncodeId !== 'undefined') {
+                await this.removeRecord(recordedEncodeId);
             }
             if (typeof recordedUseLease !== 'undefined') {
                 await this.releaseRecordedUse(recordedUseLease);
@@ -195,21 +282,270 @@ class EncodeManageModel implements IEncodeManageModel {
     }
 
     /**
+     * 依頼記録窓口に依頼を記録する。応答を得られなかった場合は、その要求の記録の取消しを依頼してから失敗を返す
+     * @param addOption: 依頼内容
+     * @return 割り当てられた識別番号
+     */
+    private async addRecord(addOption: apid.AddEncodeProgramOption): Promise<apid.EncodeId> {
+        const encodeQueueStorePort = this.encodeQueueStorePort;
+        if (encodeQueueStorePort === null) {
+            return this.processLocalNextEncodeId++;
+        }
+
+        const requestToken = randomUUID();
+        try {
+            return await encodeQueueStorePort.add(addOption, requestToken);
+        } catch (err: unknown) {
+            this.log.encode.error('failed to record an encode request');
+            this.log.encode.error(err);
+            void encodeQueueStorePort.abandon(requestToken).catch((abandonError: unknown) => {
+                this.log.encode.error('failed to abandon an encode request record');
+                this.log.encode.error(abandonError);
+            });
+            throw err;
+        }
+    }
+
+    /**
+     * 依頼の記録を削除する。失敗はログへ記録して続ける
+     * @param encodeId: 識別番号
+     */
+    private async removeRecord(encodeId: apid.EncodeId): Promise<void> {
+        if (this.encodeQueueStorePort === null) {
+            return;
+        }
+
+        try {
+            await this.encodeQueueStorePort.remove(encodeId);
+        } catch (err: unknown) {
+            this.log.encode.error(`failed to remove the encode request record: ${encodeId}`);
+            this.log.encode.error(err);
+        }
+    }
+
+    /**
+     * 同じ識別番号のジョブが待機列・実行中一覧にあるか、受付中または復元の判定中か
+     * @param encodeId: 識別番号
+     */
+    private isEncodeIdInUse(encodeId: apid.EncodeId): boolean {
+        return (
+            this.hasQueuedEncodeId(encodeId) === true ||
+            this.admittingEncodeIds.has(encodeId) === true ||
+            this.restoringEncodeIds.has(encodeId) === true
+        );
+    }
+
+    /**
+     * 同じ識別番号のジョブが待機列または実行中一覧にあるか
+     * @param encodeId: 識別番号
+     */
+    private hasQueuedEncodeId(encodeId: apid.EncodeId): boolean {
+        return [...this.runningQueue, ...this.waitQueue].some(item => item.getEncodeId() === encodeId);
+    }
+
+    public restore(): Promise<void> {
+        if (this.restoreStarted === null) {
+            this.restoreStarted = this.runRestoration();
+        }
+
+        return this.restoreStarted;
+    }
+
+    /**
+     * 記録の一覧を取得して待機列へ戻す。一覧の取得に失敗したら、受付の待ちを解いて一定時間後にやり直す
+     */
+    private runRestoration(): Promise<void> {
+        const restoring = this.restoreRecords().finally(() => {
+            if (this.restoring === restoring) {
+                this.restoring = null;
+            }
+        });
+        this.restoring = restoring;
+
+        return restoring;
+    }
+
+    private async restoreRecords(): Promise<void> {
+        if (this.encodeQueueStorePort === null) {
+            return;
+        }
+
+        let records: EncodeQueueRecord[];
+        try {
+            records = await this.encodeQueueStorePort.list();
+        } catch (err: unknown) {
+            this.log.encode.error('failed to list encode request records; retry later');
+            this.log.encode.error(err);
+            this.restoreRetryTimer = setTimeout(() => {
+                this.restoreRetryTimer = null;
+                void this.runRestoration();
+            }, EncodeManageModel.RESTORE_RETRY_DELAY_MS);
+            this.restoreRetryTimer.unref();
+
+            return;
+        }
+
+        for (const record of records) {
+            this.listedEncodeIds.add(record.id);
+        }
+        for (const record of records) {
+            if (this.isEncodeIdInUse(record.id) === true) {
+                continue;
+            }
+
+            this.restoringEncodeIds.add(record.id);
+            try {
+                await this.restoreRecord(record);
+            } finally {
+                this.restoringEncodeIds.delete(record.id);
+            }
+        }
+
+        const checkCount = Math.min(this.concurrentEncodeNum - this.runningQueue.length, this.waitQueue.length);
+        for (let i = 0; i < checkCount; i++) {
+            this.emitNeedsCheckQueue();
+        }
+    }
+
+    /**
+     * 記録を一件判定し、戻せるなら待機列の末尾へ追加する
+     * @param record: 記録
+     */
+    private async restoreRecord(record: EncodeQueueRecord): Promise<void> {
+        // 同じ識別番号の重複は、呼出し元（restoreRecords）が判定済み
+        const dependencies = this.restoreDependencies;
+        if (dependencies !== null) {
+            const isRestorable = await this.judgeRestorableRecord(record, dependencies);
+            if (isRestorable === false) {
+                return;
+            }
+        }
+
+        let recordedUseLease: RecordedUseLease;
+        try {
+            const acquired = await this.recordedResourceUsePort.acquire(record.option.recordedId, 'encoding');
+            if (
+                typeof acquired !== 'object' ||
+                acquired === null ||
+                typeof acquired.token !== 'object' ||
+                acquired.token === null
+            ) {
+                throw new Error('InvalidRecordedResourceUseLease');
+            }
+            recordedUseLease = { port: this.recordedResourceUsePort, token: acquired.token };
+        } catch (err: unknown) {
+            this.log.encode.error(
+                `encode request record is dropped because the recorded file is unavailable: ${record.id}`,
+            );
+            this.log.encode.error(err);
+            await this.removeRecord(record.id);
+
+            return;
+        }
+
+        try {
+            const encoder = await this.encoderModelProvider();
+            encoder.setOption(this.createEncodeOption(record.option, record.id));
+            this.recordedUseLeases.set(encoder, recordedUseLease);
+            this.waitQueue.push(encoder);
+            this.log.encode.info(`restore encode: ${record.id}`);
+        } catch (err: unknown) {
+            this.log.encode.error(`failed to restore an encode request: ${record.id}`);
+            this.log.encode.error(err);
+            await this.releaseRecordedUse(recordedUseLease);
+        }
+    }
+
+    /**
+     * 記録の対象の有無と出力先を判定する。戻さない記録は削除し（読取の失敗は残す）、出力途中のファイルは設定に従い
+     * 削除する
+     * @param record: 記録
+     * @param dependencies: 読取とファイル操作
+     * @return 待機列へ戻すなら true
+     */
+    private async judgeRestorableRecord(
+        record: EncodeQueueRecord,
+        dependencies: EncodeRestoreDependencies,
+    ): Promise<boolean> {
+        let recorded: Awaited<ReturnType<IRecordedDB['findId']>>;
+        try {
+            recorded = await dependencies.recordedDB.findId(record.option.recordedId);
+        } catch (err: unknown) {
+            this.log.encode.error(`failed to read the recorded program of an encode request record: ${record.id}`);
+            this.log.encode.error(err);
+
+            return false;
+        }
+
+        const videoFiles = recorded?.videoFiles ?? [];
+        if (recorded === null || videoFiles.some(file => file.id === record.option.sourceVideoFileId) === false) {
+            this.log.encode.error(
+                `encode request record is dropped because the recorded program or the source file is missing: ${record.id}`,
+            );
+            await this.removeRecord(record.id);
+
+            return false;
+        }
+
+        if (record.outputPath === null) {
+            return true;
+        }
+
+        for (const file of videoFiles) {
+            const registeredPath = dependencies.videoUtil.getFullFilePathFromVideoFile(file);
+            if (registeredPath === null) {
+                continue;
+            }
+            if (
+                path.resolve(registeredPath) === path.resolve(record.outputPath) ||
+                (await dependencies.isSameFile(registeredPath, record.outputPath)) === true
+            ) {
+                this.log.encode.info(`encode request record is already converted: ${record.id}`);
+                await this.removeRecord(record.id);
+
+                return false;
+            }
+        }
+
+        if (this.removeInterruptedOutput === true) {
+            const parentDirPath = dependencies.videoUtil.getParentDirPath(record.option.parentDir);
+            const relative =
+                parentDirPath === null
+                    ? null
+                    : path.relative(path.resolve(parentDirPath), path.resolve(record.outputPath));
+            if (
+                relative === null ||
+                relative === '' ||
+                relative.startsWith('..') === true ||
+                path.isAbsolute(relative) === true
+            ) {
+                this.log.encode.warn(
+                    `interrupted encode output is kept because it is outside the parent directory: ${record.id}`,
+                );
+            } else {
+                try {
+                    this.log.encode.info(`delete interrupted encode output: ${record.outputPath}`);
+                    await dependencies.removeFile(record.outputPath);
+                } catch (err: unknown) {
+                    this.log.encode.error(`failed to delete interrupted encode output: ${record.outputPath}`);
+                    this.log.encode.error(err);
+                }
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * エンコードオプションを生成する
      * @param baseOption: apid.AddEncodeProgramOption
+     * @param encodeId: 識別番号
      * @returns EncodeOption
      */
-    private createEncodeOption(baseOption: apid.AddEncodeProgramOption): EncodeOption {
+    private createEncodeOption(baseOption: apid.AddEncodeProgramOption, encodeId: apid.EncodeId): EncodeOption {
         // encoder のオプションを生成
         const encodeOption: EncodeOption = cloneDeep(baseOption) as any;
-        const encodeId = this.idCnt;
         encodeOption.encodeId = encodeId;
-
-        // idCnt をインクリメント
-        if (this.idCnt === Number.MAX_SAFE_INTEGER) {
-            this.idCnt = 0;
-        }
-        this.idCnt++;
 
         return encodeOption;
     }
@@ -524,7 +860,17 @@ class EncodeManageModel implements IEncodeManageModel {
         }
     }
 
+    /**
+     * 終わった依頼の記録を削除してから、録画の使用権を解放する。依頼の終わり（正常終了・異常終了・取消・開始失敗・
+     * 待機中の取消）は、どれもここを通る
+     * @param encoder: IEncoderModel
+     */
     private async releaseRecordedUseForEncoder(encoder: IEncoderModel): Promise<void> {
+        const encodeId = encoder.getEncodeId();
+        if (encodeId !== null) {
+            await this.removeRecord(encodeId);
+        }
+
         const lease = this.recordedUseLeases.get(encoder);
         if (typeof lease === 'undefined') {
             return;
@@ -557,6 +903,11 @@ class EncodeManageModel implements IEncodeManageModel {
      * @param encodeId: apid.EncodeId
      */
     public async cancel(encodeId: apid.EncodeId): Promise<void> {
+        // 復元の間だけ待つ（まだ戻していない識別番号への取消を、戻した後の依頼へ届けるため）
+        if (this.restoring !== null) {
+            await this.restoring;
+        }
+
         // 実行権取得
         const exeId = await this.executeManagementModel.getExecution(EncodeManageModel.CANCEL_ENCODE_PRIPORITY);
 
@@ -663,6 +1014,11 @@ class EncodeManageModel implements IEncodeManageModel {
      * @return Promise<void>
      */
     public async cancelEncodeByRecordedId(recordedId: apid.RecordedId): Promise<void> {
+        // 復元の間だけ待つ（まだ戻していない依頼も対象に含めるため）
+        if (this.restoring !== null) {
+            await this.restoring;
+        }
+
         const encodeIds: apid.EncodeId[] = [];
 
         // recordedId に該当する encodedId を取り出す
@@ -766,6 +1122,24 @@ namespace EncodeManageModel {
     export const ENCODE_PRIPORITY = 10;
     export const DEFAULT_TIMEOUT_RATE = 4.0;
     export const DEFAULT_QUEUE_LIMIT = 1024;
+    /** 起動時に記録の一覧を取得できなかったときに、取得し直すまでの時間（ミリ秒） */
+    export const RESTORE_RETRY_DELAY_MS = 60 * 1000;
+
+    /**
+     * 二つの path が同じ実体（device と inode）のファイルを指すか。どちらかが存在しない、または読めなければ false
+     * @param a: path
+     * @param b: path
+     * @return 同じ実体なら true
+     */
+    export const isSameFile = async (a: string, b: string): Promise<boolean> => {
+        try {
+            const [statA, statB] = await Promise.all([fs.promises.stat(a), fs.promises.stat(b)]);
+
+            return statA.dev === statB.dev && statA.ino === statB.ino;
+        } catch {
+            return false;
+        }
+    };
     /** 停止時間帯の再開 timer の delay の上限（ミリ秒）。この間隔以内に時間帯を判定し直す。 */
     export const SUSPEND_RECHECK_MAX_DELAY_MS = 60 * 1000;
 

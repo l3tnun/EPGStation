@@ -516,6 +516,7 @@ const loggerModel = {
 const container = { get: (key: string): unknown => {
     if (key === 'ILoggerModel') return loggerModel;
     if (key === 'IEncodeFinishModel') return { set: (): void => undefined };
+    if (key === 'IEncodeManageModel') return { restore: async (): Promise<void> => undefined };
     if (key === 'IServiceServer') return { start: (): void => undefined };
     return {};
 } };

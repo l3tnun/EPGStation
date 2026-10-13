@@ -20,6 +20,7 @@ import {
     UploadedVideoRegistrationPort,
 } from './IUploadedVideoRegistration.js';
 import IIPCClient, {
+    IPCEncodeQueue,
     IPCOperatorEncodeEvent,
     IPCRecordedManageModel,
     IPCRecordedTagManageModel,
@@ -30,6 +31,7 @@ import IIPCClient, {
 } from './IIPCClient.js';
 import {
     ClientMessageOption,
+    EncodeQueueFunctions,
     OperatorEncodeEventFunctions,
     ModelName,
     ParentMessage,
@@ -132,6 +134,7 @@ export default class IPCClient implements IIPCClient {
     public rule!: IPCRuleManageModel;
     public thumbnail!: IPCThumbnailManageModel;
     public encodeEvent!: IPCOperatorEncodeEvent;
+    public encodeQueue!: IPCEncodeQueue;
     // 録画使用状況（再生・削除保護等）の確保／解放を、他のmoduleへ公開するための窓口。
     public readonly recordedResourceUseClient: RecordedResourceUseClient = {
         acquire: (recordedId, kind) => this.acquireRecordedResourceUse(recordedId, kind),
@@ -198,6 +201,7 @@ export default class IPCClient implements IIPCClient {
         this.setRule();
         this.setThumbnail();
         this.setEncodeEvent();
+        this.setEncodeQueue();
     }
 
     /**
@@ -231,12 +235,26 @@ export default class IPCClient implements IIPCClient {
                     this.socketIO.notifyClient();
                 } else {
                     if ((<ParentMessage>msg).type === 'pushEncode') {
-                        // エンコード依頼
-                        this.encodeManage.push((<PushEncodeMessage>msg).value);
+                        // 識別番号付きのエンコード依頼（依頼は親側で記録済み）
+                        this.handlePushEncode(<PushEncodeMessage>msg);
                     }
                 }
             },
         );
+    }
+
+    // 親が記録した識別番号付きのエンコード依頼を待機列へ渡す。識別番号が1以上の安全な整数でない通知は
+    // 記録して捨てる。`pushPersisted`の失敗（同期throwを含む）は記録し、未処理のrejectionにしない。
+    private handlePushEncode(msg: PushEncodeMessage): void {
+        const encodeId = msg.encodeId;
+        if (!Number.isSafeInteger(encodeId) || encodeId < 1) {
+            this.log.system.error('IPC pushEncode discarded: invalid encodeId');
+
+            return;
+        }
+        void (async () => this.encodeManage.pushPersisted(encodeId, msg.value))().catch((error: unknown) => {
+            this.log.system.error(`IPC pushEncode failed: ${this.toError(error).message}`);
+        });
     }
 
     /**
@@ -1136,6 +1154,58 @@ export default class IPCClient implements IIPCClient {
                     args: {
                         info: info,
                     },
+                });
+            },
+        };
+    }
+
+    /**
+     * set encode queue
+     */
+    private setEncodeQueue(): void {
+        this.encodeQueue = {
+            add: (option: apid.AddEncodeProgramOption, requestToken: string) => {
+                return this.send({
+                    model: ModelName.encodeQueue,
+                    func: EncodeQueueFunctions.add,
+                    args: {
+                        option: option,
+                        requestToken: requestToken,
+                    },
+                });
+            },
+            abandon: (requestToken: string) => {
+                return this.send({
+                    model: ModelName.encodeQueue,
+                    func: EncodeQueueFunctions.abandon,
+                    args: {
+                        requestToken: requestToken,
+                    },
+                });
+            },
+            updateOutputPath: (encodeId: apid.EncodeId, outputPath: string) => {
+                return this.send({
+                    model: ModelName.encodeQueue,
+                    func: EncodeQueueFunctions.updateOutputPath,
+                    args: {
+                        encodeId: encodeId,
+                        outputPath: outputPath,
+                    },
+                });
+            },
+            remove: (encodeId: apid.EncodeId) => {
+                return this.send({
+                    model: ModelName.encodeQueue,
+                    func: EncodeQueueFunctions.remove,
+                    args: {
+                        encodeId: encodeId,
+                    },
+                });
+            },
+            list: () => {
+                return this.send({
+                    model: ModelName.encodeQueue,
+                    func: EncodeQueueFunctions.list,
                 });
             },
         };

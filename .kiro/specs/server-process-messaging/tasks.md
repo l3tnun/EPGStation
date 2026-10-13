@@ -302,9 +302,10 @@ handler取消、永続queue、自動retryを追加しない。通常期限は5,0
 | 6.5  | `test/server/process-messaging/imp/correlation-lifecycle.test.ts`<br>`test/server/process-messaging/integration/process-messaging.integration.test.ts` | `unittest/spec`・`unittest/imp`・`integration` | `5.3` | `npm run test:server:imp -- test/server/process-messaging/imp/correlation-lifecycle.test.ts`<br>`npm run test:server:integration -- test/server/process-messaging/integration/process-messaging.integration.test.ts` |
 
 -   [x] 8. エンコードの依頼の記録の操作を管理側へ渡す
--   [x] 8.1 `encodeQueue` の4操作と、識別番号付きの `pushEncode` を実現する
+-   [x] 8.1 `encodeQueue` の5操作と、識別番号付きの `pushEncode` を実現する
 
-    -   `ModelName` に `encodeQueue` を、`EncodeQueueFunctions` に `add`・`updateOutputPath`・`remove`・`list` を加え、
+    -   `ModelName` に `encodeQueue` を、`EncodeQueueFunctions` に `add`（`option`・`requestToken`）・`abandon`・
+        `updateOutputPath`・`remove`・`list` を加え、
         `IPCClient` の facade（`encodeQueue`）から通常5秒期限で送る。`IPCServer` は依頼記録窓口（`IEncodeQueueStore`）の対応す
         る method を呼び、結果または reject を応答で返す。
     -   `PushEncodeMessage` に `encodeId` を加え、`IPCServer.pushEncode(encodeId, option)` で現在の通知先へ送る。通知先が無い

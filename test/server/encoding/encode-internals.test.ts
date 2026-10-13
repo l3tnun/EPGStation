@@ -30,7 +30,6 @@ interface SyntheticEncoder {
 interface EncodeManageRuntime {
     admissionReservations: number;
     cancel(encodeId: apid.EncodeId): Promise<void>;
-    idCnt: number;
     runningQueue: SyntheticEncoder[];
     waitQueue: SyntheticEncoder[];
     getEncodeInfo(): Record<string, unknown>;
@@ -828,12 +827,22 @@ describe('encoding memory and identifier characterization', () => {
                     warn: vi.fn(),
                 },
             };
+            const queueStore = {
+                add: vi.fn(async () => 1),
+                abandon: vi.fn(async () => undefined),
+                updateOutputPath: vi.fn(async () => undefined),
+                remove: vi.fn(async () => undefined),
+                list: vi.fn(async () => []),
+            };
             const manage = new EncodeManageModel(
                 { getLogger: () => log },
                 { getConfig: () => ({ concurrentEncodeNum: 1, encodeQueueLimit: failure === 'queueAppend' ? 2 : 1 }) },
                 execution,
                 provider,
                 event,
+                undefined,
+                undefined,
+                queueStore,
             );
             const emitter = (manage as unknown as { listener: EventEmitter }).listener;
             const processListenerCount = process.listenerCount('unhandledRejection');
@@ -856,7 +865,10 @@ describe('encoding memory and identifier characterization', () => {
             expect(execution.getExecution).toHaveBeenCalledTimes(1);
             expect(activeExecutions.size).toBe(0);
             expect(manage.admissionReservations).toBe(0);
-            expect(manage.idCnt).toBe(1);
+            // 記録した後の失敗では、その記録を一回削除する（識別番号は戻さない）
+            expect(queueStore.add).toHaveBeenCalledTimes(failure === 'execution' ? 0 : 1);
+            expect(queueStore.remove.mock.calls).toEqual(failure === 'execution' ? [] : [[1]]);
+            expect(queueStore.abandon).not.toHaveBeenCalled();
             expect(event.emitAddEncode).toHaveBeenCalledTimes(failure === 'event' ? 1 : 0);
             expect(item.finishCallback).toBeNull();
             expect(item.started).toBe(false);
@@ -1049,21 +1061,21 @@ describe('encoding memory and identifier characterization', () => {
 
         const acceptedC = manage.push(option(103));
         executionC.resolve('synthetic-c');
-        await expect(acceptedC).resolves.toBe(2);
+        // 失敗した B が受け取った識別番号 2 は戻さず、C は 3 になる
+        await expect(acceptedC).resolves.toBe(3);
 
         expect(manage.getEncodeInfo()).toEqual({
             runningQueue: [],
             waitQueue: [
                 { id: 1, mode: 'synthetic-mode', recordedId: 101 },
-                { id: 2, mode: 'synthetic-mode', recordedId: 103 },
+                { id: 3, mode: 'synthetic-mode', recordedId: 103 },
             ],
         });
         expect(new Set(manage.waitQueue.map(item => item.getEncodeId())).size).toBe(2);
-        expect(manage.idCnt).toBe(3);
         expect(manage.admissionReservations).toBe(0);
         expect(activeExecutions.size).toBe(0);
         expect(execution.unLockExecution).toHaveBeenCalledTimes(3);
-        expect(log.encode.info.mock.calls).toEqual([['add new encode: 1'], ['add new encode: 2']]);
+        expect(log.encode.info.mock.calls).toEqual([['add new encode: 1'], ['add new encode: 3']]);
         emitter.removeAllListeners();
     });
 
@@ -1087,24 +1099,6 @@ describe('encoding memory and identifier characterization', () => {
         await restarted.cleanup();
         expectCleanFixture(previous);
         expectCleanFixture(restarted);
-    });
-
-    it('[EN-IMP-R7-ID-WRAP] assigns MAX_SAFE_INTEGER and then wraps the next identifier to one', async () => {
-        const fixture = makeManage();
-        fixture.manage.idCnt = Number.MAX_SAFE_INTEGER;
-
-        await expect(fixture.manage.push(option(71))).resolves.toBe(Number.MAX_SAFE_INTEGER);
-        await expect(fixture.manage.push(option(72))).resolves.toBe(1);
-
-        expect(fixture.manage.getEncodeInfo()).toEqual({
-            runningQueue: [],
-            waitQueue: [
-                { id: Number.MAX_SAFE_INTEGER, mode: 'synthetic-mode', recordedId: 71 },
-                { id: 1, mode: 'synthetic-mode', recordedId: 72 },
-            ],
-        });
-        await fixture.cleanup();
-        expectCleanFixture(fixture);
     });
 
     it('[EN-IMP-R4-QUEUE-PROJECTION] separates running and waiting jobs and only projects acquired progress pairs', () => {

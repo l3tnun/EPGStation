@@ -30,7 +30,6 @@ interface SyntheticEncoder {
 interface EncodeManageRuntime {
     admissionReservations: number;
     encodeQueueLimit: number;
-    idCnt: number;
     runningQueue: SyntheticEncoder[];
     getEncodeInfo(): {
         runningQueue: Array<{ id: number; mode: string; recordedId: number; percent?: number; log?: string }>;
@@ -722,6 +721,7 @@ const makeEncoderFixture = async (
         progressStream?: boolean;
         stderrStream?: boolean;
         stopResult?: Deferred<{ status: 'requested'; sentSignals: ['SIGINT'] }>;
+        queueStore?: { updateOutputPath(encodeId: number, outputPath: string): Promise<void> };
     } = {},
 ) => {
     const root = await mkdtemp(join(tmpdir(), 'epgstation-encoding-contract-'));
@@ -787,6 +787,7 @@ const makeEncoderFixture = async (
         },
         encodeEvent,
         { formatFilePathString: vi.fn(async (directory: string) => directory) },
+        options.queueStore,
     );
     model.setOption({
         encodeId: 701,
@@ -909,6 +910,15 @@ const makeManage = (
         release: vi.fn(async () => undefined),
     };
     const encodeFinish = arguments_[2];
+    // 依頼記録窓口の代わり。識別番号を 1 から順に返し、呼出し回数で識別番号を消費したかを確かめる
+    let nextEncodeId = 1;
+    const queueStore = {
+        add: vi.fn(async () => nextEncodeId++),
+        abandon: vi.fn(async () => undefined),
+        updateOutputPath: vi.fn(async () => undefined),
+        remove: vi.fn(async () => undefined),
+        list: vi.fn(async () => []),
+    };
     const checkHandles: QueueCheckHandle[] = [];
     const activeExecutions = new Set<string>();
     let executionCall = 0;
@@ -953,6 +963,7 @@ const makeManage = (
         event,
         recordedResourceUse,
         encodeFinish,
+        queueStore,
     );
     const manageEmitter = (manage as unknown as { listener: EventEmitter }).listener;
     const eventEmitter = (event as unknown as { emitter: EventEmitter }).emitter;
@@ -1002,6 +1013,7 @@ const makeManage = (
         listenerCount,
         manage,
         provider,
+        queueStore,
         recordedResourceUse,
         resources,
         settleCurrentChecks,
@@ -1025,16 +1037,6 @@ describe('canonical primary R1-R7 contracts', () => {
 
         await expect(fixture.manage.push(request)).resolves.toBe(1);
         expect(fixture.manage.getEncodeInfo().waitQueue).toEqual([{ id: 1, mode: request.mode, recordedId: 101 }]);
-
-        await fixture.cleanup();
-        expectCleanFixture(fixture);
-    });
-
-    it('[EN-SPEC-R1-3] returns the first positive in-memory identifier', async () => {
-        const fixture = makeManage(1);
-
-        await expect(fixture.manage.push(addOption())).resolves.toBe(1);
-        expect(fixture.manage.getEncodeInfo().waitQueue.map(item => item.id)).toEqual([1]);
 
         await fixture.cleanup();
         expectCleanFixture(fixture);
@@ -1175,18 +1177,36 @@ describe('canonical primary R1-R7 contracts', () => {
         expectCleanFixture(fixture);
     });
 
-    it('[EN-SPEC-R2-6] keeps waiting and running requests process-local', async () => {
-        const previous = makeManage(1);
-        const restarted = makeManage(1);
+    it('[EN-SPEC-R2-6] records the output path once before starting the conversion process', async () => {
+        const order: string[] = [];
+        const queueStore = {
+            updateOutputPath: vi.fn(async (encodeId: number, outputPath: string) => {
+                order.push(`update:${encodeId}:${outputPath}`);
+            }),
+        };
+        const fixture = await makeEncoderFixture({ queueStore });
+        fixture.createManaged.mockImplementationOnce(async () => {
+            order.push('createManaged');
+            return { child: fixture.child, handle: fixture.handle };
+        });
 
-        await previous.manage.push(addOption({ recordedId: 261 }));
-        expect(previous.manage.getEncodeInfo().waitQueue).toHaveLength(1);
-        expect(restarted.manage.getEncodeInfo()).toEqual({ runningQueue: [], waitQueue: [] });
+        await fixture.model.start();
 
-        await previous.cleanup();
-        await restarted.cleanup();
-        expectCleanFixture(previous);
-        expectCleanFixture(restarted);
+        const expectedOutput = join(fixture.outputRoot, 'input.mp4');
+        expect(order).toEqual([`update:701:${expectedOutput}`, 'createManaged']);
+        fixture.child.emit('exit', 0, null);
+    });
+
+    it('[EN-SPEC-R2-6] keeps starting the conversion when recording the output path fails', async () => {
+        const queueStore = { updateOutputPath: vi.fn(async () => Promise.reject(new Error('synthetic update failure'))) };
+        const fixture = await makeEncoderFixture({ queueStore });
+
+        await fixture.model.start();
+
+        expect(queueStore.updateOutputPath).toHaveBeenCalledTimes(1);
+        expect(fixture.createManaged).toHaveBeenCalledTimes(1);
+        expect(fixture.log.encode.error).toHaveBeenCalled();
+        fixture.child.emit('exit', 0, null);
     });
 
     it('[EN-SPEC-R3-1] rejects missing input before requesting a process', async () => {
@@ -1498,55 +1518,6 @@ describe('canonical primary R1-R7 contracts', () => {
         ).toEqual({ outputPresent: false, index: {} });
     });
 
-    it('[EN-SPEC-R7-2] does not restore an earlier instance waiting queue', async () => {
-        const previous = makeManage(1);
-        const restarted = makeManage(1);
-
-        await previous.manage.push(addOption({ recordedId: 721 }));
-        expect(previous.manage.getEncodeInfo().waitQueue).toHaveLength(1);
-        expect(restarted.manage.getEncodeInfo()).toEqual({ runningQueue: [], waitQueue: [] });
-
-        await previous.cleanup();
-        await restarted.cleanup();
-        expectCleanFixture(previous);
-        expectCleanFixture(restarted);
-    });
-
-    it('[EN-SPEC-R7-3] assigns identifier one after a new instance starts', async () => {
-        const fixture = makeManage(1);
-
-        await expect(fixture.manage.push(addOption())).resolves.toBe(1);
-        expect(fixture.manage.getEncodeInfo().waitQueue[0].id).toBe(1);
-
-        await fixture.cleanup();
-        expectCleanFixture(fixture);
-    });
-
-    it('[EN-SPEC-R7-4] wraps the next identifier to one after the safe-integer maximum', async () => {
-        const fixture = makeManage(1, 4);
-        fixture.manage.idCnt = Number.MAX_SAFE_INTEGER;
-
-        await expect(fixture.manage.push(addOption({ recordedId: 741 }))).resolves.toBe(Number.MAX_SAFE_INTEGER);
-        await expect(fixture.manage.push(addOption({ recordedId: 742 }))).resolves.toBe(1);
-        expect(fixture.manage.getEncodeInfo().waitQueue.map(item => item.id)).toEqual([Number.MAX_SAFE_INTEGER, 1]);
-
-        await fixture.cleanup();
-        expectCleanFixture(fixture);
-    });
-
-    it('[EN-SPEC-R7-5] leaves a prior partial output untouched when a new manager starts', async () => {
-        const root = await mkdtemp(join(tmpdir(), 'epgstation-encoding-restart-output-'));
-        temporaryRoots.add(root);
-        const staleOutput = join(root, 'partial-output.mp4');
-        await writeFile(staleOutput, 'prior partial output');
-        const fixture = makeManage(1);
-
-        expect(fixture.manage.getEncodeInfo()).toEqual({ runningQueue: [], waitQueue: [] });
-        await expect(access(staleOutput)).resolves.toBeUndefined();
-
-        await fixture.cleanup();
-        expectCleanFixture(fixture);
-    });
 });
 
 describe('encoding request and public data contracts', () => {
@@ -1619,7 +1590,7 @@ describe('encoding request and public data contracts', () => {
         expect(fixture.manage.getEncodeInfo()).toEqual({ runningQueue: [], waitQueue: [] });
         expect(fixture.execution.getExecution).toHaveBeenCalledOnce();
         expect(fixture.provider).not.toHaveBeenCalled();
-        expect(fixture.manage.idCnt).toBe(1);
+        expect(fixture.queueStore.add).toHaveBeenCalledTimes(0);
         expect(added).toEqual([]);
         await expect(rejected).rejects.toBeInstanceOf(Error);
 
@@ -1630,7 +1601,7 @@ describe('encoding request and public data contracts', () => {
             waitQueue: [{ id: 1, mode: 'synthetic-mode', recordedId: 101 }],
         });
         expect(fixture.provider).toHaveBeenCalledOnce();
-        expect(fixture.manage.idCnt).toBe(2);
+        expect(fixture.queueStore.add).toHaveBeenCalledTimes(1);
         expect(added).toEqual([1]);
         expect(
             fixture.manage.admissionReservations + fixture.manage.getEncodeInfo().waitQueue.length,
@@ -1644,7 +1615,7 @@ describe('encoding request and public data contracts', () => {
         expect(fixture.execution.getExecution).toHaveBeenCalledTimes(callsAtWaitLimit.execution);
         expect(fixture.provider).toHaveBeenCalledTimes(callsAtWaitLimit.provider);
         expect(fixture.manage.admissionReservations).toBe(0);
-        expect(fixture.manage.idCnt).toBe(2);
+        expect(fixture.queueStore.add).toHaveBeenCalledTimes(1);
         expect(added).toEqual([1]);
         expect(fixture.manage.getEncodeInfo().waitQueue).toEqual([{ id: 1, mode: 'synthetic-mode', recordedId: 101 }]);
 
@@ -1749,7 +1720,7 @@ describe('encoding request and public data contracts', () => {
             expect(fixture.execution.unLockExecution).not.toHaveBeenCalled();
             expect(fixture.provider).not.toHaveBeenCalled();
             expect(added).not.toHaveBeenCalled();
-            expect(fixture.manage.idCnt).toBe(1);
+            expect(fixture.queueStore.add).toHaveBeenCalledTimes(0);
             expect(fixture.manage.getEncodeInfo()).toEqual({ runningQueue: [], waitQueue: [] });
             await fixture.cleanup();
             expectCleanFixture(fixture);
@@ -1837,11 +1808,22 @@ describe('encoding request and public data contracts', () => {
         expect(configResult).not.toHaveProperty('encodeQueueLimit');
 
         const child = Object.assign(new EventEmitter(), { send: vi.fn() });
-        const ipcServer = new IPCServer({}, {}, {}, {}, {}, {}, {});
+        // 依頼記録窓口の代わりに、識別番号 7 で記録したとして送る
+        const encodeQueueStore = {
+            enqueueFromRecording: vi.fn((option: apid.AddEncodeProgramOption, send: (id: number, value: apid.AddEncodeProgramOption) => boolean) => {
+                send(7, option);
+            }),
+        };
+        const ipcServer = new IPCServer({}, {}, {}, {}, {}, {}, {}, undefined, encodeQueueStore);
         ipcServer.register(child);
         ipcServer.setEncode(request);
-        const ipcPayload = child.send.mock.calls[0][0] as { type: string; value: apid.AddEncodeProgramOption };
-        expect(Object.keys(ipcPayload).sort()).toEqual(['type', 'value']);
+        const ipcPayload = child.send.mock.calls[0][0] as {
+            encodeId: number;
+            type: string;
+            value: apid.AddEncodeProgramOption;
+        };
+        expect(Object.keys(ipcPayload).sort()).toEqual(['encodeId', 'type', 'value']);
+        expect(ipcPayload.encodeId).toBe(7);
         expect(Object.keys(ipcPayload.value).sort()).toEqual([
             'directory',
             'mode',
@@ -1944,44 +1926,6 @@ describe('encoding request and public data contracts', () => {
         (event as unknown as { emitter: EventEmitter }).emitter.removeAllListeners();
     });
 
-    it('[EN-SPEC-R7-2-3-4-5] keeps queues process-local, restarts IDs, wraps safely, and leaves prior output untouched', async () => {
-        const staleRoot = await mkdtemp(join(tmpdir(), 'epgstation-encoding-stale-output-'));
-        temporaryRoots.add(staleRoot);
-        const staleOutput = join(staleRoot, 'partial-output.mp4');
-        await writeFile(staleOutput, 'stale output');
-        const previous = makeManage(1);
-        const restarted = makeManage(1);
-        const wrapping = makeManage(1);
-
-        try {
-            await expect(previous.manage.push(addOption({ recordedId: 301 }))).resolves.toBe(1);
-            expect(previous.manage.getEncodeInfo().waitQueue).toEqual([
-                { id: 1, mode: 'synthetic-mode', recordedId: 301 },
-            ]);
-            expect(restarted.manage.getEncodeInfo()).toEqual({ runningQueue: [], waitQueue: [] });
-            await expect(access(staleOutput)).resolves.toBeUndefined();
-
-            await expect(restarted.manage.push(addOption({ recordedId: 302 }))).resolves.toBe(1);
-            expect(restarted.manage.getEncodeInfo().waitQueue).toEqual([
-                { id: 1, mode: 'synthetic-mode', recordedId: 302 },
-            ]);
-
-            wrapping.manage.idCnt = Number.MAX_SAFE_INTEGER;
-            await expect(wrapping.manage.push(addOption({ recordedId: 303 }))).resolves.toBe(Number.MAX_SAFE_INTEGER);
-            await expect(wrapping.manage.push(addOption({ recordedId: 304 }))).resolves.toBe(1);
-            expect(wrapping.manage.getEncodeInfo().waitQueue.map(item => item.id)).toEqual([
-                Number.MAX_SAFE_INTEGER,
-                1,
-            ]);
-        } finally {
-            await previous.cleanup();
-            await restarted.cleanup();
-            await wrapping.cleanup();
-            expectCleanFixture(previous);
-            expectCleanFixture(restarted);
-            expectCleanFixture(wrapping);
-        }
-    });
 });
 
 describe('recorded-use lease admission contract', () => {
@@ -2035,7 +1979,7 @@ describe('recorded-use lease admission contract', () => {
 
             expect(recordedResourceUse.acquire).toHaveBeenCalledOnce();
             expect(recordedResourceUse.acquire).toHaveBeenCalledWith(904, 'encoding');
-            expect(fixture.manage.idCnt).toBe(1);
+            expect(fixture.queueStore.add).toHaveBeenCalledTimes(0);
             expect(fixture.manage.getEncodeInfo()).toEqual({ runningQueue: [], waitQueue: [] });
             expect(fixture.provider).not.toHaveBeenCalled();
             expect(added).toEqual([]);
@@ -2069,7 +2013,7 @@ describe('recorded-use lease admission contract', () => {
 
                 expect(recordedResourceUse.acquire).toHaveBeenCalledExactlyOnceWith(905, 'encoding');
                 expect(recordedResourceUse.release).not.toHaveBeenCalled();
-                expect(fixture.manage.idCnt).toBe(1);
+                expect(fixture.queueStore.add).toHaveBeenCalledTimes(0);
                 expect(fixture.manage.getEncodeInfo()).toEqual({ runningQueue: [], waitQueue: [] });
                 expect(fixture.provider).not.toHaveBeenCalled();
                 expect(added).toEqual([]);
@@ -2103,7 +2047,7 @@ describe('recorded-use lease admission contract', () => {
 
             expect(recordedResourceUse.acquire).toHaveBeenCalledExactlyOnceWith(912, 'encoding');
             expect(recordedResourceUse.release).not.toHaveBeenCalled();
-            expect(fixture.manage.idCnt).toBe(1);
+            expect(fixture.queueStore.add).toHaveBeenCalledTimes(0);
             expect(fixture.manage.getEncodeInfo()).toEqual({ runningQueue: [], waitQueue: [] });
             expect(fixture.provider).not.toHaveBeenCalled();
             expect(added).toEqual([]);
@@ -2243,7 +2187,9 @@ describe('recorded-use lease admission contract', () => {
 
             expect(recordedResourceUse.acquire).toHaveBeenCalledExactlyOnceWith(907, 'encoding');
             expect(recordedResourceUse.release).toHaveBeenCalledExactlyOnceWith(token);
-            expect(fixture.manage.idCnt).toBe(1);
+            // 記録した後の失敗では、その記録を一回削除する
+            expect(fixture.queueStore.add).toHaveBeenCalledTimes(1);
+            expect(fixture.queueStore.remove.mock.calls).toEqual([[1]]);
             expect(fixture.manage.getEncodeInfo()).toEqual({ runningQueue: [], waitQueue: [] });
         } finally {
             await fixture.cleanup();
@@ -2272,7 +2218,9 @@ describe('recorded-use lease admission contract', () => {
 
             expect(recordedResourceUse.acquire).toHaveBeenCalledExactlyOnceWith(908, 'encoding');
             expect(recordedResourceUse.release).toHaveBeenCalledExactlyOnceWith(token);
-            expect(fixture.manage.idCnt).toBe(1);
+            // 記録した後の失敗では、その記録を一回削除する
+            expect(fixture.queueStore.add).toHaveBeenCalledTimes(1);
+            expect(fixture.queueStore.remove.mock.calls).toEqual([[1]]);
             expect(fixture.manage.getEncodeInfo()).toEqual({ runningQueue: [], waitQueue: [] });
         } finally {
             await fixture.cleanup();
@@ -3050,7 +2998,14 @@ describe('encode suspend-time contracts', () => {
 
         const child = Object.assign(new EventEmitter(), { send: vi.fn() });
         try {
-            const ipcServer = new IPCServer({}, {}, {}, {}, {}, {}, {});
+            const encodeQueueStore = {
+                enqueueFromRecording: vi.fn(
+                    (option: apid.AddEncodeProgramOption, send: (id: number, value: apid.AddEncodeProgramOption) => boolean) => {
+                        send(8, option);
+                    },
+                ),
+            };
+            const ipcServer = new IPCServer({}, {}, {}, {}, {}, {}, {}, undefined, encodeQueueStore);
             ipcServer.register(child);
             ipcServer.setEncode(addOption());
             const ipcPayload = child.send.mock.calls[0][0] as { type: string; value: apid.AddEncodeProgramOption };

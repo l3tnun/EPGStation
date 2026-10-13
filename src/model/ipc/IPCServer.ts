@@ -12,6 +12,7 @@ import IRecordingManageModel from '../operator/recording/IRecordingManageModel.j
 import IReservationManageModel from '../operator/reservation/IReservationManageModel.js';
 import IRuleManageModel from '../operator/rule/IRuleManageModel.js';
 import IThumbnailManageModel from '../operator/thumbnail/IThumbnailManageModel.js';
+import IEncodeQueueStore from '../operator/encode/IEncodeQueueStore.js';
 import IPreparedRecordedDeletionProvider from '../operator/recorded/IPreparedRecordedDeletionProvider.js';
 import IPreparedVideoFileDeletionProvider from '../operator/recorded/IPreparedVideoFileDeletionProvider.js';
 import ParentUserDeletionCoordinator from '../workflow/ParentUserDeletionCoordinator.js';
@@ -30,6 +31,7 @@ import {
     RecordedUseSnapshotPayload,
 } from './IRecordedResourceUse.js';
 import {
+    EncodeQueueFunctions,
     OperatorEncodeEventFunctions,
     ModelName,
     NotifyClientMessage,
@@ -84,9 +86,9 @@ type ReplyMessage =
 const defaultRequestTimeout = 5_000;
 
 /**
- * web/service process側からoperator process（`ChildProcess`）とNode.jsのIPCで通信する窓口の実装。
- * `IPCClient`（operator process側）からの要求を`functions`索引で振り分けて対応するmanage modelを呼び出し、
- * 結果を`replay`で送り返す。録画使用状況（recordedResourceUse/recordedUseSnapshot）のacquire/release/
+ * 管理側（operator process。親process）で、Web・API側処理（service process。`ChildProcess`）とNode.jsのIPCで
+ * 通信する窓口の実装。`IPCClient`（子process側）からの要求を`functions`索引で振り分けて対応するmanage modelを
+ * 呼び出し、結果を`replay`で送り返す。録画使用状況（recordedResourceUse/recordedUseSnapshot）のacquire/release/
  * snapshot要求はmanage model呼び出しではなく、`ParentRecordedResourceUseRegistry`（登録済みなら）へ
  * 中継する。接続するoperator processは常に高々1つ（`currentPeer`）で、再接続時は前の登録を解除する。
  */
@@ -99,6 +101,9 @@ export default class IPCServer implements IIPCServer {
     private recordingManage: IRecordingManageModel;
     private ruleManage: IRuleManageModel;
     private thumbnailManage: IThumbnailManageModel;
+    // 録画ファイル変換機能の依頼記録窓口。DIで登録されていない構成では`null`で、`encodeQueue`の操作と
+    // `setEncode`は`EncodeQueueStoreNotRegistered`で失敗する。
+    private readonly encodeQueueStore: IEncodeQueueStore | null;
     // encode process側からのencode完了通知の受け皿。`register`で後から1つだけ登録される
     // （constructor注入だと循環依存になるため、登録用portを介して遅延で結び付けている）。
     private encodeCompletionSink: EncodeCompletionSink | null = null;
@@ -118,7 +123,7 @@ export default class IPCServer implements IIPCServer {
     // 上記2つのregistrationPortで後から登録される実体。未登録の間はacquire/release/snapshot要求を
     // 処理できず、`unknown`扱いになる。
     private recordedResourceUseRegistry: ParentRecordedResourceUseRegistry | null = null;
-    // 現在接続中のoperator process。接続が無い間は`null`で、`setEncode`等は例外を投げる。
+    // 現在の通知先のWeb・API側処理（子process）。接続が無い間は`null`で、通知は記録して破棄する。
     private child: ChildProcess | null = null;
     // ILoggerModelが未注入（`@optional()`）の場合に備えたfallback。既定は何もしない関数。
     private logError: (message: string) => void = () => undefined;
@@ -154,7 +159,9 @@ export default class IPCServer implements IIPCServer {
         @inject('IThumbnailManageModel') thumbnailManage: IThumbnailManageModel,
         @inject('ILoggerModel') @optional() logger: ILoggerModel | undefined,
         @inject(RecordedUploadAdoptionModel) recordedUploadAdoption: RecordedUploadAdoptionModel,
+        @inject('IEncodeQueueStore') @optional() encodeQueueStore?: IEncodeQueueStore,
     ) {
+        this.encodeQueueStore = encodeQueueStore ?? null;
         this.reservationManage = reservationManage;
         this.recordedManage = recordedManage;
         this.recordedTagManage = recordedTagManage;
@@ -514,19 +521,53 @@ export default class IPCServer implements IIPCServer {
     }
 
     /**
-     * クライアントへエンコードを依頼する
+     * エンコード依頼を依頼記録窓口へ渡して同期で戻る。窓口が依頼を記録した後、`pushEncode`で
+     * 識別番号付きの依頼を現在の通知先へ送る。
      * @param addOption: apid.AddEncodeProgramOption
      */
     public setEncode(addOption: apid.AddEncodeProgramOption): void {
+        this.requireEncodeQueueStore().enqueueFromRecording(addOption, (encodeId, option) =>
+            this.pushEncode(encodeId, option),
+        );
+    }
+
+    /**
+     * 識別番号付きのエンコード依頼を現在の通知先へ一方向に送る。通知先が無い場合と送信呼出しの同期失敗は
+     * 記録して`false`を返し、送信callbackの非同期失敗は記録して破棄する。
+     * @param encodeId 依頼の記録の識別番号
+     * @param option 依頼の内容
+     * @returns 送信を呼び出せたら`true`
+     */
+    public pushEncode(encodeId: apid.EncodeId, option: apid.AddEncodeProgramOption): boolean {
         const child = this.child;
         if (child === null) {
-            throw new Error('ChildIsNull');
+            this.recordNotificationFailure(new Error('notification recipient is unavailable'));
+
+            return false;
         }
 
-        this.sendNotification(child, {
-            type: 'pushEncode',
-            value: addOption,
-        });
+        try {
+            this.sendNotification(child, {
+                type: 'pushEncode',
+                value: option,
+                encodeId,
+            });
+        } catch (error: unknown) {
+            this.recordNotificationFailure(error);
+
+            return false;
+        }
+
+        return true;
+    }
+
+    // 依頼記録窓口を返す。DIで登録されていない構成では`EncodeQueueStoreNotRegistered`をthrowする。
+    private requireEncodeQueueStore(): IEncodeQueueStore {
+        if (this.encodeQueueStore === null) {
+            throw new Error('EncodeQueueStoreNotRegistered');
+        }
+
+        return this.encodeQueueStore;
     }
 
     /**
@@ -540,6 +581,7 @@ export default class IPCServer implements IIPCServer {
         this.functions[ModelName.rule] = this.getRuleFunctions();
         this.functions[ModelName.thumbnail] = this.getThumbnailFunctions();
         this.functions[ModelName.encodeEvent] = this.getOperatorEncodeEventFunctions();
+        this.functions[ModelName.encodeQueue] = this.getEncodeQueueFunctions();
     }
 
     /**
@@ -832,6 +874,50 @@ export default class IPCServer implements IIPCServer {
             }
 
             await this.encodeCompletionSink.accept(info);
+        };
+
+        return index;
+    }
+
+    /**
+     * set encode queue functions
+     */
+    private getEncodeQueueFunctions(): IFunctionIndex {
+        const index: IFunctionIndex = {};
+
+        // add
+        index[EncodeQueueFunctions.add] = async msg => {
+            const option = this.getArgsValue<apid.AddEncodeProgramOption>(msg, 'option');
+            const requestToken = this.getArgsValue<string>(msg, 'requestToken');
+
+            return await this.requireEncodeQueueStore().add(option, requestToken);
+        };
+
+        // abandon
+        index[EncodeQueueFunctions.abandon] = async msg => {
+            const requestToken = this.getArgsValue<string>(msg, 'requestToken');
+
+            await this.requireEncodeQueueStore().abandon(requestToken);
+        };
+
+        // updateOutputPath
+        index[EncodeQueueFunctions.updateOutputPath] = async msg => {
+            const encodeId = this.getArgsValue<apid.EncodeId>(msg, 'encodeId');
+            const outputPath = this.getArgsValue<string>(msg, 'outputPath');
+
+            await this.requireEncodeQueueStore().updateOutputPath(encodeId, outputPath);
+        };
+
+        // remove
+        index[EncodeQueueFunctions.remove] = async msg => {
+            const encodeId = this.getArgsValue<apid.EncodeId>(msg, 'encodeId');
+
+            await this.requireEncodeQueueStore().remove(encodeId);
+        };
+
+        // list
+        index[EncodeQueueFunctions.list] = async () => {
+            return await this.requireEncodeQueueStore().list();
         };
 
         return index;

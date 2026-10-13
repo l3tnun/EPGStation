@@ -16,12 +16,12 @@ describe('IMP-CHAR-PM-7.2 inbound client routing', () => {
 
             await harness.receive({ type: 'notifyClient' });
             expect(harness.notifyClient).toHaveBeenCalledOnce();
-            expect(harness.encodePush).not.toHaveBeenCalled();
+            expect(harness.encodePushPersisted).not.toHaveBeenCalled();
 
-            await harness.receive({ type: 'pushEncode', value: encodeOption });
+            await harness.receive({ encodeId: 302, type: 'pushEncode', value: encodeOption });
             expect(harness.notifyClient).toHaveBeenCalledOnce();
-            expect(harness.encodePush).toHaveBeenCalledOnce();
-            expect(harness.encodePush).toHaveBeenCalledWith(encodeOption);
+            expect(harness.encodePushPersisted).toHaveBeenCalledExactlyOnceWith(302, encodeOption);
+            expect(harness.encodePush).not.toHaveBeenCalled();
             expect(harness.client.pending.size).toBe(0);
             expect(harness.send).not.toHaveBeenCalled();
             expect(vi.getTimerCount()).toBe(0);

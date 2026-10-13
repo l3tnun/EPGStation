@@ -24,10 +24,14 @@ export interface NotifyClientMessage extends ParentMessage {
     type: 'notifyClient';
 }
 
-/** 親プロセスから子プロセスへのエンコード追加要求。`value`は追加するエンコード予約の内容。 */
+/**
+ * 親プロセスから子プロセスへのエンコード追加要求。`value`は追加するエンコードの依頼内容、`encodeId`は
+ * 親側の依頼記録窓口が記録した依頼の識別番号。
+ */
 export interface PushEncodeMessage extends ParentMessage {
     type: 'pushEncode';
     value: apid.AddEncodeProgramOption;
+    encodeId: apid.EncodeId;
 }
 
 /**
@@ -108,6 +112,7 @@ export enum ModelName {
     rule = 'rule',
     thumbnail = 'thumbnail',
     encodeEvent = 'encodeEvent',
+    encodeQueue = 'encodeQueue',
 }
 
 /**
@@ -185,4 +190,15 @@ export enum ThumbnailFunctions {
  */
 export enum OperatorEncodeEventFunctions {
     emitFinishEncode = 'emitFinishEncode',
+}
+
+/**
+ * encode queue（エンコードの依頼の記録）の関数定義
+ */
+export enum EncodeQueueFunctions {
+    add = 'add',
+    abandon = 'abandon',
+    updateOutputPath = 'updateOutputPath',
+    remove = 'remove',
+    list = 'list',
 }

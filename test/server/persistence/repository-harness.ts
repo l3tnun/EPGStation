@@ -49,6 +49,7 @@ const entityNames = [
     'DropLogFile',
     'Thumbnail',
     'RecordedTag',
+    'EncodeQueue',
 ] as const;
 
 const repositoryNames = [
@@ -62,6 +63,7 @@ const repositoryNames = [
     'DropLogFileDB',
     'ThumbnailDB',
     'RecordedTagDB',
+    'EncodeQueueDB',
 ] as const;
 
 export interface RepositoryPersistence {
@@ -186,6 +188,7 @@ export async function createRepositoryPersistence(
             DropLogFileDB: new constructors.DropLogFileDB(loggerModel, operator, retry),
             ThumbnailDB: new constructors.ThumbnailDB(loggerModel, operator, retry),
             RecordedTagDB: new constructors.RecordedTagDB(loggerModel, operator, retry),
+            EncodeQueueDB: new constructors.EncodeQueueDB(loggerModel, operator, retry),
         };
         return {
             dialect,

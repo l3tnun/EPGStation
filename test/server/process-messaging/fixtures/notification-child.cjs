@@ -15,6 +15,9 @@ const logger = {
 new IPCClient(
     { getLogger: () => logger },
     { notifyClient: () => process.send({ observation: 'notifyClient' }) },
-    { push: value => process.send({ observation: 'pushEncode', value }) },
+    {
+        push: value => process.send({ observation: 'push', value }),
+        pushPersisted: async (encodeId, value) => process.send({ observation: 'pushEncode', encodeId, value }),
+    },
 );
 process.send({ observation: 'ready' });
