@@ -1,6 +1,7 @@
 import { expectDarkCardsUseTheme } from './support/darkUiExpectations'
 import { expect, test } from '@playwright/test'
 import { installAppShellApiMocks } from './support/appShellMocks'
+import { replaceApiMocks } from './support/apiMockReplacement'
 import { installDashboardWorkflowApiMocks } from './support/dashboardMocks'
 import { SYNTHETIC_RECORDED_DETAIL_ID, installRecordedApiMocks } from './support/recordedMocks'
 import { installRecordingEncodeApiMocks } from './support/recordingEncodeMocks'
@@ -123,12 +124,13 @@ test('[AC frontend-app-shell 7.11] [AC frontend-recorded 5.5] audits dark table 
     await recordedTablePage.close()
   }
 
-  await page.unrouteAll()
-  await installAppShellApiMocks(page, {
-    enableBroadcastWaveNavigation: true,
-    forceDarkTheme: true,
+  await replaceApiMocks(page, async () => {
+    await installAppShellApiMocks(page, {
+      enableBroadcastWaveNavigation: true,
+      forceDarkTheme: true,
+    })
+    await installRecordingEncodeApiMocks(page)
   })
-  await installRecordingEncodeApiMocks(page)
   await page.goto('/#/recording')
   await expect(page.getByRole('table', { name: '録画中一覧' })).toBeVisible()
   await expectDarkCardsUseTheme(page, [

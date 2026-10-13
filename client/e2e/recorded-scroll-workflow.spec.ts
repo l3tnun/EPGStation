@@ -1,11 +1,12 @@
 import { expect, test } from '@playwright/test'
 import { installAppShellApiMocks } from './support/appShellMocks'
+import { replaceApiMocks } from './support/apiMockReplacement'
 import { muiSelectInput, selectMuiOption } from './support/muiSelect'
 import { createRecordedRequestLog, installRecordedApiMocks } from './support/recordedMocks'
 import { installStoragesUploadApiMocks } from './support/storagesUploadMocks'
 import { setRecordedBrowserSettings } from './support/recordedWorkflow'
 import { getActiveRouteScrollY, scrollActiveRouteTo } from './support/routeScroll'
-import { expectAnnounced } from './support/notificationObservation'
+import { announcementCount, expectAnnounced } from './support/notificationObservation'
 
 test.beforeEach(async ({ page }) => {
   await installAppShellApiMocks(page)
@@ -170,17 +171,20 @@ test('renders Recorded empty, error, and loading states without fixture leakage'
   await expect(page.getByTestId('recorded-list-item')).toHaveCount(0)
   await expect(page.getByText(/empty/i)).toHaveCount(0)
 
-  await page.unrouteAll()
-  await installAppShellApiMocks(page)
-  await installRecordedApiMocks(page, 'list-failure')
+  await replaceApiMocks(page, async () => {
+    await installAppShellApiMocks(page)
+    await installRecordedApiMocks(page, 'list-failure')
+  })
+  const since = await announcementCount(page)
   await page.goto('/#/recorded?timestamp=error')
   await expect(page.getByTestId('recorded-error')).toContainText('録画データ取得に失敗')
-  await expectAnnounced(page, '録画データ取得に失敗')
+  await expectAnnounced(page, '録画データ取得に失敗', { since })
   await expect(page.getByText('synthetic-recorded-list-failure')).toHaveCount(0)
 
-  await page.unrouteAll()
-  await installAppShellApiMocks(page)
-  await installRecordedApiMocks(page, 'slow-list')
+  await replaceApiMocks(page, async () => {
+    await installAppShellApiMocks(page)
+    await installRecordedApiMocks(page, 'slow-list')
+  })
   await page.goto('/#/recorded?timestamp=loading')
   await expect(page.getByTestId('recorded-loading')).toContainText('読み込み中')
   await expect(page.getByTestId('recorded-page')).toBeVisible()

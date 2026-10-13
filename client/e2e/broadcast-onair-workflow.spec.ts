@@ -1,10 +1,15 @@
 import { expect, test } from '@playwright/test'
 import { installAppShellApiMocks } from './support/appShellMocks'
+import { replaceApiMocks } from './support/apiMockReplacement'
 import { withRouteTimestamp } from './support/appShellWorkflow'
 import { installBroadcastWorkflowMocks } from './support/broadcastWorkflow'
 import { installGuideOnAirApiMocks } from './support/guideOnAirMocks'
 import { selectMuiOption } from './support/muiSelect'
-import { expectAnnounced } from './support/notificationObservation'
+import {
+  announcedNotification,
+  announcementCount,
+  expectAnnounced,
+} from './support/notificationObservation'
 
 test.beforeEach(async ({ page }) => {
   await installBroadcastWorkflowMocks(page)
@@ -69,16 +74,27 @@ test('shows synthetic empty and error states without leaking fixture content', a
   await expect(page.getByTestId('onair-page')).toHaveCount(0)
   await expect(page.getByText('Synthetic OnAir News')).toHaveCount(0)
 
-  await page.unrouteAll()
-  await installAppShellApiMocks(page, { enableBroadcastWaveNavigation: true })
-  await installGuideOnAirApiMocks(page, { guide: 'failure', onAir: 'failure', streams: 'failure' })
+  // 空の画面の取得が終わってから偽 API を入れ替える（replaceApiMocks）。入れ替えの時点で失敗の通知が
+  // 記録されていないことと、各画面の失敗の通知がその画面へ移った後に記録されることを確かめる。
+  await replaceApiMocks(page, async () => {
+    await installAppShellApiMocks(page, { enableBroadcastWaveNavigation: true })
+    await installGuideOnAirApiMocks(page, {
+      guide: 'failure',
+      onAir: 'failure',
+      streams: 'failure',
+    })
+  })
+  await expect(announcedNotification(page)).toHaveAttribute('data-announced-history', '[]')
 
+  let since = await announcementCount(page)
   await page.goto(`/#${withRouteTimestamp('/guide?time=23111507')}`)
-  await expectAnnounced(page, '番組表情報の取得に失敗しました')
+  await expectAnnounced(page, '番組表情報の取得に失敗しました', { since })
 
+  since = await announcementCount(page)
   await page.goto(`/#${withRouteTimestamp('/onair')}`)
-  await expectAnnounced(page, '番組情報取得に失敗')
+  await expectAnnounced(page, '番組情報取得に失敗', { since })
 
+  since = await announcementCount(page)
   await page.goto(`/#${withRouteTimestamp('/onair/watch?type=hls&channel=301&mode=0')}`)
-  await expectAnnounced(page, 'ストリーム情報取得に失敗')
+  await expectAnnounced(page, 'ストリーム情報取得に失敗', { since })
 })

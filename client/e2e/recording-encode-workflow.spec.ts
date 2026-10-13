@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import { installAppShellApiMocks } from './support/appShellMocks'
+import { replaceApiMocks } from './support/apiMockReplacement'
 import {
   SYNTHETIC_ENCODE_RUNNING_ID,
   SYNTHETIC_ENCODE_WAITING_ID,
@@ -9,7 +10,7 @@ import {
   installRecordingEncodeApiMocks,
   recordingEncodeFixtureSecrecyText,
 } from './support/recordingEncodeMocks'
-import { expectAnnounced } from './support/notificationObservation'
+import { announcementCount, expectAnnounced } from './support/notificationObservation'
 
 test.beforeEach(async ({ page }) => {
   await installAppShellApiMocks(page)
@@ -96,19 +97,22 @@ test('[AC 1.33] drives Recording list query, menu visibility, bulk delete, empty
     ])
   await expectAnnounced(page, '選択した番組を削除しました。')
 
-  await page.unrouteAll()
-  await installAppShellApiMocks(page)
-  await installRecordingEncodeApiMocks(page, { mode: 'recording-empty' })
+  await replaceApiMocks(page, async () => {
+    await installAppShellApiMocks(page)
+    await installRecordingEncodeApiMocks(page, { mode: 'recording-empty' })
+  })
   await page.goto('/#/recording?timestamp=empty')
   await expect(page.getByTestId('recording-page')).toHaveCount(0)
   await expect(page.getByTestId('recording-list-item')).toHaveCount(0)
 
-  await page.unrouteAll()
-  await installAppShellApiMocks(page)
-  await installRecordingEncodeApiMocks(page, { mode: 'recording-failure' })
+  await replaceApiMocks(page, async () => {
+    await installAppShellApiMocks(page)
+    await installRecordingEncodeApiMocks(page, { mode: 'recording-failure' })
+  })
+  const since = await announcementCount(page)
   await page.goto('/#/recording?timestamp=failure')
   await expect(page.getByTestId('recording-page')).toHaveCount(0)
-  await expectAnnounced(page, '録画データ取得に失敗')
+  await expectAnnounced(page, '録画データ取得に失敗', { since })
 })
 
 test('drives Encode query, progress visibility, and single cancel workflow', async ({ page }) => {
