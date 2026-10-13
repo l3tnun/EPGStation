@@ -19,6 +19,7 @@ interface EncodeManageRuntime {
     pushPersisted(encodeId: number, option: apid.AddEncodeProgramOption): Promise<void>;
     restore(): Promise<void>;
     cancel(encodeId: number): Promise<void>;
+    cancelEncodeByRecordedId(recordedId: number): Promise<void>;
     getEncodeInfo(): {
         runningQueue: Array<{ id: number; recordedId: number }>;
         waitQueue: Array<{ id: number; recordedId: number }>;
@@ -835,6 +836,146 @@ describe('encode request records in the Web/API process (unittest/spec)', () => 
             expect(fixture.resourceUse.acquire).toHaveBeenCalledTimes(1);
         } finally {
             vi.useRealTimers();
+            fixture.release();
+        }
+    });
+
+    it('[EN-SPEC-R7-2] lets requests, hand-overs and cancels proceed without waiting once restoration has finished', async () => {
+        const fixture = makeFixture({ concurrentEncodeNum: 1 });
+        try {
+            await fixture.manage.restore();
+            await fixture.manage.push(option(131));
+            const waiting = await fixture.manage.push(option(132));
+            await flushEventLoop();
+            const requestsBefore = fixture.execution.getExecution.mock.calls.length;
+
+            // 復元が終わった後は、どの操作も呼び出しと同じ同期処理の中で実行権を求める（復元を待たない）
+            const pushed = fixture.manage.push(option(133));
+            expect(fixture.execution.getExecution).toHaveBeenCalledTimes(requestsBefore + 1);
+            fixture.store.stored.set(97, record(97, 134));
+            const handedOver = fixture.manage.pushPersisted(97, option(134));
+            expect(fixture.execution.getExecution).toHaveBeenCalledTimes(requestsBefore + 2);
+            const cancelled = fixture.manage.cancel(waiting);
+            expect(fixture.execution.getExecution).toHaveBeenCalledTimes(requestsBefore + 3);
+            const cancelledByRecorded = fixture.manage.cancelEncodeByRecordedId(131);
+            expect(fixture.execution.getExecution).toHaveBeenCalledTimes(requestsBefore + 4);
+
+            await Promise.all([pushed, handedOver, cancelled, cancelledByRecorded]);
+            await flushEventLoop();
+        } finally {
+            fixture.release();
+        }
+    });
+
+    it('[EN-SPEC-R7-2] restores on the retried listing a handed-over record that was rejected and could not be removed', async () => {
+        vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+        const fixture = makeFixture({
+            concurrentEncodeNum: 1,
+            recordedFiles: { 141: [{ id: 1410, fullPath: 'p141' }] },
+        });
+        fixture.store.list.mockRejectedValueOnce(new Error('synthetic list failure'));
+        try {
+            await fixture.manage.restore();
+            // 受け渡しを使用権の取得の失敗で拒否し、記録の削除にも失敗したので記録が残る
+            fixture.store.stored.set(41, record(41, 141));
+            fixture.resourceUse.acquire.mockRejectedValueOnce(new Error('synthetic lease failure'));
+            fixture.store.remove.mockRejectedValueOnce(new Error('synthetic remove failure'));
+            await fixture.manage.pushPersisted(41, option(141));
+            expect(fixture.store.stored.has(41)).toBe(true);
+            expect(fixture.manage.getEncodeInfo()).toEqual({ runningQueue: [], waitQueue: [] });
+
+            // やり直しの一覧に残っていた記録は、待機列へ戻す
+            await vi.advanceTimersByTimeAsync(60 * 1000);
+            await flushEventLoop();
+
+            expect(ids(fixture.manage.getEncodeInfo().runningQueue)).toEqual([41]);
+            expect(fixture.store.stored.has(41)).toBe(true);
+        } finally {
+            vi.useRealTimers();
+            fixture.release();
+        }
+    });
+
+    it('[EN-SPEC-R7-10] removes a handed-over record once after releasing its lease when the job cannot be made', async () => {
+        const fixture = makeFixture({ concurrentEncodeNum: 1 });
+        fixture.provider.mockRejectedValueOnce(new Error('synthetic provider failure'));
+        try {
+            fixture.store.stored.set(92, record(92, 192));
+
+            await expect(fixture.manage.pushPersisted(92, option(192))).resolves.toBeUndefined();
+            await flushEventLoop();
+
+            expect(fixture.calls).toEqual(['acquire:192', 'release:192', 'remove:92']);
+            expect(fixture.store.stored.has(92)).toBe(false);
+            expect(fixture.added).toEqual([]);
+            expect(fixture.manage.getEncodeInfo()).toEqual({ runningQueue: [], waitQueue: [] });
+        } finally {
+            fixture.release();
+        }
+    });
+
+    it('[EN-SPEC-R7-11] ignores a handed-over identifier that is being admitted, waiting or running without a restoration listing', async () => {
+        const fixture = makeFixture({ concurrentEncodeNum: 1 });
+        try {
+            fixture.store.stored.set(93, record(93, 193));
+            fixture.store.stored.set(94, record(94, 194));
+
+            // 同じ識別番号の受け渡しが受付中
+            await Promise.all([
+                fixture.manage.pushPersisted(93, option(193)),
+                fixture.manage.pushPersisted(93, option(193)),
+            ]);
+            await flushEventLoop();
+            await fixture.manage.pushPersisted(94, option(194));
+            await flushEventLoop();
+            // 実行中の 93 と待機中の 94 を、もう一度渡す
+            await fixture.manage.pushPersisted(93, option(193));
+            await fixture.manage.pushPersisted(94, option(194));
+            await flushEventLoop();
+
+            expect(ids(fixture.manage.getEncodeInfo().runningQueue)).toEqual([93]);
+            expect(ids(fixture.manage.getEncodeInfo().waitQueue)).toEqual([94]);
+            expect(fixture.calls).toEqual(['acquire:193', 'acquire:194']);
+            expect(fixture.added).toEqual([93, 94]);
+        } finally {
+            fixture.release();
+        }
+    });
+
+    it('[EN-SPEC-R2-6] removes the record of a restored request and then releases its lease when it ends', async () => {
+        const fixture = makeFixture({
+            concurrentEncodeNum: 1,
+            records: [record(17, 117)],
+            recordedFiles: { 117: [{ id: 1170, fullPath: 'p117' }] },
+        });
+        try {
+            await fixture.manage.restore();
+            await flushEventLoop();
+            expect(fixture.encoders[0].started).toBe(true);
+
+            fixture.encoders[0].finishCallback?.(false, null);
+            await flushEventLoop();
+
+            expect(fixture.calls).toEqual(['acquire:117', 'remove:17', 'release:117']);
+            expect(fixture.store.stored.size).toBe(0);
+        } finally {
+            fixture.release();
+        }
+    });
+
+    it('[EN-SPEC-R7-7] keeps an interrupted output that points at the parent directory itself and restores the request', async () => {
+        const fixture = makeFixture({
+            records: [{ ...record(18, 118), outputPath: '<synthetic-output>' }],
+            recordedFiles: { 118: [{ id: 1180, fullPath: '<synthetic-source>/j.ts' }] },
+        });
+        try {
+            await fixture.manage.restore();
+
+            expect(fixture.restoreDependencies.removeFile).not.toHaveBeenCalled();
+            expect(fixture.calls).toEqual(['acquire:118']);
+            expect(ids(fixture.manage.getEncodeInfo().runningQueue)).toEqual([18]);
+            expect(fixture.logger.encode.warn).toHaveBeenCalled();
+        } finally {
             fixture.release();
         }
     });

@@ -62,6 +62,8 @@ const mutate = [
     'src/model/service/encode/EncoderModel.ts',
     'src/model/service/encode/EncodeFinishModel.ts',
     'src/model/service/encode/EncodeFileManageModel.ts',
+    // エンコードの依頼の記録（管理側の依頼記録窓口）
+    'src/model/operator/encode/EncodeQueueStore.ts',
     // 配信の管理と HLS の stream id の割り当て
     'src/model/service/stream/manager/StreamManageModel.ts',
     'src/model/service/stream/manager/HlsStreamIdAllocator.ts',

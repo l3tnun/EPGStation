@@ -119,6 +119,14 @@ describe('encode request records (unittest/spec)', () => {
         },
     );
 
+    it('[EN-SPEC-R7-5] keeps acceptance order across the wrap for a request added after the restart', async () => {
+        // DB は識別番号の昇順で返すので、読込直後の並びは受け付け順と異なる
+        const { store } = makeStore([row(1), row(2), row(MAX - 1), row(MAX)]);
+
+        expect(await store.add(option(100))).toBe(3);
+        expect((await store.list()).map(record => record.id)).toEqual([MAX - 1, MAX, 1, 2, 3]);
+    });
+
     it('[EN-SPEC-R7-5] returns the stored request, output path and record time', async () => {
         const { store } = makeStore([{ ...row(4, 44), outputPath: '<synthetic-output>/a.mp4', createdAt: 123 }]);
 
@@ -152,6 +160,19 @@ describe('encode request records (unittest/spec)', () => {
 
         expect([...db.table.keys()]).toEqual([second]);
         expect(db.deleteOnce.mock.calls).toEqual([[first]]);
+    });
+
+    it('[EN-SPEC-R1-12] keeps the request value of another record when one record is removed', async () => {
+        const { db, store } = makeStore();
+
+        const first = await store.add(option(125), 'synthetic-request-4');
+        const second = await store.add(option(126), 'synthetic-request-5');
+        await store.remove(first);
+        // 削除した記録の値だけが消え、別の要求の値では取り消せる
+        await store.abandon('synthetic-request-5');
+
+        expect(db.table.size).toBe(0);
+        expect(db.deleteOnce.mock.calls).toEqual([[first], [second]]);
     });
 
     it('[EN-SPEC-R7-9] records a request from a finished recording before handing it over with its id', async () => {
@@ -252,5 +273,13 @@ describe('encode request records (unittest/spec)', () => {
         await store.remove(1);
         // 次の値は 2 だが、削除できなかった壊れた記録の 2 を飛ばす
         expect(await store.add(option(9))).toBe(3);
+    });
+
+    it('[EN-SPEC-R7-12] never assigns 1 when the broken record that could not be deleted has the id 1', async () => {
+        const { db, store } = makeStore([{ ...row(1), option: 'not-json' }]);
+        db.deleteOnce.mockRejectedValueOnce(new Error('synthetic delete failure'));
+
+        expect(await store.add(option(9))).toBe(2);
+        expect([...db.table.keys()].sort((a, b) => a - b)).toEqual([1, 2]);
     });
 });

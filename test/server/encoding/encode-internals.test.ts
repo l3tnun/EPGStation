@@ -2355,6 +2355,7 @@ describe('encode suspend-time internals', () => {
         ['a missing end', [{ start: '18:00' }]],
         ['a numeric start', [{ start: 1080, end: '19:00' }]],
         ['a numeric end', [{ start: '18:00', end: 1140 }]],
+        ['an array start', [{ start: ['18:00'], end: '19:00' }]],
         ['a one-digit hour', [{ start: '7:00', end: '08:00' }]],
         ['seconds', [{ start: '07:00:00', end: '08:00' }]],
         ['surrounding spaces', [{ start: '07:00 ', end: '08:00' }]],
@@ -2362,6 +2363,7 @@ describe('encode suspend-time internals', () => {
         ['24:01 as end', [{ start: '23:00', end: '24:01' }]],
         ['hour 25', [{ start: '23:00', end: '25:00' }]],
         ['minute 60', [{ start: '23:60', end: '01:00' }]],
+        ['minute 60 within the latest start', [{ start: '00:60', end: '02:00' }]],
         ['the same start and end', [{ start: '00:00', end: '00:00' }]],
         ['an invalid range after a valid one', [{ start: '18:00', end: '19:00' }, { start: '20:00' }]],
     ])('[EN-IMP-SUSPEND-TIMES-VALIDATION] rejects %s at construction', (_label, ranges) => {
@@ -2563,6 +2565,28 @@ describe('encode suspend-time internals', () => {
             expect(fixture.manage.suspendResumeTimer).toBe(firstTimer);
 
             await vi.advanceTimersByTimeAsync(150 * 60 * 1000 - (60 * 1000 - 1) - 1);
+            await fixture.settle();
+            expect(fixture.created[0].started).toBe(false);
+            await vi.advanceTimersByTimeAsync(1);
+            await fixture.settle();
+            expect(fixture.created[0].started).toBe(true);
+            expect(vi.getTimerCount()).toBe(0);
+        } finally {
+            vi.clearAllTimers();
+            fixture.release();
+        }
+    });
+
+    it('[EN-IMP-SUSPEND-TIMES-RESUME] resumes at the end in the last minute of the late part of a range across midnight', async () => {
+        vi.useFakeTimers(SUSPEND_FAKE_TIMERS);
+        vi.setSystemTime(localTime(23, 59, 30));
+        const fixture = makeSuspendManage(1, [{ start: '23:00', end: '00:00' }]);
+        try {
+            await fixture.manage.push(option(3611));
+            await fixture.settle();
+
+            // 終了（翌日の 00:00）まで残り 30 秒なので、判定し直しの上限（1 分）を待たずに終了時に開始する
+            await vi.advanceTimersByTimeAsync(30 * 1000 - 1);
             await fixture.settle();
             expect(fixture.created[0].started).toBe(false);
             await vi.advanceTimersByTimeAsync(1);

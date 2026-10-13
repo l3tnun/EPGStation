@@ -182,6 +182,7 @@ describe('EncodeQueueStore internals (unittest/imp)', () => {
     it.each([
         ['broken JSON', row(2, '{"recordedId":'), 'option'],
         ['a JSON array', row(2, [1, 2]), 'option'],
+        ['a JSON null', row(2, 'null'), 'option'],
         ['a missing recordedId', row(2, { ...option(2), recordedId: undefined }), 'option'],
         ['a string sourceVideoFileId', row(2, { ...option(2), sourceVideoFileId: '1002' }), 'option'],
         ['a missing parentDir', row(2, { ...option(2), parentDir: undefined }), 'option'],

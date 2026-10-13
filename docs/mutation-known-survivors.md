@@ -100,6 +100,8 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 | `setTemplateValues` の `typeof config.urlscheme === 'undefined'` | ConditionalExpression、StringLiteral | 冗長: undefined は直前の `DEFAULT_VALUE` の補完で既に埋まり、残る null の判定は別の条件で検出される |
 | `Configuration.CONFIG_FILE_PATH`・`CONFIG_TEMPLATE_FILE_PATH`・`ROOT_PATH` の path の要素 | StringLiteral | 定数表で判定できない: module の読み込み時に評価される式 |
 | `Configuration.DEFAULT_VALUE`（既定値の表と、その中の path の要素） | StringLiteral、ObjectLiteral、ArrayDeclaration、BooleanLiteral | 定数表で判定できない: 項目ごとに値を確かめる test があり、説明書（`docs/conf-manual.md`）に既定値が無い `encode`・`urlscheme` の形は実装の値で固定している。`mirakurunPath` の既定値は説明書に書いてあるが、値を確かめる test は無い |
+| `Configuration.SUSPEND_START_TIME_PATTERN`・`SUSPEND_END_TIME_PATTERN` | Regex | 定数表で判定できない: module の読み込み時に評価される式。境界（`00:00`・`23:59`・`24:00`）の受理と、桁数・範囲外・前後の空白や余分な文字の拒否を、`start`・`end` のそれぞれで確かめる test がある |
+| `assertEncodeSuspendTimes` の `typeof range === 'object'`・`Array.isArray(range) === false` | ConditionalExpression | 冗長: 文字列・数値・配列の要素は `start`・`end` を持たず、続く `typeof range.start === 'string'` で false になる |
 
 ### `src/util/StrUtil.ts`
 
@@ -208,12 +210,22 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 
 | 処理の場所 | mutator | 理由 |
 | --- | --- | --- |
-| `legacyRecordedResourceUsePort`（object と `acquire`）、`NEEDS_CHECK_QUEUE_EVENT`、`UNLOCK_EVENT` | ObjectLiteral、ArrowFunction、StringLiteral | 定数表で判定できない: module の読み込み時に評価される式 |
+| `legacyRecordedResourceUsePort`（object と `acquire`）、`NEEDS_CHECK_QUEUE_EVENT`、`UNLOCK_EVENT`、`RESTORE_RETRY_DELAY_MS`、`SUSPEND_RECHECK_MAX_DELAY_MS` | ObjectLiteral、ArrowFunction、StringLiteral、ArithmeticOperator | 定数表で判定できない: module の読み込み時に評価される式。2 つの delay（60 秒）は、経過を fake timer で進める test が値を確かめている |
 | `checkQueue` の `waitQueue.length === 0` | ConditionalExpression | 冗長: 空なら直後の `shift()` が undefined になり、続く `typeof encoder === 'undefined'` で同じ結果になる |
 | `checkQueue` の `typeof encoder === 'undefined'` の判定と、その中の `unLockExecution` | ConditionalExpression、BlockStatement、StringLiteral、CallExpression | 到達不能: 直前の判定が空を弾くので来ない |
 | `createFinishEncodeInfo` の `outputFilePath === null`・`fileName === null` | LogicalOperator、ConditionalExpression | 冗長: 2 つは常に一致する |
 | `hasSamVideoFileIdItem` の `option.encodeId !== excludeEncodeId` | ConditionalExpression | 冗長: 待機 queue に自身は入らないので、除外の有無で結果が変わらない |
 | `getQueuedAndRunningRecordedIds` の `option === null` の判定 | ConditionalExpression、BlockStatement | 振る舞いが変わらない: option が null のとき `null.recordedId` が例外になり、外側の catch で同じ `unknown` を返す |
+| `pushPersisted`、`addRecord`、`removeRecord`、`restoreRecords`、`restoreRecord`、`judgeRestorableRecord` の log の文言と `log.encode.*(err)` の削除 | StringLiteral、CallExpression | 振る舞いが変わらない: log だけ |
+| `isEncodeIdInUse` の `restoringEncodeIds.has(encodeId) === true` と、`restoreRecords` の `restoringEncodeIds` への追加・削除（削除する `finally` の block を含む） | ConditionalExpression、CallExpression、BlockStatement | 冗長: 判定中の識別番号は、その前に必ず `listedEncodeIds` へ入っており、受け渡し（`pushPersisted`）は `listedEncodeIds` でも同じく何もしない。受け渡しは復元が終わるまで待ってから判定するので、判定中の識別番号を見ることもない。復元の側は、一覧の識別番号が重複しないので、判定中の識別番号と同じ記録を判定しない |
+| `runRestoration` の `this.restoring === restoring`（常に真にする置き換え） | ConditionalExpression | 冗長: 次の復元（一覧の取得し直し）は、この復元が終わってから 60 秒後の timer で始まるので、この復元が終わった時点の `this.restoring` は必ずこの復元 |
+| `restoreRecord` の使用権の形の検査のうち `typeof acquired !== 'object'`・`acquired === null` とその連結、`InvalidRecordedResourceUseLease` の文言 | ConditionalExpression、LogicalOperator、StringLiteral | 振る舞いが変わらない: object でない値と null は、続く `acquired.token` の参照が同じ try の中で例外を投げ、同じ catch（記録を削除して戻さない）に入る。error の文言は log にだけ出る |
+| `judgeRestorableRecord` の `recorded?.videoFiles ?? []` の既定値と `recorded === null` | ArrayDeclaration、ConditionalExpression | 冗長: 録画済み番組が無いときは空の配列になり、続く `videoFiles.some(...) === false` で同じく記録を捨てる。置き換え後の配列の要素は `id` を持たないので、録画ファイルの無い番組も同じく捨てる |
+| `judgeRestorableRecord` の `path.isAbsolute(relative) === true` | ConditionalExpression | 到達不能: POSIX の `path.relative` は絶対 path を返さない（Windows で別の drive を指すときだけ返す） |
+| `getSuspendRemainingMinutes` の `range.start < range.end`（`<=` にする置き換え）と `range.end > current`（`>=` にする置き換え） | EqualityOperator | 到達不能: 開始と終了が同じ時刻の時間帯は `parseSuspendTimes` が拒否する。終了の時刻ちょうどの分は、その時間帯に含まれないので、残りの分数の計算に来ない |
+| `getSuspendRemainingMinutes` の、最も早く終わる時間帯の選び方（`Math.min`、`remaining === null` の判定） | MethodExpression、ConditionalExpression | 振る舞いが変わらない: ほかの時間帯を選んでも、その終了までは選んだ時間帯が現在の時刻を含むので停止時間帯の中。delay は 60 秒以下で、発火した時点で判定し直すので、開始する時刻は変わらない |
+| `releaseRecordedUseForEncoder` の `encodeId !== null` | ConditionalExpression | 到達不能: 待機列・実行中一覧のジョブは、追加の前に必ず識別番号付きの依頼内容が設定されている |
+| `parseSuspendTimes` の要素の `typeof range !== 'object'`・`Array.isArray(range) === true` | ConditionalExpression | 冗長: 文字列・数値・配列の要素は `start`・`end` を持たず、続く `parseSuspendMinutes` が null を返して同じ例外になる |
 
 ### `src/model/service/encode/EncodeProcessManageModel.ts`
 
@@ -233,6 +245,19 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 | `childEndProcessing` の `this.listener.removeAllListeners()` | CallExpression | 冗長: `once` で登録した listener は emit で消えており、ほかに listener が無い |
 | `ENCODE_FINISH_EVENT` | StringLiteral | 定数表で判定できない: module の読み込み時に評価される式 |
 | `MAX_PROGRESS_RECORD_BYTES` | ArithmeticOperator | 定数表で判定できない: 超過時の動作は test が確かめているが、値そのものの境界は確かめていない |
+| `recordOutputPath` の `encodeQueueStorePort === null` の判定と、更新の失敗の log の文言・`log.encode.error(err)` の削除 | ConditionalExpression、BlockStatement、StringLiteral、CallExpression | 振る舞いが変わらない: 記録の port が無いときに判定を外すと、`null` の参照の例外が同じ catch に入って log に出るだけで、変換は続く |
+
+### `src/model/operator/encode/EncodeQueueStore.ts`
+
+| 処理の場所 | mutator | 理由 |
+| --- | --- | --- |
+| `abandon`、`enqueueFromRecording`、`load` の log の文言と `log.encode.error(err)` の削除、`enqueueFromRecording` の `send(...) === false`（送れなかったときの log を出すかだけを決める） | StringLiteral、CallExpression、EqualityOperator、BooleanLiteral、BlockStatement | 振る舞いが変わらない: log だけ（`send` は判定の前に必ず 1 回呼ばれる） |
+| `add` の `typeof requestToken === 'string'` | ConditionalExpression | 振る舞いが変わらない: 値を渡さない `add` でも undefined を key にした対応付けが 1 つ残るだけで、`abandon` は文字列の値でしか引かず、対応付けは記録の削除で消える（メモリだけ） |
+| `load` の、削除できなかった壊れた記録の識別番号を割り当てから外す条件（`Number.isSafeInteger(row.id) === true && row.id >= 1` のうち、境界の `>=` 以外の置き換え） | ConditionalExpression、LogicalOperator | 振る舞いが変わらない: 条件を外して加わるのは、0 以下・整数でない値・最大安全整数を超える値だけで、割り当ての候補（1〜最大安全整数の整数）と一致しない |
+| `orderByAcceptance` の `sorted.length <= 1` の早期の return | ConditionalExpression、EqualityOperator、BlockStatement | 冗長: 0 件・1 件で続く処理を通しても、同じ並び（空・その 1 件）になる |
+| `orderByAcceptance` の繰り返しの終わり（`i < sorted.length - 1`） | EqualityOperator、ArithmeticOperator | 振る舞いが変わらない: 余分に回る分は範囲外の要素との差が NaN になり、最も大きい差の更新に使われない |
+| `parseRow` の `JSON.parse` の catch の block | BlockStatement | 冗長: 空にすると値が undefined のまま続き、直後の `isAddEncodeProgramOption` が false を返して同じ null になる |
+| `isAddEncodeProgramOption` の `typeof value !== 'object'`・`Array.isArray(value) === true` | ConditionalExpression | 冗長: 数値・文字列・真偽値・配列は、続く `recordedId` などの型の検査で false になる |
 
 ### `src/model/epgUpdater/EPGUpdateManageModel.ts`
 

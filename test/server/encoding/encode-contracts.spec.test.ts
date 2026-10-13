@@ -1197,6 +1197,20 @@ describe('canonical primary R1-R7 contracts', () => {
         fixture.child.emit('exit', 0, null);
     });
 
+    it('[EN-SPEC-R2-6] adds no output path to the record when the conversion writes no output file', async () => {
+        const queueStore = { updateOutputPath: vi.fn(async () => undefined) };
+        const fixture = await makeEncoderFixture({
+            encode: [{ cmd: '%NODE%', name: 'synthetic-mode', rate: 3 }],
+            queueStore,
+        });
+
+        await fixture.model.start();
+
+        expect(queueStore.updateOutputPath).not.toHaveBeenCalled();
+        expect(fixture.createManaged).toHaveBeenCalledTimes(1);
+        fixture.child.emit('exit', 0, null);
+    });
+
     it('[EN-SPEC-R2-6] keeps starting the conversion when recording the output path fails', async () => {
         const queueStore = { updateOutputPath: vi.fn(async () => Promise.reject(new Error('synthetic update failure'))) };
         const fixture = await makeEncoderFixture({ queueStore });
