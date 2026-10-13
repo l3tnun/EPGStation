@@ -3038,4 +3038,37 @@ describe('encode suspend-time contracts', () => {
             child.removeAllListeners();
         }
     });
+
+    it('[EN-SPEC-R2-13] resumes within a minute of the end after the local clock jumps ahead of real time', async () => {
+        vi.useFakeTimers(SUSPEND_FAKE_TIMERS);
+        vi.setSystemTime(localTime(1, 30));
+        const fixture = makeSuspendManage(1, [{ start: '01:00', end: '04:00' }]);
+
+        await fixture.manage.push(addOption({ recordedId: 2131 }));
+        await fixture.settle();
+        expect(fixture.started()).toEqual([]);
+        expect(vi.getTimerCount()).toBe(1);
+
+        // ローカル時刻だけが実時間より先へ進む（サマータイムの切替えや時刻の変更）。設定済みの timer は実時間で数える
+        vi.setSystemTime(localTime(3, 58, 50));
+        await vi.advanceTimersByTimeAsync(60 * 1000 - 1);
+        await fixture.settle();
+        expect(fixture.started()).toEqual([]);
+
+        // 1 分以内に判定し直し、まだ時間帯の中なので開始せず timer を設定し直す
+        await vi.advanceTimersByTimeAsync(1);
+        await fixture.settle();
+        expect(fixture.started()).toEqual([]);
+        expect(vi.getTimerCount()).toBe(1);
+
+        // ローカル時刻が終了時刻 04:00 に達した時点で開始する
+        await vi.advanceTimersByTimeAsync(10 * 1000 - 1);
+        await fixture.settle();
+        expect(fixture.started()).toEqual([]);
+        await vi.advanceTimersByTimeAsync(1);
+        await fixture.settle();
+        expect(fixture.started()).toEqual([1]);
+        expect(vi.getTimerCount()).toBe(0);
+        await fixture.cleanup();
+    });
 });

@@ -39,10 +39,11 @@ envelope、request/reply timeout、再送は `server-process-messaging`、browse
 | 6.2  | `test/server/encoding/encode-boundaries.integration.test.ts`<br>`src/model/service/encode/EncoderModel.ts`<br>`src/util/ProcessUtil.ts`                                                                                                                                      | `integration`                                      | `3.2, 3.3, 4.2, 4.3, 5.2, 5.3`                                              | `npm run test:server:integration -- test/server/encoding/encode-boundaries.integration.test.ts`                                                                                                                                                                   |
 | 6.3  | `test/server/encoding/encode-contracts.spec.test.ts` | `unittest/spec` | `1.1, 1.2, 2.1, 2.2, 2.3, 3.1, 3.2, 3.3, 4.1, 4.2, 4.3, 5.2, 5.3, 6.1, 6.2` | `npm run test:server:spec -- test/server/encoding/encode-contracts.spec.test.ts` |
 | 6.4  | `test/server/encoding/encode-internals.test.ts`                                                                                                                                                                                                                              | `unittest/imp`                                     | `6.3`                                                                       | `npm run test:server:imp -- test/server/encoding/encode-internals.test.ts`                                                                                                                                                                                        |
-| 6.5  | `.kiro/specs/server-encoding/design.md` | レビュー | `6.4` | なし（Design §9.1の60行のレビュー） |
+| 6.5  | `.kiro/specs/server-encoding/design.md` | レビュー | `6.4` | なし（Design §9.1の61行のレビュー） |
 | 6.6  | `test/server/encoding/encode-boundaries.integration.test.ts`                                                                                                                                                                                                                 | `integration`                                      | `6.2, 6.5`                                                                  | `npm run test:server:integration -- test/server/encoding/encode-boundaries.integration.test.ts`                                                                                                                                                                   |
 | 6.7  | `test/server/encoding/encode-contracts.spec.test.ts`<br>`test/server/encoding/encode-internals.test.ts`<br>`test/server/encoding/encode-boundaries.integration.test.ts` | `unittest/spec`・`unittest/imp`・`integration` | `2.1, 2.2, 2.3, 5.2, 5.3, 6.3, 6.4, 6.5, 6.6` | `npm run test:server:spec -- test/server/encoding/encode-contracts.spec.test.ts`<br>`npm run test:server:imp -- test/server/encoding/encode-internals.test.ts`<br>`npm run test:server:integration -- test/server/encoding/encode-boundaries.integration.test.ts` |
 | 7.1  | `test/server/encoding/encode-contracts.spec.test.ts`<br>`test/server/encoding/encode-internals.test.ts`<br>`src/model/service/encode/EncodeManageModel.ts` | `unittest/spec`・`unittest/imp` | `2.1, 3.1` | `npm run test:server:spec -- test/server/encoding/encode-contracts.spec.test.ts`<br>`npm run test:server:imp -- test/server/encoding/encode-internals.test.ts` |
+| 7.2  | `test/server/encoding/encode-contracts.spec.test.ts`<br>`test/server/encoding/encode-suspend-dst.imp.test.ts`<br>`test/server/encoding/fixtures/suspend-dst-child.mjs`<br>`src/model/service/encode/EncodeManageModel.ts` | `unittest/spec`・`unittest/imp` | `7.1` | `npm run test:server:spec -- test/server/encoding/encode-contracts.spec.test.ts`<br>`npm run test:server:imp -- test/server/encoding/encode-suspend-dst.imp.test.ts` |
 
 -   [x] 1. 依頼、識別番号、およびメモリー内状態の既存契約を仕様テストで固定する
 -   [x] 1.1 依頼受付と process-local 識別・再起動契約を characterization する
@@ -371,12 +372,12 @@ envelope、request/reply timeout、再送は `server-process-messaging`、browse
 
 -   [x] 6.3 R1〜R7 の仕様 test の主 case を完成する
 
-    -   R1からR7の55件を一意な`unittest/spec`主testへ割り当て、`encode-contracts.spec.test.ts`のtest titleから各ACを逆引きで
+    -   R1からR7の56件を一意な`unittest/spec`主testへ割り当て、`encode-contracts.spec.test.ts`のtest titleから各ACを逆引きで
         きる形にする。
     -   各主testは戻り値だけでなく、queue、通知、port call、取消、結果反映、およびcleanupの意味ある結果をassertする。
-    -   完了時には55件すべてが一つの主testへ追跡でき、未割当・重複・空assertionが0件になる。
+    -   完了時には56件すべてが一つの主testへ追跡でき、未割当・重複・空assertionが0件になる。
     -   _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 1.10, 1.11, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9,
-        2.10, 2.11, 2.12, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4.1, 4.2, 4.3, 4.4, 4.5, 5.1, 5.2, 5.3, 5.4, 6.1, 6.2, 6.3, 6.4, 6.5, 6.6,
+        2.10, 2.11, 2.12, 2.13, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4.1, 4.2, 4.3, 4.4, 4.5, 5.1, 5.2, 5.3, 5.4, 6.1, 6.2, 6.3, 6.4, 6.5, 6.6,
         6.7, 6.8, 6.9, 7.1, 7.2, 7.3, 7.4, 7.5, 8.1_
     -   _Boundary: 録画ファイル変換 spec test case_
     -   _Depends: 1.1, 1.2, 2.1, 2.2, 2.3, 3.1, 3.2, 3.3, 4.1, 4.2, 4.3, 5.2, 5.3, 6.1, 6.2_
@@ -392,10 +393,10 @@ envelope、request/reply timeout、再送は `server-process-messaging`、browse
 
 -   [x] 6.5 機能固有 test matrix の状態・競合・資源分類を完成する
 
-    -   Design §9.1の60行のmatrixで受付前・待機・実行・成功・失敗・取消・再起動、同着受付、取消と期限の競合、late
+    -   Design §9.1の61行のmatrixで受付前・待機・実行・成功・失敗・取消・再起動、同着受付、取消と期限の競合、late
         settlementを一意に分類する。
     -   待機枠、timer、process、途中出力、元fileの解放または保持を記録し、空欄と未分類を0件にする。
-    -   完了時にはDesign §9.1の60行が必須列と主testのlocatorを持ち、空欄と未分類が0件である。
+    -   完了時にはDesign §9.1の61行が必須列と主testのlocatorを持ち、空欄と未分類が0件である。
     -   _Requirements: 8.3_
     -   _Boundary: 録画ファイル変換 Design test matrix_
     -   _Depends: 6.4_
@@ -445,3 +446,17 @@ envelope、request/reply timeout、再送は `server-process-messaging`、browse
     -   _Requirements: 2.7, 2.8, 2.9, 2.10, 2.11, 2.12, 8.2_
     -   _Boundary: 待機／実行管理_
     -   _Depends: 2.1, 3.1_
+
+-   [x] 7.2 サマータイムの切替えと時刻の変更の後も、停止時間帯の終了を1分以内に判定する
+
+    -   再開 timer の delay を、最も早い `end` までのミリ秒数と 60,000 の小さい方にし、ローカル時刻が実時間と異なる幅で
+        進んでも1分以内に時間帯を判定し直す。発火時にまだ時間帯の中なら、最初の確認が timer を設定し直す。
+    -   process 内でローカル時刻を実時間より先へ進めた場合に、終了時刻に達してから1分以内に開始し、それ以前は開始しない
+        ことを `unittest/spec` で検証する。
+    -   サマータイムのある時刻帯（`TZ=America/New_York`）で起動した子 process で、時計が進む日（終了時刻が飛ばされる1時間の
+        後・中）と戻る日（2度目の終了時刻、繰り返される時刻の1度目と2度目）を、実際の `Date` の時刻で `unittest/imp` に
+        固定する。worker thread の中では `TZ` を切り替えられないため子 process に分ける。
+    -   完了時には、修正前の実装で時計が進む日の2 case が失敗し、修正後に全 case が成功する。
+    -   _Requirements: 2.10, 2.13, 8.2_
+    -   _Boundary: 待機／実行管理_
+    -   _Depends: 7.1_

@@ -340,7 +340,9 @@ class EncodeManageModel implements IEncodeManageModel {
     }
 
     /**
-     * 停止時間帯の終了時に待機列を再確認する timer を設定する。既に設定済みなら何もしない
+     * 停止時間帯の終了時に待機列を再確認する timer を設定する。既に設定済みなら何もしない。
+     * サマータイムの切替えや時刻の変更でローカル時刻が実時間と異なる幅で進んでも 1 分以内に判定し直すため、
+     * delay は SUSPEND_RECHECK_MAX_DELAY_MS を上限とする
      * @param now: 停止時間帯と判定した時刻
      * @param remainingMinutes: 停止時間帯の終了までの分数
      */
@@ -349,7 +351,10 @@ class EncodeManageModel implements IEncodeManageModel {
             return;
         }
 
-        const delay = remainingMinutes * 60 * 1000 - (now.getSeconds() * 1000 + now.getMilliseconds());
+        const delay = Math.min(
+            remainingMinutes * 60 * 1000 - (now.getSeconds() * 1000 + now.getMilliseconds()),
+            EncodeManageModel.SUSPEND_RECHECK_MAX_DELAY_MS,
+        );
         this.suspendResumeTimer = setTimeout(() => {
             this.suspendResumeTimer = null;
 
@@ -760,6 +765,8 @@ namespace EncodeManageModel {
     export const ENCODE_PRIPORITY = 10;
     export const DEFAULT_TIMEOUT_RATE = 4.0;
     export const DEFAULT_QUEUE_LIMIT = 1024;
+    /** 停止時間帯の再開 timer の delay の上限（ミリ秒）。この間隔以内に時間帯を判定し直す。 */
+    export const SUSPEND_RECHECK_MAX_DELAY_MS = 60 * 1000;
 
     /**
      * config.yml の `encodeSuspendTimes` を検証し、0 時からの経過分へ変換する
