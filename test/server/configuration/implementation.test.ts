@@ -235,6 +235,7 @@ describe('server configuration implementation characterization', () => {
         ['an empty array', []],
         ['the earliest start and the latest end', [{ start: '00:00', end: '24:00' }]],
         ['the latest start and the earliest end', [{ start: '23:59', end: '00:00' }]],
+        ['a range with keys other than start and end', [{ start: '18:00', end: '19:00', note: 'synthetic-note' }]],
         [
             'several ranges that overlap',
             [

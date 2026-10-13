@@ -144,8 +144,10 @@ group 完了後に本 spec を実行し、共有 foundation を重複させず�
 -   [x] 4.3 エンコード停止時間帯の既定値と検証を一単位で追加する
 
     -   `encodeSuspendTimes` の省略時の空配列、境界 `00:00`・`23:59`（`start`）と `24:00`（`end`）の受理、明示 `null`、
-        配列以外、object でない要素、`start`・`end` の欠落と文字列以外、1桁の時、`24:00` の `start`、範囲外、同時刻の拒否を、
-        target `unittest/spec` と `unittest/imp` が検証する。
+        配列以外、object でない要素、`start`・`end` の欠落と文字列以外、1桁の時、`24:00` の `start`、範囲外、同時刻、値の無い
+        key の拒否、`start`・`end` 以外の key を持つ要素の受理、および `!env` で与えた値の受理・拒否を、target `unittest/spec`
+        （設定の読み込みを通した主 case）と `unittest/imp` が検証する。公開設定の入力に値付きの `encodeSuspendTimes` を入れ、
+        公開結果に現れないことを `unittest/spec` が検証する。
     -   `src/model/IConfigFile.ts`、`src/model/Configuration.ts`、および `config/config.yml.template` へ、型、補完・検証、
         標準設定（記載例のcomment）を実装する。
     -   完全な設定複製へ含め、公開設定 schema や公開 API へ追加しない。時間帯の意味と開始の保留は `server-encoding` に残

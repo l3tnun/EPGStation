@@ -69,6 +69,8 @@ ffprobe: /usr/local/bin/ffprobe
 
 encodeProcessNum: 4
 concurrentEncodeNum: 1
+# 待機中のエンコードを開始しない時間帯。使うときは start・end の行もコメントを外す
+# （値の無い encodeSuspendTimes: だけを残すと起動に失敗する。使わないときは項目ごと消すか [] を書く）
 # encodeSuspendTimes:
 #     - start: '18:00'
 #       end: '24:00'
