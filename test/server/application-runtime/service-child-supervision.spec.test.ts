@@ -706,10 +706,11 @@ describe('service child supervision', () => {
             }
         },
     );
-    it('[AR-8.12] records a cleanup part that cannot be resolved and still restarts the service', async () => {
+    it('[AR-8.12] records a cleanup part that cannot be resolved, restarts the service, and leaves its leases unreleased', async () => {
         const restoreListeners = captureRuntimeListeners();
         const children: DirectServiceChild[] = [];
         const fatal = vi.fn();
+        const releasePeer = vi.fn();
         const StartupContinuationCoordinator = loadStartupContinuationCoordinator();
         const services: Record<string, unknown> = {
             IConfiguration: { getConfig: () => ({}) },
@@ -726,6 +727,7 @@ describe('service child supervision', () => {
             IReservationManageModel: { cleanup: async () => undefined, setTuners: vi.fn() },
             IRuntimeStartupWorkflowPort: new StartupContinuationCoordinator(),
             IStorageManageModel: { start: vi.fn() },
+            ServiceChildRecordedUseRegistry: { releasePeer },
             TunerServerAccess: { getTuners: async () => [] },
         };
         const container = {
@@ -759,6 +761,8 @@ describe('service child supervision', () => {
                 'service child cleanup failed: Error: synthetic cleanup resolution failure',
                 'restart service',
             ]);
+            // The stop of its processes cannot be confirmed, so the ended generation keeps its leases as unknown.
+            expect(releasePeer).not.toHaveBeenCalled();
         } finally {
             removeListenersAddedSince(restoreListeners);
         }

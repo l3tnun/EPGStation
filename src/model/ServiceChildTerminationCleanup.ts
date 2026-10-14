@@ -157,7 +157,8 @@ export default class ServiceChildTerminationCleanup {
     /**
      * 開始の知らせを受け取ったときと同じ process（HLS writer はその process group）がまだ居るかを確かめる。
      * 開始時刻が変わった PID と終了済み（zombie）の process は居ないとみなす。HLS writer の group は、leader の開始時刻が
-     * 違えば居ないとみなし、それ以外は終了済みでない member が居るときだけ居るとみなす（zombie だけの group は終了）。
+     * 違えば居ないとみなし、一致して動いていれば居るとみなす。leader が zombie・居ない・開始時刻を読めないときだけ、終了済み
+     * でない member が居るかで確かめる（zombie だけの group は終了）。
      * 開始時刻や group の member を読めないときは PID・PGID だけで確かめる。確かめる操作が失敗したら記録して
      * `undefined` を返す（居なくなったとはみなさない）。
      */
@@ -165,8 +166,9 @@ export default class ServiceChildTerminationCleanup {
         try {
             if (entry.kind === 'hls') {
                 const leader = this.deps.system.identify(entry.pgid!);
-                if (leader.status === 'running' && entry.startTime !== null && leader.startTime !== entry.startTime) {
-                    return false;
+                if (leader.status === 'running' && entry.startTime !== null) {
+                    // 開始時刻が一致して動いている leader は group の生きた member。違えば元の group は居ない。
+                    return leader.startTime === entry.startTime;
                 }
                 return this.deps.system.hasLiveGroupMember(entry.pgid!) ?? this.deps.system.isGroupAlive(entry.pgid!);
             }

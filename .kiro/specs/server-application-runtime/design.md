@@ -242,7 +242,8 @@ terminalを受け取ると、`ServiceChildTerminationCleanup.run(child)`が次�
    記録する。
 3. 生存の確認は開始時刻で同じprocessかを確かめる。開始時刻が記録と違うPIDとzombie（状態`Z`・`X`）は居ないとみなして
    signalを送らない。開始時刻を読めないときは`kill(pid, 0)`で確かめる。HLS writerは、leader（PID=PGID）の開始時刻が記録と違
-   えば元のgroupは居ないとみなし、それ以外は`/proc/*/stat`を読み、5番目の値（pgrp。2番目の値の最後の`)`の後ろから数える）が
+   えば元のgroupは居ないとみなし、開始時刻が一致して動いていればgroupは居るとみなす。leaderがzombie・居ない・開始時刻を読めない
+   ときだけ`/proc/*/stat`を読み、5番目の値（pgrp。2番目の値の最後の`)`の後ろから数える）が
    PGIDと同じで状態が`Z`・`X`でないprocessが一つでも居るときだけgroupが居るとみなす。Dockerの公式imageのようにPID 1が子を
    回収しない環境では、死んだchildの外部processが回収されずzombieで残るので、zombieだけのgroupは終了したとみなす。`/proc`を
    読めない環境（Linux以外）では`kill(-pgid, 0)`で確かめる。確認やsignal送信の失敗はerrorログへ記録し、確認の失敗は居なく
@@ -263,7 +264,8 @@ terminalを受け取ると、`ServiceChildTerminationCleanup.run(child)`が次�
    leaseも二度は解放しない。
 
 `src/index.ts`は、後始末の部品（`IServiceChildTerminationCleanup`）の取り出しもpromise chainの中で行い、取り出しや後始末が
-失敗しても記録して必ず再起動する。
+失敗しても記録して必ず再起動する。部品を取り出せないときは外部プロセスの停止を確かめられないので、`releasePeer`を呼ばず、
+その世代のleaseはunknownのまま残す（容量不足削除は安全側に遮断される）。
 
 再起動した新generationのエンコードの復元は、この後始末を終えた後に始まる。後始末で削除済みの出力は復元で削除済みとして
 扱われる。Windowsではprocess groupの停止と開始時刻による確認を保証せず、PIDへの`SIGINT`はOSの既定どおりに扱われる。
@@ -1022,7 +1024,7 @@ locator列に書いたfile・実行手順・commandの結果が判定である�
 | AR-8.9  | R8.9        | S/I/G | `service-child-cleanup.spec.test.ts#AR-8.9`、`service-child-crash-cleanup.integration.test.ts` | 開始時刻の不一致・zombie・absentへsignal 0、zombieだけのgroupは終了、読めないときはPID・PGIDで確認 |
 | AR-8.10 | R8.10       | S/I/G | `service-child-cleanup.spec.test.ts#AR-8.10`、`service-child-crash-cleanup.integration.test.ts` | 復元と同じ規則（登録済み・録画なしは残す、親保存先の中・設定有効・実行中だけ削除）、HLS成果物全削除 |
 | AR-8.11 | R8.11       | S/I   | `service-child-cleanup.spec.test.ts#AR-8.11`                                   | 未確認のprocessを1秒ごとに確認、居なくなった時点で削除とlease解放、追加signal 0 |
-| AR-8.12 | R8.12       | S/I   | `service-child-cleanup.spec.test.ts#AR-8.12`、`service-child-supervision.spec.test.ts#AR-8.12`、`imp/service-child-recorded-use-registry.test.ts#AR-8.12` | 30秒、上限後のファイル削除0（HLS・出力の途中打ち切り）、lease解放一回、部品取り出し・後始末の失敗でも解放と再起動 |
+| AR-8.12 | R8.12       | S/I   | `service-child-cleanup.spec.test.ts#AR-8.12`、`service-child-supervision.spec.test.ts#AR-8.12`、`imp/service-child-recorded-use-registry.test.ts#AR-8.12` | 30秒、上限後のファイル削除0（HLS・出力の途中打ち切り）、lease解放一回、後始末の失敗でも解放と再起動、部品を取り出せないときは記録して再起動しleaseは解放しない（unknown） |
 | AR-9.1  | R9.1        | R     | `package.json`の公開scriptと§12.2                                               | Runtime owner一つ、client対象0、公開6 command |
 | AR-9.2  | R9.2        | R     | §12.2と`scripts/server-test/run-tests.mjs`のlayer分類                           | spec/imp/integration command分離        |
 | AR-9.3  | R9.3        | S     | `*.spec.test.ts`のAR-2.1〜AR-8.12の48 case（R1はAR-1.1〜1.4でspec caseではない） | R2-R8 canonical 48件一意                |

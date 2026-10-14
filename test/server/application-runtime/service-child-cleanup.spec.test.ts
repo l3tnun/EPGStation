@@ -59,8 +59,8 @@ interface FakeProcess {
 }
 
 /**
- * 偽の process 表。signal を受けた後、`exitAfterChecks` 回の生存確認で居なくなる process を表せる。直接の process は
- * `identify`、process group は `hasLiveGroupMember`（読めないgroupは `isGroupAlive`）を生存確認として数える。
+ * 偽の process 表。signal を受けた後、`exitAfterChecks` 回の生存確認で居なくなる process を表せる。`identify`
+ * （group は leader の確認）、`hasLiveGroupMember`、`isGroupAlive` のそれぞれを生存確認として数える。
  * `zombie-members` のgroupは、`kill(-pgid, 0)` には居るように見えるが終了済みの member だけが残るgroupを表す。
  */
 class FakeSystem {
@@ -88,7 +88,7 @@ class FakeSystem {
     public identify(pid: number): Identity {
         const process = this.processes.get(pid);
         if (process === undefined) return { status: 'absent' };
-        return process.group === undefined ? this.current(pid, process) : process.identity;
+        return this.current(pid, process);
     }
 
     public isAlive(pid: number): boolean {
@@ -312,6 +312,27 @@ describe('service child termination cleanup', () => {
         expect(system.ledger).not.toContain('group-alive 821');
         expect(deps.logger.error).not.toHaveBeenCalled();
         expect(elapsed).toBe(1_000);
+    });
+
+    it('[AR-8.9] counts a running group leader with the reported start time as alive without scanning the group members', async () => {
+        vi.useFakeTimers();
+        const system = new FakeSystem();
+        // The member scan would report no live member (as when /proc/<pid>/stat cannot be read), but the leader itself runs.
+        system.setProcess(841, { status: 'running', startTime: '2841' }, { group: 'zombie-members', exitOn: 'SIGINT' });
+        const { cleanup, deps, peer } = makeCleanup(
+            [{ pid: 841, pgid: 841, kind: 'hls', streamId: 5, startTime: '2841' }],
+            { system },
+        );
+
+        await runToEnd(cleanup, peer);
+
+        expect(signalsOf(system.ledger)).toEqual(['signal-group 841 SIGINT']);
+        const scans = system.ledger.filter(line => line === 'group-members 841');
+        expect(scans).toEqual(['group-members 841']);
+        expect(system.ledger.indexOf('group-members 841')).toBeGreaterThan(
+            system.ledger.indexOf('signal-group 841 SIGINT'),
+        );
+        expect(deps.logger.error).not.toHaveBeenCalled();
     });
 
     it('[AR-8.9] signals the reported PID and PGID directly and probes them when neither can be read', async () => {

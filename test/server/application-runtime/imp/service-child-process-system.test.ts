@@ -1,4 +1,4 @@
-import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -105,7 +105,10 @@ describe('ServiceChildProcessSystem', () => {
         expect(linux.hasLiveGroupMember(4242)).toBeUndefined();
         expect(windows.hasLiveGroupMember(4242)).toBeUndefined();
         expect(readDir).toHaveBeenCalledOnce();
-        expect(['boolean', 'undefined']).toContain(typeof systemModule.nodeProcessSystem.hasLiveGroupMember(process.pid));
+        // The test process itself is a live member of its own process group (field 5 of /proc/self/stat).
+        const selfStat = readFileSync('/proc/self/stat', 'utf8');
+        const ownGroup = Number(selfStat.slice(selfStat.lastIndexOf(')') + 2).split(' ')[2]);
+        expect(systemModule.nodeProcessSystem.hasLiveGroupMember(ownGroup)).toBe(true);
     });
 
     it('[AR-9.4] reports the start time as unavailable outside Linux without reading anything', () => {
