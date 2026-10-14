@@ -144,6 +144,10 @@ tuner一覧の取得に失敗した場合も、先に登録済みのevent bindin
 `Dockerfile.debian`と`Dockerfile.alpine`のserver build/runtime stageはNode.js 24を基準とし、client builderのNode.js 26と
 は役割を分ける。24未満を対応対象として表明せず、Node.js 26の成功によって最低対応版を26へ引き上げない。
 
+`mise.toml`（rootと`client/`）は開発と検証で使うNode.js・npmの版を固定するためのもので、利用者の導入手順の前提にしない。
+`package.json`の`all-install`・`build-client`はclientへ`cd client && npm ...`で移り、PATHにある`npm`をそのまま使う。mise
+などのversion管理toolを呼ばない（R1.5）。
+
 両環境はfreshな依存導入、server build、全server test（compiled startup smokeを含む）を同じ固定matrixで検証する。Node.js 24の
 回は、単体test（spec・imp）をcoverage付きで一度、結合testをcoverageなしで一度流し、C0/C1を計測する（§12.4）。どのtestも二度は流さない。
 
@@ -888,7 +892,7 @@ C0・C1の判定は`R9.9` / `AR-9.9`が表し、本機能の共有foundationが�
 
 ## 13. Numeric requirements traceability
 
-Runtimeが所有するRequirements 1から9の全69 Acceptance Criteriaを一行ずつ追跡する。R1からR8の52行は機能canonical case、R9の17行
+Runtimeが所有するRequirements 1から9の全70 Acceptance Criteriaを一行ずつ追跡する。R1からR8の53行は機能canonical case、R9の17行
 （9.1〜9.17）はRuntimeのfoundation/品質layerである。Requirements 10・11は§17.10で追跡する。
 
 | Requirement ID | Design owner | Primary evidence |
@@ -897,6 +901,7 @@ Runtimeが所有するRequirements 1から9の全69 Acceptance Criteriaを一行
 | R1.2           | 5、12.4      | AR-1.2           |
 | R1.3           | 5、12.4      | AR-1.3           |
 | R1.4           | 5、12.4      | AR-1.4           |
+| R1.5           | 5            | AR-1.5           |
 | R2.1           | 4、5         | AR-2.1           |
 | R2.2           | 4、5         | AR-2.2           |
 | R2.3           | 4、5         | AR-2.3           |
@@ -965,7 +970,7 @@ Runtimeが所有するRequirements 1から9の全69 Acceptance Criteriaを一行
 
 ## 14. Feature Test Matrix
 
-以下の69 IDはすべて一意である。locatorは各IDを確かめるtest、または実行・レビューの手順を指す。R1からR8は52 canonical case、R9は17 quality layer
+以下の70 IDはすべて一意である。locatorは各IDを確かめるtest、または実行・レビューの手順を指す。R1からR8は53 canonical case、R9は17 quality layer
 （9.1〜9.17）である。
 
 AR-1.1〜AR-1.3と、AR-9.4・AR-9.6・AR-9.17以外のAR-9.xは、`[AR-n.m]`を題に持つtest caseが無い。
@@ -977,6 +982,7 @@ locator列に書いたfile・実行手順・commandの結果が判定である�
 | AR-1.2  | R1.2        | N     | Node.js matrixの実行（§12.4）の判定                                          | 24 install/build/start/test、process/DB |
 | AR-1.3  | R1.3        | N     | Node.js matrixの実行（§12.4）の判定                                          | 26 additional matrix、同suite           |
 | AR-1.4  | R1.4        | R     | `package.json`の`engines`、`mise.toml`、両server Docker stage（§15）           | 24未満unsupported、18 fallback 0        |
+| AR-1.5  | R1.5        | I     | `install-build-scripts.integration.test.ts#AR-1.5`                             | miseの無いPATH、root・clientの順、exit 0 |
 | AR-2.1  | R2.1        | S/I   | `startup-preparation.spec.test.ts#AR-2.1`                                      | log→config順、同期throw/reject          |
 | AR-2.2  | R2.2        | S/I   | `startup-preparation.spec.test.ts#AR-2.2`                                      | root、group string/number               |
 | AR-2.3  | R2.3        | S/I   | `startup-preparation.spec.test.ts#AR-2.3`                                      | root、group null/undefined→video、空文字列を含むstring/number→設定値 |

@@ -152,6 +152,17 @@ Service と EPG の child 監督は承認済み terminal event をそのまま�
     -   _Verification: Node.js 26 fresh cell_
     -   _Depends: 1.5_
 
+-   [x] 1.7 依存導入と構築のnpm scriptをversion管理toolなしで動かす
+
+    -   `package.json`の`all-install`・`build-client`は`cd client && npm ...`でclientへ移り、PATHの`npm`を使う。mise
+        などのversion管理toolを呼ばない。`mise.toml`は開発と検証の版の固定にだけ使う。
+    -   本物の`package.json`のscriptを、miseを見つけられないPATHと記録用の`npm`で起動し、`all-install`・`build-server`・
+        `build-client`・`build`が成功して、rootとclientのdirectoryで期待した`npm`を呼ぶことを結合testで確かめる。
+    -   _Requirements: 1.5_
+    -   _Boundary: Node.js Version Policy_
+    -   _Verification: `install-build-scripts.integration.test.ts#AR-1.5`_
+    -   _Depends: 1.5_
+
 ## Runtime remainder execution barrier
 
 以下の Major 2〜8 は Major 1 完了だけでは開始しない。roadmap Level 1〜11 のdomain taskが完了し、承認済みprovider portと
@@ -441,8 +452,8 @@ gitignored `test/server/.artifacts/`だけを生成する。Requirement 9 Accept
 -   [x] 9.3 Requirements 2から8の仕様testを完成する
 
     -   `*.spec.test.ts`のRequirements 2から8の48 case（AR-2.1〜AR-8.12）が、title tagから逆引きでき、一件ずつ成功する
-        ことを確かめる。Requirement 1（対応Node.js環境）はspec caseにせず、Node.js matrixの実行とversion宣言のレビューで確
-        かめる。
+        ことを確かめる。Requirement 1（対応Node.js環境）はspec caseにせず、1.1〜1.4はNode.js matrixの実行とversion宣言の
+        レビューで、1.5は結合test（1.7）で確かめる。
     -   `startup-composition.spec.test.ts`にAR-7.2（番組情報更新の完了を関係する予約更新処理へ一度だけ通知する）と
         AR-7.4（Web・API受付、起動時整理、番組情報更新開始、最初の更新完了を一つの準備完了状態として公開しない）のspec caseを
         足す。

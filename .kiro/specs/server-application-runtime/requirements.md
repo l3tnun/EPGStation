@@ -37,6 +37,8 @@ coverage の計測の道具を一度だけ所有して提供し、本機能自�
 3. When Node.js 26 系で追加互換検証するとき, the EPGStation Server shall 依存関係導入、構築、起動、およびサーバーテスト
    を完了できる
 4. The EPGStation Server shall Node.js 24 系未満を対応実行環境として表明しない
+5. The EPGStation Server shall 依存関係導入と構築の npm script（`all-install`・`build`・`build-server`・`build-client`）を、
+   Node.js・npm・OS の shell のほかに Node.js の version 管理 tool（mise など）が無い環境でも実行できるようにする
 
 ### Requirement 2: 起動準備
 
