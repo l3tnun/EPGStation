@@ -201,7 +201,7 @@
 13. When 変換processを開始したとき, the 録画ファイル変換機能 shall 依頼の識別番号を添えて、そのprocessの開始をメディア変換
     プロセス管理機能を通して管理側へ知らせる
 14. When Web・API側処理だけが異常終了したとき, the 録画ファイル変換機能 shall 管理側が、実行中だった変換processを取消と同
-    じ`SIGINT`で停止し、Acceptance Criterion 7と同じ規則で出力途中のファイルの削除を試みてから、Web・API側処理を再起動
+    じ`SIGINT`で停止し、Acceptance Criteria 6から8と同じ規則で出力途中のファイルの削除を試みてから、Web・API側処理を再起動
     させる。停止と削除の手順、待つ時間、および上限は`server-application-runtime`のRequirement 8が所有する
 
 ### Requirement 8: 機能固有サーバーテストの品質判定

@@ -530,7 +530,7 @@ envelope、request/reply timeout、再送は `server-process-messaging`、browse
 
     -   `EncoderModel` は開始要求に `report: { kind: 'encode', encodeId }` を添え、メディア変換プロセス管理機能が開始と終了を管理
         側へ知らせる。管理側の後始末（`server-application-runtime` の §7.1）は取消と同じ `SIGINT` だけで止め、停止を始めた時点で
-        動いていた変換の出力途中のファイルを 7.7 と同じ規則で削除する。
+        動いていた変換の出力途中のファイルを 7.6〜7.8 と同じ規則（登録済みの出力と、録画済み番組・変換元ファイルが無い依頼の出力は残す）で削除する。
     -   復元の削除は `removeFileIfPresent` を使い、後始末で先に削除されたファイルを削除済みとして扱って失敗を記録しない。
     -   _Requirements: 7.7, 7.13, 7.14_
     -   _Boundary: 変換ジョブ、記録の復元_

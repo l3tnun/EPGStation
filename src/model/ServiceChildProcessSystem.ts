@@ -25,7 +25,12 @@ export interface ProcessSystem {
     isAlive(pid: number): boolean;
     /** PID の process へ signal を送る。 */
     signal(pid: number, signal: NodeJS.Signals): void;
-    /** process group が居るか。`ESRCH` 以外の失敗は投げる。 */
+    /**
+     * process group に、終了済み（zombie）でない member が居るか。全 process の `/proc/<pid>/stat` の 5 番目の値（pgrp）で数える。
+     * `/proc` を読めない環境では `undefined`。
+     */
+    hasLiveGroupMember(pgid: number): boolean | undefined;
+    /** process group が居るか（`kill(-pgid, 0)`。zombie だけの group も居るとみなされる）。`ESRCH` 以外の失敗は投げる。 */
     isGroupAlive(pgid: number): boolean;
     /** process group へ signal を送る。 */
     signalGroup(pgid: number, signal: NodeJS.Signals): void;
@@ -57,14 +62,24 @@ export const removeFileIfPresent = async (filePath: string): Promise<void> => {
 };
 
 /**
+ * `/proc/<pid>/stat` の 3 番目以降の値を返す。2 番目の値（実行ファイル名）は空白や括弧を含み得るので、最後の `)` の
+ * 後ろから数える。返す配列の 0 番目が状態（3 番目の値）、2 番目が pgrp（5 番目の値）、19 番目が開始時刻（22 番目の値）。
+ */
+const statFields = (stat: string): string[] => stat.slice(stat.lastIndexOf(')') + 2).split(' ');
+
+const isEnded = (state: string): boolean => state === 'Z' || state === 'X';
+
+/**
  * OS の操作を作る。
- * @param platform 動いている OS。`linux` のときだけ `/proc` から開始時刻を読む
+ * @param platform 動いている OS。`linux` のときだけ `/proc` から開始時刻と process group を読む
  * @param readFile `/proc/<pid>/stat` を読む関数
+ * @param readDir `/proc` の名前を列挙する関数
  * @returns OS の操作
  */
 export const createProcessSystem = (
     platform: NodeJS.Platform,
     readFile: (path: string, encoding: 'utf8') => string,
+    readDir: (path: string) => string[] = path => fs.readdirSync(path),
 ): ProcessSystem => ({
     identify: pid => {
         if (platform !== 'linux') {
@@ -76,14 +91,40 @@ export const createProcessSystem = (
         } catch (error: unknown) {
             return errorCode(error) === 'ENOENT' ? ABSENT : UNAVAILABLE;
         }
-        // 2 番目の値（実行ファイル名）は空白や括弧を含み得るので、最後の `)` の後ろから数える。
-        const fields = stat.slice(stat.lastIndexOf(')') + 2).split(' ');
-        const state = fields[0];
+        const fields = statFields(stat);
         const startTime = fields[19];
         if (typeof startTime !== 'string' || /^\d+$/u.test(startTime) === false) {
             return UNAVAILABLE;
         }
-        return state === 'Z' || state === 'X' ? ZOMBIE : { status: 'running', startTime };
+        return isEnded(fields[0]) ? ZOMBIE : { status: 'running', startTime };
+    },
+    hasLiveGroupMember: pgid => {
+        if (platform !== 'linux') {
+            return undefined;
+        }
+        let names: string[];
+        try {
+            names = readDir('/proc');
+        } catch {
+            return undefined;
+        }
+        const group = String(pgid);
+        for (const name of names) {
+            if (/^\d+$/u.test(name) === false) {
+                continue;
+            }
+            let fields: string[];
+            try {
+                fields = statFields(readFile(`/proc/${name}/stat`, 'utf8'));
+            } catch {
+                // 列挙の後に終わった process は数えない。
+                continue;
+            }
+            if (fields[2] === group && isEnded(fields[0]) === false) {
+                return true;
+            }
+        }
+        return false;
     },
     isAlive: pid => {
         try {

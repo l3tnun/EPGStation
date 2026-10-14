@@ -24,7 +24,7 @@ const record = (id: number, outputPath: string, parentDir: string) => ({
 });
 
 describe('conversion processes of an ended service child', () => {
-    it('[EN-SPEC-R7-14] stops the running conversion with SIGINT only and removes its output under the restoration rule', async () => {
+    it('[EN-SPEC-R7-14] stops the running conversion with SIGINT only and removes its output under the restoration rules', async () => {
         const ledger: string[] = [];
         const stillRunning = new Set([9601, 9602]);
         const cleanup = new ServiceChildTerminationCleanup({
@@ -34,7 +34,16 @@ describe('conversion processes of an ended service child', () => {
                     record(72, 'synthetic-elsewhere/out-72.mp4', 'synthetic-parent'),
                 ],
             },
-            getParentDirPath: (name: string) => (name === 'synthetic-parent' ? 'synthetic-parent-root' : null),
+            isSameFile: async () => false,
+            resolveRecordedFiles: () => ({
+                recordedDB: {
+                    findId: async () => ({ id: 1, videoFiles: [{ fullPath: 'synthetic-parent-root/source.ts', id: 1 }] }),
+                },
+                videoUtil: {
+                    getFullFilePathFromVideoFile: (videoFile: { fullPath: string }) => videoFile.fullPath,
+                    getParentDirPath: (name: string) => (name === 'synthetic-parent' ? 'synthetic-parent-root' : null),
+                },
+            }),
             hlsArtifacts: { deleteAllArtifacts: async () => new Set<number>() },
             logger: { error: vi.fn(), info: vi.fn() },
             processes: {
@@ -50,6 +59,7 @@ describe('conversion processes of an ended service child', () => {
                 identify: (pid: number) =>
                     stillRunning.has(pid) ? { startTime: `start-${pid}`, status: 'running' } : { status: 'absent' },
                 isAlive: () => false,
+                hasLiveGroupMember: () => false,
                 isGroupAlive: () => false,
                 removeFile: async (filePath: string) => {
                     ledger.push(`remove ${filePath}`);

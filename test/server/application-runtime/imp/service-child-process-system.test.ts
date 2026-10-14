@@ -15,6 +15,7 @@ type Identity =
 interface ProcessSystem {
     identify(pid: number): Identity;
     isAlive(pid: number): boolean;
+    hasLiveGroupMember(pgid: number): boolean | undefined;
     signal(pid: number, signal: NodeJS.Signals): void;
     isGroupAlive(pgid: number): boolean;
     signalGroup(pgid: number, signal: NodeJS.Signals): void;
@@ -24,14 +25,18 @@ interface ProcessSystem {
 
 const moduleRequire = createRequire(join(process.cwd(), 'package.json'));
 const systemModule = moduleRequire(join(compiledSnapshotRoot(), 'model', 'ServiceChildProcessSystem.js')) as {
-    createProcessSystem(platform: NodeJS.Platform, readFile: (path: string, encoding: 'utf8') => string): ProcessSystem;
+    createProcessSystem(
+        platform: NodeJS.Platform,
+        readFile: (path: string, encoding: 'utf8') => string,
+        readDir?: (path: string) => string[],
+    ): ProcessSystem;
     nodeProcessSystem: ProcessSystem;
     removeFileIfPresent(filePath: string): Promise<void>;
 };
 
-const statLine = (state: string, startTime: string): string =>
-    // pid (comm with a space and a parenthesis) state ppid ... field 22 is the start time.
-    `4242 (synthetic (worker) x) ${state} 1 4242 4242 0 -1 4194560 0 0 0 0 0 0 0 0 20 0 1 0 ${startTime} 1000 10 0\n`;
+const statLine = (state: string, startTime: string, pgrp = 4242): string =>
+    // pid (comm with a space and a parenthesis) state ppid pgrp ... field 22 is the start time.
+    `4242 (synthetic (worker) x) ${state} 1 ${pgrp} 4242 0 -1 4194560 0 0 0 0 0 0 0 0 20 0 1 0 ${startTime} 1000 10 0\n`;
 
 const errorWithCode = (code: string): Error => Object.assign(new Error(code), { code });
 
@@ -64,6 +69,43 @@ describe('ServiceChildProcessSystem', () => {
         expect(system.identify(4247)).toEqual({ status: 'unavailable' });
         expect(system.identify(4248)).toEqual({ status: 'absent' });
         expect(system.identify(4249)).toEqual({ status: 'unavailable' });
+    });
+
+    it('[AR-8.9] finds a live member of a process group and ignores zombie members and other groups', () => {
+        const lines = new Map<string, string>([
+            ['/proc/5001/stat', statLine('Z', '1', 5000)],
+            ['/proc/5002/stat', statLine('X', '1', 5000)],
+            ['/proc/5003/stat', statLine('S', '1', 5100)],
+            ['/proc/5004/stat', statLine('S', '1', 5200)],
+        ]);
+        const readDir = vi.fn(() => ['self', '5001', '5002', '5003', '5004', '5005']);
+        const system = systemModule.createProcessSystem(
+            'linux',
+            path => {
+                const line = lines.get(path);
+                if (line === undefined) throw errorWithCode('ENOENT');
+                return line;
+            },
+            readDir,
+        );
+
+        expect(system.hasLiveGroupMember(5000)).toBe(false);
+        expect(system.hasLiveGroupMember(5100)).toBe(true);
+        expect(system.hasLiveGroupMember(5200)).toBe(true);
+        expect(readDir).toHaveBeenCalledWith('/proc');
+    });
+
+    it('[AR-8.9] reports group membership as unreadable outside Linux or when /proc cannot be listed', () => {
+        const readDir = vi.fn(() => {
+            throw errorWithCode('EACCES');
+        });
+        const linux = systemModule.createProcessSystem('linux', () => statLine('S', '1'), readDir);
+        const windows = systemModule.createProcessSystem('win32', () => statLine('S', '1'), readDir);
+
+        expect(linux.hasLiveGroupMember(4242)).toBeUndefined();
+        expect(windows.hasLiveGroupMember(4242)).toBeUndefined();
+        expect(readDir).toHaveBeenCalledOnce();
+        expect(['boolean', 'undefined']).toContain(typeof systemModule.nodeProcessSystem.hasLiveGroupMember(process.pid));
     });
 
     it('[AR-9.4] reports the start time as unavailable outside Linux without reading anything', () => {

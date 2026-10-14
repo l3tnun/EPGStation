@@ -100,7 +100,8 @@ export default class ServiceChildRecordedUseRegistry
 
     /**
      * 終了した世代（peer）の lease をすべて解放する。管理側が、その世代が開始した外部プロセスの停止を確かめた後
-     * （確かめられなかったときは待つ上限の後）に呼ぶ。登録の無い peer では何もしない。
+     * （確かめられない process が残るときは、居なくなるのを確かめるか後始末の上限に達した後）に呼ぶ。登録の無い peer では
+     * 何もしない。
      * @param peer 終了した Web・API 側処理
      */
     public releasePeer(peer: object): void {

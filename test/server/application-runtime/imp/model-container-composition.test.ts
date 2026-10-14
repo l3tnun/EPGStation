@@ -384,14 +384,19 @@ describe('ModelContainerSetter service-child recorded-use composition', () => {
         expect(container.get('ServiceChildProcessRegistry')).toBe(processes);
         expect(container.get('IServiceChildTerminationCleanup')).toBe(cleanup);
         const deps = cleanup.deps as {
-            getParentDirPath(name: string): string | null;
+            isSameFile: unknown;
             logger: { error(value: unknown): void; info(value: unknown): void };
+            resolveRecordedFiles(): { recordedDB: unknown; videoUtil: unknown };
         };
         deps.logger.error('synthetic cleanup error');
         deps.logger.info('synthetic cleanup info');
         expect(systemError).toHaveBeenCalledWith('synthetic cleanup error');
         expect(system.info).toHaveBeenCalledWith('synthetic cleanup info');
-        expect(deps.getParentDirPath('synthetic')).toBeNull();
+        expect(deps.resolveRecordedFiles()).toEqual({
+            recordedDB: container.get('IRecordedDB'),
+            videoUtil: container.get('IVideoUtil'),
+        });
+        expect(deps.isSameFile).toBe((EncodeManageModel as unknown as { isSameFile: unknown }).isSameFile);
         expect(cleanup.deps).toMatchObject({
             processes,
             recordedUse: container.get('ServiceChildRecordedUseRegistry'),

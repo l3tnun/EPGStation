@@ -706,4 +706,61 @@ describe('service child supervision', () => {
             }
         },
     );
+    it('[AR-8.12] records a cleanup part that cannot be resolved and still restarts the service', async () => {
+        const restoreListeners = captureRuntimeListeners();
+        const children: DirectServiceChild[] = [];
+        const fatal = vi.fn();
+        const StartupContinuationCoordinator = loadStartupContinuationCoordinator();
+        const services: Record<string, unknown> = {
+            IConfiguration: { getConfig: () => ({}) },
+            IConnectionCheckModel: { checkDB: async () => undefined, checkMirakurun: async () => undefined },
+            IEPGUpdateExecutorManageModel: { execute: vi.fn() },
+            IEventSetter: { set: vi.fn() },
+            IIPCServer: { initialize: async () => undefined, register: vi.fn() },
+            ILoggerModel: { initialize() {}, getLogger: () => ({ system: { fatal, info() {} } }) },
+            IRecordingManageModel: {
+                cleanup: async () => undefined,
+                rebuildCandidatesAndStart: async () => undefined,
+                setTuner: vi.fn(),
+            },
+            IReservationManageModel: { cleanup: async () => undefined, setTuners: vi.fn() },
+            IRuntimeStartupWorkflowPort: new StartupContinuationCoordinator(),
+            IStorageManageModel: { start: vi.fn() },
+            TunerServerAccess: { getTuners: async () => [] },
+        };
+        const container = {
+            get: (identifier: string): unknown => {
+                if (identifier === 'IServiceChildTerminationCleanup') {
+                    throw new Error('synthetic cleanup resolution failure');
+                }
+                return services[identifier];
+            },
+        };
+        const spawnServiceChild = vi.fn(() => {
+            const child = Object.assign(new EventEmitter(), {
+                pid: 970 + children.length,
+                stderr: null,
+                stdout: null,
+            }) as DirectServiceChild;
+            children.push(child);
+            return child;
+        });
+
+        try {
+            await evaluateCompiledRuntime(container, spawnServiceChild);
+            await vi.waitFor(() => expect(children).toHaveLength(1));
+            const [first] = children;
+            expect(() => first.emit('exit', 1, null)).not.toThrow();
+
+            await vi.waitFor(() => expect(children).toHaveLength(2));
+            expect(fatal.mock.calls.map(([message]) => String(message))).toEqual([
+                'service process is down',
+                'service process exit code: 1, signal: null',
+                'service child cleanup failed: Error: synthetic cleanup resolution failure',
+                'restart service',
+            ]);
+        } finally {
+            removeListenersAddedSince(restoreListeners);
+        }
+    });
 });

@@ -88,8 +88,16 @@ if (existsSync(at('service-generation'))) {
             pending.set(id, { reject, resolve });
             process.send({ args, func, id, model });
         });
+    // The output deletion follows the restoration rule, so the recorded program and its source file must exist.
+    const recordedId = await request('recorded', 'createNewRecorded', {
+        option: { channelId: 1, endAt: 2_000, name: 'synthetic-recorded', startAt: 1_000 },
+    });
+    writeFileSync(at('recorded/synthetic-source.ts'), 'synthetic source');
+    const sourceVideoFileId = await request('recorded', 'addVideoFile', {
+        option: { filePath: 'synthetic-source.ts', name: 'synthetic-source', parentDirectoryName: 'synthetic', recordedId, type: 'ts' },
+    });
     const encodeId = await request('encodeQueue', 'add', {
-        option: { mode: 'synthetic-mode', parentDir: 'synthetic', recordedId: 1, removeOriginal: false, sourceVideoFileId: 1 },
+        option: { mode: 'synthetic-mode', parentDir: 'synthetic', recordedId, removeOriginal: false, sourceVideoFileId },
         requestToken: 'synthetic-request-token',
     });
     const outputPath = at('recorded/synthetic-output.mp4');
@@ -123,7 +131,7 @@ const forceKill = (pid: unknown, group: boolean): void => {
     }
 };
 
-describe('[AR-8.8][AR-8.10][AR-8.11] the processes of a SIGKILLed service child (real process)', () => {
+describe('[AR-8.8][AR-8.9][AR-8.10] the processes of a SIGKILLed service child (real process)', () => {
     it('stops the reported encode and HLS writer, deletes their files, and only then starts a new service child', async () => {
         const stub: TunerStub = await startTunerStub(
             healthyTunerHandler([{ index: 0, name: 'synthetic-tuner-0', types: ['GR'] }]),
@@ -159,6 +167,10 @@ describe('[AR-8.8][AR-8.10][AR-8.11] the processes of a SIGKILLed service child 
             expect(systemLog.indexOf('service process exit code: null, signal: SIGKILL')).toBeLessThan(
                 systemLog.indexOf('restart service'),
             );
+            // Every stopped process is confirmed gone (a zombie-only group counts as ended), so no unconfirmed stop and
+            // no cap is recorded.
+            expect(systemLog).not.toContain('terminalConfirmed');
+            expect(systemLog).not.toContain('did not finish within');
             expect(await readFile(join(root, 'service-generation'), 'utf8')).toBe('first');
         } finally {
             forceKill(first.encodePid, false);

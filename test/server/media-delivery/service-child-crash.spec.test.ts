@@ -53,10 +53,19 @@ const cleanupFor = (entries: readonly Record<string, unknown>[], alive: Map<numb
     dirs.push(dir);
     const ledger: string[] = [];
     const exited = new Set<number>();
+    const checks = new Map<number, number>();
     const system = {
-        identify: (pid: number) =>
-            exited.has(pid) || !alive.has(pid) ? { status: 'absent' } : { startTime: `start-${pid}`, status: 'running' },
+        identify: (pid: number) => {
+            const count = (checks.get(pid) ?? 0) + 1;
+            checks.set(pid, count);
+            // A process that ignores the signal it can receive still ends by itself on its sixth check.
+            if (count >= 6) exited.add(pid);
+            return exited.has(pid) || !alive.has(pid)
+                ? { status: 'absent' }
+                : { startTime: `start-${pid}`, status: 'running' };
+        },
         isAlive: () => true,
+        hasLiveGroupMember: (pgid: number) => !exited.has(pgid),
         isGroupAlive: (pgid: number) => !exited.has(pgid),
         signal: (pid: number, signal: string) => {
             ledger.push(`signal ${pid} ${signal}`);
@@ -71,7 +80,8 @@ const cleanupFor = (entries: readonly Record<string, unknown>[], alive: Map<numb
     };
     const cleanup = new ServiceChildTerminationCleanup({
         encodeQueue: { list: async () => [] },
-        getParentDirPath: () => null,
+        isSameFile: async () => false,
+        resolveRecordedFiles: () => ({ recordedDB: { findId: async () => null }, videoUtil: {} }),
         hlsArtifacts: new HLSFileDeleterModel({ getLogger: logger }),
         logger: { error: vi.fn(), info: vi.fn() },
         processes: { takeEntries: async () => entries },
@@ -184,6 +194,7 @@ describe('media delivery processes of an ended service child', () => {
 
         await cleanup.run({});
 
+        // The transform ignores SIGINT and ends by itself later; the parent never escalates to SIGKILL.
         expect(ledger).toEqual(['signal 9302 SIGINT', 'release-leases']);
     });
 });

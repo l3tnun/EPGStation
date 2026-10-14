@@ -240,19 +240,30 @@ terminalを受け取ると、`ServiceChildTerminationCleanup.run(child)`が次�
    `stopInStages`へ`SIGINT`だけを渡し、`SIGINT`の後の終了を1秒間隔で最大3回確かめる（確認は後始末の順序を決めるためで、
    追加のsignalは送らない）。終了を確かめられなかったprocessはPID、PGID、処理種別、送ったsignal、終了未確認をerrorログへ
    記録する。
-3. 生存の確認は開始時刻で同じprocessかを確かめる。開始時刻が記録と違うPIDとzombieは居ないとみなしてsignalを送らない。
-   開始時刻を読めないときは`kill(pid, 0)`で確かめる。HLS writerは、leader（PID=PGID）の開始時刻が記録と違えば元のgroupは
-   居ないとみなし、それ以外は`kill(-pgid, 0)`で確かめる。確認やsignal送信の失敗はerrorログへ記録し、確認の失敗は居なく
+3. 生存の確認は開始時刻で同じprocessかを確かめる。開始時刻が記録と違うPIDとzombie（状態`Z`・`X`）は居ないとみなして
+   signalを送らない。開始時刻を読めないときは`kill(pid, 0)`で確かめる。HLS writerは、leader（PID=PGID）の開始時刻が記録と違
+   えば元のgroupは居ないとみなし、それ以外は`/proc/*/stat`を読み、5番目の値（pgrp。2番目の値の最後の`)`の後ろから数える）が
+   PGIDと同じで状態が`Z`・`X`でないprocessが一つでも居るときだけgroupが居るとみなす。Dockerの公式imageのようにPID 1が子を
+   回収しない環境では、死んだchildの外部processが回収されずzombieで残るので、zombieだけのgroupは終了したとみなす。`/proc`を
+   読めない環境（Linux以外）では`kill(-pgid, 0)`で確かめる。確認やsignal送信の失敗はerrorログへ記録し、確認の失敗は居なく
    なったとはみなさない。
-4. 停止を始めた時点で動いていたエンコードについて、`IEncodeQueueStore.list()`の記録に出力先があり、
-   `encodeRemoveInterruptedOutput`が有効（省略時を含む）で、出力先が依頼の親保存先（`IVideoUtil.getParentDirPath`）の中を指す
-   ときだけ出力途中のファイルを削除する（起動時の復元と同じ規則。`server-encoding` Requirement 7.7）。既に無いファイルは削除
-   済みとして扱う（`removeFileIfPresent`）。続いて`HLSFileDeleterModel.deleteAllArtifacts`でHLS保存先のHLS成果物を識別番号に
-   かかわらずすべて削除する。終了したgenerationが全ての配信を持っていたので、動いている配信の成果物は無い。
-5. `ServiceChildRecordedUseRegistry.releasePeer(child)`で終了したgenerationのleaseを解放する。終了を確かめられなかった
-   processが残ったときも解放し、そのことをerrorログへ記録する。
-6. terminalから30秒（`SERVICE_CHILD_CLEANUP_CAP_MS`）で終えられなければ、errorログへ記録し、leaseを解放して`run`を終える。
-   残りの後始末は続くが、それ以後はファイルを削除せず、leaseも二度は解放しない。
+4. 確認の回数を使い切っても終了を確かめられなかったprocessが残るときは、追加のsignalを送らず、同じ確認の方法で1秒ごと
+   （`PROCESS_STOP_CHECK_INTERVAL_MS`）に居なくなったかを確かめ続け、すべて居なくなるまで、または上限（step 7）まで待つ。
+5. 停止を始めた時点で動いていたエンコードについて、`IEncodeQueueStore.list()`の記録に出力先があり、起動時の復元と同じ規則
+   （`server-encoding` Requirement 7.6〜7.8）に当てはまるときだけ出力途中のファイルを削除する。すなわち、`IRecordedDB.findId`
+   で録画済み番組と変換元ファイルが在り、出力先が録画ファイルとして登録されておらず（`IVideoUtil.getFullFilePathFromVideoFile`
+   とfull pathが一致せず、`EncodeManageModel.isSameFile`で同じ実体でもない）、`encodeRemoveInterruptedOutput`が有効（省略時を
+   含む）で、出力先が依頼の親保存先（`IVideoUtil.getParentDirPath`）の中を指すときだけ削除する。読取りに失敗したら削除しない。
+   既に無いファイルは削除済みとして扱う（`removeFileIfPresent`）。続いて`HLSFileDeleterModel.deleteAllArtifacts`でHLS保存先の
+   HLS成果物を識別番号にかかわらずすべて削除する。終了したgenerationが全ての配信を持っていたので、動いている配信の成果物は無い。
+6. `run`は後始末をtry/finallyで包み、finallyで`ServiceChildRecordedUseRegistry.releasePeer(child)`を一回だけ呼んで終了した
+   generationのleaseを解放する。後始末が失敗したときもerrorログへ記録して解放し、`run`はrejectしない。
+7. terminalから30秒（`SERVICE_CHILD_CLEANUP_CAP_MS`）で終えられなければ、errorログへ記録し、leaseを解放して`run`を終える。
+   残りの後始末は続くが、それ以後はファイルを削除せず（`deleteAllArtifacts`の`isCancelled`と、出力の削除の一件ごとの確認）、
+   leaseも二度は解放しない。
+
+`src/index.ts`は、後始末の部品（`IServiceChildTerminationCleanup`）の取り出しもpromise chainの中で行い、取り出しや後始末が
+失敗しても記録して必ず再起動する。
 
 再起動した新generationのエンコードの復元は、この後始末を終えた後に始まる。後始末で削除済みの出力は復元で削除済みとして
 扱われる。Windowsではprocess groupの停止と開始時刻による確認を保証せず、PIDへの`SIGINT`はOSの既定どおりに扱われる。
@@ -378,7 +389,8 @@ generationとrequest IDの解放をbest-effortで一回依頼する。releaseの
 service childの有効なpeerが登録されていない場合、またはgenerationのuse状態を確認できない場合も
 `tryAcquireDeletion()`は`unknown`を返す。旧generationの遅延releaseは新generationのleaseを解放しない。childの
 `disconnect`、`error`、`exit`、`close`だけを根拠にchildが開始したfile/processの終端を推測せず、未解放leaseは§7.1の後始末が
-外部プロセスの停止を確かめた後（確かめられなければ待つ上限の後）に`releasePeer`で解放するまでunknownとして残す。deletion
+外部プロセスの停止を確かめた後（確かめられないprocessが残るときは、居なくなるのを確かめるか30秒の上限に達した後）に
+`releasePeer`で解放するまでunknownとして残す。deletion
 tokenを保持中にchildが置換されてもparent registryはblockを維持し、新generationの同じrecorded IDに対するacquireを拒否する。
 
 `RecordingRecordedUseGate`はRecording Execution providerがsession registryと同じ直列化境界で実装する。既存sessionが対象
@@ -929,8 +941,8 @@ Runtimeが所有するRequirements 1から9の全69 Acceptance Criteriaを一行
 | R8.8           | 7.1          | AR-8.8           |
 | R8.9           | 7.1          | AR-8.9           |
 | R8.10          | 7.1          | AR-8.10          |
-| R8.11          | 7.1、9.3     | AR-8.11          |
-| R8.12          | 7.1          | AR-8.12          |
+| R8.11          | 7.1          | AR-8.11          |
+| R8.12          | 7.1、9.3     | AR-8.12          |
 | R9.1           | 1、12.2      | AR-9.1           |
 | R9.2           | 12.2         | AR-9.2           |
 | R9.3           | 12.5         | AR-9.3           |
@@ -1007,10 +1019,10 @@ locator列に書いたfile・実行手順・commandの結果が判定である�
 | AR-8.6  | R8.6        | S/I   | `child-supervision.spec.test.ts#AR-8.6`                                        | restart N回、fixed cap 0                |
 | AR-8.7  | R8.7        | S/I/G | `child-supervision.spec.test.ts#AR-8.7`                                        | stdout/stderr drain、listener解放       |
 | AR-8.8  | R8.8        | S/I/G | `service-child-cleanup.spec.test.ts#AR-8.8`、`service-child-crash-cleanup.integration.test.ts` | encode/stream `SIGINT`一回・確認3回・`SIGKILL`無し、HLS group二段階、IPC通路が閉じるまで2秒 |
-| AR-8.9  | R8.9        | S/I   | `service-child-cleanup.spec.test.ts#AR-8.9`                                    | 開始時刻の不一致・zombie・absentへsignal 0、読めないときはPIDで確認 |
-| AR-8.10 | R8.10       | S/I/G | `service-child-cleanup.spec.test.ts#AR-8.10`、`service-child-crash-cleanup.integration.test.ts` | 親保存先の中・設定有効・実行中だけ出力削除、HLS成果物全削除 |
-| AR-8.11 | R8.11       | S/I/G | `service-child-cleanup.spec.test.ts#AR-8.11`、`imp/service-child-recorded-use-registry.test.ts#AR-8.11` | 停止・削除の後にlease解放一回、終了未確認でも解放とerrorログ |
-| AR-8.12 | R8.12       | S/I   | `service-child-cleanup.spec.test.ts#AR-8.12`                                   | 30秒、上限後のファイル削除0、lease解放一回 |
+| AR-8.9  | R8.9        | S/I/G | `service-child-cleanup.spec.test.ts#AR-8.9`、`service-child-crash-cleanup.integration.test.ts` | 開始時刻の不一致・zombie・absentへsignal 0、zombieだけのgroupは終了、読めないときはPID・PGIDで確認 |
+| AR-8.10 | R8.10       | S/I/G | `service-child-cleanup.spec.test.ts#AR-8.10`、`service-child-crash-cleanup.integration.test.ts` | 復元と同じ規則（登録済み・録画なしは残す、親保存先の中・設定有効・実行中だけ削除）、HLS成果物全削除 |
+| AR-8.11 | R8.11       | S/I   | `service-child-cleanup.spec.test.ts#AR-8.11`                                   | 未確認のprocessを1秒ごとに確認、居なくなった時点で削除とlease解放、追加signal 0 |
+| AR-8.12 | R8.12       | S/I   | `service-child-cleanup.spec.test.ts#AR-8.12`、`service-child-supervision.spec.test.ts#AR-8.12`、`imp/service-child-recorded-use-registry.test.ts#AR-8.12` | 30秒、上限後のファイル削除0（HLS・出力の途中打ち切り）、lease解放一回、部品取り出し・後始末の失敗でも解放と再起動 |
 | AR-9.1  | R9.1        | R     | `package.json`の公開scriptと§12.2                                               | Runtime owner一つ、client対象0、公開6 command |
 | AR-9.2  | R9.2        | R     | §12.2と`scripts/server-test/run-tests.mjs`のlayer分類                           | spec/imp/integration command分離        |
 | AR-9.3  | R9.3        | S     | `*.spec.test.ts`のAR-2.1〜AR-8.12の48 case（R1はAR-1.1〜1.4でspec caseではない） | R2-R8 canonical 48件一意                |

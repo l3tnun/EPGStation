@@ -318,7 +318,7 @@ describe('ServiceChildRecordedUseRegistry', () => {
 
         expect(registry.acquire(lease(peer, 2, 11))).toEqual({ status: 'unknown' });
     });
-    it('[AR-8.11] keeps an ended generation lease unknown until the peer is released, then frees only that generation', () => {
+    it('[AR-8.12] keeps an ended generation lease unknown until the peer is released, then frees only that generation', () => {
         const registry = new ServiceChildRecordedUseRegistry();
         const ended = new EventEmitter();
         registry.registerPeer(ended);

@@ -137,9 +137,9 @@ const runService = async () => {
         activeServiceGeneration = null;
         log.system.fatal('service process is down');
         log.system.fatal(`service process exit code: ${code}, signal: ${signal}`);
-        const cleanup = container.get<ServiceChildTerminationCleanupPort>('IServiceChildTerminationCleanup');
+        // 後始末の部品の取り出しも chain の中で行い、取り出しや後始末が失敗しても記録して必ず再起動する
         void Promise.resolve()
-            .then(() => cleanup.run(child))
+            .then(() => container.get<ServiceChildTerminationCleanupPort>('IServiceChildTerminationCleanup').run(child))
             .catch((err: unknown) => {
                 log.system.fatal(`service child cleanup failed: ${String(err)}`);
             })

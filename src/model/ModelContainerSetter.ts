@@ -423,7 +423,11 @@ export const set = (container: Container): void => {
                 processes: context.get<ServiceChildProcessRegistry>(serviceChildProcessRegistryKey),
                 recordedUse: context.get<ServiceChildRecordedUseRegistry>(serviceChildRecordedUseRegistryKey),
                 encodeQueue: context.get<IEncodeQueueStore>('IEncodeQueueStore'),
-                getParentDirPath: name => container.get<IVideoUtil>('IVideoUtil').getParentDirPath(name),
+                resolveRecordedFiles: () => ({
+                    recordedDB: container.get<IRecordedDB>('IRecordedDB'),
+                    videoUtil: container.get<IVideoUtil>('IVideoUtil'),
+                }),
+                isSameFile: EncodeManageModel.isSameFile,
                 hlsArtifacts: context.get<IHLSFileDeleterModel>('IHLSFileDeleterModel') as HLSFileDeleterModel,
                 streamFilePath: config.streamFilePath,
                 removeInterruptedOutput: config.encodeRemoveInterruptedOutput !== false,

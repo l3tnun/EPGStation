@@ -176,17 +176,24 @@ coverage の計測の道具を一度だけ所有して提供し、本機能自�
    `SIGINT`を一回だけ送り、`SIGKILL`とprocess groupへのsignalを使わない。HLS writerは、通常のHLS配信停止（`server-media-process-management`の
    Requirement 6 Acceptance Criteria 1と2）と同じ手順と回数で止める。`SIGINT`を送った後の終了の確認は、後始末の順序を決め
    るために1秒間隔で最大3回行い、確認できなくても追加のsignalを送らない
-9. Before Acceptance Criterion 8のsignalを送るとき, the サーバー起動・稼働管理機能 shall プロセスの開始時刻を読める環境
-   （Linux）では、開始の知らせを受け取った時点の開始時刻と現在の開始時刻が一致し、終了済み（zombie）でないプロセスだけ
-   を同じプロセスとみなし、それ以外へsignalを送らない。開始時刻を読めない環境では、知らされたPIDとPGIDへそのまま送る
-10. When Acceptance Criterion 8の停止の確認を終えたとき, the サーバー起動・稼働管理機能 shall 停止を始めた時点で実行中
-    だったエンコードのうち、依頼の記録に出力先があるものについて、`encodeRemoveInterruptedOutput`が有効（省略時を含む）
-    で出力先が依頼の親保存先の中を指すときだけ出力途中のファイルの削除を試み、HLS保存先に残ったHLS成果物をすべて削除する
-11. When Acceptance Criterion 10の削除を終えたとき, the サーバー起動・稼働管理機能 shall 終了した世代が取得していた録画の
-    使用権を解放する。終了を確認できなかったプロセスが残ったときも解放し、そのことをerrorログへ記録する
-12. If Web・API提供処理の終了または起動エラーを受け取ってから30秒以内に後始末を終えられないとき, the サーバー起動・稼働
-    管理機能 shall そのことをerrorログへ記録し、終了した世代の録画の使用権を解放して同じ処理を再び起動し、それ以後は残り
-    の後始末でファイルを削除しない
+9. Before Acceptance Criterion 8のsignalを送るとき、および終了を確認するとき, the サーバー起動・稼働管理機能 shall プロセ
+   スの開始時刻を読める環境（Linux）では、開始の知らせを受け取った時点の開始時刻と現在の開始時刻が一致し、終了済み
+   （zombie）でないプロセスだけを同じプロセスとみなし、それ以外へsignalを送らない。HLS writerのprocess groupは、leaderの開
+   始時刻が知らせと違えば居ないとみなし、それ以外はそのPGIDに属して終了済みでないプロセスが一つでも居るときだけ居るとみな
+   す（終了済みのプロセスだけが残るprocess groupは終了したとみなす）。開始時刻とprocess groupを読めない環境では、知らされ
+   たPIDとPGIDへそのまま送り、そのPIDとPGIDが居るかで確認する
+10. When Acceptance Criterion 8の停止の確認と、Acceptance Criterion 11の待ちを終えたとき, the サーバー起動・稼働管理機能
+    shall 停止を始めた時点で実行中だったエンコードのうち、依頼の記録に出力先があるものについて、エンコードの起動時の復元と同
+    じ規則（`server-encoding`のRequirement 7 Acceptance Criteria 6から8: 録画済み番組と変換元ファイルが在り、出力先が録画ファ
+    イルとして登録されておらず、`encodeRemoveInterruptedOutput`が有効（省略時を含む）で、出力先が依頼の親保存先の中を指す）
+    に当てはまるときだけ出力途中のファイルの削除を試み、HLS保存先に残ったHLS成果物をすべて削除する
+11. If Acceptance Criterion 8の確認の回数を使い切っても終了を確認できないプロセスが残るとき, the サーバー起動・稼働管理
+    機能 shall 追加のsignalを送らず、同じ確認の方法で1秒ごとに居なくなったかを確かめ続け、すべて居なくなるまで、または
+    Acceptance Criterion 12の上限まで待つ
+12. When 後始末を終えたとき、または Web・API提供処理の終了か起動エラーを受け取ってから30秒の上限に達したとき, the サーバー
+    起動・稼働管理機能 shall 終了した世代が取得していた録画の使用権を一回だけ解放して同じ処理を再び起動する。上限に達したと
+    きは、そのことをerrorログへ記録し、それ以後は残りの後始末でファイルを削除しない。後始末の部品を取り出せないとき、または
+    後始末が失敗したときも、失敗を記録して使用権を解放し、同じ処理を再び起動する
 
 ### Requirement 9: サーバーテストの品質判定
 
