@@ -105,8 +105,6 @@ class EncodeManageModel implements IEncodeManageModel {
     private listedEncodeIds = new Set<apid.EncodeId>();
     /** 識別番号付きの受け渡しを受付中の識別番号。復元が同じ識別番号を二重に戻さないために使う */
     private admittingEncodeIds = new Set<apid.EncodeId>();
-    /** 復元が判定中の識別番号。受け渡しが同じ識別番号を二重に受け付けないために使う */
-    private restoringEncodeIds = new Set<apid.EncodeId>();
     /** 一覧の取得に失敗したときのやり直しの timer */
     private restoreRetryTimer: ReturnType<typeof setTimeout> | null = null;
     /** 録画ファイルの使用権取得/解放の委譲先。DI で注入されなければ
@@ -324,15 +322,11 @@ class EncodeManageModel implements IEncodeManageModel {
     }
 
     /**
-     * 同じ識別番号のジョブが待機列・実行中一覧にあるか、受付中または復元の判定中か
+     * 同じ識別番号のジョブが待機列・実行中一覧にあるか、受付中か
      * @param encodeId: 識別番号
      */
     private isEncodeIdInUse(encodeId: apid.EncodeId): boolean {
-        return (
-            this.hasQueuedEncodeId(encodeId) === true ||
-            this.admittingEncodeIds.has(encodeId) === true ||
-            this.restoringEncodeIds.has(encodeId) === true
-        );
+        return this.hasQueuedEncodeId(encodeId) === true || this.admittingEncodeIds.has(encodeId) === true;
     }
 
     /**
@@ -352,13 +346,12 @@ class EncodeManageModel implements IEncodeManageModel {
     }
 
     /**
-     * 記録の一覧を取得して待機列へ戻す。一覧の取得に失敗したら、受付の待ちを解いて一定時間後にやり直す
+     * 記録の一覧を取得して待機列へ戻す。一覧の取得に失敗したら、受付の待ちを解いて一定時間後にやり直す。
+     * やり直しはこの復元が終わってから timer で始まるので、終わった時点の `restoring` は必ずこの復元
      */
     private runRestoration(): Promise<void> {
         const restoring = this.restoreRecords().finally(() => {
-            if (this.restoring === restoring) {
-                this.restoring = null;
-            }
+            this.restoring = null;
         });
         this.restoring = restoring;
 
@@ -393,12 +386,7 @@ class EncodeManageModel implements IEncodeManageModel {
                 continue;
             }
 
-            this.restoringEncodeIds.add(record.id);
-            try {
-                await this.restoreRecord(record);
-            } finally {
-                this.restoringEncodeIds.delete(record.id);
-            }
+            await this.restoreRecord(record);
         }
 
         const checkCount = Math.min(this.concurrentEncodeNum - this.runningQueue.length, this.waitQueue.length);
