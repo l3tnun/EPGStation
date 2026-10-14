@@ -375,10 +375,10 @@ envelope、request/reply timeout、再送は `server-process-messaging`、browse
 
 -   [x] 6.3 R1〜R7 の仕様 test の主 case を完成する
 
-    -   R1からR7の64件を一意な`unittest/spec`主testへ割り当て、`encode-contracts.spec.test.ts`のtest titleから各ACを逆引きで
+    -   R1からR7の66件を一意な`unittest/spec`主testへ割り当て、`encode-contracts.spec.test.ts`のtest titleから各ACを逆引きで
         きる形にする。
     -   各主testは戻り値だけでなく、queue、通知、port call、取消、結果反映、およびcleanupの意味ある結果をassertする。
-    -   完了時には64件すべてが一つの主testへ追跡でき、未割当・重複・空assertionが0件になる。
+    -   完了時には66件すべてが一つの主testへ追跡でき、未割当・重複・空assertionが0件になる。
     -   _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 1.10, 1.11, 1.12, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9,
         2.10, 2.11, 2.12, 2.13, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4.1, 4.2, 4.3, 4.4, 4.5, 5.1, 5.2, 5.3, 5.4, 6.1, 6.2, 6.3, 6.4, 6.5, 6.6,
         6.7, 6.8, 6.9, 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 7.8, 7.9, 7.10, 7.11, 7.12, 8.1_
@@ -523,3 +523,18 @@ envelope、request/reply timeout、再送は `server-process-messaging`、browse
     -   _Requirements: 8.4_
     -   _Boundary: 依頼の記録の結合境界_
     -   _Depends: 8.1, 8.2, 8.3_
+
+-   [x] 9. Web・API側処理だけの異常終了で変換processを止め、途中出力を消してから再起動させる
+
+-   [x] 9.1 変換processの開始を識別番号とともに知らせ、管理側の後始末と復元を噛み合わせる
+
+    -   `EncoderModel` は開始要求に `report: { kind: 'encode', encodeId }` を添え、メディア変換プロセス管理機能が開始と終了を管理
+        側へ知らせる。管理側の後始末（`server-application-runtime` の §7.1）は取消と同じ `SIGINT` だけで止め、停止を始めた時点で
+        動いていた変換の出力途中のファイルを 7.7 と同じ規則で削除する。
+    -   復元の削除は `removeFileIfPresent` を使い、後始末で先に削除されたファイルを削除済みとして扱って失敗を記録しない。
+    -   _Requirements: 7.7, 7.13, 7.14_
+    -   _Boundary: 変換ジョブ、記録の復元_
+    -   _Verification: `test/server/encoding/encode-contracts.spec.test.ts#EN-SPEC-R7-13`、
+        `test/server/encoding/service-child-crash.spec.test.ts#EN-SPEC-R7-14`、
+        `test/server/encoding/encode-queue-restore.spec.test.ts#EN-SPEC-R7-7`_
+    -   _Depends: 8.3、`server-application-runtime` 15.2_

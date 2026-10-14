@@ -38,7 +38,7 @@ foundation、設定既定値、tuner stream 取得、録画 file/domain 解決�
 | 8.2  | `test/server/media-delivery/media-delivery-http.integration.test.ts`<br>`test/server/media-delivery/media-delivery-filesystem.integration.test.ts`<br>`test/server/media-delivery/media-delivery-process.integration.test.ts`<br>`test/server/media-delivery/media-delivery-tuner.integration.test.ts`<br>`test/server/media-delivery/media-delivery-recorded-content.integration.test.ts`                                                                                                                | `integration`                                      | `1.5, 5.4, 6.1, 7.1, 8.1`                                                                       | `npm run test:server:integration -- test/server/media-delivery/media-delivery-http.integration.test.ts` <br>`npm run test:server:integration -- test/server/media-delivery/media-delivery-filesystem.integration.test.ts`<br>`npm run test:server:integration -- test/server/media-delivery/media-delivery-process.integration.test.ts`<br>`npm run test:server:integration -- test/server/media-delivery/media-delivery-tuner.integration.test.ts`<br>`npm run test:server:integration -- test/server/media-delivery/media-delivery-recorded-content.integration.test.ts`                                                                                                                                                                        |
 | 8.4  | `test/server/media-delivery/live-delivery.spec.test.ts`<br>`test/server/media-delivery/recorded-delivery.spec.test.ts`<br>`test/server/media-delivery/hls-lifecycle.spec.test.ts`<br>`test/server/media-delivery/command.spec.test.ts` | `unittest/spec` | `8.1, 8.2`                                                                                      | `npm run test:server:spec -- test/server/media-delivery/live-delivery.spec.test.ts`<br>`npm run test:server:spec -- test/server/media-delivery/recorded-delivery.spec.test.ts`<br>`npm run test:server:spec -- test/server/media-delivery/hls-lifecycle.spec.test.ts`<br>`npm run test:server:spec -- test/server/media-delivery/command.spec.test.ts` |
 | 8.5  | `test/server/media-delivery/live-delivery.test.ts`<br>`test/server/media-delivery/recorded-delivery.test.ts`<br>`test/server/media-delivery/hls-lifecycle.test.ts`<br>`test/server/media-delivery/command.test.ts`<br>`src/model/service/stream/base/LiveStreamBaseModel.ts`                                                                                                                                                                                                                              | `unittest/imp` | `8.4`                                                                                           | `npm run test:server:imp -- test/server/media-delivery/live-delivery.test.ts`<br>`npm run test:server:imp -- test/server/media-delivery/recorded-delivery.test.ts`<br>`npm run test:server:imp -- test/server/media-delivery/hls-lifecycle.test.ts`<br>`npm run test:server:imp -- test/server/media-delivery/command.test.ts`                                                                                                                                                                                                                                                                                                        |
-| 8.6  | `.kiro/specs/server-media-delivery/design.md` | レビュー | `8.5`                                                                                           | なし（Designの88行のレビュー） |
+| 8.6  | `.kiro/specs/server-media-delivery/design.md` | レビュー | `8.5`                                                                                           | なし（Designの92行のレビュー） |
 | 8.7  | `test/server/media-delivery/media-delivery-http.integration.test.ts`<br>`test/server/media-delivery/media-delivery-filesystem.integration.test.ts`<br>`test/server/media-delivery/media-delivery-process.integration.test.ts`<br>`test/server/media-delivery/media-delivery-tuner.integration.test.ts`<br>`test/server/media-delivery/media-delivery-recorded-content.integration.test.ts`                                                                                                                | `integration`                                      | `8.2, 8.6`                                                                                      | `npm run test:server:integration -- test/server/media-delivery/media-delivery-http.integration.test.ts` <br>`npm run test:server:integration -- test/server/media-delivery/media-delivery-filesystem.integration.test.ts`<br>`npm run test:server:integration -- test/server/media-delivery/media-delivery-process.integration.test.ts`<br>`npm run test:server:integration -- test/server/media-delivery/media-delivery-tuner.integration.test.ts`<br>`npm run test:server:integration -- test/server/media-delivery/media-delivery-recorded-content.integration.test.ts`                                                                                                                                                                        |
 | 8.8  | `test/server/media-delivery/live-delivery.test.ts`<br>`test/server/media-delivery/media-delivery-http.integration.test.ts` | `unittest/spec`・`unittest/imp`・`integration` | `2.1, 2.2, 2.3, 2.4, 2.5, 3.1, 3.2, 3.3, 4.1, 5.1, 5.2, 5.3, 5.4, 6.1, 7.1, 8.4, 8.5, 8.6, 8.7` | `npm run test:server:imp -- test/server/media-delivery/live-delivery.test.ts`<br>`npm run test:server:integration -- test/server/media-delivery/media-delivery-http.integration.test.ts` |
 
@@ -239,20 +239,17 @@ foundation、設定既定値、tuner stream 取得、録画 file/domain 解決�
     -   _Verification: unittest/spec, unittest/imp, integration_
 
 -   [x] 3. HLS Artifact Index と競合しない採番を test と実装で実現する
--   [x] 3.1 HLS Artifact Index の起動時走査・準備・再試行を test と実装で閉じる
+-   [x] 3.1 HLS Artifact Index の起動時削除・準備・走査を test と実装で閉じる
 
-    -   保存先を一度だけ準備して read/write access を確認し、`stream{id}` 直後が数字でない成果物から ID を抽出する
-        `HLSFileDeleterModel` の走査・列挙（`scanAtStartup`・`scanCurrent`・`listExact`）契約を一時 directory の `unittest/spec` で定義する。
-    -   `stream1` と `stream10`、親・segment・subtitle・無関係 file を分離し、見つけた成果物を削除せず startup ID として
-        予約することを定義する。
-    -   mkdir/access/read 失敗では error を記録して HLS だけを失敗させ、後続 HLS start で準備と走査を再試行し、非 HLS
-        start は継続することを定義する。
-    -   保存先の mkdir、read/write access、scan、exact ID 抽出を一つの index に集約し、startup/current artifact ID をメ
-        モリーで保持する。
-    -   起動失敗は HLS 未初期化状態と error 記録へ収束させ、HLS start 時だけ同じ準備を再試行する。
-    -   起動時成果物を削除せず、非 HLS の開始経路と server startup を停止しない。
-    -   完了時には 3.1 の fixture が成功し、`stream1` の選択へ `stream10` が混入せず、失敗後の再試行回数が要求単位で観測
-        できる。
+    -   保存先を準備して read/write access を確認し、`stream{id}` 直後が数字でない成果物から ID を抽出する
+        `HLSFileDeleterModel` の削除・走査・列挙（`deleteAllArtifacts`・`scanCurrent`・`listExact`）契約を一時 directory の
+        `unittest/spec` で定義する。
+    -   `stream1` と `stream10`、親・segment・subtitle・無関係 file を分離し、起動時に全識別番号の成果物を一度だけ削除し、
+        削除できなかった成果物の ID だけを startup ID として予約することを定義する。
+    -   起動時の削除の失敗は error を記録して再試行せず、HLS start ごとの走査が保存先の準備と走査を行い、mkdir/access/read
+        失敗ではその HLS start だけを失敗させ、非 HLS start は継続することを定義する。
+    -   起動時成果物の削除と、非 HLS の開始経路と server startup を停止しないことを実装する。
+    -   完了時には 3.1 の fixture が成功し、`stream1` の選択へ `stream10` が混入せず、起動時の削除が一度だけ行われる。
     -   _Requirements: 3.14, 3.15, 3.16, 3.17, 8.3_
     -   _Boundary: HLS Artifact Index・startup initialization_
     -   _Verification: unittest/spec, unittest/imp, integration_
@@ -445,10 +442,10 @@ foundation、設定既定値、tuner stream 取得、録画 file/domain 解決�
 
 -   [x] 8.4 R1〜R9 の仕様 test の主 case を完成する
 
-    -   R1からR9の83件を一意な`unittest/spec`主testへ割り当て、test titleから各ACを逆引きできる形にする。
+    -   R1からR9の87件を一意な`unittest/spec`主testへ割り当て、test titleから各ACを逆引きできる形にする。
     -   各主testは戻り値だけでなく、配信状態、resource取得、通知、停止、外部player効果、およびcleanupの意味ある結果を
         assertする。
-    -   完了時には83件すべてが一つの主testへ追跡でき、未割当・重複・空assertionが0件になる。
+    -   完了時には87件すべてが一つの主testへ追跡でき、未割当・重複・空assertionが0件になる。
     -   _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 2.10,
         2.11, 2.12, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 3.10, 3.11, 3.12, 3.13, 3.14, 3.15, 3.16, 3.17, 4.1,
         4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9, 4.10, 4.11, 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, 5.9, 5.10, 5.11,
@@ -470,10 +467,10 @@ foundation、設定既定値、tuner stream 取得、録画 file/domain 解決�
 
 -   [x] 8.6 機能固有 test matrix の状態・競合・資源分類を完成する
 
-    -   Designの88行のmatrixで開始中・準備完了・停止中・停止済み・再起動、100ms・1秒・15秒・30秒、timeout、同着、late settlementを一意に
+    -   Designの92行のmatrixで開始中・準備完了・停止中・停止済み・再起動、100ms・1秒・15秒・30秒、timeout、同着、late settlementを一意に
         分類する。
     -   stream、file、timer、listener、process handle、HLS artifactの解放または保持を記録し、空欄と未分類を0件にする。
-    -   完了時にはDesignの88行が必須列と主testのlocatorを持ち、空欄と未分類が0件である。
+    -   完了時にはDesignの92行が必須列と主testのlocatorを持ち、空欄と未分類が0件である。
     -   _Requirements: 10.3_
     -   _Boundary: 映像配信・再生連携 Design test matrix_
     -   _Depends: 8.5_
@@ -501,3 +498,16 @@ foundation、設定既定値、tuner stream 取得、録画 file/domain 解決�
         Acceptance Criterion 9）に本機能のsourceの未到達が残らない。
     -   _Depends: 8.4, 8.5, 8.6, 8.7_
     -   _Requirements: 10.5_
+
+-   [x] 9. Web・API側処理の異常終了で配信の外部プロセスを止め、HLS成果物を消してから再起動させる
+
+-   [x] 9.1 配信の外部プロセスの開始を知らせ、管理側の停止と削除へ結び付ける
+
+    -   `LiveStreamBaseModel` と `RecordedStreamBaseModel` の `createProcessOption` が、HLS writer には
+        `report: { kind: 'hls', streamId }`、非HLSの視聴用変換には `report: { kind: 'stream' }` を添える。
+    -   管理側の後始末（`server-application-runtime` の §7.1）が、HLS writer を通常のHLS配信停止と同じ二段階で、非HLSの視聴用変換を
+        通常の停止要求と同じ `SIGINT` 一回で止め、`deleteAllArtifacts` で全HLS成果物を削除することを `unittest/spec` で確かめる。
+    -   _Requirements: 5.14, 5.15, 6.4, 6.5_
+    -   _Boundary: Live/Recorded stream models、HLS Artifact Index_
+    -   _Verification: `test/server/media-delivery/service-child-crash.spec.test.ts`_
+    -   _Depends: 3.1、`server-application-runtime` 15.2_

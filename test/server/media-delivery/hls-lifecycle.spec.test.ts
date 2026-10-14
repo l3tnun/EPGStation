@@ -469,7 +469,7 @@ describe('HLS manager lifecycle contract', () => {
                 recheckedIds.add(streamId);
                 return [];
             }),
-            scanAtStartup: vi.fn(() => scan.promise),
+            deleteAllArtifacts: vi.fn(() => scan.promise),
             scanCurrent: vi.fn(() => scan.promise),
         };
         const manager = new StreamManageModel(
@@ -488,7 +488,7 @@ describe('HLS manager lifecycle contract', () => {
 
         await expect(firstResult).resolves.toBe(1);
         await expect(secondResult).resolves.toBe(2);
-        expect(artifactIndex.scanAtStartup).toHaveBeenCalledOnce();
+        expect(artifactIndex.deleteAllArtifacts).toHaveBeenCalledOnce();
         expect(first.start).toHaveBeenCalledWith(1);
         expect(second.start).toHaveBeenCalledWith(2);
     });
@@ -497,7 +497,7 @@ describe('HLS manager lifecycle contract', () => {
         const startup = deferred<ReadonlySet<number>>();
         const artifactIndex = {
             listExact: vi.fn(async () => []),
-            scanAtStartup: vi.fn(() => startup.promise),
+            deleteAllArtifacts: vi.fn(() => startup.promise),
             scanCurrent: vi.fn(async () => new Set<number>()),
         };
         const manager = new StreamManageModel(
@@ -516,10 +516,10 @@ describe('HLS manager lifecycle contract', () => {
         await settleMicrotasks();
     });
 
-    it('[PRIMARY R3.15] skips an HLS ID when an exact residual artifact appears before writer start', async () => {
+    it('[MD-3.15] skips an HLS ID when an exact residual artifact appears before writer start', async () => {
         const artifactIndex = {
             listExact: vi.fn(async (_path: string, streamId: number) => (streamId === 0 ? ['stream0-late.ts'] : [])),
-            scanAtStartup: vi.fn(async () => new Set<number>()),
+            deleteAllArtifacts: vi.fn(async () => new Set<number>()),
             scanCurrent: vi.fn(async () => new Set<number>()),
         };
         const manager = new StreamManageModel(
@@ -546,7 +546,7 @@ describe('HLS manager lifecycle contract', () => {
         const scan = deferred<ReadonlySet<number>>();
         const artifactIndex = {
             listExact: vi.fn(async () => []),
-            scanAtStartup: vi.fn(() => scan.promise),
+            deleteAllArtifacts: vi.fn(() => scan.promise),
             scanCurrent: vi.fn(() => scan.promise),
         };
         const manager = new StreamManageModel(
@@ -574,7 +574,7 @@ describe('HLS manager lifecycle contract', () => {
         const scan = deferred<ReadonlySet<number>>();
         const artifactIndex = {
             listExact: vi.fn(async () => []),
-            scanAtStartup: vi.fn(() => scan.promise),
+            deleteAllArtifacts: vi.fn(() => scan.promise),
             scanCurrent: vi.fn(() => scan.promise),
         };
         const manager = new StreamManageModel(
@@ -607,7 +607,7 @@ describe('HLS manager lifecycle contract', () => {
         const body = deferred<void>();
         const artifactIndex = {
             listExact: vi.fn(async () => []),
-            scanAtStartup: vi.fn(() => startup.promise),
+            deleteAllArtifacts: vi.fn(() => startup.promise),
             scanCurrent: vi.fn(async () => new Set<number>()),
         };
         const manager = new StreamManageModel(
@@ -658,7 +658,7 @@ describe('HLS manager lifecycle contract', () => {
             const startup = deferred<ReadonlySet<number>>();
             const artifactIndex = {
                 listExact: vi.fn(async () => []),
-                scanAtStartup: vi.fn(() => startup.promise),
+                deleteAllArtifacts: vi.fn(() => startup.promise),
                 scanCurrent: vi.fn(async () => new Set<number>()),
             };
             const manager = new StreamManageModel(
@@ -695,7 +695,7 @@ describe('HLS manager lifecycle contract', () => {
         const body = deferred<void>();
         const artifactIndex = {
             listExact: vi.fn(async () => []),
-            scanAtStartup: vi.fn(() => startup.promise),
+            deleteAllArtifacts: vi.fn(() => startup.promise),
             scanCurrent: vi.fn(async () => new Set<number>()),
         };
         const manager = new StreamManageModel(
@@ -724,12 +724,14 @@ describe('HLS manager lifecycle contract', () => {
         expect(vi.getTimerCount()).toBe(0);
     });
 
-    it('[PRIMARY R3.17] retries a failed HLS artifact initialization on the first later HLS request', async () => {
-        const failure = new Error('synthetic startup scan failure');
+    it('[PRIMARY R3.17] does not repeat a failed startup deletion and prepares and scans the directory again at each HLS request', async () => {
+        const failure = new Error('synthetic startup deletion failure');
         const logs = logger();
         const artifactIndex = {
+            deleteAllArtifacts: vi.fn(async () => {
+                throw failure;
+            }),
             listExact: vi.fn(async () => []),
-            scanAtStartup: vi.fn().mockRejectedValueOnce(failure).mockResolvedValueOnce(new Set<number>()),
             scanCurrent: vi.fn(async () => new Set<number>()),
         };
         const manager = new StreamManageModel(
@@ -739,27 +741,52 @@ describe('HLS manager lifecycle contract', () => {
             fakeIdAllocator({ getLogger: () => logs }, { getConfig: () => ({ streamFilePath: 'synthetic-hls-root' }) }, artifactIndex),
         );
         await settleMicrotasks();
-        const stream = fakeStream({ isEnable: false, type: 'LiveHLS' });
 
-        await expect(manager.start(stream)).resolves.toBe(0);
+        await expect(manager.start(fakeStream({ isEnable: false, type: 'LiveHLS' }))).resolves.toBe(0);
+        await expect(manager.start(fakeStream({ isEnable: false, type: 'LiveHLS' }))).resolves.toBe(1);
 
-        expect(artifactIndex.scanAtStartup).toHaveBeenCalledTimes(2);
-        expect(logs.stream.error).toHaveBeenCalledWith('hls artifact index initialization error: synthetic-hls-root');
+        expect(artifactIndex.deleteAllArtifacts).toHaveBeenCalledOnce();
+        expect(artifactIndex.scanCurrent).toHaveBeenCalledTimes(2);
+        expect(logs.stream.error).toHaveBeenCalledWith('hls artifact startup deletion error: synthetic-hls-root');
         expect(logs.stream.error).toHaveBeenCalledWith(failure);
-        expect(stream.start).toHaveBeenCalledOnce();
     });
 
-    it('[PRIMARY R3.14] reserves IDs discovered by the startup HLS artifact scan', async () => {
-        const artifactIndex = {
-            listExact: vi.fn(async () => []),
-            scanAtStartup: vi.fn(async () => new Set([0])),
-            scanCurrent: vi.fn(async () => new Set<number>()),
-        };
+    it('[PRIMARY R3.14] deletes the residual HLS artifacts once at startup before assigning the first identifier', async () => {
+        const dir = mkdtempSync(join(tmpdir(), 'epg-hls-startup-delete-'));
+        dirs.push(dir);
+        writeFileSync(join(dir, 'stream0.m3u8'), '#EXTM3U');
+        writeFileSync(join(dir, 'stream0-000000001.ts'), 'residual');
+        const deleter = new HLSFileDeleterModel({ getLogger: logger });
+        const deleteAllArtifacts = vi.spyOn(deleter, 'deleteAllArtifacts');
         const manager = new StreamManageModel(
             { getLogger: logger },
             executionManager(),
             { notifyClient: vi.fn() },
-            fakeIdAllocator({ getLogger: logger }, { getConfig: () => ({ streamFilePath: 'synthetic-hls-root' }) }, artifactIndex),
+            fakeIdAllocator({ getLogger: logger }, { getConfig: () => ({ streamFilePath: dir }) }, deleter),
+        );
+        const first = fakeStream({ isEnable: false, type: 'LiveHLS' });
+
+        await expect(manager.start(first)).resolves.toBe(0);
+        await expect(manager.start(fakeStream({ isEnable: false, type: 'LiveHLS' }))).resolves.toBe(1);
+
+        expect(existsSync(join(dir, 'stream0.m3u8'))).toBe(false);
+        expect(existsSync(join(dir, 'stream0-000000001.ts'))).toBe(false);
+        expect(deleteAllArtifacts).toHaveBeenCalledOnce();
+        expect(first.start).toHaveBeenCalledWith(0);
+    });
+
+    it('[PRIMARY R3.15] avoids an identifier whose artifact the startup deletion could not remove', async () => {
+        const logs = logger();
+        const artifactIndex = {
+            deleteAllArtifacts: vi.fn(async () => new Set([0])),
+            listExact: vi.fn(async () => []),
+            scanCurrent: vi.fn(async () => new Set<number>()),
+        };
+        const manager = new StreamManageModel(
+            { getLogger: () => logs },
+            executionManager(),
+            { notifyClient: vi.fn() },
+            fakeIdAllocator({ getLogger: () => logs }, { getConfig: () => ({ streamFilePath: 'synthetic-hls-root' }) }, artifactIndex),
         );
 
         const stream = fakeStream({ isEnable: false, type: 'LiveHLS' });
@@ -773,7 +800,7 @@ describe('HLS manager lifecycle contract', () => {
         const logs = logger();
         const artifactIndex = {
             listExact: vi.fn(async () => []),
-            scanAtStartup: vi.fn(async () => new Set<number>()),
+            deleteAllArtifacts: vi.fn(async () => new Set<number>()),
             scanCurrent: vi.fn(async () => {
                 throw failure;
             }),
@@ -800,7 +827,7 @@ describe('HLS manager lifecycle contract', () => {
                 .fn()
                 .mockImplementationOnce(() => files.promise)
                 .mockRejectedValue(new Error('unexpected stale exact recheck')),
-            scanAtStartup: vi.fn(async () => new Set<number>()),
+            deleteAllArtifacts: vi.fn(async () => new Set<number>()),
             scanCurrent: vi.fn(async () => new Set<number>()),
         };
         const manager = new StreamManageModel(
@@ -829,7 +856,7 @@ describe('HLS manager lifecycle contract', () => {
                 .fn()
                 .mockImplementationOnce(() => oldFiles.promise)
                 .mockResolvedValue([]),
-            scanAtStartup: vi.fn(async () => new Set<number>()),
+            deleteAllArtifacts: vi.fn(async () => new Set<number>()),
             scanCurrent: vi.fn(async () => new Set<number>()),
         };
         const idAllocator = fakeIdAllocator(
@@ -869,7 +896,7 @@ describe('HLS manager lifecycle contract', () => {
             listExact: vi.fn(async () => {
                 throw failure;
             }),
-            scanAtStartup: vi.fn(async () => new Set<number>()),
+            deleteAllArtifacts: vi.fn(async () => new Set<number>()),
             scanCurrent: vi.fn(async () => new Set<number>()),
         };
         const idAllocator = fakeIdAllocator(
@@ -901,7 +928,7 @@ describe('HLS manager lifecycle contract', () => {
         const configuration = { getConfig: () => ({ streamFilePath: 'synthetic-hls-root' }) };
         const artifactIndex = {
             listExact: vi.fn(async () => []),
-            scanAtStartup: vi.fn(async () => new Set<number>()),
+            deleteAllArtifacts: vi.fn(async () => new Set<number>()),
             scanCurrent: vi.fn(async () => new Set<number>()),
         };
 
@@ -916,7 +943,7 @@ describe('HLS manager lifecycle contract', () => {
         const newer = deferred<ReadonlySet<number>>();
         const artifactIndex = {
             listExact: vi.fn(async () => []),
-            scanAtStartup: vi.fn(async () => new Set<number>()),
+            deleteAllArtifacts: vi.fn(async () => new Set<number>()),
             scanCurrent: vi
                 .fn()
                 .mockImplementationOnce(() => older.promise)
@@ -949,7 +976,7 @@ describe('HLS manager lifecycle contract', () => {
     it('[PRIMARY R3.3] wraps the HLS allocation cursor and skips active identifiers', async () => {
         const artifactIndex = {
             listExact: vi.fn(async () => []),
-            scanAtStartup: vi.fn(async () => new Set<number>()),
+            deleteAllArtifacts: vi.fn(async () => new Set<number>()),
             scanCurrent: vi.fn(async () => new Set<number>()),
         };
         const idAllocator = fakeIdAllocator(
@@ -980,7 +1007,7 @@ describe('HLS manager lifecycle contract', () => {
         const artifactIndex = {
             deleteAllFiles: vi.fn(async () => ({ passes: 1, remainingFiles: [], status: 'cleared' as const })),
             listExact: vi.fn(async () => []),
-            scanAtStartup: vi.fn(async () => new Set<number>()),
+            deleteAllArtifacts: vi.fn(async () => new Set<number>()),
             scanCurrent: vi.fn(async () => new Set<number>()),
             setOption: vi.fn(),
         };
@@ -1008,7 +1035,7 @@ describe('HLS manager lifecycle contract', () => {
         const replacement = lifecycleStream(undefined, 'LiveHLS');
         const artifactIndex = {
             listExact: vi.fn(async () => []),
-            scanAtStartup: vi.fn(async () => new Set<number>()),
+            deleteAllArtifacts: vi.fn(async () => new Set<number>()),
             scanCurrent: vi.fn(async () => new Set<number>()),
         };
         const manager = new StreamManageModel(
@@ -1039,7 +1066,7 @@ describe('HLS manager lifecycle contract', () => {
     it('[MD-3.2] finds the first gap across the safe-integer wrap boundary', async () => {
         const artifactIndex = {
             listExact: vi.fn(async () => []),
-            scanAtStartup: vi.fn(async () => new Set<number>()),
+            deleteAllArtifacts: vi.fn(async () => new Set<number>()),
             scanCurrent: vi.fn(async () => new Set([0, 2, Number.MAX_SAFE_INTEGER])),
         };
         const idAllocator = fakeIdAllocator(
@@ -1353,7 +1380,7 @@ describe('HLS public readiness contract', () => {
         const dir = join(root, 'streamfiles');
         const index = new HLSFileDeleterModel({ getLogger: logger });
 
-        await expect(index.scanAtStartup(dir)).resolves.toEqual(new Set());
+        await expect(index.scanCurrent(dir)).resolves.toEqual(new Set());
 
         expect(existsSync(dir)).toBe(true);
     });

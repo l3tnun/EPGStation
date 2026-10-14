@@ -101,6 +101,7 @@ describe('LiveStreamBaseModel process wiring (unittest/imp)', () => {
             input: null,
             output: null,
             priority: 1,
+            report: { kind: 'stream' },
         });
     });
 
@@ -117,6 +118,7 @@ describe('LiveStreamBaseModel process wiring (unittest/imp)', () => {
             input: null,
             output: `${streamRoot}/stream4.m3u8`,
             priority: 1,
+            report: { kind: 'hls', streamId: 4 },
         });
     });
 

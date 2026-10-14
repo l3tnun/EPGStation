@@ -376,6 +376,10 @@ leaseを再取得または交換しない。実行開始時は同じtokenを保�
 メディア変換プロセス管理からは、標準入出力とevent購読に使うchildと、停止に使うopaque managed handleを受け取る。変換ジョ
 ブは両方を保持するが、取消または実行時間上限時にchildへ直接signalを送らず、handleでprocess managerの `requestStop()`へ停
 止を依頼する。優先度入れ替えが同じ対象の停止を開始済みなら、そのstop request operationへjoinする。
+開始要求には`report: { kind: 'encode', encodeId }`を添え、メディア変換プロセス管理機能がprocessの開始と終了を依頼の識別
+番号とともに管理側へ知らせる（7.13）。Web・API側処理だけが異常終了したとき、管理側はこの知らせを使って変換processを取消と
+同じ`SIGINT`で止め、出力途中のファイルを7.7と同じ規則で削除してから再起動させる（7.14。`server-application-runtime`の§7.1）。
+復元の削除は`removeFileIfPresent`を使い、既に無いファイル（後始末で先に削除されたものを含む）を削除済みとして扱う。
 
 開始前確認へ新しい期限は追加しない。既存のDB・ファイルシステム・共有処理枠の完了契約をそのまま利用する。resource leaseは
 待機列への公開前から、待機、開始前確認、入力file利用、外部process、途中出力cleanup、結果登録・size更新・条件付き元file削
@@ -549,7 +553,7 @@ Web・API側処理の起動時（EPGStationの起動、Web・API側処理だけ�
 | 結果登録・サイズ更新失敗 | ログへ記録し、元ファイルを削除せず、完了通知へ進む   |
 | 元ファイル削除失敗       | 録画済み番組管理から返る既存の失敗として扱う         |
 | 機能の起動・再起動       | 記録を受け付け順に待機列へ戻す（5.8）                |
-| 中断された途中出力       | 設定が有効なら復元時に削除を試み、無効なら残す       |
+| 中断された途中出力       | 設定が有効なら復元時に削除を試み、無効なら残す。既に無いファイルは削除済みとして扱う |
 | 記録の保存失敗（受付）   | 依頼を失敗とし、leaseと実行権を解放する              |
 | 記録の更新・削除失敗     | ログへ記録して変換と終了処理を続ける                 |
 | 記録の一覧失敗（起動時） | ログへ記録し、記録を変更せず次の起動で再試行する     |
@@ -558,7 +562,7 @@ Web・API側処理の起動時（EPGStationの起動、Web・API側処理だけ�
 | 記録の読込失敗（管理側） | 操作を失敗とし、次の操作で読み直す                   |
 | 解釈できない記録         | ログへ記録して削除し、残りを使う                     |
 | `add`の応答なし          | `abandon`で記録の取消しを依頼する                    |
-| Web・API側処理だけの異常終了 | 起動中の変換processを止める手段を本機能は持たない。生き残った変換processがあれば、復元が同じ依頼を変換し直し、二重に変換される（出力ファイルは別の名前か、削除済みのinodeへ書かれ、登録済みファイルは壊れない）。この場合の扱いは既知の制約とする |
+| Web・API側処理だけの異常終了 | 変換processは開始時に依頼の識別番号とともに管理側へ知らされている（7.13）。管理側が取消と同じ`SIGINT`で止め、停止を始めた時点で動いていた変換の出力途中のファイルを7.7と同じ規則で削除してから、Web・API側処理を再起動させる（7.14。手順は`server-application-runtime`の§7.1）。再起動後の復元が同じ依頼を変換し直す |
 | resource lease取得失敗   | 変換元を読まずprocessを開始せず失敗として終了する    |
 | resource lease解放失敗   | 記録してjob結果を維持し、容量不足削除側は遮断を維持  |
 
@@ -626,13 +630,13 @@ Web・API側処理はDBを直接更新せず、開始前照会と復元時の判
 本機能は`server-application-runtime`が所有する共有server test foundationへ、次の機能固有suiteを追加する。testは
 `test/server/encoding/`に置き、仕様testは`encode-contracts.spec.test.ts`、依頼記録窓口の`encode-queue-store.spec.test.ts`、記録と復元の
 `encode-queue-restore.spec.test.ts`、実装testは `encode-internals.test.ts`と`encode-queue-store.imp.test.ts`、結合
-testは`encode-boundaries.integration.test.ts`と`encode-queue.integration.test.ts`とする。次節の69行を本機能唯一の機能固有Test Matrixとし、別matrixまたは
+testは`encode-boundaries.integration.test.ts`と`encode-queue.integration.test.ts`とする。次節の71行を本機能唯一の機能固有Test Matrixとし、別matrixまたは
 ledgerへ判定を分散させない。
 
 ### 9.1 AC別Test Matrix
 
 各Acceptance Criterionは一行と一意な主test IDを持つ。同じtest caseが別ACを補助できても、主test IDを兼用しない。
-R8.1・R8.3・R8.5は動作のtest caseを持たず、R8.1はR1〜R7の64主testの集合、R8.3は本表、R8.5は共有gateで判定する。これらの行のIDは判定対象の名前であり、主test IDの一意性の数には含めない。
+R8.1・R8.3・R8.5は動作のtest caseを持たず、R8.1はR1〜R7の66主testの集合、R8.3は本表、R8.5は共有gateで判定する。これらの行のIDは判定対象の名前であり、主test IDの一意性の数には含めない。
 `境界`の`adapter`はportのfakeを接続する単体test、`実境界`はDB、HTTP、IPC、filesystem、processを接続する結合testを表す。
 最後の列は実装状態、主testの件数、および除外を表す。
 
@@ -701,10 +705,12 @@ R8.1・R8.3・R8.5は動作のtest caseを持たず、R8.1はR1〜R7の64主test
 | `R7.9 / EN-SPEC-R7-9` | spec／`encode-queue-store.spec.test.ts` | 子あり・子なし、保存reject、送信失敗 | 録画完了 | 記録の後に送信 | 記録・送信 | DB・IPC adapter | 保存reject・send失敗 | 記録を保存してから識別番号付きで送信、子なしは記録だけ、保存失敗は送信0、送信失敗は記録を残す | 実装済み／主test 1／除外なし |
 | `R7.10 / EN-SPEC-R7-10` | spec／`encode-queue-restore.spec.test.ts` | 識別番号付きの受け渡しを同時実行数0・上限・lease失敗で拒否、受理 | 受付 | 拒否 | 記録port・lease | IPC adapter | 各拒否 | 拒否はremove一回とログ、ジョブ・通知0。受理は記録の識別番号でジョブと追加通知 | 実装済み／主test 1／除外なし |
 | `R7.11 / EN-SPEC-R7-11` | spec／同上 | 待機・実行中と同じ識別番号、一覧に含まれていた識別番号（終了済みを含む） | 受付 | 重複通知 | 待機列 | IPC adapter | なし | ジョブ追加0、lease取得0、記録削除0 | 実装済み／主test 1／除外なし |
+| `R7.13 / EN-SPEC-R7-13` | spec／`encode-contracts.spec.test.ts` | 変換の開始 | 開始 | 実行 | 変換process | process管理adapter | なし | 開始要求に`report: { kind: 'encode', encodeId }`を添える | 実装済み／主test 1／除外なし |
+| `R7.14 / EN-SPEC-R7-14` | spec／`service-child-crash.spec.test.ts` | Web・API側処理の異常終了、実行中の変換2件（親保存先の中と外） | 実行 | 停止 | 変換process・出力file | 管理側の後始末 | なし | 各processへ`SIGINT`一回、親保存先の中の出力だけ削除、その後に使用権を解放 | 実装済み／主test 1／除外なし |
 | `R7.12 / EN-SPEC-R7-12` | spec／`encode-queue-store.spec.test.ts` | 読込reject、壊れたJSON・項目欠落・範囲外の識別番号、削除reject | 管理側の最初の操作 | 読込のやり直し | 記録・識別番号の集合 | DB adapter | findAll・deleteOnce reject | 操作を失敗にし次で読み直す、壊れた記録は削除しログ、削除できない番号は割り当てない | 実装済み／主test 1／除外なし |
-| `R8.1 / EN-SPEC-R1-1〜EN-SPEC-R7-12（64主testの集合）` | spec／`encode-contracts.spec.test.ts`・`encode-queue-store.spec.test.ts`・`encode-queue-restore.spec.test.ts`                | R1–R7契約一覧                                                                         | 全状態                                       | 通常・失敗・race                                 | 全機能固有資源                                        | adapter群                            | 代表失敗注入              | 64契約主testが一意に存在                                                                                                                                                             | 実装済み／主test 64／除外なし                                              |
+| `R8.1 / EN-SPEC-R1-1〜EN-SPEC-R7-14（66主testの集合）` | spec／`encode-contracts.spec.test.ts`・`encode-queue-store.spec.test.ts`・`encode-queue-restore.spec.test.ts`                | R1–R7契約一覧                                                                         | 全状態                                       | 通常・失敗・race                                 | 全機能固有資源                                        | adapter群                            | 代表失敗注入              | 66契約主testが一意に存在                                                                                                                                                             | 実装済み／主test 66／除外なし                                              |
 | `R8.2 / EN-SPEC-R8-2`   | imp／`encode-internals.test.ts`・`*.imp.test.ts`     | 値域・分岐一覧                                                                        | 全内部状態                                   | 境界・settlement                                 | queue・timer・process・file                           | adapter群                            | 各分岐失敗                | 指定内部caseを追加imp caseへ収容                                                                                                                                                     | 実装済み／除外なし     |
-| `R8.3 / EN-MATRIX-R8-3` | Test Matrix／本節                                    | null、空、0、1、最小、最大、範囲外、不正型、重複                                          | 受付前・待機・実行・成功・失敗・取消・再起動 | 同着、取消×期限、late settlement                 | 待機枠・timer・process・途中出力・元file              | 全分類                               | 未分類cell                | 69行・主ID重複0・非適用理由あり                                                                                                                                                      | 実装済み（本表）／69 AC                                                    |
+| `R8.3 / EN-MATRIX-R8-3` | Test Matrix／本節                                    | null、空、0、1、最小、最大、範囲外、不正型、重複                                          | 受付前・待機・実行・成功・失敗・取消・再起動 | 同着、取消×期限、late settlement                 | 待機枠・timer・process・途中出力・元file              | 全分類                               | 未分類cell                | 71行・主ID重複0・非適用理由あり                                                                                                                                                      | 実装済み（本表）／71 AC                                                    |
 | `R8.4 / EN-INTEGRATION-T6-6-HTTP-IPC-FS-PROCESS` | integration／`encode-boundaries.integration.test.ts`・`encode-queue.integration.test.ts` | HTTP各操作、IPC各操作、衝突file、synthetic command                                        | 全状態                                       | process停止・IPC settlement                      | HTTP server・IPC peer・file・child・listener          | HTTP・IPC・filesystem・process実境界 | carrier/process/file失敗  | 9.4の境界caseを個別実行し成功・失敗・cleanupを観測                                                                                                                                   | 実装済み／主test＋境界case／DB transaction非適用                           |
 | `R8.5 / EN-GATE-R8-5`   | 品質判定／共有foundation                             | 機能固有suite（spec・imp・integration）                                                   | 全状態                                       | 全件成功とC0・C1                                 | test・coverage結果                                    | 共有foundation                       | 不一致未解決              | 全件成功とRuntime Requirement 9 Acceptance Criterion 9のC0・C1成立まで未完了                                                                                                         | 実装済み（共有gate）／除外2件（`EncodeFileManageModel.getFilePath`、`EncodeManageModel.checkQueue`） |
 
@@ -717,7 +723,7 @@ castで存在しないvalidationを創作しない。ただし設定、HTTP payl
 
 ### 9.2 必須観点と追加実装case
 
-R1からR7の64 ACはすべて、`encode-contracts.spec.test.ts`、依頼記録窓口の契約（R1.12の取消し、R7.3〜R7.5、R7.9、R7.12）を`encode-queue-store.spec.test.ts`、Web・API側処理の記録と復元の契約（R1.3、R1.12、R2.6、R7.2、R7.6〜R7.8、R7.10、R7.11）を`encode-queue-restore.spec.test.ts`の一意な`EN-SPEC-*`主testで判定する。次の`EN-IMP-*`はR8.2を満たす
+R1からR7の66 ACはすべて、`encode-contracts.spec.test.ts`、Web・API側処理の異常終了の契約（R7.14）を`service-child-crash.spec.test.ts`、依頼記録窓口の契約（R1.12の取消し、R7.3〜R7.5、R7.9、R7.12）を`encode-queue-store.spec.test.ts`、Web・API側処理の記録と復元の契約（R1.3、R1.12、R2.6、R7.2、R7.6〜R7.8、R7.10、R7.11）を`encode-queue-restore.spec.test.ts`の一意な`EN-SPEC-*`主testで判定する。次の`EN-IMP-*`はR8.2を満たす
 追加caseであり、主testの代替や重複したAC traceにはしない。
 
 | 必須観点               | 主test／追加case                                                                                            | 判定とassertion                                                                                                                              |
@@ -866,9 +872,11 @@ directory）とMySQL fixtureを使い、IPCは実際の`IPCClient`と`IPCServer`
 | 7.10 | 5.9           | 受け渡しの拒否時に記録を削除                   |
 | 7.11 | 5.8、5.9      | 同じ識別番号の受け渡しの重複除去（一覧の識別番号を含む） |
 | 7.12 | 4.4、6        | 記録の読込失敗と解釈できない記録               |
+| 7.13 | 5.3           | 変換processの開始を識別番号とともに管理側へ知らせる |
+| 7.14 | 6             | Web・API側処理の異常終了時の`SIGINT`停止と途中出力の削除（runtime §7.1） |
 | 8.1  | 9.1           | R1–R7の仕様testと一意な主test                  |
 | 8.2  | 9.1、9.2      | 内部値域・分岐と追加imp case                   |
-| 8.3  | 9.1、9.2、9.3 | 69 ACの状態・race・資源分類                    |
+| 8.3  | 9.1、9.2、9.3 | 71 ACの状態・race・資源分類                    |
 | 8.4  | 9.1、9.4      | HTTP・IPC・filesystem・process                 |
 | 8.5  | 9.1           | 単体・結合testの全件成功とC0・C1の品質判定     |
 
@@ -899,7 +907,7 @@ directory）とMySQL fixtureを使い、IPCは実際の`IPCClient`と`IPCServer`
 | 依頼記録窓口（管理側）    | `src/model/operator/encode/{IEncodeQueueStore,EncodeQueueStore}.ts`                                                                      | 識別番号の割当て、記録の直列の操作、受け付け順の並べ直し、`requestToken`と`abandon` |
 | 記録port（Web・API側）    | `src/model/service/encode/IEncodeQueueStorePort.ts`、`src/model/ModelContainerSetter.ts`の記録port adapter                               | `IPCClient.encodeQueue`へ渡す                                                          |
 | 記録・復元のtest          | `test/server/encoding/encode-queue-store.{spec,imp}.test.ts`、`encode-queue-restore.spec.test.ts`、`encode-queue.integration.test.ts`      | R1.3、R1.12、R2.6、R7.2〜R7.12                                                        |
-| 機能固有Test Matrix       | 本設計の§9.1                                                                                                                             | 69 ACの一意な主test                                                                    |
+| 機能固有Test Matrix       | 本設計の§9.1                                                                                                                             | 71 ACの一意な主test                                                                    |
 
 待機列・実行中一覧の所有構造、queue公開前のlease取得、recorded IDの保持時点、service child snapshot handler、または容量
 削除候補filterを変更する場合は、利用中snapshot、resource lease、Runtimeの最終deletion gate、および

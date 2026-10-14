@@ -13,6 +13,7 @@ import {
     RecordedResourceUseKind,
     RecordedUseSnapshotPayload,
 } from './IRecordedResourceUse.js';
+import { ServiceProcessReporter } from './IServiceProcessReport.js';
 import {
     UploadedVideoAdoptedMessage,
     UploadedVideoDispatchAttempt,
@@ -49,6 +50,8 @@ import {
     ReserveationFunctions,
     RuleFuntions,
     SendMessage,
+    ServiceProcessEndedMessage,
+    ServiceProcessStartedMessage,
     ThumbnailFunctions,
 } from './IPCMessageDefine.js';
 
@@ -148,6 +151,11 @@ export default class IPCClient implements IIPCClient {
     // アップロードされた動画fileの登録要求を発行するための窓口。
     public readonly uploadedVideoRegistrationPort: UploadedVideoRegistrationPort = {
         dispatch: option => this.dispatchUploadedVideoRegistration(option),
+    };
+    // Web・API側処理が開始した外部プロセスの開始と終了を管理側へ知らせる窓口（応答を待たない）。
+    public readonly serviceProcessReporter: ServiceProcessReporter = {
+        started: start => this.sendServiceProcessReport({ ...start, type: 'serviceProcessStarted' }),
+        ended: pid => this.sendServiceProcessReport({ pid, type: 'serviceProcessEnded' }),
     };
 
     private log: ILogger;
@@ -616,6 +624,24 @@ export default class IPCClient implements IIPCClient {
         process.nextTick(() =>
             this.sendRecordedUseSnapshotReply({ id: request.id, snapshot, type: 'recordedUseSnapshotReply' }),
         );
+    }
+
+    // 外部プロセスの開始・終了の知らせを送る。応答を待たず、送れなかった知らせはログへ記録して破棄する
+    // （保存・再送はしない）。
+    private sendServiceProcessReport(message: ServiceProcessStartedMessage | ServiceProcessEndedMessage): void {
+        const send = process.send;
+        if (typeof send === 'undefined') {
+            this.log.system.error('process.send is undefined');
+
+            return;
+        }
+        try {
+            send.call(process, message, error => {
+                if (error instanceof Error) this.log.system.error(`process.send callback error: ${error.message}`);
+            });
+        } catch (error: unknown) {
+            this.log.system.error(`process.send error: ${this.toError(error).message}`);
+        }
     }
 
     // snapshot応答を実際に送信する。応答であり要求ではないため、送信失敗時に`pending`側の

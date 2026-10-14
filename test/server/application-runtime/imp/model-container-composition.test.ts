@@ -289,7 +289,9 @@ describe('ModelContainerSetter service-child recorded-use composition', () => {
         expect(model.restoreDependencies.isSameFile).toBe(
             (EncodeManageModel as unknown as { isSameFile: unknown }).isSameFile,
         );
-        expect(model.restoreDependencies.removeFile).toEqual(expect.any(Function));
+        expect(model.restoreDependencies.removeFile).toBe(
+            compiled<{ removeFileIfPresent: unknown }>('model/ServiceChildProcessSystem.js').removeFileIfPresent,
+        );
         expect(container.get('IEncodeQueueStore')).toBe(container.get('IEncodeQueueStore'));
     });
 
@@ -335,6 +337,75 @@ describe('ModelContainerSetter service-child recorded-use composition', () => {
             status: 'granted',
         });
         expect(container.get('ServiceChildRecordedUseRegistry')).toBe(registry);
+    });
+
+    it('[AR-8.8] registers each service peer with the process registry and builds the termination cleanup from it', async () => {
+        const container = createContainer();
+        for (const token of [
+            'IReservationManageModel',
+            'IRecordedManageModel',
+            'IRecordedTagManadeModel',
+            'IRuleManageModel',
+            'IThumbnailManageModel',
+            'IRecordingManageModel',
+        ]) {
+            container.rebind(token).toConstantValue({});
+        }
+        container.rebind('IConfiguration').toConstantValue({
+            getConfig: () => ({
+                encodeRemoveInterruptedOutput: false,
+                recorded: [],
+                streamFilePath: 'synthetic-stream-root',
+                uploadTempDir: 'synthetic-upload',
+            }),
+        });
+        container.rebind('IEncodeQueueStore').toConstantValue({ list: vi.fn(async () => []) });
+        const systemError = vi.fn();
+        const system = { error: systemError, fatal: vi.fn(), info: vi.fn() };
+        container.rebind('ILoggerModel').toConstantValue({ getLogger: () => ({ ...syntheticLogger.getLogger(), system }) });
+        const ipcServer = container.get<{ register(child: unknown): void }>('IIPCServer');
+        const processes = container.get<{ takeEntries(peer: object): Promise<readonly object[]> }>(
+            'ServiceChildProcessRegistry',
+        );
+        const cleanup = container.get<{
+            deps: Record<string, unknown>;
+            run(peer: object): Promise<void>;
+        }>('IServiceChildTerminationCleanup');
+        const child = Object.assign(new EventEmitter(), { send: vi.fn() });
+
+        ipcServer.register(child);
+        child.emit('message', { kind: 'stream', pid: process.pid, type: 'serviceProcessStarted' });
+        child.emit('message', { pid: process.pid, type: 'serviceProcessEnded' });
+        child.emit('message', { pid: 0, type: 'serviceProcessEnded' });
+        child.emit('disconnect');
+        expect(systemError).toHaveBeenCalledWith('service process report discarded: {"pid":0,"type":"serviceProcessEnded"}');
+
+        await expect(processes.takeEntries(child)).resolves.toEqual([]);
+        expect(container.get('ServiceChildProcessRegistry')).toBe(processes);
+        expect(container.get('IServiceChildTerminationCleanup')).toBe(cleanup);
+        const deps = cleanup.deps as {
+            getParentDirPath(name: string): string | null;
+            logger: { error(value: unknown): void; info(value: unknown): void };
+        };
+        deps.logger.error('synthetic cleanup error');
+        deps.logger.info('synthetic cleanup info');
+        expect(systemError).toHaveBeenCalledWith('synthetic cleanup error');
+        expect(system.info).toHaveBeenCalledWith('synthetic cleanup info');
+        expect(deps.getParentDirPath('synthetic')).toBeNull();
+        expect(cleanup.deps).toMatchObject({
+            processes,
+            recordedUse: container.get('ServiceChildRecordedUseRegistry'),
+            removeInterruptedOutput: false,
+            streamFilePath: 'synthetic-stream-root',
+        });
+    });
+
+    it('[AR-9.4] reports the service processes through the IPC client reporter', () => {
+        const container = createContainer();
+        const reporter = { ended: vi.fn(), started: vi.fn() };
+        container.rebind('IIPCClient').toConstantValue({ serviceProcessReporter: reporter });
+
+        expect(container.get('IServiceProcessReporter')).toBe(reporter);
     });
 
     it.each([

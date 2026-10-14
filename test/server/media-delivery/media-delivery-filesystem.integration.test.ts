@@ -171,11 +171,12 @@ describe('HLS artifact allocation filesystem boundary', () => {
         });
     });
 
-    it('keeps startup artifacts, skips their exact IDs, and rechecks before starting the writer', async () => {
+    it('[MD-8.3] deletes the startup artifacts before the first allocation and starts the writer on the freed ID', async () => {
         const dir = mkdtempSync(join(tmpdir(), 'epg-hls-allocation-'));
         dirs.push(dir);
         writeFileSync(join(dir, 'stream0.m3u8'), '#EXTM3U');
-        writeFileSync(join(dir, 'stream10-0.ts'), 'adjacent');
+        writeFileSync(join(dir, 'stream10-0.ts'), 'residual');
+        writeFileSync(join(dir, 'synthetic-unrelated.txt'), 'kept');
         const index = new HLSFileDeleterModel({ getLogger: logger });
         const manager = new StreamManageModel(
             { getLogger: logger },
@@ -188,12 +189,13 @@ describe('HLS artifact allocation filesystem boundary', () => {
             writeFileSync(join(dir, `writer-started-${streamId}`), 'started');
         });
 
-        await expect(manager.start(stream)).resolves.toBe(1);
+        await expect(manager.start(stream)).resolves.toBe(0);
 
-        expect(existsSync(join(dir, 'stream0.m3u8'))).toBe(true);
-        expect(existsSync(join(dir, 'stream10-0.ts'))).toBe(true);
-        expect(existsSync(join(dir, 'writer-started-1'))).toBe(true);
-        expect(stream.start).toHaveBeenCalledWith(1);
+        expect(existsSync(join(dir, 'stream0.m3u8'))).toBe(false);
+        expect(existsSync(join(dir, 'stream10-0.ts'))).toBe(false);
+        expect(existsSync(join(dir, 'synthetic-unrelated.txt'))).toBe(true);
+        expect(existsSync(join(dir, 'writer-started-0'))).toBe(true);
+        expect(stream.start).toHaveBeenCalledWith(0);
     });
 
     it('[MD-5.7][MD-5.10][MD-5.12] force-releases an HLS ID through the public manager lifecycle', async () => {

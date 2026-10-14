@@ -94,6 +94,14 @@ const runOperator = async () => {
 };
 
 /**
+ * 終了した Web・API 側処理の後始末（外部プロセスの停止、途中のファイルの削除、録画の使用権の解放）。
+ * 上限の時間で打ち切り、終えてから再起動へ進む。
+ */
+interface ServiceChildTerminationCleanupPort {
+    run(child: object): Promise<void>;
+}
+
+/**
  * Service 起動処理
  */
 let activeServiceChild: child_process.ChildProcess | null = null;
@@ -113,7 +121,7 @@ const runService = async () => {
     let terminalSettled = false;
     const onStdout = () => {};
     const onStderr = () => {};
-    const onTerminal = () => {
+    const onTerminal = (code: number | null = null, signal: NodeJS.Signals | null = null) => {
         if (terminalSettled || activeServiceChild !== child || activeServiceGeneration !== generation) {
             return;
         }
@@ -128,8 +136,17 @@ const runService = async () => {
         activeServiceChild = null;
         activeServiceGeneration = null;
         log.system.fatal('service process is down');
-        log.system.fatal('restart service');
-        void runService();
+        log.system.fatal(`service process exit code: ${code}, signal: ${signal}`);
+        const cleanup = container.get<ServiceChildTerminationCleanupPort>('IServiceChildTerminationCleanup');
+        void Promise.resolve()
+            .then(() => cleanup.run(child))
+            .catch((err: unknown) => {
+                log.system.fatal(`service child cleanup failed: ${String(err)}`);
+            })
+            .then(() => {
+                log.system.fatal('restart service');
+                void runService();
+            });
     };
     const onError = () => {
         onTerminal();

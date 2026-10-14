@@ -34,7 +34,7 @@ flowchart LR
 | Recorded Use Lease       | 録画file利用前の取得と配信terminal後の解放       | `RecordedDeliveryLeaseConsumer`（PM consumer port adapterの`RecordedDeliveryUsePort`を使用） |
 | Recorded Use Snapshot    | activeな録画file resource利用IDのread-only投影   | `DeliveryRecordedUseSnapshotProvider`（Recorded Use Leaseの取得完了後にRecorded Delivery Lease Consumerが`ActiveRecordedDeliveryRegistry`を更新） |
 | HLS Readiness Monitor    | 100msごとに親playlistと媒体成果物を確認          | `StreamBaseModel`           |
-| HLS Artifact Index       | 起動時走査、識別番号予約、exact artifact選択     | `HLSFileDeleterModel`と`HlsStreamIdAllocator` |
+| HLS Artifact Index       | 起動時の残存成果物の削除、識別番号予約、exact artifact選択 | `HLSFileDeleterModel`と`HlsStreamIdAllocator` |
 | HLS Stop Coordinator     | writer停止、成果物削除、配信ID強制解放を順序化   | stream managerとbase model  |
 | Kodi Client              | 録画URLを組み立て、設定済みKodiへ送信            | video API model             |
 
@@ -90,7 +90,8 @@ class DeliveryRecordedUseSnapshotProvider {
 // HLSFileDeleterModelがIHLSFileDeleterModel（setOption・deleteAllFiles）の宣言の外で公開する走査・列挙。
 // HlsStreamIdAllocatorはこれをArtifactIndexとして受け取る。
 interface ArtifactIndex extends IHLSFileDeleterModel {
-    scanAtStartup(streamFilePath: string): Promise<ReadonlySet<StreamId>>;
+    // 識別番号にかかわらず全HLS成果物を削除し、削除できなかった成果物のIDを返す
+    deleteAllArtifacts(streamFilePath: string, isCancelled?: () => boolean): Promise<ReadonlySet<StreamId>>;
     scanCurrent(streamFilePath: string): Promise<ReadonlySet<StreamId>>;
     listExact(streamFilePath: string, streamId: StreamId): Promise<string[]>;
 }
@@ -311,14 +312,20 @@ contract自体は`test/server/recorded-content/probe.spec.test.ts`が固定す�
 
 ## 6. HLS識別番号と公開path
 
-### 6.1 起動時走査
+### 6.1 起動時の残存成果物の削除
 
-HLS保存先の初期化では、`streamFilePath`が存在しなければ作成し、read/write accessを確認してから走査する。ファイル名の先頭
-が`stream`、続いて10進整数、その直後が数字ではないHLS成果物からIDを抽出し、`startupArtifactIds`へ予約する。見つけたファ
-イルは自動削除しない。
+Web・API側処理の起動時（`HlsStreamIdAllocator`の構築時、最初のHLS識別番号の割当より前）は配信が無いので、
+`HLSFileDeleterModel.deleteAllArtifacts`で、`streamFilePath`が存在しなければ作成し、read/write accessを確認してから、ファイル
+名の先頭が`stream`、続いて10進整数、その直後が数字ではないHLS成果物を識別番号にかかわらずすべて削除する。一件を削除でき
+なければ`{ error, file, operation: 'unlink' }`をerrorログへ記録して残りを続け、削除できなかった成果物のIDを
+`startupArtifactIds`へ予約する。
 
-サーバー起動時の初期化に失敗した場合はerrorを記録してHLSを未初期化とするが、非HLS配信と他機能の起動は続ける。HLS開始要求
-ごとに保存先の作成、access確認、走査を再試行し、成功して残存IDを予約できるまで当該HLS開始だけを失敗させる。
+起動時の削除は一度だけ行う。保存先の準備や読取りに失敗したらerrorを記録し、再試行しない（後から削除し直すと、その時点で動い
+ている配信の成果物を消すため）。非HLS配信と他機能の起動は続け、HLS開始要求ごとの走査（6.2）が保存先の作成、access確認、走査を
+行い、残ったファイルのIDを避ける。保存先を準備・走査できない間は当該HLS開始だけを失敗させる。
+
+Web・API側処理が異常終了したときは、管理側の後始末（`server-application-runtime`の§7.1）が同じ`deleteAllArtifacts`を
+使ってHLS保存先の全HLS成果物を削除する（R5.15）。
 
 ### 6.2 採番
 
@@ -418,6 +425,14 @@ process managerの`SIGINT`・`SIGKILL`と各終了確認には、これと区別
 合し、新しい配信、再利用ID、実行枠、通知へ作用させない。このguardは管理下のcallbackや削除結果が別objectへ作用することを
 防ぐが、終了未確認の外部processによる固定pathへの新規書込みを防ぐとは主張しない。
 
+### 8.1 Web・API側処理の異常終了
+
+ライブと録画のHLS配信は、HLS writerの開始要求（`createProcessOption`が作る`CreateProcessOption`）に
+`report: { kind: 'hls', streamId }`を添え、メディア変換プロセス管理機能がwriterのPID・PGIDと配信の識別番号を管理側へ知らせる
+（R5.14）。Web・API側処理が異常終了したとき、管理側はこの知らせを使い、通常のHLS配信停止と同じ`stopInStages`の二段階
+（R5.2・R5.3）でwriterのprocess groupを止めてから、`deleteAllArtifacts`でHLS保存先の全HLS成果物を削除し、その後で
+Web・API側処理を再起動させる（R5.15）。手順、待つ時間、上限は`server-application-runtime`の§7.1が所有する。
+
 ## 9. 非HLS停止とKodi
 
 非HLSライブ停止では放送受信と視聴用変換、録画配信停止ではファイル読取と視聴用変換をbest-effortで停止し、配信一覧から除去
@@ -429,10 +444,14 @@ Kodi再生では、設定済み送信先と録画ファイルを確認し、要�
 はKodiとの通信だけに使用し、録画file URLへ埋め込まない。一回のKodi HTTP要求を開始する直前から応答本文の受信・解釈完了ま
 でを30秒期限で監督する。期限後の応答を成功へ変更せず、別のKodi要求へ転用しない。
 
+非HLS配信の視聴用変換の開始要求には`report: { kind: 'stream' }`を添え、開始と終了が管理側へ知らされる（R6.4）。Web・API側
+処理が異常終了したとき、管理側は通常の停止要求と同じく直接のprocessへ`SIGINT`を一回だけ送って止め、`SIGKILL`とprocess
+groupへのsignalを使わない（R6.5、`server-application-runtime`の§7.1）。
+
 ## 10. 再起動とテスト設計
 
-再起動時に`StreamManageModel.streams`、準備状態、keep期限を復元しない。起動時走査で残存成果物IDだけを予約してから新規配信を受け付け
-る。サーバー全体終了時に全配信の回収完了まで待つ新しい専用経路は追加しない。
+再起動時に`StreamManageModel.streams`、準備状態、keep期限を復元しない。起動時に残存成果物を削除し、削除できなかった成果物の
+IDだけを予約してから新規配信を受け付ける。サーバー全体終了時に全配信の回収完了まで待つ新しい専用経路は追加しない。
 
 ### 10.1 機能固有test配置
 
@@ -464,9 +483,9 @@ carrier、tuner access、recorded-content、process managerの内部実装を本
 
 ### 10.2 test層、外部境界、資源所有権
 
--   `unittest/spec`はRequirements 1から9の全83 ACだけを、利用者または関係機能から観測できる入力、応答、stream、状態、通
+-   `unittest/spec`はRequirements 1から9の全87 ACだけを、利用者または関係機能から観測できる入力、応答、stream、状態、通
     知、停止、成果物、診断として一件ずつ検証する。
--   R10.1の83 ACはRequirements 1から9の仕様test件数であり、R10.3の88行matrixは本書10.4である。いずれも機能の仕様test件
+-   R10.1の87 ACはRequirements 1から9の仕様test件数であり、R10.3の92行matrixは本書10.4である。いずれも機能の仕様test件
     数へ加えない。
 -   `unittest/imp`は再生位置、ID reservation・cursor・wrap・reuse、exact artifact集合、公開path生成、readiness、timeout
     race、process停止段階、cleanup finalizer・latch、Readable所有権、placeholderを検証する。R10.2の証拠は10.1に記載した4
@@ -524,7 +543,7 @@ carrier、tuner access、recorded-content、process managerの内部実装を本
 
 ### 10.4 機能固有Test Matrix
 
-本表を本機能唯一のTest Matrixとする。全88 ACを一行ずつ一意な`MD-N.M`へ割り当て、Requirements traceabilityの正式な
+本表を本機能唯一のTest Matrixとする。全92 ACを一行ずつ一意な`MD-N.M`へ割り当て、Requirements traceabilityの正式な
 `R1.1`形式とは名前空間を分ける。`S`は`unittest/spec`主test、`I`は`unittest/imp`、`G`はintegration、`M`は本表そのもの、`品質判定`は
 10.5の判定である。同じACを別のTest IDへ重複割当しない。
 
@@ -564,8 +583,8 @@ carrier、tuner access、recorded-content、process managerの内部実装を本
 | MD-3.11 | `hls-lifecycle.spec.test.ts#[PRIMARY R3.11]`                                  | S/I/G    | N×9               | H starting/ready                        | 15秒直前・到達・超過          | keep timer/handle                          | process/filesystem                             | stop失敗                           | keep途絶で停止へ一回遷移                                                   | spec                            |
 | MD-3.12 | `hls-lifecycle.spec.test.ts#[PRIMARY R3.12]`                                  | S/I/G    | N×9               | H starting                              | 100ms直前・到達               | readiness timer                            | filesystem                                     | scan失敗                           | 100ms間隔でexact成果物を確認                                               | spec                            |
 | MD-3.13 | `hls-lifecycle.spec.test.ts#[PRIMARY R3.13]`                                  | S/I/G    | N×9               | H starting                              | 長時間/keep同着               | readiness/keep timer                       | filesystem                                     | 成果物未生成                       | readiness全体期限なし、終了条件まで継続                                    | spec                            |
-| MD-3.14 | `hls-lifecycle.spec.test.ts#[PRIMARY R3.14]`                                  | S/I/G    | N,N,T,T,T,T,T,C,T | H restart                               | 起動時/順                     | directory/artifact set                     | filesystem                                     | read失敗                           | 数字境界を満たす残存IDだけ予約                                             | spec                            |
-| MD-3.15 | `hls-lifecycle.spec.test.ts#[PRIMARY R3.15]`（起動時の非削除は補助の`hls-lifecycle.test.ts`と`media-delivery-filesystem.integration.test.ts`）                                  | S/I/G    | N,N,T,T,T,T,N,N,T | H restart                               | 順                            | artifact set                               | filesystem                                     | 残存fileあり                       | 起動時削除0件、該当ID割当0件                                               | spec                            |
+| MD-3.14 | `hls-lifecycle.spec.test.ts#[PRIMARY R3.14]`                                  | S/I/G    | N,N,T,T,T,T,T,C,T | H restart                               | 起動時/順                     | directory/artifact set                     | filesystem                                     | 削除・read失敗                     | 数字境界を満たす残存成果物を一度だけ削除                                   | spec                            |
+| MD-3.15 | `hls-lifecycle.spec.test.ts#[PRIMARY R3.15]`（開始ごとの走査は補助の`[MD-3.15]`）                                  | S/I/G    | N,N,T,T,T,T,N,N,T | H restart                               | 順                            | artifact set                               | filesystem                                     | 削除できない残存fileあり           | 削除できなかった成果物のID割当0件                                          | spec                            |
 | MD-3.16 | `hls-lifecycle.spec.test.ts#[PRIMARY R3.16]`                                  | S/I/G    | N×9               | H未初期化                               | 起動時                        | directory/access                           | filesystem                                     | mkdir/read/write失敗               | 作成とaccess確認後だけ走査                                                 | spec                            |
 | MD-3.17 | `hls-lifecycle.spec.test.ts#[PRIMARY R3.17]`                                  | S/I/G    | N×9               | H未初期化                               | 後続要求/順                   | directory/log                              | filesystem                                     | 準備各失敗                         | HLSだけ失敗・診断し、非HLS継続、後続で再試行                               | spec                            |
 | MD-4.1  | `hls-lifecycle.spec.test.ts#[PRIMARY R4.1]`                                   | S/G      | N,N,T,T,T,N,N,N,T | L/R/H                                   | 無                            | registry                                   | HTTP                                           | 一覧取得中変化                     | 受付時点のライブ・録画一覧                                                 | spec                            |
@@ -592,9 +611,13 @@ carrier、tuner access、recorded-content、process managerの内部実装を本
 | MD-5.11 | `hls-lifecycle.spec.test.ts#[PRIMARY R5.11]`                                  | S/G      | N×9               | P離脱                                   | stop後                        | process group                              | process                                        | daemonize/setsid                   | 保証外を成功扱いせず診断・論理解放                                         | spec                            |
 | MD-5.12 | `hls-lifecycle.spec.test.ts#[PRIMARY R5.12]`                                  | S/I/G    | N×9               | H stopping                              | 全failure順                   | 全停止資源                                 | process/filesystem                             | stop失敗・filesystem reject/未解決 | reject後は残りを続け、未解決時はwall-clock有限を主張せずrisk記録           | spec                            |
 | MD-5.13 | `hls-lifecycle.spec.test.ts#[PRIMARY R5.13]`                                  | S/I/G    | N×9               | H stopping                              | pass順                        | artifact/log                               | filesystem                                     | scan/list/rescan失敗               | ID・pass・操作・errorを記録し残存未確認                                    | spec                            |
+| MD-5.14 | `service-child-crash.spec.test.ts#[MD-5.14]`                                 | S        | N×9               | H starting                              | 開始                          | process                                    | process管理                                    | なし                               | ライブ・録画のHLS writer開始要求へ`report: { kind: 'hls', streamId }`        | spec                            |
+| MD-5.15 | `service-child-crash.spec.test.ts#[MD-5.15]`、runtimeの`service-child-crash-cleanup.integration.test.ts` | S/G      | N×9               | Web・API側処理の異常終了                | SIGINT→3回→SIGKILL→3回        | process group/artifact                     | process/filesystem                             | SIGINTで終わらないwriter           | 二段階停止の後に全識別番号のHLS成果物を削除、非成果物は残す                | spec                            |
 | MD-6.1  | `direct-stop.spec.test.ts#[PRIMARY R6.1]`                                     | S/I/G    | N×9               | L/P stopping                            | terminal同着                  | tuner Readable/handle                      | tuner/process                                  | 各停止失敗                         | ライブ受信と変換をbest-effortで各一回停止                                  | spec                            |
 | MD-6.2  | `direct-stop.spec.test.ts#[PRIMARY R6.2]`                                     | S/I/G    | N×9               | R/P stopping                            | terminal同着                  | file reader/handle                         | filesystem/process                             | 各停止失敗                         | 録画readerと変換をbest-effortで各一回停止                                  | spec                            |
 | MD-6.3  | `direct-stop.spec.test.ts#[PRIMARY R6.3]`                                     | S/I/G    | N×9               | L/R stopping                            | cleanup後                     | registry/listener                          | HTTP                                           | cleanup一部失敗                    | 停止処理後に対象identityだけ一覧除去                                       | spec                            |
+| MD-6.4  | `service-child-crash.spec.test.ts#[MD-6.4]`                                  | S        | N×9               | L/R starting                            | 開始                          | process                                    | process管理                                    | なし                               | ライブ・録画の視聴用変換開始要求へ`report: { kind: 'stream' }`              | spec                            |
+| MD-6.5  | `service-child-crash.spec.test.ts#[MD-6.5]`                                  | S        | N×9               | Web・API側処理の異常終了                | SIGINT後3回確認               | process                                    | process                                        | SIGINTで終わらない変換             | `SIGINT`一回だけ、`SIGKILL`・group signal 0件                              | spec                            |
 | MD-7.1  | `kodi.spec.test.ts#[PRIMARY R7.1]`                                            | S/G      | C,C,T,T,T,N,T,C,T | 要求前/応答済み                         | 期                            | HTTP request/timer                         | HTTP/recorded-content                          | 対象・通信失敗                     | 設定済み宛先へ一回再生要求                                                 | spec                            |
 | MD-7.2  | `kodi.spec.test.ts#[PRIMARY R7.2]`                                            | S/I/G    | C,C,T,T,T,N,T,C,T | 要求前                                  | 無                            | URL                                        | HTTP/recorded-content                          | scheme/host不正                    | 要求scheme・hostとfile IDでURL構成                                         | spec                            |
 | MD-7.3  | `kodi.spec.test.ts#[PRIMARY R7.3]`                                            | S/I/G    | T,T,T,T,T,N,T,C,T | 要求前                                  | 無                            | auth header                                | HTTP                                           | credential片方なし                 | 設定済みuser/passwordをKodi認証だけへ使用                                  | spec                            |
@@ -603,7 +626,7 @@ carrier、tuner access、recorded-content、process managerの内部実装を本
 | MD-7.6  | `kodi.spec.test.ts#[PRIMARY R7.6]`                                            | S/G      | C,C,T,T,T,N,T,C,T | 全状態                                  | 期                            | query/request/timer                        | HTTP/recorded-content                          | 設定・file・通信不明               | 成功へ変えず失敗を返し資源回収                                             | spec                            |
 | MD-8.1  | `restart.spec.test.ts#[PRIMARY R8.1]`                                         | S/I      | N,N,T,T,T,T,T,C,T | L/R/H                                   | 無                            | registry/timers                            | 非適用                                         | 重複ID                             | 一覧・ID・準備・期限をmemoryだけで管理                                     | spec                            |
 | MD-8.2  | `restart.spec.test.ts#[PRIMARY R8.2]`                                         | S/I/G    | N×9               | H restart                               | 再起動後                      | registry/timers                            | filesystem                                     | 旧状態あり                         | 旧一覧・準備・keep期限を復元しない                                         | spec                            |
-| MD-8.3  | `restart.spec.test.ts#[PRIMARY R8.3]`                                         | S/I/G    | N,N,T,T,T,T,N,N,T | H restart                               | 起動順                        | artifact/reservation                       | filesystem                                     | 走査失敗                           | 残存ID予約後だけ新規HLS受付                                                | spec                            |
+| MD-8.3  | `restart.spec.test.ts#[PRIMARY R8.3]`                                         | S/I/G    | N,N,T,T,T,T,N,N,T | H restart                               | 起動順                        | artifact/reservation                       | filesystem                                     | 削除・走査失敗                     | 残存成果物を識別番号にかかわらず削除してから新規HLS受付                   | spec                            |
 | MD-8.4  | `restart.spec.test.ts#[PRIMARY R8.4]`                                         | S/G      | N×9               | 全配信状態                              | shutdown                      | managed資源                                | 非適用                                         | 資源残存                           | 全回収待ちの専用shutdown経路を追加しない                                   | spec                            |
 | MD-9.1  | `command.spec.test.ts#[PRIMARY R9.1]`                                         | S/I      | T,T,T,T,T,N,T,C,T | P未開始                                 | 無                            | process                                    | process                                        | cmd省略                            | process開始0件                                                             | spec                            |
 | MD-9.2  | `command.spec.test.ts#[PRIMARY R9.2]`                                         | S/I/G    | T,T,T,T,T,N,T,C,T | P未開始                                 | 無                            | bin/args                                   | process                                        | quote/shell文字                    | 半角空白分割のみ、shell解釈0件                                             | spec                            |
@@ -613,15 +636,15 @@ carrier、tuner access、recorded-content、process managerの内部実装を本
 | MD-9.6  | `command.spec.test.ts#[PRIMARY R9.6]`                                         | S/I/G    | N,N,T,T,T,T,T,C,T | R/P starting                            | 無                            | command/metadata                           | process/recorded-content                       | 位置不正                           | TSは空、非TSは10進再生位置へSS置換                                         | spec                            |
 | MD-9.7  | `command.spec.test.ts#[PRIMARY R9.7]`                                         | S/I      | T,T,T,T,T,N,T,C,T | L/R/H/P                                 | 無                            | command                                    | process                                        | 値非適用/null                      | 別値を推定せずplaceholderを残す                                            | spec                            |
 | MD-9.8  | `command.spec.test.ts#[PRIMARY R9.8]`                                         | S/I/G    | T,T,T,T,T,N,T,C,T | P starting                              | 無                            | spawn env                                  | process                                        | ambient env変化                    | 親envだけ継承し追加env 0件                                                 | spec                            |
-| MD-10.1 | `*.spec.test.ts`の83主test#MD-10.1                                    | S        | N×9               | 全仕様状態                              | 無                            | spec test                                  | 非適用                                         | AC欠落・重複                       | R1–R9全83 ACにspec主testが一つずつ対応する                                 | spec                            |
+| MD-10.1 | `*.spec.test.ts`の87主test#MD-10.1                                    | S        | N×9               | 全仕様状態                              | 無                            | spec test                                  | 非適用                                         | AC欠落・重複                       | R1–R9全87 ACにspec主testが一つずつ対応する                                 | spec                            |
 | MD-10.2 | `live-delivery.test.tsほか3 fileの個別結果#MD-10.2`                   | I        | N×9               | 全内部状態                              | 境界/race                     | assertion結果                     | 非適用                                         | 分岐未割当               | 10.1記載の4 imp fileから値域・exact集合・終了・失敗の具体的結果を提示      | imp                             |
-| MD-10.3 | 本表（10.4）#MD-10.3                                                  | M        | N×9               | starting/ready/stopping/stopped/restart | 100ms/1秒/15秒/30秒/late/同着 | stream/file/timer/listener/handle/artifact | 非適用                                         | matrix空欄                         | 88行の一意性と全状態・時間・race・資源分類が揃う                           | review                          |
+| MD-10.3 | 本表（10.4）#MD-10.3                                                  | M        | N×9               | starting/ready/stopping/stopped/restart | 100ms/1秒/15秒/30秒/late/同着 | stream/file/timer/listener/handle/artifact | 非適用                                         | matrix空欄                         | 92行の一意性と全状態・時間・race・資源分類が揃う                           | review                          |
 | MD-10.4 | `media-delivery-http.integration.test.tsほか境界のintegration fileの個別結果#MD-10.4` | G        | N×9               | 全結合状態                              | 順/late                       | 全境界資源                                 | HTTP/filesystem/process/tuner/recorded-content | 境界未接続                         | 10.1記載の境界のintegration fileの結果とDB間接・IPC非適用理由を提示            | integration                     |
 | MD-10.5 | 機能固有suiteとRuntime R9 AC9#MD-10.5                                 | 品質判定 | N×9               | 品質判定                                | 全件成功/C0・C1               | suite/coverage                             | Runtime                                        | 未実行・失敗・除外未解決           | feature全件成功かつserver全体のC0・C1成立まで未完了                       | coverage                        |
 
 ### 10.5 品質判定
 
-本機能の完了判定は、Requirements 1から9の機能固有`unittest/spec`主test 83件、Requirement 10.2の具体的な
+本機能の完了判定は、Requirements 1から9の機能固有`unittest/spec`主test 87件、Requirement 10.2の具体的な
 `unittest/imp`結果、およびRequirement 10.4の具体的な`integration`結果の全件成功に加え、`server-application-runtime`
 Requirement 9 Acceptance Criterion 9（server全体の単体testだけで`src/**`のC0・C1が100%）を満たすことを必要条件とする。
 本機能のtestはcoverageを判定しない。
@@ -670,8 +693,8 @@ Requirement 9 Acceptance Criterion 9（server全体の単体testだけで`src/**
 | R3.11       | 7: 15秒停止                                                        |
 | R3.12       | 7: 100ms確認                                                       |
 | R3.13       | 7: 準備確認無期限                                                  |
-| R3.14       | 6.1: 起動走査                                                      |
-| R3.15       | 6.1: 残存file保持                                                  |
+| R3.14       | 6.1: 起動時の残存成果物の削除                                      |
+| R3.15       | 6.1、6.2: 削除できなかった成果物のID回避                           |
 | R3.16       | 6.1: 保存先作成・access確認                                        |
 | R3.17       | 6.1、10: HLSだけ失敗して再試行                                     |
 | R4.1        | 3、7: 配信一覧                                                     |
@@ -698,9 +721,13 @@ Requirement 9 Acceptance Criterion 9（server全体の単体testだけで`src/**
 | R5.11       | 8: group離脱保証外                                                 |
 | R5.12       | 8、10: cleanup失敗時の強制解放                                     |
 | R5.13       | 8、10: 走査失敗の記録                                              |
+| R5.14       | 4、8: HLS writer開始の知らせ                                       |
+| R5.15       | 6.1、8: 異常終了時の二段階停止と全成果物削除（runtime §7.1）       |
 | R6.1        | 9: ライブ停止                                                      |
 | R6.2        | 9: 録画停止                                                        |
 | R6.3        | 9: 一覧除去                                                        |
+| R6.4        | 4、9: 視聴用変換開始の知らせ                                       |
+| R6.5        | 9: 異常終了時の`SIGINT`停止（runtime §7.1）                        |
 | R7.1        | 9: Kodi要求                                                        |
 | R7.2        | 9: URL構成                                                         |
 | R7.3        | 9: Kodi認証                                                        |
@@ -709,7 +736,7 @@ Requirement 9 Acceptance Criterion 9（server全体の単体testだけで`src/**
 | R7.6        | 9: 失敗                                                            |
 | R8.1        | 3、10: メモリー管理                                                |
 | R8.2        | 10: 非復元                                                         |
-| R8.3        | 6.1、10: 起動予約                                                  |
+| R8.3        | 6.1、10: 起動時の残存成果物の削除                                  |
 | R8.4        | 10: 専用shutdownなし                                               |
 | R9.1        | 3.1、4、5: cmd省略                                                 |
 | R9.2        | 3.1: 半角空白分割・shell非解釈                                     |
@@ -719,9 +746,9 @@ Requirement 9 Acceptance Criterion 9（server全体の単体testだけで`src/**
 | R9.6        | 3.1、5: 録画再生位置                                               |
 | R9.7        | 3.1: 値なしplaceholder未置換                                       |
 | R9.8        | 3.1: 親環境変数の継承                                              |
-| R10.1       | 10.1、10.4: 全83 ACの仕様test                                      |
+| R10.1       | 10.1、10.4: 全87 ACの仕様test                                      |
 | R10.2       | 10.1、10.3、10.4: 4 imp fileの具体的結果、値域・分岐 |
-| R10.3       | 10.3、10.4: 状態・時間・race・資源の全88 AC matrix                 |
+| R10.3       | 10.3、10.4: 状態・時間・race・資源の全92 AC matrix                 |
 | R10.4       | 10.1、10.2、10.4: 境界のintegration file、DB間接・IPC非適用            |
 | R10.5       | 10.5: 機能固有全件成功とserver全体のC0・C1                         |
 
@@ -730,7 +757,7 @@ Requirement 9 Acceptance Criterion 9（server全体の単体testだけで`src/**
 | 機能                                       | 主な実装位置                                                                                      | 責任                                                                                                                                                                                   |
 | ------------------------------------------ | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 配信一覧、start/stop/keep                  | `src/model/service/stream/manager/StreamManageModel.ts`                                           | 配信一覧、start/stop/keep、opaque writer handle                                                                                                                                     |
-| ID割当（cursor、停止中ID、起動時予約）     | `src/model/service/stream/manager/HlsStreamIdAllocator.ts`                                        | `IStreamIdAllocator`の実装。巡回cursor、停止中IDの除外、起動時走査で見つけた成果物のID予約                                  |
+| ID割当（cursor、停止中ID、起動時予約）     | `src/model/service/stream/manager/HlsStreamIdAllocator.ts`                                        | `IStreamIdAllocator`の実装。巡回cursor、停止中IDの除外、起動時の削除で消せなかった成果物のID予約                            |
 | 共通HLS readiness/keep                     | `src/model/service/stream/base/StreamBaseModel.ts`                                                | 親playlist・媒体成果物確認、15秒keep                                                                                                                                                   |
 | ライブ配信                                 | `src/model/service/stream/base/LiveStreamBaseModel.ts`                                            | 対応形式、視聴command、公開HLS path、30秒開始期限、encode process stdinのerror記録とexit code/signalの記録                                                                             |
 | 録画ファイル再生source provider | `src/model/operator/recorded/{IRecordedPlaybackSourceProvider,RecordedPlaybackSourceProvider}.ts` | recorded ID予備照会、全情報再読取、direct/reader variantと採用前整理を所有する                                                                                                         |
@@ -744,7 +771,7 @@ Requirement 9 Acceptance Criterion 9（server全体の単体testだけで`src/**
 | client playlist path                       | `client/src/features/video/playback/playbackLifecycleTypes.ts`（`buildHlsPlaylistUrl`）、`playbackLifecycleControllerBase.ts` | `./streamfiles/stream{id}.m3u8`                                                                                                                                                        |
 | stream API                                 | `src/model/service/api/streams.ts`、`src/model/service/api/streams/`                              | route・response                                                                                                                                                                        |
 | Kodi API                                   | `src/model/service/api/videos/{videoFileId}/kodi.ts`                                              | 認証、URL境界、30秒期限                                                                                                                                                                |
-| 機能固有server test                        | `test/server/media-delivery/`                                                                     | 83 ACの仕様主test、88行のmatrix、固有imp・integration assertion                                                                                                                          |
+| 機能固有server test                        | `test/server/media-delivery/`                                                                     | 87 ACの仕様主test、92行のmatrix、固有imp・integration assertion                                                                                                                          |
 
 active stream registry、recorded IDの確定・保持時点、recorded-use lease、service child snapshot handler、または容量削除
 候補filterを変更する場合は、利用中snapshotとRuntimeの権威的deletion gateを同じ変更単位で再検証する。

@@ -57,7 +57,17 @@ interface ProcessManagerConstructor {
     new (
         logger: { getLogger(): unknown },
         configuration: { getConfig(): { encodeProcessNum: number } },
+        reporter?: { started(start: Record<string, unknown>): void; ended(pid: number): void },
     ): ProcessManager;
+}
+
+type StopSignal = 'SIGINT' | 'SIGKILL';
+
+interface StagedStopSteps {
+    isAlive(stage: string): boolean | undefined;
+    send(signal: StopSignal): boolean;
+    wait(stage: StopSignal): Promise<boolean>;
+    isSettled(): boolean;
 }
 
 interface DirectLiveModel {
@@ -83,11 +93,18 @@ const originalSpawn = mutableChildProcess.spawn;
 mutableChildProcess.spawn = processStubs.spawn;
 const compiledSnapshot = process.env.EPGSTATION_SERVER_COMPILED_SNAPSHOT;
 if (compiledSnapshot === undefined) throw new Error('The compiled server snapshot is required');
-const ProcessManager = (
-    require(join(compiledSnapshot, 'model', 'service', 'encode', 'EncodeProcessManageModel.js')) as {
-        default: ProcessManagerConstructor;
-    }
-).default;
+const processManagerModule = require(
+    join(compiledSnapshot, 'model', 'service', 'encode', 'EncodeProcessManageModel.js'),
+) as {
+    default: ProcessManagerConstructor;
+    PROCESS_STOP_CHECK_COUNT: number;
+    PROCESS_STOP_CHECK_INTERVAL_MS: number;
+    stopInStages(
+        signals: readonly StopSignal[],
+        steps: StagedStopSteps,
+    ): Promise<{ exitConfirmed: boolean; sentSignals: StopSignal[]; wasRunning: boolean }>;
+};
+const ProcessManager = processManagerModule.default;
 const LiveStreamModel = (
     require(join(compiledSnapshot, 'model', 'service', 'stream', 'LiveStreamModel.js')) as {
         default: DirectLiveModelConstructor;
@@ -532,6 +549,33 @@ const canonicalSpecCases: readonly CanonicalSpecCase[] = [
         expect(processStubs.spawn).toHaveBeenCalledOnce();
         expect(registryOf(manager)).toEqual([]);
     }),
+    canonicalCase('R4.7', 'reports the start and the release of a process started with a kind, and nothing otherwise', async () => {
+        const reporter = { ended: vi.fn(), started: vi.fn() };
+        const manager = new ProcessManager(
+            { getLogger: () => logger },
+            { getConfig: () => ({ encodeProcessNum: 3 }) },
+            reporter,
+        );
+        const encode = spawnNext();
+        await manager.createManaged({ ...option(10), report: { encodeId: 7, kind: 'encode' } } as never);
+        const stream = spawnNext();
+        stream.pid = 43;
+        await manager.createManaged({ ...option(1), report: { kind: 'stream' } } as never);
+        const unreported = spawnNext();
+        unreported.pid = 44;
+        await manager.createManaged(option(1));
+
+        expect(reporter.started.mock.calls).toEqual([
+            [{ encodeId: 7, kind: 'encode', pid: 42 }],
+            [{ kind: 'stream', pid: 43 }],
+        ]);
+        encode.emit('exit', 0);
+        unreported.emit('exit', 0);
+        stream.emit('exit', 1);
+        await settle();
+
+        expect(reporter.ended.mock.calls).toEqual([[42], [43]]);
+    }),
     canonicalCase('R5.1', 'starts an HLS writer as a new process-group leader', async () => {
         const manager = makeManager(1);
         const child = spawnNext();
@@ -578,6 +622,20 @@ const canonicalSpecCases: readonly CanonicalSpecCase[] = [
 
         await expect(stopping).resolves.toMatchObject({ exitConfirmed: true, slotReleased: true });
         expect(signal.mock.calls).toEqual([[42, 'SIGINT']]);
+    }),
+    canonicalCase('R5.5', 'reports an HLS writer with its PID, PGID, and stream identifier', async () => {
+        const reporter = { ended: vi.fn(), started: vi.fn() };
+        const manager = new ProcessManager(
+            { getLogger: () => logger },
+            { getConfig: () => ({ encodeProcessNum: 1 }) },
+            reporter,
+        );
+        spawnNext();
+
+        await manager.createHlsWriter({ ...option(1), report: { kind: 'hls', streamId: 5 } } as never);
+
+        expect(reporter.started.mock.calls).toEqual([[{ kind: 'hls', pgid: 42, pid: 42, streamId: 5 }]]);
+        expect(reporter.ended).not.toHaveBeenCalled();
     }),
     canonicalCase('R6.1', 'sends one SIGINT and polls at most three times', async () => {
         vi.useFakeTimers();
@@ -784,6 +842,45 @@ const canonicalSpecCases: readonly CanonicalSpecCase[] = [
             expect.objectContaining({ forcedSlotRelease: true, terminalConfirmed: false }),
         );
     }),
+    canonicalCase('R6.12', 'provides the same two-stage SIGINT then SIGKILL procedure for the management side', async () => {
+        const ledger: string[] = [];
+        let aliveChecks = 0;
+        const result = await processManagerModule.stopInStages(['SIGINT', 'SIGKILL'], {
+            isAlive: stage => {
+                ledger.push(`check ${stage}`);
+                aliveChecks += 1;
+                return aliveChecks < 6;
+            },
+            isSettled: () => false,
+            send: signal => {
+                ledger.push(`send ${signal}`);
+                return true;
+            },
+            wait: async stage => {
+                ledger.push(`wait ${stage}`);
+                return true;
+            },
+        });
+
+        expect(processManagerModule.PROCESS_STOP_CHECK_COUNT).toBe(3);
+        expect(processManagerModule.PROCESS_STOP_CHECK_INTERVAL_MS).toBe(1_000);
+        expect(result).toEqual({ exitConfirmed: true, sentSignals: ['SIGINT', 'SIGKILL'], wasRunning: true });
+        expect(ledger).toEqual([
+            'check initial-check',
+            'send SIGINT',
+            'wait SIGINT',
+            'check SIGINT-check',
+            'wait SIGINT',
+            'check SIGINT-check',
+            'wait SIGINT',
+            'check SIGINT-check',
+            'send SIGKILL',
+            'wait SIGKILL',
+            'check SIGKILL-check',
+            'wait SIGKILL',
+            'check SIGKILL-check',
+        ]);
+    }),
     canonicalCase('R7.1', 'reads the configured maximum when a manager instance starts', async () => {
         const getConfig = vi.fn(() => ({ encodeProcessNum: 0 }));
         const manager = new ProcessManager({ getLogger: () => logger }, { getConfig });
@@ -862,24 +959,24 @@ describe('media process management canonical acceptance inventory', () => {
         await verify();
     });
 
-    it('[MP-SPEC-R8-1] runs every one of the 43 acceptance criteria exactly once as a uniquely identified case', () => {
+    it('[MP-SPEC-R8-1] runs every one of the 46 acceptance criteria exactly once as a uniquely identified case', () => {
         const ranges: ReadonlyArray<readonly [number, number]> = [
             [1, 6],
             [2, 6],
             [3, 6],
-            [4, 6],
-            [5, 4],
-            [6, 11],
+            [4, 7],
+            [5, 5],
+            [6, 12],
             [7, 4],
         ];
         const expectedCriteria = ranges.flatMap(([requirement, count]) =>
             Array.from({ length: count }, (_value, index) => `R${requirement}.${index + 1}`),
         );
 
-        expect(expectedCriteria).toHaveLength(43);
-        expect(canonicalSpecCases).toHaveLength(43);
+        expect(expectedCriteria).toHaveLength(46);
+        expect(canonicalSpecCases).toHaveLength(46);
         expect(canonicalSpecCases.map(({ acceptanceCriterion }) => acceptanceCriterion)).toEqual(expectedCriteria);
-        expect(new Set(canonicalSpecCases.map(({ id }) => id)).size).toBe(43);
+        expect(new Set(canonicalSpecCases.map(({ id }) => id)).size).toBe(46);
         for (const { id, title, verify } of canonicalSpecCases) {
             expect({ id, title: title.trim() }).not.toEqual({ id, title: '' });
             expect(verify).toBeTypeOf('function');

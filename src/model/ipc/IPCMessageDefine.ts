@@ -5,6 +5,7 @@ import type {
     RecordedUseReleaseStatus,
     RecordedUseSnapshotPayload,
 } from './IRecordedResourceUse.js';
+import type { ServiceProcessStart } from './IServiceProcessReport.js';
 
 /** 親子プロセス間メッセージ（`SendMessage`/`ReplayMessage`等）を対応付けるための一意な識別子。 */
 export type MessageId = number;
@@ -99,6 +100,20 @@ export interface RecordedUseSnapshotReplyMessage {
     readonly type: 'recordedUseSnapshotReply';
     readonly id: MessageId;
     readonly snapshot: RecordedUseSnapshotPayload;
+}
+
+/**
+ * 子プロセスから親プロセスへの、外部プロセスの開始の知らせ。応答しない。管理側では
+ * `ServiceChildProcessRegistry`が受け取る。
+ */
+export interface ServiceProcessStartedMessage extends ServiceProcessStart {
+    readonly type: 'serviceProcessStarted';
+}
+
+/** 子プロセスから親プロセスへの、外部プロセスの終了の知らせ。応答しない。 */
+export interface ServiceProcessEndedMessage {
+    readonly type: 'serviceProcessEnded';
+    readonly pid: number;
 }
 
 /**

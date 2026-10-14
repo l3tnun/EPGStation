@@ -244,6 +244,12 @@ export default class IPCServer implements IIPCServer {
 
             return;
         }
+        // 外部プロセスの開始・終了の知らせは応答しない。受け取りと値の確認は、IPC通路が閉じるまで同じchildを
+        // 監視する管理側の記録（`ServiceChildProcessRegistry`）が行う。
+        const reportType = (<{ type?: unknown }>msg).type;
+        if (reportType === 'serviceProcessStarted' || reportType === 'serviceProcessEnded') {
+            return;
+        }
         void this.handleRequest(requester, <SendMessage>msg);
     }
 

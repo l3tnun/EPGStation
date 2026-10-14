@@ -76,7 +76,8 @@ describe('user whole-recorded deletion Runtime composition', () => {
             ipcServer.register(child);
             // Re-registering the same peer must not accumulate a second message listener (zero duplicate binding).
             ipcServer.register(child);
-            expect(child.listenerCount('message')).toBe(1);
+            // One request listener of the IPC server and one report listener of the service-child process registry.
+            expect(child.listenerCount('message')).toBe(2);
 
             child.emit('message', { args: { recordedId: 41 }, func: 'delete', id: 501, model: 'recorded' });
             await vi.waitFor(() => expect(child.send).toHaveBeenCalledOnce(), { interval: 0 });
@@ -99,6 +100,9 @@ describe('user whole-recorded deletion Runtime composition', () => {
             // Releasing the peer must leave zero residual message-dispatch listeners on the synthetic transport
             // (no leaked binding of the parent handler adapter's own request channel).
             ipcServer.register(createSyntheticChild(9_002));
+            expect(child.listenerCount('message')).toBe(1);
+            // The process registry keeps receiving reports until the IPC channel of the old child closes.
+            child.emit('disconnect');
             expect(child.listenerCount('message')).toBe(0);
         },
     );

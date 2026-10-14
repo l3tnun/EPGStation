@@ -39,7 +39,7 @@ flowchart TB
 | process               | 主な責任                            | 監督                                              |
 | --------------------- | ----------------------------------- | ------------------------------------------------- |
 | 予約・録画管理process | 起動順、composition、起動段階の監督 | OS/service manager                                |
-| Web・API child        | HTTP、static file、realtime通知     | 親processが`exit`/`error`の先着terminal後に再起動 |
+| Web・API child        | HTTP、static file、realtime通知     | 親processが`exit`/`error`の先着terminal後に後始末（§7.1）してから再起動 |
 | 番組情報更新 child    | 番組取得・更新                      | 親が四terminal eventの先着後に回収・再起動        |
 
 `src/index.ts`が上記processをcompositionし、service childについてはgeneration単位のsingle terminal
@@ -54,6 +54,7 @@ settlementとstale callback fenceを保持する。storage削除adapterのbindin
 | Dependency Waiter                    | provider試行を1秒後に再呼出しし、成功まで後続を止める                                 | tuner / DB             |
 | Operator Composition                 | 同じtuner snapshotの配布、Workflow event binding入口の一回呼出し、storage monitor開始 | domain各機能           |
 | Service Child Supervisor             | generation、terminal先着、一回restart、current peer登録一回                           | PM / SI                |
+| Service Child Termination Cleanup    | 終了した世代の外部プロセスの停止、途中のファイルの削除、録画の使用権の解放、30秒の上限（§7.1） | PM / EN / MD / MPM     |
 | Startup Stage Observer               | 600秒soft deadline、late settlementの一回遷移                                         | stage provider         |
 | EPG Child Supervisor                 | generation、四terminal先着、listener回収、再起動                                      | program guide          |
 | Storage Deletion Composition Adapter | typed snapshot、recordingとservice-child use gate、provider call順のbinding           | SM / PM / RE / RC / SI |
@@ -202,18 +203,60 @@ stdout/stderr drain listenerを設置した時点で監督を受理する。起�
 1. generationをterminalへ一回commitし、後着terminal callbackをno-opにする。
 2. child、stdout、stderrへ登録したRuntime監督listenerを取り除く。
 3. active-childが同じobject identityの場合だけ参照を無効化する。PM peerのidentity-based無効化はPM ownerへ委譲する。
-4. 異常と再起動を記録する。
-5. 次generationを一回だけspawnし、active-childとIPC peerを新childへ一回だけ登録する。
+4. 異常と、`exit`が渡した終了codeと終了signal（`error`が先着したときはどちらも`null`）を記録する。
+5. 終了したgenerationの後始末（§7.1）を待つ。後始末が失敗しても待つのをやめて次へ進む。
+6. 再起動を記録し、次generationを一回だけspawnし、active-childとIPC peerを新childへ一回だけ登録する。
 
 旧generationのstale callbackは新しいactive-childまたはIPC peerを置換、無効化、再登録できない。登録済みchildを通知先とし
 て利用できるか、受付依頼へのreplyをどのchildへ返すかは`server-process-messaging`がchild identityと送信結果から判断する。
 stdout/stderrをpipeで受ける場合はbuffer滞留を防ぐため読み取る。再起動回数に固定上限を設けず、共通shutdown coordinator、
-readiness state、固定restart cap、子孫process回収は追加しない。
+readiness state、固定restart capは追加しない。終了したgenerationが開始した外部プロセスの停止は§7.1の後始末だけが行う。
 
 `src/index.ts`の`runService`はspawnごとにfreshなidentityを割当て、`terminalSettled`、child object identity、service
-identityの一致でterminal callbackをfenceする。先着は監督listenerをdetachし、active参照を無効化して一回だけ
-`runService()`を呼ぶ。identityはこの相関以外に使わず、spawn直後の`ipcServer.register(child)`とreadiness messageを待たな
-い挙動を維持する。
+identityの一致でterminal callbackをfenceする。先着は監督listenerをdetachし、active参照を無効化し、
+`IServiceChildTerminationCleanup`の`run(child)`の完了（rejectを含む）を待ってから一回だけ`runService()`を呼ぶ。identityは
+この相関以外に使わず、spawn直後の`ipcServer.register(child)`とreadiness messageを待たない挙動を維持する。
+
+### 7.1 終了した世代の後始末
+
+Web・API childは、外部プロセス（エンコード、非HLS配信の視聴用変換、HLS writer）の起動が成立したときと、それを実行中一覧から
+取り除いたときに、`server-media-process-management`の`EncodeProcessManageModel`を通して開始（PID、処理種別、エンコードは依頼
+の識別番号、HLS writerはPGIDと配信の識別番号）と終了（PID）を一方向のIPC messageで知らせる（`server-process-messaging`の
+Requirement 1.10）。親の`ServiceChildProcessRegistry`は`IIPCServer.register`のwrapperでchildを登録され、そのchildの
+`message`を`disconnect`または`close`まで受け取る。`exit`の後に届いた知らせも同じgenerationのものとして記録し、開始の知らせを
+受け取った時点で`ServiceChildProcessSystem`が`/proc/<pid>/stat`の22番目の値（開始時刻）を読んで記録する。開始時刻を読めない
+環境（Linux以外）では`null`を記録する。知らせを受け取る前に居なくなっていたprocess（`absent`、zombie）は記録しない。
+
+terminalを受け取ると、`ServiceChildTerminationCleanup.run(child)`が次の順に進める。
+
+1. `ServiceChildProcessRegistry.takeEntries(child)`で、IPC通路が閉じるまで最大2秒（`SERVICE_CHILD_REPORT_DRAIN_MS`）待ってから、
+   開始を知らされ終了を知らされていない外部プロセスを確定し、そのgenerationの記録を捨てる。
+2. 外部プロセスを並行して、エンコードの手動停止と通常の配信停止と同じ方法で止める。新しい停止の方針は作らない。エンコード
+   と非HLS配信は、通常processの停止要求（`EncodeProcessManageModel.requestStop`→`ProcessUtil.kill`）と同じく直接のprocess
+   （PID）へ`SIGINT`を一回だけ送り、`SIGKILL`とprocess groupへのsignalを使わない。親にはpipeが無いので、`ProcessUtil.kill`
+   のstdio整理と500msの待ちは無い。HLS writerは、通常のHLS配信停止（`stopHls`→`stopHlsProcessGroup`）が使う共通部品
+   `stopInStages`を親からも呼び、同じ定数`PROCESS_STOP_CHECK_COUNT`（3）と`PROCESS_STOP_CHECK_INTERVAL_MS`（1000ミリ秒）で、
+   PGIDへ`SIGINT`→1秒間隔で最大3回の確認→残っていれば`SIGKILL`→最大3回の確認を行う。エンコードと非HLS配信も同じ
+   `stopInStages`へ`SIGINT`だけを渡し、`SIGINT`の後の終了を1秒間隔で最大3回確かめる（確認は後始末の順序を決めるためで、
+   追加のsignalは送らない）。終了を確かめられなかったprocessはPID、PGID、処理種別、送ったsignal、終了未確認をerrorログへ
+   記録する。
+3. 生存の確認は開始時刻で同じprocessかを確かめる。開始時刻が記録と違うPIDとzombieは居ないとみなしてsignalを送らない。
+   開始時刻を読めないときは`kill(pid, 0)`で確かめる。HLS writerは、leader（PID=PGID）の開始時刻が記録と違えば元のgroupは
+   居ないとみなし、それ以外は`kill(-pgid, 0)`で確かめる。確認やsignal送信の失敗はerrorログへ記録し、確認の失敗は居なく
+   なったとはみなさない。
+4. 停止を始めた時点で動いていたエンコードについて、`IEncodeQueueStore.list()`の記録に出力先があり、
+   `encodeRemoveInterruptedOutput`が有効（省略時を含む）で、出力先が依頼の親保存先（`IVideoUtil.getParentDirPath`）の中を指す
+   ときだけ出力途中のファイルを削除する（起動時の復元と同じ規則。`server-encoding` Requirement 7.7）。既に無いファイルは削除
+   済みとして扱う（`removeFileIfPresent`）。続いて`HLSFileDeleterModel.deleteAllArtifacts`でHLS保存先のHLS成果物を識別番号に
+   かかわらずすべて削除する。終了したgenerationが全ての配信を持っていたので、動いている配信の成果物は無い。
+5. `ServiceChildRecordedUseRegistry.releasePeer(child)`で終了したgenerationのleaseを解放する。終了を確かめられなかった
+   processが残ったときも解放し、そのことをerrorログへ記録する。
+6. terminalから30秒（`SERVICE_CHILD_CLEANUP_CAP_MS`）で終えられなければ、errorログへ記録し、leaseを解放して`run`を終える。
+   残りの後始末は続くが、それ以後はファイルを削除せず、leaseも二度は解放しない。
+
+再起動した新generationのエンコードの復元は、この後始末を終えた後に始まる。後始末で削除済みの出力は復元で削除済みとして
+扱われる。Windowsではprocess groupの停止と開始時刻による確認を保証せず、PIDへの`SIGINT`はOSの既定どおりに扱われる。
+spawnが`spawn` eventに達する前、または知らせを送る前にchildが終了した外部プロセスは記録されず、止めない。
 
 ## 8. 番組情報更新childの監督
 
@@ -334,9 +377,9 @@ generationとrequest IDの解放をbest-effortで一回依頼する。releaseの
 
 service childの有効なpeerが登録されていない場合、またはgenerationのuse状態を確認できない場合も
 `tryAcquireDeletion()`は`unknown`を返す。旧generationの遅延releaseは新generationのleaseを解放しない。childの
-`disconnect`、`error`、`exit`、`close`だけを根拠にchildが開始したfile/processの終端を推測せず、未解放leaseはunknownとし
-て残す。deletion tokenを保持中にchildが置換されてもparent registryはblockを維持し、新generationの同じrecorded IDに対する
-acquireを拒否する。
+`disconnect`、`error`、`exit`、`close`だけを根拠にchildが開始したfile/processの終端を推測せず、未解放leaseは§7.1の後始末が
+外部プロセスの停止を確かめた後（確かめられなければ待つ上限の後）に`releasePeer`で解放するまでunknownとして残す。deletion
+tokenを保持中にchildが置換されてもparent registryはblockを維持し、新generationの同じrecorded IDに対するacquireを拒否する。
 
 `RecordingRecordedUseGate`はRecording Execution providerがsession registryと同じ直列化境界で実装する。既存sessionが対象
 recorded IDへ作用中なら`busy`、状態を確定できなければ`unknown`を返す。token保持中は同じrecorded IDへ作用する新しい録画
@@ -831,7 +874,7 @@ C0・C1の判定は`R9.9` / `AR-9.9`が表し、本機能の共有foundationが�
 
 ## 13. Numeric requirements traceability
 
-Runtimeが所有するRequirements 1から9の全64 Acceptance Criteriaを一行ずつ追跡する。R1からR8の47行は機能canonical case、R9の17行
+Runtimeが所有するRequirements 1から9の全69 Acceptance Criteriaを一行ずつ追跡する。R1からR8の52行は機能canonical case、R9の17行
 （9.1〜9.17）はRuntimeのfoundation/品質layerである。Requirements 10・11は§17.10で追跡する。
 
 | Requirement ID | Design owner | Primary evidence |
@@ -883,6 +926,11 @@ Runtimeが所有するRequirements 1から9の全64 Acceptance Criteriaを一行
 | R8.5           | 8            | AR-8.5           |
 | R8.6           | 7、8         | AR-8.6           |
 | R8.7           | 7、8         | AR-8.7           |
+| R8.8           | 7.1          | AR-8.8           |
+| R8.9           | 7.1          | AR-8.9           |
+| R8.10          | 7.1          | AR-8.10          |
+| R8.11          | 7.1、9.3     | AR-8.11          |
+| R8.12          | 7.1          | AR-8.12          |
 | R9.1           | 1、12.2      | AR-9.1           |
 | R9.2           | 12.2         | AR-9.2           |
 | R9.3           | 12.5         | AR-9.3           |
@@ -903,7 +951,7 @@ Runtimeが所有するRequirements 1から9の全64 Acceptance Criteriaを一行
 
 ## 14. Feature Test Matrix
 
-以下の64 IDはすべて一意である。locatorは各IDを確かめるtest、または実行・レビューの手順を指す。R1からR8は47 canonical case、R9は17 quality layer
+以下の69 IDはすべて一意である。locatorは各IDを確かめるtest、または実行・レビューの手順を指す。R1からR8は52 canonical case、R9は17 quality layer
 （9.1〜9.17）である。
 
 AR-1.1〜AR-1.3と、AR-9.4・AR-9.6・AR-9.17以外のAR-9.xは、`[AR-n.m]`を題に持つtest caseが無い。
@@ -952,17 +1000,22 @@ locator列に書いたfile・実行手順・commandの結果が判定である�
 | AR-7.3  | R7.3        | S/I/G | `child-supervision.spec.test.ts#AR-7.3`                                        | 四terminal、listener/child回収          |
 | AR-7.4  | R7.4        | S     | `startup-composition.spec.test.ts#AR-7.4`                                      | common readiness state 0                |
 | AR-8.1  | R8.1        | S/G   | `child-supervision.spec.test.ts#AR-8.1`                                        | service/EPG direct child各一            |
-| AR-8.2  | R8.2        | S/I/G | `service-child-supervision.spec.test.ts#AR-8.2`                                | service exit、log、restart一回          |
+| AR-8.2  | R8.2        | S/I/G | `service-child-supervision.spec.test.ts#AR-8.2`                                | service exit、終了code・signal、後始末の後にrestart一回 |
 | AR-8.3  | R8.3        | S/I/G | `service-child-supervision.spec.test.ts#AR-8.3`                                | service error+exit同tick、一回          |
 | AR-8.4  | R8.4        | S/I/G | `child-supervision.spec.test.ts#AR-8.4`                                        | EPG四event全順列、stale 0               |
 | AR-8.5  | R8.5        | S/I/G | `child-supervision.spec.test.ts#AR-8.5`                                        | disconnect exact child SIGINT一回       |
 | AR-8.6  | R8.6        | S/I   | `child-supervision.spec.test.ts#AR-8.6`                                        | restart N回、fixed cap 0                |
 | AR-8.7  | R8.7        | S/I/G | `child-supervision.spec.test.ts#AR-8.7`                                        | stdout/stderr drain、listener解放       |
+| AR-8.8  | R8.8        | S/I/G | `service-child-cleanup.spec.test.ts#AR-8.8`、`service-child-crash-cleanup.integration.test.ts` | encode/stream `SIGINT`一回・確認3回・`SIGKILL`無し、HLS group二段階、IPC通路が閉じるまで2秒 |
+| AR-8.9  | R8.9        | S/I   | `service-child-cleanup.spec.test.ts#AR-8.9`                                    | 開始時刻の不一致・zombie・absentへsignal 0、読めないときはPIDで確認 |
+| AR-8.10 | R8.10       | S/I/G | `service-child-cleanup.spec.test.ts#AR-8.10`、`service-child-crash-cleanup.integration.test.ts` | 親保存先の中・設定有効・実行中だけ出力削除、HLS成果物全削除 |
+| AR-8.11 | R8.11       | S/I/G | `service-child-cleanup.spec.test.ts#AR-8.11`、`imp/service-child-recorded-use-registry.test.ts#AR-8.11` | 停止・削除の後にlease解放一回、終了未確認でも解放とerrorログ |
+| AR-8.12 | R8.12       | S/I   | `service-child-cleanup.spec.test.ts#AR-8.12`                                   | 30秒、上限後のファイル削除0、lease解放一回 |
 | AR-9.1  | R9.1        | R     | `package.json`の公開scriptと§12.2                                               | Runtime owner一つ、client対象0、公開6 command |
 | AR-9.2  | R9.2        | R     | §12.2と`scripts/server-test/run-tests.mjs`のlayer分類                           | spec/imp/integration command分離        |
-| AR-9.3  | R9.3        | S     | `*.spec.test.ts`のAR-2.1〜AR-8.7の43 case（R1はAR-1.1〜1.4でspec caseではない） | R2-R8 canonical 43件一意                |
+| AR-9.3  | R9.3        | S     | `*.spec.test.ts`のAR-2.1〜AR-8.12の48 case（R1はAR-1.1〜1.4でspec caseではない） | R2-R8 canonical 48件一意                |
 | AR-9.4  | R9.4        | I     | `imp/runtime-characteristics.test.ts#AR-9.4`                                   | root、failure count、600、terminal      |
-| AR-9.5  | R9.5        | M     | 本節の64行                                                                     | 状態/time/race/resource分類             |
+| AR-9.5  | R9.5        | M     | 本節の69行                                                                     | 状態/time/race/resource分類             |
 | AR-9.6  | R9.6        | G     | `integration/runtime-boundaries.integration.test.ts#AR-9.6`                    | tuner/SQLite/MySQL/child/IPC/fs         |
 | AR-9.7  | R9.7        | Q     | 本機能のspec・imp・integrationの全件成功とAR-9.9                               | Runtime feature-level completionのみ    |
 | AR-9.8  | R9.8        | T     | `compiled-snapshot-coverage.test.ts`、`coverage-command-terminal.test.ts`、`coverage-raw-flush.spec.test.ts`、`run-coverage-gate-cli.test.ts`（`test/server/application-runtime/spec/`） | raw coverage取得、compiled snapshot計測、C0/C1集計 |
@@ -991,7 +1044,8 @@ server全体のC0・C1の判定はAR-9.9が表す。
 | startup continuation | `src/index.ts`の`createObservedStartupWorkflowInput`・`runStartupWorkflow`、`StartupContinuationCoordinator` | Runtimeがobserved portsとEPG callbackをbindingして単一Workflow入口をinvoke。Workflowがreconcile→combined rebuild/scheduler→expired→EPG requestを順序付ける |
 | dependency wait                      | `src/model/ConnectionCheckModel.ts`の`checkMirakurun`・`checkDB`は各failure後1秒、無期限                                                    | test seam。有限deadline/attempt timeoutは追加しない                                                                                            |
 | management DB wait                   | `src/DBTools.ts`、`src/V1MigrationTool.ts`は`checkDB()`をawait                                       | provider-driven無期限waitを維持。finite timeoutは追加しない                                                                                              |
-| service child | `src/index.ts`の`runService`はspawn直後register、`exit`/`error`共通terminal settlement、listener detach、child/identity fence、先着一回再spawn | service child監督のtest（`service-child-supervision.spec.test.ts`） |
+| service child | `src/index.ts`の`runService`はspawn直後register、`exit`/`error`共通terminal settlement、listener detach、child/identity fence、終了code・signalの記録、後始末の完了後に先着一回再spawn | service child監督のtest（`service-child-supervision.spec.test.ts`） |
+| service child termination cleanup | `src/model/ServiceChildProcessRegistry.ts`（知らせの受け取りと開始時刻）、`src/model/ServiceChildProcessSystem.ts`（`/proc`、signal、`removeFileIfPresent`）、`src/model/ServiceChildTerminationCleanup.ts`（停止・削除・lease解放・30秒）、`src/model/ModelContainerSetter.ts`の`IServiceChildTerminationCleanup`と`IIPCServer.register`のwrapper | §7.1。停止の手順はMPMの`stopInStages`、出力削除の規則はEncodingの復元、HLS成果物の判定はMedia Deliveryの`HLSFileDeleterModel`に従う |
 | EPG child | `src/model/epgUpdater/EPGUpdateExecutorManageModel.ts`は四event、SIGINT、drainに加えgeneration identity、active reference、single terminal settlementを保持 | exactly-one restart |
 | startup reconciliation               | `src/model/operator/recording/RecordingManageModel.ts`の`cleanup()`                                                       | stage result provider。業務algorithmはworkflow/recording owner                                                                                           |
 | expired cleanup                      | `src/model/operator/reservation/ReservationManageModel.ts`の`cleanup()`                                                 | Runtimeの段階順と一回開始guardだけ                                                                                                                       |

@@ -9,10 +9,13 @@ coverage の計測の道具を一度だけ所有して提供し、本機能自�
 ## 境界コンテキスト
 
 -   **対象範囲**: 対応 Node.js 版、ログと設定の準備、実行主体の切替、依存先の待機、各サーバー機能の開始、起動時整理、子
-    処理の再起動、全サーバー機能が共有するテスト基盤と coverage の計測の道具の提供、公開用
+    処理の再起動、Web・API 提供処理が終了したときにその処理が開始した外部プロセスの停止と後始末、全サーバー機能が共有す
+    るテスト基盤と coverage の計測の道具の提供、公開用
     Docker image の構築と起動の手元での確認、公開用 image の構築と公開、および本機能固有の品質判定
 -   **対象外**: 個別の予約・録画・番組情報・API・保存処理、全機能共通の準備完了状態、共通の終了制御
 -   **利用する機能**: サーバー設定管理機能（`server-configuration`）、運用ログ記録機能（`server-operational-logging`）、
+    録画ファイル変換（エンコード）機能（`server-encoding`）、映像配信・再生連携機能（`server-media-delivery`）、メディア変
+    換プロセス管理機能（`server-media-process-management`）、
     チューナーサーバー連携機能（`server-tuner-access`）、データベース保存・検索機能（`server-persistence`）、サーバー内
     部のプロセス間通信機能（`server-process-messaging`）、機能間連携機能（`server-workflow-coordination`）、録画予約管理
     機能（`server-reservation-management`）、予約録画実行機能（`server-recording-execution`）、録画済み番組管理機能
@@ -155,9 +158,10 @@ coverage の計測の道具を一度だけ所有して提供し、本機能自�
 
 1. When サーバー起動・稼働管理機能が起動するとき, the サーバー起動・稼働管理機能 shall Web・API提供処理と番組情報更新処
    理をそれぞれ子プロセスとして起動する
-2. When Web・API提供処理の終了を受け取ったとき, the サーバー起動・稼働管理機能 shall 異常終了と再起動を記録し、同じ処理
-   を再び起動する
-3. When Web・API提供処理の起動エラーを受け取ったとき, the サーバー起動・稼働管理機能 shall 同じ処理を再び起動する
+2. When Web・API提供処理の終了を受け取ったとき, the サーバー起動・稼働管理機能 shall 異常終了、終了code、および終了
+   signalを記録し、Acceptance Criteria 8から12の後始末を終えてから再起動を記録して同じ処理を再び起動する
+3. When Web・API提供処理の起動エラーを受け取ったとき, the サーバー起動・稼働管理機能 shall Acceptance Criteria 8から12の
+   後始末を終えてから同じ処理を再び起動する
 4. When 番組情報更新処理の終了、切断、close、または起動エラーを受け取ったとき, the サーバー起動・稼働管理機能 shall 異常
    を記録し、その子プロセスに登録した監督用listenerを取り除いてから同じ処理を再び起動する
 5. When 番組情報更新処理の切断を受け取ったとき, the サーバー起動・稼働管理機能 shall 対象子プロセスへ`SIGINT`を送ってか
@@ -165,6 +169,24 @@ coverage の計測の道具を一度だけ所有して提供し、本機能自�
 6. The サーバー起動・稼働管理機能 shall Web・API提供処理および番組情報更新処理の再起動回数へ固定上限を設けない
 7. When 子プロセスの標準出力または標準エラー出力をpipeで受け取るとき, the サーバー起動・稼働管理機能 shall bufferの滞留
    を防ぐため読み取る
+8. When Web・API提供処理の終了または起動エラーを受け取ったとき, the サーバー起動・稼働管理機能 shall その世代のWeb・API
+   提供処理が開始を知らせ、終了を知らせていない外部プロセス（エンコード、ライブ配信と録画ファイル配信の視聴用変換、および
+   HLS writer）を、エンコードの手動停止と通常の配信停止と同じ方法で止める。エンコードと非HLS配信の視聴用変換は、通常の停止
+   （取消、配信終了、実行時間上限で`server-media-process-management`が行う通常processの停止要求）と同じく直接のプロセスへ
+   `SIGINT`を一回だけ送り、`SIGKILL`とprocess groupへのsignalを使わない。HLS writerは、通常のHLS配信停止（`server-media-process-management`の
+   Requirement 6 Acceptance Criteria 1と2）と同じ手順と回数で止める。`SIGINT`を送った後の終了の確認は、後始末の順序を決め
+   るために1秒間隔で最大3回行い、確認できなくても追加のsignalを送らない
+9. Before Acceptance Criterion 8のsignalを送るとき, the サーバー起動・稼働管理機能 shall プロセスの開始時刻を読める環境
+   （Linux）では、開始の知らせを受け取った時点の開始時刻と現在の開始時刻が一致し、終了済み（zombie）でないプロセスだけ
+   を同じプロセスとみなし、それ以外へsignalを送らない。開始時刻を読めない環境では、知らされたPIDとPGIDへそのまま送る
+10. When Acceptance Criterion 8の停止の確認を終えたとき, the サーバー起動・稼働管理機能 shall 停止を始めた時点で実行中
+    だったエンコードのうち、依頼の記録に出力先があるものについて、`encodeRemoveInterruptedOutput`が有効（省略時を含む）
+    で出力先が依頼の親保存先の中を指すときだけ出力途中のファイルの削除を試み、HLS保存先に残ったHLS成果物をすべて削除する
+11. When Acceptance Criterion 10の削除を終えたとき, the サーバー起動・稼働管理機能 shall 終了した世代が取得していた録画の
+    使用権を解放する。終了を確認できなかったプロセスが残ったときも解放し、そのことをerrorログへ記録する
+12. If Web・API提供処理の終了または起動エラーを受け取ってから30秒以内に後始末を終えられないとき, the サーバー起動・稼働
+    管理機能 shall そのことをerrorログへ記録し、終了した世代の録画の使用権を解放して同じ処理を再び起動し、それ以後は残り
+    の後始末でファイルを削除しない
 
 ### Requirement 9: サーバーテストの品質判定
 

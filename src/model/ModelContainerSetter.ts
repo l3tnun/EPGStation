@@ -112,7 +112,11 @@ import {
 import { IPromiseQueue } from './IPromiseQueue.js';
 import IPromiseRetry from './IPromiseRetry.js';
 import LoggerModel from './LoggerModel.js';
+import ServiceChildProcessRegistry from './ServiceChildProcessRegistry.js';
+import { nodeProcessSystem, removeFileIfPresent } from './ServiceChildProcessSystem.js';
 import ServiceChildRecordedUseRegistry from './ServiceChildRecordedUseRegistry.js';
+import ServiceChildTerminationCleanup from './ServiceChildTerminationCleanup.js';
+import { ServiceProcessReporter } from './ipc/IServiceProcessReport.js';
 import ExternalCommandManageModel from './operator/externalCommand/ExternalCommandManageModel.js';
 import IExternalCommandManageModel from './operator/externalCommand/IExternalCommandManageModel.js';
 import IReserveOptionChecker from './operator/IReserveOptionChecker.js';
@@ -157,7 +161,6 @@ import EncodeManageModel from './service/encode/EncodeManageModel.js';
 import IEncodeQueueStorePort from './service/encode/IEncodeQueueStorePort.js';
 import EncodeQueueStore from './operator/encode/EncodeQueueStore.js';
 import IEncodeQueueStore, { EncodeQueueRecord } from './operator/encode/IEncodeQueueStore.js';
-import FileUtil from '../util/FileUtil.js';
 import EncodeProcessManageModel from './service/encode/EncodeProcessManageModel.js';
 import EncoderModel from './service/encode/EncoderModel.js';
 import IEncodeFileManageModel from './service/encode/IEncodeFileManageModel.js';
@@ -214,6 +217,7 @@ const recordedPlaybackSourceProviderKey = 'IRecordedPlaybackSourceProvider';
 const recordedDeliveryLeaseConsumerKey = 'RecordedDeliveryLeaseConsumer';
 const serviceChildRecordedUseCompositionKey = 'ServiceChildRecordedUseComposition';
 const serviceChildRecordedUseRegistryKey = 'ServiceChildRecordedUseRegistry';
+const serviceChildProcessRegistryKey = 'ServiceChildProcessRegistry';
 const encodingQueueStorePortKey = 'EncodingQueueStorePort';
 
 type EncodeFinishSettlementOwner = IEncodeManageModel & {
@@ -397,6 +401,39 @@ export const set = (container: Container): void => {
         .inSingletonScope();
 
     container
+        .bind<ServiceChildProcessRegistry>(serviceChildProcessRegistryKey)
+        .toDynamicValue(
+            () =>
+                new ServiceChildProcessRegistry({
+                    identify: pid => nodeProcessSystem.identify(pid),
+                    // 記録先は使うときに引く（この記録は IPC server と一緒に組み立てられ、設定の読込みを先に起こさない）
+                    logger: {
+                        error: value => container.get<ILoggerModel>('ILoggerModel').getLogger().system.error(value),
+                    },
+                }),
+        )
+        .inSingletonScope();
+
+    container
+        .bind<ServiceChildTerminationCleanup>('IServiceChildTerminationCleanup')
+        .toDynamicValue(context => {
+            const config = context.get<IConfiguration>('IConfiguration').getConfig();
+            const log = context.get<ILoggerModel>('ILoggerModel').getLogger();
+            return new ServiceChildTerminationCleanup({
+                processes: context.get<ServiceChildProcessRegistry>(serviceChildProcessRegistryKey),
+                recordedUse: context.get<ServiceChildRecordedUseRegistry>(serviceChildRecordedUseRegistryKey),
+                encodeQueue: context.get<IEncodeQueueStore>('IEncodeQueueStore'),
+                getParentDirPath: name => container.get<IVideoUtil>('IVideoUtil').getParentDirPath(name),
+                hlsArtifacts: context.get<IHLSFileDeleterModel>('IHLSFileDeleterModel') as HLSFileDeleterModel,
+                streamFilePath: config.streamFilePath,
+                removeInterruptedOutput: config.encodeRemoveInterruptedOutput !== false,
+                system: nodeProcessSystem,
+                logger: { error: value => log.system.error(value), info: value => log.system.info(value) },
+            });
+        })
+        .inSingletonScope();
+
+    container
         .bind<RecordedUploadAdoptionModel>(RecordedUploadAdoptionModel)
         .toDynamicValue(context => {
             const config = context.get<IConfiguration>('IConfiguration').getConfig();
@@ -411,10 +448,12 @@ export const set = (container: Container): void => {
             const serviceChildRegistry = context.get<ServiceChildRecordedUseRegistry>(
                 serviceChildRecordedUseRegistryKey,
             );
+            const serviceChildProcesses = context.get<ServiceChildProcessRegistry>(serviceChildProcessRegistryKey);
             ipcServer.recordedResourceUseRegistryRegistrationPort.register(serviceChildRegistry);
             const register = ipcServer.register.bind(ipcServer);
             ipcServer.register = child => {
                 serviceChildRegistry.registerPeer(child);
+                serviceChildProcesses.registerPeer(child);
                 register(child);
             };
             return ipcServer;
@@ -622,6 +661,10 @@ export const set = (container: Container): void => {
     container.bind<IEncodeEvent>('IEncodeEvent').to(EncodeEvent).inSingletonScope();
 
     container
+        .bind<ServiceProcessReporter>('IServiceProcessReporter')
+        .toDynamicValue(context => context.get<IIPCClient>('IIPCClient').serviceProcessReporter);
+
+    container
         .bind<IEncodeProcessManageModel>('IEncodeProcessManageModel')
         .to(EncodeProcessManageModel)
         .inSingletonScope();
@@ -714,7 +757,8 @@ export const set = (container: Container): void => {
                         recordedDB: context.get<IRecordedDB>('IRecordedDB'),
                         videoUtil: context.get<IVideoUtil>('IVideoUtil'),
                         isSameFile: EncodeManageModel.isSameFile,
-                        removeFile: FileUtil.unlink,
+                        // 管理側が Web・API 側処理の後始末で先に削除した出力は、削除済みとして扱う
+                        removeFile: removeFileIfPresent,
                     },
                 ),
         )

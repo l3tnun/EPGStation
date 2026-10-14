@@ -370,6 +370,8 @@ export default abstract class RecordedStreamBaseModel
                     : null,
             cmd: cmd,
             priority: RecordedStreamBaseModel.ENCODE_PROCESS_PRIORITY,
+            // 開始と終了を管理側へ知らせ、Web・API側処理が異常終了したときに管理側が停止できるようにする
+            report: this.getStreamType() === 'RecordedHLS' ? { kind: 'hls', streamId } : { kind: 'stream' },
         };
 
         return option;

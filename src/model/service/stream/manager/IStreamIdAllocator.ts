@@ -21,7 +21,7 @@ export default interface IStreamIdAllocator {
     isAvailable(): boolean;
 
     /**
-     * 起動時の走査を（まだ着手していなければ）開始する。冪等。
+     * 起動時の後始末（残った外部資源の削除など）を（まだ着手していなければ）開始する。冪等。
      */
     beginInitialization(): void;
 

@@ -31,6 +31,7 @@ describe('live stream implementation characterization', () => {
             input: null,
             output: null,
             priority: 1,
+            report: { kind: 'stream' },
         });
     });
 

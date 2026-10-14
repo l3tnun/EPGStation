@@ -9,6 +9,7 @@ type DeletionGate = { readonly token: object } | { readonly status: 'busy' | 'un
 interface Registry {
     acquire(input: Lease): { readonly status: 'granted' | 'blocked' | 'unknown' };
     registerPeer(peer: object): void;
+    releasePeer(peer: object): void;
     release(input: { acquisitionRequestId: number; senderPeer: object }): 'released' | 'already-released' | 'unknown';
     releaseDeletion(token: object): void;
     tryAcquireDeletion(recordedId: number): DeletionGate;
@@ -316,5 +317,26 @@ describe('ServiceChildRecordedUseRegistry', () => {
         peer.fire('disconnect');
 
         expect(registry.acquire(lease(peer, 2, 11))).toEqual({ status: 'unknown' });
+    });
+    it('[AR-8.11] keeps an ended generation lease unknown until the peer is released, then frees only that generation', () => {
+        const registry = new ServiceChildRecordedUseRegistry();
+        const ended = new EventEmitter();
+        registry.registerPeer(ended);
+        expect(registry.acquire(lease(ended, 1, 10))).toEqual({ status: 'granted' });
+        expect(registry.acquire(lease(ended, 2, 10, 'delivery'))).toEqual({ status: 'granted' });
+        ended.emit('exit', null, 'SIGKILL');
+        const next = new EventEmitter();
+        registry.registerPeer(next);
+        expect(registry.acquire(lease(next, 1, 11))).toEqual({ status: 'granted' });
+        expect(registry.tryAcquireDeletion(10)).toEqual({ status: 'unknown' });
+
+        registry.releasePeer(ended);
+        registry.releasePeer(ended);
+        registry.releasePeer(new EventEmitter());
+
+        expect(registry.tryAcquireDeletion(10)).toEqual({ token: expect.any(Object) });
+        expect(registry.tryAcquireDeletion(11)).toEqual({ status: 'busy' });
+        expect(registry.release({ acquisitionRequestId: 1, senderPeer: ended })).toBe('unknown');
+        expect(registry.release({ acquisitionRequestId: 1, senderPeer: next })).toBe('released');
     });
 });

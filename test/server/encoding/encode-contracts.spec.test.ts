@@ -1197,6 +1197,16 @@ describe('canonical primary R1-R7 contracts', () => {
         fixture.child.emit('exit', 0, null);
     });
 
+    it('[EN-SPEC-R7-13] starts the conversion process with its encode identifier so that its start is reported', async () => {
+        const fixture = await makeEncoderFixture();
+
+        await fixture.model.start();
+
+        expect(fixture.createManaged).toHaveBeenCalledOnce();
+        expect(fixture.createManaged.mock.calls[0][0]).toMatchObject({ report: { encodeId: 701, kind: 'encode' } });
+        fixture.child.emit('exit', 0, null);
+    });
+
     it('[EN-SPEC-R2-6] adds no output path to the record when the conversion writes no output file', async () => {
         const queueStore = { updateOutputPath: vi.fn(async () => undefined) };
         const fixture = await makeEncoderFixture({

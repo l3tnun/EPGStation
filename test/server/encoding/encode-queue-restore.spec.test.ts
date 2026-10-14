@@ -32,6 +32,9 @@ const EncodeManageModel = (
         default: new (...args: unknown[]) => EncodeManageRuntime;
     }
 ).default;
+const { removeFileIfPresent } = require(join(compiledSnapshot, 'model', 'ServiceChildProcessSystem.js')) as {
+    removeFileIfPresent(filePath: string): Promise<void>;
+};
 const EncodeEvent = (
     require(join(compiledSnapshot, 'model', 'event', 'EncodeEvent.js')) as {
         default: new (logger: unknown) => {
@@ -415,6 +418,23 @@ describe('encode request records in the Web/API process (unittest/spec)', () => 
 
             expect(ids(fixture.manage.getEncodeInfo().runningQueue)).toEqual([8]);
             expect(fixture.logger.encode.error).toHaveBeenCalled();
+        } finally {
+            fixture.release();
+        }
+    });
+
+    it('[EN-SPEC-R7-7] treats an interrupted output that is already gone as deleted without logging a failure', async () => {
+        const fixture = makeFixture({
+            records: [{ ...record(9, 79), outputPath: '<synthetic-output>/already-removed.mp4' }],
+            recordedFiles: { 79: [{ id: 790, fullPath: '<synthetic-source>/e.ts' }] },
+        });
+        fixture.restoreDependencies.removeFile.mockImplementationOnce(removeFileIfPresent);
+        try {
+            await fixture.manage.restore();
+
+            expect(fixture.restoreDependencies.removeFile).toHaveBeenCalledWith('<synthetic-output>/already-removed.mp4');
+            expect(ids(fixture.manage.getEncodeInfo().runningQueue)).toEqual([9]);
+            expect(fixture.logger.encode.error).not.toHaveBeenCalled();
         } finally {
             fixture.release();
         }

@@ -66,6 +66,7 @@ const exerciseDirectServiceTerminalRace = async (
         IConfiguration: { getConfig: () => ({}) },
         IConnectionCheckModel: { checkDB: async () => undefined, checkMirakurun: async () => undefined },
         IEPGUpdateExecutorManageModel: { execute: vi.fn() },
+        IServiceChildTerminationCleanup: { run: async () => undefined },
         IEventSetter: { set: vi.fn() },
         IIPCServer: {
             initialize: async () => undefined,
@@ -140,7 +141,8 @@ const exerciseDirectServiceTerminalRace = async (
         }
 
         expect(removalReentryCount).toBe(reenterOnExitRemoval ? 1 : 0);
-        expect(children).toHaveLength(2);
+        expect(children).toHaveLength(1);
+        await vi.waitFor(() => expect(children).toHaveLength(2));
         expect(registeredPeers).toEqual(children);
         expect(first.listenerCount('exit')).toBe(0);
         expect(first.listenerCount('close')).toBe(1);
@@ -253,6 +255,7 @@ const services = {
         initialize: async () => {},
         register: child => record('ipc-register', children.indexOf(child) + 1),
     },
+    IServiceChildTerminationCleanup: { run: async child => record('cleanup', children.indexOf(child) + 1) },
     ILoggerModel: logger,
     IRecordingManageModel: {
         cleanup: async () => {},
@@ -566,8 +569,13 @@ describe('service child supervision', () => {
         ]);
         expect(entriesFor(observation.ledger, 'system-fatal')).toEqual([
             { detail: 'service process is down', operation: 'system-fatal' },
+            { detail: 'service process exit code: 1, signal: null', operation: 'system-fatal' },
             { detail: 'restart service', operation: 'system-fatal' },
         ]);
+        expect(entriesFor(observation.ledger, 'cleanup')).toEqual([{ detail: 1, operation: 'cleanup' }]);
+        expect(firstIndexOf(observation.ledger, 'cleanup')).toBeLessThan(
+            observation.ledger.findIndex(entry => entry.operation === 'service-spawn' && entry.detail === 2),
+        );
         expect(entriesFor(observation.ledger, 'pipe-data')).toEqual([
             { detail: 'stdout', operation: 'pipe-data' },
             { detail: 'stderr', operation: 'pipe-data' },
@@ -621,4 +629,81 @@ describe('service child supervision', () => {
         ]);
         expect(entriesFor(observation.ledger, 'uncaught-effect')).toEqual([]);
     });
+    it.each([
+        { event: 'exit' as const, expectedFatal: 'service process exit code: null, signal: SIGKILL', rejects: false },
+        { event: 'error' as const, expectedFatal: 'service process exit code: null, signal: null', rejects: true },
+    ])(
+        '[AR-8.2][AR-8.3] records the exit code and signal, then restarts only after the cleanup settles ($event)',
+        async ({ event, expectedFatal, rejects }) => {
+            const restoreListeners = captureRuntimeListeners();
+            const children: DirectServiceChild[] = [];
+            const fatal = vi.fn();
+            let settleCleanup: () => void = () => undefined;
+            const run = vi.fn(
+                (_child: unknown) =>
+                    new Promise<void>((resolve, reject) => {
+                        settleCleanup = rejects ? () => reject(new Error('synthetic cleanup failure')) : resolve;
+                    }),
+            );
+            const StartupContinuationCoordinator = loadStartupContinuationCoordinator();
+            const services: Record<string, unknown> = {
+                IConfiguration: { getConfig: () => ({}) },
+                IConnectionCheckModel: { checkDB: async () => undefined, checkMirakurun: async () => undefined },
+                IEPGUpdateExecutorManageModel: { execute: vi.fn() },
+                IEventSetter: { set: vi.fn() },
+                IIPCServer: { initialize: async () => undefined, register: vi.fn() },
+                ILoggerModel: { initialize() {}, getLogger: () => ({ system: { fatal, info() {} } }) },
+                IRecordingManageModel: {
+                    cleanup: async () => undefined,
+                    rebuildCandidatesAndStart: async () => undefined,
+                    setTuner: vi.fn(),
+                },
+                IReservationManageModel: { cleanup: async () => undefined, setTuners: vi.fn() },
+                IRuntimeStartupWorkflowPort: new StartupContinuationCoordinator(),
+                IServiceChildTerminationCleanup: { run },
+                IStorageManageModel: { start: vi.fn() },
+                TunerServerAccess: { getTuners: async () => [] },
+            };
+            const spawnServiceChild = vi.fn(() => {
+                const child = Object.assign(new EventEmitter(), {
+                    pid: 950 + children.length,
+                    stderr: null,
+                    stdout: null,
+                }) as DirectServiceChild;
+                children.push(child);
+                return child;
+            });
+
+            try {
+                await evaluateCompiledRuntime({ get: (identifier: string) => services[identifier] }, spawnServiceChild);
+                await vi.waitFor(() => expect(children).toHaveLength(1));
+                const [first] = children;
+                if (event === 'exit') first.emit('exit', null, 'SIGKILL');
+                else first.emit('error', new Error('synthetic spawn failure'));
+                await settleDirectRuntime();
+
+                expect(run).toHaveBeenCalledExactlyOnceWith(first);
+                expect(fatal.mock.calls.map(([message]) => message)).toEqual([
+                    'service process is down',
+                    expectedFatal,
+                ]);
+                expect(children).toHaveLength(1);
+
+                settleCleanup();
+                await vi.waitFor(() => expect(children).toHaveLength(2));
+                expect(fatal.mock.calls.map(([message]) => String(message))).toEqual(
+                    rejects
+                        ? [
+                              'service process is down',
+                              expectedFatal,
+                              'service child cleanup failed: Error: synthetic cleanup failure',
+                              'restart service',
+                          ]
+                        : ['service process is down', expectedFatal, 'restart service'],
+                );
+            } finally {
+                removeListenersAddedSince(restoreListeners);
+            }
+        },
+    );
 });

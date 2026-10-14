@@ -440,7 +440,7 @@ gitignored `test/server/.artifacts/`だけを生成する。Requirement 9 Accept
 
 -   [x] 9.3 Requirements 2から8の仕様testを完成する
 
-    -   `*.spec.test.ts`のRequirements 2から8の43 case（AR-2.1〜AR-8.7）が、title tagから逆引きでき、一件ずつ成功する
+    -   `*.spec.test.ts`のRequirements 2から8の48 case（AR-2.1〜AR-8.12）が、title tagから逆引きでき、一件ずつ成功する
         ことを確かめる。Requirement 1（対応Node.js環境）はspec caseにせず、Node.js matrixの実行とversion宣言のレビューで確
         かめる。
     -   `startup-composition.spec.test.ts`にAR-7.2（番組情報更新の完了を関係する予約更新処理へ一度だけ通知する）と
@@ -452,7 +452,7 @@ gitignored `test/server/.artifacts/`だけを生成する。Requirement 9 Accept
         そのまま残し、同じ契約をspecとintegrationの両方から確かめる。
     -   `child-supervision.spec.test.ts#AR-8.4`のcaseにAR-7.3のtagを足し、四つのterminal eventでの回収と再起動を
         AR-7.3としても逆引きできるようにする。
-    -   完了時にはAR-2.1〜AR-8.7の43 caseがspec testとして全件成功し、AR-4.5・AR-6.7・AR-7.2・AR-7.3・AR-7.4が各tagから実在するspec caseへ辿れ
+    -   完了時にはAR-2.1〜AR-8.12の48 caseがspec testとして全件成功し、AR-4.5・AR-6.7・AR-7.2・AR-7.3・AR-7.4が各tagから実在するspec caseへ辿れ
         る。production/config変更は0件である。
     -   _Requirements: 4.5, 6.7, 7.2, 7.3, 7.4, 9.3_
     -   _Boundary: Runtime Spec Tests_
@@ -885,6 +885,37 @@ Major 14はDesign §12.3.2を実装する。treeのidは「何を検証したか
     -   _Boundary: Server-wide Quality Judgment_
     -   _Verification: Node.js 24・26のcell（run-node-acceptance-matrix.mjs、`--candidate`無し）_
     -   _Depends: 13.4, 14.2, 14.3_
+
+-   [x] 15. 終了したWeb・API childが開始した外部プロセスを止めて後始末してから再起動する
+
+-   [x] 15.1 外部プロセスの知らせを受け取り、開始時刻とともに世代ごとに記録する
+
+    -   新規`src/model/ServiceChildProcessRegistry.ts`が、`IIPCServer.register`のwrapperで登録されたchildの`message`を
+        `disconnect`または`close`まで受け取り、開始の知らせの値を確かめて開始時刻とともに記録し、終了の知らせで取り除く。
+        `takeEntries`はIPC通路が閉じるまで最大2秒待ってから確定する。
+    -   新規`src/model/ServiceChildProcessSystem.ts`が`/proc/<pid>/stat`の開始時刻とzombieの判定、PIDとprocess groupへの
+        signal、`removeFileIfPresent`を提供する。
+    -   完了時には、`exit`の後に届いた知らせも同じ世代として記録され、不正な知らせはerrorログへ記録して捨てられる。
+    -   _Requirements: 8.8, 8.9_
+    -   _Boundary: Service Child Termination Cleanup_
+    -   _Verification: `test/server/application-runtime/imp/service-child-process-registry.test.ts`、
+        `test/server/application-runtime/imp/service-child-process-system.test.ts`_
+
+-   [x] 15.2 停止、出力とHLS成果物の削除、使用権の解放、30秒の上限を実装し、再起動をその後へ置く
+
+    -   新規`src/model/ServiceChildTerminationCleanup.ts`が、エンコードと非HLS配信へ`SIGINT`だけを、HLS writerへ
+        `stopInStages`の二段階の停止を行い、停止を始めた時点で動いていたエンコードの出力途中のファイルとHLS成果物を削除し、
+        `ServiceChildRecordedUseRegistry.releasePeer`で使用権を解放する。30秒を超えたら待たずに戻り、それ以後はファイルを削除しない。
+    -   `src/index.ts`は終了code・signalを記録し、`IServiceChildTerminationCleanup.run(child)`を待ってから再起動する。
+    -   完了時には、実processの結合testで、SIGKILLしたchildの偽のエンコードとHLS writerが新しいchildの起動前に止まり、出力と
+        HLS成果物が消えている。
+    -   _Requirements: 8.2, 8.3, 8.8, 8.9, 8.10, 8.11, 8.12_
+    -   _Boundary: Service Child Supervisor, Service Child Termination Cleanup_
+    -   _Verification: `test/server/application-runtime/service-child-cleanup.spec.test.ts`、
+        `test/server/application-runtime/service-child-supervision.spec.test.ts`、
+        `test/server/application-runtime/imp/service-child-termination-cleanup.test.ts`、
+        `test/server/application-runtime/service-child-crash-cleanup.integration.test.ts`_
+    -   _Depends: 15.1_
 
 ## Leaf execution contract
 

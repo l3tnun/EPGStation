@@ -173,6 +173,7 @@ describe('runtime startup characteristics', () => {
                 setTuner: vi.fn(),
             },
             IReservationManageModel: { cleanup: async () => undefined, setTuners: vi.fn() },
+            IServiceChildTerminationCleanup: { run: async () => undefined },
             IStorageManageModel: { start: vi.fn() },
             IRuntimeStartupWorkflowPort: {
                 runAfterServiceSupervisionAccepted: (input: unknown) => {
@@ -190,7 +191,7 @@ describe('runtime startup characteristics', () => {
             expect(registeredPeers).toEqual(children);
             expect(workflowInputs).toHaveLength(1);
         };
-        const settleGeneration = (child: RuntimeGenerationChild, expectedChildCount: number): void => {
+        const settleGeneration = async (child: RuntimeGenerationChild, expectedChildCount: number): Promise<void> => {
             let removalReentered = false;
             const onListenerRemoved = (eventName: string | symbol): void => {
                 if (removalReentered || eventName !== 'error') return;
@@ -201,7 +202,8 @@ describe('runtime startup characteristics', () => {
 
             expect(() => child.emit('error', new Error('synthetic terminal'))).not.toThrow();
             expect(removalReentered).toBe(true);
-            expectExternalSupervision(expectedChildCount);
+            // The replacement is spawned once the cleanup of the ended generation settles.
+            await vi.waitFor(() => expectExternalSupervision(expectedChildCount));
             expect(() => {
                 child.emit('error', new Error('late terminal'));
                 child.emit('exit', 1, null);
@@ -227,12 +229,12 @@ describe('runtime startup characteristics', () => {
             if (initialChild === undefined) throw new Error('Runtime did not retain its initial Service child');
             expect(registeredPeers).toEqual([initialChild]);
 
-            settleGeneration(initialChild, 2);
+            await settleGeneration(initialChild, 2);
 
             const firstReplacement = children[1];
             expect(firstReplacement).toBeDefined();
             if (firstReplacement === undefined) throw new Error('Runtime did not create its first replacement child');
-            settleGeneration(firstReplacement, 3);
+            await settleGeneration(firstReplacement, 3);
         } finally {
             removeListenersAddedSince(restoreListeners);
         }
@@ -740,6 +742,7 @@ describe('runtime child first terminal event', () => {
                     runAfterServiceSupervisionAccepted: () =>
                         Promise.resolve({ kind: 'Succeeded', stage: 'epg-supervisor-start' } as const),
                 },
+                IServiceChildTerminationCleanup: { run: async () => undefined },
                 IStorageManageModel: { start: vi.fn() },
                 TunerServerAccess: { getTuners: async () => [] },
             };
@@ -771,8 +774,12 @@ describe('runtime child first terminal event', () => {
                 emitTerminal(first);
 
                 const expectedSpawns = restarts ? 2 : 1;
-                const expectedFatals = restarts ? ['service process is down', 'restart service'] : [];
-                expect(spawnServiceChild).toHaveBeenCalledTimes(expectedSpawns);
+                const exitFatal =
+                    first === 'exit'
+                        ? 'service process exit code: 1, signal: null'
+                        : 'service process exit code: null, signal: null';
+                const expectedFatals = restarts ? ['service process is down', exitFatal, 'restart service'] : [];
+                await vi.waitFor(() => expect(spawnServiceChild).toHaveBeenCalledTimes(expectedSpawns));
                 expect(registeredPeers).toEqual(children);
                 expect(fatals).toEqual(expectedFatals);
                 if (!restarts) {

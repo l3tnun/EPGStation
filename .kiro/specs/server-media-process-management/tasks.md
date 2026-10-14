@@ -207,15 +207,15 @@
     -   _Depends: 4.1, 5.3, 6.2_
 
 -   [x] 8. 機能固有testと共有server品質判定を接続する
--   [x] 8.1 全43機能ACのinventoryを作り`unittest/spec`を完成させる
+-   [x] 8.1 全46機能ACのinventoryを作り`unittest/spec`を完成させる
 
-    -   `test/server/media-process-management/media-process-management.spec.test.ts`にRequirements 1から7の全43 ACと一意
+    -   `test/server/media-process-management/media-process-management.spec.test.ts`にRequirements 1から7の全46 ACと一意
         の主test ID、補助test、fixture、期待する開始・停止結果、管理枠、process lifecycle、非所有effectを対応付ける。
     -   上限0・上限未満・上限到達、低・同・高優先度、3000ms到達時の入れ替え成功・3000msより後の入れ替え失敗、通常process
         の開始・停止・terminal、HLS groupの開始・二段停止・強制解放・stale handle、および起動時設定保持を外部契約として
         検証する。
     -   Tasks 2.1、2.3、3.1、4.1、5.1、5.3の失敗契約を同suiteへ統合し、全caseが成功する。
-    -   完了時には、全43 ACを成功した一意の主test IDへ逆引きでき、未割当、同じ主test IDの重複、根拠のないskip、および
+    -   完了時には、全46 ACを成功した一意の主test IDへ逆引きでき、未割当、同じ主test IDの重複、根拠のないskip、および
         失敗するcaseがいずれも0件である。
     -   _Depends: 1.1, 1.2, 1.3, 2.1, 2.3, 3.1, 4.1, 5.1, 5.3, 6.1, 6.2, 7.1, 7.2_
     -   _Requirements: 8.1_
@@ -301,3 +301,16 @@
 | 8.3  | `.kiro/specs/server-media-process-management/design.md` | レビュー | `8.1, 8.2`                                                        | なし（Designの48行のレビュー） |
 | 8.4  | `test/server/media-process-management/process-group.integration.test.ts` | `integration`                                      | `4.1, 5.3, 6.1, 6.2, 7.1, 7.2, 8.3`                               | `npm run test:server:integration -- test/server/media-process-management/process-group.integration.test.ts`                                                                                                                                                                                                         |
 | 8.5  | `test/server/media-process-management/media-process-management.spec.test.ts`<br>`test/server/media-process-management/implementation.test.ts`<br>`test/server/media-process-management/process-group.integration.test.ts`                                                                       | `unittest/spec`<br>`unittest/imp`<br>`integration` | `8.1, 8.2, 8.3, 8.4`                                              | `npm run test:server:spec -- test/server/media-process-management/media-process-management.spec.test.ts`<br>`npm run test:server:imp -- test/server/media-process-management/implementation.test.ts`<br>`npm run test:server:integration -- test/server/media-process-management/process-group.integration.test.ts` |
+
+-   [x] 9. 外部プロセスの開始と終了を知らせ、二段階の停止手順を管理側と共有する
+
+-   [x] 9.1 開始と終了の知らせと、共通の停止部品を test と実装で閉じる
+
+    -   `CreateProcessOption.report`を受け、起動の成立時と実行中一覧から取り除いたときに`IServiceProcessReporter`へ知らせる。
+        HLS writerはPGIDも知らせる。
+    -   `stopHlsProcessGroup`の確認列を`stopInStages`と`PROCESS_STOP_CHECK_COUNT`・`PROCESS_STOP_CHECK_INTERVAL_MS`へ切り出し、
+        Web・API側処理の異常終了時に管理側も同じ部品を使えるようにする。既存のHLS停止の結果と記録は変えない。
+    -   _Requirements: 4.7, 5.5, 6.12_
+    -   _Boundary: EncodeProcessManageModel_
+    -   _Verification: `test/server/media-process-management/media-process-management.spec.test.ts`（R4.7、R5.5、R6.12）、
+        `test/server/media-process-management/implementation.test.ts#MP-IMP-R4-REPORT`_

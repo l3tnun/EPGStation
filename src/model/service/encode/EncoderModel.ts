@@ -251,6 +251,8 @@ class EncoderModel implements IEncoderModel {
             output: outputFilePath,
             cmd: encodeCmd.cmd,
             priority: EncoderModel.ENCODE_PRIPORITY,
+            // 開始と終了を管理側へ知らせ、Web・API側処理が異常終了したときに管理側が停止できるようにする
+            report: { kind: 'encode' as const, encodeId: this.encodeOption.encodeId },
             spawnOption: {
                 env: {
                     ...process.env,
