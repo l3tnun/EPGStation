@@ -1793,13 +1793,14 @@ describe('encoding API to admission boundary integration', () => {
 
         const retry = fixture.api.add(request(202));
         fixture.resolveNextExecution();
-        await expect(retry).resolves.toBe(1);
+        // 失敗した受付が記録の後で受け取った識別番号 1 は戻さない（利用者には見せず、記録は削除済み）ので、再試行は 2
+        await expect(retry).resolves.toBe(2);
         expect(fixture.provider).toHaveBeenCalledTimes(2);
         expect(fixture.encoders).toHaveLength(1);
-        expect(fixture.added).toEqual([1]);
+        expect(fixture.added).toEqual([2]);
         await expect(fixture.api.getAll(false)).resolves.toEqual({
             runningItems: [],
-            waitItems: [{ id: 1, mode: 'synthetic-mode', recorded: { id: 202 } }],
+            waitItems: [{ id: 2, mode: 'synthetic-mode', recorded: { id: 202 } }],
         });
 
         fixture.config.encodeQueueLimit = 2;

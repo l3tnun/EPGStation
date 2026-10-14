@@ -2,6 +2,7 @@ import { createRealtimeHarness, emitUntilTextAppears } from './support/realtimeH
 import { openReservesMenu } from './support/pointerInteractions'
 import { expect, test, type Page } from '@playwright/test'
 import { installAppShellApiMocks } from './support/appShellMocks'
+import { replaceApiMocks } from './support/apiMockReplacement'
 import { selectMuiOption } from './support/muiSelect'
 import { reserveDeleteTarget } from './support/reservesMocks'
 import { installGuideOnAirRealtimeApiMocks } from './support/guideOnAirMocks'
@@ -191,11 +192,12 @@ test('refreshes On Air list/watch and Recorded watch info from real Socket.IO up
       expected: 'Synthetic OnAir Watch After Socket Update',
     })
 
-    await page.unrouteAll()
-    await installAppShellApiMocks(page, {
-      socketIOPort: realtime.socketIOPort,
+    const recordedWatchMocks = await replaceApiMocks(page, async () => {
+      await installAppShellApiMocks(page, {
+        socketIOPort: realtime.socketIOPort,
+      })
+      return installVideoPlaybackRealtimeApiMocks(page)
     })
-    const recordedWatchMocks = await installVideoPlaybackRealtimeApiMocks(page)
     await page.goto(
       `/#/recorded/watch?videoId=${SYNTHETIC_DIRECT_VIDEO_FILE_ID}&recordedId=${SYNTHETIC_RECORDED_ID}`,
     )

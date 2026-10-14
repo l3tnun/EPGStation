@@ -134,6 +134,7 @@ flowchart LR
 | `rule`         | `add(rule)`、`update(rule)`、`enable(ruleId)`、`disable(ruleId)`、`delete(ruleId)`                                                                                                                                                                                  | 自動予約ルール機能                  |
 | `thumbnail`    | `regenerate()`、`fileCleanup()`、`add(videoFileId)`、`delete(thumbnailId)`                                                                                                                                                                                          | サムネイル管理機能                  |
 | `encodeEvent`  | `emitFinishEncode(info)`                                                                                                                                                                                                                                            | `EncodeCompletionSink.accept(info)` |
+| `encodeQueue`  | `add(option, requestToken)`、`abandon(requestToken)`、`updateOutputPath(id, outputPath)`、`remove(id)`、`list()` | 録画ファイル変換機能の依頼記録窓口（`EncodeQueueStore`） |
 
 表にない target / operation は提供しない。interface と enum に名前だけが存在しても Dispatcher の固定表に handler がない
 operation は supported と扱わず、この設計だけで handler を追加しない。
@@ -169,6 +170,7 @@ interface StatusNotification {
 interface EncodeRequestNotification {
     readonly type: 'pushEncode';
     readonly value: AddEncodeProgramOption;
+    readonly encodeId: number; // 依頼の記録の識別番号（1〜Number.MAX_SAFE_INTEGER）
 }
 
 interface EncodeCompletionInfo {
@@ -539,10 +541,11 @@ timer は依頼ごとに一つだけ持つ。応答または同期送信失敗�
 
 ### 10.2 エンコード依頼
 
-録画完了後などにエンコード受付が必要な場合、現在の通知先へ `pushEncode` と依頼内容を送る。送信先を利用できない場合は、既
-存の呼出し元へ送信不能を知らせる契約を維持する。送信呼出しの同期失敗も同じcaller-facing failureとし、送信 callback の非
-同期失敗は運用ログへ記録する。いずれも依頼を保存、自動再送、または別のchildへ転送せず、新しい acknowledgment を追加しな
-い。
+録画完了後などにエンコード受付が必要な場合、`setEncode(option)` は依頼を録画ファイル変換機能の依頼記録窓口へ渡して同期で
+戻る。依頼記録窓口は識別番号を割り当てて依頼を記録した後、現在の通知先へ `pushEncode` と識別番号付きの依頼内容を送る
+（`pushEncode(encodeId, option)`）。通知先が無い、送信呼出しの同期失敗、送信 callback の非同期失敗は、いずれも運用ログへ記
+録して通知を破棄する。依頼の記録は残り、Web・API 側の次の起動時に録画ファイル変換機能が戻す。本機能は通知を保存、自動再
+送、または別のchildへ転送せず、新しい acknowledgment を追加しない。
 
 ### 10.3 一方向配送の失敗契約
 
@@ -551,7 +554,7 @@ timer は依頼ごとに一つだけ持つ。応答または同期送信失敗�
 | 配送種別       | recipientなし               | 同期throw                   | 非同期callback failure | 保存・retry・別child転送 |
 | -------------- | --------------------------- | --------------------------- | ---------------------- | ------------------------ |
 | `notifyClient` | 記録して破棄する。          | 記録して破棄する。          | 記録して破棄する。     | すべて0                  |
-| `pushEncode`   | 既存caller-facing failure。 | 既存caller-facing failure。 | 記録して破棄する。     | すべて0                  |
+| `pushEncode`   | 記録して破棄する（依頼の記録は残る）。 | 記録して破棄する（依頼の記録は残る）。 | 記録して破棄する。     | すべて0                  |
 
 replyは通知ではないためこの表へ混在させず、request-local targetに対するrecipientなし、同期throw、非同期callback failure
 を `PM-6.4`で検証する。
@@ -566,6 +569,18 @@ replyは通知ではないためこの表へ混在させず、request-local targ
 -   childを置き換えるときは、以前の通知先にRegistryが追加したterminal listenerを除去する。処理中依頼が保持する
     request-local reply targetはRegistry listenerとは独立してhandler settlementまで保持する。
 -   以前の通信相手から遅れて発生した終了eventで、新しい現在の通知先を消さない。
+
+### 10.5 外部プロセスの開始と終了の知らせ
+
+Web・API側の`IPCClient.serviceProcessReporter`は、`{ type: 'serviceProcessStarted', pid, kind, pgid?, encodeId?, streamId? }`と
+`{ type: 'serviceProcessEnded', pid }`を`process.send`で一方向に送る。識別子を採番せず、応答を待たない。`process.send`が無い、
+同期でthrowした、またはcallbackがerrorを返した場合は記録して破棄し、保存・再送しない（R1.10）。
+
+管理側の`IPCServer`はこの2種類のmessageへ応答も操作エラーも返さない（R3.4）。受け取りは、`IIPCServer.register`のwrapperが
+同じchildを登録する`server-application-runtime`の`ServiceChildProcessRegistry`が行い、childの`message`を`disconnect`または
+`close`まで受け取る。そのため`exit`・`error`でRegistryが通知先を外した後に届いた知らせも、同じ世代の知らせとして記録される
+（R6.7）。PIDが正の安全な整数でない、種別が`encode`・`stream`・`hls`以外、エンコードに依頼の識別番号が無い、HLS writerに
+PGIDまたは0以上の配信の識別番号が無い知らせは、Registryがerrorログへ記録して捨てる。
 
 Reply Senderはrequest-local reply targetだけへ送る。対象が未接続、送信呼出しが同期失敗、または送信 callbackが非同期失敗
 なら送信不能を記録して応答を破棄し、現在の通知先や後から登録されたchildへ転送しない。応答の再送または保存も行わない。
@@ -616,7 +631,7 @@ Reply Senderはrequest-local reply targetだけへ送る。対象が未接続、
 -   応答は同じ数値識別子と、結果またはエラーメッセージを持つ。
 -   識別子の範囲は1から `Number.MAX_SAFE_INTEGER` までである。
 -   応答順序は保証しない。
--   通知は `notifyClient` と `pushEncode` の二種類で、応答を要求しない。
+-   通知は `notifyClient` と `pushEncode` の二種類で、応答を要求しない。`pushEncode` は依頼の記録の識別番号を持つ。
 -   通常依頼の同時件数へ固定上限を追加しない。
 
 ### 12.2 公開 API 契約
@@ -683,7 +698,7 @@ schema、status、およびエラー表現を保持する。内部採番の変�
 | `src/model/ipc/IPCServer.ts`                                      | 通信相手登録、request-specific reply target、振分け・応答、および現在の通知先への通知を担う。                                                             |
 | `src/model/ipc/IEncodeCompletionSink.ts`                          | エンコード完了結果のpayloadとconsumer-owned inbound portを保持する。                                                                                      |
 | PM内部resource-control adapter                                    | 録画済みresource leaseとcurrent-generation snapshotのrequest/reply、通常5秒期限、late reply破棄を担う。                                                   |
-| `test/server/process-messaging/*.spec.test.ts`                    | R1からR6の44 ACに、`#PM-N.M`のcanonical主caseを一件ずつ持つ。                                                                                             |
+| `test/server/process-messaging/*.spec.test.ts`                    | R1からR6の48 ACに、`#PM-N.M`のcanonical主caseを一件ずつ持つ。                                                                                             |
 | `test/server/process-messaging/imp/*.test.ts`                     | 採番、状態遷移、timer、振分け、transport failure、および通信相手入替えの分岐を検証する。                                                                  |
 | `test/server/process-messaging/integration/*.integration.test.ts` | isolated child processによる依頼・応答・切断・再登録・再起動を検証する。                                                                                  |
 
@@ -729,12 +744,12 @@ schema、status、およびエラー表現を保持する。内部採番の変�
 
 | Evidence class | Status         | 確認事項                                                                                                                                                                                                       |
 | -------------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Specification  | `CONFIRMED`    | R1からR7の49 AC、特に同期連番、`pending`・`retired`、FIFO allocation wait、三種類の10分期限、request-specific reply target、identity-based current peer無効化をoracleとする。 |
+| Specification  | `CONFIRMED`    | R1からR7の50 AC、特に同期連番、`pending`・`retired`、FIFO allocation wait、三種類の10分期限、request-specific reply target、identity-based current peer無効化をoracleとする。 |
 | Source S1      | `CONFIRMED`    | `IPCClient`は`number`のIDを1から`Number.MAX_SAFE_INTEGER`まで同期予約し、折返し、`pending`、`retired`、識別子未付与FIFO waitを持つ。 |
 | Source S2      | `CONFIRMED`    | 一般送信は5秒、upload結果登録、video cleanup、drop-log cleanupは各600,000msである。 |
 | Source S3      | `CONFIRMED`    | `IPCServer.register()`の受付callbackは受付元childを`requester`としてcaptureし、`replay()`はそのchildだけへ応答する。 |
 | Source S4      | `CONFIRMED`    | `IPCServer`はcurrent childの`exit`、`error`、`disconnect`、`close`にlistenerを登録し、object identity一致時だけ無効化する。 |
-| Source S5      | `CONFIRMED`    | `notifyClient()`と`setEncode()`は一つのcurrent childへ一方向送信し、reply、通知ともsend callback failureを記録して破棄する。`pushEncode`はcaller-facingのrecipient/send failureを維持し、非同期failureを記録する。 |
+| Source S5      | `CONFIRMED`    | `notifyClient()`と`setEncode()`は一つのcurrent childへ一方向送信し、reply、通知ともsend callback failureを記録して破棄する。`setEncode()`は依頼を録画ファイル変換機能の依頼記録窓口へ渡して同期で戻り、窓口が記録の後で送る`pushEncode`のrecipientなし・同期throw・非同期failureはどれも記録して破棄する（依頼の記録は残る）。 |
 | Source S6      | `CONFIRMED`    | runtimeはWeb・API childのspawn直後に`register(child)`し、追加の起動成立messageを待たない。                                                                                                                     |
 | Source S7      | `CONFIRMED`    | reservationの`clean`はclient interfaceとfunction enumに名前があるが、Dispatcherのhandler tableにはentryがない。                                                                                                |
 | Source S8      | `CONFIRMED`    | pending entryがtimer handleを所有し、response、error、同期send failureで一回解除する。timeout時もsettlement後に残留handleを持たない。 |
@@ -764,18 +779,19 @@ commit pointも変更しない。
 
 ### 17.1 Canonical registry
 
-R1からR6の主case globは`test/server/process-messaging/*.spec.test.ts`である。次の6 fileだけに44個のnamed `#PM-N.M`主case
+R1からR6の主case globは`test/server/process-messaging/*.spec.test.ts`である。次の7 fileだけに48個のnamed `#PM-N.M`主case
 を一意に置き、一つのACを複数の主caseへ割り当てない。補助`unittest/imp`またはintegration caseは主case件数へ加えない。補助caseは、確かめるACの主caseと同じ`[PM-N.M]`をtest名に付けてよく、
 `PM-N.M`を名乗るtestは主case一つとimp・integrationの補助caseに分かれる。主caseの一意性は`*.spec.test.ts`の中だけで数える。
 
 | Registry key          | Canonical locator / expansion                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | 責任                                                                                  |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
-| `SPEC-OPS`            | `test/server/process-messaging/operation-routing.spec.test.ts#PM-1.1`から`#PM-1.8`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | R1の8主case                                                                           |
+| `SPEC-OPS`            | `test/server/process-messaging/operation-routing.spec.test.ts#PM-1.1`から`#PM-1.9`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | R1の9主case                                                                           |
 | `SPEC-CORR`           | `test/server/process-messaging/correlation.spec.test.ts#PM-2.1`から`#PM-2.16`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | R2の16主case                                                                          |
 | `SPEC-VALID`          | `test/server/process-messaging/validation.spec.test.ts#PM-3.1`から`#PM-3.3`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | R3の3主case                                                                           |
 | `SPEC-DEADLINE`       | `test/server/process-messaging/deadlines.spec.test.ts#PM-4.1`から`#PM-4.7`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | R4の7主case                                                                           |
 | `SPEC-NOTIFY`         | `test/server/process-messaging/notifications.spec.test.ts#PM-5.1`から`#PM-5.4`。`PM-5.2`と`PM-5.4`のsubcaseは通知種別×recipientなし×同期throw×非同期callback failureを列挙する。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | R5の4主case                                                                           |
 | `SPEC-PEER`           | `test/server/process-messaging/peer-registry.spec.test.ts#PM-6.1`から`#PM-6.6`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | R6の6主case                                                                           |
+| `SPEC-REPORT`         | `test/server/process-messaging/service-process-report.spec.test.ts#PM-1.10`、`#PM-3.4`、`#PM-6.7` | 外部プロセスの知らせの3主case |
 | `IMP-CHAR-PM-7.2`     | `test/server/process-messaging/imp/id-allocation.test.ts#numeric-range-wrap-successor-zero-full-release-resume`、`test/server/process-messaging/imp/correlation-lifecycle.test.ts#pending-retired-send-failure-response-and-late-response`、`test/server/process-messaging/imp/correlation-lifecycle.test.ts#records-callback-error-but-keeps-the-same-pending-request-timer-and-allocation-waiter`、`test/server/process-messaging/imp/correlation-lifecycle.test.ts#keeps-callback-failed-id-retired-until-a-late-reply-after-timeout`、`test/server/process-messaging/imp/correlation-lifecycle.test.ts#settles-only-once-when-the-response-wins-the-deadline-boundary`、`test/server/process-messaging/imp/correlation-lifecycle.test.ts#settles-only-once-when-timeout-wins-and-treats-the-same-turn-response-as-late`、`test/server/process-messaging/imp/deadline-races.test.ts#rejects-at-5-000ms-never-returns-a-late-grant-for-use-and-best-effort-releases-that-same-identity-once`、`test/server/process-messaging/imp/dispatcher-peer.test.ts#rejects-an-inherited-operation-with-the-requester-id-and-no-domain-handler`、`test/server/process-messaging/imp/dispatcher-peer.test.ts#keeps-the-parent-owned-domain-call-after-reply-delivery-failure-and-never-forwards-it-to-a-replacement-child`、`test/server/process-messaging/imp/notification-cleanup.test.ts#notification-kind-recipient-sync-async-cross-product` | implementation-characteristic layer                                                   |
 | `INT-BOUNDARY-PM-7.4` | `test/server/process-messaging/integration/process-messaging.integration.test.ts#out-of-order-disconnect-replace-restart`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | isolated child IPCのintegration layer                                                 |
 | `RUNTIME-R9-PM-7.5`   | `server-application-runtime` Requirement 9 Acceptance Criterion 9                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | provider waveがrelease evidenceを供給するruntime external layer               |
@@ -831,6 +847,8 @@ locator、Numeric ID、evidence keyは17.1と18節で同じ値を使う。
 | PM-1.6     | `test/server/process-messaging/operation-routing.spec.test.ts#PM-1.6` | S/G   | V-ARGS                                      | DSP/RE-AP                            | T-ORDER                                   | R-MSG/R-DSP                     | B-IPC/B-PORT・thumbnail handler失敗                            | thumbnail作成・再作成・削除・cleanupを配送 |
 | PM-1.7     | `test/server/process-messaging/operation-routing.spec.test.ts#PM-1.7` | S/G   | V-ARGS                                      | DSP/RE-AP                            | T-ORDER                                   | R-MSG/R-DSP                     | B-IPC/B-PORT・handler失敗                                      | `resetTimer`は担当へ、`emitFinishEncode(info)`はPM所有sinkへ配送しevent reverse import 0 |
 | PM-1.8     | `test/server/process-messaging/operation-routing.spec.test.ts#PM-1.8` | S/I   | V-ROUTE                                     | DSP/CAN-NA/RE-AP                     | T-SYNC                                    | R-DSP                           | B-PORT・業務拒否                                               | carrierはhandler結果を伝えるだけで業務可否を上書きしない |
+| PM-1.9     | `test/server/process-messaging/operation-routing.spec.test.ts#PM-1.9` | S/G   | V-ARGS                                      | DSP/RE-AP                            | T-5S                                      | R-MSG/R-DSP                     | B-IPC/B-PORT・記録窓口の失敗                                   | `encodeQueue`の`add`・`abandon`・`updateOutputPath`・`remove`・`list`をexact argsで依頼記録窓口へ一回ずつ配送し、結果・rejectを返す |
+| PM-1.10    | `test/server/process-messaging/service-process-report.spec.test.ts#PM-1.10` | S/I | V-MESSAGE | NTF | T-NOWAIT | R-MSG | B-IPC・送信の同期失敗 | 開始（PID・種別・識別番号）と終了（PID）を応答を待たずに送り、送れなければ記録して破棄、再送しない |
 | PM-2.1     | `test/server/process-messaging/correlation.spec.test.ts#PM-2.1`       | S/I/G | V-ID/V-ROUTE                                | REQ/RE-AP                            | T-SYNC                                    | R-CORR/R-MSG                    | B-IPC・send失敗                                                | 一意number、target、operation、argsを一envelopeで送る |
 | PM-2.2     | `test/server/process-messaging/correlation.spec.test.ts#PM-2.2`       | S/I   | V-ROUTE                                     | DSP                                  | T-SYNC                                    | R-DSP                           | B-PORT・未対応                                                 | fixed tableのexact handlerを一回呼ぶ |
 | PM-2.3     | `test/server/process-messaging/correlation.spec.test.ts#PM-2.3`       | S/G   | V-MESSAGE                                   | REQ/DSP                              | T-ORDER                                   | R-CORR/R-DSP                    | B-IPC・reply send失敗                                          | 成功resultを同じIDで返す |
@@ -850,6 +868,7 @@ locator、Numeric ID、evidence keyは17.1と18節で同じ値を使う。
 | PM-3.1     | `test/server/process-messaging/validation.spec.test.ts#PM-3.1`        | S/I/G | V-ROUTE                                     | DSP/F                                | T-SYNC                                    | R-DSP/R-MSG                     | B-IPC/B-PORT・unsupported                                      | target/operation own-property不在はhandler 0、`IPCFunctionError` |
 | PM-3.2     | `test/server/process-messaging/validation.spec.test.ts#PM-3.2`        | S/I   | V-ARGS                                      | DSP/F                                | T-SYNC                                    | R-DSP/R-MSG                     | B-PORT・missing args                                           | 必須arg undefinedはhandler完了0、`IPCArgsError` |
 | PM-3.3     | `test/server/process-messaging/validation.spec.test.ts#PM-3.3`        | S/G   | V-MESSAGE                                   | DSP/F                                | T-ORDER                                   | R-DSP/R-CORR                    | B-IPC・handler Error                                           | exact error.messageを依頼元Errorへ渡す |
+| PM-3.4     | `test/server/process-messaging/service-process-report.spec.test.ts#PM-3.4` | S/I | V-ARGS | DSP/F | T-ORDER | R-DSP | B-IPC・不正な知らせ | 知らせへ応答・操作エラーを返さず担当処理0件、不正な値はerrorログへ記録して捨てる |
 | PM-4.1     | `test/server/process-messaging/deadlines.spec.test.ts#PM-4.1`         | S/I   | V-TIME                                      | REQ                                  | T-5S                                      | R-CORR                          | B-PORT・応答なし                                               | 通常依頼は5,000ms、直前pending・到達timeout |
 | PM-4.2     | `test/server/process-messaging/deadlines.spec.test.ts#PM-4.2`         | S/I   | V-TIME                                      | REQ                                  | T-10M                                     | R-CORR                          | B-PORT・upload応答なし                                         | upload結果登録は600,000ms |
 | PM-4.3     | `test/server/process-messaging/deadlines.spec.test.ts#PM-4.3`         | S/I   | V-TIME                                      | REQ                                  | T-10M                                     | R-CORR                          | B-PORT・video cleanup応答なし                                  | 録画file cleanupは600,000ms、0で無期限にしない |
@@ -858,27 +877,28 @@ locator、Numeric ID、evidence keyは17.1と18節で同じ値を使う。
 | PM-4.6     | `test/server/process-messaging/deadlines.spec.test.ts#PM-4.6`         | S/I/G | V-TIME                                      | REQ/TO/CAN-NA                        | T-RACE                                    | R-CORR/R-DSP                    | B-IPC/B-PORT・handler pending                                  | timeout後もhandler cancel/abort/send 0 |
 | PM-4.7     | `test/server/process-messaging/deadlines.spec.test.ts#PM-4.7`         | S/I   | V-TIME/V-MESSAGE                            | REQ/LATE                             | T-RACE                                    | R-CORR                          | B-IPC・late response                                           | timeout結果を変えずlate payload破棄後だけretired解放 |
 | PM-5.1     | `test/server/process-messaging/notifications.spec.test.ts#PM-5.1`     | S/G   | V-MESSAGE/V-PEER                            | NTF/PEER                             | T-NOWAIT                                  | R-PEER/R-MSG                    | B-IPC・send failure                                            | current childへ`notifyClient`一回、ack待ち0 |
-| PM-5.2     | `test/server/process-messaging/notifications.spec.test.ts#PM-5.2`     | S/G   | V-MESSAGE/V-PEER                            | NTF/PEER                             | T-NOWAIT                                  | R-PEER/R-MSG                    | B-IPC・通知種別cross-productの`pushEncode`行                   | 成功時currentへ一回、recipientなし・同期throwはcaller failure、非同期callback failureは記録 |
+| PM-5.2     | `test/server/process-messaging/notifications.spec.test.ts#PM-5.2`     | S/G   | V-MESSAGE/V-PEER                            | NTF/PEER                             | T-NOWAIT                                  | R-PEER/R-MSG                    | B-IPC・通知種別cross-productの`pushEncode`行                   | 成功時currentへ識別番号付きで一回、recipientなし・同期throw・非同期callback failureは記録して破棄（`setEncode`は窓口へ渡して同期で戻る） |
 | PM-5.3     | `test/server/process-messaging/notifications.spec.test.ts#PM-5.3`     | S/I   | V-MESSAGE                                   | NTF/CAN-NA                           | T-NOWAIT                                  | R-PEER                          | B-IPC・async send pending                                      | response listener/timer/Promiseを作らない |
-| PM-5.4     | `test/server/process-messaging/notifications.spec.test.ts#PM-5.4`     | S/I/G | V-PEER                                      | NTF/F                                | T-NOWAIT/T-RACE                           | R-PEER                          | B-IPC・通知種別×recipientなし×同期throw×非同期callback failure | `notifyClient`は三failureを記録・破棄、`pushEncode`はrecipientなし・同期をcaller failure、非同期を記録。保存/retry/forwarding 0は`NO-DELIVERY-STATE`、replyはPM-6.4 |
+| PM-5.4     | `test/server/process-messaging/notifications.spec.test.ts#PM-5.4`     | S/I/G | V-PEER                                      | NTF/F                                | T-NOWAIT/T-RACE                           | R-PEER                          | B-IPC・通知種別×recipientなし×同期throw×非同期callback failure | `notifyClient`は三failureを記録・破棄、`pushEncode`も三failureを記録・破棄（依頼の記録は窓口に残る）。保存/retry/forwarding 0は`NO-DELIVERY-STATE`、replyはPM-6.4 |
 | PM-6.1     | `test/server/process-messaging/peer-registry.spec.test.ts#PM-6.1`     | S/I/G | V-PEER                                      | PEER                                 | T-SYNC                                    | R-PEER                          | B-IPC・spawn直後                                               | 追加messageなしでregistered childをcurrentにする |
 | PM-6.2     | `test/server/process-messaging/peer-registry.spec.test.ts#PM-6.2`     | S/I/G | V-PEER/V-MESSAGE                            | DSP/PEER                             | T-SYNC                                    | R-DSP                           | B-IPC・受付                                                    | requestごとにsender childをreply targetへcapture |
 | PM-6.3     | `test/server/process-messaging/peer-registry.spec.test.ts#PM-6.3`     | S/I/G | V-PEER                                      | DSP/PEER/RE-AP                       | T-RACE                                    | R-DSP/R-PEER                    | B-IPC・child replacement                                       | 旧request結果は旧childだけ、新childへreply 0 |
 | PM-6.4     | `test/server/process-messaging/peer-registry.spec.test.ts#PM-6.4`     | S/I/G | V-PEER                                      | DSP/F/PEER                           | T-RACE                                    | R-DSP                           | B-IPC・reply recipientなし/同期throw/非同期callback failure    | request-local targetの三failureを記録・破棄し別child転送0 |
 | PM-6.5     | `test/server/process-messaging/peer-registry.spec.test.ts#PM-6.5`     | S/I   | V-PEER                                      | NTF/PEER                             | T-NOWAIT                                  | R-PEER                          | B-IPC・currentなし                                             | 状態通知send 0、保存0、listener/timer 0 |
 | PM-6.6     | `test/server/process-messaging/peer-registry.spec.test.ts#PM-6.6`     | S/I/G | V-PEER                                      | PEER/RST-AP                          | T-RACE                                    | R-PEER                          | B-IPC・四terminal/replacement同着                              | identity一致時だけcurrent無効化、旧eventは新child不変、listener解放 |
-| PM-7.1     | `*.spec.test.ts`の44主case#PM-7.1                                     | S     | V-EVIDENCE                                  | REQ/DSP/NTF/PEER                     | T-STATIC                                  | R-EVIDENCE                      | 44主case・欠落/重複                                      | R1-R6の44 ACと44 canonical主caseを一意対応 |
+| PM-6.7     | `test/server/process-messaging/service-process-report.spec.test.ts#PM-6.7` | S/I/G | V-PEER | PEER | T-RACE | R-PEER | B-IPC・exit後の知らせ | `disconnect`/`close`まで同じ世代の知らせとして受け取り、その後はlistener 0 |
+| PM-7.1     | `*.spec.test.ts`の48主case#PM-7.1                                     | S     | V-EVIDENCE                                  | REQ/DSP/NTF/PEER                     | T-STATIC                                  | R-EVIDENCE                      | 48主case・欠落/重複                                      | R1-R6の48 ACと48 canonical主caseを一意対応 |
 | PM-7.2     | `IMP-CHAR-PM-7.2`                                                     | I     | V-ID/V-ROUTE/V-ARGS/V-TIME/V-MESSAGE/V-PEER | REQ/DSP/NTF/PEER/CAN-NA/RE-AP/RST-AP | T-SYNC/T-ORDER/T-5S/T-10M/T-RACE/T-NOWAIT | R-CORR/R-DSP/R-PEER/R-MSG       | B-PORT/B-IPC・全機能固有failure                                | concrete imp caseを一意対応し、不存在は各spec caseのcall ledgerで確認 |
-| PM-7.3     | 本節の Feature Test Matrix#PM-7.3                                    | M     | V-EVIDENCE                                  | 全profile                            | T-STATIC                                  | R-EVIDENCE                      | matrix・列/N/A欠落                                   | PM-1.1からPM-7.5の49行と全分類が揃う |
+| PM-7.3     | 本節の Feature Test Matrix#PM-7.3                                    | M     | V-EVIDENCE                                  | 全profile                            | T-STATIC                                  | R-EVIDENCE                      | matrix・列/N/A欠落                                   | PM-1.1からPM-7.5の50行と全分類が揃う |
 | PM-7.4     | `INT-BOUNDARY-PM-7.4`                                                 | G     | V-ID/V-MESSAGE/V-PEER                       | REQ/DSP/NTF/PEER/RST-AP              | T-ORDER/T-RACE                            | R-CORR/R-DSP/R-PEER             | child IPC/process・HTTP/DB/filesystem N/A                      | 逆順、切断、再登録、再起動非復元と全resource cleanup |
 | PM-7.5     | `RUNTIME-R9-PM-7.5`                                                   | Q     | V-EVIDENCE                                  | 品質判定 S/F                         | T-STATIC                                  | test/coverage                   | Runtime・未実行/失敗/未解決                                    | 単体・結合testの全件成功とRuntime R9 AC9のC0・C1が未成立なら未完了。PMでcommand・設定・判定の再定義0 |
 
-Feature Test Matrixは49行、Numeric IDは`PM-1.1`から`PM-7.5`の49個で、R1からR6の44主caseとR7の5 layerを重複なく
+Feature Test Matrixは53行、Numeric IDは`PM-1.1`から`PM-7.5`の53個で、R1からR6の48主caseとR7の5 layerを重複なく
 分離する。
 
 ## 18. Numeric Formal Trace
 
-Formal TraceはRequirements 1から7の49 Acceptance Criteriaを`PM-N.M`へ一対一で割り当てる。
+Formal TraceはRequirements 1から7の50 Acceptance Criteriaを`PM-N.M`へ一対一で割り当てる。
 
 | AC      | Numeric ID | Component / contract              | 状態・失敗                         | Canonical locator                                                     |
 | ------- | ---------- | --------------------------------- | ---------------------------------- | --------------------------------------------------------------------- |
@@ -890,6 +910,8 @@ Formal TraceはRequirements 1から7の49 Acceptance Criteriaを`PM-N.M`へ一�
 | R1.AC6  | PM-1.6     | Facade / thumbnail operations     | 配送・handler失敗                  | `test/server/process-messaging/operation-routing.spec.test.ts#PM-1.6` |
 | R1.AC7  | PM-1.7     | Facade / recording・consumer port | 配送・handler失敗                  | `test/server/process-messaging/operation-routing.spec.test.ts#PM-1.7` |
 | R1.AC8  | PM-1.8     | Dispatcher / domain boundary      | 業務判断を変更しない               | `test/server/process-messaging/operation-routing.spec.test.ts#PM-1.8` |
+| R1.AC9  | PM-1.9     | Facade / encode queue operations  | 通常5秒期限                        | `test/server/process-messaging/operation-routing.spec.test.ts#PM-1.9` |
+| R1.AC10 | PM-1.10    | Service process report sender     | 応答なし・送信失敗は記録して破棄   | `test/server/process-messaging/service-process-report.spec.test.ts#PM-1.10` |
 | R2.AC1  | PM-2.1     | Request envelope                  | 同期予約・send failure             | `test/server/process-messaging/correlation.spec.test.ts#PM-2.1`       |
 | R2.AC2  | PM-2.2     | Dispatcher table                  | exact handler                      | `test/server/process-messaging/correlation.spec.test.ts#PM-2.2`       |
 | R2.AC3  | PM-2.3     | Success reply                     | same ID/result                     | `test/server/process-messaging/correlation.spec.test.ts#PM-2.3`       |
@@ -909,6 +931,7 @@ Formal TraceはRequirements 1から7の49 Acceptance Criteriaを`PM-N.M`へ一�
 | R3.AC1  | PM-3.1     | Dispatcher validation             | unsupported→`IPCFunctionError`     | `test/server/process-messaging/validation.spec.test.ts#PM-3.1`        |
 | R3.AC2  | PM-3.2     | Argument extraction               | missing→`IPCArgsError`             | `test/server/process-messaging/validation.spec.test.ts#PM-3.2`        |
 | R3.AC3  | PM-3.3     | Error reply                       | exact handler message              | `test/server/process-messaging/validation.spec.test.ts#PM-3.3`        |
+| R3.AC4  | PM-3.4     | Report receipt                    | 応答なし・不正値は記録して捨てる   | `test/server/process-messaging/service-process-report.spec.test.ts#PM-3.4` |
 | R4.AC1  | PM-4.1     | Deadline selector                 | standard 5,000ms                   | `test/server/process-messaging/deadlines.spec.test.ts#PM-4.1`         |
 | R4.AC2  | PM-4.2     | Deadline selector                 | upload 600,000ms                   | `test/server/process-messaging/deadlines.spec.test.ts#PM-4.2`         |
 | R4.AC3  | PM-4.3     | Deadline selector                 | video cleanup 600,000ms            | `test/server/process-messaging/deadlines.spec.test.ts#PM-4.3`         |
@@ -926,13 +949,14 @@ Formal TraceはRequirements 1から7の49 Acceptance Criteriaを`PM-N.M`へ一�
 | R6.AC4  | PM-6.4     | Reply Sender                      | disconnected target record/discard | `test/server/process-messaging/peer-registry.spec.test.ts#PM-6.4`     |
 | R6.AC5  | PM-6.5     | Peer Registry                     | no current notification no-op      | `test/server/process-messaging/peer-registry.spec.test.ts#PM-6.5`     |
 | R6.AC6  | PM-6.6     | Peer Registry                     | four terminal identity fence       | `test/server/process-messaging/peer-registry.spec.test.ts#PM-6.6`     |
-| R7.AC1  | PM-7.1     | Feature test catalog              | 44主case                           | `*.spec.test.ts`の44主case#PM-7.1                                      |
+| R6.AC7  | PM-6.7     | Service child process registry    | IPC通路が閉じるまで受け取る        | `test/server/process-messaging/service-process-report.spec.test.ts#PM-6.7` |
+| R7.AC1  | PM-7.1     | Feature test catalog              | 48主case                           | `*.spec.test.ts`の48主case#PM-7.1                                      |
 | R7.AC2  | PM-7.2     | Feature test catalog              | implementation-characteristic      | `IMP-CHAR-PM-7.2`                                                     |
-| R7.AC3  | PM-7.3     | Feature test catalog              | 49行matrix                         | 本節の Feature Test Matrix#PM-7.3                                      |
+| R7.AC3  | PM-7.3     | Feature test catalog              | 53行matrix                         | 本節の Feature Test Matrix#PM-7.3                                      |
 | R7.AC4  | PM-7.4     | Feature test catalog              | child IPC integration              | `INT-BOUNDARY-PM-7.4`                                                 |
 | R7.AC5  | PM-7.5     | Runtime Requirement 9 判定        | server全体のC0・C1                 | `RUNTIME-R9-PM-7.5`                                                   |
 
-Formal Traceは49行、Numeric IDは49個、重複・余剰・未割当は0である。R1からR6は44個のcanonical `*.spec.test.ts#PM-N.M`主
+Formal Traceは53行、Numeric IDは53個、重複・余剰・未割当は0である。R1からR6は48個のcanonical `*.spec.test.ts#PM-N.M`主
 case、R7はspec case / implementation-characteristic / matrix / integration / 品質判定の5 layerである。
 
 ## 19. 不一致処理、risk、再確認条件

@@ -206,7 +206,7 @@ handler取消、永続queue、自動retryを追加しない。通常期限は5,0
     -   _Depends: 1.2, 4.1_
     -   _Verification: unittest/spec, unittest/imp, notification failure cross-product_
 
--   [x] 5. child IPC境界と44機能ACの回帰を閉じる
+-   [x] 5. child IPC境界と48機能ACの回帰を閉じる
 -   [x] 5.1 request/reply・deadline・peer・notificationをisolated childで結合検証する
 
     -   5.1固有のtarget integration caseは、production `dist` moduleを実processへ接続するcompiled child
@@ -242,24 +242,24 @@ handler取消、永続queue、自動retryを追加しない。通常期限は5,0
     -   known ID配列とadoption owner結果だけをserializable payloadで運び、consumer/provider binding、候補query、最終削除
         gate、filesystem mutation、HTTP lifecycle、child監督をtest doubleの外へ持ち込まない。
     -   完了時には同じtargetが成功し、誤generation reply、別lease解放、部分snapshot、ownership二重化、残留timer /
-        listener / child参照が各0件になる。supporting caseはR1-R6のcanonical 44主case数へ加算せず、production差分はTasks
+        listener / child参照が各0件になる。supporting caseはR1-R6のcanonical 48主case数へ加算せず、production差分はTasks
         3.1・3.2で完了済みとしてこのleafでは0件にする。
     -   _Requirements: 6.1_
     -   _Boundary: PM supporting carrier child-process integration_
     -   _Depends: 3.1, 3.2, 4.1_
     -   _Verification: compiled child-process integration, fake owner adapters_
 
--   [x] 5.3 R1からR6の44機能ACだけをcanonical回帰matrixで閉じる
+-   [x] 5.3 R1からR6の48機能ACだけをcanonical回帰matrixで閉じる
 
-    -   `SPEC-OPS`、`SPEC-CORR`、`SPEC-VALID`、`SPEC-DEADLINE`、`SPEC-NOTIFY`、`SPEC-PEER`を再実行し、R1からR6の44 ACへ
+    -   `SPEC-OPS`、`SPEC-CORR`、`SPEC-VALID`、`SPEC-DEADLINE`、`SPEC-NOTIFY`、`SPEC-PEER`、`SPEC-REPORT`を再実行し、R1からR6の48 ACへ
         `PM-1.1`から`PM-6.6`の主caseを一対一で対応させる。
     -   各主caseでoperation / args / result / error、ID状態、deadline、requester / current peer、send count、timer /
-        listener / Promise / child参照のterminal結果をassertし、supporting carrier caseとR7 evidenceを44主caseへ吸収しな
+        listener / Promise / child参照のterminal結果をassertし、supporting carrier caseとR7 evidenceを48主caseへ吸収しな
         い。
     -   固定件数上限、文字列・`bigint` ID、共通業務schema、handler取消、retry、永続message、browser delivery、child
         lifecycle、event hookの追加が0件であることをnegative contractで固定する。
-    -   完了時には44/44機能ACが成功したcanonical locatorへ追跡でき、欠落・重複主case・残留resourceが各0件になる。後段でproduction差分が生じた場合は
-        この44/44のtestを再実行する。
+    -   完了時には48/48機能ACが成功したcanonical locatorへ追跡でき、欠落・重複主case・残留resourceが各0件になる。後段でproduction差分が生じた場合は
+        この48/48のtestを再実行する。
     -   _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 2.10, 2.11,
         2.12, 2.13, 2.14, 2.15, 2.16, 3.1, 3.2, 3.3, 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 5.1, 5.2, 5.3, 5.4, 6.1, 6.2,
         6.3, 6.4, 6.5, 6.6_
@@ -274,7 +274,7 @@ handler取消、永続queue、自動retryを追加しない。通常期限は5,0
         所有する共有commandで全件成功させる。本specではcommand・config・thresholdを追加しない。
     -   本機能が主に所有するsourceに、単体testだけでのC0・C1の未到達が残る場合は、`server-application-runtime`のMajor 12の単体testで
         解消されていることを確かめる。判定は、同specの`Requirement 9 Acceptance Criterion 9`に従う。
-    -   Designの44主case（PM-7.1）、`IMP-CHAR-PM-7.2`のconcrete imp case（anchor 10件）、49行のFeature Test Matrix（PM-7.3）、および
+    -   Designの48主case（PM-7.1）、`IMP-CHAR-PM-7.2`のconcrete imp case（anchor 10件）、53行のFeature Test Matrix（PM-7.3）、および
         Task 5.1・5.2のcompiled child integration（`INT-BOUNDARY-PM-7.4`）を、requirements.mdのACと突き合わせてレビューし、
         欠落・重複・空欄が0件であることを確かめる。これらを読む監査testは置かない。
     -   完了時には、本機能の単体testと結合testが全件成功し、server全体の判定（`server-application-runtime` Requirement 9
@@ -300,3 +300,32 @@ handler取消、永続queue、自動retryを追加しない。通常期限は5,0
 | 5.2  | `test/server/process-messaging/integration/process-messaging.integration.test.ts`                                                                                                                                  | `compiled child-process integration, fake owner adapters`                       | `3.1, 3.2, 4.1`              | `npm run test:server:integration -- test/server/process-messaging/integration/process-messaging.integration.test.ts`                                                                                                                                                                                         |
 | 5.3  | `test/server/process-messaging/operation-routing.spec.test.ts`<br>`test/server/process-messaging/imp/dispatcher-peer.test.ts`<br>`test/server/process-messaging/integration/process-messaging.integration.test.ts` | `unittest/spec, unittest/imp, compiled child-process integration`               | `1.3, 5.1, 5.2`              | `npm run test:server:spec -- test/server/process-messaging/operation-routing.spec.test.ts`<br>`npm run test:server:imp -- test/server/process-messaging/imp/dispatcher-peer.test.ts`<br>`npm run test:server:integration -- test/server/process-messaging/integration/process-messaging.integration.test.ts` |
 | 6.5  | `test/server/process-messaging/imp/correlation-lifecycle.test.ts`<br>`test/server/process-messaging/integration/process-messaging.integration.test.ts` | `unittest/spec`・`unittest/imp`・`integration` | `5.3` | `npm run test:server:imp -- test/server/process-messaging/imp/correlation-lifecycle.test.ts`<br>`npm run test:server:integration -- test/server/process-messaging/integration/process-messaging.integration.test.ts` |
+
+-   [x] 8. エンコードの依頼の記録の操作を管理側へ渡す
+-   [x] 8.1 `encodeQueue` の5操作と、識別番号付きの `pushEncode` を実現する
+
+    -   `ModelName` に `encodeQueue` を、`EncodeQueueFunctions` に `add`（`option`・`requestToken`）・`abandon`・
+        `updateOutputPath`・`remove`・`list` を加え、
+        `IPCClient` の facade（`encodeQueue`）から通常5秒期限で送る。`IPCServer` は依頼記録窓口（`IEncodeQueueStore`）の対応す
+        る method を呼び、結果または reject を応答で返す。
+    -   `PushEncodeMessage` に `encodeId` を加え、`IPCServer.pushEncode(encodeId, option)` で現在の通知先へ送る。通知先が無い
+        場合、同期失敗、callback の非同期失敗は運用ログへ記録して破棄する。`setEncode(option)` は依頼記録窓口の
+        `enqueueFromRecording(option)` へ渡して同期で戻る。
+    -   `IPCClient` は `pushEncode` を受けると `encodeManage.pushPersisted(encodeId, option)` を呼び、reject はログへ記録する。
+    -   `operation-fixtures.ts` と操作の件数、PM-1.9 の主 case、期限区分、`pushEncode` の形と配送失敗の cross-product、isolated
+        child の結合 test を更新する。
+    -   _Requirements: 1.9, 5.2, 5.4_
+    -   _Boundary: Dispatcher、Reverse Notification Sender、Message Contract_
+
+-   [x] 9. Web・API側処理が開始した外部プロセスの開始と終了の知らせを運ぶ
+
+-   [x] 9.1 知らせの送信、管理側での無応答、IPC通路が閉じるまでの受け取りを test と実装で閉じる
+
+    -   `IPCClient.serviceProcessReporter`が`serviceProcessStarted`と`serviceProcessEnded`を一方向に送り、送信の失敗を記録して
+        破棄する。`IPCServer`はこの2種類へ応答しない。受け取りと値の確認は`ServiceChildProcessRegistry`が
+        `disconnect`・`close`まで行う。
+    -   _Requirements: 1.10, 3.4, 6.7_
+    -   _Boundary: IPCClient、IPCServer、Service child process registry_
+    -   _Verification: `test/server/process-messaging/service-process-report.spec.test.ts`、
+        `test/server/process-messaging/imp/service-process-report.test.ts`_
+    -   _Depends: `server-application-runtime` 15.1_

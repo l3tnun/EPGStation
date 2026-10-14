@@ -1,9 +1,10 @@
 import { ChildProcess, spawn } from 'child_process';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, optional } from 'inversify';
 import ProcessUtil from '../../../util/ProcessUtil.js';
 import IConfiguration from '../../IConfiguration.js';
 import ILogger from '../../ILogger.js';
 import ILoggerModel from '../../ILoggerModel.js';
+import { ServiceProcessDescriptor, ServiceProcessReporter } from '../../ipc/IServiceProcessReport.js';
 import IEncodeProcessManageModel, {
     CreateProcessOption,
     ManagedProcessHandle,
@@ -13,6 +14,81 @@ import IEncodeProcessManageModel, {
 
 type ManagedProcessState = 'starting' | 'running' | 'stopping' | 'released';
 type ManagedProcessKind = 'process' | 'hls-writer';
+
+/** 停止の signal を送った後に終了を確かめる回数。 */
+export const PROCESS_STOP_CHECK_COUNT = 3;
+/** 終了を確かめる間隔（ミリ秒）。 */
+export const PROCESS_STOP_CHECK_INTERVAL_MS = 1000;
+
+/** 段階的な停止で送る signal。 */
+export type StopSignal = 'SIGINT' | 'SIGKILL';
+
+/** `stopInStages`が対象の生存確認・signal送信・待機に使う操作。 */
+export interface StagedStopSteps {
+    /** 対象が生きているか。確かめられなければ`undefined`（居なくなったとはみなさない）。 */
+    isAlive(stage: string): boolean | undefined;
+    /** signalを送る。送れたら`true`。 */
+    send(signal: StopSignal): boolean;
+    /** 確認の間隔だけ待つ。待てなかったら`false`（その回の確認を飛ばす）。 */
+    wait(stage: StopSignal): Promise<boolean>;
+    /** 確認を待たずに終了が分かったか（実行枠の解放など）。 */
+    isSettled(): boolean;
+}
+
+/** `stopInStages`の結果。 */
+export interface StagedStopResult {
+    /** 最初の確認で居なくなっていなかったか。 */
+    wasRunning: boolean;
+    /** 終了を確かめられたか。 */
+    exitConfirmed: boolean;
+    /** 実際に送れたsignal。 */
+    sentSignals: StopSignal[];
+}
+
+/**
+ * 対象を`signals`の順に停止する。最初に生存を確かめ、居なければ何も送らない。各signalを送った後は
+ * `PROCESS_STOP_CHECK_INTERVAL_MS`ごとに最大`PROCESS_STOP_CHECK_COUNT`回終了を確かめ、確かめられたらそこで終える。
+ * HLS writerの停止（`SIGINT`→`SIGKILL`）と、Web・API側処理が終了したときに管理側が行う停止の両方が使う。
+ * @param signals 送るsignalの順
+ * @param steps 生存確認・signal送信・待機の操作
+ * @returns 停止の結果
+ */
+export const stopInStages = async (
+    signals: readonly StopSignal[],
+    steps: StagedStopSteps,
+): Promise<StagedStopResult> => {
+    const sentSignals: StopSignal[] = [];
+    if (steps.isAlive('initial-check') === false) {
+        return { wasRunning: false, exitConfirmed: true, sentSignals };
+    }
+    for (const signal of signals) {
+        if (steps.send(signal)) {
+            sentSignals.push(signal);
+        }
+        if (await pollUntilExit(signal, steps)) {
+            return { wasRunning: true, exitConfirmed: true, sentSignals };
+        }
+    }
+    return { wasRunning: true, exitConfirmed: false, sentSignals };
+};
+
+const pollUntilExit = async (stage: StopSignal, steps: StagedStopSteps): Promise<boolean> => {
+    for (let attempt = 0; attempt < PROCESS_STOP_CHECK_COUNT; attempt++) {
+        if (steps.isSettled()) {
+            return true;
+        }
+        if ((await steps.wait(stage)) === false) {
+            continue;
+        }
+        if (steps.isSettled()) {
+            return true;
+        }
+        if (steps.isAlive(`${stage}-check`) === false) {
+            return true;
+        }
+    }
+    return false;
+};
 
 interface HlsWriterHandle extends ManagedProcessHandle {
     readonly kind: 'hls-writer';
@@ -39,6 +115,10 @@ interface ChildProcessInfo {
     groupAbsentConfirmed: boolean;
     priority: number;
     processId: number;
+    /** 依頼元が添えた処理種別。あれば起動の成立と解放を管理側へ知らせる。 */
+    report?: ServiceProcessDescriptor;
+    /** 管理側へ開始を知らせたPID。解放時に同じPIDの終了を知らせる。 */
+    reportedPid?: number;
     slotReleased: boolean;
     slotReleasedAt?: number;
     slotReleasedPromise: Promise<void>;
@@ -84,10 +164,17 @@ class EncodeProcessManageModel implements IEncodeProcessManageModel {
     /** 呼び出し元に渡す不透明な `ManagedProcessHandle` から、対応する内部状態
      *  （`ChildProcessInfo`）を引くための対応表。`handle` がGCされれば自動的に消える。 */
     private handles = new WeakMap<ManagedProcessHandle, ChildProcessInfo>();
+    /** 外部プロセスの開始と終了を管理側へ知らせる窓口。注入されなければ知らせない。 */
+    private reporter: ServiceProcessReporter | null;
 
-    constructor(@inject('ILoggerModel') logeer: ILoggerModel, @inject('IConfiguration') configure: IConfiguration) {
+    constructor(
+        @inject('ILoggerModel') logeer: ILoggerModel,
+        @inject('IConfiguration') configure: IConfiguration,
+        @inject('IServiceProcessReporter') @optional() reporter?: ServiceProcessReporter,
+    ) {
         this.log = logeer.getLogger();
         this.maxEncode = configure.getConfig().encodeProcessNum;
+        this.reporter = reporter ?? null;
     }
 
     /**
@@ -234,21 +321,24 @@ class EncodeProcessManageModel implements IEncodeProcessManageModel {
     private async stopHlsProcessGroup(processInfo: ChildProcessInfo): Promise<HlsWriterStopResult> {
         const pid = processInfo.pid!;
         const pgid = processInfo.pgid!;
-        const sentSignals: Array<'SIGINT' | 'SIGKILL'> = [];
+        let sentSignals: StopSignal[];
         let exitConfirmed = false;
 
         try {
-            const initiallyAlive = this.isHlsGroupAlive(processInfo, pgid, 'initial-check');
-            if (initiallyAlive === false) {
-                exitConfirmed = true;
-            } else {
-                this.sendHlsSignal(processInfo, pgid, 'SIGINT', sentSignals);
-                exitConfirmed = await this.pollHlsGroup(processInfo, pgid, 'SIGINT');
-                if (!exitConfirmed) {
-                    this.sendHlsSignal(processInfo, pgid, 'SIGKILL', sentSignals);
-                    exitConfirmed = await this.pollHlsGroup(processInfo, pgid, 'SIGKILL');
-                }
-            }
+            ({ exitConfirmed, sentSignals } = await stopInStages(['SIGINT', 'SIGKILL'], {
+                isAlive: stage => this.isHlsGroupAlive(processInfo, pgid, stage),
+                send: signal => this.sendHlsSignal(processInfo, pgid, signal),
+                wait: async stage => {
+                    try {
+                        await ProcessUtil.wait(PROCESS_STOP_CHECK_INTERVAL_MS);
+                        return true;
+                    } catch (err: any) {
+                        this.logHlsStopError(processInfo, pgid, `${stage}-wait`, err);
+                        return false;
+                    }
+                },
+                isSettled: () => processInfo.slotReleased,
+            }));
         } finally {
             if (!exitConfirmed && !processInfo.directCloseConfirmed) {
                 this.retainReleasedErrorSink(processInfo.child);
@@ -269,31 +359,6 @@ class EncodeProcessManageModel implements IEncodeProcessManageModel {
         return { exitConfirmed, sentSignals, slotReleased: true };
     }
 
-    private async pollHlsGroup(
-        processInfo: ChildProcessInfo,
-        pgid: number,
-        stage: 'SIGINT' | 'SIGKILL',
-    ): Promise<boolean> {
-        for (let attempt = 0; attempt < 3; attempt++) {
-            if (processInfo.slotReleased) {
-                return true;
-            }
-            try {
-                await ProcessUtil.wait(1000);
-            } catch (err: any) {
-                this.logHlsStopError(processInfo, pgid, `${stage}-wait`, err);
-                continue;
-            }
-            if (processInfo.slotReleased) {
-                return true;
-            }
-            if (this.isHlsGroupAlive(processInfo, pgid, `${stage}-check`) === false) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     private isHlsGroupAlive(processInfo: ChildProcessInfo, pgid: number, stage: string): boolean | undefined {
         try {
             return ProcessUtil.isProcessGroupAlive(pgid);
@@ -303,17 +368,13 @@ class EncodeProcessManageModel implements IEncodeProcessManageModel {
         }
     }
 
-    private sendHlsSignal(
-        processInfo: ChildProcessInfo,
-        pgid: number,
-        signal: 'SIGINT' | 'SIGKILL',
-        sentSignals: Array<'SIGINT' | 'SIGKILL'>,
-    ): void {
+    private sendHlsSignal(processInfo: ChildProcessInfo, pgid: number, signal: StopSignal): boolean {
         try {
             ProcessUtil.killProcessGroup(pgid, signal);
-            sentSignals.push(signal);
+            return true;
         } catch (err: any) {
             this.logHlsStopError(processInfo, pgid, `${signal}-send`, err);
+            return false;
         }
     }
 
@@ -367,6 +428,7 @@ class EncodeProcessManageModel implements IEncodeProcessManageModel {
                 groupAbsentConfirmed: false,
                 priority: option.priority,
                 processId: Date.now(),
+                report: option.report,
                 slotReleased: false,
                 slotReleasedPromise,
                 slotReleasedResolve,
@@ -448,6 +510,7 @@ class EncodeProcessManageModel implements IEncodeProcessManageModel {
             }
             processInfo.state = 'running';
             this.log.encode.info(`create new encode process: ${processInfo.processId}`);
+            this.reportStarted(processInfo);
             resolve({ child, handle: processInfo.handle });
         };
         const onError = (err: Error): void => {
@@ -522,7 +585,28 @@ class EncodeProcessManageModel implements IEncodeProcessManageModel {
         const index = this.childs.indexOf(processInfo);
         this.childs.splice(index, 1);
         this.handles.delete(processInfo.handle);
+        if (processInfo.reportedPid !== undefined) {
+            this.reporter!.ended(processInfo.reportedPid);
+        }
         processInfo.slotReleasedResolve();
+    }
+
+    /**
+     * 依頼元が処理種別を添えたプロセスの起動の成立を、PID（HLS writerはPGIDも）とともに管理側へ知らせる。
+     * 処理種別が無い、知らせる窓口が無い、またはPIDが無い場合は知らせない。
+     * @param processInfo 起動が成立したプロセスの内部状態
+     */
+    private reportStarted(processInfo: ChildProcessInfo): void {
+        const pid = processInfo.child.pid;
+        if (processInfo.report === undefined || this.reporter === null || typeof pid !== 'number') {
+            return;
+        }
+        processInfo.reportedPid = pid;
+        this.reporter.started(
+            processInfo.kind === 'hls-writer'
+                ? { ...processInfo.report, pid, pgid: processInfo.pgid }
+                : { ...processInfo.report, pid },
+        );
     }
 
     /**

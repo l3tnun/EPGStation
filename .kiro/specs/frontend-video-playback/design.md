@@ -533,6 +533,11 @@ mount し、同じ `video` 要素に両方の `Controller.attachMedia` を張る
 経由の ID3v2 metadata（`pushID3v2Data`）は caption/superimpose どちらの PES が乗るかを送出側が保証しないため、
 両方の feeder に同一データを渡し、`Feeder.feed` 内の `recieve.type` 判定で個別に取捨選択させる。`setVisible` /
 `dispose` は 2 組双方に対して行う。
+`setVisible(true)` は各 `Controller` で `hide()` の後に `show()` を呼び、`setVisible(false)` は `hide()` だけを呼ぶ
+（要求 4.4a）。aribb24.js 2.x の `Controller` は、非表示の間に video の `play` を受けると描画 loop
+（`requestAnimationFrame`）を登録し、次の frame で非表示を見て loop を止めるが、loop の識別子を消さない。その後の
+`show()` は識別子が残っていると loop を登録しないため、そのままでは字幕が描画されない。`hide()` は識別子を
+`cancelAnimationFrame` で消して戻すので、`hide()` → `show()` の順で呼べば、どの状態からでも描画 loop が 1 つだけ動く。
 
 ### DRCS（外字）表示方針
 

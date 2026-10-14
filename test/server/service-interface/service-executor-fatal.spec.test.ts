@@ -53,6 +53,15 @@ const container = {
     get(identifier) {
         if (identifier === 'ILoggerModel') return logger;
         if (identifier === 'IEncodeFinishModel') return { set: () => record('encode-finish-set') };
+        if (identifier === 'IEncodeManageModel') {
+            // 復元は終わらない Promise を返し、HTTP の開始がその完了を待たないことを観測する
+            return {
+                restore: () => {
+                    record('encode-restore-start');
+                    return new Promise(() => undefined);
+                },
+            };
+        }
         if (identifier === 'IServiceServer') {
             return {
                 start: () => {
@@ -160,6 +169,16 @@ describe('service executor fatal path', () => {
 
         expect(entriesFor(observation.ledger, 'service-server-start')).toHaveLength(1);
         expect(entriesFor(observation.ledger, 'fatal-log')).toHaveLength(1);
+    });
+
+    it('[SI-EXEC-3] starts restoring encode requests once after the encode finish model without waiting for it', async () => {
+        const observation = await observeServiceExecutorFatalPath();
+
+        expect(
+            observation.ledger
+                .map(entry => entry.operation)
+                .filter(operation => ['encode-finish-set', 'encode-restore-start', 'service-server-start'].includes(operation)),
+        ).toEqual(['encode-finish-set', 'encode-restore-start', 'service-server-start']);
     });
 
     it('[SI-EXEC-2] exits the real child process with code 1 on the fatal path', async () => {

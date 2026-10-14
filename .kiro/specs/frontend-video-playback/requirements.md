@@ -82,6 +82,7 @@ Video playback は live watch、recorded direct watch、recorded streaming watch
 2. direct Normal playback と WebM/MP4 direct stream では、EPGStation フロントエンドは HLS/mpegts subtitle renderer (aribb24) を追加しない。subtitle button の表示可否は video の native text track が存在するかどうかで決め、`VideoPlayerSetting.isShowSubtitle` の値は表示可否に影響しない。
 3. Picture-in-Picture が browser API として利用可能なとき、EPGStation フロントエンドは player control に表示できる。
 4. HLS と M2TS-LL の aribb24 option は `isForceEnableSubtitleStroke` を参照し、subtitle 表示状態は `VideoPlayerSetting.isShowSubtitle` に保存・復元する。
+4a. aribb24 の subtitle 表示を off から on にしたとき、EPGStation フロントエンドは、再生（video の `play`）が off の間に始まった場合も含めて、on にした時点から字幕を描画する。aribb24.js 2.x の `Controller` は、非表示の間に `play` で登録した描画 loop が止まった後も loop を登録済みとして扱い、`show()` だけでは描画を再開しない。このため、on にするときは各 `Controller` の `hide()` で描画 loop の状態を戻してから `show()` を呼ぶ。
 5. shared player controls は live ではなく、かつ duration > 0 の時だけ seek/speed controls を表示し、mobile/iPadOS では volume slider を非表示にする。live 再生中は media element が duration に 0 以外の値を報告していても seek/speed controls を表示しない。
 6. keyboard shortcuts、fullscreen fallback、`video.play()` failure は snackbar なしで log only、decode/network error overlay は追加しない挙動を維持する。
 6a. player 上の keyboard shortcut は `Space`（再生/一時停止 toggle）、`k`（`Space` と同じ再生/一時停止 toggle）、`m`（mute toggle）、`f`（fullscreen toggle）、`ArrowLeft` / `ArrowRight`（live ではなく、かつ `duration > 0` の場合だけ 10 秒戻る/進む）を持つ。live 再生中は `duration` の報告値に関わらずこの shortcut を無効にする。

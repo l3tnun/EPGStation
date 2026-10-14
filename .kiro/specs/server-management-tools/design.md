@@ -22,7 +22,7 @@
 -   復元と v1 移行の順序、種類単位または行単位の確定、および途中失敗後に残る状態を一意にする。
 -   v1 の識別番号を実行中の対応表で変換し、管理情報だけを本仕様の entity へ写像する。
 -   DB 接続確認が失敗を返した後は 1 秒待って再確認し、一回の確認にも待機全体にも EPGStation 独自の期限を追加しない。
--   仕様 test、実装 test、DB integration test、および CLI process test から 45 Acceptance Criteria を一意に追跡できるよ
+-   仕様 test、実装 test、DB integration test、および CLI process test から 46 Acceptance Criteria を一意に追跡できるよ
     うにする。
 
 ### 非目標
@@ -707,6 +707,7 @@ Runtime 所有のため N/A とする。
 | MT-3.6  | `SPEC-RESTORE#MT-3.6` | S/G   | V-ROWS                                           | R/S/F/C/RE/RST     | T-SEQ               | 8 DB transactions               | SQLite/MySQL/stage失敗                       | rules→reserves→drop logs→recorded→thumbnails→video→history→tags                              | 実装済み |
 | MT-3.7  | `SPEC-RESTORE#MT-3.7` | S/G   | V-ROWS                                           | R/F/C/RE/RST       | T-SEQ               | DB transaction/connection       | 各後段のstart・mutation・commit・release失敗 | 前段 row は残り、失敗段より後の call 0                                                       | 実装済み |
 | MT-3.8  | `SPEC-RESTORE#MT-3.8` | S/I/G | V-ROWS                                           | R/F/C/RE/RST       | T-SEQ               | QueryRunner/transaction         | start・mutation・commit・rollback・release   | active時rollback、全経路release後も公開 message は`restore error`のみ                        | 実装済み |
+| MT-3.9  | `SPEC-RESTORE#MT-3.9` | S/I/G | V-ROWS                                           | R/F/C              | T-SEQ               | 依頼の記録の全件削除            | 全件削除のreject                             | 最初の種類の復元より前に全件削除を一回、rejectなら後続を開始せず`restore error`               | 実装済み |
 | MT-4.1  | `SPEC-V1#MT-4.1`      | S     | V-V1                                             | P/R/S/F/RE/RST     | T-SEQ               | input file                      | final-v1前提違反                             | final-v1 synthetic fixture を受入対象とし runtime revision判定を追加しない                   | 実装済み |
 | MT-4.2  | `SPEC-V1#MT-4.2`      | S/I/G | V-V1                                             | P/R/S/F/C/RE/RST   | T-SEQ               | input file                      | filesystem/parse失敗                         | DB probe 前に UTF-8 read と JSON parse                                                       | 実装済み |
 | MT-4.3  | `SPEC-V1#MT-4.3`      | S/I/G | V-V1                                             | P/F/RE/RST         | T-SEQ               | input file                      | ENOENT/read/invalid JSON                     | migration DB insert と probe 0、exit 1                                                       | 実装済み |
@@ -729,21 +730,21 @@ Runtime 所有のため N/A とする。
 | MT-6.1  | `package.json#MT-6.1`     | R     | V-SURFACE                                        | ST-STATIC          | T-STATIC            | package script 一覧        | command欠落                                  | `install-win-service` 名が一意に存在                                                         | 確認済み（レビュー） |
 | MT-6.2  | `package.json#MT-6.2`     | R     | V-SURFACE                                        | ST-STATIC          | T-STATIC            | package script 一覧        | command欠落                                  | `uninstall-win-service` 名が一意に存在                                                       | 確認済み（レビュー） |
 | MT-6.3  | `package.json#MT-6.3`     | R     | V-SURFACE                                        | ST-STATIC          | T-STATIC            | specification 文言             | support誤表明                                | 名称存在だけを確認し Windows runtime success を要求・報告しない                              | 確認済み（レビュー） |
-| MT-7.1  | `SPEC-*`の37主case     | S     | V-EVIDENCE                                       | ST-STATIC          | T-STATIC            | case 一覧              | AC欠落・重複・locator重複                    | R1-R6の40 ACのうちMT-6.1〜6.3を除く37 ACに37主caseを一意対応                                                             | 本節の構成 |
+| MT-7.1  | `SPEC-*`の38主case     | S     | V-EVIDENCE                                       | ST-STATIC          | T-STATIC            | case 一覧              | AC欠落・重複・locator重複                    | R1-R6の41 ACのうちMT-6.1〜6.3を除く38 ACに38主caseを一意対応                                                             | 本節の構成 |
 | MT-7.2  | `IMP-CHAR-MT-7.2`     | I     | V-DBTOOLS-CLI/V-V1-CLI/V-JSON/V-ROWS/V-V1/V-WAIT | P/W/R/S/F/RE/RST   | T-SEQ/T-WAIT/T-RACE | DB/file/timer/process           | 値域・管理情報種類・除外・継続待機の分岐欠落 | concrete imp / characterization caseを一意対応                              | 実装済み |
 | MT-7.3  | 本節の Matrix | M     | V-EVIDENCE                                       | ST-STATIC          | T-STATIC            | matrix 一覧             | 必須列・N/A理由・分類欠落                    | 45行、値域、状態、cancel/reentry/restart、時刻、資源、境界 が揃う                         | 本節の構成 |
 | MT-7.4  | `INT-BOUNDARY-MT-7.4` | G     | V-EVIDENCE                                       | P/W/R/S/F/C/RE/RST | T-SEQ/T-WAIT/T-RACE | DB/file/child                   | SQLite/MySQL/filesystem/process失敗          | concrete integration case、cleanup、HTTP/IPC N/A理由を一意対応                               | 実装済み |
 | MT-7.5  | `RUNTIME-R9-MT-7.5`   | Q     | V-EVIDENCE                                       | ST-GATE            | T-STATIC            | test/coverage evidence | 品質判定未実行・失敗           | 全固有testとserver全体のC0/C1が成立したときだけ完了                                | Runtime の判定に従う |
 
-Matrix は 45 行である。空欄はなく、N/A は profile または当該 cell に理由を持つ。主 case locator は 45 個とも一意である。
+Matrix は 46 行である。空欄はなく、N/A は profile または当該 cell に理由を持つ。主 case locator は 46 個とも一意である。
 
 ### R7 Evidence Layers
 
 | Canonical locator     | Evidence layer                | 本機能が定義する oracle                                                                                                                                                                                    |
 | --------------------- | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `SPEC-*`の37主case     | spec case                     | canonical registryに列挙したR1-R5の37 named case（R6のMT-6.1〜6.3は`package.json`の確認）がAC欠落なく一対一で並び、R7を仕様case件数へ混入しない                                                   |
+| `SPEC-*`の38主case     | spec case                     | canonical registryに列挙したR1-R5の38 named case（R6のMT-6.1〜6.3は`package.json`の確認）がAC欠落なく一対一で並び、R7を仕様case件数へ混入しない                                                   |
 | `IMP-CHAR-MT-7.2`     | implementation-characteristic | canonical registryに列挙したparser / JSON collection / converter / wait / cleanup caseを対応付け、仕様期待とsource固有事実を混同しない                                                    |
-| 本節の Matrix | matrix                        | `MT-1.1`〜`MT-7.5` 45行、全必須列、9値域、状態、時間、transaction / connection / input / output file、runtime・command競合、境界、failure、test の状態、N/A理由、およびID / locatorの欠落・重複がない |
+| 本節の Matrix | matrix                        | `MT-1.1`〜`MT-7.5` 46行、全必須列、9値域、状態、時間、transaction / connection / input / output file、runtime・command競合、境界、failure、test の状態、N/A理由、およびID / locatorの欠落・重複がない |
 | `INT-BOUNDARY-MT-7.4` | integration boundary          | canonical registryに列挙したSQLite / MySQL row、versionless JSON byte、transaction / connection / file / child cleanup、exit 0 / 1を接続する。HTTP / IPCはcarrier自体がないためN/A、Windowsは名称のみ      |
 | `RUNTIME-R9-MT-7.5`   | 品質判定                      | 本機能の単体 test と結合 test が全成功し、Runtime Requirement 9 Acceptance Criterion 9 の server 全体の C0 / C1 が成立したときだけ完了と判定する。未実行・失敗は本機能未完了                                    |
 
@@ -790,7 +791,7 @@ C0/C1 100%だけ、または名指しの test の実在だけを完了証拠に�
 
 ## Requirements Traceability
 
-Formal trace は、Requirements 1-7 の 45 Acceptance Criteria を `MT-N.M` に一対一で割り当てる。
+Formal trace は、Requirements 1-7 の 46 Acceptance Criteria を `MT-N.M` に一対一で割り当てる。
 
 | AC      | Numeric ID | Component                      | Interface / data                | 状態・失敗                                                                   | 検証                  |
 | ------- | ---------- | ------------------------------ | ------------------------------- | ---------------------------------------------------------------------------- | --------------------- |
@@ -812,6 +813,7 @@ Formal trace は、Requirements 1-7 の 45 Acceptance Criteria を `MT-N.M` に�
 | R3.AC6  | MT-3.6     | Restore coordinator            | 8 stage table                   | 固定順、後続抑止                                                             | `SPEC-RESTORE#MT-3.6` |
 | R3.AC7  | MT-3.7     | Restore / repositories         | stage commit                    | 後段失敗、前段維持                                                           | `SPEC-RESTORE#MT-3.7` |
 | R3.AC8  | MT-3.8     | Restore / persistence port     | transaction lifecycle / wrapper | rollback / release失敗、`restore error`維持                                  | `SPEC-RESTORE#MT-3.8` |
+| R3.AC9  | MT-3.9     | Restore / persistence port     | 依頼の記録の全件削除            | 復元の最初に一回、失敗時は`restore error`                                     | `SPEC-RESTORE#MT-3.9` |
 | R4.AC1  | MT-4.1     | v1 coordinator                 | final-v1 `OldBackupData`        | caller前提、revision preflightなし                                           | `SPEC-V1#MT-4.1`      |
 | R4.AC2  | MT-4.2     | v1 / JSON adapter              | v1 input file                   | DB前read / parse                                                             | `SPEC-V1#MT-4.2`      |
 | R4.AC3  | MT-4.3     | v1 coordinator                 | file error contract             | insert / probe前失敗                                                         | `SPEC-V1#MT-4.3`      |
@@ -834,13 +836,13 @@ Formal trace は、Requirements 1-7 の 45 Acceptance Criteria を `MT-N.M` に�
 | R6.AC1  | MT-6.1     | command surface                | package script 一覧        | 名称存在、runtime N/A                                                        | `package.json#MT-6.1`     |
 | R6.AC2  | MT-6.2     | command surface                | package script 一覧        | 名称存在、runtime N/A                                                        | `package.json#MT-6.2`     |
 | R6.AC3  | MT-6.3     | command / support boundary     | specification 文言             | Windows保証を表明しない                                                      | `package.json#MT-6.3`     |
-| R7.AC1  | MT-7.1     | Feature test catalog       | spec case                       | 欠落 / 重複                                                                  | `SPEC-*`の37主case     |
+| R7.AC1  | MT-7.1     | Feature test catalog       | spec case                       | 欠落 / 重複                                                                  | `SPEC-*`の38主case     |
 | R7.AC2  | MT-7.2     | Feature test catalog       | imp / characteristic case       | 値域・分岐・継続待機                                                         | `IMP-CHAR-MT-7.2`     |
 | R7.AC3  | MT-7.3     | Feature test catalog       | matrix                          | 状態・時間・資源・競合の未分類                                               | 本節の Matrix |
 | R7.AC4  | MT-7.4     | Feature test catalog       | DB / filesystem / process cases | SQLite / MySQL / compiled CLI失敗・cleanup                                   | `INT-BOUNDARY-MT-7.4` |
 | R7.AC5  | MT-7.5     | Runtime Requirement 9 判定    | server 全体の C0 / C1         | 未実行・失敗・未解決なら未完了                                               | `RUNTIME-R9-MT-7.5`   |
 
-Formal trace は 45 行、Numeric ID は `MT-1.1`〜`MT-7.5` の 45 個であり、重複・余剰・未割当は 0 である。R1-R5 は 37 主
+Formal trace は 46 行、Numeric ID は `MT-1.1`〜`MT-7.5` の 46 個であり、重複・余剰・未割当は 0 である。R1-R5 は 38 主
 case、R6 の 3 AC は `package.json` の確認、R7 は spec case / implementation-characteristic / matrix / integration / 品質判定の 5 layer と一
 対一である。
 

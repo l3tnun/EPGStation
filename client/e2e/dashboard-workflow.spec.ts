@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test'
 import { createServer } from 'node:http'
 import { Server as SocketIOServer } from 'socket.io'
 import { installAppShellApiMocks } from './support/appShellMocks'
+import { replaceApiMocks } from './support/apiMockReplacement'
 import {
   createDashboardRequestLog,
   dashboardFixtureSecrecyText,
@@ -156,9 +157,10 @@ test('renders Dashboard empty and failure states without empty copy', async ({ p
   await expect(page.getByText(/empty/i)).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'MORE' })).toHaveCount(0)
 
-  await page.unrouteAll()
-  await installAppShellApiMocks(page)
-  await installDashboardWorkflowApiMocks(page, { mode: 'failure' })
+  await replaceApiMocks(page, async () => {
+    await installAppShellApiMocks(page)
+    await installDashboardWorkflowApiMocks(page, { mode: 'failure' })
+  })
   await page.goto('/?timestamp=failure')
 
   await expect(page.getByRole('heading', { name: '録画中 0/0' })).toBeVisible()

@@ -102,6 +102,7 @@ describe('recorded stream implementation characterization', () => {
             input: null,
             output: 'synthetic-stream-root/stream7.m3u8',
             priority: 1,
+            report: { kind: 'hls', streamId: 7 },
         });
 
         model.videoFileType = 'encoded';
@@ -317,6 +318,7 @@ describe('recorded stream implementation characterization', () => {
             input: null,
             output: null,
             priority: 1,
+            report: { kind: 'stream' },
         });
         expect(pipe).toHaveBeenCalledWith(child.stdin);
 
@@ -404,6 +406,7 @@ describe('recorded stream implementation characterization', () => {
             input: 'synthetic/encoded.m2ts',
             output: null,
             priority: 1,
+            report: { kind: 'stream' },
         });
 
         await model.stop();

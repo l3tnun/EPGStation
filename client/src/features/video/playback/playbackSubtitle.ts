@@ -108,7 +108,12 @@ export function createPlaybackSubtitleAdapter({
     kind: 'aribb24',
     setVisible: (visible) => {
       if (visible) {
+        // aribb24.js 2.x の Controller は、非表示の間に video の play で登録した描画 loop が止まった後も
+        // loop の識別子を残し、show() は識別子が残っていると loop を登録しない。hide() で識別子を消して
+        // から show() を呼び、どの状態からでも描画 loop を 1 つだけ動かす（要求 4.4a）。
+        caption.controller.hide()
         caption.controller.show()
+        superimpose.controller.hide()
         superimpose.controller.show()
         return
       }

@@ -54,6 +54,7 @@ describe('stream command expansion', () => {
             input: null,
             output: 'synthetic-stream-root/stream9.m3u8',
             priority: 1,
+            report: { kind: 'hls', streamId: 9 },
         });
     });
 
@@ -71,6 +72,7 @@ describe('stream command expansion', () => {
             input: 'synthetic/video.mp4',
             output: 'synthetic-stream-root/stream9.m3u8',
             priority: 1,
+            report: { kind: 'hls', streamId: 9 },
         });
     });
 

@@ -1,6 +1,11 @@
+import { mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 
 import { compiled, executionManager, fakeIdAllocator, fakeStream, logger } from './_media-harness';
+
+const HLSFileDeleterModel = compiled<any>('model', 'service', 'stream', 'util', 'HLSFileDeleterModel.js').default;
 
 const StreamManageModel = compiled<any>('model', 'service', 'stream', 'manager', 'StreamManageModel.js').default;
 const StreamApiModel = compiled<any>('model', 'api', 'stream', 'StreamApiModel.js').default;
@@ -24,23 +29,32 @@ describe('restart compatibility boundary', () => {
         expect(stream.start).toHaveBeenCalledWith(0);
     });
 
-    it('[PRIMARY R8.3] reserves residual HLS artifact identifiers before accepting a new HLS stream after restart', async () => {
-        const artifactIndex = {
-            listExact: vi.fn(async () => []),
-            scanAtStartup: vi.fn(async () => new Set([0])),
-            scanCurrent: vi.fn(async () => new Set<number>()),
-        };
-        const manager = new StreamManageModel(
-            { getLogger: logger },
-            executionManager(),
-            { notifyClient: vi.fn() },
-            fakeIdAllocator({ getLogger: logger }, { getConfig: () => ({ streamFilePath: 'synthetic-hls-root' }) }, artifactIndex),
-        );
-        const stream = fakeStream({ isEnable: false, type: 'LiveHLS' });
+    it('[PRIMARY R8.3] deletes residual HLS artifacts of any identifier when the service starts, before the first HLS stream', async () => {
+        const dir = mkdtempSync(join(tmpdir(), 'epg-hls-restart-delete-'));
+        try {
+            for (const file of ['stream0.m3u8', 'stream0-000000003.ts', 'stream7.m3u8', 'stream7-child_vtt.m3u8']) {
+                writeFileSync(join(dir, file), 'residual');
+            }
+            writeFileSync(join(dir, 'synthetic-keep.txt'), 'kept');
+            const manager = new StreamManageModel(
+                { getLogger: logger },
+                executionManager(),
+                { notifyClient: vi.fn() },
+                fakeIdAllocator(
+                    { getLogger: logger },
+                    { getConfig: () => ({ streamFilePath: dir }) },
+                    new HLSFileDeleterModel({ getLogger: logger }),
+                ),
+            );
+            const stream = fakeStream({ isEnable: false, type: 'LiveHLS' });
 
-        await expect(manager.start(stream)).resolves.toBe(1);
+            await expect(manager.start(stream)).resolves.toBe(0);
 
-        expect(stream.start).toHaveBeenCalledWith(1);
+            expect(readdirSync(dir)).toEqual(['synthetic-keep.txt']);
+            expect(stream.start).toHaveBeenCalledWith(0);
+        } finally {
+            rmSync(dir, { force: true, recursive: true });
+        }
     });
 
     it('[PRIMARY R8.4] exposes no server-wide drain path that waits for every delivery to finish', () => {

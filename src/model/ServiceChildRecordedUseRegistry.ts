@@ -98,6 +98,24 @@ export default class ServiceChildRecordedUseRegistry
         return 'released';
     }
 
+    /**
+     * 終了した世代（peer）の lease をすべて解放する。管理側が、その世代が開始した外部プロセスの停止を確かめた後
+     * （確かめられない process が残るときは、居なくなるのを確かめるか後始末の上限に達した後）に呼ぶ。登録の無い peer では
+     * 何もしない。
+     * @param peer 終了した Web・API 側処理
+     */
+    public releasePeer(peer: object): void {
+        const peerLeases = this.leasesByPeer.get(peer);
+        if (peerLeases === undefined) return;
+        this.leasesByPeer.delete(peer);
+        for (const lease of peerLeases.values()) {
+            this.unknownLeases.delete(lease);
+            const recordedLeases = this.leasesByRecordedId.get(lease.recordedId)!;
+            recordedLeases.delete(lease);
+            if (recordedLeases.size === 0) this.leasesByRecordedId.delete(lease.recordedId);
+        }
+    }
+
     public tryAcquireDeletion(
         recordedId: number,
     ): { readonly token: object } | { readonly status: 'busy' | 'unknown' } {

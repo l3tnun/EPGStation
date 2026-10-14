@@ -632,6 +632,51 @@ describe('repository contracts through real SQLite and MySQL drivers', () => {
         });
     });
 
+    it('[PERSIST-10.1-ENCODE-QUEUE] round-trips caller-numbered encode request records, output paths, deletes, and ascending order', async () => {
+        await withDialects(async ({ db }) => {
+            const option = JSON.stringify({
+                recordedId: 7,
+                videoFileId: 8,
+                parentDir: 'synthetic-recorded',
+                directory: 'synthetic-録画/サブ "quoted"',
+                mode: 'synthetic-mode',
+                removeOriginal: false,
+            });
+            const largest = Number.MAX_SAFE_INTEGER;
+            await expect(db.EncodeQueueDB.findAll()).resolves.toEqual([]);
+
+            await db.EncodeQueueDB.insertOnce({ id: largest, option, outputPath: null, createdAt: 1_700_000_000_000 });
+            await db.EncodeQueueDB.insertOnce({ id: 2, option: '{}', outputPath: null, createdAt: 1_700_000_000_002 });
+            await db.EncodeQueueDB.insertOnce({ id: 1, option: '[]', outputPath: null, createdAt: largest });
+
+            await expect(db.EncodeQueueDB.findAll()).resolves.toEqual([
+                { id: 1, option: '[]', outputPath: null, createdAt: largest },
+                { id: 2, option: '{}', outputPath: null, createdAt: 1_700_000_000_002 },
+                { id: largest, option, outputPath: null, createdAt: 1_700_000_000_000 },
+            ]);
+
+            await expect(db.EncodeQueueDB.updateOutputPath(largest, '<synthetic-output>/encoded.mp4')).resolves.toBe(
+                true,
+            );
+            await expect(db.EncodeQueueDB.updateOutputPath(404, '<synthetic-output>/missing.mp4')).resolves.toBe(false);
+            await expect(db.EncodeQueueDB.deleteOnce(404)).resolves.toBe(false);
+            await expect(db.EncodeQueueDB.deleteOnce(2)).resolves.toBe(true);
+            await expect(db.EncodeQueueDB.deleteOnce(2)).resolves.toBe(false);
+
+            await expect(db.EncodeQueueDB.findAll()).resolves.toEqual([
+                { id: 1, option: '[]', outputPath: null, createdAt: largest },
+                { id: largest, option, outputPath: '<synthetic-output>/encoded.mp4', createdAt: 1_700_000_000_000 },
+            ]);
+
+            await expect(
+                db.EncodeQueueDB.insertOnce({ id: 1, option: '{}', outputPath: null, createdAt: 1 }),
+            ).rejects.toThrow();
+            await db.EncodeQueueDB.deleteAll();
+            await expect(db.EncodeQueueDB.findAll()).resolves.toEqual([]);
+            await expect(db.EncodeQueueDB.deleteOnce(1)).resolves.toBe(false);
+        });
+    });
+
     it('[PERSIST-2.6] preserves backend-specific LIKE, binary LIKE, regexp, and boolean results', async () => {
         await withDialects(async ({ db, entities, source }, dialect) => {
             vi.useFakeTimers();

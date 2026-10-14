@@ -16,7 +16,8 @@ SQLite または MySQL を使って EPGStation の管理情報を保存・検索
     表出力機能（`server-iptv-export`）、バックアップ・復元・旧版移行機能（`server-management-tools`）、番組情報・番組表
     機能（`server-program-guide`）、録画済み番組管理機能（`server-recorded-content`）、録画予約管理機能
     （`server-reservation-management`）、自動予約ルール機能（`server-reservation-rules`）、録画保存先の容量管理機能
-    （`server-storage-management`）、録画済み番組のサムネイル管理機能（`server-thumbnail-management`）
+    （`server-storage-management`）、録画済み番組のサムネイル管理機能（`server-thumbnail-management`）、録画ファイル変換（エンコード）
+    機能（`server-encoding`）
 
 ## Requirements
 
@@ -75,6 +76,8 @@ SQLite または MySQL を使って EPGStation の管理情報を保存・検索
 4. The データベース保存・検索機能 shall 録画ファイル、ドロップログ、およびサムネイルの管理情報を保存する
 5. The データベース保存・検索機能 shall 録画済み番組のタグと関連付けを保存する
 6. The データベース保存・検索機能 shall 各情報の業務状態と変更可否を独自に決定しない
+7. The データベース保存・検索機能 shall エンコードの依頼の記録（呼出し元が割り当てた識別番号、依頼内容、出力先、記録時刻）
+   を保存し、識別番号を自動で採番しない
 
 ### Requirement 3: 追加・更新・削除・検索
 

@@ -5,6 +5,7 @@ import type {
     RecordedUseReleaseStatus,
     RecordedUseSnapshotPayload,
 } from './IRecordedResourceUse.js';
+import type { ServiceProcessStart } from './IServiceProcessReport.js';
 
 /** 親子プロセス間メッセージ（`SendMessage`/`ReplayMessage`等）を対応付けるための一意な識別子。 */
 export type MessageId = number;
@@ -24,10 +25,14 @@ export interface NotifyClientMessage extends ParentMessage {
     type: 'notifyClient';
 }
 
-/** 親プロセスから子プロセスへのエンコード追加要求。`value`は追加するエンコード予約の内容。 */
+/**
+ * 親プロセスから子プロセスへのエンコード追加要求。`value`は追加するエンコードの依頼内容、`encodeId`は
+ * 親側の依頼記録窓口が記録した依頼の識別番号。
+ */
 export interface PushEncodeMessage extends ParentMessage {
     type: 'pushEncode';
     value: apid.AddEncodeProgramOption;
+    encodeId: apid.EncodeId;
 }
 
 /**
@@ -98,6 +103,20 @@ export interface RecordedUseSnapshotReplyMessage {
 }
 
 /**
+ * 子プロセスから親プロセスへの、外部プロセスの開始の知らせ。応答しない。管理側では
+ * `ServiceChildProcessRegistry`が受け取る。
+ */
+export interface ServiceProcessStartedMessage extends ServiceProcessStart {
+    readonly type: 'serviceProcessStarted';
+}
+
+/** 子プロセスから親プロセスへの、外部プロセスの終了の知らせ。応答しない。 */
+export interface ServiceProcessEndedMessage {
+    readonly type: 'serviceProcessEnded';
+    readonly pid: number;
+}
+
+/**
  * モデル名
  */
 export enum ModelName {
@@ -108,6 +127,7 @@ export enum ModelName {
     rule = 'rule',
     thumbnail = 'thumbnail',
     encodeEvent = 'encodeEvent',
+    encodeQueue = 'encodeQueue',
 }
 
 /**
@@ -185,4 +205,15 @@ export enum ThumbnailFunctions {
  */
 export enum OperatorEncodeEventFunctions {
     emitFinishEncode = 'emitFinishEncode',
+}
+
+/**
+ * encode queue（エンコードの依頼の記録）の関数定義
+ */
+export enum EncodeQueueFunctions {
+    add = 'add',
+    abandon = 'abandon',
+    updateOutputPath = 'updateOutputPath',
+    remove = 'remove',
+    list = 'list',
 }

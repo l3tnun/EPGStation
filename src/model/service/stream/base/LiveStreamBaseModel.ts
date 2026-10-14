@@ -120,6 +120,8 @@ export default abstract class LiveStreamBaseModel
             output: this.getStreamType() === 'LiveHLS' ? `${this.config.streamFilePath}\/stream${streamId}.m3u8` : null,
             cmd: cmd,
             priority: LiveStreamBaseModel.ENCODE_PROCESS_PRIORITY,
+            // 開始と終了を管理側へ知らせ、Web・API側処理が異常終了したときに管理側が停止できるようにする
+            report: this.getStreamType() === 'LiveHLS' ? { kind: 'hls', streamId } : { kind: 'stream' },
         };
     }
 

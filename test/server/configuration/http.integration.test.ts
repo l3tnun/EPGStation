@@ -67,6 +67,8 @@ const privateSourceConfig = (): Record<string, unknown> => ({
     hookCommandMaxPending: 'hook-limit-marker',
     hookCommandTimeoutMs: 'hook-timeout-marker',
     storageLimitCommandTimeoutMs: { marker: 'storage-timeout-carrier-marker' },
+    encodeSuspendTimes: [{ start: '18:00', end: 'encode-suspend-marker' }],
+    encodeRemoveInterruptedOutput: false,
     unknownPrivateSetting: 'unknown-private-marker',
 });
 
@@ -150,6 +152,8 @@ describe('configuration public HTTP projection boundary', () => {
                     'hookCommandMaxPending',
                     'hookCommandTimeoutMs',
                     'storageLimitCommandTimeoutMs',
+                    'encodeSuspendTimes',
+                    'encodeRemoveInterruptedOutput',
                 ]) {
                     expect(body).not.toHaveProperty(internalField);
                 }
@@ -166,6 +170,7 @@ describe('configuration public HTTP projection boundary', () => {
                     'database-user-marker',
                     'database-secret-marker',
                     'encode-queue-limit-marker',
+                    'encode-suspend-marker',
                     'concurrent-upload-marker',
                     'upload-timeout-marker',
                     'thumbnail-limit-marker',

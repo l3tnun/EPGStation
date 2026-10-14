@@ -33,7 +33,7 @@ export function announcedNotification(page: Page) {
 export async function expectAnnounced(
   page: Page,
   expected: string | RegExp,
-  options: { timeout?: number } = {},
+  options: { timeout?: number; since?: number } = {},
 ): Promise<void> {
   const pattern = typeof expected === 'string' ? new RegExp(escapeForContains(expected)) : expected
   await expect
@@ -41,13 +41,21 @@ export async function expectAnnounced(
       async () => {
         const raw = await announcedNotification(page).getAttribute('data-announced-history')
         const history: unknown = raw === null ? [] : JSON.parse(raw)
-        return (Array.isArray(history) ? history : []).some(
-          (entry) => typeof entry === 'string' && pattern.test(entry),
-        )
+        return (Array.isArray(history) ? history : [])
+          .slice(options.since ?? 0)
+          .some((entry) => typeof entry === 'string' && pattern.test(entry))
       },
       options.timeout === undefined ? undefined : { timeout: options.timeout },
     )
     .toBe(true)
+}
+
+/**
+ * これまでに記録された通知の件数。`expectAnnounced` の `since` に渡すと、その後に記録された通知だけを
+ * 見る。同じ文言の通知が前の画面で記録されていても、その記録に当たって通らない。
+ */
+export async function announcementCount(page: Page): Promise<number> {
+  return Number((await announcedNotification(page).getAttribute('data-announced-count')) ?? '0')
 }
 
 /** `toContainText` semantics for a value read from an attribute. */

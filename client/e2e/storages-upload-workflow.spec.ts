@@ -1,5 +1,6 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
 import { installAppShellApiMocks } from './support/appShellMocks'
+import { replaceApiMocks } from './support/apiMockReplacement'
 import {
   muiSelectCombobox,
   muiSelectInput,
@@ -7,7 +8,7 @@ import {
   selectMuiOption,
 } from './support/muiSelect'
 import { installStoragesUploadApiMocks } from './support/storagesUploadMocks'
-import { expectAnnounced } from './support/notificationObservation'
+import { announcementCount, expectAnnounced } from './support/notificationObservation'
 
 test.beforeEach(async ({ page }) => {
   await installAppShellApiMocks(page)
@@ -100,20 +101,23 @@ test('renders storage usage and keeps blank empty/error states', async ({ page }
   await expect(page.getByText('Synthetic nearly full storage - 20.0KB')).toBeVisible()
   await expect(page.getByText('Synthetic unknown total storage - 0.0B')).toBeVisible()
 
-  await page.unrouteAll()
-  await installAppShellApiMocks(page)
-  await installStoragesUploadApiMocks(page, 'storage-empty')
+  await replaceApiMocks(page, async () => {
+    await installAppShellApiMocks(page)
+    await installStoragesUploadApiMocks(page, 'storage-empty')
+  })
   await page.goto('/#/storages?timestamp=empty')
   await expect(
     page.getByTestId('title-bar').getByRole('heading', { name: 'ストレージ' }),
   ).toBeVisible()
   await expect(page.getByTestId('storages-page')).toHaveCount(0)
 
-  await page.unrouteAll()
-  await installAppShellApiMocks(page)
-  await installStoragesUploadApiMocks(page, 'storage-failure')
+  await replaceApiMocks(page, async () => {
+    await installAppShellApiMocks(page)
+    await installStoragesUploadApiMocks(page, 'storage-failure')
+  })
+  const since = await announcementCount(page)
   await page.goto('/#/storages?timestamp=failure')
-  await expectAnnounced(page, 'ストレージ情報取得に失敗')
+  await expectAnnounced(page, 'ストレージ情報取得に失敗', { since })
   await expect(page.getByTestId('storages-page')).toHaveCount(0)
 })
 

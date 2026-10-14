@@ -414,6 +414,94 @@ describe('management restore characterization', () => {
         expect(harness.dependencies.IRuleDB.restore).toHaveBeenCalledWith(duplicateRules);
         expect(harness.container.get).not.toHaveBeenCalledWith('syntheticExtra');
     });
+    it('[MT-3.9] deletes every encode request record once after reading the backup and before the first stage', async () => {
+        const harness = makeDependencies();
+        const readFileSync = vi.fn(() => {
+            harness.ledger.push('read-file');
+            return JSON.stringify(versionlessBackup());
+        });
+        const Tool = await loadTool('DBTools.js', harness.container, { readFileSync, writeFileSync: vi.fn() });
+        const tool = await withProcess(['-m', 'restore', '-o', 'synthetic-input'], () => new Tool());
+
+        await tool.restore();
+
+        expect(harness.container.get).toHaveBeenCalledWith('IEncodeQueueDB');
+        expect(harness.dependencies.IEncodeQueueDB.deleteAll).toHaveBeenCalledOnce();
+        expect(harness.dependencies.IEncodeQueueDB.findAll).not.toHaveBeenCalled();
+        expect(
+            harness.ledger.filter(
+                value => value === 'read-file' || value === 'delete-all:encode-queue' || value.startsWith('restore:'),
+            ),
+        ).toEqual([
+            'read-file',
+            'delete-all:encode-queue',
+            'restore:rule',
+            'restore:reserve',
+            'restore:drop-log',
+            'restore:recorded',
+            'restore:thumbnail',
+            'restore:video-file',
+            'restore:recorded-history',
+            'restore:recorded-tag',
+        ]);
+    });
+
+    it('[MT-3.9] stops before the first stage and reports only restore error when deleting the encode request records rejects', async () => {
+        const harness = makeDependencies();
+        const original = new Error('synthetic-encode-queue-delete-primary');
+        harness.dependencies.IEncodeQueueDB.deleteAll.mockRejectedValue(original);
+        const Tool = await loadTool('DBTools.js', harness.container, {
+            readFileSync: vi.fn(() => JSON.stringify(versionlessBackup())),
+            writeFileSync: vi.fn(),
+        });
+        const tool = await withProcess(['-m', 'restore', '-o', 'synthetic-input'], () => new Tool());
+
+        const rejection = await tool.restore().then(
+            () => undefined,
+            (reason: unknown) => reason,
+        );
+
+        expect(rejection).toBeInstanceOf(Error);
+        expect(rejection).not.toBe(original);
+        expect((rejection as Error).message).toBe('restore error');
+        expect((rejection as Error & { cause?: unknown }).cause).toBeUndefined();
+        expect(harness.dependencies.IEncodeQueueDB.deleteAll).toHaveBeenCalledOnce();
+        for (const stage of mt38Stages) {
+            expect(harness.dependencies[stage.port].restore).not.toHaveBeenCalled();
+        }
+    });
+
+    it('[MT-3.9] does not delete the encode request records when the backup file cannot be read', async () => {
+        const harness = makeDependencies();
+        const Tool = await loadTool('DBTools.js', harness.container, {
+            readFileSync: vi.fn(() => '{invalid'),
+            writeFileSync: vi.fn(),
+        });
+        const tool = await withProcess(['-m', 'restore', '-o', 'synthetic-input'], () => new Tool());
+        const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+        try {
+            await expect(withProcess([], () => tool.restore())).rejects.toEqual(expect.objectContaining({ code: 1 }));
+            expect(harness.dependencies.IEncodeQueueDB.deleteAll).not.toHaveBeenCalled();
+        } finally {
+            error.mockRestore();
+        }
+    });
+
+    it('[MT-3.9] leaves the encode request records out of the backup', async () => {
+        const harness = makeDependencies();
+        const writeFileSync = vi.fn();
+        const Tool = await loadTool('DBTools.js', harness.container, { readFileSync: vi.fn(), writeFileSync });
+        const tool = await withProcess(['-m', 'backup', '-o', 'synthetic-output'], () => new Tool());
+
+        await tool.backup();
+
+        expect(harness.dependencies.IEncodeQueueDB.findAll).not.toHaveBeenCalled();
+        expect(harness.dependencies.IEncodeQueueDB.deleteAll).not.toHaveBeenCalled();
+        expect(writeFileSync).toHaveBeenCalledOnce();
+        const written = JSON.parse(writeFileSync.mock.calls[0][1] as string) as Record<string, unknown>;
+        expect(Object.keys(written)).toEqual(Object.keys(versionlessBackup()));
+    });
+
     it('[MT-3.8] reports only restore error after release for every restore transaction failure point', async () => {
         for (const [index, stage] of mt38Stages.entries()) {
             for (const failure of mt38Faults) {

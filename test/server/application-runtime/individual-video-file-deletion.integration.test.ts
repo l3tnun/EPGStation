@@ -55,7 +55,8 @@ describe('individual video file deletion Runtime composition', () => {
             const child = createSyntheticChild(9_101);
             ipcServer.register(child);
             ipcServer.register(child);
-            expect(child.listenerCount('message')).toBe(1);
+            // One request listener of the IPC server and one report listener of the service-child process registry.
+            expect(child.listenerCount('message')).toBe(2);
 
             // direct path: a prepared video file is deleted through the provider directly, without touching the
             // fresh whole-recorded-deletion coordinator.
@@ -90,6 +91,9 @@ describe('individual video file deletion Runtime composition', () => {
             // Releasing the peer must leave zero residual message-dispatch listeners on the synthetic transport
             // (no leaked binding of the parent handler adapter's own request channel).
             ipcServer.register(createSyntheticChild(9_102));
+            expect(child.listenerCount('message')).toBe(1);
+            // The process registry keeps receiving reports until the IPC channel of the old child closes.
+            child.emit('disconnect');
             expect(child.listenerCount('message')).toBe(0);
         },
     );

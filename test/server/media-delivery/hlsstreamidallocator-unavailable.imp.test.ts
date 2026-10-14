@@ -35,17 +35,17 @@ describe('HlsStreamIdAllocator unavailable collaborator contract (unittest/imp)'
 
     it('[R2-HLSSTREAMIDALLOCATOR-UNAVAILABLE] resolves captureSnapshot to null when only the config is missing', async () => {
         const log = logger();
-        const scanAtStartup = vi.fn(async () => new Set<number>());
+        const deleteAllArtifacts = vi.fn(async () => new Set<number>());
         const allocator = new HlsStreamIdAllocator({ getLogger: () => log }, undefined, {
             deleteAllFiles: vi.fn(),
             listExact: vi.fn(),
-            scanAtStartup,
+            deleteAllArtifacts,
             scanCurrent: vi.fn(),
             setOption: vi.fn(),
         });
 
         expect(allocator.isAvailable()).toBe(false);
-        expect(scanAtStartup).not.toHaveBeenCalled();
+        expect(deleteAllArtifacts).not.toHaveBeenCalled();
         await expect(allocator.captureSnapshot()).resolves.toBeNull();
     });
 });

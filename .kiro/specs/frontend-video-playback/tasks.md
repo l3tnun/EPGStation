@@ -24,6 +24,8 @@
   - `VideoPlayerSetting` と `isForceEnableSubtitleStroke` を読み、HLS/M2TS-LL subtitle 表示と保存・復元を扱う。
   - 16:9 player surface、loading indicator、bottom controls、center controls、seek/speed/volume/PiP/fullscreen/subtitle visibility を browser/platform/viewport 条件に従って表示する。
   - controls auto-hide、keyboard shortcuts、fullscreen fallback、`video.play()` failure log-only、decode/network overlay not added が observable に確認できる。
+  - subtitle を off にしたまま再生が始まった後で on にしたときに字幕が描画されることを、aribb24.js の実際の `Controller` を使う `unittest/spec` が確かめる（4.4a）。
+  - ライブの M2TS-LL で、subtitle を off にしたまま再生を始め、一時停止して再開した後で on にしたときに字幕が描画されることを、合成の字幕を差し込んだ合成の TS を実時間で流す e2e（`e2e/video-playback-live-subtitle-non-ios.spec.ts`）が、本物の mpegts.js・aribb24.js・browser で確かめる（4.4a）。
   - _Requirements: 4.1-4.19_
 
 - [x] 5. Video Playback の unit/E2E/visual regression を整備する

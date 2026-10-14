@@ -19,6 +19,8 @@
 | epgstation-server-testing | project-owned | repository に導入済み | `.agents/skills/epgstation-server-testing` |
 | karpathy-guidelines | `https://github.com/nguyenphutrong/andrej-karpathy-skills-codex` | upstream の repo-scoped skill を copy | `.agents/skills/karpathy-guidelines` |
 | caveman suite | `https://github.com/JuliusBrussee/caveman` | 必要な skill directory だけを copy | `.agents/skills/caveman*`, `.agents/skills/cavecrew` |
+| grilling | `https://github.com/mattpocock/skills` | `skills/productivity/grilling` を copy | `.agents/skills/grilling` |
+| yomiyasu | `https://github.com/nanaism/yomiyasu` | `skills/yomiyasu` を copy（`.claude-plugin/` は除く） | `.agents/skills/yomiyasu` |
 
 Project-local skill は `.agents/skills` を正とする。`$CODEX_HOME/skills` には project-local skill を置かない。
 
@@ -99,6 +101,76 @@ done
 
 upstream の `curl | bash` installer、global plugin install、global skills registry install は使わない。これらはこの project 以外の agent 設定も変更し得るためである。Codex / Claude Code を再起動してから、必要時だけ各 skill を明示して使う。
 
+## grilling
+
+目的:
+
+- 計画・判断・案を、設計木（design tree）の枝ごとに質問して詰める。1 回に尋ねるのは、前提が決まった質問だけで、各質問に推奨の回答を付ける。
+- 環境から調べられる事実は agent が調べ、人に尋ねるのは判断だけにする。
+
+Project-local 導入:
+
+```bash
+export TMPDIR="$HOME/work/epgstation-tmp"
+tmp_dir=$(mktemp -d)
+git clone --depth 1 https://github.com/mattpocock/skills "$tmp_dir"
+cp -R "$tmp_dir/skills/productivity/grilling" .agents/skills/grilling
+rm -rf "$tmp_dir"
+```
+
+導入先:
+
+```text
+.agents/skills/grilling
+```
+
+確認:
+
+```bash
+test -f .agents/skills/grilling/SKILL.md
+```
+
+- upstream の `grill-me` と `grill-with-docs` は、`grilling` を呼ぶだけの wrapper なので入れない。`grill-with-docs` は別 skill の `domain-modeling` にも依存する。
+- upstream の plugin（`claude plugin install mattpocock-skills@claude-plugins-official` など）と `npx skills@latest add` は、ほかの skill も入れ、agent の global 設定も変更し得るため使わない。
+- 再起動後、`/skills` の一覧に `grilling` が出ること、または `$grilling` で呼べることを確認する。
+
+## yomiyasu
+
+目的:
+
+- AI が生成した日本語の文章（技術記事、仕様書、PR 説明文、report など）を、意味と条件を保ったまま自然な日本語へ推敲する。
+- 同梱の `scripts/yomiyasu_lint.py`・`scripts/yomiyasu_diff.py`（Python 標準ライブラリのみ）で、静的検査と差分検査をする。
+
+Project-local 導入:
+
+```bash
+export TMPDIR="$HOME/work/epgstation-tmp"
+tmp_dir=$(mktemp -d)
+git clone --depth 1 https://github.com/nanaism/yomiyasu "$tmp_dir"
+cp -R "$tmp_dir/skills/yomiyasu" .agents/skills/yomiyasu
+rm -rf .agents/skills/yomiyasu/.claude-plugin "$tmp_dir"
+```
+
+導入先:
+
+```text
+.agents/skills/yomiyasu
+```
+
+確認:
+
+```bash
+test -f .agents/skills/yomiyasu/SKILL.md
+test -f .agents/skills/yomiyasu/scripts/yomiyasu_lint.py
+```
+
+- 導入元は `skills/yomiyasu/` だけである。repository root の `scripts/`・`references/` は同じ内容の複製で、root には `SKILL.md` が無い。
+- 同梱の `.claude-plugin/`（plugin manifest）は、手で配置する場合は不要なので除く。
+- `LICENSE`（MIT）と `UNICODE-LICENSE.txt` は skill directory に残す。
+- upstream が案内する `npx skills add`・`gh skill install`・`npx openskills`・Claude Code plugin は、ほかの agent 設定も変更し得るため使わない。
+- 他の日本語校正 skill と併用すると、指示が食い違う場合がある（upstream の注意）。
+- 再起動後、`/skills` の一覧に `yomiyasu` が出ること、または `$yomiyasu` で呼べることを確認する。
+
 ## cc-sdd
 
 目的:
@@ -124,7 +196,6 @@ npx cc-sdd@latest --codex-skills --lang ja --dry-run
 - `.agents/skills/kiro-spec-design/SKILL.md`
 - `.agents/skills/kiro-spec-tasks/SKILL.md`
 - `.agents/skills/kiro-review/SKILL.md`
-- `.codex/agents/spec-reviewer.toml`
 - `.kiro/settings/templates/specs/*.md`
 - `AGENTS.md`
 

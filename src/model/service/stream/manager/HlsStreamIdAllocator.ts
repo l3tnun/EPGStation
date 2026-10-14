@@ -13,8 +13,8 @@ import IStreamIdAllocator from './IStreamIdAllocator.js';
  * 走査系 method。`HlsStreamIdAllocator` はこの拡張された形として注入を受け取って使う。
  */
 interface ArtifactIndex extends IHLSFileDeleterModel {
+    deleteAllArtifacts(streamFilePath: string): Promise<ReadonlySet<number>>;
     listExact(streamFilePath: string, streamId: number): Promise<string[]>;
-    scanAtStartup(streamFilePath: string): Promise<ReadonlySet<number>>;
     scanCurrent(streamFilePath: string): Promise<ReadonlySet<number>>;
 }
 
@@ -36,14 +36,17 @@ class HlsStreamIdAllocator implements IStreamIdAllocator {
     private readonly config: IConfigFile | null;
     /** `captureSnapshot`/`markKnownCollision` で更新される、現時点で衝突が既知の streamId 集合。 */
     private currentArtifactIds = new Set<number>();
-    /** 起動時走査（`scanAtStartup`）の進行中 Promise。`beginInitialization` が冪等になるよう、完了・失敗まで保持する。 */
+    /**
+     * 起動時の残存 HLS artifact の削除（`deleteAllArtifacts`）の Promise。一度だけ作り、失敗しても作り直さない
+     * （後から削除し直すと、その時点で動いている配信の artifact を消してしまうため）。
+     */
     private initialization: Promise<void> | null = null;
     private readonly log: ILogger;
     /** `captureSnapshot` が反映を試みたスナップショットの世代番号。古い世代の反映を無視するための比較用。 */
     private snapshotAppliedSequence = 0;
     /** `captureSnapshot` が発行するスナップショット取得要求の連番。並行呼び出しの前後関係を判定するために使う。 */
     private snapshotSequence = 0;
-    /** 起動時走査（`scanAtStartup`）で見つかった streamId 集合。プロセス起動後は更新されない。 */
+    /** 起動時の削除（`deleteAllArtifacts`）で消せなかった artifact の streamId 集合。プロセス起動後は更新されない。 */
     private startupArtifactIds = new Set<number>();
 
     constructor(
@@ -68,16 +71,18 @@ class HlsStreamIdAllocator implements IStreamIdAllocator {
             return;
         }
 
+        // 起動時は配信が無いので、残った HLS artifact を識別番号にかかわらず削除する。削除できなかった artifact の
+        // 識別番号は割り当てない（配信を受け付けるたびの走査 `captureSnapshot` でも避ける）。
         const streamFilePath = this.config!.streamFilePath;
-        const initialization = this.artifactIndex!.scanAtStartup(streamFilePath).then(ids => {
-            this.startupArtifactIds = new Set(ids);
-        });
-        this.initialization = initialization;
-        void initialization.catch((error: unknown) => {
-            this.log.stream.error(`hls artifact index initialization error: ${streamFilePath}`);
-            this.log.stream.error(error);
-            this.initialization = null;
-        });
+        this.initialization = this.artifactIndex!.deleteAllArtifacts(streamFilePath).then(
+            remainingIds => {
+                this.startupArtifactIds = new Set(remainingIds);
+            },
+            (error: unknown) => {
+                this.log.stream.error(`hls artifact startup deletion error: ${streamFilePath}`);
+                this.log.stream.error(error);
+            },
+        );
     }
 
     public async captureSnapshot(): Promise<ReadonlySet<apid.StreamId> | null> {

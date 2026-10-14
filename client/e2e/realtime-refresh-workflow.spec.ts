@@ -6,6 +6,7 @@ import {
 } from './support/realtimeHarness'
 import { expect, test } from '@playwright/test'
 import { installAppShellApiMocks } from './support/appShellMocks'
+import { replaceApiMocks } from './support/apiMockReplacement'
 import {
   createRecordedRequestLog,
   installRecordedRealtimeApiMocks,
@@ -159,13 +160,14 @@ test('refreshes Reserves, Rule, Search, and Storages pages from real Socket.IO u
     await expect(page.getByText('Synthetic Dialog Full Reserve')).toHaveCount(0)
     await expect(page.getByTestId('reserves-page')).toHaveAttribute('data-reserves-total', '0')
 
-    await page.unrouteAll()
-    await installAppShellApiMocks(page, {
-      socketIOPort: realtime.socketIOPort,
-    })
     const searchRuleLog = createSearchRuleRequestLog()
-    const searchRuleMocks = await installSearchRuleRealtimeApiMocks(page, {
-      requestLog: searchRuleLog,
+    const searchRuleMocks = await replaceApiMocks(page, async () => {
+      await installAppShellApiMocks(page, {
+        socketIOPort: realtime.socketIOPort,
+      })
+      return installSearchRuleRealtimeApiMocks(page, {
+        requestLog: searchRuleLog,
+      })
     })
 
     await page.goto('/#/rule')
@@ -196,11 +198,12 @@ test('refreshes Reserves, Rule, Search, and Storages pages from real Socket.IO u
     })
     await expect(page.getByText('Synthetic Search Program Alpha')).toHaveCount(0)
 
-    await page.unrouteAll()
-    await installAppShellApiMocks(page, {
-      socketIOPort: realtime.socketIOPort,
+    const storageMocks = await replaceApiMocks(page, async () => {
+      await installAppShellApiMocks(page, {
+        socketIOPort: realtime.socketIOPort,
+      })
+      return installStoragesRealtimeApiMocks(page)
     })
-    const storageMocks = await installStoragesRealtimeApiMocks(page)
     await page.goto('/#/storages')
     await expect(page.getByText('Synthetic archive storage - 1.3GB')).toBeVisible()
     await realtime.waitForClient()

@@ -60,6 +60,20 @@ describe('SPEC-DEADLINE operation deadlines', () => {
         await expectDeadline(client => client.reserveation.update(201), 5_000);
     });
 
+    it.each([
+        [
+            'add',
+            (client: any) =>
+                client.encodeQueue.add({ recordedId: 211, mode: 'synthetic-mode' }, 'synthetic-request-token-2'),
+        ],
+        ['abandon', (client: any) => client.encodeQueue.abandon('synthetic-request-token-2')],
+        ['updateOutputPath', (client: any) => client.encodeQueue.updateOutputPath(212, 'synthetic-output/encoded.mp4')],
+        ['remove', (client: any) => client.encodeQueue.remove(213)],
+        ['list', (client: any) => client.encodeQueue.list()],
+    ])('[PM-1.9] applies the normal 4,999/5,000/5,001ms boundaries to encodeQueue.%s', async (_func, invoke) => {
+        await expectDeadline(invoke, 5_000);
+    });
+
     // 600_000 (10min) in [PM-4.2]-[PM-4.4] below is longRequestTimeout
     // (src/model/ipc/IPCClient.ts:59), the long-operation counterpart of the ordinary
     // defaultRequestTimeout = 5_000 declared alongside it (IPCClient.ts:58) and in

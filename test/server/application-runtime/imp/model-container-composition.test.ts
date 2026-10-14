@@ -55,7 +55,16 @@ const createClient = (): Client => ({
     release: vi.fn(async () => undefined),
 });
 
-const createIpcClient = (client: Client) => ({
+const createEncodeQueue = () => ({
+    add: vi.fn(async () => 41),
+    abandon: vi.fn(async () => undefined),
+    updateOutputPath: vi.fn(async () => undefined),
+    remove: vi.fn(async () => undefined),
+    list: vi.fn(async () => []),
+});
+
+const createIpcClient = (client: Client, encodeQueue = createEncodeQueue()) => ({
+    encodeQueue,
     recordedResourceUseClient: client,
     recordedUseSnapshotHandlerRegistrationPort: { register: vi.fn() },
 });
@@ -229,6 +238,63 @@ describe('ModelContainerSetter service-child recorded-use composition', () => {
         expect(ipcClient.recordedUseSnapshotHandlerRegistrationPort.register).toHaveBeenCalledOnce();
     });
 
+    it('[AR-9.4] fails the encode queue store adapter until the IPC client is bound, then delegates every operation', async () => {
+        const container = createContainer();
+        const adapter = container.get<{
+            add(option: unknown, requestToken: string): Promise<number>;
+            abandon(requestToken: string): Promise<void>;
+            updateOutputPath(encodeId: number, outputPath: string): Promise<void>;
+            remove(encodeId: number): Promise<void>;
+            list(): Promise<unknown[]>;
+        }>('EncodingQueueStorePort');
+        const option = { recordedId: 5 };
+
+        expect(() => adapter.add(option, 'synthetic-token')).toThrow('EncodeQueueStorePortNotBound');
+        expect(() => adapter.abandon('synthetic-token')).toThrow('EncodeQueueStorePortNotBound');
+        expect(() => adapter.updateOutputPath(41, 'synthetic-output.mp4')).toThrow('EncodeQueueStorePortNotBound');
+        expect(() => adapter.remove(41)).toThrow('EncodeQueueStorePortNotBound');
+        expect(() => adapter.list()).toThrow('EncodeQueueStorePortNotBound');
+
+        const encodeQueue = createEncodeQueue();
+        container.rebind('IIPCClient').toConstantValue(createIpcClient(createClient(), encodeQueue));
+        container.rebind('ISocketIOManageModel').toConstantValue({ notifyClient: vi.fn() });
+        container.rebind('IEncodeManageModel').toConstantValue({
+            getQueuedAndRunningRecordedIds: () => ({ recordedIds: new Set<number>(), status: 'known' }),
+            setEncodeFinishModel: vi.fn(),
+        });
+        container.get('IEncodeFinishModel');
+
+        await expect(adapter.add(option, 'synthetic-token')).resolves.toBe(41);
+        await adapter.abandon('synthetic-token');
+        await adapter.updateOutputPath(41, 'synthetic-output.mp4');
+        await adapter.remove(41);
+        await expect(adapter.list()).resolves.toEqual([]);
+        expect(encodeQueue.add).toHaveBeenCalledExactlyOnceWith(option, 'synthetic-token');
+        expect(encodeQueue.abandon).toHaveBeenCalledExactlyOnceWith('synthetic-token');
+        expect(encodeQueue.updateOutputPath).toHaveBeenCalledExactlyOnceWith(41, 'synthetic-output.mp4');
+        expect(encodeQueue.remove).toHaveBeenCalledExactlyOnceWith(41);
+        expect(encodeQueue.list).toHaveBeenCalledOnce();
+    });
+
+    it('[AR-9.4] builds the encode queue with the queue store adapter and the restoration dependencies', () => {
+        const container = createContainer();
+        const model = container.get<object>('IEncodeManageModel') as unknown as {
+            encodeQueueStorePort: unknown;
+            restoreDependencies: { recordedDB: unknown; videoUtil: unknown; isSameFile: unknown; removeFile: unknown };
+        };
+
+        expect(model.encodeQueueStorePort).toBe(container.get('EncodingQueueStorePort'));
+        expect(model.restoreDependencies.recordedDB).toBe(container.get('IRecordedDB'));
+        expect(model.restoreDependencies.videoUtil).toBe(container.get('IVideoUtil'));
+        expect(model.restoreDependencies.isSameFile).toBe(
+            (EncodeManageModel as unknown as { isSameFile: unknown }).isSameFile,
+        );
+        expect(model.restoreDependencies.removeFile).toBe(
+            compiled<{ removeFileIfPresent: unknown }>('model/ServiceChildProcessSystem.js').removeFileIfPresent,
+        );
+        expect(container.get('IEncodeQueueStore')).toBe(container.get('IEncodeQueueStore'));
+    });
+
     it('[AR-9.4] tracks deliveries in one shared registry that the snapshot provider reads', () => {
         const container = createContainer();
         const registry = container.get<{ register(recordedId: number): { release(): void } }>(
@@ -271,6 +337,80 @@ describe('ModelContainerSetter service-child recorded-use composition', () => {
             status: 'granted',
         });
         expect(container.get('ServiceChildRecordedUseRegistry')).toBe(registry);
+    });
+
+    it('[AR-8.8] registers each service peer with the process registry and builds the termination cleanup from it', async () => {
+        const container = createContainer();
+        for (const token of [
+            'IReservationManageModel',
+            'IRecordedManageModel',
+            'IRecordedTagManadeModel',
+            'IRuleManageModel',
+            'IThumbnailManageModel',
+            'IRecordingManageModel',
+        ]) {
+            container.rebind(token).toConstantValue({});
+        }
+        container.rebind('IConfiguration').toConstantValue({
+            getConfig: () => ({
+                encodeRemoveInterruptedOutput: false,
+                recorded: [],
+                streamFilePath: 'synthetic-stream-root',
+                uploadTempDir: 'synthetic-upload',
+            }),
+        });
+        container.rebind('IEncodeQueueStore').toConstantValue({ list: vi.fn(async () => []) });
+        const systemError = vi.fn();
+        const system = { error: systemError, fatal: vi.fn(), info: vi.fn() };
+        container.rebind('ILoggerModel').toConstantValue({ getLogger: () => ({ ...syntheticLogger.getLogger(), system }) });
+        const ipcServer = container.get<{ register(child: unknown): void }>('IIPCServer');
+        const processes = container.get<{ takeEntries(peer: object): Promise<readonly object[]> }>(
+            'ServiceChildProcessRegistry',
+        );
+        const cleanup = container.get<{
+            deps: Record<string, unknown>;
+            run(peer: object): Promise<void>;
+        }>('IServiceChildTerminationCleanup');
+        const child = Object.assign(new EventEmitter(), { send: vi.fn() });
+
+        ipcServer.register(child);
+        child.emit('message', { kind: 'stream', pid: process.pid, type: 'serviceProcessStarted' });
+        child.emit('message', { pid: process.pid, type: 'serviceProcessEnded' });
+        child.emit('message', { pid: 0, type: 'serviceProcessEnded' });
+        child.emit('disconnect');
+        expect(systemError).toHaveBeenCalledWith('service process report discarded: {"pid":0,"type":"serviceProcessEnded"}');
+
+        await expect(processes.takeEntries(child)).resolves.toEqual([]);
+        expect(container.get('ServiceChildProcessRegistry')).toBe(processes);
+        expect(container.get('IServiceChildTerminationCleanup')).toBe(cleanup);
+        const deps = cleanup.deps as {
+            isSameFile: unknown;
+            logger: { error(value: unknown): void; info(value: unknown): void };
+            resolveRecordedFiles(): { recordedDB: unknown; videoUtil: unknown };
+        };
+        deps.logger.error('synthetic cleanup error');
+        deps.logger.info('synthetic cleanup info');
+        expect(systemError).toHaveBeenCalledWith('synthetic cleanup error');
+        expect(system.info).toHaveBeenCalledWith('synthetic cleanup info');
+        expect(deps.resolveRecordedFiles()).toEqual({
+            recordedDB: container.get('IRecordedDB'),
+            videoUtil: container.get('IVideoUtil'),
+        });
+        expect(deps.isSameFile).toBe((EncodeManageModel as unknown as { isSameFile: unknown }).isSameFile);
+        expect(cleanup.deps).toMatchObject({
+            processes,
+            recordedUse: container.get('ServiceChildRecordedUseRegistry'),
+            removeInterruptedOutput: false,
+            streamFilePath: 'synthetic-stream-root',
+        });
+    });
+
+    it('[AR-9.4] reports the service processes through the IPC client reporter', () => {
+        const container = createContainer();
+        const reporter = { ended: vi.fn(), started: vi.fn() };
+        container.rebind('IIPCClient').toConstantValue({ serviceProcessReporter: reporter });
+
+        expect(container.get('IServiceProcessReporter')).toBe(reporter);
     });
 
     it.each([

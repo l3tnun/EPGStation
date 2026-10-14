@@ -1624,6 +1624,37 @@ describe('media process management implementation characterization', () => {
         expect(registryOf(manager)).toHaveLength(1);
     });
 
+    it('[MP-IMP-R4-REPORT] reports nothing without a reporter or without a PID and reports the release once', async () => {
+        const reporter = { ended: vi.fn(), started: vi.fn() };
+        const ReportingManager = ProcessManager as unknown as new (...args: unknown[]) => ProcessManager;
+        const withoutReporter = new ReportingManager(
+            { getLogger: () => logger },
+            { getConfig: () => ({ encodeProcessNum: 1 }) },
+        );
+        const silent = spawnManaged();
+        await withoutReporter.createManaged({ ...option, report: { kind: 'stream' } } as never);
+        silent.emit('exit', 0);
+
+        const reporting = new ReportingManager(
+            { getLogger: () => logger },
+            { getConfig: () => ({ encodeProcessNum: 2 }) },
+            reporter,
+        );
+        const pidless = makeChild();
+        (pidless as { pid?: number }).pid = undefined;
+        spawnManaged(pidless);
+        await reporting.createManaged({ ...option, report: { kind: 'stream' } } as never);
+        const reported = spawnManaged();
+        reported.pid = 4242;
+        await reporting.createManaged({ ...option, report: { kind: 'stream' } } as never);
+        pidless.emit('exit', 0);
+        reported.emit('exit', 0);
+        reported.emit('close', 0, null);
+
+        expect(reporter.started.mock.calls).toEqual([[{ kind: 'stream', pid: 4242 }]]);
+        expect(reporter.ended.mock.calls).toEqual([[4242]]);
+    });
+
     it('[MP-IMP-R7-NO-DRAIN] exposes admission only and no manager-owned drain or business-result API', () => {
         const publicMethods = Object.getOwnPropertyNames(ProcessManager.prototype).filter(
             name => name !== 'constructor',

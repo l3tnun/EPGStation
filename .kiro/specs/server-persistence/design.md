@@ -281,6 +281,7 @@ interface IPromiseRetry {
 | `IDropLogFileDB`     | 追加、件数更新、削除、restore                          | ID、全件                                                  | log 実体は操作しない                     |
 | `IThumbnailDB`       | 追加、削除、recorded 単位削除、restore                 | ID、全件                                                  | image 実体は操作しない                   |
 | `IRecordedTagDB`     | 追加、更新、削除、relation 追加/削除、restore          | ID、一覧/件数                                             | many-to-many relation を所有する         |
+| `IEncodeQueueDB`     | 追加（`insertOnce`）、出力先の更新（`updateOutputPath`）、削除（`deleteOnce`）、全件削除（`deleteAll`） | 全件（`findAll`、識別番号の昇順） | 識別番号は呼出し元が渡し自動採番しない。依頼内容はJSON文字列のまま保存・返却し、解釈と検証は利用側（`server-encoding`の依頼記録窓口）が行う。restoreは持たない |
 
 `IProgramDB` の時刻による照会は、端点を次のとおり扱う。放送局と時刻による照会（`findChannelIdAndTime`）は、指定した放送局で
 `startAt <= 時刻 < endAt` の番組を 1 件返す。開始時刻は含み、終了時刻は含まないため、前の番組の終了時刻と次の番組の開始時刻が
@@ -351,6 +352,7 @@ storage consumerは返却IDを自身の`attemptedRecordedIds`と再照合し、�
 | 録画記録     | `Recorded`、`RecordedHistory`           | 録画済み番組の metadata と録画履歴                              |
 | 録画付随情報 | `VideoFile`、`DropLogFile`、`Thumbnail` | file path、size、drop/scrambling/error 件数、thumbnail metadata |
 | 分類         | `RecordedTag`                           | tag 属性と録画済み番組との関連                                  |
+| エンコード依頼 | `EncodeQueue`（table `encode_queue`）   | 識別番号（主キー、自動採番なし）、依頼内容のJSON、出力先、記録時刻（UNIXミリ秒） |
 
 ```mermaid
 erDiagram
@@ -1028,6 +1030,7 @@ portが入力として許容せずruntime validationも本機能が所有しな�
 | 2.4  | `VideoFile`、`DropLogFile`、`Thumbnail` Entity / repository         | `repositories.spec.test.ts`: round trip                                                             |
 | 2.5  | `RecordedTag` と join relation                                      | `repositories.spec.test.ts`: relation add/delete/read                                               |
 | 2.6  | repository の persistence-only 境界                                 | port contract review と無効な business import 検査                                                  |
+| 2.7  | `EncodeQueue` Entity / `IEncodeQueueDB`                             | `repositories.spec.test.ts`: round trip（最大安全整数の識別番号、JSONの依頼内容、出力先の更新）     |
 | 3.1  | 各 typed port の mutation operation                                 | `repositories.spec.test.ts`: add/update/delete                                                      |
 | 3.2  | ID / 条件による単数・複数検索                                       | `repositories.spec.test.ts`: null / empty / matches                                                 |
 | 3.3  | QueryBuilder の sort/filter/skip/take/count                         | `repositories.spec.test.ts`: pagination と total                                                    |
@@ -1097,8 +1100,9 @@ portが入力として許容せずruntime validationも本機能が所有しな�
 | Drop log metadata                                      | `src/model/db/IDropLogFileDB.ts`、`src/model/db/DropLogFileDB.ts`、`src/db/entities/DropLogFile.ts`             | CRUD / restore methods                                                                    |
 | Thumbnail metadata                                     | `src/model/db/IThumbnailDB.ts`、`src/model/db/ThumbnailDB.ts`、`src/db/entities/Thumbnail.ts`                   | CRUD / restore methods                                                                    |
 | Tag and many-to-many relation                          | `src/model/db/IRecordedTagDB.ts`、`src/model/db/RecordedTagDB.ts`、`src/db/entities/RecordedTag.ts`             | relation / CRUD / restore methods                                                         |
-| SQLite schema history                                  | `src/db/migrations/sqlite/*.ts`                                                                                 | Init、AddRawExtended、AddEventRelay、AddRuleBS4K                                          |
-| MySQL schema history                                   | `src/db/migrations/mysql/*.ts`                                                                                  | Init、AddRawExtended、AddEventRelay、AddRuleBS4K                                          |
+| Encode request records                                 | `src/model/db/IEncodeQueueDB.ts`、`src/model/db/EncodeQueueDB.ts`、`src/db/entities/EncodeQueue.ts`             | 追加、出力先の更新、削除、全件削除、全件                                                   |
+| SQLite schema history                                  | `src/db/migrations/sqlite/*.ts`                                                                                 | Init、AddRawExtended、AddEventRelay、AddRuleBS4K、AddEncodeQueue                          |
+| MySQL schema history                                   | `src/db/migrations/mysql/*.ts`                                                                                  | Init、AddRawExtended、AddEventRelay、AddRuleBS4K、AddEncodeQueue                          |
 | runtime migration option と CLI 差                     | `src/model/db/DBOperator.ts`、`ormconfig.js`                                                                    | runtime `migrationsRun: true`、`synchronize: false`                                       |
 | 手動の migration CLI の設定                            | `ormconfig.js`、`src/model/ConfigYaml.ts`、`package.json` の `orm-run`・`orm-gen`                                | ES module として読み込み、`!env` と merge key（`<<`）を展開し、`sqlite`（別名 `better-sqlite3`）は `better-sqlite3` driver（`sqlite.wal` が `true` なら WAL）、MySQL は `mysql`、他の `dbtype` は `db config error` |
 | restore stage orchestration                            | `src/DBTools.ts`                                                                                                | `restore()` による種類別呼出し                                                            |

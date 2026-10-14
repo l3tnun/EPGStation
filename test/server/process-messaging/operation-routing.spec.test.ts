@@ -256,7 +256,7 @@ describe('SPEC-OPS parent dispatcher and replies', () => {
         const actual = Object.entries(server.functions)
             .flatMap(([model, functions]: [string, any]) => Object.keys(functions).map(func => `${model}.${func}`))
             .sort();
-        expect(operationCases).toHaveLength(34);
+        expect(operationCases).toHaveLength(39);
         expect(actual).toEqual(operationCases.map(operationKey).sort());
         expect(actual).not.toContain('reserveation.clean');
     });
@@ -513,6 +513,57 @@ describe('SPEC-OPS canonical R1 acceptance cases', () => {
         expect(domains.reservation.add).toHaveBeenCalledTimes(2);
         expect(child.send).toHaveBeenNthCalledWith(2, { error: failure.message, id: 222 });
         expect(server.functions.reserveation).not.toHaveProperty('clean');
+        expectPeerReleased(server, child);
+    });
+
+    it('[PM-1.9] carries every encode queue record operation once with exact arguments to the queue store and returns its result or rejection', async () => {
+        await exerciseCanonicalOperations(
+            selectCanonicalOperations(
+                'encodeQueue.add',
+                'encodeQueue.abandon',
+                'encodeQueue.updateOutputPath',
+                'encodeQueue.remove',
+                'encodeQueue.list',
+            ),
+        );
+    });
+});
+
+describe('SPEC-OPS encode queue store registration', () => {
+    it.each(operationCases.filter(operation => operation.model === 'encodeQueue'))(
+        '[PM-1.9] $model.$func returns the same-id EncodeQueueStoreNotRegistered error when no queue store is composed',
+        async operation => {
+            const { domains, server } = makeServer({ withEncodeQueueStore: false });
+            const child = makeChild();
+            server.register(child);
+
+            child.emit('message', { args: operation.args, func: operation.func, id: 231, model: operation.model });
+            await flushImmediate();
+
+            for (const handler of domainHandlerSpies(domains)) expect(handler).not.toHaveBeenCalled();
+            expect(child.send).toHaveBeenCalledExactlyOnceWith({ error: 'EncodeQueueStoreNotRegistered', id: 231 });
+            expectPeerReleased(server, child);
+        },
+    );
+
+    it('[PM-1.9] does not call enqueueFromRecording for any wire operation', async () => {
+        const { domains, server } = makeServer();
+        const child = makeChild();
+        server.register(child);
+        for (const [index, operation] of operationCases
+            .filter(candidate => candidate.model === 'encodeQueue')
+            .entries()) {
+            child.emit('message', {
+                args: operation.args,
+                func: operation.func,
+                id: 241 + index,
+                model: 'encodeQueue',
+            });
+        }
+        await flushImmediate();
+
+        expect(domains.encodeQueue.enqueueFromRecording).not.toHaveBeenCalled();
+        expect(child.send).toHaveBeenCalledTimes(5);
         expectPeerReleased(server, child);
     });
 });

@@ -1,6 +1,7 @@
 import { expectDarkCardsUseTheme } from './support/darkUiExpectations'
 import { expect, test } from '@playwright/test'
 import { installAppShellApiMocks } from './support/appShellMocks'
+import { replaceApiMocks } from './support/apiMockReplacement'
 import { installDashboardWorkflowApiMocks } from './support/dashboardMocks'
 import { installGuideOnAirApiMocks } from './support/guideOnAirMocks'
 import { installRecordedApiMocks } from './support/recordedMocks'
@@ -96,10 +97,11 @@ test('[AC frontend-app-shell 7.7] [AC frontend-app-shell 7.8] audits dark card s
     { label: 'dashboard sections', selector: '[data-testid^="dashboard-section-"]' },
   ])
 
-  await page.unrouteAll()
-  await installAppShellApiMocks(page, {
-    enableBroadcastWaveNavigation: true,
-    forceDarkTheme: true,
+  await replaceApiMocks(page, async () => {
+    await installAppShellApiMocks(page, {
+      enableBroadcastWaveNavigation: true,
+      forceDarkTheme: true,
+    })
   })
   await page.goto('/#/settings')
   await expect(page.getByTestId('settings-card')).toBeVisible()
@@ -107,12 +109,13 @@ test('[AC frontend-app-shell 7.7] [AC frontend-app-shell 7.8] audits dark card s
     { label: 'settings card', selector: '[data-testid="settings-card"]' },
   ])
 
-  await page.unrouteAll()
-  await installAppShellApiMocks(page, {
-    enableBroadcastWaveNavigation: true,
-    forceDarkTheme: true,
+  await replaceApiMocks(page, async () => {
+    await installAppShellApiMocks(page, {
+      enableBroadcastWaveNavigation: true,
+      forceDarkTheme: true,
+    })
+    await installSearchRuleWorkflowApiMocks(page)
   })
-  await installSearchRuleWorkflowApiMocks(page)
   await page.goto('/#/search')
   await expect(page.locator('[class*="searchCard"]').first()).toBeVisible()
   await expectDarkCardsUseTheme(page, [{ label: 'search card', selector: '[class*="searchCard"]' }])
@@ -130,12 +133,13 @@ test('[AC frontend-app-shell 7.7] [AC frontend-app-shell 7.8] audits dark card s
     { label: 'rule list items', selector: '[data-testid^="rule-item-"]' },
   ])
 
-  await page.unrouteAll()
-  await installAppShellApiMocks(page, {
-    enableBroadcastWaveNavigation: true,
-    forceDarkTheme: true,
+  await replaceApiMocks(page, async () => {
+    await installAppShellApiMocks(page, {
+      enableBroadcastWaveNavigation: true,
+      forceDarkTheme: true,
+    })
+    await installReservesApiMocks(page)
   })
-  await installReservesApiMocks(page)
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/#/reserves')
   await expect(page.getByTestId('reserves-list-item').first()).toBeVisible()
@@ -170,12 +174,13 @@ test('[AC frontend-app-shell 7.7] [AC frontend-app-shell 7.8] audits dark card s
     await recordedPage.close()
   }
 
-  await page.unrouteAll()
-  await installAppShellApiMocks(page, {
-    enableBroadcastWaveNavigation: true,
-    forceDarkTheme: true,
+  await replaceApiMocks(page, async () => {
+    await installAppShellApiMocks(page, {
+      enableBroadcastWaveNavigation: true,
+      forceDarkTheme: true,
+    })
+    await installRecordingEncodeApiMocks(page)
   })
-  await installRecordingEncodeApiMocks(page)
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/#/recording')
   await expect(page.getByTestId('recording-list-item').first()).toBeVisible()
@@ -189,12 +194,13 @@ test('[AC frontend-app-shell 7.7] [AC frontend-app-shell 7.8] audits dark card s
     { label: 'encode cards', selector: '[data-testid="encode-list-item"]' },
   ])
 
-  await page.unrouteAll()
-  await installAppShellApiMocks(page, {
-    enableBroadcastWaveNavigation: true,
-    forceDarkTheme: true,
+  await replaceApiMocks(page, async () => {
+    await installAppShellApiMocks(page, {
+      enableBroadcastWaveNavigation: true,
+      forceDarkTheme: true,
+    })
+    await installGuideOnAirApiMocks(page)
   })
-  await installGuideOnAirApiMocks(page)
   await page.goto('/#/onair')
   await expect(page.getByTestId('onair-card-5101')).toBeVisible()
   await expectDarkCardsUseTheme(page, [
@@ -206,12 +212,13 @@ test('[AC frontend-app-shell 7.7] [AC frontend-app-shell 7.8] audits dark card s
     { label: 'onair watch info card', selector: '[data-testid="onair-watch-info-card"]' },
   ])
 
-  await page.unrouteAll()
-  await installAppShellApiMocks(page, {
-    enableBroadcastWaveNavigation: true,
-    forceDarkTheme: true,
+  await replaceApiMocks(page, async () => {
+    await installAppShellApiMocks(page, {
+      enableBroadcastWaveNavigation: true,
+      forceDarkTheme: true,
+    })
+    await installVideoPlaybackApiMocks(page)
   })
-  await installVideoPlaybackApiMocks(page)
   await page.goto(
     `/#/recorded/streaming/${SYNTHETIC_STREAMING_VIDEO_FILE_ID}?streamingType=hls&fileType=encoded&mode=0&recordedId=${SYNTHETIC_RECORDED_ID}`,
   )
@@ -220,12 +227,13 @@ test('[AC frontend-app-shell 7.7] [AC frontend-app-shell 7.8] audits dark card s
     { label: 'recorded watch info card', selector: '[data-testid="recorded-watch-info-card"]' },
   ])
 
-  await page.unrouteAll()
-  await installAppShellApiMocks(page, {
-    enableBroadcastWaveNavigation: true,
-    forceDarkTheme: true,
+  await replaceApiMocks(page, async () => {
+    await installAppShellApiMocks(page, {
+      enableBroadcastWaveNavigation: true,
+      forceDarkTheme: true,
+    })
+    await installStoragesUploadApiMocks(page)
   })
-  await installStoragesUploadApiMocks(page)
   await page.goto('/#/storages')
   await expect(page.locator('[class*="storageItem"]').first()).toBeVisible()
   await expectDarkCardsUseTheme(page, [

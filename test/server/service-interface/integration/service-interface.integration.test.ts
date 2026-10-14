@@ -3127,6 +3127,9 @@ describe('Service Interface recorded resource-use owner integration [INT#SI-9.4]
         try {
             const first = createRecordedUseContainer();
             const firstClient = first.get<any>('IIPCClient');
+            // 依頼の記録は親の依頼記録窓口が担うので、IPC の facade を応答させる（この test に親 process は居ない）
+            const firstRecordAdd = vi.spyOn(firstClient.encodeQueue, 'add').mockResolvedValue(41);
+            const firstRecordRemove = vi.spyOn(firstClient.encodeQueue, 'remove').mockResolvedValue(undefined);
             const firstEncodingToken = { generation: 'first-encoding' };
             const firstDeliveryToken = { generation: 'first-delivery' };
             const firstRegister = vi.spyOn(firstClient.recordedUseSnapshotHandlerRegistrationPort, 'register');
@@ -3151,6 +3154,9 @@ describe('Service Interface recorded resource-use owner integration [INT#SI-9.4]
             await expect(firstEncoding.push(recordedUseEncodeOption)).rejects.toThrow(
                 'synthetic encoder construction failure',
             );
+            // 記録の後で受付に失敗したので、その記録を一回削除する
+            expect(firstRecordAdd).toHaveBeenCalledExactlyOnceWith(recordedUseEncodeOption, expect.any(String));
+            expect(firstRecordRemove).toHaveBeenCalledExactlyOnceWith(41);
             expect(firstAcquire).toHaveBeenNthCalledWith(1, 71, 'encoding');
             expect(firstRelease).toHaveBeenNthCalledWith(1, firstEncodingToken);
 

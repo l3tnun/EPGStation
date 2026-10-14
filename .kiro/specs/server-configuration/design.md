@@ -52,16 +52,16 @@ flowchart LR
 
 1. YAML 設定ファイルを読み込む。
 2. YAML として解釈する。このとき アンカー・別名と merge key `<<` を展開し、`!env 環境変数名` の項目を、その時点の環境変数の値（文字列）へ置き換える。
-3. 実装内蔵の標準値（`Configuration.DEFAULT_VALUE`）で、省略された最上位の項目を補う。本書 3.1 の6項目の既定値もここで補う。補う値は複製して入れ、標準値の配列・オブジェクトを設定の間で共有しない（後続の `apiServers` や `recorded` の整形が標準値を書き換えないため）。
+3. 実装内蔵の標準値（`Configuration.DEFAULT_VALUE`）で、省略された最上位の項目を補う。本書 3.1 の6項目、3.1.1、3.1.2 の既定値もここで補う。補う値は複製して入れ、標準値の配列・オブジェクトを設定の間で共有しない（後続の `apiServers` や `recorded` の整形が標準値を書き換えないため）。
 4. ストリーミング設定で基準となる選択肢（標準値テンプレート）を利用できる場合、その値を省略箇所へ補う。
-5. 本書 3.1 の6項目を検証する。
+5. 本書 3.1 の6項目、3.1.1 の `encodeSuspendTimes`、3.1.2 の `encodeRemoveInterruptedOutput` を検証する。
 6. HTTP または HTTPS の最低条件を確認する。
 7. `apiServers` が空のとき、API 文書（OpenAPI の `servers`）の送信先として 1 件を補う。最上位の `port` があれば `http://localhost:<port>`、無く HTTPS だけで待ち受けるなら `https://localhost:<https の port>` とする。明示した `apiServers` は変えない。
 8. サーバー基準位置を表す記号、保存先、配信サブディレクトリを内部表記へ正規化し、`dbtype` の `better-sqlite3` を `sqlite` へ読み替える。
 9. 成功した候補を有効な設定として保持する。
 
 設定ファイルを読めない、YAML として解釈できない、`!env` が参照する環境変数が定義されていない、または HTTP/HTTPS の最低条件を満たさない場合は、後続機能へ設定を提供せ
-ずサーバー起動を失敗させる。3.1 の検証に失敗した場合は設定エラーを返し、不正な値を利用する機能を開始しない。
+ずサーバー起動を失敗させる。3.1、3.1.1、または 3.1.2 の検証に失敗した場合は設定エラーを返し、不正な値を利用する機能を開始しない。
 
 `!env` は設定ファイル（`config.yml`）のスカラー値だけで使える。YAML の既定の解釈（`CORE_SCHEMA`）にタグ `!env` と merge key
 `<<`（`mergeTag`）を足し、他の型の解釈は変えない。`<<` の展開は js-yaml 4 の既定の解釈に従い、明示した項目が取り込みより優先され、
@@ -131,7 +131,7 @@ stateDiagram-v2
 -   端末別の再生用 URL 設定
 -   外部再生先の名前
 
-DB 認証情報、内部保存場所、外部コマンド、および 3.1 の6項目は公開しない。
+DB 認証情報、内部保存場所、外部コマンド、3.1 の6項目、3.1.1 の `encodeSuspendTimes`、および 3.1.2 の `encodeRemoveInterruptedOutput` は公開しない。
 
 ### 2.5 外部コマンド設定の解釈
 
@@ -175,6 +175,33 @@ Node.js の `setTimeout()` へこの値を超える delay（2,147,483,648 以上
 
 これらは完全な設定複製には含めるが、Web UI 向け公開設定には含めない。各利用機能は開始時に必要な値を一度取得して保持し、
 設定再読み込みで保持値を置き換えない。
+
+#### 3.1.1 エンコード停止時間帯
+
+| 設定名               | 意味                                   | 既定値   | 許容値                                                                                         | 利用機能   |
+| -------------------- | -------------------------------------- | -------- | ---------------------------------------------------------------------------------------------- | ---------- |
+| `encodeSuspendTimes` | 待機中のエンコードを開始しない時間帯 | 空の配列 | `start`（`00:00`〜`23:59`）と`end`（`00:00`〜`24:00`）を`HH:mm`形式の異なる時刻で持つobjectの配列 | エンコード |
+
+`HH:mm`は時と分をそれぞれ2桁の数字で書き、`:`で区切った文字列とする（`7:00`のような1桁の時は許可しない）。`24:00`は`end`
+だけに許可する。省略時は`Configuration.DEFAULT_VALUE`の空配列を複製して補う。明示した`null`、配列以外、objectでない要素
+（`null`と配列を含む）、`start`・`end`の欠落または文字列以外、形式外、範囲外、および`start`と`end`が同じ要素は
+`ConfigValueError:encodeSuspendTimes`とする。値の無い`encodeSuspendTimes:`（keyだけを書いたもの）はYAMLでは`null`になる
+ため、同じく設定エラーとする。要素の`start`・`end`以外のkeyは検証せずに無視し、その要素を受理する（取得時の複製には書かれた
+とおり残る）。要素の重なりと順序は検証せず、時間帯の意味（境界、日付跨ぎ、ローカル時刻）と
+開始の保留は`server-encoding` Requirement 2が所有する。3.1の6項目と同じく、完全な設定複製には含めるがWeb UI向け公開設定
+には含めず、利用機能は起動時に一度だけ値を保持する。整数の項目ではないため、文字列を返す`!env`を`start`・`end`に使うこと
+はできる。`!env`で与えた値も、展開後の文字列に同じ検証を行う。
+
+#### 3.1.2 中断されたエンコードの出力途中のファイル
+
+| 設定名                          | 意味                                                         | 既定値 | 許容値                | 利用機能   |
+| ------------------------------- | ------------------------------------------------------------ | ------ | --------------------- | ---------- |
+| `encodeRemoveInterruptedOutput` | 再起動で中断されたエンコードの出力途中のファイルを復元時に削除するか | `true` | 真偽値（`true`・`false`） | エンコード |
+
+省略時は`Configuration.DEFAULT_VALUE`の`true`で補う。明示した`null`（値の無いkeyを含む）、文字列（`'true'`を含む）、数値な
+ど真偽値以外は`ConfigValueError:encodeRemoveInterruptedOutput`とする。`!env`は文字列を返すため、この項目には使えない（設定
+エラーになる）。削除の判断と実行は`server-encoding` Requirement 7.7が所有する。3.1の6項目と同じく、完全な設定複製には含め
+るがWeb UI向け公開設定には含めず、利用機能は起動時に一度だけ値を保持する。
 
 #### Cross-spec 補足: 録画保存先 command 期限 field
 
@@ -313,13 +340,18 @@ runner、threshold、coverage設定を追加しない。
     template不在時の継続、およびHTTP/HTTPS最低条件を外部契約として検証する。
 -   Requirements 3、4の取得結果の独立性、再読み込み中は旧設定、成功後は新設定、失敗後は直前設定を返す契約を検証する。変
     更前後の取得結果は旧または新の完全な設定だけとし、候補の一部を含む設定を許可しない。
--   Requirement 5の公開許可項目を肯定的に検証し、DB認証情報、内部保存場所、外部コマンド、および3.1の6項目がHTTP応答へ含
-    まれないことを検証する。
+-   Requirement 5の公開許可項目を肯定的に検証し、DB認証情報、内部保存場所、外部コマンド、3.1の6項目、3.1.1の
+    `encodeSuspendTimes`、および3.1.2の`encodeRemoveInterruptedOutput`がHTTP応答へ含まれないことを検証する。公開設定の入力には、除外を確かめる項目を値付きで入れておく。
 -   Requirement 6の実行ファイルと引数の分離、Node.js・基準位置・空白記号の置換、および実行ファイル不存在時に開始せずエ
     ラーを返す契約を検証する。外部コマンド自体は起動しない。
 -   Requirement 7の6項目について、省略時の既定値、許容値、設定エラーによる利用機能の開始抑止、完全な設定複製への包含、公
     開設定からの除外、および稼働中consumerの保持値を自動更新しない契約を検証する。再起動後の反映は、新しい設定から
-    consumerを再初期化した結果で確認し、process再起動そのものは開始しない。
+    consumerを再初期化した結果で確認し、process再起動そのものは開始しない。6項目の最小値・最大値の受理と代表的な不正値の
+    拒否は、設定の読み込みを通して確かめる。
+-   Requirement 7の`encodeSuspendTimes`について、省略時の空配列、設定の読み込みを通した境界値（`start`の`00:00`・`23:59`、
+    `end`の`00:00`・`24:00`）の受理、代表的な不正値（`null`、配列以外、objectでない要素、`start`の欠落、文字列以外、1桁の時、
+    `24:00`の`start`、`24:01`の`end`、`23:60`、同時刻、値の無いkey）の拒否、`start`・`end`以外のkeyを持つ要素の受理、
+    および`!env`で与えた値の受理・拒否を検証する。
 
 ### Cross-spec 補足 case（正式 trace／matrix 外）
 
@@ -348,6 +380,7 @@ consumer開始effectが変更されたかもassertする。
 | `encodeQueueLimit`、`concurrentUploadNum`        | 1,024、3 |      1 | 安全な整数の最大値 | 0、負数、安全な整数範囲外、小数、文字列、`NaN`、正負の無限値 |
 | `thumbnailMaxPending`、`hookCommandMaxPending`   | 32、64   |      1 |             10,000 | 0、負数、10,001、小数、文字列、`NaN`、正負の無限値           |
 | `uploadReceiveTimeoutMs`、`hookCommandTimeoutMs` | 300,000  |      1 |      2,147,483,647 | 0、負数、2,147,483,648、小数、文字列、`NaN`、正負の無限値    |
+| `encodeSuspendTimes`                             | 空の配列 | `00:00` | `23:59`（`start`）、`24:00`（`end`） | `null`、配列以外、objectでない要素、欠落、文字列以外、1桁の時、`24:00`の`start`、`24:01`、`23:60`、同時刻 |
 
 加えて、次の内部境界と分岐を検証する。
 
@@ -448,7 +481,7 @@ Requirement 9 Acceptance Criterion 9（server全体の単体testだけで`src/**
 
 ## 8. Acceptance Criteria トレーサビリティ
 
-下の表は AC から設計の節への対応である。AC から検査する named case への対応は、`configuration.spec.test.ts` の `[CFG-6.1-AC-TRACE]` が持つ（AC 1.1 から 7.12 の全てを、同 directory の `*.test.ts` に実在する case ID へ引く）。
+下の表は AC から設計の節への対応である。AC から検査する named case への対応は、`configuration.spec.test.ts` の `[CFG-6.1-AC-TRACE]` が持つ（AC 1.1 から 7.16 の全てを、同 directory の `*.test.ts` に実在する case ID へ引く）。
 
 | AC   | 設計上の対応先                        |
 | ---- | ------------------------------------- |
@@ -491,6 +524,10 @@ Requirement 9 Acceptance Criterion 9（server全体の単体testだけで`src/**
 | 7.10 | 2.1、5 設定エラーと機能開始抑止       |
 | 7.11 | 2.4、3.1 公開設定から除外             |
 | 7.12 | 2.3、3.1 完全複製への包含と起動時保持 |
+| 7.13 | 3.1.1 `encodeSuspendTimes` の既定値   |
+| 7.14 | 3.1.1 `encodeSuspendTimes` の検証     |
+| 7.15 | 3.1.2 `encodeRemoveInterruptedOutput` の既定値 |
+| 7.16 | 3.1.2 `encodeRemoveInterruptedOutput` の検証   |
 
 AC 1.1 と 1.7 のうち `ormconfig.js` が行う部分（`!env`・merge key の展開と `dbtype` の `better-sqlite3` の読み替え）は、`server-persistence` の `PERSIST-6.1-ORM-CLI-ENV`・`PERSIST-6.1-ORM-CLI-MERGE-KEY`・`PERSIST-6.1-ORM-CLI-BETTER-SQLITE3`（`test/server/persistence/orm-cli.integration.test.ts`）が確かめる。上の `[CFG-6.1-AC-TRACE]` は本機能の directory の case だけを引くため、この 3 件は含まない。
 
@@ -511,11 +548,11 @@ Requirement 8のtest品質要件は、次の各行で設計箇所、主な検証
 | 読み込み、補完、正規化、監視、複製        | `src/model/Configuration.ts`                                                | filesystem portを介し、候補を完全に検証してから一括置換する            |
 | 設定filesystem port                       | `src/model/IConfigurationFileAccess.ts`                                     | 設定・template path、同期・非同期read、watch／unwatch contractを定める |
 | production filesystem binding             | `src/model/ConfigurationFileAccess.ts`、`src/model/ModelContainerSetter.ts` | 既存固定pathと`fs`操作へbindし、製品挙動を維持する                     |
-| 設定の型                                  | `src/model/IConfigFile.ts`                                                  | 3.1の6項目を非公開のサーバー設定として保持する                         |
-| 標準設定                                  | `config/config.yml.template`                                                | 3.1 の既定値を記載する                                                 |
-| 公開設定                                  | `src/model/api/config/ConfigApiModel.ts`                                    | 許可項目方式を維持し、3.1 を公開しない                                 |
+| 設定の型                                  | `src/model/IConfigFile.ts`                                                  | 3.1の6項目、3.1.1、3.1.2を非公開のサーバー設定として保持する                  |
+| 標準設定                                  | `config/config.yml.template`                                                | 3.1 の既定値と 3.1.1・3.1.2 の記載例を記載する                                |
+| 公開設定                                  | `src/model/api/config/ConfigApiModel.ts`                                    | 許可項目方式を維持し、3.1、3.1.1、3.1.2 を公開しない                        |
 | コマンド解釈                              | `src/util/ProcessUtil.ts`                                                   | 既存の記号と引数分割契約を維持する                                     |
-| エンコードの値保持                        | `src/model/service/encode/EncodeManageModel.ts`                             | `encodeQueueLimit` を開始時に保持する                                  |
+| エンコードの値保持                        | `src/model/service/encode/EncodeManageModel.ts`                             | `encodeQueueLimit` と `encodeSuspendTimes` を開始時に保持する          |
 | アップロードの値保持                      | `src/model/service/ServiceServer.ts`                                        | 同時数と受信期限を開始時に保持する                                     |
 | サムネイルの値保持                        | `src/model/operator/thumbnail/ThumbnailManageModel.ts`                      | `thumbnailMaxPending` を開始時に保持する                               |
 | 外部コマンドの値保持                      | `src/model/operator/externalCommand/ExternalCommandManageModel.ts`          | 上限と期限を開始時に保持する                                           |

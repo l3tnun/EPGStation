@@ -91,7 +91,7 @@ describe('actual HLS readiness and timers', () => {
         expect(LiveHLSStreamModel.hlsArtifactOwners.size).toBe(artifactOwnerCount);
     });
 
-    it('[MD-3.14][MD-3.15][MD-3.16] indexes exact startup artifacts without deleting them', async () => {
+    it('[MD-3.16] indexes exact artifacts in the current scan without deleting them', async () => {
         const dir = mkdtempSync(join(tmpdir(), 'epg-hls-index-'));
         dirs.push(dir);
         for (const file of [
@@ -114,7 +114,6 @@ describe('actual HLS readiness and timers', () => {
         }
         const index = new HLSFileDeleterModel({ getLogger: logger });
 
-        await expect(index.scanAtStartup(dir)).resolves.toEqual(new Set([1, 10]));
         await expect(index.scanCurrent(dir)).resolves.toEqual(new Set([1, 10]));
         await expect(index.listExact(dir, 1).then(files => files.sort())).resolves.toEqual([
             'stream1-0.ts',
@@ -127,6 +126,56 @@ describe('actual HLS readiness and timers', () => {
         ]);
         expect(existsSync(join(dir, 'stream1.m3u8'))).toBe(true);
         expect(existsSync(join(dir, 'stream10-0.ts'))).toBe(true);
+    });
+
+    it('[MD-8.3] deletes every exact HLS artifact of any stream identifier and keeps every other file', async () => {
+        const dir = join(mkdtempSync(join(tmpdir(), 'epg-hls-delete-all-')), 'stream-files');
+        dirs.push(join(dir, '..'));
+        const index = new HLSFileDeleterModel({ getLogger: logger });
+        await expect(index.deleteAllArtifacts(dir)).resolves.toEqual(new Set());
+        expect(existsSync(dir)).toBe(true);
+        const artifacts = ['stream1.m3u8', 'stream1-0.ts', 'stream1evil.ts', 'stream10-child_vtt.m3u8', 'stream0-000000001.ts'];
+        const kept = ['stream1', 'stream-no-id.m3u8', 'xstream2.m3u8', 'stream9007199254740992.m3u8', 'unrelated.ts'];
+        for (const file of [...artifacts, ...kept]) writeFileSync(join(dir, file), file);
+
+        await expect(index.deleteAllArtifacts(dir)).resolves.toEqual(new Set());
+
+        for (const file of artifacts) expect(existsSync(join(dir, file))).toBe(false);
+        for (const file of kept) expect(existsSync(join(dir, file))).toBe(true);
+    });
+
+    it('[MD-8.3] records an artifact that cannot be deleted, continues, and stops when cancelled', async () => {
+        const dir = mkdtempSync(join(tmpdir(), 'epg-hls-delete-all-failure-'));
+        dirs.push(dir);
+        for (const file of ['stream1.m3u8', 'stream2.m3u8', 'stream3.m3u8']) writeFileSync(join(dir, file), file);
+        const logs = logger();
+        const index = new HLSFileDeleterModel({ getLogger: () => logs });
+        const failure = new Error('synthetic delete-all unlink failure');
+        const originalUnlink = FileUtil.unlink;
+        let cancelled = false;
+        vi.spyOn(FileUtil, 'unlink').mockImplementation(async (filePath: string) => {
+            if (filePath.endsWith('stream1.m3u8')) throw failure;
+            await originalUnlink(filePath);
+            cancelled = true;
+        });
+
+        await expect(index.deleteAllArtifacts(dir, () => cancelled)).resolves.toEqual(new Set([1, 3]));
+
+        expect(logs.stream.error).toHaveBeenCalledWith({ error: failure, file: 'stream1.m3u8', operation: 'unlink' });
+        expect(logs.stream.info).toHaveBeenCalledWith('deleted stream2.m3u8');
+        expect(existsSync(join(dir, 'stream1.m3u8'))).toBe(true);
+        expect(existsSync(join(dir, 'stream2.m3u8'))).toBe(false);
+        expect(existsSync(join(dir, 'stream3.m3u8'))).toBe(true);
+    });
+
+    it('[MD-8.3] propagates a directory that cannot be read', async () => {
+        const dir = mkdtempSync(join(tmpdir(), 'epg-hls-delete-all-read-'));
+        dirs.push(dir);
+        const index = new HLSFileDeleterModel({ getLogger: logger });
+        const failure = new Error('synthetic delete-all read failure');
+        vi.spyOn(FileUtil, 'readDir').mockRejectedValueOnce(failure);
+
+        await expect(index.deleteAllArtifacts(dir)).rejects.toBe(failure);
     });
 
     it('[MD-5.4][MD-5.5][MD-5.6] retries exact artifact cleanup and records an unlink failure without touching an adjacent ID', async () => {
@@ -249,10 +298,10 @@ describe('actual HLS readiness and timers', () => {
             .spyOn(FileUtil, 'access')
             .mockRejectedValueOnce(Object.assign(new Error('denied'), { code: 'EACCES' }));
 
-        await expect(index.scanAtStartup(dir)).rejects.toThrow('denied');
+        await expect(index.scanCurrent(dir)).rejects.toThrow('denied');
         expect(access).toHaveBeenCalledWith(dir, fsConstants.R_OK | fsConstants.W_OK);
         access.mockRestore();
-        await expect(index.scanAtStartup(dir)).resolves.toEqual(new Set());
+        await expect(index.scanCurrent(dir)).resolves.toEqual(new Set());
         expect(existsSync(dir)).toBe(true);
     });
 
@@ -297,9 +346,9 @@ describe('actual HLS readiness and timers', () => {
         const failure = new Error('synthetic artifact read failure');
         const readDir = vi.spyOn(FileUtil, 'readDir').mockRejectedValueOnce(failure);
 
-        await expect(index.scanAtStartup(dir)).rejects.toBe(failure);
+        await expect(index.scanCurrent(dir)).rejects.toBe(failure);
         readDir.mockRestore();
-        await expect(index.scanAtStartup(dir)).resolves.toEqual(new Set());
+        await expect(index.scanCurrent(dir)).resolves.toEqual(new Set());
     });
 
     it('[MD-3.16] recognizes only an ENOENT object as a missing directory', () => {
@@ -825,7 +874,7 @@ describe('stream manager lifecycle internals', () => {
         const artifactIndex = {
             deleteAllFiles: vi.fn(async () => undefined),
             listExact: vi.fn(async () => []),
-            scanAtStartup: vi.fn(() => initialization.promise),
+            deleteAllArtifacts: vi.fn(() => initialization.promise),
             scanCurrent: vi
                 .fn()
                 .mockImplementationOnce(() => firstSnapshot.promise)
@@ -864,7 +913,7 @@ describe('stream manager lifecycle internals', () => {
     it('[MD-10.2] wraps the HLS allocation cursor at the safe-integer boundary', async () => {
         const artifactIndex = {
             listExact: vi.fn(async () => []),
-            scanAtStartup: vi.fn(async () => new Set<number>()),
+            deleteAllArtifacts: vi.fn(async () => new Set<number>()),
             scanCurrent: vi.fn(async () => new Set<number>()),
         };
         const idAllocator = fakeIdAllocator({ getLogger: logger }, { getConfig: () => baseConfig() }, artifactIndex);

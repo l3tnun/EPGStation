@@ -40,6 +40,18 @@ export default interface IEncodeManageModel extends IEncodingRecordedUseSnapshot
      */
     push(addOption: apid.AddEncodeProgramOption): Promise<apid.EncodeId>;
     /**
+     * 管理側が記録済みの依頼（録画完了による依頼）を、記録の識別番号のまま受け付ける。同じ識別番号の依頼が
+     * 待機列または実行中一覧にあれば何もしない。受付で拒否した場合は記録を削除する。
+     * @param encodeId 記録の識別番号。
+     * @param addOption 依頼の内容。
+     */
+    pushPersisted(encodeId: apid.EncodeId, addOption: apid.AddEncodeProgramOption): Promise<void>;
+    /**
+     * 起動時に一度だけ、記録された依頼を受け付け順に待機列へ戻す。戻し終えるまで新しい受付を待たせる。
+     * 失敗はログへ記録して終える（reject しない）。
+     */
+    restore(): Promise<void>;
+    /**
      * 指定したencodeを取り消す。実行中なら該当encoderへ中断を指示し、待機中ならqueueから
      * 取り除く。
      * @param encodeId 取り消し対象のencodeID。

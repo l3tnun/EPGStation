@@ -1,4 +1,5 @@
 import { ChildProcess, SpawnOptions } from 'child_process';
+import { ServiceProcessDescriptor } from '../../ipc/IServiceProcessReport.js';
 
 /** encodeプロセスを1つ起動するためのパラメータ。 */
 export interface CreateProcessOption {
@@ -7,6 +8,8 @@ export interface CreateProcessOption {
     cmd: string; // %INPUT% と %OUTPUT% を input と output で置換する
     priority: number; // 数値が大きいほど優先度が高くなる
     spawnOption?: SpawnOptions; // 全ての環境変数を渡す場合は spawnOption.env は null or undefined とすること
+    /** 処理種別。指定すると、起動が成立したときと実行中一覧から取り除いたときに管理側へ知らせる */
+    report?: ServiceProcessDescriptor;
 }
 
 declare const managedProcessHandleBrand: unique symbol;

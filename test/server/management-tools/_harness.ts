@@ -103,6 +103,16 @@ export const makeDependencies = (overrides: Record<string, unknown> = {}) => {
         IVideoFileDB: collection('video-file', versionlessBackup().videoFileItems),
         IRecordedHistoryDB: collection('recorded-history', versionlessBackup().recordedHistoryItems),
         IRecordedTagDB: collection('recorded-tag', [versionlessBackup().recordedTagItems, 1]),
+        // エンコードの依頼の記録。復元は最初の種類より前に全件を削除し、バックアップには含めない。
+        IEncodeQueueDB: {
+            deleteAll: vi.fn(async () => {
+                ledger.push('delete-all:encode-queue');
+            }),
+            findAll: vi.fn(async () => {
+                ledger.push('read:encode-queue');
+                return [];
+            }),
+        },
         ...overrides,
     };
     const container = { get: vi.fn((name: string) => dependencies[name]) };

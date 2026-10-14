@@ -13,6 +13,7 @@ import {
     RecordedResourceUseKind,
     RecordedUseSnapshotPayload,
 } from './IRecordedResourceUse.js';
+import { ServiceProcessReporter } from './IServiceProcessReport.js';
 import {
     UploadedVideoAdoptedMessage,
     UploadedVideoDispatchAttempt,
@@ -20,6 +21,7 @@ import {
     UploadedVideoRegistrationPort,
 } from './IUploadedVideoRegistration.js';
 import IIPCClient, {
+    IPCEncodeQueue,
     IPCOperatorEncodeEvent,
     IPCRecordedManageModel,
     IPCRecordedTagManageModel,
@@ -30,6 +32,7 @@ import IIPCClient, {
 } from './IIPCClient.js';
 import {
     ClientMessageOption,
+    EncodeQueueFunctions,
     OperatorEncodeEventFunctions,
     ModelName,
     ParentMessage,
@@ -47,6 +50,8 @@ import {
     ReserveationFunctions,
     RuleFuntions,
     SendMessage,
+    ServiceProcessEndedMessage,
+    ServiceProcessStartedMessage,
     ThumbnailFunctions,
 } from './IPCMessageDefine.js';
 
@@ -132,6 +137,7 @@ export default class IPCClient implements IIPCClient {
     public rule!: IPCRuleManageModel;
     public thumbnail!: IPCThumbnailManageModel;
     public encodeEvent!: IPCOperatorEncodeEvent;
+    public encodeQueue!: IPCEncodeQueue;
     // 録画使用状況（再生・削除保護等）の確保／解放を、他のmoduleへ公開するための窓口。
     public readonly recordedResourceUseClient: RecordedResourceUseClient = {
         acquire: (recordedId, kind) => this.acquireRecordedResourceUse(recordedId, kind),
@@ -145,6 +151,11 @@ export default class IPCClient implements IIPCClient {
     // アップロードされた動画fileの登録要求を発行するための窓口。
     public readonly uploadedVideoRegistrationPort: UploadedVideoRegistrationPort = {
         dispatch: option => this.dispatchUploadedVideoRegistration(option),
+    };
+    // Web・API側処理が開始した外部プロセスの開始と終了を管理側へ知らせる窓口（応答を待たない）。
+    public readonly serviceProcessReporter: ServiceProcessReporter = {
+        started: start => this.sendServiceProcessReport({ ...start, type: 'serviceProcessStarted' }),
+        ended: pid => this.sendServiceProcessReport({ pid, type: 'serviceProcessEnded' }),
     };
 
     private log: ILogger;
@@ -198,6 +209,7 @@ export default class IPCClient implements IIPCClient {
         this.setRule();
         this.setThumbnail();
         this.setEncodeEvent();
+        this.setEncodeQueue();
     }
 
     /**
@@ -231,12 +243,26 @@ export default class IPCClient implements IIPCClient {
                     this.socketIO.notifyClient();
                 } else {
                     if ((<ParentMessage>msg).type === 'pushEncode') {
-                        // エンコード依頼
-                        this.encodeManage.push((<PushEncodeMessage>msg).value);
+                        // 識別番号付きのエンコード依頼（依頼は親側で記録済み）
+                        this.handlePushEncode(<PushEncodeMessage>msg);
                     }
                 }
             },
         );
+    }
+
+    // 親が記録した識別番号付きのエンコード依頼を待機列へ渡す。識別番号が1以上の安全な整数でない通知は
+    // 記録して捨てる。`pushPersisted`の失敗（同期throwを含む）は記録し、未処理のrejectionにしない。
+    private handlePushEncode(msg: PushEncodeMessage): void {
+        const encodeId = msg.encodeId;
+        if (!Number.isSafeInteger(encodeId) || encodeId < 1) {
+            this.log.system.error('IPC pushEncode discarded: invalid encodeId');
+
+            return;
+        }
+        void (async () => this.encodeManage.pushPersisted(encodeId, msg.value))().catch((error: unknown) => {
+            this.log.system.error(`IPC pushEncode failed: ${this.toError(error).message}`);
+        });
     }
 
     /**
@@ -598,6 +624,24 @@ export default class IPCClient implements IIPCClient {
         process.nextTick(() =>
             this.sendRecordedUseSnapshotReply({ id: request.id, snapshot, type: 'recordedUseSnapshotReply' }),
         );
+    }
+
+    // 外部プロセスの開始・終了の知らせを送る。応答を待たず、送れなかった知らせはログへ記録して破棄する
+    // （保存・再送はしない）。
+    private sendServiceProcessReport(message: ServiceProcessStartedMessage | ServiceProcessEndedMessage): void {
+        const send = process.send;
+        if (typeof send === 'undefined') {
+            this.log.system.error('process.send is undefined');
+
+            return;
+        }
+        try {
+            send.call(process, message, error => {
+                if (error instanceof Error) this.log.system.error(`process.send callback error: ${error.message}`);
+            });
+        } catch (error: unknown) {
+            this.log.system.error(`process.send error: ${this.toError(error).message}`);
+        }
     }
 
     // snapshot応答を実際に送信する。応答であり要求ではないため、送信失敗時に`pending`側の
@@ -1136,6 +1180,58 @@ export default class IPCClient implements IIPCClient {
                     args: {
                         info: info,
                     },
+                });
+            },
+        };
+    }
+
+    /**
+     * set encode queue
+     */
+    private setEncodeQueue(): void {
+        this.encodeQueue = {
+            add: (option: apid.AddEncodeProgramOption, requestToken: string) => {
+                return this.send({
+                    model: ModelName.encodeQueue,
+                    func: EncodeQueueFunctions.add,
+                    args: {
+                        option: option,
+                        requestToken: requestToken,
+                    },
+                });
+            },
+            abandon: (requestToken: string) => {
+                return this.send({
+                    model: ModelName.encodeQueue,
+                    func: EncodeQueueFunctions.abandon,
+                    args: {
+                        requestToken: requestToken,
+                    },
+                });
+            },
+            updateOutputPath: (encodeId: apid.EncodeId, outputPath: string) => {
+                return this.send({
+                    model: ModelName.encodeQueue,
+                    func: EncodeQueueFunctions.updateOutputPath,
+                    args: {
+                        encodeId: encodeId,
+                        outputPath: outputPath,
+                    },
+                });
+            },
+            remove: (encodeId: apid.EncodeId) => {
+                return this.send({
+                    model: ModelName.encodeQueue,
+                    func: EncodeQueueFunctions.remove,
+                    args: {
+                        encodeId: encodeId,
+                    },
+                });
+            },
+            list: () => {
+                return this.send({
+                    model: ModelName.encodeQueue,
+                    func: EncodeQueueFunctions.list,
                 });
             },
         };

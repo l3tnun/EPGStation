@@ -231,6 +231,7 @@ const container = { get: (key: string): unknown => {
         case 'IIPCServer': return { register: noOperation };
         case 'IEPGUpdateExecutorManageModel': return { execute: noOperation };
         case 'IEncodeFinishModel': return { set: noOperation };
+        case 'IEncodeManageModel': return { restore: async (): Promise<void> => undefined };
         case 'IServiceServer': return { start: noOperation };
         case 'IEPGUpdater': return { start: () => pending };
         default: return {};
@@ -604,6 +605,8 @@ const container = {
                 return { checkMirakurun: () => pending, checkDB: () => pending };
             case 'IEncodeFinishModel':
                 return { set: (): void => undefined };
+            case 'IEncodeManageModel':
+                return { restore: async (): Promise<void> => undefined };
             case 'IServiceServer':
                 return {
                     start: (): void => undefined,
@@ -795,6 +798,7 @@ const container = {
                     }),
                 };
             case 'IEPGUpdateExecutorManageModel': return { execute: (): void => undefined };
+            case 'IServiceChildTerminationCleanup': return { run: async (): Promise<void> => undefined };
             default: return {};
         }
     },
@@ -853,6 +857,10 @@ const main = async (): Promise<void> => {
         ${terminalEvent === 'error' ? "new Error('SYNTHETIC_WEB_POST_SPAWN_ERROR')" : '0'},
         null,
     );
+    // The restart follows the cleanup of the ended child, which settles on later turns.
+    for (let turn = 0; turn < 20 && children.length < 2; turn += 1) {
+        await new Promise<void>(resolve => setImmediate(resolve));
+    }
     process.stdout.write(
         ${JSON.stringify(resultPrefix)} + JSON.stringify({ loggerOwnedEffects, records }) + '\\n',
         () => originalExit(0),
@@ -1176,6 +1184,7 @@ describe('operational logging supervisor terminal classification', () => {
             event: 'exit' as const,
             expectedRecords: [
                 { category: 'system', level: 'fatal', value: 'service process is down' },
+                { category: 'system', level: 'fatal', value: 'service process exit code: 0, signal: null' },
                 { category: 'system', level: 'fatal', value: 'restart service' },
             ],
         },
@@ -1185,6 +1194,7 @@ describe('operational logging supervisor terminal classification', () => {
             event: 'error' as const,
             expectedRecords: [
                 { category: 'system', level: 'fatal', value: 'service process is down' },
+                { category: 'system', level: 'fatal', value: 'service process exit code: null, signal: null' },
                 { category: 'system', level: 'fatal', value: 'restart service' },
             ],
         },

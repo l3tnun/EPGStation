@@ -32,12 +32,40 @@ export default class HLSFileDeleterModel implements IHLSFileDeleterModel {
     }
 
     /**
-     * `IStreamIdAllocator`（`HlsStreamIdAllocator`）がプロセス起動時に一度だけ行う走査。
-     * 実装は `scanCurrent` と同一だが、呼び出し側の意図（起動時の初期状態把握か、
-     * 都度のスナップショット取得か）を型で区別できるよう method を分けている。
+     * HLS 保存先に残った HLS artifact を、識別番号にかかわらずすべて削除する。配信が動いていないとき
+     * （Web・API 側処理の起動時と、管理側が終了した Web・API 側処理の後始末をするとき）だけに使う。
+     * 保存先が無ければ作成し、保存先の準備や読取りの失敗は呼び出し元へ伝える。一件のファイルを削除できない
+     * ときは記録して残りを続け、`isCancelled` が `true` を返したら残りを削除せずに終える。
+     * @param streamFilePath HLS 保存先
+     * @param isCancelled 削除を打ち切るかを一件ごとに確かめる関数
+     * @returns 削除できなかった（打ち切りで削除しなかったものを含む）artifact の streamId 集合
      */
-    public async scanAtStartup(streamFilePath: string): Promise<ReadonlySet<number>> {
-        return this.scan(streamFilePath);
+    public async deleteAllArtifacts(
+        streamFilePath: string,
+        isCancelled: () => boolean = () => false,
+    ): Promise<ReadonlySet<number>> {
+        await this.prepareDirectory(streamFilePath);
+        const files = await FileUtil.readDir(streamFilePath);
+        const remainingIds = new Set<number>();
+        for (const file of files.sort()) {
+            const id = this.artifactStreamId(file);
+            if (id === null) {
+                continue;
+            }
+            if (isCancelled()) {
+                remainingIds.add(id);
+                continue;
+            }
+            try {
+                await FileUtil.unlink(`${streamFilePath}/${file}`);
+                this.logStream('info', `deleted ${file}`);
+            } catch (error: unknown) {
+                remainingIds.add(id);
+                this.logStream('error', { error, file, operation: 'unlink' });
+            }
+        }
+
+        return remainingIds;
     }
 
     /**
@@ -130,18 +158,28 @@ export default class HLSFileDeleterModel implements IHLSFileDeleterModel {
         const files = await FileUtil.readDir(streamFilePath);
         const ids = new Set<number>();
         for (const file of files) {
-            const match = /^stream(\d+)/.exec(file);
-            if (match === null) {
-                continue;
-            }
-
-            const id = Number(match[1]);
-            if (Number.isSafeInteger(id) && this.isHlsArtifactForStream(file, id)) {
+            const id = this.artifactStreamId(file);
+            if (id !== null) {
                 ids.add(id);
             }
         }
 
         return ids;
+    }
+
+    /**
+     * ファイル名がいずれかの識別番号の HLS artifact なら、その識別番号を返す。
+     * @param file ファイル名
+     * @returns 識別番号。artifact でなければ `null`
+     */
+    private artifactStreamId(file: string): number | null {
+        const match = /^stream(\d+)/.exec(file);
+        if (match === null) {
+            return null;
+        }
+
+        const id = Number(match[1]);
+        return Number.isSafeInteger(id) && this.isHlsArtifactForStream(file, id) ? id : null;
     }
 
     private async prepareDirectory(streamFilePath: string): Promise<void> {

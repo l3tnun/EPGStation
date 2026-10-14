@@ -587,6 +587,91 @@ describe('typed persistence repository contracts', () => {
         await expect(repository.findId(41)).resolves.toBe(stored);
     });
 
+    it('[PERSIST-10.1-R2.7-ENCODE-QUEUE-ROUND-TRIP] keeps a caller-numbered request record, its JSON text, and its output path through the public port', async () => {
+        // A fake table behind the query builders. Reads return the bigint columns as strings, the way the
+        // MySQL driver may hand them back, and honour an ascending `id` order only when the port asks for it.
+        const table = new Map<number, { id: number; option: string; outputPath: string | null; createdAt: number }>();
+        const writeBuilder = () => {
+            const state: { kind?: string; values?: any; set?: any; where?: { id: number } } = {};
+            const record = (key: keyof typeof state) => (value?: any) => {
+                state[key] = value;
+                return builder;
+            };
+            const builder: Record<string, (...arguments_: any[]) => unknown> = {
+                insert: () => record('kind')('insert'),
+                into: () => builder,
+                values: record('values'),
+                update: () => record('kind')('update'),
+                set: record('set'),
+                delete: () => record('kind')('delete'),
+                from: () => builder,
+                where: record('where'),
+                execute: async () => {
+                    if (state.kind === 'insert') {
+                        table.set(state.values.id, { ...state.values });
+                        return { identifiers: [{ id: state.values.id }] };
+                    }
+                    const targets = [...table.keys()].filter(id => state.where === undefined || id === state.where.id);
+                    for (const id of targets) {
+                        if (state.kind === 'update') table.set(id, { ...table.get(id)!, ...state.set });
+                        else table.delete(id);
+                    }
+                    return { affected: targets.length };
+                },
+            };
+            return builder;
+        };
+        const readBuilder = () => {
+            let ascending = false;
+            const builder: Record<string, (...arguments_: any[]) => unknown> = {
+                orderBy: (sort: string, order: string) => {
+                    ascending = sort.endsWith('.id') && order === 'ASC';
+                    return builder;
+                },
+                getMany: async () => {
+                    const rows = [...table.values()].map(row => ({
+                        ...row,
+                        id: String(row.id),
+                        createdAt: String(row.createdAt),
+                    }));
+                    return ascending ? rows.sort((left, right) => Number(left.id) - Number(right.id)) : rows;
+                },
+            };
+            return builder;
+        };
+        const connection = {
+            createQueryBuilder: vi.fn(writeBuilder),
+            getRepository: vi.fn(() => ({ createQueryBuilder: vi.fn(readBuilder) })),
+        };
+        const EncodeQueueDB = loadCompiledDefault<Record<string, (...arguments_: any[]) => Promise<any>>>(
+            'model/db/EncodeQueueDB.js',
+        );
+        const repository = new EncodeQueueDB(silentLoggerModel, repositoryOperator(connection), immediateRetry);
+        const option = JSON.stringify({ recordedId: 5, mode: 'synthetic-mode', directory: 'synthetic-録画/サブ', nested: [1] });
+
+        await repository.insertOnce({ id: Number.MAX_SAFE_INTEGER, option, outputPath: null, createdAt: 1_000 });
+        await repository.insertOnce({ id: 3, option: '{}', outputPath: null, createdAt: 2_000 });
+        await expect(
+            repository.updateOutputPath(Number.MAX_SAFE_INTEGER, '<synthetic-output>/encoded.mp4'),
+        ).resolves.toBe(true);
+        await expect(repository.updateOutputPath(404, '<synthetic-output>/missing.mp4')).resolves.toBe(false);
+
+        await expect(repository.findAll()).resolves.toEqual([
+            { id: 3, option: '{}', outputPath: null, createdAt: 2_000 },
+            {
+                id: Number.MAX_SAFE_INTEGER,
+                option,
+                outputPath: '<synthetic-output>/encoded.mp4',
+                createdAt: 1_000,
+            },
+        ]);
+
+        await expect(repository.deleteOnce(3)).resolves.toBe(true);
+        await expect(repository.deleteOnce(3)).resolves.toBe(false);
+        await repository.deleteAll();
+        await expect(repository.findAll()).resolves.toEqual([]);
+    });
+
     it('[PERSIST-7.1-R3.10-RULE-CORRUPT] propagates corrupt persisted JSON instead of inventing defaults', async () => {
         const connection = {
             getRepository: vi.fn(() => ({ findOne: vi.fn(async () => ({ channelIds: '{broken-json' })) })),

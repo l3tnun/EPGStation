@@ -16,6 +16,7 @@ const expectedMigrations = [
     'AddRawExtended1624084351785',
     'AddEventRelay1716647383635',
     'AddRuleBS4K1790497623885',
+    'AddEncodeQueue1791894978617',
 ] as const;
 
 describe('DBOperator official MySQL LTS in-place stored data', () => {
@@ -39,7 +40,7 @@ describe('DBOperator official MySQL LTS in-place stored data', () => {
         );
     });
 
-    it('[PERSIST-8.3-INPLACE-STORED-DATA] reads and updates preexisting LTS rows, applying only the pending BS4K rule-column migration and changing nothing else in schema or migration history', async () => {
+    it('[PERSIST-8.3-INPLACE-STORED-DATA] reads and updates preexisting LTS rows, applying only the pending BS4K rule-column and encode_queue migrations and changing nothing else in schema or migration history', async () => {
         const [schemaSql, seedSql] = await Promise.all([
             readFile(resolve(fixtureRoot, 'schema.sql'), 'utf8'),
             readFile(resolve(fixtureRoot, 'seed.sql'), 'utf8'),
@@ -56,12 +57,14 @@ describe('DBOperator official MySQL LTS in-place stored data', () => {
             await activeSchema.applySql(seedSql);
             const schemaBefore = await captureOfficialMySqlLtsSchemaSnapshot(sql => activeSchema.applySql(sql));
             // `schemaSql` fixes an LTS DB as it existed before the BS4K rule-column migration, so
-            // connecting the operator here is expected to apply exactly that one pending migration
-            // (adding `rule`.`BS4K`) and nothing else. Capture the `rule` table's own CREATE TABLE
-            // separately so the assertions below can prove that migration touched only this table.
+            // connecting the operator here is expected to apply exactly the two pending migrations
+            // (adding `rule`.`BS4K`, then creating the `encode_queue` table) and nothing else. Capture the
+            // `rule` table's own CREATE TABLE separately so the assertions below can prove that those
+            // migrations changed only this table and added only the new one.
             const stabilize = (createTable: string) => createTable.replace(/AUTO_INCREMENT=\d+/gu, 'AUTO_INCREMENT=N');
             const ruleDdlBefore = stabilize(await activeSchema.applySql('SHOW CREATE TABLE `rule`'));
             expect(ruleDdlBefore).not.toContain('`BS4K`');
+            expect(schemaBefore).not.toContain('encode_queue');
             operator = createOperator({ dbtype: 'mysql', mysql: activeSchema.config }, logger());
             source = await operator.getConnection();
 
@@ -91,12 +94,19 @@ describe('DBOperator official MySQL LTS in-place stored data', () => {
 
             const ruleDdlAfter = stabilize(await activeSchema.applySql('SHOW CREATE TABLE `rule`'));
             expect(ruleDdlAfter).toContain('`BS4K` tinyint NOT NULL DEFAULT');
+            const encodeQueueDdl = stabilize(await activeSchema.applySql('SHOW CREATE TABLE `encode_queue`'));
+            expect(encodeQueueDdl).toContain('`id` bigint NOT NULL');
+            expect(encodeQueueDdl).toContain('`createdAt` bigint NOT NULL');
             const schemaAfter = await captureOfficialMySqlLtsSchemaSnapshot(sql => activeSchema.applySql(sql));
             expect(schemaAfter).not.toBe(schemaBefore);
-            // Substituting the post-migration `rule` DDL back for its pre-migration form must reproduce
-            // `schemaBefore` byte-for-byte: proves the BS4K migration changed the `rule` table only, and
-            // every other table (including `migrations`' own structure) is untouched.
-            expect(schemaAfter.split(ruleDdlAfter).join(ruleDdlBefore)).toBe(schemaBefore);
+            // Removing the new `encode_queue` table (which sorts between other tables, so it is followed by
+            // the joining newline) and substituting the post-migration `rule` DDL back for its
+            // pre-migration form must reproduce `schemaBefore` byte-for-byte: proves the pending migrations
+            // added that one table, changed the `rule` table only, and left every other table (including
+            // `migrations`' own structure) untouched.
+            const withoutEncodeQueue = schemaAfter.split(`${encodeQueueDdl}\n`);
+            expect(withoutEncodeQueue).toHaveLength(2);
+            expect(withoutEncodeQueue.join('').split(ruleDdlAfter).join(ruleDdlBefore)).toBe(schemaBefore);
 
             await expect(operator.closeConnection()).resolves.toBeUndefined();
             expect(source.isInitialized).toBe(false);

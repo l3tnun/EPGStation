@@ -48,7 +48,7 @@ Project memory keeps persistent guidance (steering, specs notes, component docs)
 ## Skills Structure
 Skills are located in `.agents/skills/kiro-*/SKILL.md`
 - Each skill is a directory with a `SKILL.md` file
-- `.agents/skills/kiro-*` など外部 repository 由来の skill は git の追跡外（`.gitignore`）。導入手順（入手先、導入 command、再起動、確認）は `docs/agents-skills/README.md`、agent ごとの model / effort の割り当て方針は `docs/agent-model-policy/README.md` に従う。
+- `.agents/skills/kiro-*` など外部 repository 由来の skill は git の追跡外（`.gitignore`）。導入手順（入手先、導入 command、再起動、確認）は `docs/agents-skills/README.md` に従う。
 - Use `/skills` to inspect currently available skills
 - Invoke a skill directly with `$kiro-<skill-name>`
 - `kiro-review` — task-local adversarial review protocol used by reviewer subagents

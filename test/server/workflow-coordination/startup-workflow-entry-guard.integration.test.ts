@@ -82,6 +82,7 @@ const services = {
             return { kind: 'Succeeded', stage: 'epg-supervisor-start' };
         },
     },
+    IServiceChildTerminationCleanup: { run: async () => {} },
     IStorageManageModel: { start: () => {} },
     TunerServerAccess: { getTuners: async () => [] },
 };

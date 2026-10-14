@@ -1639,12 +1639,13 @@ const COVERAGE_EXCLUSION_ENCODE_FILE_MANAGE_WHILE_RESULT_NULL_MARKER =
 // `EncodeManageModel.checkQueue`'s `if (typeof encoder === 'undefined') { ... }` is unreachable. There is no
 // `await` between the `this.waitQueue.length === 0` early-return check and `this.waitQueue.shift()`,
 // so nothing can mutate `waitQueue` in between; if the length check passed, `shift()` always
-// returns an element. The only place anything is ever pushed onto `waitQueue` is `EncodeManageModel.push`, and
-// by that point `encoder = await this.encoderModelProvider()` has already been dereferenced
-// (`encoder.setOption(option)`), which would throw synchronously for a `null`/`undefined` encoder before
-// ever reaching the `push`. So every element ever pushed -- and therefore every element `shift()` can
-// ever return when the length check passed -- is a real, defined encoder. The approval binds to `checkQueue`
-// and `push`.
+// returns an element. The only places anything is ever pushed onto `waitQueue` are `EncodeManageModel.admit`
+// (admission of a new or recorded request) and `EncodeManageModel.restoreRecord` (restoration of a recorded
+// request at startup), and in both, by that point `encoder = await this.encoderModelProvider()` has already
+// been dereferenced (`encoder.setOption(...)`), which would throw synchronously for a `null`/`undefined`
+// encoder before ever reaching the `push`. So every element ever pushed -- and therefore every element
+// `shift()` can ever return when the length check passed -- is a real, defined encoder. The approval binds to
+// `checkQueue`, `admit` and `restoreRecord`.
 const COVERAGE_EXCLUSION_ENCODE_MANAGE_CHECK_QUEUE_UNDEFINED_MARKER =
     '__EPGSTATION_COVERAGE_EXCLUSION_ENCODE_MANAGE_CHECK_QUEUE_UNDEFINED_20260924';
 
@@ -2273,7 +2274,8 @@ export const COVERAGE_EXCLUSION_AUTHORIZATIONS = Object.freeze([
         alternativeOwnerEntries: Object.freeze(['test/server/encoding/**/*.test.ts']),
         boundFunctions: Object.freeze([
             Object.freeze({ codeSha256: 'b37d9f827666837d3d3fbef89a94fcedc7f55242caa0e598f75b1b88031b17f3', name: 'EncodeManageModel.checkQueue' }),
-            Object.freeze({ codeSha256: '736d1dc7dd099530ef81c12d191bb93b26b55a76893b42e8e11b12c8e5cbb654', name: 'EncodeManageModel.push' }),
+            Object.freeze({ codeSha256: '8bcf83f941042c0ccfdbcb22367a98f808c39c268f9b721ca1ae0435494686d5', name: 'EncodeManageModel.admit' }),
+            Object.freeze({ codeSha256: '5c879f44c853ff67b7ea416c6027a3e3c97e56378295cff5d280766ad17e2e17', name: 'EncodeManageModel.restoreRecord' }),
         ]),
         branchAnchors: Object.freeze([
             Object.freeze({

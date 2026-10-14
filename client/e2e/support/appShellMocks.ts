@@ -1,5 +1,6 @@
 import type { Page, Route } from '@playwright/test'
 import { HttpResponse, getResponse, http } from 'msw'
+import { trackApiRequests } from './apiMockReplacement'
 
 export const SYNTHETIC_APP_VERSION = '9.8.7-synthetic'
 export const SYNTHETIC_NAVIGATION_TIMESTAMP = '1700000000000'
@@ -144,6 +145,7 @@ export async function installAppShellApiMocks(
     version = SYNTHETIC_APP_VERSION,
   }: AppShellMockOptions = {},
 ): Promise<void> {
+  trackApiRequests(page)
   await page.addInitScript(
     ({
       enableBroadcastWaveNavigation: shouldEnableBroadcastWaveNavigation,

@@ -117,6 +117,33 @@ const providerNumericDefaults = {
 
 const providerNumericFields = Object.keys(providerNumericDefaults) as Array<keyof typeof providerNumericDefaults>;
 
+type ProviderNumericField = keyof typeof providerNumericDefaults;
+
+/** Requirements 7.7〜7.9 が許可する最大値。最小値はどの項目も 1。 */
+const providerNumericMaxima: Readonly<Record<ProviderNumericField, number>> = {
+    encodeQueueLimit: Number.MAX_SAFE_INTEGER,
+    concurrentUploadNum: Number.MAX_SAFE_INTEGER,
+    uploadReceiveTimeoutMs: 2_147_483_647,
+    thumbnailMaxPending: 10_000,
+    hookCommandMaxPending: 10_000,
+    hookCommandTimeoutMs: 2_147_483_647,
+};
+
+const acceptedProviderNumericValues: Array<[label: string, field: ProviderNumericField, value: number]> =
+    providerNumericFields.flatMap(field => [
+        ['minimum', field, 1] as [string, ProviderNumericField, number],
+        ['maximum', field, providerNumericMaxima[field]] as [string, ProviderNumericField, number],
+    ]);
+
+const rejectedProviderNumericValues: Array<[label: string, field: ProviderNumericField, value: unknown]> =
+    providerNumericFields.flatMap(field => [
+        ['zero', field, 0] as [string, ProviderNumericField, unknown],
+        ['a negative number', field, -1] as [string, ProviderNumericField, unknown],
+        ['a fraction', field, 1.5] as [string, ProviderNumericField, unknown],
+        ['a numeric string', field, '1'] as [string, ProviderNumericField, unknown],
+        ['one over the maximum', field, providerNumericMaxima[field] + 1] as [string, ProviderNumericField, unknown],
+    ]);
+
 const loopbackApiServer = (port: number): string => ['http:', '', `localhost:${port}`].join('/');
 const rooted = (value: string): string => ['', value].join('/');
 
@@ -252,6 +279,8 @@ const publicSourceConfig = (): Record<string, unknown> => ({
     thumbnailMaxPending: 32,
     hookCommandMaxPending: 64,
     hookCommandTimeoutMs: 300_000,
+    encodeSuspendTimes: [{ start: '18:00', end: '19:00' }],
+    encodeRemoveInterruptedOutput: false,
     storageLimitCommandTimeoutMs: { marker: 'storage-timeout-carrier-marker' },
     syntheticInternalField: 'synthetic-internal-marker',
 });
@@ -699,6 +728,297 @@ describe('server configuration characterization contract', () => {
         expect(watchFile).toHaveBeenCalledTimes(1);
     });
 
+    it.each(acceptedProviderNumericValues)(
+        '[CFG-4.1-SPEC-ACCEPT] AC 7.7-7.9: loads and provides the %s of %s unchanged',
+        (_label, field, value) => {
+            const watchFile = installInitialReadDouble(() =>
+                reloadCandidate(48100, 'accepted-generation', { [field]: value }),
+            );
+
+            const provided = new Configuration({ getLogger: () => createLogger() }).getConfig();
+
+            expect(provided[field]).toBe(value);
+            expect(watchFile).toHaveBeenCalledTimes(1);
+        },
+    );
+
+    it.each(rejectedProviderNumericValues)(
+        '[CFG-4.1-SPEC-INVALID] AC 7.7-7.9: rejects %s for %s before installing the watcher',
+        (_label, field, value) => {
+            const watchFile = installInitialReadDouble(() =>
+                reloadCandidate(48100, 'invalid-generation', { [field]: value }),
+            );
+
+            expect(() => new Configuration({ getLogger: () => createLogger() })).toThrow(`ConfigValueError:${field}`);
+            expect(watchFile).not.toHaveBeenCalled();
+        },
+    );
+
+    it('[CFG-4.3-DEFAULT] supplies an empty encodeSuspendTimes array that no clone or later generation shares', () => {
+        const configuration = createConfiguration(null);
+        configuration.config = configuration.formatConfig(readCandidate());
+
+        const first = configuration.getConfig();
+        (first.encodeSuspendTimes as unknown[]).push({ start: '01:00', end: '02:00' });
+        const second = configuration.getConfig();
+        const nextGeneration = createConfiguration(null).formatConfig(readCandidate());
+
+        expect(second.encodeSuspendTimes).toEqual([]);
+        expect(nextGeneration.encodeSuspendTimes).toEqual([]);
+        expect(Configuration.DEFAULT_VALUE.encodeSuspendTimes).toEqual([]);
+    });
+
+    it('[CFG-4.3-INITIAL-INVALID] rejects an invalid encodeSuspendTimes before installing the watcher', () => {
+        const watchFile = installInitialReadDouble(() =>
+            reloadCandidate(48100, 'invalid-initial-generation', {
+                encodeSuspendTimes: [{ start: '18:00', end: '18:00' }],
+            }),
+        );
+
+        expect(() => new Configuration({ getLogger: () => createLogger() })).toThrow(
+            'ConfigValueError:encodeSuspendTimes',
+        );
+        expect(watchFile).not.toHaveBeenCalled();
+    });
+
+    it('[CFG-4.3-RELOAD-INVALID] discards an invalid encodeSuspendTimes reload and keeps the previous ranges', async () => {
+        const stableRanges = [{ start: '23:00', end: '02:00' }];
+        const watchFile = installInitialReadDouble(() =>
+            reloadCandidate(48100, 'stable-generation', { encodeSuspendTimes: stableRanges }),
+        );
+        const logger = createLogger();
+        const configuration = new Configuration({ getLogger: () => logger });
+        const stableInternalReference = configuration.config;
+        const readFile = vi.fn();
+        mutableFileSystem.promises.readFile = readFile;
+        const changeListener = watchFile.mock.calls[0][1] as () => Promise<void>;
+
+        for (const invalid of [null, [{ start: '24:00', end: '01:00' }], [{ start: '07:00' }]]) {
+            readFile.mockResolvedValueOnce(reloadCandidate(48200, 'invalid-ranges', { encodeSuspendTimes: invalid }));
+
+            await changeListener();
+
+            expect(configuration.config).toBe(stableInternalReference);
+            expect(configuration.getConfig().encodeSuspendTimes).toEqual(stableRanges);
+        }
+        expect(logger.system.error).toHaveBeenCalledWith(
+            expect.objectContaining({ message: 'ConfigValueError:encodeSuspendTimes' }),
+        );
+    });
+
+    it.each([
+        ['an empty array', []],
+        ['the earliest start and the latest end', [{ start: '00:00', end: '24:00' }]],
+        ['the latest start and the earliest end', [{ start: '23:59', end: '00:00' }]],
+        [
+            'several ranges that overlap',
+            [
+                { start: '18:00', end: '23:00' },
+                { start: '22:00', end: '02:00' },
+            ],
+        ],
+    ])('[CFG-4.3-SPEC-ACCEPT] AC 7.14: loads and provides %s for encodeSuspendTimes', (_label, ranges) => {
+        const watchFile = installInitialReadDouble(() =>
+            reloadCandidate(48100, 'accepted-ranges', { encodeSuspendTimes: ranges }),
+        );
+
+        const provided = new Configuration({ getLogger: () => createLogger() }).getConfig();
+
+        expect(provided.encodeSuspendTimes).toStrictEqual(ranges);
+        expect(watchFile).toHaveBeenCalledTimes(1);
+    });
+
+    it.each([
+        ['null', null],
+        ['an object instead of an array', { start: '18:00', end: '19:00' }],
+        ['a string instead of an array', '18:00-19:00'],
+        ['a null element', [null]],
+        ['a missing start', [{ end: '19:00' }]],
+        ['a numeric start', [{ start: 1080, end: '19:00' }]],
+        ['a one-digit hour', [{ start: '7:00', end: '08:00' }]],
+        ['24:00 as start', [{ start: '24:00', end: '01:00' }]],
+        ['24:01 as end', [{ start: '23:00', end: '24:01' }]],
+        ['minute 60', [{ start: '23:60', end: '01:00' }]],
+        ['the same start and end', [{ start: '18:00', end: '18:00' }]],
+    ])(
+        '[CFG-4.3-SPEC-INVALID] AC 7.14: rejects %s for encodeSuspendTimes before installing the watcher',
+        (_label, ranges) => {
+            const watchFile = installInitialReadDouble(() =>
+                reloadCandidate(48100, 'invalid-ranges', { encodeSuspendTimes: ranges }),
+            );
+
+            expect(() => new Configuration({ getLogger: () => createLogger() })).toThrow(
+                'ConfigValueError:encodeSuspendTimes',
+            );
+            expect(watchFile).not.toHaveBeenCalled();
+        },
+    );
+
+    it('[CFG-4.3-SPEC-KEY-ONLY] AC 7.14: rejects an encodeSuspendTimes key written without a value', () => {
+        const watchFile = installInitialReadDouble(() => withEnvEntries(['encodeSuspendTimes:']));
+
+        expect(() => new Configuration({ getLogger: () => createLogger() })).toThrow(
+            'ConfigValueError:encodeSuspendTimes',
+        );
+        expect(watchFile).not.toHaveBeenCalled();
+    });
+
+    it('[CFG-4.3-EXTRA-KEYS] AC 7.14: accepts ranges carrying keys other than start and end', () => {
+        const watchFile = installInitialReadDouble(() =>
+            reloadCandidate(48100, 'extra-keys', {
+                encodeSuspendTimes: [{ start: '18:00', end: '19:00', note: 'synthetic-note', weekday: 1 }],
+            }),
+        );
+
+        const provided = new Configuration({ getLogger: () => createLogger() }).getConfig();
+
+        expect(provided.encodeSuspendTimes).toMatchObject([{ start: '18:00', end: '19:00' }]);
+        expect(watchFile).toHaveBeenCalledTimes(1);
+    });
+
+    it('[CFG-4.3-ENV-ACCEPT] AC 7.14: accepts start and end given through !env', () => {
+        vi.stubEnv('EPGS_SYNTHETIC_SUSPEND_START', '23:00');
+        vi.stubEnv('EPGS_SYNTHETIC_SUSPEND_END', '24:00');
+        const watchFile = installInitialReadDouble(() =>
+            withEnvEntries([
+                'encodeSuspendTimes:',
+                '    - start: !env EPGS_SYNTHETIC_SUSPEND_START',
+                '      end: !env EPGS_SYNTHETIC_SUSPEND_END',
+            ]),
+        );
+
+        const provided = new Configuration({ getLogger: () => createLogger() }).getConfig();
+
+        expect(provided.encodeSuspendTimes).toStrictEqual([{ start: '23:00', end: '24:00' }]);
+        expect(watchFile).toHaveBeenCalledTimes(1);
+    });
+
+    it('[CFG-4.3-ENV-INVALID] AC 7.14: rejects an out-of-range end given through !env', () => {
+        vi.stubEnv('EPGS_SYNTHETIC_SUSPEND_START', '23:00');
+        vi.stubEnv('EPGS_SYNTHETIC_SUSPEND_END', '24:01');
+        const watchFile = installInitialReadDouble(() =>
+            withEnvEntries([
+                'encodeSuspendTimes:',
+                '    - start: !env EPGS_SYNTHETIC_SUSPEND_START',
+                '      end: !env EPGS_SYNTHETIC_SUSPEND_END',
+            ]),
+        );
+
+        expect(() => new Configuration({ getLogger: () => createLogger() })).toThrow(
+            'ConfigValueError:encodeSuspendTimes',
+        );
+        expect(watchFile).not.toHaveBeenCalled();
+    });
+
+    it('[CFG-4.4-DEFAULT] AC 7.15: supplies true for an omitted encodeRemoveInterruptedOutput and keeps it in every clone', () => {
+        expect(readCandidate()).not.toHaveProperty('encodeRemoveInterruptedOutput');
+        const watchFile = installInitialReadDouble(() => reloadCandidate(48100, 'omitted-generation'));
+
+        const configuration = new Configuration({ getLogger: () => createLogger() });
+        const first = configuration.getConfig();
+        first.encodeRemoveInterruptedOutput = false;
+        const second = configuration.getConfig();
+
+        expect(second.encodeRemoveInterruptedOutput).toBe(true);
+        expect(Configuration.DEFAULT_VALUE.encodeRemoveInterruptedOutput).toBe(true);
+        expect(watchFile).toHaveBeenCalledTimes(1);
+    });
+
+    it.each([
+        ['true', true],
+        ['false', false],
+    ])('[CFG-4.4-SPEC-ACCEPT] AC 7.16: loads and provides %s for encodeRemoveInterruptedOutput', (_label, value) => {
+        const watchFile = installInitialReadDouble(() =>
+            reloadCandidate(48100, 'accepted-flag', { encodeRemoveInterruptedOutput: value }),
+        );
+
+        const provided = new Configuration({ getLogger: () => createLogger() }).getConfig();
+
+        expect(provided.encodeRemoveInterruptedOutput).toBe(value);
+        expect(watchFile).toHaveBeenCalledTimes(1);
+    });
+
+    it.each([
+        ['null', null],
+        ["the string 'true'", 'true'],
+        ["the string 'false'", 'false'],
+        ['the number 0', 0],
+        ['the number 1', 1],
+        ['an object', { enabled: true }],
+    ])(
+        '[CFG-4.4-SPEC-INVALID] AC 7.16: rejects %s for encodeRemoveInterruptedOutput before installing the watcher',
+        (_label, value) => {
+            const watchFile = installInitialReadDouble(() =>
+                reloadCandidate(48100, 'invalid-flag', { encodeRemoveInterruptedOutput: value }),
+            );
+
+            expect(() => new Configuration({ getLogger: () => createLogger() })).toThrow(
+                'ConfigValueError:encodeRemoveInterruptedOutput',
+            );
+            expect(watchFile).not.toHaveBeenCalled();
+        },
+    );
+
+    it('[CFG-4.4-SPEC-KEY-ONLY] AC 7.16: rejects an encodeRemoveInterruptedOutput key written without a value', () => {
+        const watchFile = installInitialReadDouble(() => withEnvEntries(['encodeRemoveInterruptedOutput:']));
+
+        expect(() => new Configuration({ getLogger: () => createLogger() })).toThrow(
+            'ConfigValueError:encodeRemoveInterruptedOutput',
+        );
+        expect(watchFile).not.toHaveBeenCalled();
+    });
+
+    it('[CFG-4.4-ENV-INVALID] AC 7.16: rejects encodeRemoveInterruptedOutput given through !env because it is a string', () => {
+        vi.stubEnv('EPGS_SYNTHETIC_REMOVE_INTERRUPTED', 'true');
+        const watchFile = installInitialReadDouble(() =>
+            withEnvEntries(['encodeRemoveInterruptedOutput: !env EPGS_SYNTHETIC_REMOVE_INTERRUPTED']),
+        );
+
+        expect(() => new Configuration({ getLogger: () => createLogger() })).toThrow(
+            'ConfigValueError:encodeRemoveInterruptedOutput',
+        );
+        expect(watchFile).not.toHaveBeenCalled();
+    });
+
+    it('[CFG-4.4-INITIAL-INVALID] AC 7.10: rejects an invalid encodeRemoveInterruptedOutput before installing the watcher', () => {
+        const logger = createLogger();
+        const watchFile = installInitialReadDouble(() =>
+            reloadCandidate(48100, 'invalid-initial-generation', { encodeRemoveInterruptedOutput: 'false' }),
+        );
+
+        expect(() => new Configuration({ getLogger: () => logger })).toThrow(
+            'ConfigValueError:encodeRemoveInterruptedOutput',
+        );
+        expect(watchFile).not.toHaveBeenCalled();
+    });
+
+    it('[CFG-4.4-RELOAD-INVALID] AC 7.10: discards an invalid encodeRemoveInterruptedOutput reload and keeps the previous value', async () => {
+        const watchFile = installInitialReadDouble(() =>
+            reloadCandidate(48100, 'stable-generation', { encodeRemoveInterruptedOutput: false }),
+        );
+        const logger = createLogger();
+        const configuration = new Configuration({ getLogger: () => logger });
+        const stableInternalReference = configuration.config;
+        const readFile = vi.fn();
+        mutableFileSystem.promises.readFile = readFile;
+        const changeListener = watchFile.mock.calls[0][1] as () => Promise<void>;
+
+        for (const invalid of [null, 'true', 1]) {
+            readFile.mockResolvedValueOnce(
+                reloadCandidate(48200, 'invalid-flag', { encodeRemoveInterruptedOutput: invalid }),
+            );
+
+            await changeListener();
+
+            expect(configuration.config).toBe(stableInternalReference);
+            expect(configuration.getConfig().encodeRemoveInterruptedOutput).toBe(false);
+            expect(configuration.getConfig().port).toBe(48100);
+        }
+        expect(logger.system.error).toHaveBeenCalledWith(
+            expect.objectContaining({ message: 'ConfigValueError:encodeRemoveInterruptedOutput' }),
+        );
+    });
+
     it('[CFG-2.2-RELOAD-FAILURE] keeps the prior generation and the same watcher after a read failure', async () => {
         const watchFile = installInitialReadDouble(() => reloadCandidate(48100, 'stable-generation'));
         const logger = createLogger();
@@ -966,6 +1286,8 @@ describe('server configuration characterization contract', () => {
             'thumbnailMaxPending',
             'hookCommandMaxPending',
             'hookCommandTimeoutMs',
+            'encodeSuspendTimes',
+            'encodeRemoveInterruptedOutput',
             'storageLimitCommandTimeoutMs',
             'syntheticInternalField',
         ]) {
@@ -1436,10 +1758,11 @@ describe('ライブ配信の既定commandは-reを持たず、録画配信の既
 });
 
 /*
- * Requirements 1 から 7 の AC は、節ごとの個数（1: 7、2: 4、3: 3、4: 5、5: 4、6: 4、7: 12）で全 39 個である。
+ * Requirements 1 から 7 の AC は、節ごとの個数（1: 7、2: 4、3: 3、4: 5、5: 4、6: 4、7: 16）で全 43 個である。
  * 値は、その AC を検査する主 case の ID（case 題の先頭の `[ID]`）。補足 case（`CFG-4.2-*`）は含めない。
+ * 7.7〜7.9、7.14、7.16 は、先頭に `unittest/spec` の主 case を置き、後ろに同じ値域を細かく確かめる `unittest/imp` の case を並べる。
  */
-const acceptanceCriteriaCounts = { 1: 7, 2: 4, 3: 3, 4: 5, 5: 4, 6: 4, 7: 12 } as const;
+const acceptanceCriteriaCounts = { 1: 7, 2: 4, 3: 3, 4: 5, 5: 4, 6: 4, 7: 16 } as const;
 
 const acceptanceCriteriaTrace: Readonly<Record<string, readonly string[]>> = {
     '1.1': ['CFG-1.1-YAML-DEFAULTS', 'CFG-1.1-ENV-EXPANSION', 'CFG-1.1-ENV-LITERAL', 'CFG-1.1-ENV-LOAD-ONLY', 'CFG-1.1-ENV-NUMERIC-FIELD', 'CFG-1.1-MERGE-KEY', 'CFG-1.1-MERGE-KEY-MULTIPLE', 'CFG-1.1-MERGE-KEY-EXPLICIT', 'CFG-1.1-MERGE-KEY-ARRAY', 'CFG-1.1-MERGE-KEY-ENV'],
@@ -1475,20 +1798,59 @@ const acceptanceCriteriaTrace: Readonly<Record<string, readonly string[]>> = {
     '7.4': ['CFG-4.1-DEFAULT-SNAPSHOT', 'CFG-4.1-DEFAULTS'],
     '7.5': ['CFG-4.1-DEFAULT-SNAPSHOT', 'CFG-4.1-DEFAULTS'],
     '7.6': ['CFG-4.1-DEFAULT-SNAPSHOT', 'CFG-4.1-DEFAULTS'],
-    '7.7': ['CFG-4.1-BOUNDARY', 'CFG-4.1-INVALID'],
-    '7.8': ['CFG-4.1-BOUNDARY', 'CFG-4.1-INVALID', 'CFG-4.1-LIMIT-CONSTANTS'],
-    '7.9': ['CFG-4.1-BOUNDARY', 'CFG-4.1-INVALID', 'CFG-4.1-LIMIT-CONSTANTS'],
-    '7.10': ['CFG-4.1-INITIAL-INVALID', 'CFG-4.1-RELOAD-INVALID'],
+    '7.7': ['CFG-4.1-SPEC-ACCEPT', 'CFG-4.1-SPEC-INVALID', 'CFG-4.1-BOUNDARY', 'CFG-4.1-INVALID'],
+    '7.8': [
+        'CFG-4.1-SPEC-ACCEPT',
+        'CFG-4.1-SPEC-INVALID',
+        'CFG-4.1-BOUNDARY',
+        'CFG-4.1-INVALID',
+        'CFG-4.1-LIMIT-CONSTANTS',
+    ],
+    '7.9': [
+        'CFG-4.1-SPEC-ACCEPT',
+        'CFG-4.1-SPEC-INVALID',
+        'CFG-4.1-BOUNDARY',
+        'CFG-4.1-INVALID',
+        'CFG-4.1-LIMIT-CONSTANTS',
+    ],
+    '7.10': [
+        'CFG-4.1-INITIAL-INVALID',
+        'CFG-4.1-RELOAD-INVALID',
+        'CFG-4.3-INITIAL-INVALID',
+        'CFG-4.3-RELOAD-INVALID',
+        'CFG-4.4-INITIAL-INVALID',
+        'CFG-4.4-RELOAD-INVALID',
+    ],
     '7.11': ['CFG-3.1-PUBLIC-ALLOWLIST', 'CFG-3.1-HTTP-ALLOWLIST'],
     '7.12': ['CFG-4.1-DEFAULT-SNAPSHOT', 'CFG-2.1-RELOAD-SUCCESS'],
+    '7.13': ['CFG-4.3-DEFAULT'],
+    '7.14': [
+        'CFG-4.3-SPEC-ACCEPT',
+        'CFG-4.3-SPEC-INVALID',
+        'CFG-4.3-SPEC-KEY-ONLY',
+        'CFG-4.3-EXTRA-KEYS',
+        'CFG-4.3-ENV-ACCEPT',
+        'CFG-4.3-ENV-INVALID',
+        'CFG-4.3-BOUNDARY',
+        'CFG-4.3-INVALID',
+    ],
+    '7.15': ['CFG-4.4-DEFAULT', 'CFG-1.1-DOCUMENTED-DEFAULTS'],
+    '7.16': [
+        'CFG-4.4-SPEC-ACCEPT',
+        'CFG-4.4-SPEC-INVALID',
+        'CFG-4.4-SPEC-KEY-ONLY',
+        'CFG-4.4-ENV-INVALID',
+        'CFG-4.4-BOUNDARY',
+        'CFG-4.4-INVALID',
+    ],
 };
 
 describe('server configuration acceptance criteria trace', () => {
-    it('[CFG-6.1-AC-TRACE] maps all 39 acceptance criteria to existing named cases', () => {
+    it('[CFG-6.1-AC-TRACE] maps all 43 acceptance criteria to existing named cases', () => {
         const expectedCriteria = Object.entries(acceptanceCriteriaCounts).flatMap(([requirement, count]) =>
             Array.from({ length: count }, (_unused, index) => `${requirement}.${index + 1}`),
         );
-        expect(expectedCriteria).toHaveLength(39);
+        expect(expectedCriteria).toHaveLength(43);
         expect(Object.keys(acceptanceCriteriaTrace).sort()).toEqual([...expectedCriteria].sort());
 
         const directory = join(process.cwd(), 'test/server/configuration');

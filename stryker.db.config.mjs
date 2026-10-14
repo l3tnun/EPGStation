@@ -25,6 +25,7 @@ const mutate = [
     'src/model/db/ThumbnailDB.ts',
     'src/model/db/DropLogFileDB.ts',
     'src/model/db/RecordedHistoryDB.ts',
+    'src/model/db/EncodeQueueDB.ts',
     'src/model/db/DBOperator.ts',
     'src/model/db/DBUtil.ts',
 ];

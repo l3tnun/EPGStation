@@ -130,6 +130,7 @@ const services = {
         setTuners: () => record('operator'),
     },
     IRuntimeStartupWorkflowPort: new StartupContinuationCoordinator(),
+    IServiceChildTerminationCleanup: { run: async () => undefined },
     IStorageManageModel: { start: () => record('operator') },
     TunerServerAccess: { getTuners: async () => (record('operator'), []) },
 };
@@ -563,6 +564,8 @@ describe('compiled runtime end-to-end composition', () => {
                             };
                         case 'IRuntimeStartupWorkflowPort':
                             return new StartupContinuationCoordinator();
+                        case 'IServiceChildTerminationCleanup':
+                            return { run: async () => undefined };
                         case 'IStorageManageModel':
                             return { start: () => record('storage-start') };
                         case 'TunerServerAccess':
@@ -737,6 +740,8 @@ describe('compiled runtime end-to-end composition', () => {
                             };
                         case 'IRuntimeStartupWorkflowPort':
                             return new StartupContinuationCoordinator();
+                        case 'IServiceChildTerminationCleanup':
+                            return { run: async () => undefined };
                         case 'IStorageManageModel':
                             return { start: () => undefined };
                         case 'TunerServerAccess':
@@ -839,6 +844,8 @@ describe('compiled runtime end-to-end composition', () => {
                             };
                         case 'IRuntimeStartupWorkflowPort':
                             return new StartupContinuationCoordinator();
+                        case 'IServiceChildTerminationCleanup':
+                            return { run: async () => undefined };
                         case 'IStorageManageModel':
                             return { start: () => undefined };
                         case 'TunerServerAccess':
@@ -969,6 +976,8 @@ describe('compiled runtime end-to-end composition', () => {
                             };
                         case 'IRuntimeStartupWorkflowPort':
                             return new StartupContinuationCoordinator();
+                        case 'IServiceChildTerminationCleanup':
+                            return { run: async () => undefined };
                         case 'IStorageManageModel':
                             return { start: () => undefined };
                         case 'TunerServerAccess':
@@ -1091,6 +1100,8 @@ describe('compiled runtime restart supervision combined with real process-messag
                             return { cleanup: async () => undefined, setTuners: () => undefined };
                         case 'IRuntimeStartupWorkflowPort':
                             return new StartupContinuationCoordinator();
+                        case 'IServiceChildTerminationCleanup':
+                            return { run: async () => undefined };
                         case 'IStorageManageModel':
                             return { start: () => undefined };
                         case 'TunerServerAccess':
@@ -1267,6 +1278,8 @@ describe('compiled runtime restart supervision combined with real process-messag
                             return { cleanup: async () => record('reservation-cleanup'), setTuners: () => undefined };
                         case 'IRuntimeStartupWorkflowPort':
                             return new StartupContinuationCoordinator();
+                        case 'IServiceChildTerminationCleanup':
+                            return { run: async () => undefined };
                         case 'IStorageManageModel':
                             return { start: () => undefined };
                         case 'TunerServerAccess':

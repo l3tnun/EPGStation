@@ -1,6 +1,6 @@
 import { ChildProcess } from 'child_process';
 import * as events from 'events';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, optional } from 'inversify';
 import * as path from 'path';
 import { StringDecoder } from 'string_decoder';
 import type * as apid from '../../../../api.js';
@@ -21,6 +21,10 @@ import IEncodeProcessManageModel from './IEncodeProcessManageModel.js';
 import { ManagedProcessHandle, ManagedStopRequestResult } from './IEncodeProcessManageModel.js';
 import { EncodeOption, EncodeProgressInfo, IEncoderModel } from './IEncoderModel.js';
 import IRecordingUtilModel from '../../operator/recording/IRecordingUtilModel.js';
+import IEncodeQueueStorePort from './IEncodeQueueStorePort.js';
+
+/** 出力先を依頼の記録へ加える操作。Web・API 側処理では依頼記録窓口への IPC へ渡す。 */
+type EncodeOutputPathRecorder = Pick<IEncodeQueueStorePort, 'updateOutputPath'>;
 
 /**
  * `IEncoderModel` の実装。エンコード予約1件（`EncodeOption`）につきこの class を1つ生成して使う
@@ -40,6 +44,8 @@ class EncoderModel implements IEncoderModel {
     private videoUtil: IVideoUtil;
     private encodeEvent: IEncodeEvent;
     private recodingUtil: IRecordingUtilModel;
+    /** 出力先を依頼の記録へ加える port。注入されなければ記録しない */
+    private encodeQueueStorePort: EncodeOutputPathRecorder | null;
 
     /** `childEndProcessing` 完了（エンコード終了）を1回だけ通知するための内部専用 event。 */
     private listener: events.EventEmitter = new events.EventEmitter();
@@ -90,6 +96,7 @@ class EncoderModel implements IEncoderModel {
         @inject('IVideoUtil') videoUtil: IVideoUtil,
         @inject('IEncodeEvent') encodeEvent: IEncodeEvent,
         @inject('IRecordingUtilModel') recodingUtil: IRecordingUtilModel,
+        @inject('EncodingQueueStorePort') @optional() encodeQueueStorePort?: EncodeOutputPathRecorder,
     ) {
         this.log = logger.getLogger();
         this.configure = configure;
@@ -101,6 +108,25 @@ class EncoderModel implements IEncoderModel {
         this.videoUtil = videoUtil;
         this.encodeEvent = encodeEvent;
         this.recodingUtil = recodingUtil;
+        this.encodeQueueStorePort = encodeQueueStorePort ?? null;
+    }
+
+    /**
+     * 出力先を依頼の記録へ加える。記録 port が無ければ何もせず、失敗はログへ記録して変換を続ける
+     * @param encodeId: 識別番号
+     * @param outputFilePath: 出力ファイルの full path
+     */
+    private async recordOutputPath(encodeId: apid.EncodeId, outputFilePath: string): Promise<void> {
+        if (this.encodeQueueStorePort === null) {
+            return;
+        }
+
+        try {
+            await this.encodeQueueStorePort.updateOutputPath(encodeId, outputFilePath);
+        } catch (err: unknown) {
+            this.log.encode.error(`failed to record the encode output path: ${encodeId} ${outputFilePath}`);
+            this.log.encode.error(err);
+        }
     }
 
     /**
@@ -214,12 +240,19 @@ class EncoderModel implements IEncoderModel {
         this.log.encode.info(`queueItem.directory: ${this.encodeOption.directory}`);
         this.log.encode.info(`outputFilePath: ${outputFilePath}`);
 
+        // 再起動後に出力途中のファイルを判定できるよう、外部処理を始める前に出力先を依頼の記録へ加える
+        if (outputFilePath !== null) {
+            await this.recordOutputPath(this.encodeOption.encodeId, outputFilePath);
+        }
+
         // プロセスの生成
         const processOption = {
             input: inputFilePath,
             output: outputFilePath,
             cmd: encodeCmd.cmd,
             priority: EncoderModel.ENCODE_PRIPORITY,
+            // 開始と終了を管理側へ知らせ、Web・API側処理が異常終了したときに管理側が停止できるようにする
+            report: { kind: 'encode' as const, encodeId: this.encodeOption.encodeId },
             spawnOption: {
                 env: {
                     ...process.env,

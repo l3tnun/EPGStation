@@ -25,6 +25,8 @@ export const makeChild = (): SyntheticChild => {
 
 interface MakeServerOptions {
     readonly registerEncodeSink?: boolean;
+    /** `false` のとき、依頼記録窓口（9番目の引数）を渡さずに IPCServer を作る。 */
+    readonly withEncodeQueueStore?: boolean;
     readonly recordedUploadAdoption?: {
         adopt(filePath: string): Promise<string>;
     };
@@ -39,6 +41,7 @@ const unavailableRecordedUploadAdoption = {
 export const makeServer = ({
     recordedUploadAdoption = unavailableRecordedUploadAdoption,
     registerEncodeSink = true,
+    withEncodeQueueStore = true,
 }: MakeServerOptions = {}) => {
     const port = (methods: readonly string[]) =>
         Object.fromEntries(methods.map(method => [method, vi.fn(async () => undefined)]));
@@ -96,7 +99,11 @@ export const makeServer = ({
     const rule = port(['add', 'update', 'enable', 'disable', 'delete']);
     const thumbnail = { ...port(['regenerate', 'fileCleanup', 'delete']), add: vi.fn() };
     const encode = { emitFinishEncode: vi.fn() };
-    const domains = { encode, recorded, recordedTag, recording, reservation, rule, thumbnail };
+    // 依頼記録窓口の fake。`enqueueFromRecording` は wire の操作ではないので、操作の handler の一覧
+    // （`domainHandlerSpies`）に数えないよう列挙しない property にする。
+    const encodeQueue = port(['add', 'abandon', 'updateOutputPath', 'remove', 'list']);
+    Object.defineProperty(encodeQueue, 'enqueueFromRecording', { enumerable: false, value: vi.fn() });
+    const domains = { encode, encodeQueue, recorded, recordedTag, recording, reservation, rule, thumbnail };
     const logError = vi.fn();
     const logger = {
         getLogger: () => ({
@@ -115,6 +122,7 @@ export const makeServer = ({
         domains.thumbnail,
         logger,
         recordedUploadAdoption,
+        withEncodeQueueStore ? domains.encodeQueue : undefined,
     );
     const registerSink = (sink: { accept(info: unknown): unknown }): void => {
         server.encodeCompletionSinkRegistrationPort.register(sink);
@@ -129,6 +137,7 @@ export const flushNextTick = (): Promise<void> => new Promise(resolve => process
 export interface ClientHarness {
     readonly client: any;
     readonly encodePush: ReturnType<typeof vi.fn>;
+    readonly encodePushPersisted: ReturnType<typeof vi.fn>;
     readonly logError: ReturnType<typeof vi.fn>;
     readonly logFatal: ReturnType<typeof vi.fn>;
     readonly logInfo: ReturnType<typeof vi.fn>;
@@ -145,19 +154,21 @@ export const makeClient = (idAllocationSeams?: unknown): ClientHarness => {
     Object.defineProperty(process, 'send', { configurable: true, value: send, writable: true });
     const notifyClient = vi.fn();
     const encodePush = vi.fn();
+    const encodePushPersisted = vi.fn(async () => undefined);
     const logError = vi.fn();
     const logFatal = vi.fn();
     const logInfo = vi.fn();
     const client = new IPCClient(
         { getLogger: () => ({ system: { error: logError, fatal: logFatal, info: logInfo } }) },
         { notifyClient },
-        { push: encodePush },
+        { push: encodePush, pushPersisted: encodePushPersisted },
         idAllocationSeams,
     );
     const clientListeners = process.listeners('message').filter(listener => !listeners.has(listener));
     return {
         client,
         encodePush,
+        encodePushPersisted,
         logError,
         logFatal,
         logInfo,

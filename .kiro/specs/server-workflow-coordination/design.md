@@ -824,6 +824,9 @@ Requirement 3.7 は、保存文字列を配列として解釈して個々の Tag
 | Hook handoff     | それ以前すべて      | failureを記録し、最後の画面通知を必ず試行   |
 | 最後のUI handoff | それ以前すべて      | failureを記録してcallbackをsettle           |
 
+`setEncode()` は依頼を録画ファイル変換機能の依頼記録窓口へ渡して同期で戻る。Web・API 側処理が稼働していないことは同期 throw
+にならない（依頼は記録され、Web・API 側の次の起動時に戻される。`server-encoding` Requirement 7.9）。
+
 event wrapper は同期 throw を記録するが、すでに確定した録画完了状態と開始済み action を取り消さない。三件の Encode を一
 つの batch、transaction、または結果一覧として扱わない。UI / Hook guardは同期throwと観測可能rejectを各一回記録するだけ
 で、retry、ack待ち、または他destinationのrollbackを追加しない。
@@ -1187,7 +1190,7 @@ FIFO、外部process lifecycleを所有する。
 | ----------- | --------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
 | 画面通知    | `notifyClient()` の同期 return / throw。観測可能なPromise-like rejectは局所記録   | IPC delivery、service 受信、Socket.IO emit、browser 受信、再取得 |
 | Hook        | 型付きfacade methodの同期 return / throw。観測可能なPromise-like rejectは局所記録 | queue開始、外部process終了、exit code、timeout                   |
-| Encode 受付 | `setEncode()` の同期 return または同期 throw                                      | child 受信、queue 登録、Encode 開始・終了                        |
+| Encode 受付 | `setEncode()` の同期 return または同期 throw                                      | 依頼の記録の保存、child 受信、queue 登録、Encode 開始・終了      |
 
 通知または Hook の失敗で、確定済みの番組、Rule、予約、録画、録画済み番組、Tag、Thumbnail、Encode 状態を巻き戻さな
 い。Workflow は選択した UI / Hook handoff ごとに別の guard を置き、同期 throwを記録して吸収し、観測可能な

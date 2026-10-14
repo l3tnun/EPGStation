@@ -106,6 +106,7 @@ const services = {
             return { kind: 'Succeeded', stage: 'epg-supervisor-start' };
         },
     },
+    IServiceChildTerminationCleanup: { run: async () => record('service-child-cleanup') },
     IStorageManageModel: { start: () => record('storage-start') },
     TunerServerAccess: {
         getTuners: async () => {
@@ -302,6 +303,7 @@ describe('runtime operator composition', () => {
         // 世代を二度置き換えても、Service child の起動と IPC 登録だけが世代ごとに繰り返される。
         expect(entriesFor(observation.ledger, 'service-spawn')).toHaveLength(3);
         expect(entriesFor(observation.ledger, 'ipc-register')).toHaveLength(3);
+        expect(entriesFor(observation.ledger, 'service-child-cleanup')).toHaveLength(2);
         expect(entriesFor(observation.ledger, 'event-binding')).toHaveLength(1);
         expect(entriesFor(observation.ledger, 'workflow-port-invoked')).toHaveLength(1);
         expect(entriesFor(observation.ledger, 'tuner-snapshot')).toHaveLength(1);

@@ -30,7 +30,6 @@ interface SyntheticEncoder {
 interface EncodeManageRuntime {
     admissionReservations: number;
     cancel(encodeId: apid.EncodeId): Promise<void>;
-    idCnt: number;
     runningQueue: SyntheticEncoder[];
     waitQueue: SyntheticEncoder[];
     getEncodeInfo(): Record<string, unknown>;
@@ -828,12 +827,22 @@ describe('encoding memory and identifier characterization', () => {
                     warn: vi.fn(),
                 },
             };
+            const queueStore = {
+                add: vi.fn(async () => 1),
+                abandon: vi.fn(async () => undefined),
+                updateOutputPath: vi.fn(async () => undefined),
+                remove: vi.fn(async () => undefined),
+                list: vi.fn(async () => []),
+            };
             const manage = new EncodeManageModel(
                 { getLogger: () => log },
                 { getConfig: () => ({ concurrentEncodeNum: 1, encodeQueueLimit: failure === 'queueAppend' ? 2 : 1 }) },
                 execution,
                 provider,
                 event,
+                undefined,
+                undefined,
+                queueStore,
             );
             const emitter = (manage as unknown as { listener: EventEmitter }).listener;
             const processListenerCount = process.listenerCount('unhandledRejection');
@@ -856,7 +865,10 @@ describe('encoding memory and identifier characterization', () => {
             expect(execution.getExecution).toHaveBeenCalledTimes(1);
             expect(activeExecutions.size).toBe(0);
             expect(manage.admissionReservations).toBe(0);
-            expect(manage.idCnt).toBe(1);
+            // 記録した後の失敗では、その記録を一回削除する（識別番号は戻さない）
+            expect(queueStore.add).toHaveBeenCalledTimes(failure === 'execution' ? 0 : 1);
+            expect(queueStore.remove.mock.calls).toEqual(failure === 'execution' ? [] : [[1]]);
+            expect(queueStore.abandon).not.toHaveBeenCalled();
             expect(event.emitAddEncode).toHaveBeenCalledTimes(failure === 'event' ? 1 : 0);
             expect(item.finishCallback).toBeNull();
             expect(item.started).toBe(false);
@@ -1049,21 +1061,21 @@ describe('encoding memory and identifier characterization', () => {
 
         const acceptedC = manage.push(option(103));
         executionC.resolve('synthetic-c');
-        await expect(acceptedC).resolves.toBe(2);
+        // 失敗した B が受け取った識別番号 2 は戻さず、C は 3 になる
+        await expect(acceptedC).resolves.toBe(3);
 
         expect(manage.getEncodeInfo()).toEqual({
             runningQueue: [],
             waitQueue: [
                 { id: 1, mode: 'synthetic-mode', recordedId: 101 },
-                { id: 2, mode: 'synthetic-mode', recordedId: 103 },
+                { id: 3, mode: 'synthetic-mode', recordedId: 103 },
             ],
         });
         expect(new Set(manage.waitQueue.map(item => item.getEncodeId())).size).toBe(2);
-        expect(manage.idCnt).toBe(3);
         expect(manage.admissionReservations).toBe(0);
         expect(activeExecutions.size).toBe(0);
         expect(execution.unLockExecution).toHaveBeenCalledTimes(3);
-        expect(log.encode.info.mock.calls).toEqual([['add new encode: 1'], ['add new encode: 2']]);
+        expect(log.encode.info.mock.calls).toEqual([['add new encode: 1'], ['add new encode: 3']]);
         emitter.removeAllListeners();
     });
 
@@ -1087,24 +1099,6 @@ describe('encoding memory and identifier characterization', () => {
         await restarted.cleanup();
         expectCleanFixture(previous);
         expectCleanFixture(restarted);
-    });
-
-    it('[EN-IMP-R7-ID-WRAP] assigns MAX_SAFE_INTEGER and then wraps the next identifier to one', async () => {
-        const fixture = makeManage();
-        fixture.manage.idCnt = Number.MAX_SAFE_INTEGER;
-
-        await expect(fixture.manage.push(option(71))).resolves.toBe(Number.MAX_SAFE_INTEGER);
-        await expect(fixture.manage.push(option(72))).resolves.toBe(1);
-
-        expect(fixture.manage.getEncodeInfo()).toEqual({
-            runningQueue: [],
-            waitQueue: [
-                { id: Number.MAX_SAFE_INTEGER, mode: 'synthetic-mode', recordedId: 71 },
-                { id: 1, mode: 'synthetic-mode', recordedId: 72 },
-            ],
-        });
-        await fixture.cleanup();
-        expectCleanFixture(fixture);
     });
 
     it('[EN-IMP-R4-QUEUE-PROJECTION] separates running and waiting jobs and only projects acquired progress pairs', () => {
@@ -2282,6 +2276,477 @@ describe('encode terminal settlement internals', () => {
             expect(fixture.infos[0]).toMatchObject({ removeOriginal: false, videoFileId: 962 });
         } finally {
             fixture.manage.listener.removeAllListeners();
+        }
+    });
+});
+
+interface SuspendManageRuntime {
+    encodeSuspendTimes: Array<{ start: number; end: number }>;
+    listener: EventEmitter;
+    suspendResumeTimer: (NodeJS.Timeout & { hasRef(): boolean }) | null;
+    cancel(id: apid.EncodeId): Promise<void>;
+    push(option: apid.AddEncodeProgramOption): Promise<number>;
+}
+
+const SUSPEND_FAKE_TIMERS = { toFake: ['setTimeout', 'clearTimeout', 'Date'] } as const;
+
+const localTime = (hours: number, minutes: number, seconds = 0, milliseconds = 0): Date =>
+    new Date(2026, 0, 5, hours, minutes, seconds, milliseconds);
+
+const makeSuspendManage = (concurrentEncodeNum: number, encodeSuspendTimes?: unknown) => {
+    const created: SyntheticEncoder[] = [];
+    const logger = { encode: { error: vi.fn(), info: vi.fn(), warn: vi.fn() }, system: { error: vi.fn() } };
+    const event = new EncodeEvent({ getLogger: () => logger });
+    const execution = { getExecution: vi.fn(async () => 'synthetic-suspend-execution'), unLockExecution: vi.fn() };
+    const config: Record<string, unknown> = { concurrentEncodeNum };
+    if (typeof encodeSuspendTimes !== 'undefined') config.encodeSuspendTimes = encodeSuspendTimes;
+    const manage = new EncodeManageModel(
+        { getLogger: () => logger },
+        { getConfig: () => config },
+        execution,
+        vi.fn(async () => {
+            const item = encoder(null, null);
+            created.push(item);
+            return item;
+        }),
+        event,
+    ) as unknown as SuspendManageRuntime;
+    const settle = async (): Promise<void> => {
+        for (let round = 0; round < 8; round += 1) await flushEventLoop();
+    };
+    const release = (): void => {
+        manage.listener.removeAllListeners();
+        (event as unknown as { emitter: EventEmitter }).emitter.removeAllListeners();
+    };
+    return { created, execution, manage, release, settle };
+};
+
+describe('encode suspend-time internals', () => {
+    it('[EN-IMP-SUSPEND-TIMES-VALIDATION] snapshots omitted and valid ranges as minutes from midnight', () => {
+        const omitted = makeSuspendManage(1);
+        const explicit = makeSuspendManage(1, [
+            { start: '00:00', end: '24:00' },
+            { start: '23:59', end: '00:00' },
+            { start: '09:05', end: '10:30' },
+        ]);
+        try {
+            expect(omitted.manage.encodeSuspendTimes).toEqual([]);
+            expect(explicit.manage.encodeSuspendTimes).toEqual([
+                { start: 0, end: 1440 },
+                { start: 1439, end: 0 },
+                { start: 545, end: 630 },
+            ]);
+            expect(omitted.manage.suspendResumeTimer).toBeNull();
+        } finally {
+            omitted.release();
+            explicit.release();
+        }
+    });
+
+    it.each([
+        ['null', null],
+        ['a string', '18:00-19:00'],
+        ['a number', 1080],
+        ['an object', { start: '18:00', end: '19:00' }],
+        ['a null element', [null]],
+        ['an array element', [['18:00', '19:00']]],
+        ['a string element', ['18:00']],
+        ['a missing start', [{ end: '19:00' }]],
+        ['a missing end', [{ start: '18:00' }]],
+        ['a numeric start', [{ start: 1080, end: '19:00' }]],
+        ['a numeric end', [{ start: '18:00', end: 1140 }]],
+        ['an array start', [{ start: ['18:00'], end: '19:00' }]],
+        ['a one-digit hour', [{ start: '7:00', end: '08:00' }]],
+        ['seconds', [{ start: '07:00:00', end: '08:00' }]],
+        ['surrounding spaces', [{ start: '07:00 ', end: '08:00' }]],
+        ['24:00 as start', [{ start: '24:00', end: '01:00' }]],
+        ['24:01 as end', [{ start: '23:00', end: '24:01' }]],
+        ['hour 25', [{ start: '23:00', end: '25:00' }]],
+        ['minute 60', [{ start: '23:60', end: '01:00' }]],
+        ['minute 60 within the latest start', [{ start: '00:60', end: '02:00' }]],
+        ['the same start and end', [{ start: '00:00', end: '00:00' }]],
+        ['an invalid range after a valid one', [{ start: '18:00', end: '19:00' }, { start: '20:00' }]],
+    ])('[EN-IMP-SUSPEND-TIMES-VALIDATION] rejects %s at construction', (_label, ranges) => {
+        expect(() => makeSuspendManage(1, ranges)).toThrow('InvalidEncodeSuspendTimes');
+    });
+
+    it('[EN-IMP-SUSPEND-TIMES-RESUME] keeps one unreferenced timer for repeated checks during a suspend range', async () => {
+        vi.useFakeTimers(SUSPEND_FAKE_TIMERS);
+        vi.setSystemTime(localTime(18, 15));
+        const fixture = makeSuspendManage(3, [{ start: '18:00', end: '19:00' }]);
+        try {
+            await fixture.manage.push(option(3001));
+            await fixture.settle();
+            const firstTimer = fixture.manage.suspendResumeTimer;
+            for (const recordedId of [3002, 3003]) await fixture.manage.push(option(recordedId));
+            await fixture.settle();
+
+            expect(fixture.created.every(item => item.started === false)).toBe(true);
+            expect(vi.getTimerCount()).toBe(1);
+            // 後の要求は timer を置き換えず、最初の timer を残す
+            expect(fixture.manage.suspendResumeTimer).toBe(firstTimer);
+            expect(fixture.manage.suspendResumeTimer?.hasRef()).toBe(false);
+            // 受付の3回だけ実行権を取得し、停止時間帯中の待機列確認は実行権を取得しない
+            expect(fixture.execution.getExecution).toHaveBeenCalledTimes(3);
+            expect(fixture.execution.unLockExecution).toHaveBeenCalledTimes(3);
+        } finally {
+            vi.clearAllTimers();
+            fixture.release();
+        }
+    });
+
+    it('[EN-IMP-SUSPEND-TIMES-RESUME] waits for the earliest end of the current ranges and re-arms while another range continues', async () => {
+        vi.useFakeTimers(SUSPEND_FAKE_TIMERS);
+        vi.setSystemTime(localTime(18, 15, 20, 500));
+        const fixture = makeSuspendManage(1, [
+            { start: '18:00', end: '20:00' },
+            { start: '17:00', end: '19:00' },
+            { start: '21:00', end: '18:30' },
+        ]);
+        try {
+            await fixture.manage.push(option(3101));
+            await fixture.settle();
+
+            await vi.advanceTimersByTimeAsync(15 * 60 * 1000 - 20_500 - 1);
+            expect(vi.getTimerCount()).toBe(1);
+            await vi.advanceTimersByTimeAsync(1);
+            await fixture.settle();
+            expect(fixture.created[0].started).toBe(false);
+            expect(vi.getTimerCount()).toBe(1);
+
+            await vi.advanceTimersByTimeAsync(30 * 60 * 1000);
+            await fixture.settle();
+            expect(fixture.created[0].started).toBe(false);
+            expect(vi.getTimerCount()).toBe(1);
+
+            await vi.advanceTimersByTimeAsync(60 * 60 * 1000);
+            await fixture.settle();
+            expect(fixture.created[0].started).toBe(true);
+            expect(vi.getTimerCount()).toBe(0);
+        } finally {
+            vi.clearAllTimers();
+            fixture.release();
+        }
+    });
+
+    it('[EN-IMP-SUSPEND-TIMES-LOCK-WAIT] lets a check requested before the range start one job after its lock wait', async () => {
+        vi.useFakeTimers(SUSPEND_FAKE_TIMERS);
+        vi.setSystemTime(localTime(17, 59, 59));
+        const fixture = makeSuspendManage(2, [{ start: '18:00', end: '19:00' }]);
+        const checkLock = createDeferred<string>();
+        fixture.execution.getExecution
+            .mockImplementationOnce(async () => 'synthetic-admission-execution')
+            .mockImplementationOnce(() => checkLock.promise);
+        try {
+            await fixture.manage.push(option(3301));
+            await fixture.settle();
+            expect(fixture.execution.getExecution).toHaveBeenCalledTimes(2);
+            expect(fixture.created[0].started).toBe(false);
+
+            // 時間帯に入ってから実行権が渡ると、要求済みの確認はそのまま一件を開始する
+            vi.setSystemTime(localTime(18, 0, 20));
+            checkLock.resolve('synthetic-check-execution');
+            await fixture.settle();
+
+            expect(fixture.created[0].started).toBe(true);
+            expect(fixture.execution.unLockExecution).toHaveBeenCalledWith('synthetic-check-execution');
+            expect(vi.getTimerCount()).toBe(0);
+
+            // 以後の要求は時間帯中として扱い、開始しない
+            await fixture.manage.push(option(3302));
+            await fixture.settle();
+            expect(fixture.created[1].started).toBe(false);
+            expect(vi.getTimerCount()).toBe(1);
+        } finally {
+            vi.clearAllTimers();
+            fixture.release();
+        }
+    });
+
+    it('[EN-IMP-SUSPEND-TIMES-LOCK-WAIT] starts nothing from a check requested inside a range while no slot was free', async () => {
+        vi.useFakeTimers(SUSPEND_FAKE_TIMERS);
+        vi.setSystemTime(localTime(17, 59));
+        const fixture = makeSuspendManage(1, [{ start: '18:00', end: '19:00' }]);
+        const waitQueue = (fixture.manage as unknown as { waitQueue: unknown[] }).waitQueue;
+        const heldLock = createDeferred<string>();
+        let insideRange = false;
+        let held = false;
+        fixture.execution.getExecution.mockImplementation(async () => {
+            // 時間帯の中で、待機依頼があるときに最初に求められた実行権を保留する
+            if (insideRange && !held && (fixture.manage as unknown as { waitQueue: unknown[] }).waitQueue.length > 0) {
+                held = true;
+                return heldLock.promise;
+            }
+            return 'synthetic-suspend-execution';
+        });
+        try {
+            await fixture.manage.push(option(3401));
+            await fixture.settle();
+            expect(fixture.created[0].started).toBe(true);
+            expect(waitQueue).toHaveLength(0);
+
+            // 空き枠が無いときに受け付け、その確認の要求も時間帯の中で受ける
+            insideRange = true;
+            vi.setSystemTime(localTime(18, 10));
+            await fixture.manage.push(option(3402));
+            await fixture.settle();
+
+            // 実行中のジョブが終わって空き枠ができた後で、保留した実行権を渡しても開始しない
+            fixture.created[0].finish();
+            await fixture.settle();
+            heldLock.resolve('synthetic-held-execution');
+            await fixture.settle();
+
+            expect(fixture.created[1].started).toBe(false);
+            expect(vi.getTimerCount()).toBe(1);
+        } finally {
+            vi.clearAllTimers();
+            fixture.release();
+        }
+    });
+
+    it('[EN-IMP-SUSPEND-TIMES-LOCK-WAIT] starts nothing from a check requested inside a range while nothing waited', async () => {
+        vi.useFakeTimers(SUSPEND_FAKE_TIMERS);
+        vi.setSystemTime(localTime(17, 59));
+        const fixture = makeSuspendManage(1, [{ start: '18:00', end: '19:00' }]);
+        const admissionLock = createDeferred<string>();
+        const heldLock = createDeferred<string>();
+        let callsInsideRange = 0;
+        fixture.execution.getExecution.mockImplementation(async () => {
+            if (vi.getMockedSystemTime()?.getTime() !== localTime(18, 10).getTime()) {
+                return 'synthetic-suspend-execution';
+            }
+            callsInsideRange += 1;
+            // 時間帯の中の 1 回目は受付、2 回目は終了の後始末、3 回目は待機列が空のときに要求された確認
+            if (callsInsideRange === 1) return admissionLock.promise;
+            if (callsInsideRange === 3) return heldLock.promise;
+            return 'synthetic-suspend-execution';
+        });
+        try {
+            await fixture.manage.push(option(3501));
+            await fixture.settle();
+            expect(fixture.created[0].started).toBe(true);
+
+            vi.setSystemTime(localTime(18, 10));
+            const pushed = fixture.manage.push(option(3502));
+            await fixture.settle();
+            fixture.created[0].finish();
+            await fixture.settle();
+            expect(vi.getTimerCount()).toBe(0);
+
+            // 受付が終わって待機依頼ができた後で、保留した実行権を渡しても開始しない
+            admissionLock.resolve('synthetic-admission-execution');
+            await pushed;
+            await fixture.settle();
+            heldLock.resolve('synthetic-held-execution');
+            await fixture.settle();
+
+            expect(fixture.created[1].started).toBe(false);
+            expect(vi.getTimerCount()).toBe(1);
+        } finally {
+            vi.clearAllTimers();
+            fixture.release();
+        }
+    });
+
+    it('[EN-IMP-SUSPEND-TIMES-RESUME] waits until the next-day end in the late part of a range across midnight', async () => {
+        vi.useFakeTimers(SUSPEND_FAKE_TIMERS);
+        vi.setSystemTime(localTime(23, 30));
+        const fixture = makeSuspendManage(1, [{ start: '23:00', end: '02:00' }]);
+        try {
+            await fixture.manage.push(option(3601));
+            await fixture.settle();
+            const firstTimer = fixture.manage.suspendResumeTimer;
+            expect(firstTimer).not.toBeNull();
+
+            // 終了は翌日の 02:00 なので、最初の timer は判定し直しの上限（1 分）まで発火しない
+            await vi.advanceTimersByTimeAsync(60 * 1000 - 1);
+            await fixture.settle();
+            expect(fixture.manage.suspendResumeTimer).toBe(firstTimer);
+
+            await vi.advanceTimersByTimeAsync(150 * 60 * 1000 - (60 * 1000 - 1) - 1);
+            await fixture.settle();
+            expect(fixture.created[0].started).toBe(false);
+            await vi.advanceTimersByTimeAsync(1);
+            await fixture.settle();
+            expect(fixture.created[0].started).toBe(true);
+            expect(vi.getTimerCount()).toBe(0);
+        } finally {
+            vi.clearAllTimers();
+            fixture.release();
+        }
+    });
+
+    it('[EN-IMP-SUSPEND-TIMES-RESUME] resumes at the end in the last minute of the late part of a range across midnight', async () => {
+        vi.useFakeTimers(SUSPEND_FAKE_TIMERS);
+        vi.setSystemTime(localTime(23, 59, 30));
+        const fixture = makeSuspendManage(1, [{ start: '23:00', end: '00:00' }]);
+        try {
+            await fixture.manage.push(option(3611));
+            await fixture.settle();
+
+            // 終了（翌日の 00:00）まで残り 30 秒なので、判定し直しの上限（1 分）を待たずに終了時に開始する
+            await vi.advanceTimersByTimeAsync(30 * 1000 - 1);
+            await fixture.settle();
+            expect(fixture.created[0].started).toBe(false);
+            await vi.advanceTimersByTimeAsync(1);
+            await fixture.settle();
+            expect(fixture.created[0].started).toBe(true);
+            expect(vi.getTimerCount()).toBe(0);
+        } finally {
+            vi.clearAllTimers();
+            fixture.release();
+        }
+    });
+
+    it('[EN-IMP-SUSPEND-TIMES-RESUME] uses a 1 ms delay one millisecond before the end', async () => {
+        vi.useFakeTimers(SUSPEND_FAKE_TIMERS);
+        vi.setSystemTime(localTime(18, 59, 59, 999));
+        const fixture = makeSuspendManage(1, [{ start: '18:00', end: '19:00' }]);
+        try {
+            await fixture.manage.push(option(3701));
+            await fixture.settle();
+            expect(fixture.created[0].started).toBe(false);
+            expect(vi.getTimerCount()).toBe(1);
+
+            await vi.advanceTimersByTimeAsync(1);
+            await fixture.settle();
+            expect(fixture.created[0].started).toBe(true);
+            expect(vi.getTimerCount()).toBe(0);
+        } finally {
+            vi.clearAllTimers();
+            fixture.release();
+        }
+    });
+
+    it('[EN-IMP-SUSPEND-TIMES-RESUME] keeps a whole-day range suspended across midnight', async () => {
+        vi.useFakeTimers(SUSPEND_FAKE_TIMERS);
+        vi.setSystemTime(localTime(23, 59, 30));
+        const fixture = makeSuspendManage(1, [{ start: '00:00', end: '24:00' }]);
+        try {
+            await fixture.manage.push(option(3801));
+            await fixture.settle();
+
+            await vi.advanceTimersByTimeAsync(3 * 60 * 1000);
+            await fixture.settle();
+            expect(new Date().getHours()).toBe(0);
+            expect(fixture.created[0].started).toBe(false);
+            expect(vi.getTimerCount()).toBe(1);
+        } finally {
+            vi.clearAllTimers();
+            fixture.release();
+        }
+    });
+
+    it('[EN-IMP-SUSPEND-TIMES-RESUME] cancels a waiting request inside a range and starts only the rest at the end', async () => {
+        vi.useFakeTimers(SUSPEND_FAKE_TIMERS);
+        vi.setSystemTime(localTime(18, 30));
+        const fixture = makeSuspendManage(2, [{ start: '18:00', end: '19:00' }]);
+        try {
+            const cancelledId = await fixture.manage.push(option(3901));
+            await fixture.manage.push(option(3902));
+            await fixture.settle();
+
+            await fixture.manage.cancel(cancelledId);
+            await fixture.settle();
+            expect(fixture.created.map(item => item.started)).toEqual([false, false]);
+            expect(vi.getTimerCount()).toBe(1);
+
+            await vi.advanceTimersByTimeAsync(30 * 60 * 1000);
+            await fixture.settle();
+            expect(fixture.created.map(item => item.started)).toEqual([false, true]);
+        } finally {
+            vi.clearAllTimers();
+            fixture.release();
+        }
+    });
+
+    it('[EN-IMP-SUSPEND-TIMES-LOCK-WAIT] holds the next request after a lock-waiting check fails to start inside a range', async () => {
+        vi.useFakeTimers(SUSPEND_FAKE_TIMERS);
+        vi.setSystemTime(localTime(17, 59, 59));
+        const fixture = makeSuspendManage(1, [{ start: '18:00', end: '19:00' }]);
+        const checkLock = createDeferred<string>();
+        fixture.execution.getExecution
+            .mockImplementationOnce(async () => 'synthetic-admission-execution')
+            .mockImplementationOnce(() => checkLock.promise);
+        try {
+            await fixture.manage.push(option(4001));
+            await fixture.settle();
+            vi.mocked(fixture.created[0].start).mockRejectedValueOnce(new Error('synthetic start failure'));
+
+            vi.setSystemTime(localTime(18, 0, 20));
+            await fixture.manage.push(option(4002));
+            await fixture.settle();
+
+            // 時間帯の前に要求された確認が開始に失敗した後、後始末が出す確認は時間帯の中なので開始しない
+            checkLock.resolve('synthetic-check-execution');
+            await fixture.settle();
+            expect(fixture.created[0].start).toHaveBeenCalledTimes(1);
+            expect(fixture.created[1].started).toBe(false);
+            expect(vi.getTimerCount()).toBe(1);
+        } finally {
+            vi.clearAllTimers();
+            fixture.release();
+        }
+    });
+
+    it('[EN-IMP-SUSPEND-TIMES-RESUME] requests as many checks as waiting requests when they are fewer than the free slots', async () => {
+        vi.useFakeTimers(SUSPEND_FAKE_TIMERS);
+        vi.setSystemTime(localTime(18, 30));
+        const fixture = makeSuspendManage(3, [{ start: '18:00', end: '19:00' }]);
+        try {
+            await fixture.manage.push(option(4101));
+            await fixture.settle();
+            const callsBeforeEnd = fixture.execution.getExecution.mock.calls.length;
+
+            await vi.advanceTimersByTimeAsync(30 * 60 * 1000);
+            await fixture.settle();
+
+            // 空き枠は 3 だが待機は 1 件なので、確認は 1 回だけ実行権を求める
+            expect(fixture.execution.getExecution.mock.calls.length - callsBeforeEnd).toBe(1);
+            expect(fixture.created[0].started).toBe(true);
+        } finally {
+            vi.clearAllTimers();
+            fixture.release();
+        }
+    });
+
+    it('[EN-IMP-SUSPEND-TIMES-RESUME] requests no queue check at the end when no slot is free or nothing waits', async () => {
+        vi.useFakeTimers(SUSPEND_FAKE_TIMERS);
+        vi.setSystemTime(localTime(18, 0));
+        const busy = makeSuspendManage(1, [{ start: '18:00', end: '19:00' }]);
+        const empty = makeSuspendManage(1, [{ start: '18:00', end: '19:00' }]);
+        try {
+            await busy.manage.push(option(3201));
+            const cancelledId = await empty.manage.push(option(3203));
+            await busy.settle();
+            expect(vi.getTimerCount()).toBe(2);
+
+            // 再開 timer が残ったまま時間帯の外で受け付けると、先頭が開始して本機能の枠が埋まる。
+            vi.setSystemTime(localTime(12, 0));
+            await busy.manage.push(option(3202));
+            await busy.settle();
+            expect(busy.created.map(item => item.started)).toEqual([true, false]);
+            await empty.manage.cancel(cancelledId);
+            await empty.settle();
+            const busyChecks = busy.execution.getExecution.mock.calls.length;
+            const emptyChecks = empty.execution.getExecution.mock.calls.length;
+
+            await vi.advanceTimersByTimeAsync(60 * 60 * 1000);
+            await busy.settle();
+
+            expect(busy.execution.getExecution).toHaveBeenCalledTimes(busyChecks);
+            expect(empty.execution.getExecution).toHaveBeenCalledTimes(emptyChecks);
+            expect(busy.created[1].started).toBe(false);
+            expect(vi.getTimerCount()).toBe(0);
+
+            busy.created[0].finish();
+            await busy.settle();
+            expect(busy.created[1].started).toBe(true);
+        } finally {
+            vi.clearAllTimers();
+            busy.release();
+            empty.release();
         }
     });
 });

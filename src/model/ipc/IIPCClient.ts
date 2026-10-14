@@ -1,6 +1,8 @@
 import type * as apid from '../../../api.js';
 import { AddVideoFileOption, UploadedVideoFileOption } from '../operator/recorded/IRecordedManageModel.js';
+import IEncodeQueueStorePort from '../service/encode/IEncodeQueueStorePort.js';
 import { EncodeCompletionInfo } from './IEncodeCompletionSink.js';
+import { ServiceProcessReporter } from './IServiceProcessReport.js';
 import { UploadedVideoRegistrationPort } from './IUploadedVideoRegistration.js';
 
 /**
@@ -122,6 +124,12 @@ export interface IPCOperatorEncodeEvent {
 }
 
 /**
+ * エンコードの依頼の記録（管理側の依頼記録窓口`EncodeQueueStore`）をIPC越しに操作するための窓口。
+ * 各methodは通常の期限（5秒）で管理側へ依頼を送り、窓口の結果またはエラーをそのまま返す。
+ */
+export type IPCEncodeQueue = IEncodeQueueStorePort;
+
+/**
  * web/service process側からoperator process上の各manage modelをIPC経由で操作するための集約窓口。
  * 各propertyは対応するmanage modelの操作をまとめたfacadeであり、DIで解決した1つの`IPCClient`
  * インスタンスがこれら全てのpropertyを構築して保持する。
@@ -134,5 +142,8 @@ export default interface IIPCClient {
     rule: IPCRuleManageModel;
     thumbnail: IPCThumbnailManageModel;
     encodeEvent: IPCOperatorEncodeEvent;
+    encodeQueue: IPCEncodeQueue;
     uploadedVideoRegistrationPort: UploadedVideoRegistrationPort;
+    /** Web・API側処理が開始した外部プロセスの開始と終了を、応答を待たずに管理側へ知らせる窓口。 */
+    serviceProcessReporter: ServiceProcessReporter;
 }

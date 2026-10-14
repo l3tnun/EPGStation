@@ -104,6 +104,8 @@ describe('Workflow event binding Runtime composition', () => {
                             return { cleanup: async () => undefined, setTuners: () => undefined };
                         case 'IRuntimeStartupWorkflowPort':
                             return new StartupContinuationCoordinator();
+                        case 'IServiceChildTerminationCleanup':
+                            return { run: async () => undefined };
                         case 'IStorageManageModel':
                             return { start: () => undefined };
                         case 'TunerServerAccess':

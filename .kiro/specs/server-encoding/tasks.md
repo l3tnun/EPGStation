@@ -15,7 +15,7 @@ characterization task は production file を読取専用で参照する。
 本 spec は、受付・待機・実行・取消・進捗・結果反映というエンコード固有状態だけを実装・検証する。IPC
 envelope、request/reply timeout、再送は `server-process-messaging`、browser・hook への配送は
 `server-event-and-hook-delivery` と `server-service-interface`、録画済み番組削除などの跨域 command 順序は
-`server-workflow-coordination` の後続 integration task に委譲する。存在しない retry、generation、再照合、永続 queue、互
+`server-workflow-coordination` の後続 integration task に委譲する。存在しない retry、generation、再照合、互
 換移行は追加しない。
 
 | Leaf | Concrete target                                                                                                                                                                                                                                                              | Test type                                          | Local Depends                                                               | Verification command                                                                                                                                                                                                                                              |
@@ -39,9 +39,15 @@ envelope、request/reply timeout、再送は `server-process-messaging`、browse
 | 6.2  | `test/server/encoding/encode-boundaries.integration.test.ts`<br>`src/model/service/encode/EncoderModel.ts`<br>`src/util/ProcessUtil.ts`                                                                                                                                      | `integration`                                      | `3.2, 3.3, 4.2, 4.3, 5.2, 5.3`                                              | `npm run test:server:integration -- test/server/encoding/encode-boundaries.integration.test.ts`                                                                                                                                                                   |
 | 6.3  | `test/server/encoding/encode-contracts.spec.test.ts` | `unittest/spec` | `1.1, 1.2, 2.1, 2.2, 2.3, 3.1, 3.2, 3.3, 4.1, 4.2, 4.3, 5.2, 5.3, 6.1, 6.2` | `npm run test:server:spec -- test/server/encoding/encode-contracts.spec.test.ts` |
 | 6.4  | `test/server/encoding/encode-internals.test.ts`                                                                                                                                                                                                                              | `unittest/imp`                                     | `6.3`                                                                       | `npm run test:server:imp -- test/server/encoding/encode-internals.test.ts`                                                                                                                                                                                        |
-| 6.5  | `.kiro/specs/server-encoding/design.md` | レビュー | `6.4` | なし（Design §9.1の54行のレビュー） |
+| 6.5  | `.kiro/specs/server-encoding/design.md` | レビュー | `6.4` | なし（Design §9.1の69行のレビュー） |
 | 6.6  | `test/server/encoding/encode-boundaries.integration.test.ts`                                                                                                                                                                                                                 | `integration`                                      | `6.2, 6.5`                                                                  | `npm run test:server:integration -- test/server/encoding/encode-boundaries.integration.test.ts`                                                                                                                                                                   |
 | 6.7  | `test/server/encoding/encode-contracts.spec.test.ts`<br>`test/server/encoding/encode-internals.test.ts`<br>`test/server/encoding/encode-boundaries.integration.test.ts` | `unittest/spec`・`unittest/imp`・`integration` | `2.1, 2.2, 2.3, 5.2, 5.3, 6.3, 6.4, 6.5, 6.6` | `npm run test:server:spec -- test/server/encoding/encode-contracts.spec.test.ts`<br>`npm run test:server:imp -- test/server/encoding/encode-internals.test.ts`<br>`npm run test:server:integration -- test/server/encoding/encode-boundaries.integration.test.ts` |
+| 7.1  | `test/server/encoding/encode-contracts.spec.test.ts`<br>`test/server/encoding/encode-internals.test.ts`<br>`src/model/service/encode/EncodeManageModel.ts` | `unittest/spec`・`unittest/imp` | `2.1, 3.1` | `npm run test:server:spec -- test/server/encoding/encode-contracts.spec.test.ts`<br>`npm run test:server:imp -- test/server/encoding/encode-internals.test.ts` |
+| 7.2  | `test/server/encoding/encode-contracts.spec.test.ts`<br>`test/server/encoding/encode-suspend-dst.imp.test.ts`<br>`test/server/encoding/fixtures/suspend-dst-child.mjs`<br>`src/model/service/encode/EncodeManageModel.ts` | `unittest/spec`・`unittest/imp` | `7.1` | `npm run test:server:spec -- test/server/encoding/encode-contracts.spec.test.ts`<br>`npm run test:server:imp -- test/server/encoding/encode-suspend-dst.imp.test.ts` |
+| 8.1  | `test/server/encoding/encode-queue-store.spec.test.ts`<br>`test/server/encoding/encode-queue-store.imp.test.ts`<br>`src/model/operator/encode/EncodeQueueStore.ts`<br>`src/model/operator/encode/IEncodeQueueStore.ts` | `unittest/spec`・`unittest/imp` | `server-persistence` 10.1 | `npm run test:server:spec -- test/server/encoding/encode-queue-store.spec.test.ts`<br>`npm run test:server:imp -- test/server/encoding/encode-queue-store.imp.test.ts` |
+| 8.2  | `test/server/encoding/encode-contracts.spec.test.ts`<br>`test/server/encoding/encode-internals.test.ts`<br>`src/model/service/encode/EncodeManageModel.ts`<br>`src/model/service/encode/IEncodeManageModel.ts`<br>`src/model/service/encode/EncoderModel.ts`<br>`src/model/service/encode/IEncoderModel.ts` | `unittest/spec`・`unittest/imp` | `8.1`、`server-process-messaging` 8.1 | `npm run test:server:spec -- test/server/encoding/encode-contracts.spec.test.ts`<br>`npm run test:server:imp -- test/server/encoding/encode-internals.test.ts` |
+| 8.3  | `test/server/encoding/encode-contracts.spec.test.ts`<br>`test/server/encoding/encode-internals.test.ts`<br>`src/model/service/encode/EncodeManageModel.ts`<br>`src/model/service/ServiceExecutor.ts` | `unittest/spec`・`unittest/imp` | `8.2`、`server-configuration` 4.4 | `npm run test:server:spec -- test/server/encoding/encode-contracts.spec.test.ts`<br>`npm run test:server:imp -- test/server/encoding/encode-internals.test.ts` |
+| 8.4  | `test/server/encoding/encode-queue.integration.test.ts` | `integration` | `8.1, 8.2, 8.3` | `npm run test:server:integration -- test/server/encoding/encode-queue.integration.test.ts` |
 
 -   [x] 1. 依頼、識別番号、およびメモリー内状態の既存契約を仕様テストで固定する
 -   [x] 1.1 依頼受付と process-local 識別・再起動契約を characterization する
@@ -50,13 +56,12 @@ envelope、request/reply timeout、再送は `server-process-messaging`、browse
         の元ファイル削除指定が一件の待機 job に保持されることを `unittest/spec` で固定する。
     -   同時実行数が 0 以下なら provider、識別番号、待機 job、追加通知を作らず拒否し、受付成功時だけ正の整数 ID と追加通
         知を返すことを検証する。
-    -   新しい機能 instance は空の待機・実行一覧と ID 1 から始まり、以前の依頼・途中出力を復元、追跡、整理しないことを
-        `unittest/imp` で確認する。
-    -   `Number.MAX_SAFE_INTEGER` を割り当てた次の ID が 1 になり、新しい衝突探索、世代、永続 ID を追加しない規則を
-        固定する。
+    -   新しい機能 instance の待機・実行一覧は、復元（Task 8.3）が戻す記録だけから始まることを確認する（当初の「ID 1
+        から始まり復元しない」契約は Task 8 で置き換えた）。
+    -   識別番号の割当てと最大安全整数の後の折返しは、Task 8.1 の依頼記録窓口で固定する。
     -   完了時には、正常受付、同時実行数 0、再起動相当、最大安全整数折返しの各 fixture が承認済み結果を再現
         し、production code の差分がない。
-    -   _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 2.6, 7.2, 7.3, 7.4, 7.5_
+    -   _Requirements: 1.1, 1.2, 1.4, 1.5_
     -   _Boundary: 変換操作窓口・受付／待機管理_
 
 -   [x] 1.2 待機・実行一覧と公開業務データを characterization する
@@ -260,15 +265,15 @@ envelope、request/reply timeout、再送は `server-process-messaging`、browse
     -   正常終了では出力を途中成果物として削除せず、すべての terminal 分岐で出力名予約、timer、listener を当該 job につ
         いて解放することを `unittest/imp` で確認する。
     -   cleanup 失敗は運用ログ port へ渡して queue finalization を妨げず、対象を実行中から除いて次の待機依頼を確認する。
-    -   新しい機能 instance が再起動前の途中出力を探索・整理しないことを再確認し、orphan adoption、再照合、generation
-        cleanup を追加しない。
+    -   再起動前の途中出力の扱いは Task 8.3（`encodeRemoveInterruptedOutput`）で定め、この task では orphan adoption、再照合、
+        generation cleanup を追加しない。
     -   遅延または重複した terminal event でも予約解放、途中出力削除、完了 callback、queue finalization、および次依頼開始
         が二重にならないよう、副作用より前の同期 one-shot guard と当該 job が所有する timer・listener の一回だ
         けの解放を行う。他 owner の listener を一括削除しない。
     -   完了時には、異常、取消、正常、出力なし、unlink 失敗、再起動相当の各 fixture で、削除対象、log、queue、予約残数が
         承認済み値になる。
     -   検証は `unittest/spec`、`unittest/imp`、temporary filesystem の `integration` で行う。
-    -   _Requirements: 2.5, 6.9, 7.1, 7.5_
+    -   _Requirements: 2.5, 6.9, 7.1_
     -   _Boundary: 変換 job・出力名管理・受付／待機管理 integration_
     -   _Depends: 3.1, 3.2_
 
@@ -370,13 +375,13 @@ envelope、request/reply timeout、再送は `server-process-messaging`、browse
 
 -   [x] 6.3 R1〜R7 の仕様 test の主 case を完成する
 
-    -   R1からR7の49件を一意な`unittest/spec`主testへ割り当て、`encode-contracts.spec.test.ts`のtest titleから各ACを逆引きで
+    -   R1からR7の66件を一意な`unittest/spec`主testへ割り当て、`encode-contracts.spec.test.ts`のtest titleから各ACを逆引きで
         きる形にする。
     -   各主testは戻り値だけでなく、queue、通知、port call、取消、結果反映、およびcleanupの意味ある結果をassertする。
-    -   完了時には49件すべてが一つの主testへ追跡でき、未割当・重複・空assertionが0件になる。
-    -   _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 1.10, 1.11, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 3.1, 3.2,
-        3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4.1, 4.2, 4.3, 4.4, 4.5, 5.1, 5.2, 5.3, 5.4, 6.1, 6.2, 6.3, 6.4, 6.5, 6.6,
-        6.7, 6.8, 6.9, 7.1, 7.2, 7.3, 7.4, 7.5, 8.1_
+    -   完了時には66件すべてが一つの主testへ追跡でき、未割当・重複・空assertionが0件になる。
+    -   _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 1.10, 1.11, 1.12, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9,
+        2.10, 2.11, 2.12, 2.13, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4.1, 4.2, 4.3, 4.4, 4.5, 5.1, 5.2, 5.3, 5.4, 6.1, 6.2, 6.3, 6.4, 6.5, 6.6,
+        6.7, 6.8, 6.9, 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 7.8, 7.9, 7.10, 7.11, 7.12, 8.1_
     -   _Boundary: 録画ファイル変換 spec test case_
     -   _Depends: 1.1, 1.2, 2.1, 2.2, 2.3, 3.1, 3.2, 3.3, 4.1, 4.2, 4.3, 5.2, 5.3, 6.1, 6.2_
 
@@ -391,10 +396,10 @@ envelope、request/reply timeout、再送は `server-process-messaging`、browse
 
 -   [x] 6.5 機能固有 test matrix の状態・競合・資源分類を完成する
 
-    -   Design §9.1の54行のmatrixで受付前・待機・実行・成功・失敗・取消・再起動、同着受付、取消と期限の競合、late
+    -   Design §9.1の69行のmatrixで受付前・待機・実行・成功・失敗・取消・再起動、同着受付、取消と期限の競合、late
         settlementを一意に分類する。
     -   待機枠、timer、process、途中出力、元fileの解放または保持を記録し、空欄と未分類を0件にする。
-    -   完了時にはDesign §9.1の54行が必須列と主testのlocatorを持ち、空欄と未分類が0件である。
+    -   完了時にはDesign §9.1の69行が必須列と主testのlocatorを持ち、空欄と未分類が0件である。
     -   _Requirements: 8.3_
     -   _Boundary: 録画ファイル変換 Design test matrix_
     -   _Depends: 6.4_
@@ -421,3 +426,115 @@ envelope、request/reply timeout、再送は `server-process-messaging`、browse
         Acceptance Criterion 9）に本機能のsourceの未到達が残らない。
     -   _Depends: 2.1, 2.2, 2.3, 5.2, 5.3, 6.3, 6.4, 6.5, 6.6_
     -   _Requirements: 8.5_
+
+-   [x] 7. 停止時間帯の待機保持と再開を test と実装で実現する
+-   [x] 7.1 起動時の停止時間帯 snapshot、待機保持、および終了時の再開を test と実装で閉じる
+
+    -   `encodeSuspendTimes` の省略を停止時間帯なしとし、`00:00`・`23:59`・`24:00` の境界と日付跨ぎを受理し、明示
+        `null`、配列以外、object でない要素、`start`・`end` の欠落、形式外、範囲外、同時刻で構築が失敗することを
+        `unittest/spec` と `unittest/imp` で検証する。
+    -   停止時間帯中は空き枠があっても待機列の先頭を取り出さず、受け付け順を保ったまま保持し、実行中 job へ停止を要求せ
+        ず、新しい依頼の受付と追加通知を続けることを fake timer で検証する。
+    -   終了時刻の直前では開始せず、到達後に再開 timer が一回だけ発火し、空き枠と待機数の小さい方の回数だけ確認を要求し
+        て受付順に開始することを検証する。重なる時間帯では最初の確認が再び timer を設定する。
+    -   稼働中に設定 source を変更しても既存 instance の停止時間帯は変わらず、新しい instance だけが変更後 snapshot を使
+        うことを確認する。
+    -   構築時に停止時間帯を検証して0時からの経過分へ変換し、待機列確認の要求を受けるたびに、空き枠と待機依頼の有無にか
+        かわらず時間帯を判定する。時間帯中は実行権を取得せずに要求を終え、待機依頼があれば `unref()` した再開 timer を一
+        つだけ設定する。時間帯の中で空き枠や待機依頼が無いときに要求された確認が、実行権を待つ間に空き枠・待機依頼ができ
+        てもジョブを開始しないことを `unittest/imp` で検証する。既存の待機列確
+        認（`checkQueue`）とその coverage 除外の承認は変更しない。
+    -   公開 API、Web UI 向け公開設定、IPC 業務 payload へ field を追加しない。
+    -   完了時には時間帯中の開始0件、実行中 job の停止要求0回、再開 timer の重複0件、終了後の空き枠の範囲での受付順の開始
+        が観測される。
+    -   検証は `unittest/spec` と `unittest/imp` で行う。
+    -   _Requirements: 2.7, 2.8, 2.9, 2.10, 2.11, 2.12, 8.2_
+    -   _Boundary: 待機／実行管理_
+    -   _Depends: 2.1, 3.1_
+
+-   [x] 7.2 サマータイムの切替えと時刻の変更の後も、停止時間帯の終了を1分以内に判定する
+
+    -   再開 timer の delay を、最も早い `end` までのミリ秒数と 60,000 の小さい方にし、ローカル時刻が実時間と異なる幅で
+        進んでも1分以内に時間帯を判定し直す。発火時にまだ時間帯の中なら、最初の確認が timer を設定し直す。
+    -   process 内でローカル時刻を実時間より先へ進めた場合に、終了時刻に達してから1分以内に開始し、それ以前は開始しない
+        ことを `unittest/spec` で検証する。
+    -   サマータイムのある時刻帯（`TZ=America/New_York`）で起動した子 process で、時計が進む日（終了時刻が飛ばされる1時間の
+        後・中）と戻る日（2度目の終了時刻、繰り返される時刻の1度目と2度目）を、実際の `Date` の時刻で `unittest/imp` に
+        固定する。worker thread の中では `TZ` を切り替えられないため子 process に分ける。
+    -   完了時には、修正前の実装で時計が進む日の2 case が失敗し、修正後に全 case が成功する。
+    -   _Requirements: 2.10, 2.13, 8.2_
+    -   _Boundary: 待機／実行管理_
+    -   _Depends: 7.1_
+
+-   [x] 8. 依頼を記録し、起動時に受け付け順で戻す
+
+-   [x] 8.1 管理側の依頼記録窓口で、識別番号の割当て、記録の操作、受け付け順の並べ直しを実現する
+
+    -   `EncodeQueueStore` を管理側（親 process）に置き、起動時に `IEncodeQueueDB.findAll()` で全記録を読み、記録が使う識別
+        番号の集合と次に割り当てる値を作る。次の値は、受け付け順に並べた最後の記録の次（最大値なら1）、記録が無ければ1とする。
+    -   `add`・`abandon`・`updateOutputPath`・`remove`・`list` と録画完了依頼の `enqueueFromRecording` を一本の直列の処理に並
+        べ、呼び出し順に一件ずつ行う。読込の失敗は操作を失敗にして次で読み直し、解釈できない記録は削除してログへ記録する。`add` は使用中を飛ばして識別番号を割り当て、記録の保存に成功してから集合へ加える。保存に失敗したら
+        集合と次の値を変えずに reject する。`remove` は記録の削除に成功してから集合から除き、失敗は reject する。
+    -   並べ直しは、識別番号を昇順に並べ、隣り合う差（最後から先頭へは最大値を越えて1へ戻る差）が最も大きい箇所の直後から並べ
+        る。
+    -   `enqueueFromRecording` は記録を保存してから、Web・API側処理が登録されていれば識別番号付きの `pushEncode` を送る。登録
+        が無ければ送らない。保存の失敗と送信の失敗はログへ記録し、呼出し元へは同期で戻る。
+    -   最大安全整数の前後、使用中の値の連続、0件・1件・最大値をまたぐ記録、各操作の reject、直列の順序を `unittest/spec` と
+        `unittest/imp` で検証する。
+    -   _Requirements: 1.3, 1.12, 7.3, 7.4, 7.5, 7.9, 7.12, 8.2_
+    -   _Boundary: 依頼記録窓口（管理側）_
+    -   _Depends: `server-persistence` 10.1_
+
+-   [x] 8.2 Web・API側処理の受付・開始・終了で記録を操作し、識別番号付きの受け渡しを受け付ける
+
+    -   受付は lease 取得の後で記録 port の `add(option, requestToken)` を await し、返った識別番号でジョブを作る。`add` が失敗
+        したら依頼を失敗とし、lease と実行権を各一回解放し、応答なしなら `abandon(requestToken)` を一回送る。`add` の成功後の
+        失敗では `remove` を一回行う。`idCnt` による採番を削除する（port が注入されない場合だけ、メモリー上で番号を振る代替の
+        port を使う）。
+    -   `EncoderModel` は出力ファイルの path を決めた後、外部処理を開始する前に、注入された記録 port の `updateOutputPath` を
+        await し、失敗はログへ記録して続ける（port が無ければ何もしない）。
+    -   依頼の終了（正常終了の結果 settlement の後、異常終了・実行中の取消・実行時間上限の後、開始前確認の失敗、開始失敗、待機中
+        の取消）では、lease を解放する前に `remove` を await し、失敗はログへ記録して続ける。
+    -   識別番号付きの受け渡し（`pushPersisted`）は、同じ識別番号のジョブがある場合と、起動時の一覧に含まれていた場合は、lease
+        取得の前に何もせず戻る。同時実行数0以下、受付上限、lease 取得失敗、ジョブの生成の失敗で拒否したら、lease を
+        解放した後で `remove` を一回行いログへ記録する。受付中の識別番号は、復元の判定でも重複として扱う。
+    -   _Requirements: 1.3, 1.12, 2.6, 7.10, 7.11, 8.2_
+    -   _Boundary: 待機／実行管理、変換ジョブ_
+    -   _Depends: 8.1、`server-process-messaging` 8.1_
+
+-   [x] 8.3 Web・API側処理の起動時に記録を判定して待機列へ戻す
+
+    -   `ServiceExecutor` で IPC と resource-use の bind の後、HTTP の受付開始を待たずに `restore()` を一回始める。受付と識別番号
+        付きの受け渡しは、復元の完了を待つ。
+    -   記録を受け付け順に、対象なし → 出力先が登録済み（path の一致または同じ実体）→ 出力途中のファイルの削除
+        （`encodeRemoveInterruptedOutput`、親保存先の中だけ）→ lease 取得、の順で判定し、戻す記録は待機列へ追加する（上限を超え
+        ても追加し、追加通知を作らない）。終わったら空き枠の数だけ待機列確認を要求する。一覧の失敗はログへ記録し、記録を変更せ
+        ず、受付の待ちを解いて 60 秒後にやり直す。受付・識別番号付きの受け渡し・取消は復元の完了を待つ。
+    -   各判定の結果、判定の順序、設定 `true`・`false`・省略、unlink の失敗、復元中の受付の待ち、復元後の待機列確認と停止時間
+        帯を `unittest/spec` と `unittest/imp` で検証する。
+    -   _Requirements: 7.2, 7.6, 7.7, 7.8, 8.2_
+    -   _Boundary: 記録の復元_
+    -   _Depends: 8.2、`server-configuration` 4.4_
+
+-   [x] 8.4 実 DB と実 IPC で記録と復元を結合検証する
+
+    -   Design §9.4 の `EN-INTEGRATION-QUEUE-*` を `encode-queue.integration.test.ts` で、SQLite と MySQL fixture、実際の
+        `IPCClient` と `IPCServer` を接続して検証する。
+    -   _Requirements: 8.4_
+    -   _Boundary: 依頼の記録の結合境界_
+    -   _Depends: 8.1, 8.2, 8.3_
+
+-   [x] 9. Web・API側処理だけの異常終了で変換processを止め、途中出力を消してから再起動させる
+
+-   [x] 9.1 変換processの開始を識別番号とともに知らせ、管理側の後始末と復元を噛み合わせる
+
+    -   `EncoderModel` は開始要求に `report: { kind: 'encode', encodeId }` を添え、メディア変換プロセス管理機能が開始と終了を管理
+        側へ知らせる。管理側の後始末（`server-application-runtime` の §7.1）は取消と同じ `SIGINT` だけで止め、停止を始めた時点で
+        動いていた変換の出力途中のファイルを 7.6〜7.8 と同じ規則（登録済みの出力と、録画済み番組・変換元ファイルが無い依頼の出力は残す）で削除する。
+    -   復元の削除は `removeFileIfPresent` を使い、後始末で先に削除されたファイルを削除済みとして扱って失敗を記録しない。
+    -   _Requirements: 7.7, 7.13, 7.14_
+    -   _Boundary: 変換ジョブ、記録の復元_
+    -   _Verification: `test/server/encoding/encode-contracts.spec.test.ts#EN-SPEC-R7-13`、
+        `test/server/encoding/service-child-crash.spec.test.ts#EN-SPEC-R7-14`、
+        `test/server/encoding/encode-queue-restore.spec.test.ts#EN-SPEC-R7-7`_
+    -   _Depends: 8.3、`server-application-runtime` 15.2_
