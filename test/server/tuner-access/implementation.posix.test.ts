@@ -90,6 +90,9 @@ describe('tuner access implementation baseline (POSIX named-pipe seam)', () => {
                 method: 'GET',
                 path: operation.path,
                 socketPath: target.socketPath,
+                agent: expect.objectContaining({
+                    options: expect.objectContaining({ readableHighWaterMark: 128 * 1024 }),
+                }),
                 headers: {
                     'User-Agent': 'epgstation/synthetic',
                     ...(operation.priority === undefined ? {} : { 'X-Mirakurun-Priority': operation.priority }),
