@@ -421,16 +421,17 @@ describe('RecorderModel.readArrivedStreamData (unittest/imp)', () => {
                 return 1;
             },
         };
-        return { reads, stream: { destroyed: false, readableEnded: false, readableLength: 0, socket, ...overrides } };
+        return { reads, stream: { destroyed: false, readableEnded: false, readableLength: 0, isPaused: () => false, socket, ...overrides } };
     };
 
     it('[R2-RECORDER-DRAIN] watches the received byte count for one more turn before it decides nothing arrives', async () => {
         const harness = makeRecorder();
         const { reads, stream } = makeDrainStream();
+        harness.model.recFile = { writableLength: 0, writableNeedDrain: false };
 
         await harness.model.readArrivedStreamData(stream);
 
-        // 1 周目で受信量を初めて記録し、2 周目で増えていないことを確かめて戻る
+        // 最初の読み取りで受信量を記録し、Writerも空の次の巡回で戻る
         expect(reads.count).toBe(3);
     });
 

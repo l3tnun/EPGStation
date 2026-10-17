@@ -385,6 +385,22 @@ describe('[RE-9.2] recorder file start in doRecord', () => {
         expect(harness.model.stream).toBeNull();
     });
 
+    it.each(['path', 'fileHandle'] as const)('uses a 1 MiB real writer for the %s path', async pathKind => {
+        const fullPath = join(root, 'synthetic.ts');
+        const fileHandle = pathKind === 'fileHandle' ? await open(fullPath, 'wx') : undefined;
+        const { harness } = prepare({}, fileHandle === undefined ? {} : { fileHandle });
+        const stream = new PassThrough();
+        harness.model.stream = stream;
+
+        const started = harness.model.doRecord();
+        await until(() => harness.model.firstDataWait !== null);
+        const writer = harness.model.recFile;
+        if (writer.pending) await once(writer, 'open');
+        expect(writer.writableHighWaterMark).toBe(1024 * 1024);
+        expect(existsSync(fullPath)).toBe(true);
+        await finish(harness, started);
+    });
+
     it('releases the opened writer and its error listeners when the stream cannot be piped into it', async () => {
         const writer = makeWriter();
         const fileHandle = { createWriteStream: vi.fn(() => writer), close: vi.fn(async () => undefined) };
@@ -398,6 +414,7 @@ describe('[RE-9.2] recorder file start in doRecord', () => {
         await expect(harness.model.doRecord()).rejects.toThrow('synthetic-pipe-failure');
 
         expect(harness.model.recFile).toBeNull();
+        expect(fileHandle.createWriteStream).toHaveBeenCalledWith({ highWaterMark: 1024 * 1024 });
         expect(writer.destroyed).toBe(true);
         // 破棄の最中に遅れて届く error を吸収する listener だけが残る
         expect(writer.listenerCount('error')).toBe(1);
