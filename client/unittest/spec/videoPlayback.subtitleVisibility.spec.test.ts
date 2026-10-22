@@ -8,7 +8,8 @@ import {
 const { Controller } = await vi.importActual<typeof import('aribb24.js')>('aribb24.js')
 
 // aribb24.js の実際の Controller を使い、Feeder と Renderer だけを合成の実装にする。Feeder は常に表示中の字幕を
-// 1 件返し、Renderer は描画の呼出しを数える。これで「描画 loop が動いているか」を描画の回数として観測する。
+// 1 件返し、Renderer は描画の呼出しを数え、show()・hide() で見えているかを持つ。字幕が見えることを「Renderer が
+// 見えていて、字幕が描かれている」として観測する。
 class SyntheticFeeder {
   public onAttach(): void {}
   public onDetach(): void {}
@@ -32,6 +33,7 @@ const renderers: SyntheticRenderer[] = []
 
 class SyntheticRenderer {
   public renderCount = 0
+  public visible = true
   public constructor() {
     renderers.push(this)
   }
@@ -46,8 +48,12 @@ class SyntheticRenderer {
   public onVideoResize(): boolean {
     return false
   }
-  public show(): void {}
-  public hide(): void {}
+  public show(): void {
+    this.visible = true
+  }
+  public hide(): void {
+    this.visible = false
+  }
   public clear(): void {}
   public render(): void {
     this.renderCount += 1
@@ -106,15 +112,20 @@ describe('Video Playback aribb24 subtitle visibility', () => {
     })
     expect(adapter?.kind).toBe('aribb24')
 
-    // 字幕を off にしたまま再生を始める
+    // 字幕を off にしたまま再生を始め、一時停止して再開する。off の間は caption も superimpose も見えない
     adapter?.setVisible(false)
     video.dispatchEvent(new Event('play'))
     advanceFrames(2)
-    expect(renderers.map((renderer) => renderer.renderCount)).toEqual([0, 0])
+    video.dispatchEvent(new Event('pause'))
+    advanceFrames(1)
+    video.dispatchEvent(new Event('play'))
+    advanceFrames(2)
+    expect(renderers.map((renderer) => renderer.visible)).toEqual([false, false])
 
-    // on にした時点から、caption と superimpose の両方で描画する
+    // on にした時点から、caption と superimpose の両方で字幕が見える
     adapter?.setVisible(true)
     advanceFrames(2)
+    expect(renderers.map((renderer) => renderer.visible)).toEqual([true, true])
     expect(renderers.every((renderer) => renderer.renderCount > 0)).toBe(true)
 
     adapter?.dispose()
@@ -136,11 +147,14 @@ describe('Video Playback aribb24 subtitle visibility', () => {
     adapter?.setVisible(true)
     advanceFrames(3)
     expect(renderers.every((renderer) => renderer.renderCount > 0)).toBe(true)
-    // 描画 loop が二重に登録されていれば、1 frame に 2 回以上の requestAnimationFrame が残る
+    // caption と superimpose の Controller が描画 loop を 1 つずつ持つ。二重に登録されていれば 3 つ以上残る
     expect(vi.getTimerCount()).toBe(2)
 
+    // off にしても loop は 1 つずつのまま回り、dispose で 1 つも残らない
     adapter?.setVisible(false)
-    expect(vi.getTimerCount()).toBe(0)
+    advanceFrames(1)
+    expect(vi.getTimerCount()).toBe(2)
     adapter?.dispose()
+    expect(vi.getTimerCount()).toBe(0)
   })
 })

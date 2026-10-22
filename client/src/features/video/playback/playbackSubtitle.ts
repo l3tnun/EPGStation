@@ -107,13 +107,10 @@ export function createPlaybackSubtitleAdapter({
   return {
     kind: 'aribb24',
     setVisible: (visible) => {
+      // aribb24.js の Controller は attachMedia() から detachMedia() まで描画 loop を 1 つだけ回し、
+      // show()・hide() は描画先を見せる・隠すだけなので、off の間も字幕は描かれ続ける（要求 4.4a）。
       if (visible) {
-        // aribb24.js 2.x の Controller は、非表示の間に video の play で登録した描画 loop が止まった後も
-        // loop の識別子を残し、show() は識別子が残っていると loop を登録しない。hide() で識別子を消して
-        // から show() を呼び、どの状態からでも描画 loop を 1 つだけ動かす（要求 4.4a）。
-        caption.controller.hide()
         caption.controller.show()
-        superimpose.controller.hide()
         superimpose.controller.show()
         return
       }
@@ -171,11 +168,8 @@ function createAribb24Subsystem({
 
 function disposeAribb24Subsystem({ controller, feeder, renderer }: Aribb24Subsystem): void {
   // controller.detachMedia() removes the media/container event listeners and resize
-  // observer, but it does not cancel an already-scheduled requestAnimationFrame loop by
-  // itself -- only hide() does, via its own unregisterRenderingLoop() call. Call hide()
-  // first so no rAF callback (and therefore no ResizeObserver either, once detachMedia
-  // runs) is left running after dispose.
-  controller.hide()
+  // observer and cancels the requestAnimationFrame rendering loop, so no rAF callback is
+  // left running after dispose.
   controller.detachMedia()
   controller.detachFeeder()
   controller.detachRenderer(renderer)
