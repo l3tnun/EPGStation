@@ -896,8 +896,8 @@ class RecorderModel implements IRecorderModel {
         try {
             recFile =
                 recPath.fileHandle === undefined
-                    ? fs.createWriteStream(recPath.fullPath, { flags: 'wx' })
-                    : recPath.fileHandle.createWriteStream();
+                    ? fs.createWriteStream(recPath.fullPath, { flags: 'wx', highWaterMark: 1024 * 1024 })
+                    : recPath.fileHandle.createWriteStream({ highWaterMark: 1024 * 1024 });
         } catch (err) {
             await cleanupUnstartedRecFile();
             throw err;
@@ -1954,18 +1954,31 @@ class RecorderModel implements IRecorderModel {
 
     /**
      * 受信 socket と stream の buffer に届いている data を、録画 file への pipe が読み終えるまで待つ。
-     * event loop を一周させるごとに受信量を確かめ、受信量が増えず buffer が空になった時点、stream が終わった時点、
+     * event loop を一周させるごとに受信量を確かめ、受信量が増えず受信・録画Writerの待機分が空で、
+     * streamが停止中でもWriterのdrain待ちでもない時点、streamが終わった時点、
      * または `CANCEL_DRAIN_LIMIT_MS` を過ぎた時点で戻る。
      * 同期の DB 処理などで event loop が直前まで塞がれていた間に届いた data を、stream の破棄で捨てないために使う。
      * @param currentStream: 録画中の stream
      */
     private async readArrivedStreamData(currentStream: http.IncomingMessage): Promise<void> {
+        if (this.recFile === null) return;
         const socket = currentStream.socket;
         const deadline = Date.now() + RecorderModel.CANCEL_DRAIN_LIMIT_MS;
         let lastBytesRead = -1;
+        const isDrained = (): boolean => {
+            const writer = this.recFile;
+            return (
+                writer !== null &&
+                socket.bytesRead === lastBytesRead &&
+                currentStream.readableLength === 0 &&
+                !currentStream.isPaused() &&
+                writer.writableLength === 0 &&
+                !writer.writableNeedDrain
+            );
+        };
         while (currentStream.destroyed === false && currentStream.readableEnded === false && Date.now() < deadline) {
             await new Promise<void>(resolve => setImmediate(resolve));
-            if (socket.bytesRead === lastBytesRead && currentStream.readableLength === 0) return;
+            if (isDrained()) return;
             lastBytesRead = socket.bytesRead;
         }
     }

@@ -424,6 +424,9 @@ serviceへの次回要求も新しいREST要求となる。
 3. network形式は`http`だけを受理し、host、port、pathnameを取得する。
 4. target base pathと固定route templateをjoinし、query parameterはURL encoderで生成する。
 5. requestへ`EPGStation/<自身の版>`形式のUser-Agentを設定する。stream要求だけはcaller priorityを互換headerへ設定する。
+   REST、logo、product probe、change feed、録画・ライブstreamとredirect後の要求は、transport instanceをまたいで
+   一つの専用`http.Agent`を共有する。`keepAlive: true`、`timeout: 5_000`、受信HWM（`readableHighWaterMark`）128 KiB
+   を設定し、RESTからTSへの接続再利用を維持する。送信HWMは指定しない。
 6. 301–399とroot-relativeな`Location`の組だけは同じconnection targetで追跡し、absoluteまたはroot-relativeでな
    い`Location`はrejectする。redirect後の最終responseについて、共通RESTとstreamは200–202を成功候補とし、JSON operationは
    bodyを期待shapeへ解析する。
@@ -635,6 +638,7 @@ errorにする。
 -   tracked文書・test fixtureはplaceholder targetだけを使い、実URL、socket path、named pipe、credential、response dataを
     含めない。
 -   HTTP request optionへauthorization、cookie、proxy agent、client certificate、CA、TLS optionを追加しない。
+    接続再利用と受信HWM設定のための上記専用`http.Agent`は使用するが、このAgentにproxy・TLS設定を持たせない。
 -   URL userinfoを受理せず、redirectは同じconnection targetのroot-relative pathだけを追跡する。absolute locationと別
     originはrejectする。
 -   IDとqueryはencoderを通し、base pathやrouteへ文字列連結で未検査入力を挿入しない。
@@ -697,7 +701,7 @@ test名の`[TA-n.m]`のn.mはtasks.mdのtask番号であり、AC番号ではな�
 | 対象                         | `unittest/spec`で固定する観測結果                                                                                                                            | `unittest/imp`で固定する内部値域・分岐                                                                                                   |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | 対応版と共通結果             | 最低対応版とそれ以降の版文字列を許容し、status・tuner・service・programを同じEPGStation DTOで返す                                                            | required field欠落・不正型・非finite値を拒否し、未知fieldを許容する。`audios`／`audio`と`extended`の正規化分岐                           |
-| connection targetと共通route | HTTPとUnix socketで同じoperation結果を返し、禁止された接続optionを公開しない。named pipeは既存parser・request optionのbest-effort characterizationに限定する | target分類、標準・legacy Unix形式、base path結合、ID encode、redirect、200–202境界、route、priority header。named pipe実接続は検証しない |
+| connection targetと共通route | HTTPとUnix socketで同じoperation結果を返し、禁止された接続optionを公開しない。全要求と複数transport instanceで同じ専用Agentを使うことをrequest factoryで確認する。named pipeは既存parser・request optionのbest-effort characterizationに限定する | target分類、標準・legacy Unix形式、base path結合、ID encode、redirect、200–202境界、route、priority header、共有AgentのkeepAlive・timeout 5秒・受信HWM 128 KiBを確認する。実際のresponse/socketの受信HWM、REST→TS接続再利用とclose/abortの独立性はHTTP・Unix socketのintegrationで確認する。named pipe実接続は検証しない |
 | RESTとlogo                   | 各operationのDTO／Buffer、個別失敗のreject、logo失敗をnot-foundへ変換しないこと、再要求で新しいHTTP requestを行う                                            | 空body、JSON不正、status、body全量受信、deadline、request・response・timer・listenerのcleanup                                            |
 | product判定とchange feed     | Mirakurun／mirakcのstarted・changed・aborted・completion、およびMirakurun通常終了差を観測する                                                                | 最終200 object／最終404／その他status・network・timeout・parse、成功時だけのcache、frame分割、初期通知抑止、program・service以外のresourceの読み飛ばし、実装不整合                   |
 | 録画・ライブstream           | ID・priorityを渡したReadable引渡し、確立失敗、冪等close、確立後terminal伝播、再開なし、総継続時間の上限なし                                                  | header受領とhandle生成の確立境界、deadline直前・到達・超過、abort race、late settlement、request・response destroy一回                   |

@@ -179,7 +179,7 @@ describe('recording start persistence', () => {
             await closed;
 
             expect(reservation).toHaveBeenCalledWith(harness.model.reserve, true, true);
-            expect(createWriteStream).toHaveBeenCalledWith(fullPath, { flags: 'wx' });
+            expect(createWriteStream).toHaveBeenCalledWith(fullPath, { flags: 'wx', highWaterMark: 1024 * 1024 });
             expect(await readFile(fullPath, 'utf8')).toBe('synthetic-data');
         } finally {
             harness.model.isCanceledCallingFinished = true;
