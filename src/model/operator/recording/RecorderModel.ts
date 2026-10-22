@@ -1961,6 +1961,7 @@ class RecorderModel implements IRecorderModel {
      * @param currentStream: 録画中の stream
      */
     private async readArrivedStreamData(currentStream: http.IncomingMessage): Promise<void> {
+        if (this.recFile === null) return;
         const socket = currentStream.socket;
         const deadline = Date.now() + RecorderModel.CANCEL_DRAIN_LIMIT_MS;
         let lastBytesRead = -1;

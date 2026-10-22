@@ -436,11 +436,60 @@ describe('RecorderModel.readArrivedStreamData (unittest/imp)', () => {
     });
 
     it.each([
+        ['paused stream', 'paused', true],
+        ['writer waiting for drain', 'writableNeedDrain', true],
+        ['writer with pending data', 'writableLength', 1],
+    ] as const)('[R2-RECORDER-DRAIN] keeps reading while the %s is the only pending condition', async (_label, condition, value) => {
+        // 時間切れではなく、個々の待機条件が解消したことで戻ることを確かめる。
+        vi.useFakeTimers({ toFake: ['Date'] });
+        const harness = makeRecorder();
+        const state = { paused: false, writableLength: 0, writableNeedDrain: false, [condition]: value };
+        const { stream } = makeDrainStream({ isPaused: () => state.paused });
+        harness.model.recFile = {
+            get writableLength() { return state.writableLength; },
+            get writableNeedDrain() { return state.writableNeedDrain; },
+        };
+        let completed = false;
+        const pending = harness.model.readArrivedStreamData(stream).then(() => { completed = true; });
+
+        try {
+            await flushImmediate();
+            await flushImmediate();
+            await flushImmediate();
+            expect(completed).toBe(false);
+
+            state.paused = false;
+            state.writableLength = 0;
+            state.writableNeedDrain = false;
+            await pending;
+            expect(completed).toBe(true);
+        } finally {
+            state.paused = false;
+            state.writableLength = 0;
+            state.writableNeedDrain = false;
+            await pending;
+        }
+    });
+
+    it('[R2-RECORDER-DRAIN] returns immediately without scheduling a turn when the writer is absent', async () => {
+        const harness = makeRecorder();
+        const { reads, stream } = makeDrainStream();
+        harness.model.recFile = null;
+        const immediate = vi.spyOn(globalThis, 'setImmediate');
+
+        await harness.model.readArrivedStreamData(stream);
+
+        expect(immediate).not.toHaveBeenCalled();
+        expect(reads.count).toBe(0);
+    });
+
+    it.each([
         ['destroyed', { destroyed: true }],
         ['ended', { readableEnded: true }],
     ])('[R2-RECORDER-DRAIN] does not wait on a stream that is already %s', async (_label, overrides) => {
         const harness = makeRecorder();
         const { reads, stream } = makeDrainStream(overrides);
+        harness.model.recFile = { writableLength: 0, writableNeedDrain: false };
 
         await harness.model.readArrivedStreamData(stream);
 
