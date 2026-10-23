@@ -1101,7 +1101,7 @@ owner判断を新設するopen decisionはない。Implementation時は承認済
 
 ## 17. 公開用Docker imageの構築・起動確認と公開（Requirement 10・11）
 
-本節の内容は、`scripts/server-test/`・`test/server/application-runtime/`・`.github/workflows/docker.yml` に実装されている。Docker Hub への公開、QEMU での arm の構築、gha cache の保存・復元は §17.9 のとおり最初の実行まで確かめていない。
+本節の内容は、`scripts/server-test/`・`test/server/application-runtime/`・`.github/workflows/docker.yml` に実装されている。Docker Hub への公開、ARM の runner での arm64 の構築、job の間の digest の受け渡し、gha cache の保存・復元は §17.9 のとおり最初の実行まで確かめていない。
 
 ### 17.1 Boundary Commitments
 
@@ -1114,7 +1114,7 @@ owner判断を新設するopen decisionはない。Implementation時は承認済
 #### Out of Boundary
 - image の中の個別機能（予約、録画、番組表など）の振る舞い。各機能の test が確かめる。
 - 実チューナー・実 tuner server への接続。確認は代役だけを使う。
-- linux/amd64 以外の architecture の手元での確認。Requirement 11 の公開用の構築が行う（実機・QEMU での動作は確かめない）。
+- linux/amd64 以外の architecture の手元での確認。Requirement 11 の公開用の構築が行う（arm64 の image の起動は確かめない）。
 - secret の検査、build context の一覧検査、registry への公開の静的な禁止検査。手元の確認は持たない。
 - Docker Hub 側の repository・secret の登録、`master` と tag の運用、公開の可否の判断。
 
@@ -1138,7 +1138,7 @@ owner判断を新設するopen decisionはない。Implementation時は承認済
 | 準備 step | 取得は 3 回・15 秒間隔・種類ごとの上限時間。exit 0 / 75 / 2 / 1 | `scripts/server-test/prepare-dependency-images.mjs` |
 | 層の Dockerfile | 製品の Dockerfile の依存の部分から導く（手書きの層の Dockerfile と Node の header の取得は持たない）。製品の Dockerfile は header を取らず、base image 同梱の header を `npm_package_config_node_gyp_nodedir` で使う | `scripts/server-test/dependency-images.mjs`（`planDependencyImages`）、`Dockerfile.debian`・`Dockerfile.alpine` の server-builder |
 | preflight | `deps-prepare`（container A と host）→ `docker-gate-node24`（container A）。node-matrix の Node 24 の回も同じ file を host の daemon で実行 | `scripts/release-preflight.sh`、`scripts/ci-rehearsal/job.sh`、`scripts/server-test/run-node-acceptance-matrix.mjs` |
-| 公開用 workflow | `master` への push と全 tag で、debian・alpine の matrix を構築して Docker Hub へ公開する。action は commit SHA で固定する | `.github/workflows/docker.yml` |
+| 公開用 workflow | `master` への push と全 tag で、distro（debian・alpine）と arch（amd64・arm64）の組を各 arch のネイティブの runner で構築し、digest からまとめた multi-arch の image を Docker Hub へ公開する。action は commit SHA で固定する | `.github/workflows/docker.yml` |
 
 ### 17.3 構成
 
@@ -1184,7 +1184,7 @@ flowchart LR
 | 項目 | 契約 |
 | --- | --- |
 | base の一覧 | `Dockerfile.debian`・`Dockerfile.alpine` の `FROM ...@sha256:...` をすべて読む。同じ tag が別の digest なら `DependencyImagePlanError`（exit 2） |
-| 依存の部分の導出 | 各 builder stage（`client-builder`・`server-builder`）で、`FROM` から最初の行頭 `COPY . `（ソース全体の copy）の直前までを依存の部分とする。comment と空行は除く。層の `FROM` は `<tag>@<digest>`（`--platform=$BUILDPLATFORM` は外す）。導けない形（`npm ci` の行・`COPY . ` が無いなど）は exit 2 |
+| 依存の部分の導出 | 各 builder stage（`client-builder`・`server-builder`）で、`FROM` から最初の行頭 `COPY . `（ソース全体の copy）の直前までを依存の部分とする。comment と空行は除く。層の `FROM` は `<tag>@<digest>`（`--platform=…` の指定があれば外す）。導けない形（`npm ci` の行・`COPY . ` が無いなど）は exit 2 |
 | OS の package の層 | server の依存の部分のうち、最初の `WORKDIR` の直前まで。tag は `epgstation-deps-os-<kind>:<hash12>`（base の digest と層の内容） |
 | npm の層 | OS の層（client は base）の上に、残りの依存の部分と manifest。tag は `epgstation-deps-<kind>:<hash12>`（層の内容と manifest の path・sha256。server は OS の層の tag を含む） |
 | 再利用 | `package.json` または `package-lock.json` が変わると、その側（client または server）の npm の層だけ tag が変わる。OS の層と base は tag が変わらない（10.6・10.7） |
@@ -1224,7 +1224,7 @@ server container の中で `docker exec <id> node -e "fetch('http://127.0.0.1:88
 
 #### Image Content Inspector
 
-応答の確認のあと、同じ server container の中で `docker exec <id> node -e ...` を実行して image の中身を調べる（10.13）。`/app/package.json` の `devDependencies` の代表（`typescript`・`eslint`・`prettier`・`vitest`）が `/app/node_modules/<名前>` に無いこと、`dependencies` の `express` が在ること、`/app/client/node_modules` が無いこと、`/app/client/dist/index.html` が在ることを確かめ、満たさなければ `image-content-invalid`。製品の Dockerfile は、server の build（`npm run compile`）のあとに `npm prune --omit=dev` で開発用の package を除き、client の build（`npm run bundle`）のあとに client の `node_modules` を削除する。どちらも network を使わない（`--network=none` の構築で通る）。
+応答の確認のあと、同じ server container の中で `docker exec <id> node -e ...` を実行して image の中身を調べる（10.13）。`/app/package.json` の `devDependencies` の代表（`typescript`・`eslint`・`prettier`・`vitest`）が `/app/node_modules/<名前>` に無いこと、`dependencies` の `express` が在ること、`/app/client/node_modules` が無いこと、`/app/client/dist/index.html` が在ること、`/app/.git` と `/app/.github` が無いことを確かめ、満たさなければ `image-content-invalid`。製品の Dockerfile は、server の build（`npm run compile`）のあとに `npm prune --omit=dev` で開発用の package を除き、client の build（`npm run bundle`）のあとに client の `node_modules` を削除する。どちらも network を使わない（`--network=none` の構築で通る）。git の管理情報（`.git`）と GitHub の設定（`.github`）は、`.dockerignore` で build context から除く（`COPY . ` で image に入れない）。
 
 #### Resource Cleaner
 
@@ -1312,8 +1312,66 @@ permissions: {}
 env:
   MAIN_DISTRO: debian
 jobs:
+  # arch ごとにネイティブの runner でビルドする。arch ごとの image は tag を付けずに digest で push し、
+  # build ジョブで digest を multi-arch manifest にまとめて tag を付ける。
+  build-arch:
+    name: Build images per arch
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        distro:
+          - alpine
+          - debian
+        arch:
+          - amd64
+          - arm64
+        include:
+          - arch: amd64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - name: Login to Docker Hub
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          username: <secrets.DOCKERHUB_USER>
+          password: <secrets.DOCKERHUB_TOKEN>
+      - name: Build and push by digest
+        id: build
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: Dockerfile.${{ matrix.distro }}
+          platforms: linux/${{ matrix.arch }}
+          tags: ${{ secrets.DOCKERHUB_IMAGE }}
+          outputs: type=image,push-by-digest=true,name-canonical=true,push=true
+          cache-from: type=gha,scope=${{ matrix.distro }}-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.distro }}-${{ matrix.arch }}
+          provenance: false
+      # digest を file 名にして、build ジョブへ artifact で渡す。
+      - name: Export digest
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/digests"
+          touch "$RUNNER_TEMP/digests/${DIGEST#sha256:}"
+      - name: Upload digest
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: digests-${{ matrix.distro }}-${{ matrix.arch }}
+          path: ${{ runner.temp }}/digests/*
+          if-no-files-found: error
+          retention-days: 1
   build:
     name: Build images
+    needs: build-arch
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -1322,79 +1380,69 @@ jobs:
         distro:
           - alpine
           - debian
-        include:
-          - distro: alpine
-            platforms: linux/amd64,linux/arm64/v8
-          - distro: debian
-            platforms: linux/amd64,linux/arm64/v8
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
       - name: Docker tags
-        id: docker-tags
-        env:
-          IMAGE: ${{ secrets.DOCKERHUB_IMAGE }}
-          DISTRO: ${{ matrix.distro }}
-        run: |
-          if echo "$GITHUB_REF" | grep -e '^refs/heads/' >/dev/null 2>&1; then
-            GIT_BRANCH=$(echo "$GITHUB_REF" | sed -e 's|^refs/heads/||')
-            MAIN_TAG="$IMAGE:$GIT_BRANCH-$DISTRO"
-            TAGS="$MAIN_TAG"
-            if [ "$MAIN_DISTRO" = "$DISTRO" ]; then
-              TAGS="$TAGS,$IMAGE:$GIT_BRANCH"
-            fi
-          else
-            GIT_TAG=$(echo "$GITHUB_REF" | sed -e 's|^refs/tags/||')
-            MAIN_TAG="$IMAGE:$GIT_TAG-$DISTRO"
-            TAGS="$MAIN_TAG"
-            if [ "$MAIN_DISTRO" = "$DISTRO" ]; then
-              TAGS="$TAGS,$IMAGE:$GIT_TAG"
-            fi
-            TAGS="$TAGS,$IMAGE:$DISTRO"
-            if [ "$MAIN_DISTRO" = "$DISTRO" ]; then
-              TAGS="$TAGS,$IMAGE:latest"
-            fi
-          fi
-          echo "Main tag: $MAIN_TAG"
-          echo "Tags: $TAGS"
-          echo "tags=$TAGS" >> "$GITHUB_OUTPUT"
-      - name: Setup QEMU user-mode emulation
-        uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
-      - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+        id: meta
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        with:
+          images: ${{ secrets.DOCKERHUB_IMAGE }}
+          flavor: latest=false
+          tags: |
+            type=ref,event=branch,suffix=-${{ matrix.distro }}
+            type=ref,event=branch,enable=${{ matrix.distro == env.MAIN_DISTRO }}
+            type=ref,event=tag,suffix=-${{ matrix.distro }}
+            type=ref,event=tag,enable=${{ matrix.distro == env.MAIN_DISTRO }}
+            type=raw,value=${{ matrix.distro }},enable=${{ github.ref_type == 'tag' }}
+            type=raw,value=latest,enable=${{ github.ref_type == 'tag' && matrix.distro == env.MAIN_DISTRO }}
+      - name: Download digests
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          path: ${{ runner.temp }}/digests
+          pattern: digests-${{ matrix.distro }}-*
+          merge-multiple: true
       - name: Login to Docker Hub
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           username: <secrets.DOCKERHUB_USER>
           password: <secrets.DOCKERHUB_TOKEN>
-      - name: Build and push
-        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
-        with:
-          context: .
-          file: Dockerfile.${{ matrix.distro }}
-          platforms: ${{ matrix.platforms }}
-          tags: ${{ steps.docker-tags.outputs.tags }}
-          cache-from: type=gha,scope=${{ matrix.distro }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.distro }}
-          provenance: false
-          push: true
+      # amd64・arm64 の digest を 1 つの multi-arch manifest にまとめ、全タグに付ける。
+      - name: Create multi-arch manifest
+        working-directory: ${{ runner.temp }}/digests
+        env:
+          IMAGE: ${{ secrets.DOCKERHUB_IMAGE }}
+          TAGS: ${{ steps.meta.outputs.tags }}
+        run: |
+          digests=(*)
+          if [ "${#digests[@]}" -ne 2 ]; then
+            echo "expected 2 digests (amd64, arm64), got ${#digests[@]}" >&2
+            exit 1
+          fi
+          for tag in $TAGS; do
+            IMAGETOOLS_ARGS+=(-t "$tag")
+          done
+          for digest in "${digests[@]}"; do
+            IMAGETOOLS_ARGS+=("$IMAGE@sha256:$digest")
+          done
+          docker buildx imagetools create "${IMAGETOOLS_ARGS[@]}"
 ```
 
 #### workflow の設計判断と理由
 
-trigger（`master` への push と全 tag）、matrix の distro と platform、tag の付け方、secret 名、`MAIN_DISTRO` は上の yaml のとおりである。上の `username` と `password` の `<secrets.…>` は、実装では GitHub Actions の `secrets` の参照（式の記法 `${{ … }}`）として書く。次の点を設計として定める。
+trigger（`master` への push と全 tag）、matrix の distro・arch・runner、tag の付け方、secret 名、`MAIN_DISTRO` は上の yaml のとおりである。上の `username` と `password` の `<secrets.…>` は、実装では GitHub Actions の `secrets` の参照（式の記法 `${{ … }}`）として書く。次の点を設計として定める。
 
 | 設計 | 理由 |
 | --- | --- |
 | action は Node 24 の版を使い、commit SHA で固定する | Node 12 の action は今の runner では動かない。tag は動かせる参照のため、`DOCKERHUB_TOKEN` を渡す job では SHA で固定する |
-| cache は `cache-from` / `cache-to` を `type=gha`（scope は distro ごと）にする | `type=gha` は追加の action が要らず、scope を分けると matrix の 2 job が同じ cache を上書きし合わない |
+| trigger に `workflow_dispatch` を持たない | 手動の実行は、実行した ref の名前の tag（例: `v3`）で Docker Hub へ公開し、過去の tag から実行すると `latest`・`debian`・`alpine` を古い版へ付け替える |
+| arch ごとに job を分け、amd64 は `ubuntu-latest`、arm64 は `ubuntu-24.04-arm` の runner でネイティブに構築する（`platforms` は `linux/<arch>` の 1 つ） | public repository では ARM の runner を追加の費用なく使え、arm64 をその arch の上で構築できる |
+| arch ごとの image は tag を付けずに digest で push し（`push-by-digest=true`・`name-canonical=true`）、digest を artifact で `build` job へ渡して `docker buildx imagetools create` で multi-arch の image にまとめ、そこへ tag を付ける | Docker Hub の tag を 11.3・11.4 のものだけにする（11.6）。途中の image に tag を付けると、push のたびに Docker Hub に残る |
+| まとめる前に、digest が 2 つ（amd64・arm64）あることを確かめる | 片方の arch が欠けた image を公開しない |
+| tag は `docker/metadata-action` で計算する（`flavor: latest=false`。`latest` は tag の push の Debian 版にだけ明示して付ける） | branch 名・tag 名を Docker の tag に使える文字へ直す。自動の `latest` を付けない |
+| cache は `cache-from` / `cache-to` を `type=gha`（scope は distro と arch の組ごと）にする | `type=gha` は追加の action が要らず、scope を分けると matrix の 4 job が同じ cache を上書きし合わない |
 | `provenance: false` を指定する | build-push-action は v4 以降、指定しないと attestation を付けて multi-arch の index に entry が増える。attestation の無い image を出す |
-| tag の出力は `$GITHUB_OUTPUT` への書き込みにする | `::set-output` は非推奨で、公式の置き換えは `$GITHUB_OUTPUT` である |
-| `${{ secrets.DOCKERHUB_IMAGE }}` と `matrix.distro` を `env` で shell へ渡す | script への展開を避ける |
+| `${{ secrets.DOCKERHUB_IMAGE }}`・digest・tag の一覧を `env` で shell へ渡す | script への展開を避ける |
 | job に `permissions: contents: read` を与える（top-level は `{}`） | `{}` のままでは GITHUB_TOKEN に権限が無く、private repository の checkout が取得できない |
 | env を `MAIN_DISTRO` だけにする | runner 上の step が他の env を読まない |
-| platform の一覧を 1 行にする | 折り畳み記法と末尾の `,` を使わず、platform の一覧を明示する |
 
 `pull_request` を含まないので、PR の検査では実行しない（11.5）。
 
@@ -1413,16 +1461,17 @@ trigger（`master` への push と全 tag）、matrix の distro と platform、
 | DC-7 | 層の導出: 製品の Dockerfile の形が規則に合わないとき exit 2 | 同 spec test（Dockerfile の複製を壊して） | 10.2, 10.9 |
 | DC-8 | registry へ公開しない: 呼んだ docker の argv に `push`・`login`・`--push`・registry への `--output` が無い | `docker-image.integration.test.ts` の ledger の検査 | 10.11 |
 | DC-9 | 片付け: 成功・失敗のどちらでも container・network・検査用 image が残らず、依存 image は残る | 同 integration の後確認（失敗の経路は、build 失敗を起こす入力で spec test が cleaner を呼ぶ） | 10.12 |
-| DC-10 | image の中身: 起動した server の container で、`package.json` の `devDependencies` の代表（`typescript`・`eslint`・`prettier`・`vitest`）が `/app/node_modules` に無く、`dependencies` の `express` は在り、`/app/client/node_modules` が無く、client の build 済みの成果物（`/app/client/dist`）が在る | 同 integration（Debian・Alpine）。比較する名前は test が `package.json` から読み、代表が `devDependencies` に在ることも確かめる | 10.13 |
+| DC-10 | image の中身: 起動した server の container で、`package.json` の `devDependencies` の代表（`typescript`・`eslint`・`prettier`・`vitest`）が `/app/node_modules` に無く、`dependencies` の `express` は在り、`/app/client/node_modules` が無く、client の build 済みの成果物（`/app/client/dist`）が在り、`/app/.git`・`/app/.github` が無い | 同 integration（Debian・Alpine）。比較する名前は test が `package.json` から読み、代表が `devDependencies` に在ることも確かめる | 10.13 |
 
 #### 実装時の確認（恒久の test にしない）
 
 `.github/workflows/docker.yml` の形（trigger、matrix、action の版、secret の参照）は恒久の test にしない。次を実装時に一度だけ行い、結果を実装の記録に残す。
 
-- `Docker tags` step の `run` を、`GITHUB_REF` を `refs/heads/master` と `refs/tags/v2.10.0`、`DISTRO` を `debian` と `alpine` の 4 通りで実行し、期待する tag 列（Requirement 11 AC 3・4）と一致することを確かめる。`IMAGE` はダミーを使う。
+- `Docker tags` step の `docker/metadata-action`（yaml と同じ commit SHA の版）に yaml と同じ `tags`・`flavor` を与え、`GITHUB_REF` を `refs/heads/master` と `refs/tags/v2.10.0`、distro を `debian` と `alpine` の 4 通りで実行し、期待する tag 列（Requirement 11 AC 3・4）と一致することを確かめる。`images` はダミーを使う。
+- 手元に registry を立て、`build-arch` job の `Build and push by digest` と同じ引数の `docker buildx build`（`--platform linux/<arch>`、`--output type=image,push-by-digest=true,name-canonical=true,push=true`）で amd64・arm64 を push し、`Create multi-arch manifest` と同じ `docker buildx imagetools create` で digest からまとめる。registry の tag がまとめた分だけであること（11.6）と、まとめた image が amd64・arm64 の 2 つを持つこと（11.2）を確かめる。手元に無い arch は emulation（QEMU）で構築するので、ARM の runner の上での構築はこの確認では確かめず、最初の実行で確かめる。
 - `actionlint` が使えれば、構文を検査する。
 
-Docker Hub への実際の公開、QEMU での arm の構築、gha cache の保存・復元は offline では確かめられない。最初の公開の実行で確かめる。
+Docker Hub への実際の公開、ARM の runner での構築、artifact での digest の受け渡し、gha cache の保存・復元は offline では確かめられない。最初の公開の実行で確かめる。
 
 ### 17.10 Requirements Traceability
 
@@ -1440,12 +1489,13 @@ Docker Hub への実際の公開、QEMU での arm の構築、gha cache の保�
 | 10.10 | 揃っていなければ取らず「準備されていない」で失敗 | Prepared Verifier | DC-1 |
 | 10.11 | registry へ公開しない | docker 実行 helper の argv ledger | DC-8 |
 | 10.12 | 成功・失敗どちらでも container と構築した image を片付け、依存は残す | Resource Cleaner | DC-9 |
-| 10.13 | image に開発用 package と client の node_modules を含めない | 製品の Dockerfile（`npm prune --omit=dev`、client の `node_modules` の削除）、Image Content Inspector | DC-10 |
+| 10.13 | image に開発用 package、client の node_modules、`.git`・`.github` を含めない | 製品の Dockerfile（`npm prune --omit=dev`、client の `node_modules` の削除）、`.dockerignore`、Image Content Inspector | DC-10 |
 | 11.1 | master への push・tag で、両 Dockerfile から構築して Docker Hub へ公開 | `docker.yml` | 実装時の確認（構文）、最初の実行 |
-| 11.2 | Debian・Alpine の platform の一覧 | `docker.yml` の matrix | 最初の実行 |
-| 11.3 | master の push の tag | `docker.yml` の `Docker tags` | 実装時の確認（tag の計算の 4 通り） |
+| 11.2 | Debian・Alpine の platform の一覧 | `docker.yml` の `build-arch` job の matrix（distro × arch） | 実装時の確認（手元の registry）、最初の実行 |
+| 11.3 | master の push の tag | `docker.yml` の `Docker tags`（`docker/metadata-action`） | 実装時の確認（tag の計算の 4 通り） |
 | 11.4 | git tag の tag | 同 | 実装時の確認（tag の計算の 4 通り） |
 | 11.5 | PR の検査では実行しない | `docker.yml` の trigger | 実装時の確認（trigger に `pull_request` が無いこと） |
+| 11.6 | Docker Hub に付く tag は 11.3・11.4 のものだけ | `docker.yml` の digest での push と `Create multi-arch manifest` | 実装時の確認（手元の registry）、最初の実行 |
 
 ## Primary production source ownership
 

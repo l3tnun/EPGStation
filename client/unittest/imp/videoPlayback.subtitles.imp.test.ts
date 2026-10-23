@@ -239,10 +239,8 @@ describe('Video playback subtitle settings and shared controls', () => {
       'attachFeeder',
       'attachRenderer',
       'attachMedia',
-      // [AC 4.4a] on にするときは、各 Controller で hide() の後に show() を呼ぶ
-      'hide',
+      // [AC 4.4a] on は各 Controller の show() だけ、off は hide() だけを呼ぶ
       'show',
-      'hide',
       'show',
       'hide',
       'hide',
@@ -250,13 +248,12 @@ describe('Video playback subtitle settings and shared controls', () => {
       'id3:12:7',
       'pes:128:9',
       'pes:129:11',
-      'hide',
+      // dispose は hide() を呼ばず、描画 loop の停止を detachMedia() に任せる
       'detachMedia',
       'detachFeeder',
       'detachRenderer',
       'feeder:destroy',
       'renderer:destroy',
-      'hide',
       'detachMedia',
       'detachFeeder',
       'detachRenderer',

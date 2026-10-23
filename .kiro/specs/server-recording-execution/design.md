@@ -1058,7 +1058,8 @@ sequenceDiagram
 
 共通 stream handle の取得と予約存続確認を終えると、path を選ぶ前に `isPrepRecording = false`、 `isRecording = true` と
 し、session 内部の `START_RECORDING_EVENT` を発行する。その後に実行権内で出力pathと排他的なfile handleを確保し、writerへ
-引き渡して共通readable streamをpipeする。path選択・writer作成が失敗して再試行へ進むとき、`RetryWaiting`の間は`isPrepRecording = true`、`isRecording = false`とし、再試行待ちでも録画していない準備中として扱う。同じpathをappend modeで開き直さない。start-outcome arbiterを一つ作成して
+引き渡して共通readable streamをpipeする。writerはpath指定の`fs.createWriteStream`と、事前確保した
+`FileHandle.createWriteStream`の両経路で`highWaterMark: 1024 * 1024`（1 MiB）を設定し、短い書込み停滞を吸収する。path選択・writer作成が失敗して再試行へ進むとき、`RetryWaiting`の間は`isPrepRecording = true`、`isRecording = false`とし、再試行待ちでも録画していない準備中として扱う。同じpathをappend modeで開き直さない。start-outcome arbiterを一つ作成して
 `AwaitingFirstData`へ入り、最初の`data`を5秒待つ。このtimeoutは`AwaitingFirstData`にいる間だけ有効な実行中I/Oの有限監視
 であり、最初のdataを受けて`Registering`へ遷移する同じ同期境界で解除する。`Registering`、 `RegistrationOverdue`、録画開始
 確定後のstream bodyへfirst-data timeoutを適用しない。
@@ -1223,10 +1224,12 @@ listener 分岐を維持し、`RecordingScheduleController` の CAS は時刻指
    `reservation-no-longer-recordable`による録画中の取消と時刻指定終了では、streamを`destroy()`する前に、その時点までに
    受信socketへ届いている放送データをstreamから読み取ってwriterとドロップ確認へ渡し切る。取消を処理する同期のDB処理や、
    同じ時刻に終わる別の録画の終了処理などでevent loopが直前まで塞がれていても、その間に届いたdataを読まずに捨てない。
-   event loopを一周させるごとに受信socketの受信量とstreamのbufferを確かめ、受信量が増えずbufferが空になった時点、stream
-   が終わった時点、または1秒（`CANCEL_DRAIN_LIMIT_MS`）を過ぎた時点で読み切りを終える。writerのbackpressureでstreamが
-   止まり、streamのbufferにdataが残っている間は、受信量が増えなくても読み切りを続ける。受信socketを持たないstreamと、まだ
-   録画fileへpipeしていないstream（書くdataが無い）では待たない。`recorded-content-deletion`はfileを削除するので対象外と
+   event loopを一周させるごとに受信socketの受信量、streamのbuffer・pause状態、writerの書込み待ち量・drain待ちを確かめる。
+   受信量が増えず、`readableLength === 0`、`isPaused() === false`、writerの`writableLength === 0`かつ
+   `writableNeedDrain === false`となった時点、streamが終わった時点、または1秒（`CANCEL_DRAIN_LIMIT_MS`）を過ぎた
+   時点で読み切りを終える。streamが停止中、writerがdrain待ち、または書込み待ちのdataが残っている間は、受信量が増えず
+   streamのbufferが空でも上限まで読み切りを続ける。受信socketを持たないstream、まだ録画fileへpipeしていないstream
+   （書くdataが無い）、writerが無い場合（`recFile === null`）では待たずに戻る。`recorded-content-deletion`はfileを削除するので対象外と
    する。
 2. `recorded-content-deletion`による取消では、ドロップ確認停止後に終了し、録画中解除、移動、サイズ、履歴、完了通知を行わ
    ない。

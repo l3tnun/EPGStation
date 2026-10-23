@@ -421,17 +421,70 @@ describe('RecorderModel.readArrivedStreamData (unittest/imp)', () => {
                 return 1;
             },
         };
-        return { reads, stream: { destroyed: false, readableEnded: false, readableLength: 0, socket, ...overrides } };
+        return { reads, stream: { destroyed: false, readableEnded: false, readableLength: 0, isPaused: () => false, socket, ...overrides } };
     };
 
     it('[R2-RECORDER-DRAIN] watches the received byte count for one more turn before it decides nothing arrives', async () => {
         const harness = makeRecorder();
         const { reads, stream } = makeDrainStream();
+        harness.model.recFile = { writableLength: 0, writableNeedDrain: false };
 
         await harness.model.readArrivedStreamData(stream);
 
-        // 1 周目で受信量を初めて記録し、2 周目で増えていないことを確かめて戻る
+        // 最初の読み取りで受信量を記録し、Writerも空の次の巡回で戻る
         expect(reads.count).toBe(3);
+    });
+
+    it.each([
+        ['stream with unread buffered data', 'readableLength', 1],
+        ['paused stream', 'paused', true],
+        ['writer waiting for drain', 'writableNeedDrain', true],
+        ['writer with pending data', 'writableLength', 1],
+    ] as const)('[R2-RECORDER-DRAIN] keeps reading while the %s is the only pending condition', async (_label, condition, value) => {
+        // 時間切れではなく、個々の待機条件が解消したことで戻ることを確かめる。
+        vi.useFakeTimers({ toFake: ['Date'] });
+        const harness = makeRecorder();
+        const state = { readableLength: 0, paused: false, writableLength: 0, writableNeedDrain: false, [condition]: value };
+        const { stream } = makeDrainStream({ isPaused: () => state.paused });
+        Object.defineProperty(stream, 'readableLength', { get: () => state.readableLength });
+        harness.model.recFile = {
+            get writableLength() { return state.writableLength; },
+            get writableNeedDrain() { return state.writableNeedDrain; },
+        };
+        let completed = false;
+        const pending = harness.model.readArrivedStreamData(stream).then(() => { completed = true; });
+
+        try {
+            await flushImmediate();
+            await flushImmediate();
+            await flushImmediate();
+            expect(completed).toBe(false);
+
+            state.readableLength = 0;
+            state.paused = false;
+            state.writableLength = 0;
+            state.writableNeedDrain = false;
+            await pending;
+            expect(completed).toBe(true);
+        } finally {
+            state.readableLength = 0;
+            state.paused = false;
+            state.writableLength = 0;
+            state.writableNeedDrain = false;
+            await pending;
+        }
+    });
+
+    it('[R2-RECORDER-DRAIN] returns immediately without scheduling a turn when the writer is absent', async () => {
+        const harness = makeRecorder();
+        const { reads, stream } = makeDrainStream();
+        harness.model.recFile = null;
+        const immediate = vi.spyOn(globalThis, 'setImmediate');
+
+        await harness.model.readArrivedStreamData(stream);
+
+        expect(immediate).not.toHaveBeenCalled();
+        expect(reads.count).toBe(0);
     });
 
     it.each([
@@ -440,6 +493,7 @@ describe('RecorderModel.readArrivedStreamData (unittest/imp)', () => {
     ])('[R2-RECORDER-DRAIN] does not wait on a stream that is already %s', async (_label, overrides) => {
         const harness = makeRecorder();
         const { reads, stream } = makeDrainStream(overrides);
+        harness.model.recFile = { writableLength: 0, writableNeedDrain: false };
 
         await harness.model.readArrivedStreamData(stream);
 

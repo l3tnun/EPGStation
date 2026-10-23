@@ -4,6 +4,9 @@ node_modules/
 **/node_modules/
 Dockerfile*
 .devcontainer
+# git の管理情報と GitHub の設定は、image に要らない。
+.git
+.github
 recorded/*
 test/server/.artifacts/
 

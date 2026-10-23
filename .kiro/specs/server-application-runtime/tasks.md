@@ -647,23 +647,24 @@ Dockerfileを前提にする。外部からの取得は準備の段階（10.1）
 
 -   [x] 11.1 `.github/workflows/docker.yml`をDesign §17.8の形で書く
 
-    -   triggerを`master`へのpushと全tag、`pull_request`なし、top-level `permissions: {}`、jobに`contents: read`、matrixのdistroとplatformの一覧、
-        `Docker tags`のstep、QEMU・Buildx・Docker Hubのlogin・build-pushの各stepで構成する。actionはcommit SHAで固定し、`type=gha`のcacheをdistroごとの
-        scopeで持ち、`provenance: false`とする。
-    -   Docker Hubの認証情報は`secrets`の参照で渡し、`DOCKERHUB_IMAGE`と`matrix.distro`は`env`でshellへ渡す。
+    -   triggerを`master`へのpushと全tag、`pull_request`と`workflow_dispatch`なし、top-level `permissions: {}`、jobに`contents: read`とする。
+        `build-arch` job（distro × archのmatrix、archごとのネイティブのrunner、Buildx・Docker Hubのlogin・digestでのbuild-push・digestのartifactの各step）と、
+        `build` job（`Docker tags`のstep〈`docker/metadata-action`〉、digestのartifactの取得、Docker Hubのlogin、multi-arch manifestのまとめの各step）で構成する。
+        actionはcommit SHAで固定し、`type=gha`のcacheをdistroとarchの組ごとのscopeで持ち、`provenance: false`とする。
+    -   Docker Hubの認証情報は`secrets`の参照で渡し、`DOCKERHUB_IMAGE`・digest・tagの一覧は`env`でshellへ渡す。
     -   完了時には、workflowがDesign §17.8の「workflowの設計判断と理由」の表と一致し、`pull_request`を含まない。
-    -   _Requirements: 11.1, 11.2, 11.5_
+    -   _Requirements: 11.1, 11.2, 11.5, 11.6_
     -   _Boundary: Docker Publish Workflow_
     -   _Verification: 11.2の実装時の確認_
     -   _Depends: 11.3_
 
 -   [x] 11.2 tagの計算と構文を実装時に確かめる
 
-    -   `Docker tags`のstepの`run`を、`GITHUB_REF`を`refs/heads/master`と`refs/tags/v2.10.0`、`DISTRO`を`debian`と`alpine`の4通りで実行し、
-        Requirement 11 Acceptance Criterion 3・4のtag列と一致することを確かめる。`IMAGE`はdummyを使う。
+    -   `Docker tags`のstepの`docker/metadata-action`（workflowと同じcommit SHAの版）にworkflowと同じ`tags`・`flavor`を与え、`GITHUB_REF`を`refs/heads/master`と
+        `refs/tags/v2.10.0`、distroを`debian`と`alpine`の4通りで実行し、Requirement 11 Acceptance Criterion 3・4のtag列と一致することを確かめる。`images`はdummyを使う。
     -   `actionlint`が使えれば構文を検査する。
     -   実行した4通りの入力と出力、`actionlint`の結果を、実装の記録（変更の本文）に残す。恒久のtestは置かない。
-    -   Docker Hubへの公開、QEMUでのarmの構築、gha cacheの保存・復元は、offlineでは確かめられないため、最初の公開の実行で確かめる。
+    -   Docker Hubへの公開、ARMのrunnerでの構築、artifactでのdigestの受け渡し、gha cacheの保存・復元は、offlineでは確かめられないため、最初の公開の実行で確かめる。
     -   完了時には、4通りのtag列が期待と一致した記録が残る。
     -   _Requirements: 11.3, 11.4_
     -   _Depends: 11.1_
@@ -679,6 +680,32 @@ Dockerfileを前提にする。外部からの取得は準備の段階（10.1）
     -   _Requirements: 11.1_
     -   _Boundary: Tracked Secrets Check_
     -   _Verification: `python3 tools/check-tracked-secrets.py`をstageした例で実行した結果_
+
+-   [x] 11.4 arm64をネイティブのrunnerで構築し、archごとのimageをdigestでまとめる
+
+    -   `docker.yml`を、archごとにjobを分けてamd64は`ubuntu-latest`、arm64は`ubuntu-24.04-arm`で構築する形にする（Design §17.8）。archごとのimageはtagを付けずに
+        digestでpushし、digestをartifactで`build` jobへ渡して`docker buildx imagetools create`でまとめ、Requirement 11 Acceptance Criterion 3・4のtagだけを付ける。
+        まとめる前にdigestが2つあることを確かめる。triggerは`master`へのpushと全tagだけにする。
+    -   `docker/metadata-action`、`actions/upload-artifact`、`actions/download-artifact`はNode 24の版をcommit SHAで固定する。
+    -   手元のregistryで、digestでのpushとまとめを実行し、registryのtagがまとめた分だけであることと、まとめたimageがamd64・arm64を持つことを確かめる。
+        11.2のtagの計算の4通りと`actionlint`も実行し、結果を実装の記録（変更の本文）に残す。
+    -   完了時には、workflowがDesign §17.8のyamlと「workflowの設計判断と理由」の表と一致し、手元のregistryでDocker Hubに付くtagが11.3・11.4のものだけになる。
+    -   _Requirements: 11.2, 11.3, 11.4, 11.6_
+    -   _Boundary: Docker Publish Workflow_
+    -   _Verification: 手元のregistryでの実行、tagの計算の4通り、`actionlint`_
+    -   _Depends: 11.1_
+
+-   [x] 11.5 imageに`.git`・`.github`を含めない
+
+    -   `.dockerignore`で`.git`と`.github`をbuild contextに含めない。
+    -   Image Content Inspector（`scripts/server-test/docker-image-check.mjs`の`inspectImageContents`）は、`/app/.git`・`/app/.github`が無いことを`gitPresent`・
+        `githubPresent`として調べ、どちらかが在れば`image-content-invalid`にする。
+        `docker-dependency-images.spec.test.ts`は、偽の`docker exec`が`gitPresent`・`githubPresent`を返し、どちらかがtrueのときに`image-content-invalid`になることを確かめる。
+        `docker-image.integration.test.ts`は、`toMatchObject`で`gitPresent`・`githubPresent`がfalseであることを確かめる。
+    -   完了時には、Debian版・Alpine版のimageに`/app/.git`・`/app/.github`が無いことをDC-10が確かめる。
+    -   _Requirements: 10.13_
+    -   _Boundary: Image Content Inspector_
+    -   _Verification: `docker-image.integration.test.ts`、`docker-dependency-images.spec.test.ts`_
 
 -   [x] 12. serverの`src/**`のC0・C1を単体testだけで100%にする
 

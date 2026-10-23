@@ -316,6 +316,12 @@ coverage 100% でも残る「通るだけで何も確かめていない test」�
     - 対象に入れない: component、型だけの file（処理が無い）、e2e・visual・device でしか確かめられない振る舞い（対象 test が unit test だけのため）。
 - 新しい module を対象に足す手順: 上の基準に合うかを確かめる → `mutate` に分類の comment 付きで足す → 対象を絞って流す（`-- --mutate <path>`、初回は全 mutant が走る） → 生き残りを「unit test の追加」「等価・冗長・到達不能として記録」に分ける → test を足した場合は `--force` で殺せたことを確かめる → 記録するものを [docs/mutation-known-survivors.md](../../docs/mutation-known-survivors.md) の client の節に足す。
 - 既知の生き残りの一覧: [docs/mutation-known-survivors.md](../../docs/mutation-known-survivors.md)。流した後はこの一覧と比べ、載っていない生き残りだけを扱う。source が変わって理由が成り立たなくなった項目は消す。一覧は理由が成り立つものだけを持ち、経緯は書かない。
+- 一覧に足してよいもの（生き残りを溜めない）: 一覧は、test を足しても殺せない mutant だけを持つ。test で殺せる mutant は一覧に足さず、unit test を足して殺す。
+    - 足せる理由は一覧の 4 つ（振る舞いが変わらない・冗長・到達不能・定数表で判定できない）だけとする。項目ごとに、理由が成り立つ根拠（同じ判定をする箇所、その分岐へ来ない理由になる呼び出し元の検査など）を code の名前で書く。
+    - 「定数表で判定できない」は、report で `static: true` と出た mutant だけに使う。値そのものを確かめる unit test があることを条件にし、無ければ足す。`static` でない mutant には使わない。
+    - 「e2e・visual・device が確かめている」は、一覧に足す理由にならない。その振る舞いを、unit test で外から観測できる assertion にして殺す。
+    - test を足せば殺せるのに、手間や時間を理由に一覧へ足さない。
+    - 流した後の報告では、扱った新しい生き残りを 1 件ずつ、場所（file と関数）・置き換えの中身・扱い（足した test、または一覧に足した理由）で示す。件数だけで済ませない。
 - 設定: `coverageAnalysis: perTest`、`ignoreStatic: true`、`concurrency: 2`。vitest は通常の設定（`vite.config.ts`）をそのまま使い、mutation 用の除外は無い。Stryker の vitest runner は `vitest.related`（既定で有効）により、mutate する file へ import でたどり着ける test file だけを動かし、たどり着けない test は動かさない。動かす test は sandbox で成り立つ必要があり、sandbox は `public/` と `src` の `.module.css` を含む client の中身を複製するので、それらを読む test は動く。src の text を読む静的な guard の test が 2 つある（`unittest/spec/dashboard/dashboardLayout.spec.test.tsx` と `unittest/imp/searchRule.scrollFab.imp.test.ts`）。Stryker は mutate する file を書き換えるので sandbox では失敗するが、読む file を import しないため動かない。import でたどり着ける位置にそのような test が現れたら、理由を添えて mutation 専用の vitest 設定で除外する。
 - incremental の cache: `client/.artifacts/mutation/incremental.json`（環境変数 `EPGS_MUTATION_INCREMENTAL_FILE` で上書きできる）。git の管理外の手元の cache で、消えたら全 mutant を流し直す。test を足しても前回の生き残りを再実行しないことがあるので、足した test が mutant を殺すかは対象を絞って `--force` で確かめる。定数表の mutant（`static`）はこの設定では判定できない。
 - vitest は Stryker vitest-runner と test 名の区切りが一致する版に固定する。vitest の版を変えるときは、`mutation:client` が全 mutant を「test 無しで生存」と報告しないこと（score が 0% にならないこと）を確認する。

@@ -1,4 +1,4 @@
-import { ClientRequest, IncomingMessage, RequestOptions, request as nodeRequest } from 'node:http';
+import { Agent, ClientRequest, IncomingMessage, RequestOptions, request as nodeRequest } from 'node:http';
 import { posix } from 'node:path';
 import { Readable } from 'node:stream';
 import { ConnectionTarget } from '../types.js';
@@ -9,6 +9,15 @@ export type TunerHttpRequest = (
     options: RequestOptions,
     callback: (response: IncomingMessage) => void,
 ) => ClientRequest;
+
+const tunerAgentOptions: ConstructorParameters<typeof Agent>[0] & { readableHighWaterMark: number } = {
+    keepAlive: true,
+    timeout: 5_000,
+    readableHighWaterMark: 128 * 1024,
+};
+
+/** チューナーHTTP要求全体で接続を再利用し、受信HWMだけを変更する。 */
+const tunerAgent = new Agent(tunerAgentOptions);
 
 type ResponseKind = 'buffer' | 'stream' | 'probe';
 
@@ -175,6 +184,7 @@ export default class TunerHttpTransport {
             method: 'GET',
             path: this.composePath(path, isRedirect, isRootRoute),
             headers: { 'User-Agent': this.userAgent, ...headers },
+            agent: tunerAgent,
         };
         return this.target.kind === 'http'
             ? { ...common, host: this.target.host, port: this.target.port }

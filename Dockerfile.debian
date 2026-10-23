@@ -1,8 +1,6 @@
-# クライアントはプラットフォーム依存のコードを含まないため、BUILDPLATFORMでビルドした結果を
-# 全てのTARGETPLATFORMで再利用できる。これによりビルド時間を短縮できる。
 # base image は digest で固定する。tag は動くため、同じ Dockerfile が時期によって別の
 # base で build され、手元で通った build と公開される image が別物になり得る。
-FROM --platform=$BUILDPLATFORM node:26-trixie@sha256:32fa97f3363975684b08bf4e8a68a47c7905175cc20275b50b974bbd02aba731 AS client-builder
+FROM node:26-trixie@sha256:32fa97f3363975684b08bf4e8a68a47c7905175cc20275b50b974bbd02aba731 AS client-builder
 COPY client/package*.json /app/client/
 WORKDIR /app/client
 RUN npm config set fetch-retries 10 \
@@ -19,15 +17,8 @@ WORKDIR /app/client
 RUN npm run bundle --loglevel=info \
     && rm -rf node_modules
 
-# サーバーはsqlite3のようなプラットフォーム依存のネイティブ・アドオンを含んでいる。そのため、各
-# TARGETPLATFORMごとにソースをビルドしなければならない。BUILDPLATFORM以外のTARGETPLATFORMでは、QEMU
-# 上でnpmコマンドを実行することになるため、どうしても時間が掛かる。
-#
-# `npm install`時にネイティブ・アドオンをクロスビルドできればビルド時間を短縮できるが、現時点では明
-# 確な手順は存在しない。https://github.com/mapbox/node-pre-gyp/issues/348を見ればそれが分かる。
-#
-# サーバーのコンパイルはプラットフォーム依存処理を含まないため、これをBUILDPLATFORMで実行すること
-# でビルド時間をさらに短縮可能だが、手順が煩雑で面倒なので現時点では行っていない。
+# サーバーはbetter-sqlite3やfs-extのようなプラットフォーム依存のネイティブ・アドオンを含んでいる。
+# そのため、各TARGETPLATFORMごとにソースをビルドしなければならない。
 FROM node:24-trixie@sha256:1278a37eb510ec1606fba0e80f554bcc941ae0b44f35ae373c4822ae7717c64d AS server-builder
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update

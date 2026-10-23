@@ -9,8 +9,66 @@ permissions: {}
 env:
   MAIN_DISTRO: debian
 jobs:
+  # arch ごとにネイティブの runner でビルドする。arch ごとの image は tag を付けずに digest で push し、
+  # build ジョブで digest を multi-arch manifest にまとめて tag を付ける。
+  build-arch:
+    name: Build images per arch
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        distro:
+          - alpine
+          - debian
+        arch:
+          - amd64
+          - arm64
+        include:
+          - arch: amd64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - name: Login to Docker Hub
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          username: ${{ secrets.DOCKERHUB_USER }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and push by digest
+        id: build
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: Dockerfile.${{ matrix.distro }}
+          platforms: linux/${{ matrix.arch }}
+          tags: ${{ secrets.DOCKERHUB_IMAGE }}
+          outputs: type=image,push-by-digest=true,name-canonical=true,push=true
+          cache-from: type=gha,scope=${{ matrix.distro }}-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.distro }}-${{ matrix.arch }}
+          provenance: false
+      # digest を file 名にして、build ジョブへ artifact で渡す。
+      - name: Export digest
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/digests"
+          touch "$RUNNER_TEMP/digests/${DIGEST#sha256:}"
+      - name: Upload digest
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: digests-${{ matrix.distro }}-${{ matrix.arch }}
+          path: ${{ runner.temp }}/digests/*
+          if-no-files-found: error
+          retention-days: 1
   build:
     name: Build images
+    needs: build-arch
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -19,60 +77,47 @@ jobs:
         distro:
           - alpine
           - debian
-        include:
-          - distro: alpine
-            platforms: linux/amd64,linux/arm64/v8
-          - distro: debian
-            platforms: linux/amd64,linux/arm64/v8
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
       - name: Docker tags
-        id: docker-tags
-        env:
-          IMAGE: ${{ secrets.DOCKERHUB_IMAGE }}
-          DISTRO: ${{ matrix.distro }}
-        run: |
-          if echo "$GITHUB_REF" | grep -e '^refs/heads/' >/dev/null 2>&1; then
-            GIT_BRANCH=$(echo "$GITHUB_REF" | sed -e 's|^refs/heads/||')
-            MAIN_TAG="$IMAGE:$GIT_BRANCH-$DISTRO"
-            TAGS="$MAIN_TAG"
-            if [ "$MAIN_DISTRO" = "$DISTRO" ]; then
-              TAGS="$TAGS,$IMAGE:$GIT_BRANCH"
-            fi
-          else
-            GIT_TAG=$(echo "$GITHUB_REF" | sed -e 's|^refs/tags/||')
-            MAIN_TAG="$IMAGE:$GIT_TAG-$DISTRO"
-            TAGS="$MAIN_TAG"
-            if [ "$MAIN_DISTRO" = "$DISTRO" ]; then
-              TAGS="$TAGS,$IMAGE:$GIT_TAG"
-            fi
-            TAGS="$TAGS,$IMAGE:$DISTRO"
-            if [ "$MAIN_DISTRO" = "$DISTRO" ]; then
-              TAGS="$TAGS,$IMAGE:latest"
-            fi
-          fi
-          echo "Main tag: $MAIN_TAG"
-          echo "Tags: $TAGS"
-          echo "tags=$TAGS" >> "$GITHUB_OUTPUT"
-      - name: Setup QEMU user-mode emulation
-        uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
-      - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+        id: meta
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        with:
+          images: ${{ secrets.DOCKERHUB_IMAGE }}
+          flavor: latest=false
+          tags: |
+            type=ref,event=branch,suffix=-${{ matrix.distro }}
+            type=ref,event=branch,enable=${{ matrix.distro == env.MAIN_DISTRO }}
+            type=ref,event=tag,suffix=-${{ matrix.distro }}
+            type=ref,event=tag,enable=${{ matrix.distro == env.MAIN_DISTRO }}
+            type=raw,value=${{ matrix.distro }},enable=${{ github.ref_type == 'tag' }}
+            type=raw,value=latest,enable=${{ github.ref_type == 'tag' && matrix.distro == env.MAIN_DISTRO }}
+      - name: Download digests
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          path: ${{ runner.temp }}/digests
+          pattern: digests-${{ matrix.distro }}-*
+          merge-multiple: true
       - name: Login to Docker Hub
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           username: ${{ secrets.DOCKERHUB_USER }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Build and push
-        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
-        with:
-          context: .
-          file: Dockerfile.${{ matrix.distro }}
-          platforms: ${{ matrix.platforms }}
-          tags: ${{ steps.docker-tags.outputs.tags }}
-          cache-from: type=gha,scope=${{ matrix.distro }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.distro }}
-          provenance: false
-          push: true
+      # amd64・arm64 の digest を 1 つの multi-arch manifest にまとめ、全タグに付ける。
+      - name: Create multi-arch manifest
+        working-directory: ${{ runner.temp }}/digests
+        env:
+          IMAGE: ${{ secrets.DOCKERHUB_IMAGE }}
+          TAGS: ${{ steps.meta.outputs.tags }}
+        run: |
+          digests=(*)
+          if [ "${#digests[@]}" -ne 2 ]; then
+            echo "expected 2 digests (amd64, arm64), got ${#digests[@]}" >&2
+            exit 1
+          fi
+          for tag in $TAGS; do
+            IMAGETOOLS_ARGS+=(-t "$tag")
+          done
+          for digest in "${digests[@]}"; do
+            IMAGETOOLS_ARGS+=("$IMAGE@sha256:$digest")
+          done
+          docker buildx imagetools create "${IMAGETOOLS_ARGS[@]}"

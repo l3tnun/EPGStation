@@ -1294,7 +1294,7 @@ describe('tuner direct HTTP gateway contract', () => {
         expect(() => parseConnectionTarget(['http+unix:', '', '%ZZ'].join('/'))).toThrow();
     });
 
-    it('[TA-2.1] composes the base path once, sets only GET/User-Agent transport policy, and accepts 200-202', async () => {
+    it('[TA-2.1] composes the base path once, sets GET/User-Agent and shared receive-HWM transport policy, and accepts 200-202', async () => {
         const harness = makeRequestHarness([
             { statusCode: 200, body: '{"ok":true}' },
             { statusCode: 201, body: 'created' },
@@ -1319,6 +1319,10 @@ describe('tuner direct HTTP gateway contract', () => {
         ]);
         for (const option of harness.options) {
             expect(option).toEqual({
+                agent: expect.objectContaining({
+                    keepAlive: true,
+                    options: expect.objectContaining({ readableHighWaterMark: 128 * 1024, timeout: 5_000 }),
+                }),
                 headers: { 'User-Agent': 'epgstation/synthetic' },
                 host: 'synthetic.invalid',
                 method: 'GET',
@@ -1326,7 +1330,7 @@ describe('tuner direct HTTP gateway contract', () => {
                 port: 40772,
             });
             expect(option).not.toHaveProperty('auth');
-            expect(option).not.toHaveProperty('agent');
+            expect(option.agent).toBe(harness.options[0].agent);
             expect(option).not.toHaveProperty('ca');
             expect(option).not.toHaveProperty('cert');
             expect(option).not.toHaveProperty('protocol');
@@ -1352,11 +1356,16 @@ describe('tuner direct HTTP gateway contract', () => {
             '/nested/api/version',
         ]);
         expect(harness.options[0]).toEqual({
+            agent: expect.objectContaining({
+                keepAlive: true,
+                options: expect.objectContaining({ readableHighWaterMark: 128 * 1024, timeout: 5_000 }),
+            }),
             headers: { 'User-Agent': 'epgstation/synthetic' },
             method: 'GET',
             path: '/nested/api/status',
             socketPath: '/tmp/synthetic.sock',
         });
+        expect(harness.options[1].agent).toBe(harness.options[0].agent);
         expect(harness.responses[0].readableEnded).toBe(true);
 
         await expect(transport.getBuffer('/api/status')).rejects.toThrow(/503/);
@@ -2267,6 +2276,7 @@ describe('tuner request deadlines and stream handles', () => {
         expect(handle.stream).toBe(response);
         expect(optionsSeen).toEqual([
             {
+                agent: expect.objectContaining({ options: expect.objectContaining({ readableHighWaterMark: 128 * 1024 }) }),
                 headers: {
                     'User-Agent': 'epgstation/synthetic',
                     'X-Mirakurun-Priority': '11',

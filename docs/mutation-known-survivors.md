@@ -9,6 +9,7 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 3. 載っていない生き残りは、次のどちらかで片付ける。
     - 振る舞いが変わる mutant なら、それを外から観測できる assertion の test を足す。足した後は、対象を絞って `--force` を付けて流し、殺せたことを確かめる。
     - 振る舞いが変わらない（下の理由のどれか）なら、理由を書いてこの一覧に足す。
+    - この一覧に足せるのは、test を足しても殺せない mutant だけ。結合 test・e2e など、その設定の対象 test に入っていない test が確かめていることは、足す理由にならない。対象 test の層で確かめる test を足して殺す（基準は steering の「Mutation Testing」の「一覧に足してよいもの」）。
 4. source を変えて、載せた理由が成り立たなくなった項目は消す。成り立たなくなった項目が再び生き残りとして出たときは、2〜3 に従って扱う。
 
 理由は次の 4 つに分ける。
@@ -18,7 +19,7 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 | 振る舞いが変わらない | 置き換えても、観測できる結果（戻り値・保存される値・外へ出る副作用）が変わらない。出力する log の文言・呼び出しもここに入れる |
 | 冗長 | 同じ条件を別の箇所が検査している、または別の経路が同じ後始末をするため、その箇所を外しても結果が同じ |
 | 到達不能 | その分岐へ来る入力が、呼び出し元の検査や処理の性質から存在しない |
-| 定数表で判定できない | module の読み込み時に評価される式（定数表・module 先頭の arrow function）の mutant。report に `static: true` と出る。test が値を確かめていても、読み込みが mutant の有効化より先に済むため、この設定では生き残りと出る。値は値そのものを確かめる test で守る |
+| 定数表で判定できない | module の読み込み時に評価される式（定数表・module 先頭の arrow function）の mutant。report に `static: true` と出る。test が値を確かめていても、読み込みが mutant の有効化より先に済むため、この設定では生き残りと出る。値は値そのものを確かめる test で守る。`static` でない mutant には使わない |
 
 同じ理由で多数の件がある場合（log の文言など）は、関数単位にまとめている。log の文言・出力は、出力される log を test の対象にしない方針のため、まとめて「振る舞いが変わらない」としている。
 
@@ -180,6 +181,7 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 | --- | --- | --- |
 | `captureSnapshot` の `sequence > this.snapshotAppliedSequence` | EqualityOperator | 到達不能: 連番は常に増えるので等号になることがない |
 | `findAvailable` の `unavailable.has(candidate)` とその throw | BlockStatement、ConditionalExpression、StringLiteral | 到達不能: 距離順に並べた連続した使用中の id の次は必ず空いているので、true になるのは 2^53 個の id が埋まったときだけ |
+| `captureSnapshot` の `this.beginInitialization()` | CallExpression | 冗長: 使える状態（config と artifactIndex がある）なら構築時に削除を始めており、`initialization` は null でない |
 
 ### `src/model/service/stream/manager/StreamManageModel.ts`
 
@@ -231,6 +233,8 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 | --- | --- | --- |
 | `release` の `handles.delete(processInfo.handle)` | CallExpression | 振る舞いが変わらない: 解放済みの handle は `slotReleased` で判定されるため、delete の有無で結果が変わらない（メモリだけ） |
 | `killAndCreateProcess` の期限の判定（`releasedByDeadline` の本体の `slotReleasedAt` の比較と、timeout 側の `if (!releasedByDeadline())`） | ConditionalExpression | 冗長: 解放が期限内なら `stopAndRelease` が先に確定しており、後から来る timeout 側の reject は race の結果に影響しない |
+| `pollUntilExit` の `steps.wait(stage) === false` のときの `continue`、`stopHlsProcessGroup` の待機の `catch` の `return false` | BlockStatement、BooleanLiteral | 到達不能: 待機は `ProcessUtil.wait`（`setTimeout` で resolve するだけ）で reject しない。管理側の `ServiceChildTerminationCleanup` の待機は常に true を返す |
+| `reportStarted` の `processInfo.kind === 'hls-writer'` | ConditionalExpression | 振る舞いが変わらない: hls-writer 以外の `pgid` は undefined で、管理側の `ServiceChildProcessRegistry.toEntry` は hls 以外の知らせから `pgid` を読まない |
 
 ### `src/model/service/encode/EncoderModel.ts`
 
@@ -364,6 +368,7 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 | `GRANTED`・`BLOCKED`・`UNKNOWN`・`BUSY` | ObjectLiteral | 定数表で判定できない: module 先頭で評価される式。返す状態は test が確かめている |
 | `release` の `isReleaseInput` の呼び出しの判定と、`isReleaseInput` の中の `isPeer`・`isRequestId` の組み合わせ | ConditionalExpression、LogicalOperator | 冗長: 不正な peer・request id は、続く lease の検索で見つからず `unknown` になる |
 | `release` の `unknownLeases.delete(lease)` | CallExpression | 振る舞いが変わらない: 解放した lease は他から参照されず、`WeakSet` に残っても判定に使われない |
+| `releasePeer` の `unknownLeases.delete(lease)` | CallExpression | 振る舞いが変わらない: 同上（終了した Web・API 側処理の lease をまとめて解放する経路） |
 | `tryAcquireDeletion` の `[...(leases ?? [])]` の既定の空配列 | ArrayDeclaration | 振る舞いが変わらない: 要素が文字列でも `WeakSet.has` は false |
 | `releaseDeletion` の `recordedId === undefined` | ConditionalExpression | 冗長: 続く `deletionTokens.get(undefined) !== token` が同じ結果 |
 
@@ -433,6 +438,7 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 | `stopForDeletion` の `currentSchedule !== null && deletionPhase !== null` の左の項を true にする | ConditionalExpression | 冗長: `currentSchedule` が null のとき `deletionPhase` も必ず null なので、右の項だけで同じ結果になる |
 | `registrationTerminationIntentPriority`（終了の意図の優先度の表） | ObjectLiteral | 定数表で判定できない: 優先順の全組み合わせは test が確かめている |
 | `CANCEL_EVENT`、`START_RECORDING_EVENT`、`EVENT_RELAY_CHECK_TIME` | StringLiteral、ArithmeticOperator | 定数表で判定できない: 値を確かめる test がある |
+| `readArrivedStreamData` の `isDrained` の `writer !== null` | ConditionalExpression | 到達不能: 先頭で `recFile === null` なら戻り、読み切りの途中で `recFile` が null になるのは `destroyStream` が stream も壊すときだけで、そのときは loop の条件で抜ける（型の絞り込みのための条件） |
 
 ### `src/model/operator/recording/RecordingManageModel.ts`
 
@@ -540,6 +546,7 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 | `stopInternal` の `getStreamType() === 'RecordedHLS'` | ConditionalExpression | 冗長: 非 HLS では `prepStreamDir` が呼ばれず、`getHlsStopFinalization()` も null を返す |
 | `observeManagedProcessTerminal` の再入の確認と `isTerminal = true`、`close`・`error`・`exit` の listener の取り外し | ConditionalExpression、BlockStatement、BooleanLiteral、StringLiteral | 冗長: 再入の確認と listener の取り外しは重複した安全策。close・error・exit のいずれかが一度来ると他の listener は外れ、再入しない。`isTerminal` を立てなくても、再入したときの `removeListener` と `completeTerminal` は 2 回目に何もせず、listener は `once` なので結果が同じ |
 | `stopHlsWriterAndReleaseWhenSafe` の `pendingHlsWriterStops.add(finalization)` | CallExpression | 振る舞いが変わらない: 追跡専用で、判定には使われない |
+| `stopInternal` の `this.getStreamType() === 'RecordedHLS'` | ConditionalExpression | 冗長: `hlsStopFinalization` を作るのは `RecordedHLS` のときの `prepStreamDir` だけで、ほかの型では `getHlsStopFinalization()` も null を返す |
 
 ### `src/model/service/stream/base/LiveStreamBaseModel.ts`
 
@@ -551,6 +558,7 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 | `closeTunerStream` の `this.tunerStreamHandle === handle` と `tunerStreamHandle` の代入 | ConditionalExpression、EqualityOperator | 振る舞いが変わらない: `tunerStreamHandle` は書き込み専用の field で、読むのはこの比較だけ |
 | `disposeSession` の `getStreamType() === 'LiveHLS'` | ConditionalExpression | 冗長: 非 HLS では `getHlsStopFinalization()` が null を返すので同じ結果になる |
 | `disposeSession` の `activeStartSession === session` | ConditionalExpression | 冗長: 後始末されるのは現行の session だけ（新しい start の前に古い session は後始末される） |
+| `disposeSession` の `this.getStreamType() === 'LiveHLS'` | ConditionalExpression | 冗長: `hlsStopFinalization` を作るのは `LiveHLS` のときの `prepStreamDir` だけで、ほかの型では `getHlsStopFinalization()` も null を返す |
 
 ### `src/model/service/stream/base/StreamBaseModel.ts`
 
@@ -567,6 +575,9 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 | --- | --- | --- |
 | `deleteAllFiles`・`deleteArtifact` の log の method 名 `'info'` | StringLiteral | 振る舞いが変わらない: `'error'` 以外は info に流れるので同じ |
 | `scan` の正規表現の `^` | Regex | 冗長: 続く `isHlsArtifactForStream` が `startsWith` で同じ判定をする |
+| `deleteAllArtifacts` の `isCancelled` の既定値 `() => false` | ArrowFunction | 振る舞いが変わらない: `() => undefined` も偽で、打ち切らない |
+| `deleteAllArtifacts` の `files.sort()` | MethodExpression | 振る舞いが変わらない: どちらの順でも、全部を消すか、打ち切った後は消さずに残った file の識別番号を返す。変わるのは消す順（要求は順を決めていない）と、それによる打ち切りまでに消す file と log の順だけ |
+| `deleteArtifact` の削除の log の文言 | StringLiteral | 振る舞いが変わらない: log だけ |
 
 ### `src/model/service/stream/recorded/DeliveryRecordedUseSnapshotProvider.ts`
 
@@ -690,7 +701,8 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 | `createFullRoutePathFromBrowserHash` の `replace(/^#/, '')` の `^` | Regex | 冗長: hash は必ず `#` で始まる |
 | `createTimestampNormalizedRoutePath` の `location.pathname === ''` | ConditionalExpression、StringLiteral | 到達不能: router は空の pathname を `/` にして渡すので、空の pathname は来ない（report は `static` と報告するが、関数の中の式で定数ではない） |
 | `memoryScrollHistory.ts` の `getScrollData` の `savedScrollData === null ? null : ...` | ConditionalExpression | 振る舞いが変わらない: 保存値が null のとき `null as T` が null |
-| `sessionScrollHistory.ts` の `isScrollPosition` の `typeof value !== 'object' \|\| value === null` | ConditionalExpression | 冗長: 非 object の値は後続の `position.x` が undefined になって型の検査で落ちる。null は呼び出し元が `entry.position === null` で先に除くため来ない（`isScrollHistoryEntry` の同じ式は test が殺している） |
+| `sessionScrollHistory.ts` の `isScrollPosition` の `typeof value !== 'object' \|\| value === null` | ConditionalExpression | 冗長: 非 object の値は後続の `position.x` が undefined になって型の検査で落ちる。null は呼び出し元が `entry.position === null` で先に除くため来ない（`isScrollHistoryEntry` の同じ式は、null を含む履歴の test が殺している） |
+| `sessionScrollHistory.ts` の `isScrollHistoryEntry` の左の項 `typeof value !== 'object'`（false への置き換え） | ConditionalExpression | 冗長: 文字列・数の値は後続の `typeof entry.key === 'string'` で落ちる（primitive は `key` を持たない）。null は右の項 `value === null` が除く |
 | `readStoredHistory` の `rawValue === null` の判定（block を含む） | ConditionalExpression、BlockStatement | 冗長: 外しても `JSON.parse(null)` は null を返し、続く `parsed.history` が例外を投げて、catch の既定値（同じ中身）に戻る |
 | `readStoredHistory` の既定の履歴 `history: []` | ArrayDeclaration | 振る舞いが変わらない: 履歴の既定配列に文字列を入れても `slice(0, 0)` で捨てられる |
 | `getScrollData` の `currentEntry === null \|\| currentEntry.data === null` | ConditionalExpression | 振る舞いが変わらない: データが null のとき `return null` と `return currentEntry.data` が同じ |
@@ -790,12 +802,6 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 | --- | --- | --- |
 | `adaptChannelNameIndex` の `typeof entry.name === 'string'` | ConditionalExpression | 冗長: 後段の `typeof name === 'string'` が文字列でない名前を弾く |
 
-### `src/features/guide/lib/guideApiAdapters.ts`
-
-| 処理の場所 | mutator | 理由 |
-| --- | --- | --- |
-| `resolveDefaultFetch` | BlockStatement | 定数表で判定できない: report が `static` と報告する。`fetcher` を渡さないとき global の `fetch` が使われることは test が確かめている |
-
 ### `src/app/api/serverConfigAdapters.ts`
 
 | 処理の場所 | mutator | 理由 |
@@ -821,7 +827,6 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 | 処理の場所 | mutator | 理由 |
 | --- | --- | --- |
 | `baseBeforeConfigItems`・`baseAfterGuideItems`（項目の表） | ArrayDeclaration、ObjectLiteral、StringLiteral | 定数表で判定できない: 全項目を並びまで確かめる test がある |
-| `generateNavigationItems` の放映中の項目の条件 `input.config.status === 'loaded'` | ConditionalExpression | 振る舞いが変わらない: `status` が `'unloaded'` の config は `liveStreamEnabled` を持たないので、`true && undefined` は偽で放映中の項目は足されない（report は `static` と報告するが、関数の中の式で定数ではない） |
 | `NAVIGATION_REGENERATION_EVENT` | StringLiteral | 定数表で判定できない: 名前を確かめる test がある |
 
 ### `src/app/realtime.ts`
@@ -1005,7 +1010,6 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 | --- | --- | --- |
 | `REQUIRED_UPLOAD_SCHEMA`（zod の schema） | ObjectLiteral、MethodExpression | 定数表で判定できない: module の読み込み時に評価される式。検証の結果は test が確かめている |
 | `parseDatetimeLocalValue` の `value === ''` | ConditionalExpression、BlockStatement、StringLiteral | 振る舞いが変わらない: 空文字は日付として不正で、どのみち null になる |
-| `createSubGenreItems` の `genre === null` | ConditionalExpression、BlockStatement | 定数表で判定できない: report が `static` と報告する。null のときも表引きの結果が空になり同じ |
 | `createValidatedVideoUploadRequests` の `viewName === null && file === null` | ConditionalExpression、LogicalOperator、EqualityOperator、BlockStatement | 冗長: 直後の判定が同じ `[]` を返す |
 
 ### `src/features/onair/lib/liveStreamSelection.ts`
