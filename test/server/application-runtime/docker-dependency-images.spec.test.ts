@@ -982,6 +982,8 @@ interface Scenario {
     indexStatus?: number;
     /** `docker rm -f` が container を消さない。 */
     stuckContainer?: boolean;
+    /** image の中身の検査（`docker exec`）が返す事実の上書き。 */
+    contents?: Record<string, unknown>;
 }
 
 /** docker の状態（container・network・image）を持つ fake。label の付いた資源を `ps`・`ls`・`images` で列挙できる。 */
@@ -1055,6 +1057,9 @@ function statefulDocker(root: string, scenario: Scenario = {}) {
                         runtimePackagePresent: true,
                         clientNodeModulesPresent: false,
                         clientBundlePresent: true,
+                        gitPresent: false,
+                        githubPresent: false,
+                        ...scenario.contents,
                     }),
                 );
             }
@@ -1250,6 +1255,47 @@ describe('確認の本体: tuner server の代役と起動・応答の確認・�
             expect(docker.containers.size + docker.networks.size + docker.images.size).toBe(0);
         },
     );
+
+    it.each([
+        ['.git', { contents: { gitPresent: true } }],
+        ['.github', { contents: { githubPresent: true } }],
+    ] as [string, Scenario][])(
+        '[AR-10.13] image に %s が在れば image-content-invalid にし、片付ける',
+        async (name, scenario) => {
+            const root = await checkRoot();
+            const docker = statefulDocker(root, scenario);
+            const failure = await runImageCheck({
+                root,
+                run: docker.run,
+                flavor: 'debian',
+                id: 'c8',
+                probeDeadlineMs: 5000,
+                ...noWait,
+            }).catch((error: unknown) => error);
+            expect(failure).toMatchObject({ reason: 'image-content-invalid' });
+            expect((failure as Error).message).toContain(`${name} is in the image`);
+            expect(docker.containers.size + docker.networks.size + docker.images.size).toBe(0);
+        },
+    );
+
+    it('[AR-10.13] image に .git・.github が無ければ、調べた事実に gitPresent・githubPresent を false で返す', async () => {
+        const root = await checkRoot();
+        const docker = statefulDocker(root);
+        const facts = await runImageCheck({
+            root,
+            run: docker.run,
+            flavor: 'alpine',
+            id: 'c9',
+            probeDeadlineMs: 5000,
+            ...noWait,
+        });
+        expect(facts.contents).toMatchObject({ gitPresent: false, githubPresent: false });
+        const inspect = docker.calls.find(
+            argv => argv[1] === 'exec' && argv[argv.length - 1].includes('devPackagesPresent'),
+        )!;
+        expect(inspect[inspect.length - 1]).toContain("has('/app/.git')");
+        expect(inspect[inspect.length - 1]).toContain("has('/app/.github')");
+    });
 
     it('[AR-10.12] 準備されていなければ not-prepared、構築の失敗は build-failed で、どちらも container を作らず、取得もしない', async () => {
         const root = await checkRoot();

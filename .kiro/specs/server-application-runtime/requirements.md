@@ -270,7 +270,7 @@ coverage の計測の道具を一度だけ所有して提供し、本機能自�
 10. If 確認の本体の開始時に必要な依存が手元に揃っていないとき, the Docker image 確認 shall 外部へ取りに行かず、準備されていないことを示して失敗する
 11. The Docker image 確認 shall 構築した image を registry へ公開しない
 12. When 確認が成功・失敗のどちらで終わったときも, the Docker image 確認 shall 起動した container と、確認のために構築した image を片付ける。準備で用意した依存（6）は残す
-13. The Docker image 確認 shall 構築した image に、server の開発用の package（`package.json` の `devDependencies`。型検査・lint・format・test の道具）と client の `node_modules` が含まれず、server の実行に要る package と client の build 済みの成果物は含まれることを、Debian 版・Alpine 版それぞれで確かめる
+13. The Docker image 確認 shall 構築した image に、server の開発用の package（`package.json` の `devDependencies`。型検査・lint・format・test の道具）と client の `node_modules`、git の管理情報（`.git`）と GitHub の設定（`.github`）が含まれず、server の実行に要る package と client の build 済みの成果物は含まれることを、Debian 版・Alpine 版それぞれで確かめる
 
 ### Requirement 11: 公開用 Docker image の構築と公開
 
@@ -281,7 +281,8 @@ coverage の計測の道具を一度だけ所有して提供し、本機能自�
 #### Acceptance Criteria
 
 1. When `master` branch へ push されたとき, or git tag が作られたとき, the 公開用 image の構築 shall GitHub Actions で `Dockerfile.debian` と `Dockerfile.alpine` のそれぞれから image を構築して Docker Hub へ公開する
-2. The 公開用 image の構築 shall Debian 版・Alpine 版のどちらも linux/amd64・linux/arm64/v8 向けに構築する（Node.js 24 以降は 32-bit ARM の公式 build を提供しないため、linux/arm/v6・linux/arm/v7 は対象外とする）
+2. The 公開用 image の構築 shall Debian 版・Alpine 版のどちらも linux/amd64・linux/arm64 向けに構築する（Node.js 24 以降は 32-bit ARM の公式 build を提供しないため、linux/arm/v6・linux/arm/v7 は対象外とする）
 3. When `master` branch へ push されたとき, the 公開用 image の構築 shall `<branch>-debian`・`<branch>-alpine` の tag を付け、Debian 版には `<branch>` の tag も付ける
 4. When git tag が作られたとき, the 公開用 image の構築 shall `<tag>-debian`・`<tag>-alpine`・`debian`・`alpine` の tag を付け、Debian 版には `<tag>` と `latest` の tag も付ける
 5. While pull request の検査を行うとき, the 公開用 image の構築 shall 実行しない
+6. The 公開用 image の構築 shall Docker Hub の image に 3・4 の tag だけを付け、architecture ごとの構築の途中の image には tag を付けない

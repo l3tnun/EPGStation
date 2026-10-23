@@ -443,10 +443,11 @@ export const RUNTIME_PACKAGE_SAMPLE = 'express';
 
 /**
  * 起動した server container の中で、image の中身を調べる。開発用の package の代表
- * （`devDependencies`）と client の `node_modules` が無く、`express` と client の build 済みの
- * 成果物（`client/dist/index.html`）が在ることを確かめる。満たさなければ `image-content-invalid`。
+ * （`devDependencies`）、client の `node_modules`、git の管理情報（`.git`）と GitHub の設定
+ * （`.github`）が無く、`express` と client の build 済みの成果物（`client/dist/index.html`）が
+ * 在ることを確かめる。満たさなければ `image-content-invalid`。
  * 調べた事実 `{ devPackages, devPackagesPresent, runtimePackagePresent, clientNodeModulesPresent,
- * clientBundlePresent }` を返す。
+ * clientBundlePresent, gitPresent, githubPresent }` を返す。
  */
 export async function inspectImageContents({ root, run, names }) {
     const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
@@ -467,6 +468,8 @@ console.log(JSON.stringify({
     runtimePackagePresent: has('/app/node_modules/${RUNTIME_PACKAGE_SAMPLE}'),
     clientNodeModulesPresent: has('/app/client/node_modules'),
     clientBundlePresent: has('/app/client/dist/index.html'),
+    gitPresent: has('/app/.git'),
+    githubPresent: has('/app/.github'),
 }));`;
     const result = await run(['docker', 'exec', names.server, 'node', '-e', script], { timeoutMs: INSPECT_TIMEOUT_MS });
     let found;
@@ -493,6 +496,12 @@ console.log(JSON.stringify({
     }
     if (!found.clientBundlePresent) {
         problems.push('client/dist/index.html is missing from the image');
+    }
+    if (found.gitPresent) {
+        problems.push('.git is in the image');
+    }
+    if (found.githubPresent) {
+        problems.push('.github is in the image');
     }
     if (problems.length > 0) {
         throw new DockerImageCheckError('image-content-invalid', problems.join('; '));
