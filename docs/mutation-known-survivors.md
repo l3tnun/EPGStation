@@ -9,6 +9,7 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 3. 載っていない生き残りは、次のどちらかで片付ける。
     - 振る舞いが変わる mutant なら、それを外から観測できる assertion の test を足す。足した後は、対象を絞って `--force` を付けて流し、殺せたことを確かめる。
     - 振る舞いが変わらない（下の理由のどれか）なら、理由を書いてこの一覧に足す。
+    - この一覧に足せるのは、test を足しても殺せない mutant だけ。結合 test・e2e など、その設定の対象 test に入っていない test が確かめていることは、足す理由にならない。対象 test の層で確かめる test を足して殺す（基準は steering の「Mutation Testing」の「一覧に足してよいもの」）。
 4. source を変えて、載せた理由が成り立たなくなった項目は消す。成り立たなくなった項目が再び生き残りとして出たときは、2〜3 に従って扱う。
 
 理由は次の 4 つに分ける。
@@ -18,7 +19,7 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 | 振る舞いが変わらない | 置き換えても、観測できる結果（戻り値・保存される値・外へ出る副作用）が変わらない。出力する log の文言・呼び出しもここに入れる |
 | 冗長 | 同じ条件を別の箇所が検査している、または別の経路が同じ後始末をするため、その箇所を外しても結果が同じ |
 | 到達不能 | その分岐へ来る入力が、呼び出し元の検査や処理の性質から存在しない |
-| 定数表で判定できない | module の読み込み時に評価される式（定数表・module 先頭の arrow function）の mutant。report に `static: true` と出る。test が値を確かめていても、読み込みが mutant の有効化より先に済むため、この設定では生き残りと出る。値は値そのものを確かめる test で守る |
+| 定数表で判定できない | module の読み込み時に評価される式（定数表・module 先頭の arrow function）の mutant。report に `static: true` と出る。test が値を確かめていても、読み込みが mutant の有効化より先に済むため、この設定では生き残りと出る。値は値そのものを確かめる test で守る。`static` でない mutant には使わない |
 
 同じ理由で多数の件がある場合（log の文言など）は、関数単位にまとめている。log の文言・出力は、出力される log を test の対象にしない方針のため、まとめて「振る舞いが変わらない」としている。
 
@@ -283,7 +284,6 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 | --- | --- | --- |
 | `drain`、`collect` | ArrowFunction | 定数表で判定できない: module 先頭で定義される arrow function 全体の置き換え。呼び出したときの振る舞いは test が確かめている |
 | `get` の `cleanupRequestError` の `request?.removeListener` | OptionalChaining | 到達不能: この関数は `cleanup(false)` か request の `close` からしか呼ばれず、どちらも request の生成後 |
-| `tunerAgentOptions`（共有の `http.Agent` の `keepAlive`・`timeout`・`readableHighWaterMark`） | ObjectLiteral、BooleanLiteral、ArithmeticOperator | 定数表で判定できない: 値は `transport.integration.test.ts` が実際の通信で確かめている |
 
 ### `src/model/tuner/change/MirakurunChangeAdapter.ts`
 
@@ -802,12 +802,6 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 | --- | --- | --- |
 | `adaptChannelNameIndex` の `typeof entry.name === 'string'` | ConditionalExpression | 冗長: 後段の `typeof name === 'string'` が文字列でない名前を弾く |
 
-### `src/features/guide/lib/guideApiAdapters.ts`
-
-| 処理の場所 | mutator | 理由 |
-| --- | --- | --- |
-| `resolveDefaultFetch` | BlockStatement | 定数表で判定できない: report が `static` と報告する。`fetcher` を渡さないとき global の `fetch` が使われることは test が確かめている |
-
 ### `src/app/api/serverConfigAdapters.ts`
 
 | 処理の場所 | mutator | 理由 |
@@ -833,7 +827,6 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 | 処理の場所 | mutator | 理由 |
 | --- | --- | --- |
 | `baseBeforeConfigItems`・`baseAfterGuideItems`（項目の表） | ArrayDeclaration、ObjectLiteral、StringLiteral | 定数表で判定できない: 全項目を並びまで確かめる test がある |
-| `generateNavigationItems` の放映中の項目の条件 `input.config.status === 'loaded'` | ConditionalExpression | 振る舞いが変わらない: `status` が `'unloaded'` の config は `liveStreamEnabled` を持たないので、`true && undefined` は偽で放映中の項目は足されない（report は `static` と報告するが、関数の中の式で定数ではない） |
 | `NAVIGATION_REGENERATION_EVENT` | StringLiteral | 定数表で判定できない: 名前を確かめる test がある |
 
 ### `src/app/realtime.ts`
@@ -1017,7 +1010,6 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 | --- | --- | --- |
 | `REQUIRED_UPLOAD_SCHEMA`（zod の schema） | ObjectLiteral、MethodExpression | 定数表で判定できない: module の読み込み時に評価される式。検証の結果は test が確かめている |
 | `parseDatetimeLocalValue` の `value === ''` | ConditionalExpression、BlockStatement、StringLiteral | 振る舞いが変わらない: 空文字は日付として不正で、どのみち null になる |
-| `createSubGenreItems` の `genre === null` | ConditionalExpression、BlockStatement | 定数表で判定できない: report が `static` と報告する。null のときも表引きの結果が空になり同じ |
 | `createValidatedVideoUploadRequests` の `viewName === null && file === null` | ConditionalExpression、LogicalOperator、EqualityOperator、BlockStatement | 冗長: 直後の判定が同じ `[]` を返す |
 
 ### `src/features/onair/lib/liveStreamSelection.ts`
