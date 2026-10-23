@@ -1,7 +1,7 @@
 # 詳細については、Dockerfile.debianのコメントを参照。
 # base image は digest で固定する。tag は動くため、同じ Dockerfile が時期によって別の
 # base で build され、手元で通った build と公開される image が別物になり得る。
-FROM --platform=$BUILDPLATFORM node:26-alpine@sha256:143494b1da2945f061539253adc65e4f1569ddf07da2d384c022c791a9d90a4a AS client-builder
+FROM node:26-alpine@sha256:143494b1da2945f061539253adc65e4f1569ddf07da2d384c022c791a9d90a4a AS client-builder
 COPY client/package*.json /app/client/
 WORKDIR /app/client
 RUN npm config set fetch-retries 10 \
