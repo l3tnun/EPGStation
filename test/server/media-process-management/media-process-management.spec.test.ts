@@ -835,7 +835,8 @@ const canonicalSpecCases: readonly CanonicalSpecCase[] = [
         const stopping = manager.stopHls(handle);
         await vi.runAllTimersAsync();
 
-        await expect(stopping).resolves.toMatchObject({ exitConfirmed: false, slotReleased: true });
+        // 送れなかった signal は、送った signal に数えない
+        await expect(stopping).resolves.toEqual({ exitConfirmed: false, sentSignals: [], slotReleased: true });
         expect(registryOf(manager)).toEqual([]);
         expect(logger.encode.error).toHaveBeenCalledWith(expect.objectContaining({ stage: 'SIGINT-send' }));
         expect(logger.encode.error).toHaveBeenCalledWith(

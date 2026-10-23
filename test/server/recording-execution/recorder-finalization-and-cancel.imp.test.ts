@@ -436,6 +436,7 @@ describe('RecorderModel.readArrivedStreamData (unittest/imp)', () => {
     });
 
     it.each([
+        ['stream with unread buffered data', 'readableLength', 1],
         ['paused stream', 'paused', true],
         ['writer waiting for drain', 'writableNeedDrain', true],
         ['writer with pending data', 'writableLength', 1],
@@ -443,8 +444,9 @@ describe('RecorderModel.readArrivedStreamData (unittest/imp)', () => {
         // 時間切れではなく、個々の待機条件が解消したことで戻ることを確かめる。
         vi.useFakeTimers({ toFake: ['Date'] });
         const harness = makeRecorder();
-        const state = { paused: false, writableLength: 0, writableNeedDrain: false, [condition]: value };
+        const state = { readableLength: 0, paused: false, writableLength: 0, writableNeedDrain: false, [condition]: value };
         const { stream } = makeDrainStream({ isPaused: () => state.paused });
+        Object.defineProperty(stream, 'readableLength', { get: () => state.readableLength });
         harness.model.recFile = {
             get writableLength() { return state.writableLength; },
             get writableNeedDrain() { return state.writableNeedDrain; },
@@ -458,12 +460,14 @@ describe('RecorderModel.readArrivedStreamData (unittest/imp)', () => {
             await flushImmediate();
             expect(completed).toBe(false);
 
+            state.readableLength = 0;
             state.paused = false;
             state.writableLength = 0;
             state.writableNeedDrain = false;
             await pending;
             expect(completed).toBe(true);
         } finally {
+            state.readableLength = 0;
             state.paused = false;
             state.writableLength = 0;
             state.writableNeedDrain = false;

@@ -180,6 +180,7 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 | --- | --- | --- |
 | `captureSnapshot` の `sequence > this.snapshotAppliedSequence` | EqualityOperator | 到達不能: 連番は常に増えるので等号になることがない |
 | `findAvailable` の `unavailable.has(candidate)` とその throw | BlockStatement、ConditionalExpression、StringLiteral | 到達不能: 距離順に並べた連続した使用中の id の次は必ず空いているので、true になるのは 2^53 個の id が埋まったときだけ |
+| `captureSnapshot` の `this.beginInitialization()` | CallExpression | 冗長: 使える状態（config と artifactIndex がある）なら構築時に削除を始めており、`initialization` は null でない |
 
 ### `src/model/service/stream/manager/StreamManageModel.ts`
 
@@ -231,6 +232,8 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 | --- | --- | --- |
 | `release` の `handles.delete(processInfo.handle)` | CallExpression | 振る舞いが変わらない: 解放済みの handle は `slotReleased` で判定されるため、delete の有無で結果が変わらない（メモリだけ） |
 | `killAndCreateProcess` の期限の判定（`releasedByDeadline` の本体の `slotReleasedAt` の比較と、timeout 側の `if (!releasedByDeadline())`） | ConditionalExpression | 冗長: 解放が期限内なら `stopAndRelease` が先に確定しており、後から来る timeout 側の reject は race の結果に影響しない |
+| `pollUntilExit` の `steps.wait(stage) === false` のときの `continue`、`stopHlsProcessGroup` の待機の `catch` の `return false` | BlockStatement、BooleanLiteral | 到達不能: 待機は `ProcessUtil.wait`（`setTimeout` で resolve するだけ）で reject しない。管理側の `ServiceChildTerminationCleanup` の待機は常に true を返す |
+| `reportStarted` の `processInfo.kind === 'hls-writer'` | ConditionalExpression | 振る舞いが変わらない: hls-writer 以外の `pgid` は undefined で、管理側の `ServiceChildProcessRegistry.toEntry` は hls 以外の知らせから `pgid` を読まない |
 
 ### `src/model/service/encode/EncoderModel.ts`
 
@@ -280,6 +283,7 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 | --- | --- | --- |
 | `drain`、`collect` | ArrowFunction | 定数表で判定できない: module 先頭で定義される arrow function 全体の置き換え。呼び出したときの振る舞いは test が確かめている |
 | `get` の `cleanupRequestError` の `request?.removeListener` | OptionalChaining | 到達不能: この関数は `cleanup(false)` か request の `close` からしか呼ばれず、どちらも request の生成後 |
+| `tunerAgentOptions`（共有の `http.Agent` の `keepAlive`・`timeout`・`readableHighWaterMark`） | ObjectLiteral、BooleanLiteral、ArithmeticOperator | 定数表で判定できない: 値は `transport.integration.test.ts` が実際の通信で確かめている |
 
 ### `src/model/tuner/change/MirakurunChangeAdapter.ts`
 
@@ -364,6 +368,7 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 | `GRANTED`・`BLOCKED`・`UNKNOWN`・`BUSY` | ObjectLiteral | 定数表で判定できない: module 先頭で評価される式。返す状態は test が確かめている |
 | `release` の `isReleaseInput` の呼び出しの判定と、`isReleaseInput` の中の `isPeer`・`isRequestId` の組み合わせ | ConditionalExpression、LogicalOperator | 冗長: 不正な peer・request id は、続く lease の検索で見つからず `unknown` になる |
 | `release` の `unknownLeases.delete(lease)` | CallExpression | 振る舞いが変わらない: 解放した lease は他から参照されず、`WeakSet` に残っても判定に使われない |
+| `releasePeer` の `unknownLeases.delete(lease)` | CallExpression | 振る舞いが変わらない: 同上（終了した Web・API 側処理の lease をまとめて解放する経路） |
 | `tryAcquireDeletion` の `[...(leases ?? [])]` の既定の空配列 | ArrayDeclaration | 振る舞いが変わらない: 要素が文字列でも `WeakSet.has` は false |
 | `releaseDeletion` の `recordedId === undefined` | ConditionalExpression | 冗長: 続く `deletionTokens.get(undefined) !== token` が同じ結果 |
 
@@ -433,6 +438,7 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 | `stopForDeletion` の `currentSchedule !== null && deletionPhase !== null` の左の項を true にする | ConditionalExpression | 冗長: `currentSchedule` が null のとき `deletionPhase` も必ず null なので、右の項だけで同じ結果になる |
 | `registrationTerminationIntentPriority`（終了の意図の優先度の表） | ObjectLiteral | 定数表で判定できない: 優先順の全組み合わせは test が確かめている |
 | `CANCEL_EVENT`、`START_RECORDING_EVENT`、`EVENT_RELAY_CHECK_TIME` | StringLiteral、ArithmeticOperator | 定数表で判定できない: 値を確かめる test がある |
+| `readArrivedStreamData` の `isDrained` の `writer !== null` | ConditionalExpression | 到達不能: 先頭で `recFile === null` なら戻り、読み切りの途中で `recFile` が null になるのは `destroyStream` が stream も壊すときだけで、そのときは loop の条件で抜ける（型の絞り込みのための条件） |
 
 ### `src/model/operator/recording/RecordingManageModel.ts`
 
