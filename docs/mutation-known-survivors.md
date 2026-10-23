@@ -546,6 +546,7 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 | `stopInternal` の `getStreamType() === 'RecordedHLS'` | ConditionalExpression | 冗長: 非 HLS では `prepStreamDir` が呼ばれず、`getHlsStopFinalization()` も null を返す |
 | `observeManagedProcessTerminal` の再入の確認と `isTerminal = true`、`close`・`error`・`exit` の listener の取り外し | ConditionalExpression、BlockStatement、BooleanLiteral、StringLiteral | 冗長: 再入の確認と listener の取り外しは重複した安全策。close・error・exit のいずれかが一度来ると他の listener は外れ、再入しない。`isTerminal` を立てなくても、再入したときの `removeListener` と `completeTerminal` は 2 回目に何もせず、listener は `once` なので結果が同じ |
 | `stopHlsWriterAndReleaseWhenSafe` の `pendingHlsWriterStops.add(finalization)` | CallExpression | 振る舞いが変わらない: 追跡専用で、判定には使われない |
+| `stopInternal` の `this.getStreamType() === 'RecordedHLS'` | ConditionalExpression | 冗長: `hlsStopFinalization` を作るのは `RecordedHLS` のときの `prepStreamDir` だけで、ほかの型では `getHlsStopFinalization()` も null を返す |
 
 ### `src/model/service/stream/base/LiveStreamBaseModel.ts`
 
@@ -557,6 +558,7 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 | `closeTunerStream` の `this.tunerStreamHandle === handle` と `tunerStreamHandle` の代入 | ConditionalExpression、EqualityOperator | 振る舞いが変わらない: `tunerStreamHandle` は書き込み専用の field で、読むのはこの比較だけ |
 | `disposeSession` の `getStreamType() === 'LiveHLS'` | ConditionalExpression | 冗長: 非 HLS では `getHlsStopFinalization()` が null を返すので同じ結果になる |
 | `disposeSession` の `activeStartSession === session` | ConditionalExpression | 冗長: 後始末されるのは現行の session だけ（新しい start の前に古い session は後始末される） |
+| `disposeSession` の `this.getStreamType() === 'LiveHLS'` | ConditionalExpression | 冗長: `hlsStopFinalization` を作るのは `LiveHLS` のときの `prepStreamDir` だけで、ほかの型では `getHlsStopFinalization()` も null を返す |
 
 ### `src/model/service/stream/base/StreamBaseModel.ts`
 
@@ -573,6 +575,9 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 | --- | --- | --- |
 | `deleteAllFiles`・`deleteArtifact` の log の method 名 `'info'` | StringLiteral | 振る舞いが変わらない: `'error'` 以外は info に流れるので同じ |
 | `scan` の正規表現の `^` | Regex | 冗長: 続く `isHlsArtifactForStream` が `startsWith` で同じ判定をする |
+| `deleteAllArtifacts` の `isCancelled` の既定値 `() => false` | ArrowFunction | 振る舞いが変わらない: `() => undefined` も偽で、打ち切らない |
+| `deleteAllArtifacts` の `files.sort()` | MethodExpression | 振る舞いが変わらない: どちらの順でも、全部を消すか、打ち切った後は消さずに残った file の識別番号を返す。変わるのは消す順（要求は順を決めていない）と、それによる打ち切りまでに消す file と log の順だけ |
+| `deleteArtifact` の削除の log の文言 | StringLiteral | 振る舞いが変わらない: log だけ |
 
 ### `src/model/service/stream/recorded/DeliveryRecordedUseSnapshotProvider.ts`
 
@@ -696,7 +701,8 @@ mutation testing（流し方は [testing.md](testing.md) の §5、方針は `.k
 | `createFullRoutePathFromBrowserHash` の `replace(/^#/, '')` の `^` | Regex | 冗長: hash は必ず `#` で始まる |
 | `createTimestampNormalizedRoutePath` の `location.pathname === ''` | ConditionalExpression、StringLiteral | 到達不能: router は空の pathname を `/` にして渡すので、空の pathname は来ない（report は `static` と報告するが、関数の中の式で定数ではない） |
 | `memoryScrollHistory.ts` の `getScrollData` の `savedScrollData === null ? null : ...` | ConditionalExpression | 振る舞いが変わらない: 保存値が null のとき `null as T` が null |
-| `sessionScrollHistory.ts` の `isScrollPosition` の `typeof value !== 'object' \|\| value === null` | ConditionalExpression | 冗長: 非 object の値は後続の `position.x` が undefined になって型の検査で落ちる。null は呼び出し元が `entry.position === null` で先に除くため来ない（`isScrollHistoryEntry` の同じ式は test が殺している） |
+| `sessionScrollHistory.ts` の `isScrollPosition` の `typeof value !== 'object' \|\| value === null` | ConditionalExpression | 冗長: 非 object の値は後続の `position.x` が undefined になって型の検査で落ちる。null は呼び出し元が `entry.position === null` で先に除くため来ない（`isScrollHistoryEntry` の同じ式は、null を含む履歴の test が殺している） |
+| `sessionScrollHistory.ts` の `isScrollHistoryEntry` の左の項 `typeof value !== 'object'`（false への置き換え） | ConditionalExpression | 冗長: 文字列・数の値は後続の `typeof entry.key === 'string'` で落ちる（primitive は `key` を持たない）。null は右の項 `value === null` が除く |
 | `readStoredHistory` の `rawValue === null` の判定（block を含む） | ConditionalExpression、BlockStatement | 冗長: 外しても `JSON.parse(null)` は null を返し、続く `parsed.history` が例外を投げて、catch の既定値（同じ中身）に戻る |
 | `readStoredHistory` の既定の履歴 `history: []` | ArrayDeclaration | 振る舞いが変わらない: 履歴の既定配列に文字列を入れても `slice(0, 0)` で捨てられる |
 | `getScrollData` の `currentEntry === null \|\| currentEntry.data === null` | ConditionalExpression | 振る舞いが変わらない: データが null のとき `return null` と `return currentEntry.data` が同じ |
