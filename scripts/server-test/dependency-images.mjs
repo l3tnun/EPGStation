@@ -7,7 +7,7 @@
  * `docker image inspect` で確かめるだけで、無ければ取得せずに失敗する。
  *
  * 層は製品の `Dockerfile.debian`・`Dockerfile.alpine` から導く。各 builder stage（`client-builder`・
- * `server-builder`）で、`FROM` から最初の行頭 `COPY . `（ソース全体の copy）の直前までを依存の部分と
+ * `server-deps`）で、`FROM` から最初の `npm ci` の行（`\` で続く行を含む）までを依存の部分と
  * する（comment と空行は除く）。層の Dockerfile を手書きで持たない。
  *   1. OS の package の層（server 用だけ）: 依存の部分のうち、最初の `WORKDIR` の直前まで。
  *      tag は層の内容（base の digest を含む）から決まる。lock file が変わっても作り直さない。
@@ -33,7 +33,7 @@ const BUILDER_STAGES = Object.freeze({
         kind: 'client',
         manifests: ['client/package.json', 'client/package-lock.json'],
     },
-    'server-builder': {
+    'server-deps': {
         kind: 'server',
         manifests: ['package.json', 'package-lock.json'],
     },
@@ -150,14 +150,15 @@ function collectBases(parsed) {
 /** 1 つの builder stage の依存の部分を導く。導けない形は `DependencyImagePlanError`。 */
 function dependencyPart(stage, spec) {
     const body = stage.lines.slice(stage.from + 1, stage.end);
-    const copy = body.findIndex(line => line.startsWith('COPY . '));
-    if (copy < 0) {
-        throw new DependencyImagePlanError(
-            'source-copy-missing',
-            `${stage.file} ${stage.name} has no line that starts with "COPY . "`,
-        );
+    const npmCi = body.findIndex(line => !/^\s*#/u.test(line) && /\bnpm ci\b/u.test(line));
+    if (npmCi < 0) {
+        throw new DependencyImagePlanError('npm-ci-missing', `${stage.file} ${stage.name} has no npm ci`);
     }
-    const lines = body.slice(0, copy).filter(line => line.trim() !== '' && !/^\s*#/u.test(line));
+    let rest = npmCi + 1;
+    while (rest < body.length && body[rest - 1].trimEnd().endsWith('\\')) {
+        rest += 1;
+    }
+    const lines = body.slice(0, rest).filter(line => line.trim() !== '' && !/^\s*#/u.test(line));
     let osLines = [];
     let npmLines = lines;
     if (spec.kind === 'server') {
@@ -171,13 +172,7 @@ function dependencyPart(stage, spec) {
         osLines = lines.slice(0, workdir);
         npmLines = lines.slice(workdir);
     }
-    if (!npmLines.some(line => /\bnpm ci\b/u.test(line))) {
-        throw new DependencyImagePlanError(
-            'npm-ci-missing',
-            `${stage.file} ${stage.name} has no npm ci before its source copy`,
-        );
-    }
-    return { osLines, npmLines, copyLine: stage.from + 1 + copy };
+    return { osLines, npmLines, restLine: stage.from + 1 + rest };
 }
 
 function layerDockerfile(ref, lines) {
@@ -190,8 +185,8 @@ function layerDockerfile(ref, lines) {
  * - `bases`: 製品の Dockerfile が固定している base（`ref` は `<tag>@<Dockerfile の digest>`）。
  * - `images`: build 順の依存 image。`layer` が `os` か `npm`。`npm` の層だけが確認の Dockerfile の
  *   `FROM` に使われる（`flavor` と `kind` ごとに 1 つ）。
- * - `stages`: 各 builder stage の依存の部分が占める行（`from` は `FROM` の行、`copy` は最初の
- *   `COPY . ` の行、どちらも 0 起点）と、その stage の npm の層の tag。
+ * - `stages`: 各 builder stage の依存の部分が占める行（`from` は `FROM` の行、`rest` は依存の部分の
+ *   次の行、どちらも 0 起点）と、その stage の npm の層の tag。
  *
  * tag は、OS の層が `epgstation-deps-os-<flavor>-<kind>:<h12>`（層の内容。base の digest を含む）、
  * npm の層が `epgstation-deps-<flavor>-<kind>:<h12>`（層の内容と manifest の内容。server 用の層は
@@ -230,7 +225,7 @@ export function planDependencyImages(root) {
                 ...manifests.flatMap(manifest => [manifest.path, manifest.sha256]),
             ])}`;
             images.push({ kind, layer: 'npm', tag, dockerfile, baseRef: stage.ref, manifests });
-            stages.push({ file, flavor, stage: name, kind, from: stage.from, copy: part.copyLine, npmTag: tag });
+            stages.push({ file, flavor, stage: name, kind, from: stage.from, rest: part.restLine, npmTag: tag });
         }
     }
     return { bases, images, stages };
